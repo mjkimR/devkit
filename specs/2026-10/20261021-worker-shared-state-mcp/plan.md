@@ -31,7 +31,7 @@ Run focused tests, affected-package lint/type checks, just test-affected with it
 
 First-write safety requires the shared directory itself to stay excluded, not one probe filename. Applicable
 ancestor ignore negations are checked before infrastructure effects, because Git's check-ignore can omit an
-ancestor negation for an absent descendant. Matching is conservative for recursive globs and bracket expressions (including Git POSIX classes); an exclusion conflict
+ancestor negation for an absent descendant. Matching is conservative for case-folded paths, recursive globs and bracket expressions (including Git POSIX classes); an exclusion conflict
 requires policy inspection, never automatic ignore rewriting. All writer initialization decisions serialize
 under the existing common exclusion lock, preserving fail-closed missing-lock handling after interrupted setup.
 

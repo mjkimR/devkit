@@ -149,7 +149,7 @@ def _eligible(context: RepositoryContext, budget: Deadline) -> None:
                 pattern = re.sub(r"\[.*\]", "*", pattern)
                 components = candidate.split("/")
                 targets = ["/".join(components[:i]) for i in range(1, len(components) + 1)] if anchored else components
-                if any(fnmatch.fnmatchcase(value, pattern) for value in targets):
+                if any(fnmatch.fnmatchcase(value.casefold(), pattern.casefold()) for value in targets):
                     raise ExclusionError("an ancestor ignore rule can re-include shared storage")
         if _git(root, budget, "ls-files", "--", RELATIVE):
             raise ExclusionError("tracked shared storage cannot be hidden")

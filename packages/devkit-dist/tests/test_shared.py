@@ -385,6 +385,7 @@ def test_required_put_fields_cannot_be_null(repository, request_data, field):
     "pattern",
     [
         "!/.devkit/.shared/",
+        "!/.DEVKIT/.SHARED/",
         "!/.devkit/.sh[[:lower:]]red/",
         "!/.devkit/.sh[a[:lower:]]red/",
         "!**/.devkit/.shared/",
@@ -395,6 +396,7 @@ def test_required_put_fields_cannot_be_null(repository, request_data, field):
 def test_negative_ignore_refuses_before_any_write(repository, request_data, pattern, monkeypatch):
     from types import SimpleNamespace
 
+    run_git(repository, "config", "core.ignoreCase", "true")
     (repository / ".gitignore").write_text(pattern + "\n")
     before = (repository / ".git/info/exclude").read_bytes()
     monkeypatch.setattr("devkit.shared.local.uuid.uuid4", lambda: SimpleNamespace(hex="a" * 32))
