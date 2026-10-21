@@ -13,7 +13,7 @@ Exit conditions SHOULD state observable phase-level outcomes and capability boun
 names, file layouts and scenario tests in proposals/specs. Use devkit spec list milestone to discover current
 milestones and --history to include done/dropped records. Close planned/active milestones through Backlog after reviewing decomposition, direct proposal work and the
 exit condition. Confirm both Completion review assertions with status done in one commit. Missing assertions
-are unconfirmed; disappearance or handoff alone proves no delivery. Scope/membership changes reset both to pending.
+are unconfirmed; disappearance or handoff alone proves no delivery. Actual semantic scope changes reset both to pending; normal handoff does not.
 Unchanged approval persists across interruption after rechecking facts; changed facts require reconfirmation.
 Existing done records remain unchanged; extending their scope needs user-owned reopen to active or another
 milestone. Repeated close of unchanged done writes nothing; dropped milestones are not close candidates.

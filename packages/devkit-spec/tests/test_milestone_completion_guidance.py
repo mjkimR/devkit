@@ -48,8 +48,12 @@ SCENARIOS = [
     ),
     ("inconclusive required inspection", ("missing/unreadable/inconclusive", "naming the remaining check")),
     (
-        "scope or membership changed",
-        ("reset both assertions to pending", "including handoff", "coordinate", "Host before the mutation"),
+        "semantic scope changed",
+        (
+            "Actual semantic scope changes",
+            "new required work, exclusion or moving scope elsewhere",
+            "assertions to pending",
+        ),
     ),
     (
         "unchanged interrupted approval",
@@ -88,9 +92,8 @@ def test_plain_assertions_and_entrypoints(environment: str) -> None:
     assert data is not None
     assert set(data) == {"id", "title", "summary", "status", "created_at", "depends_on"}
     backlog = read("skills/spec/references/backlog.md", environment)
-    assert "including creation, decomposition" in backlog
-    assert "reassignment, retirement or handoff" in backlog
-    assert "Coordinate an out-of-scope milestone edit with the Host before mutation" in backlog
+    assert "Normal handoff or mechanical identity relocation" in backlog
+    assert "no milestone review/reset" in backlog
     assert "milestone-completion.md" in read("skills/spec-next/references/next-work.md", environment)
     assert "Existing done records remain unchanged" in read("seed/docs/roadmap/README.md", environment)
     procedure = read("skills/spec/references/milestone-completion.md", environment)
@@ -109,14 +112,11 @@ def test_plain_assertions_and_entrypoints(environment: str) -> None:
 
 
 @pytest.mark.parametrize("environment", ["local", "cloud"])
-@pytest.mark.parametrize(
-    "entrypoint", ["skills/spec/SKILL.md", "skills/spec-next/SKILL.md", "skills/spec/references/worktree.md"]
-)
-def test_handoff_entrypoints_load_invalidation_before_mutation(environment: str, entrypoint: str) -> None:
-    text = read(entrypoint, environment)
-    assert "Before proposal handoff" in text
-    assert "membership invalidation]" in text
-    assert "milestone-completion.md#changes-and-terminal-records" in text
-    assert "Host before mutation" in text
-    if environment == "local":
-        assert "native" in text
+def test_normal_handoff_adds_no_milestone_ceremony(environment: str) -> None:
+    procedure = read("skills/spec/references/milestone-completion.md", environment)
+    assert "Normal PROP-to-SPEC handoff or mechanical identity relocation" in procedure
+    assert "does not change scope/decomposition" in procedure
+    assert "requires no milestone review, reset or reconfirmation" in procedure
+    assert "No pre-handoff or integration hook is needed" in procedure
+    for entrypoint in ("skills/spec/SKILL.md", "skills/spec-next/SKILL.md", "skills/spec/references/worktree.md"):
+        assert "membership invalidation]" not in read(entrypoint, environment)

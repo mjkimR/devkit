@@ -48,8 +48,10 @@ work is delivered or explicitly removed from the agreed scope. Both depend on th
 met for that scope. Focused implementation/Git inspection resolves uncertainty; unknown evidence remains open.
 A missing PROP, rejection, handoff or reassignment never proves implementation. No milestone identity travels to SPEC.
 
-A goal, exit condition, non-goal or direct membership change clears both assertions. Stored assertions are not
-standing authorization: every close requires a concrete approved candidate. If material scope, membership or relevant evidence changes
+An actual semantic scope change (new required work, exclusion or moving scope elsewhere) clears both assertions.
+Normal PROP-to-SPEC handoff or mechanical identity relocation does not change scope/decomposition and requires
+no milestone review, reset or reconfirmation. Stored assertions are not
+standing authorization: every close requires a concrete approved candidate. If semantic scope or relevant completion evidence changes
 before writing, review and confirmation repeat. After interruption, establish the approved candidate and recheck
 those facts; unchanged authorization persists. Ask again only if facts changed or the approved candidate/evidence
 cannot be established. A pause or context compaction alone is not an invalidation event. A scope

@@ -59,9 +59,9 @@ As a developer, I want a concrete collaborative milestone close review so that p
 - **Then** exclusion/movement is distinguished from delivery and the resulting agreed scope and exit condition are explicit; unfinished in-scope handed-off work blocks settlement.
 
 ### [AC-04] Invalidation and interrupted review
-- **Given** a scope or direct membership change, including handoff
+- **Given** an actual semantic scope change (new required work, exclusion or moving scope elsewhere)
 - **When** the authorized change occurs
-- **Then** both assertions reset to pending, with an out-of-scope milestone edit coordinated by the Host before mutation; material candidate/evidence change requires reconfirmation, while established unchanged authorization survives pause or compaction.
+- **Then** both assertions reset to pending in the authorized scope edit; relevant close-time evidence changes require reconfirmation, while unchanged authorization survives pause or compaction. Normal handoff/mechanical identity relocation does not change scope or decomposition and requires no milestone review/reset.
 
 ### [AC-05] Historical and terminal milestones
 - **Given** a done or dropped milestone
@@ -101,9 +101,9 @@ Sections of the proposal that did not map to a spec section. Trim or promote the
   settlement, regardless of draft/reviewing/accepted status. Explicitly excluded or moved work is settled only as a
   scope disposition, never reported as implemented. Remaining rejected anchors likewise require an explicit
   disposition. Do not reconstruct or persist a complete descendant graph.
-- **D5 — Reconfirmation:** Changes to the goal, exit condition, non-goals or direct proposal membership clear
-  both assertions to `pending` in the same authorized change. A member's handoff also invalidates settlement:
-  removal does not prove completion. Pure wording/format corrections that preserve meaning do not invalidate.
+- **D5 — Reconfirmation:** Actual semantic scope changes (new required work, exclusion or moving scope elsewhere) clear
+  both assertions to `pending` in the authorized scope edit. Normal handoff/mechanical identity relocation does not
+  change scope or decomposition and requires no milestone review/reset. Removal still does not prove completion. Pure wording/format corrections that preserve meaning do not invalidate.
   To extend a done milestone's scope, first obtain the user's decision to reopen it as `active` and reset both
   assertions in the scope edit; alternatively put the new scope in another milestone. No automatic reopening.
 - **D6 — Keep authority and scope small:** Activation and dropping remain the user's decisions. Closure works
@@ -150,8 +150,7 @@ milestones under the prerequisite proposal's semantics.
 
 - Source bundle milestone template, Backlog guidance and `spec-next` guidance: teach the two assertions, fresh
   close review, explicit dispositions, invalidation and no-op behavior. Any Backlog lifecycle/membership edit that
-  changes scope resets the assertions in the same authorized change; a worker that cannot edit the milestone
-  delegates that edit to the Host before the scope mutation, without widening its own write boundary.
+  changes scope resets the assertions in the same authorized change; normal handoff needs no milestone edit.
 - Source seeded roadmap README and repository roadmap README: describe the short collaborative review and direct
   PROP ownership; do not edit individual roadmap milestones.
 - `CAP-HARN-agent-guidance`, `CAP-DOCS-document-model`, `CAP-DLV-proposal-incubation` and their directly affected
@@ -169,8 +168,8 @@ milestones under the prerequisite proposal's semantics.
   the milestone open with a specific next action. Empty membership and handoff absence alone do not close it.
 - Explicit rejection/cancellation/reassignment is a scope decision, with any reduced exit condition made explicit;
   it is never described as delivery. An unfinished handed-off implementation blocks settlement when still in scope.
-- Adding/removing/reassigning a direct proposal or changing the phase-level scope invalidates both confirmations.
-  A handoff does not inherit approval to close. A materially changed close candidate is re-presented; an interrupted review
+- Changing the actual phase-level scope invalidates both confirmations; mechanical handoff does not.
+  A handoff alone neither authorizes close nor invalidates an unchanged approved candidate. A materially changed close candidate is re-presented; an interrupted review
   resumes under existing authorization when its candidate and evidence are established unchanged. Reopening a done milestone requires the user's scope decision; harmless formatting does not reopen it.
 - A repeat close against an unchanged done milestone is a no-op. Old done records are retained without migration;
   old open records without assertions need review. Dropped records are not silently changed to done.

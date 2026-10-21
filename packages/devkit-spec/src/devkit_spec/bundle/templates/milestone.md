@@ -32,4 +32,4 @@ Decomposition: pending
 Direct proposal work: pending
 
 Confirm both with the current Backlog close candidate; record confirmed and status done together after the user's
-confirmation. Missing assertions mean unconfirmed. Scope or direct membership changes reset both to pending.
+confirmation. Missing assertions mean unconfirmed. Actual semantic scope changes reset both to pending; normal handoff does not.

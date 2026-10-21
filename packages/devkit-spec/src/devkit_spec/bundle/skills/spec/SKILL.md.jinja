@@ -43,8 +43,6 @@ Gates: `plan-intent` and `plan-accept` are always the user's decision, recorded 
 
 `devkit spec new` and proposal handoff bind the bundle; bind one made otherwise with `devkit workflow bind --unit <dir> --workflow <id>` (definition changes apply without rebinding). Go back within Development with `devkit workflow return --unit <dir> --to <stage>` (voiding later approvals and envelopes); never back to Planning. Envelopes live under the bundle's `envelopes/` ([envelope](references/envelope.md)); a run's questions, problems, answers and resolutions follow [worker records](references/worker-records.md).
 
-Before proposal handoff, check its milestone and follow [membership invalidation](references/milestone-completion.md#changes-and-terminal-records), coordinating an out-of-scope milestone edit with the Host before mutation. This applies to CLI and native handoff alike.
-
 ### Playbooks
 `spec` never searches or routes to playbooks. A playbook runs only when the user invokes `devkit-playbook` for the task or a failing rule's remediation names one; any other operational request is ordinary work.
 

@@ -16,6 +16,6 @@ milestones and --history to include done/dropped records. Existing transition au
 Close planned/active milestones through Backlog: review sufficient decomposition, settled direct proposal work
 and the exit condition together. The user's two confirmations record Decomposition: confirmed and Direct proposal
 work: confirmed under Completion review with status done in one commit. Missing assertions are unconfirmed;
-proposal absence or handoff alone proves no delivery. Scope/membership changes reset both to pending; unchanged
+proposal absence or handoff alone proves no delivery. Actual semantic scope changes reset both to pending; normal handoff does not; unchanged
 approval survives interruption after rechecking facts. Existing done records remain unchanged; extending done scope
 requires a user-owned reopen to active or another milestone. Repeated close of unchanged done writes nothing.

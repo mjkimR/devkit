@@ -77,7 +77,7 @@ Milestone bodies carry a `Completion review` section with exactly two plain asse
 `Decomposition: pending` and `Direct proposal work: pending`. A current user-owned Backlog close decision writes
 both as confirmed with status done in one commit. Missing assertions on open documents mean unconfirmed; stored
 assertions alone do not authorize a later close. These are body content, not parsed fields, checklist items,
-reference edges or a machine-certified delivery contract. Scope/direct membership changes reset both to pending;
+reference edges or a machine-certified delivery contract. Actual semantic scope changes reset both to pending; normal handoff does not;
 existing done records remain historical without migration. `CAP-HARN-agent-guidance` owns review, invalidation,
 interruption and reopen procedures (`ADR-milestone-closure-confirmations`).
 

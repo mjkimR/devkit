@@ -62,10 +62,6 @@ In-progress means a plan-/dev- branch, a reviewing/accepted proposal, or an inco
 | **Ended (Rejected)** | Proposal is `rejected` | Planning ended: the cleanup `SPEC_PROPOSAL_REJECTED_PENDING`'s `[FIX]` names (rejection ADR, then deletion; the user may invoke the `feedback-hygiene` playbook); never back to `reviewing` |
 | **Idle** | No in-progress Unit | Recommend eligible queued drafts and Backlog actions with [next-work selection](references/next-work.md) |
 
-Before proposal handoff (CLI or native), check its milestone and follow
-[membership invalidation](../spec/references/milestone-completion.md#changes-and-terminal-records).
-Coordinate an out-of-scope milestone edit with the Host before mutation.
-
 ### 3.1 Post-handoff link check
 
 Run it immediately after every `devkit spec proposal handoff <slug>`, in the same change: [post-handoff link check](references/post-handoff.md).

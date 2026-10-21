@@ -19,10 +19,10 @@ targets:
 
 # Reconciliation
 
-`CAP-HARN-agent-guidance` reflects the shipped Backlog close procedure and the pre-handoff entrypoints, including
+`CAP-HARN-agent-guidance` reflects the shipped Backlog close procedure and the normal-handoff exemption, including
 current authority, evidence gaps, direct scope dispositions, invalidation and terminal records.
 `CAP-DOCS-document-model` defines the two plain assertions without changing indexing or schema.
-`CAP-DLV-proposal-incubation` places membership invalidation before lifecycle changes as an agent procedure,
+`CAP-DLV-proposal-incubation` distinguishes semantic scope changes from mechanical lifecycle relocation,
 without changing runtime handoff. The repository roadmap README mirrors the seeded guidance.
 
 `ADR-milestone-closure-confirmations` names the actual prerequisite ADR as predecessor and explicitly retains its
