@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-periodic-drift-reconciliation
 feature: SPEC-periodic-drift-reconciliation
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-content-packages.md
     resolution: modified
@@ -37,6 +37,9 @@ these documents do not own catalog implementation. No unrelated entrypoint chang
 `FB-nested-role-skill-read-scope` is an imported observation, outside direct-fix scope. It stays open; Host owns
 any separate disposition. No direct-fix source was completed by this unit.
 Review-refactor companion delivery is retained in `FB-maintenance-companion-playbooks`; it is not acceptance work for this unit.
-Weekly-report belongs to `MS-reporting-and-actionable-insights`. The Host has separately committed its proposal
-on the newer base and owns adding that exact proposal reference after base refresh; this unit creates no duplicate.
+Weekly-report is retained in `PROP-weekly-report`, under `MS-reporting-and-actionable-insights`.
+After the Host base refresh, local ID resolution and proposal sections 1 and 3 verify that it identifies this
+maintenance delivery as its source, independently adds weekly-report/reporting and preserves upkeep.
+This existing destination owns its separately approved Planning; no duplicate feedback or implementation is created.
+Host authorized the one-line source-link repair in that proposal from the retired proposal ID to this SPEC ID.
 No scheduler or rejected detector is reopened.

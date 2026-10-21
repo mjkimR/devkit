@@ -29,7 +29,7 @@ workflow: sdd-proposal
 ## 1. Background & Hypothesis
 
 `MS-reporting-and-actionable-insights` calls for a manually invoked report that makes completed work, decisions,
-repository health and next actions inspectable. The maintenance bundle introduced by `PROP-periodic-drift-reconciliation`
+repository health and next actions inspectable. The maintenance bundle introduced by `SPEC-periodic-drift-reconciliation`
 is the delivery home. A reporting procedure can consume available evidence without running drift or refactoring
 first, and without a scheduler or history backend.
 
