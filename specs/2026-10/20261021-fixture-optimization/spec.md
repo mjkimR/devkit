@@ -2,7 +2,7 @@
 id: SPEC-fixture-optimization
 title: Optimize slowest test fixtures via seed caching
 summary: Optimize Worktree and PlanAccept test setup by reusing prepared repository templates.
-status: planned
+status: in-progress
 created: 2026-10-21
 related_capabilities:
   - CAP-WT-task-worktrees
