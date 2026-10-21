@@ -47,9 +47,10 @@ trigger decision is part of this playbook delivery.
 ## 4. Development Conventions & Governance (docs/development/ & .devkit/)
 
 Deliver `drift-reconciliation` as an independent playbook in the opt-in, content-only `maintenance` bundle of
-`devkit-catalog`, alongside `weekly-report` and `review-refactor`. Presets are `reporting` (weekly report), `upkeep`
-(drift reconciliation and review/refactoring), and the reserved `all` (all three, the default); keep `auto_select`
-disabled. Playbook bodies are read on demand and invocation is independent.
+`devkit-catalog`, with eventual independent `weekly-report` and `review-refactor` assets. Initially declare only
+the drift asset, `upkeep` selecting it, and the implicit `all` default. Add `reporting` and extend `upkeep` only when
+their companion assets exist; keep `auto_select` disabled. Playbook bodies are read on demand and invocation is
+independent.
 
 This proposal delivers the drift asset and its applicable preset membership without requiring implementation of the
 other two playbooks. Verify package discovery and preset selection, update package documentation and installation

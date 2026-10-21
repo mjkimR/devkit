@@ -1,0 +1,15 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-20T23:25:43.801499Z'
+status: completed
+summary: round 1; independent medium challenger examined report identity, approval authority, partial recovery, viewer ADR exception and provisional adapter; no material findings.
+findings: []
+assumptions:
+- Codex challenger contract emulated; read-only prompt boundaries, explicit assigned cwd and parent unchanged HEAD/index/diff validation substitute for native confinement.
+- Shared adapter snapshot is provisional; Development waits for acceptance and implementation.
+- Form language is captured once; refresh validates the captured request language.
+unverified_areas:
+- Native form rendering and artifact URI clickability; shared adapter implementation and runtime fault injection.
+checks: {}
