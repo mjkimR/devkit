@@ -1,0 +1,23 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T00:14:34.841678Z'
+status: completed
+summary: Delivered opt-in maintenance drift-reconciliation playbook, exact upkeep/all membership, tested distribution and independent lookup, retained bounded real sweep and simulated dispositions. Independent code and reconciliation reviews pass; earlier worker problem resolved with verified weekly-report linkage.
+findings: []
+assumptions:
+- Host owns integration and official sync; no worker merge, push or generated-file edits.
+- Host-authorized base merge df220e2 accounted separately from worker scope; recovery includes only unit records and approved one-line weekly proposal source-link repair.
+- Review-refactor remains FB-maintenance-companion-playbooks; weekly-report remains PROP-weekly-report; imported nested-role feedback stays open observation-only.
+unverified_areas:
+- Manual fixture demonstrates procedural records, not autonomous agent reliability.
+checks:
+  tests: PASS just test-affected current Host base 6fd2047 full fallback 4019 passed 14 skipped; original-base run 4011 passed 14 skipped
+  build: PASS just smoke, wheel discovery and maintenance bundle validation; unchanged implementation evidence reused after link-only recovery
+  lint: PASS catalog lint and types; cumulative governance on original a7958abb and current Host 6fd2047 bases zero errors/warnings
+  reviews: PASS independent code-review and reconcile-check-02
+diff_scope:
+  base: a7958abb8eb28fd3835a5ba72042e23a9099f207
+  head: 9d616c8a6182ffe128196d07824d734c4472d6ec
+activity_effort: medium
