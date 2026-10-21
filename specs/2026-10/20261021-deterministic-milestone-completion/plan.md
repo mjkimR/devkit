@@ -2,28 +2,19 @@
 id: PLAN-deterministic-milestone-completion
 spec: SPEC-deterministic-milestone-completion
 ---
-<!-- devkit:skeleton -->
 
-# Technical Plan: `SPEC-deterministic-milestone-completion` Simple milestone completion from direct proposal checks
+# Technical Plan: `SPEC-deterministic-milestone-completion`
 
-## 1. Architecture Overview & Impact
-- Target Area: capabilities/delivery/
+## Constitution & Invariant Review
 
-## 2. Component Breakdown & Interface Contracts
+`ADR-milestone-closure-confirmations` supersedes only the closure review of `ADR-separate-unit-prerequisites-from-milestone-themes`, retaining its unit ordering, direct PROP membership and inherited transition/history policy. No runtime API or schema changes.
 
-### Planned Boundaries:
-- `packages/devkit-spec/`
-- `docs/capabilities/delivery/`
-- `docs/capabilities/documents/`
-- `docs/capabilities/harness/`
-- `docs/decisions/`
-- `docs/development/reference/`
-- `docs/roadmap/`
+## Components and Design
 
-### Excluded Boundaries:
-- `packages/devkit/src/devkit/integration/`
-- `packages/devkit-dist/src/devkit/shared/`
-- `packages/devkit-viewer/`
+Update the milestone template, Backlog reference, spec-next orientation and seeded roadmap README. Keep the detailed close procedure in a dedicated reference linked from Backlog to respect its existing context budget. Two plain body assertions are durable decisions, not parsed fields. Reset them before authorized membership mutations, coordinating through the Host when the milestone is out of scope. Update the three affected capability contracts and repository roadmap README during reconciliation.
 
-## 3. Verification & Test Plan
-- <commands and checks that verify the acceptance criteria>
+The accepted simple model requires focused current evidence, not exhaustive historical branch enumeration. Keep existing done records unchanged. Missing evidence leaves the milestone open; unchanged approved evidence remains authorized after interruption. No dependencies are added.
+
+## Verification
+
+Add local/cloud guidance contract fixtures for AC-01 through AC-06 without implementing a semantic evaluator. Run relevant lint/type checks, just test-affected (preserving its full fallback), bundle budget checks and cumulative governance rules. Independent medium code and reconcile reviews verify instructions against requirements and the final diff.

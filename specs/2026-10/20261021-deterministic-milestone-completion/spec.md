@@ -4,11 +4,11 @@ title: Simple milestone completion from direct proposal checks
 summary: Close milestones from confirmed decomposition and settlement of directly linked proposals, using focused code or Git inspection when needed instead of persistent delivery-lineage tracking.
 status: planned
 created: 2026-10-21
-related_capabilities: []
+depends_on: [SPEC-unit-dependencies-and-milestone-scope]
+related_capabilities: [CAP-DLV-proposal-incubation, CAP-DOCS-document-model, CAP-HARN-agent-guidance]
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-deterministic-milestone-completion] Simple milestone completion from direct proposal checks
 
@@ -35,18 +35,47 @@ a proposal before implementation has finished.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Simple milestone completion from direct proposal checks so that system capabilities are extended.
+As a developer, I want a concrete collaborative milestone close review so that phase completion is explicit without maintaining delivery lineage.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+**Scope Excluded:** runtime parsers, commands, evaluators, milestone metadata on SPECs, persistent lineage, integration hooks, automatic transitions, viewer changes and migration of existing milestone documents.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Current close decision
+- **Given** a planned or active milestone with sufficient decomposition, settled direct work and a met exit condition
+- **When** the user confirms both checks on the concrete current candidate
+- **Then** the Backlog procedure records Decomposition: confirmed, Direct proposal work: confirmed and status done in one commit without a third approval.
+
+### [AC-02] Missing confirmation or evidence
+- **Given** missing assertions/confirmation, unresolved in-scope work, an unmet exit condition or inconclusive required evidence
+- **When** closure is reviewed
+- **Then** it stays open with the remaining check named; empty membership and handoff absence never certify delivery.
+
+### [AC-03] Explicit scope disposition
+- **Given** rejected, cancelled, removed or reassigned proposal work
+- **When** the close candidate is prepared
+- **Then** exclusion/movement is distinguished from delivery and the resulting agreed scope and exit condition are explicit; unfinished in-scope handed-off work blocks settlement.
+
+### [AC-04] Invalidation and interrupted review
+- **Given** a scope or direct membership change, including handoff
+- **When** the authorized change occurs
+- **Then** both assertions reset to pending, with an out-of-scope milestone edit coordinated by the Host before mutation; material candidate/evidence change requires reconfirmation, while established unchanged authorization survives pause or compaction.
+
+### [AC-05] Historical and terminal milestones
+- **Given** a done or dropped milestone
+- **When** closure is requested again
+- **Then** unchanged done writes nothing and dropped is not a close candidate; done scope extension requires user-owned reopen to active with pending assertions or another milestone, and historical done records are not migrated.
+
+### [AC-06] Shipped guidance and boundaries
+- **Given** local and cloud bundle rendering
+- **When** guidance and templates are verified
+- **Then** both teach the same two-assertion procedure within existing context budgets, without runtime/schema/lineage additions.
+
+## Assumptions
+
+The integrated prerequisite provides direct PROP membership and typed unit ordering. The current predecessor is `ADR-separate-unit-prerequisites-from-milestone-themes`; its unaffected decisions remain in force. Guidance fixtures verify the shipped instructions, not semantic delivery certification.
 
 ## 5. Carried Proposal Notes
 

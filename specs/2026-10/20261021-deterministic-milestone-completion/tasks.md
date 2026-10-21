@@ -3,12 +3,10 @@ id: TASKS-deterministic-milestone-completion
 spec: SPEC-deterministic-milestone-completion
 plan: PLAN-deterministic-milestone-completion
 ---
-<!-- devkit:skeleton -->
 
-# Task Breakdown: `SPEC-deterministic-milestone-completion` Simple milestone completion from direct proposal checks
+# Task Breakdown: `SPEC-deterministic-milestone-completion`
 
-## Phase 1: Implementation
-- [ ] **Task 1.1**: Core Implementation
-  - **_Boundary**: packages/devkit-spec/, docs/capabilities/delivery/, docs/capabilities/documents/, docs/capabilities/harness/, docs/decisions/, docs/development/reference/, docs/roadmap/
-  - _Requirements: AC-01_
-  - **Verification**: <command that verifies the task>
+- [ ] **Task 1**: Ship the two-assertion milestone close procedure, template, orientation and roadmap guidance with local/cloud procedure fixtures.
+  - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundle/, packages/devkit-spec/tests/
+  - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05, AC-06_
+  - **Verification**: just test-affected; bundle guidance and budget tests; lint and type checks.
