@@ -10,6 +10,7 @@ dependencies = []
 [project.entry-points."devkit.bundles"]
 response-style = "devkit_catalog.response_style"
 host-observer = "devkit_catalog.host_observer"
+maintenance = "devkit_catalog.maintenance"
 
 [dependency-groups]
 dev = ["devkit-dist"]  # the tests load the bundles with devkit-dist's manifest reader

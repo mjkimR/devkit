@@ -29,6 +29,7 @@ recommend comes from it.
 | `authoring` (built in, `devkit-agt`) | Both of the above. | Default `all` |
 | `advisory:python` (built in) | The project depends on `devkit-advisory` at runtime, or builds Python CLIs that agents consume. | Adds the Python library guide and `RULE-advisory-unique-code` (run by `devkit-agt`). |
 | `response-style` (`devkit-catalog`) | The user wants answer-first replies that keep decision-critical facts, or a configurable default conversation language. | Default `all`: the `response-style` skill and an `AGENTS.md` line; `[presentation] language = "ko"` supplies an inherited Korean default; an explicit `[bundles.response-style.variables] language` value wins. Run sync after edits. |
+| `maintenance` (`devkit-catalog`) | The user wants a bounded manual review of Living Spec, code and guidance drift with explicit dispositions. | Default `all` or `upkeep`: only the drift-reconciliation playbook; selection never executes it. Use existing repository tools; unavailable checks are recorded as gaps. |
 | `host-observer` (`devkit-catalog`) | The user wants to validate Codex CLI lifecycle hook delivery. | Default `all`: five metadata-only observer hooks; requires devkit on the host PATH and separate host trust review. |
 
 With `devkit-dist` alone, recommend no `devkit-agt` bundle and no rule asset (`advisory:python`): nothing runs them.
