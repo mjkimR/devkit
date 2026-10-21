@@ -26,3 +26,9 @@ Preserve transactional writes, configuration race checks, ownership/manual-edit 
 AC-01/05: full inventory corpus and final path tests across hosts, local routing preservation, packaging/consumer smoke and runtime cloud regression coverage. AC-02/04: receipt roundtrip, unrecorded bootstrap, no-save mismatch, environment-only change, idempotence/reversal, locked/check/dry-run, personal ledger, context, race/rollback/manual edits and worktree isolation. AC-03: templates, validation without agents, collisions, native variants, overrides and combined language/personal restrictions.
 
 Run focused dist/spec tests, lint/type checks, `just test-affected` with full fallback, `just test-dist`, `just smoke`, governance checks and independent HIGH code/reconcile review loops.
+
+## Boundary extension
+
+The Host authorized the markdown_link rule, its colocated tests and guide because source template renames otherwise make the commit gate reject correct final Markdown links. Resolution is confined to declared same-bundle templates; missing and unrelated files still fail. The authoring/harness context CLI encountered the expected unrecorded personal-render evidence state after the implementation; source instructions were read directly, without changing installed receipts or projections.
+
+The Host also authorized the two template-source entrypoint repairs and local/cloud guidance qualifiers in `CAP-HARN-agent-guidance`; other harness contracts remain outside this unit.

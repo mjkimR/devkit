@@ -240,12 +240,12 @@ source = "subagents/scout.md"
 [[assets]]
 id = "development-worker"
 kind = "subagent"
-source = "subagents/development-worker.md"
+source = "subagents/development-worker.md.jinja"
 
 [[assets]]
 id = "planning-worker"
 kind = "subagent"
-source = "subagents/planning-worker.md"
+source = "subagents/planning-worker.md.jinja"
 
 # Occasional procedures, found through `devkit playbook search` on explicit request.
 [[assets]]

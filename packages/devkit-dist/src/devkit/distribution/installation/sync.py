@@ -13,7 +13,7 @@ from types import MappingProxyType
 from devkit.advisory import AdvisoryError, ExitCode, Level
 from devkit.core.errors import ArgumentError
 from devkit.core.git import run_git
-from devkit.core.local_config import LOCAL_CONFIG_PATH
+from devkit.core.local_config import LOCAL_CONFIG_PATH, read_effective_config
 from devkit.core.mcp_context import guard_execution
 from devkit.core.presentation import resolve_language
 from devkit.core.project import git_toplevel, require_devkit_root
@@ -333,6 +333,7 @@ def _plan_inventory(
     previous_overrides: dict[str, dict[str, OverrideRecord]],
     *,
     effective: bool = False,
+    environment: str | None = None,
 ) -> Inventory:
     """What the selection deploys: the inventory of the selected bundles' assets."""
     return desired_inventory(
@@ -343,6 +344,7 @@ def _plan_inventory(
         previous_overrides=previous_overrides,
         variables=read_config(root, effective=effective).variables,
         language=resolve_language(root, effective=effective).resolved,
+        environment=environment or read_effective_config(root).values["execution"]["environment"],
     )
 
 
@@ -504,6 +506,7 @@ def _build_receipt(
     overrides: dict[str, dict[str, OverrideRecord]],
     seeded: tuple[SeededRecord, ...],
     block_hash: str | None,
+    environment: str,
 ) -> Receipt:
     def record(content: Content) -> FileRecord:
         return FileRecord(*signature(content))
@@ -521,6 +524,7 @@ def _build_receipt(
         seeded=seeded,
         guidance_block=block_hash,
         host_hooks=tuple(inventory.host_hooks),
+        execution_environment=environment,
     )
 
 
@@ -958,8 +962,11 @@ def commit_locked(
     previous_overrides = {b: dict(r) for b, r in previous.overrides.items()} if previous else {}
     if rebaseline is not None:
         previous_overrides.get(rebaseline[0], {}).pop(rebaseline[1], None)
-    inventory = _plan_inventory(root, installed, selection, previous_overrides)
-    effective = _plan_inventory(root, installed, selection, previous_overrides, effective=True)
+    selected_environment = environment or read_effective_config(root).values["execution"]["environment"]
+    inventory = _plan_inventory(root, installed, selection, previous_overrides, environment=selected_environment)
+    effective = _plan_inventory(
+        root, installed, selection, previous_overrides, effective=True, environment=selected_environment
+    )
     personal = local_render.personal_files(root, inventory, effective)
     if config.override_drift == "block":
         _refuse_override_drift(inventory.drift)
@@ -994,7 +1001,7 @@ def commit_locked(
     require_writable(root, changes)
     notices.extend(block_notices)
     overrides = _carried_overrides(root, installed, previous, inventory.overrides)
-    receipt = _build_receipt(selection, inventory, overrides, seeded, block_hash)
+    receipt = _build_receipt(selection, inventory, overrides, seeded, block_hash, selected_environment)
     notices.extend(engine_notices(receipt.asset_records))
     if config_update is not None and config_update.text is not None:
         changes[CONFIG_PATH] = Content(
@@ -1018,7 +1025,7 @@ def commit_locked(
         if pending_receipt
         else ((root / RECEIPT_PATH).read_bytes() if previous is not None else receipt_content(receipt).data)
     )
-    local_render.plan_ledger(root, personal, receipt_bytes, changes, actions)
+    local_render.plan_ledger(root, personal, receipt_bytes, changes, actions, environment=selected_environment)
     if local_render.LOCAL_RENDER in changes or (root / local_render.LOCAL_RENDER).exists():
         local_render.require_ignored(root, local_render.LOCAL_RENDER, planned_ignore=fresh_ignore)
     if locked:
@@ -1056,9 +1063,8 @@ def commit_locked(
             auto_selected=auto_selected,
             dry_run=dry_run,
         )
-        from devkit.core.local_config import read_effective_config
 
-        result.execution_environment = environment or read_effective_config(root).values["execution"]["environment"]
+        result.execution_environment = selected_environment
         return result
 
     return finish

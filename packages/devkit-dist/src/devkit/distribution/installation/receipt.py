@@ -99,6 +99,8 @@ def receipt_json(receipt: Receipt) -> dict[str, Any]:
             name: {"sha256": record.sha256, "mode": record.mode} for name, record in receipt.file_records.items()
         },
     }
+    if receipt.execution_environment is not None:
+        value["execution_environment"] = receipt.execution_environment
     if receipt.tool is not None:
         value["tool"] = tool_json(receipt.tool)
     if receipt.overrides:

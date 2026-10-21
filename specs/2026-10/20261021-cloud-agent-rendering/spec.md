@@ -2,7 +2,7 @@
 id: SPEC-cloud-agent-rendering
 title: Render cloud agent assets without MCP guidance
 summary: Make sync --cloud render CLI-only agent instructions without MCP routes, using execution-aware templates and coverage for constitution and subagent assets.
-status: planned
+status: in-progress
 created: 2026-10-21
 related_capabilities: []
 related_stories: []

@@ -13,7 +13,7 @@ ACCEPT = "devkit spec proposal accept"
 
 
 def _read(rel: str) -> str:
-    return re.sub(r"\s+", " ", (BUNDLE / rel).read_text(encoding="utf-8"))
+    return re.sub(r"\s+", " ", _rendered(BUNDLE / rel))
 
 
 def test_acceptances_are_recorded_with_the_accept_command() -> None:
@@ -54,9 +54,7 @@ def test_the_lowering_rule_names_the_session_reclassification() -> None:
     for rel in ("AGENTS.md", "skills/spec/references/classification.md"):
         assert "session reclassification of a queued draft" in _read(rel), rel
     backlog = _read("skills/spec/references/backlog.md")
-    assert "## Session reclassification of a queued draft" in (BUNDLE / "skills/spec/references/backlog.md").read_text(
-        encoding="utf-8"
-    )
+    assert "## Session reclassification of a queued draft" in _rendered(BUNDLE / "skills/spec/references/backlog.md")
     for phrase in ("only the user's explicit decision", "no `PADR-*.md`", "new slug", "git revert"):
         assert phrase in backlog, phrase
     assert "session reclassification" in _read("skills/spec/references/feedback-retirement.md")
@@ -68,3 +66,14 @@ def test_the_scaffold_lifecycle_holds_for_a_direct_acceptance(tmp_path: Path) ->
     text = re.sub(r"\s+", " ", (tmp_path / create_proposal(tmp_path, "idea").path).read_text(encoding="utf-8"))
     assert f"{ACCEPT} idea --by user" in text and "--direct" in text
     assert "set status: accepted and merge the Planning branch" not in text
+
+
+def _rendered(path: Path) -> str:
+    from devkit.distribution.bundles.templates import render_template
+
+    if path.name.endswith(".md.jinja"):
+        return render_template(path.read_bytes(), {}, str(path), environment="local").decode()
+    if path.exists():
+        return path.read_text(encoding="utf-8")
+    source = path.with_name(path.name + ".jinja")
+    return render_template(source.read_bytes(), {}, str(source), environment="local").decode()

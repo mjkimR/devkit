@@ -74,9 +74,10 @@ recovery, actual last commit SHA, dirty paths and which record/commit is absent 
 which owns the subsequent recovery run and its records. The committed-return requirements below apply whenever
 preservation is permitted; inability to preserve them is a failure, not permission to bypass refusal.
 
-Workers return verified committed scope to the Host and never request business approval through MCP. The Host
+{% if execution.environment == "local" %}Workers return verified committed scope to the Host and never request business approval through MCP. The Host
 validates boundaries and checks before invoking a native approval tool; missing form UI grants no authority.
-
+{% else %}Approval belongs to the Host after it validates worker boundaries, committed scope and required checks. Workers return that evidence without requesting business approval. Cloud execution provides CLI inspection and artifact operations only; mutation requires a separately authorized CLI/PR route. Missing authority is a boundary, never approval. Effective workspace configuration controls runtime restrictions independently of render provenance.
+{% endif %}
 ## Return
 
 The fields of your `worker` envelope, as YAML with findings as a list, after it is committed: `status` (`completed` when the final change report holds; `needs_input` or `failed` with the `problem`), `summary` (stages done, checks run), `findings` for anything left open (`issue`, `evidence`, `suggested_action`), `checks` with each result, `assumptions`, `unverified_areas`, `diff_scope` with `head` set to your last work commit, and `final_head`: `git -C <worktree> rev-parse HEAD` after the commit that adds the envelope, the head the caller validates up to (`diff_scope.head` is its ancestor, never equal to it).
@@ -90,3 +91,4 @@ The fields of your `worker` envelope, as YAML with findings as a list, after it 
 ## On a problem
 
 Stop only when the agreed goal, scope or contract cannot be kept, a cause you cannot solve inside the write scope blocks the work, or the `high` review loop hands over (a batch still not minor at the round cap or a recurring P1: a problem whose recovery names the open findings; a contested P1: a question in your `worker` envelope, `--questions-file -`, with the reviewer's and your positions as options and a `context` written for the user); a choice you can decide is not a problem. Record the problem in your `worker` envelope (`--problem "<cause>" --tried "<attempt>" --recovery "<recovery>"`: the cause, what you tried and the recovery you recommend; the status is `failed`, or pass `--status needs_input` when only the user can decide), then make an emergency commit of the unfinished work together with the envelope. When the commit gate refuses the unfinished files, this commit alone may use `git -C <worktree> commit --no-verify`; name each check it skipped in the problem (`--tried "commit gate rules-check refused: RULE-x in spec.md"`). Do not revert, close, raise the depth or narrow the scope yourself; the Host decides. When the payload carries a recovery request for an earlier problem and you solve it, commit the fix together with `devkit workflow envelope resolution --unit <unit> --resolves <worker-NN.yaml> --summary "<what was done and why it resolves it>"`; when you cannot, write no resolution and record what you tried in this turn's `worker` envelope.
+

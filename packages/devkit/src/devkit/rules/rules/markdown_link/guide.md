@@ -13,6 +13,7 @@ silently breaks the links to it; agents follow links to load context, so a broke
   its target, which is checked and repaired at its own path. A symlink named as an explicit target
   (`devkit rules check docs/alias.md`) checks and repairs its target instead, reported at the target's path, unless
   the target is excluded, receipt-pinned, outside the workspace or already a target of the run.
+- **Bundle template destinations**: a final `.md` link inside a bundle may resolve to its existing `.md.jinja` source when the same bundle declares that source as a supported Markdown asset (or the constitution). The source must be a regular file inside the workspace. Other extensions, undeclared templates, cross-bundle links and missing templates remain broken; the rule does not rewrite the final link.
 - **Machine-local links**: a destination with the `file:` scheme (`file:///home/<user>/...`) points at one machine's
   checkout and is reported whether or not the file exists there.
 - **What is not**: other URLs with a scheme (`https:`, `mailto:`), fragment-only links (`#section`), root-relative and

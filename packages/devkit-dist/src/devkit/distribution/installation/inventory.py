@@ -138,11 +138,13 @@ class _BundleInventory:
         root: Path | None,
         variables: dict[str, Scalar],
         language: str | None,
+        environment: str,
     ) -> None:
         self.inventory = inventory
         self.bundle = bundle
         self.agents = agents
         self.root = root
+        self.environment = environment
         self.variables = resolve_variables(bundle.variables, variables, bundle.name, language=language)
         self.prefix = f"{MANAGED_PATH}/{bundle.name}/"
         self.context_files: set[Path] = set()
@@ -154,7 +156,10 @@ class _BundleInventory:
         self.inventory.copy(self.prefix + "bundle.toml", bundle.root / "bundle.toml")
         constitution = bundle.constitution
         if constitution is not None:
-            self.inventory.copy(self.prefix + "AGENTS.md", constitution)
+            data = constitution.read_bytes()
+            if constitution.name.endswith(".md.jinja"):
+                data = render_template(data, self.variables, str(constitution), environment=self.environment)
+            self.inventory.put(self.prefix + "AGENTS.md", Content(data, normal_mode(constitution.stat().st_mode)))
         self.selected = selected
         chosen = [asset for asset in bundle.assets if asset.id in selected]
         # A bundle with a context (constitution or instructions) prefixes its skills with the load prerequisite.
@@ -235,9 +240,11 @@ class _BundleInventory:
                 rel = path.relative_to(self.bundle.root).as_posix()
                 if rel.endswith(".md.jinja"):
                     read_from, cited = resolve_source(self.root, self.bundle, rel)
-                    data = render_template(read_from.read_bytes(), self.variables, cited)
+                    data = render_template(read_from.read_bytes(), self.variables, cited, environment=self.environment)
                     if asset.kind == "instruction":
                         read_instruction_header(data, cited)
+                    elif asset.kind == "subagent":
+                        read_contract(data, cited, asset.id)
                     elif asset.kind == "guidance":
                         read_fragment(data, cited)
                     elif asset.kind == "skill":
@@ -305,7 +312,7 @@ class _BundleInventory:
                 dest = f"{skill_dir}/{asset.id}/{relative}"
                 data = read_from.read_bytes()
                 if path.name.endswith(".md.jinja"):
-                    data = render_template(data, self.variables, cited)
+                    data = render_template(data, self.variables, cited, environment=self.environment)
                 check_skill_file(relative, data, cited)
                 if asset.invocation == "user":
                     data = user_only(relative, data, agent, cited)
@@ -330,7 +337,11 @@ class _BundleInventory:
     def _contract(self, asset: Asset, agent: str, rel: str) -> set[str]:
         """A role contract: render the host projection from its declared block, citing the file it read."""
         read_from, cited = resolve_source(self.root, self.bundle, rel)
-        contract = read_contract(read_from.read_bytes(), f"{self.bundle.name}/{asset.id}", asset.id)
+        data = read_from.read_bytes()
+        if rel.endswith(".md.jinja"):
+            data = render_template(data, self.variables, cited, environment=self.environment)
+            cited = self.prefix + output_path(rel)
+        contract = read_contract(data, f"{self.bundle.name}/{asset.id}", asset.id)
         rendered = render_projection(agent, contract, cited)
         if rendered is None:
             return set()
@@ -366,6 +377,7 @@ def desired_inventory(
     previous_overrides: dict[str, dict[str, OverrideRecord]] | None = None,
     variables: dict[str, dict[str, Scalar]] | None = None,
     language: str | None = None,
+    environment: str = "local",
 ) -> Inventory:
     """Everything ``installed`` deploys for ``presets`` and ``agents``.
 
@@ -378,13 +390,15 @@ def desired_inventory(
         raise SelectionError("inventory requires exactly one preset selection per bundle")
     if set(agents) - AGENTS.keys():
         raise SelectionError(f"unsupported agent selection: {sorted(set(agents) - AGENTS.keys())}")
+    if environment not in {"local", "cloud"}:
+        raise SelectionError("execution environment must be local or cloud")
     inventory = Inventory()
     for item in installed:
         bundle = item.bundle
         inventory.packages.append(PackageRecord(item.package, item.package_version, bundle.name, bundle.version))
-        _BundleInventory(inventory, bundle, agents, root, (variables or {}).get(bundle.name, {}), language).add(
-            presets[bundle.name], dict((previous_overrides or {}).get(bundle.name, {}))
-        )
+        _BundleInventory(
+            inventory, bundle, agents, root, (variables or {}).get(bundle.name, {}), language, environment
+        ).add(presets[bundle.name], dict((previous_overrides or {}).get(bundle.name, {})))
     for kind, module in GENERATED_SKILLS.items():
         if not any(asset.kind == kind for asset in inventory.assets):
             continue

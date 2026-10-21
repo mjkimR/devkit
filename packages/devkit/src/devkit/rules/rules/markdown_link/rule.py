@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+import tomllib
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,6 +21,44 @@ def _exists(path: Path) -> bool:
         return path.exists()
     except (OSError, ValueError):
         return False
+
+
+def _template_target(source: Path, target: Path, root: Path) -> bool:
+    """A final Markdown link inside one bundle may name its declared raw template."""
+    if target.suffix != ".md":
+        return False
+    try:
+        template = target.with_name(target.name + ".jinja").resolve(strict=True)
+        if not template.is_file() or not template.is_relative_to(root):
+            return False
+        for parent in source.parents:
+            if not parent.is_relative_to(root):
+                break
+            manifest = parent / "bundle.toml"
+            if not manifest.is_file():
+                continue
+            if not template.is_relative_to(parent):
+                return False
+            relative = template.relative_to(parent).as_posix()
+            if relative == "AGENTS.md.jinja":
+                return True
+            data = tomllib.loads(manifest.read_text(encoding="utf-8"))
+            for asset in data.get("assets", []):
+                kind = asset.get("kind")
+                sources = (
+                    [asset["source"]]
+                    if "source" in asset
+                    else (list(asset.get("variants", {}).values()) if kind == "skill" else [])
+                )
+                if kind not in {"instruction", "guidance", "document", "skill", "subagent"}:
+                    continue
+                for declared in sources:
+                    if relative == declared or (kind != "subagent" and relative.startswith(declared.rstrip("/") + "/")):
+                        return True
+            return False
+    except (OSError, ValueError, TypeError, AttributeError, RuntimeError):
+        return False
+    return False
 
 
 @dataclass(frozen=True)
@@ -87,7 +126,7 @@ class MarkdownLinkRule(BaseRule, Autofixable):
             target = local_target(link.target)
             if target is None:
                 continue
-            if _exists(path.parent / target.path):
+            if _exists(path.parent / target.path) or _template_target(path, path.parent / target.path, root):
                 continue
             lexical = Path(os.path.normpath(path.parent / target.path))
             candidate = None

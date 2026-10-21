@@ -60,7 +60,7 @@ FILE_MODES = frozenset({0o644, 0o755})
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 _SLUG = re.compile(r"[a-z][a-z0-9-]*\Z")
 _REQUIRED = frozenset({"schema", "packages", "selection", "assets", "files"})
-_OPTIONAL = frozenset({"tool", "overrides", "seeded", "guidance_block", "host_hooks"})
+_OPTIONAL = frozenset({"tool", "overrides", "seeded", "guidance_block", "host_hooks", "execution_environment"})
 
 
 @dataclass(frozen=True)
@@ -155,6 +155,7 @@ class Receipt:
     seeded: tuple[SeededRecord, ...] = ()
     guidance_block: str | None = None
     host_hooks: tuple[HostHookRecord, ...] = ()
+    execution_environment: str | None = None
 
     def assets(self, kind: str | None = None) -> tuple[AssetRecord, ...]:
         """Asset records in receipt order, optionally only those of one ``kind``."""
@@ -366,7 +367,11 @@ def parse_receipt(raw: bytes | str) -> Receipt:
     schema = data["schema"]
     if type(schema) is not int or schema != SCHEMA:
         raise _fail("schema", f"unsupported receipt schema {schema!r}; expected {SCHEMA}")
+    environment = data.get("execution_environment")
+    if "execution_environment" in data and (not isinstance(environment, str) or environment not in {"local", "cloud"}):
+        raise _fail("execution_environment", "expected local or cloud")
     return Receipt(
+        execution_environment=environment,
         schema=schema,
         packages=_packages(data["packages"]),
         selection=_selection(data["selection"]),

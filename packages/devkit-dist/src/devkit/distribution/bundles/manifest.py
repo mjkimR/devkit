@@ -111,10 +111,16 @@ class Bundle:
 
     @property
     def constitution(self) -> Path | None:
-        path = self.root / "AGENTS.md"
-        if not path.exists() and not path.is_symlink():
+        sources = [
+            name
+            for name in ("AGENTS.md", "AGENTS.md.jinja")
+            if (self.root / name).exists() or (self.root / name).is_symlink()
+        ]
+        if len(sources) > 1:
+            raise BundleError("constitution AGENTS.md and AGENTS.md.jinja collide")
+        if not sources:
             return None
-        path = safe_source(self.root, "AGENTS.md")
+        path = safe_source(self.root, sources[0])
         if not path.is_file():
             raise BundleError("constitution AGENTS.md must be a file")
         return path
@@ -224,12 +230,18 @@ def _check_source(root: Path, asset_id: str, kind: str, variant: str, source: st
     files = source_files(root, source)
     templates = [file for file in files if file.name.endswith(".jinja")]
     if templates:
-        if kind not in TEMPLATE_KINDS or any(not file.name.endswith(".md.jinja") for file in templates):
+        if (
+            kind not in TEMPLATE_KINDS
+            or (kind == "subagent" and variant != "common")
+            or any(not file.name.endswith(".md.jinja") for file in templates)
+        ):
             raise BundleError(
                 f"{asset_id}: templates require .md.jinja instruction, guidance, document or skill sources"
             )
         if kind == "guidance" and not path.is_file():
             raise BundleError(f"{asset_id}: guidance source must be one file")
+        if kind == "subagent":
+            subagent_entry(root, source)
         if path.is_file() and kind != "skill":
             return
     if kind == "skill":
