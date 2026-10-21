@@ -1,0 +1,21 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T04:26:43.265601Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified the P1 fix: spec, spec-next and local native/CLI worktree entrypoints now require membership invalidation before handoff; six rendering tests enforce discoverability.'
+findings:
+- issue: AC-04 pre-handoff invalidation instruction is unreachable from normal accepted-proposal handoff routes.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/backlog.md.jinja:129; skills/spec/SKILL.md.jinja:35; skills/spec-next/SKILL.md:60; skills/spec-next/references/post-handoff.md:3
+  failure_condition: A fresh Development context follows handoff without Backlog and removes milestone membership without resetting assertions or coordinating an out-of-scope milestone edit before mutation.
+  suggested_action: Add pre-handoff invalidation pointers to each entrypoint including native Host path and local/cloud tests.
+  resolution: resolved
+  severity: P1
+assumptions:
+- Medium repeat review is implementer verification; initial independent reviewer did not inspect later edits.
+checks:
+  guidance: PASS 155 targeted guidance/rendering/budget tests
+  lint: PASS lint and format
+  types: PASS 0 errors

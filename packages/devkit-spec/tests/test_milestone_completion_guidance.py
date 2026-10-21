@@ -106,3 +106,17 @@ def test_plain_assertions_and_entrypoints(environment: str) -> None:
         "not reconstruct or persist a complete descendant graph",
     ):
         assert clause in procedure
+
+
+@pytest.mark.parametrize("environment", ["local", "cloud"])
+@pytest.mark.parametrize(
+    "entrypoint", ["skills/spec/SKILL.md", "skills/spec-next/SKILL.md", "skills/spec/references/worktree.md"]
+)
+def test_handoff_entrypoints_load_invalidation_before_mutation(environment: str, entrypoint: str) -> None:
+    text = read(entrypoint, environment)
+    assert "Before proposal handoff" in text
+    assert "membership invalidation]" in text
+    assert "milestone-completion.md#changes-and-terminal-records" in text
+    assert "Host before mutation" in text
+    if environment == "local":
+        assert "native" in text

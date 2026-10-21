@@ -1,0 +1,24 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T04:25:56.166017Z'
+status: completed
+summary: 'Independent medium code review: AC-01/02/03/05/06 supported; AC-04 handoff discovery gap requires fix.'
+findings:
+- issue: AC-04 pre-handoff invalidation instruction is unreachable from normal accepted-proposal handoff routes.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/backlog.md.jinja:129; skills/spec/SKILL.md.jinja:35; skills/spec-next/SKILL.md:60; skills/spec-next/references/post-handoff.md:3
+  failure_condition: A fresh Development context follows handoff without Backlog and removes milestone membership without resetting assertions or coordinating an out-of-scope milestone edit before mutation.
+  suggested_action: Add pre-handoff invalidation pointers to each entrypoint including native Host path and local/cloud tests.
+  resolution: open
+  severity: P1
+assumptions:
+- Named code-reviewer used emulated read-only isolation; absolute worktree cwd and unchanged HEAD/clean tree verified.
+checks:
+  tests: PASS 1305 affected tests
+  lint: PASS just lint-check spec
+  types: PASS just check spec
+  rules: PASS cumulative 0 errors/warnings
+diff_scope:
+  base: 7a33b5c20f3435632c3c2b91eb6ecace06eda0c8
+  head: c4b175d7c8fbd332545c275346dc7049c30ed525
