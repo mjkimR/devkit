@@ -32,7 +32,7 @@ EFFORT_PRESETS: dict[str, tuple[str, str | None]] = {
 
 
 def _contract(role: str) -> tuple[dict[str, Any], str]:
-    _, frontmatter, body = (BUNDLE / f"subagents/{role}.md").read_text(encoding="utf-8").split("---\n", 2)
+    _, frontmatter, body = _rendered(BUNDLE / f"subagents/{role}.md").split("---\n", 2)
     return yaml.safe_load(frontmatter), body
 
 
@@ -55,7 +55,9 @@ def _preset_violations(role: str, metadata: dict[str, Any]) -> list[str]:
 
 
 def test_every_role_contract_has_an_effort_preset_entry() -> None:
-    assert {path.stem for path in (BUNDLE / "subagents").glob("*.md")} == set(EFFORT_PRESETS)
+    assert {
+        path.name.removesuffix(".jinja").removesuffix(".md") for path in (BUNDLE / "subagents").glob("*.md*")
+    } == set(EFFORT_PRESETS)
     assert set(ROLES) == set(EFFORT_PRESETS)
 
 
@@ -82,7 +84,7 @@ def test_a_drifted_preset_is_a_violation(role: str, host: str | None, key: str, 
 
 
 def test_the_challenger_leaves_the_model_to_the_runtime() -> None:
-    text = (BUNDLE / "subagents/challenger.md").read_text(encoding="utf-8")
+    text = _rendered(BUNDLE / "subagents/challenger.md")
     assert "Choose a high-reasoning model at invocation time" not in text
     assert (
         "# The reasoning effort is preset per role (ADR-role-effort-presets); the model is left to the runtime." in text
@@ -187,7 +189,7 @@ def test_the_planning_steps_live_in_the_spec_reference_for_any_executor() -> Non
         assert phrase in reference, phrase
         assert phrase not in body, phrase
     assert "the Host in `direct` mode or a `planning-worker`" in reference
-    assert "[planning](references/planning.md)" in (BUNDLE / "skills/spec/SKILL.md").read_text(encoding="utf-8")
+    assert "[planning](references/planning.md)" in _rendered(BUNDLE / "skills/spec/SKILL.md")
     assert "Follow `.devkit/managed/spec/skills/spec/references/planning.md`" in body
 
 
@@ -225,7 +227,7 @@ def test_spec_delegate_passes_only_the_payload_to_a_projected_role() -> None:
     assert "When the main session substitutes, follow the contract body yourself" in text
     assert "Pass the role contract body" not in text
     assert "[payload](references/payload.md)" in text
-    payload = (DELEGATE.parent / "references/payload.md").read_text(encoding="utf-8")
+    payload = _rendered(DELEGATE.parent / "references/payload.md")
     for role in ROLES:
         assert f"| `{role}` |" in payload, role
 
@@ -262,7 +264,7 @@ def test_the_host_validates_the_committed_range_and_blocks_a_failure() -> None:
 
 
 def test_orchestration_follows_the_committed_result_contract() -> None:
-    text = " ".join(ORCHESTRATE.read_text(encoding="utf-8").split())
+    text = " ".join(_rendered(ORCHESTRATE).split())
     assert (
         "commits at every stage boundary through the commit gate, writes its own records and returns its head" in text
     )
@@ -274,7 +276,7 @@ def test_orchestration_follows_the_committed_result_contract() -> None:
 
 
 def test_a_run_records_its_questions_and_problem_in_one_worker_envelope() -> None:
-    records = " ".join((BUNDLE / "skills/spec/references/worker-records.md").read_text(encoding="utf-8").split())
+    records = " ".join(_rendered(BUNDLE / "skills/spec/references/worker-records.md").split())
     assert "one run leaves one `worker` envelope" in records
     assert "--answers-to worker-NN.yaml" in records and "--resolves worker-NN.yaml" in records
     assert "There is no separate question or problem kind" in records
@@ -293,7 +295,7 @@ def test_a_run_records_its_questions_and_problem_in_one_worker_envelope() -> Non
 @pytest.mark.parametrize("role", WORKERS)
 def test_real_worker_projects_complete_emulated_codex_toml(role: str) -> None:
     source = BUNDLE / f"subagents/{role}.md"
-    contract = read_contract(source.read_bytes(), str(source))
+    contract = read_contract(_rendered(source).encode(), str(source))
     rendered = render_projection("codex", contract, f".devkit/managed/spec/subagents/{role}.md")
     assert rendered is not None
     projection = tomllib.loads(rendered.decode())
@@ -358,7 +360,7 @@ def test_worker_refusal_and_failed_emergency_preservation_are_truthful(role: str
 
 
 def test_named_and_generic_native_invocation_respect_trust_and_effective_contract() -> None:
-    hosts = " ".join((DELEGATE.parent / "references/hosts.md").read_text().split())
+    hosts = " ".join(_rendered(DELEGATE.parent / "references/hosts.md").split())
     for requirement in (
         "Prefer the projected named role and pass only the payload",
         "role absence alone does not prove the root is untrusted",
@@ -376,17 +378,17 @@ def test_named_and_generic_native_invocation_respect_trust_and_effective_contrac
     ):
         assert requirement in hosts, requirement
     assert "stop and ask the user to register the root" not in hosts
-    payload = " ".join((DELEGATE.parent / "references/payload.md").read_text().split())
+    payload = " ".join(_rendered(DELEGATE.parent / "references/payload.md").split())
     assert "every nested-role read scope explicitly" in payload
     assert "Every command, including verification and approvals, sets absolute worktree cwd" in payload
-    orchestrate = " ".join(ORCHESTRATE.read_text().split())
+    orchestrate = " ".join(_rendered(ORCHESTRATE).split())
     assert "Before spawning, check native spawning, required nested roles" in orchestrate
     assert "`needs_input` for required isolation; no worker starts" in orchestrate
 
 
 def test_callers_block_permission_failures_without_fabricated_worker_records() -> None:
     results = " ".join(WORKER_RESULTS.read_text().split())
-    records = " ".join((BUNDLE / "skills/spec/references/worker-records.md").read_text().split())
+    records = " ".join(_rendered(BUNDLE / "skills/spec/references/worker-records.md").split())
     assert (
         "The Host MUST block a failed dirty or uncommitted return, even when no worker envelope could be written"
         in results
@@ -399,3 +401,14 @@ def test_callers_block_permission_failures_without_fabricated_worker_records() -
         assert "never for sandbox or approval denial" in text or "never sandbox or approval denial" in text
     assert "The exactly-one committed worker-record requirement cannot be satisfied in this failure branch" in records
     assert "owns a subsequent recovery run and its records when permitted" in records
+
+
+def _rendered(path: Path) -> str:
+    from devkit.distribution.bundles.templates import render_template
+
+    if path.name.endswith(".md.jinja"):
+        return render_template(path.read_bytes(), {}, str(path), environment="local").decode()
+    if path.exists():
+        return path.read_text(encoding="utf-8")
+    source = path.with_name(path.name + ".jinja")
+    return render_template(source.read_bytes(), {}, str(source), environment="local").decode()

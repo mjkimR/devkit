@@ -9,9 +9,9 @@ stories:
   - US-route-development-intent
   - US-adopt-in-an-existing-repository
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-review-proposal/SKILL.md
+  - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-review-proposal/SKILL.md.jinja
   - packages/devkit-spec/src/devkit_spec/bundle/bundle.toml
-  - packages/devkit-spec/src/devkit_spec/bundle/AGENTS.md
+  - packages/devkit-spec/src/devkit_spec/bundle/AGENTS.md.jinja
   - packages/devkit-spec/src/devkit_spec/bundle/guidance/
   - packages/devkit-spec/src/devkit_spec/bundle/instructions/
   - packages/devkit-spec/src/devkit_spec/bundle/skills/
@@ -149,7 +149,7 @@ Living Spec and `specs/` holds feature specs.
 | `spec-tasks` | Write `tasks.md` with `_Boundary:` and `_Requirements:`. | `list spec`, `scope update` |
 | `spec-review` | Verify the change against the spec, the diff and the checks before completion. | |
 | `spec-sync` | Reconcile the change into the Living Spec and resolve `reconcile.md`. | `list`, `refs`, `search`, `proposal new`, `scope update` |
-| `spec-integrate` | Prepare integration: conflicts, re-verification, reconcile confirmation, cumulative check, then one native approval through direct `integration_integrate` (optional preflight `integration_prepare`, inspection `integration_status`, approved recovery `integration_resume`) or CLI fallback (`devkit worktree finish --merge --local-only`), cleanup. | `policy`, `scope sweep`, `proposal prune` |
+| `spec-integrate` | Local guidance: prepare integration: conflicts, re-verification, reconcile confirmation, cumulative check, then one native approval through direct `integration_integrate` (optional preflight `integration_prepare`, inspection `integration_status`, approved recovery `integration_resume`) or CLI fallback (`devkit worktree finish --merge --local-only`), cleanup. | `policy`, `scope sweep`, `proposal prune` |
 | `spec-delegate` | Delegate to a role contract as the `activity-effort` asks, record its envelope, validate a worker's committed range and handle its questions and problems. | |
 | `spec-review-proposal` | Review an exact source-bound ko/en report and all PADRs; preserve exclusive Planning ownership during refinement, commit/review changes and explicitly refresh reports. | `proposal report`, `spec_proposal_report`, `spec_plan_accept`, `spec_handoff` |
 | `spec-orchestrate` | User-invoked `local-orchestrated` mode per activity: one-shot Planning and Development workers in their own worktrees, the Host keeping preparation, validation, questions, problems and integration; a plain instruction returns to `direct`. | `new`, `proposal accept`, `scope register`, `scope query`, `scope update` |
@@ -293,6 +293,8 @@ consumer wheel smoke installs devkit-spec after the base-only checks, verifies i
 opt-in docs seeding and discovery in the installed package.
 
 ### Native local integration approval
+
+Execution-aware rendering retains the native route below for local guidance. Cloud guidance supplies CLI inspection and artifact operations; mutation requires a separately authorized CLI/PR route or returns verified results to the Host. Rendering grants no runtime authority and does not change workspace execution guards.
 
 After checks, review, reconcile and the final report, the MCP path calls integration_integrate directly for a single
 native confirmation. No separate chat approval or mandatory integration_prepare precedes it. Readiness preparation

@@ -1,7 +1,7 @@
 ---
 id: CAP-DIST-manifest-spec
 title: "Manifest Specification"
-summary: "Bundle schema, asset kinds, scalar templates with bounded presentation-language inheritance, validation and deterministic archive builds."
+summary: "Bundle schema, asset kinds, execution-aware Markdown templates with bounded presentation-language inheritance, validation and deterministic archive builds."
 area: distribution
 status: active
 entrypoints:
@@ -16,7 +16,7 @@ Schema version `1`. How a bundle reaches a project as a Python package is specif
 
 ## 1. Bundle Layout
 
-A bundle is a directory with `bundle.toml` at its root, an optional `AGENTS.md` constitution (returned by
+A bundle is a directory with `bundle.toml` at its root, an optional `AGENTS.md` or `AGENTS.md.jinja` constitution (returned by
 `devkit get-context`, see `CAP-DIST-context-and-playbooks`) and the asset sources the manifest declares:
 
 ```text
@@ -211,14 +211,13 @@ verification; projects receive bundles as installed wheels, not archives.
 
 - Entries are sorted by archive path, timestamps pinned to `1980-01-01 00:00:00 UTC`, modes normalized to `0644` or
   `0755`.
+- Raw constitution templates retain their source-relative `AGENTS.md.jinja` name in archives, so reloaded sources still render for the selected environment.
 - An embedded `inventory.json` records the SHA-256 and mode of every archived file.
 - A failed build leaves no partial archive; an existing output file is never replaced.
 
 ## Markdown templates and bundle variables
 
-An instruction, guidance, document or skill source MAY contain `.md.jinja` files. Only those files are rendered; ordinary
-files preserve literal Jinja syntax. A `.jinja` source in any other kind, or with another preceding extension,
-is `BUNDLE_INVALID`. Constitution files are not templated. The final `.jinja` suffix alone is removed from each
+An instruction, guidance, document or skill source, or a common host-neutral subagent contract, MAY contain explicit `.md.jinja` files. The constitution MAY be `AGENTS.md.jinja`; coexistence with `AGENTS.md` is `BUNDLE_INVALID`. Only explicit templates render; ordinary Markdown preserves literal Jinja syntax. Native subagent variants and executable workflow, rule, hook and gate assets do not support templates. Another template kind or preceding extension is `BUNDLE_INVALID`. The final `.jinja` suffix alone is removed from each
 managed and native skill destination and from directory-seeded filenames. An explicit seeded `target` remains the authored path.
 Two distinct source paths mapping to the same managed destination, or a file and its descendant, are
 `BUNDLE_INVALID`, even with identical bytes.
@@ -249,15 +248,14 @@ Variable declarations validate without rendering; template content validation oc
 `bundle plan` uses defaults and fails with `CONFIG_INVALID` for a required input it cannot resolve.
 
 Project configuration supplies inputs as defined by `CAP-DIST-sync-and-transactions`. Templates receive only the
-resolved `vars` mapping, for example `{{ vars.language }}` or `{% if vars.show_examples %}...{% endif %}`.
-No project-wide config, environment, paths, clock, loader or global functions are exposed. Jinja uses a sandbox,
+resolved `vars` mapping and reserved `execution.environment`, exactly `local` or `cloud`. Sync resolves the invocation flag, effective workspace setting, then the local default once before canonical and effective inventory planning. Projectless planning uses `local`. The reserved input is independent of configurable bundle variables. No project-wide configuration, process environment, paths, clock, loader or global functions are exposed. Jinja uses a sandbox,
 StrictUndefined, UTF-8, LF output, no HTML escaping, preserved trailing newlines and no Python attribute access or
 calls. Available filters are `lower`, `upper`, `trim`, `default`, `replace`, `length`; built-in Jinja tests remain
 available. The sandbox limits access, not resource consumption; bundles remain installed, trusted content.
 
-Syntax, evaluation, UTF-8 and rendered instruction-header, skill-frontmatter or guidance errors are
+Syntax, evaluation, UTF-8 and rendered instruction-header, skill-frontmatter, subagent-contract or guidance errors are
 `BUNDLE_INVALID` before writes. Rendered skill files obey the manifest-owned invocation restrictions before native
-settings and context prerequisites are inserted; these checks run even with no selected agents.
+settings and context prerequisites are inserted; these checks and common subagent contract validation run even with no selected agents. Templated common contracts render before host validation/projection and always cite the final managed `.md` file, with raw override provenance recorded separately. Ordinary Markdown contracts cite the override path when present.
 Guidance fragment formatting, the 300-byte limit, path references and selected target requirements apply to the
 rendered text. These checks also apply to project template overrides. Ordinary source validation is unchanged.
 Jinja is imported only when a `.md.jinja` file actually renders, never merely by loading a bundle or its manifest.

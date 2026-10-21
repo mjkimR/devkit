@@ -185,3 +185,37 @@ def test_a_file_url_is_reported_whether_or_not_the_file_exists(tmp_path: Path) -
         (1, f"Machine-local file link 'file://{tmp_path}/docs/a.md'", False),
         (1, "Machine-local file link 'FILE:///nowhere/x.md'", False),
     ]
+
+
+def test_final_markdown_links_resolve_only_declared_bundle_templates(tmp_path: Path) -> None:
+    write_files(
+        tmp_path,
+        {
+            "bundle/bundle.toml": 'schema=1\nname="example"\nversion="1.0.0"\n[[assets]]\nid="skill"\nkind="skill"\nsource="skills/example"\n',
+            "bundle/skills/example/SKILL.md": "[Guide](references/guide.md#topic)\n[Root](../../AGENTS.md)",
+            "bundle/skills/example/references/guide.md.jinja": "{{ execution.environment }}",
+            "bundle/AGENTS.md.jinja": "Constitution",
+            "outside.md": "[Outside](bundle/skills/example/references/guide.md)",
+            "bundle/other.md": "[Undeclared](missing.md)\n[Wrong suffix](missing.txt)",
+            "bundle/missing.md.jinja": "not declared",
+            "bundle/missing.txt.jinja": "not Markdown",
+        },
+    )
+    found = MarkdownLinkRule().check(RuleContext(workspace_root=tmp_path))
+    assert sorted((v.file, v.line) for v in found) == [
+        ("bundle/other.md", 1),
+        ("bundle/other.md", 2),
+        ("outside.md", 1),
+    ]
+    assert MarkdownLinkRule().fix(RuleContext(workspace_root=tmp_path)) == []
+
+
+def test_deleted_template_is_still_a_broken_final_link(tmp_path: Path) -> None:
+    write_files(
+        tmp_path,
+        {
+            "bundle/bundle.toml": '[[assets]]\nid="skill"\nkind="skill"\nsource="skills/example"\n',
+            "bundle/skills/example/SKILL.md": "[Missing](gone.md)",
+        },
+    )
+    assert len(MarkdownLinkRule().check(RuleContext(workspace_root=tmp_path))) == 1

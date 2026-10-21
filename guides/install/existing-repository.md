@@ -148,3 +148,9 @@ the following; check each with the user and commit the result together with `pyp
   `uv run devkit override create harness:<asset>` and carry the edit over. An override of `devkit:consumption` or of
   the `devkit` constitution keeps applying with an upstream-drift report and still holds the old harness text:
   remove those sections from it (`uv run devkit override diff`, then `accept`).
+
+## Cloud setup
+
+For cloud execution, run `uv run devkit sync --cloud` and use CLI inspection and artifact commands. This saves the checkout-local execution setting and records the actual render environment in the receipt. Optional native-service onboarding is for local execution only; skip it in cloud setup. Cloud mutation still requires a separately authorized CLI/PR route.
+
+`sync --no-save --cloud` renders cloud guidance and records its provenance without changing persisted runtime authorization. The next ordinary sync uses the saved/default environment; status/check reports the pending difference. `sync --local` restores local guidance. Locked sync refuses canonical environment changes; use ordinary sync and commit the resulting tracked output.

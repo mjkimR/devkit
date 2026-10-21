@@ -84,3 +84,9 @@ playbooks do (playbooks bring the generated `devkit-playbook` skill), so do this
 3. Optional: connect native service tools with [MCP onboarding](mcp.md).
 4. Verify and report as in [Installation Guide, step 5](../INSTALL_GUIDE.md#step-5-verify-and-report). Suggest adding
    the fresh-clone setup (`uv sync`, then `uv run devkit sync --locked`) to the project's README or setup recipe.
+
+## Cloud setup
+
+For cloud execution, run `uv run devkit sync --cloud` and use CLI inspection and artifact commands. This saves the checkout-local execution setting and records the actual render environment in the receipt. Optional native-service onboarding is for local execution only; skip it in cloud setup. Cloud mutation still requires a separately authorized CLI/PR route.
+
+`sync --no-save --cloud` renders cloud guidance and records its provenance without changing persisted runtime authorization. The next ordinary sync uses the saved/default environment; status/check reports the pending difference. `sync --local` restores local guidance. Locked sync refuses canonical environment changes; use ordinary sync and commit the resulting tracked output.

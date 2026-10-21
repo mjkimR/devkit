@@ -129,7 +129,7 @@ def test_ignore_and_index_refusal_preserve_state(fixture, case: str) -> None:
         (["--cloud", "--dry-run"], False, 0),
         (["--cloud", "--check"], False, 1),
         (["--cloud", "--no-save"], False, 0),
-        (["--cloud", "--locked"], True, 0),
+        (["--cloud", "--locked"], False, 1),
     ],
 )
 def test_environment_cli_matrix(fixture, flags: list[str], persist: bool, exit_code: int) -> None:
@@ -137,9 +137,22 @@ def test_environment_cli_matrix(fixture, flags: list[str], persist: bool, exit_c
     before = tracked_state(root)
     result = CliRunner().invoke(cli, ["sync", "-w", str(root), "--format", "json", *flags])
     assert result.exit_code == exit_code, result.output
-    assert json.loads(result.stdout)["execution_environment"] == "cloud"
+    payload = json.loads(result.stdout)
+    if "--locked" in flags:
+        assert payload["error"]["code"] == "RECEIPT_STALE"
+    else:
+        assert payload["execution_environment"] == "cloud"
     assert resolve_execution_environment(root).environment == ("cloud" if persist else "local")
-    assert tracked_state(root) == before
+    if "--dry-run" in flags or "--check" in flags or "--locked" in flags:
+        assert tracked_state(root) == before
+    else:
+        after = tracked_state(root)
+        receipt = json.loads(after.pop(".devkit/installation.json"))
+        previous = json.loads(before.pop(".devkit/installation.json"))
+        assert receipt.pop("execution_environment") == "cloud"
+        assert previous.pop("execution_environment") == "local"
+        assert receipt == previous
+        assert after == before
     if persist:
         assert CliRunner().invoke(cli, ["sync", "-w", str(root)]).exit_code == 0
         assert resolve_execution_environment(root).environment == "cloud"
