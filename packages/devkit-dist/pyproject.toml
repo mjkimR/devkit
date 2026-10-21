@@ -29,6 +29,9 @@ devkit = "devkit.distribution.guide"
 advisory = "devkit.advisory_guide"
 git-commits = "devkit.commits_guide"
 
+[project.entry-points."devkit.host.services"]
+shared = "devkit.shared.mcp:tools"
+
 [project.entry-points."devkit.host.handlers"]
 observe = "devkit.host.observation:observe"
 

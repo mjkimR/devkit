@@ -7,3 +7,8 @@ then run `devkit sync` from a retained runtime to reconcile local Codex/Claude/A
 `devkit mcp config`, `setup`, `remove`, `status` and `serve` use explicit owning configuration workspaces.
 Registration does not establish connection, native UI, trust or execution permission. Cloud profiles expose only
 declared read-only services; use an independently authorized CLI/PR route when native approval is unavailable.
+
+Dist registers the shared artifact tools `shared_put`, `shared_get`, `shared_list`, `shared_sweep` and
+`shared_sweep_apply`. Put and apply-sweep are bounded writes without business approval forms; cloud profiles hide
+and refuse them. Read tools resolve the owning configuration workspace and never initialize or clean storage.
+See `CAP-COLL-shared-artifacts` and `CAP-MCP-runtime-registration` for the domain and transport contracts.

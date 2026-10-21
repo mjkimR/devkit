@@ -26,6 +26,7 @@ ALLOWED: dict[str, set[str]] = {
     "core": {"advisory"},
     "search": {"core", "advisory"},
     "host": {"core", "advisory"},
+    "shared": {"core", "advisory"},
     "distribution": {"core", "advisory", "search", "host"},
 }
 DATA_AREAS = {"advisory_guide", "commits_guide"}

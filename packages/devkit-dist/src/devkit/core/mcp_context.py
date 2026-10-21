@@ -142,3 +142,12 @@ def constraint_environment() -> dict[str, str]:
             }
         )
     }
+
+
+def configuration_workspace(fallback: Path) -> Path:
+    """Service configuration belongs to the bound workspace, independently of executor preferences."""
+    binding = _BINDING.get()
+    if binding is not None:
+        binding.environment()
+        return binding.workspace
+    return fallback

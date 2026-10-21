@@ -2,7 +2,7 @@
 id: SPEC-worker-shared-state-mcp
 title: Shared state and workspace across worktrees and cloud agents
 summary: Define immutable expiring shared artifacts with local CLI and MCP access, preserving scope-registry authority and providing a public remote-adapter extension contract while deferring concrete remote backends.
-status: planned
+status: in-progress
 created: 2026-10-21
 milestone: MS-autonomous-backlog-and-orchestration
 related_capabilities: []
@@ -263,11 +263,8 @@ model, repository namespace provisioning owner and test environment are availabl
 transaction consistency, retention, failure/retry behavior, setup/operating cost and real integration evidence before
 its plan-accept. No credentials or mock deployment are invented here.
 
-### 5. Lifecycle
+### Source feedback and deferred work
 
-Planning has no open direction question. The proposal remains reviewing for Host/user plan-accept; acceptance,
-merge and Development start are separate actions. `ADR-separate-shared-artifacts-from-scope` records the selected
-local-first direction. `PROP-cloud-agent-rendering` owns the separate environment-driven asset work.
-`FB-remote-shared-adapter-follow-up` retains the concrete remote backend follow-up through handoff; it is not a
-completion claim or an automatically scheduled implementation. Recommended Development effort remains medium.
-
+`FB-remote-shared-adapter-follow-up` remains open as the explicit deferred production-backend destination,
+not an unmet local delivery criterion or a direct-fix source. `PROP-cloud-agent-rendering` owns the separate
+execution-environment rendering work. Neither is implemented by this unit.

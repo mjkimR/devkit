@@ -23,7 +23,7 @@ class McpTool:
     description: str
     input_schema: dict[str, Any]
     invoke: Invocation
-    execution: Literal["read_only", "preflight", "interactive", "approved_resume"] = "interactive"
+    execution: Literal["read_only", "preflight", "interactive", "approved_resume", "bounded_write"] = "interactive"
     read_only: bool = False
     destructive: bool = False
     open_world: bool = False

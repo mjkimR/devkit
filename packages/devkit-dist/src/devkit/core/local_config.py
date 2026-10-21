@@ -43,6 +43,7 @@ def validate_runtime_tables(data: dict[str, Any], path: Path) -> None:
         ("execution", "environment", "local", str),
         ("mcp", "register", True, bool),
         ("presentation", "language", "auto", str),
+        ("shared", "adapter", "local", str),
     ):
         value = data.get(table, {})
         if not isinstance(value, dict) or set(value) - {key}:
@@ -50,6 +51,8 @@ def validate_runtime_tables(data: dict[str, Any], path: Path) -> None:
         setting = value.get(key, default)
         if type(setting) is not expected or (table == "execution" and setting not in ("local", "cloud")):
             raise _invalid(path, f"{table}.{key}: invalid value {setting!r}")
+        if table == "shared" and not re.fullmatch(r"[a-z][a-z0-9-]*", setting):
+            raise _invalid(path, "shared.adapter: expected a lowercase adapter ID")
 
 
 def read_local_config(root: Path) -> dict[str, Any]:
@@ -57,7 +60,7 @@ def read_local_config(root: Path) -> dict[str, Any]:
     if path.is_symlink() or (path.exists() and not stat.S_ISREG(path.stat().st_mode)):
         raise _invalid(path, "config must be a regular file, not a symlink")
     data = read_toml(path) or {}
-    unknown = set(data) - {"schema", "execution", "mcp", "presentation", "playbooks", "bundles"}
+    unknown = set(data) - {"schema", "execution", "mcp", "presentation", "playbooks", "bundles", "shared"}
     if unknown:
         raise LocalKeyForbiddenError(f"{path}: forbidden keys: {sorted(unknown)}", target_files=[str(path)])
     if "schema" in data and (type(data["schema"]) is not int or data["schema"] != 1):
@@ -139,6 +142,7 @@ def read_effective_config(root: Path, *, local: bool = True) -> EffectiveConfig:
         ("execution", "environment", "local"),
         ("mcp", "register", True),
         ("presentation", "language", "auto"),
+        ("shared", "adapter", "local"),
     ):
         values.setdefault(table, {}).setdefault(key, value)
         sources.setdefault(f"{table}.{key}", "default")
