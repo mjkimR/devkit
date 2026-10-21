@@ -45,7 +45,7 @@ Commands, configuration and codes are in the [reference](../development/referenc
 │  - Manifest validation, inventory planning & preset selection    │
 │  - Transaction engine, advisory locking & write-ahead journal    │
 │  - Native projections (Codex, Claude Code, Antigravity)          │
-│  - Context loading & playbook search                             │
+│  - Context loading & playbook search/get                             │
 │  - Local authoring validator & deterministic ZIP builder         │
 └──────────────────┬───────────────────────────────┬───────────────┘
                    │                               │
@@ -76,7 +76,7 @@ The code lives in `packages/devkit-dist/src/devkit/distribution/` (the `devkit-d
 typed receipt reader, safe relative paths, project root discovery), `devkit.advisory`, `devkit.search` for
 playbook search and `devkit.host` for native hook contracts. Modules import each other
 by absolute path (`devkit.distribution...`), never relatively. The library surface is exported from
-`devkit.distribution`: `sync_project`, `load_bundle`, `get_context`, `search_playbooks`, the override operations,
+`devkit.distribution`: `sync_project`, `load_bundle`, `get_context`, `get_playbook`, `search_playbooks`, the override operations,
 `plan_bundle`, `get_project_status`, `get_project_listing`, and their results, frozen dataclasses whose `to_dict()`
 is the JSON the command prints.
 
@@ -113,7 +113,7 @@ is the JSON the command prints.
   - `overrides.py`, `override_commands.py`: which file a deployment reads, drift tracking, `override ...` commands.
   - `sync.py`: `sync_project` (lock, a saved selection, `commit_locked`, then post-sync extensions) and recovery.
   - `guidance_block.py`: the root `AGENTS.md` block; its markers come from `devkit.core`.
-  - `context.py`, `playbook_search.py`, `reading.py`: agent-facing reads under the shared lock.
+  - `context.py`, `playbook_get.py`, `playbook_search.py`, `reading.py`: agent-facing reads under the shared lock.
   - `status.py`, `plan.py`, `results.py`: `status`, `list`, `bundle plan` and the result dataclasses.
   - `playbook_skill.py`, `workflow_skill.py`: the generated `devkit-playbook` and `devkit-workflow` entry skills.
   - `extensions.py`: the `devkit.post_sync` extension point.

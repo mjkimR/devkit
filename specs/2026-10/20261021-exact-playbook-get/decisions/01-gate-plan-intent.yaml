@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-exact-playbook-get: Feature proposal scope and verification accepted;
+  Planning medium in local-orchestrated mode.'
+by: user
+at: '2026-10-21T01:54:25.095825Z'

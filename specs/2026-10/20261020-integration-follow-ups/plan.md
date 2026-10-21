@@ -37,7 +37,7 @@ confirmation only). Layering holds: `devkit.worktree` keeps importing only `devk
   - `packages/devkit-spec/src/devkit_spec/cleanup.py`: `_is_post_git` tests "HEAD contains the result".
   - Bundle guidance of devkit-spec (`spec-integrate`, `spec/references/completion.md`, `spec/references/worktree.md`).
   - Living Spec: `CAP-INT-mcp-services`, `CAP-WT-task-worktrees`, `CAP-DLV-delivery-workflows`,
-    `CAP-DLV-project-policy`, the integration and worktree references, `MS-multi-host-native-integration`, the install
+    `CAP-DLV-project-policy`, the integration and worktree references, the then-existing multi-host native integration milestone, the install
     guide's Git requirement.
 - **New Dependencies**: None. Git 2.38 or later only for a build whose target advanced (`git merge-tree --write-tree`).
 

@@ -43,7 +43,7 @@ message") and `hook` (a handler the agent host calls at a native event).
 | `skill` | `skills/<slug>/SKILL.md` or `SKILL.md.jinja`, and support files | The agent host lists it and invokes it as a tool; sync opens the body with the bundle context prerequisite, so never write it | name and description always; body on invocation |
 | `subagent` | native file per agent or `subagents/<slug>.md` contract | The host loads it when delegating | persona on load |
 | `workflow` | one Markdown definition with `id` and `stages` | The generated `devkit-workflow` entry skill, backed by the workflow engine of `devkit-agt` | stage output only |
-| `playbook` | `playbooks/<slug>.md` or directory with `SKILL.md` | Only on explicit `devkit-playbook` invocation or rule remediation | selected headers, then one body |
+| `playbook` | `playbooks/<slug>.md` or directory with `SKILL.md` | Explicit discovery, rule remediation, or an exact ID named for the task/schedule | selected headers then body, or exact body |
 | constitution | `AGENTS.md` at the bundle root | Returned whole by `get-context`, once per bundle | the whole file; keep it short |
 | `instruction` | `instructions/<slug>.md` with `name` and `description` frontmatter | Header returned by `get-context`; body read when relevant | header always, body on demand |
 | `document` | any files | Agents read the managed copy by path; a seeded one is project-owned after the first sync | only when read |

@@ -1,0 +1,24 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T02:08:09.572035Z'
+status: completed
+summary: 'Independent medium code review: one P2 CLI validation-order defect; remaining reviewed ACs supported.'
+findings:
+- issue: CLI resolves the workspace before validating the exact selector, contrary to the specified evaluation order.
+  evidence: packages/devkit-dist/src/devkit/distribution/cli/__init__.py:136
+  failure_condition: Both selector and workspace are invalid; malformed selector with nonexistent workspace targets --workspace-root rather than PLAYBOOK_ID.
+  suggested_action: Share selector validation between library and CLI before resolve_root and add a regression for both inputs invalid.
+  resolution: open
+  severity: P2
+assumptions:
+- Native role emulated; explicit worktree-only read scope, no mutations, and before/after clean Git state verified.
+checks:
+  lint: PASS just lint-check dist
+  types: PASS just check dist
+  tests: PASS focused 69; dist-only 1146; affected selector exit 0
+  governance: PASS cumulative rules; diff --check
+diff_scope:
+  base: 5bb7fa74375377b78ad4d3e002858e5a89dc0ab4
+  head: 3b8dc47d5c1cc5ffab88456e0f4cd3e6b1f63318

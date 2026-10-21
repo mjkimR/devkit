@@ -1,0 +1,21 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T02:14:10.101960Z'
+status: completed
+summary: Implemented exact synchronized playbook retrieval with effective body/metadata, byte identity, context instructions and stable failures. Completed medium code review and independent reconciliation; both findings fixed and verified. Ready for Host integration.
+findings: []
+assumptions:
+- Exact retrieval normalizes only LocalRenderStaleError instance to exit 2 while preserving its existing code and advisory.
+- Emulated worker/reviewer contracts use explicit absolute worktree paths, scoped escalations, read-only reviewer scopes and Git boundary comparisons; no native confinement guarantee.
+- Host-reported main advancement remains for Host integration; worker performed no merge, push or integration.
+unverified_areas:
+- Live external scheduler integration is outside scope; no scheduler or procedure execution was performed.
+checks:
+  tests: PASS post-fix exact retrieval 41; focused search/override 69 before narrow CLI fix; post-fix just test-affected exit 0, 107 paths
+  build: PASS just test-dist 1146 tests, isolated dist-only installation and CLI wiring; packaging unchanged by subsequent validation-order fix
+  lint: PASS just lint-check dist; just check dist zero errors/warnings; cumulative governance zero errors/warnings; normal gates
+diff_scope:
+  base: 5bb7fa74375377b78ad4d3e002858e5a89dc0ab4
+  head: b362f39f876685cc7d4e1236200ea403f16b4ab2

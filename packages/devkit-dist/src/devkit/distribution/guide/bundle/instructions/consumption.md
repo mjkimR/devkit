@@ -54,6 +54,23 @@ When a failing rule's remediation names a playbook, run the
 returned path, loading its bundle's context (`uv run devkit get-context <bundle>`)
 first if not yet loaded, then apply it.
 
+## Retrieving an explicitly named playbook
+
+When the user names an exact playbook for this task, or explicitly configures
+an external schedule with its ID, run `uv run devkit playbook get <bundle>/<playbook>`.
+The selector uses case-sensitive manifest IDs. The JSON-only result contains the
+complete body, effective metadata, canonical identity, source path and byte hash,
+and context requirements. Run its context argv in the same workspace (or pass `-w`)
+unless already loaded in this agent context; reload after loss, apply the full
+constitution and read relevant instructions. Read needed relative resources from
+the parent of `source.path`. Overrides are read live; selection uses the deployed
+receipt snapshot until sync. Retrieval never executes or synchronizes.
+
+Ordinary task wording does not authorize discovery or selection. Each execution
+starts fresh progress and checks prerequisites, workflow gates, permissions and
+user constraints. A schedule grants no future gated approval; unavailable approval
+UI is not approval. External systems own cadence, launch, retries, overlap and history.
+
 ## Changing what is deployed
 
 ```bash
@@ -116,7 +133,7 @@ uv run devkit override remove <bundle>:<asset>   # use upstream sources again
 
 `create` copies every file of the asset (a whole skill directory). An override
 file replaces its upstream file in projections, `get-context` and playbook
-search; even an unchanged copy follows upstream only through `accept`. For a
+search and exact retrieval; even an unchanged copy follows upstream only through `accept`. For a
 `.md.jinja` asset, edit the raw template override and sync; agents read the
 rendered managed `.md`. Bundle variables are set under
 `[bundles.<bundle>.variables]` in `.devkit/config.toml`. Drift is reported when

@@ -1,0 +1,32 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-21T02:03:26.962278Z'
+status: completed
+summary: Evidence scout supports reserved canonical execution input and constitution/host-neutral subagent templates; closed receipt schema requires narrow core reader ownership.
+findings:
+- issue: Inventory planning does not consume execution selection; resolve once before both canonical and effective planning.
+  evidence: packages/devkit-dist/src/devkit/distribution/installation/sync.py:330,959,1003,1061
+  resolution: open
+- issue: Constitution discovery and subagent parsing need explicit template handling before validation; native variants retain host-specific formats.
+  evidence: packages/devkit-dist/src/devkit/distribution/bundles/manifest.py:113,263; packages/devkit-dist/src/devkit/distribution/installation/inventory.py:155,314,335
+  resolution: open
+- issue: Reserved execution input preserves strict configurable vars; personal constitution/guidance eligibility must stay unchanged.
+  evidence: packages/devkit-dist/src/devkit/distribution/bundles/templates.py:25,44,66; packages/devkit-dist/src/devkit/distribution/installation/local_render.py:24,96
+  resolution: open
+- issue: Closed receipt schema requires core reader change; no-save evidence must bind actual selected rendering independently of persisted runtime configuration.
+  evidence: packages/devkit-dist/src/devkit/core/receipt.py:62,145,182,298; packages/devkit-dist/src/devkit/distribution/installation/local_render.py:71,180
+  resolution: open
+- issue: Reachable MCP routing occurs in constitution, worker contracts, skill metadata and on-demand references; source installation guides require explicit scope separation.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/AGENTS.md:57; packages/devkit-spec/src/devkit_spec/bundle/subagents/planning-worker.md:72; packages/devkit-spec/src/devkit_spec/bundle/skills/spec-integrate/SKILL.md:3,78; guides/INSTALL_GUIDE.md:100
+  resolution: open
+assumptions:
+- Fresh nested scout; Codex emulated read-only boundaries verified by proposal-only status; no native path confinement.
+unverified_areas:
+- No runtime tests or exhaustive other-bundle audit; Development acceptance matrix covers these.
+checks: {}
+diff_scope:
+  base: ec92741d49c633a389eb624cc87a232534fca478
+  head: bab48c773b62b8ade213deb534e6064e6ced55e4
+activity_effort: medium

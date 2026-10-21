@@ -4,7 +4,6 @@ title: Claude Code terminal MCP integration approval path
 summary: "Documents the Claude Code terminal CLI as a verified native MCP form-elicitation path for scoped integration approval, registered manually with claude mcp add."
 status: completed
 created: 2026-10-19
-milestone: MS-multi-host-native-integration
 related_capabilities:
   - CAP-INT-mcp-services
   - CAP-HOST-lifecycle-observation
