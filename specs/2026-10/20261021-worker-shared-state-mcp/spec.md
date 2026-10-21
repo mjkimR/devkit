@@ -9,7 +9,6 @@ related_capabilities: []
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-worker-shared-state-mcp] Shared state and workspace across worktrees and cloud agents
 
@@ -30,45 +29,49 @@ registration contract, with equivalent CLI and local MCP access. A concrete prod
 scope coordination are excluded from this delivery. `FB-remote-shared-adapter-follow-up` tracks the backend destination,
 dependencies and restart criteria. A protocol fake does not make cross-host production sharing work.
 
+## Assumptions
+
+The current base retains the MCP execution classifier, owning-workspace configuration and core lock interfaces identified by the accepted architecture evidence. The new domain owns a noncreating read-lock implementation and imports only core/advisory. No agreement-breaking premise change was found.
+
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Shared state and workspace across worktrees and cloud agents so that system capabilities are extended.
+- **US-1**: As a linked-worktree worker, I want immutable report artifacts accessible through CLI and the owning local MCP service so that reviewers can retrieve the exact commit-bound report.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: Production remote backends, scope-registry semantic changes, approval/report composition, viewer changes, cloud rendering conversion, arbitrary file operations and configurable retention.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### Scenario 1 [AC-01]: Carried from proposal
-- **AC1**: Given two linked worktrees with matching local configuration, put through CLI and get through a local MCP
-  service resolve the same artifact and namespace; a separate clone cannot resolve it.
+### Scenario 1: [AC-01] Linked-worktree identity
+- **Given** two linked worktrees with matching configuration and a separate clone.
+- **When** CLI publishes a report and local MCP retrieves its exact URI.
+- **Then** linked callers return the same namespace and artifact; the clone cannot resolve it.
 
-### Scenario 2 [AC-02]: Carried from proposal
-- **AC2**: Given safe initially absent storage, first put adds only a narrow exclusion and leaves both base and linked
-  `git status --porcelain --untracked-files=normal` clean. Tracked, foreign-visible, symlink and wrong-repository
-  fixtures refuse without writes or hidden files.
+### Scenario 2: [AC-02] Safe storage initialization
+- **Given** initially absent storage or tracked, foreign-visible, symlink or wrong-repository fixtures.
+- **When** first put validates and initializes the store.
+- **Then** safe initialization adds only a narrow exclusion and leaves both worktrees clean; unsafe fixtures refuse without writes or hidden files.
 
-### Scenario 3 [AC-03]: Carried from proposal
-- **AC3**: Concurrent identical puts and retry after a lost response return the same creation/expiry metadata within the live lifetime; after expiry the same content gets a fresh generation/URI
-  and the old URI remains unavailable. Different bodies coexist. Interrupted publication never yields partial envelopes.
+### Scenario 3: [AC-03] Immutable atomic publication
+- **Given** concurrent identical/different puts, lost responses and interrupted publication.
+- **When** callers retry within the live lifetime or after expiry.
+- **Then** live identical puts preserve creation and expiry metadata; different bodies coexist; expiry creates a fresh generation and URI without reviving the old URI; no reader sees a partial envelope.
 
-### Scenario 4 [AC-04]: Carried from proposal
-- **AC4**: With an injected clock, get/list expire at exactly seven days without writes; bounded explicit cleanup
-  removes only expired valid artifacts. Read-only permissions allow initialized get/list; registry records and tokens
-  remain byte-identical before and after all artifact operations.
+### Scenario 4: [AC-04] Read-only expiry and bounded cleanup
+- **Given** an injected clock and initialized read-only storage.
+- **When** get/list run at exactly seven days and explicit cleanup runs.
+- **Then** get expires and list omits without writes; cleanup removes at most 100 valid expired artifacts; scope records and tokens remain byte-identical.
 
-### Scenario 5 [AC-05]: Carried from proposal
-- **AC5**: CLI/MCP validation and errors match for oversized content, traversal, corruption, missing/expired keys,
-  lock timeout and denied access. Local-orchestrated guidance checks connected project tools before dependent
-  operations, requests user connection repair when absent, and does not automatically select CLI. Cloud MCP lists no mutation tools and rejects forged mutation calls; local bounded
-  writes never elicit a business approval form. Consumer source_sha mismatch is detectable from metadata.
+### Scenario 5: [AC-05] Equivalent transport and guarded mutations
+- **Given** CLI/MCP inputs include oversize, traversal, corruption, missing/expired keys, timeout and denied access.
+- **When** both transports invoke the domain and cloud clients attempt forged mutation calls.
+- **Then** validation/error codes match; cloud hides and refuses mutations; local bounded writes elicit no business form; source_sha is exposed for mismatch detection; local-orchestrated guidance requires connected project tools and requests connection repair without automatic CLI fallback.
 
-### Scenario 6 [AC-06]: Carried from proposal
-- **AC6**: Adapter config precedence and explicit failure on unknown adapter are tested in base, linked and owning
-  MCP workspaces. Load a test adapter through the public entry-point contract and run the reusable semantic
-  conformance suite; duplicate/unloadable/malformed registrations fail without fallback. This is not remote production evidence.
-
+### Scenario 6: [AC-06] Public adapter registration
+- **Given** base, linked and owning MCP configurations plus public entry-point test adapters.
+- **When** configuration precedence, invalid registrations and reusable semantic conformance tests run.
+- **Then** adapter precedence is deterministic; unknown, duplicate, unloadable or malformed adapters fail without fallback; a test adapter passes immutable-generation, retry, expiry, pagination and error semantics without claiming production remote support.
 Development owns the new `packages/devkit-dist/src/devkit/shared/` area (declared by its existing parent), dist CLI,
 core local-config and MCP classification, MCP transport guards, package entry points/tests, and affected architecture,
 capability and quick-reference documentation. Narrow spec-orchestrate and spec-delegate host guidance changes plus
@@ -81,9 +84,9 @@ Verification: dist and MCP focused tests including concurrency/crash/permission 
 `just test-dist`; `just lint-check`, `just check`, `just test-affected` preserve the selector's full fallback.
 Planning and recommended Development effort are medium; multiple packages alone do not require high effort.
 
-## 5. Carried Proposal Notes
+## 5. Detailed Contract
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+The accepted technical requirements below remain binding for this delivery.
 
 ### 2. Selected Technical Contract
 
