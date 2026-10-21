@@ -14,7 +14,8 @@ Read `devkit spec policy` before deciding gate or Git actions:
   - The OK is never written to a file (`ADR-integration-approval-asserted`): for a spec bundle pass `--given dev-integration` to each `devkit workflow next --unit <dir>` after it, and name the OK (`mcp-elicitation` when confirmed through `integration_integrate`) as the authority in the integration report.
   - An objection takes the stage's return path (`devkit workflow return --unit <dir> --to review-refine --note "..."`); an objection about direction is a close ([classification](classification.md) §4).
 - `policy=auto`: once review, reconciliation and required checks pass, at every effort, the policy delegates the gate: `devkit workflow next` lists `[GATE_PASSED: dev-integration ... source=policy]` (JSON `passed_gates`), the basis the integration report cites. Never describe policy delegation as a human approval or review.
-- Neither value grants commit, publication, merge or deletion authority; explicit user instructions and platform protections still apply.
+- Shared base `policy=auto` also authorizes verified local merge and exact task cleanup through `integration_integrate`, reporting `authority: policy` without elicitation. The Host invokes it after the final report; prepare alone grants no authority. Source-only auto cannot authorize its own merge. Auto PR execution and cloud execution/resume refuse. Prospective auto-to-ask revocation refuses before mutation; remaining cleanup requires unchanged auto policy.
+- Neither value grants commit or publication authority or overrides host permissions. Never switch execution routes to evade a host refusal. Without MCP, auto has no automatic CLI substitute; manual execution requires separate authority.
 - `GIT_POLICY` (worktree, pull request and branch cleanup): read [git policy](git-policy.md) and decide before the first edit.
 
 ## Reconciliation record

@@ -34,7 +34,7 @@ class StaleRequestError(IntegrationError):
 class AuthorityError(IntegrationError):
     code = "INTEGRATION_AUTHORITY_REQUIRED"
     guardrail = True
-    fix = "Call integration_integrate to obtain native confirmation; resume only a request approved in this server process"
+    fix = "Call integration_integrate for current shared-policy authority or native ask confirmation; resume only an authorized request retained in this server process"
 
 
 class CleanupContractError(IntegrationError):

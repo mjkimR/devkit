@@ -175,3 +175,5 @@ An external runner dispatches stages from this schema, binds `gate:dev-integrati
 ## Project policy
 
 Read `devkit spec policy` before integration decisions (`[workflow.approvals]`, `[workflow.stages]`, `[worktree]`, `[tool.spec] worktree`). `dev-integration = "auto"` passes only after the required review, reconcile and checks, reported as `[GATE_PASSED: dev-integration ... source=policy]`, never as a human approval; explicit user authority, worktree and PR policy, external protections and action permissions still apply.
+
+Shared base `dev-integration=auto` also authorizes the Host to invoke verified local merge and exact cleanup through `integration_integrate` without elicitation, reporting `authority: policy`. It grants no publication or cloud authority and does not override host permissions. Preparation grants no authority; source-only policy changes cannot authorize themselves.

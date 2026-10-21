@@ -1,23 +1,23 @@
 ---
-id: PADR-policy-authorized-local-integration
+id: ADR-policy-authorized-local-integration
 title: Policy authorizes local integration execution
 summary: "Explicit dev-integration auto authorizes verified local merge and scoped cleanup through the existing MCP integration executor while preserving host permissions and separate publication authority."
-proposal: PROP-policy-authorized-integration
-status: draft
+proposal: SPEC-policy-authorized-integration
+status: accepted
 created_at: 2026-10-20
 supersedes: ADR-integration-approval-asserted
 ---
 
-# [PADR-policy-authorized-local-integration] Policy authorizes local integration execution
+# [ADR-policy-authorized-local-integration] Policy authorizes local integration execution
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Supersedes on promotion**: `ADR-integration-approval-asserted`
 
 ## 1. Context & Problem Statement
 
 `ADR-integration-approval-asserted` permits automatic gate passage but denies merge/deletion authority to every
 policy value. Repeated business confirmations therefore remain necessary even when the repository opts into auto.
-`PROP-policy-authorized-integration` requires that opt-in to authorize the complete verified local operation.
+`SPEC-policy-authorized-integration` requires that opt-in to authorize the complete verified local operation.
 
 ## 2. Decision Drivers
 

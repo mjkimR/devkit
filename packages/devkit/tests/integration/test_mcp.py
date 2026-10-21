@@ -285,3 +285,33 @@ def test_cloud_transition_refuses_native_authority(repo, transition):
     asyncio.run(run())
     assert len(calls) == (transition == "form")
     assert worktree.exists() and git(base, "show-ref") == before
+
+
+def test_auto_client_without_forms_executes_local_scope(repo):
+    base, worktree = repo
+    for root in (base, worktree):
+        path = root / ".devkit/config.toml"
+        path.write_text(path.read_text() + '[workflow.approvals]\ndev-integration="auto"\n')
+        git(root, "add", ".devkit/config.toml")
+        git(root, "commit", "-qm", "authorize fixture auto integration")
+    git(worktree, "merge", "--no-edit", "main")
+
+    async def run():
+        params = StdioServerParameters(
+            command=sys.executable, args=["-c", SCRIPT, str(base)], env={"PYTHONPATH": SOURCE}
+        )
+        async with (
+            stdio_client(params) as (read, write),
+            ClientSession(read, write, read_timeout_seconds=timedelta(seconds=20)) as session,
+        ):
+            await session.initialize()
+            response = await session.call_tool(
+                "integration_integrate", {"branch": "dev-demo", "task_kind": "session", "task_id": "auto-sdk-fixture"}
+            )
+            assert response.structuredContent is not None
+            return response.structuredContent
+
+    result = asyncio.run(run())
+    assert result.get("status") == "completed", result
+    assert result["authority"] == "policy" and "ui_action" not in result
+    assert not worktree.exists() and "refs/heads/dev-demo" not in git(base, "show-ref")
