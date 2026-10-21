@@ -78,6 +78,7 @@ from devkit.distribution.installation.override_commands import (
     remove_override,
 )
 from devkit.distribution.installation.plan import plan_bundle
+from devkit.distribution.installation.playbook_get import get_playbook
 from devkit.distribution.installation.playbook_search import search_playbooks
 from devkit.distribution.installation.receipt import read_receipt
 from devkit.distribution.installation.results import OverrideChange, SyncResult
@@ -124,6 +125,15 @@ def context(bundle_name: str, workspace_root: str | None) -> object:
 @click.group()
 def playbook() -> None:
     """Discover occasional procedures after explicit devkit-playbook invocation."""
+
+
+@playbook.command(name="get")
+@click.argument("playbook_id")
+@WORKSPACE
+@_json_command
+def playbook_get(playbook_id: str, workspace_root: str | None) -> object:
+    """Return a complete synchronized playbook by exact bundle/asset ID without executing it."""
+    return get_playbook(resolve_root(workspace_root), playbook_id)
 
 
 @playbook.command(name="search")

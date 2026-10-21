@@ -2,7 +2,7 @@
 id: SPEC-exact-playbook-get
 title: Exact playbook retrieval for external runners
 summary: Add exact bundle/playbook retrieval with effective overrides, source identity and context requirements while defining external ownership of scheduling and execution.
-status: planned
+status: in-progress
 created: 2026-10-21
 milestone: MS-scheduled-jobs
 related_capabilities: [CAP-DIST-context-and-playbooks]

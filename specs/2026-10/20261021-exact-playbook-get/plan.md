@@ -15,7 +15,7 @@ Add installation/playbook_get.py and a result dataclass, sharing synchronized_pr
 
 ## Assumptions and Premise Check
 
-The current base retains the named receipt readers, shared lock, header parser and CLI boundary described in the carried design. The ADR is already promoted by handoff. Ordinary overrides use live bytes; playbook templates remain unsupported. Reusing existing readers deliberately preserves unrelated stale render-evidence failures and the deployed receipt snapshot. A frozen result model with to_dict follows adjacent result APIs; no new resolver or dependencies are justified.
+The current base retains the named receipt readers, shared lock, header parser and CLI boundary described in the carried design. The ADR is already promoted by handoff. Ordinary overrides use live bytes; playbook templates remain unsupported. Reusing existing readers deliberately preserves unrelated stale render-evidence failures and the deployed receipt snapshot. The shared stale-render error defaults to exit 1; exact retrieval normalizes only that exception instance to exit 2 to satisfy its explicit failure contract, retaining the code and advisory. A frozen result model with to_dict follows adjacent result APIs; no new resolver or dependencies are justified.
 
 ## Verification
 

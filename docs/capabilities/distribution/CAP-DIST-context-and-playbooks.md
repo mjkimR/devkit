@@ -1,10 +1,11 @@
 ---
 id: CAP-DIST-context-and-playbooks
 title: "Context Loading & Playbooks"
-summary: "On-demand context loading and playbook search using canonical or validated personal assets and effective search preferences."
+summary: "On-demand context loading, playbook discovery and exact receipt-backed retrieval with effective content identity and external execution boundaries."
 area: distribution
 status: active
 entrypoints:
+  - packages/devkit-dist/src/devkit/distribution/installation/playbook_get.py
   - packages/devkit-dist/src/devkit/distribution/installation/reading.py
   - packages/devkit-dist/src/devkit/distribution/installation/status.py
 created_at: 2026-10-17
@@ -137,3 +138,67 @@ uv run devkit playbook search "replica recovery" --limit 3 --min-score 0.2 --max
 ```
 
 Results are sorted best first. An overridden playbook is searched and returned from its override.
+
+
+## 4. Exact Playbook Retrieval (`devkit playbook get`)
+
+`devkit playbook get <bundle>/<playbook> [-w <workspace>]` accepts exactly two case-sensitive
+manifest slugs matching `[a-z][a-z0-9-]*`, separated by one slash. It performs no trimming,
+case folding, alias lookup, extension removal, path interpretation, ranking or fallback.
+The second component is the manifest asset ID, not frontmatter `name`.
+
+The command returns one JSON object and exits 0. It exposes no `--format` option;
+unsupported options and missing/extra arguments are Click usage errors (exit 2).
+Libraries return data without printing. The normative result fields are:
+
+- `bundle`, `id`: canonical requested manifest identity.
+- `name`, `description`, `aliases`: validated effective header metadata; extension keys are ignored.
+- `body`: complete decoded UTF-8 text after the closing frontmatter delimiter line, preserving
+  whitespace/newlines without truncation, interpolation, resource expansion or execution.
+- `source`: `{path, sha256}` with the absolute effective entrypoint and SHA-256 of the exact
+  bytes read including frontmatter. Overrides name their override path; other playbooks name
+  the managed path. This identifies content, not package provenance or execution attestation.
+- `context`: `{bundle, argv, policy}` with the same bundle, argv
+  `["devkit", "get-context", "<bundle>"]` and policy `"once-per-agent-context"`.
+
+Run the context argv in the same resolved workspace (or pass its `-w`) before following the
+procedure unless already loaded in this agent context; reload after loss. Apply the full
+constitution and read relevant instruction bodies, including when the bundle context is empty.
+Retrieval loads no context and tracks no execution state. Resolve relative body resources
+against the parent of `source.path`, reading only needed resources under existing permissions;
+no resource bytes or directory inventory are returned.
+
+Resolution validates the selector, resolves the synchronized project and takes its existing
+shared lock, then validates the runtime receipt, bundle presence, exact playbook match,
+entrypoint ownership, effective file and content, in that order. The match must have exactly
+one entrypoint in its recorded paths and its bundle's managed or override prefix. Only receipt
+assets are read; no installed-package discovery, source-tree lookup, lazy sync or fallback occurs.
+Ordinary overrides are read as currently edited. Selection edits do not change the deployment
+snapshot before sync. Playbook templates remain unsupported; shared runtime validation still
+checks personal-render evidence for other eligible kinds. Existing lock transient-file behavior
+and read-only filesystem fallback remain unchanged. Retrieval mutates no content or selection.
+
+All domain failures use the existing JSON error envelope, advisory action and exit 2, without
+partial results. Existing transaction, lock, unsafe-path and configuration advisories pass through.
+
+| Condition | Code | Action |
+| --- | --- | --- |
+| Malformed selector | `ARGUMENT_INVALID` | Correct `<bundle>/<playbook>`; target `PLAYBOOK_ID` |
+| Absent synchronized bundle or playbook (unknown, wrong kind or unselected) | `SELECTION_INVALID` | Inspect `devkit list` and explicit bundle/preset selection |
+| No receipt, missing effective entrypoint or modified managed content | `NOT_SYNCHRONIZED` | `devkit sync` |
+| Stale/missing personal-render evidence, including unrelated assets | `CONFIG_LOCAL_RENDER_STALE` | `devkit sync` |
+| Invalid receipt or zero/multiple/unowned/wrong-bundle entrypoints | `RECEIPT_INVALID` | Existing receipt repair advisory |
+| Invalid effective UTF-8 or frontmatter | `BUNDLE_INVALID` | Fix the named effective source; sync managed-source changes |
+
+Unknown and unselected identities share a code because the deployed receipt cannot distinguish them.
+
+## 5. Explicit Invocation and Execution Ownership
+
+A user naming the exact playbook for the current task, or explicitly configuring an external
+schedule naming that exact ID, authorizes retrieval and interpretation within that task's scope.
+Retrieval cannot verify authorization and grants none. Ordinary task wording never authorizes
+catalog discovery or playbook selection. Explicit discovery and rule remediation remain supported.
+Each run starts fresh procedure progress, checks prerequisites and obeys project workflow gates,
+permissions and user constraints. Schedules do not provide future gated approvals, and unavailable
+approval UI is not approval. External systems own cadence, launch, retries, overlap control and
+execution history; devkit supplies instructions and context requirements (`ADR-external-playbook-execution`).

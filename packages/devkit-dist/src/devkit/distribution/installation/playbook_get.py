@@ -1,0 +1,67 @@
+"""Exact, non-executing retrieval of a synchronized playbook."""
+
+from __future__ import annotations
+
+import hashlib
+from pathlib import Path
+
+from devkit.advisory import ExitCode
+from devkit.core.errors import ArgumentError, ReceiptError
+from devkit.core.receipt import MANAGED_PATH, RECEIPT_PATH
+from devkit.distribution.bundles.common import SLUG, read_frontmatter
+from devkit.distribution.bundles.playbooks import read_playbook_header
+from devkit.distribution.errors import SelectionError
+from devkit.distribution.installation.local_render import LocalRenderStaleError
+from devkit.distribution.installation.overrides import override_rel
+from devkit.distribution.installation.reading import read_owned, read_synchronized, synchronized_project_root
+from devkit.distribution.installation.results import PlaybookResult
+from devkit.distribution.installation.transaction import project_lock
+
+
+def get_playbook(start: Path, selector: str) -> PlaybookResult:
+    """Return effective bytes as validated metadata and complete body, without following the procedure."""
+    parts = selector.split("/")
+    if len(parts) != 2 or not all(SLUG.fullmatch(part) for part in parts):
+        raise ArgumentError(
+            f"playbook: expected <bundle>/<playbook> lowercase slugs, not {selector!r}",
+            target_files=["PLAYBOOK_ID"],
+            fix="Use an exact <bundle>/<playbook> selector",
+        )
+    bundle, asset_id = parts
+    root = synchronized_project_root(start)
+    with project_lock(root, shared=True):
+        try:
+            receipt = read_synchronized(root)
+        except LocalRenderStaleError as exc:
+            # Exact retrieval could not run; retain the shared code and recovery advisory.
+            exc.exit_code = ExitCode.ERROR
+            raise
+        prefix = f"{MANAGED_PATH}/{bundle}/"
+        if receipt.file(prefix + "bundle.toml") is None:
+            raise SelectionError(f"bundle is not synchronized: {bundle}", fix="devkit list")
+        matches = [asset for asset in receipt.assets("playbook") if asset.bundle == bundle and asset.id == asset_id]
+        if not matches:
+            raise SelectionError(
+                f"playbook is not synchronized: {selector}",
+                "Inspect explicit bundle and preset selection",
+                fix="devkit list",
+            )
+        if len(matches) != 1 or len(matches[0].entrypoints) != 1:
+            raise ReceiptError(f"{RECEIPT_PATH}: expected exactly one playbook entrypoint for {selector}")
+        asset = matches[0]
+        name = asset.entrypoints[0]
+        if name not in asset.paths or not name.startswith((prefix, override_rel(bundle, ""))):
+            raise ReceiptError(f"{RECEIPT_PATH}: invalid playbook entrypoint: {name}")
+        data = read_owned(root, receipt, name)
+        metadata = read_playbook_header(data, name)
+        text, block, _ = read_frontmatter(data, name, "playbook")
+        return PlaybookResult(
+            bundle,
+            asset_id,
+            metadata.name,
+            metadata.description,
+            list(metadata.aliases),
+            text[block.end :],
+            str(root / name),
+            hashlib.sha256(data).hexdigest(),
+        )

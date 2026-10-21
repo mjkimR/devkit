@@ -98,9 +98,11 @@ The **bundle context** is the whole `get-context <bundle>` response: the constit
 
 #### 4. `package-playbook`
 - **Role**: Procedures for occasional tasks, retrieved for reuse and extended through experience. Explicit, recurring execution flows belong to workflows; frequency alone does not turn a policy or judgment criterion into a playbook.
-- **Consumption**: Only through two entry conditions, never through implicit scanning during ordinary tasks (which adds latency, prompt bloat and hallucinated runbooks):
+- **Consumption**: Only through these entry conditions, never through implicit scanning during ordinary tasks (which adds latency, prompt bloat and hallucinated runbooks):
   1. **Explicit user invocation** of the shared `devkit-playbook` skill (`"use devkit-playbook to recover the replica"`).
   2. **Rule-triggered remediation**: a `governance-rule`, evaluated out-of-band by `devkit.rules` (`just rules-check`, CI, the `rules-check` commit gate) at zero token cost, reports a violation whose `Violation.remediation` points to the playbook (a search query or path) instead of embedding the procedure in the rule.
+
+  3. **Explicit exact invocation**: the user names the exact bundle/playbook ID for the task, or explicitly configures an external schedule naming it. `devkit playbook get <bundle>/<playbook>` retrieves the effective procedure without discovery or execution. Each run checks prerequisites and preserves workflow gates, permissions and user constraints; schedules and unavailable approval UI grant no gated-operation approval. External systems own scheduling and execution history (`ADR-external-playbook-execution`).
 
   Individual playbooks are not exposed in the default context, `get-context` or the native skill catalog, and ordinary prompt instructions do not bypass these entry conditions.
 - **Format Requirements**: English YAML frontmatter with required `name` and `description`, plus an optional `aliases` string array. The body contains explicit `Prerequisites`, numbered `Step N` actions, and unambiguous completion conditions.
@@ -184,7 +186,7 @@ Q3: Is it an agent persona definition or subagent configuration file?
 
 Q4: Is it a task procedure rather than a rule or judgment criterion?
  ├─ YES, recurring explicit flow ──> [ package-workflow ] (devkit workflow definition; see docs/capabilities/delivery/CAP-DLV-workflow-orchestration.md)
- ├─ YES, occasional procedure ──> [ package-playbook ] (Explicit devkit-playbook entry)
+ ├─ YES, occasional procedure ──> [ package-playbook ] (Explicit discovery or exact-ID entry)
  └─ NO  ──> Q5
 
 Q5: Is it a global orientation pointer required in root bootstrap files?
@@ -263,7 +265,7 @@ Alternatives considered:
 | **`host-guidance-block`** | Guidance | Marker block written by `devkit sync` | Session bootstrap | Minimal pointer index (<1 KB, plus ≤300 B per bundle fragment) | Root `AGENTS.md` |
 | **`package-constitution`** | Guidance | Markdown (~50–100 lines) | Before first bundle skill | Bounded (~100 lines) | `.devkit/managed/<bundle>/AGENTS.md` |
 | **`package-instruction`** | Guidance | Markdown (`instructions/*.md`) | Headers on first bundle use; bodies on demand | Header catalog plus selected bodies | `.devkit/managed/<bundle>/instructions/` |
-| **`package-playbook`** | Guidance | Metadata and checklist (`playbooks/<slug>.md` or `playbooks/<slug>/SKILL.md`) | Explicit `devkit-playbook` invocation OR rule-triggered remediation, then search and selection | Bounded candidate headers; selected body only | `.devkit/managed/<bundle>/playbooks/` |
+| **`package-playbook`** | Guidance | Metadata and checklist (`playbooks/<slug>.md` or `playbooks/<slug>/SKILL.md`) | Explicit discovery or rule remediation, then search and selection; explicit exact ID requests/schedules use `playbook get` | Bounded candidate headers; selected body only | `.devkit/managed/<bundle>/playbooks/` |
 | **`package-workflow`** | Guidance | Markdown definition with `stages` frontmatter | `devkit workflow next` via the `devkit-workflow` entry skill | Tagged CLI output per stage | `.devkit/managed/<bundle>/` (receipt `entrypoints`) |
 | **`package-document`** | Guidance | Any file or directory | Read by path; seeded once when `seeded = true` | Only when read | `.devkit/managed/<bundle>/`, or the seed `target` |
 | **`governance-rule`** | Mechanized | Python package dir (`rules/<rule>/`) | Linters / `just rules-check` | **0 tokens** (pure code) | `.devkit/managed/<bundle>/rules/` |
