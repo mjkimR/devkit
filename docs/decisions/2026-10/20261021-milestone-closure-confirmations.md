@@ -1,15 +1,15 @@
 ---
-id: PADR-milestone-closure-confirmations
+id: ADR-milestone-closure-confirmations
 title: Milestone closure through two current confirmations
 summary: Milestone closure uses two current user confirmations in its body and the existing Backlog status edit, without a delivery graph or new evaluator.
-proposal: PROP-deterministic-milestone-completion
-status: draft
+proposal: SPEC-deterministic-milestone-completion
+status: accepted
 created_at: 2026-10-21
 ---
 
-# [PADR-milestone-closure-confirmations] Milestone closure through two current confirmations
+# [ADR-milestone-closure-confirmations] Milestone closure through two current confirmations
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-21
 
 ---

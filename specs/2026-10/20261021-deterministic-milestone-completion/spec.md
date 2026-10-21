@@ -1,34 +1,22 @@
 ---
-id: PROP-deterministic-milestone-completion
+id: SPEC-deterministic-milestone-completion
 title: Simple milestone completion from direct proposal checks
-summary: "Close milestones from confirmed decomposition and settlement of directly linked proposals, using focused code or Git inspection when needed instead of persistent delivery-lineage tracking."
-status: accepted
-created_at: 2026-10-21
-target_area: capabilities/delivery/
-priority: high
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-spec/
-    - docs/capabilities/delivery/
-    - docs/capabilities/documents/
-    - docs/capabilities/harness/
-    - docs/decisions/
-    - docs/development/reference/
-    - docs/roadmap/
-  excludes:
-    - packages/devkit/src/devkit/integration/
-    - packages/devkit-dist/src/devkit/shared/
-    - packages/devkit-viewer/
-task_kind: feature
-workflow: sdd-proposal
+summary: Close milestones from confirmed decomposition and settlement of directly linked proposals, using focused code or Git inspection when needed instead of persistent delivery-lineage tracking.
+status: planned
+created: 2026-10-21
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-deterministic-milestone-completion] Simple milestone completion from direct proposal checks
+# [SPEC-deterministic-milestone-completion] Simple milestone completion from direct proposal checks
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-deterministic-milestone-completion on 2026-10-21.
+
+### 1. Background & Hypothesis
 
 Milestones should describe large phases or long-term themes that the user and agent review together and split
 into proposals. They should not become a second delivery database. `ADR-milestone-documents` currently requires
@@ -45,7 +33,26 @@ settled. That is a focused check at the time of review, not a requirement to ret
 outcome ID or integration record in the milestone. Proposal absence alone remains insufficient: handoff can remove
 a proposal before implementation has finished.
 
-## 2. Planning Decisions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Simple milestone completion from direct proposal checks so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Decisions
 
 - **D1 — Existing Backlog operation:** Close through the existing authorized milestone document edit. There is
   no milestone transition command to extend and no demonstrated need to introduce one. Deterministic means the
@@ -76,13 +83,13 @@ a proposal before implementation has finished.
   approval envelope, branch ledger or integration hook is introduced. Existing done milestones remain historical
   and are not retroactively reopened or migrated.
 
-`PADR-milestone-closure-confirmations` records the representation and policy choice. Development starts only after
+`ADR-milestone-closure-confirmations` records the representation and policy choice. Development starts only after
 `PROP-unit-dependencies-and-milestone-scope` integrates; that work owns direct PROP membership and unit ordering.
 Planning does not add an unsupported dependency field before that work is available.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Collaborative close procedure
+#### Collaborative close procedure
 
 1. Read the milestone's goal, exit condition and non-goals. The user and agent review whether the required work
    has been decomposed sufficiently into proposals. The first confirmation asserts no intended scope remains
@@ -110,7 +117,7 @@ the semantic check; ordinary governance rules still validate document shape and 
 that two words certify delivery. Existing hygiene continues to identify direct unsettled members on finished
 milestones under the prerequisite proposal's semantics.
 
-### Change placement
+#### Change placement
 
 - Source bundle milestone template, Backlog guidance and `spec-next` guidance: teach the two assertions, fresh
   close review, explicit dispositions, invalidation and no-op behavior. Any Backlog lifecycle/membership edit that
@@ -125,7 +132,7 @@ milestones under the prerequisite proposal's semantics.
   transitions. Resolve the actual predecessor ADR after prerequisite integration; do not supersede an older ADR
   in a way that loses the intervening decisions. No exception delegating done to an automatic tool is needed.
 
-### Acceptance evidence
+#### Acceptance evidence
 
 - A planned or active milestone with sufficient decomposition, settled direct work and a met exit condition is
   shown to the user; both fresh confirmations produce `confirmed` body assertions and done in one commit.
@@ -146,7 +153,7 @@ close. Reuse existing milestone history/lookup tests; no new semantic evaluator 
 runs lint, types, relevant affected tests and governance checks. Development effort remains medium because this
 changes a lasting closure policy and its shipped guidance, even though no runtime service is added.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning is ready for the user's direction decision after independent Scout and Challenger review. Development
 waits for the direct-membership prerequisite to integrate and reconciles its actual resulting contracts before
@@ -156,3 +163,4 @@ implementation. This proposal does not approve or perform current milestone clos
 PROP/SPEC lineage; branch ownership and verification ledgers; closing because files disappear; generic integration
 changes; external trackers; background monitoring; viewer changes; automatic activation/dropping/reopening; mass
 conversion of existing roadmap documents; a completion command or machine-certified delivery evaluator.
+

@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-deterministic-milestone-completion
+by: user
+at: '2026-10-21T03:46:02.142589Z'

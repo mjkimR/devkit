@@ -53,7 +53,7 @@ out-of-order starts remain available; structural validation remains mandatory.
 Author optional frontmatter through existing document editing and templates, with no new CLI flag or evaluator.
 No milestone member-count rule is added. A theme may initially have one member while describing broader scope.
 No persistent milestone delivery lineage is introduced. Downstream status can be investigated from code/Git
-on demand. `PROP-deterministic-milestone-completion` remains independent and supplies no assumed contract here.
+on demand. `SPEC-deterministic-milestone-completion` remains independent and supplies no assumed contract here.
 
 ## 5. Consequences
 

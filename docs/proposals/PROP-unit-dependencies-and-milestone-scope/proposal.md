@@ -74,7 +74,7 @@ milestones to their intended role:
   do not advertise or write milestone membership. Existing SPEC milestone metadata is ignored for membership,
   without a legacy reader or compatibility shim; no bulk historical cleanup is performed.
   On-demand code/Git inspection can answer downstream questions, without a stored MS-to-PROP-to-SPEC lineage.
-- **D6 — Orthogonality:** `PROP-deterministic-milestone-completion` is a separately evolving draft. This
+- **D6 — Orthogonality:** `SPEC-deterministic-milestone-completion` is an independent work unit. This
   proposal assumes none of its schema, completion or lineage design. It adds direct prerequisite edges only,
   no confirmed-coverage evaluator, automatic completion or persistent delivery lineage.
 
