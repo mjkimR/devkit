@@ -62,3 +62,10 @@ Authors must maintain explicit dependency edges during lifecycle changes, for li
 The base status signal can be weaker than verified completion; it intentionally grants no delivery certification.
 Development must test mixed cycles, history targets, handoff projection and conservative base recommendation.
 This accepted decision governs the typed dependency and direct proposal membership contracts.
+
+## Superseding decision disposition
+
+`ADR-milestone-closure-confirmations` replaces only the inherited milestone closure/branch-enumeration procedure
+with a focused two-confirmation Backlog review and explicit planned-to-done/reopen cases. This decision remains
+in force for typed unit prerequisites, conservative readiness, lifecycle edge disposition and direct PROP-only
+membership; unaffected MS readiness, activation/drop authority, history and roadmap review reminders remain.

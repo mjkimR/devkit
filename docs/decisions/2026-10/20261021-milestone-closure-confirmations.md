@@ -4,6 +4,7 @@ title: Milestone closure through two current confirmations
 summary: Milestone closure uses two current user confirmations in its body and the existing Backlog status edit, without a delivery graph or new evaluator.
 proposal: SPEC-deterministic-milestone-completion
 status: accepted
+supersedes: ADR-separate-unit-prerequisites-from-milestone-themes
 created_at: 2026-10-21
 ---
 
@@ -64,3 +65,12 @@ adds the explicit planned-to-done and user-owned reopen cases; activation/drop a
 Shipped milestone template, Backlog and orientation instructions and their contracts describe the procedure.
 Guidance tests cover both positive and blocked cases. There is no automatic delivery guarantee and no claim that
 body text validates implementation. Optional future automation requires a demonstrated failure beyond this procedure.
+
+## Supersession disposition
+
+This decision supersedes only the milestone closure/branch-enumeration policy retained by
+`ADR-separate-unit-prerequisites-from-milestone-themes` from `ADR-milestone-documents`. Its typed unit prerequisite,
+conservative base readiness, lifecycle edge disposition and direct PROP-only membership decisions remain in force.
+MS dependency readiness, user-owned activation/drop, lookup/history and the roadmap review reminder remain in force.
+The concrete additions are planned-to-done closure, two current assertions and user-owned reopen-to-active for
+scope extension. No existing milestone instance is migrated or closed by this policy change.

@@ -263,6 +263,16 @@ The scaffolded body has sections `1. Background & Hypothesis`, `2. Technical Spi
   `devkit spec scope compare`). Its body covers the capability ledger, stories, architecture and decisions,
   conventions and governance, and a before/after comparison.
 
+### Milestone membership changes
+
+Before creation, decomposition, reassignment, rejection/removal or handoff changes direct milestone membership,
+the agent resets both Completion review assertions to pending in the same authorized change. An out-of-scope
+milestone edit requires Host coordination before mutation; it does not expand a worker's boundary. The CLI and
+native handoff guidance require this preflight. Handoff removes membership without proving implementation;
+unfinished work still in the milestone's agreed scope blocks closure. Explicit exclusion or movement is a scope
+disposition, never delivery. This is an agent procedure, not a new parser field or automatic handoff mutation.
+`CAP-HARN-agent-guidance` defines the current two-confirmation review and user-owned reopening.
+
 ### 4.5 Handoff Steps
 
 Before its first write, handoff MUST validate the projected live unit dependency graph: replace the source
