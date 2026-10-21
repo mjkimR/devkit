@@ -1,0 +1,29 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T00:34:30.962667Z'
+status: completed
+summary: Completed specify, build-verify, review-refine, living-spec-draft, collect-feedback and final-change-report; stopped before integration. Immutable shared artifacts, public adapters, CLI/MCP and connected-tool guidance are committed; independent code/reconcile reviews completed and all findings resolved.
+findings: []
+assumptions:
+- 'Emulated isolation: explicit assigned-worktree cwd, git -C, scoped path staging and separately approved sibling/Git writes; no native confinement guarantee.'
+- 'Host authorized exact extra boundaries: docs/glossary.md one term row; packages/devkit-dist/src/devkit/distribution/installation/config.py shared schema and template.'
+- Conservative ancestor-ignore rejection, same-user POSIX storage, opaque backend cursors, no production remote backend; FB-remote-shared-adapter-follow-up retained open.
+- 'Host sync source assets: packages/devkit-spec/src/devkit_spec/bundle/skills/spec-orchestrate/SKILL.md; packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/references/hosts.md.'
+unverified_areas:
+- Moved-main refresh/integration and managed projection deployment are Host-owned and not performed.
+- Production remote authorization/consistency/cross-host behavior, Windows/network filesystems and native client UI are not verified; SDK handler dispatch is covered.
+checks:
+  tests: 'PASS test-affected preserved mode=full: 4058 passed, 14 skipped'
+  dist-only: PASS 1106 passed without devkit-agt
+  build: 'PASS wheels and sdists: devkit-dist, devkit-mcp, devkit-spec'
+  lint: PASS just lint-check for all three affected packages
+  types: PASS just check for all three affected packages
+  rules: PASS cumulative CI rules and normal commit gates
+  review: PASS independent initial and follow-up code reviews; final narrow casefold recurrence self-verified at medium
+  reconcile: PASS independent six-target review; no findings
+diff_scope:
+  base: b4756365e92941da40f68dc6a8adf7bb346e7fbf
+  head: 1687c99f98aa39a049da6a49d4d34a4d694874a7
+activity_effort: medium
