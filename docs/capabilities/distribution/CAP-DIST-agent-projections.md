@@ -36,7 +36,7 @@ and are reached through `get-context`, playbook search or their paths.
   and no `source` gets no projection for an agent it has no variant for, reported like a subagent below
   (`ASSET_UNPROJECTED`). One skill directory has one owner: two bundles shipping a skill of the same id are a
   `BUNDLE_CONFLICT` even when their files agree.
-- **Skill templates**: `.md.jinja` files, including `SKILL.md.jinja`, render with resolved bundle variables to
+- **Skill templates**: `.md.jinja` files, including `SKILL.md.jinja`, render with resolved bundle variables and the canonical execution environment to
   `.md` before context prerequisites and native invocation settings are inserted. Projections contain rendered
   files only; plain Markdown stays literal. Rendered entry frontmatter and project overrides follow
   `CAP-DIST-manifest-spec`.
@@ -52,11 +52,10 @@ and are reached through `get-context`, playbook search or their paths.
   agent is selected; differing bytes for one path are a collision error, so `codex` and `antigravity` skill
   variants of one asset must be identical (checked by `devkit bundle validate`).
 - **Native subagents** (`variants`): one native file per supported agent, copied verbatim (`.toml` for Codex, `.md`
-  for Claude Code and Antigravity). No conversion or key stripping: an agent without a variant gets no projection,
+  for Claude Code and Antigravity). Native variants do not support templates. No conversion or key stripping: an agent without a variant gets no projection,
   and `devkit sync` reports it under `unprojected` and as an `ASSET_UNPROJECTED` notice (remedies: add the
   variant, ship a role contract, or narrow `agents`).
-- **Role contracts** (`source`): one host-neutral Markdown file whose `hosts` table holds an explicit block per
-  agent. The projection is rendered deterministically from that block (frontmatter keys for Claude Code and
+- **Role contracts** (`source`): one host-neutral Markdown file, optionally an explicit `.md.jinja` template, whose `hosts` table holds an explicit block per agent. Templates render and validate before any projection, including with no selected agents. Managed output and cited contract paths use final `.md` names; overrides retain raw template provenance. The projection is rendered deterministically from that block (frontmatter keys for Claude Code and
   Antigravity, TOML keys plus `developer_instructions` for Codex), and the prompt is prefixed with the contract's
   managed path, its procedure skill and the host status. Only the host's allowlisted keys are accepted, a host with
   `status: unsupported` gets no file, and a contract that does not name every agent is invalid (`BUNDLE_INVALID`
