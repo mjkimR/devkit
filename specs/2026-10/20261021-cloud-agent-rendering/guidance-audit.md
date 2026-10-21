@@ -1,0 +1,9 @@
+# Maintained cloud guidance audit
+
+The output inventory test enumerates all assets selected by `all` in advisory, authoring, devkit, harness, response-style and spec, once per supported host. Every destination is classified, including managed references, constitutions, native role contracts, generated entry skills and machine workflow prose. Final output paths cannot retain .jinja.
+
+Conditional surfaces: spec constitution; planning/development worker contracts; main spec, integration, orchestration and proposal-review skills; completion, worktree, git policy, backlog, effort, host-delegation and workflow-signal references. Workflow executable definitions retain their gates with transport-neutral integration prose. All relative links and rendered document budgets are checked in local and cloud modes.
+
+Exact descriptive exceptions are limited to three advisory protocol-description lines and two consumption configuration-reference lines. They name transport applicability or configuration keys without tool identifiers, discovery, registration instructions, connection steps, approval routes or fallback directions. Each exception is matched by exact path and line in test_cloud_guidance.py; no asset-kind exclusion excuses operational Markdown. Rule/gate/hook non-Markdown payloads are classified as executable/configuration files, and bundle manifests as source provenance. Third-party content and custom overrides are not covered by the maintained-content promise.
+
+Required cloud flows include shared artifact CLI, source-bound proposal report CLI, exact playbook retrieval and workflow inspection. Cloud output explicitly requires separately existing CLI/PR mutation authority or returns results to the Host. Local output retains connection checks and native approval routes. Runtime implementation and permissions are untouched.

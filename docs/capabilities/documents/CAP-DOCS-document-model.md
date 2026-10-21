@@ -1,7 +1,7 @@
 ---
 id: CAP-DOCS-document-model
 title: Document Model
-summary: "Defines Markdown document locations, IDs, kinds, references and the workspace index, including the distinction between feedback promotion and verified resolution."
+summary: "Defines Markdown document identity, references and indexing, including typed direct unit prerequisites, terminal completed targets and proposal-only milestone membership."
 area: documents
 status: active
 stories:
@@ -111,7 +111,7 @@ The table order is the kind order: `devkit spec list` sorts by it. Living Spec d
 
 1. **Full IDs only**: A document MUST reference another by its full ID, never by a Markdown path.
 2. **Relation fields** (frontmatter): `stories`, `capabilities`, `related_stories`, `related_capabilities` hold a list
-   of IDs; `spec` and `plan` hold one ID. Proposal/spec anchors may declare `milestone`, one MS ID; milestones alone may declare `depends_on`, a list of MS IDs. A field of the wrong shape (a scalar where a list is expected, a non-string
+   of IDs; `spec` and `plan` hold one ID. Proposal anchors may declare `milestone`, one MS ID; SPEC milestone metadata is ignored and yields no membership reference. Milestones may declare `depends_on`, a list of MS IDs; proposal/spec anchors may declare a list of exact PROP/SPEC anchor IDs. Omit an empty optional field; an explicit empty list is valid. Auxiliary documents cannot declare unit prerequisites. Completed SPEC targets remain resolvable and are terminal for unit cycle traversal; the MS and unit graphs stay separate. A field of the wrong shape (a scalar where a list is expected, a non-string
    item) is recorded as an issue and skipped; `RULE-document-reference` reports it.
 3. **Prose references**: a single-backtick code span holding exactly one ID (the canonical form) or the same ID in
    square brackets (the bracket form, which `devkit rules fix` converts to the canonical form).

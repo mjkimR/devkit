@@ -1,0 +1,21 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T02:57:23.037384Z'
+status: completed
+summary: round 1; independent reconcile reviewer verified six targets, accepted ADR, guides and rule guide; P1 projection-path wording contradiction.
+findings:
+- issue: The projection contract unconditionally promises raw override-path citations, including newly supported templates.
+  evidence: CAP-DIST-agent-projections.md lines 98-99 and CAP-DIST-manifest-spec.md line 258 versus inventory.py lines 340-344.
+  failure_condition: Templated contracts cite rendered managed Markdown while ordinary overridden Markdown contracts cite their override path; both documents omit this distinction.
+  suggested_action: Qualify both documents consistently; ordinary Markdown contracts cite the override when present, templated contracts always cite rendered managed .md, with raw override provenance recorded separately.
+  resolution: open
+  severity: P1
+assumptions:
+- Read-only isolated reviewer; confinement emulated with scoped reads and clean unchanged HEAD checks.
+checks: {}
+diff_scope:
+  base: ba2e1678f37328cb2b9fcce6387d37100a5f0c8c
+  head: 8f341c89fc4598142c15987b207bb21269a435a5
+activity_effort: high

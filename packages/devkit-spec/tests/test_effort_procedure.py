@@ -19,7 +19,7 @@ WORKFLOWS = sorted((BUNDLE / "workflows").glob("*.md"))
 
 def _text(path: Path) -> str:
     """The file's text with every whitespace run collapsed, so assertions do not depend on line wrapping."""
-    return " ".join(path.read_text(encoding="utf-8").split())
+    return " ".join(_rendered(path).split())
 
 
 def _section(text: str, heading: str) -> str:
@@ -114,7 +114,7 @@ def test_severity_is_p1_p2_or_p3_on_every_review_finding() -> None:
 
 # AC-05
 def test_high_planning_runs_scout_and_the_request_reports_its_absence() -> None:
-    planning_row = _row(EFFORT.read_text(encoding="utf-8"), "Planning (`proposal`)")
+    planning_row = _row(_rendered(EFFORT), "Planning (`proposal`)")
     assert "`scout` and `challenger` required" in planning_row.split("|")[-2]
     loop = _section(_text(LOOP), "## 5. Planning at `high`")
     assert "runs `scout` before the first `challenger`" in loop
@@ -148,7 +148,7 @@ CITING = [
 # AC-07
 @pytest.mark.parametrize(
     "path",
-    sorted([*BUNDLE.glob("skills/**/*.md"), *BUNDLE.glob("subagents/*.md"), *WORKFLOWS]),
+    sorted([*BUNDLE.glob("skills/**/*.md*"), *BUNDLE.glob("subagents/*.md*"), *WORKFLOWS]),
     ids=lambda path: str(path.relative_to(BUNDLE)),
 )
 def test_no_bundle_file_restates_an_unbounded_high_re_review(path: Path) -> None:
@@ -175,7 +175,18 @@ def test_the_five_workflow_bodies_are_all_cited() -> None:
 # AC-08
 @pytest.mark.parametrize("role", ("code-reviewer", "reconcile-reviewer", "challenger"))
 def test_reviewer_payloads_carry_the_round_inputs(role: str) -> None:
-    row = _row((BUNDLE / "skills/spec-delegate/references/payload.md").read_text(encoding="utf-8"), f"`{role}`")
+    row = _row(_rendered(BUNDLE / "skills/spec-delegate/references/payload.md"), f"`{role}`")
     assert "the `activity-effort`" in row.lower()
     assert "in a later round also the earlier rounds' findings" in row
     assert "the round's diff scope" in row
+
+
+def _rendered(path: Path) -> str:
+    from devkit.distribution.bundles.templates import render_template
+
+    if path.name.endswith(".md.jinja"):
+        return render_template(path.read_bytes(), {}, str(path), environment="local").decode()
+    if path.exists():
+        return path.read_text(encoding="utf-8")
+    source = path.with_name(path.name + ".jinja")
+    return render_template(source.read_bytes(), {}, str(source), environment="local").decode()

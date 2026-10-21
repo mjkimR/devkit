@@ -25,8 +25,10 @@ from devkit.rules import Phase, RuleContext, Severity, Violation
 from devkit.rules.rules import BaseRule
 
 from devkit_spec.documents import Document, DocumentIndex, Reference, is_id, rewrite
+from devkit_spec.documents.dependencies import cycle_members, target_problem
 from devkit_spec.documents.ids import ID_SOURCE, Kind
 from devkit_spec.documents.markdown import visible_lines
+from devkit_spec.documents.model import is_unit_anchor
 from devkit_spec.rules import FIX_COMMAND, document_index, is_material, reportable
 
 RULE_ID = "RULE-document-reference"
@@ -156,6 +158,15 @@ class DocumentReferenceRule(BaseRule):
                 if current not in seen:
                     seen.add(current)
                     pending.extend(graph.get(current, []))
+        cyclic = cycle_members(index)
+        for document in index.documents:
+            if document.id in cyclic and reportable(ctx, index, document):
+                add(
+                    document,
+                    1,
+                    f"unit dependency cycle includes {document.id}",
+                    "Remove a depends_on edge to break the cycle",
+                )
         found.extend(self._glossary(ctx, index))
         return found
 
@@ -168,6 +179,21 @@ class DocumentReferenceRule(BaseRule):
                 "Replace the value with the target document's ID",
                 column=ref.column,
             )
+            return
+        if ref.field == "depends_on" and is_unit_anchor(document):
+            problem = target_problem(index, ref.target)
+            if problem is not None:
+                replacement = _handed_off(index, ref.target)
+                if replacement and not historical and target_problem(index, replacement) is None:
+                    add(
+                        document,
+                        ref.line,
+                        f"{ref.target} was handed off; reference `{replacement}`",
+                        f"Run `{FIX_COMMAND}` to replace it with {replacement}",
+                        fixable=True,
+                    )
+                else:
+                    add(document, ref.line, problem, "Use one exact proposal/spec anchor ID")
             return
         prefix = EXPECTED_PREFIX.get(ref.field)
         if prefix and not ref.target.startswith(prefix):
@@ -281,6 +307,8 @@ class DocumentReferenceRule(BaseRule):
             for ref in document.references:
                 spec = _handed_off(index, ref.target)
                 if spec is not None:
+                    if ref.field == "depends_on" and is_unit_anchor(document) and target_problem(index, spec):
+                        continue
                     mapping[ref.target] = spec
                 elif ref.bracket:
                     mapping.setdefault(ref.target, ref.target)

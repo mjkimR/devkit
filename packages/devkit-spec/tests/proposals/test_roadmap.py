@@ -1,5 +1,6 @@
 """CLI authoring validates roadmap metadata before writes and handoff preserves origins."""
 
+import inspect
 import subprocess
 from pathlib import Path
 
@@ -24,8 +25,7 @@ def milestone(root: Path) -> None:
 def test_invalid_milestone_never_creates_bundle(workspace: Path, value: str) -> None:
     with pytest.raises(ArgumentError):
         create_proposal(workspace, "child", milestone=value)
-    with pytest.raises(ArgumentError):
-        create_spec(workspace, "child", milestone=value)
+    assert "milestone" not in inspect.signature(create_spec).parameters
     assert not (workspace / "docs/proposals/PROP-child").exists()
     assert not (workspace / "specs").exists()
 
@@ -55,14 +55,14 @@ def test_cli_and_handoff_preserve_provenance(workspace: Path) -> None:
     handed = handoff_proposal(workspace, "child", today=TODAY)
     data = parse((workspace / handed.dir / "spec.md").read_text()).data
     assert data is not None
-    assert {key: data[key] for key in ("milestone", "decomposed_from", "supersedes")} == {
-        "milestone": "MS-foundation",
+    assert {key: data[key] for key in ("decomposed_from", "supersedes")} == {
         "decomposed_from": "PROP-parent",
         "supersedes": "PROP-retired",
     }
+    assert "milestone" not in data
     created = runner.invoke(cli, ["spec", "new", "independent", "--milestone", "MS-foundation", "-w", str(workspace)])
-    assert created.exit_code == 0, created.output
-    assert "milestone: MS-foundation" in next((workspace / "specs").glob("*/**/spec.md")).read_text()
+    assert created.exit_code == 2
+    assert "No such option '--milestone'" in created.output
 
 
 def test_decomposition_rejects_noneditable_parent(workspace: Path) -> None:

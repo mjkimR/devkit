@@ -12,7 +12,7 @@ from devkit.distribution.errors import BundleError
 Scalar = str | bool | int
 NAME = re.compile(r"[a-z][a-z0-9_]*\Z")
 TYPES = {"string": str, "boolean": bool, "integer": int}
-TEMPLATE_KINDS = frozenset({"instruction", "guidance", "document", "skill"})
+TEMPLATE_KINDS = frozenset({"instruction", "guidance", "document", "skill", "subagent"})
 
 
 @dataclass(frozen=True)
@@ -63,7 +63,9 @@ def output_path(source: str) -> str:
     return source.removesuffix(".jinja") if source.endswith(".md.jinja") else source
 
 
-def render_template(data: bytes, variables: dict[str, Scalar], context: str) -> bytes:
+def render_template(data: bytes, variables: dict[str, Scalar], context: str, *, environment: str = "local") -> bytes:
+    if environment not in {"local", "cloud"}:
+        raise BundleError(f"{context}: execution environment must be local or cloud")
     # Keeping these imports here preserves CLI startup and non-template sync import costs.
     from jinja2 import StrictUndefined
     from jinja2.sandbox import SandboxedEnvironment
@@ -86,6 +88,10 @@ def render_template(data: bytes, variables: dict[str, Scalar], context: str) -> 
     # No attribute/call filters that could escape the scalar-only interface.
     env.filters = {name: env.filters[name] for name in ("lower", "upper", "trim", "default", "replace", "length")}
     try:
-        return env.from_string(data.decode("utf-8")).render(vars=variables).encode("utf-8")
+        return (
+            env.from_string(data.decode("utf-8"))
+            .render(vars=variables, execution={"environment": environment})
+            .encode("utf-8")
+        )
     except Exception as exc:
         raise BundleError(f"{context}: template rendering failed: {exc}") from exc

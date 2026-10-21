@@ -36,6 +36,7 @@ title: <Feature Title>
 summary: "<one or two English sentences: what the spec changes>"
 status: planned # planned | in-progress | completed
 created: <YYYY-MM-DD>
+# depends_on: [PROP-foundation, SPEC-parser] # optional exact anchors; omit when empty
 related_capabilities:
   - CAP-<AREA>-<slug>
 related_stories:

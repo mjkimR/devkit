@@ -53,3 +53,10 @@ Development never returns to Planning. Only a party that can talk to the user cl
 - A rejected proposal (status only, the user's reason in the commit message) is cleaned up by a later hygiene pass (`SPEC_PROPOSAL_REJECTED_PENDING` in `devkit rules check -p hygiene`): a rejection ADR outside the proposal directory, referencing the proposal and the rejection commit, with the proposal deleted in the same commit. The rejection commit closes open questions ([worker records](worker-records.md) §2).
 
 Before deleting any proposal, follow [feedback retirement](feedback-retirement.md).
+
+
+Before direct-spec intake or explicit proposal pickup, inspect optional unit depends_on using the single local
+base snapshot procedure in `spec-next/references/next-work.md`, even when idle selection is not running. Record an
+explicit order override's unsatisfied IDs/reasons in the ordinary intent decision; do not waive malformed
+references or cycles. Before supersede, reject, delete or session reclassification, follow Backlog's per-dependent
+incoming prerequisite disposition in the same authorized change; provenance never selects successors.

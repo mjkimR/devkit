@@ -1,0 +1,18 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T04:11:45.029876Z'
+status: completed
+summary: Independent medium recheck PASS across all eleven targets; all three earlier P1 findings addressed by approved architecture, package guidance and viewer corrections. No additional omissions or contract contradictions.
+findings: []
+assumptions:
+- Read-only reconcile-reviewer role emulated with explicit worktree commands and unchanged HEAD/status. Approved scope adjustment is authoritative; existing precise entrypoints remain sufficient.
+checks:
+  reconciliation: PASS independent full feature and eleven targets
+  previous_findings: PASS all three P1 findings addressed
+  tests: PASS affected1395 and viewer17; caller pack PASS
+  generated: PASS Host generated check viewer-assets current at 0d56a001
+diff_scope:
+  base: 1b36430e893eefeb16046ce641440ed4bd74f660
+  head: 0d56a0013b6a21fa366bcee7fc3e37d226bfad75

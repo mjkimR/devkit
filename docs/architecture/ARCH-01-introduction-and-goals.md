@@ -51,4 +51,4 @@ Its primary mission is to provide an **agent-first developer harness** that unif
 
 ## Repository roadmap
 
-The repository owns its roadmap under `docs/roadmap/`. A global MS milestone document cites the mission or quality goal it advances, states an observable exit condition and holds no work list. Proposal/spec anchors declare milestone membership; Backlog maintains explicit lifecycle decisions and spec-next recommends queued work (`ADR-roadmap-in-repository`, `ADR-milestone-documents`). External trackers and autohub integration are outside this roadmap contract.
+The repository owns its roadmap under `docs/roadmap/`. A global MS milestone document cites the mission or quality goal it advances, states an observable exit condition and holds no work list. Only direct proposal anchors declare milestone membership; SPEC milestone metadata is ignored and handoff does not carry it. Backlog maintains explicit lifecycle decisions and spec-next recommends queued work (`ADR-roadmap-in-repository`, `ADR-milestone-documents`). External trackers and autohub integration are outside this roadmap contract.

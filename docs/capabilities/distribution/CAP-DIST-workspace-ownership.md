@@ -30,7 +30,7 @@ created_at: 2026-10-17
     sync-journal.json     # Write-ahead journal of an unfinished transaction
     seen-bundles.json     # Installed bundles this clone was told about (BUNDLE_UNSELECTED is announced once)
     deployed.json         # Last deployed signatures and personal destination provenance
-    local-render.json     # Personal signatures bound to canonical receipt and effective variables
+    local-render.json     # Personal signatures bound to canonical receipt, render mode and effective variables
 <agent native paths>      # Projected native assets (.agents/, .codex/, .claude/)
 AGENTS.md                 # Project-owned; only the DEVKIT:START/END block inside it is managed (Git-tracked)
 <seeded targets>          # Files a seeded document asset wrote once; project-owned (Git-tracked)
@@ -206,7 +206,7 @@ bundle and path but loses content keeps applying, with drift reported, until the
 tracked local configuration or personal outputs and effective ignore negations with `CONFIG_LOCAL_NOT_IGNORED`
 (exit 2), naming the source path and required ignore/index action. It never changes the Git index. Dry-run/check
 report the ignore edit; locked sync refuses a required `.devkit/.gitignore` change. Projects tracking native
-projections must explicitly untrack and ignore the affected outputs before personalization. The receipt, root
+projections must explicitly untrack and ignore the affected outputs before personalization. Canonical execution mode is not a personal preference: ordinary sync may rewrite tracked managed/projection files when switching local/cloud. Personal variables still cannot alter constitutions or guidance. The receipt records actual render mode; no-save rendering leaves persisted runtime settings unchanged. The receipt, root
 guidance, seeds and shared config stay canonical; see `CAP-DIST-sync-and-transactions`.
 
 ## Presentation preference ownership

@@ -60,9 +60,13 @@ def parse_document(path: str, text: str) -> Document | None:
     for name in fields:
         if name in {"decomposed_from", "supersedes"} and not is_unit_anchor(document):
             continue
-        if name == "depends_on" and document.kind is not Kind.MILESTONE:
-            document.issues.append(Issue(header_line, "depends_on is valid only on milestones"))
+        if name == "depends_on" and document.kind is not Kind.MILESTONE and not is_unit_anchor(document):
+            document.issues.append(
+                Issue(header_line, "depends_on is valid only on milestones and proposal/spec anchors")
+            )
             continue
+        if name == "milestone" and document.kind is Kind.SPEC and is_unit_anchor(document):
+            continue  # Historical SPEC metadata is not milestone membership.
         if name == "milestone" and not is_unit_anchor(document):
             document.issues.append(Issue(header_line, "milestone is valid only on proposal/spec anchors"))
             continue
