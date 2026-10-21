@@ -2,7 +2,7 @@
 id: PROP-exact-playbook-get
 title: Exact playbook retrieval for external runners
 summary: Add exact bundle/playbook retrieval with effective overrides, source identity and context requirements while defining external ownership of scheduling and execution.
-status: reviewing                         # draft | reviewing | accepted | rejected
+status: accepted                         # draft | reviewing | accepted | rejected
 created_at: 2026-10-21
 target_area: capabilities/distribution/
 priority: high                        # critical | high | medium | low
