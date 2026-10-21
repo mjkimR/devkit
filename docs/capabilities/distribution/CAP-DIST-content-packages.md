@@ -1,13 +1,14 @@
 ---
 id: CAP-DIST-content-packages
 title: "Content Packages"
-summary: "Content wheel packaging, bundle distribution and dependency boundaries, the devkit-dist and devkit-agt installations and their built-in bundles, including the auto-selected harness bundle, opt-in response-style instructions and standalone signals."
+summary: "Content wheel packaging, bundle distribution and dependency boundaries, the devkit-dist and devkit-agt installations and their built-in bundles, including the auto-selected harness bundle, opt-in response-style and maintenance bundles, and standalone signals."
 area: distribution
 status: active
 entrypoints:
   - packages/devkit-dist/src/devkit/distribution/installation/discovery.py
   - packages/devkit/src/devkit/harness_guide/
   - packages/devkit-catalog/src/devkit_catalog/response_style/
+  - packages/devkit-catalog/src/devkit_catalog/maintenance/
 created_at: 2026-10-17
 ---
 
@@ -178,3 +179,15 @@ including LF. This is not a limit on the whole guide or skill body. Deployment c
 projections; the authored examples in `MAT-response-style-rewrite-draft` illustrate the accepted design and do
 not measure model adherence, reader comprehension, comparative quality or host compaction behavior
 (`ADR-response-style-adaptive-replies`, `ADR-response-style-measurement`).
+
+## 6. Opt-in Maintenance
+
+The content-only `devkit-catalog` wheel registers `maintenance` as a resource module with no runtime dependencies
+or automatic selection. `devkit add maintenance` selects default `all`; `devkit add maintenance:upkeep` selects
+`upkeep`. Both deploy precisely the independent `drift-reconciliation` playbook. `all` is implicit, not a declared
+preset table. No `reporting` preset or companion playbook is delivered.
+
+Selection makes the playbook available to explicit `devkit-playbook` invocation and independent on-demand lookup
+(`CAP-DIST-context-and-playbooks`); it never executes a review. `CAP-DLV-drift-reconciliation` defines its bounded
+evidence report, human dispositions and correction verification. Available repository lookup and check tools are
+reused; missing tools become reported coverage gaps rather than a new package dependency.

@@ -26,7 +26,7 @@ remain loaded on demand. The three playbooks share one bundle rather than separa
 - Checks examine documented CLI commands, options, interfaces, terminology, and behavior against implementation and relevant guidance. Findings separate deterministic failures from suspected semantic mismatches, citing both sides and explaining the discrepancy.
 - Each finding receives an explicit disposition: update documentation when the implemented behavior is intended, fix code when the documented intent remains correct, or defer with a reason and a follow-up destination. Discovery alone does not authorize choosing a new source of truth or rewriting the contract.
 - Changes follow the applicable delivery and verification boundaries. Completion evidence distinguishes detected, resolved, and deferred findings and links to changes and verification, supporting later sweeps and reporting without duplicate follow-ups.
-- Detection choices respect the evidence and rejected candidates recorded in `PROP-periodic-drift-reconciliation`; path changes or document age alone do not establish semantic drift. A dedicated detection command is introduced only when the existing commands and playbook procedure leave a demonstrated gap.
+- Detection choices respect the evidence and rejected candidates recorded in `SPEC-periodic-drift-reconciliation`; path changes or document age alone do not establish semantic drift. A dedicated detection command is introduced only when the existing commands and playbook procedure leave a demonstrated gap.
 
 ## Non-goals
 

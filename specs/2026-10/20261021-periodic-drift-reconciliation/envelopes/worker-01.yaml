@@ -1,0 +1,36 @@
+kind: worker
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T00:09:53.312090Z'
+status: failed
+summary: Specify, build-verify and independent code review complete. Five-target reconciliation agrees with implementation; independent reconciliation leaves one P2 exact weekly-report follow-up link requiring Host base refresh. Stopped before final report and integration.
+findings:
+- issue: Required retained weekly-report proposal destination needs Host base refresh.
+  evidence: envelopes/reconcile-check-01.yaml reports P2; reconcile.md remains pending and spec.md in-progress.
+  suggested_action: Verify PROP-weekly-report after Host refresh, add exact link and source linkage, then run recovery Development and final report.
+  resolution: open
+assumptions:
+- 'Emulated worker and reviewers: prompt scopes, explicit workdir, scoped approval and Host committed-range validation substitute for native confinement.'
+- Host authorized scripts/smoke.sh catalog-name assertion only; no other boundary expansion.
+- Imported FB-nested-role-skill-read-scope remains open observation-only; no direct fix claimed.
+unverified_areas:
+- PROP-weekly-report on newer Host base; Host owns exact link after base refresh.
+- Manual paper fixture demonstrates procedure records, not autonomous agent reliability.
+- Official managed bundle sync and integration remain Host-owned; no .devkit files changed.
+checks:
+  tests: PASS just test-affected --base a7958abb8eb28fd3835a5ba72042e23a9099f207 full fallback 4011 passed 14 skipped
+  build: PASS just smoke and maintenance bundle validation
+  lint: PASS catalog lint, catalog types, cumulative governance zero errors/warnings
+  code_review: PASS independent reviewer no findings
+  reconcile: FAIL one P2 exact retained weekly-report destination unverified on current base
+  boundaries: PASS explicit cwd/scoped approvals, both nested reviewers read-only and clean heads
+diff_scope:
+  base: a7958abb8eb28fd3835a5ba72042e23a9099f207
+  head: e3328d3a7fd1beea12654bced3b773f5bd269980
+problem:
+  cause: Required PROP-weekly-report destination exists only on a newer Host-owned base, outside this worker read/write and Git merge authority; current reconciliation cannot be finalized without that verified link.
+  attempts:
+  - Preserved existing milestone reference and Host-owned follow-up note without duplicate feedback; independent reconcile reviewer found this insufficient (reconcile-check-01 P2).
+  recovery: Host refreshes this worktree from the newer base, adds and verifies PROP-weekly-report and source linkage in reconcile.md, then resumes Development to resolve this worker record, recheck reconciliation, collect feedback and write final report.
+activity_effort: medium

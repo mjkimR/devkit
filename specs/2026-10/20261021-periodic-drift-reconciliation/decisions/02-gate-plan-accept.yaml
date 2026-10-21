@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-periodic-drift-reconciliation
+by: user
+at: '2026-10-20T23:54:14.043688Z'

@@ -5,7 +5,7 @@ status: draft
 created_at: 2026-10-08
 ---
 
-> **Purpose**: measurement record kept as the evidence behind section 4 of `PROP-periodic-drift-reconciliation`.
+> **Purpose**: measurement record kept as the evidence behind section 4 of `SPEC-periodic-drift-reconciliation`.
 > It compares the documents predicted by looking up completed specs' code changes through the current `entrypoints`
 > with the documents their `reconcile.md` actually updated, to measure the precision, recall and false-positive
 > causes of a stale-document candidate check. Document IDs below are from the benchmark repository and do not exist in devkit-spec.
@@ -119,7 +119,7 @@ not an estimate over all false positives.
 
 ## Recommendation
 
-Reject the check of section 4 of `PROP-periodic-drift-reconciliation` (warning on entrypoint reverse-lookup candidates
+Reject the check of section 4 of `SPEC-periodic-drift-reconciliation` (warning on entrypoint reverse-lookup candidates
 per commit or spec), for three reasons. First, the baseline is precision 0.48, recall 0.54, and none of the five noise
 filters tested raises precision above 0.5 while keeping recall at 0.5: the data gives no threshold. Second, eight of
 ten judged false positives were noise. The sample is clustered and is no estimate, but applying that ratio to the 121

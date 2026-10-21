@@ -155,7 +155,7 @@ with discover_bundles() as bundles:
         'devkit': 'devkit-dist', 'advisory': 'devkit-dist', 'git-commits': 'devkit-dist',
         'authoring': 'devkit-agt', 'harness': 'devkit-agt',
     }
-    assert {item.bundle.name for item in bundles if item.package == 'devkit-catalog'} == {'host-observer', 'response-style'}
+    assert {item.bundle.name for item in bundles if item.package == 'devkit-catalog'} == {'host-observer', 'response-style', 'maintenance'}
 "
     echo "--- devkit sync (built-in bundles are selected by default)"
     uv run devkit sync >/dev/null

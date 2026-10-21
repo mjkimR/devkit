@@ -1,37 +1,28 @@
 ---
-id: PROP-periodic-drift-reconciliation
+id: SPEC-periodic-drift-reconciliation
 title: Spec-code drift reconciliation maintenance playbook
-summary: "Defines a manually invocable maintenance playbook that checks Living Spec, code, and guidance consistency using existing commands and evidence review, then resolves findings through user decisions: the Tier 2 reconciliation of ADR-dual-source-of-truth-and-periodic-reconciliation."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-10-14
+summary: 'Defines a manually invocable maintenance playbook that checks Living Spec, code, and guidance consistency using existing commands and evidence review, then resolves findings through user decisions: the Tier 2 reconciliation of ADR-dual-source-of-truth-and-periodic-reconciliation.'
+status: completed
+created: 2026-10-21
 milestone: MS-drift-reconciliation
-target_area: capabilities/delivery/
-priority: medium                      # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - capabilities/delivery/
-    - capabilities/distribution/
-    - capabilities/traceability/
-    - packages/devkit-catalog/
-    - guides/
-    - docs/stories/governance/
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
-workflow_hash: sha256:90918c632715461d07f99f683b8381bdbe6381ad6689a7575a72c002c18c1399
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
 
-# [PROP-periodic-drift-reconciliation] Spec-code drift reconciliation maintenance playbook
+# [SPEC-periodic-drift-reconciliation] Spec-code drift reconciliation maintenance playbook
+
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-periodic-drift-reconciliation on 2026-10-21.
+- **Preserved Materials**: `docs/materials/2026-10/20261021-periodic-drift-reconciliation`
+- Target Docs Blueprint: `PROP-periodic-drift-reconciliation-target` (Living Spec targets for this plan and reconcile.md)
 
 - **Parent decision**: `ADR-dual-source-of-truth-and-periodic-reconciliation`
 
-## 1. Background & Hypothesis
+### 1. Background & Hypothesis
 
-### 1.1 Problem
+#### 1.1 Problem
 
 - Per `ADR-dual-source-of-truth-and-periodic-reconciliation`, spec and code are complementary ledgers at different
   levels of abstraction.
@@ -40,14 +31,53 @@ workflow_hash: sha256:90918c632715461d07f99f683b8381bdbe6381ad6689a7575a72c002c1
 - Apart from reading by eye, nothing detects this, so drift is noticed only after it has piled up, and the large
   cleanup that follows is costly and tiring.
 
-### 1.2 Hypothesis
+#### 1.2 Hypothesis
 
 - A manually invocable **maintenance playbook** combining existing commands and evidence-based review can expose
   accumulated drift without requiring a new detector or scheduler.
 - A user-driven reconciliation sweep keeps spec and code aligned by deciding whether each finding calls for a
   documentation update, a code fix, or a documented deferral. Neither ledger is automatically authoritative.
 
-## 2. Planning Outcome
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Spec-code drift reconciliation maintenance playbook so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: detector, scheduler, standalone skill, report database, companion playbooks, automatic rewriting and unrelated repairs.
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] Opt-in delivery
+- **Given** the catalog is installed without maintenance selected
+- **When** default maintenance or maintenance:upkeep is selected
+- **Then** precisely drift-reconciliation is deployed; unselected maintenance deploys nothing; discovery, validation and independent lookup succeed.
+
+### [AC-02] Bounded evidence
+- **Given** an explicitly selected batch and repository revision
+- **When** the playbook is invoked manually
+- **Then** the report records intake, candidate coverage, precise evidence from both ledgers, deterministic versus semantic classification, and coverage gaps without a whole-repository consistency claim.
+
+### [AC-03] Human arbitration
+- **Given** evidenced findings
+- **When** dispositions are requested together
+- **Then** each finding records an explicit documentation update, code fix, deferral or waiver; unanswered findings remain pending and only decided corrections enter the applicable workflow.
+
+### [AC-04] Repeatability and verification
+- **Given** repeat findings or changed revision or dirty paths
+- **When** reconciliation continues
+- **Then** prior destinations are reused, changed evidence is revalidated, unrelated changes are preserved, and completion separates resolved, deferred, waived, pending and coverage gaps.
+
+### [AC-05] Demonstration
+- **Given** the shipped playbook
+- **When** a bounded real read-only sweep and isolated seeded exercise run
+- **Then** retained evidence demonstrates every disposition, pending decisions, deduplication and revalidation; simulated decisions authorize no repository correction.
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Outcome
 
 The selected direction is a bounded, manually invoked evidence review using existing lookup and governance
 commands. A new detector, scheduler, standalone skill, report database, or MCP tool is unnecessary. The report is
@@ -55,9 +85,9 @@ an ordinary Markdown material in the owning work unit, or the repository's exist
 unit exists. Creating that report authorizes no source corrections. Preset membership is delivered incrementally
 while the two independent companion playbooks do not yet exist (section 3.4).
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 Playbook Intake and Evidence Review
+#### 3.1 Playbook Intake and Evidence Review
 
 - **Invocation**: explicit manual invocation with a selected area or contract scope and repository revision.
   Scheduler integration and trigger design are outside this proposal.
@@ -74,7 +104,7 @@ while the two independent companion playbooks do not yet exist (section 3.4).
   and explain the suspected discrepancy. Detailed evidence belongs in a report artifact; command output follows
   `ARCH-08-1-agent-output` and `CAP-ADV-agent-advisory-protocol`.
 
-### 3.2 User-Driven Reconciliation
+#### 3.2 User-Driven Reconciliation
 
 For each finding, obtain an explicit disposition:
 
@@ -86,7 +116,7 @@ Apply agreed changes through the applicable delivery and approval boundaries, ve
 references, and record detected, resolved, and deferred findings separately. Repeated sweeps reuse existing feedback
 or proposals instead of duplicating follow-ups.
 
-### 3.3 Delivery and Verification
+#### 3.3 Delivery and Verification
 
 - Deliver a playbook with defined inputs, scope selection, evidence collection, user decisions, cleanup, verification,
   and completion evidence; demonstrate it with a manual run that records findings and their dispositions.
@@ -95,7 +125,7 @@ or proposals instead of duplicating follow-ups.
 - A dedicated detection command, a new standalone skill, automated scheduling, and automatic contract rewriting are
   excluded. A future detector requires a separately evidenced gap and scope decision.
 
-### 3.4 Catalog Bundle and Presets
+#### 3.4 Catalog Bundle and Presets
 
 - Ship `drift-reconciliation` as a playbook asset of the opt-in, content-only `maintenance` bundle in
   `devkit-catalog`; use its existing entry-point, package resource, and preset machinery. No engine extension or
@@ -113,7 +143,7 @@ or proposals instead of duplicating follow-ups.
   playbook lookup. Update catalog package documentation and existing installation recommendations. The existing
   manifest contract is reused; the content-packages contract describes the new available bundle.
 
-### 3.5 Bounded Run and Report Contract
+#### 3.5 Bounded Run and Report Contract
 
 1. Intake records repository identity, HEAD, dirty-path status, selected contract IDs or one selected area, the
    implementation and guidance roots permitted for inspection, report destination, and any prior report. Missing
@@ -143,7 +173,7 @@ or proposals instead of duplicating follow-ups.
    does not assert whole-repository consistency. Completion lists reviewed items, gaps, pending, resolved,
    deferred and waived counts, decision provenance, verification evidence and follow-up destinations.
 
-### 3.6 Development Acceptance Evidence
+#### 3.6 Development Acceptance Evidence
 
 - Given only this asset is delivered, selecting `maintenance:upkeep` or
   default `maintenance` deploys precisely drift-reconciliation; an unselected catalog deploys none. Existing
@@ -160,7 +190,7 @@ or proposals instead of duplicating follow-ups.
 - Given repeated findings, changed evidence, or an unanswered decision, a manual exercise shows deduplication,
   revalidation or pending status respectively. No scheduler or rejected path-based detector is introduced.
 
-## 4. Rejected Candidate: Entrypoint-Based Stale-Document Hints
+### 4. Rejected Candidate: Entrypoint-Based Stale-Document Hints
 
 - **Source**: code-entrypoints work, implemented as `CAP-TRACE-code-entrypoints` (entrypoint metadata and
   reverse lookup by path).
@@ -182,7 +212,7 @@ or proposals instead of duplicating follow-ups.
 - **Reopen condition**: the same measurement on another repository gives leave-one-out precision of at least 0.6
   together with recall of at least 0.5. Integration into the `spec-review` skill is then designed separately.
 
-## 5. Lifecycle & Retirement Criteria
+### 5. Lifecycle & Retirement Criteria
 
 - **Milestone**: `MS-drift-reconciliation`; manual playbook delivery is independent of scheduling.
 - **Priority**: medium. Evidence from other repositories can refine the playbook but is not a prerequisite for its
@@ -191,3 +221,4 @@ or proposals instead of duplicating follow-ups.
   evidence and its reopen condition remain in force; this proposal does not introduce a new detector threshold.
 - Acceptance follows the proposal approval workflow; Development handoff follows acceptance.
 - On rejection, preserve the decision and relevant evidence through the proposal retirement workflow.
+
