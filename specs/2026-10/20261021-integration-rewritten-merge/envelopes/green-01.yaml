@@ -1,0 +1,16 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-21T00:00:41.342648Z'
+status: completed
+summary: Bounded post-hook adoption passes metadata rewrite and preserves structural, source, policy and resume guards
+findings: []
+assumptions:
+- Green verified uncommitted implementation; committed at stage boundary
+checks:
+  resolved: PASS original executable hook regression now completes cleanup
+  preserved: PASS 33 base-advance tests and 1238 affected tests; lint and Pyright pass
+diff_scope:
+  base: 60c113789a2a892baddb38a99cd593d6c0144bc1
+  head: ''

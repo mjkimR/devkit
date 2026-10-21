@@ -23,4 +23,4 @@ A hook can mutate content, parents, source or policy. Tree/parent checks reject 
 
 ## 5. Verification
 
-Retain an executable post-merge hook regression: Red before production edits, Green afterward. Test content/parent/source/policy attacks, ordinary paths, ff-only and resumed cleanup. Run just lint-check agt, just check agt, just test-affected (including full fallback), cumulative governance, independent code review and reconciliation verification. Test fixtures use isolated temporary repositories outside checkouts.
+Retain an executable post-merge hook regression: Red before production edits, Green afterward. Test content/parent/source/policy attacks, ordinary paths, ff-only and resumed cleanup. Run just lint-check devkit-agt, just check devkit-agt, just test-affected (including full fallback), cumulative governance, independent code review and reconciliation verification. Test fixtures use isolated temporary repositories outside checkouts.
