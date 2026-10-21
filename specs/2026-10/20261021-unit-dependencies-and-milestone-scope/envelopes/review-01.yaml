@@ -1,0 +1,29 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T03:58:36.559950Z'
+status: completed
+summary: 'Independent medium review of full feature: ambiguous-source handoff defect and local Backlog budget exceedance require fixes.'
+findings:
+- issue: Handoff projection silently resolves an ambiguous source PROP identity that actual reference relocation refuses.
+  evidence: packages/devkit-spec/src/devkit_spec/proposals/handoff.py:888
+  failure_condition: An accepted PROP-child has a second declaration, including in another namespace, and a live unit depends_on PROP-child; projection passes but actual rewrite reports AMBIGUOUS and leaves the edge unchanged.
+  suggested_action: Require the source ID to identify exactly the source anchor before projection; add a namespaced duplicate-source zero-write regression.
+  resolution: open
+  severity: P1
+- issue: Locally rendered Backlog is 12352 bytes, exceeding its 12288-byte budget by 64 bytes.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/backlog.md.jinja:86
+  failure_condition: Local rendering fails the required test_bundle_budgets.py check.
+  suggested_action: Shorten redundant wording and verify local and cloud budgets.
+  resolution: open
+  severity: P2
+assumptions:
+- Named code-reviewer ran in isolated context under emulated boundaries; read-only scoped inspection and unchanged HEAD/clean status were verified.
+checks:
+  tests: FAIL affected 1275 passed, local backlog budget failed
+  lint: PASS module lint and cumulative rules
+  types: PASS just check spec
+diff_scope:
+  base: 1b36430e893eefeb16046ce641440ed4bd74f660
+  head: e4c603dfbdee0149819b72a5b99f16b382eef044

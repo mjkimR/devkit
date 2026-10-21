@@ -878,6 +878,12 @@ def _check_dependency_projection(index: DocumentIndex, source_path: str, target_
         raise ProposalInvalidError(
             "proposal depends_on must be a list of string anchor IDs", target_files=[source_path]
         )
+    if len(index.by_id.get(source.id, [])) != 1:
+        raise ProposalInvalidError(
+            f"handoff source {source.id} is ambiguous",
+            target_files=[source_path],
+            fix="Give each proposal anchor a unique ID, repair incoming references, then rerun handoff",
+        )
     projected = DocumentIndex(root=index.root)
     for document in [*(d for d in index.documents if d.path != source_path), target]:
         copied: Document = document

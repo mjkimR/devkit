@@ -93,15 +93,14 @@ Before splitting/decomposing, superseding, rejecting, deleting or reclassifying 
 `devkit spec refs PROP-<slug> --direction in -n 0` (refs is repository-wide) and inspect depends_on on all live incoming unit
 anchors. Completed historical anchors remain unchanged. Review each edge with the user: replace it with the
 required child/successor set, or remove it only when the prerequisite is explicitly waived. Commit that
-per-dependent disposition in the same authorized change. For example, splitting PROP-platform into PROP-api and
-PROP-store may require both for one dependent and only PROP-api for another; do not infer that choice from
+per-dependent disposition in the same authorized change. A split can require both children or only one per dependent; never infer successors from
 `decomposed_from` or `supersedes`. Rejection and deletion do not fulfill an edge. A retained rejected PROP remains
 resolvable but blocked; an unresolved missing target is invalid, never ready.
 
 If a required dependent edit lies outside the allowed write scope, stop the lifecycle mutation and ask the Host
 to coordinate scope; never silently delete the prerequisite or mutate another worker's checkout. Exact same-slug
 handoff relocation remains automatic for live direct references and carries outgoing dependencies, after a
-projected-graph preflight before writes. It does not infer fulfillment or continually maintain completed history.
+projected-graph preflight before writes. It implies no fulfillment.
 
 ## Coarse milestone authoring
 

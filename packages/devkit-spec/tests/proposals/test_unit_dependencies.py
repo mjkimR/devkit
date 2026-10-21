@@ -65,3 +65,13 @@ def test_projected_mixed_cycle_and_collision(workspace: Path, write) -> None:
     with pytest.raises(ProposalSlugConflictError):
         handoff_proposal(workspace, "child", today=TODAY)
     assert snapshot(workspace) == before
+
+
+def test_duplicate_namespaced_source_refuses_before_any_write(workspace: Path, write) -> None:
+    setup(workspace, "depends_on: []")
+    write("docs/packages/pkg/proposals/PROP-child/proposal.md", "---\nid: PROP-child\nstatus: draft\n---\n")
+    write("docs/proposals/PROP-next/proposal.md", "---\nid: PROP-next\nstatus: draft\ndepends_on: [PROP-child]\n---\n")
+    before = snapshot(workspace)
+    with pytest.raises(ProposalInvalidError, match="ambiguous"):
+        handoff_proposal(workspace, "child", today=TODAY)
+    assert snapshot(workspace) == before
