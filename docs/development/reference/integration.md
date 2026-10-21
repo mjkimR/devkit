@@ -6,7 +6,7 @@ Canonical behavior: `CAP-INT-mcp-services`.
 | --- | --- |
 | `devkit integration prepare BRANCH --task-kind unit|session --task-id ID [--unit DIR] [--claims JSON] [-w DIR] [--format json]` | Inspect readiness and exact scope, without approval or integration mutations |
 | MCP `integration_prepare` | Optional preflight in the retained service process; not required before integrate |
-| MCP `integration_integrate` | Normal entry point: prepare, obtain one native confirmation and execute; no prior chat approval |
+| MCP `integration_integrate` | Normal entry point: prepare, derive shared base auto authority for local execution or obtain native ask confirmation, and execute; no prior chat approval |
 | MCP `integration_status` | Inspect concise progress and observed Git state; detail=true returns full retained diagnostics |
 | MCP `integration_resume` | Recover only the remaining scope of an already approved request in this process |
 | `devkit worktree finish BRANCH --merge --local-only` | Public merge/cleanup operation excluding fetch and push (a merge commit, or a fast-forward under `[worktree] merge = "ff-only"`; the branch must contain the base HEAD); caller supplies existing authority |
@@ -14,7 +14,9 @@ Canonical behavior: `CAP-INT-mcp-services`.
 Task tools accept `branch`, `task_kind`, `task_id`, optional `unit`, optional `claims`, and `route="local"|"pull-request"` (default local). On the PR route only, `task_id` must contain 1–256 characters matching `[A-Za-z0-9][A-Za-z0-9_.:-]{0,255}`. Status accepts `request_id` and optional boolean `detail` (default false); resume accepts only `request_id`. No tool accepts an approval boolean, arbitrary command, cleanup path or merge strategy:
 the merge method is the project policy (`[worktree] merge`, `ff-only` in either the base's or the source's policy wins).
 
-The approving `integration_integrate` call absorbs target commits that land during the confirmation in one build
+Shared base `dev-integration="auto"` executes only the local route without elicitation and reports `authority: policy`; ask remains native confirmation. Auto PR and cloud execution refuse, prospective revocation blocks before merge and remaining effects require unchanged policy. Host permissions remain independent. Prepare and source-only policy changes grant no authority.
+
+The authorizing `integration_integrate` call absorbs target commits that land during the confirmation in one build
 (Git 2.38 or later for `git merge-tree --write-tree`), and waits up to 20 seconds (`LOCK_WAIT`) for another devkit
 integration; `integration_resume` continues only onto the last build target (or the confirmation target when no
 build ran) and never waits for the lock. The result reports the confirmation target, build target and result commit

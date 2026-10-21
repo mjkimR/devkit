@@ -2,7 +2,7 @@
 id: SPEC-policy-authorized-integration
 title: Authorize automatic integration through repository policy
 summary: Make dev-integration auto authorize verified local merge and scoped branch/worktree cleanup without repeated devkit approval, while respecting host permission boundaries.
-status: in-progress
+status: completed
 created: 2026-10-21
 related_capabilities: []
 related_stories: []
