@@ -25,7 +25,7 @@ resolution. An external publication can fail independently from successful evide
 - Preserve source revision, observation interval and limitations behind each claim.
 - Keep generation useful without maintenance sweeps, external accounts or publication authority.
 - Make retries and same-period reruns distinguishable without a new runtime or database.
-- Fit the independently invocable maintenance playbooks in `PROP-periodic-drift-reconciliation`.
+- Fit the independently invocable maintenance playbooks in `SPEC-periodic-drift-reconciliation`.
 
 ## 3. Considered Options
 

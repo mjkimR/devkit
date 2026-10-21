@@ -6,7 +6,7 @@ Inspected base: `e82940d0982173411c4e26a5bc223e677d4be9b8`.
   and reporting/upkeep/all catalog selections. The proposal maps each requirement to procedure and verification.
 - `MS-maintenance-history` already tracks durable GitHub storage and concurrent publication protocol. No such
   runtime is needed here; generic publication uses a destination-selected existing tool, with explicit authority.
-- `PROP-periodic-drift-reconciliation` defines incremental opt-in maintenance delivery. On this base the catalog
+- `SPEC-periodic-drift-reconciliation` defines incremental opt-in maintenance delivery. On this base the catalog
   README and source contain response-style and host-observer only; Development may initialize maintenance with
   reporting alone or extend its then-present assets, with Host coordination of overlapping catalog writes. No sibling worktree or uncommitted implementation was consulted.
 - `CAP-DIST-context-and-playbooks` supplies explicit invocation, on-demand bodies, header validation and search.

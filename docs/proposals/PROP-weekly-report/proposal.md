@@ -123,7 +123,7 @@ permissions leave publication pending; publication failure never erases successf
 
 ### 3.4 Distribution, dependencies and verification
 
-Build on the accepted content layout of `PROP-periodic-drift-reconciliation`: the opt-in content-only maintenance
+Build on the accepted content layout of `SPEC-periodic-drift-reconciliation`: the opt-in content-only maintenance
 bundle in `packages/devkit-catalog/`, `default_preset = "all"`, no `auto_select` and no reserved `[presets.all]`.
 Add the weekly-report asset and `reporting` preset, extend implicit all and preserve all delivered upkeep assets.
 Selection never executes a playbook. Follow `CAP-DIST-context-and-playbooks` for explicit invocation and on-demand
