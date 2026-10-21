@@ -37,6 +37,12 @@ class ProposalApprovalNotReadyError(SpecError):
     fix = "Resolve the reported Planning prerequisite and publish a fresh report before requesting approval"
 
 
+def _proposal_error(error: AdvisoryError) -> AdvisoryError:
+    if error.code in {"INTEGRATION_REQUEST_STALE", "INTEGRATION_TARGET_MOVED", "SPEC_HANDOFF_STALE"}:
+        return ProposalApprovalStaleError(error.message, f"Underlying guard: {error.code}: {error.message}")
+    return error
+
+
 def _git(root: Path, *args: str) -> str:
     return run_git(root, *args).decode().strip()
 
@@ -306,7 +312,7 @@ class PlanAcceptService:
                     "status": "needs_recovery" if lifecycle.completed else "blocked",
                     "completed_steps": lifecycle.completed,
                     "acceptance_sha": lifecycle.acceptance_sha,
-                    "errors": [exc.to_dict()],
+                    "errors": [_proposal_error(exc).to_dict()],
                     "next_action": exc.fix,
                 }
             payload = {
@@ -315,6 +321,7 @@ class PlanAcceptService:
                 "source_sha": lifecycle.report.metadata.source_sha,
                 "acceptance_sha": lifecycle.acceptance_sha,
                 "integration": result.compact_dict(),
+                "errors": [_proposal_error(error).to_dict() for error in result.errors],
                 "activity_effort": lifecycle.effort,
                 "next_action": "Inspect completed effects and request fresh approval for remaining effects",
             }

@@ -15,6 +15,8 @@ from devkit.shared.local import LocalAdapter, discover
 from devkit_viewer.errors import ReadError
 from devkit_viewer.repositories import Repository
 
+UNAVAILABLE_CODES = {MissingError.code, ExpiredError.code}
+
 
 def report_page(repo: Repository, generation_id: str) -> bytes:
     """Read only the requested generation; never discover plugins, enumerate or initialize storage."""
@@ -49,3 +51,15 @@ def report_page(repo: Repository, generation_id: str) -> bytes:
         f"<pre>{escape(artifact.content)}</pre></main></body></html>"
     )
     return page.encode("utf-8")
+
+
+def unavailable_page(error: ReadError) -> bytes:
+    """Stable no-write unavailable page for an exact missing or expired generation."""
+    return (
+        '<!doctype html><html><head><meta charset="utf-8"><title>Proposal review unavailable</title></head>'
+        "<body><main><h1>Proposal review unavailable</h1>"
+        f"<p>{escape(error.code)}: {escape(error.message)}</p>"
+        "<p>Ask the Host to regenerate the proposal review report for the current committed source "
+        "and provide its new exact report link. This viewer never refreshes or publishes reports.</p>"
+        "</main></body></html>"
+    ).encode()

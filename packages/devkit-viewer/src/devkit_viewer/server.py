@@ -32,7 +32,7 @@ from devkit.core.logs import get_logger
 
 from devkit_viewer.errors import PortInUseError, ReadError, repo_unknown
 from devkit_viewer.repositories import Repository
-from devkit_viewer.review import report_page
+from devkit_viewer.review import UNAVAILABLE_CODES, report_page, unavailable_page
 
 HOST = "127.0.0.1"
 # Under the devkit logger hierarchy, so `-v` prints one line per request.
@@ -186,7 +186,14 @@ class Handler(BaseHTTPRequestHandler):
         repo = self.server.repositories.get(parts[0])
         if repo is None:
             raise repo_unknown(parts[0])
-        self._send(HTTPStatus.OK, report_page(repo, parts[1]), "text/html; charset=utf-8", report=True)
+        try:
+            page = report_page(repo, parts[1])
+        except ReadError as error:
+            if error.code not in UNAVAILABLE_CODES:
+                raise
+            self._send(error.status, unavailable_page(error), "text/html; charset=utf-8", report=True)
+            return
+        self._send(HTTPStatus.OK, page, "text/html; charset=utf-8", report=True)
 
     def _static(self, path: str) -> None:
         # Only a file the bundle lists is served: the decoded path is a lookup key, never joined to a directory.

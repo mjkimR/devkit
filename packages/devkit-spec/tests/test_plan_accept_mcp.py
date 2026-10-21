@@ -111,6 +111,8 @@ def test_plan_accept_stale_before_effects(pending, change):
 
     result = asyncio.run(PlanAcceptService(repo).accept("idea", uri, confirm))
     assert result["status"] == "blocked", result
+    if change in {"source", "base", "policy"}:
+        assert result["errors"][0]["code"] == "PROPOSAL_APPROVAL_STALE"
     assert "status: reviewing" in (wt / "docs/proposals/PROP-idea/proposal.md").read_text()
     assert not list((wt / "docs/proposals/PROP-idea/decisions").glob("*plan-accept*"))
 
@@ -317,3 +319,21 @@ def test_combined_partial_failure_has_recovery_directive(pending, monkeypatch, f
     assert "fresh accepted-base report" in result["next_action"]
     assert "fresh approval" in result["next_action"]
     assert result["next_action"] != "Acceptance complete"
+
+
+def test_changed_integration_identity_returns_proposal_stale_code(pending, monkeypatch):
+    from devkit.integration import providers
+
+    repo, wt, uri = pending
+    before = git(repo, "show-ref")
+
+    async def confirm(*_):
+        monkeypatch.setattr(providers, "guards", lambda: ("replaced-registration",))
+        return ConfirmationReply("accept", {"approve": True, "mode": "accept_only"})
+
+    result = asyncio.run(PlanAcceptService(repo).accept("idea", uri, confirm))
+    assert result["status"] == "blocked"
+    assert result["errors"][0]["code"] == "PROPOSAL_APPROVAL_STALE"
+    assert result["integration"]["errors"][0]["code"] == "INTEGRATION_REQUEST_STALE"
+    assert git(repo, "show-ref") == before
+    assert git(wt, "status", "--porcelain") == ""
