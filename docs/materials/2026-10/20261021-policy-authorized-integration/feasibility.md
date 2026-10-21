@@ -87,5 +87,5 @@ old approval file. After server loss, missing branch/worktree evidence may preve
 being reconstructed: report incomplete scope and use deliberate recovery, without guessing targets or adding a
 journal to this feature.
 
-No code implementation or repository ask-policy change occurs in Planning. `PADR-policy-authorized-local-integration`
+No code implementation or repository ask-policy change occurs in Planning. `ADR-policy-authorized-local-integration`
 proposes the contract change; the proposal acceptance criteria define the implementation evidence still required.

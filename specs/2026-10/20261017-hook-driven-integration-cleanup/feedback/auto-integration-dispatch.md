@@ -42,9 +42,9 @@ Rationale: These are explicitly retained follow-ups that depend on first verifyi
 When to Reconsider: Once the tracked follow-up items (FB-auto-integration-dispatch, FB-pr-remote-and-squash-integration, FB-multi-host-integration-ergonomics) meet their restart conditions."
 ```
 
-- **Disposition**: promoted to `PROP-policy-authorized-integration`. The proposal owns the decision about policy-granted merge and deletion authority; `ADR-integration-approval-asserted` remains the current contract until a successor decision is accepted.
+- **Disposition**: promoted to `SPEC-policy-authorized-integration`. The proposal owns the decision about policy-granted merge and deletion authority; `ADR-integration-approval-asserted` remains the current contract until a successor decision is accepted.
 
 ## Promotion
 
-Handed to `PROP-policy-authorized-integration` for policy-authorized local integration and scoped cleanup,
+Handed to `SPEC-policy-authorized-integration` for policy-authorized local integration and scoped cleanup,
 including host permission feasibility. This is a terminal handoff; the proposal owns the remaining decisions.

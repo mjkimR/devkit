@@ -1,35 +1,23 @@
 ---
-id: PROP-policy-authorized-integration
+id: SPEC-policy-authorized-integration
 title: Authorize automatic integration through repository policy
-summary: "Make dev-integration auto authorize verified local merge and scoped branch/worktree cleanup without repeated devkit approval, while respecting host permission boundaries."
-status: accepted
-created_at: 2026-10-20
-target_area: delivery/
-priority: medium
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit/src/devkit/integration/
-    - packages/devkit-spec/src/devkit_spec/integration.py
-    - packages/devkit/tests/integration/
-    - packages/devkit-spec/tests/test_integration.py
-    - packages/devkit-spec/src/devkit_spec/bundle/
-    - docs/capabilities/integration/
-    - docs/capabilities/delivery/
-    - docs/capabilities/worktree/
-    - docs/development/reference/integration.md
-    - docs/decisions/
-  excludes:
-    - packages/devkit-advisory/
-task_kind: feature
-workflow: sdd-proposal
+summary: Make dev-integration auto authorize verified local merge and scoped branch/worktree cleanup without repeated devkit approval, while respecting host permission boundaries.
+status: planned
+created: 2026-10-21
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-policy-authorized-integration] Authorize automatic integration through repository policy
+# [SPEC-policy-authorized-integration] Authorize automatic integration through repository policy
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-policy-authorized-integration on 2026-10-21.
+- **Preserved Materials**: `docs/materials/2026-10/20261021-policy-authorized-integration`
+
+### 1. Background & Hypothesis
 
 Repeated integration confirmations add little value in a personal workflow where verified changes are normally
 merged and later defects receive feedback and corrective changes. The preferred direction is an explicit repository
@@ -41,7 +29,26 @@ An `auto` gate therefore does not currently provide this requested behavior. The
 to execution authority for local merge and scoped cleanup; Planning must define the implementation and verify host
 feasibility before implementation. This draft does not change current policy or authorize runtime execution.
 
-## Source feedback
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Authorize automatic integration through repository policy so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### Source feedback
 
 - `FB-auto-integration-dispatch`: receive the complete automatic integration and cleanup authority question.
   The feedback is terminal at promotion; progress and decisions belong to this proposal.
@@ -53,7 +60,7 @@ unattended merge and cleanup, including whether policy-authorized execution is a
 default MCP routing and a noninteractive environment do not themselves grant that authority. Reuse the extracted
 runtime if the MCP execution route is selected; do not duplicate its packaging or registration work.
 
-## 2. Planning Findings and Selected Route
+### 2. Planning Findings and Selected Route
 
 The proposed implementation is policy dispatch in the existing `integration_integrate` MCP tool and its shared
 `IntegrationService`, without a new command, background daemon or second opt-in. `ask` continues to require native
@@ -71,15 +78,15 @@ The current engine already supports local merge, branch/worktree cleanup and par
 regressions passed in Planning, including no-network merge, branch retention, permission-failure recovery, exact
 extension cleanup and uncertain-merge inspection. They use the existing ask authority with a test confirmation
 callback; they do not establish implemented auto dispatch or a live unattended host run. Detailed evidence and
-host limitations are retained in `materials/feasibility.md`.
+host limitations are retained in `docs/materials/2026-10/20261021-policy-authorized-integration/feasibility.md`.
 
-`PADR-policy-authorized-local-integration` proposes a successor to `ADR-integration-approval-asserted`. Existing
+`ADR-policy-authorized-local-integration` proposes a successor to `ADR-integration-approval-asserted`. Existing
 intent and direction decisions remain human decisions; only `dev-integration = "auto"` gains the declared local
 execution authority. Acceptance of this proposal does not change this repository's current ask setting.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Authority and scope
+#### Authority and scope
 
 - The executor reads `[workflow.approvals] dev-integration` from the retained base checkout's shared
   `.devkit/config.toml`. Missing means `ask`; local overlays, caller claims, tool permission and `--given` do not
@@ -99,7 +106,7 @@ execution authority. Acceptance of this proposal does not change this repository
   workspace cannot execute or resume auto integration. This implementation does not change MCP runtime profiles,
   host trust, filesystem/network permissions or `devkit-advisory`.
 
-### Execution, changed inputs and recovery
+#### Execution, changed inputs and recovery
 
 - Dispatch inside the service before calling the confirmation callback; auto therefore works without a negotiated
   elicitation form when the host allows the MCP call. Reuse the existing execution engine and locks rather than
@@ -123,7 +130,7 @@ execution authority. Acceptance of this proposal does not change this repository
   from a refused shell operation to MCP (or another route) to evade that refusal. A previously selected MCP route
   uses only its own host-granted server access and tool permissions.
 
-### Host feasibility and verification boundary
+#### Host feasibility and verification boundary
 
 Removing devkit's confirmation callback is implementable without bypassing a host permission check: the transport
 asks for elicitation only when the service invokes the callback. Host MCP-tool authorization and server OS access
@@ -132,7 +139,7 @@ Claude terminal evidence demonstrates ask-mode merge and cleanup only. Live auto
 Claude Code is still unverified and is required evidence during Development; a denied or unavailable host is reported
 with its remaining boundary, never counted as unattended success.
 
-### Acceptance evidence for Development
+#### Acceptance evidence for Development
 
 - **AC1 — Local auto:** Given shared base auto, local environment and passing completion checks, one integration call
   merges and cleans the task worktree and selected branch without invoking the confirmation callback; the result
@@ -166,10 +173,11 @@ Scope excluded: a new executing CLI, durable execution journal, background watch
 cloud mutation, changing host permissions or trust, force cleanup, bypassing required verification, VS Code/SDK/desktop
 host support and changing this repository's current ask policy as part of this proposal.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning recommends the existing MCP tool with shared-service policy dispatch and `dev_effort: medium`. Acceptance
 requires the user's `plan-accept` on this design, including the MCP dependency and the live-host verification gap.
 Development must prove AC1–AC7; if either supported host cannot satisfy unattended execution under its granted
 permissions, present the exact remaining boundary before claiming the feature complete. Acceptance alone changes no
 runtime policy and authorizes neither publication nor automatic integration of this Planning branch.
+
