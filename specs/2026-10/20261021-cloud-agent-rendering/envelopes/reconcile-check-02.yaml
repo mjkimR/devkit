@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T02:57:44.385072Z'
+status: completed
+summary: round 2; closes reconcile-check-01; implementer self-verification of the exact suggested wording edits in both named documents. Ordinary Markdown cites overrides; templates cite rendered managed Markdown. P1 resolved.
+findings: []
+assumptions:
+- 'HIGH minor-fix exception: only named documents, concrete suggested wording applied, no contract meaning or implementation change; actual diff compared to inventory.py lines 338-344.'
+checks:
+  reflection: PASS both document sentences match inventory._contract conditional and source provenance
+diff_scope:
+  base: 8f341c89fc4598142c15987b207bb21269a435a5
+  head: 8f341c89fc4598142c15987b207bb21269a435a5
+activity_effort: high

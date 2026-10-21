@@ -95,8 +95,9 @@ hosts:
 Values are strings, integers, booleans or lists of strings. The rendered `description` (`<title>. <description>`)
 is a quoted scalar whose line breaks are escaped, never folded. Because every supported agent is a target by
 default, a contract names all three hosts (`status: unsupported` for a host that gets no file). The contract
-stays under `.devkit/managed/<bundle>/` and may be overridden like any asset; the projection then cites the override
-path.
+stays under `.devkit/managed/<bundle>/` and may be overridden like any asset. Ordinary Markdown contracts cite
+the override path when present. Templated contracts always cite their rendered managed `.md` file; raw override
+provenance is recorded separately.
 
 Keys of the form `x-<name>` (`x-[a-z][a-z0-9-]*`, any YAML value) are extension keys for tools built on devkit
 (for example `x-model-profile`, `x-git-actions`). devkit validates only their shape, never renders or interprets

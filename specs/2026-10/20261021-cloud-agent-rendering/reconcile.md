@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-cloud-agent-rendering
 feature: SPEC-cloud-agent-rendering
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-manifest-spec.md
     resolution: modified

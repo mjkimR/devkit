@@ -255,7 +255,7 @@ available. The sandbox limits access, not resource consumption; bundles remain i
 
 Syntax, evaluation, UTF-8 and rendered instruction-header, skill-frontmatter, subagent-contract or guidance errors are
 `BUNDLE_INVALID` before writes. Rendered skill files obey the manifest-owned invocation restrictions before native
-settings and context prerequisites are inserted; these checks and common subagent contract validation run even with no selected agents. Common contracts render before host validation/projection, whose cited contract path is the final managed `.md` file.
+settings and context prerequisites are inserted; these checks and common subagent contract validation run even with no selected agents. Templated common contracts render before host validation/projection and always cite the final managed `.md` file, with raw override provenance recorded separately. Ordinary Markdown contracts cite the override path when present.
 Guidance fragment formatting, the 300-byte limit, path references and selected target requirements apply to the
 rendered text. These checks also apply to project template overrides. Ordinary source validation is unchanged.
 Jinja is imported only when a `.md.jinja` file actually renders, never merely by loading a bundle or its manifest.
