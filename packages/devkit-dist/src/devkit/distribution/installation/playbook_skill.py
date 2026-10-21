@@ -12,6 +12,20 @@ current task. Ordinary task requests and references from other skills or
 instructions do not authorize playbook discovery. This invocation does not
 activate playbook search for future tasks in the conversation.
 
+For an exact playbook named by the user for this task, or an explicitly
+configured external schedule naming that exact ID, skip discovery and run
+`uv run devkit playbook get <bundle>/<playbook>` in the synchronized workspace.
+Use the manifest asset ID, not its header name. Retrieval grants no execution
+authority. Load the returned context argv in the same workspace (or pass -w),
+once per agent context and again after it is lost; apply the full constitution
+and relevant instructions. Follow the complete returned body, resolving needed
+relative resources against the parent of source.path. Start fresh progress and
+check prerequisites on every run. Preserve workflow gates, permissions and user
+constraints; unavailable approval UI is not approval. External systems own
+cadence, launch, retries, overlap control and execution history.
+
+For explicitly requested discovery:
+
 1. Translate the requested task into an English search query. Preserve canonical
    technical names. Run from the synchronized consumer project:
    `uv run devkit playbook search "<English query>"`.

@@ -42,7 +42,7 @@ standards are in the `ARCH-08-2-resource-taxonomy`.
   role contract (`source`) rendered per selected agent. See `CAP-DIST-agent-projections`.
 - `instruction`: Markdown whose YAML frontmatter declares a nonempty `name` and `description`, the header
   `devkit get-context` catalogs. Every file of the source, including each file of a directory source, carries one.
-- `playbook`: a procedure for an occasional task, found through playbook search; header rules are in
+- `playbook`: a procedure for an occasional task, found through explicit playbook search or retrieved by exact manifest ID; header rules are in
   `CAP-DIST-context-and-playbooks`.
 - `rule`: Python governance rules run by `devkit.rules`, shipped as one plugin package directory per asset (see
   **Plugin packages** below). The receipt lists every deployed file under the asset's `paths` and `devkit rules`

@@ -309,7 +309,7 @@ Every mutating command follows these steps:
    `AGENTS.md` included).
 2. **Project lock**: `fcntl.flock` on `.devkit/transient/lock` (`devkit.core.file_lock`, POSIX only). Writers
    (`sync`, `add`, `remove`, `recover`, `override create|accept|remove`) take it exclusively and fail at once when it is held (`LOCK_HELD`,
-   `DEFER`). Readers (`get-context`, `playbook search`, `status`, `list`, `override list|diff`, and `sync`, `add`
+   `DEFER`). Readers (`get-context`, `playbook search`, `playbook get`, `status`, `list`, `override list|diff`, and `sync`, `add`
    and `remove` under `--dry-run` or `--check`, which write nothing) share it and wait
    up to ten seconds for a writer; in a project without `.devkit/` they take no lock, so reading never creates it. A
    reader that gets `EROFS`, `EACCES` or `EPERM` creating or opening the lock (a read-only review sandbox) reads

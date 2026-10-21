@@ -2,7 +2,7 @@
 id: MS-drift-reconciliation
 title: Spec-code drift reconciliation maintenance playbook
 summary: "Delivers a manually invocable playbook for evidence-based checks of Living Spec, code, and guidance consistency, with explicit decisions to update documentation, fix code, or defer findings."
-status: planned
+status: done
 created_at: 2026-10-20
 depends_on: []
 ---
