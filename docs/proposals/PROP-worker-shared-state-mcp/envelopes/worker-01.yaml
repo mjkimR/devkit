@@ -1,0 +1,35 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-20T23:12:16.186791Z'
+status: needs_input
+summary: Defined immutable shared artifacts separate from scope coordination, live-lifetime retry identity, local MCP-first routing with connection repair, cloud CLI and separately scoped cloud rendering. Nested scout and two challenger passes completed; all findings resolved. Production remote first-delivery scope awaits a user decision; recommended Development effort medium.
+findings: []
+assumptions:
+- 'Local-orchestrated Codex contract is emulated: absolute cwd/Git paths, proposal-only writes, scoped approvals and Host range validation substitute for native confinement.'
+- User direction assigns broad cloud rendering to separate work; local MCP-first guidance remains in this delivery.
+unverified_areas:
+- No production remote adapter/provider/authentication selected or tested; protocol conformance is not cross-host evidence.
+- No implementation, real-host, concurrency, crash or permission tests; complete cloud asset audit is separate work.
+checks:
+  rules: PASS proposal directory zero errors or warnings
+  diff: PASS whitespace and proposal-only scope
+  swept: PASS feedback-01 fresh coverage
+diff_scope:
+  base: 45b6452f44fd5d42baf2b7b7c09d5bc336600fb2
+  head: fa7b564409ed131b7dcf463ed98f80ef35b2ccbc
+questions:
+- id: remote-first-delivery
+  title: First delivery of remote sharing
+  prompt: Should the first implementation ship local shared artifacts plus a tested adapter extension contract, or include a production remote backend?
+  context: The local store unblocks linked-worktree review reports. Cross-host cloud sharing cannot be supplied by a protocol or test adapter. A real backend requires continued Planning to choose provider, authentication, namespace provisioning and deployment; local-first explicitly defers that outcome.
+  options:
+  - id: local-first
+    description: Deliver local CLI/MCP artifacts and the tested adapter contract first; defer production cross-host backend and remote scope coordination to separate work.
+    recommended: true
+  - id: remote-now
+    description: Keep production cross-host artifact sharing in this delivery; continue Planning to select a real remote backend and its authentication/deployment contract before acceptance.
+    recommended: false
+  allow_note: true
+activity_effort: medium
