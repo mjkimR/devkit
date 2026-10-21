@@ -1,32 +1,23 @@
 ---
-id: PROP-cloud-agent-rendering
+id: SPEC-cloud-agent-rendering
 title: Render cloud agent assets without MCP guidance
-summary: "Make sync --cloud render CLI-only agent instructions without MCP routes, using execution-aware templates and coverage for constitution and subagent assets."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-10-21
-target_area: capabilities/distribution/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: high                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit-dist/src/devkit/distribution/
-    - packages/devkit-dist/src/devkit/core/receipt.py
-    - packages/devkit-dist/tests/
-    - packages/devkit-spec/tests/
-    - guides/
-    - packages/devkit-spec/src/devkit_spec/bundle/
-    - docs/capabilities/distribution/
-  excludes:
-    - packages/devkit-mcp/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Make sync --cloud render CLI-only agent instructions without MCP routes, using execution-aware templates and coverage for constitution and subagent assets.
+status: planned
+created: 2026-10-21
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-cloud-agent-rendering] Render cloud agent assets without MCP guidance
+# [SPEC-cloud-agent-rendering] Render cloud agent assets without MCP guidance
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-cloud-agent-rendering on 2026-10-21.
+- **Preserved Materials**: `docs/materials/2026-10/20261021-cloud-agent-rendering`
+
+### 1. Background & Hypothesis
 
 `SPEC-worker-shared-state-mcp` defines dual access to shared artifacts: MCP is the primary local route, and
 CLI serves cloud execution. Local orchestration checks the MCP connection and asks the user to connect when it
@@ -42,9 +33,28 @@ asset audit rather than a manually supplied template variable.
 This proposal separates that work from shared artifact storage. It is queued for Planning; no rendering or
 runtime policy change is authorized by this draft alone.
 
-## 2. Resolved Direction
+## 2. User Stories
 
-`PADR-execution-aware-agent-rendering` recommends a reserved `execution.environment` template input, with
+- **US-1**: As a developer/agent, I want to implement Render cloud agent assets without MCP guidance so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Resolved Direction
+
+`ADR-execution-aware-agent-rendering` recommends a reserved `execution.environment` template input, with
 exactly `local` or `cloud`, separate from configurable `vars`. Resolve the invocation flag first, then the
 checkout's effective execution setting, then the existing `local` default. Pass that single selected value
 through both canonical and effective inventory planning before rendering. Projectless bundle planning uses
@@ -61,9 +71,9 @@ before header/frontmatter/host validation and projection, including no-selected-
 `.md` literal, collision detection, sandbox restrictions, raw override provenance, final managed `.md` paths and
 lazy Jinja loading. Executable workflow, hook, rule and gate assets do not gain template support. Native subagent variants keep their current host-specific formats without new template support; audit any variant separately and use a host-neutral contract for conditional text.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Render evidence and reversibility
+#### Render evidence and reversibility
 
 The typed canonical receipt records the actual `execution_environment` used for output; extend its closed core
 schema and writer in place, without a schema-version bump or legacy migration path. This narrowly adds
@@ -86,7 +96,7 @@ saved/default environment and restores that output, and status/check reports the
 must be documented so an invocation flag cannot be mistaken for a persistent runtime guard. Transaction rollback,
 configuration-race detection, manual-edit conflicts and worktree-local configuration isolation remain intact.
 
-### Agent guidance audit
+#### Agent guidance audit
 
 Audit the complete selected maintained bundle surfaces: constitution, instruction bodies, skill entries and their
 on-demand references, subagent contracts and host variants, guidance fragments, and machine workflow prose.
@@ -110,7 +120,7 @@ An audit must explicitly classify each match, not use a broad exclusion for an e
 bundles and arbitrary user overrides are not automatically rewritten; template mechanics apply to them, while the
 MCP-free content guarantee covers repository-maintained selected bundle assets without custom content overrides.
 
-### Acceptance evidence for Development
+#### Acceptance evidence for Development
 
 - **AC1:** Fresh cloud sync over the maintained bundle selection produces MCP-free executable guidance across all
   supported host projections and on-demand context/reference paths. A complete asset inventory test fails for an
@@ -136,7 +146,7 @@ Non-goals: MCP runtime authorization changes; host trust/sandbox or workflow gat
 mutations; remote shared storage; arbitrary source-file concealment; templating executable assets; implementation
 of in-flight exact-playbook retrieval APIs; automatic Development or acceptance.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 This follows `SPEC-worker-shared-state-mcp` and relates to `SPEC-proposal-review-and-approval`. Existing APIs and
 contracts are the planning baseline; later shared-artifact or exact-retrieval changes require a fresh dependency
@@ -148,3 +158,4 @@ Reconcile `CAP-DIST-manifest-spec`, `CAP-DIST-sync-and-transactions`, `CAP-DIST-
 `CAP-DIST-agent-projections` and `CAP-DIST-context-and-playbooks` when implementation changes their contracts.
 Promote the PADR through the normal handoff only after plan-accept. This proposal is ready for that decision only
 after the challenger findings are resolved and the Planning envelopes/checks are committed.
+

@@ -46,5 +46,5 @@ Consumers must retain exact artifact references and verify source commits; artif
 Two reports for one commit may coexist. Filesystem sharing trusts the same OS user and the retained MCP process,
 not forged caller identity. First delivery publishes the remote-adapter protocol and registration contract but
 cannot claim production cross-host support. A concrete backend restarts in a separate proposal once its consumer,
-provider/authentication, namespace owner and integration environment are known. `PROP-cloud-agent-rendering` owns
+provider/authentication, namespace owner and integration environment are known. `SPEC-cloud-agent-rendering` owns
 cloud-specific asset rendering; local orchestration still checks MCP connection before dependent operations. Scope-registry ownership and revision behavior require no migration.
