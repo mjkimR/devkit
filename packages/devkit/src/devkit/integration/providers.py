@@ -90,7 +90,7 @@ def policy(root: Path) -> tuple[str, str]:
         )
     workflow = config.get("workflow", {})
     approvals = workflow.get("approvals", {}) if isinstance(workflow, dict) else None
-    if not isinstance(approvals, dict) or approvals.get("dev-integration", "ask") not in {"ask", "auto"}:
+    if not isinstance(approvals, dict) or approvals.get("dev-integration", "ask") not in ("ask", "auto"):
         raise IntegrationConfigError(
             "integration requires dev-integration=ask or auto",
             fix="Use the existing integration path for the configured policy; do not change project approval policy to bypass this refusal",

@@ -104,3 +104,48 @@ def test_partial_auto_resume_preserves_authority_and_revocation(auto_repo, monke
     assert result.authority == "policy" and git(base, "rev-parse", "HEAD") == merged
     assert result.status == ("partial" if revoke else "completed")
     assert worktree.exists() is revoke
+
+
+def test_source_only_auto_still_requires_ask(repo):
+    from devkit.core.mcp import ConfirmationReply
+
+    base, worktree = repo
+    config = worktree / ".devkit/config.toml"
+    config.write_text(config.read_text() + '[workflow.approvals]\ndev-integration="auto"\n')
+    git(worktree, "add", ".")
+    git(worktree, "commit", "-qm", "source-only auto")
+    calls = []
+
+    async def decline(message, schema):
+        calls.append(message)
+        return ConfirmationReply("decline", {})
+
+    result = asyncio.run(
+        IntegrationService(base).integrate(
+            "dev-demo", Task("session", "fixture", claims_json='{"approved": true}'), decline
+        )
+    )
+    assert result.status == "declined" and result.authority == "none"
+    assert len(calls) == 1 and worktree.exists()
+
+
+def test_cloud_transition_blocks_auto_resume(auto_repo, monkeypatch):
+    from devkit.core.mcp_context import ExecutionBinding, McpInteractiveError, invocation
+
+    base, worktree = auto_repo()
+    binding = ExecutionBinding(base, base)
+    original = lifecycle._remove
+
+    def deny(*args, **kwargs):
+        raise RemoveFailedError("fixture denial")
+
+    monkeypatch.setattr(lifecycle, "_remove", deny)
+    service = IntegrationService(base)
+    with invocation(binding):
+        result = asyncio.run(service.integrate("dev-demo", TASK, no_confirmation))
+    assert result.status == "partial"
+    monkeypatch.setattr(lifecycle, "_remove", original)
+    (base / ".devkit/config.local.toml").write_text('[execution]\nenvironment="cloud"\n')
+    with pytest.raises(McpInteractiveError), invocation(binding):
+        service.resume(result.request.id)
+    assert worktree.exists()
