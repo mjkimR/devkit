@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-proposal-review-and-approval
 spec: SPEC-proposal-review-and-approval
-status: pending
+status: resolved
 targets:
   - file: docs/decisions/2026-10/20261021-source-bound-review-reports-and-explicit-lifecycle-approval.md
     resolution: modified

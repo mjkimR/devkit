@@ -2,7 +2,7 @@
 id: SPEC-proposal-review-and-approval
 title: Proposal review reports and unified plan-accept MCP approval
 summary: Generate PADR-focused proposal review reports in the shared workspace and provide a native MCP plan-accept confirmation that links the report and selects accept-only or combined handoff.
-status: in-progress
+status: completed
 created: 2026-10-21
 milestone: MS-autonomous-backlog-and-orchestration
 related_capabilities: []
