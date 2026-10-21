@@ -5,11 +5,10 @@ summary: Add exact bundle/playbook retrieval with effective overrides, source id
 status: planned
 created: 2026-10-21
 milestone: MS-scheduled-jobs
-related_capabilities: []
+related_capabilities: [CAP-DIST-context-and-playbooks]
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-exact-playbook-get] Exact playbook retrieval for external runners
 
@@ -27,22 +26,45 @@ introducing scheduling into devkit.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Exact playbook retrieval for external runners so that system capabilities are extended.
+- **US-1**: As a calling agent, I want the exact synchronized playbook and context requirements so that I can follow an explicitly requested procedure without catalog discovery.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: Scheduling, execution, retries, job history, provider adapters, implicit synchronization, catalog discovery and new override/render semantics.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Exact complete retrieval
+- **Given** a synchronized Markdown or directory playbook.
+- **When** its exact bundle/asset ID is retrieved.
+- **Then** the JSON result contains complete unchanged body, effective metadata, canonical identity, absolute path, byte hash and context requirements; unsupported CLI options and missing arguments exit 2.
 
-## 5. Carried Proposal Notes
+### [AC-02] Effective source integrity
+- **Given** an ordinary override or modified/missing managed source.
+- **When** retrieval reads its effective entrypoint.
+- **Then** live override edits are returned, missing or modified sources fail without fallback and unrelated stale personal-render evidence retains its existing error.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] Deterministic errors
+- **Given** malformed selectors, absent selections or invalid receipt entrypoints.
+- **When** retrieval is attempted.
+- **Then** the resolution/error table below defines the code, exit and action; existing transaction, unsafe-path and lock failures pass through without search or package enumeration.
+
+### [AC-04] Complete non-executing read
+- **Given** a body larger than search budgets with relative resource links.
+- **When** retrieval succeeds.
+- **Then** all body whitespace is preserved, resources remain unread and project content/selection/receipt remain unchanged except existing lock infrastructure.
+
+### [AC-05] Workspace and snapshot
+- **Given** unsynced selection edits and a caller in a project subdirectory or using -w.
+- **When** retrieval runs.
+- **Then** the receipt snapshot governs selection and the context instruction targets the same workspace with once-per-agent-context guidance, including empty context.
+
+### [AC-06] Explicit invocation policy
+- **Given** an explicit exact request or configured external schedule.
+- **When** the caller follows consumption guidance.
+- **Then** documentation permits that invocation while preserving unsolicited-discovery prohibitions, fresh prerequisite checks and all workflow/permission gates.
+
+## 5. Detailed Contract and Design Evidence
 
 ### 2. Technical Spike Findings
 
@@ -137,25 +159,6 @@ and test directories. Update `CAP-DIST-context-and-playbooks`, `ARCH-08-2-resour
 skill source and distribution guide source; promote the PADR to an ADR. Review introductory architecture and
 installation guides for inconsistent invocation wording and change only affected statements. Never edit generated
 managed files. No new always-loaded scheduling policy is needed; the ADR holds the decision and rationale.
-
-Acceptance scenarios for the resulting feature spec:
-
-- **AC-1**: Given a synchronized Markdown or directory playbook, exact retrieval returns the full body, effective
-  metadata, canonical identity, byte hash, absolute entrypoint and context instruction; `name` differing from ID
-  does not change selection. Default output is JSON; unsupported format options and missing arguments produce the existing usage errors.
-- **AC-2**: Given an edited ordinary override, retrieval reads it immediately; a missing override or modified
-  managed playbook fails without fallback. Given stale personal-render evidence for another eligible asset,
-  retrieval preserves the shared runtime-receipt failure. Playbook templates remain unsupported.
-- **AC-3**: Given malformed selectors, absent bundles/assets, wrong kinds, unselected assets and corrupt entrypoint
-  records, the stated code, exit and advisory action are stable. A pending transaction, unsafe path and lock failure
-  retain existing error behavior. No search/model loading, package enumeration or lazy sync occurs.
-- **AC-4**: Given a body larger than search budgets and relative resource references, retrieval returns it whole,
-  preserves body whitespace and leaves referenced resources unread. No procedure side effects occur, and project
-  content/selection/receipt remain unchanged apart from permitted lock infrastructure.
-- **AC-5**: Given unsynced selection edits, receipt-snapshot semantics remain explicit; context commands target the
-  same workspace. Tests cover project subdirectories and `-w`, empty bundle context and once-per-context guidance.
-- **AC-6**: Documentation and the promoted ADR consistently allow explicit exact invocation (including configured
-  external schedules), preserve the unsolicited-discovery prohibition and retain workflow approval boundaries.
 
 Run `just lint-check dist`, `just check dist`, `just test-affected`, focused retrieval/CLI/override tests and the
 dist-only check as appropriate to command wiring. Run governance checks over changed contracts and cumulative
