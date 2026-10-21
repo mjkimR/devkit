@@ -54,7 +54,7 @@ user`, also directly for an eligible draft in Backlog); `dev-integration` follow
 `spec` skill's `references/completion.md`, Policy). There is no Development direction gate: inside the agreed intent
 take the recommended option and record it; only a problem that breaks the agreement stops the work. Records name the
 authority (`user` or `policy`) and never carry the conversation (no quotes, paraphrase or dates of it); a decline note
-states the reason as a decision. Nothing grants new merge, publication or deletion authority. Report stages the policy
+states the reason as a decision. Shared base `dev-integration=auto` authorizes verified local merge and exact cleanup through the MCP executor; it grants no publication authority or host permission. Report stages the policy
 switched off as skipped. Before formal worktree work read the `spec` skill's `references/worktree.md`; before
 completion or Git actions its `references/completion.md`.
 

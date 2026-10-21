@@ -131,6 +131,7 @@ class IntegrationRequest:
     pr_number: int | None = None
     local_target: str | None = None
     unverified_rules: tuple[str, ...] = ()
+    approval_policy: str = "ask"
 
     @property
     def digest(self) -> str:

@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T23:18:12.113920Z'
+status: completed
+summary: Implemented shared-base auto authority for verified local MCP integration and exact cleanup; ask, readiness, revocation, cloud and publication boundaries remain enforced. Live Codex and Claude auto smoke and no-form SDK passed. Independent code review and reconcile verification completed; P2 recovery guidance fixed and self-reverified.
+findings: []
+assumptions:
+- Repository runtime integration policy remains ask. Host owns final authority and integration; no publication was performed.
+- Live host evidence covers explicitly permitted MCP tools and deterministic readiness fixtures; it does not promise zero prompts in all installations.
+- After independent reviews, the bounded error-remedy and documentation correction was verified by the implementer.
+checks:
+  tests: PASS 1397 test-affected cases and 11 final policy assertions; full fallback preserved
+  build: PASS Pyright devkit/devkit-spec and actual SDK/host execution
+  lint: PASS lint checks, cumulative rules zero violations, diff check and sync check
+  host-smoke: PASS Codex CLI 0.163.0 and Claude Code 2.1.305 actual refs/worktree/branch cleanup
+diff_scope:
+  base: a6b45cf12ec653d2126fd9bb19d42ef1760b3419
+  head: d176a9ebb55ace9fe2d954f588a99a38610d17c7

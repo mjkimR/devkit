@@ -1,7 +1,7 @@
 ---
 id: CAP-INT-mcp-services
 title: "Scoped MCP Services"
-summary: "Scoped integration MCP tools bind native approval to local or pull-request integration, with bilingual owned content, pinned source commits and resumable cleanup."
+summary: "Scoped integration MCP tools bind shared policy authority to local integration or native approval to local or pull-request integration, with bilingual owned content, pinned source commits and resumable cleanup."
 area: integration
 status: active
 entrypoints:
@@ -11,7 +11,7 @@ created_at: 2026-10-17
 
 # [CAP-INT-mcp-services] Scoped Integration
 
-`devkit.integration` prepares an immutable request, obtains a native confirmation through the optional
+`devkit.integration` prepares an immutable request, derives local policy authority or obtains native confirmation through the optional
 `devkit-mcp` runtime using the dependency-free `devkit.core.mcp.Confirmation` contract, and
 lands the task through the selected route: locally (a merge commit built outside the base checkout, or a fast-forward under
 `[worktree] merge = "ff-only"`) or through a GitHub PR merge commit, with its exact cleanup scope. `devkit-mcp` owns MCP transport and native UI adaptation;
@@ -20,13 +20,15 @@ code quick reference: [reference.md](../../development/reference/integration.md)
 
 ## 1. Supported path
 
-The supported paths are interactive MCP tool calls under `dev-integration=ask` from two terminal hosts: the Codex
+The supported hosts are the Codex CLI and Claude Code terminal CLI. Shared base `dev-integration=auto` authorizes verified local merge and exact cleanup through `integration_integrate` without elicitation; the result reports `authority: policy` and no `ui_action`. Ask remains the default. Its interactive MCP path uses two terminal hosts: the Codex
 CLI and the Claude Code terminal CLI (verified in `MAT-claude-terminal-mcp-approval-evidence`). The server checks the
 client's advertised form capability, not a host name. `integration_integrate`
-prepares the request, awaits form elicitation, and continues into execution in the same call. After reporting verified work, call it directly; no separate conversational approval or preceding integration_prepare call is required. The native affirmative form supplies route-specific dev-integration ask approval and exact execution authority together. A workflow waiting on that gate permits the approval-requesting call; --given dev-integration is asserted only after native acceptance. Only native
+prepares the request, awaits form elicitation, and continues into execution in the same call. After reporting verified work, call it directly; no separate conversational approval or preceding integration_prepare call is required. The native affirmative form supplies route-specific dev-integration ask approval and exact execution authority together. A workflow waiting on that gate permits the approval-requesting call; --given dev-integration is asserted only after native acceptance. Under ask, only native
 `action=accept` with a boolean `approve=true` grants authority. The field defaults to false. Submission without
 approval, decline, cancellation, unavailable form capability and transport failure perform no integration changes.
 Tool arguments cannot supply `approved`, authority tokens or serialized execution requests.
+
+Auto authority comes only from the retained base checkout shared configuration, never caller claims, local overlays, tool permission or a source-only policy edit. The immutable request binds its `approval_policy`, effective base and prospective-result policy digests, source/target commits, provider identities and exact cleanup scope. A prospective auto-to-ask result refuses before mutation; remaining effects require unchanged auto policy, including after merge. Auto PR requests refuse before remote operations. Required PR policy and cloud/read-only execution restrictions remain effective. Prepare grants no authority; the main-session Host invokes integrate after reporting verified work. Policy authorizes neither publication nor host permission changes (`ADR-policy-authorized-local-integration`).
 
 The form leads with the action, `Approve local integration of "<branch>" into "<target>" with a merge commit?` (`by
 fast-forward?` under `ff-only`; `Approve cleanup of "<branch>", already merged into "<target>"?` for a cleanup-only
@@ -48,7 +50,7 @@ The four tools have distinct roles:
 
 - `integration_prepare`: optional readiness and effect-scope inspection; PR prepare fetches the remote target but performs no remote write; no authority is granted. Integrate
   prepares a fresh request, so callers do not pass a prepared request ID as execution authority.
-- `integration_integrate`: the normal entry point; prepares, requests one native approval, executes and returns progress.
+- `integration_integrate`: the normal entry point; prepares, derives local auto authority or requests one native ask approval, executes and returns progress.
 - `integration_status`: read-only retained progress and observed state, concise by default. Optional boolean `detail`
   defaults false; true returns the complete retained request, evidence, revisions and underlying finish result.
 - `integration_resume`: continues remaining steps of an already approved process-local request, with no second form.
@@ -63,13 +65,13 @@ using either transport representation.
 
 The executor runs from the retained base checkout on its target branch, using an installed interpreter outside
 the worktree being removed. It supports normal linked worktrees and marked `--no-worktree` activity branches.
-The default local route excludes PR operations, fetch, push and remote branch deletion. Both routes exclude squash/rebase integration and automatic policy dispatch. Required-PR policy refuses the local path. Worktree/PR `auto` does not authorize integration.
+The default local route excludes PR operations, fetch, push and remote branch deletion. Both routes exclude squash/rebase integration. Auto policy dispatch is local only. Required-PR policy refuses the local path. Worktree/PR `auto` does not authorize integration.
 
 Project trust, hook trust, MCP tool approval, the business integration confirmation and host filesystem/network
 permissions are distinct. This service never changes host permission settings. All four tools declare `openWorldHint=true`, since PR prepare/status also reach the network. Native tool annotations describe
-real write/destructive effects; they do not substitute for the integration form. Count actual prompts separately
+real write/destructive effects; they do not substitute for ask confirmation or shared policy authority. Count actual prompts separately
 when validating a host session. SDK transport tests do not establish interactive UI or permission behavior.
-Unverified for Claude Code: its auto mode and other permission modes, the number of prompts per call, and the
+Live auto integration and cleanup were verified on Codex CLI 0.163.0 and Claude Code 2.1.305 with an explicitly allowed integration tool and server filesystem access; evidence is retained in `SPEC-policy-authorized-integration`. This does not establish all host permission modes. Unverified surfaces include the
 Claude Desktop, VS Code extension and Agent SDK surfaces, where upstream reports describe elicitation declined
 without a visible form (`MAT-native-approval-host-comparison`). Treat those surfaces like any client without
 working form capability.
@@ -213,7 +215,7 @@ the complete request and underlying FinishResult. Steps
 are `not_run`, `running`, `completed`, `skipped`, `failed` or `unknown`. A timeout can leave an unknown operation;
 the observed state is included rather than asserting that it never happened.
 
-After affirmative confirmation, `integration_resume(request_id)` can finish the retained request without asking
+After native or policy authorization, `integration_resume(request_id)` can finish the retained request without asking
 the business approval again solely for execution-permission failure. It inspects state and preserves completed
 merge/removal steps. It does not merge again after a confirmed merge. The approval tolerates target advances only
 within the approving call: resume continues only onto the last build target, or onto the confirmation target when the
@@ -229,14 +231,14 @@ The approving call waits up to 20 seconds for the Git common-directory integrati
 `ADR-target-advance-readiness`, plus the 30-second `commit-tree` bound stays below Codex's default 60-second MCP tool
 timeout; a host that cuts a call leaves the request inspectable with
 `integration_status`. Changed scope requires a new request and
-approval; dirty, locked, replaced or unrelated worktrees are preserved. Permission remedies stay host-owned.
+authorization; dirty, locked, replaced or unrelated worktrees are preserved. Permission remedies stay host-owned.
 
 The service retains at most 128 requests in memory. Pending/partial requests are not evicted to make room; completed
 or non-approved ones can be retired. There is no approval file, durable execution journal, automatic background
 retry or cross-session restart recovery. After process termination or an unknown request ID, inspect Git first.
 Use the existing guarded `worktree finish --local-only` cleanup path only after confirming the remaining targets
 and existing authority, or obtain a new request for the remaining scope. Never infer approval from a digest or
-replay a serialized result as authority.
+replay a serialized result as authority. A fresh auto request must derive current shared base authority and cover only inspectable remaining scope. If deleted source/worktree evidence prevents reconstruction of extension cleanup, report it incomplete and require deliberate recovery; never infer completion.
 
 ## 5a. GitHub pull request route
 
@@ -309,9 +311,9 @@ Codex/Claude project registrations. `devkit mcp status` distinguishes local regi
 connection, effective enablement, forms, trust and permissions. See `CAP-MCP-runtime-registration`.
 
 The Host validates the final committed scope and checks before calling `integration_integrate`; its native form
-is the business approval. Workers return scope to their Host and do not request business approval. No extra chat
+supplies business approval under ask; shared base auto supplies local policy authority without a form. Workers return scope to their Host and do not request business approval. No extra chat
 approval or `integration_prepare` call is required when native forms work. Missing runtime, disconnected transport,
-unavailable form or unsupported cloud connectivity requires intentional installation/connection or an independently
+unavailable ask form or unsupported cloud connectivity requires intentional installation/connection or an independently
 authorized CLI/PR route. Missing UI never grants authority.
 
 The calling Host's explicit configuration workspace controls execution, independently of source-branch provenance
