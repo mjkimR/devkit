@@ -44,7 +44,7 @@ targets:
 - `CAP-COLL-work-scope-registry`: item 9 states the post-merge criterion of devkit-spec's scoped cleanup (the base
   HEAD contains the result commit and the worktree is gone; later base commits allowed). `CAP-INT-mcp-services`
   section 4 states that cleanup receives the execution context.
-- `MS-multi-host-native-integration`: exit condition now reads "bound to the verified source commit and the
+- The then-existing multi-host native integration milestone: exit condition reads "bound to the verified source commit and the
   confirmation target and its descendants" (user decision in Planning).
 - References: `docs/development/reference/integration.md` and `worktree.md` (codes, APIs, the merge key).
 - `ADR-target-advance-readiness`: wording only; the handoff deleted the proposal's `answer-01.yaml`, so its trace now
