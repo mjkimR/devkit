@@ -677,8 +677,30 @@ def test_status_reports_worktrees_and_unmerged_branches_without_changing_anythin
     assert merged.path.is_dir() and open_.path.is_dir()
 
 
+_SYNCHRONIZED_TEMPLATE: Path | None = None
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _init_synchronized_template(tmp_path_factory: pytest.TempPathFactory) -> None:
+    global _SYNCHRONIZED_TEMPLATE
+    root = tmp_path_factory.mktemp("synchronized-authoring") / "repo"
+    init_repo(root)
+    subprocess.run(
+        [sys.executable, "-m", "devkit_dist", "add", "authoring", "-w", str(root)],
+        check=True,
+        capture_output=True,
+    )
+    git(root, "add", "-A")
+    git(root, "commit", "-q", "-m", "devkit_dist")
+    _SYNCHRONIZED_TEMPLATE = root
+
+
 def synchronized(repo: Path) -> Path:
     """``repo`` as a committed devkit project with the ``authoring`` bundle (its rules live under managed/)."""
+    if _SYNCHRONIZED_TEMPLATE is not None and _SYNCHRONIZED_TEMPLATE.exists():
+        shutil.rmtree(repo)
+        shutil.copytree(_SYNCHRONIZED_TEMPLATE, repo, symlinks=True)
+        return repo
     subprocess.run(
         [sys.executable, "-m", "devkit_dist", "add", "authoring", "-w", str(repo)], check=True, capture_output=True
     )
