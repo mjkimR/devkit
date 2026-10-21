@@ -2,7 +2,7 @@
 id: PROP-periodic-drift-reconciliation
 title: Spec-code drift reconciliation maintenance playbook
 summary: "Defines a manually invocable maintenance playbook that checks Living Spec, code, and guidance consistency using existing commands and evidence review, then resolves findings through user decisions: the Tier 2 reconciliation of ADR-dual-source-of-truth-and-periodic-reconciliation."
-status: draft                         # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-14
 milestone: MS-drift-reconciliation
 target_area: capabilities/delivery/
@@ -14,6 +14,10 @@ boundaries:
   owns:
     - capabilities/delivery/
     - capabilities/distribution/
+    - capabilities/traceability/
+    - packages/devkit-catalog/
+    - guides/
+    - docs/stories/governance/
   excludes:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
@@ -43,15 +47,13 @@ workflow_hash: sha256:90918c632715461d07f99f683b8381bdbe6381ad6689a7575a72c002c1
 - A user-driven reconciliation sweep keeps spec and code aligned by deciding whether each finding calls for a
   documentation update, a code fix, or a documented deferral. Neither ledger is automatically authoritative.
 
-## 2. Planning Questions
+## 2. Planning Outcome
 
-- **Q1. Scope and evidence.** Which documented commands, options, interfaces, terms, and behaviors should a bounded
-  sweep examine, and which existing checks and source inspection support each finding?
-- **Q2. Finding quality.** How should the playbook distinguish deterministic failures from suspected semantic drift,
-  limit noise, and present enough evidence for a user decision? Section 4 records a rejected detection candidate.
-- **Q3. Procedure and verification.** What inputs, review steps, disposition records, and verification make the
-  playbook reusable, and how should its manual run demonstrate the complete reconciliation path? Catalog placement
-  is the `maintenance` bundle described in section 3.4.
+The selected direction is a bounded, manually invoked evidence review using existing lookup and governance
+commands. A new detector, scheduler, standalone skill, report database, or MCP tool is unnecessary. The report is
+an ordinary Markdown material in the owning work unit, or the repository's existing materials location when no
+unit exists. Creating that report authorizes no source corrections. Preset membership is delivered incrementally
+while the two independent companion playbooks do not yet exist (section 3.4).
 
 ## 3. Proposed Design & Impact
 
@@ -96,17 +98,67 @@ or proposals instead of duplicating follow-ups.
 ### 3.4 Catalog Bundle and Presets
 
 - Ship `drift-reconciliation` as a playbook asset of the opt-in, content-only `maintenance` bundle in
-  `devkit-catalog`. The same bundle contains the independent `weekly-report` and `review-refactor` playbooks;
-  do not create separate bundles or packages for these three procedures.
-- Presets: `reporting` selects `weekly-report`; `upkeep` selects `drift-reconciliation` and `review-refactor`;
-  the reserved `all` preset selects all three and is the bundle default. Keep `auto_select` disabled, following
-  `CAP-DIST-content-packages` and `CAP-DIST-manifest-spec`.
-- Each playbook is invoked independently and its body is read on demand. A reconciliation run does not require
-  reporting or review/refactoring to run first; installing all three does not imply running all three.
-- This proposal delivers and verifies the reconciliation asset and its preset membership, reusing or establishing
-  the shared bundle as needed. It does not implement the other two playbooks or wait for their delivery.
-- Verify bundle discovery, preset selection, package validation, and a manual reconciliation run. Update package
-  documentation, installation recommendations, and the affected Living Spec distribution contract.
+  `devkit-catalog`; use its existing entry-point, package resource, and preset machinery. No engine extension or
+  additional runtime dependency is required. Set `default_preset = "all"`, leave `auto_select` disabled, and never
+  declare the reserved `[presets.all]` table.
+- The final bundle organization remains `reporting` for `weekly-report`, `upkeep` for `drift-reconciliation` and
+  `review-refactor`, and implicit `all` for all delivered assets. Each playbook is independently invoked and read
+  on demand. Selection never implies execution.
+- **Selected staged delivery:** initially publish only `drift-reconciliation`, with `upkeep` containing that asset and
+  implicit `all` containing the same asset. Add `reporting` only with its weekly-report asset, and extend `upkeep`
+  only with review-refactor. Do not create missing asset references, empty placeholder procedures, or advertise
+  undelivered presets. If companion assets are already present when Development starts, preserve them and verify
+  the combined selection. This proposal does not wait for or implement the companion playbooks.
+- Verify bundle discovery, selected asset membership, opt-in behavior, package validation, and independent
+  playbook lookup. Update catalog package documentation and existing installation recommendations. The existing
+  manifest contract is reused; the content-packages contract describes the new available bundle.
+
+### 3.5 Bounded Run and Report Contract
+
+1. Intake records repository identity, HEAD, dirty-path status, selected contract IDs or one selected area, the
+   implementation and guidance roots permitted for inspection, report destination, and any prior report. Missing
+   scope is clarified before broad inspection. Enumerate an explicit candidate list and record reviewed versus
+   excluded items; a large area is split into batches before review. Completion applies only to the declared batch.
+2. Resolve IDs, inspect references and entrypoints to navigate, run only applicable existing checks, and read the
+   relevant implementation/tests and guidance. Missing tools, malformed documents, missing entrypoints, or checks
+   that cannot run become coverage gaps with their reason; no silent omission or clean verdict is permitted.
+   Neither stale age, a changed path, nor passing governance checks proves semantic drift or consistency.
+3. Each finding records a report-local stable key, contract ID and precise citation, code/guidance path and
+   citation at the recorded revision, expected and observed behavior, evidence command/test when applicable,
+   classification (`deterministic` or `semantic-assessment`), affected outcome, and proposed disposition. A
+   deterministic checker failure proves that check's condition only; choosing intended behavior still belongs to
+   the user. An unsupported suspicion remains an investigation gap rather than a confirmed mismatch.
+4. Present all findings in one disposition round with enough evidence to choose documentation update, code fix,
+   deferral, or waiver. Record the explicit decision and reason per key; unanswered findings remain pending.
+   Deferral names an existing or newly authorized feedback/proposal destination and restart condition; waiver
+   names the intentional gap and rationale. Search existing open feedback/proposals by affected contract and
+   mismatch before creating another destination. No run is called fully reconciled while decisions remain pending.
+5. Apply only user-decided changes through the repository's applicable development workflow and gate policy.
+   Code fixes get regression evidence; documentation changes recheck the disputed claims, references, and affected
+   checks. Invocation, a clean check, or an automatic integration policy never substitutes for the parent's
+   human arbitration of each mismatch. Corrections outside the selected scope become separately tracked work.
+6. Revalidate evidence when HEAD or relevant dirty paths change before correction or final verification. Preserve
+   unrelated changes; a repeat run links the earlier finding and rechecks its disposition instead of duplicating
+   it. A completed review can contain deferred/waived findings and coverage gaps, but the report names each and
+   does not assert whole-repository consistency. Completion lists reviewed items, gaps, pending, resolved,
+   deferred and waived counts, decision provenance, verification evidence and follow-up destinations.
+
+### 3.6 Development Acceptance Evidence
+
+- Given only this asset is delivered, selecting `maintenance:upkeep` or
+  default `maintenance` deploys precisely drift-reconciliation; an unselected catalog deploys none. Existing
+  companion assets, when present, retain their membership. No missing source or asset ID passes validation.
+- Given a bounded manual sweep, the retained report names its input revision, candidate coverage and evidence
+  on both sides of every finding; a zero-finding run still records what was inspected and any coverage gaps.
+- Given unavailable checks or uncertain semantic evidence, the report records gaps or assessments and never
+  turns them into a clean or automatically authoritative verdict.
+- Given one example of each disposition, a manual exercise records the explicit decisions, delivery destination,
+  correction verification or deferral/waiver rationale. Use an isolated seeded fixture for cases absent from a
+  real bounded sweep; fixture decisions are explicitly simulated and authorize no repository change. Keep a
+  real repository read-only sweep separate from the fixture exercise. Development need not manufacture live
+  defects or fix unrelated findings to demonstrate the playbook.
+- Given repeated findings, changed evidence, or an unanswered decision, a manual exercise shows deduplication,
+  revalidation or pending status respectively. No scheduler or rejected path-based detector is introduced.
 
 ## 4. Rejected Candidate: Entrypoint-Based Stale-Document Hints
 
