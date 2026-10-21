@@ -76,3 +76,15 @@ def test_spec_milestone_is_not_membership(workspace: Path, write) -> None:
     write("specs/2026-10/x/spec.md", doc("SPEC-x", "milestone: MS-theme\n"))
     write("docs/proposals/PROP-y/proposal.md", doc("PROP-y", "milestone: MS-theme\n"))
     assert set(DocumentIndex.load(workspace).incoming("MS-theme")) == {"PROP-y"}
+
+
+def test_handoff_autofix_requires_an_exact_spec_anchor(tmp_path: Path) -> None:
+    source = "docs/proposals/PROP-next/proposal.md"
+    original = doc("PROP-next", "depends_on: [PROP-old]\n")
+    files = {source: original, "specs/2026-10/old/other.md": doc("SPEC-old")}
+    check(DocumentReferenceRule(), tmp_path, files, fix=True)
+    assert (tmp_path / source).read_text() == original
+    files = {source: original, "specs/2026-10/old/spec.md": doc("SPEC-old", status="completed")}
+    (tmp_path / "specs/2026-10/old/other.md").unlink()
+    check(DocumentReferenceRule(), tmp_path, files, fix=True)
+    assert "depends_on: [SPEC-old]" in (tmp_path / source).read_text()

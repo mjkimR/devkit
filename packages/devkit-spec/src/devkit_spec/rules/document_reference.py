@@ -307,6 +307,8 @@ class DocumentReferenceRule(BaseRule):
             for ref in document.references:
                 spec = _handed_off(index, ref.target)
                 if spec is not None:
+                    if ref.field == "depends_on" and is_unit_anchor(document) and target_problem(index, spec):
+                        continue
                     mapping[ref.target] = spec
                 elif ref.bracket:
                     mapping.setdefault(ref.target, ref.target)
