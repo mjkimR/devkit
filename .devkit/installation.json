@@ -83,6 +83,14 @@
     },
     {
       "bundle": "devkit-dev",
+      "id": "testing",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/devkit-dev/instructions/testing.md"
+      ]
+    },
+    {
+      "bundle": "devkit-dev",
       "id": "architecture",
       "kind": "rule",
       "paths": [
@@ -1180,11 +1188,15 @@
     },
     ".devkit/managed/devkit-dev/bundle.toml": {
       "mode": 420,
-      "sha256": "29a0ae9939a00c17f22824dd2b6d10caa6ef1d7e12286a3a2aa1454ed8db0555"
+      "sha256": "1f5447811115bfc0f869f2ebd7582564cd4b3ceebd53b25210ab7e47952785ab"
     },
     ".devkit/managed/devkit-dev/instructions/project-structure.md": {
       "mode": 420,
-      "sha256": "aa14cc0041fc3d40ffa7c58bc1e6d1e41785b199223457687b0d679d7ed8111b"
+      "sha256": "ab40efdbbbdf1224649df2ce9abaaabf5276d50921b46565f1105e5f200795dd"
+    },
+    ".devkit/managed/devkit-dev/instructions/testing.md": {
+      "mode": 420,
+      "sha256": "661d5df7686d3b0f30c80de41dc42ae5e0258771a51d6cf394ce71698bd0e406"
     },
     ".devkit/managed/devkit-dev/rules/architecture/guide.md": {
       "mode": 420,

@@ -7,6 +7,8 @@ status: active
 entrypoints:
   - packages/devkit/src/devkit_agt/features/integration/
 created_at: 2026-10-17
+stories:
+  - US-drive-development-to-integration
 ---
 
 # [CAP-INT-mcp-services] Scoped Integration

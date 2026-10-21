@@ -31,6 +31,7 @@ The ubiquitous terms of devkit as its documents, commands and bundles use them. 
 | **Workflow** | A multi-stage delivery procedure declared as data (`kind = "workflow"`): ordered stages with entry/exit checks, approval gates, and returns. | `CAP-DLV-workflow-orchestration` |  | `kind = "workflow"` |
 | **Unit** | A directory driven by a workflow, tracked by its anchor file (e.g. `spec.md` or `proposal.md`). | `CAP-DLV-workflow-orchestration` |  |  |
 | **Stage** | A discrete step in a workflow (`intent`, `specify`, `build-verify`, `handoff`); evaluates whether checks are met. | `CAP-DLV-workflow-definitions` |  |  |
+| **Segment** | The execution span during which a Unit is bound to a single workflow definition; reset upon workflow handoff. | `CAP-DLV-workflow-orchestration` |  |  |
 | **Gate** | A workflow stage that pauses for an explicit human or automated decision. | `CAP-DLV-workflow-definitions` |  |  |
 | **Envelope** | A structured YAML file recording the findings, questions, problems, or resolution of a workflow stage. | `CAP-DLV-workflow-envelopes` |  |  |
 | **Shared artifact** | Immutable expiring report content shared by exact generation reference; excludes scope coordination and approval authority. | `CAP-COLL-shared-artifacts` | shared state, coordination record | `devkit_dist.features.shared`, `Artifact` |

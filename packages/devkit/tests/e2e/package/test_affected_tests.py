@@ -29,12 +29,14 @@ def affected() -> ModuleType:
 
 
 def test_a_change_selects_its_area_and_the_areas_that_import_it(affected: ModuleType) -> None:
-    selection = affected.select(ROOT, ["packages/devkit/src/devkit_agt/features/worktree/usecases/lifecycle.py"])
+    selection = affected.select(
+        ROOT, ["packages/devkit/src/devkit_agt/features/worktree/usecases/lifecycle.py"], include_e2e=True
+    )
     assert selection.mode == "partial"
     assert selection.reason == "devkit_agt.features.worktree"
     assert {
-        f"{TESTS}/integration/features/worktree/test_lifecycle.py",
-        "packages/devkit-spec/tests/integration/features/delivery/test_integration.py",
+        f"{TESTS}/e2e/features/worktree/test_lifecycle.py",
+        "packages/devkit-spec/tests/e2e/features/delivery/test_integration.py",
     } <= set(selection.paths)
     assert not any(path.startswith(f"{TESTS}/integration/features/gate/") for path in selection.paths)
 
@@ -42,7 +44,7 @@ def test_a_change_selects_its_area_and_the_areas_that_import_it(affected: Module
 def test_a_leaf_area_selects_no_unrelated_area(affected: ModuleType) -> None:
     selection = affected.select(ROOT, ["packages/devkit/src/devkit_agt/features/gate/usecases/runner.py"])
     assert selection.mode == "partial"
-    assert f"{TESTS}/integration/features/gate/test_hooks.py" in selection.paths
+    assert f"{TESTS}/integration/features/gate/test_config.py" in selection.paths
     assert not any(
         path.startswith(
             (
@@ -60,12 +62,14 @@ def test_a_leaf_area_selects_no_unrelated_area(affected: ModuleType) -> None:
 
 
 def test_a_devkit_dist_area_selects_the_devkit_agt_areas_that_import_it(affected: ModuleType) -> None:
-    selection = affected.select(ROOT, ["packages/devkit-dist/src/devkit_dist/features/host/services/configuration.py"])
+    selection = affected.select(
+        ROOT, ["packages/devkit-dist/src/devkit_dist/features/host/services/configuration.py"], include_e2e=True
+    )
     assert selection.mode == "partial"
     assert selection.reason == "devkit_dist.features.host"
     assert {
         f"{DIST_TESTS}/integration/features/host/test_hooks.py",
-        "packages/devkit-spec/tests/integration/features/delivery/test_integration.py",
+        "packages/devkit-spec/tests/e2e/features/delivery/test_integration.py",
     } <= set(selection.paths)
     assert set(affected.SOURCE_TREE_TESTS) <= set(selection.paths)
 
@@ -144,18 +148,25 @@ def test_architecture_config_alone_selects_structure_rule_and_integration_tests(
     assert affected.select(ROOT, [".devkit/config.toml"]).mode == "none"
 
 
+def test_script_with_e2e_target_in_data_is_selected_even_without_e2e_flag(affected: ModuleType) -> None:
+    selection = affected.select(ROOT, ["scripts/affected_tests.py"])
+    assert selection.mode == "partial"
+    assert selection.reason == "scripts/affected_tests.py"
+    assert selection.paths == (f"{TESTS}/e2e/package/test_affected_tests.py",)
+
+
 def test_changed_tests_select_themselves_and_helpers_their_directory(affected: ModuleType) -> None:
     selection = affected.select(
         ROOT,
         [
             "packages/devkit-spec/tests/integration/features/scope/fixture.json",
-            f"{TESTS}/integration/features/gate/test_hooks.py",
+            f"{TESTS}/e2e/features/gate/test_hooks.py",
             f"{TESTS}/integration/features/gate/test_deleted_meanwhile.py",
         ],
     )
     assert selection.paths == (
         "packages/devkit-spec/tests/integration/features/scope",
-        f"{TESTS}/integration/features/gate/test_hooks.py",
+        f"{TESTS}/e2e/features/gate/test_hooks.py",
     )
 
 
@@ -515,12 +526,27 @@ def test_new_packages_and_embedded_rule_tests_keep_owner_coverage(affected: Modu
 
 
 def test_mcp_runtime_consumer_mapping_is_retained(affected: ModuleType) -> None:
-    selection = affected.select(ROOT, ["packages/devkit-mcp/src/devkit_mcp/features/runtime/mcp/server.py"])
+    selection = affected.select(
+        ROOT, ["packages/devkit-mcp/src/devkit_mcp/features/runtime/mcp/server.py"], include_e2e=True
+    )
     assert {
         "packages/devkit-mcp/tests",
         f"{TESTS}/integration/features/integration",
-        f"{SPEC_TESTS}/integration/features/delivery/test_integration.py",
+        f"{SPEC_TESTS}/e2e/features/delivery/test_integration.py",
     } <= set(selection.paths)
+
+
+def test_default_selection_excludes_e2e_tests_unless_requested_or_changed(affected: ModuleType) -> None:
+    worktree = "packages/devkit/src/devkit_agt/features/worktree/usecases/lifecycle.py"
+    default_sel = affected.select(ROOT, [worktree])
+    assert not any("/tests/e2e/" in path for path in default_sel.paths)
+    assert any("/tests/integration/" in path for path in default_sel.paths)
+
+    e2e_sel = affected.select(ROOT, [worktree], include_e2e=True)
+    assert any("/tests/e2e/" in path for path in e2e_sel.paths)
+
+    direct_e2e = affected.select(ROOT, [f"{TESTS}/e2e/features/worktree/test_lifecycle.py"])
+    assert f"{TESTS}/e2e/features/worktree/test_lifecycle.py" in direct_e2e.paths
 
 
 def test_relative_helper_package_initializer_keeps_its_dependency(affected: ModuleType, graph_root: Path) -> None:

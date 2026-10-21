@@ -9,6 +9,11 @@ kind = "instruction"
 source = "instructions/project-structure.md"
 
 [[assets]]
+id = "testing"
+kind = "instruction"
+source = "instructions/testing.md"
+
+[[assets]]
 id = "architecture"
 kind = "rule"
 source = "rules/architecture"
@@ -19,4 +24,4 @@ kind = "rule"
 source = "rules/usecase-boundaries"
 
 [presets.structure]
-assets = ["project-structure", "architecture", "usecase-boundaries"]
+assets = ["project-structure", "testing", "architecture", "usecase-boundaries"]

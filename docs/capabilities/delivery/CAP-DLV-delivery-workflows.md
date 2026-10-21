@@ -8,6 +8,8 @@ created_at: 2026-10-13
 stories:
   - US-route-development-intent
   - US-incubate-and-hand-off-a-proposal
+  - US-drive-development-to-integration
+  - US-handle-delivery-problems-and-exceptions
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/

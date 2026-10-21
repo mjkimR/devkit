@@ -87,27 +87,33 @@ def run_module(script_env: dict[str, str], *args: str) -> subprocess.CompletedPr
     [
         (
             ["gate"],
-            ["packages/devkit/tests/integration/features/gate", "packages/devkit/src/devkit_agt/features/gate"],
+            [
+                "packages/devkit/tests/integration/features/gate",
+                "packages/devkit/tests/e2e/features/gate",
+                "packages/devkit/src/devkit_agt/features/gate",
+            ],
             [],
         ),
         (
             ["gate", "worktree", "-k", "foo"],
             [
                 "packages/devkit/tests/integration/features/gate",
+                "packages/devkit/tests/e2e/features/gate",
                 "packages/devkit/src/devkit_agt/features/gate",
                 "packages/devkit/tests/integration/features/worktree",
+                "packages/devkit/tests/e2e/features/worktree",
                 "packages/devkit/src/devkit_agt/features/worktree",
             ],
             ["-k", "foo"],
         ),
         (
-            ["packages/devkit/tests/integration/features/gate/test_hooks.py::test_commits_run_built_in_gates"],
-            ["packages/devkit/tests/integration/features/gate/test_hooks.py::test_commits_run_built_in_gates"],
+            ["packages/devkit/tests/e2e/features/gate/test_hooks.py::test_commits_run_built_in_gates"],
+            ["packages/devkit/tests/e2e/features/gate/test_hooks.py::test_commits_run_built_in_gates"],
             [],
         ),
         (
-            ["tests/integration/features/gate/test_hooks.py::test_commits_run_built_in_gates"],
-            ["packages/devkit/tests/integration/features/gate/test_hooks.py::test_commits_run_built_in_gates"],
+            ["tests/e2e/features/gate/test_hooks.py::test_commits_run_built_in_gates"],
+            ["packages/devkit/tests/e2e/features/gate/test_hooks.py::test_commits_run_built_in_gates"],
             [],
         ),
         ([], ["packages/devkit/tests", "packages/devkit/src"], []),
@@ -122,6 +128,47 @@ def test_selectors_replace_the_module_paths(
     assert result.returncode == 0, result.stderr
     preflight, check = calls(script_env)
     assert preflight[-len(args) - 3 :] == ["just", action, "devkit", *args]
+    assert pytest_paths(check) == paths
+    assert check[len(check) - len(extra) :] == extra
+
+
+@pytest.mark.parametrize(
+    ("args", "paths", "extra"),
+    [
+        (
+            ["gate"],
+            ["packages/devkit/tests/e2e/features/gate"],
+            [],
+        ),
+        (
+            ["gate", "worktree", "-k", "foo"],
+            [
+                "packages/devkit/tests/e2e/features/gate",
+                "packages/devkit/tests/e2e/features/worktree",
+            ],
+            ["-k", "foo"],
+        ),
+        (
+            ["packages/devkit/tests/e2e/features/gate/test_hooks.py::test_commits_run_built_in_gates"],
+            ["packages/devkit/tests/e2e/features/gate/test_hooks.py::test_commits_run_built_in_gates"],
+            [],
+        ),
+        (
+            ["tests/e2e/features/gate/test_hooks.py::test_commits_run_built_in_gates"],
+            ["packages/devkit/tests/e2e/features/gate/test_hooks.py::test_commits_run_built_in_gates"],
+            [],
+        ),
+        ([], ["packages/devkit/tests/e2e"], []),
+        (["-k", "foo"], ["packages/devkit/tests/e2e"], ["-k", "foo"]),
+    ],
+)
+def test_test_e2e_selectors_target_e2e_paths_only(
+    script_env: dict[str, str], args: list[str], paths: list[str], extra: list[str]
+) -> None:
+    result = run_module(script_env, "test-e2e", "devkit", *args)
+    assert result.returncode == 0, result.stderr
+    preflight, check = calls(script_env)
+    assert preflight[-len(args) - 3 :] == ["just", "test-e2e", "devkit", *args]
     assert pytest_paths(check) == paths
     assert check[len(check) - len(extra) :] == extra
 
@@ -176,7 +223,7 @@ def test_invalid_mode_runs_no_tool(script_env: dict[str, str]) -> None:
     assert not Path(script_env["CALLS"]).exists()
 
 
-@pytest.mark.parametrize("category", ["unit", "integration"])
+@pytest.mark.parametrize("category", ["unit", "integration", "e2e"])
 def test_category_selector_collects_the_category(script_env: dict[str, str], category: str) -> None:
     result = run_module(script_env, "test", "dist", category)
     assert result.returncode == 0, result.stderr

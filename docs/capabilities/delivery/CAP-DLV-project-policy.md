@@ -8,6 +8,8 @@ created_at: 2026-10-13
 stories:
   - US-route-development-intent
   - US-run-parallel-work-safely
+  - US-drive-development-to-integration
+  - US-handle-delivery-problems-and-exceptions
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/policy/services/config.py
   - packages/devkit-spec/src/devkit_spec/features/policy/cli/commands.py

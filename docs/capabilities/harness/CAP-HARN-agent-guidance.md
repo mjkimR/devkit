@@ -8,6 +8,7 @@ created_at: 2026-10-13
 stories:
   - US-route-development-intent
   - US-adopt-in-an-existing-repository
+  - US-handle-delivery-problems-and-exceptions
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/SKILL.md.jinja
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml

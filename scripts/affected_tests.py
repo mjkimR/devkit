@@ -62,7 +62,7 @@ DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
         (
             "packages/devkit-mcp/tests",
             f"{DEVKIT}/tests/integration/features/integration",
-            "packages/devkit-spec/tests/integration/features/delivery/test_integration.py",
+            "packages/devkit-spec/tests/e2e/features/delivery/test_integration.py",
         ),
     ),
     (
@@ -81,7 +81,7 @@ DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("justfile", (f"{DEVKIT}/tests/integration/package/test_module_script.py",)),
     ("scripts/check_test_environment.py", (f"{DEVKIT}/tests/integration/package/test_test_environment.py",)),
     ("scripts/fetch_model.py", (f"{DIST}/tests/integration/features/search/test_packaging.py",)),
-    ("scripts/affected_tests.py", (f"{DEVKIT}/tests/integration/package/test_affected_tests.py",)),
+    ("scripts/affected_tests.py", (f"{DEVKIT}/tests/e2e/package/test_affected_tests.py",)),
 )
 # Tests over devkit's whole source tree (layering, documented codes, CLI wiring, stdout kinds), run for any source
 # change in either devkit distribution.
@@ -402,9 +402,9 @@ class Workspace:
                 self.root
             ).as_posix() in {
                 "packages/devkit-spec/tests/integration/package/test_documented_codes.py",
-                "packages/devkit-spec/tests/integration/package/test_package.py",
+                "packages/devkit-spec/tests/e2e/package/test_package.py",
                 "packages/devkit-spec/tests/integration/bundles/spec/test_workflows.py",
-                "packages/devkit-spec/tests/integration/features/delivery/test_integration.py",
+                "packages/devkit-spec/tests/e2e/features/delivery/test_integration.py",
             }:
                 depends.add("@devkit_spec")
             groups.append(Group(self._relative([path]), frozenset(depends)))
@@ -415,6 +415,8 @@ class Workspace:
 
 
 def _full_trigger(path: str) -> bool:
+    if path in UNTESTED_FILES or path.startswith(UNTESTED_PREFIXES) or bool(UNTESTED_MARKDOWN.fullmatch(path)):
+        return False
     return (
         path in FULL_FILES
         or path.rsplit("/", 1)[-1] in FULL_NAMES
@@ -443,15 +445,15 @@ def _source_node(workspace: Workspace, path: str) -> str | None:
     return package
 
 
-def select(root: Path, changed: Iterable[str]) -> Selection:
+def select(root: Path, changed: Iterable[str], *, include_e2e: bool = False) -> Selection:
     changed = sorted(set(changed))
     try:
-        return _select(root, changed)
+        return _select(root, changed, include_e2e=include_e2e)
     except UnsafeGraph as exc:
         return Selection("full", (), str(exc), any(path.startswith(FRONTEND_PREFIXES) for path in changed))
 
 
-def _select(root: Path, changed: Iterable[str]) -> Selection:
+def _select(root: Path, changed: Iterable[str], *, include_e2e: bool = False) -> Selection:
     """The test paths a set of changed repository-relative paths can affect."""
     changed = sorted(set(changed))
     frontend = any(path.startswith(FRONTEND_PREFIXES) for path in changed)
@@ -460,15 +462,19 @@ def _select(root: Path, changed: Iterable[str]) -> Selection:
             return Selection("full", (), path, frontend)
     workspace = Workspace(root)
     paths: set[str] = set()
+    data_targets: set[str] = set()
     causes: set[str] = set()
     nodes: set[str] = set()
+    has_e2e_change = any("/tests/e2e/" in path or path.startswith("tests/e2e/") for path in changed)
+    allow_e2e = include_e2e or has_e2e_change
     for path in changed:
         data = [(prefix, tests) for prefix, tests in DATA if path.startswith(prefix)]
         for prefix, tests in data:
             paths.update(tests)
+            data_targets.update(tests)
             causes.add(prefix)
         if re.fullmatch(r"(?:packages|tools)/[^/]+/src/.+", path):
-            if path.startswith(tuple(f"{home}/src/" for home in HOMES)):
+            if path.startswith((f"{DIST}/src/", f"{DEVKIT}/src/")):
                 paths.update(SOURCE_TREE_TESTS)
             node = _source_node(workspace, path)
             if not node:
@@ -491,6 +497,8 @@ def _select(root: Path, changed: Iterable[str]) -> Selection:
             if group.depends & affected:
                 paths.update(group.paths)
     kept = sorted(p for p in paths if (root / p).exists())
+    if not allow_e2e:
+        kept = [p for p in kept if "/tests/e2e/" not in p or p in data_targets]
     kept = [p for p in kept if not any(p.startswith(f"{other}/") for other in kept)]
     if not kept:
         return Selection("none", (), "frontend" if frontend else "untested", frontend)
@@ -542,12 +550,13 @@ def _replace_process(argv: list[str]) -> None:
 @click.command(context_settings={"ignore_unknown_options": True})
 @click.option("--base", default="main", show_default=True, help="Ref whose merge base with HEAD starts the changes.")
 @click.option("--list", "list_only", is_flag=True, help="Print the selection and its paths without running pytest.")
+@click.option("--e2e", "include_e2e", is_flag=True, help="Include slow end-to-end tests.")
 @click.argument("pytest_args", nargs=-1, type=click.UNPROCESSED)
 @boundary
-def main(base: str, list_only: bool, pytest_args: tuple[str, ...]) -> None:
+def main(base: str, list_only: bool, include_e2e: bool, pytest_args: tuple[str, ...]) -> None:
     """Run the tests the changes since BASE can affect; arguments after `--` go to pytest."""
     changed = changed_paths(ROOT, base)
-    selection = select(ROOT, changed)
+    selection = select(ROOT, changed, include_e2e=include_e2e)
     click.echo(
         f"[TEST_SELECTION: mode={selection.mode} base={base} changed={len(changed)} "
         f"paths={len(selection.paths)} reason={selection.reason}]"
