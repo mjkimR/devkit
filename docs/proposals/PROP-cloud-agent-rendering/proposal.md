@@ -2,7 +2,7 @@
 id: PROP-cloud-agent-rendering
 title: Render cloud agent assets without MCP guidance
 summary: "Make sync --cloud render CLI-only agent instructions without MCP routes, using execution-aware templates and coverage for constitution and subagent assets."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-21
 target_area: capabilities/distribution/
 priority: high                        # critical | high | medium | low
