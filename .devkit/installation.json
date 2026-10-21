@@ -223,6 +223,7 @@
         ".agents/skills/spec/references/envelope.md",
         ".agents/skills/spec/references/feedback-retirement.md",
         ".agents/skills/spec/references/git-policy.md",
+        ".agents/skills/spec/references/milestone-completion.md",
         ".agents/skills/spec/references/planning.md",
         ".agents/skills/spec/references/review-loop.md",
         ".agents/skills/spec/references/worker-records.md",
@@ -236,6 +237,7 @@
         ".claude/skills/spec/references/envelope.md",
         ".claude/skills/spec/references/feedback-retirement.md",
         ".claude/skills/spec/references/git-policy.md",
+        ".claude/skills/spec/references/milestone-completion.md",
         ".claude/skills/spec/references/planning.md",
         ".claude/skills/spec/references/review-loop.md",
         ".claude/skills/spec/references/worker-records.md",
@@ -249,6 +251,7 @@
         ".devkit/managed/spec/skills/spec/references/envelope.md",
         ".devkit/managed/spec/skills/spec/references/feedback-retirement.md",
         ".devkit/managed/spec/skills/spec/references/git-policy.md",
+        ".devkit/managed/spec/skills/spec/references/milestone-completion.md",
         ".devkit/managed/spec/skills/spec/references/planning.md",
         ".devkit/managed/spec/skills/spec/references/review-loop.md",
         ".devkit/managed/spec/skills/spec/references/worker-records.md",
@@ -741,7 +744,7 @@
     },
     ".agents/skills/spec-next/references/next-work.md": {
       "mode": 420,
-      "sha256": "95073ca0ad96f6c95b518829e085f577a8ca1804c1d6ae7451f9a9e46420ca23"
+      "sha256": "ead10a609f9014fefe43f908f42cf991710272a8ba22b0c729eb89296479b020"
     },
     ".agents/skills/spec-next/references/post-handoff.md": {
       "mode": 420,
@@ -809,7 +812,7 @@
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "ff8dd8efebbc722b1b64f3c6589dab4aabc5c437da6afd5b57be835930e5fb6b"
+      "sha256": "78ce45fbb3fb970c1c870776148b2834adc9e0753bd62c5326b7ce70fffcb036"
     },
     ".agents/skills/spec/references/branches.md": {
       "mode": 420,
@@ -838,6 +841,10 @@
     ".agents/skills/spec/references/git-policy.md": {
       "mode": 420,
       "sha256": "d709e4fc2c5c3c22dc1858a2e36aa75c0dbb8286d11fd1c44c722485d51bf3f5"
+    },
+    ".agents/skills/spec/references/milestone-completion.md": {
+      "mode": 420,
+      "sha256": "659f698c55515f6de755a4811520a9296c1887edfd4387baff32d9b9083c3928"
     },
     ".agents/skills/spec/references/planning.md": {
       "mode": 420,
@@ -937,7 +944,7 @@
     },
     ".claude/skills/spec-next/references/next-work.md": {
       "mode": 420,
-      "sha256": "95073ca0ad96f6c95b518829e085f577a8ca1804c1d6ae7451f9a9e46420ca23"
+      "sha256": "ead10a609f9014fefe43f908f42cf991710272a8ba22b0c729eb89296479b020"
     },
     ".claude/skills/spec-next/references/post-handoff.md": {
       "mode": 420,
@@ -1001,7 +1008,7 @@
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "ff8dd8efebbc722b1b64f3c6589dab4aabc5c437da6afd5b57be835930e5fb6b"
+      "sha256": "78ce45fbb3fb970c1c870776148b2834adc9e0753bd62c5326b7ce70fffcb036"
     },
     ".claude/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1030,6 +1037,10 @@
     ".claude/skills/spec/references/git-policy.md": {
       "mode": 420,
       "sha256": "d709e4fc2c5c3c22dc1858a2e36aa75c0dbb8286d11fd1c44c722485d51bf3f5"
+    },
+    ".claude/skills/spec/references/milestone-completion.md": {
+      "mode": 420,
+      "sha256": "659f698c55515f6de755a4811520a9296c1887edfd4387baff32d9b9083c3928"
     },
     ".claude/skills/spec/references/planning.md": {
       "mode": 420,
@@ -1397,7 +1408,7 @@
     },
     ".devkit/managed/spec/skills/spec-next/references/next-work.md": {
       "mode": 420,
-      "sha256": "95073ca0ad96f6c95b518829e085f577a8ca1804c1d6ae7451f9a9e46420ca23"
+      "sha256": "ead10a609f9014fefe43f908f42cf991710272a8ba22b0c729eb89296479b020"
     },
     ".devkit/managed/spec/skills/spec-next/references/post-handoff.md": {
       "mode": 420,
@@ -1461,7 +1472,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "ff8dd8efebbc722b1b64f3c6589dab4aabc5c437da6afd5b57be835930e5fb6b"
+      "sha256": "78ce45fbb3fb970c1c870776148b2834adc9e0753bd62c5326b7ce70fffcb036"
     },
     ".devkit/managed/spec/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1490,6 +1501,10 @@
     ".devkit/managed/spec/skills/spec/references/git-policy.md": {
       "mode": 420,
       "sha256": "d709e4fc2c5c3c22dc1858a2e36aa75c0dbb8286d11fd1c44c722485d51bf3f5"
+    },
+    ".devkit/managed/spec/skills/spec/references/milestone-completion.md": {
+      "mode": 420,
+      "sha256": "659f698c55515f6de755a4811520a9296c1887edfd4387baff32d9b9083c3928"
     },
     ".devkit/managed/spec/skills/spec/references/planning.md": {
       "mode": 420,
@@ -1541,7 +1556,7 @@
     },
     ".devkit/managed/spec/templates/milestone.md": {
       "mode": 420,
-      "sha256": "a86d5462cf3046bce54dd9923a57e71a285d96b07202530e32eb94a2c1ce2145"
+      "sha256": "7549c722442628f4a502ddc4f7ebfabc9f51b76bf99f661b39575a813f883d24"
     },
     ".devkit/managed/spec/templates/proposal.md": {
       "mode": 420,
