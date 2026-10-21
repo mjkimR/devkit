@@ -2,7 +2,7 @@
 id: PROP-periodic-drift-reconciliation-target
 title: Target Living Spec Structure for PROP-periodic-drift-reconciliation
 status: draft
-proposal: PROP-periodic-drift-reconciliation
+proposal: SPEC-periodic-drift-reconciliation
 created_at: 2026-10-14
 # The Living Spec files this proposal changes, one "- file: <workspace-relative path>" each;
 # devkit spec scope compare reads them to find overlaps with other work.
