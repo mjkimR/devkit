@@ -1,0 +1,23 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-20T23:26:10.950885Z'
+status: completed
+summary: 'Planning ready for plan-accept: selected immutable source-bound bilingual report, explicit local acceptance/merge/optional handoff with fresh-approval partial recovery, read-only exact-generation viewer exception and review guidance. Mandatory nested medium challenger completed with zero findings; worker reverified. dev_effort remains medium.'
+findings: []
+assumptions:
+- Host-supplied shared adapter contract is provisional; Development waits for dependency acceptance and implementation.
+- Local MCP is primary with explicit connection checks; cloud CLI and separate cloud-rendering proposal retain their scopes.
+- Codex worker and challenger contracts are emulated by prompt path restrictions, exact cwd, scoped approvals and Host committed-range validation; no native confinement guarantee.
+- Worktree policy required; Host owns acceptance and integration decisions. This worker commits only.
+unverified_areas:
+- 'No implementation tests or live native form/link observation: documentation-only Planning; adapter runtime and recovery faults belong to Development.'
+checks:
+  proposal-rules: PASS zero errors or warnings
+  challenger: PASS independent medium review zero findings
+  feedback: PASS fresh run sweep recorded=1 duplicates=0
+diff_scope:
+  base: 0269cd9b103c5f3dc2633f8119528fc64890ed56
+  head: 6f6c756fc4f989a3e08d7f1e0b6b6f46afdf68e8
+activity_effort: medium
