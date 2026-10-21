@@ -1174,19 +1174,19 @@
     },
     ".devkit/managed/devkit-dev/instructions/project-structure.md": {
       "mode": 420,
-      "sha256": "50223e5217980c359434bf540405a1fd01b5b1107221f898aabd2c34b9509d99"
+      "sha256": "0a4fda54978e7169f31bdf2f5889008bb42bb907700bc142e07bc0df6d70f712"
     },
     ".devkit/managed/devkit-dev/rules/architecture/guide.md": {
       "mode": 420,
-      "sha256": "eed849e54b2955c95ecf4d6cfaa4130d1d0e539f7994f5c6f5625ea12f4926c4"
+      "sha256": "119b489b82e267b83d0b8e0339a95454b4851a41dbb3407e8d418b7dd4724540"
     },
     ".devkit/managed/devkit-dev/rules/architecture/rule.py": {
       "mode": 420,
-      "sha256": "21a0f419a0d97238f45cd3230f43efbb38675be2cba9088fdb20f7af8baa22ad"
+      "sha256": "ba79eec8c97eea759c7aa8c59dd11aaea8cfb22b865f3454f9c2bb0d8dbfa59e"
     },
     ".devkit/managed/devkit-dev/rules/architecture/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "e59b1738039505ca9bf58bb53314d5fe02cd6d8ec9c0d7e48d2fc076f4fa2a23"
+      "sha256": "fc3f0f5116d0cd692dd305230f755a515e228d7cebbca93588532d4cdae906ed"
     },
     ".devkit/managed/devkit/AGENTS.md": {
       "mode": 420,

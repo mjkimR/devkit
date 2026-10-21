@@ -19,6 +19,7 @@ from devkit_agt.features.workflow.models.errors import (
     UnitExistsError,
 )
 from devkit_agt.features.workflow.models.layout import TemplateLayout
+from devkit_agt.features.workflow.repositories.layout import discover_units
 from devkit_agt.features.workflow.repositories.unit.binding import read_anchor
 from devkit_agt.features.workflow.repositories.unit.decisions import DECISIONS_DIR
 from devkit_agt.features.workflow.repositories.unit.records import is_temporary, write_new_file
@@ -150,7 +151,7 @@ def list_units(ws: Workspace, *, statuses: Iterable[str] = (), excluded: Iterabl
     keep, drop = set(statuses), set(excluded)
     rows: dict[tuple[str, str], UnitInfo] = {}
     for layout in layouts_in_use(ws):
-        for rel in layout.discover(ws.root):
+        for rel in discover_units(layout, ws.root):
             key = (rel.as_posix(), layout.anchor)
             if key in rows:
                 continue

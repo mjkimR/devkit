@@ -83,6 +83,7 @@ def inspect(
     head: str | None = None,
     scope: Sequence[str] | None = None,
     base_checkout: str | None = None,
+    details: bool = True,
     runner: Callable[[Path, Sequence[str]], dict[str, Any]] = run_check,
 ) -> dict[str, Any]:
     root, tip, chosen = inputs(root, unit, base, head, base_checkout)
@@ -123,14 +124,9 @@ def inspect(
     dirty = dirty_paths(root)
     checks["worktree"] = {"status": "fail" if dirty else "pass", "dirty_paths": dirty}
     loaded = records(root, tip, unit)
-    hold = loaded.hold().to_dict()
     checks["envelopes"] = {
         "status": "fail" if loaded.errors or loaded.unresolved_problems() or loaded.pending_questions() else "pass",
-        "result": {
-            "envelopes": [e.to_dict() for e in loaded.all()],
-            **hold,
-            "errors": [e.to_dict() for e in loaded.errors],
-        },
+        "result": loaded.inspection_dict(details=details),
     }
     checks["rules"] = (
         runner(root, ["rules", "check", "--ci", "--base", base])

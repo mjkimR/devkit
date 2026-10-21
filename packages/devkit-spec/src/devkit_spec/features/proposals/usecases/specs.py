@@ -36,8 +36,8 @@ from devkit_spec.base.errors import (
     SpecWriteError,
     SpecWrongBranchError,
 )
-from devkit_spec.features.delivery.services.branches import require_development_branch
 from devkit_spec.features.documents import DocumentIndex
+from devkit_spec.features.policy.repositories.branches import require_development_branch
 from devkit_spec.features.proposals.models.axes import BUGFIX_WORKFLOW, DEFAULT_WORKFLOW
 from devkit_spec.features.proposals.services.body import CarriedProposal, ensure_ac_ids
 from devkit_spec.features.proposals.usecases.binding import resolve_binding

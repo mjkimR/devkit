@@ -50,10 +50,10 @@ from devkit_dist.adapters.cli import (
     workspace_option,
 )
 
-from devkit_spec.features.proposals import create_padr, create_proposal, handoff_proposal, prune_proposals
+from devkit_spec.features.delivery.usecases.handoff import handoff_and_register
+from devkit_spec.features.proposals import create_padr, create_proposal, prune_proposals
 from devkit_spec.features.proposals.usecases.accept import ACTOR, accept_proposal
 from devkit_spec.features.proposals.usecases.backlog import check_backlog_editable
-from devkit_spec.features.scope import SOURCE_HANDOFF, auto_register
 from devkit_spec.features.scope.cli.output import echo_registered, registered_dict
 from devkit_spec.utils.output import sentinel
 
@@ -274,12 +274,11 @@ def accept_cmd(
 def handoff_cmd(slug: str, workspace_root: str | None, output_format: str) -> None:
     """Hand the accepted proposal SLUG off to a spec bundle sdd-spec-<task_kind> and remove the proposal."""
     root = resolve_root(workspace_root)
-    result = handoff_proposal(root, slug)
-    registered, scope_notices = auto_register(root, result.dir, source=SOURCE_HANDOFF)
-    result.notices += scope_notices
+    completed = handoff_and_register(root, slug)
+    result, registered = completed.handoff, completed.registered
     if is_json(output_format):
         scope = registered_dict(registered.location, registered.record, registered.token) if registered else None
-        echo_json(result.to_dict() | {"scope": scope})
+        echo_json(result.to_dict() | {"scope": scope, "notices": [item.to_dict() for item in completed.notices]})
     else:
         click.echo(
             sentinel(
@@ -319,8 +318,8 @@ def handoff_cmd(slug: str, workspace_root: str | None, output_format: str) -> No
             echo_registered(registered.location, registered.record, registered.token)
         if result.next_command:
             click.echo(f"[NEXT_CMD: {result.next_command}]")
-    echo_notices(result.notices)
-    exit_on_warnings(result.notices)
+    echo_notices(completed.notices)
+    exit_on_warnings(completed.notices)
 
 
 @proposal_group.command(name="prune")
@@ -380,7 +379,7 @@ def report_cmd(slug: str, source_sha: str, body_file, workspace_root: str | None
 
     result = publish(resolve_root(workspace_root), slug, source_sha, body_file.read(MAX_BYTES + 1))
     if is_json(output_format):
-        echo_json(result.to_dict())
+        echo_json(result.receipt_dict())
     else:
         click.echo(
             sentinel(

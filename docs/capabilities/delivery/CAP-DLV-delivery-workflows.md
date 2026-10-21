@@ -510,7 +510,7 @@ local user interaction otherwise provided by an external runner; final integrati
 ## Worker result inspection
 
 `devkit spec worker inspect [--unit <dir>] [--base <accepted>] [--head <returned>]
-[--scope <prefix>... | --scope-file <file>] [--base-checkout <path>]` collects evidence in the activity worktree.
+[--scope <prefix>... | --scope-file <file>] [--base-checkout <path>] [--details]` collects evidence in the activity worktree.
 It derives its inputs from committed HEAD records and reports each value's source; explicit flags replace only
 that input. Scope-file is UTF-8, one nonempty literal repository-relative prefix per line; a scope override
 replaces the entire derived scope. Literal paths match themselves and descendants at path-component boundaries.
@@ -537,7 +537,7 @@ Wrapped results retain their codes and actions.
 `--format json` emits one object containing `inputs` (value/source), `scope` entries, `base`, `head`, `changed_paths`,
 optional `outside_scope` and `base_checkout`, `checks`, `notices` and `exit_code`. Text output emits inspection,
 input, scope, changed-path and check sentinels. The compared commits and changed paths are reviewer payload
-information. Exit 0 means no failed check, 1 means at least one failed check, and 2 means invalid invocation,
+information. Default JSON keeps each check status, actionable findings, violations, notices, errors, unresolved problems, pending questions and recovery evidence; envelope entries contain metadata and current open findings rather than historical bodies. Successful wrapped check bodies are omitted. Workflow output retains the next action and approval evidence, with only stage identity, role, isolation and returns instead of the full stage definition. Unknown failed check payloads and diagnostic stdout/stderr remain intact. `--details --format json` includes all original wrapped results and envelope bodies. Both modes run every check and derive the same verdict from complete evidence. Exit 0 means no failed check, 1 means at least one failed check, and 2 means invalid invocation,
 invalid Git inputs or unresolved required unit/head/base. A not-run check alone is a notice, not exit 1.
 
 | Code | Meaning and action |

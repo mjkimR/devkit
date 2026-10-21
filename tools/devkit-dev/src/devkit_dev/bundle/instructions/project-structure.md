@@ -23,12 +23,14 @@ Imports MUST follow the layer directions declared by `RULE-architecture`:
 models/errors are contracts; repositories use contracts; services use contracts
 and repositories; usecases coordinate services and repositories; transports call
 usecases and contracts. Package base MUST NOT import features, utils, adapters or core implementations;
-utils MUST NOT import features. Cross-feature imports use declared public APIs.
+utils MUST NOT import features. Cross-feature imports MUST use declared public APIs and follow the source feature's
+explicit `feature_dependencies` declaration. The actual feature dependency graph
+MUST be acyclic, including dependencies through facade exports.
 Dist and agt use independent `devkit_dist` and `devkit_agt` roots. The advisory
 public API remains `devkit.advisory`.
 
 `.devkit/architecture.toml` owns source roots, feature names, resource areas,
-package dependencies and explicit adapter exceptions. A necessary exception
+package and feature dependencies and explicit adapter exceptions. A necessary exception
 MUST identify an exact source and target module plus its reason. Do not add a
 wildcard exclusion to conceal a dependency. Keep rule tests beside their rule;
 other tests belong under the package's `tests`. Content packages, bundle data,
@@ -61,6 +63,11 @@ real components or filesystem/Git boundaries, and e2e tests exercise installed
 public CLI/MCP flows. Shared package-installation combinations belong in the
 repository-level e2e harness. Classify by the tested boundary, not by whether the
 package is an application. A deployed rule's tests MUST remain beside that rule.
+
+Reusable helpers shared by multiple devkit packages MAY live in `devkit_dev.testing`
+when a concrete shared need exists. Consume them through development dependencies
+only; product runtime code MUST NOT depend on devkit-dev. Keep helpers used by one
+package in its own `tests/support/`.
 
 Executable packages MUST place each bundle manifest at
 `bundles/<name>/bundle/bundle.toml`, with that bundle's assets beside it.

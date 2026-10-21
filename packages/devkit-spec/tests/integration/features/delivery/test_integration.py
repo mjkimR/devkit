@@ -678,7 +678,7 @@ def test_handoff_initialization_keeps_template_isolated(
     ],
 )
 def test_handoff_nonapproval_makes_no_git_changes(accepted_handoff_base, action, content, status):
-    from devkit_spec.features.proposals.usecases.native_handoff import HandoffService
+    from devkit_spec.features.delivery.usecases.native_handoff import HandoffService
 
     repo = accepted_handoff_base
     before = git(repo, "show-ref")
@@ -697,7 +697,7 @@ def test_handoff_nonapproval_makes_no_git_changes(accepted_handoff_base, action,
 
 
 def test_handoff_approval_creates_development_and_returns_selected_effort(accepted_handoff_base):
-    from devkit_spec.features.proposals.usecases.native_handoff import HandoffService
+    from devkit_spec.features.delivery.usecases.native_handoff import HandoffService
 
     repo = accepted_handoff_base
 
@@ -715,7 +715,7 @@ def test_handoff_approval_creates_development_and_returns_selected_effort(accept
 
 
 def test_handoff_changed_base_requires_fresh_review_before_creating_worktree(accepted_handoff_base):
-    from devkit_spec.features.proposals.usecases.native_handoff import HandoffService
+    from devkit_spec.features.delivery.usecases.native_handoff import HandoffService
     from devkit_spec.features.proposals.usecases.report import ReviewRefreshRequiredError
 
     repo = accepted_handoff_base
@@ -785,7 +785,7 @@ def test_handoff_native_sdk_roundtrip(accepted_handoff_base, approved, language)
 def test_handoff_pins_reviewed_commit_before_setup_when_base_moves(accepted_handoff_base, monkeypatch):
     from devkit_agt.features.worktree.usecases import lifecycle
 
-    from devkit_spec.features.proposals.usecases.native_handoff import HandoffService
+    from devkit_spec.features.delivery.usecases.native_handoff import HandoffService
 
     repo = accepted_handoff_base
     reviewed = git(repo, "rev-parse", "HEAD")
@@ -819,7 +819,7 @@ def test_handoff_pins_reviewed_commit_before_setup_when_base_moves(accepted_hand
 
 def test_handoff_stage_off_cannot_replace_required_plan_approvals(accepted_handoff_base):
     from devkit_spec.base.errors import HandoffNotReadyError
-    from devkit_spec.features.proposals.usecases.native_handoff import prepare
+    from devkit_spec.features.delivery.usecases.native_handoff import prepare
 
     repo = accepted_handoff_base
     for record in (repo / "docs/proposals/PROP-idea/decisions").glob("*-gate-plan-*.yaml"):
@@ -921,7 +921,7 @@ def test_native_handoff_initializes_fresh_registration(accepted_handoff_base, mo
     from devkit_agt.features.worktree.usecases import lifecycle
     from devkit_dist.features.host.usecases import registrations
 
-    from devkit_spec.features.proposals.usecases.native_handoff import HandoffService
+    from devkit_spec.features.delivery.usecases.native_handoff import HandoffService
 
     repo = accepted_handoff_base
     original = lifecycle._execute
@@ -962,7 +962,7 @@ def test_native_handoff_initializes_fresh_registration(accepted_handoff_base, mo
 def test_handoff_reuses_only_clean_pinned_devkit_worktree(accepted_handoff_base):
     from devkit_agt.features.worktree import locate, start
 
-    from devkit_spec.features.proposals.usecases.native_handoff import HandoffService
+    from devkit_spec.features.delivery.usecases.native_handoff import HandoffService
 
     repo = accepted_handoff_base
     report_uri = _handoff_report(repo)
@@ -983,7 +983,7 @@ def test_handoff_recovery_refuses_changed_provenance_before_form(accepted_handof
     from devkit_agt.features.worktree import locate, start
 
     from devkit_spec.base.errors import HandoffNotReadyError
-    from devkit_spec.features.proposals.usecases.native_handoff import HandoffService
+    from devkit_spec.features.delivery.usecases.native_handoff import HandoffService
 
     repo = accepted_handoff_base
     report_uri = _handoff_report(repo)
@@ -1004,7 +1004,7 @@ def test_handoff_recovery_refuses_changed_provenance_before_form(accepted_handof
 
 
 def test_handoff_report_language_change_requires_fresh_form(accepted_handoff_base):
-    from devkit_spec.features.proposals.usecases.native_handoff import HandoffService
+    from devkit_spec.features.delivery.usecases.native_handoff import HandoffService
     from devkit_spec.features.proposals.usecases.report import ReviewRefreshRequiredError
 
     repo = accepted_handoff_base
@@ -1021,7 +1021,7 @@ def test_handoff_report_language_change_requires_fresh_form(accepted_handoff_bas
 
 
 def test_handoff_missing_report_never_displays_form(accepted_handoff_base):
-    from devkit_spec.features.proposals.usecases.native_handoff import HandoffService
+    from devkit_spec.features.delivery.usecases.native_handoff import HandoffService
     from devkit_spec.features.proposals.usecases.report import ReviewRefreshRequiredError
 
     async def confirm(message, schema):

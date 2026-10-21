@@ -32,8 +32,8 @@ from devkit_spec.features.scope.repositories.localfs import (
     safe_name,
     valid_namespace,
 )
+from devkit_spec.features.scope.repositories.location import Location, default_namespace, load_token, locate
 from devkit_spec.features.scope.services.compare import compare, compare_all, compare_with
-from devkit_spec.features.scope.services.location import Location, default_namespace, load_token, locate
 from devkit_spec.features.scope.usecases.flow import (
     SOURCE_HANDOFF,
     Ack,

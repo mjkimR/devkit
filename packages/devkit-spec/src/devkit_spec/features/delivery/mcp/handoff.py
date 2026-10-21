@@ -4,11 +4,11 @@ from pathlib import Path
 
 from devkit_core.base.mcp import Confirmation, McpTool
 
-from devkit_spec.features.proposals.usecases.native_handoff import HandoffService
+from devkit_spec.features.delivery.usecases.native_handoff import HandoffService
 
 
 def create_tools(root: Path) -> tuple[McpTool, ...]:
-    from devkit_spec.features.proposals.mcp import plan_accept as plan_accept_mcp
+    from devkit_spec.features.delivery.mcp import plan_accept as plan_accept_mcp
     from devkit_spec.features.proposals.mcp import report as proposal_report_mcp
 
     service = HandoffService(root)

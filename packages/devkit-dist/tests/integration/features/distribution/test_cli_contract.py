@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import tomllib
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -14,6 +15,7 @@ from devkit_dist.features.distribution.services.installation.config import updat
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
 from devkit_dist.features.distribution.services.installation.transaction import project_lock
 from devkit_dist.features.distribution.services.installation.workspace import DEPLOYED
+from devkit_dist.features.distribution.usecases import commands as operations
 from devkit_dist.features.distribution.usecases.sync import sync_project
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, RECEIPT_PATH
 from distsupport.distribution import cli, instruction, write_bundle
@@ -168,7 +170,7 @@ def test_unexpected_errors_are_maintenance_and_exit_2(
     def explode(*args: object, **kwargs: object) -> None:
         raise RuntimeError("boom")
 
-    monkeypatch.setattr("devkit_dist.features.distribution.cli.selection.get_project_status", explode)
+    monkeypatch.setattr("devkit_dist.features.distribution.cli.selection.inspect_project", explode)
     result = _invoke("status", "-w", str(target))
     assert result.exit_code == int(ExitCode.ERROR)
     assert json.loads(result.stdout)["error"]["advisory"]["action"].startswith("MAINTENANCE — ")
@@ -223,7 +225,7 @@ def test_status_with_problems_exits_one_whatever_their_own_codes(
     assert problem.exit_code == ExitCode.ERROR
     report = SimpleNamespace(errors=(problem,), notices=(), to_dict=lambda: {"errors": [problem.to_dict()]})
     monkeypatch.setattr(
-        "devkit_dist.features.distribution.cli.selection.get_project_status", lambda *args, **kwargs: report
+        "devkit_dist.features.distribution.cli.selection.inspect_project", lambda *args, **kwargs: report
     )
     result = _invoke("status", "-w", str(target))
     assert result.exit_code == int(ExitCode.FINDINGS)
@@ -353,3 +355,97 @@ def test_a_receipt_stale_refusal_lists_at_most_twenty_planned_writes() -> None:
     assert error.code == "RECEIPT_STALE" and error.exit_code == ExitCode.FINDINGS
     assert len(error.details) == 21 and error.details[-1].startswith("and 3 more")
     assert error.target_files[0] == RECEIPT_PATH
+
+
+@pytest.mark.parametrize("mode", ["save", "no-save", "dry-run", "clear-agents", "environment"])
+def test_public_sync_selection_matches_cli_policy(item: InstalledBundle, tmp_path: Path, mode: str) -> None:
+    roots = [tmp_path / "library", tmp_path / "transport"]
+    for root in roots:
+        root.mkdir()
+        update_config(root, agents=["claude-code"])
+    kwargs = {"agents": ["codex"], "presets": {"team": ["all"]}}
+    flags = ["--agent", "codex", "--preset", "team:all"]
+    if mode == "no-save":
+        kwargs["save"] = False
+        flags.append("--no-save")
+    elif mode == "dry-run":
+        kwargs["dry_run"] = True
+        flags.append("--dry-run")
+    elif mode == "clear-agents":
+        kwargs["agents"] = []
+        flags = ["--no-agents", "--preset", "team:all"]
+    elif mode == "environment":
+        kwargs["environment"] = "cloud"
+        flags.append("--cloud")
+    direct = operations.sync_selection(roots[0], **kwargs).to_dict()
+    transport = _invoke("sync", *flags, "--format", "json", "-w", str(roots[1]))
+    assert transport.exit_code == 0, transport.output
+    assert direct == json.loads(transport.stdout)
+    for path in (CONFIG_PATH, RECEIPT_PATH, ".devkit/config.local.toml"):
+        snapshots = [(root / path).read_bytes() if (root / path).exists() else None for root in roots]
+        assert snapshots[0] == snapshots[1], path
+    configured = roots[0] / CONFIG_PATH
+    if mode in ("no-save", "dry-run"):
+        assert 'agents = ["claude-code"]' in configured.read_text()
+        assert not tomllib.loads(configured.read_text()).get("presets")
+    else:
+        assert 'team = "all"' in configured.read_text()
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_public_add_selection_joins_presets_without_cli(item: InstalledBundle, target: Path, dry_run: bool) -> None:
+    update_config(target, presets={"team": ["all"]}, agents=[])
+    before = (target / CONFIG_PATH).read_bytes()
+    result = operations.add_selection(target, {"team": ["all"]}, dry_run=dry_run)
+    assert list(result.selection.presets["team"]) == ["all"]
+    if dry_run:
+        assert (target / CONFIG_PATH).read_bytes() == before
+        assert not (target / RECEIPT_PATH).exists()
+    else:
+        assert json.loads((target / RECEIPT_PATH).read_text())["selection"]["presets"] == {"team": ["all"]}
+
+
+def test_public_selection_rolls_back_config_when_sync_conflicts(item: InstalledBundle, target: Path) -> None:
+    operations.sync_selection(target, agents=[], presets={"team": ["all"]})
+    before = (target / CONFIG_PATH).read_bytes()
+    (target / ".devkit/managed/team/guide.md").write_text("edited\n")
+    with pytest.raises(ConflictError):
+        operations.sync_selection(target, agents=["codex"], presets={"team": ["all"]})
+    assert (target / CONFIG_PATH).read_bytes() == before
+
+
+def test_application_discovery_stays_open_until_result_is_collected(
+    item: InstalledBundle, target: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    active = False
+    calls = []
+
+    @contextmanager
+    def found():
+        nonlocal active
+        active = True
+        try:
+            yield [item]
+        finally:
+            active = False
+            calls.append("closed")
+
+    from devkit_dist.features.distribution.usecases import status as status_operations
+
+    collect = status_operations.get_project_listing
+
+    def collect_while_open(root, installed):
+        assert active
+        return collect(root, installed)
+
+    monkeypatch.setattr(status_operations, "get_project_listing", collect_while_open)
+    monkeypatch.setattr(operations, "discover_bundles", found)
+    operations.sync_selection(target, agents=[], presets={"team": ["all"]})
+    assert not active
+    assert operations.list_project(target).installed
+    assert not active
+    assert not operations.inspect_project(target).errors
+    assert not active
+    assert not operations.list_project_overrides(target)
+    assert not active
+    assert len(calls) == 4

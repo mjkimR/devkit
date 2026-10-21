@@ -89,7 +89,8 @@ Command layer.
 - CLI and MCP adapters invoke use cases. They own transport parsing and output shaping.
 - Use cases coordinate feature operations through services, repositories and models.
 - Services and repositories may use models, base contracts and technical helpers; they never import
-  use cases or transport adapters. Models do not import services, repositories or higher layers.
+  use cases or transport adapters. Models do not import services, repositories or higher layers and do not read files,
+  discover directories or launch Git. Repositories own these external operations.
 - Package `base` contracts do not import feature implementations or `utils`; technical helpers do not
   import features. `devkit_core.base` never imports `devkit_core.core` or an application package.
 - Feature dependencies follow the package's declared acyclic graph. Shared project configuration,
@@ -106,8 +107,15 @@ Command layer.
 - Bundle rule code is content loaded by the rule engine. It uses public foundation and rule APIs;
   bundle modules do not become a shortcut around application layer boundaries.
 
-Repository structure rules check folder conventions and layer direction. Package tests additionally
-check feature dependencies and package ownership; independent-wheel tests cover import isolation.
+Proposal handoff and optional scope registration are coordinated by the delivery feature.
+The proposal CLI group and native handoff/acceptance MCP adapters call delivery use cases;
+proposal state operations remain in the proposals feature. Shared branch conventions and
+Git branch queries belong to the policy feature, keeping documents and proposal state
+independent of delivery orchestration.
+
+Repository structure rules check folder conventions, layer direction and explicit per-feature
+dependencies, including actual feature cycles. Package tests cover package ownership;
+independent-wheel tests cover import isolation.
 
 ### 1.3 Test Layout
 
@@ -134,7 +142,9 @@ package is an application or a library. Foundation tests mirror `base/` and `cor
 features. Content-package tests use the same tiers around bundle loading and validation.
 
 Rule tests remain in `<rule>/tests/` so they deploy and run with the rule. Shared helpers belong
-in `tests/support/`; keep fixtures at the narrowest useful `conftest.py` scope. Repository-owned
+in each package's `tests/support/`; keep fixtures at the narrowest useful `conftest.py` scope.
+Concrete test utilities reused across packages may live in `devkit_dev.testing`, declared
+as development-only code in the structure configuration. Product runtimes do not depend on it. Repository-owned
 consumer smoke scripts build and install wheels in fresh environments and cover cross-package
 e2e combinations; individual packages need no duplicate installation suites.
 

@@ -10,7 +10,8 @@ Text output (paths are workspace-relative; ``<a>``/``<b>`` are spec, proposal or
   the owner token is ever printed;
 - ``query``: ``[RECORD: <task> revision= worktree= host= spec= scopes= unresolved= shared_worktree= own=]``, the
   pairs, then ``[SUMMARY: namespace= records= pairs= overlapping= problems=]``; with ``--history``,
-  ``[EVENT: <event> at= ...]`` per journal event and ``[SUMMARY: namespace= events= problems=]``;
+  ``[EVENT: <event> at= ...]`` per page event, ``[PAGE: limit= total= next_cursor=]`` and
+  ``[SUMMARY: namespace= events= problems=]``;
 - ``update``: the pairs of this task with the others, then
   ``[SCOPE_ACK: status=applied|failed|stale|timeout revision= added= removed= overlaps= unresolved= request_id=]``;
 - ``release``: ``[SCOPE: <task> released=yes|no registered= already= revision=]``;
@@ -41,7 +42,6 @@ from devkit_dist.adapters.cli import (
 )
 
 from devkit_spec.base.errors import (
-    ScopeJournalLineWarning,
     ScopeStaleRevisionError,
 )
 from devkit_spec.features.scope import (
@@ -58,7 +58,7 @@ from devkit_spec.features.scope import (
     update,
 )
 from devkit_spec.features.scope.cli.output import echo_registered, registered_dict
-from devkit_spec.features.scope.models.model import JOURNAL_FILE
+from devkit_spec.features.scope.usecases.history import query_history
 from devkit_spec.features.scope.usecases.query import (
     _record_warnings,
     _spec_dir,
@@ -202,28 +202,36 @@ def _record_line(record: Record, mine: bool) -> str:
 )
 @click.option("--history", is_flag=True, help="Print the namespace's event journal instead of the records")
 @click.option("--task", default=None, help="With --history: only the events whose task ID or slug is this value")
+@click.option("--limit", type=click.IntRange(1, 100), default=None, help="With --history: page size [default: 50]")
+@click.option("--cursor", default=None, help="With --history: continue to older events using next_cursor")
 @workspace_option()
 @FORMAT_OPTION
 @boundary
 def query_cmd(
-    spec_dir: str | None, history: bool, task: str | None, workspace_root: str | None, output_format: str
+    spec_dir: str | None,
+    history: bool,
+    task: str | None,
+    limit: int | None,
+    cursor: str | None,
+    workspace_root: str | None,
+    output_format: str,
 ) -> None:
     """List the namespace's records and the overlaps of this worktree's task with the others, or the journal.
 
     Without a registration in this worktree every pair of records is compared. The token is never printed.
     """
-    if task is not None and not history:
+    if (task is not None or limit is not None or cursor is not None) and not history:
         raise ArgumentError(
-            "--task filters the event journal and needs --history",
-            target_files=["--task"],
-            fix="Add --history, or drop --task",
+            "--task, --limit and --cursor filter the event journal and need --history",
+            target_files=["--task", "--limit", "--cursor"],
+            fix="Add --history, or drop the history options",
         )
     if history and spec_dir is not None:
         raise ArgumentError("--spec and --history cannot be combined", target_files=["--spec", "--history"])
     root = resolve_root(workspace_root)
     session = open_session(root)
     if history:
-        _history(session, task, output_format)
+        _history(session, task, limit or 50, cursor, output_format)
         return
     mine, others, records, pairs, summary, notices = query_scopes(root, session, spec_dir)
     if is_json(output_format):
@@ -250,34 +258,16 @@ def _event_line(event: Event) -> str:
     return sentinel("EVENT", event.event, at=event.at, **data)
 
 
-def _history(session: Session, task: str | None, output_format: str) -> None:
-    location = session.location
-    events, problems = session.registry.history(location.namespace, session.deadline)
-    if task:
-        events = [event for event in events if event.matches(task)]
-    notices: list[AdvisoryError] = []
-    if problems:
-        notices.append(
-            ScopeJournalLineWarning(
-                f"{len(problems)} journal line(s) are not JSON events and were skipped",
-                *(f"line {problem.line}: {problem.reason}" for problem in problems),
-                target_files=[str(location.shared_path / location.namespace / JOURNAL_FILE)],
-            )
-        )
-    summary = {"namespace": location.namespace, "events": len(events), "problems": len(problems)}
+def _history(session: Session, task: str | None, limit: int, cursor: str | None, output_format: str) -> None:
+    result = query_history(session, task=task, limit=limit, cursor=cursor)
     if is_json(output_format):
-        echo_json(
-            {
-                "events": [event.to_dict() for event in events],
-                "summary": summary,
-                "notices": [notice.to_dict() for notice in notices],
-            }
-        )
+        echo_json(result.to_dict())
     else:
-        for event in events:
+        for event in result.events:
             click.echo(_event_line(event))
-        click.echo(fields_line("SUMMARY", **summary))
-    _finish(notices)
+        click.echo(fields_line("PAGE", **result.pagination))
+        click.echo(fields_line("SUMMARY", **result.summary))
+    _finish(result.notices)
 
 
 # --- update -----------------------------------------------------------------------------------------------------

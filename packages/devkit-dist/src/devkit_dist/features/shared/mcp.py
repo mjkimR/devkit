@@ -37,15 +37,15 @@ def tools(root: Path) -> tuple[McpTool, ...]:
             if name == "put":
                 request = PutRequest(**arguments)
                 request.validate()
-                result = selected.put(request)
+                result = selected.put(request).receipt_dict()
             elif name == "get":
-                result = selected.get(**arguments)
+                result = selected.get(**arguments).to_dict()
             elif name == "list":
-                result = selected.list(**arguments)
+                result = selected.list(**arguments).to_dict()
             else:
-                result = selected.sweep(apply=name == "sweep_apply", **arguments)
+                result = selected.sweep(apply=name == "sweep_apply", **arguments).to_dict()
             return {
-                **result.to_dict(),
+                **result,
                 "adapter": selected.adapter_id,
                 "repository_namespace": selected.repository_namespace,
             }

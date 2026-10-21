@@ -1,8 +1,7 @@
 """Work unit layout: where units live and how their directories are named.
 
-The engine needs two operations from a layout, creating a unit path and
-discovering existing units. ``TemplateLayout`` implements both from one
-``str.format`` template.
+``TemplateLayout`` computes new unit paths and discovery patterns from one
+``str.format`` template; repositories discover existing units on disk.
 """
 
 from __future__ import annotations
@@ -10,7 +9,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from datetime import date as date_type
-from pathlib import Path, PurePosixPath
+from pathlib import PurePosixPath
 from string import Formatter
 
 from devkit_core.base.errors import UnsafePathError
@@ -195,13 +194,3 @@ class TemplateLayout:
         directory separator, so it becomes ``*/*`` to match the same depth.
         """
         return _glob(self.unit_path)
-
-    def discover(self, workspace_root: Path) -> list[PurePosixPath]:
-        base = workspace_root / self.work_dir
-        if not base.is_dir():
-            return []
-        found: list[PurePosixPath] = []
-        for candidate in base.glob(self.discovery_glob()):
-            if candidate.is_dir() and (candidate / self.anchor).is_file():
-                found.append(PurePosixPath(candidate.relative_to(workspace_root).as_posix()))
-        return sorted(found)

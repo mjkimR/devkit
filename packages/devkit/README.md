@@ -54,7 +54,8 @@ Each wheel owns a regular package: `devkit_agt` for the harness, `devkit_dist` f
 `features/<feature>/` owns each harness capability. Its `cli` or `mcp` adapter exposes application operations in
 `usecases/`; `services/` contains reusable domain logic, `repositories/` reads and writes configuration, records,
 Git state or provider data, and `models/` defines contracts, values and errors. Layers exist only when the feature
-has code for them. Feature `__init__.py` files provide explicit public library facades. The package has no `core/`;
+has code for them. Workflow definition parsing and layout calculations stay in models; the definition and layout
+repositories own definition file loading and existing unit discovery. Feature `__init__.py` files provide explicit public library facades. The package has no `core/`;
 shared low-level primitives live in `devkit_core`. Package-level `base/` and `utils/` may be introduced when needed.
 
 The `bundles/authoring/` and `bundles/harness/` resource packages retain their `bundle/` content. They load without

@@ -26,7 +26,7 @@ from pathlib import Path
 from devkit_core.core import GitError, run_git
 
 from devkit_spec.base.errors import ScopeNotAWorktreeError
-from devkit_spec.features.policy.services.config import ScopeConfig
+from devkit_spec.features.policy.models.config import ScopeConfig
 from devkit_spec.features.scope.models.deadline import Deadline
 from devkit_spec.features.scope.models.location import TOKEN_FILE, Location
 

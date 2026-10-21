@@ -9,10 +9,10 @@ stories:
   - US-incubate-and-hand-off-a-proposal
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/report.py
-  - packages/devkit-spec/src/devkit_spec/features/proposals/mcp/plan_accept.py
+  - packages/devkit-spec/src/devkit_spec/features/delivery/mcp/plan_accept.py
   - packages/devkit-spec/src/devkit_spec/features/proposals/
-  - packages/devkit-spec/src/devkit_spec/features/proposals/cli/commands.py
-  - packages/devkit-spec/src/devkit_spec/features/proposals/mcp/handoff.py
+  - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
+  - packages/devkit-spec/src/devkit_spec/features/delivery/mcp/handoff.py
   - packages/devkit-spec/src/devkit_spec/features/proposals/models/approval.py
 ---
 
@@ -602,7 +602,9 @@ Development effort and approval effects. Every current committed PADR has proble
 and consequences; committed envelope names and declared effort are accounted for. The Host verifies meaning.
 Publication rejects incomplete or false identity and oversized content; it never edits tracked documents.
 Exact immutable URI, content digest, generation and seven-day expiry come from the shared adapter; identical live
-retries keep the generation, expired retries create a different one. No read refreshes or deletes an artifact.
+retries keep the generation, expired retries create a different one. Publication responses contain the exact URI,
+metadata and available local links without repeating the submitted Markdown; `shared_get` retrieves the body.
+No read refreshes or deletes an artifact.
 
 `spec_plan_accept(slug, report_uri)` requires local native confirmation even when Development integration policy
 is auto. Its message includes title, summary, PADR IDs, report link, Planning support, recommended effort and exact

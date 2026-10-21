@@ -48,7 +48,7 @@ from devkit_spec.base.errors import PostFinishCleanupNotice, ProposalCleanupWarn
 from devkit_spec.features.proposals.usecases.prune import prune_proposals
 from devkit_spec.features.proposals.usecases.scaffold import require_slug
 from devkit_spec.features.scope.models.model import Verdict
-from devkit_spec.features.scope.services.location import load_token
+from devkit_spec.features.scope.repositories.location import load_token
 from devkit_spec.features.scope.usecases.flow import Session, journal, open_session, own, release, sweep_events
 
 SOURCE = "post-finish"

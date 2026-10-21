@@ -75,10 +75,10 @@ from devkit_spec.base.errors import (
     ProposalUnboundNotice,
     ProposalWrongWorktreeError,
 )
-from devkit_spec.features.delivery.services.branches import require_development_branch
 from devkit_spec.features.documents import DocumentIndex, parse_document
 from devkit_spec.features.documents.models.model import Document
 from devkit_spec.features.documents.services.dependencies import cycle_members, live_unit, target_problem
+from devkit_spec.features.policy.repositories.branches import require_development_branch
 from devkit_spec.features.policy.services.config import GLOBAL
 from devkit_spec.features.proposals.models.axes import (
     DEFAULT_TASK_KIND,

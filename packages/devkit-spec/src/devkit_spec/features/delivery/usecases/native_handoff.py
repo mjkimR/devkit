@@ -17,12 +17,11 @@ from devkit_dist.features.project.usecases.configuration import approval_languag
 from devkit_dist.features.project.usecases.invocation import guard_execution
 
 from devkit_spec.base.errors import HandoffNotReadyError, HandoffReplyError, HandoffStaleError
-from devkit_spec.features.proposals import handoff_proposal
+from devkit_spec.features.delivery.usecases.handoff import handoff_and_register
 from devkit_spec.features.proposals.models.approval import schema as approval_schema
 from devkit_spec.features.proposals.models.axes import EFFORTS, TASK_KINDS
 from devkit_spec.features.proposals.models.handoff import HandoffPreview
 from devkit_spec.features.proposals.usecases.report import validate
-from devkit_spec.features.scope.usecases.flow import SOURCE_HANDOFF, auto_register
 
 
 def _existing(root: Path, slug: str, head: str) -> bool:
@@ -194,13 +193,12 @@ class HandoffService:
                     "setup changed tracked or untracked worktree files; inspect them before handoff"
                 )
             guard_execution()
-            handed = handoff_proposal(root, preview.slug)
-            guard_execution()
-            registered, notices = auto_register(root, handed.dir, source=SOURCE_HANDOFF)
+            completed = handoff_and_register(root, preview.slug, before_registration=guard_execution)
+            handed, registered = completed.handoff, completed.registered
             result.update(
                 status="handed_off", handoff=handed.to_dict(), next_command=f"devkit workflow next --unit {handed.dir}"
             )
-            result["notices"] += [item.to_dict() for item in handed.notices + notices]
+            result["notices"] += [item.to_dict() for item in completed.notices]
             if registered is not None:
                 result["scope_token"] = registered.token
         except AdvisoryError as exc:

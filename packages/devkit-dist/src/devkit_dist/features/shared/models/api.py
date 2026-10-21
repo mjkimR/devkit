@@ -96,15 +96,18 @@ class Artifact:
     content: str
     local_path: str | None = None
 
-    def to_dict(self) -> dict:
+    def receipt_dict(self) -> dict:
+        """Describe a published artifact without echoing its submitted body."""
         value = {
             "artifact_uri": self.metadata.artifact_uri,
             "metadata": self.metadata.to_dict(),
-            "content": self.content,
         }
         if self.local_path is not None:
             value.update(local_path=self.local_path, file_uri=Path(self.local_path).as_uri())
         return value
+
+    def to_dict(self) -> dict:
+        return {**self.receipt_dict(), "content": self.content}
 
 
 @dataclass(frozen=True)

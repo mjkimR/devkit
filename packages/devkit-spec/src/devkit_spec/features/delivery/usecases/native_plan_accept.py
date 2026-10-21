@@ -32,7 +32,7 @@ from devkit_dist.features.project.usecases.invocation import guard_execution
 from devkit_spec.base.errors import SpecError
 from devkit_spec.features.proposals import accept_proposal
 from devkit_spec.features.proposals.models.axes import EFFORTS
-from devkit_spec.features.proposals.usecases.accept import _STATUS, _frontmatter_end
+from devkit_spec.features.proposals.services.status import accepted_text
 from devkit_spec.features.proposals.usecases.scaffold import require_slug
 
 
@@ -192,9 +192,9 @@ class _Acceptance:
         return message, _schema(self.effort, language)
 
     def _support(self) -> str:
-        from devkit_spec.features.proposals.usecases.report import SECTIONS, _sections
+        from devkit_spec.features.proposals.usecases.report import planning_support
 
-        return _sections(self.report.content, 2)[SECTIONS[self.report.metadata.language][3]]
+        return planning_support(self.report)
 
     def select(self, content: dict) -> None:
         mode, effort = content.get("mode"), content.get("activity_effort")
@@ -214,11 +214,10 @@ class _Acceptance:
             return self.acceptance_sha
         anchor = self.source / self.unit / "proposal.md"
         original = anchor.read_text()
-        end = _frontmatter_end(original)
-        prefix, count = _STATUS.subn("status: accepted", original[:end], count=1)
-        if count != 1:
-            raise ProposalApprovalNotReadyError("proposal status cannot be changed exactly")
-        expected_anchor = (prefix + original[end:]).encode()
+        try:
+            expected_anchor = accepted_text(original).encode()
+        except ValueError as exc:
+            raise ProposalApprovalNotReadyError("proposal status cannot be changed exactly") from exc
         accepted = accept_proposal(self.source, self.slug, by="user")
         self.completed.append("acceptance_record")
         if accepted.decision is None:
@@ -254,7 +253,7 @@ class PlanAcceptService:
         self._lock = asyncio.Lock()
 
     async def _remaining(self, slug: str, report_uri: str, confirm: Confirmation) -> dict:
-        from devkit_spec.features.proposals.usecases.native_handoff import HandoffService, prepare
+        from devkit_spec.features.delivery.usecases.native_handoff import HandoffService, prepare
         from devkit_spec.features.proposals.usecases.report import validate
 
         preview = await asyncio.to_thread(prepare, self.root, slug, report_uri)
@@ -353,7 +352,7 @@ class PlanAcceptService:
             payload.update(status="accepted", landed_sha=landed, next_action="Acceptance complete")
             if lifecycle.mode == "accept_only":
                 return payload
-            from devkit_spec.features.proposals.usecases.native_handoff import HandoffService, prepare
+            from devkit_spec.features.delivery.usecases.native_handoff import HandoffService, prepare
 
             try:
                 guard_execution()

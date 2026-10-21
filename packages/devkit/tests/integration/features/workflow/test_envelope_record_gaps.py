@@ -152,7 +152,9 @@ def test_an_answer_settles_assumptions_by_position(root: Path) -> None:
     assert only.exit_code == 0, only.output
     data = _read(root, "answer-02.yaml")
     assert "answers" not in data and data["settles"] == [{"assumption": 3, "decision": "No tool"}]
-    out = json.loads(run_cli("envelope", "check", "-w", str(root), "--unit", SIMPLE_UNIT, "--format", "json").stdout)
+    out = json.loads(
+        run_cli("envelope", "check", "-w", str(root), "--unit", SIMPLE_UNIT, "--format", "json", "--details").stdout
+    )
     entries = {e["file"]: e for e in out["envelopes"]}
     assert entries["envelopes/answer-02.yaml"]["settles"] == [{"assumption": 3, "decision": "No tool"}]
     assert entries["envelopes/worker-01.yaml"]["settles"] == []

@@ -11,6 +11,7 @@ from devkit_core.base.errors import ArgumentError
 from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, echo_notices, is_json
 
 from devkit_spec.features.worker.usecases.inspect import CheckNotRun, inspect
+from devkit_spec.features.worker.usecases.summary import summarize_inspection
 from devkit_spec.utils.output import sentinel
 
 
@@ -28,6 +29,7 @@ def worker_group() -> None:
     "--scope-file", type=click.Path(path_type=Path), default=None, help="UTF-8 complete scope, one prefix per line"
 )
 @click.option("--base-checkout", default=None, help="Base checkout to observe; otherwise the registered base")
+@click.option("--details", is_flag=True, help="Include complete wrapped results and envelope history in JSON output")
 @FORMAT_OPTION
 @boundary
 def inspect_cmd(
@@ -37,6 +39,7 @@ def inspect_cmd(
     scope: tuple[str, ...],
     scope_file: Path | None,
     base_checkout: str | None,
+    details: bool,
     output_format: str,
 ) -> None:
     """Collect range, scope, cleanliness, envelope, rules and workflow evidence. Never writes or repairs."""
@@ -50,9 +53,11 @@ def inspect_cmd(
             raise ArgumentError(
                 f"Cannot read scope file: {exc}", fix="Pass --scope-file with a readable UTF-8 file"
             ) from exc
-    result = inspect(Path.cwd(), unit=unit, base=base, head=head, scope=entries, base_checkout=base_checkout)
+    result = inspect(
+        Path.cwd(), unit=unit, base=base, head=head, scope=entries, base_checkout=base_checkout, details=details
+    )
     if is_json(output_format):
-        echo_json(result)
+        echo_json(result if details else summarize_inspection(result))
     else:
         click.echo(sentinel("WORKER_INSPECTION", result["exit_code"], base=result["base"], head=result["head"]))
         for name, entry in result["inputs"].items():
@@ -66,7 +71,7 @@ def inspect_cmd(
             _echo_check(name, check)
         if "base_checkout" in result:
             click.echo(sentinel("BASE_CHECKOUT", result["inputs"]["base_checkout"]["value"], **result["base_checkout"]))
-        # JSON retains complete wrapped results. Text extracts advisories, without historical envelope bodies.
+        # Text extracts advisories from the complete evidence, without historical envelope bodies.
         rendered: set[str] = set()
         for check in result["checks"].values():
             stderr = check.get("stderr", "")

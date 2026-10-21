@@ -14,7 +14,7 @@ from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
 
 from devkit_spec.base.errors import ProposalInPlanningError, ProposalNotFoundError
-from devkit_spec.features.delivery.services.branches import planning_branches
+from devkit_spec.features.policy.repositories.branches import planning_branches
 from devkit_spec.features.proposals.usecases.scaffold import bundle_dir, require_slug, single_file
 
 

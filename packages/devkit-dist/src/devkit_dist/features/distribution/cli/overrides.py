@@ -7,13 +7,12 @@ import click
 from devkit_dist.adapters.cli import (
     resolve_root,
 )
-from devkit_dist.features.distribution.usecases import commands as operations
-from devkit_dist.features.distribution.usecases.override_commands import (
-    accept_override,
-    create_override,
-    diff_override,
-    list_overrides,
-    remove_override,
+from devkit_dist.features.distribution.usecases.commands import (
+    accept_project_override,
+    create_project_override,
+    diff_project_override,
+    list_project_overrides,
+    remove_project_override,
 )
 
 from .output import WORKSPACE, _json_command, _report_change
@@ -31,8 +30,7 @@ def override() -> None:
 @_json_command
 def override_create(selector: str, workspace_root: str | None, force: bool) -> None:
     """Copy an installed asset (bundle:asset) into .devkit/overrides/ and synchronize."""
-    with operations.discover_bundles() as installed:
-        change = create_override(resolve_root(workspace_root), installed, selector, force=force)
+    change = create_project_override(resolve_root(workspace_root), selector, force=force)
     _report_change(change)
 
 
@@ -42,8 +40,7 @@ def override_create(selector: str, workspace_root: str | None, force: bool) -> N
 @_json_command
 def override_diff(selector: str, workspace_root: str | None) -> object:
     """Per file: upstream vs override, and recorded baseline vs current upstream (bundle:asset)."""
-    with operations.discover_bundles() as installed:
-        return diff_override(resolve_root(workspace_root), installed, selector)
+    return diff_project_override(resolve_root(workspace_root), selector)
 
 
 @override.command(name="accept")
@@ -52,8 +49,7 @@ def override_diff(selector: str, workspace_root: str | None) -> object:
 @_json_command
 def override_accept(selector: str, workspace_root: str | None) -> object:
     """Record the current upstream as the override's baseline (bundle:asset)."""
-    with operations.discover_bundles() as installed:
-        return accept_override(resolve_root(workspace_root), installed, selector)
+    return accept_project_override(resolve_root(workspace_root), selector)
 
 
 @override.command(name="remove")
@@ -62,8 +58,7 @@ def override_accept(selector: str, workspace_root: str | None) -> object:
 @_json_command
 def override_remove(selector: str, workspace_root: str | None) -> None:
     """Remove a local override and synchronize the pristine upstream asset (bundle:asset)."""
-    with operations.discover_bundles() as installed:
-        change = remove_override(resolve_root(workspace_root), installed, selector)
+    change = remove_project_override(resolve_root(workspace_root), selector)
     _report_change(change)
 
 
@@ -72,5 +67,4 @@ def override_remove(selector: str, workspace_root: str | None) -> None:
 @_json_command
 def override_list(workspace_root: str | None) -> object:
     """List tracked overrides and their drift status."""
-    with operations.discover_bundles() as installed:
-        return {"overrides": [item.to_dict() for item in list_overrides(resolve_root(workspace_root), installed)]}
+    return {"overrides": [item.to_dict() for item in list_project_overrides(resolve_root(workspace_root))]}

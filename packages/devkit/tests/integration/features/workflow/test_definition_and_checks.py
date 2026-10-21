@@ -328,3 +328,15 @@ def test_a_unit_of_an_optional_gated_stage_can_satisfy_it(tmp_path: Path) -> Non
     assert run_cli("new", "-w", str(root), "u").exit_code == 0
     result = json.loads(run_cli("next", "-w", str(root), "--unit", SIMPLE_UNIT, "--no-lint", "--format", "json").stdout)
     assert result["stage"] is None and result["done"] == ["spike", "build"]
+
+
+@pytest.mark.parametrize("content", [None, b"\xff", b"---\nstages: []\n---\n"])
+def test_definition_repository_targets_read_and_parse_errors(tmp_path: Path, content: bytes | None) -> None:
+    path = tmp_path / "invalid.md"
+    if content is not None:
+        path.write_bytes(content)
+    with pytest.raises(DefinitionError) as caught:
+        load_definition(path)
+    assert caught.value.code == "WORKFLOW_DEFINITION_INVALID"
+    assert caught.value.target_files == (path.as_posix(),)
+    assert str(path) in str(caught.value)

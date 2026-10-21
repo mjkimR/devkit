@@ -46,8 +46,7 @@ from devkit_spec.features.scope.models.model import (
 from devkit_spec.features.scope.models.model import now as utc_now
 from devkit_spec.features.scope.models.registry import Journaler, Registry, new_request_id, token_hash
 from devkit_spec.features.scope.repositories.localfs import LocalRegistry
-from devkit_spec.features.scope.services.compare import compare_with
-from devkit_spec.features.scope.services.location import (
+from devkit_spec.features.scope.repositories.location import (
     Location,
     base_ref,
     head_revision,
@@ -58,6 +57,7 @@ from devkit_spec.features.scope.services.location import (
     remove_token,
     save_token,
 )
+from devkit_spec.features.scope.services.compare import compare_with
 from devkit_spec.features.scope.usecases.inputs import from_spec, observe_git
 
 SOURCE_HANDOFF = "handoff"

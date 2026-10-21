@@ -31,8 +31,9 @@ from devkit_spec.base.errors import (
 from devkit_spec.features.entrypoints import classify_boundary, entrypoint_bearing, normalize, parse_boundaries
 from devkit_spec.features.proposals.usecases.scaffold import PROPOSAL_FILE, PROPOSALS, TARGET_DOCS, clean_slug
 from devkit_spec.features.proposals.usecases.specs import SKELETON_MARKER
-from devkit_spec.features.scope.models.deadline import Deadline, git_lines
+from devkit_spec.features.scope.models.deadline import Deadline
 from devkit_spec.features.scope.models.model import Diff, Granularity, ScopePath, ScopeSet, Source, Stage, Unresolved
+from devkit_spec.features.scope.repositories.git import git_lines
 
 RECONCILE = "reconcile.md"
 TASKS = "tasks.md"

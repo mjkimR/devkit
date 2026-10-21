@@ -93,6 +93,7 @@ def test_linked_cli_mcp_and_clone_isolation(repository, request_data, tmp_path):
     )
     assert result.exit_code == 0, result.output
     value = json.loads(result.output)
+    assert "content" not in value
 
     async def no_form(*args):
         raise AssertionError("no form allowed")
@@ -534,3 +535,53 @@ def test_adapter_preserves_backend_input_error(repository, monkeypatch):
     with pytest.raises(InputError) as error:
         adapter(repository).list("proposal-review", "validation", cursor="backend-specific:query")
     assert error.value.code == "SHARED_INPUT_INVALID"
+
+
+@pytest.mark.parametrize("output_format", ["text", "json"])
+def test_write_receipts_omit_large_body_but_exact_reads_retain_it(repository, output_format):
+    from dataclasses import asdict
+
+    request = PutRequest("proposal-review", "large-report", "a" * 40, "en", "x" * (1024 * 1024))
+    arguments = ["--workspace-root", str(repository), "--format", output_format]
+    put = CliRunner().invoke(
+        cli,
+        [
+            "put",
+            "--kind",
+            request.kind,
+            "--slug",
+            request.slug,
+            "--source-sha",
+            request.source_sha,
+            "--language",
+            request.language,
+            *arguments,
+        ],
+        input=request.content,
+    )
+    assert put.exit_code == 0, put.output
+    payload = put.output.strip()
+    receipt = json.loads(payload if output_format == "json" else payload.removeprefix("[SHARED_RESULT: ")[:-1])
+    assert "content" not in receipt
+    assert receipt["metadata"]["byte_count"] == 1024 * 1024
+    assert receipt["metadata"]["content_sha256"] == request.content_sha256
+    assert len(put.output.encode()) < 4096
+
+    async def no_form(*args):
+        raise AssertionError("no form allowed")
+
+    async def invoke():
+        declared = {tool.name: tool for tool in tools(repository)}
+        written = await declared["shared_put"].invoke(asdict(request), no_form)
+        read = await declared["shared_get"].invoke({"artifact_uri": written["artifact_uri"]}, no_form)
+        return written, read
+
+    written, read = asyncio.run(invoke())
+    assert written == receipt
+    assert read == {**receipt, "content": request.content}
+    fetched = CliRunner().invoke(cli, ["get", receipt["artifact_uri"], *arguments])
+    assert fetched.exit_code == 0, fetched.output
+    payload = fetched.output.strip()
+    fetched_value = json.loads(payload if output_format == "json" else payload.removeprefix("[SHARED_RESULT: ")[:-1])
+    assert fetched_value == read
+    assert adapter(repository).get(receipt["artifact_uri"]).content == request.content

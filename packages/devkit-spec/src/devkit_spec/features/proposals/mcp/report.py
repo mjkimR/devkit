@@ -12,14 +12,15 @@ from devkit_spec.features.proposals.usecases.report import publish_workspace_rep
 
 def create_tools(root: Path) -> tuple[McpTool, ...]:
     async def report(arguments: dict, _confirm: Confirmation) -> dict:
-        return await asyncio.to_thread(
+        artifact = await asyncio.to_thread(
             publish_workspace_report, root, arguments["slug"], arguments["source_sha"], arguments["body"]
         )
+        return artifact.receipt_dict()
 
     return (
         McpTool(
             "spec_proposal_report",
-            "Publish a complete source-bound proposal review briefing in the workspace language. Returns exact immutable URI, metadata and Markdown. Does not approve lifecycle effects.",
+            "Publish a complete source-bound proposal review briefing in the workspace language. Returns exact immutable URI and metadata without echoing Markdown. Does not approve lifecycle effects.",
             {
                 "type": "object",
                 "properties": {

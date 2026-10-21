@@ -19,6 +19,7 @@ namespace = "sample"
 root = "src/sample"
 kind = "features"
 features = ["one", "two"]
+feature_dependencies = { one = ["sample.features.two"], two = [] }
 dependencies = []
 """
     for rel, content in {".devkit/architecture.toml": config + extra, **files}.items():
@@ -212,13 +213,16 @@ def test_cross_package_imports_keep_layers_and_public_api(tmp_path: Path) -> Non
     )
     config = tmp_path / ".devkit/architecture.toml"
     config.write_text(
-        config.read_text().replace("dependencies = []", 'dependencies = ["other"]')
+        config.read_text()
+        .replace("dependencies = []", 'dependencies = ["other"]')
+        .replace('one = ["sample.features.two"]', 'one = ["sample.features.two", "other.features.two"]')
         + """
 [[packages]]
 namespace = "other"
 root = "src/other"
 kind = "features"
 features = ["two"]
+feature_dependencies = { two = [] }
 dependencies = []
 public_modules = ["other.features.two.usecases"]
 """
@@ -277,3 +281,72 @@ def test_executable_bundle_manifests_use_the_named_resource_directory(tmp_path: 
         'data_roots = ["bundles"]\n',
     )
     assert found == ["executable bundle belongs at bundles/<name>/bundle"]
+
+
+def test_feature_dependencies_have_explicit_direction(tmp_path: Path) -> None:
+    found = _inspect(
+        tmp_path,
+        {
+            "src/sample/features/two/usecases.py": "from sample.features.one import run\n",
+            "src/sample/features/one/__init__.py": "from .usecases import run\n",
+            "src/sample/features/one/usecases.py": "def run(): pass\n",
+        },
+    )
+    assert any(
+        "undeclared feature dependency sample.features.two -> sample.features.one" in message for message in found
+    )
+
+
+def test_actual_feature_cycle_is_reported_even_with_public_facades(tmp_path: Path) -> None:
+    import sys
+
+    _inspect(
+        tmp_path,
+        {
+            "src/sample/features/one/usecases.py": "from sample.features.two import second\ndef first(): pass\n",
+            "src/sample/features/one/__init__.py": "from .usecases import first\n",
+            "src/sample/features/two/usecases.py": "from sample.features.one import first\ndef second(): pass\n",
+            "src/sample/features/two/__init__.py": "from .usecases import second\n",
+        },
+    )
+    config = tmp_path / ".devkit/architecture.toml"
+    config.write_text(config.read_text().replace("two = []", 'two = ["sample.features.one"]'))
+    found = sys.modules[inspect_architecture].inspect_architecture(tmp_path)
+    assert any("feature dependency cycle:" in message for _, _, message in found)
+
+
+def test_module_alias_attribute_cannot_hide_facade_layer(tmp_path: Path) -> None:
+    found = _inspect(
+        tmp_path,
+        {
+            "src/sample/features/one/cli.py": "import sample.features.one.usecases as operations\noperations.run()\n",
+            "src/sample/features/one/usecases.py": "from .services import run\n",
+            "src/sample/features/one/services.py": "def run(): pass\n",
+        },
+    )
+    assert any("cli cannot import services" in message for message in found)
+
+
+def test_invalid_feature_dependency_is_rejected(tmp_path: Path) -> None:
+    import sys
+
+    _inspect(tmp_path, {"src/sample/__init__.py": ""})
+    config = tmp_path / ".devkit/architecture.toml"
+    config.write_text(config.read_text().replace("sample.features.two", "sample.features.missing"))
+    assert any(
+        "unknown feature dependency" in message
+        for _, _, message in sys.modules[inspect_architecture].inspect_architecture(tmp_path)
+    )
+
+
+def test_facade_module_reexport_cannot_hide_attribute_layer(tmp_path: Path) -> None:
+    found = _inspect(
+        tmp_path,
+        {
+            "src/sample/features/one/cli.py": "from sample.features.two import operations\noperations.run()\n",
+            "src/sample/features/two/__init__.py": "import sample.features.two.usecases as operations\n",
+            "src/sample/features/two/usecases.py": "from .services import run\n",
+            "src/sample/features/two/services.py": "def run(): pass\n",
+        },
+    )
+    assert any("cli cannot import services" in message for message in found)

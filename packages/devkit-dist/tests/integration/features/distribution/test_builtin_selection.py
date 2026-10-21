@@ -23,6 +23,7 @@ from devkit_dist.features.distribution.services.installation.discovery import (
     InstalledBundle,
     discover_bundles,
 )
+from devkit_dist.features.distribution.usecases.commands import add_selection, sync_selection
 from devkit_dist.features.distribution.usecases.status import get_project_status
 from devkit_dist.features.distribution.usecases.sync import sync_project
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, RECEIPT_PATH
@@ -363,3 +364,27 @@ def test_a_standalone_installation_ships_three_built_in_bundles() -> None:
         builtin = {item.bundle.name: item.package for item in installed if item.builtin}
     assert builtin == {"advisory": "devkit-dist", "devkit": "devkit-dist", "git-commits": "devkit-dist"}
     assert _default_selection().keys() >= {"advisory", "devkit"} and "harness" not in _default_selection()
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_public_add_unions_and_sync_replaces_without_transport(
+    bundles: list[InstalledBundle], target: Path, monkeypatch: pytest.MonkeyPatch, dry_run: bool
+) -> None:
+    monkeypatch.setattr("devkit_dist.features.distribution.usecases.commands.discover_bundles", lambda: _found(bundles))
+    sync_selection(target, agents=[], presets={"opt": ["core"]})
+    before = (target / CONFIG_PATH).read_bytes()
+    added = add_selection(target, {"opt": ["more"]}, dry_run=dry_run)
+    assert list(added.selection.presets["opt"]) == ["core", "more"]
+    if dry_run:
+        assert (target / CONFIG_PATH).read_bytes() == before
+        assert _selection(target)["opt"] == ["core"]
+    else:
+        assert _config(target)["presets"]["opt"] == ["core", "more"]
+        assert _selection(target)["opt"] == ["core", "more"]
+    replaced = sync_selection(target, presets={"opt": ["more"]}, dry_run=dry_run)
+    assert list(replaced.selection.presets["opt"]) == ["more"]
+    if dry_run:
+        assert (target / CONFIG_PATH).read_bytes() == before
+    else:
+        assert _config(target)["presets"]["opt"] == "more"
+        assert _selection(target)["opt"] == ["more"]

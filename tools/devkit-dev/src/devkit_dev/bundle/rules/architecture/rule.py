@@ -52,6 +52,34 @@ def _imports(module: Module) -> list[tuple[str, int]]:
     result: list[tuple[str, int]] = []
     package = module.name if module.is_package else module.name.rpartition(".")[0]
     dynamic_names = {"__import__"}
+    bindings: dict[str, str] = {}
+    for node in ast.walk(module.tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                bindings[alias.asname or alias.name.split(".")[0]] = (
+                    alias.name if alias.asname else alias.name.split(".")[0]
+                )
+        elif isinstance(node, ast.ImportFrom):
+            base = node.module or ""
+            if node.level:
+                try:
+                    base = importlib.util.resolve_name("." * node.level + base, package)
+                except ImportError:
+                    continue
+            for alias in node.names:
+                bindings[alias.asname or alias.name] = f"{base}.{alias.name}"
+    # Inspect imported module attributes too: `import facade as api; api.run()`
+    # must obey the defining implementation's layer, just like a from-import.
+    for node in ast.walk(module.tree):
+        if not isinstance(node, ast.Attribute):
+            continue
+        attributes: list[str] = []
+        value = node
+        while isinstance(value, ast.Attribute):
+            attributes.append(value.attr)
+            value = value.value
+        if isinstance(value, ast.Name) and value.id in bindings:
+            result.append((".".join((bindings[value.id], *reversed(attributes))), node.lineno))
     for node in ast.walk(module.tree):
         if isinstance(node, ast.ImportFrom) and node.module == "importlib":
             dynamic_names.update(alias.asname or alias.name for alias in node.names if alias.name == "import_module")
@@ -89,6 +117,28 @@ def _imports(module: Module) -> list[tuple[str, int]]:
             if all(part.isidentifier() for part in name.split(".")):
                 result.append((name, node.lineno))
     return list(dict.fromkeys(result))
+
+
+def _dependency_cycles(graph: dict[str, set[str]]) -> list[tuple[str, ...]]:
+    visited: set[str] = set()
+    active: list[str] = []
+    cycles: list[tuple[str, ...]] = []
+
+    def visit(feature: str) -> None:
+        if feature in active:
+            cycles.append((*active[active.index(feature) :], feature))
+            return
+        if feature in visited:
+            return
+        active.append(feature)
+        for dependency in sorted(graph[feature]):
+            visit(dependency)
+        active.pop()
+        visited.add(feature)
+
+    for feature in sorted(graph):
+        visit(feature)
+    return cycles
 
 
 def _layout(parts: tuple[str, ...], package: dict[str, Any]) -> str | None:
@@ -141,6 +191,7 @@ def inspect_architecture(root: Path, config_path: str = ".devkit/architecture.to
             "data_roots",
             "embedded_test_roots",
             "public_modules",
+            "feature_dependencies",
         }
         if set(config) - {"schema", "packages", "import_exceptions"}:
             raise ValueError("unknown architecture declaration field")
@@ -151,7 +202,7 @@ def inspect_architecture(root: Path, config_path: str = ".devkit/architecture.to
                 raise ValueError("namespace must be a dotted Python module name")
             if set(package) - allowed_fields:
                 raise ValueError(f"unknown package field for {package['namespace']}")
-            for field in allowed_fields - {"namespace", "root", "kind"}:
+            for field in allowed_fields - {"namespace", "root", "kind", "feature_dependencies"}:
                 values = package.get(field, [])
                 if not isinstance(values, list) or any(not isinstance(value, str) or not value for value in values):
                     raise ValueError(f"{field} must be an array of nonempty strings")
@@ -164,6 +215,22 @@ def inspect_architecture(root: Path, config_path: str = ".devkit/architecture.to
                 raise ValueError(f"unknown package kind {package['kind']}")
             if set(package.get("dependencies", [])) - declarations.keys():
                 raise ValueError(f"unknown dependency for {package['namespace']}")
+        feature_ids = {
+            f"{package['namespace']}.features.{feature}"
+            for package in packages
+            for feature in package.get("features", [])
+        }
+        for package in packages:
+            directions = package.get("feature_dependencies", {})
+            if not isinstance(directions, dict) or set(directions) != set(package.get("features", [])):
+                raise ValueError(f"feature_dependencies must declare every feature of {package['namespace']}")
+            for feature, dependencies in directions.items():
+                if not isinstance(dependencies, list) or any(not isinstance(value, str) for value in dependencies):
+                    raise ValueError(f"feature_dependencies.{feature} must be an array of feature names")
+                if len(dependencies) != len(set(dependencies)) or set(dependencies) - feature_ids:
+                    raise ValueError(f"duplicate or unknown feature dependency for {package['namespace']}.{feature}")
+                if f"{package['namespace']}.features.{feature}" in dependencies:
+                    raise ValueError(f"feature cannot depend on itself: {feature}")
         exceptions = config.get("import_exceptions", [])
         for entry in exceptions:
             if not all(
@@ -259,6 +326,13 @@ def inspect_architecture(root: Path, config_path: str = ".devkit/architecture.to
 
     for namespace in declarations:
         visit(namespace, ())
+    declared_features = {
+        f"{package['namespace']}.features.{feature}": set(dependencies)
+        for package in packages
+        for feature, dependencies in package.get("feature_dependencies", {}).items()
+    }
+    for cycle in _dependency_cycles(declared_features):
+        findings.append((config_path, 1, f"declared feature dependency cycle: {' -> '.join(cycle)}"))
     # Entry-point groups keep their external names; their Python target modules must exist.
     for package in packages:
         manifest = (root / package["root"]).parent.parent / "pyproject.toml"
@@ -291,8 +365,18 @@ def inspect_architecture(root: Path, config_path: str = ".devkit/architecture.to
             target = target.rpartition(".")[0]
         destination = modules.get(target)
         if destination and imported != target:
-            attribute = imported[len(target) + 1 :].split(".")[0]
+            attribute, _, remainder = imported[len(target) + 1 :].partition(".")
             for statement in destination.tree.body:
+                if isinstance(statement, ast.Import):
+                    for alias in statement.names:
+                        binding = alias.asname or alias.name.split(".")[0]
+                        if binding == attribute:
+                            forwarded = alias.name if alias.asname else binding
+                            if remainder:
+                                forwarded += f".{remainder}"
+                            resolved = resolve(forwarded, trail | {imported})
+                            if resolved:
+                                return resolved
                 if not isinstance(statement, ast.ImportFrom):
                     continue
                 base = statement.module or ""
@@ -304,11 +388,14 @@ def inspect_architecture(root: Path, config_path: str = ".devkit/architecture.to
                         continue
                 for alias in statement.names:
                     if (alias.asname or alias.name) == attribute:
-                        resolved = resolve(f"{base}.{alias.name}", trail | {imported})
+                        forwarded = f"{base}.{alias.name}" + (f".{remainder}" if remainder else "")
+                        resolved = resolve(forwarded, trail | {imported})
                         if resolved:
                             return resolved
         return destination
 
+    feature_graph: dict[str, set[str]] = {feature: set() for feature in feature_ids}
+    feature_edges: dict[tuple[str, str], tuple[str, int]] = {}
     used: set[tuple[str, str]] = set()
     permitted = {(entry["source"], entry["target"]) for entry in exceptions}
     namespaces = sorted(declarations, key=len, reverse=True)
@@ -336,6 +423,18 @@ def inspect_architecture(root: Path, config_path: str = ".devkit/architecture.to
                     target = target.rpartition(".")[0]
                 destination = resolve(imported)
                 if destination:
+                    if module.feature and destination.feature:
+                        source_feature = f"{module.package}.features.{module.feature}"
+                        target_feature = f"{destination.package}.features.{destination.feature}"
+                        if source_feature != target_feature:
+                            feature_graph[source_feature].add(target_feature)
+                            feature_edges.setdefault((source_feature, target_feature), (module.path, line))
+                            allowed = package["feature_dependencies"][module.feature]
+                            if target_feature not in allowed:
+                                message = f"undeclared feature dependency {source_feature} -> {target_feature}"
+                                if (line, message) not in seen:
+                                    findings.append((module.path, line, message))
+                                    seen.add((line, message))
                     if (
                         module.parts
                         and module.parts[0] == "base"
@@ -371,6 +470,11 @@ def inspect_architecture(root: Path, config_path: str = ".devkit/architecture.to
                 elif (line, issue) not in seen:
                     findings.append((module.path, line, issue))
                     seen.add((line, issue))
+    # Check the actual feature graph even when an edge also violates its declaration.
+    # A public facade and a layer exception must never conceal a feature cycle.
+    for cycle in _dependency_cycles(feature_graph):
+        path, line = feature_edges[(cycle[-2], cycle[-1])]
+        findings.append((path, line, f"feature dependency cycle: {' -> '.join(cycle)}"))
     for source, target in sorted(permitted - used):
         findings.append((config_path, 1, f"unused import exception: {source} -> {target}"))
     return findings

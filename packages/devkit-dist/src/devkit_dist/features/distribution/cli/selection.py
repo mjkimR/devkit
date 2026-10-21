@@ -17,17 +17,40 @@ from devkit_dist.adapters.cli import (
 )
 from devkit_dist.features.distribution.models.settings import (
     AGENT_NAMES,
+    DEFAULT_PRESET,
+    SLUG,
 )
-from devkit_dist.features.distribution.usecases import commands as operations
 from devkit_dist.features.distribution.usecases.commands import (
-    _parse_selections,
-    _sync_and_save,
+    add_selection,
+    inspect_project,
+    list_project,
     remove_selection,
+    sync_selection,
 )
-from devkit_dist.features.distribution.usecases.status import get_project_listing, get_project_status
 from devkit_dist.features.distribution.usecases.sync import recover_project, sync_registrations
 
 from .output import WORKSPACE, _json_command, _report
+
+
+def _parse_selections(values: tuple[str, ...], param_hint: str) -> dict[str, list[str]]:
+    """Parse ``bundle[:preset]`` values; repeating a bundle selects a union, a bare bundle its default preset.
+
+    A bare bundle is recorded as ``DEFAULT_PRESET``, so ``starter starter:extra`` keeps the default preset.
+    """
+    selected: dict[str, list[str]] = {}
+    for value in values:
+        name, separator, preset = value.partition(":")
+        if not SLUG.fullmatch(name) or (separator and not SLUG.fullmatch(preset)):
+            raise ArgumentError(
+                f"{param_hint}: expected bundle[:preset] slugs: {value}",
+                target_files=[param_hint],
+                fix="Pass lowercase bundle slugs, optionally with :<preset>",
+            )
+        presets = selected.setdefault(name, [])
+        entry = preset if separator else DEFAULT_PRESET
+        if entry not in presets:
+            presets.append(entry)
+    return selected
 
 
 @click.command()
@@ -115,16 +138,14 @@ def sync(
             )
     requested = _parse_selections(presets, "--preset")
     active_agents = [] if no_agents else (list(agents) if agents else None)
-    persist = not no_save and (bool(requested) or active_agents is not None)
-    result = _sync_and_save(
+    result = sync_selection(
         resolve_root(workspace_root),
-        save=(lambda _installed, selected: {"agents": active_agents, "presets": selected}) if persist else None,
+        save=not no_save,
         agents=active_agents,
         presets=requested,
         dry_run=dry_run or check,
         locked=locked,
         environment="cloud" if cloud else "local" if local else None,
-        save_environment=not no_save,
     )
     _report(result, output_format, check=check)
 
@@ -144,11 +165,9 @@ def add(selections: tuple[str, ...], workspace_root: str | None, dry_run: bool, 
     """
     requested = _parse_selections(selections, "SELECTIONS")
     _report(
-        _sync_and_save(
+        add_selection(
             resolve_root(workspace_root),
-            save=lambda _installed, selected: {"presets": selected},
-            presets=requested,
-            merge=True,
+            requested,
             dry_run=dry_run,
         ),
         output_format,
@@ -179,8 +198,7 @@ def list_resources(workspace_root: str | None) -> None:
 
     An installed package the project does not deploy that fails to load is a warning on stderr.
     """
-    with operations.discover_bundles() as installed:
-        listing = get_project_listing(resolve_root(workspace_root), installed)
+    listing = list_project(resolve_root(workspace_root))
     echo_json(listing.to_dict())
     echo_notices(listing.notices)
     exit_on_warnings(listing.notices)
@@ -198,8 +216,7 @@ def status(workspace_root: str | None) -> None:
     under errors and rendered on stderr; any exits 1. A package the project
     does not deploy that fails to load is a warning under notices.
     """
-    with operations.discover_bundles() as installed:
-        report = get_project_status(resolve_root(workspace_root), installed)
+    report = inspect_project(resolve_root(workspace_root))
     echo_json(report.to_dict())
     echo_notices(report.notices)
     exit_on_problems(report.errors, report=True)

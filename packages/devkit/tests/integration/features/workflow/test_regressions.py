@@ -25,6 +25,7 @@ from devkit_agt.features.workflow import (
 from devkit_agt.features.workflow.cli import cli
 from devkit_agt.features.workflow.cli.render import render_evaluation
 from devkit_agt.features.workflow.models.errors import AuthoringError
+from devkit_agt.features.workflow.repositories.layout import discover_units
 from devkit_agt.features.workflow.services.envelope import compose_envelope
 from testsupport.workflow import WORKFLOW, write_config, write_record, write_unit
 
@@ -351,7 +352,7 @@ def test_b10_discovery_follows_slashes_in_date_specs(tmp_path: Path) -> None:
     assert rel.as_posix() == "specs/2026/10/login" and layout.discovery_glob() == "*/*/*"
     (tmp_path / rel).mkdir(parents=True)
     (tmp_path / rel / "spec.md").write_text("---\nid: x\n---\n")
-    assert [p.as_posix() for p in layout.discover(tmp_path)] == ["specs/2026/10/login"]
+    assert [p.as_posix() for p in discover_units(layout, tmp_path)] == ["specs/2026/10/login"]
 
 
 @pytest.mark.parametrize("key", ["optional", "exception"])

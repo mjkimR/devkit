@@ -55,7 +55,7 @@ integration is excluded.
 
 ### Worker result inspection
 
-`devkit spec worker inspect --format json` collects committed worker range and scope information, cleanliness,
+`devkit spec worker inspect --format json` collects compact committed worker evidence (`--details` includes full wrapped results and envelope history): range and scope information, cleanliness,
 envelope validation, rules and workflow checks. Inputs derive from the activity worktree and committed records;
 `--unit`, `--base`, `--head`, `--scope` (repeat) or `--scope-file` (one prefix per line), and `--base-checkout` replace
 individual inputs. Scope overrides replace the entire scope. Results include provenance and reviewer-ready compared
@@ -71,8 +71,13 @@ its CLI and MCP adapters beside its use cases, services, repositories and models
 are present. `cli.py` composes the command group. `base/errors.py` owns shared advisory contracts, and
 `utils/output.py` contains shared CLI presentation helpers.
 
-CLI and MCP adapters call feature behavior. Shared contracts do not depend on feature code, and domain code
-does not import CLI or MCP adapters. Public command names, MCP tool names and bundle identifiers remain stable.
+CLI and MCP adapters call feature behavior. Delivery owns cross-feature orchestration: its proposal CLI group
+and native handoff/acceptance tools combine proposal operations, worktrees and scope registration. The shared
+handoff operation merges registration notices and permits a cancellation guard between the handoff and registry
+mutation. Proposal mutation remains in the proposals feature. Scope repositories own Git observations and token
+persistence; scope models retain the deadline and value contracts. Policy models hold storage-independent scope
+configuration. Shared contracts do not depend on feature code, and domain code does not import CLI or MCP
+adapters. Public command names, MCP tool names and bundle identifiers remain stable.
 
 Tests mirror runtime features under `tests/unit/features/` for pure parsing and transformation, and
 `tests/integration/features/` for filesystem, Git and component wiring. Bundle rendering and guidance contracts

@@ -39,10 +39,10 @@ from devkit_spec.base.errors import (
     ProposalWorkflowError,
     SpecError,
 )
-from devkit_spec.features.delivery.services.branches import SLUG_LIMIT, planning_branch_elsewhere
+from devkit_spec.base.units import PROPOSALS
 from devkit_spec.features.documents import DocumentIndex
 from devkit_spec.features.documents.services.namespaces import detect, require
-from devkit_spec.features.governance.usecases.document_summary import foreign_letters
+from devkit_spec.features.policy.repositories.branches import SLUG_LIMIT, planning_branch_elsewhere
 from devkit_spec.features.policy.services.config import GLOBAL, read_spec_config
 from devkit_spec.features.proposals.models.axes import (
     DEFAULT_EFFORT,
@@ -52,8 +52,8 @@ from devkit_spec.features.proposals.models.axes import (
     TASK_KINDS,
 )
 from devkit_spec.features.proposals.usecases.binding import resolve_binding
+from devkit_spec.utils.text import foreign_letters
 
-PROPOSALS = "docs/proposals"
 PROPOSAL_FILE = "proposal.md"
 TARGET_DOCS = "target-docs.md"
 DECISIONS = "decisions"

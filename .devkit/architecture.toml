@@ -19,6 +19,11 @@ namespace = "devkit_dist"
 root = "packages/devkit-dist/src/devkit_dist"
 kind = "features"
 features = ["project", "distribution", "host", "shared", "search"]
+feature_dependencies.project = []
+feature_dependencies.distribution = ["devkit_dist.features.host", "devkit_dist.features.project", "devkit_dist.features.search"]
+feature_dependencies.host = ["devkit_dist.features.project"]
+feature_dependencies.shared = ["devkit_dist.features.project"]
+feature_dependencies.search = []
 root_modules = ["cli", "__main__", "bootstrap", "adapters"]
 data_roots = ["bundles"]
 dependencies = ["devkit_core", "devkit.advisory"]
@@ -51,6 +56,13 @@ namespace = "devkit_agt"
 root = "packages/devkit/src/devkit_agt"
 kind = "features"
 features = ["rules", "workflow", "gate", "worktree", "integration", "generated", "compact"]
+feature_dependencies.rules = ["devkit_agt.features.compact", "devkit_dist.features.project"]
+feature_dependencies.workflow = ["devkit_agt.features.rules", "devkit_dist.features.project"]
+feature_dependencies.gate = ["devkit_agt.features.compact", "devkit_agt.features.rules", "devkit_dist.features.project"]
+feature_dependencies.worktree = ["devkit_dist.features.project"]
+feature_dependencies.integration = ["devkit_agt.features.worktree", "devkit_dist.features.project"]
+feature_dependencies.generated = ["devkit_agt.features.compact", "devkit_dist.features.project"]
+feature_dependencies.compact = ["devkit_dist.features.project"]
 root_modules = ["bootstrap"]
 data_roots = ["bundles"]
 embedded_test_roots = ["features/rules/services/builtins"]
@@ -77,12 +89,20 @@ namespace = "devkit_spec"
 root = "packages/devkit-spec/src/devkit_spec"
 kind = "features"
 features = ["documents", "proposals", "scope", "entrypoints", "worker", "policy", "delivery", "governance"]
+feature_dependencies.documents = ["devkit_agt.features.rules", "devkit_dist.features.search", "devkit_spec.features.policy"]
+feature_dependencies.proposals = ["devkit_agt.features.integration", "devkit_agt.features.rules", "devkit_agt.features.workflow", "devkit_agt.features.worktree", "devkit_dist.features.project", "devkit_dist.features.shared", "devkit_spec.features.documents", "devkit_spec.features.policy"]
+feature_dependencies.scope = ["devkit_spec.features.entrypoints", "devkit_spec.features.policy", "devkit_spec.features.proposals"]
+feature_dependencies.entrypoints = ["devkit_spec.features.documents"]
+feature_dependencies.worker = ["devkit_agt.features.workflow", "devkit_agt.features.worktree", "devkit_spec.features.delivery", "devkit_spec.features.entrypoints"]
+feature_dependencies.policy = ["devkit_agt.features.workflow", "devkit_agt.features.worktree", "devkit_dist.features.project"]
+feature_dependencies.delivery = ["devkit_agt.features.integration", "devkit_agt.features.rules", "devkit_agt.features.workflow", "devkit_agt.features.worktree", "devkit_dist.features.project", "devkit_dist.features.shared", "devkit_spec.features.policy", "devkit_spec.features.proposals", "devkit_spec.features.scope"]
+feature_dependencies.governance = ["devkit_agt.features.rules", "devkit_dist.features.project", "devkit_spec.features.documents", "devkit_spec.features.entrypoints", "devkit_spec.features.policy"]
 root_modules = ["cli", "bootstrap"]
 data_roots = ["bundles"]
 dependencies = ["devkit_agt", "devkit_dist", "devkit_core", "devkit.advisory"]
 
 public_modules = [
-    "devkit_spec.features.delivery.services.branches",
+    "devkit_spec.features.policy.repositories.branches",
     "devkit_spec.features.delivery.usecases.attach",
     "devkit_spec.features.documents.models.ids",
     "devkit_spec.features.documents.models.markdown",
@@ -93,14 +113,22 @@ public_modules = [
     "devkit_spec.features.documents.services.rewrite",
     "devkit_spec.features.entrypoints.repositories.bundle",
     "devkit_spec.features.entrypoints.services.paths",
-    "devkit_spec.features.governance.usecases.document_summary",
     "devkit_spec.features.policy.services.config",
+    "devkit_spec.features.policy.models.config",
+    "devkit_spec.features.proposals.models.approval",
+    "devkit_spec.features.proposals.models.axes",
+    "devkit_spec.features.proposals.models.handoff",
+    "devkit_spec.features.proposals.services.status",
+    "devkit_spec.features.proposals.usecases.accept",
+    "devkit_spec.features.proposals.usecases.backlog",
+    "devkit_spec.features.proposals.usecases.report",
+    "devkit_spec.features.proposals.mcp.report",
     "devkit_spec.features.proposals.usecases.prune",
     "devkit_spec.features.proposals.usecases.scaffold",
     "devkit_spec.features.proposals.usecases.specs",
     "devkit_spec.features.scope.models.model",
     "devkit_spec.features.scope.cli.output",
-    "devkit_spec.features.scope.services.location",
+    "devkit_spec.features.scope.repositories.location",
     "devkit_spec.features.scope.usecases.flow",
 ]
 
@@ -109,6 +137,7 @@ namespace = "devkit_mcp"
 root = "packages/devkit-mcp/src/devkit_mcp"
 kind = "features"
 features = ["runtime"]
+feature_dependencies.runtime = ["devkit_dist.features.distribution", "devkit_dist.features.host", "devkit_dist.features.project"]
 root_modules = ["bootstrap"]
 dependencies = ["devkit_dist", "devkit_core", "devkit.advisory"]
 
@@ -117,6 +146,7 @@ namespace = "devkit_viewer"
 root = "packages/devkit-viewer/src/devkit_viewer"
 kind = "features"
 features = ["browse"]
+feature_dependencies.browse = ["devkit_dist.features.project", "devkit_dist.features.shared"]
 root_modules = ["bootstrap"]
 data_roots = ["static"]
 dependencies = ["devkit_dist", "devkit_core", "devkit.advisory"]

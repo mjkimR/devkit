@@ -41,13 +41,13 @@ from devkit_dist.features.project.models.templates import TemplateKey, TemplateT
 from devkit_dist.features.project.repositories.project import read_project_config
 
 from devkit_spec.base.errors import SpecConfigError
+from devkit_spec.features.policy.models.config import SCOPE_TIMEOUT_DEFAULT, ScopeConfig
 
 TABLE = "spec"
 GLOBAL = "global"
 NAMESPACE_NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 PACKAGES_DIR = "docs/packages"
 SCOPE_NAMESPACE = re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9._-]*$")
-SCOPE_TIMEOUT_DEFAULT = 10
 SCOPE_TIMEOUT_RANGE = (1, 300)
 WORKTREE_LEVELS = ("auto", "required")
 DEPTH_ESCALATION = ("auto", "ask")
@@ -73,19 +73,6 @@ class Namespace:
     @property
     def docs(self) -> str:
         return f"{PACKAGES_DIR}/{self.name}"
-
-
-@dataclass(frozen=True)
-class ScopeConfig:
-    """``[tool.spec.scope]``: where the work-scope registry lives and how long one command may wait.
-
-    ``shared_path`` is absolute (``~`` expanded) or ``None`` for ``devkit-spec-scope/`` in the Git common directory;
-    ``namespace`` ``None`` is a hash of that common directory; ``timeout`` is in seconds.
-    """
-
-    shared_path: Path | None = None
-    namespace: str | None = None
-    timeout: int = SCOPE_TIMEOUT_DEFAULT
 
 
 @dataclass(frozen=True)

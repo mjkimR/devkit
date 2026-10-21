@@ -231,6 +231,38 @@ class Envelopes:
         """Every loaded envelope, ordered by file name."""
         return sorted((e for items in self.by_kind.values() for e in items), key=lambda e: e.file)
 
+    def inspection_dict(self, *, details: bool = False) -> dict[str, Any]:
+        """Project evidence without repeating historical bodies; validation always reads every file."""
+        deciding = {e.file for kind in self.by_kind if kind != "reverify" and (e := self.deciding(kind)) is not None}
+        entries = []
+        for envelope in self.all():
+            data = envelope.to_dict()
+            if not details:
+                data = {
+                    key: data[key]
+                    for key in (
+                        "file",
+                        "seq",
+                        "kind",
+                        "status",
+                        "stage",
+                        "workflow",
+                        "segment",
+                        "review",
+                        "open_findings",
+                    )
+                }
+                if envelope.file in deciding:
+                    findings = [f.to_dict() for f in envelope.findings if f.resolution == "open"]
+                    if findings:
+                        data["findings"] = findings
+            entries.append(data)
+        return {
+            "envelopes": entries,
+            **self.hold().to_dict(),
+            "errors": [error.to_dict() for error in sorted(self.errors, key=lambda error: error.file)],
+        }
+
     def unresolved_problems(self) -> list[Envelope]:
         """The envelopes whose ``problem`` no ``resolution`` names in ``resolves``; any of them blocks the unit.
 

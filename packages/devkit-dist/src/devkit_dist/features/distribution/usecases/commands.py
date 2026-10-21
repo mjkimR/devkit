@@ -5,13 +5,12 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from devkit_core.base.errors import ArgumentError
 
 from devkit_dist.features.distribution.models.errors import SelectionError
-from devkit_dist.features.distribution.models.results import SyncResult
-from devkit_dist.features.distribution.models.settings import DEFAULT_PRESET, SLUG
+from devkit_dist.features.distribution.models.results import OverrideChange, OverrideDiff, OverrideStatus, SyncResult
 from devkit_dist.features.distribution.services.bundles import build_bundle, load_bundle
 from devkit_dist.features.distribution.services.installation.config import (
     effective_selection,
@@ -32,28 +31,10 @@ from devkit_dist.features.distribution.usecases.sync import sync_project
 from devkit_dist.features.project.repositories.local_config import read_effective_config
 from devkit_dist.features.project.services.presentation import resolve_language
 
+if TYPE_CHECKING:
+    from .status import ProjectListing, ProjectStatus
+
 ConfigEdit = Callable[[list[InstalledBundle], dict[str, list[str]]], dict[str, Any]]
-
-
-def _parse_selections(values: tuple[str, ...], param_hint: str) -> dict[str, list[str]]:
-    """Parse ``bundle[:preset]`` values; repeating a bundle selects a union, a bare bundle its default preset.
-
-    A bare bundle is recorded as ``DEFAULT_PRESET``, so ``starter starter:extra`` keeps the default preset.
-    """
-    selected: dict[str, list[str]] = {}
-    for value in values:
-        name, separator, preset = value.partition(":")
-        if not SLUG.fullmatch(name) or (separator and not SLUG.fullmatch(preset)):
-            raise ArgumentError(
-                f"{param_hint}: expected bundle[:preset] slugs: {value}",
-                target_files=[param_hint],
-                fix="Pass lowercase bundle slugs, optionally with :<preset>",
-            )
-        presets = selected.setdefault(name, [])
-        entry = preset if separator else DEFAULT_PRESET
-        if entry not in presets:
-            presets.append(entry)
-    return selected
 
 
 def _sync_and_save(
@@ -107,6 +88,104 @@ def _sync_and_save(
             environment=environment,
             save_environment=save_environment,
         )
+
+
+def sync_selection(
+    root: Path,
+    *,
+    agents: list[str] | None = None,
+    presets: dict[str, list[str]] | None = None,
+    save: bool = True,
+    dry_run: bool = False,
+    locked: bool = False,
+    environment: str | None = None,
+) -> SyncResult:
+    """Replace requested selections and synchronize, persisting them unless ``save`` is false.
+
+    Unspecified selections retain their configured values. An empty agent list
+    explicitly clears agents. Configuration and outputs commit together under
+    the project lock; a dry run previews the same operation without writing.
+    """
+    if locked and (agents is not None or presets or dry_run or not save):
+        raise ArgumentError("locked synchronization cannot change selections or preview; use an ordinary sync")
+    persist = save and (bool(presets) or agents is not None)
+    return _sync_and_save(
+        root,
+        save=(lambda _installed, selected: {"agents": agents, "presets": selected}) if persist else None,
+        agents=agents,
+        presets=presets,
+        dry_run=dry_run,
+        locked=locked,
+        environment=environment,
+        save_environment=save,
+    )
+
+
+def add_selection(root: Path, presets: dict[str, list[str]], *, dry_run: bool = False) -> SyncResult:
+    """Union requested presets with current selections and synchronize atomically."""
+    return _sync_and_save(
+        root,
+        save=lambda _installed, selected: {"presets": selected},
+        presets=presets,
+        merge=True,
+        dry_run=dry_run,
+    )
+
+
+def list_project(root: Path) -> ProjectListing:
+    """Discover installed content and read the project listing while resources are available."""
+    from .status import get_project_listing
+
+    with discover_bundles() as installed:
+        return get_project_listing(root, installed)
+
+
+def inspect_project(root: Path) -> ProjectStatus:
+    """Discover installed content and inspect the project while resources are available."""
+    from .status import get_project_status
+
+    with discover_bundles() as installed:
+        return get_project_status(root, installed)
+
+
+def create_project_override(root: Path, selector: str, *, force: bool = False) -> OverrideChange:
+    """Discover upstream content and create an override within its resource lifetime."""
+    from .override_commands import create_override
+
+    with discover_bundles() as installed:
+        return create_override(root, installed, selector, force=force)
+
+
+def diff_project_override(root: Path, selector: str) -> OverrideDiff:
+    """Discover upstream content and compare the override before releasing it."""
+    from .override_commands import diff_override
+
+    with discover_bundles() as installed:
+        return diff_override(root, installed, selector)
+
+
+def accept_project_override(root: Path, selector: str) -> OverrideChange:
+    """Discover upstream content and accept its baseline before releasing it."""
+    from .override_commands import accept_override
+
+    with discover_bundles() as installed:
+        return accept_override(root, installed, selector)
+
+
+def remove_project_override(root: Path, selector: str) -> OverrideChange:
+    """Discover upstream content and restore it while removing the override."""
+    from .override_commands import remove_override
+
+    with discover_bundles() as installed:
+        return remove_override(root, installed, selector)
+
+
+def list_project_overrides(root: Path) -> list[OverrideStatus]:
+    """Discover upstream content and collect override drift before releasing it."""
+    from .override_commands import list_overrides
+
+    with discover_bundles() as installed:
+        return list_overrides(root, installed)
 
 
 def validate_source(source: Path) -> dict[str, object]:

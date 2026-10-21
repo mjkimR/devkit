@@ -18,7 +18,6 @@ pending condition, not a blocking one. The command never records ``plan-intent``
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -37,13 +36,14 @@ from devkit_spec.base.errors import (
     ProposalNotFoundError,
     ProposalWrongWorktreeError,
 )
-from devkit_spec.features.delivery.services.branches import (
+from devkit_spec.features.policy.repositories.branches import (
     PLANNING_PREFIX,
     base_checkout_problem,
     checkout,
     planning_branches,
 )
 from devkit_spec.features.proposals.models.axes import DEFAULT_TASK_KIND, TASK_KINDS
+from devkit_spec.features.proposals.services.status import accepted_text
 from devkit_spec.features.proposals.usecases.handoff import (
     ACCEPT_GATE,
     ACCEPTED,
@@ -63,9 +63,6 @@ acceptance the same way."""
 DRAFT, REVIEWING, REJECTED = "draft", "reviewing", "rejected"
 SUPERSEDES = "supersedes"
 WORKER = "worker"
-
-# The frontmatter ``status:`` line (plain or quoted value); a trailing comment ("#" after whitespace) stays.
-_STATUS = re.compile(r"""^status:[ \t]*(?:[A-Za-z-]+|"[A-Za-z-]*"|'[A-Za-z-]*')(?=[ \t]*\r?$|[ \t]+#)""", re.MULTILINE)
 
 
 @dataclass(frozen=True)
@@ -279,17 +276,11 @@ def _note(meta: dict[str, Any], form: str, reason: str) -> str:
 
 def _write_status(path: Path, original: bytes, rel: str) -> None:
     text = original.decode("utf-8")
-    end = _frontmatter_end(text)
-    updated, count = _STATUS.subn("status: accepted", text[:end], count=1)
-    if count != 1:
-        raise ProposalInvalidError(f"{rel} has no status line to change", target_files=[rel])
-    path.write_bytes((updated + text[end:]).encode("utf-8"))
-
-
-def _frontmatter_end(text: str) -> int:
-    """The offset just past the closing ``---`` of the frontmatter (0 when there is none)."""
-    match = re.match(r"---\r?\n.*?^---[ \t]*\r?$", text, re.DOTALL | re.MULTILINE)
-    return match.end() if match else 0
+    try:
+        updated = accepted_text(text)
+    except ValueError as exc:
+        raise ProposalInvalidError(f"{rel} has no status line to change", target_files=[rel]) from exc
+    path.write_bytes(updated.encode("utf-8"))
 
 
 def _not_open_details(workspace: Workspace, unit: UnitRef, exc: AdvisoryError) -> list[str]:

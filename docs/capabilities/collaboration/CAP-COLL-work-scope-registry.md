@@ -225,13 +225,15 @@ sentinel per line, warnings follow on stderr, and JSON is one object with the sa
 | `devkit spec scope compare (--proposal <slug> \| --spec <dir>)...` | Compares two or more declared scopes pairwise without the registry or Git. |
 | `devkit spec scope register --spec <dir> [--task-id <id>]` | Registers this worktree's task (task ID default: the spec ID) and prints its token once. |
 | `devkit spec scope query [--spec <dir>]` | Lists the namespace's records and this worktree's overlaps with the others (every pair when this worktree registered nothing, or its record is gone or may be unreadable). `--spec` compares that bundle's declared scope with every record not owned here, for a task about to start. |
-| `devkit spec scope query --history [--task <id>]` | Prints the journal in time order; `--task` keeps events whose task ID or slug matches. |
+| `devkit spec scope query --history [--task <id>] [--limit <1-100>] [--cursor <cursor>]` | Prints the most recent 50 matching events in journal order by default. `--task` keeps events whose task ID or slug matches before paging; `--cursor` continues to older events using `next_cursor`. |
 | `devkit spec scope update --spec <dir> [--request-id <id>]` | Recollects the declared and observed scope, writes it, prints the overlaps and the ACK. |
 | `devkit spec scope release [--task-id <id>]` | Removes this worktree's record and token. With `--task-id`, a token is required and must own that record. A token whose record is already gone is removed, unless an unreadable record file may hold that record. |
 | `devkit spec scope sweep [--apply] [--expect <task>=<rev>]...` | Reports stale, unverifiable and unreadable records; `--apply` removes stale ones whose revision is unchanged (without `--expect`, the revisions this command read first). |
 
+History cursors are bound to the namespace, task filter and preceding journal content. New appended events do not shift older pages. Invalid or stale cursors fail with `ARGUMENT_INVALID`; restart without a cursor. `next_cursor` is null after the oldest page. Journal-line warnings remain visible for every page.
+
 Argument errors (`ARGUMENT_INVALID`): `register`/`update` without `--spec`, `compare` with fewer than two inputs,
-`--task` without `--history`, `--spec` with `--history`, `--expect` without `--apply`, or an `--expect` that is not
+`--task`, `--limit` or `--cursor` without `--history`, `--spec` with `--history`, `--expect` without `--apply`, or an `--expect` that is not
 `<task-id>=<revision>`.
 
 ### 4.5 Output
@@ -247,7 +249,8 @@ Argument errors (`ARGUMENT_INVALID`): `register`/`update` without `--spec`, `com
 [RECORD: SPEC-b revision=3 worktree=/repo-wt-b host=h spec=specs/... scopes=7 unresolved=1 shared_worktree=no own=no]  # query
 [SUMMARY: namespace=3f2a... records=2 pairs=1 overlapping=1 problems=0]                  # query
 [EVENT: update at=2026-10-13T08:00:00.000000Z task=SPEC-a slug=a revision=2 request_id=... status=applied added=1 removed=0 overlaps=1 unresolved=2 ...]
-[SUMMARY: namespace=3f2a... events=4 problems=0]                                         # query --history
+[PAGE: limit=50 total=4 next_cursor=-]                                                # query --history
+[SUMMARY: namespace=3f2a... events=4 problems=0]
 [SCOPE_ACK: status=applied revision=2 added=1 removed=0 overlaps=1 unresolved=2 request_id=...]  # update
 [SCOPE: SPEC-a released=yes registered=yes already=no revision=2]                        # release
 [SWEEP: SPEC-b verdict=stale reason=worktree-missing revision=3]                         # sweep
@@ -264,7 +267,7 @@ Argument errors (`ARGUMENT_INVALID`): `register`/`update` without `--spec`, `com
   because its revision moved prints its verdicts, then `SPEC_SCOPE_STALE_REVISION`.
 
 JSON shapes: `compare` `{sets, pairs, summary}`; `register` `{record, token, namespace, shared_path, notices}`;
-`query` `{own, records, pairs, summary, notices}`; `query --history` `{events, summary, notices}`; `update`
+`query` `{own, records, pairs, summary, notices}`; `query --history` `{events, summary, pagination: {limit, total, next_cursor}, notices}`; `update`
 `{ack, pairs, notices[, errors]}`; `release` `{task, released, registered, already, revision, notices}`; `sweep`
 `{results, summary, notices[, errors]}`.
 

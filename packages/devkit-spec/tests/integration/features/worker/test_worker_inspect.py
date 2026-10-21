@@ -235,6 +235,40 @@ def test_cli_json_and_mutually_exclusive_scope(repo: Path, monkeypatch: pytest.M
     assert "[INPUT: unit" in result.stdout
 
 
+def test_cli_summary_keeps_current_findings_and_failures_details_restore_history(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    write(
+        repo,
+        f"{UNIT}/envelopes/review-01.yaml",
+        "kind: review\nstatus: completed\nsummary: old history\nfindings:\n  - issue: old\n    evidence: historical\n",
+    )
+    write(
+        repo,
+        f"{UNIT}/envelopes/review-02.yaml",
+        "kind: review\nstatus: completed\nsummary: latest review\nfindings:\n  - issue: current defect\n    evidence: source.py:3\n    suggested_action: fix it\n",
+    )
+    worker(repo, 1, problem_base=git(repo, "rev-parse", "main"))
+    monkeypatch.chdir(repo)
+    module = importlib.import_module("devkit_spec.features.worker.cli.commands")
+    monkeypatch.setattr(module, "inspect", lambda root, **kw: inspect(root, **kw, runner=passed))
+    runner = CliRunner()
+    compact = runner.invoke(cli, ["worker", "inspect", "--format", "json"])
+    detailed = runner.invoke(cli, ["worker", "inspect", "--format", "json", "--details"])
+    assert compact.exit_code == detailed.exit_code == 1
+    summary, full = json.loads(compact.stdout), json.loads(detailed.stdout)
+    envelopes = summary["checks"]["envelopes"]["result"]
+    entries = {e["file"]: e for e in envelopes["envelopes"]}
+    assert "findings" not in entries["envelopes/review-01.yaml"]
+    assert entries["envelopes/review-02.yaml"]["findings"][0]["suggested_action"] == "fix it"
+    assert envelopes["problems"][0]["recovery"] == "fix"
+    assert "summary" not in entries["envelopes/worker-01.yaml"]
+    assert full["checks"]["envelopes"]["result"]["envelopes"][0]["summary"] == "old history"
+    assert "result" not in summary["checks"]["rules"]
+    assert "result" in full["checks"]["rules"]
+    assert summary["inputs"] == full["inputs"] and summary["head"] == full["head"]
+
+
 def test_linked_worktree_observes_base_without_checking_it(repo: Path) -> None:
     worker(repo, 1)
     git(repo, "checkout", "-q", "main")

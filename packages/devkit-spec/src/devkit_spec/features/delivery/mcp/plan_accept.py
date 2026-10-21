@@ -4,7 +4,7 @@ from pathlib import Path
 
 from devkit_core.base.mcp import Confirmation, McpTool
 
-from devkit_spec.features.proposals.usecases.native_plan_accept import PlanAcceptService
+from devkit_spec.features.delivery.usecases.native_plan_accept import PlanAcceptService
 
 
 def create_tools(root: Path) -> tuple[McpTool, ...]:

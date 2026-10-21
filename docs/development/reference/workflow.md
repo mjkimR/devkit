@@ -6,37 +6,17 @@ A data-driven delivery workflow engine for coding agents. A workflow is a Markdo
 
 ```text
 src/devkit_agt/features/workflow/
-├── workspace.py         # Workspace: cached sources, unit resolution, bind_unit, evaluate_unit, describe
-├── answers.py           # record_answer, validate_answer, return_to
-├── handoff.py           # candidate evaluation, plan_handoff, apply_handoff
-├── render.py            # sentinel text lines (public render_* functions, used by the CLI)
-├── errors.py            # WorkflowError and one subclass per error code
-├── definition/
-│   ├── definition.py    # workflow document model (StageDefinition, ...), parse_definition, load_definition
-│   ├── validation.py    # validate_definition, compare_shared_stages, validate_definitions
-│   ├── discovery.py     # definitions_dir plus synchronized workflow assets; discover_definitions, resolve_definition
-│   ├── checks.py        # check registry: syntax, classes, primitives, aliases, plugin registration
-│   └── ids.py           # the shared [a-z][a-z0-9-]* identifier grammar
-├── project/
-│   ├── config.py        # [workflow], [workflow.approvals] and [workflow.stages]
-│   ├── layout.py        # unit_path template, discovery, per-definition layout spec
-│   └── roles.py         # subagent role vocabulary from receipt subagent assets and roles_dir
-├── unit/
-│   ├── units.py         # create_unit, list_units
-│   ├── binding.py       # workflow / workflow_history in the anchor file
-│   ├── frontmatter.py   # anchor frontmatter on devkit_core.core.frontmatter; in-place key updates
-│   ├── decisions.py     # decisions/NN-<request>.yaml records, scoped to a workflow segment
-│   ├── records.py       # record files: directory lock, unique sequences, whole, never replaced; temporary names
-│   └── envelope/        # model.py (envelopes/<kind>-NN.yaml, review state, hold, write_envelope), authoring.py (compose_envelope)
-├── evaluation/
-│   ├── evaluate.py      # pure stage evaluation: evaluate_definition (Options -> UnitEvaluation)
-│   ├── results.py       # UnitEvaluation, GateStatus, Delegate, Waiting, Skipped
-│   ├── requests.py      # Request, Option, Target and how requests are built
-│   ├── primitives.py    # evaluators of the disk primitives
-│   ├── git.py           # merge-base ancestry for revision checks
-│   └── lint.py          # the lint-clean binding to devkit_agt.features.rules
-├── integration.py       # finish_guard: the devkit.finish_guard extension refusing a held branch
-└── cli/                 # app.py (group, options, error boundary), units.py, run.py, definitions.py, envelope.py
+├── models/              # definitions, layouts, bindings, decisions and evaluation results
+│   ├── definition.py    # WorkflowDocument and pure parse_definition
+│   └── layout.py        # TemplateLayout path rendering and discovery_glob
+├── repositories/        # configuration, workflow sources, Git and unit records
+│   ├── definitions.py   # load_definition, discover_definitions, resolve_definition
+│   ├── layout.py        # discover_units: real filesystem discovery from a layout
+│   ├── project/         # workflow configuration and role vocabulary
+│   └── unit/            # bindings, frontmatter, immutable records and decisions
+├── services/            # definition validation, primitive evaluation and envelope policy
+├── usecases/            # workspace, units, evaluation, answers, handoff and envelopes
+└── cli/                 # app, definitions, units, run, envelope and rendering adapters
 ```
 
 Everything public is exported from `devkit_agt.features.workflow`; import from there

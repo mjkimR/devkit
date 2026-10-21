@@ -1,4 +1,4 @@
-"""The deadline every registry operation runs under, and Git calls bounded by it.
+"""The deadline contract every registry operation runs under.
 
 A command gets one ``Deadline`` (``[tool.spec.scope] timeout``): devkit's ``Deadline`` whose expiry raises
 ``ScopeTimeoutError``. The lock wait (``devkit_core.core.file_lock``) and each Git subprocess (``devkit_core.core.run_git``)
@@ -8,10 +8,7 @@ moment of its deadline.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from devkit_core import core
-from devkit_core.core import run_git
 
 from devkit_spec.base.errors import ScopeTimeoutError
 
@@ -28,9 +25,3 @@ class Deadline(core.Deadline):
 
     def __init__(self, seconds: float) -> None:
         super().__init__(seconds, error=timeout_error)
-
-
-def git_lines(cwd: Path, *args: str, deadline: Deadline) -> list[str]:
-    """The NUL-separated output of a ``-z`` Git command under ``deadline``, decoded with ``surrogateescape``."""
-    output = run_git(cwd, *args, deadline=deadline).decode("utf-8", errors="surrogateescape")
-    return [item for item in output.split("\0") if item]

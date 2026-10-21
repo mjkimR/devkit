@@ -1,1 +1,1 @@
-"""features proposals cli modules."""
+"""Proposal CLI transport wiring."""

@@ -77,3 +77,8 @@ Built-wheel installation and public CLI/MCP end-to-end combinations are verified
 Distribution CLI commands are grouped in `features/distribution/cli/`: bundle packaging, selection/sync,
 configuration, context, playbooks and overrides each have a named module. `app.py` composes their command set;
 `output.py` owns shared output formatting. `__init__.py` exposes the command set without implementing behavior.
+
+Public selection operations in `features/distribution/usecases/commands.py` own selection replacement,
+additive preset merging, persistence and installed-bundle discovery. Adapters supply parsed selections to
+`sync_selection` or `add_selection`; they do not construct configuration callbacks. Project listing, status
+and override operations keep discovered package resources open until their results have been collected.

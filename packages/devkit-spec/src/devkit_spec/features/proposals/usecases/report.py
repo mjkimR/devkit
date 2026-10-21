@@ -146,6 +146,12 @@ def _sections(body: str, level: int) -> dict[str, str]:
     return result
 
 
+def planning_support(report: Artifact) -> str:
+    """Read the Planning effort/support section from a validated localized report."""
+    heading = SECTIONS[report.metadata.language][3]
+    return _sections(report.content, 2)[heading]
+
+
 def _check(body: str, slug: str, selected: Source, namespace: str) -> None:
     if not isinstance(body, str) or len(body.encode("utf-8")) > MAX_BYTES:
         raise ReportInvalidError("report exceeds the 1 MiB envelope limit")
@@ -253,11 +259,11 @@ def validate(root: Path, slug: str, sha: str, uri: str) -> Artifact:
         ) from exc
 
 
-def publish_workspace_report(root: Path, slug: str, source_sha: str, body: str) -> dict:
+def publish_workspace_report(root: Path, slug: str, source_sha: str, body: str) -> Artifact:
     """Publish from the matching Planning source without changing the caller's checkout."""
     guard_execution()
     position = locate(root)
     selected = root
     if not position.linked and run_git(root, "rev-parse", "HEAD").decode().strip() != source_sha:
         selected = find(position, f"plan-{slug}")
-    return publish(selected, slug, source_sha, body).to_dict()
+    return publish(selected, slug, source_sha, body)

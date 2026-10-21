@@ -139,7 +139,7 @@ def test_two_worktrees_register_query_update_release_and_sweep(worktrees: tuple[
     )
 
     history = _scope(repo, "query", "--history", "--task", "b")
-    events = [line.split()[1] for line in history.stdout.splitlines()[:-1]]
+    events = [line.split()[1] for line in history.stdout.splitlines() if line.startswith("[EVENT:")]
     assert events == ["register", "update", "update", "sweep", "sweep", "sweep"]
     assert history.stdout.splitlines()[-1] == f"[SUMMARY: namespace={namespace} events=6 problems=0]"
     by_id = _json(_scope(repo, "query", "--history", "--task", "SPEC-s", "--format", "json"))
@@ -299,3 +299,59 @@ def test_query_cli_never_writes(
         result = _scope(repo, "query", *args, "--format", "json")
         assert result.exit_code == 0, result.output
     assert token_temp.read_text() == "old token fragment"
+
+
+@pytest.mark.parametrize("option", [("--limit", "10"), ("--cursor", "invalid")])
+def test_history_options_require_history(repo: Path, option: tuple[str, str]) -> None:
+    result = _scope(repo, "query", *option, "--format", "json")
+    assert result.exit_code == 2 and _json(result)["error"]["code"] == "ARGUMENT_INVALID"
+
+
+def test_history_pages_are_recent_bounded_and_stable_across_appends(repo: Path) -> None:
+    _scope(repo, "register", "--spec", SPEC)
+    journal = next((repo / ".git/devkit-spec-scope").glob("*/journal.jsonl"))
+    events = [{"event": "update", "task": "SPEC-s", "revision": i} for i in range(1, 124)]
+    journal.write_text("".join(json.dumps(event) + "\n" for event in events))
+    first = _json(_scope(repo, "query", "--history", "--format", "json"))
+    assert [e["revision"] for e in first["events"]] == list(range(74, 124))
+    assert first["pagination"]["limit"] == 50 and first["pagination"]["total"] == 123
+    with journal.open("a") as handle:
+        handle.write(json.dumps({"event": "update", "task": "SPEC-s", "revision": 124}) + "\n")
+    second = _json(
+        _scope(repo, "query", "--history", "--cursor", first["pagination"]["next_cursor"], "--format", "json")
+    )
+    assert [e["revision"] for e in second["events"]] == list(range(24, 74))
+    last = _json(
+        _scope(repo, "query", "--history", "--cursor", second["pagination"]["next_cursor"], "--format", "json")
+    )
+    assert [e["revision"] for e in last["events"]] == list(range(1, 24))
+    assert last["pagination"]["next_cursor"] is None
+
+
+def test_history_filter_precedes_pagination_and_cursor_is_bound_to_filter(repo: Path) -> None:
+    _scope(repo, "register", "--spec", SPEC)
+    journal = next((repo / ".git/devkit-spec-scope").glob("*/journal.jsonl"))
+    events = [{"event": "update", "task": "SPEC-s" if i % 2 else "SPEC-b", "revision": i} for i in range(1, 10)]
+    journal.write_text("".join(json.dumps(event) + "\n" for event in events) + "not json\n")
+    first = _scope(repo, "query", "--history", "--task", "SPEC-s", "--limit", "2", "--format", "json")
+    assert first.exit_code == 0
+    data = _json(first)
+    assert data["notices"][0]["code"] == "SPEC_SCOPE_JOURNAL_LINE_INVALID"
+    assert [e["revision"] for e in data["events"]] == [7, 9]
+    assert data["pagination"]["total"] == 5 and data["summary"]["problems"] == 1
+    cursor = data["pagination"]["next_cursor"]
+    next_page = _json(
+        _scope(repo, "query", "--history", "--task", "SPEC-s", "--limit", "2", "--cursor", cursor, "--format", "json")
+    )
+    assert [e["revision"] for e in next_page["events"]] == [3, 5]
+    wrong_filter = _scope(repo, "query", "--history", "--task", "SPEC-b", "--cursor", cursor, "--format", "json")
+    assert wrong_filter.exit_code == 2 and _json(wrong_filter)["error"]["code"] == "ARGUMENT_INVALID"
+    with journal.open("w") as handle:
+        handle.write(json.dumps(events[-1]) + "\n")
+    stale = _scope(repo, "query", "--history", "--task", "SPEC-s", "--cursor", cursor, "--format", "json")
+    assert stale.exit_code == 2 and _json(stale)["error"]["code"] == "ARGUMENT_INVALID"
+
+
+@pytest.mark.parametrize("limit", ["0", "101"])
+def test_history_rejects_out_of_range_limit(repo: Path, limit: str) -> None:
+    assert _scope(repo, "query", "--history", "--limit", limit).exit_code == 2

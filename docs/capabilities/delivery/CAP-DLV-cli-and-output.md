@@ -37,7 +37,7 @@ devkit workflow envelope answer COMMON [--answers-to FILE] [--answers-file PATH|
 devkit workflow envelope resolution COMMON [--resolves FILE]
 devkit workflow envelope review COMMON [--findings-file PATH|-]
 devkit workflow envelope reverify COMMON [--from latest|FILE] [--resolve N|all]... [--waive N=REASON]... [--findings-file PATH|-]
-devkit workflow envelope check --unit DIR [--format text|json]   # every envelope file, contract violations and the hold
+devkit workflow envelope check --unit DIR [--details] [--format text|json]   # every envelope file, contract violations and the hold
 ```
 
 `--anchor FILE` names the anchor file that identifies the unit when its directory holds several candidate anchors (`ANCHOR_AMBIGUOUS`); see `CAP-DLV-workflow-orchestration`.

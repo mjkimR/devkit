@@ -41,8 +41,8 @@ from devkit_spec.features.scope import (
     slug_from_spec,
     update,
 )
-from devkit_spec.features.scope.services import location as location_module
-from devkit_spec.features.scope.services.location import SHARED_DIR, TOKEN_FILE, load_token, save_token
+from devkit_spec.features.scope.repositories import location as location_module
+from devkit_spec.features.scope.repositories.location import SHARED_DIR, TOKEN_FILE, load_token, save_token
 from devkit_spec.features.scope.usecases import flow
 
 

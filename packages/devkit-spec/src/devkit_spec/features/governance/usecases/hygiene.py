@@ -17,7 +17,7 @@ from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
 
 from devkit_spec.base.errors import ProposalRejectedPendingWarning
-from devkit_spec.features.proposals.usecases.scaffold import PROPOSALS
+from devkit_spec.base.units import PROPOSALS
 
 
 def _anchors(root: Path) -> list[Path]:

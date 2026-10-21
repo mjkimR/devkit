@@ -59,6 +59,8 @@ CLI commands are devkit shared put|get|list|sweep. Put reads stdin; --format jso
 tools are shared_put, shared_get, shared_list, shared_sweep (plan only) and shared_sweep_apply. Fixed bounded-write
 classification applies only to put/apply-sweep; cloud excludes and refuses these tools. Local writes elicit no
 business approval form. `CAP-MCP-runtime-registration` owns transport execution guards.
+Put responses return the exact artifact URI, metadata and available local links without echoing the submitted
+Markdown body. Get returns the full body for that exact URI. Adapter and use-case artifacts retain their content.
 
 List requires kind/slug with optional source_sha/language, limit 1..100 and an opaque continuation cursor. Sweep
 examines at most 100 entries in deterministic filename order, returns a continuation cursor, and retains/reports

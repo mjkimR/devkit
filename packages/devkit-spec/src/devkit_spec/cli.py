@@ -13,11 +13,11 @@ from __future__ import annotations
 
 import click
 
+from devkit_spec.features.delivery.cli.proposals import proposal_group
 from devkit_spec.features.documents.cli.commands import list_cmd, refs_cmd, resolve_cmd
 from devkit_spec.features.documents.cli.search import search_cmd
 from devkit_spec.features.entrypoints.cli.commands import entrypoints_group
 from devkit_spec.features.policy.cli.commands import policy_cmd
-from devkit_spec.features.proposals.cli.commands import proposal_group
 from devkit_spec.features.proposals.cli.specs import spec_new_cmd
 from devkit_spec.features.scope.cli.commands import scope_group
 from devkit_spec.features.worker.cli.commands import worker_group

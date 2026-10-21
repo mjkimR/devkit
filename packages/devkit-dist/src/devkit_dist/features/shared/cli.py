@@ -50,7 +50,7 @@ def put(kind: str, slug: str, source_sha: str, language: str, workspace_root: st
     request = PutRequest(kind, slug, source_sha, language, content)
     request.validate()
     selected = adapter(resolve_root(workspace_root))
-    emit(selected.put(request).to_dict(), selected, output_format)
+    emit(selected.put(request).receipt_dict(), selected, output_format)
 
 
 @cli.command()

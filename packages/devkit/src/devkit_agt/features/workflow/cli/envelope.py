@@ -302,9 +302,10 @@ def envelope_reverify_cmd(**options: Any) -> None:
 @envelope_group.command(name="check")
 @WORKSPACE
 @UNIT
+@click.option("--details", is_flag=True, help="Include complete envelope bodies in JSON output")
 @FORMAT_OPTION
 @boundary
-def envelope_check_cmd(workspace_root: str | None, unit: str, output_format: str) -> None:
+def envelope_check_cmd(workspace_root: str | None, unit: str, details: bool, output_format: str) -> None:
     """Report every envelope file of a unit and any contract violation (exit 1 when a file is malformed).
 
     Also reports what holds the unit's gates: unresolved problems ([BLOCKED]) and
@@ -316,9 +317,7 @@ def envelope_check_cmd(workspace_root: str | None, unit: str, output_format: str
     hold = envelopes.hold()
     errors = sorted(envelopes.errors, key=lambda e: e.file)
     if is_json(output_format):
-        echo_json(
-            {"envelopes": [e.to_dict() for e in loaded], **hold.to_dict(), "errors": [e.to_dict() for e in errors]}
-        )
+        echo_json(envelopes.inspection_dict(details=details))
     else:
         for e in loaded:
             click.echo(

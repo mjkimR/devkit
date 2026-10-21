@@ -149,6 +149,11 @@ def test_cli_and_mcp_publish_same_artifact(repo):
 
     response = asyncio.run(invoke())
     assert response == json.loads(result.output)
+    assert "content" not in response
+    artifact = reports.publish_workspace_report(root, "example", sha, body)
+    assert artifact.content == body
+    assert reports.validate(root, "example", sha, response["artifact_uri"]) == artifact
+    assert response == artifact.receipt_dict()
 
 
 def test_accepted_base_and_wrong_branch(repo):

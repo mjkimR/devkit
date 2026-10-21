@@ -15,7 +15,6 @@ fixable: a summary is written, never generated.
 
 from __future__ import annotations
 
-import unicodedata
 from dataclasses import dataclass
 
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
@@ -23,6 +22,7 @@ from devkit_agt.features.rules.services.builtins import BaseRule
 
 from devkit_spec.features.documents import Document, Kind
 from devkit_spec.features.governance import document_index, is_material, reportable
+from devkit_spec.utils.text import foreign_letters as foreign_letters
 
 RULE_ID = "RULE-document-summary"
 SKELETON_MARKER = "<!-- devkit:skeleton -->"
@@ -45,15 +45,6 @@ def required(document: Document) -> bool:
         return True
     anchor = ANCHORS.get(document.kind)
     return anchor is not None and document.path.rsplit("/", 1)[-1] == anchor
-
-
-def foreign_letters(text: str) -> list[str]:
-    """The distinct letters of ``text`` outside the Latin script, in order of appearance."""
-    found: list[str] = []
-    for char in text:
-        if char.isalpha() and "LATIN" not in unicodedata.name(char, "") and char not in found:
-            found.append(char)
-    return found
 
 
 def _line(text: str, key: str) -> int:

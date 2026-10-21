@@ -12,7 +12,7 @@ from pathlib import Path
 
 from devkit_dist.features.project.repositories.receipt import Receipt, load_receipt
 
-from devkit_agt.features.workflow.models.definition import WorkflowDocument, load_definition
+from devkit_agt.features.workflow.models.definition import WorkflowDocument, parse_definition
 from devkit_agt.features.workflow.models.errors import (
     DefinitionError,
     WorkflowAssetMissingError,
@@ -21,6 +21,18 @@ from devkit_agt.features.workflow.models.errors import (
 )
 
 WORKFLOW_KIND = "workflow"
+
+
+def load_definition(path: Path) -> WorkflowDocument:
+    """Read and parse the definition file at ``path``; raises ``DefinitionError`` targeting it."""
+    try:
+        text = path.read_text("utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise DefinitionError(f"{path}: {exc}", target_files=[path.as_posix()]) from exc
+    try:
+        return parse_definition(text, path)
+    except DefinitionError as exc:
+        raise DefinitionError(f"{path}: {exc}", target_files=[path.as_posix()]) from exc
 
 
 def _load_paths(paths: Iterable[Path]) -> tuple[list[WorkflowDocument], list[WorkflowError]]:

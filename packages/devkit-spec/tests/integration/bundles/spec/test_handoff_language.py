@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
+from devkit_spec.features.delivery.usecases.native_handoff import HandoffPreview
 from devkit_spec.features.proposals.models.approval import schema
-from devkit_spec.features.proposals.usecases.native_handoff import HandoffPreview
 
 
 @pytest.mark.parametrize("setup", [None, 'just init && echo "evidence"'])
@@ -54,7 +54,7 @@ def test_handoff_language_does_not_change_authority(tmp_path, monkeypatch, langu
     from devkit_dist.features.host.models.errors import HostConfirmationError
 
     from devkit_spec.base.errors import HandoffReplyError, HandoffStaleError
-    from devkit_spec.features.proposals.usecases.native_handoff import HandoffService
+    from devkit_spec.features.delivery.usecases.native_handoff import HandoffService
 
     (tmp_path / ".devkit").mkdir()
     local = tmp_path / ".devkit/config.local.toml"
@@ -62,8 +62,8 @@ def test_handoff_language_does_not_change_authority(tmp_path, monkeypatch, langu
     preview = HandoffPreview(
         tmp_path, "idea", "sha", "main", "/worktree", None, "digest", "title", "", "plan", "medium"
     )
-    monkeypatch.setattr("devkit_spec.features.proposals.usecases.native_handoff.prepare", lambda *args: preview)
-    monkeypatch.setattr("devkit_spec.features.proposals.usecases.native_handoff.validate", lambda *args: None)
+    monkeypatch.setattr("devkit_spec.features.delivery.usecases.native_handoff.prepare", lambda *args: preview)
+    monkeypatch.setattr("devkit_spec.features.delivery.usecases.native_handoff.validate", lambda *args: None)
     service = HandoffService(tmp_path)
     executed = []
 

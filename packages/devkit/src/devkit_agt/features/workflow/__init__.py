@@ -22,7 +22,6 @@ from devkit_agt.features.workflow.models.definition import (
     Return,
     StageDefinition,
     WorkflowDocument,
-    load_definition,
     parse_definition,
 )
 from devkit_agt.features.workflow.models.envelope import Envelope, Envelopes, Finding, Hold
@@ -85,6 +84,7 @@ from devkit_agt.features.workflow.models.results import (
 )
 from devkit_agt.features.workflow.repositories.definitions import (
     discover_definitions,
+    load_definition,
     load_definition_dir,
     resolve_definition,
 )

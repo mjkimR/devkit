@@ -79,7 +79,9 @@ The dist wheel never depends on `devkit-agt`. Feature imports use absolute paths
 - `cli/` adapts distribution commands to use cases and formats their results. The root executable
   discovers the commands lazily (`ARCH-05-3-command-plugins`).
 - `usecases/` owns sync and recovery, context and playbook reads, overrides, project listing/status
-  and bundle planning. It coordinates validation, planning and installation services.
+  and bundle planning. `sync_selection` and `add_selection` own persistence and replacement/union
+  policy. Public operations also own installed-bundle discovery and cleanup. CLI adapters provide
+  parsed inputs and format results; they do not compose configuration-save callbacks.
 - `services/bundles/` owns manifest and header validation, role rendering, guidance fragments,
   configurable template rendering and deterministic package creation. It has no installation workspace dependency.
 - `services/installation/` owns workspace path safety and snapshots, transaction journaling and

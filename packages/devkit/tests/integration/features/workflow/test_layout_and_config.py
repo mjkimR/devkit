@@ -13,6 +13,7 @@ from devkit_agt.features.workflow import (
     load_workflow_config,
     validate_template,
 )
+from devkit_agt.features.workflow.repositories.layout import discover_units
 from devkit_agt.features.workflow.repositories.project.config import parse_workflow_config
 from devkit_dist.base.errors import ConfigError as CoreConfigError
 from testsupport.workflow import write_config, write_unit
@@ -68,12 +69,12 @@ def test_discovery_glob_and_anchor_filter(tmp_path: Path) -> None:
     write_unit(tmp_path, "specs/2026-10/20261011-b", anchor="spec.md")
     (tmp_path / "specs/2026-10/20261013-no-anchor").mkdir()
     (tmp_path / "specs/2026-10/stray.md").write_text("x")
-    found = layout.discover(tmp_path)
+    found = discover_units(layout, tmp_path)
     assert found == [PurePosixPath("specs/2026-10/20261011-b"), PurePosixPath("specs/2026-10/20261012-a")]
 
 
 def test_discover_missing_work_dir_is_empty(tmp_path: Path) -> None:
-    assert TemplateLayout("nope", "{slug}", "task.md").discover(tmp_path) == []
+    assert discover_units(TemplateLayout("nope", "{slug}", "task.md"), tmp_path) == []
 
 
 # --- config -----------------------------------------------------------------------
