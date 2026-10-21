@@ -2,7 +2,7 @@
 id: SPEC-integration-rewritten-merge
 title: Preserve integration cleanup after metadata-only merge rewrites
 summary: Track the verified post-hook merge identity while preserving provenance, content, policy and cleanup guards.
-status: in-progress
+status: completed
 created: 2026-10-21
 related_capabilities:
   - CAP-INT-mcp-services
