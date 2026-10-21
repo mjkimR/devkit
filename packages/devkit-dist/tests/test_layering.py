@@ -121,19 +121,22 @@ def _entry_points() -> list[tuple[str, str, str]]:
 
 
 def test_entry_point_groups_have_a_loading_area() -> None:
-    groups = group_loaders(SRC)
+    groups = {**group_loaders(SRC), "devkit.host.services": "external-mcp"}
     assert {group for group, _, _ in _entry_points() if group != "console_scripts"} <= groups.keys()
     assert groups["devkit.bundles"] == "distribution" and groups["devkit.commands"] == "cli"
     assert groups["devkit.config_tables"] == "distribution" and groups["devkit.config_template"] == "distribution"
 
 
 def test_entry_points_target_only_this_wheel_and_lower_layers() -> None:
-    groups = {**group_loaders(SRC), "console_scripts": "cli"}
+    groups = {**group_loaders(SRC), "console_scripts": "cli", "devkit.host.services": "external-mcp"}
     violations = []
     for group, name, module in _entry_points():
         loader, target = groups[group], module.split(".")[1]
         if target in AGT_AREAS:
             violations.append(f"{group}:{name} = {module}: devkit-dist references devkit-agt")
+        elif loader == "external-mcp":
+            # The optional transport owns discovery; dist declares only its own domain service.
+            assert (group, name, module) == ("devkit.host.services", "shared", "devkit.shared.mcp")
         elif loader != "cli" and not (target == loader or target in ALLOWED[loader] or target in DATA_AREAS):
             violations.append(f"{group}:{name} = {module}: {loader} loads devkit.{target}")
     assert violations == []

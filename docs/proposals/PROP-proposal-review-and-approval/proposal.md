@@ -51,7 +51,7 @@ alone. The report supplies evidence, never approval. The selected design is reco
   Report reading therefore requires a narrow ADR supersession at handoff; ordinary Git endpoints stay unchanged.
 - `ADR-shared-language-preference-with-bounded-approval-content` resolves form language once, preserves machine
   values and source quotations, and does not promise control of host chrome or automatic source translation.
-- `PROP-worker-shared-state-mcp` is an accepted design dependency, not an implemented API. Its selected
+- `SPEC-worker-shared-state-mcp` is an accepted design dependency, not an implemented API. Its selected
   interface contract is reflected here; Development waits for the implemented adapter, or returns for scope
   clarification if that contract changes.
 
@@ -197,6 +197,6 @@ approval credentials; atomic rollback across Git and setup; removal of standalon
 ## 5. Lifecycle & Retirement Criteria
 
 The design is accepted following the medium challenger pass and resolution of its findings. Development waits for
-`PROP-worker-shared-state-mcp` implementation; the report uses its local adapter and public protocol seam only.
+`SPEC-worker-shared-state-mcp` implementation; the report uses its local adapter and public protocol seam only.
 The shared-storage dependency is separately accepted; neither acceptance starts Development. The replacement
 ADR and capability updates are produced through normal handoff/reconciliation. No direction question remains.

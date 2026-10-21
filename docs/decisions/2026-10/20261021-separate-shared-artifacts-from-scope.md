@@ -1,15 +1,15 @@
 ---
-id: PADR-separate-shared-artifacts-from-scope
+id: ADR-separate-shared-artifacts-from-scope
 title: Separate immutable shared artifacts from scope coordination
 summary: Keep authoritative scope coordination in its existing registry and introduce bounded immutable expiring artifacts with equivalent CLI and optional local MCP operations.
-proposal: PROP-worker-shared-state-mcp
-status: draft
+proposal: SPEC-worker-shared-state-mcp
+status: accepted
 created_at: 2026-10-21
 ---
 
-# [PADR-separate-shared-artifacts-from-scope] Separate immutable shared artifacts from scope coordination
+# [ADR-separate-shared-artifacts-from-scope] Separate immutable shared artifacts from scope coordination
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-21
 
 ---

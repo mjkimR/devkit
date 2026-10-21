@@ -20,7 +20,7 @@ updated: 2026-10-20
 
 `devkit-mcp` ships `devkit_mcp`, mounts `devkit mcp`, discovers `devkit.host.services` and owns SDK stdio/form
 adaptation. `devkit.core.mcp` supplies dependency-free `McpTool`, `Confirmation` and `ConfirmationReply`.
-Services declare execution as read_only, preflight, interactive or approved_resume; omitted classification is
+Services declare execution as read_only, bounded_write, preflight, interactive or approved_resume; omitted classification is
 interactive regardless of descriptive MCP annotations. Schema validation and duplicate/unloadable service failures
 remain deterministic. Native acceptance requires both accept and approve=true; decline, cancel, disconnect or
 missing negotiated form capability grants no authority. Stdout contains only protocol traffic during serve.
@@ -33,7 +33,7 @@ interpreters. A linked-worktree interpreter or editable source is ineligible. No
 MCP_RUNTIME_UNAVAILABLE and no new entry.
 
 Every protected invocation resolves the owning checkout's effective execution environment. Cloud prevents forms,
-preflight and approved resume as well as interactive mutation; guards repeat after form/lock waits and before later
+bounded writes, preflight and approved resume as well as interactive mutation; guards repeat after form/lock waits and before later
 effects. The cloud registration profile exposes only declared read-only tools, and no registration is created if
 none exist. Transport availability remains host-dependent. The configuration root cannot be changed by tool input.
 Local Host approval can act on cloud-produced work because environment belongs to the calling Host, not the branch.
@@ -104,3 +104,12 @@ for domain-owned form text. The retained executor's preferences do not override 
 with no language/workspace tool argument and no additional serialized approval authority. Execution/environment and
 workspace identity guards still run independently before and after confirmation and before effects. Static domain
 copy and host-owned display limits are specified in `CAP-INT-mcp-services` and `CAP-DLV-proposal-incubation`.
+
+## Shared artifact services
+
+`devkit.shared.mcp` supplies fixed `bounded_write` put/apply-sweep tools and `read_only` get/list/sweep-plan tools.
+Bounded writes invoke a validated domain API without a business approval form; this classification grants neither
+host permission nor arbitrary filesystem authority. Cloud discovery omits them and invocation rejects forged calls.
+Unknown execution classifications fail closed. Both reads and writes bind configuration to the owning workspace,
+including shared.adapter; executor preferences and request arguments cannot select another workspace.
+`CAP-COLL-shared-artifacts` specifies artifact identity, retention, transport parity and adapter semantics.

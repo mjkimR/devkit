@@ -71,12 +71,17 @@ def build_server(
 
         try:
             tool = tools.get(name)
-            if tool is None or not Draft202012Validator(tool.input_schema).is_valid(arguments):
+            if (
+                tool is None
+                or tool.execution not in {"read_only", "bounded_write", "preflight", "interactive", "approved_resume"}
+                or not Draft202012Validator(tool.input_schema).is_valid(arguments)
+            ):
                 raise HostMcpInputError("unknown tool or invalid arguments; inspect the tool's input schema")
             if profile == "read-only" and tool.execution != "read_only":
                 raise HostMcpInputError("tool is not available in the read-only profile")
             if tool.execution == "read_only":
-                result = await tool.invoke(arguments, confirm)
+                with invocation(binding) if binding is not None else nullcontext():
+                    result = await tool.invoke(arguments, confirm)
             else:
                 with invocation(binding) if binding is not None else nullcontext():
                     guard_execution()

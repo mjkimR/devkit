@@ -1,0 +1,64 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T00:28:52.183640Z'
+status: completed
+review: review-01.yaml
+summary: Independent reverify resolves adapter error mapping and template order. Finding 1 recurs with core.ignoreCase=true and !/.DEVKIT/.SHARED/; authorized fixture confirms persistent writes before refusal. Fix requires conservative casefold matching and unchanged-state regression.
+findings:
+- issue: First-write exclusion refusal occurs after persistent filesystem changes.
+  evidence: packages/devkit-dist/src/devkit/shared/local.py:144
+  failure_condition: Absent storage with higher-precedence negative ignore rule creates lock and appends exclusion before refusing.
+  suggested_action: Validate effective exclusion before infrastructure writes and test unchanged state.
+  resolution: open
+  severity: P1
+- issue: Checking one probe filename does not guarantee artifact files are ignored.
+  evidence: packages/devkit-dist/src/devkit/shared/local.py:158
+  failure_condition: Filename-specific negative patterns let a UUID report remain visible although probe.md is ignored.
+  suggested_action: Require effective exclusion of the directory or validate every actual publication and infrastructure path.
+  resolution: resolved
+  severity: P1
+- issue: The new shared configuration table is rejected by distribution configuration loading.
+  evidence: packages/devkit-dist/src/devkit/distribution/installation/config.py:161
+  failure_condition: Documented shared table is absent from distribution FIELDS and config commands fail.
+  suggested_action: Add the schema field and default template with parity regression tests.
+  resolution: resolved
+  severity: P1
+- issue: Malformed adapter method signatures pass registration validation.
+  evidence: packages/devkit-dist/src/devkit/shared/service.py:32
+  failure_condition: Callable methods with incompatible arguments pass validation and later raise raw TypeError.
+  suggested_action: Validate binding shapes and operation result types at the adapter boundary.
+  resolution: resolved
+  severity: P1
+- issue: PutRequest accepts absent commit and language fields.
+  evidence: packages/devkit-dist/src/devkit/shared/api.py:40
+  failure_condition: Public callers or stored metadata use null source_sha or language; optional filter validation accepts them.
+  suggested_action: Require non-null put fields and test invalid puts and stored envelopes.
+  resolution: resolved
+  severity: P1
+- issue: Concurrent first puts can observe an incompletely initialized store.
+  evidence: packages/devkit-dist/src/devkit/shared/local.py:188
+  failure_condition: A second writer sees artifacts directory before the first creates its lock and fails spuriously.
+  suggested_action: Serialize writer initialization decisions under the common lock and test the paused race.
+  resolution: resolved
+  severity: P2
+- issue: CheckedAdapter remaps legitimate backend InputError to adapter unavailable.
+  evidence: packages/devkit-dist/src/devkit/shared/service.py:89
+  failure_condition: A backend rejects a structurally valid cursor for a different query.
+  suggested_action: Separate invocation from result validation and preserve backend AdvisoryErrors.
+  resolution: resolved
+  severity: P1
+- issue: Shared template interrupts existing harness-to-tool ordering.
+  evidence: packages/devkit-dist/src/devkit/distribution/installation/config.py:581
+  failure_condition: Installed harness and tool templates render together.
+  suggested_action: Insert shared before harness templates and keep the existing harness assertion.
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS full fallback 4057 passed, 14 skipped; dist-only 1105 passed
+  casefold: FAIL authorized recurrence fixture
+diff_scope:
+  base: a34d17c4ed3e39de2f7fa667f6e7f5ffbf88a373
+  head: 654b51c77be8a011152c720e2b3a24ebcd8af965
+activity_effort: medium
