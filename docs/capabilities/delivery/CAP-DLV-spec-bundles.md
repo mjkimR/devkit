@@ -9,10 +9,9 @@ stories:
   - US-route-development-intent
   - US-incubate-and-hand-off-a-proposal
 entrypoints:
+  - packages/devkit-spec/src/devkit_spec/features/delivery/cli/specs.py
+  - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/specs.py
   - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/specs.py
-  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/binding.py
-  - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
-  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py
 ---
 
 # [CAP-DLV-spec-bundles] Spec Bundles

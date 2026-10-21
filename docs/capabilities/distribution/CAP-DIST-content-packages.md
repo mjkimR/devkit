@@ -7,8 +7,7 @@ status: active
 entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/discovery.py
   - packages/devkit/src/devkit_agt/bundles/harness/
-  - packages/devkit-catalog/src/devkit_catalog/response_style/
-  - packages/devkit-catalog/src/devkit_catalog/maintenance/
+  - packages/devkit-catalog/src/devkit_catalog/
 created_at: 2026-10-17
 ---
 

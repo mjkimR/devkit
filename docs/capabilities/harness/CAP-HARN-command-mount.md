@@ -8,10 +8,8 @@ created_at: 2026-10-13
 stories:
   - US-adopt-in-an-existing-repository
 entrypoints:
-  - pyproject.toml
   - packages/devkit-spec/src/devkit_spec/cli.py
   - packages/devkit-spec/src/devkit_spec/utils/output.py
-  - packages/devkit-spec/src/devkit_spec/base/errors.py
 ---
 
 # [CAP-HARN-command-mount] devkit spec Command Mount and Output Conventions

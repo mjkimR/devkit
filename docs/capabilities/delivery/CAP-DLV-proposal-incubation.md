@@ -8,12 +8,9 @@ created_at: 2026-10-13
 stories:
   - US-incubate-and-hand-off-a-proposal
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/report.py
-  - packages/devkit-spec/src/devkit_spec/features/delivery/mcp/plan_accept.py
   - packages/devkit-spec/src/devkit_spec/features/proposals/
   - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
-  - packages/devkit-spec/src/devkit_spec/features/delivery/mcp/handoff.py
-  - packages/devkit-spec/src/devkit_spec/features/proposals/models/approval.py
+  - packages/devkit-spec/src/devkit_spec/features/delivery/mcp/
 ---
 
 # [CAP-DLV-proposal-incubation] Proposal Incubation and Handoff

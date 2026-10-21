@@ -10,15 +10,7 @@ stories:
   - US-adopt-in-an-existing-repository
   - US-handle-delivery-problems-and-exceptions
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/SKILL.md.jinja
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/AGENTS.md.jinja
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/guidance/
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/templates/
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/seed/
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
 ---
 
 # [CAP-HARN-agent-guidance] Agent Guidance Assets
