@@ -2,7 +2,7 @@ import tomllib
 from pathlib import Path
 
 import pytest
-from devkit.distribution.bundles import load_bundle
+from devkit_dist.features.distribution.services.bundles import load_bundle
 
 PACKAGE = Path(__file__).parents[1]
 BUNDLE = PACKAGE / "src/devkit_starter/bundle"

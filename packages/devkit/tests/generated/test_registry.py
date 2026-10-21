@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from devkit.generated import GeneratedConfigError, builtin_artifacts, load_registry, matches
+from devkit_agt.features.generated import GeneratedConfigError, builtin_artifacts, load_registry, matches
 from testsupport.rules import write
 
 
@@ -45,7 +45,7 @@ def test_the_receipt_is_built_in_and_optional(tmp_path: Path) -> None:
     assert receipt is not None and receipt.builtin and receipt.optional
     assert receipt.paths == (".devkit/installation.json",)
     assert "devkit-receipt" in builtin_artifacts()
-    assert receipt.shell.endswith("-P -m devkit sync")
+    assert receipt.shell.endswith("-P -m devkit_dist sync")
 
 
 def test_a_project_table_changes_only_the_fields_it_sets_and_can_drop_a_builtin(tmp_path: Path) -> None:

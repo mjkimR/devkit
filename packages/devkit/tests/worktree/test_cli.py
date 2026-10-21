@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from devkit.advisory import ActionMode
-from devkit.worktree import WorktreeConfig, WorktreeConfigError, read_worktree_config
+from devkit_agt.features.worktree import WorktreeConfig, WorktreeConfigError, read_worktree_config
 from testsupport.cli import cli
 from testsupport.rules import git, init_repo, write
 
@@ -193,7 +193,7 @@ def test_worktree_config_defaults_and_validation(repo: Path) -> None:
 def test_post_finish_extensions_run_after_a_successful_finish_only(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from types import SimpleNamespace
 
-    from devkit.worktree import extensions
+    import devkit_agt.features.worktree.services.extensions as extensions
     from devkit_core.core import extensions as core_extensions
 
     seen: list[tuple[Path, dict]] = []

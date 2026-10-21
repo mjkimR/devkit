@@ -9,9 +9,9 @@ import sys
 from pathlib import Path
 
 import pytest
-from devkit.rules import RelatedAsset, resolve_related
-from devkit.rules.engine.errors import RuleDefinitionError
-from devkit.rules.rules import BaseRule
+from devkit_agt.features.rules import RelatedAsset, resolve_related
+from devkit_agt.features.rules.models.errors import RuleDefinitionError
+from devkit_agt.features.rules.services.builtins import BaseRule
 
 
 class _Rule(BaseRule):
@@ -25,7 +25,12 @@ class _Rule(BaseRule):
 def _devkit(*args: str) -> subprocess.CompletedProcess[str]:
     env = {key: value for key, value in os.environ.items() if not key.startswith("DEVKIT_")}
     return subprocess.run(
-        [sys.executable, "-m", "devkit", *args], capture_output=True, text=True, encoding="utf-8", env=env, check=False
+        [sys.executable, "-m", "devkit_dist", *args],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        env=env,
+        check=False,
     )
 
 

@@ -20,16 +20,22 @@ and asks before writing anything or committing. The guides live in [`guides/`](g
 
 ## Structure
 
-`packages/devkit-core` owns the independent `devkit_core.core` foundation;
+`packages/devkit-core` owns the independent `devkit_core` foundation;
 `packages/devkit-dist` is the distribution package with the CLI, `packages/devkit` the harness package
 (`devkit-agt`), `packages/devkit-advisory` the `devkit.advisory` library shipped on its own for other
 repositories' runtime,
 `packages/devkit-spec` the Spec-Driven Development (SDD) extension,
+`tools/devkit-dev` the repository development bundle and its structure rules,
 `packages/devkit-starter` an example content package, `packages/devkit-catalog` opt-in content bundles,
 `packages/devkit-viewer` the local repository viewer (`devkit viewer serve`, with its Svelte frontend), `models/devkit-embed` the embedding model of the
 `search` extra of `devkit-dist` and `devkit-agt` (built by hand, outside the workspace), `examples/bundles/` further example bundles, `scripts/` the shell logic
 behind the justfile recipes, `guides/` the agent-facing installation guides, and `docs/` the Living Spec documentation; see
 `ARCH-05-1-containers`.
+
+Application packages place behavior in `features/<feature>/`, with transport adapters, use cases,
+services, repositories and models added as needed. Shared contracts and technical helpers belong in
+optional `base/` and `utils/`; `devkit_core` uses `base/` and `core/` for the shared foundation.
+Content packages and `tools/devkit-dev` can remain bundle-only. See `ARCH-05-2-components` for dependencies.
 
 ## Development
 
@@ -62,10 +68,11 @@ and separately runs the compact tests through `devkit run`.
 
 `uv run pytest` from the repository root runs every test.
 
-The repository, CLI (`devkit`), Python namespace (`devkit.*`), bundle names and
-entry-point groups retain their names. The distributions are `devkit-dist` and `devkit-agt` to avoid
-confusion with the unrelated `devkit` project on PyPI. They are not published to PyPI;
-install them from Git or an explicit wheel URL/path.
+The CLI (`devkit`), bundle names and entry-point groups retain their names. Python imports expose
+wheel ownership: `devkit_dist`, `devkit_agt`, `devkit_core`, `devkit_spec`, `devkit_mcp` and
+`devkit_viewer`. The runtime advisory library preserves `devkit.advisory`. The distributions are
+`devkit-dist` and `devkit-agt` to avoid confusion with the unrelated `devkit` project on PyPI.
+They are not published to PyPI; install them from Git or an explicit wheel URL/path.
 
 ## Using devkit in another project
 
@@ -99,8 +106,7 @@ bundles, and no harness command or guidance (`devkit rules` and the other harnes
 `devkit-dist` from the same commit); a release-wheel installation of `devkit-agt` names the `devkit-dist`, `devkit-core` and
 `devkit-advisory` wheels next to it only because no index serves them. A library or service that only raises
 and renders advisories at runtime depends on `devkit-advisory` alone (standard library only, no CLI, no bundles);
-its development tooling adds `devkit-dist` or `devkit-agt`. The import is `devkit.advisory` either way: `devkit` is
-a namespace package that the three wheels share. A tool installation names the owner of the `devkit` executable
+its development tooling adds `devkit-dist` or `devkit-agt`. The import remains `devkit.advisory`; only the advisory wheel contributes to the `devkit` namespace. A tool installation names the owner of the `devkit` executable
 and adds the harness: `uv tool install <devkit-dist requirement> --with <devkit-agt requirement>`.
 
 A wheel built here works the same way by path

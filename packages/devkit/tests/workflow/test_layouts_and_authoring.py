@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 import yaml
 from click.testing import CliRunner, Result
-from devkit.workflow import (
+from devkit_agt.features.workflow import (
     LayoutError,
     LayoutSpec,
     WorkflowConfigError,
@@ -16,10 +16,10 @@ from devkit.workflow import (
     parse_definition,
     parse_layout_spec,
 )
-from devkit.workflow.cli import cli
-from devkit.workflow.definition.validation import validate_definition
-from devkit.workflow.errors import AuthoringError, DefinitionError
-from devkit.workflow.unit.envelope import compose_envelope, load_envelopes, render_envelope
+from devkit_agt.features.workflow.cli import cli
+from devkit_agt.features.workflow.models.errors import AuthoringError, DefinitionError
+from devkit_agt.features.workflow.services.definition.validation import validate_definition
+from devkit_agt.features.workflow.services.envelope import compose_envelope, load_envelopes, render_envelope
 from testsupport.workflow import WORKFLOW, write_config, write_unit
 
 PROPOSAL = """---

@@ -7,9 +7,9 @@ actor: AI coding agent
 status: active
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundle/workflows/sdd-proposal.md
-  - packages/devkit-spec/src/devkit_spec/proposals/accept.py
-  - packages/devkit-spec/src/devkit_spec/proposals/feedback.py
-  - packages/devkit-spec/src/devkit_spec/proposals/handoff.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/accept.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/feedback.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py
 created_at: 2026-10-13
 capabilities:
   - CAP-DLV-proposal-incubation

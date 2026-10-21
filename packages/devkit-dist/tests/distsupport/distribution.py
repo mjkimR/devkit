@@ -5,9 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import click
-from devkit.distribution.bundles import load_bundle
-from devkit.distribution.cli import COMMANDS
-from devkit.distribution.installation.discovery import InstalledBundle
+from devkit_dist.features.distribution.cli import COMMANDS
+from devkit_dist.features.distribution.services.bundles import load_bundle
+from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
 
 
 @click.group(name="devkit")

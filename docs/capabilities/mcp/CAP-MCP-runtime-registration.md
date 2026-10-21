@@ -7,9 +7,9 @@ area: mcp
 entrypoints:
   - packages/devkit-mcp/src/devkit_mcp
   - packages/devkit-core/src/devkit_core/base/mcp.py
-  - packages/devkit-dist/src/devkit/core/mcp_context.py
-  - packages/devkit-dist/src/devkit/host/registrations.py
-  - packages/devkit-dist/src/devkit/core/presentation.py
+  - packages/devkit-dist/src/devkit_dist/features/project/repositories/invocation.py
+  - packages/devkit-dist/src/devkit_dist/features/host/usecases/registrations.py
+  - packages/devkit-dist/src/devkit_dist/features/project/services/presentation.py
 created: 2026-10-20
 updated: 2026-10-20
 ---
@@ -18,7 +18,7 @@ updated: 2026-10-20
 
 ## Runtime contract
 
-`devkit-mcp` ships `devkit_mcp`, mounts `devkit mcp`, discovers `devkit.host.services` and owns SDK stdio/form
+`devkit-mcp` ships `devkit_mcp`, mounts `devkit mcp`, discovers `devkit_dist.features.host.services` and owns SDK stdio/form
 adaptation. `devkit_core.base.mcp` supplies dependency-free `McpTool`, `Confirmation` and `ConfirmationReply`.
 Services declare execution as read_only, bounded_write, preflight, interactive or approved_resume; omitted classification is
 interactive regardless of descriptive MCP annotations. Schema validation and duplicate/unloadable service failures
@@ -107,7 +107,7 @@ copy and host-owned display limits are specified in `CAP-INT-mcp-services` and `
 
 ## Shared artifact services
 
-`devkit.shared.mcp` supplies fixed `bounded_write` put/apply-sweep tools and `read_only` get/list/sweep-plan tools.
+`devkit_dist.features.shared.mcp` supplies fixed `bounded_write` put/apply-sweep tools and `read_only` get/list/sweep-plan tools.
 Bounded writes invoke a validated domain API without a business approval form; this classification grants neither
 host permission nor arbitrary filesystem authority. Cloud discovery omits them and invocation rejects forged calls.
 Unknown execution classifications fail closed. Both reads and writes bind configuration to the owning workspace,

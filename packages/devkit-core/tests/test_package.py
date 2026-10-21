@@ -48,8 +48,7 @@ def test_public_foundation_import_does_not_load_application_or_transport_modules
 import sys
 from devkit_core.core import Deadline, Frontmatter, run_git, file_lock
 from devkit_core.base.mcp import McpTool
-assert not any(name == 'devkit.core' or name.startswith('devkit.core.') for name in sys.modules)
-assert not any(name.startswith(('devkit.distribution', 'devkit.rules', 'devkit_mcp')) for name in sys.modules)
+assert not any(name.startswith(('devkit_dist', 'devkit_agt', 'devkit_spec', 'devkit_viewer', 'devkit_mcp')) for name in sys.modules)
 assert not any(name in sys.modules for name in ('click', 'mcp', 'jinja2'))
 """
     subprocess.run([sys.executable, "-c", script], check=True)

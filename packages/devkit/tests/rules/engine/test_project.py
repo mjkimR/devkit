@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from devkit.rules import (
+from devkit_agt.features.rules import (
     Phase,
     RulesConfigError,
     RulesDirError,
@@ -22,8 +22,8 @@ from testsupport.rules import digests, init_repo, write_receipt
 
 BROKEN = "[broken](missing.md)\n"
 
-EXTRA_RULE = """from devkit.rules import RuleContext, Violation
-from devkit.rules.rules import BaseRule
+EXTRA_RULE = """from devkit_agt.features.rules import RuleContext, Violation
+from devkit_agt.features.rules.services.builtins import BaseRule
 
 
 class ExtraRule(BaseRule):
@@ -273,8 +273,8 @@ def test_snapshot_argument_validation(tmp_path: Path) -> None:
         run_project_rules(tmp_path, snapshot=snapshot)
 
 
-TODO_RULE = """from devkit.rules import RuleContext, Violation
-from devkit.rules.rules import BaseRule
+TODO_RULE = """from devkit_agt.features.rules import RuleContext, Violation
+from devkit_agt.features.rules.services.builtins import BaseRule
 
 
 class TodoRule(BaseRule):

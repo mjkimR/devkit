@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 from conftest import Write
 
-from devkit_spec.config import ScopeConfig, read_spec_config
-from devkit_spec.errors import SpecConfigError
+from devkit_spec.base.errors import SpecConfigError
+from devkit_spec.features.policy.services.config import ScopeConfig, read_spec_config
 
 
 def test_scope_defaults(workspace: Path) -> None:

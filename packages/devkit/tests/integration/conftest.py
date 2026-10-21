@@ -4,9 +4,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import devkit_agt.features.integration.services.providers as providers
 import pytest
-from devkit.integration import Evidence, Readiness, providers
-from devkit.worktree import locate, start
+from devkit_agt.features.integration import Evidence, Readiness
+from devkit_agt.features.worktree import locate, start
 from testsupport.rules import git, init_repo, write
 
 

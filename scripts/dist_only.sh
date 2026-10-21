@@ -20,14 +20,14 @@ import importlib.util
 import sys
 from importlib.metadata import PackageNotFoundError, version
 
-leaked = [name for name in ("devkit.rules", "devkit.workflow", "devkit.gate", "devkit.compact") if importlib.util.find_spec(name)]
+leaked = ["devkit_agt"] if importlib.util.find_spec("devkit_agt") else []
 try:
     version("devkit-agt")
 except PackageNotFoundError:
     pass
 else:
     leaked.append("the devkit-agt distribution")
-if leaked or importlib.util.find_spec("devkit.distribution") is None:
+if leaked or importlib.util.find_spec("devkit_dist.features.distribution") is None:
     sys.exit(f"error: the dist-only environment is not standalone: {', '.join(leaked) or 'devkit-dist is missing'}")
 PY
 

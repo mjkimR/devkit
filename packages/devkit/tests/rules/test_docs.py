@@ -39,8 +39,8 @@ def test_rule_authoring_example_package_and_registration_run(tmp_path: Path, mon
     result = namespace["result"]
     assert [(v.rule_id, v.file) for v in result.violations] == [("RULE-doc-heading", "docs/untitled.md")]
 
-    from devkit.rules import run_project_rules
-    from devkit.rules.rules import guide_path
+    from devkit_agt.features.rules import run_project_rules
+    from devkit_agt.features.rules.services.builtins import guide_path
 
     run = run_project_rules(tmp_path, rules_dir=tmp_path / "rules")
     assert run.errors == []
@@ -60,7 +60,7 @@ def test_reference_settings_example_runs(tmp_path: Path) -> None:
     (rules / "banned_words").mkdir(parents=True)
     (source,) = _blocks(REFERENCE, "class BannedWordsRule(BaseRule)")
     (rules / "banned_words/rule.py").write_text(source)
-    from devkit.rules import run_project_rules
+    from devkit_agt.features.rules import run_project_rules
 
     run = run_project_rules(workspace, rules_dir=rules)
     assert run.errors == []

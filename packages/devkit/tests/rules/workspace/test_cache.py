@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 from devkit.advisory import ActionMode
-from devkit.rules import PinnedWriteError, RuleContext, WorkspaceCache
-from devkit.rules.workspace.snapshot import Snapshot
+from devkit_agt.features.rules import PinnedWriteError, RuleContext, WorkspaceCache
+from devkit_agt.features.rules.repositories.workspace.snapshot import Snapshot
 from devkit_core.core import FrontmatterError, UnsafePathError
 from testsupport.rules import init_repo, write
 

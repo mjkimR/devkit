@@ -9,11 +9,11 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import devkit_agt.features.worktree.usecases.stale as stale_module
 import pytest
 from click.testing import CliRunner
 from devkit.advisory import ActionMode
-from devkit.worktree import locate, stale_branches
-from devkit.worktree import stale as stale_module
+from devkit_agt.features.worktree import locate, stale_branches
 from testsupport.cli import cli
 from testsupport.rules import git, init_repo, write
 

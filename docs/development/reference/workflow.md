@@ -1,11 +1,11 @@
-# devkit.workflow
+# devkit_agt.features.workflow
 
 A data-driven delivery workflow engine for coding agents. A workflow is a Markdown file whose frontmatter declares stages with exit checks and approval gates; `devkit workflow` checks them against the files of a work unit and tells the agent which stage it is in, what is unmet and which skill to open next. The CLI is a thin layer over the library ([Library](#library)). Requires Python 3.12 or later.
 
 ## Structure
 
 ```text
-src/devkit/workflow/
+src/devkit_agt/features/workflow/
 ├── workspace.py         # Workspace: cached sources, unit resolution, bind_unit, evaluate_unit, describe
 ├── answers.py           # record_answer, validate_answer, return_to
 ├── handoff.py           # candidate evaluation, plan_handoff, apply_handoff
@@ -34,12 +34,12 @@ src/devkit/workflow/
 │   ├── requests.py      # Request, Option, Target and how requests are built
 │   ├── primitives.py    # evaluators of the disk primitives
 │   ├── git.py           # merge-base ancestry for revision checks
-│   └── lint.py          # the lint-clean binding to devkit.rules
+│   └── lint.py          # the lint-clean binding to devkit_agt.features.rules
 ├── integration.py       # finish_guard: the devkit.finish_guard extension refusing a held branch
 └── cli/                 # app.py (group, options, error boundary), units.py, run.py, definitions.py, envelope.py
 ```
 
-Everything public is exported from `devkit.workflow`; import from there
+Everything public is exported from `devkit_agt.features.workflow`; import from there
 rather than from the subpackages.
 
 ## CLI usage
@@ -112,7 +112,7 @@ definitions and roles once for every call. Every
 failure is an `AdvisoryError` with a stable `code`, one class per code: a
 `WorkflowError` subclass (`WorkflowConfigError`, `DefinitionError`,
 `LayoutError`, `CheckError`, `HandoffChoiceRequiredError`, ...),
-or a `devkit.core` or `devkit.rules` error passed through unchanged
+or a foundation, project or `devkit_agt.features.rules` error passed through unchanged
 (`RECEIPT_INVALID`, `GIT_FAILED`, the error that stopped `lint-clean`). Branch
 on `exc.code` or the class, never on the message. Problems the library
 collects rather than raises are instances of the same classes:
@@ -126,7 +126,7 @@ form the CLI prints under `errors`.
 ```python
 from pathlib import Path
 
-from devkit.workflow import Workspace
+from devkit_agt.features.workflow import Workspace
 
 ws = Workspace(Path("."))  # Workspace() uses the project containing the current directory
 unit = ws.resolve_unit(".devkit/transient/work/login")

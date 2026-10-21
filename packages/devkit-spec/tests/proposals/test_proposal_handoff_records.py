@@ -7,13 +7,13 @@ from pathlib import Path
 import pytest
 import yaml
 from conftest import Write
-from devkit.workflow import Workspace, load_decisions
+from devkit_agt.features.workflow import Workspace, load_decisions
 from devkit_core.core import run_git
 from proposals.support import CHARACTERIZE, GATED, INCUBATED, MONTH, STAMP, TODAY, accept, spec_dir, write_workflow
 
-from devkit_spec.errors import ProposalAcceptanceUnrecordedError
-from devkit_spec.proposals import CarriedGate, create_padr, create_proposal, handoff_proposal
-from devkit_spec.proposals import handoff as handoff_module
+from devkit_spec.base.errors import ProposalAcceptanceUnrecordedError
+from devkit_spec.features.proposals import CarriedGate, create_padr, create_proposal, handoff_proposal
+from devkit_spec.features.proposals.usecases import handoff as handoff_module
 
 UNIT = "docs/proposals/PROP-{slug}"
 

@@ -10,14 +10,14 @@ from typing import Any
 import pytest
 import yaml
 from click.testing import CliRunner, Result
-from devkit.cli import cli as devkit_cli
-from devkit.workflow import Workspace, load_decisions, record_answer
+from devkit_agt.features.workflow import Workspace, load_decisions, record_answer
+from devkit_dist.cli import cli as devkit_cli
 from proposals.support import TODAY, write_workflow
 from scope.support import git, write
 
 import devkit_spec
-from devkit_spec.proposals import accept as accept_module
-from devkit_spec.proposals import accept_proposal, create_proposal
+from devkit_spec.features.proposals import accept_proposal, create_proposal
+from devkit_spec.features.proposals.usecases import accept as accept_module
 
 PROPOSAL_DEFINITION = (Path(devkit_spec.__file__).parent / "bundle" / "workflows" / "sdd-proposal.md").read_text(
     encoding="utf-8"

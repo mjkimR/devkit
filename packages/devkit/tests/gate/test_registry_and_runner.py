@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 from devkit.advisory import ActionMode, AdvisoryError, ExitCode, Level
-from devkit.compact import CommandInterrupted, run_command
-from devkit.gate import (
+from devkit_agt.features.compact import CommandInterrupted, run_command
+from devkit_agt.features.gate import (
     BaseGate,
     GateConfigError,
     GateContext,
@@ -149,7 +149,7 @@ def test_a_gate_file_loads_atomically(tmp_path: Path) -> None:
 
 def test_abstract_shared_bases_are_not_gates(tmp_path: Path) -> None:
     source = (
-        "from devkit.gate import BaseGate, Stage\n\n\n"
+        "from devkit_agt.features.gate import BaseGate, Stage\n\n\n"
         "class Shared(BaseGate):\n"
         "    def __init__(self, gate_id: str) -> None:\n"
         "        super().__init__(id=gate_id, description='', stage=Stage.PRE_COMMIT)\n\n\n"
@@ -168,7 +168,7 @@ def test_gates_with_invalid_metadata_are_rejected(tmp_path: Path) -> None:
     deploy_gate(tmp_path, gate_source().replace("stage=Stage.PRE_COMMIT", 'stage="pre-commit"'))
     registry = project_registry(tmp_path)
     assert registry.get("team-block") is None
-    assert any("stage must be a devkit.gate.Stage" in e.message for e in registry.errors)
+    assert any("stage must be a devkit_agt.features.gate.Stage" in e.message for e in registry.errors)
 
 
 def test_unreadable_receipt_is_a_registry_error(tmp_path: Path) -> None:

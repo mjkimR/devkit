@@ -5,13 +5,13 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.cli import cli as devkit_cli
 from devkit_core.base.errors import ArgumentError
 from devkit_core.core.frontmatter import parse
+from devkit_dist.cli import cli as devkit_cli
 from proposals.support import MONTH, STAMP, TODAY, accept, spec_dir
 
-from devkit_spec.errors import ProposalInvalidError
-from devkit_spec.proposals import create_padr, create_proposal, create_spec, handoff_proposal
+from devkit_spec.base.errors import ProposalInvalidError
+from devkit_spec.features.proposals import create_padr, create_proposal, create_spec, handoff_proposal
 
 SUMMARY = "Defines how login sessions expire: sessions end after 30 minutes."
 PLACEHOLDER = "# summary: <one or two English sentences: what this proposal changes and why>"

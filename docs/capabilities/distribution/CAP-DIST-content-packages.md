@@ -5,8 +5,8 @@ summary: "Content wheel packaging, bundle distribution and dependency boundaries
 area: distribution
 status: active
 entrypoints:
-  - packages/devkit-dist/src/devkit/distribution/installation/discovery.py
-  - packages/devkit/src/devkit/harness_guide/
+  - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/discovery.py
+  - packages/devkit/src/devkit_agt/harness_guide/
   - packages/devkit-catalog/src/devkit_catalog/response_style/
   - packages/devkit-catalog/src/devkit_catalog/maintenance/
 created_at: 2026-10-17

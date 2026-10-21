@@ -1,13 +1,14 @@
-"""``devkit.worktree.merging`` and ``finish --merge``: the result commit built outside the base checkout."""
+"""``devkit_agt.features.worktree.services.merging`` and ``finish --merge``: the result commit built outside the base checkout."""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
+import devkit_agt.features.worktree.services.merging as merging
 import pytest
 from click.testing import CliRunner
-from devkit.worktree import (
+from devkit_agt.features.worktree import (
     CommitFailedError,
     GitUnsupportedError,
     MergeConflictError,
@@ -17,7 +18,6 @@ from devkit.worktree import (
     finish,
     locate,
     merge_method,
-    merging,
     plan_finish,
     read_worktree_config,
     start,

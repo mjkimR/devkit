@@ -5,9 +5,9 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from devkit.shared.local import LocalAdapter, discover
+from devkit_dist.features.shared.repositories.local import LocalAdapter, discover
 
-from devkit_spec import proposal_report as reports
+from devkit_spec.features.proposals.usecases import report as reports
 
 
 def git(root: Path, *args: str) -> str:
@@ -27,7 +27,7 @@ def repo(tmp_path: Path) -> tuple[Path, str]:
     )
     (unit / "decisions/PADR-choice.md").write_text("---\nid: PADR-choice\n---\nChoice\n")
     (unit / "envelopes/review-01.yaml").write_text("kind: review\nactivity_effort: medium\n")
-    (tmp_path / ".gitignore").write_text(".devkit/shared/\n")
+    (tmp_path / ".gitignore").write_text(".devkit_dist/features/shared/\n")
     git(tmp_path, "add", ".")
     git(tmp_path, "commit", "-m", "fixture")
     return tmp_path, git(tmp_path, "rev-parse", "HEAD")
@@ -112,9 +112,9 @@ def test_cli_and_mcp_publish_same_artifact(repo):
     import json
 
     from click.testing import CliRunner
-    from devkit.cli import cli
+    from devkit_dist.cli import cli
 
-    from devkit_spec.proposal_report_mcp import create_tools
+    from devkit_spec.features.proposals.mcp.report import create_tools
 
     root, sha = repo
     body = briefing(root, sha)

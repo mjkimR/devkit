@@ -15,22 +15,22 @@ from pathlib import Path
 import click
 import pytest
 from click.testing import CliRunner
-from devkit import cli as root
-from devkit.distribution.installation.config import update_config
-from devkit.distribution.installation.status import get_project_status
-from devkit.distribution.installation.sync import sync_project
+from devkit_dist import cli as root
+from devkit_dist.features.distribution.services.installation.config import update_config
+from devkit_dist.features.distribution.usecases.status import get_project_status
+from devkit_dist.features.distribution.usecases.sync import sync_project
 from distsupport.distribution import harness_assets_bundle
-from testsupport.layering import ALLOWED, PYPROJECT
+from testsupport.layering import LAZY_IMPORT_AREAS, PYPROJECT
 
 _PROBE = """
 import contextlib, io, json, sys
-from devkit.cli import cli
+from devkit_dist.cli import cli
 with contextlib.redirect_stdout(io.StringIO()):
     try:
         cli.main(sys.argv[1:], prog_name="devkit", standalone_mode=False)
     except SystemExit:
         pass
-print(json.dumps(sorted({name.split(".")[1] for name in sys.modules if name.startswith("devkit.")})))
+print(json.dumps(sorted({name.split(".")[2] for name in sys.modules if name.startswith("devkit_agt.features.")})))
 """
 
 MOUNTED: dict[str, str] = tomllib.loads(PYPROJECT.read_text("utf-8"))["project"]["entry-points"]["devkit.commands"]
@@ -45,13 +45,13 @@ def _loaded_areas(*args: str) -> set[str]:
 
 def test_every_harness_command_keeps_its_name_and_target() -> None:
     assert MOUNTED == {
-        "gate": "devkit.gate.cli:cli",
-        "generated": "devkit.generated.cli:cli",
-        "integration": "devkit.integration.cli:cli",
-        "rules": "devkit.rules.cli:cli",
-        "run": "devkit.compact.cli:run_cmd",
-        "workflow": "devkit.workflow.cli:cli",
-        "worktree": "devkit.worktree.cli:cli",
+        "gate": "devkit_agt.features.gate.cli:cli",
+        "generated": "devkit_agt.features.generated.cli:cli",
+        "integration": "devkit_agt.features.integration.cli:cli",
+        "rules": "devkit_agt.features.rules.cli:cli",
+        "run": "devkit_agt.features.compact.cli:run_cmd",
+        "workflow": "devkit_agt.features.workflow.cli:cli",
+        "worktree": "devkit_agt.features.worktree.cli:cli",
     }
     declared = {
         entry.name
@@ -71,9 +71,9 @@ def test_a_mounted_command_resolves_to_its_click_command(name: str) -> None:
 
 @pytest.mark.parametrize("name", sorted(MOUNTED))
 def test_a_mounted_command_imports_only_its_area_and_lower_layers(name: str) -> None:
-    area = MOUNTED[name].split(".")[1]
+    area = MOUNTED[name].split(".")[2]
     loaded = _loaded_areas(name, "--help")
-    assert area in loaded and loaded <= {area, *ALLOWED[area]}
+    assert area in loaded and loaded <= {area, *LAZY_IMPORT_AREAS[area]}
 
 
 def test_devkit_agt_ships_no_console_script() -> None:

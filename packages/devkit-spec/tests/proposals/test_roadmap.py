@@ -6,13 +6,13 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.cli import cli
 from devkit_core.core import ArgumentError
 from devkit_core.core.frontmatter import parse
+from devkit_dist.cli import cli
 from proposals.support import TODAY, accept
 
-from devkit_spec.errors import ProposalInPlanningError
-from devkit_spec.proposals import create_proposal, create_spec, handoff_proposal
+from devkit_spec.base.errors import ProposalInPlanningError
+from devkit_spec.features.proposals import create_proposal, create_spec, handoff_proposal
 
 
 def milestone(root: Path) -> None:

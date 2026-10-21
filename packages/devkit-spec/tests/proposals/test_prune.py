@@ -5,9 +5,9 @@ from pathlib import Path
 
 from click.testing import CliRunner
 from conftest import Write
-from devkit.cli import cli as devkit_cli
+from devkit_dist.cli import cli as devkit_cli
 
-from devkit_spec.proposals import prune_proposals
+from devkit_spec.features.proposals import prune_proposals
 
 
 def test_only_empty_trees_are_removed(workspace: Path, write: Write) -> None:

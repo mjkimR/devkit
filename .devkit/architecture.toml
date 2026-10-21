@@ -1,0 +1,155 @@
+# Single declaration for repository-owned Python layout and dependency direction.
+schema = 1
+
+[[packages]]
+namespace = "devkit.advisory"
+root = "packages/devkit-advisory/src/devkit/advisory"
+kind = "advisory"
+root_modules = ["advisory", "types", "error"]
+
+[[packages]]
+namespace = "devkit_core"
+root = "packages/devkit-core/src/devkit_core"
+kind = "foundation"
+root_modules = ["base", "core"]
+dependencies = ["devkit.advisory"]
+
+[[packages]]
+namespace = "devkit_dist"
+root = "packages/devkit-dist/src/devkit_dist"
+kind = "features"
+features = ["project", "distribution", "host", "shared", "search"]
+root_modules = ["cli", "__main__", "bootstrap", "adapters"]
+data_roots = ["bundles"]
+dependencies = ["devkit_core", "devkit.advisory"]
+
+public_modules = [
+    "devkit_dist.features.shared.models.api",
+    "devkit_dist.features.shared.models.errors",
+    "devkit_dist.features.shared.repositories.local",
+    "devkit_dist.features.host.models.errors",
+    "devkit_dist.features.distribution.services.installation.config",
+    "devkit_dist.features.distribution.services.installation.transaction",
+    "devkit_dist.features.project.repositories.invocation",
+    "devkit_dist.features.project.usecases.invocation",
+    "devkit_dist.features.project.services.presentation",
+    "devkit_dist.features.project.usecases.workspace",
+    "devkit_dist.features.project.usecases.configuration",
+    "devkit_dist.features.project.models.receipt",
+    "devkit_dist.features.project.models.invocation",
+    "devkit_dist.features.project.models.templates",
+    "devkit_dist.features.project.repositories.project",
+    "devkit_dist.features.project.repositories.receipt",
+    "devkit_dist.features.project.repositories.local_config",
+    "devkit_dist.features.project.services.config_template",
+    "devkit_dist.features.host.usecases",
+    "devkit_dist.features.host.usecases.registrations",
+]
+
+[[packages]]
+namespace = "devkit_agt"
+root = "packages/devkit/src/devkit_agt"
+kind = "features"
+features = ["rules", "workflow", "gate", "worktree", "integration", "generated", "compact"]
+root_modules = ["bootstrap"]
+data_roots = ["authoring_guide", "harness_guide"]
+embedded_test_roots = ["features/rules/services/builtins"]
+dependencies = ["devkit_dist", "devkit_core", "devkit.advisory"]
+
+public_modules = [
+    "devkit_agt.features.rules.services.builtins",
+    "devkit_agt.features.worktree.usecases.lifecycle",
+    "devkit_agt.features.integration.models.contracts",
+    "devkit_agt.features.integration.usecases.service",
+    "devkit_agt.features.rules.repositories.workspace.markdown",
+    "devkit_agt.features.workflow.services.envelope",
+    "devkit_agt.features.workflow.repositories.git",
+
+    "devkit_agt.features.rules.models.settings",
+    "devkit_agt.features.worktree.repositories.pull_request",
+    "devkit_agt.features.worktree.models.lifecycle",
+    "devkit_agt.features.worktree.models.planning",
+    "devkit_agt.features.worktree.models.pull_request",
+]
+
+[[packages]]
+namespace = "devkit_spec"
+root = "packages/devkit-spec/src/devkit_spec"
+kind = "features"
+features = ["documents", "proposals", "scope", "entrypoints", "worker", "policy", "delivery", "governance"]
+root_modules = ["cli", "bootstrap"]
+data_roots = ["bundle"]
+dependencies = ["devkit_agt", "devkit_dist", "devkit_core", "devkit.advisory"]
+
+public_modules = [
+    "devkit_spec.features.delivery.services.branches",
+    "devkit_spec.features.delivery.usecases.attach",
+    "devkit_spec.features.documents.models.ids",
+    "devkit_spec.features.documents.models.markdown",
+    "devkit_spec.features.documents.models.model",
+    "devkit_spec.features.documents.repositories.index",
+    "devkit_spec.features.documents.services.dependencies",
+    "devkit_spec.features.documents.services.namespaces",
+    "devkit_spec.features.documents.services.rewrite",
+    "devkit_spec.features.entrypoints.repositories.bundle",
+    "devkit_spec.features.entrypoints.services.paths",
+    "devkit_spec.features.governance.usecases.document_summary",
+    "devkit_spec.features.policy.services.config",
+    "devkit_spec.features.proposals.usecases.prune",
+    "devkit_spec.features.proposals.usecases.scaffold",
+    "devkit_spec.features.proposals.usecases.specs",
+    "devkit_spec.features.scope.models.model",
+    "devkit_spec.features.scope.cli.output",
+    "devkit_spec.features.scope.services.location",
+    "devkit_spec.features.scope.usecases.flow",
+]
+
+[[packages]]
+namespace = "devkit_mcp"
+root = "packages/devkit-mcp/src/devkit_mcp"
+kind = "features"
+features = ["runtime"]
+root_modules = ["bootstrap"]
+dependencies = ["devkit_dist", "devkit_core", "devkit.advisory"]
+
+[[packages]]
+namespace = "devkit_viewer"
+root = "packages/devkit-viewer/src/devkit_viewer"
+kind = "features"
+features = ["browse"]
+root_modules = ["bootstrap"]
+data_roots = ["static"]
+dependencies = ["devkit_dist", "devkit_core", "devkit.advisory"]
+
+[[packages]]
+namespace = "devkit_dev"
+root = "tools/devkit-dev/src/devkit_dev"
+kind = "content"
+data_roots = ["bundle"]
+
+[[packages]]
+namespace = "devkit_starter"
+root = "packages/devkit-starter/src/devkit_starter"
+kind = "content"
+data_roots = ["bundle"]
+
+[[packages]]
+namespace = "devkit_catalog"
+root = "packages/devkit-catalog/src/devkit_catalog"
+kind = "content"
+data_roots = ["response_style", "host_observer", "maintenance"]
+
+[[import_exceptions]]
+source = "devkit_agt.features.rules.models.contracts"
+target = "devkit_agt.features.rules.repositories.workspace.cache"
+reason = "RuleContext constructs its default WorkspaceCache; split the context/cache factory in a later contract change."
+
+[[import_exceptions]]
+source = "devkit_mcp.features.runtime.cli"
+target = "devkit_mcp.features.runtime.mcp.server"
+reason = "Transport bootstrap starts the MCP server; it does not execute domain operations."
+
+[[import_exceptions]]
+source = "devkit_viewer.features.browse.cli"
+target = "devkit_viewer.features.browse.http.server"
+reason = "Transport bootstrap starts the HTTP server; domain queries remain in usecases."

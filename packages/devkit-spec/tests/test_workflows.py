@@ -23,7 +23,12 @@ AGENT_FILES = (".claude/agents/{role}.md", ".codex/agents/{role}.toml", ".agents
 def _devkit(*args: str) -> subprocess.CompletedProcess[str]:
     env = {key: value for key, value in os.environ.items() if not key.startswith("DEVKIT_")}
     return subprocess.run(
-        [sys.executable, "-m", "devkit", *args], capture_output=True, text=True, encoding="utf-8", env=env, check=False
+        [sys.executable, "-m", "devkit_dist", *args],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        env=env,
+        check=False,
     )
 
 

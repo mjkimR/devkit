@@ -10,8 +10,7 @@ import pytest
 from devkit.advisory import ActionMode, AdvisoryError, Level
 from scope.support import SPEC, git, make_repo, write
 
-from devkit_spec.config import ScopeConfig
-from devkit_spec.errors import (
+from devkit_spec.base.errors import (
     ScopeNotAWorktreeError,
     ScopeRecordMissingError,
     ScopeSharedPathError,
@@ -21,7 +20,8 @@ from devkit_spec.errors import (
     ScopeTokenMismatchError,
     ScopeTokenMissingError,
 )
-from devkit_spec.scope import (
+from devkit_spec.features.policy.services.config import ScopeConfig
+from devkit_spec.features.scope import (
     AckStatus,
     Deadline,
     FlockLocker,
@@ -33,7 +33,6 @@ from devkit_spec.scope import (
     Stage,
     auto_register,
     default_namespace,
-    flow,
     locate,
     open_session,
     own,
@@ -42,8 +41,9 @@ from devkit_spec.scope import (
     slug_from_spec,
     update,
 )
-from devkit_spec.scope import location as location_module
-from devkit_spec.scope.location import SHARED_DIR, TOKEN_FILE, load_token, save_token
+from devkit_spec.features.scope.services import location as location_module
+from devkit_spec.features.scope.services.location import SHARED_DIR, TOKEN_FILE, load_token, save_token
+from devkit_spec.features.scope.usecases import flow
 
 
 @pytest.fixture

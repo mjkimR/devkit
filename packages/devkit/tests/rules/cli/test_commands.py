@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.rules.cli import cli
+from devkit_agt.features.rules.cli import cli
 from testsupport.rules import digests, write_receipt
 
 
@@ -39,7 +39,7 @@ def test_cli_rules_check_json_output(tmp_path: Path) -> None:
     assert len(data["violations"]) >= 1
     assert data["violations"][0]["rule_id"] == "RULE-markdown-link"
     # The guide the [VIOLATION: ...] line cites travels in JSON too.
-    assert data["violations"][0]["guide"].endswith("rules/rules/markdown_link/guide.md")
+    assert data["violations"][0]["guide"].endswith("rules/services/builtins/markdown_link/guide.md")
     text = runner.invoke(cli, ["check", "--workspace-root", str(tmp_path)]).stdout
     assert f"guide={data['violations'][0]['guide']}]" in text
 
@@ -186,8 +186,8 @@ def test_cli_override_for_unknown_rule_fails(tmp_path: Path) -> None:
 def test_cli_promotion_reported_for_custom_hygiene_rule(tmp_path: Path) -> None:
     rules = tmp_path / "rules"
     (rules / "todo").mkdir(parents=True)
-    (rules / "todo/todo.py").write_text("""from devkit.rules import Phase, RuleContext, Severity, Violation
-from devkit.rules.rules import BaseRule
+    (rules / "todo/todo.py").write_text("""from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
+from devkit_agt.features.rules.services.builtins import BaseRule
 
 
 class NoTodoRule(BaseRule):
@@ -331,8 +331,8 @@ def test_cli_explain_text_and_json(tmp_path: Path) -> None:
 def test_cli_loads_rules_recorded_in_installation_receipt(tmp_path: Path) -> None:
     rules_dir = tmp_path / ".devkit/managed/team/rules"
     rules_dir.mkdir(parents=True)
-    (rules_dir / "no_todo.py").write_text("""from devkit.rules import RuleContext, Violation
-from devkit.rules.rules import BaseRule
+    (rules_dir / "no_todo.py").write_text("""from devkit_agt.features.rules import RuleContext, Violation
+from devkit_agt.features.rules.services.builtins import BaseRule
 
 
 class NoTodoRule(BaseRule):
@@ -401,7 +401,7 @@ def test_cli_staged_gate_sees_only_the_index(tmp_path: Path) -> None:
 
 def test_cli_staged_gate_runs_safety_rules_and_reads_snapshot_config(tmp_path: Path) -> None:
     root = _repo(tmp_path)
-    (root / "secrets.txt").write_text("-----BEGIN RSA PRIVATE KEY-----\n")
+    (root / "secrets.txt").write_text("-----BEGIN " + "RSA PRIVATE KEY-----\n")
     (root / "app.db").write_bytes(b"x")
     _git(root, "add", "-f", "secrets.txt", "app.db")
     result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json"])
@@ -455,8 +455,8 @@ def test_cli_snapshot_flag_validation(tmp_path: Path) -> None:
     assert "Usage:" not in outside.output  # an evaluation failure, not a usage error
 
 
-NO_TODO_RULE = """from devkit.rules import RuleContext, Violation
-from devkit.rules.rules import BaseRule
+NO_TODO_RULE = """from devkit_agt.features.rules import RuleContext, Violation
+from devkit_agt.features.rules.services.builtins import BaseRule
 
 
 class NoTodoRule(BaseRule):
@@ -661,7 +661,7 @@ def test_cli_exit_codes_distinguish_violations_from_failures(tmp_path: Path) -> 
     assert runner.invoke(cli, ["check", "-w", str(tmp_path)]).exit_code == 1  # unresolved violations
     rules = tmp_path / "rules"
     (rules / "boom").mkdir(parents=True)
-    (rules / "boom/boom.py").write_text("""from devkit.rules.rules import BaseRule
+    (rules / "boom/boom.py").write_text("""from devkit_agt.features.rules.services.builtins import BaseRule
 
 
 class Boom(BaseRule):
@@ -893,7 +893,7 @@ def test_unexpected_errors_exit_2_as_advisories(tmp_path: Path, monkeypatch: pyt
     def explode(*_args: object, **_kwargs: object) -> None:
         raise RuntimeError("disk on fire")
 
-    monkeypatch.setattr("devkit.rules.cli.commands.run_project_rules", explode)
+    monkeypatch.setattr("devkit_agt.features.rules.cli.commands.run_project_rules", explode)
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path)])
     assert result.exit_code == 2
     assert (
@@ -907,8 +907,8 @@ def test_check_refuses_a_hand_edited_managed_rule(tmp_path: Path) -> None:
 
     rel = ".devkit/managed/team/rules/r.py"
     source = (
-        "from devkit.rules import RuleContext, Violation\n"
-        "from devkit.rules.rules import BaseRule\n\n\n"
+        "from devkit_agt.features.rules import RuleContext, Violation\n"
+        "from devkit_agt.features.rules.services.builtins import BaseRule\n\n\n"
         "class R(BaseRule):\n"
         "    def __init__(self) -> None:\n"
         "        super().__init__(id='RULE-team-r', name='r', description='r')\n\n"

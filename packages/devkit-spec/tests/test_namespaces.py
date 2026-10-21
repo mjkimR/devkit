@@ -6,13 +6,20 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner, Result
 from conftest import Write
-from devkit.cli import cli as devkit_cli
 from devkit_core.base.errors import ArgumentError
+from devkit_dist.cli import cli as devkit_cli
 
-from devkit_spec.config import Namespace, read_spec_config
-from devkit_spec.documents import DocumentIndex
-from devkit_spec.errors import SpecConfigError
-from devkit_spec.namespaces import Selection, detect, docs_roots, living_path, namespace_resolver, select
+from devkit_spec.base.errors import SpecConfigError
+from devkit_spec.features.documents import DocumentIndex
+from devkit_spec.features.documents.services.namespaces import (
+    Selection,
+    detect,
+    docs_roots,
+    living_path,
+    namespace_resolver,
+    select,
+)
+from devkit_spec.features.policy.services.config import Namespace, read_spec_config
 
 API = Namespace("api", "services/api")
 WEB = Namespace("web", "apps/web")

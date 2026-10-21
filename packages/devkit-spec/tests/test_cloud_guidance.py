@@ -6,12 +6,12 @@ import re
 from pathlib import Path, PurePosixPath
 
 import pytest
-from devkit.distribution.bundles.common import AGENT_NAMES
-from devkit.distribution.installation.config import update_config
-from devkit.distribution.installation.context import get_context
-from devkit.distribution.installation.discovery import discover_bundles
-from devkit.distribution.installation.inventory import desired_inventory
-from devkit.distribution.installation.sync import sync_project
+from devkit_dist.features.distribution.services.bundles.common import AGENT_NAMES
+from devkit_dist.features.distribution.services.installation.config import update_config
+from devkit_dist.features.distribution.services.installation.discovery import discover_bundles
+from devkit_dist.features.distribution.services.installation.inventory import desired_inventory
+from devkit_dist.features.distribution.usecases.context import get_context
+from devkit_dist.features.distribution.usecases.sync import sync_project
 
 MAINTAINED = {"advisory", "authoring", "devkit", "harness", "response-style", "spec"}
 OPERATIONAL = re.compile(

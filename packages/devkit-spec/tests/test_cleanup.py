@@ -6,18 +6,24 @@ from pathlib import Path
 
 from click.testing import CliRunner
 from devkit.advisory import Level
-from devkit.cli import cli as devkit_cli
-from devkit.integration import (
+from devkit_agt.features.integration import (
     CleanupContractError,
     CleanupTarget,
     IntegrationContext,
     StaleRequestError,
     Task,
 )
-from devkit.worktree import FinishPlan, FinishResult
+from devkit_agt.features.worktree import FinishPlan, FinishResult
+from devkit_dist.cli import cli as devkit_cli
 from scope.support import SPEC, git, make_repo, write
 
-from devkit_spec.cleanup import (
+from devkit_spec.base.errors import (
+    PostFinishCleanupNotice,
+    ProposalCleanupWarning,
+    ScopeTimeoutError,
+    SpecConfigError,
+)
+from devkit_spec.features.delivery.usecases.cleanup import (
     KIND_PROPOSAL,
     KIND_SCOPE,
     after_finish,
@@ -26,14 +32,8 @@ from devkit_spec.cleanup import (
     integration_run,
     integration_validate,
 )
-from devkit_spec.config import ScopeConfig
-from devkit_spec.errors import (
-    PostFinishCleanupNotice,
-    ProposalCleanupWarning,
-    ScopeTimeoutError,
-    SpecConfigError,
-)
-from devkit_spec.scope import Deadline, FlockLocker, locate
+from devkit_spec.features.policy.services.config import ScopeConfig
+from devkit_spec.features.scope import Deadline, FlockLocker, locate
 
 
 def _scope(root: Path, *args: str) -> str:
@@ -302,7 +302,7 @@ def test_scoped_cleanup_base_checkout_releases_own_record_and_rejects_bad_target
 def test_post_git_means_the_base_contains_the_result(tmp_path: Path) -> None:
     from dataclasses import replace
 
-    from devkit_spec.cleanup import _is_post_git
+    from devkit_spec.features.delivery.usecases.cleanup import _is_post_git
 
     repo = make_repo(tmp_path / "repo")
     finished = tmp_path / "wt-s"

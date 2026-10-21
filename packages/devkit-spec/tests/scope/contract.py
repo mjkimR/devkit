@@ -10,7 +10,7 @@ from collections.abc import Callable
 import pytest
 from scope.support import record
 
-from devkit_spec.errors import (
+from devkit_spec.base.errors import (
     ScopeRecordMissingError,
     ScopeStaleRevisionError,
     ScopeTaskExistsError,
@@ -18,7 +18,7 @@ from devkit_spec.errors import (
     ScopeTokenMismatchError,
     ScopeUnsupportedError,
 )
-from devkit_spec.scope import Deadline, Granularity, Registry, ScopePath, Source, Stage, token_hash
+from devkit_spec.features.scope import Deadline, Granularity, Registry, ScopePath, Source, Stage, token_hash
 
 
 def _deadline() -> Deadline:

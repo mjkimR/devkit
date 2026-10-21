@@ -5,7 +5,7 @@ summary: "Projection matrix and role contracts for Claude Code, Codex, and Antig
 area: distribution
 status: active
 entrypoints:
-  - packages/devkit-dist/src/devkit/distribution/installation/inventory.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/inventory.py
 created_at: 2026-10-17
 ---
 

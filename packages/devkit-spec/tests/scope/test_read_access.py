@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 from scope.support import record, registry
 
-from devkit_spec.errors import ScopeSharedPathError, ScopeTimeoutError
-from devkit_spec.scope import Deadline, Event, FlockLocker
-from devkit_spec.scope.localfs import ReadFlockLocker
+from devkit_spec.base.errors import ScopeSharedPathError, ScopeTimeoutError
+from devkit_spec.features.scope import Deadline, Event, FlockLocker
+from devkit_spec.features.scope.repositories.localfs import ReadFlockLocker
 
 
 @pytest.mark.parametrize("operation", ["query", "history"])
@@ -41,7 +41,7 @@ def test_unsafe_lock_rejected_without_blocking(tmp_path: Path, kind: str, operat
         lock.symlink_to(tmp_path / "target")
     # A separate process with a timeout catches a blocking FIFO open without hanging pytest.
     code = (
-        "from pathlib import Path; from devkit_spec.scope import LocalRegistry, Deadline; "
+        "from pathlib import Path; from devkit_spec.features.scope import LocalRegistry, Deadline; "
         f"LocalRegistry(Path({str(tmp_path)!r})).{operation}('ns', Deadline(.2))"
     )
     result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=3)
@@ -132,7 +132,10 @@ def test_shared_reader_excludes_writer_process(tmp_path: Path, operation: str) -
     other_reader()
     code = f"""
 from pathlib import Path
-from devkit_spec.scope import LocalRegistry, Deadline, Record, Event
+from devkit_spec.features.scope import LocalRegistry
+from devkit_spec.features.scope import Deadline
+from devkit_spec.features.scope import Record
+from devkit_spec.features.scope import Event
 fs = LocalRegistry(Path({str(tmp_path)!r}))
 record = Record(namespace='ns', task_id='b', worktree='/wt/b')
 print('ready', flush=True)
@@ -178,7 +181,7 @@ def test_read_lock_released_after_read_failure(tmp_path: Path, monkeypatch: pyte
 def test_unreadable_lock_fails_and_unsupported_is_preserved(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, operation: str
 ) -> None:
-    from devkit_spec.errors import ScopeLockUnsupportedError
+    from devkit_spec.base.errors import ScopeLockUnsupportedError
 
     fs = registry(tmp_path)
     fs.register(record("a", "/wt/a"), Deadline(1))

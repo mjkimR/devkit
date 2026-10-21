@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 from devkit.advisory import ActionMode
-from devkit.rules import (
+from devkit_agt.features.rules import (
     Phase,
     RuleContext,
     RulesConfigError,
@@ -18,10 +18,10 @@ from devkit.rules import (
     load_rules_config,
     match_path,
 )
-from devkit.rules.engine.config import parse_rules_config
-from devkit.rules.engine.errors import PolicyError
-from devkit.rules.engine.settings import Override, RawSettings, build_resolvers, validate_pattern
-from devkit.rules.rules import BaseRule, FileLengthRule, FileLengthSettings
+from devkit_agt.features.rules.models.errors import PolicyError
+from devkit_agt.features.rules.models.settings import Override, RawSettings, build_resolvers, validate_pattern
+from devkit_agt.features.rules.repositories.config import parse_rules_config
+from devkit_agt.features.rules.services.builtins import BaseRule, FileLengthRule, FileLengthSettings
 
 
 def _write_config(root: Path, body: str) -> Path:
@@ -168,7 +168,7 @@ def test_resolver_rejects_unsupported_field_types() -> None:
 
 
 def test_optional_fields_accept_null_and_others_reject_it() -> None:
-    from devkit.rules.engine.settings import check_setting_value, describe_setting_type
+    from devkit_agt.features.rules.models.settings import check_setting_value, describe_setting_type
 
     assert describe_setting_type(int | None) == "integer or null"
     assert check_setting_value(int | None, None) is None

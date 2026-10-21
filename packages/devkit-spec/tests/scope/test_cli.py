@@ -6,11 +6,11 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner, Result
-from devkit.cli import cli as devkit_cli
+from devkit_dist.cli import cli as devkit_cli
 from proposals.support import accept
 from scope.support import CAP_A, CAP_PLANNED, SPEC, git, make_repo, write
 
-from devkit_spec.proposals import create_proposal
+from devkit_spec.features.proposals import create_proposal
 
 SPEC_B = "specs/2026-10/20261002-b"
 
@@ -285,7 +285,7 @@ def test_query_cli_never_writes(
 
     from scope.test_read_access import guard_writes
 
-    from devkit_spec.scope.flow import open_session
+    from devkit_spec.features.scope.usecases.flow import open_session
 
     if registered:
         result = _scope(repo, "register", "--spec", SPEC)

@@ -45,7 +45,7 @@ Write `rules/<name>/rule.py` and `rules/<name>/guide.md` in the bundle source, t
 Read files only through `ctx.cache` (`find_files`, `read_text`, `get_frontmatter`, `get_links`, `get_catalog`), so the snapshot gates evaluate exactly the staged or CI tree. Report a file only when `ctx.is_file_targeted(rel)` is true: it applies the run's targets and `[rules] exclude`. Read settings with `ctx.settings(self, rel)`. Give each `Violation` a message and an actionable `remediation`. Template: [templates](references/templates.md#rule-file).
 
 ### Step 4: Write tests
-Tests live in the rule's folder, `rules/<name>/tests/test_rule.py` (no `__init__.py`), and use only `devkit.rules.testing`: `load_rule(__file__)` loads the folder as devkit loads the deployed copy, `check(RULE, tmp_path, files, targets=..., fix=..., settings=...)` evaluates it. They run in isolation (no project `conftest.py`), so keep helpers in the file. Cover a valid case, a violation, targeting, settings, the fix, and idempotency (a second fix changes nothing). Template: [templates](references/templates.md#tests).
+Tests live in the rule's folder, `rules/<name>/tests/test_rule.py` (no `__init__.py`), and use only `devkit_agt.features.rules.services.testing`: `load_rule(__file__)` loads the folder as devkit loads the deployed copy, `check(RULE, tmp_path, files, targets=..., fix=..., settings=...)` evaluates it. They run in isolation (no project `conftest.py`), so keep helpers in the file. Cover a valid case, a violation, targeting, settings, the fix, and idempotency (a second fix changes nothing). Template: [templates](references/templates.md#tests).
 
 ### Step 5: Validate against devkit
 ```bash
@@ -65,7 +65,7 @@ Commit the rule source with the updated `.devkit/installation.json`: the commit 
 
 - **Do NOT edit deployed copies** under `.devkit/managed/` or `.devkit/overrides/`; fixers cannot write there either (`RULES_PINNED_WRITE_REFUSED`).
 - **Do NOT read or write the disk directly** in `check` or `fix`; bypassing `ctx.cache` breaks the snapshot gates and the recheck.
-- **Do NOT introduce heavy dependencies**: prefer the standard library and devkit's helpers (`devkit_core.core.frontmatter`, `devkit.rules.extract_links`, `devkit.rules.count_tasks`). A rule file imports only what the project's environment provides.
+- **Do NOT introduce heavy dependencies**: prefer the standard library and devkit's helpers (`devkit_core.core.frontmatter`, `devkit_agt.features.rules.extract_links`, `devkit_agt.features.rules.count_tasks`). A rule file imports only what the project's environment provides.
 - **Do NOT persist state files** (debt ledgers, caches); recompute diagnostics deterministically on every run.
 - **Do NOT use non-deterministic heuristics, network access or LLM calls** inside rules: evaluation must be deterministic, offline and fast.
 - **Do NOT print**: a rule returns violations and raises nothing for findings; output belongs to `devkit rules`.

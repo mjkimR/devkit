@@ -64,18 +64,20 @@ Base never imports core. The package depends only on PyYAML and
 `devkit-advisory`. It is released at the same version as dist and agt. Generic primitives no longer live
 in the dist wheel; project configuration, receipts and CLI support remain there.
 
-Three wheels share the PEP 420 namespace `devkit` (no wheel ships `devkit/__init__.py`, and no installed path
-belongs to two of them) and are released in lockstep from one tag at one version (`ADR-dist-module-split`,
-`ADR-dist-bundles-compatibility`): `devkit-advisory` < `devkit-dist` < `devkit-agt`, each pinning the exact version of
-the ones below it.
+Application wheels own independent regular packages: `devkit_dist`, `devkit_agt`, `devkit_spec`,
+`devkit_mcp` and `devkit_viewer`. `devkit_core` owns the shared foundation. Only `devkit-advisory`
+continues to ship the PEP 420 `devkit.advisory` API; it never ships `devkit/__init__.py`.
+No installed file belongs to two wheels. Foundation and application distributions are released in
+lockstep from one tag, pinning workspace runtime dependencies to that exact version
+(`ADR-independent-package-namespaces-and-feature-layout`, `ADR-dist-bundles-compatibility`).
 
 ### 2.1 `devkit-dist` (`packages/devkit-dist`)
 - **Distribution Wheel**: `devkit_dist-<version>-py3-none-any.whl`
 - **CLI**: `devkit`, the sole console script: the distribution commands, `devkit shared` and `devkit host`, plus whatever installed
   packages mount through `devkit.commands` (`ARCH-05-3-command-plugins`).
-- **Contents**: Project configuration, receipts and CLI support (`devkit.core`), document search (`devkit.search`), host hooks and project MCP registrations
-  (`devkit.host`), immutable expiring artifacts (`devkit.shared`, importing only core/advisory), asset distribution (`devkit.distribution`) with the `.devkit/config.toml` schema and the receipt,
-  the root command line (`devkit.cli`, `devkit.__main__`) and the built-in bundles `devkit`, `advisory` and
+- **Contents**: Project configuration and receipts (`devkit_dist.features.project`), shared CLI boundary (`devkit_dist.adapters.cli`), document search (`devkit_dist.features.search`), host hooks and project MCP registrations
+  (`devkit_dist.features.host`), immutable expiring artifacts (`devkit_dist.features.shared`, importing only core/advisory), asset distribution (`devkit_dist.features.distribution`) with the `.devkit/config.toml` schema and the receipt,
+  the root command line (`devkit_dist.cli`, `devkit_dist.__main__`) and the built-in bundles `devkit`, `advisory` and
   `git-commits` (`ADR-dist-foundation-ownership`).
 - **Dependencies**: `click`, `jinja2`, `pyyaml`, `tomlkit`, `devkit-core` and `devkit-advisory` (locked to the same version);
   extra `search` (numpy, tokenizers, `devkit-embed`). It never depends on `devkit-agt`, and its tests also
@@ -112,9 +114,9 @@ the ones below it.
   for several local repositories.
 - **Contents**: the server (`devkit_viewer`) and, under `frontend/`, one Svelte source for the page and for the
   component library whose `npm pack` tarball autohub vendors. Node is needed only to change the frontend.
-- **Dependencies**: `devkit-agt`, `devkit-core` and `click`; it uses only `devkit.core` and `devkit.advisory`, which reach it through
-  `devkit-agt`'s dependency on `devkit-dist` (the viewer keeps its `devkit-agt` dependency,
-  `SPEC-devkit-dist-package-separation`); no `devkit-spec` code, since the page parses the documents itself.
+- **Dependencies**: `devkit-agt`, `devkit-core` and `click`. It consumes foundation primitives,
+  distribution project support and `devkit.advisory`; it has no dependency on `devkit-spec` code,
+  since the page parses the documents itself.
 - **Contracts**: `CAP-VIEW-repository-viewer`, `ADR-viewer-distribution-and-frontend-build`,
   `ADR-read-only-local-server-over-git-refs`.
 
@@ -124,10 +126,16 @@ the ones below it.
 - Both test their bundles against the manifest reader of `devkit-dist`, their only development dependency.
 - **`devkit-embed` (`models/devkit-embed`)**: Hand-built data package containing the default dense embedding model for the `search` extra of `devkit-dist` (and `devkit-agt[search]`).
 
+### Repository development bundle
+
+`tools/devkit-dev` owns repository-specific project structure and layering checks. It starts as a
+bundle-only development package; optional `base`, `utils` or feature layers may be added when it
+acquires Python behavior. Its rules are separate from the reusable harness rules shipped to consumers.
+
 ### Optional MCP runtime
 
-`packages/devkit-mcp` ships `devkit_mcp` and mounts `devkit mcp` through `devkit.commands`. It is the fourth
-lockstep foundation wheel, depending on the exact dist release, `mcp>=1.30,<2` and `jsonschema`. It owns transport,
+`packages/devkit-mcp` ships `devkit_mcp` and mounts `devkit mcp` through `devkit.commands`. It is a
+lockstep application wheel, depending on the exact dist release, `mcp>=1.30,<2` and `jsonschema`. It owns transport,
 form adaptation and `devkit.host.services` discovery; integration and handoff remain domain services. Dist imports
 no runtime module and keeps the executable, receipts, hooks and narrow project-registration reconciler.
 `ADR-independent-mcp-runtime-with-project-registration-and-environment-guards` defines this inversion.

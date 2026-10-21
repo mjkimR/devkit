@@ -8,11 +8,12 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import devkit_agt.features.gate.usecases.hooks.hooks as hooks
+import devkit_agt.features.gate.usecases.hooks.local_config as local_config
 import pytest
 from click.testing import CliRunner
-from devkit.gate import BaseGate, GateContext, GateResult, Stage, load_gate_project
-from devkit.gate.cli import cli
-from devkit.gate.hooks import hooks, local_config
+from devkit_agt.features.gate import BaseGate, GateContext, GateResult, Stage, load_gate_project
+from devkit_agt.features.gate.cli import cli
 from testsupport.gate import deploy_gate, gate_source
 
 

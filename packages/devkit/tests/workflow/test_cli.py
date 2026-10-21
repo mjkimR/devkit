@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner, Result
 from devkit.advisory import AdvisoryError
-from devkit.workflow.cli import cli
+from devkit_agt.features.workflow.cli import cli
 from testsupport.workflow import SIMPLE_UNIT, WORKFLOW, simple_workspace, write_config, write_receipt
 
 CONFIG = """schema = 1
@@ -195,7 +195,7 @@ def test_lint_check_honors_rules_exclude(workspace: Path) -> None:
 
 
 def test_lint_function_reports_a_malformed_receipt(tmp_path: Path) -> None:
-    from devkit.workflow.evaluation.lint import lint_with_rules
+    from devkit_agt.features.workflow.usecases.lint import lint_with_rules
 
     (tmp_path / "a.md").write_text("fine\n")
     (tmp_path / ".devkit").mkdir()
@@ -245,14 +245,14 @@ def test_cli_uses_synchronized_workflow_from_receipt(tmp_path: Path) -> None:
 
 
 def test_requests_reports_a_lint_error_like_next(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    import devkit.rules
+    import devkit_agt.features.rules
 
     def broken(*_: object, **__: object) -> None:
         raise RuntimeError("rule exploded")
 
     root = simple_workspace(tmp_path, check="lint-clean")
     assert _run("new", "-w", str(root), "u").exit_code == 0
-    monkeypatch.setattr(devkit.rules, "run_project_rules", broken)
+    monkeypatch.setattr(devkit_agt.features.rules, "run_project_rules", broken)
     result = _run("requests", "-w", str(root), "--unit", SIMPLE_UNIT, "--format", "json")
     assert result.exit_code == 2 and result.stderr == ""
     document = json.loads(result.stdout)

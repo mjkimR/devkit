@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from devkit.rules import RuleContext, TargetError
+from devkit_agt.features.rules import RuleContext, TargetError
 
 
 def test_context_creates_cache_and_matches_exact_paths(tmp_path: Path) -> None:
@@ -49,8 +49,8 @@ def test_symlinked_targets_keep_their_own_name(tmp_path: Path) -> None:
 
 
 def test_settings_for_a_path_outside_the_workspace_is_refused(tmp_path: Path) -> None:
-    from devkit.rules import evaluate_rules
-    from devkit.rules.rules import FileLengthRule
+    from devkit_agt.features.rules import evaluate_rules
+    from devkit_agt.features.rules.services.builtins import FileLengthRule
 
     rule = FileLengthRule()
     ctx = RuleContext(workspace_root=tmp_path)
@@ -62,7 +62,7 @@ def test_settings_for_a_path_outside_the_workspace_is_refused(tmp_path: Path) ->
 
 
 def test_cache_is_always_a_workspace_cache(tmp_path: Path) -> None:
-    from devkit.rules.workspace.cache import WorkspaceCache
+    from devkit_agt.features.rules.repositories.workspace.cache import WorkspaceCache
 
     own = RuleContext(workspace_root=tmp_path)
     assert isinstance(own.cache, WorkspaceCache) and own.cache.workspace_root == tmp_path.resolve()

@@ -7,9 +7,8 @@ import pytest
 from conftest import Write
 from entrypoints.support import BUNDLE, CAP, documents, fixture
 
-from devkit_spec.entrypoints import (
-    Pair,
-    State,
+from devkit_spec.base.errors import EntrypointsInputInvalidError, EntrypointsInputMissingError, EntrypointsPathError
+from devkit_spec.features.entrypoints import (
     Target,
     aggregate,
     classify_boundary,
@@ -23,7 +22,7 @@ from devkit_spec.entrypoints import (
     parse_boundaries,
     select,
 )
-from devkit_spec.errors import EntrypointsInputInvalidError, EntrypointsInputMissingError, EntrypointsPathError
+from devkit_spec.features.entrypoints.models.derive import Pair, State
 
 
 def _find(pairs: list[Pair], doc: str, code: str) -> Pair | None:

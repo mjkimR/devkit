@@ -69,7 +69,7 @@ def main() -> None:
         script = f"""
 import importlib.util, importlib.metadata
 from devkit_core.base.mcp import McpTool
-from devkit.cli import cli
+from devkit_dist.cli import cli
 from click.testing import CliRunner
 from pathlib import Path
 assert bool(importlib.util.find_spec("devkit_mcp")) == {runtime!r}
@@ -80,8 +80,8 @@ assert CliRunner().invoke(cli, ["host", "mcp", "--help"]).exit_code != 0
 """
         if runtime:
             script += """
-from devkit_mcp.services import load_tools
-from devkit_mcp.server import build_server
+from devkit_mcp.features.runtime.usecases.discovery import load_tools
+from devkit_mcp.features.runtime.mcp.server import build_server
 server = build_server(load_tools(Path.cwd()))
 assert server.version == importlib.metadata.version("devkit-mcp")
 assert CliRunner().invoke(cli, ["mcp", "--help"]).exit_code == 0

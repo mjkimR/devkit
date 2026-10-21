@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 from viewer_fixtures import MakeRepo, commit_files, git
 
-from devkit_viewer.errors import ReadError
-from devkit_viewer.git import GitReader, check_path
+from devkit_viewer.features.browse.models.errors import ReadError
+from devkit_viewer.features.browse.repositories.git import GitReader, check_path
 
 
 @pytest.fixture

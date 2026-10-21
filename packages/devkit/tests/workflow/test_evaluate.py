@@ -5,14 +5,14 @@ from pathlib import Path
 
 import pytest
 from devkit.advisory import AdvisoryError
-from devkit.workflow import (
+from devkit_agt.features.workflow import (
     Options,
     UnitNotFoundError,
     evaluate_definition,
     parse_definition,
-    render_evaluation,
 )
-from devkit.workflow.definition.checks import CheckClass
+from devkit_agt.features.workflow.cli.render import render_evaluation
+from devkit_agt.features.workflow.models.checks import CheckClass
 from testsupport.workflow import SIMPLE, WORKFLOW, run_cli, simple_workspace, write_record, write_unit
 
 DOC = parse_definition(WORKFLOW)

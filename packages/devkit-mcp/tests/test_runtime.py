@@ -7,16 +7,17 @@ import subprocess
 from types import SimpleNamespace
 
 import pytest
-from devkit.core.mcp_context import (
+from devkit_core.base.mcp import McpTool
+from devkit_dist.features.project.repositories.invocation import (
     ExecutionBinding,
     McpInteractiveError,
     McpWorkspaceError,
     capture_terminal_removal,
     guard_execution,
-    invocation,
 )
-from devkit_core.base.mcp import McpTool
-from devkit_mcp import configuration, services
+from devkit_dist.features.project.usecases.invocation import invocation
+from devkit_mcp.features.runtime.usecases import configuration
+from devkit_mcp.features.runtime.usecases import discovery as services
 from mcp import types
 
 
@@ -163,7 +164,7 @@ def test_child_sync_rechecks_original_owner_after_lock(clones, operation):
     import os
     import sys
 
-    from devkit.core.mcp_context import CONSTRAINT_ENV, constraint_environment
+    from devkit_dist.features.project.repositories.invocation import CONSTRAINT_ENV, constraint_environment
 
     base, task = clones
     with invocation(ExecutionBinding(base, base)):
@@ -174,7 +175,7 @@ import json, sys
 from contextlib import contextmanager
 from pathlib import Path
 from devkit.advisory import AdvisoryError
-from devkit.distribution.installation import sync
+from devkit_dist.features.distribution.usecases import sync
 owner, target = Path(sys.argv[1]), Path(sys.argv[2])
 @contextmanager
 def lock(*args, **kwargs):
@@ -204,7 +205,7 @@ else:
 
 
 def test_constraint_never_inherits_terminal_removal_authority(clones, monkeypatch):
-    from devkit.core.mcp_context import constraint_environment
+    from devkit_dist.features.project.repositories.invocation import constraint_environment
 
     base, task = clones
     with invocation(ExecutionBinding(task, base)):
@@ -219,8 +220,8 @@ def test_constraint_never_inherits_terminal_removal_authority(clones, monkeypatc
 
 
 def test_cloud_transition_stops_transaction_writes_and_retains_journal(clones, monkeypatch):
-    from devkit.distribution.content import Content
-    from devkit.distribution.installation import transaction
+    from devkit_dist.features.distribution.models.content import Content
+    from devkit_dist.features.distribution.services.installation import transaction
 
     base, task = clones
     original = transaction.replace_file

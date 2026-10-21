@@ -6,13 +6,8 @@ members = [
 
 [tool.ruff]
 exclude = [".git", ".venv", "build", "dist"]
-# `devkit` is a namespace package shared by devkit-dist, devkit-agt and devkit-advisory; without an __init__.py ruff
-# would no longer see packages/*/src as the package root and would sort devkit imports as third-party.
-namespace-packages = [
-    "packages/devkit-dist/src/devkit",
-    "packages/devkit/src/devkit",
-    "packages/devkit-advisory/src/devkit",
-]
+# Only devkit-advisory retains the public devkit namespace.
+namespace-packages = ["packages/devkit-advisory/src/devkit"]
 line-length = 120
 target-version = "py312"
 
@@ -47,6 +42,7 @@ extraPaths = [
     "./packages/devkit-spec/tests",
     "./packages/devkit-viewer/src",
     "./packages/devkit-viewer/tests",
+    "./tools/devkit-dev/src",
 ]
 
 [dependency-groups]
@@ -54,6 +50,7 @@ dev = [
     "devkit-agt[search,mcp]",  # optional runtimes exercised by tests and consumer smoke
     "devkit-spec[search]",
     "devkit-viewer",
+    "devkit-dev",
     "pyright>=1.1.390",
     "pytest>=8.0.0",
     "pytest-cov>=5.0.0",
@@ -68,6 +65,7 @@ devkit-dist = { workspace = true }
 devkit-embed = { path = "models/devkit-embed/wheels/devkit_embed-0.1.0-py3-none-any.whl" }
 devkit-spec = { workspace = true }
 devkit-viewer = { workspace = true }
+devkit-dev = { workspace = true }
 
 [tool.pytest.ini_options]
 # Rule tests live in each rule's folder under src (`<rule>/tests/`), so the devkit wheels' sources are collected too.
@@ -84,12 +82,16 @@ testpaths = [
     "packages/devkit-spec/tests",
     "packages/devkit-spec/src/devkit_spec/bundle/rules",
     "packages/devkit-viewer/tests",
+    "tools/devkit-dev/tests",
+    "tools/devkit-dev/src",
 ]
 pythonpath = [
     "packages/devkit-dist/tests",
     "packages/devkit/tests",
     "packages/devkit-spec/tests",
     "packages/devkit-viewer/tests",
+    "tools/devkit-dev/tests",
+    "tools/devkit-dev/src",
 ]
 addopts = ["--import-mode=importlib"]
 log_level = "INFO"

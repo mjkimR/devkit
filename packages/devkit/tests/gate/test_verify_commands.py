@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 from devkit.advisory import ActionMode, Actor, AdvisoryError, Retry
-from devkit.gate import GateRefusedError, Stage
-from devkit.gate.errors import VerifyNotRunError
-from devkit.gate.gates.commands import VerifyCommandsGate, VerifyCommandsSettings
+from devkit_agt.features.gate import GateRefusedError, Stage
+from devkit_agt.features.gate.models.errors import VerifyNotRunError
+from devkit_agt.features.gate.usecases.gates.commands import VerifyCommandsGate, VerifyCommandsSettings
 from testsupport.gate import gate_ctx, git
 
 

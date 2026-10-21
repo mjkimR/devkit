@@ -4,10 +4,11 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
+import devkit_agt.features.workflow.repositories.unit.frontmatter as fm
 import pytest
 import yaml
 from click.testing import Result
-from devkit.workflow import (
+from devkit_agt.features.workflow import (
     Binding,
     HistoryEntry,
     Options,
@@ -18,8 +19,7 @@ from devkit.workflow import (
     read_binding,
     write_binding,
 )
-from devkit.workflow.unit import frontmatter as fm
-from devkit.workflow.unit.envelope import skeleton, write_envelope
+from devkit_agt.features.workflow.services.envelope import skeleton, write_envelope
 from testsupport.workflow import SIMPLE_UNIT, run_cli, simple_workspace, write_config, write_record, write_unit
 
 # --- frontmatter ------------------------------------------------------------------

@@ -27,11 +27,11 @@ evidence and cleanup revisions remain bound to the request digest and are availa
 Partial results retain steps, errors, failing operation, observed state and the latest build. Text and structured MCP
 outputs agree.
 
-Public API: `devkit.integration` exports `IntegrationService`, `Task`, `IntegrationContext`, `Evidence`, `Readiness`,
+Public API: `devkit_agt.features.integration` exports `IntegrationService`, `Task`, `IntegrationContext`, `Evidence`, `Readiness`,
 `ReadinessProvider`, `IntegrationRequest`, `IntegrationResult`, `CleanupTarget`, `CleanupScope`, `CleanupResult`,
 `ScopedCleanup` and typed errors. `IntegrationContext.result_sha` is `None` at `prepare` and the result commit at a
 build (whose `finish.target_sha` is the build target); `Readiness` binds `result_sha` and declares `target_bound` codes
-and a one-line `disclosure` of at most 200 characters. `devkit.worktree` exports `FinishPlan` (with `merge_method`
+and a one-line `disclosure` of at most 200 characters. `devkit_agt.features.worktree` exports `FinishPlan` (with `merge_method`
 and `already_merged`), `plan_finish`, `validate_finish` (`result=`, `target=`), `build_result`, `fast_forward`,
 `merge_method`, `integration_lock`, `run_finish_guards`, `run_post_finish`; `finish` takes `network="allow"|"forbid"`,
 `merge_method` and an optional `before_step` callback. Providers and scoped cleanup use only public exports.

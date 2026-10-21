@@ -5,9 +5,9 @@ summary: "On-demand context loading, playbook discovery and exact receipt-backed
 area: distribution
 status: active
 entrypoints:
-  - packages/devkit-dist/src/devkit/distribution/installation/playbook_get.py
-  - packages/devkit-dist/src/devkit/distribution/installation/reading.py
-  - packages/devkit-dist/src/devkit/distribution/installation/status.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/playbook_get.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/reading.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/status.py
 created_at: 2026-10-17
 ---
 

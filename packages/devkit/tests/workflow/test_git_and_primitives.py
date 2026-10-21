@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from devkit.workflow import (
+from devkit_agt.features.workflow import (
     Options,
     evaluate_definition,
     is_ancestor,

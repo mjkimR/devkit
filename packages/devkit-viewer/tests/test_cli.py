@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner, Result
-from devkit.cli import cli as devkit_cli
+from devkit_dist.cli import cli as devkit_cli
 from viewer_fixtures import MakeRepo
 
 SENTINEL = re.compile(r"^\[VIEWER: url=http://127\.0\.0\.1:(\d+)/ repos=(\d+)\]$")
@@ -21,7 +21,7 @@ SENTINEL = re.compile(r"^\[VIEWER: url=http://127\.0\.0\.1:(\d+)/ repos=(\d+)\]$
 
 def _serve(cwd: Path, *args: str) -> subprocess.Popen[str]:
     return subprocess.Popen(
-        [sys.executable, "-P", "-m", "devkit", "viewer", "serve", *args],
+        [sys.executable, "-P", "-m", "devkit_dist", "viewer", "serve", *args],
         cwd=cwd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -107,7 +107,7 @@ def test_version_and_mount() -> None:
     assert result.stdout == f"[VERSION: devkit-viewer {version('devkit-viewer')}]\n"
     assert CliRunner().invoke(devkit_cli, ["viewer", "serve", "--help"]).exit_code == 0
     (mount,) = [ep for ep in entry_points(group="devkit.commands") if ep.name == "viewer"]
-    assert mount.value == "devkit_viewer.cli:cli"
+    assert mount.value == "devkit_viewer.features.browse.cli:cli"
 
 
 @pytest.mark.parametrize("args", [["--port", "-1"], ["--port", "70000"]])

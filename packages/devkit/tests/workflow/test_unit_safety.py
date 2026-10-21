@@ -8,10 +8,12 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 from pathlib import Path
 
-import devkit.workflow.unit.units as units_module
+import devkit_agt.features.workflow.repositories.unit.binding as binding_module
+import devkit_agt.features.workflow.repositories.unit.records as records
+import devkit_agt.features.workflow.usecases.units as units_module
 import pytest
 from click.testing import CliRunner, Result
-from devkit.workflow import (
+from devkit_agt.features.workflow import (
     LayoutError,
     TemplateLayout,
     UnitDirNotEmptyError,
@@ -23,10 +25,8 @@ from devkit.workflow import (
     read_binding,
     validate_template,
 )
-from devkit.workflow.cli import cli
-from devkit.workflow.unit import binding as binding_module
-from devkit.workflow.unit import records
-from devkit.workflow.unit.binding import Binding, write_binding
+from devkit_agt.features.workflow.cli import cli
+from devkit_agt.features.workflow.repositories.unit.binding import Binding, write_binding
 from testsupport.workflow import (
     SIMPLE,
     SIMPLE_UNIT,

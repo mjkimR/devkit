@@ -9,11 +9,12 @@ import threading
 import time
 from pathlib import Path
 
+import devkit_agt.features.integration.usecases.service as service_module
+import devkit_agt.features.worktree.services.merging as merging
 import pytest
-from devkit.integration import IntegrationService, ProviderError, Task
-from devkit.integration import service as service_module
-from devkit.integration.receipts import check_merge
-from devkit.worktree import CommitFailedError, MergeNotFastForwardError, merging
+from devkit_agt.features.integration import IntegrationService, ProviderError, Task
+from devkit_agt.features.integration.repositories.receipts import check_merge
+from devkit_agt.features.worktree import CommitFailedError, MergeNotFastForwardError
 from devkit_core.base.errors import GitError
 from devkit_core.base.mcp import ConfirmationReply
 from devkit_core.core import LockHeldError
@@ -214,7 +215,7 @@ def test_changed_source_bound_evidence_at_the_build_is_stale(repo, ready_provide
         if context.result_sha is not None:
             from dataclasses import replace
 
-            from devkit.integration import Evidence
+            from devkit_agt.features.integration import Evidence
 
             return replace(value, evidence=(*value.evidence, Evidence("EXTRA", "changed")))
         return value
@@ -339,7 +340,8 @@ def test_resume_after_a_build_continues_only_onto_the_last_build_target(repo, mo
 
 
 def test_cleanup_accepts_later_commits_on_the_base_after_the_merge(repo, monkeypatch):
-    from devkit.worktree import RemoveFailedError, lifecycle
+    import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
+    from devkit_agt.features.worktree import RemoveFailedError
 
     base, worktree = repo
     original = lifecycle._remove
@@ -390,7 +392,8 @@ def test_post_merge_mutation_preserves_task(repo, mutation):
 
 
 def test_post_merge_metadata_rewrite_resumes_cleanup(repo, monkeypatch):
-    from devkit.worktree import RemoveFailedError, lifecycle
+    import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
+    from devkit_agt.features.worktree import RemoveFailedError
 
     base, worktree = repo
     hook = base / ".git/hooks/post-merge"
@@ -413,7 +416,8 @@ def test_post_merge_metadata_rewrite_resumes_cleanup(repo, monkeypatch):
 
 @pytest.mark.parametrize("rewrite_after", [False, True])
 def test_cleanup_does_not_accept_unapproved_rewrites(repo, monkeypatch, rewrite_after):
-    from devkit.worktree import RemoveFailedError, lifecycle
+    import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
+    from devkit_agt.features.worktree import RemoveFailedError
 
     base, worktree = repo
     if not rewrite_after:

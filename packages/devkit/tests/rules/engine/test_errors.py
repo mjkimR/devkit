@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 from devkit.advisory import ActionMode, AdvisoryError, ExitCode
-from devkit.rules import (
+from devkit_agt.features.rules import (
     RuleLoadError,
     RulesConfigError,
     RulesDirError,
@@ -61,7 +61,7 @@ def test_rules_dir_outside_the_snapshot_repository_is_rules_dir_invalid(tmp_path
 
 
 def test_lint_binding_raises_rules_run_failed_with_each_problem(tmp_path: Path) -> None:
-    from devkit.workflow.evaluation.lint import lint_with_rules
+    from devkit_agt.features.workflow.usecases.lint import lint_with_rules
 
     write(tmp_path, ".devkit/installation.json", "{")
     write(tmp_path, "a.md", "# A\n")

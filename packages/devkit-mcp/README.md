@@ -12,3 +12,10 @@ Dist registers the shared artifact tools `shared_put`, `shared_get`, `shared_lis
 `shared_sweep_apply`. Put and apply-sweep are bounded writes without business approval forms; cloud profiles hide
 and refuse them. Read tools resolve the owning configuration workspace and never initialize or clean storage.
 See `CAP-COLL-shared-artifacts` and `CAP-MCP-runtime-registration` for the domain and transport contracts.
+
+## Layout
+
+`src/devkit_mcp/features/runtime/` owns the optional runtime feature: `cli/` adapts command input/output,
+`usecases/` coordinates registration changes, discovers installed tool contracts and verifies retained runtimes,
+and `mcp/` implements the SDK-backed stdio transport. Domain operations remain in the packages that
+declare their tool contracts.

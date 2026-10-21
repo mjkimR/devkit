@@ -9,8 +9,8 @@ stories:
   - US-route-development-intent
   - US-run-parallel-work-safely
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/config.py
-  - packages/devkit-spec/src/devkit_spec/cli/policy.py
+  - packages/devkit-spec/src/devkit_spec/features/policy/services/config.py
+  - packages/devkit-spec/src/devkit_spec/features/policy/cli/commands.py
 ---
 
 # [CAP-DLV-project-policy] Project Policy
@@ -19,7 +19,7 @@ entrypoints:
 
 A project decides how delivery runs: which approval gates wait for a person, which stages are switched off, whether
 worktrees and pull requests are used when a task needs them or always, which integration readiness provider
-`devkit.integration` calls, and how repository-first feedback is recorded. Policy
+`devkit_agt.features.integration` calls, and how repository-first feedback is recorded. Policy
 devkit already models stays in devkit's tables
 (`[workflow.approvals]`, `[workflow.stages]`, `[worktree]`, `[integration]`); devkit-spec adds only what is specific to spec-driven
 development, under the `[tool.spec]` extension table that devkit passes through unread. Agents read the effective
@@ -29,13 +29,13 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
 ## 2. Scope & Boundary
 
 - **In-Scope**: `devkit spec policy` (text and JSON), the `[tool.spec]` table and its validation
-  (`devkit_spec.config.read_spec_config`), the defaults the command reports, and the `[tool.spec]` tables of devkit's
-  commented config template (`devkit_spec.config.template`).
+  (`devkit_spec.features.policy.services.config.read_spec_config`), the defaults the command reports, and the `[tool.spec]` tables of devkit's
+  commented config template (`devkit_spec.features.policy.services.config.template`).
 - **Out-of-Scope**:
   - The meaning of `[[tool.spec.namespaces]]`: `CAP-DOCS-namespaces`.
   - The meaning of `[tool.spec.scope]`: `CAP-COLL-work-scope-registry`. This capability owns their validation only.
   - How gates and stage switches act on a workflow: `CAP-DLV-delivery-workflows` and devkit's workflow engine.
-  - Executing worktree and integration steps (`CAP-HARN-agent-guidance`): devkit's `devkit worktree`, `devkit.integration` (`[integration] provider = "spec"`), and the `spec`
+  - Executing worktree and integration steps (`CAP-HARN-agent-guidance`): devkit's `devkit worktree`, `devkit_agt.features.integration` (`[integration] provider = "spec"`), and the `spec`
     skill's worktree procedure.
 - **Non-Goals**:
   - **Scope Excluded**: writing policy. The command only reads; the project edits `.devkit/config.toml`.
@@ -49,7 +49,7 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
    setup, integration readiness provider) MUST live in devkit's table; `[tool.spec]` holds only keys devkit has no table for.
 3. **Defaults**: a gate the project does not set is `ask` with `source=default` (devkit's default for every gate);
    `[tool.spec] worktree` and `depth_escalation` default to `"auto"`; `[worktree]` values are devkit's defaults (`pull_request = "auto"`,
-   `delete_branch = true`, `merge = "no-ff"`, no `setup`); `[integration] provider = "spec"` selects `devkit_spec.integration` for `IntegrationService`.
+   `delete_branch = true`, `merge = "no-ff"`, no `setup`); `[integration] provider = "spec"` selects `devkit_spec.features.delivery.usecases.integration` for `IntegrationService`.
 4. **Gate order and fixed gates**: the spec workflows' gates `plan-intent`, `plan-accept`, `dev-integration` come
    first, then any other gate the project configures, in sorted order. `plan-intent` and `plan-accept` are always the
    user's decision (`source=fixed`): a `[workflow.approvals]` value other than `ask` (their default) for either is
@@ -142,7 +142,7 @@ merge = "no-ff"             # a merge commit per task (default); "ff-only" keeps
 setup = "uv sync"           # run in each new worktree
 
 [integration]
-provider = "spec"           # devkit.integration.readiness entry point for approval-bound local integration
+provider = "spec"           # devkit_agt.features.integration.readiness entry point for approval-bound local integration
 
 [tool.spec]
 worktree = "required"       # direct mode: spec and proposal activities always run in a worktree (default "auto")
@@ -178,7 +178,7 @@ timeout = 10                # whole seconds per registry command, 1 to 300
 | `tool.spec.feedback.reminder` | string | `"contextual"` | `contextual` or `off`. |
 
 `devkit config template` writes the `[tool.spec]` tables into `.devkit/config.toml` as comments, from
-`devkit_spec.config.template`, the `devkit.config_template` entry point `spec`: every key at its default, an example
+`devkit_spec.features.policy.services.config.template`, the `devkit.config_template` entry point `spec`: every key at its default, an example
 for `shared_path`, `namespace` and the namespaces, uncommented in place to change a value. devkit adds only the
 tables the file does not mention yet and never changes a line.
 
@@ -188,10 +188,10 @@ executor reports it as skipped.
 ### 4.3 Library
 
 ```python
-from devkit_spec.config import read_spec_config
+from devkit_spec.features.policy.services.config import read_spec_config
 
 config = read_spec_config(root)  # SpecConfig with worktree, namespaces, scope and feedback
-tables = template()  # list[devkit.core.TemplateTable]: [tool.spec], its namespaces, scope and feedback tables
+tables = template()  # list[devkit_dist.features.project.services.config_template.TemplateTable]: [tool.spec], its namespaces, scope and feedback tables
 ```
 
 `Namespace` has `name`, `path` and `docs` (`docs/packages/<name>`); `ScopeConfig` has `shared_path` (`Path` or

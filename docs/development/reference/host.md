@@ -11,9 +11,9 @@ Canonical semantics: `CAP-HOST-lifecycle-observation`.
 | `devkit sync --check` | Exit 1 when synchronization is needed |
 | `devkit remove BUNDLE` | Remove that bundle's exact owned registrations and managed files |
 
-The public `devkit.host` surface exports `HookDefinition`, `HookEvent`, `HookResponse`, `CodexAdapter`, `HostStatus`,
+The public `devkit_dist.features.host` surface exports `HookDefinition`, `HookEvent`, `HookResponse`, `CodexAdapter`, `HostStatus`,
 `read_hook`, `adapter_for`, `plan_config`, `dispatch`, `inspect_host`, and the host advisory classes. Domain services
-register `event -> HookResponse` callables under `devkit.host.handlers`. `dispatch` raises advisories; only the
+register `event -> HookResponse` callables under `devkit_dist.features.host.handlers`. `dispatch` raises advisories; only the
 native CLI boundary turns them into warning responses. See the overview for the trust and execution limits.
 
 | Code | Next action |

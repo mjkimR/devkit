@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 import yaml
 from click.testing import Result
-from devkit.workflow.unit.envelope import load_envelopes
+from devkit_agt.features.workflow.services.envelope import load_envelopes
 from testsupport.workflow import SIMPLE_UNIT, run_cli, simple_workspace
 
 FINDINGS = [
@@ -43,7 +43,7 @@ def _put(root: Path, name: str, data: dict[str, object]) -> None:
 
 def _envelope(root: Path, kind: str, *args: str, stdin: str | None = None) -> Result:
     from click.testing import CliRunner
-    from devkit.workflow.cli import cli
+    from devkit_agt.features.workflow.cli import cli
 
     return CliRunner().invoke(cli, ["envelope", kind, "-w", str(root), "--unit", SIMPLE_UNIT, *args], input=stdin)
 

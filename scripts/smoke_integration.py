@@ -12,14 +12,14 @@ import tempfile
 from datetime import timedelta
 from pathlib import Path
 
-from devkit.worktree import locate, start
+from devkit_agt.features.worktree import locate, start
 from mcp import ClientSession, StdioServerParameters, types
 from mcp.client.stdio import stdio_client
 
 PROVIDER = """
 from pathlib import Path
 from devkit_core.core.git import run_git
-from devkit.integration import Evidence, Readiness
+from devkit_agt.features.integration import Evidence, Readiness
 
 def check(context):
     plan = context.finish
@@ -41,7 +41,7 @@ async def conversation(root: Path, worktree: Path) -> None:
         approvals.append(params.message)
         return types.ElicitResult(action="accept", content={"approve": len(approvals) == 2})
 
-    args = ["-m", "devkit", "mcp", "serve", "--workspace-root", str(root), "--configuration-workspace", str(root)]
+    args = ["-m", "devkit_dist", "mcp", "serve", "--workspace-root", str(root), "--configuration-workspace", str(root)]
     params = StdioServerParameters(command=sys.executable, args=args)
     async with (
         stdio_client(params) as (read, write),
@@ -106,11 +106,11 @@ def main() -> None:
             (worktree / "ready.txt").write_text("ready\n")
             git(worktree, "add", ".")
             git(worktree, "commit", "-qm", "ready fixture")
-            result = subprocess.check_output(
+            result = subprocess.run(
                 [
                     sys.executable,
                     "-m",
-                    "devkit",
+                    "devkit_dist",
                     "integration",
                     "prepare",
                     "dev-smoke",
@@ -124,8 +124,10 @@ def main() -> None:
                     "json",
                 ],
                 text=True,
+                capture_output=True,
             )
-            assert json.loads(result)["status"] == "prepared"
+            assert result.returncode == 0, result.stdout + result.stderr
+            assert json.loads(result.stdout)["status"] == "prepared"
             asyncio.run(conversation(root, worktree))
     finally:
         module.unlink(missing_ok=True)

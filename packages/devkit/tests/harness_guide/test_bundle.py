@@ -13,21 +13,21 @@ from importlib import resources
 from pathlib import Path
 
 from click.testing import CliRunner
-from devkit.cli import cli
-from devkit.distribution.bundles import load_bundle
-from devkit.distribution.installation.config import update_config
-from devkit.distribution.installation.context import get_context
-from devkit.distribution.installation.discovery import InstalledBundle, discover_bundles
-from devkit.distribution.installation.override_commands import create_override
-from devkit.distribution.installation.sync import sync_project
+from devkit_dist.cli import cli
+from devkit_dist.features.distribution.services.bundles import load_bundle
+from devkit_dist.features.distribution.services.installation.config import update_config
+from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle, discover_bundles
+from devkit_dist.features.distribution.usecases.context import get_context
+from devkit_dist.features.distribution.usecases.override_commands import create_override
+from devkit_dist.features.distribution.usecases.sync import sync_project
 
 PACKAGE = Path(__file__).parents[2]
-BUNDLE = PACKAGE / "src/devkit/harness_guide/bundle"
+BUNDLE = PACKAGE / "src/devkit_agt/harness_guide/bundle"
 INSTRUCTIONS = ["devkit-run", "harness-assets", "harness-consumption"]
 
 
 def _devkit_root() -> Path:
-    path = resources.files("devkit.distribution.guide").joinpath("bundle")
+    path = resources.files("devkit_dist.bundles.devkit").joinpath("bundle")
     assert isinstance(path, Path)
     return path
 

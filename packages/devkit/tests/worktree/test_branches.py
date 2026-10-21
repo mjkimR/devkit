@@ -8,10 +8,11 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+import devkit_agt.features.worktree.services.extensions as extensions
 import pytest
 from click.testing import CliRunner
 from devkit.advisory import ActionMode
-from devkit.worktree import (
+from devkit_agt.features.worktree import (
     AttachRefusedError,
     BaseDetachedError,
     BaseOnBranchError,
@@ -25,7 +26,6 @@ from devkit.worktree import (
     UnmergedError,
     attach,
     discard,
-    extensions,
     finish,
     locate,
     start,

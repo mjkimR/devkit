@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import asyncio
 
+import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
 import pytest
-from devkit.integration import AuthorityError, IntegrationService, Task
-from devkit.worktree import RemoveFailedError, lifecycle, locate, start
+from devkit_agt.features.integration import AuthorityError, IntegrationService, Task
+from devkit_agt.features.worktree import RemoveFailedError, locate, start
 from testsupport.rules import git, init_repo, write
 
 TASK = Task("session", "fixture-task")
@@ -134,7 +135,8 @@ def test_source_only_auto_still_requires_ask(repo):
 
 
 def test_cloud_transition_blocks_auto_resume(auto_repo, monkeypatch):
-    from devkit.core.mcp_context import ExecutionBinding, McpInteractiveError, invocation
+    from devkit_dist.features.project.repositories.invocation import ExecutionBinding, McpInteractiveError
+    from devkit_dist.features.project.usecases.invocation import invocation
 
     base, worktree = auto_repo()
     binding = ExecutionBinding(base, base)

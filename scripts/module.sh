@@ -41,8 +41,8 @@ add_selector() {
         selected+=("$base/$selector")
         return 0
     fi
-    for dir in "$base/tests/$selector" "$base"/src/*/"$selector"; do
-        if [ -d "$dir" ]; then
+    for dir in "$base/tests/$selector" "$base"/src/*/"$selector" "$base"/src/*/features/"$selector"; do
+        if [ -d "$dir" ] && [ -n "$(find "$dir" -type f -name '*.py' -print -quit)" ]; then
             selected+=("$dir")
             found=1
         fi

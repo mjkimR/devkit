@@ -8,8 +8,8 @@ from devkit_core.base.mcp import ConfirmationReply
 from scope.support import git
 from test_integration import _cli, _make_synced_repo, _start_worktree, synced_template  # noqa: F401
 
-from devkit_spec.plan_accept_mcp import PlanAcceptService
-from devkit_spec.proposal_report import publish, template
+from devkit_spec.features.proposals.usecases.native_plan_accept import PlanAcceptService
+from devkit_spec.features.proposals.usecases.report import publish, template
 
 
 @pytest.fixture
@@ -118,7 +118,7 @@ def test_plan_accept_stale_before_effects(pending, change):
 
 
 def test_plan_accept_commit_failure_preserves_exact_dirty_acceptance(pending, monkeypatch):
-    import devkit_spec.plan_accept_mcp as module
+    import devkit_spec.features.proposals.usecases.native_plan_accept as module
 
     repo, wt, uri = pending
     original = module._git
@@ -142,7 +142,7 @@ def test_plan_accept_commit_failure_preserves_exact_dirty_acceptance(pending, mo
 
 
 def test_plan_accept_rejects_commit_hook_unrelated_delta(pending, monkeypatch):
-    import devkit_spec.plan_accept_mcp as module
+    import devkit_spec.features.proposals.usecases.native_plan_accept as module
 
     repo, wt, uri = pending
     original = module._git
@@ -166,7 +166,7 @@ def test_plan_accept_rejects_commit_hook_unrelated_delta(pending, monkeypatch):
 
 
 def test_plan_accept_expiry_while_form_waits_refuses(pending, monkeypatch):
-    import devkit_spec.proposal_report as reports
+    import devkit_spec.features.proposals.usecases.report as reports
 
     repo, wt, uri = pending
 
@@ -184,7 +184,7 @@ def test_plan_accept_expiry_while_form_waits_refuses(pending, monkeypatch):
 
 
 def test_plan_accept_unavailable_form_performs_no_effect(pending):
-    from devkit.host.errors import HostConfirmationError
+    from devkit_dist.features.host.models.errors import HostConfirmationError
 
     repo, wt, uri = pending
     before = git(repo, "show-ref")
@@ -211,7 +211,7 @@ def _report(root):
 
 
 def test_restart_after_acceptance_requires_fresh_report_and_form(pending, monkeypatch):
-    import devkit_spec.plan_accept_mcp as module
+    import devkit_spec.features.proposals.usecases.native_plan_accept as module
 
     repo, wt, uri = pending
     original = module._Acceptance.before_merge
@@ -277,7 +277,7 @@ def test_required_pr_policy_refuses_before_native_form(pending):
 
 @pytest.mark.parametrize("uri", ["", "shared://wrong/invalid"])
 def test_remaining_effects_require_report_before_form(pending, uri):
-    from devkit_spec.proposal_report import ReviewRefreshRequiredError
+    from devkit_spec.features.proposals.usecases.report import ReviewRefreshRequiredError
 
     repo, _wt, report = pending
 
@@ -298,8 +298,8 @@ def test_remaining_effects_require_report_before_form(pending, uri):
 
 @pytest.mark.parametrize("failure", ["returned", "raised"])
 def test_combined_partial_failure_has_recovery_directive(pending, monkeypatch, failure):
-    from devkit_spec.handoff_mcp import HandoffService
-    from devkit_spec.plan_accept_mcp import ProposalApprovalStaleError
+    from devkit_spec.features.proposals.usecases.native_handoff import HandoffService
+    from devkit_spec.features.proposals.usecases.native_plan_accept import ProposalApprovalStaleError
 
     repo, _wt, uri = pending
 
@@ -322,7 +322,7 @@ def test_combined_partial_failure_has_recovery_directive(pending, monkeypatch, f
 
 
 def test_changed_integration_identity_returns_proposal_stale_code(pending, monkeypatch):
-    from devkit.integration import providers
+    from devkit_agt.features.integration.services import providers
 
     repo, wt, uri = pending
     before = git(repo, "show-ref")

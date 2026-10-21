@@ -9,14 +9,14 @@ from devkit_core.base.errors import ArgumentError
 from devkit_core.core.frontmatter import parse
 from proposals.support import INCUBATED, TODAY, accept, write_workflow
 
-from devkit_spec.errors import (
+from devkit_spec.base.errors import (
     ProposalExistsError,
     ProposalNotApprovedError,
     ProposalNotFoundError,
     ProposalSlugConflictError,
     ProposalSlugError,
 )
-from devkit_spec.proposals import clean_slug, create_padr, create_proposal, create_spec, yaml_scalar
+from devkit_spec.features.proposals import clean_slug, create_padr, create_proposal, create_spec, yaml_scalar
 
 
 @pytest.mark.parametrize(

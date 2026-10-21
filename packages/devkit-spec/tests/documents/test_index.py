@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 from conftest import Write
 
-from devkit_spec.documents import DocumentIndex
-from devkit_spec.errors import DuplicateIdError, UnresolvedIdError
+from devkit_spec.base.errors import DuplicateIdError, UnresolvedIdError
+from devkit_spec.features.documents import DocumentIndex
 
 
 def _doc(document_id: str, body: str = "", status: str = "active") -> str:

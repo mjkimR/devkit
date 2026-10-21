@@ -1,6 +1,6 @@
 # Shared artifacts
 
-Contract: `CAP-COLL-shared-artifacts`. API: `devkit.shared` exports PutRequest, Artifact, ArtifactMetadata, Page,
+Contract: `CAP-COLL-shared-artifacts`. API: `devkit_dist.features.shared` exports PutRequest, Artifact, ArtifactMetadata, Page,
 SweepResult, RepositoryContext, SharedArtifactAdapter and adapter(workspace).
 
 ```sh
@@ -16,13 +16,13 @@ language before consuming the exact URI. Cloud CLI's local store cannot share ac
 
 ## Adapter authoring
 
-Declare `[project.entry-points."devkit.shared.adapters"]` with `my-adapter = "my_package:factory"`.
+Declare `[project.entry-points."devkit_dist.features.shared.adapters"]` with `my-adapter = "my_package:factory"`.
 The factory accepts the service-owned RepositoryContext and returns a SharedArtifactAdapter whose adapter_id
 matches its entry-point name. Expose a nonempty authorized repository_namespace. Never use a caller's repository
 name as credentials. Implement put/get/list/sweep with the domain's immutable, bounded, expiry and error semantics;
-return public result types and raise public devkit.shared.errors advisories. Do not fabricate local paths.
+return public result types and raise public devkit_dist.features.shared.models.errors advisories. Do not fabricate local paths.
 
-Run `devkit.shared.conformance.assert_conformance(adapter, advance_clock)` on an empty isolated namespace with an
+Run `devkit_dist.features.shared.services.conformance.assert_conformance(adapter, advance_clock)` on an empty isolated namespace with an
 injected clock; advance_clock accepts timedelta. The helper writes, retries, paginates, expires and sweeps fixtures.
 Add backend-specific concurrency, authentication, permissions, transport-loss and real cross-host integration tests.
 Passing this semantic harness does not certify production authorization or consistency.

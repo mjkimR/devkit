@@ -10,10 +10,10 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from devkit.advisory import ActionMode, Actor, Level
-from devkit.gate import GateRefusedError, Stage
-from devkit.gate.cli import cli
-from devkit.gate.gates.rules import MAX_LISTED, RulesCheckGate, _not_run
-from devkit.rules import RuleLoadError, RulesRunError
+from devkit_agt.features.gate import GateRefusedError, Stage
+from devkit_agt.features.gate.cli import cli
+from devkit_agt.features.gate.usecases.gates.rules import MAX_LISTED, RulesCheckGate, _not_run
+from devkit_agt.features.rules import RuleLoadError, RulesRunError
 from testsupport.gate import gate_ctx, git
 
 

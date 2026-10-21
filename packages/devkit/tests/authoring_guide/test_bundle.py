@@ -9,14 +9,14 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.cli import cli
-from devkit.core import load_receipt
-from devkit.distribution.bundles import load_bundle
-from devkit.rules import resolve_managed_rules
+from devkit_agt.features.rules import resolve_managed_rules
+from devkit_dist.cli import cli
+from devkit_dist.features.distribution.services.bundles import load_bundle
+from devkit_dist.features.project.repositories.receipt import load_receipt
 from testsupport.rules import write
 
 PACKAGE = Path(__file__).parents[2]
-BUNDLE = PACKAGE / "src/devkit/authoring_guide/bundle"
+BUNDLE = PACKAGE / "src/devkit_agt/authoring_guide/bundle"
 
 
 def test_presets_pair_each_playbook_with_its_rule() -> None:

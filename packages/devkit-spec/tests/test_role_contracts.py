@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 import yaml
-from devkit.distribution.bundles.subagents import read_contract, render_projection
+from devkit_dist.features.distribution.services.bundles.subagents import read_contract, render_projection
 
 BUNDLE = Path(__file__).resolve().parents[1] / "src/devkit_spec/bundle"
 WORKERS = ("development-worker", "planning-worker")
@@ -404,7 +404,7 @@ def test_callers_block_permission_failures_without_fabricated_worker_records() -
 
 
 def _rendered(path: Path) -> str:
-    from devkit.distribution.bundles.templates import render_template
+    from devkit_dist.features.distribution.services.bundles.templates import render_template
 
     if path.name.endswith(".md.jinja"):
         return render_template(path.read_bytes(), {}, str(path), environment="local").decode()

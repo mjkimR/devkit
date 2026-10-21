@@ -18,8 +18,9 @@ Contract: `CAP-VIEW-repository-viewer`. Decisions: `ADR-viewer-distribution-and-
 
 ## Layout
 
-- `src/devkit_viewer/`: the command (`cli`), registration (`repositories`), Git reads (`git`) and the HTTP server
-  (`server`).
+- `src/devkit_viewer/features/browse/`: `cli/` exposes the command, `http/` serves read-only routes,
+  `usecases/` selects repositories, reads documents and renders retained reports; `repositories/` reads committed
+  Git content, and `models/` holds repository identity and errors. Models never import repository implementations.
 - `src/devkit_viewer/static/`: the committed app build, a tracked generated artifact (`viewer-assets` in
   `.devkit/generated.toml`). Rebuild it with `just viewer build`; `devkit generated check viewer-assets` refuses a
   stale one.

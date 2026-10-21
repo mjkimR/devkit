@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit.rules import Violation
-from devkit.rules.testing import check, load_rule
+from devkit_agt.features.rules import Violation
+from devkit_agt.features.rules.services.testing import check, load_rule
 
 RULE = load_rule(__file__)
 
@@ -131,7 +131,7 @@ _GLOSSARY_HEADER = "| Term | Definition | Owner | Avoid | Code identifiers |\n| 
 
 
 def test_glossary_owner_resolution_without_indexing_or_autofix(tmp_path: Path) -> None:
-    from devkit_spec.documents import DocumentIndex
+    from devkit_spec.features.documents import DocumentIndex
 
     glossary = _GLOSSARY_HEADER + (
         "| one | definition | `CAP-A-valid`, [ADR-missing] | | |\n"
@@ -205,7 +205,7 @@ def test_glossary_table_state_ends_at_blank_or_fence(tmp_path: Path) -> None:
 def test_glossary_uses_staged_snapshot_contents(tmp_path: Path) -> None:
     import subprocess
 
-    from devkit.rules.workspace.snapshot import git_snapshot, materialize_snapshot
+    from devkit_agt.features.rules.repositories.workspace.snapshot import git_snapshot, materialize_snapshot
 
     root = tmp_path / "repo"
     root.mkdir()

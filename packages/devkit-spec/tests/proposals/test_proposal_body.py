@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from devkit_spec.proposals import carry_proposal_body, ensure_ac_ids
-from devkit_spec.proposals.body import classify
+from devkit_spec.features.proposals import carry_proposal_body, ensure_ac_ids
+from devkit_spec.features.proposals.services.body import classify
 
 
 def test_ensure_ac_ids_tags_every_h3() -> None:

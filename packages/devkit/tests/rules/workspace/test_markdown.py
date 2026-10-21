@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import pytest
-from devkit.rules import count_tasks, extract_links
-from devkit.rules.workspace.markdown import fenced_lines, prose_lines
+from devkit_agt.features.rules import count_tasks, extract_links
+from devkit_agt.features.rules.repositories.workspace.markdown import fenced_lines, prose_lines
 
 
 def test_count_tasks_skips_frontmatter_and_fences() -> None:

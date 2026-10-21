@@ -1,0 +1,17 @@
+schema = 1
+name = "devkit-dev"
+version = "0.1.0"
+default_preset = "structure"
+
+[[assets]]
+id = "project-structure"
+kind = "instruction"
+source = "instructions/project-structure.md"
+
+[[assets]]
+id = "architecture"
+kind = "rule"
+source = "rules/architecture"
+
+[presets.structure]
+assets = ["project-structure", "architecture"]

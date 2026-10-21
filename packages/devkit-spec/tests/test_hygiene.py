@@ -5,10 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from click.testing import CliRunner
-from devkit.cli import cli as devkit_cli
+from devkit_dist.cli import cli as devkit_cli
 from scope.support import write
 
-from devkit_spec.hygiene import rejected_proposals
+from devkit_spec.features.governance.usecases.hygiene import rejected_proposals
 
 
 def _proposal(root: Path, slug: str, status: str) -> None:

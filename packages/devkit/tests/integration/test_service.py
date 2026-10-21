@@ -4,9 +4,12 @@ import asyncio
 import json
 from dataclasses import replace
 
+import devkit_agt.features.integration.services.providers as providers
+import devkit_agt.features.worktree.services.merging as merging
+import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
 import pytest
 from devkit.advisory import AdvisoryError
-from devkit.integration import (
+from devkit_agt.features.integration import (
     AuthorityError,
     CleanupContractError,
     CleanupResult,
@@ -15,16 +18,8 @@ from devkit.integration import (
     IntegrationConfigError,
     IntegrationService,
     Task,
-    providers,
 )
-from devkit.worktree import (
-    PullRequestPolicyError,
-    RemoveFailedError,
-    finish,
-    lifecycle,
-    locate,
-    merging,
-)
+from devkit_agt.features.worktree import PullRequestPolicyError, RemoveFailedError, finish, locate
 from devkit_core.base.errors import GitError
 from devkit_core.base.mcp import ConfirmationReply
 from testsupport.rules import git, write
@@ -351,7 +346,7 @@ def test_unknown_merge_outcome_is_inspected_and_not_merged_twice(repo, monkeypat
 def test_server_runtime_inside_worktree_is_refused_even_with_symlinked_python(repo, monkeypatch):
     import sys
 
-    from devkit.integration import RuntimeLocationError
+    from devkit_agt.features.integration import RuntimeLocationError
 
     base, worktree = repo
     monkeypatch.setattr(sys, "executable", str(worktree / ".venv/bin/python"))
@@ -449,7 +444,7 @@ def test_confirmation_leads_with_committed_work_and_escapes_summary(repo):
 def test_bilingual_scope_and_owned_branches(repo, method, merged, pr, number, cleanup):
     import re
 
-    from devkit.worktree.pull_request import Repository
+    from devkit_agt.features.worktree.repositories.pull_request import Repository
 
     base, _ = repo
     request = IntegrationService(base).prepare("dev-demo", Task("session", "evidence\nnot a heading")).request
@@ -492,7 +487,8 @@ def test_bilingual_scope_and_owned_branches(repo, method, merged, pr, number, cl
 
 
 def test_owning_workspace_language_snapshot_and_guard_independence(repo):
-    from devkit.core.mcp_context import ExecutionBinding, McpInteractiveError, invocation
+    from devkit_dist.features.project.repositories.invocation import ExecutionBinding, McpInteractiveError
+    from devkit_dist.features.project.usecases.invocation import invocation
 
     base, worktree = repo
     with (base / ".git/info/exclude").open("a") as stream:

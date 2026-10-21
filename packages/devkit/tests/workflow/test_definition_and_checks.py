@@ -4,10 +4,8 @@ import json
 from pathlib import Path
 
 import pytest
-from devkit.core.errors import ReceiptError
-from devkit.core.receipt import load_receipt
-from devkit.rules import count_tasks
-from devkit.workflow import (
+from devkit_agt.features.rules import count_tasks
+from devkit_agt.features.workflow import (
     CheckClass,
     CheckError,
     DefinitionError,
@@ -19,8 +17,10 @@ from devkit.workflow import (
     resolve_definition,
     validate_definition,
 )
-from devkit.workflow.definition.discovery import discover_definitions, managed_definition_paths
-from devkit.workflow.definition.validation import definition_warnings
+from devkit_agt.features.workflow.repositories.definitions import discover_definitions, managed_definition_paths
+from devkit_agt.features.workflow.services.definition.validation import definition_warnings
+from devkit_dist.base.errors import ReceiptError
+from devkit_dist.features.project.repositories.receipt import load_receipt
 from testsupport.workflow import SIMPLE_UNIT, WORKFLOW, run_cli, simple_workspace, write_config, write_receipt
 
 # --- check syntax and registry ------------------------------------------------
@@ -52,7 +52,7 @@ def test_registry_resolves_aliases_against_anchor() -> None:
 
 
 def test_registry_declared_checks_must_be_runner_or_human() -> None:
-    from devkit.workflow import Check
+    from devkit_agt.features.workflow import Check
 
     reg = Registry.build("task.md", (Check("ci-passed", CheckClass.RUNNER, "ci"),))
     assert reg.lookup("ci-passed") is not None
@@ -67,7 +67,7 @@ def test_registry_declared_checks_must_be_runner_or_human() -> None:
 def test_count_tasks() -> None:
     text = "- [ ] a\n- [x] b\n* [X] c\n  - [ ] nested\n- not a task\n"
     assert count_tasks(text) == (2, 4)
-    # Shared with devkit.rules: frontmatter and fenced examples are not tasks.
+    # Shared with devkit_agt.features.rules: frontmatter and fenced examples are not tasks.
     fenced = "---\nstatus: draft\n- [ ] in frontmatter\n---\n```\n- [ ] in a fence\n```\n- [x] real\n"
     assert count_tasks(fenced) == (1, 1)
 

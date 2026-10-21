@@ -10,7 +10,7 @@ use it).
 
 ```python
 from pathlib import Path
-from devkit.rules import RulesRunError, git_snapshot, run_project_rules
+from devkit_agt.features.rules import RulesRunError, git_snapshot, run_project_rules
 
 run = run_project_rules(Path("."))  # whole workspace, linter phase
 run = run_project_rules(Path("."), targets=["docs"])  # files or directories; [] checks nothing
@@ -63,7 +63,7 @@ destinations are left alone, `#fragment` and `?query` are kept, and a
 destination that still names its target keeps the author's spelling.
 Destinations are read as `markdown_link` reads them (`local_target`: escapes
 removed, percent-encoding decoded), and a new destination is written with
-`devkit.rules.workspace.markdown.encode_destination(path, suffix='', angle=False)`, which percent-encodes `%`,
+`devkit_agt.features.rules.repositories.workspace.markdown.encode_destination(path, suffix='', angle=False)`, which percent-encodes `%`,
 `\`, `#`, `?`, `<` and `>` and wraps a path with whitespace or parentheses in
 `<...>` (unless the destination already is), so it reads back as the same path;
 a trailing `/` (`docs/sub/`) is kept. A file that is a symbolic link is skipped
@@ -80,7 +80,7 @@ covers, left as written), or, for a whole file (`line` `0`, empty `target`),
 
 ### Rule tests
 
-`devkit.rules.testing` is what the tests in a rule's folder use
+`devkit_agt.features.rules.services.testing` is what the tests in a rule's folder use
 (`CAP-GOV-rule-authoring`):
 
 - `load_rule(anchor, rule_id=None) -> Rule`: `anchor` is a test file
@@ -108,14 +108,14 @@ covers, left as written), or, for a whole file (`line` `0`, empty `target`),
   without raising for its problems; `write_files(root, files)` and
   `rule_directory(anchor)` are the steps on their own.
 
-`devkit.rules.engine.rule_tests` is the command's library half:
+`devkit_agt.features.rules.usecases.rule_tests` is the command's library half:
 `rule_folder(rule)` and `tests_directory(rule)` locate a rule's folder and
 `tests/` (an override without `tests/` uses the managed copy's, which `load_rule`
 runs against the overridden modules), and `run_rule_tests(root, rules, pytest_args=())` returns one
 `RuleTestRun` per rule (`rule_id`, `tests`, `result` as `RuleTestResult`,
-`run` as the `devkit.compact.CommandRun`, `exit_code`), raising
+`run` as the `devkit_agt.features.compact.CommandRun`, `exit_code`), raising
 `RulesTestUnavailableError` when pytest is not importable; it never prints.
-`devkit.compact` is imported only when tests run.
+`devkit_agt.features.compact` is imported only when tests run.
 
 ### Custom rules
 
@@ -135,8 +135,8 @@ and the rule contract (settings, `guide`, autofix) in the
 ```python
 from dataclasses import dataclass, field
 
-from devkit.rules import RuleContext, Violation
-from devkit.rules.rules import BaseRule
+from devkit_agt.features.rules import RuleContext, Violation
+from devkit_agt.features.rules.services.builtins import BaseRule
 
 
 @dataclass(frozen=True)

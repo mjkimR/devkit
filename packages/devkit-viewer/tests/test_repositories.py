@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 from viewer_fixtures import MakeRepo
 
-from devkit_viewer.errors import NoRepositoryError, RepoDuplicateError, RepoInvalidError
-from devkit_viewer.repositories import register
+from devkit_viewer.features.browse.models.errors import NoRepositoryError, RepoDuplicateError, RepoInvalidError
+from devkit_viewer.features.browse.usecases.register import register
 
 
 def test_repos_sorted_by_id(make_repo: MakeRepo, tmp_path: Path) -> None:

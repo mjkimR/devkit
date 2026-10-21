@@ -23,7 +23,7 @@ from proposals.support import (
     write_workflow,
 )
 
-from devkit_spec.errors import (
+from devkit_spec.base.errors import (
     ProposalHandoffError,
     ProposalInvalidError,
     ProposalNeedsDecomposeError,
@@ -34,8 +34,14 @@ from devkit_spec.errors import (
     ProposalTargetExistsError,
     ProposalWorkflowError,
 )
-from devkit_spec.proposals import SKELETON_MARKER, HandoffResult, create_padr, create_proposal, handoff_proposal
-from devkit_spec.proposals import specs as specs_module
+from devkit_spec.features.proposals import (
+    SKELETON_MARKER,
+    HandoffResult,
+    create_padr,
+    create_proposal,
+    handoff_proposal,
+)
+from devkit_spec.features.proposals.usecases import specs as specs_module
 
 SPEC = f"specs/{MONTH}/{STAMP}"
 
@@ -473,9 +479,9 @@ def test_rewrites_code_span_paths_into_the_bundle(workspace: Path) -> None:
 
 
 def test_code_span_path_matching_stays_linear() -> None:
-    from devkit_spec.proposals.rewrite import _CODE_SPAN_PATH
+    from devkit_spec.features.proposals.services.rewrite import _CODE_SPAN_PATH
 
-    long = "packages/devkit-spec/src/devkit_spec/proposals/rewrite.py"
+    long = "packages/devkit-spec/src/devkit_spec/features/proposals/services/rewrite.py"
     started = time.monotonic()
     # A nested-quantifier pattern needed seconds for the 26-character case and doubled per character.
     assert _CODE_SPAN_PATH.search(f"`docs/{'a' * 26} x`") is None
@@ -656,7 +662,7 @@ def test_any_failure_while_writing_is_rolled_back(
     write("docs/proposals/PROP-bind/materials/a.md", "# a\n")
     accept(proposal)
     with monkeypatch.context() as patch:
-        patch.setattr("devkit_spec.proposals.specs.write_binding", _fail_binding(error))
+        patch.setattr("devkit_spec.features.proposals.usecases.specs.write_binding", _fail_binding(error))
         with pytest.raises(raised_type) as raised:
             handoff_proposal(workspace, "bind", today=TODAY)
     # An advisory error keeps its own code; anything else is a handoff failure.
@@ -684,7 +690,7 @@ def test_moves_across_file_systems(workspace: Path, write: Write, monkeypatch: p
     write("docs/proposals/PROP-far/materials/a.md", "# a\n")
     write("docs/proposals/PROP-far/notes.md", "# notes\n")
     accept(proposal)
-    monkeypatch.setattr("devkit_spec.proposals.specs.os.rename", _cross_device(proposal.parent))
+    monkeypatch.setattr("devkit_spec.features.proposals.usecases.specs.os.rename", _cross_device(proposal.parent))
     result = handoff_proposal(workspace, "far", today=TODAY)
     preserved = workspace / f"docs/materials/{MONTH}/{STAMP}-far"
     assert result.materials == preserved.relative_to(workspace).as_posix()
@@ -706,8 +712,8 @@ def test_a_partial_copy_across_file_systems_is_removed(
         (destination / "a.md").write_text("# a", encoding="utf-8")
         raise OSError("No space left on device")
 
-    monkeypatch.setattr("devkit_spec.proposals.specs.os.rename", _cross_device(proposal.parent))
-    monkeypatch.setattr("devkit_spec.proposals.specs.shutil.copytree", copytree)
+    monkeypatch.setattr("devkit_spec.features.proposals.usecases.specs.os.rename", _cross_device(proposal.parent))
+    monkeypatch.setattr("devkit_spec.features.proposals.usecases.specs.shutil.copytree", copytree)
     with pytest.raises(ProposalHandoffError):
         handoff_proposal(workspace, "partial", today=TODAY)
     assert sorted(p.name for p in (workspace / f"docs/materials/{MONTH}").iterdir()) == ["kept.md"]
@@ -921,7 +927,9 @@ def test_a_roll_back_leaves_no_directory_inside_the_materials(
     write("docs/proposals/PROP-prune/extra/deep/notes.md", "# notes\n")
     write("docs/proposals/PROP-prune/z.md", "# z\n")
     accept(proposal)
-    monkeypatch.setattr("devkit_spec.proposals.handoff.move_path", _failing_move(lambda path: path.name == "z.md"))
+    monkeypatch.setattr(
+        "devkit_spec.features.proposals.usecases.handoff.move_path", _failing_move(lambda path: path.name == "z.md")
+    )
     with pytest.raises(ProposalHandoffError):
         handoff_proposal(workspace, "prune", today=TODAY)
     bundle = proposal.parent
@@ -938,7 +946,9 @@ def test_a_roll_back_never_removes_what_it_could_not_move_back(
     write("docs/proposals/PROP-stuck/z.md", "# z\n")
     accept(proposal)
     preserved = workspace / f"docs/materials/{MONTH}/{STAMP}-stuck"
-    monkeypatch.setattr("devkit_spec.proposals.handoff.move_path", _failing_move(lambda path: path.name == "z.md"))
+    monkeypatch.setattr(
+        "devkit_spec.features.proposals.usecases.handoff.move_path", _failing_move(lambda path: path.name == "z.md")
+    )
     move = shutil.move
 
     def refuse(source: object, destination: object) -> object:
@@ -946,7 +956,7 @@ def test_a_roll_back_never_removes_what_it_could_not_move_back(
             raise OSError("simulated failure")
         return move(source, destination)  # type: ignore[arg-type]
 
-    monkeypatch.setattr("devkit_spec.proposals.specs.shutil.move", refuse)
+    monkeypatch.setattr("devkit_spec.features.proposals.usecases.specs.shutil.move", refuse)
     with pytest.raises(ProposalHandoffError) as raised:
         handoff_proposal(workspace, "stuck", today=TODAY)
     assert "roll-back was incomplete" in raised.value.message
@@ -966,7 +976,9 @@ def test_a_roll_back_reports_a_stuck_file_where_a_later_move_back_carried_it(
     accept(proposal)
     bundle = proposal.parent.resolve()
     preserved = workspace.resolve() / f"docs/materials/{MONTH}/{STAMP}-carried"
-    monkeypatch.setattr("devkit_spec.proposals.handoff.move_path", _failing_move(lambda path: path.name == "z.md"))
+    monkeypatch.setattr(
+        "devkit_spec.features.proposals.usecases.handoff.move_path", _failing_move(lambda path: path.name == "z.md")
+    )
     move = shutil.move
 
     def refuse(source: object, destination: object) -> object:
@@ -974,7 +986,7 @@ def test_a_roll_back_reports_a_stuck_file_where_a_later_move_back_carried_it(
             raise OSError("simulated failure")
         return move(source, destination)  # type: ignore[arg-type]
 
-    monkeypatch.setattr("devkit_spec.proposals.specs.shutil.move", refuse)
+    monkeypatch.setattr("devkit_spec.features.proposals.usecases.specs.shutil.move", refuse)
     with pytest.raises(ProposalHandoffError) as raised:
         handoff_proposal(workspace, "carried", today=TODAY)
     assert "roll-back was incomplete" in raised.value.message

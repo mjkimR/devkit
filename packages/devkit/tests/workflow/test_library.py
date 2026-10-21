@@ -6,9 +6,9 @@ import re
 import shutil
 from pathlib import Path
 
-import devkit.workflow as workflow
+import devkit_agt.features.workflow as workflow
 import pytest
-from devkit.workflow import (
+from devkit_agt.features.workflow import (
     UnitNotFoundError,
     WorkflowError,
     Workspace,
@@ -17,7 +17,7 @@ from devkit.workflow import (
     plan_handoff,
     record_answer,
 )
-from devkit.workflow.unit.envelope import parse_findings
+from devkit_agt.features.workflow.services.envelope import parse_findings
 from testsupport.workflow import WORKFLOW, write_config
 
 REPO = Path(__file__).resolve().parents[4]

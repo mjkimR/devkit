@@ -6,10 +6,10 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner, Result
 from conftest import Write
-from devkit.cli import cli as devkit_cli
+from devkit_dist.cli import cli as devkit_cli
 
-from devkit_spec.config import SpecConfig, read_spec_config
-from devkit_spec.errors import SpecConfigError
+from devkit_spec.base.errors import SpecConfigError
+from devkit_spec.features.policy.services.config import SpecConfig, read_spec_config
 
 
 def _policy(workspace: Path, *args: str) -> Result:
@@ -107,6 +107,6 @@ def test_a_boolean_pull_request_policy_stops_the_command(workspace: Path, write:
 
 
 def test_spec_config_error_is_a_config_error() -> None:
-    from devkit.core.errors import ConfigError
+    from devkit_dist.base.errors import ConfigError
 
     assert issubclass(SpecConfigError, ConfigError)

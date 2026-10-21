@@ -63,8 +63,9 @@ uv pip install --python "$foundation/bin/python" "$core_wheel" "$advisory_wheel"
 import importlib.util
 from devkit_core.core import Deadline, run_git
 from devkit_core.base.mcp import McpTool
-assert importlib.util.find_spec("devkit.core") is None
-assert importlib.util.find_spec("devkit.distribution") is None
+assert importlib.util.find_spec("devkit_dist") is None
+assert importlib.util.find_spec("devkit_agt") is None
+assert importlib.util.find_spec("devkit_dist") is None
 assert importlib.util.find_spec("click") is None
 assert importlib.util.find_spec("mcp") is None
 '
@@ -83,7 +84,7 @@ mkdir -p "$standalone"
     uv run python -c "
 import importlib.util
 from importlib.metadata import entry_points, version
-assert importlib.util.find_spec('devkit.rules') is None and importlib.util.find_spec('devkit.compact') is None
+assert importlib.util.find_spec('devkit_agt') is None
 assert [entry.dist.name for entry in entry_points(group='console_scripts', name='devkit')] == ['devkit-dist']
 assert [entry.name for entry in entry_points(group='devkit.commands')] == []
 "
@@ -155,8 +156,8 @@ echo "==> creating a fresh consumer project"
     uv run devkit --version
     uv run python -c "
 from importlib.metadata import PackageNotFoundError, version
-from devkit.distribution.installation.discovery import discover_bundles
-from devkit.distribution.installation.sync import tool_identity
+from devkit_dist.features.distribution.services.installation.discovery import discover_bundles
+from devkit_dist.features.distribution.usecases.sync import tool_identity
 from importlib.metadata import entry_points
 assert tool_identity().package == 'devkit-dist'
 assert tool_identity().version == version('devkit-dist') == version('devkit-agt')
@@ -186,7 +187,7 @@ with discover_bundles() as bundles:
     echo "--- response templates: lazy imports, configured language and final output"
     uv run python -c '
 import sys
-from devkit.distribution.installation.discovery import discover_bundles
+from devkit_dist.features.distribution.services.installation.discovery import discover_bundles
 with discover_bundles() as bundles:
     assert any(item.bundle.name == "response-style" for item in bundles)
 assert "jinja2" not in sys.modules
@@ -321,13 +322,13 @@ TOML
     uv add --dev pytest >/dev/null
     tested=$(uv run devkit rules test RULE-skill-document-size RULE-agent-guide-size RULE-markdown-link)
     grep -q 'RULE_TEST: RULE-skill-document-size tests=.devkit/managed/authoring/rules/skill_document_size/tests result=passed' <<<"$tested"
-    grep -q 'RULE_TEST: RULE-markdown-link tests=.*/site-packages/devkit/rules/rules/markdown_link/tests result=passed' <<<"$tested"
+    grep -q 'RULE_TEST: RULE-markdown-link tests=.*/site-packages/devkit_agt/features/rules/services/builtins/markdown_link/tests result=passed' <<<"$tested"
     grep -q 'SUMMARY: rules=3 passed=3 failed=0 no_tests=0' <<<"$tested"
     test -z "$(find .devkit -name __pycache__ -o -name .pytest_cache)"
     echo "--- dense search with the committed model wheel (numpy and tokenizers from the index)"
     uv add --dev "devkit-embed @ $model_wheel" numpy tokenizers >/dev/null
     uv run python -c "
-from devkit.search import SearchDocument, SearchIndex, SearchMode, load_embedder
+from devkit_dist.features.search import SearchDocument, SearchIndex, SearchMode, load_embedder
 assert load_embedder().dimensions == 256
 index = SearchIndex([SearchDocument('secrets', 'Secrets must not enter the repository'), SearchDocument('length', 'File length warning')])
 assert index.search('leaked credentials', mode=SearchMode.HYBRID)[0].id == 'secrets'
@@ -341,7 +342,7 @@ assert index.search('leaked credentials', mode=SearchMode.HYBRID)[0].id == 'secr
     uv run devkit add spec:docs-skeleton >/dev/null
     uv run python -c '
 from pathlib import Path
-from devkit_spec.documents import DocumentIndex
+from devkit_spec.features.documents import DocumentIndex
 index = DocumentIndex.load(Path.cwd())
 assert not index.problems, index.problems
 for document_id in (
@@ -358,7 +359,7 @@ for document_id in (
     uv run devkit viewer --version
     uv run python - <<'PY'
 import re, subprocess, sys, urllib.request
-server = subprocess.Popen([sys.executable, "-P", "-m", "devkit", "viewer", "serve", "--port", "0"], stdout=subprocess.PIPE, text=True)
+server = subprocess.Popen([sys.executable, "-P", "-m", "devkit_dist", "viewer", "serve", "--port", "0"], stdout=subprocess.PIPE, text=True)
 try:
     line = server.stdout.readline().strip()
     match = re.fullmatch(r"\[VIEWER: url=(http://127\.0\.0\.1:\d+/) repos=1\]", line)
@@ -389,7 +390,7 @@ mkdir -p "$runtime"
 import importlib.util
 from devkit.advisory import AdvisoryError, Level
 assert AdvisoryError('x', code='SMOKE').to_dict()['code'] == 'SMOKE' and Level.NOTICE
-assert importlib.util.find_spec('devkit.cli') is None and importlib.util.find_spec('devkit.core') is None
+assert importlib.util.find_spec('devkit_dist') is None and importlib.util.find_spec('devkit_agt') is None
 "
     test ! -e .venv/bin/devkit
 )

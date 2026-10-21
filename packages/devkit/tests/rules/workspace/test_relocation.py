@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 
 import pytest
-from devkit.rules import (
+from devkit_agt.features.rules import (
     LinkRelocation,
     RelocatedLink,
     UnresolvedLink,

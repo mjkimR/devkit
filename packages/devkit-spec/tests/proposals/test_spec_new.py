@@ -9,13 +9,13 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner, Result
 from conftest import Write
-from devkit.cli import cli as devkit_cli
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
+from devkit_dist.cli import cli as devkit_cli
 from proposals.support import MONTH, STAMP, TODAY, WORKFLOW, spec_dir, write_workflow
 
-from devkit_spec.errors import SpecExistsError, SpecSlugError, SpecWorkflowError, SpecWriteError
-from devkit_spec.proposals import SKELETON_MARKER, create_proposal, create_spec
+from devkit_spec.base.errors import SpecExistsError, SpecSlugError, SpecWorkflowError, SpecWriteError
+from devkit_spec.features.proposals import SKELETON_MARKER, create_proposal, create_spec
 
 
 def _spec_new(workspace: Path, *args: str) -> Result:
@@ -110,7 +110,7 @@ def test_any_failure_while_writing_is_rolled_back(
     def write_binding(*_: object) -> None:
         raise error
 
-    monkeypatch.setattr("devkit_spec.proposals.specs.write_binding", write_binding)
+    monkeypatch.setattr("devkit_spec.features.proposals.usecases.specs.write_binding", write_binding)
     with pytest.raises(raised_type) as raised:
         create_spec(workspace, "broken", day=TODAY)
     assert not (workspace / "specs").exists()
@@ -128,8 +128,8 @@ def test_an_incomplete_roll_back_says_so(workspace: Path, monkeypatch: pytest.Mo
     def rmtree(path: object, *_: object, **__: object) -> None:
         raise OSError("simulated failure")
 
-    monkeypatch.setattr("devkit_spec.proposals.specs.write_binding", write_binding)
-    monkeypatch.setattr("devkit_spec.proposals.specs.shutil.rmtree", rmtree)
+    monkeypatch.setattr("devkit_spec.features.proposals.usecases.specs.write_binding", write_binding)
+    monkeypatch.setattr("devkit_spec.features.proposals.usecases.specs.shutil.rmtree", rmtree)
     with pytest.raises(SpecWriteError) as raised:
         create_spec(workspace, "broken", day=TODAY)
     assert "roll-back was incomplete" in raised.value.message and "were removed" not in raised.value.message
@@ -177,7 +177,7 @@ def test_cli(workspace: Path) -> None:
 def _devkit(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
     env = {key: value for key, value in os.environ.items() if not key.startswith("DEVKIT_")}
     return subprocess.run(
-        [sys.executable, "-m", "devkit", *args, "-w", str(root)],
+        [sys.executable, "-m", "devkit_dist", *args, "-w", str(root)],
         capture_output=True,
         text=True,
         encoding="utf-8",
@@ -240,8 +240,8 @@ def test_spec_new_runs_on_the_slugs_development_branch(tmp_path: Path) -> None:
 
 
 def test_a_slug_fits_its_activity_branches() -> None:
-    from devkit_spec.errors import SpecSlugError
-    from devkit_spec.proposals.scaffold import new_slug
+    from devkit_spec.base.errors import SpecSlugError
+    from devkit_spec.features.proposals.usecases.scaffold import new_slug
 
     assert new_slug("a" * 59, error=SpecSlugError) == "a" * 59  # plan-<slug> and dev-<slug> fit 64 characters
     with pytest.raises(SpecSlugError, match="at most 59"):
@@ -249,7 +249,7 @@ def test_a_slug_fits_its_activity_branches() -> None:
 
 
 def test_a_bugfix_spec_is_characterized_not_told_as_a_story() -> None:
-    from devkit_spec.proposals.specs import spec_files
+    from devkit_spec.features.proposals.usecases.specs import spec_files
 
     bugfix = spec_files("x", "Fix x", "2026-10-16", origin="o\n", bugfix=True)["spec.md"]
     feature = spec_files("x", "Add x", "2026-10-16", origin="o\n")["spec.md"]

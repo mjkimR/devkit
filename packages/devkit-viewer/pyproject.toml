@@ -12,7 +12,7 @@ dependencies = [
 
 # The command group mounted under devkit: `devkit viewer ...`.
 [project.entry-points."devkit.commands"]
-viewer = "devkit_viewer.cli:cli"
+viewer = "devkit_viewer.features.browse.cli:cli"
 
 [dependency-groups]
 dev = [

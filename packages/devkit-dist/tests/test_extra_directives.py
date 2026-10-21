@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import pytest
 from click.testing import CliRunner
-from devkit.core.errors import AGT_REQUIREMENT, DIST_REQUIREMENT, extra_install_fix
-from devkit.search.errors import ModelNotFoundError, SearchExtraMissingError
+from devkit_dist.base.errors import AGT_REQUIREMENT, DIST_REQUIREMENT, extra_install_fix
+from devkit_dist.features.search.models.errors import ModelNotFoundError, SearchExtraMissingError
 from distsupport.distribution import cli
 
 AGT = "devkit-agt[{extra}] @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"

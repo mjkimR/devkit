@@ -8,12 +8,12 @@ import os
 import subprocess
 from pathlib import Path
 
-from devkit.gate import GateContext, Stage
+from devkit_agt.features.gate import GateContext, Stage
 
 # A deployed gate package's module: refuses every commit unless its ``allow`` setting is on.
 GATE = """from dataclasses import dataclass
 
-from devkit.gate import BaseGate, GateContext, GateRefusedError, GateResult, Stage
+from devkit_agt.features.gate import BaseGate, GateContext, GateRefusedError, GateResult, Stage
 
 
 @dataclass(frozen=True)

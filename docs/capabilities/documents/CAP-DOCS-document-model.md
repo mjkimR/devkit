@@ -8,7 +8,7 @@ stories:
   - US-find-the-right-documents
   - US-keep-the-living-spec-consistent
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/documents/
+  - packages/devkit-spec/src/devkit_spec/features/documents/
 created_at: 2026-10-13
 ---
 
@@ -17,7 +17,7 @@ created_at: 2026-10-13
 ## 1. Summary
 
 The document model decides which files are spec documents, how each one is identified and how documents reference
-each other. `devkit_spec.documents` implements it as a workspace index rebuilt from the files on every load. The
+each other. `devkit_spec.features.documents` implements it as a workspace index rebuilt from the files on every load. The
 lookup commands (`CAP-DOCS-document-lookup`), document search (`CAP-DOCS-document-search`), namespaces
 (`CAP-DOCS-namespaces`) and spec rules (`CAP-GOV-spec-rules`) resolve document identities through this index.
 `RULE-document-reference` also reads root glossary Owner cells through the rules workspace cache; the glossary
@@ -187,7 +187,7 @@ Commands that print documents in JSON use the record `id`, `kind`, `path` (works
 ### 4.4 Library
 
 ```python
-from devkit_spec.documents import DocumentIndex, Kind, is_id, kind_of, rewrite
+from devkit_spec.features.documents import DocumentIndex, Kind, is_id, kind_of, rewrite
 
 index = DocumentIndex.load(root)  # documents, by_id, problems (SPEC_DOCUMENT_INVALID), historical
 document = index.resolve("CAP-CORE-search")  # UnresolvedIdError, DuplicateIdError

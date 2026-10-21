@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
-from devkit.rules import RuleContext, Violation, evaluate_rules
-from devkit.rules.testing import check, load_rule, write_files
+from devkit_agt.features.rules import RuleContext, Violation, evaluate_rules
+from devkit_agt.features.rules.services.testing import check, load_rule, write_files
 
 RULE = load_rule(__file__)
 TODAY = date.today().isoformat()

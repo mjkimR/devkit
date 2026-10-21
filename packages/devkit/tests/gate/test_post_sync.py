@@ -5,10 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from devkit.distribution.bundles import load_bundle
-from devkit.distribution.installation.config import update_config
-from devkit.distribution.installation.discovery import InstalledBundle
-from devkit.distribution.installation.sync import sync_project
+from devkit_dist.features.distribution.services.bundles import load_bundle
+from devkit_dist.features.distribution.services.installation.config import update_config
+from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
+from devkit_dist.features.distribution.usecases.sync import sync_project
 from testsupport.gate import git
 
 

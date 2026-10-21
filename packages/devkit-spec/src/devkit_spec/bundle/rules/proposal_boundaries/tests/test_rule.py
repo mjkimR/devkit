@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit.rules import Severity, Violation
-from devkit.rules.testing import check, load_rule
+from devkit_agt.features.rules import Severity, Violation
+from devkit_agt.features.rules.services.testing import check, load_rule
 
 RULE = load_rule(__file__)
 CONFIG = ".devkit/config.toml"

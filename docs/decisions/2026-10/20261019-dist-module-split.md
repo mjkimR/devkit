@@ -3,7 +3,8 @@ id: ADR-dist-module-split
 title: Namespace and module split between devkit-dist and devkit-agt
 summary: Keeps the devkit.* module paths through the shared PEP 420 namespace and moves core, search, host, distribution and the root CLI whole into devkit-dist, leaving the harness engines and devkit.compact (devkit run) in devkit-agt.
 proposal: SPEC-devkit-dist-package-separation
-status: accepted
+status: superseded
+superseded_by: ADR-independent-package-namespaces-and-feature-layout
 created_at: 2026-10-19
 ---
 

@@ -76,7 +76,7 @@ SIMPLE_UNIT = ".devkit/transient/work/u"
 
 def run_cli(*args: str) -> Result:
     """Invoke ``devkit workflow`` with ``args``."""
-    from devkit.workflow.cli import cli
+    from devkit_agt.features.workflow.cli import cli
 
     return CliRunner().invoke(cli, list(args))
 

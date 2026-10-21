@@ -182,7 +182,7 @@ def test_reviewer_payloads_carry_the_round_inputs(role: str) -> None:
 
 
 def _rendered(path: Path) -> str:
-    from devkit.distribution.bundles.templates import render_template
+    from devkit_dist.features.distribution.services.bundles.templates import render_template
 
     if path.name.endswith(".md.jinja"):
         return render_template(path.read_bytes(), {}, str(path), environment="local").decode()

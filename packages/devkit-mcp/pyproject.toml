@@ -8,10 +8,10 @@ dependencies = [
     "devkit-core==0.1.1","devkit-dist==0.1.1", "mcp>=1.30,<2", "jsonschema>=4.23,<5"]
 
 [project.entry-points."devkit.commands"]
-mcp = "devkit_mcp.cli:cli"
+mcp = "devkit_mcp.features.runtime.cli:cli"
 
 [project.entry-points."devkit.mcp.registrations"]
-devkit = "devkit_mcp.configuration:descriptor"
+devkit = "devkit_mcp.features.runtime.usecases.configuration:descriptor"
 
 [tool.uv.sources]
 devkit-core = { workspace = true }

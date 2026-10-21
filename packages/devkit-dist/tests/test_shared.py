@@ -12,13 +12,20 @@ from unittest.mock import patch
 
 import pytest
 from click.testing import CliRunner
-from devkit.shared import PutRequest
-from devkit.shared.cli import cli
-from devkit.shared.errors import AdapterError, ExclusionError, ExpiredError, InputError, MissingError, SharedError
-from devkit.shared.local import LocalAdapter, discover
-from devkit.shared.mcp import tools
-from devkit.shared.service import adapter
 from devkit_core.core.git import run_git
+from devkit_dist.features.shared import PutRequest
+from devkit_dist.features.shared.cli import cli
+from devkit_dist.features.shared.mcp import tools
+from devkit_dist.features.shared.models.errors import (
+    AdapterError,
+    ExclusionError,
+    ExpiredError,
+    InputError,
+    MissingError,
+    SharedError,
+)
+from devkit_dist.features.shared.repositories.local import LocalAdapter, discover
+from devkit_dist.features.shared.usecases.service import adapter
 
 
 @pytest.fixture
@@ -151,7 +158,10 @@ def test_concurrent_identical_puts(repository, request_data):
 def test_atomic_publication_failure(repository, request_data):
     selected = adapter(repository)
     with (
-        patch("devkit.shared.local.os.replace", side_effect=OSError("injected publication interruption")),
+        patch(
+            "devkit_dist.features.shared.repositories.local.os.replace",
+            side_effect=OSError("injected publication interruption"),
+        ),
         pytest.raises(SharedError),
     ):
         selected.put(request_data)
@@ -236,7 +246,7 @@ def test_adapter_config_and_registration(repository, monkeypatch):
     class Entry:
         name = "local"
 
-    monkeypatch.setattr("devkit.shared.service.metadata.entry_points", lambda **_: [Entry()])
+    monkeypatch.setattr("devkit_dist.features.shared.usecases.service.metadata.entry_points", lambda **_: [Entry()])
     with pytest.raises(AdapterError):
         adapter(repository)
 
@@ -259,7 +269,7 @@ def test_pagination_and_sweep_bound(repository, request_data):
 def test_public_entry_point_conformance(repository, monkeypatch):
     from types import SimpleNamespace
 
-    from devkit.shared.conformance import assert_conformance
+    from devkit_dist.features.shared.services.conformance import assert_conformance
 
     now = datetime(2026, 1, 1, tzinfo=UTC)
 
@@ -270,7 +280,7 @@ def test_public_entry_point_conformance(repository, monkeypatch):
             super().__init__(context, clock=lambda: now)
 
     entry = SimpleNamespace(name="transactional-test", load=lambda: TestAdapter)
-    monkeypatch.setattr("devkit.shared.service.metadata.entry_points", lambda **_: [entry])
+    monkeypatch.setattr("devkit_dist.features.shared.usecases.service.metadata.entry_points", lambda **_: [entry])
     monkeypatch.setenv("DEVKIT_SHARED_ADAPTER", "transactional-test")
     selected = adapter(repository)
 
@@ -293,15 +303,16 @@ def test_invalid_adapter_registration(repository, monkeypatch, case):
     entry = SimpleNamespace(name="test", load=load)
     monkeypatch.setenv("DEVKIT_SHARED_ADAPTER", "test")
     monkeypatch.setattr(
-        "devkit.shared.service.metadata.entry_points", lambda **_: [entry, entry] if case == "duplicate" else [entry]
+        "devkit_dist.features.shared.usecases.service.metadata.entry_points",
+        lambda **_: [entry, entry] if case == "duplicate" else [entry],
     )
     with pytest.raises(AdapterError):
         adapter(repository)
 
 
 def test_timeout_and_access_codes(repository, request_data, monkeypatch):
-    from devkit.shared.errors import AccessError, TimeoutError
     from devkit_core.core.deadline import Deadline
+    from devkit_dist.features.shared.models.errors import AccessError, TimeoutError
 
     selected = adapter(repository)
     first = selected.put(request_data)
@@ -313,9 +324,15 @@ def test_timeout_and_access_codes(repository, request_data, monkeypatch):
             raise PermissionError("fixture")
         return original_open(path, *args, **kwargs)
 
-    with patch("devkit.shared.local.os.open", side_effect=denied), pytest.raises(AccessError):
+    with (
+        patch("devkit_dist.features.shared.repositories.local.os.open", side_effect=denied),
+        pytest.raises(AccessError),
+    ):
         selected.get(first.metadata.artifact_uri)
-    monkeypatch.setattr("devkit.shared.local.deadline", lambda: Deadline(0, error=lambda *_: TimeoutError("fixture")))
+    monkeypatch.setattr(
+        "devkit_dist.features.shared.repositories.local.deadline",
+        lambda: Deadline(0, error=lambda *_: TimeoutError("fixture")),
+    )
     with pytest.raises(TimeoutError):
         selected.get(first.metadata.artifact_uri)
 
@@ -356,8 +373,8 @@ def test_scope_records_and_tokens_untouched_by_every_operation(repository, reque
 def test_real_lock_timeout(repository, request_data, monkeypatch):
     import fcntl
 
-    from devkit.shared.errors import TimeoutError
     from devkit_core.core.deadline import Deadline
+    from devkit_dist.features.shared.models.errors import TimeoutError
 
     selected = adapter(repository)
     value = selected.put(request_data)
@@ -365,7 +382,8 @@ def test_real_lock_timeout(repository, request_data, monkeypatch):
     with (Path(value.local_path).parent / ".lock").open("rb") as stream:
         fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
         monkeypatch.setattr(
-            "devkit.shared.local.deadline", lambda: Deadline(0.1, error=lambda *_: TimeoutError("lock fixture"))
+            "devkit_dist.features.shared.repositories.local.deadline",
+            lambda: Deadline(0.1, error=lambda *_: TimeoutError("lock fixture")),
         )
         with pytest.raises(TimeoutError):
             selected.get(value.metadata.artifact_uri)
@@ -399,7 +417,9 @@ def test_negative_ignore_refuses_before_any_write(repository, request_data, patt
     run_git(repository, "config", "core.ignoreCase", "true")
     (repository / ".gitignore").write_text(pattern + "\n")
     before = (repository / ".git/info/exclude").read_bytes()
-    monkeypatch.setattr("devkit.shared.local.uuid.uuid4", lambda: SimpleNamespace(hex="a" * 32))
+    monkeypatch.setattr(
+        "devkit_dist.features.shared.repositories.local.uuid.uuid4", lambda: SimpleNamespace(hex="a" * 32)
+    )
     with pytest.raises(ExclusionError):
         adapter(repository).put(request_data)
     assert (repository / ".git/info/exclude").read_bytes() == before
@@ -432,8 +452,8 @@ def test_concurrent_initialization_waits_for_stable_lock(repository, request_dat
 
 
 def test_distribution_accepts_shared_table(repository):
-    from devkit.core.local_config import read_effective_config
-    from devkit.distribution.installation.config import preview_config_template, read_config
+    from devkit_dist.features.distribution.services.installation.config import preview_config_template, read_config
+    from devkit_dist.features.project.repositories.local_config import read_effective_config
 
     (repository / ".devkit/config.toml").write_text('schema=1\n[shared]\nadapter="local"\n')
     read_config(repository)
@@ -451,7 +471,7 @@ def test_adapter_rejects_incompatible_signatures(repository, monkeypatch, method
     setattr(Malformed, method, lambda self: None)
     monkeypatch.setenv("DEVKIT_SHARED_ADAPTER", "fixture")
     monkeypatch.setattr(
-        "devkit.shared.service.metadata.entry_points",
+        "devkit_dist.features.shared.usecases.service.metadata.entry_points",
         lambda **_: [SimpleNamespace(name="fixture", load=lambda: Malformed)],
     )
     with pytest.raises(AdapterError):
@@ -469,7 +489,7 @@ def test_adapter_rejects_malformed_result(repository, request_data, monkeypatch)
 
     monkeypatch.setenv("DEVKIT_SHARED_ADAPTER", "fixture")
     monkeypatch.setattr(
-        "devkit.shared.service.metadata.entry_points",
+        "devkit_dist.features.shared.usecases.service.metadata.entry_points",
         lambda **_: [SimpleNamespace(name="fixture", load=lambda: Malformed)],
     )
     with pytest.raises(AdapterError):
@@ -508,7 +528,7 @@ def test_adapter_preserves_backend_input_error(repository, monkeypatch):
 
     monkeypatch.setenv("DEVKIT_SHARED_ADAPTER", "fixture")
     monkeypatch.setattr(
-        "devkit.shared.service.metadata.entry_points",
+        "devkit_dist.features.shared.usecases.service.metadata.entry_points",
         lambda **_: [SimpleNamespace(name="fixture", load=lambda: Rejecting)],
     )
     with pytest.raises(InputError) as error:

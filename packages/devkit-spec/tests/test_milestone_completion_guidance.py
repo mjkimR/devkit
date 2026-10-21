@@ -3,8 +3,8 @@
 from pathlib import Path
 
 import pytest
-from devkit.distribution.bundles.templates import render_template
 from devkit_core.core.frontmatter import parse
+from devkit_dist.features.distribution.services.bundles.templates import render_template
 
 BUNDLE = Path(__file__).resolve().parents[1] / "src/devkit_spec/bundle"
 

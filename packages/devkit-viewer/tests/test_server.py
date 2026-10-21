@@ -12,9 +12,9 @@ from pathlib import Path
 import pytest
 from viewer_fixtures import MakeRepo, commit_files, git
 
-from devkit_viewer.errors import PortInUseError
-from devkit_viewer.repositories import register
-from devkit_viewer.server import ViewerServer, static_root
+from devkit_viewer.features.browse.http.server import ViewerServer, static_root
+from devkit_viewer.features.browse.models.errors import PortInUseError
+from devkit_viewer.features.browse.usecases.register import register
 
 
 @dataclass
@@ -185,8 +185,8 @@ def test_port_in_use_is_refused(server: ViewerServer) -> None:
 
 @pytest.fixture
 def review_artifact(server: ViewerServer, monkeypatch: pytest.MonkeyPatch):
-    from devkit.shared.api import PutRequest
-    from devkit.shared.local import LocalAdapter, discover
+    from devkit_dist.features.shared.models.api import PutRequest
+    from devkit_dist.features.shared.repositories.local import LocalAdapter, discover
 
     monkeypatch.delenv("DEVKIT_SHARED_ADAPTER", raising=False)
     selected = LocalAdapter(discover(server.repositories["alpha"].root))
@@ -255,7 +255,7 @@ def test_review_host_protection(server: ViewerServer) -> None:
 
 
 def test_review_refuses_remote_adapter(server: ViewerServer, monkeypatch: pytest.MonkeyPatch) -> None:
-    import devkit_viewer.review as review
+    import devkit_viewer.features.browse.usecases.review as review
 
     monkeypatch.setenv("DEVKIT_SHARED_ADAPTER", "remote")
     monkeypatch.setattr(review, "discover", lambda *_: pytest.fail("must refuse before discovering storage"))

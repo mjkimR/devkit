@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 import yaml
-from devkit.workflow.errors import AuthoringError
-from devkit.workflow.integration import finish_guard
-from devkit.workflow.unit.envelope import compose_envelope, load_envelopes
+from devkit_agt.features.workflow.models.errors import AuthoringError
+from devkit_agt.features.workflow.services.envelope import compose_envelope, load_envelopes
+from devkit_agt.features.workflow.usecases.integration import finish_guard
 from devkit_core.base.errors import GitError
 from testsupport.workflow import SIMPLE_UNIT, run_cli, write_config
 
@@ -217,7 +217,7 @@ def test_waiting_for_answers_is_not_a_problem(tmp_path: Path) -> None:
 
 def _new(root: Path, kind: str, *args: str, stdin: str | None = None) -> dict[str, object]:
     from click.testing import CliRunner
-    from devkit.workflow.cli import cli
+    from devkit_agt.features.workflow.cli import cli
 
     result = CliRunner().invoke(
         cli, ["envelope", kind, "-w", str(root), "--unit", SIMPLE_UNIT, "--format", "json", *args], input=stdin
@@ -420,8 +420,8 @@ def test_finish_guard_reads_the_units_the_branch_changed_at_its_tip(tmp_path: Pa
 
 def test_finish_merge_refuses_a_held_branch_through_the_installed_guard(tmp_path: Path) -> None:
     from click.testing import CliRunner
-    from devkit.cli import cli
-    from devkit.worktree import locate, start
+    from devkit_agt.features.worktree import locate, start
+    from devkit_dist.cli import cli
 
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -607,7 +607,7 @@ def test_narrowed_policies_show_and_frontmatter_takes_alternatives(narrowed: Pat
     ],
 )
 def test_malformed_gate_policies_are_definition_errors(tmp_path: Path, gates: str, reason: str) -> None:
-    from devkit.workflow import DefinitionError, parse_definition
+    from devkit_agt.features.workflow import DefinitionError, parse_definition
 
     text = f"---\nid: w\nschema_version: 1\ngates:\n  {gates}\nstages:\n  - id: a\n    human_gate: accept\n    exit: [anchor-exists]\n---\n"
     with pytest.raises(DefinitionError, match=reason):

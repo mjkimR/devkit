@@ -57,7 +57,7 @@ reuse valid check results and rerun only missing or stale checks. Lint, types an
 - **`just test-affected [--base REF] [--list] [-- PYTEST-ARGS]`** (`scripts/affected_tests.py`): collects the paths
   changed since the merge base of `HEAD` and `REF` (default `main`; committed, staged, unstaged, untracked, both
   sides of a rename) and selects tests from them:
-  - Shared foundations (`devkit.core`, `devkit-advisory`, `cli.py`, `__main__.py`, any `pyproject.toml` or
+  - Shared foundations (`devkit-core`, `devkit-advisory`, `cli.py`, `__main__.py`, any `pyproject.toml` or
     `conftest.py`, `uv.lock`, the shared test helpers `testsupport` and `distsupport`) select the full suite.
   - Repository files that tests read (`docs/`, `examples/`, `models/`, the recipe scripts and `justfile`) select
     those tests from a fixed table.

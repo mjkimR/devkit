@@ -14,8 +14,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[3]
 SOURCES = (
     REPO / "packages/devkit-core/src/devkit_core",
-    REPO / "packages/devkit-dist/src/devkit",
-    REPO / "packages/devkit/src/devkit",
+    REPO / "packages/devkit-dist/src/devkit_dist",
+    REPO / "packages/devkit/src/devkit_agt",
     REPO / "packages/devkit-advisory/src/devkit",
 )
 DOCS = REPO / "docs"

@@ -1,4 +1,4 @@
-"""``devkit.worktree``: locate, start, finish and status against real repositories."""
+"""``devkit_agt.features.worktree``: locate, start, finish and status against real repositories."""
 
 from __future__ import annotations
 
@@ -12,9 +12,10 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
 import pytest
 from devkit.advisory import ActionMode, AdvisoryError
-from devkit.worktree import (
+from devkit_agt.features.worktree import (
     AddFailedError,
     BaseBehindError,
     BaseDetachedError,
@@ -35,7 +36,6 @@ from devkit.worktree import (
     UnmergedError,
     UnsupportedLayoutError,
     finish,
-    lifecycle,
     locate,
     path_for,
     start,
@@ -680,10 +680,10 @@ def test_status_reports_worktrees_and_unmerged_branches_without_changing_anythin
 def synchronized(repo: Path) -> Path:
     """``repo`` as a committed devkit project with the ``authoring`` bundle (its rules live under managed/)."""
     subprocess.run(
-        [sys.executable, "-m", "devkit", "add", "authoring", "-w", str(repo)], check=True, capture_output=True
+        [sys.executable, "-m", "devkit_dist", "add", "authoring", "-w", str(repo)], check=True, capture_output=True
     )
     git(repo, "add", "-A")
-    git(repo, "commit", "-q", "-m", "devkit")
+    git(repo, "commit", "-q", "-m", "devkit_dist")
     return repo
 
 
@@ -749,7 +749,7 @@ def test_output_that_is_not_an_error_object_keeps_its_headline(monkeypatch: pyte
     failed = subprocess.CompletedProcess(["python"], 3, b"not json", block.encode())
     monkeypatch.setattr(lifecycle, "_execute", lambda *args: failed)
     warning = lifecycle._sync("python", tmp_path)
-    assert warning is not None and warning.fix == f"cd {tmp_path} && python -m devkit sync --locked"
+    assert warning is not None and warning.fix == f"cd {tmp_path} && python -m devkit_dist sync --locked"
     assert warning.message.splitlines()[:2] == [
         "devkit sync --locked exited 3:",
         "[ERROR]  (SOMETHING_FAILED) the reason",
@@ -758,9 +758,11 @@ def test_output_that_is_not_an_error_object_keeps_its_headline(monkeypatch: pyte
 
 
 def test_start_trusted_guard_stops_after_setup_before_sync(tmp_path, monkeypatch):
+    import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
     from devkit.advisory import AdvisoryError
-    from devkit.core.mcp_context import ExecutionBinding, guard_execution, invocation
-    from devkit.worktree import lifecycle, locate
+    from devkit_agt.features.worktree import locate
+    from devkit_dist.features.project.repositories.invocation import ExecutionBinding, guard_execution
+    from devkit_dist.features.project.usecases.invocation import invocation
     from testsupport.rules import git, init_repo, write
 
     base = init_repo(tmp_path / "base")
@@ -788,8 +790,8 @@ def test_start_trusted_guard_stops_after_setup_before_sync(tmp_path, monkeypatch
 
 def test_start_initializes_optional_registration_after_locked_assets(repo, monkeypatch):
     from click.testing import CliRunner
-    from devkit.cli import cli
-    from devkit.host import registrations
+    from devkit_dist.cli import cli
+    from devkit_dist.features.host.usecases import registrations
 
     synchronized(repo)
     original = lifecycle._execute
@@ -797,7 +799,7 @@ def test_start_initializes_optional_registration_after_locked_assets(repo, monke
     guards = []
 
     def execute(argv, cwd, label, timeout):
-        if argv[1:4] == ["-m", "devkit", "sync"]:
+        if argv[1:4] == ["-m", "devkit_dist", "sync"]:
             modes.append(argv[4])
             result = CliRunner().invoke(cli, argv[3:])
             return subprocess.CompletedProcess(argv, result.exit_code, result.stdout.encode(), result.stderr.encode())
@@ -810,7 +812,7 @@ def test_start_initializes_optional_registration_after_locked_assets(repo, monke
         "provider",
         lambda root, *args: registrations.LaunchDescriptor(
             sys.executable,
-            ("-m", "devkit", "mcp", "serve", "--configuration-workspace", str(root)),
+            ("-m", "devkit_dist", "mcp", "serve", "--configuration-workspace", str(root)),
             str(repo),
             str(root),
             "local",
@@ -827,7 +829,7 @@ def test_start_initializes_optional_registration_after_locked_assets(repo, monke
 
 
 def test_guard_stops_registration_after_sync_changes_environment(tmp_path, monkeypatch):
-    from devkit.core.mcp_context import McpInteractiveError
+    from devkit_dist.features.project.repositories.invocation import McpInteractiveError
 
     write(tmp_path, ".devkit/installation.json", "{}")
     calls = []

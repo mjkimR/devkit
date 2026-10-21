@@ -1,4 +1,4 @@
-"""Lazy command loading of ``devkit.cli``: a built-in command imports only its own area and the layers below it,
+"""Lazy command loading of ``devkit_dist.cli``: a built-in command imports only its own area and the layers below it,
 never an area of another wheel.
 
 Each case runs in a fresh interpreter, because the test session itself has
@@ -14,19 +14,21 @@ from pathlib import Path
 
 import click
 import pytest
-from devkit.cli import COMMANDS, cli
-from devkit.distribution.cli import COMMANDS as DISTRIBUTION_COMMANDS
-from distsupport.layering import ALLOWED, DATA_AREAS, TOP_LEVEL
+from devkit_dist.cli import COMMANDS, cli
+from devkit_dist.features.distribution.cli import COMMANDS as DISTRIBUTION_COMMANDS
+from distsupport.layering import DATA_AREAS, LAZY_IMPORT_AREAS, TOP_LEVEL, area_of
 
 _PROBE = """
 import contextlib, io, json, sys
-from devkit.cli import cli
+sys.path.insert(0, '/Users/mj/workspace/workbench/repos/devkit/packages/devkit-dist/tests')
+from distsupport.layering import area_of
+from devkit_dist.cli import cli
 with contextlib.redirect_stdout(io.StringIO()):
     try:
         cli.main(sys.argv[1:], prog_name="devkit", standalone_mode=False)
     except SystemExit:
         pass
-print(json.dumps(sorted({name.split(".")[1] for name in sys.modules if name.startswith("devkit.")})))
+print(json.dumps(sorted({area_of(name) for name in sys.modules if area_of(name) is not None})))
 """
 
 
@@ -39,7 +41,9 @@ def _loaded_areas(*args: str) -> set[str]:
 
 
 def _area(name: str) -> str:
-    return COMMANDS[name].split(".")[1]
+    area = area_of(COMMANDS[name].split(":", 1)[0])
+    assert area is not None
+    return area
 
 
 def test_every_distribution_command_is_mapped() -> None:
@@ -64,12 +68,12 @@ def test_version_imports_no_area() -> None:
 def test_a_command_imports_only_its_area_and_lower_layers(name: str) -> None:
     area = _area(name)
     loaded = _loaded_areas(name, "--help")
-    assert area in loaded and loaded <= {area, *ALLOWED[area]}
+    assert area in loaded and loaded <= {area, *LAZY_IMPORT_AREAS[area]}
 
 
 def test_bundle_discovery_loads_only_data_areas(tmp_path: Path) -> None:
     # Locating each built-in bundle imports its resource module: a data area (``*_guide``, of either wheel), never an
     # engine.
     loaded = _loaded_areas("list", "--workspace-root", str(tmp_path))
-    engines = {area for area in loaded if not area.endswith("_guide")}
-    assert loaded >= DATA_AREAS and engines <= {"distribution", *ALLOWED["distribution"]}
+    engines = {area for area in loaded if not area.startswith("bundles.")}
+    assert loaded >= DATA_AREAS and engines <= {"distribution", *LAZY_IMPORT_AREAS["distribution"]}

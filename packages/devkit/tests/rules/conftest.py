@@ -5,7 +5,7 @@ from collections.abc import Generator
 from pathlib import Path
 
 import pytest
-from devkit.rules import WorkspaceCache
+from devkit_agt.features.rules import WorkspaceCache
 
 
 @pytest.fixture

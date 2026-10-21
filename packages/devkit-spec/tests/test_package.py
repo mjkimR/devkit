@@ -11,11 +11,11 @@ from importlib.metadata import entry_points
 from pathlib import Path
 
 from click.testing import CliRunner
-from devkit.cli import COMMANDS
-from devkit.cli import cli as devkit_cli
-from devkit.distribution import load_bundle
+from devkit_dist.cli import COMMANDS
+from devkit_dist.cli import cli as devkit_cli
+from devkit_dist.features.distribution import load_bundle
 
-from devkit_spec.documents import DocumentIndex
+from devkit_spec.features.documents import DocumentIndex
 
 ROOT = Path(__file__).resolve().parents[1]
 BUNDLE = ROOT / "src/devkit_spec/bundle"
@@ -58,9 +58,9 @@ def test_the_entry_points_are_installed() -> None:
     assert (bundle.value, command.value, template.value, readiness.value, post_finish.value) == (
         "devkit_spec",
         "devkit_spec.cli:cli",
-        "devkit_spec.config:template",
-        "devkit_spec.integration",
-        "devkit_spec.cleanup:after_finish",
+        "devkit_spec.features.policy.services.config:template",
+        "devkit_spec.features.delivery.usecases.integration",
+        "devkit_spec.features.delivery.usecases.cleanup:after_finish",
     )
 
 
@@ -76,7 +76,12 @@ def test_devkit_mounts_the_spec_group() -> None:
 def _devkit(*args: str) -> subprocess.CompletedProcess[str]:
     env = {key: value for key, value in os.environ.items() if not key.startswith("DEVKIT_")}
     return subprocess.run(
-        [sys.executable, "-m", "devkit", *args], capture_output=True, text=True, encoding="utf-8", env=env, check=False
+        [sys.executable, "-m", "devkit_dist", *args],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        env=env,
+        check=False,
     )
 
 

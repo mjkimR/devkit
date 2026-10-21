@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 import yaml
 from click.testing import CliRunner
-from devkit.workflow.cli import cli
-from devkit.workflow.errors import EnvelopeFindingsError
-from devkit.workflow.unit.envelope import compose_envelope, load_envelopes, render_envelope
+from devkit_agt.features.workflow.cli import cli
+from devkit_agt.features.workflow.models.errors import EnvelopeFindingsError
+from devkit_agt.features.workflow.services.envelope import compose_envelope, load_envelopes, render_envelope
 from testsupport.gate import git
 from testsupport.workflow import write_config, write_unit
 

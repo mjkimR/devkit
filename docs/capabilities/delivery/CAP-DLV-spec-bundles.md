@@ -9,10 +9,10 @@ stories:
   - US-route-development-intent
   - US-incubate-and-hand-off-a-proposal
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/proposals/specs.py
-  - packages/devkit-spec/src/devkit_spec/proposals/binding.py
-  - packages/devkit-spec/src/devkit_spec/cli/specs.py
-  - packages/devkit-spec/src/devkit_spec/proposals/scaffold.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/specs.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/binding.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/cli/commands.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py
 ---
 
 # [CAP-DLV-spec-bundles] Spec Bundles
@@ -148,14 +148,14 @@ Only `spec.md` has a status. Without a proposal, the problem statement is a plac
 ### 4.4 Library
 
 ```python
-from devkit_spec.proposals import SKELETON_MARKER, CreatedSpec, create_spec, mark_skeleton, spec_files
+from devkit_spec.features.proposals import SKELETON_MARKER, CreatedSpec, create_spec, mark_skeleton, spec_files
 
 create_spec(root, "login-flow", workflow="bugfix")  # CreatedSpec: id, dir, workflow, namespace, next_command, notices
 create_spec(root, "rate-limits", namespace="api", summary="Defines request rate limits.", day=date(2026, 10, 13))
 create_spec(root, "quotas", cwd=Path.cwd())  # the namespace of cwd when --namespace is omitted
 ```
 
-`resolve_binding` (`devkit_spec.proposals.binding`) resolves and validates a workflow with devkit's `Workspace`
+`resolve_binding` (`devkit_spec.features.proposals.usecases.binding`) resolves and validates a workflow with devkit's `Workspace`
 before anything is written; `DEFAULT_WORKFLOW` is `sdd-spec-feature`, `BUGFIX_WORKFLOW` `sdd-spec-bugfix`.
 
 ### 4.5 Codes

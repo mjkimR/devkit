@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from click.testing import CliRunner, Result
-from devkit.workflow import (
+from devkit_agt.features.workflow import (
     Options,
     compare_shared_stages,
     discover_roles,
@@ -14,7 +14,7 @@ from devkit.workflow import (
     parse_definition,
     validate_definition,
 )
-from devkit.workflow.cli import cli
+from devkit_agt.features.workflow.cli import cli
 from testsupport.workflow import WORKFLOW, write_config, write_receipt, write_unit
 
 CONFIG = """schema = 1

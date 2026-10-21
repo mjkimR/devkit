@@ -9,7 +9,7 @@ created_at: 2026-10-17
 
 # [CAP-SRCH-document-search] Document Search: Overview
 
-`devkit.search` ranks a caller's documents against a query: lexically (BM25), densely (embedding similarity) or both (hybrid). It is SDD-agnostic: it knows documents only as an id, metadata text and an optional body. Choosing which documents to rank (scopes, namespaces) and pinning exact id matches are the caller's job. Quick reference: [reference.md](../../development/reference/search.md).
+`devkit_dist.features.search` ranks a caller's documents against a query: lexically (BM25), densely (embedding similarity) or both (hybrid). It is SDD-agnostic: it knows documents only as an id, metadata text and an optional body. Choosing which documents to rank (scopes, namespaces) and pinning exact id matches are the caller's job. Quick reference: [reference.md](../../development/reference/search.md).
 
 ## 1. Document Model
 
@@ -56,9 +56,9 @@ Dense ranking does not replace BM25. On devkit's and specrig's English documents
 | `tokenizer.json` | A Hugging Face `tokenizers` file |
 | `model.safetensors` | One tensor, `embeddings`, of shape `[vocabulary, dimensions]`, `F16` or `F32`; memory-mapped read-only |
 
-`devkit.search` ships in `devkit-dist`. `devkit-embed` provides `potion-base-8m` and is installed by its `search` extra (`devkit-dist[search]`; `devkit-agt[search]` requires it) together with `numpy` and `tokenizers`. A missing extra is `SEARCH_EXTRA_MISSING`, whose `[FIX]` adds the extra to the devkit requirement the project declares, `devkit-agt[search]` or `devkit-dist[search]`, never a second requirement (`ADR-dist-module-split`). Another model needs only another package registering another name; `SearchIndex(..., model="<name>")` selects it. A name registered by two packages is `SEARCH_MODEL_INVALID`.
+`devkit_dist.features.search` ships in `devkit-dist`. `devkit-embed` provides `potion-base-8m` and is installed by its `search` extra (`devkit-dist[search]`; `devkit-agt[search]` requires it) together with `numpy` and `tokenizers`. A missing extra is `SEARCH_EXTRA_MISSING`, whose `[FIX]` adds the extra to the devkit requirement the project declares, `devkit-agt[search]` or `devkit-dist[search]`, never a second requirement (`ADR-dist-module-split`). Another model needs only another package registering another name; `SearchIndex(..., model="<name>")` selects it. A name registered by two packages is `SEARCH_MODEL_INVALID`.
 
-**Cost.** numpy and tokenizers are imported on the first dense, hybrid or `auto` search, never on `import devkit.search` or a `lexical` search (a test enforces this). On an Apple Silicon laptop the first dense search costs about 25 ms of imports and 25 ms to load the model; embedding 150 metadata texts takes a few milliseconds. An index embeds its documents once, on its first dense or hybrid search. There is no vector cache across processes.
+**Cost.** numpy and tokenizers are imported on the first dense, hybrid or `auto` search, never on `import devkit_dist.features.search` or a `lexical` search (a test enforces this). On an Apple Silicon laptop the first dense search costs about 25 ms of imports and 25 ms to load the model; embedding 150 metadata texts takes a few milliseconds. An index embeds its documents once, on its first dense or hybrid search. There is no vector cache across processes.
 
 ## 5. Building the Model Package
 
@@ -68,7 +68,7 @@ Licensing: potion-base-8M and bge-base-en-v1.5 are MIT licensed; the package shi
 
 ## 6. Module Layout
 
-`devkit.search` imports only `devkit.core` and `devkit.advisory`; `devkit.distribution` ranks `devkit playbook search` with it (`CAP-DIST-context-and-playbooks`).
+`devkit_dist.features.search` uses `devkit_core`, distribution project support and `devkit.advisory`; `devkit_dist.features.distribution` ranks `devkit playbook search` with it (`CAP-DIST-context-and-playbooks`).
 
 - `lexical.py`: `tokenize`, `Bm25`, `bm25_scores`.
 - `dense.py`: `Embedder`, `load_embedder`, the model package layout.

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from devkit_spec.entrypoints.bundle import parse_targets
-from devkit_spec.errors import EntrypointsInputInvalidError
+from devkit_spec.base.errors import EntrypointsInputInvalidError
+from devkit_spec.features.entrypoints.repositories.bundle import parse_targets
 
 
 def test_parse_targets_preserves_order_and_defaults() -> None:

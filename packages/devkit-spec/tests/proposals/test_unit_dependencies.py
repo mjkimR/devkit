@@ -7,8 +7,8 @@ import pytest
 from devkit_core.core.frontmatter import parse
 from proposals.support import TODAY, accept
 
-from devkit_spec.errors import ProposalInvalidError, ProposalSlugConflictError
-from devkit_spec.proposals import create_proposal, handoff_proposal
+from devkit_spec.base.errors import ProposalInvalidError, ProposalSlugConflictError
+from devkit_spec.features.proposals import create_proposal, handoff_proposal
 
 
 def snapshot(root: Path) -> dict[str, bytes]:

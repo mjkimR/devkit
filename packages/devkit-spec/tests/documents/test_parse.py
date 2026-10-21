@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from devkit_core.core import FrontmatterError
 
-from devkit_spec.documents import Kind, is_id, kind_of, parse_document
+from devkit_spec.features.documents import Kind, is_id, kind_of, parse_document
 
 
 def _refs(text: str) -> list[tuple[str, str, int, bool]]:

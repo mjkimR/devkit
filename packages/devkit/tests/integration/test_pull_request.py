@@ -5,8 +5,8 @@ from dataclasses import replace
 
 import pytest
 from devkit.advisory import AdvisoryError
-from devkit.integration import IntegrationService, Task
-from devkit.worktree.pull_request import CommandResult, GitHub, Repository
+from devkit_agt.features.integration import IntegrationService, Task
+from devkit_agt.features.worktree.repositories.pull_request import CommandResult, GitHub, Repository
 from devkit_core.base.mcp import ConfirmationReply
 from testsupport.rules import git, write
 
@@ -322,7 +322,7 @@ def test_remote_source_divergence_refuses_before_approval(remote_service):
 
 
 def test_pending_resume_does_not_wait_for_repository_lock(remote_service):
-    from devkit.worktree import integration_lock
+    from devkit_agt.features.worktree import integration_lock
 
     service, fake, base, worktree = remote_service
     fake.pending = True
@@ -359,7 +359,7 @@ def test_failed_build_then_manual_merge_remains_unchecked(remote_service, ready_
 
 @pytest.mark.parametrize("deletion", [False, True])
 def test_git_mutation_timeout_preserves_unknown_recovery(remote_service, monkeypatch, deletion):
-    from devkit.worktree import pull_request as adapter
+    import devkit_agt.features.worktree.repositories.pull_request as adapter
     from devkit_core.base.errors import GitError
 
     service, _fake, _base, worktree = remote_service

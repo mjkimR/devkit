@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner, Result
 from devkit.advisory import AdvisoryError, Level
-from devkit.cli import cli
+from devkit_dist.cli import cli
 
 PY = sys.executable
 
@@ -188,7 +188,7 @@ def test_verbose_reports_how_much_of_the_output_the_view_shows() -> None:
 @pytest.mark.parametrize("signum", [signal.SIGINT, signal.SIGTERM, signal.SIGHUP])
 def test_an_interrupted_run_reports_its_log_and_exits_128_plus_the_signal(tmp_path: Path, signum: int) -> None:
     started = tmp_path / "started"
-    entry = "from devkit.compact.cli import run_cmd; run_cmd()"
+    entry = "from devkit_agt.features.compact.cli import run_cmd; run_cmd()"
     command = ["sh", "-c", f'echo partial; echo $$ > "{started}"; exec sleep 60']
     runner = subprocess.Popen(
         [PY, "-c", entry, "--", *command],

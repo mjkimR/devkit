@@ -8,12 +8,12 @@ created_at: 2026-10-13
 stories:
   - US-incubate-and-hand-off-a-proposal
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/proposal_report.py
-  - packages/devkit-spec/src/devkit_spec/plan_accept_mcp.py
-  - packages/devkit-spec/src/devkit_spec/proposals/
-  - packages/devkit-spec/src/devkit_spec/cli/proposals.py
-  - packages/devkit-spec/src/devkit_spec/handoff_mcp.py
-  - packages/devkit-spec/src/devkit_spec/handoff_language.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/report.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/mcp/plan_accept.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/
+  - packages/devkit-spec/src/devkit_spec/features/proposals/cli/commands.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/mcp/handoff.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/models/approval.py
 ---
 
 # [CAP-DLV-proposal-incubation] Proposal Incubation and Handoff
@@ -22,7 +22,7 @@ entrypoints:
 
 A proposal incubates an idea (a feature, a technical spike, an architectural change) before it becomes a feature
 spec: `proposal`-depth work, whose direction must be decided first, shapes it in a proposal bundle bound to workflow
-`sdd-proposal`. `devkit_spec.proposals`
+`sdd-proposal`. `devkit_spec.features.proposals`
 implements the lifecycle and `devkit spec proposal new|padr|accept|handoff|prune|check` exposes it. `accept` is the
 one writer of an acceptance, after Planning or directly for an eligible draft in Backlog
 (`ADR-direct-acceptance-command-and-handoff-guard`). The handoff is a cross-layout
@@ -394,7 +394,7 @@ A handoff deletes the proposal in the worktree it runs in; merging that branch r
 base checkout but leaves their directories. `devkit spec proposal prune [<slug>]` removes `docs/proposals/PROP-<slug>/` (every `PROP-*` directory without a slug) when it
 holds no file at any depth (a symbolic link counts as a file; devkit's `remove_empty_tree`). A directory holding any
 file is kept, and one that cannot be listed fails the prune before anything is removed. devkit-spec's
-`devkit.post_finish` extension (`devkit_spec.cleanup.after_finish`) prunes the finished slug after a successful `devkit worktree finish`
+`devkit.post_finish` extension (`devkit_spec.features.delivery.usecases.cleanup.after_finish`) prunes the finished slug after a successful `devkit worktree finish`
 (`ADR-cleanup-after-worktree-finish`) and, on the approval-bound `IntegrationService` path (`SPEC-hook-driven-integration-cleanup`), plans and executes the exact `CleanupTarget(kind="proposal-prune", identity="docs/proposals/PROP-<slug>", revision=<source_sha>)` target, emitting `SPEC_POST_FINISH_CLEANUP` notices; the command remains for other checkouts and a failed extension (`integration_resume` retries a partial post-finish run).
 
 ### 4.9 Commands and Options
@@ -489,7 +489,7 @@ uv run devkit spec proposal check fast-engine                        # before an
 ### 4.11 Library
 
 ```python
-from devkit_spec.proposals import accept_proposal, create_padr, create_proposal, handoff_proposal, prune_proposals
+from devkit_spec.features.proposals import accept_proposal, create_padr, create_proposal, handoff_proposal, prune_proposals
 
 created = create_proposal(root, "fast-engine", title="Fast Engine", with_target_docs=True)  # CreatedProposal
 create_padr(root, "fast-engine", "Use AST parser", summary="Parses rules with an AST.")  # CreatedDecision
@@ -539,7 +539,7 @@ directory whose namespace applies when `namespace` is omitted);
 
 ## Local native MCP handoff
 
-Installing devkit-spec registers `spec_handoff` through `devkit.host.services`. This is the local alternative to
+Installing devkit-spec registers `spec_handoff` through `devkit_dist.features.host.services`. This is the local alternative to
 an external runner's user interaction; it does not call or modify AutoHub. The caller supplies the accepted proposal slug and exact `report_uri`. From a clean retained base checkout on its base branch, the service reads the committed proposal
 and requires its `sdd-proposal` workflow to be complete with satisfied `plan-intent` and `plan-accept` gates;
 disabling their stages does not replace those approvals. A native form displays the title, goal, immutable report link,

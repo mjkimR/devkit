@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner, Result
 from conftest import Write
-from devkit.cli import cli as devkit_cli
+from devkit_dist.cli import cli as devkit_cli
 
 CAP = "docs/capabilities/x/CAP-X-one.md"
 STORY = "docs/stories/x/US-two.md"
@@ -159,8 +159,8 @@ def test_invalid_documents_are_warnings(bundles: Path, write: Write) -> None:
 
 
 def test_candidates_group_each_document_by_state() -> None:
-    from devkit_spec.cli.entrypoints import _candidates
-    from devkit_spec.entrypoints import Pair, State
+    from devkit_spec.features.entrypoints import Pair, State
+    from devkit_spec.features.entrypoints.cli.commands import _candidates
 
     pairs = [
         Pair("CAP-A", "a.md", "src/a", State.NEW, True, "SPEC-x", 1),

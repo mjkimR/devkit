@@ -4,7 +4,7 @@ from pathlib import Path
 
 from conftest import Write
 
-from devkit_spec.documents import Document, DocumentIndex
+from devkit_spec.features.documents import Document, DocumentIndex
 
 BUNDLE = "specs/2026-10/20261001-one"
 CAP = "docs/capabilities/x/CAP-X-one.md"

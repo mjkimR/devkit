@@ -3,7 +3,14 @@ from __future__ import annotations
 from pathlib import Path
 
 from devkit.advisory import ActionMode, AdvisoryError
-from devkit.rules import Phase, RuleContext, Violation, WorkspaceCache, default_rule_registry, evaluate_rules
+from devkit_agt.features.rules import (
+    Phase,
+    RuleContext,
+    Violation,
+    WorkspaceCache,
+    default_rule_registry,
+    evaluate_rules,
+)
 
 
 def test_evaluator_autofix_convergence(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:
@@ -57,7 +64,7 @@ def test_evaluator_phase_filtering(temp_workspace: Path, workspace_cache: Worksp
 
 
 def test_fix_failure_rechecks_partial_changes(tmp_path: Path) -> None:
-    from devkit.rules.rules import BaseRule
+    from devkit_agt.features.rules.services.builtins import BaseRule
 
     class FailingFix(BaseRule):
         def __init__(self) -> None:
@@ -80,7 +87,7 @@ def test_fix_failure_rechecks_partial_changes(tmp_path: Path) -> None:
 
 
 def test_each_fix_invalidates_cache_for_next_rule(tmp_path: Path) -> None:
-    from devkit.rules.rules import BaseRule
+    from devkit_agt.features.rules.services.builtins import BaseRule
 
     class DirectWrite(BaseRule):
         def __init__(self) -> None:
@@ -105,7 +112,7 @@ def test_each_fix_invalidates_cache_for_next_rule(tmp_path: Path) -> None:
 
 
 def test_fixed_status_survives_fixes_that_move_lines(tmp_path: Path) -> None:
-    from devkit.rules.rules import BaseRule
+    from devkit_agt.features.rules.services.builtins import BaseRule
 
     class Header(BaseRule):
         """Two fixable findings; the fix adds a header line and repairs only one of them."""
@@ -137,7 +144,7 @@ def test_fix_without_changes_returns_the_initial_findings(tmp_path: Path) -> Non
 
 
 def test_recheck_errors_are_reported(tmp_path: Path) -> None:
-    from devkit.rules.rules import BaseRule
+    from devkit_agt.features.rules.services.builtins import BaseRule
 
     class FlakyRecheck(BaseRule):
         def __init__(self) -> None:
@@ -162,7 +169,7 @@ def test_recheck_errors_are_reported(tmp_path: Path) -> None:
 
 
 def test_an_advisory_a_rule_raises_keeps_its_code(tmp_path: Path) -> None:
-    from devkit.rules.rules import BaseRule
+    from devkit_agt.features.rules.services.builtins import BaseRule
 
     class Refusing(BaseRule):
         def __init__(self) -> None:
@@ -194,7 +201,7 @@ def _finding(line: int, message: str = "bad", *, fixable: bool = True) -> Violat
 
 
 def test_mark_fixed_counts_findings_by_identity_and_leaves_inputs_alone() -> None:
-    from devkit.rules.engine.evaluator import _mark_fixed
+    from devkit_agt.features.rules.services.evaluator import _mark_fixed
 
     initial = [_finding(1), _finding(2), _finding(3, "other"), _finding(4, "manual", fixable=False)]
     recheck = [_finding(5), _finding(4, "manual", fixable=False)]
@@ -210,14 +217,14 @@ def test_mark_fixed_counts_findings_by_identity_and_leaves_inputs_alone() -> Non
 
 
 def test_mark_fixed_without_recheck_findings_marks_every_fixable_finding() -> None:
-    from devkit.rules.engine.evaluator import _mark_fixed
+    from devkit_agt.features.rules.services.evaluator import _mark_fixed
 
     assert [v.fixed for v in _mark_fixed([_finding(1), _finding(2, fixable=False)], [])] == [True]
     assert _mark_fixed([], []) == []
 
 
 def test_blocking_violations_are_unfixed_errors() -> None:
-    from devkit.rules import EvaluationResult, RuleExecutionError, Severity
+    from devkit_agt.features.rules import EvaluationResult, RuleExecutionError, Severity
 
     error = _finding(1)
     fixed = Violation("RULE-x", "a.md", 1, "fixed", fixed=True)

@@ -68,8 +68,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from devkit.rules import Phase, RuleContext, Severity, Violation, match_path, validate_pattern
-from devkit.rules.rules import BaseRule
+from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, match_path, validate_pattern
+from devkit_agt.features.rules.services.builtins import BaseRule
 
 
 @dataclass(frozen=True)
@@ -145,14 +145,14 @@ For a larger rule, keep the implementation in the bundle package (`<package>/rul
 
 ## Tests
 
-`rules/final_newline/tests/test_rule.py`. `devkit rules test RULE-myrepo-final-newline` runs it isolated (no project `conftest.py` or pytest configuration), so it imports only `devkit.rules.testing` and the environment's packages.
+`rules/final_newline/tests/test_rule.py`. `devkit rules test RULE-myrepo-final-newline` runs it isolated (no project `conftest.py` or pytest configuration), so it imports only `devkit_agt.features.rules.services.testing` and the environment's packages.
 
 ```python
 from __future__ import annotations
 
 from pathlib import Path
 
-from devkit.rules.testing import check, load_rule
+from devkit_agt.features.rules.services.testing import check, load_rule
 
 RULE = load_rule(__file__)  # the folder above tests/, loaded as devkit loads the deployed copy
 

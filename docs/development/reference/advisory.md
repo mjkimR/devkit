@@ -7,17 +7,17 @@ Python implementation of the `CAP-ADV-agent-advisory-protocol`, shipped as the `
 This module implements the Agent Advisory Protocol and nothing else.
 
 - **In scope**: advisories at every level (errors, warnings, notices) and their rendering as sentinel blocks, JSON and RFC 7807.
-- **Out of scope**: logs (`[INFO]`, `logging`, `-v`) and CLI plumbing (options, printing, exit handling) live in `devkit.core.cli`; anything that is not this protocol belongs in another module.
+- **Out of scope**: logs (`[INFO]`, `logging`, `-v`) and CLI plumbing (options, printing, exit handling) live in `devkit_dist.adapters.cli`; anything that is not this protocol belongs in another module.
 
 ## Contents
 
 - **Runtime**: `devkit.advisory` in the `devkit-advisory` distribution (`packages/devkit-advisory/`): standard library only, no entry points, and the lowest layer of `devkit` (it imports no other devkit module; tests in both packages enforce this). `devkit-dist` and `devkit-agt` depend on the same version, so the module is present wherever `devkit` is. `error.py` (`AdvisoryError`), `types.py` (`ExitCode`, `Level`, `ActionMode`, `Actor`, `Retry`), `advisory.py` (`Advisory`, mode derivation, `ACTION_TEXT`, the block sentinels `HEADLINE`, `FIELDS` and `CONTINUATION`, rendering). Every other devkit module raises `AdvisoryError` subclasses and returns warnings and notices as `AdvisoryError` instances at a lower level (`ARCH-08-cross-cutting`).
-- **Bundle** `advisory` (`devkit.advisory_guide`, `bundle/`, `default_preset = "core"`), built into `devkit-dist` (not `devkit-advisory`, so a runtime environment carries no agent content) with `auto_select = true` and therefore selected by default. Its `python` preset's rule runs where `devkit-agt` is installed; a distribution-only installation deploys it with a `HARNESS_ENGINE_MISSING` warning:
+- **Bundle** `advisory` (`devkit_dist.bundles.advisory`, `bundle/`, `default_preset = "core"`), built into `devkit-dist` (not `devkit-advisory`, so a runtime environment carries no agent content) with `auto_select = true` and therefore selected by default. Its `python` preset's rule runs where `devkit-agt` is installed; a distribution-only installation deploys it with a `HARNESS_ENGINE_MISSING` warning:
 
 | Preset | Assets | For |
 | --- | --- | --- |
 | `core` | `agent-advisory` (language-agnostic protocol and authoring rules) | Any repository |
-| `python` | `agent-advisory` + `agent-advisory-python` (library guide) + `unique-code` (`RULE-advisory-unique-code`, linter error: two unrelated `AdvisoryError` classes declaring one code; [guide](../../../packages/devkit-dist/src/devkit/advisory_guide/bundle/rules/unique_code/guide.md)) | Python repositories using `devkit.advisory` |
+| `python` | `agent-advisory` + `agent-advisory-python` (library guide) + `unique-code` (`RULE-advisory-unique-code`, linter error: two unrelated `AdvisoryError` classes declaring one code; [guide](../../../packages/devkit-dist/src/devkit_dist/bundles/advisory/bundle/rules/unique_code/guide.md)) | Python repositories using `devkit.advisory` |
 
 `agent-advisory` is the consumer-facing mirror of `CAP-ADV-agent-advisory-protocol` and `agent-advisory-python` documents this library; both are kept in step with the specification, and a test keeps the `[ACTION]` texts in `agent-advisory` identical to `ACTION_TEXT`.
 
@@ -35,7 +35,7 @@ This module implements the Agent Advisory Protocol and nothing else.
 | `Actor`, `Retry` | Error fields: `TOOL`/`USER`/`DEVELOPER`/`NONE`; `SAFE`/`AFTER_FIX`/`UNSAFE`. |
 | `ExitCode` | `OK = 0`, `FINDINGS = 1`, `ERROR = 2`. |
 | `ACTION_TEXT` | The canonical directive text per `ActionMode`. |
-| `HEADLINE`, `FIELDS`, `CONTINUATION` | Since `0.1.1`. The block grammar of `CAP-ADV-agent-advisory-protocol`, for code that parses rendered blocks (`devkit.compact` does): `HEADLINE` maps each `Level` to its 9-character headline sentinel (`"[ERROR]  "`, `"[WARN]   "`, `"[NOTICE] "`), `FIELDS` is the tuple of field sentinels in rendering order (`"[ACTION] "` to `"[DETAIL] "`), and `CONTINUATION` the 9-space indentation of a value's further lines. Every rendered line starts with one of them. A new field sentinel is added to `FIELDS`. |
+| `HEADLINE`, `FIELDS`, `CONTINUATION` | Since `0.1.1`. The block grammar of `CAP-ADV-agent-advisory-protocol`, for code that parses rendered blocks (`devkit_agt.features.compact` does): `HEADLINE` maps each `Level` to its 9-character headline sentinel (`"[ERROR]  "`, `"[WARN]   "`, `"[NOTICE] "`), `FIELDS` is the tuple of field sentinels in rendering order (`"[ACTION] "` to `"[DETAIL] "`), and `CONTINUATION` the 9-space indentation of a value's further lines. Every rendered line starts with one of them. A new field sentinel is added to `FIELDS`. |
 | `as_advisory_error(exc)`, `render_error(exc)` | Pass an `ERROR`-level `AdvisoryError` through; adapt anything else, a warning or notice that was raised included, to `UNEXPECTED_ERROR` (`MAINTENANCE`). A foreign exception's message is `<ExceptionType>: <text>` (the type alone when the text is empty). |
 
 Rendering and serialization:

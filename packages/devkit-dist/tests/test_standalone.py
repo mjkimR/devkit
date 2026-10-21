@@ -16,17 +16,18 @@ from importlib.metadata import entry_points, version
 from pathlib import Path
 
 import pytest
-from devkit.cli import COMMANDS, HARNESS_COMMANDS
+from devkit_dist.cli import COMMANDS, HARNESS_COMMANDS
 
 pytestmark = pytest.mark.skipif(
-    importlib.util.find_spec("devkit.rules") is not None, reason="devkit-agt is installed: not a standalone environment"
+    importlib.util.find_spec("devkit_agt") is not None,
+    reason="devkit-agt is installed: not a standalone environment",
 )
 
 
 def _devkit(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
     env = {key: value for key, value in os.environ.items() if not key.startswith("DEVKIT_")}
     return subprocess.run(
-        [sys.executable, "-m", "devkit", *args], capture_output=True, text=True, encoding="utf-8", cwd=cwd, env=env
+        [sys.executable, "-m", "devkit_dist", *args], capture_output=True, text=True, encoding="utf-8", cwd=cwd, env=env
     )
 
 

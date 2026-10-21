@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from devkit.rules import SnapshotError, git_snapshot, materialize_snapshot
+from devkit_agt.features.rules import SnapshotError, git_snapshot, materialize_snapshot
 
 
 def _git(root: Path, *args: str) -> str:
@@ -128,7 +128,7 @@ def test_changed_and_deleted_from_one_diff(repo: Path) -> None:
 
 
 def test_materialize_streams_large_and_many_blobs(repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from devkit.rules.workspace import snapshot as snapshot_module
+    import devkit_agt.features.rules.repositories.workspace.snapshot as snapshot_module
 
     monkeypatch.setattr(snapshot_module, "_CHUNK", 4096)  # many chunk boundaries inside one blob
     big = bytes(range(256)) * 4099 + b"\n\n"  # binary, newlines, not a multiple of the chunk size
@@ -159,7 +159,7 @@ def test_materialize_reports_a_missing_object(repo: Path, tmp_path: Path) -> Non
 
 
 def test_materialize_reports_a_git_failure_and_a_timeout(repo: Path, tmp_path: Path) -> None:
-    from devkit.rules.workspace.snapshot import _BlobReader
+    from devkit_agt.features.rules.repositories.workspace.snapshot import _BlobReader
 
     snapshot = git_snapshot(repo, staged=True)
     gone = tmp_path / "gone"
@@ -184,7 +184,7 @@ def test_materialize_reports_a_git_failure_and_a_timeout(repo: Path, tmp_path: P
 def test_a_watchdog_firing_after_a_clean_exit_does_not_fail_the_run(
     repo: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from devkit.rules.workspace.snapshot import _BlobReader
+    from devkit_agt.features.rules.repositories.workspace.snapshot import _BlobReader
 
     snapshot = git_snapshot(repo, staged=True)
     name, sha, _ = snapshot.files[0]
@@ -207,7 +207,7 @@ def test_a_watchdog_firing_after_a_clean_exit_does_not_fail_the_run(
 def test_the_blob_reader_timeout_counts_idle_time_and_the_limit_bounds_the_whole_run(repo: Path) -> None:
     import time
 
-    from devkit.rules.workspace.snapshot import _BlobReader
+    from devkit_agt.features.rules.repositories.workspace.snapshot import _BlobReader
 
     snapshot = git_snapshot(repo, staged=True)
     blobs = [(name, sha) for name, sha, _ in snapshot.files] * 4

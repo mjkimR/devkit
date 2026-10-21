@@ -24,27 +24,27 @@ spec = "devkit_spec.cli:cli"
 
 # Post-finish extension: cleanup after `devkit worktree finish`: empty proposal directories and the finished task's scope record.
 [project.entry-points."devkit.post_finish"]
-spec = "devkit_spec.cleanup:after_finish"
+spec = "devkit_spec.features.delivery.usecases.cleanup:after_finish"
 
 # Integration readiness provider: `devkit integration` checks SDD completion readiness at the source SHA before approval and merge.
 [project.entry-points."devkit.integration.readiness"]
-spec = "devkit_spec.integration"
+spec = "devkit_spec.features.delivery.usecases.integration"
 
 # Attach check: `devkit worktree start <branch> --existing-branch ... --unit <dir>` refuses a unit that is not the one of
 # the activity branch (plan-<slug>: the proposal; dev-<slug>: the spec, or the accepted proposal before its handoff).
 [project.entry-points."devkit.attach_check"]
-spec = "devkit_spec.attach:attach_check"
+spec = "devkit_spec.features.delivery.usecases.attach:attach_check"
 
 # Hygiene extension: `devkit rules check -p hygiene` warns about rejected proposals still waiting for their cleanup.
 [project.entry-points."devkit.hygiene"]
-spec-rejected-proposals = "devkit_spec.hygiene:rejected_proposals"
+spec-rejected-proposals = "devkit_spec.features.governance.usecases.hygiene:rejected_proposals"
 
 # Config template extension: `devkit config template` writes the commented [tool.spec] tables into .devkit/config.toml.
 [project.entry-points."devkit.config_template"]
-spec = "devkit_spec.config:template"
+spec = "devkit_spec.features.policy.services.config:template"
 
 [project.entry-points."devkit.host.services"]
-spec = "devkit_spec.handoff_mcp:create_tools"
+spec = "devkit_spec.features.proposals.mcp.handoff:create_tools"
 
 [dependency-groups]
 dev = [

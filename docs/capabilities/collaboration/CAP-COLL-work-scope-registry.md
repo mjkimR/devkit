@@ -8,9 +8,9 @@ created_at: 2026-10-13
 stories:
   - US-run-parallel-work-safely
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/scope/
-  - packages/devkit-spec/src/devkit_spec/cli/scope.py
-  - packages/devkit-spec/src/devkit_spec/cleanup.py
+  - packages/devkit-spec/src/devkit_spec/features/scope/
+  - packages/devkit-spec/src/devkit_spec/features/scope/cli/commands.py
+  - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/cleanup.py
 ---
 
 # [CAP-COLL-work-scope-registry] Work Scope Comparison and Shared Registry
@@ -28,7 +28,7 @@ integrated. It never grants or blocks a write, and it is not exclusive ownership
 - **In-Scope**: building scope sets from proposals, spec bundles and Git; pairwise comparison; the local file registry
   (records, owner tokens, locking, deadlines, sweep) and its event journal; the `compare`, `register`, `query`,
   `update`, `release` and `sweep` commands; the registration a handoff performs; the dual-mode `devkit.post_finish`
-  extension (`devkit_spec.cleanup.after_finish`, classic callable and `ScopedCleanup`).
+  extension (`devkit_spec.features.delivery.usecases.cleanup.after_finish`, classic callable and `ScopedCleanup`).
 - **Out-of-Scope**:
   - The entrypoint path contract and `_Boundary` parsing: `CAP-TRACE-code-entrypoints`.
   - `[tool.spec.scope]` validation: `CAP-DLV-project-policy`. Document namespaces: `CAP-DOCS-namespaces` (independent
@@ -63,7 +63,7 @@ integrated. It never grants or blocks a write, and it is not exclusive ownership
    and may precede a concurrent first registration.
 8. **The journal is diagnostic**: it is never an input to an overlap, stale or stage verdict, and a failed append
    never changes an operation's result or exit code (only a `SPEC_SCOPE_JOURNAL_UNAVAILABLE` warning).
-9. **Cleanup after finish**: devkit-spec's `devkit.post_finish` extension (`devkit_spec.cleanup.after_finish`) implements both the classic callable contract for `devkit worktree finish` and `devkit.integration.ScopedCleanup` (`integration_local_only = True`, `integration_plan`, `integration_validate`, `integration_run`) for `IntegrationService`. It runs in the
+9. **Cleanup after finish**: devkit-spec's `devkit.post_finish` extension (`devkit_spec.features.delivery.usecases.cleanup.after_finish`) implements both the classic callable contract for `devkit worktree finish` and `devkit_agt.features.integration.ScopedCleanup` (`integration_local_only = True`, `integration_plan`, `integration_validate`, `integration_run`) for `IntegrationService`. It runs in the
    base after the worktree finish succeeds and removes the records whose worktree is the finished one, at the
    revision it read (`sweep --apply` restricted to those tasks; or `release` for a `--no-worktree` base checkout task); other stale records stay for an explicit sweep. On the `ScopedCleanup` path, `integration_plan` binds each scope record as `CleanupTarget(kind="scope-record", identity=<task_id>, revision="<mode>:<namespace>:<revision>")` (`mode` in `worktree|base`) and `CleanupTarget(kind="proposal-prune", identity="docs/proposals/PROP-<slug>", revision=<source_sha>)`, `integration_validate` rejects any revision, namespace or mode drift (`INTEGRATION_REQUEST_STALE`) while permitting already-removed records once the Git part is done: the base HEAD contains the integration's result commit (`context.result_sha`; the source under `[worktree] merge = "ff-only"` or for a cleanup-only request, so later commits on the base are allowed) and the worktree is gone (`SPEC-integration-follow-ups`), and `integration_run` emits `SPEC_POST_FINISH_CLEANUP` notices (`CleanupResult(done=..., notices=...)`).
    Neither of its cleanups stops the other. A proposal prune that fails (a directory that cannot be listed or
@@ -184,7 +184,7 @@ sides. Ranking and weighting are the consumer's.
   Successful reads grant no mutation authority. Storage, configured absolute shared paths, namespaces and token
   locations remain unchanged; there is no relocation or transport fallback. The access separation follows
   `ADR-keep-shared-storage-and-separate-read-access`.
-- **Operations** (`devkit_spec.scope.Registry`; the local file adapter `LocalRegistry` is the only implementation):
+- **Operations** (`devkit_spec.features.scope.Registry`; the local file adapter `LocalRegistry` is the only implementation):
   - `register`: creates the record; an existing task ID in the namespace is `SPEC_SCOPE_TASK_EXISTS`. A second record
     for the same worktree and host marks both `shared_worktree` (a `SPEC_SCOPE_SHARED_WORKTREE` warning).
   - `query`: every readable record; unreadable files are reported, never read as records. `record_file` names the

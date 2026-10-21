@@ -6,7 +6,10 @@ import pytest
 from conftest import Write
 from entrypoints.support import BUNDLE, CAP, CAP_TEXT, STORY, STORY_TEXT, documents, fixture
 
-from devkit_spec.entrypoints import Pair, State, apply, collapse, derive, load_bundle, set_entrypoints
+from devkit_spec.features.entrypoints import collapse, load_bundle, set_entrypoints
+from devkit_spec.features.entrypoints.models.derive import Pair, State
+from devkit_spec.features.entrypoints.services.derive import derive
+from devkit_spec.features.entrypoints.usecases.apply import apply
 
 
 def _derive(root: Path) -> list[Pair]:

@@ -1,6 +1,7 @@
-"""``devkit_viewer`` builds on devkit's shared foundation only: ``devkit_core.base``, ``devkit_core.core``, ``devkit.core``, ``devkit.advisory``, ``click`` and the
-standard library. The exact immutable report reader additionally uses shared.api/errors/local.
-It never imports devkit-spec, so it stays independent of SDD models."""
+"""Viewer uses shared primitives, distribution project/CLI support and immutable shared reports.
+
+It never imports devkit-spec, so it stays independent of SDD models.
+"""
 
 from __future__ import annotations
 
@@ -12,13 +13,14 @@ SRC = Path(__file__).parents[1] / "src/devkit_viewer"
 ALLOWED = (
     "devkit_core.base",
     "devkit_core.core",
-    "devkit.core",
+    "devkit_dist.adapters.cli",
+    "devkit_dist.features.project.repositories",
     "devkit.advisory",
     "devkit_viewer",
     "click",
-    "devkit.shared.api",
-    "devkit.shared.errors",
-    "devkit.shared.local",
+    "devkit_dist.features.shared.models.api",
+    "devkit_dist.features.shared.models.errors",
+    "devkit_dist.features.shared.repositories.local",
 )
 
 
@@ -41,3 +43,21 @@ def test_imports_stay_on_the_shared_core() -> None:
         and not any(name == allowed or name.startswith(f"{allowed}.") for allowed in ALLOWED)
     }
     assert not offending
+
+
+def test_browse_layers_do_not_import_transport_or_application_layers() -> None:
+    feature = "devkit_viewer.features.browse."
+    prohibited = {
+        "models": {"repositories", "services", "usecases", "cli", "http"},
+        "repositories": {"services", "usecases", "cli", "http"},
+        "services": {"usecases", "cli", "http"},
+        "usecases": {"cli", "http"},
+    }
+    violations = {
+        f"{path.relative_to(SRC)}: {name}"
+        for layer, forbidden in prohibited.items()
+        for path in (SRC / "features/browse" / layer).rglob("*.py")
+        for name in _imports(path)
+        if name.startswith(feature) and name.removeprefix(feature).split(".")[0] in forbidden
+    }
+    assert not violations

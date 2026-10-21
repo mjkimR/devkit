@@ -11,12 +11,12 @@ stories:
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundle/workflows/
   - packages/devkit-spec/src/devkit_spec/bundle/subagents/
-  - packages/devkit-spec/src/devkit_spec/integration.py
+  - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py
   - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/review-loop.md
   - packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/planning.md
   - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/
   - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-orchestrate/
-  - packages/devkit-spec/src/devkit_spec/worker/
+  - packages/devkit-spec/src/devkit_spec/features/worker/
 ---
 
 # [CAP-DLV-delivery-workflows] Delivery Workflows
@@ -26,7 +26,7 @@ entrypoints:
 The `spec` bundle ships one devkit workflow definition per combination of `planning-depth` and `task-kind`
 (`kind = "workflow"` assets in `packages/devkit-spec/src/devkit_spec/bundle/workflows/`), six host-neutral role contracts
 (`kind = "subagent"` assets in `packages/devkit-spec/src/devkit_spec/bundle/subagents/`), all in the `core` preset, and the
-`devkit.integration.readiness` provider `spec` (`packages/devkit-spec/src/devkit_spec/integration.py`). devkit's workflow engine
+`devkit_agt.features.integration.readiness` provider `spec` (`packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py`). devkit's workflow engine
 evaluates the definitions (`CAP-DLV-workflow-orchestration`);
 `devkit sync` projects the roles into each agent host's subagent directory
 (`CAP-DIST-agent-projections`). The
@@ -38,7 +38,7 @@ sequence.
 - **In-Scope**: the five definitions (layout, anchor, stages, gates, entry and exit checks, returns, declared checks),
   the gate semantics of `plan-intent`, `plan-accept`, `dev-integration` and the `exception` stage, the envelope kinds
   the stages require, the `activity-effort` rules of review and reconcile, the six role contracts, and the
-  `devkit.integration.readiness` provider (`devkit_spec.integration.check`) for Unit and `session` tasks, and
+  `devkit_agt.features.integration.readiness` provider (`devkit_spec.features.delivery.usecases.integration.check`) for Unit and `session` tasks, and
   informational `devkit spec worker inspect` evidence for worker-result acceptance.
 - **Out-of-Scope**:
   - Evaluating a definition, recording answers and envelopes, binding units: devkit's `devkit workflow` commands.
@@ -475,9 +475,9 @@ prompt.
 | `devkit worktree finish <branch> [--merge [--local-only]]` | Land the branch on the base as a merge commit, or a fast-forward under `[worktree] merge = "ff-only"` (skipping `fetch`/`push` when `--local-only`), remove the worktree, delete the branch when `delete_branch=yes`, and run the post-finish extension. |
 | `devkit worktree stale` | Activity branches idle beyond `[worktree] stale_after`; also warned by `devkit rules check -p hygiene`. |
 
-### 4.8 SDD Integration Readiness Provider (`packages/devkit-spec/src/devkit_spec/integration.py`)
+### 4.8 SDD Integration Readiness Provider (`packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py`)
 
-Registered under the `devkit.integration.readiness` entry point as `spec` and selected by `[integration] provider = "spec"` (`ADR-integration-approval-asserted`, `SPEC-hook-driven-integration-cleanup`). `check(context: IntegrationContext) -> Readiness` evaluates the committed `context.finish.source_sha` against `context.finish.target_sha` (at a build of an approved request, the build target, with the result commit as `context.result_sha`; `ADR-target-advance-readiness`) inside an isolated temporary workspace materialized from Git (populating `.devkit/managed/` only when files match the committed `.devkit/installation.json` SHA-256 digests), so uncommitted worktree or base edits never influence readiness:
+Registered under the `devkit_agt.features.integration.readiness` entry point as `spec` and selected by `[integration] provider = "spec"` (`ADR-integration-approval-asserted`, `SPEC-hook-driven-integration-cleanup`). `check(context: IntegrationContext) -> Readiness` evaluates the committed `context.finish.source_sha` against `context.finish.target_sha` (at a build of an approved request, the build target, with the result commit as `context.result_sha`; `ADR-target-advance-readiness`) inside an isolated temporary workspace materialized from Git (populating `.devkit/managed/` only when files match the committed `.devkit/installation.json` SHA-256 digests), so uncommitted worktree or base edits never influence readiness:
 
 1. **Policy and configuration**: validates `[tool.spec]` (`read_spec_config`) and `[workflow.approvals]` (`check_approvals`, accepting ask or auto while keeping intent and acceptance human) in both the base checkout and the materialized `source_sha` snapshot.
 2. **Unit tasks (`task.kind == "unit"`)**: verifies branch-to-unit correspondence through `attach_check(base, branch, unit, source_sha)` and `task.id` agreement (`<slug>`, `SPEC-<slug>` or `PROP-<slug>`), then evaluates the unit in `Workspace(..., ancestor=...)`:

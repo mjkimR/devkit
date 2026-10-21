@@ -7,8 +7,8 @@ status: active
 stories:
   - US-find-the-right-documents
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/search.py
-  - packages/devkit-spec/src/devkit_spec/cli/search.py
+  - packages/devkit-spec/src/devkit_spec/features/documents/usecases/search.py
+  - packages/devkit-spec/src/devkit_spec/features/documents/cli/commands.py
 created_at: 2026-10-13
 ---
 
@@ -26,7 +26,7 @@ expansion. Going from a known ID to its path stays `devkit spec resolve` (`CAP-D
 - **In-Scope**: candidate selection, field policy, pinning, glossary expansion, mode selection, the command's
   options, text and JSON output, and error codes.
 - **Out-of-Scope** (Non-Goals):
-  - The ranking algorithms themselves (tokenizer, BM25, embedding model, fusion): devkit's `devkit.search`.
+  - The ranking algorithms themselves (tokenizer, BM25, embedding model, fusion): devkit's `devkit_dist.features.search`.
   - Embedding titles, areas or bodies. Scope Excluded: only the ID and the `summary` go to the dense ranking.
     Rationale: on benchmark documents (Korean titles and bodies, English paraphrase queries) hybrid MRR was 0.54 with
     ID, title and area embedded, 0.70 with the ID alone and 0.81 with ID and summary; embedding whole bodies ranked
@@ -125,7 +125,7 @@ warnings `1` only under `--strict`.
 
 ### 4.6 Library
 
-`devkit_spec.search.search_documents(index, query, kinds=..., history=..., mode=..., limit=..., min_similarity=...,
+`devkit_spec.features.documents.usecases.search.search_documents(index, query, kinds=..., history=..., mode=..., limit=..., min_similarity=...,
 accept=...)` returns `SpecSearchResult` (`query`, `expanded`, `mode`, `hits` of `SpecHit`: `document`, `score`,
 `pinned`); `accept` narrows candidates further (a namespace selection). `load_glossary`, `expand_query` and
 `metadata` (the embedded text) expose the policy steps.

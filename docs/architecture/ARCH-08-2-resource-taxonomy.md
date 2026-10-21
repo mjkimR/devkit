@@ -100,7 +100,7 @@ The **bundle context** is the whole `get-context <bundle>` response: the constit
 - **Role**: Procedures for occasional tasks, retrieved for reuse and extended through experience. Explicit, recurring execution flows belong to workflows; frequency alone does not turn a policy or judgment criterion into a playbook.
 - **Consumption**: Only through these entry conditions, never through implicit scanning during ordinary tasks (which adds latency, prompt bloat and hallucinated runbooks):
   1. **Explicit user invocation** of the shared `devkit-playbook` skill (`"use devkit-playbook to recover the replica"`).
-  2. **Rule-triggered remediation**: a `governance-rule`, evaluated out-of-band by `devkit.rules` (`just rules-check`, CI, the `rules-check` commit gate) at zero token cost, reports a violation whose `Violation.remediation` points to the playbook (a search query or path) instead of embedding the procedure in the rule.
+  2. **Rule-triggered remediation**: a `governance-rule`, evaluated out-of-band by `devkit_agt.features.rules` (`just rules-check`, CI, the `rules-check` commit gate) at zero token cost, reports a violation whose `Violation.remediation` points to the playbook (a search query or path) instead of embedding the procedure in the rule.
 
   3. **Explicit exact invocation**: the user names the exact bundle/playbook ID for the task, or explicitly configures an external schedule naming it. `devkit playbook get <bundle>/<playbook>` retrieves the effective procedure without discovery or execution. Each run checks prerequisites and preserves workflow gates, permissions and user constraints; schedules and unavailable approval UI grant no gated-operation approval. External systems own scheduling and execution history (`ADR-external-playbook-execution`).
 
@@ -109,7 +109,7 @@ The **bundle context** is the whole `get-context <bundle>` response: the constit
 - **Target Location**: `.devkit/managed/<bundle>/<source path>`: a single Markdown file (for example `playbooks/<slug>.md`) or a directory whose entry is `<dir>/SKILL.md`.
 
 #### 5. `package-workflow`
-- **Role**: A declarative multi-stage delivery procedure (`devkit.workflow` definition) that every agent host follows from the same computed stage. Explicit, recurring execution flows belong here rather than in playbooks.
+- **Role**: A declarative multi-stage delivery procedure (`devkit_agt.features.workflow` definition) that every agent host follows from the same computed stage. Explicit, recurring execution flows belong here rather than in playbooks.
 - **Consumption**: The generated `devkit-workflow` entry skill (present only when a workflow asset is synchronized) runs `devkit workflow next`, and stage skills named by the definition perform the work. Definitions are discovered through the installation receipt; a project-local definition with the same id shadows the distributed one.
 - **Target Location**: `.devkit/managed/<bundle>/<source path>` with the path recorded in the receipt's `entrypoints`.
 
@@ -130,7 +130,7 @@ The **bundle context** is the whole `get-context <bundle>` response: the constit
 
 An explicit invocation applies to the requested task, not to all future tasks in the conversation: "recover the database" alone does not initiate playbook search; "use devkit-playbook to recover the database" does. A selected playbook does not replace package guidance: load its bundle's context if it is not already available, then apply the constitution and any relevant instructions. The once-per-bundle rule concerns context loading, not the procedure's execution state.
 
-**Example of the rule-triggered pattern.** The opt-in `authoring` bundle's `agent-guide-authoring` preset pairs the hygiene rule `RULE-agent-guide-size` (mechanical detection: an `AGENTS.md` or `CLAUDE.md` above 8 KB, with the devkit block's share) with the `agent-guide-authoring` playbook (procedural resolution: keep what nearly every task needs and move the rest to READMEs, instructions, playbooks, rules or nested guides); its remediation names `uv run devkit playbook search "curate agent guide"`. Root guides are injected on every turn, so the recommended budget is 4 KB to 8 KB. The `skill-authoring` preset applies the same pattern to skills and playbooks (`RULE-skill-document-size`). See [devkit.rules](../development/reference/rules.md#built-in-authoring-bundle).
+**Example of the rule-triggered pattern.** The opt-in `authoring` bundle's `agent-guide-authoring` preset pairs the hygiene rule `RULE-agent-guide-size` (mechanical detection: an `AGENTS.md` or `CLAUDE.md` above 8 KB, with the devkit block's share) with the `agent-guide-authoring` playbook (procedural resolution: keep what nearly every task needs and move the rest to READMEs, instructions, playbooks, rules or nested guides); its remediation names `uv run devkit playbook search "curate agent guide"`. Root guides are injected on every turn, so the recommended budget is 4 KB to 8 KB. The `skill-authoring` preset applies the same pattern to skills and playbooks (`RULE-skill-document-size`). See [devkit_agt.features.rules](../development/reference/rules.md#built-in-authoring-bundle).
 
 #### `devkit-playbook` entry point and search contract
 
@@ -142,7 +142,7 @@ An explicit invocation applies to the requested task, not to all future tasks in
 
 #### 7. `governance-rule`
 - **Role**: Invariants that can and must be 100% mechanically verified via parsing, regex, or static analysis.
-- **Consumption**: Evaluated out-of-band by `devkit.rules` during `just rules-check`, `devkit rules check`, the `rules-check` commit gate, or CI (`check --ci`). `devkit sync` records every deployed rule file in the installation receipt and `devkit rules` loads each asset from there as one plugin package; a consumer tunes a rule's phase, severity and typed settings in `[rules]` of `.devkit/config.toml`, never by editing the managed files.
+- **Consumption**: Evaluated out-of-band by `devkit_agt.features.rules` during `just rules-check`, `devkit rules check`, the `rules-check` commit gate, or CI (`check --ci`). `devkit sync` records every deployed rule file in the installation receipt and `devkit rules` loads each asset from there as one plugin package; a consumer tunes a rule's phase, severity and typed settings in `[rules]` of `.devkit/config.toml`, never by editing the managed files.
 - **Format Requirements**: A plugin package directory: the rule module, optional `__init__.py`, helper modules imported relatively, the guide, resources and the rule's tests in `tests/` (`CAP-GOV-rule-authoring`; run with `devkit rules test`, `CAP-GOV-rule-authoring`).
 - **Token Budget**: Zero LLM context unless violations are reported. A rule may ship a Markdown guide that `devkit rules explain` prints on demand.
 - **Target Location**: `.devkit/managed/<bundle>/<source path>` (for example `rules/<rule>/`).
@@ -160,7 +160,7 @@ An explicit invocation applies to the requested task, not to all future tasks in
 
 #### 10. `git-commit-gate`
 - **Role**: Policy enforced at Git's `pre-commit`, `commit-msg` or `post-commit` hook: what may be committed, how the message must look, and what happens after the commit exists.
-- **Consumption**: Run by `devkit.gate` through static hook wrappers that discover deployed gates from the installation receipt on every commit. Configured in `[gates]` of `.devkit/config.toml`, overridden per clone by `.git/devkit.config`. See `CAP-GATE-commit-gates`.
+- **Consumption**: Run by `devkit_agt.features.gate` through static hook wrappers that discover deployed gates from the installation receipt on every commit. Configured in `[gates]` of `.devkit/config.toml`, overridden per clone by `.git/devkit.config`. See `CAP-GATE-commit-gates`.
 - **Token Budget**: Zero LLM context; refusals are Agent Advisory Protocol errors.
 - **Format Requirements**: A plugin package directory whose modules define `BaseGate` subclasses.
 - **Target Location**: `.devkit/managed/<bundle>/<source path>` (for example `gates/<gate>/`); manifest `kind = "gate"`.
@@ -171,9 +171,9 @@ When authoring new project guidance or developer tooling, select the resource ki
 
 ```text
 Q1: Can this invariant be 100% deterministically verified by machine code?
- ├─ YES, a repository invariant ──> [ governance-rule ] (Python rule for devkit.rules)
- ├─ YES, commit-time policy (message, post-commit action) ──> [ git-commit-gate ] (devkit.gate)
- ├─ YES, a workflow stage condition ──> [ package-workflow ] exit check (a devkit.workflow primitive)
+ ├─ YES, a repository invariant ──> [ governance-rule ] (Python rule for devkit_agt.features.rules)
+ ├─ YES, commit-time policy (message, post-commit action) ──> [ git-commit-gate ] (devkit_agt.features.gate)
+ ├─ YES, a workflow stage condition ──> [ package-workflow ] exit check (a devkit_agt.features.workflow primitive)
  └─ NO  ──> Q2
 
 Q2: Is it a reusable tool or executable script directory for the agent?

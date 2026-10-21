@@ -86,7 +86,7 @@ A command prints each block once. A text-mode command whose result was printed b
 
 ## 6. Verbosity and Strictness
 
-Every command takes the same three output options (`devkit.core.cli.output_options`, which the error boundary adds to every command), each also settable through the environment, which is how Git hooks (`devkit gate run`) receive them:
+Every command takes the same three output options (`devkit_dist.adapters.cli.output_options`, which the error boundary adds to every command), each also settable through the environment, which is how Git hooks (`devkit gate run`) receive them:
 
 | Option | Environment | Effect |
 | --- | --- | --- |
@@ -118,7 +118,7 @@ Diagnostics that neither change the agent's next step nor need to reach the user
 | Concern | Where |
 | --- | --- |
 | Advisory model, levels, modes, `[ACTION]` texts, block rendering, `to_dict` | `devkit.advisory` ([reference](../development/reference/advisory.md)) |
-| `boundary` (with `output_options` and the log handler), `echo_notices`, `exit_on_warnings`, `echo_json`, `exit_on_problems` | `devkit.core.cli` ([reference](../development/reference/core.md)) |
+| `boundary` (with `output_options` and the log handler), `echo_notices`, `exit_on_warnings`, `echo_json`, `exit_on_problems` | `devkit_dist.adapters.cli` ([reference](../development/reference/core.md)) |
 | `NullHandler` on the `devkit` logger, `get_logger` for every module | `devkit_core.core.logs` |
 | Result lines and JSON payloads of each command | each area's `cli/` package, documented in its reference |
 | Warnings and notices each area reports | each area's reference (error and notice code tables) |

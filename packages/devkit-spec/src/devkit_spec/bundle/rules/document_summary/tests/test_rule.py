@@ -5,10 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from devkit.rules import Violation
-from devkit.rules.testing import check, load_rule
+from devkit_agt.features.rules import Violation
+from devkit_agt.features.rules.services.testing import check, load_rule
 
-from devkit_spec.rules.document_summary import foreign_letters
+from devkit_spec.features.governance.usecases.document_summary import foreign_letters
 
 RULE = load_rule(__file__)
 
@@ -92,7 +92,7 @@ def test_history_and_targets(tmp_path: Path) -> None:
 
 
 def test_milestone_summary_required_and_history_targeting(tmp_path: Path) -> None:
-    from devkit.rules.testing import check
+    from devkit_agt.features.rules.services.testing import check
 
     files = {
         "docs/roadmap/MS-a.md": "---\nid: MS-a\nstatus: active\n---\n",

@@ -33,7 +33,7 @@ Plugin code always runs from source, never from bytecode: a ``__pycache__``
 ``.pyc`` next to a plugin file is never read, and none is written (plugins live
 in devkit's managed root and in project overrides, where a ``__pycache__``
 directory would be an unowned file). When a package carries ``sources`` (the
-bytes ``devkit.core.verified_asset_packages`` checked against the installation
+bytes ``devkit_dist.features.project.repositories.receipt.verified_asset_packages`` checked against the installation
 receipt), a module is compiled from exactly those bytes, so a file changed
 between verification and import never runs.
 """

@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.cli import cli
+from devkit_dist.cli import cli
 from mcp import ClientSession, StdioServerParameters, types
 from mcp.client.stdio import stdio_client
 from testsupport.rules import git
@@ -22,8 +22,8 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 from importlib import metadata
-from devkit.integration import Evidence, Readiness
-from devkit_mcp.server import serve
+from devkit_agt.features.integration import Evidence, Readiness
+from devkit_mcp.features.runtime.mcp.server import serve
 
 class Provider:
     def check(self, context):
@@ -169,7 +169,8 @@ def test_all_tools_use_compact_results_and_status_exposes_retained_details(repo,
     if partial:
         script = script.replace(
             "serve(Path(sys.argv[1]), Path(sys.argv[1]))",
-            """from devkit.worktree import lifecycle, RemoveFailedError
+            """from devkit_agt.features.worktree.usecases import lifecycle
+from devkit_agt.features.worktree.models.errors import RemoveFailedError
 original_remove = lifecycle._remove
 def fail_once(base, path):
     lifecycle._remove = original_remove

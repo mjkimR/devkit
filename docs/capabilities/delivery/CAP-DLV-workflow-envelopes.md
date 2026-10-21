@@ -5,15 +5,15 @@ summary: "Stage envelopes recording findings with optional severity, questions, 
 area: delivery
 status: active
 entrypoints:
-  - packages/devkit/src/devkit/workflow/cli/envelope.py
-  - packages/devkit/src/devkit/workflow/unit/envelope/authoring.py
-  - packages/devkit/src/devkit/workflow/unit/envelope/model.py
+  - packages/devkit/src/devkit_agt/features/workflow/cli/envelope.py
+  - packages/devkit/src/devkit_agt/features/workflow/services/envelope/authoring.py
+  - packages/devkit/src/devkit_agt/features/workflow/services/envelope/model.py
 created_at: 2026-10-17
 ---
 
 # [CAP-DLV-workflow-envelopes] Review Envelopes
 
-**Package**: `devkit.workflow`. The file contract that delegated roles and reviews write, the envelope checks read, and the gates and the integration guard are held by.
+**Package**: `devkit_agt.features.workflow`. The file contract that delegated roles and reviews write, the envelope checks read, and the gates and the integration guard are held by.
 **Related**: `CAP-DLV-workflow-definitions`, `CAP-DLV-cli-and-output`.
 
 ## 1. File Contract
@@ -168,4 +168,4 @@ While a unit is held:
 - **No gate from the hold on passes.** The hold applies to the gate of the stage the holding worker envelope was written in (its `stage`) and of every later stage; gates passed before stay passed, so a run that resolves the problem goes on from where the unit is. A malformed worker envelope holds from the stage it still states. An envelope of another workflow or without a stage of this one holds every gate. `devkit workflow next` reports a held gate as not satisfied (`held=yes`) whatever would satisfy it (policy `auto`, `--given`, an accepted record), asks no gate request, and a gated stage whose exit checks hold shows the unmet `envelope-hold` check (class `disk`) naming the blocking files and the number of unanswered questions. Stages without a gate, and the runs that resolve a problem or answer questions, go on. A stage skipped by policy `off` is skipped as before.
 - **No handoff.** A complete unit asks no handoff choice, and `devkit workflow handoff` refuses with `HANDOFF_HELD`.
 - **Unanswered questions are requests.** Each becomes a `choose` request `question:<worker-NN>.<id>` answered by an answer envelope (`answer: envelope`), not by `devkit workflow answer` (`CAP-DLV-human-interaction`), and the unit waits for them (`[WAITING: human ...]`).
-- **Integration is refused.** `devkit worktree finish --merge` calls the `devkit.finish_guard` extensions before its first change; devkit-agt registers one (`devkit.workflow.integration:finish_guard`) that reads every unit whose `envelopes/` files the branch changed (between the merge base and the branch tip), at the committed tip, and refuses the merge with `WORKTREE_BLOCKED` listing one line per unresolved problem, unanswered question and malformed worker envelope (`CAP-WT-task-worktrees`). Uncommitted envelopes neither block nor clear it. Envelope files are never removed one by one, so a file the branch deleted from a unit it kept still counts, read at the merge base; a unit the branch removed whole (a handoff, a close) holds nothing. A Git failure while reading propagates, and the merge is refused (`WORKTREE_GUARD_FAILED`). Other integrators (a pull request service) apply the same rule by reading the envelopes at the head they merge: `envelope check --format json` reports `blocked`, `problems` and `pending_questions`.
+- **Integration is refused.** `devkit worktree finish --merge` calls the `devkit.finish_guard` extensions before its first change; devkit-agt registers one (`devkit_agt.features.workflow.usecases.integration:finish_guard`) that reads every unit whose `envelopes/` files the branch changed (between the merge base and the branch tip), at the committed tip, and refuses the merge with `WORKTREE_BLOCKED` listing one line per unresolved problem, unanswered question and malformed worker envelope (`CAP-WT-task-worktrees`). Uncommitted envelopes neither block nor clear it. Envelope files are never removed one by one, so a file the branch deleted from a unit it kept still counts, read at the merge base; a unit the branch removed whole (a handoff, a close) holds nothing. A Git failure while reading propagates, and the merge is refused (`WORKTREE_GUARD_FAILED`). Other integrators (a pull request service) apply the same rule by reading the envelopes at the head they merge: `envelope check --format json` reports `blocked`, `problems` and `pending_questions`.

@@ -4,7 +4,7 @@ import os
 import subprocess
 from pathlib import Path
 
-from devkit_spec.scope import Granularity, LocalRegistry, Record, ScopePath, Source, Stage
+from devkit_spec.features.scope import Granularity, LocalRegistry, Record, ScopePath, Source, Stage
 
 GIT_ENV = {
     "GIT_AUTHOR_NAME": "t",

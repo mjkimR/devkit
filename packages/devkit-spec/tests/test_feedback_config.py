@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from conftest import Write
-from devkit.cli import cli as devkit_cli
+from devkit_dist.cli import cli as devkit_cli
 
-from devkit_spec.config import FEEDBACK_CHOICES, FeedbackConfig, read_spec_config
-from devkit_spec.errors import SpecConfigError
+from devkit_spec.base.errors import SpecConfigError
+from devkit_spec.features.policy.services.config import FEEDBACK_CHOICES, FeedbackConfig, read_spec_config
 
 
 def test_missing_and_empty_tables_use_repository_defaults(workspace: Path, write: Write) -> None:

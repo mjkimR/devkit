@@ -8,11 +8,11 @@ import pytest
 from conftest import Write
 from proposals.support import MONTH, STAMP, TODAY, accept, spec_dir, write_workflow
 
-from devkit_spec.documents import DocumentIndex
-from devkit_spec.errors import ProposalHandoffError, ProposalInvalidError, ProposalTargetExistsError
-from devkit_spec.proposals import create_proposal, handoff_proposal
-from devkit_spec.proposals import handoff as handoff_module
-from devkit_spec.proposals import specs as specs_module
+from devkit_spec.base.errors import ProposalHandoffError, ProposalInvalidError, ProposalTargetExistsError
+from devkit_spec.features.documents import DocumentIndex
+from devkit_spec.features.proposals import create_proposal, handoff_proposal
+from devkit_spec.features.proposals.usecases import handoff as handoff_module
+from devkit_spec.features.proposals.usecases import specs as specs_module
 
 
 def _feedback(name: str, status: str = "open", body: str = "") -> str:

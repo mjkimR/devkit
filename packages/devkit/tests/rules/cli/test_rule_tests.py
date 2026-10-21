@@ -5,17 +5,17 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import devkit_agt.features.rules.usecases.rule_tests as rule_tests
 import pytest
 from click.testing import CliRunner
-from devkit.rules import RuleRegistry
-from devkit.rules.cli import cli
-from devkit.rules.engine import rule_tests
-from devkit.rules.engine.rule_tests import rule_folder
+from devkit_agt.features.rules import RuleRegistry
+from devkit_agt.features.rules.cli import cli
+from devkit_agt.features.rules.usecases.rule_tests import rule_folder
 from testsupport.rules import write
 
 RULE = """
-from devkit.rules import RuleContext, Violation
-from devkit.rules.rules import BaseRule
+from devkit_agt.features.rules import RuleContext, Violation
+from devkit_agt.features.rules.services.builtins import BaseRule
 
 
 class {name}(BaseRule):
@@ -27,7 +27,7 @@ class {name}(BaseRule):
 """
 
 PASSING = """
-from devkit.rules.testing import check, load_rule
+from devkit_agt.features.rules.services.testing import check, load_rule
 
 RULE = load_rule(__file__)
 
@@ -141,7 +141,7 @@ def test_rule_folder_is_the_package_root_or_the_module_directory(tmp_path: Path)
     folders = {rule.id: rule_folder(rule) for rule in registry.get_all()}
     assert folders == {"RULE-flat": (rules / "flat").resolve(), "RULE-nested": (rules / "nested").resolve()}
 
-    from devkit.rules.rules import MarkdownLinkRule
+    from devkit_agt.features.rules.services.builtins import MarkdownLinkRule
 
     folder = rule_folder(MarkdownLinkRule())
     assert folder is not None and folder.name == "markdown_link" and (folder / "tests").is_dir()
@@ -167,8 +167,8 @@ def test_runs_are_isolated_from_the_project_pytest_setup(workspace: Path) -> Non
 
 
 def test_an_override_of_the_module_alone_keeps_the_managed_guide_and_tests(tmp_path: Path) -> None:
-    from devkit.rules.engine.rule_tests import tests_directory
-    from devkit.rules.rules.base import guide_path
+    from devkit_agt.features.rules.services.builtins.base import guide_path
+    from devkit_agt.features.rules.usecases.rule_tests import tests_directory
 
     managed = tmp_path / ".devkit/managed/team/rules/good"
     override = tmp_path / ".devkit/overrides/team/rules/good"
@@ -187,7 +187,7 @@ def test_an_override_of_the_module_alone_keeps_the_managed_guide_and_tests(tmp_p
 def test_managed_tests_kept_by_an_override_run_against_the_overridden_module(tmp_path: Path) -> None:
     import inspect
 
-    from devkit.rules.testing import load_rule
+    from devkit_agt.features.rules.services.testing import load_rule
     from devkit_core.core.plugins import PluginPackage, plugin_modules
 
     managed = tmp_path / ".devkit/managed/team/rules/good"
@@ -213,8 +213,8 @@ def test_managed_tests_kept_by_an_override_run_against_the_overridden_module(tmp
 def test_with_a_receipt_load_rule_loads_only_the_files_it_lists(tmp_path: Path) -> None:
     import inspect
 
-    from devkit.rules.engine.errors import RuleLoadError
-    from devkit.rules.testing import load_rule
+    from devkit_agt.features.rules.models.errors import RuleLoadError
+    from devkit_agt.features.rules.services.testing import load_rule
     from testsupport.rules import digests, write_receipt
 
     managed = tmp_path / ".devkit/managed/team/rules/good"
@@ -248,7 +248,7 @@ def test_with_a_receipt_load_rule_loads_only_the_files_it_lists(tmp_path: Path) 
 def test_an_interrupted_run_prints_the_results_so_far(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import dataclasses
 
-    from devkit import compact
+    import devkit_agt.features.compact as compact
 
     real = compact.run_command
     calls: list[int] = []

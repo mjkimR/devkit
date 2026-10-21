@@ -5,7 +5,7 @@ from pathlib import Path
 
 from click.testing import CliRunner, Result
 from conftest import Write
-from devkit.cli import cli as devkit_cli
+from devkit_dist.cli import cli as devkit_cli
 from proposals.support import GATED, INCUBATED, accept, write_workflow
 
 

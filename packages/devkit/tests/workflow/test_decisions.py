@@ -10,10 +10,11 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+import devkit_agt.features.workflow.repositories.unit.records as records
 import pytest
 import yaml
 from click.testing import CliRunner, Result
-from devkit.workflow import (
+from devkit_agt.features.workflow import (
     DecisionInvalidError,
     DefinitionError,
     Options,
@@ -24,12 +25,10 @@ from devkit.workflow import (
     load_envelopes,
     parse_definition,
     record_answer,
-    render_document,
-    render_evaluation,
 )
-from devkit.workflow.cli import cli
-from devkit.workflow.unit import records
-from devkit.workflow.unit.decisions import (
+from devkit_agt.features.workflow.cli import cli
+from devkit_agt.features.workflow.cli.render import render_document, render_evaluation
+from devkit_agt.features.workflow.repositories.unit.decisions import (
     Decision,
     DecisionRecordError,
     Decisions,

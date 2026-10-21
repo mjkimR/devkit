@@ -319,7 +319,7 @@ def test_a_raised_notice_is_a_defect() -> None:
 
 
 def test_every_rendered_line_starts_with_a_published_sentinel() -> None:
-    # devkit.compact recognizes blocks by these constants; a new field must be added to them.
+    # devkit_agt.features.compact recognizes blocks by these constants; a new field must be added to them.
     from devkit.advisory import CONTINUATION, FIELDS, HEADLINE
 
     errors = [

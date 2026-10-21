@@ -10,12 +10,16 @@ import tomllib
 from importlib.metadata import entry_points
 from pathlib import Path
 
-from devkit.core.config_template import uncomment
-from devkit.core.receipt import CONFIG_PATH
-from devkit.distribution.installation.config import RESERVED_TABLES, preview_config_template, refresh_config_template
-from devkit.distribution.installation.config_template import RESERVED_GROUP
-from devkit.workflow.project.config import WorkflowConfig, parse_workflow_config
-from devkit.worktree.config import WorktreeConfig, read_worktree_config
+from devkit_agt.features.workflow.repositories.project.config import WorkflowConfig, parse_workflow_config
+from devkit_agt.features.worktree.repositories.config import WorktreeConfig, read_worktree_config
+from devkit_dist.features.distribution.services.installation.config import (
+    RESERVED_TABLES,
+    preview_config_template,
+    refresh_config_template,
+)
+from devkit_dist.features.distribution.services.installation.config_template import RESERVED_GROUP
+from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
+from devkit_dist.features.project.services.config_template import uncomment
 
 # The harness part of a fresh template before the split, byte for byte.
 HARNESS_TABLES = (
@@ -53,8 +57,8 @@ def _agt_entries() -> dict[str, str]:
 
 def test_devkit_agt_registers_the_workflow_and_worktree_templates() -> None:
     assert _agt_entries() == {
-        "workflow": "devkit.workflow.project.config:config_tables",
-        "worktree": "devkit.worktree.config:config_tables",
+        "workflow": "devkit_agt.features.workflow.repositories.project.config:config_tables",
+        "worktree": "devkit_agt.features.worktree.repositories.config:config_tables",
     }
     assert set(_agt_entries()) <= set(RESERVED_TABLES)
 

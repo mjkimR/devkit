@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Dense and hybrid devkit.search: numpy, tokenizers and the default embedding model.
+# Dense and hybrid devkit_dist.features.search: numpy, tokenizers and the default embedding model.
 search = [
     "numpy>=2.0",
     "tokenizers>=0.20",
@@ -23,18 +23,18 @@ search = [
 
 # The sole devkit executable; devkit-agt and other packages mount their commands through devkit.commands.
 [project.scripts]
-devkit = "devkit.cli:cli"
+devkit = "devkit_dist.cli:cli"
 
 [project.entry-points."devkit.bundles"]
-devkit = "devkit.distribution.guide"
-advisory = "devkit.advisory_guide"
-git-commits = "devkit.commits_guide"
+devkit = "devkit_dist.bundles.devkit"
+advisory = "devkit_dist.bundles.advisory"
+git-commits = "devkit_dist.bundles.git_commits"
 
 [project.entry-points."devkit.host.services"]
-shared = "devkit.shared.mcp:tools"
+shared = "devkit_dist.features.shared.mcp:tools"
 
 [project.entry-points."devkit.host.handlers"]
-observe = "devkit.host.observation:observe"
+observe = "devkit_dist.features.host.services.observation:observe"
 
 # The dist-only check (`just test-dist`) syncs devkit-dist with this group alone, without the workspace's.
 [dependency-groups]
@@ -54,9 +54,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-# `devkit` is a namespace package shared with devkit-advisory and devkit-agt: no devkit/__init__.py, and every
-# installed path belongs to one wheel (each area carries its own py.typed).
-packages = ["src/devkit"]
+# devkit_dist is independently owned; only devkit-advisory retains the devkit namespace.
+packages = ["src/devkit_dist"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

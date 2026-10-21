@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.cli import cli as devkit_cli
+from devkit_dist.cli import cli as devkit_cli
 from proposals.support import TODAY, accept, spec_dir
 from scope.support import git, write
 
-from devkit_spec.errors import ProposalWrongWorktreeError
-from devkit_spec.proposals import create_proposal, handoff_proposal
+from devkit_spec.base.errors import ProposalWrongWorktreeError
+from devkit_spec.features.proposals import create_proposal, handoff_proposal
 
 SLUG = "rate-limits"
 

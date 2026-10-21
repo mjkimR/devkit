@@ -9,7 +9,7 @@ created_at: 2026-10-17
 
 # [CAP-DLV-human-interaction] Human Interaction Contract
 
-**Package**: `devkit.workflow`. Commands and error codes: `CAP-DLV-cli-and-output`.
+**Package**: `devkit_agt.features.workflow`. Commands and error codes: `CAP-DLV-cli-and-output`.
 **Related**: `CAP-DLV-workflow-orchestration`, `CAP-DLV-workflow-definitions`.
 
 ## 1. Scope

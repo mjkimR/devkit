@@ -21,7 +21,7 @@ created_at: 2026-10-17
 sequenceDiagram
     participant Dev as Agent / Engineer
     participant CLI as devkit sync
-    participant Dist as devkit.distribution
+    participant Dist as devkit_dist.features.distribution
     participant Journal as .devkit/transient/
     participant Target as .devkit/managed/ & Projections
     participant Receipt as .devkit/installation.json
@@ -50,7 +50,7 @@ If an error or process termination occurs midway, `devkit recover` reads `.devki
 ```mermaid
 sequenceDiagram
     participant Dev as Developer / Hook
-    participant Engine as devkit.rules
+    participant Engine as devkit_agt.features.rules
     participant Cache as Workspace Cache
     participant Scanner as Rule Scanners
 

@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 from scope.support import CAP_A, CAP_B, CAP_EMPTY, CAP_PLANNED, GIT_ENV, SPEC, git, make_repo, write
 
-from devkit_spec.errors import ProposalNotFoundError, ScopeInputInvalidError, ScopeSpecNotFoundError
-from devkit_spec.scope import (
+from devkit_spec.base.errors import ProposalNotFoundError, ScopeInputInvalidError, ScopeSpecNotFoundError
+from devkit_spec.features.scope import (
     Deadline,
     Diff,
     Granularity,

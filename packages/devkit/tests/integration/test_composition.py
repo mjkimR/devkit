@@ -3,9 +3,10 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
+import devkit_agt.features.integration.services.providers as providers
 import pytest
-from devkit.integration import AuthorityError, CleanupResult, CleanupTarget, IntegrationService, Task, providers
-from devkit.worktree import integration_lock
+from devkit_agt.features.integration import AuthorityError, CleanupResult, CleanupTarget, IntegrationService, Task
+from devkit_agt.features.worktree import integration_lock
 from devkit_core.base.mcp import ConfirmationReply
 from devkit_core.core import LockHeldError
 from testsupport.rules import git, write

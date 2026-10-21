@@ -6,9 +6,9 @@ from dataclasses import replace
 from pathlib import Path
 
 from conftest import Write
-from devkit.core.config_template import check_tables, render_tool_template, uncomment
+from devkit_dist.features.project.services.config_template import check_tables, render_tool_template, uncomment
 
-from devkit_spec.config import Namespace, ScopeConfig, SpecConfig, read_spec_config, template
+from devkit_spec.features.policy.services.config import Namespace, ScopeConfig, SpecConfig, read_spec_config, template
 
 
 def test_the_template_renders() -> None:

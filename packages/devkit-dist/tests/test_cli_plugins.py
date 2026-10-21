@@ -1,4 +1,4 @@
-"""Command plugins of ``devkit.cli``: commands that installed packages mount through ``devkit.commands``.
+"""Command plugins of ``devkit_dist.cli``: commands that installed packages mount through ``devkit.commands``.
 
 Each case installs fake distributions (a ``.dist-info`` directory with ``entry_points.txt``, beside the module it
 names) into a temporary directory and runs ``devkit`` in a fresh interpreter with that directory on ``PYTHONPATH``,
@@ -17,8 +17,8 @@ from types import SimpleNamespace
 import click
 import pytest
 from click.testing import CliRunner
-from devkit import cli as root
-from devkit.core.errors import HARNESS_INSTALL_FIX
+from devkit_dist import cli as root
+from devkit_dist.base.errors import HARNESS_INSTALL_FIX
 
 HELLO = """
 import click
@@ -50,7 +50,12 @@ def site(tmp_path: Path) -> Path:
 def _devkit(site: Path, *args: str) -> subprocess.CompletedProcess[str]:
     env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(site), os.environ.get("PYTHONPATH", "")])}
     return subprocess.run(
-        [sys.executable, "-m", "devkit", *args], capture_output=True, text=True, encoding="utf-8", env=env, check=False
+        [sys.executable, "-m", "devkit_dist", *args],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        env=env,
+        check=False,
     )
 
 
@@ -177,9 +182,9 @@ def test_an_installed_command_of_a_harness_name_wins(monkeypatch: pytest.MonkeyP
 
 
 def test_a_harness_name_declared_twice_is_an_unusable_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
-    entries = (_entry("devkit.rules.cli:cli", "devkit-agt"), _entry("other_rules:cli", "other-pkg"))
+    entries = (_entry("devkit_agt.features.rules.cli:cli", "devkit-agt"), _entry("other_rules:cli", "other-pkg"))
     monkeypatch.setattr(root, "plugin_entry_points", lambda: {"rules": entries})
     result = CliRunner().invoke(root.cli, ["rules", "check"])
     assert result.exit_code == 2 and "(COMMAND_PLUGIN_INVALID)" in result.stderr
-    assert "devkit.rules.cli:cli (package devkit-agt)" in result.stderr
+    assert "devkit_agt.features.rules.cli:cli (package devkit-agt)" in result.stderr
     assert "other_rules:cli (package other-pkg)" in result.stderr

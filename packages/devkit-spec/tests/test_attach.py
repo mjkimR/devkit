@@ -7,10 +7,10 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.cli import cli as devkit_cli
+from devkit_dist.cli import cli as devkit_cli
 from scope.support import git, write
 
-from devkit_spec.attach import attach_check
+from devkit_spec.features.delivery.usecases.attach import attach_check
 
 PROPOSAL = "docs/proposals/PROP-login"
 SPEC = "specs/2026-10/20261016-login"

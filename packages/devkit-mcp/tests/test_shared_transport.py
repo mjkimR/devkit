@@ -3,10 +3,10 @@
 import asyncio
 
 import pytest
-from devkit.core.mcp_context import ExecutionBinding
-from devkit.shared.mcp import tools
 from devkit_core.core.git import run_git
-from devkit_mcp.server import build_server
+from devkit_dist.features.project.repositories.invocation import ExecutionBinding
+from devkit_dist.features.shared.mcp import tools
+from devkit_mcp.features.runtime.mcp.server import build_server
 from mcp import types
 
 

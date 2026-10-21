@@ -5,7 +5,7 @@ summary: "Bundle schema, asset kinds, execution-aware Markdown templates with bo
 area: distribution
 status: active
 entrypoints:
-  - packages/devkit-dist/src/devkit/distribution/bundles/
+  - packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/
 created_at: 2026-10-17
 ---
 
@@ -44,18 +44,18 @@ standards are in the `ARCH-08-2-resource-taxonomy`.
   `devkit get-context` catalogs. Every file of the source, including each file of a directory source, carries one.
 - `playbook`: a procedure for an occasional task, found through explicit playbook search or retrieved by exact manifest ID; header rules are in
   `CAP-DIST-context-and-playbooks`.
-- `rule`: Python governance rules run by `devkit.rules`, shipped as one plugin package directory per asset (see
+- `rule`: Python governance rules run by `devkit_agt.features.rules`, shipped as one plugin package directory per asset (see
   **Plugin packages** below). The receipt lists every deployed file under the asset's `paths` and `devkit rules`
   loads the package from there; a consumer configures the rules in `[rules]` of `.devkit/config.toml`.
-- `workflow`: one Markdown delivery workflow definition (frontmatter `id` and `stages`) run by `devkit.workflow`.
+- `workflow`: one Markdown delivery workflow definition (frontmatter `id` and `stages`) run by `devkit_agt.features.workflow`.
   Distribution validates the header only (`devkit workflow validate` checks stage semantics). When at least one
   workflow is synchronized, `devkit sync` generates the `devkit-workflow` entry skill under
   `.devkit/managed/_devkit/skills/`, projects it into every selected agent, and records the definition under
   `entrypoints` in the receipt so `devkit workflow` finds it without configuration.
-- `gate`: Python commit gates in one plugin package directory per asset, run by `devkit.gate` at a Git hook stage,
+- `gate`: Python commit gates in one plugin package directory per asset, run by `devkit_agt.features.gate` at a Git hook stage,
   loaded from the receipt's `paths` and configured in `[gates]` of `.devkit/config.toml` or the per-clone `.git/devkit.config`; see the
   `CAP-GATE-commit-gates`.
-- The engines of `rule`, `workflow` and `gate` assets (`devkit.rules`, `devkit.workflow`, `devkit.gate`) ship with
+- The engines of `rule`, `workflow` and `gate` assets (`devkit_agt.features.rules`, `devkit_agt.features.workflow`, `devkit_agt.features.gate`) ship with
   `devkit-agt`; `devkit-dist` deploys these kinds without them and reports them with `HARNESS_ENGINE_MISSING`
   (`CAP-DIST-sync-and-transactions`).
 - `hook`: one declarative TOML file selecting a host, event and installed service handler. Sync manages exact

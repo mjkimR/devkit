@@ -3,11 +3,11 @@
 from pathlib import Path
 
 import pytest
-from devkit.rules.testing import check
+from devkit_agt.features.rules.services.testing import check
 
-from devkit_spec.documents import DocumentIndex, parse_document
-from devkit_spec.documents.dependencies import cycle_members, target_problem
-from devkit_spec.rules.document_reference import DocumentReferenceRule
+from devkit_spec.features.documents import DocumentIndex, parse_document
+from devkit_spec.features.documents.services.dependencies import cycle_members, target_problem
+from devkit_spec.features.governance.usecases.document_reference import DocumentReferenceRule
 
 
 def doc(name: str, edges: str = "", status: str = "draft") -> str:

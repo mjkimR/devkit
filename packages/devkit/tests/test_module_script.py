@@ -85,14 +85,14 @@ def run_module(script_env: dict[str, str], *args: str) -> subprocess.CompletedPr
 @pytest.mark.parametrize(
     ("args", "paths", "extra"),
     [
-        (["gate"], ["packages/devkit/tests/gate", "packages/devkit/src/devkit/gate"], []),
+        (["gate"], ["packages/devkit/tests/gate", "packages/devkit/src/devkit_agt/features/gate"], []),
         (
             ["gate", "worktree", "-k", "foo"],
             [
                 "packages/devkit/tests/gate",
-                "packages/devkit/src/devkit/gate",
+                "packages/devkit/src/devkit_agt/features/gate",
                 "packages/devkit/tests/worktree",
-                "packages/devkit/src/devkit/worktree",
+                "packages/devkit/src/devkit_agt/features/worktree",
             ],
             ["-k", "foo"],
         ),
@@ -127,7 +127,7 @@ def test_an_area_of_another_module_includes_its_source_package(script_env: dict[
     assert result.returncode == 0, result.stderr
     assert pytest_paths(calls(script_env)[1]) == [
         "packages/devkit-spec/tests/scope",
-        "packages/devkit-spec/src/devkit_spec/scope",
+        "packages/devkit-spec/src/devkit_spec/features/scope",
     ]
 
 

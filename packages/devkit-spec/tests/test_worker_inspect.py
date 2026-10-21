@@ -12,8 +12,8 @@ import pytest
 from click.testing import CliRunner
 
 from devkit_spec.cli import cli
-from devkit_spec.worker import inspect
-from devkit_spec.worker.inputs import BaseUnresolved, HeadUnresolved, UnitUnresolved
+from devkit_spec.features.worker.usecases.inputs import BaseUnresolved, HeadUnresolved, UnitUnresolved
+from devkit_spec.features.worker.usecases.inspect import inspect
 
 UNIT = "specs/2026-10/20261020-example"
 
@@ -221,7 +221,7 @@ def test_rename_reports_old_and_new_names(repo: Path) -> None:
 def test_cli_json_and_mutually_exclusive_scope(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     worker(repo, 1)
     monkeypatch.chdir(repo)
-    module = importlib.import_module("devkit_spec.cli.worker")
+    module = importlib.import_module("devkit_spec.features.worker.cli.commands")
     monkeypatch.setattr(module, "inspect", lambda root, **kw: inspect(root, **kw, runner=passed))
     runner = CliRunner()
     result = runner.invoke(cli, ["worker", "inspect", "--format", "json"])
@@ -292,7 +292,7 @@ def test_planning_scope_is_only_proposal(repo: Path) -> None:
 def test_scope_file_unknown_ref_and_notice_cli(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     worker(repo, 1)
     monkeypatch.chdir(repo)
-    module = importlib.import_module("devkit_spec.cli.worker")
+    module = importlib.import_module("devkit_spec.features.worker.cli.commands")
     monkeypatch.setattr(module, "inspect", lambda root, **kw: inspect(root, **kw, runner=passed))
     runner = CliRunner()
     write(repo, "scope.txt", "src\n")
@@ -309,7 +309,7 @@ def test_scope_file_unknown_ref_and_notice_cli(repo: Path, monkeypatch: pytest.M
 
 
 def test_wrapped_checks_preserve_output_and_failures(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    module = importlib.import_module("devkit_spec.worker.inspect")
+    module = importlib.import_module("devkit_spec.features.worker.usecases.inspect")
     for code, expected in [(0, "pass"), (1, "fail"), (2, "not-run")]:
         monkeypatch.setattr(
             module.subprocess,
@@ -369,7 +369,7 @@ def test_text_scope_unknown_omits_outside_and_history(repo: Path, monkeypatch: p
     (repo / UNIT / "reconcile.md").unlink()
     worker(repo, 1)
     monkeypatch.chdir(repo)
-    module = importlib.import_module("devkit_spec.cli.worker")
+    module = importlib.import_module("devkit_spec.features.worker.cli.commands")
     monkeypatch.setattr(module, "inspect", lambda root, **kw: inspect(root, **kw, runner=passed))
     result = CliRunner().invoke(cli, ["worker", "inspect"])
     assert result.exit_code == 0, result.output
@@ -385,7 +385,7 @@ def test_structured_advisories_use_stderr_once(repo: Path, monkeypatch: pytest.M
 
     worker(repo, 1)
     monkeypatch.chdir(repo)
-    module = importlib.import_module("devkit_spec.cli.worker")
+    module = importlib.import_module("devkit_spec.features.worker.cli.commands")
     error = ArgumentError("wrapped input invalid", fix="Pass the valid input").to_dict()
 
     def runner(_root: Path, _args: object) -> dict:

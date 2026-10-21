@@ -10,12 +10,12 @@ import inspect
 import json
 from pathlib import Path
 
-import devkit.workflow.errors as workflow_errors
-import devkit.workflow.workspace as workspace_module
+import devkit_agt.features.workflow.models.errors as workflow_errors
+import devkit_agt.features.workflow.usecases.workspace as workspace_module
 import pytest
 from click.testing import CliRunner, Result
 from devkit.advisory import ActionMode, AdvisoryError
-from devkit.workflow import (
+from devkit_agt.features.workflow import (
     AnchorInvalidError,
     DecisionRecordError,
     DefinitionProblem,
@@ -31,13 +31,13 @@ from devkit.workflow import (
     read_binding,
     write_binding,
 )
-from devkit.workflow.cli import cli
-from devkit.workflow.definition.ids import is_ident
-from devkit.workflow.evaluation.git import is_revision
-from devkit.workflow.project.config import parse_workflow_config
-from devkit.workflow.project.layout import validate_relative_dir
-from devkit.workflow.unit.decisions import is_request_id
-from devkit.workflow.unit.envelope import FILE
+from devkit_agt.features.workflow.cli import cli
+from devkit_agt.features.workflow.models.ids import is_ident
+from devkit_agt.features.workflow.models.layout import validate_relative_dir
+from devkit_agt.features.workflow.repositories.git import is_revision
+from devkit_agt.features.workflow.repositories.project.config import parse_workflow_config
+from devkit_agt.features.workflow.repositories.unit.decisions import is_request_id
+from devkit_agt.features.workflow.services.envelope import FILE
 from testsupport.workflow import WORKFLOW, write_config
 
 UNIT = ".devkit/transient/work/u"

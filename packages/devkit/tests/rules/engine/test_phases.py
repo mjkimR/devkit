@@ -3,8 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from devkit.core import errors as core_errors
-from devkit.rules import (
+from devkit_agt.features.rules import (
     Phase,
     RuleContext,
     RulesConfigError,
@@ -14,10 +13,11 @@ from devkit.rules import (
     load_rules_config,
     resolve_phases,
 )
-from devkit.rules.engine.config import parse_rules_config
-from devkit.rules.engine.errors import RuleDefinitionError
-from devkit.rules.engine.phases import remaining_by_rule, transition_entries, validate_phase_overrides
-from devkit.rules.rules import BaseRule
+from devkit_agt.features.rules.models.errors import RuleDefinitionError
+from devkit_agt.features.rules.models.phases import remaining_by_rule, transition_entries, validate_phase_overrides
+from devkit_agt.features.rules.repositories.config import parse_rules_config
+from devkit_agt.features.rules.services.builtins import BaseRule
+from devkit_dist.base import errors as core_errors
 
 
 def _write_config(root: Path, body: str) -> Path:

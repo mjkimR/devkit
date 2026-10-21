@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner, Result
 from conftest import Write
-from devkit.cli import cli as devkit_cli
+from devkit_dist.cli import cli as devkit_cli
 
 
 def _doc(document_id: str, body: str = "", **fields: str) -> str:

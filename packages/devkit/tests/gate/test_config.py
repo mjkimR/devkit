@@ -5,8 +5,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
-from devkit.core import ConfigError
-from devkit.gate import (
+from devkit_agt.features.gate import (
     BaseGate,
     GateConfigError,
     GateContext,
@@ -16,7 +15,8 @@ from devkit.gate import (
     load_gates_config,
     resolve_settings,
 )
-from devkit.gate.engine.config import merge
+from devkit_agt.features.gate.repositories.config import merge
+from devkit_dist.base.errors import ConfigError
 
 
 @dataclass(frozen=True)

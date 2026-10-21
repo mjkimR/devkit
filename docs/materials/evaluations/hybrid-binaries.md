@@ -29,7 +29,7 @@ Wheels (PEP 427) may contain executables, as `ruff`, `uv`, `ninja` and `cmake` d
 
 ## 4. Candidate Subsystems
 
-- **Playbook search**: today pure-Python BM25 in [playbook_search.py](../../../packages/devkit-dist/src/devkit/distribution/installation/playbook_search.py), a lexical index rebuilt from receipt-owned entry files on every invocation, with no semantic expansion (alternate vocabulary needs frontmatter `aliases`). A Go engine with BM25 and compact embeddings would bridge vocabulary mismatch without heavy Python dependencies, invoked transparently by `devkit playbook search`.
+- **Playbook search**: today pure-Python BM25 in [playbook_search.py](../../../packages/devkit-dist/src/devkit_dist/features/distribution/usecases/playbook_search.py), a lexical index rebuilt from receipt-owned entry files on every invocation, with no semantic expansion (alternate vocabulary needs frontmatter `aliases`). A Go engine with BM25 and compact embeddings would bridge vocabulary mismatch without heavy Python dependencies, invoked transparently by `devkit playbook search`.
 - **Sync engine**: today Python atomic writes, the project lock (`.devkit/transient/lock`), the write-ahead journal (`.devkit/transient/sync-journal.json`) and SHA-256 hashing. Parallel crawling (`filepath.WalkDir` with worker goroutines) and BLAKE3 hashing would speed sync planning in repositories with tens of thousands of files.
 
 ## 5. Trade-off Matrix: Pure Python vs. Hybrid Go Engine

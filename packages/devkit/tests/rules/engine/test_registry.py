@@ -1,12 +1,12 @@
 from pathlib import Path
 
-from devkit.rules import RuleRegistry
+from devkit_agt.features.rules import RuleRegistry
 
 
 def test_discovery_loads_dataclass_and_ignores_imported_rules(tmp_path: Path) -> None:
     (tmp_path / "custom").mkdir()
     (tmp_path / "custom/check.py").write_text("""from dataclasses import dataclass
-from devkit.rules.rules import BaseRule, MarkdownLinkRule
+from devkit_agt.features.rules.services.builtins import BaseRule, MarkdownLinkRule
 
 @dataclass
 class CustomRule(BaseRule):
@@ -26,7 +26,7 @@ class CustomRule(BaseRule):
 def test_loading_is_atomic_per_package_and_in_definition_order(tmp_path: Path) -> None:
     for name in ("a", "b", "_helper"):
         (tmp_path / name).mkdir()
-    (tmp_path / "a/a.py").write_text("""from devkit.rules.rules import BaseRule
+    (tmp_path / "a/a.py").write_text("""from devkit_agt.features.rules.services.builtins import BaseRule
 
 class Zeta(BaseRule):
     def __init__(self):
@@ -40,7 +40,7 @@ class Alpha(BaseRule):
     def check(self, ctx):
         return []
 """)
-    (tmp_path / "b/fine.py").write_text("""from devkit.rules.rules import BaseRule
+    (tmp_path / "b/fine.py").write_text("""from devkit_agt.features.rules.services.builtins import BaseRule
 
 class Fine(BaseRule):
     def __init__(self):
@@ -48,7 +48,7 @@ class Fine(BaseRule):
     def check(self, ctx):
         return []
 """)
-    (tmp_path / "b/needs_args.py").write_text("""from devkit.rules.rules import BaseRule
+    (tmp_path / "b/needs_args.py").write_text("""from devkit_agt.features.rules.services.builtins import BaseRule
 
 class NeedsArgs(BaseRule):
     def __init__(self, limit):
@@ -65,10 +65,10 @@ class NeedsArgs(BaseRule):
 
 
 def test_same_id_replaces_a_builtin(tmp_path: Path) -> None:
-    from devkit.rules import default_rule_registry
+    from devkit_agt.features.rules import default_rule_registry
 
     (tmp_path / "links").mkdir()
-    (tmp_path / "links/links.py").write_text("""from devkit.rules.rules import BaseRule
+    (tmp_path / "links/links.py").write_text("""from devkit_agt.features.rules.services.builtins import BaseRule
 
 class Links(BaseRule):
     def __init__(self):
@@ -92,7 +92,7 @@ def test_a_rule_file_directly_in_the_rules_dir_is_a_load_error(tmp_path: Path) -
 
 
 def test_a_rule_package_with_helpers_guide_and_tests(tmp_path: Path) -> None:
-    from devkit.rules.rules import guide_path
+    from devkit_agt.features.rules.services.builtins import guide_path
 
     package = tmp_path / "rules/limits"
     (package / "tests").mkdir(parents=True)
@@ -100,7 +100,7 @@ def test_a_rule_package_with_helpers_guide_and_tests(tmp_path: Path) -> None:
     (package / "helpers.py").write_text("def limit():\n    return 3\n")
     (package / "limits.md").write_text("# Limits\n")
     (package / "tests/test_limits.py").write_text("raise RuntimeError('never imported')\n")
-    (package / "limits.py").write_text("""from devkit.rules.rules import BaseRule
+    (package / "limits.py").write_text("""from devkit_agt.features.rules.services.builtins import BaseRule
 from .helpers import limit
 
 class Limits(BaseRule):

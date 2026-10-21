@@ -6,9 +6,10 @@ import json
 from datetime import date
 from pathlib import Path
 
+import devkit_agt.features.workflow.repositories.unit.frontmatter as fm
 import pytest
 from click.testing import CliRunner, Result
-from devkit.workflow import (
+from devkit_agt.features.workflow import (
     AnchorInvalidError,
     DefinitionError,
     Options,
@@ -18,14 +19,13 @@ from devkit.workflow import (
     load_decisions,
     load_envelopes,
     parse_definition,
-    render_evaluation,
     validate_definition,
     write_envelope,
 )
-from devkit.workflow.cli import cli
-from devkit.workflow.errors import AuthoringError
-from devkit.workflow.unit import frontmatter as fm
-from devkit.workflow.unit.envelope import compose_envelope
+from devkit_agt.features.workflow.cli import cli
+from devkit_agt.features.workflow.cli.render import render_evaluation
+from devkit_agt.features.workflow.models.errors import AuthoringError
+from devkit_agt.features.workflow.services.envelope import compose_envelope
 from testsupport.workflow import WORKFLOW, write_config, write_record, write_unit
 
 A = """---
@@ -310,7 +310,7 @@ def test_b8_unquoted_timestamps_are_accepted(tmp_path: Path) -> None:
 
 
 def test_b9_json_output_is_a_single_document_when_lint_fails(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    import devkit.rules
+    import devkit_agt.features.rules
 
     def broken(*_: object, **__: object) -> None:
         raise RuntimeError("rule exploded")
@@ -319,7 +319,7 @@ def test_b9_json_output_is_a_single_document_when_lint_fails(tmp_path: Path, mon
         tmp_path, {"w": "---\nid: w\nschema_version: 1\nstages:\n  - id: s\n    exit: [lint-clean]\n---\n"}, "w"
     )
     assert _run("new", "-w", str(root), "u").exit_code == 0
-    monkeypatch.setattr(devkit.rules, "run_project_rules", broken)
+    monkeypatch.setattr(devkit_agt.features.rules, "run_project_rules", broken)
     result = _run("next", "-w", str(root), "--unit", UNIT, "--format", "json")
     assert result.exit_code == 2 and result.stderr == ""  # the result's errors carry it
     [error] = json.loads(result.stdout)["errors"]

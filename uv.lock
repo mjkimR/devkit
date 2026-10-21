@@ -14,6 +14,7 @@ members = [
     "devkit-agt",
     "devkit-catalog",
     "devkit-core",
+    "devkit-dev",
     "devkit-dist",
     "devkit-mcp",
     "devkit-spec",
@@ -24,6 +25,7 @@ members = [
 [manifest.dependency-groups]
 dev = [
     { name = "devkit-agt", extras = ["search", "mcp"], editable = "packages/devkit" },
+    { name = "devkit-dev", editable = "tools/devkit-dev" },
     { name = "devkit-spec", extras = ["search"], editable = "packages/devkit-spec" },
     { name = "devkit-viewer", editable = "packages/devkit-viewer" },
     { name = "pyright", specifier = ">=1.1.390" },
@@ -414,6 +416,21 @@ requires-dist = [
     { name = "devkit-advisory", editable = "packages/devkit-advisory" },
     { name = "pyyaml", specifier = ">=6.0.1" },
 ]
+
+[[package]]
+name = "devkit-dev"
+version = "0.1.0"
+source = { editable = "tools/devkit-dev" }
+
+[package.dev-dependencies]
+dev = [
+    { name = "devkit-agt" },
+]
+
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = [{ name = "devkit-agt", editable = "packages/devkit" }]
 
 [[package]]
 name = "devkit-dist"

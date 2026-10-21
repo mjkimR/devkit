@@ -6,7 +6,7 @@ replaces the target with ``os.replace``; the directory is then synced, best
 effort, so the rename survives a crash. An interrupted or failed write leaves
 the target as it was and removes the temporary file. A symlink at ``path`` is
 replaced by the new file, never written through: a caller that means the link's
-target resolves the path first (and confines it, ``devkit.core.resolve_within``).
+target resolves the path first (and confines it, ``devkit_core.core.resolve_within``).
 Replacing creates a new inode, so a hard link to the old file keeps the old
 content, and the owner, ACLs and extended attributes are the new file's (the
 writing user's), not the old one's.

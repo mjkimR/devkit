@@ -1,4 +1,4 @@
-"""``devkit.compact.scan``: recognized summaries and warnings, relayed advisory blocks, the excerpt, the budgets."""
+"""``devkit_agt.features.compact.services.scan``: recognized summaries and warnings, relayed advisory blocks, the excerpt, the budgets."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import time
 
 import pytest
 from devkit.advisory import AdvisoryError, Level
-from devkit.compact.scan import (
+from devkit_agt.features.compact.services.scan import (
     ADVISORY_BUDGET,
     FAILURE_BUDGET,
     HEAD,
@@ -26,7 +26,9 @@ from devkit.compact.scan import (
     scan,
 )
 
-scan_module = importlib.import_module("devkit.compact.scan")  # the package exports the function under this name
+scan_module = importlib.import_module(
+    "devkit_agt.features.compact.services.scan"
+)  # the package exports the function under this name
 
 
 def _scan(text: str, *, notices: bool = True, base: list[str] | None = None) -> Scan:

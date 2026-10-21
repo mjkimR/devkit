@@ -1,10 +1,11 @@
 from pathlib import Path
 
+import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
 import pytest
-from devkit.core.errors import ConfigError
-from devkit.core.local_config import LOCAL_CONFIG_PATH
-from devkit.worktree import attach, lifecycle, locate, start
-from devkit.worktree.errors import LocalCopyError, NestedError
+from devkit_agt.features.worktree import attach, locate, start
+from devkit_agt.features.worktree.models.errors import LocalCopyError, NestedError
+from devkit_dist.base.errors import ConfigError
+from devkit_dist.features.project.repositories.local_config import LOCAL_CONFIG_PATH
 from testsupport.rules import git, init_repo, write
 
 

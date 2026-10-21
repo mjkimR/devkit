@@ -8,9 +8,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner, Result
 from devkit.advisory import ActionMode, ExitCode
-from devkit.core.errors import ConfigError as CoreConfigError
-from devkit.core.errors import ReceiptError
-from devkit.workflow import (
+from devkit_agt.features.workflow import (
     CheckError,
     DecisionRecordError,
     Decisions,
@@ -28,8 +26,10 @@ from devkit.workflow import (
     parse_layout_spec,
     write_envelope,
 )
-from devkit.workflow.cli import cli
+from devkit_agt.features.workflow.cli import cli
 from devkit_core.base.errors import GitError
+from devkit_dist.base.errors import ConfigError as CoreConfigError
+from devkit_dist.base.errors import ReceiptError
 from testsupport.workflow import WORKFLOW, write_config
 
 UNIT = ".devkit/transient/work/login"
@@ -208,7 +208,7 @@ def test_show_exits_one_even_when_a_problem_carries_exit_code_two(
     unit_ws: Path, monkeypatch: pytest.MonkeyPatch, output_format: str
 ) -> None:
     # ``show`` produced its report, so it exits 1; 2 is only for a show that cannot run.
-    from devkit.workflow import DefinitionProblem
+    from devkit_agt.features.workflow import DefinitionProblem
 
     problem = DefinitionProblem("serious", where="review.role", exit_code=ExitCode.ERROR)
     monkeypatch.setattr(Workspace, "validate_definition", lambda self, doc, known=None: [problem])

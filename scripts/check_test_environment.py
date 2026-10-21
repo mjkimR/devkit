@@ -7,7 +7,7 @@ import socket
 
 import click
 from devkit.advisory import Actor, AdvisoryError, Retry
-from devkit.core.cli import boundary
+from devkit_dist.adapters.cli import boundary
 
 
 @click.command(context_settings={"ignore_unknown_options": True})

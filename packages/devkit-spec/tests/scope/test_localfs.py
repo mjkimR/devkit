@@ -14,14 +14,14 @@ import pytest
 from scope.contract import SCENARIOS
 from scope.support import record, registry
 
-from devkit_spec.errors import (
+from devkit_spec.base.errors import (
     ScopeLockUnsupportedError,
     ScopeNamespaceError,
     ScopeSharedPathError,
     ScopeStaleRevisionError,
     ScopeTimeoutError,
 )
-from devkit_spec.scope import (
+from devkit_spec.features.scope import (
     Deadline,
     Event,
     FlockLocker,
@@ -34,8 +34,8 @@ from devkit_spec.scope import (
     Stage,
     Verdict,
 )
-from devkit_spec.scope.localfs import Unlock, is_temp
-from devkit_spec.scope.registry import token_hash
+from devkit_spec.features.scope.models.registry import token_hash
+from devkit_spec.features.scope.repositories.localfs import Unlock, is_temp
 
 
 def _no_temp(directory: Path) -> None:
@@ -190,8 +190,8 @@ def test_threads_contend_on_the_lock(tmp_path: Path) -> None:
 _HELPER = textwrap.dedent(
     """
     import sys
-    from devkit_spec.errors import ScopeStaleRevisionError
-    from devkit_spec.scope import Deadline, Granularity, LocalRegistry, ScopePath, Source, Stage
+    from devkit_spec.base.errors import ScopeStaleRevisionError
+    from devkit_spec.features.scope import Deadline, Granularity, LocalRegistry, ScopePath, Source, Stage
 
     shared, task, token, rounds = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
     fs = LocalRegistry(__import__("pathlib").Path(shared), hostname="host-a")

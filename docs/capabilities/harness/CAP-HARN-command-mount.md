@@ -9,9 +9,9 @@ stories:
   - US-adopt-in-an-existing-repository
 entrypoints:
   - pyproject.toml
-  - packages/devkit-spec/src/devkit_spec/cli/__init__.py
-  - packages/devkit-spec/src/devkit_spec/cli/output.py
-  - packages/devkit-spec/src/devkit_spec/errors.py
+  - packages/devkit-spec/src/devkit_spec/cli.py
+  - packages/devkit-spec/src/devkit_spec/utils/output.py
+  - packages/devkit-spec/src/devkit_spec/base/errors.py
 ---
 
 # [CAP-HARN-command-mount] devkit spec Command Mount and Output Conventions
@@ -22,7 +22,7 @@ devkit-spec has no executable of its own. Its click group `spec` (`devkit_spec.c
 `devkit.commands` entry point `spec`, and devkit's root group imports it only when `devkit spec` runs
 (`ARCH-05-3-command-plugins`). Agents reach
 the whole toolchain through the one `devkit` executable of the project environment. Every subcommand is built on
-`devkit.core.cli` and follows devkit's agent-first output contract
+`devkit_dist.adapters.cli` and follows devkit's agent-first output contract
 (`ARCH-08-1-agent-output`). Rationale:
 `ADR-mount-under-the-devkit-command-line`.
 
@@ -44,17 +44,17 @@ the whole toolchain through the one `devkit` executable of the project environme
    `--format json`; stderr carries Agent Advisory Protocol blocks (`[ERROR]`, `[WARN]`, `[NOTICE]`) and `[INFO]` log
    lines only under `-v`.
 2. **Errors are advisories**: a failure or refusal MUST be raised as an `AdvisoryError` subclass of
-   `devkit_spec.errors.SpecError` with a stable `SPEC_`-prefixed code and a deterministic `[ACTION]`; agents branch on
+   `devkit_spec.base.errors.SpecError` with a stable `SPEC_`-prefixed code and a deterministic `[ACTION]`; agents branch on
    codes, never on message text. devkit's own codes (`ARGUMENT_INVALID`, `GIT_FAILED`, `CONFIG_INVALID`, ...) pass
    through unchanged.
 3. **Warnings and notices are results**: something a successful operation must report is returned under `notices`
    at `WARNING` or `NOTICE` and printed after the result; it never changes the exit code except under `--strict`.
-4. **Libraries never print**: commands write only through `devkit.core.cli` (`boundary`, `echo_json`,
-   `echo_notices`, `exit_on_warnings`) and the helpers in `devkit_spec.cli.output`.
+4. **Libraries never print**: commands write only through `devkit_dist.adapters.cli` (`boundary`, `echo_json`,
+   `echo_notices`, `exit_on_warnings`) and the helpers in `devkit_spec.utils.output`.
 5. **Every code is documented**: each `code` a `SpecError` subclass declares MUST appear as `` `CODE` `` in a
    document under `docs/` (`tests/test_documented_codes.py`).
-6. **Public surface only**: the CLI uses devkit through its public modules (`devkit.core.cli`, `devkit.workflow`,
-   `devkit.worktree`, `devkit.advisory`, ...), never private helpers.
+6. **Public surface only**: the CLI uses devkit through its public modules (`devkit_dist.adapters.cli`, `devkit_agt.features.workflow`,
+   `devkit_agt.features.worktree`, `devkit.advisory`, ...), never private helpers.
 
 ## 4. Interfaces & Data Contracts
 

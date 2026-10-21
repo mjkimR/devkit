@@ -3,10 +3,10 @@
 from pathlib import Path
 
 from click.testing import CliRunner
-from devkit.cli import cli
+from devkit_dist.cli import cli
 
-from devkit_spec.documents import DocumentIndex, parse_document
-from devkit_spec.documents.ids import Kind
+from devkit_spec.features.documents import DocumentIndex, parse_document
+from devkit_spec.features.documents.models.ids import Kind
 
 
 def test_milestone_history_and_current_incoming_members(workspace: Path, write) -> None:

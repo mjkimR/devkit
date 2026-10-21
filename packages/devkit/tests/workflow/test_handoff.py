@@ -3,23 +3,22 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import devkit.workflow.handoff as handoff_module
+import devkit_agt.features.workflow.usecases.handoff as handoff_module
 import pytest
 from click.testing import CliRunner, Result
-from devkit.workflow import (
+from devkit_agt.features.workflow import (
     Binding,
     HistoryEntry,
     Options,
     evaluate_definition,
     parse_definition,
     read_binding,
-    render_evaluation,
     validate_definition,
     write_binding,
 )
-from devkit.workflow.cli import cli
-from devkit.workflow.definition.checks import CheckClass
-from devkit.workflow.render import render_document
+from devkit_agt.features.workflow.cli import cli
+from devkit_agt.features.workflow.cli.render import render_document, render_evaluation
+from devkit_agt.features.workflow.models.checks import CheckClass
 from testsupport.workflow import SIMPLE, SIMPLE_UNIT, WORKFLOW, write_config, write_unit
 
 FIRST = """---

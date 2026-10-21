@@ -9,13 +9,13 @@ import sys
 import tempfile
 from pathlib import Path
 
+import devkit_agt.features.gate.usecases.hooks.hooks as hooks
 import pytest
 from click.testing import CliRunner
 from devkit.advisory import ExitCode
-from devkit.gate import load_gate_project, run_hook
-from devkit.gate.cli import cli
-from devkit.gate.engine.models import Stage
-from devkit.gate.hooks import hooks
+from devkit_agt.features.gate import load_gate_project, run_hook
+from devkit_agt.features.gate.cli import cli
+from devkit_agt.features.gate.models.contracts import Stage
 from testsupport.gate import deploy_gate, gate_source, git
 
 PYTHON = Path(sys.executable).as_posix()
@@ -89,7 +89,7 @@ def test_install_refuses_an_interpreter_without_devkit(repo: Path, tmp_path: Pat
     fake.write_text("#!/bin/sh\necho 'No module named devkit' >&2\nexit 1\n")
     fake.chmod(0o755)
     code, output = _invoke("install", "-w", str(repo), "--python", str(fake))
-    assert code != 0 and "cannot import devkit.gate" in output and "No module named devkit" in output
+    assert code != 0 and "cannot import devkit_agt.features.gate" in output and "No module named devkit" in output
     assert not (repo / ".git/hooks/pre-commit").exists()
 
 
@@ -287,7 +287,7 @@ def _assert_unavailable(result: subprocess.CompletedProcess[str], stage: Stage, 
     headline = "[ERROR]  " if blocking else "[WARN]   "
     assert (
         lines[0]
-        == f"{headline}(GATE_INTERPRETER_UNAVAILABLE) {stage.value}: no interpreter can import devkit.gate; the gates did not run"
+        == f"{headline}(GATE_INTERPRETER_UNAVAILABLE) {stage.value}: no interpreter can import devkit_agt.features.gate; the gates did not run"
     )
     assert lines[1].startswith("[ACTION] MAINTENANCE" if blocking else "[ACTION] CONTINUE")
     assert any(line.startswith("[FIX]    Run `uv sync`") for line in lines)
@@ -310,8 +310,10 @@ def test_wrapper_with_interpreter_without_devkit(repo: Path, tmp_path: Path, sta
 def test_wrapper_with_interpreter_whose_devkit_is_broken(repo: Path, tmp_path: Path) -> None:
     venv = _venv_without_devkit(tmp_path)
     site = next((venv / "lib").glob("python*/site-packages"))
-    (site / "devkit/gate").mkdir(parents=True)
-    (site / "devkit/gate/__init__.py").write_text("raise RuntimeError('incompatible devkit\\nsecond line')\n")
+    (site / "devkit_agt/features/gate").mkdir(parents=True)
+    (site / "devkit_agt/features/gate/__init__.py").write_text(
+        "raise RuntimeError('incompatible devkit\\nsecond line')\n"
+    )
     result = _run_entry(repo, Stage.PRE_COMMIT, (venv / "bin/python").as_posix())
     _assert_unavailable(result, Stage.PRE_COMMIT, "RuntimeError: incompatible devkit")
     assert "second line" not in result.stderr
@@ -360,7 +362,7 @@ def test_staged_rules_in_verify_commands_check_what_is_committed(
     git(repo, "add", ".")
     git(repo, "commit", "-m", "init")
     _install(repo)
-    command = f"{shlex.quote(PYTHON)} -m devkit rules check --staged"
+    command = f"{shlex.quote(PYTHON)} -m devkit_dist rules check --staged"
     (repo / ".git/devkit.config").write_text(
         f"[gates.settings.verify-commands]\ncommands = [{json.dumps(command)}]\n"
         "[gates.settings.rules-check]\nenabled = false\n"  # the nested command alone, as a project may configure it
@@ -411,7 +413,11 @@ def test_run_command_verbose_and_post_commit_never_blocks(repo: Path) -> None:
     message = repo / "MSG"
     message.write_text("fix: y\n")
     code, output = _invoke("run", "-w", str(repo), "-v", "commit-msg", "MSG")
-    assert code == 0 and "[INFO]   gate.engine.runner: gate message-nonempty stage=commit-msg outcome=passed" in output
+    assert (
+        code == 0
+        and "[INFO]   devkit_agt.features.gate.usecases.runner: gate message-nonempty stage=commit-msg outcome=passed"
+        in output
+    )
     code, output = _invoke("run", "-w", str(repo), "commit-msg", "MSG")
     assert code == 0 and output == ""  # silent when every gate passes
 
@@ -710,7 +716,7 @@ def test_status_with_core_hooks_path_warns_with_its_fix_instead_of_install(repo:
 
 
 def test_post_commit_script_failure_is_rendered_by_the_advisory_library(repo: Path) -> None:
-    from devkit.gate.errors import HookScriptFailedNotice
+    from devkit_agt.features.gate.models.errors import HookScriptFailedNotice
 
     _install(repo)
     script = repo / ".git/hooks/post-commit.d/10 fail"

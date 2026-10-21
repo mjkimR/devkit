@@ -6,7 +6,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from devkit_spec.proposals import create_proposal
+from devkit_spec.features.proposals import create_proposal
 
 BUNDLE = Path(__file__).resolve().parents[1] / "src/devkit_spec/bundle"
 ACCEPT = "devkit spec proposal accept"
@@ -69,7 +69,7 @@ def test_the_scaffold_lifecycle_holds_for_a_direct_acceptance(tmp_path: Path) ->
 
 
 def _rendered(path: Path) -> str:
-    from devkit.distribution.bundles.templates import render_template
+    from devkit_dist.features.distribution.services.bundles.templates import render_template
 
     if path.name.endswith(".md.jinja"):
         return render_template(path.read_bytes(), {}, str(path), environment="local").decode()

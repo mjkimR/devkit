@@ -5,11 +5,11 @@ import json
 from pathlib import Path
 
 import pytest
-from devkit.rules import ManagedRules, RuleRegistry, resolve_managed_rules
+from devkit_agt.features.rules import ManagedRules, RuleRegistry, resolve_managed_rules
 from testsupport.rules import write_receipt
 
-RULE = """from devkit.rules import RuleContext, Violation
-from devkit.rules.rules import BaseRule
+RULE = """from devkit_agt.features.rules import RuleContext, Violation
+from devkit_agt.features.rules.services.builtins import BaseRule
 
 
 class ManagedRule(BaseRule):
@@ -77,7 +77,8 @@ def test_receipt_listed_rule_modules_load_whatever_their_name_and_import_each_ot
     sources = {
         helper: "LIMIT = 3\n",
         rule: RULE.format(n="entry").replace(
-            "from devkit.rules import", "from ._private import LIMIT\nfrom devkit.rules import"
+            "from devkit_agt.features.rules import",
+            "from ._private import LIMIT\nfrom devkit_agt.features.rules import",
         ),
         test: "raise RuntimeError('tests are never imported')\n",
     }
@@ -211,8 +212,8 @@ def test_plain_check_verifies_managed_rules_against_the_receipt_hash(tmp_path: P
 def test_plain_and_snapshot_runs_share_the_check_with_the_gate_registry() -> None:
     import inspect
 
-    from devkit.gate.engine import registry
-    from devkit.rules.engine import discovery
+    import devkit_agt.features.gate.usecases.registry as registry
+    import devkit_agt.features.rules.repositories.discovery as discovery
 
     for module in (discovery, registry):
         assert "verified_asset_packages(" in inspect.getsource(module)

@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from devkit.rules import RuleContext, Violation, evaluate_rules
-from devkit.rules.testing import check, load_rule, write_files
+from devkit_agt.features.rules import RuleContext, Violation, evaluate_rules
+from devkit_agt.features.rules.services.testing import check, load_rule, write_files
 
 RULE = load_rule(__file__)
 
@@ -578,7 +578,7 @@ def test_proposal_feedback_paths_identity_and_heading(tmp_path: Path) -> None:
 
 
 def test_global_milestone_path_and_word_led_slug(tmp_path: Path) -> None:
-    from devkit.rules.testing import check
+    from devkit_agt.features.rules.services.testing import check
 
     files = {
         "docs/roadmap/MS-release-1-0.md": "---\nid: MS-release-1-0\n---\n# [MS-release-1-0] Release\n",

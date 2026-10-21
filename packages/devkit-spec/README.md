@@ -62,3 +62,14 @@ individual inputs. Scope overrides replace the entire scope. Results include pro
 heads and changed paths. Exit 0 means no failed check, 1 a negative check, 2 an invalid invocation or unresolved
 required input; unavailable checks are explicitly not-run. The Host retains scope and acceptance authority.
 The command writes and repairs nothing. See `CAP-DLV-delivery-workflows`.
+
+## Package structure
+
+`bundle/` contains distributable agent assets. Runtime behavior lives in `features/`, grouped by documents,
+proposals, scope, entrypoints, worker inspection, delivery integration, policy and governance. Each feature keeps
+its CLI and MCP adapters beside its use cases, services, repositories and models; only layers the feature needs
+are present. `cli.py` composes the command group. `base/errors.py` owns shared advisory contracts, and
+`utils/output.py` contains shared CLI presentation helpers.
+
+CLI and MCP adapters call feature behavior. Shared contracts do not depend on feature code, and domain code
+does not import CLI or MCP adapters. Public command names, MCP tool names and bundle identifiers remain stable.

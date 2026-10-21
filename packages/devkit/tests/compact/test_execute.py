@@ -1,4 +1,4 @@
-"""``devkit.compact.execute``: the log file, exit codes, start failures, interruptions, notices and log retention."""
+"""``devkit_agt.features.compact.usecases.execute``: the log file, exit codes, start failures, interruptions, notices and log retention."""
 
 from __future__ import annotations
 
@@ -15,10 +15,16 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from devkit.compact.errors import CommandNotStartedError, LogDirectoryError
-from devkit.compact.execute import KEEP_LOGS, CommandInterrupted, default_log_dir, log_root, run_command
+from devkit_agt.features.compact.models.errors import CommandNotStartedError, LogDirectoryError
+from devkit_agt.features.compact.usecases.execute import (
+    KEEP_LOGS,
+    CommandInterrupted,
+    default_log_dir,
+    log_root,
+    run_command,
+)
 
-execute = importlib.import_module("devkit.compact.execute")
+execute = importlib.import_module("devkit_agt.features.compact.usecases.execute")
 
 PY = sys.executable
 
@@ -337,7 +343,7 @@ def test_a_log_directory_that_cannot_be_written_is_a_log_directory_error(tmp_pat
 
 
 def test_a_nested_devkit_root_does_not_stop_a_run(tmp_path: Path) -> None:
-    from devkit.compact.execute import default_log_dir
+    from devkit_agt.features.compact.usecases.execute import default_log_dir
 
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
     nested = tmp_path / "pkg"

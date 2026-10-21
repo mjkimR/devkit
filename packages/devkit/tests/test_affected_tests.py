@@ -29,9 +29,9 @@ def affected() -> ModuleType:
 
 
 def test_a_change_selects_its_area_and_the_areas_that_import_it(affected: ModuleType) -> None:
-    selection = affected.select(ROOT, ["packages/devkit/src/devkit/worktree/lifecycle.py"])
+    selection = affected.select(ROOT, ["packages/devkit/src/devkit_agt/features/worktree/usecases/lifecycle.py"])
     assert selection.mode == "partial"
-    assert selection.reason == "devkit.worktree"
+    assert selection.reason == "devkit_agt.features.worktree"
     assert {f"{TESTS}/worktree/test_lifecycle.py", "packages/devkit-spec/tests/test_integration.py"} <= set(
         selection.paths
     )
@@ -39,22 +39,22 @@ def test_a_change_selects_its_area_and_the_areas_that_import_it(affected: Module
 
 
 def test_a_leaf_area_selects_no_unrelated_area(affected: ModuleType) -> None:
-    selection = affected.select(ROOT, ["packages/devkit/src/devkit/gate/runner.py"])
+    selection = affected.select(ROOT, ["packages/devkit/src/devkit_agt/features/gate/usecases/runner.py"])
     assert selection.mode == "partial"
     assert f"{TESTS}/gate/test_hooks.py" in selection.paths
     assert not any(
-        path.startswith((f"{TESTS}/worktree/", f"{TESTS}/integration/", f"{DIST_TESTS}/distribution/"))
+        path.startswith((f"{TESTS}/worktree/", f"{TESTS}/integration/", f"{DIST_TESTS}/features/distribution/"))
         for path in selection.paths
     )
     assert set(affected.SOURCE_TREE_TESTS) <= set(selection.paths)
-    assert f"{DIST_TESTS}/core/test_cli.py" in selection.paths  # scans every source file for stdout kinds
+    assert f"{DIST_TESTS}/adapters/test_cli.py" in selection.paths  # scans every source file for stdout kinds
 
 
 def test_a_devkit_dist_area_selects_the_devkit_agt_areas_that_import_it(affected: ModuleType) -> None:
-    selection = affected.select(ROOT, ["packages/devkit-dist/src/devkit/host/configuration.py"])
+    selection = affected.select(ROOT, ["packages/devkit-dist/src/devkit_dist/features/host/services/configuration.py"])
     assert selection.mode == "partial"
-    assert selection.reason == "devkit.host"
-    assert {f"{DIST_TESTS}/host/test_hooks.py", "packages/devkit-spec/tests/test_integration.py"} <= set(
+    assert selection.reason == "devkit_dist.features.host"
+    assert {f"{DIST_TESTS}/features/host/test_hooks.py", "packages/devkit-spec/tests/test_integration.py"} <= set(
         selection.paths
     )
     assert set(affected.SOURCE_TREE_TESTS) <= set(selection.paths)
@@ -62,13 +62,15 @@ def test_a_devkit_dist_area_selects_the_devkit_agt_areas_that_import_it(affected
 
 def test_a_devkit_dist_helper_carries_its_dependencies(affected: ModuleType) -> None:
     # tests/distribution imports distsupport.distribution at module level.
-    selection = affected.select(ROOT, ["packages/devkit-dist/src/devkit/distribution/installation/engines.py"])
-    assert any(path.startswith(f"{DIST_TESTS}/distribution/test_") for path in selection.paths)
+    selection = affected.select(
+        ROOT, ["packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/engines.py"]
+    )
+    assert any(path.startswith(f"{DIST_TESTS}/features/distribution/test_") for path in selection.paths)
 
 
 def test_a_shared_helper_imported_at_module_level_carries_its_dependencies(affected: ModuleType) -> None:
-    # tests/workflow imports testsupport.gate at module level, which imports devkit.gate.
-    selection = affected.select(ROOT, ["packages/devkit/src/devkit/gate/runner.py"])
+    # tests/workflow imports testsupport.gate at module level, which imports devkit_agt.features.gate.
+    selection = affected.select(ROOT, ["packages/devkit/src/devkit_agt/features/gate/usecases/runner.py"])
     assert f"{TESTS}/workflow/test_hygiene_authoring.py" in selection.paths
 
 
@@ -76,10 +78,10 @@ def test_a_shared_helper_imported_at_module_level_carries_its_dependencies(affec
     "path",
     [
         "packages/devkit-core/src/devkit_core/core/git.py",
-        "packages/devkit-dist/src/devkit/core/cli.py",
+        "packages/devkit-dist/src/devkit_dist/adapters/cli.py",
         "packages/devkit-advisory/src/devkit/advisory/error.py",
-        "packages/devkit-dist/src/devkit/cli.py",
-        "packages/devkit-dist/src/devkit/__main__.py",
+        "packages/devkit-dist/src/devkit_dist/cli.py",
+        "packages/devkit-dist/src/devkit_dist/__main__.py",
         "packages/devkit-spec/pyproject.toml",
         "pyproject.toml",
         "uv.lock",
@@ -114,6 +116,18 @@ def test_docs_select_the_tests_that_read_them(affected: ModuleType) -> None:
         f"{TESTS}/test_documented_codes.py",
         f"{TESTS}/workflow/test_library.py",
     )
+
+
+def test_architecture_config_alone_selects_structure_rule_and_integration_tests(affected: ModuleType) -> None:
+    selection = affected.select(ROOT, [".devkit/architecture.toml"])
+    assert selection.mode == "partial"
+    assert selection.reason == ".devkit/architecture.toml"
+    assert selection.paths == (
+        "tools/devkit-dev/src/devkit_dev/bundle/rules/architecture/tests",
+        "tools/devkit-dev/tests",
+    )
+    assert (ROOT / "tools/devkit-dev/tests/test_architecture.py").is_file()
+    assert affected.select(ROOT, [".devkit/config.toml"]).mode == "none"
 
 
 def test_changed_tests_select_themselves_and_helpers_their_directory(affected: ModuleType) -> None:
@@ -268,11 +282,11 @@ def test_a_frontend_only_change_runs_no_pytest(
 def test_a_mixed_change_keeps_the_other_selection(
     affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]]
 ) -> None:
-    gate = "packages/devkit/src/devkit/gate/runner.py"
+    gate = "packages/devkit/src/devkit_agt/features/gate/usecases/runner.py"
     alone = affected.select(ROOT, [gate])
     mixed = affected.select(ROOT, [gate, FRONTEND])
     assert (mixed.mode, mixed.paths, mixed.frontend) == ("partial", alone.paths, True)
-    assert mixed.reason == "devkit.gate,frontend"
+    assert mixed.reason == "devkit_agt.features.gate,frontend"
     lines = invoke(affected, monkeypatch, [gate, FRONTEND], "--list")
     assert lines[1] == FRONTEND_LINE
     assert lines[2:] == [f"[TEST_PATH: {path}]" for path in alone.paths]
@@ -288,7 +302,7 @@ def test_a_full_suite_change_still_names_the_frontend_checks(
 def test_other_changes_print_no_frontend_line(
     affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]]
 ) -> None:
-    assert not affected.select(ROOT, ["packages/devkit/src/devkit/gate/runner.py"]).frontend
+    assert not affected.select(ROOT, ["packages/devkit/src/devkit_agt/features/gate/usecases/runner.py"]).frontend
     lines = invoke(affected, monkeypatch, ["docs/x.md"], "--list")
     assert not any(line.startswith("[FRONTEND_CHECK:") for line in lines)
 
@@ -303,19 +317,19 @@ def test_the_rebuilt_page_selects_the_viewer_tests(affected: ModuleType) -> None
 def graph_root(tmp_path: Path) -> Path:
     """Authored miniature workspace: expectations below do not derive from the selector graph."""
     files = {
-        "packages/devkit/src/devkit/gate/runner.py": "VALUE = 1\n",
-        "packages/devkit/src/devkit/workflow/runner.py": "VALUE = 2\n",
+        "packages/devkit/src/devkit_agt/features/gate/usecases/runner.py": "VALUE = 1\n",
+        "packages/devkit/src/devkit_agt/features/workflow/runner.py": "VALUE = 2\n",
         "packages/devkit/tests/gate/test_owner.py": "def test_owner(): pass\n",
         "packages/devkit-spec/src/devkit_spec/__init__.py": "VERSION = 1\n",
-        "packages/devkit-spec/src/devkit_spec/scope/__init__.py": "from .registry import register\n",
-        "packages/devkit-spec/src/devkit_spec/scope/registry.py": "def register(): pass\n",
-        "packages/devkit-spec/src/devkit_spec/documents.py": "VALUE = 3\n",
-        "packages/devkit-spec/tests/test_scope.py": "from devkit_spec.scope import register\n",
-        "packages/devkit-spec/tests/test_documents.py": "from devkit_spec.documents import VALUE\n",
+        "packages/devkit-spec/src/devkit_spec/features/scope/__init__.py": "from .models.registry import register\n",
+        "packages/devkit-spec/src/devkit_spec/features/scope/models/registry.py": "def register(): pass\n",
+        "packages/devkit-spec/src/devkit_spec/features/documents.py": "VALUE = 3\n",
+        "packages/devkit-spec/tests/test_scope.py": "from devkit_spec.features.scope import register\n",
+        "packages/devkit-spec/tests/test_documents.py": "from devkit_spec.features.documents import VALUE\n",
         "packages/devkit-spec/tests/test_root.py": "import devkit_spec\n",
-        "packages/devkit-spec/tests/test_cli.py": "from devkit.cli import cli\n",
-        "packages/devkit/tests/external/test_consumer.py": "import devkit_spec.scope.registry\n",
-        "packages/devkit/tests/external/test_unrelated.py": "import devkit_spec.documents\n",
+        "packages/devkit-spec/tests/test_cli.py": "from devkit_dist.cli import cli\n",
+        "packages/devkit/tests/external/test_consumer.py": "import devkit_spec.features.scope.models.registry\n",
+        "packages/devkit/tests/external/test_unrelated.py": "import devkit_spec.features.documents\n",
     }
     for name, content in files.items():
         put(tmp_path, name, content)
@@ -328,7 +342,7 @@ def put(root: Path, name: str, content: str) -> None:
     path.write_text(content)
 
 
-SCOPE_SOURCE = "packages/devkit-spec/src/devkit_spec/scope/registry.py"
+SCOPE_SOURCE = "packages/devkit-spec/src/devkit_spec/features/scope/models/registry.py"
 SPEC_TESTS = "packages/devkit-spec/tests"
 
 
@@ -345,7 +359,7 @@ def test_fine_modules_and_reexports_isolate_external_siblings(affected: ModuleTy
     assert f"{TESTS}/external/test_unrelated.py" not in selection.paths
 
 
-@pytest.mark.parametrize("initializer", ["__init__.py", "scope/__init__.py"])
+@pytest.mark.parametrize("initializer", ["__init__.py", "features/scope/__init__.py"])
 def test_executed_initializers_select_descendant_consumers(
     affected: ModuleType, graph_root: Path, initializer: str
 ) -> None:
@@ -357,13 +371,13 @@ def test_executed_initializers_select_descendant_consumers(
 @pytest.mark.parametrize(
     "statement",
     [
-        "from devkit_spec import scope",
-        "from devkit_spec.scope import registry",
-        "from devkit_spec.scope.registry import register",
-        "from devkit_spec.scope import *",
-        "import importlib; importlib.import_module('devkit_spec.scope.registry')",
-        "import importlib.util; importlib.util.find_spec('devkit_spec.scope.registry')",
-        "from importlib.resources import files; files('devkit_spec.scope')",
+        "from devkit_spec.features import scope",
+        "from devkit_spec.features.scope.models import registry",
+        "from devkit_spec.features.scope.models.registry import register",
+        "from devkit_spec.features.scope import *",
+        "import importlib; importlib.import_module('devkit_spec.features.scope.models.registry')",
+        "import importlib.util; importlib.util.find_spec('devkit_spec.features.scope.models.registry')",
+        "from importlib.resources import files; files('devkit_spec.features.scope')",
     ],
 )
 def test_import_forms_keep_required_consumers(affected: ModuleType, graph_root: Path, statement: str) -> None:
@@ -383,7 +397,9 @@ def test_an_attribute_does_not_create_a_fabricated_module(affected: ModuleType, 
 
 def test_relative_source_imports_and_cycles(affected: ModuleType, graph_root: Path) -> None:
     put(
-        graph_root, "packages/devkit-spec/src/devkit_spec/bridge.py", "from .scope import registry\nfrom . import cycle"
+        graph_root,
+        "packages/devkit-spec/src/devkit_spec/bridge.py",
+        "from .features.scope.models import registry\nfrom . import cycle",
     )
     put(graph_root, "packages/devkit-spec/src/devkit_spec/cycle.py", "from . import bridge")
     put(graph_root, f"{SPEC_TESTS}/test_bridge.py", "from devkit_spec.cycle import bridge")
@@ -393,7 +409,11 @@ def test_relative_source_imports_and_cycles(affected: ModuleType, graph_root: Pa
 def test_transitive_function_local_helpers_and_cycles(affected: ModuleType, graph_root: Path) -> None:
     put(graph_root, f"{SPEC_TESTS}/helpers/__init__.py", "")
     put(graph_root, f"{SPEC_TESTS}/helpers/one.py", "def helper():\n    from helpers import two\n")
-    put(graph_root, f"{SPEC_TESTS}/helpers/two.py", "from helpers import one\nimport devkit_spec.scope.registry")
+    put(
+        graph_root,
+        f"{SPEC_TESTS}/helpers/two.py",
+        "from helpers import one\nimport devkit_spec.features.scope.models.registry",
+    )
     put(graph_root, f"{SPEC_TESTS}/test_helper.py", "def test_helper():\n    from helpers.one import helper\n")
     selection = affected.select(graph_root, [SCOPE_SOURCE])
     assert f"{SPEC_TESTS}/test_helper.py" in selection.paths
@@ -401,24 +421,24 @@ def test_transitive_function_local_helpers_and_cycles(affected: ModuleType, grap
 
 
 def test_conftest_only_applies_to_descendants(affected: ModuleType, graph_root: Path) -> None:
-    put(graph_root, f"{SPEC_TESTS}/nested/conftest.py", "import devkit_spec.scope.registry")
-    put(graph_root, f"{SPEC_TESTS}/nested/test_nested.py", "import devkit_spec.documents")
+    put(graph_root, f"{SPEC_TESTS}/nested/conftest.py", "import devkit_spec.features.scope.models.registry")
+    put(graph_root, f"{SPEC_TESTS}/nested/test_nested.py", "import devkit_spec.features.documents")
     selection = affected.select(graph_root, [SCOPE_SOURCE])
     assert f"{SPEC_TESTS}/nested/test_nested.py" in selection.paths
     assert f"{SPEC_TESTS}/test_documents.py" not in selection.paths
 
 
 def test_relative_helpers_and_ambiguous_pythonpath_are_conservative(affected: ModuleType, graph_root: Path) -> None:
-    put(graph_root, f"{SPEC_TESTS}/nested/helper.py", "import devkit_spec.scope.registry")
+    put(graph_root, f"{SPEC_TESTS}/nested/helper.py", "import devkit_spec.features.scope.models.registry")
     put(graph_root, f"{SPEC_TESTS}/nested/test_relative.py", "from .helper import value")
-    put(graph_root, f"{SPEC_TESTS}/helper.py", "import devkit_spec.documents")
-    put(graph_root, f"{TESTS}/helper.py", "import devkit_spec.scope.registry")
+    put(graph_root, f"{SPEC_TESTS}/helper.py", "import devkit_spec.features.documents")
+    put(graph_root, f"{TESTS}/helper.py", "import devkit_spec.features.scope.models.registry")
     put(graph_root, f"{SPEC_TESTS}/test_ambiguous.py", "from helper import value")
     selection = affected.select(graph_root, [SCOPE_SOURCE])
     assert {f"{SPEC_TESTS}/nested/test_relative.py", f"{SPEC_TESTS}/test_ambiguous.py"} <= set(selection.paths)
 
 
-@pytest.mark.parametrize("content", ["def broken(:", "from devkit_spec.scope import register\n\x00"])
+@pytest.mark.parametrize("content", ["def broken(:", "from devkit_spec.features.scope import register\n\x00"])
 def test_unparseable_source_selects_full(affected: ModuleType, graph_root: Path, content: str) -> None:
     put(graph_root, SCOPE_SOURCE, content)
     assert affected.select(graph_root, [SCOPE_SOURCE]).mode == "full"
@@ -438,13 +458,13 @@ def test_deleted_renamed_or_unknown_source_selects_full(affected: ModuleType, gr
 
 
 def test_ambiguous_module_inventory_selects_full(affected: ModuleType, graph_root: Path) -> None:
-    put(graph_root, "packages/devkit-spec/src/devkit_spec/scope.py", "")
+    put(graph_root, "packages/devkit-spec/src/devkit_spec/features/scope.py", "")
     assert affected.select(graph_root, [SCOPE_SOURCE]).mode == "full"
 
 
 def test_opaque_and_wildcard_consumers_remain_broad(affected: ModuleType, graph_root: Path) -> None:
     put(graph_root, f"{SPEC_TESTS}/test_dynamic.py", "import importlib\nimportlib.import_module(module)")
-    put(graph_root, f"{SPEC_TESTS}/test_star.py", "from devkit_spec.documents import *")
+    put(graph_root, f"{SPEC_TESTS}/test_star.py", "from devkit_spec.features.documents import *")
     selection = affected.select(graph_root, [SCOPE_SOURCE])
     assert {f"{SPEC_TESTS}/test_dynamic.py", f"{SPEC_TESTS}/test_star.py"} <= set(selection.paths)
 
@@ -457,19 +477,26 @@ def test_fine_package_data_changes_cover_all_fine_tests(affected: ModuleType, gr
 
 def test_new_packages_and_embedded_rule_tests_keep_owner_coverage(affected: ModuleType, graph_root: Path) -> None:
     put(graph_root, "packages/new/src/new_package/mod.py", "")
+    put(graph_root, "packages/devkit/src/devkit_agt/features/rules/services/builtins/rule.py", "")
     put(graph_root, "packages/new/tests/test_new.py", "def test_new(): pass")
-    put(graph_root, "packages/devkit/src/devkit/rules/rule/tests/test_rule.py", "def test_rule(): pass")
+    put(
+        graph_root,
+        "packages/devkit/src/devkit_agt/features/rules/services/builtins/rule/tests/test_rule.py",
+        "def test_rule(): pass",
+    )
     assert (
         "packages/new/tests/test_new.py" in affected.select(graph_root, ["packages/new/src/new_package/mod.py"]).paths
     )
     assert (
-        "packages/devkit/src/devkit/rules/rule/tests/test_rule.py"
-        in affected.select(graph_root, ["packages/devkit/src/devkit/rules/rule.py"]).paths
+        "packages/devkit/src/devkit_agt/features/rules/services/builtins/rule/tests/test_rule.py"
+        in affected.select(
+            graph_root, ["packages/devkit/src/devkit_agt/features/rules/services/builtins/rule.py"]
+        ).paths
     )
 
 
 def test_mcp_runtime_consumer_mapping_is_retained(affected: ModuleType) -> None:
-    selection = affected.select(ROOT, ["packages/devkit-mcp/src/devkit_mcp/server.py"])
+    selection = affected.select(ROOT, ["packages/devkit-mcp/src/devkit_mcp/features/runtime/mcp/server.py"])
     assert {"packages/devkit-mcp/tests", f"{TESTS}/integration", f"{SPEC_TESTS}/test_integration.py"} <= set(
         selection.paths
     )
@@ -477,8 +504,12 @@ def test_mcp_runtime_consumer_mapping_is_retained(affected: ModuleType) -> None:
 
 def test_relative_helper_package_initializer_keeps_its_dependency(affected: ModuleType, graph_root: Path) -> None:
     put(graph_root, f"{SPEC_TESTS}/__init__.py", "")
-    put(graph_root, f"{SPEC_TESTS}/helpers/__init__.py", "import devkit_spec.scope.registry")
-    put(graph_root, f"{SPEC_TESTS}/test_package_helper.py", "import devkit_spec.documents\nfrom . import helpers")
+    put(graph_root, f"{SPEC_TESTS}/helpers/__init__.py", "import devkit_spec.features.scope.models.registry")
+    put(
+        graph_root,
+        f"{SPEC_TESTS}/test_package_helper.py",
+        "import devkit_spec.features.documents\nfrom . import helpers",
+    )
     assert f"{SPEC_TESTS}/test_package_helper.py" in affected.select(graph_root, [SCOPE_SOURCE]).paths
 
 
@@ -486,5 +517,38 @@ def test_relative_helper_package_initializer_keeps_its_dependency(affected: Modu
 def test_root_cli_coverage_survives_an_unrelated_fine_import(
     affected: ModuleType, graph_root: Path, consumer: str
 ) -> None:
-    put(graph_root, consumer, "from devkit.cli import cli\nimport devkit_spec.documents")
+    put(graph_root, consumer, "from devkit_dist.cli import cli\nimport devkit_spec.features.documents")
     assert consumer in affected.select(graph_root, [SCOPE_SOURCE]).paths
+
+
+def test_independent_namespaces_do_not_merge_same_named_features(affected: ModuleType, graph_root: Path) -> None:
+    put(graph_root, "packages/devkit/src/devkit_agt/features/shared/services/read.py", "VALUE = 1")
+    put(graph_root, "packages/devkit-dist/src/devkit_dist/features/shared/services/read.py", "VALUE = 2")
+    put(graph_root, f"{TESTS}/shared/test_owner.py", "import devkit_agt.features.shared.services.read")
+    put(graph_root, f"{DIST_TESTS}/features/shared/test_owner.py", "import devkit_dist.features.shared.services.read")
+    selection = affected.select(graph_root, ["packages/devkit/src/devkit_agt/features/shared/services/read.py"])
+    assert selection.mode == "partial"
+    assert f"{TESTS}/shared/test_owner.py" in selection.paths
+    assert f"{DIST_TESTS}/features/shared/test_owner.py" not in selection.paths
+
+
+def test_tools_packages_and_embedded_bundle_tests_are_inventoried(affected: ModuleType, graph_root: Path) -> None:
+    source = "tools/devkit-dev/src/devkit_dev/bundle/rules/layout/check.py"
+    own_test = "tools/devkit-dev/tests/test_package.py"
+    embedded_test = "tools/devkit-dev/src/devkit_dev/bundle/rules/layout/tests/test_check.py"
+    put(graph_root, source, "VALUE = 1")
+    put(graph_root, own_test, "def test_package(): pass")
+    put(graph_root, embedded_test, "def test_check(): pass")
+    selection = affected.select(graph_root, [source])
+    assert selection.mode == "partial"
+    assert {own_test, embedded_test} <= set(selection.paths)
+    assert affected.select(graph_root, [own_test]).paths == (own_test,)
+    assert affected.select(graph_root, ["tools/devkit-dev/README.md"]).mode == "none"
+
+
+@pytest.mark.parametrize("home,namespace", [("devkit", "devkit_agt"), ("devkit-dist", "devkit_dist")])
+def test_deleted_feature_source_selects_full(affected: ModuleType, graph_root: Path, home: str, namespace: str) -> None:
+    source = f"packages/{home}/src/{namespace}/features/gate/services/deleted.py"
+    put(graph_root, source, "VALUE = 1")
+    (graph_root / source).unlink()
+    assert affected.select(graph_root, [source]).mode == "full"

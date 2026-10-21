@@ -67,7 +67,7 @@ def test_the_public_names_are_pinned() -> None:
         "render_error",
     }
     assert all(hasattr(advisory, name) for name in advisory.__all__)
-    # The block grammar parsers such as devkit.compact recognize: protocol, section 3.
+    # The block grammar parsers such as devkit_agt.features.compact recognize: protocol, section 3.
     assert HEADLINE == {Level.ERROR: "[ERROR]  ", Level.WARNING: "[WARN]   ", Level.NOTICE: "[NOTICE] "}
     assert FIELDS == ("[ACTION] ", "[WHEN]   ", "[TARGET] ", "[FIX]    ", "[REPORT] ", "[DETAIL] ")
     assert CONTINUATION == " " * 9

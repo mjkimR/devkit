@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit.rules import DocumentCatalog, WorkspaceCache
+from devkit_agt.features.rules import DocumentCatalog, WorkspaceCache
 
 
 def _write(root: Path, rel: str, text: str) -> None:

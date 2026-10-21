@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner, Result
-from devkit.cli import cli
+from devkit_dist.cli import cli
 
 FIXTURES = Path(__file__).parent / "fixtures"
 _PRINT = "import sys; sys.stdout.write(open(sys.argv[1], encoding='utf-8').read()); sys.exit(int(sys.argv[2]))"

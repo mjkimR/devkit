@@ -6,12 +6,12 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner, Result
 from conftest import Write
-from devkit.cli import cli as devkit_cli
-from devkit.search import SearchMode
+from devkit_dist.cli import cli as devkit_cli
+from devkit_dist.features.search import SearchMode
 
-from devkit_spec.documents import DocumentIndex, Kind
-from devkit_spec.errors import GlossaryInvalidError
-from devkit_spec.search import expand_query, load_glossary, search_documents
+from devkit_spec.base.errors import GlossaryInvalidError
+from devkit_spec.features.documents import DocumentIndex, Kind
+from devkit_spec.features.documents.usecases.search import expand_query, load_glossary, search_documents
 
 
 def _doc(document_id: str, title: str, body: str = "", status: str = "active") -> str:

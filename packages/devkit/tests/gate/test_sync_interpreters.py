@@ -7,9 +7,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import devkit_agt.features.gate.usecases.hooks.hooks as hooks
+import devkit_agt.features.gate.usecases.hooks.local_config as local_config
 import pytest
-from devkit.gate import Stage
-from devkit.gate.hooks import hooks, local_config
+from devkit_agt.features.gate import Stage
 from testsupport.gate import git
 
 

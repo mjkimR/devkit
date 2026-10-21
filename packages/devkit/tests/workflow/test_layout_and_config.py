@@ -5,8 +5,7 @@ from pathlib import Path, PurePosixPath
 
 import pytest
 from devkit.advisory import ActionMode
-from devkit.core.errors import ConfigError as CoreConfigError
-from devkit.workflow import (
+from devkit_agt.features.workflow import (
     LayoutError,
     SlugError,
     TemplateLayout,
@@ -14,7 +13,8 @@ from devkit.workflow import (
     load_workflow_config,
     validate_template,
 )
-from devkit.workflow.project.config import parse_workflow_config
+from devkit_agt.features.workflow.repositories.project.config import parse_workflow_config
+from devkit_dist.base.errors import ConfigError as CoreConfigError
 from testsupport.workflow import write_config, write_unit
 
 # --- template validation ------------------------------------------------------

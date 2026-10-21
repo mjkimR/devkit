@@ -2,7 +2,7 @@ import tomllib
 from pathlib import Path
 
 import pytest
-from devkit.distribution.bundles import load_bundle
+from devkit_dist.features.distribution.services.bundles import load_bundle
 
 PACKAGE = Path(__file__).parents[1]
 SOURCE = PACKAGE / "src"
@@ -40,9 +40,9 @@ def test_catalog_names_do_not_collide_with_devkit_builtins() -> None:
 
 @pytest.mark.parametrize("language", ["auto", "ko"])
 def test_response_style_deploys_configured_language(tmp_path: Path, language: str) -> None:
-    from devkit.distribution.installation.config import update_config
-    from devkit.distribution.installation.discovery import InstalledBundle
-    from devkit.distribution.installation.sync import sync_project
+    from devkit_dist.features.distribution.services.installation.config import update_config
+    from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
+    from devkit_dist.features.distribution.usecases.sync import sync_project
 
     bundle = load_bundle(_bundle_root(ENTRY_POINTS["response-style"]))
     update_config(tmp_path, agents=["codex", "claude-code", "antigravity"], presets={"response-style": ["all"]})
@@ -87,10 +87,10 @@ def test_response_style_has_one_bounded_guidance_pointer() -> None:
 
 @pytest.mark.parametrize("preset", ["all", "upkeep", "reporting"])
 def test_maintenance_selection_and_independent_lookup(tmp_path: Path, preset: str) -> None:
-    from devkit.distribution.installation.config import update_config
-    from devkit.distribution.installation.discovery import InstalledBundle
-    from devkit.distribution.installation.playbook_search import search_playbooks
-    from devkit.distribution.installation.sync import sync_project
+    from devkit_dist.features.distribution.services.installation.config import update_config
+    from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
+    from devkit_dist.features.distribution.usecases.playbook_search import search_playbooks
+    from devkit_dist.features.distribution.usecases.sync import sync_project
 
     bundle = load_bundle(_bundle_root(ENTRY_POINTS["maintenance"]))
     installed = [InstalledBundle("devkit-catalog", PROJECT["version"], bundle)]
@@ -100,7 +100,7 @@ def test_maintenance_selection_and_independent_lookup(tmp_path: Path, preset: st
     update_config(tmp_path, agents=["codex"], presets={"maintenance": [preset]})
     sync_project(tmp_path, installed)
     root = tmp_path / ".devkit/managed/maintenance"
-    from devkit.distribution.installation.playbook_get import get_playbook
+    from devkit_dist.features.distribution.usecases.playbook_get import get_playbook
 
     selected = {
         "all": {"drift-reconciliation", "weekly-report"},

@@ -6,11 +6,11 @@ import json
 from pathlib import Path
 
 from click.testing import CliRunner
-from devkit.cli import cli as devkit_cli
+from devkit_dist.cli import cli as devkit_cli
 from proposals.support import TODAY, accept
 from scope.support import git, write
 
-from devkit_spec.proposals import create_proposal
+from devkit_spec.features.proposals import create_proposal
 
 
 def _repo(tmp_path: Path) -> Path:
