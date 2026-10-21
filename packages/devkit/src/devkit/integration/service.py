@@ -133,6 +133,9 @@ class IntegrationService:
                     "the process already retains 128 pending requests; inspect and finish them before preparing more"
                 )
             self._records.pop(retired)
+        approval_policy = providers.effective(read_project_config(self.root))["dev-integration"]
+        if route == "pull-request" and approval_policy == "auto":
+            raise AuthorityError("automatic integration authorizes local execution only")
         if route == "pull-request":
             from devkit.integration.pull_request import prepare
 
@@ -156,6 +159,8 @@ class IntegrationService:
             post_digest, prospective = policy_digest, read_project_config(self.root)
         else:
             post_digest, prospective = _prospective(self.root, plan.source_sha, plan.target_sha)
+        if approval_policy == "auto" and providers.effective(prospective)["dev-integration"] != "auto":
+            raise AuthorityError("the prospective result revokes automatic integration authority")
         worktree_policy = prospective.get("worktree", {})
         if not isinstance(worktree_policy, dict) or type(worktree_policy.get("delete_branch", True)) is not bool:
             raise IntegrationConfigError("source worktree policy is invalid")
@@ -173,7 +178,16 @@ class IntegrationService:
         cleanup = providers.cleanup_scopes(context, providers.cleanup_extensions())
         validate_finish(plan)
         request = IntegrationRequest(
-            uuid4().hex, context, name, ident, policy_digest, post_digest, guard_identities, ready, cleanup
+            uuid4().hex,
+            context,
+            name,
+            ident,
+            policy_digest,
+            post_digest,
+            guard_identities,
+            ready,
+            cleanup,
+            approval_policy=approval_policy,
         )
         result = IntegrationResult(request)
         result.steps["branch_delete" if not plan.delete_branch else "marker_clear"] = "skipped"
@@ -203,6 +217,11 @@ class IntegrationService:
         language = approval_language(self.root)
         result = await asyncio.to_thread(self.prepare, branch, task, route)
         request = result.request
+        if request.approval_policy == "auto":
+            guard_execution()
+            self._records[request.id].approved = True
+            result.authority = "policy"
+            return await asyncio.to_thread(self._run, request.id, LOCK_WAIT, True)
         message = request.confirmation_message(language)
         try:
             reply = await confirm(
@@ -290,6 +309,11 @@ class IntegrationService:
         expected = request.post_policy_digest if merged else request.policy_digest
         if providers.current_policy(self.root) != expected:
             raise StaleRequestError("the effective integration policy changed outside the approved merge")
+        if (
+            request.approval_policy == "auto"
+            and providers.effective(read_project_config(self.root))["dev-integration"] != "auto"
+        ):
+            raise AuthorityError("automatic integration authority was revoked")
         if not merged:
             providers.policy(self.root)
         if providers.guards() != request.guards:
@@ -322,7 +346,7 @@ class IntegrationService:
         guard_execution()
         record = self._record(request_id)
         if not record.approved:
-            raise AuthorityError("this request received no affirmative confirmation")
+            raise AuthorityError("this request has no execution authority")
         if not record.lock.acquire(blocking=False):
             raise AuthorityError("this request is already executing; inspect it after the current call finishes")
         try:

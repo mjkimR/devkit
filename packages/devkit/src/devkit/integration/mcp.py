@@ -80,12 +80,12 @@ def create_tools(root: Path) -> tuple[McpTool, ...]:
         ),
         McpTool(
             "integration_integrate",
-            'Prepare, request one host-native user confirmation, then perform local integration (a merge commit, or a fast-forward under [worktree] merge = "ff-only") and cleanup. No prior integration_prepare call or separate conversational approval is required. Returns concise scope and progress. '
+            'Prepare, authorize through shared base dev-integration=auto for the local route or request one host-native user confirmation under ask, then perform local integration (a merge commit, or a fast-forward under [worktree] merge = "ff-only") and cleanup. No prior integration_prepare call or separate conversational approval is required. Returns concise scope and progress. '
             "Invoking this tool does not assert prior integration approval: before confirmation it only validates "
             "and prepares the exact scope, without merging, deleting branches, removing worktrees or running cleanup. "
             "Decline, cancellation or unavailable confirmation causes no integration changes. "
-            "Only an explicit affirmative response through the host confirmation UI authorizes execution; "
-            "tool-call permission and caller arguments do not grant that authority. "
+            "Under ask, only an explicit affirmative response through the host confirmation UI authorizes execution; "
+            "tool-call permission and caller arguments do not grant that authority. Auto local execution reports policy authority without elicitation; auto pull-request execution is refused. "
             "Approval is bound to the prepared source commit, the confirmation target and, within this call only, its "
             "descendants, plus the cleanup scope; later target commits are merged in only when the merge is clean, the "
             "integration policy is unchanged and readiness passes again on the merged result; "
