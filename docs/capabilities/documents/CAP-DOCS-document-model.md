@@ -1,7 +1,7 @@
 ---
 id: CAP-DOCS-document-model
 title: Document Model
-summary: "Defines Markdown document identity, references and indexing, including typed direct unit prerequisites, terminal completed targets and proposal-only milestone membership."
+summary: "Defines Markdown document identity, references and indexing, including typed direct unit prerequisites, terminal completed targets and proposal-only milestone membership and plain body closure assertions."
 area: documents
 status: active
 stories:
@@ -70,6 +70,16 @@ stays ID-free and unindexed, and its Owner references do not become graph edges.
 Proposal-local feedback also stays current while a rejected proposal awaits cleanup. Handoff carries open feedback
 into the spec; Host deletion without handoff preserves it in the month-level backlog
 (`CAP-DLV-proposal-incubation`). Existing discovery, resolution and namespace rules apply before and after moves.
+
+### Milestone completion assertions
+
+Milestone bodies carry a `Completion review` section with exactly two plain assertions:
+`Decomposition: pending` and `Direct proposal work: pending`. A current user-owned Backlog close decision writes
+both as confirmed with status done in one commit. Missing assertions on open documents mean unconfirmed; stored
+assertions alone do not authorize a later close. These are body content, not parsed fields, checklist items,
+reference edges or a machine-certified delivery contract. Actual semantic scope changes reset both to pending; normal handoff does not;
+existing done records remain historical without migration. `CAP-HARN-agent-guidance` owns review, invalidation,
+interruption and reopen procedures (`ADR-milestone-closure-confirmations`).
 
 ### Feedback lifecycle
 

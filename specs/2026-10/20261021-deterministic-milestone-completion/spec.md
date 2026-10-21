@@ -1,34 +1,22 @@
 ---
-id: PROP-deterministic-milestone-completion
+id: SPEC-deterministic-milestone-completion
 title: Simple milestone completion from direct proposal checks
-summary: "Close milestones from confirmed decomposition and settlement of directly linked proposals, using focused code or Git inspection when needed instead of persistent delivery-lineage tracking."
-status: accepted
-created_at: 2026-10-21
-target_area: capabilities/delivery/
-priority: high
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-spec/
-    - docs/capabilities/delivery/
-    - docs/capabilities/documents/
-    - docs/capabilities/harness/
-    - docs/decisions/
-    - docs/development/reference/
-    - docs/roadmap/
-  excludes:
-    - packages/devkit/src/devkit/integration/
-    - packages/devkit-dist/src/devkit/shared/
-    - packages/devkit-viewer/
-task_kind: feature
-workflow: sdd-proposal
+summary: Close milestones from confirmed decomposition and settlement of directly linked proposals, using focused code or Git inspection when needed instead of persistent delivery-lineage tracking.
+status: completed
+created: 2026-10-21
+depends_on: [SPEC-unit-dependencies-and-milestone-scope]
+related_capabilities: [CAP-DLV-proposal-incubation, CAP-DOCS-document-model, CAP-HARN-agent-guidance]
+related_stories: []
+workflow: sdd-spec-feature
 ---
 
-# [PROP-deterministic-milestone-completion] Simple milestone completion from direct proposal checks
+# [SPEC-deterministic-milestone-completion] Simple milestone completion from direct proposal checks
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-deterministic-milestone-completion on 2026-10-21.
+
+### 1. Background & Hypothesis
 
 Milestones should describe large phases or long-term themes that the user and agent review together and split
 into proposals. They should not become a second delivery database. `ADR-milestone-documents` currently requires
@@ -45,7 +33,55 @@ settled. That is a focused check at the time of review, not a requirement to ret
 outcome ID or integration record in the milestone. Proposal absence alone remains insufficient: handoff can remove
 a proposal before implementation has finished.
 
-## 2. Planning Decisions
+## 2. User Stories
+
+As a developer, I want a concrete collaborative milestone close review so that phase completion is explicit without maintaining delivery lineage.
+
+## 3. Non-Goals
+
+**Scope Excluded:** runtime parsers, commands, evaluators, milestone metadata on SPECs, persistent lineage, integration hooks, automatic transitions, viewer changes and migration of existing milestone documents.
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] Current close decision
+- **Given** a planned or active milestone with sufficient decomposition, settled direct work and a met exit condition
+- **When** the user confirms both checks on the concrete current candidate
+- **Then** the Backlog procedure records Decomposition: confirmed, Direct proposal work: confirmed and status done in one commit without a third approval.
+
+### [AC-02] Missing confirmation or evidence
+- **Given** missing assertions/confirmation, unresolved in-scope work, an unmet exit condition or inconclusive required evidence
+- **When** closure is reviewed
+- **Then** it stays open with the remaining check named; empty membership and handoff absence never certify delivery.
+
+### [AC-03] Explicit scope disposition
+- **Given** rejected, cancelled, removed or reassigned proposal work
+- **When** the close candidate is prepared
+- **Then** exclusion/movement is distinguished from delivery and the resulting agreed scope and exit condition are explicit; unfinished in-scope handed-off work blocks settlement.
+
+### [AC-04] Invalidation and interrupted review
+- **Given** an actual semantic scope change (new required work, exclusion or moving scope elsewhere)
+- **When** the authorized change occurs
+- **Then** both assertions reset to pending in the authorized scope edit; relevant close-time evidence changes require reconfirmation, while unchanged authorization survives pause or compaction. Normal handoff/mechanical identity relocation does not change scope or decomposition and requires no milestone review/reset.
+
+### [AC-05] Historical and terminal milestones
+- **Given** a done or dropped milestone
+- **When** closure is requested again
+- **Then** unchanged done writes nothing and dropped is not a close candidate; done scope extension requires user-owned reopen to active with pending assertions or another milestone, and historical done records are not migrated.
+
+### [AC-06] Shipped guidance and boundaries
+- **Given** local and cloud bundle rendering
+- **When** guidance and templates are verified
+- **Then** both teach the same two-assertion procedure within existing context budgets, without runtime/schema/lineage additions.
+
+## Assumptions
+
+The integrated prerequisite provides direct PROP membership and typed unit ordering. The current predecessor is `ADR-separate-unit-prerequisites-from-milestone-themes`; its unaffected decisions remain in force. Guidance fixtures verify the shipped instructions, not semantic delivery certification.
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Decisions
 
 - **D1 — Existing Backlog operation:** Close through the existing authorized milestone document edit. There is
   no milestone transition command to extend and no demonstrated need to introduce one. Deterministic means the
@@ -65,9 +101,9 @@ a proposal before implementation has finished.
   settlement, regardless of draft/reviewing/accepted status. Explicitly excluded or moved work is settled only as a
   scope disposition, never reported as implemented. Remaining rejected anchors likewise require an explicit
   disposition. Do not reconstruct or persist a complete descendant graph.
-- **D5 — Reconfirmation:** Changes to the goal, exit condition, non-goals or direct proposal membership clear
-  both assertions to `pending` in the same authorized change. A member's handoff also invalidates settlement:
-  removal does not prove completion. Pure wording/format corrections that preserve meaning do not invalidate.
+- **D5 — Reconfirmation:** Actual semantic scope changes (new required work, exclusion or moving scope elsewhere) clear
+  both assertions to `pending` in the authorized scope edit. Normal handoff/mechanical identity relocation does not
+  change scope or decomposition and requires no milestone review/reset. Removal still does not prove completion. Pure wording/format corrections that preserve meaning do not invalidate.
   To extend a done milestone's scope, first obtain the user's decision to reopen it as `active` and reset both
   assertions in the scope edit; alternatively put the new scope in another milestone. No automatic reopening.
 - **D6 — Keep authority and scope small:** Activation and dropping remain the user's decisions. Closure works
@@ -76,13 +112,13 @@ a proposal before implementation has finished.
   approval envelope, branch ledger or integration hook is introduced. Existing done milestones remain historical
   and are not retroactively reopened or migrated.
 
-`PADR-milestone-closure-confirmations` records the representation and policy choice. Development starts only after
+`ADR-milestone-closure-confirmations` records the representation and policy choice. Development starts only after
 `SPEC-unit-dependencies-and-milestone-scope` integrates; that work owns direct PROP membership and unit ordering.
 Planning does not add an unsupported dependency field before that work is available.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Collaborative close procedure
+#### Collaborative close procedure
 
 1. Read the milestone's goal, exit condition and non-goals. The user and agent review whether the required work
    has been decomposed sufficiently into proposals. The first confirmation asserts no intended scope remains
@@ -110,12 +146,11 @@ the semantic check; ordinary governance rules still validate document shape and 
 that two words certify delivery. Existing hygiene continues to identify direct unsettled members on finished
 milestones under the prerequisite proposal's semantics.
 
-### Change placement
+#### Change placement
 
 - Source bundle milestone template, Backlog guidance and `spec-next` guidance: teach the two assertions, fresh
   close review, explicit dispositions, invalidation and no-op behavior. Any Backlog lifecycle/membership edit that
-  changes scope resets the assertions in the same authorized change; a worker that cannot edit the milestone
-  delegates that edit to the Host before the scope mutation, without widening its own write boundary.
+  changes scope resets the assertions in the same authorized change; normal handoff needs no milestone edit.
 - Source seeded roadmap README and repository roadmap README: describe the short collaborative review and direct
   PROP ownership; do not edit individual roadmap milestones.
 - `CAP-HARN-agent-guidance`, `CAP-DOCS-document-model`, `CAP-DLV-proposal-incubation` and their directly affected
@@ -125,7 +160,7 @@ milestones under the prerequisite proposal's semantics.
   transitions. Resolve the actual predecessor ADR after prerequisite integration; do not supersede an older ADR
   in a way that loses the intervening decisions. No exception delegating done to an automatic tool is needed.
 
-### Acceptance evidence
+#### Acceptance evidence
 
 - A planned or active milestone with sufficient decomposition, settled direct work and a met exit condition is
   shown to the user; both fresh confirmations produce `confirmed` body assertions and done in one commit.
@@ -133,8 +168,8 @@ milestones under the prerequisite proposal's semantics.
   the milestone open with a specific next action. Empty membership and handoff absence alone do not close it.
 - Explicit rejection/cancellation/reassignment is a scope decision, with any reduced exit condition made explicit;
   it is never described as delivery. An unfinished handed-off implementation blocks settlement when still in scope.
-- Adding/removing/reassigning a direct proposal or changing the phase-level scope invalidates both confirmations.
-  A handoff does not inherit approval to close. A materially changed close candidate is re-presented; an interrupted review
+- Changing the actual phase-level scope invalidates both confirmations; mechanical handoff does not.
+  A handoff alone neither authorizes close nor invalidates an unchanged approved candidate. A materially changed close candidate is re-presented; an interrupted review
   resumes under existing authorization when its candidate and evidence are established unchanged. Reopening a done milestone requires the user's scope decision; harmless formatting does not reopen it.
 - A repeat close against an unchanged done milestone is a no-op. Old done records are retained without migration;
   old open records without assertions need review. Dropped records are not silently changed to done.
@@ -146,7 +181,7 @@ close. Reuse existing milestone history/lookup tests; no new semantic evaluator 
 runs lint, types, relevant affected tests and governance checks. Development effort remains medium because this
 changes a lasting closure policy and its shipped guidance, even though no runtime service is added.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning is ready for the user's direction decision after independent Scout and Challenger review. Development
 waits for the direct-membership prerequisite to integrate and reconciles its actual resulting contracts before
@@ -156,3 +191,4 @@ implementation. This proposal does not approve or perform current milestone clos
 PROP/SPEC lineage; branch ownership and verification ledgers; closing because files disappear; generic integration
 changes; external trackers; background monitoring; viewer changes; automatic activation/dropping/reopening; mass
 conversion of existing roadmap documents; a completion command or machine-certified delivery evaluator.
+

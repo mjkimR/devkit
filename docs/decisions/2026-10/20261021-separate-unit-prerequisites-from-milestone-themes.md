@@ -54,7 +54,7 @@ out-of-order starts remain available; structural validation remains mandatory.
 Author optional frontmatter through existing document editing and templates, with no new CLI flag or evaluator.
 No milestone member-count rule is added. A theme may initially have one member while describing broader scope.
 No persistent milestone delivery lineage is introduced. Downstream status can be investigated from code/Git
-on demand. `PROP-deterministic-milestone-completion` remains independent and supplies no assumed contract here.
+on demand. `SPEC-deterministic-milestone-completion` remains independent and supplies no assumed contract here.
 
 ## 5. Consequences
 
@@ -62,3 +62,10 @@ Authors must maintain explicit dependency edges during lifecycle changes, for li
 The base status signal can be weaker than verified completion; it intentionally grants no delivery certification.
 Development must test mixed cycles, history targets, handoff projection and conservative base recommendation.
 This accepted decision governs the typed dependency and direct proposal membership contracts.
+
+## Superseding decision disposition
+
+`ADR-milestone-closure-confirmations` replaces only the inherited milestone closure/branch-enumeration procedure
+with a focused two-confirmation Backlog review and explicit planned-to-done/reopen cases. This decision remains
+in force for typed unit prerequisites, conservative readiness, lifecycle edge disposition and direct PROP-only
+membership; unaffected MS readiness, activation/drop authority, history and roadmap review reminders remain.

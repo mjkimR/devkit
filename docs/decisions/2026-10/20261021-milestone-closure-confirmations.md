@@ -1,15 +1,16 @@
 ---
-id: PADR-milestone-closure-confirmations
+id: ADR-milestone-closure-confirmations
 title: Milestone closure through two current confirmations
 summary: Milestone closure uses two current user confirmations in its body and the existing Backlog status edit, without a delivery graph or new evaluator.
-proposal: PROP-deterministic-milestone-completion
-status: draft
+proposal: SPEC-deterministic-milestone-completion
+status: accepted
+supersedes: ADR-separate-unit-prerequisites-from-milestone-themes
 created_at: 2026-10-21
 ---
 
-# [PADR-milestone-closure-confirmations] Milestone closure through two current confirmations
+# [ADR-milestone-closure-confirmations] Milestone closure through two current confirmations
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-21
 
 ---
@@ -47,8 +48,10 @@ work is delivered or explicitly removed from the agreed scope. Both depend on th
 met for that scope. Focused implementation/Git inspection resolves uncertainty; unknown evidence remains open.
 A missing PROP, rejection, handoff or reassignment never proves implementation. No milestone identity travels to SPEC.
 
-A goal, exit condition, non-goal or direct membership change clears both assertions. Stored assertions are not
-standing authorization: every close requires a concrete approved candidate. If material scope, membership or relevant evidence changes
+An actual semantic scope change (new required work, exclusion or moving scope elsewhere) clears both assertions.
+Normal PROP-to-SPEC handoff or mechanical identity relocation does not change scope/decomposition and requires
+no milestone review, reset or reconfirmation. Stored assertions are not
+standing authorization: every close requires a concrete approved candidate. If semantic scope or relevant completion evidence changes
 before writing, review and confirmation repeat. After interruption, establish the approved candidate and recheck
 those facts; unchanged authorization persists. Ask again only if facts changed or the approved candidate/evidence
 cannot be established. A pause or context compaction alone is not an invalidation event. A scope
@@ -64,3 +67,12 @@ adds the explicit planned-to-done and user-owned reopen cases; activation/drop a
 Shipped milestone template, Backlog and orientation instructions and their contracts describe the procedure.
 Guidance tests cover both positive and blocked cases. There is no automatic delivery guarantee and no claim that
 body text validates implementation. Optional future automation requires a demonstrated failure beyond this procedure.
+
+## Supersession disposition
+
+This decision supersedes only the milestone closure/branch-enumeration policy retained by
+`ADR-separate-unit-prerequisites-from-milestone-themes` from `ADR-milestone-documents`. Its typed unit prerequisite,
+conservative base readiness, lifecycle edge disposition and direct PROP-only membership decisions remain in force.
+MS dependency readiness, user-owned activation/drop, lookup/history and the roadmap review reminder remain in force.
+The concrete additions are planned-to-done closure, two current assertions and user-owned reopen-to-active for
+scope extension. No existing milestone instance is migrated or closed by this policy change.

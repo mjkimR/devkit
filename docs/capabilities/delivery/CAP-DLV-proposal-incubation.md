@@ -263,6 +263,15 @@ The scaffolded body has sections `1. Background & Hypothesis`, `2. Technical Spi
   `devkit spec scope compare`). Its body covers the capability ledger, stories, architecture and decisions,
   conventions and governance, and a before/after comparison.
 
+### Milestone closure boundary
+
+Normal PROP-to-SPEC handoff or mechanical identity relocation does not change milestone scope/decomposition
+and requires no milestone review, reset or reconfirmation. Handoff removes direct membership without proving
+implementation; unfinished work still in the agreed scope blocks closure. At close, inspect code/Git as needed
+rather than retaining delivery lineage. Actual new work, exclusion or moving scope elsewhere changes semantic
+scope; explicit exclusion/movement is a scope disposition, never delivery. `CAP-HARN-agent-guidance` defines the
+current two-confirmation Backlog review. No lifecycle hook or runtime milestone mutation is introduced.
+
 ### 4.5 Handoff Steps
 
 Before its first write, handoff MUST validate the projected live unit dependency graph: replace the source

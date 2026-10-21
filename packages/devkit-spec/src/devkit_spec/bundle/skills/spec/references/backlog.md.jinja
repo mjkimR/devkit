@@ -126,15 +126,15 @@ outcomes, never a persistent MS-to-PROP-to-SPEC lineage graph.
 Status is planned, active, done or dropped; several milestones may be active. A milestone is ready when all
 dependencies are done or dropped. Cycles are rule errors; the user may activate one out of order.
 
+Actual semantic scope changes (new required work, exclusion or moving scope elsewhere) reset both Completion
+review assertions to pending. Normal handoff or mechanical identity relocation does not change scope and requires
+no milestone review/reset. Follow the close procedure for changed evidence and user-owned reopening.
+
 Every transition is the user's decision, with a concrete candidate prepared first:
 
 1. Activate: show each dependency not done/dropped; the user may still activate it.
-2. Close: inspect anchor members on the base and each relevant `plan-`/`dev-` branch, including branches that introduce
-   members absent from the base. Reuse registered worktrees or read Git refs without switching another task's checkout.
-   Inspect downstream outcomes from code/Git when needed; proposal disappearance is not completion evidence.
-   Propose close only after exit conditions
-   hold and unsettled members are moved elsewhere or the close waits. Unavailable branch evidence prevents a claim
-   that all work is settled.
+2. Close planned/active: follow [milestone completion](milestone-completion.md), including relevant known
+   `plan-`/`dev-` activity. Confirm both assertions and done together.
 3. Drop: show unsettled members and dependent successor milestones. Prepare member reassignment, clearing milestone
    or proposal rejection; show each successor so the user keeps or changes its dependencies.
 
