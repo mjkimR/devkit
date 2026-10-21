@@ -1,0 +1,29 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T02:50:01.621145Z'
+status: completed
+review: review-01.yaml
+summary: 'Closed round 1 findings with exact fixes: seed renderer receives selected environment; archives preserve raw constitution filename. Three regression cases failed before fixes, then passed with 81 adjacent tests. Fresh HIGH round 2 checks the complete fix batch.'
+findings:
+- issue: Seeded Markdown templates ignore the selected execution environment.
+  evidence: packages/devkit-dist/src/devkit/distribution/installation/inventory.py:225
+  failure_condition: A cloud inventory with a seeded document template uses the render_template local default, producing local content despite cloud receipt provenance; violates AC-02.
+  suggested_action: Pass environment=self.environment to this render_template call. Add coverage for cloud rendering of both single-file and directory seeded templates, preserving write-once ownership.
+  resolution: resolved
+  severity: P1
+- issue: Bundle archives rename raw constitution templates to literal Markdown.
+  evidence: packages/devkit-dist/src/devkit/distribution/bundles/package.py:34
+  failure_condition: Building AGENTS.md.jinja archives raw template bytes as AGENTS.md, so reloaded exported source exposes conditional syntax and both branches rather than selected-environment output; violates AC-05.
+  suggested_action: Preserve the constitution source-relative filename in _payload. Add an archive round-trip test confirming AGENTS.md.jinja remains a template and renders correctly in local and cloud inventories.
+  resolution: resolved
+  severity: P1
+assumptions:
+- Public rendered outputs are affected, so independent HIGH round 2 is required rather than minor-fix closure.
+checks:
+  regressions: PASS 81 focused tests including three failed-before P1 cases
+  lint-types: PASS dist lint/types and spec types
+diff_scope:
+  base: ''
+  head: bf3bc2fe9458f780470ebc285cfeae46f9b7f1da
