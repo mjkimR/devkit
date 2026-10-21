@@ -51,9 +51,9 @@ alone. The report supplies evidence, never approval. The selected design is reco
   Report reading therefore requires a narrow ADR supersession at handoff; ordinary Git endpoints stay unchanged.
 - `ADR-shared-language-preference-with-bounded-approval-content` resolves form language once, preserves machine
   values and source quotations, and does not promise control of host chrome or automatic source translation.
-- `PROP-worker-shared-state-mcp` is an unaccepted Planning dependency, not an implemented API. The Host-supplied
-  interface snapshot is a provisional integration contract; Development waits for its acceptance and implemented
-  adapter, or returns for scope clarification if that contract changes.
+- `PROP-worker-shared-state-mcp` is an accepted design dependency, not an implemented API. Its selected
+  interface contract is reflected here; Development waits for the implemented adapter, or returns for scope
+  clarification if that contract changes.
 
 ## 3. Selected Design & Impact
 
@@ -196,8 +196,7 @@ approval credentials; atomic rollback across Git and setup; removal of standalon
 
 ## 5. Lifecycle & Retirement Criteria
 
-Ready for plan-accept after the medium challenger pass and resolution of its findings. Development waits for
+The design is accepted following the medium challenger pass and resolution of its findings. Development waits for
 `PROP-worker-shared-state-mcp` implementation; the report uses its local adapter and public protocol seam only.
-Acceptance of this proposal does not accept that dependency or authorize any merge/handoff now. Its replacement
-ADR and capability updates are produced through normal handoff/reconciliation. No business question beyond the
-Host's plan-accept remains unless the challenger exposes a decision that cannot be settled within this intent.
+The shared-storage dependency is separately accepted; neither acceptance starts Development. The replacement
+ADR and capability updates are produced through normal handoff/reconciliation. No direction question remains.
