@@ -1,0 +1,25 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-21T00:06:23.167865Z'
+status: completed
+summary: Completed characterize, plan-tasks, Red, fix-verify, independent review, reconciliation, feedback and final report. Verified metadata-only no-ff rewrites now permit guarded cleanup; Host owns integration.
+findings: []
+assumptions:
+- Codex worker and nested roles are emulated; absolute paths, command-scoped escalation, read-only review and committed diff validation substitute for native confinement
+- Host owns external source feedback disposition and base refresh; no integration or publication performed
+unverified_areas:
+- Original external installed hook attribution and retained MCP reload; existing loaded service code needs runtime reload to use the fix
+checks:
+  red: PASS original real-Git post-merge regression reproduced partial INTEGRATION_REQUEST_STALE
+  tests: PASS 33 focused and 1238 affected tests
+  lint: PASS just lint-check devkit-agt
+  types: 'PASS just check devkit-agt: zero issues'
+  governance: 'PASS cumulative rules check: zero errors/warnings; final commit gate passed'
+  reviews: PASS separate code-reviewer and reconcile-reviewer returned no findings
+  boundaries: PASS assigned write scope only; no shared checkout edits
+diff_scope:
+  base: 60c113789a2a892baddb38a99cd593d6c0144bc1
+  head: 1fc41a9acc9bd7254a1b4232c55be37120ea126a
+activity_effort: medium
