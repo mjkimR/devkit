@@ -1,0 +1,24 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T02:08:51.357716Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified P2 fix: shared ID validation now precedes CLI workspace resolution; simultaneous invalid inputs regression passes.'
+findings:
+- issue: CLI resolves the workspace before validating the exact selector, contrary to the specified evaluation order.
+  evidence: packages/devkit-dist/src/devkit/distribution/cli/__init__.py:136
+  failure_condition: Both selector and workspace are invalid; malformed selector with nonexistent workspace targets --workspace-root rather than PLAYBOOK_ID.
+  suggested_action: Share selector validation between library and CLI before resolve_root and add a regression for both inputs invalid.
+  resolution: resolved
+  severity: P2
+assumptions:
+- 'Medium repeat review omitted: narrow validation-order fix verified by implementer with direct regression; independent reviewer did not review subsequent fix.'
+checks:
+  tests: PASS exact retrieval 41 tests
+  lint: PASS just lint-check dist
+  types: PASS just check dist
+diff_scope:
+  base: 3b8dc47d5c1cc5ffab88456e0f4cd3e6b1f63318
+  head: 5519fba843258c56bb5985af710e57320a11ff3f

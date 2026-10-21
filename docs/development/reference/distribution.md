@@ -59,6 +59,7 @@ Shared-file ownership, codes and setup: [Host Integration Reference](host.md).
 | `devkit config template` | Writes the commented template into `.devkit/config.toml`: devkit's top-level keys, the tables installed engines register for the reserved names (`devkit.config_tables`: `[workflow.approvals]`, `[workflow.stages]` and `[worktree]` with `devkit-agt`), and the `[tool.<name>]` tables of the installed tools, at defaults or with marked examples when unset, only the parts the file lacks (`CAP-DIST-sync-and-transactions`). Prints `path`, `state` (`created`, `updated`, `unchanged`), `added` (the key and table names written) and `notices`; an invalid file is `CONFIG_INVALID` and is left alone. `--print` writes nothing and adds `text`, the whole file a write would produce. |
 | `devkit recover` | Rolls back an interrupted transaction from the journal in `.devkit/transient/` without overwriting newer edits. Prints `recovered_files`: the number of files restored. |
 | `devkit get-context <bundle>` | The bundle constitution and the header catalog of its instructions (`CAP-DIST-context-and-playbooks`). |
+| `devkit playbook get <bundle>/<playbook>` | Exact receipt-backed retrieval: complete body, effective metadata, source path/hash and context requirements. JSON-only, no execution or discovery (`CAP-DIST-context-and-playbooks`). |
 | `devkit playbook search <query>` | Search over synchronized playbook headers: hybrid with the `search` extra (`devkit-dist[search]` or `devkit-agt[search]`), else lexical BM25; `--mode`, `--min-score`, `--min-similarity`, `--limit`, `--max-bytes` (`CAP-DIST-context-and-playbooks`). |
 | `devkit override list` | Tracked project overrides and their drift status. |
 | `devkit override create <bundle>:<asset> [--force]` | Copies every upstream file of a selected, non-seeded asset to `.devkit/overrides/` (plus a baseline copy), records the current upstream as its baseline and synchronizes; `--force` overwrites existing override files and the baseline. |
@@ -302,7 +303,7 @@ failing engine import cannot make the bundle unusable):
 - `CAP-DIST-workspace-ownership`: workspace layout, ownership categories, the guidance block, seeded files and override drift.
 - `CAP-DIST-sync-and-transactions`: the receipt, the selection model, and the transaction engine (lock, journal, recovery, post-sync extensions).
 - `CAP-DIST-agent-projections`: projection matrix and role contracts for Codex, Claude Code and Antigravity.
-- `CAP-DIST-context-and-playbooks`: `get-context`, the skill prerequisite, and playbook search.
+- `CAP-DIST-context-and-playbooks`: `get-context`, the skill prerequisite, and playbook search/exact retrieval.
 - `CAP-DIST-in-repo-bundles`: repository-owned assets as a content package installed from the same repository.
 - `ARCH-08-2-resource-taxonomy`: guidance taxonomy and naming standards.
 

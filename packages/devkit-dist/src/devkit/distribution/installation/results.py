@@ -302,3 +302,33 @@ class OverrideChange:
             value["accepted_upstream_sha256"] = self.accepted_upstream_sha256
         value["notices"] = [notice.to_dict() for notice in self.notices]
         return value
+
+
+@dataclass(frozen=True)
+class PlaybookResult:
+    """An exact procedure with effective content identity and context requirements."""
+
+    bundle: str
+    id: str
+    name: str
+    description: str
+    aliases: list[str]
+    body: str
+    path: str
+    sha256: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "bundle": self.bundle,
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "aliases": list(self.aliases),
+            "body": self.body,
+            "source": {"path": self.path, "sha256": self.sha256},
+            "context": {
+                "bundle": self.bundle,
+                "argv": ["devkit", "get-context", self.bundle],
+                "policy": "once-per-agent-context",
+            },
+        }

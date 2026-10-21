@@ -44,6 +44,7 @@ from devkit.distribution.installation.override_commands import (
     remove_override,
 )
 from devkit.distribution.installation.plan import BundlePlan, plan_bundle
+from devkit.distribution.installation.playbook_get import get_playbook
 from devkit.distribution.installation.playbook_search import search_playbooks
 from devkit.distribution.installation.receipt import read_receipt
 from devkit.distribution.installation.results import (
@@ -51,6 +52,7 @@ from devkit.distribution.installation.results import (
     OverrideChange,
     OverrideDiff,
     OverrideStatus,
+    PlaybookResult,
     SearchResult,
     SyncResult,
 )
@@ -83,6 +85,7 @@ __all__ = [
     "OverrideStatus",
     "PackageError",
     "PendingTransactionError",
+    "PlaybookResult",
     "PostSyncExtensionFailedNotice",
     "PostSyncNotice",
     "ProjectConfig",
@@ -101,6 +104,7 @@ __all__ = [
     "diff_override",
     "discover_bundles",
     "get_context",
+    "get_playbook",
     "get_project_listing",
     "get_project_status",
     "list_overrides",
