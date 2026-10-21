@@ -4,7 +4,7 @@ title: <Milestone title>
 summary: "<The goal and exit condition this milestone owns.>"
 status: planned
 created_at: <YYYY-MM-DD>
-# depends_on: [MS-foundation] # MS-only prerequisites; omit when empty
+depends_on: []
 ---
 
 # [MS-<slug>] <Milestone title>

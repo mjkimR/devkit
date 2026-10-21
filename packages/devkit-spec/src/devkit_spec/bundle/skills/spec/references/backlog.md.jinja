@@ -85,12 +85,9 @@ through inline Planning and names the deletion commit in its final report; one t
 
 ## Direct prerequisites and lifecycle disposition
 
-Before explicit proposal pickup or direct-spec intake, apply the direct unit prerequisite procedure in
-`spec-next/references/next-work.md`: inspect one reported local base ref/commit, no implicit fetch, no branch-only
-completion, and no certification beyond completed SPEC status. Author optional depends_on in frontmatter, for
-example `depends_on: [PROP-foundation, SPEC-parser]`; omit it when empty. Unit dependencies and MS dependencies
-remain separate. Explicit order overrides record unsatisfied IDs/reasons in the ordinary intent decision and
-never waive structural errors.
+For explicit proposal pickup and direct-spec intake, apply `spec-next/references/next-work.md`'s direct
+prerequisite procedure. Author optional `depends_on: [PROP-foundation, SPEC-parser]` frontmatter; omit it when
+empty. Unit and MS dependencies stay separate. Order overrides never waive structural errors.
 
 Before splitting/decomposing, superseding, rejecting, deleting or reclassifying to session, query
 `devkit spec refs PROP-<slug> --direction in -n 0` (refs is repository-wide) and inspect depends_on on all live incoming unit
