@@ -1,51 +1,60 @@
 ---
-id: PROP-exact-playbook-get
+id: SPEC-exact-playbook-get
 title: Exact playbook retrieval for external runners
 summary: Add exact bundle/playbook retrieval with effective overrides, source identity and context requirements while defining external ownership of scheduling and execution.
-status: accepted                         # draft | reviewing | accepted | rejected
-created_at: 2026-10-21
-target_area: capabilities/distribution/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
+status: planned
+created: 2026-10-21
 milestone: MS-scheduled-jobs
-boundaries:
-  owns:
-    - packages/devkit-dist/src/devkit/distribution/
-    - packages/devkit-dist/tests/
-    - docs/capabilities/distribution/
-    - docs/architecture/
-    - docs/decisions/
-    - docs/development/reference/
-    - guides/
-  excludes:
-    - packages/devkit-catalog/
-    - packages/devkit/src/devkit/integration/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-exact-playbook-get] Exact playbook retrieval for external runners
+# [SPEC-exact-playbook-get] Exact playbook retrieval for external runners
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-exact-playbook-get on 2026-10-21.
+- **Preserved Materials**: `docs/materials/2026-10/20261021-exact-playbook-get`
+
+### 1. Background & Hypothesis
 
 `MS-scheduled-jobs` requires an exact-ID entrypoint for a caller that already knows which synchronized playbook
 to run. Search and candidate selection are unnecessary in that case. `CAP-DIST-context-and-playbooks` remains
 the consumption contract; an explicit retrieval operation can provide instructions without executing them or
 introducing scheduling into devkit.
 
-## 2. Technical Spike Findings
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Exact playbook retrieval for external runners so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Findings
 
 Receipt-owned reads already provide the synchronization, override, personal-render and shared-lock semantics
 needed here. There is no exact playbook retrieval service to reuse wholesale. Add a small
 `installation/playbook_get.py` service using the existing reading and header primitives, without search ranking,
 installed-package discovery or an alternate manifest resolver. The comparison and evidence are in
-`materials/retrieval-design.md`. `PADR-external-playbook-execution` records the responsibility boundary.
+`docs/materials/2026-10/20261021-exact-playbook-get/retrieval-design.md`. `ADR-external-playbook-execution` records the responsibility boundary.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Exact input and output contract
+#### Exact input and output contract
 
 `devkit playbook get <bundle>/<playbook> [-w <workspace>]` accepts exactly two case-sensitive manifest slugs
 matching `[a-z][a-z0-9-]*`, separated by exactly one slash. It performs no trimming, case folding, alias lookup,
@@ -74,7 +83,7 @@ Success exits 0. Libraries return data and do not print. The normative success o
 Relative resource links in `body` resolve against the parent of `source.path`; the caller reads only needed
 resources using existing permissions. No resource bytes or directory inventory are returned.
 
-### Resolution and errors
+#### Resolution and errors
 
 Validate the selector first, resolve the synchronized project and take the existing shared project lock, then
 use `read_synchronized` and its runtime receipt. Match exactly one receipt asset of kind `playbook` by bundle/id.
@@ -109,7 +118,7 @@ filesystem fallback remain as in context/search. Ordinary overrides are read as 
 validator; this feature adds no template or personal-render playbook support. Shared runtime-receipt validation
 still checks evidence for eligible other asset kinds, so their stale evidence can block the read.
 
-### Explicit invocation and ownership
+#### Explicit invocation and ownership
 
 A user naming the exact playbook for the current task, or explicitly configuring an external schedule to invoke
 that exact ID, authorizes retrieval and caller interpretation within that task's granted scope. Retrieval itself
@@ -120,7 +129,7 @@ permissions and user constraints. A schedule is neither persistent approval for 
 permission to skip unavailable approval UI. External systems own cadence, launch, retries, overlap control and
 execution history; devkit only supplies the synchronized task instructions and context requirements.
 
-### Development targets and verification
+#### Development targets and verification
 
 Development adds the retrieval service, result model, CLI wiring and focused tests under the existing distribution
 and test directories. Update `CAP-DIST-context-and-playbooks`, `ARCH-08-2-resource-taxonomy`,
@@ -157,9 +166,10 @@ Non-goals: scheduler, daemon, job registry, schedule configuration, provider ada
 playbook execution inside `get`, new maintenance assets, durable execution history, unattended approval bypasses,
 new override/render semantics, catalog discovery during exact lookup and a package provenance/audit subsystem.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Feature / proposal depth. Planning and recommended Development effort remain medium: the scoped service reuses
 existing integrity primitives but adds a public CLI contract and an invocation-policy ADR requiring independent
 review. No unresolved business choice is required for this direction. Acceptance, Development start and milestone
 status transitions remain the Host/user's responsibility.
+

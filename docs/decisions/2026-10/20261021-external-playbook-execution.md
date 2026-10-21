@@ -1,15 +1,15 @@
 ---
-id: PADR-external-playbook-execution
+id: ADR-external-playbook-execution
 title: External scheduling and exact playbook retrieval
 summary: External systems own scheduling and callers execute playbooks; devkit retrieves synchronized procedures by exact identity without granting execution authority.
-proposal: PROP-exact-playbook-get
-status: draft
+proposal: SPEC-exact-playbook-get
+status: accepted
 created_at: 2026-10-21
 ---
 
-# [PADR-external-playbook-execution] External scheduling and exact playbook retrieval
+# [ADR-external-playbook-execution] External scheduling and exact playbook retrieval
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-21
 
 ---
