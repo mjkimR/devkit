@@ -2,7 +2,7 @@
 id: PROP-deterministic-milestone-completion
 title: Simple milestone completion from direct proposal checks
 summary: "Close milestones from confirmed decomposition and settlement of directly linked proposals, using focused code or Git inspection when needed instead of persistent delivery-lineage tracking."
-status: draft
+status: reviewing
 created_at: 2026-10-21
 target_area: capabilities/delivery/
 priority: high
