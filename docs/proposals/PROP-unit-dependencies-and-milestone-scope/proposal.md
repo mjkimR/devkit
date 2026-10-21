@@ -2,7 +2,7 @@
 id: PROP-unit-dependencies-and-milestone-scope
 title: Unit-level depends_on and coarse milestone scope
 summary: "Allows proposal and spec anchors to declare depends_on prerequisites across units and defines milestone authoring guidance so milestones remain multi-unit themes rather than single-proposal gates."
-status: draft
+status: reviewing
 created_at: 2026-10-21
 target_area: capabilities/delivery/
 priority: high
