@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-21T00:05:27.139394Z'
+status: completed
+summary: Observed capture covered this run; recorded module-name discovery friction; hook rewrite observation already terminal as FB-post-commit-rewrite-stales-the-printed-hash
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=1
