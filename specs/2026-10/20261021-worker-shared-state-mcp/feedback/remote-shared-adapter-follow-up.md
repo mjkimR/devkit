@@ -46,7 +46,7 @@ scope-registry coordination remains separate because artifact storage grants no 
 - **Versions**: Planning based on worktree start d0c4428c01650ada6069606e6c340e9f065c16fa.
 - **Conditions**: Independent hosts lack a common local filesystem; local linked worktrees do not have this gap.
 - **Workarounds Attempted**: Selected local adapter for immediate review-report consumer; no remote workaround run.
-- **Related Assets**: `SPEC-worker-shared-state-mcp`, `PROP-proposal-review-and-approval`,
+- **Related Assets**: `SPEC-worker-shared-state-mcp`, `SPEC-proposal-review-and-approval`,
   `CAP-COLL-work-scope-registry` and the planned devkit.shared adapter authoring reference.
 
 ## Evidence

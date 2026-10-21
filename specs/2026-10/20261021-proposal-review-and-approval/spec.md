@@ -1,46 +1,98 @@
 ---
-id: PROP-proposal-review-and-approval
+id: SPEC-proposal-review-and-approval
 title: Proposal review reports and unified plan-accept MCP approval
-summary: "Generate PADR-focused proposal review reports in the shared workspace and provide a native MCP plan-accept confirmation that links the report and selects accept-only or combined handoff."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-10-20
-target_area: capabilities/delivery/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
+summary: Generate PADR-focused proposal review reports in the shared workspace and provide a native MCP plan-accept confirmation that links the report and selects accept-only or combined handoff.
+status: completed
+created: 2026-10-21
 milestone: MS-autonomous-backlog-and-orchestration
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/
-    - packages/devkit-viewer/src/devkit_viewer/
-    - docs/capabilities/delivery/
-    - docs/capabilities/viewer/
-    - docs/development/reference/
-    - packages/devkit-spec/tests/
-    - packages/devkit-viewer/tests/
-    - packages/devkit-viewer/frontend/
-    - packages/devkit/src/devkit/integration/
-    - packages/devkit/tests/integration/
-    - docs/capabilities/integration/
-    - docs/capabilities/harness/
-    - docs/decisions/
-  excludes:
-    - packages/devkit-dist/src/devkit/distribution/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
 
-# [PROP-proposal-review-and-approval] Proposal review reports and unified plan-accept MCP approval
+# [SPEC-proposal-review-and-approval] Proposal review reports and unified plan-accept MCP approval
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-proposal-review-and-approval on 2026-10-21.
+- **Preserved Materials**: `docs/materials/2026-10/20261021-proposal-review-and-approval`
+
+### 1. Background & Hypothesis
 
 Parallel Planning results need a durable, concise briefing outside the Host conversation. A user should review
 PADR choices in the configured language and explicitly choose acceptance with immediate Development or acceptance
 alone. The report supplies evidence, never approval. The selected design is recorded in
-`PADR-source-bound-review-reports-and-explicit-lifecycle-approval`.
+`ADR-source-bound-review-reports-and-explicit-lifecycle-approval`.
 
-## 2. Technical Spike Conclusions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Proposal review reports and unified plan-accept MCP approval so that system capabilities are extended.
+
+## 3. Delivery Scenarios
+
+- AC1: Publish a complete ko/en briefing from a committed Planning HEAD; verify all PADRs and effort/envelope
+  coverage, exact identity and clean tracked state. Reject false SHA, mismatched slug/repo/language, oversized or
+  incomplete content. Live retry returns the same generation; expiry requires a different one.
+- AC2: Exercise both native form choices. Accept-only records/commits user acceptance and merges without creating
+  a dev branch. Combined performs acceptance, checked merge and handoff with one native confirmation, disclosing
+  cleanup/setup and returning effort. Decline/cancel/missing form and open worker questions perform no effects.
+- AC3: Change source, base, policy, environment or report expiry while the form waits; prove refusal before effects.
+  Inject commit, merge, cleanup, setup and handoff failures; results identify exact completed effects and recovery.
+  A retry/restart never reuses authority or duplicates acceptance/worktrees. Required-PR refuses local combination.
+- AC4: Standalone handoff of a previously accepted proposal uses a fresh report bound to current base and one
+  explicit form; stale reports request refresh without implicit writes or raw proposal dumping.
+- AC5: Viewer displays exactly one valid report and remains read-only for get/list/expiry, traversal and wrong-repo
+  attempts. Keep existing Git endpoints and HTTP protections; sanitize hostile Markdown. Verify no adapter writes.
+- AC6: Local orchestration without connected required MCP tools requests connection; cloud CLI remains usable.
+  Review guidance preserves single worktree ownership, commits edits and refreshes the source-bound report.
+
+Development effort remains medium: cross-package domain composition requires mandatory initial code review and
+independent reconciliation; no external consumer API or irreversible data migration changes are planned. Tests
+cover service seams with injected faults and form replies, viewer routes/sanitization and language parity. Run lint,
+types, `just test-affected`, governance and viewer lint/check/test/build for changed frontend assets. A live harmless
+form/link observation is separate from protocol tests; unobserved host UI fidelity must remain reported.
+
+Non-goals: production remote storage; MCP transport/registration changes; viewer write/chat/LLM endpoints;
+translated tracked documents; general Markdown translation; remote PR integration in the combined tool; durable
+approval credentials; atomic rollback across Git and setup; removal of standalone handoff; cloud template redesign.
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] Publish a source-bound report
+- **Given** a clean committed Planning HEAD or accepted base and a complete ko/en briefing.
+- **When** the CLI or MCP report producer publishes it.
+- **Then** validate the exact commit, repository, slug, language, all PADRs and required sections; reject false or oversized inputs; identical live retries retain identity and expired retries create a new generation.
+
+### [AC-02] Explicit lifecycle approval
+- **Given** a ready proposal with an exact live report.
+- **When** the native form selects accept_only or accept_and_handoff.
+- **Then** execute only the disclosed selected effects after explicit approve=true and action=accept; decline, cancellation, unavailable forms and unresolved worker questions perform no lifecycle effects.
+
+### [AC-03] Staleness and partial recovery
+- **Given** a prepared approval binding source, base, policy, environment and report.
+- **When** any binding changes or an effect fails.
+- **Then** refuse stale input before effects, return exact completed steps and recovery, and require fresh approval for remaining effects without replaying acceptance or duplicating worktrees; required-PR refuses local combination.
+
+### [AC-04] Standalone handoff report
+- **Given** a previously accepted proposal on the retained base.
+- **When** standalone handoff receives an exact report URI.
+- **Then** validate its current base and expiry before and after the native form, show the concise report link and all worktree/setup effects, and request refresh explicitly on stale reports.
+
+### [AC-05] Read-only report view
+- **Given** a registered local repository and valid immutable report.
+- **When** the optional viewer report route is requested.
+- **Then** display only that exact report with source, language and expiry, sanitize Markdown, reject traversal/wrong repository/expired input, preserve HTTP protections, and perform no adapter writes.
+
+### [AC-06] Review guidance and connection readiness
+- **Given** a local-orchestrated or cloud Planning activity.
+- **When** the Host reviews or refines the proposal.
+- **Then** local orchestration requires connected report/approval tools; cloud CLI remains usable; refinement keeps exclusive worktree ownership, commits changes and republishes the exact source-bound report.
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Conclusions
 
 - Existing `handoff_mcp.py` validates an accepted committed proposal on a clean retained base, snapshots policy,
   requests a native form and rechecks the preview before effects. Preserve those guards and reuse its domain logic.
@@ -51,13 +103,11 @@ alone. The report supplies evidence, never approval. The selected design is reco
   Report reading therefore requires a narrow ADR supersession at handoff; ordinary Git endpoints stay unchanged.
 - `ADR-shared-language-preference-with-bounded-approval-content` resolves form language once, preserves machine
   values and source quotations, and does not promise control of host chrome or automatic source translation.
-- `SPEC-worker-shared-state-mcp` is an accepted design dependency, not an implemented API. Its selected
-  interface contract is reflected here; Development waits for the implemented adapter, or returns for scope
-  clarification if that contract changes.
+- `SPEC-worker-shared-state-mcp` is implemented on the current base. Use its public adapter, PutRequest and immutable Artifact metadata without changes to dist.
 
-## 3. Selected Design & Impact
+### 3. Selected Design & Impact
 
-### Report producer and immutable identity
+#### Report producer and immutable identity
 
 The Host produces the report after validating the final committed Planning worker range, including final envelopes.
 It reads `proposal.md`, every current PADR, relevant support/reverify envelopes and scope from that exact commit.
@@ -88,7 +138,7 @@ Changed source/language, missing or expired content refuses approval and returns
 with an action to regenerate and request a fresh form. Do not regenerate during a pending form or transfer its reply.
 Read/list/view never publish, extend expiry, clean up or grant authority. Publication leaves tracked files clean.
 
-### Native approval and effect scope
+#### Native approval and effect scope
 
 Add `spec_plan_accept(slug, report_uri)` on the retained local MCP service. The tool prepares a request binding the
 reviewed Planning SHA, base SHA, Git identities, effective policy, exact report URI/digest/language, proposal slug,
@@ -134,7 +184,7 @@ against current accepted base HEAD; stale/expired/missing reports request explic
 Its concise message replaces raw proposal dumping, while retaining all setup/worktree effects and selected effort.
 Acceptance by Backlog does not skip report or explicit Development approval.
 
-### Read-only review and interactive refinement
+#### Read-only review and interactive refinement
 
 Add an optional exact-artifact route to the running local viewer, using only its registered repository's configured
 local shared adapter. A URL such as `/review/<repo-id>/<generation-id>` binds an immutable record; the backend
@@ -155,7 +205,7 @@ Local orchestration checks that devkit MCP and required report/approval tools ar
 if absent, request connection and pause dependent operations, with no silent CLI fallback. Cloud uses CLI; full
 MCP-invisible cloud rendering belongs to `PROP-cloud-agent-rendering`.
 
-### Boundaries and delivery
+#### Boundaries and delivery
 
 `devkit-spec` owns report validation/template, orchestration, forms, guidance and tests. `devkit.integration` owns the
 minimal typed in-process composition seam and its guard tests; it imports no SDD models. The optional viewer owns
@@ -166,37 +216,8 @@ new module filenames will be chosen in Development. Reconcile `CAP-DLV-proposal-
 The viewer exception supersedes only the Git-only read restriction in `ADR-read-only-local-server-over-git-refs`;
 its no-write/no-approval and existing Git endpoint contracts remain intact.
 
-## 4. Acceptance Evidence and Non-Goals
+### 5. Lifecycle & Retirement Criteria
 
-- AC1: Publish a complete ko/en briefing from a committed Planning HEAD; verify all PADRs and effort/envelope
-  coverage, exact identity and clean tracked state. Reject false SHA, mismatched slug/repo/language, oversized or
-  incomplete content. Live retry returns the same generation; expiry requires a different one.
-- AC2: Exercise both native form choices. Accept-only records/commits user acceptance and merges without creating
-  a dev branch. Combined performs acceptance, checked merge and handoff with one native confirmation, disclosing
-  cleanup/setup and returning effort. Decline/cancel/missing form and open worker questions perform no effects.
-- AC3: Change source, base, policy, environment or report expiry while the form waits; prove refusal before effects.
-  Inject commit, merge, cleanup, setup and handoff failures; results identify exact completed effects and recovery.
-  A retry/restart never reuses authority or duplicates acceptance/worktrees. Required-PR refuses local combination.
-- AC4: Standalone handoff of a previously accepted proposal uses a fresh report bound to current base and one
-  explicit form; stale reports request refresh without implicit writes or raw proposal dumping.
-- AC5: Viewer displays exactly one valid report and remains read-only for get/list/expiry, traversal and wrong-repo
-  attempts. Keep existing Git endpoints and HTTP protections; sanitize hostile Markdown. Verify no adapter writes.
-- AC6: Local orchestration without connected required MCP tools requests connection; cloud CLI remains usable.
-  Review guidance preserves single worktree ownership, commits edits and refreshes the source-bound report.
-
-Development effort remains medium: cross-package domain composition requires mandatory initial code review and
-independent reconciliation; no external consumer API or irreversible data migration changes are planned. Tests
-cover service seams with injected faults and form replies, viewer routes/sanitization and language parity. Run lint,
-types, `just test-affected`, governance and viewer lint/check/test/build for changed frontend assets. A live harmless
-form/link observation is separate from protocol tests; unobserved host UI fidelity must remain reported.
-
-Non-goals: production remote storage; MCP transport/registration changes; viewer write/chat/LLM endpoints;
-translated tracked documents; general Markdown translation; remote PR integration in the combined tool; durable
-approval credentials; atomic rollback across Git and setup; removal of standalone handoff; cloud template redesign.
-
-## 5. Lifecycle & Retirement Criteria
-
-The design is accepted following the medium challenger pass and resolution of its findings. Development waits for
-`SPEC-worker-shared-state-mcp` implementation; the report uses its local adapter and public protocol seam only.
+The design is accepted following the medium challenger pass and resolution of its findings. The report uses the implemented shared local adapter and public protocol seam only.
 The shared-storage dependency is separately accepted; neither acceptance starts Development. The replacement
 ADR and capability updates are produced through normal handoff/reconciliation. No direction question remains.

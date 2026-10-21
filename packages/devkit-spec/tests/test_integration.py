@@ -692,6 +692,18 @@ def accepted_handoff_base(tmp_path: Path, handoff_repository_template: Path) -> 
     return repo
 
 
+def _handoff_report(repo: Path) -> str:
+    """Publish a real source-bound report, including the fixture's Planning evidence."""
+    import re
+
+    from devkit_spec.proposal_report import publish, template
+
+    sha = git(repo, "rev-parse", "HEAD")
+    body = template(repo, "idea", sha)
+    body = re.sub(r"(?m)^(#{2,4} [^\n]+)\n", r"\1\n\nFixture proposal evidence.\n", body)
+    return publish(repo, "idea", sha, body).metadata.artifact_uri
+
+
 def test_handoff_initialization_keeps_template_isolated(
     accepted_handoff_base: Path, handoff_repository_template: Path
 ) -> None:
@@ -739,13 +751,13 @@ def test_handoff_nonapproval_makes_no_git_changes(accepted_handoff_base, action,
     before = git(repo, "show-ref")
 
     async def confirm(message, schema):
-        assert 'Goal: "Proposal summary."' in message and "Accepted plan:" in message
+        assert 'Goal: "Proposal summary."' in message and "Review report:" in message
         assert schema["properties"]["activity_effort"]["default"] == "high"
         assert schema["properties"]["approve"]["default"] is False
         assert git(repo, "show-ref") == before
         return ConfirmationReply(action, content)
 
-    result = asyncio.run(HandoffService(repo).handoff("idea", confirm))
+    result = asyncio.run(HandoffService(repo).handoff("idea", _handoff_report(repo), confirm))
     assert result["status"] == status
     assert git(repo, "show-ref") == before
     assert not (repo.parent / "repo-wt-dev-idea").exists()
@@ -759,7 +771,7 @@ def test_handoff_approval_creates_development_and_returns_selected_effort(accept
     async def confirm(message, schema):
         return ConfirmationReply("accept", {"approve": True, "activity_effort": "low"})
 
-    result = asyncio.run(HandoffService(repo).handoff("idea", confirm))
+    result = asyncio.run(HandoffService(repo).handoff("idea", _handoff_report(repo), confirm))
     assert result["status"] == "handed_off", json.dumps(result, indent=2)
     assert result["activity_effort"] == "low"
     worktree = Path(result["worktree"]["path"])
@@ -770,8 +782,8 @@ def test_handoff_approval_creates_development_and_returns_selected_effort(accept
 
 
 def test_handoff_changed_base_requires_fresh_review_before_creating_worktree(accepted_handoff_base):
-    from devkit_spec.errors import HandoffStaleError
     from devkit_spec.handoff_mcp import HandoffService
+    from devkit_spec.proposal_report import ReviewRefreshRequiredError
 
     repo = accepted_handoff_base
 
@@ -779,8 +791,8 @@ def test_handoff_changed_base_requires_fresh_review_before_creating_worktree(acc
         git(repo, "commit", "--allow-empty", "-q", "-m", "base advanced")
         return ConfirmationReply("accept", {"approve": True, "activity_effort": "medium"})
 
-    with pytest.raises(HandoffStaleError):
-        asyncio.run(HandoffService(repo).handoff("idea", confirm))
+    with pytest.raises(ReviewRefreshRequiredError):
+        asyncio.run(HandoffService(repo).handoff("idea", _handoff_report(repo), confirm))
     assert not (repo.parent / "repo-wt-dev-idea").exists()
 
 
@@ -794,6 +806,7 @@ def test_handoff_native_sdk_roundtrip(accepted_handoff_base, approved, language)
 
     repo = accepted_handoff_base
     (repo / ".devkit/config.local.toml").write_text(f'[presentation]\nlanguage="{language}"\n')
+    report_uri = _handoff_report(repo)
     before = git(repo, "show-ref")
     calls = []
 
@@ -823,7 +836,7 @@ def test_handoff_native_sdk_roundtrip(accepted_handoff_base, approved, language)
             tools = await session.list_tools()
             tool = next(tool for tool in tools.tools if tool.name == "spec_handoff")
             assert tool.annotations is not None and tool.annotations.openWorldHint is True
-            response = await session.call_tool("spec_handoff", {"slug": "idea"})
+            response = await session.call_tool("spec_handoff", {"slug": "idea", "report_uri": report_uri})
             assert response.structuredContent is not None
             return response.structuredContent
 
@@ -865,7 +878,7 @@ def test_handoff_pins_reviewed_commit_before_setup_when_base_moves(accepted_hand
     async def confirm(message, schema):
         return ConfirmationReply("accept", {"approve": True, "activity_effort": "medium"})
 
-    result = asyncio.run(HandoffService(repo).handoff("idea", confirm))
+    result = asyncio.run(HandoffService(repo).handoff("idea", _handoff_report(repo), confirm))
     assert result["status"] == "handed_off", result
     assert setup_heads == [reviewed]
     assert git(repo, "rev-parse", "HEAD") != reviewed
@@ -1005,9 +1018,81 @@ def test_native_handoff_initializes_fresh_registration(accepted_handoff_base, mo
     async def confirm(message, schema):
         return ConfirmationReply("accept", {"approve": True, "activity_effort": "medium"})
 
-    result = asyncio.run(HandoffService(repo).handoff("idea", confirm))
+    result = asyncio.run(HandoffService(repo).handoff("idea", _handoff_report(repo), confirm))
     assert result["status"] == "handed_off", result
     assert modes == ["--locked", "--registrations-only"]
     worktree = Path(result["worktree"]["path"])
     assert registrations._ledger(worktree)["entries"]
     assert str(worktree) in (worktree / ".mcp.json").read_text()
+
+
+def test_handoff_reuses_only_clean_pinned_devkit_worktree(accepted_handoff_base):
+    from devkit.worktree import locate, start
+
+    from devkit_spec.handoff_mcp import HandoffService
+
+    repo = accepted_handoff_base
+    report_uri = _handoff_report(repo)
+    started = start(locate(repo), "dev-idea", project=Path("."), revision=git(repo, "rev-parse", "HEAD"))
+
+    async def confirm(message, schema):
+        assert "Completed: worktree creation. Reuse worktree:" in message
+        return ConfirmationReply("accept", {"approve": True, "activity_effort": "medium"})
+
+    result = asyncio.run(HandoffService(repo).handoff("idea", report_uri, confirm))
+    assert result["status"] == "handed_off", result
+    assert result["worktree"]["created"] is False
+    assert Path(result["worktree"]["path"]) == started.path
+
+
+@pytest.mark.parametrize("mutation", ["dirty", "head", "marker"])
+def test_handoff_recovery_refuses_changed_provenance_before_form(accepted_handoff_base, mutation):
+    from devkit.worktree import locate, start
+
+    from devkit_spec.errors import HandoffNotReadyError
+    from devkit_spec.handoff_mcp import HandoffService
+
+    repo = accepted_handoff_base
+    report_uri = _handoff_report(repo)
+    started = start(locate(repo), "dev-idea", revision=git(repo, "rev-parse", "HEAD"))
+    if mutation == "dirty":
+        (started.path / "untracked.txt").write_text("preserve")
+    elif mutation == "head":
+        git(started.path, "commit", "--allow-empty", "-q", "-m", "unrelated")
+    else:
+        git(repo, "config", "branch.dev-idea.devkitWorktree", "/wrong")
+
+    async def confirm(message, schema):
+        pytest.fail("mismatched recovery cannot reach approval")
+
+    with pytest.raises(HandoffNotReadyError):
+        asyncio.run(HandoffService(repo).handoff("idea", report_uri, confirm))
+    assert started.path.exists()
+
+
+def test_handoff_report_language_change_requires_fresh_form(accepted_handoff_base):
+    from devkit_spec.handoff_mcp import HandoffService
+    from devkit_spec.proposal_report import ReviewRefreshRequiredError
+
+    repo = accepted_handoff_base
+    (repo / ".devkit/config.local.toml").write_text('[presentation]\nlanguage="en"\n')
+    report_uri = _handoff_report(repo)
+
+    async def confirm(message, schema):
+        (repo / ".devkit/config.local.toml").write_text('[presentation]\nlanguage="ko"\n')
+        return ConfirmationReply("accept", {"approve": True, "activity_effort": "medium"})
+
+    with pytest.raises(ReviewRefreshRequiredError):
+        asyncio.run(HandoffService(repo).handoff("idea", report_uri, confirm))
+    assert not (repo.parent / "repo-wt-dev-idea").exists()
+
+
+def test_handoff_missing_report_never_displays_form(accepted_handoff_base):
+    from devkit_spec.handoff_mcp import HandoffService
+    from devkit_spec.proposal_report import ReviewRefreshRequiredError
+
+    async def confirm(message, schema):
+        pytest.fail("missing report must refuse before approval")
+
+    with pytest.raises(ReviewRefreshRequiredError):
+        asyncio.run(HandoffService(accepted_handoff_base).handoff("idea", "shared://missing", confirm))

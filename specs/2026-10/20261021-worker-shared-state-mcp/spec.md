@@ -19,7 +19,7 @@ Handed off from proposal PROP-worker-shared-state-mcp on 2026-10-21.
 
 ### 1. Problem and Planning Recommendation
 
-Linked workers need a shared, untracked home for regenerable proposal review reports. `PROP-proposal-review-and-approval`
+Linked workers need a shared, untracked home for regenerable proposal review reports. `SPEC-proposal-review-and-approval`
 is the first consumer. `CAP-COLL-work-scope-registry` already owns authoritative coordination records, revisions,
 owner tokens and diagnostic journals. These records MUST NOT be moved into an expiring artifact store or operated
 through generic artifact CRUD. `ADR-keep-shared-storage-and-separate-read-access` remains applicable.
@@ -77,7 +77,7 @@ core local-config and MCP classification, MCP transport guards, package entry po
 capability and quick-reference documentation. Narrow spec-orchestrate and spec-delegate host guidance changes plus
 bundle tests implement the local MCP-first connection precondition; they do not convert the asset set to templates.
 `PROP-cloud-agent-rendering` owns that conversion and environment-driven rendering. It does not modify scope-registry semantics, proposal approval flow,
-viewer code or tracked localized reports. `PROP-proposal-review-and-approval` owns report composition, language
+viewer code or tracked localized reports. `SPEC-proposal-review-and-approval` owns report composition, language
 resolution, display, stale-commit rejection and acceptance authority.
 
 Verification: dist and MCP focused tests including concurrency/crash/permission fixtures, layering checks and

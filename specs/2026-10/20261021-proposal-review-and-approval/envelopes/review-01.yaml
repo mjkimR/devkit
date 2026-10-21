@@ -1,0 +1,29 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T00:59:36.625768Z'
+status: completed
+summary: 'Independent code-reviewer: REVISE; two P1 defects in remaining-effects report validation and recovery directives.'
+findings:
+- issue: Remaining-effects approval permits an empty report URI and can start Development without a source-bound report.
+  evidence: packages/devkit-spec/src/devkit_spec/plan_accept_mcp.py:244; packages/devkit-spec/src/devkit_spec/handoff_mcp.py:82
+  failure_condition: After accepted merge and Planning cleanup, empty report_uri skips prepare validation and affirmative confirmation completes handoff.
+  suggested_action: Unconditionally validate exact report before remaining-effects confirmation and during revalidation; add real-Git empty URI regression.
+  resolution: open
+  severity: P1
+- issue: Combined handoff failures return a success directive instead of a recovery action.
+  evidence: packages/devkit-spec/src/devkit_spec/plan_accept_mcp.py:334; packages/devkit-spec/src/devkit_spec/plan_accept_mcp.py:353; packages/devkit-spec/src/devkit_spec/plan_accept_mcp.py:360
+  failure_condition: Handoff returns needs_recovery without next_command or raises AdvisoryError after successful integration, retaining next_action Acceptance complete.
+  suggested_action: Give every unfinished handoff a recovery-specific next_action describing preserved state and fresh report/approval; test returned and raised failures.
+  resolution: open
+  severity: P1
+unverified_areas:
+- Live native host rendering and report-link clickability
+checks:
+  tests: PASS affected suite and focused lifecycle protocol tests; reviewer reproduced both defects with runtime injection
+  lint: PASS package Ruff/Pyright and cumulative rules
+diff_scope:
+  base: 6e2dc7d5046fce90e191d54d468d3d3f741621a1
+  head: 45fc1d4eaa504f2152dc04f0151ac5e70f05d872
+activity_effort: medium

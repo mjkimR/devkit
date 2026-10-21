@@ -32,6 +32,7 @@ from devkit.core.logs import get_logger
 
 from devkit_viewer.errors import PortInUseError, ReadError, repo_unknown
 from devkit_viewer.repositories import Repository
+from devkit_viewer.review import UNAVAILABLE_CODES, report_page, unavailable_page
 
 HOST = "127.0.0.1"
 # Under the devkit logger hierarchy, so `-v` prints one line per request.
@@ -104,12 +105,14 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, format: str, *args: object) -> None:
         _log.debug("%s %s", self.address_string(), format % args)
 
-    def _send(self, status: int, body: bytes, content_type: str) -> None:
+    def _send(self, status: int, body: bytes, content_type: str, *, report: bool = False) -> None:
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("X-Content-Type-Options", "nosniff")
-        if content_type.startswith("application/json"):
+        if report:
+            self.send_header("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; sandbox")
+        if report or content_type.startswith("application/json"):
             self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(body)
@@ -140,6 +143,8 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if url.path == "/api" or url.path.startswith("/api/"):
                 self._json(HTTPStatus.OK, self._api(url.path, parse_qs(url.query, keep_blank_values=True)))
+            elif url.path == "/review" or url.path.startswith("/review/"):
+                self._review(url.path)
             else:
                 self._static(url.path)
         except ReadError as error:
@@ -173,6 +178,22 @@ class Handler(BaseHTTPRequestHandler):
             return {"items": [item.as_json() for item in reader.tree(ref, target)]}
         data = reader.blob(ref, target)
         return {"path": target, "encoding": "base64", "content": base64.b64encode(data).decode(), "size": len(data)}
+
+    def _review(self, path: str) -> None:
+        parts = [unquote(part) for part in path.split("/")[2:]]
+        if len(parts) != 2:
+            raise ReadError(HTTPStatus.NOT_FOUND, "VIEWER_NOT_FOUND", "expected one exact report")
+        repo = self.server.repositories.get(parts[0])
+        if repo is None:
+            raise repo_unknown(parts[0])
+        try:
+            page = report_page(repo, parts[1])
+        except ReadError as error:
+            if error.code not in UNAVAILABLE_CODES:
+                raise
+            self._send(error.status, unavailable_page(error), "text/html; charset=utf-8", report=True)
+            return
+        self._send(HTTPStatus.OK, page, "text/html; charset=utf-8", report=True)
 
     def _static(self, path: str) -> None:
         # Only a file the bundle lists is served: the decoded path is a lookup key, never joined to a directory.

@@ -9,6 +9,7 @@ stories:
   - US-route-development-intent
   - US-adopt-in-an-existing-repository
 entrypoints:
+  - packages/devkit-spec/src/devkit_spec/bundle/skills/spec-review-proposal/SKILL.md
   - packages/devkit-spec/src/devkit_spec/bundle/bundle.toml
   - packages/devkit-spec/src/devkit_spec/bundle/AGENTS.md
   - packages/devkit-spec/src/devkit_spec/bundle/guidance/
@@ -150,6 +151,7 @@ Living Spec and `specs/` holds feature specs.
 | `spec-sync` | Reconcile the change into the Living Spec and resolve `reconcile.md`. | `list`, `refs`, `search`, `proposal new`, `scope update` |
 | `spec-integrate` | Prepare integration: conflicts, re-verification, reconcile confirmation, cumulative check, then one native approval through direct `integration_integrate` (optional preflight `integration_prepare`, inspection `integration_status`, approved recovery `integration_resume`) or CLI fallback (`devkit worktree finish --merge --local-only`), cleanup. | `policy`, `scope sweep`, `proposal prune` |
 | `spec-delegate` | Delegate to a role contract as the `activity-effort` asks, record its envelope, validate a worker's committed range and handle its questions and problems. | |
+| `spec-review-proposal` | Review an exact source-bound ko/en report and all PADRs; preserve exclusive Planning ownership during refinement, commit/review changes and explicitly refresh reports. | `proposal report`, `spec_proposal_report`, `spec_plan_accept`, `spec_handoff` |
 | `spec-orchestrate` | User-invoked `local-orchestrated` mode per activity: one-shot Planning and Development workers in their own worktrees, the Host keeping preparation, validation, questions, problems and integration; a plain instruction returns to `direct`. | `new`, `proposal accept`, `scope register`, `scope query`, `scope update` |
 | `spec-rule` | Author or tune a project rule for `devkit rules` in the project's own bundle. | |
 | `spec-feedback` | Record and sweep feedback observations (`specs/<YYYY-MM>/feedback/`). | `list feedback`, `resolve`, `policy` |
@@ -307,3 +309,10 @@ The spec classification reference routes Backlog to its repository-only procedur
 Milestones are global MS documents with goal, exit condition and non-goals, never copied work lists. Units declare membership. Activation shows unmet dependencies but permits an explicit out-of-order decision. Close checks the base and activity branches, including members introduced only on branches; unavailable evidence prevents claiming settlement. Drop prepares member reassignment/clearing/rejection and shows successor dependencies. Done/dropped records remain hidden history (`ADR-milestone-documents`).
 
 Spec-next treats a slug with a plan-/dev- branch, a reviewing/accepted proposal or an incomplete spec as in progress; queued drafts do not suppress idle recommendations. Eligible draft order is critical first, milestone rank (active, ready planned, no milestone), milestone created_at/ID, priority, size, draft created_at/ID. Unready/finished milestone and needs_decompose drafts are Backlog actions; critical drafts still rank first. The skill supplies deterministic ties/defaults; the CLI adds no sorting. It recommends intent confirmation when absent, offers Planning, a direct acceptance or a session reclassification for the draft, and mentions open feedback hygiene. At three done milestones or 2027-01-31 it reports roadmap review due until ADR-roadmap-review exists; this is a reminder, not a gate.
+
+
+Local-orchestrated proposal acceptance requires connected owning report, shared-get and native approval tools.
+Missing tools pause dependent operations and request connection; no silent CLI fallback occurs. The Host compares
+all PADRs and support coverage to the report before native acceptance. Cloud retains explicit authorized CLI
+acceptance and report publication. A report never carries approval or permissions. Refinement requires exclusive
+Planning ownership, committed changes and a refreshed exact-source report; accepted plans use follow-up workflows.

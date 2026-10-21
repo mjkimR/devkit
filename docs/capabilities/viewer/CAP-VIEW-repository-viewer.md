@@ -42,7 +42,7 @@ Nothing else is written to stdout. Request logs are `[INFO]` lines on stderr und
 
 ## 2. Reading through Git
 
-Every read names a repository, a ref and a repository-relative path, and Git resolves the path inside that commit's
+Every ordinary Git endpoint read names a repository, a ref and a repository-relative path, and Git resolves the path inside that commit's
 tree: no file outside the repository and no uncommitted content is reachable. A ref is `HEAD` or the exact name of a
 local branch, which is read without switching a checkout; a remote-tracking branch, a tag, a commit ID or a revision
 expression (`main~1`) is `VIEWER_REF_UNKNOWN`, and nothing is fetched. The working tree and `HEAD` are never touched.
@@ -120,3 +120,19 @@ shown. Rendered Markdown and SVG pass through DOMPurify.
 A host passes its own `RepositoryDataSource` (`info`, `tree(path, ref)`, `blob(path, ref)`, optional `refs`), keeping
 authentication and renewal on its side. autohub's Git browser and run and decision panels are not part of the
 library.
+
+
+## Immutable local proposal review page
+
+`GET /review/<registered-repository-id>/<32-hex-generation-id>` reads exactly one `proposal-review` artifact
+through the registered repository's configured local shared adapter. This is the narrow non-Git exception in
+`ADR-local-immutable-proposal-review-view`; ordinary Git routes remain unchanged. The route accepts no path,
+remote URL, adapter selector or revision expression. Remote adapters are unavailable here. It calls only exact
+`get`, never list, put or sweep. Namespace, kind, digest and expiry are validated. Source SHA, language and expiry
+are prominent; the artifact is evidence for that source, not a claim that the branch is still current.
+
+The page displays escaped Markdown source inside a readable preformatted block: hostile HTML, links and scripts
+cannot execute. It uses no-store and a restrictive Content-Security-Policy. Existing loopback, Host, no-CORS and
+GET-only controls apply. Missing/remote reports return 404, expired reports 410 and malformed/corrupt reports 400,
+with refresh instructions for the Host; the viewer never regenerates. No frontend rebuild or automatic viewer
+launch is involved. The backend has a narrow dependency on shared.api, shared.errors and shared.local for this read.

@@ -1,22 +1,22 @@
 ---
-id: PADR-source-bound-review-reports-and-explicit-lifecycle-approval
+id: ADR-source-bound-review-reports-and-explicit-lifecycle-approval
 title: Source-bound review reports and explicit lifecycle approval
 summary: Bind proposal review reports and native approval to an exact committed source, and coordinate explicit acceptance, merge and optional handoff with bounded recovery.
-proposal: PROP-proposal-review-and-approval
-status: draft
+proposal: SPEC-proposal-review-and-approval
+status: accepted
 created_at: 2026-10-21
 ---
 
-# [PADR-source-bound-review-reports-and-explicit-lifecycle-approval] Source-bound review reports and explicit lifecycle approval
+# [ADR-source-bound-review-reports-and-explicit-lifecycle-approval] Source-bound review reports and explicit lifecycle approval
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-21
 
 ---
 
 ## 1. Context & Problem Statement
 
-`PROP-proposal-review-and-approval` needs a readable design briefing without embedding full English source in a
+`SPEC-proposal-review-and-approval` needs a readable design briefing without embedding full English source in a
 native form. Approval must still bind the actual plan, effects and configured guards. Shared reports expire and
 Git/worktree operations cannot form a cross-process transaction.
 

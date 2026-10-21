@@ -82,6 +82,6 @@ automatically starting this proposal's Development.
 ## 4. Lifecycle & Retirement Criteria
 
 This is an independently queued follow-up to `SPEC-worker-shared-state-mcp`, also relevant to
-`PROP-proposal-review-and-approval`. Planning should use the current distribution and execution-environment
+`SPEC-proposal-review-and-approval`. Planning should use the current distribution and execution-environment
 contracts, preserve the shared-storage dependency boundary, and propose exact scope before implementation.
 Planning and Development effort hints are medium because this introduces a cross-asset rendering contract.

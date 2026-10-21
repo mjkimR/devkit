@@ -322,6 +322,16 @@
     },
     {
       "bundle": "spec",
+      "id": "spec-review-proposal",
+      "kind": "skill",
+      "paths": [
+        ".agents/skills/spec-review-proposal/SKILL.md",
+        ".claude/skills/spec-review-proposal/SKILL.md",
+        ".devkit/managed/spec/skills/spec-review-proposal/SKILL.md"
+      ]
+    },
+    {
+      "bundle": "spec",
       "id": "spec-sync",
       "kind": "skill",
       "paths": [
@@ -742,7 +752,7 @@
     },
     ".agents/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
-      "sha256": "fa89307841397a7d3928478ac4524f380d6f1476030befb0ee90bbed9393b43b"
+      "sha256": "7044d60bd8c9b3a92c67481b0e8adc2c4795cad4370fdbe90bccda94f9ef608b"
     },
     ".agents/skills/spec-orchestrate/agents/openai.yaml": {
       "mode": 420,
@@ -751,6 +761,10 @@
     ".agents/skills/spec-plan/SKILL.md": {
       "mode": 420,
       "sha256": "116bc88d65d342b920985f706c9fd14f57106de989c24b1b4916c4162b24a891"
+    },
+    ".agents/skills/spec-review-proposal/SKILL.md": {
+      "mode": 420,
+      "sha256": "fa7cb02b8f9d88ebfafd3de141862706974c039186676cd73c1bcf5b541e7511"
     },
     ".agents/skills/spec-review/SKILL.md": {
       "mode": 420,
@@ -934,11 +948,15 @@
     },
     ".claude/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
-      "sha256": "71a23d94a8b248d96f19668f9d4fc88b9f9e04d5c10efa3fc7f9176a2cfcabd0"
+      "sha256": "677435528f7bfb648347a7942e7976b3395f203e7a93fa08a7a0c66e2210e7f8"
     },
     ".claude/skills/spec-plan/SKILL.md": {
       "mode": 420,
       "sha256": "116bc88d65d342b920985f706c9fd14f57106de989c24b1b4916c4162b24a891"
+    },
+    ".claude/skills/spec-review-proposal/SKILL.md": {
+      "mode": 420,
+      "sha256": "fa7cb02b8f9d88ebfafd3de141862706974c039186676cd73c1bcf5b541e7511"
     },
     ".claude/skills/spec-review/SKILL.md": {
       "mode": 420,
@@ -1178,7 +1196,7 @@
     },
     ".devkit/managed/spec/bundle.toml": {
       "mode": 420,
-      "sha256": "c594cb64f808f405ff3ce45c30561cb63e495add1898775db1d1833f3b8e4ab7"
+      "sha256": "88323c6e3b645e64ebdd91bfa09f8db52337203109c4e674b17a2686a0b666e9"
     },
     ".devkit/managed/spec/guidance/spec-pointer.md": {
       "mode": 420,
@@ -1390,11 +1408,15 @@
     },
     ".devkit/managed/spec/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
-      "sha256": "fa89307841397a7d3928478ac4524f380d6f1476030befb0ee90bbed9393b43b"
+      "sha256": "7044d60bd8c9b3a92c67481b0e8adc2c4795cad4370fdbe90bccda94f9ef608b"
     },
     ".devkit/managed/spec/skills/spec-plan/SKILL.md": {
       "mode": 420,
       "sha256": "116bc88d65d342b920985f706c9fd14f57106de989c24b1b4916c4162b24a891"
+    },
+    ".devkit/managed/spec/skills/spec-review-proposal/SKILL.md": {
+      "mode": 420,
+      "sha256": "fa7cb02b8f9d88ebfafd3de141862706974c039186676cd73c1bcf5b541e7511"
     },
     ".devkit/managed/spec/skills/spec-review/SKILL.md": {
       "mode": 420,

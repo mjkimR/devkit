@@ -22,11 +22,13 @@ def test_handoff_message_and_schema_parity(setup, effort):
         "summary unchanged",
         "Plan 한국어 and English",
         effort,
+        "shared://exact-report",
     )
     en, ko = preview.message("en"), preview.message("ko")
-    for evidence in (preview.title, preview.summary, preview.plan, str(preview.root), preview.worktree):
+    for evidence in (preview.title, preview.summary, preview.report_uri, str(preview.root), preview.worktree):
         assert json.dumps(evidence, ensure_ascii=False) in en
         assert json.dumps(evidence, ensure_ascii=False) in ko
+    assert preview.plan not in en and preview.plan not in ko
     for value in ("low", "medium", "high", "dev_effort"):
         assert value in en and value in ko
     assert "Final merge requires its own approval" in en and "최종 병합에는 별도 승인" in ko
@@ -61,6 +63,7 @@ def test_handoff_language_does_not_change_authority(tmp_path, monkeypatch, langu
         tmp_path, "idea", "sha", "main", "/worktree", None, "digest", "title", "", "plan", "medium"
     )
     monkeypatch.setattr("devkit_spec.handoff_mcp.prepare", lambda *args: preview)
+    monkeypatch.setattr("devkit_spec.handoff_mcp.validate", lambda *args: None)
     service = HandoffService(tmp_path)
     executed = []
 
@@ -88,9 +91,9 @@ def test_handoff_language_does_not_change_authority(tmp_path, monkeypatch, langu
     error = {"unavailable": HostConfirmationError, "malformed": HandoffReplyError, "stale": HandoffStaleError}.get(case)
     if error:
         with pytest.raises(error):
-            asyncio.run(service.handoff("idea", confirm))
+            asyncio.run(service.handoff("idea", "shared://fixture", confirm))
     else:
-        result = asyncio.run(service.handoff("idea", confirm))
+        result = asyncio.run(service.handoff("idea", "shared://fixture", confirm))
         assert (
             result["status"]
             == {"accept": "fixture-only", "false": "not_approved", "decline": "declined", "cancel": "cancelled"}[case]

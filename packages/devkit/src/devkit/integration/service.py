@@ -17,7 +17,7 @@ import sys
 import threading
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 from uuid import uuid4
 
 from devkit.advisory import AdvisoryError, Level
@@ -45,6 +45,7 @@ from devkit.integration.models import (
     IntegrationContext,
     IntegrationRequest,
     IntegrationResult,
+    Readiness,
     Task,
 )
 from devkit.worktree import (
@@ -82,6 +83,22 @@ def _prospective(root: Path, commit: str, other: str) -> tuple[str, dict[str, An
     return providers.policy_digest(config), config
 
 
+class AcceptanceLifecycle(Protocol):
+    """Trusted package composition, never a serialized credential or public approval API.
+
+    Preview supplies package-owned pre-acceptance evidence. The normal readiness provider
+    remains mandatory after acceptance and at execution. Implementations validate the
+    precise acceptance content and must not mutate outside their disclosed scope.
+    """
+
+    def preview(self, context: IntegrationContext) -> Readiness: ...
+    def confirmation(self, request: IntegrationRequest, language: str) -> tuple[str, dict[str, Any]]: ...
+    def select(self, content: dict[str, Any]) -> None: ...
+    def validate(self, request: IntegrationRequest) -> None: ...
+    def accept(self, request: IntegrationRequest) -> str: ...
+    def before_merge(self, request: IntegrationRequest) -> None: ...
+
+
 @dataclass
 class _Record:
     result: IntegrationResult
@@ -101,6 +118,11 @@ class IntegrationService:
         self._records: dict[str, _Record] = {}
 
     def prepare(self, branch: str, task: Task, route: str = "local") -> IntegrationResult:
+        return self._prepare(branch, task, route)
+
+    def _prepare(
+        self, branch: str, task: Task, route: str = "local", *, lifecycle: AcceptanceLifecycle | None = None
+    ) -> IntegrationResult:
         guard_execution()
         if (
             task.kind not in {"unit", "session"}
@@ -175,7 +197,7 @@ class IntegrationService:
         plan = replace(plan, delete_branch=config.delete_branch and worktree_policy.get("delete_branch", True))
         context = IntegrationContext(plan, task)
         ident, provider = providers.provider(name)
-        ready = providers.check(provider, context)
+        ready = lifecycle.preview(context) if lifecycle is not None else providers.check(provider, context)
         guard_identities = providers.guards()
         # The guard base is the merge base: the target, or the source itself for a cleanup-only request.
         run_finish_guards(
@@ -262,6 +284,97 @@ class IntegrationService:
         self._records[request.id].approved = True
         result.authority = "mcp-elicitation"
         return await asyncio.to_thread(self._run, request.id, LOCK_WAIT, True)
+
+    async def _compose(
+        self, branch: str, task: Task, lifecycle: AcceptanceLifecycle, confirm: Confirmation
+    ) -> IntegrationResult:
+        """One native decision for acceptance and exact local integration, with no reusable authority.
+
+        Only the acceptance source may change after confirmation. Target advancement is
+        refused even when it descends from the displayed target. Recovery needs a new form.
+        """
+        guard_execution()
+        result = await asyncio.to_thread(self._prepare, branch, task, lifecycle=lifecycle)
+        request = result.request
+        try:
+            lifecycle.validate(request)
+            message, schema = lifecycle.confirmation(request, approval_language(self.root))
+            reply = await confirm(message, schema)
+            result.ui_action = reply.action
+            if reply.action != "accept" or reply.content.get("approve") is not True:
+                result.status = {"decline": "declined", "cancel": "cancelled"}.get(
+                    reply.action, reply.action if reply.action in {"declined", "cancelled"} else "not_approved"
+                )
+                return result
+            guard_execution()
+            lifecycle.select(dict(reply.content))
+            return await asyncio.to_thread(self._compose_execute, request, lifecycle, reply.action)
+        except AdvisoryError as exc:
+            result.status = "blocked"
+            result.errors.append(exc)
+            return result
+
+    def _compose_execute(
+        self, request: IntegrationRequest, lifecycle: AcceptanceLifecycle, ui_action: str
+    ) -> IntegrationResult:
+        """Hold the operation lock across acceptance, readiness and exact-target execution."""
+        before = request.context.finish
+        with integration_lock(Path(before.common_dir), timeout=LOCK_WAIT):
+            # Bind the form to the original Git, policy, provider, guard and cleanup identities.
+            self._validate(request, merged=before.already_merged, removed=False, finalized=False)
+            lifecycle.validate(request)
+            accepted = lifecycle.accept(request)
+            if (
+                accepted != before.source_sha
+                and _git(self.root, "show", "-s", "--format=%P", accepted) != before.source_sha
+            ):
+                raise StaleRequestError("acceptance must produce the exact direct child of the displayed source")
+            fresh = self.prepare(before.branch, request.context.task)
+            after = fresh.request.context.finish
+            if after.source_sha != accepted:
+                raise StaleRequestError("the source differs from the service-created acceptance commit")
+            # A source-bound cleanup revision follows the exact acceptance child, while
+            # extension installation and every target identity remain the displayed scope.
+            source_bound = {
+                (scope.extension, scope.identity, target.kind, target.identity)
+                for scope in request.cleanup
+                for target in scope.targets
+                if target.revision == before.source_sha
+            }
+            cleanup = tuple(
+                replace(
+                    scope,
+                    targets=tuple(
+                        replace(target, revision=before.source_sha)
+                        if target.revision == accepted
+                        and (scope.extension, scope.identity, target.kind, target.identity) in source_bound
+                        else target
+                        for target in scope.targets
+                    ),
+                )
+                for scope in fresh.request.cleanup
+            )
+            normalized = replace(
+                fresh.request,
+                id=request.id,
+                context=replace(fresh.request.context, finish=replace(after, source_sha=before.source_sha)),
+                readiness=request.readiness,
+                cleanup=cleanup,
+            )
+            if normalized != request:
+                raise StaleRequestError(
+                    "integration target, policy, identities or cleanup scope changed after confirmation"
+                )
+            lifecycle.before_merge(fresh.request)
+            fresh.ui_action = ui_action
+            record = self._record(fresh.request.id)
+            with record.lock:
+                record.approved = True
+                fresh.authority = "mcp-elicitation"
+                try:
+                    return self._execute(record, False)
+                finally:
+                    record.approved = False
 
     def _observe(self, request: IntegrationRequest) -> dict:
         if request.route == "pull-request":

@@ -1,0 +1,29 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T01:06:21.291365Z'
+status: completed
+summary: Independent reconcile-reviewer verified all cumulative targets; two P1 implementation-contract contradictions require fixes.
+findings:
+- issue: Composed approval does not consistently return the contracted proposal stale code.
+  evidence: spec.md:160; CAP-DLV-proposal-incubation.md:617; integration/service.py:323,430; plan_accept_mcp.py
+  failure_condition: Changed policy or integration identity while confirmation waits produces INTEGRATION_REQUEST_STALE instead of PROPOSAL_APPROVAL_STALE.
+  suggested_action: Normalize integration stale failures at the proposal boundary while retaining underlying evidence and progress; test exact code.
+  resolution: open
+  severity: P1
+- issue: Missing report responses omit required Host refresh instructions.
+  evidence: spec.md:193; CAP-VIEW-repository-viewer.md:136-137; review.py:32-33; server.py:149-150
+  failure_condition: Missing exact report URL returns generic error without Host regeneration instructions.
+  suggested_action: Return stable unavailable pages with explicit Host refresh instructions for missing and expired reports, preserving status and read-only protections.
+  resolution: open
+  severity: P1
+assumptions:
+- Inherited Host handoff ADR/material/reference moves are distinguished from worker changes; emulated read-only verification
+unverified_areas:
+- Live native host rendering and report-link clickability
+checks: {}
+diff_scope:
+  base: 6e2dc7d5046fce90e191d54d468d3d3f741621a1
+  head: f5ac4dbde97e4447c6f680cc230a67dc91c7dffc
+activity_effort: medium
