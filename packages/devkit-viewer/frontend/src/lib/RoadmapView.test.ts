@@ -1,5 +1,5 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/svelte';
-import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import RoadmapView from './RoadmapView.svelte';
 import type { RepositoryDataSource } from './repository';
 
@@ -54,11 +54,14 @@ afterEach(cleanup);
 describe('RoadmapView', () => {
 	it('reads the default branch and the activity branches, whatever branch is shown', async () => {
 		const reads: string[] = [];
-		render(RoadmapView, { source: source(true, reads), branch: 'plan-x', onOpen: () => {} });
+		const onOpen = vi.fn();
+		render(RoadmapView, { source: source(true, reads), branch: 'plan-x', onOpen });
 		await screen.findByText('Main milestone');
 		expect(new Set(reads)).toEqual(new Set(['main', 'plan-x']));
-		expect(screen.getByText('Done on main')).toBeTruthy();
+		expect(screen.queryByText('Done on main')).toBeNull();
 		expect(screen.getByText('In planning')).toBeTruthy();
+		await fireEvent.click(screen.getByRole('button', { name: 'In planning' }));
+		expect(onOpen).toHaveBeenCalledWith('docs/proposals/PROP-x/proposal.md');
 		expect(screen.queryByText('Not an activity branch')).toBeNull();
 		expect(screen.queryByText('Stale copy')).toBeNull();
 	});

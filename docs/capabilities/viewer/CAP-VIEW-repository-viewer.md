@@ -99,9 +99,10 @@ shown. Rendered Markdown and SVG pass through DOMPurify.
 - **Source**: milestones come from the default branch, whatever branch the viewer shows. Members come from the
   default branch and, when the data source lists refs, from each local `plan-` and `dev-` branch. Without `refs` (a
   data source that does not provide it, or a failing one), only the default branch is read, and the page says so.
-- **Members**: proposals and specs whose `milestone` names the milestone. A rejected proposal is not a member; a
-  completed spec is settled. One member per slug: a spec replaces the proposal it was handed off from, and an activity
-  branch replaces the default branch's copy. A member found on an activity branch shows that branch. A document opens
+- **Members**: direct PROP anchors whose `milestone` names the milestone. Rejected proposals are not members.
+  SPEC milestone metadata is ignored, including historical metadata; SPECs never replace proposals by slug.
+  The roadmap loader reads milestone and proposal anchors only. Direct proposals do not certify completion.
+  One member per slug: an activity branch replaces the default branch's proposal copy. A member found on an activity branch shows that branch. A document opens
   in the file explorer only when it was read from the branch the viewer shows.
 
 ## 6. The library for autohub

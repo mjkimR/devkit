@@ -2,7 +2,7 @@
 id: SPEC-unit-dependencies-and-milestone-scope
 title: Unit-level depends_on and coarse milestone scope
 summary: Allows proposal and spec anchors to declare depends_on prerequisites across units and defines milestone authoring guidance so milestones remain multi-unit themes rather than single-proposal gates.
-status: completed
+status: in-progress
 created: 2026-10-21
 related_capabilities: []
 related_stories: []
@@ -213,3 +213,11 @@ from disappearance of a proposal. The existing exact same-slug PROP-to-SPEC rewr
 only as direct reference relocation for live documents; it does not imply completion. A stale direct reference
 that cannot be repaired by this exact existing mapping is surfaced for user-assisted Backlog repair.
 
+
+
+## Approved scope adjustment
+
+The bounded viewer membership correction supersedes the initial viewer exclusion only for roadmap member
+selection/loading, its focused tests, current viewer capability and generated static page. Preserve proposal
+branch presentation and milestone history/readiness; no unrelated UI design or new lineage is included.
+Architecture roadmap wording and the package README are included to remove stale membership/CLI guidance.

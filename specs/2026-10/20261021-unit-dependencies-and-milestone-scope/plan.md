@@ -20,3 +20,14 @@ Refuse invalid projected graphs through ProposalInvalidError before any write. K
 
 ## Verification
 Parser/reference tests cover shapes, exact anchors, namespaces, history and filtered cycles. Isolated Git handoff tests cover carry/rewrite, invalid graph zero-write refusal and collisions. Membership/API/CLI and guidance tests cover AC-03 through AC-05, including base-versus-branch status evidence. Run module lint/types, just test-affected with its full fallback, cumulative rules, medium independent code review and reconcile verification.
+
+
+## Bounded consumer correction
+
+Independent reconciliation identified stale consumers of milestone membership. The approved scope adjustment
+includes the architecture roadmap sentence, devkit-spec README, viewer roadmap.ts/test.ts, viewer capability and
+static output regenerated only through just viewer build. Remove SPEC loading/selection and its precedence;
+retain PROP branch overrides, rejected-member filtering and milestone history/readiness. Keep the current member
+presentation shape with settled=false. Run frontend lint/check/test/build and a new independent medium code
+review for this delta. The Host owns the generated-artifact clean-worktree check because this worker has no
+Git worktree creation authority.
