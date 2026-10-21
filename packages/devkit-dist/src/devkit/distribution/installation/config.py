@@ -28,7 +28,7 @@ import tomlkit
 from tomlkit.exceptions import TOMLKitError
 
 from devkit.advisory import AdvisoryError
-from devkit.core.config_template import TemplateKey
+from devkit.core.config_template import TemplateKey, TemplateTable
 from devkit.core.errors import ConfigError
 from devkit.core.local_config import read_effective_config, validate_runtime_tables
 from devkit.core.project import read_toml
@@ -64,6 +64,7 @@ FIELDS = frozenset(
         "execution",
         "presentation",
         "mcp",
+        "shared",
         "agents",
         "presets",
         "playbooks",
@@ -577,6 +578,23 @@ def _template(root: Path) -> tuple[str | None, str, list[str], list[AdvisoryErro
 def _templates() -> tuple[list[ToolTemplate], list[ToolTemplate], list[AdvisoryError]]:
     """The installed ``[tool.<name>]`` templates, the reserved tables' templates and the warnings of both loads."""
     reserved, reserved_notices = load_reserved_templates(RESERVED_TABLES)
+    reserved.append(
+        ToolTemplate(
+            "shared",
+            (
+                TemplateTable(
+                    (
+                        TemplateKey(
+                            "adapter",
+                            "local",
+                            "Installed immutable artifact adapter; DEVKIT_SHARED_ADAPTER overrides this key",
+                        ),
+                    )
+                ),
+            ),
+            "devkit-dist",
+        )
+    )
     tools, tool_notices = load_tool_templates()
     return tools, reserved, [*reserved_notices, *tool_notices]
 

@@ -7,7 +7,7 @@ plan: PLAN-worker-shared-state-mcp
 # Task Breakdown: `SPEC-worker-shared-state-mcp`
 
 - [x] **Task 1**: Immutable local artifact API, registration and safety with conformance and filesystem tests
-  - **_Boundary**: packages/devkit-dist/src/devkit/shared/, packages/devkit-dist/src/devkit/core/, packages/devkit-dist/tests/, packages/devkit-dist/pyproject.toml
+  - **_Boundary**: packages/devkit-dist/src/devkit/shared/, packages/devkit-dist/src/devkit/core/, packages/devkit-dist/src/devkit/distribution/installation/config.py, packages/devkit-dist/tests/, packages/devkit-dist/pyproject.toml
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-06_
 - [x] **Task 2**: CLI and MCP parity, owning-workspace configuration and bounded-write guard tests
   - **_Boundary**: packages/devkit-dist/src/devkit/cli.py, packages/devkit-dist/src/devkit/shared/, packages/devkit-dist/src/devkit/core/, packages/devkit-dist/src/devkit/host/, packages/devkit-dist/tests/, packages/devkit-mcp/src/, packages/devkit-mcp/tests/

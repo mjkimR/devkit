@@ -11,6 +11,8 @@ targets:
     resolution: modified
   - file: docs/development/reference/shared.md
     resolution: modified
+  - file: docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md
+    resolution: modified
   - file: docs/glossary.md
     resolution: modified
 ---
@@ -29,3 +31,9 @@ production remote backend selection and real integration evidence. It is deferre
 
 The two source guidance assets now require connected project tools before local-orchestrated shared operations.
 The Host owns deployment sync because generated projections and .devkit/ writes are outside worker boundaries.
+
+Distribution configuration accepts and templates the shared table. This required a Host-authorized narrow
+expansion to distribution/installation/config.py; its existing schema and checkout-local capability sections
+are updated in place. Entrypoint derivation was reviewed: broad package/test/guidance candidates are rejected
+because they do not belong to each capability. The shared domain directory and existing MCP/core/config
+entrypoints identify the actual owners; no broad cross-component declaration was applied.

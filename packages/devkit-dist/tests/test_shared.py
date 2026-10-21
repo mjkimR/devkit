@@ -369,3 +369,125 @@ def test_real_lock_timeout(repository, request_data, monkeypatch):
         )
         with pytest.raises(TimeoutError):
             selected.get(value.metadata.artifact_uri)
+
+
+@pytest.mark.parametrize("field", ["source_sha", "language"])
+def test_required_put_fields_cannot_be_null(repository, request_data, field):
+    from dataclasses import asdict
+
+    request = PutRequest(**{**asdict(request_data), field: None})
+    with pytest.raises(InputError):
+        adapter(repository).put(request)
+    assert not (repository / ".devkit/.shared").exists()
+
+
+@pytest.mark.parametrize(
+    "pattern",
+    [
+        "!/.devkit/.shared/",
+        "!**/.devkit/.shared/",
+        "!/.devkit/**/.shared/",
+        "!/.devkit/.shared/\n!/.devkit/.shared/artifacts/\n/.devkit/.shared/artifacts/*\n!/.devkit/.shared/artifacts/a*.md",
+    ],
+)
+def test_negative_ignore_refuses_before_any_write(repository, request_data, pattern, monkeypatch):
+    from types import SimpleNamespace
+
+    (repository / ".gitignore").write_text(pattern + "\n")
+    before = (repository / ".git/info/exclude").read_bytes()
+    monkeypatch.setattr("devkit.shared.local.uuid.uuid4", lambda: SimpleNamespace(hex="a" * 32))
+    with pytest.raises(ExclusionError):
+        adapter(repository).put(request_data)
+    assert (repository / ".git/info/exclude").read_bytes() == before
+    assert not (repository / ".git/devkit-mcp.lock").exists()
+    assert not (repository / ".devkit/.shared").exists()
+
+
+def test_concurrent_initialization_waits_for_stable_lock(repository, request_data, monkeypatch):
+    import threading
+
+    selected = adapter(repository)
+    created, resume = threading.Event(), threading.Event()
+    original_mkdir = Path.mkdir
+
+    def paused(path, *args, **kwargs):
+        result = original_mkdir(path, *args, **kwargs)
+        if path.name == "artifacts" and not created.is_set():
+            created.set()
+            assert resume.wait(5)
+        return result
+
+    monkeypatch.setattr(Path, "mkdir", paused)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(selected.put, request_data)
+        assert created.wait(5)
+        second = pool.submit(selected.put, request_data)
+        assert not second.done()
+        resume.set()
+        assert first.result().metadata == second.result().metadata
+
+
+def test_distribution_accepts_shared_table(repository):
+    from devkit.core.local_config import read_effective_config
+    from devkit.distribution.installation.config import preview_config_template, read_config
+
+    (repository / ".devkit/config.toml").write_text('schema=1\n[shared]\nadapter="local"\n')
+    read_config(repository)
+    assert read_effective_config(repository).values["shared"]["adapter"] == "local"
+    assert preview_config_template(repository).state in ("updated", "unchanged")
+
+
+@pytest.mark.parametrize("method", ["put", "get", "list", "sweep"])
+def test_adapter_rejects_incompatible_signatures(repository, monkeypatch, method):
+    from types import SimpleNamespace
+
+    class Malformed(LocalAdapter):
+        adapter_id = "fixture"
+
+    setattr(Malformed, method, lambda self: None)
+    monkeypatch.setenv("DEVKIT_SHARED_ADAPTER", "fixture")
+    monkeypatch.setattr(
+        "devkit.shared.service.metadata.entry_points",
+        lambda **_: [SimpleNamespace(name="fixture", load=lambda: Malformed)],
+    )
+    with pytest.raises(AdapterError):
+        adapter(repository)
+
+
+def test_adapter_rejects_malformed_result(repository, request_data, monkeypatch):
+    from types import SimpleNamespace
+
+    class Malformed(LocalAdapter):
+        adapter_id = "fixture"
+
+        def put(self, request):
+            return {"not": "Artifact"}
+
+    monkeypatch.setenv("DEVKIT_SHARED_ADAPTER", "fixture")
+    monkeypatch.setattr(
+        "devkit.shared.service.metadata.entry_points",
+        lambda **_: [SimpleNamespace(name="fixture", load=lambda: Malformed)],
+    )
+    with pytest.raises(AdapterError):
+        adapter(repository).put(request_data)
+
+
+def test_null_stored_metadata_is_corruption(repository, request_data):
+    selected = adapter(repository)
+    artifact = selected.put(request_data)
+    assert artifact.local_path is not None
+    path = Path(artifact.local_path)
+    raw = path.read_bytes()
+    header, body = raw[4:].split(b"\n---\n", 1)
+    value = json.loads(header)
+    value["source_sha"] = None
+    path.write_bytes(b"---\n" + json.dumps(value, sort_keys=True, separators=(",", ":")).encode() + b"\n---\n" + body)
+    with pytest.raises(SharedError) as error:
+        selected.get(artifact.metadata.artifact_uri)
+    assert error.value.code == "SHARED_ARTIFACT_INVALID"
+    assert selected.sweep(apply=True).invalid == (path.name,)
+
+
+def test_unrelated_negative_ignore_does_not_block_shared_storage(repository, request_data):
+    (repository / ".gitignore").write_text("!unrelated/\n")
+    assert adapter(repository).put(request_data).content == request_data.content

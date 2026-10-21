@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import contextlib
 import fcntl
+import fnmatch
 import hashlib
 import json
 import os
+import re
 import stat
 import tempfile
 import time
@@ -130,6 +132,23 @@ def _worktrees(context: RepositoryContext, budget: Deadline) -> list[Path]:
 def _eligible(context: RepositoryContext, budget: Deadline) -> None:
     for root in _worktrees(context, budget):
         _safe(root / RELATIVE, directory=True)
+        # Git check-ignore cannot report an ancestor negation for an absent child.
+        # Refuse applicable higher-precedence negations before adding info/exclude.
+        for base, candidate in ((root, RELATIVE), (root / ".devkit", ".shared")):
+            ignore = base / ".gitignore"
+            _safe(ignore, directory=False)
+            if not ignore.exists():
+                continue
+            for line in ignore.read_text(encoding="utf-8", errors="surrogateescape").splitlines():
+                if not line.startswith("!"):
+                    continue
+                pattern = re.sub(r"\\(.)", r"\1", line[1:].rstrip()).removesuffix("/")
+                anchored = pattern.startswith("/") or "/" in pattern
+                pattern = pattern.removeprefix("/").replace("**/", "*")
+                components = candidate.split("/")
+                targets = ["/".join(components[:i]) for i in range(1, len(components) + 1)] if anchored else components
+                if any(fnmatch.fnmatchcase(value, pattern) for value in targets):
+                    raise ExclusionError("an ancestor ignore rule can re-include shared storage")
         if _git(root, budget, "ls-files", "--", RELATIVE):
             raise ExclusionError("tracked shared storage cannot be hidden")
         if _git(root, budget, "ls-files", "--others", "--exclude-standard", "--", RELATIVE):
@@ -143,6 +162,10 @@ def _initialize(context: RepositoryContext, budget: Deadline) -> Path:
     _safe(context.common / "info/exclude", directory=False)
     with _lock(common_lock, budget, write=True, create=True):
         _eligible(context, budget)
+        root = context.main / RELATIVE / "artifacts"
+        existed = root.exists()
+        if existed and not (root / ".lock").exists():
+            raise SharedError("existing store is missing its stable lock")
         exclude = context.common / "info/exclude"
         data = exclude.read_bytes() if exclude.exists() else b""
         line = b"/.devkit/.shared/"
@@ -155,14 +178,14 @@ def _initialize(context: RepositoryContext, budget: Deadline) -> Path:
                 os.fsync(stream.fileno())
         for root in _worktrees(context, budget):
             try:
-                _git(root, budget, "check-ignore", "--", RELATIVE + "/artifacts/probe.md")
+                _git(root, budget, "check-ignore", "--", RELATIVE + "/")
             except GitError as exc:
                 raise ExclusionError("shared storage is not ignored in every registered worktree") from exc
         for part in (context.main / ".devkit", context.main / RELATIVE, context.main / RELATIVE / "artifacts"):
             _safe(part, directory=True)
             part.mkdir(mode=0o700, exist_ok=True)
         root = context.main / RELATIVE / "artifacts"
-        with _lock(root / ".lock", budget, write=True, create=True):
+        with _lock(root / ".lock", budget, write=True, create=not existed):
             pass
         return root
 
@@ -185,7 +208,7 @@ class LocalAdapter:
             _safe(self.root, directory=True)
             if write:
                 guard_execution()
-            if initialize and not self.root.exists():
+            if initialize:
                 _initialize(self.context, budget)
             if not self.root.exists():
                 yield budget

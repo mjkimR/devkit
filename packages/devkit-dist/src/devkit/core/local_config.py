@@ -51,7 +51,7 @@ def validate_runtime_tables(data: dict[str, Any], path: Path) -> None:
         setting = value.get(key, default)
         if type(setting) is not expected or (table == "execution" and setting not in ("local", "cloud")):
             raise _invalid(path, f"{table}.{key}: invalid value {setting!r}")
-        if table == "shared" and not re.fullmatch(r"[a-z][a-z0-9-]*", setting):
+        if table == "shared" and (not isinstance(setting, str) or not re.fullmatch(r"[a-z][a-z0-9-]*", setting)):
             raise _invalid(path, "shared.adapter: expected a lowercase adapter ID")
 
 

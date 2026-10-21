@@ -37,6 +37,8 @@ class PutRequest:
     content: str
 
     def validate(self) -> None:
+        if self.source_sha is None or self.language is None:
+            raise InputError("put requires a commit SHA and language")
         validate_filter(self.kind, self.slug, self.source_sha, self.language)
         try:
             valid = isinstance(self.content, str) and len(self.content.encode("utf-8")) <= MAX_BYTES
@@ -146,12 +148,12 @@ class SharedArtifactAdapter(Protocol):
 
 
 def encode_cursor(name: str) -> str:
-    return base64.urlsafe_b64encode(name.encode("utf-8")).decode("ascii")
+    return base64.urlsafe_b64encode(name.encode("utf-8", errors="surrogateescape")).decode("ascii")
 
 
 def decode_cursor(cursor: str) -> str:
     try:
-        value = base64.b64decode(cursor, altchars=b"-_", validate=True).decode("utf-8")
+        value = base64.b64decode(cursor, altchars=b"-_", validate=True).decode("utf-8", errors="surrogateescape")
         if not value or len(value) > 255 or "/" in value or value in (".", "..") or "\x00" in value:
             raise ValueError("unsafe cursor")
         return value

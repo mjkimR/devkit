@@ -26,3 +26,15 @@ Explicit SHARED codes cover invalid input/envelopes, unavailable workspace/adapt
 AC-01/02: real temporary Git main/linked/clone discovery, CLI/MCP parity and exclusions, including foreign and symlink fixtures. AC-03/04: concurrent publication, injected publication failures, expiry clocks, read permissions, stable metadata and registry byte snapshots. AC-05: common validation/error cases, cloud discovery/forged calls and no-form local writes. AC-06: configuration precedence and public factory registration plus reusable conformance fixtures with a test adapter.
 
 Run focused tests, affected-package lint/type checks, just test-affected with its full fallback, just test-dist and governance checks. Independent code and reconcile reviewers verify cross-component scope at medium effort.
+
+## Implementation decisions
+
+First-write safety requires the shared directory itself to stay excluded, not one probe filename. Applicable
+ancestor ignore negations are checked before infrastructure effects, because Git's check-ignore can omit an
+ancestor negation for an absent descendant. Matching is conservative for recursive globs; an exclusion conflict
+requires policy inspection, never automatic ignore rewriting. All writer initialization decisions serialize
+under the existing common exclusion lock, preserving fail-closed missing-lock handling after interrupted setup.
+
+Host-authorized narrow boundary extensions add the glossary term and distribution's shared schema/default
+template. Registered adapter method binding and operation-result validation fail explicitly before consumers
+can mistake malformed responses for artifacts.
