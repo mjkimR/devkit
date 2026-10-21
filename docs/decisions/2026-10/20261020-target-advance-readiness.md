@@ -64,5 +64,5 @@ anything else is stale or ambiguous.
 - A semantic break that no CI rule catches can land after a clean merge of a later target; main's own CI finds it.
 - The approval's meaning changes from "this target" to "this source onto the target as it will be, under these
   conditions, within one call"; `CAP-INT-mcp-services` section 2 is rewritten accordingly, and Development updates
-  the exit condition of `MS-multi-host-native-integration` to "bound to the verified source commit and the
+  the exit condition of the then-existing multi-host native integration milestone to "bound to the verified source commit and the
   confirmation target and its descendants" (user decision).
