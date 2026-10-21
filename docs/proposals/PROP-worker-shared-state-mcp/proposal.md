@@ -2,7 +2,7 @@
 id: PROP-worker-shared-state-mcp
 title: Shared state and workspace across worktrees and cloud agents
 summary: "Define a shared state and artifact workspace across worktrees and cloud agents, backed by a base-checkout .devkit/.shared local adapter and pluggable server adapters over dual MCP and CLI surfaces."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-20
 target_area: capabilities/collaboration/
 priority: high                        # critical | high | medium | low
