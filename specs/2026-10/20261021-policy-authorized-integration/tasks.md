@@ -3,12 +3,15 @@ id: TASKS-policy-authorized-integration
 spec: SPEC-policy-authorized-integration
 plan: PLAN-policy-authorized-integration
 ---
-<!-- devkit:skeleton -->
 
-# Task Breakdown: `SPEC-policy-authorized-integration` Authorize automatic integration through repository policy
+# Task Breakdown: `SPEC-policy-authorized-integration`
 
-## Phase 1: Implementation
-- [ ] **Task 1.1**: Core Implementation
-  - **_Boundary**: packages/devkit/src/devkit/integration/, packages/devkit-spec/src/devkit_spec/integration.py, packages/devkit/tests/integration/, packages/devkit-spec/tests/test_integration.py, packages/devkit-spec/src/devkit_spec/bundle/, docs/capabilities/integration/, docs/capabilities/delivery/, docs/capabilities/worktree/, docs/development/reference/integration.md, docs/decisions/
-  - _Requirements: AC-01_
-  - **Verification**: <command that verifies the task>
+- [ ] **Task 1**: Shared policy dispatch and retained authority with service/readiness regressions
+  - **_Boundary**: packages/devkit/src/devkit/integration/, packages/devkit/tests/integration/, packages/devkit-spec/src/devkit_spec/integration.py, packages/devkit-spec/tests/test_integration.py
+  - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05_
+- [ ] **Task 2**: No-form transport and live Codex CLI/Claude Code smoke evidence
+  - **_Boundary**: packages/devkit-mcp/tests/, docs/materials/2026-10/20261021-policy-authorized-integration/
+  - _Requirements: AC-06_
+- [ ] **Task 3**: Source bundle policy guidance
+  - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundle/
+  - _Requirements: AC-07_

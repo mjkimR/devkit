@@ -8,7 +8,6 @@ related_capabilities: []
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-policy-authorized-integration] Authorize automatic integration through repository policy
 
@@ -35,14 +34,44 @@ feasibility before implementation. This draft does not change current policy or 
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: new executing CLI, durable execution journal, background watcher, remote publication, cloud mutation, host permission changes, force cleanup, verification bypass, additional host support and changing repository runtime policy.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Local auto
+- **Given** shared base auto, local execution and passing checks.
+- **When** the Host invokes integration_integrate.
+- **Then** merge and exact cleanup execute without confirmation; authority is policy; both merge methods and retained branches work.
+
+### [AC-02] Authority origin
+- **Given** ask or missing policy, or only source/caller auto claims.
+- **When** integration is requested.
+- **Then** native acceptance remains mandatory; prepare and local governance overlays grant no execution authority.
+
+### [AC-03] Readiness and state
+- **Given** dirty, locked or replaced worktrees, changed identities, unresolved evidence or inconsistent receipts.
+- **When** execution or resume validates the request.
+- **Then** unsafe effects refuse; an initial descendant target is accepted only after unchanged policy and readiness checks; retained resume rejects later targets.
+
+### [AC-04] Publication and environment
+- **Given** auto PR, required PR local policy, cloud owner or read-only profile.
+- **When** execution or resume is requested.
+- **Then** execution refuses before remote writes; local execution performs no fetch, push or PR operation.
+
+### [AC-05] Partial results
+- **Given** a denial after merge or during cleanup.
+- **When** status or same-process resume is invoked.
+- **Then** completed and remaining steps are reported without repeated merge or confirmation; policy revocation stops remaining effects; restart restores no authority and lost cleanup evidence stays incomplete.
+
+### [AC-06] Live host and transport
+- **Given** disposable repositories and permitted MCP tools and filesystem access.
+- **When** implemented auto is exercised on Codex CLI, Claude Code and SDK transport without forms.
+- **Then** evidence records host versions, tool permissions, absent devkit elicitation, actual refs and cleanup and no remote effects; unavailable or denied host evidence remains unverified.
+
+### [AC-07] Contract and guidance
+- **Given** the implemented policy dispatch.
+- **When** Living Spec and source instructions are reconciled.
+- **Then** the successor ADR, integration, policy, workflow and worktree contracts and guidance agree; intent and direction remain human, publication separate, local governance overrides forbidden and runtime policy unchanged.
 
 ## 5. Carried Proposal Notes
 
@@ -181,3 +210,7 @@ Development must prove AC1–AC7; if either supported host cannot satisfy unatte
 permissions, present the exact remaining boundary before claiming the feature complete. Acceptance alone changes no
 runtime policy and authorizes neither publication nor automatic integration of this Planning branch.
 
+
+## Assumptions
+
+The accepted proposal boundaries and interfaces remain present on the handoff base. The existing retained executor, policy digest and owning-workspace guard are reused; no alternative execution route is introduced.
