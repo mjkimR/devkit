@@ -2,7 +2,7 @@
 id: PROP-weekly-report
 title: Evidence-based weekly maintenance reporting
 summary: Define a manually invoked weekly-report playbook that turns revision-bound repository evidence into a report and prioritized follow-ups while separating generation from authorized publication.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                         # draft | reviewing | accepted | rejected
 created_at: 2026-10-21
 target_area: capabilities/delivery/
 priority: high                        # critical | high | medium | low
