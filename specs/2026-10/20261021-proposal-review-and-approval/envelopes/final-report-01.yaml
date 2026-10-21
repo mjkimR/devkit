@@ -1,0 +1,25 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T01:10:58.077255Z'
+status: completed
+summary: Completed source-bound ko/en report CLI/MCP, explicit native accept-only/combined lifecycle with exact guarded acceptance and fresh partial recovery, report-bound handoff, read-only protected report viewer and review guidance. Independent code and reconcile reviews resolved all findings; no integration performed.
+findings: []
+assumptions:
+- Shared adapter dependency is implemented; Host-supplied handoff changes predate worker baseline
+- Viewer uses escaped Markdown source; no frontend assets changed
+- Host must officially sync source bundle.toml, spec-orchestrate/SKILL.md and new spec-review-proposal/SKILL.md before integration
+- Emulated boundaries use absolute worktree paths, command-scoped approvals and range validation; no native confinement guarantee
+unverified_areas:
+- Live native host form rendering and shared URI clickability; tests use fresh service instances and isolated fixtures, not the retained old runtime
+- Semantic accuracy of future agent-authored report prose remains Host review responsibility
+checks:
+  tests: 'PASS just test-affected --base main: 1584 passed; full fallback preserved'
+  build: PASS Python package import and MCP service factory/registration tests in affected suite; frontend unchanged so no frontend rebuild required
+  lint: PASS Ruff lint/format and Pyright for devkit-spec, devkit-agt and devkit-viewer; cumulative rules zero errors/warnings
+  review: PASS independent initial code review and implementer reverify; separate independent reconcile and recheck
+diff_scope:
+  base: 546f5284548819886cdb9ae4c5d523013ffa9a57
+  head: ba50bba4d6bf246d33a857a5d36058bb1a614101
+activity_effort: medium
