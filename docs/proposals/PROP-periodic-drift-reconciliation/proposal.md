@@ -52,8 +52,8 @@ workflow_hash: sha256:90918c632715461d07f99f683b8381bdbe6381ad6689a7575a72c002c1
 The selected direction is a bounded, manually invoked evidence review using existing lookup and governance
 commands. A new detector, scheduler, standalone skill, report database, or MCP tool is unnecessary. The report is
 an ordinary Markdown material in the owning work unit, or the repository's existing materials location when no
-unit exists. Creating that report authorizes no source corrections. The remaining question is whether to deliver
-preset membership incrementally while the two independent companion playbooks do not yet exist (section 3.4).
+unit exists. Creating that report authorizes no source corrections. Preset membership is delivered incrementally
+while the two independent companion playbooks do not yet exist (section 3.4).
 
 ## 3. Proposed Design & Impact
 
@@ -104,12 +104,11 @@ or proposals instead of duplicating follow-ups.
 - The final bundle organization remains `reporting` for `weekly-report`, `upkeep` for `drift-reconciliation` and
   `review-refactor`, and implicit `all` for all delivered assets. Each playbook is independently invoked and read
   on demand. Selection never implies execution.
-- **Decision pending:** initially publish only `drift-reconciliation`, with `upkeep` containing that asset and
+- **Selected staged delivery:** initially publish only `drift-reconciliation`, with `upkeep` containing that asset and
   implicit `all` containing the same asset. Add `reporting` only with its weekly-report asset, and extend `upkeep`
   only with review-refactor. Do not create missing asset references, empty placeholder procedures, or advertise
   undelivered presets. If companion assets are already present when Development starts, preserve them and verify
-  the combined selection. The alternative is to wait for separately delivered companion assets before shipping
-  the complete preset arrangement; this proposal never implements them.
+  the combined selection. This proposal does not wait for or implement the companion playbooks.
 - Verify bundle discovery, selected asset membership, opt-in behavior, package validation, and independent
   playbook lookup. Update catalog package documentation and existing installation recommendations. The existing
   manifest contract is reused; the content-packages contract describes the new available bundle.
@@ -146,7 +145,7 @@ or proposals instead of duplicating follow-ups.
 
 ### 3.6 Development Acceptance Evidence
 
-- Given only this asset is delivered and the staged preset option is accepted, selecting `maintenance:upkeep` or
+- Given only this asset is delivered, selecting `maintenance:upkeep` or
   default `maintenance` deploys precisely drift-reconciliation; an unselected catalog deploys none. Existing
   companion assets, when present, retain their membership. No missing source or asset ID passes validation.
 - Given a bounded manual sweep, the retained report names its input revision, candidate coverage and evidence
