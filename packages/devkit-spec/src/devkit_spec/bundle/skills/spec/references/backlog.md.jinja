@@ -32,8 +32,9 @@ Planning branch or retry `--decomposed-from` there.
 The Host then checks the committed return and obtains explicit user authorization to merge that return and
 perform cleanup under the existing Git policy. For a local merge, use `devkit worktree finish plan-<slug> --merge
 --local-only` from the base after preparing the branch and clearing envelope holds; use the required PR path when
-policy requires it. The MCP unit integration path requires an accepted proposal and cannot integrate this draft
-return. Do not manufacture `plan-accept` to satisfy that readiness check. This is a return of a draft, not `plan-accept` or authorization to
+{% if execution.environment == "local" %}policy requires it. The MCP unit integration path requires an accepted proposal and cannot integrate this draft
+{% else %}policy requires it. The automated unit integration path requires an accepted proposal and cannot integrate this draft
+{% endif %}return. Do not manufacture `plan-accept` to satisfy that readiness check. This is a return of a draft, not `plan-accept` or authorization to
 implement the old proposal. Preserve the committed return on the base before removing the local Planning branch
 and worktree. A fetched remote Planning branch also blocks Backlog: coordinate its authorized remote removal and
 refresh/prune the fetched ref under existing network authority; do not hide a live remote branch by deleting only
@@ -106,8 +107,10 @@ Every transition is the user's decision, with a concrete candidate prepared firs
 Hygiene reads base facts only: `SPEC_MILESTONE_DONE_UNSETTLED` and `SPEC_MILESTONE_DROPPED_UNSETTLED` name unsettled
 members left on finished milestones until they are completed or reassigned/cleared/rejected.
 
-Native MCP approval belongs to the Host after it validates worker boundaries, committed scope and required checks.
+{% if execution.environment == "local" %}Native MCP approval belongs to the Host after it validates worker boundaries, committed scope and required checks.
 Workers return that evidence and do not ask for business approval. When the optional runtime, connection or negotiated
 form UI is unavailable, use intentional installation/connection or an independently authorized explicit CLI/PR route;
 missing UI is not approval. Cloud execution exposes read-only inspection and cannot use interactive or resume tools.
 The owning configuration workspace controls this restriction, independently of source-branch provenance.
+{% else %}Approval belongs to the Host after it validates worker boundaries, committed scope and required checks. Workers return that evidence without requesting business approval. Cloud execution provides CLI inspection and artifact operations only; mutation requires a separately authorized CLI/PR route. Missing authority is a boundary, never approval. Effective workspace configuration controls runtime restrictions independently of render provenance.
+{% endif %}

@@ -68,9 +68,13 @@ def unchanged(root: Path, before: dict[str, bytes | None]) -> None:
         )
 
 
-def variables_digest(root: Path) -> str:
+def variables_digest(root: Path, environment: str) -> str:
     config = read_effective_config(root).values
-    values = {"bundles": config.get("bundles", {}), "presentation": config["presentation"]}
+    values = {
+        "bundles": config.get("bundles", {}),
+        "presentation": config["presentation"],
+        "execution_environment": environment,
+    }
     return hashlib.sha256(json.dumps(values, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
@@ -138,6 +142,8 @@ def plan_ledger(
     receipt_bytes: bytes,
     changes: dict[str, Content | None],
     actions: list[Action],
+    *,
+    environment: str,
 ) -> None:
     before = snapshot(root, LOCAL_RENDER)
     local = read_local_config(root)
@@ -146,7 +152,7 @@ def plan_ledger(
         json_content(
             {
                 "receipt_sha256": hashlib.sha256(receipt_bytes).hexdigest(),
-                "variables_sha256": variables_digest(root),
+                "variables_sha256": variables_digest(root, environment),
                 "files": {
                     name: {"sha256": signature(content)[0], "mode": content.mode} for name, content in personal.items()
                 },
@@ -183,7 +189,9 @@ def runtime_receipt(root: Path, receipt: Receipt) -> Receipt:
         data = json.loads(content.data) if content else {}
         if data["receipt_sha256"] != hashlib.sha256((root / RECEIPT_PATH).read_bytes()).hexdigest():
             raise ValueError("receipt changed")
-        if data["variables_sha256"] != variables_digest(root):
+        if receipt.execution_environment is None:
+            raise ValueError("render environment unrecorded")
+        if data["variables_sha256"] != variables_digest(root, receipt.execution_environment):
             raise ValueError("variables changed")
         allowed = {path for asset in receipt.asset_records if asset.kind in ELIGIBLE for path in asset.paths}
         files = dict(receipt.file_records)

@@ -31,7 +31,7 @@ synchronized instructions, so an instruction-only bundle still has one. It runs 
 subdirectory (or with `-w`) and takes the shared project lock, waiting up to ten seconds while a sync writes; where
 the file system is read-only for it, it reads without the lock (`CAP-DIST-sync-and-transactions`).
 
-- `constitution`: the full text of the optional UTF-8 `AGENTS.md` at the bundle root, which `devkit sync` always
+- `constitution`: the full text of the optional UTF-8 constitution, literal `AGENTS.md` or rendered `AGENTS.md.jinja`, at the bundle root, which `devkit sync` always
   deploys to `.devkit/managed/<bundle>/AGENTS.md` whatever the presets; `null` when absent.
 - `instructions`: for each synchronized instruction of the selected presets, its YAML `header` (`name`,
   `description`) and absolute `path`. An ordinary overridden instruction is read from
@@ -47,6 +47,8 @@ name: code-style
 description: Read before changing Python code. Formatting, typing and naming standards.
 ---
 ```
+
+Context reads the actual recorded render mode when validating personal evidence, including a no-save cloud render under persisted local runtime settings. An unrecorded receipt can still validate canonical bytes without claiming an environment; mode-bound personal evidence requires sync. Render provenance never replaces effective configuration as runtime authority.
 
 ### Skill Prerequisite
 

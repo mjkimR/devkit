@@ -64,7 +64,7 @@ class Contract:
 
 def subagent_entry(root: Path, source: str) -> Path:
     path = root / source
-    if not path.is_file() or path.suffix.lower() != ".md":
+    if not path.is_file() or not (path.suffix.lower() == ".md" or path.name.endswith(".md.jinja")):
         raise BundleError(f"{source}: subagent contract must be a single Markdown file")
     return path
 

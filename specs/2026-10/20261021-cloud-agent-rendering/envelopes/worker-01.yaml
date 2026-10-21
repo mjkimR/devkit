@@ -1,0 +1,24 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T02:59:48.604363Z'
+status: completed
+summary: Completed specify through final-change-report; execution-aware rendering, typed provenance, cloud guidance and Living Spec reconciled. HIGH review findings resolved; all nested reviewers returned. Clean committed handoff stops before Host integration.
+findings: []
+assumptions:
+- 'Emulated confinement only: absolute assigned-worktree commands, explicit scoped staging, read-only review scopes and Host range validation; no native guarantee.'
+- Host authorized markdown_link rule/test/guide and harness capability extensions. Runtime authority unchanged.
+- Six non-gating template EOF whitespace notices retained to preserve rendered newline layout; reviewer raised no finding.
+unverified_areas:
+- Host must incorporate moved main and perform official sync/receipt/projection generation, final cumulative integration check and integration. Existing personal receipt intentionally remains stale before official sync.
+checks:
+  tests: PASS full fallback4267 passed14 skipped; post-fix81 focused and affected partial108 paths exit0; dist-only1162 passed
+  build: PASS consumer smoke
+  lint: PASS dist/spec/devkit-agt lint/types and cumulative CI rules0 errors0 warnings
+  review: PASS fresh code review round2 zero findings; reconcile round1 exact wording fix self-verified under HIGH minor-fix exception
+  feedback: PASS FB-rendered-guidance-test-fixtures captured and swept
+diff_scope:
+  base: ba2e1678f37328cb2b9fcce6387d37100a5f0c8c
+  head: 1278109036f8f7d24992d3ba90bc18b930b7f548
+activity_effort: high

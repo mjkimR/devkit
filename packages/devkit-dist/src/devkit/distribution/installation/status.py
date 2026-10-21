@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from devkit.advisory import Actor, AdvisoryError, ExitCode, Level
+from devkit.core.local_config import read_effective_config
 from devkit.core.receipt import AssetRecord, FileRecord, OverrideRecord, Receipt, SeededRecord, Selection, ToolRecord
 from devkit.distribution.content import signature
 from devkit.distribution.errors import (
@@ -374,6 +375,15 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
         selected = effective_selection(installed, config, receipt)
         packages, warnings = _unusable_packages(installed, selected)
         packages.extend(_missing_packages(installed, selected, config))
+        desired_environment = read_effective_config(root).values["execution"]["environment"]
+        if receipt is not None and receipt.execution_environment != desired_environment:
+            packages.append(
+                NotSynchronizedError(
+                    f"render environment is {receipt.execution_environment or 'unrecorded'}; desired {desired_environment}",
+                    target_files=[".devkit/installation.json"],
+                    exit_code=ExitCode.FINDINGS,
+                )
+            )
         host_hooks: list[dict[str, Any]] = []
         host_errors: list[AdvisoryError] = []
         for host in sorted({record.host for record in receipt.host_hooks} if receipt else set()):

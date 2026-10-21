@@ -69,9 +69,10 @@ recovery, actual last commit SHA, dirty paths and which record/commit is absent 
 which owns the subsequent recovery run and its records. The committed-return requirements below apply whenever
 preservation is permitted; inability to preserve them is a failure, not permission to bypass refusal.
 
-Workers return verified committed scope to the Host and never request business approval through MCP. The Host
+{% if execution.environment == "local" %}Workers return verified committed scope to the Host and never request business approval through MCP. The Host
 validates boundaries and checks before invoking a native approval tool; missing form UI grants no authority.
-
+{% else %}Approval belongs to the Host after it validates worker boundaries, committed scope and required checks. Workers return that evidence without requesting business approval. Cloud execution provides CLI inspection and artifact operations only; mutation requires a separately authorized CLI/PR route. Missing authority is a boundary, never approval. Effective workspace configuration controls runtime restrictions independently of render provenance.
+{% endif %}
 ## Return
 
 The fields of your `worker` envelope after it is committed: `status` (`completed` when no question is left and the proposal is ready for `plan-accept`; `needs_input` while questions wait for the user, with the `questions`; `failed` with the `problem`), `summary` (what changed, the decisions made in this Planning, the support roles this run used), `findings` for what is left open, `assumptions`, `unverified_areas`, `diff_scope` with `head` set to your last work commit, and `final_head`: `git -C <worktree> rev-parse HEAD` after the commit that adds the envelope, the head the caller validates up to.
@@ -90,3 +91,4 @@ The fields of your `worker` envelope after it is committed: `status` (`completed
 ## On a problem
 
 Waiting for the user's answers is not a problem: it is `needs_input` with the questions in your `worker` envelope. A cause you cannot solve (a tool failure, a proposal that cannot be planned as agreed) is recorded in your `worker` envelope (`--problem`, `--tried`, `--recovery`: its cause, what you tried and the recovery you recommend) and committed with the unfinished work: an emergency commit, the only one that may use `--no-verify` when the commit gate refuses the unfinished files, naming each skipped check in the problem. A run that solved an earlier problem on request commits a `resolution` naming it with the fix. Do not reject, close or rewrite the goal yourself; the Host decides.
+

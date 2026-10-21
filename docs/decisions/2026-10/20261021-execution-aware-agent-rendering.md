@@ -1,15 +1,15 @@
 ---
-id: PADR-execution-aware-agent-rendering
+id: ADR-execution-aware-agent-rendering
 title: Execution-aware agent rendering
 summary: Use a reserved execution input for canonical rendering and extend templates to constitutions and subagent contracts while preserving runtime authority and personal-render restrictions.
-proposal: PROP-cloud-agent-rendering
-status: draft
+proposal: SPEC-cloud-agent-rendering
+status: accepted
 created_at: 2026-10-21
 ---
 
-# [PADR-execution-aware-agent-rendering] Execution-aware agent rendering
+# [ADR-execution-aware-agent-rendering] Execution-aware agent rendering
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-21
 
 ---

@@ -1,0 +1,32 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T02:48:01.245038Z'
+status: completed
+summary: 'round 1; independent code-reviewer REVISE: seeded templates omit selected environment and archives lose constitution template identity.'
+findings:
+- issue: Seeded Markdown templates ignore the selected execution environment.
+  evidence: packages/devkit-dist/src/devkit/distribution/installation/inventory.py:225
+  failure_condition: A cloud inventory with a seeded document template uses the render_template local default, producing local content despite cloud receipt provenance; violates AC-02.
+  suggested_action: Pass environment=self.environment to this render_template call. Add coverage for cloud rendering of both single-file and directory seeded templates, preserving write-once ownership.
+  resolution: open
+  severity: P1
+- issue: Bundle archives rename raw constitution templates to literal Markdown.
+  evidence: packages/devkit-dist/src/devkit/distribution/bundles/package.py:34
+  failure_condition: Building AGENTS.md.jinja archives raw template bytes as AGENTS.md, so reloaded exported source exposes conditional syntax and both branches rather than selected-environment output; violates AC-05.
+  suggested_action: Preserve the constitution source-relative filename in _payload. Add an archive round-trip test confirming AGENTS.md.jinja remains a template and renders correctly in local and cloud inventories.
+  resolution: open
+  severity: P1
+assumptions:
+- Independent isolated code-reviewer; emulated read-only scope verified by unchanged clean Git state and head.
+unverified_areas:
+- Living Spec reconciliation follows separately.
+checks:
+  tests: PASS affected full 4267 passed,14 skipped; dist-only 1162; smoke; focused fresh cloud sync 3 hosts
+  lint-types: PASS dist spec agt
+  rules: PASS normal gate and cumulative CI
+diff_scope:
+  base: ba2e1678f37328cb2b9fcce6387d37100a5f0c8c
+  head: 11ed1e42ca94d3d3a8fb9eaa80cd95658f2464f5
+activity_effort: high
