@@ -85,7 +85,7 @@ def test_response_style_has_one_bounded_guidance_pointer() -> None:
     assert len(pointer) <= 300
 
 
-@pytest.mark.parametrize("preset", ["all", "upkeep"])
+@pytest.mark.parametrize("preset", ["all", "upkeep", "reporting"])
 def test_maintenance_selection_and_independent_lookup(tmp_path: Path, preset: str) -> None:
     from devkit.distribution.installation.config import update_config
     from devkit.distribution.installation.discovery import InstalledBundle
@@ -100,19 +100,29 @@ def test_maintenance_selection_and_independent_lookup(tmp_path: Path, preset: st
     update_config(tmp_path, agents=["codex"], presets={"maintenance": [preset]})
     sync_project(tmp_path, installed)
     root = tmp_path / ".devkit/managed/maintenance"
+    from devkit.distribution.installation.playbook_get import get_playbook
+
+    selected = {
+        "all": {"drift-reconciliation", "weekly-report"},
+        "upkeep": {"drift-reconciliation"},
+        "reporting": {"weekly-report"},
+    }[preset]
     assert {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()} == {
         "bundle.toml",
-        "playbooks/drift-reconciliation.md",
+        *(f"playbooks/{name}.md" for name in selected),
     }
-    result = search_playbooks(tmp_path, "drift reconciliation", mode="lexical")
-    assert len(result.results) == 1
-    assert result.results[0].id == "drift-reconciliation"
-    assert result.results[0].bundle == "maintenance"
+    for name in selected:
+        result = search_playbooks(tmp_path, name.replace("-", " "), mode="lexical")
+        assert any(item.id == name and item.bundle == "maintenance" for item in result.results)
+        exact = get_playbook(tmp_path, f"maintenance/{name}")
+        assert exact.name == name
+        assert exact.body.strip()
+    assert not (tmp_path / "materials").exists()
     assert not (root / "skills").exists()
 
 
 def test_maintenance_uses_default_all_and_valid_upkeep() -> None:
     bundle = load_bundle(_bundle_root(ENTRY_POINTS["maintenance"]))
     assert bundle.default_preset == "all"
-    assert set(bundle.presets) == {"upkeep"}
-    assert [asset.id for asset in bundle.assets] == ["drift-reconciliation"]
+    assert set(bundle.presets) == {"upkeep", "reporting"}
+    assert {asset.id for asset in bundle.assets} == {"drift-reconciliation", "weekly-report"}

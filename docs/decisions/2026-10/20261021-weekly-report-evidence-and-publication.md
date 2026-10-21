@@ -1,15 +1,15 @@
 ---
-id: PADR-weekly-report-evidence-and-publication
+id: ADR-weekly-report-evidence-and-publication
 title: Revision-bound reports and independent publication
 summary: Weekly reports preserve revision-bound evidence in immutable local artifacts, with publication authority and outcome recorded independently.
-proposal: PROP-weekly-report
-status: draft
+proposal: SPEC-weekly-report
+status: accepted
 created_at: 2026-10-21
 ---
 
-# [PADR-weekly-report-evidence-and-publication] Revision-bound reports and independent publication
+# [ADR-weekly-report-evidence-and-publication] Revision-bound reports and independent publication
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-21
 
 ---

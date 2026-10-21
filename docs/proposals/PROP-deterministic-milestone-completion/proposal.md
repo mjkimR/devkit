@@ -1,14 +1,14 @@
 ---
 id: PROP-deterministic-milestone-completion
-title: Deterministic milestone completion from confirmed scope
-summary: "Confirm complete milestone outcome coverage and derive automatic completion from verified, integrated delivery lineage rather than proposal deletion."
+title: Simple milestone completion from direct proposal checks
+summary: "Close milestones from confirmed decomposition and settlement of directly linked proposals, using focused code or Git inspection when needed instead of persistent delivery-lineage tracking."
 status: draft
 created_at: 2026-10-21
 target_area: capabilities/delivery/
 priority: high
-size: L
-planning_effort: high
-dev_effort: high
+size: M
+planning_effort: medium
+dev_effort: medium
 boundaries:
   owns:
     - packages/devkit-spec/
@@ -27,121 +27,102 @@ task_kind: feature
 workflow: sdd-proposal
 ---
 
-# [PROP-deterministic-milestone-completion] Deterministic milestone completion from confirmed scope
+# [PROP-deterministic-milestone-completion] Simple milestone completion from direct proposal checks
 
 ## 1. Background & Hypothesis
 
-`ADR-milestone-documents` makes milestone transitions explicit user decisions. Units declare membership, while
-Backlog separately checks exit conditions and unsettled work before closing. Hygiene warns when a finished
-milestone retains unsettled base members, but does not identify a close candidate. Consequently, completing and
-integrating all intended work can leave a milestone planned or active until a separate review occurs.
+Milestones should describe large phases or long-term themes that the user and agent review together and split
+into proposals. They should not become a second delivery database. `ADR-milestone-documents` currently requires
+separate manual transitions; completing the associated work can leave the milestone planned or active.
 
-A deterministic close needs two facts: the intended scope is fully represented, and every required outcome has
-verified settlement. The absence of proposals proves neither. Handoff removes a proposal when Development starts;
-plain deletion, rejection or reassignment does not prove delivery. Counting only extant members also misses work
-that has not yet been created or has lost its linkage.
+The desired closure has two checks: the user and agent have finished decomposing the intended milestone scope
+into proposals, and the work represented by its directly connected proposals has been settled. Keep this model
+local to the milestone/proposal boundary. Do not carry milestone metadata into SPECs or maintain a persistent
+milestone-to-PROP-to-SPEC graph. `PROP-unit-dependencies-and-milestone-scope` owns the direct-membership model and
+unit ordering; this proposal owns the small closure procedure built on that boundary.
 
-The hypothesis is that user-confirmed outcome coverage can provide a finite completion contract. Once that
-contract is fixed, tools can evaluate delivery lineage and automatically record done when every condition holds.
-Human judgment establishes scope and verifies the work through existing gates; the completion evaluator consumes
-that evidence rather than deciding semantic adequacy or granting new authority.
+The agent may inspect relevant code or Git state when deciding whether a removed proposal's work is actually
+settled. That is a focused check at the time of review, not a requirement to retain every descendant, branch,
+outcome ID or integration record in the milestone. Proposal absence alone remains insufficient: handoff can remove
+a proposal before implementation has finished.
 
 ## 2. Technical Spike Questions
 
-- **Q1 — Scope commitment:** What minimal durable representation names required outcomes, their PROP/SPEC owners,
-  and explicit confirmation that decomposition is complete? How does it bind approval to an exact scope revision
-  without duplicating tasks or maintaining a second work list?
-- **Q2 — Lineage and settlement:** Which existing handoff, decomposition and supersession records can preserve
-  outcome ownership after proposal removal? What additional durable evidence is necessary for deleted anchors,
-  direct spec intake, split/combined work and source records retained only in Git?
-- **Q3 — Evidence authority:** How should the evaluator establish completed tasks, required verification,
-  reconciliation and base integration without treating a status flag or proposal absence as sufficient? Define
-  exact branch/ref inspection coverage and an unknown result when required evidence cannot be inspected.
-- **Q4 — Trigger and atomicity:** Where should read-only evaluation and the authorized done transition run after
-  integration and Backlog changes? Prefer an existing devkit-spec extension boundary; determine transaction,
-  recheck, retry and recovery semantics without modifying the generic integration package unnecessarily.
-- **Q5 — Scope changes and existing milestones:** Which changes invalidate the scope commitment and require
-  reconfirmation? Existing planned/active milestones without commitment must remain unconfirmed, not auto-close.
-  Determine behavior for newly discovered work after done, stale evidence and direct manual status edits.
+- **Q1 — Minimal confirmation:** What is the smallest way to record that milestone decomposition is complete and
+  that its directly linked proposal work is settled? Prefer two explicit confirmations tied to the current
+  milestone scope over per-outcome maps, copied work lists or durable descendant records.
+- **Q2 — Direct proposal checks:** How does the review list the milestone's direct proposals and identify ones
+  still requiring work? When a proposal has been handed off or removed, what focused code/Git inspection is useful
+  before confirming settlement, without propagating milestone metadata to the resulting SPEC?
+- **Q3 — Deterministic close:** Once both confirmations hold and no directly linked proposal remains unsettled,
+  what existing Backlog command/procedure can set done idempotently? A read-only candidate check must distinguish
+  missing confirmation from a failed inspection. Do not add a background evaluator or integration-engine coupling.
+- **Q4 — Change handling:** Which direct scope or membership changes invalidate a prior confirmation? Keep that
+  rule simple. Rejection, reassignment or deletion requires an explicit disposition, not automatic success from
+  the file disappearing. Existing milestones without confirmation remain open until reviewed.
 
 ## 3. Proposed Design & Impact
 
-### Two independent completion conditions
+### Collaborative scope, direct ownership
 
-1. **Confirmed coverage:** Each required milestone outcome has an explicit delivery owner or an authorized scope
-   exclusion, and the user has confirmed that decomposition covers the complete intended scope. Merely creating
-   some proposals or observing zero members does not establish completeness. Unrepresented requirements prevent
-   commitment. A deliberately empty scope requires an explicit disposition rather than vacuous completion.
-2. **Verified settlement:** Each included outcome resolves through its delivery lineage to work that is completed,
-   has the required verification and resolved reconciliation evidence, and is integrated into the selected base.
-   Related active Planning/Development branches must not contain unsettled work. An already-integrated leftover
-   branch is a cleanup observation, not an unfinished deliverable. Missing or ambiguous evidence means unknown,
-   never done; unavailable required branch evidence prevents a settlement claim.
+The user and agent review a milestone's high-level goal and create its necessary proposals. Proposal anchors
+express direct membership. The milestone does not duplicate their task lists and does not attach its identity to
+SPECs. The first closure condition is an explicit confirmation that this decomposition is sufficient for the
+agreed scope; merely counting existing proposals cannot establish that no work was omitted.
 
-A milestone becomes eligible only when both conditions hold against the same current scope and repository state.
-The automatic transition writes status done with inspectable evidence and is idempotent. It does not delete the
-milestone: done/dropped history, ID resolution and dependent milestone readiness retain their existing meaning.
+The second condition is confirmation that directly associated proposal work has been settled. Remaining direct
+proposals are reviewed and completed, explicitly removed from scope, or left open. If handoff/removal makes status
+unclear, inspect the relevant implementation or Git facts before confirming. Do not treat deletion as proof of
+implemented behavior. If the inspection cannot establish settlement, leave the confirmation unset and state the
+specific outstanding check.
 
-### Deletion, cancellation and scope revisions
+No persistent outcome-to-unit matrix, transitive lineage index, branch ownership graph or automatically maintained
+verification ledger is introduced. Existing PROP/SPEC records remain available for ordinary navigation when useful,
+but closure does not require carrying milestone metadata through them or enumerating all historic descendants.
 
-Proposal handoff transfers ownership to the SPEC; it never settles the outcome by itself. Decomposition must
-preserve coverage across child proposals, and supersession must identify the successor rather than silently lose
-the requirement. Rejection, deletion, abandonment or moving a unit to another milestone does not count as
-completion. Excluding a required outcome needs an explicit user decision and an updated scope commitment. Retain
-the reason and provenance. A completed outcome can be delivered by multiple units, and one unit can serve several
-outcomes; Planning must avoid making unit counts the completion model.
+### Small deterministic transition
 
-Changes to required outcomes or their ownership after commitment invalidate the prior completion decision input.
-Do not silently reuse approval for a larger or reduced scope. Activation, dropping and unrelated user-owned
-plan-intent/plan-accept gates remain unchanged. The selected policy exception is specifically automatic done under
-a previously confirmed completion contract; a PADR/ADR must replace the relevant all-transitions-manual rule.
+With decomposition and direct-proposal settlement explicitly confirmed for the current scope, the close operation
+can deterministically record done. The tool validates the recorded conditions and current direct membership;
+it does not replace the user/agent's judgment about the goal or infer semantic completion from missing files.
+Repeated close is a no-op. Done milestones remain historical documents, resolvable by ID and visible with --history;
+this is not proposal-style deletion.
 
-### Integration with delivery
+A change to the agreed goal or direct membership requires the affected confirmation to be revisited before close.
+Cancellation, rejection or moving a proposal is an explicit scope disposition, not delivery success. Activation and
+dropping remain user decisions. A PADR should define the narrow policy exception permitting done after prior
+confirmation, without relaxing plan-intent, plan-accept or delivery verification.
 
-Expose deterministic read-only completion evaluation that names each satisfied, unmet or unknown condition and
-its stable code/evidence. Connect evaluation to the appropriate successful integration/Backlog lifecycle point so
-completed work does not rely on a separate conversational reminder. Re-evaluate changed inputs before writing;
-concurrent new membership or scope changes must not produce a stale done transition. Repeated evaluation and
-resumed cleanup must not create duplicate decisions or commits. A failed milestone update must report remaining
-work distinctly from the already-completed feature integration.
+Prefer checking closure during the existing collaborative Backlog review and after relevant work completes.
+Do not make every feature integration maintain milestone state. The exact two-confirmation representation and
+supported command are Planning decisions; no new API or schema is fixed by this draft.
 
-Keep the machinery in devkit-spec when existing extension contracts suffice. Do not add scheduling, background
-agents or external trackers. The design must preserve branch isolation and permissions; read-only inspection
-never mutates Git. Exact command names, stored fields and the mutation boundary are Planning decisions rather
-than APIs invented by this draft.
+### Acceptance evidence
 
-### Expected acceptance evidence
+- A milestone with confirmed decomposition and confirmed settlement of its direct proposal work closes once;
+  repeat close is harmless and history/ID lookup still works.
+- Missing confirmation or an unsettled direct proposal keeps it open and identifies the remaining action.
+- A proposal removed by handoff while implementation is unfinished does not justify settlement confirmation;
+  a focused code/Git inspection can identify the unfinished work without a stored milestone-to-SPEC relation.
+- Explicit cancellation or reassignment updates the reviewed scope; deleting a file alone does not manufacture
+  a successful disposition. Scope/membership changes require the affected confirmation to be revisited.
+- Milestone metadata is not propagated to SPECs, and no durable descendant/verification graph is required.
+  Existing unconfirmed milestones do not auto-close merely because they have no proposals.
+- The current user-owned gates remain intact; no background process, generic integration change, automatic
+  activation or automatic dropping is introduced.
 
-- Confirmed complete coverage plus all verified, integrated owners produces done once and keeps the historical
-  milestone resolvable; default discovery hides it and dependent readiness reflects it.
-- Unconfirmed/incomplete coverage, no members, missing owners, malformed lineage or unknown branch evidence does
-  not close. Results identify the unmet condition rather than reporting generic success.
-- Handoff removes the PROP while the SPEC is unfinished: the milestone remains open. Completed but unintegrated
-  work, open problems/questions, unresolved reconciliation or missing required verification also remains open.
-- Split, superseded, rejected, deleted and reassigned proposals preserve requirements or require explicit scope
-  exclusion/reconfirmation; deletion alone never satisfies an outcome.
-- A scope or relevant ref changes between evaluation and transition: the stale result cannot close the milestone.
-  Retry/recovery is bounded and idempotent; delivery success and milestone-update failure remain distinguishable.
-- Existing unconfirmed milestones do not auto-close. Other gates and manual drop/activation authority remain intact;
-  completed milestone history is not pruned as if it were a proposal.
-
-Verification should cover domain fixtures for each lifecycle, real isolated Git branch/handoff/integration cases,
-CLI output/advisory contracts, targeted rules and relevant lint/types plus just test-affected. Planning must define
-what evidence is sufficient and what is intentionally unknown; implementation cannot infer missing evidence.
+Use small document/domain fixtures for confirmed/unconfirmed conditions, handoff absence, direct membership
+changes and repeat close, plus relevant command/advisory and governance checks. Keep verification proportional
+to the chosen small contract; do not build a lineage framework just to test milestone closure.
 
 ## 4. Lifecycle & Retirement Criteria
 
-This is a queued feature proposal, not an accepted policy change or authorization to run Planning/Development.
-Planning and Development effort hints are high because the change introduces a completion contract, provenance
-rules and an automatic lifecycle mutation across several existing boundaries. Do not auto-assign this draft to
-an existing milestone whose confirmed scope would be affected by the design under discussion.
+This is a queued feature draft, not approval to start Planning or Development. Planning and Development effort
+hints are medium. Planning must settle the minimal confirmation contract and explicitly reject unnecessary
+transitive bookkeeping. Keep shared direct-membership semantics aligned with
+`PROP-unit-dependencies-and-milestone-scope`; do not implement that proposal's independent unit dependency work here.
 
-Planning must compare a minimal confirmed-coverage representation with alternatives, audit existing provenance
-and integration hooks, and produce a verifiable design plus a PADR for the user-owned-transition policy change.
-The accepted design must account for every exception above without duplicating unit task lists. Reconcile the
-current document, workflow, hygiene and agent-guidance contracts when implementation is separately authorized.
-
-**Scope excluded:** automatically guessing all necessary work; using deleted PROP counts as delivery evidence;
-new semantic quality judgments outside existing verification; weakening approval gates; automatic milestone
-activation or dropping; external issue trackers; background monitoring; viewer work; generic integration-engine
-refactoring; mass acceptance or completion of existing milestones.
+**Scope excluded:** automatically guessing all necessary proposals; milestone metadata on SPECs; per-outcome
+coverage maps; persistent PROP/SPEC descendant graphs; automatically collected verification/integration ledgers;
+closing solely because PROP files are gone; generic integration-engine hooks/refactoring; external trackers;
+background monitoring; viewer changes; automatic activation/dropping; mass conversion of the current roadmap.
