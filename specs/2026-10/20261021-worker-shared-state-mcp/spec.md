@@ -2,7 +2,7 @@
 id: SPEC-worker-shared-state-mcp
 title: Shared state and workspace across worktrees and cloud agents
 summary: Define immutable expiring shared artifacts with local CLI and MCP access, preserving scope-registry authority and providing a public remote-adapter extension contract while deferring concrete remote backends.
-status: in-progress
+status: completed
 created: 2026-10-21
 milestone: MS-autonomous-backlog-and-orchestration
 related_capabilities: []

@@ -1,7 +1,7 @@
 ---
 id: CAP-COLL-shared-artifacts
 title: Immutable Shared Artifacts
-summary: Immutable seven-day Markdown artifacts share exact report references across linked worktrees through CLI and local MCP, with public adapter registration and conformance checks.
+summary: "Immutable seven-day Markdown artifacts share exact report references across linked worktrees through CLI and local MCP, with public adapter registration and conformance checks."
 status: active
 area: collaboration
 entrypoints:
@@ -42,7 +42,8 @@ or nonregular paths before effects. This is same-user POSIX storage; network fil
 Initialization checks every registered worktree for tracked or visible foreign content before adding only
 /.devkit/.shared/ to clone-local info/exclude under the common exclusion lock. Conflicts raise
 SHARED_EXCLUSION_CONFLICT without hiding files. Applicable ancestor ignore negations are refused before
-infrastructure writes; case-folded paths, recursive globs and bracket expressions are conservatively matched. Reads never install exclusions. Narrow exclusions remain after
+infrastructure writes; case-folded paths, recursive globs and bracket expressions are conservatively matched.
+Safe policies can therefore require inspection before use. Reads never install exclusions. Narrow exclusions remain after
 expiry. Created artifact files/locks have mode 0600 and storage directories 0700. The service shares local OS
 permissions; worktree identity does not authenticate other processes.
 

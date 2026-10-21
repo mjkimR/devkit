@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-worker-shared-state-mcp
 feature: SPEC-worker-shared-state-mcp
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md
     resolution: modified
@@ -37,3 +37,7 @@ expansion to distribution/installation/config.py; its existing schema and checko
 are updated in place. Entrypoint derivation was reviewed: broad package/test/guidance candidates are rejected
 because they do not belong to each capability. The shared domain directory and existing MCP/core/config
 entrypoints identify the actual owners; no broad cross-component declaration was applied.
+
+Exclusion safety conservatively rejects applicable case-folded ancestor negations and recursive/bracket globs
+before infrastructure writes. It does not promise exact acceptance of every safe Git ignore policy. Backend
+advisory codes and opaque cursors remain intact; local filename decoding belongs only to the local adapter.
