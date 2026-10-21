@@ -1,0 +1,16 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T13:46:05.770602Z'
+status: completed
+summary: Optimized worktree synchronized_template and plan_accept proposal_seed_template via seed caching. All 46 worktree tests and 33 plan-accept tests pass with 40-70% latency reduction. 0 errors in lint, typecheck, and governance rules.
+findings: []
+checks:
+  tests: PASS 46 worktree tests in 18.2s, 33 plan-accept tests in 26.9s
+  lint: PASS just lint-check
+  typecheck: PASS just check (0 errors, 0 warnings)
+diff_scope:
+  base: a91a4b43124223bcd73bc87193a3f9433ac7d864
+  head: d55dab97e401597ea9cffccb8eab93b160b68751
+activity_effort: medium
