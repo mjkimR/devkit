@@ -2,7 +2,7 @@
 id: SPEC-deterministic-milestone-completion
 title: Simple milestone completion from direct proposal checks
 summary: Close milestones from confirmed decomposition and settlement of directly linked proposals, using focused code or Git inspection when needed instead of persistent delivery-lineage tracking.
-status: planned
+status: in-progress
 created: 2026-10-21
 depends_on: [SPEC-unit-dependencies-and-milestone-scope]
 related_capabilities: [CAP-DLV-proposal-incubation, CAP-DOCS-document-model, CAP-HARN-agent-guidance]

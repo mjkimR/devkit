@@ -54,3 +54,10 @@ No creation flag, readiness command or delivery certification is added.
    the ordinary intent decision. It cannot waive malformed references or cycle diagnostics. No new gate or hard
    readiness refusal is introduced. Direct-spec intake and explicit pickup inspect these same fields even when
    idle recommendation is not running.
+
+## Milestone close review
+
+After known associated work finishes, you may propose the existing Backlog
+[milestone completion review](../../spec/references/milestone-completion.md). Never silently close after integration
+or infer completion from empty membership or handoff. The user confirms decomposition and direct work settlement
+on one current candidate; unchanged approval persists across interruption after rechecking its facts.

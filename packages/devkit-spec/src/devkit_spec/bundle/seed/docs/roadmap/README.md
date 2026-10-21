@@ -12,3 +12,10 @@ Use unit depends_on for PROP/SPEC prerequisites. Milestone depends_on remains MS
 Exit conditions SHOULD state observable phase-level outcomes and capability boundaries. Keep CLI flags, branch
 names, file layouts and scenario tests in proposals/specs. Use devkit spec list milestone to discover current
 milestones and --history to include done/dropped records. Existing transition authority is unchanged.
+
+Close planned/active milestones through Backlog: review sufficient decomposition, settled direct proposal work
+and the exit condition together. The user's two confirmations record Decomposition: confirmed and Direct proposal
+work: confirmed under Completion review with status done in one commit. Missing assertions are unconfirmed;
+proposal absence or handoff alone proves no delivery. Scope/membership changes reset both to pending; unchanged
+approval survives interruption after rechecking facts. Existing done records remain unchanged; extending done scope
+requires a user-owned reopen to active or another milestone. Repeated close of unchanged done writes nothing.
