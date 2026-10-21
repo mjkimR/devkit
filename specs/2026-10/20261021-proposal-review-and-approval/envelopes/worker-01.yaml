@@ -1,0 +1,24 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T01:12:53.575946Z'
+status: completed
+summary: 'Completed specify through final-change-report: immutable source-bound reports, explicit native acceptance and exact partial recovery, report-bound handoff, protected read-only viewer and review guidance. All code/reconcile findings resolved; Host integration remains.'
+findings: []
+assumptions:
+- Shared artifact dependency is implemented; Host handoff changes precede the worker baseline.
+- Host official sync required for packages/devkit-spec/src/devkit_spec/bundle/bundle.toml, packages/devkit-spec/src/devkit_spec/bundle/skills/spec-orchestrate/SKILL.md, packages/devkit-spec/src/devkit_spec/bundle/skills/spec-review-proposal/SKILL.md.
+- Codex boundaries are emulated with explicit assigned workdir, command-scoped escalation and actual diff validation; no native path confinement guarantee.
+unverified_areas:
+- Live native form rendering and shared URI clickability were not observed; tests used fresh services and fixtures. Retained runtime requires restart for changed services.
+- Future report semantic truth remains Host review responsibility; producer validates structure and exact source binding.
+checks:
+  tests: 'PASS just test-affected --base main: 1584 passed; full fallback preserved'
+  lint: PASS Ruff lint/format and Pyright for devkit-spec, devkit-agt and devkit-viewer; cumulative rules zero errors/warnings
+  review: PASS independent initial code review and separate independent reconcile review; all findings resolved and reconcile recheck passed
+  scope: PASS worker baseline range contains only authorized paths; frontend unchanged
+diff_scope:
+  base: 546f5284548819886cdb9ae4c5d523013ffa9a57
+  head: 23a4ded473f8a1a818da578aae72d6ac2c46059d
+activity_effort: medium
