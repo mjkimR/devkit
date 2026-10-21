@@ -181,3 +181,108 @@ def test_port_in_use_is_refused(server: ViewerServer) -> None:
     with pytest.raises(PortInUseError) as caught:
         ViewerServer([], server.port)
     assert caught.value.code == "VIEWER_PORT_IN_USE"
+
+
+@pytest.fixture
+def review_artifact(server: ViewerServer, monkeypatch: pytest.MonkeyPatch):
+    from devkit.shared.api import PutRequest
+    from devkit.shared.local import LocalAdapter, discover
+
+    monkeypatch.delenv("DEVKIT_SHARED_ADAPTER", raising=False)
+    selected = LocalAdapter(discover(server.repositories["alpha"].root))
+    artifact = selected.put(
+        PutRequest(
+            "proposal-review",
+            "sample",
+            "a" * 40,
+            "en",
+            "# Review\n<script>alert(1)</script>\n[bad](javascript:alert(1))",
+        )
+    )
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("viewer must not enumerate or write shared artifacts")
+
+    for method in ("put", "list", "sweep"):
+        monkeypatch.setattr(LocalAdapter, method, forbidden)
+    return selected, artifact
+
+
+def test_exact_review_is_escaped_read_only(server: ViewerServer, review_artifact) -> None:
+    selected, artifact = review_artifact
+    before = {p.name: p.read_bytes() for p in selected.root.iterdir()}
+    response = request(server, f"/review/alpha/{artifact.metadata.generation_id}")
+    assert response.status == 200
+    body = response.body.decode()
+    assert "&lt;script&gt;" in body and "<script>" not in body
+    assert "<a href=" not in body
+    assert artifact.metadata.source_sha in body
+    assert artifact.metadata.language in body
+    assert artifact.metadata.expires_at in body
+    assert response.headers["cache-control"] == "no-store"
+    assert "default-src 'none'" in response.headers["content-security-policy"]
+    assert "access-control-allow-origin" not in response.headers
+    assert {p.name: p.read_bytes() for p in selected.root.iterdir()} == before
+    assert request(server, f"/review/beta/{artifact.metadata.generation_id}").status == 404
+    assert not (server.repositories["beta"].root / ".devkit/.shared").exists()
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/review",
+        "/review/alpha",
+        "/review/alpha/",
+        "/review/alpha/list",
+        "/review/alpha/../x",
+        "/review/alpha/%2e%2e%2fx",
+        "/review/alpha/%2fetc%2fpasswd",
+        "/review/alpha/https:%2f%2fexample.com",
+        "/review/unknown/" + "a" * 32,
+    ],
+)
+def test_review_rejects_non_exact_paths(server: ViewerServer, path: str) -> None:
+    assert request(server, path).status in (400, 404)
+
+
+@pytest.mark.parametrize("method", ["POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"])
+def test_review_get_only(server: ViewerServer, method: str) -> None:
+    assert request(server, "/review/alpha/" + "a" * 32, method=method).status == 405
+
+
+def test_review_host_protection(server: ViewerServer) -> None:
+    assert request(server, "/review/alpha/" + "a" * 32, host="evil.example").status == 403
+
+
+def test_review_refuses_remote_adapter(server: ViewerServer, monkeypatch: pytest.MonkeyPatch) -> None:
+    import devkit_viewer.review as review
+
+    monkeypatch.setenv("DEVKIT_SHARED_ADAPTER", "remote")
+    monkeypatch.setattr(review, "discover", lambda *_: pytest.fail("must refuse before discovering storage"))
+    response = request(server, "/review/alpha/" + "a" * 32)
+    assert response.status == 404
+    assert response.json()["error"]["code"] == "VIEWER_REVIEW_UNAVAILABLE"
+
+
+@pytest.mark.parametrize("change", ["kind", "namespace", "digest", "expired"])
+def test_review_refuses_invalid_or_expired_artifact(server: ViewerServer, review_artifact, change: str) -> None:
+    from datetime import UTC, datetime, timedelta
+
+    selected, artifact = review_artifact
+    path = selected.root / (artifact.metadata.generation_id + ".md")
+    header, content = path.read_bytes()[4:].split(b"\n---\n", 1)
+    meta = json.loads(header)
+    if change == "kind":
+        meta["kind"] = "other"
+    elif change == "namespace":
+        meta["repository_namespace"] = "other"
+    elif change == "digest":
+        content += b"tampered"
+    else:
+        meta["created_at"] = (datetime.now(UTC) - timedelta(days=8)).isoformat()
+        meta["expires_at"] = (datetime.fromisoformat(meta["created_at"]) + timedelta(days=7)).isoformat()
+    path.write_bytes(b"---\n" + json.dumps(meta, sort_keys=True, separators=(",", ":")).encode() + b"\n---\n" + content)
+    before = path.read_bytes()
+    response = request(server, f"/review/alpha/{artifact.metadata.generation_id}")
+    assert response.status == (410 if change == "expired" else 400)
+    assert path.read_bytes() == before

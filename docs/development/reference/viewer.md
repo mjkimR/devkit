@@ -63,3 +63,6 @@ just viewer build     # rebuild the committed app under src/devkit_viewer/static
 just viewer pack      # the library tarball autohub vendors, checked for its exports
 uv run devkit generated check viewer-assets   # the committed build matches the sources
 ```
+
+
+The exact local report page is `/review/<registered-id>/<generation-id>`; it displays escaped Markdown with source/language/expiry and never regenerates reports. See `CAP-VIEW-repository-viewer`.

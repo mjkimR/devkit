@@ -83,3 +83,6 @@ in shared config or ignored `.devkit/config.local.toml`. `devkit config show --e
 resolved language, source and fallback. Run sync for response-style assets; approval forms read per request.
 Explicit response-style bundle variables win. See `CAP-DIST-sync-and-transactions` and `CAP-INT-mcp-services`;
 this does not localize host-owned controls or establish visible native Korean form support.
+
+
+Proposal acceptance uses `spec_plan_accept(slug, report_uri)` with explicit accept_only/accept_and_handoff. Its private lifecycle composition never transfers authority to integration_resume; partial recovery requires fresh approval. See `CAP-DLV-proposal-incubation` and `CAP-INT-mcp-services`.

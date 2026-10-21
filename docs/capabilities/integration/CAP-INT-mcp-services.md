@@ -353,3 +353,17 @@ boolean widgets, omitted/transformed metadata, validation errors and trust/permi
 localization nor actual native Korean rendering is claimed. `MAT-language-development-evidence` records passing
 bilingual protocol/domain fixtures and explicitly unverified visible-form status for each host. Existing English
 Claude approval evidence proves those outcomes, not Korean rendering or metadata fidelity.
+
+
+## Private lifecycle composition
+
+`IntegrationService._compose` accepts a trusted in-process typed `AcceptanceLifecycle`, never a caller-supplied
+approval token or affirmative callback. Integration owns the real confirmation. The lifecycle supplies the
+pre-acceptance readiness, concise form, reply selection and exact domain delta checks. After confirmation the
+common-directory lock spans original-scope validation, acceptance, full provider revalidation and local execution.
+Only the exact direct-child acceptance source may replace the displayed source; the target must remain equal.
+Cleanup identity and installation stay exact; a revision equal to the old source SHA may follow only that verified
+child. A final lifecycle guard rechecks report expiry/environment before merge. Required-PR remains refused.
+The execution record is revoked in every return path, including partial progress: generic integration_resume
+cannot inherit composition authority. Remaining effects require fresh inspection and native confirmation.
+This private seam imports no SDD models; `spec_plan_accept` owns proposal semantics.

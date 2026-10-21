@@ -14,10 +14,12 @@ from devkit.core.mcp import Confirmation, McpTool
 from devkit.core.mcp_context import guard_execution
 from devkit.core.presentation import approval_language
 from devkit.workflow import Workspace
-from devkit.worktree import locate, path_for, read_worktree_config, start
+from devkit.worktree import StartResult, locate, path_for, read_worktree_config, start
+from devkit.worktree.lifecycle import _prepare
 
 from devkit_spec.errors import HandoffNotReadyError, HandoffReplyError, HandoffStaleError
 from devkit_spec.handoff_language import schema as approval_schema
+from devkit_spec.proposal_report import validate
 from devkit_spec.proposals import handoff_proposal
 from devkit_spec.proposals.binding import EFFORTS, TASK_KINDS
 from devkit_spec.scope.flow import SOURCE_HANDOFF, auto_register
@@ -36,6 +38,8 @@ class HandoffPreview:
     summary: str
     plan: str
     effort: str
+    report_uri: str = ""
+    existing: bool = False
 
     def message(self, language: str = "en") -> str:
         from devkit_spec.handoff_language import message
@@ -43,13 +47,42 @@ class HandoffPreview:
         return message(self, language)
 
 
-def prepare(root: Path, slug: str) -> HandoffPreview:
+def _existing(root: Path, slug: str, head: str) -> bool:
+    """Recover only an untouched devkit-created checkout of this exact accepted base."""
+    position = locate(root)
+    path = path_for(position, f"dev-{slug}")
+    if not path.exists() and not path.is_symlink():
+        return False
+    try:
+        current = locate(path)
+        marker = run_git(position.base, "config", "--get", f"branch.dev-{slug}.devkitWorktree").decode().strip()
+        if (
+            path.is_symlink()
+            or not current.linked
+            or current.root != path
+            or current.base != position.base
+            or current.branch != f"dev-{slug}"
+            or marker != str(path)
+            or run_git(path, "rev-parse", "HEAD").decode().strip() != head
+            or run_git(path, "status", "--porcelain", "--untracked-files=normal").strip()
+        ):
+            raise HandoffNotReadyError("existing Development worktree provenance or clean source differs")
+    except AdvisoryError as exc:
+        raise HandoffNotReadyError(
+            "inspect the existing Development worktree and preserve its changes before requesting fresh handoff"
+        ) from exc
+    return True
+
+
+def prepare(root: Path, slug: str, report_uri: str = "") -> HandoffPreview:
     position = locate(root)
     if position.linked or not position.branch or position.branch.startswith(("dev-", "plan-")):
         raise HandoffNotReadyError("run the handoff service from the retained base checkout on its base branch")
     if run_git(position.base, "status", "--porcelain", "--untracked-files=normal").strip():
         raise HandoffNotReadyError("the base checkout has uncommitted changes; commit or resolve them before review")
     head = run_git(position.base, "rev-parse", "HEAD").decode().strip()
+    if report_uri:
+        validate(root, slug, head, report_uri)
     relative = root.relative_to(position.base)
     unit = f"docs/proposals/PROP-{slug}"
     anchor = relative / unit / "proposal.md"
@@ -92,6 +125,8 @@ def prepare(root: Path, slug: str) -> HandoffPreview:
         str(meta.get("summary") or ""),
         text,
         effort,
+        report_uri,
+        _existing(root, slug, head),
     )
 
 
@@ -100,12 +135,13 @@ class HandoffService:
         self.root = root.resolve()
         self._lock = asyncio.Lock()
 
-    async def handoff(self, slug: str, confirm: Confirmation) -> dict:
+    async def handoff(self, slug: str, report_uri: str, confirm: Confirmation) -> dict:
         guard_execution()
         async with self._lock:
             guard_execution()
             language = approval_language(self.root)
-            preview = await asyncio.to_thread(prepare, self.root, slug)
+            preview = await asyncio.to_thread(prepare, self.root, slug, report_uri)
+            await asyncio.to_thread(validate, self.root, slug, preview.head, report_uri)
             guard_execution()
             reply = await confirm(
                 preview.message(language),
@@ -121,19 +157,39 @@ class HandoffService:
 
     def _execute(self, preview: HandoffPreview, effort: str) -> dict:
         guard_execution()
-        if prepare(self.root, preview.slug) != preview:
+        if prepare(self.root, preview.slug, preview.report_uri) != preview:
             raise HandoffStaleError("the base, accepted plan or policy changed after review")
         position = locate(self.root)
         guard_execution()
         try:
-            started = start(
-                position,
-                f"dev-{preview.slug}",
-                setup=preview.setup,
-                project=self.root.relative_to(position.base),
-                revision=preview.head,
-                before_step=lambda _step: guard_execution(),
-            )
+            if preview.existing:
+                notices = []
+                setup, synced = _prepare(
+                    Path(preview.worktree),
+                    preview.setup,
+                    self.root.relative_to(position.base),
+                    notices,
+                    before_step=lambda _step: guard_execution(),
+                )
+                started = StartResult(
+                    f"dev-{preview.slug}",
+                    Path(preview.worktree),
+                    position.base,
+                    False,
+                    setup,
+                    synced,
+                    notices,
+                    existing=True,
+                )
+            else:
+                started = start(
+                    position,
+                    f"dev-{preview.slug}",
+                    setup=preview.setup,
+                    project=self.root.relative_to(position.base),
+                    revision=preview.head,
+                    before_step=lambda _step: guard_execution(),
+                )
         except AdvisoryError as exc:
             return {
                 "status": "needs_recovery" if Path(preview.worktree).exists() else "blocked",
@@ -175,23 +231,30 @@ class HandoffService:
 
 
 def create_tools(root: Path) -> tuple[McpTool, ...]:
+    from devkit_spec import plan_accept_mcp, proposal_report_mcp
+
     service = HandoffService(root)
 
     async def handoff(arguments: dict, confirm: Confirmation) -> dict:
-        return await service.handoff(arguments["slug"], confirm)
+        return await service.handoff(arguments["slug"], arguments["report_uri"], confirm)
 
     return (
         McpTool(
             "spec_handoff",
-            "Review an accepted proposal summary and plan in one native form, select activity effort defaulted from dev_effort, then explicitly approve starting local Development. Creates dev-<slug> and its worktree and runs proposal handoff only after approval. Decline, cancellation or unavailable confirmation makes no changes. Changed base or policy requires fresh review. Returns selected effort as run input; the caller continues in the returned worktree and records effort in its worker envelope. Does not approve or execute final merge.",
+            "Review an accepted proposal summary and exact live report URI in one native form, select activity effort defaulted from dev_effort, then explicitly approve starting local Development. Creates dev-<slug> and its worktree and runs proposal handoff only after approval. Decline, cancellation or unavailable confirmation makes no changes. Changed base or policy requires fresh review. Returns selected effort as run input; the caller continues in the returned worktree and records effort in its worker envelope. Does not approve or execute final merge.",
             {
                 "type": "object",
-                "properties": {"slug": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 59}},
-                "required": ["slug"],
+                "properties": {
+                    "slug": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 59},
+                    "report_uri": {"type": "string", "minLength": 1},
+                },
+                "required": ["slug", "report_uri"],
                 "additionalProperties": False,
             },
             handoff,
             destructive=True,
             open_world=True,
         ),
+        *proposal_report_mcp.create_tools(root),
+        *plan_accept_mcp.create_tools(root),
     )

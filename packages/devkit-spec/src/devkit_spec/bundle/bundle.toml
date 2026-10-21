@@ -100,6 +100,12 @@ id = "spec-review"
 kind = "skill"
 source = "skills/spec-review"
 
+# Review proposal decisions and refine Planning against an exact report.
+[[assets]]
+id = "spec-review-proposal"
+kind = "skill"
+source = "skills/spec-review-proposal"
+
 # Reconcile the change into the Living Spec and resolve reconcile.md.
 [[assets]]
 id = "spec-sync"
@@ -275,6 +281,7 @@ assets = [
     "spec-plan",
     "spec-tasks",
     "spec-review",
+    "spec-review-proposal",
     "spec-sync",
     "spec-integrate",
     "spec-delegate",

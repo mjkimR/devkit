@@ -358,3 +358,36 @@ def check_cmd(slug: str, workspace_root: str | None, output_format: str) -> None
         echo_json(checked.to_dict())
         return
     click.echo(sentinel("PROPOSAL", checked.id, path=checked.path, status=checked.status, editable="yes"))
+
+
+@proposal_group.command(name="report")
+@click.argument("slug")
+@click.option("--source-sha", required=True, help="Exact current committed Planning or accepted base SHA")
+@click.option(
+    "--body-file",
+    required=True,
+    type=click.File("r", encoding="utf-8"),
+    help="Complete Markdown briefing, or - for stdin",
+)
+@WORKSPACE
+@FORMAT_OPTION
+@boundary
+def report_cmd(slug: str, source_sha: str, body_file, workspace_root: str | None, output_format: str) -> None:
+    """Publish a source-bound proposal review report through the shared adapter."""
+    from devkit.shared.api import MAX_BYTES
+
+    from devkit_spec.proposal_report import publish
+
+    result = publish(resolve_root(workspace_root), slug, source_sha, body_file.read(MAX_BYTES + 1))
+    if is_json(output_format):
+        echo_json(result.to_dict())
+    else:
+        click.echo(
+            sentinel(
+                "PROPOSAL_REVIEW",
+                result.metadata.artifact_uri,
+                source_sha=source_sha,
+                language=result.metadata.language,
+                expires_at=result.metadata.expires_at,
+            )
+        )

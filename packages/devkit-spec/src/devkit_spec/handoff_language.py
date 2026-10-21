@@ -1,4 +1,4 @@
-"""Static handoff content; accepted plan and repository evidence stay verbatim."""
+"""Concise handoff disclosure with exact source-bound report identity."""
 
 from __future__ import annotations
 
@@ -39,11 +39,16 @@ def message(preview: HandoffPreview, language: str) -> str:
                 "Required checks apply at every level. This selection does not change model reasoning settings.",
                 "모든 수준에서 필수 검사를 수행합니다. 이 선택은 모델 추론 설정을 변경하지 않습니다.",
             ),
-            t("Accepted plan: ", "수락된 계획: ") + show(preview.plan),
+            t("Review report: ", "검토 보고서: ") + show(preview.report_uri),
             t("Repository: ", "저장소: ") + show(str(preview.root)),
             t("Base: ", "기준: ") + f"{show(preview.base_branch)} @ {preview.head}",
-            t("Create branch: ", "만들 브랜치: ") + show("dev-" + preview.slug),
-            t("Create worktree: ", "만들 worktree: ") + show(preview.worktree),
+            t("Reuse branch: ", "재사용할 브랜치: ") + show("dev-" + preview.slug)
+            if preview.existing
+            else t("Create branch: ", "만들 브랜치: ") + show("dev-" + preview.slug),
+            t("Completed: worktree creation. Reuse worktree: ", "완료: worktree 생성. 재사용할 worktree: ")
+            + show(preview.worktree)
+            if preview.existing
+            else t("Create worktree: ", "만들 worktree: ") + show(preview.worktree),
             t(
                 f"Run configured setup: {setup}; restore locked agent assets.",
                 f"설정된 setup 실행: {setup}; 잠긴 에이전트 자산을 복원합니다.",
