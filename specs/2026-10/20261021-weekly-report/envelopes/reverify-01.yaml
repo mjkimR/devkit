@@ -1,0 +1,28 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T02:29:21.416176Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified both evidence fixes: committed completed-work chain and executed reachability at captured main; immutable rerun companion exists with matching digest.'
+findings:
+- issue: AC-03 completed/integrated success path is not exercised.
+  evidence: specs/2026-10/20261021-weekly-report/materials/manual-scenarios.md:10
+  failure_condition: Verified integrated work lacks an executed complete evidence chain.
+  suggested_action: Add committed status/tasks/verification/reconcile and captured-SHA reachability scenario, qualified as snapshot.
+  resolution: resolved
+  severity: P1
+- issue: Rerun report names missing fixture-2-outcome.json.
+  evidence: specs/2026-10/20261021-weekly-report/materials/fixture-2-report.md:44
+  failure_condition: The rerun authoritative outcome reference cannot resolve.
+  suggested_action: Add pending companion record with verified immutable artifact digest and absent authority/destination.
+  resolution: resolved
+  severity: P2
+assumptions:
+- Review fixes are uncommitted materials only; original implementation checks remain valid; cumulative gate covers commit.
+checks:
+  evidence: PASS completed-work-scenario.md; both report companions resolve and hashes match
+diff_scope:
+  base: 152b60c1ea94a2453fbc0586bdf803bcdbc4c0b6
+  head: e07b6cd73e39b4b87cb5c8f1dee63d5a735df2e6

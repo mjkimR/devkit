@@ -10,3 +10,11 @@ source = "playbooks/drift-reconciliation.md"
 
 [presets.upkeep]
 assets = ["drift-reconciliation"]
+
+[[assets]]
+id = "weekly-report"
+kind = "playbook"
+source = "playbooks/weekly-report.md"
+
+[presets.reporting]
+assets = ["weekly-report"]

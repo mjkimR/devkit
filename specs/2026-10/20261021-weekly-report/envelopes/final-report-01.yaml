@@ -1,0 +1,23 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T02:32:42.199989Z'
+status: completed
+summary: Delivered content-only maintenance/weekly-report, reporting/upkeep/all selection, lookup tests and guidance. Revision-bound evidence, DST/interval handling, immutable reruns and independently authorized publication are documented and exercised. Independent review findings resolved; independent reconciliation passed.
+findings: []
+assumptions:
+- Current-base maintenance drift/upkeep preserved. Exact retrieval already available; no runtime changes.
+- Host owns moved-base integration and generated instruction sync. Scope is emulated through absolute worktree commands and committed diff audit.
+unverified_areas:
+- No real external publication or model adherence guarantee. Failure/change/collision branches are labeled manual walkthroughs; local fixture receipt verifies bytes only.
+- Main advanced after captured validation; Host incorporates and validates moved base before integration.
+checks:
+  tests: PASS catalog 15; final just test-affected 24; manual DST/readback/hash/reachability and controlled publication scenarios
+  build: PASS just smoke including wheel builds and consumer installation
+  lint: PASS catalog lint and pyright; cumulative governance zero errors/warnings; normal commit gates
+  reviews: PASS independent code review with two evidence findings resolved by implementer; independent reconcile no findings
+diff_scope:
+  base: 152b60c1ea94a2453fbc0586bdf803bcdbc4c0b6
+  head: 9313e7f6f9bc55fcb82de90513eb76ae3ef125eb
+activity_effort: medium

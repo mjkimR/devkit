@@ -14,7 +14,7 @@ Inspected base: `e82940d0982173411c4e26a5bc223e677d4be9b8`.
   not use default lists as if they included completed specs or every namespace.
 - `CAP-DLV-delivery-workflows` and its completion guidance distinguish implementation, commit and integration.
   The proposal therefore separates verified integration from reachable changes with unknown integration time.
-- Options and rationale are recorded in `PADR-weekly-report-evidence-and-publication`.
+- Options and rationale are recorded in `ADR-weekly-report-evidence-and-publication`.
 
 Verification here is document/governance verification, not a run of the future playbook. Development will retain
 manual scenario evidence and package selection/smoke results. No external platform facts or API were assumed.

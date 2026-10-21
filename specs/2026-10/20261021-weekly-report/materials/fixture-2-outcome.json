@@ -1,0 +1,11 @@
+{
+  "run_id": "fixture-2",
+  "artifact": "fixture-2-report.md",
+  "sha256": "2fc97d83a389ba7cc8f3ab4e85f90140407fbf6bfea742474cbffb4cde9cdcb9",
+  "generation": "completed",
+  "publication": "pending",
+  "destination": null,
+  "authority": null,
+  "receipt": null,
+  "attempts": []
+}
