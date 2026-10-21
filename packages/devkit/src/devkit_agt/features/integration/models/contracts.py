@@ -134,6 +134,7 @@ class IntegrationRequest:
     local_target: str | None = None
     unverified_rules: tuple[str, ...] = ()
     approval_policy: str = "ask"
+    approval_gate: str = "dev-integration"
 
     @property
     def digest(self) -> str:
@@ -147,6 +148,7 @@ class IntegrationRequest:
         return {
             "id": self.id,
             "digest": self.digest,
+            "approval": {"gate": self.approval_gate, "policy": self.approval_policy},
             "repository": plan.base,
             "task": {"kind": self.context.task.kind, "id": self.context.task.id},
             "source": {"branch": plan.branch, "sha": plan.source_sha},
@@ -178,6 +180,7 @@ class IntegrationRequest:
         return asdict(self) | {
             "repository": self.repository.public_scope() if self.repository else None,
             "digest": self.digest,
+            "approval": {"gate": self.approval_gate, "policy": self.approval_policy},
             "merge_method": self.context.finish.merge_method,
             "network_operations": "excluded" if self.route == "local" else "approved-pull-request",
             "route": self.route,

@@ -33,7 +33,7 @@ devkit workflow next --unit docs/proposals/PROP-<slug>            # a proposal b
 ### Step 1: Check Working Tree & Git State
 Run `git status -s`:
 - Uncommitted or unstaged changes? On a feature branch, a task worktree or the base branch?
-- Report leftovers from `devkit worktree status` at any `GIT_POLICY` level, each as `devkit worktree finish <branch>` or user-authorized removal, and stale activity branches from `devkit worktree stale` (also warned by `devkit rules check -p hygiene`), each with its resume or discard path, per §4 of the `spec` skill's `references/branches.md`; never remove or resume any unasked.
+- Report leftovers from `devkit worktree status` at any `GIT_POLICY` level, each as `devkit worktree finish <branch>` or user-authorized removal, and stale activity branches from `devkit worktree status --stale` (also warned by `devkit rules check -p hygiene`), each with its resume or discard path, per §4 of the `spec` skill's `references/branches.md`; never remove or resume any unasked.
 
 ### Step 2: Check Active Change Specs (`specs/`)
 Run `devkit spec list spec` (completed bundles are left out unless `--history`; follow any `[NEXT_CMD]`) and inspect only the listed directories. Completed specs are work history: pass `--history --status completed` only when a task explicitly needs one.

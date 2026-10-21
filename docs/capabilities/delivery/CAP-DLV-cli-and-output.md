@@ -14,12 +14,14 @@ created_at: 2026-10-17
 
 ## 1. Commands
 
+The default group help focuses on operating existing units. Authoring commands `new`, `bind`, `checks`, `validate` and `envelope new` remain callable with their own `--help` but are hidden from their parent help.
+
 ```bash
 devkit workflow new <slug> [--workflow ID] [--date YYYY-MM-DD] [--status S]   # create a unit from the layout template and bind it
 devkit workflow bind --unit DIR [--anchor FILE] [--workflow ID]  # record or change the workflow binding
 devkit workflow next --unit DIR [--anchor FILE] [--workflow ID] [--given NAME]... [--no-lint] [--format text|json]
 devkit workflow handoff --unit DIR [--anchor FILE] [--workflow ID] [--date YYYY-MM-DD] [--by NAME] [--no-lint] [--format text|json]
-devkit workflow requests --unit DIR [--anchor FILE] [--no-lint] [--format text|json]   # open human requests of a unit
+devkit workflow next --view requests --unit DIR [--anchor FILE] [--no-lint] [--format text|json]   # requests-only view, using the same evaluation and error status as next
 devkit workflow answer --unit DIR [--anchor FILE] --request ID --action accept|decline|cancel [--value V] [--note TEXT] [--by NAME] [--no-lint] [--format text|json]
 devkit workflow return --unit DIR [--anchor FILE] --to STAGE [--note TEXT] [--by NAME] [--no-lint] [--format text|json]  # go back; later approvals are asked again
 devkit workflow show <ID|PATH> [--format text|json]              # a definition's stages and next candidates
@@ -56,7 +58,7 @@ Exit codes follow the devkit convention (`ARCH-08-cross-cutting`):
 
 A command that collects several problems (`validate`, `envelope check`) exits with the highest exit code among them. `show` only reports, so it exits `1` when its report lists any problem, whatever the problem's own code, and `2` only when it cannot run (an unknown workflow, an unreadable definition or configuration).
 
-In text mode errors are reported on stderr as Agent Advisory Protocol blocks from `devkit.advisory`, with a stable code and an `[ACTION]` directive, so an agent knows whether to fix input, stop for a person, or respect a guardrail. Under `--format json` stdout carries exactly one JSON object, never a bare array: the command's result, or `{"error": {...}}` when it has none. Problems a command collects rather than raises are listed in its result under `errors`, each the `to_dict()` of an advisory error (`code`, `level`, `message`, `exit_code`, `advisory`, plus `file` or `where` when the problem has one); warnings and notices are listed under `notices`. The JSON object carries every advisory, so nothing is rendered on stderr in JSON mode; in text mode warnings and notices follow the result as `[WARN]` or `[NOTICE]` blocks. A text-mode `next` or `requests` whose lint run failed prints its result and then reports the `devkit_agt.features.rules` error on stderr (in JSON it is among the result's `errors`); `envelope check` reports each `ENVELOPE_INVALID` file the same way.
+In text mode errors are reported on stderr as Agent Advisory Protocol blocks from `devkit.advisory`, with a stable code and an `[ACTION]` directive, so an agent knows whether to fix input, stop for a person, or respect a guardrail. Under `--format json` stdout carries exactly one JSON object, never a bare array: the command's result, or `{"error": {...}}` when it has none. Problems a command collects rather than raises are listed in its result under `errors`, each the `to_dict()` of an advisory error (`code`, `level`, `message`, `exit_code`, `advisory`, plus `file` or `where` when the problem has one); warnings and notices are listed under `notices`. The JSON object carries every advisory, so nothing is rendered on stderr in JSON mode; in text mode warnings and notices follow the result as `[WARN]` or `[NOTICE]` blocks. A text-mode `next` (including its `--view requests` view) whose lint run failed prints its result and then reports the `devkit_agt.features.rules` error on stderr (in JSON it is among the result's `errors`); `envelope check` reports each `ENVELOPE_INVALID` file the same way.
 
 The library raises the same codes, one class per code. `WorkflowError` is the base: it sets the actor and retry once, and each subclass adds its code and mode. Foundation and project errors (`CONFIG_INVALID`, `RECEIPT_INVALID`, `GIT_FAILED`, ...) and of `devkit_agt.features.rules` (from `lint-clean`) pass through unchanged.
 
@@ -64,7 +66,7 @@ The library raises the same codes, one class per code. `WorkflowError` is the ba
 | --- | --- | --- | --- | --- |
 | `CONFIG_INVALID` | `devkit_dist.base.errors` `ConfigError` | `INPUT_ERROR` | `2` | `.devkit/config.toml` cannot be read or parsed (passed through unchanged) |
 | `WORKFLOW_CONFIG_INVALID` | `WorkflowConfigError` | `INPUT_ERROR` | `2` | the `[workflow]`, `[workflow.approvals]` or `[workflow.stages]` table is malformed (a subclass of the `devkit_dist.base.errors` `ConfigError`) |
-| `WORKFLOW_GATE_POLICY` | `GatePolicyError` | `INPUT_ERROR` | `2` | `[workflow.approvals]` sets a gate to a policy its definition does not accept (`gates.<gate>.policies`); refused before evaluation by `next`, `requests`, `answer`, `return` and `handoff` |
+| `WORKFLOW_GATE_POLICY` | `GatePolicyError` | `INPUT_ERROR` | `2` | `[workflow.approvals]` sets a gate to a policy its definition does not accept (`gates.<gate>.policies`); refused before evaluation by `next`, `answer`, `return` and `handoff` |
 | `ARGUMENT_INVALID` | `devkit_core.base.errors` `ArgumentError` | `INPUT_ERROR` | `2` | `-w/--workspace-root` or a `validate` path does not exist, `--date` is not `YYYY-MM-DD`, or `show` is given both or neither of `REF` and `--unit` |
 | `WORKFLOW_NOT_SELECTED`, `WORKFLOW_NOT_FOUND`, `WORKFLOW_INVALID` | `WorkflowNotSelectedError`, `WorkflowNotFoundError`, `WorkflowInvalidError` | `INPUT_ERROR` | `2` | no definition chosen (`new` without `--workflow` or `[workflow].default`; for a unit command, an unbound unit without a default, whose fix is `bind --unit <dir> --workflow <id>`), no id or file matches, or the chosen one fails validation (problems become `[DETAIL]` lines) |
 | `WORKFLOW_NOT_BINDABLE` | `WorkflowNotBindableError` | `INPUT_ERROR` | `2` | `new` or `bind` was given `--workflow <path>` naming a file that is not the discovered definition of its id (outside `definitions_dir` and the receipt, or shadowed by another file with the same id); a binding records only the id, so later commands could not find the file |

@@ -2,7 +2,7 @@
 
 ## 1. Classify (Backlog)
 
-Decide in this order and propose the result; the user confirms `task-kind` and `planning-depth` at `plan-intent`, `activity-effort` when the activity starts.
+Decide in this order and state the result. Record the authorized intent at `plan-intent`; an existing explicit task instruction needs no repeated confirmation. Choose activity effort within that intent, preserving explicit user choices and required review.
 
 | Axis | Values | Criterion |
 | --- | --- | --- |
@@ -10,15 +10,16 @@ Decide in this order and propose the result; the user confirms `task-kind` and `
 | `planning-depth` | `session`, `spec`, `proposal` | What must be settled before implementation, not size. Nothing (no design choice, no contract impact, verifiable in the session): `session`. The contract, with a clear direction: `spec`. The direction, with options to compare: `proposal`. Large but clear work is `spec`; small work whose direction is open is `proposal`. |
 | `activity-effort` | `low`, `medium` (default), `high` | How thorough the activity's review and verification are ([effort](effort.md)); none for Backlog and inline Planning. Never lowers gates, exit checks or `required` policies. |
 
-- **Backlog is `direct`** and follows [repository Backlog](backlog.md). Propose effort hints with `plan-intent`; record explicit confirmation with `devkit workflow answer --by user`. Commit only the draft and its intent record before starting Planning from the base HEAD.
-- **A request that must be split is not classified yet**: decompose it into drafts ([repository Backlog](backlog.md)). A `needs_decompose` draft never starts Planning; one proposal hands off to one spec.
-- **A queued draft may skip Planning or the Unit, on the user's decision**: a settled direction by a direct acceptance, `session`-depth work by the session reclassification at pickup ([repository Backlog](backlog.md)).
+- **Backlog is `direct`** and follows [repository Backlog](backlog.md). State effort hints with `plan-intent`; record actual user instruction with `devkit workflow answer --by user` without inventing a new approval. Commit only the draft and its intent record before starting Planning from the base HEAD.
+- **A request requiring independently delivered outcomes is decomposed first**: decompose it into drafts ([repository Backlog](backlog.md)). A `needs_decompose` draft never starts Planning; one proposal hands off to one spec.
+- **A queued draft may skip Planning or the Unit, within the authorized scope**: a settled direction by a direct acceptance, `session`-depth work by the session reclassification at pickup ([repository Backlog](backlog.md)).
 - **Draft proposals may be added from any activity**, outside the worktree and PR `required` policies, in the current checkout; a follow-up found during other work is feedback by default, a draft is also allowed. Backlog changes only a `draft` that Planning does not own ([repository Backlog](backlog.md); stop on `SPEC_PROPOSAL_IN_PLANNING`).
 
 ## 2. Inline Planning (`session`, `spec`) and the problem rule
 
 - **`spec`**: start `dev-<slug>` and the Unit per [worktree](worktree.md) §1 (`--no-worktree` when `GIT_POLICY` needs no worktree, [branches](branches.md); `devkit spec new` is refused off `dev-<slug>`), agree the intent with the user, record `plan-intent`, commit. That committed state is Development's input; a worker or cloud run continues the branch (`--existing-branch dev-<slug> --unit <dir>`, [branches](branches.md) §3).
 - **`session`**: agree the intent in the conversation, no Unit. With a PR the work runs on `dev-<slug>`, else on the current branch (on the base under `ask` integration: `dev-<slug>` or the OK first). A `session` task runs in `direct` or the `cloud-pr` general PR path only; in `local-orchestrated` handle it yourself in `direct`.
+- **Split work for execution, not extra approval.** Keep one cohesive unit when its outcome can be implemented and verified together. Sequence shared contracts and conflicting files; parallelize independent scopes; use separate units for independently delivered outcomes. The Host chooses implementation tasks, subagents, review and rework within the agreed scope. A worker return or stage boundary does not require user acceptance. Preserve committed heads, unresolved work and recovery state when pausing or resuming. Request a new decision only at an `ask` approval boundary not already authorized, or when the agreed goal, scope or constraints must change.
 - **Development decides inside the agreement.** A choice inside the agreed goal, scope and contract takes the recommended option and is recorded. Only a problem that cannot be solved without changing the agreement, or at all, stops the work: a worker records it and you resolve it per [worker records](worker-records.md) §3; a `session` task reports it in the conversation or the cloud run's problem report and does not integrate. A change of scope needs the user and a close (§4).
 
 ### Source feedback at entry
@@ -32,7 +33,7 @@ updates in delegated write scope. Terminal sources remain traceability and requi
 
 ## 3. Raising the depth
 
-Raising is yours to decide (`[ROUTING_POLICY: depth_escalation=auto]`); under `ask` confirm it with the user first. Lowering never happens except through a proposal's handoff (after `plan-accept`, a direct acceptance included) or the session reclassification of a queued draft on the user's explicit decision at pickup ([repository Backlog](backlog.md)); a proposal in review or accepted and a spec Unit are never lowered. Workers and Cloud Agents never raise it: they report the need as a problem.
+Raising is yours to decide (`[ROUTING_POLICY: depth_escalation=auto]`); under `ask` confirm it with the user first. Lowering never happens except through a proposal's handoff (after `plan-accept`, a direct acceptance included) or the session reclassification of a queued draft by the Host within the authorized scope at pickup ([repository Backlog](backlog.md)); a proposal in review or accepted and a spec Unit are never lowered. Workers and Cloud Agents never raise it: they report the need as a problem.
 
 - Before Development: change the classification only.
 - **`session` → `spec` during Development** keeps the work, with no close, new slug or new worktree: add a spec Unit in the current work environment (`devkit spec new <slug>` on `dev-<slug>`; without that branch, first `devkit worktree start dev-<slug> --no-worktree` in this checkout, which keeps the uncommitted work), record the agreed intent and the work so far, and continue from the workflow's next stage. Ask the agreement again only if goal or scope change; record `plan-intent` on the strength of the session's approval: `devkit workflow answer --unit <dir> --request gate:plan-intent --action accept --by user --note "approved in the session; depth session -> spec: <reason>"` (under `depth_escalation = ask`, name the user's confirmation too). Raise it when a lasting design record, a contract change or a Living Spec change is needed; a higher review effort alone never raises the depth.

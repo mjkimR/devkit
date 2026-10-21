@@ -68,7 +68,6 @@ Shared-file ownership, codes and setup: [Host Integration Reference](host.md).
 | `devkit override remove <bundle>:<asset>` | Deletes the override files of the asset's upstream files and its baseline, then synchronizes the pristine upstream files; any other project file under the override stays (`ORPHAN_LEFT`). |
 | `devkit bundle validate <source>` | Verifies `bundle.toml`, the declared sources, the kind-specific headers (instructions, playbooks, workflows, role contracts) and every per-agent rule a sync applies (`CAP-DIST-manifest-spec`). `<source>` is the bundle directory. Prints `name`, `version` and `assets` (the number of declared assets). |
 | `devkit bundle plan <source> [--preset <name>] [--agent <name>]...` | Previews every destination a local bundle deploys (managed copies, native projections, generated entry skills, seeded files), computed by the same inventory as `sync`, without a consumer project. Defaults: the default preset (else `all`) and every supported agent. Prints `bundle`, `version`, `preset`, `agents`, `assets` (as in the sync result), `files` (`destination`, `sha256`, `mode`) and `seeded` (`destination`, `asset`, `sha256`). |
-| `devkit bundle build <source> --output <zip>` | Builds a deterministic ZIP archive (`CAP-DIST-manifest-spec`). Prints `path`, `sha256` (of the archive) and `files` (the number of archived files, `inventory.json` included). |
 
 Override semantics are specified in `CAP-DIST-workspace-ownership`.
 

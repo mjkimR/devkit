@@ -279,6 +279,19 @@ def test_version_lives_only_on_the_root_group() -> None:
     assert {"sync", "status", "list", "override", "bundle", "host"} <= names
 
 
+def test_internal_commands_are_callable_but_not_discovered_and_archive_cli_is_removed() -> None:
+    runner = CliRunner()
+    root = runner.invoke(root_cli, ["--help"])
+    assert root.exit_code == 0 and "  recover " not in root.stdout
+    assert runner.invoke(root_cli, ["recover", "--help"]).exit_code == 0
+    host = runner.invoke(root_cli, ["host", "--help"])
+    assert "  hook " not in host.stdout
+    assert runner.invoke(root_cli, ["host", "hook", "--help"]).exit_code == 0
+    bundle = runner.invoke(root_cli, ["bundle", "--help"])
+    assert "validate" in bundle.stdout and "plan" in bundle.stdout and "  build " not in bundle.stdout
+    assert runner.invoke(root_cli, ["bundle", "build"]).exit_code == 2
+
+
 def _leaf_commands(command: click.Command, path: str = "devkit"):
     if isinstance(command, click.Group):
         ctx = click.Context(command)

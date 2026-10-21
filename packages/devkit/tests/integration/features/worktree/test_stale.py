@@ -1,4 +1,4 @@
-"""Stale activity branches: ``stale_branches``, ``devkit worktree stale`` and the hygiene report."""
+"""Stale activity branches: ``stale_branches``, ``devkit worktree status --stale`` and the hygiene report."""
 
 from __future__ import annotations
 
@@ -113,7 +113,7 @@ def test_a_failed_pull_request_lookup_judges_by_commits_alone(repo: Path) -> Non
 def test_the_stale_command_lists_and_warns(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     aged_branch(repo, "dev-old", 30)
     monkeypatch.setattr(stale_module, "run_gh", fake_gh())
-    result = CliRunner().invoke(cli, ["worktree", "stale", "-w", str(repo)])
+    result = CliRunner().invoke(cli, ["worktree", "status", "--stale", "-w", str(repo)])
     assert result.exit_code == 0, result.output
     lines = result.stdout.splitlines()
     assert lines[0].startswith("[STALE_BRANCH: dev-old unit=- last_activity=") and lines[0].endswith(
@@ -121,10 +121,12 @@ def test_the_stale_command_lists_and_warns(repo: Path, monkeypatch: pytest.Monke
     )
     assert lines[1] == "[SUMMARY: checked=yes branches=1 stale=1 stale_after=14d]"
     assert "(WORKTREE_STALE_BRANCH)" in result.stderr
-    document = json.loads(CliRunner().invoke(cli, ["worktree", "stale", "-w", str(repo), "--format", "json"]).stdout)
+    document = json.loads(
+        CliRunner().invoke(cli, ["worktree", "status", "--stale", "-w", str(repo), "--format", "json"]).stdout
+    )
     assert document["checked"] is True and [item["branch"] for item in document["stale"]] == ["dev-old"]
     monkeypatch.setattr(stale_module, "run_gh", fake_gh(auth=1))
-    skipped = CliRunner().invoke(cli, ["worktree", "stale", "-w", str(repo)])
+    skipped = CliRunner().invoke(cli, ["worktree", "status", "--stale", "-w", str(repo)])
     assert skipped.exit_code == 0 and skipped.stdout == "[SUMMARY: checked=no branches=0 stale=0 stale_after=14d]\n"
     assert "(WORKTREE_STALE_SKIPPED)" in skipped.stderr
 
@@ -152,3 +154,14 @@ def test_a_recorded_unit_the_branch_no_longer_holds_is_not_reported(repo: Path) 
     git(repo, "config", "--local", "branch.dev-gone.devkitUnit", "docs/proposals/PROP-gone")  # handed off since
     [item] = stale_branches(locate(repo), gh=fake_gh()).stale
     assert item.unit is None  # the caller maps the slug instead of resuming a unit that is gone
+
+
+def test_default_status_never_queries_github(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def unexpected_gh(cwd: Path, args: list[str]) -> None:
+        pytest.fail("default worktree status must not query GitHub")
+
+    monkeypatch.setattr(stale_module, "run_gh", unexpected_gh)
+    result = CliRunner().invoke(cli, ["worktree", "status", "-w", str(repo), "--format", "json"])
+    assert result.exit_code == 0, result.output
+    assert "worktrees" in json.loads(result.stdout)
+    assert CliRunner().invoke(cli, ["worktree", "stale", "--help"]).exit_code == 2

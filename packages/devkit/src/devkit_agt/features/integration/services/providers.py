@@ -59,6 +59,16 @@ def effective(config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def approval(config: dict[str, Any], gate: str) -> str:
+    """Read an owning decision policy with validated table shapes."""
+    workflow = config.get("workflow", {})
+    approvals = workflow.get("approvals", {}) if isinstance(workflow, dict) else None
+    value = approvals.get(gate, "ask") if isinstance(approvals, dict) else None
+    if value not in ("ask", "auto"):
+        raise IntegrationConfigError(f"{gate} requires ask or auto in workflow.approvals")
+    return value
+
+
 def policy_digest(config: dict[str, Any]) -> str:
     return digest(effective(config))
 

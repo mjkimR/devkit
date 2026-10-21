@@ -25,6 +25,14 @@ def _run(*args: str) -> Result:
 def test_help() -> None:
     result = _run("--help")
     assert result.exit_code == 0 and "workflow engine" in result.output
+    commands = {line.split()[0] for line in result.output.splitlines() if line.startswith("  ") and line.strip()}
+    assert {"new", "bind", "requests", "checks", "validate"}.isdisjoint(commands)
+    assert _run("requests", "--help").exit_code == 2
+    for command in ("new", "bind", "checks", "validate"):
+        assert _run(command, "--help").exit_code == 0
+    envelope_help = _run("envelope", "--help")
+    assert not any(line.strip().startswith("new ") for line in envelope_help.output.splitlines())
+    assert _run("envelope", "new", "--help").exit_code == 0
 
 
 def test_checks_text_and_json(tmp_path: Path) -> None:
@@ -253,13 +261,17 @@ def test_requests_reports_a_lint_error_like_next(tmp_path: Path, monkeypatch: py
     root = simple_workspace(tmp_path, check="lint-clean")
     assert _run("new", "-w", str(root), "u").exit_code == 0
     monkeypatch.setattr(devkit_agt.features.rules, "run_project_rules", broken)
-    result = _run("requests", "-w", str(root), "--unit", SIMPLE_UNIT, "--format", "json")
+    result = _run("next", "--view", "requests", "-w", str(root), "--unit", SIMPLE_UNIT, "--format", "json")
     assert result.exit_code == 2 and result.stderr == ""
     document = json.loads(result.stdout)
     assert document["requests"] == [] and [e["code"] for e in document["errors"]] == ["UNEXPECTED_ERROR"]
-    text = _run("requests", "-w", str(root), "--unit", SIMPLE_UNIT)
+    text = _run("next", "--view", "requests", "-w", str(root), "--unit", SIMPLE_UNIT)
     assert text.stdout.splitlines() == ["[REQUESTS: none]", '[LINT_ERROR: "RuntimeError: rule exploded"]']
     assert text.exit_code == 2 and "(UNEXPECTED_ERROR) RuntimeError: rule exploded" in text.stderr
 
-    clean = json.loads(_run("requests", "-w", str(root), "--unit", SIMPLE_UNIT, "--no-lint", "--format", "json").stdout)
+    clean = json.loads(
+        _run(
+            "next", "--view", "requests", "-w", str(root), "--unit", SIMPLE_UNIT, "--no-lint", "--format", "json"
+        ).stdout
+    )
     assert clean == {"requests": [], "errors": []}

@@ -1,7 +1,8 @@
 """The ``devkit workflow`` group and its shared options; the error boundary is ``devkit_dist.adapters.cli.boundary``.
 
 Under ``--format json`` every command prints exactly one object: ``list``
-``{"units"}``, ``checks`` ``{"checks"}``, ``requests`` ``{"requests"}``, the
+``{"units"}``, ``checks`` ``{"checks"}``, ``next --view requests``
+``{"requests", "errors"}``, the
 other commands their result object (collected problems under ``errors``), and
 ``{"error"}`` when a command fails.
 """

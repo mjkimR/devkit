@@ -129,7 +129,7 @@ def ambiguous(workspace: Path) -> Path:
     [
         ("next", "--no-lint"),
         ("bind",),
-        ("requests", "--no-lint"),
+        ("next", "--view", "requests", "--no-lint"),
         ("answer", "--no-lint", "--request", "feedback:draft", "--action", "accept", "--value", "x"),
         ("return", "--no-lint", "--to", "draft"),
         ("show",),
@@ -199,7 +199,11 @@ def test_envelope_check_needs_only_some_anchor_and_new_resolves_the_unit(ambiguo
 
 def test_anchor_mismatch_fix_names_a_command_every_caller_has(ambiguous: Path) -> None:
     write_unit(ambiguous, "specs/x", anchor="spec.md", extra="workflow: incubate\n")
-    for command in (("requests",), ("next",), ("handoff",)):
+    for command in (
+        ("next", "--view", "requests"),
+        ("next",),
+        ("handoff",),
+    ):
         result = _run(*command, "-w", str(ambiguous), "--unit", "specs/x", "--no-lint")
         assert result.exit_code == 2 and "(ANCHOR_MISMATCH)" in result.stderr
         assert "`devkit workflow bind --unit specs/x --workflow <id>`" in result.stderr
@@ -301,7 +305,7 @@ def test_failed_handoff_leaves_no_decision_record(chain: Path, monkeypatch: pyte
     [
         ("next", "--no-lint"),
         ("bind",),
-        ("requests", "--no-lint"),
+        ("next", "--view", "requests", "--no-lint"),
         ("answer", "--no-lint", "--request", "gate:x", "--action", "accept"),
         ("return", "--no-lint", "--to", "plan"),
         ("handoff", "--no-lint"),
@@ -362,7 +366,11 @@ def test_a_path_to_the_discovered_definition_binds_and_resolves_later(tmp_path: 
     assert run_cli("new", "-w", str(root), "u", "--workflow", ".devkit/workflows/w.md").exit_code == 0
     bound = run_cli("bind", "-w", str(root), "--unit", SIMPLE_UNIT, "--workflow", str(root / ".devkit/workflows/w.md"))
     assert bound.exit_code == 0 and bound.stdout.startswith("[BOUND: w]")
-    for args in (("next",), ("requests",), ("show",)):
+    for args in (
+        ("next",),
+        ("next", "--view", "requests"),
+        ("show",),
+    ):
         result = run_cli(*args, "-w", str(root), "--unit", SIMPLE_UNIT)
         assert result.exit_code == 0, (args, result.stderr)
 

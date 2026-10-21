@@ -13,7 +13,7 @@ uv run devkit worktree finish dev-login --discard  # close: drop the unmerged br
 uv run devkit worktree start dev-login --no-worktree   # or: the branch in this checkout, no separate directory
 uv run devkit worktree start dev-login --existing-branch origin/dev-login --unit docs/specs/login  # continue it
 uv run devkit worktree status                    # leftovers: unmerged or dirty worktrees, stray branches
-uv run devkit worktree stale                     # plan-*/dev-* branches idle longer than [worktree] stale_after
+uv run devkit worktree status --stale                     # plan-*/dev-* branches idle longer than [worktree] stale_after
 ```
 
 Every command takes `-w/--workspace-root` (any directory in the checkout; default the current directory), `--format text|json` and the shared output options.

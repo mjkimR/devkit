@@ -1,7 +1,7 @@
 """Record the user's acceptance of a proposal in one validated step (``devkit spec proposal accept``).
 
 ``accept_proposal`` is the one writer of an acceptance (``ADR-direct-acceptance-command-and-handoff-guard``), run
-only after the user's explicit acceptance. Its form follows from the status and ``direct``:
+after explicit acceptance or owning policy delegation. Its form follows from the status and ``direct``:
 
 - ``planning``: a proposal in review (``status: reviewing``) on its ``plan-<slug>``, the acceptance after Planning;
 - ``direct``: an eligible draft (``ADR-eligibility-for-direct-acceptance``) on the base checkout, Backlog work
@@ -23,7 +23,15 @@ from pathlib import Path
 from typing import Any
 
 from devkit.advisory import AdvisoryError
-from devkit_agt.features.workflow import UnitRef, Workspace, load_envelopes, record_answer
+from devkit_agt.features.workflow import (
+    UnitRef,
+    Workspace,
+    load_decisions,
+    load_envelopes,
+    new_decision,
+    record_answer,
+    write_decision,
+)
 from devkit_core.base.errors import ArgumentError
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
@@ -42,6 +50,7 @@ from devkit_spec.features.policy.repositories.branches import (
     checkout,
     planning_branches,
 )
+from devkit_spec.features.policy.usecases.approvals import approval_policy
 from devkit_spec.features.proposals.models.axes import DEFAULT_TASK_KIND, TASK_KINDS
 from devkit_spec.features.proposals.services.status import accepted_text
 from devkit_spec.features.proposals.usecases.handoff import (
@@ -58,8 +67,7 @@ from devkit_spec.features.proposals.usecases.specs import text_value
 PLANNING, DIRECT, REPAIR = "planning", "direct", "repair"
 FORMS = (PLANNING, DIRECT, REPAIR)
 ACTOR = "user"
-"""The only ``--by``: ``plan-accept`` is always the user's (policy ``ask`` only); autohub records the user's UI
-acceptance the same way."""
+"""User authority is recorded explicitly; policy authority requires owning plan-accept=auto."""
 DRAFT, REVIEWING, REJECTED = "draft", "reviewing", "rejected"
 SUPERSEDES = "supersedes"
 WORKER = "worker"
@@ -98,21 +106,24 @@ class AcceptResult:
 def accept_proposal(
     root: Path, slug: str, *, by: str, note: str = "", direct: bool = False, check: bool = False
 ) -> AcceptResult:
-    """Accept proposal ``slug`` under the workspace ``root`` for the user (see the module docstring).
+    """Accept proposal ``slug`` under the workspace ``root`` for the recorded authority (see the module docstring).
 
-    Raises, before writing anything: ``ArgumentError`` (``by`` other than ``user``; ``direct`` without a non-blank
+    Raises, before writing anything: ``ArgumentError`` (``by`` other than ``user`` or authorized ``policy``; ``direct`` without a non-blank
     ``note``), ``ProposalSlugError``, ``ProposalNotFoundError``, ``ProposalInvalidError``,
     ``ProposalAcceptRefusedError`` (a form the status does not allow, a single-file or unbound proposal),
     ``ProposalWrongWorktreeError`` (the Planning form off ``plan-<slug>``) and ``ProposalNotEligibleError`` (every
     failed direct condition in its details). After writing the status: ``ProposalGateNotOpenError``, with the status
     restored.
     """
-    if by != ACTOR:
+    if by not in {ACTOR, "policy"}:
         raise ArgumentError(
-            f"--by {by!r}: plan-accept is always the user's decision",
+            f"--by {by!r}: expected user or policy",
             target_files=["--by"],
-            fix="Pass --by user, only after the user's explicit acceptance",
+            fix="Use user for explicit acceptance or policy when owning policy delegates plan-accept",
         )
+    policy = approval_policy(root, "plan-accept")
+    if by == "policy" and policy != "auto":
+        raise ArgumentError("--by policy requires owning plan-accept=auto")
     reason = note.strip()
     if direct and not reason:
         raise ArgumentError(
@@ -167,7 +178,7 @@ def accept_proposal(
             )
     else:
         blocking = _direct_conditions(root, bundle, slug, meta, form, workspace, unit)
-        if INTENT_GATE not in gates:
+        if INTENT_GATE not in gates and workspace.config.policy("plan-intent") != "auto":
             pending.append(INTENT_GATE)
         if blocking or (pending and not check):
             raise ProposalNotEligibleError(
@@ -183,7 +194,24 @@ def accept_proposal(
     if form != REPAIR:
         _write_status(path, original, rel)
     try:
-        decision = record_answer(workspace, unit, ACCEPT_GATE, "accept", note=recorded, by=by, lint=False)
+        if workspace.config.policy("plan-accept") == "auto":
+            evaluation = workspace.evaluate_unit(unit, lint=False)
+            if evaluation.errors or evaluation.hold.reasons() or not evaluation.complete:
+                raise ProposalGateNotOpenError("automatic acceptance still requires completed Planning checks")
+            decision = write_decision(
+                unit.dir,
+                new_decision(
+                    load_decisions(unit.dir),
+                    ACCEPT_GATE,
+                    "accept",
+                    workflow=unit.doc.id,
+                    stage="direction-handoff",
+                    note=recorded,
+                    by=by,
+                ),
+            )
+        else:
+            decision = record_answer(workspace, unit, ACCEPT_GATE, "accept", note=recorded, by=by, lint=False)
     except BaseException as exc:
         # Any failure (the gate not open, a write error, an interruption, also while collecting the reasons below)
         # leaves no status without its record: the original bytes are restored before anything is raised.

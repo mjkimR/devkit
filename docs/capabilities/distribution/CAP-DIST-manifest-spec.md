@@ -206,8 +206,8 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
 
 ## 5. Deterministic Local Archive Build
 
-`devkit bundle build <source> --output <zip>` produces a bit-for-bit reproducible ZIP for local export and
-verification; projects receive bundles as installed wheels, not archives.
+`build_source(source, output)` remains an application usecase for deterministic local ZIP export and
+verification. It has no public CLI command; projects receive bundles as installed wheels, not archives.
 
 - Entries are sorted by archive path, timestamps pinned to `1980-01-01 00:00:00 UTC`, modes normalized to `0644` or
   `0755`.

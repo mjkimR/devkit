@@ -29,8 +29,8 @@ When Planning discovers a split is needed, its executor follows [Planning](plann
 that Planning returned to Backlog, and commit the return with the run's records. Do not create children on the
 Planning branch or retry `--decomposed-from` there.
 
-The Host then checks the committed return and obtains explicit user authorization to merge that return and
-perform cleanup under the existing Git policy. For a local merge, use `devkit worktree finish plan-<slug> --merge
+The Host then checks the committed return and establishes authority to merge that return and
+perform cleanup under the existing Git policy; reuse existing authorization for these exact effects rather than adding a routine decomposition approval. For a local merge, use `devkit worktree finish plan-<slug> --merge
 --local-only` from the base after preparing the branch and clearing envelope holds; use the required PR path when
 {% if execution.environment == "local" %}policy requires it. The MCP unit integration path requires an accepted proposal and cannot integrate this draft
 {% else %}policy requires it. The automated unit integration path requires an accepted proposal and cannot integrate this draft
@@ -47,33 +47,18 @@ permission and gives workers no additional Git actions.
 
 ## Direct acceptance
 
-An eligible draft may skip Planning on the user's explicit `plan-accept` (`ADR-eligibility-for-direct-acceptance`,
-`ADR-direct-acceptance-command-and-handoff-guard`). Never propose it silently; the user may always choose Planning.
+An eligible draft may skip Planning under the `plan-accept` policy. Apply the eligibility checks before acceptance; skip Planning only when direction is settled and no comparison, spike question or failed-attempt depth escalation needs it. Preserve an explicit request for Planning.
 
-1. In the base checkout run `devkit spec proposal accept <slug> --by user --direct --check --note "<reason>"`; a
-   refusal names each failed condition, and a missing intent shows as `pending=gate:plan-intent`.
-2. Judge the direction yourself: nothing to compare, no open spike question, not a depth escalation carrying a
-   failed attempt's material. Otherwise propose Planning, with the reason.
-3. The request shows "Planning: skipped (direct acceptance)", the eligibility reason, `task_kind` (which `plan-accept`
-   confirms), the recorded `planning_effort` hint (not `low`: why Planning is skipped anyway), the PADRs the handoff
-   will promote and the `dev_effort` you reviewed against the settled direction; under `pull_request = required`, that
-   the direction gets no PR review. Without a recorded intent the same request may ask `plan-intent` too, each
-   decision named in full and answered explicitly; neither is inferred from the other.
-4. On the user's acceptance: record a pending `plan-intent` (`devkit workflow answer --by user`), sweep this session
-   at `collect-feedback` under the project's sweep policy (`spec-feedback`; zero observations is a valid PASS), then
-   run `devkit spec proposal accept <slug> --by user --direct --note "<reason>"` and commit it all in one Backlog
-   commit. No run, `activity-effort` or `worker` envelope. Intent only: no sweep; commit the draft with its intent for
-   Planning. A refusal after the sweep: remove the sweep envelope before committing.
+1. In the base checkout run `devkit spec proposal accept <slug> --by user --direct --check --note "<reason>"`; this is a read-only eligibility check, not a user approval. Resolve any failed condition. Reuse existing explicit task intent for a pending `gate:plan-intent` instead of prompting again.
+2. Before acceptance, provide the eligibility reason, `task_kind`, Planning skipped, PADRs to promote, selected `dev_effort`, and any missing PR review under `pull_request = required`. Under `plan-accept=ask`, obtain or reuse explicit direction acceptance; under `auto`, use policy authority from the owning base and task policy.
+3. Sweep this session at `collect-feedback` under the project's sweep policy (`spec-feedback`; zero observations is a valid PASS), then run `devkit spec proposal accept <slug> --by user|policy --direct --note "<reason>"` with the actual authority and commit the agreed Backlog change. No Planning run, `activity-effort` or `worker` envelope. A refusal after the sweep removes that sweep envelope before committing.
 
-Development then hands off as for any accepted proposal. `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED` at handoff goes to the
-user: without a `worker` envelope, on the user's acceptance, repair it on the base with the same `--direct` command
-and merge the base into `dev-<slug>`; with one, on the user's decision revert the whole Planning merge to `draft`.
+Development follows the independent `proposal-handoff=ask|auto` boundary; direction acceptance alone does not imply a human decision to start Development. `accept_only` can retain the accepted proposal in Backlog. For `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED`, inspect the exact state and repair a missing direct acceptance only with valid authority and eligibility; never invent approval to satisfy handoff.
 
 ## Session reclassification of a queued draft
 
 When the user picks a queued draft whose work meets the `session` criteria ([classification](classification.md) §1),
-you may propose doing it as a `session` task, with the reason; only the user's explicit decision allows it
-(`ADR-session-reclassification-of-a-queued-draft`), never a worker or Cloud Agent. It needs push access to the base,
+the Host may choose a `session` task within the authorized goal, scope and constraints, stating the reason; a worker or Cloud Agent returns a recommendation rather than mutating Backlog. Respect any explicit requirement to retain the proposal or Planning. It needs push access to the base,
 a passing `devkit spec proposal check <slug>` (fetch first), no `PADR-*.md` in `decisions/`, and no
 `needs_decompose`, `supersedes` or depth escalation. The request names what goes: the draft and its gate records, its
 materials (kept in Git history), its `milestone` membership (review that milestone's exit condition) and the open
@@ -81,7 +66,7 @@ feedback preserved. Delete it in one Backlog commit on the base, preserving open
 ordinary prose references ([feedback retirement](feedback-retirement.md)); disposition direct prerequisites as below, with the message "depth proposal -> session on
 the user's decision: <reason>", and name the commit to the user at once. The session takes a new slug, starts
 through inline Planning and names the deletion commit in its final report; one that never integrates is undone by
-`git revert` of that commit, on the user's decision.
+`git revert` of that commit, under existing Git authority.
 
 ## Direct prerequisites and lifecycle disposition
 

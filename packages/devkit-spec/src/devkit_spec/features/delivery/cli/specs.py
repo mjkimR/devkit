@@ -22,7 +22,8 @@ from devkit_dist.adapters.cli import (
     workspace_option,
 )
 
-from devkit_spec.features.proposals import create_spec
+from devkit_spec.features.delivery.usecases.specs import create_and_register_spec
+from devkit_spec.features.scope.cli.output import echo_registered, registered_dict
 from devkit_spec.utils.output import sentinel
 
 
@@ -66,7 +67,7 @@ def spec_new_cmd(
     output_format: str,
 ) -> None:
     """Create the spec bundle specs/<YYYY-MM>/<YYYYMMDD>-<SLUG>/ (SPEC, PLAN and TASKS skeletons) and bind spec.md."""
-    created = create_spec(
+    initialized = create_and_register_spec(
         resolve_root(workspace_root),
         slug,
         title=title,
@@ -76,12 +77,16 @@ def spec_new_cmd(
         day=day.date() if day else None,
         cwd=Path.cwd(),
     )
+    created, registered = initialized.spec, initialized.registered
     if is_json(output_format):
-        echo_json(created.to_dict())
+        scope = registered_dict(registered.location, registered.record, registered.token) if registered else None
+        echo_json(created.to_dict() | {"scope": scope, "notices": [notice.to_dict() for notice in initialized.notices]})
     else:
         fields = {"namespace": created.namespace} if created.namespace else {}
         click.echo(sentinel("SPEC", created.id, path=created.dir, workflow=created.workflow, **fields))
+        if registered is not None:
+            echo_registered(registered.location, registered.record, registered.token)
         if created.next_command:
             click.echo(f"[NEXT_CMD: {created.next_command}]")
-    echo_notices(created.notices)
-    exit_on_warnings(created.notices)
+    echo_notices(initialized.notices)
+    exit_on_warnings(initialized.notices)

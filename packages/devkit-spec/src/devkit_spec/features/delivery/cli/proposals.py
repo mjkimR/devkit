@@ -206,8 +206,8 @@ def padr_cmd(
     "--by",
     "actor",
     required=True,
-    type=click.Choice([ACTOR]),
-    help="Who accepted: always the user, recorded only after the user's explicit acceptance",
+    type=click.Choice([ACTOR, "policy"]),
+    help="Decision authority: user acceptance or owning plan-accept=auto policy",
 )
 @click.option(
     "--note",
@@ -322,7 +322,7 @@ def handoff_cmd(slug: str, workspace_root: str | None, output_format: str) -> No
     exit_on_warnings(completed.notices)
 
 
-@proposal_group.command(name="prune")
+@proposal_group.command(name="prune", hidden=True)
 @click.argument("slug", required=False)
 @workspace_option()
 @FORMAT_OPTION

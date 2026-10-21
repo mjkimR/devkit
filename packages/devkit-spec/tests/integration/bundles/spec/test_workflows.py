@@ -128,9 +128,9 @@ def test_the_gates_fix_their_policies_and_integration_is_answered_by_given(workf
     data = _definition(workflow)
     gates = {stage.get("human_gate") for stage in data["stages"]}  # type: ignore[union-attr]
     expected: dict[str, dict[str, object]] = {}
-    for gate in ("plan-intent", "plan-accept"):  # always a person (01 §3): configuration cannot pass them
+    for gate in ("plan-intent", "plan-accept"):  # policy delegation preserves the gate and its checks
         if gate in gates:
-            expected[gate] = {"policies": ["ask"]}
+            expected[gate] = {"policies": ["ask", "auto"]}
     if "dev-integration" in gates:  # ask or auto; off would skip integration
         expected["dev-integration"] = {"answer": "given", "policies": ["ask", "auto"]}
     assert data.get("gates") == expected

@@ -1,4 +1,4 @@
-"""``next``, ``requests``, ``answer``, ``return`` and ``handoff``."""
+"""``next``, ``answer``, ``return`` and ``handoff``."""
 
 from __future__ import annotations
 
@@ -18,6 +18,13 @@ from devkit_agt.features.workflow.usecases.handoff import apply_handoff, plan_ha
 @ANCHOR
 @click.option("--workflow", "workflow_ref", default=None, help="Evaluate against this workflow instead of the binding")
 @click.option("--given", multiple=True, help="Gate, runner or human check the executor holds (repeatable)")
+@click.option(
+    "--view",
+    type=click.Choice(["next", "requests"]),
+    default="next",
+    show_default=True,
+    help="Full next step or only open requests",
+)
 @NO_LINT
 @FORMAT_OPTION
 @boundary
@@ -27,6 +34,7 @@ def next_cmd(
     anchor: str | None,
     workflow_ref: str | None,
     given: tuple[str, ...],
+    view: str,
     no_lint: bool,
     output_format: str,
 ) -> None:
@@ -38,38 +46,20 @@ def next_cmd(
     ws = workspace(workspace_root)
     ref = ws.resolve_unit(unit, workflow_ref, anchor=anchor)
     result = ws.evaluate_unit(ref, given=given, lint=not no_lint)
-    if is_json(output_format):
+    lint_error = result.lint_error
+    if view == "requests":
+        if is_json(output_format):
+            errors = [lint_error.to_dict()] if lint_error is not None else []
+            echo_json({"requests": [r.to_dict() for r in result.requests], "errors": errors})
+        else:
+            lines = render_requests(result.requests) or ["[REQUESTS: none]"]
+            if lint_error is not None:
+                lines.append(f"[LINT_ERROR: {quote(lint_error.message)}]")
+            click.echo("\n".join(lines))
+    elif is_json(output_format):
         echo_json(result.to_dict())
     else:
         click.echo(render_evaluation(result), nl=False)
-    if result.lint_error is not None:
-        raise Reported(result.lint_error)
-
-
-@cli.command(name="requests")
-@WORKSPACE
-@UNIT
-@ANCHOR
-@NO_LINT
-@FORMAT_OPTION
-@boundary
-def requests_cmd(workspace_root: str | None, unit: str, anchor: str | None, no_lint: bool, output_format: str) -> None:
-    """List the open human requests of a unit (approvals and choices).
-
-    When the rules behind lint-clean cannot run, their error is reported
-    unchanged after the result and sets the exit code, as for ``next``.
-    """
-    ws = workspace(workspace_root)
-    result = ws.evaluate_unit(ws.resolve_unit(unit, anchor=anchor), lint=not no_lint)
-    lint_error = result.lint_error
-    if is_json(output_format):
-        errors = [lint_error.to_dict()] if lint_error is not None else []
-        echo_json({"requests": [r.to_dict() for r in result.requests], "errors": errors})
-    else:
-        lines = render_requests(result.requests) or ["[REQUESTS: none]"]
-        if lint_error is not None:
-            lines.append(f"[LINT_ERROR: {quote(lint_error.message)}]")
-        click.echo("\n".join(lines))
     if lint_error is not None:
         raise Reported(lint_error)
 

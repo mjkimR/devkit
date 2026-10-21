@@ -8,7 +8,7 @@ import click
 from devkit_dist.adapters.cli import boundary
 
 
-@click.command()
+@click.command(hidden=True)
 @click.option("--workspace-root", required=True, type=click.Path(path_type=Path, exists=True, file_okay=False))
 @click.option("--configuration-workspace", required=True, type=click.Path(path_type=Path, exists=True, file_okay=False))
 @click.option("--profile", type=click.Choice(["local", "read-only"]), default="local")

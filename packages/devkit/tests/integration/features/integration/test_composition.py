@@ -13,6 +13,11 @@ from testsupport.rules import git, write
 
 
 class Lifecycle:
+    approval_gate = "dev-integration"
+
+    def automatic(self, request):
+        return None
+
     def __init__(self, worktree, provider, *, existing=False):
         self.worktree = worktree
         self.provider = provider
@@ -141,16 +146,18 @@ def test_composition_refuses_target_move_after_reprepare(repo, ready_provider, m
     base, worktree = repo
     service = IntegrationService(base)
     lifecycle = Lifecycle(worktree, ready_provider)
-    original = service.prepare
+    original = service._prepare
 
     def moved(*args, **kwargs):
         result = original(*args, **kwargs)
+        if kwargs.get("lifecycle") is not None:
+            return result
         write(base, "moved.txt", "moved\n")
         git(base, "add", ".")
         git(base, "commit", "-qm", "advance base after preparation")
         return result
 
-    monkeypatch.setattr(service, "prepare", moved)
+    monkeypatch.setattr(service, "_prepare", moved)
     result = asyncio.run(service._compose("dev-demo", Task("session", "fixture"), lifecycle, approve))
     assert result.status == "blocked" and lifecycle.accepted
     assert result.steps["merge"] == "not_run" and worktree.exists()

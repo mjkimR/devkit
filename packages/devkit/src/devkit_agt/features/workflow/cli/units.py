@@ -13,7 +13,7 @@ from devkit_agt.features.workflow.cli.render import quote, render_document
 from devkit_agt.features.workflow.usecases.units import create_unit, layouts_in_use, list_units
 
 
-@cli.command(name="new")
+@cli.command(name="new", hidden=True)
 @WORKSPACE
 @click.argument("slug", type=str)
 @click.option(
@@ -29,7 +29,7 @@ def new_cmd(workspace_root: str | None, slug: str, workflow_ref: str | None, whe
     click.echo(f"[UNIT: {unit.rel} workflow={unit.doc.id} anchor={unit.anchor}]")
 
 
-@cli.command(name="bind")
+@cli.command(name="bind", hidden=True)
 @WORKSPACE
 @UNIT
 @ANCHOR

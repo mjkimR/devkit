@@ -6,7 +6,7 @@ pull_request = "auto"   # a pull request or finish --merge, as the task needs; "
 delete_branch = true    # finish deletes the merged branch (`git branch -d`, never -D)
 merge = "no-ff"         # a merge commit per task; "ff-only": fast-forward only (linear history)
 setup = "uv sync"       # shell command run in a newly created worktree (default: none)
-stale_after = "14d"     # an activity branch idle this long is reported by `devkit worktree stale` (<N>d or <N>w)
+stale_after = "14d"     # an activity branch idle this long is reported by `devkit worktree status --stale` (<N>d or <N>w)
 ```
 """
 
@@ -57,7 +57,7 @@ def config_tables() -> tuple[TemplateTable, ...]:
                 TemplateKey(
                     "stale_after",
                     "14d",
-                    "idle plan-*/dev-* branches are reported by devkit worktree stale and hygiene runs",
+                    "idle plan-*/dev-* branches are reported by devkit worktree status --stale and hygiene runs",
                     kind='"<N>d" | "<N>w"',
                 ),
             ),

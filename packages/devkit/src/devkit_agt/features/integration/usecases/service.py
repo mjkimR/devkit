@@ -93,8 +93,11 @@ class AcceptanceLifecycle(Protocol):
     precise acceptance content and must not mutate outside their disclosed scope.
     """
 
+    approval_gate: str
+
     def preview(self, context: IntegrationContext) -> Readiness: ...
     def confirmation(self, request: IntegrationRequest, language: str) -> tuple[str, dict[str, Any]]: ...
+    def automatic(self, request: IntegrationRequest) -> dict[str, Any] | None: ...
     def select(self, content: dict[str, Any]) -> None: ...
     def validate(self, request: IntegrationRequest) -> None: ...
     def accept(self, request: IntegrationRequest) -> str: ...
@@ -123,7 +126,13 @@ class IntegrationService:
         return self._prepare(branch, task, route)
 
     def _prepare(
-        self, branch: str, task: Task, route: str = "local", *, lifecycle: AcceptanceLifecycle | None = None
+        self,
+        branch: str,
+        task: Task,
+        route: str = "local",
+        *,
+        lifecycle: AcceptanceLifecycle | None = None,
+        approval_gate: str = "dev-integration",
     ) -> IntegrationResult:
         guard_execution()
         if (
@@ -157,7 +166,11 @@ class IntegrationService:
                     "the process already retains 128 pending requests; inspect and finish them before preparing more"
                 )
             self._records.pop(retired)
-        approval_policy = providers.effective(read_project_config(self.root))["dev-integration"]
+        approval_gate = lifecycle.approval_gate if lifecycle is not None else approval_gate
+        base_config = read_project_config(self.root)
+        approval_policy = providers.approval(base_config, approval_gate)
+        if approval_policy not in {"ask", "auto"}:
+            raise IntegrationConfigError(f"{approval_gate} requires ask or auto")
         if route == "pull-request" and approval_policy == "auto":
             raise AuthorityError(
                 "automatic integration authorizes local execution only",
@@ -186,7 +199,7 @@ class IntegrationService:
             post_digest, prospective = policy_digest, read_project_config(self.root)
         else:
             post_digest, prospective = _prospective(self.root, plan.source_sha, plan.target_sha)
-        if approval_policy == "auto" and providers.effective(prospective)["dev-integration"] != "auto":
+        if approval_policy == "auto" and providers.approval(prospective, approval_gate) != "auto":
             raise AuthorityError(
                 "the prospective result revokes automatic integration authority",
                 fix="Resolve prospective policy revocation before automatic integration; do not bypass it with another authority route",
@@ -218,6 +231,7 @@ class IntegrationService:
             ready,
             cleanup,
             approval_policy=approval_policy,
+            approval_gate=approval_gate,
         )
         result = IntegrationResult(request)
         result.steps["branch_delete" if not plan.delete_branch else "marker_clear"] = "skipped"
@@ -300,6 +314,12 @@ class IntegrationService:
         request = result.request
         try:
             lifecycle.validate(request)
+            selected = lifecycle.automatic(request)
+            if selected is not None:
+                if request.approval_policy != "auto":
+                    raise AuthorityError("automatic composition requires owning integration policy delegation")
+                lifecycle.select(selected)
+                return await asyncio.to_thread(self._compose_execute, request, lifecycle, "policy")
             message, schema = lifecycle.confirmation(request, approval_language(self.root))
             reply = await confirm(message, schema)
             result.ui_action = reply.action
@@ -331,7 +351,7 @@ class IntegrationService:
                 and _git(self.root, "show", "-s", "--format=%P", accepted) != before.source_sha
             ):
                 raise StaleRequestError("acceptance must produce the exact direct child of the displayed source")
-            fresh = self.prepare(before.branch, request.context.task)
+            fresh = self._prepare(before.branch, request.context.task, approval_gate=request.approval_gate)
             after = fresh.request.context.finish
             if after.source_sha != accepted:
                 raise StaleRequestError("the source differs from the service-created acceptance commit")
@@ -372,7 +392,7 @@ class IntegrationService:
             record = self._record(fresh.request.id)
             with record.lock:
                 record.approved = True
-                fresh.authority = "mcp-elicitation"
+                fresh.authority = "policy" if ui_action == "policy" else "mcp-elicitation"
                 try:
                     return self._execute(record, False)
                 finally:
@@ -432,7 +452,7 @@ class IntegrationService:
             raise StaleRequestError("the effective integration policy changed outside the approved merge")
         if (
             request.approval_policy == "auto"
-            and providers.effective(read_project_config(self.root))["dev-integration"] != "auto"
+            and providers.approval(read_project_config(self.root), request.approval_gate) != "auto"
         ):
             raise AuthorityError(
                 "automatic integration authority was revoked",

@@ -129,7 +129,7 @@ def test_every_json_command_prints_one_object(unit_ws: Path) -> None:
         ("list",),
         ("checks",),
         ("validate",),
-        ("requests", "--unit", UNIT, "--no-lint"),
+        ("next", "--view", "requests", "--unit", UNIT, "--no-lint"),
         ("next", "--unit", UNIT, "--no-lint"),
         ("show", "direct-delivery"),
         ("envelope", "check", "--unit", UNIT),

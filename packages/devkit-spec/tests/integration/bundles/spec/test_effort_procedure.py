@@ -70,21 +70,18 @@ def test_minor_fix_self_verification_has_four_conditions_per_review_kind() -> No
 
 
 # AC-03
-def test_hand_over_uses_worker_problems_and_questions() -> None:
-    loop = _section(_text(LOOP), "## 4. Hand-over to the user")
+def test_bounded_recovery_is_host_owned_without_an_extra_user_gate() -> None:
+    loop = _section(_text(LOOP), "## 4. Bounded recovery")
     assert "At the cap round, the third after the initial review, the batch does not meet section 2" in loop
     assert "The same P1 recurs after its fix" in loop
     assert "still asserted after one more round given the implementer's counter-evidence" in loop
-    assert loop.count("`problem` in the `worker` envelope") == 3
-    assert "terminates and hands back to the user as a `problem` in the `worker` envelope" in loop
-    assert "`questions` entry with the reviewer's and the implementer's positions as options" in loop
-    assert "Reported in the conversation; not integrated" in loop and "Asked in the conversation" in loop
-    assert "citing the `answer` envelope: the only waiver a P1 may carry" in loop
-    assert "one further fresh round outside the cap, named by the `resolution` envelope" in loop
+    assert "The Host owns recovery within the authorized goal, scope and constraints" in loop
+    assert "adds no user approval gate" in loop
+    assert "unresolved defects remain open" in loop
+    assert "one further fresh round outside the cap" in loop
+    assert "Never integrate while required findings remain open" in loop
+    assert "neither a new worker nor a new session resets the failed history" in loop
     assert "`recurs: <envelope> #<n>;`" in _text(LOOP)
-    worker = _text(BUNDLE / "subagents/development-worker.md")
-    assert "or the `high` review loop hands over" in worker
-    assert "a contested P1: a question in your `worker` envelope" in worker
 
 
 # AC-04

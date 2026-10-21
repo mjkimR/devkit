@@ -209,15 +209,19 @@ def finish_cmd(
 
 
 @cli.command(name="status")
+@click.option("--stale", is_flag=True, help="Show idle activity branches instead of worktrees (optional gh query)")
 @WORKSPACE
 @FORMAT_OPTION
 @boundary
-def status_cmd(workspace_root: str | None, output_format: str) -> None:
+def status_cmd(workspace_root: str | None, output_format: str, stale: bool) -> None:
     """List every worktree with its branch, merge and dirty state, and the unmerged branches no worktree checks out.
 
     Changes nothing. A merged, clean linked worktree is finished with `devkit worktree finish <branch>`; remove
     anything unmerged, dirty or prunable only with the user's authorization.
     """
+    if stale:
+        _show_stale(workspace_root, output_format)
+        return
     result = status(_position(workspace_root)[0])
     if is_json(output_format):
         echo_json(result.to_dict())
@@ -237,11 +241,7 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
     )
 
 
-@cli.command(name="stale")
-@WORKSPACE
-@FORMAT_OPTION
-@boundary
-def stale_cmd(workspace_root: str | None, output_format: str) -> None:
+def _show_stale(workspace_root: str | None, output_format: str) -> None:
     """List the plan-*/dev-* branches idle longer than [worktree] stale_after (needs gh logged in).
 
     Changes nothing. Each stale branch is also a WORKTREE_STALE_BRANCH warning whose fix names how to resume it and,

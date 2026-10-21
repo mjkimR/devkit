@@ -1,13 +1,9 @@
 """``devkit spec policy``: the project policy that routing, gate and Git decisions follow, in one place.
 
-Text output: ``[GATE_POLICY: <gate> policy= source=]`` for the gates of the spec workflows (``plan-intent``,
-``plan-accept``, ``dev-integration``) and any other gate the project configures, ``[STAGE_POLICY: <stage> state=off]``
-per stage the project switched off, ``[GIT_POLICY: worktree= pull_request= delete_branch= setup=]``,
-``[ROUTING_POLICY: depth_escalation=]`` and ``[FEEDBACK_POLICY: capture= coverage= detail= reminder=]``.
-``source`` is ``fixed`` for a gate a person always decides (``plan-intent``, ``plan-accept``), ``config`` when
-``.devkit/config.toml`` sets the value, else ``default``. A policy key for a fixed gate, or ``dev-integration =
-"off"``, is ``SPEC_CONFIG_INVALID``; a key that names no gate (``exception``) is a ``SPEC_APPROVAL_KEY_IGNORED``
-warning and is not listed.
+Text output lists plan-accept, proposal-handoff, dev-integration and task intent, followed by configured custom
+gates, disabled stages, Git, routing and feedback policies. A policy source is config or default. Main boundaries
+and task intent permit ask or auto, never off. A key naming no gate (exception) emits SPEC_APPROVAL_KEY_IGNORED.
+
 """
 
 from __future__ import annotations

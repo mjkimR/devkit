@@ -92,8 +92,8 @@ so moves and content edits stay reviewable apart.
 - **Docs skeleton** (optional): `uv run devkit add spec:docs-skeleton` writes the Living Spec directories, arc42
   starter chapters and glossary only where no file exists; then they are project-owned. A link to a legacy index such
   as `docs/README.md` now reaches the starter; point it at the `_legacy/` copy when the reader needs the old content.
-- **Policy**: show `uv run devkit spec policy`. `plan-intent` and `plan-accept` are always the user's;
-  `dev-integration` defaults to `ask`. Record only the user's choices (`[workflow.approvals]`, `[workflow.stages]`,
+- **Policy**: show `uv run devkit spec policy`. `plan-accept`, `proposal-handoff` and `dev-integration` each follow `ask|auto`.
+  Existing task authorization satisfies `plan-intent` without another prompt. Record user decisions and policy authority accurately (`[workflow.approvals]`, `[workflow.stages]`,
   `[worktree]`, `[tool.spec]`) in `.devkit/config.toml`.
 - **Commit gate**: sync installs the hooks; the `rules-check` gate (on by default) refuses a commit touching a file
   with an error finding. The user chooses: fix, park or lower the rule in `[rules]`, or `enabled = false` in

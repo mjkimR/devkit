@@ -1,4 +1,4 @@
-"""Sentinel text lines for ``next``, ``requests`` and ``show``. JSON comes from each object's ``to_dict``.
+"""Sentinel text lines for ``next`` and ``show``. JSON comes from each object's ``to_dict``.
 
 Free text (titles, details, notes, descriptions) is written as a JSON string,
 so quotes, backslashes and newlines are escaped and every fact stays on one line.

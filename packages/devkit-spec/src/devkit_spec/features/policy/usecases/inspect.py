@@ -8,9 +8,9 @@ from devkit_agt.features.workflow import load_workflow_config
 from devkit_agt.features.worktree import read_worktree_config
 
 from devkit_spec.base.errors import ApprovalKeyIgnoredWarning
-from devkit_spec.features.policy.services.config import FIXED_GATES, INTEGRATION_GATE, check_approvals, read_spec_config
+from devkit_spec.features.policy.services.config import APPROVAL_GATES, INTENT_GATE, check_approvals, read_spec_config
 
-GATES = (*FIXED_GATES, INTEGRATION_GATE)
+GATES = (*APPROVAL_GATES, INTENT_GATE)
 NOT_GATES = ("exception",)
 
 
@@ -30,7 +30,7 @@ def inspect_policy(root: Path) -> tuple[dict, list[AdvisoryError]]:
     approvals = {
         gate: {
             "policy": workflow.policy(gate),
-            "source": "fixed" if gate in FIXED_GATES else "config" if gate in workflow.approvals else "default",
+            "source": "config" if gate in workflow.approvals else "default",
         }
         for gate in gates
     }

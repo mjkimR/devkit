@@ -6,7 +6,7 @@ use the matching dist/advisory/runtime release assets. Runtime installation alon
 set. Install agt for integration and spec for handoff; domain packages do not need the SDK to import.
 
 Run `devkit sync` in the owning checkout. Selected Codex CLI, Claude Code and Antigravity project entries are reconciled under
-`.codex/config.toml`, `.mcp.json` and `.agents/mcp_config.json`; `[mcp] register = false` opts out. `devkit mcp config --format json` inspects
+`.codex/config.toml`, `.mcp.json` and `.agents/mcp_config.json`; `[mcp] register = false` opts out. `devkit mcp status --descriptor --format json` inspects
 the retained launch descriptor, and `devkit mcp setup --executable /retained/bin/python` explicitly selects a
 verified runtime. It must remain installed after task cleanup, including any editable source locations.
 

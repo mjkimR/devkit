@@ -33,7 +33,7 @@ just workflow new login-flow                          # create and bind a unit
 just workflow next --unit .devkit/transient/work/login-flow
 just workflow next --unit <dir> --given integration   # assert a gate for this run only (every run for an answer=given gate)
 just workflow next --unit <dir> --format json
-just workflow requests --unit <dir>                   # open human requests (approvals, choices)
+just workflow next --view requests --unit <dir>                   # open human requests (approvals, choices)
 just workflow answer --unit <dir> --request gate:integration --action accept
 just workflow return --unit <dir> --to build-verify   # take the unit back; later approvals are asked again
 just workflow handoff --unit <dir>                    # continue a completed unit with the recorded or auto choice

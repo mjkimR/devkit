@@ -35,11 +35,11 @@ def test_backlog_states_the_direct_acceptance_procedure() -> None:
     assert "Until direct acceptance exists" not in backlog
     for phrase in (
         f"{ACCEPT} <slug> --by user --direct --check",
-        f"{ACCEPT} <slug> --by user --direct --note",
-        "Planning: skipped (direct acceptance)",
+        f"{ACCEPT} <slug> --by user|policy --direct --note",
+        "Planning skipped",
         "pull_request = required",
         "collect-feedback",
-        "No run, `activity-effort` or `worker` envelope",
+        "No Planning run, `activity-effort` or `worker` envelope",
         "only on the base checkout",
         "SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED",
     ):
@@ -55,7 +55,7 @@ def test_the_lowering_rule_names_the_session_reclassification() -> None:
         assert "session reclassification of a queued draft" in _read(rel), rel
     backlog = _read("skills/spec/references/backlog.md")
     assert "## Session reclassification of a queued draft" in _rendered(BUNDLE / "skills/spec/references/backlog.md")
-    for phrase in ("only the user's explicit decision", "no `PADR-*.md`", "new slug", "git revert"):
+    for phrase in ("within the authorized goal, scope and constraints", "no `PADR-*.md`", "new slug", "git revert"):
         assert phrase in backlog, phrase
     assert "session reclassification" in _read("skills/spec/references/feedback-retirement.md")
     assert "session reclassification" in _read("skills/spec-next/references/next-work.md")

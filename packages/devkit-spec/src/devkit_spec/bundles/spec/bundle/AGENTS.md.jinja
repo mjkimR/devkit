@@ -32,7 +32,7 @@ session.
 
 ## 3. Classification and Workflows
 
-The agent classifies work on three axes; the user confirms at `plan-intent`:
+The agent classifies authorized work on three axes; `plan-intent` records the instructed intent without asking again:
 
 - **`task-kind`**: `feature` (default) or `bugfix` (a defect against an agreed contract: reproduce, Red then Green).
 - **`planning-depth`**: what must be settled first, not size. `session`: nothing, no Unit. `spec`: the contract, with
@@ -47,21 +47,27 @@ proposal's handoff or, on the user's explicit decision at pickup, the session re
 Unit depths write `spec.md`, `plan.md` and `tasks.md` before production code. Follow the workflow definition's
 stages, checks, gates and returns, never an ad-hoc sequence (`devkit workflow next --unit <dir>`).
 
-Read `devkit spec policy` before classification, gate and Git decisions. `plan-intent` (goal, scope, verification,
-expected behavior for a bugfix, `task-kind`, `planning-depth`) and `plan-accept` (a proposal's direction) are always
-the user's, recorded with `devkit workflow answer --by user` (`plan-accept` with `devkit spec proposal accept --by
-user`, also directly for an eligible draft in Backlog); `dev-integration` follows `devkit spec policy` (the
-`spec` skill's `references/completion.md`, Policy). There is no Development direction gate: inside the agreed intent
-take the recommended option and record it; only a problem that breaks the agreement stops the work. Records name the
-authority (`user` or `policy`) and never carry the conversation (no quotes, paraphrase or dates of it); a decline note
+Read `devkit spec policy` before classification, gate and Git decisions. The main decision boundaries are
+`plan-accept` (proposal direction), `proposal-handoff` (start Development), and `dev-integration` (accept the
+Development result). Each permits `ask` or `auto`, defaulting to `ask`; a boundary does not necessarily require a
+human interruption. `plan-intent` records goal, scope, verification, expected bugfix behavior, `task-kind` and
+`planning-depth`: an explicit task instruction supplies that intent, so do not request the same consent again.
+Record its authority with `devkit workflow answer --by user` when a Unit needs a record; `auto` satisfies it by policy.
+Accept proposals with `devkit spec proposal accept --by user|policy`, using `policy` only under owning
+`plan-accept=auto`. Source-only auto never grants authority; prospective revocation stops remaining effects.
+A native accept-and-handoff form may cover both included decisions in one explicit approval. Otherwise keep them
+separate so accepted proposals can wait in Backlog. Within approved scope the Host chooses sequencing, parallel
+workers, implementation, review and fixes without extra user approvals; scope or constraint changes need new authority.
+Records name `user` or `policy` and carry decisions, never conversation quotes, paraphrases or dates; a decline note
 {% if execution.environment == "local" %}states the reason as a decision. Shared base `dev-integration=auto` authorizes verified local merge and exact cleanup through the MCP executor; it grants no publication authority or host permission. Report stages the policy
 {% else %}states the reason as a decision. Shared base `dev-integration=auto` grants no cloud mutation or publication authority. Return verified results to the Host unless a separately authorized CLI/PR route exists; host permissions still apply. Report stages the policy
 {% endif %}switched off as skipped. Before formal worktree work read the `spec` skill's `references/worktree.md`; before
 completion or Git actions its `references/completion.md`.
 
-Mode per activity: `direct` (default; the Host implements), `local-orchestrated` (one-shot workers in their own
-worktrees; user-invoked `spec-orchestrate`) or `cloud-pr` (a Cloud Agent from a PR). Heavier modes are the user's
-choice; a `session` task runs only in `direct` or the `cloud-pr` general PR path.
+Mode per activity: the Host chooses `direct` (default; the Host implements) or `local-orchestrated` (one-shot
+workers in their own worktrees) within authorized scope and resource constraints, without another approval solely
+for delegation. `cloud-pr` requires existing external execution and publication authority. A `session` task runs
+only in `direct` or the `cloud-pr` general PR path, as a supported-mode constraint.
 
 ## 4. Verification and Completion
 
@@ -78,7 +84,7 @@ commit gate (on by default) runs the spec rules on every commit (`devkit rules c
 ## 5. Templates and Policy Files
 
 - Templates: `.devkit/managed/spec/templates/{capability,story,decision,proposal,milestone}.md`.
-- Policy lives in `.devkit/config.toml` (`[workflow.approvals]` with `dev-integration` only, `[workflow.stages]`,
+- Policy lives in `.devkit/config.toml` (`[workflow.approvals]` with the three main boundaries and task intent, `[workflow.stages]`,
   `[worktree]`, `[tool.spec]`); read it through `devkit spec policy`, never by parsing the file.
 - Never edit `.devkit/managed/`; change it through `devkit override` or the project's own bundle.
 

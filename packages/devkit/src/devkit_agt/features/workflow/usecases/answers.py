@@ -86,7 +86,7 @@ def record_answer(
     if not is_request_id(request_id):
         raise RequestUnknownError(
             f"--request {request_id!r} is not a request id",
-            fix="Use an id printed by `devkit workflow requests`, or feedback:<target>",
+            fix="Use an id printed by `devkit workflow next --view requests`, or feedback:<target>",
         )
     stage = ""
     if request_id.startswith(FEEDBACK_PREFIX):
@@ -109,7 +109,7 @@ def record_answer(
             raise RequestUnknownError(
                 f"{request_id!r} is not an open request of {ref.rel}",
                 *([f"open: {rid}" for rid in open_requests] or ["open: none"]),
-                fix="Run `devkit workflow requests --unit <dir>` and answer one of the listed ids",
+                fix="Run `devkit workflow next --view requests --unit <dir>` and answer one of the listed ids",
             )
         if request.answer == "envelope":
             source, _, question = request.target.name.partition("#")

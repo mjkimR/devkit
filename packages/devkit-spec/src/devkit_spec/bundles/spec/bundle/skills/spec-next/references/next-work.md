@@ -18,7 +18,7 @@ merely because its branch exists.
      then ID.
    - Within a group: priority critical/high/medium/low, size S/M/L/XL, draft created_at, draft ID. Missing
      priority/size use the scaffold defaults high/M; missing created_at sorts after dated peers, then by ID.
-4. Recommend the first eligible draft; without a recorded plan-intent, recommend confirming intent first. Offer
+4. Recommend the first eligible draft; without a recorded plan-intent, record an existing explicit task instruction or ask only when intent is unresolved. Offer
    Planning, or a direct acceptance when its direction is settled (`devkit spec proposal accept <slug> --by user
    --direct --check --note "<reason>"` first), and for `session`-depth work the session reclassification at pickup (the `spec` skill's
    `references/backlog.md`); the user chooses. Report

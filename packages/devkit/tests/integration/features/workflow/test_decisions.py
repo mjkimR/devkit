@@ -419,9 +419,11 @@ def test_cli_requests_answer_and_next(tmp_path: Path) -> None:
     _run("new", "-w", str(root), "login")
     unit = ".devkit/transient/work/login"
 
-    listed = _run("requests", "-w", str(root), "--unit", unit, "--no-lint")
+    listed = _run("next", "--view", "requests", "-w", str(root), "--unit", unit, "--no-lint")
     assert listed.exit_code == 0 and listed.output.startswith("[REQUEST: id=gate:direction kind=approve")
-    as_json = json.loads(_run("requests", "-w", str(root), "--unit", unit, "--no-lint", "--format", "json").stdout)
+    as_json = json.loads(
+        _run("next", "--view", "requests", "-w", str(root), "--unit", unit, "--no-lint", "--format", "json").stdout
+    )
     assert [r["id"] for r in as_json["requests"]] == ["gate:direction"]
 
     unknown = _run(
@@ -495,7 +497,10 @@ def test_cli_requests_answer_and_next(tmp_path: Path) -> None:
     nxt = _run("next", "-w", str(root), "--unit", unit, "--no-lint", "--format", "json")
     payload = json.loads(nxt.stdout)
     assert payload["done"] == ["intent"] and payload["requests"] == [] and payload["errors"] == []
-    assert _run("requests", "-w", str(root), "--unit", unit, "--no-lint").output.strip() == "[REQUESTS: none]"
+    assert (
+        _run("next", "--view", "requests", "-w", str(root), "--unit", unit, "--no-lint").output.strip()
+        == "[REQUESTS: none]"
+    )
 
     feedback = _run(
         "answer",

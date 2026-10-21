@@ -9,7 +9,7 @@ from devkit_agt.features.integration.models.contracts import Task
 from devkit_agt.features.integration.usecases.service import IntegrationService
 
 
-@click.group()
+@click.group(hidden=True)
 def cli() -> None:
     """Scoped local integration: inspect readiness and exact approval requests."""
 

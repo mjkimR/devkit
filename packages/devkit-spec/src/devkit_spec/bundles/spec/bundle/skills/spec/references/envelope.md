@@ -44,7 +44,7 @@ devkit workflow envelope new --unit <dir> --kind final-report --stage final-chan
 
 Do not repeat changed paths (Git), docs impact and reconcile state (`reconcile.md`) or the review result (the latest review envelope). Record assumptions the user should see with `--assume`.
 
-When open feedback marked `severity: critical` exists (`devkit spec list feedback --status open --where severity=critical`), including items the `collect-feedback` sweep just recorded, list each in the report presented to the user as one line, `FB-<slug> → <target>`, so the person deciding `dev-integration` sees that a feedback hygiene pass is due.
+When open feedback marked `severity: critical` exists (`devkit spec list feedback --status open --where severity=critical`), including items the `collect-feedback` sweep just recorded, list each in the report presented to the user as one line, `FB-<slug> → <target>`, so the user or policy-authorized Host deciding `dev-integration` sees that a feedback hygiene pass is due.
 
 ## 4. Integration result (after `spec-integrate`)
 

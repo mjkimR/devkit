@@ -19,7 +19,7 @@ def create_tools(root: Path) -> tuple[McpTool, ...]:
     return (
         McpTool(
             "spec_handoff",
-            "Review an accepted proposal summary and exact live report URI in one native form, select activity effort defaulted from dev_effort, then explicitly approve starting local Development. Creates dev-<slug> and its worktree and runs proposal handoff only after approval. Decline, cancellation or unavailable confirmation makes no changes. Changed base or policy requires fresh review. Returns selected effort as run input; the caller continues in the returned worktree and records effort in its worker envelope. Does not approve or execute final merge.",
+            "Review an accepted proposal summary and exact live report URI in one native form, select activity effort defaulted from dev_effort, then approve starting local Development under ask; owning proposal-handoff=auto uses the default effort without another form. Creates dev-<slug> and its worktree and runs proposal handoff only under explicit user or policy authority. Decline, cancellation or unavailable confirmation makes no changes. Changed base or policy requires fresh review. Returns selected effort as run input; the caller continues in the returned worktree and records effort in its worker envelope. Does not approve or execute final merge.",
             {
                 "type": "object",
                 "properties": {

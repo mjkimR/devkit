@@ -6,7 +6,7 @@ schema_version: 1
 # dev-integration is asked after the change is final: its approval is passed as `--given dev-integration`, never
 # recorded (ADR-integration-approval-asserted).
 gates:
-  plan-intent: { policies: [ask] }  # always a person (01 §3); configuration cannot pass it
+  plan-intent: { policies: [ask, auto] }  # task intent; explicit user instructions need no repeated prompt
   dev-integration: { answer: given, policies: [ask, auto] }  # off would skip integration
 # Shared stages must match across workflows (`devkit workflow validate`); returns are this workflow's own.
 # No layout: a session creates no work unit, envelope, gate record file or reconcile document.

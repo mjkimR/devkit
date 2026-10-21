@@ -18,6 +18,7 @@ from devkit_dist.features.project.usecases.invocation import guard_execution
 
 from devkit_spec.base.errors import HandoffNotReadyError, HandoffReplyError, HandoffStaleError
 from devkit_spec.features.delivery.usecases.handoff import handoff_and_register
+from devkit_spec.features.policy.usecases.approvals import approval_policy
 from devkit_spec.features.proposals.models.approval import schema as approval_schema
 from devkit_spec.features.proposals.models.axes import EFFORTS, TASK_KINDS
 from devkit_spec.features.proposals.models.handoff import HandoffPreview
@@ -120,6 +121,9 @@ class HandoffService:
             preview = await asyncio.to_thread(prepare, self.root, slug, report_uri)
             await asyncio.to_thread(validate, self.root, slug, preview.head, report_uri)
             guard_execution()
+            if approval_policy(self.root, "proposal-handoff") == "auto":
+                result = await asyncio.to_thread(self._execute, preview, preview.effort)
+                return {**result, "authority": "policy"}
             reply = await confirm(
                 preview.message(language),
                 approval_schema(preview.effort, language),
@@ -130,7 +134,8 @@ class HandoffService:
             effort = reply.content.get("activity_effort")
             if effort not in EFFORTS:
                 raise HandoffReplyError("choose low, medium or high in the native form")
-            return await asyncio.to_thread(self._execute, preview, effort)
+            result = await asyncio.to_thread(self._execute, preview, effort)
+            return {**result, "authority": "user"}
 
     def _execute(self, preview: HandoffPreview, effort: str) -> dict:
         guard_execution()

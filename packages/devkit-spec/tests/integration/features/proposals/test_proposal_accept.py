@@ -399,3 +399,33 @@ def test_arguments_are_refused_before_the_proposal_is_read(tmp_path: Path) -> No
     error = _error(_accept(root, "missing", "--direct", "--note", "  ", "--format", "json"))
     assert error["code"] == "ARGUMENT_INVALID"  # before the proposal is looked up
     assert _snapshot(root, "small") == before
+
+
+@pytest.mark.parametrize("intent", ["ask", "auto"])
+def test_policy_direct_acceptance_records_authority_and_status(tmp_path: Path, intent: str) -> None:
+    root = _repo(tmp_path, config=f'[workflow.approvals]\nplan-accept = "auto"\nplan-intent = "{intent}"\n')
+    proposal = _draft(root, intent=intent == "ask")
+    result = CliRunner().invoke(
+        devkit_cli,
+        ["spec", "proposal", "accept", "small", "--by", "policy", "--direct", "--note", "settled", "-w", str(root)],
+    )
+    assert result.exit_code == 0, result.output
+    [record] = _plan_accepts(root, "small")
+    assert (record["action"], record["by"], record["stage"]) == ("accept", "policy", "direction-handoff")
+    assert "status: accepted" in proposal.read_text()
+    workspace = Workspace(root, lint=None, ancestor=None)
+    assert workspace.evaluate_unit(workspace.resolve_unit(UNIT.format(slug="small")), lint=False).complete
+
+
+def test_policy_cannot_accept_when_owning_policy_requires_user(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    _draft(root)
+    before = _snapshot(root, "small")
+    result = CliRunner().invoke(
+        devkit_cli,
+        ["spec", "proposal", "accept", "small", "--by", "policy", "--direct", "--note", "settled", "-w", str(root)],
+    )
+    assert result.exit_code == 2
+    assert "ARGUMENT_INVALID" in result.stderr
+    assert _snapshot(root, "small") == before
+    assert not _plan_accepts(root, "small")

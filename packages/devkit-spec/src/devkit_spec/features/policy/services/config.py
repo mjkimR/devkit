@@ -51,8 +51,9 @@ SCOPE_NAMESPACE = re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9._-]*$")
 SCOPE_TIMEOUT_RANGE = (1, 300)
 WORKTREE_LEVELS = ("auto", "required")
 DEPTH_ESCALATION = ("auto", "ask")
-FIXED_GATES = ("plan-intent", "plan-accept")
-"""Gates a person always decides: no ``[workflow.approvals]`` key may delegate them (``exception`` is a stage)."""
+INTENT_GATE = "plan-intent"
+APPROVAL_GATES = ("plan-accept", "proposal-handoff", "dev-integration")
+"""Main business decision boundaries, independently delegated through ask or auto."""
 INTEGRATION_GATE = "dev-integration"
 INTEGRATION_POLICIES = ("ask", "auto")
 FEEDBACK_CHOICES = {
@@ -219,26 +220,14 @@ def read_spec_config(root: Path) -> SpecConfig:
 
 
 def check_approvals(approvals: dict[str, str]) -> None:
-    """Refuse ``[workflow.approvals]`` entries the spec workflows do not accept: a ``FIXED_GATES`` gate set to anything
-    but ``ask`` (always a person's decision; an explicit ``ask`` is its default) and ``dev-integration = "off"`` (it
-    would skip the integration stage). ``exception`` is a stage, not a gate, so no key concerns it.
-
-    The workflow definitions declare the same rule (``gates.<gate>.policies``), which devkit enforces wherever it
-    evaluates a unit (``WORKFLOW_GATE_POLICY``); this reports it before any unit is evaluated.
-    """
-    fixed = sorted(gate for gate, policy in approvals.items() if gate in FIXED_GATES and policy != "ask")
-    if fixed:
-        raise SpecConfigError(
-            f'config workflow.approvals: {", ".join(fixed)} is always decided by a person; only "ask" (its default)'
-            " is accepted",
-            fix=f'Remove {", ".join(fixed)} from [workflow.approvals] in .devkit/config.toml, or set it to "ask"',
-        )
-    integration = approvals.get(INTEGRATION_GATE, "ask")
-    if integration not in INTEGRATION_POLICIES:
-        raise SpecConfigError(
-            f'config workflow.approvals.{INTEGRATION_GATE}: expected "ask" or "auto", got {integration!r}',
-            fix=f'Set {INTEGRATION_GATE} = "ask" or "auto" in [workflow.approvals] of .devkit/config.toml',
-        )
+    """Main decision boundaries and task intent permit ask or policy delegation, never off."""
+    for gate in (INTENT_GATE, *APPROVAL_GATES):
+        policy = approvals.get(gate, "ask")
+        if policy not in INTEGRATION_POLICIES:
+            raise SpecConfigError(
+                f'config workflow.approvals.{gate}: expected "ask" or "auto", got {policy!r}',
+                fix=f'Set {gate} = "ask" or "auto" in [workflow.approvals] of .devkit/config.toml',
+            )
 
 
 def _feedback(value: object) -> FeedbackConfig:

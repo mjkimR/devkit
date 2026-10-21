@@ -160,7 +160,7 @@ def test_the_harness_names_are_never_listed_and_other_names_stay_usage_errors() 
     listing = CliRunner().invoke(root.cli, ["--help"])
     assert listing.exit_code == 0
     listed = {line.split()[0] for line in listing.stdout.split("Commands:")[1].splitlines() if line.strip()}
-    assert listed == set(root.COMMANDS)
+    assert listed == set(root.COMMANDS) - {"recover"}
     unknown = CliRunner().invoke(root.cli, ["no-such-command"])
     assert unknown.exit_code == 2 and "No such command" in unknown.stderr
     assert "HARNESS_COMMAND_UNAVAILABLE" not in unknown.stderr

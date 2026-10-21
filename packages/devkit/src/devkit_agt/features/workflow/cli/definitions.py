@@ -22,7 +22,7 @@ from devkit_agt.features.workflow.cli.render import quote
 from devkit_agt.features.workflow.models.checks import Registry
 
 
-@cli.command(name="checks")
+@cli.command(name="checks", hidden=True)
 @WORKSPACE
 @FORMAT_OPTION
 @boundary
@@ -39,7 +39,7 @@ def checks_cmd(workspace_root: str | None, output_format: str) -> None:
         click.echo(f"[CHECK: {c.name}{params} class={c.class_.value}{alias} description={quote(c.description)}]")
 
 
-@cli.command(name="validate")
+@cli.command(name="validate", hidden=True)
 @WORKSPACE
 @click.argument("paths", nargs=-1, type=str)
 @FORMAT_OPTION

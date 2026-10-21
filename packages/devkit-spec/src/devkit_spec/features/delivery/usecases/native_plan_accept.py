@@ -30,6 +30,7 @@ from devkit_dist.features.project.usecases.configuration import (
 from devkit_dist.features.project.usecases.invocation import guard_execution
 
 from devkit_spec.base.errors import SpecError
+from devkit_spec.features.policy.usecases.approvals import approval_policy
 from devkit_spec.features.proposals import accept_proposal
 from devkit_spec.features.proposals.models.axes import EFFORTS
 from devkit_spec.features.proposals.services.status import accepted_text
@@ -64,7 +65,7 @@ def _configuration(root: Path) -> str:
     return hashlib.sha256(json.dumps(value, sort_keys=True, default=str).encode()).hexdigest()
 
 
-def _schema(effort: str, language: str) -> dict:
+def _schema(effort: str, language: str, mode: str = "accept_and_handoff") -> dict:
     return {
         "type": "object",
         "properties": {
@@ -73,7 +74,11 @@ def _schema(effort: str, language: str) -> dict:
                 "default": False,
                 "title": "명시적으로 승인" if language == "ko" else "Explicitly approve",
             },
-            "mode": {"type": "string", "enum": ["accept_and_handoff", "accept_only"], "default": "accept_and_handoff"},
+            "mode": {
+                "type": "string",
+                "enum": ["accept_only"] if mode == "accept_only" else ["accept_and_handoff", "accept_only"],
+                "default": mode,
+            },
             "activity_effort": {"type": "string", "enum": ["low", "medium", "high"], "default": effort},
         },
         "required": ["approve", "mode", "activity_effort"],
@@ -82,10 +87,14 @@ def _schema(effort: str, language: str) -> dict:
 
 
 class _Acceptance:
-    def __init__(self, root: Path, slug: str, report_uri: str):
+    approval_gate = "plan-accept"
+
+    def __init__(self, root: Path, slug: str, report_uri: str, mode: str = "accept_and_handoff"):
         self.root, self.slug, self.report_uri = root, slug, report_uri
         self.unit = f"docs/proposals/PROP-{slug}"
-        self.mode, self.effort = "accept_and_handoff", "medium"
+        self.requested_mode = mode
+        self.mode, self.effort = mode, "medium"
+        self.actor = "user"
         self.completed: list[str] = []
         self.acceptance_sha: str | None = None
         self.source: Path | None = None
@@ -114,8 +123,8 @@ class _Acceptance:
             if not evaluation.complete:
                 raise ProposalApprovalNotReadyError("accepted status lacks completed workflow approval")
             self.completed = ["acceptance_commit"]
-        elif (
-            meta.get("status") != "reviewing" or evaluation.stage is None or evaluation.stage.id != "direction-handoff"
+        elif meta.get("status") != "reviewing" or (
+            not evaluation.complete and (evaluation.stage is None or evaluation.stage.id != "direction-handoff")
         ):
             raise ProposalApprovalNotReadyError("proposal is not ready for plan-accept")
         self.effort = str(meta.get("dev_effort", "medium"))
@@ -165,6 +174,22 @@ class _Acceptance:
             raise ProposalApprovalStaleError("environment, base or acceptance changed before merge")
         validate_artifact(self.source, self.slug, self.report.metadata.source_sha, self.report_uri)
 
+    def automatic(self, request: IntegrationRequest) -> dict | None:
+        assert self.source is not None
+        policies = {"plan-accept": approval_policy(self.source, "plan-accept")}
+        if self.requested_mode == "accept_and_handoff":
+            policies["proposal-handoff"] = approval_policy(self.source, "proposal-handoff")
+        # Acceptance may complete while Development waits for a separate ask boundary.
+        # An ask at acceptance can include handoff in the same explicit native decision.
+        if policies["plan-accept"] != "auto" or request.approval_policy != "auto":
+            return None
+        self.actor = "policy"
+        self.setup = read_worktree_config(self.source).setup
+        return {
+            "mode": self.requested_mode if policies.get("proposal-handoff") == "auto" else "accept_only",
+            "activity_effort": self.effort,
+        }
+
     def confirmation(self, request: IntegrationRequest, language: str) -> tuple[str, dict]:
         position = locate(self.root)
         assert self.source is not None
@@ -189,7 +214,7 @@ class _Acceptance:
             f"Development worktree: {path_for(position, 'dev-' + self.slug)}\nSetup: {setup!r}\n"
             f"{request.confirmation_message(language)}"
         )
-        return message, _schema(self.effort, language)
+        return message, _schema(self.effort, language, self.requested_mode)
 
     def _support(self) -> str:
         from devkit_spec.features.proposals.usecases.report import planning_support
@@ -198,6 +223,8 @@ class _Acceptance:
 
     def select(self, content: dict) -> None:
         mode, effort = content.get("mode"), content.get("activity_effort")
+        if self.requested_mode == "accept_only" and mode != "accept_only":
+            raise ProposalApprovalNotReadyError("accept_only does not authorize Development handoff")
         if mode not in {"accept_only", "accept_and_handoff"} or (
             mode == "accept_and_handoff" and effort not in EFFORTS
         ):
@@ -218,10 +245,10 @@ class _Acceptance:
             expected_anchor = accepted_text(original).encode()
         except ValueError as exc:
             raise ProposalApprovalNotReadyError("proposal status cannot be changed exactly") from exc
-        accepted = accept_proposal(self.source, self.slug, by="user")
+        accepted = accept_proposal(self.source, self.slug, by=self.actor)
         self.completed.append("acceptance_record")
         if accepted.decision is None:
-            raise ProposalApprovalStaleError("acceptance did not produce a user gate record")
+            raise ProposalApprovalStaleError("acceptance did not produce an authority gate record")
         paths = [accepted.path, accepted.decision]
         expected = {accepted.path: expected_anchor, accepted.decision: (self.source / accepted.decision).read_bytes()}
         if anchor.read_bytes() != expected_anchor:
@@ -252,7 +279,7 @@ class PlanAcceptService:
         self.root = root.resolve()
         self._lock = asyncio.Lock()
 
-    async def _remaining(self, slug: str, report_uri: str, confirm: Confirmation) -> dict:
+    async def _remaining(self, slug: str, report_uri: str, confirm: Confirmation, mode: str) -> dict:
         from devkit_spec.features.delivery.usecases.native_handoff import HandoffService, prepare
         from devkit_spec.features.proposals.usecases.report import validate
 
@@ -267,7 +294,24 @@ class PlanAcceptService:
             else "Acceptance and merge already completed. Approve remaining effects only. accept_only performs "
             "no further effects; accept_and_handoff performs the Development effects below.\n"
         )
-        reply = await confirm(message + preview.message(language), _schema(preview.effort, language))
+        if mode == "accept_only":
+            return {
+                "status": "accepted",
+                "completed_steps": ["acceptance_commit", "merge"],
+                "landed_sha": preview.head,
+                "next_action": "Acceptance already complete",
+            }
+        if approval_policy(self.root, "proposal-handoff") == "auto":
+            handed = await asyncio.to_thread(HandoffService(self.root)._execute, preview, preview.effort)
+            return {
+                "status": handed["status"],
+                "completed_steps": ["acceptance_commit", "merge"],
+                "landed_sha": preview.head,
+                "handoff": handed,
+                "handoff_authority": "policy",
+                "next_action": handed.get("next_command", "Inspect remaining handoff effects"),
+            }
+        reply = await confirm(message + preview.message(language), _schema(preview.effort, language, mode))
         result = {
             "status": "held",
             "completed_steps": ["acceptance_commit", "merge"],
@@ -277,15 +321,15 @@ class PlanAcceptService:
         if reply.action != "accept" or reply.content.get("approve") is not True:
             return result
         guard_execution()
-        mode, effort = reply.content.get("mode"), reply.content.get("activity_effort")
-        if mode not in {"accept_only", "accept_and_handoff"} or (
-            mode == "accept_and_handoff" and effort not in EFFORTS
+        selected_mode, effort = reply.content.get("mode"), reply.content.get("activity_effort")
+        if selected_mode not in {"accept_only", "accept_and_handoff"} or (
+            selected_mode == "accept_and_handoff" and effort not in EFFORTS
         ):
             raise ProposalApprovalNotReadyError("choose a valid mode and Development effort")
         validate(self.root, slug, preview.head, report_uri)
         if _configuration(self.root) != snapshot or prepare(self.root, slug, report_uri) != preview:
             raise ProposalApprovalStaleError("accepted base, report, policy or environment changed")
-        if mode == "accept_only":
+        if selected_mode == "accept_only":
             return {**result, "status": "accepted", "next_action": "Acceptance already complete"}
         handed = await asyncio.to_thread(HandoffService(self.root)._execute, preview, str(effort))
         return {
@@ -296,8 +340,12 @@ class PlanAcceptService:
             "next_action": handed.get("next_command", result["next_action"]),
         }
 
-    async def accept(self, slug: str, report_uri: str, confirm: Confirmation) -> dict:
+    async def accept(
+        self, slug: str, report_uri: str, confirm: Confirmation, *, mode: str = "accept_and_handoff"
+    ) -> dict:
         slug = require_slug(slug)
+        if mode not in {"accept_only", "accept_and_handoff"}:
+            raise ProposalApprovalNotReadyError("choose accept_only or accept_and_handoff")
         guard_execution()
         async with self._lock:
             position = locate(self.root)
@@ -308,8 +356,8 @@ class PlanAcceptService:
             except GitError as exc:
                 if exc.returncode is None:
                     raise
-                return await self._remaining(slug, report_uri, confirm)
-            lifecycle = _Acceptance(self.root, slug, report_uri)
+                return await self._remaining(slug, report_uri, confirm, mode)
+            lifecycle = _Acceptance(self.root, slug, report_uri, mode)
             integration = IntegrationService(self.root)
             try:
                 result = await integration._compose(
@@ -350,7 +398,14 @@ class PlanAcceptService:
                     "next_action": "Base moved after integration; refresh report and request remaining-effects approval",
                 }
             payload.update(status="accepted", landed_sha=landed, next_action="Acceptance complete")
+            payload["acceptance_authority"] = lifecycle.actor
             if lifecycle.mode == "accept_only":
+                if (
+                    lifecycle.actor == "policy"
+                    and lifecycle.requested_mode != "accept_only"
+                    and approval_policy(self.root, "proposal-handoff") == "ask"
+                ):
+                    payload["next_action"] = "Acceptance complete; request proposal handoff approval separately"
                 return payload
             from devkit_spec.features.delivery.usecases.native_handoff import HandoffService, prepare
 

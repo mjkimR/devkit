@@ -20,9 +20,10 @@ def test_defaults(workspace: Path) -> None:
     result = _policy(workspace)
     assert result.exit_code == 0
     assert result.stdout.splitlines() == [
-        "[GATE_POLICY: plan-intent policy=ask source=fixed]",
-        "[GATE_POLICY: plan-accept policy=ask source=fixed]",
+        "[GATE_POLICY: plan-accept policy=ask source=default]",
+        "[GATE_POLICY: proposal-handoff policy=ask source=default]",
         "[GATE_POLICY: dev-integration policy=ask source=default]",
+        "[GATE_POLICY: plan-intent policy=ask source=default]",
         "[GIT_POLICY: worktree=auto pull_request=auto delete_branch=yes setup=-]",
         "[ROUTING_POLICY: depth_escalation=auto]",
         "[FEEDBACK_POLICY: capture=observed coverage=repo detail=standard reminder=contextual]",
@@ -53,22 +54,20 @@ def test_configured(workspace: Path, write: Write) -> None:
     assert payload["routing"] == {"depth_escalation": "ask"}
 
 
-@pytest.mark.parametrize(
-    "approvals",
-    ['plan-intent = "auto"', 'plan-accept = "off"', 'dev-integration = "off"'],
-)
-def test_a_person_decides_plan_gates_and_integration_is_never_skipped(
-    workspace: Path, write: Write, approvals: str
-) -> None:
-    write(".devkit/config.toml", f"[workflow.approvals]\n{approvals}\n")
+@pytest.mark.parametrize("gate", ["plan-intent", "plan-accept", "proposal-handoff", "dev-integration"])
+@pytest.mark.parametrize("policy", ["ask", "auto"])
+def test_main_approval_boundaries_accept_ask_and_auto(workspace: Path, write: Write, gate: str, policy: str) -> None:
+    write(".devkit/config.toml", f'[workflow.approvals]\n{gate} = "{policy}"\n')
+    result = _policy(workspace)
+    assert result.exit_code == 0, result.stderr
+    assert f"[GATE_POLICY: {gate} policy={policy} source=config]" in result.stdout
+
+
+@pytest.mark.parametrize("gate", ["plan-intent", "plan-accept", "proposal-handoff", "dev-integration"])
+def test_main_approval_boundaries_cannot_be_skipped(workspace: Path, write: Write, gate: str) -> None:
+    write(".devkit/config.toml", f'[workflow.approvals]\n{gate} = "off"\n')
     result = _policy(workspace)
     assert result.exit_code == 2 and "SPEC_CONFIG_INVALID" in result.stderr
-
-
-@pytest.mark.parametrize("approvals", ['plan-intent = "ask"', 'plan-accept = "ask"'])
-def test_an_explicit_ask_is_accepted(workspace: Path, write: Write, approvals: str) -> None:
-    write(".devkit/config.toml", f"[workflow.approvals]\n{approvals}\n")  # ask is the fixed gates' default
-    assert _policy(workspace).exit_code == 0
 
 
 def test_a_key_for_no_gate_warns_and_is_not_listed(workspace: Path, write: Write) -> None:

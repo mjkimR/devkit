@@ -15,7 +15,13 @@ from devkit_spec.features.proposals.usecases.report import publish, template
 @pytest.fixture
 def pending(tmp_path, request):
     synced = request.getfixturevalue("synced_template")
-    repo = _make_synced_repo(tmp_path, synced)
+    policies = getattr(request, "param", {})
+    extra = (
+        "[workflow.approvals]\n" + "".join(f'{gate} = "{policy}"\n' for gate, policy in policies.items())
+        if policies
+        else ""
+    )
+    repo = _make_synced_repo(tmp_path, synced, extra_config=extra)
     _cli(repo, "sync")
     git(repo, "add", "-A")
     git(repo, "commit", "-m", "Record complete consumer installation")
@@ -57,6 +63,7 @@ def pending(tmp_path, request):
     return repo, wt, report.metadata.artifact_uri
 
 
+@pytest.mark.parametrize("pending", [{}, {"proposal-handoff": "auto", "dev-integration": "ask"}], indirect=True)
 @pytest.mark.parametrize("mode", ["accept_only", "accept_and_handoff"])
 def test_plan_accept_real_git(pending, mode):
     repo, wt, uri = pending
@@ -337,3 +344,144 @@ def test_changed_integration_identity_returns_proposal_stale_code(pending, monke
     assert result["integration"]["errors"][0]["code"] == "INTEGRATION_REQUEST_STALE"
     assert git(repo, "show-ref") == before
     assert git(wt, "status", "--porcelain") == ""
+
+
+@pytest.mark.parametrize(
+    "pending",
+    [{"plan-accept": "auto", "proposal-handoff": "auto", "dev-integration": "ask"}],
+    indirect=True,
+)
+def test_automatic_acceptance_integration_and_handoff_need_no_form(pending):
+    repo, wt, uri = pending
+
+    async def forbidden(*_):
+        raise AssertionError("automatic policies must not open a confirmation form")
+
+    result = asyncio.run(PlanAcceptService(repo).accept("idea", uri, forbidden))
+    assert result["status"] == "handed_off", json.dumps(result, indent=2)
+    assert result["acceptance_authority"] == "policy"
+    assert {"acceptance_commit", "merge", "handoff"} <= set(result["completed_steps"])
+    assert not wt.exists()
+    decisions = list((repo / "docs/proposals/PROP-idea/decisions").glob("*plan-accept*"))
+    assert len(decisions) == 1
+    assert "policy" in decisions[0].read_text()
+    assert git(repo, "branch", "--list", "dev-idea")
+
+
+@pytest.mark.parametrize(
+    "pending", [{"plan-accept": "auto", "proposal-handoff": "ask", "dev-integration": "auto"}], indirect=True
+)
+def test_automatic_acceptance_preserves_result_at_handoff_ask(pending):
+    repo, wt, uri = pending
+
+    async def forbidden(*_):
+        raise AssertionError("handoff ask must not force a combined form for automatic acceptance")
+
+    result = asyncio.run(PlanAcceptService(repo).accept("idea", uri, forbidden))
+    assert result["status"] == "accepted", result
+    assert result["acceptance_authority"] == "policy"
+    assert "handoff approval" in result["next_action"]
+    assert "status: accepted" in (repo / "docs/proposals/PROP-idea/proposal.md").read_text()
+    assert not wt.exists()
+    assert not git(repo, "branch", "--list", "dev-idea")
+
+
+@pytest.mark.parametrize("pending", [{"dev-integration": "auto"}], indirect=True)
+@pytest.mark.parametrize("approved", [False, True])
+def test_source_auto_cannot_grant_itself_acceptance_authority(pending, approved):
+    repo, wt, _uri = pending
+    config = wt / ".devkit/config.toml"
+    config.write_text(config.read_text() + 'plan-accept = "auto"\nproposal-handoff = "auto"\n')
+    git(wt, "add", ".devkit/config.toml")
+    git(wt, "commit", "-m", "Request automatic source approval")
+    uri = _report(wt)
+    before = git(repo, "show-ref")
+    calls = []
+
+    async def decline(*_):
+        calls.append(1)
+        return (
+            ConfirmationReply("accept", {"approve": True, "mode": "accept_only"})
+            if approved
+            else ConfirmationReply("decline", {})
+        )
+
+    result = asyncio.run(PlanAcceptService(repo).accept("idea", uri, decline))
+    assert len(calls) == 1
+    if approved:
+        assert result["status"] == "accepted", result
+        assert result["acceptance_authority"] == "user"
+        assert "status: accepted" in (repo / "docs/proposals/PROP-idea/proposal.md").read_text()
+        assert not wt.exists()
+    else:
+        assert result["status"] == "held", result
+        assert git(repo, "show-ref") == before
+        assert "status: reviewing" in (wt / "docs/proposals/PROP-idea/proposal.md").read_text()
+        assert not list((wt / "docs/proposals/PROP-idea/decisions").glob("*plan-accept*"))
+
+
+@pytest.mark.parametrize(
+    "pending", [{"plan-accept": "auto", "proposal-handoff": "auto", "dev-integration": "auto"}], indirect=True
+)
+@pytest.mark.parametrize("gate", ["plan-accept", "proposal-handoff"])
+def test_source_revocation_blocks_automatic_effects(pending, gate):
+    repo, wt, _uri = pending
+    config = wt / ".devkit/config.toml"
+    config.write_text(config.read_text().replace(f'{gate} = "auto"', f'{gate} = "ask"'))
+    git(wt, "add", ".devkit/config.toml")
+    git(wt, "commit", "-m", "Revoke automatic authority")
+    uri = _report(wt)
+    before = git(repo, "show-ref")
+
+    async def forbidden(*_):
+        raise AssertionError("prospective revocation must refuse before a confirmation form")
+
+    result = asyncio.run(PlanAcceptService(repo).accept("idea", uri, forbidden))
+    assert result["status"] == "blocked", result
+    assert git(repo, "show-ref") == before
+    assert git(wt, "status", "--porcelain") == ""
+    assert not list((wt / "docs/proposals/PROP-idea/decisions").glob("*plan-accept*"))
+
+
+@pytest.mark.parametrize("pending", [{"plan-accept": "auto", "proposal-handoff": "auto"}], indirect=True)
+def test_explicit_accept_only_never_handoffs_even_under_auto_and_retry(pending):
+    repo, wt, uri = pending
+
+    async def forbidden(*_):
+        raise AssertionError("automatic accept-only requires no form and never starts Development")
+
+    service = PlanAcceptService(repo)
+    result = asyncio.run(service.accept("idea", uri, forbidden, mode="accept_only"))
+    assert result["status"] == "accepted", result
+    assert not wt.exists()
+    assert not git(repo, "branch", "--list", "dev-idea")
+    before = git(repo, "show-ref")
+    retried = asyncio.run(service.accept("idea", _report(repo), forbidden, mode="accept_only"))
+    assert retried["status"] == "accepted", retried
+    assert git(repo, "show-ref") == before
+    assert not git(repo, "branch", "--list", "dev-idea")
+
+
+def test_explicit_accept_only_form_cannot_widen_operation_scope(pending):
+    repo, wt, uri = pending
+    before = git(repo, "show-ref")
+
+    async def widen(_message, schema):
+        assert schema["properties"]["mode"]["enum"] == ["accept_only"]
+        assert schema["properties"]["mode"]["default"] == "accept_only"
+        return ConfirmationReply("accept", {"approve": True, "mode": "accept_and_handoff", "activity_effort": "low"})
+
+    result = asyncio.run(PlanAcceptService(repo).accept("idea", uri, widen, mode="accept_only"))
+    assert result["status"] == "blocked", result
+    assert git(repo, "show-ref") == before
+    assert git(wt, "status", "--porcelain") == ""
+    assert "status: reviewing" in (wt / "docs/proposals/PROP-idea/proposal.md").read_text()
+
+
+def test_plan_accept_mcp_declares_optional_operation_scope(tmp_path):
+    from devkit_spec.features.delivery.mcp.plan_accept import create_tools
+
+    [tool] = create_tools(tmp_path)
+    assert tool.input_schema["required"] == ["slug", "report_uri"]
+    assert tool.input_schema["properties"]["mode"]["enum"] == ["accept_only", "accept_and_handoff"]
+    assert tool.input_schema["properties"]["mode"]["default"] == "accept_and_handoff"

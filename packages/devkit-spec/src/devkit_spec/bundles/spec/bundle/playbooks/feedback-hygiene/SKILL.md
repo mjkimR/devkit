@@ -92,7 +92,7 @@ concrete test/review evidence. A dismissal states its reason in the same line.
 
 A hygiene session also surfaces stalled work. `uv run devkit rules check -p hygiene` warns about each `plan-*` and
 `dev-*` branch idle longer than `[worktree] stale_after` (it needs `gh auth status`; otherwise it notes the skip);
-`uv run devkit worktree stale` prints the same as `[STALE_BRANCH: ...]` lines with the pull request state and the
+`uv run devkit worktree status --stale` prints the same as `[STALE_BRANCH: ...]` lines with the pull request state and the
 resume command. List them for the user with the two ways on, resume or discard, per §4 of the `spec` skill's
 `references/branches.md`, and do neither unasked: the warning never cleans anything up.
 

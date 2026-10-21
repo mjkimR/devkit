@@ -10,7 +10,6 @@ from devkit_dist.features.distribution.models.settings import (
     AGENT_NAMES,
 )
 from devkit_dist.features.distribution.usecases.commands import (
-    build_source,
     plan_source,
     validate_source,
 )
@@ -39,12 +38,3 @@ def validate(source: Path) -> object:
 def plan(source: Path, preset: str | None, agents: tuple[str, ...]) -> object:
     """Preview every destination a bundle deploys, without a consumer project."""
     return plan_source(source, preset, agents)
-
-
-@bundle.command()
-@SOURCE
-@click.option("--output", required=True, type=click.Path(dir_okay=False, path_type=Path))
-@_json_command
-def build(source: Path, output: Path) -> object:
-    """Build a deterministic ZIP archive with a hashed inventory."""
-    return build_source(source, output)

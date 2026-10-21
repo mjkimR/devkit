@@ -369,7 +369,7 @@ def _expected(expects: Sequence[str]) -> dict[str, int]:
     return expected
 
 
-@scope_group.command(name="sweep")
+@scope_group.command(name="sweep", hidden=True)
 @click.option("--apply", "apply", is_flag=True, help="Remove the stale records whose revision is unchanged")
 @click.option(
     "--expect",

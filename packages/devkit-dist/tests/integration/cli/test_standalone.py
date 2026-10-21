@@ -36,7 +36,7 @@ def test_version_and_help_list_only_the_distribution_commands() -> None:
     listing = _devkit("--help")
     assert listing.returncode == 0
     listed = {line.split()[0] for line in listing.stdout.split("Commands:")[1].splitlines() if line.strip()}
-    assert listed == set(COMMANDS) and not listed & set(HARNESS_COMMANDS)
+    assert listed == set(COMMANDS) - {"recover"} and not listed & set(HARNESS_COMMANDS)
     assert [entry.name for entry in entry_points(group="devkit.commands")] == []
 
 

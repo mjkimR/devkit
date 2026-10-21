@@ -114,6 +114,7 @@ public_modules = [
     "devkit_spec.features.entrypoints.repositories.bundle",
     "devkit_spec.features.entrypoints.services.paths",
     "devkit_spec.features.policy.services.config",
+    "devkit_spec.features.policy.usecases.approvals",
     "devkit_spec.features.policy.models.config",
     "devkit_spec.features.proposals.models.approval",
     "devkit_spec.features.proposals.models.axes",

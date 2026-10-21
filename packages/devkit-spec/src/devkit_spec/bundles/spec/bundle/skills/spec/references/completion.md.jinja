@@ -6,7 +6,11 @@ Every task MUST compare the final diff, the requirements, the check results and 
 
 ## Policy
 
-Read `devkit spec policy` before deciding gate or Git actions:
+Read `devkit spec policy` before deciding gate or Git actions. The main boundaries are `plan-accept`, `proposal-handoff` and `dev-integration`, each independently `ask|auto`. An `ask` boundary needs authority for its exact effects; reuse an explicit decision already given rather than asking again. `auto` delegates that boundary to the Host after readiness checks; report policy as the authority, never as a human approval. Auto requires the owning base and prospective policy to allow it; source-only policy edits cannot authorize themselves. Existing task authorization satisfies `plan-intent` without a fourth repeated approval.
+
+`accept_only` settles proposal direction and leaves Development for later. `accept_and_handoff` can settle both boundaries in one interaction: ask only for the boundaries whose policy is `ask`, and disclose each effect. A stale source/report invalidates the old request; inspect partial state and authorize only remaining effects. Preserve exact source SHA, report URI, authority and recovery state. Planning integration is part of `plan-accept`, not another `dev-integration` decision; that boundary governs the final Development result. Neither mode bypasses readiness, host restrictions or publication policy.
+
+For the final result:
 
 - `[GATE_POLICY: dev-integration policy=ask]`: present the verified result, then obtain the user's OK:
 {% if execution.environment == "local" %}  - Local MCP integration: call `integration_integrate` directly. Its native confirmation, bound to the verified source commit, the confirmation target and (within that call) its descendants, and the merge/cleanup scope, is the user's OK for this gate: ask no separate chat approval and do not require `integration_prepare` first. A waiting `gate:dev-integration` permits this call; do not assert `--given dev-integration` before native acceptance.

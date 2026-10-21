@@ -42,7 +42,7 @@ HARNESS_TABLES = (
     '#   merge = "no-ff"  # "no-ff" | "ff-only"; no-ff: a merge commit per task; ff-only: fast-forward only, wins in'
     " either policy\n"
     '#   setup = "uv sync"  # example; string; shell command run in a newly created worktree; unset: no setup command\n'
-    '#   stale_after = "14d"  # "<N>d" | "<N>w"; idle plan-*/dev-* branches are reported by devkit worktree stale and'
+    '#   stale_after = "14d"  # "<N>d" | "<N>w"; idle plan-*/dev-* branches are reported by devkit worktree status --stale and'
     " hygiene runs\n"
 )
 

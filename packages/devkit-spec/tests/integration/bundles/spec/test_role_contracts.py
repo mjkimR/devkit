@@ -272,7 +272,8 @@ def test_orchestration_follows_the_committed_result_contract() -> None:
     assert "A failing range is blocked, never discarded" in text
     assert "a blocked unit goes no further" in text
     assert "A `session`-depth task never becomes a unit" in text
-    assert "`local-orchestrated` is the user's choice, never yours" in text
+    assert "This scheduling choice requires no additional business approval" in text
+    assert "preserve an explicit user preference" in text
 
 
 def test_a_run_records_its_questions_and_problem_in_one_worker_envelope() -> None:

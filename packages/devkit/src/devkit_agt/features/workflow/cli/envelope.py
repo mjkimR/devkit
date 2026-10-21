@@ -165,7 +165,7 @@ def _write(
     )
 
 
-@envelope_group.command(name="new")
+@envelope_group.command(name="new", hidden=True)
 @click.option("--kind", required=True, help="Envelope kind, e.g. scout, red, final-report")
 @_common()
 @FINDINGS_FILE

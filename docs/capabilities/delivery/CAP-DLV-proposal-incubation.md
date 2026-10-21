@@ -44,7 +44,7 @@ removes it.
   - Format and reference rules over proposal files: `CAP-GOV-spec-rules`.
 - **Non-Goals**:
   - **Scope Excluded**: inferring approval. Neither `accept` nor handoff derives the user's choice from context;
-    `accept` runs only after the user's explicit acceptance and never records `plan-intent`.
+    `accept` requires explicit user acceptance or owning `plan-accept=auto` policy and never records `plan-intent`.
   - **Scope Excluded**: moving into a worktree. Handoff runs in the workspace it is given; task worktrees are
     devkit's `devkit worktree`.
   - **Scope Excluded**: archives. Rejected and handed-off proposals are deleted; Git history keeps them.
@@ -55,7 +55,7 @@ removes it.
    `new` and `handoff` MUST refuse a slug whose `SPEC-<slug>` exists (`SPEC_PROPOSAL_SLUG_CONFLICT`); a document that
    cannot be indexed never blocks them.
 2. **Approval is explicit and recorded**: handoff MUST require `status: accepted`, which `accept` writes once the
-   user gave `plan-accept`. Anything else is `SPEC_PROPOSAL_NOT_APPROVED` (`INTERACTION`: stop and ask the user; its
+   user gave `plan-accept` or owning policy delegated it. Anything else is `SPEC_PROPOSAL_NOT_APPROVED` (`INTERACTION`: stop and ask the user; its
    `[FIX]` names `devkit spec proposal accept`). A bundle bound to `sdd-proposal` MUST also have its effective accepted
    `gate:plan-accept` record (the rule of rule 12 that carries it); without it the handoff refuses before writing
    (`SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED`, `INTERACTION`: never record an acceptance unasked; without a `worker`
@@ -142,7 +142,7 @@ removes it.
     the base before creating children. Changing status alone is insufficient. The decomposition refusal retains
     `SPEC_PROPOSAL_IN_PLANNING` and directs the caller to this Host-managed return, never to retry on the plan branch.
 14. **One writer of an acceptance**: `accept` records the user's acceptance in one step, after the user's explicit
-    acceptance only (`--by user`, the only value: `plan-accept` is never delegated). Its form follows from the
+    acceptance (`--by user`) or validated owning policy delegation (`--by policy`). Its form follows from the
     status: `planning` for a proposal in review on its `plan-<slug>` (another branch is
     `SPEC_PROPOSAL_WRONG_WORKTREE`), `direct` with `--direct` for an eligible draft, `repair` with `--direct` for an
     `accepted` proposal without an effective `gate:plan-accept`; every other combination, a `rejected`, single-file or
@@ -432,7 +432,7 @@ uv run devkit spec proposal check fast-engine                        # before an
 | `--slug` | `padr` | The PADR slug for its ID and file name (default: the title's slug); refused when its first segment has no letter. |
 | `--summary` | `new`, `padr` | Write `summary: <text>`. After stripping surrounding whitespace, empty, longer than 300 characters, or with a letter outside the Latin script: `ARGUMENT_INVALID` (`[TARGET] --summary`), nothing written. A promoted ADR keeps its PADR's summary. |
 | `--with-target-docs` | `new` | Also write `target-docs.md`. |
-| `--by` | `accept` | Required: `user`, written only after the user's explicit acceptance; any other value is a usage error (exit `2`). |
+| `--by` | `accept` | Required: `user` for explicit acceptance or `policy` under owning `plan-accept=auto`; other values are usage errors (exit `2`). |
 | `--note` | `accept` | The decision note; with `--direct` the eligibility reason, required (blank: `ARGUMENT_INVALID`, `[TARGET] --note`, before the proposal is read). |
 | `--direct` | `accept` | Accept an eligible draft on the base checkout, or repair an accepted proposal without its record and without a `worker` envelope (rule 14). |
 | `--check` | `accept` | Run every check of the form and write nothing. |
@@ -633,3 +633,15 @@ protocol tests. See `ADR-source-bound-review-reports-and-explicit-lifecycle-appr
 | `PROPOSAL_REVIEW_REFRESH_REQUIRED` | Exact report is missing, expired, changed or bound to another source/language. | Publish a new report outside any pending form and request fresh review. |
 | `PROPOSAL_APPROVAL_NOT_READY` | Planning or native reply prerequisites do not hold. | Resolve the named prerequisite and request a fresh form. |
 | `PROPOSAL_APPROVAL_STALE` | Reviewed scope or exact acceptance delta changed. | Inspect preserved effects, refresh evidence and approve only remaining scope. |
+
+### Policy-aware native decision boundaries
+
+`plan-accept`, `proposal-handoff`, and `dev-integration` independently allow `ask` or `auto`, default `ask`.
+`spec_plan_accept` binds the exact immutable report, source and base commits, configuration, environment and setup.
+Owning `plan-accept=auto` authorizes checked acceptance and the Planning merge regardless of Development's final-result
+policy. Source-only auto cannot grant authority, and prospective revocation refuses execution. With handoff auto it
+continues into Development using the accepted `dev_effort`; with handoff ask it leaves the accepted proposal waiting
+for its separate start decision. A native user form can explicitly include both acceptance and handoff once. The optional operation `mode` is `accept_only` or `accept_and_handoff` (default); `accept_only` never starts Development even when both policies are auto, and its form cannot widen that requested scope.
+`spec_handoff` uses a form under ask and the default effort under auto. The low-level CLI handoff is an instructed executor: the Host must already possess user or policy authority for `proposal-handoff`; invoking it does not itself prove approval. Exact report validation, snapshot checks,
+readiness, rollback and partial-effect recovery apply under either authority. Internal worker sequencing, review,
+retries and fixes inside the approved scope are delegated to the Host, rather than additional user approval gates.

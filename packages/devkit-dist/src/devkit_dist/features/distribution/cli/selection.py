@@ -223,7 +223,7 @@ def status(workspace_root: str | None) -> None:
     exit_on_warnings(report.notices)
 
 
-@click.command()
+@click.command(hidden=True)
 @WORKSPACE
 @_json_command
 def recover(workspace_root: str | None) -> object:

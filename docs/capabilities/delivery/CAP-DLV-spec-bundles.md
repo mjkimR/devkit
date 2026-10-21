@@ -81,6 +81,12 @@ creates one without a proposal, writing the document IDs the spec rules expect (
 
 ## 4. Interfaces & Data Contracts
 
+`spec new` also registers the created bundle in the work-scope registry when invoked in a linked worktree.
+The JSON result includes `scope` (or `null`) and the combined creation/registration notices; text includes a
+`SCOPE` sentinel on registration. Registration failure leaves the created bundle intact and emits
+`SPEC_SCOPE_REGISTER_FAILED` with the explicit registration recovery command. The pure `create_spec` operation
+continues to create and bind only; delivery owns the composed operation.
+
 ### 4.1 Command
 
 ```text

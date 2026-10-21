@@ -1029,3 +1029,55 @@ def test_handoff_missing_report_never_displays_form(accepted_handoff_base):
 
     with pytest.raises(ReviewRefreshRequiredError):
         asyncio.run(HandoffService(accepted_handoff_base).handoff("idea", "shared://missing", confirm))
+
+
+@pytest.mark.parametrize("policy", ["ask", "auto"])
+def test_handoff_boundary_follows_owning_policy(accepted_handoff_base, policy):
+    from devkit_spec.features.delivery.usecases.native_handoff import HandoffService
+
+    repo = accepted_handoff_base
+    config = repo / ".devkit/config.toml"
+    config.write_text(config.read_text() + f'\n[workflow.approvals]\nproposal-handoff = "{policy}"\n')
+    git(repo, "add", ".devkit/config.toml")
+    git(repo, "commit", "-m", "Configure proposal handoff boundary")
+    calls = []
+
+    async def confirm(*_):
+        calls.append(1)
+        assert policy == "ask", "automatic handoff must not open a form"
+        return ConfirmationReply("accept", {"approve": True, "activity_effort": "low"})
+
+    result = asyncio.run(HandoffService(repo).handoff("idea", _handoff_report(repo), confirm))
+    assert result["status"] == "handed_off", result
+    assert len(calls) == (1 if policy == "ask" else 0)
+    assert result["authority"] == ("user" if policy == "ask" else "policy")
+    assert result["activity_effort"] == ("low" if policy == "ask" else "high")
+
+
+def test_handoff_automatic_policy_revocation_preserves_git_state(accepted_handoff_base, monkeypatch):
+    import devkit_spec.features.delivery.usecases.native_handoff as module
+
+    repo = accepted_handoff_base
+    config = repo / ".devkit/config.toml"
+    config.write_text(config.read_text() + '\n[workflow.approvals]\nproposal-handoff = "auto"\n')
+    git(repo, "add", ".devkit/config.toml")
+    git(repo, "commit", "-m", "Delegate handoff")
+    uri = _handoff_report(repo)
+    before = git(repo, "show-ref")
+    original = module.approval_policy
+
+    def revoke(root, gate):
+        result = original(root, gate)
+        config.write_text(config.read_text().replace('proposal-handoff = "auto"', 'proposal-handoff = "ask"'))
+        return result
+
+    monkeypatch.setattr(module, "approval_policy", revoke)
+
+    async def forbidden(*_):
+        raise AssertionError("revoked automatic authority must not fall back to a form")
+
+    with pytest.raises(module.HandoffNotReadyError) as caught:
+        asyncio.run(module.HandoffService(repo).handoff("idea", uri, forbidden))
+    assert caught.value.code == "SPEC_HANDOFF_NOT_READY"
+    assert git(repo, "show-ref") == before
+    assert not git(repo, "branch", "--list", "dev-idea")

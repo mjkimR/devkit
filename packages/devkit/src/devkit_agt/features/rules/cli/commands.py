@@ -235,7 +235,7 @@ def fix_cmd(
     )
 
 
-@cli.command(name="phases")
+@cli.command(name="phases", hidden=True)
 @_workspace_option
 @_rules_dir_option
 @_format_option
@@ -321,7 +321,7 @@ class _PytestArgsCommand(click.Command):
         return super().parse_args(ctx, args)
 
 
-@cli.command(name="test", cls=_PytestArgsCommand)
+@cli.command(name="test", cls=_PytestArgsCommand, hidden=True)
 @_workspace_option
 @_rules_dir_option
 @_format_option

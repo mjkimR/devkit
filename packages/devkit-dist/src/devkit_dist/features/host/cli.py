@@ -53,7 +53,7 @@ def status(host: str, workspace_root: str | None, output_format: str) -> None:
     sys.exit(report_exit_code(report.errors))
 
 
-@cli.command()
+@cli.command(hidden=True)
 @click.option("--host", required=True)
 @click.option("--asset", required=True, help="Receipt-selected bundle:hook asset")
 @workspace_option()

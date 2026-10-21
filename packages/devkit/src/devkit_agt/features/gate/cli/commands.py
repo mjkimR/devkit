@@ -208,7 +208,7 @@ def _report(report: StageReport) -> None:
         echo_notices(report.notices)
 
 
-@cli.command(name="run", context_settings={"ignore_unknown_options": True})
+@cli.command(name="run", hidden=True, context_settings={"ignore_unknown_options": True})
 @WORKSPACE
 @click.argument("stage", type=click.Choice([stage.value for stage in Stage]))
 @click.argument("hook_args", nargs=-1, type=click.UNPROCESSED)

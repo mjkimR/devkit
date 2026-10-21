@@ -580,7 +580,10 @@ def test_a_definition_narrows_the_policies_of_its_gates(narrowed: Path, approval
         assert result.exit_code == 0, result.stderr
         return
     assert result.exit_code == 2 and "(WORKFLOW_GATE_POLICY)" in result.stderr
-    for command in (("requests",), ("answer", "--request", "gate:accept", "--action", "accept")):
+    for command in (
+        ("next", "--view", "requests"),
+        ("answer", "--request", "gate:accept", "--action", "accept"),
+    ):
         refused = run_cli(*command, "-w", str(narrowed), "--unit", SIMPLE_UNIT, "--no-lint")
         assert refused.exit_code == 2 and "WORKFLOW_GATE_POLICY" in refused.stderr
 
