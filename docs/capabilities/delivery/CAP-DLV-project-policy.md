@@ -39,8 +39,7 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
     skill's worktree procedure.
 - **Non-Goals**:
   - **Scope Excluded**: writing policy. The command only reads; the project edits `.devkit/config.toml`.
-  - **Scope Excluded**: granting authority. No policy value grants commit, merge, publication or deletion authority
-    the user has not given.
+  - **Scope Excluded**: granting commit, publication or host permission authority. Explicit shared base auto grants only the verified local MCP integration and exact cleanup authority defined by `CAP-INT-mcp-services`.
 
 ## 3. Business Rules & Policies
 
@@ -55,7 +54,7 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
    first, then any other gate the project configures, in sorted order. `plan-intent` and `plan-accept` are always the
    user's decision (`source=fixed`): a `[workflow.approvals]` value other than `ask` (their default) for either is
    `SPEC_CONFIG_INVALID`, and so is `dev-integration = "off"` (it would skip the integration stage); `dev-integration`
-   takes `ask` or `auto`, and `auto` applies at every `activity-effort`. The workflow definitions declare the same rule
+   takes `ask` or `auto`, and `auto` applies at every `activity-effort`. Shared base auto authorizes verified local merge and scoped cleanup through the MCP executor, reported as `authority: policy`, without another business confirmation (`ADR-policy-authorized-local-integration`). Source-only auto, local overrides and tool permissions do not supply this authority. Auto PR execution and cloud mutation remain refused. The workflow definitions declare the same rule
    (`gates.<gate>.policies`), so devkit refuses it too wherever it evaluates a unit (`WORKFLOW_GATE_POLICY`).
    `exception` is a stage, not a gate: a key for it has no effect, so `devkit spec policy` does not list it and warns `SPEC_APPROVAL_KEY_IGNORED`.
 5. **Strict table**: `[tool.spec]` MUST be a table with only the keys `worktree`, `depth_escalation`, `namespaces`,

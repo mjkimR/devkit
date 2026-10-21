@@ -1,0 +1,10 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: 'PROP-policy-authorized-integration: Accept MCP service policy dispatch for
+  verified local auto merge and scoped cleanup with separate host permissions and
+  live-host acceptance evidence'
+by: user
+at: '2026-10-20T23:00:22.586218Z'

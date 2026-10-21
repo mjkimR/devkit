@@ -1,0 +1,24 @@
+kind: worker
+stage: integration-approval
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T23:18:33.952745Z'
+status: completed
+summary: Development specify through final-change-report completed and committed. Shared-base auto local MCP authority implemented, exact cleanup and recovery preserved, all AC verified including live Codex/Claude and no-form SDK. Independent review passed; independent reconcile P2 fixed and self-reverified. Waiting for Host integration authority.
+findings: []
+assumptions:
+- Emulated worker and nested role contracts use explicit absolute cwd, scoped operations and Host committed-range validation rather than native path confinement.
+- Separate scoped approvals were used for sibling writes/Git/checks. Disposable smoke subtree was explicitly expanded by Host and removed after sanitized evidence retention.
+- Independent initial code and reconcile reviews completed. Implementer verified bounded diagnostic/documentation fix after P2.
+unverified_areas:
+- Host must incorporate moved base 48f165f02f1491f830ef5969babc5d2df559d43e and validate/integrate; this worker did not merge or publish.
+- Live host evidence is limited to documented explicitly granted tool settings, not all host permission modes.
+checks:
+  tests: PASS 1397 affected tests plus 11 final policy assertions
+  lint: PASS lint and types for devkit/devkit-spec
+  governance: PASS cumulative rules zero violations, sync check and diff check
+  host-smoke: PASS Codex CLI 0.163.0 and Claude Code 2.1.305 actual local merge/cleanup; no remote effects
+diff_scope:
+  base: a6b45cf12ec653d2126fd9bb19d42ef1760b3419
+  head: 38d0f975975d4f0f50677d7d9feb83f8df298b1e
+activity_effort: medium
