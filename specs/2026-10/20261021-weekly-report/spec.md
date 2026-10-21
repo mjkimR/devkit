@@ -2,7 +2,7 @@
 id: SPEC-weekly-report
 title: Evidence-based weekly maintenance reporting
 summary: Define a manually invoked weekly-report playbook that turns revision-bound repository evidence into a report and prioritized follow-ups while separating generation from authorized publication.
-status: planned
+status: in-progress
 created: 2026-10-21
 milestone: MS-reporting-and-actionable-insights
 related_capabilities: []
