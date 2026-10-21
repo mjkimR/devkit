@@ -222,7 +222,7 @@ class _BundleInventory:
                     target_files=[dest],
                 )
             data = (
-                render_template(path.read_bytes(), self.variables, source)
+                render_template(path.read_bytes(), self.variables, source, environment=self.environment)
                 if path.name.endswith(".md.jinja")
                 else path.read_bytes()
             )

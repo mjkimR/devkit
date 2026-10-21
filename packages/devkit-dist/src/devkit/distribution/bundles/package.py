@@ -31,7 +31,9 @@ def _payload(bundle: Bundle) -> dict[str, Content]:
     """Archive path -> content (normalized mode) for the manifest, constitution and every source file."""
     payload = {"bundle.toml": Content((bundle.root / "bundle.toml").read_bytes(), 0o644)}
     if bundle.constitution is not None:
-        payload["AGENTS.md"] = Content(bundle.constitution.read_bytes(), 0o644)
+        payload[bundle.constitution.relative_to(bundle.root).as_posix()] = Content(
+            bundle.constitution.read_bytes(), 0o644
+        )
     for asset in bundle.assets:
         for _, source in asset.sources:
             for path in source_files(bundle.root, source):

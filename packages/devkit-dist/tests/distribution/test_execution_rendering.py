@@ -170,3 +170,50 @@ def test_constitution_personal_variables_remain_forbidden(tmp_path: Path):
     (root / ".devkit/config.local.toml").write_text('[bundles.execution.variables]\nlanguage="ko"\n')
     with pytest.raises(LocalRenderForbiddenError):
         sync_project(root, [item], environment="cloud", save_environment=False)
+
+
+@pytest.mark.parametrize("directory", [False, True])
+def test_seed_templates_use_selected_environment_once(tmp_path: Path, directory: bool):
+    source = "seed" if directory else "seed.md.jinja"
+    target = "docs" if directory else "docs/guide.md"
+    item = write_bundle(
+        tmp_path / "source",
+        f'''schema=1
+name="seeds"
+version="0.1.0"
+[[assets]]
+id="seed"
+kind="document"
+source="{source}"
+seeded=true
+target="{target}"
+''',
+        {"seed/guide.md.jinja" if directory else source: "{{ execution.environment }}\n"},
+    )
+    root = tmp_path / "project"
+    (root / ".devkit").mkdir(parents=True)
+    (root / ".devkit/config.toml").write_text('agents=[]\n[presets]\nseeds="all"\n')
+    sync_project(root, [item], environment="cloud", save_environment=False)
+    assert (root / "docs/guide.md").read_text() == "cloud\n"
+    sync_project(root, [item], environment="local", save_environment=False)
+    assert (root / "docs/guide.md").read_text() == "cloud\n"  # Seed ownership stays with the user.
+
+
+def test_archive_roundtrip_preserves_constitution_template(tmp_path: Path):
+    import zipfile
+
+    from devkit.distribution.bundles import build_bundle
+    from devkit.distribution.installation.discovery import InstalledBundle
+
+    _root, item = setup(tmp_path)
+    archive_path = tmp_path / "bundle.zip"
+    build_bundle(item.bundle, archive_path)
+    unpacked = tmp_path / "unpacked"
+    with zipfile.ZipFile(archive_path) as archive:
+        assert "AGENTS.md.jinja" in archive.namelist()
+        assert "AGENTS.md" not in archive.namelist()
+        archive.extractall(unpacked)
+    restored = InstalledBundle("content", "0.1.0", load_bundle(unpacked))
+    for environment in ("local", "cloud"):
+        inventory = desired_inventory([restored], {"execution": ["all"]}, [], environment=environment)
+        assert inventory.files[".devkit/managed/execution/AGENTS.md"].data == f"Constitution {environment}\n".encode()
