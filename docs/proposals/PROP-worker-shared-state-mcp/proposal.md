@@ -1,7 +1,7 @@
 ---
 id: PROP-worker-shared-state-mcp
 title: Shared state and workspace across worktrees and cloud agents
-summary: "Define immutable expiring shared artifacts with local CLI and MCP access, preserving scope-registry authority and exposing the production remote-adapter scope as a Planning decision."
+summary: "Define immutable expiring shared artifacts with local CLI and MCP access, preserving scope-registry authority and providing a public remote-adapter extension contract while deferring concrete remote backends."
 status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-20
 target_area: capabilities/collaboration/
@@ -43,10 +43,10 @@ is the first consumer. `CAP-COLL-work-scope-registry` already owns authoritative
 owner tokens and diagnostic journals. These records MUST NOT be moved into an expiring artifact store or operated
 through generic artifact CRUD. `ADR-keep-shared-storage-and-separate-read-access` remains applicable.
 
-The recommended first delivery is a local shared artifact store and a tested adapter protocol, with equivalent CLI
-and optional local MCP access. A production remote adapter and remote scope coordination remain a decision for the
-user: this recommendation narrows the draft's cross-host delivery and therefore requires an explicit answer before
-plan-accept. It does not claim a protocol fake makes cross-host production sharing work.
+The selected first delivery is a local shared artifact store and a public, tested remote-adapter protocol and
+registration contract, with equivalent CLI and local MCP access. A concrete production remote adapter and remote
+scope coordination are excluded from this delivery. `FB-remote-shared-adapter-follow-up` tracks the backend destination,
+dependencies and restart criteria. A protocol fake does not make cross-host production sharing work.
 
 ## 2. Selected Technical Contract
 
@@ -195,24 +195,33 @@ Exact extension areas: `distribution/bundles/templates.py`, `installation/invent
 then the named spec source assets/bundle manifest/tests plus dist consumption source/tests. Changing subagent or
 constitution template support or cloud registration would add those validators/projection contracts and
 `CAP-DIST-agent-projections` / `CAP-MCP-runtime-registration`. These broad changes are not added to this proposal's
-implementation boundaries without a scope decision. The scope decision assigns this work to a separate rendering proposal; this
+implementation boundaries without a scope decision. The scope decision assigns this work to `PROP-cloud-agent-rendering`; this
 artifact delivery documents the local MCP-first connection precondition and cloud CLI API only. No runtime config,
 managed output, source bundle or production code was changed by this feasibility investigation.
 
-## 3. Alternatives and Pending Product Scope
+## 3. Selected Delivery and Alternatives
 
 | Option | Benefit | Cost and limits |
 | --- | --- | --- |
-| Local artifacts plus tested protocol seam (recommended) | Unblocks linked-worktree review reports; preserves scope authority and current cloud MCP guard | No production cross-host sharing until a later backend delivery |
+| Local artifacts plus public tested protocol seam (selected) | Unblocks linked-worktree review reports; preserves scope authority and current cloud MCP guard | No production cross-host sharing until a later backend delivery |
 | Implement a real remote artifact backend in this unit | Meets unattended cross-host artifact sharing immediately | Requires provider/auth/deployment selection and integration tests; Planning must continue |
 | Unify scope state and artifacts in one generic store | One apparent API | Replaces existing ownership/revision contracts and couples TTL to authoritative records; rejected |
 
-Use a protocol selected from installed `devkit.shared.adapters` entry points, with the built-in local implementation
-and a test-only transactional adapter for conformance. An installed adapter must declare its identity and implement
+Publish `SharedArtifactAdapter` and its input/result/error types as an importable `devkit.shared` API, selected from
+installed `devkit.shared.adapters` entry points, with built-in local implementation and a test-only transactional
+adapter for conformance. Each entry-point name is the adapter ID and loads a factory that accepts the validated
+repository context and returns the protocol implementation; roots/namespace are service-owned, never tool arguments.
+Reserve `local` for the built-in adapter. Duplicate names, unloadable factories or malformed implementations produce
+`SHARED_ADAPTER_UNAVAILABLE` without fallback. Publish an adapter authoring reference and reusable semantic
+conformance fixtures covering immutable generations, live retries, expiry, pagination and error mapping. These are
+public extension contracts, not an internal-only mock interface. An installed adapter must declare its identity and implement
 the bounded immutable artifact semantics; protocol support alone does not certify its authentication or consistency.
 No production Firestore adapter, remote scope registry, deployment service, credentials UI or hosting lifecycle is
-included in the recommendation. If the user requires them now, continue Planning to choose a provider and assess
-whether a separate proposal is needed; do not silently invent credentials or label a mock production-ready.
+included in this delivery. The concrete remote backend is deferred to a separate Backlog proposal via
+`FB-remote-shared-adapter-follow-up`: restart when a cross-host consumer requires it and a provider, authentication
+model, repository namespace provisioning owner and test environment are available. That proposal must specify
+transaction consistency, retention, failure/retry behavior, setup/operating cost and real integration evidence before
+its plan-accept. No credentials or mock deployment are invented here.
 
 ## 4. Acceptance Evidence and Delivery Boundaries
 
@@ -231,13 +240,14 @@ whether a separate proposal is needed; do not silently invent credentials or lab
   operations, requests user connection repair when absent, and does not automatically select CLI. Cloud MCP lists no mutation tools and rejects forged mutation calls; local bounded
   writes never elicit a business approval form. Consumer source_sha mismatch is detectable from metadata.
 - **AC6**: Adapter config precedence and explicit failure on unknown adapter are tested in base, linked and owning
-  MCP workspaces. A test adapter passes the same semantic conformance suite; this is not remote production evidence.
+  MCP workspaces. Load a test adapter through the public entry-point contract and run the reusable semantic
+  conformance suite; duplicate/unloadable/malformed registrations fail without fallback. This is not remote production evidence.
 
 Development owns the new `packages/devkit-dist/src/devkit/shared/` area (declared by its existing parent), dist CLI,
 core local-config and MCP classification, MCP transport guards, package entry points/tests, and affected architecture,
 capability and quick-reference documentation. Narrow spec-orchestrate and spec-delegate host guidance changes plus
 bundle tests implement the local MCP-first connection precondition; they do not convert the asset set to templates.
-The separate rendering proposal owns that conversion and environment-driven rendering. It does not modify scope-registry semantics, proposal approval flow,
+`PROP-cloud-agent-rendering` owns that conversion and environment-driven rendering. It does not modify scope-registry semantics, proposal approval flow,
 viewer code or tracked localized reports. `PROP-proposal-review-and-approval` owns report composition, language
 resolution, display, stale-commit rejection and acceptance authority.
 
@@ -247,7 +257,8 @@ Planning and recommended Development effort are medium; multiple packages alone 
 
 ## 5. Lifecycle
 
-The proposal stays reviewing until the first-delivery remote scope question is answered. The cloud-rendering extension is assigned to a separate proposal,
-so it does not hold this artifact design or expand its implementation scope. The independent evidence,
-comparison and preliminary decision are retained in this bundle. `PADR-separate-shared-artifacts-from-scope` records
-the rationale; final acceptance belongs to the Host/user after the question and challenger findings are settled.
+Planning has no open direction question. The proposal remains reviewing for Host/user plan-accept; acceptance,
+merge and Development start are separate actions. `PADR-separate-shared-artifacts-from-scope` records the selected
+local-first direction. `PROP-cloud-agent-rendering` owns the separate environment-driven asset work.
+`FB-remote-shared-adapter-follow-up` retains the concrete remote backend follow-up through handoff; it is not a
+completion claim or an automatically scheduled implementation. Recommended Development effort remains medium.
