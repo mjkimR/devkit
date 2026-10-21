@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-periodic-drift-reconciliation
+by: user
+at: '2026-10-20T23:54:14.041666Z'

@@ -1,0 +1,15 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-20T23:57:40.559982Z'
+status: completed
+summary: Executable post-merge message amendment leaves cleanup stale
+findings: []
+assumptions:
+- Regression test was uncommitted when Red ran
+checks:
+  reproduced: PASS test_post_merge_metadata_rewrite_completes_cleanup fails with partial INTEGRATION_REQUEST_STALE before production fix
+diff_scope:
+  base: 60c113789a2a892baddb38a99cd593d6c0144bc1
+  head: ''
