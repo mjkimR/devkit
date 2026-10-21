@@ -133,7 +133,7 @@ devkit = false                          # opt out of an auto-selected bundle
 ```
 
 - **Top-level keys**: `schema`, `agents`, `presets`, `playbooks`, `rules`, `workflow`, `gates`, `worktree`,
-  `integration`, `guidance_block`, `override_drift`, `bundles`, `tool`, `execution`, `mcp`, `presentation`; anything else is `CONFIG_INVALID`. The list is
+  `integration`, `guidance_block`, `override_drift`, `bundles`, `tool`, `execution`, `mcp`, `presentation`, `shared`; anything else is `CONFIG_INVALID`. The list is
   the same whether or not `devkit-agt` is installed, so a configuration reads the same in both installations and
   typos are still caught.
 - **`schema`**: optional; `1` is the only version. `devkit add` writes it when it creates the file.
@@ -424,9 +424,9 @@ aborts before transaction writes; override commands restore their preliminary wr
 ### Checkout-local configuration and execution
 
 `.devkit/config.local.toml` is an optional, ignored, regular TOML file. It accepts optional `schema = 1`,
-`[execution] environment = "local" | "cloud"`, `[mcp] register = true | false`, `[presentation] language`, the existing `[playbooks]`
+`[execution] environment = "local" | "cloud"`, `[mcp] register = true | false`, `[presentation] language`, `[shared] adapter`, the existing `[playbooks]`
 search settings, and scalar `[bundles.<bundle>.variables]` inputs. Shared configuration also accepts `execution`
-and `mcp`, plus `presentation`; environment defaults to `local`, registration to `true`. Registration reconciliation belongs to the
+and `mcp`, plus `presentation` and `shared`; artifact adapter defaults to `local`, environment defaults to `local`, registration to `true`. Registration reconciliation belongs to the
 MCP service. The local file is not a secret store.
 
 Core `read_effective_config(root)` returns values and leaf-key source paths. Tables merge recursively; scalars and
@@ -487,3 +487,10 @@ For response-style, `auto` follows the current user request. For native approval
 uses English; `ko` and `en` select static domain-owned copy. Unsupported strings select English for both inherited
 consumers. Only bundle declarations opting into `default_from = "presentation.language"` inherit this preference.
 Templates still receive only `vars`. See `CAP-INT-mcp-services` and `CAP-DLV-proposal-incubation` for form boundaries.
+
+### Shared artifact adapter configuration
+
+The built-in commented config template includes `[shared] adapter = "local"`. The table accepts only adapter,
+a lowercase adapter ID; both shared and checkout-local readers validate it. `DEVKIT_SHARED_ADAPTER` overrides
+this key only when the artifact service selects its adapter. It grants no filesystem or cloud mutation authority.
+`CAP-COLL-shared-artifacts` defines adapter selection, namespace comparison and explicit unavailable errors.

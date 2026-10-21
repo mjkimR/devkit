@@ -46,7 +46,7 @@ backend or on scheduling.
   to the GitHub files and history commits. An agent can determine the latest completed run and its inspected
   source revision without checking out or fetching the history branch.
 - Durable execution history and reports are not subject to the ephemeral artifact TTL proposed by
-  `PROP-worker-shared-state-mcp`. Shared workspace artifacts may support work in progress, but expiring them does
+  `SPEC-worker-shared-state-mcp`. Shared workspace artifacts may support work in progress, but expiring them does
   not remove the persisted record or its required evidence.
 - Verification covers branch initialization, publication and retrieval for each playbook, multi-file publication,
   no-finding and failed runs, duplicate retries, concurrent writers, publication failure recovery, and unchanged

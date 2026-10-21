@@ -1,0 +1,27 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T00:33:52.659348Z'
+status: completed
+summary: Implemented immutable seven-day shared artifacts in devkit-dist with atomic local storage, exact generation retrieval, bounded cleanup, public adapters and conformance, CLI/MCP parity, owning-workspace configuration and cloud mutation refusal. All six ACs implemented; independent code review findings resolved and independent six-target reconciliation passed. Development completed before integration; Host owns base refresh and managed source deployment.
+findings: []
+assumptions:
+- 'Host-approved extensions: docs/glossary.md one term row and distribution/installation/config.py shared schema/default template; no other boundary extensions.'
+- Same-user local POSIX filesystem; conservative ignore rejection; backend continuation tokens opaque. Concrete remote adapter remains deferred in FB-remote-shared-adapter-follow-up.
+- Host must sync packages/devkit-spec/src/devkit_spec/bundle/skills/spec-orchestrate/SKILL.md and packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/references/hosts.md after integration.
+unverified_areas:
+- Production remote backend authorization/consistency/cross-host operation, Windows/network filesystems and native client UI are outside evidence. MCP server dispatch is tested through SDK handlers.
+- Moved main integration and managed projection sync remain Host-owned; worker does not merge or deploy.
+checks:
+  tests: 'PASS test-affected mode=full: 4058 passed, 14 skipped; dist-only 1106 passed; concurrency, expiry, permissions, publication faults, adapter/transport fixtures included'
+  build: PASS uv build wheel and sdist for devkit-dist, devkit-mcp, devkit-spec
+  lint: PASS just lint-check devkit-dist, devkit-mcp, devkit-spec
+  types: PASS just check devkit-dist, devkit-mcp, devkit-spec
+  rules: PASS cumulative --ci --base b4756365e92941da40f68dc6a8adf7bb346e7fbf; normal gates passed
+  review: PASS independent initial/follow-up reviews; final narrow casefold recurrence self-verified at medium
+  reconcile: PASS independent reviewer; six targets; no findings
+diff_scope:
+  base: b4756365e92941da40f68dc6a8adf7bb346e7fbf
+  head: a020d14bc80573d0c1b250cb0c983d1056d1c819
+activity_effort: medium

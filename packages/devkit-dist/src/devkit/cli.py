@@ -61,6 +61,7 @@ COMMANDS: dict[str, str] = {
     "recover": f"{_DISTRIBUTION}:recover",
     "override": f"{_DISTRIBUTION}:override",
     "host": "devkit.host.cli:cli",
+    "shared": "devkit.shared.cli:cli",
 }
 
 # The command names devkit-agt mounts through devkit.commands. Names only, consulted last: an installed command of

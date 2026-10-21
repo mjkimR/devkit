@@ -27,7 +27,8 @@ def load_tools(root: Path) -> dict[str, McpTool]:
                 if (
                     not NAME.fullmatch(tool.name)
                     or tool.name in tools
-                    or tool.execution not in {"read_only", "preflight", "interactive", "approved_resume"}
+                    or tool.execution
+                    not in {"read_only", "preflight", "interactive", "approved_resume", "bounded_write"}
                 ):
                     raise TypeError("invalid or duplicate tool name")
                 tools[tool.name] = tool

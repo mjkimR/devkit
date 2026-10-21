@@ -2,7 +2,7 @@
 
 Agent asset distribution in one Python package with the `devkit` command line: bundles, native agent projections,
 transactional sync and the installation receipt, context loading, playbooks and native host hooks. The distribution
-name is `devkit-dist`; imports are `devkit.*` (`devkit.core`, `devkit.search`, `devkit.host`, `devkit.distribution`,
+name is `devkit-dist`; imports are `devkit.*` (`devkit.core`, `devkit.search`, `devkit.host`, `devkit.shared`, `devkit.distribution`,
 `devkit.cli`). It owns the sole `devkit` console script, the `.devkit/config.toml` schema and the receipt format.
 Requires Python 3.12 or later; runtime dependencies are `click`, `jinja2`, `pyyaml`, `tomlkit` and `devkit-advisory`
 (the `devkit.advisory` library, same version). The `search` extra (`devkit-dist[search]`) adds `numpy`, `tokenizers`
@@ -41,6 +41,7 @@ installation names the script owner and adds the harness:
 | `devkit.core` | Shared foundation: frontmatter grammar, installation receipt, safe paths, atomic writes, Git runner, deadlines, file locks, plugin loading, project discovery, CLI plumbing | none | [core reference](../../docs/development/reference/core.md) |
 | `devkit.distribution` | Bundle packaging and transactional synchronization, plus the built-in `devkit` guide bundle | `devkit sync`, `add`, `remove`, `list`, `status`, ... | [distribution reference](../../docs/development/reference/distribution.md) |
 | `devkit.host` | Lifecycle hooks, service handlers and exact project MCP registrations; distribution owns hook deployment | `devkit host` | [host reference](../../docs/development/reference/host.md) |
+| `devkit.shared` | Immutable seven-day report artifacts and public adapter contract | `devkit shared put/get/list/sweep` | [shared reference](../../docs/development/reference/shared.md) |
 | `devkit.search` | Lexical, dense and hybrid document search; dense needs the `search` extra | none | [search reference](../../docs/development/reference/search.md) |
 | `devkit.cli` | The root `devkit` group: built-in commands, then `devkit.commands` plugins, then the name-only harness list | `devkit` | `ARCH-05-3-command-plugins` |
 
@@ -48,6 +49,6 @@ The built-in bundles are `devkit` (consumption guidance, auto-selected), `adviso
 auto-selected; data area `devkit.advisory_guide`) and `git-commits` (commit message conventions, opt-in; data area
 `devkit.commits_guide`).
 
-Layering (`advisory` < `core` < `search`/`host` < `distribution`; the data-only bundle areas import nothing) is
+Layering (`advisory` < `core` < `search`/`host`/`shared` < `distribution`; the data-only bundle areas import nothing) is
 enforced by `tests/test_layering.py`, which also refuses any reference to a `devkit-agt` area. The tests run without
 `devkit-agt` installed: `just test-dist` syncs an environment with only this package and its extras.

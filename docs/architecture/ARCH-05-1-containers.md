@@ -63,10 +63,10 @@ the ones below it.
 
 ### 2.1 `devkit-dist` (`packages/devkit-dist`)
 - **Distribution Wheel**: `devkit_dist-<version>-py3-none-any.whl`
-- **CLI**: `devkit`, the sole console script: the distribution commands and `devkit host`, plus whatever installed
+- **CLI**: `devkit`, the sole console script: the distribution commands, `devkit shared` and `devkit host`, plus whatever installed
   packages mount through `devkit.commands` (`ARCH-05-3-command-plugins`).
 - **Contents**: The shared foundation (`devkit.core`), document search (`devkit.search`), host hooks and project MCP registrations
-  (`devkit.host`), asset distribution (`devkit.distribution`) with the `.devkit/config.toml` schema and the receipt,
+  (`devkit.host`), immutable expiring artifacts (`devkit.shared`, importing only core/advisory), asset distribution (`devkit.distribution`) with the `.devkit/config.toml` schema and the receipt,
   the root command line (`devkit.cli`, `devkit.__main__`) and the built-in bundles `devkit`, `advisory` and
   `git-commits` (`ADR-dist-foundation-ownership`).
 - **Dependencies**: `click`, `jinja2`, `pyyaml`, `tomlkit`, and `devkit-advisory` (locked to the same version);

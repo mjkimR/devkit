@@ -25,7 +25,7 @@ workflow: sdd-proposal
 
 ## 1. Background & Hypothesis
 
-`PROP-worker-shared-state-mcp` defines dual access to shared artifacts: MCP is the primary local route, and
+`SPEC-worker-shared-state-mcp` defines dual access to shared artifacts: MCP is the primary local route, and
 CLI serves cloud execution. Local orchestration checks the MCP connection and asks the user to connect when it
 is unavailable. Cloud agents should receive only the applicable CLI instructions, without MCP discovery,
 connection, approval or fallback instructions.
@@ -54,7 +54,7 @@ runtime policy change is authorized by this draft alone.
 
 Use the existing sync execution-environment selection as the source for rendered agent guidance. Cloud output
 exposes equivalent CLI operations only. Local output preserves MCP-first guidance and the local-orchestration
-connection check owned by `PROP-worker-shared-state-mcp`. Rendering is presentation, not execution authority:
+connection check owned by `SPEC-worker-shared-state-mcp`. Rendering is presentation, not execution authority:
 cloud runtime guards and human approval boundaries remain effective independently of text visibility.
 
 Planning should identify exact source assets and distribution-owned changes, compare extending supported
@@ -81,7 +81,7 @@ automatically starting this proposal's Development.
 
 ## 4. Lifecycle & Retirement Criteria
 
-This is an independently queued follow-up to `PROP-worker-shared-state-mcp`, also relevant to
+This is an independently queued follow-up to `SPEC-worker-shared-state-mcp`, also relevant to
 `SPEC-proposal-review-and-approval`. Planning should use the current distribution and execution-environment
 contracts, preserve the shared-storage dependency boundary, and propose exact scope before implementation.
 Planning and Development effort hints are medium because this introduces a cross-asset rendering contract.

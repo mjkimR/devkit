@@ -31,7 +31,7 @@ from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.sync import sync_project
 from distsupport.distribution import cli, make_bundle
 
-COMMON_TABLES = ["workflow.approvals", "workflow.stages", "worktree"]
+COMMON_TABLES = ["shared", "workflow.approvals", "workflow.stages", "worktree"]
 DEVKIT_PARTS = ["agents", "guidance_block", "override_drift", *COMMON_TABLES]
 
 # Stand-ins for the templates an engine package registers for reserved tables, in entry-point name order.
@@ -126,6 +126,7 @@ def test_creates_the_file_with_devkit_keys_at_their_defaults(tmp_path: Path, too
             "stages": {"collect-feedback": "on"},
         },
         "worktree": {"pull_request": "auto", "setup": "uv sync"},
+        "shared": {"adapter": "local"},
     }
     assert read_config(uncommented) == ProjectConfig()  # every commented value is the default
     assert not (tmp_path / ".devkit/transient").exists()  # no lock file in a project without .devkit/
@@ -143,7 +144,7 @@ def test_adds_devkit_keys_after_the_last_top_level_key_and_keeps_every_line(
     assert head.startswith('# team notes\nschema = 1\nagents = ["codex"]  # ours\n\n## devkit project configuration')
     assert "# agents =" not in text  # set by the project
     assert "# guidance_block = true" in head and '# override_drift = "warn"' in head
-    assert tail.startswith('team = "all"\n\n## Workflow approval gates')
+    assert tail.startswith('team = "all"\n\n# [shared]')
     assert tomllib.loads(text) == tomllib.loads(before)
     assert refresh_config_template(project).to_dict()["state"] == "unchanged"
     assert _text(project) == text
@@ -168,7 +169,7 @@ def test_without_engine_templates_no_reserved_table_is_written(
 ) -> None:
     reserved.clear()  # a standalone devkit-dist installation: no package registers reserved tables
     result = refresh_config_template(project)
-    assert result.added == ["agents", "guidance_block", "override_drift"]
+    assert result.added == ["agents", "guidance_block", "override_drift", "shared"]
     assert "[workflow" not in _text(project) and "[worktree" not in _text(project)
     _write(project, _text(project) + '\n[workflow.approvals]\nintegration = "auto"\n\n[worktree]\nsetup = "uv sync"\n')
     assert read_config(project) == ProjectConfig()  # reserved tables are passed through unread
@@ -218,7 +219,7 @@ def test_existing_common_tables_are_preserved(project: Path, tools: list[SimpleN
     before = "schema = 1\n" + existing
     _write(project, before)
     result = refresh_config_template(project)
-    assert result.added == ["agents", "guidance_block", "override_drift", "workflow.stages", "worktree"]
+    assert result.added == ["agents", "guidance_block", "override_drift", "shared", "workflow.stages", "worktree"]
     assert existing in _text(project)
     assert "# [workflow.approvals]" not in _text(project)
     assert tomllib.loads(_text(project)) == tomllib.loads(before)

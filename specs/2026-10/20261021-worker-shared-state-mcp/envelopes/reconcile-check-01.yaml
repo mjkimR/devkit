@@ -1,0 +1,20 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T00:32:34.306669Z'
+status: completed
+summary: 'Independent reconcile-reviewer verified all six targets, package inventories and source guidance: immutable seven-day generations, linked identity, read-only queries, bounded cleanup, conservative exclusion refusal, config/MCP owning-workspace binding, bounded_write cloud refusal, adapters, opaque cursors and backend advisory codes. No omissions, contradictions or waivers found.'
+findings: []
+assumptions:
+- Pinned head verified unchanged; explicit worktree paths/read-only Git substitute for native confinement.
+- Conservative casefold/glob/bracket rejection does not promise acceptance of every safe Git ignore policy.
+unverified_areas:
+- Reviewer inspected test sources and deciding evidence without rerunning tests; implementer results remain the execution evidence.
+- Host-owned managed projection deployment and excluded production remote backend authorization/consistency/cross-host operation.
+checks:
+  reconcile: PASS independent reviewer; no findings
+diff_scope:
+  base: b4756365e92941da40f68dc6a8adf7bb346e7fbf
+  head: c5fae405494e06ab2485cedc1ded378c5707e93e
+activity_effort: medium
