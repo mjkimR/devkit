@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import json
+import shutil
+from pathlib import Path
 
 import pytest
 from devkit_core.base.mcp import ConfirmationReply
@@ -12,20 +14,14 @@ from devkit_spec.features.delivery.usecases.native_plan_accept import PlanAccept
 from devkit_spec.features.proposals.usecases.report import publish, template
 
 
-@pytest.fixture
-def pending(tmp_path, request):
-    synced = request.getfixturevalue("synced_template")
-    policies = getattr(request, "param", {})
-    extra = (
-        "[workflow.approvals]\n" + "".join(f'{gate} = "{policy}"\n' for gate, policy in policies.items())
-        if policies
-        else ""
-    )
-    repo = _make_synced_repo(tmp_path, synced, extra_config=extra)
+@pytest.fixture(scope="module")
+def proposal_seed_template(synced_template: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+    seed_root = tmp_path_factory.mktemp("proposal-seed-template")
+    repo = _make_synced_repo(seed_root, synced_template)
     _cli(repo, "sync")
     git(repo, "add", "-A")
     git(repo, "commit", "-m", "Record complete consumer installation")
-    wt = _start_worktree(repo, "plan-idea", tmp_path / "planning")
+    wt = _start_worktree(repo, "plan-idea", seed_root / "seed-planning")
     unit = "docs/proposals/PROP-idea"
     _cli(wt, "spec", "proposal", "new", "idea", "--title", "Idea", "--summary", "Review this idea.")
     _cli(
@@ -51,6 +47,27 @@ def pending(tmp_path, request):
     anchor.write_text(anchor.read_text().replace("status: draft", "status: reviewing"))
     git(wt, "add", "-A")
     git(wt, "commit", "-m", "Planning complete")
+    git(repo, "worktree", "remove", "--force", str(wt))
+    return repo
+
+
+@pytest.fixture
+def pending(tmp_path: Path, request: pytest.FixtureRequest, proposal_seed_template: Path):
+    policies = getattr(request, "param", {})
+    repo = tmp_path / "repo"
+    shutil.copytree(proposal_seed_template, repo, symlinks=True)
+    wt = tmp_path / "planning"
+    git(repo, "worktree", "add", "-q", str(wt), "plan-idea")
+    git(repo, "config", "branch.plan-idea.devkitWorktree", "true")
+    git(repo, "config", "branch.plan-idea.devkitBase", "main")
+    shutil.copytree(repo / ".devkit/managed", wt / ".devkit/managed", dirs_exist_ok=True)
+    if policies:
+        config_path = repo / ".devkit/config.toml"
+        extra = "[workflow.approvals]\n" + "".join(f'{gate} = "{policy}"\n' for gate, policy in policies.items())
+        config_path.write_text(config_path.read_text(encoding="utf-8") + "\n" + extra, encoding="utf-8")
+        git(repo, "add", "-A")
+        git(repo, "commit", "-q", "-m", "configure approval policies")
+        git(wt, "merge", "-q", "-m", "Merge branch 'main' into plan-idea", "main")
     sha = git(wt, "rev-parse", "HEAD")
     text = template(wt, "idea", sha)
     text = (

@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T13:47:44.569554Z'
+status: completed
+summary: Optimized slowest test fixtures via seed caching. All 46 worktree tests and 33 plan-accept tests pass cleanly.
+findings: []
+checks:
+  tests: PASS 46 worktree tests in 18.2s, 33 plan-accept tests in 26.9s
+  build: PASS just check (0 errors, 0 warnings)
+  lint: PASS just lint-check (0 errors)
+diff_scope:
+  base: a91a4b43124223bcd73bc87193a3f9433ac7d864
+  head: d55dab97e401597ea9cffccb8eab93b160b68751
