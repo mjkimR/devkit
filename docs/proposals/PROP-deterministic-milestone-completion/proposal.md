@@ -2,7 +2,7 @@
 id: PROP-deterministic-milestone-completion
 title: Simple milestone completion from direct proposal checks
 summary: "Close milestones from confirmed decomposition and settlement of directly linked proposals, using focused code or Git inspection when needed instead of persistent delivery-lineage tracking."
-status: draft
+status: accepted
 created_at: 2026-10-21
 target_area: capabilities/delivery/
 priority: high
@@ -14,7 +14,6 @@ boundaries:
     - packages/devkit-spec/
     - docs/capabilities/delivery/
     - docs/capabilities/documents/
-    - docs/capabilities/governance/
     - docs/capabilities/harness/
     - docs/decisions/
     - docs/development/reference/
@@ -46,83 +45,114 @@ settled. That is a focused check at the time of review, not a requirement to ret
 outcome ID or integration record in the milestone. Proposal absence alone remains insufficient: handoff can remove
 a proposal before implementation has finished.
 
-## 2. Technical Spike Questions
+## 2. Planning Decisions
 
-- **Q1 — Minimal confirmation:** What is the smallest way to record that milestone decomposition is complete and
-  that its directly linked proposal work is settled? Prefer two explicit confirmations tied to the current
-  milestone scope over per-outcome maps, copied work lists or durable descendant records.
-- **Q2 — Direct proposal checks:** How does the review list the milestone's direct proposals and identify ones
-  still requiring work? When a proposal has been handed off or removed, what focused code/Git inspection is useful
-  before confirming settlement, without propagating milestone metadata to the resulting SPEC?
-- **Q3 — Deterministic close:** Once both confirmations hold and no directly linked proposal remains unsettled,
-  what existing Backlog command/procedure can set done idempotently? A read-only candidate check must distinguish
-  missing confirmation from a failed inspection. Do not add a background evaluator or integration-engine coupling.
-- **Q4 — Change handling:** Which direct scope or membership changes invalidate a prior confirmation? Keep that
-  rule simple. Rejection, reassignment or deletion requires an explicit disposition, not automatic success from
-  the file disappearing. Existing milestones without confirmation remain open until reviewed.
+- **D1 — Existing Backlog operation:** Close through the existing authorized milestone document edit. There is
+  no milestone transition command to extend and no demonstrated need to introduce one. Deterministic means the
+  procedure has two explicit conditions and a fixed next action; it does not promise automatic semantic validation.
+- **D2 — Two body assertions:** Add a `Completion review` section to the milestone template with exactly two
+  plain statements: `Decomposition: pending` and `Direct proposal work: pending`. Each becomes `confirmed` only
+  after the user confirms the concrete review. These are durable milestone closure assertions, not task checklists,
+  frontmatter schema, a verification ledger or a list of work. Existing documents without them are unconfirmed.
+- **D3 — Fresh decision:** Prepare both confirmations for the current scope together with the close candidate.
+  The user's confirmation of both authorizes the existing `status: done` edit; no separate third approval is needed.
+  Record both `confirmed` statements and `done` in the same Backlog commit. Stored body assertions alone never authorize a later close. After a pause, re-establish the approved
+  candidate and recheck scope, membership and relevant evidence; unchanged authorization remains valid. Reconfirm
+  only when material facts changed or the approved candidate and its evidence cannot be established.
+- **D4 — Direct work only:** Review all current direct PROP members and relevant known activity, using ordinary
+  document queries and focused code/Git inspection. No SPEC receives milestone metadata. Handoff, deletion,
+  rejection and reassignment alone are not evidence of delivery. An unresolved proposal still in scope blocks
+  settlement, regardless of draft/reviewing/accepted status. Explicitly excluded or moved work is settled only as a
+  scope disposition, never reported as implemented. Remaining rejected anchors likewise require an explicit
+  disposition. Do not reconstruct or persist a complete descendant graph.
+- **D5 — Reconfirmation:** Changes to the goal, exit condition, non-goals or direct proposal membership clear
+  both assertions to `pending` in the same authorized change. A member's handoff also invalidates settlement:
+  removal does not prove completion. Pure wording/format corrections that preserve meaning do not invalidate.
+  To extend a done milestone's scope, first obtain the user's decision to reopen it as `active` and reset both
+  assertions in the scope edit; alternatively put the new scope in another milestone. No automatic reopening.
+- **D6 — Keep authority and scope small:** Activation and dropping remain the user's decisions. Closure works
+  from planned or active after the review; a current done milestone is a no-op unless its scope is being reopened.
+  Dropped milestones are not close candidates. No background evaluator, new command, new parser field, hash,
+  approval envelope, branch ledger or integration hook is introduced. Existing done milestones remain historical
+  and are not retroactively reopened or migrated.
+
+`PADR-milestone-closure-confirmations` records the representation and policy choice. Development starts only after
+`PROP-unit-dependencies-and-milestone-scope` integrates; that work owns direct PROP membership and unit ordering.
+Planning does not add an unsupported dependency field before that work is available.
 
 ## 3. Proposed Design & Impact
 
-### Collaborative scope, direct ownership
+### Collaborative close procedure
 
-The user and agent review a milestone's high-level goal and create its necessary proposals. Proposal anchors
-express direct membership. The milestone does not duplicate their task lists and does not attach its identity to
-SPECs. The first closure condition is an explicit confirmation that this decomposition is sufficient for the
-agreed scope; merely counting existing proposals cannot establish that no work was omitted.
+1. Read the milestone's goal, exit condition and non-goals. The user and agent review whether the required work
+   has been decomposed sufficiently into proposals. The first confirmation asserts no intended scope remains
+   undecomposed; a zero-member count cannot establish it.
+2. Inspect direct PROP membership across namespaces using existing list/refs queries, distinguishing membership
+   from ordinary prose references. Check the selected local base and relevant known Planning/Development activity
+   without switching another task's checkout. Report the base commit used, without implying remote freshness.
+   When work disappeared through handoff or another lifecycle action, inspect the focused code/Git facts needed
+   to establish its disposition and the milestone's phase-level exit outcome. Do not enumerate every historic
+   descendant or require a saved MS-to-PROP-to-SPEC mapping.
+3. Present one concrete close candidate: decomposition sufficient, directly associated work delivered or explicitly
+   excluded/moved, and exit condition met for the resulting agreed scope. Explicit scope reduction updates the goal
+   or exit condition where needed. State delivery and exclusion distinctly. Known outstanding work or a missing,
+   unreadable or inconclusive required inspection keeps the milestone open and names the remaining check. Missing
+   user confirmation is reported separately from an evidence gap; an empty query alone establishes neither check.
+4. Obtain the user's two confirmations together and record the body assertions plus `status: done` in the same
+   Backlog edit/commit. Re-read current scope and membership immediately before writing; a changed candidate is
+   presented again. Do not reuse approval of a stale candidate. After interruption, recheck the approved candidate and relevant facts; preserve authorization when unchanged.
+   Reconfirm only after a material change or when the prior candidate/evidence cannot be established. A pause or
+   context compaction alone does not require another user decision. Report the resulting status. A repeat against an unchanged done document writes nothing.
 
-The second condition is confirmation that directly associated proposal work has been settled. Remaining direct
-proposals are reviewed and completed, explicitly removed from scope, or left open. If handoff/removal makes status
-unclear, inspect the relevant implementation or Git facts before confirming. Do not treat deletion as proof of
-implemented behavior. If the inspection cannot establish settlement, leave the confirmation unset and state the
-specific outstanding check.
+The agent applies these steps during requested collaborative Backlog review and can propose the review after known
+associated work finishes. It does not silently mutate milestones after every integration. User/agent reasoning is
+the semantic check; ordinary governance rules still validate document shape and references. No rule claims to prove
+that two words certify delivery. Existing hygiene continues to identify direct unsettled members on finished
+milestones under the prerequisite proposal's semantics.
 
-No persistent outcome-to-unit matrix, transitive lineage index, branch ownership graph or automatically maintained
-verification ledger is introduced. Existing PROP/SPEC records remain available for ordinary navigation when useful,
-but closure does not require carrying milestone metadata through them or enumerating all historic descendants.
+### Change placement
 
-### Small deterministic transition
-
-With decomposition and direct-proposal settlement explicitly confirmed for the current scope, the close operation
-can deterministically record done. The tool validates the recorded conditions and current direct membership;
-it does not replace the user/agent's judgment about the goal or infer semantic completion from missing files.
-Repeated close is a no-op. Done milestones remain historical documents, resolvable by ID and visible with --history;
-this is not proposal-style deletion.
-
-A change to the agreed goal or direct membership requires the affected confirmation to be revisited before close.
-Cancellation, rejection or moving a proposal is an explicit scope disposition, not delivery success. Activation and
-dropping remain user decisions. A PADR should define the narrow policy exception permitting done after prior
-confirmation, without relaxing plan-intent, plan-accept or delivery verification.
-
-Prefer checking closure during the existing collaborative Backlog review and after relevant work completes.
-Do not make every feature integration maintain milestone state. The exact two-confirmation representation and
-supported command are Planning decisions; no new API or schema is fixed by this draft.
+- Source bundle milestone template, Backlog guidance and `spec-next` guidance: teach the two assertions, fresh
+  close review, explicit dispositions, invalidation and no-op behavior. Any Backlog lifecycle/membership edit that
+  changes scope resets the assertions in the same authorized change; a worker that cannot edit the milestone
+  delegates that edit to the Host before the scope mutation, without widening its own write boundary.
+- Source seeded roadmap README and repository roadmap README: describe the short collaborative review and direct
+  PROP ownership; do not edit individual roadmap milestones.
+- `CAP-HARN-agent-guidance`, `CAP-DOCS-document-model`, `CAP-DLV-proposal-incubation` and their directly affected
+  quick references: reconcile the procedural/body contract. Keep document parsing and membership services unchanged.
+- Promote the PADR as the follow-on to the prerequisite's milestone decision: replace its closure/branch-enumeration
+  policy with focused review, retain its direct PROP membership and unit ordering decisions, and preserve user-owned
+  transitions. Resolve the actual predecessor ADR after prerequisite integration; do not supersede an older ADR
+  in a way that loses the intervening decisions. No exception delegating done to an automatic tool is needed.
 
 ### Acceptance evidence
 
-- A milestone with confirmed decomposition and confirmed settlement of its direct proposal work closes once;
-  repeat close is harmless and history/ID lookup still works.
-- Missing confirmation or an unsettled direct proposal keeps it open and identifies the remaining action.
-- A proposal removed by handoff while implementation is unfinished does not justify settlement confirmation;
-  a focused code/Git inspection can identify the unfinished work without a stored milestone-to-SPEC relation.
-- Explicit cancellation or reassignment updates the reviewed scope; deleting a file alone does not manufacture
-  a successful disposition. Scope/membership changes require the affected confirmation to be revisited.
-- Milestone metadata is not propagated to SPECs, and no durable descendant/verification graph is required.
-  Existing unconfirmed milestones do not auto-close merely because they have no proposals.
-- The current user-owned gates remain intact; no background process, generic integration change, automatic
-  activation or automatic dropping is introduced.
+- A planned or active milestone with sufficient decomposition, settled direct work and a met exit condition is
+  shown to the user; both fresh confirmations produce `confirmed` body assertions and done in one commit.
+- Missing confirmation, a remaining in-scope PROP, unmet exit condition or inconclusive required evidence keeps
+  the milestone open with a specific next action. Empty membership and handoff absence alone do not close it.
+- Explicit rejection/cancellation/reassignment is a scope decision, with any reduced exit condition made explicit;
+  it is never described as delivery. An unfinished handed-off implementation blocks settlement when still in scope.
+- Adding/removing/reassigning a direct proposal or changing the phase-level scope invalidates both confirmations.
+  A handoff does not inherit approval to close. A materially changed close candidate is re-presented; an interrupted review
+  resumes under existing authorization when its candidate and evidence are established unchanged. Reopening a done milestone requires the user's scope decision; harmless formatting does not reopen it.
+- A repeat close against an unchanged done milestone is a no-op. Old done records are retained without migration;
+  old open records without assertions need review. Dropped records are not silently changed to done.
+- No SPEC milestone metadata, persistent delivery graph, new completion API/schema or integration coupling is added.
 
-Use small document/domain fixtures for confirmed/unconfirmed conditions, handoff absence, direct membership
-changes and repeat close, plus relevant command/advisory and governance checks. Keep verification proportional
-to the chosen small contract; do not build a lineage framework just to test milestone closure.
+Use focused bundle contract tests for the shipped template/instructions and representative procedure fixtures for
+fresh/missing confirmations, unfinished handoff, explicit exclusion, changed scope, interrupted review with unchanged versus changed facts and repeated
+close. Reuse existing milestone history/lookup tests; no new semantic evaluator is built for testing. Development
+runs lint, types, relevant affected tests and governance checks. Development effort remains medium because this
+changes a lasting closure policy and its shipped guidance, even though no runtime service is added.
 
 ## 4. Lifecycle & Retirement Criteria
 
-This is a queued feature draft, not approval to start Planning or Development. Planning and Development effort
-hints are medium. Planning must settle the minimal confirmation contract and explicitly reject unnecessary
-transitive bookkeeping. Keep shared direct-membership semantics aligned with
-`PROP-unit-dependencies-and-milestone-scope`; do not implement that proposal's independent unit dependency work here.
+Planning is ready for the user's direction decision after independent Scout and Challenger review. Development
+waits for the direct-membership prerequisite to integrate and reconciles its actual resulting contracts before
+implementation. This proposal does not approve or perform current milestone closure.
 
-**Scope excluded:** automatically guessing all necessary proposals; milestone metadata on SPECs; per-outcome
-coverage maps; persistent PROP/SPEC descendant graphs; automatically collected verification/integration ledgers;
-closing solely because PROP files are gone; generic integration-engine hooks/refactoring; external trackers;
-background monitoring; viewer changes; automatic activation/dropping; mass conversion of the current roadmap.
+**Scope excluded:** automatic decomposition; milestone metadata on SPECs; per-outcome coverage maps; persistent
+PROP/SPEC lineage; branch ownership and verification ledgers; closing because files disappear; generic integration
+changes; external trackers; background monitoring; viewer changes; automatic activation/dropping/reopening; mass
+conversion of existing roadmap documents; a completion command or machine-certified delivery evaluator.
