@@ -1,0 +1,17 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-20T23:17:28.955747Z'
+status: completed
+summary: 'Implementer reverified independent reconcile-check-01 P2: quick reference and actual authority errors distinguish local-only refusal, prospective revocation and fresh policy/native ask authority. No open mismatch remains across all five targets.'
+findings: []
+assumptions:
+- Initial reconciliation was independent; this bounded diagnostic/documentation fix was self-verified under medium repeat discretion. Authority semantics unchanged.
+checks:
+  tests: PASS 1397 affected tests and 11 final policy assertions
+  lint: PASS lint and type checks after fix
+diff_scope:
+  base: a6b45cf12ec653d2126fd9bb19d42ef1760b3419
+  head: 11204af5cb64e6b8697c16b17c06272126b84852
+activity_effort: medium
