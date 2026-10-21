@@ -221,4 +221,3 @@ its no-write/no-approval and existing Git endpoint contracts remain intact.
 The design is accepted following the medium challenger pass and resolution of its findings. The report uses the implemented shared local adapter and public protocol seam only.
 The shared-storage dependency is separately accepted; neither acceptance starts Development. The replacement
 ADR and capability updates are produced through normal handoff/reconciliation. No direction question remains.
-
