@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-bugfix
+stage: intent
+note: Repair metadata-only post-hook merge identity tracking; preserve content, parent,
+  policy and source guards; verify Red/Green and independent review.
+by: user
+at: '2026-10-20T23:54:33.138871Z'
