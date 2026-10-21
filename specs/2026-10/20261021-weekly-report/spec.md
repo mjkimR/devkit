@@ -9,7 +9,6 @@ related_capabilities: []
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-weekly-report] Evidence-based weekly maintenance reporting
 
@@ -27,22 +26,52 @@ first, and without a scheduler or history backend.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Evidence-based weekly maintenance reporting so that system capabilities are extended.
+- **US-1**: As a developer/agent, I want a revision-bound weekly report so that delivered work, health gaps and next actions can be inspected without publishing or running maintenance.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: Schedulers, detectors, standalone skills, runtime publishers, history databases, automatic maintenance or follow-up creation, and unauthorized publication.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Distribution and invocation
+- **Given** the maintenance bundle already supplies drift-reconciliation and upkeep.
+- **When** reporting, upkeep and implicit all are selected and synchronized.
+- **Then** reporting deploys only weekly-report, upkeep retains drift-reconciliation, and all deploys both; search and exact retrieval validate headers without execution.
 
-## 5. Carried Proposal Notes
+### [AC-02] Identity and interval
+- **Given** an explicit manual invocation and repository scope.
+- **When** the report intake is collected.
+- **Then** repository identity, captured SHA, integration ref/SHA, dirty state and generation time are recorded; the previous complete local Monday-to-Monday interval or explicit endpoints records inclusive start, exclusive end, timezone and both UTC offsets, including DST; unknown timezone requires input.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] Revision-bound delivery evidence
+- **Given** completed and unintegrated work plus changed decisions.
+- **When** available evidence is collected.
+- **Then** claims cite revision/path or document ID and artifacts; completed spec/session work requires verification and reachability at integration SHA, dated claims identify event basis, and missing integration time never becomes an interval delivery claim.
+
+### [AC-04] Health and comparison limitations
+- **Given** missing, stale, failed and incompatible maintenance evidence and optional prior report.
+- **When** health and actions are assessed.
+- **Then** every source records revision, scope, observation time and result; no absent result is clean, no absent finding is resolved, compatible evidence alone supports comparison, and existing open follow-ups are linked without creation.
+
+### [AC-05] Dirty and changing state
+- **Given** checkout-only lookup, dirty documents or a changing captured revision.
+- **When** evidence is reconciled.
+- **Then** committed evidence remains the default, checkout observations are labeled and checked at the SHA, selected uncommitted evidence has a preserved diff reference, and changed evidence is re-collected or marked unverified.
+
+### [AC-06] Immutable generation and reruns
+- **Given** a selected local output location and same-period rerun.
+- **When** generation finishes.
+- **Then** verified artifacts contain all six report sections, a logical repository/scope/interval/timezone key, unique run ID and source SHA; reruns preserve predecessors and name supersession; identity or artifact-write failure fails generation while optional evidence gaps remain limitations.
+
+### [AC-07] Independent authorized publication
+- **Given** a generated immutable artifact.
+- **When** publication is considered or retried.
+- **Then** a separate outcome record preserves digest, destination, authority and receipt; absent permission or destination stays pending, verified receipt is published, confirmed failure is failed, lost response is unknown; unknown is inspected before retry, retry retains exact bytes/run, replacement needs explicit authority and collision checks, and generation remains completed.
+
+## 5. Detailed Behavioral Contract and Assumptions
+
+The accepted direction below remains binding. Current-base assumption: maintenance and upkeep exist; extend them. The earlier absent-base contingency is historical and does not apply to this implementation.
 
 ### 2. Planning Outcome
 
