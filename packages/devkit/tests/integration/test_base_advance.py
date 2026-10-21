@@ -354,3 +354,84 @@ def test_cleanup_accepts_later_commits_on_the_base_after_the_merge(repo, monkeyp
     commit(base, "later.txt")
     monkeypatch.setattr(lifecycle, "_remove", original)
     assert service.resume(result.request.id).status == "completed" and not worktree.exists()
+
+
+def test_post_merge_metadata_rewrite_completes_cleanup(repo):
+    base, worktree = repo
+    hook = base / ".git/hooks/post-merge"
+    hook.write_text("#!/bin/sh\ngit -c core.hooksPath=/dev/null commit --amend -qm 'rewritten metadata'\n")
+    hook.chmod(0o755)
+    result = integrate(IntegrationService(base), approve_after())
+    assert result.status == "completed", result.errors
+    assert result.result_sha == git(base, "rev-parse", "HEAD")
+    assert not worktree.exists()
+
+
+@pytest.mark.parametrize("mutation", ["content", "parents", "source", "policy"])
+def test_post_merge_mutation_preserves_task(repo, mutation):
+    base, worktree = repo
+    scripts = {
+        "content": "echo changed > ready.txt\ngit add ready.txt\ngit commit --amend -qm changed",
+        "parents": 'replacement=$(git commit-tree HEAD^{tree} -p HEAD^2 -p HEAD^1 -m reordered)\ngit update-ref refs/heads/main "$replacement"',
+        "source": "git commit --amend -qm rewritten\ngit update-ref refs/heads/dev-demo HEAD",
+        "policy": "git commit --amend -qm rewritten\nprintf '\n[workflow.approvals]\ndev-integration = \"auto\"\n' >> .devkit/config.toml",
+    }
+    hook = base / ".git/hooks/post-merge"
+    hook.write_text("#!/bin/sh\n" + scripts[mutation] + "\n")
+    hook.chmod(0o755)
+    service = IntegrationService(base)
+    result = integrate(service, approve_after())
+    assert result.status in {"blocked", "partial"}
+    assert result.errors[0].code == "INTEGRATION_REQUEST_STALE"
+    assert worktree.exists()
+    assert git(base, "rev-parse", "--verify", "refs/heads/dev-demo")
+    resumed = service.resume(result.request.id)
+    assert resumed.status in {"blocked", "partial"} and worktree.exists()
+
+
+def test_post_merge_metadata_rewrite_resumes_cleanup(repo, monkeypatch):
+    from devkit.worktree import RemoveFailedError, lifecycle
+
+    base, worktree = repo
+    hook = base / ".git/hooks/post-merge"
+    hook.write_text("#!/bin/sh\ngit -c core.hooksPath=/dev/null commit --amend -qm rewritten\n")
+    hook.chmod(0o755)
+    original = lifecycle._remove
+
+    def deny(_base, _path):
+        raise RemoveFailedError("permission denied")
+
+    monkeypatch.setattr(lifecycle, "_remove", deny)
+    service = IntegrationService(base)
+    result = integrate(service, approve_after())
+    assert result.status == "partial" and result.steps["merge"] == "completed"
+    assert result.result_sha == git(base, "rev-parse", "HEAD")
+    commit(base, "later.txt")
+    monkeypatch.setattr(lifecycle, "_remove", original)
+    assert service.resume(result.request.id).status == "completed" and not worktree.exists()
+
+
+@pytest.mark.parametrize("rewrite_after", [False, True])
+def test_cleanup_does_not_accept_unapproved_rewrites(repo, monkeypatch, rewrite_after):
+    from devkit.worktree import RemoveFailedError, lifecycle
+
+    base, worktree = repo
+    if not rewrite_after:
+        commit(worktree, ".devkit/config.toml", '[integration]\nprovider = "fixture"\n[worktree]\nmerge = "ff-only"\n')
+        hook = base / ".git/hooks/post-merge"
+        hook.write_text("#!/bin/sh\ngit -c core.hooksPath=/dev/null commit --amend -qm rewritten\n")
+        hook.chmod(0o755)
+    original = lifecycle._remove
+
+    def deny(_base, _path):
+        raise RemoveFailedError("permission denied")
+
+    monkeypatch.setattr(lifecycle, "_remove", deny)
+    service = IntegrationService(base)
+    result = integrate(service, approve_after())
+    assert result.status in {"blocked", "partial"} and worktree.exists()
+    if rewrite_after:
+        git(base, "commit", "--amend", "-qm", "later metadata rewrite")
+    monkeypatch.setattr(lifecycle, "_remove", original)
+    resumed = service.resume(result.request.id)
+    assert resumed.errors[0].code == "INTEGRATION_REQUEST_STALE" and worktree.exists()

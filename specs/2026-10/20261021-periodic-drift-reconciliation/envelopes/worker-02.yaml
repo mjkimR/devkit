@@ -1,0 +1,27 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T00:15:09.152201Z'
+status: completed
+summary: 'Recovery completed: worker-01 resolved with verified weekly-report destination and source linkage; independent reconcile recheck passes; feedback and final report committed. All Development stages complete. Workflow next names integrate under auto policy; integration remains Host-owned and was not performed.'
+findings: []
+assumptions:
+- 'Emulated worker and roles: explicit workdir, scoped approvals, read-only role payloads and Host diff validation substitute for native path enforcement.'
+- Original accepted base a7958abb retained; Host merged base at df220e2, with unrelated changes left untouched.
+- 'Extra authorized paths: scripts/smoke.sh catalog expectation and docs/proposals/PROP-weekly-report/proposal.md source ID only.'
+- dev-integration passed by auto policy, not human approval; worker performed no integration.
+unverified_areas:
+- Manual seeded fixture covers procedure records, not autonomous agent reliability.
+- Integration and final Host cumulative validation remain; official sync is Host-owned.
+checks:
+  tests: PASS current-base test-affected full fallback 4019 passed 14 skipped; original base 4011 passed 14 skipped
+  build: PASS consumer smoke and maintenance bundle validation
+  lint: PASS catalog lint/types and cumulative governance against original and current Host bases
+  review: PASS independent initial code review and independent recovery reconcile review
+  recovery: PASS resolution-01 fixes worker-01; reconcile-check-02 no findings
+  scope: PASS recovery writes limited to unit and Host-authorized one-line weekly proposal source-ID repair; Host merge separately accounted
+diff_scope:
+  base: a7958abb8eb28fd3835a5ba72042e23a9099f207
+  head: 99aadaf982f6bd75af90f0ef1d9bc6c1388b7a74
+activity_effort: medium

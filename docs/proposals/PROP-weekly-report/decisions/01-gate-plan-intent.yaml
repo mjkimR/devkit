@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: Feature proposal scope and verification accepted; Planning medium in local-orchestrated
+  mode.
+by: user
+at: '2026-10-21T00:04:24.929063Z'

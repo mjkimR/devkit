@@ -1,0 +1,12 @@
+schema = 1
+name = "maintenance"
+version = "0.1.0"
+default_preset = "all"
+
+[[assets]]
+id = "drift-reconciliation"
+kind = "playbook"
+source = "playbooks/drift-reconciliation.md"
+
+[presets.upkeep]
+assets = ["drift-reconciliation"]

@@ -1,0 +1,21 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-21T00:06:01.478945Z'
+status: completed
+summary: Local no-ff integration now retains an immediately observed metadata-only rewrite after equal-tree and ordered-parent validation; cleanup and resume preserve all existing source, policy and ancestry guards. Independent code and reconcile review passed.
+findings: []
+assumptions:
+- Host owns base refresh and integration; reported base movement to e82940d0982173411c4e26a5bc223e677d4be9b8 adds unrelated Backlog units
+- Source FB-integration-cleanup-stale-after-merge-rewrite is verified addressed; Host owns external source disposition
+unverified_areas:
+- Actual installed external hook attribution and retained MCP runtime reload; test fixtures reproduce real Git post-merge ordering
+checks:
+  tests: PASS Red reproduced exact stale failure; Green 33 focused tests and 1238 affected tests
+  build: 'PASS just check devkit-agt: zero errors/warnings; no packaging or dependency changes'
+  lint: 'PASS just lint-check devkit-agt and cumulative governance: zero errors/warnings'
+  scope: PASS only integration service/test, integration capability and unit records changed
+diff_scope:
+  base: 60c113789a2a892baddb38a99cd593d6c0144bc1
+  head: fe825271d0bbcaaa42075fe1fe14c71e152048aa

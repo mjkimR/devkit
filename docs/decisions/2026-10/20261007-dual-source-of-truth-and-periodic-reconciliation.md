@@ -13,7 +13,7 @@ created_at: 2026-10-07
 - **Deciders**: @mjkimR
 - **Involved Components/Capabilities**: `CAP-DLV-delivery-workflows`, the `spec-sync` skill, `docs/capabilities/`,
   `docs/stories/`, `specs/`
-- **Follow-up**: `PROP-periodic-drift-reconciliation`
+- **Follow-up**: `SPEC-periodic-drift-reconciliation`
 
 ---
 
@@ -90,5 +90,5 @@ Option 3 is adopted.
   - Agents stop spending tokens and sessions on over-editing the spec during feature work.
   - Drift, when it occurs, is not treated as a failure of the system but as the subject of a routine sweep or hygiene
     session.
-- **Follow-up**: `PROP-periodic-drift-reconciliation` explores a drift check that detects symbol and interface changes
+- **Follow-up**: `SPEC-periodic-drift-reconciliation` explores a drift check that detects symbol and interface changes
   between code and spec, and the interactive reconciliation workflow.

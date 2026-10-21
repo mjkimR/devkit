@@ -129,7 +129,15 @@ skipped). Immediately before the fast-forward the base must still point at the b
 result, so it never stops mid-merge; every refusal of the build changes nothing on the target. The result reports
 `build` (confirmation target, build target, result commit), kept in the process outside the request digest.
 
-After the merge every step checks that the base contains the result (later commits on the base are allowed) and
+Git runs post-merge hooks within the fast-forward operation. Immediately after it returns, local `no-ff`
+integration accepts a replacement commit only when its tree and ordered parents equal the checked result's;
+message, author and committer metadata may differ. The executor records that observed SHA as `build.result`
+for cleanup and resume. Changed tree or ordered parents return `INTEGRATION_REQUEST_STALE` without removing the
+task. `ff-only` does not accept a replacement for the approved source. This equivalence check applies only at
+landing; resume does not adopt later rewrites. Source identity, effective policy and cleanup checks still run
+before deletion.
+
+After the merge every step checks that the base contains the recorded result (later commits on the base are allowed) and
 revalidates Git identities, policy and cleanup scope at each mutation boundary. Changed source, provider/guard
 registrations or cleanup revisions invalidate the request.
 

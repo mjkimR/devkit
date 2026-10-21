@@ -83,3 +83,36 @@ def test_response_style_has_one_bounded_guidance_pointer() -> None:
     pointer = pointers[0].read_bytes()
     assert pointer.endswith(b"\n")
     assert len(pointer) <= 300
+
+
+@pytest.mark.parametrize("preset", ["all", "upkeep"])
+def test_maintenance_selection_and_independent_lookup(tmp_path: Path, preset: str) -> None:
+    from devkit.distribution.installation.config import update_config
+    from devkit.distribution.installation.discovery import InstalledBundle
+    from devkit.distribution.installation.playbook_search import search_playbooks
+    from devkit.distribution.installation.sync import sync_project
+
+    bundle = load_bundle(_bundle_root(ENTRY_POINTS["maintenance"]))
+    installed = [InstalledBundle("devkit-catalog", PROJECT["version"], bundle)]
+    update_config(tmp_path, agents=["codex"], presets={})
+    sync_project(tmp_path, installed)
+    assert not (tmp_path / ".devkit/managed/maintenance").exists()
+    update_config(tmp_path, agents=["codex"], presets={"maintenance": [preset]})
+    sync_project(tmp_path, installed)
+    root = tmp_path / ".devkit/managed/maintenance"
+    assert {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()} == {
+        "bundle.toml",
+        "playbooks/drift-reconciliation.md",
+    }
+    result = search_playbooks(tmp_path, "drift reconciliation", mode="lexical")
+    assert len(result.results) == 1
+    assert result.results[0].id == "drift-reconciliation"
+    assert result.results[0].bundle == "maintenance"
+    assert not (root / "skills").exists()
+
+
+def test_maintenance_uses_default_all_and_valid_upkeep() -> None:
+    bundle = load_bundle(_bundle_root(ENTRY_POINTS["maintenance"]))
+    assert bundle.default_preset == "all"
+    assert set(bundle.presets) == {"upkeep"}
+    assert [asset.id for asset in bundle.assets] == ["drift-reconciliation"]

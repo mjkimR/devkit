@@ -1,0 +1,17 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-21T00:09:58.862681Z'
+status: completed
+review: challenger-01.yaml
+summary: 'Resolved P2: proposal and PADR allow independent reporting-only maintenance initialization, preserve existing assets, and coordinate overlapping catalog writers through the Host.'
+findings:
+- issue: The proposal requires the maintenance bundle to land before Development despite independent weekly-report delivery.
+  evidence: PROP-weekly-report sections 3.4 and 4 conflict with MS-reporting-and-actionable-insights exit condition 1; accepted drift design allows incremental assets.
+  failure_condition: Drift delivery has not landed when reporting is ready, blocking an otherwise independent playbook.
+  suggested_action: Permit conditional initialization of the accepted content-only layout, preserving existing assets and presets when present.
+  resolution: resolved
+  severity: P2
+checks:
+  direction: PASS milestone independent delivery preserved

@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: true
-status: open
+status: resolved
 created_at: 2026-10-21
 ---
 
@@ -54,3 +54,7 @@ git diff --stat between each pair: empty
 initial: merge=completed, worktree_remove=not_run, INTEGRATION_REQUEST_STALE
 fresh approved cleanup: already_merged=true, merge=skipped, cleanup=completed
 ```
+
+## Disposition
+
+`SPEC-integration-rewritten-merge` records the immediately observed no-ff landing SHA only after equal tree and ordered-parent verification. The executable post-merge hook regression reproduces the original failure before the fix and completes cleanup after it. Negative content, parent, source, policy and later-resume rewrite cases preserve the guards. Independent code and reconciliation reviews passed; Host verification passed lint, types and 1,245 affected tests on the refreshed branch. This disposition verifies the implementation; integration is reported separately.

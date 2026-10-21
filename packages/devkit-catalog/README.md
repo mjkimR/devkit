@@ -7,6 +7,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 | Bundle | Presets (default first) | Contents |
 | --- | --- | --- |
 | `response-style` | `all` | Answer-first user-facing replies that keep decision-critical facts, with configurable conversation language |
+| `maintenance` | `all`, `upkeep` | Manually invoked drift reconciliation with bounded evidence and user dispositions |
 | `host-observer` | `all` | Codex lifecycle hook registrations using devkit's metadata-only observer; `CAP-HOST-lifecycle-observation` |
 
 ```bash
@@ -48,3 +49,12 @@ language = "ko"
 Run `devkit sync` after changing variables. Language values are natural-language names or codes understood by the
 agent, not a closed locale registry. The language is rendered into the skill from `SKILL.md.jinja`; the root
 reminder only references the skill. Documentation and code-comment language still follow repository requirements.
+
+## Maintenance
+
+`devkit add maintenance` or `devkit add maintenance:upkeep` deploys only the independent
+`drift-reconciliation` playbook. Invoke `devkit-playbook` explicitly for a bounded drift review;
+selection does not execute it. Reports distinguish evidence, user decisions, corrections and coverage gaps.
+The implicit `all` and `upkeep` currently select the same asset; no reporting preset or companion procedure is shipped.
+The playbook uses available repository lookup/check tools; it adds no runtime dependency, detector or scheduler.
+See `CAP-DLV-drift-reconciliation`.

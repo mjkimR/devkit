@@ -1,0 +1,24 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T00:09:08.130169Z'
+status: completed
+summary: 'Independent reconcile-reviewer verified all five Living Spec targets; one P2 deferred-work traceability item remains: exact weekly-report proposal destination on newer base.'
+findings:
+- issue: Weekly-report handoff lacks its exact proposal destination.
+  evidence: reconcile.md cites MS-reporting-and-actionable-insights and promises a Host-added proposal link after base refresh; completion requires a full FB or PROP destination verified to exist.
+  failure_condition: The resolved record is used as final completion evidence before the promised proposal reference and verification are added.
+  suggested_action: Host refreshes the base, adds existing PROP-weekly-report to reconcile.md and verifies retained scope and source linkage without duplicate feedback.
+  resolution: open
+  severity: P2
+assumptions:
+- 'Emulated role: assigned-tree read-only commands and post-run clean HEAD/diff checks; no native confinement.'
+unverified_areas:
+- Weekly-report proposal on newer shared base was outside reviewer read scope.
+- Manual fixture evidence covers records, not autonomous agent reliability.
+checks: {}
+diff_scope:
+  base: a7958abb8eb28fd3835a5ba72042e23a9099f207
+  head: ac2edd106acea174118b0867a55f5c597a959292
+activity_effort: medium

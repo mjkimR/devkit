@@ -1,0 +1,10 @@
+kind: resolution
+stage: '-'
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T00:11:53.595667Z'
+status: completed
+summary: Host refreshed base to df220e2; verified local PROP-weekly-report identity, source linkage and independent reporting/upkeep scope, and replaced the pending note with its exact ID. This resolves the missing destination that blocked worker-01.
+findings: []
+checks: {}
+resolves: worker-01.yaml
