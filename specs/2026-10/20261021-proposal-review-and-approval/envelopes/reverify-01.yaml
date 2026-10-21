@@ -1,0 +1,32 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T01:02:09.331383Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer reverified both independent P1 findings: remaining effects validate exact report unconditionally before and after confirmation; every partial combined outcome directs inspection, fresh report and fresh remaining-effects approval.'
+findings:
+- issue: Remaining-effects approval permits an empty report URI and can start Development without a source-bound report.
+  evidence: packages/devkit-spec/src/devkit_spec/plan_accept_mcp.py:244; packages/devkit-spec/src/devkit_spec/handoff_mcp.py:82
+  failure_condition: After accepted merge and Planning cleanup, empty report_uri skips prepare validation and affirmative confirmation completes handoff.
+  suggested_action: Unconditionally validate exact report before remaining-effects confirmation and during revalidation; add real-Git empty URI regression.
+  resolution: resolved
+  severity: P1
+- issue: Combined handoff failures return a success directive instead of a recovery action.
+  evidence: packages/devkit-spec/src/devkit_spec/plan_accept_mcp.py:334; packages/devkit-spec/src/devkit_spec/plan_accept_mcp.py:353; packages/devkit-spec/src/devkit_spec/plan_accept_mcp.py:360
+  failure_condition: Handoff returns needs_recovery without next_command or raises AdvisoryError after successful integration, retaining next_action Acceptance complete.
+  suggested_action: Give every unfinished handoff a recovery-specific next_action describing preserved state and fresh report/approval; test returned and raised failures.
+  resolution: resolved
+  severity: P1
+assumptions:
+- 'Medium repeat code review omitted: localized findings have real-Git regression tests for empty/malformed URI and returned/raised partial failures'
+unverified_areas:
+- Live native host rendering and report-link clickability
+checks:
+  tests: 'PASS 21 lifecycle tests and just test-affected --base main: 1582 passed'
+  lint: PASS spec Ruff format and Pyright; unchanged integration/viewer checks reused
+diff_scope:
+  base: 45fc1d4eaa504f2152dc04f0151ac5e70f05d872
+  head: 1f14e20d0f82fc40a0f38458a5b4f4fc5820687e
+activity_effort: medium
