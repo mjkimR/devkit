@@ -135,7 +135,10 @@ class IntegrationService:
             self._records.pop(retired)
         approval_policy = providers.effective(read_project_config(self.root))["dev-integration"]
         if route == "pull-request" and approval_policy == "auto":
-            raise AuthorityError("automatic integration authorizes local execution only")
+            raise AuthorityError(
+                "automatic integration authorizes local execution only",
+                fix="Use the verified local route; obtain separate publication authority for a pull request",
+            )
         if route == "pull-request":
             from devkit.integration.pull_request import prepare
 
@@ -160,7 +163,10 @@ class IntegrationService:
         else:
             post_digest, prospective = _prospective(self.root, plan.source_sha, plan.target_sha)
         if approval_policy == "auto" and providers.effective(prospective)["dev-integration"] != "auto":
-            raise AuthorityError("the prospective result revokes automatic integration authority")
+            raise AuthorityError(
+                "the prospective result revokes automatic integration authority",
+                fix="Resolve prospective policy revocation before automatic integration; do not bypass it with another authority route",
+            )
         worktree_policy = prospective.get("worktree", {})
         if not isinstance(worktree_policy, dict) or type(worktree_policy.get("delete_branch", True)) is not bool:
             raise IntegrationConfigError("source worktree policy is invalid")
@@ -313,7 +319,10 @@ class IntegrationService:
             request.approval_policy == "auto"
             and providers.effective(read_project_config(self.root))["dev-integration"] != "auto"
         ):
-            raise AuthorityError("automatic integration authority was revoked")
+            raise AuthorityError(
+                "automatic integration authority was revoked",
+                fix="Stop remaining effects and inspect current policy and completed progress; obtain fresh authority before recovery",
+            )
         if not merged:
             providers.policy(self.root)
         if providers.guards() != request.guards:

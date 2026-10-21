@@ -67,8 +67,10 @@ def test_auto_pr_refused_before_port_access(auto_repo, monkeypatch):
     base, _ = auto_repo()
     service = IntegrationService(base)
     monkeypatch.setattr(service.github, "begin_call", lambda: pytest.fail("remote port used"))
-    with pytest.raises(AuthorityError):
+    with pytest.raises(AuthorityError) as error:
         asyncio.run(service.integrate("dev-demo", TASK, no_confirmation, "pull-request"))
+    assert error.value.fix is not None
+    assert "separate publication authority" in error.value.fix
 
 
 def test_prospective_revocation_refuses_before_mutation(auto_repo):
@@ -78,8 +80,10 @@ def test_prospective_revocation_refuses_before_mutation(auto_repo):
     git(worktree, "add", ".")
     git(worktree, "commit", "-qm", "revoke policy")
     before = git(base, "show-ref")
-    with pytest.raises(AuthorityError):
+    with pytest.raises(AuthorityError) as error:
         asyncio.run(IntegrationService(base).integrate("dev-demo", TASK, no_confirmation))
+    assert error.value.fix is not None
+    assert "do not bypass" in error.value.fix
     assert git(base, "show-ref") == before and worktree.exists()
 
 
