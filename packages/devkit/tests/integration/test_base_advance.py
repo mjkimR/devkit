@@ -354,3 +354,14 @@ def test_cleanup_accepts_later_commits_on_the_base_after_the_merge(repo, monkeyp
     commit(base, "later.txt")
     monkeypatch.setattr(lifecycle, "_remove", original)
     assert service.resume(result.request.id).status == "completed" and not worktree.exists()
+
+
+def test_post_merge_metadata_rewrite_completes_cleanup(repo):
+    base, worktree = repo
+    hook = base / ".git/hooks/post-merge"
+    hook.write_text("#!/bin/sh\ngit -c core.hooksPath=/dev/null commit --amend -qm 'rewritten metadata'\n")
+    hook.chmod(0o755)
+    result = integrate(IntegrationService(base), approve_after())
+    assert result.status == "completed", result.errors
+    assert result.result_sha == git(base, "rev-parse", "HEAD")
+    assert not worktree.exists()
