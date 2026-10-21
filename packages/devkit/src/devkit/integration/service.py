@@ -582,4 +582,14 @@ class IntegrationService:
             if exc.returncode is None:
                 raise
             raise MergeFailedError(f"local merge of {plan.branch} failed: {exc.stderr or exc.message}") from exc
+        # Git runs post-merge hooks before returning. A hook may amend commit metadata,
+        # so bind cleanup to the observed commit only after proving checked content and
+        # ordered provenance unchanged. Never substitute for the approved ff-only source.
+        landed = _git(self.root, "rev-parse", "--verify", f"refs/heads/{plan.target_branch}^{{commit}}")
+        if landed != result.result_sha:
+            if plan.merge_method != "no-ff" or _git(self.root, "show", "-s", "--format=%T %P", landed) != _git(
+                self.root, "show", "-s", "--format=%T %P", result.result_sha
+            ):
+                raise StaleRequestError("the landed commit differs from the checked result tree or ordered parents")
+            result.result_sha = landed
         result.steps["merge"] = "completed"
