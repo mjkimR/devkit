@@ -129,3 +129,12 @@ Option 2 with `depends_on`, ordered by the skill:
 - `devkit spec proposal new --milestone` and `devkit spec new --milestone` take an `MS-` ID.
 - The existing free-text values need no migration: no current proposal or active spec sets `milestone`.
 - The hygiene warnings run through devkit-spec's `devkit.hygiene` extension, like the rejected-proposal warning.
+
+
+## Superseding decision disposition
+
+`ADR-separate-unit-prerequisites-from-milestone-themes` supersedes the milestone-only depends_on restriction,
+proposal/spec membership and handoff carry decisions, and adds the unit prerequisite filter before ranking.
+Milestones group direct PROP members only. The remaining MS dependency readiness, transition authority, history
+and review-reminder decisions remain in force. This disposition does not migrate historical specs or persist
+proposal-to-spec delivery lineage.

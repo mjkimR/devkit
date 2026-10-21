@@ -117,7 +117,7 @@ def spec_files(
 
     ``bugfix`` gives ``spec.md`` the characterization sections of a defect (current, expected and preserved
     behavior, reproduction conditions) instead of a feature-style user story. ``origin`` opens the problem statement; ``carried`` fills the sections from a proposal body; ``meta`` is the
-    proposal frontmatter (``milestone``, ``target_area``, ``boundaries``); ``namespace`` and ``summary`` become
+    proposal frontmatter (``depends_on``, ``target_area``, ``boundaries``); ``namespace`` and ``summary`` become
     ``spec.md``'s ``namespace`` and ``summary`` (none written when ``None``).
     """
     carried = carried or CarriedProposal()
@@ -131,9 +131,10 @@ def spec_files(
         if carried.notes
         else ""
     )
-    milestone = text_value(meta.get("milestone"))
     extra = f"\nnamespace: {yaml_scalar(namespace)}" if namespace else ""
-    extra += f"\nmilestone: {yaml_scalar(milestone)}" if milestone else ""
+    dependencies = meta.get("depends_on")
+    if dependencies:
+        extra += "\ndepends_on:" + "".join(f"\n  - {yaml_scalar(item)}" for item in dependencies)
     for name in ("decomposed_from", "supersedes"):
         value = text_value(meta.get(name))
         extra += f"\n{name}: {yaml_scalar(value)}" if value else ""
@@ -352,7 +353,6 @@ def create_spec(
     workflow: str | None = None,
     namespace: str | None = None,
     summary: str | None = None,
-    milestone: str | None = None,
     day: date | None = None,
     cwd: Path | None = None,
 ) -> CreatedSpec:
@@ -374,9 +374,6 @@ def create_spec(
     root = root.resolve()
     slug = new_slug(slug.strip().removeprefix("SPEC-"), error=SpecSlugError)
     require_development_branch(root, slug, "devkit spec new", SpecWrongBranchError)
-    from devkit_spec.proposals.roadmap import milestone_id
-
-    milestone = milestone_id(root, milestone)
     namespace, reported = bundle_namespace(root, namespace, cwd)
     summary = require_summary(summary)
     day = day or date.today()
@@ -399,7 +396,6 @@ def create_spec(
         title,
         day.isoformat(),
         origin="<Describe the problem, who has it and why it matters now.>\n",
-        meta={"milestone": milestone},
         namespace=namespace,
         summary=summary,
         bugfix=spec_only(binding),

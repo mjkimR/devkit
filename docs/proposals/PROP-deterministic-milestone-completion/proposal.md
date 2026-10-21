@@ -37,7 +37,7 @@ separate manual transitions; completing the associated work can leave the milest
 The desired closure has two checks: the user and agent have finished decomposing the intended milestone scope
 into proposals, and the work represented by its directly connected proposals has been settled. Keep this model
 local to the milestone/proposal boundary. Do not carry milestone metadata into SPECs or maintain a persistent
-milestone-to-PROP-to-SPEC graph. `PROP-unit-dependencies-and-milestone-scope` owns the direct-membership model and
+milestone-to-PROP-to-SPEC graph. `SPEC-unit-dependencies-and-milestone-scope` owns the direct-membership model and
 unit ordering; this proposal owns the small closure procedure built on that boundary.
 
 The agent may inspect relevant code or Git state when deciding whether a removed proposal's work is actually
@@ -77,7 +77,7 @@ a proposal before implementation has finished.
   and are not retroactively reopened or migrated.
 
 `PADR-milestone-closure-confirmations` records the representation and policy choice. Development starts only after
-`PROP-unit-dependencies-and-milestone-scope` integrates; that work owns direct PROP membership and unit ordering.
+`SPEC-unit-dependencies-and-milestone-scope` integrates; that work owns direct PROP membership and unit ordering.
 Planning does not add an unsupported dependency field before that work is available.
 
 ## 3. Proposed Design & Impact

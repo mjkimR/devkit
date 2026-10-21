@@ -78,17 +78,50 @@ a passing `devkit spec proposal check <slug>` (fetch first), no `PADR-*.md` in `
 `needs_decompose`, `supersedes` or depth escalation. The request names what goes: the draft and its gate records, its
 materials (kept in Git history), its `milestone` membership (review that milestone's exit condition) and the open
 feedback preserved. Delete it in one Backlog commit on the base, preserving open feedback and striking through
-incoming references ([feedback retirement](feedback-retirement.md)), with the message "depth proposal -> session on
+ordinary prose references ([feedback retirement](feedback-retirement.md)); disposition direct prerequisites as below, with the message "depth proposal -> session on
 the user's decision: <reason>", and name the commit to the user at once. The session takes a new slug, starts
 through inline Planning and names the deletion commit in its final report; one that never integrates is undone by
 `git revert` of that commit, on the user's decision.
+
+## Direct prerequisites and lifecycle disposition
+
+For explicit proposal pickup and direct-spec intake, apply `spec-next/references/next-work.md`'s direct
+prerequisite procedure. Author optional `depends_on: [PROP-foundation, SPEC-parser]` frontmatter; omit it when
+empty. Unit and MS dependencies stay separate. Order overrides never waive structural errors.
+
+Before splitting/decomposing, superseding, rejecting, deleting or reclassifying to session, query
+`devkit spec refs PROP-<slug> --direction in -n 0` (refs is repository-wide) and inspect depends_on on all live incoming unit
+anchors. Completed historical anchors remain unchanged. Review each edge with the user: replace it with the
+required child/successor set, or remove it only when the prerequisite is explicitly waived. Commit that
+per-dependent disposition in the same authorized change. A split can require both children or only one per dependent; never infer successors from
+`decomposed_from` or `supersedes`. Rejection and deletion do not fulfill an edge. A retained rejected PROP remains
+resolvable but blocked; an unresolved missing target is invalid, never ready.
+
+If a required dependent edit lies outside the allowed write scope, stop the lifecycle mutation and ask the Host
+to coordinate scope; never silently delete the prerequisite or mutate another worker's checkout. Exact same-slug
+handoff relocation remains automatic for live direct references and carries outgoing dependencies, after a
+projected-graph preflight before writes. It implies no fulfillment.
+
+## Coarse milestone authoring
+
+A milestone SHOULD describe a multi-unit phase, release or architectural theme advancing ARCH-01. Authors SHOULD
+NOT create a milestone solely as a single-proposal sequencing gate or split a cohesive theme merely for ordering;
+use unit depends_on instead. A theme may initially contain one proposal while additional scope is not authored,
+provided its intended outcome is multi-unit. This is guidance, not a minimum-member-count validator.
+
+Exit conditions SHOULD state observable phase-level outcomes and capability boundaries. CLI flags, branch names,
+file layouts and scenario-level tests belong in proposals/specs. Existing milestone transition authority and
+MS readiness semantics remain unchanged.
 
 ## Milestone documents and user decisions
 
 Use `.devkit/managed/spec/templates/milestone.md` for a global `docs/roadmap/MS-<slug>.md` document. Slugs start with a
 word, for example MS-release-1-0. Required metadata is id, title, English summary, status and created_at; optional
 `depends_on` lists milestone IDs. Body: the goal it advances (cite ARCH-01), exit condition and non-goals. Do not
-duplicate work lists: proposal/spec anchors own the optional `milestone` field; use `refs --direction in`.
+duplicate work lists: only direct PROP anchors own the optional `milestone` field; use `refs --direction in`.
+User and agent jointly review the theme and decompose it into proposals. Handoff MUST NOT carry milestone metadata
+to SPEC; historical SPEC metadata is ignored for membership. Use code/Git inspection on demand for downstream
+outcomes, never a persistent MS-to-PROP-to-SPEC lineage graph.
 
 Status is planned, active, done or dropped; several milestones may be active. A milestone is ready when all
 dependencies are done or dropped. Cycles are rule errors; the user may activate one out of order.
@@ -98,14 +131,16 @@ Every transition is the user's decision, with a concrete candidate prepared firs
 1. Activate: show each dependency not done/dropped; the user may still activate it.
 2. Close: inspect anchor members on the base and each relevant `plan-`/`dev-` branch, including branches that introduce
    members absent from the base. Reuse registered worktrees or read Git refs without switching another task's checkout.
-   Reconcile duplicate slugs across proposal and handed-off spec views. Propose close only after exit conditions
+   Inspect downstream outcomes from code/Git when needed; proposal disappearance is not completion evidence.
+   Propose close only after exit conditions
    hold and unsettled members are moved elsewhere or the close waits. Unavailable branch evidence prevents a claim
    that all work is settled.
 3. Drop: show unsettled members and dependent successor milestones. Prepare member reassignment, clearing milestone
    or proposal rejection; show each successor so the user keeps or changes its dependencies.
 
 Hygiene reads base facts only: `SPEC_MILESTONE_DONE_UNSETTLED` and `SPEC_MILESTONE_DROPPED_UNSETTLED` name unsettled
-members left on finished milestones until they are completed or reassigned/cleared/rejected.
+direct proposal members left on finished milestones until reassigned/cleared/rejected or handed off; handoff
+removes membership without certifying milestone completion.
 
 {% if execution.environment == "local" %}Native MCP approval belongs to the Host after it validates worker boundaries, committed scope and required checks.
 Workers return that evidence and do not ask for business approval. When the optional runtime, connection or negotiated

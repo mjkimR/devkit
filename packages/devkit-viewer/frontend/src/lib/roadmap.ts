@@ -4,9 +4,9 @@ import { normalizeTree, type RepositoryDataSource } from './repository';
 export interface Member {
 	id: string;
 	title: string;
-	kind: 'proposal' | 'spec';
+	kind: 'proposal';
 	status: string;
-	/** A completed spec; everything else still needs work before the milestone can close. */
+	/** Direct proposals do not certify milestone completion. */
 	settled: boolean;
 	/** The activity branch the member was read from; `null` for the default branch. */
 	branch: string | null;
@@ -35,7 +35,6 @@ const FINISHED = new Set(['done', 'dropped']);
 const ORDER = ['active', 'planned', 'done', 'dropped'];
 const MILESTONE = /^docs\/roadmap\/MS-[^/]+\.md$/;
 const PROPOSAL = /^docs\/proposals\/PROP-[^/]+\/proposal\.md$/;
-const SPEC = /^specs\/\d{4}-\d{2}\/[^/]+\/spec\.md$/;
 
 /** Local branches whose Units the roadmap reads besides the selected branch. */
 export const isActivityBranch = (name: string) => /^(plan|dev)-./.test(name);
@@ -47,25 +46,25 @@ const rank = (status: string) => {
 };
 
 function memberOf(doc: RepositoryDocument, branch: string | null) {
-	const kind = PROPOSAL.test(doc.path) ? 'proposal' : SPEC.test(doc.path) ? 'spec' : null;
+	if (!PROPOSAL.test(doc.path)) return null;
 	const id = text(doc.meta.id);
-	if (!kind || !id) return null;
+	if (!id.startsWith('PROP-')) return null;
 	const status = text(doc.meta.status) || 'unknown';
 	const member: Member = {
 		id,
 		title: doc.title,
-		kind,
+		kind: 'proposal',
 		status,
-		settled: kind === 'spec' && status === 'completed',
+		settled: false,
 		branch,
 		path: doc.path
 	};
-	return { member, milestone: text(doc.meta.milestone), slug: id.replace(/^(PROP|SPEC)-/, '') };
+	return { member, milestone: text(doc.meta.milestone), slug: id.replace(/^PROP-/, '') };
 }
 
 /**
- * Milestones of the default branch (`base`) with their readiness and members. One member per slug: a spec replaces the
- * proposal it was handed off from, and an activity branch replaces the default branch's copy; rejected proposals
+ * Milestones of the default branch (`base`) with their readiness and members. Direct PROP members only. One member per slug:
+ * an activity branch replaces the default branch's copy; rejected proposals
  * are not members.
  */
 export function buildRoadmap(
@@ -78,7 +77,7 @@ export function buildRoadmap(
 		{ branch: null, documents: base },
 		...branches.map((b) => ({ branch: b.name, documents: b.documents }))
 	];
-	const weight = (m: Member) => (m.kind === 'spec' ? 2 : 0) + (m.branch ? 1 : 0);
+	const weight = (m: Member) => (m.branch ? 1 : 0);
 	for (const source of sources)
 		for (const doc of source.documents) {
 			const candidate = memberOf(doc, source.branch);
@@ -107,11 +106,7 @@ export function buildRoadmap(
 				(d: string) => statusOf.has(d) && !FINISHED.has(statusOf.get(d)!)
 			);
 			const members = [...winners.values()]
-				.filter(
-					(w) =>
-						w.milestone === m.id &&
-						!(w.member.kind === 'proposal' && w.member.status === 'rejected')
-				)
+				.filter((w) => w.milestone === m.id && w.member.status !== 'rejected')
 				.map((w) => w.member)
 				.sort((a, b) => a.id.localeCompare(b.id));
 			return { ...m, ready: !unknown.length && !waitingFor.length, waitingFor, unknown, members };
@@ -119,7 +114,7 @@ export function buildRoadmap(
 		.sort((a, b) => rank(a.status) - rank(b.status) || a.id.localeCompare(b.id));
 }
 
-/** The milestone, proposal and spec documents of one ref; unreadable files are listed in `errors`. */
+/** Milestones and direct proposal anchors of one ref; unreadable files are listed in `errors`. */
 export async function loadRoadmapDocuments(
 	source: RepositoryDataSource,
 	ref: string,
@@ -145,11 +140,6 @@ export async function loadRoadmapDocuments(
 	if (has('docs/proposals'))
 		for (const item of await list('docs/proposals'))
 			if (item.type === 'tree' && /^PROP-/.test(item.name)) paths.push(`${item.path}/proposal.md`);
-	if (root.some((i) => i.path === 'specs' && i.type === 'tree'))
-		for (const month of await list('specs'))
-			if (month.type === 'tree' && /^\d{4}-\d{2}$/.test(month.name))
-				for (const bundle of await list(month.path))
-					if (bundle.type === 'tree') paths.push(`${bundle.path}/spec.md`);
 	const documents: RepositoryDocument[] = [];
 	for (let i = 0; i < paths.length && !signal.aborted; i += 6)
 		await Promise.all(

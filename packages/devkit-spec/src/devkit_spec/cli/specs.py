@@ -52,7 +52,6 @@ from devkit_spec.proposals import create_spec
     default=None,
     help="Date of the bundle directory and created field, YYYY-MM-DD [default: today]",
 )
-@click.option("--milestone", "-m", default=None, help="Existing global MS-<slug> milestone ID")
 @workspace_option()
 @FORMAT_OPTION
 @boundary
@@ -63,7 +62,6 @@ def spec_new_cmd(
     namespace: str | None,
     summary: str | None,
     day: datetime | None,
-    milestone: str | None,
     workspace_root: str | None,
     output_format: str,
 ) -> None:
@@ -76,7 +74,6 @@ def spec_new_cmd(
         namespace=namespace,
         summary=summary,
         day=day.date() if day else None,
-        milestone=milestone,
         cwd=Path.cwd(),
     )
     if is_json(output_format):

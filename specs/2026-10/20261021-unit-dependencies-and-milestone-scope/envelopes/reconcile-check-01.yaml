@@ -1,0 +1,35 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T04:05:02.431058Z'
+status: completed
+summary: 'Independent medium reconciliation verified eight targets but found three out-of-scope stale consumers: architecture membership, viewer SPEC membership, and package README removed CLI option. Host scope coordination requested.'
+findings:
+- issue: Architecture still declares SPEC milestone membership and is missing from reconcile targets.
+  evidence: docs/architecture/ARCH-01-introduction-and-goals.md:54
+  failure_condition: System architecture readers receive proposal/spec membership contrary to accepted direct PROP ownership and ignored SPEC metadata.
+  suggested_action: Update the architecture statement and add it as a modified reconcile target after Host authorizes scope.
+  resolution: open
+  severity: P1
+- issue: Viewer membership implementation and contract still use SPEC membership.
+  evidence: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md:102; packages/devkit-viewer/frontend/src/lib/roadmap.ts:50-63,81-88
+  failure_condition: Historical SPEC milestone metadata remains a viewer member and same-slug SPEC replaces direct PROP, disagreeing with document-index membership.
+  suggested_action: Align viewer membership with direct PROP ownership, update its capability/reconcile target and run required frontend checks/build after Host scope coordination.
+  resolution: open
+  severity: P1
+- issue: Package guidance advertises the removed direct-spec milestone option.
+  evidence: packages/devkit-spec/README.md:47
+  failure_condition: Documented devkit spec new --milestone fails with unknown-option rejection.
+  suggested_action: Remove the obsolete command and describe proposal-only membership after Host authorizes scope.
+  resolution: open
+  severity: P1
+assumptions:
+- Independent reconcile-reviewer used emulated read-only boundaries; unchanged HEAD and clean status verified.
+- Reviewer interprets accepted PROP-only milestone ownership as applying to viewer membership as well as CLI indexing and hygiene.
+checks:
+  inspection: PASS independent full-feature comparison
+  contracts: FAIL three stale consumers outside worker write scope
+diff_scope:
+  base: 1b36430e893eefeb16046ce641440ed4bd74f660
+  head: dafe119348b8fcb15058011c4a30d18028333887

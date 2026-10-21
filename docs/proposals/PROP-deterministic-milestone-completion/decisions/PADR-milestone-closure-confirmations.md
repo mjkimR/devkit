@@ -17,7 +17,7 @@ created_at: 2026-10-21
 ## 1. Context & Problem Statement
 
 `ADR-milestone-documents` uses user-owned Backlog status edits, while its member/branch review assumes SPEC
-membership. `PROP-unit-dependencies-and-milestone-scope` establishes direct PROP-only membership. Closure must
+membership. `SPEC-unit-dependencies-and-milestone-scope` establishes direct PROP-only membership. Closure must
 fit that model without retaining delivery lineage after handoff. Proposal disappearance cannot certify completion.
 
 ## 2. Decision Drivers

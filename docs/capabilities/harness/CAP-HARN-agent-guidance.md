@@ -1,7 +1,7 @@
 ---
 id: CAP-HARN-agent-guidance
 title: Agent Guidance Assets
-summary: "Agent guidance deployed by the spec bundle covers delivery skills, worker contracts, feedback capture and verified source resolution, terminology guidance, and an opt-in docs skeleton with a five-column glossary."
+summary: "Spec guidance covers delivery skills, workers and source feedback, with base-snapshot prerequisite recommendations, explicit lifecycle edge disposition and coarse milestones owned by direct proposals."
 area: harness
 status: active
 created_at: 2026-10-13
@@ -143,7 +143,7 @@ Living Spec and `specs/` holds feature specs.
 | Skill | Purpose | devkit-spec commands it runs |
 | --- | --- | --- |
 | `spec` | Entry router: classify the work, run Backlog (direct acceptance and session reclassification of a draft included) and inline Planning, raise the depth and close, drive the workflow; never routes to playbooks. | `policy`, `new`, `proposal new`, `proposal check`, `proposal accept`, `proposal handoff` |
-| `spec-next` | Orientation: diagnose work under way; when idle, recommend queued drafts by repository milestone, priority and size, offering Planning, a direct acceptance or a session reclassification. | `policy`, `list spec\|proposal\|feedback`, `proposal padr`, `proposal accept --check`, `proposal handoff` |
+| `spec-next` | Orientation: diagnose work under way; when idle, filter queued drafts by direct prerequisites on one local base snapshot, then rank by repository milestone, priority and size, offering Planning, a direct acceptance or a session reclassification. | `policy`, `list spec\|proposal\|feedback`, `proposal padr`, `proposal accept --check`, `proposal handoff` |
 | `spec-specify` | Write `spec.md` (feature or bugfix reference); creates the bundle with `devkit spec new`. | `new`, `list`, `refs`, `search`, `policy` |
 | `spec-plan` | Write `plan.md`: design, interfaces, verification plan. | `list`, `refs`, `search` |
 | `spec-tasks` | Write `tasks.md` with `_Boundary:` and `_Requirements:`. | `list spec`, `scope update` |
@@ -308,9 +308,9 @@ integration retains its ready-state authority. Unavailable native confirmation i
 
 The spec classification reference routes Backlog to its repository-only procedure (`ADR-roadmap-in-repository`). Immediate session/spec requests use inline Planning; every request not starting now and every decomposition result is a draft proposal. Decomposed_from and supersedes preserve request origin through handoff. Backlog reviews feedback, places drafts in milestones and prepares explicit user decisions for milestone activation, closing and dropping. On the user's explicit `plan-accept`, Backlog may accept an eligible draft directly on the base checkout, after `devkit spec proposal accept --direct --check`, the Host's judgment that the direction leaves nothing to compare and its sweep of the acceptance session, with no Planning branch, run, effort or worker envelope (`ADR-direct-acceptance-command-and-handoff-guard`, `ADR-eligibility-for-direct-acceptance`); this ends the interim rule of `ADR-roadmap-in-repository` that small drafts run Planning at `low`. On the user's explicit decision at pickup, a queued draft without PADRs whose work is `session` depth may be deleted in one base commit that preserves its open feedback and done as a session under a new slug (`ADR-session-reclassification-of-a-queued-draft`). No issue field, tracker intake/closing or autohub dependency applies.
 
-Milestones are global MS documents with goal, exit condition and non-goals, never copied work lists. Units declare membership. Activation shows unmet dependencies but permits an explicit out-of-order decision. Close checks the base and activity branches, including members introduced only on branches; unavailable evidence prevents claiming settlement. Drop prepares member reassignment/clearing/rejection and shows successor dependencies. Done/dropped records remain hidden history (`ADR-milestone-documents`).
+Milestones are global MS documents with goal, exit condition and non-goals, never copied work lists. User and agent jointly review the theme and decompose it into direct PROP members. Only proposal anchors declare membership; handoff omits milestone metadata and historical SPEC metadata is ignored. Authors SHOULD describe a multi-unit phase, release or architectural theme advancing `ARCH-01-introduction-and-goals`, with observable phase-level outcomes and capability boundaries. A theme may initially have one proposal when broader intended scope is not authored yet; it SHOULD NOT exist solely as a sequencing gate. CLI flags, branch names, file layouts and scenario tests belong in proposals/specs. Activation shows unmet dependencies but permits an explicit out-of-order decision. Close checks the base and activity branches, including members introduced only on branches; unavailable evidence prevents claiming settlement. Drop prepares member reassignment/clearing/rejection and shows successor dependencies. Done/dropped records remain hidden history (`ADR-milestone-documents`).
 
-Spec-next treats a slug with a plan-/dev- branch, a reviewing/accepted proposal or an incomplete spec as in progress; queued drafts do not suppress idle recommendations. Eligible draft order is critical first, milestone rank (active, ready planned, no milestone), milestone created_at/ID, priority, size, draft created_at/ID. Unready/finished milestone and needs_decompose drafts are Backlog actions; critical drafts still rank first. The skill supplies deterministic ties/defaults; the CLI adds no sorting. It recommends intent confirmation when absent, offers Planning, a direct acceptance or a session reclassification for the draft, and mentions open feedback hygiene. At three done milestones or 2027-01-31 it reports roadmap review due until ADR-roadmap-review exists; this is a reminder, not a gate.
+Spec-next treats a slug with a plan-/dev- branch, a reviewing/accepted proposal or an incomplete spec as in progress; queued drafts do not suppress idle recommendations. After the unit prerequisite filter below, eligible draft order is critical first, milestone rank (active, ready planned, no milestone), milestone created_at/ID, priority, size, draft created_at/ID. Unready/finished milestone and needs_decompose drafts are Backlog actions; unit-ready critical drafts still rank first; milestone exceptions never bypass unit prerequisites. The skill supplies deterministic ties/defaults; the CLI adds no sorting. It recommends intent confirmation when absent, offers Planning, a direct acceptance or a session reclassification for the draft, and mentions open feedback hygiene. At three done milestones or 2027-01-31 it reports roadmap review due until ADR-roadmap-review exists; this is a reminder, not a gate.
 
 
 Local-orchestrated proposal acceptance requires connected owning report, shared-get and native approval tools.
@@ -318,3 +318,26 @@ Missing tools pause dependent operations and request connection; no silent CLI f
 all PADRs and support coverage to the report before native acceptance. Cloud retains explicit authorized CLI
 acceptance and report publication. A report never carries approval or permissions. Refinement requires exclusive
 Planning ownership, committed changes and a refreshed exact-source report; accepted plans use follow-up workflows.
+
+
+### Direct unit prerequisites and lifecycle decisions
+
+Backlog/spec-next and explicit proposal pickup or direct-spec intake inspect optional depends_on without a new
+CLI or gate. Select one local base ref and resolve its commit once; report both and read all candidates and direct
+target anchors from that snapshot across namespaces, including history. Never substitute active branch completion,
+fetch implicitly or claim remote freshness. Only one uniquely resolved SPEC anchor with status completed satisfies
+an edge for scheduling; do not recursively reopen that SPEC's prerequisites. This is a status signal, not task,
+reconcile, approval or coverage certification. No dependencies means unit-ready. Report each blocked draft's exact
+ID and reason: unfinished proposal, rejected proposal, unfinished spec, or invalid/unknown target. Missing,
+malformed, ambiguous or unreadable base evidence requires Backlog repair. Filter ordinary and critical candidates
+before existing milestone/priority ordering. Explicit user pickup may override order, recording unsatisfied IDs
+and reasons in the ordinary intent decision; it cannot waive malformed references or cycle diagnostics.
+
+Before decompose, supersede, reject, delete or session reclassification, inspect incoming depends_on references
+across all namespaces, retaining only live direct unit edges. Review each edge with the user and replace it with
+the required child/successor set, or remove it only for an explicit prerequisite waiver. Apply the disposition in
+the same authorized change. Stop the lifecycle mutation when dependent edits exceed the allowed scope and ask the
+Host to coordinate; never edit another worker's checkout. Retained rejected PROP anchors resolve but remain
+blocked. Missing targets never mean ready. Do not rewrite completed history, infer successors through provenance
+or store a lineage graph. On-demand code/Git inspection can answer downstream milestone outcome questions;
+proposal disappearance is not completion evidence.

@@ -44,7 +44,9 @@ just smoke                    # wheel installation, CLI mounting, bundle deploym
 Python 3.12 or later, macOS or Linux. The [development guide](../../docs/development/setup.md) lists prerequisites.
 
 Repository roadmaps use global `docs/roadmap/MS-<slug>.md` milestone documents. Assign one with
-`devkit spec proposal new <slug> --milestone MS-<slug>` or `devkit spec new <slug> --milestone MS-<slug>`;
+`devkit spec proposal new <slug> --milestone MS-<slug>`; only direct PROP anchors are members.
+Handoff does not carry milestone metadata into specs, and historical SPEC metadata is ignored.
+Direct specs have no milestone creation option;
 `proposal new --decomposed-from PROP-<parent>` preserves the original draft's identity. The Backlog and spec-next
 skills own lifecycle decisions and next-work ordering. `devkit spec proposal accept <slug> --by user` records the
 user's acceptance in one step, after Planning or, with `--direct`, for an eligible draft on the base checkout without

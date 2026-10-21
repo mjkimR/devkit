@@ -55,18 +55,32 @@ describe('buildRoadmap members', () => {
 	];
 	const branches = [{ name: 'dev-h', documents: [spec('h', 'in-progress', 'MS-b')] }];
 
-	it('reads activity branches, prefers specs and leaves rejected proposals out', () => {
+	it('ignores SPEC metadata and leaves direct PROP members and rejected filtering intact', () => {
 		const b = buildRoadmap(base, branches, { history: false }).find((m) => m.id === 'MS-b')!;
 		expect(b.members.map((m) => [m.id, m.settled, m.branch])).toEqual([
-			['PROP-p', false, null],
-			['SPEC-h', false, 'dev-h'],
-			['SPEC-s', true, null]
+			['PROP-h', false, null],
+			['PROP-p', false, null]
 		]);
 	});
 
 	it('shows only the selected branch without activity branches', () => {
 		const b = buildRoadmap(base, [], { history: false }).find((m) => m.id === 'MS-b')!;
-		expect(b.members.map((m) => m.id)).toEqual(['PROP-h', 'PROP-p', 'SPEC-s']);
+		expect(b.members.map((m) => m.id)).toEqual(['PROP-h', 'PROP-p']);
+	});
+
+	it('does not replace PROP membership with a same-slug completed SPEC on any branch', () => {
+		const documents = [...base, spec('p', 'completed', 'MS-c')];
+		const activity = [{ name: 'dev-p', documents: [spec('p', 'completed', 'MS-c')] }];
+		const b = buildRoadmap(documents, activity, { history: true }).find((m) => m.id === 'MS-b')!;
+		expect(b.members.map((m) => m.id)).toEqual(['PROP-h', 'PROP-p']);
+		expect(b.members.every((m) => m.kind === 'proposal' && !m.settled)).toBe(true);
+	});
+
+	it('retains proposal members when showing milestone history', () => {
+		const history = buildRoadmap([...base, proposal('old', 'draft', 'MS-a')], [], {
+			history: true
+		});
+		expect(history.find((m) => m.id === 'MS-a')!.members.map((m) => m.id)).toEqual(['PROP-old']);
 	});
 
 	it('follows a member that moved to another milestone on its branch', () => {
@@ -85,6 +99,7 @@ describe('loadRoadmapDocuments', () => {
 		'docs/roadmap/MS-b.md': '---\nid: MS-b\nstatus: active\n---\n# B\n',
 		'docs/roadmap/README.md': '# Roadmap\n',
 		'docs/proposals/PROP-p/proposal.md': '---\nid: PROP-p\nmilestone: MS-b\n---\n# P\n',
+		'docs/proposals/PROP-broken/proposal.md': '---\nid: PROP-broken\nmilestone: [broken\n---\n',
 		'docs/proposals/PROP-q/notes.md': '# not a bundle anchor\n',
 		'specs/2026-10/20261019-s/spec.md': '---\nid: SPEC-s\nmilestone: [broken\n---\n# S\n',
 		'docs/capabilities/a/CAP-A-x.md': '# unrelated\n'
@@ -110,7 +125,7 @@ describe('loadRoadmapDocuments', () => {
 		}
 	};
 
-	it('reads milestones, proposal anchors and spec anchors only', async () => {
+	it('loads only milestone and proposal anchors and preserves their error reporting', async () => {
 		const { documents, errors } = await loadRoadmapDocuments(
 			source,
 			'main',
@@ -121,6 +136,6 @@ describe('loadRoadmapDocuments', () => {
 			'docs/roadmap/MS-b.md'
 		]);
 		expect(errors).toHaveLength(1);
-		expect(errors[0]).toMatch(/^specs\/2026-10\/20261019-s\/spec\.md: /);
+		expect(errors[0]).toMatch(/^docs\/proposals\/PROP-broken\/proposal\.md: /);
 	});
 });
