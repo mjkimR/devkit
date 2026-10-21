@@ -3,12 +3,15 @@ id: TASKS-unit-dependencies-and-milestone-scope
 spec: SPEC-unit-dependencies-and-milestone-scope
 plan: PLAN-unit-dependencies-and-milestone-scope
 ---
-<!-- devkit:skeleton -->
 
-# Task Breakdown: `SPEC-unit-dependencies-and-milestone-scope` Unit-level depends_on and coarse milestone scope
+# Task Breakdown: `SPEC-unit-dependencies-and-milestone-scope`
 
-## Phase 1: Implementation
-- [ ] **Task 1.1**: Core Implementation
-  - **_Boundary**: packages/devkit-spec/, docs/capabilities/delivery/, docs/capabilities/documents/, docs/capabilities/governance/, docs/capabilities/harness/, docs/decisions/, docs/development/reference/, docs/roadmap/
-  - _Requirements: AC-01_
-  - **Verification**: <command that verifies the task>
+- [ ] **Task 1**: Typed dependency parsing, reference validation and projected handoff, with regression tests
+  - **_Boundary**: packages/devkit-spec/src/devkit_spec/, packages/devkit-spec/tests/
+  - _Requirements: AC-01, AC-02_
+- [ ] **Task 2**: Proposal-only milestone membership and removed spec creation inputs, with tests
+  - **_Boundary**: packages/devkit-spec/src/devkit_spec/, packages/devkit-spec/tests/
+  - _Requirements: AC-04_
+- [ ] **Task 3**: Base recommendation, lifecycle repair and coarse milestone guidance, with contract fixtures
+  - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundle/, packages/devkit-spec/tests/, docs/roadmap/README.md
+  - _Requirements: AC-03, AC-05_

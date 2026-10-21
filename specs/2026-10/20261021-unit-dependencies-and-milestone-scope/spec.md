@@ -8,7 +8,6 @@ related_capabilities: []
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-unit-dependencies-and-milestone-scope] Unit-level depends_on and coarse milestone scope
 
@@ -41,14 +40,34 @@ milestones to their intended role:
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: New readiness services or CLI flags, persistent lineage, automatic fulfillment inference, bulk roadmap cleanup, and changes to milestone transition authority.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Typed direct prerequisites
+- **Given** milestone and proposal/spec anchors, including namespaced and completed targets
+- **When** document parsing and reference validation run
+- **Then** omitted/empty lists are accepted; unit lists resolve only exact unique PROP/SPEC anchors, milestone lists only MS targets; malformed lists, wrong kinds, auxiliary targets, missing/ambiguous IDs and live self/mixed cycles produce RULE-document-reference diagnostics, including targeted cycle members. Completed SPEC history is terminal.
+
+### [AC-02] Atomic dependency handoff
+- **Given** an accepted proposal with outgoing and live incoming dependencies across namespaces
+- **When** handoff runs
+- **Then** it carries outgoing edges and rewrites live incoming PROP targets to SPEC, validates the projected graph before writing, refuses invalid references/cycles and pre-existing same-slug SPEC collisions without writes, preserves completed history and existing rollback.
+
+### [AC-03] Base scheduling and explicit lifecycle repair
+- **Given** ordinary or critical drafts, direct spec intake or explicit proposal pickup
+- **When** guidance selects work
+- **Then** it evaluates all direct edges against one reported local base ref/commit, treats only uniquely resolved completed SPEC anchors as satisfied, reports exact blocked IDs/reasons, preserves milestone ranking exceptions and permits explicit order overrides without waiving structural errors. Decompose/supersede/reject/delete/session changes require same-change user-approved disposition of live incoming edges across namespaces and stop on insufficient scope.
+
+### [AC-04] Proposal-only milestone membership
+- **Given** direct PROP members and historical SPEC milestone metadata
+- **When** membership queries, hygiene, direct creation and handoff run
+- **Then** only PROP anchors count, SPEC metadata is ignored, handoff omits milestone, and direct-spec API/CLI milestone inputs are removed with normal unknown-option rejection.
+
+### [AC-05] Coarse shared milestone planning
+- **Given** a milestone theme reviewed jointly by user and agent
+- **When** the guidance and templates describe decomposition and exits
+- **Then** they recommend multi-unit outcomes and phase-level exit conditions, allow one initial member with broader intended scope, use unit prerequisites for sequencing, and keep CLI/file/test detail within proposals/specs; no member-count validator or lineage graph is introduced.
 
 ## 5. Carried Proposal Notes
 
