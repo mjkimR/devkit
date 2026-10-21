@@ -9,7 +9,6 @@ related_capabilities: []
 related_stories: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-periodic-drift-reconciliation] Spec-code drift reconciliation maintenance playbook
 
@@ -45,14 +44,34 @@ Handed off from proposal PROP-periodic-drift-reconciliation on 2026-10-21.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: detector, scheduler, standalone skill, report database, companion playbooks, automatic rewriting and unrelated repairs.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Opt-in delivery
+- **Given** the catalog is installed without maintenance selected
+- **When** default maintenance or maintenance:upkeep is selected
+- **Then** precisely drift-reconciliation is deployed; unselected maintenance deploys nothing; discovery, validation and independent lookup succeed.
+
+### [AC-02] Bounded evidence
+- **Given** an explicitly selected batch and repository revision
+- **When** the playbook is invoked manually
+- **Then** the report records intake, candidate coverage, precise evidence from both ledgers, deterministic versus semantic classification, and coverage gaps without a whole-repository consistency claim.
+
+### [AC-03] Human arbitration
+- **Given** evidenced findings
+- **When** dispositions are requested together
+- **Then** each finding records an explicit documentation update, code fix, deferral or waiver; unanswered findings remain pending and only decided corrections enter the applicable workflow.
+
+### [AC-04] Repeatability and verification
+- **Given** repeat findings or changed revision or dirty paths
+- **When** reconciliation continues
+- **Then** prior destinations are reused, changed evidence is revalidated, unrelated changes are preserved, and completion separates resolved, deferred, waived, pending and coverage gaps.
+
+### [AC-05] Demonstration
+- **Given** the shipped playbook
+- **When** a bounded real read-only sweep and isolated seeded exercise run
+- **Then** retained evidence demonstrates every disposition, pending decisions, deduplication and revalidation; simulated decisions authorize no repository correction.
 
 ## 5. Carried Proposal Notes
 
