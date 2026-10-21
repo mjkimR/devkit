@@ -122,3 +122,5 @@ A session runs in `direct` or through the `cloud-pr` general PR path (a Work Pla
 ## Project policy
 
 Read `devkit spec policy` before the integration decision (`[workflow.approvals]`, `[worktree]`). `auto` delegates `dev-integration` only after the completion conditions hold, at every effort, and the executor reports the delegation, never a human approval. `exception` always needs resolution; explicit user authority, required PR policy, external protections and action permissions still apply, and local branch cleanup after a confirmed merge follows `[worktree]` and existing deletion authority.
+
+Shared base `dev-integration=auto` also authorizes the Host to invoke verified local merge and exact cleanup through `integration_integrate` without elicitation, reporting `authority: policy`. It grants no publication or cloud authority and does not override host permissions. Preparation grants no authority; source-only policy changes cannot authorize themselves.

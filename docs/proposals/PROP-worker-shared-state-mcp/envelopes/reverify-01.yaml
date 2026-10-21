@@ -1,0 +1,25 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-20T23:08:55.199879Z'
+status: completed
+review: challenger-01.yaml
+summary: 'Author verified both fixes: idempotency lasts only while live and fresh generation URI never revives expired references; shared_sweep is plan-only and shared_sweep_apply is a separate bounded-write tool.'
+findings:
+- issue: Identical-key retries cannot preserve original metadata after expiry sweep deletes it.
+  evidence: Reviewed proposal sections 2.1 and 2.3 and AC3/AC4 promise retry metadata stability but delete expired envelopes.
+  failure_condition: Publish, expire, sweep and retry identical content; original timestamps are no longer available.
+  suggested_action: Bound retry idempotency to live lifetime and define fresh publication after expiry with clock-controlled tests.
+  resolution: resolved
+  severity: P2
+- issue: A single sweep tool cannot be both read_only plan and bounded_write apply under tool-wide classification.
+  evidence: Reviewed proposal sections 2.1/2.4; core/mcp.py McpTool.execution; devkit_mcp/server.py:30-42,76-83.
+  failure_condition: read_only with apply bypasses mutation guards; bounded_write hides read-only planning in cloud.
+  suggested_action: Split read-only sweep-plan and bounded-write sweep-apply tools, reject apply arguments on plan.
+  resolution: resolved
+  severity: P1
+unverified_areas:
+- User routing/rendering steering added after round 1 requires a focused challenger pass.
+checks:
+  contract: PASS expiry and per-tool classification explicit

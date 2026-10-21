@@ -1,0 +1,16 @@
+kind: answer
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-20T23:14:01.773388Z'
+status: completed
+summary: Select local artifacts plus public remote adapter extension contract for first delivery; defer concrete remote backend.
+findings: []
+checks: {}
+answers_to: worker-01.yaml
+answers:
+- question: remote-first-delivery
+  choice: local-first
+  decision: First delivery implements the local adapter and public remote adapter protocol/registration contract; a concrete remote backend is deferred.
+  constraints:
+  - Track the deferred backend destination, dependencies and restart criteria inside proposal feedback.

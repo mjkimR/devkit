@@ -546,10 +546,13 @@ def test_session_readiness_verifies_claims_and_refuses_invalid_claims_or_plan_br
     assert any("touched proposal unit docs/proposals/PROP-other is not accepted" in reason for reason in r_prop.reasons)
 
 
+@pytest.mark.parametrize("auto", [False, True])
 def test_integration_service_end_to_end_approval_cleanup_non_approval_and_no_network(
-    tmp_path: Path, synced_template: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, synced_template: Path, monkeypatch: pytest.MonkeyPatch, auto: bool
 ) -> None:
-    repo = _make_synced_repo(tmp_path, synced_template)
+    repo = _make_synced_repo(
+        tmp_path, synced_template, extra_config='[workflow.approvals]\ndev-integration="auto"' if auto else ""
+    )
     (repo / "docs/proposals/PROP-feat/decisions").mkdir(parents=True)
     wt = _start_worktree(repo, "dev-feat", tmp_path / "wt-feat")
     unit = _complete_feature_spec(wt, "feat")
@@ -571,18 +574,20 @@ def test_integration_service_end_to_end_approval_cleanup_non_approval_and_no_net
     async def _decline(_msg: str, _schema: dict) -> ConfirmationReply:
         return ConfirmationReply(action="decline", content={"approve": False})
 
-    declined = asyncio.run(service.integrate("dev-feat", task, _decline))
-    assert declined.status == "declined"
-    assert wt.is_dir()
-    assert "SPEC-feat" in _cli(repo, "spec", "scope", "query")
+    if not auto:
+        declined = asyncio.run(service.integrate("dev-feat", task, _decline))
+        assert declined.status == "declined"
+        assert wt.is_dir()
+        assert "SPEC-feat" in _cli(repo, "spec", "scope", "query")
 
     # 2. Affirmative confirmation fast-forwards base, removes worktree & branch, prunes proposal dir, sweeps scope record.
     async def _accept(_msg: str, _schema: dict) -> ConfirmationReply:
+        assert not auto, "auto must not request native confirmation"
         return ConfirmationReply(action="accept", content={"approve": True})
 
     completed = asyncio.run(service.integrate("dev-feat", task, _accept))
     assert completed.status == "completed", completed.to_dict()
-    assert completed.authority == "mcp-elicitation"
+    assert completed.authority == ("policy" if auto else "mcp-elicitation")
     assert completed.steps["merge"] == "completed"
     assert completed.steps["worktree_remove"] == "completed"
     assert completed.steps["branch_delete"] == "completed"

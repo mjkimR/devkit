@@ -84,7 +84,7 @@ sequence.
    recorded, or with the PR ready state a runner binds (`ADR-integration-approval-asserted`); under `auto` it passes by
    policy (`[GATE_PASSED: dev-integration ... source=policy]`, JSON `passed_gates`) and the executor MUST report the
    delegation as the authority, never as a human approval.
-   None grants new commit, merge, publication or deletion authority. `devkit workflow return --unit <dir> --to
+   Shared base auto also authorizes verified local merge and exact cleanup through the MCP integration executor, reporting `authority: policy` without elicitation (`ADR-policy-authorized-local-integration`). It grants no commit, publication or host permission authority; auto PR and cloud execution refuse. `devkit workflow return --unit <dir> --to
    <stage>` voids the approvals of that stage and later ones, and the envelopes recorded for them before the return.
 6. **`plan-intent` opens every task**: goal, scope, verification (for a bugfix, the expected behavior), `task-kind`
    and `planning-depth` are confirmed by the user. For `spec` depth the gate opens once the anchor exists and is
@@ -476,7 +476,7 @@ prompt.
 
 Registered under the `devkit.integration.readiness` entry point as `spec` and selected by `[integration] provider = "spec"` (`ADR-integration-approval-asserted`, `SPEC-hook-driven-integration-cleanup`). `check(context: IntegrationContext) -> Readiness` evaluates the committed `context.finish.source_sha` against `context.finish.target_sha` (at a build of an approved request, the build target, with the result commit as `context.result_sha`; `ADR-target-advance-readiness`) inside an isolated temporary workspace materialized from Git (populating `.devkit/managed/` only when files match the committed `.devkit/installation.json` SHA-256 digests), so uncommitted worktree or base edits never influence readiness:
 
-1. **Policy and configuration**: validates `[tool.spec]` (`read_spec_config`) and `[workflow.approvals]` (`check_approvals`, requiring `dev-integration == "ask"` for the approval-bound `IntegrationService` path) in both the base checkout and the materialized `source_sha` snapshot.
+1. **Policy and configuration**: validates `[tool.spec]` (`read_spec_config`) and `[workflow.approvals]` (`check_approvals`, accepting ask or auto while keeping intent and acceptance human) in both the base checkout and the materialized `source_sha` snapshot.
 2. **Unit tasks (`task.kind == "unit"`)**: verifies branch-to-unit correspondence through `attach_check(base, branch, unit, source_sha)` and `task.id` agreement (`<slug>`, `SPEC-<slug>` or `PROP-<slug>`), then evaluates the unit in `Workspace(..., ancestor=...)`:
    - `dev-<slug>` (`sdd-spec-feature` or `sdd-spec-bugfix`): evaluated with `given=("dev-integration",)`; requires `current_stage == "integrate"`, zero unmet checks across earlier stages (`specify`/`characterize`, `build-verify` or `reproduce`/`fix-verify`, `review-refine`, `living-spec-draft`, `collect-feedback` when enabled, `final-change-report`, `integration-approval`), no envelope hold (`blocked` or `pending_questions`), `spec.md` `status: completed`, `reconcile.md` `status: resolved`, and (when handed off from a proposal) carried `gate:plan-accept` accepted.
    - `plan-<slug>` (`sdd-proposal`): requires `proposal.md` `status: accepted`, `gate:plan-intent` and `gate:plan-accept` accepted, `collect-feedback` satisfied when enabled, `complete == True` (`current_stage is None`), and no envelope hold.

@@ -6,6 +6,9 @@ spec = ["core", "docs-skeleton"]
 authoring = "skill-authoring"
 response-style = "all"
 
+[workflow.approvals] 
+dev-integration = "auto"
+
 [worktree]
 pull_request = "auto"
 setup = "just init"  # a new worktree gets the workspace environment before its first devkit command
