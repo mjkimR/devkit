@@ -2,7 +2,7 @@
 id: SPEC-periodic-drift-reconciliation
 title: Spec-code drift reconciliation maintenance playbook
 summary: 'Defines a manually invocable maintenance playbook that checks Living Spec, code, and guidance consistency using existing commands and evidence review, then resolves findings through user decisions: the Tier 2 reconciliation of ADR-dual-source-of-truth-and-periodic-reconciliation.'
-status: completed
+status: in-progress
 created: 2026-10-21
 milestone: MS-drift-reconciliation
 related_capabilities: []

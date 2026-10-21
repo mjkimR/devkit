@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-periodic-drift-reconciliation
 feature: SPEC-periodic-drift-reconciliation
-status: resolved
+status: pending
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-content-packages.md
     resolution: modified
