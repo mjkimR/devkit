@@ -7,8 +7,9 @@ from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 
+from devkit_core.core.logs import get_logger
+
 from devkit.advisory import AdvisoryError, Level
-from devkit.core.logs import get_logger
 from devkit.rules.engine.errors import RuleExecutionError, RuleProblem, SettingsError
 from devkit.rules.engine.models import Autofixable, Rule, RuleContext, Severity, Violation
 from devkit.rules.engine.phases import effective_phase, runs_in_phase

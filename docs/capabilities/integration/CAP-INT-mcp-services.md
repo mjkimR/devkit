@@ -12,7 +12,7 @@ created_at: 2026-10-17
 # [CAP-INT-mcp-services] Scoped Integration
 
 `devkit.integration` prepares an immutable request, derives local policy authority or obtains native confirmation through the optional
-`devkit-mcp` runtime using the dependency-free `devkit.core.mcp.Confirmation` contract, and
+`devkit-mcp` runtime using the dependency-free `devkit_core.base.mcp.Confirmation` contract, and
 lands the task through the selected route: locally (a merge commit built outside the base checkout, or a fast-forward under
 `[worktree] merge = "ff-only"`) or through a GitHub PR merge commit, with its exact cleanup scope. `devkit-mcp` owns MCP transport and native UI adaptation;
 integration owns authorization binding, policy, readiness and execution. It imports no SDD models. Command and

@@ -15,7 +15,8 @@ import os
 from collections.abc import Callable
 from pathlib import Path, PurePosixPath
 
-from devkit.core.git import run_git
+from devkit_core.core.git import run_git
+
 from devkit.workflow.unit.envelope import ENVELOPES_DIR, collect_envelopes, is_envelope_name
 
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"  # what a branch without a merge base is compared with

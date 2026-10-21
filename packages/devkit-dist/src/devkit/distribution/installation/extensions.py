@@ -18,8 +18,9 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from devkit_core.core.extensions import run_extensions
+
 from devkit.advisory import AdvisoryError
-from devkit.core.extensions import run_extensions
 from devkit.distribution.errors import PostSyncExtensionFailedNotice, PostSyncNotice
 
 GROUP = "devkit.post_sync"

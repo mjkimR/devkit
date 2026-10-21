@@ -15,11 +15,11 @@ from pathlib import Path
 from typing import Any
 
 import tomlkit
+from devkit_core.core.git import run_git
+from devkit_core.core.locks import file_lock
 
 from devkit.advisory import AdvisoryError, Level
-from devkit.core.git import run_git
 from devkit.core.local_config import read_effective_config
-from devkit.core.locks import file_lock
 from devkit.core.mcp_context import guard_execution
 from devkit.host.errors import HostError
 

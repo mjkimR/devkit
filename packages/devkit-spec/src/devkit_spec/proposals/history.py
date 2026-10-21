@@ -5,10 +5,10 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from devkit.core import FrontmatterError, GitError, atomic_write_text, run_git
-from devkit.core.frontmatter import locate
 from devkit.rules import extract_links
 from devkit.rules.workspace.markdown import local_target
+from devkit_core.core import FrontmatterError, GitError, atomic_write_text, run_git
+from devkit_core.core.frontmatter import locate
 
 from devkit_spec.documents import visible_lines
 from devkit_spec.proposals.rewrite import (

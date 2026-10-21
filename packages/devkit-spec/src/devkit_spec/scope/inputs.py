@@ -19,8 +19,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from devkit.core import FrontmatterError, GitError, run_git
-from devkit.core.frontmatter import parse
+from devkit_core.core import FrontmatterError, GitError, run_git
+from devkit_core.core.frontmatter import parse
 
 from devkit_spec.entrypoints import classify_boundary, entrypoint_bearing, normalize, parse_boundaries
 from devkit_spec.errors import (

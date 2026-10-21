@@ -23,10 +23,10 @@ from pathlib import Path
 
 import yaml
 from devkit.advisory import AdvisoryError
-from devkit.core import FrontmatterError
-from devkit.core.errors import ArgumentError
-from devkit.core.frontmatter import parse
 from devkit.workflow import write_binding
+from devkit_core.base.errors import ArgumentError
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import parse
 
 from devkit_spec.branches import SLUG_LIMIT, planning_branch_elsewhere
 from devkit_spec.config import GLOBAL, read_spec_config

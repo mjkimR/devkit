@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import click
+from devkit_core.base.errors import ArgumentError
 
 from devkit.core.cli import (
     FORMAT_OPTION,
@@ -16,7 +17,6 @@ from devkit.core.cli import (
     highest_exit_code,
     is_json,
 )
-from devkit.core.errors import ArgumentError
 from devkit.workflow.cli.app import WORKSPACE, cli, workspace
 from devkit.workflow.definition.checks import Registry
 from devkit.workflow.render import quote

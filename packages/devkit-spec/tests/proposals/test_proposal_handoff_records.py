@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 import yaml
 from conftest import Write
-from devkit.core import run_git
 from devkit.workflow import Workspace, load_decisions
+from devkit_core.core import run_git
 from proposals.support import CHARACTERIZE, GATED, INCUBATED, MONTH, STAMP, TODAY, accept, spec_dir, write_workflow
 
 from devkit_spec.errors import ProposalAcceptanceUnrecordedError

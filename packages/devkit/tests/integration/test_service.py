@@ -6,8 +6,6 @@ from dataclasses import replace
 
 import pytest
 from devkit.advisory import AdvisoryError
-from devkit.core.errors import GitError
-from devkit.core.mcp import ConfirmationReply
 from devkit.integration import (
     AuthorityError,
     CleanupContractError,
@@ -27,6 +25,8 @@ from devkit.worktree import (
     locate,
     merging,
 )
+from devkit_core.base.errors import GitError
+from devkit_core.base.mcp import ConfirmationReply
 from testsupport.rules import git, write
 
 from .conftest import Entry

@@ -38,10 +38,11 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from devkit.core import CONFIG_PATH, FrontmatterError
-from devkit.core.frontmatter import BOM, load_header, locate
+from devkit.core import CONFIG_PATH
 from devkit.rules import Phase, RuleContext, Severity, Violation, match_path
 from devkit.rules.rules import BaseRule
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import BOM, load_header, locate
 
 from devkit_spec.config import GLOBAL, Namespace
 from devkit_spec.documents import Document, DocumentIndex, in_source_directory, is_document_file

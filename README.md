@@ -20,6 +20,7 @@ and asks before writing anything or committing. The guides live in [`guides/`](g
 
 ## Structure
 
+`packages/devkit-core` owns the independent `devkit_core.core` foundation;
 `packages/devkit-dist` is the distribution package with the CLI, `packages/devkit` the harness package
 (`devkit-agt`), `packages/devkit-advisory` the `devkit.advisory` library shipped on its own for other
 repositories' runtime,
@@ -50,9 +51,9 @@ just --list                # every recipe (rules-fix, rules-phases, rules-explai
 ```
 
 Module commands discover projects from `packages/*/pyproject.toml` and
-`tools/*/pyproject.toml`; pass a project name (`devkit-dist`, `devkit-agt`, `devkit-advisory`,
+`tools/*/pyproject.toml`; pass a project name (`devkit-core`, `devkit-dist`, `devkit-agt`, `devkit-advisory`,
 `devkit-spec`, `devkit-starter`, `devkit-catalog` or `devkit-viewer`) or `all`. `devkit` remains a module-command
-alias for `devkit-agt`, and `dist` is one for `devkit-dist`. Area names (directories under the module's `tests/`, with the matching `src` package) or paths after the module narrow `test` and `test-cov`, and extra pytest arguments follow them: `just test devkit gate worktree -k cache`. `just test-affected [--base REF] [--list] [-- PYTEST-ARGS]` derives the paths from the changes since the merge base with `main`.
+alias for `devkit-agt`, `core` is one for `devkit-core`, and `dist` is one for `devkit-dist`. Area names (directories under the module's `tests/`, with the matching `src` package) or paths after the module narrow `test` and `test-cov`, and extra pytest arguments follow them: `just test devkit gate worktree -k cache`. `just test-affected [--base REF] [--list] [-- PYTEST-ARGS]` derives the paths from the changes since the merge base with `main`.
 
 This repository's lint, type-check and test recipes use `devkit run` for bounded output.
 When changing or repairing the runner, use `DEVKIT_RUN_MODE=raw just test` (also supported by
@@ -75,10 +76,12 @@ with every package's wheel, `SHA256SUMS` and the install commands; install by UR
 base=https://github.com/mjkimR/devkit/releases/download/v<version>
 uv add --dev "devkit-agt @ $base/devkit_agt-<version>-py3-none-any.whl" \
   "devkit-dist @ $base/devkit_dist-<version>-py3-none-any.whl" \
+  "devkit-core @ $base/devkit_core-<version>-py3-none-any.whl" \
   "devkit-advisory @ $base/devkit_advisory-<version>-py3-none-any.whl"
 # or, with dense and hybrid search (numpy, tokenizers and the 15 MB embedding model):
 uv add --dev "devkit-agt[search] @ $base/devkit_agt-<version>-py3-none-any.whl" \
   "devkit-dist[search] @ $base/devkit_dist-<version>-py3-none-any.whl" \
+  "devkit-core @ $base/devkit_core-<version>-py3-none-any.whl" \
   "devkit-advisory @ $base/devkit_advisory-<version>-py3-none-any.whl" \
   "devkit-embed @ $base/devkit_embed-0.1.0-py3-none-any.whl"
 
@@ -88,12 +91,12 @@ uv run devkit list
 uv run devkit rules check
 ```
 
-`devkit-agt` requires `devkit-dist` and `devkit-advisory` of the same version, and no index serves them, so
-all three wheels are named. A repository that only deploys agent assets installs `devkit-dist` (with
-`devkit-advisory`) alone: it gets sync, context loading, playbooks and native hooks, the `devkit` and `advisory`
+`devkit-agt` requires `devkit-dist`, `devkit-core` and `devkit-advisory` of the same version, and no index serves them, so
+all four wheels are named. A repository that only deploys agent assets installs `devkit-dist` (with
+`devkit-core` and `devkit-advisory`) alone: it gets sync, context loading, playbooks and native hooks, the `devkit` and `advisory`
 bundles, and no harness command or guidance (`devkit rules` and the other harness commands answer with
 `HARNESS_COMMAND_UNAVAILABLE`). A Git installation declares exactly one of the two, never both (`devkit-agt` brings
-`devkit-dist` from the same commit); a release-wheel installation of `devkit-agt` names the `devkit-dist` and
+`devkit-dist` from the same commit); a release-wheel installation of `devkit-agt` names the `devkit-dist`, `devkit-core` and
 `devkit-advisory` wheels next to it only because no index serves them. A library or service that only raises
 and renders advisories at runtime depends on `devkit-advisory` alone (standard library only, no CLI, no bundles);
 its development tooling adds `devkit-dist` or `devkit-agt`. The import is `devkit.advisory` either way: `devkit` is

@@ -12,8 +12,8 @@ import os
 import subprocess
 from pathlib import Path
 
-from devkit.core.deadline import Deadline
-from devkit.core.errors import GitError
+from devkit_core.base.errors import GitError
+from devkit_core.core.deadline import Deadline
 
 DEFAULT_TIMEOUT = 60.0  # seconds; the one Git timeout every devkit area uses
 # The index of the commit being made, which the ``verify-commands`` gate passes to the commands it runs, and the

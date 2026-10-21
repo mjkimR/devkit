@@ -3,8 +3,8 @@ from __future__ import annotations
 import datetime
 
 import pytest
-from devkit.core import FrontmatterError
-from devkit.core.frontmatter import locate, parse
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import locate, parse
 
 
 def test_no_frontmatter_returns_whole_text() -> None:

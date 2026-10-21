@@ -23,10 +23,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from devkit.core import FrontmatterError
-from devkit.core.frontmatter import locate
 from devkit.rules import Phase, RuleContext, Severity, Violation, count_tasks
 from devkit.rules.rules import BaseRule
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import locate
 
 from devkit_spec.rules import FIX_COMMAND, explicitly_targeted
 

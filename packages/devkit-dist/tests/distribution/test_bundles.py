@@ -8,13 +8,13 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.core.errors import ArgumentError
 from devkit.distribution.bundles import build_bundle, load_bundle
 from devkit.distribution.errors import BundleError, SelectionError
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.plan import plan_bundle
 from devkit.distribution.installation.sync import sync_project
+from devkit_core.base.errors import ArgumentError
 from distsupport.distribution import cli
 
 

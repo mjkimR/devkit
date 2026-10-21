@@ -10,8 +10,9 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from devkit_core.base.errors import UnsafePathError
+
 from devkit.advisory import AdvisoryError, as_advisory_error
-from devkit.core.errors import UnsafePathError
 from devkit.workflow.definition.checks import (
     GATE_PREFIX,
     Check,

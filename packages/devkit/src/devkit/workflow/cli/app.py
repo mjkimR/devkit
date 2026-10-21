@@ -11,9 +11,9 @@ from __future__ import annotations
 from datetime import date
 
 import click
+from devkit_core.base.errors import ArgumentError
 
 from devkit.core.cli import resolve_root, workspace_option
-from devkit.core.errors import ArgumentError
 from devkit.workflow.workspace import Workspace
 
 WORKSPACE = workspace_option()

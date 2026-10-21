@@ -114,7 +114,7 @@ up what it keeps per task there (`devkit spec` prunes the handed-off proposal's 
 record). An extension returns `None` or a list: a string becomes a `POST_FINISH_NOTICE` notice, an advisory keeps its code
 (an `ERROR` lowered to `WARNING`). It cannot fail the finish: an advisory it raises keeps its code the same way, with an
 `extension: <name>` detail; any other exception or a malformed return value is a `POST_FINISH_EXTENSION_FAILED` warning. The extensions run in the CLI; the library's `finish` runs none (`before_remove` is
-its callback). The rules are those of the `devkit.post_sync` extensions (`devkit.core.extensions`).
+its callback). The rules are those of the `devkit.post_sync` extensions (`devkit_core.core.extensions`).
 
 Rerunning the same command resumes once the cause is resolved:
 
@@ -156,9 +156,9 @@ An activity branch nobody moves stays in progress: nothing expires it. `devkit w
 
 ## 7. Module Layout
 
-`devkit.worktree` imports only `devkit.core` and `devkit.advisory`; Git runs through `devkit.core.git.run_git`.
+`devkit.worktree` imports only `devkit.core` and `devkit.advisory`; Git runs through `devkit_core.core.git.run_git`.
 
-- `extensions.py`: the `devkit.post_finish` extension point (`run_post_finish`), on `devkit.core.extensions`, and the fail-closed check groups `devkit.finish_guard` (`run_finish_guards`) and `devkit.attach_check` (`run_attach_checks`).
+- `extensions.py`: the `devkit.post_finish` extension point (`run_post_finish`), on `devkit_core.core.extensions`, and the fail-closed check groups `devkit.finish_guard` (`run_finish_guards`) and `devkit.attach_check` (`run_attach_checks`).
 - `lifecycle.py`: `locate`, `check_branch`, `path_for`, `start`, `start_branch`, `attach`, `find`, `finish`, `status` and their results.
 - `stale.py`: `stale_branches` and the `devkit.hygiene` extension `hygiene`; `gh` runs through `run_gh`, which callers and tests can replace. `start` runs `devkit sync --locked` as a subprocess (`python -m devkit sync --locked`), so the module still imports no other area.
 - `merging.py`: the result commit (`build_result`, `merge_message`, `merge_method`, `check_identity`), `fast_forward` and the integration lock (`integration_lock`); with `advance=True` (the integration service only) it merges an advanced target with `git merge-tree --write-tree` (Git 2.38 or later, `WORKTREE_GIT_UNSUPPORTED`; a conflict is `WORKTREE_MERGE_CONFLICT`).

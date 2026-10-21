@@ -10,7 +10,6 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from devkit.cli import cli
-from devkit.core import ArgumentError
 from devkit.generated import (
     CommandFailedError,
     InputsConflictedError,
@@ -21,6 +20,7 @@ from devkit.generated import (
     resolve,
     unmerged,
 )
+from devkit_core.core import ArgumentError
 from testsupport.rules import git, init_repo, write
 
 # out.txt concatenates the sources; count.txt, regenerated after it, counts its lines.

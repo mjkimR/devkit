@@ -15,10 +15,11 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
+from devkit_core.core.logs import get_logger
+
 from devkit.advisory import AdvisoryError, ExitCode, Level, as_advisory_error
 from devkit.compact import CommandInterrupted
 from devkit.core import ConfigError, require_git_toplevel
-from devkit.core.logs import get_logger
 from devkit.gate.engine.config import GatesConfig, load_gates_config, resolve_settings
 from devkit.gate.engine.models import Gate, GateContext, GateResult, Outcome, Stage, checked_notices
 from devkit.gate.engine.registry import GateRegistry, project_registry

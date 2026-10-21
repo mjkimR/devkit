@@ -39,8 +39,10 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import IO
 
-from devkit.core import GitError, is_safe_relpath, require_git_toplevel, run_git
-from devkit.core.git import DEFAULT_TIMEOUT, commit_index
+from devkit_core.core import GitError, is_safe_relpath, run_git
+from devkit_core.core.git import DEFAULT_TIMEOUT, commit_index
+
+from devkit.core import require_git_toplevel
 from devkit.rules.engine.errors import SnapshotError
 
 REGULAR_MODES = {"100644", "100755"}

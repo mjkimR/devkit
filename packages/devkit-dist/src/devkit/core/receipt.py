@@ -24,7 +24,7 @@ Schema (``schema = 1``)::
     }
 
 Unknown or missing keys, wrong types, duplicate JSON keys and unsafe paths
-(see ``devkit.core.paths``; receipt paths must also be canonical) are errors.
+(see ``devkit_core.core.paths``; receipt paths must also be canonical) are errors.
 Policy that belongs to the writer (which destinations the receipt may own,
 which agents exist) is validated by ``devkit``.
 """
@@ -40,10 +40,12 @@ from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 from typing import Any
 
+from devkit_core.base.errors import UnsafePathError
+from devkit_core.core.paths import normalize_relpath, resolve_within
+from devkit_core.core.plugins import PluginPackage, plugin_module_name, plugin_modules
+
 from devkit.advisory import Actor
-from devkit.core.errors import AssetFileError, ReceiptError, UnsafePathError
-from devkit.core.paths import normalize_relpath, resolve_within
-from devkit.core.plugins import PluginPackage, plugin_module_name, plugin_modules
+from devkit.core.errors import AssetFileError, ReceiptError
 
 RECEIPT_PATH = ".devkit/installation.json"
 SYNC_COMMAND = "devkit sync"  # restores missing managed copies (the fix of a missing asset file)
@@ -535,7 +537,7 @@ def verified_asset_packages(
     ``AssetRecord.files``) are taken relative to the asset's source directory:
     the ``.devkit/managed/<bundle>/`` or ``.devkit/overrides/<bundle>/`` prefix
     is removed, then the directory common to all of the asset's paths. Every
-    file that is a module there (``devkit.core.plugins.plugin_module_name``:
+    file that is a module there (``devkit_core.core.plugins.plugin_module_name``:
     not a test file) goes through ``verified_asset_file``, so one package may
     mix project overrides, managed copies and, in a Git snapshot, working-tree
     copies; none is skipped for its name (a ``_helpers.py`` is a module like

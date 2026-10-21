@@ -33,15 +33,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from devkit_core.core import PluginPackage
+
 from devkit.advisory import Actor
-from devkit.core import (
-    RECEIPT_PATH,
-    AssetFileError,
-    PluginPackage,
-    ReceiptError,
-    load_receipt,
-    verified_asset_packages,
-)
+from devkit.core import RECEIPT_PATH, AssetFileError, ReceiptError, load_receipt, verified_asset_packages
 from devkit.rules.engine.errors import SYNC_FIX, RuleLoadError
 
 RULE_KIND = "rule"

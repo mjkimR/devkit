@@ -24,7 +24,7 @@ src/devkit/workflow/
 ├── unit/
 │   ├── units.py         # create_unit, list_units
 │   ├── binding.py       # workflow / workflow_history in the anchor file
-│   ├── frontmatter.py   # anchor frontmatter on devkit.core.frontmatter; in-place key updates
+│   ├── frontmatter.py   # anchor frontmatter on devkit_core.core.frontmatter; in-place key updates
 │   ├── decisions.py     # decisions/NN-<request>.yaml records, scoped to a workflow segment
 │   ├── records.py       # record files: directory lock, unique sequences, whole, never replaced; temporary names
 │   └── envelope/        # model.py (envelopes/<kind>-NN.yaml, review state, hold, write_envelope), authoring.py (compose_envelope)

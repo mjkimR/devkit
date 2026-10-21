@@ -10,8 +10,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from devkit.core import frontmatter as core_frontmatter
-from devkit.core.errors import FrontmatterError
+from devkit_core.base.errors import FrontmatterError
+from devkit_core.core import frontmatter as core_frontmatter
+
 from devkit.workflow.definition.checks import DECLARABLE, Check, CheckClass
 from devkit.workflow.definition.ids import IDENT_HINT, is_ident
 from devkit.workflow.errors import DefinitionError, LayoutError

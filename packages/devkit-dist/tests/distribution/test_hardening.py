@@ -10,7 +10,6 @@ from types import SimpleNamespace
 import pytest
 from click.testing import CliRunner
 from devkit.advisory import ActionMode, AdvisoryError, ExitCode, Level
-from devkit.core import extensions as core_extensions
 from devkit.core.errors import ConfigError, ReceiptError
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH, ToolRecord
 from devkit.distribution.bundles import load_bundle
@@ -24,6 +23,7 @@ from devkit.distribution.installation.override_commands import create_override
 from devkit.distribution.installation.status import get_project_listing, get_project_status
 from devkit.distribution.installation.sync import sync_project, tool_identity
 from devkit.distribution.installation.workspace import AGENTS_FILE, JOURNAL
+from devkit_core.core import extensions as core_extensions
 from distsupport.distribution import cli
 
 

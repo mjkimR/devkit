@@ -21,10 +21,10 @@ from __future__ import annotations
 from typing import Any
 
 import yaml
-from devkit.core import FrontmatterError
-from devkit.core.frontmatter import locate
 from devkit.rules import Phase, RuleContext, Severity, Violation, match_path
 from devkit.rules.rules import BaseRule
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import locate
 
 from devkit_spec.documents import Document, DocumentIndex, Kind
 from devkit_spec.entrypoints import entrypoint_bearing, exists, normalize

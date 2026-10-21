@@ -1,7 +1,7 @@
 """The consumer workspace as devkit sees it: well-known paths, file snapshots and path safety.
 
 Every workspace-relative path devkit reads or writes goes through
-``checked_path`` (canonical relative POSIX via ``devkit.core.paths``, no
+``checked_path`` (canonical relative POSIX via ``devkit_core.core.paths``, no
 backslash, no symlinked component, a regular file if it exists).
 ``project_path`` adds the paths a transaction may never write;
 ``owned_path`` narrows that to what the receipt's ``files`` map may own.
@@ -13,8 +13,9 @@ import os
 import stat
 from pathlib import Path
 
-from devkit.core.errors import UnsafePathError
-from devkit.core.paths import normalize_relpath
+from devkit_core.base.errors import UnsafePathError
+from devkit_core.core.paths import normalize_relpath
+
 from devkit.core.receipt import AGENTS_FILE, CONFIG_PATH, MANAGED_PATH, OVERRIDES_PATH, RECEIPT_PATH
 from devkit.distribution.content import Content
 from devkit.distribution.errors import UnsafeWorkspaceError

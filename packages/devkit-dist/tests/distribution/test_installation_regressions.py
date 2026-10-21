@@ -11,7 +11,6 @@ from types import SimpleNamespace
 import pytest
 from click.testing import CliRunner
 from devkit.advisory import ExitCode, Level
-from devkit.core import extensions as core_extensions
 from devkit.core.receipt import CONFIG_PATH, OVERRIDES_PATH, RECEIPT_PATH, ToolRecord
 from devkit.distribution.errors import (
     BundleConflictError,
@@ -37,6 +36,7 @@ from devkit.distribution.installation.status import get_project_listing, get_pro
 from devkit.distribution.installation.sync import sync_project
 from devkit.distribution.installation.transaction import project_lock
 from devkit.distribution.installation.workspace import AGENTS_FILE, DEPLOYED
+from devkit_core.core import extensions as core_extensions
 from distsupport.distribution import cli, instruction, reload, write_bundle
 
 MANIFEST = """schema = 1

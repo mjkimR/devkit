@@ -9,7 +9,7 @@ import pytest
 from click.testing import CliRunner, Result
 from devkit.advisory import ActionMode, ExitCode
 from devkit.core.errors import ConfigError as CoreConfigError
-from devkit.core.errors import GitError, ReceiptError
+from devkit.core.errors import ReceiptError
 from devkit.workflow import (
     CheckError,
     DecisionRecordError,
@@ -29,6 +29,7 @@ from devkit.workflow import (
     write_envelope,
 )
 from devkit.workflow.cli import cli
+from devkit_core.base.errors import GitError
 from testsupport.workflow import WORKFLOW, write_config
 
 UNIT = ".devkit/transient/work/login"

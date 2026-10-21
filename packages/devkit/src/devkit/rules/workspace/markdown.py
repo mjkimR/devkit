@@ -12,7 +12,7 @@ Two scanners live here so every reader agrees on them:
   task completion and a workflow check that gates on it must agree on what a
   task is.
 
-Lines end with ``\\n`` only, as in ``devkit.core.frontmatter``; a ``\\r``
+Lines end with ``\\n`` only, as in ``devkit_core.core.frontmatter``; a ``\\r``
 before it stays part of the line.
 """
 
@@ -23,8 +23,8 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from urllib.parse import unquote
 
-from devkit.core import FrontmatterError
-from devkit.core.frontmatter import locate
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import locate
 
 _CHECKLIST_ITEM = re.compile(r"^[ \t]*[-*+][ \t]+\[([ xX])\][ \t]+")
 
@@ -92,7 +92,7 @@ def count_tasks(text: str) -> tuple[int, int]:
 
     Counts ``- [ ]``, ``- [x]`` and ``- [X]`` items (also with ``*`` and ``+``
     markers, any indentation, and at least one space or tab after the box)
-    outside the leading YAML frontmatter (``devkit.core.frontmatter`` grammar)
+    outside the leading YAML frontmatter (``devkit_core.core.frontmatter`` grammar)
     and outside fenced code blocks. A frontmatter block that is never closed
     leaves no body, so such a text has no tasks.
     """

@@ -14,8 +14,9 @@ from collections.abc import Iterable, Iterator
 from contextlib import ExitStack, contextmanager
 from pathlib import Path
 
-from devkit.core import LockHeldError as CoreLockHeldError
-from devkit.core import UnsafePathError, atomic_write_bytes, file_lock
+from devkit_core.core import LockHeldError as CoreLockHeldError
+from devkit_core.core import UnsafePathError, atomic_write_bytes, file_lock
+
 from devkit.core.mcp_context import guard_execution
 from devkit.distribution.content import Content, json_content
 from devkit.distribution.errors import LockHeldError, PendingTransactionError, RecoveryError, UnsafeWorkspaceError

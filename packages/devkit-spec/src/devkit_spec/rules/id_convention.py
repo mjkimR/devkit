@@ -41,10 +41,10 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from devkit.core import FrontmatterError
-from devkit.core.frontmatter import FrontmatterBlock, locate
 from devkit.rules import Phase, RuleContext, Severity, Violation
 from devkit.rules.rules import BaseRule
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import FrontmatterBlock, locate
 
 from devkit_spec.config import Namespace
 from devkit_spec.documents import DocumentIndex, Kind, VisibleLine, in_feedback, visible_lines

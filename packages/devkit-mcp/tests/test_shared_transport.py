@@ -3,9 +3,9 @@
 import asyncio
 
 import pytest
-from devkit.core.git import run_git
 from devkit.core.mcp_context import ExecutionBinding
 from devkit.shared.mcp import tools
+from devkit_core.core.git import run_git
 from devkit_mcp.server import build_server
 from mcp import types
 

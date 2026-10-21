@@ -1,12 +1,12 @@
-"""Git queries the workflow engine needs, built on ``devkit.core.git.run_git``."""
+"""Git queries the workflow engine needs, built on ``devkit_core.core.git.run_git``."""
 
 from __future__ import annotations
 
 import re
 from pathlib import Path
 
-from devkit.core.errors import GitError
-from devkit.core.git import run_git
+from devkit_core.base.errors import GitError
+from devkit_core.core.git import run_git
 
 __all__ = ["REVISION", "is_ancestor", "is_revision"]
 

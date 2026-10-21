@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 from devkit.advisory import ActionMode, AdvisoryError, Retry
-from devkit.core import Deadline, DeadlineExceededError, GitError, run_git
+from devkit_core.core import Deadline, DeadlineExceededError, GitError, run_git
 
 
 class _CallerTimeout(AdvisoryError):

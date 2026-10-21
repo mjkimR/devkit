@@ -10,8 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from devkit.core.errors import GitError
-from devkit.core.git import run_git
+from devkit_core.base.errors import GitError
+from devkit_core.core.git import run_git
 
 from devkit_viewer.errors import git_failed, path_invalid, path_not_found, ref_unknown
 

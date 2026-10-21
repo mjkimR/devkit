@@ -21,7 +21,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from devkit.core.errors import ArgumentError
+from devkit_core.base.errors import ArgumentError
 
 from devkit_spec.config import GLOBAL, PACKAGES_DIR, Namespace
 from devkit_spec.documents import Document, DocumentIndex

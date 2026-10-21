@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from devkit.core import FrontmatterError
+from devkit_core.core import FrontmatterError
 
 if TYPE_CHECKING:
     from devkit.rules.workspace.cache import WorkspaceCache

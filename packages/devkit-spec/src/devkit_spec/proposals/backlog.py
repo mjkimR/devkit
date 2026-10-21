@@ -10,8 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from devkit.core import FrontmatterError
-from devkit.core.frontmatter import parse
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import parse
 
 from devkit_spec.branches import planning_branches
 from devkit_spec.errors import ProposalInPlanningError, ProposalNotFoundError

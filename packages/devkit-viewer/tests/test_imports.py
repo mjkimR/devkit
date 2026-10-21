@@ -1,4 +1,4 @@
-"""``devkit_viewer`` builds on devkit's shared core only: ``devkit.core``, ``devkit.advisory``, ``click`` and the
+"""``devkit_viewer`` builds on devkit's shared foundation only: ``devkit_core.base``, ``devkit_core.core``, ``devkit.core``, ``devkit.advisory``, ``click`` and the
 standard library. The exact immutable report reader additionally uses shared.api/errors/local.
 It never imports devkit-spec, so it stays independent of SDD models."""
 
@@ -10,6 +10,8 @@ from pathlib import Path
 
 SRC = Path(__file__).parents[1] / "src/devkit_viewer"
 ALLOWED = (
+    "devkit_core.base",
+    "devkit_core.core",
     "devkit.core",
     "devkit.advisory",
     "devkit_viewer",

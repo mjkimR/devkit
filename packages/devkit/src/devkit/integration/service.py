@@ -20,13 +20,14 @@ from pathlib import Path
 from typing import Any, Protocol
 from uuid import uuid4
 
+from devkit_core.base.errors import GitError
+from devkit_core.base.mcp import Confirmation
+from devkit_core.core import LockHeldError
+from devkit_core.core.git import run_git
+from devkit_core.core.paths import normalize_relpath
+
 from devkit.advisory import AdvisoryError, Level
-from devkit.core import LockHeldError
-from devkit.core.errors import GitError
-from devkit.core.git import run_git
-from devkit.core.mcp import Confirmation
 from devkit.core.mcp_context import capture_terminal_removal, guard_execution
-from devkit.core.paths import normalize_relpath
 from devkit.core.presentation import approval_language
 from devkit.core.project import read_project_config
 from devkit.integration import providers, receipts

@@ -21,10 +21,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit.core import FrontmatterError, GitError, is_safe_relpath, normalize_relpath, run_git
-from devkit.core.frontmatter import parse
 from devkit.rules import Phase, RuleContext, Severity, Violation
 from devkit.rules.rules import BaseRule
+from devkit_core.core import FrontmatterError, GitError, is_safe_relpath, normalize_relpath, run_git
+from devkit_core.core.frontmatter import parse
 
 from devkit_spec.rules import explicitly_targeted
 

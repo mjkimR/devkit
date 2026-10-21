@@ -24,9 +24,11 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from devkit_core.core import ArgumentError, GitError, run_git
+
 from devkit.advisory import AdvisoryError, Level
 from devkit.compact import CommandRun, run_command
-from devkit.core import ArgumentError, ConfigError, GitError, require_git_toplevel, run_git
+from devkit.core import ConfigError, require_git_toplevel
 from devkit.generated.errors import (
     CommandFailedError,
     ConflictsRemainWarning,

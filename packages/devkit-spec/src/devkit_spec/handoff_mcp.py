@@ -8,14 +8,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
-from devkit.core import run_git
-from devkit.core.frontmatter import parse
-from devkit.core.mcp import Confirmation, McpTool
 from devkit.core.mcp_context import guard_execution
 from devkit.core.presentation import approval_language
 from devkit.workflow import Workspace
 from devkit.worktree import StartResult, locate, path_for, read_worktree_config, start
 from devkit.worktree.lifecycle import _prepare
+from devkit_core.base.mcp import Confirmation, McpTool
+from devkit_core.core import run_git
+from devkit_core.core.frontmatter import parse
 
 from devkit_spec.errors import HandoffNotReadyError, HandoffReplyError, HandoffStaleError
 from devkit_spec.handoff_language import schema as approval_schema

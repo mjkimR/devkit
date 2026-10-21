@@ -23,11 +23,12 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
-from devkit.core import FrontmatterError, is_safe_relpath, load_receipt, run_git
-from devkit.core.frontmatter import parse
+from devkit.core import load_receipt
 from devkit.integration import Evidence, IntegrationContext, Readiness
 from devkit.rules import Phase, Snapshot, materialize_snapshot, run_project_rules
 from devkit.workflow import Workspace, is_ancestor, load_decisions, load_envelopes, load_workflow_config
+from devkit_core.core import FrontmatterError, is_safe_relpath, run_git
+from devkit_core.core.frontmatter import parse
 
 from devkit_spec.attach import (
     PROPOSAL_UNIT,

@@ -49,11 +49,12 @@ from pathlib import Path
 from typing import Any
 
 import tomlkit
+from devkit_core.base.errors import GitError
+from devkit_core.core import UnsafePathError, atomic_write_text
+from devkit_core.core.logs import get_logger
 
 from devkit.advisory import AdvisoryError, as_advisory_error
-from devkit.core import CONFIG_PATH, ConfigError, UnsafePathError, atomic_write_text, require_git_toplevel
-from devkit.core.errors import GitError
-from devkit.core.logs import get_logger
+from devkit.core import CONFIG_PATH, ConfigError, require_git_toplevel
 from devkit.gate.engine.config import ENABLED_KEY, LOCAL_CONFIG, GateEntry, GatesConfig, load_project_gates_config
 from devkit.gate.engine.models import Gate
 from devkit.gate.engine.registry import project_registry

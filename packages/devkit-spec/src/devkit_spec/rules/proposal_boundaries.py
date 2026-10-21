@@ -21,10 +21,10 @@ import re
 from typing import Any
 
 import yaml
-from devkit.core import FrontmatterError
-from devkit.core.frontmatter import locate
 from devkit.rules import Phase, RuleContext, Severity, Violation
 from devkit.rules.rules import BaseRule
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import locate
 
 from devkit_spec.documents import Document
 from devkit_spec.entrypoints import exists, normalize

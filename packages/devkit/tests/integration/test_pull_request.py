@@ -5,9 +5,9 @@ from dataclasses import replace
 
 import pytest
 from devkit.advisory import AdvisoryError
-from devkit.core.mcp import ConfirmationReply
 from devkit.integration import IntegrationService, Task
 from devkit.worktree.pull_request import CommandResult, GitHub, Repository
+from devkit_core.base.mcp import ConfirmationReply
 from testsupport.rules import git, write
 
 TASK = Task("session", "fixture-task")
@@ -359,8 +359,8 @@ def test_failed_build_then_manual_merge_remains_unchecked(remote_service, ready_
 
 @pytest.mark.parametrize("deletion", [False, True])
 def test_git_mutation_timeout_preserves_unknown_recovery(remote_service, monkeypatch, deletion):
-    from devkit.core.errors import GitError
     from devkit.worktree import pull_request as adapter
+    from devkit_core.base.errors import GitError
 
     service, _fake, _base, worktree = remote_service
     original = adapter.run_git

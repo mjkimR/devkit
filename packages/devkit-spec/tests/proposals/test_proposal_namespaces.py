@@ -7,8 +7,8 @@ import pytest
 from click.testing import CliRunner
 from conftest import Write
 from devkit.cli import cli as devkit_cli
-from devkit.core.errors import ArgumentError
-from devkit.core.frontmatter import parse
+from devkit_core.base.errors import ArgumentError
+from devkit_core.core.frontmatter import parse
 from proposals.support import TODAY, accept, spec_dir
 
 from devkit_spec.errors import ProposalInvalidError, SpecConfigError

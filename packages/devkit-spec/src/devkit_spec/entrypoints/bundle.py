@@ -19,8 +19,8 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from devkit.core import FrontmatterError
-from devkit.core.frontmatter import parse
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import parse
 
 from devkit_spec.errors import EntrypointsInputInvalidError, EntrypointsInputMissingError
 

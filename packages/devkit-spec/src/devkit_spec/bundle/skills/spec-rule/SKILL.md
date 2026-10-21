@@ -65,7 +65,7 @@ Commit the rule source with the updated `.devkit/installation.json`: the commit 
 
 - **Do NOT edit deployed copies** under `.devkit/managed/` or `.devkit/overrides/`; fixers cannot write there either (`RULES_PINNED_WRITE_REFUSED`).
 - **Do NOT read or write the disk directly** in `check` or `fix`; bypassing `ctx.cache` breaks the snapshot gates and the recheck.
-- **Do NOT introduce heavy dependencies**: prefer the standard library and devkit's helpers (`devkit.core.frontmatter`, `devkit.rules.extract_links`, `devkit.rules.count_tasks`). A rule file imports only what the project's environment provides.
+- **Do NOT introduce heavy dependencies**: prefer the standard library and devkit's helpers (`devkit_core.core.frontmatter`, `devkit.rules.extract_links`, `devkit.rules.count_tasks`). A rule file imports only what the project's environment provides.
 - **Do NOT persist state files** (debt ledgers, caches); recompute diagnostics deterministically on every run.
 - **Do NOT use non-deterministic heuristics, network access or LLM calls** inside rules: evaluation must be deterministic, offline and fast.
 - **Do NOT print**: a rule returns violations and raises nothing for findings; output belongs to `devkit rules`.

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from devkit.core import FrontmatterError
+from devkit_core.core import FrontmatterError
 
 from devkit_spec.documents import Kind, is_id, kind_of, parse_document
 

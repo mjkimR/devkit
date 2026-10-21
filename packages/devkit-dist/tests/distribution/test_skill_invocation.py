@@ -6,13 +6,13 @@ from pathlib import Path
 
 import pytest
 import yaml
-from devkit.core.frontmatter import parse
 from devkit.core.receipt import OVERRIDES_PATH
 from devkit.distribution.bundles import load_bundle
 from devkit.distribution.errors import BundleError
 from devkit.distribution.installation.config import update_config
 from devkit.distribution.installation.discovery import InstalledBundle
 from devkit.distribution.installation.sync import sync_project
+from devkit_core.core.frontmatter import parse
 
 HEADER = 'schema = 1\nname = "team"\nversion = "0.1.0"\n'
 SKILL = "---\nname: release\ndescription: Cut a release.\n---\nSteps.\n"

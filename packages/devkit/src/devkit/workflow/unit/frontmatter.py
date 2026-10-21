@@ -1,4 +1,4 @@
-"""Anchor and document frontmatter on top of ``devkit.core.frontmatter``.
+"""Anchor and document frontmatter on top of ``devkit_core.core.frontmatter``.
 
 Reading uses the shared grammar. ``update`` rewrites top-level keys in place
 and keeps every other character of the document, including comments, key order
@@ -13,9 +13,8 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
-from devkit.core import frontmatter as core
-from devkit.core.errors import FrontmatterError
+from devkit_core.base.errors import FrontmatterError
+from devkit_core.core import frontmatter as core
 
 __all__ = ["FrontmatterError", "field", "parse", "read", "render", "update"]
 

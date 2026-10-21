@@ -6,13 +6,13 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from devkit.core.errors import GitError
 from devkit.workflow import (
     Options,
     evaluate_definition,
     is_ancestor,
     parse_definition,
 )
+from devkit_core.base.errors import GitError
 from testsupport.workflow import write_unit
 
 

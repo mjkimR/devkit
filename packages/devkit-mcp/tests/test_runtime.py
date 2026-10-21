@@ -7,7 +7,6 @@ import subprocess
 from types import SimpleNamespace
 
 import pytest
-from devkit.core.mcp import McpTool
 from devkit.core.mcp_context import (
     ExecutionBinding,
     McpInteractiveError,
@@ -16,6 +15,7 @@ from devkit.core.mcp_context import (
     guard_execution,
     invocation,
 )
+from devkit_core.base.mcp import McpTool
 from devkit_mcp import configuration, services
 from mcp import types
 

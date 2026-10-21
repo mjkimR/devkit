@@ -18,8 +18,8 @@ from devkit.core.cli import (
     resolve_root,
     workspace_option,
 )
-from devkit.core.errors import ArgumentError
 from devkit.search import SearchMode
+from devkit_core.base.errors import ArgumentError
 
 from devkit_spec.cli.documents import ALL_NAMESPACES, NAMESPACE, NamespaceScope
 from devkit_spec.cli.output import fields_line, sentinel

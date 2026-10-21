@@ -3,7 +3,8 @@ from __future__ import annotations
 from collections.abc import Iterable
 from pathlib import Path
 
-from devkit.core import PluginFailure, PluginPackage, iter_plugin_packages, load_subclasses
+from devkit_core.core import PluginFailure, PluginPackage, iter_plugin_packages, load_subclasses
+
 from devkit.rules.engine.errors import RuleLoadError, RuleProblem
 from devkit.rules.engine.models import Rule
 from devkit.rules.rules import (
@@ -43,7 +44,7 @@ class RuleRegistry:
         Each immediate subdirectory not starting with ``_`` or ``.`` is one
         package; a ``.py`` file directly in ``rules_dir`` is a ``RuleLoadError``
         telling to move it into a package directory
-        (``devkit.core.plugins.iter_plugin_packages``).
+        (``devkit_core.core.plugins.iter_plugin_packages``).
         """
         packages, failures = iter_plugin_packages(rules_dir)
         self._record(failures)
@@ -52,7 +53,7 @@ class RuleRegistry:
     def discover_from_packages(self, packages: Iterable[PluginPackage]) -> list[Rule]:
         """Load the ``BaseRule`` subclasses defined in each plugin package, in order.
 
-        Loading is atomic per package (``devkit.core.plugins``): a package
+        Loading is atomic per package (``devkit_core.core.plugins``): a package
         that fails to import or whose classes cannot be instantiated
         contributes no rule, and the failure is recorded in ``errors`` as a
         ``RuleLoadError`` (``RULES_LOAD_FAILED``) naming the package.

@@ -4,21 +4,18 @@ from pathlib import Path
 
 import pytest
 from devkit.advisory import ActionMode, AdvisoryError, ExitCode
-from devkit.core import (
+from devkit.core import ConfigError, ReceiptError, parse_receipt, read_project_config
+from devkit_core.core import (
     ArgumentError,
-    ConfigError,
     DeadlineExceededError,
     DevkitCoreError,
     FrontmatterError,
     GitError,
     LockHeldError,
     LockUnsupportedError,
-    ReceiptError,
     UnsafePathError,
     frontmatter,
     normalize_relpath,
-    parse_receipt,
-    read_project_config,
     run_git,
 )
 
@@ -71,3 +68,14 @@ def test_git_error_forwards_advisory_fields() -> None:
         128,
         ("git",),
     )
+
+
+def test_distribution_facade_exports_existing_contracts_from_their_owners() -> None:
+    from devkit import core
+    from devkit_core import core as foundation
+
+    assert all(hasattr(core, name) for name in core.__all__)
+    assert core.Deadline is foundation.Deadline
+    assert core.GitError is foundation.GitError
+    assert core.run_git is foundation.run_git
+    assert core.ReceiptError.__module__ == "devkit.core.errors"

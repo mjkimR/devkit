@@ -1,6 +1,6 @@
 """Read one document: its identity from the frontmatter, its references from the frontmatter and the prose.
 
-The frontmatter follows devkit's grammar (``devkit.core.frontmatter``): a
+The frontmatter follows devkit's grammar (``devkit_core.core.frontmatter``): a
 malformed block raises ``FrontmatterError``. A document is indexed only when
 its ``id`` (or, for a reconcile file, ``reconcile_id``) is a well-formed ID;
 ``id``, ``reconcile_id`` and ``status`` must be strings. Body references are
@@ -14,8 +14,8 @@ import re
 from typing import Any
 
 import yaml
-from devkit.core import FrontmatterError
-from devkit.core.frontmatter import load_header, locate
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import load_header, locate
 
 from devkit_spec.documents.ids import ID_SOURCE, Kind, kind_of
 from devkit_spec.documents.markdown import visible_lines

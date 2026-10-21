@@ -7,7 +7,7 @@ import pytest
 from click.testing import CliRunner, Result
 from conftest import Write
 from devkit.cli import cli as devkit_cli
-from devkit.core.errors import ArgumentError
+from devkit_core.base.errors import ArgumentError
 
 from devkit_spec.config import Namespace, read_spec_config
 from devkit_spec.documents import DocumentIndex

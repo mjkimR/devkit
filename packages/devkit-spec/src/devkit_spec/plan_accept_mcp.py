@@ -9,16 +9,16 @@ import re
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
-from devkit.core import GitError, run_git
-from devkit.core.frontmatter import parse
 from devkit.core.local_config import read_effective_config, resolve_execution_environment
-from devkit.core.mcp import Confirmation, McpTool
 from devkit.core.mcp_context import guard_execution
 from devkit.core.presentation import approval_language
 from devkit.integration.models import Evidence, IntegrationContext, IntegrationRequest, Readiness, Task
 from devkit.integration.service import IntegrationService
 from devkit.workflow import Workspace
 from devkit.worktree import locate, path_for, read_worktree_config
+from devkit_core.base.mcp import Confirmation, McpTool
+from devkit_core.core import GitError, run_git
+from devkit_core.core.frontmatter import parse
 
 from devkit_spec.errors import SpecError
 from devkit_spec.proposals import accept_proposal

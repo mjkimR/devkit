@@ -21,8 +21,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
-from devkit.core import Deadline, LockHeldError, LockUnsupportedError
-from devkit.core.errors import UnsafePathError
+from devkit_core.base.errors import UnsafePathError
+from devkit_core.core import Deadline, LockHeldError, LockUnsupportedError
 
 # ``.<name>.<12 hex digits>.tmp``: a file being written (or left by an interrupted write) next to ``<name>``.
 TEMPORARY = re.compile(r"\..+\.[0-9a-f]{12}\.tmp")

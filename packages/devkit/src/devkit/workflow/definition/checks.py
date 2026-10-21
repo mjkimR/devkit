@@ -6,7 +6,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
-from devkit.core.paths import is_safe_relpath
+from devkit_core.core.paths import is_safe_relpath
+
 from devkit.workflow.errors import CheckError
 
 __all__ = [

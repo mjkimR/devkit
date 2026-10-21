@@ -24,9 +24,9 @@ from pathlib import Path
 from typing import Any
 
 from devkit.advisory import AdvisoryError
-from devkit.core import remove_empty_tree
-from devkit.core.frontmatter import locate
 from devkit.workflow import Binding, write_binding
+from devkit_core.core import remove_empty_tree
+from devkit_core.core.frontmatter import locate
 
 from devkit_spec.branches import require_development_branch
 from devkit_spec.documents import DocumentIndex

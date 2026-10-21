@@ -10,12 +10,12 @@ from pathlib import Path
 
 import yaml
 from devkit.advisory import AdvisoryError
-from devkit.core import run_git
-from devkit.core.frontmatter import parse
 from devkit.core.presentation import approval_language
 from devkit.shared import Artifact, PutRequest, adapter
 from devkit.shared.api import MAX_BYTES, SHA, SLUG
 from devkit.worktree import locate
+from devkit_core.core import run_git
+from devkit_core.core.frontmatter import parse
 
 from devkit_spec.errors import SpecError
 

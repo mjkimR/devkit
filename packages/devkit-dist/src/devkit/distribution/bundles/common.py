@@ -5,9 +5,10 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from devkit.core import frontmatter
-from devkit.core.errors import FrontmatterError
-from devkit.core.frontmatter import FrontmatterBlock
+from devkit_core.base.errors import FrontmatterError
+from devkit_core.core import frontmatter
+from devkit_core.core.frontmatter import FrontmatterBlock
+
 from devkit.distribution.errors import BundleError
 
 SLUG = re.compile(r"[a-z][a-z0-9-]*\Z")

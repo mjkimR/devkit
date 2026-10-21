@@ -19,7 +19,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit.core.errors import FrontmatterError
+from devkit_core.base.errors import FrontmatterError
+
 from devkit.core.receipt import MANAGED_PATH, OVERRIDES_PATH, AssetRecord, Receipt, load_receipt
 from devkit.workflow.definition.ids import is_ident
 from devkit.workflow.unit import frontmatter

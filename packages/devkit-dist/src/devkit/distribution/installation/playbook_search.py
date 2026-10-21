@@ -12,7 +12,9 @@ import json
 import math
 from pathlib import Path
 
-from devkit.core.errors import ArgumentError, ReceiptError
+from devkit_core.base.errors import ArgumentError
+
+from devkit.core.errors import ReceiptError
 from devkit.core.receipt import MANAGED_PATH, RECEIPT_PATH
 from devkit.distribution.bundles.playbooks import is_latin_text, read_playbook_header
 from devkit.distribution.installation.config import (

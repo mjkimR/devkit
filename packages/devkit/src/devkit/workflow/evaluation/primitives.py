@@ -6,7 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from devkit.core.errors import FrontmatterError
+from devkit_core.base.errors import FrontmatterError
+
 from devkit.rules import count_tasks
 from devkit.workflow.definition.checks import (
     ENVELOPE_CHECK_PASS,

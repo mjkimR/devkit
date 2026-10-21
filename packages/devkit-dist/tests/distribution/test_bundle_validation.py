@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 import yaml
-from devkit.core.errors import ArgumentError
 from devkit.distribution.bundles import Bundle, build_bundle, load_bundle
 from devkit.distribution.bundles.manifest import RESERVED_SKILL_IDS
 from devkit.distribution.bundles.subagents import read_contract, render_projection
 from devkit.distribution.errors import BundleError
 from devkit.distribution.installation import playbook_skill, workflow_skill
+from devkit_core.base.errors import ArgumentError
 
 HEADER = 'schema = 1\nname = "team"\nversion = "0.1.0"\n'
 INSTRUCTION = "---\nname: guide\ndescription: Read first.\n---\nBody.\n"

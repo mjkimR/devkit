@@ -30,7 +30,7 @@ import yaml
 from yaml.constructor import ConstructorError
 from yaml.nodes import MappingNode
 
-from devkit.core.errors import FrontmatterError
+from devkit_core.base.errors import FrontmatterError
 
 BOM = "﻿"
 OPENER = "---"

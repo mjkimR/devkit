@@ -33,7 +33,8 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from devkit.core.plugins import TESTS_DIRECTORY, PluginPackage, plugin_modules
+from devkit_core.core.plugins import TESTS_DIRECTORY, PluginPackage, plugin_modules
+
 from devkit.core.receipt import MANAGED_PATH, RECEIPT_PATH
 from devkit.rules.engine.config import parse_rules_config
 from devkit.rules.engine.discovery import resolve_managed_rules

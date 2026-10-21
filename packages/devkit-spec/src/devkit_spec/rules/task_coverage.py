@@ -24,10 +24,10 @@ import re
 from collections.abc import Callable
 from pathlib import PurePosixPath
 
-from devkit.core import FrontmatterError
-from devkit.core.frontmatter import locate
 from devkit.rules import Phase, RuleContext, Severity, Violation, match_path
 from devkit.rules.rules import BaseRule
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import locate
 
 from devkit_spec.rules import explicitly_targeted
 

@@ -18,9 +18,10 @@ from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
 
-from devkit.core.deadline import Deadline
-from devkit.core.errors import GitError
-from devkit.core.git import run_git
+from devkit_core.base.errors import GitError
+from devkit_core.core.deadline import Deadline
+from devkit_core.core.git import run_git
+
 from devkit.core.mcp_context import guard_execution
 from devkit.shared.api import (
     DIGEST,

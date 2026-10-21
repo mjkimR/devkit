@@ -38,7 +38,7 @@ from devkit.core.cli import (
     resolve_root,
     workspace_option,
 )
-from devkit.core.errors import ArgumentError
+from devkit_core.base.errors import ArgumentError
 
 from devkit_spec.branches import planning_branches
 from devkit_spec.cli.output import echo_page, page, sentinel

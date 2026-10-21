@@ -31,7 +31,8 @@ from devkit.core.cli import (
     resolve_root,
     workspace_option,
 )
-from devkit.core.errors import ArgumentError, DevkitRootNestedError
+from devkit.core.errors import DevkitRootNestedError
+from devkit_core.base.errors import ArgumentError
 
 
 class Finding(AdvisoryError):

@@ -21,9 +21,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from devkit_core.base.errors import GitError
+from devkit_core.core.git import run_git
+
 from devkit.advisory import AdvisoryError
-from devkit.core.errors import GitError
-from devkit.core.git import run_git
 from devkit.worktree.config import parse_period, read_worktree_config
 from devkit.worktree.errors import (
     StaleBranchWarning,

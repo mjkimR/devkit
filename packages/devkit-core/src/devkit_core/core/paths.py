@@ -20,7 +20,7 @@ from __future__ import annotations
 import re
 from pathlib import Path, PurePosixPath
 
-from devkit.core.errors import UnsafePathError
+from devkit_core.base.errors import UnsafePathError
 
 _DRIVE = re.compile(r"[A-Za-z]:")
 

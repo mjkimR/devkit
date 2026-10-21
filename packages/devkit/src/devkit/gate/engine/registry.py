@@ -15,7 +15,7 @@ as ``devkit.rules`` loads ``kind = "rule"`` assets:
   missing, resolves outside the project, or differs from the SHA-256 the
   receipt records for it is reported as that ``AssetFileError``
   (``ASSET_FILE_INVALID``), never a silent skip, and its package is not loaded;
-- packages are imported with ``devkit.core.plugins.load_subclasses``,
+- packages are imported with ``devkit_core.core.plugins.load_subclasses``,
   atomically per package.
 
 A gate package may import from any package installed in the same environment,
@@ -29,8 +29,10 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
+from devkit_core.core import PluginPackage, load_subclasses
+
 from devkit.advisory import AdvisoryError
-from devkit.core import PluginPackage, ReceiptError, load_receipt, load_subclasses, verified_asset_packages
+from devkit.core import ReceiptError, load_receipt, verified_asset_packages
 from devkit.gate.engine.base import BaseGate
 from devkit.gate.engine.models import Gate, Stage
 from devkit.gate.errors import GateDefinitionError, GateLoadError

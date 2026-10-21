@@ -57,7 +57,7 @@ def test_fixes_name_the_command_that_repairs_the_state() -> None:
 
 
 def test_the_project_lock_error_is_also_the_core_lock_error() -> None:
-    from devkit.core import LockHeldError as CoreLockHeldError
+    from devkit_core.core import LockHeldError as CoreLockHeldError
 
     error = errors.LockHeldError("x", what="waiting for the lock", seconds=10.0)
     assert isinstance(error, CoreLockHeldError) and isinstance(error, errors.DistributionError)

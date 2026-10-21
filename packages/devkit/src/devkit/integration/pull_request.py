@@ -9,8 +9,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
+from devkit_core.core.git import run_git
+
 from devkit.advisory import AdvisoryError, Level
-from devkit.core.git import run_git
 from devkit.core.mcp_context import capture_terminal_removal, guard_execution
 from devkit.core.project import read_project_config
 from devkit.integration import providers, receipts

@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from devkit_core.base.errors import FrontmatterError
 
-from devkit.core.errors import FrontmatterError
 from devkit.workflow.errors import AnchorInvalidError
 from devkit.workflow.unit import frontmatter
 from devkit.workflow.unit.records import temporary_path

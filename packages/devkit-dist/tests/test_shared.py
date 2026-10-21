@@ -12,13 +12,13 @@ from unittest.mock import patch
 
 import pytest
 from click.testing import CliRunner
-from devkit.core.git import run_git
 from devkit.shared import PutRequest
 from devkit.shared.cli import cli
 from devkit.shared.errors import AdapterError, ExclusionError, ExpiredError, InputError, MissingError, SharedError
 from devkit.shared.local import LocalAdapter, discover
 from devkit.shared.mcp import tools
 from devkit.shared.service import adapter
+from devkit_core.core.git import run_git
 
 
 @pytest.fixture
@@ -300,8 +300,8 @@ def test_invalid_adapter_registration(repository, monkeypatch, case):
 
 
 def test_timeout_and_access_codes(repository, request_data, monkeypatch):
-    from devkit.core.deadline import Deadline
     from devkit.shared.errors import AccessError, TimeoutError
+    from devkit_core.core.deadline import Deadline
 
     selected = adapter(repository)
     first = selected.put(request_data)
@@ -356,8 +356,8 @@ def test_scope_records_and_tokens_untouched_by_every_operation(repository, reque
 def test_real_lock_timeout(repository, request_data, monkeypatch):
     import fcntl
 
-    from devkit.core.deadline import Deadline
     from devkit.shared.errors import TimeoutError
+    from devkit_core.core.deadline import Deadline
 
     selected = adapter(repository)
     value = selected.put(request_data)

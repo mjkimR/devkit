@@ -1,7 +1,7 @@
 """The deadline every registry operation runs under, and Git calls bounded by it.
 
 A command gets one ``Deadline`` (``[tool.spec.scope] timeout``): devkit's ``Deadline`` whose expiry raises
-``ScopeTimeoutError``. The lock wait (``devkit.core.file_lock``) and each Git subprocess (``devkit.core.run_git``)
+``ScopeTimeoutError``. The lock wait (``devkit_core.core.file_lock``) and each Git subprocess (``devkit_core.core.run_git``)
 take the time that is left; a Git subprocess that outlives its share is killed, so a timed-out command ends within a
 moment of its deadline.
 """
@@ -10,8 +10,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit import core
-from devkit.core import run_git
+from devkit_core import core
+from devkit_core.core import run_git
 
 from devkit_spec.errors import ScopeTimeoutError
 

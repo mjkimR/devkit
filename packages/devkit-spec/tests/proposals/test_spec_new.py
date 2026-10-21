@@ -10,8 +10,8 @@ import pytest
 from click.testing import CliRunner, Result
 from conftest import Write
 from devkit.cli import cli as devkit_cli
-from devkit.core import FrontmatterError
-from devkit.core.frontmatter import parse
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import parse
 from proposals.support import MONTH, STAMP, TODAY, WORKFLOW, spec_dir, write_workflow
 
 from devkit_spec.errors import SpecExistsError, SpecSlugError, SpecWorkflowError, SpecWriteError

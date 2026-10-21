@@ -16,8 +16,8 @@ from collections.abc import Iterator
 from pathlib import Path
 from types import ModuleType
 
-from devkit.core.deadline import Deadline
-from devkit.core.errors import LockHeldError, LockUnsupportedError, UnsafePathError
+from devkit_core.base.errors import LockHeldError, LockUnsupportedError, UnsafePathError
+from devkit_core.core.deadline import Deadline
 
 LOCK_FILE_MODE = 0o600
 POLL_INTERVAL = 0.01  # seconds between attempts while a bounded wait lasts

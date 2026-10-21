@@ -13,8 +13,9 @@ from datetime import date as date_type
 from pathlib import Path, PurePosixPath
 from string import Formatter
 
-from devkit.core.errors import UnsafePathError
-from devkit.core.paths import normalize_relpath
+from devkit_core.base.errors import UnsafePathError
+from devkit_core.core.paths import normalize_relpath
+
 from devkit.workflow.errors import LayoutError, SlugError
 
 ALLOWED_FIELDS = {"slug", "date"}
@@ -87,7 +88,7 @@ def validate_slug(slug: str) -> str:
 
 
 def validate_relative_dir(value: object) -> str:
-    """A workspace-relative POSIX path (``devkit.core.paths.normalize_relpath``) without backslashes, normalized."""
+    """A workspace-relative POSIX path (``devkit_core.core.paths.normalize_relpath``) without backslashes, normalized."""
     if not isinstance(value, str) or not value.strip():
         raise LayoutError("expected a nonempty string")
     message = "must be a workspace-relative path without '..' or backslashes"

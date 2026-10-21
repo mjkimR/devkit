@@ -12,9 +12,9 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from devkit_core.base.errors import FrontmatterError
+from devkit_core.core.frontmatter import load_header
 
-from devkit.core.errors import FrontmatterError
-from devkit.core.frontmatter import load_header
 from devkit.distribution.bundles.common import SHARED_SKILL_AGENTS, locate_frontmatter
 from devkit.distribution.errors import BundleError
 

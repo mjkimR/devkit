@@ -13,8 +13,6 @@ from pathlib import Path
 import pytest
 import yaml
 from click.testing import CliRunner, Result
-from devkit.core import LockHeldError, LockUnsupportedError
-from devkit.core.errors import UnsafePathError
 from devkit.workflow import (
     DecisionInvalidError,
     DefinitionError,
@@ -41,6 +39,8 @@ from devkit.workflow.unit.decisions import (
     utc_timestamp,
     write_decision,
 )
+from devkit_core.base.errors import UnsafePathError
+from devkit_core.core import LockHeldError, LockUnsupportedError
 from testsupport.workflow import WORKFLOW, simple_workspace, write_config, write_record, write_unit
 
 HUMAN_CHECK = """---

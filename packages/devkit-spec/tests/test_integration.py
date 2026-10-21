@@ -13,8 +13,6 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from devkit.cli import cli as devkit_cli
-from devkit.core import git as core_git
-from devkit.core.mcp import ConfirmationReply
 from devkit.integration import (
     IntegrationContext,
     IntegrationService,
@@ -23,6 +21,8 @@ from devkit.integration import (
     providers,
 )
 from devkit.worktree import PullRequestPolicyError, locate, plan_finish
+from devkit_core.base.mcp import ConfirmationReply
+from devkit_core.core import git as core_git
 from scope.support import git, write
 
 from devkit_spec.integration import check

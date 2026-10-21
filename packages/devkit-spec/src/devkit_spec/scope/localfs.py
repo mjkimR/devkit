@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Protocol
 
 from devkit.advisory import Level
-from devkit.core import GitError, LockUnsupportedError, UnsafePathError, atomic_write_text, file_lock, run_git
+from devkit_core.core import GitError, LockUnsupportedError, UnsafePathError, atomic_write_text, file_lock, run_git
 
 from devkit_spec.errors import (
     ScopeLockUnsupportedError,

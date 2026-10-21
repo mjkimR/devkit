@@ -20,7 +20,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from devkit.core import MANAGED_PATH, OVERRIDES_PATH, atomic_write_text
+from devkit_core.core import atomic_write_text
+
+from devkit.core import MANAGED_PATH, OVERRIDES_PATH
 from devkit.rules.workspace.markdown import encode_destination, extract_links, local_target
 
 StrPath = str | os.PathLike[str]

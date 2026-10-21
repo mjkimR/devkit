@@ -8,8 +8,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol
 
+from devkit_core.base.errors import ArgumentError
+
 from devkit.advisory import AdvisoryError
-from devkit.core.errors import ArgumentError
 from devkit.gate.errors import GateDefinitionError, GateResultError
 
 

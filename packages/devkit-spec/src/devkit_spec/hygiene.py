@@ -13,8 +13,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
-from devkit.core import FrontmatterError
-from devkit.core.frontmatter import parse
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import parse
 
 from devkit_spec.errors import ProposalRejectedPendingWarning
 from devkit_spec.proposals.scaffold import PROPOSALS

@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 import click
+from devkit_core.base.errors import ArgumentError
 
 from devkit.advisory import ExitCode
 from devkit.core.cli import (
@@ -45,7 +46,6 @@ from devkit.core.cli import (
     resolve_root,
     workspace_option,
 )
-from devkit.core.errors import ArgumentError
 from devkit.distribution.bundles import build_bundle, load_bundle
 from devkit.distribution.bundles.common import AGENT_NAMES, SLUG
 from devkit.distribution.errors import SelectionError

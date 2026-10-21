@@ -21,8 +21,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from devkit.core import FrontmatterError, GitError, run_git
-from devkit.core.frontmatter import parse
+from devkit_core.core import FrontmatterError, GitError, run_git
+from devkit_core.core.frontmatter import parse
 
 PROPOSAL_UNIT = re.compile(r"(?:.+/)?docs/proposals/PROP-(?P<slug>[^/]+)")
 SPEC_UNIT = re.compile(r"(?:.+/)?specs/\d{4}-\d{2}/\d{8}-(?P<slug>[^/]+)")

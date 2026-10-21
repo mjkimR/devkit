@@ -33,8 +33,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from devkit_core.core.git import COMMIT_INDEX_VARIABLE
+
 from devkit.advisory import Actor
-from devkit.core.git import COMMIT_INDEX_VARIABLE
 from devkit.gate.engine.base import BaseGate
 from devkit.gate.engine.models import GateContext, GateResult, Stage
 from devkit.gate.errors import GateRefusedError, RulesWarningsNotice

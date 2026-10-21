@@ -24,9 +24,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
-from devkit.core import FrontmatterError
-from devkit.core.frontmatter import parse
 from devkit.search import SearchDocument, SearchIndex, SearchMode, tokenize
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import parse
 
 from devkit_spec.documents import Document, DocumentIndex, Kind
 from devkit_spec.errors import GlossaryInvalidError

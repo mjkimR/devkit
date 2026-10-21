@@ -4,7 +4,7 @@ Agent asset distribution in one Python package with the `devkit` command line: b
 transactional sync and the installation receipt, context loading, playbooks and native host hooks. The distribution
 name is `devkit-dist`; imports are `devkit.*` (`devkit.core`, `devkit.search`, `devkit.host`, `devkit.shared`, `devkit.distribution`,
 `devkit.cli`). It owns the sole `devkit` console script, the `.devkit/config.toml` schema and the receipt format.
-Requires Python 3.12 or later; runtime dependencies are `click`, `jinja2`, `pyyaml`, `tomlkit` and `devkit-advisory`
+Requires Python 3.12 or later; runtime dependencies are `click`, `jinja2`, `pyyaml`, `tomlkit`, `devkit-core` and `devkit-advisory`
 (the `devkit.advisory` library, same version). The `search` extra (`devkit-dist[search]`) adds `numpy`, `tokenizers`
 and the embedding model package for dense and hybrid search. Optional `devkit-mcp` owns native stdio and forms;
 dist owns exact project registration and does not import the SDK.
@@ -19,8 +19,8 @@ name the requirement to add.
 
 ## Install
 
-No package index hosts the wheel; install it from Git (which brings `devkit-advisory` from the same commit) or by URL
-from a GitHub Release with the `devkit-advisory` wheel next to it (see the
+No package index hosts the wheel; install it from Git (which brings `devkit-core` and `devkit-advisory` from the same commit) or by URL
+from a GitHub Release with the `devkit-core` and `devkit-advisory` wheels next to it (see the
 [root README](../../README.md#using-devkit-in-another-project)):
 
 ```bash
@@ -38,7 +38,7 @@ installation names the script owner and adds the harness:
 
 | Module | Purpose | CLI | Reference |
 | --- | --- | --- | --- |
-| `devkit.core` | Shared foundation: frontmatter grammar, installation receipt, safe paths, atomic writes, Git runner, deadlines, file locks, plugin loading, project discovery, CLI plumbing | none | [core reference](../../docs/development/reference/core.md) |
+| `devkit.core` | Distribution-owned installation receipt, project configuration and discovery, CLI plumbing; shared primitives come from `devkit_core.core` | none | [core reference](../../docs/development/reference/core.md) |
 | `devkit.distribution` | Bundle packaging and transactional synchronization, plus the built-in `devkit` guide bundle | `devkit sync`, `add`, `remove`, `list`, `status`, ... | [distribution reference](../../docs/development/reference/distribution.md) |
 | `devkit.host` | Lifecycle hooks, service handlers and exact project MCP registrations; distribution owns hook deployment | `devkit host` | [host reference](../../docs/development/reference/host.md) |
 | `devkit.shared` | Immutable seven-day report artifacts and public adapter contract | `devkit shared put/get/list/sweep` | [shared reference](../../docs/development/reference/shared.md) |
@@ -52,3 +52,6 @@ auto-selected; data area `devkit.advisory_guide`) and `git-commits` (commit mess
 Layering (`advisory` < `core` < `search`/`host`/`shared` < `distribution`; the data-only bundle areas import nothing) is
 enforced by `tests/test_layering.py`, which also refuses any reference to a `devkit-agt` area. The tests run without
 `devkit-agt` installed: `just test-dist` syncs an environment with only this package and its extras.
+
+The independent [devkit-core](../devkit-core/README.md) package owns filesystem/Git/parsing/plugin primitives,
+logging, extension dispatch and SDK-free MCP contracts. Its package tests prohibit dependencies on this wheel.

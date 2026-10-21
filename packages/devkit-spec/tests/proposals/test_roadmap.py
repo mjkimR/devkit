@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from devkit.cli import cli
-from devkit.core import ArgumentError
-from devkit.core.frontmatter import parse
+from devkit_core.core import ArgumentError
+from devkit_core.core.frontmatter import parse
 from proposals.support import TODAY, accept
 
 from devkit_spec.errors import ProposalInPlanningError

@@ -52,7 +52,7 @@ stays ID-free and unindexed, and its Owner references do not become graph edges.
 3. **Identity**: A file is a document only when its frontmatter declares a well-formed ID (section 3.2) in `id`, or
    in `reconcile_id` for a reconcile record. A file without frontmatter, without an ID, or with an ID outside the
    grammar is not a document (a README, a glossary, a guide) and is silently left out.
-4. **Frontmatter grammar**: The frontmatter MUST follow devkit's grammar (`devkit.core.frontmatter`); `id`,
+4. **Frontmatter grammar**: The frontmatter MUST follow devkit's grammar (`devkit_core.core.frontmatter`); `id`,
    `reconcile_id` and `status`, when present, MUST be strings. A file that cannot be read as UTF-8, or whose
    frontmatter breaks either requirement, MUST be left out of the index and reported as a `SPEC_DOCUMENT_INVALID`
    warning; every other document MUST stay usable.

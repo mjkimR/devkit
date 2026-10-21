@@ -10,14 +10,14 @@ import time
 from pathlib import Path
 
 import pytest
-from devkit.core import LockHeldError
-from devkit.core.errors import GitError
-from devkit.core.locks import file_lock
-from devkit.core.mcp import ConfirmationReply
 from devkit.integration import IntegrationService, ProviderError, Task
 from devkit.integration import service as service_module
 from devkit.integration.receipts import check_merge
 from devkit.worktree import CommitFailedError, MergeNotFastForwardError, merging
+from devkit_core.base.errors import GitError
+from devkit_core.base.mcp import ConfirmationReply
+from devkit_core.core import LockHeldError
+from devkit_core.core.locks import file_lock
 from testsupport.rules import git, write
 
 TASK = Task("session", "fixture-task")

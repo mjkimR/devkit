@@ -34,7 +34,7 @@ src/devkit/rules/
 │   ├── phases.py            # Effective phase resolution, overrides, promotions
 │   ├── policy.py            # validate_policy: phase, severity and settings policy in one pass
 │   ├── errors.py            # RulesError hierarchy: raised errors and collected RuleProblems with codes
-│   ├── registry.py          # RuleRegistry & default_rule_registry (plugin packages via devkit.core.plugins)
+│   ├── registry.py          # RuleRegistry & default_rule_registry (plugin packages via devkit_core.core.plugins)
 │   ├── evaluator.py         # Sequential rule evaluation, single autofix pass & convergence recheck
 │   └── rule_tests.py        # rule_folder and run_rule_tests: each rule's tests/ in a pytest subprocess
 ├── testing.py               # load_rule, check, evaluate: helpers for the tests in a rule's folder
@@ -60,4 +60,4 @@ Library callers import the public API from `devkit.rules`; built-in rule classes
 
 ## 4. Shared Foundation
 
-`devkit.rules` builds on `devkit.core` and never re-implements it: frontmatter is parsed with `devkit.core.frontmatter` (the grammar the workflow engine reads), the installation receipt with `devkit.core.receipt`, Git commands run through `devkit.core.git.run_git`, snapshot paths are validated with `devkit.core.paths`, and rule packages are loaded with `devkit.core.plugins` (atomic per package, classes in module then definition order). `devkit rules test` runs each rule's tests through `devkit.compact.run_command` (full log on disk, bounded view in the result), imported only when tests run. The CLI's default workspace root is `devkit.core.find_project_root` of the current directory.
+`devkit.rules` builds on `devkit.core` and never re-implements it: frontmatter is parsed with `devkit_core.core.frontmatter` (the grammar the workflow engine reads), the installation receipt with `devkit.core.receipt`, Git commands run through `devkit_core.core.git.run_git`, snapshot paths are validated with `devkit_core.core.paths`, and rule packages are loaded with `devkit_core.core.plugins` (atomic per package, classes in module then definition order). `devkit rules test` runs each rule's tests through `devkit.compact.run_command` (full log on disk, bounded view in the result), imported only when tests run. The CLI's default workspace root is `devkit.core.find_project_root` of the current directory.

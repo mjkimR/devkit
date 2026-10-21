@@ -17,7 +17,8 @@ from devkit.core import (
     require_git_toplevel,
 )
 from devkit.core import project as project_module
-from devkit.core.errors import ArgumentError, DevkitRootNestedError, GitError, UnsafePathError
+from devkit.core.errors import DevkitRootNestedError
+from devkit_core.base.errors import ArgumentError, GitError, UnsafePathError
 
 
 def test_inside_git_the_repository_root_is_the_devkit_root(repo: Path) -> None:

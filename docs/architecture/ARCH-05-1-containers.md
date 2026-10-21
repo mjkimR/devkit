@@ -20,6 +20,7 @@ devkit is structured as a Python monorepo using `uv` workspaces:
 ```mermaid
 graph TD
     subgraph DevkitWorkspace ["devkit Monorepo (uv workspace)"]
+        PkgCore["packages/devkit-core<br>(devkit_core, shared foundation)"]
         PkgDist["packages/devkit-dist<br>(devkit-dist wheel, devkit executable)"]
         PkgMcp["packages/devkit-mcp<br>(optional devkit-mcp wheel)"]
         PkgDevkit["packages/devkit<br>(devkit-agt wheel)"]
@@ -37,6 +38,8 @@ graph TD
     end
 
     PkgAdv -.->|Runtime dependency (std-lib only)| Runtime
+    PkgCore -->|Same-version dependency| PkgAdv
+    PkgDist -->|Same-version dependency| PkgCore
     PkgDist -->|Same-version dependency| PkgAdv
     PkgMcp -->|Same-version dependency| PkgDist
     PkgMcp -.->|MCP transport and native forms| DevTools
@@ -56,6 +59,11 @@ graph TD
 
 ## 2. Package Breakdown
 
+`devkit-core` owns shared contracts in `devkit_core.base` and implementations in `devkit_core.core`.
+Base never imports core. The package depends only on PyYAML and
+`devkit-advisory`. It is released at the same version as dist and agt. Generic primitives no longer live
+in the dist wheel; project configuration, receipts and CLI support remain there.
+
 Three wheels share the PEP 420 namespace `devkit` (no wheel ships `devkit/__init__.py`, and no installed path
 belongs to two of them) and are released in lockstep from one tag at one version (`ADR-dist-module-split`,
 `ADR-dist-bundles-compatibility`): `devkit-advisory` < `devkit-dist` < `devkit-agt`, each pinning the exact version of
@@ -65,11 +73,11 @@ the ones below it.
 - **Distribution Wheel**: `devkit_dist-<version>-py3-none-any.whl`
 - **CLI**: `devkit`, the sole console script: the distribution commands, `devkit shared` and `devkit host`, plus whatever installed
   packages mount through `devkit.commands` (`ARCH-05-3-command-plugins`).
-- **Contents**: The shared foundation (`devkit.core`), document search (`devkit.search`), host hooks and project MCP registrations
+- **Contents**: Project configuration, receipts and CLI support (`devkit.core`), document search (`devkit.search`), host hooks and project MCP registrations
   (`devkit.host`), immutable expiring artifacts (`devkit.shared`, importing only core/advisory), asset distribution (`devkit.distribution`) with the `.devkit/config.toml` schema and the receipt,
   the root command line (`devkit.cli`, `devkit.__main__`) and the built-in bundles `devkit`, `advisory` and
   `git-commits` (`ADR-dist-foundation-ownership`).
-- **Dependencies**: `click`, `jinja2`, `pyyaml`, `tomlkit`, and `devkit-advisory` (locked to the same version);
+- **Dependencies**: `click`, `jinja2`, `pyyaml`, `tomlkit`, `devkit-core` and `devkit-advisory` (locked to the same version);
   extra `search` (numpy, tokenizers, `devkit-embed`). It never depends on `devkit-agt`, and its tests also
   run in an environment without it (`just test-dist`).
 
@@ -81,7 +89,7 @@ the ones below it.
 - **Contents**: The developer harness: rules engine, delivery workflows, commit gates, task worktrees, tracked
   generated files, approval-bound integration and the compact runner, with the built-in bundles `authoring` and
   `harness` (auto-selected).
-- **Dependencies**: `click`, `pyyaml`, `tomlkit`, `devkit-dist` and `devkit-advisory` (both locked to the same
+- **Dependencies**: `click`, `pyyaml`, `tomlkit`, `devkit-core`, `devkit-dist` and `devkit-advisory` (all locked to the same
   version); its `search` extra requires `devkit-dist[search]`; `mcp` requires the same-version `devkit-mcp`.
 
 ### 2.3 `devkit-advisory` (`packages/devkit-advisory`)
@@ -95,7 +103,7 @@ the ones below it.
 - **CLI**: `devkit spec`, mounted through `devkit.commands`.
 - **Contents**: The SDD document model and commands, proposals, spec bundles, code entrypoints, scope registry,
   and the `spec` guidance bundle with its workflows, rules, templates and opt-in docs skeleton.
-- **Dependencies**: `devkit-agt` and `click`; the base harness remains SDD-agnostic.
+- **Dependencies**: `devkit-agt`, `devkit-core` and `click`; the base harness remains SDD-agnostic.
 - **Contracts**: `CAP-HARN-command-mount`, `CAP-HARN-agent-guidance`.
 
 ### 2.5 `devkit-viewer` (`packages/devkit-viewer`)
@@ -104,7 +112,7 @@ the ones below it.
   for several local repositories.
 - **Contents**: the server (`devkit_viewer`) and, under `frontend/`, one Svelte source for the page and for the
   component library whose `npm pack` tarball autohub vendors. Node is needed only to change the frontend.
-- **Dependencies**: `devkit-agt` and `click`; it uses only `devkit.core` and `devkit.advisory`, which reach it through
+- **Dependencies**: `devkit-agt`, `devkit-core` and `click`; it uses only `devkit.core` and `devkit.advisory`, which reach it through
   `devkit-agt`'s dependency on `devkit-dist` (the viewer keeps its `devkit-agt` dependency,
   `SPEC-devkit-dist-package-separation`); no `devkit-spec` code, since the page parses the documents itself.
 - **Contracts**: `CAP-VIEW-repository-viewer`, `ADR-viewer-distribution-and-frontend-build`,

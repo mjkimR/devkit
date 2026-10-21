@@ -14,7 +14,6 @@ from typing import Any
 
 import pytest
 from devkit.advisory import ActionMode, AdvisoryError
-from devkit.core.errors import ArgumentError, GitError
 from devkit.worktree import (
     AddFailedError,
     BaseBehindError,
@@ -42,6 +41,7 @@ from devkit.worktree import (
     start,
     status,
 )
+from devkit_core.base.errors import ArgumentError, GitError
 from testsupport.rules import git, init_repo, write
 
 

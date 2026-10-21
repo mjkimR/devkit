@@ -6,7 +6,7 @@ status: active
 area: mcp
 entrypoints:
   - packages/devkit-mcp/src/devkit_mcp
-  - packages/devkit-dist/src/devkit/core/mcp.py
+  - packages/devkit-core/src/devkit_core/base/mcp.py
   - packages/devkit-dist/src/devkit/core/mcp_context.py
   - packages/devkit-dist/src/devkit/host/registrations.py
   - packages/devkit-dist/src/devkit/core/presentation.py
@@ -19,7 +19,7 @@ updated: 2026-10-20
 ## Runtime contract
 
 `devkit-mcp` ships `devkit_mcp`, mounts `devkit mcp`, discovers `devkit.host.services` and owns SDK stdio/form
-adaptation. `devkit.core.mcp` supplies dependency-free `McpTool`, `Confirmation` and `ConfirmationReply`.
+adaptation. `devkit_core.base.mcp` supplies dependency-free `McpTool`, `Confirmation` and `ConfirmationReply`.
 Services declare execution as read_only, bounded_write, preflight, interactive or approved_resume; omitted classification is
 interactive regardless of descriptive MCP annotations. Schema validation and duplicate/unloadable service failures
 remain deterministic. Native acceptance requires both accept and approve=true; decline, cancel, disconnect or

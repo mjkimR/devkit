@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import Any
 
 import click
+from devkit_core.core import GitError, run_git
 
-from devkit.core import GitError, run_git
 from devkit.core.cli import FORMAT_OPTION, boundary, echo_json, exit_on_problems, is_json
 from devkit.workflow.cli.app import ANCHOR, UNIT, WORKSPACE, cli, workspace
 from devkit.workflow.errors import EnvelopeFlagError

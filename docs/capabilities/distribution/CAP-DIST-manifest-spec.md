@@ -157,7 +157,7 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
 - **Strict schema**: unknown top-level keys or table fields are errors.
 - **Slugs**: bundle names, asset ids and preset names match `^[a-z][a-z0-9-]*$`.
 - **Versions**: bundle versions are `MAJOR.MINOR.PATCH`.
-- **Source paths**: canonical relative POSIX paths (validated by `devkit.core.paths`); `..`, redundant `.` segments
+- **Source paths**: canonical relative POSIX paths (validated by `devkit_core.core.paths`); `..`, redundant `.` segments
   or separators, symlinks and special files are rejected, and so are backslashes, so a manifest names the same files
   on every platform.
 - **Editing by-products**: inside a directory source, `.DS_Store`, `__pycache__/` and `*.pyc` are not bundle content:
@@ -181,12 +181,12 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
   entries; `__init__.py` is optional. The directory must contain at least one module, every directory and file name
   of a module must be a Python identifier, and no module may have two files (`a.py` beside `a/__init__.py` or
   beside a package directory `a/`). Modules import each other relatively; the loading model is
-  [`devkit.core.plugins`](../../development/reference/core.md). Guides, resources and tests ship in the same directory; a rule's
+  [`devkit_core.core.plugins`](../../development/reference/core.md). Guides, resources and tests ship in the same directory; a rule's
   tests in its `tests/` folder run with `devkit rules test` (`CAP-GOV-rule-authoring`).
 - **Native subagents**: each `subagent` variant is one file with the agent's native suffix: `.toml` for `codex`,
   `.md` for `claude-code` and `antigravity`.
 - **Headers**: instruction, playbook and workflow headers and role contracts follow the frontmatter grammar of
-  `devkit.core.frontmatter` (a `---` opener, a `---` or `...` closer, a YAML mapping without duplicate keys).
+  `devkit_core.core.frontmatter` (a `---` opener, a `---` or `...` closer, a YAML mapping without duplicate keys).
 - **Role contracts**: a `subagent` declared with `source` is a single Markdown file whose frontmatter has `role` equal
   to the asset id, `title`, `description`, a `hosts` table with a block for every supported agent (valid statuses,
   allowlisted keys), and a nonempty body (`CAP-DIST-agent-projections`).

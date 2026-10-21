@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 from devkit.advisory import ActionMode, AdvisoryError
-from devkit.core import (
+from devkit_core.core import (
     Deadline,
     DeadlineExceededError,
     LockHeldError,

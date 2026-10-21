@@ -20,7 +20,8 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from devkit.core.logs import get_logger
+from devkit_core.core.logs import get_logger
+
 from devkit.search.errors import ModelInvalidError, ModelNotFoundError, SearchExtraMissingError
 
 if TYPE_CHECKING:

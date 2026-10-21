@@ -11,7 +11,7 @@ from __future__ import annotations
 import time
 from collections.abc import Callable
 
-from devkit.core.errors import DeadlineExceededError
+from devkit_core.base.errors import DeadlineExceededError
 
 ErrorFactory = Callable[[str, float], BaseException]
 

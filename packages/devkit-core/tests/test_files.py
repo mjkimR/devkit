@@ -6,8 +6,8 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import pytest
-from devkit.core import atomic_write_bytes, atomic_write_text, remove_empty_tree
-from devkit.core import files as files_module
+from devkit_core.core import atomic_write_bytes, atomic_write_text, remove_empty_tree
+from devkit_core.core import files as files_module
 
 
 @pytest.fixture

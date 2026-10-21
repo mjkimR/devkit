@@ -187,8 +187,8 @@ def test_an_override_of_the_module_alone_keeps_the_managed_guide_and_tests(tmp_p
 def test_managed_tests_kept_by_an_override_run_against_the_overridden_module(tmp_path: Path) -> None:
     import inspect
 
-    from devkit.core.plugins import PluginPackage, plugin_modules
     from devkit.rules.testing import load_rule
+    from devkit_core.core.plugins import PluginPackage, plugin_modules
 
     managed = tmp_path / ".devkit/managed/team/rules/good"
     override = tmp_path / ".devkit/overrides/team/rules/good"

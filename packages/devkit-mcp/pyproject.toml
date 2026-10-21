@@ -4,7 +4,8 @@ version = "0.1.1"
 description = "Optional MCP transport and native confirmation runtime for devkit services"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["devkit-dist==0.1.1", "mcp>=1.30,<2", "jsonschema>=4.23,<5"]
+dependencies = [
+    "devkit-core==0.1.1","devkit-dist==0.1.1", "mcp>=1.30,<2", "jsonschema>=4.23,<5"]
 
 [project.entry-points."devkit.commands"]
 mcp = "devkit_mcp.cli:cli"
@@ -13,6 +14,7 @@ mcp = "devkit_mcp.cli:cli"
 devkit = "devkit_mcp.configuration:descriptor"
 
 [tool.uv.sources]
+devkit-core = { workspace = true }
 devkit-dist = { workspace = true }
 
 [build-system]

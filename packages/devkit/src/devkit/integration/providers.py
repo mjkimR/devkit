@@ -8,8 +8,9 @@ from importlib import metadata
 from pathlib import Path
 from typing import Any, cast
 
+from devkit_core.core.git import run_git
+
 from devkit.advisory import AdvisoryError
-from devkit.core.git import run_git
 from devkit.core.project import read_project_config
 from devkit.integration.errors import CleanupContractError, IntegrationConfigError, ProviderError, ReadinessError
 from devkit.integration.models import (

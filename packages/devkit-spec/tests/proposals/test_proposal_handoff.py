@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 from conftest import Write
-from devkit.core import FrontmatterError
-from devkit.core.frontmatter import parse
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import parse
 from proposals.support import (
     INCUBATED,
     MONTH,

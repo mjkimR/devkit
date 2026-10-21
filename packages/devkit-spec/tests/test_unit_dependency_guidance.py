@@ -4,8 +4,8 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from devkit.core.frontmatter import parse
 from devkit.distribution.bundles.templates import render_template
+from devkit_core.core.frontmatter import parse
 
 BUNDLE = Path(__file__).resolve().parents[1] / "src/devkit_spec/bundle"
 

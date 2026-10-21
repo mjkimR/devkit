@@ -9,9 +9,9 @@ import sys
 from importlib import metadata
 from pathlib import Path
 
-from devkit.core.git import run_git
 from devkit.core.local_config import read_effective_config
 from devkit.host.registrations import LaunchDescriptor, RuntimeUnavailable, common_dir
+from devkit_core.core.git import run_git
 
 # A probe only imports the transport and inspects service module specs; no service factory or host is launched.
 PROBE = """

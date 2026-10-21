@@ -8,7 +8,7 @@ from typing import Any
 import click
 from devkit.advisory import Actor, AdvisoryError, Level, Retry
 from devkit.core.cli import FORMAT_OPTION, boundary, echo_json, echo_notices, is_json
-from devkit.core.errors import ArgumentError
+from devkit_core.base.errors import ArgumentError
 
 from devkit_spec.cli.output import sentinel
 from devkit_spec.worker import inspect

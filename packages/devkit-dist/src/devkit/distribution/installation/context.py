@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit.core.errors import ArgumentError, ReceiptError
+from devkit_core.base.errors import ArgumentError
+
+from devkit.core.errors import ReceiptError
 from devkit.core.receipt import MANAGED_PATH, RECEIPT_PATH
 from devkit.distribution.bundles.common import SLUG
 from devkit.distribution.bundles.instructions import read_instruction_header

@@ -52,10 +52,10 @@ from pathlib import Path
 from typing import Any, NoReturn
 
 import click
+from devkit_core.base.errors import ArgumentError
+from devkit_core.core.logs import ROOT, get_logger
 
 from devkit.advisory import AdvisoryError, ExitCode, Level, as_advisory_error
-from devkit.core.errors import ArgumentError
-from devkit.core.logs import ROOT, get_logger
 from devkit.core.project import find_project_root, require_devkit_root
 
 WORKSPACE_HELP = "Workspace root directory [default: the devkit project containing the current directory]"

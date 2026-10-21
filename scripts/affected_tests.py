@@ -37,7 +37,12 @@ HELPERS = {"distsupport": f"{DIST}/tests/distsupport", "testsupport": f"{DEVKIT}
 logger = logging.getLogger(__name__)
 
 # Changes every test can depend on: the lowest layers, the CLI assembly, packaging and shared test fixtures.
-FULL_PREFIXES = (f"{DIST_SRC}/core/", "packages/devkit-advisory/", *(f"{path}/" for path in HELPERS.values()))
+FULL_PREFIXES = (
+    "packages/devkit-core/",
+    f"{DIST_SRC}/core/",
+    "packages/devkit-advisory/",
+    *(f"{path}/" for path in HELPERS.values()),
+)
 FULL_FILES = frozenset({f"{DIST_SRC}/cli.py", f"{DIST_SRC}/__main__.py", "uv.lock"})
 FULL_NAMES = frozenset({"pyproject.toml", "conftest.py"})
 

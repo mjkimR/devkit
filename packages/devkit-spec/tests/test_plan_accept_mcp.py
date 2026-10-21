@@ -4,7 +4,7 @@ import asyncio
 import json
 
 import pytest
-from devkit.core.mcp import ConfirmationReply
+from devkit_core.base.mcp import ConfirmationReply
 from scope.support import git
 from test_integration import _cli, _make_synced_repo, _start_worktree, synced_template  # noqa: F401
 

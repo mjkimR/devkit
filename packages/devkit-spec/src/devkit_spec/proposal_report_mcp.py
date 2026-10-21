@@ -5,10 +5,10 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
-from devkit.core import run_git
-from devkit.core.mcp import Confirmation, McpTool
 from devkit.core.mcp_context import guard_execution
 from devkit.worktree import find, locate
+from devkit_core.base.mcp import Confirmation, McpTool
+from devkit_core.core import run_git
 
 from devkit_spec.proposal_report import publish
 

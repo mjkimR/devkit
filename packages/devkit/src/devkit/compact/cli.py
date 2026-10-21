@@ -27,6 +27,8 @@ import re
 import sys
 
 import click
+from devkit_core.base.errors import ArgumentError
+from devkit_core.core.logs import get_logger
 
 from devkit.advisory import ExitCode, Level
 from devkit.compact.execute import CommandInterrupted, CommandRun, run_command
@@ -43,8 +45,6 @@ from devkit.core.cli import (
     is_json,
     output_settings,
 )
-from devkit.core.errors import ArgumentError
-from devkit.core.logs import get_logger
 
 _BARE = re.compile(r'[^\s"\]]+')
 

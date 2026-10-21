@@ -36,7 +36,8 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 
-from devkit.core import TemplateKey, TemplateTable, is_safe_relpath, read_project_config
+from devkit.core import TemplateKey, TemplateTable, read_project_config
+from devkit_core.core import is_safe_relpath
 
 from devkit_spec.errors import SpecConfigError
 

@@ -193,8 +193,8 @@ def test_worktree_config_defaults_and_validation(repo: Path) -> None:
 def test_post_finish_extensions_run_after_a_successful_finish_only(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from types import SimpleNamespace
 
-    from devkit.core import extensions as core_extensions
     from devkit.worktree import extensions
+    from devkit_core.core import extensions as core_extensions
 
     seen: list[tuple[Path, dict]] = []
 

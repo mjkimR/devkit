@@ -6,7 +6,8 @@ import asyncio
 import json
 from pathlib import Path
 
-from devkit.core.mcp import Confirmation, McpTool
+from devkit_core.base.mcp import Confirmation, McpTool
+
 from devkit.integration.models import Task
 from devkit.integration.service import IntegrationService
 

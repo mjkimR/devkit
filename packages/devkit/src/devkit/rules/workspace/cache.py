@@ -25,8 +25,10 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from devkit.core import MANAGED_PATH, OVERRIDES_PATH, GitError, UnsafePathError, atomic_write_bytes, run_git
-from devkit.core.frontmatter import parse as parse_frontmatter
+from devkit_core.core import GitError, UnsafePathError, atomic_write_bytes, run_git
+from devkit_core.core.frontmatter import parse as parse_frontmatter
+
+from devkit.core import MANAGED_PATH, OVERRIDES_PATH
 from devkit.rules.engine.errors import PinnedWriteError
 from devkit.rules.workspace.markdown import MarkdownLink, extract_links
 
@@ -128,7 +130,7 @@ class WorkspaceCache:
         self._bytes_cache[key] = data
 
     def get_frontmatter(self, path: str | Path) -> dict[str, Any] | None:
-        """The YAML frontmatter mapping of a file (``devkit.core.frontmatter`` grammar), or ``None``.
+        """The YAML frontmatter mapping of a file (``devkit_core.core.frontmatter`` grammar), or ``None``.
 
         A missing file and a file without frontmatter are ``None``. Raises
         ``devkit.core.FrontmatterError`` (``FRONTMATTER_INVALID``) for a block that

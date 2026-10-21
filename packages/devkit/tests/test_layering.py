@@ -57,13 +57,13 @@ def test_test_folders_are_not_scanned() -> None:
 ENTRY_POINT_EXCEPTIONS: dict[tuple[str, str], str] = {
     ("devkit.host.services", "integration"): "integration",
     # Dependency inversion: gate registers its hook installation as a post-sync extension; distribution calls it
-    # through ``devkit.core.extensions`` without importing gate code.
+    # through ``devkit_core.core.extensions`` without importing gate code.
     ("devkit.post_sync", "gate-hooks"): "gate",
     # Dependency inversion: workflow registers the envelope hold check as a finish guard; worktree loads it through
     # its entry point (failing closed) without importing workflow code.
     ("devkit.finish_guard", "workflow-envelopes"): "workflow",
     # Dependency inversion: worktree registers its stale activity branch report as a hygiene extension; rules calls
-    # it through ``devkit.core.extensions`` without importing worktree code.
+    # it through ``devkit_core.core.extensions`` without importing worktree code.
     ("devkit.hygiene", "worktree-stale"): "worktree",
     # Dependency inversion: the engines register the commented templates of their reserved configuration tables;
     # distribution renders them without importing engine code.

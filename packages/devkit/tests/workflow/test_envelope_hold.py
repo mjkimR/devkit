@@ -8,10 +8,10 @@ from pathlib import Path
 
 import pytest
 import yaml
-from devkit.core.errors import GitError
 from devkit.workflow.errors import AuthoringError
 from devkit.workflow.integration import finish_guard
 from devkit.workflow.unit.envelope import compose_envelope, load_envelopes
+from devkit_core.base.errors import GitError
 from testsupport.workflow import SIMPLE_UNIT, run_cli, write_config
 
 GATED = """---

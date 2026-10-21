@@ -46,8 +46,6 @@ from pathlib import Path
 from typing import Any
 
 from devkit.advisory import AdvisoryError
-from devkit.core import FrontmatterError
-from devkit.core.frontmatter import parse
 from devkit.workflow import (
     Binding,
     Decision,
@@ -58,6 +56,8 @@ from devkit.workflow import (
     record_answer,
     write_decision,
 )
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import parse
 
 from devkit_spec.branches import require_development_branch
 from devkit_spec.config import GLOBAL

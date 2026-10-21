@@ -19,9 +19,9 @@ from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
 
-from devkit.core import FrontmatterError, atomic_write_text
-from devkit.core.frontmatter import locate
 from devkit.rules import LinkRelocation, relocate_links
+from devkit_core.core import FrontmatterError, atomic_write_text
+from devkit_core.core.frontmatter import locate
 
 from devkit_spec.documents import Document, DocumentIndex, Reference, parse_document, rewrite, visible_lines
 from devkit_spec.documents.ids import ID_SOURCE

@@ -11,9 +11,9 @@ from importlib.metadata import version
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
-from devkit.core.mcp import ConfirmationReply, McpTool
 from devkit.core.mcp_context import ExecutionBinding, guard_execution, invocation
 from devkit.host.errors import HostConfirmationError, HostMcpError, HostMcpInputError
+from devkit_core.base.mcp import ConfirmationReply, McpTool
 from jsonschema import Draft202012Validator
 from mcp import types
 from mcp.server.lowlevel import Server

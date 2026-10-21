@@ -24,10 +24,10 @@ from pathlib import Path
 from typing import Any
 
 from devkit.advisory import AdvisoryError
-from devkit.core import FrontmatterError
-from devkit.core.errors import ArgumentError
-from devkit.core.frontmatter import parse
 from devkit.workflow import UnitRef, Workspace, load_envelopes, record_answer
+from devkit_core.base.errors import ArgumentError
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import parse
 
 from devkit_spec.branches import PLANNING_PREFIX, base_checkout_problem, checkout, planning_branches
 from devkit_spec.errors import (

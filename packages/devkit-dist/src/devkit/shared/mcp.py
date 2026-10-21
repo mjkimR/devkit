@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit.core.mcp import Confirmation, McpTool
+from devkit_core.base.mcp import Confirmation, McpTool
+
 from devkit.core.mcp_context import configuration_workspace, guard_execution
 from devkit.shared.api import PutRequest
 from devkit.shared.service import adapter

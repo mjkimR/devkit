@@ -16,11 +16,13 @@ created_at: 2026-10-17
 ## 1. Subsystem Decomposition & Layering
 
 The `devkit` modules ship in two wheels that share the `devkit` namespace (`ARCH-05-1-containers`,
-`ADR-dist-module-split`): `devkit-dist` (`packages/devkit-dist`) holds the foundation, distribution, host hooks,
+`ADR-dist-module-split`): `devkit-dist` (`packages/devkit-dist`) holds project configuration, receipts, distribution, host hooks,
 search and the root command line; `devkit-agt` (`packages/devkit`) holds the harness engines. Each wheel enforces its
 own layering with a unit test (`packages/devkit-dist/tests/test_layering.py`, `packages/devkit/tests/test_layering.py`).
 The optional `devkit-mcp` wheel owns the separate `devkit_mcp` namespace and adapts dependency-free core service
-contracts to MCP transport and native forms:
+contracts to MCP transport and native forms. The independent `devkit-core` wheel owns shared primitives
+under `devkit_core.core` and shared errors/SDK-free contracts under `devkit_core.base`. Its package tests
+forbid application imports and dependencies from base to core:
 
 ```mermaid
 graph TD
@@ -45,9 +47,11 @@ graph TD
         Distribution["devkit.distribution"]
         Host["devkit.host"]
         Search["devkit.search (Hybrid Search)"]
-        Core["devkit.core (Shared Primitives and MCP Service Contracts)"]
+        DistSupport["devkit.core (Project Configuration, Receipts and CLI Support)"]
     end
 
+    Core["devkit_core (base contracts, core primitives)"]
+    DistSupport --> Core
     Advisory["devkit.advisory (Protocol & Error Types, devkit-advisory)"]
 
     CLI -->|built-in commands| Distribution
@@ -90,7 +94,7 @@ graph TD
     inversion: `devkit.post_sync` (gate), `devkit.config_tables` (workflow, worktree), `devkit.host.services`
     (runtime loading domain services), `devkit.mcp.registrations` (host loading the optional runtime launch provider),
     `devkit.hygiene` (worktree) and `devkit.finish_guard` (workflow).
-14. `devkit_mcp` imports dist core contracts and discovers domain services through entry points; dist never imports
+14. `devkit_mcp` imports foundation base contracts and distribution execution bindings and discovers domain services through entry points; dist never imports
     `devkit_mcp` or the MCP SDK. Domain services consume core contracts without importing the transport.
 
 ---
@@ -113,7 +117,7 @@ graph TD
 | **`devkit.generated`** (agt) | Tracking and deterministic regeneration of machine-generated files. | `generated check`, `generated regen` |
 
 The optional `devkit_mcp` component mounts `mcp`, loads `devkit.host.services` and adapts native forms.
-`devkit.core.mcp` owns SDK-free service contracts and explicit execution classification; the core execution binding
+`devkit_core.base.mcp` owns SDK-free service contracts and explicit execution classification; the core execution binding
 keeps owning configuration workspace, retained executor and same-clone identity distinct. Domain mutation guards
 consume the process-local binding without importing the transport. Dist discovers only the narrow
 `devkit.mcp.registrations` launch provider; removing that package leaves dist able to retire exact owned entries.

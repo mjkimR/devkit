@@ -75,7 +75,8 @@ def test_a_shared_helper_imported_at_module_level_carries_its_dependencies(affec
 @pytest.mark.parametrize(
     "path",
     [
-        "packages/devkit-dist/src/devkit/core/git.py",
+        "packages/devkit-core/src/devkit_core/core/git.py",
+        "packages/devkit-dist/src/devkit/core/cli.py",
         "packages/devkit-advisory/src/devkit/advisory/error.py",
         "packages/devkit-dist/src/devkit/cli.py",
         "packages/devkit-dist/src/devkit/__main__.py",

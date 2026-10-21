@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from devkit.core import frontmatter
+from devkit_core.core import frontmatter
+
 from devkit.distribution.bundles.common import locate_frontmatter
 
 CONTEXT_START = "<!-- DEVKIT:CONTEXT -->"

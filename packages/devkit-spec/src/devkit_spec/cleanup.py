@@ -33,8 +33,6 @@ from pathlib import Path
 from typing import Any
 
 from devkit.advisory import AdvisoryError
-from devkit.core.errors import GitError
-from devkit.core.git import run_git
 from devkit.integration import (
     CleanupContractError,
     CleanupResult,
@@ -43,6 +41,8 @@ from devkit.integration import (
     StaleRequestError,
 )
 from devkit.worktree import FinishResult, slug_of
+from devkit_core.base.errors import GitError
+from devkit_core.core.git import run_git
 
 from devkit_spec.errors import PostFinishCleanupNotice, ProposalCleanupWarning, SpecError
 from devkit_spec.proposals.prune import prune_proposals

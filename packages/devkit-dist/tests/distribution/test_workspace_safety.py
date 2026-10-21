@@ -9,8 +9,6 @@ import threading
 from pathlib import Path
 
 import pytest
-from devkit.core import LockHeldError as CoreLockHeldError
-from devkit.core import extensions as core_extensions
 from devkit.core.errors import ReceiptError
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH
 from devkit.distribution.bundles import build_bundle, load_bundle
@@ -31,6 +29,8 @@ from devkit.distribution.installation.guidance_block import START
 from devkit.distribution.installation.receipt import read_receipt
 from devkit.distribution.installation.sync import recover_project, sync_project
 from devkit.distribution.installation.workspace import AGENTS_FILE, LOCK, project_path
+from devkit_core.core import LockHeldError as CoreLockHeldError
+from devkit_core.core import extensions as core_extensions
 from distsupport.distribution import instruction, write_bundle
 
 MANIFEST = """schema = 1

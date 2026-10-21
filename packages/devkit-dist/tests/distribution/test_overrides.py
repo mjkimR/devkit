@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.core.errors import ArgumentError
 from devkit.core.receipt import OVERRIDES_PATH
 from devkit.distribution.bundles import load_bundle
 from devkit.distribution.errors import SelectionError
@@ -22,6 +21,7 @@ from devkit.distribution.installation.override_commands import (
 )
 from devkit.distribution.installation.receipt import read_receipt
 from devkit.distribution.installation.sync import sync_project
+from devkit_core.base.errors import ArgumentError
 from distsupport.distribution import cli
 
 

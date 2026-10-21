@@ -8,8 +8,8 @@ import re
 from importlib import metadata
 from pathlib import Path
 
-from devkit.core.mcp import McpTool
 from devkit.host.errors import HostMcpError
+from devkit_core.base.mcp import McpTool
 
 SERVICE_GROUP = "devkit.host.services"
 NAME = re.compile(r"[a-zA-Z0-9_-]{1,64}\Z")

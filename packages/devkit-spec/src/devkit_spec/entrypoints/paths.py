@@ -15,7 +15,7 @@ from __future__ import annotations
 import posixpath
 from pathlib import Path
 
-from devkit.core import UnsafePathError, resolve_within
+from devkit_core.core import UnsafePathError, resolve_within
 
 from devkit_spec.errors import EntrypointsPathError
 from devkit_spec.namespaces import living_path

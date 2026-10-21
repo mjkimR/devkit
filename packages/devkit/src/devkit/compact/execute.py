@@ -28,11 +28,12 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+from devkit_core.core.logs import get_logger
+
 from devkit.advisory import AdvisoryError
 from devkit.compact.errors import CommandNotStartedError, LogDirectoryError, SlowCommandNotice
 from devkit.compact.scan import Scan, scan
 from devkit.core.errors import DevkitRootNestedError
-from devkit.core.logs import get_logger
 from devkit.core.project import find_project_root, git_toplevel
 
 KEEP_LOGS = 20

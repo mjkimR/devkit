@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from devkit.core import ArgumentError
+from devkit_core.core import ArgumentError
 
 from devkit_spec.documents import DocumentIndex
 from devkit_spec.documents.ids import Kind

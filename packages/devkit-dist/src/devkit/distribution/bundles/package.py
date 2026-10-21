@@ -7,7 +7,8 @@ import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from devkit.core.errors import ArgumentError
+from devkit_core.base.errors import ArgumentError
+
 from devkit.distribution.bundles.manifest import Bundle, source_files
 from devkit.distribution.content import Content, json_content, normal_mode, sha256
 from devkit.distribution.errors import BundleError

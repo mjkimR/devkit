@@ -4,10 +4,10 @@ import asyncio
 from pathlib import Path
 
 import pytest
-from devkit.core import LockHeldError
-from devkit.core.mcp import ConfirmationReply
 from devkit.integration import AuthorityError, CleanupResult, CleanupTarget, IntegrationService, Task, providers
 from devkit.worktree import integration_lock
+from devkit_core.base.mcp import ConfirmationReply
+from devkit_core.core import LockHeldError
 from testsupport.rules import git, write
 
 

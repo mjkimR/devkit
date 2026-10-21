@@ -19,8 +19,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
-from devkit.core import FrontmatterError, atomic_write_text
-from devkit.core.frontmatter import locate, parse
+from devkit_core.core import FrontmatterError, atomic_write_text
+from devkit_core.core.frontmatter import locate, parse
 
 from devkit_spec.entrypoints.derive import Pair, Reason, SkipKind, Skipped, State
 from devkit_spec.entrypoints.paths import covers, normalize

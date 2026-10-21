@@ -22,6 +22,7 @@ from pathlib import Path
 
 import click
 from click.core import ParameterSource
+from devkit_core.base.errors import ArgumentError
 
 from devkit.advisory import AdvisoryError, ExitCode, Level
 from devkit.core.cli import (
@@ -36,7 +37,6 @@ from devkit.core.cli import (
     resolve_root,
     workspace_option,
 )
-from devkit.core.errors import ArgumentError
 from devkit.rules.cli import output
 from devkit.rules.engine.errors import RuleProblem
 from devkit.rules.engine.hygiene import run_hygiene_extensions

@@ -6,8 +6,9 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-from devkit.core.files import atomic_write_bytes
-from devkit.core.paths import normalize_relpath
+from devkit_core.core.files import atomic_write_bytes
+from devkit_core.core.paths import normalize_relpath
+
 from devkit.host.errors import HookDispatchError
 from devkit.host.hooks import HookEvent, HookResponse
 

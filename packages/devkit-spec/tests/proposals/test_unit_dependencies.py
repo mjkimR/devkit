@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from devkit.core.frontmatter import parse
+from devkit_core.core.frontmatter import parse
 from proposals.support import TODAY, accept
 
 from devkit_spec.errors import ProposalInvalidError, ProposalSlugConflictError

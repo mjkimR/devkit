@@ -5,8 +5,10 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
+from devkit_core.base.errors import ArgumentError
+
 from devkit.advisory import ExitCode
-from devkit.core.errors import ArgumentError, ReceiptError
+from devkit.core.errors import ReceiptError
 from devkit.core.receipt import MANAGED_PATH, RECEIPT_PATH
 from devkit.distribution.bundles.common import SLUG, read_frontmatter
 from devkit.distribution.bundles.playbooks import read_playbook_header

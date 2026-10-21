@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import Any
 
 from devkit.advisory import AdvisoryError, Level
-from devkit.core import FrontmatterError, run_git
 from devkit.workflow.evaluation.git import is_ancestor
+from devkit_core.core import FrontmatterError, run_git
 
 from devkit_spec.errors import SpecError
 from devkit_spec.worker.inputs import ScopeUnresolved, derive_scope, git, inputs, prefix, records

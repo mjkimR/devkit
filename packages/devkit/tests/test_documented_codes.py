@@ -13,6 +13,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
 SOURCES = (
+    REPO / "packages/devkit-core/src/devkit_core",
     REPO / "packages/devkit-dist/src/devkit",
     REPO / "packages/devkit/src/devkit",
     REPO / "packages/devkit-advisory/src/devkit",

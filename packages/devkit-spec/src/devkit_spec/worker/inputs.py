@@ -6,11 +6,11 @@ import re
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from devkit.core import GitError, run_git
-from devkit.core.errors import ArgumentError
-from devkit.core.frontmatter import parse
 from devkit.workflow.unit.envelope import Envelopes, collect_envelopes, is_envelope_name
 from devkit.worktree.lifecycle import locate
+from devkit_core.base.errors import ArgumentError
+from devkit_core.core import GitError, run_git
+from devkit_core.core.frontmatter import parse
 
 from devkit_spec.attach import PROPOSAL_UNIT, SPEC_UNIT, attach_check
 from devkit_spec.entrypoints.bundle import parse_boundaries, parse_targets

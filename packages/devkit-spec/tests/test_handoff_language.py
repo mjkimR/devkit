@@ -50,8 +50,8 @@ def test_handoff_message_and_schema_parity(setup, effort):
 def test_handoff_language_does_not_change_authority(tmp_path, monkeypatch, language, case):
     import asyncio
 
-    from devkit.core.mcp import ConfirmationReply
     from devkit.host.errors import HostConfirmationError
+    from devkit_core.base.mcp import ConfirmationReply
 
     from devkit_spec.errors import HandoffReplyError, HandoffStaleError
     from devkit_spec.handoff_mcp import HandoffService

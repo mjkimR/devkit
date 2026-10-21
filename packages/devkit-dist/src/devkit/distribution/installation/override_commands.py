@@ -13,8 +13,9 @@ import difflib
 from pathlib import Path
 from types import MappingProxyType
 
+from devkit_core.base.errors import ArgumentError
+
 from devkit.advisory import AdvisoryError
-from devkit.core.errors import ArgumentError
 from devkit.core.receipt import OVERRIDES_PATH, RECEIPT_PATH, OverrideRecord, Receipt
 from devkit.distribution.bundles.common import SLUG
 from devkit.distribution.bundles.manifest import Asset

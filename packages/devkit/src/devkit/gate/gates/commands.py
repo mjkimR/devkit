@@ -23,7 +23,7 @@ is not pointed at this commit's index. The index is passed as
 ``DEVKIT_GIT_INDEX_FILE`` instead, which devkit's own staged checks
 (``devkit rules check --staged``) use for this repository, so they evaluate
 exactly what is committed, ``git commit -a`` and ``git commit <paths>``
-included (``devkit.core.git.commit_index``).
+included (``devkit_core.core.git.commit_index``).
 """
 
 from __future__ import annotations
@@ -31,9 +31,10 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
+from devkit_core.core.git import COMMIT_INDEX_VARIABLE, run_git
+
 from devkit.advisory import Actor, AdvisoryError, ExitCode, Level
 from devkit.compact import CommandRun, run_command
-from devkit.core.git import COMMIT_INDEX_VARIABLE, run_git
 from devkit.gate.engine.base import BaseGate
 from devkit.gate.engine.models import GateContext, GateResult, Stage
 from devkit.gate.errors import GateRefusedError, VerifyNotRunError, VerifyUnstagedNotice

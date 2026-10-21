@@ -7,9 +7,10 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from devkit.core.errors import UnsafePathError
-from devkit.core.paths import normalize_relpath
-from devkit.core.plugins import PluginPackage, check_plugin_modules
+from devkit_core.base.errors import UnsafePathError
+from devkit_core.core.paths import normalize_relpath
+from devkit_core.core.plugins import PluginPackage, check_plugin_modules
+
 from devkit.distribution.bundles.common import AGENT_NAMES, ALL, SHARED_SKILL_AGENTS, SLUG, VERSION, locate_frontmatter
 from devkit.distribution.bundles.fragments import read_fragment, references
 from devkit.distribution.bundles.instructions import read_instruction_header
@@ -36,7 +37,7 @@ KINDS = frozenset(
         "hook",
     }
 )
-# The kinds whose source is a plugin package directory of Python modules (``devkit.core.plugins``).
+# The kinds whose source is a plugin package directory of Python modules (``devkit_core.core.plugins``).
 PLUGIN_KINDS = frozenset({"rule", "gate"})
 # The kinds projected into agent directories (agent-projections.md); only they may ship per-agent ``variants``.
 VARIANT_KINDS = frozenset({"skill", "subagent"})
@@ -143,7 +144,7 @@ def _slug(value: Any, context: str) -> str:
 def _authoring_path(value: Any, error: str) -> PurePosixPath:
     """A path as a bundle author writes it: canonical relative POSIX, and no backslash.
 
-    ``devkit.core.paths`` accepts a backslash as a file-name character; an
+    ``devkit_core.core.paths`` accepts a backslash as a file-name character; an
     authored path rejects it so the same manifest means the same files on
     every platform.
     """

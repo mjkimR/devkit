@@ -12,7 +12,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
-from devkit.core import GitError, run_git
+from devkit_core.core import GitError, run_git
 
 PLANNING_PREFIX = "plan-"
 DEVELOPMENT_PREFIX = "dev-"

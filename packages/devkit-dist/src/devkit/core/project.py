@@ -18,8 +18,10 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
-from devkit.core.errors import ArgumentError, ConfigError, DevkitRootNestedError, GitError, UnsafePathError
-from devkit.core.git import run_git
+from devkit_core.base.errors import ArgumentError, GitError, UnsafePathError
+from devkit_core.core.git import run_git
+
+from devkit.core.errors import ConfigError, DevkitRootNestedError
 from devkit.core.receipt import CONFIG_PATH
 
 DEVKIT_DIR = ".devkit"

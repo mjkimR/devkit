@@ -9,8 +9,9 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from devkit_core.core.git import run_git
+
 from devkit.advisory import Actor, AdvisoryError, Retry
-from devkit.core.git import run_git
 from devkit.core.local_config import resolve_execution_environment
 
 

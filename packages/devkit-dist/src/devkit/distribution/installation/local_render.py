@@ -8,10 +8,11 @@ from dataclasses import replace
 from pathlib import Path
 
 import tomlkit
+from devkit_core.base.errors import GitError
+from devkit_core.core.git import run_git
 
 from devkit.advisory import ExitCode
-from devkit.core.errors import ConfigError, GitError
-from devkit.core.git import run_git
+from devkit.core.errors import ConfigError
 from devkit.core.local_config import LOCAL_CONFIG_PATH, read_effective_config, read_local_config
 from devkit.core.project import git_toplevel
 from devkit.core.receipt import CONFIG_PATH, RECEIPT_PATH, FileRecord, Receipt

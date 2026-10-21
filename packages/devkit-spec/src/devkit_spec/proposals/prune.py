@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit.core import remove_empty_tree
+from devkit_core.core import remove_empty_tree
 
 from devkit_spec.proposals.scaffold import PROPOSALS, require_slug
 

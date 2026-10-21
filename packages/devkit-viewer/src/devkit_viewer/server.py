@@ -28,7 +28,7 @@ from importlib.resources import files
 from importlib.resources.abc import Traversable
 from urllib.parse import parse_qs, unquote, urlsplit
 
-from devkit.core.logs import get_logger
+from devkit_core.core.logs import get_logger
 
 from devkit_viewer.errors import PortInUseError, ReadError, repo_unknown
 from devkit_viewer.repositories import Repository

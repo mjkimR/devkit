@@ -11,8 +11,9 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from devkit_core.core.git import run_git
+
 from devkit.core.errors import ReceiptError
-from devkit.core.git import run_git
 from devkit.core.receipt import RECEIPT_PATH, Receipt, parse_receipt
 from devkit.integration.errors import ReceiptConflictError
 

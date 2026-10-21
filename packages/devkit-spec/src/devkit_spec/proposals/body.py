@@ -18,7 +18,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from devkit.core.frontmatter import locate
+from devkit_core.core.frontmatter import locate
 
 _H1 = re.compile(r"^ {0,3}# +.+$")
 _H2 = re.compile(r"^ {0,3}## +(.+?)\s*$")

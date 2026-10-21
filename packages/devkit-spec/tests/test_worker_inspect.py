@@ -381,7 +381,7 @@ def test_text_scope_unknown_omits_outside_and_history(repo: Path, monkeypatch: p
 
 
 def test_structured_advisories_use_stderr_once(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from devkit.core.errors import ArgumentError
+    from devkit_core.base.errors import ArgumentError
 
     worker(repo, 1)
     monkeypatch.chdir(repo)

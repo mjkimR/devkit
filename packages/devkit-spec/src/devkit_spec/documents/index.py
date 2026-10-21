@@ -19,7 +19,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from devkit.core import FrontmatterError
+from devkit_core.core import FrontmatterError
 
 from devkit_spec.documents.ids import Kind
 from devkit_spec.documents.model import Document, Reference

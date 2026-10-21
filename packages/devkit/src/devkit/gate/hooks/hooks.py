@@ -11,8 +11,10 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 
+from devkit_core.core import atomic_write_bytes, file_lock
+
 from devkit.advisory import AdvisoryError, Level
-from devkit.core import atomic_write_bytes, file_lock, require_git_toplevel
+from devkit.core import require_git_toplevel
 from devkit.gate.engine.models import Stage
 from devkit.gate.engine.runner import GateProject, load_gate_project
 from devkit.gate.errors import (

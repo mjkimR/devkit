@@ -3,7 +3,7 @@
 Every rule is one directory: a built-in rule is a package module of
 ``devkit.rules.rules``, a distributed or custom rule a plugin package. Its
 tests sit beside the code in ``<rule folder>/tests/`` and are never imported
-by devkit's loaders (``devkit.core.plugins``). ``rule_folder`` finds the folder
+by devkit's loaders (``devkit_core.core.plugins``). ``rule_folder`` finds the folder
 of a loaded rule: the directory of the module defining its class, or for a
 plugin package the package's root in the tree that module came from (a
 project override's copy when the class is defined there, else the managed
@@ -31,8 +31,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from devkit_core.core.plugins import TESTS_DIRECTORY
+
 from devkit.advisory import AdvisoryError
-from devkit.core.plugins import TESTS_DIRECTORY
 from devkit.rules.engine.errors import RulesTestUnavailableError
 from devkit.rules.engine.models import Rule
 from devkit.rules.engine.registry import PLUGIN_NAMESPACE

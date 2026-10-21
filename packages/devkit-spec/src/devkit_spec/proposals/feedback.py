@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from devkit.core import FrontmatterError
+from devkit_core.core import FrontmatterError
 
 from devkit_spec.documents import parse_document
 from devkit_spec.errors import ProposalInvalidError

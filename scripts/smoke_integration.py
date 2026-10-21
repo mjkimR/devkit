@@ -18,7 +18,7 @@ from mcp.client.stdio import stdio_client
 
 PROVIDER = """
 from pathlib import Path
-from devkit.core.git import run_git
+from devkit_core.core.git import run_git
 from devkit.integration import Evidence, Readiness
 
 def check(context):

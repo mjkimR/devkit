@@ -20,6 +20,7 @@ from contextlib import nullcontext
 from pathlib import Path
 
 import click
+from devkit_core.base.errors import ArgumentError
 
 from devkit.core.cli import (
     FORMAT_OPTION,
@@ -32,7 +33,6 @@ from devkit.core.cli import (
     is_json,
     workspace_option,
 )
-from devkit.core.errors import ArgumentError
 from devkit.core.project import find_project_root
 from devkit.worktree.config import WorktreeConfig, read_worktree_config
 from devkit.worktree.errors import WorktreeError

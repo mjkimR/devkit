@@ -14,8 +14,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from devkit_core.core.extensions import run_extensions
+
 from devkit.advisory import AdvisoryError
-from devkit.core.extensions import run_extensions
 from devkit.rules.engine.errors import HygieneExtensionFailedNotice, HygieneNotice
 
 HYGIENE_GROUP = "devkit.hygiene"

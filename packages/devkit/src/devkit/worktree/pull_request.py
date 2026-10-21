@@ -13,9 +13,10 @@ from pathlib import Path
 from typing import Any, Protocol
 from urllib.parse import quote, urlparse
 
+from devkit_core.base.errors import GitError
+from devkit_core.core.git import run_git
+
 from devkit.advisory import Actor, AdvisoryError, Retry
-from devkit.core.errors import GitError
-from devkit.core.git import run_git
 
 NETWORK_TIMEOUT = 5.0
 NETWORK_BUDGET = 20.0

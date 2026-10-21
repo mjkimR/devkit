@@ -111,7 +111,7 @@ def test_partial_auto_resume_preserves_authority_and_revocation(auto_repo, monke
 
 
 def test_source_only_auto_still_requires_ask(repo):
-    from devkit.core.mcp import ConfirmationReply
+    from devkit_core.base.mcp import ConfirmationReply
 
     base, worktree = repo
     config = worktree / ".devkit/config.toml"

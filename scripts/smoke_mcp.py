@@ -29,7 +29,7 @@ def main() -> None:
         "CODEX_HOME": str(work / "codex"),
         "PYTHONPATH": "",
     }
-    packages = ["devkit-advisory", "devkit-dist", "devkit-agt", "devkit-mcp", "devkit-spec"]
+    packages = ["devkit-advisory", "devkit-core", "devkit-dist", "devkit-agt", "devkit-mcp", "devkit-spec"]
     for package in packages:
         run(["uv", "build", "--offline", "--wheel", "--package", package, "--out-dir", str(wheels)], root, env)
     paths = {}
@@ -68,7 +68,7 @@ def main() -> None:
         spec = "devkit-spec" in chosen
         script = f"""
 import importlib.util, importlib.metadata
-from devkit.core.mcp import McpTool
+from devkit_core.base.mcp import McpTool
 from devkit.cli import cli
 from click.testing import CliRunner
 from pathlib import Path

@@ -4,7 +4,7 @@ import os
 from pathlib import Path, PurePosixPath
 
 import pytest
-from devkit.core import UnsafePathError, is_safe_relpath, normalize_relpath, resolve_within
+from devkit_core.core import UnsafePathError, is_safe_relpath, normalize_relpath, resolve_within
 
 
 @pytest.mark.parametrize(

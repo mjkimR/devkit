@@ -5,8 +5,8 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from devkit.core import PluginFailure, PluginPackage, iter_plugin_packages, load_subclasses
-from devkit.core.plugins import check_plugin_modules, module_name, plugin_module_name, plugin_modules
+from devkit_core.core import PluginFailure, PluginPackage, iter_plugin_packages, load_subclasses
+from devkit_core.core.plugins import check_plugin_modules, module_name, plugin_module_name, plugin_modules
 
 # The base class plugin modules subclass; they import it from this test module.
 BASE_MODULE = "devkit.core_test_plugin_base"

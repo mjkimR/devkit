@@ -1,4 +1,4 @@
-"""The Git queries the gate system needs, built on ``devkit.core.git.run_git``.
+"""The Git queries the gate system needs, built on ``devkit_core.core.git.run_git``.
 
 A failed Git call raises ``devkit.core.GitError`` (``GIT_FAILED``) as it is.
 The repository root is ``devkit.core.require_git_toplevel``, whose error is an
@@ -10,7 +10,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from devkit.core import GitError, run_git
+from devkit_core.core import GitError, run_git
 
 
 def _git(cwd: Path, *args: str) -> str:

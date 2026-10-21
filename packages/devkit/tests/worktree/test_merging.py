@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.core.locks import file_lock
 from devkit.worktree import (
     CommitFailedError,
     GitUnsupportedError,
@@ -23,6 +22,7 @@ from devkit.worktree import (
     read_worktree_config,
     start,
 )
+from devkit_core.core.locks import file_lock
 from testsupport.cli import cli
 from testsupport.rules import git, init_repo, write
 

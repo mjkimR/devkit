@@ -17,9 +17,10 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-from devkit.core.errors import GitError
-from devkit.core.git import run_git
-from devkit.core.locks import file_lock
+from devkit_core.base.errors import GitError
+from devkit_core.core.git import run_git
+from devkit_core.core.locks import file_lock
+
 from devkit.worktree.config import MERGE_METHODS
 from devkit.worktree.errors import (
     CommitFailedError,

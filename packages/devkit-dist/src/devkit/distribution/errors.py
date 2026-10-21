@@ -18,9 +18,10 @@ or decide something) or ``NOTICE`` (worth knowing). Override drift under
 
 from __future__ import annotations
 
+from devkit_core.base.errors import LockHeldError as CoreLockHeldError
+
 from devkit.advisory import Actor, AdvisoryError, ExitCode, Level, Retry
 from devkit.core.errors import HARNESS_INSTALL_FIX
-from devkit.core.errors import LockHeldError as CoreLockHeldError
 
 LOCK_RETRY_AFTER = "the running devkit command finishes"
 

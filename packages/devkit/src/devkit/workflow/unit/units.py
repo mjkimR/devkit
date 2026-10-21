@@ -7,8 +7,9 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path, PurePosixPath
 
-from devkit.core.errors import UnsafePathError
-from devkit.core.paths import resolve_within
+from devkit_core.base.errors import UnsafePathError
+from devkit_core.core.paths import resolve_within
+
 from devkit.workflow.errors import AnchorInvalidError, LayoutError, UnitDirNotEmptyError, UnitExistsError
 from devkit.workflow.project.layout import TemplateLayout
 from devkit.workflow.unit import frontmatter

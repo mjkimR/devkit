@@ -1,56 +1,52 @@
-"""Shared foundation for devkit packages.
+"""Distribution-owned project configuration, receipts and CLI support.
 
-One implementation of what several packages need to agree on: the frontmatter
-grammar, the installation receipt, safe workspace-relative paths, atomic file
-replacement and empty-tree removal, the Git runner, deadlines, file locks, plugin package loading,
-project discovery and configuration reading, and
-the command-line plumbing every command group uses (``devkit.core.cli``, the
-only module that imports click; it is not imported here). Free of import-time
-side effects; the only devkit module it imports is ``devkit.advisory`` (every
-core error is an ``AdvisoryError``).
-
-Frontmatter functions are used through their module
-(``devkit.core.frontmatter.parse`` / ``locate`` / ``load_header``), as are the
-config template's (``devkit.core.config_template.render_tool_template`` /
-``uncomment``).
+The public facade also exposes shared foundation types from devkit-core. Their implementations
+and internal callers use devkit_core.core; no primitive implementation is duplicated here.
+CLI plumbing remains in devkit.core.cli and is not imported by this facade.
 """
 
-from devkit.core.config_template import TemplateKey, TemplateTable
-from devkit.core.deadline import Deadline
-from devkit.core.errors import (
+from devkit_core.core import (
     ArgumentError,
+    Deadline,
+    DeadlineExceededError,
+    DevkitCoreError,
+    Frontmatter,
+    FrontmatterBlock,
+    FrontmatterError,
+    GitError,
+    LoadedPlugin,
+    LockHeldError,
+    LockUnsupportedError,
+    PluginFailure,
+    PluginLoad,
+    PluginPackage,
+    UnsafePathError,
+    atomic_write_bytes,
+    atomic_write_text,
+    file_lock,
+    is_safe_relpath,
+    iter_plugin_packages,
+    load_subclasses,
+    normalize_relpath,
+    remove_empty_tree,
+    resolve_within,
+    run_git,
+)
+
+from devkit.core.config_template import TemplateKey, TemplateTable
+from devkit.core.errors import (
     AssetFileError,
     CommandPluginError,
     ConfigError,
-    DeadlineExceededError,
-    DevkitCoreError,
     DevkitRootNestedError,
-    FrontmatterError,
-    GitError,
     HarnessCommandUnavailableError,
-    LockHeldError,
-    LockUnsupportedError,
     ReceiptError,
-    UnsafePathError,
 )
-from devkit.core.files import atomic_write_bytes, atomic_write_text, remove_empty_tree
-from devkit.core.frontmatter import Frontmatter, FrontmatterBlock
-from devkit.core.git import run_git
 from devkit.core.local_config import (
     EffectiveConfig,
     ExecutionEnvironment,
     read_effective_config,
     resolve_execution_environment,
-)
-from devkit.core.locks import file_lock
-from devkit.core.paths import is_safe_relpath, normalize_relpath, resolve_within
-from devkit.core.plugins import (
-    LoadedPlugin,
-    PluginFailure,
-    PluginLoad,
-    PluginPackage,
-    iter_plugin_packages,
-    load_subclasses,
 )
 from devkit.core.project import (
     config_table,

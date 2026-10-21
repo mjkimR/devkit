@@ -4,8 +4,8 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from devkit.core import GitError, run_git
-from devkit.core.errors import DevkitCoreError
+from devkit_core.base.errors import DevkitCoreError
+from devkit_core.core import GitError, run_git
 
 
 def test_returns_stdout_bytes(repo: Path) -> None:
@@ -118,7 +118,7 @@ def test_git_messages_are_not_localized(tmp_path: Path, monkeypatch: pytest.Monk
 def test_commit_index_applies_only_to_its_own_repository(
     repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from devkit.core.git import COMMIT_INDEX_VARIABLE, commit_index
+    from devkit_core.core.git import COMMIT_INDEX_VARIABLE, commit_index
 
     monkeypatch.delenv("GIT_INDEX_FILE", raising=False)
     monkeypatch.delenv(COMMIT_INDEX_VARIABLE, raising=False)
