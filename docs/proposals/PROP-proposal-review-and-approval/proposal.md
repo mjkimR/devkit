@@ -2,7 +2,7 @@
 id: PROP-proposal-review-and-approval
 title: Proposal review reports and unified plan-accept MCP approval
 summary: "Generate PADR-focused proposal review reports in the shared workspace and provide a native MCP plan-accept confirmation that links the report and selects accept-only or combined handoff."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-20
 target_area: capabilities/delivery/
 priority: high                        # critical | high | medium | low
