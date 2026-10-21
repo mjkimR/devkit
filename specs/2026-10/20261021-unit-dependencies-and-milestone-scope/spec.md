@@ -1,35 +1,23 @@
 ---
-id: PROP-unit-dependencies-and-milestone-scope
+id: SPEC-unit-dependencies-and-milestone-scope
 title: Unit-level depends_on and coarse milestone scope
-summary: "Allows proposal and spec anchors to declare depends_on prerequisites across units and defines milestone authoring guidance so milestones remain multi-unit themes rather than single-proposal gates."
-status: accepted
-created_at: 2026-10-21
-target_area: capabilities/delivery/
-priority: high
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-spec/
-    - docs/capabilities/delivery/
-    - docs/capabilities/documents/
-    - docs/capabilities/governance/
-    - docs/capabilities/harness/
-    - docs/decisions/
-    - docs/development/reference/
-    - docs/roadmap/
-  excludes:
-    - packages/devkit/
-    - packages/devkit-dist/
-    - packages/devkit-viewer/
-task_kind: feature
-workflow: sdd-proposal
+summary: Allows proposal and spec anchors to declare depends_on prerequisites across units and defines milestone authoring guidance so milestones remain multi-unit themes rather than single-proposal gates.
+status: planned
+created: 2026-10-21
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-unit-dependencies-and-milestone-scope] Unit-level depends_on and coarse milestone scope
+# [SPEC-unit-dependencies-and-milestone-scope] Unit-level depends_on and coarse milestone scope
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-unit-dependencies-and-milestone-scope on 2026-10-21.
+- **Preserved Materials**: `docs/materials/2026-10/20261021-unit-dependencies-and-milestone-scope`
+
+### 1. Background & Hypothesis
 
 `ADR-milestone-documents` and `CAP-DOCS-document-model` restrict `depends_on` to milestone documents (`MS-<slug>`)
 and validate only `MS-` target prefixes (`RULE-document-reference`). Because proposals and specs have no way to
@@ -47,7 +35,26 @@ milestones to their intended role:
 2. Defining explicit milestone sizing and abstraction rules in the Backlog guidance and milestone template discourages
    milestones used solely as single-proposal sequencing gates and keeps detailed CLI/implementation contracts inside proposals and specs.
 
-## 2. Planning Decisions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Unit-level depends_on and coarse milestone scope so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Decisions
 
 - **D1 — Typed graphs:** Unit anchors accept only PROP/SPEC anchor IDs, and milestones retain MS-only
   dependencies. The graphs remain separate. Validate list/string shape, exact target identity, ambiguity,
@@ -78,9 +85,9 @@ milestones to their intended role:
   proposal assumes none of its schema, completion or lineage design. It adds direct prerequisite edges only,
   no confirmed-coverage evaluator, automatic completion or persistent delivery lineage.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Document model and `RULE-document-reference`
+#### Document model and `RULE-document-reference`
 
 - Extend `parse_document` (`CAP-DOCS-document-model`) so `depends_on` is valid on both `Kind.MILESTONE` and unit
   anchors (`is_unit_anchor`: `proposal.md` and `spec.md`), remaining invalid on other document kinds.
@@ -93,7 +100,7 @@ milestones to their intended role:
     automatically rewrite `depends_on` entries from `PROP-<slug>` to `SPEC-<slug>` when the prerequisite proposal is
     handed off, and `handoff` carries `depends_on` from `proposal.md` to `spec.md`.
 
-### Readiness and Backlog / `spec-next` procedures
+#### Readiness and Backlog / `spec-next` procedures
 
 - **Unit readiness:** A unit's `depends_on` prerequisites are satisfied when every referenced ID resolves to a
   completed spec (`SPEC-<slug>` with `status: completed` on the base), evaluated one direct edge at a time;
@@ -113,7 +120,7 @@ milestones to their intended role:
   authorized write scope, stop the lifecycle mutation and ask the Host to coordinate the scope; never silently
   delete the prerequisite or mutate another worker's checkout.
 
-### Coarse milestone scope and authoring guidance
+#### Coarse milestone scope and authoring guidance
 
 - Update `backlog.md`, `docs/roadmap/README.md` (and seeded `bundle/seed/docs/roadmap/README.md`), and
   `bundle/templates/milestone.md`:
@@ -125,14 +132,14 @@ milestones to their intended role:
     outcomes and capability boundaries. Command-line flags, branch names, file layouts and scenario-level test cases
     belong in `proposal.md` and `spec.md`, not in the milestone document.
 
-### Non-Goals
+#### Non-Goals
 
 - **Scope Excluded**: Retroactively merging or deleting existing milestones under `docs/roadmap/` as part of this
   mechanism change (existing roadmap cleanup remains a separate user decision in Backlog).
 - **Scope Excluded**: Cross-kind `depends_on` edges (such as a milestone depending on a proposal, or a proposal
   depending on a milestone via `depends_on` instead of `milestone`).
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - Record a PADR superseding `ADR-milestone-documents` while retaining its unaffected decisions to allow `depends_on` on unit anchors (`PROP-`/`SPEC-`) alongside
   milestones and to define the coarse-milestone / unit-dependency split.
@@ -141,7 +148,7 @@ milestones to their intended role:
   carrying `depends_on`, and bundle contract tests for updated skill/template guidance.
 - Run `just lint-check`, `just check`, `just rules-check`, and `just test-affected` before integration.
 
-### Implementation constraints and acceptance evidence
+#### Implementation constraints and acceptance evidence
 
 - Dependency references remain normal indexed relationships. History-hidden completed SPEC targets must resolve;
   list/search presentation filters must not prevent resolving a direct target. Incoming repair covers live
@@ -186,3 +193,4 @@ expand prerequisites through `decomposed_from`/`supersedes`, continually repair 
 from disappearance of a proposal. The existing exact same-slug PROP-to-SPEC rewrite during handoff is retained
 only as direct reference relocation for live documents; it does not imply completion. A stale direct reference
 that cannot be repaired by this exact existing mapping is surfaced for user-assisted Backlog repair.
+

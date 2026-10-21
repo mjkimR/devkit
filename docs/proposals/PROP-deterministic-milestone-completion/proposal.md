@@ -38,7 +38,7 @@ separate manual transitions; completing the associated work can leave the milest
 The desired closure has two checks: the user and agent have finished decomposing the intended milestone scope
 into proposals, and the work represented by its directly connected proposals has been settled. Keep this model
 local to the milestone/proposal boundary. Do not carry milestone metadata into SPECs or maintain a persistent
-milestone-to-PROP-to-SPEC graph. `PROP-unit-dependencies-and-milestone-scope` owns the direct-membership model and
+milestone-to-PROP-to-SPEC graph. `SPEC-unit-dependencies-and-milestone-scope` owns the direct-membership model and
 unit ordering; this proposal owns the small closure procedure built on that boundary.
 
 The agent may inspect relevant code or Git state when deciding whether a removed proposal's work is actually
@@ -120,7 +120,7 @@ to the chosen small contract; do not build a lineage framework just to test mile
 This is a queued feature draft, not approval to start Planning or Development. Planning and Development effort
 hints are medium. Planning must settle the minimal confirmation contract and explicitly reject unnecessary
 transitive bookkeeping. Keep shared direct-membership semantics aligned with
-`PROP-unit-dependencies-and-milestone-scope`; do not implement that proposal's independent unit dependency work here.
+`SPEC-unit-dependencies-and-milestone-scope`; do not implement that proposal's independent unit dependency work here.
 
 **Scope excluded:** automatically guessing all necessary proposals; milestone metadata on SPECs; per-outcome
 coverage maps; persistent PROP/SPEC descendant graphs; automatically collected verification/integration ledgers;

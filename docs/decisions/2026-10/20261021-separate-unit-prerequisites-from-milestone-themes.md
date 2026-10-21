@@ -1,15 +1,15 @@
 ---
-id: PADR-separate-unit-prerequisites-from-milestone-themes
+id: ADR-separate-unit-prerequisites-from-milestone-themes
 title: Separate unit prerequisites from milestone themes
 summary: "Defines typed unit prerequisite edges, conservative base readiness and explicit lifecycle retargeting while milestones remain coarse grouping documents."
-proposal: PROP-unit-dependencies-and-milestone-scope
-status: draft
+proposal: SPEC-unit-dependencies-and-milestone-scope
+status: accepted
 created_at: 2026-10-21
 ---
 
-# [PADR-separate-unit-prerequisites-from-milestone-themes] Separate unit prerequisites from milestone themes
+# [ADR-separate-unit-prerequisites-from-milestone-themes] Separate unit prerequisites from milestone themes
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-21
 
 ---
