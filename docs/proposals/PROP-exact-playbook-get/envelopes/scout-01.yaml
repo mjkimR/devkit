@@ -1,0 +1,12 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-21T00:09:30.015449Z'
+status: completed
+summary: Receipt readers and header primitives support a thin exact lookup; reject search and installed override resolver reuse. Slash follows approved intent despite the scout colon suggestion; receipt snapshot semantics and one entrypoint are explicit.
+findings: []
+unverified_areas:
+- Source/test inspection only; no production implementation or test execution.
+checks:
+  investigation: PASS source and test evidence recorded in materials/retrieval-design.md
