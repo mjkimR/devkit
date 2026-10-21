@@ -1,0 +1,30 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T04:01:20.076918Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer reverified both medium-review findings: source identity must be unique before projection; duplicate-source regression proves zero writes. Local/cloud guidance budgets pass. Additional exact-anchor autofix guard verified against auxiliary and completed-history targets.'
+findings:
+- issue: Handoff projection silently resolves an ambiguous source PROP identity that actual reference relocation refuses.
+  evidence: packages/devkit-spec/src/devkit_spec/proposals/handoff.py:888
+  failure_condition: An accepted PROP-child has a second declaration, including in another namespace, and a live unit depends_on PROP-child; projection passes but actual rewrite reports AMBIGUOUS and leaves the edge unchanged.
+  suggested_action: Require the source ID to identify exactly the source anchor before projection; add a namespaced duplicate-source zero-write regression.
+  resolution: resolved
+  severity: P1
+- issue: Locally rendered Backlog is 12352 bytes, exceeding its 12288-byte budget by 64 bytes.
+  evidence: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/backlog.md.jinja:86
+  failure_condition: Local rendering fails the required test_bundle_budgets.py check.
+  suggested_action: Shorten redundant wording and verify local and cloud budgets.
+  resolution: resolved
+  severity: P2
+assumptions:
+- 'Medium repeat review omitted: fixes are bounded guards and wording reductions, with direct regressions; implementer verified later changes, not the initial reviewer.'
+checks:
+  tests: PASS affected 1277; review-fix 124; subsequent exact-anchor autofix 29
+  lint: PASS module Ruff and cumulative rules
+  types: PASS just check spec
+diff_scope:
+  base: e4c603dfbdee0149819b72a5b99f16b382eef044
+  head: 8ae58613030f176831af0962f601df674aa45971
