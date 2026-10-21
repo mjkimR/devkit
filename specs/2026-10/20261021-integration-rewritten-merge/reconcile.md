@@ -15,7 +15,7 @@ targets:
 
 ## Source feedback disposition for the Host
 
-`FB-integration-cleanup-stale-after-merge-rewrite` is directly addressed: an executable Git post-merge hook reproduces stale cleanup before the fix, and now completes using the equal-tree, equal-ordered-parent replacement. Negative content, parent, source and policy cases retain the worktree and branch; interrupted cleanup resumes from the adopted identity. The external source is read-only in this worker scope. The Host can resolve its open destination using this evidence after validating the committed result. No assertion of integration is made.
+`FB-integration-cleanup-stale-after-merge-rewrite` is directly addressed: an executable Git post-merge hook reproduces stale cleanup before the fix, and now completes using the equal-tree, equal-ordered-parent replacement. Negative content, parent, source and policy cases retain the worktree and branch; interrupted cleanup resumes from the adopted identity. The Host validated the committed worker range, reran lint, types and 1,245 affected tests after incorporating the current base, and resolved the external source feedback with that evidence. No assertion of integration is made.
 
 ## Deferred work
 
