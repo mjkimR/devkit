@@ -4,6 +4,7 @@ title: Separate unit prerequisites from milestone themes
 summary: "Defines typed unit prerequisite edges, conservative base readiness and explicit lifecycle retargeting while milestones remain coarse grouping documents."
 proposal: SPEC-unit-dependencies-and-milestone-scope
 status: accepted
+supersedes: ADR-milestone-documents
 created_at: 2026-10-21
 ---
 
@@ -60,4 +61,4 @@ on demand. `PROP-deterministic-milestone-completion` remains independent and sup
 Authors must maintain explicit dependency edges during lifecycle changes, for live incoming direct edges when a target is removed; completed history remains unchanged. No automatic selection of decomposed children or superseding proposals is safe.
 The base status signal can be weaker than verified completion; it intentionally grants no delivery certification.
 Development must test mixed cycles, history targets, handoff projection and conservative base recommendation.
-This draft decision becomes effective only through the proposal's acceptance and normal handoff promotion.
+This accepted decision governs the typed dependency and direct proposal membership contracts.

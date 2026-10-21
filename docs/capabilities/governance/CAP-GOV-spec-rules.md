@@ -98,7 +98,7 @@ exclusions and snapshot cache rules apply.
 
 - MUST report: a relation field of the wrong shape, a value that is not a full ID, or an ID of the wrong kind
   (`stories`, `related_stories` take `US`; `capabilities`, `related_capabilities` take `CAP`; `spec` takes `SPEC`;
-  `plan` takes `PLAN`; `milestone` and `depends_on` take `MS`).
+  `plan` takes `PLAN`; proposal `milestone` and milestone `depends_on` take `MS`; unit `depends_on` takes exact PROP/SPEC anchors).
 - MUST report a reference to an ID no document declares or several documents declare; a missing or duplicated ID is
   fixed by hand (the rule never guesses which document was meant).
 - MUST report a bracket reference in prose (fixable: converted to the code-span form).
@@ -322,7 +322,7 @@ without IDs every rule's tests. The repository's own `pytest` collects the same 
 
 ### Milestone hygiene advisories
 
-The existing spec hygiene extension also checks repository milestone membership on the base. It reads proposal/spec anchors only; completed specs and rejected proposals are settled or excluded. It never claims to inspect unmerged branches.
+The existing spec hygiene extension also checks repository milestone membership on the base. It reads direct proposal anchors only; rejected proposals are excluded and SPEC milestone metadata is ignored. It never claims to inspect unmerged branches.
 
 | Code | Level | Condition and resolution |
 | --- | --- | --- |
@@ -335,4 +335,4 @@ Warnings carry the milestone and member paths, deterministic remediation and the
 
 Milestones use the global docs/roadmap/MS-<slug>.md path with word-led kebab-case slugs, matching ID and H1 token; namespace roadmap locations are invalid. Format requires id, title, status and created_at; summary follows the English summary rule. Status is planned/active/done/dropped. Safe fixes fill missing metadata with planned status and created_at; existing invalid statuses need correction by hand.
 
-Milestone membership is a scalar existing MS ID on proposal/spec anchors only. Depends_on is an MS-ID list on milestones only. Wrong field locations/shapes/kinds, unresolved or duplicate targets and cycles (including self-cycles) are errors. A targeted run checks cycles through the complete index and reports participating targeted milestones. Decomposed_from/supersedes on anchors are scalar PROP provenance; deleted sources are valid. Done/dropped milestone history follows explicit targeting and is never rewritten automatically.
+Milestone membership is a scalar existing MS ID on proposal anchors only; legacy SPEC metadata yields no membership edge. Depends_on is an MS-ID list on milestones and a PROP/SPEC-anchor-ID list on proposal/spec anchors. Wrong field locations/shapes/kinds, auxiliary targets, unresolved or duplicate targets and cycles (including self-cycles) are errors. A targeted run checks each typed graph through the complete index and reports participating targeted anchors even when other cycle members are untargeted. Completed SPEC anchors resolve as terminal targets and do not contribute outgoing cycle edges. Exact same-slug handoff fixes also rewrite live incoming depends_on references; they do not infer completion or successors. Decomposed_from/supersedes on anchors are scalar PROP provenance; deleted sources are valid. Done/dropped milestone history follows explicit targeting and is never rewritten automatically.
