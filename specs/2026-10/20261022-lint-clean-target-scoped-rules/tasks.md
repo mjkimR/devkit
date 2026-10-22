@@ -34,7 +34,7 @@ plan: PLAN-lint-clean-target-scoped-rules
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-rule/`, `docs/capabilities/governance/`, `docs/development/reference/rules.md`, `.devkit/installation.json`
   - _Requirements: AC-07_
   - **Verification**: `uv run devkit rules check docs/capabilities/governance docs/development/reference/rules.md packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-rule`; `just test agt packages/devkit/tests/integration/features/rules/test_docs.py packages/devkit/tests/integration/package/test_documented_codes.py`
-- [ ] **Task 3.2**: Equivalence, performance and boundary evidence
+- [x] **Task 3.2**: Equivalence, performance and boundary evidence
   - **_Boundary**: `specs/2026-10/20261022-lint-clean-target-scoped-rules/evidence.md`
   - _Requirements: AC-09, AC-10, AC-11_
   - **Verification**: `uv run devkit rules check specs/2026-10/20261022-lint-clean-target-scoped-rules`; `uv run devkit rules check`
