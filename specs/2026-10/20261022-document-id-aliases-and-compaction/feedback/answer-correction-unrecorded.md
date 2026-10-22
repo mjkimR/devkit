@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -35,3 +35,10 @@ created_at: 2026-10-22
 - `references/worker-records.md` section 2 and "Direction without a recorded question".
 - historical Git `2963ae20e92c1b9b9f0c54131fb53222f402c127:docs/proposals/PROP-document-id-aliases-and-compaction/envelopes/answer-01.yaml` q3 decision ("No ADR file under docs/decisions/ is changed by this work") and the
   proposal's Planning decision "ADRs are not excluded".
+
+## Disposition
+
+- **Disposition (resolved)**: `SPEC-feedback-guidance-fixes` adds "Correcting a recorded answer" to the `spec` skill's
+  `references/worker-records.md`: a later `answer` envelope naming the same `worker` envelope re-answers the question
+  and names the corrected `answer-NN.yaml` in its summary; the earlier envelope is never edited. No CLI change was
+  needed. Verified by `test_a_later_answer_corrects_an_answered_question` in `test_envelope_record_gaps.py`.

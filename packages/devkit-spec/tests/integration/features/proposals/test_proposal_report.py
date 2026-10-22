@@ -168,3 +168,85 @@ def test_accepted_base_and_wrong_branch(repo):
     sha = git(root, "rev-parse", "HEAD")
     report = reports.publish(root, "example", sha, briefing(root, sha))
     assert reports.validate(root, "example", sha, report.metadata.artifact_uri) == report
+
+
+def _cli(*args: str, input: str | None = None):
+    from click.testing import CliRunner
+    from devkit_dist.cli import cli
+
+    return CliRunner().invoke(cli, ["spec", "proposal", "report", *args], input=input)
+
+
+def test_cli_template_prints_without_publishing(repo):
+    # AC-01
+    import json
+
+    root, sha = repo
+    text = _cli("example", "--source-sha", sha, "--template", "--workspace-root", str(root))
+    assert text.exit_code == 0, text.output
+    assert text.output == reports.template(root, "example", sha)
+    for token in ("proposal: PROP-example", f"source_sha: {sha}", "repository_namespace:", "### PADR-choice"):
+        assert token in text.output
+    assert "review-01.yaml" in text.output
+    data = _cli("example", "--source-sha", sha, "--template", "--workspace-root", str(root), "--format", "json")
+    assert data.exit_code == 0, data.output
+    assert json.loads(data.output) == {"proposal": "PROP-example", "source_sha": sha, "template": text.output}
+    assert not LocalAdapter(discover(root)).list("proposal-review", "example").entries
+
+
+@pytest.mark.parametrize("extra", [("--template", "--body-file", "-"), ()])
+def test_cli_template_and_body_are_exclusive(repo, extra):
+    # AC-02
+    root, sha = repo
+    result = _cli("example", "--source-sha", sha, *extra, "--workspace-root", str(root), input="x")
+    assert result.exit_code == 2
+    assert "ARGUMENT_INVALID" in result.output
+    assert not LocalAdapter(discover(root)).list("proposal-review", "example").entries
+
+
+def test_mcp_template_is_read_only_and_matches_cli(repo):
+    # AC-03
+    import asyncio
+
+    from devkit_spec.features.proposals.mcp.report import create_tools
+
+    root, sha = repo
+    tools = {tool.name: tool for tool in create_tools(root)}
+    tool = tools["spec_proposal_report_template"]
+    assert tool.execution == "read_only" and tool.read_only
+    assert "spec_proposal_report_template" in tools["spec_proposal_report"].description
+    assert "--template" in tools["spec_proposal_report"].description
+
+    async def forbidden_confirm(*args):
+        raise AssertionError("the template must not request approval")
+
+    async def invoke():
+        return await tool.invoke({"slug": "example", "source_sha": sha}, forbidden_confirm)
+
+    response = asyncio.run(invoke())
+    assert response == {
+        "proposal": "PROP-example",
+        "source_sha": sha,
+        "template": reports.template(root, "example", sha),
+    }
+
+
+@pytest.mark.parametrize(
+    ("old", "new", "prefix", "named"),
+    [
+        ("source_sha: ", "source_sha: x", "identity:", "source_sha"),
+        ("### PADR-choice", "### PADR-other", "decisions:", "PADR-choice"),
+        ("#### Consequences", "#### Other", "decision fields:", "Consequences"),
+        ("review-01.yaml", "wrong", "coverage:", "review-01.yaml"),
+    ],
+)
+def test_refusal_names_field_class_and_template_route(repo, old, new, prefix, named):
+    # AC-04
+    root, sha = repo
+    body = briefing(root, sha).replace(old, new, 1)
+    with pytest.raises(reports.ReportInvalidError) as caught:
+        reports.publish(root, "example", sha, body)
+    assert caught.value.message.startswith(prefix)
+    assert named in caught.value.message
+    fix = caught.value.fix or ""
+    assert "--template" in fix and "spec_proposal_report_template" in fix

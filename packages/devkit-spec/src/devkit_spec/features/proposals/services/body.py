@@ -5,6 +5,8 @@ heading (case-insensitive):
 
 - no heading (text before the first H2), ``background``, ``hypothesis``, ``problem``, ``motivation``, ``origin``:
   the problem statement, headings demoted one level;
+- a non-goal keyword together with ``acceptance``, ``validation`` or ``verification``: the carried contract,
+  heading kept and inner headings demoted one level, so its positive scenarios are not read as non-goals;
 - ``non-goal``, ``non goal``, ``scope excluded``, ``out of scope``: the non-goals, body only;
 - ``acceptance``: the acceptance criteria, body only, given ``[AC-NN]`` IDs (``ensure_ac_ids``);
 - anything else: carried notes, headings demoted one level.
@@ -30,6 +32,7 @@ _LIST_ITEM = re.compile(r"^(?:[-*+]|[0-9]+[.)]) +\S")
 _NON_GOAL = ("non-goal", "non goal", "scope excluded", "out of scope")
 _ACCEPTANCE = ("acceptance",)
 _PROBLEM = ("background", "hypothesis", "problem", "motivation", "origin")
+_VALIDATION = ("validation", "verification")
 
 
 @dataclass
@@ -39,6 +42,7 @@ class CarriedProposal:
     problem: str = ""
     non_goals: str = ""
     acceptance: str = ""
+    contract: str = ""
     notes: str = ""
 
 
@@ -78,12 +82,15 @@ def _sections(text: str) -> list[_Section]:
 
 
 def classify(heading: str) -> str:
-    """``problem``, ``non-goals``, ``acceptance`` or ``notes`` for an H2 heading (``problem`` when empty)."""
+    """``problem``, ``contract``, ``non-goals``, ``acceptance`` or ``notes`` for an H2 heading (``problem`` when
+    empty). A heading that mixes exclusions with acceptance or validation is ``contract``: its positive scenarios
+    must not be read as non-goals."""
     lowered = heading.lower()
     if not heading:
         return "problem"
     if any(key in lowered for key in _NON_GOAL):
-        return "non-goals"
+        mixed = any(key in lowered for key in (*_ACCEPTANCE, *_VALIDATION))
+        return "contract" if mixed else "non-goals"
     if any(key in lowered for key in _ACCEPTANCE):
         return "acceptance"
     if any(key in lowered for key in _PROBLEM):
@@ -141,6 +148,8 @@ def carry_proposal_body(text: str) -> CarriedProposal:
             add("non_goals", "", section.body, True)
         elif kind == "acceptance":
             add("acceptance", "", section.body, False)
+        elif kind == "contract":
+            add("contract", section.heading, section.body, True)
         else:
             add("notes", section.heading, section.body, True)
     return carried

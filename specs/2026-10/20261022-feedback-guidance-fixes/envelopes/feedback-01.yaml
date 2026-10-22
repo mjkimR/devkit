@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T00:55:46.661421Z'
+status: completed
+summary: 'Swept this run and the diff 437564d9..HEAD: recorded FB-reconcile-close-guidance-names-reverify; no duplicates among open feedback.'
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0

@@ -288,6 +288,11 @@ id = "feedback-hygiene"
 kind = "playbook"
 source = "playbooks/feedback-hygiene"
 
+[[assets]]
+id = "adr-compaction"
+kind = "playbook"
+source = "playbooks/adr-compaction"
+
 [presets.core]
 assets = [
     "contract-authoring",
@@ -337,6 +342,7 @@ assets = [
     "planning-worker",
     "brownfield-adoption",
     "feedback-hygiene",
+    "adr-compaction",
 ]
 
 [presets.docs-skeleton]

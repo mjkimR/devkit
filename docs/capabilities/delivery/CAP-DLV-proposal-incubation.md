@@ -257,6 +257,8 @@ The scaffolded body has sections `1. Background & Hypothesis`, `2. Technical Spi
   PROP-<slug>`, `status: draft`, `created_at`, and a body shaped like the decision template (`- **Status**: Draft`,
   `- **Date**`, then Context & Problem Statement, Decision Drivers, Considered Options, Decision Outcome,
   Consequences, Confirmation). PADR IDs are unique across the repository, aliases included (`SPEC_PROPOSAL_EXISTS`).
+- A PADR has no withdrawn status: one withdrawn before `plan-accept` is deleted from `decisions/` in the Planning fold
+  commit, and the proposal's Planning decisions name its ID and the reason. Handoff promotes every PADR left there.
 - `target-docs.md` declares `id: PROP-<slug>-target`, `proposal: PROP-<slug>`, `status: draft`, `created_at` and
   `targets: []` (one `- file: <workspace-relative path>` per Living Spec file the proposal changes; read by
   `devkit spec scope compare`). Its body covers the capability ledger, stories, architecture and decisions,
@@ -335,9 +337,10 @@ never a heading), each classified by its heading, case-insensitively:
 | Heading contains | Lands in | How |
 | --- | --- | --- |
 | (text before the first H2), `background`, `hypothesis`, `problem`, `motivation`, `origin` | 1. Problem Statement & Motivation | heading kept as H3, inner headings demoted one level |
+| a non-goal keyword together with `acceptance`, `validation` or `verification` | 5. Carried Proposal Contract | heading kept as H3, inner headings demoted; positive scenarios kept apart from exclusions, to be rewritten as criteria and non-goals |
 | `non-goal`, `non goal`, `scope excluded`, `out of scope` | 3. Non-Goals | body only; a placeholder item when none |
 | `acceptance` | 4. Acceptance Criteria & Behavioral Contracts | body only, with acceptance criterion IDs |
-| anything else | 5. Carried Proposal Notes | heading kept as H3, inner headings demoted; not contracts |
+| anything else | 5. Carried Proposal Notes (6. when a carried contract precedes it) | heading kept as H3, inner headings demoted; not contracts |
 
 Bodies are verbatim apart from heading levels; leading and trailing blank lines and trailing horizontal rules are
 trimmed. Acceptance criteria get IDs so the spec satisfies `RULE-task-coverage`: an H3 with exactly one `[AC-NN]`
@@ -600,6 +603,10 @@ client-owned; per-host visible localization is unverified in `MAT-language-devel
 
 `devkit spec proposal report <slug> --source-sha <sha> --body-file <path-or-dash>` and
 `spec_proposal_report(slug, source_sha, body)` publish authored Markdown through `CAP-COLL-shared-artifacts`.
+`devkit spec proposal report <slug> --source-sha <sha> --template` (exactly one of `--template` and `--body-file`,
+else `ARGUMENT_INVALID`) and the read-only `spec_proposal_report_template(slug, source_sha)` return the domain
+template for the same source without publishing: Markdown on stdout, or `proposal`, `source_sha` and `template` in
+JSON and MCP. The `spec_proposal_report` description names this route.
 The source is a real full commit at clean current `plan-<slug>` HEAD (reviewing or accepted), or a clean accepted
 base HEAD for standalone handoff. The MCP producer resolves the Planning worktree from the retained base.
 Language is the owning workspace preference, normalized to ko/en. Report frontmatter binds `proposal`,
@@ -608,6 +615,9 @@ decisions, boundary impacts, Planning effort/support, open decisions/waivers, un
 Development effort and approval effects. Every current committed PADR has problem, choice, rejected alternatives
 and consequences; committed envelope names and declared effort are accounted for. The Host verifies meaning.
 Publication rejects incomplete or false identity and oversized content; it never edits tracked documents.
+A `PROPOSAL_REVIEW_INVALID` message starts with the failed field class (`source`, `size`, `identity`, `title`,
+`sections`, `decisions`, `decision fields`, `coverage`, `dev_effort`) and names the mismatched keys, headings, PADR
+IDs or tokens; its `[FIX]` names both template routes.
 Exact immutable URI, content digest, generation and seven-day expiry come from the shared adapter; identical live
 retries keep the generation, expired retries create a different one. Publication responses contain the exact URI,
 metadata and available local links without repeating the submitted Markdown; `shared_get` retrieves the body.
@@ -636,7 +646,7 @@ protocol tests. See `ADR-source-bound-review-reports-and-explicit-lifecycle-appr
 
 | Code | Meaning | Action |
 | --- | --- | --- |
-| `PROPOSAL_REVIEW_INVALID` | Report source, structure or identity is invalid. | Author a complete template-bound report for clean current source. |
+| `PROPOSAL_REVIEW_INVALID` | Report source, structure or identity is invalid; the message starts with the failed field class. | Fill the template from `--template` or `spec_proposal_report_template` for clean current source and publish again. |
 | `PROPOSAL_REVIEW_REFRESH_REQUIRED` | Exact report is missing, expired, changed or bound to another source/language. | Publish a new report outside any pending form and request fresh review. |
 | `PROPOSAL_APPROVAL_NOT_READY` | Planning or native reply prerequisites do not hold. | Resolve the named prerequisite and request a fresh form. |
 | `PROPOSAL_APPROVAL_STALE` | Reviewed scope or exact acceptance delta changed. | Inspect preserved effects, refresh evidence and approve only remaining scope. |

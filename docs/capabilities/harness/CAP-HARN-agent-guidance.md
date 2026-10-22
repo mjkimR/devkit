@@ -99,7 +99,7 @@ A project opts out of the bundle with `[presets] spec = false` in `.devkit/confi
 | `skill` | the 13 skills of 4.4 |
 | `workflow` | `sdd-session-feature`, `sdd-session-bugfix`, `sdd-spec-feature`, `sdd-spec-bugfix`, `sdd-proposal` |
 | `subagent` | `challenger`, `reconcile-reviewer`, `code-reviewer`, `scout`, `planning-worker`, `development-worker` |
-| `playbook` | `brownfield-adoption`, `feedback-hygiene` |
+| `playbook` | `brownfield-adoption`, `feedback-hygiene`, `adr-compaction` |
 | `document` | `templates`; `docs-skeleton` (`seeded = true`, `target = "docs"`) |
 
 ### 4.2 Constitution
@@ -149,7 +149,7 @@ Living Spec and `specs/` holds feature specs.
 | `spec-sync` | Reconcile the change into the Living Spec and resolve `reconcile.md`. | `list`, `refs`, `search`, `proposal new`, `scope update` |
 | `spec-integrate` | Local guidance: prepare integration: conflicts, re-verification, reconcile confirmation, cumulative check, then one native approval through direct `integration_integrate` (optional preflight `integration_prepare`, inspection `integration_status`, approved recovery `integration_resume`) or CLI fallback (`devkit worktree finish --merge --local-only`), cleanup. | `policy`, `scope sweep`, `proposal prune` |
 | `spec-delegate` | Delegate to a role contract as the `activity-effort` asks, record its envelope, validate a worker's committed range and handle its questions and problems. | |
-| `spec-review-proposal` | Review an exact source-bound ko/en report and all PADRs; preserve exclusive Planning ownership during refinement, commit/review changes and explicitly refresh reports. | `proposal report`, `spec_proposal_report`, `spec_plan_accept`, `spec_handoff` |
+| `spec-review-proposal` | Review an exact source-bound ko/en report and all PADRs; preserve exclusive Planning ownership during refinement, commit/review changes and explicitly refresh reports. | `proposal report`, `spec_proposal_report_template`, `spec_proposal_report`, `spec_plan_accept`, `spec_handoff` |
 | `spec-orchestrate` | User-invoked `local-orchestrated` mode per activity: one-shot Planning and Development workers in their own worktrees, the Host keeping preparation, validation, questions, problems and integration; a plain instruction returns to `direct`. | `new`, `proposal accept`, `scope register`, `scope query`, `scope update` |
 | `spec-rule` | Author or tune a project rule for `devkit rules` in the project's own bundle. | |
 | `spec-feedback` | Record and sweep feedback observations (`specs/<YYYY-MM>/feedback/`). | `list feedback`, `resolve`, `policy` |
@@ -256,6 +256,7 @@ even under requested-only capture or a disabled collect-feedback stage, without 
 | --- | --- |
 | `brownfield-adoption` | Adopt spec-driven delivery in a repository that already has code and docs: install, take the baseline, contain legacy Markdown under `docs/materials/_legacy/` and record any deferral as a commented `.devkit/config.toml` entry the user decided, then migrate legacy content through normal work. |
 | `feedback-hygiene` | Triage open feedback in one batch: group by target, order by severity and recurrence, promote to rules, playbooks, decisions or spec work, or dismiss or forward, with the user's decision. |
+| `adr-compaction` | Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases and summarize their history, without changing any decision (`ADR-adr-compaction`). |
 
 ### 4.6 Templates
 

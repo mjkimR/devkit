@@ -178,7 +178,8 @@ The table order is the kind order: `devkit spec list` sorts by it. Living Spec d
    `FB`) is renamed by moving the file, setting the new ID and keeping the old ID in `aliases`; renaming a spec bundle
    keeps an alias on every file whose ID derives from the bundle slug (`spec.md`, `plan.md`, `tasks.md`,
    `reconcile.md`). An approved ADR is not renamed; it gains aliases from its PADR at handoff
-   (`CAP-DLV-proposal-incubation`). One `devkit rules fix` then moves current documents to the new ID.
+   (`CAP-DLV-proposal-incubation`) or, as a compaction replacement, lists the IDs of the ADRs it retires
+   (`ADR-adr-compaction`). One `devkit rules fix` then moves current documents to the new ID.
 6. **Declaration across contracts**: wherever another contract refuses or reports an ID that a document declares (a
    taken spec or proposal slug, a duplicate PADR, a graduating ADR), an alias declaration counts as a declaration;
    wherever a command takes an ID argument that it resolves through the index (`devkit spec resolve`, `refs`,

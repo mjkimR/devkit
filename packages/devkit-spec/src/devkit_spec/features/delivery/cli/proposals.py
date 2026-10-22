@@ -8,6 +8,8 @@ Text output (paths are relative to the workspace root):
   workflow, ``[NEXT_CMD: devkit workflow next --unit <dir>]``.
 - ``padr``: ``[PADR: <id> path= proposal=]``.
 - ``prune``: ``[PRUNED: <dir>]`` per empty proposal directory removed, else ``[OK: nothing to prune]``.
+- ``report``: ``[PROPOSAL_REVIEW: <uri> source_sha= language= expires_at=]`` after publication; with ``--template``
+  the report template Markdown itself (JSON: ``proposal``, ``source_sha``, ``template``) and nothing published.
 - ``accept``: ``[ACCEPTED: <id> form=planning|direct|repair path= status=accepted decision=]``; with ``--check``
   ``[ACCEPT_CHECK: <id> form= path= eligible=yes pending=<requests>|-]`` and nothing written. Refusals:
   ``SPEC_PROPOSAL_ACCEPT_REFUSED``, ``SPEC_PROPOSAL_NOT_ELIGIBLE``, ``SPEC_PROPOSAL_WRONG_WORKTREE``,
@@ -369,22 +371,43 @@ def check_cmd(slug: str, workspace_root: str | None, output_format: str) -> None
 @click.option("--source-sha", required=True, help="Exact current committed Planning or accepted base SHA")
 @click.option(
     "--body-file",
-    required=True,
     type=click.File("r", encoding="utf-8"),
-    help="Complete Markdown briefing, or - for stdin",
+    help="Complete Markdown briefing to publish, or - for stdin",
+)
+@click.option(
+    "--template",
+    "show_template",
+    is_flag=True,
+    help="Print the report template to complete for this source instead of publishing",
 )
 @WORKSPACE
 @FORMAT_OPTION
 @boundary
-def report_cmd(slug: str, source_sha: str, body_file, workspace_root: str | None, output_format: str) -> None:
-    """Publish a source-bound proposal review report through the shared adapter."""
+def report_cmd(
+    slug: str, source_sha: str, body_file, show_template: bool, workspace_root: str | None, output_format: str
+) -> None:
+    """Publish a source-bound proposal review report through the shared adapter, or print its template."""
+    from devkit_core.base.errors import ArgumentError
     from devkit_dist.features.shared.models.api import MAX_BYTES
 
-    from devkit_spec.features.proposals.usecases.report import PublishProposalReportUseCase
+    from devkit_spec.features.proposals.usecases.report import PublishProposalReportUseCase, ReportTemplateUseCase
 
-    result = PublishProposalReportUseCase().execute(
-        resolve_root(workspace_root), slug, source_sha, body_file.read(MAX_BYTES + 1)
-    )
+    if show_template == (body_file is not None):
+        raise ArgumentError(
+            "pass exactly one of --template and --body-file",
+            target_files=["--template", "--body-file"],
+            fix="Use --template to print the report template, then --body-file <path-or-dash> to publish the"
+            " completed report",
+        )
+    root = resolve_root(workspace_root)
+    if show_template:
+        text = ReportTemplateUseCase().execute(root, slug, source_sha)
+        if is_json(output_format):
+            echo_json({"proposal": f"PROP-{slug}", "source_sha": source_sha, "template": text})
+        else:
+            click.echo(text, nl=False)
+        return
+    result = PublishProposalReportUseCase().execute(root, slug, source_sha, body_file.read(MAX_BYTES + 1))
     if is_json(output_format):
         echo_json(result.receipt_dict())
     else:

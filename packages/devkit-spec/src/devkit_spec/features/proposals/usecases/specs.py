@@ -128,9 +128,15 @@ def spec_files(
     problem = origin + ("\n" + carried.problem if carried.problem else "\n")
     non_goals = carried.non_goals or "1. **Scope Excluded**: <what this change will not do>\n\n"
     acceptance, ac_ids = ensure_ac_ids(carried.acceptance)
+    contract = (
+        "\n## 5. Carried Proposal Contract\n\nProposal sections that mix validation scenarios with exclusions. Rewrite each scenario as an acceptance criterion and each exclusion as a non-goal while "
+        "drafting.\n\n" + carried.contract
+        if carried.contract
+        else ""
+    )
     notes = (
-        "\n## 5. Carried Proposal Notes\n\nSections of the proposal that did not map to a spec section. Trim or "
-        "promote them while drafting; they are not contracts.\n\n" + carried.notes
+        f"\n## {6 if contract else 5}. Carried Proposal Notes\n\nSections of the proposal that did not map to a spec "
+        "section. Trim or promote them while drafting; they are not contracts.\n\n" + carried.notes
         if carried.notes
         else ""
     )
@@ -161,7 +167,7 @@ related_stories: []
 
 {non_goals}## 4. Acceptance Criteria & Behavioral Contracts
 
-{acceptance}{notes}"""
+{acceptance}{contract}{notes}"""
 
     target_area = text_value(meta.get("target_area")) or "<target area>"
     boundaries = meta.get("boundaries")

@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T00:56:37.402091Z'
+status: completed
+summary: 'Five feedback items resolved: proposal report template via devkit spec proposal report --template and read-only spec_proposal_report_template, field-class PROPOSAL_REVIEW_INVALID messages naming both routes; reconcile-check route in the reverify ENVELOPE_FROM_INVALID FIX; PADR withdrawal and answer-correction procedures in planning.md and worker-records.md; mixed acceptance/non-goal proposal sections carried under Carried Proposal Contract. Living Spec: four capabilities updated.'
+findings: []
+assumptions:
+- Item 2 scope is the FIX text; the spec-delegate and effort.md sentences are follow-up FB-reconcile-close-guidance-names-reverify
+- Headings naming validation or verification alone stay carried notes
+checks:
+  tests: PASS just test-affected 1867 passed
+  build: PASS just check devkit-spec and devkit (pyright 0 errors); devkit sync --check clean; devkit status errors=[]
+  lint: PASS just lint-check devkit-spec and devkit; devkit rules check --ci --base 437564d9 0 errors
+diff_scope:
+  base: 437564d993d8b27799d1d2398813cb30bd2f25b9
+  head: dfcd629266c9660a8bf79af80760940acea61c5a
