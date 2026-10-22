@@ -240,7 +240,7 @@ materials, and a rejected or decomposed proposal can be deleted without handoff.
   remaining authority; fresh inspection and approval describe only remaining effects. No rollback removes user
   changes. Standalone handoff uses an exact accepted-base report and remains explicitly approved.
   (ADR-source-bound-review-reports-and-explicit-lifecycle-approval)
-- **Viewer exception**: a narrowly scoped supersession of `ADR-read-only-local-server-over-git-refs` permits only
+- **Viewer exception**: a narrowly scoped supersession of `ADR-viewer` permits only
   registered-local-adapter, exact-generation `proposal-review` artifact reads outside Git. Git-only ordinary
   endpoints, loopback/Host/no-CORS protections, sanitization, no write/approval endpoints and no server regeneration
   are retained. No arbitrary filesystem or remote URL lookup is permitted. The viewer remains optional and never
@@ -319,8 +319,8 @@ materials, and a rejected or decomposed proposal can be deleted without handoff.
     `sdd-proposal` gate rules and the `spec` skill name the command. Tests that hand off a bound proposal with only
     `status: accepted` must record the gate; tests of the carried note change.
     (ADR-direct-acceptance-command-and-handoff-guard)
-  - Direct acceptance extends `ADR-roadmap-in-repository`, whose interim rule ("until a direct-acceptance path exists,
-    a small draft runs Planning at `low`") it ends, and qualifies `ADR-run-records-and-activity-branches` (every
+  - Direct acceptance extends `ADR-roadmap-and-milestones`, whose interim rule ("until a direct-acceptance path exists,
+    a small draft runs Planning at `low`") it ends, and qualifies `ADR-orchestration-workers` (every
     proposal activity on `plan-<slug>` or `dev-<slug>`): a direct acceptance is Backlog work, and the proposal has no
     Planning activity. (ADR-direct-acceptance-command-and-handoff-guard)
   - The shared adapter proposal must be accepted and implemented first; source-bound review changes no current

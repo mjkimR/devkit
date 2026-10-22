@@ -895,7 +895,7 @@
     },
     ".agents/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "b4be5b558935a6c7247dcc12c26a49b0ffbbe250ec3cb09b87f455327330c894"
+      "sha256": "b5a71e4262d65785467189026d083c15f1b83bc4bb282a42a929567b1e121e6a"
     },
     ".agents/skills/spec-tasks/SKILL.md": {
       "mode": 420,
@@ -1091,7 +1091,7 @@
     },
     ".claude/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "b4be5b558935a6c7247dcc12c26a49b0ffbbe250ec3cb09b87f455327330c894"
+      "sha256": "b5a71e4262d65785467189026d083c15f1b83bc4bb282a42a929567b1e121e6a"
     },
     ".claude/skills/spec-tasks/SKILL.md": {
       "mode": 420,
@@ -1371,7 +1371,7 @@
     },
     ".devkit/managed/spec/instructions/living-spec-writing.md": {
       "mode": 420,
-      "sha256": "343b3c1b5cff4aaf8e574fd89fbcfa65c11deccfb3e68c6cddb9764dc79e16b3"
+      "sha256": "7de36cacb3da7234761daacaaa0075594d568df4600fcdfe828207966804a4f8"
     },
     ".devkit/managed/spec/instructions/story-writing.md": {
       "mode": 420,
@@ -1379,7 +1379,7 @@
     },
     ".devkit/managed/spec/playbooks/adr-compaction/SKILL.md": {
       "mode": 420,
-      "sha256": "62d903c10e1eb60db2b143a30af99b02e49944e1c089b4000b198ceb21460c44"
+      "sha256": "937ceae5c1ee0f32a93b215b0aae33f5f07c388d7c72fa3c98bcd57956138636"
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md": {
       "mode": 420,
@@ -1403,7 +1403,7 @@
     },
     ".devkit/managed/spec/rules/document_reference/guide.md": {
       "mode": 420,
-      "sha256": "1bab3a0479f56206237c43489a485aba28902162c30be216f9da4c9111245a52"
+      "sha256": "08dfd33aaee015538e16537aafbfb412ebe0a0e2f4fd929b06a7e40c39d459de"
     },
     ".devkit/managed/spec/rules/document_reference/rule.py": {
       "mode": 420,
@@ -1411,7 +1411,7 @@
     },
     ".devkit/managed/spec/rules/document_reference/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "c9ed0a40d7de1b9478e06ab3fd397eeb5195d36c37ee4eb1a0db8cf89079a875"
+      "sha256": "2bd9b0a048b4cd7658b84fa5a37b3b95e6793ea106feee779f6d9ef096f149ff"
     },
     ".devkit/managed/spec/rules/document_summary/guide.md": {
       "mode": 420,
@@ -1619,7 +1619,7 @@
     },
     ".devkit/managed/spec/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "b4be5b558935a6c7247dcc12c26a49b0ffbbe250ec3cb09b87f455327330c894"
+      "sha256": "b5a71e4262d65785467189026d083c15f1b83bc4bb282a42a929567b1e121e6a"
     },
     ".devkit/managed/spec/skills/spec-tasks/SKILL.md": {
       "mode": 420,

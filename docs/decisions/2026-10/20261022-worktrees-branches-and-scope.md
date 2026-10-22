@@ -35,8 +35,8 @@ once the merge is done, and a forgotten sweep leaves a stale record every other 
 
 `[tool.spec] worktree` and devkit's `[worktree] pull_request` were switches that forced one behavior on every task.
 Agents need to use them when a task needs them, and projects need to require them when they manage work that way. The
-location of both keys is settled by `ADR-policy-in-the-tool-spec-table`. With activity branches
-(`ADR-run-records-and-activity-branches`) a `direct` task may run on `dev-<slug>` in the base checkout
+location of both keys is settled by `ADR-spec-package-on-devkit`. With activity branches
+(`ADR-orchestration-workers`) a `direct` task may run on `dev-<slug>` in the base checkout
 (`devkit worktree start --no-worktree`). A review of the local flow found that a handoff on the base branch deleted the
 accepted proposal from the base, that `devkit spec new` could create a unit on any branch, that a base-checkout task's
 scope record leaked past its finish, and that a close had no allowed way to drop an unmerged branch. The strategy layer

@@ -108,8 +108,9 @@ exclusions and snapshot cache rules apply.
   and materials.
 - References resolve through the canonical mapping of `CAP-DOCS-document-model` (section 3.5). MUST report a
   reference written with another document's alias in a current document (fixable: rewritten to the canonical ID in
-  frontmatter and prose); relation-field prefix typing applies to the ID as written. In historical files and in
-  decision records (ADRs and PADRs) an alias reference resolves silently and `devkit rules fix` never rewrites it. A
+  frontmatter and prose); relation-field prefix typing applies to the ID as written. Decision records (ADRs and PADRs) are
+  current documents here (`ADR-immutable-decisions-editable-records`). In historical files an alias reference resolves
+  silently and `devkit rules fix` never rewrites it. A
   document mentioning its own alias is not reported. A reference to a colliding alias is reported as ambiguous and
   left unchanged.
 - MUST report a relative Markdown link to a document that has an ID. External URLs, images, code files, documents

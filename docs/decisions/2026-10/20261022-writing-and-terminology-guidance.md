@@ -48,7 +48,7 @@ guidance is the agreed baseline.
   (`Term | Definition | Defined in`).
 - `devkit spec search` expands queries with the `glossary.yaml` synonym clusters (`CAP-DOCS-document-search`): a
   rejected synonym should still lead to the registered term.
-- A seeded glossary is project-owned after seeding (`ADR-docs-skeleton-is-opt-in`); the bundle cannot migrate it.
+- A seeded glossary is project-owned after seeding (`ADR-spec-package-on-devkit`); the bundle cannot migrate it.
 - Asset boundaries: criteria are instructions, procedures are playbooks (`ARCH-08-2-resource-taxonomy`); `authoring`
   is opt-in and never depends on `spec`.
 

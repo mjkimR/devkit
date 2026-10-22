@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADR)
 
-A permanent ledger recording critical technical and structural decisions, as well as architectural invariants. Approved ADRs are never deleted or retroactively modified; when an update is needed, create a new ADR linked via `supersedes` and `superseded_by`. The only exception is compaction (`ADR-adr-compaction`, the `adr-compaction` playbook): related approved ADRs are replaced by one ADR that lists their IDs in `aliases`, without changing any decision.
+A permanent ledger recording critical technical and structural decisions, as well as architectural invariants. A decision is never changed in place: reversing, invalidating or changing a decision takes a new ADR linked via `supersedes` and `superseded_by`. The documents themselves may be edited without changing any decision's meaning: wording, format, stale names and references, metadata, and consolidation of related ADRs into one that lists their IDs in `aliases` (the `adr-compaction` playbook) (`ADR-immutable-decisions-editable-records`).
 
 ## Directory Layout & Naming Conventions
 

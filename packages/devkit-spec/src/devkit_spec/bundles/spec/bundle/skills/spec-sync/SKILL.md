@@ -21,7 +21,7 @@ editing `docs/`.
 ## 2. Reconciliation Principles
 
 - Keep transient task lists in `specs/`.
-- ADRs are append-only: replace one with a new ADR that sets `supersedes`. The only exception is compaction through the `adr-compaction` playbook, which changes no decision.
+- A decision never changes in place: a changed decision is a new ADR that sets `supersedes`. Editing an ADR without changing its decision (wording, stale names, references, consolidation through the `adr-compaction` playbook) is allowed.
 - Write no index tables in directory `README.md` files; `devkit spec list <kind>` and `devkit spec refs <ID>` list
   them.
 - Link capabilities and stories both ways by exact ID in frontmatter: `stories:` in a capability, `capabilities:` in a

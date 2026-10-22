@@ -2,13 +2,14 @@
 id: ADR-adr-compaction
 title: ADR Compaction as the Only Exception to the Append-Only Ledger
 summary: "For a fragmented decision ledger, we allow compaction into replacement ADRs that alias the retired IDs as the only exception to the append-only rule, to keep current decisions readable in one place, accepting that retired texts live only in Git history."
-status: accepted
+status: superseded
 created_at: 2026-10-22
+superseded_by: ADR-immutable-decisions-editable-records
 ---
 
 # [ADR-adr-compaction] ADR Compaction as the Only Exception to the Append-Only Ledger
 
-- **Status**: Accepted
+- **Status**: Superseded by `ADR-immutable-decisions-editable-records`
 - **Date**: 2026-10-22
 - **Deciders**: @minjae
 - **Involved Components/Capabilities**: `docs/decisions/`, `capabilities/documents/`, `capabilities/harness/`

@@ -153,7 +153,7 @@ Rebuilding on devkit raises the questions of the package's shape:
 - **Policy**: approvals, stage switches and worktree integration stay in devkit's tables (`[workflow.approvals]`,
   `[workflow.stages]`, `[worktree]`); `[tool.spec]` holds `worktree`, `[[tool.spec.namespaces]]` and
   `[tool.spec.scope]`; `devkit spec policy` prints the effective values of both. Mapping: approvals to
-  `[workflow.approvals]` (`ADR-approval-gates-intent-direction-integration`), the feedback sweep to `[workflow.stages]`
+  `[workflow.approvals]` (`ADR-delivery-decision-boundaries`), the feedback sweep to `[workflow.stages]`
   (`collect-feedback`), `pull_request` and branch cleanup to `[worktree]`, `git.worktree` to `[tool.spec] worktree`.
   (ADR-policy-in-the-tool-spec-table)
 - **Rules**: the spec rules are implemented and tested in the package; each `bundle/rules/<name>/rule.py` imports the
@@ -186,7 +186,7 @@ Rebuilding on devkit raises the questions of the package's shape:
 - **Negative / Risks**:
   - devkit is pinned to a minor range (`devkit>=0.1,<0.2`) and devkit-spec moves with it; devkit's `workflow next` and
     `worktree finish` cannot call devkit-spec, so the skills run the scope commands
-    (`ADR-scope-maintenance-through-skills`); some earlier features were dropped (derived-data cache, web viewer,
+    (`ADR-worktrees-branches-and-scope`); some earlier features were dropped (derived-data cache, web viewer,
     per-kind listing filters). (ADR-rebuild-spec-on-devkit)
   - The plugin is visible only in the environment devkit-spec is installed in; the `spec` name is reserved for this
     plugin by convention; a broken install surfaces as `COMMAND_PLUGIN_INVALID` on `devkit spec` only.

@@ -35,7 +35,7 @@ code-table row under `docs/` a test requires for a new advisory code). That hand
 share a working tree; when workers deliver through their own branch or pull request, their checks and the commit gate
 run before any host can repair the result.
 
-`ADR-task-kind-and-planning-depth` left Planning's question rounds, the problem and resolution records and the blocked
+`ADR-delivery-classification` left Planning's question rounds, the problem and resolution records and the blocked
 state to devkit envelope contracts adopted separately. Until they existed, the Host recorded its check of a worker's
 committed range as a `validation` envelope and treated the latest failed one as the block, so two rules decided
 whether a unit was blocked. Worktrees were named after the bare slug, so the Planning and the Development activity of
@@ -405,7 +405,7 @@ Further gaps followed on the same runs:
     `devkit rules check --ci`; the command runs it once per call.
 - **Follow-ups and effects on other records**:
   - `devkit spec proposal handoff` refuses any checkout on another branch than `dev-<slug>`
-    (`SPEC_PROPOSAL_WRONG_WORKTREE`); `ADR-branch-guards-and-close-discard` extends the guard to the base checkout.
+    (`SPEC_PROPOSAL_WRONG_WORKTREE`); `ADR-worktrees-branches-and-scope` extends the guard to the base checkout.
   - `/spec-next` reports `[PENDING_QUESTION]`, `[BLOCKED]` and stale activity branches; the feedback hygiene playbook
     lists stale branches for the user to resume or discard. A stale branch's unit is shown only when an attach recorded
     it; the Host maps the slug otherwise.

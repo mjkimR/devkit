@@ -1,12 +1,12 @@
 ---
 name: adr-compaction
-description: Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases, deleting the retired files, without changing any decision (ADR-adr-compaction).
+description: Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases, deleting the retired files, without changing any decision (ADR-immutable-decisions-editable-records).
 ---
 
 # ADR compaction
 
 Run this playbook only when the user asks for it; that request authorizes the run's ADR deletions
-(`ADR-adr-compaction`). It runs at `session` depth: no spec unit, envelope or reconcile record.
+(`ADR-immutable-decisions-editable-records`). It runs at `session` depth: no spec unit, envelope or reconcile record.
 
 A compaction reorganizes decisions and never changes one. Anything that needs a decision changed leaves the run.
 
@@ -53,7 +53,7 @@ Path `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md` dated today, from the decis
 
 1. Delete the member files: `git rm <member paths>`.
 2. Run `uv run devkit rules fix`: it rewrites alias references in current documents to the replacement ID and leaves
-   history and decision records as written.
+   history as written.
 3. Run `uv run devkit sync` if a bundle source changed.
 
 ## Step 5: Verify

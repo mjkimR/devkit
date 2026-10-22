@@ -372,8 +372,7 @@ proposal as it was; their `feedback/` is scanned, since feedback stays current.
   reference written with an alias of the proposal or a promoted PADR is rewritten exactly like one written with its
   old ID, to the new canonical ID, across the same scan set (ADRs, the ADRs promoted in this handoff and feedback
   included, completed bundles excluded), because the translation removes the alias's only declaration. This is the
-  handoff's own rename: the rule that `devkit rules fix` never rewrites alias references in decision records does not
-  apply to it. Bare text, inline code other than a lone ID and fenced code do not change.
+  handoff's own rename. Bare text, inline code other than a lone ID and fenced code do not change.
 - **Code-span paths** (`kind=path`) in the bodies of the documents the handoff wrote or moved out of a bundle
   proposal (the carried `spec.md` and blueprint, the promoted ADRs, moved feedback and other carried files): an inline
   code span holding a path relative to the bundle (`` `decisions/PADR-x.md` ``,

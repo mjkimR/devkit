@@ -30,7 +30,7 @@ import SDK-free contracts, which must remain available without installing a tran
 
 `CAP-COLL-work-scope-registry` records authoritative owner tokens and optimistic revisions, while proposal review
 reports are regenerable presentation artifacts. Applying TTL and generic CRUD to both would violate the registry's
-non-expiring storage and read-only query contract in `ADR-keep-shared-storage-and-separate-read-access`
+non-expiring storage and read-only query contract in `ADR-worktrees-branches-and-scope`
 (`SPEC-worker-shared-state-mcp`).
 
 `MS-reporting-and-actionable-insights` needs a manually useful weekly report before a scheduler or durable history
