@@ -1,14 +1,15 @@
 ---
 name: adr-compaction
-description: Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases, deleting the retired files, without changing any decision (ADR-immutable-decisions-editable-records).
+description: Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases, deleting the retired files, without changing any decision.
 ---
 
 # ADR compaction
 
-Run this playbook only when the user asks for it; that request authorizes the run's ADR deletions
-(`ADR-immutable-decisions-editable-records`). It runs at `session` depth: no spec unit, envelope or reconcile record.
+Run this playbook only when the user asks for it; that request authorizes the run's ADR deletions. It runs at
+`session` depth: no spec unit, envelope or reconcile record.
 
-A compaction reorganizes decisions and never changes one. Anything that needs a decision changed leaves the run.
+A compaction is an editorial change of the decision records, never a change of decision: a reversed, invalidated or
+changed decision needs a new ADR with `supersedes`. Anything that needs a decision changed leaves the run.
 
 ## Prerequisites
 
