@@ -2,7 +2,7 @@
 id: SPEC-frontmatter-libyaml
 title: Accelerate strict frontmatter parsing with libyaml
 summary: "Use libyaml for ordinary frontmatter while retaining Python-loader validation and diagnostics."
-status: planned
+status: completed
 created: 2026-10-22
 related_capabilities: [CAP-DOCS-document-model]
 related_usecases: []

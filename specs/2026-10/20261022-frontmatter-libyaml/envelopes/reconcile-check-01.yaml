@@ -1,0 +1,17 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T11:06:05.181782Z'
+status: completed
+summary: Self-verified single-module grammar reflection, source feedback resolution and entrypoint; all AC evidence is covered.
+findings: []
+assumptions:
+- 'Medium-effort reconcile self-verification exception: one core module and its own single capability reflection; no cross-component behavior or unresolved interpretation.'
+checks:
+  contracts: PASS parser routing, errors, types and fallback match CAP-DOCS-document-model
+  source-feedback: PASS explicitly linked source fully addressed and verified
+diff_scope:
+  base: 148f84df36858de01cd2f6147dbb21b346624b1f
+  head: d2255f5a2265894641007353a86cc3d6c7c29a78
+activity_effort: medium
