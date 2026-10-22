@@ -224,4 +224,3 @@ def test_derive_directory_code_folds_and_applies(bundles: Path, write: Write) ->
 
     missing_res = _derive(bundles, "--spec", "specs/2026-10/20261010-files", "--code", "src/nonexistent/")
     assert missing_res.exit_code == 2
-

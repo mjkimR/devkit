@@ -268,4 +268,3 @@ def test_fold_by_directory_selectors(workspace: Path, write: Write) -> None:
     # Regular file with trailing slash raises EntrypointsPathError
     with pytest.raises(EntrypointsPathError):
         fold_by_directory_selectors(workspace, pairs, ["src/pkg/a.go/"], {})
-
