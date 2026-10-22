@@ -83,6 +83,14 @@ model-build:
     uv run --no-active python scripts/fetch_model.py models/devkit-embed/src/devkit_embed
     uv build --wheel models/devkit-embed --out-dir dist/model
 
+# Synchronize package versions and internal pins from root VERSION, then refresh uv.lock
+version-sync:
+    python3 scripts/version.py
+
+# Check release metadata against root VERSION without writing files
+version-check:
+    python3 scripts/version.py --check
+
 # Build the release wheels, SHA256SUMS and notes for a vX.Y.Z tag into dist/
 release-build tag:
     bash scripts/release.sh "$1"

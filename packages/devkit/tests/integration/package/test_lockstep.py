@@ -26,7 +26,12 @@ def _pins(project: dict, name: str) -> list[str]:
 
 def test_release_wheels_share_one_version() -> None:
     versions = {name: _project(directory)["version"] for name, directory in WHEELS.items()}
-    assert len(set(versions.values())) == 1, versions
+    root = PACKAGES.parent
+    expected = (root / "VERSION").read_text().strip()
+    for path in sorted(root.glob("packages/*/pyproject.toml")) + sorted(root.glob("tools/*/pyproject.toml")):
+        project = tomllib.loads(path.read_text())["project"]
+        versions[project["name"]] = project["version"]
+    assert set(versions.values()) == {expected}, versions
 
 
 def test_each_wheel_pins_the_exact_version_of_the_wheels_below_it() -> None:
@@ -50,7 +55,7 @@ def test_every_release_install_command_with_devkit_dist_names_its_companion_whee
 
 def test_devkit_agt_extras_pass_through_to_devkit_dist() -> None:
     agt, dist = _project("devkit"), _project("devkit-dist")
-    assert agt["optional-dependencies"] == {"mcp": ["devkit-mcp==0.1.1"], "search": ["devkit-dist[search]"]}
+    assert agt["optional-dependencies"] == {"mcp": [f"devkit-mcp=={agt['version']}"], "search": ["devkit-dist[search]"]}
     assert set(dist["optional-dependencies"]) == {"search"}
 
 

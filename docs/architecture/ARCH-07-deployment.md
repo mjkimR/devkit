@@ -25,10 +25,11 @@ GitHub Release Assets (vX.Y.Z):
 ├── devkit_core-X.Y.Z-py3-none-any.whl
 ├── devkit_cli-X.Y.Z-py3-none-any.whl
 ├── devkit_mcp-X.Y.Z-py3-none-any.whl
-├── devkit_spec-<spec-version>-py3-none-any.whl
-├── devkit_starter-<starter-version>-py3-none-any.whl
-├── devkit_catalog-<catalog-version>-py3-none-any.whl
-├── devkit_viewer-<viewer-version>-py3-none-any.whl
+├── devkit_spec-X.Y.Z-py3-none-any.whl
+├── devkit_starter-X.Y.Z-py3-none-any.whl
+├── devkit_catalog-X.Y.Z-py3-none-any.whl
+├── devkit_viewer-X.Y.Z-py3-none-any.whl
+├── devkit_dev-X.Y.Z-py3-none-any.whl
 └── SHA256SUMS
 ```
 
@@ -48,9 +49,12 @@ uv add --dev "devkit-viewer @ git+https://github.com/mjkimR/devkit.git#subdirect
 
 `uv.lock` pins the resolved commits. A Git requirement on `devkit-agt` brings `devkit-dist`, `devkit-core`, `devkit-cli` and
 `devkit-advisory` from the same commit (their workspace sources), and the `search` extra brings the model wheel from the release
-`packages/devkit-dist/pyproject.toml` pins. `devkit-dist`, `devkit-agt`, `devkit-core`, `devkit-cli` and `devkit-advisory` share a
-version and are released with optional `devkit-mcp` in lockstep from one tag (each foundation dependency is pinned exactly); spec, starter, catalog and viewer keep
-independent versions. A tool installation names the owner of the `devkit` executable and adds the harness:
+`packages/devkit-dist/pyproject.toml` pins. Every workspace distribution under `packages/` and `tools/` shares the version in root `VERSION` and is released
+from its matching `vX.Y.Z` tag. `just version-sync` updates static package versions, versioned internal requirements
+and `uv.lock`. Existing internal version constraints become exact matching pins; unversioned requirements retain
+their spelling. The separately built devkit-embed wheel keeps its model version. `just version-check` and
+`scripts/release.sh` enforce metadata consistency; release builds also check the tag and `uv lock --check`.
+The version source and generated metadata policy is `ADR-single-release-version`. A tool installation names the owner of the `devkit` executable and adds the harness:
 `uv tool install <devkit-dist requirement> --with <devkit-agt requirement>` (`ARCH-05-3-command-plugins`). The viewer's Svelte library is not a release asset: a host such as autohub
 vendors its `npm pack` tarball from a pinned commit (`CAP-VIEW-repository-viewer`). Release-wheel installations
 name every required local package wheel explicitly (a `devkit-agt` installation names the `devkit-dist`, `devkit-core`,

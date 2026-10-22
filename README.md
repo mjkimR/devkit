@@ -151,16 +151,23 @@ without a consumer project, point `-w` at an existing empty directory:
 
 ## Releasing
 
-Set the new version in the `pyproject.toml` of `packages/devkit-core`, `packages/devkit-cli`, `packages/devkit-dist`,
-`packages/devkit`, `packages/devkit-advisory` and `packages/devkit-mcp` (with the exact pins between them), merge to
-`main`, then
-push a matching tag: `git tag v0.2.0 && git push origin v0.2.0`. The release
-workflow runs the full CI on the tagged commit, refuses a tag that is not on
-`main` or does not match all six versions, builds the wheels with
-`just release-build <tag>` (try it locally) and
-publishes the release. `devkit-core`, `devkit-cli`, `devkit-dist`, `devkit-agt`, `devkit-advisory` and `devkit-mcp` are released in lockstep: each pins
-exactly the lockstep packages it depends on, and `test_lockstep` checks the shared version and the pins of
-`devkit-agt`, `devkit-dist` and `devkit-cli`. `devkit-spec`, `devkit-starter`, `devkit-catalog` and `devkit-viewer` keep their own versions.
+Edit root `VERSION` (for example, `0.1.2`), then run:
+
+```bash
+just version-sync          # update all workspace versions, internal pins and uv.lock
+just version-check         # read-only metadata consistency check
+just release-build v0.1.2  # build and validate the release locally
+```
+
+Commit `VERSION`, the generated package metadata and `uv.lock` together. All workspace packages under
+`packages/` and `tools/` share this release version. Versioned internal requirements use exact matching pins;
+unversioned extra pass-throughs retain their spelling. Static metadata keeps wheels and source distributions
+buildable without the repository's root version file.
+
+After the change reaches `main`, push the matching tag, for example `git tag v0.1.2 && git push origin v0.1.2`.
+The release workflow runs the full CI, refuses a commit outside `main`, and validates the tag, `VERSION`, package
+metadata and lock before building every workspace wheel and publishing the GitHub Release. See
+`ARCH-07-deployment` and `ADR-single-release-version`.
 
 `devkit-embed` keeps its own version too and is not rebuilt by releases: devkit
 installs it, in this workspace and from Git, from the committed wheel in

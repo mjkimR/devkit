@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Build the release assets for a version tag:
 #   release.sh vX.Y.Z
-# Checks that the tag is vX.Y.Z and names the version of the six lockstep
-# packages (devkit-core, devkit-cli, devkit-dist, devkit-agt, devkit-advisory, devkit-mcp), builds a wheel of every
+# Checks that the tag is vX.Y.Z and matches VERSION and every workspace
+# package and versioned internal dependency, builds a wheel of every
 # workspace package into dist/release/, writes SHA256SUMS there and the release
 # notes (install commands for this tag) to dist/release-notes.md. The
 # devkit-embed model wheel is copied from the committed wheel in models/devkit-embed/wheels/.
@@ -15,15 +15,13 @@ if [[ ! "$tag" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
     echo "error: $tag is not a vX.Y.Z version tag" >&2
     exit 1
 fi
-version=${tag#v}
-# The six lockstep packages above are released from one tag, at one version (ARCH-07-deployment).
-for metadata in packages/devkit-core/pyproject.toml packages/devkit-cli/pyproject.toml packages/devkit-dist/pyproject.toml packages/devkit/pyproject.toml packages/devkit-advisory/pyproject.toml packages/devkit-mcp/pyproject.toml; do
-    package_version=$(project_version "$metadata")
-    if [ "$package_version" != "$version" ]; then
-        echo "error: $tag does not match the version $package_version in $metadata" >&2
-        exit 1
-    fi
-done
+python3 scripts/version.py --check
+version=$(tr -d '\r\n' < VERSION)
+if [ "${tag#v}" != "$version" ]; then
+    echo "error: $tag does not match VERSION ($version)" >&2
+    exit 1
+fi
+uv lock --check
 
 out=dist/release
 rm -rf "$out"
