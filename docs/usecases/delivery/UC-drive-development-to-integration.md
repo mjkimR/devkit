@@ -66,6 +66,9 @@ The main scenario follows a spec Unit at the default `activity-effort` `medium`,
 
 ## 3. Extensions
 
+The integration executor's coded refusals this section does not name, and their recoveries, are listed in
+`CAP-INT-mcp-services`.
+
 - **1a.** The task is `session` depth: the agent implements, tests and reviews it at the same effort levels, with the
   `code-reviewer` returning a message, writes no spec, envelope, gate record file or reconcile document, commits before
   approval and reports the change, effort, review result and verification in its final response or PR body
@@ -105,6 +108,13 @@ The main scenario follows a spec Unit at the default `activity-effort` `medium`,
 - **7e.** A Unit the branch changed holds an unresolved problem, an unanswered question or a malformed worker
   envelope: the gate is held and the merge is refused with `WORKTREE_BLOCKED` (`CAP-DLV-workflow-envelopes`); the use
   case ends and `UC-handle-delivery-problems-and-exceptions` continues.
+- **7f.** The source changes the receipt reader and commits a receipt only that reader accepts: the system refuses
+  with `INTEGRATION_RECEIPT_READER_CHANGED` and changes nothing; restarting the service does not help, and the agent
+  never changes the route itself but, with separately granted authority, finishes the branch through the local CLI
+  path run from the source's code (`CAP-INT-mcp-services`); resumes at step 9.
+- **7g.** The retained MCP service runs devkit code that differs from the installed code: the system refuses the call
+  with `MCP_RUNTIME_STALE` before it runs, and the agent restarts or reconnects the retained service and calls again
+  (`CAP-MCP-runtime-registration`, `CAP-INT-mcp-services`); resumes at step 7.
 - **8a.** The base moved after the result was built: the system refuses with `INTEGRATION_TARGET_MOVED`, or with
   `INTEGRATION_REQUEST_STALE` for a later request, and changes nothing on the target (`CAP-INT-mcp-services`); resumes
   at step 6.
@@ -247,3 +257,18 @@ The main scenario follows a spec Unit at the default `activity-effort` `medium`,
 - **Given**: an approved integration whose merge completed and whose cleanup extension reported `done=false`
 - **When**: the agent calls `integration_resume` with the request ID
 - **Then**: only the remaining cleanup runs, the merge is not repeated, and no new confirmation is asked
+
+### Scenario 17: A changed receipt reader refuses the MCP route
+- **Covers**: 7f
+- **Given**: a `dev-<slug>` branch whose range changes a receipt reader module and whose committed receipt only the
+  changed reader accepts, under a retained service built from the target
+- **When**: the agent calls `integration_integrate`
+- **Then**: it refuses with `INTEGRATION_RECEIPT_READER_CHANGED`, the target is unchanged, and the agent runs the CLI
+  route from the source's code only with separately granted authority, without restarting the service
+
+### Scenario 18: A stale retained runtime refuses until it is restarted
+- **Covers**: 7g
+- **Given**: a retained MCP service with a loaded devkit module whose installed file has changed since it started
+- **When**: the agent calls `integration_integrate`
+- **Then**: the call is refused with `MCP_RUNTIME_STALE` naming the stale modules before any execution guard runs,
+  read-only tools still answer, and the same call proceeds after the service is restarted or reconnected

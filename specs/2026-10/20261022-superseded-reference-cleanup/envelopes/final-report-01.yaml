@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T05:48:30.252320Z'
+status: completed
+summary: 'Five source feedback items resolved: devkit-agt pyproject comment, configuration ADR driver (editorial), effort test docstring, UC-drive-development-to-integration extensions 7f/7g with scenarios 17-18, and read-only shell access for reconcile-reviewer with its contract test and regenerated projections. Two follow-ups recorded as feedback. No production behavior change.'
+findings: []
+checks:
+  tests: PASS just test-affected (mode=full) 4664 passed, 14 skipped
+  build: PASS uv build --package devkit-agt and devkit-spec; devkit sync --check
+  lint: PASS just lint devkit-spec; devkit rules check --ci --base 8801eb6a; git diff --check
+diff_scope:
+  base: 8801eb6a63da1d8ae29fb3e31977a13e69b169cc
+  head: e966d5ecf7d134019675f3be3d31bc1e54c0faf6

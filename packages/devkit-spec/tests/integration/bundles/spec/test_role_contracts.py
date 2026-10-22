@@ -119,6 +119,12 @@ def test_support_roles_shell_access() -> None:
     assert challenger["claude-code"]["disallowedTools"] == ["Write", "Edit"]
     assert "run_command" in challenger["antigravity"]["tools"]
     assert challenger["antigravity"]["commandExecutionPolicy"] == "sandbox"
+    reconciler = _contract("reconcile-reviewer")[0]["hosts"]
+    assert reconciler["claude-code"]["tools"] == ["Read", "Grep", "Glob", "Bash"]
+    assert reconciler["claude-code"]["disallowedTools"] == ["Write", "Edit"]
+    assert reconciler["codex"]["sandbox_mode"] == "read-only"
+    assert "run_command" in reconciler["antigravity"]["tools"]
+    assert reconciler["antigravity"]["commandExecutionPolicy"] == "sandbox"
 
 
 @pytest.mark.parametrize("role", WORKERS)

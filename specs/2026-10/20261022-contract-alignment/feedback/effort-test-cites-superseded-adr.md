@@ -8,7 +8,7 @@ target: packages/devkit-spec/tests/integration/bundles/spec/test_effort_procedur
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -30,3 +30,9 @@ created_at: 2026-10-22
 packages/devkit-spec/tests/integration/bundles/spec/test_effort_procedure.py:1
 """The ``high`` activity-effort procedure ships as one bounded review loop (``ADR-bounded-high-effort-review-loop``).
 ```
+
+## Disposition
+
+- **Disposition (resolved)**: `SPEC-superseded-reference-cleanup` repoints the module docstring of `test_effort_procedure.py` to
+  `ADR-host-owned-review-loop-recovery`. Verified by `rg` on the file (no `ADR-bounded-high-effort-review-loop`) and
+  `just test-affected` (mode=full, 4664 passed).

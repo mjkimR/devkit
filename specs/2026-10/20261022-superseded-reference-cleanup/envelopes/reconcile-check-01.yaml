@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T05:47:23.896169Z'
+status: completed
+summary: 'Self-checked reconcile at low effort: targets UC-drive-development-to-integration (7f/7g and scenarios 17-18 match CAP-INT-mcp-services and CAP-MCP-runtime-registration directives) and ADR-configuration-language-and-rendering (editorial driver edit, meaning kept) are the only docs/ changes in the range; no-impact on capabilities and ARCH-04-1 confirmed (role stays read-only, no capability states its tool set); five source feedback resolutions and two deferred feedback items recorded.'
+findings: []
+assumptions:
+- 'Low effort: the author verifies the reconcile without a reconcile-reviewer (effort.md).'
+checks:
+  rules: PASS devkit rules check --ci --base 8801eb6a
+  sync: PASS devkit sync --check
+diff_scope:
+  base: 8801eb6a63da1d8ae29fb3e31977a13e69b169cc
+  head: e6a83e009b5e67e1924dbbfec021efbeab37a4bb

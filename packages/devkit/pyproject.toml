@@ -8,7 +8,7 @@ dependencies = [
     "devkit-core==0.1.1",
     "click>=8.1.7",
     "devkit-advisory==0.1.1",  # released in lockstep with the other devkit wheels, from the same tag
-    "devkit-dist==0.1.1",  # the devkit executable and the shared foundation, released in lockstep from the same tag
+    "devkit-dist==0.1.1",  # the devkit executable and distribution, released in lockstep from the same tag
     "pyyaml>=6.0.1",
     "tomlkit>=0.13",
 ]
