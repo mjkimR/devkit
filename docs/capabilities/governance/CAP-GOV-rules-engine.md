@@ -42,7 +42,7 @@ src/devkit_agt/features/rules/
 │   └── rule_tests.py        # rule_folder and run_rule_tests: each rule's tests/ in a pytest subprocess
 ├── testing.py               # load_rule, check, evaluate, opened_files: helpers for the tests in a rule's folder
 ├── workspace/               # Shared file caching, Markdown file catalog and Git snapshots
-│   ├── cache.py             # WorkspaceCache (file discovery, bytes, text, frontmatter, links, parsed Python, per-run path resolution)
+│   ├── cache.py             # WorkspaceCache (file discovery, bytes, text, frontmatter, links, parsed Python, per-run path resolution, run-scoped get_or_compute)
 │   ├── catalog.py           # DocumentCatalog (paths, basenames, frontmatter id/title/status)
 │   ├── markdown.py          # Fences, inline links, count_tasks (the checklist counter shared with devkit_agt.features.workflow)
 │   └── snapshot.py          # Staged / CI Git trees for gate evaluation (in place or materialized)
