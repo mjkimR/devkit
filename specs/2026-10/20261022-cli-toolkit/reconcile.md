@@ -7,6 +7,8 @@ targets:
     resolution: modified
   - file: docs/capabilities/README.md
     resolution: modified
+  - file: docs/capabilities/distribution/CAP-DIST-content-packages.md
+    resolution: modified
   - file: docs/architecture/ARCH-05-1-containers.md
     resolution: modified
   - file: docs/architecture/ARCH-05-2-components.md
@@ -35,6 +37,9 @@ Architecture:
   name `devkit-core` and `devkit-cli`.
 - `ARCH-08-1-agent-output`: the contract is unchanged (AC-10, non-goal 4); the introduction and the implementation
   map name `devkit_cli` as the implementation and `devkit_dist.adapters.cli` as devkit's binding of it.
+
+`CAP-DIST-content-packages`: its release-wheel install command and the sentence listing the wheels a `devkit-agt`
+installation names now include `devkit-core` (already required, previously missing) and `devkit-cli` (AC-11).
 
 AC-09 (`devkit.advisory.ArgumentError`) is an additive change to the advisory API. `CAP-ADV-agent-advisory-protocol`
 specifies the protocol, not the library's classes, so it does not change; the library reference

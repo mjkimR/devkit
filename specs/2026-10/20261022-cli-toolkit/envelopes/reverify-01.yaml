@@ -1,0 +1,53 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T01:22:23.193143Z'
+status: completed
+review: review-01.yaml
+summary: 'closes review-01; all six findings fixed in 33daee77. The rule fix changes rule output, so the batch is not a minor fix: round 2 reviews it.'
+findings:
+- issue: Release-wheel install commands naming the devkit-dist wheel do not name the devkit-cli wheel (devkit-dist pins devkit-cli==<version>, which no index serves); two wheel-listing sentences are stale.
+  evidence: packages/devkit-starter/README.md:10; docs/development/reference/distribution.md:14,23; docs/capabilities/distribution/CAP-DIST-content-packages.md:64,115
+  failure_condition: A user copies one of these uv add commands for a release with this change; uv cannot resolve devkit-cli and the install fails.
+  suggested_action: Add the devkit-core and devkit-cli wheels to the three commands and name both in the two sentences.
+  resolution: resolved
+  severity: P2
+- issue: RULE-cli-tool-command-boundary checks presence of a boundary decorator, not its position; @boundary above @cli.command() registers the unwrapped command and the rule passes.
+  evidence: packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/command_boundary/rule.py:85-87
+  failure_condition: A CLI module has @boundary / @cli.command() / def run().
+  suggested_action: Report a boundary placed above the command decorator, with a message to place it below; add a test.
+  resolution: resolved
+  severity: P3
+- issue: AC-01 and AC-08 tests do not assert the literal Then; the shared failing fixture also emits a notice, and AC-08's Given contradicts its Then.
+  evidence: packages/devkit-cli/tests/integration/test_boundary.py:31-32,72-76; specs/2026-10/20261022-cli-toolkit/spec.md:97-101
+  failure_condition: Extra stderr output on a notice-free failure would pass the AC-01 test; AC-08 cannot be met by its own Given.
+  suggested_action: Add a notice-free failing command asserting stderr equals the render and codes() == [THING_MISSING], or amend AC-08.
+  resolution: resolved
+  severity: P3
+- issue: AC-11's release-notes clause has no mechanical check, though the plan promised one.
+  evidence: specs/2026-10/20261022-cli-toolkit/plan.md:90; scripts/release.sh:56-77; packages/devkit/tests/integration/package/test_lockstep.py:35-39
+  failure_condition: A later release.sh edit adds a devkit-dist install line without devkit-cli and no test fails.
+  suggested_action: Assert every release.sh line with $dist_wheel also has $cli_wheel.
+  resolution: resolved
+  severity: P3
+- issue: tasks.md was 0/6 checked, so review-refine had not opened.
+  evidence: specs/2026-10/20261022-cli-toolkit/tasks.md:11-45
+  failure_condition: A review envelope recorded before the stage opens does not advance the workflow.
+  suggested_action: Check the completed tasks before recording the review.
+  resolution: resolved
+  severity: P3
+- issue: CAP-CLI rule 10 claims the semver contract is enforced by test_lockstep, but nothing pins devkit_cli public names; the AC-07 import check allows any devkit submodule.
+  evidence: docs/capabilities/cli/CAP-CLI-agent-cli-toolkit.md:64-66; packages/devkit-cli/tests/integration/test_lazy_and_package.py:84
+  failure_condition: A public name is removed from devkit_cli.__all__ without a version bump and no test fails.
+  suggested_action: Add a pinned-public-names test, cite it in rule 10; narrow the AC-07 check to devkit.advisory.
+  resolution: resolved
+  severity: P3
+checks:
+  targeted_tests: PASS 78 passed (devkit-cli, devkit-catalog, test_lockstep)
+  lint_typecheck: PASS just lint, just check cli
+  rules: PASS just rules-check
+diff_scope:
+  base: c85b20985c32b30b149fcba86564994e9eee4028
+  head: 33daee77ecd27af96a124ad17049bed5d13b532a
+activity_effort: high
