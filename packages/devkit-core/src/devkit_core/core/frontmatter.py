@@ -152,6 +152,8 @@ _FastStrictLoader = _strict_loader(_c_base) if _c_base is not None else None
 # Route deep syntax back to Python before its recursion limit becomes relevant.
 # This is a parser selection threshold, not an input depth limit.
 _PYTHON_DEPTH_THRESHOLD = 100
+# C and Python scanners disagree on these characters in some syntactic positions.
+_PYTHON_SYNTAX = frozenset("\t?#\ufeff")
 
 
 def _needs_python(header: str, loader: type[yaml.SafeLoader]) -> bool:
@@ -168,8 +170,7 @@ def _needs_python(header: str, loader: type[yaml.SafeLoader]) -> bool:
 
 
 def _load_yaml(header: str) -> Any:
-    # libyaml accepts tab separators that the Python scanner rejects.
-    if _FastStrictLoader is not None and "\t" not in header:
+    if _FastStrictLoader is not None and _PYTHON_SYNTAX.isdisjoint(header):
         try:
             if not _needs_python(header, _FastStrictLoader):
                 return yaml.load(header, Loader=_FastStrictLoader)

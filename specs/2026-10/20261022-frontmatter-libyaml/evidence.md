@@ -3,8 +3,8 @@
 ## Header parsing benchmark
 
 Python 3.12.3, PyYAML 6.0.3 with libyaml; Linux. Preloaded 682 Markdown headers from docs/ and specs/.
-Nine alternating runs per route; values equal in every run. Python median 178.74 ms; guarded libyaml
-median 34.81 ms; speedup 5.14x. This measures header parsing, not end-to-end command latency.
+Nine alternating runs per route; values equal in every run. Python median 318.49 ms; guarded libyaml
+median 89.80 ms; speedup 3.55x. This measures header parsing, not end-to-end command latency.
 
 The Python baseline disables only the optional parser on the same worktree; no Git checkout is required.
 
@@ -50,5 +50,8 @@ assert ratio >= 2
 
 Both parser routes run the shared grammar tests. Additional tests compare complete Python error messages,
 accept moderately nested syntax, reject excessive syntax, preserve recursive alias identity, and import the module
-with CSafeLoader absent. Tab separators use Python because libyaml accepts inputs the Python scanner rejects.
+with CSafeLoader absent. Tabs, question marks, hashes and U+FEFF use Python because libyaml accepts inputs the Python scanner rejects.
+Independent review found 15 differing mutations among 2,960; another 19,138 unique mutations excluding those
+characters had no differing outcomes. Regression tests cover the invalid forms and valid quoted occurrences.
+The final frontmatter regression run passed 116 tests.
 Lint and Pyright pass; the devkit-core wheel builds. The affected selector retains its full-suite fallback.

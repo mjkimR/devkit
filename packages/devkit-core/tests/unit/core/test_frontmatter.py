@@ -165,6 +165,9 @@ def test_deeply_nested_yaml_is_a_frontmatter_error() -> None:
         "x:\n  1: a\n  0x1: b\n",
         "a: [unclosed\n",
         "a:\t1\n",
+        "a: [b?,c]\n",
+        "a: |#\n  b\n",
+        "a: b\n\ufeff",
         "? [a]\n: 1\n",
         "created: 2024-02-30\n",
         "k: !!python/object:builtins.object {}\n",
@@ -212,3 +215,8 @@ def test_import_without_libyaml(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_tabs_inside_quoted_scalars_remain_valid() -> None:
     assert frontmatter.load_header('k: "a\tb"\n') == {"k": "a\tb"}
+
+
+@pytest.mark.parametrize("character", ["?", "#", "\ufeff"])
+def test_guarded_characters_inside_quoted_scalars_remain_valid(character: str) -> None:
+    assert frontmatter.load_header(f'k: "a{character}b"\n') == {"k": f"a{character}b"}

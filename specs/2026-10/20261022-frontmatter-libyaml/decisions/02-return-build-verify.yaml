@@ -1,0 +1,8 @@
+request: return:build-verify
+kind: return
+action: accept
+workflow: sdd-spec-feature
+stage: build-verify
+note: Fix the independent review's C-only syntax acceptance finding within the agreed
+  grammar-preserving scope.
+at: '2026-10-22T11:02:32.431875Z'
