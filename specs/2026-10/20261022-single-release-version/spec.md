@@ -64,3 +64,4 @@ All workspace distributions should share the version of one release tag.
 - **Given** a workspace package contains src/**/bundle.toml manifests
 - **When** synchronization or checking runs
 - **Then** manifest versions are synchronized to VERSION or reported stale, preserving other manifest content.
+- **Then** successful synchronization also runs `uv run --no-active devkit sync` to refresh deployed assets and the tracked installation receipt; a deployment failure exits 2 without a success sentinel.

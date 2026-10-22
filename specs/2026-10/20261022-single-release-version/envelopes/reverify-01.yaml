@@ -1,0 +1,26 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T12:30:17.755101Z'
+status: completed
+review: review-01.yaml
+summary: Independent bounded review confirmed both original fixes; host added receipt synchronization with failure coverage.
+findings:
+- issue: Bundle versions were omitted from synchronization.
+  evidence: scripts/version.py at 402e3859 and full tests with 11 bundle/package mismatch failures.
+  failure_condition: Running version-sync changes packages without updating bundled manifests.
+  suggested_action: Synchronize workspace-owned bundle.toml versions and add regression coverage.
+  resolution: resolved
+  severity: P2
+- issue: INPUT_ERROR directive was shortened.
+  evidence: scripts/version.py at 402e3859 versus CAP-ADV-agent-advisory-protocol canonical directive.
+  failure_condition: Invalid input or stale metadata emits a noncanonical advisory.
+  suggested_action: Render and test the complete canonical directive.
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS 18 targeted tests; automatic sync extension separately tested
+diff_scope:
+  base: 402e38594d92867d5c831564524a951e34ba1f3f
+  head: a2a39f82a015da32ceaf91609d0cdbb1ed2a55f1

@@ -101,8 +101,16 @@ def main(argv: list[str] | None = None, *, root: Path = ROOT) -> int:
             for path, content in updates.items():
                 path.write_text(content)
             subprocess.run(["uv", "lock"], cwd=root, check=True, stdout=sys.stderr)
+            # The repository deploys its own bundles; keep the tracked installation receipt current too.
+            subprocess.run(
+                ["uv", "run", "--no-active", "devkit", "sync"], cwd=root, check=True, stdout=subprocess.DEVNULL
+            )
         except (OSError, subprocess.CalledProcessError) as exc:
-            error("VERSION_SYNC_FAILED", str(exc), "Resolve the write or uv lock failure and rerun just version-sync.")
+            error(
+                "VERSION_SYNC_FAILED",
+                str(exc),
+                "Resolve the write, uv lock or devkit sync failure and rerun just version-sync.",
+            )
             return 2
     state = "checked" if args.check else "synced"
     print(f"[VERSION: {version} state={state} packages={count}]")

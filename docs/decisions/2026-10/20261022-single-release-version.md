@@ -33,6 +33,10 @@ project and bundle manifest versions and versioned internal requirements, then r
 pass-throughs unchanged. Check consistency before release building. The separately built model and frontend npm
 library keep their own versions. `ARCH-07-deployment` defines the deployment boundary.
 
+Synchronization also runs `uv run --no-active devkit sync` after locking to refresh deployed bundles and
+`.devkit/installation.json`. Commit the refreshed receipt with the release metadata. A sync failure stops release
+preparation without a success sentinel; resolve its advisory and rerun `just version-sync`.
+
 ## 5. Consequences
 
 Maintainers edit one version value and run one command. Package metadata and the lock still change and must be

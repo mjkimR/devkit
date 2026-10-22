@@ -61,6 +61,10 @@ name every required local package wheel explicitly (a `devkit-agt` installation 
 `devkit-cli` and `devkit-advisory` wheels too); release notes include the harness, distribution-only, SDD, viewer and tool installation
 commands, and the runtime-only `devkit-advisory` and `devkit-cli` (with `devkit-advisory`) installations.
 
+Synchronization also runs `uv run --no-active devkit sync` after locking to refresh deployed bundles and
+`.devkit/installation.json`. Commit the refreshed receipt with the release metadata. A sync failure stops release
+preparation without a success sentinel; resolve its advisory and rerun `just version-sync`.
+
 ---
 
 ## 2. Consumer Workspace Layout

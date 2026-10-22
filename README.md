@@ -169,6 +169,10 @@ The release workflow runs the full CI, refuses a commit outside `main`, and vali
 metadata and lock before building every workspace wheel and publishing the GitHub Release. See
 `ARCH-07-deployment` and `ADR-single-release-version`.
 
+Synchronization also runs `uv run --no-active devkit sync` after locking to refresh deployed bundles and
+`.devkit/installation.json`. Commit the refreshed receipt with the release metadata. A sync failure stops release
+preparation without a success sentinel; resolve its advisory and rerun `just version-sync`.
+
 `devkit-embed` keeps its own version too and is not rebuilt by releases: devkit
 installs it, in this workspace and from Git, from the committed wheel in
 `models/devkit-embed/wheels/` pinned in `[tool.uv.sources]`. When the model changes,

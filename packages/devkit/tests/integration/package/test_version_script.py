@@ -64,8 +64,10 @@ def test_sync_preserves_external_metadata_and_refreshes_lock(script, workspace, 
     bundle = workspace / "packages/core/src/demo/bundle/bundle.toml"
     assert tomllib.loads(bundle.read_text())["version"] == "0.1.2"
     assert "# keep bundle comment" in bundle.read_text()
-    run.assert_called_once()
-    assert run.call_args.args[0] == ["uv", "lock"]
+    assert run.call_count == 2
+    assert run.call_args_list[0].args[0] == ["uv", "lock"]
+    assert run.call_args_list[1].args[0] == ["uv", "run", "--no-active", "devkit", "sync"]
+    assert run.call_args_list[1].kwargs["stdout"] == subprocess.DEVNULL
     assert capsys.readouterr().out == "[VERSION: 0.1.2 state=synced packages=2]\n"
     assert script.metadata_updates(workspace)[2] == {}
 
@@ -138,3 +140,13 @@ def test_stale_bundle_is_checked_even_with_current_package_versions(script, work
     assert script.main(["--check"], root=workspace) == 1
     run.assert_not_called()
     assert list(script.metadata_updates(workspace)[2]) == [bundle]
+
+
+def test_deployment_failure_is_not_success(script, workspace, monkeypatch, capsys):
+    run = Mock(side_effect=[None, subprocess.CalledProcessError(2, ["uv", "run", "devkit", "sync"])])
+    monkeypatch.setattr(script.subprocess, "run", run)
+    assert script.main([], root=workspace) == 2
+    assert run.call_count == 2
+    result = capsys.readouterr()
+    assert result.out == ""
+    assert "VERSION_SYNC_FAILED" in result.err

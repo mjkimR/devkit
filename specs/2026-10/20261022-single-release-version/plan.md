@@ -27,6 +27,10 @@ Success emits one VERSION sentinel. Staleness exits 1; invalid input or lock fai
 A failed lock leaves synchronized metadata for inspection; fix the lock failure and rerun synchronization.
 Checking is read-only and checks metadata only; uv lock --check verifies the lock separately.
 
+Synchronization also runs `uv run --no-active devkit sync` after locking to refresh deployed bundles and
+`.devkit/installation.json`. Commit the refreshed receipt with the release metadata. A sync failure stops release
+preparation without a success sentinel; resolve its advisory and rerun `just version-sync`.
+
 ## 6. Verification & Test Plan
 
 Extend package integration checks for workspace-wide versions, input validation, idempotence, pin updates,
