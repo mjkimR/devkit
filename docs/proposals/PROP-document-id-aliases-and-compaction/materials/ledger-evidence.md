@@ -2,6 +2,9 @@
 
 Gathered by the planning worker at base `fd6f011b` to ground the direction review.
 
+Planning history only: ADR compaction and supersession checking left the scope with the answers recorded in
+`envelopes/answer-01.yaml`; nothing below is a change target.
+
 ## ADR ledger size and supersession
 
 - `docs/decisions/2026-10/` holds 74 ADRs: 67 `accepted`, 7 `superseded`.
