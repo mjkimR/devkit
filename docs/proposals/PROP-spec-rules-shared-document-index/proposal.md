@@ -2,7 +2,7 @@
 id: PROP-spec-rules-shared-document-index
 title: Share one document index across a rules run
 summary: "Lets the spec rules and markdown_link share one in-process document index and catalog per rules run, and keeps markdown_link to its targets, so targeted runs such as workflow lint-clean stop re-reading every document."
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-22
 target_area: documents/
 priority: medium                      # critical | high | medium | low
