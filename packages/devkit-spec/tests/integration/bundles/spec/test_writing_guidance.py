@@ -4,11 +4,10 @@ the templates that point to them (SPEC-writing-guidance-layers, ADR-layered-writ
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 from devkit_dist.features.distribution.services.bundles import load_bundle
+from spec_support.bundle_text import BUNDLE, raw, text
 
-BUNDLE = Path(__file__).resolve().parents[4] / "src/devkit_spec/bundles/spec/bundle"
 INSTRUCTIONS = {
     "contract-authoring",
     "living-spec-writing",
@@ -20,12 +19,8 @@ INSTRUCTIONS = {
 }
 
 
-def _read(relative: str) -> str:
-    return (BUNDLE / relative).read_text(encoding="utf-8")
-
-
 def _description(name: str) -> str:
-    found = re.search(r"^description: (.+)$", _read(f"instructions/{name}.md"), re.MULTILINE)
+    found = re.search(r"^description: (.+)$", raw(f"instructions/{name}.md"), re.MULTILINE)
     assert found is not None, name
     return found.group(1)
 
@@ -45,14 +40,14 @@ def test_every_instruction_header_names_its_trigger_within_the_budget() -> None:
 
 
 def test_the_decision_template_and_guide_carry_the_y_statement_and_confirmation() -> None:
-    template = _read("templates/decision.md")
+    template = text("templates/decision.md")
     assert "## 6. Confirmation" in template and "accepting <downside>" in template
-    guide = " ".join(_read("instructions/decision-writing.md").split())
+    guide = text("instructions/decision-writing.md")
     assert "Y-statement" in guide and "**Confirmation**" in guide
 
 
 def test_the_capability_guide_gives_every_ears_template_and_the_template_points_to_it() -> None:
-    guide = _read("instructions/capability-writing.md")
+    guide = text("instructions/capability-writing.md")
     for clause in (
         "`<system> MUST <response>`",
         "`WHEN <event>",
@@ -61,13 +56,13 @@ def test_the_capability_guide_gives_every_ears_template_and_the_template_points_
         "`WHERE <feature",
     ):
         assert clause in guide, clause
-    assert "capability-writing" in _read("templates/capability.md")
+    assert "capability-writing" in text("templates/capability.md")
 
 
 def test_the_usecase_and_architecture_guides_and_the_usecase_template() -> None:
-    usecase = " ".join(_read("instructions/usecase-writing.md").split())
+    usecase = text("instructions/usecase-writing.md")
     assert "Example Mapping" in usecase and "Given/When/Then" in usecase
-    assert _read("templates/usecase.md").count("usecase-writing") == 2
-    architecture = " ".join(_read("instructions/architecture-writing.md").split())
+    assert text("templates/usecase.md").count("usecase-writing") == 2
+    architecture = text("instructions/architecture-writing.md")
     assert "fitness function" in architecture
     assert "source, stimulus, environment, response and measure" in architecture

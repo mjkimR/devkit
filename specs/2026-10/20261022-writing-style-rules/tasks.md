@@ -18,7 +18,7 @@ plan: PLAN-writing-style-rules
     `docs/architecture/ARCH-08-2-resource-taxonomy.md`, `.devkit/`, `.claude/`, `.agents/`, `AGENTS.md`
   - _Requirements: AC-06_
   - **Verification**: `uv run devkit sync && uv run devkit rules check --phase hygiene`
-- [ ] **Task 3**: Shared bundle text reader for the spec bundle guidance tests
+- [x] **Task 3**: Shared bundle text reader for the spec bundle guidance tests
   - **_Boundary**: `packages/devkit-spec/tests/support/spec_support/bundle_text.py`,
     `packages/devkit-spec/tests/integration/bundles/spec/`
   - _Requirements: AC-07_

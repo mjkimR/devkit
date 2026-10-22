@@ -3,29 +3,24 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from spec_support.bundle_text import text
 
-BUNDLE = Path(__file__).resolve().parents[4] / "src/devkit_spec/bundles/spec/bundle"
-REFERENCES = BUNDLE / "skills/spec/references"
-
-
-def _text(path: Path) -> str:
-    """The file's text with every whitespace run collapsed, so assertions do not depend on line wrapping."""
-    return " ".join(path.read_text(encoding="utf-8").split())
+PLANNING = "skills/spec/references/planning.md"
+LOOP = "skills/spec/references/review-loop.md"
 
 
 def test_planning_closes_each_challenger_round_with_a_reverify() -> None:
-    planning = _text(REFERENCES / "planning.md")
+    planning = text(PLANNING)
     assert "After folding a `challenger` round, close it with `devkit workflow envelope reverify" in planning
     assert "--from envelopes/challenger-NN.yaml`: `--resolve <N>` per folded finding" in planning
     assert "leave `Decision needed:` findings open for `plan-accept`" in planning
-    loop = _text(REFERENCES / "review-loop.md")
+    loop = text(LOOP)
     assert "`reverify --from envelopes/challenger-NN.yaml` for Planning" in loop
     assert "closed after its fold as in [planning](planning.md) step 3" in loop
 
 
 def test_the_round_count_covers_unmarked_rounds_and_answer_folds() -> None:
-    loop = _text(REFERENCES / "review-loop.md")
+    loop = text(LOOP)
     assert "Each kind counts separately." in loop
     assert (
         "An unmarked round counts only when it precedes the first marked round and the segment's `worker` envelope"
@@ -38,14 +33,14 @@ def test_the_round_count_covers_unmarked_rounds_and_answer_folds() -> None:
 
 
 def test_settled_assumptions_go_into_settles() -> None:
-    records = _text(REFERENCES / "worker-records.md")
+    records = text("skills/spec/references/worker-records.md")
     assert "goes into `--settle N=<decision>` (`N` its 1-based position), not `constraints`" in records
 
 
 def test_planning_clears_boundary_reports_before_plan_accept() -> None:
-    proposal = _text(BUNDLE / "workflows/sdd-proposal.md")
+    proposal = text("workflows/sdd-proposal.md")
     assert "clears every `RULE-proposal-boundaries` report" in proposal
     assert "each `challenger` round with the `reverify` that closes it (`review=` on its line)" in proposal
-    assert "clear every `RULE-proposal-boundaries` report" in _text(REFERENCES / "planning.md")
-    template = _text(BUNDLE / "templates/proposal.md")
+    assert "clear every `RULE-proposal-boundaries` report" in text(PLANNING)
+    template = text("templates/proposal.md")
     assert "existing paths (RULE-proposal-boundaries); a path to create: its nearest existing parent" in template
