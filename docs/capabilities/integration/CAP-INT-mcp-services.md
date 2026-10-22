@@ -164,6 +164,14 @@ package registers a module or object with `check(context)`:
 my-methodology = "my_package.integration"
 ```
 
+Before every provider run (prepare on either route, and every build) the executor names one receipt case itself.
+When the running reader (`READER_MODULES` of the receipt reader) refuses the source's committed
+`.devkit/installation.json`, accepts the target's, and the source's range from the merge base changes a reader
+module path, it refuses with `INTEGRATION_RECEIPT_READER_CHANGED`: a runtime built from the target cannot read that
+receipt and restarting does not help, so the directive is the CLI route run from the source's code under separately
+granted authority, never an automatic route change. Validation stays strict; any other refused receipt keeps the
+provider's `RECEIPT_INVALID`.
+
 `check(IntegrationContext) -> Readiness` verifies final committed work at `context.finish.source_sha`, compared with
 `target_sha`. At prepare `context.result_sha` is `None`; at a build the execution context carries the build target as
 `finish.target_sha` and the result commit as `result_sha`. It returns immutable `Evidence(code, value)` entries, any
@@ -318,7 +326,9 @@ measurement limits are recorded in the unit's platform evidence material.
 
 Install `devkit-agt[mcp]` intentionally in a retained base/tool runtime, then run ordinary `devkit sync` for selected
 Codex/Claude project registrations. `devkit mcp status` distinguishes local registration facts from unknown
-connection, effective enablement, forms, trust and permissions. See `CAP-MCP-runtime-registration`.
+connection, effective enablement, forms, trust and permissions. See `CAP-MCP-runtime-registration`. A retained
+service whose loaded devkit code no longer matches the installed code refuses every tool except read-only ones with
+`MCP_RUNTIME_STALE` until it is restarted or reconnected.
 
 The Host validates the final committed scope and checks before calling `integration_integrate`; its native form
 supplies business approval under ask; shared base auto supplies local policy authority without a form. Workers return scope to their Host and do not request business approval. No extra chat
