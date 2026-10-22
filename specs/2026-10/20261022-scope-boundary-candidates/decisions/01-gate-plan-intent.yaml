@@ -1,0 +1,15 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'Goal: resolve FB-scope-observation-candidates. Decision (option A): once a
+  spec unit''s tasks.md declares _Boundary code paths, its scope set uses declared-code
+  and observed paths only; capability and use case entrypoints stop contributing candidate
+  code paths to comparison. Before tasks exist (proposal stage, or a spec without
+  _Boundary), candidates stay as they are; observed paths keep being compared at build.
+  Living Spec: CAP-COLL-work-scope-registry sections 4.1 and 4.2 state the rule. Verification:
+  Red then Green tests on scope inputs and comparison, affected tests, rules check.
+  task-kind feature, planning-depth spec, activity-effort medium.'
+by: user
+at: '2026-10-22T05:20:11.456799Z'
