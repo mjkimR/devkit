@@ -70,5 +70,4 @@ def test_the_story_and_architecture_guides_and_the_story_template() -> None:
     assert _read("templates/story.md").count("story-writing") == 2
     architecture = " ".join(_read("instructions/architecture-writing.md").split())
     assert "fitness function" in architecture
-    for part in ("Source", "Stimulus", "Environment", "Response", "Measure"):
-        assert f"| {part} |" in architecture, part
+    assert "source, stimulus, environment, response and measure" in architecture

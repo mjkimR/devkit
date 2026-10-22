@@ -5,92 +5,39 @@ description: Create an agent skill or playbook with a router structure, restruct
 
 # Skill authoring and restructuring
 
-Use this playbook when you create or substantially edit a skill (`SKILL.md` with
-optional `references/` and `scripts/`) or a playbook, and when
-`RULE-skill-document-size` reports a file. Read
-[script support](references/scripts.md) only when a step needs a helper script.
-
-## Prerequisites
-
-- The skill or playbook to create or restructure, and where its source lives:
-  a project-native skill directory or a bundle source (`bundle/skills/`,
-  `bundle/playbooks/`); for a bundle source, run `devkit sync` after editing.
-- Restructure in a hygiene session or as the task itself, not as a side quest
-  of unrelated feature work.
+Use when you create or substantially edit a skill or playbook, or when `RULE-skill-document-size` reports one.
+Write it by the `agent-asset-writing` instruction. Read [script support](references/scripts.md) when a step is
+repetitive and deterministic, or must filter repository state down to the slice the agent needs. For a bundle
+source, run `devkit sync` after editing.
 
 ## Constraints
 
-- Every instruction that applies on every run stays in `SKILL.md`. Never move
-  safety, scope or boundary constraints into a rarely read file.
-- Size is a review signal, not a goal. Do not shrink a file by joining lines,
-  dropping verification criteria or deleting examples the procedure depends on.
+- Keep every instruction that applies on every run in `SKILL.md`, including safety, scope and boundary constraints.
+- Do not shrink a file by joining lines, dropping completion criteria or deleting examples the procedure depends on.
+- Restructure as the task itself or in a hygiene session, not inside unrelated feature work.
 
-## Step 1: Create new skills as a router
+## Step 1: Create a skill as a router
 
-```text
-<skill-name>/
-├── SKILL.md          # always loaded when the skill triggers
-├── references/       # read on a stated condition
-└── scripts/          # executed, not read (see references/scripts.md)
-```
-
-- **Frontmatter**: `name` matches the directory. `description` says what the
-  skill does and when to use it, with the words a user or agent would actually
-  type; the description decides whether the skill triggers at all.
-- **Body order**: purpose and trigger, required constraints, procedure or task
-  branches, verification criteria (how the agent knows it is done), then
-  situational reference paths.
-- **References**: one file per situation or procedure, linked from `SKILL.md`
-  with its read condition, for example "Read `references/review.md` when
-  entering review." Keep references one level deep.
-- **Sentences**: write the body by the `agent-asset-writing` instruction
-  (directives, degrees of freedom, defaults, feedback loops, completion
-  criteria, examples).
+- Make `description` say what the skill does and when to use it, in the words a user or agent would type; it
+  decides whether the skill triggers.
+- Put each situation or procedure that only some runs need in its own `references/<situation>.md`.
 
 ## Step 2: Restructure a large skill
 
-The default threshold is 12 KiB (12288 bytes) per Markdown file, frontmatter
-included. Prefer splitting conditional content to trimming a file just below its
-effective `max_bytes`, and aim for about 75-80% of the limit so later edits have
-room; that range is guidance, not a threshold, and never a reason to split an
-inseparable procedure or move always-required constraints.
+Aim for about 75-80% of the effective `max_bytes`; never split an inseparable procedure to get there.
 
-1. **Split conditional content first.** Move content that only some runs need:
-   recovery procedures, tool- or host-specific instructions, the detailed schema
-   of one stage, rare long examples. Name each file after its situation and
-   state the read condition where `SKILL.md` links it.
-2. **Thin router.** `SKILL.md` keeps purpose and trigger, shared constraints,
-   task branches and the situational reference paths. Do not instruct the agent
-   to read every reference at start; that loads the same context as before.
-3. **Compress repetition.** Remove repeated explanation, long background and
-   overlapping examples. Keep execution conditions, required constraints and
-   verification criteria.
-4. **Review supporting files.** Apply the same steps to a large reference. Split
-   it by situation or procedure, not by arbitrary size. Avoid many tiny files
-   and chains where one reference sends the agent to another.
+1. Move conditional content first: recovery procedures, tool- or host-specific instructions, one stage's detailed
+   schema, rare long examples.
+2. Leave `SKILL.md` as a router: purpose and trigger, shared constraints, task branches, reference paths.
+3. Remove repeated explanation, long background and overlapping examples.
+4. Apply the same steps to a large reference. Avoid many tiny files and references that send the agent to another
+   reference.
 
-## Step 3: Record a justified exception
-
-When a file must stay large (a single procedure that is always read whole, or a
-quoted external protocol), add an exact-path override with the reason as a
-comment directly above it in `.devkit/config.toml`:
-
-```toml
-# Read as one procedure; split deferred.
-[[rules.settings.RULE-skill-document-size.overrides]]
-path = ".agents/skills/example/SKILL.md"
-max_bytes = 16384
-```
-
-Update or remove the entry when the file moves or shrinks.
+If a file must stay large (one procedure always read whole, a quoted external protocol), record the override that
+`devkit rules explain RULE-skill-document-size` shows.
 
 ## Completion conditions
 
-- The body meets the completion list of the `agent-asset-writing` instruction.
-- Every link from `SKILL.md` resolves, and every reference is linked from
-  somewhere.
-- Every required constraint is still reachable on every path that needs it; a
-  run that does not hit a stated condition does not need the moved file.
-- `uv run devkit rules check --phase hygiene` reports no
-  `RULE-skill-document-size` warning for the edited files, or the remaining
-  file has a commented override.
+- Every link from `SKILL.md` resolves, and every reference is linked with a read condition.
+- `uv run devkit rules check --phase hygiene` reports no `RULE-skill-document-size` warning for the edited files, or
+  the file has a commented override.

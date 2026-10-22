@@ -52,16 +52,15 @@ def test_the_bundle_names_no_harness_command() -> None:
 
 def test_the_constitution_keeps_the_distribution_contracts() -> None:
     constitution = (_root() / "AGENTS.md").read_text("utf-8")
-    contracts = re.findall(r"^\d+\. \*\*(.+?)\*\*", constitution, re.MULTILINE)
-    assert contracts == [
-        "Load context once per bundle.",
-        "Never edit generated copies.",
-        "Selection lives in `.devkit/config.toml`.",
-        "Playbooks are explicit.",
-        "Commit the receipt with the change.",
-    ]
-    assert "`auto_select`" in constitution and "`devkit list` shows them" in constitution  # contract 3, generic
-    assert "Snapshot gates" not in constitution  # the snapshot-gate half of the old contract 6 is the harness's
+    for directive in (
+        "only when its header matches the work",  # instruction bodies on demand
+        "`devkit-playbook`",  # playbooks are explicit
+        "`devkit add <bundle>[:<preset>]`",  # selection
+        "`devkit remove <bundle>`",
+        "commit `.devkit/installation.json`",  # the receipt travels with the change
+    ):
+        assert directive in constitution, directive
+    assert "Snapshot gates" not in constitution  # the snapshot-gate contract is the harness's
 
 
 def test_the_in_repo_example_never_declares_both_devkit_requirements() -> None:
@@ -77,7 +76,7 @@ def test_the_in_repo_example_never_declares_both_devkit_requirements() -> None:
     for dependencies in groups:
         names = {re.split(r"[\s\[@=<>]", dependency, maxsplit=1)[0] for dependency in dependencies}
         assert not {"devkit-dist", "devkit-agt"} <= names
-    assert "never declares both" in text
+    assert "Declare `devkit-agt` instead of `devkit-dist`" in text
 
 
 @pytest.mark.parametrize("presets", [["core", "run"], ["run"]])
@@ -107,7 +106,7 @@ def test_guide_bundle_context_delivers_constitution_and_headers(tmp_path: Path) 
     update_config(target, presets={"devkit": ["core"]}, agents=[])
     sync_project(target, [InstalledBundle("devkit", "0.1.0", bundle)])
     context = GetContext().execute(target, "devkit").to_dict()
-    assert context["constitution"] and "devkit get-context <bundle>" in context["constitution"]
+    assert context["constitution"] and "`devkit-playbook`" in context["constitution"]
     headers = {entry["header"].split("\n", 1)[0] for entry in context["instructions"]}
     assert headers == {f"name: {name}" for name in INSTRUCTIONS}
     for entry in context["instructions"]:

@@ -5,87 +5,39 @@ description: Write or curate always-loaded agent guides (AGENTS.md, CLAUDE.md po
 
 # Agent guide authoring and curation
 
-Use this playbook when you write or substantially edit an agent guide, and when
-`RULE-agent-guide-size` reports one. Read [host loading](references/hosts.md)
-only when you add, move or point between guides (nested guides, `CLAUDE.md`).
+Use when you write or substantially edit an agent guide, or when `RULE-agent-guide-size` reports one;
+`devkit rules explain RULE-agent-guide-size` gives the budget, the override syntax and how to shrink the devkit
+guidance block. Read [host loading](references/hosts.md) when you add, move or point between guides (nested
+guides, `CLAUDE.md`).
 
-Unlike a skill, a guide is loaded on every turn of every session, so it holds
-only what nearly every task needs. Move other content to where it is read on
-demand, not into references the guide links: agents follow a plain link unreliably.
+A guide loads on every turn, so it holds only what nearly every task needs.
 
-## Prerequisites
+## Step 1: Keep
 
-- The guide to write or curate. Shrink the block between `<!-- DEVKIT:START -->`
-  and `<!-- DEVKIT:END -->` only by deselecting presets that contribute
-  `guidance` fragments.
-- Curate as the task itself or in a hygiene session, not as a side quest.
+- One or two lines of purpose.
+- At most a module map: one line per module with its responsibility and a link to its README or docs.
+- Boundaries and invariants an agent could break unknowingly.
+- The verification commands to run before finishing.
+- Safety, commit and publication constraints.
+- Pointers with an explicit read condition ("Before changing schemas, read `docs/schema.md`."), because agents
+  rarely follow a plain link.
 
-## Step 1: Decide what stays
-
-Keep only what applies to nearly every task in the directory the guide covers:
-
-- one or two lines of purpose and orientation;
-- at most a module map: one line per module stating its responsibility, with a
-  link to its README or docs;
-- architecture boundaries and invariants an agent could break unknowingly;
-- the verification commands to run before finishing;
-- safety, commit and publication constraints;
-- pointers whose read condition is explicit ("Before changing schemas, read
-  `docs/schema.md`."); a pointer without a condition is rarely followed.
-
-Leave out, even when it looks helpful:
-
-- **Project structure trees.** A tree is large and goes stale unnoticed;
-  agents list files themselves, and the module map is enough orientation.
-- **Module-specific content.** Conventions, commands, configuration, layout or
-  architecture that apply to one module belong in that module's README or docs
-  (or a nested guide in its directory). The root guide keeps at most a link
-  with its read condition: "Before changing `packages/api`, read
-  `packages/api/README.md`."
-
-## Step 2: Move everything else to where it is read on demand
+## Step 2: Move or delete the rest
 
 | Content | Destination |
 | --- | --- |
-| Module-specific conventions, commands, layout, architecture or API details | The module's README or `docs/`; the guide keeps a conditional link |
-| Project or directory structure trees | Nowhere; keep the one-line-per-module map |
+| Structure trees, file inventories, counts, versions, implementation details | Nowhere: they go stale unnoticed, and agents list files themselves |
+| Module-specific conventions, commands, layout or architecture | The module's README or `docs/`, or a nested guide in its directory |
 | Judgment rules for one kind of work | An instruction |
 | Multi-step or occasional procedures | A playbook or skill |
-| Mechanically checkable invariants | A rule (then drop the prose, or keep one line) |
-| Guidance for one directory | A nested guide in that directory |
+| Mechanically checkable invariants, or what a tool already enforces | A rule or the tool; drop the prose |
+| What the agent host already instructs, history, narratives | Nowhere |
 
-Leave a conditional pointer only when an agent would otherwise not find the
-moved content at the moment it matters.
-
-## Step 3: Write for every turn
-
-- State invariants and decisions, not narratives or history.
-- Leave out facts that drift: structure trees, file inventories, counts, version
-  numbers, descriptions of current implementation details.
-- Do not repeat what a tool already enforces or what the agent host already
-  instructs; repetition costs context on every request.
-- Write one precise sentence with a threshold or command instead of emphatic
-  wording; capitals and absolute words make agents over-apply a rule.
-- Keep one source of truth: when `CLAUDE.md` exists for Claude Code, point it at
-  `AGENTS.md` instead of duplicating content (see references/hosts.md).
-
-## Step 4: Record a justified exception
-
-When a guide must stay large, add an exact-path override with the reason as a
-comment directly above it in `.devkit/config.toml`:
-
-```toml
-# Monorepo root guide: shared boundaries for twelve packages; split planned.
-[[rules.settings.RULE-agent-guide-size.overrides]]
-path = "AGENTS.md"
-max_bytes = 12288
-```
+Write what stays as one precise sentence with a threshold or command, without emphatic wording.
 
 ## Completion conditions
 
-- Every moved item is reachable: the destination exists and, where needed, a
-  pointer with an explicit read condition remains.
+- Every moved item exists at its destination, with a conditional pointer where an agent would not otherwise find it.
 - No constraint that applies to every task left the guide.
-- `uv run devkit rules check --phase hygiene` reports no `RULE-agent-guide-size`
-  warning for the edited guides, or the remaining guide has a commented
-  override.
+- `uv run devkit rules check --phase hygiene` reports no `RULE-agent-guide-size` warning for the edited guides, or
+  the guide has a commented override.

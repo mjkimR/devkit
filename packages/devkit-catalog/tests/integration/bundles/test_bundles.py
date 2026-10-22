@@ -61,8 +61,8 @@ def test_response_style_deploys_configured_language(tmp_path: Path, language: st
     assert "# Reply style" in text
     assert "→ **Core sentence.** Supporting explanation." in text
     assert "Required user and workflow formats take precedence" in text
-    assert "return the artifact without conversational framing" in text
-    assert "State what is finished and what remains" in text
+    assert "return it without framing" in text
+    assert "state what is finished and what remains" in text
     assert "Follow repository and task language requirements" in text
     assert (
         "unless the user explicitly requests another language" in text

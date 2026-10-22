@@ -87,11 +87,11 @@ def test_complete_maintained_cloud_inventory(agent: str, tmp_path: Path):
     local = desired_inventory(selected, {item.bundle.name: ["all"] for item in selected}, [agent], environment="local")
     review = local.files[".devkit/managed/spec/skills/spec-review-proposal/SKILL.md"].data
     assert b"spec_plan_accept" in review
-    # AC-05: both renderings name the template route; only the local one names the MCP tool.
-    assert b"spec_proposal_report_template" in review and b"--template" in review
+    # AC-05: the local rendering names the MCP template tool; the cloud one names the CLI template route.
+    assert b"spec_proposal_report_template" in review
     cloud_review = inventory.files[".devkit/managed/spec/skills/spec-review-proposal/SKILL.md"].data
     assert b"--template" in cloud_review
     assert (
-        b"Do not automatically fall back to CLI"
+        b"do not fall back to CLI unless the user chooses an authorized CLI route"
         in local.files[".devkit/managed/spec/skills/spec-orchestrate/SKILL.md"].data
     )

@@ -80,7 +80,7 @@ def test_a_worker_is_projected_with_its_host_execution_contract(synced: Path, wo
     assert "The host does not enforce the contract's boundaries itself" in prompt
     body = source.read_text(encoding="utf-8").split("---\n", 2)[2].lstrip("\n")
     assert prompt.endswith(body.rstrip("\n") + "\n")
-    assert "## Procedure" in prompt and "## Codex execution and permissions" in prompt
+    assert "## Procedure" in prompt and "On Codex, `workspace-write` confines no path" in prompt
 
 
 def test_no_skill_is_projected_for_a_procedure_only_a_role_runs(synced: Path) -> None:

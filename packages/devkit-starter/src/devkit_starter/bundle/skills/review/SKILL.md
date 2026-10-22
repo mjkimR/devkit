@@ -1,7 +1,6 @@
 ---
 name: review
-description: Review a code change for correctness and verification gaps.
+description: Review a code change for correctness and verification gaps. Use when asked to review a diff, patch or pull request.
 ---
 
-Inspect the project's instructions and the change. Check the intended behavior,
-identify concrete defects, and cite relevant files. Report verification results.
+Report each concrete defect with its file reference, and each check you ran with its result.

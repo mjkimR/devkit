@@ -87,7 +87,7 @@ Outcomes and failure codes: `CAP-GATE-commit-gates`.
 
 Commit message policy is a bundle, not a gate: `devkit-dist` ships the opt-in bundle `git-commits` (sources in `packages/devkit-dist/src/devkit_dist/bundles/git_commits/bundle/`, the data-only module `devkit_dist.bundles.git_commits`), deployed after `uv run devkit add git-commits`; it needs no engine, so a distribution-only installation deploys it too. Its preset `core` holds:
 
-- the instruction `git-commits`: Conventional Commits types, optional scope, imperative subject, body and footer formatting, breaking changes and clean message output; listed by `devkit get-context git-commits`;
+- the instruction `git-commits`: Conventional Commits with the repository's choices: types, imperative subject, bullet bodies, supported claims and clean message output; listed by `devkit get-context git-commits`;
 - the `guidance` fragment `commit-pointer`, which adds one line to the root `AGENTS.md` block: "Before drafting or creating a commit message, read `<path>` and follow it." The path is the managed copy, or the project override after `devkit override create git-commits:git-commits`.
 
 It ships no gate: messages are not validated. Adapt the conventions (scope names, message language, issue references) with an override of the instruction.
