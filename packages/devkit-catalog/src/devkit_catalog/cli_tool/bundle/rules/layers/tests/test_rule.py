@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 from devkit_agt.features.rules import Phase, Severity
-from devkit_agt.features.rules.services.testing import check, load_rule
+from devkit_agt.features.rules.services.testing import check, load_rule, write_files
 
 RULE = load_rule(__file__)
 SCAN = "src/pkg/features/scan"
@@ -121,3 +122,32 @@ def test_annotations_only_and_feature_packages_are_not_checked(tmp_path: Path) -
 def test_one_violation_per_import_statement(tmp_path: Path) -> None:
     source = "from pkg.features.scan import services, usecases\n"
     assert len(check(RULE, tmp_path, {f"{SCAN}/models.py": source})) == 1
+
+
+def _parses_through_the_shared_cache(root: Path, monkeypatch: pytest.MonkeyPatch, files: dict[str, str]) -> None:
+    """Run the rule on a shared cache; each Python file it scanned was parsed through ``ctx.cache`` and left intact."""
+    import ast
+
+    from devkit_agt.features.rules import RuleContext, WorkspaceCache
+
+    write_files(root, files)
+    ctx = RuleContext(workspace_root=root, cache=WorkspaceCache(root))
+    RULE.check(ctx)
+    original = ast.parse
+    parsed: list[str] = []
+    monkeypatch.setattr(ast, "parse", lambda *args, **kwargs: parsed.append(str(args[0])) or original(*args, **kwargs))
+    for name in files:
+        tree = ctx.cache.get_python_ast(name)
+        assert ast.dump(tree, include_attributes=True) == ast.dump(
+            original((root / name).read_bytes()), include_attributes=True
+        )
+    assert parsed == []  # the rule had already parsed every scanned file through ctx.cache
+
+
+def test_sources_are_parsed_once_through_the_shared_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    files = {f"{SCAN}/services.py": "import click\n", f"{SCAN}/cli.py": "from .usecases import run\n"}
+    _parses_through_the_shared_cache(tmp_path, monkeypatch, files)
+
+
+def test_a_file_that_does_not_parse_is_left_to_the_language_linter(tmp_path: Path) -> None:
+    assert check(RULE, tmp_path, {f"{SCAN}/services.py": "import click\ndef broken(:\n"}) == []

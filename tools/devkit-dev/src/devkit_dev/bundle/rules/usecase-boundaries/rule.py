@@ -8,7 +8,7 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
-from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
+from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, WorkspaceCache
 from devkit_agt.features.rules.services.builtins.base import BaseRule
 
 BASE = "devkit_core.base.usecase.BaseUseCase"
@@ -70,7 +70,7 @@ def _imports(module: Module, tree: ast.AST) -> dict[str, str]:
 
 
 class Index:
-    def __init__(self, root: Path, config: dict) -> None:
+    def __init__(self, root: Path, config: dict, cache: WorkspaceCache) -> None:
         self.modules: dict[str, Module] = {}
         self.definitions: dict[str, ast.ClassDef | Function] = {}
         for package in config["packages"]:
@@ -88,7 +88,7 @@ class Index:
                     name,
                     path.relative_to(root).as_posix(),
                     layer,
-                    ast.parse(path.read_text()),
+                    cache.get_python_ast(path),
                     relative[-1] == "__init__",
                     {},
                 )
@@ -211,11 +211,17 @@ class Index:
         )
 
 
-def inspect_usecases(root: Path, config_path: str = ".devkit/architecture.toml") -> list[tuple[str, int, str]]:
-    """Check known static execution edges; computed dispatch remains a review responsibility."""
+def inspect_usecases(
+    root: Path, config_path: str = ".devkit/architecture.toml", *, cache: WorkspaceCache | None = None
+) -> list[tuple[str, int, str]]:
+    """Check known static execution edges; computed dispatch remains a review responsibility.
+
+    Sources are parsed through ``cache`` (a fresh ``WorkspaceCache(root)`` when omitted), so a rules run shares one
+    parsed tree per file with its other Python-source rules.
+    """
     try:
         config = tomllib.loads((root / config_path).read_text())
-        index = Index(root, config)
+        index = Index(root, config, cache if cache is not None else WorkspaceCache(root))
         exceptions = config.get("usecase_exceptions", [])
         for entry in exceptions:
             if set(entry) != {"source", "target", "reason"} or any(
@@ -446,5 +452,5 @@ class UsecaseBoundariesRule(BaseRule):
                 severity=self.severity,
                 phase=self.phase,
             )
-            for path, line, message in inspect_usecases(ctx.workspace_root)
+            for path, line, message in inspect_usecases(ctx.workspace_root, cache=ctx.cache)
         ]

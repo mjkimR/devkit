@@ -162,8 +162,8 @@ class HeavyImportsRule(BaseRule):
             if not any(match_path(pattern, rel) for pattern in settings.cli_modules):
                 continue
             try:
-                tree = ast.parse(ctx.cache.read_text(path), filename=rel)
-            except SyntaxError:
+                tree = ctx.cache.get_python_ast(path)
+            except (SyntaxError, ValueError):
                 continue  # the linter of the language reports it
             heavy = [*settings.heavy_modules, *settings.extra_heavy_modules]
             for node in _module_level(tree.body):

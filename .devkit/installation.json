@@ -1255,15 +1255,15 @@
     },
     ".devkit/managed/advisory/rules/unique_code/index.py": {
       "mode": 420,
-      "sha256": "07ce171acfe64605856e6d473f0b06d6bcdedff47dd5cf68e3004df48c616981"
+      "sha256": "e1ba28a653b5abb95b3ec6d284623684b406e2f390a52d19d275c97d819c2a34"
     },
     ".devkit/managed/advisory/rules/unique_code/rule.py": {
       "mode": 420,
-      "sha256": "12d940188b0d4d6c34a467264ca1af897689198bd21a1cf70d846e3ac6a2d6cf"
+      "sha256": "7c5c36a9a4e0a512b113c3966209327ba4cf3d9d1c0eb83145aa4201a4acf953"
     },
     ".devkit/managed/advisory/rules/unique_code/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "1e0153b5173f7a7608111a24a861f39a1dbdbf6df3881b58fb9c13c14a854e47"
+      "sha256": "8859b9827ba8901d5eb9f65d049fe57b0d7916edcdc2386dee3167bdb0b9d576"
     },
     ".devkit/managed/authoring/bundle.toml": {
       "mode": 420,
@@ -1323,11 +1323,11 @@
     },
     ".devkit/managed/devkit-dev/rules/architecture/rule.py": {
       "mode": 420,
-      "sha256": "bc3fdc934635563f412910c5c5e3212d22ab094a16f4def4b460158ad8c4715f"
+      "sha256": "a2d8870c9da5f0dc22564d909a18bbf729094ce3d3f2bcb04c5a180e6f3a77e0"
     },
     ".devkit/managed/devkit-dev/rules/architecture/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "535261f3a32985a4c94a00f0b33dd0d9c4a570d0eafd38a8f78c6be925a2bbfd"
+      "sha256": "c28aad9cb4650c1c9b90571315a673995e07a7285811f64efb492e1f66744695"
     },
     ".devkit/managed/devkit-dev/rules/usecase-boundaries/guide.md": {
       "mode": 420,
@@ -1335,11 +1335,11 @@
     },
     ".devkit/managed/devkit-dev/rules/usecase-boundaries/rule.py": {
       "mode": 420,
-      "sha256": "1189a4e2a423b587a52aa225ccc2c882a614ceeed590b3acba2747cd9a8cb652"
+      "sha256": "6c6f9574e99d304cc5bb4a06c2f7bcce44831d5556177e83fda4a2e1a29fc6ad"
     },
     ".devkit/managed/devkit-dev/rules/usecase-boundaries/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "f0c7f303dded5d21bcd5bcf251bd89a213ab0afbb114541d4a089d20a44a02c7"
+      "sha256": "d93583778a5d6812b5521c1ba5ec6077fbce396180363012b7152d4f42271771"
     },
     ".devkit/managed/devkit/AGENTS.md": {
       "mode": 420,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import unicodedata
 from pathlib import Path
 
@@ -215,3 +216,149 @@ def test_only_command_line_targets_are_listed_inside_dependency_directories(tmp_
     diffed = RuleContext(workspace_root=root, changed_files=target, cache=WorkspaceCache(root), snapshot=snapshot)
     assert diffed.changed_files == target
     assert [p.relative_to(root).as_posix() for p in diffed.cache.find_files(root)] == ["docs/a.md"]
+
+
+def _dump(tree: ast.AST) -> str:
+    return ast.dump(tree, include_attributes=True)
+
+
+@pytest.fixture
+def parse_calls(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Names of the exec-mode ``ast.parse`` calls made while the test runs."""
+    calls: list[str] = []
+    original = ast.parse
+
+    def counting(source: str | bytes, filename: str = "<unknown>", mode: str = "exec", **kwargs: object) -> ast.AST:
+        if mode == "exec":
+            calls.append(str(filename))
+        return original(source, filename, mode, **kwargs)  # type: ignore[call-overload]
+
+    monkeypatch.setattr(ast, "parse", counting)
+    return calls
+
+
+@pytest.fixture
+def resolve_calls(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Paths ``Path.resolve`` was called on while the test runs."""
+    calls: list[str] = []
+    original = Path.resolve
+
+    def counting(self: Path, strict: bool = False) -> Path:
+        calls.append(str(self))
+        return original(self, strict=strict)
+
+    monkeypatch.setattr(Path, "resolve", counting)
+    return calls
+
+
+def test_python_ast_is_one_shared_tree_per_file(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:
+    write(temp_workspace, "pkg/mod.py", "import os\n\n\ndef run() -> int:\n    return 1\n")
+    tree = workspace_cache.get_python_ast("pkg/mod.py")
+    assert workspace_cache.get_python_ast(temp_workspace / "pkg/mod.py") is tree
+    assert _dump(tree) == _dump(ast.parse((temp_workspace / "pkg/mod.py").read_bytes()))
+
+
+def test_python_ast_remembers_a_syntax_error(
+    temp_workspace: Path, workspace_cache: WorkspaceCache, parse_calls: list[str]
+) -> None:
+    write(temp_workspace, "pkg/bad.py", "def broken(:\n")
+    raised: list[SyntaxError] = []
+    for _ in range(3):
+        with pytest.raises(SyntaxError) as info:
+            workspace_cache.get_python_ast("pkg/bad.py")
+        raised.append(info.value)
+    assert parse_calls == ["pkg/bad.py"]
+    assert len({id(error) for error in raised}) == 3
+    assert {(type(error), error.args) for error in raised} == {(type(raised[0]), raised[0].args)}
+    assert raised[0].filename == "pkg/bad.py" and raised[0].lineno == 1
+
+
+def test_python_ast_of_a_missing_file_is_not_remembered(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:
+    for _ in range(2):
+        with pytest.raises(FileNotFoundError):
+            workspace_cache.get_python_ast("pkg/missing.py")
+    write(temp_workspace, "pkg/missing.py", "VALUE = 1\n")
+    workspace_cache.invalidate("pkg/missing.py")
+    assert isinstance(workspace_cache.get_python_ast("pkg/missing.py").body[0], ast.Assign)
+
+
+def test_python_ast_reads_source_as_cpython_does(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:
+    (temp_workspace / "bom.py").write_bytes(b"\xef\xbb\xbfVALUE = 'x'\n")
+    tree = workspace_cache.get_python_ast("bom.py")
+    assert isinstance(tree.body[0], ast.Assign)
+
+
+@pytest.mark.parametrize("drop", ["invalidate", "invalidate_many", "write_text", "invalidate_all"])
+def test_python_ast_is_dropped_on_invalidation(
+    temp_workspace: Path, workspace_cache: WorkspaceCache, drop: str
+) -> None:
+    write(temp_workspace, "mod.py", "OLD = 1\n")
+    old = workspace_cache.get_python_ast("mod.py")
+    new_source = "NEW = 2\n"
+    if drop == "write_text":
+        workspace_cache.write_text("mod.py", new_source)
+    else:
+        (temp_workspace / "mod.py").write_text(new_source)
+        if drop == "invalidate":
+            workspace_cache.invalidate("mod.py")
+        elif drop == "invalidate_many":
+            workspace_cache.invalidate_many(["mod.py"])
+        else:
+            workspace_cache.invalidate_all()
+    tree = workspace_cache.get_python_ast("mod.py")
+    assert tree is not old
+    assert _dump(tree) == _dump(ast.parse(new_source))
+
+
+def test_a_path_argument_resolves_once_between_invalidations(
+    temp_workspace: Path, workspace_cache: WorkspaceCache, resolve_calls: list[str]
+) -> None:
+    write(temp_workspace, "mod.py", "VALUE = 1\n")
+    for _ in range(3):
+        workspace_cache.read_bytes("mod.py")
+        workspace_cache.read_text("mod.py")
+        workspace_cache.get_python_ast("mod.py")
+    assert resolve_calls == [str(workspace_cache.workspace_root / "mod.py")]
+    workspace_cache.invalidate("other.py")
+    workspace_cache.read_bytes("mod.py")
+    assert resolve_calls.count(str(workspace_cache.workspace_root / "mod.py")) == 2
+
+
+@pytest.mark.parametrize("drop", ["invalidate", "write_text", "invalidate_all"])
+def test_a_retargeted_symlink_gets_its_new_key_after_an_invalidation(tmp_path: Path, drop: str) -> None:
+    root = tmp_path.resolve()
+    write(root, "first.py", "FIRST = 1\n")
+    write(root, "second.py", "SECOND = 2\n")
+    (root / "link.py").symlink_to("first.py")
+    cache = WorkspaceCache(root)
+    assert cache.read_text("link.py") == "FIRST = 1\n"
+    # A symlink and its target share one key.
+    assert cache.get_python_ast("link.py") is cache.get_python_ast("first.py")
+    (root / "link.py").unlink()
+    (root / "link.py").symlink_to("second.py")
+    assert cache.read_text("link.py") == "FIRST = 1\n"  # unchanged until an invalidation
+    if drop == "invalidate":
+        cache.invalidate("unrelated.py")
+    elif drop == "write_text":
+        cache.write_text("unrelated.py", "")
+    else:
+        cache.invalidate_all()
+    assert cache.read_text("link.py") == "SECOND = 2\n"
+    assert isinstance(cache.get_python_ast("link.py").body[0].targets[0], ast.Name)  # type: ignore[attr-defined]
+    assert cache.get_python_ast("link.py") is cache.get_python_ast("second.py")
+
+
+def test_write_text_resolves_afresh_after_a_parent_became_an_outside_symlink(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    write(root, "docs/a.md", "before\n")
+    cache = WorkspaceCache(root)
+    assert cache.read_text("docs/a.md") == "before\n"
+    (root / "docs/a.md").unlink()
+    (root / "docs").rmdir()
+    (root / "docs").symlink_to(outside)
+    with pytest.raises(UnsafePathError) as info:
+        cache.write_text("docs/a.md", "after\n")
+    assert info.value.code == "PATH_UNSAFE"
+    assert not (outside / "a.md").exists()

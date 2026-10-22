@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
+from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, WorkspaceCache
 from devkit_agt.features.rules.services.builtins.base import BaseRule
 
 LAYERS = {"cli", "mcp", "http", "usecases", "services", "repositories", "models"}
@@ -167,8 +167,15 @@ def _layout(parts: tuple[str, ...], package: dict[str, Any]) -> str | None:
     return None
 
 
-def inspect_architecture(root: Path, config_path: str = ".devkit/architecture.toml") -> list[tuple[str, int, str]]:
-    """Return all graph violations; never execute inspected modules."""
+def inspect_architecture(
+    root: Path, config_path: str = ".devkit/architecture.toml", *, cache: WorkspaceCache | None = None
+) -> list[tuple[str, int, str]]:
+    """Return all graph violations; never execute inspected modules.
+
+    Sources are parsed through ``cache`` (a fresh ``WorkspaceCache(root)`` when omitted), so a rules run shares one
+    parsed tree per file with its other Python-source rules.
+    """
+    cache = cache if cache is not None else WorkspaceCache(root)
     findings: list[tuple[str, int, str]] = []
     configuration = root / config_path
     if not configuration.is_file():
@@ -303,8 +310,8 @@ def inspect_architecture(root: Path, config_path: str = ".devkit/architecture.to
             if issue:
                 findings.append((rel, 1, issue))
             try:
-                tree = ast.parse(path.read_text(), filename=rel)
-            except (SyntaxError, UnicodeError) as exc:
+                tree = cache.get_python_ast(path)
+            except (SyntaxError, ValueError) as exc:
                 findings.append((rel, getattr(exc, "lineno", 1) or 1, f"cannot parse source: {exc}"))
                 continue
             parts = relative[:-1] if relative[-1] == "__init__" else relative
@@ -503,5 +510,5 @@ class ArchitectureRule(BaseRule):
                 severity=self.severity,
                 phase=self.phase,
             )
-            for path, line, message in inspect_architecture(ctx.workspace_root)
+            for path, line, message in inspect_architecture(ctx.workspace_root, cache=ctx.cache)
         ]

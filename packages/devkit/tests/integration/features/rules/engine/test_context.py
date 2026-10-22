@@ -72,3 +72,44 @@ def test_cache_is_always_a_workspace_cache(tmp_path: Path) -> None:
     other.mkdir()
     with pytest.raises(ValueError, match="same workspace root"):
         RuleContext(workspace_root=tmp_path, cache=WorkspaceCache(other))
+
+
+def test_a_path_inside_the_workspace_is_made_relative_without_resolving(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ctx = RuleContext(workspace_root=tmp_path)
+    calls: list[Path] = []
+    original = Path.resolve
+
+    def counting(self: Path, strict: bool = False) -> Path:
+        calls.append(self)
+        return original(self, strict=strict)
+
+    monkeypatch.setattr(Path, "resolve", counting)
+    assert ctx.relative_path("docs/a.md") == "docs/a.md"
+    assert ctx.relative_path(ctx.workspace_root / "docs/../docs/a.md") == "docs/a.md"
+    assert ctx.is_file_targeted("docs/a.md")
+    assert calls == []
+
+
+def test_symlinked_roots_outside_links_and_loops_map_as_before(tmp_path: Path) -> None:
+    root = (tmp_path / "root").resolve()
+    outside = tmp_path / "outside"
+    (root / "docs").mkdir(parents=True)
+    (root / "docs/a.md").write_text("x\n")
+    outside.mkdir()
+    (outside / "x.md").write_text("y\n")
+    (root / "toout").symlink_to(outside)
+    (root / "loop").symlink_to("loop")
+    alias = tmp_path / "alias"
+    alias.symlink_to(root)
+    ctx = RuleContext(workspace_root=root)
+    # A root reached through a symlinked alias still maps to its relative form.
+    assert ctx.relative_path(alias / "docs/a.md") == "docs/a.md"
+    # An in-workspace symlink to outside keeps its lexical name; through the alias it resolves outside.
+    assert ctx.relative_path("toout/x.md") == "toout/x.md"
+    assert ctx.relative_path(alias / "toout/x.md") is None
+    assert ctx.relative_path("toout/../docs/a.md") == "docs/a.md"
+    # A symlink loop inside the workspace gets its lexical name instead of failing the rule.
+    assert ctx.relative_path("loop") == "loop"
+    assert ctx.relative_path("loop/x") == "loop/x"

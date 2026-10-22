@@ -143,19 +143,20 @@ class RuleContext:
         """Workspace-relative POSIX form of ``path``, or ``None`` when it lies outside the workspace.
 
         The path is normalized lexically, so a symlink inside the workspace keeps
-        its own name (as ``WorkspaceCache.find_files`` lists it). An absolute
-        path that is outside lexically is retried after resolving symlinks, for
-        roots reached through a symlinked prefix.
+        its own name (as ``WorkspaceCache.find_files`` lists it). Only a path
+        that is outside lexically is retried after resolving symlinks, for roots
+        reached through a symlinked prefix.
         """
         candidate = Path(path)
         absolute = candidate if candidate.is_absolute() else self.workspace_root / candidate
-        for option in (Path(os.path.normpath(absolute)), absolute.resolve()):
-            try:
-                relative = option.relative_to(self.workspace_root).as_posix()
-            except ValueError:
-                continue
-            return relative if relative != "." else None
-        return None
+        option = Path(os.path.normpath(absolute))
+        if not option.is_relative_to(self.workspace_root):
+            # Resolve only when the lexical form is outside: a path inside never touches the file system.
+            option = absolute.resolve()
+            if not option.is_relative_to(self.workspace_root):
+                return None
+        relative = option.relative_to(self.workspace_root).as_posix()
+        return relative if relative != "." else None
 
     def relative_path(self, path: str | Path) -> str | None:
         """Workspace-relative POSIX form of ``path`` (relative to the workspace or absolute), or ``None`` outside it."""

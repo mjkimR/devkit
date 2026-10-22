@@ -93,8 +93,8 @@ class LibraryOutputRule(BaseRule):
             if any(match_path(pattern, rel) for pattern in settings.exclude):
                 continue
             try:
-                tree = ast.parse(ctx.cache.read_text(path), filename=rel)
-            except SyntaxError:
+                tree = ctx.cache.get_python_ast(path)
+            except (SyntaxError, ValueError):
                 continue  # the linter of the language reports it
             cli_module = any(match_path(pattern, rel) for pattern in settings.cli_modules)
             aliases = _aliases(tree)

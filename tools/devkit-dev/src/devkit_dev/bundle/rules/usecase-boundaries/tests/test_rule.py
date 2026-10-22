@@ -340,3 +340,39 @@ def test_every_file_the_rule_opens_matches_its_inputs(tmp_path: Path) -> None:
         check(RULE, tmp_path)
     assert {".devkit/architecture.toml", "src/sample/features/one/cli.py"} <= opened
     assert [name for name in sorted(opened) if not any(match_path(p, name) for p in INPUTS)] == []
+
+
+def _parses_through_the_shared_cache(root: Path, monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Run the rule on a shared cache; return the Python files it scanned, each left equal to a fresh parse."""
+    import ast
+
+    from devkit_agt.features.rules import RuleContext, WorkspaceCache
+
+    ctx = RuleContext(workspace_root=root, cache=WorkspaceCache(root))
+    RULE.check(ctx)
+    original = ast.parse
+    parsed: list[str] = []
+    monkeypatch.setattr(ast, "parse", lambda *args, **kwargs: parsed.append(str(args[0])) or original(*args, **kwargs))
+    scanned = sorted(path.relative_to(root).as_posix() for path in (root / "src").rglob("*.py"))
+    for name in scanned:
+        tree = ctx.cache.get_python_ast(name)
+        assert ast.dump(tree, include_attributes=True) == ast.dump(
+            original((root / name).read_bytes()), include_attributes=True
+        )
+    assert parsed == []  # the rule had already parsed every scanned file through ctx.cache
+    return scanned
+
+
+def test_sources_are_parsed_once_through_the_shared_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    write_files(tmp_path, SEEDED)
+    assert len(_parses_through_the_shared_cache(tmp_path, monkeypatch)) >= 2
+
+
+def test_a_source_that_does_not_parse_aborts_with_one_finding_naming_it(tmp_path: Path) -> None:
+    write_files(tmp_path, {**SEEDED, "src/sample/features/one/broken.py": "def broken(:\n"})
+    found = [(v.file, v.message) for v in check(RULE, tmp_path)]
+    assert len(found) == 1
+    file, message = found[0]
+    assert file == ".devkit/architecture.toml"
+    assert message.startswith("cannot inspect usecase boundaries: ")
+    assert message.endswith("(broken.py, line 1)")  # the file name, no longer <unknown>
