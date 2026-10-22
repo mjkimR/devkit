@@ -8,7 +8,7 @@ plan: PLAN-retained-runtime-receipt
 
 ## Phase 1: Reproduction
 
-- [ ] **Task 1.1**: Reproduction tests for both cases
+- [x] **Task 1.1**: Reproduction tests for both cases
   - **_Boundary**: `packages/devkit/tests/integration/features/integration/test_receipt_reader.py`, `packages/devkit-mcp/tests/integration/features/runtime/test_loaded_code.py`
   - _Requirements: AC-01, AC-02, AC-04, AC-05_
   - **Verification**: `just test agt packages/devkit/tests/integration/features/integration/test_receipt_reader.py`; `just test mcp packages/devkit-mcp/tests/integration/features/runtime/test_loaded_code.py`
