@@ -7,6 +7,7 @@ created: 2026-10-22
 related_capabilities:
   - CAP-HARN-agent-guidance
   - CAP-DIST-content-packages
+  - CAP-DLV-proposal-incubation
 related_stories: []
 workflow: sdd-spec-feature
 ---

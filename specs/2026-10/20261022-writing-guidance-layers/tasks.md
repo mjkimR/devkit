@@ -14,6 +14,8 @@ plan: PLAN-writing-guidance-layers
     `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/living-spec-writing.md`,
     `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml`
   - _Requirements: AC-01, AC-02_
+  - Result: `contract-authoring` and `living-spec-writing` held no sentence-level rule, so neither needed a dedup
+    edit; `document-writing` leaves current-state writing to `living-spec-writing`.
 - [x] **Task 1.2**: Per-type guides and template changes, PADR Confirmation section
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/decision-writing.md`,
     `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/capability-writing.md`,

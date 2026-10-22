@@ -1,0 +1,46 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T23:49:21.049503Z'
+status: completed
+summary: 'code-reviewer (native, isolated) at 1354d80a: AC-01..AC-08 and AC-10 confirmed by get-context, tests and reading; AC-09 record incomplete'
+findings:
+- issue: AC-09 record lacks the fixed expected-behavior lists and the met behaviors per run
+  evidence: specs/2026-10/20261022-writing-guidance-layers/pilot.md:42
+  failure_condition: A reader cannot verify that the new text meets at least as many behaviors as the old in each scenario
+  suggested_action: Record the S1/S2/S3 lists and per-run results in the unit; note text revision per run or rerun with the final text
+  resolution: open
+  severity: P1
+- issue: document-writing restates the current-state rule owned by living-spec-writing and applies it to dated records; dedup status of the two existing instructions is unstated
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/document-writing.md:32
+  failure_condition: An agent editing an ADR or material applies current-state rewriting to it
+  suggested_action: Limit the line to time-relative words; state that contract-authoring and living-spec-writing needed no dedup edits
+  resolution: open
+  severity: P3
+- issue: document-writing reserves capitals for RFC 2119 keywords while capability-writing requires capitalized EARS keywords
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/document-writing.md:21
+  failure_condition: Contradictory guidance on EARS keyword case for capability authors
+  suggested_action: Say defined keywords (RFC 2119, EARS)
+  resolution: open
+  severity: P3
+- issue: S1 and S2 new-text runs predate the final ID-citation wording
+  evidence: specs/2026-10/20261022-writing-guidance-layers/pilot.md:51
+  failure_condition: Recorded new-text scores may not describe the shipped text
+  suggested_action: Note the revision per run or rerun S1 and S2 with the final text
+  resolution: open
+  severity: P3
+- issue: related_capabilities omits CAP-DLV-proposal-incubation, which the change rewrites
+  evidence: specs/2026-10/20261022-writing-guidance-layers/spec.md:7
+  failure_condition: Relation searches miss this spec's change to CAP-DLV-proposal-incubation
+  suggested_action: Add it to related_capabilities
+  resolution: open
+  severity: P3
+assumptions:
+- Reviewer ran as the native code-reviewer subagent in an isolated context
+checks:
+  tests: PASS just test-affected (1392 passed)
+  lint: PASS devkit rules check --ci --base 542f4461
+diff_scope:
+  base: 542f4461b572a5432c89f81bd0dceff4ddafc38f
+  head: 1354d80a52da06c3874847c7cab82ff021298905

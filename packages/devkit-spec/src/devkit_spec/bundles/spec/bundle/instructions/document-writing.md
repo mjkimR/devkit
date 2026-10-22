@@ -18,8 +18,8 @@ the domain basics, and lacks only this repository's facts.
 - Give a reason in one clause when it changes how the reader applies the rule: "..., because the file is shared in
   the PR." Link background, history and rejected options by ID (ADR, MAT, SPEC) instead of retelling them.
 - Write directives without hedges ("likely", "might", "probably"); state the condition under which they apply.
-- Keep capitals for RFC 2119 keywords. A rule gets its force from its condition and reason, not from "CRITICAL",
-  "ALWAYS" or bold text.
+- Keep capitals for defined keywords (RFC 2119, and the keywords a per-kind instruction defines, such as EARS). A
+  rule gets its force from its condition and reason, not from "CRITICAL", "ALWAYS" or bold text.
 
 ## Content
 
@@ -29,7 +29,7 @@ the domain basics, and lacks only this repository's facts.
 - Show one concrete example per pattern (an exact command, output line or snippet) rather than an abstract
   description.
 - Name exact identifiers in backticks: commands with their flags, codes, paths and IDs.
-- Describe the current state without time-relative words ("recently", "the new X", "as of now").
+- Write no time-relative words ("recently", "the new X", "as of now"); name the version, date or ID instead.
 
 ## Layout
 
