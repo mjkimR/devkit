@@ -160,7 +160,7 @@ The table order is the kind order: `devkit spec list` sorts by it. Living Spec d
 
 ### 3.5 Aliases
 
-1. **Field**: any ID-bearing document (`CAP`, `US`, `ARCH`, `ADR`, `MS`, `MAT`, `PROP`, `PADR`, `SPEC`, `PLAN`,
+1. **Field**: any ID-bearing document (`CAP`, `UC`, `ARCH`, `ADR`, `MS`, `MAT`, `PROP`, `PADR`, `SPEC`, `PLAN`,
    `TASKS`, `REC`, `FB`; namespace documents included) MAY declare `aliases`, a list of previous or alternate IDs of
    itself. No kind refuses it.
 2. **Shape**: each item MUST be a full ID with the declaring document's own prefix, MUST NOT be its own ID, MUST NOT
@@ -174,7 +174,7 @@ The table order is the kind order: `devkit spec list` sorts by it. Living Spec d
    its ID. Otherwise the alias collides: the collision is reported on every document involved, and the target
    resolves as it would without the alias, or stays ambiguous. Resolution, reference queries, the `depends_on` cycle
    graphs, milestone membership, traceability and every identity check use this mapping.
-5. **Renaming**: a document whose ID derives from its path (`CAP`, `US`, `ARCH`, `SPEC`, `PLAN`, `TASKS`, `REC`,
+5. **Renaming**: a document whose ID derives from its path (`CAP`, `UC`, `ARCH`, `SPEC`, `PLAN`, `TASKS`, `REC`,
    `FB`) is renamed by moving the file, setting the new ID and keeping the old ID in `aliases`; renaming a spec bundle
    keeps an alias on every file whose ID derives from the bundle slug (`spec.md`, `plan.md`, `tasks.md`,
    `reconcile.md`). An ADR gains aliases from its PADR at handoff (`CAP-DLV-proposal-incubation`) or, as a compaction

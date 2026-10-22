@@ -102,58 +102,70 @@ entrypoints:
 - **Then**: completed claims carry status, verification and reachability evidence; actions link existing follow-ups
   without creating work, and publication stays `pending` without a destination and authority
 
-### Scenario 2: Fails on an unresolved interval
+### Scenario 2: Asks for an unknown timezone before resolving the interval
+- **Covers**: 2a
+- **Given**: a developer whose timezone the agent does not know
+- **When**: the agent resolves the reporting interval
+- **Then**: the agent asks for the timezone and neither resolves the interval nor creates an artifact until the developer answers
+
+### Scenario 3: Fails on an unresolved interval
 - **Covers**: 2b
 - **Given**: an explicit interval whose end precedes its start
 - **When**: the agent resolves the interval
 - **Then**: generation fails and no report artifact is created
 
-### Scenario 3: Keeps health gaps explicit
+### Scenario 4: Asks for a location instead of writing to the default branch
+- **Covers**: 2c
+- **Given**: no owning unit's materials and no repository materials location
+- **When**: the agent chooses where to write the report
+- **Then**: the agent asks for the artifact location, and no tracked report file is created on the default branch
+
+### Scenario 5: Keeps health gaps explicit
 - **Covers**: 3a
 - **Given**: a missing check artifact and a check result recorded for an older revision
 - **When**: evidence is collected
 - **Then**: both appear as health limitations with their reasons, and neither is reported as clean
 
-### Scenario 4: Keeps unproven integration as snapshot evidence
+### Scenario 6: Keeps unproven integration as snapshot evidence
 - **Covers**: 4a
 - **Given**: changes reachable from the captured integration SHA without a known integration time
 - **When**: the agent classifies the week's work
 - **Then**: the changes are reported as snapshot evidence, not as delivery within the week
 
-### Scenario 5: States an incompatible prior report
+### Scenario 7: States an incompatible prior report
 - **Covers**: 5a
 - **Given**: a named prior report whose scope differs from this run's
 - **When**: findings are compared
 - **Then**: the report states that the prior report is not comparable, and the absence of a finding is never read as
   resolved
 
-### Scenario 6: Separates changing and dirty evidence
+### Scenario 8: Separates changing and dirty evidence
 - **Covers**: 6a
 - **Given**: dirty working-tree content, and an integration ref that moves during collection
 - **When**: the agent rechecks before writing
 - **Then**: dirty observations are labeled separately from committed evidence, and the changed evidence is
   re-collected or marked unverified, never silently mixed
 
-### Scenario 7: Preserves the predecessor on a rerun
+### Scenario 9: Preserves the predecessor on a rerun
 - **Covers**: 7a
 - **Given**: a verified report for the same repository, scope and interval
 - **When**: the developer reruns the playbook
 - **Then**: a new artifact with a new run ID names the superseded run, and the earlier artifact's bytes are unchanged
 
-### Scenario 8: Fails generation when verification fails
+### Scenario 10: Fails generation when verification fails
 - **Covers**: 7b
 - **Given**: a written report whose readback does not match the recorded identity
 - **When**: the agent verifies the artifact
 - **Then**: generation fails and nothing is published
 
-### Scenario 9: Records an authorized publication outcome
+### Scenario 11: Records an authorized publication outcome
 - **Covers**: 8a
 - **Given**: a verified report, a companion record, and a destination the developer selected with explicit authority
 - **When**: the agent publishes through an existing authorized connector
 - **Then**: the companion records `published` only after a verified receipt with matching content, run and digest, or
   `failed` on a confirmed failure, and the report is unchanged either way
 
-### Scenario 10: Never retries a lost publication blindly
+### Scenario 12: Never retries a lost publication blindly
 - **Covers**: 8b
 - **Given**: a publication attempt whose response was lost
 - **When**: the developer asks to retry

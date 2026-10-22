@@ -60,7 +60,7 @@ sustainable.
    or pull request. Rejected: document noise explodes and agents produce mechanical, hallucinated updates.
 3. **Two complementary ledgers with periodic human reconciliation (chosen)**:
    - The spec is the ledger of intent, contracts and invariants; code is the ledger of the running implementation.
-   - At feature completion, only the core delta (capabilities, stories) is synced lightly (Tier 1, micro-sync).
+   - At feature completion, only the core delta (capabilities, use cases) is synced lightly (Tier 1, micro-sync).
    - Accumulated drift is reviewed and cleaned up by the user and the agent together at milestones or in periodic
      sessions (Tier 2, periodic human reconciliation).
 
