@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T10:02:10.364865Z'
+status: completed
+summary: 'round 1; PASS: Living Spec reflection in CAP-GOV-rules-engine, CAP-GOV-spec-rules, and CAP-GOV-rule-authoring verified against implementation; all targets resolved'
+findings: []
+checks:
+  reconcile: PASS targets CAP-GOV-rules-engine, CAP-GOV-spec-rules, and CAP-GOV-rule-authoring verified
+  lint: PASS devkit rules check (0 errors, 0 warnings)
+diff_scope:
+  base: fb1db8fa4335e367b4492077a0dfc0d06387cf6e
+  head: 92dff45f6d1a64afa6c2fc1ae19ab23a4b6fa637
+activity_effort: medium
