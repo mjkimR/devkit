@@ -8,6 +8,7 @@ from devkit.advisory import (
     Actor,
     Advisory,
     AdvisoryError,
+    ArgumentError,
     ExitCode,
     Level,
     Retry,
@@ -154,6 +155,12 @@ def test_serialization_and_problem_details() -> None:
     bare = error.to_problem_details(include_advisory=False)
     assert bare["type"] == "about:blank"
     assert "status" not in bare and "advisory" not in bare
+
+
+def test_argument_error_is_the_input_error_of_command_lines() -> None:
+    error = ArgumentError("--limit must be positive", target_files="--limit", fix="Pass --limit 1 or more")
+    assert (error.code, error.mode, error.exit_code) == ("ARGUMENT_INVALID", ActionMode.INPUT_ERROR, ExitCode.ERROR)
+    assert error.render().startswith("[ERROR]  (ARGUMENT_INVALID) --limit must be positive\n[ACTION] INPUT_ERROR")
 
 
 def test_unexpected_errors_are_maintenance() -> None:

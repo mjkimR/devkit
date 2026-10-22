@@ -3,8 +3,8 @@
 Agent asset distribution in one Python package with the `devkit` command line: bundles, native agent projections,
 transactional sync and the installation receipt, context loading, playbooks and native host hooks. The distribution
 name is `devkit-dist`; imports are under `devkit_dist`. It owns the sole `devkit` console script, the `.devkit/config.toml` schema and the receipt format.
-Requires Python 3.12 or later; runtime dependencies are `click`, `jinja2`, `pyyaml`, `tomlkit`, `devkit-core` and `devkit-advisory`
-(the `devkit.advisory` library, same version). The `search` extra (`devkit-dist[search]`) adds `numpy`, `tokenizers`
+Requires Python 3.12 or later; runtime dependencies are `click`, `jinja2`, `pyyaml`, `tomlkit`, `devkit-core`, `devkit-cli` (the
+agent-first command-line boundary) and `devkit-advisory` (the `devkit.advisory` library), the devkit ones at the same version. The `search` extra (`devkit-dist[search]`) adds `numpy`, `tokenizers`
 and the embedding model package for dense and hybrid search. Optional `devkit-mcp` owns native stdio and forms;
 dist owns exact project registration and does not import the SDK.
 
@@ -18,8 +18,8 @@ name the requirement to add.
 
 ## Install
 
-No package index hosts the wheel; install it from Git (which brings `devkit-core` and `devkit-advisory` from the same commit) or by URL
-from a GitHub Release with the `devkit-core` and `devkit-advisory` wheels next to it (see the
+No package index hosts the wheel; install it from Git (which brings `devkit-core`, `devkit-cli` and `devkit-advisory` from the same commit) or by
+URL from a GitHub Release with the `devkit-core`, `devkit-cli` and `devkit-advisory` wheels next to it (see the
 [root README](../../README.md#using-devkit-in-another-project)):
 
 ```bash
@@ -65,7 +65,10 @@ copy and may use the public rule API. The repository development bundle checks f
 checks lazy command loading. `just test-dist` runs the package tests without the harness installed.
 
 The independent [devkit-core](../devkit-core/README.md) package owns filesystem/Git/parsing/plugin primitives,
-logging, extension dispatch and SDK-free MCP contracts. Its tests prohibit dependencies on this wheel.
+logging, extension dispatch and SDK-free MCP contracts. Its tests prohibit dependencies on this wheel. The output
+contract of every command is implemented by [devkit-cli](../devkit-cli/README.md); `adapters/cli.py` binds it to the
+`devkit` logger and the `DEVKIT_` environment prefix and adds the workspace options, and the root group is a
+`devkit_cli.LazyGroup` extended with plugin lookup.
 
 ## Tests
 

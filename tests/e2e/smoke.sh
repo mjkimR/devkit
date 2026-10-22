@@ -46,6 +46,7 @@ wheel() {
     echo "${matches[0]}"
 }
 core_wheel=$(wheel devkit_core)
+cli_wheel=$(wheel devkit_cli)
 dist_wheel=$(wheel devkit_dist)
 devkit_wheel=$(wheel devkit_agt)
 advisory_wheel=$(wheel devkit_advisory)
@@ -72,6 +73,32 @@ assert importlib.util.find_spec("mcp") is None
 "$foundation/bin/python" -m pytest -c packages/devkit-core/pyproject.toml --rootdir packages/devkit-core \
     -p no:cacheprovider packages/devkit-core/tests -q
 
+echo "==> toolkit-only consumer: a click tool on devkit-cli, without devkit-dist"
+toolkit="$work/toolkit"
+uv venv "$toolkit" >/dev/null
+uv pip install --python "$toolkit/bin/python" "$cli_wheel" "$advisory_wheel" >/dev/null
+cat > "$work/toolkit_tool.py" <<'PY'
+import importlib.util
+import click
+from devkit.advisory import AdvisoryError
+from devkit_cli import FORMAT_OPTION, Boundary
+
+assert importlib.util.find_spec("devkit_dist") is None and importlib.util.find_spec("devkit_core") is None
+
+@click.command()
+@FORMAT_OPTION
+@Boundary("smoketool")
+def main(output_format: str) -> None:
+    raise AdvisoryError("nothing to do", code="SMOKE_FAILED")
+
+main()
+PY
+status=0
+toolkit_out=$("$toolkit/bin/python" "$work/toolkit_tool.py" --format json 2>"$work/toolkit.err") || status=$?
+[ "$status" -eq 2 ] || { echo "error: the toolkit tool exited $status, expected 2" >&2; exit 1; }
+grep -q '"code": "SMOKE_FAILED"' <<<"$toolkit_out" || { echo "error: the toolkit tool printed no JSON error" >&2; exit 1; }
+[ ! -s "$work/toolkit.err" ] || { echo "error: the toolkit tool wrote stderr in JSON mode" >&2; exit 1; }
+
 echo "==> distribution-only consumer: the devkit-dist wheel without devkit-agt"
 standalone="$work/standalone"
 mkdir -p "$standalone"
@@ -79,7 +106,7 @@ mkdir -p "$standalone"
     cd "$standalone"
     unset VIRTUAL_ENV
     uv init --bare --name smoke-standalone --no-workspace >/dev/null
-    uv add --dev "$dist_wheel" "$core_wheel" "$advisory_wheel" >/dev/null
+    uv add --dev "$dist_wheel" "$core_wheel" "$cli_wheel" "$advisory_wheel" >/dev/null
     uv run devkit --version
     uv run python -c "
 import importlib.util
@@ -140,7 +167,7 @@ echo "==> tool installation: devkit-dist owns the executable, devkit-agt adds th
 (
     unset VIRTUAL_ENV
     export UV_TOOL_DIR="$work/tools" UV_TOOL_BIN_DIR="$work/tool-bin"
-    uv tool install "$dist_wheel" --with "$devkit_wheel" --with "$core_wheel" --with "$advisory_wheel" >/dev/null 2>&1
+    uv tool install "$dist_wheel" --with "$devkit_wheel" --with "$core_wheel" --with "$cli_wheel" --with "$advisory_wheel" >/dev/null 2>&1
     "$work/tool-bin/devkit" --version
     "$work/tool-bin/devkit" rules --help >/dev/null
     "$work/tool-bin/devkit" run --help >/dev/null
@@ -151,7 +178,7 @@ echo "==> creating a fresh consumer project"
     cd "$project"
     unset VIRTUAL_ENV
     uv init --bare --name smoke-consumer --no-workspace >/dev/null
-    uv add --dev "$devkit_wheel" "$dist_wheel" "$core_wheel" "$advisory_wheel" "$starter_wheel" "$catalog_wheel" >/dev/null
+    uv add --dev "$devkit_wheel" "$dist_wheel" "$core_wheel" "$cli_wheel" "$advisory_wheel" "$starter_wheel" "$catalog_wheel" >/dev/null
     echo "--- devkit --version"
     uv run devkit --version
     uv run python -c "

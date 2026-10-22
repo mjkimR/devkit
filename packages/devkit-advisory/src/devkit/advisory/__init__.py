@@ -5,7 +5,14 @@ separately, in the ``advisory`` bundle of ``devkit_dist.bundles.advisory``.
 """
 
 from devkit.advisory.advisory import ACTION_TEXT, CONTINUATION, FIELDS, HEADLINE, Advisory
-from devkit.advisory.error import UNEXPECTED_CODE, AdvisoryError, AdvisoryFields, as_advisory_error, render_error
+from devkit.advisory.error import (
+    UNEXPECTED_CODE,
+    AdvisoryError,
+    AdvisoryFields,
+    ArgumentError,
+    as_advisory_error,
+    render_error,
+)
 from devkit.advisory.types import ActionMode, Actor, ExitCode, Level, Retry
 
 __all__ = [
@@ -19,6 +26,7 @@ __all__ = [
     "Advisory",
     "AdvisoryError",
     "AdvisoryFields",
+    "ArgumentError",
     "ExitCode",
     "Level",
     "Retry",

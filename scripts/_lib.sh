@@ -63,6 +63,7 @@ agt devkit-agt
 devkit devkit-agt
 dev devkit-dev
 core devkit-core
+cli devkit-cli
 dist devkit-dist
 mcp devkit-mcp
 starter devkit-starter

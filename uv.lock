@@ -13,6 +13,7 @@ members = [
     "devkit-advisory",
     "devkit-agt",
     "devkit-catalog",
+    "devkit-cli",
     "devkit-core",
     "devkit-dev",
     "devkit-dist",
@@ -403,6 +404,21 @@ dev = [
 dev = [{ name = "devkit-dist", editable = "packages/devkit-dist" }]
 
 [[package]]
+name = "devkit-cli"
+version = "0.1.1"
+source = { editable = "packages/devkit-cli" }
+dependencies = [
+    { name = "click" },
+    { name = "devkit-advisory" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "click", specifier = ">=8.2" },
+    { name = "devkit-advisory", editable = "packages/devkit-advisory" },
+]
+
+[[package]]
 name = "devkit-core"
 version = "0.1.1"
 source = { editable = "packages/devkit-core" }
@@ -439,6 +455,7 @@ source = { editable = "packages/devkit-dist" }
 dependencies = [
     { name = "click" },
     { name = "devkit-advisory" },
+    { name = "devkit-cli" },
     { name = "devkit-core" },
     { name = "jinja2" },
     { name = "pyyaml" },
@@ -460,8 +477,9 @@ dist-test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "click", specifier = ">=8.1.7" },
+    { name = "click", specifier = ">=8.2" },
     { name = "devkit-advisory", editable = "packages/devkit-advisory" },
+    { name = "devkit-cli", editable = "packages/devkit-cli" },
     { name = "devkit-core", editable = "packages/devkit-core" },
     { name = "devkit-embed", marker = "extra == 'search'", path = "models/devkit-embed/wheels/devkit_embed-0.1.0-py3-none-any.whl" },
     { name = "jinja2", specifier = ">=3.1.6,<4" },
