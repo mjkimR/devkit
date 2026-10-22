@@ -16,7 +16,7 @@ created_at: 2026-10-21
 
 ## 1. Context & Problem Statement
 
-`MS-scheduled-jobs` requires callers that already know a playbook ID to retrieve a task without discovery.
+`MS-maintenance-operations` requires callers that already know a playbook ID to retrieve a task without discovery.
 `ARCH-08-2-resource-taxonomy` currently describes explicit skill invocation or rule remediation as the entry
 conditions. Scheduled invocation needs an explicit boundary that preserves task-specific authority.
 

@@ -39,4 +39,4 @@ Manifest declares one playbook, upkeep selects drift-reconciliation and default 
 Acceptance for follow-up: independent lookup/invocation, exact combined upkeep/all membership, opt-in behavior,
 valid package resources and a bounded manual exercise of the separately agreed review/refactor procedure.
 
-- **Disposition**: dismissed. `MS-refactoring-and-prevention-rules` owns the `review-refactor` playbook of the `maintenance` bundle, so the roadmap already tracks this delivery.
+- **Disposition**: dismissed. `MS-maintenance-operations` owns the `review-refactor` playbook of the `maintenance` bundle, so the roadmap already tracks this delivery.

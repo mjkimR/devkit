@@ -17,7 +17,7 @@ aliases:
 - **Deciders**: @minjae
 - **Involved Components/Capabilities**: `packages/devkit-mcp/`, `packages/devkit-dist/` (shared artifacts, host
   registration), `packages/devkit-core/`, `CAP-HOST-lifecycle-observation`, `CAP-COLL-work-scope-registry`, the
-  maintenance bundle's reporting playbook, `MS-reporting-and-actionable-insights`
+  maintenance bundle's reporting playbook, `MS-maintenance-operations`
 
 ---
 
@@ -33,7 +33,7 @@ reports are regenerable presentation artifacts. Applying TTL and generic CRUD to
 non-expiring storage and read-only query contract in `ADR-worktrees-branches-and-scope`
 (`SPEC-worker-shared-state-mcp`).
 
-`MS-reporting-and-actionable-insights` needs a manually useful weekly report before a scheduler or durable history
+`MS-maintenance-operations` needs a manually useful weekly report before a scheduler or durable history
 backend exists (`SPEC-weekly-report`). Commits, accepted proposals and current check results alone cannot prove weekly
 delivery or resolution, and an external publication can fail independently from successful evidence collection.
 
@@ -89,7 +89,7 @@ delivery or resolution, and an external publication can fail independently from 
   connectors.
 - **A history backend and automatic maintenance sweeps with reporting** (rejected by
   `ADR-weekly-report-evidence-and-publication`): dependencies and external mutations beyond the manual reporting
-  milestone; `MS-maintenance-history` owns storage.
+  milestone; durable history storage belongs to `MS-maintenance-operations`.
 
 ---
 
