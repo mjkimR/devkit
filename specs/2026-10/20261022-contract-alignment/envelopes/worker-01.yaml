@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T04:45:24.153259Z'
+status: completed
+summary: 'Development completed to the final change report at activity-effort low (docs only). Added ADR-foundation-and-mcp-package-ownership and ADR-host-owned-review-loop-recovery superseding ADR-dist-foundation-ownership and ADR-bounded-high-effort-review-loop; aligned CAP-DLV-delivery-workflows rule 7; added alias wording to CAP-DLV-spec-bundles, CAP-TRACE-code-entrypoints, CAP-DIST-manifest-spec, the devkit consumption instruction (synced) and the glossary; resolved the three source feedback items; recorded three follow-ups as feedback. Pending: integrate (Host).'
+findings: []
+checks:
+  tests: PASS just test-affected 145 passed
+  lint: PASS devkit rules check --ci --base 88f8a0fd
+  sync: PASS devkit sync --check
+  diff: PASS git diff --check
+diff_scope:
+  base: ''
+  head: e2a8e82440c08296fb89c2bb4ee78f40680e91d0
+activity_effort: low
