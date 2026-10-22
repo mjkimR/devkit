@@ -37,22 +37,26 @@ from devkit_spec.features.documents import SOURCE_DIRECTORIES, Document, Documen
 from devkit_spec.features.policy.services.config import Namespace, read_spec_config
 
 FIX_COMMAND = "devkit rules fix"
+CACHE_KEY = "devkit_spec.document_index"
 
 
 def document_index(ctx: RuleContext) -> DocumentIndex:
     """The document index of the run's workspace, read through its cache."""
     root = ctx.workspace_root
 
-    def read(path: Path) -> str:
-        return ctx.cache.read_bytes(path).decode("utf-8")
+    def _load() -> DocumentIndex:
+        def read(path: Path) -> str:
+            return ctx.cache.read_bytes(path).decode("utf-8")
 
-    files = [
-        path
-        for directory in SOURCE_DIRECTORIES
-        if (root / directory).is_dir()
-        for path in ctx.cache.find_files(root / directory, extensions=(".md",))
-    ]
-    return DocumentIndex.load(root, files=files, read=read)
+        files = [
+            path
+            for directory in SOURCE_DIRECTORIES
+            if (root / directory).is_dir()
+            for path in ctx.cache.find_files(root / directory, extensions=(".md",))
+        ]
+        return DocumentIndex.load(root, files=files, read=read)
+
+    return ctx.cache.get_or_compute(CACHE_KEY, _load)
 
 
 def namespaces(ctx: RuleContext) -> tuple[Namespace, ...]:

@@ -1,15 +1,15 @@
 ---
-id: PADR-share-document-index-and-defer-catalog-build-in-rules-run
+id: ADR-share-document-index-and-defer-catalog-build-in-rules-run
 title: Share document index and defer catalog build in rules run
 summary: For Markdown rules in devkit-spec and devkit-agt, we share one DocumentIndex per rules run via WorkspaceCache and defer DocumentCatalog building in markdown_link, to eliminate redundant re-reads and whole-workspace scans, accepting that the shared index is read-only.
-proposal: PROP-spec-rules-shared-document-index
-status: draft
+proposal: SPEC-spec-rules-shared-document-index
+status: accepted
 created_at: 2026-10-22
 ---
 
-# [PADR-share-document-index-and-defer-catalog-build-in-rules-run] Share document index and defer catalog build in rules run
+# [ADR-share-document-index-and-defer-catalog-build-in-rules-run] Share document index and defer catalog build in rules run
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-22
 
 ---

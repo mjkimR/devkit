@@ -22,9 +22,9 @@ from __future__ import annotations
 import ast
 import os
 import unicodedata
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypeVar, overload
+from typing import TYPE_CHECKING, Any, TypeVar, cast, overload
 
 from devkit_core.core import GitError, UnsafePathError, atomic_write_bytes, run_git
 from devkit_core.core.frontmatter import parse as parse_frontmatter
@@ -37,6 +37,8 @@ if TYPE_CHECKING:
     from devkit_agt.features.rules.repositories.workspace.catalog import DocumentCatalog
 
 __all__ = ["WorkspaceCache"]
+
+T = TypeVar("T")
 
 # Workspace-relative directories holding copies whose hashes the installation receipt pins.
 _PINNED_DIRS = (MANAGED_PATH, OVERRIDES_PATH)
@@ -84,6 +86,7 @@ class WorkspaceCache:
         self._resolved: dict[str | Path, Path] = {}
         self._catalog: DocumentCatalog | None = None
         self._files_cache: dict[tuple[Path, tuple[str, ...] | None], list[Path]] = {}
+        self._computed_cache: dict[str, Any] = {}
 
     def _resolve_fresh(self, path: str | Path) -> Path:
         p = Path(path)
@@ -278,6 +281,12 @@ class WorkspaceCache:
             self._catalog = catalog
         return self._catalog
 
+    def get_or_compute(self, key: str, factory: Callable[[], T]) -> T:
+        """A run-scoped object computed once by ``factory`` and retained until an invalidation."""
+        if key not in self._computed_cache:
+            self._computed_cache[key] = factory()
+        return cast(T, self._computed_cache[key])
+
     def _visible_files(self) -> set[str] | None:
         """Workspace-relative files Git does not ignore, or ``None`` outside a Git work tree."""
         if not self._git_filter:
@@ -375,6 +384,7 @@ class WorkspaceCache:
         self._ast_cache.pop(key, None)
         self._nodes_cache.pop(key, None)
         self._catalog = None
+        self._computed_cache.clear()
         self._files_cache.clear()
         self._git_files_loaded = False
 
@@ -391,5 +401,6 @@ class WorkspaceCache:
         self._frontmatter_cache.clear()
         self._links_cache.clear()
         self._catalog = None
+        self._computed_cache.clear()
         self._files_cache.clear()
         self._git_files_loaded = False

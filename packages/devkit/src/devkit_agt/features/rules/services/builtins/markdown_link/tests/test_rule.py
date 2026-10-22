@@ -219,3 +219,28 @@ def test_deleted_template_is_still_a_broken_final_link(tmp_path: Path) -> None:
         },
     )
     assert len(MarkdownLinkRule().check(RuleContext(workspace_root=tmp_path))) == 1
+
+
+def test_catalog_build_is_deferred_until_broken_links_occur(tmp_path: Path) -> None:
+    write_files(
+        tmp_path,
+        {
+            "valid.md": "[self](valid.md)\n",
+            "other.md": "# Other\n",
+        },
+    )
+    cache = WorkspaceCache(tmp_path)
+    ctx = RuleContext(workspace_root=tmp_path, cache=cache)
+    assert cache._catalog is None
+    violations = MarkdownLinkRule().check(ctx)
+    assert violations == []
+    # No broken links: catalog was never built
+    assert cache._catalog is None
+
+    # Now add a broken link pointing inside the workspace
+    write_files(tmp_path, {"broken.md": "[Missing](nonexistent.md)\n"})
+    cache.invalidate("broken.md")
+    violations = MarkdownLinkRule().check(ctx)
+    assert len(violations) == 1
+    # Broken link triggered catalog build for candidate lookup
+    assert cache._catalog is not None

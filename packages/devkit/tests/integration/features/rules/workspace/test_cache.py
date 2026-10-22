@@ -364,6 +364,39 @@ def test_write_text_resolves_afresh_after_a_parent_became_an_outside_symlink(tmp
     assert not (outside / "a.md").exists()
 
 
+def test_get_or_compute_caches_and_invalidates(tmp_path: Path) -> None:
+    cache = WorkspaceCache(tmp_path)
+    calls = 0
+
+    def factory() -> dict[str, int]:
+        nonlocal calls
+        calls += 1
+        return {"count": calls}
+
+    # First call computes and caches
+    result1 = cache.get_or_compute("test_key", factory)
+    assert result1 == {"count": 1}
+    assert calls == 1
+
+    # Second call returns cached instance without re-calling factory
+    result2 = cache.get_or_compute("test_key", factory)
+    assert result2 is result1
+    assert calls == 1
+
+    # Invalidation drops computed cache
+    cache.invalidate("any_file.txt")
+    result3 = cache.get_or_compute("test_key", factory)
+    assert result3 == {"count": 2}
+    assert result3 is not result1
+    assert calls == 2
+
+    # Invalidate all also drops computed cache
+    cache.invalidate_all()
+    result4 = cache.get_or_compute("test_key", factory)
+    assert result4 == {"count": 3}
+    assert calls == 3
+
+
 def test_get_python_nodes_returns_matching_nodes_in_traversal_order(
     temp_workspace: Path, workspace_cache: WorkspaceCache
 ) -> None:
