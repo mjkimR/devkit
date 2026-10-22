@@ -21,32 +21,32 @@ def _doc(document_id: str, body: str = "", header: str = "", status: str = "acti
 
 def test_resolvable_references_pass(tmp_path: Path) -> None:
     files = {
-        "docs/a.md": _doc("CAP-A-a", "`US-b`\n", "stories:\n  - US-b\n"),
-        "docs/b.md": _doc("US-b", "`CAP-A-a`\n", "capabilities: [CAP-A-a]\n"),
+        "docs/a.md": _doc("CAP-A-a", "`UC-b`\n", "usecases:\n  - UC-b\n"),
+        "docs/b.md": _doc("UC-b", "`CAP-A-a`\n", "capabilities: [CAP-A-a]\n"),
     }
     assert check(RULE, tmp_path, files) == []
 
 
 def test_reference_problems(tmp_path: Path) -> None:
-    files = {"docs/a.md": _doc("CAP-A-a", "`US-none`\n", "stories:\n  - CAP-A-a\n  - docs/b.md\nspec: [x]\n")}
+    files = {"docs/a.md": _doc("CAP-A-a", "`UC-none`\n", "usecases:\n  - CAP-A-a\n  - docs/b.md\nspec: [x]\n")}
     assert _found(check(RULE, tmp_path, files)) == [
         ("docs/a.md", 7, "spec must be one ID"),
-        ("docs/a.md", 5, "stories takes US- IDs, got CAP-A-a"),
-        ("docs/a.md", 6, "stories must contain a full document ID, got 'docs/b.md'"),
-        ("docs/a.md", 9, "no document has the ID US-none"),
+        ("docs/a.md", 5, "usecases takes UC- IDs, got CAP-A-a"),
+        ("docs/a.md", 6, "usecases must contain a full document ID, got 'docs/b.md'"),
+        ("docs/a.md", 9, "no document has the ID UC-none"),
     ]
 
 
 def test_duplicates_and_shared_proposal_slugs(tmp_path: Path) -> None:
     files = {
-        "docs/a.md": _doc("US-dup"),
-        "docs/b.md": _doc("US-dup"),
+        "docs/a.md": _doc("UC-dup"),
+        "docs/b.md": _doc("UC-dup"),
         "docs/proposals/x/proposal.md": _doc("PROP-x"),
         "specs/2026-10/20261001-x/spec.md": _doc("SPEC-x"),
     }
     messages = _found(check(RULE, tmp_path, files))
-    assert ("docs/a.md", 1, "US-dup is declared by 2 documents: docs/a.md, docs/b.md") in messages
-    assert ("docs/b.md", 1, "US-dup is declared by 2 documents: docs/a.md, docs/b.md") in messages
+    assert ("docs/a.md", 1, "UC-dup is declared by 2 documents: docs/a.md, docs/b.md") in messages
+    assert ("docs/b.md", 1, "UC-dup is declared by 2 documents: docs/a.md, docs/b.md") in messages
     assert any(path == "docs/proposals/x/proposal.md" and "shares its slug" in m for path, _, m in messages)
 
 
@@ -71,26 +71,26 @@ def test_internal_path_links_must_be_ids(tmp_path: Path) -> None:
         "docs/a/one.md": _doc(
             "CAP-A-one", "[two](../b/two.md) [readme](../b/README.md) [x](../b/two.md#h) ![i](../b/two.md)\n"
         ),
-        "docs/b/two.md": _doc("US-two"),
+        "docs/b/two.md": _doc("UC-two"),
         "docs/b/README.md": "# readme\n",
     }
     assert _found(check(RULE, tmp_path, files)) == [
-        ("docs/a/one.md", 5, "internal document link ../b/two.md must be the ID `US-two`")
+        ("docs/a/one.md", 5, "internal document link ../b/two.md must be the ID `UC-two`")
     ]
 
 
 def test_history_and_materials_are_skipped_unless_targeted(tmp_path: Path) -> None:
     files = {
-        "specs/2026-10/20261001-done/spec.md": _doc("SPEC-done", "`US-gone` [US-x]\n", status="completed"),
-        "docs/materials/m.md": _doc("MAT-m", "`US-gone`\n"),
+        "specs/2026-10/20261001-done/spec.md": _doc("SPEC-done", "`UC-gone` [UC-x]\n", status="completed"),
+        "docs/materials/m.md": _doc("MAT-m", "`UC-gone`\n"),
     }
     assert check(RULE, tmp_path, files) == []
     targeted = _found(check(RULE, tmp_path, targets=["specs/2026-10/20261001-done/spec.md"]))
-    assert [m for _, _, m in targeted] == ["no document has the ID US-gone", "no document has the ID US-x"]
+    assert [m for _, _, m in targeted] == ["no document has the ID UC-gone", "no document has the ID UC-x"]
 
 
 def test_only_targets_are_reported(tmp_path: Path) -> None:
-    files = {"docs/a.md": _doc("CAP-A-a", "`US-none`\n"), "docs/b.md": _doc("CAP-A-b", "`US-none`\n")}
+    files = {"docs/a.md": _doc("CAP-A-a", "`UC-none`\n"), "docs/b.md": _doc("CAP-A-b", "`UC-none`\n")}
     assert [file for file, _, _ in _found(check(RULE, tmp_path, files, targets=["docs/b.md"]))] == ["docs/b.md"]
 
 
@@ -135,19 +135,19 @@ def test_glossary_owner_resolution_without_indexing_or_autofix(tmp_path: Path) -
 
     glossary = _GLOSSARY_HEADER + (
         "| one | definition | `CAP-A-valid`, [ADR-missing] | | |\n"
-        "| two | definition | `US-duplicate` | | |\n"
+        "| two | definition | `UC-duplicate` | | |\n"
         "| three | definition | | | |\n"
     )
     files = {
         "docs/glossary.md": glossary,
         "docs/a.md": _doc("CAP-A-valid"),
-        "docs/b.md": _doc("US-duplicate"),
-        "docs/c.md": _doc("US-duplicate"),
+        "docs/b.md": _doc("UC-duplicate"),
+        "docs/c.md": _doc("UC-duplicate"),
     }
     found = check(RULE, tmp_path, files, targets=["docs/glossary.md"])
     assert _found(found) == [
         ("docs/glossary.md", 3, "no document has the ID ADR-missing"),
-        ("docs/glossary.md", 4, "US-duplicate is declared by 2 documents: docs/b.md, docs/c.md"),
+        ("docs/glossary.md", 4, "UC-duplicate is declared by 2 documents: docs/b.md, docs/c.md"),
     ]
     assert all(not v.fixable for v in found)
     assert all(d.path != "docs/glossary.md" for d in DocumentIndex.load(tmp_path).documents)
@@ -252,21 +252,21 @@ def _aliased(document_id: str, aliases: str, body: str = "", header: str = "", s
 
 def test_alias_references_are_fixed_in_current_documents(tmp_path: Path) -> None:
     files = {
-        "docs/new.md": _aliased("US-new", "US-old", "Formerly `US-old`.\n"),
+        "docs/new.md": _aliased("UC-new", "UC-old", "Formerly `UC-old`.\n"),
         "docs/adr-new.md": _aliased("ADR-new", "ADR-old"),
-        "docs/cap.md": _doc("CAP-A-a", "See [US-old] and `ADR-old`.\n", "stories:\n  - 'US-old'\n"),
+        "docs/cap.md": _doc("CAP-A-a", "See [UC-old] and `ADR-old`.\n", "usecases:\n  - 'UC-old'\n"),
     }
     violations = check(RULE, tmp_path, files)
     assert {(v.file, v.message, v.fixable) for v in violations} == {
-        ("docs/cap.md", "US-old is an alias of US-new; reference `US-new`", True),
-        ("docs/cap.md", "prose reference US-old must be written `US-old`, not [US-old]", True),
+        ("docs/cap.md", "UC-old is an alias of UC-new; reference `UC-new`", True),
+        ("docs/cap.md", "prose reference UC-old must be written `UC-old`, not [UC-old]", True),
         ("docs/cap.md", "ADR-old is an alias of ADR-new; reference `ADR-new`", True),
     }
-    assert sum(v.message.startswith("US-old is an alias") for v in violations) == 2
+    assert sum(v.message.startswith("UC-old is an alias") for v in violations) == 2
     fixed = check(RULE, tmp_path, fix=True)
     assert _found(fixed) == []
     text = (tmp_path / "docs/cap.md").read_text()
-    assert "stories:\n  - 'US-new'\n" in text and text.endswith("See `US-new` and `ADR-new`.\n")
+    assert "usecases:\n  - 'UC-new'\n" in text and text.endswith("See `UC-new` and `ADR-new`.\n")
     # A self-mention of a retired ID is deliberate: neither reported nor rewritten.
     assert (tmp_path / "docs/new.md").read_text() == files["docs/new.md"]
     assert check(RULE, tmp_path) == []
@@ -274,9 +274,9 @@ def test_alias_references_are_fixed_in_current_documents(tmp_path: Path) -> None
 
 def test_alias_references_in_history_stay(tmp_path: Path) -> None:
     files = {
-        "docs/new.md": _aliased("US-new", "US-old"),
-        "specs/2026-10/20261001-done/spec.md": _doc("SPEC-done", "`US-old`\n", status="completed"),
-        "docs/roadmap/MS-done.md": _doc("MS-done", "`US-old`\n", status="done"),
+        "docs/new.md": _aliased("UC-new", "UC-old"),
+        "specs/2026-10/20261001-done/spec.md": _doc("SPEC-done", "`UC-old`\n", status="completed"),
+        "docs/roadmap/MS-done.md": _doc("MS-done", "`UC-old`\n", status="done"),
     }
     assert check(RULE, tmp_path, files) == []
     check(RULE, tmp_path, fix=True)
@@ -286,9 +286,9 @@ def test_alias_references_in_history_stay(tmp_path: Path) -> None:
 
 def test_alias_references_in_decision_records_are_fixed(tmp_path: Path) -> None:
     files = {
-        "docs/new.md": _aliased("US-new", "US-old"),
-        "docs/decisions/2026-10/20261001-x.md": _doc("ADR-x", "`US-old`\n", status="accepted"),
-        "docs/proposals/PROP-p/decisions/PADR-p.md": _doc("PADR-p", "`US-old`\n", status="draft"),
+        "docs/new.md": _aliased("UC-new", "UC-old"),
+        "docs/decisions/2026-10/20261001-x.md": _doc("ADR-x", "`UC-old`\n", status="accepted"),
+        "docs/proposals/PROP-p/decisions/PADR-p.md": _doc("PADR-p", "`UC-old`\n", status="draft"),
         "docs/proposals/PROP-p/proposal.md": _doc("PROP-p", status="draft"),
     }
     assert {(v.file, v.fixable) for v in check(RULE, tmp_path, files)} == {
@@ -296,26 +296,26 @@ def test_alias_references_in_decision_records_are_fixed(tmp_path: Path) -> None:
         ("docs/proposals/PROP-p/decisions/PADR-p.md", True),
     }
     check(RULE, tmp_path, fix=True)
-    assert (tmp_path / "docs/decisions/2026-10/20261001-x.md").read_text().endswith("`US-new`\n")
-    assert (tmp_path / "docs/proposals/PROP-p/decisions/PADR-p.md").read_text().endswith("`US-new`\n")
+    assert (tmp_path / "docs/decisions/2026-10/20261001-x.md").read_text().endswith("`UC-new`\n")
+    assert (tmp_path / "docs/proposals/PROP-p/decisions/PADR-p.md").read_text().endswith("`UC-new`\n")
     assert check(RULE, tmp_path) == []
 
 
 def test_relation_field_typing_is_kept_for_aliases(tmp_path: Path) -> None:
     files = {
         "docs/new.md": _aliased("CAP-A-new", "CAP-A-old"),
-        "docs/story.md": _doc("US-s", header="stories: [CAP-A-old]\n"),
+        "docs/usecase.md": _doc("UC-s", header="usecases: [CAP-A-old]\n"),
     }
-    assert _found(check(RULE, tmp_path, files)) == [("docs/story.md", 4, "stories takes US- IDs, got CAP-A-old")]
+    assert _found(check(RULE, tmp_path, files)) == [("docs/usecase.md", 4, "usecases takes UC- IDs, got CAP-A-old")]
 
 
 def test_alias_shape_and_collisions_are_identity_checks(tmp_path: Path) -> None:
     files = {
-        "docs/materials/m.md": _aliased("MAT-m", "MAT-old, CAP-A-x", "`US-gone` `MAT-old`\n"),
+        "docs/materials/m.md": _aliased("MAT-m", "MAT-old, CAP-A-x", "`UC-gone` `MAT-old`\n"),
         "docs/materials/n.md": _aliased("MAT-n", "MAT-old"),
         "docs/a.md": _aliased("CAP-A-a", "CAP-A-b"),
         "docs/b.md": _doc("CAP-A-b"),
-        "docs/ref.md": _doc("US-r", "`MAT-old`\n"),
+        "docs/ref.md": _doc("UC-r", "`MAT-old`\n"),
     }
     found = _found(check(RULE, tmp_path, files))
     assert ("docs/materials/m.md", 4, "alias CAP-A-x must have the document's own prefix MAT-") in found
@@ -329,13 +329,13 @@ def test_alias_shape_and_collisions_are_identity_checks(tmp_path: Path) -> None:
         "MAT-old is an alias declared by 2 documents: docs/materials/m.md, docs/materials/n.md",
     ) in found
     # References written inside materials are not checked.
-    assert not any(file.startswith("docs/materials/") and "US-gone" in message for file, _, message in found)
+    assert not any(file.startswith("docs/materials/") and "UC-gone" in message for file, _, message in found)
     check(RULE, tmp_path, fix=True)
     assert (tmp_path / "docs/ref.md").read_text() == files["docs/ref.md"]
 
 
 def test_reference_to_a_material_alias_is_fixed(tmp_path: Path) -> None:
-    files = {"docs/materials/m.md": _aliased("MAT-m", "MAT-old"), "docs/ref.md": _doc("US-r", "`MAT-old`\n")}
+    files = {"docs/materials/m.md": _aliased("MAT-m", "MAT-old"), "docs/ref.md": _doc("UC-r", "`MAT-old`\n")}
     assert [v.message for v in check(RULE, tmp_path, files)] == ["MAT-old is an alias of MAT-m; reference `MAT-m`"]
     check(RULE, tmp_path, fix=True)
     assert (tmp_path / "docs/ref.md").read_text().endswith("`MAT-m`\n")

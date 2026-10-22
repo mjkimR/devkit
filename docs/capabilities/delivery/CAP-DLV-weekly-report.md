@@ -4,8 +4,8 @@ title: Evidence-based Weekly Reporting
 summary: "An explicitly invoked maintenance playbook produces immutable revision-bound weekly reports with delivery evidence, health limitations and prioritized actions, keeping authorized publication outcomes separate."
 area: delivery
 status: active
-stories:
-  - US-inspect-weekly-repository-progress
+usecases:
+  - UC-inspect-weekly-repository-progress
 entrypoints:
   - packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/weekly-report.md
 ---
@@ -35,7 +35,7 @@ HEAD, integration ref and relevant dirty content after collection and before fin
 must be re-collected or marked unverified, never silently mixed. Preserve unrelated edits.
 
 Use existing Git inspection, document lookup including completed specs/history, all intended namespaces and
-complete pagination, changed ADRs/capabilities/stories, workflow records and check artifacts. Every factual claim
+complete pagination, changed ADRs/capabilities/use cases, workflow records and check artifacts. Every factual claim
 cites commit plus path/document ID, envelope or check artifact; assessments are separate. Dated claims identify
 the timestamp basis. Git timestamps are discovery hints, never integration proof. Without integration time,
 report reachable changes as snapshot evidence rather than claiming weekly delivery. Check results cover only

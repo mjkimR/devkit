@@ -16,7 +16,7 @@ def _messages(root: Path) -> list[tuple[int, str]]:
 def test_a_broken_link_is_reported_and_fixed(tmp_path: Path) -> None:
     write_files(
         tmp_path,
-        {"docs/guides/auth.md": "# Auth\n", "docs/stories/login.md": "See [Auth](../wrong/auth.md) for details."},
+        {"docs/guides/auth.md": "# Auth\n", "docs/usecases/login.md": "See [Auth](../wrong/auth.md) for details."},
     )
     cache = WorkspaceCache(tmp_path)
     ctx = RuleContext(workspace_root=tmp_path, cache=cache)
@@ -28,7 +28,7 @@ def test_a_broken_link_is_reported_and_fixed(tmp_path: Path) -> None:
 
     assert len(rule.fix(ctx)) == 1
     cache.invalidate_all()
-    assert "../guides/auth.md" in cache.read_text(tmp_path / "docs/stories/login.md")
+    assert "../guides/auth.md" in cache.read_text(tmp_path / "docs/usecases/login.md")
 
 
 def test_the_engine_marks_the_repaired_finding_fixed(tmp_path: Path) -> None:

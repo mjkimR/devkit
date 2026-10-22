@@ -1,11 +1,11 @@
-"""``RULE-traceability-link``: stories and capabilities link each other in both directions.
+"""``RULE-traceability-link``: use cases and capabilities link each other in both directions.
 
-A story (a document under ``docs/stories/``) lists the capabilities it needs in ``capabilities``; a capability (under
-``docs/capabilities/``) lists the stories it serves in ``stories``. The relation is M:N and must be recorded on both
-sides by exact ID: when a story lists a capability that does not list the story back, or a capability lists a story
-that does not list it back, the document missing the reverse link is reported. When that document is not reported
-(the run does not target it), the one-sided link is reported on the referencing document instead, so a change that
-adds only one side is caught.
+A use case (a document under ``docs/usecases/``) lists the capabilities it needs in ``capabilities``; a capability
+(under ``docs/capabilities/``) lists the use cases it serves in ``usecases``. The relation is M:N and must be recorded
+on both sides by exact ID: when a use case lists a capability that does not list the use case back, or a capability
+lists a use case that does not list it back, the document missing the reverse link is reported. When that document
+is not reported (the run does not target it), the one-sided link is reported on the referencing document instead, so
+a change that adds only one side is caught.
 
 The fix appends the missing ID to the reverse field (creating the field when absent, keeping a flow ``[...]`` or
 block list in its style), in current documents only and within the targets when the run names any. It never guesses:
@@ -16,8 +16,8 @@ Links resolve through ``DocumentIndex.canonical``: a link written with an alias 
 link to it, in both directions, so the fix never adds the canonical ID beside an alias (``RULE-document-reference``
 rewrites the alias).
 
-Stories and capabilities of a namespace docs root (``docs/packages/<name>/stories/``, ``.../capabilities/``) are
-checked as the global ones, and links cross namespaces freely: IDs are repository-wide.
+Use cases and capabilities of a namespace docs root (``docs/packages/<name>/usecases/``, ``.../capabilities/``)
+are checked as the global ones, and links cross namespaces freely: IDs are repository-wide.
 """
 
 from __future__ import annotations
@@ -36,11 +36,11 @@ from devkit_spec.features.governance import FIX_COMMAND, document_index, is_mate
 from devkit_spec.features.policy.services.config import Namespace
 
 RULE_ID = "RULE-traceability-link"
-STORIES_DIRECTORY = "docs/stories/"
+USECASES_DIRECTORY = "docs/usecases/"
 CAPABILITIES_DIRECTORY = "docs/capabilities/"
 # The field of each side that holds the IDs of the other side.
-STORY_FIELD = "capabilities"
-CAPABILITY_FIELD = "stories"
+USECASE_FIELD = "capabilities"
+CAPABILITY_FIELD = "usecases"
 _COMPOSER: type[yaml.SafeLoader] = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 
 
@@ -52,7 +52,7 @@ class _Gap:
     target: Document
     ref: Reference
     field: str
-    label: str  # what ``target`` is missing: "story" or "capability"
+    label: str  # what ``target`` is missing: "use case" or "capability"
 
     def fixable(self, index: DocumentIndex) -> bool:
         """Whether the fix adds the link: both IDs are unambiguous and ``field`` is absent or a list."""
@@ -69,15 +69,15 @@ def _lists(index: DocumentIndex, document: Document, field: str, document_id: st
 
 
 def _gaps(index: DocumentIndex, registered: tuple[Namespace, ...]) -> list[_Gap]:
-    """Every one-sided link, stories before capabilities, each reported once per target document."""
+    """Every one-sided link, use cases before capabilities, each reported once per target document."""
     current = [(d, living_path(d.path, namespaces=registered)) for d in index.documents if not is_material(d)]
-    stories = [d for d, path in current if path.startswith(STORIES_DIRECTORY)]
+    usecases = [d for d, path in current if path.startswith(USECASES_DIRECTORY)]
     capabilities = [d for d, path in current if path.startswith(CAPABILITIES_DIRECTORY)]
     gaps: list[_Gap] = []
     seen: set[tuple[str, str]] = set()
     for sources, targets, field, back, label in (
-        (stories, capabilities, STORY_FIELD, CAPABILITY_FIELD, "story"),
-        (capabilities, stories, CAPABILITY_FIELD, STORY_FIELD, "capability"),
+        (usecases, capabilities, USECASE_FIELD, CAPABILITY_FIELD, "use case"),
+        (capabilities, usecases, CAPABILITY_FIELD, USECASE_FIELD, "capability"),
     ):
         by_id: dict[str, list[Document]] = {}
         for target in targets:
@@ -97,7 +97,7 @@ class TraceabilityLinkRule(BaseRule):
         super().__init__(
             id=RULE_ID,
             name="bidirectional-traceability-link-check",
-            description="Stories and capabilities record their M:N links in both directions by exact ID.",
+            description="Use cases and capabilities record their M:N links in both directions by exact ID.",
             phase=Phase.LINTER,
             severity=Severity.ERROR,
             guide="guide.md",

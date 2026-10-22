@@ -104,7 +104,7 @@ def test_handoff_text(workspace: Path, write: Write) -> None:
     _proposal(workspace, "new", "shipit")
     _proposal(workspace, "padr", "shipit", "Pick")
     write("docs/proposals/PROP-shipit/materials/m.md", "[up](../proposal.md)\n")
-    write("docs/stories/US-a.md", "---\nid: US-a\n---\n[PROP-shipit] [gone](../proposals/PROP-shipit/decisions/)\n")
+    write("docs/usecases/UC-a.md", "---\nid: UC-a\n---\n[PROP-shipit] [gone](../proposals/PROP-shipit/decisions/)\n")
     accept(workspace / "docs/proposals/PROP-shipit/proposal.md")
 
     result = _proposal(workspace, "handoff", "shipit")
@@ -120,13 +120,13 @@ def test_handoff_text(workspace: Path, write: Write) -> None:
     stamp = bundle.split("-")[0]
     assert lines[1] == f"[MATERIALS: docs/materials/{month}/{stamp}-shipit]"
     assert lines[2] == f"[PROMOTED_ADR: ADR-pick path=docs/decisions/{month}/{stamp}-pick.md padr=PADR-pick]"
-    assert "[REWRITTEN: docs/stories/US-a.md:4 kind=id from=PROP-shipit to=SPEC-shipit]" in lines
+    assert "[REWRITTEN: docs/usecases/UC-a.md:4 kind=id from=PROP-shipit to=SPEC-shipit]" in lines
     assert (
         f"[REWRITTEN: docs/materials/{month}/{stamp}-shipit/m.md:1 kind=link from=../proposal.md "
         f"to=../../../../{spec_dir}/spec.md]"
     ) in lines
     assert (
-        "[UNRESOLVED_LINK: docs/stories/US-a.md:4 kind=link target=../proposals/PROP-shipit/decisions/ reason=unmapped]"
+        "[UNRESOLVED_LINK: docs/usecases/UC-a.md:4 kind=link target=../proposals/PROP-shipit/decisions/ reason=unmapped]"
         in lines
     )
     assert lines[-1] == f"[NEXT_CMD: devkit workflow next --unit {spec_dir}]"
@@ -143,7 +143,7 @@ def _accept(workspace: Path, slug: str) -> None:
 def test_handoff_strict_fails_on_the_unresolved_link_warning(workspace: Path, write: Write) -> None:
     _proposal(workspace, "new", "strict")
     _accept(workspace, "strict")
-    write("docs/stories/US-a.md", "[gone](../proposals/PROP-strict/decisions/)\n")
+    write("docs/usecases/UC-a.md", "[gone](../proposals/PROP-strict/decisions/)\n")
     result = _proposal(workspace, "handoff", "strict", "--strict")
     assert result.exit_code == 1
     assert result.stdout.startswith("[HANDOFF: PROP-strict ")

@@ -9,7 +9,7 @@ in another language.
 
 - **Phase and severity**: `linter`, `error`.
 - **What is checked**: the targeted documents, Markdown files under `docs/` and `specs/` whose frontmatter `id` (or
-  `reconcile_id`) is a well-formed document ID. A summary is required on capabilities (`CAP-`), stories (`US-`),
+  `reconcile_id`) is a well-formed document ID. A summary is required on capabilities (`CAP-`), use cases (`UC-`),
   decisions (`ADR-`), architecture documents (`ARCH-`), milestones (`MS-`), `proposal.md` and `spec.md`; any other
   document that has one is checked for its form.
 - **What is not**: materials (`docs/materials/`, any `/materials/` directory), which are free-form; `README.md`,

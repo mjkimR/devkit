@@ -8,6 +8,8 @@ entrypoints:
   - packages/devkit/src/devkit_agt/features/gate/usecases/hooks/hooks.py
   - packages/devkit/src/devkit_agt/features/gate/usecases/hooks/local_config.py
 created_at: 2026-10-17
+usecases:
+  - UC-keep-the-living-spec-consistent
 ---
 
 # [CAP-GATE-commit-gates] Commit Gate: Architecture Overview

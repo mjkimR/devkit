@@ -9,9 +9,9 @@ entrypoints:
   - packages/devkit/src/devkit_agt/features/workflow/services/envelope/authoring.py
   - packages/devkit/src/devkit_agt/features/workflow/services/envelope/model.py
 created_at: 2026-10-17
-stories:
-  - US-drive-development-to-integration
-  - US-handle-delivery-problems-and-exceptions
+usecases:
+  - UC-drive-development-to-integration
+  - UC-handle-delivery-problems-and-exceptions
 ---
 
 # [CAP-DLV-workflow-envelopes] Review Envelopes

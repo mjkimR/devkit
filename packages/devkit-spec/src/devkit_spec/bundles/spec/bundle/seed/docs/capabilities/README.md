@@ -28,5 +28,5 @@ capabilities/
 
 ## 2. Authoring Principles
 1. **Durable Functional Specification**: Define permanent system capabilities and responsibilities, not transient tickets.
-2. **M:N Association with Stories**: Reference associated user stories using `US-<slug>` identifiers in the frontmatter `stories:` list.
+2. **M:N Association with Use Cases**: Reference associated use cases using `UC-<slug>` identifiers in the frontmatter `usecases:` list.
 3. **Normative Force**: Express business rules explicitly using RFC 2119 keywords (`MUST`, `SHOULD`, `MAY`).

@@ -1,12 +1,12 @@
 ---
 id: CAP-TRACE-code-entrypoints
 title: Code Entrypoints
-summary: Defines the entrypoints frontmatter of capabilities and stories that anchors documents to code paths, its path contract, the RULE-code-entrypoints liveness check, the reverse lookup by path, and devkit spec entrypoints derive, which proposes and applies declarations from spec bundles.
+summary: Defines the entrypoints frontmatter of capabilities and use cases that anchors documents to code paths, its path contract, the RULE-code-entrypoints liveness check, the reverse lookup by path, and devkit spec entrypoints derive, which proposes and applies declarations from spec bundles.
 area: traceability
 status: active
-stories:
-  - US-keep-the-living-spec-consistent
-  - US-run-parallel-work-safely
+usecases:
+  - UC-keep-the-living-spec-consistent
+  - UC-run-parallel-work-safely
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/entrypoints/
   - packages/devkit-spec/src/devkit_spec/features/entrypoints/cli/commands.py
@@ -18,7 +18,7 @@ created_at: 2026-10-13
 
 ## 1. Summary
 
-Capabilities and stories MAY declare `entrypoints` in their frontmatter: the files and directories where their
+Capabilities and use cases MAY declare `entrypoints` in their frontmatter: the files and directories where their
 implementation starts. An entrypoint is an anchor for finding code from a document and documents from code. devkit-spec
 keeps the declarations alive (`RULE-code-entrypoints`), finds documents by path (`devkit spec list --file`,
 `CAP-DOCS-document-lookup`) and proposes declarations from the spec bundles that already name both sides
@@ -59,7 +59,7 @@ entrypoints:
    `?`, `[`, `]`), NUL or a line break. Where a command takes a path argument under this contract, a violation fails
    with `SPEC_ENTRYPOINTS_PATH_INVALID`.
 4. Paths compare by whole segments, case-sensitively: `src/a` covers `src/a/b.py`, not `src/ab`.
-5. **Entrypoint-bearing documents** are the Markdown files under `docs/capabilities/` and `docs/stories/`, and under
+5. **Entrypoint-bearing documents** are the Markdown files under `docs/capabilities/` and `docs/usecases/`, and under
    the same directories of a namespace docs root `docs/packages/<name>/` (`CAP-DOCS-namespaces`).
 
 The same contract governs the code paths of the work-scope registry (`CAP-COLL-work-scope-registry`).
@@ -68,7 +68,7 @@ The same contract governs the code paths of the work-scope registry (`CAP-COLL-w
 
 Phase `linter`, severity `error`, not fixable (`CAP-GOV-spec-rules`).
 
-1. For each targeted capability or story that declares `entrypoints`: the field MUST be a list of strings, each a
+1. For each targeted capability or use case that declares `entrypoints`: the field MUST be a list of strings, each a
    valid path (section 3.1), each an existing file or directory inside the workspace with symbolic links resolved (a
    link pointing outside counts as missing: "Dead code entrypoint").
 2. `check --staged` and `--ci` resolve paths in the snapshot's tree, where an empty directory does not exist.
@@ -80,7 +80,7 @@ Phase `linter`, severity `error`, not fixable (`CAP-GOV-spec-rules`).
 
 ### 3.3 Reverse Query
 
-`devkit spec list [capability|story] --file <path>` lists the documents whose `entrypoints` equal the path, lie under
+`devkit spec list [capability|usecase] --file <path>` lists the documents whose `entrypoints` equal the path, lie under
 it, or are a directory containing it (`CAP-DOCS-document-lookup`). The path need not exist, so a deleted file still
 finds its documents; it MUST follow the path contract (`SPEC_ENTRYPOINTS_PATH_INVALID`).
 

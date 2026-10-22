@@ -4,7 +4,7 @@
 
 Documents refer to each other by full ID, never by Markdown path: `` `ADR-example` `` in prose, the bare ID in a
 relation field. An ID survives moves and renames and resolves with one lookup; a path breaks silently and a partial or
-ambiguous ID sends an agent to the wrong document. `stories` and `related_stories` take `US` IDs, `capabilities` and
+ambiguous ID sends an agent to the wrong document. `usecases` and `related_usecases` take `UC` IDs, `capabilities` and
 `related_capabilities` `CAP` IDs, `spec` a `SPEC` ID, `plan` a `PLAN` ID, `milestone` (proposal and spec anchors
 only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without cycles.
 

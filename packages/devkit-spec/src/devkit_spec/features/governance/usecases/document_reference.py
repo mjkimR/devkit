@@ -3,7 +3,7 @@
 Checks every current document that is not a material (``rules.is_material``):
 
 - a relation field of the wrong shape, or holding something that is not a full ID, or an ID of the wrong kind
-  (``stories`` and ``related_stories`` take ``US``, ``capabilities`` and ``related_capabilities`` ``CAP``, ``spec``
+  (``usecases`` and ``related_usecases`` take ``UC``, ``capabilities`` and ``related_capabilities`` ``CAP``, ``spec``
   ``SPEC``, ``plan`` ``PLAN``);
 - a reference to an ID no document declares, or that several declare;
 - a ``[ID]`` prose reference: the canonical form is `` `ID` `` (fixable);
@@ -41,8 +41,8 @@ from devkit_spec.features.governance import FIX_COMMAND, document_index, is_mate
 RULE_ID = "RULE-document-reference"
 type Add = Callable[..., None]
 EXPECTED_PREFIX = {
-    "stories": "US-",
-    "related_stories": "US-",
+    "usecases": "UC-",
+    "related_usecases": "UC-",
     "capabilities": "CAP-",
     "related_capabilities": "CAP-",
     "spec": "SPEC-",

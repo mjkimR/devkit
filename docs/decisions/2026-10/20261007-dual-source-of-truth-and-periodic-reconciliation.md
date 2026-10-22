@@ -12,7 +12,7 @@ created_at: 2026-10-07
 - **Date**: 2026-10-07
 - **Deciders**: @mjkimR
 - **Involved Components/Capabilities**: `CAP-DLV-delivery-workflows`, the `spec-sync` skill, `docs/capabilities/`,
-  `docs/stories/`, `specs/`
+  `docs/usecases/`, `specs/`
 - **Follow-up**: `SPEC-periodic-drift-reconciliation`
 
 ---
@@ -72,7 +72,7 @@ Option 3 is adopted.
 
 - **Complementary ledgers**:
   - Code is the ledger that proves how the system behaves.
-  - The spec (`docs/capabilities/`, `docs/stories/`) is the ledger of why and what the system exists for, and of the
+  - The spec (`docs/capabilities/`, `docs/usecases/`) is the ledger of why and what the system exists for, and of the
     invariants that must not break.
 - **Two-tier sync lifecycle**:
   - **Tier 1 (per-feature micro-sync)**: when a task or pull request completes, `spec-sync` reflects only the added or

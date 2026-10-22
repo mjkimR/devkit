@@ -1,6 +1,6 @@
 ---
 name: spec-sync
-description: Reconcile a completed feature spec and discovered behaviors into the durable Living Spec (docs/capabilities/, docs/stories/) and its reconcile.md record, so documentation never rots.
+description: Reconcile a completed feature spec and discovered behaviors into the durable Living Spec (docs/capabilities/, docs/usecases/) and its reconcile.md record, so documentation never rots.
 ---
 
 # spec-sync: Living Specification Reconciliation Workflow
@@ -12,9 +12,12 @@ verification by effort is in its `references/effort.md` and `references/review-l
 ## Steps
 
 1. **Impact**: from `spec.md` and the code changes, find affected documents (`devkit spec refs <ID> --direction in`,
-   `devkit spec search "<topic>"`). Update or create capabilities, stories (templates in
+   `devkit spec search "<topic>"`). Update or create capabilities, use cases (templates in
    `.devkit/managed/spec/templates/`) and `docs/architecture/`; if the change did introduce or rename a domain term,
    update `docs/glossary.md` where it exists. Write no index tables in directory `README.md` files.
+   - The spec's user stories state the request, not the contract; copy none into `docs/`. Fold the delivered behavior
+     into the use cases it changes: new or changed steps, extensions with their codes, postconditions and scenarios
+     (`usecase-writing`).
 2. **Record**: create `reconcile.md` in the bundle, one target per changed Living Spec file, or the no-impact
    reasoning in the body:
 

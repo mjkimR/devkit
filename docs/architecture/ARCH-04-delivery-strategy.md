@@ -10,7 +10,7 @@ created_at: 2026-10-21
 
 - **arc42**: §4 Solution Strategy
 - Boundaries: `ARCH-04-1-ecosystem-boundaries`. Policy: `ARCH-04-2-delivery-policy`.
-- Living Spec: `CAP-DLV-delivery-workflows`, `CAP-DLV-project-policy`. Stories: `US-route-development-intent`, `US-drive-development-to-integration`.
+- Living Spec: `CAP-DLV-delivery-workflows`, `CAP-DLV-project-policy`. Use cases: `UC-route-development-intent`, `UC-drive-development-to-integration`.
 
 ---
 

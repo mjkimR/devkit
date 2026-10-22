@@ -125,7 +125,7 @@ guidance is the agreed baseline.
 - **devkit-spec's own glossary** uses the five columns: `Defined in` became `Owner`, and `Avoid` and `Code identifiers`
   are filled where a rejected synonym or an identifier is known. (ADR-seeded-glossary-columns)
 - **Layered writing instructions** in the `spec` bundle, preset `core`: `document-writing` (sentence-level rules for
-  every document), `decision-writing`, `capability-writing`, `story-writing`, `architecture-writing`.
+  every document), `decision-writing`, `capability-writing`, `usecase-writing`, `architecture-writing`.
   `contract-authoring` and `living-spec-writing` keep their own topics; a rule lives in one of them only.
   (ADR-layered-writing-guidance)
 - **Authoring**: the `authoring` bundle, presets `skill-authoring` and `all`, carries `agent-asset-writing`,

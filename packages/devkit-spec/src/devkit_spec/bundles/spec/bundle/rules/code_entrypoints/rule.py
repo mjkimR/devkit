@@ -9,4 +9,4 @@ from devkit_spec.features.governance.usecases.code_entrypoints import CodeEntryp
 
 
 class CodeEntrypointsRule(_Implementation):
-    """Every entrypoints path of a capability or story exists in the workspace."""
+    """Every entrypoints path of a capability or use case exists in the workspace."""

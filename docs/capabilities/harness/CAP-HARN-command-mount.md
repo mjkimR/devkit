@@ -5,8 +5,8 @@ summary: How the devkit spec command group mounts into devkit's command line thr
 area: harness
 status: active
 created_at: 2026-10-13
-stories:
-  - US-adopt-in-an-existing-repository
+usecases:
+  - UC-adopt-in-an-existing-repository
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/cli.py
   - packages/devkit-spec/src/devkit_spec/utils/output.py

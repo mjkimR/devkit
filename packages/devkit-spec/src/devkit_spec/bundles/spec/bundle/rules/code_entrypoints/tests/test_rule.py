@@ -12,7 +12,7 @@ from devkit_agt.features.rules.services.testing import check, load_rule, write_f
 
 RULE = load_rule(__file__)
 VALID = "docs/capabilities/test/CAP-TEST-valid.md"
-STORY = "docs/stories/test/US-invalid.md"
+USECASE = "docs/usecases/test/UC-invalid.md"
 
 
 def _found(violations: list[Violation]) -> list[tuple[str, int, str]]:
@@ -24,8 +24,8 @@ def test_existing_paths_pass(tmp_path: Path) -> None:
     files = {
         "src/main.go": "package main",
         VALID: "---\nid: CAP-TEST-valid\nentrypoints: [src/, ./src/main.go, .]\n---\n",
-        "docs/stories/test/US-absent.md": "---\nid: US-absent\n---\n",
-        "docs/stories/test/US-empty.md": "---\nid: US-empty\nentrypoints: []\n---\n",
+        "docs/usecases/test/UC-absent.md": "---\nid: UC-absent\n---\n",
+        "docs/usecases/test/UC-empty.md": "---\nid: UC-empty\nentrypoints: []\n---\n",
         "docs/packages/api/capabilities/core/CAP-CORE-a.md": "---\nid: CAP-CORE-a\nentrypoints: [src/main.go]\n---\n",
     }
     assert check(RULE, tmp_path, files) == []
@@ -46,14 +46,14 @@ def test_existing_paths_pass(tmp_path: Path) -> None:
     ],
 )
 def test_invalid_declarations(tmp_path: Path, value: str, message: str) -> None:
-    files = {STORY: f"---\nid: US-invalid\nentrypoints: {value}\n---\n"}
-    assert _found(check(RULE, tmp_path, files)) == [(STORY, 3, message)]
+    files = {USECASE: f"---\nid: UC-invalid\nentrypoints: {value}\n---\n"}
+    assert _found(check(RULE, tmp_path, files)) == [(USECASE, 3, message)]
 
 
 def test_lines_point_at_items(tmp_path: Path) -> None:
     files = {
         "src/a.py": "",
-        STORY: "---\nid: US-invalid\ntitle: x\nentrypoints:\n  - src/a.py\n  - src/gone.py\n---\n",
+        USECASE: "---\nid: UC-invalid\ntitle: x\nentrypoints:\n  - src/a.py\n  - src/gone.py\n---\n",
     }
     assert [(line, message) for _, line, message in _found(check(RULE, tmp_path, files))] == [
         (6, "Dead code entrypoint: 'src/gone.py' (missing or outside workspace)")
@@ -63,20 +63,20 @@ def test_lines_point_at_items(tmp_path: Path) -> None:
 def test_symlink_outside_workspace_is_dead(tmp_path: Path, tmp_path_factory: pytest.TempPathFactory) -> None:
     outside = tmp_path_factory.mktemp("outside")
     os.symlink(outside, tmp_path / "escape")
-    files = {STORY: "---\nid: US-invalid\nentrypoints: [escape]\n---\n"}
+    files = {USECASE: "---\nid: UC-invalid\nentrypoints: [escape]\n---\n"}
     assert len(_found(check(RULE, tmp_path, files))) == 1
 
 
 def test_only_targets_and_bearing_documents(tmp_path: Path) -> None:
     files = {
-        STORY: "---\nid: US-invalid\nentrypoints: [missing]\n---\n",
+        USECASE: "---\nid: UC-invalid\nentrypoints: [missing]\n---\n",
         "docs/decisions/2026-10/20261001-x.md": "---\nid: ADR-x\nentrypoints: [missing]\n---\n",
         "docs/materials/MAT-x.md": "---\nid: MAT-x\nentrypoints: [missing]\n---\n",
         VALID: "---\nid: CAP-TEST-valid\n---\n",
     }
-    assert [file for file, _, _ in _found(check(RULE, tmp_path, files))] == [STORY]
+    assert [file for file, _, _ in _found(check(RULE, tmp_path, files))] == [USECASE]
     assert check(RULE, tmp_path, targets=[VALID]) == []
-    assert len(_found(check(RULE, tmp_path, targets=[STORY]))) == 1
+    assert len(_found(check(RULE, tmp_path, targets=[USECASE]))) == 1
 
 
 def _git(root: Path, *args: str) -> None:

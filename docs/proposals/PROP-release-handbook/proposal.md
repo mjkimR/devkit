@@ -44,7 +44,7 @@ without adding Living Spec maintenance:
 - It is a snapshot bound to a release tag. Between releases it is intentionally stale and says so; it is never a
   reconcile target, so `spec-sync` gains no obligation.
 - It reorganizes rather than summarizes: the Living Spec is organized by contract and ID, the handbook by user
-  journey and concept. Stories (`US-*`) already follow user journeys and form its backbone.
+  journey and concept. Use cases (`UC-*`) already follow actor goals and form its backbone.
 - Detail is not rewritten. Handbook pages link to the source documents at the release tag, untranslated.
 - With the handbook carrying human readability, the agent-first restructuring of `docs/` no longer has to.
 
@@ -57,7 +57,7 @@ artifact bound to a source revision and verifies its links before completing.
   tables, provenance header, source links, glossary) and which are written by an agent (narrative)? Can the
   deterministic parts reuse the document index and `devkit spec refs`, or do they need their own reader?
 - **Q2 (staleness detection)**: Is `sources: {<ID>: <blob SHA>}` per English page enough to detect stale pages
-  deterministically, and how is a coverage gap (a new story or capability that no page cites) reported?
+  deterministically, and how is a coverage gap (a new use case or capability that no page cites) reported?
 - **Q3 (exclusion)**: Does a repository-root `handbook/` stay out of the document index, `devkit spec search`,
   `devkit get-context` and spec rules such as `RULE-document-summary` and `RULE-document-reference` without changes?
   If not, what is the smallest exclusion?
@@ -84,7 +84,7 @@ handbook/
 ├── en/                # pivot language, synthesized from docs/
 │   ├── README.md      # L0: what devkit is, the overall model, where to start
 │   ├── concepts.md    # bundle, sync, projection; Living Spec and specs; workflow stages; advisories
-│   ├── journeys/      # L1: one page per story (US-*), how-to oriented
+│   ├── journeys/      # L1: one page per use case (UC-*), how-to oriented
 │   ├── areas/         # L1: capability area summaries linking to the L2 sources
 │   ├── decisions.md   # digest of the decisions in effect (scope per Q6)
 │   ├── changes.md     # previous release tag to this one: completed specs and new ADRs

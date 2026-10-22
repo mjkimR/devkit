@@ -17,7 +17,7 @@ class Kind(StrEnum):
     """What a document is, derived from its ID prefix."""
 
     CAPABILITY = "capability"
-    STORY = "story"
+    USECASE = "usecase"
     ARCHITECTURE = "architecture"
     DECISION = "decision"
     PROPOSAL = "proposal"
@@ -33,7 +33,7 @@ class Kind(StrEnum):
 
 PREFIXES: dict[str, Kind] = {
     "CAP": Kind.CAPABILITY,
-    "US": Kind.STORY,
+    "UC": Kind.USECASE,
     "ARCH": Kind.ARCHITECTURE,
     "ADR": Kind.DECISION,
     "PROP": Kind.PROPOSAL,
@@ -53,7 +53,7 @@ ID_PATTERN = re.compile(rf"^{ID_SOURCE}$")
 # Date- or number-based references that are never valid identifiers (``RULE-id-convention`` reports them, and an
 # alias of that form is refused, so the two never disagree).
 _LEGACY_REF = re.compile(
-    r"\b(SPEC-\d{8}(?:-[a-z0-9-]+)?|FB-\d{8}(?:-[a-z0-9-]+)?|P?ADR-\d{4}|US-\d{3,}|CAP-[A-Z0-9]+-\d{3,})\b", re.ASCII
+    r"\b(SPEC-\d{8}(?:-[a-z0-9-]+)?|FB-\d{8}(?:-[a-z0-9-]+)?|P?ADR-\d{4}|UC-\d{3,}|CAP-[A-Z0-9]+-\d{3,})\b", re.ASCII
 )
 # The arc42 chapter number is part of an architecture slug: ARCH-03-context is valid, a bare ARCH-03 is not.
 _ARCH_REF = re.compile(r"\bARCH-\d{2}(?:-[0-9a-z]+)*", re.ASCII)

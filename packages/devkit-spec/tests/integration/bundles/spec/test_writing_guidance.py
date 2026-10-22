@@ -15,7 +15,7 @@ INSTRUCTIONS = {
     "document-writing",
     "decision-writing",
     "capability-writing",
-    "story-writing",
+    "usecase-writing",
     "architecture-writing",
 }
 
@@ -64,10 +64,10 @@ def test_the_capability_guide_gives_every_ears_template_and_the_template_points_
     assert "capability-writing" in _read("templates/capability.md")
 
 
-def test_the_story_and_architecture_guides_and_the_story_template() -> None:
-    story = " ".join(_read("instructions/story-writing.md").split())
-    assert "Example Mapping" in story and "Given/When/Then" in story
-    assert _read("templates/story.md").count("story-writing") == 2
+def test_the_usecase_and_architecture_guides_and_the_usecase_template() -> None:
+    usecase = " ".join(_read("instructions/usecase-writing.md").split())
+    assert "Example Mapping" in usecase and "Given/When/Then" in usecase
+    assert _read("templates/usecase.md").count("usecase-writing") == 2
     architecture = " ".join(_read("instructions/architecture-writing.md").split())
     assert "fitness function" in architecture
     assert "source, stimulus, environment, response and measure" in architecture

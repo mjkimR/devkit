@@ -1,6 +1,6 @@
 ---
 name: living-spec-writing
-description: Read before authoring, editing or reviewing docs/ or specs/ documents. Defines current-state writing, decision placement, history placement, completed specs, story-capability traceability, summaries, ID references, terminology and the glossary.
+description: Read before authoring, editing or reviewing docs/ or specs/ documents. Defines current-state writing, decision placement, history placement, completed specs, use case and capability traceability, summaries, ID references, terminology and the glossary.
 ---
 
 # Living Spec Writing
@@ -24,8 +24,8 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
 ## Completed Specs and Traceability
 
 - A spec with `status: completed` stays in place as history; start a later behavior change in a new spec. Read the
-  current contract in `docs/capabilities/` and `docs/stories/`, not in completed specs.
-- Link stories and capabilities both ways through YAML `stories:` and `capabilities:`; never nest one inside the
+  current contract in `docs/capabilities/` and `docs/usecases/`, not in completed specs.
+- Link use cases and capabilities both ways through YAML `usecases:` and `capabilities:`; never nest one inside the
   other.
 
 ## Summaries

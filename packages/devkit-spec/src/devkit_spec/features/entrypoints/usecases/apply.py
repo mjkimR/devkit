@@ -1,4 +1,4 @@
-"""``--apply``: append derived paths to the ``entrypoints`` frontmatter of capability and story documents.
+"""``--apply``: append derived paths to the ``entrypoints`` frontmatter of capability and use case documents.
 
 Per document, the ``new`` pairs whose path exists and is not folded are written: directories with a trailing
 ``/``, sorted, after the entries already declared. An addition an existing entry or another addition already

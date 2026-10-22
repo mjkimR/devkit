@@ -34,11 +34,11 @@ id = "capability-writing"
 kind = "instruction"
 source = "instructions/capability-writing.md"
 
-# Story writing: narrative and Example Mapping to Given/When/Then scenarios.
+# Use case writing: main success scenario, step-keyed extensions, postconditions and acceptance scenarios.
 [[assets]]
-id = "story-writing"
+id = "usecase-writing"
 kind = "instruction"
-source = "instructions/story-writing.md"
+source = "instructions/usecase-writing.md"
 
 # Architecture writing: arc42 placement, constraints with enforcing checks, quality scenarios.
 [[assets]]
@@ -64,13 +64,13 @@ id = "id-convention"
 kind = "rule"
 source = "rules/id_convention"
 
-# Capabilities, stories and proposals carry id, title and status frontmatter.
+# Capabilities, use cases and proposals carry id, title and status frontmatter.
 [[assets]]
 id = "spec-format"
 kind = "rule"
 source = "rules/spec_format"
 
-# Story and capability links are bidirectional.
+# Use case and capability links are bidirectional.
 [[assets]]
 id = "traceability-link"
 kind = "rule"
@@ -173,7 +173,7 @@ id = "spec-feedback"
 kind = "skill"
 source = "skills/spec-feedback"
 
-# Derive capability/story entrypoints from spec bundles, review them and write the chosen ones.
+# Derive capability/use case entrypoints from spec bundles, review them and write the chosen ones.
 [[assets]]
 id = "spec-entrypoints"
 kind = "skill"
@@ -194,7 +194,7 @@ id = "reconcile-contract"
 kind = "rule"
 source = "rules/reconcile_contract"
 
-# Every entrypoints path of a capability or story is an existing workspace file or directory.
+# Every entrypoints path of a capability or use case is an existing workspace file or directory.
 [[assets]]
 id = "code-entrypoints"
 kind = "rule"
@@ -305,7 +305,7 @@ assets = [
     "document-writing",
     "decision-writing",
     "capability-writing",
-    "story-writing",
+    "usecase-writing",
     "architecture-writing",
     "spec-pointer",
     "document-reference",

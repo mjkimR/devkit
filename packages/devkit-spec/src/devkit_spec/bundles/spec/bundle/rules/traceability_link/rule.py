@@ -9,4 +9,4 @@ from devkit_spec.features.governance.usecases.traceability_link import Traceabil
 
 
 class TraceabilityLinkRule(_Implementation):
-    """Stories and capabilities record their M:N links in both directions by exact ID."""
+    """Use cases and capabilities record their M:N links in both directions by exact ID."""

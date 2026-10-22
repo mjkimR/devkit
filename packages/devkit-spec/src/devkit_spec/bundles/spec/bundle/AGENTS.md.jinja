@@ -12,7 +12,7 @@ user instructions take precedence. Never end the user's session on your own.
 
 ## 2. Living Spec and Scope
 
-- `docs/` is the Living Spec, the current contract: capabilities, stories, architecture and decisions. A feature spec
+- `docs/` is the Living Spec, the current contract: capabilities, use cases, architecture and decisions. A feature spec
   is `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` (`spec.md`, `plan.md`, `tasks.md`) and stays as history once completed.
 - Read current contracts and active specs (`devkit spec list spec`) before drafting new work. In a package namespace
   (`docs/packages/<name>/`), `list` and `search` cover that namespace plus global documents; pass `--all-namespaces`
@@ -56,6 +56,6 @@ user instructions take precedence. Never end the user's session on your own.
 
 ## 5. Managed Files
 
-- Templates: `.devkit/managed/spec/templates/{capability,story,decision,proposal,milestone}.md`.
+- Templates: `.devkit/managed/spec/templates/{capability,usecase,decision,proposal,milestone}.md`.
 - Read policy through `devkit spec policy`, never by parsing `.devkit/config.toml`.
 - Change `.devkit/managed/` through `devkit override` or the project's own bundle, never by editing it.

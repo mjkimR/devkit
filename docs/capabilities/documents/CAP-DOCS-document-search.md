@@ -4,8 +4,8 @@ title: Document Search
 summary: Defines devkit spec search, which ranks spec documents for a free-text query on top of devkit's lexical, dense and hybrid search, embedding only the ID and English summary, pinning exact IDs and paths, expanding glossary synonyms and narrowing by kind, history and namespace.
 area: documents
 status: active
-stories:
-  - US-find-the-right-documents
+usecases:
+  - UC-find-the-right-documents
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/documents/usecases/search.py
   - packages/devkit-spec/src/devkit_spec/features/documents/cli/commands.py

@@ -4,8 +4,8 @@ title: Capability Title (e.g., Payment Authorization and Cancellation)
 summary: "One or two English sentences: what this capability provides and its boundary"   # required, English (RULE-document-summary); quote it, it may contain ": "
 area: <area>              # Must match parent directory docs/capabilities/<area>/ (auth | billing | order, etc.)
 status: draft             # draft | active | deprecated
-stories:
-  - US-<slug>
+usecases:
+  - UC-<slug>
 ---
 
 # [CAP-<AREA>-<slug>] Capability Title

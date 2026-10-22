@@ -8,7 +8,7 @@ Checks the identifier targets:
 - feedback at ``specs/<YYYY-MM>/<YYYYMMDD>-<slug>/feedback/<slug>.md`` or
   ``specs/<YYYY-MM>/feedback/<YYYYMMDD>-<slug>.md`` (``FB-<slug>``);
 - Living Spec documents, whose ID is the file stem: ``docs/capabilities/<area>/CAP-<AREA>-<slug>.md``,
-  ``docs/stories/<area>/US-<slug>.md`` (both with ``area: <area>``) and
+  ``docs/usecases/<area>/UC-<slug>.md`` (both with ``area: <area>``) and
   ``docs/architecture/ARCH-[<NN>[-<n>]-]<slug>.md`` (``NN`` an arc42 chapter other than 09 and 12).
 
 A target is reported for a path off the convention (and then nothing else), a missing frontmatter, an ``id`` /
@@ -19,7 +19,7 @@ document's own), in any target but a spec bundle file (feedback included, in a b
 not open with an ID token but names one of the document's own kind (``# Capability [CAP-X-old] Title``; reported, not
 fixed), and an ADR, spec or Living Spec ID that another target's path also derives. Every Markdown file under ``docs/`` (except ``docs/materials/``) and
 ``specs/`` is reported for a date- or number-based reference (``ADR-0006``,
-``SPEC-20261006``, ``US-010``, ``CAP-HARN-007``, ``ARCH-06``) in its frontmatter or prose; code, HTML comments and
+``SPEC-20261006``, ``UC-010``, ``CAP-HARN-007``, ``ARCH-06``) in its frontmatter or prose; code, HTML comments and
 escapes are skipped, link labels and targets are not.
 
 Fields are read line by line as written (a top-level ``id:`` / ``area:`` line), so a header YAML rejects is still
@@ -60,11 +60,11 @@ _DATED_NAME = re.compile(r"^(\d{8})-([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
 _SLUG_NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$", re.ASCII)
 _MONTH_NAME = re.compile(r"^(\d{4})-(\d{2})$", re.ASCII)
 _CAP_STEM = re.compile(r"^CAP-([A-Z0-9]+)-([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
-_STORY_STEM = re.compile(r"^US-([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
+_USECASE_STEM = re.compile(r"^UC-([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
 _ARCH_STEM = re.compile(r"^ARCH-(?:(\d{2})(?:-([1-9]))?-)?([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
 # The document's own ID token opens its first H1 (``# [ID] Title`` or ``# `ID` Title``); in a spec bundle file it may
 # follow a leading label (``# Technical Plan: `SPEC-<slug>` Title``). An ID later in the heading is a reference.
-_ID_TOKEN = r"(?P<token>(?:\[|`)(?P<id>(?:SPEC|PLAN|TASKS|REC|ADR|FB|CAP|US|ARCH|MS)-[^\]`]+)(?:\]|`))"
+_ID_TOKEN = r"(?P<token>(?:\[|`)(?P<id>(?:SPEC|PLAN|TASKS|REC|ADR|FB|CAP|UC|ARCH|MS)-[^\]`]+)(?:\]|`))"
 _HEADING_TOKEN = re.compile(rf"^#[ \t]+{_ID_TOKEN}")
 _LABELLED_HEADING_TOKEN = re.compile(rf"^#[ \t]+(?:[^`\[\]:\r\n]+:[ \t]+)?{_ID_TOKEN}")
 _ANY_ID_TOKEN = re.compile(_ID_TOKEN)
@@ -77,10 +77,10 @@ _ANY_ID_LINE = re.compile(r"^id:.*?(?=\r?$)", re.MULTILINE)
 _SPEC_FILES = {"spec.md": "SPEC", "plan.md": "PLAN", "tasks.md": "TASKS", "reconcile.md": "REC"}
 # arc42 chapters that may hold a numbered ARCH document; 09 (decisions) and 12 (glossary) live elsewhere.
 _ARCH_CHAPTERS = frozenset({"01", "02", "03", "04", "05", "06", "07", "08", "10", "11"})
-_LIVING_SPEC = (Kind.CAPABILITY, Kind.STORY, Kind.ARCHITECTURE)
-_LIVING_DIRECTORIES = {"capabilities": Kind.CAPABILITY, "stories": Kind.STORY, "architecture": Kind.ARCHITECTURE}
+_LIVING_SPEC = (Kind.CAPABILITY, Kind.USECASE, Kind.ARCHITECTURE)
+_LIVING_DIRECTORIES = {"capabilities": Kind.CAPABILITY, "usecases": Kind.USECASE, "architecture": Kind.ARCHITECTURE}
 _REFERENCE_REMEDIATION = (
-    "Reference documents by slug identifier (ADR-{slug}, SPEC-{slug}, CAP-{AREA}-{slug}, US-{slug}, ARCH-{NN}-{slug}),"
+    "Reference documents by slug identifier (ADR-{slug}, SPEC-{slug}, CAP-{AREA}-{slug}, UC-{slug}, ARCH-{NN}-{slug}),"
     " written `FULL-ID` in prose"
 )
 
@@ -88,7 +88,7 @@ _REFERENCE_REMEDIATION = (
 @dataclass(frozen=True, slots=True)
 class _Target:
     """An identifier target: ``kind`` is ``SPEC`` for every spec bundle file; ``expected_id`` and ``slug`` are set
-    when ``path_issue`` is empty; ``expected_area`` is the parent directory of a capability or story; ``docs_root``
+    when ``path_issue`` is empty; ``expected_area`` is the parent directory of a capability or use case; ``docs_root``
     is the docs root of a Living Spec document (``docs`` or a namespace's ``docs/packages/<name>``)."""
 
     path: str
@@ -210,12 +210,12 @@ def _living_spec(path: str, kind: Kind, docs_root: str, registered: tuple[Namesp
             )
             return target(path_issue=issue)
         return target(slug=match.group(2), expected_id=stem, expected_area=parts[2])
-    if kind is Kind.STORY:
+    if kind is Kind.USECASE:
         if len(parts) != 4:
-            return target(path_issue=f"Story must be stored at {docs_root}/stories/{{area}}/US-{{slug}}.md")
-        match = _STORY_STEM.match(stem)
+            return target(path_issue=f"Use case must be stored at {docs_root}/usecases/{{area}}/UC-{{slug}}.md")
+        match = _USECASE_STEM.match(stem)
         if match is None or not _has_letter(match.group(1)):
-            issue = f"file name must be US-{{slug}} with a kebab-case slug that is not a sequence number: {stem}"
+            issue = f"file name must be UC-{{slug}} with a kebab-case slug that is not a sequence number: {stem}"
             return target(path_issue=issue)
         return target(slug=match.group(1), expected_id=stem, expected_area=parts[2])
     if len(parts) != 3:
@@ -506,7 +506,7 @@ class IdConventionRule(BaseRule):
                 )
             area = _field(block.header, "area")
             if target.expected_area and area != target.expected_area:
-                directory = "stories" if target.kind is Kind.STORY else "capabilities"
+                directory = "usecases" if target.kind is Kind.USECASE else "capabilities"
                 add(
                     path,
                     1,

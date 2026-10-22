@@ -17,7 +17,7 @@ with frontmatter `id: PLAN-<slug>` and `spec: SPEC-<slug>`.
    (`docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, template `.devkit/managed/spec/templates/decision.md`).
 3. **Choices**: inside the agreed intent, take the recommended option and record its reason. Outside it, raise a
    problem for the Host; a bugfix that needs a different defect scope returns to `characterize`.
-4. **Design**: give every story and `[AC-NN]` scenario a handling component and keep every non-goal out. Name the
+4. **Design**: give every user story and `[AC-NN]` scenario a handling component and keep every non-goal out. Name the
    components touched, their contracts (types, signatures, schemas; for a CLI or API its flags, codes and payloads),
    the failure modes and any migration.
 5. **Verification**: name the tests and checks that prove each scenario; a bugfix keeps its reproduction test as the
@@ -39,5 +39,5 @@ Always write sections 1, 2 and 6; add the others only when the change has that c
 
 ## Completion
 
-- [ ] Every story and scenario has an implementation path and no non-goal is planned.
+- [ ] Every user story and scenario has an implementation path and no non-goal is planned.
 - [ ] `devkit workflow next --unit <dir>` no longer reports `not-skeleton(plan.md)`.

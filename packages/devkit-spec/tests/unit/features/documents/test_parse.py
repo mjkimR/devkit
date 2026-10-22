@@ -18,7 +18,7 @@ def _doc(body: str, header: str = "id: CAP-CORE-x\nstatus: active\n") -> str:
 
 @pytest.mark.parametrize(
     ("value", "kind"),
-    [("CAP-CORE-x", Kind.CAPABILITY), ("US-a_b-c", Kind.STORY), ("REC-x", Kind.RECONCILE), ("MAT-9", Kind.MATERIAL)],
+    [("CAP-CORE-x", Kind.CAPABILITY), ("UC-a_b-c", Kind.USECASE), ("REC-x", Kind.RECONCILE), ("MAT-9", Kind.MATERIAL)],
 )
 def test_ids_name_their_kind(value: str, kind: Kind) -> None:
     assert is_id(value) and kind_of(value) is kind
@@ -58,56 +58,56 @@ def test_malformed_frontmatter_raises(text: str) -> None:
 
 
 def test_frontmatter_references_keep_their_positions() -> None:
-    text = _doc("", "id: CAP-CORE-x\nstories:\n  - US-a\n  - 'US-b'\nspec: SPEC-s\nproposal: PROP-p\n")
+    text = _doc("", "id: CAP-CORE-x\nusecases:\n  - UC-a\n  - 'UC-b'\nspec: SPEC-s\nproposal: PROP-p\n")
     document = parse_document("docs/x.md", text)
     assert document is not None
     assert [(r.target, r.field, r.line, r.column) for r in document.references] == [
-        ("US-a", "stories", 4, 5),
-        ("US-b", "stories", 5, 5),
+        ("UC-a", "usecases", 4, 5),
+        ("UC-b", "usecases", 5, 5),
         ("SPEC-s", "spec", 6, 7),
     ]
-    assert [text[r.start : r.end] for r in document.references] == ["US-a", "'US-b'", "SPEC-s"]
+    assert [text[r.start : r.end] for r in document.references] == ["UC-a", "'UC-b'", "SPEC-s"]
     assert [(r.target, r.field) for r in document.provenance] == [("PROP-p", "proposal")]
 
 
 def test_malformed_reference_fields_are_issues() -> None:
     document = parse_document(
-        "docs/x.md", _doc("", "id: CAP-CORE-x\nstories: US-a\nspec: [SPEC-s]\ncapabilities: [1]\n")
+        "docs/x.md", _doc("", "id: CAP-CORE-x\nusecases: UC-a\nspec: [SPEC-s]\ncapabilities: [1]\n")
     )
     assert document is not None and document.references == []
     assert [(issue.line, issue.message) for issue in document.issues] == [
-        (3, "stories must be a list of IDs"),
+        (3, "usecases must be a list of IDs"),
         (5, "capabilities must contain string IDs"),
         (4, "spec must be one ID"),
     ]
 
 
 def test_body_references() -> None:
-    body = "# [CAP-CORE-x] Title\n\nSee `US-a` and [ADR-b], not `US-a b` or `x US-c`.\n"
-    assert _refs(_doc(body)) == [("US-a", "body", 7, False), ("ADR-b", "body", 7, True)]
+    body = "# [CAP-CORE-x] Title\n\nSee `UC-a` and [ADR-b], not `UC-a b` or `x UC-c`.\n"
+    assert _refs(_doc(body)) == [("UC-a", "body", 7, False), ("ADR-b", "body", 7, True)]
 
 
 def test_body_reference_positions() -> None:
-    text = _doc("intro\n  uses `US-a` here\n")
+    text = _doc("intro\n  uses `UC-a` here\n")
     document = parse_document("docs/x.md", text)
     assert document is not None
     (ref,) = document.references
-    assert (ref.line, ref.column, text[ref.start : ref.end]) == (6, 9, "US-a")
+    assert (ref.line, ref.column, text[ref.start : ref.end]) == (6, 9, "UC-a")
 
 
 @pytest.mark.parametrize(
     "body",
     [
-        "```\n`US-a`\n```\n",
-        "~~~~md\n[US-a]\n~~~\n~~~~\n",
-        "    `US-a` indented code\n",
-        "<!-- `US-a`\n[US-b] -->\n",
-        "``code `US-a` code``\n",
-        "~~`US-a`~~\n",
-        "[US-a](path.md) ![US-b] [US-c][ref] [US-d]: x\n",
-        "\\[US-a\\] \\`US-b\\`\n",
-        "`code\n`US-a` [US-b]\nend` after\n",
-        "~~gone\n`US-a`~~\n",
+        "```\n`UC-a`\n```\n",
+        "~~~~md\n[UC-a]\n~~~\n~~~~\n",
+        "    `UC-a` indented code\n",
+        "<!-- `UC-a`\n[UC-b] -->\n",
+        "``code `UC-a` code``\n",
+        "~~`UC-a`~~\n",
+        "[UC-a](path.md) ![UC-b] [UC-c][ref] [UC-d]: x\n",
+        "\\[UC-a\\] \\`UC-b\\`\n",
+        "`code\n`UC-a` [UC-b]\nend` after\n",
+        "~~gone\n`UC-a`~~\n",
     ],
 )
 def test_non_prose_is_not_referenced(body: str) -> None:
@@ -115,39 +115,39 @@ def test_non_prose_is_not_referenced(body: str) -> None:
 
 
 def test_a_heading_does_not_reference_its_own_document() -> None:
-    assert _refs(_doc("# `CAP-CORE-x` and `US-a`\n## `CAP-CORE-x`\n")) == [
-        ("US-a", "body", 5, False),
+    assert _refs(_doc("# `CAP-CORE-x` and `UC-a`\n## `CAP-CORE-x`\n")) == [
+        ("UC-a", "body", 5, False),
         ("CAP-CORE-x", "body", 6, False),
     ]
 
 
 def test_crlf_line_endings() -> None:
-    text = "---\r\nid: CAP-CORE-x\r\nstories:\r\n  - US-a\r\n---\r\nsee `US-b`\r\n"
-    assert _refs(text) == [("US-a", "stories", 4, False), ("US-b", "body", 6, False)]
+    text = "---\r\nid: CAP-CORE-x\r\nusecases:\r\n  - UC-a\r\n---\r\nsee `UC-b`\r\n"
+    assert _refs(text) == [("UC-a", "usecases", 4, False), ("UC-b", "body", 6, False)]
 
 
 def test_a_span_ends_with_its_paragraph() -> None:
-    assert _refs(_doc("`open\n\n`US-a`\n")) == [("US-a", "body", 7, False)]
-    assert _refs(_doc("``open `US-a`\n~~~\n")) == [("US-a", "body", 5, False)]
+    assert _refs(_doc("`open\n\n`UC-a`\n")) == [("UC-a", "body", 7, False)]
+    assert _refs(_doc("``open `UC-a`\n~~~\n")) == [("UC-a", "body", 5, False)]
 
 
 def test_text_after_a_multiline_span_stays_visible() -> None:
-    assert _refs(_doc("`a\nb` `US-a`\n")) == [("US-a", "body", 6, False)]
+    assert _refs(_doc("`a\nb` `UC-a`\n")) == [("UC-a", "body", 6, False)]
 
 
 @pytest.mark.parametrize(
     "body",
     [
-        "- item\n    `US-a` continued\n",
-        "- item\n\n    `US-a` a paragraph of the item\n",
-        "1. item\n    - nested `US-a`\n",
-        "text\n    `US-a` continues the paragraph\n",
+        "- item\n    `UC-a` continued\n",
+        "- item\n\n    `UC-a` a paragraph of the item\n",
+        "1. item\n    - nested `UC-a`\n",
+        "text\n    `UC-a` continues the paragraph\n",
     ],
 )
 def test_indented_prose_is_referenced(body: str) -> None:
-    assert [target for target, *_ in _refs(_doc(body))] == ["US-a"]
+    assert [target for target, *_ in _refs(_doc(body))] == ["UC-a"]
 
 
-@pytest.mark.parametrize("body", ["    `US-a`\n", "text\n\n    `US-a`\n", "text\n\n    code\n\n    `US-a`\n"])
+@pytest.mark.parametrize("body", ["    `UC-a`\n", "text\n\n    `UC-a`\n", "text\n\n    code\n\n    `UC-a`\n"])
 def test_indented_code_is_not(body: str) -> None:
     assert _refs(_doc(body)) == []

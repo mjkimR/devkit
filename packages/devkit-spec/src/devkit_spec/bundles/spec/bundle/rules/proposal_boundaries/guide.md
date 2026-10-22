@@ -16,7 +16,7 @@ exists. The Planning executor clears its reports before the `plan-accept` reques
   in this order:
   1. relative to the repository root (`packages/devkit-spec/src/devkit_spec/`, `docs/glossary.md`);
   2. relative to the proposal's namespace docs root (`docs/packages/<name>/`, when `namespace` names a registered
-     namespace), then to `docs/` (`capabilities/delivery/`, `stories/delivery/`);
+     namespace), then to `docs/` (`capabilities/delivery/`, `usecases/delivery/`);
   3. as a capability area under the namespace's `capabilities/`, then `docs/capabilities/` (`delivery/`).
 
   A trailing `/` requires a directory. A bare entry that matches a repository directory resolves there first: `src/`

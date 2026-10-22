@@ -5,10 +5,10 @@ summary: "Spec guidance covers delivery skills, workers and source feedback, wit
 area: harness
 status: active
 created_at: 2026-10-13
-stories:
-  - US-route-development-intent
-  - US-adopt-in-an-existing-repository
-  - US-handle-delivery-problems-and-exceptions
+usecases:
+  - UC-route-development-intent
+  - UC-adopt-in-an-existing-repository
+  - UC-handle-delivery-problems-and-exceptions
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
 ---
@@ -93,7 +93,7 @@ A project opts out of the bundle with `[presets] spec = false` in `.devkit/confi
 
 | Asset kind | Assets |
 | --- | --- |
-| `instruction` | `contract-authoring`, `living-spec-writing`, `document-writing`, `decision-writing`, `capability-writing`, `story-writing`, `architecture-writing` (`ADR-writing-and-terminology-guidance`) |
+| `instruction` | `contract-authoring`, `living-spec-writing`, `document-writing`, `decision-writing`, `capability-writing`, `usecase-writing`, `architecture-writing` (`ADR-writing-and-terminology-guidance`, `ADR-usecases-replace-stories`) |
 | `guidance` | `spec-pointer` |
 | `rule` | `document-reference`, `id-convention`, `spec-format`, `traceability-link`, `task-coverage`, `spec-lifecycle`, `spec-progress`, `reconcile-contract`, `document-summary`, `code-entrypoints`, `proposal-boundaries` (`CAP-GOV-spec-rules`) |
 | `skill` | the 13 skills of 4.4 |
@@ -127,7 +127,7 @@ The constitution's sections:
 | `document-writing` | Writing or editing any document: the sentence-level baseline (one directive or claim per sentence, condition first, prohibitions with their alternative, one-clause reasons with background by ID, no hedges or emphatic capitals, one default, concrete examples); the per-kind instructions add to it. |
 | `decision-writing` | Writing an ADR or PADR: Y-statement `summary`, context, drivers, options, outcome, consequences and the `Confirmation` section naming the check, test or review. |
 | `capability-writing` | Writing a capability: EARS business rules (`WHEN`, `WHILE`, `IF ... THEN`, `WHERE`) with RFC 2119 keywords and their enforcing rule or test, scope owners, exact interfaces. |
-| `story-writing` | Writing a user story: narrative, Example Mapping from rules to Given/When/Then scenarios, background limited to shared preconditions. |
+| `usecase-writing` | Writing a use case: goal, main success scenario, extensions keyed to its steps, postconditions, Example Mapping to Given/When/Then scenarios. |
 | `architecture-writing` | Writing `docs/architecture/`: arc42 placement, C4 diagram scope, constraints with their enforcing check (fitness function) or "review only", quality-attribute scenarios. |
 
 The `spec-pointer` line in the root `AGENTS.md` block: run `uv run devkit get-context spec` once per agent context
@@ -151,7 +151,7 @@ Living Spec and `specs/` holds feature specs.
 | `spec-orchestrate` | User-invoked `local-orchestrated` mode per activity: one-shot Planning and Development workers in their own worktrees, the Host keeping preparation, validation, questions, problems and integration; a plain instruction returns to `direct`. | `new`, `proposal accept`, `scope register`, `scope query`, `scope update` |
 | `spec-rule` | Author or tune a project rule for `devkit rules` in the project's own bundle. | |
 | `spec-feedback` | Record and sweep feedback observations (`specs/<YYYY-MM>/feedback/`). | `list feedback`, `resolve`, `policy` |
-| `spec-entrypoints` | Derive capability and story entrypoints from spec bundles, review and apply them. | `entrypoints derive`, `list capability` |
+| `spec-entrypoints` | Derive capability and use case entrypoints from spec bundles, review and apply them. | `entrypoints derive`, `list capability` |
 
 Skill references, each read at the moment it names: `spec/references/completion.md` (completion classification,
 policy, `mcp-elicitation` confirmation authority for `integration_integrate`, reconciliation evidence),
@@ -260,7 +260,7 @@ even under requested-only capture or a disabled collect-feedback stage, without 
 
 ### 4.6 Templates
 
-`.devkit/managed/spec/templates/{capability,story,decision,proposal,milestone}.md`: frontmatter with a required English
+`.devkit/managed/spec/templates/{capability,usecase,decision,proposal,milestone}.md`: frontmatter with a required English
 `summary`, the H1 `# [<ID>] <Title>` convention and the section skeleton of each document kind (`devkit spec proposal
 new` and `padr` write the proposal and PADR shapes themselves; `CAP-DLV-proposal-incubation`).
 
@@ -272,7 +272,7 @@ The `docs-skeleton` asset seeds `docs/`, each file written once where absent and
 docs/
 ├── README.md, glossary.md, glossary.yaml     # entry, terms, search synonyms
 ├── architecture/                              # README.md and arc42 chapters ARCH-01, 03, 05-1, 05-2, 06, 07, 08
-├── capabilities/README.md, stories/README.md, decisions/README.md, materials/README.md, proposals/README.md, roadmap/README.md
+├── capabilities/README.md, usecases/README.md, decisions/README.md, materials/README.md, proposals/README.md, roadmap/README.md
 └── development/setup.md, workflow.md, ci-cd.md
 ```
 

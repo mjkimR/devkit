@@ -40,5 +40,5 @@ Order content by when the reader needs it: purpose, constraints, procedure, comp
 - Read `contract-authoring` when a document states a contract: normative keywords, measurable criteria, Non-Goals.
 - Read `living-spec-writing` when writing under `docs/` or `specs/`: placement, history, summaries, references,
   terminology.
-- Read `decision-writing`, `capability-writing`, `story-writing` or `architecture-writing` when writing that document
-  kind.
+- Read `decision-writing`, `capability-writing`, `usecase-writing` or `architecture-writing` when writing that
+  document kind.

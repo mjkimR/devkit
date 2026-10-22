@@ -30,13 +30,13 @@ def test_cache_read_text_and_invalidation(temp_workspace: Path, workspace_cache:
 
 def test_cache_frontmatter_parsing(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:
     doc_path = temp_workspace / "doc.md"
-    content = "---\nid: US-test\ntitle: Test Story\nstatus: active\n---\n\n# Body here"
+    content = "---\nid: UC-test\ntitle: Test Use Case\nstatus: active\n---\n\n# Body here"
     doc_path.write_text(content, encoding="utf-8")
 
     fm = workspace_cache.get_frontmatter("doc.md")
     assert fm is not None
-    assert fm["id"] == "US-test"
-    assert fm["title"] == "Test Story"
+    assert fm["id"] == "UC-test"
+    assert fm["title"] == "Test Use Case"
 
 
 def test_cache_markdown_links(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:

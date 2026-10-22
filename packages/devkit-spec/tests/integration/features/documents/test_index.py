@@ -36,25 +36,25 @@ def test_a_malformed_file_is_a_warning_and_the_rest_is_indexed(workspace: Path, 
 
 def test_resolve(workspace: Path, write: Write) -> None:
     write("docs/a.md", _doc("CAP-A-a"))
-    write("docs/b.md", _doc("US-dup"))
-    write("docs/c.md", _doc("US-dup"))
+    write("docs/b.md", _doc("UC-dup"))
+    write("docs/c.md", _doc("UC-dup"))
     index = DocumentIndex.load(workspace)
     assert index.resolve("CAP-A-a").path == "docs/a.md"
     with pytest.raises(UnresolvedIdError):
         index.resolve("CAP-A-none")
     with pytest.raises(DuplicateIdError) as caught:
-        index.resolve("US-dup")
+        index.resolve("UC-dup")
     assert caught.value.target_files == ("docs/b.md", "docs/c.md")
 
 
 def test_references_in_both_directions(workspace: Path, write: Write) -> None:
-    write("docs/a.md", _doc("CAP-A-a", "`US-b` `US-c` [US-b]\n"))
-    write("docs/b.md", _doc("US-b", "`CAP-A-a`\n"))
+    write("docs/a.md", _doc("CAP-A-a", "`UC-b` `UC-c` [UC-b]\n"))
+    write("docs/b.md", _doc("UC-b", "`CAP-A-a`\n"))
     index = DocumentIndex.load(workspace)
     outgoing = index.outgoing(index.resolve("CAP-A-a"))
-    assert {key: len(refs) for key, refs in outgoing.items()} == {"US-b": 2, "US-c": 1}
-    assert list(index.incoming("US-b")) == ["CAP-A-a"]
-    assert list(index.incoming("CAP-A-a")) == ["US-b"]
+    assert {key: len(refs) for key, refs in outgoing.items()} == {"UC-b": 2, "UC-c": 1}
+    assert list(index.incoming("UC-b")) == ["CAP-A-a"]
+    assert list(index.incoming("CAP-A-a")) == ["UC-b"]
 
 
 def test_files_of_completed_spec_bundles_are_historical(workspace: Path, write: Write) -> None:

@@ -13,7 +13,7 @@ RULE = load_rule(__file__)
 BUNDLE = "specs/2026-10/20261001-x"
 SPEC = f"{BUNDLE}/spec.md"
 RECORD = f"{BUNDLE}/reconcile.md"
-WAIVER = "rationale: The acceptance criteria of this story are unchanged.\n"
+WAIVER = "rationale: The acceptance criteria of this use case are unchanged.\n"
 
 
 def _found(violations: list[Violation]) -> list[tuple[str, int, str]]:

@@ -4,9 +4,9 @@ title: Document Model
 summary: "Defines Markdown document identity, references and indexing, including typed direct unit prerequisites, terminal completed targets and proposal-only milestone membership and plain body closure assertions."
 area: documents
 status: active
-stories:
-  - US-find-the-right-documents
-  - US-keep-the-living-spec-consistent
+usecases:
+  - UC-find-the-right-documents
+  - UC-keep-the-living-spec-consistent
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/documents/
 created_at: 2026-10-13
@@ -63,7 +63,7 @@ stays ID-free and unindexed, and its Owner references do not become graph edges.
    The index keeps every declaration of an ID, so a duplicate is detectable (`SPEC_ID_DUPLICATE`). Aliases share
    this namespace (section 3.5).
 6. **Summary**: `summary` is one or two English sentences saying what the document defines. It is REQUIRED on
-   capabilities, stories, decisions, architecture documents, milestones, `proposal.md` and `spec.md` (`RULE-document-summary`)
+   capabilities, use cases, decisions, architecture documents, milestones, `proposal.md` and `spec.md` (`RULE-document-summary`)
    and is the main signal of document search (`CAP-DOCS-document-search`). Titles and bodies MAY use any language.
 7. **Historical documents**: The files of a spec bundle (`specs/<YYYY-MM>/<bundle>/...`) whose `spec.md` has
    `status: completed` are historical: work history kept in place. Browsing and search MUST hide them unless
@@ -108,7 +108,7 @@ live; the index itself does not check it.
 | Prefix | Kind | Location (checked by the rules) |
 | --- | --- | --- |
 | `CAP` | `capability` | `docs/capabilities/<area>/CAP-<AREA>-<slug>.md` |
-| `US` | `story` | `docs/stories/<area>/US-<slug>.md` |
+| `UC` | `usecase` | `docs/usecases/<area>/UC-<slug>.md` |
 | `ARCH` | `architecture` | `docs/architecture/ARCH-[<NN>[-<n>]-]<slug>.md` |
 | `ADR` | `decision` | `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md` |
 | `PROP` | `proposal` | `docs/proposals/...` |
@@ -124,7 +124,7 @@ The table order is the kind order: `devkit spec list` sorts by it. Living Spec d
 ### 3.3 References
 
 1. **Full IDs only**: A document MUST reference another by its full ID, never by a Markdown path.
-2. **Relation fields** (frontmatter): `stories`, `capabilities`, `related_stories`, `related_capabilities` hold a list
+2. **Relation fields** (frontmatter): `usecases`, `capabilities`, `related_usecases`, `related_capabilities` hold a list
    of IDs; `spec` and `plan` hold one ID. Proposal anchors may declare `milestone`, one MS ID; SPEC milestone metadata is ignored and yields no membership reference. Milestones may declare `depends_on`, a list of MS IDs; proposal/spec anchors may declare a list of exact PROP/SPEC anchor IDs. Omit an empty optional field; an explicit empty list is valid. Auxiliary documents cannot declare unit prerequisites. Completed SPEC targets remain resolvable and are terminal for unit cycle traversal; the MS and unit graphs stay separate. A field of the wrong shape (a scalar where a list is expected, a non-string
    item) is recorded as an issue and skipped; `RULE-document-reference` reports it.
 3. **Prose references**: a single-backtick code span holding exactly one ID (the canonical form) or the same ID in
@@ -195,13 +195,13 @@ The table order is the kind order: `devkit spec list` sorts by it. Living Spec d
 | `status` | string | Lifecycle status; `completed` on a `spec.md` makes its bundle historical, its feedback aside. |
 | `title` | string | Display title (any language). |
 | `summary` | string | One or two English sentences; embedded by search. |
-| `area` | string | Area of a capability or story (its directory). |
-| `stories`, `capabilities`, `related_stories`, `related_capabilities` | list of IDs | Relation fields. |
+| `area` | string | Area of a capability or use case (its directory). |
+| `usecases`, `capabilities`, `related_usecases`, `related_capabilities` | list of IDs | Relation fields. |
 | `spec`, `plan` | ID | Relation fields. |
 | `proposal` | ID | Provenance of a handed-off spec. |
 | `aliases` | list of IDs | Previous or alternate IDs of the document itself (section 3.5); identity, not references. |
 | `namespace` | string | Namespace of a spec or proposal bundle (`CAP-DOCS-namespaces`). |
-| `entrypoints` | list of paths | Code entrypoints of a capability or story (`CAP-TRACE-code-entrypoints`). |
+| `entrypoints` | list of paths | Code entrypoints of a capability or use case (`CAP-TRACE-code-entrypoints`). |
 
 ### 4.2 Document Record (JSON)
 

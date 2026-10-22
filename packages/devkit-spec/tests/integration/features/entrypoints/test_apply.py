@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from spec_support.entrypoints import BUNDLE, CAP, CAP_TEXT, STORY, STORY_TEXT, documents, fixture
+from spec_support.entrypoints import BUNDLE, CAP, CAP_TEXT, USECASE, USECASE_TEXT, documents, fixture
 from spec_support.types import Write
 
 from devkit_spec.features.entrypoints import collapse, load_bundle, set_entrypoints
@@ -23,7 +23,7 @@ def test_apply_writes_only_new_existing_paths_idempotently(workspace: Path, writ
     assert result.failures == []
     assert [(item.doc, item.added) for item in result.applied] == [
         ("CAP-X-one", ("src/pkg/",)),
-        ("US-two", ("src/declared/a.go", "src/pkg/")),
+        ("UC-two", ("src/declared/a.go", "src/pkg/")),
     ]
     assert sum(item.reason == "missing-path" for item in result.skipped) == 2
     assert sum(item.reason == "folded" for item in result.skipped) == 2
@@ -32,8 +32,8 @@ def test_apply_writes_only_new_existing_paths_idempotently(workspace: Path, writ
         "---\nid: CAP-X-one\ntitle: One\nstatus: active\nentrypoints:\n  - src/declared/\n  - src/pkg/\n"
         "created_at: 2026-10-01\n---\n\n# body\n"
     )
-    assert (workspace / STORY).read_text() == (
-        "---\nid: US-two\nstatus: active\nentrypoints:\n  - src/declared/a.go\n  - src/pkg/\n---\n"
+    assert (workspace / USECASE).read_text() == (
+        "---\nid: UC-two\nstatus: active\nentrypoints:\n  - src/declared/a.go\n  - src/pkg/\n---\n"
     )
 
     pairs = _derive(workspace)
@@ -44,10 +44,10 @@ def test_apply_writes_only_new_existing_paths_idempotently(workspace: Path, writ
 
 def test_apply_restricted_to_documents(workspace: Path, write: Write) -> None:
     fixture(write)
-    result = apply(workspace, _derive(workspace), {STORY})
-    assert [item.doc for item in result.applied] == ["US-two"]
+    result = apply(workspace, _derive(workspace), {USECASE})
+    assert [item.doc for item in result.applied] == ["UC-two"]
     assert (workspace / CAP).read_text() == CAP_TEXT
-    assert (workspace / STORY).read_text() != STORY_TEXT
+    assert (workspace / USECASE).read_text() != USECASE_TEXT
 
 
 def test_apply_collapses_directory_and_files(workspace: Path, write: Write) -> None:
@@ -132,8 +132,8 @@ def test_apply_refuses_entrypoints_that_are_not_a_list_of_strings(workspace: Pat
             "---\nid: A\nentrypoints:\n  - src/a\n---\n",
         ),
         (
-            "---\nid: A\nentrypoints: []\nstories: []\n---\nbody\n",
-            "---\nid: A\nentrypoints:\n  - src/a\nstories: []\n---\nbody\n",
+            "---\nid: A\nentrypoints: []\nusecases: []\n---\nbody\n",
+            "---\nid: A\nentrypoints:\n  - src/a\nusecases: []\n---\nbody\n",
         ),
         (
             "---\nid: A\nentrypoints:\n  - old/\n  - older/\nstatus: x\n---\n",
@@ -152,8 +152,8 @@ def test_apply_refuses_entrypoints_that_are_not_a_list_of_strings(workspace: Pat
             "---\nid: A\nentrypoints:\n  - src/a\ncreated_at: 2026-01-01\n---\n",
         ),
         (
-            "---\nid: A\ncreated_at: 2026-01-01\nstories: []\nentrypoints:\n  - old/\n---\n",
-            "---\nid: A\ncreated_at: 2026-01-01\nstories: []\nentrypoints:\n  - src/a\n---\n",
+            "---\nid: A\ncreated_at: 2026-01-01\nusecases: []\nentrypoints:\n  - old/\n---\n",
+            "---\nid: A\ncreated_at: 2026-01-01\nusecases: []\nentrypoints:\n  - src/a\n---\n",
         ),
         ("---\nid: A\nstatus: x\n---\n\n# T\n", "---\nid: A\nstatus: x\nentrypoints:\n  - src/a\n---\n\n# T\n"),
         (

@@ -2,13 +2,13 @@
 
 ## 1. Overview
 
-Every capability, story, proposal and milestone starts with a YAML frontmatter block that sets `id`, `title` and
+Every capability, use case, proposal and milestone starts with a YAML frontmatter block that sets `id`, `title` and
 `status`: without them a document cannot be indexed, searched or referenced. The rule checks that the fields are
 present, non-blank strings; their values are checked by the other spec rules (`RULE-id-convention` for the ID).
 
 - **Phase and severity**: `linter`, `error`.
-- **What is checked**: the targeted Markdown files under `docs/capabilities/`, `docs/stories/`, `docs/proposals/` and
-  `docs/roadmap/`, and under `capabilities/` and `stories/` of each namespace docs root (`docs/packages/<name>/`,
+- **What is checked**: the targeted Markdown files under `docs/capabilities/`, `docs/usecases/`, `docs/proposals/` and
+  `docs/roadmap/`, and under `capabilities/` and `usecases/` of each namespace docs root (`docs/packages/<name>/`,
   registered in `[[tool.spec.namespaces]]`), even when they declare no ID. Milestones (`docs/roadmap/`) also need
   `created_at` and a lifecycle `status`; `done` and `dropped` milestones are history, checked only when named as
   explicit targets.
@@ -80,19 +80,19 @@ id: CAP-HARN-context-pack-slicing
 title: Context pack slicing
 area: harness
 status: active
-stories:
-  - US-init-project-docs
+usecases:
+  - UC-init-project-docs
 ---
 ```
 
-A story (`docs/stories/<area>/US-<slug>.md`):
+A use case (`docs/usecases/<area>/UC-<slug>.md`):
 
 ```yaml
 ---
-id: US-init-project-docs
+id: UC-init-project-docs
 title: Initialize project documents
 area: onboarding
-actor: System administrator
+primary_actor: System administrator
 status: active
 capabilities:
   - CAP-HARN-context-pack-slicing
