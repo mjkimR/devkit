@@ -52,7 +52,7 @@ cat > dist/release-notes.md <<EOF
 
 \`\`\`bash
 # devkit with the harness: rules, commit gates, workflows, worktrees, devkit run
-# (devkit-agt requires devkit-dist and devkit-advisory of the same version, named here as release wheels)
+# (devkit-agt requires devkit-dist, devkit-core, devkit-cli and devkit-advisory of the same version, named here as release wheels)
 uv add --dev "devkit-agt @ $base/$devkit_wheel" "devkit-dist @ $base/$dist_wheel" "devkit-core @ $base/$core_wheel" "devkit-cli @ $base/$cli_wheel" "devkit-advisory @ $base/$advisory_wheel"
 
 # Agent asset distribution only: sync, context, playbooks, native hooks (no harness commands or guidance)
