@@ -1,0 +1,12 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T23:55:37.372361Z'
+status: completed
+summary: 'Implementer self-verification of the fix for reconcile-check-01 finding 1 (the reconcile-reviewer did not check this change): scaffold.py proposal hint and spec/references/planning.md now ask for the Y-statement summary; rg finds no remaining ''<what it decides>'' hint; test-affected 1392 passed; rules check --ci --base 542f4461 0 errors'
+findings: []
+checks: {}
+diff_scope:
+  base: 542f4461b572a5432c89f81bd0dceff4ddafc38f
+  head: 8abee4b83630c0a00b3c2446cfe159c9a464f501

@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-writing-guidance-layers
 feature: SPEC-writing-guidance-layers
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
     resolution: modified
