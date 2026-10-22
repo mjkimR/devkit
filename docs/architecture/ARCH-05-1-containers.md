@@ -82,7 +82,7 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
 - **Contents**: Project configuration and receipts (`devkit_dist.features.project`), shared CLI boundary (`devkit_dist.adapters.cli`, `devkit-cli` bound to devkit), document search (`devkit_dist.features.search`), host hooks and project MCP registrations
   (`devkit_dist.features.host`), immutable expiring artifacts (`devkit_dist.features.shared`, importing only core/advisory), asset distribution (`devkit_dist.features.distribution`) with the `.devkit/config.toml` schema and the receipt,
   the root command line (`devkit_dist.cli`, `devkit_dist.__main__`) and the built-in bundles `devkit`, `advisory` and
-  `git-commits` (`ADR-dist-foundation-ownership`).
+  `git-commits` (`ADR-foundation-and-mcp-package-ownership`).
 - **Dependencies**: `click`, `jinja2`, `pyyaml`, `tomlkit`, `devkit-core`, `devkit-cli` and `devkit-advisory` (locked to the same version);
   extra `search` (numpy, tokenizers, `devkit-embed`). It never depends on `devkit-agt`, and its tests also
   run in an environment without it (`just test-dist`).

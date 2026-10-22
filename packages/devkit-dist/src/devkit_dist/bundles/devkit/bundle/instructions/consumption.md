@@ -67,7 +67,10 @@ procedure at the returned path.
 If the user names an exact playbook for this task, or configures an external
 schedule with its ID:
 
-1. Run `uv run devkit playbook get <bundle>/<playbook>`.
+1. Run `uv run devkit playbook get <bundle>/<playbook>`. `<playbook>` is the
+   manifest asset ID or a declared alias (a previous asset ID in its header);
+   the result reports the canonical `id` and the `alias` used. On
+   `PLAYBOOK_ALIAS_AMBIGUOUS`, name the playbook by its exact asset ID.
 2. Unless already loaded in this agent context, run the context argv it returns.
 3. Apply the constitution, then the body; read relative resources from the
    parent of `source.path`.

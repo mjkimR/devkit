@@ -2,7 +2,7 @@
 id: SPEC-contract-alignment
 title: Align ADRs and alias wording with the shipped contracts
 summary: Supersedes the package ownership and high-effort review loop ADRs with decisions that match the code and the bundled review loop, and states the document alias case in the contracts and mirrors that still describe exact IDs only.
-status: planned
+status: in-progress
 created: 2026-10-22
 related_capabilities:
   - CAP-DLV-delivery-workflows

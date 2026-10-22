@@ -3,14 +3,15 @@ id: ADR-bounded-high-effort-review-loop
 title: Bounded high-effort review loop
 summary: At high, each fresh review round takes every fix since the previous one, findings are fixed together, the loop ends when a round finds nothing or every fix is minor, and persistent, recurring or contested P1s go to the user via worker questions and problems.
 proposal: SPEC-high-effort-review-loop
-status: accepted
+status: superseded
 supersedes: ADR-medium-review-delegation
 created_at: 2026-10-19
+superseded_by: ADR-host-owned-review-loop-recovery
 ---
 
 # [ADR-bounded-high-effort-review-loop] Bounded high-effort review loop
 
-- **Status**: Accepted
+- **Status**: Superseded by `ADR-host-owned-review-loop-recovery`
 - **Date**: 2026-10-19
 
 ---

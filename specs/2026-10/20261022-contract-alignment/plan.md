@@ -25,7 +25,7 @@ spec: SPEC-contract-alignment
 | `CAP-DLV-spec-bundles`, `CAP-TRACE-code-entrypoints`, `CAP-DIST-manifest-spec` | Alias wording (AC-04). |
 | devkit bundle `instructions/consumption.md`, then `devkit sync` | Playbook get by a declared alias (AC-04). |
 | `docs/glossary.md` | `Alias` row (AC-04). |
-| Link repair | `ARCH-05-1-containers`, `CAP-DIST-content-packages`, `ADR-configuration-language-and-rendering`, `ADR-package-split-and-namespaces` (to the foundation successor); `ARCH-04-delivery-strategy`, `ADR-review-and-reconcile-verification` (to the review loop successor) (AC-05). |
+| Link repair | `ARCH-05-1-containers`, `CAP-DIST-content-packages` (to the foundation successor); `ARCH-04-delivery-strategy`, `ADR-review-and-reconcile-verification` (to the review loop successor) (AC-05). |
 
 Facts verified before writing:
 
@@ -46,8 +46,10 @@ Choices:
 - ADR slugs name the decision: foundation and `mcp` extra ownership; Host-owned recovery in the review loop.
 - The review loop successor restates the whole loop (rounds, minor fixes, severity, recurrence, count, cap) and the
   carried-over `ADR-medium-review-delegation` rules, because it replaces a whole ADR.
-- `ADR-configuration-language-and-rendering` keeps its driver text: project configuration stays in the
-  distribution's project feature (`ADR-package-split-and-namespaces`), so only the citation is repointed.
+- `ADR-configuration-language-and-rendering` (a decision driver) and `ADR-package-split-and-namespaces` (its context)
+  cite `ADR-dist-foundation-ownership` as decision-time reasoning, not as the current rule, so they stay unchanged:
+  repointing the driver would make it claim a foundation owner the successor does not state. The driver's stale
+  wording is reported as feedback, because rewording it is outside link repair.
 
 ## 3. Verification & Test Plan
 

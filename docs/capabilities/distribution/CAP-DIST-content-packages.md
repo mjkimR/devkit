@@ -105,7 +105,7 @@ A consumer that does not want an auto-selected bundle opts it out with `[presets
 ## 4. The devkit Wheels and Their Built-in Bundles
 
 The CLI ships in two wheels released in lockstep with `devkit-core`, `devkit-cli`, `devkit-advisory` and `devkit-mcp`
-(`ADR-dist-foundation-ownership`, `ADR-package-split-and-namespaces`):
+(`ADR-foundation-and-mcp-package-ownership`, `ADR-package-split-and-namespaces`):
 
 - **`devkit-dist`** owns the `devkit` executable, distribution (this capability area), native host hooks, context
   loading and playbooks. Installed alone, it deploys every asset kind and runs none of the harness.
