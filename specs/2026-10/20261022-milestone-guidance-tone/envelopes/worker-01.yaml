@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T06:06:27.660816Z'
+status: completed
+summary: 'Development from specify to final-change-report: ADR-milestone-merging (partial supersession of the ADR-roadmap-and-milestones Status clause), recommendation wording in the roadmap READMEs and milestone template, merge procedure in the Backlog reference and seed README, kept reopen rule in milestone completion, capabilities reconciled, two feedback items recorded. Next: dev-integration by the Host.'
+findings: []
+checks:
+  tests: PASS just test-affected (1364 passed, mode=partial)
+  rules: PASS devkit rules check --ci --base 3b854eae
+  sync: PASS devkit sync --check
+  lint: PASS just lint-check devkit-spec; git diff --check
+diff_scope:
+  base: ''
+  head: 3c38ddd03e94054ac6884e519008b02455b5db8a
+activity_effort: low
