@@ -30,7 +30,7 @@ plan: PLAN-lint-clean-target-scoped-rules
 
 ## Phase 3: Documentation and evidence
 
-- [ ] **Task 3.1**: Rule authoring guidance and the reference
+- [x] **Task 3.1**: Rule authoring guidance and the reference
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-rule/`, `docs/capabilities/governance/`, `docs/development/reference/rules.md`, `.devkit/installation.json`
   - _Requirements: AC-07_
   - **Verification**: `uv run devkit rules check docs/capabilities/governance docs/development/reference/rules.md packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-rule`; `just test agt packages/devkit/tests/integration/features/rules/test_docs.py packages/devkit/tests/integration/package/test_documented_codes.py`

@@ -899,7 +899,7 @@
     },
     ".agents/skills/spec-rule/SKILL.md": {
       "mode": 420,
-      "sha256": "06e91b00252854fe30778c8d451c0bd422a3db5590b66aa8d735b0ecb9264c41"
+      "sha256": "eec2f16de25db62ce8293bd871176c5dfadd6043abcd9f21cf601e43b5955836"
     },
     ".agents/skills/spec-rule/references/config.md": {
       "mode": 420,
@@ -907,7 +907,7 @@
     },
     ".agents/skills/spec-rule/references/templates.md": {
       "mode": 420,
-      "sha256": "7ff284d8a452bcd1745056fb0785d1d3686349f5343806b2a8d7d7104c040400"
+      "sha256": "82dc7d3a2a2dbb85fd1f2ce3c7409c924ad79139377b674574328bb1790b9114"
     },
     ".agents/skills/spec-specify/SKILL.md": {
       "mode": 420,
@@ -1103,7 +1103,7 @@
     },
     ".claude/skills/spec-rule/SKILL.md": {
       "mode": 420,
-      "sha256": "06e91b00252854fe30778c8d451c0bd422a3db5590b66aa8d735b0ecb9264c41"
+      "sha256": "eec2f16de25db62ce8293bd871176c5dfadd6043abcd9f21cf601e43b5955836"
     },
     ".claude/skills/spec-rule/references/config.md": {
       "mode": 420,
@@ -1111,7 +1111,7 @@
     },
     ".claude/skills/spec-rule/references/templates.md": {
       "mode": 420,
-      "sha256": "7ff284d8a452bcd1745056fb0785d1d3686349f5343806b2a8d7d7104c040400"
+      "sha256": "82dc7d3a2a2dbb85fd1f2ce3c7409c924ad79139377b674574328bb1790b9114"
     },
     ".claude/skills/spec-specify/SKILL.md": {
       "mode": 420,
@@ -1655,7 +1655,7 @@
     },
     ".devkit/managed/spec/skills/spec-rule/SKILL.md": {
       "mode": 420,
-      "sha256": "06e91b00252854fe30778c8d451c0bd422a3db5590b66aa8d735b0ecb9264c41"
+      "sha256": "eec2f16de25db62ce8293bd871176c5dfadd6043abcd9f21cf601e43b5955836"
     },
     ".devkit/managed/spec/skills/spec-rule/references/config.md": {
       "mode": 420,
@@ -1663,7 +1663,7 @@
     },
     ".devkit/managed/spec/skills/spec-rule/references/templates.md": {
       "mode": 420,
-      "sha256": "7ff284d8a452bcd1745056fb0785d1d3686349f5343806b2a8d7d7104c040400"
+      "sha256": "82dc7d3a2a2dbb85fd1f2ce3c7409c924ad79139377b674574328bb1790b9114"
     },
     ".devkit/managed/spec/skills/spec-specify/SKILL.md": {
       "mode": 420,

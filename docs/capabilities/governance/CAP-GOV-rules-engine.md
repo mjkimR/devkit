@@ -19,7 +19,7 @@ Related: `CAP-GOV-evaluation-lifecycle`, `CAP-GOV-rule-authoring`, [Rules Refere
 2. **No built-in document model**: the engine does not know what a specification, use case or decision record is. Identifier grammars, frontmatter schemas, target directories and cross-reference semantics belong to the bundle that defines those documents and arrive as `kind = "rule"` assets; the engine provides the cache, the Markdown file catalog, policy and execution. Built-in rules cover only what holds for any repository.
 3. **Session caching**: one in-memory cache per evaluation session holds file lists, bytes, text, frontmatter and links.
 4. **Convergent autofix**: one repair pass followed by one recheck, never a repair loop (`CAP-GOV-evaluation-lifecycle`).
-5. **One evaluation path**: the CLI, the `rules-check` commit gate and the workflow engine's `lint-clean` check both call `run_project_rules`, so they cannot disagree on policy.
+5. **One evaluation path**: the CLI, the `rules-check` commit gate and the workflow engine's `lint-clean` check both call `run_project_rules`, so they cannot disagree on policy; target scoping lives in `evaluate_rules`, so they also agree on which rules explicit targets can affect (`CAP-GOV-evaluation-lifecycle`).
 
 ## 2. Subsystem Layout
 
@@ -32,19 +32,19 @@ src/devkit_agt/features/rules/
 │   ├── discovery.py         # Rule assets recorded by devkit sync in the installation receipt
 │   ├── project.py           # run_project_rules: config, registry, context and evaluation in one call
 │   ├── phases.py            # Effective phase resolution, overrides, promotions
-│   ├── policy.py            # validate_policy: phase, severity and settings policy in one pass
+│   ├── policy.py            # validate_policy: inputs declarations, phase, severity and settings policy in one pass
 │   ├── errors.py            # RulesError hierarchy: raised errors and collected RuleProblems with codes
 │   ├── registry.py          # RuleRegistry & default_rule_registry (plugin packages via devkit_core.core.plugins)
-│   ├── evaluator.py         # Sequential rule evaluation, single autofix pass & convergence recheck
+│   ├── evaluator.py         # Target scoping, sequential rule evaluation, single autofix pass & convergence recheck
 │   └── rule_tests.py        # rule_folder and run_rule_tests: each rule's tests/ in a pytest subprocess
-├── testing.py               # load_rule, check, evaluate: helpers for the tests in a rule's folder
+├── testing.py               # load_rule, check, evaluate, opened_files: helpers for the tests in a rule's folder
 ├── workspace/               # Shared file caching, Markdown file catalog and Git snapshots
 │   ├── cache.py             # WorkspaceCache (file discovery, bytes, text, frontmatter, links)
 │   ├── catalog.py           # DocumentCatalog (paths, basenames, frontmatter id/title/status)
 │   ├── markdown.py          # Fences, inline links, count_tasks (the checklist counter shared with devkit_agt.features.workflow)
 │   └── snapshot.py          # Staged / CI Git trees for gate evaluation (in place or materialized)
 ├── rules/                   # Built-in governance rules (repository-generic only)
-│   ├── base.py              # Base rule helper class (settings, guide, related, promote_to)
+│   ├── base.py              # Base rule helper class (settings, guide, related, promote_to, inputs)
 │   └── <name>/              # one folder per rule: rule.py, guide.md, tests/ (markdown_link, file_length,
 │                            # secret_leak, clean_artifacts)
 └── cli/                     # commands.py (check, fix, phases, explain, test) and output.py (text and JSON rendering)
