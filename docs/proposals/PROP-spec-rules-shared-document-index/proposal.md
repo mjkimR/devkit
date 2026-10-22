@@ -2,7 +2,7 @@
 id: PROP-spec-rules-shared-document-index
 title: Share one document index across a rules run
 summary: "Lets the spec rules and markdown_link share one in-process document index and catalog per rules run, and keeps markdown_link to its targets, so targeted runs such as workflow lint-clean stop re-reading every document."
-status: draft                         # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-22
 target_area: documents/
 priority: medium                      # critical | high | medium | low
@@ -12,6 +12,7 @@ dev_effort: medium                    # low | medium | high (hint for Developmen
 boundaries:
   owns:
     - packages/devkit-spec/src/devkit_spec/features/governance/
+    - packages/devkit/src/devkit_agt/features/rules/repositories/workspace/
     - packages/devkit/src/devkit_agt/features/rules/services/builtins/markdown_link/
     - docs/capabilities/governance/
   excludes:
@@ -36,13 +37,24 @@ and target-limited link checking, cut the targeted run without changing findings
 
 - **Q1**: Do the spec rules already share one index per run, or does each load its own, and can a supplied-reader
   load reuse the persisted memo's entries for files the run did not modify?
+  - *Answer*: Spec rules do not share an index; each of the 7 rules independently calls `DocumentIndex.load`,
+    rebuilding the index 7 times per run. Providing a per-run cache slot on `WorkspaceCache` eliminates repeated loads.
+    Reusing memo entries without re-reading/hashing was evaluated, but preserving `ADR-content-keyed-document-parse-memo`'s
+    exact content verification while sharing the loaded instance in memory achieves ~85% load time reduction safely.
 - **Q2**: Which `markdown_link` findings depend on non-target files (link targets, anchors), and how far can a
   targeted run narrow its reads without missing a broken link in a target?
+  - *Answer*: Findings on target files only depend on non-target files when an invalid link needs a repair candidate
+    from `DocumentCatalog`. Deferring catalog construction to broken link handling avoids all whole-workspace Markdown
+    scans on healthy targeted runs.
 
 ## 3. Proposed Design & Impact
 
-- The rules run builds the document index and link catalog once and hands them to the rules that need them; findings
-  stay identical for targeted and whole-workspace runs.
+- Settled in `PADR-share-document-index-and-defer-catalog-build-in-rules-run`:
+  - `WorkspaceCache` provides a generic per-run compute-and-cache helper (`get_or_compute`) cleared on cache
+    invalidation and file modifications (`write_text`).
+  - `document_index(ctx)` retrieves or computes `DocumentIndex` via `ctx.cache.get_or_compute`, building it once per run.
+  - `MarkdownLinkRule` defers `ctx.cache.get_catalog(root)` until an actual broken link requires a candidate lookup.
+  - Findings stay byte-identical for both targeted and whole-workspace runs.
 - `workflow next` on the same unit measured on main before and after.
 - Independent of the Python-rule proposals.
 
