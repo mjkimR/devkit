@@ -5,23 +5,12 @@ from pathlib import Path
 
 import pytest
 from devkit_core.core.frontmatter import parse
-from devkit_dist.features.distribution.services.bundles.templates import render_template
-
-BUNDLE = Path(__file__).resolve().parents[4] / "src/devkit_spec/bundles/spec/bundle"
-
-
-def read(rel: str, environment: str = "local") -> str:
-    path = BUNDLE / rel
-    if not path.exists():
-        path = path.with_name(path.name + ".jinja")
-    if path.name.endswith(".jinja"):
-        return render_template(path.read_bytes(), {}, str(path), environment=environment).decode()
-    return path.read_text()
+from spec_support.bundle_text import text
 
 
 @pytest.mark.parametrize("environment", ["local", "cloud"])
 def test_pickup_order_and_lifecycle_guards(environment: str) -> None:
-    next_work = " ".join(read("skills/spec-next/references/next-work.md", environment).split())
+    next_work = text("skills/spec-next/references/next-work.md", environment)
     for phrase in (
         "including critical drafts",
         "A critical blocked draft stays blocked",
@@ -41,7 +30,7 @@ def test_pickup_order_and_lifecycle_guards(environment: str) -> None:
         "Critical drafts first, whatever their milestone",
     ):
         assert phrase in next_work, phrase
-    backlog = read("skills/spec/references/backlog.md", environment)
+    backlog = text("skills/spec/references/backlog.md", environment)
     for phrase in (
         "--direction in -n 0",
         "leave completed ones unchanged",
@@ -52,20 +41,20 @@ def test_pickup_order_and_lifecycle_guards(environment: str) -> None:
         "If a dependent lies outside your write scope, stop and ask the Host to coordinate",
     ):
         assert phrase in backlog, phrase
-    classification = read("skills/spec/references/classification.md", environment)
+    classification = text("skills/spec/references/classification.md", environment)
     assert "Before direct-spec intake or explicit proposal pickup" in classification
 
 
 def test_templates_separate_membership_and_prerequisites() -> None:
-    proposal = read("templates/proposal.md")
+    proposal = text("templates/proposal.md")
     assert "# depends_on: [PROP-foundation, SPEC-parser]" in proposal
     assert "never carried to spec.md" in proposal
-    milestone = read("templates/milestone.md")
+    milestone = text("templates/milestone.md")
     assert "direct PROP" in milestone and "phase-level outcomes" in milestone
     assert "initially have one proposal" in milestone and "User and agent jointly review" in milestone
     assert "Handoff does not carry milestone metadata to SPEC" in milestone
     assert "CLI flags, branch names, file layouts" in milestone
-    assert "no delivery lineage is stored" in read("seed/docs/roadmap/README.md")
+    assert "no delivery lineage is stored" in text("seed/docs/roadmap/README.md")
 
 
 def git(root: Path, *args: str) -> str:

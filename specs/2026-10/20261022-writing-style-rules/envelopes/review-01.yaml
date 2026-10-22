@@ -1,0 +1,38 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T04:38:37.227545Z'
+status: completed
+summary: 'code-reviewer (native, isolated) on 277ef3b5..f0bdcd6a: AC-01..AC-07 covered by rule tests, authoring bundle tests and the guidance test refactor; four P3 scanner masking edge cases'
+findings:
+- issue: An inline code span wrapped across two lines is masked wrongly (unmatched backticks pair with the next span)
+  evidence: packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/agent_asset_wording/rule.py:48
+  failure_condition: A listed word inside a wrapped code span is reported and a real use between mispaired backticks is not; four such spans exist in scope
+  suggested_action: Carry an open backtick span across lines until a blank line
+  resolution: open
+  severity: P3
+- issue: The Jinja comment opener starts a block state in plain .md files; multi-line {% %} and {{ }} tags are not masked
+  evidence: packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/agent_asset_wording/rule.py:49
+  failure_condition: An unclosed {# (e.g. a heading attribute {#anchor}) silences the rest of a plain .md file; a two-line {% tag reports its words
+  suggested_action: Apply Jinja masking only to .jinja files and carry {% and {{ state across lines
+  resolution: open
+  severity: P3
+- issue: The closing-fence check accepts a line with an info string
+  evidence: packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/agent_asset_wording/rule.py:74
+  failure_condition: A nested example line such as ```text closes the fence early and flips prose and code masking for the rest of the file
+  suggested_action: Close only on the fence character repeated at least as long as the opener with nothing after it
+  resolution: open
+  severity: P3
+- issue: The rule description omits role contracts and project skills
+  evidence: packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/agent_asset_wording/rule.py:98
+  failure_condition: devkit rules explain understates the checked scope
+  suggested_action: Name role contracts in the description
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test-affected --base main 4647 passed 14 skipped
+  lint: PASS just lint-check, just check, devkit rules check --ci --base main
+diff_scope:
+  base: 277ef3b5e47c6c91d2213ce69e3d5cd64d908912
+  head: f0bdcd6a632c1e37e8ccb403744d49ed04fcdee7

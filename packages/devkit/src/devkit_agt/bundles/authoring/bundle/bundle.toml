@@ -22,6 +22,12 @@ id = "skill-document-size"
 kind = "rule"
 source = "rules/skill_document_size"
 
+# Hygiene warning on hedges, emphatic capitals and time-relative words in agent assets.
+[[assets]]
+id = "agent-asset-wording"
+kind = "rule"
+source = "rules/agent_asset_wording"
+
 # Writing and curating always-loaded agent guides (AGENTS.md, CLAUDE.md).
 [[assets]]
 id = "agent-guide-authoring"
@@ -35,7 +41,7 @@ kind = "rule"
 source = "rules/agent_guide_size"
 
 [presets.skill-authoring]
-assets = ["skill-authoring", "agent-asset-writing", "skill-document-size"]
+assets = ["skill-authoring", "agent-asset-writing", "agent-asset-wording", "skill-document-size"]
 
 [presets.agent-guide-authoring]
 assets = ["agent-guide-authoring", "agent-guide-size"]

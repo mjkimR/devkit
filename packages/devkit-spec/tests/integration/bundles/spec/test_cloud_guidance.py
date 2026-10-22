@@ -12,6 +12,7 @@ from devkit_dist.features.distribution.services.installation.discovery import di
 from devkit_dist.features.distribution.services.installation.inventory import desired_inventory
 from devkit_dist.features.distribution.usecases.context import GetContext
 from devkit_dist.features.distribution.usecases.sync import sync_project
+from spec_support.bundle_text import flat
 
 MAINTAINED = {"advisory", "authoring", "devkit", "harness", "response-style", "spec"}
 OPERATIONAL = re.compile(
@@ -75,7 +76,7 @@ def test_complete_maintained_cloud_inventory(agent: str, tmp_path: Path):
                 assert line in DESCRIPTIVE.get(name, set()), (name, line)
         classified.add(name)
     assert classified == set(inventory.files)
-    combined = "\n".join(v.data.decode() for k, v in inventory.files.items() if k.endswith(".md"))
+    combined = flat("\n".join(v.data.decode() for k, v in inventory.files.items() if k.endswith(".md")))
     for required in (
         "devkit shared put|get|list|sweep",
         "devkit spec proposal report",
@@ -85,13 +86,11 @@ def test_complete_maintained_cloud_inventory(agent: str, tmp_path: Path):
     ):
         assert required in combined
     local = desired_inventory(selected, {item.bundle.name: ["all"] for item in selected}, [agent], environment="local")
-    review = local.files[".devkit/managed/spec/skills/spec-review-proposal/SKILL.md"].data
-    assert b"spec_plan_accept" in review
+    review = flat(local.files[".devkit/managed/spec/skills/spec-review-proposal/SKILL.md"].data.decode())
+    assert "spec_plan_accept" in review
     # AC-05: the local rendering names the MCP template tool; the cloud one names the CLI template route.
-    assert b"spec_proposal_report_template" in review
-    cloud_review = inventory.files[".devkit/managed/spec/skills/spec-review-proposal/SKILL.md"].data
-    assert b"--template" in cloud_review
-    assert (
-        b"do not fall back to CLI unless the user chooses an authorized CLI route"
-        in local.files[".devkit/managed/spec/skills/spec-orchestrate/SKILL.md"].data
-    )
+    assert "spec_proposal_report_template" in review
+    cloud_review = flat(inventory.files[".devkit/managed/spec/skills/spec-review-proposal/SKILL.md"].data.decode())
+    assert "--template" in cloud_review
+    orchestrate = flat(local.files[".devkit/managed/spec/skills/spec-orchestrate/SKILL.md"].data.decode())
+    assert "do not fall back to CLI unless the user chooses an authorized CLI route" in orchestrate
