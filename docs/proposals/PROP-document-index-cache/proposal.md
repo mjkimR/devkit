@@ -2,7 +2,7 @@
 id: PROP-document-index-cache
 title: Reuse the document index between commands
 summary: "Caches the Living Spec document index on disk, keyed by each file's identity, so lookups such as devkit spec resolve and list stop re-reading every document on each call."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-22
 target_area: documents/
 priority: medium                       # critical | high | medium | low
