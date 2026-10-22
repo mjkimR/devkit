@@ -18,7 +18,7 @@ Command-line tools in the user's repositories are run by AI agents on the user's
 contract of `ARCH-08-1-agent-output`: results on stdout, Agent Advisory Protocol blocks on stderr, exit codes `0`,
 `1` and `2`, and the same output options. `devkit-cli` (`devkit_cli`) implements that contract once for any click
 tool; `devkit` itself runs on it. The opt-in `cli-tool` bundle of `devkit-catalog` tells agents how to structure a
-tool around it and checks the structure with three rules.
+tool around it and checks the structure with five rules.
 
 ## 2. Scope & Boundary
 
@@ -27,8 +27,8 @@ tool around it and checks the structure with three rules.
     lines, UTF-8 output and the closed-reader exit.
   - Output helpers (`FORMAT_OPTION`, `echo_json`, `echo_notices`, `exit_on_warnings`, `exit_on_problems`,
     `report_exit_code`), lazily loaded subcommands (`LazyGroup`) and the test helper (`devkit_cli.testing`).
-  - The `cli-tool` bundle: the `cli-tool-structure` instruction and `RULE-cli-tool-command-boundary`,
-    `RULE-cli-tool-library-output` and `RULE-cli-tool-heavy-imports`.
+  - The `cli-tool` bundle: the `cli-tool-structure` instruction and `RULE-cli-tool-layout`, `RULE-cli-tool-layers`,
+    `RULE-cli-tool-command-boundary`, `RULE-cli-tool-library-output` and `RULE-cli-tool-heavy-imports`.
 - **Out-of-Scope**:
   - The advisory model, codes, modes and rendering: `CAP-ADV-agent-advisory-protocol` (`devkit.advisory`).
   - Command-specific results, project discovery and the `devkit` command tree: each devkit area and
@@ -68,7 +68,7 @@ tool around it and checks the structure with three rules.
     (`packages/devkit/tests/integration/package/test_lockstep.py` for the version, and the pinned public names in
     `packages/devkit-cli/tests/integration/test_lazy_and_package.py`).
 11. **Opt-in bundle**: the `cli-tool` bundle MUST deploy nothing until a project selects it; its default preset deploys
-    the instruction and the three rules, and its `guide` preset the instruction only
+    the instruction and the five rules, and its `guide` preset the instruction only
     (`packages/devkit-catalog/tests/integration/bundles/test_bundles.py`).
 12. **Command boundary**: WHERE `cli-tool` is selected, a function in a CLI module with a decorator named `command`
     MUST also carry a decorator named in `boundary_names` below it; group callbacks are not checked
@@ -79,6 +79,18 @@ tool around it and checks the structure with three rules.
 15. **Heavy imports**: WHERE `cli-tool` is selected, a CLI module MUST NOT import a module of `heavy_modules` or
     `extra_heavy_modules` at import time; imports inside functions and under `if TYPE_CHECKING:` are allowed
     (`RULE-cli-tool-heavy-imports`).
+16. **Feature layout**: WHERE `cli-tool` is selected, a module of a package below `src/` MUST be one of `__init__`,
+    `__main__`, `cli`, `errors`, `base`, `utils` or `features`, and below `features/<feature>/` one of `__init__`,
+    `cli`, `mcp`, `usecases`, `services`, `repositories`, `models`, `errors` or `utils`, each a module or a
+    directory; a flat layout is not allowed (`RULE-cli-tool-layout`).
+17. **Command line confined**: WHERE `cli-tool` is selected, only the package-level `cli` and `__main__` and a
+    feature's `cli` MUST import `click`, `devkit_cli` or the package-level `cli` (`RULE-cli-tool-layers`).
+18. **Layer direction**: WHERE `cli-tool` is selected, a feature module MUST import only feature layers of its own
+    rank or lower (`models`, `errors`, `utils` < `repositories` < `services` < `usecases` < `cli`, `mcp`), and the
+    package-level `base`, `utils` and `errors` MUST import no feature; imports under `if TYPE_CHECKING:` are not
+    checked (`RULE-cli-tool-layers`).
+19. **Lazy root group**: WHERE `cli-tool` is selected, the package-level `cli` MUST NOT import a feature module at
+    module level (`RULE-cli-tool-layers`).
 
 ## 4. Interfaces & Data Contracts
 
@@ -98,11 +110,12 @@ tool around it and checks the structure with three rules.
   returns `Outcome(exit_code, stdout, stderr, exception)`; `Outcome.json()` returns the one JSON object on stdout
   (else `AssertionError`), `Outcome.codes()` the codes of the `[ERROR]`, `[WARN]` and `[NOTICE]` blocks on stderr.
 - **`devkit.advisory.ArgumentError`**: `code = "ARGUMENT_INVALID"`, mode `INPUT_ERROR`, exit `2`.
-- **`cli-tool` bundle**: assets `cli-tool-structure` (instruction), `command-boundary`, `library-output` and
-  `heavy-imports` (rules); presets `all` (default) and `guide`. Every rule takes `include` (default `["**/src/**"]`),
-  `cli_modules` (default `["**/cli.py", "**/cli/**", "**/__main__.py"]`) and `exclude` (default the test file
-  patterns); `RULE-cli-tool-command-boundary` adds `boundary_names` (default `["boundary"]`) and
-  `RULE-cli-tool-heavy-imports` adds `heavy_modules` and `extra_heavy_modules`. Each rule's guide documents its
+- **`cli-tool` bundle**: assets `cli-tool-structure` (instruction), `layout`, `layers`, `command-boundary`,
+  `library-output` and `heavy-imports` (rules); presets `all` (default) and `guide`. Every rule takes `include`
+  (default `["**/src/**"]`) and `exclude` (default the test file patterns); the three output rules take
+  `cli_modules` (default `["**/cli.py", "**/cli/**", "**/__main__.py"]`); `RULE-cli-tool-layout` adds
+  `extra_root_modules` and `extra_feature_modules`, `RULE-cli-tool-command-boundary` `boundary_names` (default
+  `["boundary"]`) and `RULE-cli-tool-heavy-imports` `heavy_modules` and `extra_heavy_modules`. Each rule's guide documents its
   messages and settings.
 - **devkit's configuration**: `devkit_dist.adapters.cli` binds the toolkit as `Boundary("devkit")` (variables
   `DEVKIT_QUIET`, `DEVKIT_VERBOSE`, `DEVKIT_STRICT`), and the `devkit` root group extends `LazyGroup` with

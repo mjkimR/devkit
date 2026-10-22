@@ -24,8 +24,8 @@ spec: SPEC-cli-tool-layout-rules
   `base`/`utils`, root `errors`, feature layer, feature `__init__`), resolve every import outside `if TYPE_CHECKING:`
   (absolute ones with the package prefix, relative ones against the file's package) and report:
   - `click` or `devkit_cli` imported outside CLI modules (root `cli`, root `__main__`, a feature's `cli`);
-  - a feature layer importing a higher-ranked layer; a transport importing a layer other than `usecases`, `models`,
-    `errors`;
+  - a feature layer importing a higher-ranked layer (transports may import any lower one);
+  - a module other than a CLI module importing the package-level `cli` or `__main__`;
   - `base` or `utils` importing a feature;
   - the root `cli` importing a feature at module level.
   One violation per import, at its line.

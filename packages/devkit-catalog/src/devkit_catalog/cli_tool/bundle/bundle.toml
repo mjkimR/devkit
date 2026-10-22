@@ -1,7 +1,7 @@
 schema = 1
 name = "cli-tool"
 version = "0.1.0"
-default_preset = "all"  # the structure guide and its three rules (the rules run where devkit-agt is installed)
+default_preset = "all"  # the structure guide and its five rules (the rules run where devkit-agt is installed)
 
 [[assets]]
 id = "cli-tool-structure"
@@ -25,6 +25,18 @@ source = "rules/library_output"
 id = "heavy-imports"
 kind = "rule"
 source = "rules/heavy_imports"
+
+# Linter error for a module outside the feature layout (package-level modules, features/<feature>/<layer>).
+[[assets]]
+id = "layout"
+kind = "rule"
+source = "rules/layout"
+
+# Linter error for an upward layer import, click outside CLI modules, or eager feature imports in the root cli.
+[[assets]]
+id = "layers"
+kind = "rule"
+source = "rules/layers"
 
 # The structure guide alone, for a project without devkit-agt.
 [presets.guide]

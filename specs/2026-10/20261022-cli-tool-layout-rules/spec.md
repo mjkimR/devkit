@@ -34,7 +34,9 @@ modules, `features/<feature>/` with fixed layer names, click confined to CLI mod
    - **When to Reconsider**: agents repeatedly fix layout violations one by one when creating a tool.
 2. **Scope Excluded**: a flat package layout (`src/<package>/usecases.py` beside `cli.py`); it is reported, never
    configurable as an alternative layout.
-3. **Scope Excluded**: checking what a command function does beyond its imports (length, logic).
+3. **Scope Excluded**: checking what a command function does beyond its imports (length, logic, which lower layer
+   it calls), and checking the shape of use case classes: the rules fix where code lives and the import direction,
+   and leave the rest to the tool's authors.
 4. **Scope Excluded**: changes to the three existing rules or to `devkit-cli`.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
@@ -47,7 +49,7 @@ modules, `features/<feature>/` with fixed layer names, click confined to CLI mod
 
 ### [AC-02] Feature modules outside the fixed layers are reported
 - **Given** `src/pkg/features/scan/` holding `cli.py`, `mcp.py`, `usecases/run.py`, `services.py`, `repositories.py`,
-  `models.py`, `errors.py`, `__init__.py` and `helpers.py`, and a module `src/pkg/features/run.py`
+  `models.py`, `errors.py`, `utils.py`, `__init__.py` and `helpers.py`, and a module `src/pkg/features/run.py`
 - **When** `RULE-cli-tool-layout` runs
 - **Then** it reports `src/pkg/features/scan/helpers.py` and `src/pkg/features/run.py`, and nothing else
 
@@ -64,11 +66,11 @@ modules, `features/<feature>/` with fixed layer names, click confined to CLI mod
 - **When** `RULE-cli-tool-layers` runs
 - **Then** it reports the import in `models.py` and the import in `usecases.py`, and not the other two
 
-### [AC-05] Transports reach only use cases, models and errors
-- **Given** `src/pkg/features/scan/cli.py` importing `pkg.features.scan.usecases`, `pkg.features.scan.models`,
-  `pkg.features.scan.errors` and `pkg.features.scan.repositories`
+### [AC-05] Transports may reach any lower layer, and lower layers never reach the command line
+- **Given** `src/pkg/features/scan/cli.py` importing `pkg.features.scan.usecases` and
+  `pkg.features.scan.repositories`, and `src/pkg/features/scan/services.py` importing `pkg.cli`
 - **When** `RULE-cli-tool-layers` runs
-- **Then** it reports only the `repositories` import
+- **Then** it reports only the import of `pkg.cli` in `services.py`
 
 ### [AC-06] The root group loads features lazily
 - **Given** `src/pkg/cli.py` importing `pkg.features.scan.cli` at module level and `pkg.errors` at module level, and
@@ -92,12 +94,12 @@ modules, `features/<feature>/` with fixed layer names, click confined to CLI mod
 - A tool's package is the directory directly below the last `src` segment; every rule reads files under `include`
   (default `**/src/**`) and skips the test patterns.
 - Package-level modules: `__init__`, `__main__`, `cli`, `errors`, `base`, `utils` and `features`. Feature modules:
-  `__init__`, `cli`, `mcp`, `usecases`, `services`, `repositories`, `models` and `errors`, each a module or a
-  directory. `mcp` is allowed so a tool can add an MCP transport without restructuring.
-- Layer ranks for imports between features' modules: `models` and `errors` lowest, then `repositories`, `services`,
-  `usecases`, and the transports `cli` and `mcp`. A module imports its own rank or lower, across features too;
-  transports import only `usecases`, `models` and `errors`. `base` and `utils` import no feature; anything may import
-  them. A feature's `__init__.py` is package management and is not checked for direction.
+  `__init__`, `cli`, `mcp`, `usecases`, `services`, `repositories`, `models`, `errors` and `utils`, each a module
+  or a directory whose inside is free. `mcp` is allowed so a tool can add an MCP transport without restructuring.
+- Layer ranks for imports between features' modules: `models`, `errors` and `utils` lowest, then `repositories`,
+  `services`, `usecases`, and the transports `cli` and `mcp`. A module imports its own rank or lower, across features
+  too. Package-level `base`, `utils` and `errors` import no feature; anything may import them. Only CLI modules import
+  the package-level `cli` or `__main__`. A feature's `__init__.py` is package management and is not checked.
 - Imports under `if TYPE_CHECKING:` are not checked (annotations only).
 - Both settings lists can be extended per project (`extra_root_modules`, `extra_feature_modules`) for a justified
   exception, as the other bundle rules allow overrides.

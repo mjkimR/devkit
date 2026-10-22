@@ -1,6 +1,6 @@
 ---
 name: cli-tool-structure
-description: Read before creating or restructuring a Python command-line tool that agents run. Defines the framework, dependencies, package layout, the devkit-cli output contract, errors and exit codes, the import budget and tests.
+description: Read before creating or restructuring a Python command-line tool that agents run. Defines the framework, dependencies, the required feature layout and layer directions, the devkit-cli output contract, errors and exit codes, the import budget and tests.
 ---
 
 # Agent-Facing CLI Tools
@@ -23,15 +23,24 @@ an existing tool that predates it is restructured only when the user asks.
 ```text
 src/<package>/
   __init__.py          # version and public exports only; adds a NullHandler to the tool's logger
-  cli.py               # root group (LazyGroup) and the tool's Boundary
-  features/<feature>/
+  __main__.py          # optional: python -m <package>
+  cli.py               # root group (LazyGroup) and the tool's Boundary; imports no feature at module level
+  errors.py            # the tool's AdvisoryError subclasses
+  base/, utils/        # optional: contracts several features share; technical helpers
+  features/<feature>/  # every feature, also the first and only one
     cli.py             # the feature's commands: parse, call the use case, print
     usecases.py        # one class per operation with a typed execute(); returns data and notices
     services.py        # logic; repositories.py for files, Git, HTTP or databases; models.py for data
-  errors.py            # the tool's AdvisoryError subclasses
+    mcp.py, errors.py, utils.py   # optional: an MCP transport, feature errors, helpers
 ```
 
-- Commands live only in CLI modules (`cli.py`, `cli/`, `__main__.py`). A command parses arguments, calls one use
+The feature layout is required from the first command: a flat package (`usecases.py` beside the root `cli.py`) is
+rebuilt when the second feature arrives (`RULE-cli-tool-layout`). Each name may be a module or a directory; what a
+layer directory holds is free. Imports go one way, `models`/`errors`/`utils` <- `repositories` <- `services` <-
+`usecases` <- `cli`/`mcp`, and package-level `base`, `utils` and `errors` import no feature (`RULE-cli-tool-layers`).
+
+- Commands live only in CLI modules (`cli.py`, `cli/`, `__main__.py`); click and `devkit_cli` are imported nowhere
+  else. A command parses arguments, calls one use
   case, prints its result and returns: no business logic, no file or network access.
 - A use case is a class whose constructor receives dependencies and whose `execute` method takes and returns typed
   values. Create `services`, `repositories` and `models` only when a feature needs them. Lower layers never import
@@ -120,5 +129,5 @@ Every invocation, `--help` included, imports the root group and the CLI module o
 
 ## Rules
 
-`devkit rules check` runs `RULE-cli-tool-command-boundary`, `RULE-cli-tool-library-output` and
-`RULE-cli-tool-heavy-imports` on `src/`; `devkit rules explain <RULE-id>` prints each rule's guide and settings.
+`devkit rules check` runs `RULE-cli-tool-layout`, `RULE-cli-tool-layers`, `RULE-cli-tool-command-boundary`,
+`RULE-cli-tool-library-output` and `RULE-cli-tool-heavy-imports` on `src/`; `devkit rules explain <RULE-id>` prints each rule's guide and settings.
