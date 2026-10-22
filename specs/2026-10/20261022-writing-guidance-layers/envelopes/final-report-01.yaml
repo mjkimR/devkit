@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T23:56:53.115652Z'
+status: completed
+summary: 'Layered writing guidance: spec bundle gains document-writing plus decision/capability/story/architecture-writing instructions (core preset) with template and PADR Confirmation/Y-statement changes; authoring bundle gains agent-asset-writing and a procedure-only skill-authoring playbook; spec-plan piloted (no regression, no measurable gain); ADR-layered-writing-guidance records the header-budget trade-off; rollout and style rules deferred to FB-writing-guidance-rollout and FB-writing-style-rules.'
+findings: []
+assumptions:
+- Pilot evidence is one dry run per version and scenario, graded by a separate agent; it shows no regression, not an improvement
+- contract-authoring and living-spec-writing needed no dedup edits
+checks:
+  tests: PASS just test-affected 1392 passed
+  build: PASS just check devkit and devkit-spec (pyright 0 errors); devkit sync --check clean
+  lint: PASS just lint-check; devkit rules check --ci --base 542f4461 0 errors
+diff_scope:
+  base: 542f4461b572a5432c89f81bd0dceff4ddafc38f
+  head: e41a29f2466430d5df1fc12224a6765222ac5866
