@@ -4,6 +4,9 @@ title: "Governance Rules Engine"
 summary: "Deterministic static invariant verification, convergence checking, phases, and autofix engine."
 area: governance
 status: active
+entrypoints:
+  - packages/devkit/src/devkit_agt/features/rules/__init__.py
+  - packages/devkit/src/devkit_agt/features/rules/usecases/project.py
 created_at: 2026-10-17
 ---
 

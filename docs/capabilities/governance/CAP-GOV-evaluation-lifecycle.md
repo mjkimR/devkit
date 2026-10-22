@@ -4,6 +4,8 @@ title: "Rule Evaluation Lifecycle"
 summary: "Single-pass repairs, target scoping, execution phases, and Git snapshot evaluation."
 area: governance
 status: active
+entrypoints:
+  - packages/devkit/src/devkit_agt/features/rules/services/evaluator.py
 created_at: 2026-10-17
 usecases:
   - UC-resolve-stale-activity-branches

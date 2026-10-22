@@ -4,6 +4,9 @@ title: "Rule Authoring"
 summary: "Protocols, workspace cache API, rule configuration, and custom rule development."
 area: governance
 status: active
+entrypoints:
+  - packages/devkit/src/devkit_agt/features/rules/services/builtins/base.py
+  - packages/devkit/src/devkit_agt/features/rules/services/testing.py
 created_at: 2026-10-17
 ---
 
