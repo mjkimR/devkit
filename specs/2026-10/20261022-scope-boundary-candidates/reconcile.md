@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-scope-boundary-candidates
 feature: SPEC-scope-boundary-candidates
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md
     resolution: modified

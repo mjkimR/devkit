@@ -95,8 +95,8 @@ path, no `..`, case-sensitive, `./` and a trailing `/` normalized), with its gra
 Candidates estimate a task's code before it declares any. When at least one `_Boundary` entry of a spec bundle's
 `tasks.md` is a code path (`declared-code`), the bundle's code side is its declared code and it contributes no
 `candidate` path, however broad its targets' `entrypoints` are. A proposal, and a spec bundle whose `tasks.md` is
-missing, still the handoff skeleton, or names no code path (only `N/A`, placeholders, or paths under `docs/` or
-`specs/`), keeps its targets' `entrypoints` as candidates. A capability or use case target without `entrypoints` is
+missing, still the handoff skeleton, or names no code path (only `N/A`, placeholders, invalid paths, or paths under
+`docs/` or `specs/`), keeps its targets' `entrypoints` as candidates. A capability or use case target without `entrypoints` is
 unresolved (`no-entrypoints`) in both cases. A stored record changes from one rule to the other at the `register` or
 `update` that recollects its scope.
 
