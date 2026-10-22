@@ -1,7 +1,7 @@
 ---
 id: SPEC-feedback-quick-fixes
 title: Feedback Quick Fixes
-summary: 'Resolves four small open feedback items: refusing unsupported presentation languages, accepting the agt module name, naming nested-role skill paths in worker payloads, and clarifying that a condition-free spike completion is not Planning evidence.'
+summary: 'Resolves four small open feedback items: a visible warning for unsupported presentation languages, accepting the agt module name, naming nested-role skill paths in worker payloads, and clarifying that a condition-free spike completion is not Planning evidence.'
 status: completed
 created: 2026-10-22
 namespace: global
@@ -35,8 +35,9 @@ Four small open feedback items each cost an agent a wasted run or a silent wrong
 
 ## 2. User Stories
 
-- **US-1**: As an agent configuring a workspace, I want an unsupported presentation language refused with a stable
-  code and the accepted values, so that I fix the value instead of shipping English projections.
+- **US-1**: As an agent configuring a workspace, I want the English fallback for an unsupported presentation
+  language reported as a warning with a stable code and the accepted values, so that I learn of it and fix the value
+  instead of shipping English projections unknowingly.
 - **US-2**: As a delegated verifier, I want `agt` accepted and the short names listed in the refusal, so that one
   failed call is enough to correct a module name.
 - **US-3**: As a Host delegating to a worker, I want the payload guidance to name the worktree's skill and
@@ -47,26 +48,28 @@ Four small open feedback items each cost an agent a wasted run or a silent wrong
 ## 3. Non-Goals
 
 1. **Scope Excluded**: Language aliases (`korean`, `english`) or locale inference for `[presentation] language`.
-   - **Rationale**: An explicit refusal with the accepted values is enough.
+   - **Rationale**: A visible warning naming the accepted values is enough.
 2. **Scope Excluded**: Changing the `sdd-proposal` workflow definition or the `devkit workflow next` evaluation of
    `spike`.
    - **Rationale**: An engine change needs separate review because low-effort Planning has no challenger.
    - **When to Reconsider**: When the wording-only clarification proves insufficient in a recorded Planning run.
-3. **Scope Excluded**: Removing the `fallback` field from the resolved presentation language and the
-   `devkit config show` output, and editing the `docs/development/reference/` quick references or ADRs.
-   - **Rationale**: Outside this unit's write boundary; the field keeps its shape and is always `false` now.
+3. **Scope Excluded**: Refusing unsupported presentation languages, or editing ADRs.
+   - **Rationale**: `ADR-shared-language-preference-with-bounded-approval-content` decides the English fallback; the
+     user decision for this unit keeps it and only makes it visible.
 4. **Scope Excluded**: Any other open feedback item, refactor, or change under
    `packages/devkit-spec/src/devkit_spec/features/`.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] Unsupported presentation language is refused
+### [AC-01] Unsupported presentation language falls back to English visibly
 - **Given** a workspace whose shared `.devkit/config.toml` or local `.devkit/config.local.toml` sets
   `[presentation] language` to a string other than exactly `auto`, `en` or `ko` (for example `korean`, `KO`, `ja`
   or the empty string)
-- **When** configuration is validated (`resolve_language`, `devkit sync`, `devkit config show`)
-- **Then** a configuration error with code `CONFIG_INVALID` (exit 2) is raised whose message names the source file and
-  the value and whose fix names the accepted values `auto`, `en` and `ko`; no projection is rendered
+- **When** `devkit sync`, `devkit status` or `devkit config show --effective` runs
+- **Then** the value resolves to `en` with `fallback=true` as the ADR decides, and the result carries, under
+  `notices`, one `PRESENTATION_LANGUAGE_UNSUPPORTED` advisory at level `WARNING` per configuration file whose value
+  fell back; it names the file and the value, its `[FIX]` names the accepted values `auto`, `en` and `ko` and the file
+  to edit, it is printed on stderr in text mode, and it changes no exit code (`0`) except under `--strict` (`1`)
 
 ### [AC-02] Supported presentation languages resolve unchanged
 - **Given** `[presentation] language` set to `auto`, `en` or `ko`, or absent
@@ -103,12 +106,12 @@ The unit resolves exactly these open direct-fix sources:
 
 ## 6. Assumptions
 
-1. The refusal keeps the existing `CONFIG_INVALID` code with a per-instance fix naming the accepted values instead
-   of a new code: every other invalid configuration value already uses it, and agents branch on it.
-2. Values are matched exactly; `KO` and the empty string are refused like any other unsupported string.
-3. `ADR-shared-language-preference-with-bounded-approval-content` decided an English fallback for unsupported strings.
-   The user's recorded plan-intent for this unit replaces that one behavior. ADRs are append-only and outside this
-   unit's write boundary, so the capabilities are rewritten citing this spec and the Host is told that a
-   superseding ADR may be wanted.
-4. The `fallback` field stays in the resolved presentation language and in `devkit config show` output (always
-   `false`), so the quick references outside this unit's boundary stay accurate.
+1. The warning has its own code, `PRESENTATION_LANGUAGE_UNSUPPORTED`, not `CONFIG_INVALID`: it is a returned
+   `WARNING` of a successful command, never a refusal, and agents branch on codes.
+2. Values are matched exactly; `KO` and the empty string fall back and warn like any other unsupported string.
+3. `ADR-shared-language-preference-with-bounded-approval-content` decides an English fallback for unsupported strings.
+   The user decision recorded with the return to build-verify (`decisions/02-return-build-verify.yaml`) keeps that
+   behavior and requires only that it be visible, so this unit conforms to the ADR and no superseding ADR is needed.
+   The earlier `CONFIG_INVALID` refusal is withdrawn.
+4. Both the effective value (personal rendering) and the shared-only value (canonical tracked output) are checked;
+   a file whose value fell back is reported once. The `fallback` field of the resolved language is set again.

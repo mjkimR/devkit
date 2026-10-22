@@ -8,8 +8,8 @@ plan: PLAN-feedback-quick-fixes
 
 ## Phase 1: Implementation
 
-- [x] **Task 1.1**: Refuse unsupported presentation languages
-  - **_Boundary**: `packages/devkit-dist/src/devkit_dist/features/project/`, `packages/devkit-dist/tests/integration/features/project/test_presentation.py`, `packages/devkit-dist/tests/integration/features/distribution/test_local_config.py`
+- [x] **Task 1.1**: Report the English fallback of unsupported presentation languages as a warning
+  - **_Boundary**: `packages/devkit-dist/src/devkit_dist/features/project/`, `packages/devkit-dist/src/devkit_dist/features/distribution/usecases/`, `packages/devkit-dist/src/devkit_dist/features/distribution/models/results.py`, `packages/devkit-dist/src/devkit_dist/features/distribution/cli/configuration.py`, `packages/devkit-dist/tests/integration/features/project/test_presentation.py`, `packages/devkit-dist/tests/integration/features/distribution/test_local_config.py`
   - _Requirements: AC-01, AC-02_
   - **Verification**: `just test devkit-dist packages/devkit-dist/tests/integration/features/project/test_presentation.py packages/devkit-dist/tests/integration/features/distribution/test_local_config.py`
 - [x] **Task 1.2**: Accept and list module short names

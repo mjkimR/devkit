@@ -15,8 +15,6 @@ from devkit_dist.features.project.repositories.project import read_toml
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
 LOCAL_CONFIG_PATH = ".devkit/config.local.toml"
-# Exact ``[presentation] language`` values; anything else is refused, never silently resolved to another language.
-PRESENTATION_LANGUAGES = ("auto", "en", "ko")
 
 
 class LocalKeyForbiddenError(ConfigError):
@@ -53,12 +51,6 @@ def validate_runtime_tables(data: dict[str, Any], path: Path) -> None:
         setting = value.get(key, default)
         if type(setting) is not expected or (table == "execution" and setting not in ("local", "cloud")):
             raise _invalid(path, f"{table}.{key}: invalid value {setting!r}")
-        if table == "presentation" and setting not in PRESENTATION_LANGUAGES:
-            raise ConfigError(
-                f"{path}: presentation.language: unsupported value {setting!r}",
-                target_files=[str(path)],
-                fix=f"Set [presentation] language in {path} to one of: {', '.join(PRESENTATION_LANGUAGES)}",
-            )
         if table == "shared" and (not isinstance(setting, str) or not re.fullmatch(r"[a-z][a-z0-9-]*", setting)):
             raise _invalid(path, "shared.adapter: expected a lowercase adapter ID")
 

@@ -1,0 +1,10 @@
+request: return:build-verify
+kind: return
+action: accept
+workflow: sdd-spec-feature
+stage: build-verify
+note: 'User decision: keep the ADR''s en fallback for unsupported presentation languages
+  but make it visible as a WARNING notice from sync, status and config show; item
+  1 is reworked.'
+by: host
+at: '2026-10-21T23:52:15.990407Z'
