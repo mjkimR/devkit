@@ -2,7 +2,7 @@
 id: PROP-snapshot-scoped-rules
 title: Scope snapshot rules runs to their changed paths
 summary: "Extends rule target scoping to Git snapshot runs, the rules-check commit gate and CI, by treating deleted paths as matching targets, so a commit stops paying for whole-workspace rules its changes cannot affect."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                         # draft | reviewing | accepted | rejected
 created_at: 2026-10-22
 target_area: governance/
 priority: high                        # critical | high | medium | low
