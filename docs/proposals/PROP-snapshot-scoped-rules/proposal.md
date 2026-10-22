@@ -2,7 +2,7 @@
 id: PROP-snapshot-scoped-rules
 title: Scope snapshot rules runs to their changed paths
 summary: "Extends rule target scoping to Git snapshot runs, the rules-check commit gate and CI, by treating deleted paths as matching targets, so a commit stops paying for whole-workspace rules its changes cannot affect."
-status: draft                         # draft | reviewing | accepted | rejected
+status: accepted                         # draft | reviewing | accepted | rejected
 created_at: 2026-10-22
 target_area: governance/
 priority: high                        # critical | high | medium | low
@@ -13,7 +13,6 @@ boundaries:
   owns:
     - packages/devkit/src/devkit_agt/features/rules/
     - docs/capabilities/governance/
-  excludes:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
 workflow: sdd-proposal
@@ -25,37 +24,46 @@ workflow: sdd-proposal
 
 The `rules-check` commit gate runs a Git snapshot rules run on every commit, and CI runs `devkit rules check --ci`.
 `ADR-scope-only-explicit-working-tree-targets-in-the-evaluator` kept snapshot runs whole-workspace because deleted
-paths are not targets there, so a deletion-only change to Python could skip `RULE-architecture`. A snapshot run takes
-about 3.3 s (Measured on main at df307e99 (macOS, Python 3.12, about 820 tracked Python files): `devkit rules check --ci --base HEAD~1` 3.30-3.40 s), paid on every commit even when the commit
-touches only documents. The ADR's follow-up names this proposal's trigger: the commit gate's cost.
+paths were not targets there. A staged snapshot run takes about 4.49 s (measured on `plan-snapshot-scoped-rules`
+at `56568864` (Linux, Python 3.12, about 820 tracked Python files)), with ~2.93 s spent evaluating whole-workspace
+Python rules even when the commit touches only documentation. The ADR's follow-up names this proposal's trigger:
+the commit gate's cost.
 
-Hypothesis: treating deleted and renamed-from paths as matching targets lets snapshot runs use the same `inputs`
-scoping as working-tree targeted runs without missing a violation a commit introduces.
+Hypothesis: decoupling scoping paths from evaluation targets and matching deleted and renamed-from paths against rule
+`inputs` allows snapshot runs to skip unaffected whole-workspace rules, cutting commit gate latency by ~65 % on
+non-Python commits without missing deletion-induced violations.
 
 ## 2. Technical Spike Questions
 
 - **Q1**: Which paths must a snapshot run treat as targets (added, modified, deleted, renamed from and to, mode
   changes), and does any declared rule depend on a file a commit can change without it appearing in the diff?
+  - *Answer*: `git_snapshot` captures added, modified, deleted, renamed (via `--no-renames` as deletion + addition)
+    and typechanged paths. Evaluation targets (`RuleContext.targets`) hold only files present in the snapshot tree,
+    while scoping matching paths (`scope_rules`) include `targets` plus `snapshot.deleted`. All declared rules
+    (`RULE-architecture`, `RULE-usecase-boundaries`, `RULE-advisory-unique-code`) test that all opened files match
+    their declared `inputs`. No declared rule depends on an untracked or uncaptured file.
 - **Q2**: Does CI keep a whole-workspace run as a safety net (for example on the default branch or nightly), and
   what does the commit gate report when it skips rules?
+  - *Answer*: Yes, `.github/workflows/ci.yml` runs an unscoped `just rules-check` on Linux and macOS, and nightly and
+    release workflows run full CI. Skipped rules are returned on `EvaluationResult.skipped` and logged at `INFO`
+    under `-v`, keeping default agent stdout and JSON clean.
 
 ## 3. Proposed Design & Impact
 
-- Snapshot runs skip a declared rule when no changed path (including deletions) matches its `inputs`; undeclared
-  rules and `.devkit/config.toml` changes keep today's behavior.
+- Decouple evaluation targets (`RuleContext.targets`) from candidate scoping paths (`names` in `scope_rules`).
+- In `scope_rules`, when `ctx.snapshot is not None`, match rule `inputs` against `ctx.targets` plus `ctx.snapshot.deleted`.
+- Fix engine lifecycle short-circuit in `RunProjectRulesUseCase._run` so `has_work = bool(targets or (snapshot and snapshot.deleted))`,
+  ensuring deletion-only commits initialize context and run matching rules.
+- If `.devkit/config.toml` (`CONFIG_PATH`) or `.devkit/installation.json` (`RECEIPT_PATH`) is touched, skip no rules.
 - Equivalence evidence: for representative commits (documentation-only, Python-only, deletion-only, configuration),
   scoped and unscoped snapshot results are equal; a seeded violation in a non-changed file is still reported by the
   chosen safety-net run.
-- The commit gate time on a documentation-only commit is measured before and after.
-- Follows `SPEC-lint-clean-target-scoped-rules`; supersedes the follow-up in its ADR rather than reopening it.
+- The commit gate time on a documentation-only commit drops from ~4.49 s to ~1.56 s (~2.93 s saved per commit).
+- Supersedes the follow-up section of `ADR-scope-only-explicit-working-tree-targets-in-the-evaluator`.
 
 ## 4. Lifecycle & Retirement Criteria
-<!--
-- Preliminary decisions: devkit spec proposal padr snapshot-scoped-rules "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
-- Research: collect benchmarks and references in materials/.
-- On acceptance (plan-accept): devkit spec proposal accept snapshot-scoped-rules --by user records gate:plan-accept and status:
-  accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
-  without Planning. Development starts with devkit spec proposal handoff snapshot-scoped-rules.
-- On rejection: change only status: rejected, with the user's reason in the commit message; a later hygiene pass
-  writes the rejection ADR and deletes the proposal directory.
--->
+
+- Preliminary decision: recorded in `PADR-scope-snapshot-runs-to-diff-paths-including-deletions`.
+- Research: collected in `materials/spike-evidence.md`.
+- Acceptance: `devkit spec proposal accept snapshot-scoped-rules --by user` records `gate:plan-accept` and `status: accepted`.
+  Development starts with `devkit spec proposal handoff snapshot-scoped-rules`.

@@ -2,9 +2,9 @@ kind: feedback
 stage: collect-feedback
 workflow: sdd-proposal
 segment: 0
-created_at: '2026-10-22T09:21:49.322955Z'
+created_at: '2026-10-22T09:38:09.644813Z'
 status: completed
-summary: 'Planning turn 2 sweep: 0 unrecorded observations'
+summary: 'Planning run sweep: 0 unrecorded observations'
 findings: []
 checks:
   swept: PASS recorded=0 duplicates=0

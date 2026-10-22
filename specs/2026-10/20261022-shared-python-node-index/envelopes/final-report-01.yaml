@@ -1,0 +1,16 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T09:58:54.102446Z'
+status: completed
+summary: WorkspaceCache.get_python_nodes provides per-run type-indexed Python AST nodes in document traversal order, replacing full ast.walk tree traversals across RULE-architecture, RULE-usecase-boundaries, RULE-cli-tool-command-boundary, and RULE-cli-tool-library-output. Traversal overhead across 826 files drops from 1,151 ms to 1.82 ms (~1.15 s saved, 8.97 MB RSS) with byte-identical findings and zero rule regressions.
+findings: []
+checks:
+  tests: 'PASS just test-affected: 2706 passed; uv run devkit rules test: 21/21 passed'
+  build: 'PASS just check: 0 errors across all packages; just smoke: pass'
+  lint: PASS just lint-check; uv run devkit rules check --ci --base 3d1f162f; devkit sync --check; git diff --check
+diff_scope:
+  base: 3d1f162fa990044a598ed13374b04462eece2e09
+  head: 6827ff81d46161e778d86868b59dc66c699140b5
+activity_effort: medium

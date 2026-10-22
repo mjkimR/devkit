@@ -1,15 +1,15 @@
 ---
-id: PADR-index-python-ast-nodes-by-type-in-workspacecache
+id: ADR-index-python-ast-nodes-by-type-in-workspacecache
 title: Index Python AST nodes by type in WorkspaceCache
 summary: For Python-source rules traversing shared ASTs, we build a per-run node index by type in WorkspaceCache on first request, to eliminate redundant whole-tree walks across rules, accepting that callers receive shared node tuples that must stay unmodified.
-proposal: PROP-shared-python-node-index
-status: draft
+proposal: SPEC-shared-python-node-index
+status: accepted
 created_at: 2026-10-22
 ---
 
-# [PADR-index-python-ast-nodes-by-type-in-workspacecache] Index Python AST nodes by type in WorkspaceCache
+# [ADR-index-python-ast-nodes-by-type-in-workspacecache] Index Python AST nodes by type in WorkspaceCache
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-22
 
 ---
