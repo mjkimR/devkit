@@ -2,7 +2,7 @@
 id: SPEC-shared-python-node-index
 title: Walk each Python tree once per rules run
 summary: Adds a per-run node index to the rules workspace cache so Python-source rules read the nodes they need from one shared traversal instead of each walking every tree.
-status: in-progress
+status: completed
 created: 2026-10-22
 related_capabilities: [CAP-GOV-rule-authoring, CAP-GOV-evaluation-lifecycle, CAP-GOV-rules-engine]
 related_usecases: []

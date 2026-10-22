@@ -23,7 +23,7 @@ plan: PLAN-shared-python-node-index
   - **_Boundary**: `packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/command_boundary/`, `packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/library_output/`
   - _Requirements: AC-06_
   - **Verification**: `just test devkit-catalog`
-- [ ] **Task 2.3**: Reconcile Living Spec contracts, refresh installation receipt, and verify workspace findings
+- [x] **Task 2.3**: Reconcile Living Spec contracts, refresh installation receipt, and verify workspace findings
   - **_Boundary**: `docs/capabilities/governance/`, `.devkit/installation.json`
   - _Requirements: AC-07, AC-08, AC-09_
   - **Verification**: `uv run devkit sync --check`; `uv run devkit rules check --format json`
