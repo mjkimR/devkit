@@ -46,8 +46,8 @@ class WorkspaceCache:
   error is stored as its type and `args`; each call raises `type(*args)`. `SyntaxError(*args)` rebuilds `msg`,
   `filename`, `lineno`, `offset`, `text`, `end_lineno` and `end_offset` from `args`, so the raised error equals the
   original in type, arguments and attributes, and it carries no traceback of an earlier rule.
-- Resolution memo: `_resolved: dict[str | Path, Path]` keyed by the path argument as given (`Path(path)` when a
-  string, so `"a.py"` and `Path("a.py")` share an entry). `_resolve_path` uses it; `write_text` calls an uncached
+- Resolution memo: `_resolved: dict[str | Path, Path]` keyed by the path argument as given (a string and an equal
+  `Path` are two entries that resolve alike; converting every string would cost more than the duplicate). `_resolve_path` uses it; `write_text` calls an uncached
   `_resolve_fresh`. `invalidate` and `invalidate_all` clear it whole. `find_files`, `get_catalog` and the
   `DocumentCatalog` keep their own resolution (Non-Goal 5).
 - `RuleContext._relative`: compute the lexical `normpath`; when it is relative to the root return it; otherwise try

@@ -2,7 +2,7 @@
 id: SPEC-rule-shared-python-ast
 title: Parse each Python file once per rules run
 summary: Adds a parsed-AST accessor to the rules workspace cache so Python-source rules share one parse per file and run, and resolves each rule path once per run, removing about 1,000 repeated parses, their garbage collection and most repeated path resolution from devkit rules check.
-status: planned
+status: in-progress
 created: 2026-10-22
 related_capabilities: [CAP-GOV-rule-authoring, CAP-GOV-evaluation-lifecycle, CAP-GOV-rules-engine]
 related_usecases: []
@@ -156,10 +156,12 @@ byte-identical output.
    files their `inputs` cover, because the accessor reads the same files through `read_bytes`.
 2. AC-10 is measured in this worktree before and after the change, sequentially rather than interleaved, because a
    Development worker creates no second checkout; the Host repeats the measurement on main after integration.
-3. `RULE-architecture` keeps catching `UnicodeError` with `SyntaxError` and adds `ValueError`, the other error the
-   accessor memoizes, so a source the parser rejects with `ValueError` is reported like a syntax error instead of
-   failing the rule. The other migrated rules already catch both or skip on `SyntaxError`; the catalog rules add
-   `ValueError` to their skip for the same reason.
+3. `RULE-architecture` catches `SyntaxError` and `ValueError` (which includes the `UnicodeError` it caught before),
+   the two errors the accessor memoizes, so a source the parser rejects with `ValueError` is reported like a syntax
+   error instead of failing the rule. The catalog rules add `ValueError` to their skip for the same reason;
+   `unique_code` already skipped both.
+6. A `SyntaxError` prints only the base name of its file (`invalid syntax (broken.py, line 1)`), so the
+   `usecase-boundaries` abort message names the file by its base name instead of `<unknown>`.
 4. `parse_module(rel, tree)` of `unique_code` takes the parsed tree; the rule calls the accessor and skips a file that
    raises `SyntaxError` or `ValueError`, as before.
 5. The catalog `layout` rule lists Python files without parsing them and is not migrated.
