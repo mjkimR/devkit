@@ -9,16 +9,21 @@ free text, ignores `--format json` on failure and has no `-q`, `-v` or `--strict
 - **Phase and severity**: `linter`, `error`; it runs in `devkit rules check` and the commit gate. Shipped by the
   `cli-tool` bundle (`devkit add cli-tool`).
 - **What is checked**: in every Python file matching `include` and `cli_modules` and not `exclude`, each function
-  with a decorator named `command` (`@cli.command()`, `@click.command`, `@command()`), read statically.
+  with a decorator named `command` (`@cli.command()`, `@click.command`, `@command()`), read statically: a decorator
+  named in `boundary_names` must sit below it.
 - **Not checked**: group callbacks (`@click.group`, `@cli.group()`): a group only dispatches to its commands. Commands
   outside CLI modules are not looked for: that a command lives in a CLI module is the structure the
   `cli-tool-structure` instruction asks for.
 
 ## 2. Cause of Violation
 
-One violation per command function without a decorator named in `boundary_names`, at the function's line:
+One violation per command function without a decorator named in `boundary_names` below its `command` decorator, at
+the function's `def` line:
 
-`Command <name> has no boundary decorator (boundary); its errors bypass the output contract`
+- `Command <name> has no boundary decorator (boundary); its errors bypass the output contract`
+- `Command <name> has its boundary decorator above the click decorator; the group registers the command without it`:
+  decorators apply bottom-up, so a boundary above `@cli.command()` wraps the click `Command` object after the group
+  registered the bare callback.
 
 ## 3. Remediation
 

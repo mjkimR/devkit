@@ -34,6 +34,13 @@ def failing(output_format: str) -> None:
 
 
 @click.command()
+@FORMAT_OPTION
+@boundary
+def missing(output_format: str) -> None:
+    raise ThingMissingError("thing.toml is missing")
+
+
+@click.command()
 @boundary
 def reporting() -> None:
     click.echo("[SCAN: files=1]")
@@ -74,6 +81,16 @@ def test_a_failure_is_one_advisory_block_and_its_exit_code() -> None:  # AC-01
     assert (outcome.exit_code, outcome.stdout) == (1, "")
     assert outcome.stderr.count("(THING_MISSING)") == 1
     assert outcome.codes() == ["UNSELECTED", "THING_MISSING"]
+
+
+def test_a_failure_without_notices_prints_exactly_its_block() -> None:  # AC-01, AC-08
+    outcome = invoke(missing)
+    assert (outcome.exit_code, outcome.stdout) == (1, "")
+    assert outcome.stderr == ThingMissingError("thing.toml is missing").render() + "\n"
+    assert outcome.codes() == ["THING_MISSING"]
+    as_json = invoke(missing, ["--format", "json"])
+    assert (as_json.exit_code, as_json.stderr) == (1, "")
+    assert as_json.json() == {"error": ThingMissingError("thing.toml is missing").to_dict()}
 
 
 def test_json_mode_carries_the_error_and_the_notices_in_one_document() -> None:  # AC-02

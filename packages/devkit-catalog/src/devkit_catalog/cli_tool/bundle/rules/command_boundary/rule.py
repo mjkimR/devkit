@@ -83,18 +83,25 @@ class CommandBoundaryRule(BaseRule):
                 if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                     continue
                 decorators = [_decorator_name(decorator) for decorator in node.decorator_list]
-                if "command" not in decorators or names & set(decorators):
+                if "command" not in decorators:
                     continue
-                violations.append(
-                    Violation(
-                        rule_id=self.id,
-                        file=rel,
-                        line=node.lineno,
-                        message=(
-                            f"Command {node.name} has no boundary decorator "
-                            f"({', '.join(sorted(names))}); its errors bypass the output contract"
-                        ),
-                        remediation=REMEDIATION,
+                # Decorators apply bottom-up: a boundary above the click decorator wraps the Command object, and the
+                # group has already registered the unwrapped callback.
+                command = decorators.index("command")
+                guards = [index for index, name in enumerate(decorators) if name in names]
+                if any(index > command for index in guards):
+                    continue
+                if guards:
+                    message = (
+                        f"Command {node.name} has its boundary decorator above the click decorator; the group registers"
+                        " the command without it"
                     )
+                else:
+                    message = (
+                        f"Command {node.name} has no boundary decorator "
+                        f"({', '.join(sorted(names))}); its errors bypass the output contract"
+                    )
+                violations.append(
+                    Violation(rule_id=self.id, file=rel, line=node.lineno, message=message, remediation=REMEDIATION)
                 )
         return violations

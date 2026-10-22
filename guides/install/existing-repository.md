@@ -135,7 +135,7 @@ uv run devkit list               # bundles, their selection state and presets
 the following; check each with the user and commit the result together with `pyproject.toml` and `uv.lock`:
 
 - **Packages**: a Git requirement on `devkit-agt` brings `devkit-dist` from the same commit; a release-wheel
-  installation names the `devkit-dist` wheel next to `devkit-agt` and `devkit-advisory`. A tool installation is
+  installation names the `devkit-dist`, `devkit-core` and `devkit-cli` wheels next to `devkit-agt` and `devkit-advisory`. A tool installation is
   `uv tool install <devkit-dist requirement> --with <devkit-agt requirement>`.
 - **The `harness` bundle**: the first `uv run devkit sync` deploys the new auto-selected `harness` bundle (the rules,
   commit gates, workflows and `devkit run` guidance that left the `devkit` bundle), rewrites the `devkit` bundle's

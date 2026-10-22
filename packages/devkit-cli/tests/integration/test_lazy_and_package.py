@@ -77,13 +77,46 @@ def test_importing_the_toolkit_loads_only_its_dependencies() -> None:  # AC-07
         import json, sys
         before = set(sys.modules)
         import devkit_cli
-        print(json.dumps(sorted({name.split(".")[0] for name in set(sys.modules) - before})))
+        print(json.dumps(sorted(set(sys.modules) - before)))
         """
     )
     loaded = json.loads(subprocess.run([sys.executable, "-c", script], capture_output=True, check=True).stdout)
-    foreign = [name for name in loaded if name not in {*sys.stdlib_module_names, "click", "devkit", "devkit_cli"}]
+    foreign = [name for name in loaded if name.split(".")[0] not in {*sys.stdlib_module_names, "click", "devkit_cli"}]
+    foreign = [name for name in foreign if name != "devkit" and not name.startswith("devkit.advisory")]
     assert foreign == []
     assert "devkit_cli.testing" not in loaded
+
+
+def test_the_public_names_are_pinned() -> None:
+    # The semver surface (CAP-CLI-agent-cli-toolkit): removing or renaming a name is breaking (a minor bump within 0.x).
+    import devkit_cli
+    from devkit_cli import Boundary, LazyGroup, OutputSettings
+    from devkit_cli import testing as cli_testing
+
+    assert set(devkit_cli.__all__) == {
+        "FORMAT_OPTION",
+        "Boundary",
+        "LazyGroup",
+        "OutputSettings",
+        "Reported",
+        "echo_json",
+        "echo_notices",
+        "exit_on_problems",
+        "exit_on_warnings",
+        "highest_exit_code",
+        "is_json",
+        "output_settings",
+        "report_exit_code",
+    }
+    assert all(hasattr(devkit_cli, name) for name in devkit_cli.__all__)
+    boundary = Boundary("pinned")
+    assert all(
+        hasattr(boundary, name)
+        for name in ("name", "quiet_env", "verbose_env", "strict_env", "output_options", "resolve_output")
+    )
+    assert hasattr(LazyGroup, "resolve_lazy")
+    assert {"quiet", "verbose", "strict", "json"} == set(OutputSettings.__dataclass_fields__)
+    assert {"invoke", "Outcome"} <= set(dir(cli_testing))
 
 
 def test_the_distribution_depends_on_click_and_the_advisory_library_only() -> None:

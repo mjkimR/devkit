@@ -62,6 +62,8 @@ may retain their bundle-only layouts. This source convention does not change the
 ```bash
 base=https://github.com/mjkimR/devkit/releases/download/v<version>
 uv add --dev "devkit-dist @ $base/devkit_dist-<version>-py3-none-any.whl" \
+  "devkit-core @ $base/devkit_core-<version>-py3-none-any.whl" \
+  "devkit-cli @ $base/devkit_cli-<version>-py3-none-any.whl" \
   "devkit-advisory @ $base/devkit_advisory-<version>-py3-none-any.whl" \
   "devkit-starter @ $base/devkit_starter-0.1.0-py3-none-any.whl"
 uv run devkit sync               # deploys auto-selected bundles with their default preset
@@ -112,7 +114,8 @@ The CLI ships in two wheels released in lockstep with `devkit-advisory` (`ADR-di
   (`ARCH-05-3-command-plugins`).
 
 A project declares exactly one of them as its devkit requirement, `devkit-agt` when it uses the harness; a
-release-wheel installation of `devkit-agt` also names the `devkit-dist` and `devkit-advisory` wheels of the same release,
+release-wheel installation of `devkit-agt` also names the `devkit-dist`, `devkit-core`, `devkit-cli` and `devkit-advisory`
+wheels of the same release,
 because no index serves them.
 Bundles registered by either wheel are built in (`builtin` in `devkit list` and `devkit status`), so the
 `BUNDLE_AUTO_SELECTED` notice never names them:

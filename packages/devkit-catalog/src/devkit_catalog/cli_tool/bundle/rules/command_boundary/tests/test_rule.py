@@ -39,6 +39,16 @@ def test_every_spelling_of_the_boundary_counts(tmp_path: Path, decorator: str) -
     assert check(RULE, tmp_path, {"src/pkg/cli/commands.py": source}) == []
 
 
+def test_a_boundary_above_the_click_decorator_is_reported(tmp_path: Path) -> None:
+    source = HEAD + "\n\n@boundary\n@cli.command()\ndef misplaced():\n    pass\n"
+    found = check(RULE, tmp_path, {"src/pkg/cli.py": source})
+    assert _found(found) == [("src/pkg/cli.py", 14)]
+    assert found[0].message == (
+        "Command misplaced has its boundary decorator above the click decorator; the group registers the command"
+        " without it"
+    )
+
+
 def test_groups_and_files_outside_cli_modules_are_not_checked(tmp_path: Path) -> None:
     command = "import click\n\n\n@click.command()\ndef bare():\n    pass\n"
     files = {

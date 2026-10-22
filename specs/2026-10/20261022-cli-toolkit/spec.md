@@ -95,7 +95,8 @@ rules that check it.
   namespace) or `devkit_cli`
 
 ### [AC-08] Tests can assert the contract through the testing helper
-- **Given** a command under a boundary that fails as in AC-02
+- **Given** a command under a boundary taking `--format` that raises `THING_MISSING` (exit code `1`) and returns no
+  notice
 - **When** a test calls `devkit_cli.testing.invoke(command, ["--format", "json"])`
 - **Then** the returned outcome's `exit_code` is `1`, `json()` returns the one object, and `codes()` on a text-mode
   run returns `["THING_MISSING"]`

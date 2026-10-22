@@ -40,6 +40,14 @@ def test_each_wheel_pins_the_exact_version_of_the_wheels_below_it() -> None:
     assert _pins(dist, "devkit-agt") == []  # devkit-dist never depends on the harness
 
 
+def test_every_release_install_command_with_devkit_dist_names_its_companion_wheels() -> None:
+    # SPEC-cli-toolkit AC-11: no index serves the wheels devkit-dist pins, so each command must name them.
+    release = (PACKAGES.parent / "scripts/release.sh").read_text()
+    commands = [line for line in release.splitlines() if line.startswith("uv ") and "$dist_wheel" in line]
+    assert commands
+    assert [line for line in commands if not all(f"${w}_wheel" in line for w in ("core", "cli", "advisory"))] == []
+
+
 def test_devkit_agt_extras_pass_through_to_devkit_dist() -> None:
     agt, dist = _project("devkit"), _project("devkit-dist")
     assert agt["optional-dependencies"] == {"mcp": ["devkit-mcp==0.1.1"], "search": ["devkit-dist[search]"]}

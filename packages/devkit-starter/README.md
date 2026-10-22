@@ -8,6 +8,8 @@ package is the starter example bundle's only copy:
 ```bash
 base=https://github.com/mjkimR/devkit/releases/download/v<version>
 uv add --dev "devkit-dist @ $base/devkit_dist-<version>-py3-none-any.whl" \
+  "devkit-core @ $base/devkit_core-<version>-py3-none-any.whl" \
+  "devkit-cli @ $base/devkit_cli-<version>-py3-none-any.whl" \
   "devkit-advisory @ $base/devkit_advisory-<version>-py3-none-any.whl" \
   "devkit-starter @ $base/devkit_starter-0.1.0-py3-none-any.whl"
 uv run devkit add starter   # records starter = "daily" (the default preset)

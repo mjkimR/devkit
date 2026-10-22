@@ -63,12 +63,13 @@ tool around it and checks the structure with three rules.
    a subclass of it; no other class declares that code (`RULE-advisory-unique-code`).
 10. **Semver contract**: `devkit-cli` MUST be released at the version of `devkit-dist`, `devkit-agt` and
     `devkit-advisory`, and a removed or renamed public name MUST bump the minor version within `0.x`
-    (`packages/devkit/tests/integration/package/test_lockstep.py`).
+    (`packages/devkit/tests/integration/package/test_lockstep.py` for the version, and the pinned public names in
+    `packages/devkit-cli/tests/integration/test_lazy_and_package.py`).
 11. **Opt-in bundle**: the `cli-tool` bundle MUST deploy nothing until a project selects it; its default preset deploys
     the instruction and the three rules, and its `guide` preset the instruction only
     (`packages/devkit-catalog/tests/integration/bundles/test_bundles.py`).
 12. **Command boundary**: WHERE `cli-tool` is selected, a function decorated as a click command in a CLI module MUST
-    also carry a decorator named in `boundary_names` (`RULE-cli-tool-command-boundary`).
+    also carry a decorator named in `boundary_names` below that command decorator (`RULE-cli-tool-command-boundary`).
 13. **No print**: WHERE `cli-tool` is selected, a module MUST NOT call `print` (`RULE-cli-tool-library-output`).
 14. **Library output**: WHERE `cli-tool` is selected, a module other than a CLI module MUST NOT call `click.echo`,
     `click.secho`, `sys.stdout.write` or `sys.stderr.write` (`RULE-cli-tool-library-output`).
