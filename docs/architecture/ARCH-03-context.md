@@ -19,7 +19,7 @@ created_at: 2026-10-17
 graph TD
     Agent["AI Coding Agent<br>(Codex, Claude Code, Antigravity)"]
     Dev["Software Engineer"]
-    Devkit["devkit CLI & Libraries<br>(devkit-dist / devkit-agt / devkit-advisory)"]
+    Devkit["devkit CLI & Libraries<br>(devkit-dist / devkit-agt / devkit-advisory / devkit-cli)"]
     Git["Git Repository<br>(Hooks, Worktrees, Commits)"]
     Workspace["Consumer Workspace<br>(.devkit/, AGENTS.md, Projections)"]
     PackageManager["uv / Python Runtime"]
@@ -50,6 +50,7 @@ graph TD
   - Multi-stage delivery workflows and envelopes.
   - Commit gate wrappers and policy checks.
   - Agent Advisory Protocol definitions and formatting.
+  - The agent-first command-line boundary for click tools (`devkit-cli`) and the `cli-tool` structure bundle.
   - Compact execution runner and log capturing.
   - Task worktree isolation and lifecycle.
 

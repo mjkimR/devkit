@@ -129,8 +129,8 @@ Nightly, manual and release CI run the complete suite through `just test`. Relea
 
 ## 3. Release Automation
 
-Tags matching `v*` trigger the release workflow. It requires a tag on `main` matching the version of `devkit-dist`,
-`devkit-agt` and `devkit-advisory` (released in lockstep),
+Tags matching `v*` trigger the release workflow. It requires a tag on `main` matching the version of
+`devkit-core`, `devkit-cli`, `devkit-dist`, `devkit-agt`, `devkit-advisory` and `devkit-mcp` (released in lockstep),
 runs the reusable CI workflow on that commit, then calls `just release-build <tag>` to build every workspace
 package wheel and generate `SHA256SUMS` and installation notes. It publishes those artifacts in a GitHub Release.
 The separately released embedding-model wheel is referenced by URL and is not rebuilt.

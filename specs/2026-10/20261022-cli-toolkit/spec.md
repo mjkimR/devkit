@@ -6,6 +6,7 @@ status: planned
 created: 2026-10-22
 related_capabilities:
   - CAP-ADV-agent-advisory-protocol
+  - CAP-CLI-agent-cli-toolkit
 related_stories: []
 workflow: sdd-spec-feature
 ---

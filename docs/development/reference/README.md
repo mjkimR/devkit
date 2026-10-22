@@ -8,6 +8,7 @@ distribution that ships the module (`ARCH-05-1-containers`).
 | --- | --- | --- | --- |
 | `devkit_core` / `devkit_dist.features.project` | `devkit-core` / `devkit-dist` | [Core](core.md) | `ARCH-05-2-components` |
 | `devkit.advisory` | `devkit-advisory` | [Advisory](advisory.md) | `CAP-ADV-agent-advisory-protocol` |
+| `devkit_cli` | `devkit-cli` | [devkit-cli README](../../../packages/devkit-cli/README.md) | `CAP-CLI-agent-cli-toolkit` |
 | `devkit_dist.features.distribution` | `devkit-dist` | [Distribution](distribution.md) | `CAP-DIST-manifest-spec`, `ARCH-05-4-distribution-components` |
 | `devkit_agt.features.rules` | `devkit-agt` | [Rules](rules.md) | `CAP-GOV-rules-engine`, `CAP-GOV-rule-authoring` |
 | `devkit_agt.features.workflow` | `devkit-agt` | [Workflow](workflow.md) | `CAP-DLV-workflow-orchestration`, `CAP-DLV-cli-and-output` |

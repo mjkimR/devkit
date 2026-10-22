@@ -9,6 +9,18 @@ targets:
     resolution: modified
   - file: docs/capabilities/distribution/CAP-DIST-content-packages.md
     resolution: modified
+  - file: docs/development/reference/advisory.md
+    resolution: modified
+  - file: docs/development/reference/core.md
+    resolution: modified
+  - file: docs/development/reference/distribution.md
+    resolution: modified
+  - file: docs/development/reference/README.md
+    resolution: modified
+  - file: docs/architecture/ARCH-01-introduction-and-goals.md
+    resolution: modified
+  - file: docs/architecture/ARCH-03-context.md
+    resolution: modified
   - file: docs/architecture/ARCH-05-1-containers.md
     resolution: modified
   - file: docs/architecture/ARCH-05-2-components.md
@@ -16,6 +28,8 @@ targets:
   - file: docs/architecture/ARCH-07-deployment.md
     resolution: modified
   - file: docs/architecture/ARCH-08-1-agent-output.md
+    resolution: modified
+  - file: docs/architecture/ARCH-05-3-command-plugins.md
     resolution: modified
 ---
 
@@ -28,6 +42,8 @@ tool's logger and prefix, and name the test or rule that enforces each.
 
 Architecture:
 
+- `ARCH-01-introduction-and-goals` and `ARCH-03-context`: `devkit-cli` is a published runtime library next to
+  `devkit-advisory`; the mission list and the system's In-Scope list name the CLI toolkit and its bundle.
 - `ARCH-05-1-containers`: the `devkit-cli` container (section 2.3.1), its edges (dist depends on it, it depends on
   advisory, click tools depend on it at runtime) and the lockstep summary.
 - `ARCH-05-2-components`: `devkit_cli` in the component graph and the module table; `ArgumentError` among the
@@ -44,16 +60,20 @@ installation names now include `devkit-core` (already required, previously missi
 AC-09 (`devkit.advisory.ArgumentError`) is an additive change to the advisory API. `CAP-ADV-agent-advisory-protocol`
 specifies the protocol, not the library's classes, so it does not change; the library reference
 (`docs/development/reference/advisory.md`) and the `agent-advisory-python` instruction document the class, and
-`docs/development/reference/core.md` its devkit-core subclass and the adapter binding.
+`docs/development/reference/core.md` its devkit-core subclass and the adapter binding. The reference index
+(`docs/development/reference/README.md`) lists `devkit_cli`, and `docs/development/reference/distribution.md` names
+the `devkit-core` and `devkit-cli` wheels in its install command and wheel sentence.
 
 No other Living Spec document changes:
 
-- `CAP-HARN-command-mount` and `ARCH-05-3-command-plugins` cite `devkit_dist.adapters.cli` for plugin commands; that
-  module keeps every name they cite.
+- `CAP-HARN-command-mount` cites `devkit_dist.adapters.cli` for plugin commands; that module keeps every name it
+  cites. `ARCH-05-3-command-plugins` does too; only its sentence on the lockstep versions changed (now naming
+  `devkit-core` and `devkit-cli` and pointing to `ARCH-07-deployment`).
 - `CAP-GOV-rule-authoring`: the three rules use the plugin-package contract unchanged, one directory per rule.
 - No story covers command-line tooling; no ADR is required: no `MUST` of an existing contract changes, and
   `devkit-cli` joins the lockstep release under the existing `ADR-independent-package-namespaces-and-feature-layout`.
 - Glossary: no new domain term; "boundary" is used as in `ARCH-08-1-agent-output`.
 
-Repository guides kept in step (not Living Spec): `AGENTS.md`, `README.md`, the package READMEs, `guides/` (install
-commands and the `cli-tool` recommendation) and the `devkit-dev` `project-structure` instruction.
+Repository guides kept in step (not Living Spec): `AGENTS.md`, `README.md` (including the release procedure's six
+lockstep packages), `docs/development/ci-cd.md`, the package READMEs, `guides/` (install commands and the `cli-tool`
+recommendation) and the `devkit-dev` `project-structure` instruction.

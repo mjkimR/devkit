@@ -1,0 +1,51 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T01:30:40.045411Z'
+status: completed
+summary: round 1; whole change dd008f2b..0a4b3cec against REC-cli-toolkit. No contradiction; 2 P2 (missing reference targets; ARCH-01/03 scope) and 4 P3.
+findings:
+- issue: reconcile.md targets omit docs/development/reference/advisory.md, core.md and distribution.md, which the change rewrote.
+  evidence: specs/2026-10/20261022-cli-toolkit/reconcile.md:5-19; docs/development/reference/core.md:12,18,30; docs/development/reference/advisory.md:10,14,31; docs/development/reference/distribution.md:15-16,25-26
+  failure_condition: The record omits changed reference docs, so diff-evidence checks never cover them.
+  suggested_action: Add the three files to targets with resolution modified.
+  resolution: open
+  severity: P2
+- issue: ARCH-01 and ARCH-03 do not name devkit-cli as a published runtime library or the CLI toolkit as in scope; reconcile.md neither targets nor waives them.
+  evidence: docs/architecture/ARCH-01-introduction-and-goals.md:18,20-29; docs/architecture/ARCH-03-context.md:22,45-52
+  failure_condition: A reader concludes devkit-advisory is the only runtime library and the CLI toolkit is out of scope.
+  suggested_action: Name devkit-cli in ARCH-01 section 1 and its missions, and in the ARCH-03 system node and In-Scope list.
+  resolution: open
+  severity: P2
+- issue: ARCH-05-3 lists the wheels sharing devkit-dist's version without devkit-cli (and devkit-core).
+  evidence: docs/architecture/ARCH-05-3-command-plugins.md:46
+  failure_condition: A plugin author does not learn devkit-cli shares the devkit-dist version.
+  suggested_action: List devkit-core and devkit-cli, or point to ARCH-07-deployment.
+  resolution: open
+  severity: P3
+- issue: Repository lockstep statements name three packages while release.sh checks six.
+  evidence: README.md:154-162; docs/development/ci-cd.md:132-133; AGENTS.md:49; packages/devkit-advisory/README.md:9; packages/devkit/README.md:6
+  failure_condition: A maintainer bumps only three versions and release.sh refuses the tag.
+  suggested_action: Name every lockstep package or point to ARCH-07-deployment.
+  resolution: open
+  severity: P3
+- issue: CAP-CLI rule 5 omits the Reported/SystemExit/BrokenPipe pass-throughs; rule 12 says click command where the rule checks command decorators only.
+  evidence: docs/capabilities/cli/CAP-CLI-agent-cli-toolkit.md:52-53,63-64
+  failure_condition: The capability read alone says Reported becomes UNEXPECTED_ERROR and group callbacks need a boundary.
+  suggested_action: Exclude Reported and SystemExit in rule 5; say command decorator and group callbacks unchecked in rule 12.
+  resolution: open
+  severity: P3
+- issue: No reference-index row for devkit_cli; spec related_capabilities omits CAP-CLI-agent-cli-toolkit.
+  evidence: docs/development/reference/README.md:7-21; specs/2026-10/20261022-cli-toolkit/spec.md:7-8
+  failure_condition: Navigation from the index or from the capability back to the spec misses them.
+  suggested_action: Add the index row and the related capability.
+  resolution: open
+  severity: P3
+assumptions:
+- reconcile-reviewer emulated by a generic Claude Code subagent following .devkit/managed/spec/subagents/reconcile-reviewer.md
+checks: {}
+diff_scope:
+  base: dd008f2b2789fd5057b284a1e07442f32586660d
+  head: 0a4b3cecad53a96c9337ad3bc6b94293f3f7634f
+activity_effort: high

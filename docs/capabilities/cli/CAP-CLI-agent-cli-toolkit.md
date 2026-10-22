@@ -51,8 +51,10 @@ tool around it and checks the structure with three rules.
 4. **Errors**: WHEN a wrapped command raises an `ERROR` advisory, the boundary MUST render it once and exit with its
    `exit_code`: on stderr in text mode, as `{"error": {...}}` on stdout with the notices passed to `echo_notices`
    under `notices` in JSON mode (`--format json` or `json_only`), with nothing on stderr.
-5. **Unexpected exceptions**: IF a wrapped command raises anything other than an `ERROR` advisory or a click exit,
-   THEN the boundary MUST report it as `UNEXPECTED_ERROR` with exit `2` and log its traceback at `DEBUG`.
+5. **Unexpected exceptions**: IF a wrapped command raises anything other than an `ERROR` advisory, `Reported` (its
+   error is rendered as in rule 4 and its `exit_code` used), a click exit or usage error, `SystemExit` or
+   `BrokenPipeError` (rule 6), THEN the boundary MUST report it as `UNEXPECTED_ERROR` with exit `2` and log its
+   traceback at `DEBUG`.
 6. **Closed reader**: IF the reader of stdout closes before the command finishes, THEN the boundary MUST exit `2`
    without writing an advisory.
 7. **Locale independence**: the boundary MUST make stdout and stderr UTF-8 with `backslashreplace` before the command
@@ -68,8 +70,9 @@ tool around it and checks the structure with three rules.
 11. **Opt-in bundle**: the `cli-tool` bundle MUST deploy nothing until a project selects it; its default preset deploys
     the instruction and the three rules, and its `guide` preset the instruction only
     (`packages/devkit-catalog/tests/integration/bundles/test_bundles.py`).
-12. **Command boundary**: WHERE `cli-tool` is selected, a function decorated as a click command in a CLI module MUST
-    also carry a decorator named in `boundary_names` below that command decorator (`RULE-cli-tool-command-boundary`).
+12. **Command boundary**: WHERE `cli-tool` is selected, a function in a CLI module with a decorator named `command`
+    MUST also carry a decorator named in `boundary_names` below it; group callbacks are not checked
+    (`RULE-cli-tool-command-boundary`).
 13. **No print**: WHERE `cli-tool` is selected, a module MUST NOT call `print` (`RULE-cli-tool-library-output`).
 14. **Library output**: WHERE `cli-tool` is selected, a module other than a CLI module MUST NOT call `click.echo`,
     `click.secho`, `sys.stdout.write` or `sys.stderr.write` (`RULE-cli-tool-library-output`).

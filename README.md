@@ -151,15 +151,15 @@ without a consumer project, point `-w` at an existing empty directory:
 
 ## Releasing
 
-Set the new version in `packages/devkit-dist/pyproject.toml`, `packages/devkit/pyproject.toml` and
-`packages/devkit-advisory/pyproject.toml` (with the exact pins between them), merge to `main`, then
+Set the new version in the `pyproject.toml` of `packages/devkit-core`, `packages/devkit-cli`, `packages/devkit-dist`,
+`packages/devkit`, `packages/devkit-advisory` and `packages/devkit-mcp` (with the exact pins between them), merge to
+`main`, then
 push a matching tag: `git tag v0.2.0 && git push origin v0.2.0`. The release
 workflow runs the full CI on the tagged commit, refuses a tag that is not on
-`main` or does not match all three versions, builds the wheels with
+`main` or does not match all six versions, builds the wheels with
 `just release-build <tag>` (try it locally) and
-publishes the release. `devkit-dist`, `devkit-agt` and `devkit-advisory` are released in lockstep:
-`devkit-agt` pins `devkit-dist` and `devkit-advisory` exactly, `devkit-dist` pins `devkit-advisory`, and a test
-checks all three. `devkit-spec`, `devkit-starter`, `devkit-catalog` and `devkit-viewer` keep their own versions.
+publishes the release. `devkit-core`, `devkit-cli`, `devkit-dist`, `devkit-agt`, `devkit-advisory` and `devkit-mcp` are released in lockstep: each pins
+the ones below it exactly, and `test_lockstep` checks the versions and pins. `devkit-spec`, `devkit-starter`, `devkit-catalog` and `devkit-viewer` keep their own versions.
 
 `devkit-embed` keeps its own version too and is not rebuilt by releases: devkit
 installs it, in this workspace and from Git, from the committed wheel in
