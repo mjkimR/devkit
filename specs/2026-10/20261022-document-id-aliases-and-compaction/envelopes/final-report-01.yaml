@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T00:32:38.866723Z'
+status: completed
+summary: Document ID aliases (canonical DocumentIndex mapping, RULE-document-reference alias fix and identity checks, alias-aware lookup/search/handoff/scaffolding) and playbook aliases as previous asset IDs (validation, search without aliases, playbook get alias resolution, PLAYBOOK_ALIAS_AMBIGUOUS); seven bundled playbooks dropped keyword aliases; Living Spec reconciled; no docs/decisions change
+findings: []
+assumptions:
+- playbook get is JSON-only; the alias is reported in the alias JSON field, not a text sentinel
+- a document mentioning its own alias is neither reported nor rewritten
+unverified_areas:
+- explicit alias wording in CAP-DLV-spec-bundles, CAP-TRACE-code-entrypoints, CAP-DIST-manifest-spec, the devkit consumption instruction and the glossary (outside write scope; FB-alias-wording-outside-scope)
+checks:
+  tests: PASS just test-affected mode=full 4516 passed 14 skipped
+  build: PASS uv run devkit sync; uv run devkit status exit 0
+  lint: PASS just lint/check devkit-spec devkit-dist 0 errors; just rules-check 0 errors
+diff_scope:
+  base: 9f23ee0e3967a04868824f559aa31a15f2ebd95e
+  head: 961858c8da728a6ae0276b92265b995b59943f0e
