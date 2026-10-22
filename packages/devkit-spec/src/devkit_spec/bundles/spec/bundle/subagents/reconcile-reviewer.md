@@ -8,18 +8,21 @@ x-invocation: optional
 x-model-profile: light-medium
 x-git-actions: [read]
 hosts:
-  # Read-only: the verification writes nothing, so the diff comparison only confirms that.
+  # Shell access runs `git diff` and confirms the head; disallowedTools prevents file writes.
   claude-code:
     status: native
-    tools: [Read, Grep, Glob]
+    tools: [Read, Grep, Glob, Bash]
+    disallowedTools: [Write, Edit]
     effort: medium
+  # Expected diff after the run: none.
   codex:
     status: emulated
+    sandbox_mode: read-only
     model_reasoning_effort: medium
   antigravity:
     status: native
-    tools: [view_file, grep_search]
-    commandExecutionPolicy: "off"
+    tools: [view_file, grep_search, run_command]
+    commandExecutionPolicy: sandbox
 ---
 
 # Reconcile Reviewer
@@ -28,8 +31,8 @@ Verify the Living Spec reflection the implementer wrote for a spec unit's Develo
 
 ## Procedure
 
-1. Read `.devkit/managed/spec/AGENTS.md` and `.devkit/managed/spec/skills/spec-sync/SKILL.md`, or its override under `.devkit/overrides/`; you have no shell for `devkit get-context`.
-2. Compare the diff in `diff_scope` with the docs changes and `reconcile.md`. Each of these is a finding: a missing target, a reflected change that contradicts the implementation or the contract, a waiver of a required contract mismatch, a stated no-impact the diff contradicts.
+1. Read `.devkit/managed/spec/AGENTS.md` and `.devkit/managed/spec/skills/spec-sync/SKILL.md`, or its override under `.devkit/overrides/`.
+2. Run `git diff <base> <head>` for `diff_scope` and compare it with the docs changes and `reconcile.md`. Each of these is a finding: a missing target, a reflected change that contradicts the implementation or the contract, a waiver of a required contract mismatch, a stated no-impact the diff contradicts.
 3. At `high`, follow `.devkit/managed/spec/skills/spec/references/review-loop.md` for the round's scope and `recurs:` marking.
 
 ## Return
@@ -37,4 +40,4 @@ Verify the Living Spec reflection the implementer wrote for a spec unit's Develo
 Modify, stage and commit nothing. The fields of a `reconcile-check` envelope ("Return envelope" in `.devkit/managed/spec/skills/spec/references/envelope.md`) as YAML; the caller records them. `summary` names the verified targets or the confirmed no-impact. Give every finding a `severity` from the "Severity" section of `review-loop.md`.
 
 - If it is ambiguous which contract applies, return `needs_input`.
-- If the head moved since `diff_scope`, report the verification as stale.
+- If `git rev-parse HEAD` differs from the `diff_scope` head, report the verification as stale.

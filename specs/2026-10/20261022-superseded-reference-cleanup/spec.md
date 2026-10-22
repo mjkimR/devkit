@@ -2,7 +2,7 @@
 id: SPEC-superseded-reference-cleanup
 title: Align leftover references with the current ownership and integration recoveries
 summary: Repoints the remaining references to devkit-dist as the foundation owner and to the superseded review loop ADR, adds the distinct integration recoveries of the retained runtime codes to the integration use case, and gives the reconcile reviewer read-only shell access to the diff it compares.
-status: planned
+status: in-progress
 created: 2026-10-22
 related_capabilities:
   - CAP-INT-mcp-services
@@ -58,12 +58,15 @@ longer describe what ships, and `SPEC-scope-boundary-candidates` found a role th
    at step 7 after the restart or reconnect.
 3. Each new extension gets one acceptance scenario, because `usecase-writing` requires a scenario for every extension
    that changes the outcome.
-4. The `reconcile-reviewer` frontmatter copies the `challenger` host settings (claude-code
+4. The use case cites `CAP-MCP-runtime-registration` in extension 7g but does not add it to `capabilities:`:
+   `RULE-traceability-link` then requires the capability's `usecases` list to name the use case, and capability files
+   are outside this unit's write scope. The missing link pair is recorded as feedback.
+5. The `reconcile-reviewer` frontmatter copies the `challenger` host settings (claude-code
    `tools: [Read, Grep, Glob, Bash]` with `disallowedTools: [Write, Edit]`, codex `sandbox_mode: read-only`,
    antigravity `run_command` with `commandExecutionPolicy: sandbox`) and keeps `x-git-actions: [read]`, its effort
    presets and an "Expected diff after the run: none." comment. The body's "you have no shell" clause is dropped,
    because it would be false; the role still reads the context files instead of running `devkit get-context`.
-5. The `spec-delegate` payload reference says nothing about the reconcile reviewer lacking a shell, so it stays
+6. The `spec-delegate` payload reference says nothing about the reconcile reviewer lacking a shell, so it stays
    unchanged; no capability states the reconcile reviewer's tool set.
 
 ## 2. User Stories
@@ -101,9 +104,9 @@ longer describe what ships, and `SPEC-scope-boundary-candidates` found a role th
 ### [AC-02] The configuration ADR driver names project configuration and the in-effect ADR
 - **Given** `ADR-configuration-language-and-rendering`
 - **When** `rg -n 'ADR-dist-foundation-ownership|foundation belongs'` runs on its file
-- **Then** it reports no match, the Decision Drivers section holds the line "Project configuration belongs to
+- **Then** it reports no match, the Decision Drivers section holds the driver "Project configuration belongs to
   devkit-dist, which cannot import the harness (`ADR-foundation-and-mcp-package-ownership`).", and `git diff` of the
-  file changes that one line only
+  file changes that one driver only
 
 ### [AC-03] The effort procedure test cites the in-effect review loop ADR
 - **Given** `packages/devkit-spec/tests/integration/bundles/spec/test_effort_procedure.py`
@@ -119,7 +122,7 @@ longer describe what ships, and `SPEC-scope-boundary-candidates` found a role th
   `CAP-INT-mcp-services`; another keyed to step 7 names `MCP_RUNTIME_STALE` with the restart or reconnect of the
   retained service, citing `CAP-MCP-runtime-registration`; the section states that the executor's other coded
   refusals and their recoveries are listed in `CAP-INT-mcp-services`; each new extension is covered by one
-  acceptance scenario; `capabilities:` lists `CAP-MCP-runtime-registration`; and
+  acceptance scenario; and
   `uv run devkit rules check docs/usecases/delivery/UC-drive-development-to-integration.md` exits 0
 
 ### [AC-05] The reconcile reviewer runs the range's diff read-only

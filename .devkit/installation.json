@@ -795,7 +795,7 @@
     },
     ".agents/agents/reconcile-reviewer.md": {
       "mode": 420,
-      "sha256": "264f1ea84224f66a0cedf4e0fe246cfb5f9b37c447769ca85f747ae72dd4a5e8"
+      "sha256": "a2bba40539df6ec0dd2c45b9353a059aa407cfbd65ef85635784306a332d1fac"
     },
     ".agents/agents/scout.md": {
       "mode": 420,
@@ -1011,7 +1011,7 @@
     },
     ".claude/agents/reconcile-reviewer.md": {
       "mode": 420,
-      "sha256": "44446871d156ca30860374ab14cb047aa7a81c761879cd3a6983ce2178e85d56"
+      "sha256": "ab2be3755404934c9863f6ba6a943716b4c7e3c3d3ceb69ff91ab6f367fb4666"
     },
     ".claude/agents/scout.md": {
       "mode": 420,
@@ -1215,7 +1215,7 @@
     },
     ".codex/agents/reconcile-reviewer.toml": {
       "mode": 420,
-      "sha256": "e4747edcd8e22fb13a9368057de5a3d576ddcd824a65f64202841b028e13e3e1"
+      "sha256": "b398e6c538f2c09c26a47c395842248fbf86b5d58900858dbf804896ba4a39d9"
     },
     ".codex/agents/scout.toml": {
       "mode": 420,
@@ -1767,7 +1767,7 @@
     },
     ".devkit/managed/spec/subagents/reconcile-reviewer.md": {
       "mode": 420,
-      "sha256": "da64d927b0a8c82fff952a373da9816daab5151b5b910c157195e70aa00dfeba"
+      "sha256": "9c285f3fb56d2e538f51cef727996ad4f417c467b36511e6d9bab427bcda00e0"
     },
     ".devkit/managed/spec/subagents/scout.md": {
       "mode": 420,

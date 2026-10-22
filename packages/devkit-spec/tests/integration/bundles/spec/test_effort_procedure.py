@@ -1,4 +1,4 @@
-"""The ``high`` activity-effort procedure ships as one bounded review loop (``ADR-bounded-high-effort-review-loop``).
+"""The ``high`` activity-effort procedure ships as one bounded review loop (``ADR-host-owned-review-loop-recovery``).
 
 ``skills/spec/references/review-loop.md`` holds the loop; every other bundle file names the level and cites it, so no
 copy restates an unbounded re-review (``SPEC-high-effort-review-loop``).
