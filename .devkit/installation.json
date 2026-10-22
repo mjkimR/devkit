@@ -752,7 +752,7 @@
     },
     ".agents/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
-      "sha256": "4a81eae89156d8d16b5fa12e21ff0edbeb891bb04ef53491b54b64e6278ec893"
+      "sha256": "cd0468b7424f6c0dd7b7775099c63f75f8ec4990f930a529b52f53e22e3d4fe3"
     },
     ".agents/skills/spec-feedback/SKILL.md": {
       "mode": 420,
@@ -952,7 +952,7 @@
     },
     ".claude/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
-      "sha256": "4a81eae89156d8d16b5fa12e21ff0edbeb891bb04ef53491b54b64e6278ec893"
+      "sha256": "cd0468b7424f6c0dd7b7775099c63f75f8ec4990f930a529b52f53e22e3d4fe3"
     },
     ".claude/skills/spec-feedback/SKILL.md": {
       "mode": 420,
@@ -1452,7 +1452,7 @@
     },
     ".devkit/managed/spec/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
-      "sha256": "4a81eae89156d8d16b5fa12e21ff0edbeb891bb04ef53491b54b64e6278ec893"
+      "sha256": "cd0468b7424f6c0dd7b7775099c63f75f8ec4990f930a529b52f53e22e3d4fe3"
     },
     ".devkit/managed/spec/skills/spec-feedback/SKILL.md": {
       "mode": 420,
