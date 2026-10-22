@@ -120,18 +120,36 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def _files(root: Path) -> Iterable[Path]:
+def _files(root: Path) -> Iterable[tuple[Path, str]]:
+    """Yield ``(path, relative)`` for every document candidate under ``SOURCE_DIRECTORIES``.
+
+    Walks with ``os.scandir``, skipping symbolic links and directories starting with ``.``.
+    Directories and files within each directory are traversed in alphabetical order.
+    """
+    root_str = str(root)
     for directory in SOURCE_DIRECTORIES:
-        base = root / directory
-        if base.is_symlink() or not base.is_dir():
+        base_str = os.path.join(root_str, directory)
+        if os.path.islink(base_str) or not os.path.isdir(base_str):
             continue
-        for current, dirnames, filenames in os.walk(base):
-            here = Path(current)
-            dirnames[:] = sorted(d for d in dirnames if not d.startswith(".") and not (here / d).is_symlink())
-            for name in sorted(filenames):
-                path = here / name
-                if is_document_file(name) and not path.is_symlink() and path.is_file():
-                    yield path
+        stack = [(base_str, directory)]
+        while stack:
+            current_path, current_rel = stack.pop()
+            try:
+                with os.scandir(current_path) as it:
+                    dirs: list[tuple[str, str]] = []
+                    files: list[tuple[Path, str]] = []
+                    for entry in it:
+                        name = entry.name
+                        if name.startswith(".") or entry.is_symlink():
+                            continue
+                        if entry.is_dir(follow_symlinks=False):
+                            dirs.append((entry.path, f"{current_rel}/{name}"))
+                        elif entry.is_file(follow_symlinks=False) and is_document_file(name):
+                            files.append((Path(entry.path), f"{current_rel}/{name}"))
+            except OSError:
+                continue
+            stack.extend(sorted(dirs, key=lambda d: d[1], reverse=True))
+            yield from sorted(files, key=lambda f: f[1])
 
 
 def in_feedback(path: str) -> bool:
@@ -170,9 +188,11 @@ class DocumentIndex:
         """
         index = cls(root=root.resolve())
         memo = ParseMemo.open(index.root, writes=files is None and read is _read)
-        for path in _files(index.root) if files is None else files:
-            relative = path.relative_to(index.root).as_posix()
-            if not (is_document_file(path.name) and in_source_directory(relative)):
+        items: Iterable[tuple[Path, str]] = (
+            _files(index.root) if files is None else ((path, path.relative_to(index.root).as_posix()) for path in files)
+        )
+        for path, relative in items:
+            if files is not None and not (is_document_file(path.name) and in_source_directory(relative)):
                 continue
             try:
                 text = read(path)
