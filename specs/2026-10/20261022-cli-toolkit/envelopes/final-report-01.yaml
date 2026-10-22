@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T01:39:38.829721Z'
+status: completed
+summary: 'SPEC-cli-toolkit complete on 6b391b94: devkit-cli package (devkit_cli boundary, output helpers, LazyGroup, testing), devkit.advisory.ArgumentError, devkit_dist.adapters.cli and the root group rebuilt on it with unchanged output, lockstep release wiring, and the opt-in cli-tool catalog bundle (instruction plus three rules). Code review: 2 rounds (review-01 6 findings fixed; review-02 1 P3 self-verified). Reconcile: 3 checks (01, 02 independent; 03 self-verified), 0 open.'
+findings: []
+assumptions:
+- activity-effort high (an additive change to the devkit-advisory semver API); code-reviewer and reconcile-reviewer emulated by generic subagents following the managed role contracts
+checks:
+  tests: PASS just test-affected 4608 passed 14 skipped; just test-dist 1038 passed
+  build: PASS just smoke (wheels built, toolkit-only consumer, cli-tool rules from installed wheels)
+  lint: PASS just lint-check, just check (pyright 0 errors), devkit rules check --ci --base main 0 violations
+diff_scope:
+  base: ''
+  head: 6b391b94ffb5068769757f3582a1f25594a7cd2d
+activity_effort: high
