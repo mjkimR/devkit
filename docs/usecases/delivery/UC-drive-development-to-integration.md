@@ -17,6 +17,7 @@ capabilities:
   - CAP-DLV-project-policy
   - CAP-DLV-workflow-envelopes
   - CAP-INT-mcp-services
+  - CAP-MCP-runtime-registration
   - CAP-WT-task-worktrees
 ---
 

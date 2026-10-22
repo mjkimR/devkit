@@ -1,0 +1,16 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'Goal: resolve FB-capability-milestone-granularity-tone (user decision: rewrite
+  the SHOULD/SHOULD NOT milestone granularity sentence of CAP-HARN-agent-guidance
+  as a recommendation, matching ADR-milestone-merging and the roadmap README), FB-payload-challenger-no-shell-note
+  (drop the stale no-shell note from the spec-delegate payload reference), FB-runtime-registration-usecase-link
+  (add the traceability link between UC-drive-development-to-integration and CAP-MCP-runtime-registration
+  on both sides) and FB-spec-sync-reconcile-check-command (name the reconcile-check
+  envelope command in the spec-sync skill). Wording and links only; no behavior change.
+  Verification: rules check, affected tests, sync check, reconcile-check. task-kind
+  feature, planning-depth spec, activity-effort low.'
+by: user
+at: '2026-10-22T06:12:32.765749Z'

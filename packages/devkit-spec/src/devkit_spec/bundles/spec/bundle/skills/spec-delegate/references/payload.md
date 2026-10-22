@@ -14,7 +14,7 @@ Read this when building a payload (`spec-delegate` step 2).
 | Role | `relevant_files` | Also pass |
 | --- | --- | --- |
 | `scout` | Starting points | The `materials/` path when an artifact is wanted |
-| `challenger` | Proposal or spec, AC, non-goals, ADRs and capabilities as paths (it has no shell); at `high` the `scout` list | `activity-effort` |
+| `challenger` | Proposal or spec, AC, non-goals, ADRs and capabilities as paths; at `high` the `scout` list | `activity-effort` |
 | `code-reviewer` | `spec.md`, `plan.md`, `tasks.md`, touched capabilities and ADRs | Your check results; `activity-effort` |
 | `reconcile-reviewer` | `spec.md`, `reconcile.md`, the deciding review envelope, the docs `devkit spec refs <ID> --direction in` lists | `activity-effort` |
 | `development-worker` | `spec.md`, `plan.md`, `tasks.md` and the code starting points | Absolute worktree path; write scope (unit directory, `_Boundary:` paths, reconcile targets); checks to run; `activity-effort`; a recovery request for an open problem |

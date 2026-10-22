@@ -1,0 +1,14 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T06:16:33.329722Z'
+status: completed
+summary: 'Self-review at low: AC-01..AC-04 confirmed by the diff, rg (no SHOULD milestone sentence in docs/capabilities), rules check (no RULE-traceability-link violation) and test_role_shell_guidance.py; no findings.'
+findings: []
+checks:
+  tests: PASS just test-affected 1366 passed
+  lint: PASS devkit rules check --ci --base 7b4bf3b8; just lint devkit-spec
+diff_scope:
+  base: 7b4bf3b84ff55a20440b75018e214c61a254783f
+  head: 96633bf8c0c5d1c6edf217cc80e918348c35f376

@@ -9,7 +9,7 @@ skill: spec-delegate
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -47,3 +47,8 @@ skills/spec-delegate/references/payload.md:17
 | `challenger` | Proposal or spec, AC, non-goals, ADRs and capabilities as paths (it has no shell); ... |
 subagents/challenger.md hosts.claude-code: tools: [Read, Grep, Glob, Bash], disallowedTools: [Write, Edit]
 ```
+
+- **Disposition**: `SPEC-guidance-followups`: the `challenger` row of the `spec-delegate` payload reference no longer
+  says "(it has no shell)"; the `reconcile-reviewer` row made no shell claim. Verified by
+  `packages/devkit-spec/tests/integration/bundles/spec/test_role_shell_guidance.py` (no `no shell` text in the
+  reference) and `just test-affected`.

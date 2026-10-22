@@ -4,6 +4,8 @@ title: "MCP Runtime and Project Registration"
 summary: "An optional retained MCP runtime binds approval and presentation context to an owning workspace, while reconciling ignored project registrations without changing host trust."
 status: active
 area: mcp
+usecases:
+  - UC-drive-development-to-integration
 entrypoints:
   - packages/devkit-mcp/src/devkit_mcp/
   - packages/devkit-dist/src/devkit_dist/features/host/usecases/registrations.py

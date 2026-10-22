@@ -831,7 +831,7 @@
     },
     ".agents/skills/spec-delegate/references/payload.md": {
       "mode": 420,
-      "sha256": "de03931f0110080bcaa1d9f6feda78468ddc245a01424c063f5e9add39570ec9"
+      "sha256": "ed6c07e5f436a31c3e8c27acf381c86f622694a1b2fff4eba15caba2781d20a3"
     },
     ".agents/skills/spec-delegate/references/worker.md": {
       "mode": 420,
@@ -923,7 +923,7 @@
     },
     ".agents/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "260942e6da87837caebe181da263c2f9abea047157b43e0bb590172c8c671a41"
+      "sha256": "0e438609785e30995c0b014540d150e4e807ba4c9ffe128f9f2d3db5a9e7bb77"
     },
     ".agents/skills/spec-tasks/SKILL.md": {
       "mode": 420,
@@ -1039,7 +1039,7 @@
     },
     ".claude/skills/spec-delegate/references/payload.md": {
       "mode": 420,
-      "sha256": "de03931f0110080bcaa1d9f6feda78468ddc245a01424c063f5e9add39570ec9"
+      "sha256": "ed6c07e5f436a31c3e8c27acf381c86f622694a1b2fff4eba15caba2781d20a3"
     },
     ".claude/skills/spec-delegate/references/worker.md": {
       "mode": 420,
@@ -1127,7 +1127,7 @@
     },
     ".claude/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "260942e6da87837caebe181da263c2f9abea047157b43e0bb590172c8c671a41"
+      "sha256": "0e438609785e30995c0b014540d150e4e807ba4c9ffe128f9f2d3db5a9e7bb77"
     },
     ".claude/skills/spec-tasks/SKILL.md": {
       "mode": 420,
@@ -1591,7 +1591,7 @@
     },
     ".devkit/managed/spec/skills/spec-delegate/references/payload.md": {
       "mode": 420,
-      "sha256": "de03931f0110080bcaa1d9f6feda78468ddc245a01424c063f5e9add39570ec9"
+      "sha256": "ed6c07e5f436a31c3e8c27acf381c86f622694a1b2fff4eba15caba2781d20a3"
     },
     ".devkit/managed/spec/skills/spec-delegate/references/worker.md": {
       "mode": 420,
@@ -1679,7 +1679,7 @@
     },
     ".devkit/managed/spec/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "260942e6da87837caebe181da263c2f9abea047157b43e0bb590172c8c671a41"
+      "sha256": "0e438609785e30995c0b014540d150e4e807ba4c9ffe128f9f2d3db5a9e7bb77"
     },
     ".devkit/managed/spec/skills/spec-tasks/SKILL.md": {
       "mode": 420,
