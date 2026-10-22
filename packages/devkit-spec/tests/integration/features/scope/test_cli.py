@@ -52,7 +52,7 @@ def test_compare_proposals_and_specs(repo: Path) -> None:
     lines = result.stdout.splitlines()
     assert lines[0] == "[PAIR: a=PROP-one b=PROP-two docs=1 code=0 unresolved=3]"
     assert lines[1] == f"[EVIDENCE: {CAP_PLANNED} a=PROP-one b=PROP-two kind=doc granularity=unknown]"
-    assert "[PAIR: a=PROP-one b=SPEC-s docs=1 code=2 unresolved=6]" in lines
+    assert "[PAIR: a=PROP-one b=SPEC-s docs=1 code=1 unresolved=6]" in lines
     assert (
         "[EVIDENCE: src/a a=PROP-one b=SPEC-s kind=code granularity=dir other=src/a source=candidate "
         "other_source=declared-code]"
@@ -97,16 +97,16 @@ def test_two_worktrees_register_query_update_release_and_sweep(worktrees: tuple[
     lines = query.stdout.splitlines()
     assert lines[0].startswith(f"[RECORD: SPEC-s revision=1 worktree={a} ") and lines[0].endswith("own=yes]")
     assert lines[1].startswith("[RECORD: SPEC-b revision=1 ") and lines[1].endswith("own=no]")
-    assert lines[2] == "[PAIR: a=SPEC-s b=SPEC-b docs=1 code=3 unresolved=4]"
+    assert lines[2] == "[PAIR: a=SPEC-s b=SPEC-b docs=1 code=1 unresolved=4]"
     assert (
         "[EVIDENCE: src/a a=SPEC-s b=SPEC-b kind=code granularity=dir other=src/a/a.py source=declared-code other_source=declared-code]"
         in lines
     )
     assert lines[-1] == f"[SUMMARY: namespace={namespace} records=2 pairs=1 overlapping=1 problems=0]"
     from_base = _scope(repo, "query")
-    assert "[PAIR: a=SPEC-b b=SPEC-s docs=1 code=3 unresolved=4]" in from_base.stdout.splitlines()
+    assert "[PAIR: a=SPEC-b b=SPEC-s docs=1 code=1 unresolved=4]" in from_base.stdout.splitlines()
     planned = _scope(repo, "query", "--spec", SPEC_B)
-    assert "[PAIR: a=SPEC-b b=SPEC-s docs=1 code=3 unresolved=4]" in planned.stdout.splitlines()
+    assert "[PAIR: a=SPEC-b b=SPEC-s docs=1 code=1 unresolved=4]" in planned.stdout.splitlines()
 
     write(b, "src/a/a.py", "a = 'b'\n")
     write(b, "src/c/new.py", "c = 1\n")
@@ -144,6 +144,29 @@ def test_two_worktrees_register_query_update_release_and_sweep(worktrees: tuple[
     assert history.stdout.splitlines()[-1] == f"[SUMMARY: namespace={namespace} events=6 problems=0]"
     by_id = _json(_scope(repo, "query", "--history", "--task", "SPEC-s", "--format", "json"))
     assert [event["event"] for event in by_id["events"]] == ["register", "release"]
+
+
+def test_declared_code_replaces_candidates_and_observed_paths_still_overlap(
+    worktrees: tuple[Path, Path], repo: Path
+) -> None:
+    # AC-01, AC-04: SPEC-b declares src/a/a.py and src/c/; its target's entrypoints (src/a/, src/shared.py) drop out.
+    a, b = worktrees
+    assert _scope(b, "register", "--spec", SPEC_B).exit_code == 0
+    write(b, "src/b/b.py", "b = 'b'\n")  # outside SPEC-b's boundary and outside every target's entrypoints
+    git(b, "commit", "-q", "-am", "b")
+    assert _scope(b, "update", "--spec", SPEC_B).exit_code == 0
+    own = _json(_scope(b, "query", "--format", "json"))["own"]
+    scopes = {(item["path"], item["source"]) for item in own["scopes"] if item["path"].startswith("src/")}
+    assert scopes == {("src/a/a.py", "declared-code"), ("src/c", "declared-code"), ("src/b/b.py", "observed")}
+
+    assert _scope(a, "register", "--spec", SPEC).exit_code == 0
+    lines = _scope(a, "query").stdout.splitlines()
+    assert "[PAIR: a=SPEC-s b=SPEC-b docs=1 code=2 unresolved=4]" in lines
+    assert (
+        "[EVIDENCE: src/b a=SPEC-s b=SPEC-b kind=code granularity=dir other=src/b/b.py source=declared-code "
+        "other_source=observed]"
+    ) in lines
+    assert not [line for line in lines if "source=candidate" in line]
 
 
 def test_update_failure_prints_the_ack_then_the_error(repo: Path) -> None:

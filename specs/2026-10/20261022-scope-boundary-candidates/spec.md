@@ -2,7 +2,7 @@
 id: SPEC-scope-boundary-candidates
 title: Drop entrypoint candidates once a spec declares its code boundary
 summary: Once tasks.md declares _Boundary code paths, the work scope registry compares a spec unit by its declared and observed code only, so the entrypoints of a broad capability target no longer report overlaps outside the unit's boundary.
-status: planned
+status: in-progress
 created: 2026-10-22
 related_capabilities: [CAP-COLL-work-scope-registry]
 related_usecases: [UC-run-parallel-work-safely]

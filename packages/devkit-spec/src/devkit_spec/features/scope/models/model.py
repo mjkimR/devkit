@@ -20,7 +20,7 @@ class Source(StrEnum):
 
     DECLARED_DOC = "declared-doc"  # a document target of target-docs.md or reconcile.md
     DECLARED_CODE = "declared-code"  # a tasks.md _Boundary entry
-    CANDIDATE = "candidate"  # an entrypoint of a document target
+    CANDIDATE = "candidate"  # an entrypoint of a document target, until tasks.md declares code
     OBSERVED = "observed"  # a path Git reports as changed in the worktree
 
 

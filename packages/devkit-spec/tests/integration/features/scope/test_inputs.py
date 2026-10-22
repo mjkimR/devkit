@@ -65,9 +65,8 @@ def test_from_spec(repo: Path) -> None:
     assert scope.id == "SPEC-s"
     assert [(item.path, item.stage) for item in scope.docs] == [(CAP_A, Stage.SPEC)]
     assert {item.path: item.source for item in scope.code} == {
-        "src/a": Source.DECLARED_CODE,  # declared wins over the candidate of the same path
+        "src/a": Source.DECLARED_CODE,  # declared code replaces the target's entrypoint candidates
         "src/b": Source.DECLARED_CODE,
-        "src/shared.py": Source.CANDIDATE,
     }
     assert _reasons(scope) == {
         "N/A": "not-a-path",
@@ -252,3 +251,66 @@ def test_from_spec_skips_skeleton_tasks(repo: Path) -> None:
     edited = from_spec(repo, "specs/2026-10/20261015-alpha")
     assert [item.path for item in edited.code] == ["src/a"]
     assert _reasons(edited)["<target area>"] == "not-a-path"
+
+
+def _bundle(repo: Path, slug: str, tasks: str | None, targets: tuple[str, ...] = (CAP_A,)) -> str:
+    """A spec bundle whose ``reconcile.md`` modifies ``targets``; ``tasks`` is its ``tasks.md`` (``None``: none)."""
+    base = f"specs/2026-10/20261022-{slug}"
+    write(repo, f"{base}/spec.md", f"---\nid: SPEC-{slug}\n---\n")
+    entries = "".join(f"  - file: {target}\n    resolution: modified\n" for target in targets)
+    write(repo, f"{base}/reconcile.md", f"---\nreconcile_id: REC-{slug}\nstatus: pending\ntargets:\n{entries}---\n")
+    if tasks is not None:
+        write(repo, f"{base}/tasks.md", tasks)
+    return base
+
+
+def _boundary(*values: str) -> str:
+    return f"- [ ] **Task 1**: t\n  - **_Boundary**: {', '.join(values)}\n  - _Requirements: AC-01_\n"
+
+
+def test_declared_code_replaces_target_entrypoint_candidates(repo: Path) -> None:
+    # AC-01: CAP_A lists src/a/ and src/shared.py; the boundary names only src/b/.
+    scope = from_spec(repo, _bundle(repo, "narrow", _boundary("`src/b/`")))
+    assert [(item.path, item.source) for item in scope.code] == [("src/b", Source.DECLARED_CODE)]
+    assert [(item.path, item.source) for item in scope.docs] == [(CAP_A, Source.DECLARED_DOC)]
+    assert scope.unresolved == []
+
+
+def test_a_candidate_only_path_no_longer_overlaps(repo: Path) -> None:
+    # AC-02: PROP-one's candidates (src/a, src/shared.py) meet the bundle only through the shared target document.
+    narrow = from_spec(repo, _bundle(repo, "narrow", _boundary("`src/b/`")))
+    other = ScopeSet("other", code=[ScopePath("src/shared.py", Granularity.FILE, Source.DECLARED_CODE, Stage.SPEC)])
+    assert compare(narrow, other).code == ()
+    pair = compare(narrow, from_proposal(repo, "one"))
+    assert pair.code == () and [item.path for item in pair.docs] == [CAP_A]
+
+
+@pytest.mark.parametrize(
+    "tasks",
+    [
+        None,
+        "---\nid: TASKS-x\n---\n<!-- devkit:skeleton -->\n- [ ] **Task 1.1**: Core\n  - **_Boundary**: `src/b/`\n",
+        _boundary("N/A", "<target area>", "`docs/capabilities/`", "`specs/2026-10/`", "`src/**`"),
+    ],
+    ids=["missing", "skeleton", "no-code-path"],
+)
+def test_candidates_stay_before_code_is_declared(repo: Path, tasks: str | None) -> None:
+    # AC-03: without a declared code path the target entrypoints remain the code estimate.
+    scope = from_spec(repo, _bundle(repo, "early", tasks))
+    assert [(item.path, item.source) for item in scope.code] == [
+        ("src/a", Source.CANDIDATE),
+        ("src/shared.py", Source.CANDIDATE),
+    ]
+    assert [(item.path, item.source) for item in from_proposal(repo, "one").code] == [
+        ("src/a", Source.CANDIDATE),
+        ("src/shared.py", Source.CANDIDATE),
+    ]
+
+
+def test_missing_target_entrypoints_stay_unresolved_with_declared_code(repo: Path) -> None:
+    # AC-05: no-entrypoints reports the target's traceability gap whether or not candidates are used.
+    scope = from_spec(repo, _bundle(repo, "gap", _boundary("`src/b/`"), (CAP_A, CAP_EMPTY)))
+    assert [item.source for item in scope.code] == [Source.DECLARED_CODE]
+    assert [(item.value, item.reason, item.source) for item in scope.unresolved] == [
+        (CAP_EMPTY, "no-entrypoints", Source.CANDIDATE)
+    ]
