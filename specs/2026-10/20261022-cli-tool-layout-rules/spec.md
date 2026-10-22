@@ -2,7 +2,7 @@
 id: SPEC-cli-tool-layout-rules
 title: Feature layout and layer rules for cli-tool
 summary: Adds RULE-cli-tool-layout and RULE-cli-tool-layers to the cli-tool bundle so agent-facing CLI tools keep the feature layout, confine click to CLI modules and import layers in one direction.
-status: planned
+status: completed
 created: 2026-10-22
 related_capabilities:
   - CAP-CLI-agent-cli-toolkit
