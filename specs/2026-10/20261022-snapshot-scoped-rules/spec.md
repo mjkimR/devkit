@@ -2,7 +2,7 @@
 id: SPEC-snapshot-scoped-rules
 title: Scope snapshot rules runs to their changed paths
 summary: Extends rule target scoping to Git snapshot runs, the rules-check commit gate and CI, by treating deleted paths as matching targets, so a commit stops paying for whole-workspace rules its changes cannot affect.
-status: in-progress
+status: completed
 created: 2026-10-22
 related_capabilities: [CAP-GOV-evaluation-lifecycle, CAP-GOV-rules-engine]
 related_usecases: []
