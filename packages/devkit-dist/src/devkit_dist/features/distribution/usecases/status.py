@@ -68,6 +68,7 @@ from devkit_dist.features.project.repositories.receipt import (
     Selection,
     ToolRecord,
 )
+from devkit_dist.features.project.services.presentation import language_notices
 
 _EMPTY_SELECTION = Selection((), {})
 logger = logging.getLogger(__name__)
@@ -139,7 +140,8 @@ class ProjectStatus:
     """``devkit status``. ``errors`` are the problems to act on; ``ok`` when there are none.
 
     ``notices``: warnings that change no exit code (an installed package the project does not deploy failed to load,
-    deployed rule, gate or workflow assets that no installed engine runs).
+    an unsupported ``[presentation] language`` resolved to ``en``, deployed rule, gate or workflow assets that no
+    installed engine runs).
     """
 
     # Whether a receipt exists; without one every other entry describes an empty installation.
@@ -419,7 +421,7 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
             tool=ToolStatus(tool_identity(), receipt.tool if receipt is not None else None),
             host_hooks=host_hooks,
             errors=[*packages, *_problems(files, journal, drift, block), *host_errors],
-            notices=[*warnings, *engine_notices(receipt.asset_records if receipt else ())],
+            notices=[*warnings, *language_notices(root), *engine_notices(receipt.asset_records if receipt else ())],
         )
 
 

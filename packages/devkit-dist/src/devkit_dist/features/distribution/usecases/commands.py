@@ -11,7 +11,13 @@ from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 
 from devkit_dist.features.distribution.models.errors import SelectionError
-from devkit_dist.features.distribution.models.results import OverrideChange, OverrideDiff, OverrideStatus, SyncResult
+from devkit_dist.features.distribution.models.results import (
+    ConfigurationReport,
+    OverrideChange,
+    OverrideDiff,
+    OverrideStatus,
+    SyncResult,
+)
 from devkit_dist.features.distribution.services.bundles import build_bundle, load_bundle
 from devkit_dist.features.distribution.services.installation.config import (
     ConfigTemplateResult,
@@ -31,7 +37,7 @@ from devkit_dist.features.distribution.services.installation.receipt import read
 from devkit_dist.features.distribution.services.installation.transaction import project_lock
 from devkit_dist.features.distribution.usecases.sync import sync_project
 from devkit_dist.features.project.repositories.local_config import read_effective_config
-from devkit_dist.features.project.services.presentation import resolve_language
+from devkit_dist.features.project.services.presentation import language_notices, resolve_language
 
 if TYPE_CHECKING:
     from .status import ProjectListing, ProjectStatus
@@ -240,17 +246,19 @@ def build_source(source: Path, output: Path):
 class ShowConfiguration(BaseUseCase):
     """Execute the show configuration application operation."""
 
-    def execute(self, root: Path) -> dict[str, object]:
+    def execute(self, root: Path) -> ConfigurationReport:
         with project_lock(root, shared=True):
             read_config(root)
             result = read_effective_config(root)
             language = resolve_language(root)
-        return {
-            "configuration": result.values,
-            "sources": result.sources,
-            "execution_environment": result.values["execution"]["environment"],
-            "presentation_language": asdict(language),
-        }
+            notices = language_notices(root)
+        return ConfigurationReport(
+            configuration=result.values,
+            sources=result.sources,
+            execution_environment=result.values["execution"]["environment"],
+            presentation_language=asdict(language),
+            notices=notices,
+        )
 
 
 class RemoveSelection(BaseUseCase):

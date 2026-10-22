@@ -10,9 +10,8 @@ Use this playbook when you write or substantially edit an agent guide, and when
 only when you add, move or point between guides (nested guides, `CLAUDE.md`).
 
 Unlike a skill, a guide is loaded on every turn of every session, so it holds
-only what nearly every task needs. Agents follow a plain link unreliably, so
-content leaves the guide by moving to where it is read on demand, not by being
-chopped into references.
+only what nearly every task needs. Move other content to where it is read on
+demand, not into references the guide links: agents follow a plain link unreliably.
 
 ## Prerequisites
 
@@ -61,12 +60,12 @@ moved content at the moment it matters.
 ## Step 3: Write for every turn
 
 - State invariants and decisions, not narratives or history.
-- Avoid facts that drift: structure trees, file inventories, counts, version
+- Leave out facts that drift: structure trees, file inventories, counts, version
   numbers, descriptions of current implementation details.
 - Do not repeat what a tool already enforces or what the agent host already
   instructs; repetition costs context on every request.
-- Prefer one precise sentence with a threshold or command over emphatic wording;
-  capitals and absolute words make agents over-apply a rule.
+- Write one precise sentence with a threshold or command instead of emphatic
+  wording; capitals and absolute words make agents over-apply a rule.
 - Keep one source of truth: when `CLAUDE.md` exists for Claude Code, point it at
   `AGENTS.md` instead of duplicating content (see references/hosts.md).
 

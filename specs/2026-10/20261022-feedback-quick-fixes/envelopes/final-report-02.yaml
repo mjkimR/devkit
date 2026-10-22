@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T00:01:32.567043Z'
+status: completed
+summary: 'Reworked item 1 to the accepted ADR under the recorded user decision: unsupported presentation languages keep the en fallback (fallback=true) and devkit sync, status and config show return a PRESENTATION_LANGUAGE_UNSUPPORTED WARNING under notices naming the file and accepted values auto, en, ko; the CONFIG_INVALID refusal is reverted. Capabilities, quick references, spec, plan, tasks, reconcile and the source disposition updated; two moot unit feedback items dismissed. Items 2-4 unchanged.'
+findings: []
+assumptions:
+- User decision recorded in decisions/02-return-build-verify.yaml; the unit conforms to ADR-shared-language-preference-with-bounded-approval-content, no superseding ADR needed
+- Warning checks both the effective and the shared-only value, one per falling-back file
+checks:
+  tests: PASS just test-affected mode=full 4462 passed 14 skipped
+  build: PASS just check devkit-dist 0 errors; devkit status ok=242 errors=0
+  lint: PASS just lint-check devkit-dist; devkit rules check --ci --base 490b0b28
+diff_scope:
+  base: 48e6479d1bcd4e0bb22ea1e05ff2f6b1e801c6ed
+  head: 16efd858c4080c36ee41c5ec5719bed43fdd6535
+activity_effort: low

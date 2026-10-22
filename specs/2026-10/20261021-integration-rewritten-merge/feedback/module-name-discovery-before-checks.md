@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-21
 ---
 
@@ -41,3 +41,9 @@ Available modules: ... devkit-agt
 just lint-check devkit-agt: All checks passed; 240 files already formatted
 just check devkit-agt: 0 errors, 0 warnings, 0 informations
 ```
+
+## Disposition
+
+Directly resolved by `SPEC-feedback-quick-fixes`. `scripts/_lib.sh` keeps one `module_short_names` table that drives `resolve_module` and adds `agt` for `devkit-agt`; the unknown-module refusal prints `Module short names:` from the same table next to the full names, and the README module paragraph lists the short names.
+
+Verification: `just lint-check agt` passed on `packages/devkit`; `bash scripts/module.sh lint-check nope` exited 1 and printed both lists; the full suite passed (4461 passed, 14 skipped). Integration remains a separate Host step.

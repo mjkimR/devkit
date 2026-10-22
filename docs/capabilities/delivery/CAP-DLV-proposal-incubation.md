@@ -253,10 +253,10 @@ The scaffolded body has sections `1. Background & Hypothesis`, `2. Technical Spi
 - `padr <slug> <title> [--summary TEXT] [--slug SLUG]` writes `decisions/PADR-<padr slug>.md`, where the PADR slug is
   `--slug` (a leading `PADR-` dropped, normalized as in 4.2) or else the title's slug; the title stays free text, so
   `padr plans "2024 roadmap" --slug roadmap-2024` works where the title alone is refused. The file has `id`, `title`, `summary` (or
-  the commented placeholder `# summary: <one or two English sentences: what is decided and why>`), `proposal:
+  the commented placeholder `# summary: <English Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>`), `proposal:
   PROP-<slug>`, `status: draft`, `created_at`, and a body shaped like the decision template (`- **Status**: Draft`,
   `- **Date**`, then Context & Problem Statement, Decision Drivers, Considered Options, Decision Outcome,
-  Consequences). PADR IDs are unique across the repository, aliases included (`SPEC_PROPOSAL_EXISTS`).
+  Consequences, Confirmation). PADR IDs are unique across the repository, aliases included (`SPEC_PROPOSAL_EXISTS`).
 - `target-docs.md` declares `id: PROP-<slug>-target`, `proposal: PROP-<slug>`, `status: draft`, `created_at` and
   `targets: []` (one `- file: <workspace-relative path>` per Living Spec file the proposal changes; read by
   `devkit spec scope compare`). Its body covers the capability ledger, stories, architecture and decisions,
@@ -582,7 +582,8 @@ not authorize final integration. See `CAP-MCP-runtime-registration` for runtime/
 ### Handoff presentation language
 
 The service snapshots the owning configuration workspace's `presentation.language` before each confirmation,
-independently of the retained executor. English is deterministic for auto/unsupported strings; ko selects Korean.
+independently of the retained executor. English is deterministic for auto/unsupported strings (an unsupported string is a
+`PRESENTATION_LANGUAGE_UNSUPPORTED` warning from sync, status and config show); ko selects Korean.
 Static copy covers Development start, setup/restoration effects, effort meanings, required checks, absent markers
 and separate final-merge approval. Both messages pair canonical `low`, `medium`, `high` with their localized meanings
 and explain that effort does not change model reasoning settings, so omitted field metadata loses no decision facts.

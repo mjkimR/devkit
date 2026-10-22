@@ -408,7 +408,7 @@ size: M                               # S | M | L | XL
 
 ## 4. Lifecycle & Retirement Criteria
 <!--
-- Preliminary decisions: devkit spec proposal padr {slug} "<title>" --summary "<what it decides>" records a PADR in decisions/.
+- Preliminary decisions: devkit spec proposal padr {slug} "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
 - Research: collect benchmarks and references in materials/.
 - On acceptance (plan-accept): devkit spec proposal accept {slug} --by user records gate:plan-accept and status:
   accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
@@ -496,7 +496,7 @@ def _padr(padr_id: str, title: str, summary: str | None, slug: str, created: str
     summary_line = (
         f"summary: {yaml_scalar(summary)}\n"
         if summary
-        else "# summary: <one or two English sentences: what is decided and why>\n"
+        else "# summary: <English Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>\n"
     )
     return f"""---
 id: {padr_id}
@@ -522,6 +522,8 @@ created_at: {created}
 ## 4. Decision Outcome
 
 ## 5. Consequences
+
+## 6. Confirmation
 """
 
 

@@ -1,0 +1,29 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T00:01:54.270212Z'
+status: completed
+summary: 'Recovery turn: returned the unit to build-verify (decisions/02-return-build-verify.yaml) and reworked item 1 to the accepted ADR: unsupported [presentation] language keeps the en fallback and devkit sync, status and config show return a PRESENTATION_LANGUAGE_UNSUPPORTED WARNING under notices; redid build-verify, review-refine (self-review), living-spec-draft (reconcile self-check), collect-feedback and final-change-report; stops before integration.'
+findings:
+- issue: The sync notice table in docs/development/reference/distribution.md has no PRESENTATION_LANGUAGE_UNSUPPORTED row.
+  evidence: Payload allowed quick-reference edits only for the fallback field description; recorded as open FB-presentation-warning-missing-from-notice-table.
+  suggested_action: Add the one-line table row in a follow-up or let the Host widen the boundary before integration.
+  resolution: open
+assumptions:
+- User decision (Host-rewritten) recorded as the return decision note; the unit now conforms to ADR-shared-language-preference-with-bounded-approval-content
+- Warning code PRESENTATION_LANGUAGE_UNSUPPORTED (own code, not CONFIG_INVALID); one per falling-back file, effective and shared-only values checked
+- Quick-reference fallback sentences in distribution/host/integration.md updated, within the payload's fallback-description allowance
+unverified_areas:
+- native host enforcement of nested-role read scopes (items 2-4 unchanged from the accepted turn)
+checks:
+  lint: PASS just lint devkit-dist; just lint-check devkit-dist
+  typecheck: PASS just check devkit-dist 0 errors
+  tests: PASS just test-affected mode=full 4462 passed 14 skipped
+  rules: PASS commit gate on every commit; devkit rules check --ci --base 490b0b28
+  status: PASS uv run devkit status ok=242 errors=0
+  manual: PASS devkit sync with language=korean printed [WARN] PRESENTATION_LANGUAGE_UNSUPPORTED on stderr, exit 0; local config restored to ko and re-synced
+diff_scope:
+  base: 48e6479d1bcd4e0bb22ea1e05ff2f6b1e801c6ed
+  head: 112c3e9c623f8fd69f7c9be47119f9874bf04f7b
+activity_effort: low

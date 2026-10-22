@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
+from devkit.advisory import Level
 from devkit_dist.features.distribution.models.errors import ConflictError, ReceiptStaleError
 from devkit_dist.features.distribution.services.installation import transaction
 from devkit_dist.features.distribution.services.installation.config import update_config
@@ -431,13 +432,27 @@ def test_presentation_inheritance_and_canonical_receipt(fixture, override: str |
     local(root, '[presentation]\nlanguage="unsupported"\n')
     with pytest.raises(LocalRenderStaleError):
         GetContext().execute(root, "style")
-    sync.sync_project(root, [item], locked=True)
+    synced = sync.sync_project(root, [item], locked=True)
     assert f"Language: {override if override is not None else 'en'}" in output.read_text()
+    warned = [notice for notice in synced.notices if notice.code == "PRESENTATION_LANGUAGE_UNSUPPORTED"]
+    assert [(notice.level, notice.target_files) for notice in warned] == [
+        (Level.WARNING, (str(root / LOCAL_CONFIG_PATH),))
+    ]
+    assert warned[0].fix is not None and "auto, en, ko" in warned[0].fix and LOCAL_CONFIG_PATH in warned[0].fix
     result = CliRunner().invoke(cli, ["config", "show", "--effective", "-w", str(root)])
     assert result.exit_code == 0, result.output
-    assert json.loads(result.stdout)["presentation_language"] == {
+    shown = json.loads(result.stdout)
+    assert shown["presentation_language"] == {
         "requested": "unsupported",
         "resolved": "en",
         "fallback": True,
         "source": str(root / LOCAL_CONFIG_PATH),
     }
+    assert [notice["code"] for notice in shown["notices"]] == ["PRESENTATION_LANGUAGE_UNSUPPORTED"]
+    strict = CliRunner().invoke(cli, ["config", "show", "--effective", "--strict", "-w", str(root)])
+    assert strict.exit_code == 1, strict.output
+    status = CliRunner().invoke(cli, ["status", "-w", str(root)])
+    assert "PRESENTATION_LANGUAGE_UNSUPPORTED" in [notice["code"] for notice in json.loads(status.stdout)["notices"]]
+    text = CliRunner().invoke(cli, ["sync", "--locked", "-w", str(root)])
+    assert text.exit_code == 0, text.output
+    assert "PRESENTATION_LANGUAGE_UNSUPPORTED" in text.stderr and "auto, en, ko" in text.stderr

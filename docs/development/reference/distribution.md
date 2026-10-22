@@ -192,6 +192,7 @@ they run in their own `notices` list.
 | `GATE_HOOK_PRESERVED` | `WARNING` | `HookPreservedNotice` | an existing regular Git hook was preserved and chained during automatic installation | `details`: adapter path and unchanged executable mode; reported once when moved |
 | `GATE_HOOK_INSTALL_SKIPPED` | `WARNING` | `HookInstallSkippedNotice` | automatic hook installation could not safely run | `details`: reason code and paths; `fix`: remediation |
 | `POST_SYNC_EXTENSION_FAILED` | `WARNING` | `PostSyncExtensionFailedNotice` | a post-sync extension raised an exception other than an advisory, or returned something other than a list | `details`: the hook; `what_to_report`: the failure |
+| `PRESENTATION_LANGUAGE_UNSUPPORTED` | `WARNING` | `PresentationLanguageUnsupportedNotice` | a shared or local `[presentation] language` other than `auto`, `en` or `ko` fell back to `en`; also returned by `devkit status` and `devkit config show` | `target_files`: the configuration file; `fix`: the accepted values and the file |
 | `ASSET_UNPROJECTED` | `NOTICE` (brief) | `UnprojectedNotice` | a skill or subagent has no variant for a selected agent and was not projected | message: each `<bundle>:<asset> (<agent>)`; `target_files`: `.devkit/config.toml` (where the project narrows `agents`); `[DETAIL]`: the remedies |
 | `BUNDLE_UNSELECTED` | `NOTICE` | `BundleUnselectedNotice` | installed bundles the project neither selected nor opted out of, reported once per clone when they appear (recorded in `.devkit/transient/seen-bundles.json`) | `fix`: `devkit add <bundle>` for one bundle, else `devkit list`; one `[DETAIL]` per bundle with its exact `devkit add` command and presets |
 | `HARNESS_ENGINE_MISSING` | `WARNING` | `HarnessEngineMissingNotice` | deployed `rule`, `gate` or `workflow` assets in an installation with no `devkit.commands` entry point named `rules`, `gate` or `workflow` (devkit-agt not installed); the assets are deployed as selected. Also in `devkit status` `notices` | message: each bundle with its kinds; `[DETAIL]`: one line per bundle; `fix`: the install directive that adds `devkit-agt` (shared with `HARNESS_COMMAND_UNAVAILABLE`, [core reference](core.md)) |
@@ -290,7 +291,7 @@ failing engine import cannot make the bundle unusable):
 | --- | --- | --- | --- | --- |
 | `advisory` | `devkit-dist` | `devkit_dist.bundles.advisory` | Auto-selected (`core`); `devkit add advisory:python` for Python repositories | Agent Advisory Protocol guides and, in `python`, `RULE-advisory-unique-code` (run by the rule engine of `devkit-agt`); see [devkit.advisory](advisory.md). |
 | `git-commits` | `devkit-dist` | `devkit_dist.bundles.git_commits` | Opt-in: `devkit add git-commits` | Commit message conventions and their `AGENTS.md` pointer; see [devkit_agt.features.gate](gate.md#built-in-git-commits-bundle). |
-| `authoring` | `devkit-agt` | `devkit_agt.bundles.authoring` | Opt-in: `devkit add authoring` (`all`), or one of the presets `skill-authoring`, `agent-guide-authoring` | Size rules and restructuring playbooks for skills and agent guides; see [devkit_agt.features.rules](rules.md#built-in-authoring-bundle). |
+| `authoring` | `devkit-agt` | `devkit_agt.bundles.authoring` | Opt-in: `devkit add authoring` (`all`), or one of the presets `skill-authoring`, `agent-guide-authoring` | Size rules and restructuring playbooks for skills and agent guides, and the `agent-asset-writing` instruction; see [devkit_agt.features.rules](rules.md#built-in-authoring-bundle). |
 | `harness` | `devkit-agt` | `devkit_agt.bundles.harness` | Auto-selected (`core`); `devkit add harness:run` for the `AGENTS.md` pointer | The harness guidance above. |
 
 ---
@@ -338,6 +339,8 @@ guidance and seeds. Details and persistence behavior: `CAP-DIST-sync-and-transac
 
 For shared or personal approval/response defaults, set `[presentation] language = "ko"` (`auto`, `en`, `ko`)
 in shared config or ignored `.devkit/config.local.toml`. `devkit config show --effective` reports the requested and
-resolved language, source and fallback. Run sync for response-style assets; approval forms read per request.
+resolved language, source and fallback; another value falls back to `en`, which `devkit sync`, `devkit status`
+and `devkit config show` report as a `PRESENTATION_LANGUAGE_UNSUPPORTED` warning. Run sync for response-style
+assets; approval forms read per request.
 Explicit response-style bundle variables win. See `CAP-DIST-sync-and-transactions` and `CAP-INT-mcp-services`;
 this does not localize host-owned controls or establish visible native Korean form support.

@@ -1,0 +1,23 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T23:59:20.336919Z'
+status: completed
+summary: 'self-review (low), rework of item 1: unsupported presentation languages keep the ADR en fallback and return a PRESENTATION_LANGUAGE_UNSUPPORTED WARNING from sync (planning notices), status and config show (new ConfigurationReport with notices); CONFIG_INVALID refusal reverted; one fix applied (quick-reference fallback wording); no open findings.'
+findings: []
+assumptions:
+- 'User decision recorded in decisions/02-return-build-verify.yaml: keep the ADR fallback, make it visible; the unit now conforms to ADR-shared-language-preference-with-bounded-approval-content'
+- Both the effective and the shared-only value are checked; one warning per falling-back file
+unverified_areas:
+- native host enforcement of nested-role read scopes (items 2-4 unchanged)
+checks:
+  lint: PASS just lint devkit-dist
+  typecheck: PASS just check devkit-dist
+  tests: PASS just test-affected mode=full 4462 passed 14 skipped
+  rules: PASS devkit rules check --staged (commit gate)
+  manual: PASS devkit sync with language=korean printed [WARN] PRESENTATION_LANGUAGE_UNSUPPORTED on stderr, exit 0; config show and status list it under notices
+diff_scope:
+  base: 48e6479d1bcd4e0bb22ea1e05ff2f6b1e801c6ed
+  head: 058066a8dc7500d2c1fd52a2027f4d4da61fcb9c
+activity_effort: low

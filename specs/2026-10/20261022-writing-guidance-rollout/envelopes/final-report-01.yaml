@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T00:26:41.605604Z'
+status: completed
+summary: Rewrote 60 of 67 in-scope bundle skills, playbooks, instructions and role contracts (devkit-spec, devkit-dist, devkit, devkit-catalog) under agent-asset-writing; 7 already conformed. Content-preservation review found 11 meaning shifts, all fixed; no Living Spec impact; FB-writing-guidance-rollout resolved.
+findings: []
+assumptions:
+- No behavior comparison was run; misbehavior found in later use is corrected then
+- Frontmatter and Jinja constructs are byte-identical in every rewritten file
+checks:
+  tests: PASS just test-affected 1431 passed
+  build: PASS just check devkit-spec (pyright 0 errors); devkit sync --check clean
+  lint: PASS just lint-check; devkit rules check --ci --base main 0 errors
+diff_scope:
+  base: 134837b1923c1d948fd0d10be7400da95f19506a
+  head: 9a48e6b7604c37b3cbd92c960637c63e16d54455

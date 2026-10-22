@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T23:59:54.446903Z'
+status: completed
+summary: 'self-check (low): CAP-DIST-sync-and-transactions, CAP-DIST-workspace-ownership, CAP-INT-mcp-services and CAP-DLV-proposal-incubation restored to the ADR fallback and name the PRESENTATION_LANGUAGE_UNSUPPORTED warning matching the diff (sync, status, config show; per-file; exit unchanged except --strict); three quick references updated; entrypoint now services/presentation.py; CAP-DLV-delivery-workflows unchanged from the accepted turn; source disposition updated; no open findings.'
+findings: []
+assumptions:
+- The unit conforms to ADR-shared-language-preference-with-bounded-approval-content after the user decision; no superseding ADR is needed
+checks:
+  rules: PASS devkit rules check docs/capabilities, the unit and specs/2026-10/feedback
+diff_scope:
+  base: 48e6479d1bcd4e0bb22ea1e05ff2f6b1e801c6ed
+  head: 3b13f1b9fc95c5822c8fe5367371b3f7709b365c
+activity_effort: low

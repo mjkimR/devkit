@@ -12,8 +12,8 @@ most situation-dependent content is a conditional reference instead.
 2. **No script that only prints a reference file.** That is a conditional
    reference with extra cost: running a script can trigger a host approval
    prompt where reading a file does not.
-3. **Otherwise write a script**, preferably Python 3 with the standard library,
-   which needs no build step or installation.
+3. **Otherwise write a script**, by default in Python 3 with the standard library, which
+   needs no build step or installation.
 
 ## Writing rules
 
@@ -26,7 +26,8 @@ most situation-dependent content is a conditional reference instead.
   the locale encoding.
 - Print compact, deterministic, machine-readable output (TSV, JSON or IDs) with
   stable ordering.
-- Read-only by default. A script that writes declares it in its name or a flag.
+- Keep a script read-only unless it must write; a script that writes declares it
+  in its name or a flag.
 - On failure exit non-zero with a message that states the cause and the next
   action.
 - Support `--help` with one line per option.

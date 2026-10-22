@@ -26,7 +26,7 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
 
 ## 2. Scope & Boundary
 
-- **In-Scope**: the bundle manifest and presets, the constitution, the two instructions, the guidance pointer, the
+- **In-Scope**: the bundle manifest and presets, the constitution, the seven instructions, the guidance pointer, the
   `spec*` skills and their references, the two playbooks, the document templates and the docs skeleton; the role
   contracts as deployed assets.
 - **Out-of-Scope**:
@@ -93,7 +93,7 @@ A project opts out of the bundle with `[presets] spec = false` in `.devkit/confi
 
 | Asset kind | Assets |
 | --- | --- |
-| `instruction` | `contract-authoring`, `living-spec-writing` |
+| `instruction` | `contract-authoring`, `living-spec-writing`, `document-writing`, `decision-writing`, `capability-writing`, `story-writing`, `architecture-writing` (`ADR-layered-writing-guidance`) |
 | `guidance` | `spec-pointer` |
 | `rule` | `document-reference`, `id-convention`, `spec-format`, `traceability-link`, `task-coverage`, `spec-lifecycle`, `spec-progress`, `reconcile-contract`, `document-summary`, `code-entrypoints`, `proposal-boundaries` (`CAP-GOV-spec-rules`) |
 | `skill` | the 13 skills of 4.4 |
@@ -126,6 +126,11 @@ The constitution's sections:
 | --- | --- |
 | `contract-authoring` | Authoring or reviewing specifications, acceptance criteria, policies, instructions, rules or workflows: RFC 2119 wording, measurable contracts, Non-Goals, examples (policy exceptions are in the spec constitution). |
 | `living-spec-writing` | Authoring, editing or reviewing `docs/` or `specs/`: current-state writing, history placement, completed specs, traceability, summaries, ID references, and terminology and the glossary: eight domain-neutral naming rules in its Glossary section (`ADR-terminology-guidance-lives-in-living-spec-writing`) that inform naming, enforce nothing and do not authorize renaming code, APIs or schemas. |
+| `document-writing` | Writing or editing any document: the sentence-level baseline (one directive or claim per sentence, condition first, prohibitions with their alternative, one-clause reasons with background by ID, no hedges or emphatic capitals, one default, concrete examples); the per-kind instructions add to it. |
+| `decision-writing` | Writing an ADR or PADR: Y-statement `summary`, context, drivers, options, outcome, consequences and the `Confirmation` section naming the check, test or review. |
+| `capability-writing` | Writing a capability: EARS business rules (`WHEN`, `WHILE`, `IF ... THEN`, `WHERE`) with RFC 2119 keywords and their enforcing rule or test, scope owners, exact interfaces. |
+| `story-writing` | Writing a user story: narrative, Example Mapping from rules to Given/When/Then scenarios, background limited to shared preconditions. |
+| `architecture-writing` | Writing `docs/architecture/`: arc42 placement, C4 diagram scope, constraints with their enforcing check (fitness function) or "review only", quality-attribute scenarios. |
 
 The `spec-pointer` line in the root `AGENTS.md` block: run `uv run devkit get-context spec` once per agent context
 before development work; start work with `/spec <intent>`, orient with `/spec-next`; `docs/` is the current-state

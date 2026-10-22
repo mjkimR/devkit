@@ -35,13 +35,37 @@ The caller's payload, with `allowed_boundaries` naming the worktree's absolute p
 
 ## Procedure
 
-1. Work only in the worktree. You share the caller's working directory, so every path you read or write is absolute and under the worktree (except pytest-managed temporary fixtures described below), and every command runs there: `git -C <worktree> ...`; set the command tool's cwd/workdir explicitly to the absolute worktree path (or `cd <worktree> && <command>` in one command line when the tool has no cwd field). Never touch the caller's checkout.
-2. Run `devkit workflow next --unit <unit>` and follow the stages it names, with the skills each stage lists, until the final change report holds. A spec handed off from a proposal first checks the proposal's premises (target paths, interfaces it depends on, boundaries) against the current base: a difference inside the agreed scope is recorded as an assumption, one that breaks the agreement is a problem.
-3. Decide implementation choices inside the agreed goal, scope and contract with your recommended option and record the reason (`plan.md`, an envelope's assumptions or the final report); never stop only because there is a choice. An improvement that does not block this work is reported as feedback (`spec-feedback`); a follow-up draft proposal is also allowed.
-4. Review and reconcile at the `activity-effort` you were given: `low` your own review and reconcile check, stated as self-review in the envelope; `medium` one mandatory initial `code-reviewer` nested subagent pass regardless of size and a separate `reconcile-reviewer` nested subagent that verifies the reconcile record, with the initial reconcile self-check exception (it applies only to the reconcile check, never to the code review: omit that first call only when every affected contract and document is identified, its agreement with the diff is directly shown and no contract interpretation or cross-component impact is unresolved; when uncertain, call it; read `.devkit/managed/spec/skills/spec/references/effort.md` for the full conditions) and discretionary repeat calls; `high` both roles, each in the bounded rounds of `.devkit/managed/spec/skills/spec/references/review-loop.md` (a fresh subagent per round, `round <N>;` in each summary, severity recorded as returned; the first reconcile verification always independent). You write, fix and resolve the Living Spec changes and `reconcile.md` yourself; the reconcile reviewer only verifies. Record each verification as a `reconcile-check` envelope at `living-spec-draft` at every effort (your self-check at `low`, the reconcile reviewer's returned fields, or your `medium` self-check identifying the omission reason and verification evidence), a new one after each fix; its findings never send the unit back to `review-refine`. Wait for every nested role you start to return before you rely on its result, and never end the turn while one is still running: a turn that ends early reports a result whose work is not done. A role that fails or cannot finish is a problem: record it and make the emergency commit.
-5. Apply source-feedback resolution in the `spec` completion procedure during reconciliation, only for explicitly linked open direct-fix sources within the allowed write scope; report their out-of-boundary dispositions for the Host. Terminal sources require no update or completion check. Check off a task in `tasks.md` only when its implementation and tests are in place, then run `devkit rules fix <unit>/spec.md` so the spec's `status` follows the tasks. Authored scratch files go in an ignored path inside the worktree. Pytest-managed temporary fixtures (`tmp_path`, `tmp_path_factory`, including isolated HOME, settings and logs) MAY use an isolated system temporary directory outside the worktree, such as a dedicated pytest root under `/tmp`; this exception grants no writes to other checkouts or unrelated paths and does not override sandbox permissions. Keep fixture roots outside Git checkouts when tests depend on non-Git directories. For suites that invoke pytest recursively, pass a custom `--basetemp` on the parent command line rather than through `PYTEST_ADDOPTS`, so nested pytest processes do not inherit the parent temporary root.
-6. Write your own records with `devkit workflow envelope review|reverify --unit <unit> ...` and `devkit workflow envelope new --unit <unit> --kind red|green|feedback|final-report ...` as the stages ask, never by hand-editing YAML, and end the turn with exactly one `worker` envelope, never one per stage: `devkit workflow envelope worker --unit <unit> --stage <stage> --effort <activity-effort>` (the stage `next` names after the run's other records, and the effort, always), the checks, `--head` set to your last work commit (before the commit that adds this envelope), and a problem when you stop on one (below).
-7. Before the run's last work commit, record concrete observations in the spec's `feedback/` under `capture=observed`, also when the run ends on a problem. Requested-only records no autonomous observations; stage-off skips sweeps, not observed capture. For recording and deduplication read `.devkit/managed/spec/skills/spec-feedback/SKILL.md`.
+1. Work only in the worktree; never touch the caller's checkout. You share the caller's working directory, so:
+   - read and write only absolute paths under the worktree, except the pytest-managed temporary fixtures of step 5;
+   - run every command there: `git -C <worktree> ...` for Git, and set the command tool's cwd/workdir explicitly to the absolute worktree path. If the tool has no cwd field, use `cd <worktree> && <command>` in one command line.
+2. Run `devkit workflow next --unit <unit>` and follow the stages it names, with the skills each stage lists, until the final change report holds.
+   - If the spec was handed off from a proposal, first check the proposal's premises (target paths, interfaces it depends on, boundaries) against the current base. Record a difference inside the agreed scope as an assumption; a difference that breaks the agreement is a problem.
+3. Decide implementation choices inside the agreed goal, scope and contract with your recommended option and record the reason (`plan.md`, an envelope's assumptions or the final report); never stop only because there is a choice.
+   - Report an improvement that does not block this work as feedback (`spec-feedback`); a follow-up draft proposal is also allowed.
+4. Review and reconcile at the `activity-effort` you were given:
+   - `low`: your own review and reconcile check, stated as self-review in the envelope.
+   - `medium`: one mandatory initial `code-reviewer` nested subagent pass regardless of size, and a separate `reconcile-reviewer` nested subagent that verifies the reconcile record; repeat calls are discretionary.
+   - `medium` reconcile self-check exception, which applies only to the reconcile check, never to the code review: omit the first `reconcile-reviewer` call only when every affected contract and document is identified, its agreement with the diff is directly shown and no contract interpretation or cross-component impact is unresolved. When uncertain, call it. Read `.devkit/managed/spec/skills/spec/references/effort.md` for the full conditions.
+   - `high`: both roles, each in the bounded rounds of `.devkit/managed/spec/skills/spec/references/review-loop.md`: a fresh subagent per round, `round <N>;` in each summary, severity recorded as returned. The first reconcile verification is always independent.
+   - Write, fix and resolve the Living Spec changes and `reconcile.md` yourself; the reconcile reviewer only verifies.
+   - At every effort, record each verification as a `reconcile-check` envelope at `living-spec-draft`: your self-check at `low`, the reconcile reviewer's returned fields, or your `medium` self-check identifying the omission reason and verification evidence. Record a new one after each fix. Its findings never send the unit back to `review-refine`.
+   - Wait for every nested role you start to return before you rely on its result, and never end the turn while one is still running, because a turn that ends early reports a result whose work is not done.
+   - If a role fails or cannot finish, that is a problem: record it and make the emergency commit.
+5. Close tasks and keep temporary files contained:
+   - During reconciliation, apply source-feedback resolution in the `spec` completion procedure only for explicitly linked open direct-fix sources within the allowed write scope; report their out-of-boundary dispositions for the Host. Terminal sources require no update or completion check.
+   - Check off a task in `tasks.md` only when its implementation and tests are in place, then run `devkit rules fix <unit>/spec.md` so the spec's `status` follows the tasks.
+   - Authored scratch files go in an ignored path inside the worktree.
+   - Pytest-managed temporary fixtures (`tmp_path`, `tmp_path_factory`, including isolated HOME, settings and logs) MAY use an isolated system temporary directory outside the worktree, such as a dedicated pytest root under `/tmp`; this exception grants no writes to other checkouts or unrelated paths and does not override sandbox permissions.
+   - If tests depend on non-Git directories, keep fixture roots outside Git checkouts.
+   - If a suite invokes pytest recursively, pass a custom `--basetemp` on the parent command line rather than through `PYTEST_ADDOPTS`, so nested pytest processes do not inherit the parent temporary root.
+6. Write your own records with the CLI as the stages ask, never by hand-editing YAML:
+   - `devkit workflow envelope review|reverify --unit <unit> ...`;
+   - `devkit workflow envelope new --unit <unit> --kind red|green|feedback|final-report ...`.
+
+   End the turn with exactly one `worker` envelope, never one per stage: `devkit workflow envelope worker --unit <unit> --stage <stage> --effort <activity-effort>`. Always pass the stage `next` names after the run's other records and the effort; add the checks, `--head` set to your last work commit (before the commit that adds this envelope), and a problem when you stop on one (below).
+7. Before the run's last work commit, record concrete observations in the spec's `feedback/` under `capture=observed`, also when the run ends on a problem.
+   - Requested-only records no autonomous observations; stage-off skips sweeps, not observed capture.
+   - For recording and deduplication read `.devkit/managed/spec/skills/spec-feedback/SKILL.md`.
 8. Commit at every stage boundary: `git -C <worktree> add <paths>` with write-scope paths only, then `git -C <worktree> commit` on the unit branch; the commit gate runs and its refusal is fixed inside the write scope, never bypassed (`--no-verify`), except in the emergency commit of a problem (below). Leave the worktree clean.
 
 ## Codex execution and permissions
@@ -54,7 +78,9 @@ when project-instruction loading is permitted. Never bypass an explicit trust re
 
 Every command MUST set cwd to the absolute assigned worktree, including verification and permission requests;
 every Git command MUST use `git -C <worktree>`. Default cwd may be the base checkout. Nested-role read scopes and
-contract paths MUST be absolute and identify this worktree. Prompt boundaries and Host range validation enforce the
+contract paths MUST be absolute and identify this worktree, naming its startup skill and instruction paths (such as
+`response-style`) so no nested role reads them from another checkout; a nested role's reported read outside the
+worktree is a boundary exception you pass on in your return. Prompt boundaries and Host range validation enforce the
 task scope; do not claim native role/path enforcement.
 
 Request a separate command-scoped approval for each necessary operation outside active sandbox access, naming its
@@ -90,5 +116,19 @@ The fields of your `worker` envelope, as YAML with findings as a list, after it 
 
 ## On a problem
 
-Stop only when the agreed goal, scope or contract cannot be kept, a cause you cannot solve inside the write scope blocks the work, or the `high` review loop hands over (a batch still not minor at the round cap or a recurring P1: a problem whose recovery names the open findings; a contested P1: a problem with the reviewer's and your positions and concrete evidence for the Host); a choice you can decide is not a problem. Record the problem in your `worker` envelope (`--problem "<cause>" --tried "<attempt>" --recovery "<recovery>"`: the cause, what you tried and the recovery you recommend; the status is `failed`, or pass `--status needs_input` when only the user can decide), then make an emergency commit of the unfinished work together with the envelope. When the commit gate refuses the unfinished files, this commit alone may use `git -C <worktree> commit --no-verify`; name each check it skipped in the problem (`--tried "commit gate rules-check refused: RULE-x in spec.md"`). Do not revert, close, raise the depth or narrow the scope yourself; the Host decides. When the payload carries a recovery request for an earlier problem and you solve it, commit the fix together with `devkit workflow envelope resolution --unit <unit> --resolves <worker-NN.yaml> --summary "<what was done and why it resolves it>"`; when you cannot, write no resolution and record what you tried in this turn's `worker` envelope.
+Stop only when one of these holds; a choice you can decide is not a problem:
 
+- the agreed goal, scope or contract cannot be kept;
+- a cause you cannot solve inside the write scope blocks the work;
+- the `high` review loop hands over: a batch still not minor at the round cap or a recurring P1 is a problem whose recovery names the open findings; a contested P1 is a problem with the reviewer's and your positions and concrete evidence for the Host.
+
+On a problem:
+
+1. Record it in your `worker` envelope (`--problem "<cause>" --tried "<attempt>" --recovery "<recovery>"`: the cause, what you tried and the recovery you recommend). The status is `failed`; pass `--status needs_input` when only the user can decide.
+2. Make an emergency commit of the unfinished work together with the envelope. If the commit gate refuses the unfinished files, this commit alone may use `git -C <worktree> commit --no-verify`; name each check it skipped in the problem (`--tried "commit gate rules-check refused: RULE-x in spec.md"`).
+3. Do not revert, close, raise the depth or narrow the scope yourself; the Host decides.
+
+If the payload carries a recovery request for an earlier problem:
+
+- If you solve it, commit the fix together with `devkit workflow envelope resolution --unit <unit> --resolves <worker-NN.yaml> --summary "<what was done and why it resolves it>"`.
+- If you cannot, write no resolution and record what you tried in this turn's `worker` envelope.

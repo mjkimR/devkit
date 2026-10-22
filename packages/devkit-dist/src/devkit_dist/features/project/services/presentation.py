@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit_dist.features.project.models.presentation import PresentationLanguage
+from devkit.advisory import AdvisoryError
+
+from devkit_dist.features.project.models.presentation import (
+    PRESENTATION_LANGUAGES,
+    PresentationLanguage,
+    PresentationLanguageUnsupportedNotice,
+)
 from devkit_dist.features.project.repositories.local_config import read_effective_config
 
 
@@ -13,8 +19,24 @@ def resolve_language(root: Path, *, effective: bool = True) -> PresentationLangu
     config = read_effective_config(root, local=effective)
     requested = config.values["presentation"]["language"]
     source = config.sources["presentation.language"]
-    fallback = requested not in ("auto", "en", "ko")
+    fallback = requested not in PRESENTATION_LANGUAGES
     return PresentationLanguage(requested, "en" if fallback else requested, source, fallback)
+
+
+def language_notices(root: Path) -> list[AdvisoryError]:
+    """``PRESENTATION_LANGUAGE_UNSUPPORTED`` warnings for each configuration file whose value fell back to ``en``.
+
+    Both the effective value (personal rendering) and the shared-only value (canonical tracked output) are checked;
+    a file is reported once.
+    """
+    notices: list[AdvisoryError] = []
+    sources: set[str] = set()
+    for effective in (True, False):
+        language = resolve_language(root, effective=effective)
+        if language.fallback and language.source not in sources:
+            sources.add(language.source)
+            notices.append(PresentationLanguageUnsupportedNotice.of(language))
+    return notices
 
 
 def approval_language(executor: Path) -> str:

@@ -1,6 +1,8 @@
 # spec-rule templates
 
-Read this at Step 2 of the `spec-rule` skill. Starting points for a new rule asset in the repository's in-repository bundle (`tools/<repo>-devkit/src/<package>/bundle/`). Rename `RULE-myrepo-final-newline`, `final_newline` and the classes; keep the structure. The example is complete and fixable: Markdown files under the configured paths must end with a newline.
+Read this at Step 2 of the `spec-rule` skill. These are starting points for a new rule asset in the repository's in-repository bundle (`tools/<repo>-devkit/src/<package>/bundle/`). The example is complete and fixable: Markdown files under the configured paths must end with a newline.
+
+Rename `RULE-myrepo-final-newline`, `final_newline` and the classes; keep the structure.
 
 ## Layout and registration
 
@@ -139,7 +141,9 @@ class FinalNewlineRule(BaseRule):
         return found
 ```
 
-The evaluator sets each violation's effective `severity` and `phase`; the rule does not pass them. A rule without settings omits `settings`, `validate_settings` and the `ctx.settings` call. A hygiene rule meant to become a linter rule declares `phase=Phase.HYGIENE, promote_to=Phase.LINTER`.
+- Do not pass `severity` or `phase` to a violation; the evaluator sets their effective values.
+- For a rule without settings, omit `settings`, `validate_settings` and the `ctx.settings` call.
+- For a hygiene rule meant to become a linter rule, declare `phase=Phase.HYGIENE, promote_to=Phase.LINTER`.
 
 For a larger rule, keep the implementation in the bundle package (`<package>/rules/final_newline.py`, importable and type-checked) and let the deployed `rule.py` only subclass it, as the `spec` bundle's rules do; `guide.md` stays beside the deployed file.
 

@@ -10,7 +10,7 @@ agent: claude-code
 origin: user
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -44,3 +44,9 @@ After sync with the unsupported value, .claude/ and .agents/ response-style SKIL
   "Use en as the default conversation language ..."  (identical sha256 in .devkit/transient/local-render.json)
 After setting the value to ko and re-syncing: "Use ko as the default conversation language ..."
 ```
+
+## Disposition
+
+Directly resolved by `SPEC-feedback-quick-fixes` with the suggestion's warning option, by user decision, keeping the English fallback that `ADR-shared-language-preference-with-bounded-approval-content` decides. Any `[presentation] language` other than exactly `auto`, `en` or `ko` still resolves to `en` with `fallback=true`, but `devkit sync`, `devkit status` and `devkit config show` now return a `PRESENTATION_LANGUAGE_UNSUPPORTED` `WARNING` under `notices` for each shared or local file whose value fell back, naming the file and the value, with a `[FIX]` naming the accepted values `auto`, `en` and `ko` and the file to edit. The warning changes no exit code except under `--strict`. No aliases are accepted.
+
+Verification: `test_presentation.py` covers the warning for the shared file, the local file and both, and none for supported values; the sync scenario in `distribution/test_local_config.py` renders `en` for an unsupported value and expects the warning from `sync_project`, `config show` (exit 0, exit 1 under `--strict`), `status` and `devkit sync` stderr. A manual `uv run devkit sync` with `language = "korean"` in `.devkit/config.local.toml` printed the `[WARN]` block on stderr and exited 0. `just test-affected` ran the full suite: 4462 passed, 14 skipped. Integration remains a separate Host step.
