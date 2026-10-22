@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T11:09:50.729584Z'
+status: completed
+summary: Guarded strict libyaml parsing preserves current grammar and diagnostics; independent review, cumulative tests and reconciliation pass.
+findings: []
+assumptions:
+- 'Local integration selected under pull_request=auto: no platform review or CI requirement; dev-integration=auto supplies integration authority.'
+- Canonical C-loader grammar and fixer work is retained as FB-canonical-c-yaml-contract, outside this optimization.
+checks:
+  tests: PASS just test-affected mode=full 4937 passed 12 skipped
+  build: PASS final devkit-core wheel
+  lint: PASS lint-check core, check core and CI rules check
+diff_scope:
+  base: 148f84df36858de01cd2f6147dbb21b346624b1f
+  head: aa4e02c59ddc629f81093770d24f631c11060986
