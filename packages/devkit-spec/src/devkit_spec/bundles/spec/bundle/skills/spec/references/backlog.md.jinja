@@ -48,3 +48,5 @@ Before splitting, superseding, rejecting, deleting or reclassifying a proposal:
 
 - Create `docs/roadmap/MS-<slug>.md` from `.devkit/managed/spec/templates/milestone.md` and follow its section guidance; membership lives only in a direct proposal's `milestone` field.
 - Every status change is the user's decision on a concrete candidate. Activate: show each dependency not `done` or `dropped`. Close: follow [milestone completion](milestone-completion.md). Drop: show unsettled members and dependent milestones, and prepare their reassignment, clearing or rejection.
+- Merge: on the user's decision, small milestones of any status may merge into a broader theme milestone. In one commit, list the merged IDs in the theme's `aliases`, restate its goal and exit condition, delete the merged files, run `devkit rules fix` and remove `depends_on` edges between the merged milestones; completed specs and Git keep the delivery record.
+- After a merge, move remaining scope to draft proposals in the theme, keep the theme `planned` or `active` while scope remains, and close it only through [milestone completion](milestone-completion.md).
