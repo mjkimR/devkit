@@ -9,6 +9,7 @@ usecases:
   - UC-keep-the-living-spec-consistent
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/documents/
+  - packages/devkit-core/src/devkit_core/core/frontmatter.py
 created_at: 2026-10-13
 ---
 
@@ -62,6 +63,11 @@ stays ID-free and unindexed, and its Owner references do not become graph edges.
    `reconcile_id` and `status`, when present, MUST be strings. A file that cannot be read as UTF-8, or whose
    frontmatter breaks either requirement, MUST be left out of the index and reported as a `SPEC_DOCUMENT_INVALID`
    warning; every other document MUST stay usable.
+   WHERE PyYAML provides libyaml, the shared loader MUST accelerate ordinary headers while preserving Python
+   value types and strict duplicate-key validation. Headers with tabs, question marks, hashes, U+FEFF or deeply
+   nested collection syntax use the Python loader. C-parser failures are retried with the Python loader to preserve its FrontmatterError diagnostics.
+   Without libyaml, the Python loader remains available. These routes are verified by
+   `packages/devkit-core/tests/unit/core/test_frontmatter.py`.
 5. **Uniqueness**: IDs are repository-wide and MUST be unique across `docs/`, `specs/` and every namespace docs root.
    The index keeps every declaration of an ID, so a duplicate is detectable (`SPEC_ID_DUPLICATE`). Aliases share
    this namespace (section 3.5).

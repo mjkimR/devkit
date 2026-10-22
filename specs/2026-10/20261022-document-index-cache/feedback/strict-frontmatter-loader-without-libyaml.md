@@ -8,7 +8,7 @@ target: packages/devkit-core/src/devkit_core/core/frontmatter.py
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -38,3 +38,8 @@ Performance: the shared frontmatter loader ignores libyaml even when PyYAML has 
 cProfile of devkit spec resolve: frontmatter.load_header 0.40 s of 1.07 s (pure-Python yaml composer/scanner).
 headers=640 pure=128ms libyaml=15ms equal=True   (yaml.__with_libyaml__ True, PyYAML 6.0.3)
 ```
+
+- **Disposition**: `SPEC-frontmatter-libyaml`: guarded libyaml parsing preserves strict errors and deep-input
+  fallback; 116 frontmatter tests passed, independent review and 2,960 differential probes passed, and 682 headers
+  produced equal values with a 3.55x median parsing speedup. Python-only import, lint, type checks and wheel build
+  verified.

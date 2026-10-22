@@ -1,0 +1,23 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T11:02:28.081395Z'
+status: completed
+summary: 'REVISE: independent review found C-only syntax accepted on the fast path.'
+findings:
+- issue: The fast path preserves libyaml syntax that Python rejects.
+  evidence: 'frontmatter.py:172-175: a: [b?,c], a: |# followed by a block scalar, and trailing U+FEFF are accepted by C but raise FrontmatterError in Python.'
+  failure_condition: libyaml is available and a header uses C-only syntax; successful C construction bypasses Python fallback.
+  suggested_action: Route headers containing question marks, hashes or U+FEFF through Python; add valid and invalid regression cases and remeasure.
+  resolution: open
+  severity: P1
+assumptions:
+- Codex emulated isolated reviewer; read-only fixed-commit review.
+checks:
+  tests: PASS 104 frontmatter regressions
+  differential: FAIL 15 of 2960 mutations differ; 19138 additional guarded mutations agree
+diff_scope:
+  base: b5cfd8d27fed749003d0ed8ca8e12d1b5554e1e0
+  head: 2e1744ac28c255b22c4609eb4138080f2e0b1d15
+activity_effort: medium

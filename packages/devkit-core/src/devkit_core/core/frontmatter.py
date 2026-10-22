@@ -23,11 +23,13 @@ caller can rewrite the header and keep every other character of the text.
 
 from __future__ import annotations
 
+from contextlib import closing
 from dataclasses import dataclass
 from typing import Any
 
 import yaml
 from yaml.constructor import ConstructorError
+from yaml.events import CollectionEndEvent, CollectionStartEvent
 from yaml.nodes import MappingNode
 
 from devkit_core.base.errors import FrontmatterError
@@ -119,24 +121,63 @@ def locate(text: str) -> FrontmatterBlock | None:
     raise FrontmatterError("frontmatter opened with '---' is never closed by a '---' or '...' line")
 
 
-class _StrictLoader(yaml.SafeLoader):
-    """Safe YAML loader that rejects duplicate mapping keys at every nesting level."""
+def _strict_loader(base: type[yaml.SafeLoader]) -> type[yaml.SafeLoader]:
+    """Apply the same duplicate-key check to either safe parser."""
 
-    def construct_mapping(self, node: MappingNode, deep: bool = False) -> dict[Any, Any]:
-        seen: list[Any] = []
-        for key_node, _ in node.value:
-            if key_node.tag == "tag:yaml.org,2002:merge":
-                continue  # merged keys may be overridden explicitly
-            key = self.construct_object(key_node, deep=True)
-            if key in seen:
-                raise ConstructorError(
-                    "while constructing a mapping",
-                    node.start_mark,
-                    f"found duplicate key {key!r}",
-                    key_node.start_mark,
-                )
-            seen.append(key)
-        return super().construct_mapping(node, deep=deep)
+    class StrictLoader(base):
+        """Safe YAML loader that rejects duplicate mapping keys at every nesting level."""
+
+        def construct_mapping(self, node: MappingNode, deep: bool = False) -> dict[Any, Any]:
+            seen: list[Any] = []
+            for key_node, _ in node.value:
+                if key_node.tag == "tag:yaml.org,2002:merge":
+                    continue  # merged keys may be overridden explicitly
+                key = self.construct_object(key_node, deep=True)
+                if key in seen:
+                    raise ConstructorError(
+                        "while constructing a mapping",
+                        node.start_mark,
+                        f"found duplicate key {key!r}",
+                        key_node.start_mark,
+                    )
+                seen.append(key)
+            return super().construct_mapping(node, deep=deep)
+
+    return StrictLoader
+
+
+_StrictLoader = _strict_loader(yaml.SafeLoader)
+_c_base = getattr(yaml, "CSafeLoader", None)
+_FastStrictLoader = _strict_loader(_c_base) if _c_base is not None else None
+# Route deep syntax back to Python before its recursion limit becomes relevant.
+# This is a parser selection threshold, not an input depth limit.
+_PYTHON_DEPTH_THRESHOLD = 100
+# C and Python scanners disagree on these characters in some syntactic positions.
+_PYTHON_SYNTAX = frozenset("\t?#\ufeff")
+
+
+def _needs_python(header: str, loader: type[yaml.SafeLoader]) -> bool:
+    depth = 0
+    with closing(yaml.parse(header, Loader=loader)) as events:
+        for event in events:
+            if isinstance(event, CollectionStartEvent):
+                depth += 1
+                if depth > _PYTHON_DEPTH_THRESHOLD:
+                    return True
+            elif isinstance(event, CollectionEndEvent):
+                depth -= 1
+    return False
+
+
+def _load_yaml(header: str) -> Any:
+    if _FastStrictLoader is not None and _PYTHON_SYNTAX.isdisjoint(header):
+        try:
+            if not _needs_python(header, _FastStrictLoader):
+                return yaml.load(header, Loader=_FastStrictLoader)
+        except (yaml.YAMLError, ValueError, RecursionError):
+            # Python supplies the original error message, marks and source excerpt.
+            pass
+    return yaml.load(header, Loader=_StrictLoader)
 
 
 def load_header(header: str) -> dict[str, Any]:
@@ -147,7 +188,7 @@ def load_header(header: str) -> dict[str, Any]:
     value that is not a mapping, or a top-level key that is not a string.
     """
     try:
-        data = yaml.load(header, Loader=_StrictLoader)
+        data = _load_yaml(header)
     except RecursionError as exc:
         raise FrontmatterError("invalid YAML frontmatter: nested too deeply") from exc
     except (yaml.YAMLError, ValueError) as exc:  # SafeLoader raises ValueError for an impossible date

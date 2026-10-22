@@ -1,10 +1,22 @@
 from __future__ import annotations
 
 import datetime
+import importlib.util
+from pathlib import Path
+from unittest.mock import patch
 
 import pytest
-from devkit_core.core import FrontmatterError
+import yaml
+from devkit_core.core import FrontmatterError, frontmatter
 from devkit_core.core.frontmatter import locate, parse
+
+
+@pytest.fixture(autouse=True, params=["python", "libyaml"])
+def parser_route(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
+    if request.param == "python":
+        monkeypatch.setattr(frontmatter, "_FastStrictLoader", None)
+    elif frontmatter._FastStrictLoader is None:
+        pytest.skip("PyYAML has no libyaml")
 
 
 def test_no_frontmatter_returns_whole_text() -> None:
@@ -143,3 +155,68 @@ def test_an_impossible_date_is_a_frontmatter_error(header: str) -> None:
 def test_deeply_nested_yaml_is_a_frontmatter_error() -> None:
     with pytest.raises(FrontmatterError, match="nested too deeply"):
         parse("---\nk: " + "[" * 10_000 + "]" * 10_000 + "\n---\n")
+
+
+@pytest.mark.parametrize(
+    "header",
+    [
+        "a: 1\na: 2\n",
+        "outer:\n  x: 1\n  x: 2\n",
+        "x:\n  1: a\n  0x1: b\n",
+        "a: [unclosed\n",
+        "a:\t1\n",
+        "a: [b?,c]\n",
+        "a: |#\n  b\n",
+        "a: b\n\ufeff",
+        "? [a]\n: 1\n",
+        "created: 2024-02-30\n",
+        "k: !!python/object:builtins.object {}\n",
+        "- a\n- b\n",
+        "1: one\n",
+    ],
+)
+def test_error_messages_match_python(header: str) -> None:
+    with patch.object(frontmatter, "_FastStrictLoader", None), pytest.raises(FrontmatterError) as python_error:
+        frontmatter.load_header(header)
+    with pytest.raises(FrontmatterError) as actual_error:
+        frontmatter.load_header(header)
+    assert str(actual_error.value) == str(python_error.value)
+
+
+@pytest.mark.parametrize("depth", [99, 100, 101, 150])
+def test_moderately_deep_syntax_keeps_python_acceptance(depth: int) -> None:
+    header = "k: " + "[" * depth + "0" + "]" * depth
+    with patch.object(frontmatter, "_FastStrictLoader", None):
+        expected = frontmatter.load_header(header)
+    assert frontmatter.load_header(header) == expected
+
+
+def test_recursive_aliases_keep_identity() -> None:
+    data = frontmatter.load_header("k: &loop [*loop]\n")
+    assert data["k"][0] is data["k"]
+
+
+def test_import_without_libyaml(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delattr(yaml, "CSafeLoader", raising=False)
+    spec = importlib.util.spec_from_file_location("_frontmatter_without_libyaml", Path(frontmatter.__file__))
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    # dataclasses resolves the defining module through sys.modules during import.
+    import sys
+
+    monkeypatch.setitem(sys.modules, spec.name, module)
+    spec.loader.exec_module(module)
+    assert module.load_header("day: 2026-10-22\n") == {"day": datetime.date(2026, 10, 22)}
+    with pytest.raises(FrontmatterError, match="duplicate key"):
+        module.load_header("a: 1\na: 2\n")
+    with pytest.raises(FrontmatterError, match="nested too deeply"):
+        module.load_header("k: " + "[" * 10_000 + "]" * 10_000)
+
+
+def test_tabs_inside_quoted_scalars_remain_valid() -> None:
+    assert frontmatter.load_header('k: "a\tb"\n') == {"k": "a\tb"}
+
+
+@pytest.mark.parametrize("character", ["?", "#", "\ufeff"])
+def test_guarded_characters_inside_quoted_scalars_remain_valid(character: str) -> None:
+    assert frontmatter.load_header(f'k: "a{character}b"\n') == {"k": f"a{character}b"}
