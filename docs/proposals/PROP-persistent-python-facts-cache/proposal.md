@@ -44,7 +44,7 @@ facts can persist between runs under a content digest and a rule version, so a r
 - An opt-in rule contract for per-file facts, persisted under `.devkit/transient/` with content-digest keys and a
   rule fingerprint; undeclared rules are unchanged.
 - Results identical to a run without the cache under edits, renames, deletions, branch switches and rule changes.
-- Measured against main after `PROP-shared-python-node-index`; Planning decides whether the remaining time justifies
+- Measured against main after `SPEC-shared-python-node-index`; Planning decides whether the remaining time justifies
   the contract change.
 
 ## 4. Lifecycle & Retirement Criteria
