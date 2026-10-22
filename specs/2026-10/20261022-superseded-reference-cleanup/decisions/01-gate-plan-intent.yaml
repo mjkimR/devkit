@@ -1,0 +1,18 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'Goal: resolve FB-agt-pyproject-foundation-comment, FB-configuration-adr-foundation-driver,
+  FB-effort-test-cites-superseded-adr and FB-integration-usecase-coded-extensions.
+  Scope: the devkit-agt pyproject dependency comment names devkit-dist as the executable
+  and distribution; the ADR-configuration-language-and-rendering driver is reworded
+  editorially to project configuration owned by devkit-dist citing ADR-foundation-and-mcp-package-ownership;
+  the test_effort_procedure docstring cites ADR-host-owned-review-loop-recovery; UC-drive-development-to-integration
+  gains step extensions for INTEGRATION_RECEIPT_READER_CHANGED and MCP_RUNTIME_STALE
+  with their distinct recoveries and states that the other coded executor refusals
+  are listed in CAP-INT-mcp-services. No behavior change. Verification: rules check,
+  affected tests, reconcile-check. task-kind feature, planning-depth spec, activity-effort
+  low.'
+by: user
+at: '2026-10-22T05:35:40.588419Z'
