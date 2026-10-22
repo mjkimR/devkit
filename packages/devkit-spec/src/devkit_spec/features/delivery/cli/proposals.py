@@ -72,9 +72,7 @@ def proposal_group() -> None:
 @click.argument("slug")
 @click.option("--title", "-t", default=None, help="Proposal title [default: the slug]")
 @click.option("--target-area", "-a", default=None, help="Capability area the proposal targets (capabilities/<area>/)")
-@click.option(
-    "--milestone", "-m", default=None, help="Existing global MS-<slug> milestone ID; carried to spec.md on handoff"
-)
+@click.option("--milestone", "-m", default=None, help="Existing global MS-<slug> milestone ID")
 @click.option(
     "--task-kind",
     default=None,

@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -38,3 +38,5 @@ created_at: 2026-10-22
 ```text
 proposals.py: help="Existing global MS-<slug> milestone ID; carried to spec.md on handoff"
 ```
+
+- **Disposition**: resolved. Session change `packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py`: the `--milestone` help no longer claims a carry to spec.md; `just test-affected` (1353 passed), lint and Pyright pass.
