@@ -1,0 +1,15 @@
+kind: resolution
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T00:03:41.951928Z'
+status: completed
+summary: 'Host reviewed models/results.py: the additive ConfigurationReport result is required for devkit config show to return the decided warning under notices, matching existing result types; the boundary is expanded narrowly to that file. Also added the missing notice table row.'
+findings: []
+checks:
+  rules: PASS devkit rules check --ci --base 490b0b28
+diff_scope:
+  base: 2b635fe463182181b6eaf5e43be5e570ef04f9df
+  head: 58a1f1b3344d0fbbff11207fceb9bd67530bbd04
+resolves: worker-03.yaml
+activity_effort: low
