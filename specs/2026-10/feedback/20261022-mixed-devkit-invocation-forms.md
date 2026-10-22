@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -47,3 +47,5 @@ rg count of `uv run devkit` in bundle sources: about 56
 which -a devkit -> devkit not found
 VIRTUAL_ENV=<other project>/.venv
 ```
+
+- **Disposition (resolved)**: Added convention rules in `AGENTS.md.jinja` (spec context) and `spec` entry skill (`SKILL.md.jinja`) stating that bare `devkit ...` names the project's documented invocation (`uv run devkit ...` per `ADR-keep-uv-run-as-the-agent-facing-devkit-invocation`), synchronized with `devkit sync`.

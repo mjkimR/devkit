@@ -7,16 +7,16 @@ and validate; a default that is not available leaves the anchor unbound, with a 
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow import Binding, Workspace
+from devkit_core.core.logs import get_logger
 
 from devkit_spec.base.errors import ProposalWorkflowError, SpecError
 from devkit_spec.features.proposals.models.axes import DEFAULT_WORKFLOW
 
-_log = logging.getLogger(__name__)
+_log = get_logger(__name__)
 
 
 def resolve_binding(

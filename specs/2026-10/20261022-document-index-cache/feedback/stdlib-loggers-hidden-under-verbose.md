@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/binding
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -50,3 +50,5 @@ rg "logging.getLogger(__name__)" packages/*/src:
   devkit_dist/features/distribution/usecases/status.py:74
 test_a_discarded_memo_is_logged_only_under_verbose: failed with logging.getLogger, passed with get_logger
 ```
+
+- **Disposition (resolved)**: Replaced `logging.getLogger(__name__)` with `devkit_core.core.logs.get_logger(__name__)` in `binding.py`, `specs.py`, `transaction.py` and `status.py`, and added `test_workspace_modules_use_shared_logger` in `tools/devkit-dev/tests/integration/test_architecture.py`. Verified via pytest.

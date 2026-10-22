@@ -8,7 +8,7 @@ target: the spec-specify skill
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -42,3 +42,5 @@ created_at: 2026-10-22
 [ERROR]  (GATE_RULES_FAILED) 1 rule violation(s) in the staged tree
 [DETAIL] RULE-task-coverage .../tasks.md:1: acceptance criteria without a task: AC-02, ..., AC-11
 ```
+
+- **Disposition (resolved)**: Clarified in `spec-specify` completion instructions (`SKILL.md`) that the `specify` stage boundary is reached and committed only after `spec.md`, `plan.md` and `tasks.md` are all written, avoiding early commit refusal by `RULE-task-coverage`.

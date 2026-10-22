@@ -9,6 +9,8 @@ user instructions take precedence. Never end the user's session on your own.
 - Read each relevant instruction listed with it before the action it governs. If an instruction conflicts with a
   mandatory check, follow the check and report the conflict.
 - Add a rule or check only for an identifiable failure or a reusable practice, at proportionate cost.
+- Where bundle text or skills name a bare `devkit ...` command, run the project's documented form (`uv run devkit ...`
+  per `ADR-keep-uv-run-as-the-agent-facing-devkit-invocation`).
 
 ## 2. Living Spec and Scope
 

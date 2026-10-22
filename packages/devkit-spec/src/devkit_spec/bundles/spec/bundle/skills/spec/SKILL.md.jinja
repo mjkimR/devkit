@@ -11,6 +11,7 @@ Use this skill for `/spec <intent>`, any development task, feature request, trou
 
 - If `devkit spec policy` fails, stop policy-dependent work.
 - Before deciding an approval boundary or a Git action, read the [completion policy](references/completion.md#policy).
+- Where guidance names a bare `devkit ...` command, invoke the project's documented form (`uv run devkit ...`).
 - Do not search or route to playbooks from `spec`. A playbook runs only when the user invokes `devkit-playbook` for the task or a failing rule's remediation names one; handle any other operational request as ordinary work.
 - Under `FEEDBACK_POLICY reminder=contextual`, suggest an optional `/spec-feedback` sweep when completed work produced reusable observations; it never gates completion or merge. Routine completions and wording edits get no reminder.
 

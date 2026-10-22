@@ -14,7 +14,6 @@ when given; a skeleton-marked ``spec.md`` is exempt from the rule until it is wr
 from __future__ import annotations
 
 import errno
-import logging
 import os
 import shutil
 from collections.abc import Sequence
@@ -27,6 +26,7 @@ from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow import Binding, write_binding
 from devkit_core.core import remove_empty_tree
 from devkit_core.core.frontmatter import locate
+from devkit_core.core.logs import get_logger
 
 from devkit_spec.base.errors import (
     SpecExistsError,
@@ -54,7 +54,7 @@ from devkit_spec.features.proposals.usecases.scaffold import (
 SKELETON_MARKER = "<!-- devkit:skeleton -->"
 SPEC_FILE = "spec.md"
 
-_log = logging.getLogger(__name__)
+_log = get_logger(__name__)
 
 
 def text_value(value: object) -> str:

@@ -8,12 +8,12 @@ reports what differs; what needs acting on is collected under ``errors``.
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from devkit.advisory import Actor, AdvisoryError, ExitCode, Level
+from devkit_core.core.logs import get_logger
 
 from devkit_dist.features.distribution.models.content import signature
 from devkit_dist.features.distribution.models.errors import (
@@ -71,7 +71,7 @@ from devkit_dist.features.project.repositories.receipt import (
 from devkit_dist.features.project.services.presentation import language_notices
 
 _EMPTY_SELECTION = Selection((), {})
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass(frozen=True)

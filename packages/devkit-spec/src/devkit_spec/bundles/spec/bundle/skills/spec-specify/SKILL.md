@@ -52,4 +52,4 @@ Read one:
 
 - [ ] `spec.md` keeps the `id` and `workflow` frontmatter and an English `summary`, and the
   `<!-- devkit:skeleton -->` line is removed.
-- [ ] `devkit rules check <dir>` reports no violation other than task coverage not yet written; next is `spec-plan`.
+- [ ] `devkit rules check <dir>` reports no violation other than task coverage not yet written; next is `spec-plan`. Do not commit yet: the `specify` stage boundary is reached and committed only after `plan.md` and `tasks.md` are also written, satisfying `RULE-task-coverage`.

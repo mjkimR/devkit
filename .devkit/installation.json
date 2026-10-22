@@ -911,7 +911,7 @@
     },
     ".agents/skills/spec-specify/SKILL.md": {
       "mode": 420,
-      "sha256": "9c921dbd948e15924f2ab5f099a9634a40b398ad2ad4b3e0458320b73e613def"
+      "sha256": "d3286f71dd14a78def5ec94e1faac181ee59b1a8d70eee2df82825aa1dbdda77"
     },
     ".agents/skills/spec-specify/references/bugfix.md": {
       "mode": 420,
@@ -931,7 +931,7 @@
     },
     ".agents/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "24ca73adf90a94db90c1e18b59aab4f4ceac7a4c4a1a4954df53dd3ea7b1456b"
+      "sha256": "a6b84636e89a8c383f9daf102e15b853ba2f8cd1f892ec3c5dd117f363496d8e"
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -1115,7 +1115,7 @@
     },
     ".claude/skills/spec-specify/SKILL.md": {
       "mode": 420,
-      "sha256": "9c921dbd948e15924f2ab5f099a9634a40b398ad2ad4b3e0458320b73e613def"
+      "sha256": "d3286f71dd14a78def5ec94e1faac181ee59b1a8d70eee2df82825aa1dbdda77"
     },
     ".claude/skills/spec-specify/references/bugfix.md": {
       "mode": 420,
@@ -1135,7 +1135,7 @@
     },
     ".claude/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "24ca73adf90a94db90c1e18b59aab4f4ceac7a4c4a1a4954df53dd3ea7b1456b"
+      "sha256": "a6b84636e89a8c383f9daf102e15b853ba2f8cd1f892ec3c5dd117f363496d8e"
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -1395,7 +1395,7 @@
     },
     ".devkit/managed/spec/AGENTS.md": {
       "mode": 420,
-      "sha256": "143cba16cf7f5749d5888814daf3225e828e37028516fee24dcdef1af4efff7b"
+      "sha256": "b830f1a823e1354257ff745c047bfe81cd36695e2c432d1824584859967cc578"
     },
     ".devkit/managed/spec/bundle.toml": {
       "mode": 420,
@@ -1667,7 +1667,7 @@
     },
     ".devkit/managed/spec/skills/spec-specify/SKILL.md": {
       "mode": 420,
-      "sha256": "9c921dbd948e15924f2ab5f099a9634a40b398ad2ad4b3e0458320b73e613def"
+      "sha256": "d3286f71dd14a78def5ec94e1faac181ee59b1a8d70eee2df82825aa1dbdda77"
     },
     ".devkit/managed/spec/skills/spec-specify/references/bugfix.md": {
       "mode": 420,
@@ -1687,7 +1687,7 @@
     },
     ".devkit/managed/spec/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "24ca73adf90a94db90c1e18b59aab4f4ceac7a4c4a1a4954df53dd3ea7b1456b"
+      "sha256": "a6b84636e89a8c383f9daf102e15b853ba2f8cd1f892ec3c5dd117f363496d8e"
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,

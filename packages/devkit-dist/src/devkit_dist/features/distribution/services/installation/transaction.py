@@ -8,7 +8,6 @@ from __future__ import annotations
 import base64
 import errno
 import json
-import logging
 import os
 from collections.abc import Iterable, Iterator
 from contextlib import ExitStack, contextmanager
@@ -16,6 +15,7 @@ from pathlib import Path
 
 from devkit_core.core import LockHeldError as CoreLockHeldError
 from devkit_core.core import UnsafePathError, atomic_write_bytes, file_lock
+from devkit_core.core.logs import get_logger
 
 from devkit_dist.features.distribution.models.content import Content, json_content
 from devkit_dist.features.distribution.models.errors import (
@@ -35,7 +35,7 @@ from devkit_dist.features.distribution.services.installation.workspace import (
 )
 from devkit_dist.features.project.repositories.invocation import guard_execution
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 # A reader that meets one of these while taking the lock reads without it: the file system is read-only for it.
 _READ_ONLY = frozenset({errno.EROFS, errno.EACCES, errno.EPERM})
