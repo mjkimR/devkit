@@ -24,5 +24,5 @@ Read this when the output of `devkit workflow next --unit <dir>` has a line othe
 
 ## Stage ids
 
-`sdd-session-feature` and `sdd-session-bugfix` have no unit and are not evaluated by `next`; read them with `devkit workflow show <id>` and diagnose from Steps 1-3. In `sdd-proposal`, `[STAGE: - complete=true]` is the Proposal Hand-off row, and `collect-feedback` is Planning's sweep before `direction-handoff`: [run coverage](../../spec-feedback/references/sweep.md#planning-run-coverage).
+`sdd-session-feature` and `sdd-session-bugfix` have no unit and are not evaluated by `next`; read them with `devkit workflow show <id>` and diagnose from Steps 1-3. In `sdd-proposal`, `[STAGE: - complete=true]` is the Proposal Hand-off row, and `collect-feedback` is Planning's sweep before `direction-handoff`: [run coverage](../../spec-feedback/references/sweep.md#planning-run-coverage). `spike` has no exit check, so `[DONE: ... spike]` is not Planning evidence: the `scout` and `challenger` envelopes and their `reverify` recorded at `spike` are, at the effort the `spec` skill's `references/planning.md` step 3 requires.
 

@@ -9,12 +9,10 @@ from devkit_dist.features.project.repositories.local_config import read_effectiv
 
 
 def resolve_language(root: Path, *, effective: bool = True) -> PresentationLanguage:
-    """Resolve exact values, retaining unsupported requests as diagnostic evidence."""
+    """Resolve the validated value; configuration validation refuses unsupported values, so none falls back."""
     config = read_effective_config(root, local=effective)
     requested = config.values["presentation"]["language"]
-    source = config.sources["presentation.language"]
-    fallback = requested not in ("auto", "en", "ko")
-    return PresentationLanguage(requested, "en" if fallback else requested, source, fallback)
+    return PresentationLanguage(requested, requested, config.sources["presentation.language"], False)
 
 
 def approval_language(executor: Path) -> str:

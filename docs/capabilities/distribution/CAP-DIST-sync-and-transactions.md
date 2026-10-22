@@ -435,7 +435,7 @@ use. Unknown local keys, including governance, selection and command settings, f
 
 `devkit config show --effective [--format json]` returns `configuration`, per-key `sources`, and
 `execution_environment` and `presentation_language` under the project read lock. The language metadata contains
-`requested`, `resolved`, `source` and `fallback`; explicit bundle inputs and their leaf sources remain in the
+`requested`, `resolved`, `source` and `fallback` (always `false`: unsupported values are refused); explicit bundle inputs and their leaf sources remain in the
 configuration/source maps. `resolve_execution_environment(root)` requires an existing
 bound devkit workspace and returns `environment` and its `source`; it never searches another checkout. Missing
 local files use shared/default values. Cloud means interactive approval is unavailable, never permission to change
@@ -471,17 +471,17 @@ removes obsolete local evidence. The personal language fixture is `[bundles.resp
 
 ### Presentation language
 
-Shared and allowed local `[presentation] language` accepts a string. Exact lowercase `auto`, `en` and `ko` are
-supported; omission selects `auto`. Another string resolves to `en` with the original requested value, selected
-source and `fallback=true` retained. Wrong types, malformed tables or files retain `CONFIG_INVALID`.
+Shared and allowed local `[presentation] language` accepts exactly lowercase `auto`, `en` or `ko`; omission selects
+`auto`. Any other string, a wrong type, a malformed table or file is `CONFIG_INVALID` (exit 2) naming the source file;
+for an unsupported string the `[FIX]` names the accepted values (`SPEC-feedback-quick-fixes`). The refusal comes from
+the shared runtime-table validation, so `devkit sync`, `devkit config show` and every resolver stop before rendering.
 No locale aliases, OS/environment detection or conversation-language inference is performed. The preference grants
 no execution authority. Core `resolve_language(root, effective=True)` uses only the explicit workspace; shared-only
 resolution uses the same validated resolver with local input excluded. `read_effective_config(root, local=False)`
 is the canonical shared-only variant. Local file copying and independent worktree semantics remain unchanged.
 
 For response-style, `auto` follows the current user request. For native approval forms, `auto` deterministically
-uses English; `ko` and `en` select static domain-owned copy. Unsupported strings select English for both inherited
-consumers. Only bundle declarations opting into `default_from = "presentation.language"` inherit this preference.
+uses English; `ko` and `en` select static domain-owned copy. Only bundle declarations opting into `default_from = "presentation.language"` inherit this preference.
 Templates still receive only `vars`. See `CAP-INT-mcp-services` and `CAP-DLV-proposal-incubation` for form boundaries.
 
 ### Shared artifact adapter configuration

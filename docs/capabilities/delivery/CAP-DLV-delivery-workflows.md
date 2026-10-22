@@ -223,7 +223,9 @@ expects them and `devkit workflow list` finds both. `schema_version` is `1` in e
 - **`sdd-spec-bugfix`**: `intent` (`plan-intent`), `characterize`, `plan-tasks`, `reproduce`, `fix-verify`, then the
   stages of `sdd-spec-feature` from `review-refine` on.
 - **`sdd-proposal`**: `intent-proposal` (`plan-intent`), `spike` (optional in the schema and never current on
-  its own, but run whenever the Planning effort requires a `challenger`, rule 15, or the direction needs evidence),
+  its own, but run whenever the Planning effort requires a `challenger`, rule 15, or the direction needs evidence;
+  having no exit check, it may show under `[DONE]` before any review ran, which is not Planning evidence: the
+  support-role envelopes recorded at `spike` are),
   `collect-feedback`, `direction-handoff` (`plan-accept`), `handoff` (no exit check, no return:
   Development never returns to Planning).
 
@@ -388,7 +390,8 @@ The workers exist for `local-orchestrated` mode (`spec-orchestrate`, user-invoke
 `session` depth. Each is one-shot: it runs one turn of one activity in that activity's devkit worktree, using absolute
 paths, an explicit absolute worktree cwd on every command and `git -C <worktree>` because initial cwd may be the
 base checkout, runs its role subagents nested (Host → worker → role; Claude Code tool `Agent`, Codex
-`collaboration.spawn_agent`) with absolute read/contract scopes and never ends its turn while one is still running, keeps
+`collaboration.spawn_agent`) with absolute read/contract scopes that name the worktree's startup skill and
+instruction paths (a nested role's read from another checkout is a reported boundary exception) and never ends its turn while one is still running, keeps
 scratch files in an ignored path inside its worktree, writes its own records, commits at every stage boundary and,
 when it stops on questions or a problem, makes an emergency commit of the unfinished work with its `worker` envelope
 when record/commit access is permitted.

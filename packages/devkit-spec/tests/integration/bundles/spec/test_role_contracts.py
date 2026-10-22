@@ -332,6 +332,7 @@ def test_worker_requires_explicit_paths_and_each_operation_approval(role: str) -
         "Every command MUST set cwd to the absolute assigned worktree, including verification and permission requests",
         "every Git command MUST use `git -C <worktree>`",
         "Nested-role read scopes and contract paths MUST be absolute",
+        "naming its startup skill and instruction paths (such as `response-style`)",
         "separate command-scoped approval for each necessary operation",
         "sibling-worktree writes, shared Git index/commits, scope registry writes",
         "verification requiring unavailable network access",
@@ -381,6 +382,8 @@ def test_named_and_generic_native_invocation_respect_trust_and_effective_contrac
     assert "stop and ask the user to register the root" not in hosts
     payload = " ".join(_rendered(DELEGATE.parent / "references/payload.md").split())
     assert "every nested-role read scope explicitly" in payload
+    assert "names the assigned worktree's absolute startup skill and instruction paths" in payload
+    assert "reports any read from another checkout as a boundary exception" in payload
     assert "Every command, including verification and approvals, sets absolute worktree cwd" in payload
     orchestrate = " ".join(_rendered(ORCHESTRATE).split())
     assert "Before spawning, check native spawning, required nested roles" in orchestrate
@@ -413,3 +416,12 @@ def _rendered(path: Path) -> str:
         return path.read_text(encoding="utf-8")
     source = path.with_name(path.name + ".jinja")
     return render_template(source.read_bytes(), {}, str(source), environment="local").decode()
+
+
+def test_a_condition_free_spike_completion_is_not_planning_evidence() -> None:
+    planning = " ".join(PLANNING.read_text(encoding="utf-8").split())
+    signals = " ".join(_rendered(BUNDLE / "skills/spec-next/references/workflow-signals.md").split())
+    assert "may list it under `[DONE]` before any review ran: that is not Planning evidence" in planning
+    assert "`[DONE: ... spike]` is not Planning evidence" in signals
+    for text in (planning, signals):
+        assert "`scout` and `challenger` envelopes and their `reverify` recorded at `spike`" in text

@@ -213,7 +213,7 @@ guidance, seeds and shared config stay canonical; see `CAP-DIST-sync-and-transac
 
 `presentation.language` belongs to shared configuration with an optional ignored checkout-local override, using
 the same copy-and-diverge worktree semantics as other allowed local preferences. Core owns validation, exact
-`auto/en/ko` resolution, unsupported-string English fallback and source metadata; see `CAP-DIST-sync-and-transactions`.
+`auto/en/ko` resolution, refusal of any other value with `CONFIG_INVALID`, and source metadata; see `CAP-DIST-sync-and-transactions`.
 Canonical asset planning uses shared preferences; eligible personal rendering uses effective preferences and local
 ledger evidence. The preference never authorizes a tracked output write, a forbidden asset difference or execution.
 Explicit bundle-variable values override inherited presentation defaults, regardless of which layer supplied them.

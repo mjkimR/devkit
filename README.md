@@ -65,8 +65,9 @@ just --list                # every recipe (rules-fix, rules-phases, rules-explai
 
 Module commands discover projects from `packages/*/pyproject.toml` and
 `tools/*/pyproject.toml`; pass a project name (`devkit-core`, `devkit-dist`, `devkit-agt`, `devkit-advisory`,
-`devkit-spec`, `devkit-starter`, `devkit-catalog` or `devkit-viewer`) or `all`. `devkit` remains a module-command
-alias for `devkit-agt`, `core` is one for `devkit-core`, and `dist` is one for `devkit-dist`. Feature names select their tests across tiers and matching source subtrees; tier names (`unit`, `integration`, `e2e`) or explicit paths also narrow `test` and `test-cov`, and extra pytest arguments follow them: `just test devkit gate worktree -k cache`. `just test-affected [--base REF] [--list] [-- PYTEST-ARGS]` derives the paths from the changes since the merge base with `main`.
+`devkit-spec`, `devkit-starter`, `devkit-catalog` or `devkit-viewer`) or `all`. Short names are accepted too:
+`agt` and `devkit` for `devkit-agt`, and `dev`, `core`, `dist`, `mcp`, `starter`, `catalog`, `spec` and `viewer` for
+`devkit-<name>` (`scripts/_lib.sh` `module_short_names`; an unknown name prints both lists). Feature names select their tests across tiers and matching source subtrees; tier names (`unit`, `integration`, `e2e`) or explicit paths also narrow `test` and `test-cov`, and extra pytest arguments follow them: `just test devkit gate worktree -k cache`. `just test-affected [--base REF] [--list] [-- PYTEST-ARGS]` derives the paths from the changes since the merge base with `main`.
 
 This repository's lint, type-check and test recipes use `devkit run` for bounded output.
 When changing or repairing the runner, use `DEVKIT_RUN_MODE=raw just test` (also supported by

@@ -56,19 +56,24 @@ list_modules() {
     echo "$table" | cut -d' ' -f1
 }
 
+# "<short> <full>" for every accepted module short name; the one source for resolution and the refusal's list.
+module_short_names() {
+    cat <<'NAMES'
+agt devkit-agt
+devkit devkit-agt
+dev devkit-dev
+core devkit-core
+dist devkit-dist
+mcp devkit-mcp
+starter devkit-starter
+catalog devkit-catalog
+spec devkit-spec
+viewer devkit-viewer
+NAMES
+}
+
 resolve_module() {
-    case "$1" in
-        devkit) echo "devkit-agt" ;;
-        dev) echo "devkit-dev" ;;
-        core) echo "devkit-core" ;;
-        dist) echo "devkit-dist" ;;
-        mcp) echo "devkit-mcp" ;;
-        starter) echo "devkit-starter" ;;
-        catalog) echo "devkit-catalog" ;;
-        spec) echo "devkit-spec" ;;
-        viewer) echo "devkit-viewer" ;;
-        *) echo "$1" ;;
-    esac
+    module_short_names | awk -v name="$1" '$1 == name { print $2; found = 1; exit } END { if (!found) print name }'
 }
 
 resolve_module_path() {
@@ -85,6 +90,7 @@ validate_module() {
     if [ "$1" != all ] && ! resolve_module_path "$1" >/dev/null; then
         echo "Unknown module: $1" >&2
         echo "Available modules: all $(list_modules | tr '\n' ' ')" >&2
+        echo "Module short names: $(module_short_names | awk '{ printf "%s=%s ", $1, $2 }')" >&2
         return 1
     fi
 }

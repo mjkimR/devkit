@@ -573,7 +573,7 @@ not authorize final integration. See `CAP-MCP-runtime-registration` for runtime/
 ### Handoff presentation language
 
 The service snapshots the owning configuration workspace's `presentation.language` before each confirmation,
-independently of the retained executor. English is deterministic for auto/unsupported strings; ko selects Korean.
+independently of the retained executor. English is deterministic for auto and en; ko selects Korean (other values are refused as configuration errors).
 Static copy covers Development start, setup/restoration effects, effort meanings, required checks, absent markers
 and separate final-merge approval. Both messages pair canonical `low`, `medium`, `high` with their localized meanings
 and explain that effort does not change model reasoning settings, so omitted field metadata loses no decision facts.

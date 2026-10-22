@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
+from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.distribution.models.errors import ConflictError, ReceiptStaleError
 from devkit_dist.features.distribution.services.installation import transaction
 from devkit_dist.features.distribution.services.installation.config import update_config
@@ -429,15 +430,10 @@ def test_presentation_inheritance_and_canonical_receipt(fixture, override: str |
     assert tracked_state(root) == canonical
     assert GetContext().execute(root, "style").instructions
     local(root, '[presentation]\nlanguage="unsupported"\n')
-    with pytest.raises(LocalRenderStaleError):
-        GetContext().execute(root, "style")
-    sync.sync_project(root, [item], locked=True)
-    assert f"Language: {override if override is not None else 'en'}" in output.read_text()
+    with pytest.raises(ConfigError) as error:
+        sync.sync_project(root, [item], locked=True)
+    assert error.value.code == "CONFIG_INVALID"
+    assert "Language: " + (override if override is not None else "ko") in output.read_text()
     result = CliRunner().invoke(cli, ["config", "show", "--effective", "-w", str(root)])
-    assert result.exit_code == 0, result.output
-    assert json.loads(result.stdout)["presentation_language"] == {
-        "requested": "unsupported",
-        "resolved": "en",
-        "fallback": True,
-        "source": str(root / LOCAL_CONFIG_PATH),
-    }
+    assert result.exit_code == 2, result.output
+    assert "auto, en, ko" in result.stderr

@@ -2,7 +2,7 @@
 id: SPEC-feedback-quick-fixes
 title: Feedback Quick Fixes
 summary: 'Resolves four small open feedback items: refusing unsupported presentation languages, accepting the agt module name, naming nested-role skill paths in worker payloads, and clarifying that a condition-free spike completion is not Planning evidence.'
-status: planned
+status: in-progress
 created: 2026-10-22
 namespace: global
 related_capabilities:
