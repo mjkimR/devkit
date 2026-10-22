@@ -2,7 +2,7 @@
 id: SPEC-spec-rules-shared-document-index
 title: Share one document index across a rules run
 summary: Lets the spec rules and markdown_link share one in-process document index and catalog per rules run, and keeps markdown_link to its targets, so targeted runs such as workflow lint-clean stop re-reading every document.
-status: in-progress
+status: completed
 created: 2026-10-22
 related_capabilities:
   - CAP-GOV-rules-engine
