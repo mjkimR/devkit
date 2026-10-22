@@ -14,6 +14,7 @@ boundaries:
     - packages/devkit/src/devkit_agt/features/rules/
     - tools/devkit-dev/
     - packages/devkit-dist/src/devkit_dist/bundles/advisory/
+    - packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/
     - docs/capabilities/governance/
   excludes:
     - docs/decisions/
