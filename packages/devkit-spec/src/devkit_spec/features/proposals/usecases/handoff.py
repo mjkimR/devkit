@@ -76,6 +76,7 @@ from devkit_spec.base.errors import (
     ProposalWrongWorktreeError,
 )
 from devkit_spec.features.documents import DocumentIndex, parse_document
+from devkit_spec.features.documents.models.ids import is_legacy_id
 from devkit_spec.features.documents.models.model import Document
 from devkit_spec.features.documents.services.dependencies import cycle_members, live_unit, target_problem
 from devkit_spec.features.policy.repositories.branches import require_development_branch
@@ -241,6 +242,7 @@ class _Decision:
     target: Path
     adr_id: str
     text: str
+    aliases: tuple[str, ...] = ()
 
 
 def _read(path: Path, root: Path) -> str:
@@ -347,7 +349,16 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
         if move_materials or extras:
             materials_target = preserved
             targets.append(materials_target)
-    _check_targets(root, index, targets, decisions)
+    spec_aliases = tuple(f"SPEC-{alias.removeprefix('PROP-')}" for alias in source.aliases)
+    legacy = [alias for alias in spec_aliases if is_legacy_id(alias)]
+    if legacy:
+        raise ProposalInvalidError(
+            f"proposal aliases would become date-based spec aliases: {', '.join(legacy)}",
+            target_files=[proposal_rel],
+            fix="Remove the dated alias from the proposal's aliases (a SPEC- ID never carries a date), then rerun the"
+            " handoff",
+        )
+    _check_targets(root, index, targets, decisions, [f"SPEC-{slug}", *spec_aliases])
     for destination in [*targets, *(destination for _, destination in extras + feedback)]:
         _require_inside(root, destination)
 
@@ -378,6 +389,7 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
         summary=summary,
         target_docs_ref=target_docs_ref,
         bugfix=bugfix,
+        aliases=spec_aliases,
     )
     if bugfix:
         # sdd-spec-bugfix writes plan.md and tasks.md in its plan-tasks stage; skeletons would have to match the
@@ -559,6 +571,10 @@ def _plan_decisions(root: Path, decisions_dir: Path, month: str, stamp: str) -> 
             old = parse_document(rel, original)
         except FrontmatterError as exc:
             raise ProposalInvalidError(f"{rel}: {exc.message}", target_files=[rel]) from exc
+        if old is not None:
+            # A carried alias follows its document's rename: PADR-<x> becomes ADR-<x> in the aliases field only.
+            for start, end in sorted(old.alias_spans, reverse=True):
+                original = original[:start] + original[start:end].replace("PADR-", "ADR-", 1) + original[end:]
         sources.append((padr, adr_slug, original, rel, old.id if old else f"PADR-{adr_slug}"))
     padr_ids = {source[4] for source in sources}
 
@@ -585,6 +601,7 @@ def _plan_decisions(root: Path, decisions_dir: Path, month: str, stamp: str) -> 
                 target=target,
                 adr_id=new.id if new else f"ADR-{adr_slug}",
                 text=promoted,
+                aliases=new.aliases if new else (),
             )
         )
     return planned
@@ -793,15 +810,27 @@ def _require_inside(root: Path, destination: Path) -> None:
     )
 
 
-def _check_targets(root: Path, index: DocumentIndex, targets: list[Path], decisions: list[_Decision]) -> None:
-    """Refuse a handoff that would overwrite a path, write one path twice, or declare an ADR ID twice."""
+def _check_targets(
+    root: Path, index: DocumentIndex, targets: list[Path], decisions: list[_Decision], spec_names: list[str]
+) -> None:
+    """Refuse a handoff that would overwrite a path, write one path twice, or declare an ID twice: a graduating
+    ``SPEC-<slug>`` or ``ADR-<slug>``, or a translated alias (``spec_names`` after the spec ID, each decision's
+    ``aliases``), equal to an existing document ID or alias, or to another one graduating in the same handoff."""
     clashes = [path for path in targets if path.exists() or path.is_symlink()]
     clashes += [path for position, path in enumerate(targets) if path in targets[:position]]
-    for decision in decisions:
-        clashes += [root / document.path for document in index.by_id.get(decision.adr_id, [])]
+    names = [*spec_names, *(name for decision in decisions for name in (decision.adr_id, *decision.aliases))]
+    for name in names:
+        clashes += [root / document.path for document in index.declares(name)]
     if clashes:
         rels = list(dict.fromkeys(path.relative_to(root).as_posix() for path in clashes))
         raise ProposalTargetExistsError(f"the handoff would overwrite {', '.join(rels)}", target_files=rels)
+    twice = sorted({name for position, name in enumerate(names) if name in names[:position]})
+    if twice:
+        raise ProposalTargetExistsError(
+            f"the handoff would declare {', '.join(twice)} more than once (as an ID or a carried alias)",
+            target_files=twice,
+            fix="Remove the repeated alias or rename one of the decisions, then rerun the handoff",
+        )
 
 
 def _target_docs_reference(text: str) -> str:
@@ -884,6 +913,13 @@ def _check_dependency_projection(index: DocumentIndex, source_path: str, target_
             target_files=[source_path],
             fix="Give each proposal anchor a unique ID, repair incoming references, then rerun handoff",
         )
+
+    def names_source(written: str) -> bool:
+        found = index.canonical(written)
+        return found is not None and found[0] is source
+
+    # The projection keeps every document's aliases; a target written with the source's ID or one of its aliases
+    # is the new spec.
     projected = DocumentIndex(root=index.root)
     for document in [*(d for d in index.documents if d.path != source_path), target]:
         copied: Document = document
@@ -891,12 +927,11 @@ def _check_dependency_projection(index: DocumentIndex, source_path: str, target_
             copied = replace(
                 document,
                 references=[
-                    replace(ref, target=target.id) if ref.field == "depends_on" and ref.target == source.id else ref
+                    replace(ref, target=target.id) if ref.field == "depends_on" and names_source(ref.target) else ref
                     for ref in document.references
                 ],
             )
-        projected.documents.append(copied)
-        projected.by_id.setdefault(copied.id, []).append(copied)
+        projected.add(copied)
     problems = []
     for document in projected.documents:
         if not live_unit(document):

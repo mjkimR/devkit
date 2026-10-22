@@ -220,19 +220,22 @@ def rewrite_ids(
 
     The mapping comes from the documents actually written (``plan.exact``: proposal to spec, PADR to ADR, the
     blueprint to its copy, each carried file to its new path), never from slug guesses; every document of the
-    proposal is carried somewhere, so each of its IDs maps. An ID other documents declare too is ``ambiguous`` and
-    stays.
+    proposal is carried somewhere, so each of its IDs maps. A reference written with an alias of a relocated document
+    is rewritten exactly like one written with its old ID, to the new canonical ID: the handoff translates the alias
+    (``PROP-`` to ``SPEC-``, ``PADR-`` to ``ADR-``), which removes its only declaration. An ID or alias other
+    documents declare too is ``ambiguous`` and stays.
     """
     mapping: dict[str, str] = {}
     for old_path, new_path in sorted(plan.exact.items()):
         old, new = _parse(root, old_path), _parse(root, new_path)
         if old is None or new is None:
             continue
-        others = [d.path for d in index.by_id.get(old.id, []) if str(index.root / d.path) not in (old_path, new_path)]
-        if others:
-            report.unresolved.append(Unresolved(_display(root, old_path), 1, ID, old.id, AMBIGUOUS))
-            continue
-        mapping[old.id] = new.id
+        for name in (old.id, *old.aliases):
+            others = [d.path for d in index.declares(name) if str(index.root / d.path) not in (old_path, new_path)]
+            if others:
+                report.unresolved.append(Unresolved(_display(root, old_path), 1, ID, name, AMBIGUOUS))
+                continue
+            mapping[name] = new.id
     for file in files:
         display = _display(root, file)
         try:

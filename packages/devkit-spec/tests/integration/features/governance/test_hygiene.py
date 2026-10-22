@@ -66,3 +66,16 @@ def test_finished_milestones_report_only_unsettled_anchor_members(tmp_path: Path
     _proposal(tmp_path, "done", "rejected")
     _proposal(tmp_path, "dropped", "rejected")
     assert not [w for w in rejected_proposals(tmp_path) or [] if w.code.startswith("SPEC_MILESTONE_")]
+
+
+def test_milestone_membership_counts_a_member_written_with_an_alias(tmp_path: Path) -> None:
+    (tmp_path / ".devkit/managed/spec").mkdir(parents=True)
+    write(tmp_path, "docs/roadmap/MS-done.md", "---\nid: MS-done\nstatus: done\naliases: [MS-old]\n---\n")
+    write(
+        tmp_path,
+        "docs/proposals/PROP-member/proposal.md",
+        "---\nid: PROP-member\nstatus: draft\nmilestone: MS-old\n---\n",
+    )
+    found = rejected_proposals(tmp_path) or []
+    warnings = [w for w in found if w.code == "SPEC_MILESTONE_DONE_UNSETTLED"]
+    assert len(warnings) == 1 and "PROP-member" in warnings[0].message

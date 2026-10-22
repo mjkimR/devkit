@@ -1,4 +1,9 @@
-"""``playbook`` assets: occasional procedures found by ``devkit playbook search`` through their frontmatter."""
+"""``playbook`` assets: occasional procedures found by ``devkit playbook search`` through their frontmatter.
+
+``aliases`` are previous asset IDs of the playbook in the same bundle (``ADR-playbook-aliases-as-identifiers``): each
+matches the manifest slug grammar, and ``devkit playbook get <bundle>/<alias>`` resolves one. They are identity, not
+search text. Uniqueness within the bundle is checked by the manifest and again at retrieval.
+"""
 
 from __future__ import annotations
 
@@ -8,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from devkit_dist.features.distribution.models.errors import BundleError
-from devkit_dist.features.distribution.services.bundles.common import EXTENSION_KEY, read_frontmatter
+from devkit_dist.features.distribution.services.bundles.common import EXTENSION_KEY, SLUG, read_frontmatter
 
 FIELDS = {"name", "description", "aliases"}
 MAX_HEADER_BYTES = 4096
@@ -54,9 +59,12 @@ def read_playbook_header(data: bytes, context: str) -> PlaybookHeader:
             raise BundleError(f"{context}: {field} must be a nonempty string")
         _require_english(value, f"{context}.{field}")
     aliases = metadata.get("aliases", [])
-    if not isinstance(aliases, list) or not all(isinstance(v, str) and v.strip() for v in aliases):
-        raise BundleError(f"{context}: aliases must be an array of nonempty strings")
-    for alias in aliases:
-        _require_english(alias, f"{context}.aliases")
+    if not isinstance(aliases, list) or not all(isinstance(v, str) and SLUG.fullmatch(v) for v in aliases):
+        raise BundleError(
+            f"{context}: aliases must be an array of previous playbook asset IDs ([a-z][a-z0-9-]*)",
+            fix="List previous asset IDs of this playbook in aliases; move search phrases into the description",
+        )
+    if len(set(aliases)) != len(aliases):
+        raise BundleError(f"{context}: aliases must not repeat an ID")
     extensions = tuple((key, value) for key, value in metadata.items() if key not in FIELDS)
     return PlaybookHeader(metadata["name"].strip(), metadata["description"].strip(), tuple(aliases), extensions)

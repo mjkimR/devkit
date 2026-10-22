@@ -33,5 +33,5 @@ created_at: 2026-10-22
 ## Evidence
 
 - `references/worker-records.md` section 2 and "Direction without a recorded question".
-- `envelopes/answer-01.yaml` q3 decision ("No ADR file under docs/decisions/ is changed by this work") and the
+- historical Git `2963ae20e92c1b9b9f0c54131fb53222f402c127:docs/proposals/PROP-document-id-aliases-and-compaction/envelopes/answer-01.yaml` q3 decision ("No ADR file under docs/decisions/ is changed by this work") and the
   proposal's Planning decision "ADRs are not excluded".

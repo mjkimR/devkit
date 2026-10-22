@@ -10,6 +10,12 @@ file never hides the others. IDs and references are repository-wide.
 A parsed document is reused by later loads while its file's text is
 unchanged, so the rules of one run, which each load the index, parse every
 file once.
+
+A document may declare ``aliases``, previous or alternate IDs
+(``ADR-document-id-aliases``). ``canonical`` is the one mapping from a written
+target to its document: a declared ID always wins, and an alias resolves only
+when exactly one document declares it and none has it as its ID. Every lookup
+of the index goes through it.
 """
 
 from __future__ import annotations
@@ -79,13 +85,15 @@ def in_feedback(path: str) -> bool:
 
 @dataclass
 class DocumentIndex:
-    """``documents`` in path order, ``by_id`` every document declaring an ID, ``problems`` the files left out,
-    ``historical`` the paths of the files of completed spec bundles (work history, no longer current), feedback
-    aside: a feedback file stays current until a hygiene session settles it, whatever its bundle's status."""
+    """``documents`` in path order, ``by_id`` every document declaring an ID, ``by_alias`` every document declaring
+    an alias, ``problems`` the files left out, ``historical`` the paths of the files of completed spec bundles (work
+    history, no longer current), feedback aside: a feedback file stays current until a hygiene session settles it,
+    whatever its bundle's status."""
 
     root: Path
     documents: list[Document] = field(default_factory=list)
     by_id: dict[str, list[Document]] = field(default_factory=dict)
+    by_alias: dict[str, list[Document]] = field(default_factory=dict)
     problems: list[DocumentInvalidWarning] = field(default_factory=list)
     historical: set[str] = field(default_factory=set)
 
@@ -111,8 +119,7 @@ class DocumentIndex:
                 index.problems.append(DocumentInvalidWarning(f"{relative}: {reason}", target_files=[relative]))
                 continue
             if document is not None:
-                index.documents.append(document)
-                index.by_id.setdefault(document.id, []).append(document)
+                index.add(document)
         index.documents.sort(key=lambda document: document.path)
         specs = {d.path: d for d in index.documents if d.path.endswith("/spec.md")}
         for document in index.documents:
@@ -125,26 +132,82 @@ class DocumentIndex:
                 index.historical.add(document.path)
         return index
 
+    def add(self, document: Document) -> None:
+        """Index ``document`` under its ID and its aliases (``documents`` keeps insertion order)."""
+        self.documents.append(document)
+        self.by_id.setdefault(document.id, []).append(document)
+        for alias in document.aliases:
+            self.by_alias.setdefault(alias, []).append(document)
+
     def is_historical(self, document: Document) -> bool:
         return document.path in self.historical
 
+    def canonical(self, written: str) -> tuple[Document, str | None] | None:
+        """The one document ``written`` names and the alias used (``None`` for a declared ID); ``None`` when no
+        document or several match. A declared ID always wins over an alias."""
+        found = self.by_id.get(written)
+        if found:
+            return (found[0], None) if len(found) == 1 else None
+        declared = self.by_alias.get(written, [])
+        return (declared[0], written) if len(declared) == 1 else None
+
+    def canonical_id(self, written: str) -> str:
+        """The ID of the document ``written`` names, or ``written`` itself when it names none or several."""
+        found = self.canonical(written)
+        return found[0].id if found is not None else written
+
+    def declares(self, document_id: str) -> list[Document]:
+        """Every document declaring ``document_id`` as its ID or as an alias, IDs first."""
+        return [*self.by_id.get(document_id, []), *self.by_alias.get(document_id, [])]
+
+    def alias_collisions(self) -> list[tuple[str, list[Document]]]:
+        """Each alias another document declares as its ID or that several documents declare, with every document
+        involved, in alias order."""
+        return [
+            (alias, self.declares(alias))
+            for alias, declared in sorted(self.by_alias.items())
+            if len(declared) > 1 or alias in self.by_id
+        ]
+
+    def _names(self, written: str, document: Document) -> bool:
+        found = self.canonical(written)
+        return found is not None and found[0] is document
+
+    def lookup(self, written: str) -> tuple[Document, str | None]:
+        """The one document ``written`` names and the alias used; ``UnresolvedIdError`` or ``DuplicateIdError``
+        otherwise."""
+        found = self.canonical(written)
+        if found is not None:
+            return found
+        if written in self.by_id:
+            declared = self.by_id[written]
+            paths = [document.path for document in declared]
+            raise DuplicateIdError(f"{len(paths)} documents declare the ID {written}", *paths, target_files=paths)
+        declared = self.by_alias.get(written, [])
+        if declared:
+            paths = [document.path for document in declared]
+            raise DuplicateIdError(f"{len(paths)} documents declare the alias {written}", *paths, target_files=paths)
+        raise UnresolvedIdError(f"no document has the ID {written}", target_files=[written])
+
     def resolve(self, document_id: str) -> Document:
-        """The one document declaring ``document_id``; ``UnresolvedIdError`` or ``DuplicateIdError`` otherwise."""
-        found = self.by_id.get(document_id, [])
-        if len(found) == 1:
-            return found[0]
-        if not found:
-            raise UnresolvedIdError(f"no document has the ID {document_id}", target_files=[document_id])
-        paths = [document.path for document in found]
-        raise DuplicateIdError(f"{len(paths)} documents declare the ID {document_id}", *paths, target_files=paths)
+        """The one document ``document_id`` names, a declared ID or an alias; ``UnresolvedIdError`` or
+        ``DuplicateIdError`` otherwise."""
+        return self.lookup(document_id)[0]
 
     def outgoing(self, document: Document) -> dict[str, list[Reference]]:
-        """``document``'s references grouped by target ID, in ID order."""
-        return _grouped(document.references, lambda ref: ref.target)
+        """``document``'s references grouped by canonical target ID (an alias with its document), in ID order."""
+        return _grouped(document.references, lambda ref: self.canonical_id(ref.target))
 
     def incoming(self, document_id: str) -> dict[str, list[Reference]]:
-        """References to ``document_id`` grouped by the ID of the referencing document, in ID order."""
-        refs = [ref for document in self.documents for ref in document.references if ref.target == document_id]
+        """References to the document ``document_id`` names, written with its ID or an alias that resolves to it,
+        grouped by the ID of the referencing document, in ID order."""
+        found = self.canonical(document_id)
+        if found is None:
+            names = {document_id}
+        else:
+            target = found[0]
+            names = {target.id} | {alias for alias in target.aliases if self._names(alias, target)}
+        refs = [ref for document in self.documents for ref in document.references if ref.target in names]
         return _grouped(refs, lambda ref: ref.source)
 
 

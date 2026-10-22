@@ -113,13 +113,15 @@ def spec_files(
     summary: str | None = None,
     target_docs_ref: str = "",
     bugfix: bool = False,
+    aliases: Sequence[str] = (),
 ) -> dict[str, str]:
     """``spec.md``, ``plan.md`` and ``tasks.md`` of a spec bundle, each marked as a skeleton.
 
     ``bugfix`` gives ``spec.md`` the characterization sections of a defect (current, expected and preserved
     behavior, reproduction conditions) instead of a feature-style user story. ``origin`` opens the problem statement; ``carried`` fills the sections from a proposal body; ``meta`` is the
     proposal frontmatter (``depends_on``, ``target_area``, ``boundaries``); ``namespace`` and ``summary`` become
-    ``spec.md``'s ``namespace`` and ``summary`` (none written when ``None``).
+    ``spec.md``'s ``namespace`` and ``summary`` (none written when ``None``); ``aliases`` are ``spec.md``'s
+    ``SPEC-`` aliases (none written when empty).
     """
     carried = carried or CarriedProposal()
     meta = meta or {}
@@ -139,6 +141,8 @@ def spec_files(
     for name in ("decomposed_from", "supersedes"):
         value = text_value(meta.get(name))
         extra += f"\n{name}: {yaml_scalar(value)}" if value else ""
+    if aliases:
+        extra += "\naliases:" + "".join(f"\n  - {yaml_scalar(item)}" for item in aliases)
     summary_line = f"\nsummary: {yaml_scalar(summary)}" if summary else ""
     spec = f"""---
 id: SPEC-{slug}
@@ -380,7 +384,7 @@ def create_spec(
     day = day or date.today()
     directory = spec_dir(root, slug, day)
     index = DocumentIndex.load(root)
-    taken = [d.path for document_id in (f"SPEC-{slug}", f"PROP-{slug}") for d in index.by_id.get(document_id, [])]
+    taken = [d.path for document_id in (f"SPEC-{slug}", f"PROP-{slug}") for d in index.declares(document_id)]
     taken += [
         path.relative_to(root).as_posix()
         for path in (bundle_dir(root, slug), single_file(root, slug), directory)

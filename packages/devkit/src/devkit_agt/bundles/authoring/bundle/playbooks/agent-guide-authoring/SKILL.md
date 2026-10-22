@@ -1,13 +1,6 @@
 ---
 name: agent-guide-authoring
-description: Write or curate always-loaded agent guides (AGENTS.md, CLAUDE.md, nested guides) and shrink one that grew too large (RULE-agent-guide-size).
-aliases:
-  - curate agent guide
-  - shrink AGENTS.md
-  - agent guide size
-  - write AGENTS.md
-  - CLAUDE.md pointer
-  - remove project structure tree
+description: Write or curate always-loaded agent guides (AGENTS.md, CLAUDE.md pointers, nested guides) and shrink one that grew too large (RULE-agent-guide-size), for example by removing a project structure tree.
 ---
 
 # Agent guide authoring and curation

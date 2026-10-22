@@ -16,7 +16,7 @@ created_at: 2026-10-17
 | Field | Read by | Purpose |
 | --- | --- | --- |
 | `id` | (result) | Unique within an index; ties rank by id. |
-| `metadata` | lexical and dense | The text written for finding the document: title, description, aliases, usually from frontmatter. Write it in English. |
+| `metadata` | lexical and dense | The text written for finding the document: a title and description, usually from frontmatter. Write it in English. |
 | `body` | lexical only | Optional; any language. |
 
 The embedding model is English-only, so dense ranking reads only `metadata`. A repository whose documents are in another language stays searchable by giving each document English frontmatter metadata; its body still contributes to BM25.

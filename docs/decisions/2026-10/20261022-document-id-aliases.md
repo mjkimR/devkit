@@ -1,15 +1,15 @@
 ---
-id: PADR-document-id-aliases
+id: ADR-document-id-aliases
 title: Document ID aliases
 summary: Every ID-bearing document may declare aliases, previous or alternate IDs with its own prefix, resolved by DocumentIndex through one alias-aware lookup; an alias reference in a current document is an error that devkit rules fix rewrites to the canonical ID.
-proposal: PROP-document-id-aliases-and-compaction
-status: draft
+proposal: SPEC-document-id-aliases-and-compaction
+status: accepted
 created_at: 2026-10-22
 ---
 
-# [PADR-document-id-aliases] Document ID aliases
+# [ADR-document-id-aliases] Document ID aliases
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-22
 
 ---
@@ -90,5 +90,5 @@ Option 4.
 - A rename keeps the old ID in `aliases`, and one `devkit rules fix` moves current documents to the new ID.
 - The handoff gains alias translation and an alias clash check (`CAP-DLV-proposal-incubation`).
 - Aliases are identifiers, not search keywords; the playbook field of the same name follows this meaning
-  (`PADR-playbook-aliases-as-identifiers`).
+  (`ADR-playbook-aliases-as-identifiers`).
 - ADR supersession stays as it is, and no file under `docs/decisions/` is edited by this work.

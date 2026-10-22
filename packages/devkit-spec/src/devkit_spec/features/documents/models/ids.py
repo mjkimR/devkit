@@ -50,6 +50,16 @@ PREFIXES: dict[str, Kind] = {
 ID_SOURCE = rf"(?:{'|'.join(PREFIXES)})-[A-Za-z0-9][A-Za-z0-9_-]*"
 ID_PATTERN = re.compile(rf"^{ID_SOURCE}$")
 
+# Date- or number-based references that are never valid identifiers (``RULE-id-convention`` reports them, and an
+# alias of that form is refused, so the two never disagree).
+_LEGACY_REF = re.compile(
+    r"\b(SPEC-\d{8}(?:-[a-z0-9-]+)?|FB-\d{8}(?:-[a-z0-9-]+)?|P?ADR-\d{4}|US-\d{3,}|CAP-[A-Z0-9]+-\d{3,})\b", re.ASCII
+)
+# The arc42 chapter number is part of an architecture slug: ARCH-03-context is valid, a bare ARCH-03 is not.
+_ARCH_REF = re.compile(r"\bARCH-\d{2}(?:-[0-9a-z]+)*", re.ASCII)
+_ARCH_SUBDOCUMENT = re.compile(r"^-[1-9](?=-|$)")
+_HAS_LETTER = re.compile(r"[a-z]")
+
 
 def is_id(value: str) -> bool:
     """Whether ``value`` is a well-formed document ID."""
@@ -61,3 +71,19 @@ def kind_of(document_id: str) -> Kind | None:
     if not is_id(document_id):
         return None
     return PREFIXES[document_id.split("-", 1)[0]]
+
+
+def legacy_references(text: str) -> list[re.Match[str]]:
+    """The date- or number-based identifier references in ``text`` (one line), in order."""
+    found = list(_LEGACY_REF.finditer(text))
+    for match in _ARCH_REF.finditer(text):
+        rest = match.group(0)[len("ARCH-") + 2 :]
+        rest = _ARCH_SUBDOCUMENT.sub("", rest, count=1)
+        if not _HAS_LETTER.search(rest):
+            found.append(match)
+    return sorted(found, key=lambda match: match.start())
+
+
+def is_legacy_id(value: str) -> bool:
+    """Whether ``value`` contains a date- or number-based identifier form ``RULE-id-convention`` reports."""
+    return bool(legacy_references(value))

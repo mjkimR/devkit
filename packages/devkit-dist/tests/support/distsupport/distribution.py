@@ -28,7 +28,7 @@ def make_bundle(tmp_path: Path, bundle: str, *, directory: bool = False) -> Inst
     (root / source).parent.mkdir(exist_ok=True)
     (root / source).write_text(
         "---\nname: restore-replica\ndescription: Restore a PostgreSQL replica.\n"
-        "aliases:\n  - postgres standby repair\n  - wal failure\n---\n\nBODY_ONLY_SECRET\n"
+        "aliases:\n  - restore-standby\n  - wal-failure\n---\n\nBODY_ONLY_SECRET\n"
     )
     if directory:
         (root / "recovery/reference.md").write_text("Resource containing bodyonlytoken.\n")

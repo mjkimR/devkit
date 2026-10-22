@@ -52,9 +52,11 @@ resolve` maps IDs to paths, `devkit spec refs` follows the references of one doc
 
 ### 3.2 `devkit spec resolve ID...`
 
-1. Prints one `[DOCUMENT: ...]` line per resolved ID, in argument order.
-2. Each unresolved or duplicated ID MUST be reported as an error after the lines that did resolve
-   (`SPEC_ID_UNRESOLVED`, `SPEC_ID_DUPLICATE`); the command then exits `2`.
+1. Prints one `[DOCUMENT: ...]` line per resolved ID, in argument order. An ID argument may be an alias
+   (`CAP-DOCS-document-model` section 3.5): the line names the canonical document and adds `alias=<alias>`; no notice
+   is emitted.
+2. Each unresolved or duplicated ID (a colliding alias included) MUST be reported as an error after the lines that
+   did resolve (`SPEC_ID_UNRESOLVED`, `SPEC_ID_DUPLICATE`); the command then exits `2`.
 
 ### 3.3 `devkit spec refs ID`
 
@@ -63,7 +65,11 @@ resolve` maps IDs to paths, `devkit spec refs` follows the references of one doc
    (`body` or frontmatter field names, sorted, comma-separated), `count` how many references there are.
 3. `path=-` and `status=-` mark an ID that no single document declares: a dangling reference, or a duplicated ID.
 4. The `proposal` provenance field is not a reference and MUST NOT appear.
-5. An unresolvable ID argument fails with `SPEC_ID_UNRESOLVED` or `SPEC_ID_DUPLICATE` (exit `2`).
+5. An unresolvable ID argument fails with `SPEC_ID_UNRESOLVED` or `SPEC_ID_DUPLICATE` (exit `2`); an alias argument
+   names its document.
+6. **Aliases**: `--direction in` includes references written with an alias that resolves to the document;
+   `--direction out` groups a reference written with an alias under its canonical ID, as one target with the
+   references written either way.
 
 ### 3.4 `devkit spec list [KIND]...`
 
@@ -135,7 +141,8 @@ devkit spec list feedback --status open --where severity=critical -n 0   # open 
 [NEXT_CMD: devkit spec list spec --limit 20 --offset 20]
 ```
 
-`resolve` prints `[DOCUMENT: <id> kind= status= path=]`; `list` prints
+`resolve` prints `[DOCUMENT: <id> kind= status= path=]`, with `alias=<alias>` appended when the argument was an
+alias; `list` prints
 `[DOCUMENT: <id> kind= status= path= tasks= task_kind= planning_effort= dev_effort= severity= scope= target= namespace= title=]`, `task_kind=`, `planning_effort=` and `dev_effort=` only on proposal lines, `severity=`, `scope=` and
 `target=` only on feedback lines, `namespace=` only with registered namespaces. Values follow devkit's sentinel conventions: `-` for empty, `yes`/`no` for booleans, a JSON
 string when the value holds spaces, quotes or brackets.
@@ -144,7 +151,7 @@ string when the value holds spaces, quotes or brackets.
 
 | Command | Keys |
 | --- | --- |
-| `resolve` | `documents` (document records: `id`, `kind`, `path`, `status`, `title`, `area`, `summary`), `errors` (advisory objects), `notices` |
+| `resolve` | `documents` (document records: `id`, `kind`, `path`, `status`, `title`, `area`, `summary`, plus `alias`: the alias argument, `null` for a declared ID), `errors` (advisory objects), `notices` |
 | `refs` | `id`, `direction`, `total`, `offset`, `limit`, `items` (`id`, `path`, `status`, `references`: `target`, `source`, `path`, `field`, `line`, `column`, `bracket`), `notices`; `path` and `status` are `null` for an ID no single document declares |
 | `list` | `total`, `offset`, `limit`, `namespace` (the selection, `null` for every namespace), `documents` (document records plus `namespace`, `historical`, `tasks`; proposal records also `task_kind`, `planning_effort`, `dev_effort`, `null` when absent; feedback records also `severity`, `scope`, `target`, `null` when absent; a draft proposal whose `plan-<slug>` exists, locally or fetched, is shown with `status: reviewing` and its `planning_branch`, `CAP-DLV-proposal-incubation` rule 10), `notices` |
 

@@ -47,6 +47,7 @@ from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import FrontmatterBlock, locate
 
 from devkit_spec.features.documents import DocumentIndex, Kind, VisibleLine, in_feedback, visible_lines
+from devkit_spec.features.documents.models.ids import legacy_references
 from devkit_spec.features.documents.repositories.index import is_document_file
 from devkit_spec.features.documents.services.namespaces import docs_roots, living_path
 from devkit_spec.features.governance import FIX_COMMAND, document_index, explicitly_targeted, namespaces
@@ -67,13 +68,6 @@ _ID_TOKEN = r"(?P<token>(?:\[|`)(?P<id>(?:SPEC|PLAN|TASKS|REC|ADR|FB|CAP|US|ARCH
 _HEADING_TOKEN = re.compile(rf"^#[ \t]+{_ID_TOKEN}")
 _LABELLED_HEADING_TOKEN = re.compile(rf"^#[ \t]+(?:[^`\[\]:\r\n]+:[ \t]+)?{_ID_TOKEN}")
 _ANY_ID_TOKEN = re.compile(_ID_TOKEN)
-# Date- or number-based references that are never valid identifiers.
-_LEGACY_REF = re.compile(
-    r"\b(SPEC-\d{8}(?:-[a-z0-9-]+)?|FB-\d{8}(?:-[a-z0-9-]+)?|P?ADR-\d{4}|US-\d{3,}|CAP-[A-Z0-9]+-\d{3,})\b", re.ASCII
-)
-# The arc42 chapter number is part of an architecture slug: ARCH-03-context is valid, a bare ARCH-03 is not.
-_ARCH_REF = re.compile(r"\bARCH-\d{2}(?:-[0-9a-z]+)*", re.ASCII)
-_ARCH_SUBDOCUMENT = re.compile(r"^-[1-9](?=-|$)")
 _HAS_LETTER = re.compile(r"[a-z]")
 # Header lines, read as written; the value excludes surrounding blanks and a CR line ending.
 _ID_LINE = re.compile(r"^(id|reconcile_id):[ \t]*(.*?)[ \t]*(?=\r?$)", re.MULTILINE)
@@ -397,17 +391,6 @@ def _convention_lines(text: str) -> Iterator[VisibleLine]:
     yield from visible_lines(text, start=start, first_line=first_line, mask_links=False, keep_id_spans=False)
 
 
-def _legacy_references(line: str) -> list[re.Match[str]]:
-    """The date- or number-based identifier references in one line, in line order."""
-    found = list(_LEGACY_REF.finditer(line))
-    for match in _ARCH_REF.finditer(line):
-        rest = match.group(0)[len("ARCH-") + 2 :]
-        rest = _ARCH_SUBDOCUMENT.sub("", rest, count=1)
-        if not _HAS_LETTER.search(rest):
-            found.append(match)
-    return sorted(found, key=lambda match: match.start())
-
-
 def _set_field(header: str, name: str, value: str, newline: str) -> str:
     """``header`` with every top-level ``name:`` line set to ``value``; a missing ``id`` / ``reconcile_id`` becomes
     the first line, a missing ``area`` follows the ``id`` line."""
@@ -478,7 +461,7 @@ class IdConventionRule(BaseRule):
             if not reportable(path):
                 continue
             for line in _convention_lines(ctx.cache.read_text(path)):
-                for match in _legacy_references(line.text):
+                for match in legacy_references(line.text):
                     add(
                         path,
                         line.number,

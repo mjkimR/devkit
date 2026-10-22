@@ -1,0 +1,28 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T00:23:36.333994Z'
+status: completed
+review: review-01.yaml
+summary: 'implementer self-verified both fixes: handoff refuses a dated translated alias (SPEC_PROPOSAL_INVALID), proposal new refuses a slug declared as an alias (SPEC_PROPOSAL_EXISTS); regression tests added; no repeat code-reviewer call (small, targeted fixes)'
+findings:
+- issue: Handoff translates a valid dated PROP- alias (PROP-20260101-carry) into a legacy SPEC- alias that RULE-document-reference refuses, breaking AC-08's no-violation outcome
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py:351
+  failure_condition: An accepted proposal declares aliases [PROP-20260101-carry]; after handoff spec.md declares SPEC-20260101-carry and the rule reports a date-based alias
+  suggested_action: Refuse the handoff before any write when a translated alias is a legacy form, with a regression test
+  resolution: resolved
+  severity: P2
+- issue: devkit spec proposal new does not refuse a slug whose PROP-<slug> is declared as an alias of another proposal
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py:582
+  failure_condition: PROP-current declares aliases [PROP-old]; create_proposal(root, 'old') writes PROP-old, which collides with the alias
+  suggested_action: Refuse when index.declares(PROP-<slug>) is non-empty with SPEC_PROPOSAL_EXISTS and add a test
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS just test devkit-spec proposals 257 passed
+  lint: PASS just lint devkit-spec; just check devkit-spec 0 errors
+diff_scope:
+  base: 87c30b51da3b25fb0d5a51d98030b74f4346d7ad
+  head: 185c9846da5c2485170a73bb51e018e12d94c03e
+activity_effort: medium

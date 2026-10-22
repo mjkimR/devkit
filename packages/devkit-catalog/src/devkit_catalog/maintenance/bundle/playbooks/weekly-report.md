@@ -1,7 +1,6 @@
 ---
 name: weekly-report
-description: Manually generate a revision-bound weekly repository report with evidence, health gaps and prioritized actions, then separately publish only to an authorized destination.
-aliases: [weekly maintenance report, repository progress report, weekly delivery evidence]
+description: Manually generate a revision-bound weekly repository progress report with delivery evidence, health gaps and prioritized actions, then separately publish only to an authorized destination.
 ---
 
 # Weekly report

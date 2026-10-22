@@ -123,8 +123,10 @@ def metadata(document: Document) -> str:
 
 
 def _matches_exactly(document: Document, query: str) -> bool:
+    """The query is the document's ID, one of its aliases, its path or its file name (case-insensitive)."""
     wanted = query.strip().casefold()
-    return wanted in (document.id.casefold(), document.path.casefold(), document.path.rsplit("/", 1)[-1].casefold())
+    names = (document.id, *document.aliases, document.path, document.path.rsplit("/", 1)[-1])
+    return wanted in (name.casefold() for name in names)
 
 
 def _body(root: Path, document: Document) -> str:

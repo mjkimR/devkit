@@ -32,7 +32,10 @@ stays ID-free and unindexed, and its Owner references do not become graph edges.
   - The `proposal`, `decomposed_from` and `supersedes` provenance fields.
   - Historical documents (completed spec bundle files except feedback, and done/dropped milestones).
   - The `summary` field as data of the model.
-  - The index: loading, invalid files, ID resolution, incoming and outgoing references, in-place rewriting.
+  - Document ID aliases (`aliases`): shape, precedence, collisions and the canonical mapping
+    (`ADR-document-id-aliases`), and the rename procedure.
+  - The index: loading, invalid files, ID and alias resolution, incoming and outgoing references, in-place
+    rewriting.
 - **Out-of-Scope** (Non-Goals):
   - Path and naming conventions per kind (dated partitions, `CAP-<AREA>-<slug>` stems, arc42 chapters). Scope
     Excluded: the index accepts any well-formed ID wherever it is declared. Rationale: conventions are checked and
@@ -57,7 +60,8 @@ stays ID-free and unindexed, and its Owner references do not become graph edges.
    frontmatter breaks either requirement, MUST be left out of the index and reported as a `SPEC_DOCUMENT_INVALID`
    warning; every other document MUST stay usable.
 5. **Uniqueness**: IDs are repository-wide and MUST be unique across `docs/`, `specs/` and every namespace docs root.
-   The index keeps every declaration of an ID, so a duplicate is detectable (`SPEC_ID_DUPLICATE`).
+   The index keeps every declaration of an ID, so a duplicate is detectable (`SPEC_ID_DUPLICATE`). Aliases share
+   this namespace (section 3.5).
 6. **Summary**: `summary` is one or two English sentences saying what the document defines. It is REQUIRED on
    capabilities, stories, decisions, architecture documents, milestones, `proposal.md` and `spec.md` (`RULE-document-summary`)
    and is the main signal of document search (`CAP-DOCS-document-search`). Titles and bodies MAY use any language.
@@ -144,13 +148,41 @@ The table order is the kind order: `devkit spec list` sorts by it. Living Spec d
    `--ci`) indexes the snapshot and a fix is seen by the recheck.
 2. **Parse reuse**: a parsed document is reused while its path and text are unchanged, so the rules of one run parse
    every file once.
-3. **Resolution**: resolving an ID MUST return the one document that declares it, else raise `SPEC_ID_UNRESOLVED`
-   (no document) or `SPEC_ID_DUPLICATE` (several; `[TARGET]` lists their paths).
-4. **Reference queries**: outgoing references are grouped by target ID and incoming references by source ID, both in
-   ID order. A target that no single document declares stays in the result (a dangling or ambiguous reference).
+3. **Resolution**: resolving an ID MUST go through the canonical mapping (section 3.5) and return the one document
+   it names, else raise `SPEC_ID_UNRESOLVED` (no document) or `SPEC_ID_DUPLICATE` (several declare the ID, or
+   several declare the alias; `[TARGET]` lists their paths).
+4. **Reference queries**: outgoing references are grouped by canonical target ID (an alias with its document) and
+   incoming references, written with the document's ID or a resolving alias, by source ID, both in ID order. A target
+   that no single document declares stays in the result (a dangling or ambiguous reference).
 5. **Rewriting**: `rewrite` replaces only parsed references whose target a mapping names, never other occurrences
    of the ID. A quoted frontmatter value keeps its quote style; a bracket reference becomes a code-span reference
    (mapping an ID to itself converts the notation only).
+
+### 3.5 Aliases
+
+1. **Field**: any ID-bearing document (`CAP`, `US`, `ARCH`, `ADR`, `MS`, `MAT`, `PROP`, `PADR`, `SPEC`, `PLAN`,
+   `TASKS`, `REC`, `FB`; namespace documents included) MAY declare `aliases`, a list of previous or alternate IDs of
+   itself. No kind refuses it.
+2. **Shape**: each item MUST be a full ID with the declaring document's own prefix, MUST NOT be its own ID, MUST NOT
+   repeat, and MUST NOT have a legacy date- or number-based form (the forms `RULE-id-convention` reports). A
+   malformed field or item is left out of the index and recorded as an identity issue that `RULE-document-reference`
+   reports on every document, materials and completed specs included.
+3. **Identity, not reference**: `aliases` is not a relation field. Its entries are not references, are not counted as
+   incoming references and are never rewritten.
+4. **Canonical mapping**: `DocumentIndex.canonical` maps a written target to its document and the alias used. A
+   declared ID always wins; an alias resolves only when exactly one document declares it and no document has it as
+   its ID. Otherwise the alias collides: the collision is reported on every document involved, and the target
+   resolves as it would without the alias, or stays ambiguous. Resolution, reference queries, the `depends_on` cycle
+   graphs, milestone membership, traceability and every identity check use this mapping.
+5. **Renaming**: a document whose ID derives from its path (`CAP`, `US`, `ARCH`, `SPEC`, `PLAN`, `TASKS`, `REC`,
+   `FB`) is renamed by moving the file, setting the new ID and keeping the old ID in `aliases`; renaming a spec bundle
+   keeps an alias on every file whose ID derives from the bundle slug (`spec.md`, `plan.md`, `tasks.md`,
+   `reconcile.md`). An approved ADR is not renamed; it gains aliases from its PADR at handoff
+   (`CAP-DLV-proposal-incubation`). One `devkit rules fix` then moves current documents to the new ID.
+6. **Declaration across contracts**: wherever another contract refuses or reports an ID that a document declares (a
+   taken spec or proposal slug, a duplicate PADR, a graduating ADR), an alias declaration counts as a declaration;
+   wherever a command takes an ID argument that it resolves through the index (`devkit spec resolve`, `refs`,
+   `entrypoints --target`, `proposal new --milestone`), an alias resolves to its canonical document.
 
 ## 4. Interfaces & Data Contracts
 
@@ -167,6 +199,7 @@ The table order is the kind order: `devkit spec list` sorts by it. Living Spec d
 | `stories`, `capabilities`, `related_stories`, `related_capabilities` | list of IDs | Relation fields. |
 | `spec`, `plan` | ID | Relation fields. |
 | `proposal` | ID | Provenance of a handed-off spec. |
+| `aliases` | list of IDs | Previous or alternate IDs of the document itself (section 3.5); identity, not references. |
 | `namespace` | string | Namespace of a spec or proposal bundle (`CAP-DOCS-namespaces`). |
 | `entrypoints` | list of paths | Code entrypoints of a capability or story (`CAP-TRACE-code-entrypoints`). |
 
@@ -182,17 +215,21 @@ Commands that print documents in JSON use the record `id`, `kind`, `path` (works
 | --- | --- | --- | --- |
 | `SPEC_DOCUMENT_INVALID` | `WARNING` | `DocumentInvalidWarning` | A file under `docs/` or `specs/` cannot be read as UTF-8 or has malformed frontmatter (including a non-string `id`, `reconcile_id` or `status`); it is left out of the index. Returned under `notices`; exit `0`, `1` under `--strict`. |
 | `SPEC_ID_UNRESOLVED` | `ERROR` (`INPUT_ERROR`) | `UnresolvedIdError` | No document declares the ID. |
-| `SPEC_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | More than one document declares the ID; `[TARGET]` lists them. |
+| `SPEC_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | More than one document declares the ID, or (no document declaring it as its ID) the alias; `[TARGET]` lists them. |
 
 ### 4.4 Library
 
 ```python
 from devkit_spec.features.documents import DocumentIndex, Kind, is_id, kind_of, rewrite
 
-index = DocumentIndex.load(root)  # documents, by_id, problems (SPEC_DOCUMENT_INVALID), historical
-document = index.resolve("CAP-CORE-search")  # UnresolvedIdError, DuplicateIdError
-index.outgoing(document)  # {target ID: [Reference, ...]}
-index.incoming(document.id)  # {source ID: [Reference, ...]}
+index = DocumentIndex.load(root)  # documents, by_id, by_alias, problems (SPEC_DOCUMENT_INVALID), historical
+document = index.resolve("CAP-CORE-search")  # an ID or an alias; UnresolvedIdError, DuplicateIdError
+document, alias = index.lookup("CAP-CORE-old")  # alias is None for a declared ID
+index.canonical("CAP-CORE-old")  # (document, alias) or None when no document or several match
+index.canonical_id("CAP-CORE-old")  # the canonical ID, else the written value
+index.alias_collisions()  # [(alias, [every document involved]), ...]
+index.outgoing(document)  # {canonical target ID: [Reference, ...]}
+index.incoming(document.id)  # {source ID: [Reference, ...]}, alias-written references included
 index.is_historical(document)  # a file of a completed spec bundle outside its feedback/
 ```
 

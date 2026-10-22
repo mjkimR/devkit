@@ -68,7 +68,7 @@ artifact bound to a source revision and verifies its links before completing.
   `docs/`? How does this fit the release procedure in `ARCH-07-deployment`, and should `changes.md` feed the release
   notes there?
 - **Q6 (decision digest scope)**: A digest of the ADRs in effect (supersession chains folded) overlaps the problem
-  `PROP-document-id-aliases-and-compaction` addresses on the ledger side. Is the digest in scope here, and where is
+  `SPEC-document-id-aliases-and-compaction` addresses on the ledger side. Is the digest in scope here, and where is
   the boundary between the two proposals?
 - **Q7 (ownership)**: Start as a devkit-repository-only playbook and script in the `devkit-dev` bundle, with a later
   promotion to a `devkit-spec` feature for other Living Spec repositories? Does the eventual contract belong in

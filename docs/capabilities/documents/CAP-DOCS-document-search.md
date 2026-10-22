@@ -41,9 +41,9 @@ expansion. Going from a known ID to its path stays `devkit spec resolve` (`CAP-D
 2. **Fields**: a document's ID and its English `summary` are its metadata, ranked lexically and densely (the ID alone
    for a document without a summary). The title, the area and the body after the frontmatter are ranked lexically
    only, in any language. `RULE-document-summary` requires the summary on the documents agents search.
-3. **Pinning**: a query equal to a document's ID, workspace-relative path or file name (compared case-insensitively
-   after trimming) MUST put that document first, whatever the ranking, with `score=-` (`null` in JSON) and
-   `pinned=yes`. A pinned document is not repeated among the ranked hits.
+3. **Pinning**: a query equal to a document's ID, one of its declared `aliases`, its workspace-relative path or file
+   name (compared case-insensitively after trimming) MUST put that document first, whatever the ranking, with
+   `score=-` (`null` in JSON) and `pinned=yes`. A pinned document is not repeated among the ranked hits.
 4. **Glossary expansion**: the optional, project-owned `docs/glossary.yaml` expands the query. Terms and query are
    compared as the words of devkit's `tokenize` (casefolded, split on `-`, `_`, `.` and other non-word characters,
    Latin accents dropped), so `Work_Scope` matches the term `work-scope` and `cafe` the term `café`. When the query
@@ -78,7 +78,7 @@ document kinds of `CAP-DOCS-document-model`.
 
 ```bash
 devkit spec search "link integrity between documents"
-devkit spec search CAP-CORE-search                  # an exact ID, path or file name is pinned first
+devkit spec search CAP-CORE-search                  # an exact ID, alias, path or file name is pinned first
 devkit spec search "cache policy" --kind decision --kind capability --history
 ```
 

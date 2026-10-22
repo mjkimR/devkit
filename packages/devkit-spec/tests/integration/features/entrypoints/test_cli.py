@@ -177,3 +177,10 @@ def test_candidates_group_each_document_by_state() -> None:
         ),
         ("US-b", "b.md", {"new": ["src/a"], "missing": [], "folded": [], "declared": []}),
     ]
+
+
+def test_apply_target_named_by_an_alias(bundles: Path, write: Write) -> None:
+    write(CAP, "---\nid: CAP-X-one\nstatus: active\naliases: [CAP-X-first]\n---\n")
+    result = _derive(bundles, "--all", "--apply", "--target", "CAP-X-first")
+    assert result.exit_code == 0, result.output
+    assert f"[APPLIED: CAP-X-one path={CAP} added=src/other/,src/pkg/]" in result.stdout.splitlines()

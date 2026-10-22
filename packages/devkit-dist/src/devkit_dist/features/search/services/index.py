@@ -1,6 +1,6 @@
 """``SearchIndex``: lexical, dense or hybrid ranking over a fixed set of documents.
 
-A document has ``metadata`` (title, description, aliases: the text written for
+A document has ``metadata`` (a title and description: the text written for
 finding it, in English) and an optional ``body``. Lexical ranking (BM25) reads
 both; dense ranking embeds only the metadata, because the embedding model is
 English-only and a body may be in any language. Hybrid ranking fuses the two

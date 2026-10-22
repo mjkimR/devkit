@@ -1,12 +1,6 @@
 ---
 name: brownfield-adoption
-description: Adopt spec-driven development in an existing repository that already has code and docs or specs Markdown; install devkit-spec, contain legacy documents and rule violations so the checks pass, then migrate legacy content into the Living Spec through normal work.
-aliases:
-  - adopt spec-driven development in an existing repository
-  - brownfield adoption
-  - migrate legacy docs
-  - existing documentation
-  - roll out spec rules on an existing codebase
+description: Adopt spec-driven development in an existing repository that already has code and docs or specs Markdown; install devkit-spec and roll out its rules, contain legacy documents and rule violations so the checks pass, then migrate legacy content into the Living Spec through normal work.
 ---
 
 # Brownfield adoption

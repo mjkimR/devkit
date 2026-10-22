@@ -43,6 +43,7 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
 
 - Refer to ID-bearing internal documents with full IDs in prose and exact IDs in relationship fields; omit Markdown paths. IDs are path-derived slugs, never dates or sequence numbers (`RULE-id-convention`, `RULE-document-reference`).
 - Keep external URLs, images, code paths and documents without IDs as ordinary links. Code examples, non-ID inline code and H1 self IDs are not reference edges.
+- Renaming a document whose ID derives from its path (`CAP`, `US`, `ARCH`, `SPEC`, `PLAN`, `TASKS`, `REC`, `FB`): move the file, set the new ID and keep the old ID in `aliases` (own prefix, never a date- or number-based form); renaming a spec bundle keeps an alias on `spec.md`, `plan.md`, `tasks.md` and `reconcile.md`. An approved ADR is not renamed. Then run `devkit rules fix`: it moves current documents to the new ID and leaves history and decision records as written (`CAP-DOCS-document-model`).
 
 ## Glossary
 

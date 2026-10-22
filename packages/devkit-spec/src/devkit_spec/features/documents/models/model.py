@@ -12,6 +12,8 @@ LIST_FIELDS = ("stories", "capabilities", "related_stories", "related_capabiliti
 SCALAR_FIELDS = ("spec", "plan", "milestone")
 # Where a document came from: an edge of its history, not of the current contract.
 PROVENANCE_FIELDS = ("proposal", "decomposed_from", "supersedes")
+# Previous or alternate IDs of the document itself: identity, never a reference (``ADR-document-id-aliases``).
+ALIASES = "aliases"
 BODY = "body"
 
 
@@ -61,8 +63,11 @@ class Document:
 
     ``id`` is the frontmatter ``id`` (``reconcile_id`` for a reconcile file), ``path`` workspace-relative.
     ``frontmatter`` is the parsed header as it is. ``references`` are the edges of the current contract (reference
-    fields and prose), ``provenance`` the proposal and Unit origin fields retained outside the current reference graph. A parsed document is shared
-    between index loads of the same text and is never modified afterwards.
+    fields and prose), ``provenance`` the proposal and Unit origin fields retained outside the current reference graph.
+    ``aliases`` are the well-formed previous or alternate IDs the document declares, ``alias_spans`` their
+    ``(start, end)`` character offsets in the text (the quotes of a quoted item included), and ``alias_issues`` the
+    malformed ``aliases`` items the parser left out: identity issues, reported over every document. A parsed document
+    is shared between index loads of the same text and is never modified afterwards.
     """
 
     id: str
@@ -72,6 +77,9 @@ class Document:
     references: list[Reference] = field(default_factory=list)
     provenance: list[Reference] = field(default_factory=list)
     issues: list[Issue] = field(default_factory=list)
+    aliases: tuple[str, ...] = ()
+    alias_spans: tuple[tuple[int, int], ...] = ()
+    alias_issues: list[Issue] = field(default_factory=list)
 
     @property
     def status(self) -> str:

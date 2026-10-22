@@ -145,3 +145,12 @@ def test_cli_keeps_a_non_blank_query(docs: Path) -> None:
     result = _search(docs, "cache", "policy", "--mode", "lexical")
     assert result.exit_code == 0
     assert result.stdout.splitlines()[0].startswith('[SEARCH: query="cache policy" mode=lexical count=')
+
+
+def test_exact_alias_is_pinned_first(docs: Path, write: Write) -> None:
+    write(
+        "docs/decisions/2026-10/20261001-cache.md",
+        "---\nid: ADR-cache\ntitle: Cache\nstatus: active\naliases: [ADR-store]\n---\n",
+    )
+    result = search_documents(DocumentIndex.load(docs), "ADR-store", mode=SearchMode.LEXICAL)
+    assert result.hits[0].document.id == "ADR-cache" and result.hits[0].pinned

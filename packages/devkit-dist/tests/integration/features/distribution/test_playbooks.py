@@ -37,15 +37,18 @@ def target(tmp_path: Path) -> Path:
     return root
 
 
-def test_search_aliases_across_bundles_without_body_disclosure(tmp_path: Path, target: Path) -> None:
+def test_search_metadata_across_bundles_without_body_disclosure(tmp_path: Path, target: Path) -> None:
     installed = [make_bundle(tmp_path, "team", directory=True), make_bundle(tmp_path, "ops")]
     select(target, "team", "ops")
     sync_project(target, installed)
     nested = target / "nested"
     nested.mkdir()
-    result = SearchPlaybooks().execute(nested, "POSTGRES standby repair").to_dict()
+    result = SearchPlaybooks().execute(nested, "POSTGRESQL replica").to_dict()
     assert [entry["bundle"] for entry in result["results"]] == ["ops", "team"]
     assert all(entry["id"] == "recovery" for entry in result["results"])
+    # Aliases are identity metadata: returned with the candidate, never ranked.
+    assert all(entry["aliases"] == ["restore-standby", "wal-failure"] for entry in result["results"])
+    assert SearchPlaybooks().execute(target, "wal failure standby").to_dict()["results"] == []
     assert "BODY_ONLY_SECRET" not in json.dumps(result)
     assert "BODY_ONLY_SECRET" in Path(result["results"][0]["path"]).read_text()
     assert SearchPlaybooks().execute(target, "bodyonlytoken").to_dict()["results"] == []
@@ -153,6 +156,11 @@ def test_search_rejects_modified_files_and_pending_transactions(tmp_path: Path, 
         "name: example\nname: duplicate\ndescription: Example\n",
         "name: example\ndescription: 복구\n",
         "name: example\ndescription: Example\naliases: [복구]\n",
+        "name: example\ndescription: Example\naliases: [postgres standby repair]\n",
+        "name: example\ndescription: Example\naliases: [Old-id]\n",
+        "name: example\ndescription: Example\naliases: [old-id, old-id]\n",
+        "name: example\ndescription: Example\naliases: [release]\n",
+        "name: example\ndescription: Example\naliases: [recovery]\n",
         "name: example\ndescription: [broken\n",
     ],
 )
@@ -363,3 +371,13 @@ def test_mode_and_min_similarity_come_from_config_and_options(tmp_path: Path, ta
     error = json.loads(bad.stdout)["error"]
     assert error["code"] == "ARGUMENT_INVALID" and error["advisory"]["target_files"] == ["--min-similarity"]
     assert runner.invoke(cli, ["playbook", "search", "replica", "-w", str(target), "--mode", "semantic"]).exit_code == 2
+
+
+def test_identifier_aliases_are_accepted_and_unique_in_the_bundle(tmp_path: Path) -> None:
+    item = make_bundle(tmp_path, "team")
+    assert load_bundle(item.bundle.root).name == "team"
+    (item.bundle.root / "release.md").write_text(
+        "---\nname: publish-release\ndescription: Publish a software release.\naliases: [wal-failure]\n---\nbody\n"
+    )
+    with pytest.raises(BundleError, match="already declared by recovery"):
+        load_bundle(item.bundle.root)
