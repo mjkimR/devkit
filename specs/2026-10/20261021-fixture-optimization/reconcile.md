@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-fixture-optimization
-feature: SPEC-fixture-optimization
 status: resolved
 targets: []
 ---

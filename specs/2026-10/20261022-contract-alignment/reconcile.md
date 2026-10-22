@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-contract-alignment
-feature: SPEC-contract-alignment
 status: resolved
 targets:
   - file: docs/decisions/2026-10/20261022-foundation-and-mcp-package-ownership.md

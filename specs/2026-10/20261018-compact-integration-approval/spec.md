@@ -7,7 +7,7 @@ created: 2026-10-18
 related_capabilities:
   - CAP-INT-mcp-services
   - CAP-HARN-agent-guidance
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

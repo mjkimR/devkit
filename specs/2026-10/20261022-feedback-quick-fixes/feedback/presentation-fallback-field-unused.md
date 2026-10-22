@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: other
 target: devkit_dist.features.project.models.presentation.PresentationLanguage.fallback and devkit config show presentation_language
-skill: spec-sync
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

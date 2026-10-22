@@ -5,8 +5,6 @@ scope: bundle
 kind: friction
 category: instruction-conflict
 target: "spec-integrate skill"
-skill: spec-integrate
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

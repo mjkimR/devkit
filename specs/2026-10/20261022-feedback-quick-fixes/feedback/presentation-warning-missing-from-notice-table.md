@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: docs-mismatch
 target: docs/development/reference/distribution.md (sync output and notices table)
-skill: spec-sync
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

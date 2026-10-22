@@ -6,7 +6,7 @@ status: completed
 created: 2026-10-22
 related_capabilities:
   - CAP-CLI-agent-cli-toolkit
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

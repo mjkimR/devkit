@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-post-merge-hygiene
-feature: SPEC-post-merge-hygiene
 status: resolved
 targets:
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md

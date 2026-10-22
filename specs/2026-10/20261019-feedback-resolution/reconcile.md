@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-feedback-resolution
-feature: SPEC-feedback-resolution
 status: resolved
 targets:
   - file: docs/glossary.md

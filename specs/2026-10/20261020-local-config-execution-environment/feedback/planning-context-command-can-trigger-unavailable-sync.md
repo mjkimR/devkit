@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: tool-error
 target: .devkit/managed/spec/skills/spec/SKILL.md
-skill: spec
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

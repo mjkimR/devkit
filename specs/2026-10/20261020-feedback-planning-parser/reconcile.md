@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-feedback-planning-parser
-feature: SPEC-feedback-planning-parser
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md

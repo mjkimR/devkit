@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-feedback-handoff-references
-feature: SPEC-feedback-handoff-references
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md

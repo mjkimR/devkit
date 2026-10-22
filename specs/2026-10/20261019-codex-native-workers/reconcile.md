@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-codex-native-workers
-feature: SPEC-codex-native-workers
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md

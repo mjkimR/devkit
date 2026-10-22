@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-response-style-survey
-feature: SPEC-response-style-survey
 status: resolved
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-content-packages.md

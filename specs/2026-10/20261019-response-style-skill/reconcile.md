@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-response-style-skill
-feature: SPEC-response-style-skill
 status: resolved
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-manifest-spec.md

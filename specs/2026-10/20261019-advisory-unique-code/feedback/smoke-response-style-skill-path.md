@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: docs-mismatch
 target: scripts/smoke.sh (just smoke, response-style section)
-skill: spec-review
-agent: claude-code
 origin: agent
 severity: blocked
 recurring: false

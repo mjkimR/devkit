@@ -5,8 +5,6 @@ scope: upstream
 kind: suggestion
 category: missing-capability
 target: "devkit workflow envelope answer"
-skill: spec
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

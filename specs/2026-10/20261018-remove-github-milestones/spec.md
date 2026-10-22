@@ -6,7 +6,7 @@ status: completed
 created: 2026-10-18
 related_capabilities:
   - CAP-DIST-content-packages
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

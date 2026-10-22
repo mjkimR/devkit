@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-orchestration-mode
-feature: SPEC-orchestration-mode
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md

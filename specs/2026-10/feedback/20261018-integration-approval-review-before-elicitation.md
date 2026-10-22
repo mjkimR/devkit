@@ -5,8 +5,6 @@ scope: unknown
 kind: friction
 category: instruction-conflict
 target: devkit.integration.mcp integration_integrate and Codex automatic tool approval review
-skill: spec
-agent: codex
 origin: user
 severity: workaround
 recurring: false

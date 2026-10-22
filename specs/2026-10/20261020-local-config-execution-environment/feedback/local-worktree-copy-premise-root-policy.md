@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: spec-ambiguity
 target: docs/materials/2026-10/20261020-local-config-execution-environment/configuration-evidence.md
-skill: spec-specify
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

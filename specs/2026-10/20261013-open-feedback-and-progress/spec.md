@@ -7,9 +7,8 @@ created: 2026-10-13
 related_capabilities:
   - CAP-DOCS-document-model
   - CAP-GOV-spec-rules
-related_stories: []
+related_usecases: []
 workflow: direct-delivery
-workflow_hash: sha256:6fe2644b9464ea860e6d6928748778b4ffd7a255e92ddea5fe10eba59138f287
 ---
 
 # [SPEC-open-feedback-and-progress] Open feedback outside history and in-progress specs

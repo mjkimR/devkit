@@ -5,8 +5,6 @@ scope: repo
 kind: question
 category: instruction-conflict
 target: src/devkit_spec/bundle/skills/spec-review/SKILL.md
-skill: spec-review
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

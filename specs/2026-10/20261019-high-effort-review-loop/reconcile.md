@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-high-effort-review-loop
-feature: SPEC-high-effort-review-loop
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md

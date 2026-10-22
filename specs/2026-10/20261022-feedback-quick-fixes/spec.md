@@ -11,7 +11,7 @@ related_capabilities:
   - CAP-INT-mcp-services
   - CAP-DLV-proposal-incubation
   - CAP-DLV-delivery-workflows
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

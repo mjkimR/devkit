@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: instruction-conflict
 target: RULE-document-reference on a plan- branch worktree (Planning workers do not merge main; the Host merges at acceptance)
-skill: spec-delegate
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

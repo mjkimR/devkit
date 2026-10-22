@@ -5,7 +5,7 @@ summary: "Render skill Markdown templates before validation and native projectio
 status: completed
 created: 2026-10-19
 related_capabilities: [CAP-DIST-manifest-spec, CAP-DIST-agent-projections, CAP-DIST-sync-and-transactions]
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

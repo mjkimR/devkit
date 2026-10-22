@@ -5,8 +5,6 @@ scope: repo
 kind: question
 category: spec-ambiguity
 target: spec skill references/worktree.md (premise check after handoff)
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

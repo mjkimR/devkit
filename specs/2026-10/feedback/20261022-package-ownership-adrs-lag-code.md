@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: docs-mismatch
 target: ADR-dist-foundation-ownership; ADR-package-split-and-namespaces
-skill: adr-compaction
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

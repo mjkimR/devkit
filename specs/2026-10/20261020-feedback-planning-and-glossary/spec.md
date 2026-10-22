@@ -8,7 +8,7 @@ related_capabilities:
   - CAP-DLV-proposal-incubation
   - CAP-GOV-spec-rules
   - CAP-DOCS-document-model
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

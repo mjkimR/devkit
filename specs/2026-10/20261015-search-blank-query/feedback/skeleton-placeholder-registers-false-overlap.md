@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: tool-error
 target: devkit spec scope register
-skill: spec-orchestrate
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

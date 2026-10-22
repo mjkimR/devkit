@@ -5,8 +5,6 @@ scope: repo
 kind: change-request
 category: instruction-conflict
 target: "src/devkit_spec/bundle/skills/spec/references/classification.md"
-skill: spec
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

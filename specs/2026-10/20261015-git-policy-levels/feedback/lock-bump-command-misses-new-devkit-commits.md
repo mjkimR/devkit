@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: docs-mismatch
 target: docs/development/setup.md
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

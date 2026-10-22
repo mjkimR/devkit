@@ -5,8 +5,6 @@ scope: upstream
 kind: suggestion
 category: other
 target: codex exec and claude -p smoke launchers
-skill: spec
-agent: codex
 origin: agent
 severity: noise
 recurring: false

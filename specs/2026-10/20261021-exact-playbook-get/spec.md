@@ -6,7 +6,7 @@ status: completed
 created: 2026-10-21
 milestone: MS-scheduled-jobs
 related_capabilities: [CAP-DIST-context-and-playbooks]
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

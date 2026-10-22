@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: tool-error
 target: devkit generated check
-skill: none
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

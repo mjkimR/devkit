@@ -5,8 +5,6 @@ scope: repo
 kind: question
 category: spec-ambiguity
 target: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/review-loop.md (section 1 Round count, section 4 cap)
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

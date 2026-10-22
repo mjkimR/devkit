@@ -10,11 +10,10 @@ related_capabilities:
   - CAP-DLV-proposal-incubation
   - CAP-COLL-work-scope-registry
   - CAP-HARN-agent-guidance
-related_stories:
-  - US-route-development-intent
-  - US-run-parallel-work-safely
+related_usecases:
+  - UC-route-development-intent
+  - UC-run-parallel-work-safely
 workflow: sdd-spec-feature
-workflow_hash: sha256:20b913108a194572244fd42f0587ce3fe7fecfb7610c8afb52fa6b35e79fb0e0
 ---
 
 # [SPEC-hook-driven-integration-cleanup] Approval-driven integration and worktree cleanup

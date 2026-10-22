@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-feedback-review-auto-proposal
-feature: SPEC-feedback-review-auto-proposal
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md

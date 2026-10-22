@@ -6,7 +6,7 @@ status: completed
 created: 2026-10-20
 related_capabilities:
   - CAP-COLL-work-scope-registry
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

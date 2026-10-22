@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-unit-dependencies-and-milestone-scope
-feature: SPEC-unit-dependencies-and-milestone-scope
 status: resolved
 targets:
   - file: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md

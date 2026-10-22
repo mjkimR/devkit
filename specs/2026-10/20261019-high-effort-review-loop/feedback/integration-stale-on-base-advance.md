@@ -5,8 +5,6 @@ scope: repo
 kind: change-request
 category: redundant-step
 target: packages/devkit/src/devkit/integration/service.py
-skill: spec-integrate
-agent: claude-code
 origin: user
 severity: workaround
 recurring: false

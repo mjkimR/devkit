@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: spec-ambiguity
 target: devkit workflow next (sdd-proposal spike completion)
-skill: spec
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

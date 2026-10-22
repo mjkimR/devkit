@@ -5,8 +5,6 @@ scope: bundle
 kind: suggestion
 category: instruction-conflict
 target: src/devkit_spec/bundle/subagents/reconciler.md
-skill: spec-delegate
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

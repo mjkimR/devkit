@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: tool-error
 target: packages/devkit-spec/src/devkit_spec/entrypoints/apply.py (devkit spec entrypoints derive --apply)
-skill: spec-entrypoints
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: tool-error
 target: devkit sync (presentation.language, devkit_dist.features.project.services.presentation.resolve_language)
-skill: spec-orchestrate
-agent: claude-code
 origin: user
 severity: workaround
 recurring: false

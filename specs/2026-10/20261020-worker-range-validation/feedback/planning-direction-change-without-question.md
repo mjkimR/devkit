@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: spec-ambiguity
 target: spec skill references/planning.md (step 2) and references/worker-records.md (section 2)
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: redundant-step
 target: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/effort.md
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

@@ -7,7 +7,7 @@ created: 2026-10-19
 related_capabilities:
   - CAP-ADV-agent-advisory-protocol
   - CAP-GOV-rule-authoring
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

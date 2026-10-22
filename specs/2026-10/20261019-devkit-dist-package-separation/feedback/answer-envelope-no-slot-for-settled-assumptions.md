@@ -5,8 +5,6 @@ scope: repo
 kind: question
 category: spec-ambiguity
 target: spec skill references/worker-records.md (answer records) and devkit workflow envelope answer
-skill: spec
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

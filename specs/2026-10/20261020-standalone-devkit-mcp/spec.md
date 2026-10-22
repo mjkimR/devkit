@@ -5,7 +5,7 @@ summary: "Extract the shared MCP runtime into devkit-mcp, manage project registr
 status: completed
 created: 2026-10-20
 related_capabilities: []
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

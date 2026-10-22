@@ -17,9 +17,7 @@ def _bundle(root: Path, slug: str, spec_status: str, tasks: str = "", reconcile_
     if tasks:
         files[f"{base}/tasks.md"] = f"---\nid: TASKS-{slug}\n---\n{tasks}"
     if reconcile_status:
-        files[f"{base}/reconcile.md"] = (
-            f"---\nreconcile_id: REC-{slug}\nfeature: SPEC-{slug}\nstatus: {reconcile_status}\ntargets: []\n---\n"
-        )
+        files[f"{base}/reconcile.md"] = f"---\nreconcile_id: REC-{slug}\nstatus: {reconcile_status}\ntargets: []\n---\n"
     write_files(root, files)
     return f"{base}/spec.md"
 

@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-feedback-planning-and-glossary
-feature: SPEC-feedback-planning-and-glossary
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md

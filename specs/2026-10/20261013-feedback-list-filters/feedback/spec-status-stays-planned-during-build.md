@@ -5,8 +5,6 @@ scope: bundle
 kind: question
 category: spec-ambiguity
 target: "spec-tasks skill"
-skill: spec-tasks
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

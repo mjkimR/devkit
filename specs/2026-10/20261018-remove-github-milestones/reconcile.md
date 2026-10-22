@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-remove-github-milestones
-feature: SPEC-remove-github-milestones
 status: resolved
 targets:
   - file: docs/architecture/ARCH-05-1-containers.md

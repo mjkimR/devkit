@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: missing-capability
 target: src/devkit_spec/bundle/skills/spec-delegate/references/hosts.md
-skill: spec-delegate
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

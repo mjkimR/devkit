@@ -5,8 +5,6 @@ scope: upstream
 kind: suggestion
 category: missing-capability
 target: devkit config template
-skill: none
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

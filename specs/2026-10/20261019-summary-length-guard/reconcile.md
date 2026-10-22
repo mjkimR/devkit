@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-summary-length-guard
-feature: SPEC-summary-length-guard
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md

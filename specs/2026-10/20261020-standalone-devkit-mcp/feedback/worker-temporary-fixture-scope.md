@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: instruction-conflict
 target: packages/devkit-spec/src/devkit_spec/bundle/subagents/development-worker.md
-skill: spec-review
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

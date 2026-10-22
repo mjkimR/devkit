@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: tool-error
 target: packages/devkit-spec/src/devkit_spec/proposals/handoff.py
-skill: spec-specify
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

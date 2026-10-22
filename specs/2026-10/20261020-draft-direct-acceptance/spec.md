@@ -9,8 +9,8 @@ related_capabilities:
   - CAP-DLV-delivery-workflows
   - CAP-HARN-agent-guidance
   - CAP-HARN-command-mount
-related_stories:
-  - US-incubate-and-hand-off-a-proposal
+related_usecases:
+  - UC-incubate-and-hand-off-a-proposal
 workflow: sdd-spec-feature
 ---
 

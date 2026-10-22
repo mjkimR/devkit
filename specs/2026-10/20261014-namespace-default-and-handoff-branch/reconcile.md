@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-namespace-default-and-handoff-branch
-feature: SPEC-namespace-default-and-handoff-branch
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-spec-bundles.md

@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-bundle-templates
-feature: SPEC-bundle-templates
 status: resolved
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-manifest-spec.md

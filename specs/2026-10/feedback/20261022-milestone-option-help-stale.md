@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: docs-mismatch
 target: devkit spec proposal new --milestone (packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py)
-skill: adr-compaction
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

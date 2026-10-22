@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-embed-local-wheel
-feature: SPEC-embed-local-wheel
 status: resolved
 targets:
   - file: docs/capabilities/search/CAP-SRCH-document-search.md

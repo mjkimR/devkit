@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: tool-error
 target: scripts/smoke.sh (response-style section)
-skill: spec
-agent: claude-code
 origin: agent
 severity: blocked
 recurring: false

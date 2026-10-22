@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-subagent-procedure-in-contract
-feature: SPEC-subagent-procedure-in-contract
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md

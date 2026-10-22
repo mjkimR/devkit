@@ -5,8 +5,6 @@ scope: bundle
 kind: question
 category: missing-capability
 target: "devkit spec scope query"
-skill: spec-tasks
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

@@ -5,8 +5,6 @@ scope: repo
 kind: question
 category: missing-capability
 target: planning-worker role contract (Write boundaries) and spec-delegate references/payload.md (allowed_boundaries)
-skill: spec-delegate
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

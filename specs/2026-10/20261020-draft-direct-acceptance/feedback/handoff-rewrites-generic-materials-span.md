@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: tool-error
 target: devkit spec proposal handoff (code-span path rewrite, kind=path)
-skill: spec-sync
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

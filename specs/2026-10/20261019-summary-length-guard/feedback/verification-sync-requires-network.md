@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: tool-error
 target: scripts/module.sh run_check uv run invocations
-skill: spec-review
-agent: codex
 origin: agent
 severity: workaround
 recurring: true

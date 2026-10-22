@@ -5,7 +5,7 @@ summary: Allows proposal and spec anchors to declare depends_on prerequisites ac
 status: completed
 created: 2026-10-21
 related_capabilities: []
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

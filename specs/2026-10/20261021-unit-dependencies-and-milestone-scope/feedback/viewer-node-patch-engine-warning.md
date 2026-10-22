@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: other
 target: packages/devkit-viewer/frontend/package-lock.json
-skill: spec-review
-agent: codex
 origin: agent
 severity: noise
 recurring: false

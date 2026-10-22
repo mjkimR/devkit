@@ -6,7 +6,7 @@ status: completed
 created: 2026-10-21
 milestone: MS-reporting-and-actionable-insights
 related_capabilities: [CAP-DLV-weekly-report]
-related_stories: [US-inspect-weekly-repository-progress]
+related_usecases: [UC-inspect-weekly-repository-progress]
 workflow: sdd-spec-feature
 ---
 

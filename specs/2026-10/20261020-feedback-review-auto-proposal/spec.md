@@ -5,7 +5,7 @@ summary: "Classify recurrence by the same failure condition while preserving rev
 status: completed
 created: 2026-10-20
 related_capabilities: [CAP-DLV-delivery-workflows]
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

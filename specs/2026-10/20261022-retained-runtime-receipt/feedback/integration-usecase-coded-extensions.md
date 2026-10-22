@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: spec-ambiguity
 target: UC-drive-development-to-integration
-skill: spec-sync
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

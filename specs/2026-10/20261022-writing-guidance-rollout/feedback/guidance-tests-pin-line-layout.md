@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: other
 target: packages/devkit-spec/tests/integration/bundles/spec/
-skill: none
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

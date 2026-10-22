@@ -8,7 +8,7 @@ related_capabilities:
   - CAP-DOCS-document-model
   - CAP-GEN-tracked-artifacts
   - CAP-HARN-command-mount
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

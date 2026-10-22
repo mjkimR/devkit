@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: missing-capability
 target: devkit workflow envelope answer --answers-file
-skill: spec
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

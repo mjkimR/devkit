@@ -5,8 +5,6 @@ scope: upstream
 kind: friction
 category: other
 target: cgate post-commit hook (10-cgate)
-skill: spec
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

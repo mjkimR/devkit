@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-worker-committed-result
-feature: SPEC-worker-committed-result
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md

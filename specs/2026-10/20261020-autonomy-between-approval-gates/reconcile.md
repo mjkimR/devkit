@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-autonomy-between-approval-gates
-feature: SPEC-autonomy-between-approval-gates
 status: resolved
 targets:
   - file: docs/decisions/2026-10/20261020-autonomy-between-approval-gates.md

@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-writing-style-rules
-feature: SPEC-writing-style-rules
 status: resolved
 targets:
   - file: docs/architecture/ARCH-08-2-resource-taxonomy.md

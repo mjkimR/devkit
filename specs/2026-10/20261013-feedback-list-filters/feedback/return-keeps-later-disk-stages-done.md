@@ -5,8 +5,6 @@ scope: bundle
 kind: question
 category: tool-error
 target: "devkit workflow return"
-skill: spec-review
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

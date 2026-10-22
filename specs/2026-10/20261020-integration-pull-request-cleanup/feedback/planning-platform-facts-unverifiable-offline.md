@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: missing-capability
 target: .devkit/managed/spec/skills/spec/references/planning.md (scout step under a network-denied worker payload)
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

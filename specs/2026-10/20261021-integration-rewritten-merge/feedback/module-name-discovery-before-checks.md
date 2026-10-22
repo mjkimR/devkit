@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: redundant-step
 target: scripts/module.sh and justfile verification recipes
-skill: spec-review
-agent: codex
 origin: agent
 severity: noise
 recurring: false

@@ -5,8 +5,6 @@ scope: unknown
 kind: suggestion
 category: missing-capability
 target: devkit.host.mcp and src/devkit_spec/bundle/skills/spec-integrate/SKILL.md
-skill: spec-sync
-agent: antigravity
 origin: agent
 severity: workaround
 recurring: false

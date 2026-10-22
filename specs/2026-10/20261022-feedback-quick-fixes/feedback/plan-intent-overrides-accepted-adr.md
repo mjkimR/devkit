@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: instruction-conflict
 target: spec-delegate payload (allowed_boundaries) and the constitution's ADR requirement for lasting policy changes
-skill: spec-specify
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

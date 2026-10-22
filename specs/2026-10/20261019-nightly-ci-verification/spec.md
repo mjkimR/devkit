@@ -5,7 +5,7 @@ summary: "Use affected tests for local integration and run full CI nightly when 
 status: completed
 created: 2026-10-19
 related_capabilities: []
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

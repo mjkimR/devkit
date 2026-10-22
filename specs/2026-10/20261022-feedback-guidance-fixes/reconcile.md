@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-feedback-guidance-fixes
-feature: SPEC-feedback-guidance-fixes
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md

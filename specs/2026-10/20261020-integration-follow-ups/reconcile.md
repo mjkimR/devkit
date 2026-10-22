@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-integration-follow-ups
-feature: SPEC-integration-follow-ups
 status: resolved
 targets:
   - file: docs/capabilities/integration/CAP-INT-mcp-services.md

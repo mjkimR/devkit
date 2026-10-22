@@ -5,7 +5,7 @@ summary: Reduce unnecessary affected-test execution with finer test groups and s
 status: completed
 created: 2026-10-20
 related_capabilities: []
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

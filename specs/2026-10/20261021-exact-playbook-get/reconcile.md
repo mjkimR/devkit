@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-exact-playbook-get
-feature: SPEC-exact-playbook-get
 status: resolved
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md

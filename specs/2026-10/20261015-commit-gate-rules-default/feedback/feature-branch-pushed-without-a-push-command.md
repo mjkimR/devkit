@@ -5,8 +5,6 @@ scope: unknown
 kind: question
 category: other
 target: devkit repository Git hooks and settings (post-commit, push.autoSetupRemote)
-skill: none
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

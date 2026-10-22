@@ -5,8 +5,6 @@ scope: repo
 kind: change-request
 category: other
 target: packages/*/src/**/bundle/{skills,playbooks,instructions}/
-skill: spec-sync
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

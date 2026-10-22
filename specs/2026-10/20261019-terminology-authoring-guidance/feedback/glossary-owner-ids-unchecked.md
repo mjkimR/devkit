@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: docs-mismatch
 target: RULE-document-reference (docs/glossary.md)
-skill: spec-sync
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

@@ -5,7 +5,7 @@ summary: "Reuse synchronized standalone repository templates in handoff tests wh
 status: completed
 created: 2026-10-20
 related_capabilities: []
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

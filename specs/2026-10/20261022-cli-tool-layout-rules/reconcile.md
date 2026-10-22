@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-cli-tool-layout-rules
-feature: SPEC-cli-tool-layout-rules
 status: resolved
 targets:
   - file: docs/capabilities/cli/CAP-CLI-agent-cli-toolkit.md

@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: missing-capability
 target: docs/materials/2026-10/20261020-language-setting-coverage/development-evidence.md
-skill: spec-feedback
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: spec-ambiguity
 target: docs/capabilities/delivery/CAP-DLV-spec-bundles.md
-skill: spec-sync
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

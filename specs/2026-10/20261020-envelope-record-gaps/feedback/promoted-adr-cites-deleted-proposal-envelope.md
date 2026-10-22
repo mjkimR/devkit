@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: docs-mismatch
 target: devkit spec proposal handoff (PADR promotion and reference rewrite)
-skill: spec
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

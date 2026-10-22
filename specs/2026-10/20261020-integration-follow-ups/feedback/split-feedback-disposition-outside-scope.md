@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: missing-capability
 target: planning-worker write boundaries; feedback disposition on a Planning split
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

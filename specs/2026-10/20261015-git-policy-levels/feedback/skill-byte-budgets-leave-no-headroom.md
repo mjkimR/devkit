@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: other
 target: src/devkit_spec/bundle/skills/spec/references/completion.md
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

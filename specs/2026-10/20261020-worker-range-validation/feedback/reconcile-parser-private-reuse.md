@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: missing-capability
 target: packages/devkit-spec/src/devkit_spec/entrypoints/bundle.py
-skill: spec-feedback
-agent: codex
 origin: agent
 severity: noise
 recurring: false

@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: tool-error
 target: devkit sync (post-sync gate-hooks extension)
-skill: spec-integrate
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: true

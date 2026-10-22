@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: other
 target: tests/test_bundle_budgets.py
-skill: spec-review
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

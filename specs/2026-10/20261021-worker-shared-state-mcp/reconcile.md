@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-worker-shared-state-mcp
-feature: SPEC-worker-shared-state-mcp
 status: resolved
 targets:
   - file: docs/capabilities/collaboration/CAP-COLL-shared-artifacts.md

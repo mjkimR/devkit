@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: tool-error
 target: scripts/module.sh (just test <module> [area|path...])
-skill: none
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

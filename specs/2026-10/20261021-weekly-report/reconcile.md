@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-weekly-report
-feature: SPEC-weekly-report
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-weekly-report.md

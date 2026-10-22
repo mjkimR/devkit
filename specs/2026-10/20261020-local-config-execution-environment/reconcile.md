@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-local-config-execution-environment
-feature: SPEC-local-config-execution-environment
 status: resolved
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md

@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: instruction-conflict
 target: src/devkit_spec/bundle/skills/spec-integrate/SKILL.md
-skill: spec-integrate
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

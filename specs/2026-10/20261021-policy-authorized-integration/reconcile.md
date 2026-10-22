@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-policy-authorized-integration
-feature: SPEC-policy-authorized-integration
 status: resolved
 targets:
   - file: docs/capabilities/integration/CAP-INT-mcp-services.md

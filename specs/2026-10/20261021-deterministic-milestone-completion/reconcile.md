@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-deterministic-milestone-completion
-feature: SPEC-deterministic-milestone-completion
 status: resolved
 targets:
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md

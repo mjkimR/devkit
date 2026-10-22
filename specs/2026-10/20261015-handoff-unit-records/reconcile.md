@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-handoff-unit-records
-feature: SPEC-handoff-unit-records
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md

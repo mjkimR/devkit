@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: tool-error
 target: devkit worktree start and spec worktree procedure
-skill: spec
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

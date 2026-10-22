@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: instruction-conflict
 target: development-worker
-skill: spec-specify
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

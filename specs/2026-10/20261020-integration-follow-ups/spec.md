@@ -9,7 +9,7 @@ related_capabilities:
   - CAP-WT-task-worktrees
   - CAP-DLV-delivery-workflows
   - CAP-DLV-project-policy
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: docs-mismatch
 target: ADR-bounded-high-effort-review-loop; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/review-loop.md
-skill: adr-compaction
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

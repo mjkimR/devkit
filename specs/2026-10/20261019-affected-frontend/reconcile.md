@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-affected-frontend
-feature: SPEC-affected-frontend
 status: resolved
 targets:
   - file: docs/development/ci-cd.md

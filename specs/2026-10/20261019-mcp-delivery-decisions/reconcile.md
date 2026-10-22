@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-mcp-delivery-decisions
-feature: SPEC-mcp-delivery-decisions
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md

@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-feedback-list-filters
-feature: SPEC-feedback-list-filters
 status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-lookup.md

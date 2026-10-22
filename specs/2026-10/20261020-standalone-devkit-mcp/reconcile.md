@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-standalone-devkit-mcp
-feature: SPEC-standalone-devkit-mcp
 status: resolved
 targets:
   - file: docs/architecture/ARCH-08-1-agent-output.md

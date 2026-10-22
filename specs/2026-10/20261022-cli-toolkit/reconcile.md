@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-cli-toolkit
-feature: SPEC-cli-toolkit
 status: resolved
 targets:
   - file: docs/capabilities/cli/CAP-CLI-agent-cli-toolkit.md

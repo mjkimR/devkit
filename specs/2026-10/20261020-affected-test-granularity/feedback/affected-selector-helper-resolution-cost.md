@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: other
 target: scripts/affected_tests.py
-skill: spec-review
-agent: codex
 origin: agent
 severity: noise
 recurring: true
