@@ -1,0 +1,12 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T05:31:48.791692Z'
+status: completed
+summary: 'round 2; closes reconcile-check-01; implementer self-verified the P3 fix: CAP §4.1 now lists invalid paths among _Boundary values that are no code path, matching classify_boundary and test_candidates_stay_before_code_is_declared; reconcile resolved'
+findings: []
+checks: {}
+diff_scope:
+  base: 01cfbda557f0f1a913c6e354b06c23dd7740789e
+  head: 73d55cd62f281eed95a21757a83dbac91ab15f47
