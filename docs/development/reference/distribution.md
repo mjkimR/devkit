@@ -337,6 +337,8 @@ guidance and seeds. Details and persistence behavior: `CAP-DIST-sync-and-transac
 
 For shared or personal approval/response defaults, set `[presentation] language = "ko"` (`auto`, `en`, `ko`)
 in shared config or ignored `.devkit/config.local.toml`. `devkit config show --effective` reports the requested and
-resolved language, source and fallback. Run sync for response-style assets; approval forms read per request.
+resolved language, source and fallback; another value falls back to `en`, which `devkit sync`, `devkit status`
+and `devkit config show` report as a `PRESENTATION_LANGUAGE_UNSUPPORTED` warning. Run sync for response-style
+assets; approval forms read per request.
 Explicit response-style bundle variables win. See `CAP-DIST-sync-and-transactions` and `CAP-INT-mcp-services`;
 this does not localize host-owned controls or establish visible native Korean form support.
