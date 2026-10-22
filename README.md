@@ -154,7 +154,7 @@ without a consumer project, point `-w` at an existing empty directory:
 Edit root `VERSION` (for example, `0.1.2`), then run:
 
 ```bash
-just version-sync          # update all workspace versions, internal pins and uv.lock
+just version-sync          # update all workspace and bundle versions, internal pins and uv.lock
 just version-check         # read-only metadata consistency check
 just release-build v0.1.2  # build and validate the release locally
 ```

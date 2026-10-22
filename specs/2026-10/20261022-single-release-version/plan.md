@@ -14,7 +14,7 @@ Base main is a1bed56189f11cdd7e00a0335d17ff2c2b49f624; this direct intake has no
 ## 2. Architecture Overview & Impact
 
 Root VERSION is the human-edited source. Static pyproject metadata and uv.lock remain committed build inputs.
-A standard-library Python script discovers members from the root workspace patterns, updates project versions
+A standard-library Python script discovers members from the root workspace patterns, updates project and bundle manifest versions
 and versioned internal requirements while retaining formatting, then calls uv lock.
 Existing unversioned dependency entries retain their spelling; existing internal ranges become exact pins.
 The release script checks synchronization and the tag before touching its output directory.

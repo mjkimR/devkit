@@ -52,13 +52,30 @@ def metadata_updates(root: Path) -> tuple[str, int, dict[Path, str]]:
         updated = requirement.sub(lambda m: f"{m[1]}{m[2]}=={version}{m[3] or ''}{m[1]}", updated)
         if updated != content:
             updates[path] = updated
+    for metadata in paths:
+        for manifest in sorted((metadata.parent / "src").rglob("bundle.toml")):
+            content = manifest.read_text()
+            if not isinstance(tomllib.loads(content).get("version"), str):
+                raise ValueError(f"{manifest.relative_to(root)} must declare a static bundle version")
+            header, separator, rest = content.partition("\n[")
+            updated_header, count = re.subn(
+                r"""(?m)^(version\s*=\s*)(["'])[^"'\r\n]*\2""",
+                lambda match: f"{match[1]}{match[2]}{version}{match[2]}",
+                header,
+            )
+            if count != 1:
+                raise ValueError(f"{manifest.relative_to(root)} must declare one bundle version")
+            updated = updated_header + separator + rest
+            if updated != content:
+                updates[manifest] = updated
     return version, len(paths), updates
 
 
 def error(code: str, message: str, action: str) -> None:
     print(
         f"[ERROR]  ({code}) {message}\n"
-        "[ACTION] INPUT_ERROR — Do not retry with identical input. Correct the input or environment before rerunning.\n"
+        "[ACTION] INPUT_ERROR — Do not retry with identical input. Retrying unchanged will\n"
+        "         fail identically. Correct the flag, argument, or input file before rerunning.\n"
         f"[FIX]    {action}",
         file=sys.stderr,
     )

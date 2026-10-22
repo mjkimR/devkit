@@ -1,6 +1,6 @@
 schema = 1
 name = "devkit"
-version = "0.1.1"
+version = "0.1.2"
 default_preset = "core"
 # Deployed without `devkit add`; `devkit remove` opts a project out.
 auto_select = true

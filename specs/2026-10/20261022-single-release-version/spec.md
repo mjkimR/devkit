@@ -2,7 +2,7 @@
 id: SPEC-single-release-version
 title: One workspace release version
 summary: "A root VERSION file drives workspace package versions and internal dependency pins for one release tag."
-status: planned
+status: in-progress
 created: 2026-10-22
 related_capabilities: []
 related_usecases: []
@@ -58,3 +58,9 @@ All workspace distributions should share the version of one release tag.
 - **Given** the existing workspace
 - **When** this change is complete
 - **Then** all eleven workspace packages and their versioned internal requirements use 0.1.2, uv.lock is current, and release wheel metadata agrees with the single version.
+
+### [AC-05] Synchronize bundled asset versions
+
+- **Given** a workspace package contains src/**/bundle.toml manifests
+- **When** synchronization or checking runs
+- **Then** manifest versions are synchronized to VERSION or reported stale, preserving other manifest content.

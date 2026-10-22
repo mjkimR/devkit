@@ -29,7 +29,7 @@ preparation require edits across package metadata. Installed library contracts s
 ## 4. Decision Outcome
 
 Use root VERSION and `just version-sync` for every workspace package, including repository tools. Synchronize
-project versions and versioned internal requirements, then regenerate uv.lock with uv. Keep unversioned extra
+project and bundle manifest versions and versioned internal requirements, then regenerate uv.lock with uv. Keep unversioned extra
 pass-throughs unchanged. Check consistency before release building. The separately built model and frontend npm
 library keep their own versions. `ARCH-07-deployment` defines the deployment boundary.
 
