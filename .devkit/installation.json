@@ -1283,7 +1283,7 @@
     },
     ".devkit/managed/authoring/rules/agent_asset_wording/guide.md": {
       "mode": 420,
-      "sha256": "bf82985c72c1de30b3db0f7aff7cd178f3d8e23a20e0b78e6e2275f2c0778856"
+      "sha256": "9bb7d8e4f0be49909e816cecd1c090d84512de3361a64b1422ea3a55cd5b4e3d"
     },
     ".devkit/managed/authoring/rules/agent_asset_wording/rule.py": {
       "mode": 420,
