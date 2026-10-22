@@ -6,11 +6,11 @@ plan: PLAN-writing-style-rules
 
 # Task Breakdown: `SPEC-writing-style-rules` Writing style rules and layout-free guidance tests
 
-- [ ] **Task 1**: `RULE-agent-asset-wording` with its guide and tests
+- [x] **Task 1**: `RULE-agent-asset-wording` with its guide and tests
   - **_Boundary**: `packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/agent_asset_wording/`
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05_
   - **Verification**: `just test devkit packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/agent_asset_wording`
-- [ ] **Task 2**: Ship the rule in the `skill-authoring` preset and document it
+- [x] **Task 2**: Ship the rule in the `skill-authoring` preset and document it
   - **_Boundary**: `packages/devkit/src/devkit_agt/bundles/authoring/bundle/bundle.toml`,
     `packages/devkit/src/devkit_agt/bundles/authoring/bundle/instructions/agent-asset-writing.md`,
     `packages/devkit/src/devkit_agt/bundles/authoring/bundle/playbooks/skill-authoring/SKILL.md`,

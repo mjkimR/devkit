@@ -58,6 +58,16 @@
       ]
     },
     {
+      "bundle": "authoring",
+      "id": "agent-asset-wording",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/authoring/rules/agent_asset_wording/guide.md",
+        ".devkit/managed/authoring/rules/agent_asset_wording/rule.py",
+        ".devkit/managed/authoring/rules/agent_asset_wording/tests/test_rule.py"
+      ]
+    },
+    {
       "bundle": "devkit",
       "id": "consumption",
       "kind": "instruction",
@@ -1257,19 +1267,31 @@
     },
     ".devkit/managed/authoring/bundle.toml": {
       "mode": 420,
-      "sha256": "c1e656d0aed9535e640be627d5d345126864e664bf11c2700ed0a53132217a80"
+      "sha256": "ab51c8db30d58aaf499a22be2cdddb749968b836e4146c26b6d788e7b1396c8f"
     },
     ".devkit/managed/authoring/instructions/agent-asset-writing.md": {
       "mode": 420,
-      "sha256": "d334c5fe07d35c8bafd30bab712438b837260ad169a86db99ddd688ccdb706e6"
+      "sha256": "b8326d69d7c7d2c6812e64e4a0188bba1c2d1d75212bb0a56b780d85875dd845"
     },
     ".devkit/managed/authoring/playbooks/skill-authoring/SKILL.md": {
       "mode": 420,
-      "sha256": "90c46b9f68d686164e29129e0afb589bf1248dcc955ae89f04f44be0e813051b"
+      "sha256": "8896c1753b6fe1afc70e15ea783bf5f77edc99b4adf23296374fdbd5c42cc25f"
     },
     ".devkit/managed/authoring/playbooks/skill-authoring/references/scripts.md": {
       "mode": 420,
       "sha256": "2febfea932128b03da888e16adb61f578b0f5f502cc29f82de82c4ef55a87808"
+    },
+    ".devkit/managed/authoring/rules/agent_asset_wording/guide.md": {
+      "mode": 420,
+      "sha256": "bf82985c72c1de30b3db0f7aff7cd178f3d8e23a20e0b78e6e2275f2c0778856"
+    },
+    ".devkit/managed/authoring/rules/agent_asset_wording/rule.py": {
+      "mode": 420,
+      "sha256": "1fb983717fbd1f69ac64440f31cfb6c1c6519061540d0ffcd22fa1d347c355c0"
+    },
+    ".devkit/managed/authoring/rules/agent_asset_wording/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "cd72e85ef39c5e3b4b1cdd8c912ac60c9222026828925957108ab1787a6a76db"
     },
     ".devkit/managed/authoring/rules/skill_document_size/guide.md": {
       "mode": 420,
