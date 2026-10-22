@@ -8,7 +8,7 @@ target: CAP-HARN-agent-guidance
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -41,3 +41,8 @@ created_at: 2026-10-22
 ```text
 CAP-HARN-agent-guidance: "it SHOULD NOT exist solely as a sequencing gate"
 ```
+
+- **Disposition**: `SPEC-guidance-followups`: the milestone paragraph of `CAP-HARN-agent-guidance` states granularity
+  as a preference ("Milestones are loosely managed themes: prefer ... over a milestone that only sequences one
+  proposal"), matching `ADR-milestone-merging` and the roadmap README, on the user's decision. Verified:
+  `rg -n "SHOULD" docs/capabilities | rg -i milestone` prints nothing, and `devkit rules check` passes.

@@ -8,7 +8,7 @@ target: CAP-MCP-runtime-registration
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -47,3 +47,7 @@ created_at: 2026-10-22
  line=20 ... message="UC-drive-development-to-integration links CAP-MCP-runtime-registration, but
  docs/capabilities/mcp/CAP-MCP-runtime-registration.md does not list UC-drive-development-to-integration in usecases"]
 ```
+
+- **Disposition**: `SPEC-guidance-followups`: `UC-drive-development-to-integration` lists
+  `CAP-MCP-runtime-registration` in `capabilities`, and the capability lists the use case in `usecases`. Verified:
+  `devkit rules check` reports no `RULE-traceability-link` violation.

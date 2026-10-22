@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-syn
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -42,3 +42,9 @@ created_at: 2026-10-22
 Error: No such command 'reconcile-check'.
 [ENVELOPE: .../envelopes/reconcile-check-01.yaml kind=reconcile-check seq=01 status=completed open_findings=0]
 ```
+
+- **Disposition**: `SPEC-guidance-followups`: `spec-sync` step 5 names
+  `devkit workflow envelope new --unit <dir> --kind reconcile-check --stage living-spec-draft` and links the `spec`
+  skill's `references/envelope.md` for the remaining flags. Verified by
+  `packages/devkit-spec/tests/integration/bundles/spec/test_role_shell_guidance.py` and the bundle budget tests
+  (`just test-affected`).
