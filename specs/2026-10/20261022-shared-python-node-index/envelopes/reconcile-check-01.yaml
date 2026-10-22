@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T09:54:09.036483Z'
+status: completed
+summary: 'Self-verified: CAP-GOV-rule-authoring and CAP-GOV-rules-engine reflect get_python_nodes and node index caching; findings byte-identical'
+findings: []
+checks:
+  rules: PASS devkit rules check --ci
+diff_scope:
+  base: 3d1f162fa990044a598ed13374b04462eece2e09
+  head: 6827ff81d46161e778d86868b59dc66c699140b5

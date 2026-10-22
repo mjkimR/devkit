@@ -27,3 +27,4 @@ cost ~1.82 ms (saving ~1.15 s of pure AST walk overhead with 8.97 MB RSS memory 
 - `just check devkit`: 0 errors.
 - `just check devkit-dev`: 0 errors.
 - `just check devkit-catalog`: 0 errors.
+
