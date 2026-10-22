@@ -47,14 +47,14 @@ sequence.
 - **Non-Goals**:
   - **Scope Excluded**: conditional stages. Each classification is one workflow; a change of depth adds a Unit,
     closes the work or, for a queued draft the user reclassifies as `session` at pickup, deletes the draft in Backlog
-    (`ADR-session-reclassification-of-a-queued-draft`), never a stage switched on by content.
+    (`ADR-delivery-classification`), never a stage switched on by content.
   - **Scope Excluded**: a Development direction gate. Choices inside the agreed intent are the executor's; a problem
     that breaks the agreement stops the work as a problem.
   - **Scope Excluded**: a runner. Dispatching stages, the integration queue, the shared-docs write lock, retry caps,
     executing merges and declaring `lint-ci-clean` and `merged` belong to an external runner, or to the executor
     declaring them with `--given` when none exists.
   - **Scope Excluded**: model selection. The model is the runtime's setting; role contracts preset only a
-    model-independent reasoning effort per role (§4.6, `ADR-role-effort-presets`), independent of `activity-effort`,
+    model-independent reasoning effort per role (§4.6, `ADR-orchestration-workers`), independent of `activity-effort`,
     which sets only how thorough an activity's review and verification are.
 
 ## 3. Business Rules & Policies
@@ -126,7 +126,7 @@ sequence.
     candidates, because devkit's `devkit workflow handoff` rebinds a unit in place and refuses a candidate with
     another anchor (`HANDOFF_LAYOUT_MISMATCH`). Once `plan-accept` holds, `next` reports the unit complete
     (`[STAGE: - complete=true]`, no `[HANDOFF]` line) and Development starts with `devkit spec proposal handoff <slug>`.
-    An eligible draft may skip Planning by a **direct acceptance** (`ADR-direct-acceptance-command-and-handoff-guard`):
+    An eligible draft may skip Planning by a **direct acceptance** (`ADR-proposal-acceptance`):
     Backlog work on the base checkout, under every pull-request policy, where the Host sweeps its own acceptance
     session at `collect-feedback` and records `plan-accept` with `devkit spec proposal accept <slug> --by user
     --direct --note "<reason>"`, without `reviewing`. It has no Planning branch, run, `activity-effort` or `worker` envelope; the
@@ -162,7 +162,7 @@ sequence.
     marker counts, in sequence order, only before the loop's first marked round and only when a `worker` envelope of
     the segment written before that marker records `activity_effort: high`; the higher number holds when a marker
     disagrees with that count, a `reverify` is never a round, and a fold of the user's answers is a new batch of the same loop that gets at most one
-    fresh round outside the cap (`ADR-reverify-closes-challenger-rounds`). A batch not minor at the cap round and a recurring P1
+    fresh round outside the cap (`ADR-review-and-reconcile-verification`). A batch not minor at the cap round and a recurring P1
     (`recurs:` at the start of the reviewer's `issue`) stop the work (rule 7). Recurrence means the same failure
     condition remains after an attempted fix, including an incomplete fix, or returns; the reviewer names the earlier
     finding and explains the shared failure condition. A distinct defect introduced by a fix is a new finding:
@@ -193,7 +193,7 @@ sequence.
     and `required` policies hold at every effort.
 16. **Only the workers write to Git**: a read-only role never stages or commits (`x-git-actions: [read]`). The two
     workers (`[read, commit]`) commit on their activity branch, write their own records and never push, merge, rebase,
-    reset or amend (`ADR-worker-delivers-committed-result`).
+    reset or amend (`ADR-orchestration-workers`).
 
 ## 4. Interfaces & Data Contracts
 
@@ -343,7 +343,7 @@ A unit is held while a `worker` envelope's problem has no `resolution` naming it
 (`WORKTREE_BLOCKED`); a pull request merges only while `devkit workflow envelope check --format json` reports
 `"blocked": false` and no `pending_questions`. Unanswered questions are `choose` requests
 (`question:worker-NN.<id>`, `answer=envelope`) that `devkit workflow answer` refuses. Formats and roles:
-`ADR-run-records-and-activity-branches`.
+`ADR-orchestration-workers`.
 
 A role returns `status` (`completed`, `needs_input`, `failed`), `summary`, `findings` (`issue`, `evidence`,
 `failure_condition`, `suggested_action`, and `severity` `P1`, `P2` or `P3` on every `review`, `reconcile-check` and
@@ -360,7 +360,7 @@ Extension keys devkit does not interpret: `x-execution` (`isolated`), `x-invocat
 role but the two workers, `[read, commit]`).
 
 The four read-only roles preset a reasoning effort in their host blocks, with no model name
-(`ADR-role-effort-presets`): `medium` for the `light-medium` profile, `high` for `general-high` and `high-reasoning`,
+(`ADR-orchestration-workers`): `medium` for the `light-medium` profile, `high` for `general-high` and `high-reasoning`,
 as `effort` under `claude-code` and `model_reasoning_effort` under a `codex` block that is not `unsupported`, at
 `low`, `medium` or `high` only. Antigravity has no such key. The two workers set none, whatever their profile, so
 they run at the session's effort like the Host whose work they take over. The preset is independent of
@@ -383,7 +383,7 @@ write boundaries, failure handling and, for a role whose procedure no main sessi
 `development-worker`), the procedure itself. Planning runs in a main session in `direct` mode, so its ordered steps
 live in the `spec` skill's `references/planning.md`, which the `planning-worker` contract cites; the contract keeps
 only the worker's own obligations (worktree, nested roles, return, write boundaries, problems)
-(`ADR-executor-neutral-planning-steps-in-a-spec-reference`). Caller guidance (per-role payload, host guarantees, the
+(`ADR-orchestration-workers`). Caller guidance (per-role payload, host guarantees, the
 post-run diff comparison, envelope recording, range validation) lives in `spec-delegate` (`SPEC-subagent-procedure-in-contract`).
 
 The workers exist for `local-orchestrated` mode (`spec-orchestrate`, user-invoked per activity) and never for
@@ -413,9 +413,9 @@ It never reverts, closes, raises the depth or narrows the scope. The `developmen
 each answer decides, what each option leads to) rather than relaying the worker's wording. The Host validates the cumulative committed range from the
 unit's last accepted head; a range it rejects is a problem in the Host's own `worker` envelope, which blocks the unit
 from review and integration without discarding anything until a resolution names it
-(`ADR-worker-delivers-committed-result`, `ADR-run-records-and-activity-branches`). Host statuses: Claude Code
+(`ADR-orchestration-workers`, `ADR-orchestration-workers`). Host statuses: Claude Code
 `native`, Codex `emulated` with `sandbox_mode: workspace-write`, Antigravity `unverified`
-(`ADR-codex-native-worker-execution`). Native Codex spawning does not enforce the worker's role/path boundary;
+(`ADR-orchestration-workers`). Native Codex spawning does not enforce the worker's role/path boundary;
 Git administration remains shared. Workers inherit model and reasoning effort and set no approval-policy override.
 
 Prefer the projected named role with payload only. An unavailable role can mean projection or session-root
@@ -473,7 +473,7 @@ prompt.
 
 ### 4.8 SDD Integration Readiness Provider (`packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py`)
 
-Registered under the `devkit_agt.features.integration.readiness` entry point as `spec` and selected by `[integration] provider = "spec"` (`ADR-integration-approval-asserted`, `SPEC-hook-driven-integration-cleanup`). `check(context: IntegrationContext) -> Readiness` evaluates the committed `context.finish.source_sha` against `context.finish.target_sha` (at a build of an approved request, the build target, with the result commit as `context.result_sha`; `ADR-target-advance-readiness`) inside an isolated temporary workspace materialized from Git (populating `.devkit/managed/` only when files match the committed `.devkit/installation.json` SHA-256 digests), so uncommitted worktree or base edits never influence readiness:
+Registered under the `devkit_agt.features.integration.readiness` entry point as `spec` and selected by `[integration] provider = "spec"` (`ADR-delivery-decision-boundaries`, `SPEC-hook-driven-integration-cleanup`). `check(context: IntegrationContext) -> Readiness` evaluates the committed `context.finish.source_sha` against `context.finish.target_sha` (at a build of an approved request, the build target, with the result commit as `context.result_sha`; `ADR-local-and-pull-request-integration`) inside an isolated temporary workspace materialized from Git (populating `.devkit/managed/` only when files match the committed `.devkit/installation.json` SHA-256 digests), so uncommitted worktree or base edits never influence readiness:
 
 1. **Policy and configuration**: validates `[tool.spec]` (`read_spec_config`) and `[workflow.approvals]` (`check_approvals`, accepting ask or auto for task intent and the three main boundaries) in both the base checkout and the materialized `source_sha` snapshot.
 2. **Unit tasks (`task.kind == "unit"`)**: verifies branch-to-unit correspondence through `attach_check(base, branch, unit, source_sha)` and `task.id` agreement (`<slug>`, `SPEC-<slug>` or `PROP-<slug>`), then evaluates the unit in `Workspace(..., ancestor=...)`:
@@ -485,7 +485,7 @@ Registered under the `devkit_agt.features.integration.readiness` entry point as 
 
 ## Source feedback at completion
 
-`ADR-feedback-terminal-outcomes` defines promoted and resolved as terminal routes: promotion transfers tracking to
+`ADR-feedback-lifecycle` defines promoted and resolved as terminal routes: promotion transfers tracking to
 identified follow-up work; resolution closes a direct verified fix without promotion. Only open feedback needs action.
 Task entry preserves source FB IDs and scope through handoff and drafting. Terminal references require no completion
 disposition or re-verification and do not implicitly authorize source writes. Completion of follow-up work never

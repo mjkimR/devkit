@@ -49,4 +49,4 @@ tests/test_documented_codes.py: """Every advisory code devkit-spec defines is do
 worker run: test_every_code_is_documented: AssertionError: assert ['SPEC_LIST_STATUS_UNKNOWN'] == []; 1 failed, 720 passed
 ```
 
-- **Disposition**: `SPEC-worker-committed-result`: a worker writes the `docs/` paths its task's `_Boundary:` names, and `spec-tasks` puts the documentation a check requires there, so the worker's commit passes its checks (`ADR-worker-delivers-committed-result`).
+- **Disposition**: `SPEC-worker-committed-result`: a worker writes the `docs/` paths its task's `_Boundary:` names, and `spec-tasks` puts the documentation a check requires there, so the worker's commit passes its checks (`ADR-orchestration-workers`).

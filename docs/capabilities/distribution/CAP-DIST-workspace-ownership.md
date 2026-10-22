@@ -52,7 +52,7 @@ See `CAP-HOST-lifecycle-observation`.
    (`CAP-DIST-sync-and-transactions`). The receipt cannot claim it. Its schema, the template renderer and the receipt
    format belong to `devkit-dist`; the reserved harness tables (`[rules]`, `[workflow]`, `[gates]`, `[worktree]`,
    `[integration]`) to the engines of `devkit-agt`, which contribute their commented templates through the
-   `devkit.config_tables` entry points (`ADR-dist-config-receipt-ownership`).
+   `devkit.config_tables` entry points (`ADR-package-split-and-namespaces`).
 2. **Managed assets (`.devkit/managed/<bundle>/`)**: generated files, regenerated deterministically by `devkit sync`.
    Ordinary files cache upstream bytes at their original relative paths. Supported `.md.jinja` sources instead
    produce rendered `.md` files using declared project inputs, after resolving raw project overrides;

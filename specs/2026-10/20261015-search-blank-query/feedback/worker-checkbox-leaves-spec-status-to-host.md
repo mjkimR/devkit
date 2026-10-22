@@ -45,4 +45,4 @@ worker.md: Denied: anything outside the worktree, the unit's `spec.md`, `plan.md
 [VIOLATION: RULE-spec-progress severity=warning file=specs/2026-10/20261015-search-blank-query/tasks.md line=1 status=open message="Spec status 'planned' of specs/2026-10/20261015-search-blank-query/spec.md is behind its tasks: 1 of 1 checked" remediation="Run `devkit rules fix specs/2026-10/20261015-search-blank-query/spec.md` to set status: in-progress in spec.md"]
 ```
 
-- **Disposition**: `SPEC-worker-committed-result`: the worker sets the spec's status itself with `devkit rules fix <unit>/spec.md` as part of its committed result (`ADR-worker-delivers-committed-result`); no host step.
+- **Disposition**: `SPEC-worker-committed-result`: the worker sets the spec's status itself with `devkit rules fix <unit>/spec.md` as part of its committed result (`ADR-orchestration-workers`); no host step.

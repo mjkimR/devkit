@@ -26,7 +26,7 @@ devkit already models stays in devkit's tables
 (`[workflow.approvals]`, `[workflow.stages]`, `[worktree]`, `[integration]`); devkit-spec adds only what is specific to spec-driven
 development, under the `[tool.spec]` extension table that devkit passes through unread. Agents read the effective
 policy with one command, `devkit spec policy`, before routing, gate and Git decisions. Rationale:
-`ADR-policy-in-the-tool-spec-table`; the Git policy levels: `ADR-worktree-and-pull-request-levels`, refined by `ADR-branch-guards-and-close-discard`; integration readiness and scoped cleanup: `SPEC-hook-driven-integration-cleanup`.
+`ADR-spec-package-on-devkit`; the Git policy levels: `ADR-worktrees-branches-and-scope`, refined by `ADR-worktrees-branches-and-scope`; integration readiness and scoped cleanup: `SPEC-hook-driven-integration-cleanup`.
 
 ## 2. Scope & Boundary
 
@@ -61,7 +61,7 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
    Owning base auto, also retained by the prospective source, delegates only that boundary's verified local effects.
    A task branch cannot authorize itself; revocation stops remaining effects. Authority is reported as `policy`, never
    as a human approval. The Planning acceptance merge belongs to `plan-accept`, not Development's `dev-integration`.
-   Host permissions, required PR policy and publication authority remain separate (`ADR-policy-delegated-decision-boundaries`).
+   Host permissions, required PR policy and publication authority remain separate (`ADR-delivery-decision-boundaries`).
    `exception` is a resolution stage, not a gate: its key emits `SPEC_APPROVAL_KEY_IGNORED` and is not listed.
 5. **Strict table**: `[tool.spec]` MUST be a table with only the keys `worktree`, `depth_escalation`, `namespaces`,
    `scope` and `feedback`; anything else is `SPEC_CONFIG_INVALID`, raised by every command that reads the table.

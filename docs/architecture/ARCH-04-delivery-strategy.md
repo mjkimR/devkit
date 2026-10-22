@@ -114,7 +114,7 @@ flowchart LR
     classDef host fill:#bfdbfe,stroke:#1d4ed8,color:#111
 ```
 
-Depth may escalate during Development (`session → spec`) when contract or documentation changes are discovered. Lowering depth is prohibited, with the sole exception of session reclassification of unreviewed draft proposals at pickup (`ADR-session-reclassification-of-a-queued-draft`).
+Depth may escalate during Development (`session → spec`) when contract or documentation changes are discovered. Lowering depth is prohibited, with the sole exception of session reclassification of unreviewed draft proposals at pickup (`ADR-delivery-classification`).
 
 ### 2.3 `activity-effort`
 Determines the thoroughness of inspection and review per activity (`low`, `medium`, `high`, default `medium`):

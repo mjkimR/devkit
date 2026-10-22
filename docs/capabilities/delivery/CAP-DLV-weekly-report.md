@@ -62,7 +62,7 @@ Select a local location explicitly, defaulting to owning-unit materials or an ex
 location; otherwise resolve it at invocation. Never silently create a tracked report on the default branch.
 The logical key is repository identity, scope and exact interval/timezone. Each run has a unique ID and source
 SHA; use a collision-checked exclusively created artifact. Reruns name superseded runs and preserve earlier bytes.
-No seven-day TTL or automatic history discovery applies (`ADR-weekly-report-evidence-and-publication`).
+No seven-day TTL or automatic history discovery applies (`ADR-mcp-runtime-and-shared-artifacts`).
 
 Reports contain identity/evidence inventory; completed and unintegrated work; decisions/behavior changes;
 repository health; unresolved problems/prioritized actions; and prior comparison, limitations and outcomes.

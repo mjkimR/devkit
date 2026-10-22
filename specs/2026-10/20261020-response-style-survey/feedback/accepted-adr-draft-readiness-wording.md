@@ -33,7 +33,7 @@ created_at: 2026-10-20
 - **Versions**: Observed on handoff base `1c238be1df936aa86d466a53e9abc5f6322a7aef`.
 - **Conditions**: Proposal-to-spec handoff, Codex Development worker, accepted ADR edits excluded.
 - **Workarounds Attempted**: Used explicit handoff authority and drafted measurable Development criteria; succeeded.
-- **Related Assets**: `ADR-response-style-adaptive-replies`, `SPEC-response-style-survey`, proposal acceptance preparation.
+- **Related Assets**: `ADR-response-style`, `SPEC-response-style-survey`, proposal acceptance preparation.
 
 ## Evidence
 
@@ -47,7 +47,7 @@ friction in the preserved decision, not evidence that the accepted behavior shou
 
 ## Disposition
 
-The session corrected the readiness prose in `ADR-response-style-adaptive-replies`: the draft-review
+The session corrected the readiness prose in `ADR-response-style`: the draft-review
 statement now describes Planning history, and the outcome explicitly records the accepted direction.
 The user authorized this one-off wording correction to the accepted ADR; its decision, constraints and
 qualification about unobserved runtime quality remain unchanged. No new decision or handoff-engine change

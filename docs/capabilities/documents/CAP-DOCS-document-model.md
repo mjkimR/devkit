@@ -83,12 +83,12 @@ both as confirmed with status done in one commit. Missing assertions on open doc
 assertions alone do not authorize a later close. These are body content, not parsed fields, checklist items,
 reference edges or a machine-certified delivery contract. Actual semantic scope changes reset both to pending; normal handoff does not;
 existing done records remain historical without migration. `CAP-HARN-agent-guidance` owns review, invalidation,
-interruption and reopen procedures (`ADR-milestone-closure-confirmations`).
+interruption and reopen procedures (`ADR-roadmap-and-milestones`).
 
 ### Feedback lifecycle
 
 Feedback status is `open`, `promoted`, `resolved`, `dismissed` or `forwarded`
-(`ADR-feedback-terminal-outcomes`). Only open feedback is actionable. Promotion closes feedback by handing it to
+(`ADR-feedback-lifecycle`). Only open feedback is actionable. Promotion closes feedback by handing it to
 identified follow-up work, whose progress is tracked at the destination; it never implies implementation success.
 Resolution closes an observation directly fixed and verified without promotion, by a session or spec task. Both
 are terminal: completing promoted work does not convert its source to resolved. Dismissal records a reason and

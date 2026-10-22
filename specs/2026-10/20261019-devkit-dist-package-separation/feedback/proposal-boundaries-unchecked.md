@@ -52,5 +52,5 @@ devkit rules check <proposal dir> -> no finding
 
 - **Disposition**: PROP-envelope-record-gaps: a rule for proposal boundaries and target_area (Q3)
 - **Disposition (resolved)**: `SPEC-envelope-record-gaps` adds the warning rule `RULE-proposal-boundaries`
-  (`ADR-proposal-boundaries-name-existing-paths`). Verified by
+  (`ADR-proposal-acceptance`). Verified by
   `packages/devkit-spec/src/devkit_spec/bundle/rules/proposal_boundaries/tests/test_rule.py` (AC-08 to AC-10).

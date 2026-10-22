@@ -11,7 +11,7 @@ depends_on: []
 
 ## Goal
 
-Advances `ARCH-01-introduction-and-goals` §1.3 (Delivery Workflow Orchestration) and §1.7 (Task Worktrees) by introducing isolated Backlog subagent roles (`triage` and `decomposer`, noted as follow-ups in `ADR-roadmap-in-repository`) and hardening multi-unit orchestration (`CAP-DLV-delivery-workflows`, `CAP-WT-task-worktrees`) across `local-orchestrated` and `cloud-pr` execution modes.
+Advances `ARCH-01-introduction-and-goals` §1.3 (Delivery Workflow Orchestration) and §1.7 (Task Worktrees) by introducing isolated Backlog subagent roles (`triage` and `decomposer`, noted as follow-ups in `ADR-roadmap-and-milestones`) and hardening multi-unit orchestration (`CAP-DLV-delivery-workflows`, `CAP-WT-task-worktrees`) across `local-orchestrated` and `cloud-pr` execution modes.
 
 ## Exit condition
 
@@ -20,4 +20,4 @@ Advances `ARCH-01-introduction-and-goals` §1.3 (Delivery Workflow Orchestration
 
 ## Non-goals
 
-- **Scope Excluded**: External tracker synchronization or outbound issue generation (`ADR-roadmap-in-repository`), and replacing user-owned gates (`plan-intent`, `plan-accept`, and milestone transitions).
+- **Scope Excluded**: External tracker synchronization or outbound issue generation (`ADR-roadmap-and-milestones`), and replacing user-owned gates (`plan-intent`, `plan-accept`, and milestone transitions).

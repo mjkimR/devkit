@@ -22,7 +22,7 @@ created_at: 2026-10-17
 - **Proposed Procedure**: Once local approval-bound integration is established, design an explicit remote/PR integration and post-PR cleanup contract that (1) separates local-only integration from explicit remote push/PR merge authority and (2) verifies squash/rebase PR completion against recorded PR state or tree/patch equivalence before removing the linked worktree and branch.
 - **Expected Benefit**: Allows repositories with `pull_request = "required"` or squash/rebase PR merge policies to use deterministic, approval-bound post-merge worktree, branch, and scope-record cleanup without manual branch removal.
 - **Cost & Risk**: Network operations (`fetch`, `push`, PR API calls) and non-ancestor branch deletion carry higher irreversibility than local `--ff-only` merges; the confirmation schema must explicitly disclose remote targets and verify squash/rebase provenance so unmerged work is never discarded.
-- **Attempted**: Deferred by design in `SPEC-hook-driven-integration-cleanup` Non-Goal 3 (`ADR-worktree-and-pull-request-levels`).
+- **Attempted**: Deferred by design in `SPEC-hook-driven-integration-cleanup` Non-Goal 3 (`ADR-worktrees-branches-and-scope`).
 
 ## Diagnostic Details
 
@@ -31,7 +31,7 @@ created_at: 2026-10-17
 - **Versions**: `devkit-agt` `0.1.0` (`b510601d7cbe`), `devkit-spec` `0.1.0`.
 - **Conditions**: Repositories using `[worktree] pull_request = "required"` or merging PRs via squash/rebase.
 - **Workarounds Attempted**: Push the branch, merge through the PR platform, then run `devkit worktree finish <branch>` (or remove squash-merged worktree/branch after explicit user confirmation).
-- **Related Assets**: `SPEC-hook-driven-integration-cleanup`, `ADR-worktree-and-pull-request-levels`, `CAP-DLV-project-policy`, `src/devkit_spec/bundle/skills/spec/references/worktree.md`.
+- **Related Assets**: `SPEC-hook-driven-integration-cleanup`, `ADR-worktrees-branches-and-scope`, `CAP-DLV-project-policy`, `src/devkit_spec/bundle/skills/spec/references/worktree.md`.
 
 ## Evidence
 

@@ -1,6 +1,6 @@
 ---
 name: adr-compaction
-description: Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases and summarize their history, deleting the retired files, without changing any decision (ADR-adr-compaction).
+description: Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases, deleting the retired files, without changing any decision (ADR-adr-compaction).
 ---
 
 # ADR compaction
@@ -45,17 +45,8 @@ Path `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md` dated today, from the decis
 - Frontmatter: `id: ADR-<slug>`, `title`, an English Y-statement `summary`, `status: accepted`, `created_at` today,
   `aliases:` every member ID and every alias a member declared. No `supersedes`, no `proposal`.
 - Sections 1 to 6: consolidated from the members. Section 4 lists only the statements in effect, one item per part,
-  each ending with its source ID in parentheses. Considered options keep the option a member rejected, labelled by
-  that member.
-- `## 7. History`: one row per member in decision order.
-
-  ```markdown
-  | ADR | Date | Status | Decision | Fate |
-  | --- | --- | --- | --- | --- |
-  | `ADR-<old>` | YYYY-MM-DD | accepted | <the decision in one line> | in effect / superseded by `ADR-<other>`: <what changed> / rejected: <why> |
-  ```
-
-  Add `Retired texts: git show <base>:<path>` below the table with the base commit from the prerequisites.
+  each ending with its source ID in parentheses; superseded parts are left out. Considered options keep the
+  option a member rejected, labelled by that member. No History section: retired texts stay in Git.
 - Keep wording faithful: no driver, option, scope or consequence is added, dropped or changed in meaning.
 
 ## Step 4: Apply
@@ -72,8 +63,7 @@ uv run devkit rules check
 git diff --no-renames --name-only --diff-filter=D <base> -- docs/decisions/
 ```
 
-- Every deleted ADR ID resolves: `uv run devkit spec resolve <ID>` prints the replacement with `alias=<ID>`, and the
-  replacement's History lists it.
+- Every deleted ADR ID resolves: `uv run devkit spec resolve <ID>` prints the replacement with `alias=<ID>`.
 - No remaining `supersedes` or `superseded_by` outside the replacements names a retired ID.
 - Fidelity review: compare each replacement with its members (`git show <base>:<path>`), with each member's incoming
   references (`devkit spec refs <ID> --direction in`). Each in-effect statement must trace to a member, and no member's

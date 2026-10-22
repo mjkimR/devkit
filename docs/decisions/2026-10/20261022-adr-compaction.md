@@ -38,7 +38,7 @@ resolved through one canonical mapping, so records can be consolidated without b
 
 ### Option 1: Compaction by replacement with aliases (Selected)
 - **Overview**: replace a group of related approved ADRs with one new ADR whose `aliases` lists the retired IDs and
-  whose History section summarizes them; delete the retired files in the same commit.
+  whose considered options keep the alternatives the retired ADRs weighed; delete the retired files in the same commit.
 - **Pros**: one record per topic; references resolve through the alias; the full text stays in Git.
 - **Cons**: retired files leave the working tree.
 
@@ -62,9 +62,8 @@ We adopt **Option 1**. The append-only rule stays the default; compaction is its
   The replacement's `aliases` lists every source ID and every alias a source declared. No `supersedes` is written.
 - **No new decision**: the replacement's outcome holds exactly the statements in effect in the group, each citing its
   source ID. Wording may be consolidated; no driver, option, scope or consequence is added, dropped or changed in
-  meaning. Superseded and rejected parts appear only in `## 7. History`: one row per retired ADR, ordered by decision
-  date, with its ID, date, status, the decision in one line and its fate (in effect, superseded by which source and
-  what changed, or rejected and why).
+  meaning. Superseded parts are left out; rejected alternatives stay in the considered options, labelled by the
+  source that weighed them. The retired texts are read from Git (`git log --diff-filter=D -- docs/decisions/`).
 - **Out of compaction**: a contradiction between in-effect ADRs, a statement that no longer matches the code or the
   Living Spec, or any other needed change is not resolved by compaction. The affected ADR stays out of the group and
   the finding goes to feedback or a proposal.
@@ -72,12 +71,12 @@ We adopt **Option 1**. The append-only rule stays the default; compaction is its
   whose supersession field names a member, transitively.
 - **Later changes**: a later ADR that changes any part of a replacement supersedes the whole replacement by its
   canonical ID and restates the parts that stay in effect; a new `supersedes` never names a retired alias. A
-  replacement may itself be compacted again; its History rows are carried over.
+  replacement may itself be compacted again; its aliases carry over.
 - **Authority and depth**: compaction runs only when the user explicitly invokes the `adr-compaction` playbook; that
   invocation is the authorization for the run's deletions. It runs at `session` depth: the replacement ADRs and the
   ID rewrites `devkit rules fix` makes in current documents do not raise it to `spec`.
 - **Checks**: no dedicated rule. A run is complete when `devkit rules fix` then `devkit rules check` pass, every
-  deleted ADR ID resolves through `devkit spec resolve` to a replacement whose History lists it, and a fidelity review
+  deleted ADR ID resolves through `devkit spec resolve` to a replacement that lists it in `aliases`, and a fidelity review
   of each replacement against its sources finds no changed decision.
 
 ---

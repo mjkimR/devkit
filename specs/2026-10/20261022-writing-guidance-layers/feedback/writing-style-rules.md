@@ -36,7 +36,7 @@ Deferred work retained by `SPEC-writing-guidance-layers` (Non-Goal 2).
 - **Versions**: devkit-spec at the `SPEC-writing-guidance-layers` integration.
 - **Conditions**: Depends on the rollout giving evidence of recurring patterns.
 - **Workarounds Attempted**: not attempted.
-- **Related Assets**: `ADR-layered-writing-guidance`, the `document-writing` and `agent-asset-writing` instructions.
+- **Related Assets**: `ADR-writing-and-terminology-guidance`, the `document-writing` and `agent-asset-writing` instructions.
 
 ## Evidence
 

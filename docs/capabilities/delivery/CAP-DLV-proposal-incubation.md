@@ -22,7 +22,7 @@ spec: `proposal`-depth work, whose direction must be decided first, shapes it in
 `sdd-proposal`. `devkit_spec.features.proposals`
 implements the lifecycle and `devkit spec proposal new|padr|accept|handoff|prune|check` exposes it. `accept` is the
 one writer of an acceptance, after Planning or directly for an eligible draft in Backlog
-(`ADR-direct-acceptance-command-and-handoff-guard`). The handoff is a cross-layout
+(`ADR-proposal-acceptance`). The handoff is a cross-layout
 move devkit's own `devkit workflow handoff` cannot make: it creates the spec bundle (`CAP-DLV-spec-bundles`), carries
 the proposal body, promotes preliminary decisions, moves materials, rewrites what pointed into the proposal and
 removes it.
@@ -62,7 +62,7 @@ removes it.
    handed off (`SPEC_PROPOSAL_NEEDS_DECOMPOSE`), and one proposal hands off to exactly one spec.
 3. **The follow-up workflow comes from `task_kind`; effort hints stay on the proposal**: `workflow` in `proposal.md` is devkit's
    binding of the proposal unit itself; `task_kind` (`feature` or `bugfix`, confirmed at `plan-accept`) selects the follow-up workflow `sdd-spec-<task_kind>` (any other value is `SPEC_PROPOSAL_INVALID`), while `planning_effort` and `dev_effort` (`low` | `medium` | `high`, scaffolded default `medium`) are non-authoritative activity-effort hints on `proposal.md`. `planning_effort` guides Planning and `dev_effort` is refined before `plan-accept` to guide Development (`[HANDOFF]` and `HandoffResult.dev_effort` expose it). After handoff the bound workflow carries the
-   `task-kind` and `spec.md` has neither a `kind` field (`ADR-task-kind-and-planning-depth`) nor `planning_effort`/`dev_effort` fields (confirmed run effort is recorded on `worker-NN.yaml` envelopes).
+   `task-kind` and `spec.md` has neither a `kind` field (`ADR-delivery-classification`) nor `planning_effort`/`dev_effort` fields (confirmed run effort is recorded on `worker-NN.yaml` envelopes).
 4. **Validate everything before writing**: handoff checks the slug, the proposal file and its frontmatter, the
    approval, `namespace` (`global` or registered, else `SPEC_PROPOSAL_INVALID`), `summary` (a string, else
    `SPEC_PROPOSAL_INVALID`), `planning_effort` and `dev_effort` (`low` | `medium` | `high` when present, else `SPEC_PROPOSAL_INVALID`), the slug conflict, the workflow binding and every path it would create before its first
@@ -133,7 +133,7 @@ removes it.
     `padr` applies the branch half of the guard itself: while `plan-<slug>` exists it writes a PADR only from the
     checkout of that branch (`SPEC_PROPOSAL_IN_PLANNING` elsewhere). Beside its edits Backlog may accept an eligible
     draft directly (rule 14), the one status change it makes, and, on the user's explicit decision at pickup, delete a
-    draft without PADRs to do it as a `session` task (`ADR-session-reclassification-of-a-queued-draft`), preserving
+    draft without PADRs to do it as a `session` task (`ADR-delivery-classification`), preserving
     its open feedback (3.1); both commit only on the base checkout.
     For decomposition discovered in Planning, its executor commits `draft` plus `needs_decompose: true`, retained
     materials and answers closing pending questions. The Host integrates that return and removes local and fetched
@@ -146,7 +146,7 @@ removes it.
     `SPEC_PROPOSAL_WRONG_WORKTREE`), `direct` with `--direct` for an eligible draft, `repair` with `--direct` for an
     `accepted` proposal without an effective `gate:plan-accept`; every other combination, a `rejected`, single-file or
     unbound proposal included, is `SPEC_PROPOSAL_ACCEPT_REFUSED`. A direct acceptance and a repair MUST hold every
-    condition of `ADR-eligibility-for-direct-acceptance` the tool checks, all reported at once
+    condition of `ADR-proposal-acceptance` the tool checks, all reported at once
     (`SPEC_PROPOSAL_NOT_ELIGIBLE`, one `blocking:` or `pending:` detail each): an accepted `gate:plan-intent`, no
     `needs_decompose: true`, no `supersedes`, no local or fetched `plan-<slug>`, `task_kind` `feature` or `bugfix`
     (absent: `feature`), no envelope hold, and the base checkout: the main worktree on a branch that is not `plan-*`
@@ -177,7 +177,7 @@ A proposal receiving feedback records full source FB IDs and its received scope 
 section. Handoff carries those references into the spec (feature and bugfix); drafting retains them. Promotion routes
 work and closes the feedback without claiming implementation success. Promoted and other terminal sources require
 no completion edits or re-verification; their references remain traceability. Handoff never resolves open feedback.
-Only direct fixes of explicit open sources are checked at completion under `ADR-feedback-terminal-outcomes`.
+Only direct fixes of explicit open sources are checked at completion under `ADR-feedback-lifecycle`.
 
 Without handoff, rejection/decomposition return keeps feedback in place until authorized Host deletion; a draft
 deleted for a session reclassification (rule 13) preserves its open feedback the same way, in its deletion commit.
@@ -231,7 +231,7 @@ legacy proposal or PADR whose slug starts that way, before writing anything, wit
 | `summary` | One or two English sentences (`--summary`); carried to `spec.md`. Without the option, `new` writes the commented placeholder `# summary: <one or two English sentences: what this proposal changes and why>`, which the agent replaces with the field before committing. |
 | `status` | `draft` (scaffolded), `reviewing`, `accepted`, `rejected`. |
 | `created_at` | Scaffold date. |
-| `target_area` | `--target-area` (default `capabilities/<area>/`, a trailing `/` added): the capability area on graduation. It and every `boundaries.owns` entry name an existing repository path, docs-root path or capability area, a path the Development will create by its nearest existing parent directory; `RULE-proposal-boundaries` warns on the rest and on the placeholder, and the Planning executor clears its reports before the `plan-accept` request (`ADR-proposal-boundaries-name-existing-paths`). |
+| `target_area` | `--target-area` (default `capabilities/<area>/`, a trailing `/` added): the capability area on graduation. It and every `boundaries.owns` entry name an existing repository path, docs-root path or capability area, a path the Development will create by its nearest existing parent directory; `RULE-proposal-boundaries` warns on the rest and on the placeholder, and the Planning executor clears its reports before the `plan-accept` request (`ADR-proposal-acceptance`). |
 | `namespace` | Optional (`--namespace`): `global` or a registered namespace (`CAP-DOCS-namespaces`); carried to `spec.md`. Every file of the bundle belongs to it. |
 | `priority` | `critical`, `high` (scaffolded), `medium`, `low`. |
 | `size` | `S` (single fix), `M` (scaffolded; 1-2 sessions), `L` (complex module), `XL` (major overhaul). |
@@ -404,7 +404,7 @@ base checkout but leaves their directories. `devkit spec proposal prune [<slug>]
 holds no file at any depth (a symbolic link counts as a file; devkit's `remove_empty_tree`). A directory holding any
 file is kept, and one that cannot be listed fails the prune before anything is removed. devkit-spec's
 `devkit.post_finish` extension (`devkit_spec.features.delivery.usecases.cleanup.after_finish`) prunes the finished slug after a successful `devkit worktree finish`
-(`ADR-cleanup-after-worktree-finish`) and, on the approval-bound `IntegrationService` path (`SPEC-hook-driven-integration-cleanup`), plans and executes the exact `CleanupTarget(kind="proposal-prune", identity="docs/proposals/PROP-<slug>", revision=<source_sha>)` target, emitting `SPEC_POST_FINISH_CLEANUP` notices; the command remains for other checkouts and a failed extension (`integration_resume` retries a partial post-finish run).
+(`ADR-worktrees-branches-and-scope`) and, on the approval-bound `IntegrationService` path (`SPEC-hook-driven-integration-cleanup`), plans and executes the exact `CleanupTarget(kind="proposal-prune", identity="docs/proposals/PROP-<slug>", revision=<source_sha>)` target, emitting `SPEC_POST_FINISH_CLEANUP` notices; the command remains for other checkouts and a failed extension (`integration_resume` retries a partial post-finish run).
 
 ### 4.9 Commands and Options
 
@@ -642,7 +642,7 @@ a next action. No authority survives a return or restart. Fresh reports and form
 accepted Planning commits are never replayed, accepted base recovery starts only Development, and strictly matched
 clean pinned worktrees can retry setup/handoff. Dirty or mismatched partial state requires inspection; it is never
 rolled back or treated as completed merely because a branch exists. Host link/render fidelity is not asserted by
-protocol tests. See `ADR-source-bound-review-reports-and-explicit-lifecycle-approval`.
+protocol tests. See `ADR-proposal-acceptance`.
 
 | Code | Meaning | Action |
 | --- | --- | --- |

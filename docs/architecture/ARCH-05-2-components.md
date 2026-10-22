@@ -18,7 +18,7 @@ created_at: 2026-10-17
 Each application wheel owns a regular Python package (`ARCH-05-1-containers`): `devkit_dist`
 holds distribution behavior and the root command line; `devkit_agt` holds the harness engines;
 `devkit_spec`, `devkit_mcp` and `devkit_viewer` own their extensions. The public advisory API remains
-`devkit.advisory`. `ADR-independent-package-namespaces-and-feature-layout` records the ownership and layout decision.
+`devkit.advisory`. `ADR-package-split-and-namespaces` records the ownership and layout decision.
 
 ```mermaid
 graph TD

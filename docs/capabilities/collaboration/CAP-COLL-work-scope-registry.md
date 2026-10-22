@@ -71,7 +71,7 @@ integrated. It never grants or blocks a write, and it is not exclusive ownership
    record removal still runs. When the record removal fails (a malformed `[tool.spec]`, a registry timeout), its
    error (`SPEC_CONFIG_INVALID`, `SPEC_SCOPE_TIMEOUT`, ...) is returned beside the prune notices, devkit reports it as
    a warning with its own code, and its fix ends with `devkit spec scope sweep --apply` (or `integration_resume` on a partial `IntegrationService` run). Nothing is released before
-   the finish, so a refused finish leaves the task registered. Rationale: `ADR-cleanup-after-worktree-finish`, `SPEC-hook-driven-integration-cleanup`.
+   the finish, so a refused finish leaves the task registered. Rationale: `ADR-worktrees-branches-and-scope`, `SPEC-hook-driven-integration-cleanup`.
 10. **Absolute shared path**: a configured `shared_path` MUST be absolute (a relative path would resolve to a
     different directory in each worktree).
 
@@ -183,7 +183,7 @@ sides. Ranking and weighting are the consumer's.
   Git-directory token writes and cleanup. Hosts grant required access explicitly; refusal stops that operation.
   Successful reads grant no mutation authority. Storage, configured absolute shared paths, namespaces and token
   locations remain unchanged; there is no relocation or transport fallback. The access separation follows
-  `ADR-keep-shared-storage-and-separate-read-access`.
+  `ADR-worktrees-branches-and-scope`.
 - **Operations** (`devkit_spec.features.scope.Registry`; the local file adapter `LocalRegistry` is the only implementation):
   - `register`: creates the record; an existing task ID in the namespace is `SPEC_SCOPE_TASK_EXISTS`. A second record
     for the same worktree and host marks both `shared_worktree` (a `SPEC_SCOPE_SHARED_WORKTREE` warning).
