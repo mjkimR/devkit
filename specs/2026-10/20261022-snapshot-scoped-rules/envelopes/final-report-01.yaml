@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T10:13:31.412895Z'
+status: completed
+summary: 'SPEC-snapshot-scoped-rules complete: snapshot rules scoping skips declared rules whose inputs match no diff or deleted paths, includes deleted/typechanged paths in candidate scoping names, keeps RuleContext.targets limited to existing files, fixes deletion-only lifecycle short-circuit, disables rule skipping on config or receipt edits, and passes 2706 affected tests.'
+findings: []
+checks:
+  tests: PASS 2706 passed
+  build: PASS pyright packages/devkit
+  lint: PASS ruff check/format, rules check --ci
+diff_scope:
+  base: fb1db8fa4335e367b4492077a0dfc0d06387cf6e
+  head: d381afda1761e3eaf74e47a0519ed18fcc2d4450
