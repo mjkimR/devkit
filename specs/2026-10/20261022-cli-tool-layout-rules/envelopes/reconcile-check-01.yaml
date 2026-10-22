@@ -1,0 +1,21 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T02:19:03.333370Z'
+status: completed
+summary: round 1; head 06559234 against REC-cli-tool-layout-rules. Target agrees except an imprecise scope statement in CAP rules 17-19 (P2); no-impact reasoning holds.
+findings:
+- issue: 'CAP rules 17-19 describe RULE-cli-tool-layers less precisely than the code: only CLI modules may import the package-level cli or __main__; a feature __init__ is not checked for direction; the TYPE_CHECKING and feature-package exemptions apply to all three rules.'
+  evidence: docs/capabilities/cli/CAP-CLI-agent-cli-toolkit.md:86-94; packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/layers/rule.py:61-66,80-81,106-119
+  failure_condition: A capability reader expects base/ may import <package>.cli and that click under TYPE_CHECKING is reported.
+  suggested_action: Reword rule 17 to say only CLI modules import click, devkit_cli, or the package-level cli or __main__; move the not-checked list into a sentence covering rules 17-19.
+  resolution: open
+  severity: P2
+assumptions:
+- reconcile-reviewer emulated by a generic Claude Code subagent following .devkit/managed/spec/subagents/reconcile-reviewer.md
+checks: {}
+diff_scope:
+  base: 45f6f810af4104f6d13c4d2fdb500bd28a9bdac4
+  head: 0655923493f24a4274d5b9c2a40e4f474500f38a
+activity_effort: medium

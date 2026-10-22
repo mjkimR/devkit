@@ -242,13 +242,17 @@ assert "read and apply the `response-style` skill" in Path("AGENTS.md").read_tex
     uv run devkit add cli-tool >/dev/null
     mkdir -p src/smoketool
     printf 'import click\nimport httpx\n\n\n@click.command()\ndef main():\n    print("x")\n' > src/smoketool/cli.py
+    printf 'import click\n' > src/smoketool/usecases.py
     status=0
-    uv run devkit rules check --format json src/smoketool/cli.py >"$work/cli-tool.json" 2>/dev/null || status=$?
+    uv run devkit rules check --format json src/smoketool/cli.py src/smoketool/usecases.py >"$work/cli-tool.json" 2>/dev/null || status=$?
     [ "$status" -eq 1 ] || { echo "error: devkit rules check exited $status on the cli-tool sample, expected 1" >&2; exit 1; }
     uv run python - "$work/cli-tool.json" <<'PY'
 import json, sys
 found = {item["rule_id"] for item in json.load(open(sys.argv[1]))["violations"]}
-expected = {"RULE-cli-tool-command-boundary", "RULE-cli-tool-library-output", "RULE-cli-tool-heavy-imports"}
+expected = {
+    "RULE-cli-tool-command-boundary", "RULE-cli-tool-library-output", "RULE-cli-tool-heavy-imports",
+    "RULE-cli-tool-layout", "RULE-cli-tool-layers",
+}
 assert expected <= found, found
 PY
     rm -r src/smoketool

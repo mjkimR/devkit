@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T02:22:29.617535Z'
+status: completed
+summary: 'SPEC-cli-tool-layout-rules complete: RULE-cli-tool-layout (required features/<feature>/ layout, no flat layout; __about__/_version allowed) and RULE-cli-tool-layers (click and devkit_cli only in CLI modules, downward layer imports, transports may use any lower layer, lazy root group) in the cli-tool bundle, with the instruction, CAP-CLI rules 16-19, README, recommendation and smoke updated. Code review: 1 round (5 findings fixed, self-verified at medium). Reconcile: 2 checks (01 independent, 02 self-verified), 0 open.'
+findings: []
+assumptions:
+- later commits through 41f85e73 change only docs and unit records
+checks:
+  tests: PASS just test-affected 4632 passed 14 skipped (06559234); just test catalog 63 passed
+  build: PASS just smoke (06559234), five cli-tool rules from installed wheels
+  lint: PASS just lint-check (06559234), just check catalog, just rules-check
+diff_scope:
+  base: ''
+  head: 41f85e731762775ba79996708b82940c1e8c85a9
+activity_effort: medium

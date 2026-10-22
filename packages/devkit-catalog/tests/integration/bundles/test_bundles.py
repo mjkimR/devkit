@@ -150,6 +150,8 @@ def test_cli_tool_deploys_its_guide_and_rules_only_when_selected(tmp_path: Path)
     registry.discover_from_packages(rules.packages)
     assert not rules.errors and not registry.errors
     assert {rule.id for rule in registry.get_all()} == {
+        "RULE-cli-tool-layout",
+        "RULE-cli-tool-layers",
         "RULE-cli-tool-command-boundary",
         "RULE-cli-tool-library-output",
         "RULE-cli-tool-heavy-imports",

@@ -1,13 +1,13 @@
 ---
 name: cli-tool-structure
-description: Read before creating or restructuring a Python command-line tool that agents run. Defines the framework, dependencies, package layout, the devkit-cli output contract, the import budget and tests.
+description: Read before creating or restructuring a Python command-line tool that agents run. Defines the framework, dependencies, the required feature layout and layer directions, the devkit-cli output contract, the import budget and tests.
 ---
 
 # Agent-Facing CLI Tools
 
 Follow this for a new tool and every command added to one; restructure an older tool only when the user asks. The
-`cli-tool` rules check boundaries, library output and heavy imports (`devkit rules explain <RULE-id>` gives each
-fix); the `agent-advisory-python` instruction defines errors, notices and exit codes.
+`cli-tool` rules check the layout, layer imports, boundaries, library output and heavy imports (`devkit rules
+explain <RULE-id>` gives each fix); the `agent-advisory-python` instruction defines errors, notices and exit codes.
 
 ## Dependencies
 
@@ -19,13 +19,19 @@ fix); the `agent-advisory-python` instruction defines errors, notices and exit c
 
 ```text
 src/<package>/
-  cli.py               # root LazyGroup and the tool's one Boundary
+  cli.py               # root LazyGroup and the tool's one Boundary; imports no feature at module level
   errors.py            # the tool's AdvisoryError subclasses
-  features/<feature>/
+  base/, utils/        # optional: contracts several features share; technical helpers
+  features/<feature>/  # every feature, also the first and only one
     cli.py             # commands
     usecases.py        # one class per operation
     services.py, repositories.py, models.py   # only when the feature needs them
+    mcp.py, errors.py, utils.py               # optional
 ```
+
+The feature layout is required from the first command; a flat package is rebuilt when the second feature arrives.
+Each name may be a module or a directory whose inside is free. Imports go one way, `models`/`errors`/`utils` <-
+`repositories` <- `services` <- `usecases` <- `cli`/`mcp`; click and `devkit_cli` stay in CLI modules.
 
 - A command parses arguments, calls one use case and prints its result: no business logic, file or network access.
 - A use case receives dependencies in its constructor and has a typed `execute` that returns data and notices.
