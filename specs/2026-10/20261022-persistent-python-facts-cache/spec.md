@@ -155,4 +155,3 @@ Planning is ready for `plan-accept` after Scout evidence, Challenger findings an
 feedback coverage and a committed worker record. Acceptance approves the two PADRs and expanded Development scope.
 Development requires the separate `proposal-handoff` approval. If benchmarks do not validate the hypothesis, return
 with evidence and revise the direction instead of substituting synthetic JSON timing for an implemented result.
-
