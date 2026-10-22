@@ -4,11 +4,10 @@ title: Scope target runs to the rules their targets can affect
 summary: Lets a targeted rules run, such as the workflow lint-clean check, skip whole-workspace rules whose inputs the targets cannot change, so devkit workflow next stops paying for a full Python analysis on documentation-only units.
 status: planned
 created: 2026-10-22
-related_capabilities: []
+related_capabilities: [CAP-GOV-rule-authoring, CAP-GOV-evaluation-lifecycle, CAP-GOV-rules-engine]
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-lint-clean-target-scoped-rules] Scope target runs to the rules their targets can affect
 
@@ -16,8 +15,8 @@ workflow: sdd-spec-feature
 
 Handed off from proposal PROP-lint-clean-target-scoped-rules on 2026-10-22.
 - **Preserved Materials**: `docs/materials/2026-10/20261022-lint-clean-target-scoped-rules`
-
-### 1. Background & Hypothesis
+- **Accepted decisions**: `ADR-rules-declare-their-input-files-undeclared-rules-always-run`,
+  `ADR-scope-only-explicit-working-tree-targets-in-the-evaluator`.
 
 `devkit workflow next --unit <dir>` takes about 3.7 s on a spec unit (measured: 3.74 s on
 `specs/2026-10/20261022-writing-style-rules`, 11 Markdown and YAML files, at 514bdea1 on macOS, Python 3.12; this
@@ -28,142 +27,147 @@ still pays for whole-workspace Python analysis: `RULE-architecture` and `RULE-us
 and inspect every Python file, and `RULE-advisory-unique-code` indexes every Python file to report the targeted ones.
 Together they take about 2.5 s of the run (`docs/materials/2026-10/20261022-lint-clean-target-scoped-rules/spike-evidence.md`).
 
-Hypothesis: when a rule declares which files its result depends on, a targeted run can skip a whole-workspace rule
-whose inputs no target can change, without missing a violation the targets introduce.
+When a rule declares which files its result depends on, a targeted run can skip a whole-workspace rule whose inputs
+no target can change, without missing a violation the targets introduce.
+
+### Design
+
+- **Declaration** (`ADR-rules-declare-their-input-files-undeclared-rules-always-run`): `BaseRule` gains
+  `inputs: tuple[str, ...] | None = None`, the workspace-relative patterns (the `**` grammar of `[rules] exclude`,
+  checked with `validate_pattern`) of every file whose content can change the rule's findings, validated at
+  construction. The `Rule` protocol is unchanged; the engine reads the attribute with `getattr`, and its policy
+  validation rejects, for every loaded rule, an `inputs` that is neither `None` nor a non-empty tuple of valid
+  patterns, with `RULES_DEFINITION_INVALID` before any rule runs. Declared on `RULE-architecture` (`**/*.py`,
+  `**/pyproject.toml`, `**/bundle.toml`, `.devkit/architecture.toml`), `RULE-usecase-boundaries` (`**/*.py`,
+  `.devkit/architecture.toml`) and `RULE-advisory-unique-code` (`**/*.py`).
+- **Scoping** (`ADR-scope-only-explicit-working-tree-targets-in-the-evaluator`): after the phase filter,
+  `evaluate_rules` skips a declared rule when the run has explicit targets (`ctx.has_targets`), is not a Git
+  snapshot (`ctx.snapshot is None`), no target is `.devkit/config.toml`, and no target matches one of its patterns.
+  Matching uses the expanded targets before `[rules] exclude`. The fix pass uses the reduced list; the recheck decides
+  again against the targets plus the files the fixes modified. Whole-workspace runs and the snapshot gates evaluate
+  every rule as today. `devkit rules check FILES`, `devkit rules fix FILES`, `lint-clean` and library callers of
+  `evaluate_rules` share this behavior; `workflow/usecases/lint.py` does not change.
+- **Visibility**: `EvaluationResult.skipped` (and `ProjectRun.skipped`) lists the skipped rule IDs, logged at `INFO`
+  (`-v`); default stdout and JSON results of `check` and `fix` are unchanged. `devkit rules explain` shows `inputs=`
+  on its `[RULE: ...]` line and `inputs` in JSON.
+
+At the build-verify (feature) and fix-verify (bugfix) exits, `lint-clean` on a documentation-only unit no longer
+reports architecture and use-case boundary violations of the unit's own code outside the unit directory (accepted
+with the proposal); the `rules-check` commit gate, `lint-ci-clean` and `devkit rules check <changed files>` still
+report them.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Scope target runs to the rules their targets can affect so that system capabilities are extended.
+- **US-1**: As an agent running `devkit workflow next` on a documentation-only spec unit, I want the `lint-clean`
+  check to skip Python-source rules no unit file can affect, so that each call stops paying about 2.5 s for analysis
+  that cannot change its result.
+- **US-2**: As a rule author, I want to declare the files my rule reads, so that targeted runs skip it when no target
+  can change its findings and still run it whenever one can.
+- **US-3**: As a maintainer, I want whole-workspace runs and the Git snapshot gates to keep evaluating every rule, so
+  that no finding is lost before history.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: scoping Git snapshot runs (`check --staged`, `check --ci`); deleted paths are not targets there.
+2. **Scope Excluded**: declaring `inputs` on the Markdown rules or the `devkit-catalog` `cli_tool` rules.
+3. **Scope Excluded**: making the target-ignoring rules report only targeted files, or parsing Python faster (that is
+   `PROP-rule-shared-python-ast`, including any `WorkspaceCache.get_python_ast` accessor).
+4. **Scope Excluded**: new output fields in `devkit rules check` or `fix` stdout or JSON, and any change to the
+   workflow feature (`lint-clean` gains scoping through `run_project_rules`).
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] BaseRule validates its declaration
+- **Given** a `BaseRule` subclass
+- **When** it is constructed with `inputs=()`, a list, a string, or a tuple holding a pattern `validate_pattern`
+  rejects (empty, leading `/`, backslash, `:`, `.` or `..` segment, partial `**`)
+- **Then** it raises `RuleDefinitionError` with code `RULES_DEFINITION_INVALID`, while `inputs=None` and a non-empty
+  tuple of valid patterns construct and keep the value
 
-## 5. Carried Proposal Notes
+### [AC-02] A malformed declaration on a protocol-only rule fails the run before any rule runs
+- **Given** a rule that satisfies the `Rule` protocol without subclassing `BaseRule`, whose `inputs` is a string, a
+  list or an empty tuple, evaluated together with a well-formed rule
+- **When** `evaluate_rules` runs
+- **Then** the result's errors hold one problem with code `RULES_DEFINITION_INVALID` and that rule's ID, and neither
+  rule's `check` was called
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] A targeted working-tree run skips a declared rule no target can affect
+- **Given** a rule declaring `inputs=("**/*.py",)` and an undeclared rule, both active
+- **When** `evaluate_rules` runs with the explicit target `docs/a.md` only and no snapshot
+- **Then** the declared rule's `check` is not called, the undeclared rule's is, and `skipped` equals exactly
+  `[<declared rule ID>]`
 
-### 2. Technical Spike Questions
+### [AC-04] Every other run evaluates the declared rule
+- **Given** the rules of AC-03
+- **When** `evaluate_rules` runs with (a) the target `src/a.py`, (b) the target `src/a.py` that `[rules] exclude`
+  removes, (c) the targets `docs/a.md` and `.devkit/config.toml`, (d) no targets, or (e) the target `docs/a.md` with
+  a Git snapshot on the context
+- **Then** both rules' `check` is called in each case and `skipped` is empty
 
-- **Q1**: Which declaration fits the rule contract, and what does an undeclared rule default to?
-  **Answer**: an optional `BaseRule` field `inputs: tuple[str, ...] | None`, workspace-relative patterns in the `**`
-  grammar of `[rules] exclude`. Extensions alone cannot name `.devkit/architecture.toml`; a separate
-  "workspace-wide" flag adds nothing the input set does not imply. An undeclared rule (`None`) runs in every targeted
-  run, exactly as today; an empty tuple or an invalid pattern is `RULES_DEFINITION_INVALID`
-  (`ADR-rules-declare-their-input-files-undeclared-rules-always-run`).
-- **Q2**: Which whole-workspace rules can a Markdown-only change affect, and how is that expressed?
-  **Answer**: none of the three Python-source rules reads a Markdown file (`docs/materials/2026-10/20261022-lint-clean-target-scoped-rules/spike-evidence.md` §2-3); the
-  Markdown rules (`spec` rules, `markdown_link`, `cli_contract`, `file_length`, `authoring`) report only targeted
-  files and stay undeclared, so they run as today. A rule that does read Markdown for a Python check lists the
-  Markdown pattern in `inputs`. A `.devkit/config.toml` target turns scoping off for the run, because `[rules]`
-  policy can change any rule's findings.
+### [AC-05] The recheck re-decides against the files fixes modified
+- **Given** a rule declaring `inputs=("**/*.py",)`, an undeclared autofixable rule whose fix writes `src/b.py`, and
+  the explicit target `docs/a.md` with `fix`
+- **When** `evaluate_rules` runs
+- **Then** the declared rule is neither checked nor fixed in the initial pass, its `check` is called in the recheck
+  and its findings are returned, and `skipped` is empty
 
-### 3. Proposed Design & Impact
+### [AC-06] The three Python-source rules declare complete inputs
+- **Given** `RULE-architecture`, `RULE-usecase-boundaries` and `RULE-advisory-unique-code` with their declared
+  `inputs`
+- **When** each rule's `tests/test_rule.py` evaluates it through the rule test helper
+- **Then** a documentation-only target set skips it; for each one of its declared patterns, a target set holding a
+  file that matches that pattern reports a seeded violation; and during a whole-workspace check of a fixture holding
+  every file kind the rule reads, every workspace file the rule opens (recorded by an `open` audit hook) matches one
+  of its `inputs`
 
-- **Declaration** (`ADR-rules-declare-their-input-files-undeclared-rules-always-run`): `BaseRule` gains `inputs`,
-  validated at construction. The `Rule` protocol is unchanged; the engine reads the field with `getattr` and its
-  policy validation rejects, for any loaded rule, an `inputs` that is neither `None` nor a non-empty tuple of valid
-  patterns (`RULES_DEFINITION_INVALID`, before any rule runs). This
-  proposal declares it on `RULE-architecture` (`**/*.py`, `**/pyproject.toml`, `**/bundle.toml`,
-  `.devkit/architecture.toml`), `RULE-usecase-boundaries` (`**/*.py`, `.devkit/architecture.toml`) and
-  `RULE-advisory-unique-code` (`**/*.py`).
-- **Scoping** (`ADR-scope-only-explicit-working-tree-targets-in-the-evaluator`): after the phase filter,
-  `evaluate_rules` skips a declared rule when the run has explicit targets (`ctx.has_targets`), is not a Git snapshot
-  (`ctx.snapshot is None`), no target is `.devkit/config.toml`, and no target matches one of its patterns. Matching
-  uses the expanded targets before `[rules] exclude`, because the target-ignoring rules do not honor exclusions. The
-  fix pass uses the reduced list; the recheck evaluates it again against the targets plus the files the fixes
-  modified. Whole-workspace runs and the snapshot gates
-  (`check --staged`, `check --ci`) evaluate every rule as today. `devkit rules check FILES`, `devkit rules fix FILES`,
-  `lint-clean` and library callers of `evaluate_rules` share this behavior.
-- **Visibility**: `EvaluationResult.skipped` (and `ProjectRun`) lists the skipped rule IDs, logged at `INFO`
-  (`-v`); default stdout and JSON results are unchanged. `devkit rules explain` shows `inputs=` on its `[RULE: ...]`
-  line and `inputs` in JSON.
-- **Living Spec**: `CAP-GOV-rule-authoring` §1 documents `inputs`; `CAP-GOV-evaluation-lifecycle` replaces "checked
-  by every rule" (Targets) and "a `hygiene` run limited to explicit targets still evaluates the rule" (Phase
-  overrides) with the scoping contract; the Rules Reference documents the `explain` field; the three rule
-  guides state their inputs in §1; the `spec-rule` skill names `inputs` for rules that scan the workspace.
-- `workflow/usecases/lint.py` does not change: scoping lives in the engine, so `lint-clean` gains it through
-  `run_project_rules`.
+### [AC-07] `devkit rules explain` shows the declaration
+- **Given** `RULE-architecture` (declared) and `RULE-markdown-link` (undeclared)
+- **When** `devkit rules explain <RULE-id>` runs, in text and with `--format json`
+- **Then** the exit code is 0, the `[RULE: ...]` line holds
+  `inputs=**/*.py,**/pyproject.toml,**/bundle.toml,.devkit/architecture.toml` or `inputs=-`, and the JSON `rule`
+  object holds `inputs` as that list or `null`
 
-#### Acceptance outcomes
+### [AC-08] A documentation-only targeted run no longer reports a seeded violation elsewhere
+- **Given** a fixture workspace with a seeded `RULE-architecture` violation in a Python file no target names
+- **When** the rules run on the whole workspace, on a target set naming another Python file, and on a
+  documentation-only target set
+- **Then** the first two runs report the seeded violation and the third does not
 
-1. **Declaration contract**: `BaseRule(inputs=())` and each `validate_pattern` rejection raise
-   `RuleDefinitionError` (`RULES_DEFINITION_INVALID`); `inputs=None` and a valid tuple construct; a protocol-only rule
-   whose `inputs` is a string, a list or an empty tuple fails the run with `RULES_DEFINITION_INVALID` before any rule
-   runs.
-2. **Scoping contract**: evaluator tests show a declared rule skipped for explicit targets matching none of its
-   patterns, and evaluated for a matching target, for a matching target that `[rules] exclude` removes, for a
-   `.devkit/config.toml` target, for a whole-workspace run and for a snapshot context; an undeclared rule is evaluated
-   in each case; `skipped` lists exactly the skipped IDs; a recheck after a fix that modified a file matching a
-   skipped rule's patterns evaluates that rule.
-3. **Declared rules**: each of the three rules' `tests/test_rule.py` shows it skipped for a documentation-only
-   target set and reporting a seeded violation when the target matches each of its declared patterns, and checks the
-   declaration is complete: during a whole-workspace check of a fixture holding every file kind the rule reads, every
-   workspace file the rule opens (recorded through an `open` audit hook or an equivalent patch) matches one of its
-   `inputs`.
-4. **Equivalence**: on this repository at the integration base, for the target sets of
-   `docs/materials/2026-10/20261022-lint-clean-target-scoped-rules/spike-evidence.md` §4 (a spec unit, a proposal, `docs/capabilities/governance`, one Python source file,
-   `.devkit/architecture.toml`, `tools/devkit-dev`, a spec unit plus a `pyproject.toml`, `docs`), the scoped run's
-   violations and problems equal the unscoped targeted run's, and `devkit rules check` without targets is unchanged.
-   The comparison is recorded in the unit's evidence.
-5. **Intended difference**: a test with a seeded `RULE-architecture` violation in a non-targeted Python file shows it
-   reported by the whole-workspace run and by a run targeting a Python file, and not by a documentation-only targeted
-   run.
-6. **Performance**: `.venv/bin/devkit workflow next --unit specs/2026-10/20261022-writing-style-rules` takes at most
-   half the time of the same command on the integration base without the change, both measured on one machine as the
-   median of three cold runs and recorded in the unit's evidence (Planning, Apple M4 Pro: 3.65 s unscoped, 1.37 s with
-   scoping simulated in a fresh process, `docs/materials/2026-10/20261022-lint-clean-target-scoped-rules/spike-evidence.md` §5).
-7. **Boundaries**: `devkit rules check docs/proposals/PROP-lint-clean-target-scoped-rules/proposal.md` reports no
-   `RULE-proposal-boundaries` finding.
+### [AC-09] Equivalence on this repository
+- **Given** this repository at the integration base
+- **When** `run_project_rules` runs scoped and unscoped for each target set of spike-evidence §4 (a spec unit, a
+  proposal, `docs/capabilities/governance`, one Python source file, `.devkit/architecture.toml`, `tools/devkit-dev`,
+  a spec unit plus a `pyproject.toml`, `docs`), and `devkit rules check` runs without targets
+- **Then** each scoped run's violations and problems equal the unscoped run's, and the whole-workspace check reports
+  the same result as without the change; the comparison is recorded in the unit's evidence
 
-#### Non-Goals
+### [AC-10] `devkit workflow next` on a documentation-only unit takes at most half the time
+- **Given** one machine, the integration base without the change and the head with it
+- **When** `.venv/bin/devkit workflow next --unit specs/2026-10/20261022-writing-style-rules` runs three times cold
+  on each
+- **Then** the median with the change is at most half the median without it; both are recorded in the unit's evidence
 
-- Scoping Git snapshot runs (commit gate, CI); deleted paths are not targets there.
-- Declaring `inputs` on the Markdown rules or the `devkit-catalog` `cli_tool` rules.
-- Making the target-ignoring rules report only targeted files, or parsing Python faster (that is
-  `PROP-rule-shared-python-ast`).
-- New output fields in `devkit rules check` stdout or JSON.
+### [AC-11] The unit stays within its boundaries
+- **Given** the finished unit
+- **When** `devkit rules check specs/2026-10/20261022-lint-clean-target-scoped-rules` runs
+- **Then** it exits 0 with no violation, and the diff from the handoff touches no path under `docs/decisions/` or
+  `packages/devkit/src/devkit_agt/features/workflow/`
 
-#### Sequencing
+## 5. Assumptions
 
-`PROP-rule-shared-python-ast` (one `ast.parse` per file through `WorkspaceCache`) changes how the three rules read
-Python; this proposal changes whether they run and adds one constructor argument to each. There is no design
-dependency, so no `depends_on`. The sibling is planned to land first; whichever lands second rebases the three rule
-modules and the governance capabilities onto the other. Acceptance outcome 6 is relative to its own base and holds
-either way.
+1. The proposal's acceptance outcome 7 (`devkit rules check` of the proposal reports no `RULE-proposal-boundaries`
+   finding) applied while the proposal was in Planning; the proposal now lives in this unit, so AC-11 checks the unit
+   and its excluded boundaries instead.
+2. A protocol-only rule's malformed `inputs` is collected as a `RULES_DEFINITION_INVALID` problem by the same policy
+   validation `phases` and `explain` use: `RuleDefinitionError` becomes a collectable rule problem carrying the rule
+   ID while staying raisable at construction.
+3. `skipped` lists the rules the final check pass did not evaluate: a rule skipped initially and rechecked after a
+   fix is not listed. When a fixer raises, its partial writes are unknown, so the recheck evaluates every active rule.
+4. The three rule guides state their inputs in their opening section; the two `devkit-dev` guides have no numbered
+   sections, so the statement opens the guide.
 
-#### Planning decisions
+## 6. Sequencing
 
-- `lint-clean` is not changed; the workflow feature is excluded from the boundaries because scoping belongs to the
-  engine's one evaluation path (`CAP-GOV-rules-engine` principle 5).
-- At the build-verify (feature) and fix-verify (bugfix) exits, `lint-clean` no longer reports architecture and
-  use-case boundary violations of the unit's own code, which lives outside the unit directory and was caught there
-  only because the two rules ignore targets. The draft already set this direction ("on a documentation-only unit no
-  longer runs Python-source rules"); the code is still checked by every snapshot run, that is the `rules-check` commit
-  gate on each Development commit and `lint-ci-clean` before integration, and by `devkit rules check <changed files>`.
-- The skip predicate lives in the engine, not in each rule: a rule-local guard would copy the snapshot, configuration
-  and exclusion conditions into three rules of two bundles and every later rule, hide the declaration from
-  `devkit rules explain`, and leave `skipped` unreportable
-  (`ADR-rules-declare-their-input-files-undeclared-rules-always-run`, option 6).
-- `dev_effort` stays `medium`: the change spans the rules engine, two bundle sources, a skill and the Living Spec,
-  with no effect that cannot be undone locally.
-
-### 4. Lifecycle & Retirement Criteria
-
-<!--
-- Preliminary decisions: devkit spec proposal padr lint-clean-target-scoped-rules "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
-- Research: collect benchmarks and references in materials/.
-- On acceptance (plan-accept): devkit spec proposal accept lint-clean-target-scoped-rules --by user records gate:plan-accept and status:
-  accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
-  without Planning. Development starts with devkit spec proposal handoff lint-clean-target-scoped-rules.
-- On rejection: change only status: rejected, with the user's reason in the commit message; a later hygiene pass
-  writes the rejection ADR and deletes the proposal directory.
--->
-
+`PROP-rule-shared-python-ast` changes how the three rules read Python; this unit changes whether they run and adds
+one constructor argument to each. There is no design dependency. That sibling lands after this unit and rebases the
+three rule modules and the governance capabilities onto it.
