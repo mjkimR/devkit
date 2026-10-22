@@ -7,6 +7,7 @@ Source files are parsed, never imported; imports and their aliases are resolved 
 from __future__ import annotations
 
 import ast
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, match_path, validate_pattern
@@ -36,10 +37,11 @@ class LibraryOutputSettings:
     )
 
 
-def _aliases(tree: ast.Module) -> dict[str, str]:
+def _aliases(source: ast.AST | Sequence[ast.AST]) -> dict[str, str]:
     """Local name -> dotted origin for every import of the file (``import click as c``, ``from sys import stdout``)."""
     aliases: dict[str, str] = {}
-    for node in ast.walk(tree):
+    nodes = source if isinstance(source, Sequence) else ast.walk(source)
+    for node in nodes:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 if alias.asname:
@@ -93,12 +95,13 @@ class LibraryOutputRule(BaseRule):
             if any(match_path(pattern, rel) for pattern in settings.exclude):
                 continue
             try:
-                tree = ctx.cache.get_python_ast(path)
+                import_nodes = ctx.cache.get_python_nodes(path, ast.Import, ast.ImportFrom)
+                call_nodes = ctx.cache.get_python_nodes(path, ast.Call)
             except (SyntaxError, ValueError):
                 continue  # the linter of the language reports it
             cli_module = any(match_path(pattern, rel) for pattern in settings.cli_modules)
-            aliases = _aliases(tree)
-            for node in ast.walk(tree):
+            aliases = _aliases(import_nodes)
+            for node in call_nodes:
                 if not isinstance(node, ast.Call):
                     continue
                 target = _dotted(node.func, aliases)

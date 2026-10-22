@@ -63,6 +63,8 @@ Every rule is phase `linter` and is deployed by the `core` preset; every rule is
 
 1. **Document index**: every rule reads documents through the run's workspace cache (`CAP-DOCS-document-model`), so
    `--staged` and `--ci` evaluate the snapshot they name (devkit's `ctx.snapshot`) and a fix is seen by the recheck.
+   Within a single rules evaluation run, the document index is loaded once on first access and cached in memory across
+   rules via `ctx.cache.get_or_compute`.
 2. **Targeting**: as with every devkit rule, a violation is reported only in the files the run targets: a commit
    checks the files it changes, `devkit rules check` without targets the whole workspace. A rule whose relation spans
    several files (task coverage, lifecycle, traceability, entrypoints) states below where it reports when only one

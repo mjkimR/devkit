@@ -362,3 +362,109 @@ def test_write_text_resolves_afresh_after_a_parent_became_an_outside_symlink(tmp
         cache.write_text("docs/a.md", "after\n")
     assert info.value.code == "PATH_UNSAFE"
     assert not (outside / "a.md").exists()
+
+
+def test_get_or_compute_caches_and_invalidates(tmp_path: Path) -> None:
+    cache = WorkspaceCache(tmp_path)
+    calls = 0
+
+    def factory() -> dict[str, int]:
+        nonlocal calls
+        calls += 1
+        return {"count": calls}
+
+    # First call computes and caches
+    result1 = cache.get_or_compute("test_key", factory)
+    assert result1 == {"count": 1}
+    assert calls == 1
+
+    # Second call returns cached instance without re-calling factory
+    result2 = cache.get_or_compute("test_key", factory)
+    assert result2 is result1
+    assert calls == 1
+
+    # Invalidation drops computed cache
+    cache.invalidate("any_file.txt")
+    result3 = cache.get_or_compute("test_key", factory)
+    assert result3 == {"count": 2}
+    assert result3 is not result1
+    assert calls == 2
+
+    # Invalidate all also drops computed cache
+    cache.invalidate_all()
+    result4 = cache.get_or_compute("test_key", factory)
+    assert result4 == {"count": 3}
+    assert calls == 3
+
+
+def test_get_python_nodes_returns_matching_nodes_in_traversal_order(
+    temp_workspace: Path, workspace_cache: WorkspaceCache
+) -> None:
+    code = (
+        "import sys\n"
+        "from os import path\n"
+        "import json\n\n"
+        "class C:\n"
+        "    def run(self) -> None:\n"
+        "        print(sys.version)\n"
+    )
+    write(temp_workspace, "sample.py", code)
+    nodes = workspace_cache.get_python_nodes("sample.py", ast.Import, ast.ImportFrom)
+    assert len(nodes) == 3
+    assert isinstance(nodes[0], ast.Import) and nodes[0].names[0].name == "sys"
+    assert isinstance(nodes[1], ast.ImportFrom) and nodes[1].module == "os"
+    assert isinstance(nodes[2], ast.Import) and nodes[2].names[0].name == "json"
+
+    # Matches direct ast.walk filter
+    tree = workspace_cache.get_python_ast("sample.py")
+    expected = tuple(n for n in ast.walk(tree) if isinstance(n, (ast.Import, ast.ImportFrom)))
+    assert nodes == expected
+
+
+def test_get_python_nodes_repeated_calls_return_identical_cached_tuple(
+    temp_workspace: Path, workspace_cache: WorkspaceCache
+) -> None:
+    write(temp_workspace, "sample.py", "def a(): pass\ndef b(): pass\n")
+    first = workspace_cache.get_python_nodes("sample.py", ast.FunctionDef)
+    second = workspace_cache.get_python_nodes("sample.py", ast.FunctionDef)
+    assert first is second
+
+
+def test_get_python_nodes_unparsable_and_missing_files(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:
+    write(temp_workspace, "bad.py", "def broken(:\n")
+    with pytest.raises(SyntaxError):
+        workspace_cache.get_python_nodes("bad.py", ast.FunctionDef)
+
+    with pytest.raises(FileNotFoundError):
+        workspace_cache.get_python_nodes("missing.py", ast.FunctionDef)
+
+
+@pytest.mark.parametrize("drop", ["invalidate", "write_text", "invalidate_all"])
+def test_get_python_nodes_dropped_on_invalidation(
+    temp_workspace: Path, workspace_cache: WorkspaceCache, drop: str
+) -> None:
+    write(temp_workspace, "mod.py", "X = 1\n")
+    first = workspace_cache.get_python_nodes("mod.py", ast.Assign)
+    assert len(first) == 1
+
+    if drop == "write_text":
+        workspace_cache.write_text("mod.py", "X = 1\nY = 2\n")
+    else:
+        write(temp_workspace, "mod.py", "X = 1\nY = 2\n")
+        if drop == "invalidate":
+            workspace_cache.invalidate("mod.py")
+        else:
+            workspace_cache.invalidate_all()
+
+    second = workspace_cache.get_python_nodes("mod.py", ast.Assign)
+    assert len(second) == 2
+    assert second is not first
+
+
+def test_get_python_nodes_validates_arguments(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:
+    write(temp_workspace, "mod.py", "A = 1\n")
+    with pytest.raises(ValueError, match="at least one node type must be specified"):
+        workspace_cache.get_python_nodes("mod.py")
+
+    with pytest.raises(TypeError, match=r"expected ast\.AST subclass"):
+        workspace_cache.get_python_nodes("mod.py", str)  # type: ignore[arg-type]

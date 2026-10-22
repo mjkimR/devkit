@@ -22,9 +22,9 @@ from __future__ import annotations
 import ast
 import os
 import unicodedata
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar, cast, overload
 
 from devkit_core.core import GitError, UnsafePathError, atomic_write_bytes, run_git
 from devkit_core.core.frontmatter import parse as parse_frontmatter
@@ -38,9 +38,12 @@ if TYPE_CHECKING:
 
 __all__ = ["WorkspaceCache"]
 
+T = TypeVar("T")
+
 # Workspace-relative directories holding copies whose hashes the installation receipt pins.
 _PINNED_DIRS = (MANAGED_PATH, OVERRIDES_PATH)
 _IGNORED_DIRS = {".git", ".venv", ".pytest_cache", ".ruff_cache", "node_modules", "__pycache__"}
+_T = TypeVar("_T", bound=ast.AST)
 
 
 def _nfc(name: str) -> str:
@@ -71,10 +74,19 @@ class WorkspaceCache:
         self._links_cache: dict[str, list[MarkdownLink]] = {}
         # A parsed module, or the type and arguments of the error its parse raised.
         self._ast_cache: dict[str, ast.Module | tuple[type[Exception], tuple[Any, ...]]] = {}
+        # Per-file node index: by-type sequence and query cache.
+        self._nodes_cache: dict[
+            str,
+            tuple[
+                dict[type[ast.AST], tuple[tuple[int, ast.AST], ...]],
+                dict[tuple[type[ast.AST], ...], tuple[ast.AST, ...]],
+            ],
+        ] = {}
         # The resolved path of each path argument as given, until the next invalidation.
         self._resolved: dict[str | Path, Path] = {}
         self._catalog: DocumentCatalog | None = None
         self._files_cache: dict[tuple[Path, tuple[str, ...] | None], list[Path]] = {}
+        self._computed_cache: dict[str, Any] = {}
 
     def _resolve_fresh(self, path: str | Path) -> Path:
         p = Path(path)
@@ -176,6 +188,62 @@ class WorkspaceCache:
         error_type, args = outcome
         raise error_type(*args)
 
+    @overload
+    def get_python_nodes(self, path: str | Path, __t1: type[_T], /) -> tuple[_T, ...]: ...
+
+    @overload
+    def get_python_nodes(self, path: str | Path, *types: type[ast.AST]) -> tuple[ast.AST, ...]: ...
+
+    def get_python_nodes(self, path: str | Path, *types: type[ast.AST]) -> tuple[ast.AST, ...]:
+        """Nodes of the requested AST types from a parsed Python module, in document traversal order.
+
+        Builds the file's type-indexed node table on the first call from ``get_python_ast(path)``.
+        Returns an immutable tuple of nodes whose type matches any of ``types`` in document
+        traversal order (as yielded by ``ast.walk``).
+        Raises ``ValueError`` if no types are passed, and re-raises any ``SyntaxError`` or
+        ``ValueError`` from ``get_python_ast``.
+        """
+        if not types:
+            raise ValueError("at least one node type must be specified")
+        for t in types:
+            if not isinstance(t, type) or not issubclass(t, ast.AST):
+                raise TypeError(f"expected ast.AST subclass, got {t!r}")
+
+        tree = self.get_python_ast(path)
+        resolved = self._resolve_path(path)
+        key = resolved.as_posix()
+
+        file_index = self._nodes_cache.get(key)
+        if file_index is None:
+            by_type: dict[type[ast.AST], list[tuple[int, ast.AST]]] = {}
+            for i, node in enumerate(ast.walk(tree)):
+                nt = type(node)
+                if nt not in by_type:
+                    by_type[nt] = []
+                by_type[nt].append((i, node))
+            file_index = (
+                {t: tuple(items) for t, items in by_type.items()},
+                {},
+            )
+            self._nodes_cache[key] = file_index
+
+        by_type_map, query_cache = file_index
+        cached_result = query_cache.get(types)
+        if cached_result is not None:
+            return cached_result
+
+        matched: list[tuple[int, ast.AST]] = []
+        for nt, items in by_type_map.items():
+            if issubclass(nt, types):
+                matched.extend(items)
+
+        if len(matched) > 1:
+            matched.sort(key=lambda x: x[0])
+
+        result: tuple[ast.AST, ...] = tuple(node for _, node in matched)
+        query_cache[types] = result
+        return result
+
     def get_frontmatter(self, path: str | Path) -> dict[str, Any] | None:
         """The YAML frontmatter mapping of a file (``devkit_core.core.frontmatter`` grammar), or ``None``.
 
@@ -212,6 +280,12 @@ class WorkspaceCache:
             catalog.build(root, self)
             self._catalog = catalog
         return self._catalog
+
+    def get_or_compute(self, key: str, factory: Callable[[], T]) -> T:
+        """A run-scoped object computed once by ``factory`` and retained until an invalidation."""
+        if key not in self._computed_cache:
+            self._computed_cache[key] = factory()
+        return cast(T, self._computed_cache[key])
 
     def _visible_files(self) -> set[str] | None:
         """Workspace-relative files Git does not ignore, or ``None`` outside a Git work tree."""
@@ -308,7 +382,9 @@ class WorkspaceCache:
         self._frontmatter_cache.pop(key, None)
         self._links_cache.pop(key, None)
         self._ast_cache.pop(key, None)
+        self._nodes_cache.pop(key, None)
         self._catalog = None
+        self._computed_cache.clear()
         self._files_cache.clear()
         self._git_files_loaded = False
 
@@ -319,10 +395,12 @@ class WorkspaceCache:
     def invalidate_all(self) -> None:
         self._resolved.clear()
         self._ast_cache.clear()
+        self._nodes_cache.clear()
         self._bytes_cache.clear()
         self._text_cache.clear()
         self._frontmatter_cache.clear()
         self._links_cache.clear()
         self._catalog = None
+        self._computed_cache.clear()
         self._files_cache.clear()
         self._git_files_loaded = False

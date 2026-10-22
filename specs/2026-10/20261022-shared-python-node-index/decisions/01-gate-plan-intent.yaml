@@ -1,0 +1,12 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-shared-python-node-index: Goal: walk each Python tree once per rules run
+  through a per-run node index in WorkspaceCache, so Python-source rules read nodes
+  from one shared traversal instead of each walking every tree, with byte-identical
+  results and measured speedup of devkit rules check. User authorized starting Planning.
+  task-kind feature, planning-depth proposal.'
+by: user
+at: '2026-10-22T09:36:24.797735Z'

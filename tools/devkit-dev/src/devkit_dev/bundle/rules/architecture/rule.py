@@ -47,13 +47,25 @@ class Module:
         return self.parts[2] if len(self.parts) > 2 and self.feature else None
 
 
-def _imports(module: Module) -> list[tuple[str, int]]:
+def _imports(module: Module, cache: WorkspaceCache | None = None) -> list[tuple[str, int]]:
     """Resolve relative imports, including from-import submodules, without importing code."""
     result: list[tuple[str, int]] = []
     package = module.name if module.is_package else module.name.rpartition(".")[0]
     dynamic_names = {"__import__"}
     bindings: dict[str, str] = {}
-    for node in ast.walk(module.tree):
+
+    if cache is not None:
+        import_nodes = cache.get_python_nodes(module.path, ast.Import, ast.ImportFrom)
+        attribute_nodes = cache.get_python_nodes(module.path, ast.Attribute)
+        scan_nodes = cache.get_python_nodes(module.path, ast.Import, ast.ImportFrom, ast.Call, ast.Constant)
+    else:
+        import_nodes = tuple(n for n in ast.walk(module.tree) if isinstance(n, (ast.Import, ast.ImportFrom)))
+        attribute_nodes = tuple(n for n in ast.walk(module.tree) if isinstance(n, ast.Attribute))
+        scan_nodes = tuple(
+            n for n in ast.walk(module.tree) if isinstance(n, (ast.Import, ast.ImportFrom, ast.Call, ast.Constant))
+        )
+
+    for node in import_nodes:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 bindings[alias.asname or alias.name.split(".")[0]] = (
@@ -70,9 +82,7 @@ def _imports(module: Module) -> list[tuple[str, int]]:
                 bindings[alias.asname or alias.name] = f"{base}.{alias.name}"
     # Inspect imported module attributes too: `import facade as api; api.run()`
     # must obey the defining implementation's layer, just like a from-import.
-    for node in ast.walk(module.tree):
-        if not isinstance(node, ast.Attribute):
-            continue
+    for node in attribute_nodes:
         attributes: list[str] = []
         value = node
         while isinstance(value, ast.Attribute):
@@ -80,10 +90,10 @@ def _imports(module: Module) -> list[tuple[str, int]]:
             value = value.value
         if isinstance(value, ast.Name) and value.id in bindings:
             result.append((".".join((bindings[value.id], *reversed(attributes))), node.lineno))
-    for node in ast.walk(module.tree):
+    for node in import_nodes:
         if isinstance(node, ast.ImportFrom) and node.module == "importlib":
             dynamic_names.update(alias.asname or alias.name for alias in node.names if alias.name == "import_module")
-    for node in ast.walk(module.tree):
+    for node in scan_nodes:
         if isinstance(node, ast.Import):
             result.extend((alias.name, node.lineno) for alias in node.names)
         elif isinstance(node, ast.ImportFrom):
@@ -409,7 +419,7 @@ def inspect_architecture(
     for module in modules.values():
         package = declarations[module.package]
         seen: set[tuple[int, str]] = set()
-        for imported, line in _imports(module):
+        for imported, line in _imports(module, cache):
             target_namespace = next((ns for ns in namespaces if imported == ns or imported.startswith(ns + ".")), None)
             issue: str | None = None
             if imported == "<invalid-relative-import>":

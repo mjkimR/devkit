@@ -20,7 +20,7 @@ Related: `CAP-GOV-evaluation-lifecycle`, `CAP-GOV-rule-authoring`, [Rules Refere
 
 1. **Deterministic checks**: repository invariants (relative links, file sizes, committed secrets) are enforced by parsing, not by prompt instructions.
 2. **No built-in document model**: the engine does not know what a specification, use case or decision record is. Identifier grammars, frontmatter schemas, target directories and cross-reference semantics belong to the bundle that defines those documents and arrive as `kind = "rule"` assets; the engine provides the cache, the Markdown file catalog, policy and execution. Built-in rules cover only what holds for any repository.
-3. **Session caching**: one in-memory cache per evaluation session holds file lists, bytes, text, frontmatter, links and parsed Python (one shared, read-only tree or remembered parse error per file), and resolves each path argument once until an invalidation.
+3. **Session caching**: one in-memory cache per evaluation session holds file lists, bytes, text, frontmatter, links, parsed Python (one shared, read-only tree or remembered parse error per file) and indexed AST nodes by type, arbitrary computed run-scoped objects (`get_or_compute`), and resolves each path argument once until an invalidation.
 4. **Convergent autofix**: one repair pass followed by one recheck, never a repair loop (`CAP-GOV-evaluation-lifecycle`).
 5. **One evaluation path**: the CLI, the `rules-check` commit gate and the workflow engine's `lint-clean` check both call `run_project_rules`, so they cannot disagree on policy; target scoping lives in `evaluate_rules`, so they also agree on which rules explicit targets and snapshot diffs can affect (`CAP-GOV-evaluation-lifecycle`).
 
@@ -42,7 +42,7 @@ src/devkit_agt/features/rules/
 │   └── rule_tests.py        # rule_folder and run_rule_tests: each rule's tests/ in a pytest subprocess
 ├── testing.py               # load_rule, check, evaluate, opened_files: helpers for the tests in a rule's folder
 ├── workspace/               # Shared file caching, Markdown file catalog and Git snapshots
-│   ├── cache.py             # WorkspaceCache (file discovery, bytes, text, frontmatter, links, parsed Python, per-run path resolution)
+│   ├── cache.py             # WorkspaceCache (file discovery, bytes, text, frontmatter, links, parsed Python, node index, per-run path resolution, run-scoped get_or_compute)
 │   ├── catalog.py           # DocumentCatalog (paths, basenames, frontmatter id/title/status)
 │   ├── markdown.py          # Fences, inline links, count_tasks (the checklist counter shared with devkit_agt.features.workflow)
 │   └── snapshot.py          # Staged / CI Git trees for gate evaluation (in place or materialized)

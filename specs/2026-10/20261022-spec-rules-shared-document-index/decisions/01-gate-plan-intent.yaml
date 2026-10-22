@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-spec-rules-shared-document-index
+by: user
+at: '2026-10-22T09:37:03.913309Z'

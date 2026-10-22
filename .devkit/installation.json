@@ -1323,7 +1323,7 @@
     },
     ".devkit/managed/devkit-dev/rules/architecture/rule.py": {
       "mode": 420,
-      "sha256": "a2d8870c9da5f0dc22564d909a18bbf729094ce3d3f2bcb04c5a180e6f3a77e0"
+      "sha256": "d390d8504ee18bc3905afe457d73b2f291fe7ce07f25eaca625d00e08e478c6b"
     },
     ".devkit/managed/devkit-dev/rules/architecture/tests/test_rule.py": {
       "mode": 420,
@@ -1335,7 +1335,7 @@
     },
     ".devkit/managed/devkit-dev/rules/usecase-boundaries/rule.py": {
       "mode": 420,
-      "sha256": "6c6f9574e99d304cc5bb4a06c2f7bcce44831d5556177e83fda4a2e1a29fc6ad"
+      "sha256": "b2f37ea200798af1231c696144a30f13a902a3101c7a433ffb2fba2d1da5e2ff"
     },
     ".devkit/managed/devkit-dev/rules/usecase-boundaries/tests/test_rule.py": {
       "mode": 420,

@@ -48,9 +48,13 @@ def _attribute(node: ast.AST) -> str | None:
     return None
 
 
-def _imports(module: Module, tree: ast.AST) -> dict[str, str]:
+def _imports(module: Module, tree: ast.AST, cache: WorkspaceCache | None = None) -> dict[str, str]:
     bindings: dict[str, str] = {}
-    for node in ast.walk(tree):
+    if cache is not None:
+        nodes = cache.get_python_nodes(module.path, ast.Import, ast.ImportFrom)
+    else:
+        nodes = tuple(node for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom)))
+    for node in nodes:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 bindings[alias.asname or alias.name.split(".")[0]] = (
@@ -92,7 +96,7 @@ class Index:
                     relative[-1] == "__init__",
                     {},
                 )
-                module.bindings = _imports(module, module.tree)
+                module.bindings = _imports(module, module.tree, cache)
                 self.modules[name] = module
                 for statement in module.tree.body:
                     if isinstance(statement, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
