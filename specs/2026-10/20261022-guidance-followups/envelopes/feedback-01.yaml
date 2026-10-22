@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T06:18:22.891986Z'
+status: completed
+summary: 'Swept this Development turn and its diff: no new observation; the one candidate (spec.md-only commit refused by task coverage) matches the dismissed FB-specify-boundary-commit-refused-by-task-coverage, so nothing is recorded.'
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0
