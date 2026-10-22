@@ -75,11 +75,11 @@ class CommandBoundaryRule(BaseRule):
             if not any(match_path(pattern, rel) for pattern in settings.cli_modules):
                 continue
             try:
-                tree = ctx.cache.get_python_ast(path)
+                functions = ctx.cache.get_python_nodes(path, ast.FunctionDef, ast.AsyncFunctionDef)
             except (SyntaxError, ValueError):
                 continue  # the linter of the language reports it
             names = set(settings.boundary_names)
-            for node in ast.walk(tree):
+            for node in functions:
                 if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                     continue
                 decorators = [_decorator_name(decorator) for decorator in node.decorator_list]

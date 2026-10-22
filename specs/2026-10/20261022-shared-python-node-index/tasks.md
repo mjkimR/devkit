@@ -19,7 +19,7 @@ plan: PLAN-shared-python-node-index
   - **_Boundary**: `tools/devkit-dev/src/devkit_dev/bundle/rules/architecture/`, `tools/devkit-dev/src/devkit_dev/bundle/rules/usecase-boundaries/`
   - _Requirements: AC-06_
   - **Verification**: `just test devkit-dev`
-- [ ] **Task 2.2**: Migrate `RULE-cli-tool-command-boundary` and `RULE-cli-tool-library-output` to `get_python_nodes`
+- [x] **Task 2.2**: Migrate `RULE-cli-tool-command-boundary` and `RULE-cli-tool-library-output` to `get_python_nodes`
   - **_Boundary**: `packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/command_boundary/`, `packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/library_output/`
   - _Requirements: AC-06_
   - **Verification**: `just test devkit-catalog`
