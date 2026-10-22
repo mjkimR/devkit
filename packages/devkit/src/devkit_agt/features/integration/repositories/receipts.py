@@ -1,9 +1,12 @@
-"""Receipt records a merge makes inconsistent (``ADR-effective-policy-digest``).
+"""Receipt records a merge makes inconsistent (``ADR-effective-policy-digest``), and a source the reader cannot read.
 
 A merge commit combines the receipt (``.devkit/installation.json``) and the managed files of both parents. A record
 of the merged receipt whose path is tracked in the result and whose ``(recorded hash, blob)`` pair equals neither
 parent's was produced by the merge itself; its blob must then match the record. Untracked projections and
 inconsistencies already present on a parent are not the integration's and are skipped.
+
+A source that changes the receipt reader may carry a receipt only its own reader accepts; ``check_reader`` names that
+case before anything else reads the source's receipt.
 """
 
 from __future__ import annotations
@@ -13,9 +16,13 @@ from pathlib import Path
 
 from devkit_core.core.git import run_git
 from devkit_dist.base.errors import ReceiptError
-from devkit_dist.features.project.repositories.receipt import RECEIPT_PATH, Receipt, parse_receipt
+from devkit_dist.features.project.repositories.receipt import READER_MODULES, RECEIPT_PATH, Receipt, parse_receipt
 
-from devkit_agt.features.integration.models.errors import ReceiptConflictError
+from devkit_agt.features.integration.models.errors import ReceiptConflictError, ReceiptReaderChangedError
+
+# Each reader module as a path suffix (``devkit_dist/features/project/repositories/receipt.py``), wherever the
+# repository keeps its sources.
+_READER_PATHS = tuple(f"{name.replace('.', '/')}.py" for name in READER_MODULES)
 
 
 def _blob(root: Path, commit: str, path: str) -> bytes | None:
@@ -29,6 +36,38 @@ def _receipt(root: Path, commit: str) -> Receipt | None:
     if raw is None:
         return None
     return parse_receipt(raw)
+
+
+def _reader_path(path: str) -> bool:
+    return any(path == suffix or path.endswith(f"/{suffix}") for suffix in _READER_PATHS)
+
+
+def check_reader(root: Path, source_sha: str, target_sha: str) -> None:
+    """Refuse a source whose receipt only a changed reader accepts (``INTEGRATION_RECEIPT_READER_CHANGED``).
+
+    The running reader refuses the source's committed receipt, accepts the target's, and the source's range from the
+    merge base changes a reader module (``READER_MODULES``). Any other combination returns and leaves the existing
+    outcome, such as ``RECEIPT_INVALID`` for a corrupted receipt. Validation is unchanged: this only names the case.
+    """
+    try:
+        _receipt(root, source_sha)
+        return
+    except ReceiptError as exc:
+        refusal = exc
+    try:
+        if _receipt(root, target_sha) is None:
+            return
+    except ReceiptError:
+        return
+    prior = run_git(root, "merge-base", "--", target_sha, source_sha).decode().strip()
+    output = run_git(root, "diff", "--name-only", "--no-renames", "-z", prior, source_sha, "--")
+    changed = sorted(path for path in (os.fsdecode(name) for name in output.split(b"\0") if name) if _reader_path(path))
+    if changed:
+        raise ReceiptReaderChangedError(
+            f"the source changes the receipt reader ({', '.join(changed)}) and carries a receipt this runtime's reader"
+            f" refuses: {refusal.message}",
+            target_files=[RECEIPT_PATH],
+        ) from refusal
 
 
 def _blobs(root: Path, commit: str, paths: list[str]) -> dict[str, str]:

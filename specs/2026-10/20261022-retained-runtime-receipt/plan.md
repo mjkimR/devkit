@@ -19,7 +19,7 @@ integration service calls a new repository function; `devkit-dist` gains one con
   what the reader accepts: the module itself (accepted keys and types) and `models/receipt.py` (`SCHEMA` and record
   types), derived from `__name__` and `Receipt.__module__` so a rename keeps it correct.
 - `devkit-agt` integration:
-  - `models/errors.py`: `ReceiptReaderChangedError` (`INTEGRATION_RECEIPT_READER_CHANGED`, guardrail).
+  - `models/errors.py`: `ReceiptReaderChangedError` (`INTEGRATION_RECEIPT_READER_CHANGED`, actor `USER`).
   - `repositories/receipts.py`: `check_reader(root, source_sha, target_sha)` raises it when the source's committed
     receipt is refused, the target's committed receipt parses, and `git diff --name-only --no-renames
     merge-base(target, source) source` names a path at a reader module path (the module name as a path ending in
@@ -28,7 +28,7 @@ integration service calls a new repository function; `devkit-dist` gains one con
     target before running the provider, so local prepare, pull-request prepare and every build share it, through
     the MCP service and the CLI.
 - `devkit-mcp` runtime:
-  - `models/errors.py`: `RuntimeStaleError` (`MCP_RUNTIME_STALE`, guardrail, a `HostError`).
+  - `models/errors.py`: `RuntimeStaleError` (`MCP_RUNTIME_STALE`, actor `USER`, a `HostError`).
   - `services/loaded_code.py`: `record()` hashes every `*.py` file under the import locations of the top-level
     `devkit` namespace and every `devkit_*` package on `sys.path` (`pkgutil.iter_modules`, `importlib.util.find_spec`),
     keyed by real path; `stale(baseline)` lists the loaded `devkit`/`devkit_*` modules whose `.py` file is absent,
@@ -57,8 +57,8 @@ class GuardLoadedCode(BaseUseCase):
 
 | Code | Mode | `[ACTION]` |
 | --- | --- | --- |
-| `INTEGRATION_RECEIPT_READER_CHANGED` | BLOCKED | A runtime built from the target cannot read this source's receipt and restarting the MCP service does not help; obtain separately granted `dev-integration` authority for the CLI route, then run `devkit worktree finish <branch> --merge --local-only` in the base checkout with a devkit runtime built from the source's code |
-| `MCP_RUNTIME_STALE` | BLOCKED | Restart or reconnect the retained devkit MCP service so it loads the installed code, then call the tool again; nothing ran, and a request retained by the old process must be prepared again after inspecting Git |
+| `INTEGRATION_RECEIPT_READER_CHANGED` | INTERACTION | A runtime built from the target cannot read this source's receipt and restarting the MCP service does not help; obtain separately granted `dev-integration` authority for the CLI route, then run `devkit worktree finish <branch> --merge --local-only` in the base checkout with a devkit runtime built from the source's code |
+| `MCP_RUNTIME_STALE` | INTERACTION | Restart or reconnect the retained devkit MCP service so it loads the installed code, then call the tool again; nothing ran, and a request retained by the old process must be prepared again after inspecting Git |
 
 ## 4. Error Handling & Edge Cases
 

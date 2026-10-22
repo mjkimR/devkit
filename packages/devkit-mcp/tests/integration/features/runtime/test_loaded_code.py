@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import importlib
 import sys
+from typing import Literal
 
 import pytest
 from devkit_core.base.mcp import McpTool
@@ -15,6 +16,7 @@ from mcp import types
 from .test_runtime import git
 
 PACKAGE = "devkit_stale_fixture"
+Execution = Literal["read_only", "preflight", "interactive", "approved_resume", "bounded_write"]
 
 
 @pytest.fixture
@@ -44,7 +46,7 @@ def loaded(tmp_path, monkeypatch):
 
 
 def _tools(calls: list[str]) -> dict[str, McpTool]:
-    def tool(name: str, execution: str) -> McpTool:
+    def tool(name: str, execution: Execution) -> McpTool:
         async def invoke(arguments, confirm):
             calls.append(name)
             return {"ran": name}
@@ -77,9 +79,9 @@ def test_changed_loaded_module_refuses_protected_tools(project, loaded):
         assert result.isError
         error = result.structuredContent["error"]
         assert error["code"] == "MCP_RUNTIME_STALE"
-        assert error["mode"] == "BLOCKED"
-        assert "Restart or reconnect" in error["fix"]
-        assert any(f"{PACKAGE}.model" in detail for detail in error["details"])
+        assert error["advisory"]["mode"] == "INTERACTION"
+        assert "Restart or reconnect" in error["advisory"]["fix"]
+        assert any(f"{PACKAGE}.model" in detail for detail in error["advisory"]["details"])
     assert calls == ["write"]
 
 

@@ -61,7 +61,7 @@ def test_reader_changing_source_is_refused_before_the_provider(repo, reading_pro
     with pytest.raises(AdvisoryError) as raised:
         service.prepare("dev-demo", TASK)
     assert raised.value.code == "INTEGRATION_RECEIPT_READER_CHANGED"
-    assert raised.value.mode is ActionMode.BLOCKED
+    assert raised.value.mode is ActionMode.INTERACTION
     assert "restarting" in (raised.value.fix or "")
     assert "devkit worktree finish" in (raised.value.fix or "")
     assert raised.value.target_files == (RECEIPT_PATH,)
