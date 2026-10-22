@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: instruction-conflict
 target: "development-worker scratch-path contract and packages/devkit-spec/tests/scope Git fixtures"
-skill: spec-review
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

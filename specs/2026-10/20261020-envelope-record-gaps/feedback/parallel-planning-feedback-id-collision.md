@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: missing-capability
 target: spec-feedback references/sweep.md (deduplication step)
-skill: spec-feedback
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: docs-mismatch
 target: docs/decisions/2026-10/20261020-response-style-adaptive-replies.md
-skill: spec-specify
-agent: codex
 origin: agent
 severity: noise
 recurring: false

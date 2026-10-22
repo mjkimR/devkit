@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: instruction-conflict
 target: .devkit/managed/spec/skills/spec-delegate/references/payload.md
-skill: spec-delegate
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

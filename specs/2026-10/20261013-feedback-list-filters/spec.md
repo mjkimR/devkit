@@ -6,10 +6,9 @@ status: completed
 created: 2026-10-13
 related_capabilities:
   - CAP-DOCS-document-lookup
-related_stories:
-  - US-find-the-right-documents
+related_usecases:
+  - UC-find-the-right-documents
 workflow: direct-delivery
-workflow_hash: sha256:6fe2644b9464ea860e6d6928748778b4ffd7a255e92ddea5fe10eba59138f287
 ---
 
 # [SPEC-feedback-list-filters] Feedback list filters

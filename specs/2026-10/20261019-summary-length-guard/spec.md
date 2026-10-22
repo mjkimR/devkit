@@ -7,7 +7,7 @@ created: 2026-10-19
 related_capabilities:
   - CAP-DLV-proposal-incubation
   - CAP-DLV-spec-bundles
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-bugfix
 ---
 

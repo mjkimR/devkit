@@ -8,11 +8,10 @@ related_capabilities:
   - CAP-DLV-spec-bundles
   - CAP-DLV-proposal-incubation
   - CAP-DOCS-namespaces
-related_stories:
-  - US-incubate-and-hand-off-a-proposal
-  - US-run-parallel-work-safely
+related_usecases:
+  - UC-incubate-and-hand-off-a-proposal
+  - UC-run-parallel-work-safely
 workflow: direct-delivery
-workflow_hash: sha256:6fe2644b9464ea860e6d6928748778b4ffd7a255e92ddea5fe10eba59138f287
 ---
 
 # [SPEC-namespace-default-and-handoff-branch] Namespace default from the current directory and the handoff branch guard

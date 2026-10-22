@@ -24,7 +24,6 @@ verification by effort is in its `references/effort.md` and `references/review-l
    ```yaml
    ---
    reconcile_id: REC-<slug>
-   feature: SPEC-<slug>
    status: pending            # pending | resolved
    targets:
      - file: docs/capabilities/<area>/CAP-<AREA>-<slug>.md

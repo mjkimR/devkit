@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-review-role-policy
-feature: SPEC-review-role-policy
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md

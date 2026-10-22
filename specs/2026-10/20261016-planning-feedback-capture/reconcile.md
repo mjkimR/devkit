@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-planning-feedback-capture
-feature: SPEC-planning-feedback-capture
 status: resolved
 targets:
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md

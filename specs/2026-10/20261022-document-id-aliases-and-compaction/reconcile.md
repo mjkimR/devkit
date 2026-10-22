@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-document-id-aliases-and-compaction
-feature: SPEC-document-id-aliases-and-compaction
 status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-model.md

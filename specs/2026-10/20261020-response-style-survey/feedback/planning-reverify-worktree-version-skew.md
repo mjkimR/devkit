@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: instruction-conflict
 target: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/planning.md
-skill: spec-delegate
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

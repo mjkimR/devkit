@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: missing-capability
 target: devkit workflow envelope check
-skill: spec
-agent: claude-code
 origin: agent
 severity: noise
 recurring: true

@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-terminology-authoring-guidance
-feature: SPEC-terminology-authoring-guidance
 status: resolved
 targets:
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md

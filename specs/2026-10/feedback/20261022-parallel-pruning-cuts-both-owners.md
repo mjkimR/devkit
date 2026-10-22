@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: instruction-conflict
 target: packages/devkit/src/devkit_agt/bundles/authoring/bundle/instructions/agent-asset-writing.md
-skill: none
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

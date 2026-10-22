@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: missing-capability
 target: packages/devkit/src/devkit/rules/rules/markdown_link (RULE markdown-link)
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

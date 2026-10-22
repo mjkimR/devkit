@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: tool-error
 target: integration_integrate
-skill: spec-integrate
-agent: codex
 origin: agent
 severity: blocked
 recurring: false

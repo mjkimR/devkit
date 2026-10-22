@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: other
 target: "justfile lint-check"
-skill: spec-plan
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

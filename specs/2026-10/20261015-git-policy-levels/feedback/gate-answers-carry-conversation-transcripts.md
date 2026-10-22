@@ -5,8 +5,6 @@ scope: repo
 kind: change-request
 category: token-cost
 target: skills/spec-next/references/workflow-signals.md, skills/spec/references/worktree.md, devkit workflow answer
-skill: spec
-agent: claude-code
 origin: user
 severity: critical
 recurring: false

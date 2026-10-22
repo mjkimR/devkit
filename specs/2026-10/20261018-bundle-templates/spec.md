@@ -5,7 +5,7 @@ summary: "Render Markdown templates using typed bundle variables without loading
 status: completed
 created: 2026-10-18
 related_capabilities: [CAP-DIST-manifest-spec, CAP-DIST-sync-and-transactions]
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

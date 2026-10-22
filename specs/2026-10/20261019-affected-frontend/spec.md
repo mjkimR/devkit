@@ -5,7 +5,7 @@ summary: just test-affected stops sending devkit-viewer frontend changes to the 
 status: completed
 created: 2026-10-19
 related_capabilities: []
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

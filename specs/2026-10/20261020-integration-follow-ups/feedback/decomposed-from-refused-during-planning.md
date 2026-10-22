@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: instruction-conflict
 target: devkit spec proposal new --decomposed-from (devkit_spec/proposals/backlog.py check_backlog_editable)
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

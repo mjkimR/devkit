@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-advisory-unique-code
-feature: SPEC-advisory-unique-code
 status: resolved
 targets:
   - file: docs/capabilities/advisory/CAP-ADV-agent-advisory-protocol.md

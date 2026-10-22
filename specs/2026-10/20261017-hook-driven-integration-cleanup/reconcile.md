@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-hook-driven-integration-cleanup
-feature: SPEC-hook-driven-integration-cleanup
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md

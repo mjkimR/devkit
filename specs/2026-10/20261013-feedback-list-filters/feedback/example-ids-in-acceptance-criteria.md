@@ -5,8 +5,6 @@ scope: bundle
 kind: friction
 category: spec-ambiguity
 target: "spec-specify skill"
-skill: spec-specify
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

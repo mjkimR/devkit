@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: other
 target: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/SKILL.md
-skill: spec
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

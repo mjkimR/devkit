@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: unclear-instruction
 target: spec skill references/worker-records.md (questions)
-skill: spec
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

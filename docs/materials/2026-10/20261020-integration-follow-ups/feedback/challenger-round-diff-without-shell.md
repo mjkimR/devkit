@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: missing-capability
 target: packages/devkit-spec/src/devkit_spec/bundle/subagents/challenger.md (x-git-actions, tools)
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

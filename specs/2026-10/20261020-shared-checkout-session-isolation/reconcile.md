@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-shared-checkout-session-isolation
-feature: SPEC-shared-checkout-session-isolation
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-project-policy.md

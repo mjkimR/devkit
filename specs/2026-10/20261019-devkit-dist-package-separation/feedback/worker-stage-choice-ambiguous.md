@@ -5,8 +5,6 @@ scope: repo
 kind: question
 category: spec-ambiguity
 target: planning-worker role contract (step 6, --stage) and spec skill references/worker-records.md
-skill: spec
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

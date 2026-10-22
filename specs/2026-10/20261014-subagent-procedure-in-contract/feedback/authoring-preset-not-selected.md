@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: missing-capability
 target: .devkit/config.toml
-skill: none
-agent: claude-code
 origin: user
 severity: workaround
 recurring: false

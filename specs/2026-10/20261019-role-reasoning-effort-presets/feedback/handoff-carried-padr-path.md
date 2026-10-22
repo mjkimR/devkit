@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: docs-mismatch
 target: devkit spec proposal handoff (carried proposal notes in spec.md)
-skill: spec-specify
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

@@ -6,7 +6,7 @@ status: completed
 created: 2026-10-21
 milestone: MS-autonomous-backlog-and-orchestration
 related_capabilities: []
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

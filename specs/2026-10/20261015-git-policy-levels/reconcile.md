@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-git-policy-levels
-feature: SPEC-git-policy-levels
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-project-policy.md

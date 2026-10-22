@@ -5,8 +5,6 @@ scope: upstream
 kind: question
 category: docs-mismatch
 target: devkit workflow bind / WORKFLOW_DRIFT
-skill: spec-plan
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

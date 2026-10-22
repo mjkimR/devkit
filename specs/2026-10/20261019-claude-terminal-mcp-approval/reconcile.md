@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-claude-terminal-mcp-approval
-feature: SPEC-claude-terminal-mcp-approval
 status: resolved
 targets:
   - file: docs/capabilities/integration/CAP-INT-mcp-services.md

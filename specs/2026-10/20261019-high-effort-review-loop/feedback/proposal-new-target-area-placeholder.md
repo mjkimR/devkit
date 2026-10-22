@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: missing-capability
 target: devkit spec proposal new
-skill: spec
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

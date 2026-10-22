@@ -5,7 +5,7 @@ summary: "Commit the devkit-embed model wheel into the repository and switch pac
 status: completed
 created: 2026-10-20
 related_capabilities: ["CAP-SRCH-document-search"]
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

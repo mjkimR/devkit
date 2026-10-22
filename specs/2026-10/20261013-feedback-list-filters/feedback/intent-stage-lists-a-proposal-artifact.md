@@ -5,8 +5,6 @@ scope: bundle
 kind: question
 category: docs-mismatch
 target: "src/devkit_spec/bundle/workflows/direct-delivery.md"
-skill: spec
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

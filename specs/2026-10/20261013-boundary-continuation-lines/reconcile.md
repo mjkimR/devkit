@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-boundary-continuation-lines
-feature: SPEC-boundary-continuation-lines
 status: resolved
 targets:
   - file: docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md

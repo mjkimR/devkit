@@ -5,7 +5,7 @@ summary: Add ignored checkout-local configuration overlays and an explicit cloud
 status: completed
 created: 2026-10-20
 related_capabilities: [CAP-DIST-sync-and-transactions, CAP-DIST-workspace-ownership, CAP-WT-task-worktrees]
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

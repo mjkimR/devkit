@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: other
 target: authoring bundle rules
-skill: spec-sync
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

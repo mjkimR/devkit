@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: instruction-conflict
 target: packages/devkit-spec/src/devkit_spec/bundle/subagents/development-worker.md (write boundaries, `.devkit/` denied)
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

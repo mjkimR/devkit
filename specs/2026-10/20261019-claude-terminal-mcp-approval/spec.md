@@ -7,7 +7,7 @@ created: 2026-10-19
 related_capabilities:
   - CAP-INT-mcp-services
   - CAP-HOST-lifecycle-observation
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

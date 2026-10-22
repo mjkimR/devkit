@@ -5,8 +5,6 @@ scope: unknown
 kind: suggestion
 category: missing-capability
 target: devkit.integration.IntegrationService and devkit_spec.integration
-skill: spec-sync
-agent: antigravity
 origin: agent
 severity: workaround
 recurring: false

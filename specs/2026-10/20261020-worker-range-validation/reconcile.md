@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-worker-range-validation
-feature: SPEC-worker-range-validation
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md

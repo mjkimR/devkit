@@ -7,8 +7,8 @@ created: 2026-10-19
 related_capabilities:
   - CAP-HARN-agent-guidance
   - CAP-DLV-delivery-workflows
-related_stories:
-  - US-keep-the-living-spec-consistent
+related_usecases:
+  - UC-keep-the-living-spec-consistent
 workflow: sdd-spec-feature
 ---
 

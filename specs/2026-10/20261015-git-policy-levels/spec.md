@@ -8,9 +8,8 @@ related_capabilities:
   - CAP-DLV-project-policy
   - CAP-DLV-proposal-incubation
   - CAP-COLL-work-scope-registry
-related_stories: []
+related_usecases: []
 workflow: direct-delivery
-workflow_hash: sha256:6fe2644b9464ea860e6d6928748778b4ffd7a255e92ddea5fe10eba59138f287
 ---
 
 # [SPEC-git-policy-levels] Worktree and pull request policy levels

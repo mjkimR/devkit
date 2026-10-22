@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: instruction-conflict
 target: devkit get-context and spec-delegate read-only support-role bootstrap
-skill: spec-review
-agent: codex
 origin: agent
 severity: workaround
 recurring: true

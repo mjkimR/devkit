@@ -6,7 +6,7 @@ status: completed
 created: 2026-10-21
 milestone: MS-drift-reconciliation
 related_capabilities: []
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

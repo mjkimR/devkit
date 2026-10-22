@@ -10,11 +10,10 @@ related_capabilities:
   - CAP-DOCS-document-lookup
   - CAP-GOV-spec-rules
   - CAP-HARN-agent-guidance
-related_stories:
-  - US-incubate-and-hand-off-a-proposal
-  - US-route-development-intent
+related_usecases:
+  - UC-incubate-and-hand-off-a-proposal
+  - UC-route-development-intent
 workflow: sdd-spec-feature
-workflow_hash: sha256:20b913108a194572244fd42f0587ce3fe7fecfb7610c8afb52fa6b35e79fb0e0
 ---
 
 # [SPEC-proposal-effort-hints] Separate Planning and Development effort hints on proposals

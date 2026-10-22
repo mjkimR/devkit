@@ -6,7 +6,7 @@ status: completed
 created: 2026-10-22
 related_capabilities:
   - CAP-HARN-agent-guidance
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

@@ -5,8 +5,6 @@ scope: upstream
 kind: friction
 category: tool-error
 target: Codex exec_command automatic permission approval review
-skill: spec-review
-agent: codex
 origin: agent
 severity: workaround
 recurring: true

@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: redundant-step
 target: packages/devkit-spec/tests/test_integration.py::accepted_handoff_base
-skill: spec-feedback
-agent: codex
 origin: agent
 severity: noise
 recurring: true

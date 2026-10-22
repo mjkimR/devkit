@@ -7,7 +7,7 @@ created: 2026-10-19
 related_capabilities:
   - CAP-DLV-delivery-workflows
   - CAP-DLV-workflow-envelopes
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

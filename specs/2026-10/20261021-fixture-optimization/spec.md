@@ -7,7 +7,7 @@ created: 2026-10-21
 related_capabilities:
   - CAP-WT-task-worktrees
   - CAP-DLV-delivery-workflows
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

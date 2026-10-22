@@ -5,7 +5,7 @@ summary: Defines one approval for push, no-ff PR merge and cleanup, fixing the s
 status: completed
 created: 2026-10-20
 related_capabilities: []
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

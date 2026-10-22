@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: redundant-step
 target: packages/devkit-dist/src/devkit/host/registrations.py and packages/devkit-dist/src/devkit/shared/local.py
-skill: spec-review
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

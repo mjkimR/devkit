@@ -5,7 +5,7 @@ summary: "User-facing Planning to Development handoff with effort selection and 
 status: completed
 created: 2026-10-19
 related_capabilities: [CAP-INT-mcp-services]
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

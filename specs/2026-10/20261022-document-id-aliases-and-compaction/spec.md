@@ -11,7 +11,7 @@ related_capabilities:
   - CAP-DLV-proposal-incubation
   - CAP-DIST-context-and-playbooks
   - CAP-SRCH-document-search
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

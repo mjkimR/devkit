@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: tool-error
 target: packages/devkit/src/devkit/integration/service.py
-skill: spec-integrate
-agent: codex
 origin: agent
 severity: workaround
 recurring: true

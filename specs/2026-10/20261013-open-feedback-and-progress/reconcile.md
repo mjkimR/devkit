@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-open-feedback-and-progress
-feature: SPEC-open-feedback-and-progress
 status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-model.md

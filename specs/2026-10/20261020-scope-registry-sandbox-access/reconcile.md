@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-scope-registry-sandbox-access
-feature: SPEC-scope-registry-sandbox-access
 status: resolved
 targets:
   - file: docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md

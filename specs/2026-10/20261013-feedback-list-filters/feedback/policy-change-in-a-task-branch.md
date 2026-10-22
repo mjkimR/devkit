@@ -5,8 +5,6 @@ scope: bundle
 kind: suggestion
 category: missing-capability
 target: "spec skill references/worktree.md"
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

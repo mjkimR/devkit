@@ -5,7 +5,7 @@ summary: Make sync --cloud render CLI-only agent instructions without MCP routes
 status: completed
 created: 2026-10-21
 related_capabilities: []
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

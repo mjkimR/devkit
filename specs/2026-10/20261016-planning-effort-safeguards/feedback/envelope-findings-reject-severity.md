@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: tool-error
 target: devkit workflow envelope review --findings-file
-skill: spec-delegate
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: true

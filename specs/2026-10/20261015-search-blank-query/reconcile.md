@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-search-blank-query
-feature: SPEC-search-blank-query
 status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-search.md

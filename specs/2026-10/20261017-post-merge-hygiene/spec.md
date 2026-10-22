@@ -7,8 +7,8 @@ created: 2026-10-17
 related_capabilities:
   - CAP-HARN-agent-guidance
   - CAP-HARN-command-mount
-related_stories:
-  - US-adopt-in-an-existing-repository
+related_usecases:
+  - UC-adopt-in-an-existing-repository
 workflow: sdd-spec-bugfix
 ---
 

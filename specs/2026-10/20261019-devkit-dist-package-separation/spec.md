@@ -16,7 +16,7 @@ related_capabilities:
   - CAP-SRCH-document-search
   - CAP-CMP-bounded-execution
   - CAP-INT-mcp-services
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

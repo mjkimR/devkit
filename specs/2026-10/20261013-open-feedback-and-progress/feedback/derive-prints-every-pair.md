@@ -5,8 +5,6 @@ scope: bundle
 kind: suggestion
 category: token-cost
 target: "devkit spec entrypoints derive"
-skill: spec-sync
-agent: claude-code
 origin: agent
 severity: noise
 recurring: true

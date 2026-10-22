@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: missing-capability
 target: packages/devkit-spec/src/devkit_spec/bundle/skills/spec-delegate/references/payload.md (development-worker write scope)
-skill: spec-delegate
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

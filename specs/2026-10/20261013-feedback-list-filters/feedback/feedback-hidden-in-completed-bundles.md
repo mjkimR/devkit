@@ -5,8 +5,6 @@ scope: bundle
 kind: suggestion
 category: spec-ambiguity
 target: "devkit spec list feedback"
-skill: spec-feedback
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

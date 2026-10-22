@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: instruction-conflict
 target: src/devkit_spec/bundle/subagents/worker.md
-skill: spec-delegate
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

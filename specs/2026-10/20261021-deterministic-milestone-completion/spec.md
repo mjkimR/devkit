@@ -6,7 +6,7 @@ status: completed
 created: 2026-10-21
 depends_on: [SPEC-unit-dependencies-and-milestone-scope]
 related_capabilities: [CAP-DLV-proposal-incubation, CAP-DOCS-document-model, CAP-HARN-agent-guidance]
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

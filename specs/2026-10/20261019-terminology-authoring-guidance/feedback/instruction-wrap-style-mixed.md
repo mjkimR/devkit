@@ -5,8 +5,6 @@ scope: repo
 kind: question
 category: spec-ambiguity
 target: packages/devkit-spec/src/devkit_spec/bundle/instructions/living-spec-writing.md
-skill: spec-specify
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

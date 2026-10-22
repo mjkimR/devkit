@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-language-setting-coverage
-feature: SPEC-language-setting-coverage
 status: resolved
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-manifest-spec.md

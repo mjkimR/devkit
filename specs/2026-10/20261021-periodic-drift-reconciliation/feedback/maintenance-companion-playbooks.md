@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: other
 target: packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/bundle.toml
-skill: spec-sync
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

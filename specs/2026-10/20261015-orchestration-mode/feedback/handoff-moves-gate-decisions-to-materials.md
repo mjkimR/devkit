@@ -5,8 +5,6 @@ scope: repo
 kind: question
 category: spec-ambiguity
 target: devkit spec proposal handoff
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

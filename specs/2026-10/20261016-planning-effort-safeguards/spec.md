@@ -7,10 +7,9 @@ created: 2026-10-16
 related_capabilities:
   - CAP-DLV-delivery-workflows
   - CAP-HARN-agent-guidance
-related_stories:
-  - US-incubate-and-hand-off-a-proposal
+related_usecases:
+  - UC-incubate-and-hand-off-a-proposal
 workflow: sdd-spec-feature
-workflow_hash: sha256:200b62037a75f0224fc4deeffe8b5d6a0f6bcc5ded729a0606e1d24b4ac34d38
 ---
 
 # [SPEC-planning-effort-safeguards] Planning effort safeguards

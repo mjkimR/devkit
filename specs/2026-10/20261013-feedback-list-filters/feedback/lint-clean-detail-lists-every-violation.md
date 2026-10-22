@@ -5,8 +5,6 @@ scope: bundle
 kind: suggestion
 category: token-cost
 target: "devkit workflow next"
-skill: spec-specify
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

@@ -5,8 +5,6 @@ scope: repo
 kind: question
 category: spec-ambiguity
 target: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/worker-records.md (section 1)
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

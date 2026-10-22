@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: other
 target: RULE-document-reference
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

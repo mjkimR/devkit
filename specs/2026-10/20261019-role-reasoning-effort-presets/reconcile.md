@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-role-reasoning-effort-presets
-feature: SPEC-role-reasoning-effort-presets
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md

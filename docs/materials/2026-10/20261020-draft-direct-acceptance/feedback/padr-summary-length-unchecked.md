@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: tool-error
 target: devkit spec proposal padr --summary
-skill: spec
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

@@ -11,8 +11,6 @@ scope: repo                         # repo | upstream | unknown
 kind: friction                      # friction | suggestion | change-request | question
 category: other                     # see Categories below
 target: <asset path or command>     # e.g. the spec-specify skill, devkit spec list, CAP-<AREA>-<slug>
-skill: none                         # active skill when observed, or none
-agent: <claude-code | codex | antigravity | ...>
 origin: agent                       # agent | user
 severity: workaround                # critical | blocked | workaround | noise
 recurring: false

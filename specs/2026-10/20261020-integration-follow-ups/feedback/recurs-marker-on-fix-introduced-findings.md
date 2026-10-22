@@ -5,8 +5,6 @@ scope: repo
 kind: question
 category: spec-ambiguity
 target: packages/devkit-spec/src/devkit_spec/bundle/skills/spec/references/review-loop.md (sections 2 and 3, recurs marker)
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

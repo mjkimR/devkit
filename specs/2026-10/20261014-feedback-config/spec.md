@@ -7,9 +7,8 @@ created: 2026-10-14
 related_capabilities:
   - CAP-DLV-project-policy
   - CAP-HARN-agent-guidance
-related_stories: []
+related_usecases: []
 workflow: direct-delivery
-workflow_hash: sha256:6fe2644b9464ea860e6d6928748778b4ffd7a255e92ddea5fe10eba59138f287
 ---
 
 # [SPEC-feedback-config] Repository-first feedback configuration

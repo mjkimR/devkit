@@ -5,7 +5,7 @@ summary: Make dev-integration auto authorize verified local merge and scoped bra
 status: completed
 created: 2026-10-21
 related_capabilities: []
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

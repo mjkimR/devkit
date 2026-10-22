@@ -8,7 +8,7 @@ related_capabilities:
   - CAP-GATE-commit-gates
   - CAP-DLV-workflow-envelopes
   - CAP-GOV-rule-authoring
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

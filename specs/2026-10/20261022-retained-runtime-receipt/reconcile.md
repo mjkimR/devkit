@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-retained-runtime-receipt
-feature: SPEC-retained-runtime-receipt
 status: resolved
 targets:
   - file: docs/capabilities/mcp/CAP-MCP-runtime-registration.md

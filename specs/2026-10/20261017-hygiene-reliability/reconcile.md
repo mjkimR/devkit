@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-hygiene-reliability
-feature: SPEC-hygiene-reliability
 status: resolved
 targets:
   - file: docs/capabilities/gate/CAP-GATE-commit-gates.md

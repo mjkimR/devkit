@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: missing-capability
 target: devkit-spec proposal frontmatter (boundaries.owns), devkit spec proposal handoff
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

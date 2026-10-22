@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: instruction-conflict
 target: src/devkit_spec/bundle/rules/reconcile_contract/guide.md
-skill: spec-sync
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

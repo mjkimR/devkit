@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: instruction-conflict
 target: src/devkit_spec/bundle/skills/spec-orchestrate/SKILL.md
-skill: spec-orchestrate
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: true

@@ -5,8 +5,6 @@ scope: bundle
 kind: friction
 category: docs-mismatch
 target: "spec skill and spec-specify references/feature.md"
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

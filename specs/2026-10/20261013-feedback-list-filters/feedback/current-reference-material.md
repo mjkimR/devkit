@@ -5,8 +5,6 @@ scope: repo
 kind: question
 category: instruction-conflict
 target: "MAT-port-map"
-skill: spec-sync
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-feedback-config
-feature: SPEC-feedback-config
 status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-project-policy.md

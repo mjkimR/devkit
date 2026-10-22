@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: docs-mismatch
 target: packages/devkit-spec/tests/integration/bundles/spec/test_effort_procedure.py
-skill: spec-sync
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

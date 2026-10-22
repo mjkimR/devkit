@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-feedback-quick-fixes
-feature: SPEC-feedback-quick-fixes
 status: resolved
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md

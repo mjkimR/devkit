@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-integration-rewritten-merge
-feature: SPEC-integration-rewritten-merge
 status: resolved
 targets:
   - file: docs/capabilities/integration/CAP-INT-mcp-services.md

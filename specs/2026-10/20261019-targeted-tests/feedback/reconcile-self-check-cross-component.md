@@ -5,8 +5,6 @@ scope: repo
 kind: question
 category: spec-ambiguity
 target: devkit-spec bundle skills/spec/references/effort.md (Medium initial reconcile exception)
-skill: spec-sync
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

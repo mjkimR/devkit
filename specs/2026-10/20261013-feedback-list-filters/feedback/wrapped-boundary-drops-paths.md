@@ -5,8 +5,6 @@ scope: bundle
 kind: friction
 category: tool-error
 target: "src/devkit_spec/entrypoints/bundle.py"
-skill: spec-sync
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

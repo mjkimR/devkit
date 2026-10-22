@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: spec-ambiguity
 target: devkit spec scope update
-skill: spec-sync
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

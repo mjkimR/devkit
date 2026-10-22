@@ -10,7 +10,7 @@ related_capabilities:
   - CAP-DLV-workflow-envelopes
   - CAP-DLV-spec-bundles
   - CAP-HARN-agent-guidance
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

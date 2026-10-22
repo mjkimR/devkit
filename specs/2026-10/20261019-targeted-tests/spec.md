@@ -5,7 +5,7 @@ summary: 'Run only the tests a change needs: area targeting for just test, a dif
 status: completed
 created: 2026-10-19
 related_capabilities: []
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

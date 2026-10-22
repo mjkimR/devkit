@@ -5,8 +5,6 @@ scope: repo
 kind: suggestion
 category: missing-capability
 target: devkit.shared public adapter protocol and registration contract
-skill: spec
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

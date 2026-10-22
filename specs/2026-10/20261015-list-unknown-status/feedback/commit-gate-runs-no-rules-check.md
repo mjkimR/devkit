@@ -5,8 +5,6 @@ scope: unknown
 kind: friction
 category: docs-mismatch
 target: devkit gate status
-skill: spec-sync
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

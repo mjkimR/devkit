@@ -5,8 +5,6 @@ scope: repo
 kind: question
 category: unclear-instruction
 target: spec skill references/review-loop.md
-skill: spec
-agent: claude-code
 origin: agent
 severity: friction
 recurring: false

@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-repository-viewer
-feature: SPEC-repository-viewer
 status: resolved
 targets:
   - file: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md

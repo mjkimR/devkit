@@ -9,7 +9,7 @@ related_capabilities:
   - CAP-DLV-delivery-workflows
   - CAP-DLV-proposal-incubation
   - CAP-GOV-spec-rules
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

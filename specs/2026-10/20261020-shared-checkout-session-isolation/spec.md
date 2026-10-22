@@ -5,7 +5,7 @@ summary: Adds concise guidance for --no-worktree branches in shared checkouts, l
 status: completed
 created: 2026-10-20
 related_capabilities: [CAP-DLV-project-policy, CAP-WT-task-worktrees]
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

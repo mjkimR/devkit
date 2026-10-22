@@ -7,7 +7,7 @@ created: 2026-10-21
 related_capabilities:
   - CAP-INT-mcp-services
   - CAP-WT-task-worktrees
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-bugfix
 ---
 

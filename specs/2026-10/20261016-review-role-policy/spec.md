@@ -7,9 +7,8 @@ created: 2026-10-16
 related_capabilities:
   - CAP-DLV-delivery-workflows
   - CAP-HARN-agent-guidance
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
-workflow_hash: sha256:20b913108a194572244fd42f0587ce3fe7fecfb7610c8afb52fa6b35e79fb0e0
 ---
 
 # [SPEC-review-role-policy] Separate review roles and bound medium review repetition

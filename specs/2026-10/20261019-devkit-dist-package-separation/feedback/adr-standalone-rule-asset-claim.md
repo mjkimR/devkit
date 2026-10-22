@@ -5,8 +5,6 @@ scope: repo
 kind: question
 category: docs-mismatch
 target: ADR-dist-bundles-compatibility (section 3, harness guidance of the devkit bundle)
-skill: spec-specify
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

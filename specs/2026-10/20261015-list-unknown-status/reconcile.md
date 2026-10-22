@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-list-unknown-status
-feature: SPEC-list-unknown-status
 status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-lookup.md

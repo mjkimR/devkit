@@ -5,7 +5,7 @@ summary: "Define unsolicited decision recording, official documentation reads, H
 status: completed
 created: 2026-10-20
 related_capabilities: []
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

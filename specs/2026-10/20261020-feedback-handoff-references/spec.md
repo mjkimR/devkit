@@ -5,7 +5,7 @@ summary: Keep generic materials directory mentions intact and retain deleted env
 status: completed
 created: 2026-10-20
 related_capabilities: [CAP-DLV-proposal-incubation]
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-bugfix
 ---
 # [SPEC-feedback-handoff-references] Preserve generic and historical references during proposal handoff

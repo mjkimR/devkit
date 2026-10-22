@@ -7,7 +7,7 @@ created: 2026-10-20
 related_capabilities:
   - CAP-DLV-delivery-workflows
   - CAP-TRACE-code-entrypoints
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

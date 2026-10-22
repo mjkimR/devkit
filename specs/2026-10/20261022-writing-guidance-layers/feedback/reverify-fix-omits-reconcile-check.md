@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: docs-mismatch
 target: devkit workflow envelope reverify
-skill: spec-sync
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

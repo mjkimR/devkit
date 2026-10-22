@@ -5,7 +5,7 @@ summary: Gives Backlog a repository-owned roadmap of milestone documents ordered
 status: completed
 created: 2026-10-18
 related_capabilities: []
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

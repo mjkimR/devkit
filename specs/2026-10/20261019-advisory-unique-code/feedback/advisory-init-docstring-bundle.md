@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: docs-mismatch
 target: packages/devkit-advisory/src/devkit/advisory/__init__.py
-skill: spec-specify
-agent: claude-code
 origin: agent
 severity: noise
 recurring: false

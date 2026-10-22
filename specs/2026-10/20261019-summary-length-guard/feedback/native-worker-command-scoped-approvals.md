@@ -5,8 +5,6 @@ scope: upstream
 kind: friction
 category: missing-capability
 target: Codex native subagent exec_command sandbox for sibling worktrees
-skill: spec-delegate
-agent: codex
 origin: agent
 severity: workaround
 recurring: true

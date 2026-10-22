@@ -5,8 +5,6 @@ scope: bundle
 kind: friction
 category: context-overflow
 target: src/devkit_spec/bundle/skills/spec-delegate/SKILL.md
-skill: spec-delegate
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: missing-capability
 target: spec_proposal_report
-skill: spec-review-proposal
-agent: codex
 origin: agent
 severity: workaround
 recurring: false

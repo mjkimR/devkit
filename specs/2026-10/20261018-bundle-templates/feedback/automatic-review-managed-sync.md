@@ -5,8 +5,6 @@ scope: unknown
 kind: friction
 category: instruction-conflict
 target: Codex exec_command automatic approval review for devkit sync
-skill: spec
-agent: codex
 origin: agent
 severity: blocked
 recurring: false

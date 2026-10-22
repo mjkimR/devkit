@@ -14,6 +14,7 @@ from click.testing import CliRunner
 from devkit_dist.cli import COMMANDS
 from devkit_dist.cli import cli as devkit_cli
 from devkit_dist.features.distribution import load_bundle
+from spec_support import bundle_text
 
 from devkit_spec.features.documents import DocumentIndex
 
@@ -145,8 +146,8 @@ def test_the_docs_skeleton_is_opt_in_and_passes_the_rules(tmp_path: Path) -> Non
 def test_roadmap_template_and_guidance_are_packaged() -> None:
     template = (BUNDLE / "templates/milestone.md").read_text()
     assert "status: planned" in template and "depends_on: []" in template
-    backlog = (BUNDLE / "skills/spec/references/backlog.md.jinja").read_text()
-    selection = (BUNDLE / "skills/spec-next/references/next-work.md").read_text()
+    backlog = bundle_text.text("skills/spec/references/backlog.md")
+    selection = bundle_text.text("skills/spec-next/references/next-work.md")
     assert "--decomposed-from" in backlog and "[milestone completion](milestone-completion.md)" in backlog
     assert "devkit spec list milestone --all-namespaces -n 0" in selection
     assert (BUNDLE / "seed/docs/roadmap/README.md").is_file()

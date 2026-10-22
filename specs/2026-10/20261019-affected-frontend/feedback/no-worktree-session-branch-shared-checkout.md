@@ -5,8 +5,6 @@ scope: repo
 kind: friction
 category: other
 target: devkit-spec bundle skills/spec/references/git-policy.md (session without a worktree) and devkit worktree start --no-worktree
-skill: spec
-agent: claude-code
 origin: agent
 severity: workaround
 recurring: false

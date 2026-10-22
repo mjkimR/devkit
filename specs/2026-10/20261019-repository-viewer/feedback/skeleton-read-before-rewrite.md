@@ -5,8 +5,6 @@ scope: repo
 kind: change-request
 category: redundant-step
 target: packages/devkit-spec/src/devkit_spec/bundle/skills/spec-plan/SKILL.md
-skill: spec-plan
-agent: claude-code
 origin: user
 severity: workaround
 recurring: true

@@ -8,7 +8,7 @@ related_capabilities:
   - CAP-HARN-agent-guidance
   - CAP-DIST-content-packages
   - CAP-DLV-proposal-incubation
-related_stories: []
+related_usecases: []
 workflow: sdd-spec-feature
 ---
 

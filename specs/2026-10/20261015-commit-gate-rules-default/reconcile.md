@@ -1,6 +1,5 @@
 ---
 reconcile_id: REC-commit-gate-rules-default
-feature: SPEC-commit-gate-rules-default
 status: resolved
 targets:
   - file: docs/glossary.md
