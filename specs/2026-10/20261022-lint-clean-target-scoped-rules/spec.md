@@ -2,7 +2,7 @@
 id: SPEC-lint-clean-target-scoped-rules
 title: Scope target runs to the rules their targets can affect
 summary: Lets a targeted rules run, such as the workflow lint-clean check, skip whole-workspace rules whose inputs the targets cannot change, so devkit workflow next stops paying for a full Python analysis on documentation-only units.
-status: in-progress
+status: completed
 created: 2026-10-22
 related_capabilities: [CAP-GOV-rule-authoring, CAP-GOV-evaluation-lifecycle, CAP-GOV-rules-engine]
 related_usecases: []

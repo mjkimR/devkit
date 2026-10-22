@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-lint-clean-target-scoped-rules
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/governance/CAP-GOV-rule-authoring.md
     resolution: modified
@@ -22,7 +22,7 @@ targets:
   - §1 gains "Optional `inputs`": what to declare, the skip it enables, `None` as "runs in every run", the
     construction check (`RULES_DEFINITION_INVALID`, a loading error for a `BaseRule` package), the policy check of a
     protocol-only rule, and that `devkit rules explain` prints the declaration (AC-01, AC-02, AC-07).
-  - §2 names `ctx.targets`.
+  - §2 names `ctx.targets` and `ctx.relative_path` (`reconcile-check-01.yaml` P3).
   - §6 names `opened_files` and the three tests a declared rule carries (AC-06).
 - `CAP-GOV-evaluation-lifecycle`:
   - §1 adds the `inputs` validation to step 2, the scoping to step 3 and the scoped recheck to step 4.
