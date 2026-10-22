@@ -46,22 +46,27 @@ Option 3, because it keeps the gates complete (driver 1), gives the CLI, `lint-c
 behavior (driver 2) and is reachable from the rule test helper (driver 3):
 
 - After the phase filter, `evaluate_rules` skips a rule with declared `inputs` when `ctx.has_targets` is true,
-  `ctx.snapshot` is `None`, and no file of `ctx.changed_files` (the targets after `[rules] exclude`) matches one of its
-  patterns. A whole-workspace run (`has_targets` false) and every snapshot run evaluate every active rule.
+  `ctx.snapshot` is `None`, and no target matches one of its patterns. A whole-workspace run (`has_targets` false) and
+  every snapshot run evaluate every active rule.
+- Matching uses the targets as named and expanded, before `[rules] exclude` (kept on `RuleContext` beside
+  `changed_files`): the target-ignoring rules do not honor exclusions, so an excluded Python target can still change
+  their findings.
 - A target that is the project configuration `.devkit/config.toml` disables the skip for that run: `[rules]`
   settings and exclusions can change any rule's findings (driver 4).
-- The autofix pass and the convergence recheck use the same reduced rule list. Policy validation still covers every
-  loaded rule, so a settings error of a skipped rule is reported as today.
+- The autofix pass uses the reduced rule list; the convergence recheck decides again against the targets plus the
+  files the fixes modified, so a fix that writes a skipped rule's input is rechecked by it. Policy validation still
+  covers every loaded rule, so a settings error of a skipped rule is reported as today.
 - Skipped rule IDs are returned on `EvaluationResult.skipped` (and so on `ProjectRun`) and logged at `INFO`
   (visible under `-v`); default stdout and the JSON result do not change, because a skip changes no next step.
-- An excluded target counts as no target: `[rules] exclude` already means no rule targets it.
 
 ## 5. Consequences
 
-- Positive: `lint-clean` on a documentation-only unit drops from about 3.6 s to about 0.9 s in process
-  (`materials/spike-evidence.md`); `devkit rules check <docs>` gains the same.
-- Negative: a documentation-only targeted run no longer reports pre-existing violations of a skipped
-  target-ignoring rule in files outside its targets; the commit gate, CI and full runs still do.
+- Positive: `devkit workflow next` on a documentation-only spec unit drops from 3.65 s to about 1.4 s
+  (`materials/spike-evidence.md` §5); `devkit rules check <docs>` gains the same.
+- Negative: a documentation-only targeted run no longer reports violations of a skipped target-ignoring rule in
+  files outside its targets, whether pre-existing or introduced by uncommitted work. For `lint-clean` at the
+  build-verify and fix-verify exits this includes the unit's own code, which lives outside the unit directory; the
+  `rules-check` commit gate on each Development commit, `lint-ci-clean` and full runs still report it.
 - Negative: the commit gate keeps its present cost.
 - Follow-up: scoping snapshot runs needs the deleted paths treated as matching targets; triggered when the commit
   gate's cost becomes a measured problem.
@@ -69,6 +74,7 @@ behavior (driver 2) and is reachable from the rule test helper (driver 3):
 ## 6. Confirmation
 
 - Evaluator tests (`packages/devkit/tests/`): skip with explicit non-matching targets; run with a matching target, a
-  `.devkit/config.toml` target, no targets, and a snapshot context; undeclared rule always runs; `skipped` lists the
-  skipped IDs; fix and recheck use the reduced list.
+  matching target `[rules] exclude` removes, a `.devkit/config.toml` target, no targets, and a snapshot context;
+  undeclared rule always runs; `skipped` lists the skipped IDs; a recheck after a fix that modified a matching file
+  evaluates the skipped rule.
 - The equivalence comparison of the acceptance outcomes on this repository.

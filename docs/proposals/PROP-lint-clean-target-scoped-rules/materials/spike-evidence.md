@@ -66,12 +66,24 @@ severity).
 | spec unit + `packages/devkit/pyproject.toml` | 3.32 s | 1.67 s | yes | `unique-code`, `usecase-boundaries` |
 | `docs` | 3.69 s | 3.67 s | yes | none (`docs/materials/**/*.py` exists) |
 
-On this clean base the scoped and unscoped results are identical. The difference scoping introduces is limited to
-findings a skipped target-ignoring rule reports for files outside the targets: a pre-existing architecture violation
-in a Python file is reported by a full run and by a targeted run that names any Python file, and no longer by a
-documentation-only targeted run.
+On this clean base the scoped and unscoped results are identical, which only shows that scoping hides nothing here;
+the seeded tests of the acceptance outcomes cover the difference. That difference is limited to findings a skipped
+target-ignoring rule reports for files outside the targets: an architecture violation in a Python file, pre-existing
+or introduced by the unit's own uncommitted code, is reported by a full run, by every snapshot run (commit gate, CI)
+and by a targeted run that names any Python file, and no longer by a documentation-only targeted run such as
+`lint-clean` at the build-verify exit.
 
-## 5. Overlap with `PROP-rule-shared-python-ast`
+## 5. Cold measurement
+
+The section 4 scoped runs followed an unscoped run in one warm process. Measured cold instead, each run a fresh
+interpreter on Apple M4 Pro, median of three:
+
+| Command | real |
+| --- | --- |
+| `.venv/bin/devkit workflow next --unit specs/2026-10/20261022-writing-style-rules` | 3.65 s |
+| the same command in a fresh process with the three rules' skip simulated in `evaluate_rules` | 1.37 s |
+
+## 6. Overlap with `PROP-rule-shared-python-ast`
 
 That proposal shares one `ast.parse` per file through `WorkspaceCache`; it changes how the Python rules read, not
 whether they run. The two touch the same three rule modules (here: one constructor argument each) and compose: after

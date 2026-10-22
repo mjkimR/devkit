@@ -41,16 +41,22 @@ about what a rule reads, and rules come from built-ins, bundles and plugin direc
    where one suffices.
 5. **Engine-inferred inputs** (from the `find_files` calls a rule makes): the rules that matter read outside the cache
    (`rglob`), and inference needs a run, which is the cost to avoid.
+6. **A guard inside each rule** (`return []` when the run has targets, no snapshot and no matching target): no engine
+   change, but the snapshot, configuration and exclusion conditions are copied into three rules of two bundles and
+   into every later rule, `devkit rules explain` cannot show why a rule did not run, and the engine cannot report
+   what it skipped.
 
 ## 4. Decision Outcome
 
 Option 3, because it is the only one that names both the extension and the exact configuration files (driver 3) in
-the grammar authors already use (driver 4):
+the grammar authors already use (driver 4), and keeps the skip conditions in one place, unlike option 6:
 
 - `BaseRule` gains `inputs: tuple[str, ...] | None = None`: the workspace-relative patterns (`match_path` grammar,
   checked with `validate_pattern`) of every file whose content can change the rule's findings. It is not added to
   the `Rule` protocol; the engine reads it with `getattr`, as it reads `guide` and `promote_to`, so rules that do not
-  subclass `BaseRule` keep satisfying the protocol.
+  subclass `BaseRule` keep satisfying the protocol. The engine's policy validation checks the attribute of every
+  loaded rule, so a protocol-only rule with a string, a list or an empty value fails the run with
+  `RULES_DEFINITION_INVALID` before any rule runs.
 - `None` (undeclared) means any file can affect the rule: it runs in every targeted run, exactly as today
   (drivers 1 and 2). An empty tuple or an invalid pattern raises `RuleDefinitionError` (`RULES_DEFINITION_INVALID`)
   at construction, so a rule cannot silence itself by accident.
@@ -65,13 +71,16 @@ the grammar authors already use (driver 4):
 - Positive: a documentation-only targeted run skips the three rules; the declaration is local to the rule that knows
   what it reads.
 - Negative: a declaration that omits a file the rule reads makes a targeted run on that file miss the rule's findings
-  until a full run, the commit gate or CI reports them. The rule's own tests guard it (Confirmation).
+  until a full run, the commit gate or CI reports them. Each declared rule's completeness test guards it
+  (Confirmation).
 - Follow-up: declaring the Markdown rules (`RULE-document-reference` 0.78 s, the spec rules) would speed
   Python-only targeted runs such as `devkit rules check <file.py>`; triggered when such runs become a measured cost.
 
 ## 6. Confirmation
 
-- Tests of `BaseRule` construction: an empty tuple and each invalid pattern form raise `RULES_DEFINITION_INVALID`.
-- Each declared rule's `tests/test_rule.py`: a documentation-only target set does not evaluate it, and a seeded
-  violation in a target matching each declared pattern is reported.
+- Tests of `BaseRule` construction: an empty tuple and each invalid pattern form raise `RULES_DEFINITION_INVALID`;
+  an engine test shows the same code for a protocol-only rule with a malformed `inputs`.
+- Each declared rule's `tests/test_rule.py`: a documentation-only target set does not evaluate it, a seeded violation
+  in a target matching each declared pattern is reported, and every workspace file the rule opens during a
+  whole-workspace check of a fixture matches one of its `inputs` (an `open` audit hook or an equivalent patch).
 - `devkit rules explain RULE-architecture` shows the declaration.
