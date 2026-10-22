@@ -40,11 +40,14 @@ and devkit-starter bundles use the keyword form today.
 Option 3, decided by the user.
 
 - A playbook's `aliases` declares previous or alternate identifiers of that playbook, validated as identifiers
-  rather than free English text. What exactly a playbook alias identifies is the open Planning question
-  `q1` of `envelopes/worker-02.yaml`; the recommended answer is a previous manifest asset ID in the same bundle, so
-  `devkit playbook get <bundle>/<alias>` returns the canonical playbook and reports the alias it was reached through.
+  rather than free English text. What exactly a playbook alias identifies is the open Planning question `q1` of
+  this turn's worker envelope. The recommended answer: a previous manifest asset ID in the same bundle (the
+  `[a-z][a-z0-9-]*` slug grammar, not frontmatter `name`), resolved by `devkit playbook get <bundle>/<alias>`; an
+  exact asset ID always wins; the alias resolves only when exactly one effective playbook header of that bundle
+  (overrides included) declares it, otherwise get refuses with a stable code; the result reports the canonical `id`
+  and the alias used, and the "no alias lookup, no fallback" sentence of the resolution contract is amended.
 - Aliases are unique against the bundle's playbook IDs and the other playbooks' aliases, checked when the bundle
-  manifest is validated.
+  manifest is validated, and again over effective headers at retrieval because an override can change them.
 - `devkit playbook search` indexes only `name` and `description`; aliases are not ranked.
 - The bundled playbooks drop their keyword lists, moving any phrase worth keeping into the description.
 
