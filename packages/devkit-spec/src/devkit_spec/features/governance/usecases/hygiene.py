@@ -72,7 +72,8 @@ def milestone_members(root: Path) -> list[AdvisoryError]:
             for d in index.documents
             if is_unit_anchor(d)
             and d.kind is Kind.PROPOSAL
-            and d.frontmatter.get("milestone") == milestone.id
+            and isinstance(d.frontmatter.get("milestone"), str)
+            and index.canonical_id(d.frontmatter["milestone"].strip()) == milestone.id
             and not (d.kind is Kind.PROPOSAL and d.status.lower() == "rejected")
         ]
         if not members:

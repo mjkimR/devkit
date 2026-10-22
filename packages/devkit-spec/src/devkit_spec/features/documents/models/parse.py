@@ -6,6 +6,11 @@ its ``id`` (or, for a reconcile file, ``reconcile_id``) is a well-formed ID;
 ``id``, ``reconcile_id`` and ``status`` must be strings. Body references are
 `` `ID` `` code spans and ``[ID]`` brackets in prose (``markdown.visible_lines``);
 a heading line ``# ... ID ...`` does not reference the document's own ID.
+
+``aliases`` declares previous or alternate IDs of the document itself
+(``ADR-document-id-aliases``): a list of full IDs with the document's own
+prefix, never its own ID, never repeated and never a legacy date- or
+number-based form. A malformed item is left out and recorded as an alias issue.
 """
 
 from __future__ import annotations
@@ -17,9 +22,10 @@ import yaml
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import load_header, locate
 
-from devkit_spec.features.documents.models.ids import ID_SOURCE, Kind, kind_of
+from devkit_spec.features.documents.models.ids import ID_SOURCE, Kind, is_id, is_legacy_id, kind_of
 from devkit_spec.features.documents.models.markdown import visible_lines
 from devkit_spec.features.documents.models.model import (
+    ALIASES,
     BODY,
     LIST_FIELDS,
     PROVENANCE_FIELDS,
@@ -55,8 +61,10 @@ def parse_document(path: str, text: str) -> Document | None:
         return None
     document = Document(id=document_id, path=path, kind=kind, frontmatter=data)
     fields = [name for name in (*LIST_FIELDS, *SCALAR_FIELDS, *PROVENANCE_FIELDS) if name in data]
-    nodes = _field_nodes(block.header) if fields else {}
-    line_starts = _line_starts(text) if fields else []
+    nodes = _field_nodes(block.header) if fields or ALIASES in data else {}
+    line_starts = _line_starts(text) if fields or ALIASES in data else []
+    if ALIASES in data:
+        _aliases(document, data[ALIASES], nodes.get(ALIASES), line_starts, header_line)
     for name in fields:
         if name in {"decomposed_from", "supersedes"} and not is_unit_anchor(document):
             continue
@@ -130,6 +138,50 @@ def _field_references(
             )
         )
     return refs
+
+
+def _aliases(document: Document, value: Any, node: yaml.Node | None, line_starts: list[int], header_line: int) -> None:
+    """Keep the well-formed ``aliases`` items of ``document`` and record an issue for each malformed one."""
+    line = header_line + (node.start_mark.line if node is not None else 0)
+    if not isinstance(value, list) or not isinstance(node, yaml.SequenceNode):
+        document.alias_issues.append(Issue(line, "aliases must be a list of IDs"))
+        return
+    prefix = document.id.split("-", 1)[0] + "-"
+    kept: list[str] = []
+    spans: list[tuple[int, int]] = []
+    for item, item_node in zip(value, node.value, strict=True):
+        item_line = header_line + item_node.start_mark.line
+        if not isinstance(item, str):
+            document.alias_issues.append(Issue(item_line, "aliases must contain string IDs"))
+            continue
+        problem = _alias_problem(document.id, prefix, item, kept)
+        if problem is not None:
+            document.alias_issues.append(Issue(item_line, problem))
+            continue
+        start, end = item_node.start_mark, item_node.end_mark
+        kept.append(item)
+        spans.append(
+            (
+                line_starts[header_line + start.line - 1] + start.column,
+                line_starts[header_line + end.line - 1] + end.column,
+            )
+        )
+    document.aliases = tuple(kept)
+    document.alias_spans = tuple(spans)
+
+
+def _alias_problem(document_id: str, prefix: str, item: str, kept: list[str]) -> str | None:
+    if not is_id(item):
+        return f"aliases must contain full document IDs, got {item!r}"
+    if is_legacy_id(item):
+        return f"alias {item} has a date- or number-based form; use a slug ID"
+    if not item.startswith(prefix):
+        return f"alias {item} must have the document's own prefix {prefix}"
+    if item == document_id:
+        return f"alias {item} is the document's own ID"
+    if item in kept:
+        return f"alias {item} is repeated"
+    return None
 
 
 def _body_references(document: Document, text: str, start: int, first_line: int) -> list[Reference]:

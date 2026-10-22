@@ -13,19 +13,19 @@ def milestone_id(root: Path, value: str | None) -> str | None:
         return None
     value = value.strip()
     index = DocumentIndex.load(root)
-    matches = index.by_id.get(value, [])
+    found = index.canonical(value)
     if (
         not value.startswith("MS-")
-        or len(matches) != 1
-        or matches[0].kind is not Kind.MILESTONE
-        or matches[0].path != f"docs/roadmap/{value}.md"
+        or found is None
+        or found[0].kind is not Kind.MILESTONE
+        or found[0].path != f"docs/roadmap/{found[0].id}.md"
     ):
         raise ArgumentError(
             f"--milestone {value!r} must name one existing global milestone",
             target_files=["--milestone"],
             fix="Pass an MS- ID shown by devkit spec list milestone, or omit --milestone",
         )
-    return value
+    return found[0].id
 
 
 def decomposition_source(root: Path, value: str | None, slug: str) -> str | None:

@@ -166,3 +166,17 @@ def test_namespace_documents_link_like_global_ones(tmp_path: Path) -> None:
     ]
     assert _found(check(RULE, tmp_path, fix=True)) == []
     assert "stories: [US-api-login]\n" in (tmp_path / cap).read_text()
+
+
+def test_links_written_with_an_alias_count_without_a_duplicate_fix(tmp_path: Path) -> None:
+    other = "docs/stories/governance/US-other.md"
+    files = {
+        STORY: _doc("US-test-story", "aliases: [US-old-story]\ncapabilities:\n  - CAP-TEST-contract\n"),
+        CAP: _doc("CAP-TEST-contract", "aliases: [CAP-TEST-old]\nstories:\n  - US-old-story\n"),
+        other: _doc("US-other", "capabilities: [CAP-TEST-old]\n"),
+    }
+    found = _found(check(RULE, tmp_path, files))
+    assert found == [(CAP, 1, f"CAP-TEST-contract is missing the reverse story link to US-other ({other})")]
+    check(RULE, tmp_path, fix=True)
+    text = (tmp_path / CAP).read_text()
+    assert text.count("US-test-story") == 0 and "  - US-old-story\n  - US-other\n" in text

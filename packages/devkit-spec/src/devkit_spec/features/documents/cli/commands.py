@@ -2,10 +2,13 @@
 
 Text output (paths are relative to the workspace root):
 
-- ``resolve``: one ``[DOCUMENT: <id> kind= status= path=]`` line per resolved ID; unresolved or duplicated IDs
-  are errors after the lines that did resolve.
+- ``resolve``: one ``[DOCUMENT: <id> kind= status= path=]`` line per resolved ID, with ``alias=<alias>`` when the
+  ID given is an alias of ``<id>`` (JSON: ``alias``, ``null`` for a declared ID); unresolved or duplicated IDs are
+  errors after the lines that did resolve.
 - ``refs``: ``[REF: <id> path= status= fields= count=]`` per referenced (``--direction out``) or referencing
-  (``--direction in``) document, in ID order; ``path=-`` is a reference to an ID no document declares.
+  (``--direction in``) document, in ID order; ``path=-`` is a reference to an ID no document declares. References
+  written with an alias count as references to its document: ``--direction out`` groups them under the canonical
+  ID and ``--direction in`` includes them.
 - ``list``: ``[DOCUMENT: <id> kind= status= path= tasks= title=]`` per document in kind, then ID order (feedback by
   severity first); ``tasks`` is ``<checked>/<total>`` of a spec's ``tasks.md``. Proposal lines add ``task_kind=``,
   ``planning_effort=`` and ``dev_effort=`` after ``tasks=``; feedback lines add ``severity=``,
@@ -82,15 +85,22 @@ def resolve_cmd(ids: tuple[str, ...], workspace_root: str | None, output_format:
     if is_json(output_format):
         echo_json(
             {
-                "documents": [document.to_dict() for document in found],
+                "documents": [{**document.to_dict(), "alias": alias} for document, alias in found],
                 "errors": [error.to_dict() for error in errors],
                 "notices": [notice.to_dict() for notice in notices],
             }
         )
     else:
-        for document in found:
+        for document, alias in found:
             click.echo(
-                sentinel("DOCUMENT", document.id, kind=document.kind, status=document.status, path=document.path)
+                sentinel(
+                    "DOCUMENT",
+                    document.id,
+                    kind=document.kind,
+                    status=document.status,
+                    path=document.path,
+                    **({"alias": alias} if alias else {}),
+                )
             )
     echo_notices(notices)
     exit_on_problems(errors)

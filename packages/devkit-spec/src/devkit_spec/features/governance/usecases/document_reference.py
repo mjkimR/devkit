@@ -8,12 +8,18 @@ Checks every current document that is not a material (``rules.is_material``):
 - a reference to an ID no document declares, or that several declare;
 - a ``[ID]`` prose reference: the canonical form is `` `ID` `` (fixable);
 - a ``PROP-<slug>`` reference after the proposal was handed off to the only ``SPEC-<slug>`` (fixable);
+- a reference written with another document's alias (fixable), except in decision records (``ADR``, ``PADR``),
+  which name a retired ID on purpose; a document mentioning its own alias is not reported;
 - a relative Markdown link to a document that has an ID;
-- an ID declared by several documents, and a ``PROP-<slug>`` beside a ``SPEC-<slug>`` (handoff removes the
-  proposal, so the pair is an unfinished handoff or a reused slug).
+- an ID declared by several documents, and a ``PROP-<slug>`` beside a ``SPEC-<slug>`` or a ``SPEC-<slug>`` alias
+  (handoff removes the proposal, so the pair is an unfinished handoff or a reused slug);
+- identity checks over every targeted document, materials and completed specs included: a malformed ``aliases``
+  field, and an alias that another document declares as its ID or that several documents declare.
 
-The fix converts ``[ID]`` to `` `ID` `` and rewrites handed-off proposal references, never the ``proposal``
-provenance field, in current documents only (within the targets, when the run names any).
+References resolve through ``DocumentIndex.canonical``: a declared ID always wins, an alias only when exactly one
+document declares it. The fix converts ``[ID]`` to `` `ID` ``, rewrites handed-off proposal references to the
+canonical spec and alias references to the canonical ID, never the ``proposal`` provenance field, in current
+documents only (within the targets, when the run names any).
 """
 
 from __future__ import annotations
@@ -47,20 +53,38 @@ EXPECTED_PREFIX = {
 
 
 def _handed_off(index: DocumentIndex, target: str) -> str | None:
-    """``SPEC-<slug>`` for an undeclared ``PROP-<slug>`` when exactly one such spec exists."""
+    """The canonical ID of the one ``SPEC-<slug>`` (declared or an alias) for a ``PROP-<slug>`` no document declares,
+    so one fix pass converges."""
     slug = target.removeprefix("PROP-")
-    if slug == target or index.by_id.get(target) or len(index.by_id.get(f"SPEC-{slug}", [])) != 1:
+    if slug == target or index.declares(target):
         return None
-    return f"SPEC-{slug}"
+    spec = index.canonical(f"SPEC-{slug}")
+    return spec[0].id if spec is not None else None
 
 
 def _resolve_problem(index: DocumentIndex, target: str) -> str | None:
-    declared = index.by_id.get(target, [])
-    if len(declared) == 1:
+    if index.canonical(target) is not None:
         return None
-    if not declared:
-        return f"no document has the ID {target}"
-    return f"{target} is declared by {len(declared)} documents: {', '.join(d.path for d in declared)}"
+    declared = index.by_id.get(target, [])
+    if declared:
+        return f"{target} is declared by {len(declared)} documents: {', '.join(d.path for d in declared)}"
+    aliased = index.by_alias.get(target, [])
+    if aliased:
+        return f"{target} is an alias declared by {len(aliased)} documents: {', '.join(d.path for d in aliased)}"
+    return f"no document has the ID {target}"
+
+
+def _alias_target(index: DocumentIndex, document: Document, target: str) -> str | None:
+    """The canonical ID when ``target`` is a resolving alias of another document, else ``None``."""
+    found = index.canonical(target)
+    if found is None or found[1] is None or found[0] is document:
+        return None
+    return found[0].id
+
+
+def is_decision_record(document: Document) -> bool:
+    """ADRs and PADRs name a retired ID on purpose: an alias reference there resolves silently."""
+    return document.kind in (Kind.DECISION, Kind.PROPOSAL_DECISION)
 
 
 class DocumentReferenceRule(BaseRule):
@@ -106,7 +130,7 @@ class DocumentReferenceRule(BaseRule):
                             "Give each document its own full ID, then update the references to it",
                         )
             slug = document_id.removeprefix("PROP-")
-            spec = index.by_id.get(f"SPEC-{slug}") if slug != document_id else None
+            spec = index.declares(f"SPEC-{slug}") if slug != document_id else None
             if spec:
                 for document in declared:
                     if ctx.is_file_targeted(document.path):
@@ -117,6 +141,7 @@ class DocumentReferenceRule(BaseRule):
                             " a proposal and a spec cannot share a slug",
                             "Remove the proposal if it was already handed off, or rename it to an unused slug",
                         )
+        self._identity(ctx, index, add)
         for document in index.documents:
             if is_material(document) or not reportable(ctx, index, document):
                 continue
@@ -137,7 +162,7 @@ class DocumentReferenceRule(BaseRule):
                     )
             self._links(ctx, index, document, add)
         graph = {
-            d.id: [ref.target for ref in d.references if ref.field == "depends_on"]
+            d.id: [index.canonical_id(ref.target) for ref in d.references if ref.field == "depends_on"]
             for d in index.documents
             if d.kind is Kind.MILESTONE
         }
@@ -171,6 +196,39 @@ class DocumentReferenceRule(BaseRule):
         found.extend(self._glossary(ctx, index))
         return found
 
+    def _identity(self, ctx: RuleContext, index: DocumentIndex, add: Add) -> None:
+        """Alias shape issues and alias collisions, on every targeted document (materials and history included)."""
+        for document in index.documents:
+            if ctx.is_file_targeted(document.path):
+                for issue in document.alias_issues:
+                    add(
+                        document, issue.line, issue.message, "Declare previous IDs of this document with its own prefix"
+                    )
+        for alias, involved in index.alias_collisions():
+            unique = list({d.path: d for d in involved}.values())
+            paths = ", ".join(d.path for d in unique)
+            for document in unique:
+                if ctx.is_file_targeted(document.path):
+                    add(
+                        document,
+                        1,
+                        f"alias {alias} collides: it is declared by {paths}",
+                        "Keep the ID or alias on one document only; a declared ID always wins over an alias",
+                    )
+
+    def _alias(self, index: DocumentIndex, document: Document, ref: Reference, historical: bool, add: Add) -> None:
+        canonical = _alias_target(index, document, ref.target)
+        if canonical is None or historical or is_decision_record(document):
+            return
+        add(
+            document,
+            ref.line,
+            f"{ref.target} is an alias of {canonical}; reference `{canonical}`",
+            f"Run `{FIX_COMMAND}` to replace it with {canonical}",
+            column=ref.column,
+            fixable=True,
+        )
+
     def _reference(self, index: DocumentIndex, document: Document, ref: Reference, historical: bool, add: Add) -> None:
         if not is_id(ref.target):
             add(
@@ -195,6 +253,8 @@ class DocumentReferenceRule(BaseRule):
                     )
                 else:
                     add(document, ref.line, problem, "Use one exact proposal/spec anchor ID")
+            else:
+                self._alias(index, document, ref, historical, add)
             return
         prefix = EXPECTED_PREFIX.get(ref.field)
         if prefix and not ref.target.startswith(prefix):
@@ -217,6 +277,7 @@ class DocumentReferenceRule(BaseRule):
             )
         problem = _resolve_problem(index, ref.target)
         if problem is None:
+            self._alias(index, document, ref, historical, add)
             return
         spec = _handed_off(index, ref.target)
         if spec is not None and not historical:
@@ -286,6 +347,8 @@ class DocumentReferenceRule(BaseRule):
             for match in re.finditer(rf"`({ID_SOURCE})`|\[({ID_SOURCE})\]", owner):
                 target = match.group(1) or match.group(2)
                 problem = _resolve_problem(index, target)
+                if problem is None and (canonical := index.canonical_id(target)) != target:
+                    problem = f"Owner {target} is an alias of {canonical}; name `{canonical}`"
                 if problem:
                     found.append(
                         Violation(
@@ -307,6 +370,8 @@ class DocumentReferenceRule(BaseRule):
             mapping: dict[str, str] = {}
             for ref in document.references:
                 spec = _handed_off(index, ref.target)
+                if spec is None and not is_decision_record(document):
+                    spec = _alias_target(index, document, ref.target)
                 if spec is not None:
                     if ref.field == "depends_on" and is_unit_anchor(document) and target_problem(index, spec):
                         continue

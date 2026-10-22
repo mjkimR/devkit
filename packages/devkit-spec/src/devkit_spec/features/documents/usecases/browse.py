@@ -226,8 +226,8 @@ class _RefGroup:
 
     @classmethod
     def of(cls, index: DocumentIndex, other: str, references: list[Reference]) -> _RefGroup:
-        declared = index.by_id.get(other, [])
-        return cls(other, declared[0] if len(declared) == 1 else None, references)
+        found = index.canonical(other)
+        return cls(other, found[0] if found is not None else None, references)
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -239,17 +239,18 @@ class _RefGroup:
 
 
 class ResolveDocumentsUseCase(BaseUseCase):
-    """ResolveDocuments execution boundary."""
+    """ResolveDocuments execution boundary: each resolved document with the alias it was named by (``None`` for its
+    declared ID)."""
 
     def execute(
         self, root: Path, ids: tuple[str, ...]
-    ) -> tuple[list[Document], list[AdvisoryError], Sequence[AdvisoryError]]:
+    ) -> tuple[list[tuple[Document, str | None]], list[AdvisoryError], Sequence[AdvisoryError]]:
         index = DocumentIndex.load(root)
-        found: list[Document] = []
+        found: list[tuple[Document, str | None]] = []
         errors: list[AdvisoryError] = []
         for document_id in ids:
             try:
-                found.append(index.resolve(document_id))
+                found.append(index.lookup(document_id))
             except AdvisoryError as error:
                 errors.append(error)
         return found, errors, index.problems

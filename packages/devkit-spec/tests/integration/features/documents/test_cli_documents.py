@@ -384,3 +384,40 @@ def test_feedback_resolution_status_filter(docs: Path, write: Write, status: str
     result = _spec("list", "feedback", "--status", status, "--format", "json", workspace=docs)
     assert result.exit_code == 0
     assert [d["id"] for d in json.loads(result.stdout)["documents"]] == [f"FB-{status}"]
+
+
+@pytest.fixture
+def aliased(workspace: Path, write: Write) -> Path:
+    write("docs/capabilities/core/CAP-CORE-new.md", _doc("CAP-CORE-new", status="active", aliases="[CAP-CORE-old]"))
+    write("docs/stories/core/US-r.md", _doc("US-r", "`CAP-CORE-old` and `CAP-CORE-new`\n", status="active"))
+    write("docs/stories/core/US-s.md", _doc("US-s", "`CAP-CORE-old`\n", status="active"))
+    return workspace
+
+
+def test_resolve_an_alias(aliased: Path) -> None:
+    result = _spec("resolve", "CAP-CORE-old", "CAP-CORE-new", workspace=aliased)
+    assert result.exit_code == 0 and result.stderr == ""
+    path = "docs/capabilities/core/CAP-CORE-new.md"
+    assert result.stdout.splitlines() == [
+        f"[DOCUMENT: CAP-CORE-new kind=capability status=active path={path} alias=CAP-CORE-old]",
+        f"[DOCUMENT: CAP-CORE-new kind=capability status=active path={path}]",
+    ]
+    payload = json.loads(_spec("resolve", "CAP-CORE-old", "CAP-CORE-new", "--format", "json", workspace=aliased).stdout)
+    assert [(d["id"], d["alias"]) for d in payload["documents"]] == [
+        ("CAP-CORE-new", "CAP-CORE-old"),
+        ("CAP-CORE-new", None),
+    ]
+    assert payload["notices"] == []
+
+
+def test_refs_with_aliases(aliased: Path) -> None:
+    incoming = _spec("refs", "CAP-CORE-new", "--direction", "in", "--format", "json", workspace=aliased)
+    items = json.loads(incoming.stdout)["items"]
+    assert [(item["id"], len(item["references"])) for item in items] == [("US-r", 2), ("US-s", 1)]
+    outgoing = _spec("refs", "US-r", "--format", "json", workspace=aliased)
+    items = json.loads(outgoing.stdout)["items"]
+    assert [(item["id"], item["path"], len(item["references"])) for item in items] == [
+        ("CAP-CORE-new", "docs/capabilities/core/CAP-CORE-new.md", 2)
+    ]
+    by_alias = _spec("refs", "CAP-CORE-old", "--direction", "in", "--format", "json", workspace=aliased)
+    assert json.loads(by_alias.stdout)["id"] == "CAP-CORE-new"

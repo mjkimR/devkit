@@ -255,12 +255,12 @@ def single_file(root: Path, slug: str) -> Path:
 
 
 def check_spec_conflict(index: DocumentIndex, slug: str) -> None:
-    """Raise ``ProposalSlugConflictError`` when a document declares ``SPEC-<slug>``.
+    """Raise ``ProposalSlugConflictError`` when a document declares ``SPEC-<slug>`` as its ID or an alias.
 
     A broken document is a problem of the index, not a conflict, so it never blocks a proposal.
     """
     spec_id = f"SPEC-{slug}"
-    found = index.by_id.get(spec_id, [])
+    found = index.declares(spec_id)
     if found:
         path = found[0].path
         raise ProposalSlugConflictError(
@@ -691,7 +691,7 @@ class CreateProposalDecisionUseCase(BaseUseCase):
                 f" --unit docs/proposals/PROP-{slug} attaches one), or wait until that branch is merged and removed",
             )
         path = bundle / DECISIONS / f"{padr_id}.md"
-        existing = [document.path for document in DocumentIndex.load(root).by_id.get(padr_id, [])]
+        existing = [document.path for document in DocumentIndex.load(root).declares(padr_id)]
         if path.exists() and path.relative_to(root).as_posix() not in existing:
             existing.append(path.relative_to(root).as_posix())
         if existing:

@@ -244,3 +244,127 @@ def test_glossary_compact_empty_cells_keep_owner_and_following_rows(tmp_path: Pa
         ("docs/glossary.md", 5, "no document has the ID ADR-no-border"),
         ("docs/glossary.md", 7, "no document has the ID ADR-extra"),
     ]
+
+
+def _aliased(document_id: str, aliases: str, body: str = "", header: str = "", status: str = "active") -> str:
+    return _doc(document_id, body, f"aliases: [{aliases}]\n{header}", status)
+
+
+def test_alias_references_are_fixed_in_current_documents(tmp_path: Path) -> None:
+    files = {
+        "docs/new.md": _aliased("US-new", "US-old", "Formerly `US-old`.\n"),
+        "docs/adr-new.md": _aliased("ADR-new", "ADR-old"),
+        "docs/cap.md": _doc("CAP-A-a", "See [US-old] and `ADR-old`.\n", "stories:\n  - 'US-old'\n"),
+    }
+    violations = check(RULE, tmp_path, files)
+    assert {(v.file, v.message, v.fixable) for v in violations} == {
+        ("docs/cap.md", "US-old is an alias of US-new; reference `US-new`", True),
+        ("docs/cap.md", "prose reference US-old must be written `US-old`, not [US-old]", True),
+        ("docs/cap.md", "ADR-old is an alias of ADR-new; reference `ADR-new`", True),
+    }
+    assert sum(v.message.startswith("US-old is an alias") for v in violations) == 2
+    fixed = check(RULE, tmp_path, fix=True)
+    assert _found(fixed) == []
+    text = (tmp_path / "docs/cap.md").read_text()
+    assert "stories:\n  - 'US-new'\n" in text and text.endswith("See `US-new` and `ADR-new`.\n")
+    # A self-mention of a retired ID is deliberate: neither reported nor rewritten.
+    assert (tmp_path / "docs/new.md").read_text() == files["docs/new.md"]
+    assert check(RULE, tmp_path) == []
+
+
+def test_alias_references_in_history_and_decision_records_stay(tmp_path: Path) -> None:
+    files = {
+        "docs/new.md": _aliased("US-new", "US-old"),
+        "specs/2026-10/20261001-done/spec.md": _doc("SPEC-done", "`US-old`\n", status="completed"),
+        "docs/roadmap/MS-done.md": _doc("MS-done", "`US-old`\n", status="done"),
+        "docs/decisions/2026-10/20261001-x.md": _doc("ADR-x", "`US-old`\n", status="accepted"),
+        "docs/proposals/PROP-p/decisions/PADR-p.md": _doc("PADR-p", "`US-old`\n", status="draft"),
+        "docs/proposals/PROP-p/proposal.md": _doc("PROP-p", status="draft"),
+    }
+    assert check(RULE, tmp_path, files) == []
+    check(RULE, tmp_path, fix=True)
+    for name, text in files.items():
+        assert (tmp_path / name).read_text() == text
+
+
+def test_relation_field_typing_is_kept_for_aliases(tmp_path: Path) -> None:
+    files = {
+        "docs/new.md": _aliased("CAP-A-new", "CAP-A-old"),
+        "docs/story.md": _doc("US-s", header="stories: [CAP-A-old]\n"),
+    }
+    assert _found(check(RULE, tmp_path, files)) == [("docs/story.md", 4, "stories takes US- IDs, got CAP-A-old")]
+
+
+def test_alias_shape_and_collisions_are_identity_checks(tmp_path: Path) -> None:
+    files = {
+        "docs/materials/m.md": _aliased("MAT-m", "MAT-old, CAP-A-x", "`US-gone` `MAT-old`\n"),
+        "docs/materials/n.md": _aliased("MAT-n", "MAT-old"),
+        "docs/a.md": _aliased("CAP-A-a", "CAP-A-b"),
+        "docs/b.md": _doc("CAP-A-b"),
+        "docs/ref.md": _doc("US-r", "`MAT-old`\n"),
+    }
+    found = _found(check(RULE, tmp_path, files))
+    assert ("docs/materials/m.md", 4, "alias CAP-A-x must have the document's own prefix MAT-") in found
+    collision = "alias MAT-old collides: it is declared by docs/materials/m.md, docs/materials/n.md"
+    assert ("docs/materials/m.md", 1, collision) in found and ("docs/materials/n.md", 1, collision) in found
+    shadowed = "alias CAP-A-b collides: it is declared by docs/b.md, docs/a.md"
+    assert ("docs/a.md", 1, shadowed) in found and ("docs/b.md", 1, shadowed) in found
+    assert (
+        "docs/ref.md",
+        5,
+        "MAT-old is an alias declared by 2 documents: docs/materials/m.md, docs/materials/n.md",
+    ) in found
+    # References written inside materials are not checked.
+    assert not any(file.startswith("docs/materials/") and "US-gone" in message for file, _, message in found)
+    check(RULE, tmp_path, fix=True)
+    assert (tmp_path / "docs/ref.md").read_text() == files["docs/ref.md"]
+
+
+def test_reference_to_a_material_alias_is_fixed(tmp_path: Path) -> None:
+    files = {"docs/materials/m.md": _aliased("MAT-m", "MAT-old"), "docs/ref.md": _doc("US-r", "`MAT-old`\n")}
+    assert [v.message for v in check(RULE, tmp_path, files)] == ["MAT-old is an alias of MAT-m; reference `MAT-m`"]
+    check(RULE, tmp_path, fix=True)
+    assert (tmp_path / "docs/ref.md").read_text().endswith("`MAT-m`\n")
+
+
+def test_glossary_owner_naming_an_alias_is_reported_not_fixed(tmp_path: Path) -> None:
+    glossary = _GLOSSARY_HEADER + "| one | definition | `CAP-A-old` | | |\n"
+    files = {"docs/glossary.md": glossary, "docs/a.md": _aliased("CAP-A-new", "CAP-A-old")}
+    found = check(RULE, tmp_path, files, targets=["docs/glossary.md"])
+    assert _found(found) == [("docs/glossary.md", 3, "Owner CAP-A-old is an alias of CAP-A-new; name `CAP-A-new`")]
+    assert not found[0].fixable
+    check(RULE, tmp_path, targets=["docs/glossary.md"], fix=True)
+    assert (tmp_path / "docs/glossary.md").read_text() == glossary
+
+
+def test_cycles_through_aliases(tmp_path: Path) -> None:
+    files = {
+        "docs/roadmap/MS-a.md": _doc("MS-a", header="depends_on: [MS-b-old]\n"),
+        "docs/roadmap/MS-b.md": _aliased("MS-b", "MS-b-old", header="depends_on: [MS-a]\n"),
+        "docs/proposals/PROP-x/proposal.md": _doc("PROP-x", header="depends_on: [PROP-y-old]\n", status="draft"),
+        "docs/proposals/PROP-y/proposal.md": _aliased("PROP-y", "PROP-y-old", header="depends_on: [PROP-x]\n"),
+    }
+    messages = [v.message for v in check(RULE, tmp_path, files)]
+    assert "milestone dependency cycle includes MS-a" in messages
+    assert "unit dependency cycle includes PROP-x" in messages
+    assert "PROP-y-old is an alias of PROP-y; reference `PROP-y`" in messages
+
+
+def test_late_proposal_reference_is_fixed_to_the_canonical_spec(tmp_path: Path) -> None:
+    files = {
+        "specs/2026-10/20261001-new/spec.md": _aliased("SPEC-new", "SPEC-old"),
+        "docs/a.md": _doc("CAP-A-a", "`PROP-old`\n"),
+    }
+    assert [v.message for v in check(RULE, tmp_path, files)] == ["PROP-old was handed off; reference `SPEC-new`"]
+    check(RULE, tmp_path, fix=True)
+    assert (tmp_path / "docs/a.md").read_text().endswith("`SPEC-new`\n")
+    assert check(RULE, tmp_path) == []
+
+
+def test_proposal_beside_a_spec_alias_shares_its_slug(tmp_path: Path) -> None:
+    files = {
+        "specs/2026-10/20261001-new/spec.md": _aliased("SPEC-new", "SPEC-old"),
+        "docs/proposals/PROP-old/proposal.md": _doc("PROP-old", status="draft"),
+    }
+    messages = [m for _, _, m in _found(check(RULE, tmp_path, files))]
+    assert any(m.startswith("PROP-old shares its slug with SPEC-old") for m in messages)

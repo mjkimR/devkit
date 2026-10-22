@@ -12,6 +12,10 @@ block list in its style), in current documents only and within the targets when 
 a link is fixed only when both IDs are declared by exactly one document and the field is absent or a list. Missing
 targets, duplicate IDs and wrong ID kinds are ``RULE-document-reference``'s.
 
+Links resolve through ``DocumentIndex.canonical``: a link written with an alias of the other document counts as a
+link to it, in both directions, so the fix never adds the canonical ID beside an alias (``RULE-document-reference``
+rewrites the alias).
+
 Stories and capabilities of a namespace docs root (``docs/packages/<name>/stories/``, ``.../capabilities/``) are
 checked as the global ones, and links cross namespaces freely: IDs are repository-wide.
 """
@@ -60,8 +64,8 @@ def _links(document: Document, field: str) -> list[Reference]:
     return [ref for ref in document.references if ref.field == field]
 
 
-def _lists(document: Document, field: str, document_id: str) -> bool:
-    return any(ref.target.strip() == document_id for ref in _links(document, field))
+def _lists(index: DocumentIndex, document: Document, field: str, document_id: str) -> bool:
+    return any(index.canonical_id(ref.target.strip()) == document_id for ref in _links(document, field))
 
 
 def _gaps(index: DocumentIndex, registered: tuple[Namespace, ...]) -> list[_Gap]:
@@ -80,9 +84,9 @@ def _gaps(index: DocumentIndex, registered: tuple[Namespace, ...]) -> list[_Gap]
             by_id.setdefault(target.id, []).append(target)
         for source in sources:
             for ref in _links(source, field):
-                for target in by_id.get(ref.target.strip(), []):
+                for target in by_id.get(index.canonical_id(ref.target.strip()), []):
                     key = (source.path, target.path)
-                    if key not in seen and not _lists(target, back, source.id):
+                    if key not in seen and not _lists(index, target, back, source.id):
                         seen.add(key)
                         gaps.append(_Gap(source, target, ref, back, label))
     return gaps

@@ -8,12 +8,13 @@ from devkit_spec.features.documents.repositories.index import DocumentIndex
 
 
 def target_problem(index: DocumentIndex, target: str) -> str | None:
-    """Resolve an exact PROP/SPEC anchor, including completed history."""
+    """Resolve a PROP/SPEC anchor by its ID or an alias (``DocumentIndex.canonical``), including completed history."""
     if not is_id(target) or not target.startswith(("PROP-", "SPEC-")):
         return f"depends_on takes PROP- or SPEC- anchor IDs, got {target!r}"
-    found = index.by_id.get(target, [])
-    if len(found) != 1:
-        return f"depends_on target {target} resolves to {len(found)} documents; expected one anchor"
+    found = index.canonical(target)
+    if found is None:
+        count = len(index.by_id.get(target) or index.by_alias.get(target, []))
+        return f"depends_on target {target} resolves to {count} documents; expected one anchor"
     if not is_unit_anchor(found[0]):
         return f"depends_on target {target} is not a proposal/spec anchor"
     return None
@@ -24,9 +25,9 @@ def live_unit(document: Document) -> bool:
 
 
 def cycle_members(index: DocumentIndex) -> set[str]:
-    """All live vertices on cycles; completed SPEC targets are terminal."""
+    """All live vertices on cycles; completed SPEC targets are terminal. An alias edge leads to its document."""
     graph = {
-        d.id: sorted(ref.target for ref in d.references if ref.field == "depends_on")
+        d.id: sorted(index.canonical_id(ref.target) for ref in d.references if ref.field == "depends_on")
         for d in index.documents
         if live_unit(d)
     }
