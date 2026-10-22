@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-21
 ---
 
@@ -43,3 +43,5 @@ current Node: v22.22.0
 reported required Node: ^22.22.2 || ^24.15.0 || >=26.0.0
 installation completed; viewer lint/check/test/pack/build passed
 ```
+
+- **Disposition**: resolved. Session change `packages/devkit-viewer/frontend/package.json`, its `package-lock.json` and `docs/development/setup.md`: the declared and documented Node range is now the locked dependencies' `^22.22.2 || ^24.15.0 || >=26.0.0`, so a Node below it is reported as unsupported for the viewer itself; the viewer install, lint, check, test, pack and build sequence passes.

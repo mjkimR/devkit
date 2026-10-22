@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-20
 ---
 
@@ -41,3 +41,5 @@ a nested .devkit directory is not a project of its own.
 Carried AC4: nested project paths.
 Regression: test_nested_project_helper_uses_corresponding_path.
 ```
+
+- **Disposition**: dismissed. A one-off interpretation in a completed unit, already recorded in its plan and covered by `test_nested_project_helper_uses_corresponding_path`; the target is a dated material and no recurring asset needs a change.
