@@ -75,8 +75,9 @@ Every finding, location, ordering, severity, fix behavior, advisory and exit cod
    `write_text` must invalidate affected in-memory facts before recheck; a disk entry still needs a fresh byte digest.
    A store may flush only after successful evaluation/recheck using entries for the bytes actually consumed.
 4. Migrate each rule's extraction and judgment together, preserving its existing file enumeration and ordering.
-   Full untargeted working-tree evaluations can prune entries after that rule completes its file enumeration;
-   partial runs merge their observed entries without deleting unseen paths. Skipped or failed rules never prune.
+   Preserve unseen entries by default. Full untargeted working-tree evaluations can prune only after the rule
+   explicitly supplies its descriptor's complete logical path set following enumeration. A normal return is not
+   completion evidence; caught source/parse failures issue no completion marker. Partial runs retain unseen paths.
 5. Update `CAP-GOV-rules-engine`, `CAP-GOV-rule-authoring`, `CAP-GOV-evaluation-lifecycle`,
    `CAP-ADV-agent-advisory-protocol`, the rules library reference and affected rule guides. Register per-file rule facts in
    the glossary. PADRs become ADRs at handoff; no existing ADR is rewritten by Planning.
@@ -97,7 +98,9 @@ Every finding, location, ordering, severity, fix behavior, advisory and exit cod
 - **AC4 — Safe persistence**: corrupt or wrong-shaped JSON/entries, mismatched fingerprints, unsupported schema,
   unreadable sources and unwritable/non-regular/symlink memo locations fall back without changed results, new
   advisories or exit status. Test atomic concurrent writers, no steady-state write, partial-run preservation and
-  bounded full-run pruning. Invalid encoder values bypass persistence; extractor errors retain prior semantics.
+  bounded full-run pruning. Warm several files, abort enumeration early through a caught source error, and verify
+  unseen entries survive; only an explicitly completed path set permits pruning. Invalid encoder values bypass
+  persistence; extractor errors retain prior semantics.
 - **AC5 — Snapshot isolation**: warm the host memo, then run materialized and in-place staged and CI snapshots with
   different unstaged source and rule/helper code. Hits require snapshot identities; misses compute from the snapshot.
   Assert the host memo and temporary snapshot memo paths are unchanged or absent. Run the existing receipt-tamper

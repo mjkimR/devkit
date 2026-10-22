@@ -74,9 +74,12 @@ working-tree flush. Derive a safe filename from a validated rule ID; never conca
 
 Working-tree project checks/fixes may write. Dry runs, all snapshots and default library caches cannot write.
 An opt-in library writer uses the same safety checks. Flush at evaluation completion after all fixes/rechecks;
-failed/incomplete rule enumeration cannot prune. Full runs replace that completed descriptor's retained path set;
-partial runs keep unseen entries and update observed identities. Removed entries disappear at the next complete
-rule enumeration. A rule skipped by inputs or policy changes neither writes nor prunes. Encode in deterministic
+Unseen entries are preserved by default. Pruning requires the rule to explicitly supply a complete logical path
+set for its descriptor after it finishes enumeration; a normal rule return does not establish completeness.
+Caught source/parse errors must not issue that completion marker. Only an untargeted full working-tree evaluation
+may use a completed path set to prune; partial runs keep unseen entries and update observed identities.
+Removed entries disappear at the next explicitly completed full enumeration. A rule skipped by inputs or policy
+changes neither writes nor prunes. Encode in deterministic
 order and skip replacement if the resulting payload equals the loaded payload. An unsupported facts value stays
 usable in memory but is omitted from persistent entries. Exceptions in extraction propagate normally; descriptor
 programming errors must not be disguised as cache I/O failures.
