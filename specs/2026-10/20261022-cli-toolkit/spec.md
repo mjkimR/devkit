@@ -2,7 +2,7 @@
 id: SPEC-cli-toolkit
 title: Agent-first CLI toolkit package and catalog bundle
 summary: Adds the devkit-cli package with the reusable agent-first CLI boundary that devkit-dist builds on, and an opt-in devkit-catalog cli-tool bundle with the structure guide and rules for new CLI tools.
-status: planned
+status: completed
 created: 2026-10-22
 related_capabilities:
   - CAP-ADV-agent-advisory-protocol
