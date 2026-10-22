@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T07:26:16.636652Z'
+status: completed
+summary: Parse memo for DocumentIndex.load (repositories/memo.py, index.py) per the three accepted ADRs; AC-01..AC-11 met; warm in-process load 53 ms vs 315 ms (ratio 0.169), resolve/list 186/198 ms vs 434/451 ms; review-01 four P3 fixed (reverify-01), reconcile-check-01 one P2 fixed (reconcile-check-02); CAP-DOCS-document-model and CAP-DOCS-document-lookup updated; 3 feedback recorded
+findings: []
+assumptions:
+- Speed evidence and the multi-process AC-06 run are in the Unit's materials/speed.md (docs/materials outside the write scope); AC-06 in the test suite runs with threads (e2e tier outside the write scope)
+- FB-strict-frontmatter-loader-without-libyaml stays open (Non-Goal 2)
+checks:
+  tests: PASS just test-affected (mode=partial) 1454 passed; just test-e2e devkit-spec 89 passed at 2665f774 (code fixes since are fingerprint timing and a test)
+  build: PASS uv build --package devkit-spec (memo.py in the wheel); just check devkit-spec pyright 0 errors; devkit sync --check clean
+  lint: PASS just lint-check devkit-spec; devkit rules check --ci --base 8046ae64 0 errors; git diff --check clean
+diff_scope:
+  base: 8046ae6490f64185db20fbdf73710893ebe9967d
+  head: e99c57b7772afc967c94d992b313d3dee9367ab6
