@@ -39,5 +39,5 @@ If a file must stay large (one procedure always read whole, a quoted external pr
 ## Completion conditions
 
 - Every link from `SKILL.md` resolves, and every reference is linked with a read condition.
-- `uv run devkit rules check --phase hygiene` reports no `RULE-skill-document-size` warning for the edited files, or
-  the file has a commented override.
+- `uv run devkit rules check --phase hygiene` reports no `RULE-skill-document-size` or `RULE-agent-asset-wording`
+  warning for the edited files, or the file has a commented override.

@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from spec_support.bundle_text import flat, raw
 
 WORKFLOWS = (
     "sdd-session-feature",
@@ -76,11 +77,12 @@ def test_a_worker_is_projected_with_its_host_execution_contract(synced: Path, wo
     assert projection["name"] == worker
     assert projection["sandbox_mode"] == "workspace-write"
     prompt = projection["developer_instructions"]
-    assert "Host projection: emulated." in prompt
-    assert "The host does not enforce the contract's boundaries itself" in prompt
     body = source.read_text(encoding="utf-8").split("---\n", 2)[2].lstrip("\n")
     assert prompt.endswith(body.rstrip("\n") + "\n")
-    assert "## Procedure" in prompt and "On Codex, `workspace-write` confines no path" in prompt
+    prose = flat(prompt)
+    assert "Host projection: emulated." in prose
+    assert "The host does not enforce the contract's boundaries itself" in prose
+    assert "## Procedure" in prose and "On Codex, `workspace-write` confines no path" in prose
 
 
 def test_no_skill_is_projected_for_a_procedure_only_a_role_runs(synced: Path) -> None:
@@ -124,10 +126,7 @@ def test_a_proposal_unit_is_a_proposal_bundle(synced: Path) -> None:
 
 
 def _definition(workflow: str) -> dict[str, object]:
-    text = (
-        Path(__file__).resolve().parents[4] / f"src/devkit_spec/bundles/spec/bundle/workflows/{workflow}.md"
-    ).read_text("utf-8")
-    return yaml.safe_load(text.split("---\n", 2)[1])
+    return yaml.safe_load(raw(f"workflows/{workflow}.md").split("---\n", 2)[1])
 
 
 @pytest.mark.parametrize("workflow", WORKFLOWS)
@@ -148,8 +147,8 @@ def test_only_the_three_named_gates_are_used_and_development_has_no_direction_ga
     stages = _definition(workflow)["stages"]
     assert {stage.get("human_gate") for stage in stages} <= GATES  # type: ignore[union-attr]
     assert "direction" not in {stage["id"] for stage in stages}  # type: ignore[union-attr]
-    names = " ".join(str(stage["name"]) for stage in stages)  # type: ignore[union-attr]
-    assert not any(token in names.split() for token in ("G1", "G2", "G3", "E"))
+    names = [token for stage in stages for token in str(stage["name"]).split()]  # type: ignore[union-attr]
+    assert not any(token in names for token in ("G1", "G2", "G3", "E"))
     for stage in stages:  # type: ignore[union-attr]
         assert all(ret["to"] != "direction" for ret in stage.get("returns", [])), stage["id"]
 
@@ -159,8 +158,9 @@ def test_a_session_requires_no_unit_envelope_spec_or_reconcile_artifact(workflow
     data = _definition(workflow)
     assert "layout" not in data
     for stage in data["stages"]:  # type: ignore[union-attr]
-        checks = " ".join([*stage["entry"], *stage["exit"]])
-        assert not any(word in checks for word in ("envelope", "spec.md", "reconcile", "anchor", "tasks")), stage
+        checks = [*stage["entry"], *stage["exit"]]
+        words = ("envelope", "spec.md", "reconcile", "anchor", "tasks")
+        assert not any(word in check for check in checks for word in words), stage
         assert not any("envelopes/" in str(item) or "reconcile" in str(item) for item in stage["artifacts"]), stage
 
 

@@ -50,7 +50,7 @@ src/devkit_agt/features/rules/
 └── cli/                     # commands.py (check, fix, phases, explain, test) and output.py (text and JSON rendering)
 ```
 
-Library callers import the public API from `devkit_agt.features.rules`; built-in rule classes are exported by `devkit_agt.features.rules.services.builtins`. The opt-in `authoring` bundle (size rules with their tests, and playbooks) lives outside this module, in the data-only `devkit_agt.bundles.authoring` (`src/devkit_agt/bundles/authoring/bundle/`): its rules use only the public API and are loaded from the synchronized copies like any bundle rule, and discovering the bundle never imports the engine.
+Library callers import the public API from `devkit_agt.features.rules`; built-in rule classes are exported by `devkit_agt.features.rules.services.builtins`. The opt-in `authoring` bundle (size and wording rules with their tests, playbooks and the `agent-asset-writing` instruction) lives outside this module, in the data-only `devkit_agt.bundles.authoring` (`src/devkit_agt/bundles/authoring/bundle/`): its rules use only the public API and are loaded from the synchronized copies like any bundle rule, and discovering the bundle never imports the engine.
 
 ## 3. Integration with Content Wheels and devkit
 

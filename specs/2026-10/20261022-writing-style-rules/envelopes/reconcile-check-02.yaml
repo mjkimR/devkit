@@ -1,0 +1,12 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T04:44:55.230046Z'
+status: completed
+summary: 'Implementer self-check after reconcile-check-01: all four findings applied (install guide, CAP-GOV-rules-engine added as a modified target, devkit README, package and test docstrings), each re-read against rule.py and bundle.toml; rg over docs, guides and READMEs for authoring rule enumerations finds no other stale description; no second reviewer call: one-line wording edits naming the same rule'
+findings: []
+checks: {}
+diff_scope:
+  base: 277ef3b5e47c6c91d2213ce69e3d5cd64d908912
+  head: bc438a994d18b42bf115fb4371abadd7f7527954

@@ -1,0 +1,39 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T04:40:27.299235Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer fixed all four P3 findings in rule.py with regression tests (wrapped code span, bare fence close, template-only Jinja and {#anchor}, description); rule tests 12 passed, authoring bundle tests passed, hygiene scan of the repository reports no RULE-agent-asset-wording violation; no second code-reviewer call: fixes are confined to the scanner and its tests'
+findings:
+- issue: An inline code span wrapped across two lines is masked wrongly (unmatched backticks pair with the next span)
+  evidence: packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/agent_asset_wording/rule.py:48
+  failure_condition: A listed word inside a wrapped code span is reported and a real use between mispaired backticks is not; four such spans exist in scope
+  suggested_action: Carry an open backtick span across lines until a blank line
+  resolution: resolved
+  severity: P3
+- issue: The Jinja comment opener starts a block state in plain .md files; multi-line {% %} and {{ }} tags are not masked
+  evidence: packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/agent_asset_wording/rule.py:49
+  failure_condition: An unclosed {# (e.g. a heading attribute {#anchor}) silences the rest of a plain .md file; a two-line {% tag reports its words
+  suggested_action: Apply Jinja masking only to .jinja files and carry {% and {{ state across lines
+  resolution: resolved
+  severity: P3
+- issue: The closing-fence check accepts a line with an info string
+  evidence: packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/agent_asset_wording/rule.py:74
+  failure_condition: A nested example line such as ```text closes the fence early and flips prose and code masking for the rest of the file
+  suggested_action: Close only on the fence character repeated at least as long as the opener with nothing after it
+  resolution: resolved
+  severity: P3
+- issue: The rule description omits role contracts and project skills
+  evidence: packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/agent_asset_wording/rule.py:98
+  failure_condition: devkit rules explain understates the checked scope
+  suggested_action: Name role contracts in the description
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS pytest authoring bundle and rule tests
+  lint: PASS ruff check, ruff format --check, pyright
+diff_scope:
+  base: ''
+  head: 7b2494c7490318de49a7ff41970090238d34410d
