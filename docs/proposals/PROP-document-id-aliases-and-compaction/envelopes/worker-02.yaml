@@ -1,0 +1,42 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-21T23:24:59.251780Z'
+status: needs_input
+summary: 'Planning turn 2: recorded answer-01 (q1-q3; assumption 1 settled); narrowed the proposal to ID aliases and renamed it Document and Playbook ID Aliases (size M->L, dev_effort medium kept); withdrew PADR-adr-supersession-integrity by deletion; added PADR-document-id-aliases and PADR-playbook-aliases-as-identifiers; widened owns to the devkit-dist playbook files, CAP-DIST/CAP-SRCH/ARCH-08-2, the bundled playbooks and .devkit/installation.json; closed round 1 (reverify-02). Support roles: one challenger (challenger-02, 8 findings), 7 folded and closed in reverify-03: ADR and MAT refused as alias kinds (append-only ledger; materials unchecked) so the handoff clash check is dropped, decision records never rewritten, one canonical DocumentIndex mapping with an audited call-site list, declared-ID precedence, resolve alias= output. No scout. Feedback sweep feedback-02 (1 recorded). One user decision remains.'
+findings:
+- issue: Challenger-02 finding 6 (what a playbook alias identifies) stays open for q1.
+  evidence: envelopes/reverify-03.yaml
+  suggested_action: Fold the answer to q1 into PADR-playbook-aliases-as-identifiers and proposal.md sections 3.3 and 5.
+  resolution: open
+- issue: The in-place playbook format break also affects the sibling workbench repository app-common, whose playbook onboard.md carries keyword aliases and which pins devkit by commit; its next pin bump fails bundle validation until that list moves into the description.
+  evidence: challenger-02 assumptions (app-tools bundle playbooks/onboard.md:4; app-common pyproject.toml:23)
+  suggested_action: Note it as a follow-up for app-common when it adopts this change; it does not block this unit.
+  resolution: open
+assumptions:
+- The devkit-agt rules catalog (packages/devkit, outside owns) stays exact-ID.
+unverified_areas:
+- Rule order inside devkit rules fix (possible traceability duplicate entry) was not traced in devkit-agt; covered by a planned test.
+- No code probe was run; call sites come from static reading by the challenger.
+checks: {}
+diff_scope:
+  base: ecb96f28c6aac21ac48732acd1e71ce127869238
+  head: 060b886b3b9962955602b1661e4788255fb7a017
+questions:
+- id: q1
+  title: What a playbook alias identifies
+  prompt: Playbook aliases become identifiers instead of search keywords. What should a playbook alias identify, and should devkit playbook get resolve it?
+  context: Playbooks are retrieved by an exact <bundle>/<playbook> selector whose second part is the manifest asset ID (not the frontmatter name), and published instructions cite such selectors. Once aliases stop feeding search, an alias is only useful if something resolves it. This decides the playbook validation, the get command and the CAP-DIST retrieval contract (which today says get does no alias lookup and no fallback).
+  options:
+  - id: a
+    description: A previous asset ID in the same bundle (lowercase slug). devkit playbook get <bundle>/<alias> returns the renamed playbook and reports its canonical id and the alias used; an exact asset ID always wins; an alias declared by more than one effective playbook (overrides included) is refused with a stable code. Renames keep published selectors working.
+    recommended: true
+  - id: b
+    description: 'A validated identifier list that no command resolves: aliases are only checked for shape and uniqueness and returned as metadata. Smaller, but the field then has no consumer.'
+    recommended: false
+  - id: c
+    description: 'No playbook aliases: remove the field from the playbook format entirely (an aliases key is refused); a renamed playbook breaks its old selector. Smallest change.'
+    recommended: false
+  allow_note: true
+activity_effort: medium
