@@ -1,31 +1,25 @@
 # Git policy levels
 
-Read this before the first edit of a task and before any Git action, after `devkit spec policy` printed the `[GIT_POLICY: worktree= pull_request= delete_branch= setup=]` line. Decide the worktree and the integration path before the first edit.
+Read this before the first edit of a task and before any Git action, after `devkit spec policy` printed the `[GIT_POLICY: worktree= pull_request= delete_branch= setup=]` line.
 
-## Worktree
+## Worktree (`direct` mode only)
 
-- `worktree` applies to `direct` mode only: `local-orchestrated` always runs workers in worktrees, and `cloud-pr` uses the runner's checkout.
-- `worktree=required` runs every `spec` and `proposal` activity (on its `plan-` or `dev-` activity branch) in its own worktree from creation to cleanup ([worktree](worktree.md)); `session` depth is never required to.
-- `worktree=auto` leaves it to you:
-  - Use a worktree when the current checkout holds changes unrelated to the task (the user's uncommitted work stays put), another task is in flight in this checkout, or the user asks.
-  - Otherwise use the current checkout, on the activity branch started with `devkit worktree start <branch> --no-worktree` ([branches](branches.md) §2).
-- With `--no-worktree`, the branch switch applies to every session using that directory, and another session can commit to the checked-out task branch. The direct user coordinates shared sessions and may choose a separate worktree for a session task; the local orchestration Host coordinates workers, which still run in their own worktrees.
+- `worktree=required`: every `spec` and `proposal` activity runs in its own worktree from creation to cleanup ([worktree](worktree.md)); `session` depth never needs one.
+- `worktree=auto`: use a worktree when the checkout holds changes unrelated to the task, another task is in flight in it, or the user asks. Otherwise start the activity branch in this checkout with `devkit worktree start <branch> --no-worktree` ([branches](branches.md) §2).
+- With `--no-worktree`, the branch switch applies to every session using that directory, and another session can commit to the task branch; the direct user coordinates shared sessions.
 
 ## Integration path
 
-- `pull_request=required` integrates every task, `session` depth included, through a PR (no `finish --merge`).
-- `pull_request=auto` uses a PR when the task needs platform review or CI, the base refuses direct pushes, or the user asks; otherwise a local merge.
-- The integration path does not choose the worktree: a task integrating through a PR may run on its branch in the current checkout (`--no-worktree`) when no worktree reason applies.
-- A `session` without a PR runs on the current branch. On the base branch under `dev-integration = "ask"`, it starts `dev-<slug>` (`--no-worktree`) or gets the user's OK before its commit, because a commit on the base is already integrated.
+- `pull_request=required`: every task, `session` included, integrates through a PR.
+- `pull_request=auto`: use a PR when the task needs platform review or CI, the base refuses direct pushes, or the user asks; otherwise merge locally. The path does not decide the worktree.
 
 ## Branch cleanup
 
-- `delete_branch=yes`: after a confirmed merge, and only under existing deletion authority ({% if execution.environment == "local" %}including shared base `dev-integration=auto` through the local MCP executor{% else %}a separately authorized CLI/PR route is required in cloud execution{% endif %}), `devkit worktree finish` removes the merged task branch with safe `git branch -d`. A dirty worktree, current branch, protected or base branch, or unmerged branch prevents cleanup; report the remaining branch.
-- `delete_branch=no` keeps the branch.
-- This policy never deletes remote branches or forces deletion; an unmerged branch is dropped only by a close (`devkit worktree finish <branch> --discard`, [classification](classification.md) §4).
+- `delete_branch=yes`: after a confirmed merge and under existing deletion authority ({% if execution.environment == "local" %}including shared base `dev-integration=auto` through the local MCP executor{% else %}a separately authorized CLI/PR route in cloud execution{% endif %}), `devkit worktree finish` deletes the merged task branch with `git branch -d`; report a branch it could not delete. `delete_branch=no` keeps it.
+- Remote branches are never deleted by this policy; an unmerged branch goes only through a [close](depth-and-close.md).
 
 ## Deviations
 
 - Report each `auto` choice and its reason in the final change report's assumptions.
-- A request that names the checkout or the integration path overrides the policy for that task; report it there as a user request.
-- Otherwise, when an action the policy requires is unavailable, treat it as a blocker; never downgrade it silently.
+- A request that names the checkout or the integration path overrides the policy for that task; report it as a user request.
+- When an action the policy requires is unavailable, treat it as a blocker; never downgrade silently.

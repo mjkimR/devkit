@@ -25,85 +25,26 @@ hosts:
 
 # Planning worker
 
-## Purpose
-
-Run one turn of one proposal's Planning inside the worktree of its `plan-<slug>` branch, taking a `draft` proposal toward `plan-accept`. The next worker reads only the proposal bundle, its envelopes and the caller's handoff, so commit before you end. You do not accept or reject the proposal, hand it off, write outside the proposal directory, push or merge.
-
-## Input
-
-The caller's payload: `allowed_boundaries` names the worktree's absolute path and the proposal directory as write scope; the payload also carries the `activity-effort` of this activity and any rewritten answers to earlier questions.
+Run one turn of one proposal's Planning in the worktree of its `plan-<slug>` branch. The next worker reads only the proposal bundle, its envelopes and the caller's handoff, so commit before you end. You do not accept, reject or hand off the proposal, push or merge.
 
 ## Procedure
 
-1. Work only in the worktree; never touch the caller's checkout.
-   - Use absolute paths and `git -C <worktree>`.
-   - Read operational instructions and run the CLI from this assigned worktree.
-   - Scratch files go in an ignored path inside the worktree: the probe path the payload names (Write boundaries).
-2. Follow `.devkit/managed/spec/skills/spec/references/planning.md` for the turn's steps at the `activity-effort` you were given, from the first-turn status change to the single `worker` envelope you write with `devkit workflow envelope worker` and commit with the turn's last changes.
-3. Start each `scout` or `challenger` the effort asks for as a nested subagent (Host -> worker -> role).
-   - Wait for every nested role you start to return before you rely on its result, and never end the turn while one is still running, because a turn that ends early reports a result whose work is not done.
-   - If a role fails or cannot finish, that is a problem: record it and make the emergency commit.
+1. Work only in the assigned worktree: absolute paths, every command's cwd set to the worktree (the default cwd may be the base checkout) and `git -C <worktree>` for Git.
+2. Follow `.devkit/managed/spec/skills/spec/references/planning.md` at the `activity-effort` you were given, through the single `worker` envelope committed with the turn's last changes.
+3. Start each `scout` or `challenger` as a nested subagent with absolute read scopes and contract paths in this worktree; pass on any read it reports outside it. Wait for every nested role before you rely on its result or end the turn.
+4. If a cause you cannot solve stops the turn, record it and make the emergency commit as "The `worker` envelope" in `.devkit/managed/spec/skills/spec/references/worker-records.md` describes. Waiting for answers is `needs_input`, not a problem. Do not reject, close or rewrite the goal; the Host decides.
+5. On Codex, `workspace-write` confines no path: inherit the session model and reasoning effort and change no approval policy or host setting. Request a separate approval for each operation outside sandbox access, naming the operation, target and reason (sibling-worktree writes, shared Git, network for verification); use no broad persistent prefix and treat no earlier grant as later permission. On a refused or unavailable approval, stop that operation and preserve the state; never reroute through another tool, path, process or setting.
 
-## Codex execution and permissions
-
-Native `collaboration.spawn_agent` invocation runs an emulated worker contract: `workspace-write` is not
-worker-specific path confinement, and Git administration is shared. Inherit the session model and reasoning effort;
-do not set an approval-policy override or change host settings. If the caller uses a generic native subagent, read
-the absolute effective managed/override contract it names and follow it only when project-instruction loading is
-permitted. Never bypass an explicit trust restriction.
-
-Every command MUST set cwd to the absolute assigned worktree, including verification and permission requests;
-every Git command MUST use `git -C <worktree>`. Default cwd may be the base checkout. Nested-role read scopes and
-contract paths MUST be absolute and identify this worktree, naming its startup skill and instruction paths (such as
-`response-style`) so no nested role reads them from another checkout; a nested role's reported read outside the
-worktree is a boundary exception you pass on in your return. Prompt boundaries and Host range validation enforce the
-task scope; do not claim native role/path enforcement.
-
-Request a separate command-scoped approval for each necessary operation outside active sandbox access, naming its
-exact operation, target and justification. This includes sibling-worktree writes, shared Git index/commits, scope
-registry writes and verification requiring unavailable network access. Use no broad persistent prefix. A successful
-preflight or approved command grants no later access.
-
-On unavailable or denied approval, stop that operation and preserve partial state. Do not evade refusal through
-another tool, path, process, broader request or settings edit. Retry a command that failed for another cause only
-after its cause/input changes and authorization permits it. Try the failed worker record and emergency commit only
-through still-permitted, separately scoped operations. Only ordinary commit-gate refusal permits the emergency
-`--no-verify` exception; sandbox or approval denial never does.
-
-If the record or emergency commit also cannot run, return `failed` with the cause, commands tried, recommended
-recovery, actual last commit SHA, dirty paths and which record/commit is absent or uncommitted. Report the actual
-`final_head`; never invent a committed envelope or clean tree. This unsuccessful return is blocked by the Host,
-which owns the subsequent recovery run and its records. The committed-return requirements below apply whenever
-preservation is permitted; inability to preserve them is a failure, not permission to bypass refusal.
-
-{% if execution.environment == "local" %}Workers return verified committed scope to the Host and never request business approval through MCP. The Host
-validates boundaries and checks before invoking a native approval tool; missing form UI grants no authority.
-{% else %}Approval belongs to the Host after it validates worker boundaries, committed scope and required checks. Workers return that evidence without requesting business approval. Cloud execution provides CLI inspection and artifact operations only; mutation requires a separately authorized CLI/PR route. Missing authority is a boundary, never approval. Effective workspace configuration controls runtime restrictions independently of render provenance.
+{% if execution.environment == "local" %}Return verified committed scope to the Host; never request business approval through MCP.
+{% else %}Return your evidence to the Host without requesting business approval; a mutation needs a separately authorized CLI/PR route.
 {% endif %}
 ## Return
 
-The fields of your `worker` envelope after it is committed: `status` (`completed` when no question is left and the proposal is ready for `plan-accept`; `needs_input` while questions wait for the user, with the `questions`; `failed` with the `problem`), `summary` (what changed, the decisions made in this Planning, the support roles this run used), `findings` for what is left open, `assumptions`, `unverified_areas`, `diff_scope` with `head` set to your last work commit, and `final_head`: `git -C <worktree> rev-parse HEAD` after the commit that adds the envelope, the head the caller validates up to.
+The fields of your committed `worker` envelope, with `final_head`: `git -C <worktree> rev-parse HEAD` after the commit that adds the envelope.
 
 ## Write boundaries
 
-- Allowed: the proposal directory (`proposal.md`, `decisions/`, `materials/`, `target-docs.md`, its envelopes) inside the worktree, and a new draft proposal for a follow-up.
-- Temporary probes: only the ignored path the payload names inside the proposal directory, within existing tool
-  permissions; throwaway repositories go there too. Remove them, including temporary linked worktrees, before the
-  last commit and keep only evidence in `materials/`. A probe that needs another path is a Host boundary-expansion
-  problem, not write authority. Git operations on a throwaway repository authorize no merge or cleanup on the
-  activity repository.
-- Denied: everything else, the proposal's `status: accepted` or `rejected`, the gate records of `plan-accept`, handoff.
-- Git: commit only. Do not push, merge, rebase, reset, amend, stash or check out (`MUST NOT`).
-
-## On a problem
-
-Waiting for the user's answers is not a problem: it is `needs_input` with the questions in your `worker` envelope.
-
-If a cause you cannot solve stops the turn (a tool failure, a proposal that cannot be planned as agreed):
-
-1. Record it in your `worker` envelope (`--problem`, `--tried`, `--recovery`: its cause, what you tried and the recovery you recommend).
-2. Commit it with the unfinished work as an emergency commit. Only this commit may use `--no-verify`, and only when the commit gate refuses the unfinished files; name each skipped check in the problem.
-
-If you solved an earlier problem on request, commit a `resolution` naming it together with the fix.
-
-Do not reject, close or rewrite the goal yourself; the Host decides.
+- Allowed: the proposal directory inside the worktree, and a new draft proposal for a follow-up.
+- Temporary probes: only the ignored path the payload names. Remove them before the last commit and keep evidence in `materials/`; a probe that needs another path is a problem for the Host.
+- Denied: the proposal's `status: accepted` or `rejected`, the `plan-accept` gate records and handoff.
+- Git: commit only; never push, merge, rebase, reset, amend, stash or check out.

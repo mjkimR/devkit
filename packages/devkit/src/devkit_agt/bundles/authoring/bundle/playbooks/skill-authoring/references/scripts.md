@@ -1,39 +1,16 @@
 # Script support
 
-## Decide whether a script is needed
-
-1. **Existing CLI first.** If `devkit`, `git`, `rg` or another installed tool
-   already prints the needed slice, call it. Put a few chained commands in
-   `SKILL.md` as a code block, not in a script file.
-2. **No script that only prints a reference file.** Make it a conditional
-   reference instead, because running a script can trigger a host approval
-   prompt where reading a file does not.
-3. **Otherwise write a Python 3 script.**
-
-## Writing rules
-
-- Use the standard library only, so the script runs without a build step or
-  installation.
-- State the minimum Python version in the file header and use no syntax or
-  modules newer than it (for example no `match` or `tomllib` below 3.11).
-- Handle paths with `pathlib`.
-- Read and write files with `encoding="utf-8"` and call
-  `sys.stdout.reconfigure(encoding="utf-8")`; piped output otherwise follows
-  the locale encoding.
-- Print compact, deterministic, machine-readable output (TSV, JSON or IDs) with
-  stable ordering.
-- Keep a script read-only unless it must write; a script that writes declares it
-  in its name or a flag.
-- On failure, exit non-zero with a message that states the cause and the next
-  action.
-- Support `--help` with one line per option.
-
-## Wiring it into the skill
-
-- In `SKILL.md`, state when to run the script and say to run it, not read it;
-  only its output enters the context.
-- Describe in one line what the script computes, so an agent can reach the same
-  result with ordinary commands when the script cannot run.
-- Invoke it by path relative to the skill directory, for example
-  `python3 scripts/collect.py --format tsv`. Keep it executable (`0755`) in the
-  source; projections preserve the mode.
+1. If `devkit`, `git`, `rg` or another installed tool already prints the needed slice, put the command in
+   `SKILL.md` instead of a script.
+2. If the script would only print a file, make that file a reference instead; running a script can trigger a host
+   approval prompt.
+3. Otherwise write a Python 3 script:
+   - Use the standard library only, so it runs without installation. State the minimum Python version in the
+     header and use nothing newer.
+   - Read and write with `encoding="utf-8"` and call `sys.stdout.reconfigure(encoding="utf-8")`; piped output
+     otherwise follows the locale.
+   - Print compact, deterministic output (TSV, JSON or IDs) in stable order.
+   - Stay read-only unless the script's name or a flag declares the write.
+4. In `SKILL.md`, say when to run the script (not read it) by its path relative to the skill directory
+   (`python3 scripts/collect.py`), and describe in one line what it computes so an agent can do it by hand when the
+   script cannot run. Keep it executable (`0755`); projections preserve the mode.

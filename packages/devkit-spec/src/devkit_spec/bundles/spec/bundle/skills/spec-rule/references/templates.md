@@ -74,7 +74,6 @@ from devkit_agt.features.rules.services.builtins import BaseRule
 
 @dataclass(frozen=True)
 class FinalNewlineSettings:
-    # Fields: int, float, str, bool or list[str], each optionally `| None`; no nested tables.
     paths: list[str] = field(default_factory=lambda: ["docs/**"])
     extensions: list[str] = field(default_factory=lambda: [".md"])
 
@@ -141,13 +140,11 @@ class FinalNewlineRule(BaseRule):
 
 - Do not pass `severity` or `phase` to a violation; the evaluator sets their effective values.
 - For a rule without settings, omit `settings`, `validate_settings` and the `ctx.settings` call.
-- For a hygiene rule meant to become a linter rule, declare `phase=Phase.HYGIENE, promote_to=Phase.LINTER`.
-
-For a larger rule, keep the implementation in the bundle package (`<package>/rules/final_newline.py`, importable and type-checked) and let the deployed `rule.py` only subclass it, as the `spec` bundle's rules do; `guide.md` stays beside the deployed file.
+- For a larger rule, keep the implementation in the bundle package (`<package>/rules/final_newline.py`, importable and type-checked) and let the deployed `rule.py` only subclass it; `guide.md` stays beside the deployed file.
 
 ## Tests
 
-`rules/final_newline/tests/test_rule.py`, run isolated by `devkit rules test RULE-myrepo-final-newline` (no project pytest configuration either).
+`rules/final_newline/tests/test_rule.py`, run by `devkit rules test RULE-myrepo-final-newline`.
 
 ```python
 from __future__ import annotations
@@ -179,6 +176,4 @@ def test_settings_apply_per_path(tmp_path: Path) -> None:
     assert [v.file for v in check(RULE, tmp_path, files, settings=settings)] == ["guides/a.md"]
 ```
 
-- `check` runs the real engine: settings go through the `[rules.settings.<id>]` parser (invalid values raise `RulesRunError`), and `fix=True` runs one fix pass and one recheck, so a repaired finding comes back with `fixed=True` and an empty second run proves idempotency.
-- Use `evaluate` when a test needs the whole `EvaluationResult`.
-- Assert on `v.rule_id`, `v.file` and `v.fixable`, not on message text.
+`check` runs the real engine (settings parser, one fix pass and one recheck); `evaluate` returns the whole `EvaluationResult`. Assert on `v.rule_id`, `v.file` and `v.fixable`, not on message text.

@@ -5,49 +5,16 @@ description: Read before running tests, linters or type checks outside a project
 
 # Running verification commands with `devkit run`
 
-When you run a test runner, linter or type checker yourself, run it as
-`uv run devkit run -- <command>`. It keeps the complete output in a log file and
-prints the outcome, the tool's summary lines and warnings and, on failure, an
-excerpt without progress and noise:
+- Run a recipe that already calls `devkit run` as it is, not inside a second
+  `devkit run`.
+- Act on the printed excerpt first. Read the log at `log=` only for what the
+  excerpt lacks: the line range a `[... log lines A-B ...]` marker names
+  (`sed -n 'A,Bp' <log>`), or a search (`rg -n "<test name>" <log>`).
+- Rerun a `[RUN_FAILURE: "<test>" ...]` by its node ID.
 
-```bash
-uv run devkit run -- uv run pytest tests/test_api.py -x
-uv run devkit run -- npm run check
-```
-
-If a recipe already calls `devkit run`, run the recipe as it is, without a
-second `devkit run` around it.
-
-## Reading the output
-
-| Line | Meaning |
-| --- | --- |
-| `[RUN: "<command>" outcome=passed\|failed\|interrupted exit=<code> log=<path>]` | The result; `exit` is the command's own code. |
-| `[RUN_SUMMARY: "..."]` | A summary line the tool printed (`3 passed in 0.5s`). |
-| `[RUN_LAST_LINE: "..."]` | Passed without a recognized summary: the last output lines. |
-| `[RUN_FAILURE: "<test>" kind=... message=...]` | A failed test the excerpt cuts out; rerun it by its node ID. |
-| `[RUN_WARNING: "..." location=...]` | A warning the tool printed, once per message. |
-| `[RUN_OMITTED: ...]` | Something did not fit the budget; it is in the log. |
-| `[RUN_OUTPUT: shown=N omitted=N filtered=N]` | Failure only: the excerpt (head and tail) follows; `filtered` noise lines are only in the log. |
-
-- Advisory blocks of nested `devkit` commands come whole on stderr.
-- A `[... previous line repeated N more times ...]` line stands for copies of the line above it.
-
-Act on the excerpt first. Read the log at `log=` only when the excerpt is not
-enough, and only the part you need:
-
-- If the excerpt has a `[... N characters omitted, log lines A-B ...]` line, read
-  those lines (`sed -n 'A,Bp' <log>`).
-- Otherwise search the log (`rg -n "<test name>" <log>`).
-
-`devkit run` exits `0` when the command passed, `1` when it failed, `2` when it
-could not be started (`RUN_COMMAND_NOT_STARTED`), and `128 + N` when signal `N`
-interrupted it (`130` Ctrl-C, `143` SIGTERM; only the `[RUN]` line is printed).
-
-## Setting up recipes
-
-In a project that runs its checks through recipes (`just`, `make`, `npm`
-scripts), put `devkit run` inside the recipe:
+In a project that runs checks through recipes (`just`, `make`, `npm` scripts),
+put `devkit run` inside the recipe and shorten the tools' own reports unless the
+project needs the long forms:
 
 ```just
 test *args:
@@ -56,8 +23,3 @@ test *args:
 lint:
     uv run devkit run -- uv run ruff check --output-format=concise .
 ```
-
-Shorten the tools' own reports as above: `pytest --tb=short` prints the
-failing line and `E` lines of each frame instead of the test source, and ruff's
-concise format prints one line per finding. Keep the long forms when the project
-needs them.

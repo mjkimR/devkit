@@ -5,17 +5,15 @@ description: Read before raising, returning, rendering or serializing errors, wa
 
 # Agent Advisory Protocol in Python (`devkit.advisory`)
 
-`devkit.advisory` implements the protocol of the `agent-advisory` instruction; read that instruction first for levels, modes and rendering rules.
-
-Make runtime code depend on `devkit-advisory`, the standard-library-only package that ships the library, not on `devkit-dist` or `devkit-agt`.
+Read the `agent-advisory` instruction first. Make runtime code depend on
+`devkit-advisory`, not on `devkit-dist` or `devkit-agt`.
 
 ## Raising errors
 
-At boundaries agents read, raise `AdvisoryError` subclasses, not bare `ValueError`, `RuntimeError` or framework exceptions.
-
-- Set any field as a class-level default on the subclass.
-- Pass a keyword argument other than `None` to override a default for one instance.
-- Pass positional arguments after the message to add `[DETAIL]` lines.
+At boundaries agents read, raise `AdvisoryError` subclasses, not bare
+`ValueError`, `RuntimeError` or framework exceptions. Set fields as class
+defaults; a keyword argument overrides one for an instance, and positional
+arguments after the message become `[DETAIL]` lines.
 
 ```python
 from devkit.advisory import Actor, AdvisoryError, Retry
@@ -30,110 +28,60 @@ class ConfigInvalidError(AdvisoryError):
 
 raise ConfigInvalidError(
     "config.toml: 'timeout' must be an integer",
-    'line 12: timeout = "30s"',  # positional extras become [DETAIL] lines
+    'line 12: timeout = "30s"',
     target_files=["config.toml:12"],
     fix="Set timeout = 30 in config.toml",
 )
 ```
 
-For a malformed argument or parameter, raise `ArgumentError` (`ARGUMENT_INVALID`, `INPUT_ERROR`), or a project-specific subclass of it, not a new class declaring `ARGUMENT_INVALID`.
+- For a one-off error, use a factory classmethod: `invalid_input`, `blocked`,
+  `auto_fix` (requires `fix=`) or `interaction`. It sets every field that decides
+  the mode, and `MyDomainError.blocked(...)` returns `MyDomainError`.
+- For a malformed argument, raise `ArgumentError` or a subclass of it.
+- Set `exit_code = ExitCode.FINDINGS` (`1`) for a negative result of a check
+  that ran; the default is `ExitCode.ERROR` (`2`).
+- If a subclass takes constructor arguments of its own, accept
+  `**fields: Unpack[AdvisoryFields]` and pass them to `super().__init__`.
 
-Declare each code in one class and its subclasses only, in their bodies or through `code=` at a call; a subclass may redeclare its base's code. `RULE-advisory-unique-code` of this bundle's `python` preset checks it.
+## Warnings and notices
 
-For one-off errors, use the factories. They set every field that decides the mode, so a subclass default never changes it, and as classmethods `MyDomainError.blocked(...)` returns `MyDomainError`:
-
-| Factory | Mode | Fields set |
-| --- | --- | --- |
-| `AdvisoryError.invalid_input(msg, *details, code=, fix=, target_files=)` | `INPUT_ERROR` | `input_error`, `DEVELOPER`, `AFTER_FIX` |
-| `AdvisoryError.blocked(msg, *details, code=, fix=, target_files=)` | `BLOCKED` | `guardrail`, `DEVELOPER`, `AFTER_FIX` |
-| `AdvisoryError.auto_fix(msg, *details, fix=, code=, target_files=)` | `AUTO` | `TOOL`, `AFTER_FIX` |
-| `AdvisoryError.interaction(msg, *details, code=, what_to_report=, fix=)` | `INTERACTION` | `USER`, `AFTER_FIX` |
-
-For other modes, set `actor`, `retry` and `retry_after`; a bare `AdvisoryError("...")` derives `HALT` (`actor=NONE`, `retry=UNSAFE`).
-
-`exit_code` defaults to `ExitCode.ERROR` (`2`); set `ExitCode.FINDINGS` (`1`) for a negative result of a check that ran. An error with `ExitCode.OK`, or an `AUTO` error without `fix`, raises `ValueError`. `target_files` given as one string is one target.
-
-If a subclass takes constructor arguments of its own, forward the advisory keywords typed with `AdvisoryFields`:
+Subclass with `level = Level.WARNING` or `Level.NOTICE` and return instances in
+the result's `notices` list. `error.with_level(Level.WARNING)` returns a copy at
+the lower level with the same code.
 
 ```python
-from typing import Unpack
-
-from devkit.advisory import AdvisoryError, AdvisoryFields
-
-
-class GitFailedError(AdvisoryError):
-    code = "GIT_FAILED"
-
-    def __init__(
-        self, message: str, *details: object, returncode: int | None = None, **fields: Unpack[AdvisoryFields]
-    ) -> None:
-        super().__init__(message, *details, **fields)
-        self.returncode = returncode
-```
-
-## Returning warnings and notices
-
-Return a warning or notice, an `AdvisoryError` at level `WARNING` or `NOTICE`, with the result (by convention in a `notices` list); never raise it. Its `exit_code` is `0`; `actor`, `retry`, `guardrail`, `input_error` and `retry_after` are ignored.
-
-```python
-from dataclasses import dataclass, field
-
-from devkit.advisory import AdvisoryError, Level
-
-
 class OrphanLeftNotice(AdvisoryError):
     code = "ORPHAN_LEFT"
     level = Level.WARNING
     what_to_report = "A hand-edited file is no longer managed; delete or move it"
-
-
-class ToolVersionChangedNotice(AdvisoryError):
-    code = "TOOL_VERSION_CHANGED"
-    level = Level.NOTICE
-    brief = True  # self-explanatory, no fix: rendered without [ACTION]
-
-
-@dataclass
-class SyncResult:
-    written: list[str]
-    notices: list[AdvisoryError] = field(default_factory=list)
 ```
-
-`error.with_level(Level.WARNING)` returns a copy at the lower level, keeping class and code. `as_advisory_error` reports a raised warning or notice as `UNEXPECTED_ERROR`.
 
 ## Rendering at boundaries
 
 Catch at the process or transport boundary, not deep inside the code:
 
 ```python
-import sys
-
-from devkit.advisory import as_advisory_error
-
-
 def main() -> int:
     try:
         run()
-    except Exception as exc:  # boundary: adapt anything unexpected to UNEXPECTED_ERROR
-        error = as_advisory_error(exc)
+    except Exception as exc:
+        error = as_advisory_error(exc)  # anything not an ERROR-level AdvisoryError becomes UNEXPECTED_ERROR
         print(error.render(), file=sys.stderr)
         return int(error.exit_code)
     return 0
 ```
 
-- `error.lines()` / `error.render()`: sentinel lines (`[ERROR]`, `[WARN]` or `[NOTICE]` headline by level) for stderr or an MCP tool result; multi-line values continue on lines indented under their sentinel.
-- `error.to_dict(include_advisory=True)`: JSON payload `{code, level, message, exit_code, advisory}`; a command printing JSON renders no block on stderr.
-- `error.to_problem_details(status=404, type_base="https://docs.example.com/errors")`: RFC 7807 body. `status` is the HTTP status chosen by the web layer; the library never maps codes to statuses.
-- `as_advisory_error(exc)` / `render_error(exc)`: pass through an `ERROR`-level `AdvisoryError`, adapt anything else to `UNEXPECTED_ERROR` (`MAINTENANCE`) with the message `<ExceptionType>: <text>`.
-
-## Boundary rules
-
-- Web frameworks own HTTP status mapping, headers such as `Retry-After`, and the server-side decision to include `advisory`; keep that adapter code in the application, not in `devkit.advisory`.
-- Do not copy the enums, mode derivation, or `[ACTION]` texts into application code. Subclass `AdvisoryError` for domain errors instead.
+- `error.to_dict(include_advisory=True)` gives the JSON payload; a command
+  printing JSON renders no block on stderr.
+- `error.to_problem_details(status=..., type_base=...)` gives an RFC 7807 body;
+  the web layer chooses the status.
+- Subclass `AdvisoryError` for domain errors; do not copy the enums, mode
+  derivation or `[ACTION]` texts into application code.
 
 ## Testing
 
-Assert on `error.code` and `error.mode`, not message strings, and check that `fix` and `target_files` are exact:
+Assert on `error.code`, `error.mode` and exact `fix` and `target_files`, not on
+message strings:
 
 ```python
 assert exc_info.value.mode is ActionMode.INPUT_ERROR

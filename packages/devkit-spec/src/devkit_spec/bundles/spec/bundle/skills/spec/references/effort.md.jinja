@@ -1,62 +1,32 @@
 # activity-effort
 
-How thoroughly one activity of a slug is done: `low`, `medium` (the default) or `high`.
-
-- Choose it when the activity starts and pass it to its executor as run input. Never store it as authoritative state in the Unit or the configuration.
-- Backlog (a direct acceptance included: it has no Planning run) and inline Planning have no effort.
+How thoroughly one activity of a slug is done: `low`, `medium` (the default) or `high`. Backlog (a direct acceptance included: it has no Planning run) and inline Planning have no effort.
 
 ## Selecting the effort
 
-When an activity starts, choose the effort within the authorized scope and state it with its reason.
+When an activity starts, choose the effort within the authorized scope, state it with its reason and pass it to the executor as run input. Effort selection adds no approval gate.
 
-- Preserve an explicit user selection. Effort selection adds no approval gate.
-- For a proposal, the `planning_effort` and `dev_effort` hints in `proposal.md` are the initial recommendation. Backlog sets them; Planning updates `dev_effort` before `plan-accept`, and the handoff returns it as `dev_effort`. An override at start needs no commit to `proposal.md`.
-{% if execution.environment == "local" %}- When `proposal-handoff=ask`, the native form can collect Development effort with that decision. Under `auto`, use the selected hint without adding a form.
-- Use the returned `activity_effort` as run input without asking again.
-{% else %}- Use the activity effort selected by the Host as run input without asking the same choice again.
-{% endif %}- Propose `medium` by default, also for work that changes an accepted decision or contract, creates a contract or a document kind, or spans several packages: its `challenger` pass and initial review cover those.
-- Propose `high` only when one of these holds:
-  - the work has an effect that cannot be undone locally: a publication or release, a migration of persisted data, deletion of user data, or a change to a contract with external consumers, such as a published library API;
-  - an earlier activity or review of the same work left P1 findings unresolved, or the work was returned or closed for a defect.
+- Preserve an explicit user selection, and use the effort a handoff returns without asking again.
+- For a proposal, the `planning_effort` and `dev_effort` hints in `proposal.md` are the initial recommendation; Planning updates `dev_effort` before `plan-accept`. An override at start needs no commit.
+- Propose `medium` by default, also for work that changes an accepted decision or contract, creates a document kind, or spans several packages.
+- Propose `high` only when the work has an effect that cannot be undone locally (a release, a persisted-data migration, deletion of user data, a change to a contract with external consumers), or an earlier activity or review of the same work left P1 findings unresolved or was returned or closed for a defect.
 - Propose `low` only for work whose direction leaves nothing to criticize.
+- For `high` on a `session` task, also advise on depth: a contract or document-kind change proposes `spec` depth, reversing an accepted decision proposes `proposal` depth, other work gets no depth advice. If the user keeps `session`, the work runs at `high` and its review loop reports a hand-over in the conversation.
 
 ## Procedure per effort
 
 | Activity | `low` | `medium` | `high` |
 | --- | --- | --- | --- |
 | Planning (`proposal`) | questions only; no `scout` or `challenger` | one `challenger` pass always; `scout` when the direction needs evidence | two or more options compared, `scout` and `challenger` required, rounds in the [review loop](review-loop.md) |
-| Development (`session`) | the author's self-review | one mandatory initial `code-reviewer` pass; the implementer verifies fixes and decides repeat calls | `code-reviewer` subagent review in the [review loop](review-loop.md) |
-| Development (Unit path) | the author's self-review and self-checked reconcile | one mandatory initial `code-reviewer` pass; a separate `reconcile-reviewer` check unless eligible for self-check below; repeat calls at the implementer's judgment | `code-reviewer` and a separate `reconcile-reviewer`, each in the [review loop](review-loop.md); the first reconcile verification is always independent |
+| Development (`session`) | the author's self-review | one mandatory initial `code-reviewer` pass; the implementer verifies fixes and decides repeat calls | `code-reviewer` rounds in the [review loop](review-loop.md) |
+| Development (Unit path) | the author's self-review and self-checked reconcile | one mandatory initial `code-reviewer` pass; a separate `reconcile-reviewer` check unless the exception below applies | `code-reviewer` and `reconcile-reviewer`, each in the [review loop](review-loop.md) |
 
 ## Rules
 
-- **The floor stays.** Gates, the workflow's exit checks and `required` policies hold at every effort; effort sets only the optional procedure above them.
-  - On the Unit path, record the review envelope before `dev-integration`, also at `low`; a `low` self-review says so in it.
-  - A `session` task reviews at every effort (session: no records).
-- **The initial review runs in a subagent** at `medium` and `high`, regardless of change size. A worker nests it (Host → worker → code-reviewer); a `session` task's Host or Cloud Agent runs it directly. The reviewer returns its fields as a message; on the Unit path the caller records them as the envelope.
-- **Reconcile is Unit-path only.** The implementer writes and resolves the Living Spec reflection and `reconcile.md` at every effort.
-  - The read-only `reconcile-reviewer` verifies it at `medium` (except below) and `high`.
-  - Every verification is a `reconcile-check` envelope; `living-spec-draft` exits only on the latest with no open findings.
-  - Fix findings in the reconcile and check again, not by reopening the code review.
-- **Medium initial reconcile exception.** The implementer MAY omit the first `reconcile-reviewer` call only when all of these hold:
-  - all affected contracts and documents can be identified;
-  - their agreement with the actual diff can be directly demonstrated;
-  - there is no unresolved contract interpretation or cross-component impact.
-
-  Cross-component impact means the diff changes behavior or agent-facing text in more than one package, in more than one capability area, or in a package and the repository tooling (`scripts/`, `justfile`): a repository script plus a sentence of a shipped skill counts. The Living Spec reflection of the change itself, and links or references updated elsewhere, do not count. A confirmed no-impact or a wording-only reflection preserving the contract can qualify; a small diff alone cannot.
-  - If any condition is uncertain, call the reviewer.
-  - When omitting the call, perform the self-check and record the omission reason and the verification evidence in the `reconcile-check` envelope, identified as self-verification.
-  - This exception never skips the first medium code review, changes the effort or bypasses a required policy. At `high`, always call the reconcile reviewer for its first round.
-- **Medium repeat calls are discretionary.** After the initial review the implementer verifies fixes and later changes itself.
-  - Call the reviewer again only for expanded scope, uncertain correctness or an uncertain contract interpretation.
-  - Close findings with evidence in `reverify` or a new `reconcile-check`, naming who verified the changed scope. Do not imply that the prior reviewer checked later changes.
-  - A failed or stale initial call never satisfies a required first review.
-- **High runs the bounded [review loop](review-loop.md)** for code review, reconcile verification and Planning criticism; findings carry `P1`, `P2` or `P3`.
-- **High session work.** When `high` is proposed for a `session` task, the proposal SHOULD also advise on depth by what the work does:
-  - creating or changing a contract or a document kind proposes `spec` depth;
-  - reversing an accepted decision proposes `proposal` depth;
-  - other work (a release or migration with no contract change, earlier unresolved findings, several packages alone) gets no depth advice.
-
-  If the user keeps `session`, the work runs at `high` as defined: its review loop reports a hand-over in the conversation.
-- **Effort never changes integration policy** ([completion](completion.md#policy)).
-- **Where it is recorded.** A worker writes the applied effort in its `worker` envelope (`--effort`, the sole authoritative record; the `proposal.md` hints are not). A `session` task reports it in its final response or PR body. Model and reasoning settings are outside this axis.
+- Gates, exit checks and `required` policies hold at every effort; effort sets only the optional procedure above them. On the Unit path, record the review envelope also at `low`.
+- At `medium` and `high` the initial review runs in a subagent regardless of change size; a worker nests it (Host → worker → `code-reviewer`). On the Unit path the caller records its fields as the envelope.
+- The implementer writes the Living Spec reflection and `reconcile.md` at every effort. Each verification is a `reconcile-check` envelope; fix findings in the reconcile and check again, not by reopening the code review.
+- At `medium`, the implementer MAY skip the first `reconcile-reviewer` call only when every affected contract and document is identified, its agreement with the diff is shown, and nothing is cross-component or open to interpretation. Cross-component means behavior or agent-facing text changes in more than one package or capability area, or in a package and the repository tooling; the change's own Living Spec reflection does not count. If any condition is uncertain, call the reviewer. When skipping, record the reason and evidence in the `reconcile-check` envelope as self-verification.
+- After the initial `medium` review, the implementer verifies fixes itself and calls the reviewer again only for expanded scope or uncertain correctness. Name who verified what in `reverify` or the new `reconcile-check`; a failed or stale initial call never counts as the first review.
+- Effort never changes integration policy ([completion](completion.md#policy)).
+- A worker records the applied effort with `--effort` in its `worker` envelope, the only authoritative record; a `session` task reports it in its final response or PR body.

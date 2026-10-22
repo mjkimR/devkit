@@ -33,9 +33,7 @@ the domain basics, and lacks only this repository's facts.
 
 ## Layout
 
-- Order content by when the reader needs it: purpose, constraints, procedure, completion check, references.
-- Use a table for items compared on the same attributes, a numbered list for ordered steps and bullets otherwise.
-- Give a heading to content a reader searches for; a single short paragraph needs none.
+Order content by when the reader needs it: purpose, constraints, procedure, completion check, references.
 
 ## Related Instructions
 

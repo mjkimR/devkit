@@ -5,123 +5,63 @@ description: Triage open feedback files under specs/ in one hygiene session; gro
 
 # Feedback hygiene
 
-Run this playbook only in a hygiene session the user asks for. It triages open feedback into `promoted`, `dismissed`
-or `forwarded` (Step 4). An authorized direct fix without promotion is resolved by the `spec` skill's
-[completion procedure](../../skills/spec/references/completion.md#source-feedback-resolution) and needs no hygiene
-session.
+Run this playbook only in a hygiene session the user asks for, from a clean working tree or a task worktree. You
+propose and draft; destinations beyond existing authorization are the user's decisions. A direct fix resolves its
+feedback through the `spec` skill's
+[source feedback resolution](../../skills/spec/references/completion.md#source-feedback-resolution) instead.
 
-## Prerequisites
-
-- The user asked for this playbook. Destinations are the user's decisions; this playbook drafts and asks.
-- A clean working tree (`git status`), or an isolated branch or task worktree.
-- The Step 1 listing shows at least one item; otherwise report an empty backlog and stop.
-
-## Step 1: Collect
+## Step 1: Collect and group
 
 ```bash
 uv run devkit spec list feedback --status open --all-namespaces -n 0
 ```
 
-- Feedback of completed spec bundles is included; `--query <text>` narrows by ID or title.
-- Each line carries `severity`, `scope` and `target`, critical items first.
-- If the user names a scope or severity, narrow the selection with `--where scope=<scope>` or
-  `--where severity=<a>,<b>`; otherwise take every open item.
-- Read each selected file's remaining frontmatter (`kind`, `category`, `recurring`, `origin`) in Step 2.
+- If the listing is empty, report an empty backlog and stop. Narrow with `--where scope=<scope>` or
+  `--where severity=<a>,<b>` only when the user names one.
+- Confirm each item's ownership (`repo`, `upstream`, `unknown`) from its target and evidence; do not ask the user.
+- Group items by `target`; a group shares one decision.
+- Order by `critical`, then `recurring: true`, then `blocked`, `workaround`, `noise`.
+- An item without observed Evidence is a dismissal candidate.
 
-## Step 2: Group and order
-
-- Determine ownership from the observed target and evidence: `repo`, `upstream` or `unknown`; do not ask the user
-  to classify tools. An asset developed in this repository is `repo` even when other projects install it.
-- An unknown or cross-tool item stays eligible.
-- Group items with the same `target`; a group shares one decision.
-- Order groups and items: `critical`, then `recurring: true`, then `blocked`, `workaround`, `noise`.
-- Read each body's Evidence section. A suggestion without observed evidence is a dismissal candidate
-  ("insufficient evidence").
-
-## Step 3: Decide the destination with the user
-
-Propose the resolution destination or destinations per group yourself. Draft artifacts within existing
-authorization; ask the user for decisions beyond that scope:
+## Step 2: Decide the destination with the user
 
 | Scope | Destination | Action |
 | :--- | :--- | :--- |
-| `repo` | Rule | Draft it with the `spec-rule` skill in the project's in-repository bundle |
-| `repo` | Playbook | Draft `playbooks/<slug>/SKILL.md` and its `kind = "playbook"` asset in the project's in-repository bundle (`devkit get-context devkit`, instruction `in-repo-bundle`), then `uv run devkit sync` |
-| `repo` | Decision | Draft `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md` from `.devkit/managed/spec/templates/decision.md` |
-| `repo` | Living Spec fix | A wrong capability, story or architecture statement: fix it through the `spec` skill |
-| any | Dismissal | Record the reason in the disposition line (Step 4) |
-| `upstream` | Forward draft | Prepare a report for the owning tool or bundle, including devkit and devkit-spec; submit only with explicit external-send authorization |
-| `unknown` | Ownership review | Inspect the observed targets, propose repository or upstream destinations, and keep unresolved items open |
+| `repo` | Rule | Draft it with the `spec-rule` skill |
+| `repo` | Playbook | Draft `playbooks/<slug>/SKILL.md` as a `kind = "playbook"` asset of the in-repository bundle (devkit's `in-repo-bundle` instruction) |
+| `repo` | Decision | Draft an ADR from `.devkit/managed/spec/templates/decision.md` |
+| `repo` | Fix | A defect: a `bugfix` task; a wording fix: a `session` change; an open design question: `uv run devkit spec proposal new <slug>` |
+| `upstream` | Forward | Draft a report for the owning tool; submit only with explicit external-send authorization |
+| `unknown` | Ownership review | Propose destinations; keep unresolved items open |
+| any | Dismissal | A reasoned decline |
 
-Address a `repo` item locally:
+Record the source FB IDs in the destination's `Source feedback` or the session's agreed scope.
 
-- a defect with clear expected behavior: a `bugfix` task (`sdd-session-bugfix`, or `sdd-spec-bugfix` when its
-  behavior must be written down);
-- a small wording fix: a `session` change;
-- an open design question: a draft proposal (`uv run devkit spec proposal new <slug>`).
+## Step 3: Update status
 
-Record full source FB IDs and the scope received in the destination proposal/spec body (`Source feedback`), or in a
-session's agreed scope. Include only open direct-fix source paths in implementation boundaries for completion
-updates; promoted references remain traceability and require no further feedback work.
-
-## Step 4: Update status and seal
-
-Set each item's status:
-
-- `promoted`: when follow-up work receives the observation. Track subsequent progress in that destination; never
-  convert promoted to resolved merely because the work finishes.
-- `resolved`: only for an open observation directly fixed and verified without promotion, including a session or
-  spec fix. A partial or unverified direct fix stays `open`.
+- `promoted`: follow-up work received the item. It stays `promoted` when that work finishes.
 - `dismissed`: a reasoned decline.
-- `forwarded`: only after authorized submission, citing the actual report location. A draft alone stays `open`, as
-  does an item whose ownership is unresolved.
+- `forwarded`: only after the authorized submission. A draft or an unresolved ownership stays `open`.
 
-Append a disposition line so each outcome is traceable; for an item spanning several tools, link every resolution
-destination:
+Append a disposition line to each item, linking every destination for a cross-tool item:
 
 ```markdown
-- **Disposition**: <destination ID, path or issue link>: <one-line summary of what was done>
+- **Disposition**: <destination ID, path or report location>: <one-line summary or dismissal reason>
 ```
 
-- The destination is the spec, proposal, decision, rule or playbook ID that received the item, the changed file
-  path for a `session` fix, or the report location for a forward.
-- A resolution also states the implemented outcome and concrete test/review evidence.
-- A dismissal states its reason in the same line.
+## Step 4: Stale branches and rejected proposals
 
-## Step 5: Stale activity branches
+`uv run devkit rules check -p hygiene` also reports:
 
-A hygiene session also surfaces stalled work.
-
-- `uv run devkit rules check -p hygiene` warns about each `plan-*` and `dev-*` branch idle longer than
-  `[worktree] stale_after`. It needs `gh auth status`; otherwise it notes the skip.
-- `uv run devkit worktree status --stale` prints the same as `[STALE_BRANCH: ...]` lines with the pull request state
-  and the resume command.
-
-List them for the user with the two ways on, resume or discard, per the `spec` skill's
-[leftovers and stale branches](../../skills/spec/references/branches.md#4-leftovers-and-stale-branches). Do neither
-unasked: the warning never cleans anything up.
-
-## Step 6: Rejected proposals
-
-The same run lists each rejected proposal still in the base (`SPEC_PROPOSAL_REJECTED_PENDING`). Its cleanup is
-Host work; do it here once the user agrees:
-
-1. Find the rejection commit and the user's reason:
-   `git log -1 --format='%H %B' -S'status: rejected' -- <proposal.md>`.
-2. Write a rejection ADR under `docs/decisions/` that references the proposal and that commit. Quote the reason;
-   rewrite nothing from it.
-3. Before deleting, follow the
-   [feedback retirement procedure](../../skills/spec/references/feedback-retirement.md): preserve open observations,
-   retire historical references with Git context, update relative links and validate current references.
-4. Keep the proposal on collision, invalid input or an unresolved live dependency.
-5. Put preservation, the ADR and deletion in the same commit.
+- `[STALE_BRANCH: ...]`: offer resume or discard per the `spec` skill's
+  [stale branches](../../skills/spec/references/branches.md#4-leftovers-and-stale-branches); do neither unasked.
+- `SPEC_PROPOSAL_REJECTED_PENDING`: once the user agrees, write the rejection ADR quoting the reason from the
+  rejection commit (`git log -1 --format='%H %B' -S'status: rejected' -- <proposal.md>`), preserve feedback by the
+  [feedback retirement procedure](../../skills/spec/references/feedback-retirement.md), and delete the proposal in the
+  same commit.
 
 ## Completion conditions
 
-- Every dispositioned item selected in Step 1 has `status` `promoted`, `resolved`, `dismissed` or `forwarded` and a
-  disposition line, and the Step 1 listing no longer shows it; items left `open` (Step 4) are reported.
-- Every promotion has a destination receiving its scope under user authorization; every resolution has
-  implementation and verification evidence. No observation is marked resolved merely because it was handed off.
-- Every rejected proposal the run listed is cleaned up (rejection ADR and deletion in one commit) or reported as left
-  for later.
-- `uv run devkit rules check` exits `0`; the status updates and drafts are proposed as one commit.
+- Every dispositioned item has a terminal status and a disposition line; items left `open` are reported.
+- Every rejected proposal listed is cleaned up or reported as left.
+- `uv run devkit rules check` exits `0`, and the changes are proposed as one commit.

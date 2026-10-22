@@ -5,146 +5,78 @@ description: Manually generate a revision-bound weekly repository progress repor
 
 # Weekly report
 
-Run only on explicit invocation for this task, through `devkit-playbook` or exact
-`devkit playbook get maintenance/weekly-report`; selecting or retrieving the playbook does not run it. Load the
-returned bundle context once per agent context.
-
-- Use existing repository tools and authorized connectors; build no scheduler, detector, history store or publisher.
-- Generation runs no maintenance sweep, full test suite, automatic fix, feedback creation or proposal creation.
-- Preserve unrelated edits throughout.
+Run only on explicit invocation (`devkit-playbook` or `devkit playbook get maintenance/weekly-report`); load the
+returned bundle context once. Use existing tools and authorized connectors only. Generation runs no maintenance
+sweep, full test suite, automatic fix, feedback or proposal creation, and changes no source.
 
 ## 1. Capture identity and interval
 
-1. Record a credential-free repository identity (canonical local path or configured remote), selected scope,
-   inspected commit SHA, integration branch/ref and resolved SHA, generation timestamp and dirty paths.
-   - Use local Git inspection, for example `git rev-parse HEAD`, `git rev-parse <integration-ref>^{commit}` and
-     `git status --short`; do not fetch, switch branches or modify sources.
-   - If a required identity is unavailable, generation fails. A local integration ref does not prove remote
-     freshness.
-2. Fix the interval:
-   - Accept explicit start/end timestamps and timezone, or use the previous complete Monday 00:00 to Monday 00:00
-     calendar week in the configured user timezone. If the timezone is unknown, ask for it.
-   - Record inclusive start, exclusive end, timezone name and UTC offsets at both boundaries.
-   - Resolve local calendar boundaries before converting to UTC: a DST week may be 167 or 169 hours.
-   - An event exactly at start belongs; one exactly at end does not.
-   - If the interval is reversed, ambiguous or unresolved, generation fails until it is resolved.
-3. Select a local artifact location explicitly:
-   - Default to the owning work unit's materials or the repository's existing materials location; if neither
-     exists, ask for it.
-   - Do not create a tracked report on the default branch without the user's say.
-   - Keep the report an ordinary local file, not a seven-day shared artifact.
-   - Record a prior report only when the user names one; do not search history for one.
-4. Build a logical report key from repository identity, scope and exact interval/timezone.
-5. Allocate a unique run ID, source SHA and new filename, checking collisions and creating the file exclusively. A
-   rerun names any superseded run and preserves its artifact; never overwrite another run.
+1. Record a credential-free repository identity, scope, HEAD SHA, integration ref and its SHA, generation time and
+   dirty paths with local Git only (`git rev-parse HEAD`, `git rev-parse <ref>^{commit}`, `git status --short`); do
+   not fetch or switch branches. A missing identity fails generation; a local ref does not prove remote freshness.
+2. Use the user's start, end and timezone, or the previous complete Monday 00:00 to Monday 00:00 week in the user's
+   timezone (ask if it is unknown). Record inclusive start, exclusive end, timezone and both UTC offsets; resolve
+   local boundaries before converting (a DST week has 167 or 169 hours). A reversed, ambiguous or unresolved
+   interval fails generation.
+3. Write to the owning work unit's materials or the repository's materials location (ask if neither exists) as an
+   ordinary local file: not a seven-day shared artifact, and not a tracked file on the default branch without the
+   user's say. Use a prior report only when the user names one.
+4. Key the report by identity, scope and exact interval. Give each run a unique ID and a new, exclusively created
+   file; a rerun names the run it supersedes and never overwrites it.
 
-## 2. Gather revision-bound evidence
+## 2. Gather evidence
 
-Default to committed content at the captured SHA (`git show <sha>:<path>`, local history and reachability checks).
+Read committed content at the captured SHA (`git show <sha>:<path>`). Where document lookup is installed, include
+completed specs (`--history`), all namespaces and every page, and check command help for actual options. Treat
+checkout-only lookup output as a working-tree observation until reconciled with the SHA; include uncommitted
+content only when selected, labeled separately.
 
-- Where document lookup is installed, include completed specs with `--history`, all intended namespaces and
-  every page.
-- Read the available command help for actual options instead of assuming a command API.
-- Resolve IDs and inspect changed ADRs, capabilities and stories, work-unit workflow records and available check
-  artifacts.
-- Treat checkout-only lookup output as a working-tree observation: reconcile it against the captured SHA before
-  citing it as committed evidence.
-- Never attribute dirty documents to committed history. Include uncommitted content only when explicitly selected,
-  with a diff/artifact reference and a separate label.
-
-Inventory each source with revision, scope, observed time, result and artifact/path citation.
-
-- Distinguish events inside the interval from the current snapshot; snapshot evidence predating the interval is
-  not a new event.
-- Use Git author/committer times as discovery hints, not integration proof, and name the timestamp basis of each
-  dated claim. Without established integration time, report reachable changes with that limitation, never as
-  integrated in the week.
-- Cite each factual claim by commit plus path/document ID, work-unit envelope or check artifact; label assessments
-  separately.
-
-Corroborate delivery:
-
-- For completed spec work, corroborate completed status with tasks, verification/reconcile evidence and delivered
-  commit reachability from the captured integration SHA (`git merge-base --is-ancestor <commit> <integration-sha>`).
-- For session work, cite the change, verification report and reachability.
-- An accepted proposal, checked task or commit alone proves no delivery; missing evidence lowers a claim to
-  unverified. Report implementation that is complete but not verified as integrated separately from completed work.
-- Never infer remote release or deployment.
-
-After collection and before artifact verification, capture HEAD, integration ref and relevant dirty-content state
-again and compare content and diffs, not only path names. If the state changed, restart against the new revisions
-or mark the affected evidence unverified; never mix snapshots silently.
+- Inventory each source with revision, scope, observed time, result and citation. Cite each claim by commit and
+  path or ID; label assessments.
+- Separate events inside the interval from the current snapshot. Git author and committer times are hints: name
+  each dated claim's timestamp basis, and never call a change integrated in the week without integration evidence.
+- Count spec work as delivered only with tasks, verification or reconcile evidence and reachability from the
+  integration SHA (`git merge-base --is-ancestor <commit> <integration-sha>`); session work needs the change, its
+  verification and reachability. Report the rest as unverified, and never infer release or deployment.
+- Before writing, recapture HEAD, integration ref and dirty content; if they changed, restart or mark the affected
+  evidence unverified.
 
 ## 3. Assess health, comparisons and actions
 
-Reuse available hygiene, drift and review/refactoring artifacts; a check covers only its recorded revision and
-scope.
+- Reuse hygiene, drift and review artifacts for their recorded revision and scope. Record missing, stale, failed or
+  not-comparable sources with reasons; a stale result is never a current clean verdict, and a failed optional source
+  is a limitation.
+- Compare with the named prior report only on compatible scope, matching by feedback or proposal ID, else by source,
+  target and discrepancy. Label findings new, recurring or, with direct evidence, resolved; absence is unknown.
+- Rank next actions by demonstrated impact and urgency, each with its reason and step. Link open feedback and
+  proposals instead of duplicating them; never reopen terminal ones.
 
-- Record missing, stale, failed and not-comparable sources explicitly with reasons.
-- Cite a stale result as historical evidence, never as a current clean verdict.
-- If an optional source fails, continue generation and state the limitation.
+## 4. Write and verify the report
 
-Compare only compatible scope, finding identity and supporting evidence:
+Write six sections: identity and evidence inventory; completed and integrated work, then unverified work; changed
+ADRs and behavior with IDs and commits; health per source with gaps; problems and ranked actions; prior comparison,
+limitations, generation outcome and a link to the outcome record.
 
-- Match an existing feedback/proposal ID first, otherwise source, affected target and substantive discrepancy.
-- Label first observations new and evidenced continuing findings recurring. Label a finding resolved only with
-  direct resolution evidence covering that finding; absence from a report is unknown, not resolved.
-- Record a missing prior report or incompatible scope as explicit non-comparability.
+Read the file back and check its identity and every evidence link, or mark the link unavailable. Only then is
+generation complete; otherwise it fails and nothing is published. Record its SHA-256; changed content needs a new run.
 
-Rank next actions by demonstrated impact and urgency, each with its reason and concrete next step. Link matching
-open feedback/proposals instead of creating duplicates; cite terminal feedback for traceability, never reopen it.
+## 5. Record and publish
 
-## 4. Write and verify the immutable report
-
-Write these six sections, with evidence links and separately labeled assessments:
-
-1. Identity: logical key, run ID, superseded run if any, repository, interval/offsets/timezone, scope, captured
-   revisions, dirty state, generation timestamp and complete evidence inventory.
-2. Completed work and integration evidence; separate unintegrated or unverified implementation.
-3. Added/changed ADRs and significant behavior changes with document IDs and commit evidence.
-4. Repository health with per-source revision, scope, observed time, result and explicit gaps.
-5. Unresolved problems and prioritized next actions with reasons, steps and existing follow-up links.
-6. Named prior report comparison, limitations and generation outcome; reference the companion outcome record as
-   the authoritative publication status, initially pending.
-
-Verify that the local artifact exists, its identity matches intake and each evidence link resolves or is marked
-unavailable/unverified. Only then is generation completed.
-
-- If writing, reading back or verifying identity fails, generation fails; publish nothing.
-- After verification, compute a SHA-256 content digest. The report bytes are now immutable; changed content,
-  including changed evidence on a rerun, needs a new run.
-
-## 5. Record and separately publish
-
-Create a local companion outcome record with run ID, artifact reference, SHA-256 digest, generation outcome,
-publication outcome, destination, authority basis, attempts and receipt/link or error evidence.
-
-- Publication updates this record and keeps earlier attempts; it never changes the report or its generation
-  outcome.
-- Without an outcome record, do not publish; the verified report stays valid.
+Create a companion outcome record: run ID, artifact, digest, generation outcome, publication outcome, destination,
+authority, attempts and evidence. Publication changes only this record.
 
 | Publication outcome | Evidence and action |
 | --- | --- |
 | pending | No destination, authority, publisher or permission; preserve the local artifact and state what is missing. |
-| published | Existing authorized tool returned a destination receipt/link and destination content/run/digest was verified. |
-| failed | Confirmed publication failure; retain error evidence and successful generation. |
-| unknown | Lost response or destination cannot be verified; retain uncertainty and do not blindly retry. |
+| published | An authorized tool returned a receipt or link, and the destination's content, run and digest were verified. |
+| failed | Confirmed failure; retain the error evidence and the successful generation. |
+| unknown | Lost response or unverifiable destination; do not retry blindly. |
 
-Publish only to a destination the user selected, under the user's explicit authority, with an existing authorized
-connector or command.
+Publish only to a destination the user selected, under the user's explicit authority, with an existing connector or
+command; nothing external happens implicitly. Check collisions first, replace a target only with authority naming
+it, and recheck the digest. Retry with the same run ID and bytes. Before retrying `unknown`, inspect the
+destination: a verified match is `published`, an unverifiable state stays `unknown` for the user to decide, and
+different content is a collision.
 
-- Invocation or integration policy grants no publication authority; no upload, message, commit, push or other
-  external mutation follows implicitly.
-- Check destination collisions before sending; replace an existing target only under explicit authority naming it.
-- Recheck the local digest immediately before publishing.
-
-Retry with the same run ID and exact bytes/digest:
-
-- Before retrying `unknown`, inspect destination state for that run and digest. On a verified match, record
-  `published` without resending.
-- If the state is unverifiable, leave it `unknown` and ask the user for a disposition instead of publishing again.
-- After a confirmed absence, retry only within the existing publication authority.
-- Treat confirmed different content as a collision, never as an implicit replacement.
-
-Finish by naming the local artifact, generation outcome, publication outcome, evidence limitations and next
-steps. In a controlled exercise, label simulated authority and receipts and imply no real external publication.
+Finish by naming the artifact, both outcomes, limitations and next steps; in an exercise, label simulated authority
+and receipts.

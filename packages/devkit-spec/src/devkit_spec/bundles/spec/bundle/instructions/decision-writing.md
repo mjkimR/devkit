@@ -5,8 +5,7 @@ description: Read before writing or editing an ADR (docs/decisions/) or a propos
 
 # Decision Writing
 
-An ADR records one decision and its reasons; other documents link it by ID instead of repeating them. Start from the
-`decision` template; a PADR has the same sections.
+An ADR records one decision and its reasons. Start from the `decision` template; a PADR has the same sections.
 
 ## Summary
 

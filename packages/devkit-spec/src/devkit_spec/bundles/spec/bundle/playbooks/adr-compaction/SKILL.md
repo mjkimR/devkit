@@ -5,88 +5,51 @@ description: Consolidate related approved ADRs into replacement ADRs that keep t
 
 # ADR compaction
 
-Run this playbook only when the user asks for it; that request authorizes the run's ADR deletions. It runs at
-`session` depth: no spec unit, envelope or reconcile record.
+Run this playbook only when the user asks for it, for the whole ledger or named ADRs; the request authorizes the
+run's ADR deletions. It runs at `session` depth from a clean working tree; record the base commit
+(`git rev-parse HEAD`).
 
-A compaction is an editorial change of the decision records, never a change of decision: a reversed, invalidated or
-changed decision needs a new ADR with `supersedes`. Anything that needs a decision changed leaves the run.
+A compaction never changes a decision. A decision that must change needs a new ADR with `supersedes`, outside this
+run.
 
-## Prerequisites
+## Step 1: Group
 
-- The user asked for this playbook, for the whole ledger or for named topics or ADRs.
-- A clean working tree (`git status`). Record the base commit: `git rev-parse HEAD`.
+Read every ADR in scope (`uv run devkit spec list decision -n 0`).
 
-## Step 1: Survey
+- A group holds the supersession closure of its members (`supersedes`, `superseded_by` in frontmatter; these are not
+  in the reference graph) plus ADRs on the same topic. It has two or more members.
+- Leave out an ADR that contradicts another in-effect ADR or no longer matches the code or the Living Spec, and record
+  it with the `spec-feedback` skill.
+- Order members by `created_at`, then supersession order.
 
-```bash
-uv run devkit spec list decision -n 0
-rg -n '^(status|supersedes|superseded_by|aliases):' docs/decisions/
-```
+Show the user the group map (replacement slug, members, one-line topic) before writing, unless the request named the
+groups.
 
-Read every ADR in scope. Build the supersession graph from frontmatter (`supersedes`, `superseded_by`); these fields
-are outside the reference graph.
+## Step 2: Write each replacement
 
-## Step 2: Group and order
+Write `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, dated today, from `.devkit/managed/spec/templates/decision.md`:
 
-- Start from supersession closure: a group holds every ADR a member's supersession field names, and every ADR whose
-  supersession field names a member.
-- Add ADRs on the same topic: shared components, the same capability, overlapping `devkit spec refs` targets.
-- A group has two or more ADRs. An ADR that fits no group stays as it is.
-- Leave out of every group an ADR that contradicts another in-effect ADR or no longer matches the code or the Living
-  Spec; record the finding as feedback (`spec-feedback`).
-- Order each group's members by decision date (`created_at`), then supersession order.
+- Frontmatter: `status: accepted`, `created_at` today, `aliases:` every member ID and every alias a member declared;
+  no `supersedes` or `proposal`.
+- Section 4 lists only statements in effect, each ending with its source ID in parentheses. Considered options keep
+  each option a member rejected, labelled by that member. No History section.
+- Add, drop or change the meaning of no driver, option, scope or consequence.
 
-Show the user the group map (replacement slug, members, one-line topic) before writing, unless the request already
-named the groups.
+## Step 3: Apply and verify
 
-## Step 3: Write each replacement
-
-Path `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md` dated today, from `.devkit/managed/spec/templates/decision.md`:
-
-- Frontmatter: `id: ADR-<slug>`, `title`, an English Y-statement `summary`, `status: accepted`, `created_at` today,
-  `aliases:` every member ID and every alias a member declared. No `supersedes`, no `proposal`.
-- Sections 1 to 6: consolidated from the members. Section 4 lists only the statements in effect, one item per part,
-  each ending with its source ID in parentheses; superseded parts are left out. Considered options keep the
-  option a member rejected, labelled by that member. No History section: retired texts stay in Git.
-- Keep wording faithful: no driver, option, scope or consequence is added, dropped or changed in meaning.
-
-## Step 4: Apply
-
-1. Delete the member files: `git rm <member paths>`.
-2. Run `uv run devkit rules fix`: it rewrites alias references in current documents to the replacement ID and leaves
-   history as written.
-3. If `devkit rules check` still reports a glossary Owner naming a retired ID, replace it with the replacement ID in
-   `docs/glossary.md` by hand; `devkit rules fix` does not rewrite glossary Owners.
-4. Run `uv run devkit sync` if a bundle source changed.
-
-## Step 5: Verify
-
-```bash
-uv run devkit rules check
-git diff --no-renames --name-only --diff-filter=D <base> -- docs/decisions/
-```
-
-For each deleted ADR listed by the diff:
-
-1. `uv run devkit spec resolve <ID>` prints the replacement with `alias=<ID>`.
-2. No remaining `supersedes` or `superseded_by` outside the replacements names it.
-
-For each replacement:
-
-1. Every path, test and rule ID in its Confirmation section exists in the working tree. Correct a path that moved;
-   write "Review only" when no check exists.
-2. Fidelity review: compare it with its members (`git show <base>:<path>`) and each member's incoming references
-   (`devkit spec refs <ID> --direction in`). Each in-effect statement traces to a member, and no member's in-effect
-   decision is missing or altered. If a change is found, return to Step 3 or take the member out of the group.
-
-## Step 6: Commit and report
-
-Commit the replacements, the deletions and the rewrites together. The commit body carries the group map (replacement
-and members), the check results and the fidelity review result. Report the same to the user, with any ADR left out
-and why.
+1. `git rm` the member files, then run `uv run devkit rules fix` to rewrite alias references in current documents.
+2. Replace a retired ID in a `docs/glossary.md` Owner by hand; `devkit rules fix` does not rewrite Owners.
+3. Correct every path, test and rule ID in a replacement's Confirmation section that no longer exists; write "Review
+   only" when no check exists.
+4. Fidelity review: compare each replacement with its members (`git show <base>:<path>`) and their incoming references
+   (`devkit spec refs <ID> --direction in`). If an in-effect statement is missing, altered or untraceable, return to
+   Step 2 or take the member out of the group.
 
 ## Completion conditions
 
 - `uv run devkit rules check` exits `0`.
-- Every retired ID resolves to its replacement, and every replacement passed the fidelity review.
-- One commit holds the replacements, deletions and rewrites, and the user has the group map and any ADR left out.
+- `uv run devkit spec resolve <ID>` prints the replacement with `alias=<ID>` for every deleted ID
+  (`git diff --no-renames --name-only --diff-filter=D <base> -- docs/decisions/`), and no remaining `supersedes` or
+  `superseded_by` names one.
+- One commit holds the replacements, deletions and rewrites; its body and the report to the user carry the group map,
+  the check and fidelity results and any ADR left out with the reason.

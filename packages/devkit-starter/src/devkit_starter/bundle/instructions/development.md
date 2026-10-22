@@ -1,9 +1,8 @@
 ---
 name: development
-description: Read before editing a project. Covers instruction discovery and verification before completing changes.
+description: Read before completing a change. Covers reporting verification.
 ---
 
 # Development
 
-Read the project's instructions before editing. Before finishing, run the checks relevant to the change and
-report each check you could not complete, with the reason.
+Report each relevant check you could not run, with the reason.

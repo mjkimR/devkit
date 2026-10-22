@@ -24,50 +24,17 @@ hosts:
 
 # Reconcile Reviewer
 
-## Purpose
-
-At `activity-effort` `medium` or `high` of a spec unit's Development, verify the Living Spec reflection the implementer already wrote:
-
-- every behavior, capability and constraint change of the diff is reflected in `docs/`;
-- `reconcile.md` names every target;
-- docs and implementation agree with the contract.
-
-You do not draft documents; writing the reflection, fixing what you find and resolving `reconcile.md` stay with the implementer. Verify the whole supplied scope.
-
-## Input
-
-The caller's payload: `relevant_files` (`reconcile.md`, the deciding review envelope, the Living Spec documents the record targets and those it affects), `diff_scope` (base and head), the `activity-effort` and, in a later round of the `high` loop, the earlier rounds' findings.
+Verify the Living Spec reflection the implementer wrote for a spec unit's Development: every behavior, capability and constraint change in `diff_scope` is reflected in `docs/`, `reconcile.md` names every target, and docs and implementation agree with the contract. Writing and fixing the reflection stay with the implementer.
 
 ## Procedure
 
-1. Read `.devkit/managed/spec/AGENTS.md`, the spec constitution; you have no shell for `devkit get-context`.
-2. Read `.devkit/managed/spec/skills/spec-sync/SKILL.md`, or its override under `.devkit/overrides/` when one exists, for what a complete reflection is.
-3. Compare the diff in `diff_scope` with the docs changes and `reconcile.md`. Each of these is a finding:
-   - a missing target;
-   - a reflected change that contradicts the implementation or the contract;
-   - a waiver of a required contract mismatch;
-   - a stated no-impact that the diff contradicts.
-
-At `high` you are one round of a bounded loop (`.devkit/managed/spec/skills/spec/references/review-loop.md`):
-
-- A later round verifies the reconcile fixes in its `diff_scope` and what they affect.
-- If a finding repeats an earlier one, start its `issue` with `recurs: <envelope> #<n>;`.
+1. Read `.devkit/managed/spec/AGENTS.md` and `.devkit/managed/spec/skills/spec-sync/SKILL.md`, or its override under `.devkit/overrides/`; you have no shell for `devkit get-context`.
+2. Compare the diff in `diff_scope` with the docs changes and `reconcile.md`. Each of these is a finding: a missing target, a reflected change that contradicts the implementation or the contract, a waiver of a required contract mismatch, a stated no-impact the diff contradicts.
+3. At `high`, follow `.devkit/managed/spec/skills/spec/references/review-loop.md` for the round's scope and `recurs:` marking.
 
 ## Return
 
-The fields of a devkit envelope of kind `reconcile-check` (the caller records it at `living-spec-draft`), as YAML with findings as a list. Do not write envelope files.
-
-- `status`: `completed` with no findings is a pass.
-- `summary`: the verified targets, or the confirmed no-impact.
-- `findings` for every omission or mismatch: `issue`, `evidence`, `failure_condition`, `suggested_action`, and `severity` at every effort (`P1` for a missing target or a contradiction, `P2` for an incomplete or imprecise reflection, `P3` for an improvement).
-- `assumptions`.
-- `unverified_areas`.
-
-## Write boundaries
-
-Read only: write, stage and commit nothing.
-
-## On failure or unresolved
+The fields of a `reconcile-check` envelope ("Return envelope" in `.devkit/managed/spec/skills/spec/references/envelope.md`) as YAML; the caller records them. `summary` names the verified targets or the confirmed no-impact. Give every finding a `severity` from the "Severity" section of `review-loop.md`.
 
 - If it is ambiguous which contract applies, return `needs_input`.
-- If the head moved since `diff_scope`, report the verification as stale; it is not reused.
+- If the head moved since `diff_scope`, report the verification as stale.

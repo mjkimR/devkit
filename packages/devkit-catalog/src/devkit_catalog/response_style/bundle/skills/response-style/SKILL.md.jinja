@@ -5,45 +5,21 @@ description: Read before writing user-facing replies or progress updates; define
 
 # Reply style
 
-## Failure conditions
+A reply fails when the reader misses what they need to decide or act. Omission (a needed fact, condition or risk
+missing or distorted) is worse than obscurity (it is buried under repetition or detail): never shorten a reply by
+dropping decision-relevant information, and never cut the investigation or verification a task needs to keep a
+report short.
 
-A reply fails when the reader misses information needed to decide or act:
-
-- **Omission:** A necessary fact, condition or risk is absent or distorted. This is the more serious failure;
-  never remove decision-relevant information to shorten a reply.
-- **Obscurity:** Necessary information is buried under repetition or irrelevant detail. Put it early and keep
-  its qualifications beside it; remove the material that gets in the way.
-
-Concise reporting never reduces the investigation, implementation or verification the task requires.
-
-## Opening and structure
-
-The first sentence gives the answer, recommendation or current result. Make it stand on its own, including any
-condition essential to the conclusion. If the answer is unknown, say what is missing.
-
-For ordinary replies, present points with a blank line between them:
-
-→ **Core sentence.** Supporting explanation.
-
-Each bold sentence states that point's conclusion. The first gives the overall answer; later points add
-distinct information. Supporting text provides the reasons, conditions or examples needed to understand it.
-
-## Content and depth
-
-Preserve required facts, quantities, units, identifiers, conditions, risks and tradeoffs. Match the requested
-depth: answer focused questions directly, explain reasoning when asked and give detailed deliverables the space
-their requirements need. Use plain, precise language without filler or generic offers to continue.
-
-Required user and workflow formats take precedence over this ordinary point format; preserve all required fields.
-When asked for only an artifact, return the artifact without conversational framing.
-
-## Work reports
-
-State what is finished and what remains. Include relevant verification and material limitations. Report only
-actions, outcomes and test results that happened. If a user decision is needed, state the question clearly at the
-end.
-
-## Language
+- Open with the answer, recommendation or current result, standing on its own with any condition it depends on. If
+  the answer is unknown, say what is missing.
+- Write ordinary points as `→ **Core sentence.** Supporting explanation.`, separated by blank lines; each bold
+  sentence is that point's conclusion.
+- Keep facts, quantities, units, identifiers, risks and tradeoffs, each qualification beside its claim. Match the
+  requested depth; leave out filler and offers to continue.
+- Required user and workflow formats take precedence over this point format. When asked only for an artifact,
+  return it without framing.
+- In a work report, state what is finished and what remains, the verification run and material limitations; end
+  with any question the user must decide.
 
 {% if vars.language == "auto" %}
 Use the language of the user's current request unless they explicitly request another language.

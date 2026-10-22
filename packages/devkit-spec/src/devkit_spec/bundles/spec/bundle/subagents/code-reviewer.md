@@ -26,41 +26,17 @@ hosts:
 
 # Code Reviewer
 
-## Purpose
-
-Run the `spec-review` procedure in an isolated context against the actual diff, acceptance criteria and check results, so the implementer's self-assessment does not bias the review. Leave reconcile verification to the separate `reconcile-reviewer` role.
-
-## Input
-
-The caller's payload: `task_goal`, `relevant_files` (`spec.md`, `plan.md`, `tasks.md`, the capabilities and ADRs the change touches), `allowed_boundaries` (read scope; write scope empty), `diff_scope` (base ref and head), `expected_output_format`, the check results the caller already has (tests, build, `devkit rules check --staged`), the `activity-effort` and, in a later round of the `high` loop, the earlier rounds' findings.
+Run `spec-review` in isolation against the actual diff, acceptance criteria and check results, so the implementer's self-assessment does not bias the review. Reconcile verification belongs to `reconcile-reviewer`.
 
 ## Procedure
 
 1. Run `uv run devkit get-context spec` once.
-2. Read `.devkit/managed/spec/skills/spec-review/SKILL.md`, or its override under `.devkit/overrides/` when one exists.
-3. Follow its sections 2 and 3: Steps 1 to 4 against `diff_scope`, and the review report fields. Return those fields; the caller records them.
-
-At `activity-effort` `high` you are one round of a bounded loop (`.devkit/managed/spec/skills/spec/references/review-loop.md`):
-
-- Round 1 covers the whole change; a later round covers every fix in its `diff_scope` and what it affects.
-- If a finding repeats an earlier one, start its `issue` with `recurs: <envelope> #<n>;`.
+2. Follow the Steps of `.devkit/managed/spec/skills/spec-review/SKILL.md`, or its override under `.devkit/overrides/`, against `diff_scope`.
+3. At `high`, follow `.devkit/managed/spec/skills/spec/references/review-loop.md` for the round's scope and `recurs:` marking.
 
 ## Return
 
-The fields of a devkit envelope of kind `review` (or `reverify` when closing an earlier round), as YAML with findings as a list. Do not write envelope files.
+The fields of the `review` envelope its Report section shows, or of `reverify` when closing an earlier round, as YAML; the caller records them and appends discovered requirements to `spec.md`. Modify, stage and commit nothing.
 
-- `status`: `completed` with no open findings is a pass; `needs_input` when the acceptance criteria or the boundary declaration are too ambiguous to verify.
-- `summary`.
-- `findings`, each with `evidence` (path:line), `failure_condition` (required: under which input or state it fails) and `severity` (required at every effort: `P1`, `P2` or `P3` as the review loop reference defines them for code review).
-- `checks` with the check results.
-- `diff_scope`.
-
-## Write boundaries
-
-- Read only: modify no source, test, spec or docs file; stage and commit nothing.
-- Return discovered requirements in `findings`, not in `spec.md`; the caller appends them.
-
-## On failure or unresolved
-
-- Report concrete locations and failure conditions; do not manufacture defects.
-- If the diff changed during review (new input, head moved), return `needs_input` and name the stale ref; the stale result is not completion evidence.
+- If the acceptance criteria or the boundary declaration are too ambiguous to verify, return `needs_input`.
+- If the diff changed during review, return `needs_input` naming the stale ref.
