@@ -8,7 +8,7 @@ plan: PLAN-shared-python-node-index
 
 ## Phase 1: Cache Accessor
 
-- [ ] **Task 1.1**: Implement `WorkspaceCache.get_python_nodes` and write cache integration tests
+- [x] **Task 1.1**: Implement `WorkspaceCache.get_python_nodes` and write cache integration tests
   - **_Boundary**: `packages/devkit/src/devkit_agt/features/rules/repositories/workspace/cache.py`, `packages/devkit/tests/integration/features/rules/workspace/test_cache.py`
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05_
   - **Verification**: `just test devkit packages/devkit/tests/integration/features/rules/workspace/test_cache.py`
