@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T10:11:25.422122Z'
+status: completed
+summary: 'round 2; verified targets: CAP-GOV-evaluation-lifecycle, CAP-GOV-rules-engine, reference/rules.'
+findings: []
+assumptions:
+- Living spec changes in CAP-GOV-evaluation-lifecycle, CAP-GOV-rules-engine, and rules.md faithfully match ADR-scope-snapshot-runs-to-diff-paths-including-deletions and the implementation.
+checks:
+  rules: PASS uv run devkit rules check --ci --base fb1db8fa4335e367b4492077a0dfc0d06387cf6e
+diff_scope:
+  base: fb1db8fa4335e367b4492077a0dfc0d06387cf6e
+  head: 9a9eeac4da47ed517a766c9681eb4dd2658f53d5
+activity_effort: medium
