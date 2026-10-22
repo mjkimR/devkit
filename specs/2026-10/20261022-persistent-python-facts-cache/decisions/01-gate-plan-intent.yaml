@@ -1,0 +1,7 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-persistent-python-facts-cache
+at: '2026-10-22T12:40:47.325690Z'

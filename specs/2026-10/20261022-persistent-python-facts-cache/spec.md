@@ -1,54 +1,62 @@
 ---
-id: PROP-persistent-python-facts-cache
+id: SPEC-persistent-python-facts-cache
 title: Persist per-file rule facts between runs
-summary: "Lets Python-source rules declare a per-file facts function whose results persist between runs keyed by content digest, so a rules run parses and walks only changed files."
-status: accepted
-created_at: 2026-10-22
-target_area: governance/
-priority: medium                      # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: high                 # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit/src/devkit_agt/features/rules/
-    - tools/devkit-dev/src/devkit_dev/bundle/rules/architecture/
-    - tools/devkit-dev/src/devkit_dev/bundle/rules/usecase-boundaries/
-    - packages/devkit-dist/src/devkit_dist/bundles/advisory/bundle/rules/unique_code/
-    - packages/devkit/tests/
-    - docs/capabilities/governance/
-    - docs/capabilities/advisory/
-    - docs/development/reference/rules-library.md
-    - docs/glossary.md
-  excludes:
-    - packages/devkit-spec/src/devkit_spec/features/documents/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Lets Python-source rules declare a per-file facts function whose results persist between runs keyed by content digest, so a rules run parses and walks only changed files.
+status: planned
+created: 2026-10-22
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-persistent-python-facts-cache] Persist per-file rule facts between runs
+# [SPEC-persistent-python-facts-cache] Persist per-file rule facts between runs
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-persistent-python-facts-cache on 2026-10-22.
+- **Preserved Materials**: `docs/materials/2026-10/20261022-persistent-python-facts-cache`
+
+### 1. Background & Hypothesis
 
 Repeated CLI processes discard `WorkspaceCache`'s shared Python AST and node index. The baseline in
-[the baseline measurements](materials/measurements.md) identifies extraction as a candidate
+[the baseline measurements](../../../docs/materials/2026-10/20261022-persistent-python-facts-cache/measurements.md) identifies extraction as a candidate
 cost, but does not measure an implemented persistent facts path. Its 0.84 ms number is synthetic JSON decoding,
 not total lookup latency. Separately cold rule measurements can double-count AST work shared in a real evaluation;
 the claimed 6.0 s to 1.8–2.0 s reduction is not established by the measured 2.5 s difference.
 
 Hypothesis: persist rule-owned, per-file facts while rerunning file discovery, configuration and cross-file judgment.
 Every finding, location, ordering, severity, fix behavior, advisory and exit code must match cache-disabled execution.
-`PADR-pull-per-file-python-facts` defines the extraction boundary;
-`PADR-persist-python-facts-and-reuse-in-snapshots` defines storage and snapshot reuse.
+`ADR-pull-per-file-python-facts` defines the extraction boundary;
+`ADR-persist-python-facts-and-reuse-in-snapshots` defines storage and snapshot reuse.
 
-## 2. Technical Spike Results
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Persist per-file rule facts between runs so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Results
 
 - **Q1 — Contract and consumers**: use an opt-in pull accessor on `WorkspaceCache`, with a rule-owned extractor and
   codec descriptor. Do not add an evaluator lifecycle hook or require `BaseRule` inheritance. Migrate
   `RULE-architecture`, `RULE-advisory-unique-code` and `RULE-usecase-boundaries` in this work. Their facts must preserve
   unresolved imports, expression/scope structure and source locations; the original measurements' import/class
   summaries are insufficient for advisory inheritance and usecase callback/alias checks. The rule-owned records
-  represent the syntax each existing judgment consumes; they contain no live AST nodes. See `materials/design.md`.
+  represent the syntax each existing judgment consumes; they contain no live AST nodes. See `docs/materials/2026-10/20261022-persistent-python-facts-cache/design.md`.
 - **Q2 — Identity and storage**: use relative POSIX path plus digest of exact bytes read by `WorkspaceCache.read_bytes`,
   an explicit canonical extraction-context key, and a source-derived fingerprint. UTF-8 text hashing would lose
   Python coding-cookie/BOM behavior. Keep one validated JSON memo per rule. Rule module bytes and a distribution
@@ -58,9 +66,9 @@ Every finding, location, ordering, severity, fix behavior, advisory and exit cod
   fingerprint and the snapshot bytes, never the unstaged rule or source bytes. This is only a cache read exception;
   snapshot policy, receipt verification and rule discovery keep their existing authority.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Scope and choices
+#### Scope and choices
 
 1. Add a typed descriptor and `WorkspaceCache.get_file_facts(path, descriptor, *, context_key=...)` pull API. The
    descriptor owns rule ID, schema version, source dependencies, extractor and JSON encoder/decoder. The extractor
@@ -82,7 +90,7 @@ Every finding, location, ordering, severity, fix behavior, advisory and exit cod
    `CAP-ADV-agent-advisory-protocol`, the rules library reference and affected rule guides. Register per-file rule facts in
    the glossary. PADRs become ADRs at handoff; no existing ADR is rewritten by Planning.
 
-### Development verification criteria
+#### Development verification criteria
 
 - **AC1 — Fresh-run equivalence**: compare enabled and disabled evaluation for all three migrated rules on fixtures
   exercising imports/re-exports, dynamic imports, relative imports, package layout, advisory inherited codes,
@@ -114,7 +122,7 @@ Every finding, location, ordering, severity, fix behavior, advisory and exit cod
   median at least 20% below disabled execution; if unmet, revisit the design before claiming the hypothesis proved.
   Neither <1 ms total load nor 1.8–2.0 s full execution is an accepted performance claim.
 
-### Boundaries and Non-Goals
+#### Boundaries and Non-Goals
 
 The expanded boundaries include the actual rule owners and their co-located tests. Engine tests belong in
 `packages/devkit/tests/`; rule-specific tests stay with each rule. Add only the tiers needed beneath these parents.
@@ -125,7 +133,7 @@ stat/mtime fast paths, shared caches across worktrees, document-memo changes, ne
 migration of other Python rules. Cache-disabled execution is an internal test/library control. No changes to
 `devkit.advisory` or `devkit_cli` public runtime APIs are required.
 
-## 4. Planning Decisions and Delivery Shape
+### 4. Planning Decisions and Delivery Shape
 
 - Recommend the pull descriptor over a lifecycle hook: current rules control their own file sets and cross-file
   composition; a hook would add scheduling and inheritance constraints without replacing that work.
@@ -141,9 +149,10 @@ migration of other Python rules. Cache-disabled execution is an internal test/li
   facts; advisory facts; usecase facts; snapshot isolation and equivalence/performance checks; Living Spec reflection.
   Handoff creates the feature spec, technical plan and independently verifiable tasks; Planning changes no production code.
 
-## 5. Lifecycle & Retirement Criteria
+### 5. Lifecycle & Retirement Criteria
 
 Planning is ready for `plan-accept` after Scout evidence, Challenger findings and closures, proposal boundary checks,
 feedback coverage and a committed worker record. Acceptance approves the two PADRs and expanded Development scope.
 Development requires the separate `proposal-handoff` approval. If benchmarks do not validate the hypothesis, return
 with evidence and revise the direction instead of substituting synthetic JSON timing for an implemented result.
+

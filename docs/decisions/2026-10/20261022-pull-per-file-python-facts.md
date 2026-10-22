@@ -1,15 +1,15 @@
 ---
-id: PADR-pull-per-file-python-facts
+id: ADR-pull-per-file-python-facts
 title: Pull per-file Python facts through WorkspaceCache
 summary: For repeated Python rule checks, we pull rule-owned JSON facts through WorkspaceCache keyed by source bytes and extractor inputs, to reuse extraction across processes, accepting explicit dependency declarations.
-proposal: PROP-persistent-python-facts-cache
-status: draft
+proposal: SPEC-persistent-python-facts-cache
+status: accepted
 created_at: 2026-10-22
 ---
 
-# [PADR-pull-per-file-python-facts] Pull per-file Python facts through WorkspaceCache
+# [ADR-pull-per-file-python-facts] Pull per-file Python facts through WorkspaceCache
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-22
 
 ---
@@ -34,7 +34,7 @@ callback scopes; a list of imports/classes cannot preserve all their behavior.
 
 ## 4. Decision Outcome
 
-Choose the pull descriptor in `materials/design.md`. The rule supplies a typed extractor/codec, schema version and
+Choose the pull descriptor in `docs/materials/2026-10/20261022-persistent-python-facts-cache/design.md`. The rule supplies a typed extractor/codec, schema version and
 source dependencies; `WorkspaceCache` owns identity and retention. The key uses logical relative path, exact cached
 Python bytes, explicit canonical extraction context and a source-derived fingerprint. Hash the read/AST/codec
 framework path, actual extractor/helper sources and Python runtime; unreadable dependencies disable persistence.

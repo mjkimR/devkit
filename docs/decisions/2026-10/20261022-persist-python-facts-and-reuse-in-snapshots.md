@@ -1,15 +1,15 @@
 ---
-id: PADR-persist-python-facts-and-reuse-in-snapshots
+id: ADR-persist-python-facts-and-reuse-in-snapshots
 title: Store Python facts per rule with read-only snapshot reuse
 summary: For Python facts persistence, we use per-rule JSON memos with atomic working-tree writes and read-only snapshot reuse, to preserve fresh-run results, accepting hashing every input and cache misses on invalidation.
-proposal: PROP-persistent-python-facts-cache
-status: draft
+proposal: SPEC-persistent-python-facts-cache
+status: accepted
 created_at: 2026-10-22
 ---
 
-# [PADR-persist-python-facts-and-reuse-in-snapshots] Store Python facts per rule with read-only snapshot reuse
+# [ADR-persist-python-facts-and-reuse-in-snapshots] Store Python facts per rule with read-only snapshot reuse
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-22
 
 ---
@@ -36,7 +36,7 @@ read-only borrowing to benefit commit gates without changing snapshot code or po
 ## 4. Decision Outcome
 
 Choose per-rule JSON memos with atomic working-tree updates and read-only snapshot borrowing, as detailed in
-`materials/design.md`. Use `.devkit/transient/rules/facts/<rule-id>.json` under an existing safe transient directory.
+`docs/materials/2026-10/20261022-persistent-python-facts-cache/design.md`. Use `.devkit/transient/rules/facts/<rule-id>.json` under an existing safe transient directory.
 Validate format, fingerprint, entry identity and rule codec before reuse. Reject symlink components and escaped or
 non-regular memo paths; never remove obstructing files. Validated rule IDs determine safe filenames.
 
