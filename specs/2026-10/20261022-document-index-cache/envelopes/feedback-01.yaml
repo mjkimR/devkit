@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T07:25:25.759750Z'
+status: completed
+summary: 'Swept this Development turn and its diff: recorded FB-stdlib-loggers-hidden-under-verbose, FB-specify-commit-blocked-by-task-coverage, FB-index-walk-dominates-warm-load; no duplicates; FB-strict-frontmatter-loader-without-libyaml stays open'
+findings: []
+checks:
+  swept: PASS recorded=3 duplicates=0

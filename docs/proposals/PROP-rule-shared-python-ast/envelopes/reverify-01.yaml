@@ -1,0 +1,43 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-22T06:56:52.181382Z'
+status: completed
+review: challenger-01.yaml
+summary: 'Folded 2-5 in 695cfd91: memory risk stated and accepted (D5), release-before-exit removed (D4), memoized error raised as a fresh equal exception, AC4 mechanism named. Finding 1 stays open as a user decision.'
+findings:
+- issue: 'Decision hidden in the text: the approved goal says byte-identical rule results, but the design keeps results identical only for UTF-8 source without a BOM'
+  evidence: decisions/01-gate-plan-intent.yaml note; PADR-parse-cached-bytes-once-and-memoize-the-outcome.md:65-68; proposal.md:41-42, 61-64, 112, 125; bytes parsing also honours PEP 263 cookies, which text parsing ignores
+  failure_condition: A file with a BOM, invalid UTF-8 or a non-UTF-8 coding cookie gets different unique_code and catalog findings, architecture messages and usecase-boundaries abort message than today
+  suggested_action: 'Decision needed: accept byte identity for UTF-8 source without a BOM with the listed edge-case changes, or keep full identity by memoizing trees keyed by source text with errors not memoized, each rule keeping its current decoding'
+  resolution: open
+  severity: P2
+- issue: The read-only-tree PADR claims peak RSS stays unchanged, which holds only for this repository; the catalog rules stream today and would retain every tree
+  evidence: PADR-share-one-read-only-parsed-tree-per-python-file.md:57-58; catalog layers/rule.py:167, heavy_imports/rule.py:165, command_boundary/rule.py:78, library_output/rule.py:96; holding all 822 trees adds 221 MB RSS for 5.1 MB of source
+  failure_condition: A project selecting cli-tool without devkit-dev and with tens of MB of Python holds every parsed tree for the rest of the run
+  suggested_action: State the risk as retained memory of about 40x the parsed source for the whole run where the selected rules previously streamed, and record it as accepted
+  resolution: resolved
+  severity: P2
+- issue: 'D4 Release before exit misdiagnoses the teardown cost: the per-run WorkspaceCache is not released before exit and that costs nothing'
+  evidence: 'catalog.py:49 and cache.py:166 form a reference cycle; the run''s cache stays alive after the CLI returns; simulation on that cache: base 4.25 s, trees left until exit 3.69 s, collected 3.71 s'
+  failure_condition: An implementer adds unrequested release machinery or misreads an AC3 shortfall as a teardown problem
+  suggested_action: Remove the release-before-exit requirement from D4 and materials section 3; keep timing on the real CLI process
+  resolution: resolved
+  severity: P3
+- issue: Memoizing the SyntaxError instance and re-raising it grows its traceback and keeps every raising rule's frames alive
+  evidence: PADR-parse-cached-bytes-once-and-memoize-the-outcome.md:49-50; 3 re-raises gave 7 traceback entries; evaluator.py:174 logs logger.exception
+  failure_condition: Any unparsable .py file in the scanned roots keeps later rules' frames referenced and a logged traceback shows other rules' frames
+  suggested_action: Store the error without its traceback and raise a fresh equal exception per call; test that two calls raise equal messages from distinct objects
+  resolution: resolved
+  severity: P3
+- issue: AC4's per-rule tree-integrity assertion has no mechanical path through the documented rule-test harness
+  evidence: proposal.md:117-118; PADR-share-one-read-only-parsed-tree-per-python-file.md:66-67; services/testing.py:224 builds its own WorkspaceCache; CAP-GOV-rule-authoring line 270
+  failure_condition: Development changes the documented harness API or reaches into private cache state, or checks the AC inconsistently
+  suggested_action: Each test builds RuleContext(workspace_root=root, cache=WorkspaceCache(root)), calls rule.check(ctx) and compares ctx.cache.get_python_ast(p) with a fresh parse; the harness API stays unchanged
+  resolution: resolved
+  severity: P3
+checks: {}
+diff_scope:
+  base: 9c4fdb294cf7a2d8404638b08800dd90e9f44691
+  head: 695cfd9111625a6b3781f8cd68e532f2f662469d

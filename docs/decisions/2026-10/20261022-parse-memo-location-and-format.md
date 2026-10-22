@@ -1,22 +1,22 @@
 ---
-id: PADR-parse-memo-location-and-format
+id: ADR-parse-memo-location-and-format
 title: Parse memo location and format
 summary: For storing the parse memo, we write one JSON file at .devkit/transient/spec/document-index.json of each worktree, only where .devkit/transient/ exists, to keep it ignored, per worktree and safe to load, accepting no memo in unsynced workspaces.
-proposal: PROP-document-index-cache
-status: draft
+proposal: SPEC-document-index-cache
+status: accepted
 created_at: 2026-10-22
 ---
 
-# [PADR-parse-memo-location-and-format] Parse memo location and format
+# [ADR-parse-memo-location-and-format] Parse memo location and format
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-22
 
 ---
 
 ## 1. Context & Problem Statement
 
-The parse memo (`PADR-content-keyed-document-parse-memo`) needs a file that Git ignores, that belongs to one worktree,
+The parse memo (`ADR-content-keyed-document-parse-memo`) needs a file that Git ignores, that belongs to one worktree,
 and that loading cannot turn into code execution. `.devkit/transient/` is already the per-checkout, Git-ignored state
 directory: `.devkit/.gitignore`, which a writing sync seeds, ignores `/transient/` (`CAP-DIST-workspace-ownership`),
 devkit-dist keeps its journal, lock and `deployed.json` there, and devkit-agt its work units

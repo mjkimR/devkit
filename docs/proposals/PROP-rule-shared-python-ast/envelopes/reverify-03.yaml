@@ -1,0 +1,31 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-22T07:13:22.666865Z'
+status: completed
+review: challenger-02.yaml
+summary: 'Folded all 3 in a3e6f1f2: write_text resolves afresh and the PADR''s stale-read consequence is corrected, symlinked-prefix, alias and loop cases added to the Confirmation tests and AC4, sameness claim narrowed to inputs whose resolution succeeds; probe evidence in materials section 7.'
+findings:
+- issue: 'The PADR does not keep the memo out of write_text: write_text resolves through _resolve_path, so a memo there would base the containment check, the pinned check and the write destination on an earlier resolution; the PADR''s Negative consequence also wrongly says the cache already serves stale bytes for a retargeted symlink.'
+  evidence: 'cache.py:113-127 (write_text: _resolve_path, is_relative_to, _pinned, atomic_write_bytes(resolved)); cache.py:70-74; PADR-resolve-rule-paths-once-per-run.md section 4 bullet 2 and section 5 Negative; CAP-GOV-rule-authoring.md:155 (PATH_UNSAFE)'
+  failure_condition: During devkit rules check --fix a rule has read docs/a.md, then a concurrent process replaces docs with a symlink to outside the workspace; a later fixer's write_text passes the containment check against the memoized path and os.replace writes outside the workspace, where today it is refused with PATH_UNSAFE.
+  suggested_action: State that write_text resolves its path fresh, without the memo, for the containment check, the pinned check and the destination; add a test that swaps a read path's parent for an outside symlink and asserts PATH_UNSAFE; correct section 5 Negative.
+  resolution: resolved
+  severity: P2
+- issue: No Confirmation test or acceptance outcome exercises the resolve() fallback of _relative for workspace roots reached through a symlinked prefix.
+  evidence: contracts.py:136-152; test_context.py:37-61 (tmp_path is already resolved, so no symlinked-prefix path is tested); PADR section 6 bullet 2
+  failure_condition: A lazy implementation that drops or misplaces the fallback makes is_file_targeted return False and settings raise TargetError for an unresolved absolute path such as /var/folders/... on macOS, with every listed test green.
+  suggested_action: 'Add to test_context.py: an absolute path through a symlinked alias of the root maps to its relative form; a path through an in-workspace symlink to outside keeps its lexical name and returns None through the alias; toout/../docs/a.md stays docs/a.md.'
+  resolution: resolved
+  severity: P2
+- issue: '''It returns the same value for every input'' is false on Python 3.12 for symlink loops: today the eager resolve() raises RuntimeError, the lazy form returns the lexical relative path.'
+  evidence: contracts.py:146; packages/devkit/pyproject.toml requires-python >=3.12; probe on CPython 3.12.8 for loop1 and loop1/x; services/targets.py:36 still resolves CLI targets first
+  failure_condition: A rule calling is_file_targeted or settings on an in-workspace symlink loop fails with a rule execution error today and carries on after the change, a difference the claim and Confirmation do not cover.
+  suggested_action: Reword to the same value for every input whose resolution succeeds; an in-workspace symlink loop now gets its lexical name instead of raising.
+  resolution: resolved
+  severity: P3
+checks: {}
+diff_scope:
+  base: ''
+  head: a3e6f1f2b227d6e556e30355df263c39b69802af

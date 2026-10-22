@@ -25,9 +25,9 @@ Performance: the shared frontmatter loader ignores libyaml even when PyYAML has 
   duplicate-key check, and keep `SafeLoader` as the fallback. Confirm that errors (impossible dates, nesting depth,
   duplicate keys) keep their messages and `FrontmatterError` mapping.
 - **Expected Benefit**: the 640 headers of this repository load in about 15 ms instead of about 128 ms, with equal
-  results; fresh `DocumentIndex` builds and rule runs get faster even without `PROP-document-index-cache`'s memo.
+  results; fresh `DocumentIndex` builds and rule runs get faster even without `SPEC-document-index-cache`'s memo.
 - **Cost & Risk**: libyaml error messages and marks differ from the pure-Python ones; a test asserting message text
-  or recursion behavior can change. The `PROP-document-index-cache` fingerprint covers `frontmatter.py`, so a changed
+  or recursion behavior can change. The `SPEC-document-index-cache` fingerprint covers `frontmatter.py`, so a changed
   loader invalidates its memo automatically.
 - **Attempted**: measured in this session with a `CSafeLoader` subclass carrying the same duplicate-key check;
   not implemented.
