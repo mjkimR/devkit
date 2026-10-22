@@ -36,7 +36,7 @@ You do not draft documents; writing the reflection, fixing what you find and res
 
 ## Input
 
-The caller's payload (`relevant_files` include `reconcile.md`, the deciding review envelope, the Living Spec documents the record targets and those the diff can affect; `diff_scope`: base and head) plus the `activity-effort` and, in a later round of the `high` loop, the earlier rounds' findings.
+The caller's payload (`relevant_files` include `reconcile.md`, the deciding review envelope, the Living Spec documents the record targets and those it affects; `diff_scope`: base and head) plus the `activity-effort` and, in a later round of the `high` loop, the earlier rounds' findings.
 
 ## Procedure
 

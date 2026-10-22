@@ -12,7 +12,7 @@ most situation-dependent content is a conditional reference instead.
 2. **No script that only prints a reference file.** That is a conditional
    reference with extra cost: running a script can trigger a host approval
    prompt where reading a file does not.
-3. **Otherwise write a script** in Python 3 with the standard library, which
+3. **Otherwise write a script**, by default in Python 3 with the standard library, which
    needs no build step or installation.
 
 ## Writing rules

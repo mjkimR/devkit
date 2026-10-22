@@ -32,8 +32,8 @@ for its actual operations are available.
 - If one is unavailable, use existing delegation policy: the Host runs the unit in `direct` when allowed; `required`
   isolation stops with `needs_input`.
 - Do not start a worker that cannot meet its required nested-role or approval obligations.
-- Capability availability is not a promise that an approval will be granted. Run no persistent-grant preflight or
-  separate probe framework.
+- Capability availability is not a promise that an approval will be granted. Starting a worker requires no
+  persistent-grant preflight or separate probe framework.
 
 ## Codex worker access
 

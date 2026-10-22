@@ -67,7 +67,7 @@ empty. The procedure adds no creation flag, readiness command, delivery certific
 
 ## Milestone close review
 
-- After known associated work finishes, offer the existing Backlog
+- After known associated work finishes, you MAY offer the existing Backlog
   [milestone completion review](../../spec/references/milestone-completion.md).
 - Never close silently after integration; never infer completion from empty membership or handoff.
 - The user confirms decomposition and direct work settlement on one current candidate. After an interruption,

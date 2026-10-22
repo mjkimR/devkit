@@ -119,7 +119,7 @@ Before deleting a source proposal or reporting completion, find concrete work it
 
 1. Each such follow-up MUST be tracked: by default as feedback for Backlog (`/spec-feedback`), or as a draft proposal when concrete enough. For a draft, link or update a matching open `PROP-...` (`devkit spec search "<topic>" --kind proposal`), else run `devkit spec proposal new <slug>`.
 2. Record the source, remaining scope, reason for deferral, dependencies or restart conditions, and expected acceptance checks; group work with the same outcome.
-3. Reference the destination `FB-...` or `PROP-...` by full ID from the source `reconcile.md` (or a `session` task's final report). If the original proposal is removed, reference the retained source spec or Git history from the proposal. A future-work paragraph in a capability document is no handoff.
+3. Reference the destination `FB-...` or `PROP-...` by full ID from the source `reconcile.md` (or a `session` task's final report). If the original proposal is removed, reference the retained source spec or Git history from the destination proposal. A future-work paragraph in a capability document is no handoff.
 4. Verify the destination exists (`devkit spec list feedback` or `devkit spec list proposal`) before claiming it is tracked.
 
 - Drafting a follow-up neither accepts it nor authorizes implementation.

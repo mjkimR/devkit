@@ -15,8 +15,8 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
 ## Decision Placement and Duplication
 
 - Record decisions and their rationale in ADRs.
-- Do not repeat a decision in guidance blocks, constitutions or other always-loaded instructions because it is
-  important, and do not keep appending references to individual ADRs there; Planning already searches related ADRs.
+- Do not repeat a decision, or keep appending references to individual ADRs, in guidance blocks, constitutions or
+  other always-loaded instructions only because it is important; Planning already searches related ADRs.
 - Reserve always-loaded guidance for common constraints an agent needs before it can search for task-specific
   decisions. An exception SHOULD identify the concrete failure caused by missing that constraint before discovery;
   include only the minimum operational rule and keep its detailed rationale in the ADR.

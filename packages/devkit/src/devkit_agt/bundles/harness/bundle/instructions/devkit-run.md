@@ -8,7 +8,7 @@ description: Read before running tests, linters or type checks outside a project
 `uv run devkit run -- <command>` keeps the complete output in a log file and
 prints the outcome, the tool's summary lines and warnings and, on failure, an
 excerpt without progress and noise. When you run a test runner, linter or
-type checker yourself, run it through `devkit run`:
+type checker yourself, run it through `devkit run` by default:
 
 ```bash
 uv run devkit run -- uv run pytest tests/test_api.py -x

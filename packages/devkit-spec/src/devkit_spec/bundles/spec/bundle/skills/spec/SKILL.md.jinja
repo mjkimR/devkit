@@ -72,8 +72,8 @@ The three main approval boundaries are `plan-accept` (proposal direction), `prop
 
 ### Playbooks
 
-- Run a playbook only when the user invokes `devkit-playbook` for the task or a failing rule's remediation names one.
-- Otherwise do not search or route to playbooks; handle any other operational request as ordinary work.
+- Never search or route to playbooks from `spec`.
+- A playbook runs only when the user invokes `devkit-playbook` for the task or a failing rule's remediation names one; handle any other operational request as ordinary work.
 
 ---
 

@@ -71,7 +71,7 @@ Factories are classmethods, so `MyDomainError.blocked(...)` returns `MyDomainErr
 
 ## Returning warnings and notices
 
-A warning or notice is an `AdvisoryError` at level `WARNING` or `NOTICE`, returned with the result (in a `notices` list), never raised. Its `exit_code` is `0`; `actor`, `retry`, `guardrail`, `input_error` and `retry_after` are ignored.
+A warning or notice is an `AdvisoryError` at level `WARNING` or `NOTICE`, returned with the result (by convention in a `notices` list), never raised. Its `exit_code` is `0`; `actor`, `retry`, `guardrail`, `input_error` and `retry_after` are ignored.
 
 ```python
 from dataclasses import dataclass, field

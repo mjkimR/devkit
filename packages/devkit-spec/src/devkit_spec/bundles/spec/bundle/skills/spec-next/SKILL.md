@@ -128,4 +128,4 @@ A concise summary:
 
 - [ ] The reply names one recommended next step with its evidence (`[UNMET]` lines, Git state, list output), after
   any critical feedback pass.
-- [ ] Nothing was started, created or executed beyond the diagnosis commands.
+- [ ] Nothing was started, created or executed beyond the diagnosis commands without the user's explicit approval.

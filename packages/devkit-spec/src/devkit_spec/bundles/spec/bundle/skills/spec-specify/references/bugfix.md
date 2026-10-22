@@ -76,8 +76,8 @@ For external outages, environment-dependent or non-deterministic defects:
 
 - If a fix needs a contract change or a design choice outside the agreed intent, raise it as a problem for the Host.
   Development never returns to Planning; a close is the `spec` skill's `references/classification.md`.
-- Say which evidence stays valid. Reproduction evidence stays valid unless the change alters the reproduction
-  conditions; re-examine the AC and preserved-behavior lists.
+- Say which evidence stays valid: state whether the reproduction evidence still holds, and re-examine the AC and
+  preserved-behavior lists.
 
 ## Output standard
 
