@@ -54,8 +54,11 @@ Chosen: **shared tree, read-only by contract**.
 - Positive: one parse per file and run for every migrated rule; fewer AST allocations also cut cyclic GC time
   (0.49 s to 0.15 s in the prototype).
 - Negative: a future rule that mutates a shared tree silently changes the input of every later rule in that run.
-- Risk: trees stay alive for the whole run instead of one rule; peak RSS was unchanged in the prototype because the
-  devkit-dev rules already hold all their trees at once.
+- Risk (accepted): trees stay alive for the rest of the run instead of one rule. Retained memory is about 40 times
+  the parsed source (all 822 trees of this repository: +221 MB for 5.1 MB of source). Peak RSS is unchanged here
+  because the devkit-dev rules already hold all their trees at once, but a project whose selected rules streamed
+  before (the catalog `cli_tool` rules without devkit-dev) now holds every parsed tree; trigger to revisit: a
+  project reports memory pressure in `devkit rules check`.
 - Follow-up: if a mutating rule is ever needed, it parses its own tree; revisit enforcement only when a mutation
   defect is observed.
 
@@ -63,6 +66,7 @@ Chosen: **shared tree, read-only by contract**.
 
 - A test in `packages/devkit/tests/integration/features/rules/workspace/test_cache.py` asserts that repeated
   `get_python_ast` calls return the same object.
-- Each migrated rule's tests assert that, after `check`, the trees it read through the cache equal a fresh parse
-  (`ast.dump` with attributes).
+- Each migrated rule's tests build `RuleContext(workspace_root=root, cache=WorkspaceCache(root))`, call
+  `rule.check(ctx)` and assert that `ctx.cache.get_python_ast(p)` equals a fresh parse (`ast.dump` with attributes)
+  for the files it scanned; the documented `testing` harness API stays unchanged.
 - Review: `CAP-GOV-rule-authoring` names the read-only contract.

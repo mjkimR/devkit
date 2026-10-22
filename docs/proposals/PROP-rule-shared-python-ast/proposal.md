@@ -65,9 +65,18 @@ Hypothesis, confirmed by a prototype: one parse per file and run, shared through
 - **D3 — Only the parse moves**: the two devkit-dev rules keep enumerating their declared package roots
   (`Path.rglob`), and every rule keeps its file selection; only the parse (and with it the read) goes through
   `ctx.cache`. Which rules run for a targeted run is `PROP-lint-clean-target-scoped-rules`, developed after this one.
-- **D4 — Release before exit**: the cached trees live only as long as the run's `WorkspaceCache`. In the prototype,
-  trees kept alive until interpreter shutdown cost about 0.65 s at exit and erased most of the gain, so the acceptance
-  measurement times the real CLI process.
+- **D4 — Per-run lifetime, real-CLI timing**: the trees live on the run's `WorkspaceCache` and need no release step;
+  a simulation on that cache gave 4.25 s to 3.69 s. The acceptance measurement times the real CLI process, because an
+  in-process timer misses interpreter shutdown.
+- **D5 — Memory accepted**: retained trees cost about 40 times the parsed source for the rest of the run; projects
+  whose selected rules streamed before (catalog `cli_tool` without devkit-dev) now hold every parsed tree
+  (`PADR-share-one-read-only-parsed-tree-per-python-file`, Consequences).
+- **Pending question — byte identity on unusual encodings**: the approved goal says byte-identical rule results.
+  Parsing bytes keeps them identical for UTF-8 source without a BOM (every file of this repository) but changes
+  results for a BOM, invalid UTF-8 or a PEP 263 cookie, and the `usecase-boundaries` abort message names the file
+  instead of `<unknown>` (`PADR-parse-cached-bytes-once-and-memoize-the-outcome`, Consequences). Full identity is
+  possible instead with trees keyed by decoded source text, each rule keeping its own decoding and the devkit-dev rules
+  reading outside `ctx.cache`.
 - **Pending question — path resolution**: the profile also shows about 0.4 s of repeated `Path.resolve` in
   `WorkspaceCache._key` and `RuleContext._relative`, in the same module but outside the approved goal. The user decides
   whether this proposal takes it (prototype with both: 4.29 s to 3.23 s, byte-identical) or a separate draft does.
@@ -109,13 +118,15 @@ After changing the bundle sources, `devkit sync` refreshes `.devkit/managed/` an
 
 ### Acceptance outcomes
 
-1. `devkit rules check --format json` on this repository prints the same bytes before and after the change.
+1. `devkit rules check --format json` on this repository prints the same bytes before and after the change, and for
+   UTF-8 source without a BOM every migrated rule reports the same findings and messages as before.
 2. A whole-workspace run makes at most one exec-mode `ast.parse` call per distinct Python file the rules read (about
    540 instead of 1,526), measured by wrapping `ast.parse` as `materials/measurements.md` describes.
 3. The median wall time of 7 interleaved runs of `.venv/bin/devkit rules check --format json` is at least 0.4 s
    below main's (prototype: 0.61 s), with both numbers recorded in the change report.
-4. The cache tests named in the two PADRs' Confirmation sections pass, and each migrated rule's tests assert the trees
-   it read equal a fresh parse after `check`.
+4. The cache tests named in the two PADRs' Confirmation sections pass, and each migrated rule's tests build
+   `RuleContext(workspace_root=root, cache=WorkspaceCache(root))`, call `rule.check(ctx)` and assert that the trees
+   it read equal a fresh parse; the `testing` harness API stays unchanged.
 5. The migrated rules' existing tests and the catalog rule tests pass; `just test-affected`, `just lint` and
    `just check` are clean.
 

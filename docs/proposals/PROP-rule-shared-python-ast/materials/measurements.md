@@ -3,7 +3,7 @@
 Measured on the `plan-rule-shared-python-ast` worktree at base `9c4fdb29` (macOS, CPython 3.12.8, 822 tracked Python
 files). Every run is a whole-workspace `devkit rules check --format json` with the repository's installed bundles
 (`cli-tool` is not selected, so the catalog rules do not run here). The probe scripts lived in the ignored
-`probe/` directory and were removed; their method is described below so a later run can repeat them.
+`probe/` directory, which is removed before the Planning branch's last commit; their method is described below so a later run can repeat them.
 
 ## 1. Baseline
 
@@ -49,9 +49,12 @@ released before interpreter exit, as a per-run `WorkspaceCache` is.
 
 - Shared parse: 490 distinct trees instead of 1,526 parses; GC time 0.15 s instead of 0.49 s (375/34/3
   collections), because far fewer AST objects are allocated.
-- Teardown matters: when the memo was kept alive until interpreter shutdown, the shared-parse variant's wall time
-  was 4.19 s (shutdown spent about 0.65 s releasing it). The design must release the cached trees with the per-run
-  cache before the process exits, and the acceptance measurement uses the real CLI, not an in-process timer.
+- Time the real CLI process, not an in-process timer: when the probe kept its memo in a module global until
+  interpreter shutdown, the shared-parse variant's wall time was 4.19 s (about 0.65 s at shutdown). That cost belongs
+  to the probe's module global, not to a per-run cache: the challenger stored the shared trees on the run's own
+  `WorkspaceCache`, which a reference cycle with its `DocumentCatalog` keeps alive until exit, and measured base
+  4.25 s, trees left until exit 3.69 s, trees collected explicitly 3.71 s (5 interleaved real-CLI runs).
+- Memory: holding all 822 trees of this repository adds about 221 MB RSS for 5.1 MB of source (challenger probe).
 - Peak RSS with shared trees: 178-185 MB, unchanged from baseline (the two devkit-dev rules already hold all their
   trees at once).
 
