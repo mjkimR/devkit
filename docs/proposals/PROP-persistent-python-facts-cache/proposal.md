@@ -2,7 +2,7 @@
 id: PROP-persistent-python-facts-cache
 title: Persist per-file rule facts between runs
 summary: "Lets Python-source rules declare a per-file facts function whose results persist between runs keyed by content digest, so a rules run parses and walks only changed files."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing
 created_at: 2026-10-22
 target_area: governance/
 priority: medium                      # critical | high | medium | low
