@@ -23,7 +23,7 @@ from devkit.advisory import AdvisoryError
 from devkit_core.base.usecase import BaseUseCase
 
 from devkit_agt.features.rules.models.contracts import Phase, Rule, RuleContext, Violation
-from devkit_agt.features.rules.models.errors import PolicyError, RuleProblem, RulesDirError, RulesRunError
+from devkit_agt.features.rules.models.errors import RuleProblem, RulesDirError, RulesRunError
 from devkit_agt.features.rules.models.phases import PhaseEntry, promotion_notices, resolve_phases
 from devkit_agt.features.rules.models.policy import validate_policy
 from devkit_agt.features.rules.models.settings import SettingsResolver
@@ -48,7 +48,8 @@ class ProjectRules:
     ``load_errors`` are rule loading failures (an invalid receipt, a missing or
     drifted synchronized rule, a rule package that fails to import);
     ``policy_errors`` are ``[rules]`` entries that cannot apply to the loaded
-    rules. ``resolvers`` are the settings resolvers of the rules whose settings
+    rules and malformed ``inputs`` declarations (``RULES_DEFINITION_INVALID``).
+    ``resolvers`` are the settings resolvers of the rules whose settings
     type-check.
     """
 
@@ -56,7 +57,7 @@ class ProjectRules:
     registry: RuleRegistry
     rules_dir: Path | None
     load_errors: tuple[RuleProblem, ...]
-    policy_errors: tuple[PolicyError, ...]
+    policy_errors: tuple[RuleProblem, ...]
     resolvers: dict[str, SettingsResolver]
 
     @property
@@ -124,7 +125,8 @@ class ProjectRun:
     ``context`` is ``None`` when there was nothing to evaluate (empty targets).
     ``whole_workspace`` is ``False`` when explicit or snapshot targets limited
     the run. ``guides`` maps rule IDs to their guide documents, resolved while
-    the workspace existed.
+    the workspace existed. ``skipped`` lists the rules the explicit targets
+    could not affect (``EvaluationResult.skipped``).
     """
 
     workspace_root: Path
@@ -151,6 +153,11 @@ class ProjectRun:
     def blocking_violations(self) -> list[Violation]:
         """Unfixed error-severity violations: the findings that fail the run."""
         return self.result.blocking_violations
+
+    @property
+    def skipped(self) -> list[str]:
+        """IDs of the rules the run did not evaluate because no explicit target matched their declared ``inputs``."""
+        return self.result.skipped
 
     @property
     def transitions(self) -> list[PhaseEntry]:
@@ -286,6 +293,9 @@ class RunProjectRulesUseCase(BaseUseCase):
         otherwise each entry is a file or directory (relative to ``root`` or
         absolute inside it) and directories expand to the files under them. An
         empty selection checks nothing. ``[rules] exclude`` applies either way.
+        With explicit targets, a rule declaring ``inputs`` that no target matches
+        is skipped (``ProjectRun.skipped``, ``evaluate_rules``); snapshot runs
+        evaluate every rule.
 
         With ``snapshot`` (from ``git_snapshot(root, ...)``) the snapshot's tree is
         materialized into a temporary directory that becomes the workspace: the
@@ -308,7 +318,7 @@ class RunProjectRulesUseCase(BaseUseCase):
         target, ``RulesDirError`` (``RULES_DIR_INVALID``) and ``SnapshotError``
         (``RULES_SNAPSHOT_FAILED``) when the snapshot cannot be materialized. Rule
         loading problems (``RuleLoadError``) are returned in ``load_errors``;
-        policy problems (``PolicyError``, ``SettingsError``) and rule execution
+        policy problems (``PolicyError``, ``SettingsError``, ``RuleDefinitionError``) and rule execution
         errors (``RuleExecutionError``) in ``result.errors``.
         """
         if snapshot is None:

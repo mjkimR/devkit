@@ -25,11 +25,24 @@ real engine (``evaluate_rules``): settings go through the same parser and
 ``SettingsResolver`` as ``[rules.settings.<id>]`` in ``.devkit/config.toml``,
 the evaluator sets each finding's effective phase and severity, and
 ``fix=True`` applies the fix and rechecks.
+
+A rule that declares ``inputs`` tests the declaration is complete with
+``opened_files``: every workspace file the rule opens during a whole-workspace
+check must match one of its patterns::
+
+    def test_inputs_cover_every_file_read(tmp_path):
+        write_files(tmp_path, {"src/a.py": "x = 1\n", "docs/a.md": "# A\n"})
+        with opened_files(tmp_path) as opened:
+            check(RULE, tmp_path)
+        assert all(any(match_path(p, f) for p in RULE.inputs) for f in opened)
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+import os
+import sys
+from collections.abc import Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -46,7 +59,7 @@ from devkit_agt.features.rules.services.evaluator import EvaluationResult, evalu
 from devkit_agt.features.rules.services.registry import RuleRegistry
 from devkit_agt.features.rules.services.targets import expand_targets
 
-__all__ = ["check", "evaluate", "load_rule", "rule_directory", "write_files"]
+__all__ = ["check", "evaluate", "load_rule", "opened_files", "rule_directory", "write_files"]
 
 
 def rule_directory(anchor: str | Path) -> Path:
@@ -258,3 +271,43 @@ def check(
     if result.errors:
         raise RulesRunError(result.errors)
     return result.violations
+
+
+# Active ``opened_files`` recorders: the workspace root and the set it fills. Audit hooks cannot be removed, so one
+# hook is installed per process and records only while a recorder is active.
+_RECORDERS: list[tuple[Path, set[str]]] = []
+_HOOK_INSTALLED = False
+
+
+def _record_open(event: str, args: tuple[Any, ...]) -> None:
+    if event != "open" or not _RECORDERS or not args:
+        return
+    name = args[0]
+    if not isinstance(name, str | bytes | os.PathLike):
+        return  # an open file descriptor, not a path
+    path = Path(os.path.abspath(os.fsdecode(name)))
+    for root, opened in _RECORDERS:
+        for candidate in (path, path.resolve()):
+            if candidate.is_relative_to(root):
+                opened.add(candidate.relative_to(root).as_posix())
+                break
+
+
+@contextmanager
+def opened_files(root: Path) -> Iterator[set[str]]:
+    """Record the files under ``root`` opened (in any mode) while the context is active.
+
+    Yields a set that fills with workspace-relative POSIX paths. It observes Python's ``open`` audit event, so it
+    covers ``open``, ``Path.read_text``, ``io.open`` and ``os.open``, but not files a subprocess reads. Write the
+    fixture before entering the context, so its own writes are not recorded.
+    """
+    global _HOOK_INSTALLED
+    if not _HOOK_INSTALLED:
+        sys.addaudithook(_record_open)
+        _HOOK_INSTALLED = True
+    entry = (root.resolve(), set[str]())
+    _RECORDERS.append(entry)
+    try:
+        yield entry[1]
+    finally:
+        _RECORDERS[:] = [recorder for recorder in _RECORDERS if recorder is not entry]

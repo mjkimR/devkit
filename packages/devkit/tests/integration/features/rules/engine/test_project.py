@@ -389,3 +389,51 @@ def test_snapshot_policy_ignores_personal_language(tmp_path: Path) -> None:
     after = run_project_rules(root, snapshot=git_snapshot(root, staged=True))
     assert _files(before.result.violations) == _files(after.result.violations)
     assert before.config == after.config
+
+
+PYTHON_RULE = """from devkit_agt.features.rules import RuleContext, Violation
+from devkit_agt.features.rules.services.builtins import BaseRule
+
+
+class PythonRule(BaseRule):
+    def __init__(self) -> None:
+        super().__init__(id="RULE-python", name="python", description="scans every Python file", inputs={inputs})
+
+    def check(self, ctx: RuleContext) -> list[Violation]:
+        return [Violation(self.id, "src/seeded.py", 1, "seeded")]  # whatever the targets, like a workspace scan
+"""
+
+
+def test_explicit_targets_skip_a_declared_rule_none_of_them_matches(tmp_path: Path) -> None:
+    _write(tmp_path, "extra/python/__init__.py", PYTHON_RULE.format(inputs='("**/*.py",)'))
+    _write(tmp_path, "docs/a.md", "# A\n")
+    _write(tmp_path, "src/seeded.py", "x = 1\n")
+    _write(tmp_path, "src/other.py", "y = 2\n")
+    rules = tmp_path / "extra"
+
+    docs = run_project_rules(tmp_path, targets=["docs/a.md"], rules_dir=rules)
+    assert docs.skipped == ["RULE-python"] and docs.result.violations == [] and docs.ok
+    other = run_project_rules(tmp_path, targets=["docs/a.md", "src/other.py"], rules_dir=rules)
+    assert other.skipped == [] and [v.file for v in other.result.violations] == ["src/seeded.py"]
+    whole = run_project_rules(tmp_path, rules_dir=rules)
+    assert whole.skipped == [] and [v.file for v in whole.result.violations] == ["src/seeded.py"]
+
+
+def test_a_snapshot_gate_evaluates_a_declared_rule_for_documentation_changes(tmp_path: Path) -> None:
+    root = _committed_repo(tmp_path)
+    _write(root, "rules/python/__init__.py", PYTHON_RULE.format(inputs='("**/*.py",)'))
+    _git(root, "add", "rules")
+    _git(root, "-c", "user.email=a@b", "-c", "user.name=a", "commit", "-qm", "rules")
+    _write(root, "docs/c.md", "# C\n")
+    _git(root, "add", "docs/c.md")
+    run = run_project_rules(root, snapshot=git_snapshot(root, staged=True), rules_dir=root / "rules")
+    assert run.skipped == [] and [v.rule_id for v in run.result.violations] == ["RULE-python"]
+
+
+def test_a_malformed_inputs_declaration_is_a_loading_error(tmp_path: Path) -> None:
+    _write(tmp_path, "extra/python/__init__.py", PYTHON_RULE.format(inputs='["**/*.py"]'))
+    run = run_project_rules(tmp_path, targets=["extra"], rules_dir=tmp_path / "extra")
+    [problem] = run.load_errors
+    assert problem.code == "RULES_LOAD_FAILED" and "RULE-python: inputs must be None or a non-empty tuple" in str(
+        problem
+    )

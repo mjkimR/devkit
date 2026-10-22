@@ -432,6 +432,7 @@ class UsecaseBoundariesRule(BaseRule):
             phase=Phase.LINTER,
             severity=Severity.ERROR,
             guide="guide.md",
+            inputs=("**/*.py", ".devkit/architecture.toml"),
         )
 
     def check(self, ctx: RuleContext) -> list[Violation]:

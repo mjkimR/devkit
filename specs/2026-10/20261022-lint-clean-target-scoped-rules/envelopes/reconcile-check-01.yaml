@@ -1,0 +1,18 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T07:29:07.611580Z'
+status: completed
+summary: 'reconcile-reviewer: all five targets (CAP-GOV-rule-authoring, CAP-GOV-evaluation-lifecycle, CAP-GOV-rules-engine, rules.md, rules-library.md) match the diff and both ADRs; no-impact statements confirmed; one P3'
+findings:
+- issue: The new public RuleContext.relative_path(path) is not documented in CAP-GOV-rule-authoring §2, which documents ctx.targets.
+  evidence: packages/devkit/src/devkit_agt/features/rules/models/contracts.py relative_path; docs/capabilities/governance/CAP-GOV-rule-authoring.md §2
+  failure_condition: A rule author reading the RuleContext API does not learn the normalizer exists and writes their own or uses the private _relative.
+  suggested_action: Name relative_path in the ctx bullet of CAP-GOV-rule-authoring §2.
+  resolution: open
+  severity: P3
+checks: {}
+diff_scope:
+  base: 3015be11c1adb7ed02eb49936bd62b6c662f36c0
+  head: 4b863c4ddaa5054583534a9ebb2373c011ae72a9

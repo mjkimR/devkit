@@ -32,12 +32,17 @@ a missing or drifted synchronized rule, are returned in `run.load_errors`, and
 no rule is evaluated. `run.blocking_violations` (also on `EvaluationResult`)
 are the unfixed error-severity violations, `run.ok` is true when there are
 neither problems nor blocking violations, and `run.raise_for_problems()` raises
-`RulesRunError` when there are problems. `build_project_registry` and
+`RulesRunError` when there are problems. `run.skipped` (also on
+`EvaluationResult`) lists the IDs of the rules a run with explicit targets did
+not evaluate because no target matched their declared `inputs`
+(`CAP-GOV-evaluation-lifecycle`); it is logged at `INFO` and never printed.
+`build_project_registry` and
 `expand_targets` expose the individual steps; `RuleContext`,
 `default_rule_registry` and `evaluate_rules` serve callers that assemble a run
 themselves (`CAP-GOV-rule-authoring`);
-`validate_policy` checks a `[rules]` policy against loaded rules and returns
-`PolicyError` objects that carry the rule ID.
+`validate_policy` checks a `[rules]` policy and every rule's `inputs`
+declaration against loaded rules and returns `PolicyError` and
+`RuleDefinitionError` objects that carry the rule ID.
 `match_path(pattern, file)` and `validate_pattern(pattern)` are the path
 pattern grammar of settings overrides (`path`): `**` is a whole segment matching
 zero or more segments, and `*`, `?` and character classes match within one.
@@ -107,6 +112,11 @@ covers, left as written), or, for a whole file (`line` `0`, empty `target`),
 - `evaluate(...)`: the same arguments, returning the whole `EvaluationResult`
   without raising for its problems; `write_files(root, files)` and
   `rule_directory(anchor)` are the steps on their own.
+- `opened_files(root)`: a context manager yielding a set that fills with the
+  workspace-relative paths of the files under `root` opened while it is active
+  (Python's `open` audit event: `open`, `Path.read_text`, `os.open`; not files a
+  subprocess reads). A rule declaring `inputs` checks with it that every file a
+  whole-workspace check opens matches one of its patterns.
 
 `devkit_agt.features.rules.usecases.rule_tests` is the command's library half:
 `rule_folder(rule)` and `tests_directory(rule)` locate a rule's folder and

@@ -177,3 +177,15 @@ def test_settings_apply_per_path(tmp_path: Path) -> None:
 ```
 
 `check` runs the real engine (settings parser, one fix pass and one recheck); `evaluate` returns the whole `EvaluationResult`. Assert on `v.rule_id`, `v.file` and `v.fixable`, not on message text.
+
+A rule that declares `inputs` also tests the skip and that the declaration is complete. `opened_files` records every workspace file opened while it is active; it, `evaluate` and `write_files` come from the same module, `match_path` from `devkit_agt.features.rules`:
+
+```python
+def test_inputs_cover_every_file_the_rule_reads(tmp_path: Path) -> None:
+    write_files(tmp_path, {"src/a.py": "x = 1\n", "docs/a.md": "# A\n", "pyproject.toml": ""})
+    assert evaluate(RULE, tmp_path, targets=["docs/a.md"]).skipped == [RULE.id]
+    with opened_files(tmp_path) as opened:
+        check(RULE, tmp_path)
+    inputs = getattr(RULE, "inputs", None) or ()
+    assert [name for name in sorted(opened) if not any(match_path(p, name) for p in inputs)] == []
+```

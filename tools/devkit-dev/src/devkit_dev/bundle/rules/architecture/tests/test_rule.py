@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit_agt.features.rules.services.testing import load_rule
+import pytest
+from devkit_agt.features.rules import match_path
+from devkit_agt.features.rules.services.testing import check, evaluate, load_rule, opened_files, write_files
 
 RULE = load_rule(__file__)
 inspect_architecture = RULE.__module__  # load_rule isolates dynamically loaded rule names
@@ -350,3 +352,85 @@ def test_facade_module_reexport_cannot_hide_attribute_layer(tmp_path: Path) -> N
         },
     )
     assert any("cli cannot import services" in message for message in found)
+
+
+# --- declared inputs: targeted runs skip the rule when no target can change its findings ---------------------------
+
+INPUTS: tuple[str, ...] = getattr(RULE, "inputs", None) or ()
+
+SEEDED_CONFIG = """schema = 1
+[[packages]]
+namespace = "sample"
+root = "src/sample"
+kind = "features"
+features = ["one", "two"]
+feature_dependencies = { one = ["sample.features.two"], two = [] }
+dependencies = []
+
+[[import_exceptions]]
+source = "sample.features.one.cli"
+target = "sample.features.two.unused"
+reason = "seeded"
+"""
+# One seeded violation per declared input pattern, plus files the rule must never read.
+SEEDED = {
+    ".devkit/architecture.toml": SEEDED_CONFIG,
+    "src/sample/features/one/models.py": "from sample.features.one.usecases import run\n",
+    "src/sample/features/one/usecases.py": "def run(): pass\n",
+    "src/sample/features/two/__init__.py": "",
+    "pyproject.toml": '[project]\nname = "sample"\n[project.scripts]\nsample = "sample.missing:main"\n',
+    "src/sample/misplaced/bundle.toml": "",
+    "docs/a.md": "# A\n",
+    "README.md": "# Sample\n",
+    "src/sample/features/one/notes.txt": "notes\n",
+    "data.json": "{}\n",
+}
+SEEDED_MESSAGES = {
+    "unused import exception: sample.features.one.cli -> sample.features.two.unused",
+    "models cannot import usecases: sample.features.one.usecases",
+    "entry-point module is missing: sample.missing",
+    "executable bundle belongs at bundles/<name>/bundle",
+}
+
+# One target per declared pattern, each holding (or being) a seeded violation.
+MATCHING_TARGETS = [
+    ".devkit/architecture.toml",
+    "src/sample/features/one/usecases.py",
+    "pyproject.toml",
+    "src/sample/misplaced/bundle.toml",
+]
+
+
+def test_the_declaration_and_one_matching_target_per_pattern() -> None:
+    assert INPUTS == ("**/*.py", "**/pyproject.toml", "**/bundle.toml", ".devkit/architecture.toml")
+    assert all(any(match_path(pattern, target) for target in MATCHING_TARGETS) for pattern in INPUTS)
+
+
+def test_documentation_targets_skip_the_rule(tmp_path: Path) -> None:
+    result = evaluate(RULE, tmp_path, SEEDED, targets=["docs/a.md", "README.md"])
+    assert result.skipped == [RULE.id] and result.violations == []
+
+
+@pytest.mark.parametrize("target", MATCHING_TARGETS)
+def test_a_target_matching_each_declared_input_reports_the_seeded_violations(tmp_path: Path, target: str) -> None:
+    found = check(RULE, tmp_path, SEEDED, targets=["docs/a.md", target])
+    assert {v.message for v in found} == SEEDED_MESSAGES
+
+
+def test_a_violation_outside_the_targets_is_reported_only_when_a_python_file_is_targeted(tmp_path: Path) -> None:
+    seeded = ("src/sample/features/one/models.py", "models cannot import usecases: sample.features.one.usecases")
+    files = {**SEEDED, "src/sample/features/two/other.py": "VALUE = 1\n"}
+    whole = check(RULE, tmp_path, files)
+    python = check(RULE, tmp_path, targets=["src/sample/features/two/other.py"])
+    documentation = check(RULE, tmp_path, targets=["docs/a.md"])
+    assert seeded in {(v.file, v.message) for v in whole}
+    assert seeded in {(v.file, v.message) for v in python}
+    assert documentation == []
+
+
+def test_every_file_the_rule_opens_matches_its_inputs(tmp_path: Path) -> None:
+    write_files(tmp_path, SEEDED)
+    with opened_files(tmp_path) as opened:
+        check(RULE, tmp_path)
+    assert {".devkit/architecture.toml", "pyproject.toml", "src/sample/features/one/models.py"} <= opened
+    assert [name for name in sorted(opened) if not any(match_path(p, name) for p in INPUTS)] == []

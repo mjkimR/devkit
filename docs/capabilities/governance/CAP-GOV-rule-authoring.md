@@ -4,6 +4,9 @@ title: "Rule Authoring"
 summary: "Protocols, workspace cache API, rule configuration, and custom rule development."
 area: governance
 status: active
+entrypoints:
+  - packages/devkit/src/devkit_agt/features/rules/services/builtins/base.py
+  - packages/devkit/src/devkit_agt/features/rules/services/testing.py
 created_at: 2026-10-17
 ---
 
@@ -114,6 +117,28 @@ without repeating its checks.
 super().__init__(id="RULE-skill-document-size", ..., guide="guide.md", related=("authoring:skill-authoring",))
 ```
 
+### Optional `inputs`
+
+A rule that reads files beyond its targets, such as one that scans the whole workspace or reads a configuration file,
+declares `inputs`: the workspace-relative patterns, in the `**` grammar of `[rules] exclude` (`match_path`), of every
+file whose content can change its findings. A run with explicit working-tree targets skips the rule when no target
+matches one of them (`CAP-GOV-evaluation-lifecycle`); whole-workspace runs and the Git snapshot gates always evaluate
+it. `None`, the default, means any file can affect the rule: it runs in every run. A rule that reports only its
+targets leaves `inputs` unset.
+
+```python
+super().__init__(id="RULE-architecture", ..., inputs=("**/*.py", "**/pyproject.toml", "**/bundle.toml",
+                                                       ".devkit/architecture.toml"))
+```
+
+`inputs` is not part of the `Rule` protocol; the engine reads it with `getattr`. On `BaseRule` it must be `None` or a
+non-empty tuple of patterns `validate_pattern` accepts; anything else (an empty tuple, a list, a string, an invalid
+pattern) raises `RuleDefinitionError` (`RULES_DEFINITION_INVALID`) at construction, which makes the rule package a
+loading error. A rule that satisfies the protocol without subclassing `BaseRule` and carries such a value fails policy
+validation with the same code and its rule ID before any rule runs. A declaration that omits a file the rule reads
+hides its findings from targeted runs on that file, so the rule's tests check it is complete (section 6).
+`devkit rules explain` prints the declaration.
+
 ### Guide Format
 
 A guide is what `devkit rules explain <RULE-id>` prints and what a violation cites, so an agent that hits a violation
@@ -148,7 +173,7 @@ class Autofixable(Rule, Protocol):
 
 Rules read files through `ctx.cache`, not direct disk I/O:
 
-- `ctx.is_file_targeted(path)`: `True` if the file is in the current run's targets. It is `False` for any path matched by `[rules] exclude`, even in a whole-workspace run, so a rule that scans with `find_files` must call it before reporting. `ctx.changed_files` already has excluded paths removed; `ctx.has_targets` says whether the run named explicit targets.
+- `ctx.is_file_targeted(path)`: `True` if the file is in the current run's targets. It is `False` for any path matched by `[rules] exclude`, even in a whole-workspace run, so a rule that scans with `find_files` must call it before reporting. `ctx.changed_files` already has excluded paths removed; `ctx.has_targets` says whether the run named explicit targets, and `ctx.targets` holds them workspace-relative before exclusions. `ctx.relative_path(path)` gives the workspace-relative POSIX form of a relative or absolute path, `None` outside the workspace.
 - `ctx.snapshot`: the Git snapshot a `check --staged` or `--ci` run evaluates (`devkit_agt.features.rules.Snapshot`: `mode` `staged` or `ci`, `base`, `changed` and `deleted` paths, the repository `root`), `None` for a working-tree run. Rules about diff evidence read it: a record that claims a file changed can be checked against `changed`, and a declaration naming a deleted path against `deleted`, even when the declaring file itself is not in the diff.
 - `ctx.cache.find_files(root, extensions=(".md",))`: Sorted absolute paths of the regular files under `root` with one of `extensions` (`None` lists every file), with the target discovery of `CAP-GOV-evaluation-lifecycle` (cached).
 - `ctx.cache.read_text(path)` / `ctx.cache.read_bytes(path)`: Contents of a workspace-relative or absolute path (cached). `read_text` replaces undecodable bytes with U+FFFD; `read_text_strict(path)` returns `None` for a file that is not valid UTF-8, which a fixer must then leave alone.
@@ -282,7 +307,10 @@ files by path (`--import-mode=importlib`). The built-in rules follow the same la
   `[rules.settings.<RULE-id>]` values, path overrides under `"overrides"`) and `exclude` (`[rules] exclude`)
   match a project run. A run that reports
   problems (settings that do not type-check, a rule that raises) raises `RulesRunError` with them; `evaluate` returns
-  the whole `EvaluationResult` instead, to assert on those problems.
+  the whole `EvaluationResult` instead, to assert on those problems and on `skipped`.
+- `opened_files(root)` records the workspace files opened while it is active. A rule declaring `inputs` tests that a
+  documentation-only target set skips it, that a target matching each pattern reports a seeded violation, and that
+  every file a whole-workspace check opens matches one of its patterns.
 
 ```python
 # rules/doc_heading/tests/test_rule.py

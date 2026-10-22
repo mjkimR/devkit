@@ -77,7 +77,7 @@ Sections of the proposal that did not map to a spec section. Trim or promote the
   directly from every rule.
 - **D3 — Only the parse moves**: the two devkit-dev rules keep enumerating their declared package roots
   (`Path.rglob`), and every rule keeps its file selection; only the parse (and with it the read) goes through
-  `ctx.cache`. Which rules run for a targeted run is `PROP-lint-clean-target-scoped-rules` (D8).
+  `ctx.cache`. Which rules run for a targeted run is `SPEC-lint-clean-target-scoped-rules` (D8).
 - **D4 — Per-run lifetime, real-CLI timing**: the trees live on the run's `WorkspaceCache` and need no release step;
   a simulation on that cache gave 4.25 s to 3.69 s. The acceptance measurement times the real CLI process, because an
   in-process timer misses interpreter shutdown.
@@ -91,7 +91,7 @@ Sections of the proposal that did not map to a spec section. Trim or promote the
 - **D7 — Path resolution included (user)**: this proposal also resolves each rule path once per run: lazy
   resolution in `RuleContext._relative` and a per-run memo of `WorkspaceCache._key`
   (`ADR-resolve-rule-paths-once-per-run`). The speed target rises to at least 0.8 s faster.
-- **D8 — Sequencing with `PROP-lint-clean-target-scoped-rules`**: that unit is in Development and lands on main
+- **D8 — Sequencing with `SPEC-lint-clean-target-scoped-rules`**: that unit is in Development and lands on main
   first. It adds an `inputs` declaration to `RULE-architecture`, `RULE-usecase-boundaries` and
   `RULE-advisory-unique-code` and target scoping in `evaluate_rules`. This proposal plans none of it; its Development
   merges main after that unit lands and adapts the three rule modules (and any `RuleContext` change) to it.
@@ -151,7 +151,7 @@ After changing the bundle sources, `devkit sync` refreshes `.devkit/managed/` an
    540 instead of 1,526), measured by wrapping `ast.parse` as `docs/materials/2026-10/20261022-rule-shared-python-ast/measurements.md` describes.
 3. The median wall time of 7 interleaved runs of `.venv/bin/devkit rules check --format json` is at least 0.8 s
    below main's (prototype: 1.06 s), with both numbers recorded in the change report. Main is measured after
-   `PROP-lint-clean-target-scoped-rules` has landed, on the same commit this unit's Development merged.
+   `SPEC-lint-clean-target-scoped-rules` has landed, on the same commit this unit's Development merged.
 4. The cache and context tests named in the three PADRs' Confirmation sections pass: among them, a path argument
    resolves once between invalidations, `write_text` refuses a path whose parent became an outside symlink after it
    was read, a lexically inside path is made relative without `Path.resolve`, and a path through a symlinked alias of
@@ -164,13 +164,13 @@ After changing the bundle sources, `devkit sync` refreshes `.devkit/managed/` an
 
 #### Non-Goals
 
-- Selecting which rules a targeted run executes (`PROP-lint-clean-target-scoped-rules`).
+- Selecting which rules a targeted run executes (`SPEC-lint-clean-target-scoped-rules`).
 - Changing which files any rule scans, or its findings and messages for valid source.
 - Sharing or merging the rules' own `ast.walk` traversals (about 0.5 s, rule-internal).
 - A central syntax-error report, a persistent cross-run cache, or CLI startup time.
 - `Path.resolve` call sites outside `RuleContext._relative` and the `WorkspaceCache` key (`find_files`, target
   expansion, `DocumentCatalog`).
-- The `inputs` declaration and target scoping of `PROP-lint-clean-target-scoped-rules` (D8).
+- The `inputs` declaration and target scoping of `SPEC-lint-clean-target-scoped-rules` (D8).
 
 ### 5. Lifecycle & Retirement Criteria
 

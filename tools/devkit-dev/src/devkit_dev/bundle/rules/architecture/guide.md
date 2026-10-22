@@ -1,5 +1,14 @@
 # Architecture violations
 
+The rule reads `.devkit/architecture.toml`, every Python file under
+`packages/*/src`, `tools/*/src` and the declared packages' sources and tests,
+their `pyproject.toml` and the location of every `bundle.toml`, and reports
+findings anywhere in the workspace. It declares these
+inputs (`**/*.py`, `**/pyproject.toml`, `**/bundle.toml`,
+`.devkit/architecture.toml`), so a run with explicit targets that match none of
+them, such as `lint-clean` on a documentation-only unit, skips it; full runs,
+the commit gate and CI always run it.
+
 Move modules to their owning feature and layer; update imports and entry-point
 module paths together. Put shared contracts in base and execution in features.
 Expose intentional cross-feature APIs through a facade or declare a narrow

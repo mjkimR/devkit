@@ -37,7 +37,8 @@ a Git work tree is `ARGUMENT_INVALID`. A `.devkit/` below the top level of a Git
 work tree whose top level has none is `DEVKIT_ROOT_NESTED` (`INPUT_ERROR`), with
 or without `-w`, rather than a check that loads no managed rules and passes.
 
-- `check` never writes files. Targets, exclusions and phases:
+- `check` never writes files. Targets, target scoping (a run naming files skips
+  the rules whose declared `inputs` none of them matches), exclusions and phases:
   `CAP-GOV-evaluation-lifecycle`.
 - `check --staged` evaluates the Git index (the built-in `rules-check`
   commit gate runs the same evaluation before every commit); `check --ci --base <ref>` evaluates `HEAD` against its merge base with
@@ -49,9 +50,9 @@ or without `-w`, rather than a check that loads no managed rules and passes.
 - `fix --dry-run` reports the initial findings, marking fixable ones
   `status=fixable`, without running any fixer.
 - `phases` prints each rule's default and effective phase without evaluating.
-- `explain <RULE-id>` prints a rule's phase, severity, effective settings, the
-  instructions and playbooks it names as `related` (resolved to the file agents
-  read) and its guide document.
+- `explain <RULE-id>` prints a rule's phase, severity, declared `inputs`,
+  effective settings, the instructions and playbooks it names as `related`
+  (resolved to the file agents read) and its guide document.
 - `test [RULE-id]...` runs the tests in each rule's folder (`<rule folder>/tests/`;
   every rule when none is named), with rules resolved as for `explain`
   (built-in, synchronized, `--rules-dir`). The rule folder is the directory of
@@ -124,7 +125,9 @@ parseable:
   and keeps the other lines. Exit codes are unchanged; `--format json` ignores
   the flag.
 - `phases`: one `[PHASE: RULE-id default=... effective=... overridden=yes|no promote_to=...]` line per rule.
-- `explain`: `[RULE: ...]`, `[DESCRIPTION: ...]`, one
+- `explain`: `[RULE: RULE-id name=... phase=... effective_phase=... severity=...
+  effective_severity=... promote_to=... guide=... inputs=<pattern>,<pattern>]`
+  (`inputs=-` for a rule that declares none), `[DESCRIPTION: ...]`, one
   `[RELATED: <bundle>:<asset-id> kind=instruction|playbook path=<file>]` per related
   asset (`kind=- path=-` when it is not deployed or the receipt cannot be read, `path=-`
   when it is another kind or has no Markdown file), one
@@ -165,7 +168,7 @@ the rule gives them, as the `[VIOLATION: ...]` line does),
 `{"rules": [...], "errors": [...]}` with one object per rule carrying
 `rule_id`, `default_phase`, `effective_phase`, `overridden` and `promote_to`
 (`phases`), `{"rule": {...}, "notices": [...], "errors": [...]}`
-(`explain`), or `{"results": [...], "summary": {...}, "notices": [...]}`
+(`explain`; `rule` carries `inputs`, a list of patterns or `null`), or `{"results": [...], "summary": {...}, "notices": [...]}`
 (`test`: one result per rule with `rule_id`, `tests`, `result`, `exit_code`
 and `log`, `null` without a run, and for a failed run `summaries`, `failures`
 (`test`, `kind`, `message`), `output` (the excerpt) and `omitted`
@@ -272,7 +275,7 @@ are returned in `RuleRegistry.errors`, `ProjectRun.load_errors` and
 | `RulesDirError` | `RULES_DIR_INVALID` | `INPUT_ERROR` | a snapshot run cannot read `--rules-dir` from the snapshot: outside the repository or not in the snapshot (raised) |
 | `SnapshotError` | `RULES_SNAPSHOT_FAILED` | `INPUT_ERROR` (not a work tree top level, unknown `--base`) or `MAINTENANCE` (Git failure) | a Git snapshot cannot be taken or materialized (raised) |
 | `PinnedWriteError` | `RULES_PINNED_WRITE_REFUSED` | `BLOCKED` | a fixer tried to write a receipt-pinned copy under `.devkit/managed/` or `.devkit/overrides/` |
-| `RuleDefinitionError` | `RULES_DEFINITION_INVALID` | `MAINTENANCE` | a rule class declares an invalid `promote_to` (raised at construction) |
+| `RuleDefinitionError` | `RULES_DEFINITION_INVALID` | `MAINTENANCE` | a rule class declares an invalid `promote_to`, `related` entry or `inputs` (raised at construction; the plugin loader reports it as the package's `RULES_LOAD_FAILED`), or a rule that only satisfies the protocol carries an `inputs` that is not `None` or a non-empty tuple of valid patterns (collected by policy validation with its `rule_id`; `[TARGET]` is the file defining it) |
 | `PolicyError` | `RULES_POLICY_INVALID` | `INPUT_ERROR` | a phase or severity override or settings entry names an unknown rule or changes nothing (collected) |
 | `SettingsError` | `RULES_SETTINGS_INVALID` | `INPUT_ERROR`, or `MAINTENANCE` for a defect in the rule's settings declaration | settings do not type-check, or the settings class's `__post_init__` or `validate_settings` rejects them (collected; a `PolicyError`). `MAINTENANCE` covers rejected defaults, an unsupported or unresolvable field type, an `init=False` field, and any exception other than `ValueError` from the class or `validate_settings`; its `fix` names the rule, its settings class and the file defining it (fix the declaration, or report it to the rule's author) instead of the `[rules]` table |
 | `RuleLoadError` | `RULES_LOAD_FAILED` | `MAINTENANCE`; `AUTO` when missing | a rule package fails to load (or a `.py` file sits directly in `--rules-dir`), or the receipt is malformed or lists a missing or drifted rule (collected; `fix` names `devkit sync`); a missing rule file (a fresh clone or worktree lacks the ignored managed copies) is `AUTO` with the fix `devkit sync` |

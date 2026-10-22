@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from devkit_agt.features.rules import Phase, RulesRunError, Severity
-from devkit_agt.features.rules.services.testing import check, load_rule
+from devkit_agt.features.rules import Phase, RulesRunError, Severity, match_path
+from devkit_agt.features.rules.services.testing import check, evaluate, load_rule, opened_files, write_files
 
 RULE = load_rule(__file__)
 
@@ -182,3 +182,34 @@ def test_annotated_module_constants_are_codes(tmp_path: Path) -> None:
         ),
     }
     assert len(check(RULE, tmp_path, files)) == 2
+
+
+# --- declared inputs: targeted runs skip the rule when no target can change its findings ---------------------------
+
+INPUTS: tuple[str, ...] = getattr(RULE, "inputs", None) or ()
+
+SEEDED = {
+    "a.py": ADVISORY + 'class A(AdvisoryError):\n    code = "DUP"\n',
+    "b.py": ADVISORY + 'class B(AdvisoryError):\n    code = "DUP"\n',
+    "docs/a.md": "# A\n",
+    "pyproject.toml": '[project]\nname = "sample"\n',
+}
+
+
+def test_documentation_targets_skip_the_rule(tmp_path: Path) -> None:
+    result = evaluate(RULE, tmp_path, SEEDED, targets=["docs/a.md", "pyproject.toml"])
+    assert result.skipped == [RULE.id] and result.violations == []
+
+
+def test_a_python_target_reports_the_seeded_violation(tmp_path: Path) -> None:
+    assert INPUTS == ("**/*.py",)
+    found = check(RULE, tmp_path, SEEDED, targets=["docs/a.md", "a.py"])
+    assert _found(found) == [("a.py", 5, 'Code "DUP" is also declared by b.B (b.py:5); a code names one condition')]
+
+
+def test_every_file_the_rule_opens_matches_its_inputs(tmp_path: Path) -> None:
+    write_files(tmp_path, SEEDED)
+    with opened_files(tmp_path) as opened:
+        check(RULE, tmp_path)
+    assert {"a.py", "b.py"} <= opened
+    assert [name for name in sorted(opened) if not any(match_path(p, name) for p in INPUTS)] == []

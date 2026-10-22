@@ -81,6 +81,9 @@ class RuleContext:
     exclude: tuple[str, ...]
     # Whether the run named explicit targets (before exclusions were applied).
     has_targets: bool
+    # The explicit targets, workspace-relative, before ``exclude`` removed any: what the evaluator matches a rule's
+    # ``inputs`` against.
+    targets: tuple[str, ...]
     # The Git snapshot a ``check --staged`` or ``--ci`` run evaluates (``mode``, ``base``, ``changed``, ``deleted``);
     # ``None`` for a working-tree run. Rules about diff evidence read it.
     snapshot: Snapshot | None
@@ -119,13 +122,16 @@ class RuleContext:
         self.exclude = tuple(exclude)
         targets = changed_files or []
         self.has_targets = bool(targets)
+        named: list[str] = []
         normalized: list[str] = []
         for name in targets:
             relative = self._relative(name)
             if relative is None:
                 raise TargetError(f"Target file is outside the workspace: {name}", target_files=[str(name)])
+            named.append(relative)
             if not self._excluded(relative):
                 normalized.append(relative)
+        self.targets = tuple(named)
         self.changed_files = normalized
         if snapshot is None:
             # Targets named on the command line are listed by ``find_files`` even where discovery skips files
@@ -150,6 +156,10 @@ class RuleContext:
                 continue
             return relative if relative != "." else None
         return None
+
+    def relative_path(self, path: str | Path) -> str | None:
+        """Workspace-relative POSIX form of ``path`` (relative to the workspace or absolute), or ``None`` outside it."""
+        return self._relative(path)
 
     def _excluded(self, relative: str) -> bool:
         return any(match_path(p, relative) for p in self.exclude)

@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T07:31:10.845232Z'
+status: completed
+summary: 'Targeted rules runs skip declared rules no explicit working-tree target can affect: BaseRule.inputs (validated, RULES_DEFINITION_INVALID), scoping in evaluate_rules with EvaluationResult/ProjectRun.skipped, inputs in devkit rules explain, opened_files for declaration tests; RULE-architecture, RULE-usecase-boundaries and RULE-advisory-unique-code declare their inputs; devkit workflow next on a documentation-only unit drops from 3.71 s to 1.51 s with equal findings on all nine target sets'
+findings: []
+assumptions:
+- lint-clean at build-verify/fix-verify no longer reports architecture and use-case boundary violations of a documentation-only unit's own code outside the unit directory (accepted with the proposal); the commit gate and lint-ci-clean still do
+- AC-10's baseline is the head with scoping disabled, not commit 3015be11 (review-01 finding 3, waived; evidence.md section 2)
+checks:
+  tests: 'PASS just test-affected mode=partial: 2584 passed; just test-e2e agt: 215 passed; devkit rules test of the three declared rules: 3 passed'
+  build: 'PASS just smoke; just check agt, dist, devkit-dev: 0 errors'
+  lint: PASS just lint-check; uv run devkit rules check --ci --base 3015be11; devkit sync --check; git diff --check
+diff_scope:
+  base: 3015be11c1adb7ed02eb49936bd62b6c662f36c0
+  head: b31eba464bb09b341ba5fd27ad4fa09149bedb35
