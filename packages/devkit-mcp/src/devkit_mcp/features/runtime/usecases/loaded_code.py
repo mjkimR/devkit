@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
 from devkit_core.base.usecase import BaseUseCase
 
 from devkit_mcp.features.runtime.models.errors import RuntimeStaleError
+from devkit_mcp.features.runtime.models.loaded_code import LoadedCodeBaseline
 from devkit_mcp.features.runtime.services import loaded_code
 
 DETAIL_LIMIT = 20
@@ -15,14 +14,14 @@ DETAIL_LIMIT = 20
 class RecordLoadedCodeUseCase(BaseUseCase):
     """The baseline the service compares against: the installed devkit source when it starts."""
 
-    def execute(self) -> Mapping[str, str]:
+    def execute(self) -> LoadedCodeBaseline:
         return loaded_code.record()
 
 
 class GuardLoadedCodeUseCase(BaseUseCase):
     """Raise ``MCP_RUNTIME_STALE`` when a loaded devkit module differs from the recorded baseline."""
 
-    def __init__(self, baseline: Mapping[str, str]) -> None:
+    def __init__(self, baseline: LoadedCodeBaseline) -> None:
         self.baseline = baseline
 
     def execute(self) -> None:

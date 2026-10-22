@@ -5,7 +5,8 @@ merge into an editable base checkout, a reinstall), those modules no longer matc
 from disk (managed rules, assets) can fail against them. ``record`` captures the SHA-256 of every Python source file
 of the installed devkit packages (the top-level ``devkit`` namespace and every ``devkit_*`` package on ``sys.path``)
 when the service starts; ``stale`` names each loaded module of those packages whose file is now absent, unreadable,
-unrecorded or different. A file the process never imported does not count.
+unrecorded or different. A file the process never imported does not count, and neither does a module outside the
+packages recorded at start, such as a rule or gate plugin (``devkit_rule_<sha>``) loaded from ``.devkit/managed``.
 """
 
 from __future__ import annotations
@@ -15,17 +16,14 @@ import importlib.util
 import os
 import pkgutil
 import sys
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from pathlib import Path
 from types import MappingProxyType
 
+from devkit_mcp.features.runtime.models.loaded_code import LoadedCodeBaseline
+
 NAMESPACE = "devkit"
 PREFIX = "devkit_"
-
-
-def _devkit(name: str) -> bool:
-    top = name.partition(".")[0]
-    return top == NAMESPACE or top.startswith(PREFIX)
 
 
 def _digest(path: str) -> str | None:
@@ -35,7 +33,8 @@ def _digest(path: str) -> str | None:
         return None
 
 
-def _locations() -> Iterator[Path]:
+def _locations() -> Iterator[tuple[str, tuple[Path, ...]]]:
+    """Each installed devkit package (top-level name) with its import locations."""
     names = {NAMESPACE} | {module.name for module in pkgutil.iter_modules() if module.name.startswith(PREFIX)}
     for name in sorted(names):
         try:
@@ -45,9 +44,9 @@ def _locations() -> Iterator[Path]:
         if spec is None:
             continue
         if spec.submodule_search_locations is not None:
-            yield from (Path(location) for location in spec.submodule_search_locations)
+            yield name, tuple(Path(location) for location in spec.submodule_search_locations)
         elif spec.origin and spec.origin.endswith(".py"):
-            yield Path(spec.origin)
+            yield name, (Path(spec.origin),)
 
 
 def _sources(location: Path) -> Iterator[Path]:
@@ -59,27 +58,30 @@ def _sources(location: Path) -> Iterator[Path]:
             yield path
 
 
-def record() -> Mapping[str, str]:
-    """The SHA-256 of every installed devkit Python source file, keyed by its real path."""
-    baseline: dict[str, str] = {}
-    for location in _locations():
-        for path in _sources(location):
-            real = os.path.realpath(path)
-            digest = _digest(real)
-            if digest is not None:
-                baseline.setdefault(real, digest)
-    return MappingProxyType(baseline)
+def record() -> LoadedCodeBaseline:
+    """The installed devkit packages and the SHA-256 of each of their Python source files."""
+    packages: set[str] = set()
+    digests: dict[str, str] = {}
+    for name, locations in _locations():
+        packages.add(name)
+        for location in locations:
+            for path in _sources(location):
+                real = os.path.realpath(path)
+                digest = _digest(real)
+                if digest is not None:
+                    digests.setdefault(real, digest)
+    return LoadedCodeBaseline(frozenset(packages), MappingProxyType(digests))
 
 
-def stale(baseline: Mapping[str, str]) -> tuple[str, ...]:
-    """The loaded devkit modules whose source file no longer matches ``baseline``, sorted by name."""
+def stale(baseline: LoadedCodeBaseline) -> tuple[str, ...]:
+    """The loaded modules of the recorded packages whose source file no longer matches ``baseline``, sorted."""
     found: list[str] = []
     for name, module in tuple(sys.modules.items()):
         path = getattr(module, "__file__", None)
-        if not _devkit(name) or not isinstance(path, str) or not path.endswith(".py"):
+        if name.partition(".")[0] not in baseline.packages or not isinstance(path, str) or not path.endswith(".py"):
             continue
         real = os.path.realpath(path)
-        recorded = baseline.get(real)
+        recorded = baseline.digests.get(real)
         if recorded is None or _digest(real) != recorded:
             found.append(name)
     return tuple(sorted(found))

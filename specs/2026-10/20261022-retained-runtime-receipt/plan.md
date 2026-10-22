@@ -31,8 +31,8 @@ integration service calls a new repository function; `devkit-dist` gains one con
   - `models/errors.py`: `RuntimeStaleError` (`MCP_RUNTIME_STALE`, actor `USER`, a `HostError`).
   - `services/loaded_code.py`: `record()` hashes every `*.py` file under the import locations of the top-level
     `devkit` namespace and every `devkit_*` package on `sys.path` (`pkgutil.iter_modules`, `importlib.util.find_spec`),
-    keyed by real path; `stale(baseline)` lists the loaded `devkit`/`devkit_*` modules whose `.py` file is absent,
-    unreadable, unrecorded or differs.
+    keyed by real path, with those top-level names (`LoadedCodeBaseline`); `stale(baseline)` lists the loaded
+    modules of the recorded packages whose `.py` file is absent, unreadable, unrecorded or differs.
   - `usecases/loaded_code.py`: `RecordLoadedCode` (returns the baseline) and `GuardLoadedCode(baseline)` (raises
     `RuntimeStaleError` with the stale module names as details).
   - `mcp/server.py`: `build_server` records the baseline when the server is built (at `devkit mcp serve` start) and
@@ -67,6 +67,8 @@ class GuardLoadedCode(BaseUseCase):
   the provider for a corrupted receipt).
 - A cleanup-only request (the target contains the source) has an empty range and is never diagnosed.
 - A module loaded after start from a file changed since start runs a mixed code generation and is reported stale.
+- Rule and gate plugins (`devkit_rule_<sha>`, `devkit_gate_<sha>`) loaded from `.devkit/managed/` are not installed
+  packages recorded at start and are never reported stale; they are verified against the receipt when loaded.
 - `read_only` tools skip the guard, keeping retained read-only diagnostics available. The guard runs once at the
   start of a call; a merge the same call lands does not refuse that call, and the next protected call is refused.
 - The guard never re-imports, restarts or selects a runtime and grants no authority.

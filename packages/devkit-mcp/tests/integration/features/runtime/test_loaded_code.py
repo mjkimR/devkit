@@ -9,6 +9,7 @@ from typing import Literal
 
 import pytest
 from devkit_core.base.mcp import McpTool
+from devkit_core.core.plugins import iter_plugin_packages, load_subclasses
 from devkit_dist.features.project.repositories.invocation import ExecutionBinding
 from devkit_mcp.features.runtime.mcp.server import build_server
 from mcp import types
@@ -93,3 +94,22 @@ def test_read_only_tools_and_unloaded_changes_are_not_refused(project, loaded):
     (loaded / "model.py").write_text("MEMBERS = ('SPEC', 'USECASE')\n")
     assert not _call(server, "read").isError
     assert calls == ["write", "read"]
+
+
+def test_plugins_loaded_after_start_are_not_stale(project, loaded, tmp_path):
+    calls: list[str] = []
+    server = build_server(_tools(calls), ExecutionBinding(project, project))
+    plugin = tmp_path / "rules" / "demo"
+    plugin.mkdir(parents=True)
+    (plugin / "rule.py").write_text("class Demo:\n    pass\n")
+    packages, failures = iter_plugin_packages(tmp_path / "rules")
+    before = set(sys.modules)
+    try:
+        assert not failures
+        assert load_subclasses(packages, object, namespace="devkit_rule").plugins
+        assert any(name.startswith("devkit_rule_") for name in set(sys.modules) - before)
+        assert not _call(server, "write").isError
+    finally:
+        for name in set(sys.modules) - before:
+            del sys.modules[name]
+    assert calls == ["write"]
