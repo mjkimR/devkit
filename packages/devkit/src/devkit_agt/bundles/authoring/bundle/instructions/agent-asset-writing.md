@@ -55,4 +55,5 @@ Name consumer documents and example IDs only as placeholders (`docs/decisions/`,
 ## Completion
 
 - `rg -n '\b(ADR|CAP|US|ARCH|SPEC|MS)-[a-z]' <bundle directory>` reports only placeholders.
+- `uv run devkit rules check --phase hygiene <asset>` reports no `RULE-agent-asset-wording` warning.
 - Every line of the asset meets the directives above.

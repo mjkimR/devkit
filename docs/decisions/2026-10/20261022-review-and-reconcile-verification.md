@@ -95,7 +95,7 @@ fresh loop (`FB-review-loop-round-count-across-procedure-change`). Evidence:
 
 ### Reverify closes challenger rounds
 
-- These rules refine `ADR-bounded-high-effort-review-loop` (the closing record of a Planning round, and the count of
+- These rules refine `ADR-host-owned-review-loop-recovery` (the closing record of a Planning round, and the count of
   rounds recorded before its marker existed) without superseding it. (ADR-reverify-closes-challenger-rounds)
 - `reverify --from` accepts a `challenger-NN.yaml` (or a reverify that closes one) besides review files; the `review`
   key then names that challenger file, and the reference pattern becomes `review-NN.yaml` or `challenger-NN.yaml`.

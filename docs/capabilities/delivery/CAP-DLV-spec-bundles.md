@@ -48,7 +48,8 @@ creates one without a proposal, writing the document IDs the spec rules expect (
    dashes trimmed, lower-cased). A slug with no letter or digit left, or longer than 59 characters (its activity
    branches `plan-<slug>` and `dev-<slug>` must fit devkit worktree's 64), is `SPEC_SLUG_INVALID`.
 3. **One slug, one unit**: the command MUST refuse (`SPEC_EXISTS`) a slug whose `SPEC-<slug>` or `PROP-<slug>` any
-   document declares, a proposal bundle `docs/proposals/PROP-<slug>/` or file `docs/proposals/PROP-<slug>.md`, and an
+   document declares as its ID or in its `aliases` (an alias declaration counts, `CAP-DOCS-document-model` section
+   3.5 rule 6), a proposal bundle `docs/proposals/PROP-<slug>/` or file `docs/proposals/PROP-<slug>.md`, and an
    existing bundle directory; `[TARGET]` lists them.
 4. **Skeleton marker**: every file written carries `<!-- devkit:skeleton -->` as its first body line, right after
    the frontmatter. devkit's `not-skeleton(<file>)` check keeps `specify` (or `plan-tasks`) open until the file is
@@ -172,7 +173,7 @@ before anything is written; `DEFAULT_WORKFLOW` is `sdd-spec-feature`, `BUGFIX_WO
 | --- | --- | --- | --- |
 | `SPEC_SLUG_INVALID` | `ERROR` (`INPUT_ERROR`) | `SpecSlugError` | The slug keeps no letter or digit after normalization. |
 | `SPEC_WRONG_BRANCH` | `ERROR` (`INPUT_ERROR`) | `SpecWrongBranchError` | In Git, the checkout is not on `dev-<slug>` (rule 9); `[FIX]` starts or continues that branch. Nothing written. |
-| `SPEC_EXISTS` | `ERROR` (`INPUT_ERROR`) | `SpecExistsError` | A document declares `SPEC-<slug>` or `PROP-<slug>`, a proposal of the slug exists, or the bundle directory exists; `[TARGET]` lists them. |
+| `SPEC_EXISTS` | `ERROR` (`INPUT_ERROR`) | `SpecExistsError` | A document declares `SPEC-<slug>` or `PROP-<slug>` as its ID or an alias, a proposal of the slug exists, or the bundle directory exists; `[TARGET]` lists them. |
 | `SPEC_WORKFLOW_INVALID` | `ERROR` (`INPUT_ERROR`) | `SpecWorkflowError` | `--workflow` names a workflow that does not resolve or validate, or a definition path other than the one discovered for its id; `[DETAIL]` carries devkit's code (`WORKFLOW_NOT_BINDABLE` for the latter). |
 | `SPEC_WRITE_FAILED` | `ERROR` (`MAINTENANCE`) | `SpecWriteError` | A write failed; what was written is removed. When the roll-back was incomplete, `[DETAIL]` lists what could not be removed. |
 | `SPEC_UNBOUND` | `NOTICE` | `SpecUnboundNotice` | No `--workflow` and `sdd-spec-feature` is not available: `spec.md` is unbound. |

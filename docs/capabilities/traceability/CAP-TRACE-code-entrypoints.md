@@ -135,8 +135,9 @@ supplied `relative` diagnostic path. It does not normalize paths or change the r
 ### 3.6 Apply
 
 1. Nothing MUST be written without `--apply`.
-2. With `--apply`, for each document (only those named by `--target`, an ID or a workspace-relative path that MUST be
-   among the derived documents before `--code`/`--exclude`, else `SPEC_ENTRYPOINTS_TARGET_UNKNOWN`), the `new` pairs
+2. With `--apply`, for each document (only those named by `--target`: an ID, an alias, which resolves to its canonical
+   document (`CAP-DOCS-document-model` section 3.5 rule 6), or a workspace-relative path; the document MUST be among
+   the derived documents before `--code`/`--exclude`, else `SPEC_ENTRYPOINTS_TARGET_UNKNOWN`), the `new` pairs
    whose path exists and is not folded are appended to the document's `entrypoints`: directories with a trailing `/`,
    sorted, after the existing entries.
 3. An addition that an existing entry or another addition already covers is dropped, so one apply never lists a
@@ -218,9 +219,9 @@ could not be indexed are `SPEC_DOCUMENT_INVALID` warnings under `notices`.
 | `SPEC_ENTRYPOINTS_INPUT_MISSING` | `ERROR` (`INPUT_ERROR`) | `EntrypointsInputMissingError` | `--spec`: the bundle has no `tasks.md` or `reconcile.md`. |
 | `SPEC_ENTRYPOINTS_INPUT_INVALID` | `ERROR` (`MAINTENANCE`) | `EntrypointsInputInvalidError` | `--spec`: `tasks.md` or `reconcile.md` cannot be read, or `reconcile.md` has no frontmatter or malformed `targets`. |
 | `SPEC_ENTRYPOINTS_PATH_INVALID` | `ERROR` (`INPUT_ERROR`) | `EntrypointsPathError` | A `--code` or `--exclude` path, or a `devkit spec list --file` path, breaks the path contract. |
-| `SPEC_ENTRYPOINTS_TARGET_UNKNOWN` | `ERROR` (`INPUT_ERROR`) | `EntrypointsTargetError` | A `--target` ID names no document, or the ID or path is not among the derived documents. |
+| `SPEC_ENTRYPOINTS_TARGET_UNKNOWN` | `ERROR` (`INPUT_ERROR`) | `EntrypointsTargetError` | A `--target` ID or alias names no document, or the document or path is not among the derived documents. |
 | `SPEC_ENTRYPOINTS_APPLY_FAILED` | `ERROR` (`MAINTENANCE`) | `EntrypointsApplyError` | `--apply` could not read or write some documents, or their `entrypoints` is not a list of strings; `[TARGET]` lists them, the documents listed as applied were written. |
-| `SPEC_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | A `--target` ID is declared by several documents. |
+| `SPEC_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | A `--target` ID is declared by several documents, or no document has it as its ID and several declare it as an alias. |
 | `SPEC_DOCUMENT_INVALID` | `WARNING` | `DocumentInvalidWarning` | A file could not be indexed; a malformed `spec.md` leaves its bundle out of `--all`. |
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_core.base.errors.ArgumentError` | An option conflict (section 4.1). |
 

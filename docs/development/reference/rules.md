@@ -222,7 +222,7 @@ explicit targets.
 ### Built-in authoring bundle
 
 The opt-in bundle `authoring` (sources in `src/devkit_agt/bundles/authoring/bundle/`, the data-only module `devkit_agt.bundles.authoring`)
-is deployed only when a project selects it. Both rules run in the `hygiene`
+is deployed only when a project selects it. Its rules run in the `hygiene`
 phase only, so they never block a commit or a CI linter run:
 
 ```bash
@@ -233,11 +233,11 @@ uv run devkit rules check --phase hygiene
 
 | Preset | Rule (warning, hygiene) | Playbook |
 | --- | --- | --- |
-| `skill-authoring` | `RULE-skill-document-size`: a skill or playbook Markdown file above `max_bytes` (12288 UTF-8 bytes) ([guide](../../../packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/skill_document_size/guide.md)) | `skill-authoring`: router structure for new skills, the four restructuring steps, helper-script rules; with the `agent-asset-writing` instruction for sentence-level writing |
+| `skill-authoring` | `RULE-skill-document-size`: a skill or playbook Markdown file above `max_bytes` (12288 UTF-8 bytes) ([guide](../../../packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/skill_document_size/guide.md)); `RULE-agent-asset-wording`: a hedge, emphatic capitals or a time-relative word in a skill, playbook, instruction or role contract, outside quotes and code ([guide](../../../packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/agent_asset_wording/guide.md)) | `skill-authoring`: router structure for new skills, the four restructuring steps, helper-script rules; with the `agent-asset-writing` instruction for sentence-level writing |
 | `agent-guide-authoring` | `RULE-agent-guide-size`: an `AGENTS.md` or `CLAUDE.md` above `max_bytes` (8192 UTF-8 bytes), reporting the devkit guidance block's share ([guide](../../../packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/agent_guide_size/guide.md)) | `agent-guide-authoring`: what stays in an always-loaded guide (no structure trees; module specifics only as links), where the rest moves, per-host loading |
 
-Both remediations name the playbook and its `uv run devkit playbook search`
-query. The rules are bundle assets (one plugin package directory each) loaded
+The size remediations name the playbook and its `uv run devkit playbook search`
+query; the wording rule relates the `agent-asset-writing` instruction. The rules are bundle assets (one plugin package directory each) loaded
 from the receipt, never imported from the package; their guides define the
 checked paths and settings.
 

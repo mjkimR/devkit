@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T04:48:05.963067Z'
+status: completed
+summary: RULE-agent-asset-wording ships in the authoring skill-authoring preset (hygiene warning on hedges, emphatic capitals and time-relative words in agent assets, outside code, quotes, comments and template tags; 0 hits on this repository); spec bundle guidance tests read bundle text through spec_support/bundle_text.py and survive rewrapping; FB-writing-style-rules and FB-guidance-tests-pin-line-layout resolved, FB-parallel-pruning-cuts-both-owners dismissed by the user
+findings: []
+checks:
+  tests: PASS just test-affected --base main (mode=full) 4650 passed 14 skipped
+  build: PASS devkit sync --check, devkit rules test RULE-agent-asset-wording
+  lint: PASS just lint-check, just check, devkit rules check --ci --base main
+diff_scope:
+  base: 277ef3b5e47c6c91d2213ce69e3d5cd64d908912
+  head: 141ba8d190f3227c06c09154b3fa2b15795ee73a

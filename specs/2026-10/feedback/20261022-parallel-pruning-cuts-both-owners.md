@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-22
 ---
 
@@ -48,3 +48,9 @@ AGENTS.md.jinja (pruned): "Classify work ... with the spec skill's references/cl
 worker-records.md (pruned): permission rules "owned by the worker contracts and spec-delegate worker.md"
 worker.md (pruned): "Removed everything worker-records.md owns: ... permission failures"
 ```
+
+## Disposition
+
+- **Disposition**: dismissed by the user's decision: the failure needs parallel ownership-based pruning across files
+  that point to each other, too narrow a case for standing guidance in `agent-asset-writing`; an independent review
+  of the whole diff caught it in the observed run.

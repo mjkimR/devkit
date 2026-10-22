@@ -1,0 +1,16 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'Goal: align Living Spec contracts with shipped behavior for FB-alias-wording-outside-scope,
+  FB-package-ownership-adrs-lag-code and FB-review-loop-adr-disagrees-with-bundle.
+  Scope: superseding ADRs for package foundation ownership (devkit-core, mcp extra
+  on devkit-agt) and for the high-effort review loop keeping the bundled rule (a contested
+  P1 is a Host-owned problem; recovery adds no user approval gate), CAP-DLV-delivery-workflows
+  aligned to it, and explicit alias wording in the listed contracts, the consumption
+  instruction and the glossary. Docs only; no code or bundle behavior change. Verification:
+  rules check, affected tests, reconcile-check. task-kind feature, planning-depth
+  spec, activity-effort low.'
+by: user
+at: '2026-10-22T04:29:40.009042Z'

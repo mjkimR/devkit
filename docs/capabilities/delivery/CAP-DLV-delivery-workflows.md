@@ -89,14 +89,17 @@ sequence.
 7. **No Development direction gate**: Development starts from the agreed intent. Implementation choices inside it
    are made with the recommended option and recorded; a non-blocking improvement is reported as feedback (a
    follow-up draft proposal is also allowed); only a problem that cannot be solved without changing the agreed goal,
-   scope or contract stops the work. At `high` the review loop also stops it (rule 15): a batch that is not minor at
-   the cap round, or a recurring P1, is a problem; a P1 the implementer holds invalid and the reviewer asserts again
-   after one round given the counter-evidence is a question in the run's `worker` envelope, with both positions as
-   options. A P1 the user then rules invalid is closed only by a waiver citing the `answer` envelope, and a fix the
-   user asks for after a cap or recurrence problem gets one further round outside the cap, named by the `resolution`
-   envelope. A session reports either in the conversation and does not
-   integrate; none of this is the `exception` stage. A worker records it and ends; the Host decides recovery or a
-   close. There is no return from Development to Planning.
+   scope or contract stops the work. At `high` the review loop also stops it (rule 15,
+   `ADR-host-owned-review-loop-recovery`): a batch that is not minor at the cap round, a recurring P1, and a P1 the
+   implementer holds invalid that the reviewer asserts again after one more round given the counter-evidence are each
+   a `problem` in the run's `worker` envelope (the contested one with the disagreement and the evidence). The Host
+   owns the recovery within the authorized goal, scope and constraints, and recovery adds no user approval gate; it
+   closes a contested P1 only with evidence that its failure condition does not apply under the agreed contract, and
+   changing an acceptance criterion or waiving an agreed constraint needs the user's decision. A Host-directed
+   recovery gets one further fresh round outside the cap, named by its `resolution` envelope. A session reports a cap
+   or recurrence hand-over in the conversation and does not integrate, and the Host resolves a contested P1 against
+   the agreed contract; none of this is the `exception` stage. A worker records it and ends; the Host decides
+   recovery or a close. There is no return from Development to Planning.
 8. **`dev-integration` is per integration unit** (one pull request): it has no exit checks of its own and is asked as
    soon as `integration-approval` is current, that is once the final change report holds. Under `auto` it passes only
    after the path's required review, reconciliation and checks pass, at every `activity-effort`, `low` included.
@@ -145,7 +148,7 @@ sequence.
     verification evidence in `reconcile-check`; small size alone is insufficient. At medium the implementer verifies
     fixes and subsequent changes and decides repeat calls, considering expanded scope, uncertain correctness and
     contract interpretation. A failed or stale initial call is not required-review evidence. These choices do not
-    change the effort, stages or required policies (`ADR-bounded-high-effort-review-loop`).
+    change the effort, stages or required policies (`ADR-host-owned-review-loop-recovery`).
     The implementer always writes, fixes and resolves the Living Spec reflection and `reconcile.md`; the
     verification at every effort is a `reconcile-check` envelope the `living-spec-draft` exit reads, so its findings
     are fixed in the reconcile and never reopen `review-refine`.

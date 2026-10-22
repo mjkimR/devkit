@@ -12,9 +12,8 @@ import re
 from pathlib import Path
 
 import pytest
-from devkit_dist.features.distribution.services.bundles.templates import render_template
+from spec_support.bundle_text import BUNDLE, raw
 
-BUNDLE = Path(__file__).resolve().parents[4] / "src/devkit_spec/bundles/spec/bundle"
 BUDGET = 12288
 DOCUMENTS = sorted([*BUNDLE.glob("skills/**/*.md*"), *BUNDLE.glob("playbooks/**/*.md*")])
 SKILLS = sorted(path.parent for path in BUNDLE.glob("skills/*/SKILL.md*"))
@@ -24,14 +23,11 @@ LINK = re.compile(r"\]\(([^)\s#]+)(?:#[^)]*)?\)")
 
 
 def _relative_links(path: Path, environment: str) -> list[str]:
-    return [target for target in LINK.findall(_data(path, environment).decode()) if "://" not in target]
+    return [target for target in LINK.findall(raw(path, environment)) if "://" not in target]
 
 
-def _data(path: Path, environment: str) -> bytes:
-    if not path.exists():
-        path = path.with_name(path.name + ".jinja")
-    data = path.read_bytes()
-    return render_template(data, {}, str(path), environment=environment) if path.name.endswith(".jinja") else data
+def _size(path: Path, environment: str) -> int:
+    return len(raw(path, environment).encode())
 
 
 def _over(size: int, limit: int) -> str:
@@ -41,13 +37,13 @@ def _over(size: int, limit: int) -> str:
 @pytest.mark.parametrize("path", DOCUMENTS, ids=lambda path: str(path.relative_to(BUNDLE)))
 @pytest.mark.parametrize("environment", ["local", "cloud"])
 def test_within_budget(path: Path, environment: str) -> None:
-    size = len(_data(path, environment))
+    size = _size(path, environment)
     assert size <= BUDGET, _over(size, BUDGET)
 
 
 @pytest.mark.parametrize("skill", sorted(HEADROOM))
 def test_restructured_skills_keep_headroom(skill: str) -> None:
-    size = len(_data(BUNDLE / f"skills/{skill}/SKILL.md", "local"))
+    size = _size(BUNDLE / f"skills/{skill}/SKILL.md", "local")
     assert size <= HEADROOM[skill], _over(size, HEADROOM[skill])
 
 

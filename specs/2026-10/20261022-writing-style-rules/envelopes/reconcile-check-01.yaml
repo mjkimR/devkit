@@ -1,0 +1,36 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T04:44:16.455398Z'
+status: completed
+summary: 'reconcile-reviewer (native, isolated) on 277ef3b5..6b141b38: four targets reflected and consistent; five other descriptions of the authoring bundle omit the wording rule'
+findings:
+- issue: The consumer install guide lists the skill-authoring preset without the wording rule
+  evidence: guides/install/bundle-recommendations.md:27
+  failure_condition: A consumer agent tells the user the preset adds only a size rule
+  suggested_action: Name both rules and note the guide in reconcile.md
+  resolution: open
+  severity: P2
+- issue: CAP-GOV-rules-engine describes the authoring bundle as size rules and playbooks only
+  evidence: docs/capabilities/governance/CAP-GOV-rules-engine.md:53
+  failure_condition: The capability owning the rules engine lists only size rules for the authoring bundle
+  suggested_action: Name the wording rule and the instruction; add the file as a modified target
+  resolution: open
+  severity: P2
+- issue: The devkit package README omits the wording rule from the authoring bundle summary
+  evidence: packages/devkit/README.md:31
+  failure_condition: The quick reference disagrees with the distribution docs
+  suggested_action: Add the wording rule to the summary
+  resolution: open
+  severity: P3
+- issue: Two docstrings still describe the authoring bundle as size rules / two rules
+  evidence: packages/devkit/src/devkit_agt/bundles/authoring/__init__.py:1
+  failure_condition: The docstrings misstate the bundle's rule set
+  suggested_action: Update the package and test module docstrings
+  resolution: open
+  severity: P3
+checks: {}
+diff_scope:
+  base: 277ef3b5e47c6c91d2213ce69e3d5cd64d908912
+  head: 6b141b3854a2ff4efe127fa01a678529d70c4448

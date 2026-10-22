@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -47,3 +47,11 @@ Test brittleness: assertions depend on line wrapping, not on wording.
 Rewriter reports: "the test checks raw text without whitespace normalization, so I kept every asserted clause on a
 single line"; failures cleared after rejoining the phrase onto one line.
 ```
+
+## Disposition
+
+Resolved by `SPEC-writing-style-rules`: the spec bundle guidance tests read bundle text through
+`spec_support/bundle_text.py` (`raw`, `text`, `flat`); phrase assertions run on whitespace-collapsed text and no test
+file in the folder keeps its own reader or normalization. Verification: with "only when the prerequisite is
+explicitly waived" rewrapped across two lines in `skills/spec/references/backlog.md.jinja`, the 365 spec bundle tests
+pass; a code-reviewer round confirmed every assertion pins the same phrases, files and environments.

@@ -1,4 +1,4 @@
-"""The opt-in ``authoring`` bundle: its manifest, and its two rules run from a synchronized consumer."""
+"""The opt-in ``authoring`` bundle: its manifest, and its rules run from a synchronized consumer."""
 
 from __future__ import annotations
 
@@ -22,7 +22,12 @@ BUNDLE = PACKAGE / "src/devkit_agt/bundles/authoring/bundle"
 def test_presets_pair_each_playbook_with_its_rule() -> None:
     bundle = load_bundle(BUNDLE)
     assert (bundle.name, bundle.default_preset, bundle.auto_select) == ("authoring", "all", False)
-    assert bundle.select(["skill-authoring"]) == {"skill-authoring", "agent-asset-writing", "skill-document-size"}
+    assert bundle.select(["skill-authoring"]) == {
+        "skill-authoring",
+        "agent-asset-writing",
+        "agent-asset-wording",
+        "skill-document-size",
+    }
     assert bundle.select(["agent-guide-authoring"]) == {"agent-guide-authoring", "agent-guide-size"}
     pyproject = tomllib.loads((PACKAGE / "pyproject.toml").read_text())
     assert bundle.version == pyproject["project"]["version"]
@@ -86,26 +91,39 @@ def test_deployed_rules_run_from_the_receipt(consumer: Path) -> None:
     # Each rule's behaviour is tested in its folder (rules/<name>/tests/); this checks the deployed copies load.
     write(consumer, ".agents/skills/demo/SKILL.md", "x" * 13000)
     write(consumer, "packages/app/AGENTS.md", "x" * 9000)
+    write(consumer, ".agents/skills/hedged/SKILL.md", "The sync might fail.\n")
     found = _violations(consumer)
     assert [item["file"] for item in found["RULE-skill-document-size"]] == [".agents/skills/demo/SKILL.md"]
     assert [item["file"] for item in found["RULE-agent-guide-size"]] == ["packages/app/AGENTS.md"]
+    assert [(item["file"], item["line"]) for item in found["RULE-agent-asset-wording"]] == [
+        (".agents/skills/hedged/SKILL.md", 1)
+    ]
 
 
 def test_rule_tests_ship_with_the_rules_and_are_never_loaded(consumer: Path) -> None:
     assert _run("bundle", "validate", str(BUNDLE))
     receipt = load_receipt(consumer)
     assert receipt is not None
-    for name in ("skill_document_size", "agent_guide_size"):
+    for name in ("skill_document_size", "agent_guide_size", "agent_asset_wording"):
         test = f".devkit/managed/authoring/rules/{name}/tests/test_rule.py"
         assert (consumer / test).is_file()
         assert test in receipt.file_records
     packages = [p for p in resolve_managed_rules(consumer).packages if "/authoring/" in p.location.as_posix()]
-    assert sorted(dotted for package in packages for dotted in package.modules) == ["rule", "rule"]
+    assert sorted(dotted for package in packages for dotted in package.modules) == ["rule", "rule", "rule"]
 
 
 def test_rules_test_runs_the_deployed_copy_without_writing_into_it(consumer: Path) -> None:
     result = CliRunner().invoke(
-        cli, ["rules", "test", "-w", str(consumer), "RULE-skill-document-size", "RULE-agent-guide-size"]
+        cli,
+        [
+            "rules",
+            "test",
+            "-w",
+            str(consumer),
+            "RULE-skill-document-size",
+            "RULE-agent-guide-size",
+            "RULE-agent-asset-wording",
+        ],
     )
     assert result.exit_code == 0, result.output
     lines = result.stdout.splitlines()
@@ -113,7 +131,7 @@ def test_rules_test_runs_the_deployed_copy_without_writing_into_it(consumer: Pat
         "[RULE_TEST: RULE-skill-document-size tests=.devkit/managed/authoring/rules/skill_document_size/tests "
         "result=passed exit=0 log="
     )
-    assert lines[-1] == "[SUMMARY: rules=2 passed=2 failed=0 no_tests=0 interrupted=0]"
+    assert lines[-1] == "[SUMMARY: rules=3 passed=3 failed=0 no_tests=0 interrupted=0]"
     written = [p for p in (consumer / ".devkit").rglob("*") if p.name in {"__pycache__", ".pytest_cache"}]
     assert written == []
     assert _run("sync", "--check", "--workspace-root", str(consumer)) is not None
