@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-21
 ---
 
@@ -37,3 +37,5 @@ created_at: 2026-10-21
 
 `SCOPE_ACK status=applied revision=2` and revision 3 reported spec-delegate and spec-orchestrate as
 `source=candidate`, overlapping SPEC-worker-shared-state-mcp. The authored task boundaries contain neither path.
+
+- **Disposition**: `SPEC-scope-boundary-candidates`: the candidate overlaps came from the `entrypoints` of the broad reconcile target `CAP-DLV-delivery-workflows` (which then listed the `spec-delegate/` and `spec-orchestrate/` skill directories), not from imported feedback. Once a spec bundle's `tasks.md` declares a `_Boundary` code path, its scope set now holds declared and observed code only and no target entrypoint candidate; proposals and bundles without declared code keep the candidates (`CAP-COLL-work-scope-registry` §4.1, §4.2). Verified by `packages/devkit-spec/tests/integration/features/scope/test_inputs.py` (`test_declared_code_replaces_target_entrypoint_candidates`, `test_a_candidate_only_path_no_longer_overlaps`, `test_candidates_stay_before_code_is_declared`) and `test_cli.py` (`test_declared_code_replaces_candidates_and_observed_paths_still_overlap`: a registered update records no `source=candidate` path), with `just test-affected` passing and a code-reviewer PASS.
