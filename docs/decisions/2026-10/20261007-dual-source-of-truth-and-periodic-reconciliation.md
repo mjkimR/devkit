@@ -12,7 +12,7 @@ created_at: 2026-10-07
 - **Date**: 2026-10-07
 - **Deciders**: @mjkimR
 - **Involved Components/Capabilities**: `CAP-DLV-delivery-workflows`, the `spec-sync` skill, `docs/capabilities/`,
-  `docs/stories/`, `specs/`
+  `docs/usecases/`, `specs/`
 - **Follow-up**: `SPEC-periodic-drift-reconciliation`
 
 ---
@@ -60,7 +60,7 @@ sustainable.
    or pull request. Rejected: document noise explodes and agents produce mechanical, hallucinated updates.
 3. **Two complementary ledgers with periodic human reconciliation (chosen)**:
    - The spec is the ledger of intent, contracts and invariants; code is the ledger of the running implementation.
-   - At feature completion, only the core delta (capabilities, stories) is synced lightly (Tier 1, micro-sync).
+   - At feature completion, only the core delta (capabilities, use cases) is synced lightly (Tier 1, micro-sync).
    - Accumulated drift is reviewed and cleaned up by the user and the agent together at milestones or in periodic
      sessions (Tier 2, periodic human reconciliation).
 
@@ -72,7 +72,7 @@ Option 3 is adopted.
 
 - **Complementary ledgers**:
   - Code is the ledger that proves how the system behaves.
-  - The spec (`docs/capabilities/`, `docs/stories/`) is the ledger of why and what the system exists for, and of the
+  - The spec (`docs/capabilities/`, `docs/usecases/`) is the ledger of why and what the system exists for, and of the
     invariants that must not break.
 - **Two-tier sync lifecycle**:
   - **Tier 1 (per-feature micro-sync)**: when a task or pull request completes, `spec-sync` reflects only the added or

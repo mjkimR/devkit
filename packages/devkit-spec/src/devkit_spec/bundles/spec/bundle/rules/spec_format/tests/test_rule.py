@@ -28,7 +28,7 @@ def test_required_frontmatter(tmp_path: Path) -> None:
         "docs/capabilities/CAP-TEST-alpha.md": "---\nid: CAP-TEST-alpha\ntitle: T\nstatus: active\n---\n# T\n",
         "docs/capabilities/CAP-TEST-beta.md": "---\nid: CAP-TEST-beta\ntitle: Incomplete\n---\n# Incomplete\n",
         "docs/capabilities/CAP-TEST-gamma.md": "# Raw markdown without frontmatter\n",
-        "docs/stories/US-blank.md": "---\nid: US-blank\ntitle: ''\nstatus: 3\n---\n",
+        "docs/usecases/UC-blank.md": "---\nid: UC-blank\ntitle: ''\nstatus: 3\n---\n",
         "docs/proposals/x/proposal.md": "---\nid: PROP-x\ntitle: a\ntitle: b\nstatus: draft\n---\n",
     }
     violations = {(v.file, v.message, v.fixable) for v in check(RULE, tmp_path, files)}
@@ -40,8 +40,8 @@ def test_required_frontmatter(tmp_path: Path) -> None:
             "document has no YAML frontmatter block (--- ... --- on the first line)",
             True,
         ),
-        ("docs/stories/US-blank.md", "frontmatter is missing the required field 'title'", True),
-        ("docs/stories/US-blank.md", "frontmatter field 'status' must be a string", False),
+        ("docs/usecases/UC-blank.md", "frontmatter is missing the required field 'title'", True),
+        ("docs/usecases/UC-blank.md", "frontmatter field 'status' must be a string", False),
     }
     [(_, message, fixable)] = malformed
     assert message.startswith("frontmatter is malformed: invalid YAML frontmatter") and "duplicate key" in message
@@ -49,9 +49,9 @@ def test_required_frontmatter(tmp_path: Path) -> None:
 
 
 def test_unclosed_frontmatter(tmp_path: Path) -> None:
-    assert _found(check(RULE, tmp_path, {"docs/stories/US-open.md": "---\nid: US-open\n# Body\n"})) == [
+    assert _found(check(RULE, tmp_path, {"docs/usecases/UC-open.md": "---\nid: UC-open\n# Body\n"})) == [
         (
-            "docs/stories/US-open.md",
+            "docs/usecases/UC-open.md",
             1,
             "frontmatter is malformed: frontmatter opened with '---' is never closed by a '---' or '...' line",
         )
@@ -73,7 +73,7 @@ def test_only_document_files_in_scope_are_checked(tmp_path: Path) -> None:
 
 def test_only_targets_are_reported(tmp_path: Path) -> None:
     targets = ["docs/capabilities/CAP-test.md", "specs/test/reconcile.md", "template/agents/skills/spec/SKILL.md"]
-    files = dict.fromkeys([*targets, "docs/stories/US-other.md"], "# no frontmatter\n")
+    files = dict.fromkeys([*targets, "docs/usecases/UC-other.md"], "# no frontmatter\n")
     assert [file for file, _, _ in _found(check(RULE, tmp_path, files, targets=targets))] == [targets[0]]
 
 
@@ -106,14 +106,14 @@ def test_fix_adds_frontmatter(tmp_path: Path) -> None:
 
 def test_fix_fills_blank_fields_and_quotes_titles(tmp_path: Path) -> None:
     files = {
-        "docs/stories/US-x.md": "---\r\nid: US-x\r\ntitle:\r\nstatus: ~  # later\r\ncreated: 2026-01-01\r\n---\r\n",
-        "docs/stories/US-y.md": "# Story: the title\n",
+        "docs/usecases/UC-x.md": "---\r\nid: UC-x\r\ntitle:\r\nstatus: ~  # later\r\ncreated: 2026-01-01\r\n---\r\n",
+        "docs/usecases/UC-y.md": "# Use case: the title\n",
     }
     assert _found(check(RULE, tmp_path, files, fix=True)) == []
     assert (
-        tmp_path / "docs/stories/US-x.md"
-    ).read_bytes().decode() == "---\r\nid: US-x\r\ntitle: US-x\r\nstatus: draft\r\ncreated: 2026-01-01\r\n---\r\n"
-    assert (tmp_path / "docs/stories/US-y.md").read_text().startswith('---\nid: US-y\ntitle: "Story: the title"\n')
+        tmp_path / "docs/usecases/UC-x.md"
+    ).read_bytes().decode() == "---\r\nid: UC-x\r\ntitle: UC-x\r\nstatus: draft\r\ncreated: 2026-01-01\r\n---\r\n"
+    assert (tmp_path / "docs/usecases/UC-y.md").read_text().startswith('---\nid: UC-y\ntitle: "Use case: the title"\n')
 
 
 def test_fix_leaves_accepted_and_malformed_files_alone(tmp_path: Path) -> None:
@@ -134,18 +134,18 @@ def test_namespace_docs_roots_are_checked(tmp_path: Path) -> None:
     files = {
         CONFIG: _namespaces("api"),
         capability: "# X\n",
-        "docs/packages/api/stories/auth/US-x.md": "---\nid: US-x\ntitle: X\n---\n",
+        "docs/packages/api/usecases/auth/UC-x.md": "---\nid: UC-x\ntitle: X\n---\n",
         "docs/packages/api/architecture/ARCH-x.md": "# out of scope\n",
         "docs/packages/api/capabilities/auth/materials/notes.md": "# out of scope\n",
         "docs/packages/web/capabilities/CAP-WEB-x.md": "# out of scope\n",
     }
     assert sorted((file, message) for file, _, message in _found(check(RULE, tmp_path, files))) == [
         (capability, "document has no YAML frontmatter block (--- ... --- on the first line)"),
-        ("docs/packages/api/stories/auth/US-x.md", "frontmatter is missing the required field 'status'"),
+        ("docs/packages/api/usecases/auth/UC-x.md", "frontmatter is missing the required field 'status'"),
     ]
     assert [
-        file for file, _, _ in _found(check(RULE, tmp_path, targets=["docs/packages/api/stories/auth/US-x.md"]))
-    ] == ["docs/packages/api/stories/auth/US-x.md"]
+        file for file, _, _ in _found(check(RULE, tmp_path, targets=["docs/packages/api/usecases/auth/UC-x.md"]))
+    ] == ["docs/packages/api/usecases/auth/UC-x.md"]
     assert _found(check(RULE, tmp_path, fix=True)) == []
     assert (tmp_path / capability).read_text().startswith("---\nid: CAP-AUTH-x\ntitle: X\nstatus: draft\n")
 
@@ -184,11 +184,11 @@ def test_namespace_fields_are_rechecked_when_the_config_changes(tmp_path: Path) 
         "docs/proposals/PROP-a/proposal.md": _anchor("PROP-a", "namespace: web\n"),
         "specs/2026-10/20261013-b/spec.md": _anchor("SPEC-b", "namespace: web\n"),
         "specs/2026-10/20261013-c/spec.md": "---\nid: SPEC-c\ntitle: T\nstatus: completed\nnamespace: web\n---\n",
-        "docs/stories/US-other.md": _anchor("US-other"),
+        "docs/usecases/UC-other.md": _anchor("UC-other"),
     }
     assert check(RULE, tmp_path, files, targets=[CONFIG]) == []
     write_files(tmp_path, {CONFIG: _namespaces("api")})
-    assert check(RULE, tmp_path, targets=["docs/stories/US-other.md"]) == []
+    assert check(RULE, tmp_path, targets=["docs/usecases/UC-other.md"]) == []
     assert [v.file for v in check(RULE, tmp_path, targets=[CONFIG])] == [
         "docs/proposals/PROP-a/proposal.md",
         "specs/2026-10/20261013-b/spec.md",

@@ -52,7 +52,7 @@ def test_covers_and_overlaps_compare_whole_segments() -> None:
 
 def test_entrypoint_bearing() -> None:
     assert entrypoint_bearing("docs/capabilities/x/CAP-X-a.md")
-    assert entrypoint_bearing("docs/stories/x/US-a.md")
+    assert entrypoint_bearing("docs/usecases/x/UC-a.md")
     assert entrypoint_bearing("docs/packages/api/capabilities/core/CAP-CORE-a.md")
     assert not entrypoint_bearing("docs/decisions/ADR-x.md")
     assert not entrypoint_bearing("docs/packages/api/decisions/ADR-x.md")
@@ -144,9 +144,9 @@ def test_derive_states_folding_and_skips(workspace: Path, write: Write) -> None:
     declared = _find(pairs, "CAP-X-one", "src/declared/a.go")
     assert declared is not None
     assert (declared.state, declared.exists, declared.task, declared.spec) == (State.DECLARED, True, 1, "SPEC-one")
-    new = _find(pairs, "US-two", "src/pkg")
+    new = _find(pairs, "UC-two", "src/pkg")
     assert new is not None and new.state is State.NEW and new.folded_into is None
-    folded = _find(pairs, "US-two", "src/pkg/sub/c.go")
+    folded = _find(pairs, "UC-two", "src/pkg/sub/c.go")
     assert folded is not None and folded.folded_into == "src/pkg"
     missing = _find(pairs, "CAP-X-one", "src/missing.go")
     assert missing is not None and not missing.exists and missing.task == 2

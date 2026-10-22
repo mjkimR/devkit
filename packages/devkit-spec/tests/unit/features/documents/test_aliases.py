@@ -25,7 +25,7 @@ def _parse(text: str, path: str = "docs/x.md") -> Document:
     ("document_id", "alias"),
     [
         ("CAP-A-new", "CAP-A-old"),
-        ("US-new", "US-old"),
+        ("UC-new", "UC-old"),
         ("ARCH-05-new", "ARCH-05-old"),
         ("ADR-new", "ADR-old"),
         ("MS-new", "MS-old"),
@@ -49,20 +49,20 @@ def test_reconcile_id_declares_aliases() -> None:
 
 
 def test_aliases_are_not_references() -> None:
-    document = _parse(_doc("CAP-A-new", "\n  - CAP-A-old\n  - 'CAP-A-older'", "`US-x`\n"))
+    document = _parse(_doc("CAP-A-new", "\n  - CAP-A-old\n  - 'CAP-A-older'", "`UC-x`\n"))
     assert document.aliases == ("CAP-A-old", "CAP-A-older")
-    assert [ref.target for ref in document.references] == ["US-x"]
+    assert [ref.target for ref in document.references] == ["UC-x"]
 
 
 def test_shape_issues() -> None:
     text = _doc(
         "CAP-A-new",
-        "\n  - CAP-A-old\n  - US-old\n  - CAP-A-new\n  - CAP-A-old\n  - not an id\n  - 3\n  - CAP-HARN-007\n",
+        "\n  - CAP-A-old\n  - UC-old\n  - CAP-A-new\n  - CAP-A-old\n  - not an id\n  - 3\n  - CAP-HARN-007\n",
     )
     document = _parse(text)
     assert document.aliases == ("CAP-A-old",)
     assert [(issue.line, issue.message) for issue in document.alias_issues] == [
-        (6, "alias US-old must have the document's own prefix CAP-"),
+        (6, "alias UC-old must have the document's own prefix CAP-"),
         (7, "alias CAP-A-new is the document's own ID"),
         (8, "alias CAP-A-old is repeated"),
         (9, "aliases must contain full document IDs, got 'not an id'"),
@@ -83,7 +83,7 @@ def test_aliases_must_be_a_list() -> None:
         ("ADR-0006", True),
         ("PADR-0001", True),
         ("SPEC-20261006-x", True),
-        ("US-010", True),
+        ("UC-010", True),
         ("CAP-HARN-007", True),
         ("ARCH-06", True),
         ("ARCH-05-1", True),
@@ -109,7 +109,7 @@ def test_canonical_mapping(tmp_path: Path) -> None:
         tmp_path,
         {
             "docs/new.md": _doc("CAP-A-new", "[CAP-A-old]"),
-            "docs/ref.md": _doc("US-ref", "[]", "`CAP-A-old` and `CAP-A-new`\n"),
+            "docs/ref.md": _doc("UC-ref", "[]", "`CAP-A-old` and `CAP-A-new`\n"),
         },
     )
     new = index.resolve("CAP-A-new")
@@ -119,8 +119,8 @@ def test_canonical_mapping(tmp_path: Path) -> None:
     assert index.canonical_id("CAP-A-old") == "CAP-A-new" and index.canonical_id("CAP-A-none") == "CAP-A-none"
     assert index.lookup("CAP-A-old") == (new, "CAP-A-old")
     assert index.resolve("CAP-A-old") is new
-    assert [ref.target for ref in index.incoming("CAP-A-new")["US-ref"]] == ["CAP-A-old", "CAP-A-new"]
-    assert list(index.outgoing(index.resolve("US-ref"))) == ["CAP-A-new"]
+    assert [ref.target for ref in index.incoming("CAP-A-new")["UC-ref"]] == ["CAP-A-old", "CAP-A-new"]
+    assert list(index.outgoing(index.resolve("UC-ref"))) == ["CAP-A-new"]
     assert index.alias_collisions() == []
 
 

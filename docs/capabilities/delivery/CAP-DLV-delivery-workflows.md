@@ -5,11 +5,11 @@ summary: "Five delivery workflows define stages, gates, checks, bounded reviews 
 area: delivery
 status: active
 created_at: 2026-10-13
-stories:
-  - US-route-development-intent
-  - US-incubate-and-hand-off-a-proposal
-  - US-drive-development-to-integration
-  - US-handle-delivery-problems-and-exceptions
+usecases:
+  - UC-route-development-intent
+  - UC-incubate-and-hand-off-a-proposal
+  - UC-drive-development-to-integration
+  - UC-handle-delivery-problems-and-exceptions
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/

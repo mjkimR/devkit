@@ -8,7 +8,7 @@ legacy content up front.
 | Legacy content | Destination |
 | :--- | :--- |
 | Behavior the system provides, its scope and invariants | Capability `docs/capabilities/<area>/CAP-<AREA>-<slug>.md` |
-| A user goal with acceptance scenarios | Story `docs/stories/<area>/US-<slug>.md` |
+| An actor's goal with its flow, failure paths or acceptance scenarios | Use case `docs/usecases/<area>/UC-<slug>.md` |
 | Context, containers, components, runtime, deployment, cross-cutting concepts | arc42 chapter `docs/architecture/ARCH-<NN>-<slug>.md` |
 | A decision with its rationale | `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, dated by the original decision |
 | Setup, build, release and contribution guides | `docs/development/` |

@@ -8,4 +8,4 @@ from devkit_spec.features.governance.usecases.spec_format import SpecFormatRule 
 
 
 class SpecFormatRule(_Implementation):
-    """Capabilities, stories and proposals carry YAML frontmatter with id, title and status."""
+    """Capabilities, use cases and proposals carry YAML frontmatter with id, title and status."""

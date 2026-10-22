@@ -30,18 +30,18 @@ of an ID, and neither are sequence numbers: they collide across parallel branche
 give `ADR-2024-budget`, which reads as the number-based `ADR-2024`; write `20261014-budget-2024`). The `{YYYY-MM}`
 partition must match the date prefix. A feedback file inside a bundle has no date prefix.
 
-### Living Spec and Roadmap: Capability, Story, Architecture, Milestone
+### Living Spec and Roadmap: Capability, Use Case, Architecture, Milestone
 
 The ID is the file stem:
 
 | Document | Path | Also required |
 | :--- | :--- | :--- |
 | Capability | `docs/capabilities/{area}/CAP-{AREA}-{slug}.md` | `{AREA}` upper-case letters and digits; `area: {area}` |
-| Story | `docs/stories/{area}/US-{slug}.md` | `area: {area}`; only `README.md` directly under `docs/stories/` |
+| Use case | `docs/usecases/{area}/UC-{slug}.md` | `area: {area}`; only `README.md` directly under `docs/usecases/` |
 | Architecture | `docs/architecture/ARCH-{slug}.md` or `ARCH-{NN}[-{n}]-{slug}.md` | `{NN}` an arc42 chapter, `{n}` a sub-document (1-9) |
 | Milestone | `docs/roadmap/MS-{slug}.md` | global only: no nested or namespaced roadmap location |
 
-The first segment of `{slug}` must contain a letter: `CAP-HARN-001-foo` and `US-010-bar` are sequence numbers.
+The first segment of `{slug}` must contain a letter: `CAP-HARN-001-foo` and `UC-010-bar` are sequence numbers.
 `{NN}` is an arc42 chapter `01`-`11` in arc42's order (`05-1` containers, `05-2` components), except `09` (decisions
 live in `docs/decisions/`); `12` (the glossary) is `docs/glossary.md`. A deep-dive outside the chapters is
 `ARCH-{slug}`. Chapters: 01 Introduction and Goals, 02 Architecture Constraints, 03 System Scope and Context (C4 L1),
@@ -49,19 +49,19 @@ live in `docs/decisions/`); `12` (the glossary) is `docs/glossary.md`. A deep-di
 Architecture Decisions, 10 Quality Requirements, 11 Risks and Technical Debts, 12 Glossary.
 
 In a monorepo, a package registered in `[[tool.spec.namespaces]]` of `.devkit/config.toml` keeps its Living Spec
-under `docs/packages/<name>/` with the same layout (`capabilities/`, `stories/`, `architecture/`). IDs are
+under `docs/packages/<name>/` with the same layout (`capabilities/`, `usecases/`, `architecture/`). IDs are
 repository-wide, so a slug is unique across `docs/` and every package.
 
 ## 2. Cause of Violation
 
 - A path off the convention above (wrong depth, an undated or misdated partition, a non-kebab-case name, a dated
   feedback name inside a bundle, a slug whose first segment is a date or sequence number, chapter 09 or 12, a
-  capability or story outside an area directory, a milestone outside `docs/roadmap/`): `Invalid partition path:
+  capability or use case outside an area directory, a milestone outside `docs/roadmap/`): `Invalid partition path:
   <what the path must be>`. Nothing else is reported for the file until it is moved.
 - No frontmatter (or one never closed): `Missing YAML frontmatter; expected <field>: <ID>`.
 - A frontmatter `id` (`reconcile_id` in `reconcile.md`) other than the path requires (fixable): `Frontmatter <field>
   is "<declared>" but the path requires "<ID>"`.
-- A capability's or story's `area` other than its directory (fixable): `Frontmatter area is "<area>" but the
+- A capability's or use case's `area` other than its directory (fixable): `Frontmatter area is "<area>" but the
   directory requires "<directory>"`.
 - A first `# ` heading opened by an `[ID]` or `` `ID` `` token that is not the ID (fixable; in a spec bundle file
   the token may follow a leading label, `` # Technical Plan: `SPEC-{slug}` ``, and a plan, tasks or reconcile heading
@@ -75,7 +75,7 @@ repository-wide, so a slug is unique across `docs/` and every package.
   <paths>`. Slugs are unique per document type across partitions and areas. Duplicate `FB-` IDs are reported by
   `RULE-document-reference`.
 - A date- or number-based reference in the frontmatter or prose: `Date- or number-based identifier reference
-  "<reference>"`, for `SPEC-20261006`, `FB-20261006`, `ADR-0006`, `PADR-0001`, `US-010`, `CAP-HARN-007`, or `ARCH-06`
+  "<reference>"`, for `SPEC-20261006`, `FB-20261006`, `ADR-0006`, `PADR-0001`, `UC-010`, `CAP-HARN-007`, or `ARCH-06`
   (also `ARCH-05-2`) without a slug.
 
 ## 3. Remediation
@@ -90,7 +90,7 @@ repository-wide, so a slug is unique across `docs/` and every package.
    It writes only the targets when the run names any.
 3. Add missing frontmatter with the ID, `title` and `status`; rename one of two duplicate slugs.
 4. Replace date- or number-based references with the slug ID by hand, written as `` `ADR-{slug}` ``,
-   `` `SPEC-{slug}` ``, `` `CAP-{AREA}-{slug}` ``, `` `US-{slug}` `` or `` `ARCH-{NN}-{slug}` `` in prose.
+   `` `SPEC-{slug}` ``, `` `CAP-{AREA}-{slug}` ``, `` `UC-{slug}` `` or `` `ARCH-{NN}-{slug}` `` in prose.
 
 Read the `spec:living-spec-writing` instruction (References) when rewriting a reference: it says where a full ID, an
 exact field ID or an ordinary link belongs.

@@ -11,7 +11,7 @@ This project manages its documentation based on **Spec-Driven Development (SDD)*
 | **`architecture/`** | System Architecture | System blueprints (C4 L1-L3, runtime sequences, deployment infrastructure, cross-cutting concepts) |
 | **`capabilities/`** | System Capabilities (Living Spec) | Permanent functional capabilities and contracts partitioned by area (`CAP-<AREA>-<slug>`) |
 | **`decisions/`** | Architecture Decisions (ADR) | Context and rationale for critical technology selection and structural decisions (`ADR-<slug>`) |
-| **`stories/`** | User Stories | User-centric journeys, actor value flows, acceptance criteria (`US-<slug>`) |
+| **`usecases/`** | Use Cases | How each actor reaches a goal: main success scenario, extensions, postconditions, acceptance criteria (`UC-<slug>`) |
 | **`materials/`** | Reference & Spikes | Technical spikes, benchmarks, external libraries, competitor analysis reports |
 | **`proposals/`** | Proposals | Pre-spec proposals incubating uncertain work (`PROP-<slug>`) |
 | **`development/`** | Development & Collaboration | Local environment setup, Git workflow, commit/PR conventions, CI/CD pipelines, and CLI/API quick references in `development/reference/` |
@@ -21,9 +21,9 @@ This project manages its documentation based on **Spec-Driven Development (SDD)*
 
 ## 2. Interaction Principles Between Documents
 
-1. **Orthogonal M:N Relationship Between Capabilities and Stories**:
-   - A user story may traverse multiple functional capability areas.
-   - `capabilities/` and `stories/` cross-reference each other via Markdown Frontmatter (`stories:` and `capabilities:`).
+1. **Orthogonal M:N Relationship Between Capabilities and Use Cases**:
+   - A use case may traverse multiple functional capability areas.
+   - `capabilities/` and `usecases/` cross-reference each other via Markdown Frontmatter (`usecases:` and `capabilities:`).
 2. **Separation of Durable Backbone (`docs/`) and Ephemeral Task Specs (`specs/`)**:
    - `docs/` is the permanent Living Spec maintained throughout the system lifecycle.
    - Sprint/ticket task specifications reside in `specs/`; completed bundles remain in place as work history.

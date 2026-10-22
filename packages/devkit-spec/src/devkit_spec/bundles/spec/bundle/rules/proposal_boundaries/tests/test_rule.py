@@ -13,7 +13,7 @@ EXISTING = {
     "packages/a/x.py": "",
     "docs/glossary.md": "# Glossary\n",
     "docs/capabilities/delivery/CAP-DLV-a.md": "---\nid: CAP-DLV-a\n---\n",
-    "docs/stories/delivery/US-a.md": "---\nid: US-a\n---\n",
+    "docs/usecases/delivery/UC-a.md": "---\nid: UC-a\n---\n",
     "docs/packages/api/capabilities/core/CAP-CORE-a.md": "---\nid: CAP-CORE-a\n---\n",
     CONFIG: '[[tool.spec.namespaces]]\nname = "api"\npath = "packages/api"\n',
 }
@@ -30,7 +30,7 @@ def _found(violations: list[Violation]) -> list[tuple[str, int, str]]:
 
 # AC-08
 def test_entries_that_resolve_pass(tmp_path: Path) -> None:
-    owns = "\n    - packages/a/\n    - capabilities/delivery/\n    - stories/delivery\n    - delivery/\n    - docs/glossary.md\n    - ./packages/a/x.py"
+    owns = "\n    - packages/a/\n    - capabilities/delivery/\n    - usecases/delivery\n    - delivery/\n    - docs/glossary.md\n    - ./packages/a/x.py"
     files = {
         **EXISTING,
         "docs/proposals/PROP-x/proposal.md": _proposal("reviewing", "delivery/", owns),

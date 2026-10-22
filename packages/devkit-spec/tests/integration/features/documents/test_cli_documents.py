@@ -21,10 +21,10 @@ def _spec(*args: str, workspace: Path) -> Result:
 @pytest.fixture
 def docs(workspace: Path, write: Write) -> Path:
     write(
-        "docs/capabilities/core/CAP-CORE-a.md", _doc("CAP-CORE-a", "`US-b` `US-gone`\n", status="active", area="core")
+        "docs/capabilities/core/CAP-CORE-a.md", _doc("CAP-CORE-a", "`UC-b` `UC-gone`\n", status="active", area="core")
     )
-    write("docs/stories/core/US-b.md", _doc("US-b", "`CAP-CORE-a`\n", status="active", title="Story B", area="core"))
-    write("docs/stories/ops/US-c.md", _doc("US-c", "`CAP-CORE-a`\n", status="proposed", title="Story C", area="ops"))
+    write("docs/usecases/core/UC-b.md", _doc("UC-b", "`CAP-CORE-a`\n", status="active", title="Usecase B", area="core"))
+    write("docs/usecases/ops/UC-c.md", _doc("UC-c", "`CAP-CORE-a`\n", status="proposed", title="Usecase C", area="ops"))
     write("specs/2026-10/20261001-done/spec.md", _doc("SPEC-done", status="completed"))
     write("specs/2026-10/20261002-open/spec.md", _doc("SPEC-open", status="draft", title="Open"))
     write("specs/2026-10/20261002-open/tasks.md", "- [x] one\n- [ ] two\n")
@@ -32,26 +32,26 @@ def docs(workspace: Path, write: Write) -> Path:
 
 
 def test_resolve(docs: Path) -> None:
-    result = _spec("resolve", "US-b", "SPEC-open", workspace=docs)
+    result = _spec("resolve", "UC-b", "SPEC-open", workspace=docs)
     assert result.exit_code == 0
     assert result.stdout.splitlines() == [
-        "[DOCUMENT: US-b kind=story status=active path=docs/stories/core/US-b.md]",
+        "[DOCUMENT: UC-b kind=usecase status=active path=docs/usecases/core/UC-b.md]",
         "[DOCUMENT: SPEC-open kind=spec status=draft path=specs/2026-10/20261002-open/spec.md]",
     ]
 
 
 def test_resolve_reports_each_unresolved_id_after_the_resolved_ones(docs: Path) -> None:
-    result = _spec("resolve", "US-b", "US-none", "US-other", workspace=docs)
+    result = _spec("resolve", "UC-b", "UC-none", "UC-other", workspace=docs)
     assert result.exit_code == 2
-    assert result.stdout.startswith("[DOCUMENT: US-b ")
+    assert result.stdout.startswith("[DOCUMENT: UC-b ")
     assert result.stderr.count("(SPEC_ID_UNRESOLVED)") == 2
 
 
 def test_resolve_json(docs: Path) -> None:
-    result = _spec("resolve", "US-b", "US-none", "--format", "json", workspace=docs)
+    result = _spec("resolve", "UC-b", "UC-none", "--format", "json", workspace=docs)
     payload = json.loads(result.stdout)
     assert result.exit_code == 2 and result.stderr == ""
-    assert [d["id"] for d in payload["documents"]] == ["US-b"]
+    assert [d["id"] for d in payload["documents"]] == ["UC-b"]
     assert [e["code"] for e in payload["errors"]] == ["SPEC_ID_UNRESOLVED"]
 
 
@@ -59,8 +59,8 @@ def test_refs_out_marks_dangling_references(docs: Path) -> None:
     result = _spec("refs", "CAP-CORE-a", workspace=docs)
     assert result.exit_code == 0
     assert result.stdout.splitlines() == [
-        "[REF: US-b path=docs/stories/core/US-b.md status=active fields=body count=1]",
-        "[REF: US-gone path=- status=- fields=body count=1]",
+        "[REF: UC-b path=docs/usecases/core/UC-b.md status=active fields=body count=1]",
+        "[REF: UC-gone path=- status=- fields=body count=1]",
         "[PAGE: total=2 offset=0 limit=20 count=2 next=-]",
     ]
 
@@ -68,15 +68,15 @@ def test_refs_out_marks_dangling_references(docs: Path) -> None:
 def test_refs_in_pages(docs: Path) -> None:
     result = _spec("refs", "CAP-CORE-a", "--direction", "in", "--limit", "1", workspace=docs)
     lines = result.stdout.splitlines()
-    assert lines[0].startswith("[REF: US-b ")
+    assert lines[0].startswith("[REF: UC-b ")
     assert lines[1] == "[PAGE: total=2 offset=0 limit=1 count=1 next=1]"
     assert lines[2] == f"[NEXT_CMD: devkit spec refs CAP-CORE-a --direction in -w {docs} --limit 1 --offset 1]"
     second = _spec("refs", "CAP-CORE-a", "--direction", "in", "--limit", "1", "--offset", "1", workspace=docs)
-    assert second.stdout.splitlines()[0].startswith("[REF: US-c ")
+    assert second.stdout.splitlines()[0].startswith("[REF: UC-c ")
 
 
 def test_refs_of_an_unknown_id(docs: Path) -> None:
-    result = _spec("refs", "US-none", workspace=docs)
+    result = _spec("refs", "UC-none", workspace=docs)
     assert result.exit_code == 2 and "(SPEC_ID_UNRESOLVED)" in result.stderr
 
 
@@ -100,11 +100,11 @@ def test_list_hides_history_and_counts_tasks(docs: Path) -> None:
 @pytest.mark.parametrize(
     ("args", "ids"),
     [
-        ((), ["CAP-CORE-a", "US-b", "US-c", "SPEC-open"]),
-        (("story",), ["US-b", "US-c"]),
-        (("--status", "Proposed,draft"), ["US-c", "SPEC-open"]),
-        (("--area", "ops"), ["US-c"]),
-        (("--query", "story b"), ["US-b"]),
+        ((), ["CAP-CORE-a", "UC-b", "UC-c", "SPEC-open"]),
+        (("usecase",), ["UC-b", "UC-c"]),
+        (("--status", "Proposed,draft"), ["UC-c", "SPEC-open"]),
+        (("--area", "ops"), ["UC-c"]),
+        (("--query", "usecase b"), ["UC-b"]),
     ],
 )
 def test_list_filters(docs: Path, args: tuple[str, ...], ids: list[str]) -> None:
@@ -195,7 +195,7 @@ def test_negative_paging_is_an_argument_error(docs: Path) -> None:
 
 def test_invalid_documents_are_warnings(docs: Path, write: Write) -> None:
     write("docs/bad.md", "---\nid: [x]\n---\n")
-    result = _spec("list", "story", workspace=docs)
+    result = _spec("list", "usecase", workspace=docs)
     assert result.exit_code == 0 and "(SPEC_DOCUMENT_INVALID)" in result.stderr
     assert _spec("--strict", "list", workspace=docs).exit_code == 2  # --strict belongs to the command, not the group
     assert _spec("list", "--strict", workspace=docs).exit_code == 1
@@ -206,8 +206,8 @@ def test_list_by_entrypoint_overlap(workspace: Path, write: Write) -> None:
         "docs/capabilities/core/CAP-CORE-a.md",
         _doc("CAP-CORE-a", status="active", entrypoints="[src/app/search/, src/cli.py]"),
     )
-    write("docs/stories/core/US-b.md", _doc("US-b", status="active", entrypoints="[src/app/search/rank.py]"))
-    write("docs/stories/core/US-c.md", _doc("US-c", status="active"))
+    write("docs/usecases/core/UC-b.md", _doc("UC-b", status="active", entrypoints="[src/app/search/rank.py]"))
+    write("docs/usecases/core/UC-c.md", _doc("UC-c", status="active"))
 
     def ids(path: str) -> list[str]:
         return [
@@ -217,8 +217,8 @@ def test_list_by_entrypoint_overlap(workspace: Path, write: Write) -> None:
             ]
         ]
 
-    assert ids("src/app/search/rank.py") == ["CAP-CORE-a", "US-b"]
-    assert ids("src/app") == ["CAP-CORE-a", "US-b"]
+    assert ids("src/app/search/rank.py") == ["CAP-CORE-a", "UC-b"]
+    assert ids("src/app") == ["CAP-CORE-a", "UC-b"]
     assert ids("src/cli.py") == ["CAP-CORE-a"]
     assert ids("src/other.py") == []
     for invalid in ("/src/app", "src/*.py", "../src", "src/../app"):
@@ -234,7 +234,7 @@ def _feedback(write: Write, name: str, **fields: str) -> None:
 def feedback(workspace: Path, write: Write) -> Path:
     write(
         "docs/capabilities/core/CAP-CORE-a.md",
-        _doc("CAP-CORE-a", status="open", stories="[US-x, US-y]"),
+        _doc("CAP-CORE-a", status="open", usecases="[UC-x, UC-y]"),
     )
     _feedback(write, "a", severity="critical", scope="upstream", target='"devkit spec list"', recurring="true")
     _feedback(write, "b", severity="blocked", scope="repo", created_at="2026-10-13", at="2026-10-13T05:25:43Z")
@@ -264,7 +264,7 @@ def test_where_items_and_other_filters_combine_with_and(feedback: Path) -> None:
 def test_where_matches_booleans_and_list_elements(feedback: Path) -> None:
     # AC-03
     assert _ids(feedback, "--where", "recurring=true") == ["FB-a"]
-    assert _ids(feedback, "--where", "stories=US-y") == ["CAP-CORE-a"]
+    assert _ids(feedback, "--where", "usecases=UC-y") == ["CAP-CORE-a"]
     assert _ids(feedback, "--where", "recurring=false") == []
     assert _ids(feedback, "--where", "created_at=2026-10-13", "--where", "at=2026-10-13T05:25:43+00:00") == ["FB-b"]
 
@@ -389,8 +389,8 @@ def test_feedback_resolution_status_filter(docs: Path, write: Write, status: str
 @pytest.fixture
 def aliased(workspace: Path, write: Write) -> Path:
     write("docs/capabilities/core/CAP-CORE-new.md", _doc("CAP-CORE-new", status="active", aliases="[CAP-CORE-old]"))
-    write("docs/stories/core/US-r.md", _doc("US-r", "`CAP-CORE-old` and `CAP-CORE-new`\n", status="active"))
-    write("docs/stories/core/US-s.md", _doc("US-s", "`CAP-CORE-old`\n", status="active"))
+    write("docs/usecases/core/UC-r.md", _doc("UC-r", "`CAP-CORE-old` and `CAP-CORE-new`\n", status="active"))
+    write("docs/usecases/core/UC-s.md", _doc("UC-s", "`CAP-CORE-old`\n", status="active"))
     return workspace
 
 
@@ -413,8 +413,8 @@ def test_resolve_an_alias(aliased: Path) -> None:
 def test_refs_with_aliases(aliased: Path) -> None:
     incoming = _spec("refs", "CAP-CORE-new", "--direction", "in", "--format", "json", workspace=aliased)
     items = json.loads(incoming.stdout)["items"]
-    assert [(item["id"], len(item["references"])) for item in items] == [("US-r", 2), ("US-s", 1)]
-    outgoing = _spec("refs", "US-r", "--format", "json", workspace=aliased)
+    assert [(item["id"], len(item["references"])) for item in items] == [("UC-r", 2), ("UC-s", 1)]
+    outgoing = _spec("refs", "UC-r", "--format", "json", workspace=aliased)
     items = json.loads(outgoing.stdout)["items"]
     assert [(item["id"], item["path"], len(item["references"])) for item in items] == [
         ("CAP-CORE-new", "docs/capabilities/core/CAP-CORE-new.md", 2)

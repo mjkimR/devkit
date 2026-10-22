@@ -5,7 +5,7 @@ An entrypoint is a file or directory relative to the workspace root, written wit
 backslash, a colon (drive), a glob character (``*?[]``), NUL or a line break is invalid. Paths compare by whole
 segments and case-sensitively: ``src/a`` covers ``src/a/b.py`` but not ``src/ab``.
 
-Capabilities and stories carry ``entrypoints``: documents under ``docs/capabilities/`` or ``docs/stories/``, and
+Capabilities and use cases carry ``entrypoints``: documents under ``docs/capabilities/`` or ``docs/usecases/``, and
 under the same directories of a namespace's docs root ``docs/packages/<name>/``. Their paths stay
 workspace-relative, never package-relative.
 """
@@ -22,11 +22,11 @@ from devkit_spec.utils.paths import covers as covers
 from devkit_spec.utils.paths import normalize as normalize
 from devkit_spec.utils.paths import overlaps as overlaps
 
-_LIVING_DIRECTORIES = ("docs/capabilities/", "docs/stories/")
+_LIVING_DIRECTORIES = ("docs/capabilities/", "docs/usecases/")
 
 
 def entrypoint_bearing(path: str) -> bool:
-    """Whether the workspace-relative ``path`` is a capability or story file, which may declare ``entrypoints``.
+    """Whether the workspace-relative ``path`` is a capability or use case file, which may declare ``entrypoints``.
 
     Every ``docs/packages/<name>/`` counts, registered as a namespace or not, so callers need no configuration.
     """

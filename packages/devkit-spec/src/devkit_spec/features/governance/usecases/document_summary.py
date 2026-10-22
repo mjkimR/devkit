@@ -3,7 +3,7 @@
 ``devkit spec search`` embeds a document's ID and ``summary``; titles and bodies may be in any language and are ranked
 lexically only. A summary therefore has to exist where agents search and has to be English for the embedding model.
 
-- Capabilities, stories, decisions, architecture documents, proposals (``proposal.md``) and specs (``spec.md``) MUST
+- Capabilities, use cases, decisions, architecture documents, proposals (``proposal.md``) and specs (``spec.md``) MUST
   have a ``summary``: a non-empty string. A file that still carries the skeleton marker (a spec just created by
   ``devkit spec new`` or a handoff) is exempt until it is written.
 - Any ``summary``, required or not, MUST be English: no letter outside the Latin script (digits, punctuation and
@@ -26,7 +26,7 @@ from devkit_spec.utils.text import foreign_letters as foreign_letters
 
 RULE_ID = "RULE-document-summary"
 SKELETON_MARKER = "<!-- devkit:skeleton -->"
-REQUIRED = {Kind.CAPABILITY, Kind.STORY, Kind.DECISION, Kind.ARCHITECTURE, Kind.MILESTONE}
+REQUIRED = {Kind.CAPABILITY, Kind.USECASE, Kind.DECISION, Kind.ARCHITECTURE, Kind.MILESTONE}
 ANCHORS = {Kind.PROPOSAL: "proposal.md", Kind.SPEC: "spec.md"}
 REMEDIATION = (
     "Write `summary:` in the frontmatter: one or two English sentences saying what the document defines"

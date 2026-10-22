@@ -4,8 +4,8 @@ title: Document Lookup
 summary: "Defines devkit spec resolve, refs and list: map IDs to paths, follow references both ways, and browse documents by kind, status (with a notice for an unused status), area, text, frontmatter field, history, namespace or owned code path, with feedback by severity, paging and JSON output."
 area: documents
 status: active
-stories:
-  - US-find-the-right-documents
+usecases:
+  - UC-find-the-right-documents
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/documents/cli/commands.py
 created_at: 2026-10-13
@@ -27,7 +27,7 @@ resolve` maps IDs to paths, `devkit spec refs` follows the references of one doc
 - **Out-of-Scope** (Non-Goals):
   - Ranking by meaning: `CAP-DOCS-document-search`.
   - Namespace semantics (membership, default selection): `CAP-DOCS-namespaces`; this capability only applies them.
-  - Per-kind listing extras: filters by linked story or capability (`--with-story`, `--with-cap`) and a `--sort`
+  - Per-kind listing extras: filters by linked use case or capability (`--with-usecase`, `--with-cap`) and a `--sort`
     option. Scope Excluded: `list` filters by the generic fields and `--where` below; proposal priority and size,
     feedback severity, scope and kind are `--where` fields. When to Reconsider: when agents repeatedly combine
     `refs` and `list` by hand for one of these questions.
@@ -73,7 +73,7 @@ resolve` maps IDs to paths, `devkit spec refs` follows the references of one doc
 
 ### 3.4 `devkit spec list [KIND]...`
 
-1. **Kinds**: `KIND...` restricts to `capability`, `story`, `architecture`, `decision`, `proposal`,
+1. **Kinds**: `KIND...` restricts to `capability`, `usecase`, `architecture`, `decision`, `proposal`,
    `proposal-decision`, `spec`, `plan`, `tasks`, `reconcile`, `feedback`, `material` (default: all).
 2. **Filters** (all combine with AND):
    - `--status/-s a,b`: comma-separated statuses, compared case-insensitively. Status vocabularies come from the
@@ -94,7 +94,7 @@ resolve` maps IDs to paths, `devkit spec refs` follows the references of one doc
      it, under it, or a directory containing it (whole path segments, case-sensitive; `CAP-TRACE-code-entrypoints`).
      The path need not exist, so a deleted file still finds its documents; a path that breaks the entrypoint path
      contract (absolute, a glob, a `..` segment) MUST fail with `SPEC_ENTRYPOINTS_PATH_INVALID` (exit `2`) before
-     any document is read. Only capabilities and stories declare `entrypoints`.
+     any document is read. Only capabilities and use cases declare `entrypoints`.
    - `--namespace NAME` / `--all-namespaces`: the namespace selection (`CAP-DOCS-namespaces`). Default: the namespace
      of the current directory plus the global documents.
 3. **Order**: kind order (the table of `CAP-DOCS-document-model`), then, for feedback, `severity` (`critical`,
@@ -118,10 +118,10 @@ resolve` maps IDs to paths, `devkit spec refs` follows the references of one doc
 ### 4.1 Usage
 
 ```bash
-devkit spec resolve CAP-CORE-search US-find-docs     # the path of each ID
+devkit spec resolve CAP-CORE-search UC-find-docs     # the path of each ID
 devkit spec refs CAP-CORE-search                      # what it references
 devkit spec refs CAP-CORE-search --direction in       # what references it
-devkit spec list story --status active --area core    # browse
+devkit spec list usecase --status active --area core  # browse
 devkit spec list capability --file src/engine/        # documents owning a code path
 devkit spec list spec --history --all-namespaces      # completed bundles too, every package
 devkit spec list milestone --history                 # include done/dropped milestones
@@ -131,9 +131,9 @@ devkit spec list feedback --status open --where severity=critical -n 0   # open 
 ### 4.2 Text Output
 
 ```text
-[DOCUMENT: US-find-docs kind=story status=active path=docs/stories/core/US-find-docs.md]
-[REF: US-find-docs path=docs/stories/core/US-find-docs.md status=active fields=body,stories count=2]
-[REF: US-removed path=- status=- fields=body count=1]
+[DOCUMENT: UC-find-docs kind=usecase status=active path=docs/usecases/core/UC-find-docs.md]
+[REF: UC-find-docs path=docs/usecases/core/UC-find-docs.md status=active fields=body,usecases count=2]
+[REF: UC-removed path=- status=- fields=body count=1]
 [DOCUMENT: SPEC-search kind=spec status=draft path=specs/2026-10/20261002-search/spec.md tasks=1/2 title="Search"]
 [DOCUMENT: PROP-search kind=proposal status=draft path=docs/proposals/PROP-search/proposal.md tasks=- task_kind=feature planning_effort=medium dev_effort=medium title="Search"]
 [DOCUMENT: FB-slow-sync kind=feedback status=open path=specs/2026-10/feedback/20261013-slow-sync.md tasks=- severity=critical scope=upstream target="devkit sync" title="Sync blocks"]

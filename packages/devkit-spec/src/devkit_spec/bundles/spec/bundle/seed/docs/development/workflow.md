@@ -27,14 +27,15 @@ flowchart LR
 ```
 
 1. **Step 1: Discover & Anchor**
-   - Identify the functional domain and capabilities in `docs/capabilities/` and `docs/stories/`.
+   - Identify the functional domain and capabilities in `docs/capabilities/` and `docs/usecases/`.
 2. **Step 2: Specify in `specs/`**
    - Scaffold the task specification (`spec.md`), technical plan (`plan.md`), and task checklist (`tasks.md`) under `specs/{YYYY-MM}/{YYYYMMDD}-{feature-slug}/`.
-   - Anchor links to corresponding `docs/capabilities/` and `docs/stories/`.
+   - Anchor links to corresponding `docs/capabilities/` and `docs/usecases/`.
 3. **Step 3: Implement & Verify**
    - Implement code following `tasks.md` boundaries and ensure tests pass.
 4. **Step 4: Reconcile Living Spec & Complete**
    - Update `docs/capabilities/<area>/<capability>.md` with modified business rules, contracts, and error policies.
+   - Fold the delivered behavior into the affected `docs/usecases/<area>/UC-<slug>.md`: steps, extensions, postconditions, and scenarios. User stories stay in the feature spec.
    - Record significant technical or structural decisions in `docs/decisions/` as ADRs.
    - Seal the bundle with `reconcile.md` upon completion. `docs/` remains the single source of truth.
 
@@ -61,4 +62,4 @@ Follow Conventional Commits format in the imperative mood without emojis:
 ## 4. Pull Request Rules
 - Open PRs only after passing local linting, type checking, and tests.
 - PR titles follow Conventional Commits.
-- Fill out PR templates with description of changes, linked specs/stories, and test evidence.
+- Fill out PR templates with description of changes, linked specs and use cases, and test evidence.

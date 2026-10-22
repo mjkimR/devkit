@@ -341,7 +341,7 @@ def test_rewrites_id_references_and_provenance(workspace: Path, write: Write) ->
         handle.write("\n[PADR-choose-parser]\n")
     write(
         "docs/consumer.md",
-        "---\nid: US-consumer\nspec: SPEC-other\n---\n[PROP-ref-test] [PADR-choose-parser]\n"
+        "---\nid: UC-consumer\nspec: SPEC-other\n---\n[PROP-ref-test] [PADR-choose-parser]\n"
         "Historical PROP-ref-test and `[PROP-ref-test]`\n```\n[PADR-choose-parser]\n```\n",
     )
     write("docs/README.md", "# Docs\n[PROP-ref-test]\n")
@@ -727,12 +727,12 @@ def test_single_file_proposal(workspace: Path, write: Write) -> None:
         "---\nid: PROP-single\ntitle: Single\nstatus: accepted\ntarget_area: capabilities/x/\n---\n\n"
         "# [PROP-single] Single\n\n## Background\n\nNot carried.\n",
     )
-    write("docs/stories/US-a.md", "---\nid: US-a\n---\n[PROP-single] [s](../proposals/PROP-single.md)\n")
+    write("docs/usecases/UC-a.md", "---\nid: UC-a\n---\n[PROP-single] [s](../proposals/PROP-single.md)\n")
     result = handoff_proposal(workspace, "single", today=TODAY)
     spec = (spec_dir(workspace, "single") / "spec.md").read_text(encoding="utf-8")
     assert "Not carried." not in spec and "## 5. Carried Proposal Notes" not in spec
-    story = (workspace / "docs/stories/US-a.md").read_text(encoding="utf-8")
-    assert f"`SPEC-single` [s](../../{SPEC}-single/spec.md)" in story
+    usecase = (workspace / "docs/usecases/UC-a.md").read_text(encoding="utf-8")
+    assert f"`SPEC-single` [s](../../{SPEC}-single/spec.md)" in usecase
     assert not (workspace / "docs/proposals/PROP-single.md").exists()
     assert result.decisions == [] and result.materials is None
 

@@ -24,7 +24,7 @@ handed-off `PROP-<slug>` to `SPEC-<slug>` rewrite of the proposals lifecycle.
 ## 2. Decision Drivers
 
 - A rename must not break references, and current documents must converge on the canonical ID.
-- Relation fields are typed by the prefix written in them (`stories` takes `US-` IDs), so an alias must not change
+- Relation fields are typed by the prefix written in them (`usecases` takes `UC-` IDs), so an alias must not change
   the kind a reference appears to have.
 - Every identity check must agree on what an ID resolves to; a fallback in one caller leaves the others failing.
 - One specification for every ID-bearing kind: a rule that depends on the kind is a second concept to learn.
@@ -35,7 +35,7 @@ handed-off `PROP-<slug>` to `SPEC-<slug>` rewrite of the proposals lifecycle.
 
 1. **Exact IDs only**: the present state; a rename means editing every reference by hand.
 2. **ADR-only aliases tied to deletion-based compaction**: withdrawn with the compaction direction in this Planning.
-3. **Aliases on selected kinds only** (`CAP`, `US`, `ARCH`, `MS`), refusing `ADR`, `MAT` and the lifecycle kinds:
+3. **Aliases on selected kinds only** (`CAP`, `UC`, `ARCH`, `MS`), refusing `ADR`, `MAT` and the lifecycle kinds:
    rejected by the user; it ties the field to a per-kind list and leaves renamed decisions and materials without
    continuity.
 4. **One aliases specification for every ID-bearing kind, resolved through one canonical mapping (chosen)**.
@@ -44,7 +44,7 @@ handed-off `PROP-<slug>` to `SPEC-<slug>` rewrite of the proposals lifecycle.
 
 Option 4.
 
-- **Kinds**: `aliases` is accepted on every ID-bearing document kind (`CAP`, `US`, `ARCH`, `ADR`, `MS`, `MAT`, `PROP`,
+- **Kinds**: `aliases` is accepted on every ID-bearing document kind (`CAP`, `UC`, `ARCH`, `ADR`, `MS`, `MAT`, `PROP`,
   `PADR`, `SPEC`, `PLAN`, `TASKS`, `REC`, `FB`; namespace documents included). No kind refuses it. A malformed field
   is a recorded issue that `RULE-document-reference` reports with its identity checks.
 - **Where a kind has a gap**: alias shape issues and collisions are identity checks, run over every indexed document

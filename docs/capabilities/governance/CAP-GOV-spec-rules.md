@@ -4,9 +4,9 @@ title: Spec Governance Rules
 summary: "Defines the eleven spec governance rules, their snapshot targeting and fixes, including separate milestone/unit dependency graphs and proposal-only milestone hygiene."
 area: governance
 status: active
-stories:
-  - US-keep-the-living-spec-consistent
-  - US-adopt-in-an-existing-repository
+usecases:
+  - UC-keep-the-living-spec-consistent
+  - UC-adopt-in-an-existing-repository
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/governance/
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/
@@ -49,13 +49,13 @@ Every rule is phase `linter` and is deployed by the `core` preset; every rule is
 | --- | --- | --- |
 | `RULE-document-reference` | Relation fields hold full IDs of the right kind; every reference resolves to exactly one document; prose uses the code-span form; current documents use canonical IDs, not aliases; no relative links to ID-bearing documents; no duplicate IDs; well-formed, non-colliding aliases; no proposal sharing its slug with a spec. | Bracket form to code-span form; a handed-off `PROP-<slug>` to its canonical spec ID; an alias reference to the canonical ID. |
 | `RULE-id-convention` | Dated partitions and path-derived IDs; Living Spec stems; `area` matching the directory; the first H1's ID token; duplicate path-derived IDs; no date- or number-based references. | `id`, `reconcile_id`, `area` and the H1 token aligned to the path. |
-| `RULE-spec-format` | Capabilities, stories and proposals have a frontmatter block with string `id`, `title`, `status`; a proposal's `planning_effort` and `dev_effort` are `low`, `medium` or `high`; a proposal's or spec's `namespace` is `global` or registered. | Adds a missing block or missing fields. |
-| `RULE-traceability-link` | A story's `capabilities` and a capability's `stories` link both ways. | Appends the missing reverse ID. |
+| `RULE-spec-format` | Capabilities, use cases and proposals have a frontmatter block with string `id`, `title`, `status`; a proposal's `planning_effort` and `dev_effort` are `low`, `medium` or `high`; a proposal's or spec's `namespace` is `global` or registered. | Adds a missing block or missing fields. |
+| `RULE-traceability-link` | A use case's `capabilities` and a capability's `usecases` link both ways. | Appends the missing reverse ID. |
 | `RULE-task-coverage` | Acceptance-criterion IDs of a spec and the task references of its `tasks.md` cover each other. | none |
 | `RULE-spec-lifecycle` | A spec's `status`, its task checklist and its `reconcile.md` status agree. | Sets `status: completed` on a stale `spec.md`. |
 | `RULE-spec-progress` | A `draft` or `planned` spec with a checked task is marked `in-progress`. | Sets `status: in-progress`. |
 | `RULE-reconcile-contract` | A `reconcile.md` is well formed; in a snapshot run its `modified` targets changed in the diff. | none |
-| `RULE-code-entrypoints` | Every `entrypoints` path of a capability or story is a valid, existing workspace path. | none |
+| `RULE-code-entrypoints` | Every `entrypoints` path of a capability or use case is a valid, existing workspace path. | none |
 | `RULE-proposal-boundaries` | A current proposal's `target_area` and `boundaries.owns` entries name existing paths. | none |
 | `RULE-document-summary` | Searchable documents carry a short English `summary`. | none |
 
@@ -97,7 +97,7 @@ package glossaries and other ID-free files are outside its scope. Existing prose
 exclusions and snapshot cache rules apply.
 
 - MUST report: a relation field of the wrong shape, a value that is not a full ID, or an ID of the wrong kind
-  (`stories`, `related_stories` take `US`; `capabilities`, `related_capabilities` take `CAP`; `spec` takes `SPEC`;
+  (`usecases`, `related_usecases` take `UC`; `capabilities`, `related_capabilities` take `CAP`; `spec` takes `SPEC`;
   `plan` takes `PLAN`; proposal `milestone` and milestone `depends_on` take `MS`; unit `depends_on` takes exact PROP/SPEC anchors).
 - MUST report a reference to an ID no document declares or several documents declare; a missing or duplicated ID is
   fixed by hand (the rule never guesses which document was meant).
@@ -136,8 +136,8 @@ sequence numbers are forbidden (they collide across parallel branches).
   contain a letter (a year or number there would read as a retired number-based ID), and the month partition MUST
   match the date prefix.
 - **Living Spec stems** (the ID is the file stem): `docs/capabilities/<area>/CAP-<AREA>-<slug>.md` (`<AREA>`
-  upper-case letters and digits, `area: <area>`); `docs/stories/<area>/US-<slug>.md` (`area: <area>`; only
-  `README.md` directly under `docs/stories/`); `docs/architecture/ARCH-<slug>.md` or `ARCH-<NN>[-<n>]-<slug>.md` with
+  upper-case letters and digits, `area: <area>`); `docs/usecases/<area>/UC-<slug>.md` (`area: <area>`; only
+  `README.md` directly under `docs/usecases/`); `docs/architecture/ARCH-<slug>.md` or `ARCH-<NN>[-<n>]-<slug>.md` with
   `<NN>` an arc42 chapter (`01`-`11` except `09`, decisions, and `12`, the glossary) and `<n>` a sub-document `1`-`9`
   (`05-1` containers, `05-2` components). The first slug segment MUST contain a letter. Namespace docs roots use the
   same layout.
@@ -150,18 +150,18 @@ sequence numbers are forbidden (they collide across parallel branches).
   that does not open with an ID token but names an ID of the document's own kind (`# Capability [CAP-X-old] Title`;
   reported, not fixable: the heading should read `# [<ID>] <title>`); an ID another file's path also derives (slugs are unique per document type across partitions and
   areas, feedback slugs within their bundle; detected across the whole workspace); a date- or number-based reference
-  (such as ``ADR-0006``, ``US-010``, ``CAP-HARN-007``, ``SPEC-20261006`` or an `ARCH-<NN>` without slug) in the
+  (such as ``ADR-0006``, ``UC-010``, ``CAP-HARN-007``, ``SPEC-20261006`` or an `ARCH-<NN>` without slug) in the
   frontmatter or prose of any Markdown file under `docs/` (materials excepted) or `specs/`. Code blocks, indented
   code, inline code, HTML comments and escapes are not checked; Markdown link labels and targets are.
 - Fields are read from their top-level frontmatter lines as written.
 
 ### 3.5 `RULE-spec-format`
 
-Every capability, story, proposal and global milestone starts with a YAML frontmatter block that sets `id`, `title` and `status` as
+Every capability, use case, proposal and global milestone starts with a YAML frontmatter block that sets `id`, `title` and `status` as
 non-blank strings.
 
-- **Scope**: Markdown files under `docs/capabilities/`, `docs/stories/`, `docs/proposals/`, `docs/roadmap/`, and `capabilities/`,
-  `stories/` of each namespace docs root, except `README.md`, templates, directories starting with `.` and
+- **Scope**: Markdown files under `docs/capabilities/`, `docs/usecases/`, `docs/proposals/`, `docs/roadmap/`, and `capabilities/`,
+  `usecases/` of each namespace docs root, except `README.md`, templates, directories starting with `.` and
   `materials/`. Unlike the index, a file is checked even when it declares no ID.
 - MUST report: no block (`---` on the first line, closed by `---`); a malformed block (unclosed, invalid YAML,
   duplicate keys, not a mapping; fixed by hand); a missing, blank or non-string `id`, `title` or `status`; a
@@ -172,14 +172,14 @@ non-blank strings.
   current proposals and specs, and in every one of them when the run targets `.devkit/config.toml`.
 - **Fix**: fills what is missing and leaves present values alone: `id` the ID the path derives, `title` the first
   `# ` heading (a leading ID token dropped) else the file stem, `status: draft` (`open` for proposal feedback, `planned` for milestones), and `created_at` today when none of
-  `created_at`, `created`, `date` is set. The path derives the file stem for a capability, story, single-file
+  `created_at`, `created`, `date` is set. The path derives the file stem for a capability, use case, single-file
   proposal or PADR, `PROP-<slug>` for a bundle's `proposal.md` and `PROP-<slug>-target` for its `target-docs.md`, and
   `FB-<name>` for its direct `feedback/<name>.md`; any other file under `docs/proposals/` derives none, and its missing `id` is reported without a fix.
 
 ### 3.6 `RULE-traceability-link`
 
-Stories and capabilities form an M:N relation recorded on both sides by exact ID: a story's `capabilities`, a
-capability's `stories` (under `docs/` and every namespace docs root; links MAY cross packages).
+Use cases and capabilities form an M:N relation recorded on both sides by exact ID: a use case's `capabilities`, a
+capability's `usecases` (under `docs/` and every namespace docs root; links MAY cross packages).
 
 - MUST report a one-sided link on the document missing the reverse link; when the run does not target that document,
   on the document that declares the link instead.
@@ -252,7 +252,7 @@ so this hint is a rule of its own (`SPEC-open-feedback-and-progress`).
 
 ### 3.11 `RULE-code-entrypoints`
 
-Every `entrypoints` item of a capability or story (`docs/` and namespace docs roots) MUST be a string, a literal
+Every `entrypoints` item of a capability or use case (`docs/` and namespace docs roots) MUST be a string, a literal
 workspace-relative path, and an existing file or directory inside the workspace. In a snapshot run it also reports
 every current document that declares a path the diff deletes. Not fixable. The full contract is
 `CAP-TRACE-code-entrypoints`.
@@ -277,7 +277,7 @@ A proposal's boundary is copied into its spec at handoff, so it names real paths
 
 `summary` is the main signal of `devkit spec search` (`CAP-DOCS-document-search`).
 
-- MUST report: a capability, story, decision, architecture document, milestone, `proposal.md` or `spec.md` without `summary`
+- MUST report: a capability, use case, decision, architecture document, milestone, `proposal.md` or `spec.md` without `summary`
   (a file still carrying the skeleton marker `<!-- devkit:skeleton -->` is exempt until written); a `summary` that is
   not a non-empty string; a letter outside the Latin script in any `summary` (digits, punctuation and symbols are
   allowed); a `summary` longer than `max_length` characters.

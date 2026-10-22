@@ -205,7 +205,7 @@ def list_cmd(
 
     --file finds the documents that own a code path through their ``entrypoints``; --where filters by any
     frontmatter field, such as a feedback document's severity or scope. Feedback is ordered by severity. KIND is one
-    of: capability, story, architecture, decision, proposal, proposal-decision, spec, plan, tasks, reconcile,
+    of: capability, usecase, architecture, decision, proposal, proposal-decision, spec, plan, tasks, reconcile,
     feedback, material. In a workspace with namespaces, the namespace of the current directory (plus the
     global documents) is shown unless --namespace or --all-namespaces says otherwise.
     """

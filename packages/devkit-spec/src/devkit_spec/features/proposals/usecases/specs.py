@@ -94,7 +94,7 @@ _STORY_SECTION = """## 2. User Stories
 _BUGFIX_SECTIONS = """## 2. Defect Characterization
 
 - **Current behavior**: <trigger, environment and the observed wrong result, with evidence>
-- **Expected behavior and its basis**: <the result the existing contract requires, citing its capability, story, ADR or test>
+- **Expected behavior and its basis**: <the result the existing contract requires, citing its capability, use case, ADR or test>
 - **Behavior to preserve**: <call paths, input boundaries and contracts that must keep working, with their tests>
 - **Reproduction conditions**: <the command, data and environment that reproduce the defect>
 
@@ -156,7 +156,7 @@ title: {yaml_scalar(title)}{summary_line}
 status: planned
 created: {created}{extra}
 related_capabilities: []
-related_stories: []
+related_usecases: []
 ---
 
 # [SPEC-{slug}] {title}

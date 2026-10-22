@@ -9,6 +9,8 @@ entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/reading.py
   - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/status.py
 created_at: 2026-10-17
+usecases:
+  - UC-reconcile-living-spec-drift
 ---
 
 # [CAP-DIST-context-and-playbooks] Context Loading and Playbook Discovery

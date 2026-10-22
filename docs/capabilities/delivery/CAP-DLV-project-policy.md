@@ -5,11 +5,10 @@ summary: "Effective approval, stage, Git (auto or required worktree and pull req
 area: delivery
 status: active
 created_at: 2026-10-13
-stories:
-  - US-route-development-intent
-  - US-run-parallel-work-safely
-  - US-drive-development-to-integration
-  - US-handle-delivery-problems-and-exceptions
+usecases:
+  - UC-route-development-intent
+  - UC-run-parallel-work-safely
+  - UC-drive-development-to-integration
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/policy/services/config.py
   - packages/devkit-spec/src/devkit_spec/features/policy/cli/commands.py

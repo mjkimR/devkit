@@ -5,8 +5,8 @@ summary: "devkit spec scope compares parallel task scopes in a registry and jour
 area: collaboration
 status: active
 created_at: 2026-10-13
-stories:
-  - US-run-parallel-work-safely
+usecases:
+  - UC-run-parallel-work-safely
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/scope/
   - packages/devkit-spec/src/devkit_spec/features/scope/cli/commands.py
@@ -88,7 +88,7 @@ path, no `..`, case-sensitive, `./` and a trailing `/` normalized), with its gra
 | --- | --- | --- | --- |
 | Proposal: `targets` of `docs/proposals/PROP-<slug>/target-docs.md` | document | `declared-doc` | `prop` |
 | Spec bundle: `targets` of `reconcile.md` (not `waived`); without `reconcile.md`, those of `target-docs.md` | document | `declared-doc` | `spec` (`prop` for `target-docs.md`) |
-| `entrypoints` of each capability or story target (also under `docs/packages/<name>/`) | code | `candidate` | as its target |
+| `entrypoints` of each capability or use case target (also under `docs/packages/<name>/`) | code | `candidate` | as its target |
 | `tasks.md` `_Boundary` entries | code | `declared-code` (wins over a candidate of the same path) | `spec` |
 | Git in the registering worktree: the committed range (below), staged, unstaged, untracked | code | `observed` | `build` |
 
@@ -123,7 +123,7 @@ shallow clone whose history does not reach the fork point stays unresolved until
 | Unresolved reason | Input |
 | --- | --- |
 | `planned-doc` | A document target that does not exist yet (it still counts as a document, so two tasks planning the same file overlap). |
-| `no-entrypoints` | A capability or story target without `entrypoints`. |
+| `no-entrypoints` | A capability or use case target without `entrypoints`. |
 | `not-a-path`, `invalid-path`, `excluded-tree` | A `_Boundary` entry that is `N/A`/`none`, not a literal path, or under `docs/` or `specs/`. |
 | `invalid-path` | A document target that is not a literal path. |
 | `waived` | A `reconcile.md` target with `resolution: waived`. |

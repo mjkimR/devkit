@@ -443,9 +443,9 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
 
 ---
 
-## 2. User Stories Plan (docs/stories/)
+## 2. Use Cases Plan (docs/usecases/)
 
-<Specify new or modified US documents and updated acceptance criteria.>
+<Specify new or modified UC documents, their scenarios and updated acceptance criteria.>
 
 ---
 

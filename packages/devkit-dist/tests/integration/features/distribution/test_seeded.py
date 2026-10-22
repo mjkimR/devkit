@@ -49,12 +49,12 @@ assets = ["guide"]
 
 
 def write_source(root: Path, manifest: str = MANIFEST) -> Path:
-    (root / "seed/tree/stories").mkdir(parents=True)
+    (root / "seed/tree/usecases").mkdir(parents=True)
     (root / "guide.md").write_text("---\nname: guide\ndescription: Guide.\n---\n# Guide\n")
     (root / "reference.md").write_text("# Reference\n")
     (root / "seed/README.md").write_text("# Docs\n")
     (root / "seed/tree/glossary.md").write_text("# Glossary\n")
-    (root / "seed/tree/stories/README.md").write_text("# Stories\n")
+    (root / "seed/tree/usecases/README.md").write_text("# Use Cases\n")
     script = root / "seed/tree/check.sh"
     script.write_text("#!/bin/sh\n")
     script.chmod(0o755)
@@ -146,7 +146,7 @@ def test_manifest_accepts_seeded_document(installed: list[InstalledBundle]) -> N
         "docs/README.md",
         "docs/spec/check.sh",
         "docs/spec/glossary.md",
-        "docs/spec/stories/README.md",
+        "docs/spec/usecases/README.md",
     ]
     assert all(not item["destination"].startswith("docs/") for item in plan["files"])
     assert any(item["destination"] == ".devkit/managed/sdd/reference.md" for item in plan["files"])
@@ -160,7 +160,7 @@ def test_seeded_files_are_written_once_and_then_project_owned(installed: list[In
         "docs/README.md",
         "docs/spec/check.sh",
         "docs/spec/glossary.md",
-        "docs/spec/stories/README.md",
+        "docs/spec/usecases/README.md",
     }
     assert (target / "docs/README.md").read_text() == "# Docs\n"
     assert (target / "docs/spec/check.sh").stat().st_mode & 0o777 == 0o755
@@ -171,7 +171,7 @@ def test_seeded_files_are_written_once_and_then_project_owned(installed: list[In
         {"bundle": "sdd", "id": "docs-readme", "path": "docs/README.md"},
         {"bundle": "sdd", "id": "docs-tree", "path": "docs/spec/check.sh"},
         {"bundle": "sdd", "id": "docs-tree", "path": "docs/spec/glossary.md"},
-        {"bundle": "sdd", "id": "docs-tree", "path": "docs/spec/stories/README.md"},
+        {"bundle": "sdd", "id": "docs-tree", "path": "docs/spec/usecases/README.md"},
     ]
     seeded_asset = next(a for a in receipt["assets"] if a["id"] == "docs-tree")
     assert seeded_asset["paths"] == [] and len(seeded_asset["seeded"]) == 3
@@ -196,7 +196,7 @@ def test_seeded_files_are_written_once_and_then_project_owned(installed: list[In
     # Deselecting leaves every seeded file in place and drops the record.
     sync_project(target, [], deselect=["sdd"])
     assert (target / "docs/README.md").read_text() == "# My docs\n"
-    assert (target / "docs/spec/stories/README.md").exists()
+    assert (target / "docs/spec/usecases/README.md").exists()
     assert "seeded" not in json.loads((target / RECEIPT_PATH).read_text())
     assert not (target / ".devkit/managed/sdd/reference.md").exists()
 
@@ -338,14 +338,14 @@ def test_rollback_removes_the_directories_a_failed_transaction_created(
 
     def interrupt(root: Path, name: str, content: Content | None) -> None:
         original(root, name, content)
-        if name == "docs/spec/stories/README.md":
+        if name == "docs/spec/usecases/README.md":
             raise SystemExit("simulated process interruption")
 
     monkeypatch.setattr(transaction, "atomic_write", interrupt)
     with pytest.raises(SystemExit):
         sync_project(target, installed)
     monkeypatch.setattr(transaction, "atomic_write", original)
-    assert (target / "docs/spec/stories/README.md").exists() and (target / JOURNAL).exists()
+    assert (target / "docs/spec/usecases/README.md").exists() and (target / JOURNAL).exists()
     assert RecoverProject().execute(target) > 0
     # The project's own docs/ stays; docs/spec/ and .devkit/managed/, created by the transaction, are gone.
     assert sorted(path.name for path in (target / "docs").iterdir()) == ["ours.md"]

@@ -4,8 +4,8 @@ title: Manual Drift Reconciliation
 summary: "An explicitly invoked maintenance playbook reviews a bounded batch of Living Spec, code and guidance, records evidence and coverage gaps, and routes user-decided corrections or deferrals through existing workflows."
 area: delivery
 status: active
-stories:
-  - US-keep-the-living-spec-consistent
+usecases:
+  - UC-reconcile-living-spec-drift
 entrypoints:
   - packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/drift-reconciliation.md
 ---

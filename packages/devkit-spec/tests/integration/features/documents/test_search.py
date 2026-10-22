@@ -21,7 +21,9 @@ def _doc(document_id: str, title: str, body: str = "", status: str = "active") -
 @pytest.fixture
 def docs(workspace: Path, write: Write) -> Path:
     write("docs/capabilities/core/CAP-CORE-search.md", _doc("CAP-CORE-search", "Document search", "Ranks documents.\n"))
-    write("docs/stories/core/US-find-docs.md", _doc("US-find-docs", "Find documents", "As an agent I look up specs.\n"))
+    write(
+        "docs/usecases/core/UC-find-docs.md", _doc("UC-find-docs", "Find documents", "As an agent I look up specs.\n")
+    )
     write("docs/decisions/2026-10/20261001-cache.md", _doc("ADR-cache", "Cache derived data", "Vectors are cached.\n"))
     write("specs/2026-10/20261001-done/spec.md", _doc("SPEC-done", "Old search work", status="completed"))
     return workspace
@@ -33,7 +35,7 @@ def _ids(root: Path, query: str, **options: object) -> list[str]:
 
 
 def test_lexical_ranking_uses_metadata_and_body(docs: Path) -> None:
-    assert _ids(docs, "search documents") == ["CAP-CORE-search", "US-find-docs"]
+    assert _ids(docs, "search documents") == ["CAP-CORE-search", "UC-find-docs"]
     assert _ids(docs, "vectors") == ["ADR-cache"]
 
 
@@ -44,7 +46,7 @@ def test_exact_id_path_and_file_name_are_pinned_first(docs: Path) -> None:
 
 
 def test_kinds_history_and_limit(docs: Path) -> None:
-    assert _ids(docs, "search", kinds={Kind.STORY, Kind.CAPABILITY}) == ["CAP-CORE-search"]
+    assert _ids(docs, "search", kinds={Kind.USECASE, Kind.CAPABILITY}) == ["CAP-CORE-search"]
     assert "SPEC-done" not in _ids(docs, "search work")
     assert "SPEC-done" in _ids(docs, "search work", history=True)
 

@@ -1,27 +1,27 @@
-# [RULE-traceability-link] Bidirectional Story and Capability Links
+# [RULE-traceability-link] Bidirectional Use Case and Capability Links
 
 ## 1. Overview
 
-Stories and capabilities have an M:N relationship recorded on both sides by exact document ID. A story
-(`docs/stories/<area>/US-<slug>.md`) lists its capabilities in `capabilities`; a capability
-(`docs/capabilities/<area>/CAP-<AREA>-<slug>.md`) lists its stories in `stories`. Paths and partial IDs never match.
+Use cases and capabilities have an M:N relationship recorded on both sides by exact document ID. A use case
+(`docs/usecases/<area>/UC-<slug>.md`) lists its capabilities in `capabilities`; a capability
+(`docs/capabilities/<area>/CAP-<AREA>-<slug>.md`) lists its use cases in `usecases`. Paths and partial IDs never match.
 Both sides are kept so an agent reading either document sees the whole relation without a reverse search.
 
 - **Phase and severity**: `linter`, `error`.
-- **What is checked**: stories and capabilities under `docs/stories/` and `docs/capabilities/` and under the same
-  directories of each package registered in `[[tool.spec.namespaces]]` (`docs/packages/<name>/stories/`,
+- **What is checked**: use cases and capabilities under `docs/usecases/` and `docs/capabilities/` and under the same
+  directories of each package registered in `[[tool.spec.namespaces]]` (`docs/packages/<name>/usecases/`,
   `.../capabilities/`); links may cross packages, since IDs are repository-wide. Materials are not checked.
 - **Targeting**: the document missing the reverse link is reported when the run targets it. When it does not (a commit
-  that changes only the story, say), the one-sided link is reported on the document that declares it instead, so a
+  that changes only the use case, say), the one-sided link is reported on the document that declares it instead, so a
   change that adds only one side is caught.
 
 ## 2. Cause of Violation
 
-A story lists a capability that does not list the story in `stories`, or a capability lists a story that does not
-list the capability in `capabilities`:
+A use case lists a capability that does not list the use case in `usecases`, or a capability lists a use case that
+does not list the capability in `capabilities`:
 
 - On the document missing the reverse link, at line 1 (fixable when the fix applies, section 3): `<ID> is missing the
-  reverse <story|capability> link to <source ID> (<source path>)`.
+  reverse <use case|capability> link to <source ID> (<source path>)`.
 - On the declaring document, at the link, when the other one is not targeted: `<source ID> links <ID>, but <path>
   does not list <source ID> in <field>`.
 
@@ -35,7 +35,7 @@ Missing targets, duplicate IDs, wrong ID kinds and malformed fields are reported
   document and the field is absent or a list, and only in the documents the run targets. When the run targets only
   the source, name the target document: `devkit rules fix docs/capabilities/<area>/CAP-<AREA>-<slug>.md`.
 - **By hand**: add the source ID to the target's list, or remove the one-sided link when the relation does not hold.
-- **Related**: whether a story and a capability belong together is a judgment the rule cannot make; read the
+- **Related**: whether a use case and a capability belong together is a judgment the rule cannot make; read the
   `spec:living-spec-writing` instruction (Completed Specs and Traceability) before removing a link or adding one the
   fix cannot.
 
@@ -51,13 +51,13 @@ removes a file from every rule.
 ## 6. Example
 
 ```yaml
-# docs/stories/billing/US-pay-invoice.md
+# docs/usecases/billing/UC-pay-invoice.md
 capabilities:
   - CAP-BILLING-invoices
 ```
 
 ```yaml
 # docs/capabilities/billing/CAP-BILLING-invoices.md
-stories:
-  - US-pay-invoice
+usecases:
+  - UC-pay-invoice
 ```

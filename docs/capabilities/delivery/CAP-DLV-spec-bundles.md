@@ -5,9 +5,9 @@ summary: "Spec creation validates summaries and scaffolds bound SPEC/PLAN/TASKS 
 area: delivery
 status: active
 created_at: 2026-10-13
-stories:
-  - US-route-development-intent
-  - US-incubate-and-hand-off-a-proposal
+usecases:
+  - UC-route-development-intent
+  - UC-incubate-and-hand-off-a-proposal
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/delivery/cli/specs.py
   - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/specs.py
@@ -136,7 +136,7 @@ specs/<YYYY-MM>/<YYYYMMDD>-<slug>/
 
 - **`spec.md`**: frontmatter `id: SPEC-<slug>`, `title`, optional `summary`, `status: planned`,
   `created: <bundle date>`, optional `namespace`, `related_capabilities: []`,
-  `related_stories: []`, then `workflow` from the binding. H1 `# [SPEC-<slug>] <title>`; sections
+  `related_usecases: []`, then `workflow` from the binding. H1 `# [SPEC-<slug>] <title>`; sections
   `1. Problem Statement & Motivation`, `2. User Stories`, `3. Non-Goals` (a `Scope Excluded` placeholder),
   `4. Acceptance Criteria & Behavioral Contracts` (one placeholder `### [AC-01] <scenario>` with Given/When/Then
   lines) and, after a handoff, `5. Carried Proposal Contract` for proposal sections mixing validation scenarios with

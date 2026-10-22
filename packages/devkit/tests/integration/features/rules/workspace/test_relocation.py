@@ -198,14 +198,14 @@ def test_carried_files_and_links_to_them(tmp_path: Path) -> None:
 
 def test_a_moved_single_file(tmp_path: Path) -> None:
     single = tmp_path / "docs/proposals/PROP-single.md"
-    story = _write(tmp_path, "docs/stories/US-a.md", "---\nid: US-a\n---\n[s](../proposals/PROP-single.md#why)\n")
+    usecase = _write(tmp_path, "docs/usecases/UC-a.md", "---\nid: UC-a\n---\n[s](../proposals/PROP-single.md#why)\n")
     relocation = LinkRelocation(files={single: tmp_path / "specs/2026-10/20261014-single/spec.md"}, removed=[single])
-    report = relocate_links(tmp_path, [story], relocation)
+    report = relocate_links(tmp_path, [usecase], relocation)
     assert (
-        story.read_text(encoding="utf-8")
-        == "---\nid: US-a\n---\n[s](../../specs/2026-10/20261014-single/spec.md#why)\n"
+        usecase.read_text(encoding="utf-8")
+        == "---\nid: UC-a\n---\n[s](../../specs/2026-10/20261014-single/spec.md#why)\n"
     )
-    assert [(r.path, r.line) for r in report.rewritten] == [("docs/stories/US-a.md", 4)]
+    assert [(r.path, r.line) for r in report.rewritten] == [("docs/usecases/UC-a.md", 4)]
 
 
 def test_relative_paths_resolve_against_the_root_and_the_deepest_directory_wins(tmp_path: Path) -> None:

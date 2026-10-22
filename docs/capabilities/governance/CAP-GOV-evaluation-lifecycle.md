@@ -5,6 +5,8 @@ summary: "Single-pass repairs, target scoping, execution phases, and Git snapsho
 area: governance
 status: active
 created_at: 2026-10-17
+usecases:
+  - UC-resolve-stale-activity-branches
 ---
 
 # [CAP-GOV-evaluation-lifecycle] Evaluation Lifecycle and Autofix Convergence

@@ -7,9 +7,9 @@ from spec_support.types import Write
 
 BUNDLE = "specs/2026-10/20261001-one"
 CAP = "docs/capabilities/x/CAP-X-one.md"
-STORY = "docs/stories/x/US-two.md"
+USECASE = "docs/usecases/x/UC-two.md"
 CAP_TEXT = "---\nid: CAP-X-one\ntitle: One\nstatus: active\nentrypoints:\n  - src/declared/\ncreated_at: 2026-10-01\n---\n\n# body\n"
-STORY_TEXT = "---\nid: US-two\nstatus: active\n---\n"
+USECASE_TEXT = "---\nid: UC-two\nstatus: active\n---\n"
 TASKS = "\n".join(
     [
         "---",
@@ -37,7 +37,7 @@ RECONCILE = "\n".join(
         "targets:",
         f"  - file: {CAP}",
         "    resolution: modified",
-        f"  - file: {STORY}",
+        f"  - file: {USECASE}",
         "    resolution: modified",
         "  - file: docs/decisions/ADR-x.md",
         "    resolution: modified",
@@ -55,7 +55,7 @@ RECONCILE = "\n".join(
 def fixture(write: Write) -> None:
     """Derivation fixture: two bearing documents, one decision, a waived target and mixed boundaries."""
     write(CAP, CAP_TEXT)
-    write(STORY, STORY_TEXT)
+    write(USECASE, USECASE_TEXT)
     write("docs/decisions/ADR-x.md", "---\nid: ADR-x\n---\n")
     write("src/declared/a.go", "package a\n")
     write("src/pkg/b.go", "package b\n")

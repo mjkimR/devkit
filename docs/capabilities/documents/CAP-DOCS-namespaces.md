@@ -4,8 +4,8 @@ title: Document Namespaces
 summary: Defines monorepo namespaces, packages registered in [[tool.spec.namespaces]] that keep their own Living Spec under docs/packages/<name>/, how each document's namespace is determined, and how list and search select namespaces while IDs and references stay repository-wide.
 area: documents
 status: active
-stories:
-  - US-find-the-right-documents
+usecases:
+  - UC-find-the-right-documents
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/documents/services/namespaces.py
   - packages/devkit-spec/src/devkit_spec/features/policy/services/config.py
@@ -75,7 +75,7 @@ Every document belongs to exactly one namespace:
 ### 3.4 Rules
 
 The rules treat `docs/packages/<name>/` like `docs/`: `RULE-id-convention`, `RULE-spec-format`,
-`RULE-traceability-link`, `RULE-code-entrypoints` and `RULE-document-summary` check its `capabilities/`, `stories/`
+`RULE-traceability-link`, `RULE-code-entrypoints` and `RULE-document-summary` check its `capabilities/`, `usecases/`
 and `architecture/` directories as they check those of `docs/`. `RULE-spec-format` also checks that a proposal's or
 spec's `namespace` names `global` or a registered namespace, and rechecks every one of them when a run targets
 `.devkit/config.toml`. Entrypoint paths of a namespace's documents stay workspace-relative, never package-relative

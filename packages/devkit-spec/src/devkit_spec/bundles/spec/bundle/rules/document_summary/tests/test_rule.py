@@ -27,7 +27,7 @@ def _doc(document_id: str, summary: str | None = None, status: str = "active", b
     "path",
     [
         "docs/capabilities/core/CAP-CORE-a.md",
-        "docs/stories/core/US-a.md",
+        "docs/usecases/core/UC-a.md",
         "docs/decisions/2026-10/20261001-a.md",
         "docs/architecture/ARCH-03-context.md",
         "docs/proposals/PROP-a/proposal.md",
@@ -35,7 +35,7 @@ def _doc(document_id: str, summary: str | None = None, status: str = "active", b
     ],
 )
 def test_required_kinds(tmp_path: Path, path: str) -> None:
-    ids = {"capabilities": "CAP-CORE-a", "stories": "US-a", "decisions": "ADR-a", "architecture": "ARCH-03-context"}
+    ids = {"capabilities": "CAP-CORE-a", "usecases": "UC-a", "decisions": "ADR-a", "architecture": "ARCH-03-context"}
     document_id = next((v for k, v in ids.items() if f"/{k}/" in path), "PROP-a" if "proposals" in path else "SPEC-a")
     assert _found(check(RULE, tmp_path, {path: _doc(document_id)})) == [(path, 1, f"{document_id} has no summary")]
     assert check(RULE, tmp_path, {path: _doc(document_id, "Ranks documents for a query by meaning.")}) == []

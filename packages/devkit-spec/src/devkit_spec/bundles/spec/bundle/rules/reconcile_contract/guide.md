@@ -66,8 +66,8 @@ status: resolved            # pending while reconciliation is under way
 targets:
   - file: docs/capabilities/core/CAP-CORE-search.md
     resolution: modified    # changed with this work
-  - file: docs/stories/core/US-find-docs.md
+  - file: docs/usecases/core/UC-find-docs.md
     resolution: waived
-    rationale: The story's acceptance criteria are unchanged by the new ranking mode.
+    rationale: The use case's acceptance criteria are unchanged by the new ranking mode.
 ---
 ```

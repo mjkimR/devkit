@@ -92,10 +92,10 @@ def test_devkit_sync_deploys_the_default_preset_and_its_rules_run(tmp_path: Path
     assert (tmp_path / ".devkit/managed/spec/instructions/contract-authoring.md").is_file()
     doc = tmp_path / "docs/capabilities/core/CAP-CORE-a.md"
     doc.parent.mkdir(parents=True)
-    doc.write_text("---\nid: CAP-CORE-a\nstatus: active\n---\nSee `US-missing`.\n", encoding="utf-8")
+    doc.write_text("---\nid: CAP-CORE-a\nstatus: active\n---\nSee `UC-missing`.\n", encoding="utf-8")
     check = _devkit("rules", "check", "-w", str(tmp_path))
     assert check.returncode == 1, check.stderr
-    assert "RULE-document-reference" in check.stdout and "no document has the ID US-missing" in check.stdout
+    assert "RULE-document-reference" in check.stdout and "no document has the ID UC-missing" in check.stdout
     for rule in RULES:
         explain = _devkit("rules", "explain", rule, "-w", str(tmp_path))
         assert explain.returncode == 0 and f"# [{rule}] " in explain.stdout, explain.stderr

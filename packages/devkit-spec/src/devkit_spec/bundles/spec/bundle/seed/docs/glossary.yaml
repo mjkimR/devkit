@@ -9,7 +9,7 @@ terms:
     synonyms: ["역량", "기능", "cap"]
   - primary: proposal
     synonyms: ["제안서", "제안", "prop"]
-  - primary: story
-    synonyms: ["스토리", "사용자 스토리", "user story"]
+  - primary: use case
+    synonyms: ["usecase", "use-case", "uc", "유스케이스", "사용 사례", "story", "user story", "스토리", "사용자 스토리"]
   - primary: decision
     synonyms: ["ADR", "결정", "의사결정"]

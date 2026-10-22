@@ -1,4 +1,5 @@
-"""devkit_spec.features.entrypoints: code entrypoints of capabilities and stories, and their derivation from spec bundles.
+"""devkit_spec.features.entrypoints: code entrypoints of capabilities and use cases, and their derivation from spec
+bundles.
 
 ``paths`` holds the path contract (``RULE-code-entrypoints`` checks it), ``bundle`` reads a spec bundle's
 declarations, ``derive`` joins them into document-code pairs and ``apply`` writes chosen pairs into frontmatter.

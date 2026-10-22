@@ -36,17 +36,17 @@ def _read(tmp_path: Path, path: str) -> str:
 @pytest.mark.parametrize(
     ("text", "line"),
     [
-        ("Example `US-010` and ``ADR-0006 ` quoted``.\n", 0),
-        ("Example `US-010\nADR-0006` ends.\n", 0),
-        ("````md\nUS-010\n```\nADR-0006\n````\nSee US-010\n", 6),
-        ("~~~md\nUS-010\n~~~\nSee US-010\n", 4),
-        ("<!-- US-010\nADR-0006 -->\n", 0),
-        ("    US-010\n", 0),
-        ("Example `US-010`\nSee ADR-0006\n", 2),
-        ("Example `US-010`\n[old](US-010.md)\n", 2),
-        ("[US-010](old.md)\n", 1),
-        ("---\nrelated_stories:\n    - US-010\n---\n`ADR-0006`\n", 3),
-        ("Unclosed `US-010\n", 1),
+        ("Example `UC-010` and ``ADR-0006 ` quoted``.\n", 0),
+        ("Example `UC-010\nADR-0006` ends.\n", 0),
+        ("````md\nUS-010\n```\nADR-0006\n````\nSee UC-010\n", 6),
+        ("~~~md\nUS-010\n~~~\nSee UC-010\n", 4),
+        ("<!-- UC-010\nADR-0006 -->\n", 0),
+        ("    UC-010\n", 0),
+        ("Example `UC-010`\nSee ADR-0006\n", 2),
+        ("Example `UC-010`\n[old](UC-010.md)\n", 2),
+        ("[UC-010](old.md)\n", 1),
+        ("---\nrelated_usecases:\n    - UC-010\n---\n`ADR-0006`\n", 3),
+        ("Unclosed `UC-010\n", 1),
         ("~~~md\r\nUS-010\r\n~~~\r\nSee ADR-0006\r\n", 4),
     ],
     ids=[
@@ -227,11 +227,11 @@ def _living_spec_fixture() -> dict[str, str]:
         "CAP-HARN-context-pack-slicing",
         "[CAP-HARN-context-pack-slicing] Pack",
         area="harness",
-        body="\nSee US-010 and ARCH-06-runtime-view and US-init-project-docs and CAP-GOV-rule-verification.\n",
+        body="\nSee UC-010 and ARCH-06-runtime-view and UC-init-project-docs and CAP-GOV-rule-verification.\n",
     )
-    files["docs/stories/README.md"] = "# Stories\n"
-    files["docs/stories/delivery/US-reconcile-feature.md"] = doc(
-        "US-reconcile-feature", "[US-reconcile-feature] Reconcile", area="delivery"
+    files["docs/usecases/README.md"] = "# Use Cases\n"
+    files["docs/usecases/delivery/UC-reconcile-feature.md"] = doc(
+        "UC-reconcile-feature", "[UC-reconcile-feature] Reconcile", area="delivery"
     )
     files["docs/architecture/README.md"] = "# Architecture\n"
     files["docs/architecture/ARCH-01-introduction-and-goals.md"] = doc(
@@ -250,12 +250,12 @@ def _living_spec_fixture() -> dict[str, str]:
         "CAP-HARN-other", "[CAP-HARN-other] Wrong id", area="harness"
     )
     files["docs/capabilities/CAP-FLAT-no-area.md"] = doc("CAP-FLAT-no-area", "Flat")
-    files["docs/stories/US-flat-story.md"] = doc("US-flat-story", "Flat")
-    files["docs/stories/governance/US-deterministic-rule-verification.md"] = (
-        "---\nid: US-003\ntitle: Rules\nactor: agent\nstatus: active\n---\n\n# [US-003] Rules\n"
+    files["docs/usecases/UC-flat-usecase.md"] = doc("UC-flat-usecase", "Flat")
+    files["docs/usecases/governance/UC-deterministic-rule-verification.md"] = (
+        "---\nid: UC-003\ntitle: Rules\nactor: agent\nstatus: active\n---\n\n# [UC-003] Rules\n"
     )
-    files["docs/stories/a/US-same-slug.md"] = doc("US-same-slug", "A", area="a")
-    files["docs/stories/b/US-same-slug.md"] = doc("US-same-slug", "B", area="b")
+    files["docs/usecases/a/UC-same-slug.md"] = doc("UC-same-slug", "A", area="a")
+    files["docs/usecases/b/UC-same-slug.md"] = doc("UC-same-slug", "B", area="b")
     files["docs/architecture/ARCH-13-extra.md"] = doc("ARCH-13-extra", "Extra")
     files["docs/architecture/ARCH-09-decisions.md"] = doc("ARCH-09-decisions", "Decisions")
     files["docs/architecture/ARCH-07.md"] = doc("ARCH-07", "Bare")
@@ -263,16 +263,16 @@ def _living_spec_fixture() -> dict[str, str]:
     # references
     files["specs/2026-10/20261005-delta/reconcile.md"] = (
         "---\nreconcile_id: REC-delta\nstatus: resolved\n---\n\n# Reconcile\n\n"
-        "Touched CAP-HARN-007 and stories/US-002-reconcile.md.\n"
+        "Touched CAP-HARN-007 and usecases/UC-002-reconcile.md.\n"
     )
-    files["docs/materials/2026-10/old.md"] = "US-010 CAP-HARN-007 ARCH-06 are ignored in materials\n"
+    files["docs/materials/2026-10/old.md"] = "UC-010 CAP-HARN-007 ARCH-06 are ignored in materials\n"
     return files
 
 
 def test_living_spec(tmp_path: Path) -> None:
     write_files(tmp_path, _living_spec_fixture())
     violations = check(RULE, tmp_path)
-    story = "docs/stories/governance/US-deterministic-rule-verification.md"
+    usecase = "docs/usecases/governance/UC-deterministic-rule-verification.md"
     assert not _missing(
         violations,
         {
@@ -284,10 +284,10 @@ def test_living_spec(tmp_path: Path) -> None:
                 'Frontmatter id is "CAP-HARN-other" but the path requires "CAP-HARN-wrong-id"'
             ),
             "docs/capabilities/CAP-FLAT-no-area.md": "docs/capabilities/{area}/CAP-{AREA}-{slug}.md",
-            "docs/stories/US-flat-story.md": "docs/stories/{area}/US-{slug}.md",
-            story: 'Frontmatter id is "US-003"',
-            "docs/stories/a/US-same-slug.md": "duplicated across",
-            "docs/stories/b/US-same-slug.md": "duplicated across",
+            "docs/usecases/UC-flat-usecase.md": "docs/usecases/{area}/UC-{slug}.md",
+            usecase: 'Frontmatter id is "UC-003"',
+            "docs/usecases/a/UC-same-slug.md": "duplicated across",
+            "docs/usecases/b/UC-same-slug.md": "duplicated across",
             "docs/architecture/ARCH-13-extra.md": 'arc42 chapter "13"',
             "docs/architecture/ARCH-09-decisions.md": 'arc42 chapter "09"',
             "docs/architecture/ARCH-07.md": "kebab-case slug",
@@ -296,39 +296,39 @@ def test_living_spec(tmp_path: Path) -> None:
             "docs/architecture/ARCH-search-pipeline.md": '"ARCH-06"',
         },
     )
-    assert _has(violations, story, 'Frontmatter area is "" but the directory requires "governance"')
-    assert _has(violations, story, "Heading token [US-003]")
-    assert _has(violations, "specs/2026-10/20261005-delta/reconcile.md", '"US-002"')
+    assert _has(violations, usecase, 'Frontmatter area is "" but the directory requires "governance"')
+    assert _has(violations, usecase, "Heading token [UC-003]")
+    assert _has(violations, "specs/2026-10/20261005-delta/reconcile.md", '"UC-002"')
     slicing = [v.message for v in violations if v.file == "docs/capabilities/harness/CAP-HARN-context-pack-slicing.md"]
-    assert slicing == ['Date- or number-based identifier reference "US-010"']
+    assert slicing == ['Date- or number-based identifier reference "UC-010"']
     flagged = {v.file for v in violations}
     assert not flagged & {
-        "docs/stories/delivery/US-reconcile-feature.md",
+        "docs/usecases/delivery/UC-reconcile-feature.md",
         "docs/architecture/ARCH-01-introduction-and-goals.md",
         "docs/architecture/ARCH-05-1-containers.md",
         "docs/capabilities/README.md",
-        "docs/stories/README.md",
+        "docs/usecases/README.md",
         "docs/architecture/README.md",
         "docs/materials/2026-10/old.md",
     }
     for v in violations:
-        if v.file in ("docs/capabilities/harness/CAP-HARN-wrong-area.md", story):
+        if v.file in ("docs/capabilities/harness/CAP-HARN-wrong-area.md", usecase):
             assert v.fixable == v.message.startswith(("Frontmatter", "Heading token")), v.message
 
 
 def test_living_spec_fix(tmp_path: Path) -> None:
     write_files(tmp_path, _living_spec_fixture())
     untouched = [
-        "docs/stories/US-flat-story.md",
-        "docs/stories/a/US-same-slug.md",
-        "docs/stories/b/US-same-slug.md",
+        "docs/usecases/UC-flat-usecase.md",
+        "docs/usecases/a/UC-same-slug.md",
+        "docs/usecases/b/UC-same-slug.md",
         "docs/architecture/ARCH-07-deployment.md",
     ]
     before = {path: _read(tmp_path, path) for path in untouched}
     violations = check(RULE, tmp_path, fix=True)
-    story = _read(tmp_path, "docs/stories/governance/US-deterministic-rule-verification.md")
-    assert story.startswith("---\nid: US-deterministic-rule-verification\narea: governance\ntitle: Rules\n")
-    assert "# [US-deterministic-rule-verification] Rules" in story
+    usecase = _read(tmp_path, "docs/usecases/governance/UC-deterministic-rule-verification.md")
+    assert usecase.startswith("---\nid: UC-deterministic-rule-verification\narea: governance\ntitle: Rules\n")
+    assert "# [UC-deterministic-rule-verification] Rules" in usecase
     area = _read(tmp_path, "docs/capabilities/harness/CAP-HARN-wrong-area.md")
     assert "\narea: harness\n" in area and "governance" not in area
     assert "id: CAP-HARN-wrong-id\n" in _read(tmp_path, "docs/capabilities/harness/CAP-HARN-wrong-id.md")
@@ -349,7 +349,7 @@ def test_completed_bundles_are_checked_only_when_targeted(tmp_path: Path) -> Non
     spec = "specs/2026-10/20261001-done/spec.md"
     files = {
         spec: "---\nid: SPEC-old\nstatus: completed\n---\n\n# Done\n\nSee ADR-0001.\n",
-        "specs/2026-10/20261001-done/notes.md": "See US-001.\n",
+        "specs/2026-10/20261001-done/notes.md": "See UC-001.\n",
     }
     assert check(RULE, tmp_path, files) == []
     assert check(RULE, tmp_path, fix=True) == []
@@ -370,14 +370,14 @@ def test_namespace_docs_roots_follow_the_living_spec_conventions(tmp_path: Path)
     files = {
         ".devkit/config.toml": _namespaces("api"),
         f"{root}/capabilities/auth/CAP-AUTH-login.md": _living("CAP-AUTH-login", "auth"),
-        f"{root}/stories/auth/US-sign-in.md": _living("US-sign-in", "billing"),
+        f"{root}/usecases/auth/UC-sign-in.md": _living("UC-sign-in", "billing"),
         f"{root}/architecture/ARCH-05-building-blocks.md": _living("ARCH-05-other"),
         f"{root}/capabilities/CAP-AUTH-flat.md": _living("CAP-AUTH-flat", "auth"),
         f"{root}/capabilities/auth/README.md": "# Capabilities\n",
         "docs/capabilities/auth/CAP-AUTH-login.md": _living("CAP-AUTH-login", "auth"),
         "docs/packages/web/capabilities/CAP-WEB-unregistered.md": "# not a namespace root\n",
-        f"{root}/materials/notes.md": "Old US-010 survey\n",
-        f"{root}/notes.md": "See US-010\n",
+        f"{root}/materials/notes.md": "Old UC-010 survey\n",
+        f"{root}/notes.md": "See UC-010\n",
     }
     violations = check(RULE, tmp_path, files)
     assert sorted((v.file, v.message) for v in violations if not v.fixed) == [
@@ -400,14 +400,14 @@ def test_namespace_docs_roots_follow_the_living_spec_conventions(tmp_path: Path)
             f"Identifier CAP-AUTH-login is duplicated across docs/capabilities/auth/CAP-AUTH-login.md,"
             f" {root}/capabilities/auth/CAP-AUTH-login.md",
         ),
-        (f"{root}/notes.md", 'Date- or number-based identifier reference "US-010"'),
-        (f"{root}/stories/auth/US-sign-in.md", 'Frontmatter area is "billing" but the directory requires "auth"'),
+        (f"{root}/notes.md", 'Date- or number-based identifier reference "UC-010"'),
+        (f"{root}/usecases/auth/UC-sign-in.md", 'Frontmatter area is "billing" but the directory requires "auth"'),
     ]
     area = next(v for v in violations if v.message.startswith("Frontmatter area"))
-    assert f"move the file to {root}/stories/billing/" in area.remediation
+    assert f"move the file to {root}/usecases/billing/" in area.remediation
 
-    fixed = check(RULE, tmp_path, targets=[f"{root}/stories/auth/US-sign-in.md"], fix=True)
-    assert _found(fixed) == [] and "area: auth\n" in _read(tmp_path, f"{root}/stories/auth/US-sign-in.md")
+    fixed = check(RULE, tmp_path, targets=[f"{root}/usecases/auth/UC-sign-in.md"], fix=True)
+    assert _found(fixed) == [] and "area: auth\n" in _read(tmp_path, f"{root}/usecases/auth/UC-sign-in.md")
 
 
 def test_namespace_docs_roots_need_registration(tmp_path: Path) -> None:
@@ -481,8 +481,8 @@ def test_a_heading_must_open_with_its_own_id(tmp_path: Path) -> None:
     files = {
         "docs/capabilities/x/CAP-X-new.md": doc("CAP-X-new", "Capability [CAP-X-old] Title"),
         "docs/capabilities/x/CAP-X-own.md": doc("CAP-X-own", "Capability `CAP-X-own` later"),
-        "docs/capabilities/x/CAP-X-ref.md": doc("CAP-X-ref", "Uses [US-login] only"),
-        "docs/stories/x/US-login.md": doc("US-login", "[US-login] Login, see [US-other]"),
+        "docs/capabilities/x/CAP-X-ref.md": doc("CAP-X-ref", "Uses [UC-login] only"),
+        "docs/usecases/x/UC-login.md": doc("UC-login", "[UC-login] Login, see [UC-other]"),
     }
     violations = check(RULE, tmp_path, files)
     assert [(v.file, v.message, v.fixable) for v in violations] == [

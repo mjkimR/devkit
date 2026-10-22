@@ -5,8 +5,8 @@ summary: "Proposal incubation and handoff preserve approved scope, decisions, ma
 area: delivery
 status: active
 created_at: 2026-10-13
-stories:
-  - US-incubate-and-hand-off-a-proposal
+usecases:
+  - UC-incubate-and-hand-off-a-proposal
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/proposals/
   - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
@@ -261,7 +261,7 @@ The scaffolded body has sections `1. Background & Hypothesis`, `2. Technical Spi
   commit, and the proposal's Planning decisions name its ID and the reason. Handoff promotes every PADR left there.
 - `target-docs.md` declares `id: PROP-<slug>-target`, `proposal: PROP-<slug>`, `status: draft`, `created_at` and
   `targets: []` (one `- file: <workspace-relative path>` per Living Spec file the proposal changes; read by
-  `devkit spec scope compare`). Its body covers the capability ledger, stories, architecture and decisions,
+  `devkit spec scope compare`). Its body covers the capability ledger, use cases, architecture and decisions,
   conventions and governance, and a before/after comparison.
 
 ### Milestone closure boundary
@@ -462,9 +462,9 @@ uv run devkit spec proposal check fast-engine                        # before an
 [DROPPED_RECORD: docs/proposals/PROP-fast-engine/decisions/02-gate-plan-accept.yaml]
 [CARRIED_GATE: gate:plan-intent decision=specs/2026-10/20261013-fast-engine/decisions/01-gate-plan-intent.yaml]
 [CARRIED_GATE: gate:plan-accept decision=specs/2026-10/20261013-fast-engine/decisions/02-gate-plan-accept.yaml]
-[REWRITTEN: docs/stories/core/US-x.md:5 kind=id from=PROP-fast-engine to=SPEC-fast-engine]
-[REWRITTEN: docs/stories/core/US-x.md:9 kind=link from=../../proposals/PROP-fast-engine/proposal.md to=../../../specs/2026-10/20261013-fast-engine/spec.md]
-[UNRESOLVED_LINK: docs/stories/core/US-x.md:9 kind=link target=../../proposals/PROP-fast-engine/decisions/ reason=unmapped]
+[REWRITTEN: docs/usecases/core/UC-x.md:5 kind=id from=PROP-fast-engine to=SPEC-fast-engine]
+[REWRITTEN: docs/usecases/core/UC-x.md:9 kind=link from=../../proposals/PROP-fast-engine/proposal.md to=../../../specs/2026-10/20261013-fast-engine/spec.md]
+[UNRESOLVED_LINK: docs/usecases/core/UC-x.md:9 kind=link target=../../proposals/PROP-fast-engine/decisions/ reason=unmapped]
 [SCOPE: SPEC-fast-engine namespace=3f2a... revision=1 scopes=6 unresolved=2 shared_path=/repo/.git/devkit-spec-scope token=...]
 [NEXT_CMD: devkit workflow next --unit specs/2026-10/20261013-fast-engine]
 [PRUNED: docs/proposals/PROP-fast-engine]

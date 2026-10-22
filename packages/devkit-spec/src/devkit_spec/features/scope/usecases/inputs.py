@@ -1,7 +1,7 @@
 """Scope inputs: what a proposal or spec bundle declares, and what Git observes in a worktree.
 
 - Proposal (``prop`` stage): the ``targets`` of ``docs/proposals/PROP-<slug>/target-docs.md`` are the document side,
-  the ``entrypoints`` of the existing capability and story targets the code candidates.
+  the ``entrypoints`` of the existing capability and use case targets the code candidates.
 - Spec bundle (``spec`` stage): ``reconcile.md`` ``targets`` (not ``waived``) are the document side, or, without
   ``reconcile.md``, ``target-docs.md`` (``prop`` stage); ``tasks.md`` ``_Boundary`` entries are declared code (they win
   over a candidate of the same path), the targets' ``entrypoints`` candidates. When both target lists exist, the
@@ -111,7 +111,7 @@ def _add_doc_targets(root: Path, scope: ScopeSet, targets: list[tuple[str, str]]
     """Record document targets and the code candidates their entrypoints provide.
 
     A waived target, an invalid path, a planned document (not in the working tree; it still counts as a document,
-    so a shared planned path overlaps) and a capability or story without entrypoints are unresolved.
+    so a shared planned path overlaps) and a capability or use case without entrypoints are unresolved.
     """
     seen_docs = {path.path for path in scope.docs}
     seen_code = {path.path for path in scope.code}

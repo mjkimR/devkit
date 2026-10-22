@@ -1,6 +1,6 @@
-"""``RULE-code-entrypoints``: every ``entrypoints`` path of a capability or story exists in the workspace.
+"""``RULE-code-entrypoints``: every ``entrypoints`` path of a capability or use case exists in the workspace.
 
-Checks the capabilities and stories (``docs/capabilities/``, ``docs/stories/`` and the same directories under
+Checks the capabilities and use cases (``docs/capabilities/``, ``docs/usecases/`` and the same directories under
 ``docs/packages/<name>/``) that declare ``entrypoints``:
 
 - the field is a list, and each item a string;
@@ -38,7 +38,7 @@ REMEDIATION = (
     "Update entrypoints to existing workspace-relative files or directories, or restore the missing paths; "
     "remove obsolete declarations"
 )
-_KINDS = (Kind.CAPABILITY, Kind.STORY)
+_KINDS = (Kind.CAPABILITY, Kind.USECASE)
 _COMPOSER: type[yaml.SafeLoader] = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 
 
@@ -47,7 +47,7 @@ class CodeEntrypointsRule(BaseRule):
         super().__init__(
             id=RULE_ID,
             name="code-entrypoints",
-            description="Every entrypoints path of a capability or story is an existing workspace file or directory.",
+            description="Every entrypoints path of a capability or use case is an existing workspace file or directory.",
             phase=Phase.LINTER,
             severity=Severity.ERROR,
             guide="guide.md",

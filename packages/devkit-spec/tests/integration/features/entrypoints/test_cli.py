@@ -9,7 +9,7 @@ from devkit_dist.cli import cli as devkit_cli
 from spec_support.types import Write
 
 CAP = "docs/capabilities/x/CAP-X-one.md"
-STORY = "docs/stories/x/US-two.md"
+USECASE = "docs/usecases/x/UC-two.md"
 
 
 def _derive(workspace: Path, *args: str) -> Result:
@@ -23,7 +23,7 @@ def _code(result: Result) -> str:
 @pytest.fixture
 def bundles(workspace: Path, write: Write) -> Path:
     write(CAP, "---\nid: CAP-X-one\nstatus: active\n---\n")
-    write(STORY, "---\nid: US-two\nstatus: active\n---\n")
+    write(USECASE, "---\nid: UC-two\nstatus: active\n---\n")
     write("src/pkg/b.go", "package b\n")
     write("src/other/c.go", "package c\n")
 
@@ -39,7 +39,7 @@ def bundles(workspace: Path, write: Write) -> Path:
 
     bundle("specs/2026-10/20261001-one", "SPEC-one", "completed", "`src/pkg/`, N/A", CAP)
     bundle("specs/2026-10/20261002-two", "SPEC-two", "completed", "`src/pkg/`, `src/other/`", CAP)
-    bundle("specs/2026-10/20261003-three", "SPEC-three", "draft", "`src/other/`", STORY)
+    bundle("specs/2026-10/20261003-three", "SPEC-three", "draft", "`src/other/`", USECASE)
     write("specs/2026-10/20261004-four/spec.md", "---\nid: SPEC-four\nstatus: completed\n---\n")
     return workspace
 
@@ -87,7 +87,7 @@ def test_all_aggregates_and_skips_bundles(bundles: Path) -> None:
         "[CANDIDATES: CAP-X-one path=docs/capabilities/x/CAP-X-one.md new=src/other(1),src/pkg(2) missing=- folded=- declared=-]"
         in lines
     )
-    assert "US-two" not in result.stdout
+    assert "UC-two" not in result.stdout
     assert "[SKIPPED: specs/2026-10/20261004-four kind=bundle spec=SPEC-four reason=input-missing]" in lines
 
     payload = json.loads(_derive(bundles, "--all", "--min-count", "2", "--format", "json").stdout)
@@ -96,16 +96,16 @@ def test_all_aggregates_and_skips_bundles(bundles: Path) -> None:
     assert payload["errors"] == [] and payload["notices"] == []
 
     result = _derive(bundles, "--all", "--status", "Draft")
-    assert "[CANDIDATES: US-two path=docs/stories/x/US-two.md new=src/other(1) missing=- folded=- declared=-]" in (
+    assert "[CANDIDATES: UC-two path=docs/usecases/x/UC-two.md new=src/other(1) missing=- folded=- declared=-]" in (
         result.stdout.splitlines()
     )
 
 
 def test_apply_with_targets(bundles: Path) -> None:
-    assert _code(_derive(bundles, "--all", "--apply", "--target", "US-nope", "--format", "json")) == (
+    assert _code(_derive(bundles, "--all", "--apply", "--target", "UC-nope", "--format", "json")) == (
         "SPEC_ENTRYPOINTS_TARGET_UNKNOWN"
     )
-    assert _code(_derive(bundles, "--all", "--apply", "--target", STORY, "--format", "json")) == (
+    assert _code(_derive(bundles, "--all", "--apply", "--target", USECASE, "--format", "json")) == (
         "SPEC_ENTRYPOINTS_TARGET_UNKNOWN"
     )
     result = _derive(bundles, "--all", "--apply", "--target", "CAP-X-one")
@@ -152,7 +152,7 @@ def test_apply_failure_is_reported_after_the_result(bundles: Path, write: Write)
 
 
 def test_invalid_documents_are_warnings(bundles: Path, write: Write) -> None:
-    write("docs/stories/x/US-broken.md", "---\nid: [\n---\n")
+    write("docs/usecases/x/UC-broken.md", "---\nid: [\n---\n")
     result = _derive(bundles, "--spec", "specs/2026-10/20261001-one")
     assert result.exit_code == 0
     assert "(SPEC_DOCUMENT_INVALID)" in result.stderr
@@ -167,7 +167,7 @@ def test_candidates_group_each_document_by_state() -> None:
         Pair("CAP-A", "a.md", "src/a/b.py", State.NEW, True, "SPEC-x", 1, folded_into="src/a"),
         Pair("CAP-A", "a.md", "src/gone.py", State.NEW, False, "SPEC-x", 2),
         Pair("CAP-A", "a.md", "src/old", State.DECLARED, True, "SPEC-x", 2),
-        Pair("US-b", "b.md", "src/a", State.NEW, True, "SPEC-x", 1),
+        Pair("UC-b", "b.md", "src/a", State.NEW, True, "SPEC-x", 1),
     ]
     assert _candidates(pairs) == [
         (
@@ -175,7 +175,7 @@ def test_candidates_group_each_document_by_state() -> None:
             "a.md",
             {"new": ["src/a"], "missing": ["src/gone.py"], "folded": ["src/a/b.py"], "declared": ["src/old"]},
         ),
-        ("US-b", "b.md", {"new": ["src/a"], "missing": [], "folded": [], "declared": []}),
+        ("UC-b", "b.md", {"new": ["src/a"], "missing": [], "folded": [], "declared": []}),
     ]
 
 

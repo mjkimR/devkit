@@ -149,7 +149,7 @@
 	const taskChecks = $derived(taskProgress(taskDoc?.body ?? ''));
 	const relations = $derived(
 		selected
-			? ['related_capabilities', 'related_stories'].flatMap((key) =>
+			? ['related_capabilities', 'related_usecases'].flatMap((key) =>
 					Array.isArray(selected.meta[key]) ? selected.meta[key] : []
 				)
 			: []

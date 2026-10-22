@@ -1,8 +1,8 @@
-"""``RULE-spec-format``: capabilities, stories and proposals carry a frontmatter block with ``id``, ``title`` and
+"""``RULE-spec-format``: capabilities, use cases and proposals carry a frontmatter block with ``id``, ``title`` and
 ``status``.
 
-Checks every document file (``documents.is_document_file``) under ``docs/capabilities/``, ``docs/stories/`` and
-``docs/proposals/``, and under the ``capabilities/`` and ``stories/`` of every namespace docs root
+Checks every document file (``documents.is_document_file``) under ``docs/capabilities/``, ``docs/usecases/`` and
+``docs/proposals/``, and under the ``capabilities/`` and ``usecases/`` of every namespace docs root
 (``docs/packages/<name>/``, registered in ``[[tool.spec.namespaces]]``), outside ``materials/`` directories, whether or
 not it declares a well-formed ID:
 
@@ -13,7 +13,7 @@ not it declares a well-formed ID:
 The fix prepends a block to a file without one (``id`` the ID the path derives, ``title`` the first ``# `` heading
 without a leading ``[ID]``, else the file stem, ``status: draft`` (``open`` for proposal feedback) and ``created_at`` today) and fills the missing
 fields of an existing block with the same values, adding ``created_at`` when neither ``created_at``, ``created`` nor
-``date`` is set. The path derives the ID (``_derived_id``) of a capability or story (the file stem), of a single-file
+``date`` is set. The path derives the ID (``_derived_id``) of a capability or use case (the file stem), of a single-file
 proposal ``PROP-<slug>.md`` or a PADR ``PROP-<slug>/decisions/PADR-<name>.md`` (the stem), of a bundle's
 ``proposal.md`` (``PROP-<slug>``) and of its ``target-docs.md`` (``PROP-<slug>-target``); any other file under
 ``docs/proposals/`` derives none, so its missing ``id`` is reported but not fixed (the fix still fills the other
@@ -54,8 +54,8 @@ PROPOSALS = "docs/proposals"
 # ``devkit_spec.features.proposals``, which imports the rules.
 PROPOSAL_FILE = "proposal.md"
 TARGET_DOCS = "target-docs.md"
-SCOPE = ("docs/capabilities", "docs/stories", PROPOSALS, "docs/roadmap")
-NAMESPACE_SCOPE = ("capabilities", "stories")
+SCOPE = ("docs/capabilities", "docs/usecases", PROPOSALS, "docs/roadmap")
+NAMESPACE_SCOPE = ("capabilities", "usecases")
 NAMESPACE_FIELD = "namespace"
 EFFORT_FIELDS = ("planning_effort", "dev_effort")
 EFFORTS = ("low", "medium", "high")
@@ -66,8 +66,8 @@ DEFAULT_STATUS = "draft"
 _BLANK_VALUE = r"""[ \t]*(?:""|''|~|null|Null|NULL)?[ \t]*(?:#[^\r\n]*)?(?=\r?$)"""
 REMEDIATION = {
     "id": (
-        "Set id to the document's full ID: the file stem of a capability, story, single-file proposal or PADR"
-        " (CAP-<AREA>-<slug>, US-<slug>, PROP-<slug>, PADR-<slug>), PROP-<slug> in a bundle's proposal.md and"
+        "Set id to the document's full ID: the file stem of a capability, use case, single-file proposal or PADR"
+        " (CAP-<AREA>-<slug>, UC-<slug>, PROP-<slug>, PADR-<slug>), PROP-<slug> in a bundle's proposal.md and"
         " PROP-<slug>-target in its target-docs.md"
     ),
     "title": "Set title to the document's title",
@@ -90,7 +90,7 @@ def _blank(value: Any) -> bool:
 def _derived_id(path: str) -> str | None:
     """The ID the workspace-relative ``path`` of a checked file requires, or ``None`` when its path derives none.
 
-    A capability or story declares its file stem. Under ``docs/proposals/``: ``PROP-<slug>.md`` and
+    A capability or use case declares its file stem. Under ``docs/proposals/``: ``PROP-<slug>.md`` and
     ``PROP-<slug>/decisions/PADR-<name>.md`` their stems, ``PROP-<slug>/proposal.md`` ``PROP-<slug>`` and
     ``PROP-<slug>/target-docs.md`` ``PROP-<slug>-target``; any other file there derives none."""
     stem = Path(path).stem
@@ -200,7 +200,7 @@ class SpecFormatRule(BaseRule):
         super().__init__(
             id=RULE_ID,
             name="spec-markdown-frontmatter-check",
-            description="Capabilities, stories and proposals carry YAML frontmatter with id, title and status.",
+            description="Capabilities, use cases and proposals carry YAML frontmatter with id, title and status.",
             phase=Phase.LINTER,
             severity=Severity.ERROR,
             guide="guide.md",
