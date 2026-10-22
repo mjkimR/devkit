@@ -8,7 +8,7 @@ plan: PLAN-merge-not-ff-auto
 
 ## Phase 1: Implementation
 
-- [ ] **Task 1.1**: Update `MergeNotFastForwardError` to `actor = Actor.TOOL` and add regression tests for `AUTO` mode
+- [x] **Task 1.1**: Update `MergeNotFastForwardError` to `actor = Actor.TOOL` and add regression tests for `AUTO` mode
   - **_Boundary**: `packages/devkit/src/devkit_agt/features/worktree/models/errors.py`, `packages/devkit/tests/e2e/features/integration/test_base_advance.py`
   - _Requirements: AC-01, AC-02, AC-03_
   - **Verification**: `uv run pytest packages/devkit/tests/e2e/features/integration/test_base_advance.py`

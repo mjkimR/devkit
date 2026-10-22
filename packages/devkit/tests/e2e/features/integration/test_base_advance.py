@@ -12,6 +12,7 @@ from pathlib import Path
 import devkit_agt.features.integration.usecases.service as service_module
 import devkit_agt.features.worktree.services.merging as merging
 import pytest
+from devkit.advisory import ActionMode, Actor
 from devkit_agt.features.integration import IntegrationService, ProviderError, Task
 from devkit_agt.features.integration.repositories.receipts import check_merge
 from devkit_agt.features.worktree import CommitFailedError, MergeNotFastForwardError
@@ -261,6 +262,8 @@ def test_diverged_branch_is_refused_with_a_sha_preserving_fix(repo):
     commit(base, "theirs.txt")
     with pytest.raises(MergeNotFastForwardError) as raised:
         IntegrationService(base).prepare("dev-demo", TASK)
+    assert raised.value.actor is Actor.TOOL
+    assert raised.value.mode is ActionMode.AUTO
     fix = raised.value.fix or ""
     assert "never rebase" in fix and "rebase or merge" not in fix
 
