@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T11:09:29.894421Z'
+status: completed
+summary: 'SPEC-entrypoints-directory-apply completed: directory code entrypoint apply supported with trailing slash, verified by 1450 tests and living spec updated'
+findings: []
+checks:
+  tests: PASS 1450 passed in 34.10s
+  build: PASS pyright 0 errors
+  lint: PASS devkit rules check --ci
+diff_scope:
+  base: 148f84df36858de01cd2f6147dbb21b346624b1f
+  head: 7d54c62c5157c2a6b3cb80f088ffa42706f6f365

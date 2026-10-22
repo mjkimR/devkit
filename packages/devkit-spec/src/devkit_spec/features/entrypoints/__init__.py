@@ -20,6 +20,7 @@ from devkit_spec.features.entrypoints.services.derive import (
     declared_entrypoints,
     derive,
     exclude,
+    fold_by_directory_selectors,
     select,
 )
 from devkit_spec.features.entrypoints.services.paths import covers, entrypoint_bearing, exists, normalize, overlaps
@@ -46,6 +47,7 @@ __all__ = [
     "entrypoint_bearing",
     "exclude",
     "exists",
+    "fold_by_directory_selectors",
     "load_bundle",
     "normalize",
     "overlaps",

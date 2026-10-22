@@ -184,6 +184,87 @@ def select(pairs: Sequence[Pair], includes: Sequence[str]) -> list[Pair]:
     return [pair for pair in pairs if any(covers(path, pair.code) for path in wanted)]
 
 
+def fold_by_directory_selectors(
+    root: Path,
+    pairs: Sequence[Pair],
+    codes: Sequence[str],
+    documents: Mapping[str, Document],
+) -> list[Pair]:
+    """When a code selector ends with '/', synthesize that directory as a candidate pair for documents
+    having covered pairs, and fold those descendant pairs into it.
+
+    Raises ``EntrypointsPathError`` if a trailing-slash code is not an existing directory in ``root``.
+    """
+    dir_codes: list[str] = []
+    for code in codes:
+        if code.endswith("/"):
+            norm = normalize(code)
+            if not (root / norm).is_dir():
+                raise EntrypointsPathError(
+                    f"invalid entrypoint {code!r}: not an existing directory",
+                    target_files=[code],
+                )
+            if norm not in dir_codes:
+                dir_codes.append(norm)
+
+    if not dir_codes:
+        return list(pairs)
+
+    by_doc: dict[str, list[Pair]] = {}
+    for pair in pairs:
+        by_doc.setdefault(pair.doc_path, []).append(pair)
+
+    out: list[Pair] = []
+    for doc_path, doc_pairs in by_doc.items():
+        doc_pairs_dict: dict[str, Pair] = {p.code: p for p in doc_pairs}
+        doc_obj = documents.get(doc_path)
+        declared = declared_entrypoints(doc_obj) if doc_obj else ()
+
+        for dir_norm in dir_codes:
+            covered = [p for p in doc_pairs_dict.values() if covers(dir_norm, p.code)]
+            if not covered:
+                continue
+
+            if dir_norm in doc_pairs_dict:
+                existing_dir_pair = doc_pairs_dict[dir_norm]
+                if existing_dir_pair.folded_into is not None:
+                    doc_pairs_dict[dir_norm] = replace(existing_dir_pair, folded_into=None)
+            else:
+                first = covered[0]
+                if first.count is not None or first.specs is not None:
+                    all_specs = tuple(sorted(set(s for p in covered if p.specs for s in p.specs)))
+                    dir_pair = Pair(
+                        doc=first.doc,
+                        doc_path=doc_path,
+                        code=dir_norm,
+                        state=state_for(declared, dir_norm),
+                        exists=True,
+                        count=len(all_specs),
+                        specs=all_specs,
+                        folded_into=None,
+                    )
+                else:
+                    dir_pair = Pair(
+                        doc=first.doc,
+                        doc_path=doc_path,
+                        code=dir_norm,
+                        state=state_for(declared, dir_norm),
+                        exists=True,
+                        spec=first.spec,
+                        task=first.task,
+                        folded_into=None,
+                    )
+                doc_pairs_dict[dir_norm] = dir_pair
+
+            for p in covered:
+                if p.code != dir_norm:
+                    doc_pairs_dict[p.code] = replace(doc_pairs_dict[p.code], folded_into=dir_norm)
+
+        out.extend(doc_pairs_dict.values())
+
+    return sort_pairs(out)
+
+
 def exclude(pairs: Sequence[Pair], excludes: Sequence[str]) -> tuple[list[Pair], list[Skipped]]:
     """Drop the pairs whose code path equals or lies under one of ``excludes``, each reported as skipped.
 
