@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T05:47:58.271821Z'
+status: completed
+summary: 'Swept this turn and the range diff: recorded FB-payload-challenger-no-shell-note and FB-runtime-registration-usecase-link during reconcile; no duplicates among open feedback.'
+findings: []
+checks:
+  swept: PASS recorded=2 duplicates=0
