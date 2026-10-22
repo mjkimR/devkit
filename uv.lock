@@ -395,13 +395,17 @@ source = { editable = "packages/devkit-catalog" }
 
 [package.dev-dependencies]
 dev = [
+    { name = "devkit-agt" },
     { name = "devkit-dist" },
 ]
 
 [package.metadata]
 
 [package.metadata.requires-dev]
-dev = [{ name = "devkit-dist", editable = "packages/devkit-dist" }]
+dev = [
+    { name = "devkit-agt", editable = "packages/devkit" },
+    { name = "devkit-dist", editable = "packages/devkit-dist" },
+]
 
 [[package]]
 name = "devkit-cli"

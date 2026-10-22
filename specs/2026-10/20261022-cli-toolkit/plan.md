@@ -59,8 +59,8 @@ in `resolve_lazy`.
   `devkit_cli.testing`, and the rules.
 - `RULE-cli-tool-command-boundary` (linter, error): in CLI modules, a function decorated with `*.command(...)` or
   `*.group(...)` (also `command`/`group` imported from click) needs a decorator named in `boundary_names` (default
-  `["boundary"]`), bare, called or as an attribute's last part. A group callback is exempt (`groups = false`
-  default: groups only dispatch).
+  `["boundary"]`), bare, called or as an attribute's last part. Group callbacks are not checked: groups only
+  dispatch.
 - `RULE-cli-tool-library-output` (linter, error): `print(...)` anywhere outside `exclude`; `click.echo`,
   `click.secho`, `sys.stdout.write` and `sys.stderr.write` outside CLI modules.
 - `RULE-cli-tool-heavy-imports` (linter, error): module-level `import`/`from` in CLI modules whose top-level or full
@@ -68,7 +68,8 @@ in `resolve_lazy`.
   `extra_heavy_modules`); imports inside functions and under `if TYPE_CHECKING:` are allowed.
 - Settings shared by the three: `cli_modules` (patterns, default `["**/cli.py", "**/cli/**/*.py",
   "**/__main__.py"]`), `exclude` (default the test patterns), per-path overrides through the rules engine.
-- Presets: `all` (default) with the instruction and the three rules; `guide` with the instruction only.
+- Presets: the implicit `all` (default) with the instruction and the three rules; `guide` with the instruction only.
+- Each rule is its own plugin package directory (`rules/<name>/rule.py`, `guide.md`, `tests/`).
 
 ### 2.5 Packaging
 

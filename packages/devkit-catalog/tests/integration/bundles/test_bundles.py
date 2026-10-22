@@ -126,3 +126,37 @@ def test_maintenance_uses_default_all_and_valid_upkeep() -> None:
     assert bundle.default_preset == "all"
     assert set(bundle.presets) == {"upkeep", "reporting"}
     assert {asset.id for asset in bundle.assets} == {"drift-reconciliation", "weekly-report"}
+
+
+def test_cli_tool_deploys_its_guide_and_rules_only_when_selected(tmp_path: Path) -> None:  # SPEC-cli-toolkit AC-12
+    from devkit_agt.features.rules import RuleRegistry, resolve_managed_rules
+    from devkit_dist.features.distribution.services.installation.config import update_config
+    from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
+    from devkit_dist.features.distribution.usecases.sync import sync_project
+
+    installed = [
+        InstalledBundle("devkit-catalog", PROJECT["version"], load_bundle(_bundle_root(ENTRY_POINTS["cli-tool"])))
+    ]
+    update_config(tmp_path, agents=["codex"])
+    sync_project(tmp_path, installed)
+    assert not (tmp_path / ".devkit/managed/cli-tool").exists()
+
+    update_config(tmp_path, agents=["codex"], presets={"cli-tool": ["all"]})
+    sync_project(tmp_path, installed)
+    managed = tmp_path / ".devkit/managed/cli-tool"
+    assert (managed / "instructions/cli-tool-structure.md").is_file()
+    rules = resolve_managed_rules(tmp_path)
+    registry = RuleRegistry()
+    registry.discover_from_packages(rules.packages)
+    assert not rules.errors and not registry.errors
+    assert {rule.id for rule in registry.get_all()} == {
+        "RULE-cli-tool-command-boundary",
+        "RULE-cli-tool-library-output",
+        "RULE-cli-tool-heavy-imports",
+    }
+
+
+def test_cli_tool_guide_preset_has_no_rules() -> None:
+    bundle = load_bundle(_bundle_root(ENTRY_POINTS["cli-tool"]))
+    assert bundle.default_preset == "all"
+    assert tuple(bundle.presets["guide"]) == ("cli-tool-structure",)

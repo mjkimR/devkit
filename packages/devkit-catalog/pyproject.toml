@@ -11,12 +11,14 @@ dependencies = []
 response-style = "devkit_catalog.response_style"
 host-observer = "devkit_catalog.host_observer"
 maintenance = "devkit_catalog.maintenance"
+cli-tool = "devkit_catalog.cli_tool"
 
 [dependency-groups]
-dev = ["devkit-dist"]  # the tests load the bundles with devkit-dist's manifest reader
+dev = ["devkit-dist", "devkit-agt"]  # bundle tests use devkit-dist's manifest reader; rule tests the rules engine
 
 [tool.uv.sources]
 devkit-dist = { workspace = true }
+devkit-agt = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

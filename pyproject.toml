@@ -81,6 +81,7 @@ testpaths = [
     "packages/devkit-advisory/tests",
     "packages/devkit-starter/tests",
     "packages/devkit-catalog/tests",
+    "packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules",
     "packages/devkit-spec/tests",
     "packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules",
     "packages/devkit-viewer/tests",
