@@ -1,0 +1,11 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: 'Goal: parse each Python file once per rules run through a shared WorkspaceCache
+  AST accessor used by the Python-source rules, with byte-identical rule results and
+  a measured speedup of devkit rules check. User requested all four CLI performance
+  drafts be planned and delivered now. task-kind feature, planning-depth proposal.'
+by: user
+at: '2026-10-22T06:27:29.920343Z'
