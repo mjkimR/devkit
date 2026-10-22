@@ -1,4 +1,4 @@
-"""The opt-in ``authoring`` bundle: its manifest, and its two rules run from a synchronized consumer."""
+"""The opt-in ``authoring`` bundle: its manifest, and its rules run from a synchronized consumer."""
 
 from __future__ import annotations
 

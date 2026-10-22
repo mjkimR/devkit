@@ -29,7 +29,7 @@ and adds this package: `uv tool install 'devkit-dist @ git+https://github.com/mj
 
 The bundles built into this package are `harness` (auto-selected: the guidance for rules, commit gates, workflows
 and `devkit run`; its opt-in `run` preset adds the `AGENTS.md` pointer to `devkit run`) and `authoring` (opt-in: skill
-and agent guide size rules with their playbooks, and the `agent-asset-writing` instruction,
+and agent guide size rules with their playbooks, and the `agent-asset-writing` instruction with its wording rule,
 [rules reference](../../docs/development/reference/rules.md#built-in-authoring-bundle)). `devkit-dist` builds in
 `devkit`, `advisory` and `git-commits`
 ([gate reference](../../docs/development/reference/gate.md#built-in-git-commits-bundle)).
