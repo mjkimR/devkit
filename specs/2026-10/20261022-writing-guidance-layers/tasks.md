@@ -8,13 +8,13 @@ plan: PLAN-writing-guidance-layers
 
 ## Phase 1: Spec bundle guidance
 
-- [ ] **Task 1.1**: Common baseline `document-writing` and deduplicated `contract-authoring` and `living-spec-writing`
+- [x] **Task 1.1**: Common baseline `document-writing` and deduplicated `contract-authoring` and `living-spec-writing`
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/document-writing.md`,
     `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/contract-authoring.md`,
     `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/living-spec-writing.md`,
     `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml`
   - _Requirements: AC-01, AC-02_
-- [ ] **Task 1.2**: Per-type guides and template changes, PADR Confirmation section
+- [x] **Task 1.2**: Per-type guides and template changes, PADR Confirmation section
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/decision-writing.md`,
     `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/capability-writing.md`,
     `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/story-writing.md`,
@@ -23,7 +23,7 @@ plan: PLAN-writing-guidance-layers
     `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml`,
     `packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py`
   - _Requirements: AC-01, AC-03, AC-04, AC-05_
-- [ ] **Task 1.3**: Spec bundle writing-guidance tests
+- [x] **Task 1.3**: Spec bundle writing-guidance tests
   - **_Boundary**: `packages/devkit-spec/tests/integration/bundles/spec/test_writing_guidance.py`,
     `packages/devkit-spec/tests/integration/features/proposals/`
   - _Requirements: AC-01, AC-03, AC-04, AC-05_
@@ -31,7 +31,7 @@ plan: PLAN-writing-guidance-layers
 
 ## Phase 2: Authoring bundle
 
-- [ ] **Task 2.1**: `agent-asset-writing` instruction, procedure-only `skill-authoring` playbook, bundle test
+- [x] **Task 2.1**: `agent-asset-writing` instruction, procedure-only `skill-authoring` playbook, bundle test
   - **_Boundary**: `packages/devkit/src/devkit_agt/bundles/authoring/bundle/`,
     `packages/devkit/tests/integration/bundles/authoring/test_bundle.py`
   - _Requirements: AC-06, AC-07_

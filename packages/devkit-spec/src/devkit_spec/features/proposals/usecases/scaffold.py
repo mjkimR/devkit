@@ -496,7 +496,7 @@ def _padr(padr_id: str, title: str, summary: str | None, slug: str, created: str
     summary_line = (
         f"summary: {yaml_scalar(summary)}\n"
         if summary
-        else "# summary: <one or two English sentences: what is decided and why>\n"
+        else "# summary: <English Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>\n"
     )
     return f"""---
 id: {padr_id}
@@ -522,6 +522,8 @@ created_at: {created}
 ## 4. Decision Outcome
 
 ## 5. Consequences
+
+## 6. Confirmation
 """
 
 
