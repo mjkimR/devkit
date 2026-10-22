@@ -14,13 +14,13 @@ def _read(relative: str) -> str:
     return (BUNDLE / relative).read_text(encoding="utf-8")
 
 
-def test_the_glossary_section_carries_eight_rules_and_the_code_boundary() -> None:
+def test_the_glossary_section_carries_six_rules_and_the_code_boundary() -> None:
     text = _read("instructions/living-spec-writing.md")
     description = re.search(r"^description: (.+)$", text, re.MULTILINE)
     assert description is not None and "terminology and the glossary" in description.group(1)
     section = text.split("\n## Glossary\n", 1)[1]
-    assert "A package redefinition applies to that package's documents only." in section
-    assert re.findall(r"^(\d)\. ", section, re.MULTILINE) == [str(n) for n in range(1, 9)]
+    assert "A package redefinition applies to that package's documents only." in " ".join(section.split())
+    assert re.findall(r"^(\d)\. ", section, re.MULTILINE) == [str(n) for n in range(1, 7)]
     assert "does not authorize renaming code, APIs or schemas" in " ".join(section.split())
 
 
@@ -40,5 +40,5 @@ def test_the_seeded_glossary_has_five_columns_and_no_rename_mandate() -> None:
 
 def test_spec_sync_asks_the_glossary_question_in_step_one() -> None:
     text = _read("skills/spec-sync/SKILL.md")
-    step_one = text.split("### Step 1:", 1)[1].split("### Step 2:", 1)[0]
+    step_one = text.split("1. **Impact**", 1)[1].split("2. **Record**", 1)[0]
     assert "introduce or rename a domain term" in step_one and "`docs/glossary.md`" in step_one

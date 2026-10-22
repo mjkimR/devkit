@@ -5,91 +5,51 @@ description: Turn a feature request or defect report into a verifiable spec.md w
 
 # spec-specify: Specification Router
 
-Use this skill when a spec bundle `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` needs its `spec.md`:
-
-- a feature or substantial enhancement (workflow `sdd-spec-feature`, also after `devkit spec proposal handoff`);
-- a defect (workflow `sdd-spec-bugfix`).
-
-This file holds the bundle creation, the choice of reference and the contracts both references share.
+Use this skill when a spec bundle needs its `spec.md`: a feature (workflow `sdd-spec-feature`, also after
+`devkit spec proposal handoff`) or a defect (workflow `sdd-spec-bugfix`). A defect the session can reproduce and fix
+without documents is `session` depth and needs no `spec.md`.
 
 ## 1. Prerequisites
 
-- Check whether an active spec already covers this work: `devkit spec list spec`. Completed specs are work history,
-  not inputs; the current contract lives in `docs/capabilities/` and `docs/stories/`.
-- Look for overlap, extension or conflict with the Living Spec:
-  - `devkit spec search "<query>"` (`--kind capability`, `--kind decision`);
-  - `devkit spec list capability decision`;
-  - `devkit spec refs <ID> --direction in` for what depends on a document the change touches.
-- Read `devkit spec policy`.
-- Read the `contract-authoring` instruction before writing acceptance criteria and non-goals, and `living-spec-writing`
-  before citing Living Spec documents.
+- Check overlap with active specs (`devkit spec list spec`) and the Living Spec (`devkit spec search "<query>"`,
+  `devkit spec refs <ID> --direction in`). Completed specs are history, not inputs.
+- Read `devkit spec policy`, the `contract-authoring` instruction and the `living-spec-writing` instruction.
 
 ## 2. Create or open the bundle
 
-- Handed-off bundle (`devkit spec proposal handoff`): it already exists and is bound; `spec.md`, `plan.md` and
-  `tasks.md` carry the skeleton marker. Rewrite `spec.md` in place, keeping the carried content that still holds.
-- New bundle: on the slug's `dev-<slug>` branch, run
-  `devkit spec new <slug> --title "<Title>" --summary "<English sentence>"`.
-  - For a defect, add `--workflow sdd-spec-bugfix`. A bugfix bundle gets `spec.md` only; its `plan-tasks` stage
-    writes the other two.
-  - The command writes the skeletons, sets the ID `SPEC-<slug>` and binds the bundle. In a monorepo it takes the
-    current directory's namespace (or `--namespace <name>`).
-  - Never hand-make the bundle or its binding; run `devkit spec new`.
-  - The slug is kebab-case, has no date or sequence number and is unique among specs (`RULE-id-convention`).
+- A handed-off bundle already exists and is bound: rewrite its `spec.md` in place, keeping carried content that still
+  holds.
+- Otherwise, on `dev-<slug>`, run `devkit spec new <slug> --title "<Title>" --summary "<English sentence>"` (a defect:
+  add `--workflow sdd-spec-bugfix`). Never hand-make a bundle or its binding.
 - Read each skeleton before rewriting it, because some hosts refuse to overwrite an unread file.
-- `devkit workflow show --unit <dir>` shows the workflow; `devkit workflow next --unit <dir>` shows the current stage
-  and what is unmet.
 
 ## 3. Choose the reference
 
-| Situation | Reference |
-| :--- | :--- |
-| New capability, enhancement, contract change; bundle bound to `sdd-spec-feature` | [feature](references/feature.md): discovery questions, user story, acceptance scenarios, output standard |
-| Defect with contract impact or uncertainty; bundle bound to `sdd-spec-bugfix` | [bugfix](references/bugfix.md): defect characterization, reproduction evidence before the fix, resolution and preservation evidence after it |
+Read one:
 
-- Read one reference, not both.
-- A defect the session can reproduce and fix without written documents is `session` depth (workflow
-  `sdd-session-bugfix`) and needs no `spec.md`.
+- [feature](references/feature.md) for a bundle bound to `sdd-spec-feature`.
+- [bugfix](references/bugfix.md) for a bundle bound to `sdd-spec-bugfix`.
 
 ## 4. Shared contracts
 
-- **Non-goals** state **Scope Excluded**. Add **Rationale** and **When to Reconsider** only when they help a later
-  reader decide; do not fill them for form.
-- **Acceptance criteria** (`RULE-task-coverage`):
-  - Every H3 under the H2 whose title contains `Acceptance Criteria` is one scenario with exactly one `[AC-NN]` ID
-    (`AC-` and at least two digits, unique in the spec) and Given/When/Then lines.
-  - Put explanatory tables and prose in paragraphs, never in an H3 there.
-  - Add new IDs instead of renumbering, because renumbering an ID breaks the task links.
-- **Measurable Then**: no "fast", "robust", "properly"; use verifiable bounds (exit code, status code, exact output
-  line, count).
-- **References** (`RULE-document-reference`):
-  - Cite capabilities, stories and ADRs by full ID in backticks (`` `CAP-<AREA>-<slug>` ``), never by Markdown path or
-    a date- or number-based ID.
-  - Write example or fixture IDs in a scenario as plain text; in backticks or brackets they are references and must
-    resolve.
-  - `related_capabilities` and `related_stories` hold bare `CAP` and `US` IDs that resolve.
-- **Invariants**: review `docs/architecture/` and the affected capabilities. If a `MUST` has to change, say that an
-  ADR is required before implementation.
-- **No questions during Development**:
-  - Resolve what is unclear from the agreed intent, the issue, the proposal and the code; decide with the recommended
-    option and record each inference in `spec.md` as an assumption.
-  - If a point needs the agreed goal, scope or contract changed, raise it as a problem for the Host, never as a
-    question to the user or a `[NEEDS CLARIFICATION]` marker.
-  - Explicit user instructions take precedence.
-- **Source feedback**:
-  - Preserve the full FB IDs and intended scope from inline Planning or the carried proposal in a `Source feedback`
-    section; do not trim them as incidental notes.
-  - Include only open source files needing direct-fix resolution in task boundaries; terminal sources require no
-    edits.
-- **Only what the change needs**: drop an optional output section that does not apply instead of writing "N/A".
-- **Self-validation** before finishing: completeness (personas, inputs, outputs, edge cases), clarity (every AC
-  measurable), consistency (non-goals and invariants respected), scenario IDs unique.
+- **Acceptance criteria**: each H3 under the `Acceptance Criteria` H2 is one scenario with one `[AC-NN]` ID and
+  Given/When/Then lines with verifiable bounds (exit code, status code, exact output line, count). Put other prose in
+  paragraphs. Add new IDs instead of renumbering, because tasks link to them.
+- **References**: cite documents by full ID in backticks; write example or fixture IDs as plain text, because
+  backticked IDs must resolve.
+- **Non-goals**: state **Scope Excluded**; add **Rationale** or **When to Reconsider** only when they help a later
+  reader.
+- **Invariants**: if a `MUST` in `docs/architecture/` or an affected capability has to change, say that an ADR is
+  required before implementation.
+- **No questions**: decide what is unclear from the agreed intent, the issue, the proposal and the code with the
+  recommended option, and record each inference as an assumption. If the goal, scope or contract must change, raise a
+  problem for the Host instead of asking the user. Explicit user instructions take precedence.
+- **Source feedback**: keep the full FB IDs and scope from Planning or the carried proposal in a `Source feedback`
+  section.
+- Drop an optional section that does not apply instead of writing "N/A".
 
-## 5. Definition of Done
+## 5. Completion
 
-- [ ] `spec.md` follows the agreed intent, with the choices made inside it recorded as assumptions, in the reference's
-  output standard, keeping the `id` and `workflow` frontmatter and an English `summary` (`RULE-document-summary`).
-- [ ] The skeleton marker line `<!-- devkit:skeleton -->` is removed from `spec.md`; until then
-  `not-skeleton(spec.md)` keeps the `specify` (feature) or `characterize` (bugfix) stage open.
-- [ ] `devkit rules check <dir>` reports no spec-rule violation other than coverage the tasks have not been written
-  for yet; next is `spec-plan` (bugfix: at `plan-tasks`).
+- [ ] `spec.md` keeps the `id` and `workflow` frontmatter and an English `summary`, and the
+  `<!-- devkit:skeleton -->` line is removed.
+- [ ] `devkit rules check <dir>` reports no violation other than task coverage not yet written; next is `spec-plan`.

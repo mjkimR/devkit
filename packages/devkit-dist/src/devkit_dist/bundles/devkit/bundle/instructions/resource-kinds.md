@@ -5,86 +5,38 @@ description: Read before choosing the kind of a new asset (rule, gate, skill, su
 
 # Choosing an asset kind
 
-Every asset has one `kind` in its bundle's `bundle.toml`, which decides where
-it lands, who reads it when, and what it costs in context. Pick the kind from
-what the content *is*, not from how often it is needed.
-
-## Decision tree
+Choose the kind from what the content is, not from how often it is needed:
 
 ```text
-Can a program verify the invariant with certainty?
-  yes -> rule            (Python, run by the rule engine of devkit-agt; zero agent tokens)
-  no  -> Must it run at a Git hook stage and block a commit?
-    yes -> gate          (Python, run by the commit gate of devkit-agt; zero agent tokens)
-    no  -> Is it a reusable tool or script directory the agent executes?
-      yes -> skill       (directory with SKILL.md, projected into agent skill directories)
-      no  -> Is it a delegated persona for a subagent?
-        yes -> subagent  (native file per agent, or one host-neutral role contract)
-        no  -> Is it a procedure rather than a judgment criterion?
-          yes, recurring multi-stage delivery flow -> workflow
-          yes, occasional task                     -> playbook
-          no  -> Is it the bundle's short orientation read before anything else?
-            yes -> the bundle's AGENTS.md (constitution)
-            no  -> instruction (default for policies, standards, judgment criteria)
+Can a program verify the invariant with certainty?            -> rule      rules/<slug>/
+Must it run at a Git hook stage and block a commit?           -> gate      gates/<slug>/
+Is it a tool or script directory the agent executes?          -> skill     skills/<slug>/SKILL.md
+Is it a delegated persona?                                    -> subagent  subagents/<slug>.md
+Is it a recurring multi-stage delivery flow?                  -> workflow  one Markdown definition
+Is it a procedure for an occasional task?                     -> playbook  playbooks/<slug>.md
+Does every task of the bundle need it, read before anything?  -> AGENTS.md (constitution)
+Otherwise (policies, standards, judgment criteria)            -> instruction  instructions/<slug>.md
 ```
 
-Three kinds sit outside the tree: `document` (reference material read by path,
-or with `seeded = true` a scaffold the project owns after the first sync),
-`guidance` (a short line in the root `AGENTS.md` block that sends every session
-to an instruction at a moment no skill marks, such as "before writing a commit
-message") and `hook` (a handler the agent host calls at a native event).
+Three kinds sit outside the tree: `document` (read by path; with `seeded = true`
+a scaffold the project owns after the first sync), `guidance` (a pointer line in
+the root `AGENTS.md` block for a moment no skill marks) and `hook` (a handler
+the agent host calls at a native event).
 
-## Comparison
+- Write a rule when a check can be decided mechanically, even if a sentence is
+  shorter, because a rule costs no context and runs in gates.
+- Keep the constitution and guidance to what every task needs, because they are
+  read on every context load or every turn.
+- Write a `description` that says when to read the asset, because the agent
+  decides from the header alone.
+- Do not write the bundle-context prerequisite in a skill; sync adds it.
+- For a skill only the user should start, declare `invocation = "user"` in
+  `bundle.toml`.
+- Keep rule ids unique across the installed bundles; a later rule with the same
+  id replaces an earlier one.
 
-| Kind | File form | Who consumes it, when | Context cost |
-| --- | --- | --- | --- |
-| `rule` | `rules/<slug>/`: a plugin package directory of `.py` modules, guide and tests | The rule engine of `devkit-agt` (checks, commit gate, CI); loaded from the receipt | none |
-| `gate` | `gates/<slug>/`: a plugin package directory | The commit gate of `devkit-agt` at a Git hook stage | none |
-| `skill` | `skills/<slug>/SKILL.md` or `SKILL.md.jinja`, and support files | The agent host lists it and invokes it as a tool; sync opens the body with the bundle context prerequisite, so do not write that prerequisite in the source | name and description always; body on invocation |
-| `subagent` | native file per agent or `subagents/<slug>.md` contract | The host loads it when delegating | persona on load |
-| `workflow` | one Markdown definition with `id` and `stages` | The generated `devkit-workflow` entry skill, backed by the workflow engine of `devkit-agt` | stage output only |
-| `playbook` | `playbooks/<slug>.md` or directory with `SKILL.md` | Explicit discovery, rule remediation, or an exact ID named for the task/schedule | selected headers then body, or exact body |
-| constitution | `AGENTS.md` at the bundle root | Returned whole by `get-context`, once per bundle | the whole file; keep it short |
-| `instruction` | `instructions/<slug>.md` with `name` and `description` frontmatter | Header returned by `get-context`; body read when relevant | header always, body on demand |
-| `document` | any files | Agents read the managed copy by path; a seeded one is project-owned after the first sync | only when read |
-| `hook` | one TOML definition (`host`, `event`, `handler`, optional `matcher`, `timeout`) | The selected host invokes an installed `devkit_dist.features.host.handlers` callable | native response only |
-| `guidance` | one Markdown file of list items, at most 300 bytes; `{path:<asset-id>}` names another asset's file | Rendered into the root `AGENTS.md` block, read by every session | every turn: keep it to a pointer with its read condition |
+For a `.md.jinja` source, declare each input under `[variables.<name>]` with a
+`type` and, for a local `bundle plan`, a `default`; reference it as
+`{{ vars.<name> }}`. Consumers set `[bundles.<bundle>.variables]`.
 
-## Boundaries that are easy to get wrong
-
-- **Instruction versus playbook.** An instruction states criteria that apply
-  while working and is visible in the catalog; a playbook is a numbered
-  procedure for an occasional task, invisible until invoked. "Compatibility
-  rules for schema changes" is an instruction; "recover a broken replica" is a
-  playbook. A procedure followed for every delivery, with stages and approval
-  gates, is a workflow.
-- **Instruction versus rule.** If a check can be decided mechanically, write a
-  rule, even if a sentence would be shorter: rules cost no tokens and run in gates.
-- **Constitution versus instruction.** The constitution is read in full every
-  time the bundle's context loads, so it holds only what every task needs.
-- **Skill versus instruction.** A skill has steps the agent executes; one that
-  only contains guidance is an instruction, unless the host must list it as a tool.
-
-## Authoring requirements
-
-- Frontmatter and headers are English. A `description` says *when to read* the
-  document, not what it contains: the agent decides from the header alone.
-- A skill only the user should start (a release, a destructive cleanup)
-  declares `invocation = "user"` in `bundle.toml`, never a host setting in the
-  skill source.
-- Slugs are lowercase with hyphens. Rule ids are unique across all bundles a
-  repository installs; a later rule with the same id replaces an earlier one.
-- The `harness-assets` instruction of the `harness` bundle covers the modules,
-  imports and tests of rule, gate and workflow assets.
-- `devkit bundle validate` checks the remaining manifest and frontmatter requirements.
-
-## Configurable Markdown
-
-Instruction, guidance, document and skill assets may use `.md.jinja` sources.
-
-- Declare each input under `[variables.<name>]` with `type = "string"`,
-  `"boolean"` or `"integer"` and an optional `default` (needed for a local
-  `bundle plan` without project inputs).
-- Use `{{ vars.<name> }}` in the template.
-- Consumers set `[bundles.<bundle>.variables]` in `.devkit/config.toml`.
-- Guidance limits apply after rendering.
+Done when `uv run devkit bundle validate <bundle dir>` passes.

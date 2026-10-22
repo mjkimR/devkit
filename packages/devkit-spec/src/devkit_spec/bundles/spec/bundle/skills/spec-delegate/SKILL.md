@@ -3,96 +3,35 @@ name: spec-delegate
 description: Delegate to Scout, Challenger, Code Reviewer, Reconcile Reviewer or a local-orchestrated worker with an explicit payload; verify the returned envelope and the actual diff against write boundaries.
 ---
 
-# spec-delegate: Support Role Invocation Workflow
+# spec-delegate: Support Role Invocation
 
-Use this skill when the main Developer session hands one of these to an isolated context:
+Use this skill to hand one isolated task to a support role (`scout`, `challenger`, `code-reviewer`, `reconcile-reviewer`) or, in `local-orchestrated` mode, to a worker (`planning-worker`, `development-worker`). Treat a role's result as an opinion with evidence; completion rests on the agreed AC, checks, the final diff and reconciliation.
 
-- exploration, criticism, an independent review or a reconcile verification, to a support role;
-- one Planning or Development turn, to a worker.
+## Constraints
 
-A reviewer runs in a context other than the author's, for neutrality. Treat a role's result as an opinion with evidence; completion still rests on the agreed AC, checks, the final diff and reconciliation.
-
----
-
-## 1. Inputs
-
-- Role contract: `challenger`, `reconcile-reviewer`, `code-reviewer`, `scout`, `planning-worker` or `development-worker` (the workers in `local-orchestrated` mode only).
-  - For a stage that prefers isolation, `devkit workflow next --unit <dir>` prints `[DELEGATE: role=<role> isolation=<level> contract=<path>]`; `contract=` is the effective contract (managed or overridden).
-  - Otherwise the managed contract is `.devkit/managed/spec/subagents/<role>.md`.
-  - The body is the role's prompt, already in its projected agent file. It is read when the main session substitutes or a permitted generic subagent emulates the role.
-- Stage context: `devkit workflow next --unit <dir>` (current stage) and `devkit workflow show --unit <dir>` (where returns go).
-
----
-
-## 2. Invariants
-
-1. **Read the contract frontmatter first (`MUST`)**: `x-git-actions` and `hosts.<host>.status` for the current host decide how you call it.
-2. **No whole-tree injection (`MUST NOT`)**: pass `relevant_files`, not the repository.
-3. **Boundaries are per task (`MUST`)**: inject the repository's actual declared paths into `allowed_boundaries`; contract paths are examples.
-4. **Guarantee comes from the host and the diff (`MUST`)**: prompt limits are guidance. If the host status is `emulated` or `unverified`, say so in the call and rely on the post-run diff comparison.
-5. **Support roles never touch index or HEAD (`MUST NOT`)**, except a worker, which commits on its activity branch ([worker](references/worker.md)).
-6. **Zero findings is a valid result (`MUST`)**: never ask a role to produce a minimum number of objections.
-
----
-
-## 3. Procedure
-
-### Step 1: Decide whether to delegate
-- `[DELEGATE]` names the role.
-- The `activity-effort` decides which roles run and how: the `spec` skill's `references/effort.md`; at `high`, the bounded rounds of its `references/review-loop.md`, with a fresh call per round.
+- Read the contract frontmatter first: `x-git-actions` and `hosts.<host>.status` decide how you call the role. The contract is the `contract=` path of `[DELEGATE: ...]`, else `.devkit/managed/spec/subagents/<role>.md`.
+- Fill `allowed_boundaries` with the task's actual declared paths; the post-run diff, not the prompt, enforces them.
+- A support role never touches the index or HEAD; a worker commits only on its activity branch.
+- Zero findings is a valid result.
 - For a `session` task, the role returns a message: write no envelope and start no worker.
-- In `local-orchestrated` mode (`spec-orchestrate`), a `planning-worker` runs one proposal Planning turn and a `development-worker` one Development turn of a spec unit, each in its own worktree. A worker runs its role subagents nested (Host → worker → role).
-- Before starting a worker, check native spawning, nested-role and necessary approval capabilities per [hosts](references/hosts.md). If one is unavailable, use the existing `direct`/`needs_input` fallback.
 
-### Step 2: Build the input payload
-Fill all five fields: `task_goal`, `relevant_files`, `allowed_boundaries` (read scope, write scope, denied paths), `diff_scope` (base and head), `expected_output_format`, with the rows per role in [payload](references/payload.md). Record the head SHA you passed (`git rev-parse HEAD`).
+## Procedure
 
-### Step 3: Invoke in isolation
-1. Read the stage's `isolation` from `[DELEGATE: ... isolation=none|preferred|required ...]` and the role's `hosts.<host>.status`.
-2. State one choice and record it with the status in the envelope's `assumptions`:
-   - If the status is `native`, `emulated` or `unverified`: spawn an isolated subagent.
-   - If the status is `unsupported`, or isolation is `preferred` without a fresh context: substitute in the main session.
-   - If isolation is `required` and the status is `unsupported`: stop with `needs_input`.
-3. To spawn, use the host's isolated-context mechanism; read [hosts](references/hosts.md) for the tool, the projected file, role availability and trust-aware fallback. When a fresh context is what isolates the result, start one instead of forking the main context.
-4. Pass the role its input:
-   - With a projected file, pass only the payload: the host loads the contract body as the system prompt.
-   - If a named role is unavailable, a generic native subagent may read the absolute effective contract only under the trust conditions in [hosts](references/hosts.md), and states emulation.
-   - When the main session substitutes, follow the contract body yourself.
-   - Pass the actual change and the intent, not the main session's narrative.
+1. **Choose the route** from the stage's `isolation` (`[DELEGATE: ... isolation=none|preferred|required ...]`) and the host status, and record it in the envelope's `assumptions`:
+   - `native`, `emulated` or `unverified`: spawn an isolated subagent per [hosts](references/hosts.md); if the status is not `native`, say so in the call.
+   - `unsupported` with isolation `required`: stop with `needs_input`.
+   - `unsupported`, or `preferred` without a fresh context: substitute in the main session and follow the contract body yourself.
+2. **Build the payload** per [payload](references/payload.md) and record the head SHA you passed. Give a projected role only the payload, with the actual change and intent instead of the main session's narrative.
+3. **Validate the return**: `status` is `completed | needs_input | failed`, and each finding has `evidence` and `failure_condition`. A `failed` result or a stale `diff_scope` is not evidence; re-invoke only after the input or the cause changed.
+4. **Check the diff**: a support role leaves `git status --short` unchanged, except a Scout's agreed `materials/` path. For a worker, validate the committed range per [worker](references/worker.md). On a path outside `allowed_boundaries`, report it, revert it (block a worker's range instead) and discard earlier check results.
+5. **Fold back**:
+   - Record a read-only role's return with `devkit workflow envelope new --unit <dir> --kind scout|challenger|review|reconcile-check --stage <stage> ...` (`envelope review` for a review), then run `devkit workflow envelope check --unit <dir>`; flags and closing a round: the `spec` skill's `references/envelope.md`, Where envelopes live. A proposal spike's unit is `docs/proposals/PROP-<slug>`.
+   - Scout or Challenger: put the comparison and recommendation into the proposal bundle; keep `unverified_areas` visible for `plan-accept`.
+   - Code Reviewer: fix the findings and re-verify only the changed part.
+   - Reconcile Reviewer: fix each finding (a contract mismatch in code, never by waiver), then complete `reconcile.md` per `spec-sync`.
+   - Commit as the Developer; stage only the task's agreed paths.
 
-### Step 4: Validate the returned fields
-- Required fields present; `status` is one of `completed | needs_input | failed`.
-- Reviewer and Challenger findings each have `evidence` and `failure_condition`.
-- `failed` or a stale `diff_scope` (a worker's own head aside) is not completion evidence. Re-invoke only for a changed input or cause.
+## Completion
 
-### Step 5: Compare the actual diff with the boundary
-```bash
-git status --short
-git diff --name-only            # unstaged
-git diff --name-only --cached   # staged (should be unchanged by the role)
-```
-- Scout, Challenger, Reviewer, Reconciler: the expected diff is empty. Scout may add only to the agreed `materials/` path; the Reconciler verifies, never drafts.
-- Worker: validate the committed range instead ([worker](references/worker.md)). One path outside the write scope rejects the whole result.
-- A path outside `allowed_boundaries`, or a change to the index or HEAD other than a worker's own commits, is a violation. On a violation: report the paths, revert the change (block a worker's range instead), and do not reuse earlier check results.
-
-### Step 6: Fold the result back
-- **Envelope file** (spec Unit):
-  - Record a read-only role's return as `<unit>/envelopes/<kind>-<NN>.yaml` with kind `scout`, `challenger`, `review` or `reconcile-check`.
-  - A worker writes its own records; a range you block is a problem in your own `worker` envelope.
-  - Write envelopes with the CLI instead of hand-editing YAML: `devkit workflow envelope new --unit <dir> --kind <kind> --stage <stage> ... --findings-file -` (`envelope review` for a review), then `devkit workflow envelope check --unit <dir>`. Authoring flags: section 6 of the `spec` skill's `references/envelope.md`.
-  - A review records findings as found (all open); `envelope reverify` (`--from latest --resolve N --waive N=<why>`) closes it, and `--from envelopes/challenger-NN.yaml` closes a Planning `challenger` round the same way.
-  - For a proposal spike, the unit is the proposal bundle: `--unit docs/proposals/PROP-<slug> --stage spike`.
-  - Keep only the summary and file path in the conversation. `session` depth writes no envelope files.
-- Scout/Challenger: write the comparison table and recommendation into the proposal bundle (`materials/` or `proposal.md`); keep `unverified_areas` visible for `plan-accept`.
-- Reviewer: fix findings, then re-verify only the changed part (tests for touched packages, `devkit rules check --staged`).
-- Worker: accept the range or block it, and handle a recorded problem ([worker](references/worker.md)).
-- Reconcile reviewer: fix each omission or mismatch it found, a contract mismatch in code and never by waiver; then complete `reconcile.md` per the `spec-sync` skill.
-- The Developer commits, except a worker's own commits; stage only this task's agreed paths.
-
----
-
-## 4. Definition of Done
-
-- [ ] Host projection status stated when not native; the payload was all a projected role received.
-- [ ] Stale or failed results not used as evidence; the actual diff (a worker: its committed range) matched `allowed_boundaries`.
-- [ ] Result folded back into the current stage's artifact; envelope file written for a spec Unit.
+- The actual diff (a worker: its committed range) stayed inside `allowed_boundaries`, and no failed or stale result served as evidence.
+- For a spec Unit, `devkit workflow envelope check --unit <dir>` lists the new envelope.

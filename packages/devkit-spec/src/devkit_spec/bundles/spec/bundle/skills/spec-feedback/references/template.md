@@ -1,37 +1,32 @@
 # Feedback template
 
-Read this when writing a feedback file (step 3 of the `spec-feedback` recording procedure).
-
-1. Copy the block inside the four-backtick fence.
-2. Replace every `<...>` placeholder.
-3. Follow the comment, then delete it.
+Read this when writing a feedback file. Copy the block inside the four-backtick fence, replace every `<...>`
+placeholder, follow the comment, then delete it.
 
 ````markdown
 ---
 id: FB-<name>
 title: <title>
-scope: repo                         # repo | upstream | unknown; ownership of the observed asset, filled by the agent
+scope: repo                         # repo | upstream | unknown
 kind: friction                      # friction | suggestion | change-request | question
-category: other                     # instruction-conflict | tool-error | spec-ambiguity | context-overflow | missing-capability | docs-mismatch | redundant-step | token-cost | other
+category: other                     # see Categories below
 target: <asset path or command>     # e.g. the spec-specify skill, devkit spec list, CAP-<AREA>-<slug>
-skill: none                         # active skill when observed (spec, spec-specify, spec-review, ...) or none
+skill: none                         # active skill when observed, or none
 agent: <claude-code | codex | antigravity | ...>
-origin: agent                       # agent | user  (user = raised by the user)
+origin: agent                       # agent | user
 severity: workaround                # critical | blocked | workaround | noise
-recurring: false                    # true if observed 2+ times
-status: open                        # only actionable status; promoted/resolved/dismissed/forwarded are terminal
+recurring: false
+status: open
 created_at: <YYYY-MM-DD>
 ---
 
 # [FB-<name>] <title>
 
 <!--
-One incident per file, at the configured detail level (brief/standard take about one minute).
 friction / question: fill Section 1 and remove Section 2; suggestion / change-request: the reverse.
-Evidence is only what you observed yourself: instruction or document excerpts, summarized command output, file state.
-Excerpt key lines instead of raw output, and mask local paths and identifiers (<repo>, <worktree>).
-The user's remark is not evidence; never quote or paraphrase the user anywhere in the file.
-Never include secrets, tokens or personal data (local usernames and absolute paths included): the file is shared in the PR.
+Evidence is only what you observed: excerpts of instructions or documents, summarized command output, file state.
+Never quote or paraphrase the user; their remark is not evidence.
+Mask local paths, usernames and identifiers (<repo>, <worktree>) and include no secrets: the file is shared in the PR.
 If category is other, state the nature in the first line below.
 -->
 
@@ -58,26 +53,37 @@ If category is other, state the nature in the first line below.
 ```
 ````
 
-## Configured detail
+## Categories
 
-Read the level from `FEEDBACK_POLICY detail` in `devkit spec policy`. At every level, keep complete frontmatter, the
-rules of the comment above and your own assessment.
+| category | Meaning |
+| :--- | :--- |
+| `instruction-conflict` | Instructions conflict with each other, or with repository reality |
+| `tool-error` | CLI or skill command failed, or an advisory gave wrong guidance |
+| `spec-ambiguity` | spec/plan/tasks wording left the decision open |
+| `context-overflow` | Required reading was too large; something was skipped or summarized |
+| `missing-capability` | A needed command, field, template or rule does not exist |
+| `docs-mismatch` | Guide or capability document differs from actual behavior |
+| `redundant-step` | A step that does not contribute to the result; duplicate reads or checks |
+| `token-cost` | Text read every session but not used |
+| `other` | None of the above |
 
-- **brief**: retain the applicable section with context/current procedure, actual observation or proposed change,
-  a short assessment and Evidence. Omit unused template bullets.
-- **standard**: fill the applicable kind-specific section and Evidence as shown above.
-- **detailed**: standard plus the following section before Evidence.
-  - Fill a missing fact with `unknown`; never fabricate output, versions or reproduction results.
-  - Write `not applicable` where a field does not apply.
-  - Do not rerun risky or expensive commands just to complete the record; write `unknown` instead.
+## Detail level
+
+`FEEDBACK_POLICY detail` in `devkit spec policy` sets the level; frontmatter and your assessment are complete at every
+level.
+
+- **brief**: the applicable section's context, the observation or proposed change, a short assessment and Evidence.
+- **standard**: the applicable section and Evidence.
+- **detailed**: standard plus this section before Evidence. Write `unknown` for a missing fact instead of rerunning a
+  risky or expensive command, and `not applicable` for a field that does not apply.
 
 ```markdown
 ## Diagnostic Details
 
 - **Reproduction**: Observed steps and command, or unknown when not reproduced.
 - **Expected / Actual**: Expected behavior and the directly observed result.
-- **Versions**: Known tool/package versions or revision; unknown for unavailable versions.
-- **Conditions**: Relevant repository, configuration, host and occurrence conditions, without personal data.
+- **Versions**: Known tool/package versions or revision.
+- **Conditions**: Relevant repository, configuration, host and occurrence conditions.
 - **Workarounds Attempted**: Attempts and their outcomes, or not attempted.
 - **Related Assets**: Observed command, source paths, instructions or document IDs.
 ```

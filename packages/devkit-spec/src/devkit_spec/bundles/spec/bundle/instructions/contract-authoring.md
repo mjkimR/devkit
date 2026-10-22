@@ -7,7 +7,7 @@ description: Read before authoring or reviewing specifications, acceptance crite
 
 ## Normative Wording
 
-- No `A > B` priority slogans; state the trade-off as a bounded MUST/SHOULD.
+- State a trade-off as a bounded MUST or SHOULD, not as an `A > B` priority slogan.
 - Use RFC 2119 keywords (`MUST`, `SHOULD`, `MAY`) with explicit boundaries and thresholds.
 - Reserve MUST and MUST NOT for violations caught by a check/review or hard to undo, such as committing a secret, weakening a contract without approval or editing an accepted ADR. Working habits are SHOULD or "when it helps".
 

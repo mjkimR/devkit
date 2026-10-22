@@ -20,65 +20,69 @@ def read(relative: str, environment: str) -> str:
 
 # Scenario input and expected decision are human-review fixtures. Assertions below check that the
 # deployed instruction contains the decision's required evidence and action; they do not decide delivery.
+PROCEDURE = "skills/spec/references/milestone-completion.md"
 SCENARIOS = [
     (
         "fresh planned/active candidate",
-        (
-            "Closure is available from planned or active",
-            "no third approval",
-            "same Backlog edit/commit",
-            "phase-level exit condition met",
-        ),
+        PROCEDURE,
+        ("in one Backlog commit, from `planned` or `active`", "the exit condition met for the agreed scope"),
     ),
     (
         "open legacy document lacks confirmations",
-        ("Missing assertions", "mean unconfirmed", "missing user confirmation separately"),
-    ),
-    (
-        "stored confirmations without current authority",
-        ("Stored confirmed assertions alone never", "authorize a later close"),
+        PROCEDURE,
+        ("Missing or previously confirmed assertions authorize nothing", "missing user confirmation separately"),
     ),
     (
         "empty members after unfinished handoff",
-        ("Empty membership alone establishes neither", "unfinished handed-off work still in scope blocks"),
+        PROCEDURE,
+        ("empty membership proves nothing", "unfinished handed-off work blocks the close"),
     ),
     (
         "rejected/cancelled/reassigned work",
-        ("retained rejected", "explicit scope disposition", "Distinguish delivery", "update the goal/exit condition"),
+        PROCEDURE,
+        (
+            "A retained rejected member needs an explicit scope disposition",
+            "rejection or reassignment alone proves no delivery",
+            "Update the goal or exit condition when the scope shrank",
+        ),
     ),
-    ("inconclusive required inspection", ("missing/unreadable/inconclusive", "naming the remaining check")),
+    ("inconclusive required inspection", PROCEDURE, ("missing or inconclusive", "name the remaining check")),
     (
         "semantic scope changed",
-        (
-            "Actual semantic scope changes",
-            "new required work, exclusion or moving scope elsewhere",
-            "assertions to pending",
-        ),
+        "templates/milestone.md",
+        ("Actual semantic scope changes reset both to pending",),
     ),
     (
         "unchanged interrupted approval",
-        ("pause or context compaction", "unchanged authorization persists", "Interruption alone does not invalidate"),
+        PROCEDURE,
+        ("recheck the evidence", "an interruption alone does not invalidate the user's confirmation"),
     ),
     (
         "changed interrupted candidate",
-        ("present the changed candidate again", "approved candidate/evidence cannot be established"),
+        PROCEDURE,
+        ("the approved candidate cannot be re-established after a pause, present the candidate again",),
     ),
-    ("repeat close and historical done", ("no-op: write nothing", "without migration or retrospective reopening")),
+    (
+        "repeat close and historical done",
+        PROCEDURE,
+        ("Closing an unchanged `done` milestone writes nothing", "existing `done` records stay as they are"),
+    ),
     (
         "done scope extension or dropped",
-        ("reopen to active", "another milestone", "Dropped milestones are not close candidates"),
+        PROCEDURE,
+        ("reopen it to `active`", "another milestone", "A `dropped` milestone is no close candidate"),
     ),
 ]
 
 
 @pytest.mark.parametrize("environment", ["local", "cloud"])
-@pytest.mark.parametrize(("scenario", "required"), SCENARIOS, ids=[row[0] for row in SCENARIOS])
-def test_close_review_scenarios(environment: str, scenario: str, required: tuple[str, ...]) -> None:
+@pytest.mark.parametrize(("scenario", "source", "required"), SCENARIOS, ids=[row[0] for row in SCENARIOS])
+def test_close_review_scenarios(environment: str, scenario: str, source: str, required: tuple[str, ...]) -> None:
     backlog = read("skills/spec/references/backlog.md", environment)
     assert "[milestone completion](milestone-completion.md)" in backlog
-    procedure = read("skills/spec/references/milestone-completion.md", environment)
+    text = read(source, environment)
     for clause in required:
-        assert clause in procedure, f"{scenario}: {clause}"
+        assert clause in text, f"{scenario}: {clause}"
 
 
 @pytest.mark.parametrize("environment", ["local", "cloud"])
@@ -91,32 +95,24 @@ def test_plain_assertions_and_entrypoints(environment: str) -> None:
     data = parse(template).data
     assert data is not None
     assert set(data) == {"id", "title", "summary", "status", "created_at", "depends_on"}
-    backlog = read("skills/spec/references/backlog.md", environment)
-    assert "Normal handoff or mechanical identity relocation" in backlog
-    assert "no milestone review/reset" in backlog
     assert "milestone-completion.md" in read("skills/spec-next/references/next-work.md", environment)
     assert "Existing done records remain unchanged" in read("seed/docs/roadmap/README.md", environment)
-    procedure = read("skills/spec/references/milestone-completion.md", environment)
+    procedure = read(PROCEDURE, environment)
     for clause in (
         "--all-namespaces -n 0",
         "--direction in -n 0",
-        "ordinary prose references",
-        "base",
-        "commit used",
-        "remote freshness",
-        "relevant known Planning/Development activity",
+        "not prose references",
+        "base commit used",
+        "known `plan-`/`dev-` activity",
         "without switching another task's checkout",
-        "not reconstruct or persist a complete descendant graph",
+        "persist no descendant graph",
     ):
         assert clause in procedure
 
 
 @pytest.mark.parametrize("environment", ["local", "cloud"])
 def test_normal_handoff_adds_no_milestone_ceremony(environment: str) -> None:
-    procedure = read("skills/spec/references/milestone-completion.md", environment)
-    assert "Normal PROP-to-SPEC handoff or mechanical identity relocation" in procedure
-    assert "does not change scope/decomposition" in procedure
-    assert "requires no milestone review, reset or reconfirmation" in procedure
-    assert "No pre-handoff or integration hook is needed" in procedure
+    assert "normal handoff does not" in read("templates/milestone.md", environment)
+    assert "normal handoff does not" in read("seed/docs/roadmap/README.md", environment)
     for entrypoint in ("skills/spec/SKILL.md", "skills/spec-next/SKILL.md", "skills/spec/references/worktree.md"):
         assert "membership invalidation]" not in read(entrypoint, environment)

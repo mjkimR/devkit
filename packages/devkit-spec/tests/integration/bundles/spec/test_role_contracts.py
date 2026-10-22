@@ -134,49 +134,45 @@ def test_a_worker_commits_its_result_and_records_in_its_worktree(role: str) -> N
     assert hosts["codex"] == {"status": "emulated", "sandbox_mode": "workspace-write"}
     assert hosts["antigravity"]["status"] == "unverified"
     assert "git -C <worktree>" in body and "absolute" in body
-    assert "Do not push, merge, rebase, reset, amend, stash or check out (`MUST NOT`)" in body
-    assert "devkit workflow envelope worker" in body and "`worker` envelope" in body
-    assert "`head` set to your last work commit" in body and "`final_head`" in body
+    assert "Git: commit only; never push, merge, rebase, reset, amend, stash or check out." in body
+    assert "`worker` envelope" in body and "worker-records.md" in body
+    assert "`final_head`: `git -C <worktree> rev-parse HEAD` after the commit that adds the envelope" in body
     assert "do not write envelope files" not in body
 
 
 def test_the_development_worker_commits_at_stage_boundaries_and_on_a_problem() -> None:
     body = " ".join(_contract("development-worker")[1].split())
-    assert "Commit at every stage boundary" in body
-    assert "with write-scope paths only, then `git -C <worktree> commit` on the unit branch" in body
-    assert "never bypassed (`--no-verify`), except in the emergency commit of a problem (below)" in body
-    assert "this commit alone may use `git -C <worktree> commit --no-verify`" in body
+    assert "Commit at every stage boundary with write-scope paths only" in body
+    assert "only that commit may use `--no-verify`" in body
     assert "One path outside the write scope rejects the whole result" in body
-    assert "emergency commit" in body and "what you tried and the recovery you recommend" in body
-    assert "Do not revert, close, raise the depth or narrow the scope yourself" in body
-    assert "with your recommended option and record the reason" in body
+    assert "make the emergency commit" in body
+    assert "You do not split units, push, merge, integrate, revert, close, raise the planning depth or shrink" in body
+    assert "Decide implementation choices inside the agreed goal, scope and contract and record the reason" in body
 
 
 def test_the_development_worker_result_is_self_contained() -> None:
-    body = _contract("development-worker")[1]
+    body = " ".join(_contract("development-worker")[1].split())
     assert "run `devkit rules fix <unit>/spec.md`" in body
-    assert "Authored scratch files go in an ignored path inside the worktree" in body
-    assert "Pytest-managed temporary fixtures (`tmp_path`, `tmp_path_factory`" in body
-    assert "MAY use an isolated system temporary directory outside the worktree" in body
-    assert "does not override sandbox permissions" in body
-    assert "pass a custom `--basetemp` on the parent command line rather than through `PYTEST_ADDOPTS`" in body
-    assert "except the pytest-managed temporary fixtures described above" in body
+    assert "Keep authored scratch files in an ignored path inside the worktree" in body
+    assert "Pytest-managed fixtures (`tmp_path`) may use an isolated system temporary directory" in body
+    assert "pass `--basetemp` on the command line, not through `PYTEST_ADDOPTS`" in body
+    assert "Denied: everything else except pytest-managed fixtures" in body
     # activity-effort decides the nested roles; the reconcile reviewer only verifies.
-    assert "a separate `reconcile-reviewer` nested subagent that verifies" in body
+    assert "Run `code-reviewer` and `reconcile-reviewer` as nested subagents" in body
+    assert "Write and fix the Living Spec changes and `reconcile.md` yourself" in body
 
 
 # Planning steps an executor runs in either mode, moved out of the contract
 # (ADR-executor-neutral-planning-steps-in-a-spec-reference).
 MOVED_PLANNING_PHRASES = (
-    "Collect the questions for the user in one round, never stopping at the first",
+    "Collect every question for the user in one round",
     "as a commit of their own",
     "status: reviewing",
     "needs_decompose: true",
-    "never into a file of their own",
     "envelope answer --unit <proposal dir> --answers-to <worker-NN.yaml>",
     "--questions-file",
     "check `dev_effort` in `proposal.md`",
-    "run the enabled `collect-feedback` sweep",
+    "[planning run coverage]",
 )
 
 
@@ -193,10 +189,10 @@ def test_the_planning_steps_live_in_the_spec_reference_for_any_executor() -> Non
 
 def test_the_planning_worker_keeps_its_worker_obligations() -> None:
     body = " ".join(_contract("planning-worker")[1].split())
-    assert "as a nested subagent (Host -> worker -> role)" in body
-    assert "never end the turn while one is still running" in body
-    assert "Waiting for the user's answers is not a problem" in body
-    assert "Scratch files go in an ignored path inside the worktree" in body
+    assert "Start each `scout` or `challenger` as a nested subagent" in body
+    assert "Wait for every nested role before you rely on its result or end the turn" in body
+    assert "Waiting for answers is `needs_input`, not a problem" in body
+    assert "Temporary probes: only the ignored path the payload names" in body
 
 
 @pytest.mark.parametrize("role", [r for r in ROLES if r not in WORKERS])
@@ -207,22 +203,22 @@ def test_every_other_role_stays_read_only(role: str) -> None:
 def test_the_reconciler_verifies_and_never_drafts() -> None:
     metadata, body = _contract("reconcile-reviewer")
     assert "Write" not in metadata["hosts"]["claude-code"]["tools"]
-    assert "You do not draft documents" in body
-    assert "kind `reconcile-check`" in body  # the caller records it at living-spec-draft, whose exit reads it
+    assert "Writing and fixing the reflection stay with the implementer" in body
+    assert "The fields of a `reconcile-check` envelope" in body  # recorded at living-spec-draft, whose exit reads it
 
 
 def test_the_code_reviewer_leaves_reconcile_verification_to_its_own_role() -> None:
     _, body = _contract("code-reviewer")
-    assert "separate `reconcile-reviewer` role" in body
-    assert "kind `reconcile-check`" not in body
-    assert "kind `review`" in body
+    assert "Reconcile verification belongs to `reconcile-reviewer`" in body
+    assert "`reconcile-check`" not in body
+    assert "The fields of the `review` envelope" in body
 
 
 def test_spec_delegate_passes_only_the_payload_to_a_projected_role() -> None:
     text = DELEGATE.read_text(encoding="utf-8")
     assert "Read the contract frontmatter first" in text
-    assert "With a projected file, pass only the payload" in text
-    assert "When the main session substitutes, follow the contract body yourself" in text
+    assert "Give a projected role only the payload" in text
+    assert "substitute in the main session and follow the contract body yourself" in text
     assert "Pass the role contract body" not in text
     assert "[payload](references/payload.md)" in text
     payload = _rendered(DELEGATE.parent / "references/payload.md")
@@ -232,45 +228,40 @@ def test_spec_delegate_passes_only_the_payload_to_a_projected_role() -> None:
 
 def test_tasks_name_the_docs_a_worker_must_write() -> None:
     text = " ".join(TASKS.read_text(encoding="utf-8").split())
-    assert "a task a `development-worker` builds names the `docs/` paths its checks require" in text
+    assert "A task a `development-worker` builds also names the `docs/` paths its checks require" in text
 
 
 def test_the_host_validates_the_committed_range_and_blocks_a_failure() -> None:
-    delegate = DELEGATE.read_text(encoding="utf-8")
-    assert "except a worker, which commits on its activity branch ([worker](references/worker.md))" in delegate
-    assert "a range you block is a problem in your own `worker` envelope" in delegate
+    delegate = " ".join(DELEGATE.read_text(encoding="utf-8").split())
+    assert "a worker commits only on its activity branch" in delegate
+    assert "For a worker, validate the committed range per [worker](references/worker.md)" in delegate
     text = " ".join(WORKER_RESULTS.read_text(encoding="utf-8").split())
-    assert "From the last accepted head to the worker's *final HEAD* (`<returned>`" in text
-    assert "merge-base --is-ancestor <diff_scope.head> <returned>" in text
-    assert "merge-base --is-ancestor <accepted> <returned>" in text
+    assert "The range from `<accepted>` to the returned final HEAD `<returned>`" in text
+    assert "`<accepted>` and the envelope's `diff_scope.head` are ancestors of `<returned>`" in text
     assert "diff --name-only <accepted> <returned>` is in the write scope" in text
-    assert "`git -C <worktree> status --short` is empty" in text
-    assert "--problem" in text and "never reset or amend" in text
-    assert "a pull request stays open and blocked" in text
-    assert "A blocked unit goes to no review and no integration" in text
-    assert "validate the cumulative range again from the same last accepted head" in text
-    assert "the base checkout's status and HEAD are as recorded" in text
-    assert "except the records you wrote under `<unit>/envelopes/` since `<accepted>`" in text
+    assert "The worktree is clean" in text
+    assert "the base checkout's status and HEAD match what you recorded before spawning" in text
+    assert "envelopes you committed since `<accepted>` are exempt only while unchanged since your commit" in text
     assert "`validation`" not in text
+    assert "Record the violation as your own `worker` envelope" in text
     assert "envelope worker --unit <dir> --stage <stage> --effort <activity-effort> --problem" in text
-    assert "Never pass a blocked unit's current HEAD as the base" in text
-    assert "`build-verify`, or `fix-verify` in `sdd-spec-bugfix`" in text
-    assert "A unit is blocked while any problem, a worker's or yours, has no resolution that names it" in text
-    assert "a later commit or a successful `worker` envelope clears nothing" in text
-    assert "validate the whole branch: from its merge base" in text
-    assert "A comment or a rerun request alone resolves nothing" in text
+    assert "Never reset or amend; keep a pull request open and blocked" in text
+    assert "Validate again from the same last accepted head" in text
+    assert "Blocked: the head its blocked range started from, never the current HEAD" in text
+    assert "Unaccountable after context loss: the branch's merge base with the base branch" in text
+    records = " ".join(_rendered(BUNDLE / "skills/spec/references/worker-records.md").split())
+    assert "`[BLOCKED: ...]` means a problem has no `resolution` naming it" in records
+    assert "the handoff and `devkit worktree finish --merge`" in records
+    assert "Only a `resolution` clears it" in records
 
 
 def test_orchestration_follows_the_committed_result_contract() -> None:
     text = " ".join(_rendered(ORCHESTRATE).split())
-    assert (
-        "commits at every stage boundary through the commit gate, writes its own records and returns its head" in text
-    )
-    assert "the committed range from the last accepted head" in text
+    assert "**Validate** the committed range through `spec-delegate`'s worker reference" in text
     assert "A failing range is blocked, never discarded" in text
-    assert "a blocked unit goes no further" in text
+    assert "blocked with its problem recorded" in text
     assert "A `session`-depth task never becomes a unit" in text
-    assert "This scheduling choice requires no additional business approval" in text
+    assert "The mode changes no gate, policy or authority, needs no approval" in text
     assert "preserve an explicit user preference" in text
 
 
@@ -284,11 +275,9 @@ def test_a_run_records_its_questions_and_problem_in_one_worker_envelope() -> Non
         "--questions-file" in planning
         and "envelope answer --unit <proposal dir> --answers-to <worker-NN.yaml>" in planning
     )
-    assert "never into a file of their own" in planning
-    development = _contract("development-worker")[1]
-    assert (
-        "exactly one `worker` envelope" in development and "envelope resolution --unit <unit> --resolves" in development
-    )
+    development = " ".join(_contract("development-worker")[1].split())
+    assert "exactly one `worker` envelope" in development
+    assert 'follow "Problems and resolutions" in `worker-records.md`' in development
 
 
 @pytest.mark.parametrize("role", WORKERS)
@@ -305,8 +294,8 @@ def test_real_worker_projects_complete_emulated_codex_toml(role: str) -> None:
     assert "Host projection: emulated." in prompt
     assert "The host does not enforce the contract's boundaries itself" in prompt
     assert prompt.endswith(contract.body.rstrip("\n") + "\n")
-    assert "## Procedure" in prompt and "## Codex execution and permissions" in prompt
-    assert "## On a problem" in prompt
+    assert "## Procedure" in prompt and "On Codex, `workspace-write` confines no path" in prompt
+    assert "## Write boundaries" in prompt
 
 
 @pytest.mark.parametrize("role", WORKERS)
@@ -327,16 +316,14 @@ def test_worker_other_host_settings_are_preserved(role: str) -> None:
 def test_worker_requires_explicit_paths_and_each_operation_approval(role: str) -> None:
     body = " ".join(_contract(role)[1].split())
     for requirement in (
-        "Every command MUST set cwd to the absolute assigned worktree, including verification and permission requests",
-        "every Git command MUST use `git -C <worktree>`",
-        "Nested-role read scopes and contract paths MUST be absolute",
-        "naming its startup skill and instruction paths (such as `response-style`)",
-        "separate command-scoped approval for each necessary operation",
-        "sibling-worktree writes, shared Git index/commits, scope registry writes",
-        "verification requiring unavailable network access",
-        "Use no broad persistent prefix",
-        "preflight or approved command grants no later access",
-        "`workspace-write` is not worker-specific path confinement",
+        "every command's cwd set to",
+        "`git -C <worktree>` for Git",
+        "with absolute read scopes and contract paths in this worktree",
+        "pass on any read",
+        "`workspace-write` confines no path",
+        "Request a separate approval for each operation outside sandbox access, naming the operation, target and reason",
+        "(sibling-worktree writes, shared Git, network for verification)",
+        "use no broad persistent prefix and treat no earlier grant as later permission",
     ):
         assert requirement in body, (role, requirement)
 
@@ -345,64 +332,58 @@ def test_worker_requires_explicit_paths_and_each_operation_approval(role: str) -
 def test_worker_refusal_and_failed_emergency_preservation_are_truthful(role: str) -> None:
     body = " ".join(_contract(role)[1].split())
     for requirement in (
-        "On unavailable or denied approval, stop that operation and preserve partial state",
-        "Do not evade refusal through another tool, path, process, broader request or settings edit",
-        "only after its cause/input changes and authorization permits it",
-        "only through still-permitted, separately scoped operations",
-        "Only ordinary commit-gate refusal permits the emergency `--no-verify` exception",
-        "sandbox or approval denial never does",
-        "If the record or emergency commit also cannot run, return `failed`",
-        "actual last commit SHA, dirty paths and which record/commit is absent or uncommitted",
-        "never invent a committed envelope or clean tree",
-        "Host, which owns the subsequent recovery run and its records",
+        "On a refused or unavailable approval, stop that operation and preserve the state",
+        "never reroute through another tool, path, process or setting",
+        "emergency commit",
+        "worker-records.md",
+        "Host decides",
     ):
         assert requirement in body, (role, requirement)
+    records = " ".join(_rendered(BUNDLE / "skills/spec/references/worker-records.md").split())
+    for requirement in (
+        "Only this commit may use `git commit --no-verify`, and only on ordinary commit-gate refusal",
+        "never for sandbox or approval denial",
+        "stop that operation and preserve the state; never reroute through another tool, path, process",
+        "If the record or commit itself is denied, stop, preserve the state and return `failed`",
+        "the actual last commit, dirty paths and the absent/uncommitted record or commit",
+        "never invent a committed envelope",
+    ):
+        assert requirement in records, requirement
 
 
 def test_named_and_generic_native_invocation_respect_trust_and_effective_contract() -> None:
     hosts = " ".join(_rendered(DELEGATE.parent / "references/hosts.md").split())
     for requirement in (
-        "Prefer the projected named role and pass only the payload",
-        "role absence alone does not prove the root is untrusted",
-        "Diagnose availability separately from trust",
+        "Give a projected named role only the payload",
+        "A missing role does not prove the root is untrusted",
+        "diagnose availability separately from trust",
         "effective managed/override contract by absolute path",
-        "only when host project-instruction loading is permitted",
-        "explicitly report emulation",
-        "Never replace an override with the upstream contract during fallback",
-        "An explicit host trust restriction MUST stop this fallback",
-        "Do not use a generic role, another tool/process/path, or host configuration edits to bypass it",
-        "Before starting a worker",
-        "native spawning, required nested roles and the approval capability",
-        "the Host runs the unit in `direct` when allowed; `required` isolation stops with `needs_input`",
-        "Capability availability is not a promise that an approval will be granted",
+        "host project-instruction loading is permitted",
+        "report the emulation",
+        "Never substitute the upstream contract for an override",
+        "An explicit host trust restriction stops this fallback",
+        "do not bypass it with another role, tool, path or host setting",
+        "Start a worker only when native spawning, its nested roles and the approval capability",
+        "run the unit in `direct` when allowed, or stop with `needs_input` when isolation is required",
+        "Availability does not promise an approval",
     ):
         assert requirement in hosts, requirement
     assert "stop and ask the user to register the root" not in hosts
     payload = " ".join(_rendered(DELEGATE.parent / "references/payload.md").split())
-    assert "every nested-role read scope explicitly" in payload
-    assert "names the assigned worktree's absolute startup skill and instruction paths" in payload
-    assert "reports any read from another checkout as a boundary exception" in payload
-    assert "Every command, including verification and approvals, sets absolute worktree cwd" in payload
-    orchestrate = " ".join(_rendered(ORCHESTRATE).split())
-    assert "Before spawning, check native spawning, required nested roles" in orchestrate
-    assert "`needs_input` for required isolation; no worker starts" in orchestrate
+    assert "Name absolute paths for nested-role reads" in payload
+    assert "the worktree's own startup skills and instructions and the effective role contract" in payload
 
 
 def test_callers_block_permission_failures_without_fabricated_worker_records() -> None:
     results = " ".join(WORKER_RESULTS.read_text().split())
     records = " ".join(_rendered(BUNDLE / "skills/spec/references/worker-records.md").split())
-    assert (
-        "The Host MUST block a failed dirty or uncommitted return, even when no worker envelope could be written"
-        in results
-    )
-    assert "Inspect actual HEAD/status and the cumulative allowed paths" in results
-    assert "never impersonate the worker's missing record" in results
-    for text in (results, records):
-        assert "actual last" in text and "dirty paths" in text and "absent/uncommitted" in text
-        assert "ordinary commit-gate refusal" in text
-        assert "never for sandbox or approval denial" in text or "never sandbox or approval denial" in text
-    assert "The exactly-one committed worker-record requirement cannot be satisfied in this failure branch" in records
-    assert "owns a subsequent recovery run and its records when permitted" in records
+    assert "Never write a worker's records for it" in results
+    assert "**Failed without a committed envelope** (dirty or uncommitted" in results and "block it" in results
+    assert "Inspect the actual HEAD and status against the scope" in results
+    assert "never commit its dirty paths as your own" in results
+    assert "record the failure in your own envelope when permitted" in results
+    assert "actual last" in records and "dirty paths" in records and "absent/uncommitted" in records
+    assert "ordinary commit-gate refusal" in records and "never for sandbox or approval denial" in records
 
 
 def _rendered(path: Path) -> str:
@@ -419,7 +400,7 @@ def _rendered(path: Path) -> str:
 def test_a_condition_free_spike_completion_is_not_planning_evidence() -> None:
     planning = " ".join(PLANNING.read_text(encoding="utf-8").split())
     signals = " ".join(_rendered(BUNDLE / "skills/spec-next/references/workflow-signals.md").split())
-    assert "may list it under `[DONE]` before any review ran: that is not Planning evidence" in planning
+    assert "`devkit workflow next` may list `spike` as done before any review ran" in planning
+    assert "only the recorded `scout`, `challenger` and `reverify` envelopes are Planning evidence" in planning
     assert "`[DONE: ... spike]` is not Planning evidence" in signals
-    for text in (planning, signals):
-        assert "`scout` and `challenger` envelopes and their `reverify` recorded at `spike`" in text
+    assert "`scout` and `challenger` envelopes and their `reverify` recorded at `spike`" in signals

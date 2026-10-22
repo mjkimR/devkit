@@ -17,11 +17,11 @@ def test_bundle_presets_split_core_and_python() -> None:
     assert bundle.select(["python"]) == {"agent-advisory", "agent-advisory-python", "unique-code"}
 
 
-def test_guide_directives_match_runtime_texts() -> None:
+def test_guide_names_every_mode_and_defers_texts_to_the_runtime() -> None:
     guide = (BUNDLE / "instructions/agent-advisory.md").read_text()
-    blocks = re.findall(r"```text\n(\w+ — .*?)```", guide, flags=re.DOTALL)
-    rendered = {block.split(" — ", 1)[0]: " ".join(block.split()) for block in blocks}
-    assert {mode.value: " ".join(text.split()) for mode, text in ACTION_TEXT.items()} == rendered
+    assert "`devkit.advisory.ACTION_TEXT`" in guide
+    for mode in ACTION_TEXT:
+        assert f"`{mode.value}`" in guide, mode.value
 
 
 def test_bundle_version_matches_the_package_version() -> None:

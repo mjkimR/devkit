@@ -21,7 +21,7 @@ def read(rel: str, environment: str = "local") -> str:
 
 @pytest.mark.parametrize("environment", ["local", "cloud"])
 def test_pickup_order_and_lifecycle_guards(environment: str) -> None:
-    next_work = read("skills/spec-next/references/next-work.md", environment)
+    next_work = " ".join(read("skills/spec-next/references/next-work.md", environment).split())
     for phrase in (
         "including critical drafts",
         "A critical blocked draft stays blocked",
@@ -44,19 +44,12 @@ def test_pickup_order_and_lifecycle_guards(environment: str) -> None:
     backlog = read("skills/spec/references/backlog.md", environment)
     for phrase in (
         "--direction in -n 0",
-        "repository-wide",
-        "Completed historical anchors remain unchanged",
-        "splitting/decomposing, superseding, rejecting, deleting or reclassifying to session",
+        "leave completed ones unchanged",
+        "Before splitting, superseding, rejecting, deleting or reclassifying a proposal",
         "required child/successor set",
         "only when the prerequisite is explicitly waived",
         "same authorized change",
-        "stop the lifecycle mutation",
-        "another worker's checkout",
-        "initially contain one proposal",
-        "not a minimum-member-count validator",
-        "User and agent jointly review",
-        "MUST NOT carry milestone metadata",
-        "projected-graph preflight before writes",
+        "If a dependent lies outside your write scope, stop and ask the Host to coordinate",
     ):
         assert phrase in backlog, phrase
     classification = read("skills/spec/references/classification.md", environment)
@@ -67,11 +60,10 @@ def test_templates_separate_membership_and_prerequisites() -> None:
     proposal = read("templates/proposal.md")
     assert "# depends_on: [PROP-foundation, SPEC-parser]" in proposal
     assert "never carried to spec.md" in proposal
-    feature = read("skills/spec-specify/references/feature.md")
-    assert "# depends_on: [PROP-foundation, SPEC-parser]" in feature
     milestone = read("templates/milestone.md")
     assert "direct PROP" in milestone and "phase-level outcomes" in milestone
-    assert "initially have one proposal" in milestone
+    assert "initially have one proposal" in milestone and "User and agent jointly review" in milestone
+    assert "Handoff does not carry milestone metadata to SPEC" in milestone
     assert "CLI flags, branch names, file layouts" in milestone
     assert "no delivery lineage is stored" in read("seed/docs/roadmap/README.md")
 

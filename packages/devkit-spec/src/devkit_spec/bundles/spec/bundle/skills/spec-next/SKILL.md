@@ -5,127 +5,38 @@ description: Entry skill for orientation; inspect repository state and active sp
 
 # spec-next: Engineering Workflow Navigator
 
-Use this skill to orient at session start or to choose the next action: diagnose state and recommend one concrete step
-with evidence.
+Diagnose repository state and recommend one concrete next step with its evidence. Run only the diagnosis commands
+below; start nothing else until the user approves.
 
----
+## Diagnosis
 
-## 1. Operating Invariant: No Automatic Execution
+1. `git status -s`, `devkit worktree status` and `devkit worktree status --stale`: report uncommitted changes, the
+   checkout kind (feature branch, task worktree, base), leftovers (`devkit worktree finish <branch>`) and stale
+   branches with their resume or discard path (§4 of the `spec` skill's `references/branches.md`). Never remove or
+   resume one unasked.
+2. `devkit spec list spec`: per listed bundle, tasks done vs pending and pending reconciliation. Spec status
+   `completed` does not prove integration; check Git/PR state.
+3. `devkit spec list proposal`: proposals `reviewing`, or `accepted` and waiting for handoff.
+4. `devkit spec list feedback --status open --where severity=critical`, and the open count without `--where`.
+5. `devkit workflow next --unit <dir>` for each unit the user or steps 2–3 name. Recommend its `[NEXT_SKILL]` with the
+   `[UNMET]` evidence and follow any `[FIX]` or `[ACTION]`. For any other line or advisory, read
+   [workflow signals](references/workflow-signals.md).
 
-- `spec-next` MUST only diagnose state and explain the recommended next step.
-- The agent MUST NOT start implementing, creating files or executing code without the user's explicit approval;
-  end with the recommendation and wait for the user's instruction.
+## Recommendation
 
----
+- If critical open feedback exists, recommend a feedback hygiene pass first (the user invokes `/devkit-playbook` when
+  the project has one); the stage recommendation comes second. Give other open feedback one line.
+- In progress means a plan-/dev- branch, a reviewing/accepted proposal or an incomplete spec; queued drafts are not.
 
-## 2. Diagnosis Workflow
+| State | Recommend |
+| :--- | :--- |
+| Unit with a `[STAGE]` | Its `[NEXT_SKILL]`. In a multi-skill stage, `spec-specify`, `spec-plan` or `spec-tasks` for the first of `spec.md`, `plan.md`, `tasks.md` an unmet check names. `[NEXT_SKILL: -]`: implement the next unchecked task within its `_Boundary:` and run its tests |
+| Proposal `accepted`, `[STAGE: - complete=true]` | `devkit worktree start dev-<slug>` (or `--no-worktree`, `--existing-branch`), `devkit spec proposal handoff <slug>` there, then in the same change the [post-handoff link check](references/post-handoff.md) |
+| Proposal `draft` or `reviewing` | For a queued draft, [next-work selection](references/next-work.md); otherwise review the hypothesis, add research to `materials/`, draft a PADR (`devkit spec proposal padr <slug> <title>`) or delegate a spike to `scout`/`challenger` (`spec-delegate`) |
+| Proposal `rejected` | The cleanup the `SPEC_PROPOSAL_REJECTED_PENDING` `[FIX]` names; never back to `reviewing` |
+| Nothing in progress | [next-work selection](references/next-work.md) |
 
-Run Steps 1 to 4. Run Step 0 for each unit directory the user, Step 2 or Step 3 names.
+## Completion
 
-### Step 0: Ask the CLI for the current stage
-
-```bash
-devkit workflow next --unit specs/<YYYY-MM>/<YYYYMMDD>-<slug>     # a spec bundle
-devkit workflow next --unit docs/proposals/PROP-<slug>            # a proposal bundle
-```
-
-- `[STAGE]` is the diagnosed stage, `[UNMET]` the evidence and `[NEXT_SKILL]` the skill to recommend.
-- Follow any `[FIX]` or `[ACTION]`.
-- For any other line (`[GATE]`, `[WAITING]`, `[REQUEST]`, `[DELEGATE]`, `[SKIPPED]`, an error line, ...) or an
-  advisory, read [workflow signals](references/workflow-signals.md).
-- `devkit workflow show --unit <dir>` shows the whole flow. Steps 1 to 4 add what the CLI does not see.
-
-### Step 1: Check Working Tree & Git State
-
-1. Run `git status -s`. Report uncommitted or unstaged changes and whether the checkout is a feature branch, a task
-   worktree or the base branch.
-2. Report leftovers from `devkit worktree status` at any `GIT_POLICY` level, each as `devkit worktree finish <branch>`
-   or user-authorized removal.
-3. Report stale activity branches from `devkit worktree status --stale` (also warned by
-   `devkit rules check -p hygiene`), each with its resume or discard path, per §4 of the `spec` skill's
-   `references/branches.md`.
-4. Never remove or resume a leftover or stale branch unasked.
-
-### Step 2: Check Active Change Specs (`specs/`)
-
-Run `devkit spec list spec` and follow any `[NEXT_CMD]`. Completed bundles are left out unless `--history`; inspect
-only the listed directories. Completed specs are work history: pass `--history --status completed` only when a task
-explicitly needs one.
-
-- `tasks.md`: count tasks completed vs pending.
-- `reconcile.md`: prioritize pending required reconciliation after implementation review.
-- Distinguish verified/uncommitted, PR review, reconciliation pending and integrated. Spec status `completed` does
-  not prove integration; inspect Git/PR state.
-
-### Step 3: Check Incubating Proposals (`docs/proposals/`)
-
-Run `devkit spec list proposal`. Report proposals in `reviewing` or `accepted` waiting for handoff, and an accepted
-one ready for `devkit spec proposal handoff <slug>` (on `dev-<slug>`).
-
-### Step 4: Check Open Feedback
-
-Run `devkit spec list feedback --status open --where severity=critical` for the critical items, and the same without
-`--where` for the count of the rest.
-
----
-
-## 3. Decision Matrix & Action Guidance
-
-Critical feedback first:
-
-- If open feedback with `severity: critical` exists, the first recommendation is a feedback hygiene pass on those
-  items now; the stage recommendation follows as the second item.
-- If the project has a playbook for that pass, recommend that the user invoke `/devkit-playbook`; never start a
-  playbook search yourself.
-- Give lower-severity open feedback one line; it waits for the next hygiene session.
-
-In-progress means a plan-/dev- branch, a reviewing/accepted proposal, or an incomplete spec; queued drafts are not in
-progress.
-
-| Diagnosed State | Status Criteria | Recommended Next Action |
-| :--- | :--- | :--- |
-| **Unit in progress** | Step 0 names a `[STAGE]` | Recommend its `[NEXT_SKILL]` with the `[UNMET]` evidence; gates, waits and other lines as [workflow signals](references/workflow-signals.md) describes. Multi-skill stages and `[NEXT_SKILL: -]`: below the table |
-| **Proposal Hand-off** | Proposal `status: accepted` (`plan-accept` given) and `next` reports it complete (`[STAGE: - complete=true]`) | Start or continue `dev-<slug>` (`devkit worktree start dev-<slug>`, `--no-worktree` in this checkout, or `--existing-branch`), run `devkit spec proposal handoff <slug>` there, then the post-handoff link check (§3.1) |
-| **Proposal Incubation** | Proposal in `draft` or `reviewing` | For a queued draft, [next-work selection](references/next-work.md) (Planning, direct acceptance or session reclassification). Review the hypothesis, add research to `materials/`, or draft a PADR (`devkit spec proposal padr <slug> <title>`); for a spike, delegate `scout`/`challenger` (`spec-delegate`) |
-| **Ended (Rejected)** | Proposal is `rejected` | Planning ended: the cleanup `SPEC_PROPOSAL_REJECTED_PENDING`'s `[FIX]` names (rejection ADR, then deletion; the user may invoke the `feedback-hygiene` playbook); never back to `reviewing` |
-| **Idle** | No in-progress Unit | Recommend eligible queued drafts and Backlog actions with [next-work selection](references/next-work.md) |
-
-For a Unit in progress:
-
-- `[NEXT_SKILL]` is only a stage's first skill. In a multi-skill stage, recommend `spec-specify`, `spec-plan` or
-  `spec-tasks` for the first of `spec.md`, `plan.md`, `tasks.md` an unmet check names (`not-skeleton(...)`,
-  `file-exists(plan.md)`, `tasks-exists`).
-- `[NEXT_SKILL: -]` (`build-verify`, `fix-verify`) means implement the next unchecked task within its `_Boundary:` and
-  run its tests.
-
-### 3.1 Post-handoff link check
-
-Run it immediately after every `devkit spec proposal handoff <slug>`, in the same change:
-[post-handoff link check](references/post-handoff.md).
-
----
-
-## 4. Output Standard
-
-A concise summary:
-
-```markdown
-### Current Status & Next Action Diagnosis
-
-- **Active Stage**: build-verify
-- **Active Feature**: `SPEC-feature-name` (specs/2026-10/20261004-feature-name/)
-- **Progress**: 2 / 5 tasks completed in `tasks.md`
-
-#### Recommended Next Step:
-**Implement Task 2.3: Wire CLI handler**
-- **Boundary**: `src/app/cli.py`
-- **Verification**: the project's test command
-
-*(Type `proceed` or give instructions to begin this task)*
-```
-
-## 5. Completion
-
-- [ ] The reply names one recommended next step with its evidence (`[UNMET]` lines, Git state, list output), after
-  any critical feedback pass.
-- [ ] Nothing was started, created or executed beyond the diagnosis commands without the user's explicit approval.
+- The reply names one next step with its evidence (`[UNMET]` lines, Git state, list output), after any critical
+  feedback pass, and ends by waiting for the user's instruction.

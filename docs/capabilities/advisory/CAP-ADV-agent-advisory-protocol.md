@@ -141,7 +141,7 @@ Choose the level first, then (for an error) the fields, by asking which directiv
 
 ## 6. Action Modes
 
-The `[ACTION]` texts below are canonical. Every implementation renders exactly these directives, so every tool speaks with one voice; `devkit.advisory.ACTION_TEXT` holds them, and a test keeps the bundled guide identical to it.
+The `[ACTION]` texts below are canonical. Every implementation renders exactly these directives, so every tool speaks with one voice; `devkit.advisory.ACTION_TEXT` holds them, and the bundled `agent-advisory` guide names each mode and defers to it for the text.
 
 ### Error modes
 

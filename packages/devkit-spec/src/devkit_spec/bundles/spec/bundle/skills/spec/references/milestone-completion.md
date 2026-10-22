@@ -1,58 +1,33 @@
 # Milestone completion review
 
-Read for a requested Backlog close review, or when proposing one after known associated work finishes.
-This is a user/agent semantic review, not an automatic evaluator or an integration hook.
+Read this for a requested Backlog close review, or to propose one after the milestone's known work finishes. Scope changes and handoff effects on the assertions are in the milestone template (`.devkit/managed/spec/templates/milestone.md`).
 
-## Prepare one current candidate
+## Prepare one candidate
 
-1. Read the goal, exit condition and non-goals. Review whether all intended scope has been sufficiently
-   decomposed into proposals. Empty membership alone establishes neither decomposition nor settlement.
-2. Use `devkit spec list proposal --all-namespaces -n 0` and
-   `devkit spec refs MS-<slug> --direction in -n 0` to inspect all current direct PROP members across namespaces;
-   distinguish frontmatter membership from ordinary prose references. Inspect the selected local base and
-   relevant known Planning/Development activity, without switching another task's checkout. Report the base
-   commit used; do not imply remote freshness. Use focused code/Git inspection when a proposal disappeared
-   through handoff or another lifecycle action. Do not reconstruct or persist a complete descendant graph.
-3. Prepare one concrete candidate: sufficient decomposition, directly associated work delivered or explicitly
-   excluded/moved, and the phase-level exit condition met for the resulting agreed scope. Distinguish delivery
-   from exclusion or movement; update the goal/exit condition when scope reduction requires it.
-   An unresolved in-scope proposal blocks settlement whether draft, reviewing or accepted. A retained rejected
-   anchor requires an explicit scope disposition. Handoff, deletion, rejection and reassignment alone never
-   prove delivery; unfinished handed-off work still in scope blocks settlement.
-4. Keep the milestone open for outstanding work, an unmet exit condition or missing/unreadable/inconclusive
-   required evidence, naming the remaining check. Report missing user confirmation separately from evidence gaps.
+1. Read the goal, exit condition and non-goals, and judge whether the intended scope is fully decomposed into proposals; empty membership proves nothing.
+2. List the direct members: `devkit spec refs MS-<slug> --direction in -n 0` (frontmatter membership, not prose references), with `devkit spec list proposal --all-namespaces -n 0`.
+3. Inspect the local base and known `plan-`/`dev-` activity without switching another task's checkout, and report the base commit used. Use focused Git inspection for a proposal that left through handoff; persist no descendant graph.
+4. Prepare one candidate: each member delivered, explicitly excluded or moved, and the exit condition met for the agreed scope. Update the goal or exit condition when the scope shrank.
+   - An unresolved in-scope proposal (draft, reviewing or accepted) or unfinished handed-off work blocks the close.
+   - A retained rejected member needs an explicit scope disposition.
+   - Handoff, deletion, rejection or reassignment alone proves no delivery.
+5. If work is outstanding, the exit condition is unmet or required evidence is missing or inconclusive, keep the milestone open and name the remaining check. Report missing user confirmation separately from evidence gaps.
 
 ## Confirm and write
 
-The milestone body has exactly two plain assertions under `Completion review`:
+The milestone body holds two assertions under `Completion review`:
 
+```text
 Decomposition: pending
 Direct proposal work: pending
+```
 
-Missing assertions on an existing open milestone mean unconfirmed. Stored confirmed assertions alone never
-authorize a later close. Present both confirmations together with the concrete candidate. The user's confirmation
-of both authorizes recording `Decomposition: confirmed`, `Direct proposal work: confirmed` and `status: done`
-in the same Backlog edit/commit; no third approval is needed. Closure is available from planned or active.
+1. Present both assertions with the candidate. Missing or previously confirmed assertions authorize nothing.
+2. Immediately before writing, re-read scope and membership and recheck the evidence. If either changed, or the approved candidate cannot be re-established after a pause, present the candidate again; an interruption alone does not invalidate the user's confirmation.
+3. On the user's confirmation of both, write `Decomposition: confirmed`, `Direct proposal work: confirmed` and `status: done` in one Backlog commit, from `planned` or `active`.
 
-Immediately before writing, re-read current scope and direct membership and recheck relevant evidence.
+## Later changes
 
-- If semantic scope or relevant completion evidence changed, present the changed candidate again for confirmation.
-- After pause or context compaction, establish the approved candidate and recheck those facts;
-  unchanged authorization persists.
-- Reconfirm only when semantic scope or relevant completion evidence changed or the
-  approved candidate/evidence cannot be established. Interruption alone does not invalidate.
-
-## Changes and terminal records
-
-- Actual semantic scope changes, such as new required work, exclusion or moving scope elsewhere, reset both
-  assertions to pending in the authorized scope edit.
-- Normal PROP-to-SPEC handoff or mechanical identity relocation does not change scope/decomposition and
-  requires no milestone review, reset or reconfirmation. Handoff still proves no delivery: check relevant completion
-  evidence at close. No pre-handoff or integration hook is needed.
-- Pure wording/format corrections preserving meaning do not invalidate.
-- To extend done scope, first obtain the user's decision to reopen to active and reset both assertions in the scope
-  edit, or put the new scope in another milestone. Activation and dropping remain user-owned decisions.
-- An unchanged done milestone is a no-op: write nothing. Dropped milestones are not close candidates.
-- Existing done records remain historical without migration or retrospective reopening.
-- Introduce no SPEC milestone metadata, schema field, command, approval envelope, branch ledger or stored delivery
-  lineage.
+- Wording or format corrections that keep the meaning do not reset the assertions.
+- To extend a `done` milestone, get the user's decision to reopen it to `active` and reset both assertions, or put the new scope in another milestone.
+- Closing an unchanged `done` milestone writes nothing. A `dropped` milestone is no close candidate, and existing `done` records stay as they are.

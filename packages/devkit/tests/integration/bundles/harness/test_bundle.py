@@ -6,7 +6,6 @@ It is auto-selected and built in wherever devkit-agt is installed (``ADR-dist-bu
 from __future__ import annotations
 
 import json
-import re
 import shutil
 import tomllib
 from importlib import resources
@@ -46,10 +45,9 @@ def test_the_bundle_is_auto_selected_with_its_core_preset() -> None:
 
 def test_the_constitution_holds_the_harness_contracts() -> None:
     constitution = (BUNDLE / "AGENTS.md").read_text("utf-8")
-    contracts = re.findall(r"^\d+\. \*\*(.+?)\*\*", constitution, re.MULTILINE)
-    assert contracts == ["Rules and gates run as code.", "Snapshot gates trust the committed receipt."]
     assert "`[rules]` and `[gates]`" in constitution
     assert "`devkit rules check --staged`, `--ci`" in constitution
+    assert "commit the receipt" in constitution
     assert len(constitution.splitlines()) <= 100
 
 
@@ -107,7 +105,7 @@ def test_the_context_delivers_the_moved_guidance(tmp_path: Path) -> None:
     update_config(target, presets={"harness": ["core"]}, agents=[])
     sync_project(target, [InstalledBundle("devkit-agt", "0.1.0", load_bundle(BUNDLE))])
     context = GetContext().execute(target, "harness").to_dict()
-    assert "Rules and gates run as code" in context["constitution"]
+    assert "`[rules]` and `[gates]`" in context["constitution"]
     headers = {entry["header"].split("\n", 1)[0] for entry in context["instructions"]}
     assert headers == {f"name: {name}" for name in INSTRUCTIONS}
     bodies = "\n".join(Path(entry["path"]).read_text() for entry in context["instructions"])
