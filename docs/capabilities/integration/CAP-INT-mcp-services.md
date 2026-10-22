@@ -338,7 +338,8 @@ merge/push and resume cannot. Read-only retained diagnostics remain available.
 
 At the start of each confirmation request, integration snapshots `presentation.language` from the runtime's owning
 configuration workspace, independently of its retained executor root. `ko` selects Korean; `en`, `auto` and unsupported
-strings select English under `CAP-DIST-sync-and-transactions`. Tool arguments cannot select the preference or its
+strings select English under `CAP-DIST-sync-and-transactions`, whose sync, status and config show report an
+unsupported string as a `PRESENTATION_LANGUAGE_UNSUPPORTED` warning. Tool arguments cannot select the preference or its
 workspace. An open form keeps its rendered language; a later request reads the new preference. Language is outside
 business approval equality/digests. Existing environment, identity, policy, source and target checks still apply.
 

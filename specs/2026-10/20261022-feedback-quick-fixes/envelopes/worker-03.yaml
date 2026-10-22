@@ -1,0 +1,20 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T00:03:05.921160Z'
+status: failed
+summary: 'Host validation of the recovery turn: checks pass; one path outside the write scope.'
+findings:
+- issue: packages/devkit-dist/src/devkit_dist/features/distribution/models/results.py is outside the recovery payload write scope (it named distribution/usecases/ and, if necessary, distribution cli or adapters).
+  evidence: git diff --name-only 48e6479d 2b635fe4 adds ConfigurationReport to models/results.py (+23 lines, additive).
+  suggested_action: Host reviews whether the result type is required by the decided config show notice; expand the boundary narrowly or revert.
+  resolution: open
+checks: {}
+diff_scope:
+  base: 48e6479d1bcd4e0bb22ea1e05ff2f6b1e801c6ed
+  head: 2b635fe463182181b6eaf5e43be5e570ef04f9df
+problem:
+  cause: The committed range 48e6479d..2b635fe4 changes one path outside the payload write scope
+  recovery: 'Host review: accept the additive result model by a narrow boundary expansion, or revert it'
+activity_effort: low

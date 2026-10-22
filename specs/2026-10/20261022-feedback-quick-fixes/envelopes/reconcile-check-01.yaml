@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T23:46:34.804732Z'
+status: completed
+summary: 'self-check (low): five capability targets match the diff (presentation refusal in CAP-DIST-sync-and-transactions, CAP-DIST-workspace-ownership, CAP-INT-mcp-services, CAP-DLV-proposal-incubation; nested-role skill paths and spike evidence in CAP-DLV-delivery-workflows); four source feedback files resolved with dispositions; entrypoint added; no open findings.'
+findings: []
+assumptions:
+- The ADR fallback outcome is superseded by plan-intent; ADR left unchanged (append-only, denied path)
+checks:
+  rules: PASS devkit rules check docs/capabilities and the unit
+diff_scope:
+  base: 490b0b287a719336b4192fc2f37eabe44d20854f
+  head: 68da37a0ced38b215a5874babc67c559df0b02db
+activity_effort: low

@@ -32,8 +32,14 @@ def config() -> None:
 @FORMAT_OPTION
 @boundary
 def config_show(workspace_root: str | None, effective: bool, output_format: str) -> None:
-    """Inspect effective checkout preferences without changing configuration."""
-    echo_json(ShowConfiguration().execute(resolve_root(workspace_root)))
+    """Inspect effective checkout preferences without changing configuration.
+
+    An unsupported [presentation] language resolves to en and is a warning under notices.
+    """
+    report = ShowConfiguration().execute(resolve_root(workspace_root))
+    echo_json(report.to_dict())
+    echo_notices(report.notices)
+    exit_on_warnings(report.notices)
 
 
 @config.command(name="template")

@@ -313,6 +313,29 @@ class OverrideChange:
 
 
 @dataclass(frozen=True)
+class ConfigurationReport:
+    """``devkit config show --effective``: effective checkout preferences and their sources.
+
+    ``notices``: warnings that change no exit code (an unsupported ``[presentation] language`` resolved to ``en``).
+    """
+
+    configuration: dict[str, Any]
+    sources: dict[str, str]
+    execution_environment: str
+    presentation_language: dict[str, Any]
+    notices: list[AdvisoryError] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "configuration": self.configuration,
+            "sources": self.sources,
+            "execution_environment": self.execution_environment,
+            "presentation_language": self.presentation_language,
+            "notices": [notice.to_dict() for notice in self.notices],
+        }
+
+
+@dataclass(frozen=True)
 class PlaybookResult:
     """An exact procedure with effective content identity and context requirements."""
 

@@ -88,7 +88,7 @@ from devkit_dist.features.project.repositories.receipt import (
     Selection,
     ToolRecord,
 )
-from devkit_dist.features.project.services.presentation import resolve_language
+from devkit_dist.features.project.services.presentation import language_notices, resolve_language
 
 TOOL_PACKAGE = "devkit-dist"
 EDITED_FILE_FIX = (
@@ -982,6 +982,7 @@ def commit_locked(
     actions: list[Action] = []
     conflicts = _Conflicts()
     notices = unusable_notices(installed, selection.presets)
+    notices.extend(language_notices(root))
     deployed = read_deployed(root)
     plan_host_hooks(root, previous.host_hooks if previous else (), inventory.host_hooks, changes, actions)
     notices.extend(_plan_managed_files(root, old_files, deployed, effective.files, changes, actions, conflicts))

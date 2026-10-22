@@ -1,9 +1,10 @@
 from pathlib import Path
 
 import pytest
+from devkit.advisory import ExitCode, Level
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project.repositories.local_config import LOCAL_CONFIG_PATH
-from devkit_dist.features.project.services.presentation import resolve_language
+from devkit_dist.features.project.services.presentation import language_notices, resolve_language
 
 
 @pytest.mark.parametrize(
@@ -32,6 +33,36 @@ def test_shared_and_local_language(tmp_path: Path, requested: str, resolved: str
     assert resolve_language(root, effective=False).resolved == "en"
     assert resolve_language(root, effective=False).source == str(shared)
     assert result.approval_language == ("ko" if resolved == "ko" else "en")
+
+
+@pytest.mark.parametrize(
+    "shared,local,warned",
+    [
+        (None, None, []),
+        ("ko", "en", []),
+        ("korean", None, ["config.toml"]),
+        ("en", "KO", ["config.local.toml"]),
+        ("korean", "ko", ["config.toml"]),
+        ("ja", "", ["config.local.toml", "config.toml"]),
+    ],
+)
+def test_unsupported_language_is_a_visible_warning(
+    tmp_path: Path, shared: str | None, local: str | None, warned: list[str]
+) -> None:
+    (tmp_path / ".devkit").mkdir()
+    for name, value in (("config.toml", shared), ("config.local.toml", local)):
+        if value is not None:
+            (tmp_path / ".devkit" / name).write_text(f'[presentation]\nlanguage="{value}"\n')
+    notices = language_notices(tmp_path)
+    assert [list(notice.target_files) for notice in notices] == [[str(tmp_path / ".devkit" / n)] for n in warned]
+    for notice in notices:
+        assert (notice.code, notice.level, notice.exit_code) == (
+            "PRESENTATION_LANGUAGE_UNSUPPORTED",
+            Level.WARNING,
+            ExitCode.OK,
+        )
+        assert "resolves to 'en'" in notice.message
+        assert notice.fix == f"Set [presentation] language in {notice.target_files[0]} to one of: auto, en, ko"
 
 
 @pytest.mark.parametrize(

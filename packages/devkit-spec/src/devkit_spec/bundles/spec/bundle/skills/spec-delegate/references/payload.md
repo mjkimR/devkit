@@ -59,7 +59,10 @@ narrow Host boundary expansion before editing; a move grants no general permissi
 
 Name the absolute assigned worktree, command cwd requirement and every nested-role read scope explicitly; initial
 cwd may be the base checkout. Every command, including verification and approvals, sets absolute worktree cwd;
-every Git command uses `git -C <worktree>`. A generic native call also receives the absolute effective managed/override
+every Git command uses `git -C <worktree>`. A nested-role read scope names the assigned worktree's absolute startup
+skill and instruction paths (for example its `response-style` skill and the effective role contract), because a host
+skill catalog may list another checkout's copies; the role reads them there, and reports any read from another
+checkout as a boundary exception in its return. A generic native call also receives the absolute effective managed/override
 contract path and the assumption that its role contract is emulated, with instruction loading permitted.
 
 Identify required nested roles and necessary approval capabilities before spawning. Each operation beyond current

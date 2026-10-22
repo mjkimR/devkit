@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-21
 ---
 
@@ -44,3 +44,9 @@ Challenger return: initial required response-style skill read used the base chec
 outside the assigned worktree; all proposal and contract evidence used the assigned worktree.
 Host inspection: HEAD unchanged; index empty; only worker-authored proposal, blueprint and material changes.
 ```
+
+## Disposition
+
+Directly resolved by `SPEC-feedback-quick-fixes`. The `spec-delegate` payload reference and the `development-worker` and `planning-worker` contracts now require a nested-role read scope to name the assigned worktree's absolute startup skill and instruction paths (such as `response-style`), and treat a read from another checkout as a boundary exception reported in the return. `CAP-DLV-delivery-workflows` states the same; projections were re-synced.
+
+Verification: `test_role_contracts.py` asserts the payload and both contract texts (52 passed); the full suite passed (4461 passed, 14 skipped). Native host enforcement of the read scope is not claimed. Integration remains a separate Host step.

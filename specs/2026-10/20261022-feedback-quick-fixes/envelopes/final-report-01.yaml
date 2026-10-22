@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T23:47:57.892307Z'
+status: completed
+summary: 'Resolved the four linked feedback items: unsupported presentation languages refused with CONFIG_INVALID naming auto/en/ko; agt module short name plus a short-name list in the refusal; nested-role payloads name the worktree''s skill/instruction paths; a [DONE] spike is documented as not Planning evidence. Bundle projections re-synced; five capabilities reconciled.'
+findings: []
+assumptions:
+- ADR-shared-language-preference-with-bounded-approval-content fallback outcome replaced by plan-intent; a superseding ADR is left to the Host (FB-plan-intent-overrides-accepted-adr)
+- PresentationLanguage.fallback kept (always false) so out-of-scope reference docs stay accurate (FB-presentation-fallback-field-unused)
+checks:
+  tests: PASS just test-affected mode=full 4461 passed 14 skipped
+  build: 'PASS just check devkit-dist, devkit-spec: 0 errors; devkit status ok=242 stale=0'
+  lint: PASS just lint devkit-dist, devkit-spec; devkit rules check --ci --base 490b0b28
+diff_scope:
+  base: 490b0b287a719336b4192fc2f37eabe44d20854f
+  head: d41cac7777ccdd71219653d9b7237f6a0e018719
