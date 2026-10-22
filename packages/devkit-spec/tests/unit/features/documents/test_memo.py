@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
+from dataclasses import fields
 from datetime import date, datetime, timedelta, tzinfo
 from pathlib import Path
 from types import FrameType
@@ -16,10 +17,11 @@ import yaml
 from devkit_core.core.frontmatter import load_header
 
 import devkit_spec
-from devkit_spec.features.documents import parse_document
+from devkit_spec.features.documents import Document, Issue, Reference, parse_document
 from devkit_spec.features.documents.repositories import index as index_module
 from devkit_spec.features.documents.repositories import memo
 from devkit_spec.features.documents.repositories.memo import (
+    CODEC_FIELDS,
     UNSTORABLE,
     UNSTORABLE_RESULT,
     Invalid,
@@ -233,3 +235,8 @@ def test_the_fingerprint_covers_versions_and_sources() -> None:
     assert {"devkit_core.core.frontmatter", "devkit_core.base.errors"} <= set(modules)
     assert memo.fingerprint() == memo.fingerprint() and memo.fingerprint() is not None
     assert yaml.__version__  # part of the fingerprint
+
+
+def test_the_codec_stores_every_field_of_documents_references_and_issues() -> None:
+    for kind in (Document, Reference, Issue):
+        assert tuple(field.name for field in fields(kind)) == CODEC_FIELDS[kind], kind.__name__

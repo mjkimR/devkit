@@ -164,10 +164,11 @@ The table order is the kind order: `devkit spec list` sorts by it. Living Spec d
    its entries differ from those it read (a new, changed or removed file, or a discarded memo), by atomic replace
    without a lock; a load with a supplied file list or reader reads the memo and never writes it
    (`ADR-parse-memo-failure-and-write-policy`).
-5. **Memo silence**: IF the memo is missing, unreadable, malformed, of another version or fingerprint, holds an entry
+5. **Memo silence**: IF the memo is unreadable, malformed, of another version or fingerprint, holds an entry
    that cannot be rebuilt, is a non-regular file or cannot be written, THEN the index MUST return a fresh build's
    result with no advisory, notice or exit-status change, logging one line visible under `-v`; a non-regular file
-   at the memo path is never removed or replaced (`packages/devkit-spec/tests/integration/features/documents/test_memo_index.py`).
+   at the memo path is never removed or replaced. A missing memo is created without a log line
+   (`packages/devkit-spec/tests/integration/features/documents/test_memo_index.py`).
 6. **Resolution**: resolving an ID MUST go through the canonical mapping (section 3.5) and return the one document
    it names, else raise `SPEC_ID_UNRESOLVED` (no document) or `SPEC_ID_DUPLICATE` (several declare the ID, or
    several declare the alias; `[TARGET]` lists their paths).

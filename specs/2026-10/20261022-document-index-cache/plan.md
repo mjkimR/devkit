@@ -57,18 +57,23 @@ class Invalid:            # a malformed frontmatter: the SPEC_DOCUMENT_INVALID r
 Parsed = Document | Invalid | None
 Entry = list[object]      # [digest, "d", payload] | [digest, "n"] | [digest, "e", reason] | [digest, "u"]
 
+CODEC_FIELDS: dict[type, tuple[str, ...]]  # the Document, Reference and Issue fields the codec stores
+
 def digest(text: str) -> str
-def encode_entry(digest: str, result: Parsed) -> Entry       # "u" when a value cannot be stored
-def decode_entry(relative: str, digest: str, entry: object) -> Parsed   # raises MemoError when not rebuildable
-def encode_value(value: object) -> object                    # raises Unstorable
-def decode_value(value: object) -> object                    # raises MemoError
+def encode_entry(text_digest: str, result: Parsed) -> Entry  # "u" when a value cannot be stored
+def decode_entry(relative: str, entry: Entry) -> Parsed | _Unstorable  # caller matched the digest;
+                                                             # UNSTORABLE_RESULT for "u"; MemoError when not rebuildable
+def encode_value(value: object, active: set[int] | None = None) -> object  # raises Unstorable
+def decode_value(value: object) -> Any                       # raises MemoError
 def fingerprint_modules() -> tuple[str, ...]
-def fingerprint() -> str | None                              # None when a module's source cannot be read
+def fingerprint() -> str | None    # computed once at import; None when a module's source cannot be read
+def memo_path(root: Path) -> Path | None
 
 class ParseMemo:
     @classmethod
     def open(cls, root: Path, *, writes: bool) -> ParseMemo | None
-    def stored(self, relative: str) -> object | None         # the raw entry read for the path
+    def stored(self, relative: str) -> Any                   # the raw entry read for the path, or None
+    def unusable(self) -> None                               # count an entry whose digest matched but did not decode
     def keep(self, relative: str, entry: Entry) -> None
     def save(self) -> None
 ```
@@ -81,10 +86,11 @@ type or a cycle is unstorable. A document payload is
 `[target, field, line, column, start, end, bracket]` whose `source` and `path` are the document's (an encoder that
 finds otherwise stores the entry as unstorable).
 
-Fingerprint: BLAKE2b over the format version, the name and source bytes of every module of
+Fingerprint: computed once when the memo module is imported, right after the modules it covers; BLAKE2b over the
+format version, the name and source bytes of every module of
 `devkit_spec.features.documents.models` and `devkit_spec.features.documents.repositories` (enumerated with
 `pkgutil`), `devkit_core.core.frontmatter` and `devkit_core.base.errors`, `yaml.__version__`,
-`yaml.__with_libyaml__` and `sys.version`; computed once per process.
+`yaml.__with_libyaml__` and `sys.version`.
 
 Choices made inside the agreed design:
 

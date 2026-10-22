@@ -36,7 +36,6 @@ import stat
 import sys
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
-from functools import cache
 from pathlib import Path
 from typing import Any
 
@@ -168,6 +167,26 @@ def _decode_time(parse: Any, text: str, kind: type) -> Any:
 
 
 # --- entries --------------------------------------------------------------------------------------------------------
+
+
+# The fields the entry codec stores, in its order; a unit test fails when a dataclass gains or loses one.
+# ``Reference.source`` and ``Reference.path`` are the document's own and are not stored per reference.
+CODEC_FIELDS: dict[type, tuple[str, ...]] = {
+    Document: (
+        "id",
+        "path",
+        "kind",
+        "frontmatter",
+        "references",
+        "provenance",
+        "issues",
+        "aliases",
+        "alias_spans",
+        "alias_issues",
+    ),
+    Reference: ("target", "source", "path", "field", "line", "column", "start", "end", "bracket"),
+    Issue: ("line", "message"),
+}
 
 
 def encode_entry(text_digest: str, result: Parsed) -> Entry:
@@ -329,9 +348,7 @@ def fingerprint_modules() -> tuple[str, ...]:
     return tuple(sorted(names))
 
 
-@cache
-def fingerprint() -> str | None:
-    """The parser fingerprint of this process; ``None`` when a module's source cannot be read (no memo is used)."""
+def _compute_fingerprint() -> str | None:
     hasher = hashlib.blake2b(digest_size=16)
     libyaml = bool(getattr(yaml, "__with_libyaml__", False))
     hasher.update(f"{FORMAT_VERSION}\0{yaml.__version__}\0{libyaml}\0{sys.version}\0".encode())
@@ -348,6 +365,17 @@ def fingerprint() -> str | None:
         _log.info("document memo not used: the parser fingerprint cannot be computed: %s", exc)
         return None
     return hasher.hexdigest()
+
+
+# Computed when this module is imported, right after the modules it covers, so the fingerprint describes the code
+# this process runs. A source edited on disk between those imports and this line is the one window left; a later
+# process sees the new source and writes under the new fingerprint.
+_FINGERPRINT = _compute_fingerprint()
+
+
+def fingerprint() -> str | None:
+    """The parser fingerprint of this process; ``None`` when a module's source cannot be read (no memo is used)."""
+    return _FINGERPRINT
 
 
 # --- the file -------------------------------------------------------------------------------------------------------
