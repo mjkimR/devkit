@@ -1,0 +1,17 @@
+kind: answer
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-22T09:19:39.167703Z'
+status: completed
+summary: q1, q2 decided
+findings: []
+checks: {}
+answers_to: worker-01.yaml
+answers:
+- question: q1
+  choice: a
+  decision: Migrate all flat whole-tree walks to the shared node index; keep custom scoped walks (unique_code._calls and layers._imports) rule-internal, with optional early exit when target nodes are absent.
+- question: q2
+  choice: a
+  decision: WorkspaceCache exposes get_python_nodes(path, *types) returning a read-only tuple of ast.AST matching any requested type in document traversal order, lazily constructed on first request and invalidated alongside the AST.
