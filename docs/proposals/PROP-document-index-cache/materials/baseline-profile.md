@@ -70,3 +70,13 @@ described in `PADR-content-keyed-document-parse-memo`.
   rules workspace cache; content keys make the memo valid for those loads too.
 - A libyaml-backed strict loader in `devkit_core.core.frontmatter` would cut the fresh parse, but it lies outside
   this proposal's boundary and leaves the per-call parse in place.
+
+## After the challenger round
+
+- The prototype decoded raw bytes and hashed the bytes; the repository has no CRLF document, so it could not show
+  that `Path.read_text` (the walk) and the rules reader (bytes decoded, CR kept) produce different texts from one
+  file. The design keys entries on the digest of the parsed text instead.
+- A codec that tags every list, mapping, `date` and `datetime` (mappings as key-value pair lists) decodes the
+  frontmatter of all 637 documents in 1.4 to 1.9 ms (241 KiB) and compares equal.
+- A `CSafeLoader`-based strict loader with the same duplicate-key check loads the 640 headers in about 15 ms instead
+  of 128 ms with equal results; recorded as `FB-strict-frontmatter-loader-without-libyaml`, outside this proposal.

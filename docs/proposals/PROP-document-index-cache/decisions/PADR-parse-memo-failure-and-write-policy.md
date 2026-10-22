@@ -45,12 +45,16 @@ meets the identity, silence and no-wait drivers; a lost update only costs a late
 - **Discard rules**: a memo that is missing, unreadable, not valid UTF-8 JSON, not the expected shape, of another
   `version` or of another `fingerprint` is treated as empty. An entry whose stored result cannot be rebuilt is a miss.
   In both cases the load parses those files as a fresh build would, and the memo is rewritten.
+- **Non-regular memo path**: a directory or other non-regular file at the memo path is never removed. The load
+  returns a fresh build's result and skips the write, with a `-v` log line.
 - **Silence**: discarding or failing to write the memo emits no advisory or notice and never changes the exit status;
   each case logs one `logging` line, visible under `-v`.
 - **Writers**: only a load that walks the workspace itself (no caller-supplied file list or reader) writes, and only
   when its entries differ from what it read (a new, changed or removed file, or a discarded memo). Its entries are
-  exactly the files that load saw, so deleted and renamed files are pruned. Loads with a supplied file list or reader,
-  which the spec rules and Git snapshot runs use, read the memo and never write it.
+  exactly the files that load read and decoded, each with its stored result or an "unstorable" marker, so deleted and
+  renamed files are pruned and an unstorable document does not count as a change. A file that cannot be read or
+  decoded has no entry before or after and is no change either. Loads with a supplied file list or reader, which the
+  spec rules use, read the memo and never write it.
 - **Write**: `devkit_core.core.atomic_write_bytes` (temporary file, then rename). An `OSError` (read-only file system,
   permissions, full disk) is logged under `-v` and ignored.
 - **Concurrency**: no lock. Concurrent writers each write a complete memo of entries that matched the text they read;
@@ -59,16 +63,16 @@ meets the identity, silence and no-wait drivers; a lost update only costs a late
 ## 5. Consequences
 
 - Positive: a lookup never waits, never fails because of the memo, and writes nothing in the steady state.
-- Positive: rule runs gain the parse reuse without writing to the workspace.
+- Positive: rule runs on the working tree gain the parse reuse without writing to the workspace.
 - Negative: concurrent writers can drop each other's new entries; the next load parses those files again and writes.
 - Negative: a process killed between the temporary write and the rename leaves a temporary file in
   `.devkit/transient/spec/`, ignored by Git; `atomic_write_bytes` removes it on every error it sees.
 
 ## 6. Confirmation
 
-- Tests: a truncated file, invalid JSON, a wrong `version` or `fingerprint`, a malformed entry and a directory in
-  place of the file each give results equal to a fresh build, the same exit code, no advisory without `-v` and a
-  rewritten memo; an unwritable `.devkit/transient/spec/` gives a fresh build's result.
-- Tests: a load with no changed file leaves the memo's bytes and modification time unchanged; a load with a supplied
-  file list never creates or changes it.
+- Tests: a truncated file, invalid JSON, a wrong `version` or `fingerprint` and a malformed entry each give results
+  equal to a fresh build, the same exit code, no advisory without `-v` and a rewritten memo; a directory at the memo
+  path and an unwritable `.devkit/transient/spec/` each give a fresh build's result and leave the path as it was.
+- Tests: a load with no changed file leaves the memo's bytes and modification time unchanged, also with an
+  unstorable document and an unreadable file present; a load with a supplied file list never creates or changes it.
 - Test: several processes loading and writing at once all return a fresh build's result.

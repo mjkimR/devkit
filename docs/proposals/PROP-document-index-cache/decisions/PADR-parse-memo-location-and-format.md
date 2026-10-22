@@ -23,7 +23,9 @@ devkit-dist keeps its journal, lock and `deployed.json` there, and devkit-agt it
 (`.devkit/transient/work/`). Every Git worktree has its own working tree, so its own `.devkit/transient/`. The
 repository `.gitignore` ignores neither `.devkit/` nor any cache directory at the root.
 
-Frontmatter values include `datetime.date` (375 of them in this repository), which plain JSON cannot hold.
+Frontmatter values include `datetime.date` (375 of them in this repository), which plain JSON cannot hold. The strict
+loader requires string keys only at the top level, so nested mappings may have integer, boolean, null or date keys,
+which `json.dumps` silently turns into strings.
 
 ## 2. Decision Drivers
 
@@ -42,22 +44,27 @@ Frontmatter values include `datetime.date` (375 of them in this repository), whi
 - **A user cache directory** (`~/.cache/devkit/...`, keyed by worktree path): outside the workspace, survives worktree
   removal as garbage and needs its own cleanup.
 - **Format: pickle**: fastest (about 5 ms) and keeps every type, but loading a crafted file runs code.
-- **Format: JSON with tagged dates**: about 3 ms to decode and 3 to 6 ms to rebuild the documents; values stay plain
-  data.
+- **Format: JSON with tagged dates only**: about 3 ms to decode, but a nested non-string key is coerced to a string
+  and a literal one-key mapping shaped like a tag decodes as a date.
+- **Format: JSON with every container tagged**: lists and mappings become tagged objects and a mapping a list of
+  key-value pairs, so no value is ambiguous; the frontmatter of all 637 documents decodes in 1.4 to 1.9 ms.
 
 ## 4. Decision Outcome
 
-Chosen options: **`.devkit/transient/spec/document-index.json`** and **JSON**, because they meet the ignore,
-per-worktree and safe-load drivers with no new ignore rule and a load cost under 10 ms.
+Chosen options: **`.devkit/transient/spec/document-index.json`** and **JSON with every container tagged**, because
+they meet the ignore, per-worktree and safe-load drivers with no new ignore rule, a faithful round trip and a load cost
+under 10 ms.
 
 - **Location**: `<root>/.devkit/transient/spec/document-index.json`, `<root>` being the root the load indexes. The memo
-  is read and written only when `<root>/.devkit/transient/` exists as a directory and is not a symbolic link;
-  otherwise the load behaves as today and creates no file or directory. `spec/` is created on the first write.
+  is used only when `<root>/.devkit/transient/` exists as a directory, neither it, `spec/` nor the memo path is a
+  symbolic link, and the memo path resolves inside `<root>`; otherwise the load behaves as today and creates no file
+  or directory. `spec/` is created on the first write.
 - **Format**: one UTF-8 JSON object with `version`, `fingerprint` and `entries` (path to digest and stored result).
-  `date` and `datetime` values are tagged objects decoded back to the same type. A file whose parse result holds any
-  other value JSON cannot represent is not stored and is parsed on each load.
+  Strings, booleans, integers, finite floats and null stay plain; every list, mapping, `datetime` and `date` is a
+  one-key tagged object (a mapping as a list of key-value pairs, so any key type survives; `datetime` checked before
+  `date`, with its UTC offset). A parse result holding any other value (a non-finite float, another type) is stored
+  as an "unstorable" marker with its digest and parsed on each load.
 - Deleting the file is always safe: the next load rebuilds it.
-
 ## 5. Consequences
 
 - Positive: no repository `.gitignore` change and no new ignored path; the memo follows the checkout, so worktrees,
@@ -70,6 +77,8 @@ per-worktree and safe-load drivers with no new ignore rule and a load cost under
 
 ## 6. Confirmation
 
-- Tests: a workspace without `.devkit/transient/` gets no memo file; a symbolic link in its place is not followed; a
-  memo holding dates round-trips to equal frontmatter.
+- Tests: a workspace without `.devkit/transient/` gets no memo file; a symbolic link at `.devkit/transient/`,
+  `spec/` or the memo path is not followed; frontmatter with a date, a naive `datetime`, an aware `datetime` (`Z` and
+  `+09:00`), nested integer, boolean and null keys and a literal tag-shaped mapping round-trips to equal frontmatter,
+  and a non-finite float is stored as unstorable.
 - Review: `CAP-DOCS-document-model` names the path and states that deleting it is safe.
