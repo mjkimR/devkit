@@ -14,7 +14,8 @@ devkit workflow envelope worker --unit <dir> --stage <stage> --summary "<what th
 ```
 
 - Always pass `--stage` (the stage `devkit workflow next` names once the run's other records are written) and `--effort` (the only record of the effort the run applied).
-- `--head <last commit>` is `git -C <worktree> rev-parse HEAD` after the run's last work commit, before the commit that adds this envelope. That next commit (alone, or with the run's last changes) is the run's **final HEAD**, the one it returns to you, so `diff_scope.head` is always the parent side of the final HEAD, never equal to it: validate the range up to the final HEAD and check that `diff_scope.head` is its ancestor ([spec-delegate's worker reference](../../spec-delegate/references/worker.md)).
+- `--head <last commit>` is `git -C <worktree> rev-parse HEAD` after the run's last work commit, before the commit that adds this envelope.
+- That next commit (alone, or with the run's last changes) is the run's **final HEAD**, the one it returns to you. `diff_scope.head` is therefore always the parent side of the final HEAD, never equal to it: validate the range up to the final HEAD and check that `diff_scope.head` is its ancestor ([spec-delegate's worker reference](../../spec-delegate/references/worker.md)).
 
 - **Questions**: add `--questions-file <path>|-`, a YAML list of `id`, `title` (40 characters at most), `prompt`, optional `context` (what the answer decides and why it matters, for a reader who has not seen the work), `options` (`{id, description, recommended}`, at most one recommended) and `allow_note`; the status becomes `needs_input`. Gather every question of the round in it; finish everything that does not depend on an answer first. When an option depends on a condition (such as a resolved ref or remote), also state what holds when the condition does not hold, leaving no case for the fold to infer.
 - **Problem**: add `--problem "<cause>" --tried "<attempt>" --recovery "<recommended recovery>"`; the status becomes `failed`, or pass `--status needs_input` when only the user can decide. A run that both asks and hit a problem records both (`needs_input`). A malformed `worker` envelope holds the unit like a problem (from the stage it states, or every gate when none is readable): fix the file, never answer that stage's gate again.
@@ -36,16 +37,21 @@ devkit workflow envelope answer --unit <dir> --stage <stage> --summary "q1, q2 d
   # add --settle "2=<decision>" for each of the worker's assumptions the answers settle
 ```
 
-- One decision sentence per question; `choice: null` for an answer outside the options; `constraints` only for what the answer adds. A decision that settles one of the answered run's `assumptions` goes into `settles` (`--settle N=<decision>`, `N` its 1-based position), never into `constraints`; an answer may carry settles alone. Settling holds and releases nothing. When a rejection or a return to Backlog for decomposition ends the Planning, the party ending it closes every question still open the same way: `choice: null` and the reason (`"Planning ended: rejected by the user"`) as the decision, in the commit that ends it; otherwise the open questions hold the Planning branch's merge. Never the raw conversation, the reasoning or the question again. An answer that leaves something ambiguous becomes a new question in the next run's `worker` envelope, never a guess.
+- One decision sentence per question; `choice: null` for an answer outside the options; `constraints` only for what the answer adds. Do not record the raw conversation, the reasoning or the question again.
+- A decision that settles one of the answered run's `assumptions` goes into `settles` (`--settle N=<decision>`, `N` its 1-based position), never into `constraints`; an answer may carry settles alone. Settling holds and releases nothing.
+- When a rejection or a return to Backlog for decomposition ends the Planning, the party ending it closes every question still open the same way: `choice: null` and the reason (`"Planning ended: rejected by the user"`) as the decision, in the commit that ends it. Otherwise the open questions hold the Planning branch's merge.
+- An answer that leaves something ambiguous becomes a new question in the next run's `worker` envelope, never a guess.
 
 ### Direction without a recorded question
 
-When the user supplies direction that neither answers a recorded question nor settles a recorded worker assumption,
-reflect the decision and its reason in the
-proposal/PADR (or spec/plan during Development) and summarize its incorporation in the next worker record. Do not
-fabricate a question or create an answer envelope unless it answers a recorded question or settles a recorded worker
-assumption. Existing pending questions still
-follow the answer procedure above; unsolicited direction does not itself settle them.
+When the user supplies direction that neither answers a recorded question nor settles a recorded worker assumption:
+
+- Reflect the decision and its reason in the proposal/PADR (or spec/plan during Development) and summarize its
+  incorporation in the next worker record.
+- Do not fabricate a question or create an answer envelope unless it answers a recorded question or settles a
+  recorded worker assumption.
+- Existing pending questions still follow the answer procedure above; unsolicited direction does not itself settle
+  them.
 
 ## 3. Problems and resolutions
 
@@ -65,13 +71,14 @@ devkit workflow envelope resolution --unit <dir> --resolves worker-NN.yaml \
 
 ## 5. When permissions prevent the record or commit
 
-On unavailable or denied approval, stop that operation and preserve partial state; do not evade refusal through an
-alternate tool, path, process, broader request or host settings. Each still-permitted failure-record or emergency
-commit operation requests its own scoped approval when needed. A successful preflight grants no later access.
-
-If the worker record or emergency commit cannot run, return `failed` to the Host with cause, commands tried,
-recommended recovery, actual last commit SHA, dirty paths and the absent/uncommitted record or commit. Do not invent
-a committed envelope, clean tree or final HEAD containing it. The exactly-one committed worker-record requirement
-cannot be satisfied in this failure branch; report that fact. Only ordinary commit-gate refusal permits emergency
-`--no-verify`, never sandbox or approval denial. The Host blocks acceptance of failed dirty/uncommitted results and
-owns a subsequent recovery run and its records when permitted; it does not impersonate the worker's missing record.
+- On unavailable or denied approval, stop that operation and preserve partial state; do not evade refusal through
+  an alternate tool, path, process, broader request or host settings.
+- Each still-permitted failure-record or emergency commit operation requests its own scoped approval when needed. A
+  successful preflight grants no later access.
+- If the worker record or emergency commit cannot run, return `failed` to the Host with cause, commands tried,
+  recommended recovery, actual last commit SHA, dirty paths and the absent/uncommitted record or commit. Do not
+  invent a committed envelope, clean tree or final HEAD containing it.
+- The exactly-one committed worker-record requirement cannot be satisfied in this failure branch; report that fact.
+- Only ordinary commit-gate refusal permits emergency `--no-verify`, never sandbox or approval denial.
+- The Host blocks acceptance of failed dirty/uncommitted results and owns a subsequent recovery run and its records
+  when permitted; it does not impersonate the worker's missing record.

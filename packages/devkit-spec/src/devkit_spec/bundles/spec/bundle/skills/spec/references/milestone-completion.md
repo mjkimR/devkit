@@ -34,20 +34,25 @@ authorize a later close. Present both confirmations together with the concrete c
 of both authorizes recording `Decomposition: confirmed`, `Direct proposal work: confirmed` and `status: done`
 in the same Backlog edit/commit; no third approval is needed. Closure is available from planned or active.
 
-Immediately before writing, re-read current scope and direct membership and recheck relevant evidence. If semantic scope or relevant completion
-evidence changed, present the changed candidate again for confirmation. After pause or context compaction, establish
-the approved candidate and recheck those facts; unchanged authorization persists. Reconfirm only when semantic scope or relevant completion
-evidence changed or the approved candidate/evidence cannot be established. Interruption alone does not invalidate.
+Immediately before writing, re-read current scope and direct membership and recheck relevant evidence.
+
+- If semantic scope or relevant completion evidence changed, present the changed candidate again for confirmation.
+- After pause or context compaction, establish the approved candidate and recheck those facts;
+  unchanged authorization persists.
+- Reconfirm only when semantic scope or relevant completion evidence changed or the
+  approved candidate/evidence cannot be established. Interruption alone does not invalidate.
 
 ## Changes and terminal records
 
-Actual semantic scope changes, such as new required work, exclusion or moving scope elsewhere, reset both
-assertions to pending in the authorized scope edit. Normal PROP-to-SPEC handoff or mechanical identity relocation
-does not change scope/decomposition and requires no milestone review, reset or reconfirmation. Handoff still
-proves no delivery: check relevant completion evidence at close. Pure wording/format corrections preserving
-meaning do not invalidate. No pre-handoff or integration hook is needed.
-To extend done scope, first obtain the user's decision to reopen to active and reset both assertions in the scope
-edit, or put the new scope in another milestone. Activation and dropping remain user-owned decisions.
-An unchanged done milestone is a no-op: write nothing. Dropped milestones are not close candidates. Existing done
-records remain historical without migration or retrospective reopening. No SPEC milestone metadata, schema field,
-command, approval envelope, branch ledger or stored delivery lineage is introduced.
+- Actual semantic scope changes, such as new required work, exclusion or moving scope elsewhere, reset both
+  assertions to pending in the authorized scope edit.
+- Normal PROP-to-SPEC handoff or mechanical identity relocation does not change scope/decomposition and
+  requires no milestone review, reset or reconfirmation. Handoff still proves no delivery: check relevant completion
+  evidence at close. No pre-handoff or integration hook is needed.
+- Pure wording/format corrections preserving meaning do not invalidate.
+- To extend done scope, first obtain the user's decision to reopen to active and reset both assertions in the scope
+  edit, or put the new scope in another milestone. Activation and dropping remain user-owned decisions.
+- An unchanged done milestone is a no-op: write nothing. Dropped milestones are not close candidates.
+- Existing done records remain historical without migration or retrospective reopening.
+- Introduce no SPEC milestone metadata, schema field, command, approval envelope, branch ledger or stored delivery
+  lineage.

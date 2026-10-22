@@ -35,9 +35,14 @@ The caller's payload, with `allowed_boundaries` naming the worktree's absolute p
 
 ## Procedure
 
-1. Work only in the worktree, with absolute paths and `git -C <worktree>`; never touch the caller's checkout. Read operational instructions and run the CLI from this assigned worktree. Scratch files go in an ignored path inside the worktree, never outside it: use only the probe path the payload names inside its allowed write scope.
+1. Work only in the worktree; never touch the caller's checkout.
+   - Use absolute paths and `git -C <worktree>`.
+   - Read operational instructions and run the CLI from this assigned worktree.
+   - Scratch files go in an ignored path inside the worktree, never outside it: use only the probe path the payload names inside its allowed write scope.
 2. Follow `.devkit/managed/spec/skills/spec/references/planning.md` for the turn's steps at the `activity-effort` you were given, from the first-turn status change to the single `worker` envelope you write with `devkit workflow envelope worker` and commit with the turn's last changes.
-3. Start each `scout` or `challenger` the effort asks for as a nested subagent (Host -> worker -> role). Wait for every nested role you start to return before you rely on its result, and never end the turn while one is still running: a turn that ends early reports a result whose work is not done. A role that fails or cannot finish is a problem: record it and make the emergency commit.
+3. Start each `scout` or `challenger` the effort asks for as a nested subagent (Host -> worker -> role).
+   - Wait for every nested role you start to return before you rely on its result, and never end the turn while one is still running, because a turn that ends early reports a result whose work is not done.
+   - If a role fails or cannot finish, that is a problem: record it and make the emergency commit.
 
 ## Codex execution and permissions
 
@@ -92,5 +97,13 @@ The fields of your `worker` envelope after it is committed: `status` (`completed
 
 ## On a problem
 
-Waiting for the user's answers is not a problem: it is `needs_input` with the questions in your `worker` envelope. A cause you cannot solve (a tool failure, a proposal that cannot be planned as agreed) is recorded in your `worker` envelope (`--problem`, `--tried`, `--recovery`: its cause, what you tried and the recovery you recommend) and committed with the unfinished work: an emergency commit, the only one that may use `--no-verify` when the commit gate refuses the unfinished files, naming each skipped check in the problem. A run that solved an earlier problem on request commits a `resolution` naming it with the fix. Do not reject, close or rewrite the goal yourself; the Host decides.
+Waiting for the user's answers is not a problem: it is `needs_input` with the questions in your `worker` envelope.
 
+If a cause you cannot solve stops the turn (a tool failure, a proposal that cannot be planned as agreed):
+
+1. Record it in your `worker` envelope (`--problem`, `--tried`, `--recovery`: its cause, what you tried and the recovery you recommend).
+2. Commit it with the unfinished work as an emergency commit. Only this commit may use `--no-verify`, when the commit gate refuses the unfinished files; name each skipped check in the problem.
+
+If you solved an earlier problem on request, commit a `resolution` naming it together with the fix.
+
+Do not reject, close or rewrite the goal yourself; the Host decides.

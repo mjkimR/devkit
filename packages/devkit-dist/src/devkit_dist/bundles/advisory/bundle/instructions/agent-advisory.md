@@ -47,7 +47,11 @@ Render advisories as sentinel lines on standard error (or as the text of a tool 
 [DETAIL] <Diagnostic context; one line per detail>
 ```
 
-Each sentinel is padded to 9 characters; the headline always carries the code, then the message: one concise sentence. A notice omits `[ACTION]` only when it is `brief` and has no `[FIX]`, since a fix without a directive reads as an instruction to run it. Omit any other line whose field is empty. A multi-line value continues on lines indented 9 spaces; a block never contains a blank line, colour, emoji or Markdown.
+- Pad each sentinel to 9 characters.
+- Put the code in the headline, then the message: one concise sentence.
+- Omit `[ACTION]` only for a notice that is `brief` and has no `[FIX]`; a fix without a directive reads as an instruction to run it.
+- Omit any other line whose field is empty.
+- Continue a multi-line value on lines indented 9 spaces; a block never contains a blank line, colour, emoji or Markdown.
 
 ## Fields
 
@@ -100,7 +104,7 @@ INPUT_ERROR — Do not retry with identical input. Retrying unchanged will
 
 ### `HALT`: critical state hazard or corruption risk
 
-- **Use for**: half-applied mutations, lock conflicts, possible state corruption: **only** where further execution can damage state.
+- **Use for**: half-applied mutations, lock conflicts, possible state corruption: only where further execution can damage state.
 - **Never use for** input typos or fixable syntax errors; use `INPUT_ERROR`.
 - **Set**: `retry = UNSAFE` with `actor` `NONE` or `TOOL`.
 
@@ -202,4 +206,4 @@ Machine channels carry the same envelope as data:
 - **HTTP (RFC 7807)**: errors only: `{"type", "title": <code>, "status": <HTTP status>, "detail": <message>, "code", "advisory"}`, `type` being `<documentation base URI>/<code>` or `about:blank`. The server, never a request header, decides whether to expose `advisory`. Warnings and notices travel in the successful response body.
 - **MCP tools**: a failed call returns the rendered error block as the error result text; a successful call appends its rendered warning and notice blocks after the result text.
 
-A consumer never executes `fix` automatically outside `AUTO` (and `INTERACTION` after approval, `CONTINUE`/`NOTE` when the user asks). A transport adapter never executes `fix` on the agent's behalf.
+A consumer executes `fix` automatically only in `AUTO`, in `INTERACTION` after approval, and in `CONTINUE`/`NOTE` when the user asks. A transport adapter never executes `fix` on the agent's behalf.

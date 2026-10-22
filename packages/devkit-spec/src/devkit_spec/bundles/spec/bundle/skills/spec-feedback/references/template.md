@@ -1,6 +1,10 @@
 # Feedback template
 
-Read this when writing a feedback file (step 3 of the `spec-feedback` recording procedure). Copy the block inside the four-backtick fence, replace every `<...>` placeholder, follow and then delete the comment.
+Read this when writing a feedback file (step 3 of the `spec-feedback` recording procedure).
+
+1. Copy the block inside the four-backtick fence.
+2. Replace every `<...>` placeholder.
+3. Follow the comment, then delete it.
 
 ````markdown
 ---
@@ -56,15 +60,16 @@ If category is other, state the nature in the first line below.
 
 ## Configured detail
 
-`FEEDBACK_POLICY detail` from `devkit spec policy`. Every level keeps complete frontmatter, the rules of the comment
-above and the agent's own assessment.
+Read the level from `FEEDBACK_POLICY detail` in `devkit spec policy`. At every level, keep complete frontmatter, the
+rules of the comment above and your own assessment.
 
 - **brief**: retain the applicable section with context/current procedure, actual observation or proposed change,
   a short assessment and Evidence. Omit unused template bullets.
 - **standard**: fill the applicable kind-specific section and Evidence as shown above.
-- **detailed**: standard plus the following section before Evidence. Fill missing facts with `unknown` (never
-  fabricate output, versions or reproduction results) and `not applicable` where a field does not apply; do not rerun
-  risky or expensive commands just to complete the record.
+- **detailed**: standard plus the following section before Evidence.
+  - Fill a missing fact with `unknown`; never fabricate output, versions or reproduction results.
+  - Write `not applicable` where a field does not apply.
+  - Do not rerun risky or expensive commands just to complete the record; write `unknown` instead.
 
 ```markdown
 ## Diagnostic Details

@@ -7,15 +7,15 @@ description: Read before running tests, linters or type checks outside a project
 
 `uv run devkit run -- <command>` keeps the complete output in a log file and
 prints the outcome, the tool's summary lines and warnings and, on failure, an
-excerpt without progress and noise. Prefer it when you run a test runner,
-linter or type checker yourself:
+excerpt without progress and noise. When you run a test runner, linter or
+type checker yourself, run it through `devkit run`:
 
 ```bash
 uv run devkit run -- uv run pytest tests/test_api.py -x
 uv run devkit run -- npm run check
 ```
 
-Run a recipe that already calls `devkit run` as it is; never wrap it twice.
+Run a recipe that already calls `devkit run` as it is, without a second `devkit run` around it.
 
 ## Reading the output
 
@@ -32,10 +32,13 @@ Run a recipe that already calls `devkit run` as it is; never wrap it twice.
 Advisory blocks of nested `devkit` commands come on stderr, whole.
 
 Act on the excerpt first. Read the log at `log=` only when the excerpt is not
-enough, and only the part you need: the excerpt's
-`[... N characters omitted, log lines A-B ...]` line names what it left out
-(`sed -n 'A,Bp' <log>`); otherwise search it (`rg -n "<test name>" <log>`). A
-`[... previous line repeated N more times ...]` line stands for copies of the
+enough, and only the part you need:
+
+- If the excerpt has a `[... N characters omitted, log lines A-B ...]` line, read
+  those lines (`sed -n 'A,Bp' <log>`).
+- Otherwise search the log (`rg -n "<test name>" <log>`).
+
+A `[... previous line repeated N more times ...]` line stands for copies of the
 line above it.
 
 `devkit run` exits `0` when the command passed, `1` when it failed, `2` when it
