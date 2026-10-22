@@ -62,7 +62,9 @@ sequence.
 1. **One definition per classification**: the workflow id is `sdd-<planning-depth>[-<task-kind>]`. `session` uses
    `sdd-session-feature` or `sdd-session-bugfix`, `spec` uses `sdd-spec-feature` or `sdd-spec-bugfix`, `proposal` uses
    `sdd-proposal` until handoff and then `sdd-spec-<task_kind>`. A team review is `proposal` depth plus PR policy, not
-   a workflow. The axes are not stored as fields: the Unit's kind and the bound workflow show them.
+   a workflow. The task kind `overall-refactor` has no depth and one workflow, `sdd-overall-refactor`, run in `direct`
+   mode only, without a Unit, proposal or spec bundle (`ADR-overall-refactor-workflow`). The axes are not stored as
+   fields: the Unit's kind and the bound workflow show them.
 2. **Definitions are authoritative**: an executor MUST take stage order, checks, gates and returns from
    `devkit workflow show <id>` / `devkit workflow show --unit <dir>` and `devkit workflow next --unit <dir>`. The
    Markdown body of a definition keeps only rules the schema cannot express.
@@ -203,6 +205,7 @@ sequence.
 | --- | --- | --- | --- | --- |
 | `sdd-session-feature` | `session` × `feature` | none | none | `plan-intent`, `dev-integration` |
 | `sdd-session-bugfix` | `session` × `bugfix` | none | none | `plan-intent`, `dev-integration` |
+| `sdd-overall-refactor` | `overall-refactor` (no depth) | none | none | `plan-intent`, `dev-integration` |
 | `sdd-spec-feature` | `spec` × `feature` | `specs` / `{date:%Y-%m}/{date:%Y%m%d}-{slug}` | `spec.md` | `plan-intent`, `dev-integration` |
 | `sdd-spec-bugfix` | `spec` × `bugfix` | `specs` / `{date:%Y-%m}/{date:%Y%m%d}-{slug}` | `spec.md` | `plan-intent`, `dev-integration` |
 | `sdd-proposal` | `proposal` (either kind) | `docs/proposals` / `PROP-{slug}` | `proposal.md` | `plan-intent`, `plan-accept` |
@@ -218,6 +221,8 @@ expects them and `devkit workflow list` finds both. `schema_version` is `1` in e
   (`dev-integration`), `commit-session` (exit `lint-ci-clean`), `merge` (exit `merged`).
 - **`sdd-session-bugfix`**: `intent-session`, `reproduce-session`, then the stages of `sdd-session-feature` from
   `execute-verify` on.
+- **`sdd-overall-refactor`**: `intent-refactor` (`plan-intent`), `restructure`, `report-refactor`, `commit-refactor`
+  (exit `lint-ci-clean`), `approval-refactor` (`dev-integration`), `merge` (exit `merged`).
 - **`sdd-spec-feature`**: `intent` (`plan-intent`), `specify`, `build-verify`, `review-refine`, `living-spec-draft`,
   `collect-feedback`, `final-change-report`, `integration-approval` (`dev-integration`), `integrate`, `merge`.
 - **`sdd-spec-bugfix`**: `intent` (`plan-intent`), `characterize`, `plan-tasks`, `reproduce`, `fix-verify`, then the
@@ -479,7 +484,7 @@ Registered under the `devkit_agt.features.integration.readiness` entry point as 
 2. **Unit tasks (`task.kind == "unit"`)**: verifies branch-to-unit correspondence through `attach_check(base, branch, unit, source_sha)` and `task.id` agreement (`<slug>`, `SPEC-<slug>` or `PROP-<slug>`), then evaluates the unit in `Workspace(..., ancestor=...)`:
    - `dev-<slug>` (`sdd-spec-feature` or `sdd-spec-bugfix`): evaluated with `given=("dev-integration",)`; requires `current_stage == "integrate"`, zero unmet checks across earlier stages (`specify`/`characterize`, `build-verify` or `reproduce`/`fix-verify`, `review-refine`, `living-spec-draft`, `collect-feedback` when enabled, `final-change-report`, `integration-approval`), no envelope hold (`blocked` or `pending_questions`), `spec.md` `status: completed`, `reconcile.md` `status: resolved`, and (when handed off from a proposal) carried `gate:plan-accept` accepted.
    - `plan-<slug>` (`sdd-proposal`): requires `proposal.md` `status: accepted`, `gate:plan-intent` and `gate:plan-accept` accepted, `collect-feedback` satisfied when enabled, `complete == True` (`current_stage is None`), and no envelope hold.
-3. **Session tasks (`task.kind == "session"`)**: requires a `dev-<slug>` branch with no spec unit for `<slug>`, verifies that no spec or proposal unit touched between `merge_base(target_sha, source_sha)` and `source_sha` is held or incomplete (`spec.md` must be `completed`, `proposal.md` must be `accepted`), and validates structured JSON declarations in `task.claims_json` (`task_kind` in `feature|bugfix`, `effort` in `low|medium|high`, `review`, `tests`, `lint` passed, plus `reproduced: true` and `resolved: true` for `bugfix`).
+3. **Session tasks (`task.kind == "session"`)**: requires a `dev-<slug>` branch with no spec unit for `<slug>`, verifies that no spec or proposal unit touched between `merge_base(target_sha, source_sha)` and `source_sha` is held or incomplete (`spec.md` must be `completed`, `proposal.md` must be `accepted`), and validates structured JSON declarations in `task.claims_json` (`task_kind` in `feature|bugfix|overall-refactor`, `effort` in `low|medium|high`, `review`, `tests`, `lint` passed, plus `reproduced: true` and `resolved: true` for `bugfix`).
 4. **Cumulative CI governance rules**: runs `run_project_rules(workspace, snapshot=ci_snapshot, phase=Phase.LINTER)` on the `merge_base..source_sha` snapshot (`mode="ci"`), or with a result commit on the `build_target..result_sha` snapshot (the tree that would land), and requires zero load/evaluation errors and zero blocking violations (`CI_RULES=pass`). The unit is still evaluated from the source tree; with a result commit, a target change inside the unit directory since the merge base is a reason. Tests are not re-run on the result.
 5. **Deterministic evidence**: returns `Readiness(source_sha, target_sha, evidence=..., reasons=..., result_sha=..., target_bound=("TARGET_SHA", "RESULT_SHA"), disclosure="CI rules only on the merged result; tests and review ran on the source only")` whose coded `Evidence` tuple (`TASK_KIND`, `WORKFLOW`, `UNIT`, `SOURCE_SHA`, `TARGET_SHA`, `STAGE_STATUS`, `HOLD_STATUS`, `SESSION_CLAIMS`, `CI_RULES`, `SPEC_POLICY`, and `RESULT_SHA` at a build) is deterministic from committed Git state. `SPEC_POLICY` digests the parsed `[tool.spec]` of the target and of the result (the source before a build) and is not target-bound, so a `[tool.spec]` change on the target refuses the build through `IntegrationService`'s evidence equality, which ignores only the target-bound codes.
 

@@ -617,6 +617,17 @@
     {
       "bundle": "spec",
       "entrypoints": [
+        ".devkit/managed/spec/workflows/sdd-overall-refactor.md"
+      ],
+      "id": "sdd-overall-refactor",
+      "kind": "workflow",
+      "paths": [
+        ".devkit/managed/spec/workflows/sdd-overall-refactor.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "entrypoints": [
         ".devkit/managed/spec/workflows/sdd-spec-feature.md"
       ],
       "id": "sdd-spec-feature",
@@ -847,7 +858,7 @@
     },
     ".agents/skills/spec-next/references/workflow-signals.md": {
       "mode": 420,
-      "sha256": "68be7158e09aa1b361e67b3fe445d7a998ff27086883b24b7b29efcc33933b9e"
+      "sha256": "b7f05b433b9f83f1e45db33a38d7b5ad336f3f64bab6dd4551c4fbf6a18fef52"
     },
     ".agents/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
@@ -903,7 +914,7 @@
     },
     ".agents/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "077693fd91a6163e6d28fa86321b8633194a84f0526367bafdb5a9bb17671864"
+      "sha256": "b9cf566ce77185b5ec84f93d1583122c6014e563fb4dc1c2e79add6292509cf0"
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -915,7 +926,7 @@
     },
     ".agents/skills/spec/references/classification.md": {
       "mode": 420,
-      "sha256": "f25f21c8cd9010ab95aab0d520c1c68403c19f58fd3087c301f1e7941990eb95"
+      "sha256": "ac706c310c8827515d395f8f74e25c9c7bcf09696fa2020dea69e11d49e95c45"
     },
     ".agents/skills/spec/references/completion.md": {
       "mode": 420,
@@ -1047,7 +1058,7 @@
     },
     ".claude/skills/spec-next/references/workflow-signals.md": {
       "mode": 420,
-      "sha256": "68be7158e09aa1b361e67b3fe445d7a998ff27086883b24b7b29efcc33933b9e"
+      "sha256": "b7f05b433b9f83f1e45db33a38d7b5ad336f3f64bab6dd4551c4fbf6a18fef52"
     },
     ".claude/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
@@ -1099,7 +1110,7 @@
     },
     ".claude/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "077693fd91a6163e6d28fa86321b8633194a84f0526367bafdb5a9bb17671864"
+      "sha256": "b9cf566ce77185b5ec84f93d1583122c6014e563fb4dc1c2e79add6292509cf0"
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -1111,7 +1122,7 @@
     },
     ".claude/skills/spec/references/classification.md": {
       "mode": 420,
-      "sha256": "f25f21c8cd9010ab95aab0d520c1c68403c19f58fd3087c301f1e7941990eb95"
+      "sha256": "ac706c310c8827515d395f8f74e25c9c7bcf09696fa2020dea69e11d49e95c45"
     },
     ".claude/skills/spec/references/completion.md": {
       "mode": 420,
@@ -1339,11 +1350,11 @@
     },
     ".devkit/managed/spec/AGENTS.md": {
       "mode": 420,
-      "sha256": "e2cd544875fcfdaa3636eebbe53d8bb1e26a836ff1fdd47c9518cf9c6b760540"
+      "sha256": "121290e2fc910f143ec6e305d00d7d96105ccd1cd386e2f6ae4c616d96575364"
     },
     ".devkit/managed/spec/bundle.toml": {
       "mode": 420,
-      "sha256": "04dcebb035d4c2a45c6f3f771edb122bbcb18568218fd5c056b1f899a0eee27b"
+      "sha256": "05f5f0d76b7bf39b5df892f32f6d4aca5fb5ae7c4419894bcc3032175feafd99"
     },
     ".devkit/managed/spec/guidance/spec-pointer.md": {
       "mode": 420,
@@ -1575,7 +1586,7 @@
     },
     ".devkit/managed/spec/skills/spec-next/references/workflow-signals.md": {
       "mode": 420,
-      "sha256": "68be7158e09aa1b361e67b3fe445d7a998ff27086883b24b7b29efcc33933b9e"
+      "sha256": "b7f05b433b9f83f1e45db33a38d7b5ad336f3f64bab6dd4551c4fbf6a18fef52"
     },
     ".devkit/managed/spec/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
@@ -1627,7 +1638,7 @@
     },
     ".devkit/managed/spec/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "077693fd91a6163e6d28fa86321b8633194a84f0526367bafdb5a9bb17671864"
+      "sha256": "b9cf566ce77185b5ec84f93d1583122c6014e563fb4dc1c2e79add6292509cf0"
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -1639,7 +1650,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/classification.md": {
       "mode": 420,
-      "sha256": "f25f21c8cd9010ab95aab0d520c1c68403c19f58fd3087c301f1e7941990eb95"
+      "sha256": "ac706c310c8827515d395f8f74e25c9c7bcf09696fa2020dea69e11d49e95c45"
     },
     ".devkit/managed/spec/skills/spec/references/completion.md": {
       "mode": 420,
@@ -1724,6 +1735,10 @@
     ".devkit/managed/spec/templates/story.md": {
       "mode": 420,
       "sha256": "65e547b4636d3ff2d40bfd780856a1c3a2f4ae075200c9a6833a687559e06cb7"
+    },
+    ".devkit/managed/spec/workflows/sdd-overall-refactor.md": {
+      "mode": 420,
+      "sha256": "56047cbcb2f5c77488fcbf6d1d668db5e0081dca9d6ec639e583428aaac3b37d"
     },
     ".devkit/managed/spec/workflows/sdd-proposal.md": {
       "mode": 420,

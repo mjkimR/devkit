@@ -441,6 +441,17 @@ def test_session_readiness_verifies_claims_and_refuses_invalid_claims_or_plan_br
     assert r_ok.reasons == ()
     assert dict((e.code, e.value) for e in r_ok.evidence)["WORKFLOW"] == "sdd-session-bugfix"
 
+    refactor = Task(
+        kind="session",
+        id="quick",
+        claims_json=json.dumps(
+            {"task_kind": "overall-refactor", "effort": "medium", "review": "passed", "tests": "PASS", "lint": True}
+        ),
+    )
+    r_refactor = check(IntegrationContext(plan, refactor))
+    assert r_refactor.reasons == ()
+    assert dict((e.code, e.value) for e in r_refactor.evidence)["WORKFLOW"] == "sdd-overall-refactor"
+
     missing_repro = Task(
         kind="session",
         id="quick",

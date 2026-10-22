@@ -124,6 +124,7 @@ to allow it on their explicit decision (`answer-01.yaml`, question `session-recl
 
 - **Axes**: work is classified on `task-kind` (`feature`, `bugfix`), `planning-depth` (`session`, `spec`, `proposal`)
   and `activity-effort` (`low`, `medium`, `high`) instead of Routes 1 to 4. (ADR-task-kind-and-planning-depth)
+  (Task kinds: `ADR-overall-refactor-workflow` adds `overall-refactor`, with no depth and its own workflow.)
 - **Workflows**: `sdd-session-feature`, `sdd-session-bugfix`, `sdd-spec-feature`, `sdd-spec-bugfix`, `sdd-proposal`.
   (ADR-task-kind-and-planning-depth)
 - **Gates**: `plan-intent`, `plan-accept` and `dev-integration` are named gates matching the engine's request ids;

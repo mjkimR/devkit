@@ -104,6 +104,9 @@ flowchart LR
 | **`spec`** | `sdd-spec-feature` | `sdd-spec-bugfix` |
 | **`proposal`** | `sdd-proposal` → `sdd-spec-feature` | `sdd-proposal` → `sdd-spec-bugfix` |
 
+`overall-refactor`, a structural change across the project that adds no behavior, has no depth: it runs
+`sdd-overall-refactor` in `direct` mode, without a Unit (`ADR-overall-refactor-workflow`).
+
 ```mermaid
 flowchart LR
     S["session<br/>in-memory / conversation"]:::host -->|contract or doc changes discovered| SP["spec<br/>spec Unit on dev-slug"]:::host

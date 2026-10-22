@@ -42,6 +42,7 @@ When the user enters `/spec <intent>` or asks a general engineering question:
 | :--- | :--- | :--- |
 | `session` × `feature` | `sdd-session-feature` | Inline Planning: agree the intent in the conversation (session: no records). Implement, verify and review at the effort, following `devkit workflow show sdd-session-feature` in the session. |
 | `session` × `bugfix` | `sdd-session-bugfix` | Same, with the expected behavior agreed; a failing reproduction test first (Red), then the fix (Green), reporting both. |
+| `overall-refactor` (no depth) | `sdd-overall-refactor` | `direct` only, with the user: agree goal, scope and non-goals in the conversation (no records); restructure code, tests and the Living Spec with general subagents, never the predefined workers; full verification; report in the response and the commit body ([classification](references/classification.md) §5). |
 | `spec` × `feature` | `sdd-spec-feature` | Inline Planning on `dev-<slug>`: `devkit spec new <slug> --title "..." --summary "..."`, record `plan-intent`, commit. Development then runs `spec-specify` ➔ `spec-plan` ➔ `spec-tasks` and the later stages. |
 | `spec` × `bugfix` | `sdd-spec-bugfix` | Same with `--workflow sdd-spec-bugfix`. Development characterizes the defect (`spec-specify`, bugfix reference), reproduces with a `red` envelope and verifies with a `green` one. |
 | `proposal` (either kind) | `sdd-proposal`, then `sdd-spec-<task_kind>` | Backlog: `devkit spec proposal new <slug> --task-kind feature\|bugfix [--planning-effort ...] [--dev-effort ...]`; record the authorized intent as `plan-intent`. Planning (its own activity): runs on `plan-<slug>` to `plan-accept` following [planning](references/planning.md), in `direct` mode or by a `planning-worker`. If the user accepts an eligible draft directly in Backlog ([backlog](references/backlog.md)), Planning is skipped. Development: starts on `dev-<slug>` with `devkit spec proposal handoff <slug>` and the `spec-next` skill's post-handoff link check. |
@@ -62,7 +63,7 @@ The three main approval boundaries are `plan-accept` (proposal direction), `prop
 - Record acceptance with `devkit spec proposal accept`, which also writes status.
 - Native acceptance can combine `plan-accept` and `proposal-handoff` in one request (`accept_and_handoff`), or stop after direction acceptance (`accept_only`); their policies remain independent.
 - Pass `--given` to assert a runner check (`lint-ci-clean`, `merged`) per run.
-- There is no Development direction gate: implementation, decomposition, review and refinement within the agreement are agent decisions ([classification](references/classification.md) §2).
+- There is no Development direction gate: implementation, decomposition, review and refinement within the agreement are agent decisions ([classification](references/classification.md) §5).
 
 ### Binding, returns and records
 
