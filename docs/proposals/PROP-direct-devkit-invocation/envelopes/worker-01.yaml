@@ -1,0 +1,35 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-22T06:36:06.826647Z'
+status: needs_input
+summary: Inventoried uv run devkit emitters, measured five invocation forms and probed missing, stale and subdirectory behavior; no direct form is clearly safe for consumers, so the PADR recommends keeping uv run and q1 asks the user to choose.
+findings: []
+assumptions:
+- The 2-14 % saving from the worktree measurement holds for consumer repositories of similar size
+unverified_areas:
+- Codex and Antigravity hosts were not run; their portability follows from PATH and cwd behavior, not a live run
+checks:
+  rules: PASS proposal, PADR, materials, feedback
+  measurement: PASS uv run overhead 18-23 ms over .venv/bin/devkit, 2-14 % of frequent commands
+diff_scope:
+  base: 9811613ada968b8ddbec96327f8f493a20297802
+  head: 4abf6ac5dc56344ad401c55a676ab7c3272b9bc6
+questions:
+- id: q1
+  title: Agent-facing devkit invocation form
+  prompt: Which form should agent guidance use for frequent devkit calls (get-context, workflow next, envelopes)?
+  context: This decides whether the proposal has any Development. Measured in this repository, uv run devkit costs 18-23 ms more per call than .venv/bin/devkit and 9-14 ms more than uv run --no-sync, which is 2-14 % of a 120-450 ms frequent command (about 1 s per 50-call agent session). Only uv run devkit works from any directory and syncs devkit after a lock change; .venv/bin/devkit fails with exit 127 from a subdirectory or without an environment, and both direct forms silently run an older devkit after git pull, a branch switch or a new worktree without setup. Hooks already bypass uv run, so only guidance text is affected. The guidance is committed and reaches every consumer repository and host.
+  options:
+  - id: a
+    description: Keep uv run devkit everywhere (PADR as written). No Development; the Host closes the proposal, with the measurements in materials/invocation-forms.md as the reason.
+    recommended: true
+  - id: b
+    description: Use .venv/bin/devkit in the managed AGENTS.md block and the devkit-workflow entry skill only, with a "run uv sync when it is missing" instruction; keep uv run for setup. Accepts root-only calls and a stale devkit after a lock change. The next turn rewrites the PADR and raises dev_effort to medium (devkit-dist, devkit-spec and devkit-agt guidance).
+    recommended: false
+  - id: c
+    description: Use uv run --no-sync devkit on the same frequent emitters; works from subdirectories and saves 9-14 ms. Accepts a stale devkit after a lock change and an empty .venv when none exists. The next turn rewrites the PADR and raises dev_effort to medium.
+    recommended: false
+  allow_note: true
+activity_effort: low
