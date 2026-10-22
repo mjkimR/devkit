@@ -8,7 +8,7 @@ target: devkit.shared public adapter protocol and registration contract
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-21
 ---
 
@@ -54,3 +54,5 @@ worker-01 question remote-first-delivery: a protocol/test adapter cannot provide
 answer-01 decision: local adapter plus public remote adapter protocol/registration; concrete backend deferred.
 proposal AC6: test adapter conformance explicitly does not constitute remote production evidence.
 ```
+
+- **Disposition**: dismissed. `CAP-COLL-shared-artifacts` states that local storage provides no cross-host sharing, and a cross-host attempt is refused at once (a URI from another namespace fails in `get`; cloud refuses `shared_put`), so the need surfaces when it arises; no current consumer reads reports across hosts. A concrete remote adapter starts as its own proposal when one does.
