@@ -2,7 +2,7 @@
 id: PROP-rule-shared-python-ast
 title: Parse each Python file once per rules run
 summary: "Adds a parsed-AST accessor to the rules workspace cache so Python-source rules share one parse per file and run, and resolves each rule path once per run, removing about 1,000 repeated parses, their garbage collection and most repeated path resolution from devkit rules check."
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-22
 target_area: governance/
 priority: high                        # critical | high | medium | low
