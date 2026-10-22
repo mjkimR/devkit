@@ -7,6 +7,7 @@ status: active
 entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/sync.py
   - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/
+  - packages/devkit-dist/src/devkit_dist/features/project/repositories/local_config.py
 created_at: 2026-10-17
 ---
 
