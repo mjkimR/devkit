@@ -219,3 +219,34 @@ def test_only_an_answer_carries_settles(root: Path) -> None:
     errors = {e.file: e.message for e in load_envelopes(_unit(root)).errors}
     assert "only an answer envelope carries them" in errors["envelopes/review-01.yaml"]
     assert "an answer envelope needs answers or settles" in errors["envelopes/answer-01.yaml"]
+
+
+# SPEC-feedback-guidance-fixes AC-06
+def test_a_reconcile_check_source_names_the_reconcile_route(root: Path) -> None:
+    _put(root, "reconcile-check-01.yaml", {"kind": "reconcile-check", "stage": "s", "status": "completed", "findings": FINDINGS})  # fmt: skip
+    before = _names(root)
+    result = _envelope(root, "reverify", "--summary", "x", "--from", "envelopes/reconcile-check-01.yaml")
+    assert result.exit_code == 2
+    assert "ENVELOPE_FROM_INVALID" in result.stderr
+    assert "--kind reconcile-check" in result.stderr and "reconcile-reviewer" in result.stderr
+    assert "--from envelopes/challenger-NN.yaml" not in result.stderr
+    assert _names(root) == before
+
+
+# SPEC-feedback-guidance-fixes AC-08
+def test_a_later_answer_corrects_an_answered_question(root: Path) -> None:
+    _put(root, "worker-01.yaml", WORKER)
+    first = _envelope(
+        root, "answer", "--summary", "q1 decided", "--answers-to", "worker-01.yaml", "--answers-file", "-",
+        stdin="- { question: q1, choice: a, decision: Keep TOML. }\n",
+    )  # fmt: skip
+    assert first.exit_code == 0, first.output
+    correction = _envelope(
+        root, "answer", "--summary", "q1 corrected; corrects answer-01.yaml", "--answers-to", "worker-01.yaml",
+        "--answers-file", "-", stdin="- { question: q1, choice: b, decision: Use YAML instead. }\n",
+    )  # fmt: skip
+    assert correction.exit_code == 0, correction.output
+    assert _read(root, "answer-01.yaml")["answers"][0]["choice"] == "a"  # type: ignore[index]
+    assert _read(root, "answer-02.yaml")["answers"][0]["choice"] == "b"  # type: ignore[index]
+    envelopes = load_envelopes(_unit(root))
+    assert not envelopes.errors and not envelopes.hold().questions

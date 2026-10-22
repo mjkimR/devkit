@@ -42,6 +42,16 @@ devkit workflow envelope answer --unit <dir> --stage <stage> --summary "q1, q2 d
 - When a rejection or a return to Backlog for decomposition ends the Planning, the party ending it closes every question still open the same way: `choice: null` and the reason (`"Planning ended: rejected by the user"`) as the decision, in the commit that ends it. Otherwise the open questions hold the Planning branch's merge.
 - An answer that leaves something ambiguous becomes a new question in the next run's `worker` envelope, never a guess.
 
+### Correcting a recorded answer
+
+When the user corrects an answer already recorded in an `answer` envelope:
+
+- Record a later `answer` envelope naming the same `worker` envelope (`--answers-to worker-NN.yaml`) that answers
+  the corrected question again with the corrected choice and decision; its summary names the corrected record
+  (`"q3 corrected; corrects answer-01.yaml"`).
+- The later answer supersedes the earlier one for that question. Never edit or delete the earlier envelope.
+- Fold the corrected decision into the documents like any answer and name the correction in the next worker record.
+
 ### Direction without a recorded question
 
 When the user supplies direction that neither answers a recorded question nor settles a recorded worker assumption:

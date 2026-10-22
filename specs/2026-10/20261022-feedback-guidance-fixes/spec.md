@@ -2,7 +2,7 @@
 id: SPEC-feedback-guidance-fixes
 title: Feedback Guidance Fixes
 summary: 'Resolves five open feedback items: a discoverable proposal report template, a reverify fix that names the reconcile-check path, PADR withdrawal and answer-correction procedures in the Planning guides, and handoff placement of carried validation scenarios.'
-status: planned
+status: in-progress
 created: 2026-10-22
 namespace: global
 related_capabilities:
@@ -59,9 +59,10 @@ Five open feedback items report friction an agent hit while following the delive
   `decisions`, `decision fields`, `coverage`, `dev_effort`, `size`, `source`) and names the mismatched keys,
   headings, PADR IDs or tokens; the `[FIX]` names both template routes.
 - **A3 (mixed sections)**: an H2 heading is a carried contract when it names a non-goal keyword together with
-  `acceptance`, `validation` or `verification`, or names `validation` or `verification` alone. Such a section is
-  carried verbatim (inner headings demoted) under a neutral `Carried Proposal Contract` section placed after the
-  acceptance criteria; Non-Goals keep their placeholder and leftover notes follow it with the next section number.
+  `acceptance`, `validation` or `verification`. A heading naming validation or verification alone (such as
+  `Lifecycle & Verification`) stays a carried note, which is already neutral. A carried contract keeps its heading
+  as H3 with inner headings demoted under a neutral `Carried Proposal Contract` section placed after the acceptance
+  criteria; Non-Goals keep their placeholder and leftover notes follow it with the next section number.
 - **A4 (scope of item 2)**: the Host's payload scopes the reverify feedback to the `[FIX]` text; the `spec-delegate`
   sentence its suggestion also names stays as it is and is reported as a follow-up observation.
 

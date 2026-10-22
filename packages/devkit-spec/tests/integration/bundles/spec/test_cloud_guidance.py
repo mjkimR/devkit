@@ -15,7 +15,7 @@ from devkit_dist.features.distribution.usecases.sync import sync_project
 
 MAINTAINED = {"advisory", "authoring", "devkit", "harness", "response-style", "spec"}
 OPERATIONAL = re.compile(
-    r"\bMCP\b|\b(?:integration_(?:integrate|prepare|resume|status)|spec_(?:proposal_report|plan_accept|handoff)|shared_(?:put|get|list|sweep|sweep_apply))\b|native (?:approval|confirmation|form)",
+    r"\bMCP\b|\b(?:integration_(?:integrate|prepare|resume|status)|spec_(?:proposal_report(?:_template)?|plan_accept|handoff)|shared_(?:put|get|list|sweep|sweep_apply))\b|native (?:approval|confirmation|form)",
     re.I,
 )
 # These two lines document configuration keys; they do not instruct setup or routing.
@@ -85,7 +85,12 @@ def test_complete_maintained_cloud_inventory(agent: str, tmp_path: Path):
     ):
         assert required in combined
     local = desired_inventory(selected, {item.bundle.name: ["all"] for item in selected}, [agent], environment="local")
-    assert b"spec_plan_accept" in local.files[".devkit/managed/spec/skills/spec-review-proposal/SKILL.md"].data
+    review = local.files[".devkit/managed/spec/skills/spec-review-proposal/SKILL.md"].data
+    assert b"spec_plan_accept" in review
+    # AC-05: both renderings name the template route; only the local one names the MCP tool.
+    assert b"spec_proposal_report_template" in review and b"--template" in review
+    cloud_review = inventory.files[".devkit/managed/spec/skills/spec-review-proposal/SKILL.md"].data
+    assert b"--template" in cloud_review
     assert (
         b"Do not automatically fall back to CLI"
         in local.files[".devkit/managed/spec/skills/spec-orchestrate/SKILL.md"].data

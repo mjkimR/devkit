@@ -52,7 +52,10 @@ DECISION_FIELDS = {
 class ReportInvalidError(SpecError):
     code = "PROPOSAL_REVIEW_INVALID"
     input_error = True
-    fix = "Provide a complete report for the current clean committed proposal using the report template"
+    fix = (
+        "Fill the report template of the current clean committed proposal and publish it again: "
+        "`devkit spec proposal report <slug> --source-sha <sha> --template` (MCP: spec_proposal_report_template)"
+    )
 
 
 class ReviewRefreshRequiredError(SpecError):
@@ -73,26 +76,26 @@ class Source:
 
 def source(root: Path, slug: str, sha: str) -> Source:
     if not SLUG.fullmatch(slug) or len(slug) > 59 or not SHA.fullmatch(sha):
-        raise ReportInvalidError("expected a proposal slug and full lowercase commit SHA")
+        raise ReportInvalidError("source: expected a proposal slug and full lowercase commit SHA")
     try:
         if (
             run_git(root, "rev-parse", "HEAD").decode().strip() != sha
             or run_git(root, "cat-file", "-t", sha).strip() != b"commit"
         ):
-            raise ReportInvalidError("source must be the current full commit identity")
+            raise ReportInvalidError("source: source_sha must be the current full commit identity")
         if run_git(root, "status", "--porcelain", "--untracked-files=normal").strip():
-            raise ReportInvalidError("commit or resolve worktree changes before publishing")
+            raise ReportInvalidError("source: commit or resolve worktree changes before publishing")
         unit = f"docs/proposals/PROP-{slug}/"
         entries = run_git(root, "ls-tree", "-r", sha, "--", unit).decode().splitlines()
         files = {}
         for entry in entries:
             mode, _kind, _oid, path = entry.split(None, 3)
             if mode not in {"100644", "100755"}:
-                raise ReportInvalidError("proposal records must be committed regular files")
+                raise ReportInvalidError("source: proposal records must be committed regular files")
             files[path] = run_git(root, "show", f"{sha}:{path}").decode()
         meta = parse(files.get(unit + "proposal.md", "")).data or {}
         if meta.get("id") != f"PROP-{slug}":
-            raise ReportInvalidError("source does not contain the expected proposal")
+            raise ReportInvalidError("source: the commit does not contain the expected proposal")
         position = locate(root)
         planning = position.branch == f"plan-{slug}" and meta.get("status") in {"reviewing", "accepted"}
         accepted = (
@@ -102,25 +105,25 @@ def source(root: Path, slug: str, sha: str) -> Source:
             and meta.get("status") == "accepted"
         )
         if not (planning or accepted):
-            raise ReportInvalidError("source must be the Planning branch or accepted retained base")
+            raise ReportInvalidError("source: must be the Planning branch or accepted retained base")
         padrs, coverage = [], []
         for path, text in files.items():
             if path.startswith(unit + "decisions/PADR-") and path.endswith(".md"):
                 identifier = (parse(text).data or {}).get("id")
                 if not isinstance(identifier, str) or identifier != Path(path).stem:
-                    raise ReportInvalidError("PADR identity must match its committed filename")
+                    raise ReportInvalidError("source: PADR identity must match its committed filename")
                 padrs.append(identifier)
             if path.startswith(unit + "envelopes/") and path.endswith((".yaml", ".yml")):
                 record = yaml.safe_load(text)
                 if not isinstance(record, dict):
-                    raise ReportInvalidError("invalid committed envelope")
+                    raise ReportInvalidError("source: invalid committed envelope")
                 coverage.append(Path(path).name)
                 effort = record.get("activity_effort", record.get("effort"))
                 if effort is not None:
                     coverage.append(str(effort))
         effort, dev_effort = meta.get("planning_effort", "medium"), meta.get("dev_effort", "medium")
         if effort not in {"low", "medium", "high"} or dev_effort not in {"low", "medium", "high"}:
-            raise ReportInvalidError("proposal effort must be low, medium or high")
+            raise ReportInvalidError("source: proposal effort must be low, medium or high")
         return Source(
             sha,
             approval_language(root),
@@ -133,7 +136,7 @@ def source(root: Path, slug: str, sha: str) -> Source:
     except ReportInvalidError:
         raise
     except (AdvisoryError, ValueError, UnicodeError, yaml.YAMLError) as exc:
-        raise ReportInvalidError("cannot read the exact committed proposal records") from exc
+        raise ReportInvalidError("source: cannot read the exact committed proposal records") from exc
 
 
 def _sections(body: str, level: int) -> dict[str, str]:
@@ -142,7 +145,7 @@ def _sections(body: str, level: int) -> dict[str, str]:
     for index, match in enumerate(matches):
         name = match[1].strip()
         if name in result:
-            raise ReportInvalidError("duplicate report section")
+            raise ReportInvalidError(f"sections: duplicate report section {name!r}")
         result[name] = body[match.end() : matches[index + 1].start() if index + 1 < len(matches) else len(body)].strip()
     return result
 
@@ -154,38 +157,54 @@ def planning_support(report: Artifact) -> str:
 
 
 def _check(body: str, slug: str, selected: Source, namespace: str) -> None:
+    """Refuse a briefing that misses part of the template; each message starts with the failed field class."""
     if not isinstance(body, str) or len(body.encode("utf-8")) > MAX_BYTES:
-        raise ReportInvalidError("report exceeds the 1 MiB envelope limit")
+        raise ReportInvalidError("size: report exceeds the 1 MiB envelope limit")
     parsed = parse(body)
     meta = parsed.data or {}
-    if any(
-        meta.get(key) != value
-        for key, value in {
-            "proposal": f"PROP-{slug}",
-            "source_sha": selected.sha,
-            "language": selected.language,
-            "repository_namespace": namespace,
-        }.items()
-    ):
-        raise ReportInvalidError("report identity does not match repository, proposal, source or language")
+    expected = {
+        "proposal": f"PROP-{slug}",
+        "source_sha": selected.sha,
+        "language": selected.language,
+        "repository_namespace": namespace,
+    }
+    mismatched = [key for key, value in expected.items() if meta.get(key) != value]
+    if mismatched:
+        raise ReportInvalidError(
+            "identity: frontmatter does not match repository, proposal, source or language: " + ", ".join(mismatched)
+        )
     if not re.search(r"(?m)^# [^\n]+", body):
-        raise ReportInvalidError("report needs a title")
+        raise ReportInvalidError("title: report needs an H1 title")
     sections = _sections(body, 2)
     headings = SECTIONS[selected.language]
-    if any(not sections.get(heading) for heading in headings):
-        raise ReportInvalidError("report is missing a mandatory nonempty section")
+    missing = [heading for heading in headings if not sections.get(heading)]
+    if missing:
+        raise ReportInvalidError("sections: missing or empty mandatory section: " + ", ".join(missing))
     decisions = _sections(sections[headings[1]], 3)
     if set(decisions) != set(selected.padrs):
-        raise ReportInvalidError("report must account for every current PADR exactly once")
-    for content in decisions.values():
+        absent = sorted(set(selected.padrs) - set(decisions))
+        extra = sorted(set(decisions) - set(selected.padrs))
+        raise ReportInvalidError(
+            "decisions: report must account for every current PADR exactly once"
+            + (f"; missing {', '.join(absent)}" if absent else "")
+            + (f"; unknown {', '.join(extra)}" if extra else "")
+        )
+    for identifier, content in decisions.items():
         fields = _sections(content, 4)
-        if any(not fields.get(field) for field in DECISION_FIELDS[selected.language]):
-            raise ReportInvalidError("each PADR needs problem, choice, rejected alternatives and consequences")
+        empty = [field for field in DECISION_FIELDS[selected.language] if not fields.get(field)]
+        if empty:
+            raise ReportInvalidError(f"decision fields: {identifier} needs {', '.join(empty)}")
     coverage = sections[headings[3]]
-    if any(token not in coverage for token in (*selected.coverage, selected.effort)):
-        raise ReportInvalidError("Planning coverage must name every envelope and applied effort")
+    uncovered = [token for token in (*selected.coverage, selected.effort) if token not in coverage]
+    if uncovered:
+        raise ReportInvalidError(
+            f"coverage: section {headings[3]!r} must name every envelope and applied effort; missing "
+            + ", ".join(uncovered)
+        )
     if selected.dev_effort not in sections[headings[6]]:
-        raise ReportInvalidError("report must identify the recommended dev_effort")
+        raise ReportInvalidError(
+            f"dev_effort: section {headings[6]!r} must identify the recommended dev_effort {selected.dev_effort}"
+        )
 
 
 def template(root: Path, slug: str, sha: str) -> str:
@@ -273,14 +292,26 @@ class PublishProposalReportUseCase(BaseUseCase):
         return store.put(PutRequest("proposal-review", slug, sha, selected.language, body))
 
 
+def _workspace_source(root: Path, slug: str, source_sha: str) -> Path:
+    """The checkout holding ``source_sha``: ``root``, or the ``plan-<slug>`` worktree of a retained base."""
+    position = locate(root)
+    if not position.linked and run_git(root, "rev-parse", "HEAD").decode().strip() != source_sha:
+        return find(position, f"plan-{slug}")
+    return root
+
+
 class PublishWorkspaceProposalReportUseCase(BaseUseCase):
     """Application entrypoint for publish workspace report."""
 
     def execute(self, root: Path, slug: str, source_sha: str, body: str) -> Artifact:
         """Publish from the matching Planning source without changing the caller's checkout."""
         guard_execution()
-        position = locate(root)
-        selected = root
-        if not position.linked and run_git(root, "rev-parse", "HEAD").decode().strip() != source_sha:
-            selected = find(position, f"plan-{slug}")
-        return publish(selected, slug, source_sha, body)
+        return publish(_workspace_source(root, slug, source_sha), slug, source_sha, body)
+
+
+class ReportTemplateUseCase(BaseUseCase):
+    """Application entrypoint for the report template; read-only, publishes nothing."""
+
+    def execute(self, root: Path, slug: str, source_sha: str) -> str:
+        """The template to complete for ``source_sha``, read from the matching Planning source."""
+        return template(_workspace_source(root, slug, source_sha), slug, source_sha)
