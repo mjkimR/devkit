@@ -104,7 +104,7 @@ A consumer that does not want an auto-selected bundle opts it out with `[presets
 
 ## 4. The devkit Wheels and Their Built-in Bundles
 
-The CLI ships in two wheels released in lockstep with `devkit-advisory` (`ADR-dist-foundation-ownership`,
+The CLI ships in two wheels released in lockstep with `devkit-core`, `devkit-cli`, `devkit-advisory` and `devkit-mcp` (`ADR-dist-foundation-ownership`,
 `ADR-dist-bundles-compatibility`):
 
 - **`devkit-dist`** owns the `devkit` executable, distribution (this capability area), native host hooks, context

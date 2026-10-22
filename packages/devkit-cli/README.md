@@ -7,7 +7,7 @@ object under `--format json`, errors, warnings and notices as Agent Advisory Pro
 or later, `click` and `devkit-advisory`; it imports nothing else, so it adds only click's own import time.
 
 `devkit-dist` builds the `devkit` command line on it, and tools in other repositories depend on it at runtime, so it
-is a semver contract released in lockstep with `devkit-dist`, `devkit-agt` and `devkit-advisory`. The behavior is
+is a semver contract released in lockstep with the other devkit wheels (`ARCH-07-deployment`). The behavior is
 specified in `CAP-CLI-agent-cli-toolkit`; the opt-in `cli-tool` bundle of `devkit-catalog` is the structure guide
 and rules for a tool built on it.
 

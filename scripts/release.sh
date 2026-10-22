@@ -16,7 +16,7 @@ if [[ ! "$tag" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
     exit 1
 fi
 version=${tag#v}
-# devkit-dist, devkit-agt and devkit-advisory are released in lockstep from one tag, at one version.
+# The six lockstep packages above are released from one tag, at one version (ARCH-07-deployment).
 for metadata in packages/devkit-core/pyproject.toml packages/devkit-cli/pyproject.toml packages/devkit-dist/pyproject.toml packages/devkit/pyproject.toml packages/devkit-advisory/pyproject.toml packages/devkit-mcp/pyproject.toml; do
     package_version=$(project_version "$metadata")
     if [ "$package_version" != "$version" ]; then

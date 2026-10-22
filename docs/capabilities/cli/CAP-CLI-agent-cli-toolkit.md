@@ -52,9 +52,9 @@ tool around it and checks the structure with three rules.
    `exit_code`: on stderr in text mode, as `{"error": {...}}` on stdout with the notices passed to `echo_notices`
    under `notices` in JSON mode (`--format json` or `json_only`), with nothing on stderr.
 5. **Unexpected exceptions**: IF a wrapped command raises anything other than an `ERROR` advisory, `Reported` (its
-   error is rendered as in rule 4 and its `exit_code` used), a click exit or usage error, `SystemExit` or
-   `BrokenPipeError` (rule 6), THEN the boundary MUST report it as `UNEXPECTED_ERROR` with exit `2` and log its
-   traceback at `DEBUG`.
+   error is rendered on stderr in text mode only, since its result is already on stdout, and its `exit_code` used), a
+   click exit, abort or usage error, `SystemExit` or `BrokenPipeError` (rule 6), THEN the boundary MUST report it as
+   `UNEXPECTED_ERROR` with exit `2` and log its traceback at `DEBUG`.
 6. **Closed reader**: IF the reader of stdout closes before the command finishes, THEN the boundary MUST exit `2`
    without writing an advisory.
 7. **Locale independence**: the boundary MUST make stdout and stderr UTF-8 with `backslashreplace` before the command

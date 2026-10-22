@@ -1,0 +1,33 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T01:35:02.716115Z'
+status: completed
+summary: round 2; closes reconcile-check-01; fixes 0a4b3cec..da297bf5 and reconcile.md against dd008f2b..da297bf5. Round-1 findings closed; the rule 5 fix introduced a wording contradiction (P1); 2 P3.
+findings:
+- issue: CAP-CLI rule 5 says a Reported error is rendered as in rule 4 (a JSON error document in JSON mode); the boundary renders it on stderr in text mode only. Abort is also omitted.
+  evidence: docs/capabilities/cli/CAP-CLI-agent-cli-toolkit.md:51-56; packages/devkit-cli/src/devkit_cli/boundary.py:205-216
+  failure_condition: A reader of the capability expects a second JSON object after a Reported result in --format json.
+  suggested_action: 'Reword: Reported (its error is rendered on stderr in text mode only, since its result is already on stdout, and its exit_code used), a click exit, abort or usage error, SystemExit or BrokenPipeError (rule 6).'
+  resolution: open
+  severity: P1
+- issue: README Releasing overstates the pins and what test_lockstep checks.
+  evidence: README.md:161-162; packages/devkit/tests/integration/package/test_lockstep.py:33-41
+  failure_condition: A maintainer trusts test_lockstep to catch devkit-core or devkit-mcp pins it does not check.
+  suggested_action: Say each pins exactly the lockstep packages it depends on, and test_lockstep checks the shared version and the pins of devkit-agt, devkit-dist and devkit-cli.
+  resolution: open
+  severity: P3
+- issue: Some lockstep statements still name fewer than six packages.
+  evidence: scripts/release.sh:19; packages/devkit-cli/README.md:9-10; docs/capabilities/distribution/CAP-DIST-content-packages.md:107; packages/devkit/pyproject.toml:10; packages/devkit-dist/pyproject.toml:11
+  failure_condition: Readers get an incomplete lockstep set.
+  suggested_action: Name the six packages or point to ARCH-07-deployment; at minimum fix release.sh:19.
+  resolution: open
+  severity: P3
+assumptions:
+- reconcile-reviewer emulated by a generic Claude Code subagent following .devkit/managed/spec/subagents/reconcile-reviewer.md
+checks: {}
+diff_scope:
+  base: 0a4b3cecad53a96c9337ad3bc6b94293f3f7634f
+  head: da297bf5dc5ecae3d4edc0ba7ad8da7c4cfd320b
+activity_effort: high

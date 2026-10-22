@@ -159,7 +159,8 @@ workflow runs the full CI on the tagged commit, refuses a tag that is not on
 `main` or does not match all six versions, builds the wheels with
 `just release-build <tag>` (try it locally) and
 publishes the release. `devkit-core`, `devkit-cli`, `devkit-dist`, `devkit-agt`, `devkit-advisory` and `devkit-mcp` are released in lockstep: each pins
-the ones below it exactly, and `test_lockstep` checks the versions and pins. `devkit-spec`, `devkit-starter`, `devkit-catalog` and `devkit-viewer` keep their own versions.
+exactly the lockstep packages it depends on, and `test_lockstep` checks the shared version and the pins of
+`devkit-agt`, `devkit-dist` and `devkit-cli`. `devkit-spec`, `devkit-starter`, `devkit-catalog` and `devkit-viewer` keep their own versions.
 
 `devkit-embed` keeps its own version too and is not rebuilt by releases: devkit
 installs it, in this workspace and from Git, from the committed wheel in
