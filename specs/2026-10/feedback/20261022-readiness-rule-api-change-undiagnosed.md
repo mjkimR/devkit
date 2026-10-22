@@ -8,7 +8,7 @@ target: integration_integrate readiness provider (devkit-spec) and the INTEGRATI
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-22
 ---
 
@@ -41,3 +41,7 @@ integration_integrate dev-lint-clean-target-scoped-rules: INTEGRATION_NOT_READY 
 Source branch checks: rules check --ci 0 errors; test-affected 2672 passed.
 CLI merge 8240e402; cumulative check on the result: rules check --ci 0 errors, 2672 passed.
 ```
+
+## Disposition
+
+- **Disposition**: dismissed by the user's decision: this mismatch occurs exclusively when dogfooding devkit development inside this repository (modifying `BaseRule` / rule engine core APIs in a branch while running MCP from the base target), not in consumer repositories where devkit is an installed external package. For this rare dogfood scenario, the existing CLI merge route (`devkit worktree finish <branch> --merge --local-only` from the base checkout) is a sufficient and safe workaround without introducing additional engine diagnosis complexity.
