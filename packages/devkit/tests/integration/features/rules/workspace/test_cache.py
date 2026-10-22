@@ -397,9 +397,7 @@ def test_get_python_nodes_repeated_calls_return_identical_cached_tuple(
     assert first is second
 
 
-def test_get_python_nodes_unparsable_and_missing_files(
-    temp_workspace: Path, workspace_cache: WorkspaceCache
-) -> None:
+def test_get_python_nodes_unparsable_and_missing_files(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:
     write(temp_workspace, "bad.py", "def broken(:\n")
     with pytest.raises(SyntaxError):
         workspace_cache.get_python_nodes("bad.py", ast.FunctionDef)
@@ -430,13 +428,10 @@ def test_get_python_nodes_dropped_on_invalidation(
     assert second is not first
 
 
-def test_get_python_nodes_validates_arguments(
-    temp_workspace: Path, workspace_cache: WorkspaceCache
-) -> None:
+def test_get_python_nodes_validates_arguments(temp_workspace: Path, workspace_cache: WorkspaceCache) -> None:
     write(temp_workspace, "mod.py", "A = 1\n")
     with pytest.raises(ValueError, match="at least one node type must be specified"):
         workspace_cache.get_python_nodes("mod.py")
 
-    with pytest.raises(TypeError, match="expected ast.AST subclass"):
+    with pytest.raises(TypeError, match=r"expected ast\.AST subclass"):
         workspace_cache.get_python_nodes("mod.py", str)  # type: ignore[arg-type]
-

@@ -75,7 +75,10 @@ class WorkspaceCache:
         # Per-file node index: by-type sequence and query cache.
         self._nodes_cache: dict[
             str,
-            tuple[dict[type[ast.AST], tuple[tuple[int, ast.AST], ...]], dict[tuple[type[ast.AST], ...], tuple[ast.AST, ...]]],
+            tuple[
+                dict[type[ast.AST], tuple[tuple[int, ast.AST], ...]],
+                dict[tuple[type[ast.AST], ...], tuple[ast.AST, ...]],
+            ],
         ] = {}
         # The resolved path of each path argument as given, until the next invalidation.
         self._resolved: dict[str | Path, Path] = {}
