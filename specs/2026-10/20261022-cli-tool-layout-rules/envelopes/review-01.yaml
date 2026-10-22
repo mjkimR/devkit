@@ -1,0 +1,47 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T02:15:49.167084Z'
+status: completed
+summary: round 1; whole change 45f6f810..7b79f337. 2 P2 (nested src crash; vacuous AC-04 relative case) and 3 P3; no over-strictness against the autonomy request.
+findings:
+- issue: Both rules crash with IndexError on a .py file directly inside a nested src directory (src/pkg/templates/src/x.py), losing the run's other violations.
+  evidence: packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/layout/rule.py:39-42; packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/layers/rule.py:51-55
+  failure_condition: The last src is the file's parent directory; below is empty and below[-1] raises.
+  suggested_action: Return None unless a package directory and a file follow the last src; add a test in each rule.
+  resolution: open
+  severity: P2
+- issue: The AC-04 relative case `from ..models import Item` in features/scan/repositories.py resolves to pkg.features.models and is skipped, so the test passes vacuously; the guide example repeats it.
+  evidence: packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/layers/tests/test_rule.py:39; specs/2026-10/20261022-cli-tool-layout-rules/spec.md:64; packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/layers/guide.md:15
+  failure_condition: A broken sibling relative resolution would still pass AC-04.
+  suggested_action: Use `from .models import Item`; add a cross-feature relative case; fix the guide example.
+  resolution: open
+  severity: P2
+- issue: click/devkit_cli confinement skips features/__init__.py, a feature's __init__.py and extra_feature_modules modules.
+  evidence: packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/layers/rule.py:59-64; docs/capabilities/cli/CAP-CLI-agent-cli-toolkit.md:86
+  failure_condition: import click in src/pkg/features/__init__.py is not reported although CAP rule 17 has no exception.
+  suggested_action: Apply the CLI-library check to every file of the package; skip only the rank checks for place-less files.
+  resolution: open
+  severity: P3
+- issue: Imports of a feature package (not a layer) bypass the layer checks, undocumented.
+  evidence: packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/layers/rule.py:110-111,119-120
+  failure_condition: Readers expect a feature-package import to be checked.
+  suggested_action: Document that imports of a feature package are not checked.
+  resolution: open
+  severity: P3
+- issue: Packaging version modules (__about__.py, _version.py) are reported with no remedy; namespace-package tools are unsupported without saying so.
+  evidence: packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/layout/rule.py:14,48-49; packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/layout/guide.md:50-54
+  failure_condition: A hatch-generated __about__.py fails the layout rule.
+  suggested_action: Allow __about__ and _version by default, or document them; state namespace packages are unsupported.
+  resolution: open
+  severity: P3
+assumptions:
+- code-reviewer emulated by a generic Claude Code subagent following .devkit/managed/spec/subagents/code-reviewer.md
+checks:
+  tests: PASS 13 rule tests on 7b79f337
+  probe: FAIL nested-src IndexError reproduced
+diff_scope:
+  base: 45f6f810af4104f6d13c4d2fdb500bd28a9bdac4
+  head: 7b79f3379449ff71dc55532b64b87115e0e75176
+activity_effort: medium

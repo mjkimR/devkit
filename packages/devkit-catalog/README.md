@@ -8,7 +8,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 | --- | --- | --- |
 | `response-style` | `all` | Answer-first user-facing replies that keep decision-critical facts, with configurable conversation language |
 | `maintenance` | `all`, `upkeep`, `reporting` | Manual drift reconciliation and evidence-based weekly reporting |
-| `cli-tool` | `all`, `guide` | Structure guide for agent-facing click tools on `devkit-cli`, with rules for command boundaries, library output and heavy imports; `CAP-CLI-agent-cli-toolkit` |
+| `cli-tool` | `all`, `guide` | Structure guide for agent-facing click tools on `devkit-cli`, with rules for the feature layout, layer imports, command boundaries, library output and heavy imports; `CAP-CLI-agent-cli-toolkit` |
 | `host-observer` | `all` | Codex lifecycle hook registrations using devkit's metadata-only observer; `CAP-HOST-lifecycle-observation` |
 
 ```bash

@@ -1,0 +1,12 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'goal: enforce the cli-tool structure: features/<feature>/ layout required (no
+  flat layout), click and devkit_cli only in CLI modules, one-way layer imports, root
+  cli lazy. scope: two new rules in the cli-tool bundle, instruction and CAP-CLI updates;
+  the creation playbook is out of scope. task-kind feature, depth spec, dev effort
+  medium.'
+by: user
+at: '2026-10-22T02:07:14.599593Z'
