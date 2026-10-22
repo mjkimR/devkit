@@ -5,12 +5,10 @@ scope: repo
 kind: suggestion
 category: redundant-step
 target: packages/devkit-spec/tests/
-skill: spec-feedback
-agent: codex
 origin: agent
 severity: workaround
 recurring: true
-status: open
+status: resolved
 created_at: 2026-10-21
 ---
 
@@ -40,3 +38,5 @@ Focused semantic/rendered checks: 239 passed.
 Initial affected full fallback: 1 failed, 4264 passed, 14 skipped.
 Failure: test_package.py expected skills/spec/references/backlog.md as a raw source.
 ```
+
+- **Disposition**: resolved. `spec_support.bundle_text` (`raw()` for package-source structure, `text()` for rendered, whitespace-collapsed guidance, both execution environments) is the shared helper, and the session change `packages/devkit-spec/tests/e2e/package/test_package.py` moves the last direct `.md.jinja` read to it; `test_package.py` passes (8 tests).
