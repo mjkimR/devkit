@@ -323,6 +323,59 @@ def test_cli_explain_text_and_json(tmp_path: Path) -> None:
 
     plain = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-markdown-link"])
     assert plain.exit_code == 0 and "[SETTINGS: none]" in plain.output
+    assert plain.output.splitlines()[0].endswith(" inputs=-]")
+    undeclared = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-markdown-link", "--format", "json"])
+    assert json.loads(undeclared.stdout)["rule"]["inputs"] is None
+
+
+DECLARED_RULE = """from devkit_agt.features.rules import RuleContext, Violation
+from devkit_agt.features.rules.services.builtins import BaseRule
+
+
+class DeclaredRule(BaseRule):
+    def __init__(self) -> None:
+        super().__init__(
+            id="RULE-declared", name="declared", description="d", inputs=("**/*.py", ".devkit/architecture.toml")
+        )
+
+    def check(self, ctx: RuleContext) -> list[Violation]:
+        return [Violation(self.id, "src/a.py", 1, "seeded")]
+"""
+
+
+def test_cli_explain_shows_declared_inputs(tmp_path: Path) -> None:
+    rules = tmp_path / "rules"
+    (rules / "declared").mkdir(parents=True)
+    (rules / "declared" / "__init__.py").write_text(DECLARED_RULE)
+    runner = CliRunner()
+    text = runner.invoke(cli, ["explain", "-w", str(tmp_path), "--rules-dir", str(rules), "RULE-declared"])
+    assert text.exit_code == 0, text.output
+    assert text.output.splitlines()[0].endswith(" guide=- inputs=**/*.py,.devkit/architecture.toml]")
+    as_json = runner.invoke(
+        cli, ["explain", "-w", str(tmp_path), "--rules-dir", str(rules), "RULE-declared", "--format", "json"]
+    )
+    assert as_json.exit_code == 0 and json.loads(as_json.stdout)["rule"]["inputs"] == [
+        "**/*.py",
+        ".devkit/architecture.toml",
+    ]
+
+
+def test_cli_check_output_is_unchanged_when_a_rule_is_skipped(tmp_path: Path) -> None:
+    rules = tmp_path / "rules"
+    (rules / "declared").mkdir(parents=True)
+    (rules / "declared" / "__init__.py").write_text(DECLARED_RULE)
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "a.md").write_text("# A\n")
+    runner = CliRunner()
+    args = ["check", "-w", str(tmp_path), "--rules-dir", str(rules), "docs/a.md"]
+    text = runner.invoke(cli, args)
+    assert text.exit_code == 0 and text.output == (
+        "[SUMMARY: errors=0 warnings=0 infos=0 fixed=0]\n[OK: no error-severity violation remains]\n"
+    )
+    as_json = runner.invoke(cli, [*args, "--format", "json"])
+    assert as_json.exit_code == 0 and set(json.loads(as_json.stdout)) == {"violations", "errors", "notices"}
+    python = runner.invoke(cli, ["check", "-w", str(tmp_path), "--rules-dir", str(rules), "rules"])
+    assert python.exit_code == 1 and "[VIOLATION: RULE-declared" in python.output
 
 
 # --- synchronized rule assets -----------------------------------------------

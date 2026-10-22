@@ -8,15 +8,15 @@ plan: PLAN-lint-clean-target-scoped-rules
 
 ## Phase 1: Engine
 
-- [ ] **Task 1.1**: `inputs` declaration and its validation, with tests
+- [x] **Task 1.1**: `inputs` declaration and its validation, with tests
   - **_Boundary**: `packages/devkit/src/devkit_agt/features/rules/models/errors.py`, `packages/devkit/src/devkit_agt/features/rules/models/policy.py`, `packages/devkit/src/devkit_agt/features/rules/services/builtins/base.py`, `packages/devkit/src/devkit_agt/features/rules/usecases/project.py`, `packages/devkit/tests/unit/features/rules/`, `packages/devkit/tests/integration/features/rules/engine/`
   - _Requirements: AC-01, AC-02_
   - **Verification**: `just test agt packages/devkit/tests/unit/features/rules packages/devkit/tests/integration/features/rules/engine`
-- [ ] **Task 1.2**: Scoping in `evaluate_rules`, `skipped` on the results, with tests
+- [x] **Task 1.2**: Scoping in `evaluate_rules`, `skipped` on the results, with tests
   - **_Boundary**: `packages/devkit/src/devkit_agt/features/rules/models/contracts.py`, `packages/devkit/src/devkit_agt/features/rules/services/evaluator.py`, `packages/devkit/src/devkit_agt/features/rules/usecases/project.py`, `packages/devkit/src/devkit_agt/features/rules/__init__.py`, `packages/devkit/tests/unit/features/rules/`, `packages/devkit/tests/integration/features/rules/engine/`
   - _Requirements: AC-03, AC-04, AC-05_
   - **Verification**: `just test agt packages/devkit/tests/unit/features/rules packages/devkit/tests/integration/features/rules/engine`
-- [ ] **Task 1.3**: `devkit rules explain` shows `inputs`, with tests
+- [x] **Task 1.3**: `devkit rules explain` shows `inputs`, with tests
   - **_Boundary**: `packages/devkit/src/devkit_agt/features/rules/usecases/explain.py`, `packages/devkit/src/devkit_agt/features/rules/cli/output.py`, `packages/devkit/tests/integration/features/rules/cli/test_commands.py`
   - _Requirements: AC-07_
   - **Verification**: `just test agt packages/devkit/tests/integration/features/rules/cli/test_commands.py`
