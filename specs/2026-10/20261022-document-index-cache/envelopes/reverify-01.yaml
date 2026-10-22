@@ -1,0 +1,40 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T07:20:18.189127Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified the four P3 fixes (medium: no repeat reviewer call; scope did not expand): fingerprint computed at import with the window stated (memo.py); CODEC_FIELDS plus a unit test tying it to Document, Reference and Issue fields; capability wording corrected (missing memo, unstorable parses); plan interface aligned and driver scripts recorded verbatim in materials/speed.md with rerun evidence at 845c3c17'
+findings:
+- issue: The parser fingerprint hashes module sources on disk at the first fingerprint() call, not the code the process loaded; a source edit between import and the first load would write old-code entries under the new fingerprint.
+  evidence: packages/devkit-spec/src/devkit_spec/features/documents/repositories/memo.py:332-350
+  failure_condition: A process imports the documents feature, a fingerprinted module changes on disk, then the process makes its first memo load.
+  suggested_action: Compute the fingerprint at import of memo.py and state the remaining window in a comment.
+  resolution: resolved
+  severity: P3
+- issue: The codec lists Document and Reference fields by hand with no guard tying the list to the dataclass fields.
+  evidence: memo.py:185-212 and memo.py:256-295; models/model.py:60-82
+  failure_condition: A future Document or Reference field whose parsed value differs from its default.
+  suggested_action: Add a unit assertion that the dataclass fields equal the fields the codec handles.
+  resolution: resolved
+  severity: P3
+- issue: 'Living Spec overstates: CAP-DOCS-document-model 3.4 rule 5 says a missing memo logs a line (it is created silently); CAP-DOCS-document-lookup says an unchanged workspace parses no document again (unstorable documents are parsed every load).'
+  evidence: docs/capabilities/documents/CAP-DOCS-document-model.md:167; docs/capabilities/documents/CAP-DOCS-document-lookup.md:22
+  failure_condition: A reader or test expects a -v line for a first-time memo, or zero parses with an unstorable frontmatter present.
+  suggested_action: Drop 'missing' from rule 5 and qualify the lookup sentence.
+  resolution: resolved
+  severity: P3
+- issue: The AC-06/AC-10 driver scripts are only summarized in materials/speed.md although Assumption 2 says a recorded script; plan.md's interface block gives decode_entry(relative, digest, entry) while the code has decode_entry(relative, entry) plus ParseMemo.unusable().
+  evidence: spec.md:164; materials/speed.md:7-8; plan.md:62
+  failure_condition: Someone re-runs the evidence or reads the plan as the interface contract.
+  suggested_action: Record the scripts in materials/speed.md and align the plan's interface block.
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS documents unit+integration 264 passed at 845c3c17
+  lint: PASS just lint devkit-spec, just check devkit-spec 0 errors, devkit rules check unit 0 violations
+diff_scope:
+  base: 2665f77466f539a38931928d959b3ffbee1588c9
+  head: cce8728d3ae013901e56d0a78a5fe2800bf26b41
+activity_effort: medium

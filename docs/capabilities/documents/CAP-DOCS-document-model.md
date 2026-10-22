@@ -17,7 +17,8 @@ created_at: 2026-10-13
 ## 1. Summary
 
 The document model decides which files are spec documents, how each one is identified and how documents reference
-each other. `devkit_spec.features.documents` implements it as a workspace index rebuilt from the files on every load. The
+each other. `devkit_spec.features.documents` implements it as a workspace index built from the files on every load,
+reusing a file's parse result, also between processes, only while its path and text are unchanged. The
 lookup commands (`CAP-DOCS-document-lookup`), document search (`CAP-DOCS-document-search`), namespaces
 (`CAP-DOCS-namespaces`) and spec rules (`CAP-GOV-spec-rules`) resolve document identities through this index.
 `RULE-document-reference` also reads root glossary Owner cells through the rules workspace cache; the glossary
@@ -43,7 +44,9 @@ stays ID-free and unindexed, and its Owner references do not become graph edges.
   - Validity of references (unresolved, duplicated, wrong kind). Scope Excluded: the parser records references and
     skips malformed fields; `RULE-document-reference` reports them.
   - Namespace membership: `CAP-DOCS-namespaces`.
-  - A persistent cache or database of documents. Scope Excluded: there is no second source of truth that can go stale.
+  - A persistent source of truth for documents. Scope Excluded: the files are the only input to a load; the parse
+    memo (section 3.4) keeps derived parse results keyed by each file's text and never decides which files exist or
+    what they hold (`ADR-content-keyed-document-parse-memo`).
 
 ## 3. Business Rules & Policies
 
@@ -143,18 +146,36 @@ The table order is the kind order: `devkit spec list` sorts by it. Living Spec d
 
 ### 3.4 Index
 
-1. **Rebuilt per load**: `DocumentIndex.load` walks `docs/` and `specs/` (sorted, symbolic links skipped) or reads the
-   file list a caller supplies; the rules supply the run's workspace cache, so a snapshot run (`check --staged`,
-   `--ci`) indexes the snapshot and a fix is seen by the recheck.
-2. **Parse reuse**: a parsed document is reused while its path and text are unchanged, so the rules of one run parse
-   every file once.
-3. **Resolution**: resolving an ID MUST go through the canonical mapping (section 3.5) and return the one document
+1. **Built per load**: `DocumentIndex.load` MUST walk `docs/` and `specs/` (sorted, symbolic links skipped) or read
+   the file list a caller supplies, read every file, and build the ID and alias maps, historical documents, problems
+   and order from those files on every load. The rules supply the run's workspace cache, so a snapshot run
+   (`check --staged`, `--ci`) indexes the snapshot and a fix is seen by the recheck.
+2. **Parse reuse**: a file's parse result MUST be reused only for the same workspace-relative path and the exact text
+   the reader returned; within a process this makes the rules of one run parse every file once.
+3. **Parse memo**: WHERE `<root>/.devkit/transient/` is a directory, the index MUST keep parse results between
+   processes in `<root>/.devkit/transient/spec/document-index.json`, each entry keyed by the path and the BLAKE2b
+   digest of the UTF-8 encoding of the text parsed, the whole file under a parser fingerprint (the format version,
+   the source of the read, parse and codec modules, the PyYAML version, libyaml presence and the Python version)
+   (`ADR-content-keyed-document-parse-memo`, `ADR-parse-memo-location-and-format`). A stored result is a document,
+   "no document", a malformed-frontmatter reason or an "unstorable" marker; a file that cannot be read or decoded
+   has no entry. The memo is not used when a symbolic link is at `.devkit/transient/`, `spec/` or the file, or the
+   file resolves outside the root. Deleting the file is always safe: the next load rebuilds it.
+4. **Memo writes**: only a load that walks the workspace with the default reader MUST write the memo, and only when
+   its entries differ from those it read (a new, changed or removed file, or a discarded memo), by atomic replace
+   without a lock; a load with a supplied file list or reader reads the memo and never writes it
+   (`ADR-parse-memo-failure-and-write-policy`).
+5. **Memo silence**: IF the memo is unreadable, malformed, of another version or fingerprint, holds an entry
+   that cannot be rebuilt, is a non-regular file or cannot be written, THEN the index MUST return a fresh build's
+   result with no advisory, notice or exit-status change, logging one line visible under `-v`; a non-regular file
+   at the memo path is never removed or replaced. A missing memo is created without a log line
+   (`packages/devkit-spec/tests/integration/features/documents/test_memo_index.py`).
+6. **Resolution**: resolving an ID MUST go through the canonical mapping (section 3.5) and return the one document
    it names, else raise `SPEC_ID_UNRESOLVED` (no document) or `SPEC_ID_DUPLICATE` (several declare the ID, or
    several declare the alias; `[TARGET]` lists their paths).
-4. **Reference queries**: outgoing references are grouped by canonical target ID (an alias with its document) and
+7. **Reference queries**: outgoing references are grouped by canonical target ID (an alias with its document) and
    incoming references, written with the document's ID or a resolving alias, by source ID, both in ID order. A target
    that no single document declares stays in the result (a dangling or ambiguous reference).
-5. **Rewriting**: `rewrite` replaces only parsed references whose target a mapping names, never other occurrences
+8. **Rewriting**: `rewrite` replaces only parsed references whose target a mapping names, never other occurrences
    of the ID. A quoted frontmatter value keeps its quote style; a bracket reference becomes a code-span reference
    (mapping an ID to itself converts the notation only).
 

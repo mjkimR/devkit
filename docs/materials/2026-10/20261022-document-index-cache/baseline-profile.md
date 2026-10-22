@@ -58,7 +58,7 @@ A content-keyed memo (path to BLAKE2b digest and stored document, JSON) consulte
 
 Expected command time with a warm memo: about 427 - 310 + 55, so about 170 ms for `resolve`; the rest is interpreter
 start, click and plugin import. A stat-signature key would skip the read and hash (10 to 50 ms more), at the cost
-described in `PADR-content-keyed-document-parse-memo`.
+described in `ADR-content-keyed-document-parse-memo`.
 
 ## Related observations
 
