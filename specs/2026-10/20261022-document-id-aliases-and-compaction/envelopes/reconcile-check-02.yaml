@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T00:29:53.157522Z'
+status: completed
+summary: 'implementer self-verification of the reconcile-check-01 fixes (no repeat reviewer call): CAP-DOCS-document-model 3.5 rule 6 covers the alias declaration and ID-argument cases of CAP-DLV-spec-bundles and CAP-TRACE-code-entrypoints; --milestone alias rows and playbook skill text updated; out-of-scope explicit wording recorded as FB-alias-wording-outside-scope; reconcile.md resolved'
+findings: []
+assumptions:
+- Self-verification by the implementer; the reconcile-reviewer verified head 7a3ad6c8 only
+checks:
+  rules: PASS devkit rules check --ci --base 9f23ee0e 0 errors
+  tests: PASS devkit-dist distribution integration 605 passed
+diff_scope:
+  base: 7a3ad6c8b3eb3faa5de044e434f5dccaf7b270d6
+  head: 718824416557600d4f60402f9f44080f576447f5
