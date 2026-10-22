@@ -2,7 +2,7 @@
 id: SPEC-merge-not-ff-auto
 title: Auto advisory mode for WORKTREE_MERGE_NOT_FF
 summary: Set actor to Actor.TOOL for MergeNotFastForwardError so AAP derives AUTO mode, allowing agents to absorb routine target advances autonomously without unnecessary user interruptions.
-status: in-progress
+status: completed
 created: 2026-10-22
 related_capabilities:
   - CAP-WT-task-worktrees

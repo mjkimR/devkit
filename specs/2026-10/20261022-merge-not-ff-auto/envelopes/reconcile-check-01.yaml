@@ -1,0 +1,9 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T11:22:15.000000Z'
+status: completed
+summary: 'Reconcile verified: CAP-WT-task-worktrees, CAP-INT-mcp-services, and worktree reference updated with ERROR (AUTO) contract'
+findings: []
+checks: {}

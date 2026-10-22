@@ -75,7 +75,7 @@ Every command takes `-w/--workspace-root` (any directory in the checkout; defaul
 | `WORKTREE_BASE_DIRTY` | `ERROR` (`INTERACTION`) | `BaseDirtyError` | `--merge` with uncommitted changes in the base. |
 | `WORKTREE_BASE_BEHIND` | `ERROR` (`INTERACTION`) | `BaseBehindError` | `--merge`: the fetched upstream of the base branch has commits the base lacks; `[FIX]` is `git pull --ff-only`. Nothing changed. |
 | `WORKTREE_BRANCH_UNPUSHED` | `ERROR` (`INTERACTION`) | `BranchUnpushedError` | The branch's upstream lacks its commits, so `git branch -d` would refuse it; `[FIX]` pushes it. Nothing changed. |
-| `WORKTREE_MERGE_NOT_FF` | `ERROR` (`INTERACTION`) | `MergeNotFastForwardError` | The branch does not contain the base HEAD (`finish --merge`, `ff-only`, a prepared integration); `[FIX]` merges the target into the branch, never a rebase. Nothing changed. |
+| `WORKTREE_MERGE_NOT_FF` | `ERROR` (`AUTO`) | `MergeNotFastForwardError` | The branch does not contain the base HEAD (`finish --merge`, `ff-only`, a prepared integration); `[FIX]` merges the target into the branch, never a rebase. Nothing changed. |
 | `WORKTREE_MERGE_CONFLICT` | `ERROR` (`INTERACTION`) | `MergeConflictError` | An approved integration's merge of an advanced target conflicts with the branch; `[FIX]` merges the target into the branch. Nothing changed. |
 | `WORKTREE_GIT_UNSUPPORTED` | `ERROR` (`INTERACTION`) | `GitUnsupportedError` | Merging an advanced target needs `git merge-tree --write-tree` (Git 2.38 or later). Nothing changed. |
 | `WORKTREE_COMMIT_FAILED` | `ERROR` (`INTERACTION`) | `CommitFailedError` | No committer identity, or `git commit-tree` of the merge commit failed or exceeded 30 seconds (a signing program). Nothing changed. |

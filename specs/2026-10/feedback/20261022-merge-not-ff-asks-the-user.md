@@ -8,7 +8,7 @@ target: WORKTREE_MERGE_NOT_FF advisory (integration_integrate, spec_plan_accept)
 origin: user
 severity: workaround
 recurring: true
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -38,3 +38,9 @@ integration_integrate: WORKTREE_MERGE_NOT_FF mode=INTERACTION actor=USER
 spec_plan_accept: WORKTREE_MERGE_NOT_FF mode=INTERACTION actor=USER (plan-document-index-cache, target 397286e1)
 Both resolved by `git merge main` in the task worktree, re-verification and one retry.
 ```
+
+## Disposition (resolved)
+
+- Set `MergeNotFastForwardError` actor to `Actor.TOOL` so AAP derives `mode = ActionMode.AUTO`.
+- Preserves `MergeConflictError` as `INTERACTION` (`Actor.USER`) for genuine merge conflicts.
+- Implemented and verified under `SPEC-merge-not-ff-auto`.

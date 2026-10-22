@@ -15,7 +15,7 @@ plan: PLAN-merge-not-ff-auto
 
 ## Phase 2: Living Spec & Verification
 
-- [ ] **Task 2.1**: Update Living Spec references and run verification
+- [x] **Task 2.1**: Update Living Spec references and run verification
   - **_Boundary**: `docs/capabilities/worktree/CAP-WT-task-worktrees.md`, `docs/development/reference/worktree.md`, `specs/2026-10/feedback/20261022-merge-not-ff-asks-the-user.md`
   - _Requirements: AC-04_
   - **Verification**: `just test-affected && just rules-check`
