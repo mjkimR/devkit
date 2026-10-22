@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-guidance-followups
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
     resolution: modified

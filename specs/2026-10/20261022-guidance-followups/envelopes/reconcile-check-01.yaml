@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T06:17:35.265665Z'
+status: completed
+summary: 'Self-checked reconcile at low: reconcile.md covers the three changed Living Spec files (CAP-HARN-agent-guidance, CAP-MCP-runtime-registration, UC-drive-development-to-integration) and matches the diff; the bundle guidance edits change no capability sentence; four source feedback items verified and resolved.'
+findings: []
+assumptions:
+- 'activity-effort low: no reconcile-reviewer call (effort.md); self-verification by the implementer'
+checks:
+  lint: PASS devkit rules check --ci --base 7b4bf3b8
+diff_scope:
+  base: 7b4bf3b84ff55a20440b75018e214c61a254783f
+  head: fbd7df23a55e924450fe7a80d79599bd9cc2068e
+activity_effort: low
