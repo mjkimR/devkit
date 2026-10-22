@@ -39,13 +39,13 @@ and devkit-starter bundles use the keyword form today.
 
 Option 3, decided by the user.
 
-- A playbook's `aliases` declares previous or alternate identifiers of that playbook, validated as identifiers
-  rather than free English text. What exactly a playbook alias identifies is the open Planning question `q1` of
-  this turn's worker envelope. The recommended answer: a previous manifest asset ID in the same bundle (the
-  `[a-z][a-z0-9-]*` slug grammar, not frontmatter `name`), resolved by `devkit playbook get <bundle>/<alias>`; an
-  exact asset ID always wins; the alias resolves only when exactly one effective playbook header of that bundle
-  (overrides included) declares it, otherwise get refuses with a stable code; the result reports the canonical `id`
-  and the alias used, and the "no alias lookup, no fallback" sentence of the resolution contract is amended.
+- A playbook's `aliases` declares previous asset IDs of that playbook in the same bundle (the `[a-z][a-z0-9-]*`
+  manifest slug grammar, not frontmatter `name`), decided by the user in Planning.
+- `devkit playbook get <bundle>/<alias>` resolves an alias: an exact asset ID always wins; otherwise the alias
+  resolves only when exactly one effective playbook header of that bundle (overrides included) declares it, and the
+  result reports the canonical `id` and the alias used. An alias declared by more than one effective playbook is
+  refused with a stable code. The "no alias lookup, no fallback" sentence of the `CAP-DIST-context-and-playbooks`
+  resolution contract changes accordingly.
 - Aliases are unique against the bundle's playbook IDs and the other playbooks' aliases, checked when the bundle
   manifest is validated, and again over effective headers at retrieval because an override can change them.
 - `devkit playbook search` indexes only `name` and `description`; aliases are not ranked.
@@ -53,6 +53,7 @@ Option 3, decided by the user.
 
 ## 5. Consequences
 
+- A renamed playbook keeps its published `<bundle>/<old-id>` selectors working.
 - Breaking change to the playbook asset format, made in place: a keyword list that is not a valid identifier list is
   refused at bundle validation.
 - `CAP-DIST-context-and-playbooks`, `ARCH-08-2-resource-taxonomy`, `CAP-SRCH-document-search` (the metadata example),

@@ -1,7 +1,7 @@
 ---
 id: PADR-document-id-aliases
 title: Document ID aliases
-summary: Living Spec documents may declare aliases, previous or alternate IDs of their own kind, resolved by DocumentIndex through one alias-aware lookup; an alias reference in a current document is an error that devkit rules fix rewrites to the canonical ID.
+summary: Every ID-bearing document may declare aliases, previous or alternate IDs with its own prefix, resolved by DocumentIndex through one alias-aware lookup; an alias reference in a current document is an error that devkit rules fix rewrites to the canonical ID.
 proposal: PROP-document-id-aliases-and-compaction
 status: draft
 created_at: 2026-10-22
@@ -16,8 +16,8 @@ created_at: 2026-10-22
 
 ## 1. Context & Problem Statement
 
-A Living Spec document is found only by its exact ID. Renaming a capability, story, architecture document or
-milestone, or merging two of them, breaks every reference written with the old ID: `RULE-document-reference`
+A document is found only by its exact ID. Renaming a capability, story, architecture document, milestone or any
+other ID-bearing document, or merging two of them, breaks every reference written with the old ID: `RULE-document-reference`
 reports each one as unresolved, and `devkit spec resolve <old-id>` finds nothing. The only rename handled today is
 the handed-off `PROP-<slug>` to `SPEC-<slug>` rewrite of the proposals lifecycle.
 
@@ -27,25 +27,32 @@ the handed-off `PROP-<slug>` to `SPEC-<slug>` rewrite of the proposals lifecycle
 - Relation fields are typed by the prefix written in them (`stories` takes `US-` IDs), so an alias must not change
   the kind a reference appears to have.
 - Every identity check must agree on what an ID resolves to; a fallback in one caller leaves the others failing.
+- One specification for every ID-bearing kind: a rule that depends on the kind is a second concept to learn.
 - Records are never rewritten: historical files, and decision records that name a retired ID on purpose.
-- No ADR file and no ADR ledger rule changes with this decision; approved ADRs stay append-only.
+- No existing ADR file is edited by this work; refactoring or compacting the ADR ledger is out of scope.
 
 ## 3. Considered Options
 
 1. **Exact IDs only**: the present state; a rename means editing every reference by hand.
 2. **ADR-only aliases tied to deletion-based compaction**: withdrawn with the compaction direction in this Planning.
-3. **Aliases on renameable Living Spec documents, resolved through one canonical mapping (chosen)**.
+3. **Aliases on selected kinds only** (`CAP`, `US`, `ARCH`, `MS`), refusing `ADR`, `MAT` and the lifecycle kinds:
+   rejected by the user; it ties the field to a per-kind list and leaves renamed decisions and materials without
+   continuity.
+4. **One aliases specification for every ID-bearing kind, resolved through one canonical mapping (chosen)**.
 
 ## 4. Decision Outcome
 
-Option 3.
+Option 4.
 
-- **Kinds**: `aliases` is accepted on `CAP`, `US`, `ARCH` and `MS` documents (namespace documents included). It is
-  refused on `ADR` (approved ADRs are never renamed or deleted, so an ADR alias could never be used without breaking
-  the append-only ledger), on `MAT` (`RULE-document-reference` does not check materials, so their aliases could not
-  be validated) and on proposal and spec-bundle kinds (`PROP`, `PADR`, `SPEC`, `PLAN`, `TASKS`, `REC`, `FB`), whose
-  IDs follow the delivery lifecycle and its handoff rename. A refused or malformed field is a recorded issue that
-  `RULE-document-reference` reports.
+- **Kinds**: `aliases` is accepted on every ID-bearing document kind (`CAP`, `US`, `ARCH`, `ADR`, `MS`, `MAT`, `PROP`,
+  `PADR`, `SPEC`, `PLAN`, `TASKS`, `REC`, `FB`; namespace documents included). No kind refuses it. A malformed field
+  is a recorded issue that `RULE-document-reference` reports with its identity checks.
+- **Where a kind has a gap**: alias shape issues and collisions are identity checks, run over every indexed document
+  as the duplicate-ID check is, so a material's aliases are validated. `RULE-document-reference` does not check the
+  references written inside materials, so such a reference (alias or not) is neither reported nor rewritten; a
+  reference to a material's alias from a checked document resolves and is fixed like any other. Approved ADRs are
+  append-only, so an ADR normally gains aliases when it is created (from its PADR, see Handoff), and an alias
+  reference inside an ADR stays as written.
 - **Shape**: a list of full IDs with the declaring document's own prefix, never its own ID, no item repeated.
   `aliases` entries are identity, not references: not a relation field, not counted as incoming references and never
   rewritten.
@@ -61,6 +68,10 @@ Option 3.
   (completed spec bundles, done or dropped milestones) and in decision records (ADRs under `docs/decisions/` and
   PADRs, which graduate into ADRs) it resolves silently and is never rewritten, so a record that names the retired
   ID as history keeps its meaning. A glossary Owner naming an alias is reported but not fixed.
+- **Handoff**: carried aliases follow their document's handoff rename: a proposal's `PROP-` aliases become `SPEC-`
+  aliases on `spec.md`, a promoted PADR's `PADR-` aliases become `ADR-` aliases on its ADR. A reference written with
+  a carried alias is rewritten like one written with the old ID (current documents only). The handoff refuses, before
+  writing, when a graduating `ADR-<slug>` or `SPEC-<slug>`, or a translated alias, equals an existing ID or alias.
 - **Output**: `devkit spec resolve <alias>` prints the canonical document with `alias=<alias>` in its `[DOCUMENT]`
   sentinel and an `alias` field in JSON; no notice is emitted. `devkit spec refs <canonical> --direction in` includes
   alias-written references, and `--direction out` groups an alias and its canonical ID as one target.
@@ -69,7 +80,7 @@ Option 3.
 ## 5. Consequences
 
 - A rename keeps the old ID in `aliases`, and one `devkit rules fix` moves current documents to the new ID.
-- No handoff change: with ADRs refused and the own-prefix rule, no alias can equal a graduating `ADR-<slug>`.
+- The handoff gains alias translation and an alias clash check (`CAP-DLV-proposal-incubation`).
 - Aliases are identifiers, not search keywords; the playbook field of the same name follows this meaning
   (`PADR-playbook-aliases-as-identifiers`).
-- ADR supersession stays as it is, and no ADR file is edited by this work.
+- ADR supersession stays as it is, and no file under `docs/decisions/` is edited by this work.
