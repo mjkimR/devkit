@@ -44,9 +44,18 @@ CATEGORIES = (
 )
 
 FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
-# Inline code, straight and curly double quotes, one-line HTML comments and Jinja tags.
-SPANS = re.compile(r"(`+).+?\1|\"[^\"]*\"|“[^”]*”|<!--.*?-->|\{\{.*?\}\}|\{%.*?%\}|\{#.*?#\}")
-BLOCKS = (("<!--", "-->"), ("{#", "#}"))
+# Spans that may wrap: code spans within a paragraph, HTML comments (an unclosed one runs to the end).
+WRAPPED = r"(?<!`)(`+)(?!`)(?:(?!\n[ \t]*\n).)+?(?<!`)\1(?!`)|<!--.*?(?:-->|\Z)"
+# Jinja tags and comments, in templates only; a plain Markdown "{#anchor}" is prose.
+JINJA = r"|\{\{.*?\}\}|\{%.*?%\}|\{#.*?(?:#\}|\Z)"
+SPANS = re.compile(WRAPPED, re.DOTALL)
+TEMPLATE_SPANS = re.compile(WRAPPED + JINJA, re.DOTALL)
+# Straight and curly double quotes, on one line.
+QUOTES = re.compile(r"\"[^\"\n]*\"|“[^”\n]*”")
+
+
+def _blank(found: re.Match[str]) -> str:
+    return re.sub(r"[^\n]", " ", found.group())
 
 
 @dataclass(frozen=True)
@@ -66,28 +75,21 @@ def _pattern(words: tuple[str, ...], flags: int) -> re.Pattern[str] | None:
     return re.compile(rf"(?<![\w-])(?:{'|'.join(phrases)})(?![\w-])", flags)
 
 
-def prose_lines(text: str) -> Iterator[tuple[int, str]]:
+def prose_lines(text: str, *, template: bool = False) -> Iterator[tuple[int, str]]:
     """Each line number with the line's prose: fenced code, comments, quotes, code spans and Jinja tags blanked."""
-    fence = closer = ""
-    for number, line in enumerate(text.splitlines(), start=1):
+    lines = text.splitlines()
+    fence = ""
+    for index, line in enumerate(lines):
         if fence:
-            if line.lstrip().startswith(fence):
+            if re.fullmatch(rf"{re.escape(fence[0])}{{{len(fence)},}}", line.strip()):
                 fence = ""
-            continue
-        if closer:
-            end = line.find(closer)
-            if end < 0:
-                continue
-            line, closer = line[end + len(closer) :], ""
-        if opened := FENCE.match(line):
+            lines[index] = ""
+        elif opened := FENCE.match(line):
             fence = opened.group(1)
-            continue
-        line = SPANS.sub(" ", line)
-        for opener, block_closer in BLOCKS:
-            if (start := line.find(opener)) >= 0:
-                line, closer = line[:start], block_closer
-                break
-        yield number, line
+            lines[index] = ""
+    prose = (TEMPLATE_SPANS if template else SPANS).sub(_blank, "\n".join(lines))
+    for number, line in enumerate(prose.split("\n"), start=1):
+        yield number, QUOTES.sub(" ", line)
 
 
 class AgentAssetWordingRule(BaseRule):
@@ -95,7 +97,10 @@ class AgentAssetWordingRule(BaseRule):
         super().__init__(
             id="RULE-agent-asset-wording",
             name="agent-asset-wording-check",
-            description="Warn on hedges, emphatic capitals and time-relative words in skills, playbooks and instructions.",
+            description=(
+                "Warn on hedges, emphatic capitals and time-relative words in skills, playbooks, instructions and"
+                " role contracts."
+            ),
             phase=Phase.HYGIENE,
             severity=Severity.WARNING,
             settings=AgentAssetWordingSettings(),
@@ -130,7 +135,7 @@ class AgentAssetWordingRule(BaseRule):
                 for name, label, flags, remediation in CATEGORIES
                 if (pattern := _pattern(tuple(getattr(settings, name)), flags)) is not None
             ]
-            for number, line in prose_lines(ctx.cache.read_text(path)):
+            for number, line in prose_lines(ctx.cache.read_text(path), template=rel.endswith(".jinja")):
                 for pattern, label, remediation in checks:
                     violations.extend(
                         Violation(

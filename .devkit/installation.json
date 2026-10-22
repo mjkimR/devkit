@@ -1287,11 +1287,11 @@
     },
     ".devkit/managed/authoring/rules/agent_asset_wording/rule.py": {
       "mode": 420,
-      "sha256": "1fb983717fbd1f69ac64440f31cfb6c1c6519061540d0ffcd22fa1d347c355c0"
+      "sha256": "4ac26341ba5ef11b2f12144a60346fe0a4b5b902084ef7fe16ebdc19a9abb30e"
     },
     ".devkit/managed/authoring/rules/agent_asset_wording/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "cd72e85ef39c5e3b4b1cdd8c912ac60c9222026828925957108ab1787a6a76db"
+      "sha256": "670f8a58a9e3296e2a386ebf5e001cb1b5c215c671ea5215cae29bd8d7118b30"
     },
     ".devkit/managed/authoring/rules/skill_document_size/guide.md": {
       "mode": 420,

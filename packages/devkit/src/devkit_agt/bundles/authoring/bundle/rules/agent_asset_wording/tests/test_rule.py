@@ -44,7 +44,7 @@ def test_phrases_match_across_spaces(tmp_path: Path) -> None:
     assert _found(tmp_path, body) == [(1, 'Emphatic capitals "DO NOT"'), (4, 'Time-relative word "for now"')]
 
 
-def test_mentions_in_quotes_code_comments_and_templates_pass(tmp_path: Path) -> None:
+def test_mentions_in_quotes_code_and_comments_pass(tmp_path: Path) -> None:
     body = "\n".join(
         [
             "---",
@@ -52,21 +52,38 @@ def test_mentions_in_quotes_code_comments_and_templates_pass(tmp_path: Path) -> 
             "---",
             'Write no hedges ("likely", "might") and no “CRITICAL” emphasis.',
             "Run `devkit check --recently` or ``a `NOTE` b``.",
+            "A code span may wrap: `devkit check",
+            "--currently` and ALWAYS is reported after it.",
             "<!-- this might change --> Then stop.",
             "<!-- a block",
             "that is currently open -->",
-            "{{ 'might' }} {% if ALWAYS %} {# recently #}",
-            "{# a multi-line",
-            "Jinja comment that might wrap #}",
             "```text",
             "IMPORTANT: this might fail",
             "```",
-            "~~~",
-            "currently",
-            "~~~",
+            "  ~~~",
+            "  currently",
+            "  ~~~",
         ]
     )
-    assert _found(tmp_path, body) == []
+    assert _found(tmp_path, body) == [(7, 'Emphatic capitals "ALWAYS"')]
+
+
+def test_fences_close_only_on_a_bare_fence_as_long_as_the_opener(tmp_path: Path) -> None:
+    body = "````markdown\n```text\nIt might fail.\n```\n````\nIt might fail.\n"
+    assert _found(tmp_path, body) == [(6, 'Hedge "might"')]
+
+
+def test_an_unmatched_backtick_masks_nothing_past_its_paragraph(tmp_path: Path) -> None:
+    body = "An unmatched ` backtick.\n\nIt might fail; `code` stays masked.\n"
+    assert _found(tmp_path, body) == [(3, 'Hedge "might"')]
+
+
+def test_jinja_tags_are_masked_in_templates_only(tmp_path: Path) -> None:
+    template = "pkg/bundle/skills/demo/SKILL.md.jinja"
+    body = "{{ maybe }} {% if x\n and ALWAYS %} {# recently #}\n{# a multi-line\nJinja comment that might wrap #}\n"
+    assert check(RULE, tmp_path, {template: body}) == []
+    # In plain Markdown "{#anchor}" is prose and silences nothing after it.
+    assert _found(tmp_path, "## Title {#anchor}\nIt might fail.\n") == [(2, 'Hedge "might"')]
 
 
 def test_keywords_ordinary_case_and_joined_words_pass(tmp_path: Path) -> None:

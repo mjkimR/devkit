@@ -39,9 +39,10 @@ class AgentAssetWordingSettings:
     paths: list[str]           # project skills and bundle skills, playbooks, instructions, subagents
 ```
 
-- Scan: per line, skipping fenced code blocks (```` ``` ```` or `~~~`), multi-line HTML comments and multi-line Jinja
-  comments; within a line, blank out inline code spans, straight and curly double-quoted spans, HTML comments and
-  Jinja tags before matching. Column positions are not reported, only lines.
+- Scan: blank fenced code blocks (closed only by a bare fence at least as long as the opener), then over the whole
+  document blank code spans (which may wrap within a paragraph) and HTML comments, and in `.jinja` files Jinja tags
+  and comments; per line, blank straight and curly double-quoted spans. Blanking keeps newlines, so line numbers
+  hold. Column positions are not reported, only lines.
 - One `Violation` per match: `message` `"<Category> \"<word>\""`, e.g. `Hedge "might"`, with a category-specific
   remediation (state the condition / give force through condition and reason / name the version, date or ID; quote
   or backtick a word that is mentioned, not used).

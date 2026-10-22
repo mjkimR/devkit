@@ -13,8 +13,9 @@ line-by-line review.
   (`.agents/skills/**`, `.claude/skills/**`) and bundle sources (`**/bundle/skills/**`, `**/bundle/playbooks/**`,
   `**/bundle/instructions/**`, `**/bundle/subagents/**`). Files the installation receipt owns (agent projections) and
   symbolic links are skipped: fix the bundle source instead.
-- **Not checked**: fenced code blocks, inline code, text in straight or curly double quotes, HTML comments and Jinja
-  tags. These mention a word rather than use it. A prohibition without its alternative stays a review item.
+- **Not checked**: fenced code blocks, inline code (also wrapped within a paragraph), text in straight or curly
+  double quotes on one line, HTML comments and, in `.jinja` files only, Jinja tags and comments. These mention a word
+  rather than use it. A prohibition without its alternative stays a review item.
 
 ## 2. Cause of Violation
 
@@ -34,8 +35,8 @@ A word joined to another by `-` or `_` is not matched (`READ-ONLY`, `INTEGRATION
 - Hedge: state the condition under which the directive applies ("If the branch exists, ...").
 - Emphatic capitals: give the rule its force through its condition and reason, in ordinary case.
 - Time-relative word: name the version, date or ID.
-- A word the text mentions rather than uses (an example of what not to write): put it in backticks or double quotes,
-  on one line. Quotes split across a line break are not recognized.
+- A word the text mentions rather than uses (an example of what not to write): put it in backticks, or in double
+  quotes on one line; quotes split across a line break are not recognized.
 
 Read the `agent-asset-writing` instruction for the full writing criteria. The rule never rewrites files.
 
