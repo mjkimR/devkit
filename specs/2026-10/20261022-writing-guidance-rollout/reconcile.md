@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-writing-guidance-rollout
 feature: SPEC-writing-guidance-rollout
-status: pending
+status: resolved
 targets: []
 ---
 

@@ -2,7 +2,7 @@
 id: SPEC-writing-guidance-rollout
 title: Roll out agent-asset-writing to bundle assets
 summary: "Rewrites the remaining bundle skills, playbooks, instructions and role contracts under the agent-asset-writing guidance, verified by a content-preservation review of each changed document."
-status: in-progress
+status: completed
 created: 2026-10-22
 related_capabilities:
   - CAP-HARN-agent-guidance

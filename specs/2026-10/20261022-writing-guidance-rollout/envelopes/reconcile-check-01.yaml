@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T00:26:03.778488Z'
+status: completed
+summary: 'reconcile-reviewer (native, isolated) at e50f164c: no-impact claim holds; the only Living Spec citation of rewritten skill structure (CAP-DLV-delivery-workflows rule 9, spec-sync Step 1) still matches; role contract sections and CAP-HARN-agent-guidance purposes intact'
+findings: []
+assumptions:
+- Reviewer had no shell; it checked head text against Living Spec statements, relying on review-01/reverify-01 for meaning preservation
+checks: {}
+diff_scope:
+  base: 134837b1923c1d948fd0d10be7400da95f19506a
+  head: e50f164c0695668fb55edfe00585e6aab7d92372
