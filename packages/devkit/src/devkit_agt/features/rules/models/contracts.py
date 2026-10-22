@@ -121,7 +121,7 @@ class RuleContext:
         self.settings_resolvers = settings_resolvers if settings_resolvers is not None else {}
         self.exclude = tuple(exclude)
         targets = changed_files or []
-        self.has_targets = bool(targets)
+        self.has_targets = bool(targets) or snapshot is not None
         named: list[str] = []
         normalized: list[str] = []
         for name in targets:

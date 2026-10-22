@@ -1,0 +1,19 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T10:00:59.145424Z'
+status: completed
+summary: 'round 1; verified AC-01 to AC-06: snapshot rules scoping skips declared rules when no diff paths match inputs, accurately includes deleted and typechanged paths in candidate scoping names, keeps RuleContext.targets limited to existing files, fixes deletion-only lifecycle short-circuit, disables rule skipping on config or receipt edits, and preserves unscoped whole-workspace evaluation.'
+findings: []
+assumptions:
+- Diff includes deletion of docs/proposals/PROP-snapshot-scoped-rules performed during standard devkit spec proposal handoff into docs/materials/2026-10/20261022-snapshot-scoped-rules.
+checks:
+  lint: PASS just lint-check devkit
+  typecheck: PASS just check devkit
+  tests: PASS 2706 passed
+  rules: PASS uv run devkit rules check --ci --base fb1db8fa
+diff_scope:
+  base: fb1db8fa4335e367b4492077a0dfc0d06387cf6e
+  head: 0dd83a169fb95c8cc2c2f2bf3596d97dc4ae5a91
+activity_effort: medium

@@ -1,0 +1,10 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-snapshot-scoped-rules: Goal: scope Git snapshot rules runs to changed
+  and deleted paths so commits avoid whole-workspace evaluation for unaffected rules.
+  User authorized starting Planning. task-kind feature, planning-depth proposal.'
+by: user
+at: '2026-10-22T09:44:30.053501Z'

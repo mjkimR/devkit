@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: 'PROP-snapshot-scoped-rules: User approved proposal direction and PADR design.'
+by: user
+at: '2026-10-22T09:44:30.059090Z'

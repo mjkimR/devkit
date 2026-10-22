@@ -10,7 +10,7 @@ from dataclasses import dataclass, field, replace
 
 from devkit.advisory import AdvisoryError, Level
 from devkit_core.core.logs import get_logger
-from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
+from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, RECEIPT_PATH
 
 from devkit_agt.features.rules.models.contracts import Autofixable, Rule, RuleContext, Severity, Violation
 from devkit_agt.features.rules.models.errors import RuleExecutionError, RuleProblem, SettingsError
@@ -48,17 +48,25 @@ def _finding_key(v: Violation) -> tuple[str, str, str]:
 def scope_rules(ctx: RuleContext, rules: Sequence[Rule], modified: Iterable[str] = ()) -> tuple[list[Rule], list[str]]:
     """The rules of ``rules`` a run must evaluate, and the IDs of those it can skip.
 
-    A rule with declared ``inputs`` (read with ``getattr``) is skipped only in a working-tree run with explicit
-    targets (``ctx.has_targets`` and no ``ctx.snapshot``) when no target, before ``[rules] exclude``, and no file in
-    ``modified`` (the files fixes wrote) matches one of its patterns. A target that is the project configuration
-    ``.devkit/config.toml`` keeps every rule, since ``[rules]`` policy can change any rule's findings. Undeclared rules
-    always run, and so does every rule of a whole-workspace or snapshot run.
+    A rule with declared ``inputs`` (read with ``getattr``) is skipped in a run with explicit targets
+    (``ctx.has_targets`` in a working-tree run, or a snapshot run with changed or deleted paths) when no candidate
+    path, before ``[rules] exclude``, and no file in ``modified`` (the files fixes wrote) matches one of its patterns.
+    Candidate paths are ``ctx.targets``, plus ``ctx.snapshot.deleted`` for a Git snapshot run. A candidate that is
+    the project configuration ``.devkit/config.toml`` or the installation receipt ``.devkit/installation.json`` keeps
+    every rule, since rule policy and rule definitions can change any rule's findings. Undeclared rules always run,
+    and so does every rule of a whole-workspace run without explicit targets or snapshot changes.
     """
-    if not ctx.has_targets or ctx.snapshot is not None:
-        return list(rules), []
-    names = list(ctx.targets)
+    if ctx.snapshot is None:
+        if not ctx.has_targets:
+            return list(rules), []
+        names = list(ctx.targets)
+    else:
+        names = list(ctx.targets)
+        names.extend(ctx.snapshot.deleted)
+        if not names:
+            return list(rules), []
     names.extend(relative for path in modified if (relative := ctx.relative_path(path)) is not None)
-    if CONFIG_PATH in names:
+    if CONFIG_PATH in names or RECEIPT_PATH in names:
         return list(rules), []
     selected: list[Rule] = []
     skipped: list[str] = []

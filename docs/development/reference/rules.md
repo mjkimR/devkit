@@ -37,9 +37,9 @@ a Git work tree is `ARGUMENT_INVALID`. A `.devkit/` below the top level of a Git
 work tree whose top level has none is `DEVKIT_ROOT_NESTED` (`INPUT_ERROR`), with
 or without `-w`, rather than a check that loads no managed rules and passes.
 
-- `check` never writes files. Targets, target scoping (a run naming files skips
-  the rules whose declared `inputs` none of them matches), exclusions and phases:
-  `CAP-GOV-evaluation-lifecycle`.
+- `check` never writes files. Targets, target scoping (a run naming files or
+  evaluating a snapshot skips the rules whose declared `inputs` no candidate
+  path matches), exclusions and phases: `CAP-GOV-evaluation-lifecycle`.
 - `check --staged` evaluates the Git index (the built-in `rules-check`
   commit gate runs the same evaluation before every commit); `check --ci --base <ref>` evaluates `HEAD` against its merge base with
   `<ref>`. Both run the linter phase over the changed files of the tree,
