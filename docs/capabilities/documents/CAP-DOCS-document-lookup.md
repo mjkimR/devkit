@@ -18,7 +18,9 @@ created_at: 2026-10-13
 Three commands give an agent deterministic access to the document index (`CAP-DOCS-document-model`): `devkit spec
 resolve` maps IDs to paths, `devkit spec refs` follows the references of one document in either direction, and
 `devkit spec list` browses documents with filters. They are the exact-match counterpart of `devkit spec search`
-(`CAP-DOCS-document-search`), which ranks by meaning when the ID is not known.
+(`CAP-DOCS-document-search`), which ranks by meaning when the ID is not known. Each call loads the index through
+the parse memo of `CAP-DOCS-document-model`, so a call in an unchanged workspace parses no document again; the memo
+never changes an argument, output, code or exit status.
 
 ## 2. Scope & Boundary
 
