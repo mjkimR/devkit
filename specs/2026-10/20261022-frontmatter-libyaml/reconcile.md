@@ -17,7 +17,8 @@ No CLI, use-case sequence, dependency, architecture or glossary term changes.
 ## Source feedback
 
 `FB-strict-frontmatter-loader-without-libyaml` is directly addressed by the implementation and its tests.
-The Disposition in the source records the checks and measured benefit. No required work is deferred.
+The Disposition in the source records the checks and measured benefit. No required work is deferred. The separate grammar/deployment direction is retained in
+`FB-canonical-c-yaml-contract`; it does not alter this unit's acceptance criteria.
 
 ## Entrypoints
 

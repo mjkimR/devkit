@@ -55,3 +55,9 @@ Independent review found 15 differing mutations among 2,960; another 19,138 uniq
 characters had no differing outcomes. Regression tests cover the invalid forms and valid quoted occurrences.
 The final frontmatter regression run passed 116 tests.
 Lint and Pyright pass; the devkit-core wheel builds. The affected selector retains its full-suite fallback.
+
+## Final cumulative verification
+
+After merging main at 148f84df36858de01cd2f6147dbb21b346624b1f without conflicts, `just test-affected` retained
+mode=full and passed 4,937 tests with 12 skipped. CI rules check passed with zero errors and warnings.
+Final core wheel build, lint-check core and check core passed. Independent review verified the P1 fix.
