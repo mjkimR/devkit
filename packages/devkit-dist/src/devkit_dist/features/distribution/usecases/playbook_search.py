@@ -1,8 +1,9 @@
 """``devkit playbook search``: lexical, dense or hybrid search over synchronized playbook metadata.
 
 Never returns procedure bodies. The ranking is ``devkit_dist.features.search``'s over each
-playbook's name, description and aliases; ``auto`` (the default) is hybrid when
-the ``search`` extra is installed and lexical otherwise.
+playbook's name and description; aliases are previous asset IDs, returned as identity
+metadata and never ranked. ``auto`` (the default) is hybrid when the ``search`` extra is
+installed and lexical otherwise.
 """
 
 from __future__ import annotations
@@ -154,7 +155,7 @@ class SearchPlaybooks(BaseUseCase):
                         list(metadata.aliases),
                         str(root / name),
                     )
-                    candidates.append((candidate, " ".join((metadata.name, metadata.description, *metadata.aliases))))
+                    candidates.append((candidate, f"{metadata.name} {metadata.description}"))
         # Indexed in (bundle, id, path) order with fixed-width ids, so ties inside each ranking, and so the
         # fused scores of a hybrid search, follow the same order as ties in the final ranking.
         candidates.sort(key=lambda pair: (pair[0].bundle, pair[0].id, pair[0].path))

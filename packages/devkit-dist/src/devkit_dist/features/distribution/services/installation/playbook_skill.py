@@ -29,7 +29,7 @@ For explicitly requested discovery:
 1. Translate the requested task into an English search query. Preserve canonical
    technical names. Run from the synchronized consumer project:
    `uv run devkit playbook search "<English query>"`.
-   Search indexes name, description, and aliases only. Results include candidate
+   Search indexes name and description only. Results include candidate
    metadata, scores, and readable paths, never procedure bodies. A score ranks
    candidates against each other; it is not confidence that a procedure applies.
 2. Select a relevant candidate from the returned metadata. Do not scan or load
@@ -47,7 +47,8 @@ For explicitly requested discovery:
    ask whether the user wants to add the reusable procedure as a playbook.
    Present a draft and proposed authoring bundle/source path with that question.
    Use English frontmatter: required name and description, optional aliases
-   string array; include prerequisites, ordered steps, and completion conditions.
+   listing previous asset IDs of the playbook (never search keywords); include
+   prerequisites, ordered steps, and completion conditions.
    Persist only after approval, into an available authoring source, then validate
    the bundle and sync. Never edit generated managed/native copies or installed
    wheel resources. If no source is available, provide the draft for the user.

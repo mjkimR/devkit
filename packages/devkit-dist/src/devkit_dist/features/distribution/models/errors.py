@@ -55,6 +55,12 @@ class SelectionError(DistributionError):
     input_error = True
 
 
+class PlaybookAliasAmbiguousError(SelectionError):
+    """A ``devkit playbook get`` alias is declared by more than one effective playbook header of the bundle."""
+
+    code = "PLAYBOOK_ALIAS_AMBIGUOUS"
+
+
 class NotSynchronizedError(DistributionError):
     """The project has no receipt, or a file an agent reads no longer matches it; ``devkit sync`` reconciles."""
 

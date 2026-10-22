@@ -1,12 +1,6 @@
 ---
 name: skill-authoring
 description: Create an agent skill or playbook with a router structure, restructure one that grew too large (RULE-skill-document-size), and decide when it needs a helper script.
-aliases:
-  - restructure a large skill
-  - split SKILL.md
-  - skill document size
-  - write a new skill
-  - playbook authoring
 ---
 
 # Skill authoring and restructuring

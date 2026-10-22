@@ -383,6 +383,22 @@ def _check_workflow_ids(bundle: Bundle) -> None:
         seen[header.id] = asset.id
 
 
+def _check_playbook_aliases(bundle: Bundle) -> None:
+    """A playbook alias names one playbook of the bundle: never a playbook asset ID, never declared twice."""
+    playbooks = [asset for asset in bundle.assets if asset.kind == "playbook"]
+    ids = {asset.id for asset in playbooks}
+    declared: dict[str, str] = {}
+    for asset in playbooks:
+        ((_, source),) = asset.sources
+        header = read_playbook_header(playbook_entry(bundle.root, source).read_bytes(), f"{asset.id}/{source}")
+        for alias in header.aliases:
+            if alias in ids:
+                raise BundleError(f"{asset.id}: playbook alias {alias!r} is a playbook asset ID of the bundle")
+            if alias in declared:
+                raise BundleError(f"{asset.id}: playbook alias {alias!r} is already declared by {declared[alias]}")
+            declared[alias] = asset.id
+
+
 def load_bundle(root: Path) -> Bundle:
     """Load and validate the bundle source directory ``root``.
 
@@ -477,6 +493,7 @@ def _load(root: Path) -> Bundle:
                 raise BundleError(f"template destination collision: {destinations[parent.as_posix()]} and {source}")
     _check_fragment_references(bundle)
     _check_workflow_ids(bundle)
+    _check_playbook_aliases(bundle)
     if bundle.constitution is not None:
         try:
             bundle.constitution.read_text(encoding="utf-8")

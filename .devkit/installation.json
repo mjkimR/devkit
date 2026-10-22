@@ -716,7 +716,7 @@
     },
     ".agents/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
-      "sha256": "016f7c0a90ce36944baca696fb8193fc9ec3edbad18692aa792a446c10ab1ff2"
+      "sha256": "899b9035458fbeca4695501534d1310626ce51d8d27c1c6a4f090897d676275b"
     },
     ".agents/skills/devkit-playbook/agents/openai.yaml": {
       "mode": 420,
@@ -924,7 +924,7 @@
     },
     ".claude/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
-      "sha256": "5715383d20f2b9c373298d3a0d3ad37680b10f10c99afbe6e37a8faf906a5169"
+      "sha256": "fc1cb061871857c1880df5403c98417700423aa4143aca93a276db93a09e315c"
     },
     ".claude/skills/devkit-workflow/SKILL.md": {
       "mode": 420,
@@ -1120,7 +1120,7 @@
     },
     ".devkit/managed/_devkit/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
-      "sha256": "016f7c0a90ce36944baca696fb8193fc9ec3edbad18692aa792a446c10ab1ff2"
+      "sha256": "899b9035458fbeca4695501534d1310626ce51d8d27c1c6a4f090897d676275b"
     },
     ".devkit/managed/_devkit/skills/devkit-playbook/agents/openai.yaml": {
       "mode": 420,
@@ -1168,7 +1168,7 @@
     },
     ".devkit/managed/authoring/playbooks/skill-authoring/SKILL.md": {
       "mode": 420,
-      "sha256": "2f673298348328a08834cc818bbdf86685fd965cfa53cfa8b71d2253b636ebb9"
+      "sha256": "a947907b8d27181c77553391bcf2aeafd14f82cc11e3d6db1aa77361acbc83a1"
     },
     ".devkit/managed/authoring/playbooks/skill-authoring/references/scripts.md": {
       "mode": 420,
@@ -1296,11 +1296,11 @@
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md": {
       "mode": 420,
-      "sha256": "854eb3086bdaae49e6a2af475a7a025c608305690bc0255e4a6fb7d6242faf1f"
+      "sha256": "b760f716f5ccccdae6881aa4d2ba3e5b1bc3adb74d04c709a47dce441d666b56"
     },
     ".devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md": {
       "mode": 420,
-      "sha256": "8067894fb637c1d664104ca973ba0131988ed999d1d4f1ad0c5cfd1104cf7eed"
+      "sha256": "65c911f21b7da309a5b4af28e435cbb493883a4d61eda9a2e8b937650ac1c458"
     },
     ".devkit/managed/spec/rules/code_entrypoints/guide.md": {
       "mode": 420,
@@ -1316,7 +1316,7 @@
     },
     ".devkit/managed/spec/rules/document_reference/guide.md": {
       "mode": 420,
-      "sha256": "66353f0bfb79ad8d23f4dfc14bcaa03ec54df5e1180d5e6919d634a841344e8a"
+      "sha256": "1bab3a0479f56206237c43489a485aba28902162c30be216f9da4c9111245a52"
     },
     ".devkit/managed/spec/rules/document_reference/rule.py": {
       "mode": 420,
@@ -1324,7 +1324,7 @@
     },
     ".devkit/managed/spec/rules/document_reference/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "6ac7586338a9a3cac0a30cc10dde82434aaac0657f37abf1d14b4876afaf5f81"
+      "sha256": "c9ed0a40d7de1b9478e06ab3fd397eeb5195d36c37ee4eb1a0db8cf89079a875"
     },
     ".devkit/managed/spec/rules/document_summary/guide.md": {
       "mode": 420,
@@ -1432,7 +1432,7 @@
     },
     ".devkit/managed/spec/rules/traceability_link/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "9f85abdd64c7cf313799a8d6dc6a5ed0e0cf5e66a47a554f6126c6969bbf0940"
+      "sha256": "969b7bb05fbb1142a99e74436cc05e15ad97ebd53b2958a269532119ef6985c1"
     },
     ".devkit/managed/spec/skills/spec-delegate/SKILL.md": {
       "mode": 420,

@@ -1,7 +1,6 @@
 ---
 name: drift-reconciliation
-description: Manually review a bounded Living Spec, code and guidance scope for drift, then reconcile evidenced findings through explicit user decisions.
-aliases: [spec code drift, living spec consistency, maintenance reconciliation]
+description: Manually review a bounded Living Spec, code and guidance scope for spec-code drift and consistency, then reconcile evidenced findings through explicit user decisions.
 ---
 
 # Drift reconciliation

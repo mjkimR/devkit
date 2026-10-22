@@ -70,6 +70,7 @@ def test_complete_body_identity_and_no_resource_reads(tmp_path: Path, directory:
     assert result == {
         "bundle": "team",
         "id": "recovery",
+        "alias": None,
         "name": "different-name",
         "description": "Procedure.",
         "aliases": [],
@@ -266,3 +267,24 @@ def test_generated_exact_invocation_guidance():
 def test_invalid_selector_precedes_invalid_workspace(tmp_path):
     problem = error(tmp_path / "nonexistent", "INVALID", "ARGUMENT_INVALID")
     assert problem["advisory"]["target_files"] == ["PLAYBOOK_ID"]
+
+
+def test_alias_resolves_to_the_canonical_playbook(deployed):
+    root, _ = deployed
+    result = json.loads(invoke(root, "team/wal-failure").stdout)
+    assert (result["id"], result["alias"], result["name"]) == ("recovery", "wal-failure", "restore-replica")
+    assert result["aliases"] == ["restore-standby", "wal-failure"]
+    assert GetPlaybook().execute(root, "team/recovery").alias is None
+
+
+def test_override_aliases_exact_shadowing_and_ambiguity(deployed):
+    root, installed = deployed
+    create_override(root, installed, "team:release")
+    path = root / ".devkit/overrides/team/release.md"
+    # The override declares the other playbook's ID and alias: retrieval checks the effective headers again.
+    path.write_text("---\nname: publish-release\ndescription: Edited.\naliases: [recovery, restore-standby]\n---\nb\n")
+    exact = GetPlaybook().execute(root, "team/recovery")
+    assert (exact.id, exact.alias) == ("recovery", None)
+    problem = error(root, "team/restore-standby", "PLAYBOOK_ALIAS_AMBIGUOUS")
+    assert problem["advisory"]["target_files"] == ["team/recovery", "team/release"]
+    assert GetPlaybook().execute(root, "team/wal-failure").id == "recovery"

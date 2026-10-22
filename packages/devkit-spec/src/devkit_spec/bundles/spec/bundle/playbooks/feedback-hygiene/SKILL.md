@@ -1,12 +1,6 @@
 ---
 name: feedback-hygiene
-description: Triage open feedback files under specs/ in one batch; group them by target, order them by severity and recurrence, and with the user's decision promote them to rules, playbooks, decisions or spec work, or dismiss or forward them and update their status.
-aliases:
-  - feedback triage
-  - process open feedback
-  - promote feedback
-  - feedback hygiene session
-  - triage critical feedback
+description: Triage open feedback files under specs/ in one hygiene session; group them by target, order them by severity and recurrence, and with the user's decision promote them to rules, playbooks, decisions or spec work, or dismiss or forward them and update their status.
 ---
 
 # Feedback hygiene

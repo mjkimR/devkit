@@ -33,11 +33,11 @@ plan: PLAN-document-id-aliases-and-compaction
 
 ## Phase 2: Playbook aliases
 
-- [ ] **Task 2.1**: Playbook alias validation, search without aliases and `playbook get` alias resolution, with tests
+- [x] **Task 2.1**: Playbook alias validation, search without aliases and `playbook get` alias resolution, with tests
   - **_Boundary**: packages/devkit-dist/src/devkit_dist/features/distribution/, packages/devkit-dist/src/devkit_dist/features/search/services/index.py,
     packages/devkit-dist/tests/
   - _Requirements: AC-10, AC-11, AC-12_
-- [ ] **Task 2.2**: Bundled playbooks drop keyword aliases; sync the repository's projections
+- [x] **Task 2.2**: Bundled playbooks drop keyword aliases; sync the repository's projections
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/, packages/devkit/src/devkit_agt/bundles/authoring/bundle/playbooks/,
     packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/, packages/devkit-starter/src/devkit_starter/bundle/playbooks/,
     .devkit/installation.json

@@ -171,7 +171,8 @@ class ContextResult:
 
 @dataclass(frozen=True)
 class PlaybookCandidate:
-    """A playbook's searchable metadata and readable path; ``score`` is set once it is ranked."""
+    """A playbook's metadata and readable path; ``score`` is set once it is ranked. Only ``name`` and ``description``
+    are searched; ``aliases`` are identity metadata (previous asset IDs)."""
 
     bundle: str
     id: str
@@ -314,7 +315,8 @@ class OverrideChange:
 
 @dataclass(frozen=True)
 class PlaybookResult:
-    """An exact procedure with effective content identity and context requirements."""
+    """An exact procedure with effective content identity and context requirements; ``alias`` is the declared alias
+    the request named (``None`` for the exact asset ID)."""
 
     bundle: str
     id: str
@@ -324,11 +326,13 @@ class PlaybookResult:
     body: str
     path: str
     sha256: str
+    alias: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "bundle": self.bundle,
             "id": self.id,
+            "alias": self.alias,
             "name": self.name,
             "description": self.description,
             "aliases": list(self.aliases),

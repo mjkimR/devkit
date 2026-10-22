@@ -14,6 +14,7 @@ from devkit_dist.features.distribution.models import errors
         (errors.BundleError, "BUNDLE_INVALID", ActionMode.INPUT_ERROR),
         (errors.PackageError, "BUNDLE_PACKAGE_INVALID", ActionMode.MAINTENANCE),
         (errors.SelectionError, "SELECTION_INVALID", ActionMode.INPUT_ERROR),
+        (errors.PlaybookAliasAmbiguousError, "PLAYBOOK_ALIAS_AMBIGUOUS", ActionMode.INPUT_ERROR),
         (errors.NotSynchronizedError, "NOT_SYNCHRONIZED", ActionMode.AUTO),
         (errors.ConflictError, "SYNC_CONFLICT", ActionMode.INTERACTION),
         (errors.BundleConflictError, "BUNDLE_CONFLICT", ActionMode.INTERACTION),

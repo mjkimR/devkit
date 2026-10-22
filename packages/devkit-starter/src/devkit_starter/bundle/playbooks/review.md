@@ -1,7 +1,6 @@
 ---
 name: review-change
-description: Review a code change for correctness, compatibility, and verification gaps.
-aliases: [code review, inspect patch, change assessment]
+description: Review a code change or patch for correctness, compatibility, and verification gaps.
 ---
 
 # Review procedure
