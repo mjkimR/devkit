@@ -1,0 +1,18 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T05:29:19.336209Z'
+status: completed
+summary: 'code-reviewer PASS: AC-01..AC-06 confirmed against 01cfbda5..7880864f; from_spec drops candidates once declared code exists, proposals and code-less bundles keep them, no-entrypoints and observed paths unchanged; no findings'
+findings: []
+assumptions:
+- untracked reconcile.md draft outside the reviewed range
+checks:
+  tests: PASS just test devkit-spec scope/ 116 passed (reviewer); just test-affected 1360 passed mode=partial
+  lint: PASS just lint devkit-spec
+  typecheck: PASS just check devkit-spec
+  rules: PASS uv run devkit rules check
+diff_scope:
+  base: 01cfbda557f0f1a913c6e354b06c23dd7740789e
+  head: 7880864f258a1259ae8984c881f4edee5664694c
