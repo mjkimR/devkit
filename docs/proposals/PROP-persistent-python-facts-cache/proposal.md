@@ -31,7 +31,7 @@ workflow: sdd-proposal
 ## 1. Background & Hypothesis
 
 Repeated CLI processes discard `WorkspaceCache`'s shared Python AST and node index. The baseline in
-`docs/materials/2026-10/20261022-persistent-python-facts-cache/measurements.md` identifies extraction as a candidate
+[the baseline measurements](materials/measurements.md) identifies extraction as a candidate
 cost, but does not measure an implemented persistent facts path. Its 0.84 ms number is synthetic JSON decoding,
 not total lookup latency. Separately cold rule measurements can double-count AST work shared in a real evaluation;
 the claimed 6.0 s to 1.8–2.0 s reduction is not established by the measured 2.5 s difference.
