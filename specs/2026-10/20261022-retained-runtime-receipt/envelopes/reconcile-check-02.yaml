@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-22T05:11:49.035800Z'
+status: completed
+summary: 'round 2; closes reconcile-check-01; self-verified by the implementer: the P3 is waived in reconcile.md with its reason (the use case leaves executor refusal codes to CAP-INT-mcp-services, which states both recoveries; docs/usecases is outside the write scope); targets unchanged since round 1 and reconcile.md resolved'
+findings: []
+checks:
+  rules: PASS uv run devkit rules check
+diff_scope:
+  base: e52a2050ee39c90d5462a33b03d9d34833470bcd
+  head: ''
+activity_effort: medium

@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-retained-runtime-receipt
 feature: SPEC-retained-runtime-receipt
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/mcp/CAP-MCP-runtime-registration.md
     resolution: modified
@@ -29,7 +29,11 @@ targets:
 - `CAP-DIST-sync-and-transactions`: the receipt schema, its single-schema rule and strict validation are unchanged;
   `READER_MODULES` only names the reader's modules.
 - Use cases: `UC-drive-development-to-integration` steps and postconditions are unchanged; both refusals are
-  diagnoses of failures that already stopped integration.
+  diagnoses of failures that already stopped integration. The P3 of `reconcile-check-01.yaml` (no extension for the
+  two codes) is waived: the use case already leaves executor refusal codes such as `INTEGRATION_NOT_READY` and
+  `INTEGRATION_RECEIPT_CONFLICT` to `CAP-INT-mcp-services`, which now states both recoveries, and `docs/usecases/`
+  is outside this development turn's write scope. Adding coded integration extensions to the use case is a
+  separate documentation change for the Host to schedule.
 
 ## Source feedback
 

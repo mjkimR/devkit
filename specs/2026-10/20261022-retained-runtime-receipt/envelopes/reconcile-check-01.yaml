@@ -1,0 +1,21 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-22T05:11:33.885256Z'
+status: completed
+summary: 'round 1; reconcile-reviewer: CAP-MCP-runtime-registration, CAP-INT-mcp-services and the integration and host quick references agree with the implementation and AC-01..AC-05; CAP-DIST-sync-and-transactions no-impact confirmed; source feedback resolution matches; one P3 on UC-drive-development-to-integration extensions'
+findings:
+- issue: UC-drive-development-to-integration has no extension for the new coded refusals INTEGRATION_RECEIPT_READER_CHANGED (CLI route under separate authority, no restart) and MCP_RUNTIME_STALE (restart or reconnect), while it lists comparable coded extensions at step 7 and 8
+  evidence: docs/usecases/delivery/UC-drive-development-to-integration.md:93-113; specs/2026-10/20261022-retained-runtime-receipt/reconcile.md:31-32
+  failure_condition: An agent following the use case meets INTEGRATION_RECEIPT_READER_CHANGED at step 7 and finds no extension naming its recovery; steps and postconditions stay correct
+  suggested_action: Add a 7f extension citing CAP-INT-mcp-services and add the use case to reconcile.md targets, or waive with a reason since the use case omits other refusal codes such as INTEGRATION_NOT_READY and INTEGRATION_RECEIPT_CONFLICT
+  resolution: open
+  severity: P3
+assumptions:
+- Native reconcile-reviewer subagent nested by the development-worker on claude-code, with no shell; it read the committed files at head e52a2050 in the clean worktree and made no reads outside it
+checks: {}
+diff_scope:
+  base: 14d8e5a9ede28cb3196ae5045fc87137b0517385
+  head: e52a2050ee39c90d5462a33b03d9d34833470bcd
+activity_effort: medium

@@ -2,7 +2,7 @@
 id: SPEC-retained-runtime-receipt
 title: Diagnose a retained MCP runtime older than the code it reads
 summary: Integration refuses a source that changes the receipt reader with INTEGRATION_RECEIPT_READER_CHANGED, and the retained MCP service refuses protected tools with MCP_RUNTIME_STALE when its loaded devkit code differs from the installed code, keeping receipt validation strict.
-status: in-progress
+status: completed
 created: 2026-10-22
 related_capabilities: [CAP-MCP-runtime-registration, CAP-INT-mcp-services]
 related_usecases: []
