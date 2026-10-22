@@ -200,7 +200,7 @@ with discover_bundles() as bundles:
         'devkit': 'devkit-dist', 'advisory': 'devkit-dist', 'git-commits': 'devkit-dist',
         'authoring': 'devkit-agt', 'harness': 'devkit-agt',
     }
-    assert {item.bundle.name for item in bundles if item.package == 'devkit-catalog'} == {'host-observer', 'response-style', 'maintenance'}
+    assert {item.bundle.name for item in bundles if item.package == 'devkit-catalog'} == {'host-observer', 'response-style', 'maintenance', 'cli-tool'}
 "
     echo "--- devkit sync (built-in bundles are selected by default)"
     uv run devkit sync >/dev/null
@@ -211,6 +211,7 @@ with discover_bundles() as bundles:
     test -f .devkit/managed/harness/instructions/devkit-run.md
     test ! -e .devkit/managed/host-observer
     test ! -e .devkit/managed/response-style
+    test ! -e .devkit/managed/cli-tool
     echo "--- response templates: lazy imports, configured language and final output"
     uv run python -c '
 import sys
@@ -237,6 +238,21 @@ assert "read and apply the `response-style` skill" in Path("AGENTS.md").read_tex
 '
     uv run devkit sync --check >/dev/null
     uv run devkit remove response-style >/dev/null
+    echo "--- cli-tool: the structure rules load from the installed catalog and check a tool"
+    uv run devkit add cli-tool >/dev/null
+    mkdir -p src/smoketool
+    printf 'import click\nimport httpx\n\n\n@click.command()\ndef main():\n    print("x")\n' > src/smoketool/cli.py
+    status=0
+    uv run devkit rules check --format json src/smoketool/cli.py >"$work/cli-tool.json" 2>/dev/null || status=$?
+    [ "$status" -eq 1 ] || { echo "error: devkit rules check exited $status on the cli-tool sample, expected 1" >&2; exit 1; }
+    uv run python - "$work/cli-tool.json" <<'PY'
+import json, sys
+found = {item["rule_id"] for item in json.load(open(sys.argv[1]))["violations"]}
+expected = {"RULE-cli-tool-command-boundary", "RULE-cli-tool-library-output", "RULE-cli-tool-heavy-imports"}
+assert expected <= found, found
+PY
+    rm -r src/smoketool
+    uv run devkit remove cli-tool >/dev/null
     echo "--- host hooks: preserve foreign entries, dispatch from a subdirectory, inspect and remove"
     mkdir -p .codex host-subdir
     cat > .codex/hooks.json <<'JSON'

@@ -4,6 +4,10 @@ title: Agent-First CLI Toolkit
 summary: "The devkit-cli runtime library that gives any click tool devkit's agent-first output contract, and the opt-in cli-tool bundle that guides and checks the structure of such tools."
 area: cli
 status: active
+entrypoints:
+  - packages/devkit-cli/
+  - packages/devkit-dist/src/devkit_dist/adapters/cli.py
+  - packages/devkit-catalog/src/devkit_catalog/cli_tool/
 ---
 
 # [CAP-CLI-agent-cli-toolkit] Agent-First CLI Toolkit
