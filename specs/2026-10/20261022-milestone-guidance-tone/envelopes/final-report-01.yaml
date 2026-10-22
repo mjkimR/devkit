@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T06:06:13.512279Z'
+status: completed
+summary: Guidance tone softened to recommendations, milestone merge procedure documented (ADR-milestone-merging, Backlog and seed guidance), done-extension reopen rule kept; Living Spec reconciled.
+findings: []
+checks:
+  tests: PASS just test-affected (1364 passed, mode=partial)
+  build: PASS devkit sync --check (bundle renders; projections match)
+  lint: PASS devkit rules check --ci --base 3b854eae; just lint-check devkit-spec; git diff --check
+diff_scope:
+  base: 3b854eaee69ce75579facc8c17dbf1a92b27845c
+  head: fe8376b9055f1040d9f72adec1d3363c6df945f3
