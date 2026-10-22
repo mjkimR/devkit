@@ -1,0 +1,69 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-22T06:45:39.172829Z'
+status: completed
+review: challenger-01.yaml
+summary: 'Folded challenger-01 in 4c44ca75: 2-9 resolved (rule-local guard weighed and rejected, completeness test, pre-exclusion matching, recheck recompute, engine validation, lifecycle line 67, sequencing reworded per Host, relative cold performance bound). Finding 1 (build-verify consequence) is reworded and stays open as Decision needed for plan-accept.'
+findings:
+- issue: 'Decision needed: at the build-verify exit lint-clean stops reporting architecture and usecase-boundary violations the unit''s own implementation introduces; the PADR and spike evidence call the loss only pre-existing violations.'
+  evidence: workflow/usecases/evaluate.py:211,226-230 (_unit_files of the unit directory); sdd-spec-feature.md:43-46 build-verify exits on lint-clean (sdd-spec-bugfix fix-verify :68); architecture/rule.py:505 and usecase-boundaries/rule.py:448 ignore targets; PADR-scope...md:63 and spike-evidence.md:70 say pre-existing.
+  failure_condition: A layer-violating import added during build-verify passes the lint-clean exit and surfaces only at the commit gate or lint-ci-clean.
+  suggested_action: Confirm build-verify may rely on the rules-check commit gate and lint-ci-clean; reword PADR section 5 and spike-evidence section 4 to name the unit's own uncommitted code and the gates that still catch it.
+  resolution: open
+  severity: P2
+- issue: A rule-local guard is not weighed as an option; it meets acceptance outcomes 4-6 without the engine field, EvaluationResult.skipped, explain change or capability edits.
+  evidence: PADR-rules-declare...md options 1-5 and PADR-scope...md options 1-4 have no rule-local option; unique_code/rule.py:199 already reports only targeted files.
+  failure_condition: The project takes a size-M engine change where three rules could carry an S-size guard with the same benefit.
+  suggested_action: Add the rule-local guard as a considered option and either adopt it or state the requirement that forces the engine level.
+  resolution: resolved
+  severity: P2
+- issue: No acceptance outcome checks that a declared input set is complete; AC3 shows only matching triggers and AC4 passes trivially on a clean base.
+  evidence: PADR-rules-declare...md section 5 names the risk; architecture/rule.py:177,248,260,272,282,306,342 and usecase-boundaries/rule.py:78,91,217 read outside ctx.cache; spike-evidence.md section 4 rows are all 0/0.
+  failure_condition: A later edit makes RULE-architecture read another file type without updating inputs; all tests pass and a targeted run on that file misses the finding.
+  suggested_action: 'Add a completeness test per declared rule: record files opened during a whole-workspace check of a fixture (audit hook on open) and assert each matches rule.inputs; optionally a negative-control row in AC4.'
+  resolution: resolved
+  severity: P2
+- issue: Matching on post-exclusion targets is unsafe for the two target-ignoring rules, which do not honor [rules] exclude.
+  evidence: PADR-scope...md:57; contracts.py:121-129 drops excluded targets; architecture/rule.py:245-312 and usecase-boundaries/rule.py:76-96 never read ctx.exclude.
+  failure_condition: With exclude covering generated modules, devkit rules check on an edited generated module skips RULE-architecture that today reports it.
+  suggested_action: Match inputs and the .devkit/config.toml exception against the expanded targets before exclusion (kept on RuleContext), or document the exception.
+  resolution: resolved
+  severity: P3
+- issue: The fix pass and recheck reuse the skip list from the targets alone; a fixer that writes a non-target file matching a skipped rule's inputs is not rechecked.
+  evidence: evaluator.py:69-75 recheck reuses active; current fixers write only Markdown (markdown_link/rule.py:203-232, document_reference.py:359+).
+  failure_condition: A future or plugin fixer rewrites a Python file during devkit rules fix <docs>; the recheck skips RULE-architecture and reports clean.
+  suggested_action: Recompute the skip set for the recheck against targets plus modified files; state it in CAP-GOV-evaluation-lifecycle.
+  resolution: resolved
+  severity: P3
+- issue: Only BaseRule validates inputs; a protocol-only rule with a bare string, list or empty value is read through getattr unvalidated.
+  evidence: proposal.md:63, PADR-rules-declare...md:52; precedent coerces (phases.py:55-58); a string iterates per character.
+  failure_condition: A plugin rule declaring inputs = '**/*.py' is skipped or run inconsistently, missing findings.
+  suggested_action: The engine accepts only a non-empty tuple of valid patterns and reports anything else as RULES_DEFINITION_INVALID; cover in AC1.
+  resolution: resolved
+  severity: P3
+- issue: The Living Spec list misses CAP-GOV-evaluation-lifecycle line 67 (a targeted hygiene run still evaluates the rule), which the change makes false.
+  evidence: CAP-GOV-evaluation-lifecycle.md:43,67; proposal.md Living Spec bullet names only the Targets paragraph.
+  failure_condition: With RULE-architecture overridden to hygiene, check --phase hygiene docs/x.md skips it, contradicting line 67; reconcile flags it.
+  suggested_action: Add the phase-overrides paragraph (line 67) to the Living Spec updates.
+  resolution: resolved
+  severity: P3
+- issue: 'Decision needed: Sequencing makes Development wait for the draft PROP-rule-shared-python-ast while declaring no depends_on.'
+  evidence: proposal.md:113-118; PROP-rule-shared-python-ast status draft; both own features/rules/ and docs/capabilities/governance/.
+  failure_condition: The sibling stalls or is rejected and this proposal is blocked by its own text with nothing recording why, or develops in parallel contrary to it.
+  suggested_action: Declare depends_on or reword to 'whichever lands second rebases the three rule modules'.
+  resolution: resolved
+  severity: P3
+- issue: 'The 0.85 s scoped figure behind the 1.5 s bound is biased low: the scoped run followed the unscoped run in one warm process.'
+  evidence: probe/equivalence.py runs unscoped then scoped in one process; spike-evidence.md:57-66; baseline 3.74 s CLI vs 3.59 s in process.
+  failure_condition: A cold workflow next pays imports and discovery the probe did not; AC6 fails on a slower machine.
+  suggested_action: Re-measure the scoped case cold in a fresh process and record machine and invocation next to AC6.
+  resolution: resolved
+  severity: P3
+checks:
+  rules-check: PASS docs/proposals/PROP-lint-clean-target-scoped-rules
+diff_scope:
+  base: ''
+  head: 4c44ca75b31048f5963a82d5de68d8411bccde41
+activity_effort: medium
