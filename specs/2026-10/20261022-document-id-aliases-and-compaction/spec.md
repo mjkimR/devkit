@@ -2,7 +2,7 @@
 id: SPEC-document-id-aliases-and-compaction
 title: Document and Playbook ID Aliases
 summary: Introduces an optional aliases frontmatter field of previous or alternate IDs on every ID-bearing document, resolved through one alias-aware DocumentIndex lookup and rewritten to canonical IDs by devkit rules fix, and gives playbook aliases the same identifier meaning.
-status: in-progress
+status: completed
 created: 2026-10-22
 related_capabilities:
   - CAP-DOCS-document-model

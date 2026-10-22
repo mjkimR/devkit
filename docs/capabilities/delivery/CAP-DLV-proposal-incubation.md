@@ -235,7 +235,7 @@ legacy proposal or PADR whose slug starts that way, before writing anything, wit
 | `namespace` | Optional (`--namespace`): `global` or a registered namespace (`CAP-DOCS-namespaces`); carried to `spec.md`. Every file of the bundle belongs to it. |
 | `priority` | `critical`, `high` (scaffolded), `medium`, `low`. |
 | `size` | `S` (single fix), `M` (scaffolded; 1-2 sessions), `L` (complex module), `XL` (major overhaul). |
-| `milestone` | Optional (`--milestone`): one existing global MS ID under docs/roadmap/; validated before writing and never carried to `spec.md`. |
+| `milestone` | Optional (`--milestone`): one existing global MS ID under docs/roadmap/, or one of its aliases (the canonical ID is written); validated before writing and never carried to `spec.md`. |
 | `boundaries` | `owns` (scaffolded: the target area) and `excludes` (scaffolded: `docs/decisions/`); carried to `plan.md` and `tasks.md`. |
 | `task_kind` | `feature` (scaffolded default) or `bugfix` (`--task-kind`): the provisional `task-kind`, confirmed at `plan-accept`; the spec follows `sdd-spec-<task_kind>`. |
 | `planning_effort` | `low`, `medium` (scaffolded default) or `high` (`--planning-effort`): non-authoritative Planning `activity-effort` hint, confirmed at `plan-intent`; not carried to `spec.md`. |
@@ -427,7 +427,7 @@ uv run devkit spec proposal check fast-engine                        # before an
 | --- | --- | --- |
 | `--title/-t` | `new` | Title (default: the slug). |
 | `--target-area/-a` | `new` | Capability area the proposal targets (default `capabilities/<area>/`); also the owned boundary. |
-| `--milestone/-m` | `new` | One existing global MS ID; otherwise ARGUMENT_INVALID before writes. Proposal membership only; not carried to `spec.md`. |
+| `--milestone/-m` | `new` | One existing global MS ID or one of its aliases, written as the canonical ID; otherwise ARGUMENT_INVALID before writes. Proposal membership only; not carried to `spec.md`. |
 | `--decomposed-from` | `new` | Editable draft PROP ID; checks source existence, draft status and absence of a Planning branch before writing. |
 | `--task-kind` | `new` | Write `task_kind: feature\|bugfix` (default `feature`); anything else is `ARGUMENT_INVALID`. |
 | `--planning-effort` | `new` | Write `planning_effort: low\|medium\|high` (default `medium`); anything else is `ARGUMENT_INVALID`. |

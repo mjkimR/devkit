@@ -1,0 +1,43 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T00:28:41.200206Z'
+status: completed
+summary: 'reconcile-reviewer (independent, medium first round): nine targets, instruction and rule guide match the code and ADRs; one P2 and four P3 coverage gaps in contracts outside the record'
+findings:
+- issue: CAP-DLV-spec-bundles is not in reconcile.md although devkit spec new now refuses a slug declared only as an alias
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/specs.py:387; docs/capabilities/delivery/CAP-DLV-spec-bundles.md:50
+  failure_condition: A reader of CAP-DLV-spec-bundles cannot tell that an alias blocks a spec slug
+  suggested_action: State that an alias declaration counts, and record the contract
+  resolution: open
+  severity: P2
+- issue: CAP-TRACE-code-entrypoints --target describes only an ID, not an alias
+  evidence: packages/devkit-spec/src/devkit_spec/features/entrypoints/usecases/derive.py:80
+  failure_condition: The alias form of --target is only implicit through CAP-DOCS-document-model
+  suggested_action: Optionally state alias acceptance
+  resolution: open
+  severity: P3
+- issue: proposal new --milestone accepts an MS alias and writes the canonical ID; CAP-DLV-proposal-incubation does not say so
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/roadmap.py:16
+  failure_condition: Contract omits alias normalization at creation
+  suggested_action: Add the alias note to the --milestone rows
+  resolution: open
+  severity: P3
+- issue: The alias concept is not registered in docs/glossary.md
+  evidence: docs/glossary.md
+  failure_condition: The identifier-not-keyword decision is not visible where terms are registered
+  suggested_action: Add a glossary row or state why none is needed
+  resolution: open
+  severity: P3
+- issue: Consumer mirrors and CAP-DIST-manifest-spec describe only exact-ID playbook retrieval
+  evidence: packages/devkit-dist/src/devkit_dist/bundles/devkit/bundle/instructions/consumption.md:59; packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/playbook_skill.py:15; docs/capabilities/distribution/CAP-DIST-manifest-spec.md:45
+  failure_condition: An agent following the mirrors may not treat a named old playbook ID as explicit invocation
+  suggested_action: Add 'or a declared alias' to these texts
+  resolution: open
+  severity: P3
+checks:
+  docs: PASS targets compared against code
+diff_scope:
+  base: 9f23ee0e3967a04868824f559aa31a15f2ebd95e
+  head: 7a3ad6c8b3eb3faa5de044e434f5dccaf7b270d6

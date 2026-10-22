@@ -15,7 +15,9 @@ activate playbook search for future tasks in the conversation.
 For an exact playbook named by the user for this task, or an explicitly
 configured external schedule naming that exact ID, skip discovery and run
 `uv run devkit playbook get <bundle>/<playbook>` in the synchronized workspace.
-Use the manifest asset ID, not its header name. Retrieval grants no execution
+Use the manifest asset ID, not its header name; a declared alias (a previous
+asset ID) names the same playbook, whose canonical id the result reports, and is
+explicit invocation of it. Retrieval grants no execution
 authority. Load the returned context argv in the same workspace (or pass -w),
 once per agent context and again after it is lost; apply the full constitution
 and relevant instructions. Follow the complete returned body, resolving needed

@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-document-id-aliases-and-compaction
 feature: SPEC-document-id-aliases-and-compaction
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-model.md
     resolution: modified
@@ -54,3 +54,13 @@ deferred work remains in the agreed scope.
 Entrypoint derivation was reviewed (`spec-entrypoints`): candidates are the broad package directories of this
 bundle's task boundaries, which span several capabilities; the touched capabilities already declare their doorway
 modules or were edited for contract wording, so no entrypoint was applied.
+
+Reconcile verification (`reconcile-check-01`) found contracts outside this record that name changed behavior.
+In scope, `CAP-DOCS-document-model` section 3.5 rule 6 now states the cross-contract rule: an alias declaration
+counts wherever a contract refuses or reports a declared ID (so `CAP-DLV-spec-bundles` "any document declares" covers
+`devkit spec new` refusing a slug taken by an alias), and ID arguments resolved through the index accept an alias (so
+`CAP-TRACE-code-entrypoints` `--target` stays correct). `CAP-DLV-proposal-incubation` states that `--milestone`
+accepts an alias and writes the canonical ID, and the projected devkit-playbook skill text names alias retrieval.
+Explicit wording in `CAP-DLV-spec-bundles`, `CAP-TRACE-code-entrypoints`, `CAP-DIST-manifest-spec`, the bundled
+devkit `consumption` instruction and a glossary entry lie outside this unit's write scope; they are recorded as
+`FB-alias-wording-outside-scope` for a follow-up edit, and none of them contradicts the implementation.
