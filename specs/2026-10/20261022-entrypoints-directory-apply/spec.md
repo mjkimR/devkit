@@ -2,7 +2,7 @@
 id: SPEC-entrypoints-directory-apply
 title: Apply directory code entrypoints
 summary: Allow devkit spec entrypoints derive --apply with a directory path (--code ending in /) to record the directory entrypoint directly instead of expanding all matching candidate files.
-status: in-progress
+status: completed
 created: 2026-10-22
 related_capabilities:
   - CAP-TRACE-code-entrypoints

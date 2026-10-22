@@ -8,7 +8,7 @@ target: spec-entrypoints skill, devkit spec entrypoints derive --apply --code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -42,3 +42,9 @@ created_at: 2026-10-22
 [APPLIED: CAP-GOV-rules-engine path=docs/capabilities/governance/CAP-GOV-rules-engine.md added=packages/devkit/src/devkit_agt/features/rules/__init__.py,...cli/output.py,...models/contracts.py,... (10 files)]
 --code TEXT  Keep only candidates equal to or under this path
 ```
+
+- **Disposition (resolved)**: `SPEC-entrypoints-directory-apply` added `fold_by_directory_selectors` in
+  `devkit_spec.features.entrypoints.services.derive`, which detects `--code` paths ending in `/`, synthesizes the
+  directory as a candidate pair for matching documents, and folds descendant files into it. `--apply` writes
+  the directory entrypoint with trailing `/` to frontmatter and skips descendant files. Verified by unit and
+  integration tests (66 passed) and `CAP-TRACE-code-entrypoints` updated.
