@@ -935,7 +935,7 @@
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "786bb56647c881050bdec0eb716ddcee9998badfb0d5e2fe6a75df0958cdb11c"
+      "sha256": "7015b3e25beb92fe73750681e93c51ec54fc17707b19ee083317bfc99935f180"
     },
     ".agents/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1139,7 +1139,7 @@
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "786bb56647c881050bdec0eb716ddcee9998badfb0d5e2fe6a75df0958cdb11c"
+      "sha256": "7015b3e25beb92fe73750681e93c51ec54fc17707b19ee083317bfc99935f180"
     },
     ".claude/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1691,7 +1691,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "786bb56647c881050bdec0eb716ddcee9998badfb0d5e2fe6a75df0958cdb11c"
+      "sha256": "7015b3e25beb92fe73750681e93c51ec54fc17707b19ee083317bfc99935f180"
     },
     ".devkit/managed/spec/skills/spec/references/branches.md": {
       "mode": 420,
