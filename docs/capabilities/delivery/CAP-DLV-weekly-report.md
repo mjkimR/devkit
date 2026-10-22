@@ -6,6 +6,7 @@ area: delivery
 status: active
 usecases:
   - UC-inspect-weekly-repository-progress
+  - UC-publish-a-weekly-report
 entrypoints:
   - packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/weekly-report.md
 ---

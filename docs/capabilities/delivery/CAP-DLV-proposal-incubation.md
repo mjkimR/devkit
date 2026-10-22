@@ -7,7 +7,6 @@ status: active
 created_at: 2026-10-13
 usecases:
   - UC-incubate-and-hand-off-a-proposal
-  - UC-handle-delivery-problems-and-exceptions
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/proposals/
   - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py

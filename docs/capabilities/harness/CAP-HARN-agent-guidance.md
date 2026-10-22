@@ -9,6 +9,7 @@ usecases:
   - UC-route-development-intent
   - UC-adopt-in-an-existing-repository
   - UC-handle-delivery-problems-and-exceptions
+  - UC-resolve-stale-activity-branches
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
 ---

@@ -79,7 +79,7 @@ capabilities:
   child drafts once the proposal check passes on the base (`CAP-DLV-proposal-incubation`); while the Planning branch
   exists, Backlog changes are refused with `SPEC_PROPOSAL_IN_PLANNING`; the use case ends.
 - **5a.** The user rejects the direction: the agent sets `status: rejected` with the user's reason in the commit
-  message, closes the open questions and merges the Planning branch; a later hygiene pass, warned by
+  message, closes the open questions and merges the Planning branch per policy; a later hygiene pass, warned by
   `SPEC_PROPOSAL_REJECTED_PENDING`, writes the rejection ADR, preserves open feedback and deletes the proposal
   (`CAP-DLV-proposal-incubation`); the use case ends.
 - **5b.** The workflow does not open `plan-accept` (a missing feedback sweep, an envelope hold): the system refuses
@@ -188,7 +188,8 @@ capabilities:
 
 ### Scenario 9: A rejected proposal waits for its cleanup
 - **Covers**: 5a
-- **Given**: a proposal the user rejected, merged with `status: rejected` and still in the base
+- **Given**: a proposal whose direction the user rejected in Planning, its Planning branch merged per policy with
+  `status: rejected` and the user's reason in the commit message, and still in the base
 - **When**: the agent runs `devkit rules check -p hygiene` on the whole workspace
 - **Then**: a `SPEC_PROPOSAL_REJECTED_PENDING` warning names it, and its `[FIX]` writes the rejection ADR and deletes
   the proposal in one commit

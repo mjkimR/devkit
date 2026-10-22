@@ -13,6 +13,7 @@ capabilities:
   - CAP-DLV-delivery-workflows
   - CAP-DLV-spec-bundles
   - CAP-DLV-project-policy
+  - CAP-WT-task-worktrees
 ---
 
 # [UC-route-development-intent] Route a Development Request to the Right Workflow
@@ -91,8 +92,11 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
   (`CAP-DLV-delivery-workflows`); the use case ends.
 - **\*a.** During Development, a `session` task turns out to need a lasting design record, a contract change or a
   Living Spec change: the agent raises the depth to `spec` itself under `depth_escalation=auto`, or after the user's
-  confirmation under `ask`; it adds a spec Unit in the current work environment, keeps the changes made so far and
-  records the agreed intent and the work so far (`CAP-HARN-agent-guidance`); resumes at step 7.
+  confirmation under `ask`, and a worker reports the need as a problem instead (`CAP-HARN-agent-guidance`,
+  `CAP-DLV-project-policy`); the agent adds a spec Unit on `dev-<slug>` in the current work environment with no close,
+  new slug or new worktree, first starting that branch in the current checkout when it is missing, which carries the
+  uncommitted changes over (`CAP-WT-task-worktrees`), and records the agreed intent and the work so far; resumes at
+  step 7.
 
 ---
 
@@ -215,6 +219,7 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 - **Given**: a `session` task turns out to need a contract change or a Living Spec change during Development, and the
   policy reports `[ROUTING_POLICY: depth_escalation=auto]`
 - **When**: the agent raises its depth
-- **Then**: it adds a spec Unit with `devkit spec new <slug>` on `dev-<slug>` in the current work environment,
-  records the agreed intent and the work so far, and continues from the workflow's next stage, keeping the changes
-  made so far
+- **Then**: it adds a spec Unit with `devkit spec new <slug>` on `dev-<slug>` in the current work environment (first
+  starting that branch with `devkit worktree start dev-<slug> --no-worktree`, which carries the uncommitted changes,
+  when it does not exist yet), records the agreed intent and the work so far, and continues from the workflow's
+  next stage, keeping the changes made so far

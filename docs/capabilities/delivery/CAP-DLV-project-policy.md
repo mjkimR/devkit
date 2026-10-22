@@ -9,7 +9,6 @@ usecases:
   - UC-route-development-intent
   - UC-run-parallel-work-safely
   - UC-drive-development-to-integration
-  - UC-handle-delivery-problems-and-exceptions
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/policy/services/config.py
   - packages/devkit-spec/src/devkit_spec/features/policy/cli/commands.py

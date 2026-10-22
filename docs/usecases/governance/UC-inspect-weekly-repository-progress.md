@@ -6,7 +6,6 @@ area: governance
 primary_actor: Developer
 supporting_actors:
   - AI coding agent running the weekly-report playbook
-  - Publication destination reached through an authorized connector or command
 status: active
 capabilities:
   - CAP-DLV-weekly-report
@@ -21,7 +20,7 @@ entrypoints:
 - **Goal**: obtain a revision-bound report of one week of repository progress, so that the developer can tell
   verified delivery from incomplete evidence, understand health limitations and choose useful next actions
 - **Scope**: the `weekly-report` playbook of the opt-in `maintenance` catalog bundle, run by an AI coding agent with
-  the repository's existing tools
+  the repository's existing tools; publishing the verified report is `UC-publish-a-weekly-report`
 - **Trigger**: the developer explicitly invokes the weekly-report playbook
 - **Preconditions**: the `maintenance` bundle is installed; the developer supplies the scope and may supply the
   timezone or interval, the artifact location and a prior report; generation needs neither maintenance artifacts nor
@@ -71,14 +70,6 @@ entrypoints:
   supersedes and preserves the earlier bytes; resumes at step 8.
 - **7b.** The readback, identity or required artifact verification fails: generation fails and nothing is published;
   an unavailable evidence link alone is marked unverified instead; the use case ends.
-- **8a.** The developer selects a destination and grants authority to publish: the agent checks collisions, rechecks
-  the digest and publishes through an existing authorized connector or command; the companion records `published`
-  only with a verified receipt and matching content, run and digest, or `failed` on a confirmed failure, leaving the
-  report intact; the use case ends.
-- **8b.** The publication response is lost or the destination cannot be verified: the companion records `unknown`;
-  the agent inspects the destination before any retry, records `published` on a verified match, keeps `unknown` for
-  the developer's decision when it stays unverifiable, retries with the same run ID and bytes on confirmed absence,
-  and treats different content as a collision; the use case ends.
 
 ---
 
@@ -86,10 +77,10 @@ entrypoints:
 
 - **Success guarantee**: an immutable, verified report exists at a new local artifact with its digest; every factual
   claim cites its evidence, and health gaps, unverified work and comparison limits are explicit; the companion record
-  holds the generation and publication outcomes.
+  holds the completed generation outcome with publication `pending`.
 - **Minimal guarantee**: generation fetches nothing, switches no branch, changes no source, runs no maintenance,
-  check or fix, and creates no follow-up work; a rerun never overwrites an earlier report; nothing external is
-  mutated without the developer's explicit authority, and a failed publication leaves the completed report intact.
+  check or fix, and creates no follow-up work; a rerun never overwrites an earlier report; generation uploads,
+  messages, commits or pushes nothing, and a failed generation publishes nothing.
 
 ---
 
@@ -157,18 +148,3 @@ entrypoints:
 - **Given**: a written report whose readback does not match the recorded identity
 - **When**: the agent verifies the artifact
 - **Then**: generation fails and nothing is published
-
-### Scenario 11: Records an authorized publication outcome
-- **Covers**: 8a
-- **Given**: a verified report, a companion record, and a destination the developer selected with explicit authority
-- **When**: the agent publishes through an existing authorized connector
-- **Then**: the companion records `published` only after a verified receipt with matching content, run and digest, or
-  `failed` on a confirmed failure, and the report is unchanged either way
-
-### Scenario 12: Never retries a lost publication blindly
-- **Covers**: 8b
-- **Given**: a publication attempt whose response was lost
-- **When**: the developer asks to retry
-- **Then**: the agent inspects the destination first; a matching receipt resolves `published` without resending, an
-  unverifiable state stays `unknown` for the developer's decision, and only confirmed absence permits a retry with the
-  same run ID and bytes

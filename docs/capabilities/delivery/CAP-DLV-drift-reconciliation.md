@@ -5,7 +5,7 @@ summary: "An explicitly invoked maintenance playbook reviews a bounded batch of 
 area: delivery
 status: active
 usecases:
-  - UC-keep-the-living-spec-consistent
+  - UC-reconcile-living-spec-drift
 entrypoints:
   - packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/drift-reconciliation.md
 ---

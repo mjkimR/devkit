@@ -13,6 +13,8 @@ usecases:
   - UC-drive-development-to-integration
   - UC-run-parallel-work-safely
   - UC-handle-delivery-problems-and-exceptions
+  - UC-resolve-stale-activity-branches
+  - UC-route-development-intent
 ---
 
 # [CAP-WT-task-worktrees] Task Worktrees: Overview
