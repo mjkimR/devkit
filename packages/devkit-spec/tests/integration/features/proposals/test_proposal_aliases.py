@@ -123,3 +123,19 @@ def test_scaffolding_treats_a_spec_alias_like_a_declared_spec(workspace: Path, w
     )
     with pytest.raises(ProposalExistsError):
         create_padr(workspace, "fresh", "Taken")
+
+
+def test_handoff_refuses_an_alias_that_would_become_a_dated_spec_id(workspace: Path) -> None:
+    from devkit_spec.base.errors import ProposalInvalidError
+
+    proposal = _proposal(workspace, "dated", "PROP-20260101-dated")
+    with pytest.raises(ProposalInvalidError, match="SPEC-20260101-dated"):
+        handoff_proposal(workspace, "dated", today=TODAY)
+    assert proposal.is_file() and not spec_dir(workspace, "dated").exists()
+
+
+def test_new_proposal_refuses_a_slug_declared_as_an_alias(workspace: Path, write: Write) -> None:
+    write("docs/proposals/PROP-current/proposal.md", "---\nid: PROP-current\nstatus: draft\naliases: [PROP-old]\n---\n")
+    with pytest.raises(ProposalExistsError, match="already declared as an alias"):
+        create_proposal(workspace, "old", today=TODAY)
+    assert not (workspace / "docs/proposals/PROP-old").exists()

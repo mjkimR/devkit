@@ -71,7 +71,8 @@ removes it.
    ID or translated alias graduating in the same handoff, a carried bundle file whose path under the materials directory a file or symbolic link of `materials/`
    takes too (or lies below; a `materials/` that is itself a symbolic link takes every such path), or a path it would
    create (the spec bundle, an ADR, the materials directory, a carried file) whose directory resolves outside the
-   workspace is `SPEC_PROPOSAL_TARGET_EXISTS`; a legacy proposal or PADR slug whose first segment has no letter is
+   workspace is `SPEC_PROPOSAL_TARGET_EXISTS`; a proposal alias whose `SPEC-` translation has a date-based form
+   (`PROP-<YYYYMMDD>-<x>`) is `SPEC_PROPOSAL_INVALID`; a legacy proposal or PADR slug whose first segment has no letter is
    `SPEC_PROPOSAL_SLUG_INVALID`.
 5. **Roll back a failed write**: any failure while writing the spec bundle, the blueprint, the ADRs or moving the
    materials and carried files removes what was written, moves them back and keeps the proposal, so the handoff can
@@ -517,7 +518,7 @@ directory whose namespace applies when `namespace` is omitted);
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
 | `SPEC_PROPOSAL_SLUG_INVALID` | `ERROR` (`INPUT_ERROR`) | `ProposalSlugError` | The slug, or a PADR title or `--slug`, keeps no letter or digit after normalization; a new proposal's or PADR's slug, or at handoff a legacy proposal's or PADR's, has no letter in its first segment (`[FIX]`: rename it, or pass `--slug` to `padr`). |
-| `SPEC_PROPOSAL_EXISTS` | `ERROR` (`INPUT_ERROR`) | `ProposalExistsError` | `new`: the bundle or `PROP-<slug>.md` exists. `padr`: a document already declares the PADR ID; `[TARGET]` lists it. |
+| `SPEC_PROPOSAL_EXISTS` | `ERROR` (`INPUT_ERROR`) | `ProposalExistsError` | `new`: the bundle or `PROP-<slug>.md` exists, or another document declares `PROP-<slug>` as an alias. `padr`: a document already declares the PADR ID; `[TARGET]` lists it. |
 | `SPEC_PROPOSAL_SLUG_CONFLICT` | `ERROR` (`INTERACTION`) | `ProposalSlugConflictError` | `SPEC-<slug>` exists (`[TARGET]`); the user picks another slug or drops the duplicate. |
 | `SPEC_PROPOSAL_NOT_FOUND` | `ERROR` (`INPUT_ERROR`) | `ProposalNotFoundError` | No bundle or single-file proposal has the slug (`padr`: no bundle); `new`: `--supersedes` names a proposal that does not exist. |
 | `SPEC_PROPOSAL_REJECTED_PENDING` | `WARNING` | `ProposalRejectedPendingWarning` | `rules check -p hygiene` (whole workspace): a rejected proposal is still in the base; `[FIX]` finds the rejection commit, writes the rejection ADR and deletes the proposal in one commit (rule 9). |

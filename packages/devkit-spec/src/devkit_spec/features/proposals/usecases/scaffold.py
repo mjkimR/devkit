@@ -584,7 +584,13 @@ class CreateProposalUseCase(BaseUseCase):
             if existing.exists():
                 rel = existing.relative_to(root).as_posix()
                 raise ProposalExistsError(f"proposal PROP-{slug} already exists: {rel}", target_files=[rel])
-        check_spec_conflict(DocumentIndex.load(root), slug)
+        index = DocumentIndex.load(root)
+        aliased = [document.path for document in index.by_alias.get(f"PROP-{slug}", [])]
+        if aliased:
+            raise ProposalExistsError(
+                f"PROP-{slug} is already declared as an alias: {', '.join(aliased)}", target_files=aliased
+            )
+        check_spec_conflict(index, slug)
         binding, unbound = resolve_binding(
             root, None, PROPOSAL_FILE, default=PROPOSAL_WORKFLOW, error=ProposalWorkflowError
         )

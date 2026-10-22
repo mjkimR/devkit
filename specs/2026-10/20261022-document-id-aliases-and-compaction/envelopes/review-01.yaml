@@ -1,0 +1,26 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T00:22:54.449333Z'
+status: completed
+summary: 'code-reviewer: AC-01..AC-13 implemented and tested; two edge-case defects in handoff alias translation and proposal scaffolding'
+findings:
+- issue: Handoff translates a valid dated PROP- alias (PROP-20260101-carry) into a legacy SPEC- alias that RULE-document-reference refuses, breaking AC-08's no-violation outcome
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py:351
+  failure_condition: An accepted proposal declares aliases [PROP-20260101-carry]; after handoff spec.md declares SPEC-20260101-carry and the rule reports a date-based alias
+  suggested_action: Refuse the handoff before any write when a translated alias is a legacy form, with a regression test
+  resolution: open
+  severity: P2
+- issue: devkit spec proposal new does not refuse a slug whose PROP-<slug> is declared as an alias of another proposal
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py:582
+  failure_condition: PROP-current declares aliases [PROP-old]; create_proposal(root, 'old') writes PROP-old, which collides with the alias
+  suggested_action: Refuse when index.declares(PROP-<slug>) is non-empty with SPEC_PROPOSAL_EXISTS and add a test
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test-affected mode=full 4514 passed 14 skipped
+  lint: PASS just lint devkit-spec devkit-dist; just rules-check 0 errors
+diff_scope:
+  base: 9f23ee0e3967a04868824f559aa31a15f2ebd95e
+  head: 87c30b51da3b25fb0d5a51d98030b74f4346d7ad

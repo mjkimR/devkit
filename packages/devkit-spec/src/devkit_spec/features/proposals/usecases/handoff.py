@@ -76,6 +76,7 @@ from devkit_spec.base.errors import (
     ProposalWrongWorktreeError,
 )
 from devkit_spec.features.documents import DocumentIndex, parse_document
+from devkit_spec.features.documents.models.ids import is_legacy_id
 from devkit_spec.features.documents.models.model import Document
 from devkit_spec.features.documents.services.dependencies import cycle_members, live_unit, target_problem
 from devkit_spec.features.policy.repositories.branches import require_development_branch
@@ -349,6 +350,14 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
             materials_target = preserved
             targets.append(materials_target)
     spec_aliases = tuple(f"SPEC-{alias.removeprefix('PROP-')}" for alias in source.aliases)
+    legacy = [alias for alias in spec_aliases if is_legacy_id(alias)]
+    if legacy:
+        raise ProposalInvalidError(
+            f"proposal aliases would become date-based spec aliases: {', '.join(legacy)}",
+            target_files=[proposal_rel],
+            fix="Remove the dated alias from the proposal's aliases (a SPEC- ID never carries a date), then rerun the"
+            " handoff",
+        )
     _check_targets(root, index, targets, decisions, [f"SPEC-{slug}", *spec_aliases])
     for destination in [*targets, *(destination for _, destination in extras + feedback)]:
         _require_inside(root, destination)
