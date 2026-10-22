@@ -251,10 +251,10 @@ The scaffolded body has sections `1. Background & Hypothesis`, `2. Technical Spi
 - `padr <slug> <title> [--summary TEXT] [--slug SLUG]` writes `decisions/PADR-<padr slug>.md`, where the PADR slug is
   `--slug` (a leading `PADR-` dropped, normalized as in 4.2) or else the title's slug; the title stays free text, so
   `padr plans "2024 roadmap" --slug roadmap-2024` works where the title alone is refused. The file has `id`, `title`, `summary` (or
-  the commented placeholder `# summary: <one or two English sentences: what is decided and why>`), `proposal:
+  the commented placeholder `# summary: <English Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>`), `proposal:
   PROP-<slug>`, `status: draft`, `created_at`, and a body shaped like the decision template (`- **Status**: Draft`,
   `- **Date**`, then Context & Problem Statement, Decision Drivers, Considered Options, Decision Outcome,
-  Consequences). PADR IDs are unique across the repository (`SPEC_PROPOSAL_EXISTS`).
+  Consequences, Confirmation). PADR IDs are unique across the repository (`SPEC_PROPOSAL_EXISTS`).
 - `target-docs.md` declares `id: PROP-<slug>-target`, `proposal: PROP-<slug>`, `status: draft`, `created_at` and
   `targets: []` (one `- file: <workspace-relative path>` per Living Spec file the proposal changes; read by
   `devkit spec scope compare`). Its body covers the capability ledger, stories, architecture and decisions,

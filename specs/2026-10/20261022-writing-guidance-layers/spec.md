@@ -2,7 +2,7 @@
 id: SPEC-writing-guidance-layers
 title: Layered writing guidance for documents and agent assets
 summary: "Restructures writing guidance into a common baseline for all documents, per-document-type guides for ADRs, capabilities, stories and architecture, and a self-contained guide for agent-executed assets, piloted on existing skills."
-status: planned
+status: in-progress
 created: 2026-10-22
 related_capabilities:
   - CAP-HARN-agent-guidance

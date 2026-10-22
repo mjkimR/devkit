@@ -53,8 +53,13 @@ def test_the_decision_template_and_guide_carry_the_y_statement_and_confirmation(
 
 def test_the_capability_guide_gives_every_ears_template_and_the_template_points_to_it() -> None:
     guide = _read("instructions/capability-writing.md")
-    for clause in ("`<system> MUST <response>`", "`WHEN <event>", "`WHILE <state>", "`IF <unwanted condition>, THEN",
-                   "`WHERE <feature"):
+    for clause in (
+        "`<system> MUST <response>`",
+        "`WHEN <event>",
+        "`WHILE <state>",
+        "`IF <unwanted condition>, THEN",
+        "`WHERE <feature",
+    ):
         assert clause in guide, clause
     assert "capability-writing" in _read("templates/capability.md")
 

@@ -39,17 +39,17 @@ plan: PLAN-writing-guidance-layers
 
 ## Phase 3: Pilot
 
-- [ ] **Task 3.1**: Rewrite `spec-plan` under `agent-asset-writing` with the constraint mapping table
+- [x] **Task 3.1**: Rewrite `spec-plan` under `agent-asset-writing` with the constraint mapping table
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-plan/SKILL.md`,
     `specs/2026-10/20261022-writing-guidance-layers/pilot.md`
   - _Requirements: AC-08_
-- [ ] **Task 3.2**: Run the three dry-run scenarios against the old and new text and record the results
+- [x] **Task 3.2**: Run the three dry-run scenarios against the old and new text and record the results
   - **_Boundary**: `specs/2026-10/20261022-writing-guidance-layers/pilot.md`
   - _Requirements: AC-09_
 
 ## Phase 4: Integration checks
 
-- [ ] **Task 4.1**: Sync projections, ADR and reference documents, run the checks
+- [x] **Task 4.1**: Sync projections, ADR and reference documents, run the checks
   - **_Boundary**: `.devkit/`, `.claude/`, `.agents/`, `AGENTS.md`, `CLAUDE.md`,
     `docs/decisions/2026-10/20261022-layered-writing-guidance.md`, `docs/development/reference/rules.md`,
     `docs/development/reference/distribution.md`, `guides/install/bundle-recommendations.md`,
