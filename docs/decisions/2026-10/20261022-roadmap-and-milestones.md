@@ -151,6 +151,7 @@ handoff, and proposal disappearance cannot certify completion.
   drops a milestone through Backlog (base commits, like drafts). Several may be `active` at once. `done` and `dropped`
   milestones stay as historical documents: `devkit spec list` hides them by default as it hides completed spec bundles,
   and `refs --direction in` keeps their membership history. (ADR-milestone-documents)
+  Superseded in part by `ADR-milestone-merging`: a milestone of any status may merge into a broader theme milestone.
 - **Milestone `depends_on`** is a start condition: a milestone is *ready* when every milestone it depends on is `done`
   or `dropped`. Enforced at the decision points, never by refusal. (ADR-milestone-documents)
 - **Unit prerequisites**: proposal and spec anchors may declare typed direct PROP/SPEC anchor edges alongside the

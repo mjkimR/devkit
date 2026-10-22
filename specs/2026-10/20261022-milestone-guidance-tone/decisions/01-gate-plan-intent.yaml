@@ -1,0 +1,23 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'Goal: milestones are loosely managed themes. (1) Soften the granularity wording
+  in docs/roadmap/README.md, the bundle seed README and the milestone template from
+  SHOULD/SHOULD NOT to recommendations (a broader multi-unit theme is preferred over
+  a milestone that only sequences one proposal; phase-level exit conditions are recommended).
+  (2) Allow merging: small milestones of any status (done, dropped, planned, active)
+  MAY merge into a broader theme milestone that keeps their IDs in aliases; old files
+  are removed and current references move with devkit rules fix; completed SPECs and
+  Git keep the delivery record; the merged milestone is active or planned while scope
+  remains, done once both completion assertions are confirmed; the user decides through
+  Backlog and remaining scope moves to draft proposals. (3) Keep: extending a done
+  milestone''s scope in place still needs a reopen to active with reset assertions,
+  or another milestone. A new ADR supersedes the historical-document clause of ADR-roadmap-and-milestones;
+  README, seed, template, the spec skill''s milestone-completion and Backlog milestone
+  guidance follow. No code or rule behavior change. Verification: rules check, affected
+  tests, reconcile-check. task-kind feature, planning-depth spec, activity-effort
+  low.'
+by: user
+at: '2026-10-22T05:56:01.677812Z'

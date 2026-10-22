@@ -29,5 +29,5 @@ Direct proposal work: pending
 ## Later changes
 
 - Wording or format corrections that keep the meaning do not reset the assertions.
-- To extend a `done` milestone, get the user's decision to reopen it to `active` and reset both assertions, or put the new scope in another milestone.
-- Closing an unchanged `done` milestone writes nothing. A `dropped` milestone is no close candidate, and existing `done` records stay as they are.
+- To extend a `done` milestone, get the user's decision to reopen it to `active` and reset both assertions, or put the new scope in another milestone. Merging it into a broader theme milestone ([Backlog](backlog.md)) is not such an extension: the theme's own assertions decide its close.
+- Closing an unchanged `done` milestone writes nothing. A `dropped` milestone is no close candidate, and existing `done` records stay as they are unless merged.

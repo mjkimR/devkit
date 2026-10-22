@@ -69,7 +69,7 @@ stays ID-free and unindexed, and its Owner references do not become graph edges.
    `status: completed` are historical: work history kept in place. Browsing and search MUST hide them unless
    `--history` is passed; the rules check them only when they are named as explicit targets. The bundle's
    `feedback/` directory is the exception: observations may remain open after the bundle completes,
-   so feedback of every status MUST stay current whatever the bundle's status (`SPEC-open-feedback-and-progress`). Milestones whose status is done or dropped are also historical: hidden from browsing/search by default, resolvable and available with `--history`; rules check them only when explicitly targeted.
+   so feedback of every status MUST stay current whatever the bundle's status (`SPEC-open-feedback-and-progress`). Milestones whose status is done or dropped are also historical: hidden from browsing/search by default, resolvable and available with `--history`; rules check them only when explicitly targeted. A user-decided merge into a broader theme milestone MAY delete one; its ID then resolves as an alias of the theme (`ADR-milestone-merging`).
 
 Proposal-local feedback also stays current while a rejected proposal awaits cleanup. Handoff carries open feedback
 into the spec; Host deletion without handoff preserves it in the month-level backlog
