@@ -267,3 +267,21 @@ def test_an_interrupted_run_prints_the_results_so_far(workspace: Path, monkeypat
     assert lines[0].startswith("[RULE_TEST: RULE-good tests=rules/good/tests result=passed exit=0 ")
     assert lines[1].startswith("[RULE_TEST: RULE-bad tests=rules/bad/tests result=interrupted exit=130 ")
     assert lines[-1] == "[SUMMARY: rules=2 passed=1 failed=0 no_tests=0 interrupted=1]"
+
+
+def test_opened_files_records_workspace_reads_only_while_active(tmp_path: Path) -> None:
+    import os
+
+    from devkit_agt.features.rules.services.testing import opened_files, write_files
+
+    write_files(tmp_path, {"a.py": "x\n", "docs/b.md": "# B\n", "c.toml": "", "late.txt": ""})
+    outside = tmp_path.parent / f"{tmp_path.name}-outside.txt"
+    outside.write_text("x")
+    with opened_files(tmp_path) as opened, opened_files(tmp_path / "docs") as docs:
+        (tmp_path / "a.py").read_text()
+        with open(tmp_path / "docs/b.md", "rb"):
+            pass
+        os.close(os.open(tmp_path / "c.toml", os.O_RDONLY))
+        outside.read_text()
+    (tmp_path / "late.txt").read_text()
+    assert opened == {"a.py", "docs/b.md", "c.toml"} and docs == {"b.md"}

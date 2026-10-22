@@ -1251,7 +1251,7 @@
     },
     ".devkit/managed/advisory/rules/unique_code/guide.md": {
       "mode": 420,
-      "sha256": "22025649ab80693f67e67efd68a8c73bc175d97ac973d4a188f9210ce0dc7f84"
+      "sha256": "1e3dc6e81d440ed7d3ad74800e8ed48080919eda93f0a22f96c315d8e634be96"
     },
     ".devkit/managed/advisory/rules/unique_code/index.py": {
       "mode": 420,
@@ -1259,11 +1259,11 @@
     },
     ".devkit/managed/advisory/rules/unique_code/rule.py": {
       "mode": 420,
-      "sha256": "d8b8b68430e8449c73fce34dddefeeb0a15b457d82e0d86c6a903e114e014e88"
+      "sha256": "12d940188b0d4d6c34a467264ca1af897689198bd21a1cf70d846e3ac6a2d6cf"
     },
     ".devkit/managed/advisory/rules/unique_code/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "28c9da2a59db638c8097cec3411007a28a7033c49f966e197b71f627a2c06607"
+      "sha256": "1e0153b5173f7a7608111a24a861f39a1dbdbf6df3881b58fb9c13c14a854e47"
     },
     ".devkit/managed/authoring/bundle.toml": {
       "mode": 420,
@@ -1319,27 +1319,27 @@
     },
     ".devkit/managed/devkit-dev/rules/architecture/guide.md": {
       "mode": 420,
-      "sha256": "119b489b82e267b83d0b8e0339a95454b4851a41dbb3407e8d418b7dd4724540"
+      "sha256": "791843d6306be5f4954c7be6a057ca7c974dafe25fafe132343ba540b473acb4"
     },
     ".devkit/managed/devkit-dev/rules/architecture/rule.py": {
       "mode": 420,
-      "sha256": "338701ed6453e89d59356fa8d73fc81f302a2e1fbd2dc8281f5e174cd0a22114"
+      "sha256": "bc3fdc934635563f412910c5c5e3212d22ab094a16f4def4b460158ad8c4715f"
     },
     ".devkit/managed/devkit-dev/rules/architecture/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "fc3f0f5116d0cd692dd305230f755a515e228d7cebbca93588532d4cdae906ed"
+      "sha256": "535261f3a32985a4c94a00f0b33dd0d9c4a570d0eafd38a8f78c6be925a2bbfd"
     },
     ".devkit/managed/devkit-dev/rules/usecase-boundaries/guide.md": {
       "mode": 420,
-      "sha256": "cd037f2c16d8439b3c76e5fc00dd66eeaf1f67e189441e790e25d21d05ace204"
+      "sha256": "b93ca62bd20778ff1d6aeafde86f2c6735c0d299c066dfc9d0b184e4152f380a"
     },
     ".devkit/managed/devkit-dev/rules/usecase-boundaries/rule.py": {
       "mode": 420,
-      "sha256": "5af3987dd41541413cdc2a26f9dd7169e44f3c61895f9e13f92754c8b995dafa"
+      "sha256": "1189a4e2a423b587a52aa225ccc2c882a614ceeed590b3acba2747cd9a8cb652"
     },
     ".devkit/managed/devkit-dev/rules/usecase-boundaries/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "0481a141871d954aff5e59da808c7eba9cc1a52f191308ad4dd330f066319590"
+      "sha256": "f0c7f303dded5d21bcd5bcf251bd89a213ab0afbb114541d4a089d20a44a02c7"
     },
     ".devkit/managed/devkit/AGENTS.md": {
       "mode": 420,

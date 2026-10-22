@@ -23,7 +23,7 @@ plan: PLAN-lint-clean-target-scoped-rules
 
 ## Phase 2: Declared rules
 
-- [ ] **Task 2.1**: Open-file recording for rule tests, and the three rules' declarations, guides and tests
+- [x] **Task 2.1**: Open-file recording for rule tests, and the three rules' declarations, guides and tests
   - **_Boundary**: `packages/devkit/src/devkit_agt/features/rules/services/testing.py`, `tools/devkit-dev/src/devkit_dev/bundle/rules/architecture/`, `tools/devkit-dev/src/devkit_dev/bundle/rules/usecase-boundaries/`, `packages/devkit-dist/src/devkit_dist/bundles/advisory/bundle/rules/unique_code/`, `.devkit/installation.json`, `packages/devkit/tests/integration/features/rules/engine/`
   - _Requirements: AC-06, AC-08_
   - **Verification**: `uv run devkit rules test RULE-architecture RULE-usecase-boundaries RULE-advisory-unique-code`; `uv run devkit sync --check`

@@ -3,7 +3,9 @@
 import sys
 from pathlib import Path
 
-from devkit_agt.features.rules.services.testing import load_rule
+import pytest
+from devkit_agt.features.rules import match_path
+from devkit_agt.features.rules.services.testing import check, evaluate, load_rule, opened_files, write_files
 
 RULE = load_rule(__file__)
 inspect_usecases = sys.modules[RULE.__module__].inspect_usecases
@@ -282,3 +284,59 @@ Another().other_method()
     )
     assert len(found) == 1
     assert "must invoke BaseUseCase.execute" in found[0]
+
+
+# --- declared inputs: targeted runs skip the rule when no target can change its findings ---------------------------
+
+INPUTS: tuple[str, ...] = getattr(RULE, "inputs", None) or ()
+
+SEEDED = {
+    ".devkit/architecture.toml": """schema = 1
+[[packages]]
+namespace = "sample"
+root = "src/sample"
+kind = "features"
+features = ["one"]
+
+[[usecase_exceptions]]
+source = "sample.features.one.cli"
+target = "sample.features.one.usecases.unused"
+reason = "seeded"
+""",
+    "src/sample/features/one/usecases.py": "def run(): pass\n",
+    "src/sample/features/one/cli.py": "from .usecases import run\nrun()\n",
+    "pyproject.toml": '[project]\nname = "sample"\n',
+    "docs/a.md": "# A\n",
+    "src/sample/features/one/notes.txt": "notes\n",
+}
+SEEDED_MESSAGES = {
+    "transport calls execution function instead of BaseUseCase.execute: sample.features.one.usecases.run",
+    "unused usecase exception: sample.features.one.cli -> sample.features.one.usecases.unused",
+}
+
+# One target per declared pattern, each holding (or being) a seeded violation.
+MATCHING_TARGETS = [".devkit/architecture.toml", "src/sample/features/one/usecases.py"]
+
+
+def test_the_declaration_and_one_matching_target_per_pattern() -> None:
+    assert INPUTS == ("**/*.py", ".devkit/architecture.toml")
+    assert all(any(match_path(pattern, target) for target in MATCHING_TARGETS) for pattern in INPUTS)
+
+
+def test_documentation_targets_skip_the_rule(tmp_path: Path) -> None:
+    result = evaluate(RULE, tmp_path, SEEDED, targets=["docs/a.md", "pyproject.toml"])
+    assert result.skipped == [RULE.id] and result.violations == []
+
+
+@pytest.mark.parametrize("target", MATCHING_TARGETS)
+def test_a_target_matching_each_declared_input_reports_the_seeded_violations(tmp_path: Path, target: str) -> None:
+    found = check(RULE, tmp_path, SEEDED, targets=["docs/a.md", target])
+    assert {v.message for v in found} == SEEDED_MESSAGES
+
+
+def test_every_file_the_rule_opens_matches_its_inputs(tmp_path: Path) -> None:
+    write_files(tmp_path, SEEDED)
+    with opened_files(tmp_path) as opened:
+        check(RULE, tmp_path)
+    assert {".devkit/architecture.toml", "src/sample/features/one/cli.py"} <= opened
+    assert [name for name in sorted(opened) if not any(match_path(p, name) for p in INPUTS)] == []

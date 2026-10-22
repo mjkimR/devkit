@@ -157,6 +157,7 @@ class AdvisoryUniqueCodeRule(BaseRule):
             settings=UniqueCodeSettings(),
             guide="guide.md",
             related=("advisory:agent-advisory-python",),
+            inputs=("**/*.py",),
         )
 
     def validate_settings(self, settings: UniqueCodeSettings) -> None:

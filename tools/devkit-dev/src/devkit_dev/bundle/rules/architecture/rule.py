@@ -489,6 +489,7 @@ class ArchitectureRule(BaseRule):
             phase=Phase.LINTER,
             severity=Severity.ERROR,
             guide="guide.md",
+            inputs=("**/*.py", "**/pyproject.toml", "**/bundle.toml", ".devkit/architecture.toml"),
         )
 
     def check(self, ctx: RuleContext) -> list[Violation]:
