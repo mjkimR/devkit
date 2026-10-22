@@ -36,6 +36,8 @@ raise ConfigInvalidError(
 )
 ```
 
+A malformed argument or parameter raises `ArgumentError` (`ARGUMENT_INVALID`, `INPUT_ERROR`), the library's own class for that code; derive a project-specific argument error from it rather than declaring `ARGUMENT_INVALID` again.
+
 A code names one condition: it is declared by one class and its subclasses, in their bodies or through `code=` at a call (a subclass may redeclare its base's code). `RULE-advisory-unique-code` checks this in the `python` preset.
 
 For one-off errors, use the factories; they set every field that decides the mode, so a subclass default never changes it:

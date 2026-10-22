@@ -11,6 +11,9 @@ regular Python package with explicit responsibility boundaries:
 - **`devkit-core` (`devkit_core`):** Shared foundation without CLI or application dependencies. Pure primitives
   for filesystem, Git, parsing, and extension dispatch under `core/`, and shared base contracts (`BaseUseCase`,
   MCP interfaces) under `base/`. `base` never imports `core`, and neither imports application packages.
+- **`devkit-cli` (`devkit_cli`):** The agent-first command-line boundary for any click command, depending on `click`
+  and `devkit-advisory` only. A semver contract with external consumers; `devkit_dist.adapters.cli` configures it for
+  devkit. Never imports `devkit_core` or an application package.
 - **`devkit-dist` (`devkit_dist`):** Agent asset distribution and the `devkit` CLI executable. Manages bundles,
   agent projections, sync, context loading, operational playbooks, and native hooks. Never imports `devkit_agt` or
   the MCP SDK.

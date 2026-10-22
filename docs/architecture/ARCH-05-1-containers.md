@@ -1,7 +1,7 @@
 ---
 id: ARCH-05-1-containers
 title: Building Block View - Containers
-summary: "Container topology of devkit: workspace packages, the devkit-dist, devkit-agt, devkit-advisory and devkit-mcp wheels released in lockstep, and external content packages."
+summary: "Container topology of devkit: workspace packages, the devkit-dist, devkit-agt, devkit-advisory, devkit-cli and devkit-mcp wheels released in lockstep, and external content packages."
 status: active
 created_at: 2026-10-17
 ---
@@ -21,6 +21,7 @@ devkit is structured as a Python monorepo using `uv` workspaces:
 graph TD
     subgraph DevkitWorkspace ["devkit Monorepo (uv workspace)"]
         PkgCore["packages/devkit-core<br>(devkit_core, shared foundation)"]
+        PkgCli["packages/devkit-cli<br>(devkit-cli wheel, agent-first CLI boundary)"]
         PkgDist["packages/devkit-dist<br>(devkit-dist wheel, devkit executable)"]
         PkgMcp["packages/devkit-mcp<br>(optional devkit-mcp wheel)"]
         PkgDevkit["packages/devkit<br>(devkit-agt wheel)"]
@@ -39,6 +40,9 @@ graph TD
 
     PkgAdv -.->|Runtime dependency (std-lib only)| Runtime
     PkgCore -->|Same-version dependency| PkgAdv
+    PkgCli -->|Same-version dependency| PkgAdv
+    PkgCli -.->|Runtime dependency of click tools| Runtime
+    PkgDist -->|Same-version dependency| PkgCli
     PkgDist -->|Same-version dependency| PkgCore
     PkgDist -->|Same-version dependency| PkgAdv
     PkgMcp -->|Same-version dependency| PkgDist
@@ -65,7 +69,7 @@ Base never imports core. The package depends only on PyYAML and
 in the dist wheel; project configuration, receipts and CLI support remain there.
 
 Application wheels own independent regular packages: `devkit_dist`, `devkit_agt`, `devkit_spec`,
-`devkit_mcp` and `devkit_viewer`. `devkit_core` owns the shared foundation. Only `devkit-advisory`
+`devkit_mcp` and `devkit_viewer`. `devkit_core` owns the shared foundation and `devkit_cli` the command-line boundary. Only `devkit-advisory`
 continues to ship the PEP 420 `devkit.advisory` API; it never ships `devkit/__init__.py`.
 No installed file belongs to two wheels. Foundation and application distributions are released in
 lockstep from one tag, pinning workspace runtime dependencies to that exact version
@@ -75,11 +79,11 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
 - **Distribution Wheel**: `devkit_dist-<version>-py3-none-any.whl`
 - **CLI**: `devkit`, the sole console script: the distribution commands, `devkit shared` and `devkit host`, plus whatever installed
   packages mount through `devkit.commands` (`ARCH-05-3-command-plugins`).
-- **Contents**: Project configuration and receipts (`devkit_dist.features.project`), shared CLI boundary (`devkit_dist.adapters.cli`), document search (`devkit_dist.features.search`), host hooks and project MCP registrations
+- **Contents**: Project configuration and receipts (`devkit_dist.features.project`), shared CLI boundary (`devkit_dist.adapters.cli`, `devkit-cli` bound to devkit), document search (`devkit_dist.features.search`), host hooks and project MCP registrations
   (`devkit_dist.features.host`), immutable expiring artifacts (`devkit_dist.features.shared`, importing only core/advisory), asset distribution (`devkit_dist.features.distribution`) with the `.devkit/config.toml` schema and the receipt,
   the root command line (`devkit_dist.cli`, `devkit_dist.__main__`) and the built-in bundles `devkit`, `advisory` and
   `git-commits` (`ADR-dist-foundation-ownership`).
-- **Dependencies**: `click`, `jinja2`, `pyyaml`, `tomlkit`, `devkit-core` and `devkit-advisory` (locked to the same version);
+- **Dependencies**: `click`, `jinja2`, `pyyaml`, `tomlkit`, `devkit-core`, `devkit-cli` and `devkit-advisory` (locked to the same version);
   extra `search` (numpy, tokenizers, `devkit-embed`). It never depends on `devkit-agt`, and its tests also
   run in an environment without it (`just test-dist`).
 
@@ -99,6 +103,14 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
 - **Contents**: The Agent Advisory Protocol standard library types (`AdvisoryError`, `Advisory`, `ExitCode`, `Actor`, `Level`, `Retry`).
 - **Dependencies**: None (Python standard library only).
 - **Role**: Published on its own so consumer libraries can raise and handle advisories without importing the devkit CLI or orchestration engines.
+
+### 2.3.1 `devkit-cli` (`packages/devkit-cli`)
+- **Distribution Wheel**: `devkit_cli-<version>-py3-none-any.whl`
+- **Contents**: `devkit_cli`, the agent-first output contract of `ARCH-08-1-agent-output` for any click command:
+  `Boundary`, the output helpers, `LazyGroup` and the `devkit_cli.testing` helper (`CAP-CLI-agent-cli-toolkit`).
+- **Dependencies**: `click` and `devkit-advisory` (same version); nothing else is imported.
+- **Role**: The runtime dependency of click tools in other repositories and the base of `devkit_dist.adapters.cli`.
+  A semver contract like `devkit-advisory`, released at the same version.
 
 ### 2.4 `devkit-spec` (`packages/devkit-spec`)
 - **Distribution Wheel**: `devkit_spec-<version>-py3-none-any.whl`
