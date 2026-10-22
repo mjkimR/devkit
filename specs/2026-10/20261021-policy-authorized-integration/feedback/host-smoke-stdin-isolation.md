@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-21
 ---
 
@@ -39,3 +39,5 @@ This concerns subprocess input isolation during live host verification.
 
 Codex stderr: `Reading additional input from stdin...`.
 Claude's result reported exactly one tool call and stated it did not run appended Python text.
+
+- **Disposition**: dismissed. The input leak came from an ad hoc launcher used once for live host evidence; the repository has no `codex exec` or `claude -p` launcher to change.

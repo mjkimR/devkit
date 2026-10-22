@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-21
 ---
 
@@ -41,3 +41,5 @@ shared/local.py: _initialize uses common / "devkit-mcp.lock"
 Independent review found absent-store negative-ignore and probe-filename safety gaps;
 deterministic artifact regression tests were added and passed after the fixes.
 ```
+
+- **Disposition**: dismissed. A speculative refactor with no observed failure: only two services share the `devkit-mcp.lock` literal. Record new feedback when a third service joins the common exclusion.

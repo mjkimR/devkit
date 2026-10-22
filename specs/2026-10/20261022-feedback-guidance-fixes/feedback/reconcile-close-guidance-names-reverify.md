@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-22
 ---
 
@@ -36,3 +36,5 @@ references/effort.md: "Close findings with evidence in `reverify` or a new `reco
 spec-delegate Step 6: "A review records findings as found (all open); `envelope reverify` (...) closes it ..."
 CLI: (ENVELOPE_FROM_INVALID) --from must name a review, challenger or reverify envelope, not reconcile-check
 ```
+
+- **Disposition**: dismissed. Superseded by the agent asset pruning: `references/effort.md` now states that each reconcile verification is a `reconcile-check` envelope, and `spec-delegate` no longer names `envelope reverify` for closing findings.
