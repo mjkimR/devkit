@@ -1,15 +1,15 @@
 ---
-id: PADR-playbook-aliases-as-identifiers
+id: ADR-playbook-aliases-as-identifiers
 title: Playbook aliases as identifiers
 summary: A playbook's aliases field stops being search keywords and declares previous or alternate identifiers of the playbook under the same aliases specification as Living Spec documents; playbook search ranks name and description only.
-proposal: PROP-document-id-aliases-and-compaction
-status: draft
+proposal: SPEC-document-id-aliases-and-compaction
+status: accepted
 created_at: 2026-10-22
 ---
 
-# [PADR-playbook-aliases-as-identifiers] Playbook aliases as identifiers
+# [ADR-playbook-aliases-as-identifiers] Playbook aliases as identifiers
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-22
 
 ---
@@ -18,7 +18,7 @@ created_at: 2026-10-22
 
 A playbook's optional `aliases` frontmatter array holds English search keywords that `devkit playbook search`
 indexes beside `name` and `description` (`CAP-DIST-context-and-playbooks`). Living Spec documents gain an `aliases`
-field with another meaning: previous or alternate identifiers (`PADR-document-id-aliases`). One field name with two
+field with another meaning: previous or alternate identifiers (`ADR-document-id-aliases`). One field name with two
 meanings in one toolkit misleads authors and agents. The playbooks in the devkit-spec, devkit-agt, devkit-catalog
 and devkit-starter bundles use the keyword form today.
 

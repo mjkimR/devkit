@@ -1,42 +1,23 @@
 ---
-id: PROP-document-id-aliases-and-compaction
+id: SPEC-document-id-aliases-and-compaction
 title: Document and Playbook ID Aliases
-summary: "Introduces an optional aliases frontmatter field of previous or alternate IDs on every ID-bearing document, resolved through one alias-aware DocumentIndex lookup and rewritten to canonical IDs by devkit rules fix, and gives playbook aliases the same identifier meaning."
-status: accepted
-created_at: 2026-10-21
-target_area: capabilities/documents/
-priority: high
-size: L
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-spec/
-    - docs/capabilities/documents/
-    - docs/capabilities/governance/
-    - packages/devkit-dist/src/devkit_dist/features/distribution/
-    - packages/devkit-dist/src/devkit_dist/features/search/services/index.py
-    - packages/devkit-dist/tests/
-    - docs/capabilities/delivery/CAP-DLV-proposal-incubation.md
-    - docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md
-    - docs/development/reference/distribution.md
-    - docs/capabilities/search/CAP-SRCH-document-search.md
-    - docs/architecture/ARCH-08-2-resource-taxonomy.md
-    - packages/devkit/src/devkit_agt/bundles/authoring/bundle/playbooks/
-    - packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/
-    - packages/devkit-starter/src/devkit_starter/bundle/playbooks/
-    - .devkit/installation.json
-  excludes:
-    - docs/decisions/
-    - packages/devkit/src/devkit_agt/features/
-    - packages/devkit-viewer/
-task_kind: feature
-workflow: sdd-proposal
+summary: Introduces an optional aliases frontmatter field of previous or alternate IDs on every ID-bearing document, resolved through one alias-aware DocumentIndex lookup and rewritten to canonical IDs by devkit rules fix, and gives playbook aliases the same identifier meaning.
+status: planned
+created: 2026-10-22
+related_capabilities: []
+related_stories: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-document-id-aliases-and-compaction] Document and Playbook ID Aliases
+# [SPEC-document-id-aliases-and-compaction] Document and Playbook ID Aliases
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-document-id-aliases-and-compaction on 2026-10-22.
+- **Preserved Materials**: `docs/materials/2026-10/20261022-document-id-aliases-and-compaction`
+
+### 1. Background & Hypothesis
 
 A document is found only by its exact ID. Renaming or merging a capability, story, architecture
 document or milestone breaks every reference written with the old ID: `RULE-document-reference` reports each as
@@ -51,17 +32,36 @@ one field two concepts.
 rewritten to the canonical ID by `devkit rules fix`, lets documents be renamed without breaking references; giving
 playbook `aliases` the same identifier meaning keeps one concept across devkit.
 
-## 2. Planning Decisions
+## 2. User Stories
 
-- **Scope narrowed** (answers to `envelopes/worker-01.yaml`): the proposal specifies ID aliases only. ADR compaction,
+- **US-1**: As a developer/agent, I want to implement Document and Playbook ID Aliases so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Decisions
+
+- **Scope narrowed** (answers to historical Git `2963ae20e92c1b9b9f0c54131fb53222f402c127:docs/proposals/PROP-document-id-aliases-and-compaction/envelopes/worker-01.yaml`): the proposal specifies ID aliases only. ADR compaction,
   the append-only amendment and ADR supersession checking (`supersedes`/`superseded_by` parsing, pairing and status
   checks, correcting drifted ADRs) are out of scope; the earlier supersession PADR is withdrawn (deleted unaccepted).
-  No file under `docs/decisions/` changes. The ledger survey in `materials/ledger-evidence.md` is kept as Planning
+  No file under `docs/decisions/` changes. The ledger survey in `docs/materials/2026-10/20261022-document-id-aliases-and-compaction/ledger-evidence.md` is kept as Planning
   history only.
 - **ADRs are not excluded** (user correction of the worker-01 q3 answer, which the second turn misapplied): "no ADR
   change" means only that refactoring or compacting existing ADR files is out of scope, not that ADRs are left out of
   the aliases specification.
-- **Document aliases** (`PADR-document-id-aliases`): `aliases` is one common frontmatter specification for every
+- **Document aliases** (`ADR-document-id-aliases`): `aliases` is one common frontmatter specification for every
   ID-bearing document kind (`CAP`, `US`, `ARCH`, `ADR`, `MS`, `MAT` and the lifecycle kinds `PROP`, `PADR`, `SPEC`,
   `PLAN`, `TASKS`, `REC`, `FB`); there is no kind-based refusal. The kind-independent rules hold for all: aliases
   carry the declaring document's own prefix, are identity and not references, a declared ID always wins, an alias
@@ -78,14 +78,14 @@ playbook `aliases` the same identifier meaning keeps one concept across devkit.
   the old ID, and refuses when a graduating `ADR-<slug>` or `SPEC-<slug>`, or a translated alias, equals an existing
   ID or alias or another one graduating in the same handoff. Scaffolding checks a `SPEC-<slug>` alias like a declared
   `SPEC-<slug>`, so the clash is found before Planning.
-- **Playbooks** (`PADR-playbook-aliases-as-identifiers`, answer to `envelopes/worker-02.yaml` q1): playbook `aliases`
+- **Playbooks** (`ADR-playbook-aliases-as-identifiers`, answer to historical Git `2963ae20e92c1b9b9f0c54131fb53222f402c127:docs/proposals/PROP-document-id-aliases-and-compaction/envelopes/worker-02.yaml` q1): playbook `aliases`
   stop being search keywords and become previous asset IDs in the same bundle, resolved by `devkit playbook get`
   as the playbook's own identity, refining (not reversing) `ADR-external-playbook-execution`; search ranks `name` and
   `description` only. Breaking change in place, no migration.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### 3.1 Document aliases (`CAP-DOCS-document-model`, `CAP-DOCS-document-lookup`)
+#### 3.1 Document aliases (`CAP-DOCS-document-model`, `CAP-DOCS-document-lookup`)
 
 - `aliases: [<PREFIX>-<old-slug>, ...]` on any ID-bearing document (namespace documents included). Each item is a
   well-formed ID with the declaring document's prefix, not its own ID, not repeated, and not a legacy date- or
@@ -113,7 +113,7 @@ playbook `aliases` the same identifier meaning keeps one concept across devkit.
   converges; `check_spec_conflict`, the PADR scaffold duplicate check and the `PROP`/`SPEC` slug-pair check, which
   treat a `SPEC-<slug>` alias like a declared `SPEC-<slug>`; the proposals rewrite service.
 
-### 3.2 Alias references (`RULE-document-reference`)
+#### 3.2 Alias references (`RULE-document-reference`)
 
 - An alias reference resolves. In a current document it is an error that `devkit rules fix` rewrites to the canonical
   ID in frontmatter and prose, through `services/rewrite.py`. In historical files and decision records (ADRs under
@@ -123,7 +123,7 @@ playbook `aliases` the same identifier meaning keeps one concept across devkit.
   without a notice; `devkit spec refs <canonical> --direction in` includes alias-written references and
   `--direction out` groups an alias with its canonical ID; `CAP-DOCS-document-search` pins an exact alias match.
 
-### 3.3 Handoff (`CAP-DLV-proposal-incubation`)
+#### 3.3 Handoff (`CAP-DLV-proposal-incubation`)
 
 - A proposal's `aliases` are carried to `spec.md` with the `PROP-` prefix replaced by `SPEC-`; each promoted PADR's
   `aliases` are kept on its ADR with `PADR-` replaced by `ADR-`, so the own-prefix rule holds after the rename.
@@ -135,7 +135,7 @@ playbook `aliases` the same identifier meaning keeps one concept across devkit.
   `ADR-<slug>` or `SPEC-<slug>`, or a translated alias, equals an existing document ID or an existing alias, or
   another ID or translated alias graduating in the same handoff.
 
-### 3.4 Playbook aliases (`CAP-DIST-context-and-playbooks`, `ARCH-08-2-resource-taxonomy`)
+#### 3.4 Playbook aliases (`CAP-DIST-context-and-playbooks`, `ARCH-08-2-resource-taxonomy`)
 
 - `packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/playbooks.py` validates `aliases` as
   previous asset IDs (the `[a-z][a-z0-9-]*` manifest slug grammar, not frontmatter `name`), and
@@ -159,7 +159,7 @@ playbook `aliases` the same identifier meaning keeps one concept across devkit.
   `weekly-report`, devkit-starter `review`) drop them, moving any phrase worth keeping into the description.
   The repository's projected copies and `.devkit/installation.json` are refreshed by `devkit sync`.
 
-## 4. Lifecycle & Verification
+### 4. Lifecycle & Verification
 
 - Unit tests (`packages/devkit-spec/tests/unit/features/documents/`): alias parsing and shape issues on every kind
   (`REC` through `reconcile_id` included), foreign prefixes, legacy date- or number-based aliases refused, `aliases`
@@ -186,6 +186,7 @@ playbook `aliases` the same identifier meaning keeps one concept across devkit.
   (`PLAYBOOK_ALIAS_AMBIGUOUS`).
 - `just rules-check` clean on the repository; no file under `docs/decisions/` in the diff.
 
-## 5. Open Decisions
+### 5. Open Decisions
 
-None. The playbook alias target was decided in `envelopes/answer-02.yaml`.
+None. The playbook alias target was decided in historical Git `2963ae20e92c1b9b9f0c54131fb53222f402c127:docs/proposals/PROP-document-id-aliases-and-compaction/envelopes/answer-02.yaml`.
+

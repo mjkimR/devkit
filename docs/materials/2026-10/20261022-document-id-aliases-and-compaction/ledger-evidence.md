@@ -3,7 +3,7 @@
 Gathered by the planning worker at base `fd6f011b` to ground the direction review.
 
 Planning history only: ADR compaction and supersession checking left the scope with the answers recorded in
-`envelopes/answer-01.yaml`; nothing below is a change target.
+historical Git `2963ae20e92c1b9b9f0c54131fb53222f402c127:docs/proposals/PROP-document-id-aliases-and-compaction/envelopes/answer-01.yaml`; nothing below is a change target.
 
 ## ADR ledger size and supersession
 
