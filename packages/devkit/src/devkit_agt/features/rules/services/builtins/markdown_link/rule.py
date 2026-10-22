@@ -128,7 +128,7 @@ class MarkdownLinkRule(BaseRule, Autofixable):
         basename.
         """
         root = ctx.workspace_root
-        catalog = ctx.cache.get_catalog(root)
+        catalog = None
         for path, rel, link in self._targeted_links(ctx):
             target = local_target(link.target)
             if target is None:
@@ -138,6 +138,8 @@ class MarkdownLinkRule(BaseRule, Autofixable):
             lexical = Path(os.path.normpath(path.parent / target.path))
             candidate = None
             if lexical.is_relative_to(root):
+                if catalog is None:
+                    catalog = ctx.cache.get_catalog(root)
                 candidates = catalog.find_paths_by_basename(lexical.name)
                 candidate = candidates[0] if len(candidates) == 1 else None
             yield BrokenLink(path, rel, link, target, candidate)
