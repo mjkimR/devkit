@@ -8,7 +8,8 @@ spec: SPEC-single-release-version
 ## 1. Constitution & Invariant Review
 
 `ARCH-07-deployment` changes from six shared versions to all workspace distributions.
-Record `ADR-single-release-version` for the durable version policy. Public library APIs are unchanged.
+Record `ADR-single-release-version` for the durable version policy, superseding only the independent-version
+clause of `ADR-package-split-and-namespaces`. Public library APIs are unchanged.
 Base main is a1bed56189f11cdd7e00a0335d17ff2c2b49f624; this direct intake has no prerequisite edges.
 
 ## 2. Architecture Overview & Impact

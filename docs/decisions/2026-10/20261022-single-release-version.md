@@ -4,6 +4,8 @@ title: Synchronize workspace releases from one version file
 summary: "For a workspace released from one tag, we synchronize static package metadata from root VERSION, to make version updates one edit, accepting generated changes across package metadata and the lock."
 status: accepted
 created_at: 2026-10-22
+supersedes:
+  - ADR-package-split-and-namespaces
 ---
 
 # [ADR-single-release-version] Synchronize workspace releases from one version file
@@ -27,6 +29,9 @@ preparation require edits across package metadata. Installed library contracts s
 - Synchronize static metadata from VERSION: one source and ordinary package builds, with generated tracked changes.
 
 ## 4. Decision Outcome
+
+This decision supersedes only the independent-version clause of `ADR-package-split-and-namespaces`.
+Its package ownership, namespace and distribution boundaries remain in force.
 
 Use root VERSION and `just version-sync` for every workspace package, including repository tools. Synchronize
 project and bundle manifest versions and versioned internal requirements, then regenerate uv.lock with uv. Keep unversioned extra
