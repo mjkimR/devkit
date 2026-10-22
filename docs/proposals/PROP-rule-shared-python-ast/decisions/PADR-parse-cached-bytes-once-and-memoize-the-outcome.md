@@ -27,6 +27,7 @@ source.
 
 - One parse per file and run, including for files that do not parse.
 - Valid source yields the same tree for every rule; the file name in error messages stays workspace-relative.
+- Results stay byte-identical for UTF-8 source without a BOM; changes on other encodings are acceptable (user).
 - Each rule keeps its own reporting policy for unparsable files.
 - No compatibility shim: no external consumer exists, and devkit-dist and devkit-agt are released in lockstep.
 - Callers without a `RuleContext` (`inspect_architecture`, `inspect_usecases` in tests) keep working.
@@ -62,9 +63,10 @@ source.
 ## 5. Consequences
 
 - Positive: valid source parses once per run for every migrated rule, and an unparsable file is also parsed once.
-- Negative: on source the repository does not contain today (0 of 822 files), results change: a file with a UTF-8
-  BOM now parses in every rule; a PEP 263 coding cookie (`# coding: latin-1`) is honoured; a file with invalid UTF-8 is skipped by `unique_code` and the catalog rules instead of
-  being analysed as replaced text; `architecture` reports a decode failure with the `SyntaxError` wording; and the
+- Negative (accepted by the user): on source the repository does not contain today (0 of 822 files), results
+  change: a file with a UTF-8 BOM now parses in every rule; a PEP 263 coding cookie (`# coding: latin-1`) is
+  honoured; a file with invalid UTF-8 is skipped by `unique_code` and the catalog rules instead of being analysed as
+  replaced text; `architecture` reports a decode failure with the `SyntaxError` wording; and the
   `usecase-boundaries` abort message names the file instead of `<unknown>`.
 - Risk: a rule enumerating a symlinked path inside the workspace sees the resolved name in a syntax-error message.
 - Follow-up: none; a project installing mismatched devkit-catalog and devkit-agt versions sees a rule execution error

@@ -1,7 +1,7 @@
 ---
 id: PROP-rule-shared-python-ast
 title: Parse each Python file once per rules run
-summary: "Adds a parsed-AST accessor to the rules workspace cache so every rule that inspects Python source shares one parse per file and run, removing about 1,000 repeated parses and their garbage collection from devkit rules check."
+summary: "Adds a parsed-AST accessor to the rules workspace cache so Python-source rules share one parse per file and run, and resolves each rule path once per run, removing about 1,000 repeated parses, their garbage collection and most repeated path resolution from devkit rules check."
 status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-22
 target_area: governance/
@@ -38,8 +38,12 @@ rules (0.90 s, 0.80 s and 0.69 s). The catalog `cli_tool` rules `layers`, `heavy
 already shares bytes, text, frontmatter and Markdown links per run, but not parsed Python. `cli_contract`, named in
 the draft, checks CLI citations in Markdown and parses no Python; it is out of scope.
 
+The same profile shows 22,962 `Path.resolve` calls: `WorkspaceCache._key` resolves on every cache access and
+`RuleContext._relative` resolves even when the lexical path already lies inside the workspace.
+
 Hypothesis, confirmed by a prototype: one parse per file and run, shared through the cache, makes the run about
-0.6 s (14 %) faster with byte-identical output (median 4.29 s to 3.68 s over 7 interleaved runs).
+0.6 s (14 %) faster with byte-identical output (median 4.29 s to 3.68 s over 7 interleaved runs); resolving each
+path once as well makes it about 1.06 s (25 %) faster (3.23 s), still byte-identical.
 
 ## 2. Technical Spike Questions
 
@@ -64,22 +68,24 @@ Hypothesis, confirmed by a prototype: one parse per file and run, shared through
   directly from every rule.
 - **D3 — Only the parse moves**: the two devkit-dev rules keep enumerating their declared package roots
   (`Path.rglob`), and every rule keeps its file selection; only the parse (and with it the read) goes through
-  `ctx.cache`. Which rules run for a targeted run is `PROP-lint-clean-target-scoped-rules`, developed after this one.
+  `ctx.cache`. Which rules run for a targeted run is `PROP-lint-clean-target-scoped-rules` (D8).
 - **D4 — Per-run lifetime, real-CLI timing**: the trees live on the run's `WorkspaceCache` and need no release step;
   a simulation on that cache gave 4.25 s to 3.69 s. The acceptance measurement times the real CLI process, because an
   in-process timer misses interpreter shutdown.
 - **D5 — Memory accepted**: retained trees cost about 40 times the parsed source for the rest of the run; projects
   whose selected rules streamed before (catalog `cli_tool` without devkit-dev) now hold every parsed tree
   (`PADR-share-one-read-only-parsed-tree-per-python-file`, Consequences).
-- **Pending question — byte identity on unusual encodings**: the approved goal says byte-identical rule results.
-  Parsing bytes keeps them identical for UTF-8 source without a BOM (every file of this repository) but changes
-  results for a BOM, invalid UTF-8 or a PEP 263 cookie, and the `usecase-boundaries` abort message names the file
-  instead of `<unknown>` (`PADR-parse-cached-bytes-once-and-memoize-the-outcome`, Consequences). Full identity is
-  possible instead with trees keyed by decoded source text, each rule keeping its own decoding and the devkit-dev rules
-  reading outside `ctx.cache`.
-- **Pending question — path resolution**: the profile also shows about 0.4 s of repeated `Path.resolve` in
-  `WorkspaceCache._key` and `RuleContext._relative`, in the same module but outside the approved goal. The user decides
-  whether this proposal takes it (prototype with both: 4.29 s to 3.23 s, byte-identical) or a separate draft does.
+- **D6 — Byte identity scope (user)**: byte-identical results are required for this repository's UTF-8 sources
+  without a BOM. The edge-case changes from parsing the cached bytes are accepted: a file with a BOM, invalid UTF-8 or
+  a PEP 263 coding cookie, and the `usecase-boundaries` abort message naming the file instead of `<unknown>`
+  (`PADR-parse-cached-bytes-once-and-memoize-the-outcome`, Consequences).
+- **D7 — Path resolution included (user)**: this proposal also resolves each rule path once per run: lazy
+  resolution in `RuleContext._relative` and a per-run memo of `WorkspaceCache._key`
+  (`PADR-resolve-rule-paths-once-per-run`). The speed target rises to at least 0.8 s faster.
+- **D8 — Sequencing with `PROP-lint-clean-target-scoped-rules`**: that unit is in Development and lands on main
+  first. It adds an `inputs` declaration to `RULE-architecture`, `RULE-usecase-boundaries` and
+  `RULE-advisory-unique-code` and target scoping in `evaluate_rules`. This proposal plans none of it; its Development
+  merges main after that unit lands and adapts the three rule modules (and any `RuleContext` change) to it.
 
 ## 4. Proposed Design & Impact
 
@@ -106,6 +112,15 @@ Hypothesis, confirmed by a prototype: one parse per file and run, shared through
 `cache=None` defaults to a fresh `WorkspaceCache(root)`, so the bundled tests and
 `tools/devkit-dev/tests/integration/test_architecture.py` keep calling the inspectors with a root only.
 `usecase-boundaries` keeps its `ast.parse(..., mode="eval")` of string annotations, which is not a file parse.
+
+### Path resolution
+
+- `RuleContext._relative` (`packages/devkit/src/devkit_agt/features/rules/models/contracts.py`) tries the lexically
+  normalized path first and calls `resolve()` only when that path is outside the workspace; it returns the same value
+  for every input.
+- `WorkspaceCache` memoizes each path argument's resolved path for the run; `_key` and `read_bytes` use it, and
+  `invalidate`, `write_text`, `invalidate_many` and `invalidate_all` clear the whole memo
+  (`PADR-resolve-rule-paths-once-per-run`).
 After changing the bundle sources, `devkit sync` refreshes `.devkit/managed/` and the tracked
 `.devkit/installation.json`.
 
@@ -114,17 +129,22 @@ After changing the bundle sources, `devkit sync` refreshes `.devkit/managed/` an
 - `CAP-GOV-rule-authoring` (§2 Rule Context and Workspace Cache) lists `ctx.cache.get_python_ast(path)`, its
   read-only contract and its error behavior, and tells Python-source rules to use it.
 - `CAP-GOV-evaluation-lifecycle` names parsed Python among the data a fixer's invalidation drops.
-- `CAP-GOV-rules-engine` lists parsed Python in the `cache.py` responsibilities.
+- `CAP-GOV-rules-engine` lists parsed Python and the per-run path-resolution memo, cleared on invalidation, in the
+  `cache.py` responsibilities.
 
 ### Acceptance outcomes
 
 1. `devkit rules check --format json` on this repository prints the same bytes before and after the change, and for
-   UTF-8 source without a BOM every migrated rule reports the same findings and messages as before.
+   UTF-8 source without a BOM every migrated rule reports the same findings and messages as before. The edge-case
+   changes D6 accepts are covered by the cache tests (a BOM file parses) and are the only changed expectations.
 2. A whole-workspace run makes at most one exec-mode `ast.parse` call per distinct Python file the rules read (about
    540 instead of 1,526), measured by wrapping `ast.parse` as `materials/measurements.md` describes.
-3. The median wall time of 7 interleaved runs of `.venv/bin/devkit rules check --format json` is at least 0.4 s
-   below main's (prototype: 0.61 s), with both numbers recorded in the change report.
-4. The cache tests named in the two PADRs' Confirmation sections pass, and each migrated rule's tests build
+3. The median wall time of 7 interleaved runs of `.venv/bin/devkit rules check --format json` is at least 0.8 s
+   below main's (prototype: 1.06 s), with both numbers recorded in the change report. Main is measured after
+   `PROP-lint-clean-target-scoped-rules` has landed, on the same commit this unit's Development merged.
+4. The cache and context tests named in the three PADRs' Confirmation sections pass: among them, a path argument
+   resolves once between invalidations and a lexically inside path is made relative without `Path.resolve`. Each
+   migrated rule's tests build
    `RuleContext(workspace_root=root, cache=WorkspaceCache(root))`, call `rule.check(ctx)` and assert that the trees
    it read equal a fresh parse; the `testing` harness API stays unchanged.
 5. The migrated rules' existing tests and the catalog rule tests pass; `just test-affected`, `just lint` and
@@ -136,7 +156,9 @@ After changing the bundle sources, `devkit sync` refreshes `.devkit/managed/` an
 - Changing which files any rule scans, or its findings and messages for valid source.
 - Sharing or merging the rules' own `ast.walk` traversals (about 0.5 s, rule-internal).
 - A central syntax-error report, a persistent cross-run cache, or CLI startup time.
-- Path-resolution changes, unless the pending question adds them.
+- `Path.resolve` call sites outside `RuleContext._relative` and the `WorkspaceCache` key (`find_files`, target
+  expansion, `DocumentCatalog`).
+- The `inputs` declaration and target scoping of `PROP-lint-clean-target-scoped-rules` (D8).
 
 ## 5. Lifecycle & Retirement Criteria
 <!--
