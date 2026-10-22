@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T05:32:29.614768Z'
+status: completed
+summary: swept this run (specify through reconcile) and its diff; recorded FB-reconcile-reviewer-diff-access; no duplicates
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0
