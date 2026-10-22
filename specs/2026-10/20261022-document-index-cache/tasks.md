@@ -19,7 +19,7 @@ plan: PLAN-document-index-cache
 
 ## Phase 2: Verification
 
-- [ ] **Task 2.1**: Speed and multi-process evidence, and the repository checks
+- [x] **Task 2.1**: Speed and multi-process evidence, and the repository checks
   - **_Boundary**: `specs/2026-10/20261022-document-index-cache/materials/speed.md`, `docs/capabilities/documents/CAP-DOCS-document-model.md`, `docs/capabilities/documents/CAP-DOCS-document-lookup.md`
   - _Requirements: AC-06, AC-10, AC-11_
   - **Verification**: `uv run devkit rules check`, `just lint devkit-spec`, `just check devkit-spec`, `just test-affected`
