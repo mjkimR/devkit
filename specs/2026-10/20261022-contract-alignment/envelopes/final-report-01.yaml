@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T04:45:04.263383Z'
+status: completed
+summary: 'Docs-only change: two superseding ADRs (ADR-foundation-and-mcp-package-ownership, ADR-host-owned-review-loop-recovery), CAP-DLV-delivery-workflows rule 7 aligned to review-loop.md section 4, alias wording in three capabilities, the consumption instruction and the glossary, link repairs; three source feedback items resolved, three follow-ups recorded as feedback.'
+findings: []
+checks:
+  tests: PASS just test-affected 145 passed
+  build: PASS devkit sync --check (no build artifact for docs)
+  lint: PASS devkit rules check --ci --base 88f8a0fd; git diff --check
+diff_scope:
+  base: 88f8a0fde7cf5c221e8bedd344db5cfd5ead9f48
+  head: f42a3872388709df7bc075f679fc30386dfd7f58

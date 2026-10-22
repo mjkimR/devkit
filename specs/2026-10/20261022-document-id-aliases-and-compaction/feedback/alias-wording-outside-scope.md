@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -35,3 +35,10 @@ created_at: 2026-10-22
 - `packages/devkit-spec/src/devkit_spec/features/proposals/usecases/specs.py` (`index.declares`).
 - `packages/devkit-spec/src/devkit_spec/features/entrypoints/usecases/derive.py` (`index.resolve`).
 - `packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/manifest.py` (`_check_playbook_aliases`).
+
+- **Disposition (resolved)**: `SPEC-contract-alignment` added the alias case to `CAP-DLV-spec-bundles` (rule 3 and
+  `SPEC_EXISTS`), `CAP-TRACE-code-entrypoints` (`--target` and its error rows), `CAP-DIST-manifest-spec` (the
+  playbook kind and a **Playbook aliases** validation rule), the devkit bundle `consumption` instruction (`playbook get`
+  by a declared alias) and `docs/glossary.md` (an `Alias` row, "search keyword" under Avoid), each checked against
+  the cited code. Verified by `devkit rules check --ci`, `devkit sync --check`, `just test-affected` and the unit's
+  review.

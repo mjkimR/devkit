@@ -42,7 +42,8 @@ standards are in the `ARCH-08-2-resource-taxonomy`.
   role contract (`source`) rendered per selected agent. See `CAP-DIST-agent-projections`.
 - `instruction`: Markdown whose YAML frontmatter declares a nonempty `name` and `description`, the header
   `devkit get-context` catalogs. Every file of the source, including each file of a directory source, carries one.
-- `playbook`: a procedure for an occasional task, found through explicit playbook search or retrieved by exact manifest ID; header rules are in
+- `playbook`: a procedure for an occasional task, found through explicit playbook search or retrieved by its exact
+  manifest ID or a declared alias (a previous asset ID in the header's `aliases`); header rules are in
   `CAP-DIST-context-and-playbooks`.
 - `rule`: Python governance rules run by `devkit_agt.features.rules`, shipped as one plugin package directory per asset (see
   **Plugin packages** below). The receipt lists every deployed file under the asset's `paths` and `devkit rules`
@@ -191,6 +192,9 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
   to the asset id, `title`, `description`, a `hosts` table with a block for every supported agent (valid statuses,
   allowlisted keys), and a nonempty body (`CAP-DIST-agent-projections`).
 - **Workflows**: two `workflow` assets of one bundle may not declare the same header `id`.
+- **Playbook aliases**: across the `playbook` assets of one bundle, no header alias may equal a playbook asset ID of
+  the bundle (its own included) or an alias another playbook already declares (`BUNDLE_INVALID`;
+  `ADR-playbook-aliases-as-identifiers`).
 - **Presets**: asset lists are nonempty, unique and reference declared ids.
 - **Verbatim native content**: `subagent` variant files are never parsed, modified or stripped. Skill variants are
   deployed like a skill `source`, context prerequisite included

@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -39,3 +39,10 @@ created_at: 2026-10-22
 review-loop.md §4: contested P1 -> problem for the Host; "adds no user approval gate"
 ADR-bounded-high-effort-review-loop: contested P1 -> worker question to the user
 ```
+
+- **Disposition (resolved)**: The user decided that the shipped bundle rule holds. `SPEC-contract-alignment` added
+  `ADR-host-owned-review-loop-recovery`, which supersedes `ADR-bounded-high-effort-review-loop` (now
+  `status: superseded`) with `review-loop.md` section 4 (a contested P1 is a Host-owned `problem`, recovery adds no
+  user approval gate, changing an acceptance criterion or waiving an agreed constraint needs the user's decision) and
+  carries over the rest of the loop; `CAP-DLV-delivery-workflows` rule 7 states the same rule. `review-loop.md` is
+  unchanged. Verified by reading the three side by side, `devkit rules check --ci` and the unit's review.

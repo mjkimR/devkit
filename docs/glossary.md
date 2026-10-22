@@ -15,6 +15,7 @@ The ubiquitous terms of devkit as its documents, commands and bundles use them. 
 | **Projections** | Native agent files projected into `.agents/skills/`, `.claude/skills/`, `.codex/skills/`, etc. | `CAP-DIST-agent-projections` |  | `.agents/skills/`, `.claude/skills/`, `.codex/skills/` |
 | **Receipt** | `.devkit/installation.json`: records every deployed file, checksum, and origin bundle in one transaction. | `CAP-DIST-sync-and-transactions` |  | `.devkit/installation.json` |
 | **Project override** | Local adaptation of an upstream asset placed under `.devkit/overrides/`, tracked against an upstream baseline. | `CAP-DIST-workspace-ownership` |  | `.devkit/overrides/` |
+| **Alias** | A previous or alternate identifier of a document (`aliases` in its frontmatter) or of a playbook (a previous asset ID in its header's `aliases`). It resolves to the canonical document or playbook and counts as a declaration; it is identity, not a reference. | `CAP-DOCS-document-model` | search keyword | `aliases`, `DocumentIndex.canonical` |
 
 ## 2. Governance and Verification
 

@@ -123,7 +123,7 @@ Depth may escalate during Development (`session → spec`) when contract or docu
 Determines the thoroughness of inspection and review per activity (`low`, `medium`, `high`, default `medium`):
 - `low`: Self-review and self-verification by the working actor.
 - `medium`: Mandatory initial `code-reviewer` subagent execution. Conditional self-verification for `reconcile-reviewer` only when contracts and diff coverage are provably unambiguous.
-- `high`: Bounded re-review loop (`ADR-bounded-high-effort-review-loop`) reviewing whole batches, stopping when rounds find no issues or only minor fixes. Mandatory independent `reconcile-reviewer`.
+- `high`: Bounded re-review loop (`ADR-host-owned-review-loop-recovery`) reviewing whole batches, stopping when rounds find no issues or only minor fixes. Mandatory independent `reconcile-reviewer`.
 
 ---
 

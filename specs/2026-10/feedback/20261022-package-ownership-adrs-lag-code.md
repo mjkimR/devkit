@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -39,3 +39,10 @@ created_at: 2026-10-22
 ADR-dist-foundation-ownership: "devkit-dist MUST own the shared foundation"
 packages/devkit-core/: devkit_core owns base/ and core/
 ```
+
+- **Disposition (resolved)**: `SPEC-contract-alignment` added `ADR-foundation-and-mcp-package-ownership`, which
+  supersedes `ADR-dist-foundation-ownership` (now `status: superseded`): `devkit-core` (`devkit_core`) owns the
+  shared foundation, `devkit-agt` declares the `mcp` extra requiring `devkit-mcp` and `devkit-dist` declares none; the
+  standalone-scope, executable and dependency-direction rules are carried over. Verified against the `pyproject.toml`
+  files of the four wheels, `devkit rules check --ci` and the unit's review; `ARCH-05-1-containers` and
+  `CAP-DIST-content-packages` cite the successor.
