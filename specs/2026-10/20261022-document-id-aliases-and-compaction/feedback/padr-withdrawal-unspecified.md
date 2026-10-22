@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -33,3 +33,10 @@ created_at: 2026-10-22
 
 - `references/planning.md` step 2 covers recording and summaries only.
 - `CAP-DOCS-document-model` lists the `PADR` kind without a status vocabulary for withdrawal.
+
+## Disposition
+
+- **Disposition (resolved)**: `SPEC-feedback-guidance-fixes` states in the `spec` skill's `references/planning.md` step 2 and in
+  `CAP-DLV-proposal-incubation` 4.4 that a PADR withdrawn before `plan-accept` is deleted in the fold commit and named
+  with its reason in the proposal's Planning decisions; no withdrawn status exists. Verified by the spec's review and
+  reconcile self-check.

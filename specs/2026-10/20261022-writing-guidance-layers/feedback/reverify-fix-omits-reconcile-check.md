@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -45,3 +45,11 @@ created_at: 2026-10-22
 [ERROR]  (ENVELOPE_FROM_INVALID) --from must name a review, challenger or reverify envelope, not reconcile-check
 [FIX]    Use --from latest for the review round, or --from envelopes/challenger-NN.yaml for a challenger round
 ```
+
+## Disposition
+
+- **Disposition (resolved)**: `SPEC-feedback-guidance-fixes` makes the `ENVELOPE_FROM_INVALID` `[FIX]` for a `reconcile-check` source name a
+  new `reconcile-check` envelope (`envelope new --kind reconcile-check`) or another reconcile-reviewer call; the
+  `spec` skill's `references/effort.md` already states the route, and the `spec-delegate` Step 6 sentence was left
+  unchanged (outside that unit's write scope). Verified by
+  `test_a_reconcile_check_source_names_the_reconcile_route` in `test_envelope_record_gaps.py`.

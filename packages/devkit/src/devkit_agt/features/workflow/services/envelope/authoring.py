@@ -251,6 +251,13 @@ def carried_findings(envelopes: Envelopes, source: str, unit_dir: Path) -> tuple
                 f"--from {source}: {exc.message}",
                 fix="Use --from latest, or pass an existing, well-formed envelopes/<review|challenger|reverify>-NN.yaml",
             ) from exc
+    if env.kind == "reconcile-check":
+        raise EnvelopeFromError(
+            "--from must name a review, challenger or reverify envelope, not reconcile-check",
+            fix="Close a reconcile finding with a new reconcile-check envelope instead of a reverify: `devkit workflow"
+            " envelope new --unit <dir> --kind reconcile-check --stage living-spec-draft --summary ...` after your"
+            " own check, or call the reconcile-reviewer again and record its return the same way",
+        )
     if env.kind not in {*CLOSABLE, "reverify"}:
         raise EnvelopeFromError(
             f"--from must name a review, challenger or reverify envelope, not {env.kind}",

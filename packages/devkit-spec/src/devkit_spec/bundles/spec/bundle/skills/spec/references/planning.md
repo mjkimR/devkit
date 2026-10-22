@@ -25,6 +25,7 @@ Read this to run one turn of a proposal's Planning on its `plan-<slug>` branch, 
    - Then fold the decisions into `proposal.md` and the PADRs in a separate commit.
    - Record a new PADR with `devkit spec proposal padr <slug> "<title>" --summary "<Y-statement by the decision-writing instruction>"`; `RULE-document-summary` refuses the handoff commit without a summary.
    - Read the scaffolded PADR before writing its body. Give an existing PADR without a summary one.
+   - Withdraw a PADR the answers dropped before `plan-accept` by deleting its file in the fold commit; Git keeps it, and handoff would otherwise promote every PADR left in `decisions/`. There is no withdrawn status. Name the withdrawn PADR ID and the reason in the proposal's Planning decisions, and remove or rewrite references to it.
 3. Review the proposal to the end at the Planning `activity-effort`:
    - `low`: questions only, no `scout` or `challenger`.
    - `medium`: one `challenger` pass always, and a `scout` when the direction needs evidence.

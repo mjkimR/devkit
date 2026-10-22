@@ -74,3 +74,27 @@ def test_carry_regroups_sections() -> None:
     assert carried.non_goals == "1. Nothing.\n\n"
     assert carried.acceptance == "- **Given** it\n\n"
     assert carried.notes == "### Open Questions\n\n```md\n## kept\n```\n\n"
+
+
+@pytest.mark.parametrize(
+    ("heading", "kind"),
+    [
+        ("4. Acceptance Evidence and Non-Goals", "contract"),
+        ("Validation and out of scope", "contract"),
+        ("Non-goals and verification", "contract"),
+        ("4. Lifecycle & Verification", "notes"),
+    ],
+)
+def test_classify_mixed_sections_as_contract(heading: str, kind: str) -> None:
+    # SPEC-feedback-guidance-fixes AC-09
+    assert classify(heading) == kind
+
+
+def test_carry_keeps_mixed_scenarios_out_of_non_goals() -> None:
+    carried = carry_proposal_body(
+        "# [PROP-x] X\n\n## 4. Acceptance Evidence and Non-Goals\n\n- AC1: Publish.\n\n### Detail\n\nNon-goals: none.\n"
+    )
+    assert carried.non_goals == "" and carried.acceptance == ""
+    assert carried.contract == (
+        "### 4. Acceptance Evidence and Non-Goals\n\n- AC1: Publish.\n\n#### Detail\n\nNon-goals: none.\n\n"
+    )

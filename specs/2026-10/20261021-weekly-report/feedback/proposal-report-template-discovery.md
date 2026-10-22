@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-21
 ---
 
@@ -44,3 +44,11 @@ localized section names, each PADR and all Planning envelope filenames.
 After filling template: two immutable proposal-review artifacts published;
 exact-playbook-get spec_handoff status=handed_off.
 ```
+
+## Disposition
+
+- **Disposition (resolved)**: `SPEC-feedback-guidance-fixes` adds `devkit spec proposal report <slug> --source-sha <sha> --template` and the
+  read-only MCP tool `spec_proposal_report_template`, names them in the `spec_proposal_report` description and the
+  `spec-review-proposal` skill, and prefixes each `PROPOSAL_REVIEW_INVALID` message with the failed field class whose
+  `[FIX]` names both routes; every publication check is kept. Verified by
+  `packages/devkit-spec/tests/integration/features/proposals/test_proposal_report.py` and `test_cloud_guidance.py`.

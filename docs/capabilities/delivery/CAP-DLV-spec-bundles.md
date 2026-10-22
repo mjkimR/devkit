@@ -139,7 +139,8 @@ specs/<YYYY-MM>/<YYYYMMDD>-<slug>/
   `related_stories: []`, then `workflow` from the binding. H1 `# [SPEC-<slug>] <title>`; sections
   `1. Problem Statement & Motivation`, `2. User Stories`, `3. Non-Goals` (a `Scope Excluded` placeholder),
   `4. Acceptance Criteria & Behavioral Contracts` (one placeholder `### [AC-01] <scenario>` with Given/When/Then
-  lines) and, after a handoff with leftover proposal sections, `5. Carried Proposal Notes`.
+  lines) and, after a handoff, `5. Carried Proposal Contract` for proposal sections mixing validation scenarios with
+  non-goals, then `Carried Proposal Notes` for leftover sections (numbered 5, or 6 after a carried contract).
 - **`plan.md`**: `id: PLAN-<slug>`, `spec: SPEC-<slug>`; sections `1. Architecture Overview & Impact` (target area,
   blueprint reference), `2. Component Breakdown & Interface Contracts` (planned and excluded boundaries from a
   proposal), `3. Verification & Test Plan` (a placeholder line).

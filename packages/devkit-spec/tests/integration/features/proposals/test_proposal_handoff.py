@@ -1026,3 +1026,23 @@ def test_promotes_only_a_draft_status_value(workspace: Path, status: str, promot
     handoff_proposal(workspace, "quoted", today=TODAY)
     adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-pick-one.md").read_text(encoding="utf-8")
     assert f"\nstatus: {promoted}\n" in adr
+
+
+def test_mixed_acceptance_and_non_goals_carry_as_contract(workspace: Path) -> None:
+    # SPEC-feedback-guidance-fixes AC-09
+    proposal = _new(workspace, "mixed-contract")
+    accept(proposal)
+    with proposal.open("a", encoding="utf-8") as handle:
+        handle.write(
+            "\n\n## 4. Acceptance Evidence and Non-Goals\n\n- AC1: Publish a briefing.\n- AC2: Refuse a stale one.\n"
+            "\nNon-goals: remote storage.\n"
+        )
+    handoff_proposal(workspace, "mixed-contract", today=TODAY)
+    spec = (spec_dir(workspace, "mixed-contract") / "spec.md").read_text(encoding="utf-8")
+    non_goals = spec[spec.index("## 3. Non-Goals") : spec.index("## 4. Acceptance Criteria")]
+    assert non_goals == "## 3. Non-Goals\n\n1. **Scope Excluded**: <what this change will not do>\n\n"
+    contract = spec[spec.index("## 5. Carried Proposal Contract") :]
+    assert (
+        "### 4. Acceptance Evidence and Non-Goals\n\n- AC1: Publish a briefing.\n- AC2: Refuse a stale one." in contract
+    )
+    assert contract.index("- AC1") < contract.index("## 6. Carried Proposal Notes")

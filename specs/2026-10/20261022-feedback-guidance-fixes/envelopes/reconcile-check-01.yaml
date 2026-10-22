@@ -1,0 +1,12 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T00:55:04.620007Z'
+status: completed
+summary: 'Self-verification at activity-effort low (no reconcile-reviewer): the four reconcile targets were compared line by line with the diff (CLI --template and JSON keys, read-only MCP tool, field-class messages and FIX, reconcile-check FIX, carried-contract classification and numbering, PADR withdrawal); entrypoints already declare the changed doorways; five source feedback items resolved with dispositions.'
+findings: []
+checks:
+  rules: PASS
+  entrypoints: PASS no new pair applied
+activity_effort: low

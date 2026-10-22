@@ -35,8 +35,15 @@ This skill grants no acceptance, merge or Development authority.
    Planning gate. Return the committed head and ownership to the Host. Publish a new report bound
 {% if execution.environment == "local" %}   to that head, accounting for all PADRs and envelopes, through `spec_proposal_report` (Cloud:
    `devkit spec proposal report <slug> --source-sha <sha> --body-file <path-or-dash>`).
+   - Start from the report template for that head: `spec_proposal_report_template(slug, source_sha)` (Cloud:
+     the same command with `--template` instead of `--body-file`). Keep its frontmatter, headings, PADR blocks
+     and coverage tokens; replace no structure, fill every section.
+   - A `PROPOSAL_REVIEW_INVALID` message starts with the failed field class; fix that part of the template.
 {% else %}   to that head, accounting for all PADRs and envelopes, through
    `devkit spec proposal report <slug> --source-sha <sha> --body-file <path-or-dash>`.
+   - Start from the report template for that head: the same command with `--template` instead of `--body-file`.
+     Keep its frontmatter, headings, PADR blocks and coverage tokens; replace no structure, fill every section.
+   - A `PROPOSAL_REVIEW_INVALID` message starts with the failed field class; fix that part of the template.
 {% endif %}   Report publication does not accept the plan. Provide the exact immutable URI and any returned
    viewer URL; without a viewer, retrieve and present the readable Markdown.
 {% if execution.environment == "local" %}6. Request native `spec_plan_accept(slug, report_uri)` only when readiness holds.
