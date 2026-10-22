@@ -24,14 +24,14 @@ plan: PLAN-lint-clean-target-scoped-rules
 ## Phase 2: Declared rules
 
 - [x] **Task 2.1**: Open-file recording for rule tests, and the three rules' declarations, guides and tests
-  - **_Boundary**: `packages/devkit/src/devkit_agt/features/rules/services/testing.py`, `tools/devkit-dev/src/devkit_dev/bundle/rules/architecture/`, `tools/devkit-dev/src/devkit_dev/bundle/rules/usecase-boundaries/`, `packages/devkit-dist/src/devkit_dist/bundles/advisory/bundle/rules/unique_code/`, `.devkit/installation.json`, `packages/devkit/tests/integration/features/rules/engine/`
+  - **_Boundary**: `packages/devkit/src/devkit_agt/features/rules/services/testing.py`, `tools/devkit-dev/src/devkit_dev/bundle/rules/architecture/`, `tools/devkit-dev/src/devkit_dev/bundle/rules/usecase-boundaries/`, `packages/devkit-dist/src/devkit_dist/bundles/advisory/bundle/rules/unique_code/`, `.devkit/installation.json`, `packages/devkit/tests/integration/features/rules/engine/`, `packages/devkit/tests/integration/features/rules/cli/test_rule_tests.py` (the helper's own test, beside the other rule-test helper tests)
   - _Requirements: AC-06, AC-08_
   - **Verification**: `uv run devkit rules test RULE-architecture RULE-usecase-boundaries RULE-advisory-unique-code`; `uv run devkit sync --check`
 
 ## Phase 3: Documentation and evidence
 
 - [x] **Task 3.1**: Rule authoring guidance and the reference
-  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-rule/`, `docs/capabilities/governance/`, `docs/development/reference/rules.md`, `.devkit/installation.json`
+  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-rule/`, `docs/capabilities/governance/`, `docs/development/reference/rules.md`, `docs/development/reference/rules-library.md` (documents `EvaluationResult`, `validate_policy` and the rule-test helpers this unit changes), `.devkit/installation.json`
   - _Requirements: AC-07_
   - **Verification**: `uv run devkit rules check docs/capabilities/governance docs/development/reference/rules.md packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-rule`; `just test agt packages/devkit/tests/integration/features/rules/test_docs.py packages/devkit/tests/integration/package/test_documented_codes.py`
 - [x] **Task 3.2**: Equivalence, performance and boundary evidence

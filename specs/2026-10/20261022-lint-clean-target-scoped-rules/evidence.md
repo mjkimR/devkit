@@ -42,6 +42,13 @@ patches `scope_rules`, then calls `devkit_dist.cli.cli`), so every rule runs as 
 Ratio 1.51 / 3.71 = 0.41, within the bound of 0.5. Both commands printed the same `[WORKFLOW: ...]` and `[DONE: ...]`
 lines.
 
+Deviation from AC-10's wording: the baseline ran the head with scoping disabled, not the commit 3015be11. A worker may
+only commit in its worktree, and running the base commit would need a second checkout or a nested repository. The
+patched head evaluates every rule the base evaluates, plus one `inputs` check per loaded rule and the target list kept
+on the context, which is negligible next to the rule checks. Two other measurements agree with the 3.71 s baseline: the base-equivalent unscoped runs of section 1
+(3.58 s in a warm process), and the cold base measurement of Planning on the same Apple M4 Pro (3.65 s at 514bdea1,
+spike-evidence §5).
+
 ## 3. Declaration and boundaries (AC-07, AC-11)
 
 - `.venv/bin/devkit rules explain RULE-architecture` prints
