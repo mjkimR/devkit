@@ -1,0 +1,19 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T07:23:31.591078Z'
+status: completed
+summary: 'reconcile-reviewer (nested subagent, native, medium): CAP-DOCS-document-model and CAP-DOCS-document-lookup match memo.py/index.py and the three ADRs; no-impact claims hold; one P2: the lookup sentence omits the memo''s WHERE condition and is badly wrapped'
+findings:
+- issue: CAP-DOCS-document-lookup section 1 states the memo reuse without the WHERE condition of CAP-DOCS-document-model 3.4 rule 3 (a .devkit/transient/ directory, no symbolic link, a valid fingerprint); the re-wrapped sentence breaks the file's line width.
+  evidence: docs/capabilities/documents/CAP-DOCS-document-lookup.md:21-24; docs/capabilities/documents/CAP-DOCS-document-model.md:155
+  failure_condition: A reader expects the speed-up or reuse in a workspace without .devkit/transient/, with a symbolic link on the memo path, or on the first call after a fingerprint change.
+  suggested_action: Qualify the sentence with 'where the workspace has one' and 'repeated call', and re-wrap it.
+  resolution: open
+  severity: P2
+checks:
+  lint: PASS devkit rules check --ci --base 8046ae64 errors=0
+diff_scope:
+  base: 8046ae6490f64185db20fbdf73710893ebe9967d
+  head: 2ac34a9bef612002c63d39276bc4b95eaeb4c2c0
