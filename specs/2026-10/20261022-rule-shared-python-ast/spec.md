@@ -160,8 +160,8 @@ byte-identical output.
    the two errors the accessor memoizes, so a source the parser rejects with `ValueError` is reported like a syntax
    error instead of failing the rule. The catalog rules add `ValueError` to their skip for the same reason;
    `unique_code` already skipped both.
-6. A `SyntaxError` prints only the base name of its file (`invalid syntax (broken.py, line 1)`), so the
-   `usecase-boundaries` abort message names the file by its base name instead of `<unknown>`.
 4. `parse_module(rel, tree)` of `unique_code` takes the parsed tree; the rule calls the accessor and skips a file that
    raises `SyntaxError` or `ValueError`, as before.
 5. The catalog `layout` rule lists Python files without parsing them and is not migrated.
+6. A `SyntaxError` prints only the base name of its file (`invalid syntax (broken.py, line 1)`), so the
+   `usecase-boundaries` abort message names the file by its base name instead of `<unknown>`.

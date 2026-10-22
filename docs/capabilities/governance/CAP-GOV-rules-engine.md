@@ -20,7 +20,7 @@ Related: `CAP-GOV-evaluation-lifecycle`, `CAP-GOV-rule-authoring`, [Rules Refere
 
 1. **Deterministic checks**: repository invariants (relative links, file sizes, committed secrets) are enforced by parsing, not by prompt instructions.
 2. **No built-in document model**: the engine does not know what a specification, use case or decision record is. Identifier grammars, frontmatter schemas, target directories and cross-reference semantics belong to the bundle that defines those documents and arrive as `kind = "rule"` assets; the engine provides the cache, the Markdown file catalog, policy and execution. Built-in rules cover only what holds for any repository.
-3. **Session caching**: one in-memory cache per evaluation session holds file lists, bytes, text, frontmatter and links.
+3. **Session caching**: one in-memory cache per evaluation session holds file lists, bytes, text, frontmatter, links and parsed Python (one shared, read-only tree or remembered syntax error per file), and resolves each path argument once until an invalidation.
 4. **Convergent autofix**: one repair pass followed by one recheck, never a repair loop (`CAP-GOV-evaluation-lifecycle`).
 5. **One evaluation path**: the CLI, the `rules-check` commit gate and the workflow engine's `lint-clean` check both call `run_project_rules`, so they cannot disagree on policy; target scoping lives in `evaluate_rules`, so they also agree on which rules explicit targets can affect (`CAP-GOV-evaluation-lifecycle`).
 
