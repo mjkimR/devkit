@@ -1,0 +1,23 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T01:24:50.826314Z'
+status: completed
+summary: round 2; fixes c85b2098..33daee77. All six round-1 findings closed, none recurs; one out-of-scope P3 (MCP install guide wheel list).
+findings:
+- issue: The MCP install guide describes release-wheel installation with only the dist, advisory and runtime wheels, omitting devkit-core and devkit-cli, which devkit-dist pins and no index serves.
+  evidence: guides/install/mcp.md:4; scripts/release.sh:65; packages/devkit-dist/pyproject.toml:8-9
+  failure_condition: A user installs devkit-mcp from release wheels following the guide and names only dist, advisory and mcp; uv cannot resolve devkit-core or devkit-cli.
+  suggested_action: Name the devkit-dist, devkit-core, devkit-cli, devkit-advisory and devkit-mcp wheels; optionally fix the comment at scripts/release.sh:55.
+  resolution: open
+  severity: P3
+assumptions:
+- code-reviewer emulated by a generic Claude Code subagent following .devkit/managed/spec/subagents/code-reviewer.md
+checks:
+  targeted_tests: PASS 59 passed on 33daee77
+  rule_order_probe: PASS
+diff_scope:
+  base: c85b20985c32b30b149fcba86564994e9eee4028
+  head: 33daee77ecd27af96a124ad17049bed5d13b532a
+activity_effort: high

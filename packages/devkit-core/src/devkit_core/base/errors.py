@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Unpack
 
 from devkit.advisory import Actor, AdvisoryError, AdvisoryFields, Retry
+from devkit.advisory import ArgumentError as AdvisoryArgumentError
 
 
 class DevkitCoreError(AdvisoryError):
@@ -20,17 +21,14 @@ class FrontmatterError(DevkitCoreError):
     input_error = True
 
 
-class ArgumentError(DevkitCoreError):
+class ArgumentError(DevkitCoreError, AdvisoryArgumentError):
     """A command argument or library parameter is malformed or names something that does not exist.
 
     Command lines raise it for every semantic argument check (click only parses
-    syntax), so a JSON caller still receives one ``{"error": ...}`` document.
+    syntax), so a JSON caller still receives one ``{"error": ...}`` document. The
+    code and its fields come from ``devkit.advisory.ArgumentError``, which owns
+    ``ARGUMENT_INVALID``; this class keeps it a ``DevkitCoreError`` too.
     """
-
-    code = "ARGUMENT_INVALID"
-    actor = Actor.DEVELOPER
-    retry = Retry.AFTER_FIX
-    input_error = True
 
 
 class UnsafePathError(DevkitCoreError):

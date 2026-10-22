@@ -305,6 +305,20 @@ class AdvisoryError(Exception):
         return f"{type(self).__name__}(code={self.code!r}, message={self.message!r})"
 
 
+class ArgumentError(AdvisoryError):
+    """A command-line argument or library parameter is malformed or names something that does not exist.
+
+    The one owner of ``ARGUMENT_INVALID`` (``INPUT_ERROR``): command lines raise it for every semantic argument
+    check (click only parses syntax), so a JSON caller still receives one ``{"error": ...}`` document. An
+    application's own argument error derives from it rather than declaring the code again.
+    """
+
+    code = "ARGUMENT_INVALID"
+    actor = Actor.DEVELOPER
+    retry = Retry.AFTER_FIX
+    input_error = True
+
+
 def _rebuild[E: AdvisoryError](cls: type[E], args: tuple[Any, ...], state: dict[str, Any]) -> E:
     """Unpickle or copy an ``AdvisoryError`` without calling its ``__init__``."""
     error = cls.__new__(cls, *args)

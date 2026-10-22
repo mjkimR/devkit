@@ -46,6 +46,7 @@ wheel() {
     echo "${matches[0]}"
 }
 core_wheel=$(wheel devkit_core)
+cli_wheel=$(wheel devkit_cli)
 dist_wheel=$(wheel devkit_dist)
 devkit_wheel=$(wheel devkit_agt)
 advisory_wheel=$(wheel devkit_advisory)
@@ -72,6 +73,32 @@ assert importlib.util.find_spec("mcp") is None
 "$foundation/bin/python" -m pytest -c packages/devkit-core/pyproject.toml --rootdir packages/devkit-core \
     -p no:cacheprovider packages/devkit-core/tests -q
 
+echo "==> toolkit-only consumer: a click tool on devkit-cli, without devkit-dist"
+toolkit="$work/toolkit"
+uv venv "$toolkit" >/dev/null
+uv pip install --python "$toolkit/bin/python" "$cli_wheel" "$advisory_wheel" >/dev/null
+cat > "$work/toolkit_tool.py" <<'PY'
+import importlib.util
+import click
+from devkit.advisory import AdvisoryError
+from devkit_cli import FORMAT_OPTION, Boundary
+
+assert importlib.util.find_spec("devkit_dist") is None and importlib.util.find_spec("devkit_core") is None
+
+@click.command()
+@FORMAT_OPTION
+@Boundary("smoketool")
+def main(output_format: str) -> None:
+    raise AdvisoryError("nothing to do", code="SMOKE_FAILED")
+
+main()
+PY
+status=0
+toolkit_out=$("$toolkit/bin/python" "$work/toolkit_tool.py" --format json 2>"$work/toolkit.err") || status=$?
+[ "$status" -eq 2 ] || { echo "error: the toolkit tool exited $status, expected 2" >&2; exit 1; }
+grep -q '"code": "SMOKE_FAILED"' <<<"$toolkit_out" || { echo "error: the toolkit tool printed no JSON error" >&2; exit 1; }
+[ ! -s "$work/toolkit.err" ] || { echo "error: the toolkit tool wrote stderr in JSON mode" >&2; exit 1; }
+
 echo "==> distribution-only consumer: the devkit-dist wheel without devkit-agt"
 standalone="$work/standalone"
 mkdir -p "$standalone"
@@ -79,7 +106,7 @@ mkdir -p "$standalone"
     cd "$standalone"
     unset VIRTUAL_ENV
     uv init --bare --name smoke-standalone --no-workspace >/dev/null
-    uv add --dev "$dist_wheel" "$core_wheel" "$advisory_wheel" >/dev/null
+    uv add --dev "$dist_wheel" "$core_wheel" "$cli_wheel" "$advisory_wheel" >/dev/null
     uv run devkit --version
     uv run python -c "
 import importlib.util
@@ -140,7 +167,7 @@ echo "==> tool installation: devkit-dist owns the executable, devkit-agt adds th
 (
     unset VIRTUAL_ENV
     export UV_TOOL_DIR="$work/tools" UV_TOOL_BIN_DIR="$work/tool-bin"
-    uv tool install "$dist_wheel" --with "$devkit_wheel" --with "$core_wheel" --with "$advisory_wheel" >/dev/null 2>&1
+    uv tool install "$dist_wheel" --with "$devkit_wheel" --with "$core_wheel" --with "$cli_wheel" --with "$advisory_wheel" >/dev/null 2>&1
     "$work/tool-bin/devkit" --version
     "$work/tool-bin/devkit" rules --help >/dev/null
     "$work/tool-bin/devkit" run --help >/dev/null
@@ -151,7 +178,7 @@ echo "==> creating a fresh consumer project"
     cd "$project"
     unset VIRTUAL_ENV
     uv init --bare --name smoke-consumer --no-workspace >/dev/null
-    uv add --dev "$devkit_wheel" "$dist_wheel" "$core_wheel" "$advisory_wheel" "$starter_wheel" "$catalog_wheel" >/dev/null
+    uv add --dev "$devkit_wheel" "$dist_wheel" "$core_wheel" "$cli_wheel" "$advisory_wheel" "$starter_wheel" "$catalog_wheel" >/dev/null
     echo "--- devkit --version"
     uv run devkit --version
     uv run python -c "
@@ -173,7 +200,7 @@ with discover_bundles() as bundles:
         'devkit': 'devkit-dist', 'advisory': 'devkit-dist', 'git-commits': 'devkit-dist',
         'authoring': 'devkit-agt', 'harness': 'devkit-agt',
     }
-    assert {item.bundle.name for item in bundles if item.package == 'devkit-catalog'} == {'host-observer', 'response-style', 'maintenance'}
+    assert {item.bundle.name for item in bundles if item.package == 'devkit-catalog'} == {'host-observer', 'response-style', 'maintenance', 'cli-tool'}
 "
     echo "--- devkit sync (built-in bundles are selected by default)"
     uv run devkit sync >/dev/null
@@ -184,6 +211,7 @@ with discover_bundles() as bundles:
     test -f .devkit/managed/harness/instructions/devkit-run.md
     test ! -e .devkit/managed/host-observer
     test ! -e .devkit/managed/response-style
+    test ! -e .devkit/managed/cli-tool
     echo "--- response templates: lazy imports, configured language and final output"
     uv run python -c '
 import sys
@@ -210,6 +238,21 @@ assert "read and apply the `response-style` skill" in Path("AGENTS.md").read_tex
 '
     uv run devkit sync --check >/dev/null
     uv run devkit remove response-style >/dev/null
+    echo "--- cli-tool: the structure rules load from the installed catalog and check a tool"
+    uv run devkit add cli-tool >/dev/null
+    mkdir -p src/smoketool
+    printf 'import click\nimport httpx\n\n\n@click.command()\ndef main():\n    print("x")\n' > src/smoketool/cli.py
+    status=0
+    uv run devkit rules check --format json src/smoketool/cli.py >"$work/cli-tool.json" 2>/dev/null || status=$?
+    [ "$status" -eq 1 ] || { echo "error: devkit rules check exited $status on the cli-tool sample, expected 1" >&2; exit 1; }
+    uv run python - "$work/cli-tool.json" <<'PY'
+import json, sys
+found = {item["rule_id"] for item in json.load(open(sys.argv[1]))["violations"]}
+expected = {"RULE-cli-tool-command-boundary", "RULE-cli-tool-library-output", "RULE-cli-tool-heavy-imports"}
+assert expected <= found, found
+PY
+    rm -r src/smoketool
+    uv run devkit remove cli-tool >/dev/null
     echo "--- host hooks: preserve foreign entries, dispatch from a subdirectory, inspect and remove"
     mkdir -p .codex host-subdir
     cat > .codex/hooks.json <<'JSON'

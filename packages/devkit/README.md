@@ -3,18 +3,18 @@
 The devkit developer harness: repository rules, delivery workflows, commit gates, task worktrees, tracked generated
 files, approval-bound integration and compact command output, mounted under the `devkit` command line of
 [`devkit-dist`](../devkit-dist/README.md). The distribution name is `devkit-agt`; imports use the regular `devkit_agt` package. It
-depends on `devkit-dist` and `devkit-advisory` at its own version (the three are released in lockstep), so installing
+depends on `devkit-dist` and `devkit-advisory` at its own version (released in lockstep; see `ARCH-07-deployment`), so installing
 `devkit-agt` installs the whole CLI: every distribution command of `devkit-dist` plus `devkit rules`,
 `devkit workflow`, `devkit gate`, `devkit worktree`, `devkit generated`, `devkit integration` and `devkit run`. It
 ships no console script of its own: its commands are `devkit.commands` plugins (`ARCH-05-3-command-plugins`).
 Requires Python 3.12 or later; runtime dependencies are `devkit-core`, `click`, `pyyaml`, `tomlkit`, `devkit-dist` and
-`devkit-advisory`. The `search` extra selects `devkit-dist[search]` for dense/hybrid search. The `mcp` extra selects the same-version
+`devkit-advisory` (`devkit-dist` brings `devkit-cli`). The `search` extra selects `devkit-dist[search]` for dense/hybrid search. The `mcp` extra selects the same-version
 `devkit-mcp` wheel for optional transport and forms. Domain integration imports only dependency-free core contracts.
 
 ## Install
 
-No package index hosts the wheel; install it from Git, which brings `devkit-dist` and `devkit-advisory` from the same
-commit, or by URL from a GitHub Release with the `devkit-dist` and `devkit-advisory` wheels next to it (see the
+No package index hosts the wheel; install it from Git, which brings `devkit-dist`, `devkit-core`, `devkit-cli` and
+`devkit-advisory` from the same commit, or by URL from a GitHub Release with those wheels next to it (see the
 [root README](../../README.md#using-devkit-in-another-project)):
 
 ```bash
@@ -24,7 +24,7 @@ uv run devkit add <bundle>    # selects any other bundle: built-in opt-in ones o
 ```
 
 A Git installation declares `devkit-agt` or `devkit-dist`, never both; a release-wheel installation of `devkit-agt`
-names the `devkit-dist` and `devkit-advisory` wheels next to it only because no index serves them. A tool installation names the owner of the executable
+names the `devkit-dist`, `devkit-core`, `devkit-cli` and `devkit-advisory` wheels next to it only because no index serves them. A tool installation names the owner of the executable
 and adds this package: `uv tool install 'devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist' --with 'devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit'`.
 
 The bundles built into this package are `harness` (auto-selected: the guidance for rules, commit gates, workflows

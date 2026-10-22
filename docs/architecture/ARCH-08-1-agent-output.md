@@ -8,7 +8,7 @@ created_at: 2026-10-17
 
 # [ARCH-08-1-agent-output] Agent-First Output
 
-The primary consumer of every `devkit` command is an AI coding agent that runs it through a shell or a tool call and acts on what comes back; a person reads the same output, but nothing is shaped for a person at the agent's expense. Everything a command prints lands in the agent's context window, so output is a contract, not a log. This document specifies that contract; the advisory blocks themselves are specified in the `CAP-ADV-agent-advisory-protocol`, exit codes in `ARCH-08-cross-cutting`.
+The primary consumer of every `devkit` command is an AI coding agent that runs it through a shell or a tool call and acts on what comes back; a person reads the same output, but nothing is shaped for a person at the agent's expense. Everything a command prints lands in the agent's context window, so output is a contract, not a log. This document specifies that contract; the advisory blocks themselves are specified in the `CAP-ADV-agent-advisory-protocol`, exit codes in `ARCH-08-cross-cutting`. The contract is implemented once, in `devkit_cli`, so a click tool outside devkit reports the same way under its own logger and environment prefix (`CAP-CLI-agent-cli-toolkit`).
 
 ## 1. Principles
 
@@ -118,7 +118,8 @@ Diagnostics that neither change the agent's next step nor need to reach the user
 | Concern | Where |
 | --- | --- |
 | Advisory model, levels, modes, `[ACTION]` texts, block rendering, `to_dict` | `devkit.advisory` ([reference](../development/reference/advisory.md)) |
-| `boundary` (with `output_options` and the log handler), `echo_notices`, `exit_on_warnings`, `echo_json`, `exit_on_problems` | `devkit_dist.adapters.cli` ([reference](../development/reference/core.md)) |
+| `Boundary` (with `output_options` and the log handler), `echo_notices`, `exit_on_warnings`, `echo_json`, `exit_on_problems`, `LazyGroup` | `devkit_cli` (`CAP-CLI-agent-cli-toolkit`) |
+| devkit's `boundary` (`Boundary("devkit")`: the `devkit` logger, `DEVKIT_*` variables) and the re-exported helpers every devkit command imports | `devkit_dist.adapters.cli` ([reference](../development/reference/core.md)) |
 | `NullHandler` on the `devkit` logger, `get_logger` for every module | `devkit_core.core.logs` |
 | Result lines and JSON payloads of each command | each area's `cli/` package, documented in its reference |
 | Warnings and notices each area reports | each area's reference (error and notice code tables) |

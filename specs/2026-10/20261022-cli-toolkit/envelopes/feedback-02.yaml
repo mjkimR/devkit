@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T01:51:44.547112Z'
+status: completed
+summary: 'Supersedes feedback-01: both recorded observations were deleted by user decision, since their cause was a session started outside the repository, not a devkit defect. No feedback remains for this unit.'
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0

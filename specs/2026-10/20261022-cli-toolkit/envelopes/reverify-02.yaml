@@ -1,0 +1,22 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T01:25:08.606586Z'
+status: completed
+review: review-02.yaml
+summary: 'closes review-02; minor-fix self-verification: wording only at the named locations (guides/install/mcp.md:4, the release.sh comment its suggested_action names), no contract, API or output change; diff limited to those lines.'
+findings:
+- issue: The MCP install guide describes release-wheel installation with only the dist, advisory and runtime wheels, omitting devkit-core and devkit-cli, which devkit-dist pins and no index serves.
+  evidence: guides/install/mcp.md:4; scripts/release.sh:65; packages/devkit-dist/pyproject.toml:8-9
+  failure_condition: A user installs devkit-mcp from release wheels following the guide and names only dist, advisory and mcp; uv cannot resolve devkit-core or devkit-cli.
+  suggested_action: Name the devkit-dist, devkit-core, devkit-cli, devkit-advisory and devkit-mcp wheels; optionally fix the comment at scripts/release.sh:55.
+  resolution: resolved
+  severity: P3
+checks:
+  rules: PASS just rules-check
+  lockstep: PASS test_lockstep
+diff_scope:
+  base: 33daee77ecd27af96a124ad17049bed5d13b532a
+  head: c04501433d17b24d65096f803d96064249d37ec2
+activity_effort: high

@@ -31,8 +31,10 @@ capabilities/
 │   └── CAP-INT-<slug>.md
 ├── generated/
 │   └── CAP-GEN-<slug>.md
-└── advisory/
-    └── CAP-ADV-<slug>.md
+├── advisory/
+│   └── CAP-ADV-<slug>.md
+└── cli/
+    └── CAP-CLI-<slug>.md
 ```
 
 - File name is `CAP-<AREA>-<slug>.md` and frontmatter `id` matches the file stem without sequence numbers.

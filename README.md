@@ -20,7 +20,8 @@ and asks before writing anything or committing. The guides live in [`guides/`](g
 
 ## Structure
 
-`packages/devkit-core` owns the independent `devkit_core` foundation;
+`packages/devkit-core` owns the independent `devkit_core` foundation; `packages/devkit-cli` the agent-first
+command-line boundary (`devkit_cli`) that `devkit` and other repositories' click tools build on;
 `packages/devkit-dist` is the distribution package with the CLI, `packages/devkit` the harness package
 (`devkit-agt`), `packages/devkit-advisory` the `devkit.advisory` library shipped on its own for other
 repositories' runtime,
@@ -64,9 +65,9 @@ just --list                # every recipe (rules-fix, rules-phases, rules-explai
 ```
 
 Module commands discover projects from `packages/*/pyproject.toml` and
-`tools/*/pyproject.toml`; pass a project name (`devkit-core`, `devkit-dist`, `devkit-agt`, `devkit-advisory`,
+`tools/*/pyproject.toml`; pass a project name (`devkit-core`, `devkit-cli`, `devkit-dist`, `devkit-agt`, `devkit-advisory`,
 `devkit-spec`, `devkit-starter`, `devkit-catalog` or `devkit-viewer`) or `all`. Short names are accepted too:
-`agt` and `devkit` for `devkit-agt`, and `dev`, `core`, `dist`, `mcp`, `starter`, `catalog`, `spec` and `viewer` for
+`agt` and `devkit` for `devkit-agt`, and `dev`, `core`, `cli`, `dist`, `mcp`, `starter`, `catalog`, `spec` and `viewer` for
 `devkit-<name>` (`scripts/_lib.sh` `module_short_names`; an unknown name prints both lists). Feature names select their tests across tiers and matching source subtrees; tier names (`unit`, `integration`, `e2e`) or explicit paths also narrow `test` and `test-cov`, and extra pytest arguments follow them: `just test devkit gate worktree -k cache`. `just test-affected [--base REF] [--list] [-- PYTEST-ARGS]` derives the paths from the changes since the merge base with `main`.
 
 This repository's lint, type-check and test recipes use `devkit run` for bounded output.
@@ -77,7 +78,7 @@ and separately runs the compact tests through `devkit run`.
 `uv run pytest` from the repository root runs every test.
 
 The CLI (`devkit`), bundle names and entry-point groups retain their names. Python imports expose
-wheel ownership: `devkit_dist`, `devkit_agt`, `devkit_core`, `devkit_spec`, `devkit_mcp` and
+wheel ownership: `devkit_dist`, `devkit_agt`, `devkit_core`, `devkit_cli`, `devkit_spec`, `devkit_mcp` and
 `devkit_viewer`. The runtime advisory library preserves `devkit.advisory`. The distributions are
 `devkit-dist` and `devkit-agt` to avoid confusion with the unrelated `devkit` project on PyPI.
 They are not published to PyPI; install them from Git or an explicit wheel URL/path.
@@ -92,11 +93,13 @@ base=https://github.com/mjkimR/devkit/releases/download/v<version>
 uv add --dev "devkit-agt @ $base/devkit_agt-<version>-py3-none-any.whl" \
   "devkit-dist @ $base/devkit_dist-<version>-py3-none-any.whl" \
   "devkit-core @ $base/devkit_core-<version>-py3-none-any.whl" \
+  "devkit-cli @ $base/devkit_cli-<version>-py3-none-any.whl" \
   "devkit-advisory @ $base/devkit_advisory-<version>-py3-none-any.whl"
 # or, with dense and hybrid search (numpy, tokenizers and the 15 MB embedding model):
 uv add --dev "devkit-agt[search] @ $base/devkit_agt-<version>-py3-none-any.whl" \
   "devkit-dist[search] @ $base/devkit_dist-<version>-py3-none-any.whl" \
   "devkit-core @ $base/devkit_core-<version>-py3-none-any.whl" \
+  "devkit-cli @ $base/devkit_cli-<version>-py3-none-any.whl" \
   "devkit-advisory @ $base/devkit_advisory-<version>-py3-none-any.whl" \
   "devkit-embed @ $base/devkit_embed-0.1.0-py3-none-any.whl"
 
@@ -106,21 +109,23 @@ uv run devkit list
 uv run devkit rules check
 ```
 
-`devkit-agt` requires `devkit-dist`, `devkit-core` and `devkit-advisory` of the same version, and no index serves them, so
-all four wheels are named. A repository that only deploys agent assets installs `devkit-dist` (with
-`devkit-core` and `devkit-advisory`) alone: it gets sync, context loading, playbooks and native hooks, the `devkit` and `advisory`
+`devkit-agt` requires `devkit-dist`, `devkit-core`, `devkit-cli` and `devkit-advisory` of the same version, and no index
+serves them, so all five wheels are named. A repository that only deploys agent assets installs `devkit-dist` (with
+`devkit-core`, `devkit-cli` and `devkit-advisory`) alone: it gets sync, context loading, playbooks and native hooks, the `devkit` and `advisory`
 bundles, and no harness command or guidance (`devkit rules` and the other harness commands answer with
 `HARNESS_COMMAND_UNAVAILABLE`). A Git installation declares exactly one of the two, never both (`devkit-agt` brings
-`devkit-dist` from the same commit); a release-wheel installation of `devkit-agt` names the `devkit-dist`, `devkit-core` and
-`devkit-advisory` wheels next to it only because no index serves them. A library or service that only raises
+`devkit-dist` from the same commit); a release-wheel installation of `devkit-agt` names the `devkit-dist`, `devkit-core`, `devkit-cli`
+and `devkit-advisory` wheels next to it only because no index serves them. A library or service that only raises
 and renders advisories at runtime depends on `devkit-advisory` alone (standard library only, no CLI, no bundles);
-its development tooling adds `devkit-dist` or `devkit-agt`. The import remains `devkit.advisory`; only the advisory wheel contributes to the `devkit` namespace. A tool installation names the owner of the `devkit` executable
+its development tooling adds `devkit-dist` or `devkit-agt`. A click tool that agents run depends at runtime on
+`devkit-cli` (with `devkit-advisory`) for devkit's output contract, and its repository can select the opt-in `cli-tool`
+bundle of `devkit-catalog` for the structure guide and rules. The import remains `devkit.advisory`; only the advisory wheel contributes to the `devkit` namespace. A tool installation names the owner of the `devkit` executable
 and adds the harness: `uv tool install <devkit-dist requirement> --with <devkit-agt requirement>`.
 
 A wheel built here works the same way by path
 (`uv build --all-packages --wheel --out-dir dist`). Installing from Git
 (`[tool.uv.sources]` with `subdirectory = "packages/devkit"`, or `packages/devkit-dist`) brings
-`devkit-dist` and `devkit-advisory` from the same commit and, with the `search` extra, the model
+`devkit-dist`, `devkit-core`, `devkit-cli` and `devkit-advisory` from the same commit and, with the `search` extra, the model
 wheel from the release `packages/devkit-dist/pyproject.toml` pins: uv applies a Git
 dependency's own sources. Declare none of them again with another source, or uv
 reports conflicting URLs. The example content
@@ -146,15 +151,16 @@ without a consumer project, point `-w` at an existing empty directory:
 
 ## Releasing
 
-Set the new version in `packages/devkit-dist/pyproject.toml`, `packages/devkit/pyproject.toml` and
-`packages/devkit-advisory/pyproject.toml` (with the exact pins between them), merge to `main`, then
+Set the new version in the `pyproject.toml` of `packages/devkit-core`, `packages/devkit-cli`, `packages/devkit-dist`,
+`packages/devkit`, `packages/devkit-advisory` and `packages/devkit-mcp` (with the exact pins between them), merge to
+`main`, then
 push a matching tag: `git tag v0.2.0 && git push origin v0.2.0`. The release
 workflow runs the full CI on the tagged commit, refuses a tag that is not on
-`main` or does not match all three versions, builds the wheels with
+`main` or does not match all six versions, builds the wheels with
 `just release-build <tag>` (try it locally) and
-publishes the release. `devkit-dist`, `devkit-agt` and `devkit-advisory` are released in lockstep:
-`devkit-agt` pins `devkit-dist` and `devkit-advisory` exactly, `devkit-dist` pins `devkit-advisory`, and a test
-checks all three. `devkit-spec`, `devkit-starter`, `devkit-catalog` and `devkit-viewer` keep their own versions.
+publishes the release. `devkit-core`, `devkit-cli`, `devkit-dist`, `devkit-agt`, `devkit-advisory` and `devkit-mcp` are released in lockstep: each pins
+exactly the lockstep packages it depends on, and `test_lockstep` checks the shared version and the pins of
+`devkit-agt`, `devkit-dist` and `devkit-cli`. `devkit-spec`, `devkit-starter`, `devkit-catalog` and `devkit-viewer` keep their own versions.
 
 `devkit-embed` keeps its own version too and is not rebuilt by releases: devkit
 installs it, in this workspace and from Git, from the committed wheel in

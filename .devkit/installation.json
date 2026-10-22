@@ -1210,7 +1210,7 @@
     },
     ".devkit/managed/advisory/instructions/agent-advisory-python.md": {
       "mode": 420,
-      "sha256": "840875cf16f26a6ebd23979fcf2629b7fa3ec363ae8632d209861acd845ccd4f"
+      "sha256": "7646b886ad3107c572327b88ff3abc36650488b5c6c0f2cb07425e42f69fce20"
     },
     ".devkit/managed/advisory/instructions/agent-advisory.md": {
       "mode": 420,
@@ -1266,7 +1266,7 @@
     },
     ".devkit/managed/devkit-dev/instructions/project-structure.md": {
       "mode": 420,
-      "sha256": "ab40efdbbbdf1224649df2ce9abaaabf5276d50921b46565f1105e5f200795dd"
+      "sha256": "9d1086b885ecffd78ff5436d45ce76da1b3281b06d51f06d9e6b5f5859ce5c9c"
     },
     ".devkit/managed/devkit-dev/instructions/testing.md": {
       "mode": 420,

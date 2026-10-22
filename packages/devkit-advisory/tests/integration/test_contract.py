@@ -60,6 +60,7 @@ def test_the_public_names_are_pinned() -> None:
         "Advisory",
         "AdvisoryError",
         "AdvisoryFields",
+        "ArgumentError",
         "ExitCode",
         "Level",
         "Retry",

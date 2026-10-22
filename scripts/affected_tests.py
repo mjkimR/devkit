@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 # Changes every test can depend on: the lowest layers, the CLI assembly, packaging and shared test fixtures.
 FULL_PREFIXES = (
     "packages/devkit-core/",
+    "packages/devkit-cli/",
     f"{DIST_SRC}/base/",
     f"{DIST_SRC}/adapters/",
     f"{DIST_SRC}/features/project/",

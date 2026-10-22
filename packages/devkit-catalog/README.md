@@ -8,6 +8,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 | --- | --- | --- |
 | `response-style` | `all` | Answer-first user-facing replies that keep decision-critical facts, with configurable conversation language |
 | `maintenance` | `all`, `upkeep`, `reporting` | Manual drift reconciliation and evidence-based weekly reporting |
+| `cli-tool` | `all`, `guide` | Structure guide for agent-facing click tools on `devkit-cli`, with rules for command boundaries, library output and heavy imports; `CAP-CLI-agent-cli-toolkit` |
 | `host-observer` | `all` | Codex lifecycle hook registrations using devkit's metadata-only observer; `CAP-HOST-lifecycle-observation` |
 
 ```bash
@@ -21,7 +22,7 @@ uv run devkit add host-observer                      # the default preset (all)
 A catalog bundle holds content only: instructions, playbooks, skills, documents,
 guidance fragments, rules and declarative hooks using installed devkit handlers (its rules run where `devkit-agt` is
 installed). A bundle that needs devkit code (a gate, a workflow check, a command) belongs in `devkit-agt` instead.
-The tests load the bundles with the manifest reader of `devkit-dist`, the package's only development dependency.
+The tests load the bundles with the manifest reader of `devkit-dist`; rule tests use the rules engine of `devkit-agt`.
 
 1. Create `src/devkit_catalog/<module>/__init__.py` (empty) and
    `src/devkit_catalog/<module>/bundle/bundle.toml` with the package version.

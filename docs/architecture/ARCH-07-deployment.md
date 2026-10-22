@@ -22,6 +22,9 @@ GitHub Release Assets (vX.Y.Z):
 ├── devkit_dist-X.Y.Z-py3-none-any.whl
 ├── devkit_agt-X.Y.Z-py3-none-any.whl
 ├── devkit_advisory-X.Y.Z-py3-none-any.whl
+├── devkit_core-X.Y.Z-py3-none-any.whl
+├── devkit_cli-X.Y.Z-py3-none-any.whl
+├── devkit_mcp-X.Y.Z-py3-none-any.whl
 ├── devkit_spec-<spec-version>-py3-none-any.whl
 ├── devkit_starter-<starter-version>-py3-none-any.whl
 ├── devkit_catalog-<catalog-version>-py3-none-any.whl
@@ -43,16 +46,16 @@ uv add --dev "devkit-spec @ git+https://github.com/mjkimR/devkit.git#subdirector
 uv add --dev "devkit-viewer @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-viewer"
 ```
 
-`uv.lock` pins the resolved commits. A Git requirement on `devkit-agt` brings `devkit-dist` and `devkit-advisory` from
-the same commit (their workspace sources), and the `search` extra brings the model wheel from the release
-`packages/devkit-dist/pyproject.toml` pins. `devkit-dist`, `devkit-agt` and `devkit-advisory` share a version and are
-released with optional `devkit-mcp` in lockstep from one tag (each foundation dependency is pinned exactly); spec, starter, catalog and viewer keep
+`uv.lock` pins the resolved commits. A Git requirement on `devkit-agt` brings `devkit-dist`, `devkit-core`, `devkit-cli` and
+`devkit-advisory` from the same commit (their workspace sources), and the `search` extra brings the model wheel from the release
+`packages/devkit-dist/pyproject.toml` pins. `devkit-dist`, `devkit-agt`, `devkit-core`, `devkit-cli` and `devkit-advisory` share a
+version and are released with optional `devkit-mcp` in lockstep from one tag (each foundation dependency is pinned exactly); spec, starter, catalog and viewer keep
 independent versions. A tool installation names the owner of the `devkit` executable and adds the harness:
 `uv tool install <devkit-dist requirement> --with <devkit-agt requirement>` (`ARCH-05-3-command-plugins`). The viewer's Svelte library is not a release asset: a host such as autohub
 vendors its `npm pack` tarball from a pinned commit (`CAP-VIEW-repository-viewer`). Release-wheel installations
-name every required local package wheel explicitly (a `devkit-agt` installation names the `devkit-dist` and
-`devkit-advisory` wheels too); release notes include the harness, distribution-only, SDD, viewer and tool installation
-commands.
+name every required local package wheel explicitly (a `devkit-agt` installation names the `devkit-dist`, `devkit-core`,
+`devkit-cli` and `devkit-advisory` wheels too); release notes include the harness, distribution-only, SDD, viewer and tool installation
+commands, and the runtime-only `devkit-advisory` and `devkit-cli` (with `devkit-advisory`) installations.
 
 ---
 

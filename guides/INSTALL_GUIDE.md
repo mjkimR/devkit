@@ -60,7 +60,8 @@ When unsure, take the existing-repository route: its analysis is read-only and c
 
 ## Step 3: Package sources
 
-Install from Git. uv resolves `devkit-dist` and `devkit-advisory` from the same commit automatically, and `uv.lock`
+Install from Git. uv resolves `devkit-dist`, `devkit-core`, `devkit-cli` and `devkit-advisory` from the same commit
+automatically, and `uv.lock`
 pins the commit. Declare exactly one devkit requirement:
 
 ```bash
@@ -86,8 +87,9 @@ uv add --dev "devkit-catalog @ git+https://github.com/mjkimR/devkit.git#subdirec
   (`WORKTREE_GIT_UNSUPPORTED`).
 - Release wheels are an alternative only when `gh release view --repo mjkimR/devkit` lists `devkit_dist-*.whl` and
   `devkit_agt-*.whl` (and `devkit_catalog-*.whl` when needed); a `devkit-agt` wheel installation also names the
-  `devkit-dist` and `devkit-advisory` wheels of that release. Never mix Git and wheel sources for these packages.
-- Upgrading later: `uv lock --upgrade-package devkit-agt --upgrade-package devkit-dist --upgrade-package devkit-advisory`
+  `devkit-dist`, `devkit-core`, `devkit-cli` and `devkit-advisory` wheels of that release. Never mix Git and wheel sources for these packages.
+- Upgrading later: `uv lock --upgrade-package devkit-agt --upgrade-package devkit-dist --upgrade-package devkit-core
+  --upgrade-package devkit-cli --upgrade-package devkit-advisory`
   (plus `--upgrade-package devkit-catalog`), then `uv sync` and `uv run devkit sync`. The first upgrade from a
   `devkit-agt` that predates `devkit-dist` follows
   [Upgrading across the package split](install/existing-repository.md#upgrading-across-the-package-split).

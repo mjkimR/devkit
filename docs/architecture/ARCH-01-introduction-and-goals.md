@@ -15,7 +15,7 @@ created_at: 2026-10-17
 
 ## 1. Mission
 
-`devkit` is a developer tooling suite for engineering teams collaborating with AI coding agents (such as Codex, Claude Code, and Antigravity). It ships one CLI (`devkit`) in two Python distributions released in lockstep: `devkit-dist` (asset distribution with the shared foundation, host hooks, search and the `devkit` executable) and `devkit-agt` (the developer harness: rules, workflows, gates, worktrees, generated files, integration and compact output, mounted under the same executable), which depends on it; a repository that only deploys agent assets installs `devkit-dist` alone. Its `devkit.advisory` library is also published on its own as `devkit-advisory`, the standard-library-only runtime dependency of repositories that report advisories from their own code.
+`devkit` is a developer tooling suite for engineering teams collaborating with AI coding agents (such as Codex, Claude Code, and Antigravity). It ships one CLI (`devkit`) in two Python distributions released in lockstep: `devkit-dist` (asset distribution with the shared foundation, host hooks, search and the `devkit` executable) and `devkit-agt` (the developer harness: rules, workflows, gates, worktrees, generated files, integration and compact output, mounted under the same executable), which depends on it; a repository that only deploys agent assets installs `devkit-dist` alone. Its `devkit.advisory` library is also published on its own as `devkit-advisory`, the standard-library-only runtime dependency of repositories that report advisories from their own code, and its command-line boundary as `devkit-cli`, the runtime dependency of other repositories' click tools that agents run.
 
 Its primary mission is to provide an **agent-first developer harness** that unifies:
 1. **Asset Distribution & Guidance Delivery (`devkit_dist.features.distribution`)**: packaging, versioning, selecting, and synchronizing agent guidance, instructions, playbooks, native skills, subagent roles, and bundle assets across repositories.
@@ -23,10 +23,11 @@ Its primary mission is to provide an **agent-first developer harness** that unif
 3. **Delivery Workflow Orchestration (`devkit_agt.features.workflow`)**: multi-stage delivery procedures declared as data, tracking activity progress, envelopes, and human decisions.
 4. **Commit Gates (`devkit_agt.features.gate`)**: pluggable commit-time policy enforcement through static wrappers and layered configuration.
 5. **Agent Advisories (`devkit.advisory`)**: the Agent Advisory Protocol reporting structured errors, warnings, and notices with machine-actionable directives.
-6. **Compact Command Output (`devkit_agt.features.compact`)**: bounded command execution for agents with full logs saved to disk (`devkit run`).
-7. **Task Worktrees (`devkit_agt.features.worktree`)**: activity branches and isolated Git worktrees for safe parallel task execution.
-8. **Document Search (`devkit_dist.features.search`)**: lexical, dense, and hybrid ranking over project documents.
-9. **Host & Scoped Integration (`devkit_dist.features.host`, `devkit_agt.features.integration`)**: lifecycle observation, native hooks, and MCP service endpoints.
+6. **Agent-First CLI Toolkit (`devkit_cli`, `cli-tool` bundle)**: the output contract of `devkit` commands for any click tool, with an opt-in structure guide and rules for such tools (`CAP-CLI-agent-cli-toolkit`).
+7. **Compact Command Output (`devkit_agt.features.compact`)**: bounded command execution for agents with full logs saved to disk (`devkit run`).
+8. **Task Worktrees (`devkit_agt.features.worktree`)**: activity branches and isolated Git worktrees for safe parallel task execution.
+9. **Document Search (`devkit_dist.features.search`)**: lexical, dense, and hybrid ranking over project documents.
+10. **Host & Scoped Integration (`devkit_dist.features.host`, `devkit_agt.features.integration`)**: lifecycle observation, native hooks, and MCP service endpoints.
 
 ---
 

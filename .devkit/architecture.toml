@@ -15,6 +15,13 @@ root_modules = ["base", "core"]
 dependencies = ["devkit.advisory"]
 
 [[packages]]
+namespace = "devkit_cli"
+root = "packages/devkit-cli/src/devkit_cli"
+kind = "foundation"
+root_modules = ["boundary", "lazy", "output", "testing"]
+dependencies = ["devkit.advisory"]
+
+[[packages]]
 namespace = "devkit_dist"
 root = "packages/devkit-dist/src/devkit_dist"
 kind = "features"
@@ -26,7 +33,7 @@ feature_dependencies.shared = ["devkit_dist.features.project"]
 feature_dependencies.search = []
 root_modules = ["cli", "__main__", "bootstrap", "adapters"]
 data_roots = ["bundles"]
-dependencies = ["devkit_core", "devkit.advisory"]
+dependencies = ["devkit_core", "devkit_cli", "devkit.advisory"]
 
 public_modules = [
     "devkit_dist.features.shared.models.api",
@@ -168,7 +175,7 @@ data_roots = ["bundle"]
 namespace = "devkit_catalog"
 root = "packages/devkit-catalog/src/devkit_catalog"
 kind = "content"
-data_roots = ["response_style", "host_observer", "maintenance"]
+data_roots = ["response_style", "host_observer", "maintenance", "cli_tool"]
 
 [[import_exceptions]]
 source = "devkit_agt.features.rules.models.contracts"

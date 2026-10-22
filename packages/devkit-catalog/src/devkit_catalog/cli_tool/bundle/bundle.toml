@@ -1,0 +1,31 @@
+schema = 1
+name = "cli-tool"
+version = "0.1.0"
+default_preset = "all"  # the structure guide and its three rules (the rules run where devkit-agt is installed)
+
+[[assets]]
+id = "cli-tool-structure"
+kind = "instruction"
+source = "instructions/cli-tool-structure.md"
+
+# Linter error unless every click command in a CLI module has the devkit_cli boundary decorator.
+[[assets]]
+id = "command-boundary"
+kind = "rule"
+source = "rules/command_boundary"
+
+# Linter error for print anywhere and terminal writes outside CLI modules.
+[[assets]]
+id = "library-output"
+kind = "rule"
+source = "rules/library_output"
+
+# Linter error for heavy libraries imported at module level of a CLI module.
+[[assets]]
+id = "heavy-imports"
+kind = "rule"
+source = "rules/heavy_imports"
+
+# The structure guide alone, for a project without devkit-agt.
+[presets.guide]
+assets = ["cli-tool-structure"]

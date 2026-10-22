@@ -4,9 +4,10 @@ The Python library of the `CAP-ADV-agent-advisory-protocol`: `devkit.advisory`, 
 errors, warnings and notices with stable codes and deterministic `[ACTION]` directives. Requires Python 3.12 or
 later and nothing else: standard library only, no entry points, no CLI.
 
-It is the one part of devkit that other repositories import at runtime, so it ships on its own: a service or
+It is a part of devkit that other repositories import at runtime (with `devkit-cli` for their click tools), so it
+ships on its own: a service or
 library depends on `devkit-advisory`, and its development tooling on `devkit-dist` or `devkit-agt`, which depend on
-the same version of this package (the three are released in lockstep). `devkit` is a namespace package shared by
+the same version of this package (released in lockstep; see `ARCH-07-deployment`). `devkit` is a namespace package shared by
 these distributions, so the import is `from devkit.advisory import AdvisoryError` either way.
 
 ## Install

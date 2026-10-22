@@ -31,12 +31,12 @@ answers with ``HARNESS_COMMAND_UNAVAILABLE`` and the directive to add
 from __future__ import annotations
 
 import functools
-import importlib
 import itertools
 import sys
 from typing import TYPE_CHECKING
 
 import click
+from devkit_cli import LazyGroup
 
 if TYPE_CHECKING:
     from importlib.metadata import EntryPoint
@@ -104,7 +104,7 @@ def _unusable(name: str, error: AdvisoryError) -> click.Command:
 
     def report(args: tuple[str, ...]) -> None:
         if _json_requested(args):
-            from devkit_dist.adapters.cli import echo_json
+            from devkit_cli import echo_json
 
             echo_json({"error": error.to_dict()})
         else:
@@ -152,23 +152,16 @@ def _harness_unavailable(name: str) -> click.Command | None:
     return _unusable(name, error)
 
 
-class _LazyGroup(click.Group):
-    """A group that imports a command's module only when the command is looked up."""
+class _LazyGroup(LazyGroup):
+    """The root group: the built-in ``COMMANDS`` load lazily, then installed plugins and harness stand-ins by name."""
 
     def list_commands(self, ctx: click.Context) -> list[str]:
-        return sorted({*super().list_commands(ctx), *COMMANDS, *plugin_entry_points()})
+        return sorted({*super().list_commands(ctx), *plugin_entry_points()})
 
-    def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
-        command = super().get_command(ctx, cmd_name)
-        if command is not None:
-            return command
-        if cmd_name not in COMMANDS:
-            return _load_plugin(cmd_name) or _harness_unavailable(cmd_name)
-        module, _, attribute = COMMANDS[cmd_name].partition(":")
-        command = getattr(importlib.import_module(module), attribute)
-        if not isinstance(command, click.Command):
-            raise TypeError(f"{COMMANDS[cmd_name]} is not a click command")
-        return command
+    def resolve_lazy(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
+        if cmd_name in COMMANDS:
+            return super().resolve_lazy(ctx, cmd_name)
+        return _load_plugin(cmd_name) or _harness_unavailable(cmd_name)
 
 
 def _print_version(ctx: click.Context, _param: click.Parameter, value: bool) -> None:
@@ -180,7 +173,7 @@ def _print_version(ctx: click.Context, _param: click.Parameter, value: bool) -> 
     ctx.exit()
 
 
-@click.group(name="devkit", cls=_LazyGroup)
+@click.group(name="devkit", cls=_LazyGroup, lazy_commands=COMMANDS)
 @click.option(
     "--version",
     is_flag=True,
