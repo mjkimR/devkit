@@ -32,8 +32,8 @@ targets:
   diagnoses of failures that already stopped integration. The P3 of `reconcile-check-01.yaml` (no extension for the
   two codes) is waived: the use case already leaves executor refusal codes such as `INTEGRATION_NOT_READY` and
   `INTEGRATION_RECEIPT_CONFLICT` to `CAP-INT-mcp-services`, which now states both recoveries, and `docs/usecases/`
-  is outside this development turn's write scope. Adding coded integration extensions to the use case is a
-  separate documentation change for the Host to schedule.
+  is outside this development turn's write scope. Adding coded integration extensions to the use case is tracked
+  as `FB-integration-usecase-coded-extensions`.
 
 ## Source feedback
 
