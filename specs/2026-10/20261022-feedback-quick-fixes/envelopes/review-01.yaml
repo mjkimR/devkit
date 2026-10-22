@@ -1,0 +1,22 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T23:45:37.692240Z'
+status: completed
+summary: 'self-review (low): diff matches AC-01..AC-05; refusal sits in the shared validator used by shared and local readers; short-name table drives resolution and refusal; wording-only guide changes with no engine change; no findings.'
+findings: []
+assumptions:
+- ADR-shared-language-preference-with-bounded-approval-content fallback outcome is replaced by the recorded plan-intent; no superseding ADR is written in this unit (docs/decisions denied)
+unverified_areas:
+- native host enforcement of nested-role read scopes
+checks:
+  lint: PASS just lint devkit-dist, devkit-spec
+  typecheck: PASS just check devkit-dist, devkit-spec
+  tests: PASS just test-affected mode=full 4461 passed 14 skipped
+  rules: PASS devkit rules check --staged (commit gate)
+  manual: PASS just lint-check agt; module.sh lint-check nope exit 1 with short-name line
+diff_scope:
+  base: 490b0b287a719336b4192fc2f37eabe44d20854f
+  head: ce73e4fb1b3ce7c7148622e479b2831e30cf5484
+activity_effort: low
