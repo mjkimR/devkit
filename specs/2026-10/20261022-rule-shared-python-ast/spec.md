@@ -4,11 +4,10 @@ title: Parse each Python file once per rules run
 summary: Adds a parsed-AST accessor to the rules workspace cache so Python-source rules share one parse per file and run, and resolves each rule path once per run, removing about 1,000 repeated parses, their garbage collection and most repeated path resolution from devkit rules check.
 status: planned
 created: 2026-10-22
-related_capabilities: []
+related_capabilities: [CAP-GOV-rule-authoring, CAP-GOV-evaluation-lifecycle, CAP-GOV-rules-engine]
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-rule-shared-python-ast] Parse each Python file once per rules run
 
@@ -16,171 +15,151 @@ workflow: sdd-spec-feature
 
 Handed off from proposal PROP-rule-shared-python-ast on 2026-10-22.
 - **Preserved Materials**: `docs/materials/2026-10/20261022-rule-shared-python-ast`
+- **Accepted decisions**: `ADR-share-one-read-only-parsed-tree-per-python-file`,
+  `ADR-parse-cached-bytes-once-and-memoize-the-outcome`, `ADR-resolve-rule-paths-once-per-run`.
 
-### 1. Background & Hypothesis
-
-`devkit rules check` takes 4.0-4.4 s on this repository (median 4.29 s; evidence in `docs/materials/2026-10/20261022-rule-shared-python-ast/measurements.md`).
-Three rules in this repository's run parse Python source themselves: the advisory `unique_code` rule and the
-devkit-dev `architecture` and `usecase-boundaries` rules make 1,526 `ast.parse` calls for about 540 files, 0.82 s of
-parsing, and the objects they allocate drive 0.49 s of cyclic garbage collection. They are also the three slowest
-rules (0.90 s, 0.80 s and 0.69 s). The catalog `cli_tool` rules `layers`, `heavy_imports`, `command_boundary` and
-`library_output` parse the same way where a project selects them. The rules `WorkspaceCache` (`RuleContext.cache`)
-already shares bytes, text, frontmatter and Markdown links per run, but not parsed Python. `cli_contract`, named in
-the draft, checks CLI citations in Markdown and parses no Python; it is out of scope.
+`devkit rules check` takes about 4.0 s on this repository (median 4.29 s at Planning, 4.02 s on this unit's base
+47993c48; evidence in `docs/materials/2026-10/20261022-rule-shared-python-ast/measurements.md`). Three rules in this
+repository's run parse Python source themselves: the advisory `unique_code` rule and the devkit-dev `architecture`
+and `usecase-boundaries` rules make 1,529 exec-mode `ast.parse` calls for 540 files on the base, about 0.8 s of
+parsing, and the objects they allocate drive about 0.5 s of cyclic garbage collection. The catalog `cli_tool` rules
+`layers`, `heavy_imports`, `command_boundary` and `library_output` parse the same way where a project selects them.
+The rules `WorkspaceCache` (`RuleContext.cache`) already shares bytes, text, frontmatter and Markdown links per run,
+but not parsed Python.
 
 The same profile shows 22,962 `Path.resolve` calls: `WorkspaceCache._key` resolves on every cache access and
 `RuleContext._relative` resolves even when the lexical path already lies inside the workspace.
 
-Hypothesis, confirmed by a prototype: one parse per file and run, shared through the cache, makes the run about
-0.6 s (14 %) faster with byte-identical output (median 4.29 s to 3.68 s over 7 interleaved runs); resolving each
-path once as well makes it about 1.06 s (25 %) faster (3.23 s), still byte-identical.
+A prototype that parsed each file once and resolved each path once cut the median from 4.29 s to 3.23 s with
+byte-identical output.
+
+### Design
+
+- **Accessor** (`ADR-parse-cached-bytes-once-and-memoize-the-outcome`): `WorkspaceCache.get_python_ast(path) ->
+  ast.Module` parses `read_bytes(path)` once per resolved path and run, under the resolved workspace-relative POSIX
+  name (the resolved absolute path for a file outside the workspace). A `SyntaxError` or `ValueError` is memoized
+  without its traceback and raised again as a fresh, equal exception on every call; a missing file raises
+  `FileNotFoundError` like `read_bytes` and is not memoized. `invalidate` (and so `write_text` and
+  `invalidate_many`) and `invalidate_all` drop the tree or error.
+- **Shared trees** (`ADR-share-one-read-only-parsed-tree-per-python-file`): every caller receives the same cached
+  object; a rule never modifies it and parses its own copy when it needs a changed tree.
+- **Migrated rules**: `RULE-architecture` (`inspect_architecture(root, config_path, *, cache=None)`),
+  `RULE-usecase-boundaries` (`Index` and `inspect_usecases(root, config_path, *, cache=None)`),
+  `RULE-advisory-unique-code` (`parse_module` indexes a tree from the accessor) and the catalog `layers`,
+  `heavy_imports`, `command_boundary` and `library_output` rules parse through the accessor. `cache=None` defaults
+  to a fresh `WorkspaceCache(root)`; the rules pass `ctx.cache`. Every rule keeps its file selection and its handling
+  of an unparsable file.
+- **Path resolution** (`ADR-resolve-rule-paths-once-per-run`): `RuleContext._relative` resolves only when the
+  lexically normalized path is outside the workspace; `WorkspaceCache` memoizes each path argument's resolved path
+  until an invalidation clears the whole memo; `write_text` resolves its path afresh.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Parse each Python file once per rules run so that system capabilities are extended.
+- **US-1**: As an agent running `devkit rules check` or a commit gate, I want each Python file parsed once per run,
+  so that the Python-source rules stop paying for repeated parses and the garbage collection they cause.
+- **US-2**: As a rule author, I want one cache accessor that returns a file's parsed tree or its syntax error, so
+  that a new Python-source rule needs no reading, decoding or parse handling of its own.
+- **US-3**: As a maintainer, I want rule results unchanged for valid UTF-8 source, so that the speed-up changes no
+  finding.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: selecting which rules a targeted run executes, and the `inputs` declarations
+   (`SPEC-lint-clean-target-scoped-rules`, already on the base).
+2. **Scope Excluded**: changing which files any rule scans, or its findings and messages for valid UTF-8 source
+   without a BOM.
+3. **Scope Excluded**: sharing or merging the rules' own `ast.walk` traversals (about 0.5 s, rule-internal).
+4. **Scope Excluded**: a central syntax-error report, a persistent cross-run cache, or CLI startup time.
+5. **Scope Excluded**: `Path.resolve` call sites outside `RuleContext._relative` and the `WorkspaceCache` key
+   (`find_files`, target expansion, `DocumentCatalog`).
+6. **Scope Excluded**: a compatibility probe or fallback parse for an engine without the accessor; devkit-dist,
+   devkit-agt and the content packages release in lockstep.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] The accessor returns one shared tree per file
+- **Given** a workspace holding `pkg/mod.py` and a `WorkspaceCache` of it
+- **When** `get_python_ast` is called with `pkg/mod.py` and again with its absolute path
+- **Then** both calls return the same object, equal to `ast.parse` of the file's bytes (`ast.dump` with attributes)
 
-## 5. Carried Proposal Notes
+### [AC-02] An unparsable file raises an equal error from one parse
+- **Given** a file holding invalid Python and an `ast.parse` wrapper counting exec-mode calls
+- **When** `get_python_ast` is called three times on it
+- **Then** each call raises a distinct `SyntaxError` object of equal type and arguments whose `filename` is the
+  workspace-relative path, and the file is parsed exactly once; a missing file raises `FileNotFoundError` on every
+  call; a file starting with a UTF-8 BOM parses
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-03] Invalidation drops the tree or error
+- **Given** a parsed file
+- **When** the file changes on disk and the cache runs `invalidate`, `invalidate_many`, `write_text` or
+  `invalidate_all`
+- **Then** the next `get_python_ast` call returns a new tree equal to a fresh parse of the new content
 
-### 2. Technical Spike Questions
+### [AC-04] A path resolves once between invalidations
+- **Given** a `WorkspaceCache` and a counter on `Path.resolve`
+- **When** the same path argument is passed to `read_bytes`, `read_text` and `get_python_ast` repeatedly
+- **Then** it is resolved once; after `invalidate`, `write_text` or `invalidate_all` a retargeted symlink yields its
+  new target's content; a symlink and its target share one key; and after a path is read, replacing its parent
+  directory with a symlink to outside the workspace makes `write_text` raise `UnsafePathError` (`PATH_UNSAFE`)
 
-- **Q1**: Is a shared `ast.Module` safe to hand to several rules, or does the cache need copies or a read-only view?
-  - **Answer**: Share the same object, read-only by contract (`ADR-share-one-read-only-parsed-tree-per-python-file`).
-    No rule mutates a node (source review), all 490 shared trees equalled a fresh parse after a full prototype run,
-    and deep-copying them costs 1.0 s against 0.4 s to parse them, so copies would erase the saving.
-- **Q2**: How do rules loaded from `.devkit/managed` reach the cache API compatibly, and how are syntax errors
-  reported once rather than per rule?
-  - **Answer**: Rules call `ctx.cache.get_python_ast(path)` directly; `RuleContext.cache` is always a
-    `WorkspaceCache` of the installed, lockstep-released engine, and no fallback shim is added
-    (`ADR-parse-cached-bytes-once-and-memoize-the-outcome`). A syntax error is parsed once and memoized, then raised
-    to every rule that asks; each rule keeps its own reporting (`architecture` reports the file, `usecase-boundaries`
-    aborts, the others skip), because a central report would change rule output and the language linters already
-    report syntax errors.
+### [AC-05] `RuleContext` resolves symlinks only for paths outside the workspace
+- **Given** a workspace with `toout` (a symlink to a directory outside it), `loop` (a symlink to itself) and an alias
+  path that is a symlink to the workspace root
+- **When** `RuleContext.relative_path` maps `docs/a.md`, the alias form of `docs/a.md`, `toout/x.md`, the alias form
+  of `toout/x.md`, `toout/../docs/a.md` and `loop`
+- **Then** it returns `docs/a.md` without calling `Path.resolve`, `docs/a.md`, `toout/x.md`, `None`, `docs/a.md` and
+  `loop`, and the existing context tests pass unchanged
 
-### 3. Planning Decisions
+### [AC-06] Migrated rules read Python through the shared accessor
+- **Given** each migrated rule (`RULE-architecture`, `RULE-usecase-boundaries`, `RULE-advisory-unique-code` and the
+  catalog `layers`, `heavy_imports`, `command_boundary`, `library_output`) and a fixture workspace
+- **When** a test builds `RuleContext(workspace_root=root, cache=WorkspaceCache(root))` and calls `rule.check(ctx)`
+- **Then** for each Python file the rule scanned, `ctx.cache.get_python_ast(path)` equals a fresh parse, the rule's
+  existing tests pass, and the `testing` harness API is unchanged; no migrated rule calls `ast.parse` on a whole
+  file or reads Python source outside `ctx.cache`
 
-- **D1 — Shared read-only trees**: `ADR-share-one-read-only-parsed-tree-per-python-file`.
-- **D2 — Accessor contract**: `ADR-parse-cached-bytes-once-and-memoize-the-outcome`: parse the cached bytes under the
-  workspace-relative name, memoize the tree or the `SyntaxError`/`ValueError`, drop both on invalidation, call
-  directly from every rule.
-- **D3 — Only the parse moves**: the two devkit-dev rules keep enumerating their declared package roots
-  (`Path.rglob`), and every rule keeps its file selection; only the parse (and with it the read) goes through
-  `ctx.cache`. Which rules run for a targeted run is `SPEC-lint-clean-target-scoped-rules` (D8).
-- **D4 — Per-run lifetime, real-CLI timing**: the trees live on the run's `WorkspaceCache` and need no release step;
-  a simulation on that cache gave 4.25 s to 3.69 s. The acceptance measurement times the real CLI process, because an
-  in-process timer misses interpreter shutdown.
-- **D5 — Memory accepted**: retained trees cost about 40 times the parsed source for the rest of the run; projects
-  whose selected rules streamed before (catalog `cli_tool` without devkit-dev) now hold every parsed tree
-  (`ADR-share-one-read-only-parsed-tree-per-python-file`, Consequences).
-- **D6 — Byte identity scope (user)**: byte-identical results are required for this repository's UTF-8 sources
-  without a BOM. The edge-case changes from parsing the cached bytes are accepted: a file with a BOM, invalid UTF-8 or
-  a PEP 263 coding cookie, and the `usecase-boundaries` abort message naming the file instead of `<unknown>`
-  (`ADR-parse-cached-bytes-once-and-memoize-the-outcome`, Consequences).
-- **D7 — Path resolution included (user)**: this proposal also resolves each rule path once per run: lazy
-  resolution in `RuleContext._relative` and a per-run memo of `WorkspaceCache._key`
-  (`ADR-resolve-rule-paths-once-per-run`). The speed target rises to at least 0.8 s faster.
-- **D8 — Sequencing with `SPEC-lint-clean-target-scoped-rules`**: that unit is in Development and lands on main
-  first. It adds an `inputs` declaration to `RULE-architecture`, `RULE-usecase-boundaries` and
-  `RULE-advisory-unique-code` and target scoping in `evaluate_rules`. This proposal plans none of it; its Development
-  merges main after that unit lands and adapts the three rule modules (and any `RuleContext` change) to it.
+### [AC-07] Each rule keeps its handling of an unparsable file
+- **Given** a fixture with a Python file that does not parse
+- **When** each migrated rule checks it
+- **Then** `RULE-architecture` reports `cannot parse source: ...` at that file, `RULE-usecase-boundaries` returns one
+  `cannot inspect usecase boundaries: ...` finding whose message names the file, and `RULE-advisory-unique-code` and
+  the catalog rules skip the file
 
-### 4. Proposed Design & Impact
+### [AC-08] One parse per Python file in a whole-workspace run
+- **Given** this repository and an `ast.parse` wrapper counting exec-mode calls
+- **When** `devkit rules check --format json` runs on the whole workspace
+- **Then** no file name is parsed more than once, and the total is at most the number of distinct Python files the
+  rules read (540 on the base, against 1,529 parses)
 
-#### Accessor
+### [AC-09] Byte-identical output on this repository
+- **Given** this repository before and after the change
+- **When** `devkit rules check --format json` runs on the whole workspace
+- **Then** both runs exit 0 and print the same bytes; the comparison is recorded in the unit's evidence
 
-`WorkspaceCache.get_python_ast(path) -> ast.Module` in
-`packages/devkit/src/devkit_agt/features/rules/repositories/workspace/cache.py`:
+### [AC-10] A whole-workspace run is at least 0.8 s faster
+- **Given** one machine, main at or after 8240e402 without the change and with it
+- **When** `.venv/bin/devkit rules check --format json` runs 7 times on each
+- **Then** the median with the change is at least 0.8 s below the median without it; both numbers are recorded in the
+  change report
 
-- parses `read_bytes(path)` once per resolved path and run, with the resolved workspace-relative POSIX path as the
-  file name;
-- memoizes a `SyntaxError` or `ValueError` and raises it again on every later call; a missing file raises
-  `FileNotFoundError` like `read_bytes`;
-- drops the tree or error in `invalidate` (so also after `write_text` and `invalidate_many`) and `invalidate_all`.
+### [AC-11] The unit stays within its boundaries
+- **Given** the finished unit
+- **When** `devkit rules check specs/2026-10/20261022-rule-shared-python-ast` runs and the diff from the handoff is
+  listed
+- **Then** the check exits 0 with no violation, and the diff touches no path under `docs/decisions/` or
+  `packages/devkit/src/devkit_agt/features/workflow/`
 
-#### Migrated rules
+## 5. Assumptions
 
-| Rule | Source | Change |
-| --- | --- | --- |
-| `RULE-architecture` | `tools/devkit-dev/src/devkit_dev/bundle/rules/architecture/rule.py` | `inspect_architecture(root, config_path, *, cache=None)` parses through the cache; the rule passes `ctx.cache` |
-| `RULE-usecase-boundaries` | `tools/devkit-dev/src/devkit_dev/bundle/rules/usecase-boundaries/rule.py` | `Index` and `inspect_usecases(..., *, cache=None)` parse through the cache |
-| `RULE-advisory-unique-code` | `packages/devkit-dist/src/devkit_dist/bundles/advisory/bundle/rules/unique_code/` | `parse_module` indexes a tree from `ctx.cache.get_python_ast` |
-| catalog `layers`, `heavy_imports`, `command_boundary`, `library_output` | `packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/` | replace `ast.parse(ctx.cache.read_text(path), ...)` with the accessor |
-
-`cache=None` defaults to a fresh `WorkspaceCache(root)`, so the bundled tests and
-`tools/devkit-dev/tests/integration/test_architecture.py` keep calling the inspectors with a root only.
-`usecase-boundaries` keeps its `ast.parse(..., mode="eval")` of string annotations, which is not a file parse.
-
-#### Path resolution
-
-- `RuleContext._relative` (`packages/devkit/src/devkit_agt/features/rules/models/contracts.py`) tries the lexically
-  normalized path first and calls `resolve()` only when that path is outside the workspace; it returns the same value
-  for every input whose resolution succeeds, and an in-workspace symlink loop now gets its lexical name instead of
-  failing the rule.
-- `WorkspaceCache` memoizes each path argument's resolved path for the run; `_key` and `read_bytes` use it, and
-  `invalidate`, `write_text`, `invalidate_many` and `invalidate_all` clear the whole memo. `write_text` resolves its
-  path afresh for its containment and pinned checks and its destination (`ADR-resolve-rule-paths-once-per-run`).
-After changing the bundle sources, `devkit sync` refreshes `.devkit/managed/` and the tracked
-`.devkit/installation.json`.
-
-#### Living Spec
-
-- `CAP-GOV-rule-authoring` (§2 Rule Context and Workspace Cache) lists `ctx.cache.get_python_ast(path)`, its
-  read-only contract and its error behavior, and tells Python-source rules to use it.
-- `CAP-GOV-evaluation-lifecycle` names parsed Python among the data a fixer's invalidation drops.
-- `CAP-GOV-rules-engine` lists parsed Python and the per-run path-resolution memo, cleared on invalidation, in the
-  `cache.py` responsibilities.
-
-#### Acceptance outcomes
-
-1. `devkit rules check --format json` on this repository prints the same bytes before and after the change, and for
-   UTF-8 source without a BOM every migrated rule reports the same findings and messages as before. The edge-case
-   changes D6 accepts are covered by the cache tests (a BOM file parses) and are the only changed expectations.
-2. A whole-workspace run makes at most one exec-mode `ast.parse` call per distinct Python file the rules read (about
-   540 instead of 1,526), measured by wrapping `ast.parse` as `docs/materials/2026-10/20261022-rule-shared-python-ast/measurements.md` describes.
-3. The median wall time of 7 interleaved runs of `.venv/bin/devkit rules check --format json` is at least 0.8 s
-   below main's (prototype: 1.06 s), with both numbers recorded in the change report. Main is measured after
-   `SPEC-lint-clean-target-scoped-rules` has landed, on the same commit this unit's Development merged.
-4. The cache and context tests named in the three PADRs' Confirmation sections pass: among them, a path argument
-   resolves once between invalidations, `write_text` refuses a path whose parent became an outside symlink after it
-   was read, a lexically inside path is made relative without `Path.resolve`, and a path through a symlinked alias of
-   the workspace root still maps to its relative form. Each
-   migrated rule's tests build
-   `RuleContext(workspace_root=root, cache=WorkspaceCache(root))`, call `rule.check(ctx)` and assert that the trees
-   it read equal a fresh parse; the `testing` harness API stays unchanged.
-5. The migrated rules' existing tests and the catalog rule tests pass; `just test-affected`, `just lint` and
-   `just check` are clean.
-
-#### Non-Goals
-
-- Selecting which rules a targeted run executes (`SPEC-lint-clean-target-scoped-rules`).
-- Changing which files any rule scans, or its findings and messages for valid source.
-- Sharing or merging the rules' own `ast.walk` traversals (about 0.5 s, rule-internal).
-- A central syntax-error report, a persistent cross-run cache, or CLI startup time.
-- `Path.resolve` call sites outside `RuleContext._relative` and the `WorkspaceCache` key (`find_files`, target
-  expansion, `DocumentCatalog`).
-- The `inputs` declaration and target scoping of `SPEC-lint-clean-target-scoped-rules` (D8).
-
-### 5. Lifecycle & Retirement Criteria
-
-<!--
-- Preliminary decisions: devkit spec proposal padr rule-shared-python-ast "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
-- Research: collect benchmarks and references in materials/.
-- On acceptance (plan-accept): devkit spec proposal accept rule-shared-python-ast --by user records gate:plan-accept and status:
-  accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
-  without Planning. Development starts with devkit spec proposal handoff rule-shared-python-ast.
-- On rejection: change only status: rejected, with the user's reason in the commit message; a later hygiene pass
-  writes the rejection ADR and deletes the proposal directory.
--->
-
+1. `SPEC-lint-clean-target-scoped-rules` landed before this unit's Development (main 8240e402, merged into the base
+   47993c48). Its `inputs` declarations and `opened_files` helper stay as they are; the migrated rules still open only
+   files their `inputs` cover, because the accessor reads the same files through `read_bytes`.
+2. AC-10 is measured in this worktree before and after the change, sequentially rather than interleaved, because a
+   Development worker creates no second checkout; the Host repeats the measurement on main after integration.
+3. `RULE-architecture` keeps catching `UnicodeError` with `SyntaxError` and adds `ValueError`, the other error the
+   accessor memoizes, so a source the parser rejects with `ValueError` is reported like a syntax error instead of
+   failing the rule. The other migrated rules already catch both or skip on `SyntaxError`; the catalog rules add
+   `ValueError` to their skip for the same reason.
+4. `parse_module(rel, tree)` of `unique_code` takes the parsed tree; the rule calls the accessor and skips a file that
+   raises `SyntaxError` or `ValueError`, as before.
+5. The catalog `layout` rule lists Python files without parsing them and is not migrated.
