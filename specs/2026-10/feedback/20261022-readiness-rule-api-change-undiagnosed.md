@@ -8,8 +8,8 @@ target: integration_integrate readiness provider (devkit-spec) and the INTEGRATI
 origin: agent
 severity: workaround
 recurring: false
-status: dismissed
 created_at: 2026-10-22
+status: dismissed
 ---
 
 # [FB-readiness-rule-api-change-undiagnosed] Integration readiness reports a rule engine API change as a generic rules failure
