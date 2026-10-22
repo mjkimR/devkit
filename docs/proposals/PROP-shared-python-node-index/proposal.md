@@ -2,7 +2,7 @@
 id: PROP-shared-python-node-index
 title: Walk each Python tree once per rules run
 summary: "Adds a per-run node index to the rules workspace cache so Python-source rules read the nodes they need from one shared traversal instead of each walking every tree."
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-22
 target_area: governance/
 priority: high                        # critical | high | medium | low
