@@ -99,3 +99,14 @@ differs and is part of each rule's contract:
 - `inspect_architecture(root, config_path)` and `inspect_usecases(root, config_path)` are also called without a
   `RuleContext` by their bundled tests and by `tools/devkit-dev/tests/integration/test_architecture.py`.
 - `devkit sync` after changing bundle rule sources rewrites the tracked `.devkit/installation.json` hashes.
+
+## 7. Path-resolution edge inputs (second challenger round)
+
+A probe compared today's eager `RuleContext._relative` (both candidates built in a tuple) with the lazy form over 23
+inputs on CPython 3.12.8: relative and absolute paths, `..` segments, a workspace root reached through a symlinked
+prefix, an in-workspace symlink pointing outside, `.`, the empty string and the root itself gave identical results.
+The 2 differences were symlink loops (`loop1`, `loop1/x`): the eager form raises `RuntimeError` from `resolve()`,
+the lazy form returns the lexical name. CLI targets are unaffected, because target expansion
+(`services/targets.py`) resolves them first. In-run writers: every cache-aware fixer writes through `write_text`,
+and the evaluator invalidates the returned paths after each fixer (or everything when a fixer raises); no fixer
+creates, removes or retargets symlinks.

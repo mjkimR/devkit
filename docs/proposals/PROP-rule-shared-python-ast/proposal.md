@@ -117,10 +117,11 @@ path once as well makes it about 1.06 s (25 %) faster (3.23 s), still byte-ident
 
 - `RuleContext._relative` (`packages/devkit/src/devkit_agt/features/rules/models/contracts.py`) tries the lexically
   normalized path first and calls `resolve()` only when that path is outside the workspace; it returns the same value
-  for every input.
+  for every input whose resolution succeeds, and an in-workspace symlink loop now gets its lexical name instead of
+  failing the rule.
 - `WorkspaceCache` memoizes each path argument's resolved path for the run; `_key` and `read_bytes` use it, and
-  `invalidate`, `write_text`, `invalidate_many` and `invalidate_all` clear the whole memo
-  (`PADR-resolve-rule-paths-once-per-run`).
+  `invalidate`, `write_text`, `invalidate_many` and `invalidate_all` clear the whole memo. `write_text` resolves its
+  path afresh for its containment and pinned checks and its destination (`PADR-resolve-rule-paths-once-per-run`).
 After changing the bundle sources, `devkit sync` refreshes `.devkit/managed/` and the tracked
 `.devkit/installation.json`.
 
@@ -143,7 +144,9 @@ After changing the bundle sources, `devkit sync` refreshes `.devkit/managed/` an
    below main's (prototype: 1.06 s), with both numbers recorded in the change report. Main is measured after
    `PROP-lint-clean-target-scoped-rules` has landed, on the same commit this unit's Development merged.
 4. The cache and context tests named in the three PADRs' Confirmation sections pass: among them, a path argument
-   resolves once between invalidations and a lexically inside path is made relative without `Path.resolve`. Each
+   resolves once between invalidations, `write_text` refuses a path whose parent became an outside symlink after it
+   was read, a lexically inside path is made relative without `Path.resolve`, and a path through a symlinked alias of
+   the workspace root still maps to its relative form. Each
    migrated rule's tests build
    `RuleContext(workspace_root=root, cache=WorkspaceCache(root))`, call `rule.check(ctx)` and assert that the trees
    it read equal a fresh parse; the `testing` harness API stays unchanged.
