@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -49,3 +49,7 @@ POST_SYNC_NOTICE; no PRESENTATION_LANGUAGE_UNSUPPORTED row.
 Payload write scope: docs/development/reference/{distribution,host,integration}.md only if their fallback field
 description needs to change.
 ```
+
+## Disposition
+
+Directly resolved within `SPEC-feedback-quick-fixes` by the Host during integration validation: the sync notice table in `docs/development/reference/distribution.md` now has the proposed `PRESENTATION_LANGUAGE_UNSUPPORTED` row (`WARNING`, `PresentationLanguageUnsupportedNotice`, `target_files` and `fix`). Verification: `devkit rules check` clean on the change.
