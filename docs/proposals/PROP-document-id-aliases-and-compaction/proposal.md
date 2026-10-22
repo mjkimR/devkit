@@ -26,65 +26,93 @@ workflow: sdd-proposal
 
 ## 1. Background & Hypothesis
 
-Architecture Decision Records (ADRs) are managed under `docs/decisions/` as an append-only permanent ledger recording critical structural decisions and invariants (`ADR-dual-source-of-truth-and-periodic-reconciliation`). In accordance with standard ADR governance, approved ADRs are never retroactively modified or deleted in-place; when an update is required, authors create a new ADR linked via `supersedes` and `superseded_by`.
+Architecture Decision Records (ADRs) under `docs/decisions/` are an append-only ledger: `docs/decisions/README.md`
+(and its seed copy), the `spec-sync` skill and the `spec:living-spec-writing` instruction state that approved ADRs are
+never deleted or retroactively modified, and a change is a new ADR linked through `supersedes` and `superseded_by`.
 
-However, rapid development produces a proliferation of fine-grained decisions—over 70 ADRs were committed within a single month. This leads to several compounding problems:
-1. **Context Window Debt**: AI agents and human engineers navigating architectural decisions face long, fragmented supersession chains (`ADR-step-1 -> ADR-step-2 -> ADR-step-3`), consuming excessive context budget and obscuring the current state of truth.
-2. **Referential Fragility**: Merging or consolidating multiple micro-decisions into a unified record by deleting old files causes broken references across git commits, completed feature specs (`specs/`), and Living Spec documents, triggering `RULE-document-reference` errors.
-3. **Playbook Schema Divergence**: The playbook asset format in `devkit-dist` currently uses an `aliases` array exclusively for manual keyword/synonym search matching. With the arrival of hybrid BM25 and dense embedding ranking (`SearchIndex`), manual search aliases are largely redundant, while the broader Living Spec document model lacks any formal alias/tombstone mechanism.
+Rapid development produced 74 ADRs in one month (`materials/ledger-evidence.md`). Two problems follow:
 
-**Core Hypothesis:**
-Introducing an optional `aliases: list[str]` frontmatter field across Living Spec documents (ADRs, Capabilities, Stories, Proposals) and indexing it as secondary identifiers in `DocumentIndex` will:
-- Allow multiple historical ADRs to be consolidated and replaced by a unified record without breaking incoming references or triggering governance violations.
-- Enable `RULE-document-reference` to validate alias references and optionally provide an automated fix (`devkit rules fix`) that migrates obsolete alias references to the canonical target ID.
-- Establish a repeatable, governed **ADR Compaction Procedure** that resolves decision fragmentation while honoring architectural immutability.
+1. **Supersession drift (measured)**: the supersession fields are not checked by any rule. `parse_document` skips an
+   ADR's `supersedes`, and `superseded_by` is not read. Five ADRs replaced by a later ADR still say
+   `status: accepted`, so an agent filtering decisions by status reads replaced decisions as current
+   (`ADR-integration-approval-asserted`, mentioned 38 times, is one of them).
+2. **Fragmented chains (expected to grow)**: replacement chains (currently at most three records) make a reader
+   traverse several ADRs to learn the current decision. Consolidating them into one record by removing the old files
+   would break every reference to the removed IDs.
 
-## 2. Technical Spike Questions
+**Core hypothesis:** checked supersession makes the ledger's current state reliable at once, and an alias mechanism
+for ADR IDs lets a governed compaction consolidate a chain into one record without breaking references.
 
-- **Q1 (Identity & Resolution)**: How should `DocumentIndex.resolve(document_id)` resolve alias conflicts? If an alias collides with an existing canonical `id` or another document's alias, how should `DuplicateIdError` or resolution priority be enforced?
-- **Q2 (Linter & Autofix Behavior)**: Should `RULE-document-reference` treat an alias reference as fully valid, or report it as a warning/notice encouraging canonical migration? How should `devkit rules fix` rewrite prose links (e.g., bracket form `[ADR-<slug>]` vs code-span `ADR-<slug>`)?
-- **Q3 (Historical Boundary)**: How does compaction interact with completed spec history (`specs/`)? Can an old ADR file be safely deleted once referenced as an alias in a new consolidated ADR, or should a minimal tombstone header be preserved?
-- **Q4 (Playbook Schema Alignment)**: Should playbook search aliases be harmonized with document ID aliases, or cleanly deprecated in favor of hybrid search over `name` and `description`?
+## 2. Planning Decisions
+
+- **Supersession integrity** is in scope whatever the compaction decision
+  (`PADR-adr-supersession-integrity`): kind-aware provenance on ADRs, a fixable reverse-field check, and the
+  drifted records corrected.
+- **Alias references** (when aliases are kept): an alias reference in a current document is a fixable error that
+  `devkit rules fix` rewrites to the canonical ID, following the handed-off `PROP-<slug>` precedent; historical
+  files (completed spec bundles, done/dropped milestones) resolve the alias silently and are never rewritten. The
+  bracket-versus-code-span question is already answered by `services/rewrite.py`.
+- **Kinds**: aliases are accepted on ADRs only, and an alias must carry the `ADR-` prefix. Other kinds keep exact
+  IDs; a later proposal may extend this with resolved-kind typing.
+- **One lookup**: `DocumentIndex` gains one alias-aware lookup that every identity check uses (the rule's
+  resolution and handed-off checks, traceability, dependencies, browse, roadmap, scaffold, specs, handoff and the
+  proposals rewrite service); `devkit spec resolve` reports an alias hit with the canonical ID and the alias, and
+  `devkit spec refs <canonical> --direction in` includes references written with an alias. The devkit-agt rules
+  catalog stays exact-ID.
+- **Handoff**: a graduating PADR's `ADR-<slug>` is refused when it equals a declared alias, as it is for a declared ID.
+- Open decisions for the user are listed in section 5.
 
 ## 3. Proposed Design & Impact
 
-### 3.1 Document Model Extension (`CAP-DOCS-document-model`)
-- Extend the `Document` dataclass and frontmatter schema to parse an optional `aliases` list:
-  ```yaml
-  ---
-  id: ADR-consolidated-worktree-management
-  title: Consolidated Worktree Management
-  summary: "Unifies worktree creation, isolation levels, and close/discard lifecycle into a single authoritative record."
-  status: accepted
-  aliases:
-    - ADR-worktree-and-pull-request-levels
-    - ADR-branch-guards-and-close-discard
-  supersedes:
-    - ADR-worktree-and-pull-request-levels
-    - ADR-branch-guards-and-close-discard
-  ---
-  ```
-- `DocumentIndex` maintains a secondary index mapping alias IDs to their declaring documents.
-- `DocumentIndex.resolve(id)` first attempts exact `id` lookup; if not found, it resolves against `by_alias`.
-- Enforce uniqueness: an alias cannot duplicate an active document's primary `id` or an alias declared elsewhere.
+### 3.1 ADR supersession integrity (`PADR-adr-supersession-integrity`)
 
-### 3.2 Governance Integration (`RULE-document-reference`)
-- References targeting a registered alias are considered resolved.
-- During lint checks, referencing an alias can either pass cleanly or emit an informational hint (`ALIAS_REFERENCE`).
-- Under `devkit rules fix`, references to an alias can be deterministically rewritten to the canonical `id` in targeted active files, while completed historical files remain untouched.
+- On an ADR, `supersedes` is a list of `ADR-` IDs (a scalar is read as a one-element list) and `superseded_by` one
+  `ADR-` ID; both are provenance, outside the current reference graph. Unit-anchor provenance is unchanged.
+- A declared superseded ADR must say `status: superseded` and name its successor in `superseded_by` (fixable); a
+  `superseded_by` target must list the ADR in its `supersedes` (by hand).
+- Development corrects the drifted records in `docs/decisions/`.
 
-### 3.3 ADR Compaction Procedure
-- **Scope Identification**: Group related micro-ADRs that represent incremental iterations or refinements of the same subsystem.
-- **Consolidation**: Author a unified ADR summarizing the current coherent decision.
-- **Context Synthesis**: In the unified ADR's `Context` and `Considered Options`, summarize why intermediate options were discarded or superseded, retaining essential historical rationale without requiring traversal of obsolete files.
-- **Provenance Linkage**: Register old IDs in `aliases` and `supersedes`.
-- **Tombstone vs Deletion**: Old ADR files may either be removed (relying on `aliases` resolution and git history) or retained with `status: superseded` pointing to the consolidated record.
+### 3.2 ADR aliases (`CAP-DOCS-document-model`) — subject to decision q1
 
-## 4. Lifecycle & Retirement Criteria
+- An ADR may declare `aliases: [ADR-<old-slug>, ...]`. An alias may equal no declared ID of any status and no other
+  alias; it must also appear in the ADR's `supersedes`, so the redirect is always backed by provenance.
+- `DocumentIndex` keeps `by_alias` beside `by_id`; the alias-aware lookup returns the document and whether it was
+  reached through an alias.
+- `RULE-document-reference` treats an alias reference as resolved, reports it as a fixable error in current
+  documents and skips it in historical ones.
 
-- **PADR Candidate**: A preliminary decision (`PADR-document-id-aliases-and-compaction.md`) will evaluate whether old consolidated files should be physically deleted or kept as minimal tombstones.
-- **Verification**:
-  - Unit tests in `packages/devkit-spec/tests/unit/features/documents/` for frontmatter parsing, duplicate alias detection, and index resolution.
-  - Governance tests in `packages/devkit-spec/tests/unit/features/governance/` verifying `RULE-document-reference` behavior against aliases.
-  - An end-to-end fixture demonstrating compaction of two sample ADRs into a consolidated record with clean rules check and link resolution.
-- **Acceptance Gate**: Normal proposal review and acceptance (`devkit spec proposal accept document-id-aliases-and-compaction`).
+### 3.3 ADR compaction procedure — subject to decision q1
+
+1. **Scope**: group ADRs that are iterations of the same decision (a supersession chain or a set of refinements).
+2. **Consolidation**: author one new ADR through the normal proposal path, whose `Context` and `Considered Options`
+   summarize why the earlier options were discarded.
+3. **Provenance**: list every consolidated ID in `supersedes` and `aliases`.
+4. **Removal**: delete the consolidated files (Git history keeps them), run `devkit rules fix` to retarget current
+   references, and search `packages/` (bundle workflows, skills, READMEs, tests) for the retired IDs, which the
+   document index does not cover, retargeting or striking them through.
+5. **Check**: `devkit rules check` is clean; `devkit spec resolve <old-id>` reports the consolidated ADR.
+
+The procedure lives in the spec bundle's instructions (`packages/devkit-spec/`), and the append-only statements are
+amended to allow this governed removal: `docs/decisions/README.md`, the seed README and `templates/decision.md` in
+the spec bundle, the `spec-sync` skill, the `spec:living-spec-writing` instruction, and the resolution contract in
+`CAP-DOCS-document-model` and `CAP-DOCS-document-lookup`. That amendment is recorded as its own PADR once q1 is
+answered.
+
+## 4. Lifecycle & Verification
+
+- Unit tests (`packages/devkit-spec/tests/unit/features/documents/`): ADR provenance parsing (scalar and list),
+  alias parsing, alias collisions with any declared ID or alias, non-ADR aliases refused, the alias-aware lookup.
+- Governance tests (`packages/devkit-spec/tests/unit/features/governance/` and the rule's own tests): supersession
+  pairing and its fix, alias references as fixable errors in current documents, historical files byte-identical
+  after `devkit rules fix`, traceability with an alias.
+- Handoff test: a graduating ADR ID that equals a declared alias is refused.
+- CLI tests: `devkit spec resolve` and `devkit spec refs --direction in` for an alias.
+- End-to-end fixture: two ADRs compacted into one with a clean rules check and alias resolution.
+- Acceptance demonstration: decided by q3.
+
+## 5. Open Decisions
+
+- **q1 Direction and compaction model**: supersession integrity plus delete-based compaction with ADR aliases, or
+  supersession integrity only, or integrity plus tombstone compaction without aliases.
+- **q2 Playbook aliases**: whether the playbook-alias question leaves this proposal.
+- **q3 Real compaction**: whether Development compacts one real chain of the ledger as the acceptance demonstration.
