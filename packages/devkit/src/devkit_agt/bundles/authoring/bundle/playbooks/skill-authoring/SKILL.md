@@ -49,10 +49,9 @@ optional `references/` and `scripts/`) or a playbook, and when
 - **References**: one file per situation or procedure, linked from `SKILL.md`
   with its read condition, for example "Read `references/review.md` when
   entering review." Keep references one level deep.
-- **Examples**: one short example per pattern in `SKILL.md`; long or rare
-  examples go to `references/`.
-- **Normative words**: use MUST, SHOULD and MAY with explicit thresholds instead
-  of vague qualifiers.
+- **Sentences**: write the body by the `agent-asset-writing` instruction
+  (directives, degrees of freedom, defaults, feedback loops, completion
+  criteria, examples).
 
 ## Step 2: Restructure a large skill
 
@@ -93,6 +92,7 @@ Update or remove the entry when the file moves or shrinks.
 
 ## Completion conditions
 
+- The body meets the completion list of the `agent-asset-writing` instruction.
 - Every link from `SKILL.md` resolves, and every reference is linked from
   somewhere.
 - Every required constraint is still reachable on every path that needs it; a

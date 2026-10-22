@@ -21,11 +21,12 @@ capabilities:
 ---
 
 ## 2. Background & Context
-<!-- Describe contextual situation, preconditions, and general user flow -->
+<!-- Preconditions the scenarios share; link the spec or ADR holding the motivation by ID (story-writing) -->
 
 ---
 
 ## 3. Acceptance Criteria (Given / When / Then)
+<!-- Derive scenarios from rules and examples (story-writing): one per distinct outcome of each rule -->
 
 ### Scenario 1: [Happy Path Scenario Name]
 - **Given**: <!-- Precondition -->

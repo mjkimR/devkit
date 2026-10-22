@@ -1,7 +1,7 @@
 ---
 id: ADR-<slug>
 title: Decision Title
-summary: "One or two English sentences: what was decided and why"   # required, English; quote it, it may contain ": "
+summary: "For <context>, we <decision>, to <achieved quality>, accepting <downside>."   # required, English Y-statement (decision-writing); quote it, it may contain ": "
 status: proposed          # proposed | accepted | deprecated | superseded
 created_at: YYYY-MM-DD
 ---
@@ -58,3 +58,8 @@ We decided to adopt **[Option 1]**.
 - **Positive**:
 - **Negative / Risks**:
 - **Follow-ups**:
+
+---
+
+## 6. Confirmation
+<!-- How compliance is checked: a rule ID, a test path or a review step; "Review only" when no check exists. -->

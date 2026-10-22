@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T23:56:14.832771Z'
+status: completed
+summary: 'Swept this Development session and the diff (repo-and-upstream): recorded FB-reverify-fix-omits-reconcile-check; deferred work already recorded as FB-writing-guidance-rollout and FB-writing-style-rules; no duplicates'
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0

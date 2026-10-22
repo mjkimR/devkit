@@ -22,7 +22,7 @@ docs/decisions/
 ---
 id: ADR-<slug>
 title: <Decision Title>
-summary: <One or two English sentences: what was decided and why> # required, English
+summary: "For <context>, we <decision>, to <achieved quality>, accepting <downside>." # required, English Y-statement
 status: accepted # proposed | accepted | superseded | rejected | deprecated
 created_at: <YYYY-MM-DD>
 supersedes: [] # optional
@@ -36,4 +36,5 @@ superseded_by: null # optional
 ## 3. Considered Options
 ## 4. Decision Outcome & Rationale
 ## 5. Consequences
+## 6. Confirmation
 ```

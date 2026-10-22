@@ -41,6 +41,14 @@
     },
     {
       "bundle": "authoring",
+      "id": "agent-asset-writing",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/authoring/instructions/agent-asset-writing.md"
+      ]
+    },
+    {
+      "bundle": "authoring",
       "id": "skill-document-size",
       "kind": "rule",
       "paths": [
@@ -165,6 +173,46 @@
       "kind": "instruction",
       "paths": [
         ".devkit/managed/spec/instructions/living-spec-writing.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "document-writing",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/spec/instructions/document-writing.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "decision-writing",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/spec/instructions/decision-writing.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "capability-writing",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/spec/instructions/capability-writing.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "story-writing",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/spec/instructions/story-writing.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "architecture-writing",
+      "kind": "instruction",
+      "paths": [
+        ".devkit/managed/spec/instructions/architecture-writing.md"
       ]
     },
     {
@@ -800,7 +848,7 @@
     },
     ".agents/skills/spec-plan/SKILL.md": {
       "mode": 420,
-      "sha256": "116bc88d65d342b920985f706c9fd14f57106de989c24b1b4916c4162b24a891"
+      "sha256": "fc5c850498e2733351a04539558399f08a633d4bdd06a2e6907637ec5b50e990"
     },
     ".agents/skills/spec-review-proposal/SKILL.md": {
       "mode": 420,
@@ -884,7 +932,7 @@
     },
     ".agents/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "af68d3fa3107f0045fa3a681d2588f732fb7aa2136d33db9603fcdf14a9d106b"
+      "sha256": "08ee6a520d0d3bde6c4b1bf64e7d6a116681af2c553f1ed930118177b0ec5b64"
     },
     ".agents/skills/spec/references/review-loop.md": {
       "mode": 420,
@@ -996,7 +1044,7 @@
     },
     ".claude/skills/spec-plan/SKILL.md": {
       "mode": 420,
-      "sha256": "116bc88d65d342b920985f706c9fd14f57106de989c24b1b4916c4162b24a891"
+      "sha256": "fc5c850498e2733351a04539558399f08a633d4bdd06a2e6907637ec5b50e990"
     },
     ".claude/skills/spec-review-proposal/SKILL.md": {
       "mode": 420,
@@ -1080,7 +1128,7 @@
     },
     ".claude/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "af68d3fa3107f0045fa3a681d2588f732fb7aa2136d33db9603fcdf14a9d106b"
+      "sha256": "08ee6a520d0d3bde6c4b1bf64e7d6a116681af2c553f1ed930118177b0ec5b64"
     },
     ".claude/skills/spec/references/review-loop.md": {
       "mode": 420,
@@ -1164,11 +1212,15 @@
     },
     ".devkit/managed/authoring/bundle.toml": {
       "mode": 420,
-      "sha256": "1286142919408f968203e545952ff7bc77d5bf8e65c17b0f5b29eebbbfb8d60c"
+      "sha256": "c1e656d0aed9535e640be627d5d345126864e664bf11c2700ed0a53132217a80"
+    },
+    ".devkit/managed/authoring/instructions/agent-asset-writing.md": {
+      "mode": 420,
+      "sha256": "ac4c31e956f95a8e09728e4b9df460a85db565d2d00c0a10b04fdbb7ae5ca101"
     },
     ".devkit/managed/authoring/playbooks/skill-authoring/SKILL.md": {
       "mode": 420,
-      "sha256": "2f673298348328a08834cc818bbdf86685fd965cfa53cfa8b71d2253b636ebb9"
+      "sha256": "025ab03597bb15be0a25726371f3de317477330e73e0fe698f34076c00fa0974"
     },
     ".devkit/managed/authoring/playbooks/skill-authoring/references/scripts.md": {
       "mode": 420,
@@ -1280,19 +1332,39 @@
     },
     ".devkit/managed/spec/bundle.toml": {
       "mode": 420,
-      "sha256": "6282af6b3deaac7ca206dd75d53b1b4d3c39b97baf681246795aa5812f28a7e9"
+      "sha256": "c5bf69cb6175943c19037f3e647152069f21db6dd4249d0df479a891e9006a38"
     },
     ".devkit/managed/spec/guidance/spec-pointer.md": {
       "mode": 420,
       "sha256": "196ef5be773845c62a7e409666370746b8866d2ba5fae99811fb250361ec3d94"
     },
+    ".devkit/managed/spec/instructions/architecture-writing.md": {
+      "mode": 420,
+      "sha256": "d4c928f18e0fbfb98fbc6439e7c4712b72c7d6c18773f776fe32c61c8cc7bf21"
+    },
+    ".devkit/managed/spec/instructions/capability-writing.md": {
+      "mode": 420,
+      "sha256": "857323f7eecd10063235ca8e1e9787c53fc818b6df353695b153454678554081"
+    },
     ".devkit/managed/spec/instructions/contract-authoring.md": {
       "mode": 420,
       "sha256": "d9902f603042037d581394ae1f30ef2abb5a359cdf798c355a17a6941b53c5ba"
     },
+    ".devkit/managed/spec/instructions/decision-writing.md": {
+      "mode": 420,
+      "sha256": "6ad74c8c4618756a8e0cfadd461d9bcbd381cfcfdef194e80ef8071434b711f2"
+    },
+    ".devkit/managed/spec/instructions/document-writing.md": {
+      "mode": 420,
+      "sha256": "22f4de5760e6e52149f889bf690cd3d675173aef13f4c3a24394f4a4da99cd54"
+    },
     ".devkit/managed/spec/instructions/living-spec-writing.md": {
       "mode": 420,
       "sha256": "be7188a9830d6e2e2872a8254c356bca4c64b38429ac2334375f996599ad7f56"
+    },
+    ".devkit/managed/spec/instructions/story-writing.md": {
+      "mode": 420,
+      "sha256": "6b125a8f71f9638851409131c2675596b2b02bdcc06dfa3d3bca27573e15c17e"
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md": {
       "mode": 420,
@@ -1496,7 +1568,7 @@
     },
     ".devkit/managed/spec/skills/spec-plan/SKILL.md": {
       "mode": 420,
-      "sha256": "116bc88d65d342b920985f706c9fd14f57106de989c24b1b4916c4162b24a891"
+      "sha256": "fc5c850498e2733351a04539558399f08a633d4bdd06a2e6907637ec5b50e990"
     },
     ".devkit/managed/spec/skills/spec-review-proposal/SKILL.md": {
       "mode": 420,
@@ -1580,7 +1652,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "af68d3fa3107f0045fa3a681d2588f732fb7aa2136d33db9603fcdf14a9d106b"
+      "sha256": "08ee6a520d0d3bde6c4b1bf64e7d6a116681af2c553f1ed930118177b0ec5b64"
     },
     ".devkit/managed/spec/skills/spec/references/review-loop.md": {
       "mode": 420,
@@ -1620,11 +1692,11 @@
     },
     ".devkit/managed/spec/templates/capability.md": {
       "mode": 420,
-      "sha256": "680ee3438a2954e17faa19f89b307f7fec653f59cb3517d658a51a44bcc097b0"
+      "sha256": "249428d5fd227b40469fd41d990af503e3f96b5954361350e77af1136bd4b569"
     },
     ".devkit/managed/spec/templates/decision.md": {
       "mode": 420,
-      "sha256": "15d30aff07d9a61b77566f84d58b31925f2299cfd6689cac35a9c51237811ec9"
+      "sha256": "c38d084c5010f3a8a1f5ba71263e1f54735efcebb0075e6871889e733793165f"
     },
     ".devkit/managed/spec/templates/milestone.md": {
       "mode": 420,
@@ -1636,7 +1708,7 @@
     },
     ".devkit/managed/spec/templates/story.md": {
       "mode": 420,
-      "sha256": "36b87f3c259bdad89cbb043d3cfd9339cd1e1c014caf21b0e2226f36f0640f0d"
+      "sha256": "65e547b4636d3ff2d40bfd780856a1c3a2f4ae075200c9a6833a687559e06cb7"
     },
     ".devkit/managed/spec/workflows/sdd-proposal.md": {
       "mode": 420,

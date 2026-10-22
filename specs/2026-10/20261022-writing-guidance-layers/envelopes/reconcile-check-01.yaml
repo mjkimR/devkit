@@ -1,0 +1,18 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-21T23:55:08.468134Z'
+status: completed
+summary: 'reconcile-reviewer (native, isolated) at e06c33e2: all six targets reflected and consistent with the implementation; one P3 hint mismatch'
+findings:
+- issue: Proposal PADR --summary hints still say '<what it decides>' while the PADR placeholder and decision-writing ask for a Y-statement
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py:411
+  failure_condition: An agent passes a non-Y-statement summary to devkit spec proposal padr
+  suggested_action: Use the Y-statement form in scaffold.py:411 and spec/references/planning.md:20
+  resolution: open
+  severity: P3
+checks: {}
+diff_scope:
+  base: 542f4461b572a5432c89f81bd0dceff4ddafc38f
+  head: e06c33e22ffb9f9c63ae2271c3661bd44fedaa0e

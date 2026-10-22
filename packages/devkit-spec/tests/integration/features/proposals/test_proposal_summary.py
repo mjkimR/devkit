@@ -40,7 +40,10 @@ def test_without_summary_proposal_md_has_a_placeholder(workspace: Path) -> None:
     assert f"title: a\n{PLACEHOLDER}\nstatus: draft" in proposal.read_text()
     assert "summary" not in _meta(proposal)
     padr = workspace / create_padr(workspace, "a", "Use JWT", today=TODAY).path
-    assert "# summary: <one or two English sentences: what is decided and why>\n" in padr.read_text()
+    placeholder = (
+        "# summary: <English Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>\n"
+    )
+    assert placeholder in padr.read_text()
     assert "summary" not in _meta(padr)
     create_spec(workspace, "b", day=TODAY)
     assert "summary" not in (spec_dir(workspace, "b") / "spec.md").read_text()

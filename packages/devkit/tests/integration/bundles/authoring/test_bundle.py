@@ -22,10 +22,21 @@ BUNDLE = PACKAGE / "src/devkit_agt/bundles/authoring/bundle"
 def test_presets_pair_each_playbook_with_its_rule() -> None:
     bundle = load_bundle(BUNDLE)
     assert (bundle.name, bundle.default_preset, bundle.auto_select) == ("authoring", "all", False)
-    assert bundle.select(["skill-authoring"]) == {"skill-authoring", "skill-document-size"}
+    assert bundle.select(["skill-authoring"]) == {"skill-authoring", "agent-asset-writing", "skill-document-size"}
     assert bundle.select(["agent-guide-authoring"]) == {"agent-guide-authoring", "agent-guide-size"}
     pyproject = tomllib.loads((PACKAGE / "pyproject.toml").read_text())
     assert bundle.version == pyproject["project"]["version"]
+
+
+def test_the_agent_asset_writing_instruction_stands_alone() -> None:
+    # ``authoring`` never depends on ``spec`` (ADR-layered-writing-guidance), so the instruction names none of its
+    # writing instructions; the playbook defers sentence-level rules to it.
+    text = (BUNDLE / "instructions/agent-asset-writing.md").read_text()
+    assert re.search(r"^description: Read before ", text, re.MULTILINE)
+    for name in ("document-writing", "contract-authoring", "living-spec-writing"):
+        assert name not in text, name
+    playbook = (BUNDLE / "playbooks/skill-authoring/SKILL.md").read_text()
+    assert "`agent-asset-writing`" in playbook and "**Normative words**" not in playbook
 
 
 def test_content_is_english_and_skill_documents_fit_their_own_budget() -> None:
