@@ -1,0 +1,55 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-22T09:34:21.589617Z'
+status: completed
+summary: The proposal contradicts accepted ADR-20261022 commit-gate invariants while excluding docs/decisions/ from its boundaries; its deletion-only hypothesis breaks on engine short-circuits (has_work/has_targets), omits installation.json receipt changes, and bases its necessity on flawed benchmarks conflating materialization overhead with rule execution.
+findings:
+- issue: Direct conflict with ADR-scope-only-explicit-working-tree-targets-in-the-evaluator and CAP-GOV-evaluation-lifecycle §3 while excluding docs/decisions/ from boundaries
+  evidence: docs/proposals/PROP-snapshot-scoped-rules/proposal.md:16-17,50; docs/decisions/2026-10/20261022-scope-only-explicit-working-tree-targets-in-the-evaluator.md:28,48-50; docs/capabilities/governance/CAP-GOV-evaluation-lifecycle.md:46; specs/2026-10/20261022-lint-clean-target-scoped-rules/spec.md:66-67,71
+  failure_condition: A commit touches only documentation while a latent architectural or usecase-boundary violation exists elsewhere in the workspace or branch history. Scoping snapshot runs allows the commit to pass the rules-check gate, violating the agreed invariant that snapshot gates are the complete check before Git history.
+  suggested_action: 'Decision needed: Reopen ADR-scope-only-explicit-working-tree-targets-in-the-evaluator and remove docs/decisions/ from proposal boundary exclusions, or limit snapshot scoping to local pre-commit while requiring a full unscoped run at integration.'
+  resolution: open
+  severity: P1
+- issue: Deletion-only commits bypass rule evaluation entirely due to has_work and has_targets short-circuit in project run use case
+  evidence: docs/proposals/PROP-snapshot-scoped-rules/proposal.md:32-33; packages/devkit/src/devkit_agt/features/rules/usecases/project.py:234-237,393-412; packages/devkit/src/devkit_agt/features/rules/models/contracts.py:123-124; packages/devkit/src/devkit_agt/features/rules/services/evaluator.py:57
+  failure_condition: A commit only deletes Python files (e.g., git rm src/pkg/unused.py) without modifying other files or having inbound Markdown links. snapshot_targets returns empty, setting has_work=False in RunProjectRulesUseCase._run so evaluate_rules is never called. If has_work is forced True, has_targets evaluates to False, causing scope_rules to treat the run as an unscoped whole-workspace evaluation.
+  suggested_action: Redesign RuleContext and RunProjectRulesUseCase to explicitly decouple evaluation targets from scoping paths before attempting to scope snapshot runs.
+  resolution: open
+  severity: P1
+- issue: Omission of .devkit/installation.json (RECEIPT_PATH) from skip-disabling rules in proposal design
+  evidence: docs/proposals/PROP-snapshot-scoped-rules/proposal.md:44-45; docs/proposals/PROP-snapshot-scoped-rules/materials/spike-evidence.md:33-34; packages/devkit/src/devkit_agt/features/rules/services/evaluator.py:61
+  failure_condition: A commit modifies .devkit/installation.json via devkit sync (updating rule hashes or bundle definitions) without altering .devkit/config.toml or Python files. Declared whole-workspace rules are skipped even though rule code or receipt definitions changed.
+  suggested_action: Add RECEIPT_PATH (.devkit/installation.json) to the skip-disabling check alongside CONFIG_PATH in proposal.md §3 and scope_rules.
+  resolution: open
+  severity: P2
+- issue: Benchmark in spike evidence conflates snapshot materialization overhead with rule execution time
+  evidence: docs/proposals/PROP-snapshot-scoped-rules/materials/spike-evidence.md:11-16; docs/proposals/PROP-snapshot-scoped-rules/proposal.md:29-30; packages/devkit/src/devkit_agt/features/rules/repositories/workspace/snapshot.py:157-158
+  failure_condition: The claim of a 3.2s (63%) saving on commit gates was measured by comparing a materialized --ci snapshot run against a working-tree run. In-place staged snapshot runs (--staged) incur 0s materialization cost, while --ci runs will continue to pay 1.5s-2.0s streaming 1600+ files to disk regardless of rule scoping. Furthermore, CI workflows in ci.yml run whole-workspace rules-check, not --ci.
+  suggested_action: Benchmark in-place devkit rules check --staged before and after, separate git tree materialization from rule execution, and correct the necessity claim in the proposal.
+  resolution: open
+  severity: P2
+- issue: Non-regular Git tree objects (symlinks, submodules, typechanges) are dropped from scoping paths
+  evidence: packages/devkit/src/devkit_agt/features/rules/repositories/workspace/snapshot.py:48-50,88-92,142-143
+  failure_condition: A Python file or module is converted to a symlink (mode 120000) or submodule (mode 160000). git diff emits status M or T (not D), and the tree mode is not in REGULAR_MODES, so the path is absent from both snapshot.changed and snapshot.deleted. Scoping treats the change as not matching **/*.py and skips RULE-architecture.
+  suggested_action: Capture all changed paths from git diff into scoping paths regardless of tree mode, or handle mode typechanges explicitly.
+  resolution: open
+  severity: P2
+- issue: Unsettled decision on mandatory whole-workspace safety net stage vs gate relaxation
+  evidence: docs/proposals/PROP-snapshot-scoped-rules/proposal.md:39-40,47-48
+  failure_condition: If the commit gate is relaxed to be scoped and branch CI uses scoped runs, latent whole-workspace defects will only be detected after branch integration during nightly CI on main.
+  suggested_action: 'Decision needed: Specify whether spec-integrate or cumulative branch gates require an unscoped whole-workspace run before allowing commit-gate scoping.'
+  resolution: open
+  severity: P3
+assumptions:
+- The repository follows SDD proposal workflow conventions and ADR immutability rules.
+- Rule inputs declarations remain limited to the three existing Python rules (RULE-architecture, RULE-usecase-boundaries, RULE-advisory-unique-code).
+unverified_areas:
+- Performance impact of in-place --staged snapshot runs on repositories with tens of thousands of files.
+- Behavior of git diff --name-status on exotic Git configurations or gitlink trees.
+checks: {}
+diff_scope:
+  base: 61a4d067f6965cf1e16ba897967440ffd833485c
+  head: 56568864fb85e4b1b8a0e7514951fad2476f3047
+activity_effort: medium
