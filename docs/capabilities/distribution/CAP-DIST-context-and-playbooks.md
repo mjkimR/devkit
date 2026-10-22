@@ -78,7 +78,11 @@ source; drafts need explicit approval and never touch installed or generated fil
 ### Playbook Header
 
 A playbook is a Markdown file or a directory with `SKILL.md`. Its YAML frontmatter has nonempty English `name` and
-`description` strings and an optional `aliases` array of nonempty English strings. `x-<name>` extension keys
+`description` strings and an optional `aliases` array of previous asset IDs of the playbook in the same bundle
+(`ADR-playbook-aliases-as-identifiers`): each matches the manifest slug grammar `[a-z][a-z0-9-]*` (not frontmatter
+`name`), no item repeats, and no alias equals a playbook asset ID of the bundle (its own included) or another
+playbook's alias; bundle validation refuses a violation (`BUNDLE_INVALID`). Aliases are identifiers, not search
+keywords: a renamed playbook keeps its published `<bundle>/<old-id>` selectors working. `x-<name>` extension keys
 (`x-[a-z][a-z0-9-]*`, any YAML value) are accepted for tools built on devkit and otherwise ignored: not indexed, not
 returned, not interpreted. Any other key (`tags` included) is rejected. The whole header, extension values included,
 must be Latin-script text within 4096 bytes.
@@ -87,15 +91,15 @@ must be Latin-script text within 4096 bytes.
 ---
 name: recover-postgres-replica
 description: Recover a PostgreSQL replica after replication has stopped.
-aliases: [postgres standby repair, replication failure]
+aliases: [standby-repair]
 ---
 ```
 
 ### Search Engine
 
 `devkit playbook search <query>` ranks an in-memory index rebuilt from receipt-owned files on every call (no
-persistent cache) with `CAP-SRCH-document-search`. Only `name`, `description` and `aliases` are indexed;
-bodies never are.
+persistent cache) with `CAP-SRCH-document-search`. Only `name` and `description` are indexed; aliases are
+returned as identity metadata and never ranked, and bodies never are.
 
 - **Mode**: `auto` (default) is `hybrid` when the `search` extra (`devkit-dist[search]`, or `devkit-agt[search]`)
   is installed and `lexical` otherwise;
@@ -146,14 +150,17 @@ Results are sorted best first. An overridden playbook is searched and returned f
 
 `devkit playbook get <bundle>/<playbook> [-w <workspace>]` accepts exactly two case-sensitive
 manifest slugs matching `[a-z][a-z0-9-]*`, separated by one slash. It performs no trimming,
-case folding, alias lookup, extension removal, path interpretation, ranking or fallback.
-The second component is the manifest asset ID, not frontmatter `name`.
+case folding, extension removal, path interpretation, ranking or fallback.
+The second component is the manifest asset ID, not frontmatter `name`, or a declared alias of one: an exact asset
+ID always wins; otherwise the alias resolves only when exactly one effective playbook header of that bundle
+(overrides included) declares it. A declared alias is the playbook's own identity, not fallback selection.
 
 The command returns one JSON object and exits 0. It exposes no `--format` option;
 unsupported options and missing/extra arguments are Click usage errors (exit 2).
 Libraries return data without printing. The normative result fields are:
 
-- `bundle`, `id`: canonical requested manifest identity.
+- `bundle`, `id`: canonical manifest identity (the asset ID, also when the request named an alias).
+- `alias`: the alias the request named, or `null` for an exact asset ID.
 - `name`, `description`, `aliases`: validated effective header metadata; extension keys are ignored.
 - `body`: complete decoded UTF-8 text after the closing frontmatter delimiter line, preserving
   whitespace/newlines without truncation, interpolation, resource expansion or execution.
@@ -171,8 +178,9 @@ against the parent of `source.path`, reading only needed resources under existin
 no resource bytes or directory inventory are returned.
 
 Resolution validates the selector, resolves the synchronized project and takes its existing
-shared lock, then validates the runtime receipt, bundle presence, exact playbook match,
-entrypoint ownership, effective file and content, in that order. The match must have exactly
+shared lock, then validates the runtime receipt, bundle presence, exact playbook match (when it misses, the alias
+match over every effective playbook header of the bundle, each validated as below; an exact ID is served without
+this step), entrypoint ownership, effective file and content, in that order. The match must have exactly
 one entrypoint in its recorded paths and its bundle's managed or override prefix. Only receipt
 assets are read; no installed-package discovery, source-tree lookup, lazy sync or fallback occurs.
 Ordinary overrides are read as currently edited. Selection edits do not change the deployment
@@ -186,7 +194,8 @@ partial results. Existing transaction, lock, unsafe-path and configuration advis
 | Condition | Code | Action |
 | --- | --- | --- |
 | Malformed selector | `ARGUMENT_INVALID` | Correct `<bundle>/<playbook>`; target `PLAYBOOK_ID` |
-| Absent synchronized bundle or playbook (unknown, wrong kind or unselected) | `SELECTION_INVALID` | Inspect `devkit list` and explicit bundle/preset selection |
+| Absent synchronized bundle or playbook (unknown, wrong kind or unselected, and no effective header declares the alias) | `SELECTION_INVALID` | Inspect `devkit list` and explicit bundle/preset selection |
+| Alias declared by more than one effective playbook header of the bundle | `PLAYBOOK_ALIAS_AMBIGUOUS` | Name the playbook by its exact asset ID, or keep the alias on one playbook; target the declaring playbooks |
 | No receipt, missing effective entrypoint or modified managed content | `NOT_SYNCHRONIZED` | `devkit sync` |
 | Stale/missing personal-render evidence, including unrelated assets | `CONFIG_LOCAL_RENDER_STALE` | `devkit sync` |
 | Invalid receipt or zero/multiple/unowned/wrong-bundle entrypoints | `RECEIPT_INVALID` | Existing receipt repair advisory |
@@ -197,7 +206,8 @@ Unknown and unselected identities share a code because the deployed receipt cann
 ## 5. Explicit Invocation and Execution Ownership
 
 A user naming the exact playbook for the current task, or explicitly configuring an external
-schedule naming that exact ID, authorizes retrieval and interpretation within that task's scope.
+schedule naming that exact ID, authorizes retrieval and interpretation within that task's scope. A request or
+schedule naming a declared alias is explicit invocation of the canonical playbook `get` reports.
 Retrieval cannot verify authorization and grants none. Ordinary task wording never authorizes
 catalog discovery or playbook selection. Explicit discovery and rule remediation remain supported.
 Each run starts fresh procedure progress, checks prerequisites and obeys project workflow gates,

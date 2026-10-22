@@ -105,7 +105,7 @@ The **bundle context** is the whole `get-context <bundle>` response: the constit
   3. **Explicit exact invocation**: the user names the exact bundle/playbook ID for the task, or explicitly configures an external schedule naming it. `devkit playbook get <bundle>/<playbook>` retrieves the effective procedure without discovery or execution. Each run checks prerequisites and preserves workflow gates, permissions and user constraints; schedules and unavailable approval UI grant no gated-operation approval. External systems own scheduling and execution history (`ADR-external-playbook-execution`).
 
   Individual playbooks are not exposed in the default context, `get-context` or the native skill catalog, and ordinary prompt instructions do not bypass these entry conditions.
-- **Format Requirements**: English YAML frontmatter with required `name` and `description`, plus an optional `aliases` string array. The body contains explicit `Prerequisites`, numbered `Step N` actions, and unambiguous completion conditions.
+- **Format Requirements**: English YAML frontmatter with required `name` and `description`, plus an optional `aliases` array of previous asset IDs of the playbook in the same bundle, resolved by `devkit playbook get` and never searched (`ADR-playbook-aliases-as-identifiers`). The body contains explicit `Prerequisites`, numbered `Step N` actions, and unambiguous completion conditions.
 - **Target Location**: `.devkit/managed/<bundle>/<source path>`: a single Markdown file (for example `playbooks/<slug>.md`) or a directory whose entry is `<dir>/SKILL.md`.
 
 #### 5. `package-workflow`

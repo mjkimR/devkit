@@ -46,7 +46,7 @@ plan: PLAN-document-id-aliases-and-compaction
 
 ## Phase 3: Contracts
 
-- [ ] **Task 3.1**: Instructions and capability contracts describe aliases (document model, lookup, search, spec rules,
+- [x] **Task 3.1**: Instructions and capability contracts describe aliases (document model, lookup, search, spec rules,
   proposal incubation, playbooks, search metadata, resource taxonomy, distribution reference)
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/living-spec-writing.md, docs/capabilities/documents/,
     docs/capabilities/governance/, docs/capabilities/delivery/CAP-DLV-proposal-incubation.md,

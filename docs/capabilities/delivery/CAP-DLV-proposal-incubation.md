@@ -49,8 +49,8 @@ removes it.
 ## 3. Business Rules & Policies
 
 1. **A proposal and a spec never share a slug**: a handed-off `PROP-<slug>` maps to exactly one `SPEC-<slug>`.
-   `new` and `handoff` MUST refuse a slug whose `SPEC-<slug>` exists (`SPEC_PROPOSAL_SLUG_CONFLICT`); a document that
-   cannot be indexed never blocks them.
+   `new` and `handoff` MUST refuse a slug whose `SPEC-<slug>` exists, declared or as an alias
+   (`SPEC_PROPOSAL_SLUG_CONFLICT`); a document that cannot be indexed never blocks them.
 2. **Approval is explicit and recorded**: handoff MUST require `status: accepted`, which `accept` writes once the
    user gave `plan-accept` or owning policy delegated it. Anything else is `SPEC_PROPOSAL_NOT_APPROVED` (`INTERACTION`: stop and ask the user; its
    `[FIX]` names `devkit spec proposal accept`). A bundle bound to `sdd-proposal` MUST also have its effective accepted
@@ -66,8 +66,9 @@ removes it.
 4. **Validate everything before writing**: handoff checks the slug, the proposal file and its frontmatter, the
    approval, `namespace` (`global` or registered, else `SPEC_PROPOSAL_INVALID`), `summary` (a string, else
    `SPEC_PROPOSAL_INVALID`), `planning_effort` and `dev_effort` (`low` | `medium` | `high` when present, else `SPEC_PROPOSAL_INVALID`), the slug conflict, the workflow binding and every path it would create before its first
-   write. A path that already exists, two PADRs that would become the same ADR, an ADR ID another document already
-   declares, a carried bundle file whose path under the materials directory a file or symbolic link of `materials/`
+   write. A path that already exists, two PADRs that would become the same ADR, a graduating `ADR-<slug>` or
+   `SPEC-<slug>` or a translated alias (4.5, steps 1 and 4) that equals an existing document ID or alias or another
+   ID or translated alias graduating in the same handoff, a carried bundle file whose path under the materials directory a file or symbolic link of `materials/`
    takes too (or lies below; a `materials/` that is itself a symbolic link takes every such path), or a path it would
    create (the spec bundle, an ADR, the materials directory, a carried file) whose directory resolves outside the
    workspace is `SPEC_PROPOSAL_TARGET_EXISTS`; a legacy proposal or PADR slug whose first segment has no letter is
@@ -254,7 +255,7 @@ The scaffolded body has sections `1. Background & Hypothesis`, `2. Technical Spi
   the commented placeholder `# summary: <one or two English sentences: what is decided and why>`), `proposal:
   PROP-<slug>`, `status: draft`, `created_at`, and a body shaped like the decision template (`- **Status**: Draft`,
   `- **Date**`, then Context & Problem Statement, Decision Drivers, Considered Options, Decision Outcome,
-  Consequences). PADR IDs are unique across the repository (`SPEC_PROPOSAL_EXISTS`).
+  Consequences). PADR IDs are unique across the repository, aliases included (`SPEC_PROPOSAL_EXISTS`).
 - `target-docs.md` declares `id: PROP-<slug>-target`, `proposal: PROP-<slug>`, `status: draft`, `created_at` and
   `targets: []` (one `- file: <workspace-relative path>` per Living Spec file the proposal changes; read by
   `devkit spec scope compare`). Its body covers the capability ledger, stories, architecture and decisions,
@@ -272,7 +273,8 @@ current two-confirmation Backlog review. No lifecycle hook or runtime milestone 
 ### 4.5 Handoff Steps
 
 Before its first write, handoff MUST validate the projected live unit dependency graph: replace the source
-PROP anchor with the new SPEC, carry outgoing edges and rewrite live incoming depends_on targets in memory.
+PROP anchor with the new SPEC, carry outgoing edges and rewrite live incoming depends_on targets, written with the
+proposal's ID or one of its aliases, in memory; every other document keeps its aliases in the projection.
 Exclude the source PROP from the projection; a pre-existing same-slug SPEC is still a collision. Malformed lists,
 missing/ambiguous/wrong-kind or auxiliary anchors and live cycles refuse with SPEC_PROPOSAL_INVALID and a repair
 directive, without writes. Completed SPEC targets are terminal; retained completed history is not rewritten.
@@ -282,7 +284,8 @@ With `<YYYY-MM>` and `<YYYYMMDD>` today's date:
 
 1. **Spec bundle** `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` with the skeletons of `CAP-DLV-spec-bundles`: `spec.md`
    (`SPEC-<slug>`, the proposal's `summary`, `status: planned`, `created`, the proposal's `namespace` and
-   nonempty `depends_on`, `decomposed_from` and `supersedes`; milestone membership is not carried; the two origin fields are provenance and do not require the source to survive. The problem statement starts with `Handed off from proposal PROP-<slug> on <date>.` and the
+   nonempty `depends_on`, `decomposed_from` and `supersedes`, and the proposal's `aliases` with `PROP-` replaced by
+   `SPEC-` (`CAP-DOCS-document-model` section 3.5); milestone membership is not carried; the two origin fields are provenance and do not require the source to survive. The problem statement starts with `Handed off from proposal PROP-<slug> on <date>.` and the
    preserved materials and blueprint references, then the carried body), `plan.md` (target area, blueprint
    reference, planned and excluded boundaries) and `tasks.md` (one task whose boundary is `boundaries.owns`, else
    `target_area`, and whose `_Requirements:` lists every acceptance criterion ID).
@@ -296,9 +299,10 @@ With `<YYYY-MM>` and `<YYYYMMDD>` today's date:
 4. **PADR promotion**: each `decisions/PADR-<slug>.md` becomes `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`. Every
    `PADR-<slug>` in it becomes `ADR-<slug>`, a frontmatter `status: draft` (or `proposed`) becomes
    `status: accepted`, and a body line `- **Status**: Draft` (or `Proposed`) becomes `- **Status**: Accepted`. The
-   rest of the frontmatter, `summary` included, is kept. Only the IDs of the PADRs this handoff promotes change, and
-   never inside a file name (`PADR-<slug>.md` in a link is left to step 6). Other files under `decisions/` are not
-   promoted.
+   rest of the frontmatter, `summary` included, is kept, except that each item of the PADR's `aliases` has `PADR-`
+   replaced by `ADR-`, so the own-prefix rule holds after the rename. Only the IDs of the PADRs this handoff promotes
+   change, and never inside a file name (`PADR-<slug>.md` in a link is left to step 6). Other files under
+   `decisions/` are not promoted.
 5. **Feedback and materials**: open `feedback/*.md` files move into the new spec's feedback directory;
    settled feedback follows the generic extras route. `materials/` moves to `docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug>/` when it holds a file other
    than operating-system junk (`.DS_Store`, `Thumbs.db`, `desktop.ini`) or a symbolic link. Every other bundle file the
@@ -360,8 +364,12 @@ proposal as it was; their `feedback/` is scanned, since feedback stays current.
   the bundle keeps its target and one that still resolves to the same file keeps its spelling.
 - **Document ID references** (frontmatter reference fields, `` `ID` `` and `[ID]` in prose, and the `proposal`
   provenance field) are rewritten from the IDs of the documents actually written: `PROP-<slug>` to `SPEC-<slug>`,
-  each `PADR-<slug>` to its `ADR-<slug>`, and `PROP-<slug>-target` to itself (a `[ID]` becomes `` `ID` ``). Bare
-  text, inline code other than a lone ID and fenced code do not change.
+  each `PADR-<slug>` to its `ADR-<slug>`, and `PROP-<slug>-target` to itself (a `[ID]` becomes `` `ID` ``). A
+  reference written with an alias of the proposal or a promoted PADR is rewritten exactly like one written with its
+  old ID, to the new canonical ID, across the same scan set (ADRs, the ADRs promoted in this handoff and feedback
+  included, completed bundles excluded), because the translation removes the alias's only declaration. This is the
+  handoff's own rename: the rule that `devkit rules fix` never rewrites alias references in decision records does not
+  apply to it. Bare text, inline code other than a lone ID and fenced code do not change.
 - **Code-span paths** (`kind=path`) in the bodies of the documents the handoff wrote or moved out of a bundle
   proposal (the carried `spec.md` and blueprint, the promoted ADRs, moved feedback and other carried files): an inline
   code span holding a path relative to the bundle (`` `decisions/PADR-x.md` ``,
@@ -380,7 +388,7 @@ proposal as it was; their `feedback/` is scanned, since feedback stays current.
 | Unresolved reason | Meaning |
 | --- | --- |
 | `unmapped` | A link into the proposal with no new location (the `decisions/` directory, a path that does not exist). |
-| `ambiguous` | Another document declares the same ID, so it is not rewritten. |
+| `ambiguous` | Another document declares the same ID or alias, so it is not rewritten. |
 | `unreadable`, `unwritable` | The file could not be read, parsed or written (line `0`); the link rewrites of a file that could not be written are not reported as rewritten. |
 
 The `spec-next` skill's post-handoff check follows up the reported lines.
@@ -523,7 +531,7 @@ directory whose namespace applies when `namespace` is omitted);
 | `SPEC_PROPOSAL_NEEDS_DECOMPOSE` | `ERROR` (`INTERACTION`) | `ProposalNeedsDecomposeError` | The proposal carries `needs_decompose: true`; Backlog splits it into new drafts. |
 | `SPEC_PROPOSAL_WRONG_WORKTREE` | `ERROR` (`INPUT_ERROR`) | `ProposalWrongWorktreeError` | `handoff` in a checkout, linked or base, on another branch than `dev-<slug>`, at either `[tool.spec] worktree` level (rule 11); `[FIX]` starts or continues `dev-<slug>` and reruns the handoff there. `accept` without `--direct` on another branch than `plan-<slug>`. |
 | `SPEC_PROPOSAL_WORKFLOW_INVALID` | `ERROR` (`MAINTENANCE`) | `ProposalWorkflowError` | `task_kind: bugfix` and `sdd-spec-bugfix` does not resolve or validate; `[DETAIL]` carries devkit's code. |
-| `SPEC_PROPOSAL_TARGET_EXISTS` | `ERROR` (`BLOCKED`) | `ProposalTargetExistsError` | The spec bundle, an ADR file or the materials directory exists, two PADRs map to one ADR, another document declares a promoted ADR's ID, a carried bundle file clashes with a file or symbolic link of `materials/` (or `materials/` is itself a symbolic link), or the directory of the spec bundle, an ADR, the materials directory or a carried file resolves outside the workspace. |
+| `SPEC_PROPOSAL_TARGET_EXISTS` | `ERROR` (`BLOCKED`) | `ProposalTargetExistsError` | The spec bundle, an ADR file or the materials directory exists, two PADRs map to one ADR, another document declares a promoted ADR's ID, the spec ID or a translated alias as its ID or an alias, two graduating IDs or translated aliases coincide, a carried bundle file clashes with a file or symbolic link of `materials/` (or `materials/` is itself a symbolic link), or the directory of the spec bundle, an ADR, the materials directory or a carried file resolves outside the workspace. |
 | `SPEC_PROPOSAL_HANDOFF_FAILED` | `ERROR` (`MAINTENANCE`) | `ProposalHandoffError` | A write failed; what was written is removed, the materials and carried files moved back, the proposal kept. When the roll-back was incomplete, `[DETAIL]` lists what could not be moved back or removed (kept, never deleted). |
 | `SPEC_PROPOSAL_CLEANUP_FAILED` | `WARNING` | `ProposalCleanupWarning` | The handoff completed but the proposal could not be removed, or the post-finish prune of the slug's empty proposal directories failed (`CAP-COLL-work-scope-registry`). |
 | `SPEC_PROPOSAL_LINK_UNRESOLVED` | `WARNING` | `ProposalLinkUnresolvedWarning` | Links or references into the proposal were left as they were; the `[UNRESOLVED_LINK]` lines list them. |

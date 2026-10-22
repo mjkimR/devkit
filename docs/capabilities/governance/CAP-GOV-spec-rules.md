@@ -47,7 +47,7 @@ Every rule is phase `linter` and is deployed by the `core` preset; every rule is
 
 | Rule | Checks | Fix |
 | --- | --- | --- |
-| `RULE-document-reference` | Relation fields hold full IDs of the right kind; every reference resolves to exactly one document; prose uses the code-span form; no relative links to ID-bearing documents; no duplicate IDs; no proposal sharing its slug with a spec. | Bracket form to code-span form; a handed-off `PROP-<slug>` to its `SPEC-<slug>`. |
+| `RULE-document-reference` | Relation fields hold full IDs of the right kind; every reference resolves to exactly one document; prose uses the code-span form; current documents use canonical IDs, not aliases; no relative links to ID-bearing documents; no duplicate IDs; well-formed, non-colliding aliases; no proposal sharing its slug with a spec. | Bracket form to code-span form; a handed-off `PROP-<slug>` to its canonical spec ID; an alias reference to the canonical ID. |
 | `RULE-id-convention` | Dated partitions and path-derived IDs; Living Spec stems; `area` matching the directory; the first H1's ID token; duplicate path-derived IDs; no date- or number-based references. | `id`, `reconcile_id`, `area` and the H1 token aligned to the path. |
 | `RULE-spec-format` | Capabilities, stories and proposals have a frontmatter block with string `id`, `title`, `status`; a proposal's `planning_effort` and `dev_effort` are `low`, `medium` or `high`; a proposal's or spec's `namespace` is `global` or registered. | Adds a missing block or missing fields. |
 | `RULE-traceability-link` | A story's `capabilities` and a capability's `stories` link both ways. | Appends the missing reverse ID. |
@@ -90,7 +90,7 @@ Documents reference each other by exact, resolvable full IDs. Checks every curre
 The root `docs/glossary.md` is an additional, ID-free input: in five-column tables headed
 `Term | Definition | Owner | Avoid | Code identifiers` with a Markdown separator row, backticked or bracketed full
 IDs in the Owner column MUST resolve to exactly one indexed document. Missing and ambiguous owners produce errors
-at their source line. Empty cells and non-reference text are allowed. The header fixes the Owner column;
+at their source line; an Owner naming an alias is reported (not fixed) with the canonical ID. Empty cells and non-reference text are allowed. The header fixes the Owner column;
 rows may omit trailing cells or have surplus cells without moving that column. This extension only validates resolution:
 no autofix, mandatory owners, glossary indexing or graph edges. Other columns, surrounding prose, legacy tables,
 package glossaries and other ID-free files are outside its scope. Existing prose masking, file targeting,
@@ -102,13 +102,23 @@ exclusions and snapshot cache rules apply.
 - MUST report a reference to an ID no document declares or several documents declare; a missing or duplicated ID is
   fixed by hand (the rule never guesses which document was meant).
 - MUST report a bracket reference in prose (fixable: converted to the code-span form).
-- MUST report a `PROP-<slug>` reference that does not resolve when exactly one `SPEC-<slug>` exists, typically added
-  on another branch after the handoff (fixable: rewritten to `SPEC-<slug>`). The fix never changes a spec's
-  `proposal` provenance field and skips completed specs and materials.
+- MUST report a `PROP-<slug>` reference that does not resolve when exactly one `SPEC-<slug>` exists, declared or as
+  an alias, typically added on another branch after the handoff (fixable: rewritten to the canonical ID of that spec,
+  so one fix pass converges). The fix never changes a spec's `proposal` provenance field and skips completed specs
+  and materials.
+- References resolve through the canonical mapping of `CAP-DOCS-document-model` (section 3.5). MUST report a
+  reference written with another document's alias in a current document (fixable: rewritten to the canonical ID in
+  frontmatter and prose); relation-field prefix typing applies to the ID as written. In historical files and in
+  decision records (ADRs and PADRs) an alias reference resolves silently and `devkit rules fix` never rewrites it. A
+  document mentioning its own alias is not reported. A reference to a colliding alias is reported as ambiguous and
+  left unchanged.
 - MUST report a relative Markdown link to a document that has an ID. External URLs, images, code files, documents
   without IDs and links with a fragment or query keep Markdown links.
-- MUST report an ID declared by several documents (on each), and a `PROP-<slug>` beside a `SPEC-<slug>` (handoff
-  deletes the proposal, so the pair is an unfinished handoff or a reused slug).
+- MUST report an ID declared by several documents (on each), and a `PROP-<slug>` beside a `SPEC-<slug>`, declared or
+  as an alias (handoff deletes the proposal, so the pair is an unfinished handoff or a reused slug).
+- MUST report, as identity checks over every targeted document (materials and completed specs included), each
+  malformed `aliases` item and each alias another document declares as its ID or several documents declare (on every
+  document involved). The `depends_on` cycle checks follow alias edges to their documents.
 - Reference extraction follows `CAP-DOCS-document-model`: code, comments, escapes, link labels and
   `~~strikethrough~~` are not prose, so a historical mention of a removed document MAY stay in strikethrough.
 
@@ -176,6 +186,8 @@ capability's `stories` (under `docs/` and every namespace docs root; links MAY c
   list in its style. It fixes a link only when both IDs are declared by exactly one document and the field is absent
   or a list, and only in targeted documents (`devkit rules fix <target document>` when the run targets only the
   source).
+- A link written with an alias of the other document counts as a link to it in both directions, so the fix never adds
+  the canonical ID beside an alias; `RULE-document-reference` rewrites the alias.
 - Missing targets, duplicate IDs, wrong kinds and malformed fields are `RULE-document-reference`'s.
 
 ### 3.7 `RULE-task-coverage`
