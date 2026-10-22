@@ -28,10 +28,10 @@ Run steps 1 to 4 in the task worktree.
    - Local merge (`pull_request=auto`): from the base checkout, call `integration_integrate` with `branch`, `task_kind="unit"`, `task_id` and `unit` (a session task: `task_kind="session"`, `task_id`, `claims`). It merges, takes in target commits that land during the confirmation, and cleans up.
    - PR (`pull_request=required`, or chosen under `auto`): the same call with `route="pull-request"`; it pushes, opens or reuses the PR, merges it and cleans up.
    - On `status: "partial"`, resume with `integration_resume`; after a timeout or an unknown result, call `integration_status` before any recovery. A moved target sends you back to step 1.
-   - When native confirmation is unavailable, use the CLI path below.
+   - When native confirmation is unavailable, use the CLI path below only with the user's conversational `dev-integration` OK; under `auto` there is no CLI substitute.
 {% else %}5. Present the verified change report and the merge and cleanup effects, then merge by the separately authorized route:
    - PR: before merging, verify the required checks and the unchanged approved source and base; afterwards run `devkit worktree finish <branch>`. Report an incomplete or unknown mutation to the Host.
-{% endif %}   - CLI: run `devkit worktree finish <branch> --merge --local-only` in the base checkout, rerun the cumulative check on the result, then declare it: `devkit workflow next --unit <dir> --given dev-integration --given lint-ci-clean --given merged`.
+{% endif %}   - CLI, with the user's conversational `dev-integration` OK: run `devkit worktree finish <branch> --merge --local-only` in the base checkout, rerun the cumulative check on the result, then declare it: `devkit workflow next --unit <dir> --given dev-integration --given lint-ci-clean --given merged`.
 6. After bundle changes land, run `devkit sync` in the base checkout. Report the result in the conversation (the `spec` skill's `references/envelope.md`, Integration result), naming the actual `dev-integration` authority.
 
 If a retry cap is exceeded or a tool fails, return `exception` with the cause and evidence; do not open a new task to bypass the cap.

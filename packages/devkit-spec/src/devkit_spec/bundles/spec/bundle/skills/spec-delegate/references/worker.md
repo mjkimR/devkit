@@ -24,6 +24,7 @@ The range from `<accepted>` to the returned final HEAD `<returned>` (the commit 
 ## Accept or block
 
 - **Accept**: run `devkit spec scope update --spec <dir>`; the next spawn starts from HEAD.
+- **Failed without a committed envelope** (dirty or uncommitted, e.g. a denied record or commit): block it. Inspect the actual HEAD and status against the scope, preserve the partial state, never commit its dirty paths as your own, and record the failure in your own envelope when permitted.
 - **Block**:
   1. Record the violation as your own `worker` envelope at the stage `devkit workflow next --unit <dir>` names, one finding per violation:
      ```bash

@@ -19,9 +19,8 @@ def _read(rel: str) -> str:
 def test_acceptances_are_recorded_with_the_accept_command() -> None:
     for rel in (
         "workflows/sdd-proposal.md",
-        "AGENTS.md",
-        "skills/spec/SKILL.md",
-        "skills/spec-orchestrate/SKILL.md",
+        "skills/spec/references/backlog.md",
+        "skills/spec-next/references/next-work.md",
         "skills/spec-next/references/workflow-signals.md",
         "seed/docs/proposals/README.md",
     ):
@@ -39,20 +38,18 @@ def test_backlog_states_the_direct_acceptance_procedure() -> None:
         "Planning skipped",
         "pull_request = required",
         "collect-feedback",
-        "No Planning run, `activity-effort` or `worker` envelope",
         "only on the base checkout",
-        "SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED",
     ):
         assert phrase in backlog, phrase
-    assert "Planning skipped" in _read("workflows/sdd-proposal.md") or "Planning: skipped" in _read(
-        "workflows/sdd-proposal.md"
-    )
+    workflow = _read("workflows/sdd-proposal.md")
+    assert "Planning: skipped (direct acceptance)" in workflow
+    assert "no Planning run, no `activity-effort` and no `worker` envelope" in workflow
+    assert "SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED" in workflow
     assert "a direct acceptance included: it has no Planning run" in _read("skills/spec/references/effort.md")
 
 
 def test_the_lowering_rule_names_the_session_reclassification() -> None:
-    for rel in ("AGENTS.md", "skills/spec/references/classification.md"):
-        assert "session reclassification of a queued draft" in _read(rel), rel
+    assert "session reclassification of a queued draft" in _read("AGENTS.md")
     backlog = _read("skills/spec/references/backlog.md")
     assert "## Session reclassification of a queued draft" in _rendered(BUNDLE / "skills/spec/references/backlog.md")
     for phrase in ("within the authorized goal, scope and constraints", "no `PADR-*.md`", "new slug", "git revert"):

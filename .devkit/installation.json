@@ -785,7 +785,7 @@
     },
     ".agents/agents/reconcile-reviewer.md": {
       "mode": 420,
-      "sha256": "cad71b55d23382db81c19e2e268e9dcb4dec4a7be4b578923ae665ffbdb26ad5"
+      "sha256": "264f1ea84224f66a0cedf4e0fe246cfb5f9b37c447769ca85f747ae72dd4a5e8"
     },
     ".agents/agents/scout.md": {
       "mode": 420,
@@ -825,7 +825,7 @@
     },
     ".agents/skills/spec-delegate/references/worker.md": {
       "mode": 420,
-      "sha256": "e443d2aad25a6c99ceca73cfa9709c658021997be9d76c97e25acbe05de17af5"
+      "sha256": "ebd3a75bf72407bd091291c78e4918c0e20dc46929bb574db9875dbba302cee1"
     },
     ".agents/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
@@ -849,7 +849,7 @@
     },
     ".agents/skills/spec-integrate/SKILL.md": {
       "mode": 420,
-      "sha256": "80f61cb048a592dfebac0c96697676f4c0d771bfe11a01460949aead69a07afb"
+      "sha256": "384c45b4219db8d014a764500ab6b97906428d5a0cbf0cb0df85615ab11a8941"
     },
     ".agents/skills/spec-next/SKILL.md": {
       "mode": 420,
@@ -961,7 +961,7 @@
     },
     ".agents/skills/spec/references/milestone-completion.md": {
       "mode": 420,
-      "sha256": "d6edf22c1d77d2913336bcd41dd4a2621805ea146016e7f7e94cac6537be8a9d"
+      "sha256": "47ac0c06aa1e848b25dc27d9f39bc0f8166bb2306793af34434aa2eae9681443"
     },
     ".agents/skills/spec/references/planning.md": {
       "mode": 420,
@@ -977,7 +977,7 @@
     },
     ".agents/skills/spec/references/worker-records.md": {
       "mode": 420,
-      "sha256": "3c22aeb9c8b62e4d585cf77b85f62ebf28e92737492a875d44ea5aa07ea98817"
+      "sha256": "cf8bec631b8ae3e774026094d414260d61a6f3f1ad7bf22d3e63151dfb280e8b"
     },
     ".agents/skills/spec/references/worktree.md": {
       "mode": 420,
@@ -1001,7 +1001,7 @@
     },
     ".claude/agents/reconcile-reviewer.md": {
       "mode": 420,
-      "sha256": "9e3c9c61ff41526d948770ccd5058b26b35cadfec23590bb3377aa9dcefc7700"
+      "sha256": "44446871d156ca30860374ab14cb047aa7a81c761879cd3a6983ce2178e85d56"
     },
     ".claude/agents/scout.md": {
       "mode": 420,
@@ -1033,7 +1033,7 @@
     },
     ".claude/skills/spec-delegate/references/worker.md": {
       "mode": 420,
-      "sha256": "e443d2aad25a6c99ceca73cfa9709c658021997be9d76c97e25acbe05de17af5"
+      "sha256": "ebd3a75bf72407bd091291c78e4918c0e20dc46929bb574db9875dbba302cee1"
     },
     ".claude/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
@@ -1057,7 +1057,7 @@
     },
     ".claude/skills/spec-integrate/SKILL.md": {
       "mode": 420,
-      "sha256": "80f61cb048a592dfebac0c96697676f4c0d771bfe11a01460949aead69a07afb"
+      "sha256": "384c45b4219db8d014a764500ab6b97906428d5a0cbf0cb0df85615ab11a8941"
     },
     ".claude/skills/spec-next/SKILL.md": {
       "mode": 420,
@@ -1165,7 +1165,7 @@
     },
     ".claude/skills/spec/references/milestone-completion.md": {
       "mode": 420,
-      "sha256": "d6edf22c1d77d2913336bcd41dd4a2621805ea146016e7f7e94cac6537be8a9d"
+      "sha256": "47ac0c06aa1e848b25dc27d9f39bc0f8166bb2306793af34434aa2eae9681443"
     },
     ".claude/skills/spec/references/planning.md": {
       "mode": 420,
@@ -1181,7 +1181,7 @@
     },
     ".claude/skills/spec/references/worker-records.md": {
       "mode": 420,
-      "sha256": "3c22aeb9c8b62e4d585cf77b85f62ebf28e92737492a875d44ea5aa07ea98817"
+      "sha256": "cf8bec631b8ae3e774026094d414260d61a6f3f1ad7bf22d3e63151dfb280e8b"
     },
     ".claude/skills/spec/references/worktree.md": {
       "mode": 420,
@@ -1205,7 +1205,7 @@
     },
     ".codex/agents/reconcile-reviewer.toml": {
       "mode": 420,
-      "sha256": "f47966fc3fbe8582d457facaa5cc1f0618895937715b4fc748a9114b3b104e79"
+      "sha256": "e4747edcd8e22fb13a9368057de5a3d576ddcd824a65f64202841b028e13e3e1"
     },
     ".codex/agents/scout.toml": {
       "mode": 420,
@@ -1373,7 +1373,7 @@
     },
     ".devkit/managed/spec/AGENTS.md": {
       "mode": 420,
-      "sha256": "22003c77fe2fd32c9c28ca4a29d587ebaf744f250a7fe9ec984857035acbc8b7"
+      "sha256": "bba125458939769076c22367e8e3210412d40f015c2d95c35bdc602f816eb4b0"
     },
     ".devkit/managed/spec/bundle.toml": {
       "mode": 420,
@@ -1425,7 +1425,7 @@
     },
     ".devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md": {
       "mode": 420,
-      "sha256": "0ba85da481abe37850e90397db614b8d8718d2f52aa8db592dc3911dd0b5404c"
+      "sha256": "d20839d292d5cabe6c8c1fd2d129933824ec42b78cb04f5991e723cd5027c702"
     },
     ".devkit/managed/spec/rules/code_entrypoints/guide.md": {
       "mode": 420,
@@ -1573,7 +1573,7 @@
     },
     ".devkit/managed/spec/skills/spec-delegate/references/worker.md": {
       "mode": 420,
-      "sha256": "e443d2aad25a6c99ceca73cfa9709c658021997be9d76c97e25acbe05de17af5"
+      "sha256": "ebd3a75bf72407bd091291c78e4918c0e20dc46929bb574db9875dbba302cee1"
     },
     ".devkit/managed/spec/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
@@ -1597,7 +1597,7 @@
     },
     ".devkit/managed/spec/skills/spec-integrate/SKILL.md": {
       "mode": 420,
-      "sha256": "80f61cb048a592dfebac0c96697676f4c0d771bfe11a01460949aead69a07afb"
+      "sha256": "384c45b4219db8d014a764500ab6b97906428d5a0cbf0cb0df85615ab11a8941"
     },
     ".devkit/managed/spec/skills/spec-next/SKILL.md": {
       "mode": 420,
@@ -1705,7 +1705,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/milestone-completion.md": {
       "mode": 420,
-      "sha256": "d6edf22c1d77d2913336bcd41dd4a2621805ea146016e7f7e94cac6537be8a9d"
+      "sha256": "47ac0c06aa1e848b25dc27d9f39bc0f8166bb2306793af34434aa2eae9681443"
     },
     ".devkit/managed/spec/skills/spec/references/planning.md": {
       "mode": 420,
@@ -1721,7 +1721,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/worker-records.md": {
       "mode": 420,
-      "sha256": "3c22aeb9c8b62e4d585cf77b85f62ebf28e92737492a875d44ea5aa07ea98817"
+      "sha256": "cf8bec631b8ae3e774026094d414260d61a6f3f1ad7bf22d3e63151dfb280e8b"
     },
     ".devkit/managed/spec/skills/spec/references/worktree.md": {
       "mode": 420,
@@ -1745,7 +1745,7 @@
     },
     ".devkit/managed/spec/subagents/reconcile-reviewer.md": {
       "mode": 420,
-      "sha256": "9eba363702eac15e92d85cdb2113d341607471b200829f13dff048532d9451d5"
+      "sha256": "da64d927b0a8c82fff952a373da9816daab5151b5b910c157195e70aa00dfeba"
     },
     ".devkit/managed/spec/subagents/scout.md": {
       "mode": 420,

@@ -147,6 +147,6 @@ def test_roadmap_template_and_guidance_are_packaged() -> None:
     assert "status: planned" in template and "depends_on: []" in template
     backlog = (BUNDLE / "skills/spec/references/backlog.md.jinja").read_text()
     selection = (BUNDLE / "skills/spec-next/references/next-work.md").read_text()
-    assert "--decomposed-from" in backlog and "plan-`/`dev-" in backlog
-    assert "2027-01-31" in selection and "ADR-roadmap-review" in selection
+    assert "--decomposed-from" in backlog and "[milestone completion](milestone-completion.md)" in backlog
+    assert "devkit spec list milestone --all-namespaces -n 0" in selection
     assert (BUNDLE / "seed/docs/roadmap/README.md").is_file()

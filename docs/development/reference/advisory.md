@@ -19,7 +19,7 @@ This module implements the Agent Advisory Protocol and nothing else.
 | `core` | `agent-advisory` (language-agnostic protocol and authoring rules) | Any repository |
 | `python` | `agent-advisory` + `agent-advisory-python` (library guide) + `unique-code` (`RULE-advisory-unique-code`, linter error: two unrelated `AdvisoryError` classes declaring one code; [guide](../../../packages/devkit-dist/src/devkit_dist/bundles/advisory/bundle/rules/unique_code/guide.md)) | Python repositories using `devkit.advisory` |
 
-`agent-advisory` is the consumer-facing mirror of `CAP-ADV-agent-advisory-protocol` and `agent-advisory-python` documents this library; both are kept in step with the specification, and a test keeps the `[ACTION]` texts in `agent-advisory` identical to `ACTION_TEXT`.
+`agent-advisory` is the consumer-facing mirror of `CAP-ADV-agent-advisory-protocol` and `agent-advisory-python` documents this library; both are kept in step with the specification, and `agent-advisory` names each mode and defers to `ACTION_TEXT` for the `[ACTION]` texts.
 
 ## Library
 

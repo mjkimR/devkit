@@ -25,8 +25,18 @@ user instructions take precedence. Never end the user's session on your own.
 
 ## 3. Classification and Authority
 
-- Classify work by `task-kind`, `planning-depth` and `activity-effort` with the `spec` skill's
-  `references/classification.md`. Only the Host raises the depth, never a worker.
+- Classify work on three axes; the `spec` skill's `references/classification.md` adds the criteria:
+  - `task-kind`: `feature` (default), `bugfix` (a defect against an agreed contract: reproduce, Red then Green) or
+    `overall-refactor` (a structural change across the project with no new behavior: `sdd-overall-refactor`, no depth).
+  - `planning-depth`: what must be settled first, not size. `session`: nothing, no Unit. `spec`: the contract, with a
+    clear direction. `proposal`: the direction; Planning, then handoff.
+  - `activity-effort`: `low`, `medium` (default) or `high` per activity; it never lowers gates, exit checks or
+    `required` policies.
+- The workflow is `sdd-<planning-depth>[-<task-kind>]`; `sdd-proposal` hands off to `sdd-spec-<task_kind>`.
+- Only the Host raises the depth, never a worker. Lower it only through a proposal's handoff or the session
+  reclassification of a queued draft; never lower a proposal in review or accepted, or a spec Unit.
+- The approval boundaries are `plan-accept` (proposal direction), `proposal-handoff` (start Development) and
+  `dev-integration` (land the Development result), each `ask` (default) or `auto`.
 - Follow the workflow's stages, checks, gates and returns as `devkit workflow next --unit <dir>` reports them, never an
   ad-hoc sequence. A Unit writes `spec.md`, `plan.md` and `tasks.md` before production code.
 - Before classification, gate and Git decisions, run `devkit spec policy` and read the `spec` skill's

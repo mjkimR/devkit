@@ -18,6 +18,7 @@ devkit workflow envelope worker --unit <dir> --stage <stage> --summary "<what th
 - **Questions**: add `--questions-file -`, a YAML list of `id`, `title` (40 characters at most), `prompt`, `context` (what the answer decides and why it matters now, for a reader who has not seen the work), `options` (`{id, description, recommended}`, one recommended) and `allow_note`. When an option depends on a condition, also state what holds when it does not.
 - **Problem**: add `--problem "<cause>" --tried "<attempt>" --recovery "<recommended recovery>"`; pass `--status needs_input` when only the user can decide. A problem is what breaks the agreed goal, scope or contract or cannot be solved; a choice you can make, or waiting for answers, is not one.
 - **Emergency commit**: a run that stops on a problem commits its unfinished work with the envelope. Only this commit may use `git commit --no-verify`, and only on ordinary commit-gate refusal of the unfinished files, never for sandbox or approval denial; name each skipped check in `--tried`.
+- On any refused or unavailable approval, on every host, stop that operation and preserve the state; never reroute through another tool, path, process, broader request or setting.
 - If the record or commit itself is denied, stop, preserve the state and return `failed` with the actual last commit, dirty paths and the absent/uncommitted record or commit; never invent a committed envelope.
 - A malformed `worker` envelope holds the unit like a problem: fix the file.
 
@@ -44,7 +45,7 @@ devkit workflow envelope answer --unit <dir> --stage <stage> --summary "q1, q2 d
 
 `[BLOCKED: ...]` means a problem has no `resolution` naming it. It holds the gates from the problem's stage on, the handoff and `devkit worktree finish --merge`; `devkit workflow next` still names the stage where the recovery runs. Only a `resolution` clears it.
 
-- Decide the recovery inside the approved scope: fix or revert yourself (`git revert`, never reset), or send a new worker the recovery request. A recovery that needs the scope changed goes to the user and a close ([classification](classification.md) §4).
+- Decide the recovery inside the approved scope: fix or revert yourself (`git revert`, never reset), or send a new worker the recovery request. A recovery that needs the scope changed goes to the user and a close ([close](depth-and-close.md#close)).
 - Record a problem you find yourself in your own `worker` envelope (`--problem`).
 - Whoever fixed it writes the resolution in the same commit as the fix; one who could not writes none:
 

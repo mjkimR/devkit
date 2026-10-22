@@ -8,7 +8,7 @@ description: Triage open feedback files under specs/ in one hygiene session; gro
 Run this playbook only in a hygiene session the user asks for, from a clean working tree or a task worktree. You
 propose and draft; destinations beyond existing authorization are the user's decisions. A direct fix resolves its
 feedback through the `spec` skill's
-[source feedback resolution](../../skills/spec/references/completion.md#source-feedback-resolution) instead.
+[source feedback resolution](../../skills/spec/references/source-feedback.md) instead.
 
 ## Step 1: Collect and group
 

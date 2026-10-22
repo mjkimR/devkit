@@ -34,7 +34,7 @@ Verify the Living Spec reflection the implementer wrote for a spec unit's Develo
 
 ## Return
 
-The fields of a `reconcile-check` envelope ("Return envelope" in `.devkit/managed/spec/skills/spec/references/envelope.md`) as YAML; the caller records them. `summary` names the verified targets or the confirmed no-impact. Give every finding a `severity` from the "Severity" section of `review-loop.md`.
+Modify, stage and commit nothing. The fields of a `reconcile-check` envelope ("Return envelope" in `.devkit/managed/spec/skills/spec/references/envelope.md`) as YAML; the caller records them. `summary` names the verified targets or the confirmed no-impact. Give every finding a `severity` from the "Severity" section of `review-loop.md`.
 
 - If it is ambiguous which contract applies, return `needs_input`.
 - If the head moved since `diff_scope`, report the verification as stale.

@@ -107,18 +107,16 @@ A project opts out of the bundle with `[presets] spec = false` in `.devkit/confi
 `devkit get-context spec` returns `{"bundle": "spec", "constitution": <text>, "instructions": [{"path", "header"}]}`.
 The constitution's sections:
 
-1. **Context**: read it once per agent context; instructions hold judgment and policy, playbooks occasional
-   procedures, rules deterministic checks.
+1. **Context**: read it once per agent context and each relevant instruction before the action it governs; a
+   mandatory check wins over an instruction.
 2. **Living Spec and Scope**: `docs/` holds the current contract; feature specs are `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/`;
-   namespaces under `docs/packages/<name>/`; English `summary`; references by full ID; Non-Goals and
-   `_Boundary:` are the expected scope.
-3. **Classification and Workflows**: the three axes, the five workflows, the gates `plan-intent`, `plan-accept` and
-   `dev-integration`, no Development direction gate, and the modes per activity; policy read through
-   `devkit spec policy`.
+   namespaces under `docs/packages/<name>/`; references by full ID; Non-Goals and `_Boundary:` are the expected scope.
+3. **Classification and Authority**: the three axes, the `sdd-<planning-depth>[-<task-kind>]` workflow names, raising
+   and lowering the depth, the approval boundaries `plan-accept`, `proposal-handoff` and `dev-integration` with
+   `ask|auto`, `plan-intent` supplied by an explicit instruction, and policy read through `devkit spec policy`.
 4. **Verification and Completion**: compare diff, requirements, check results and Living Spec impact before
-   reporting completion; spec Units keep a resolved `reconcile.md`, a `session` task reports in its final response
-   or PR body.
-5. **Templates and Policy Files**: template paths, policy tables, managed files.
+   reporting completion; a `session` task reports in its final response or PR body.
+5. **Managed Files**: template paths, policy read through `devkit spec policy`, managed files changed only by override.
 
 ### 4.3 Instructions and Guidance Pointer
 
@@ -156,14 +154,16 @@ Living Spec and `specs/` holds feature specs.
 | `spec-entrypoints` | Derive capability and story entrypoints from spec bundles, review and apply them. | `entrypoints derive`, `list capability` |
 
 Skill references, each read at the moment it names: `spec/references/completion.md` (completion classification,
-policy, `mcp-elicitation` confirmation authority for `integration_integrate`, reconcile record, checks and commits), `spec/references/envelope.md` (delegation input and return envelope,
-final change report), `spec/references/git-policy.md` (worktree, pull request and branch cleanup levels), `spec/references/worktree.md` (task worktree start, work, approval-bound `integration_integrate` and `devkit worktree finish --local-only`, leftovers),
+policy, `mcp-elicitation` confirmation authority for `integration_integrate`, reconciliation evidence),
+`spec/references/depth-and-close.md` (raising the depth and closing without a merge),
+`spec/references/source-feedback.md` (tasks that address named feedback), `spec/references/envelope.md` (return
+envelope, final change report, integration result), `spec/references/git-policy.md` (worktree, pull request and branch cleanup levels), `spec/references/worktree.md` (task worktree start, work, approval-bound `integration_integrate` and `devkit worktree finish --local-only`, leftovers),
 `spec-next/references/post-handoff.md` (follow-up of `[REWRITTEN]` and `[UNRESOLVED_LINK]` lines),
 `spec-next/references/workflow-signals.md` (`devkit workflow next` lines and advisories),
 `spec-delegate/references/hosts.md` (spawning a role on each host), `spec-delegate/references/payload.md` (payload
 fields and rows per role), `spec-specify/references/feature.md` and
 `bugfix.md`, `spec-feedback/references/sweep.md` and `template.md`, `spec-rule/references/config.md` and
-`templates.md`.
+`templates.md`, `spec-entrypoints/references/backfill.md`.
 
 ### Delegation evidence and integration responsibilities
 
@@ -225,7 +225,7 @@ Handoff carries only `status: open` files into the spec and settled files into m
 The Host then preserves open files in the month-level backlog in the deletion commit, updates links and historical
 references with Git context, validates current references, and keeps the proposal on invalid input, collision or an
 unresolved live dependency. Capture and relocation never change feedback status. The procedure is
-`spec/references/feedback-retirement.md`; category lookup is `spec-feedback/references/categories.md`.
+`spec/references/feedback-retirement.md`; the category table is in `spec-feedback/references/template.md`.
 
 Feedback uses `scope: repo | upstream | unknown`, determined by ownership rather than product name. An asset
 developed in this repository is `repo`, even if it is shipped to other repositories; an installed upstream copy
@@ -309,7 +309,7 @@ The spec classification reference routes Backlog to its repository-only procedur
 
 Milestones are global MS documents with goal, exit condition and non-goals, never copied work lists. User and agent jointly review the theme and decompose it into direct PROP members. Only proposal anchors declare membership; handoff omits milestone metadata and historical SPEC metadata is ignored. Authors SHOULD describe a multi-unit phase, release or architectural theme advancing `ARCH-01-introduction-and-goals`, with observable phase-level outcomes and capability boundaries. A theme may initially have one proposal when broader intended scope is not authored yet; it SHOULD NOT exist solely as a sequencing gate. CLI flags, branch names, file layouts and scenario tests belong in proposals/specs. Activation shows unmet dependencies but permits an explicit out-of-order decision. Close planned/active milestones through one current Backlog candidate: sufficient decomposition, direct proposal work delivered or explicitly excluded/moved, and the exit condition met for the resulting agreed scope. Inspect all direct PROP members across namespaces, the selected local base (report its commit without claiming remote freshness) and relevant known Planning/Development activity; focused code/Git inspection resolves missing proposals without reconstructing delivery lineage. Handoff, deletion, rejection, reassignment and empty membership alone never prove delivery. Outstanding in-scope work, an unmet exit condition or inconclusive required evidence keeps the milestone open with the remaining check named; missing confirmation is a separate gap. The user confirms both plain body assertions and status done together in one Backlog commit, without a third approval. Recheck scope, membership and relevant evidence immediately before writing; unchanged authorization survives interruption or compaction, while material changes or an unestablishable approved candidate/evidence require reconfirmation. Actual semantic scope changes (new required work, exclusion or moving scope elsewhere) reset both assertions to pending in the authorized scope edit. Normal handoff/mechanical identity relocation does not change scope/decomposition and requires no milestone review, reset or reconfirmation. No pre-handoff or integration hook is added; relevant completion evidence is checked at close. Pure wording/format corrections preserving meaning do not invalidate. Extending done scope requires user-owned reopen to active with pending assertions or another milestone. Unchanged done writes nothing, dropped is not a close candidate, and existing done records are not migrated. Drop prepares member reassignment/clearing/rejection and shows successor dependencies. Done/dropped records remain hidden history (`ADR-roadmap-and-milestones`).
 
-Spec-next treats a slug with a plan-/dev- branch, a reviewing/accepted proposal or an incomplete spec as in progress; queued drafts do not suppress idle recommendations. After the unit prerequisite filter below, eligible draft order is critical first, milestone rank (active, ready planned, no milestone), milestone created_at/ID, priority, size, draft created_at/ID. Unready/finished milestone and needs_decompose drafts are Backlog actions; unit-ready critical drafts still rank first; milestone exceptions never bypass unit prerequisites. The skill supplies deterministic ties/defaults; the CLI adds no sorting. It recommends intent confirmation when absent, offers Planning, a direct acceptance or a session reclassification for the draft, and mentions open feedback hygiene. At three done milestones or 2027-01-31 it reports roadmap review due until ADR-roadmap-review exists; this is a reminder, not a gate.
+Spec-next treats a slug with a plan-/dev- branch, a reviewing/accepted proposal or an incomplete spec as in progress; queued drafts do not suppress idle recommendations. After the unit prerequisite filter below, eligible draft order is critical first, milestone rank (active, ready planned, no milestone), milestone created_at/ID, priority, size, draft created_at/ID. Unready/finished milestone and needs_decompose drafts are Backlog actions; unit-ready critical drafts still rank first; milestone exceptions never bypass unit prerequisites. The skill supplies deterministic ties/defaults; the CLI adds no sorting. It recommends intent confirmation when absent, offers Planning, a direct acceptance or a session reclassification for the draft, and mentions open feedback hygiene.
 
 
 Local-orchestrated proposal acceptance requires connected owning report, shared-get and native approval tools.

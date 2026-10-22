@@ -5,12 +5,9 @@ from pathlib import Path
 
 def test_local_orchestration_requires_project_connection():
     bundle = Path(__file__).resolve().parents[4] / "src/devkit_spec/bundles/spec/bundle/skills"
-    for path in (bundle / "spec-orchestrate/SKILL.md", bundle / "spec-delegate/references/hosts.md"):
-        text = _rendered(path)
-        assert "shared_put" in text and "shared_sweep_apply" in text
-        assert "Do not automatically fall back to CLI" in text
-        assert "stop that dependent operation" in text
-        assert "permission refusal grants no rerouting authority" in text
+    text = _rendered(bundle / "spec-orchestrate/SKILL.md")
+    assert "shared_put" in text and "shared_sweep_apply" in text
+    assert "stop that operation; do not fall back to CLI unless the user chooses an authorized CLI route" in text
 
 
 def _rendered(path: Path) -> str:

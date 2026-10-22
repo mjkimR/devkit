@@ -1,6 +1,6 @@
 # Milestone completion review
 
-Read this for a requested Backlog close review, or to propose one after the milestone's known work finishes. Scope changes and handoff effects on the assertions are in [backlog](backlog.md).
+Read this for a requested Backlog close review, or to propose one after the milestone's known work finishes. Scope changes and handoff effects on the assertions are in the milestone template (`.devkit/managed/spec/templates/milestone.md`).
 
 ## Prepare one candidate
 
