@@ -20,7 +20,7 @@ number the documents (`ARCH-<section>-<slug>`); C4 levels scope the diagrams.
 ## Constraints
 
 - State each constraint as one rule with an RFC 2119 keyword and its boundary: "Models MUST NOT import use cases."
-- Name the check that enforces it (its fitness function): `RULE-<slug>`, a test path or a CI step. Write "review
+- Name the check that enforces it (its fitness function): `RULE-<slug>`, a test path or a CI step. Write "Review
   only" when no check exists, so the gap stays visible.
 
 ## Quality Scenarios

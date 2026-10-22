@@ -2,10 +2,7 @@
 
 ## 1. Classify (Backlog)
 
-Decide in this order and state the result.
-
-- Record the authorized intent at `plan-intent`; an existing explicit task instruction needs no repeated confirmation.
-- Choose activity effort within that intent, preserving explicit user choices and required review.
+Decide the axes in this order and state the result. Choose activity effort within the authorized intent, preserving explicit user choices and required review.
 
 | Axis | Values | Criterion |
 | --- | --- | --- |
@@ -13,24 +10,19 @@ Decide in this order and state the result.
 | `planning-depth` | `session`, `spec`, `proposal` | What must be settled before implementation, not size. Nothing (no design choice, no contract impact, verifiable in the session): `session`. The contract, with a clear direction: `spec`. The direction, with options to compare: `proposal`. Large but clear work is `spec`; small work whose direction is open is `proposal`. |
 | `activity-effort` | `low`, `medium` (default), `high` | How thorough the activity's review and verification are ([effort](effort.md)); none for Backlog and inline Planning. Never lowers gates, exit checks or `required` policies. |
 
-- Run Backlog in `direct` mode, following [repository Backlog](backlog.md).
-  - State effort hints with `plan-intent`.
-  - Record actual user instruction with `devkit workflow answer --by user`; do not invent a new approval.
-  - Commit only the draft and its intent record before starting Planning from the base HEAD.
-- If a request requires independently delivered outcomes, decompose it into drafts first ([repository Backlog](backlog.md)). A `needs_decompose` draft never starts Planning; one proposal hands off to one spec.
-- Within the authorized scope, a queued draft may skip Planning or the Unit: a settled direction by a direct acceptance, `session`-depth work by the session reclassification at pickup ([repository Backlog](backlog.md)).
-- Draft proposals may be added from any activity, outside the worktree and PR `required` policies, in the current checkout.
-  - Record a follow-up found during other work as feedback by default; a draft is also allowed.
-  - Backlog changes only a `draft` that Planning does not own ([repository Backlog](backlog.md)); stop on `SPEC_PROPOSAL_IN_PLANNING`.
+- Run Backlog in `direct` mode per [repository Backlog](backlog.md). State effort hints with `plan-intent`, and commit only the draft and its intent record before starting Planning from the base HEAD.
+- If a request requires independently delivered outcomes, decompose it into drafts first. A `needs_decompose` draft never starts Planning; one proposal hands off to one spec.
+- Within the authorized scope, a queued draft skips Planning by a direct acceptance when its direction is settled, or skips the Unit by the session reclassification at pickup when the work is `session` depth ([repository Backlog](backlog.md)).
+- Any activity may add a draft proposal in the current checkout, outside the worktree and PR `required` policies. Record a follow-up found during other work as feedback by default; a draft is also allowed.
 
 ## 2. Inline Planning (`session`, `spec`) and the problem rule
 
 - `spec`:
-  1. Start `dev-<slug>` and the Unit per [worktree](worktree.md) §1. When `GIT_POLICY` needs no worktree, use `--no-worktree` ([branches](branches.md)). `devkit spec new` is refused off `dev-<slug>`.
+  1. Start `dev-<slug>` and the Unit per [worktree](worktree.md) §1, or with `--no-worktree` when `GIT_POLICY` needs no worktree ([branches](branches.md)). `devkit spec new` is refused off `dev-<slug>`.
   2. Agree the intent with the user, record `plan-intent` and commit.
   3. That committed state is Development's input; a worker or cloud run continues the branch (`--existing-branch dev-<slug> --unit <dir>`, [branches](branches.md) §3).
 - `session`: agree the intent in the conversation; no Unit.
-  - With a PR, the work runs on `dev-<slug>`; otherwise on the current branch. On the base under `ask` integration, start `dev-<slug>` or get the OK first.
+  - With a PR, the work runs on `dev-<slug>`; otherwise on the current branch, with the base-branch exception in [git policy](git-policy.md).
   - A `session` task runs in `direct` or the `cloud-pr` general PR path only; in `local-orchestrated`, handle it yourself in `direct`.
 - Split work for execution, not for extra approval:
   - Keep one cohesive unit when its outcome can be implemented and verified together.
@@ -47,11 +39,9 @@ Decide in this order and state the result.
 
 When the agreed work addresses named feedback:
 
-- Record its full FB IDs and the intended scope in a `Source feedback` section of the proposal/spec body. For a session,
-  keep them in the agreed conversational scope (no new file).
+- Record its full FB IDs and the intended scope in a `Source feedback` section of the proposal or spec body. For a session, keep them in the agreed conversational scope (no new file).
 - Keep that section when drafting a handed-off spec: handoff carries proposal body references and never resolves them.
-- Resolve open direct-fix sources to actual files before planning boundaries. Include paths needing completion
-  updates in delegated write scope.
+- Before planning boundaries, resolve open direct-fix sources to actual files, and include the paths needing completion updates in delegated write scope.
 - Terminal sources remain traceability and require no completion edits.
 - Do not infer sources from a matching target alone.
 - At completion, follow [Source feedback resolution](completion.md#source-feedback-resolution).
@@ -91,22 +81,13 @@ Development never returns to Planning. Only a party that can talk to the user cl
 
 ### Unit prerequisites
 
-- Before direct-spec intake or explicit proposal pickup, inspect optional unit depends_on using the single local
-  base snapshot procedure in `spec-next/references/next-work.md`, even when idle selection is not running.
-- Record an explicit order override's unsatisfied IDs/reasons in the ordinary intent decision; do not waive malformed
-  references or cycles.
-- Before supersede, reject, delete or session reclassification, follow Backlog's per-dependent incoming prerequisite
-  disposition in the same authorized change; provenance never selects successors.
+- Before direct-spec intake or explicit proposal pickup, inspect optional unit `depends_on` with the single local base snapshot procedure in `spec-next/references/next-work.md`, even when idle selection is not running.
+- Record an explicit order override's unsatisfied IDs and reasons in the ordinary intent decision; do not waive malformed references or cycles.
+- Before supersede, reject, delete or session reclassification, apply the incoming prerequisite disposition of [repository Backlog](backlog.md) in the same authorized change.
 
 ## 5. Overall refactor
 
-- Use `overall-refactor` when a change adds no behavior and restructures several areas of the project at once
-  (package boundaries, conventions, document systems, ledgers) and its direction settles while the work proceeds.
-  A refactor inside one feature or module is `feature` work at its planning depth.
-- It has no planning depth and no Unit: run `sdd-overall-refactor` (`devkit workflow show sdd-overall-refactor`),
-  never a proposal or spec bundle. A draft proposal for it is reclassified at pickup.
-- Run it in `direct` only, with the user. Do not start `planning-worker` or `development-worker` for it; use general
-  subagents for parallel drafting, edits and research, and keep splitting, checking, the conversation and commits.
-- Change the Living Spec with the code; record a lasting policy as an ADR. Report what changed and why, the breaking
-  changes and the verification (full test suite, lint, types, `devkit rules check`) in the final response and the
-  commit body; write no other record.
+- Use `overall-refactor` when a change adds no behavior and restructures several areas of the project at once (package boundaries, conventions, document systems, ledgers) and its direction settles while the work proceeds. A refactor inside one feature or module is `feature` work at its planning depth.
+- It has no planning depth and no Unit: run `sdd-overall-refactor` (`devkit workflow show sdd-overall-refactor`), never a proposal or spec bundle. A draft proposal for it is reclassified at pickup.
+- Run it in `direct` only, with the user. Do not start `planning-worker` or `development-worker` for it; use general subagents for parallel drafting, edits and research, and keep splitting, checking, the conversation and commits yourself.
+- Change the Living Spec with the code; record a lasting policy as an ADR. Report what changed and why, the breaking changes and the verification (full test suite, lint, types, `devkit rules check`) in the final response and the commit body; write no other record.

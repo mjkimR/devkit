@@ -5,9 +5,8 @@ description: Verify the git diff, acceptance criteria and test results before de
 
 # spec-review: Pre-Completion Verification Workflow
 
-Use this skill when all tasks in `tasks.md` are checked (`tasks-all-checked` opens the `review-refine` stage), or before submitting a pull request.
-
----
+Use this skill when all tasks in `tasks.md` are checked (`tasks-all-checked` opens the `review-refine` stage), or
+before submitting a pull request.
 
 ## 1. Prerequisites & Inputs
 
@@ -17,8 +16,6 @@ Use this skill when all tasks in `tasks.md` are checked (`tasks-all-checked` ope
 - If the review covers uncommitted changes, say so in the envelope's `assumptions`; the cumulative check after the
   commit covers it.
 
----
-
 ## 2. Verification Workflow & Converge Invariants
 
 - Never rewrite, delete or weaken original tests or acceptance criteria to force a failing check to pass. Record a
@@ -27,6 +24,7 @@ Use this skill when all tasks in `tasks.md` are checked (`tasks-all-checked` ope
 - Verify mechanically (`git diff`, build, tests, linters), not by extra LLM re-evaluation.
 
 ### Step 1: Mechanical Git Diff Inspection
+
 - Run `git status -s` and `git diff` against the base branch.
 - Check for:
   - **Scope drift**: changes outside the declared `_Boundary:` in `tasks.md` without a stated reason.
@@ -37,29 +35,32 @@ Use this skill when all tasks in `tasks.md` are checked (`tasks-all-checked` ope
   - **Dead code / debug prints**: `print`/`console.log` debugging, commented-out code blocks, mock bypass flags.
 
 ### Step 2: Contract & Acceptance Criteria Validation
+
 - Compare actual code and test outputs against every `[AC-NN]` Given/When/Then scenario in `spec.md`:
   - happy path, edge cases and boundary conditions are tested and passing;
   - error payloads and status codes match the contract.
 - Non-goals: no excluded scope implemented, even partially.
-- Bugfix bundles: the Red and Green envelopes exist and the regression test is kept (`devkit workflow envelope check --unit <dir>`).
+- Bugfix bundles: the Red and Green envelopes exist and the regression test is kept
+  (`devkit workflow envelope check --unit <dir>`).
 
 ### Step 3: Run Deterministic Verification Gates
+
 - Follow the repository's test policy on the reviewed content (e.g., `just test-affected`); preserve selector
   fallbacks and any named frontend checks.
 - Run the full suite locally only when that policy or the selector requires it.
 - As a delegated reviewer, reuse valid results and rerun only missing or stale checks.
 - Run the linters and formatters (e.g., `just lint`) and the spec rules: `devkit rules check --staged` for staged
   changes, `devkit rules check --ci --base <ref>` for a committed branch.
-- Exit code 0 with zero warnings and errors.
+- Each check passes with exit code 0 and zero warnings and errors.
 
 ### Step 4: Capture Unstated Requirements & Drift
+
 - Record each new requirement, API change or unexpected constraint the implementation revealed as a finding.
 - If it changes the agreed contract, it is a problem for the Host; if it stays inside the contract, fix or waive it in
   the reverify round.
 
----
-
 ### Delegated execution (Reviewer role)
+
 - Who runs this skill, by `activity-effort`:
   - medium and high: the `code-reviewer` role, in an isolated context (through `spec-delegate`; `[DELEGATE]` for this
     stage). Its first medium review is mandatory regardless of change size.
@@ -76,15 +77,13 @@ Use this skill when all tasks in `tasks.md` are checked (`tasks-all-checked` ope
   - At high the review runs in the bounded rounds of `references/review-loop.md`; each summary starts with
     `round <N>;`.
 
-### Optional feedback breakpoint
+### Feedback after the review
 
-- After `review-refine` passes and before `living-spec-draft`, an executor may pause for user feedback or proceed
-  automatically.
-- An external runner owns that option and its wait/resume state; it adds no stage, check or approval file.
+If an external runner pauses after `review-refine` for user feedback:
+
 - Feedback that changes implementation returns to build/reverify for the affected part; a direction change is a close
   (the `spec` skill).
-- The breakpoint does not replace the `dev-integration` gate; Living Spec reflection still completes before
-  `dev-integration`.
+- The pause replaces no stage, check or gate: Living Spec reflection still completes before `dev-integration`.
 
 ## 3. Review Report
 
@@ -112,4 +111,9 @@ EOF
 - A `session`-depth task states the same content in the final response or PR body and writes no envelope; a reviewer
   subagent returns it as a message.
 
-- PASS is `status: completed` with no open findings; REVISE is `status: completed` with findings; `needs_input` when verification is blocked. Give the user a clear verdict.
+## 4. Completion
+
+- [ ] The verdict is stated to the user: PASS is `status: completed` with no open findings; REVISE is
+  `status: completed` with findings; `needs_input` when verification is blocked.
+- [ ] For a spec Unit with a PASS, `devkit workflow next --unit <dir>` no longer lists `envelope-review-passed` as
+  unmet.

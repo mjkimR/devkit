@@ -7,8 +7,10 @@ description: Create an agent skill or playbook with a router structure, restruct
 
 Use this playbook when you create or substantially edit a skill (`SKILL.md` with
 optional `references/` and `scripts/`) or a playbook, and when
-`RULE-skill-document-size` reports a file. Read
-[script support](references/scripts.md) only when a step needs a helper script.
+`RULE-skill-document-size` reports a file. Write the sentences, body order and
+reference links by the `agent-asset-writing` instruction. Read
+[script support](references/scripts.md) when a step is repetitive and
+deterministic, or must filter repository state down to the slice the agent needs.
 
 ## Prerequisites
 
@@ -31,21 +33,15 @@ optional `references/` and `scripts/`) or a playbook, and when
 <skill-name>/
 ├── SKILL.md          # always loaded when the skill triggers
 ├── references/       # read on a stated condition
-└── scripts/          # executed, not read (see references/scripts.md)
+└── scripts/          # executed, not read
 ```
 
 - **Frontmatter**: `name` matches the directory. `description` says what the
   skill does and when to use it, with the words a user or agent would actually
   type; the description decides whether the skill triggers at all.
-- **Body order**: purpose and trigger, required constraints, procedure or task
-  branches, verification criteria (how the agent knows it is done), then
-  situational reference paths.
-- **References**: one file per situation or procedure, linked from `SKILL.md`
-  with its read condition, for example "Read `references/review.md` when
-  entering review." Keep references one level deep.
-- **Sentences**: write the body by the `agent-asset-writing` instruction
-  (directives, degrees of freedom, defaults, feedback loops, completion
-  criteria, examples).
+- **Body**: purpose and trigger, required constraints, procedure or task
+  branches, completion criteria, then the situational reference paths.
+- **References**: one file per situation or procedure, named after it.
 
 ## Step 2: Restructure a large skill
 
@@ -57,11 +53,10 @@ inseparable procedure or move always-required constraints.
 
 1. **Split conditional content first.** Move content that only some runs need:
    recovery procedures, tool- or host-specific instructions, the detailed schema
-   of one stage, rare long examples. Name each file after its situation and
-   state the read condition where `SKILL.md` links it.
+   of one stage, rare long examples. State the read condition where `SKILL.md`
+   links each file.
 2. **Thin router.** `SKILL.md` keeps purpose and trigger, shared constraints,
-   task branches and the situational reference paths. Do not instruct the agent
-   to read every reference at start; that loads the same context as before.
+   task branches and the situational reference paths.
 3. **Compress repetition.** Remove repeated explanation, long background and
    overlapping examples. Keep execution conditions, required constraints and
    verification criteria.

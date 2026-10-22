@@ -59,10 +59,9 @@ Match the precision of a step to how fragile it is:
 ## Self-Containment
 
 A bundle is the unit a package ships to other repositories, which have none of the authoring repository's
-documents. Each bundle is self-contained: its assets may reference each other, but nothing outside the bundle.
+documents. Link an asset to the bundle's own skills, references, instructions, playbooks, templates, rules and
+workflows, and to nothing outside the bundle.
 
-- Link freely to the bundle's own assets: its skills and their references, instructions, playbooks, templates,
-  rules and workflows.
 - Write the rule and its one-clause reason in the asset instead of citing the authoring repository's ADR, capability,
   story, spec or path: "Do not write the OK to a file." not "... (`ADR-...`)".
 - Refer to the consumer repository's own documents only through a placeholder (`docs/decisions/`, `ADR-<slug>`).
@@ -78,4 +77,4 @@ documents. Each bundle is self-contained: its assets may reference each other, b
   keywords.
 - Every required ordering names its enforcing command; the asset ends with checkable completion criteria.
 - Every reference is linked with a read condition, one level deep.
-- The bundle cites nothing outside itself except placeholders for the consumer repository's documents.
+- The document-ID search above reports only placeholders.

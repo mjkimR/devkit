@@ -41,7 +41,7 @@ named the groups.
 
 ## Step 3: Write each replacement
 
-Path `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md` dated today, from the decision template:
+Path `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md` dated today, from `.devkit/managed/spec/templates/decision.md`:
 
 - Frontmatter: `id: ADR-<slug>`, `title`, an English Y-statement `summary`, `status: accepted`, `created_at` today,
   `aliases:` every member ID and every alias a member declared. No `supersedes`, no `proposal`.
@@ -66,16 +66,27 @@ uv run devkit rules check
 git diff --no-renames --name-only --diff-filter=D <base> -- docs/decisions/
 ```
 
-- Every deleted ADR ID resolves: `uv run devkit spec resolve <ID>` prints the replacement with `alias=<ID>`.
-- No remaining `supersedes` or `superseded_by` outside the replacements names a retired ID.
-- Every path, test and rule ID in a replacement's Confirmation section exists in the working tree; correct a path
-  that moved, and write "Review only" when no check exists.
-- Fidelity review: compare each replacement with its members (`git show <base>:<path>`), with each member's incoming
-  references (`devkit spec refs <ID> --direction in`). Each in-effect statement must trace to a member, and no member's
-  in-effect decision may be missing or altered. A change found here goes back to Step 3, or the member leaves the group.
+For each deleted ADR listed by the diff:
+
+1. `uv run devkit spec resolve <ID>` prints the replacement with `alias=<ID>`.
+2. No remaining `supersedes` or `superseded_by` outside the replacements names it.
+
+For each replacement:
+
+1. Every path, test and rule ID in its Confirmation section exists in the working tree. Correct a path that moved;
+   write "Review only" when no check exists.
+2. Fidelity review: compare it with its members (`git show <base>:<path>`) and each member's incoming references
+   (`devkit spec refs <ID> --direction in`). Each in-effect statement traces to a member, and no member's in-effect
+   decision is missing or altered. If a change is found, return to Step 3 or take the member out of the group.
 
 ## Step 6: Commit and report
 
 Commit the replacements, the deletions and the rewrites together. The commit body carries the group map (replacement
 and members), the check results and the fidelity review result. Report the same to the user, with any ADR left out
 and why.
+
+## Completion conditions
+
+- `uv run devkit rules check` exits `0`.
+- Every retired ID resolves to its replacement, and every replacement passed the fidelity review.
+- One commit holds the replacements, deletions and rewrites, and the user has the group map and any ADR left out.

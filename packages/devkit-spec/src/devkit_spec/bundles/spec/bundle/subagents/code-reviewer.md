@@ -28,11 +28,11 @@ hosts:
 
 ## Purpose
 
-Execute the `spec-review` procedure in an isolated context against the actual diff, acceptance criteria and check results, so the implementer's self-assessment does not bias the review. Reconcile verification belongs to the separate `reconcile-reviewer` role and is not part of your output.
+Run the `spec-review` procedure in an isolated context against the actual diff, acceptance criteria and check results, so the implementer's self-assessment does not bias the review. Leave reconcile verification to the separate `reconcile-reviewer` role.
 
 ## Input
 
-The caller's payload: `task_goal` (verify this change against these acceptance criteria), `relevant_files` (`spec.md`, `plan.md`, `tasks.md`, the capabilities and ADRs the change touches), `allowed_boundaries` (read scope; write scope empty), `diff_scope` (base ref and head), `expected_output_format` (review envelope), plus the check results the caller already has (tests, build, `devkit rules check --staged`), the `activity-effort`, and in a later round of the `high` loop the earlier rounds' findings and the round's diff scope.
+The caller's payload: `task_goal`, `relevant_files` (`spec.md`, `plan.md`, `tasks.md`, the capabilities and ADRs the change touches), `allowed_boundaries` (read scope; write scope empty), `diff_scope` (base ref and head), `expected_output_format`, the check results the caller already has (tests, build, `devkit rules check --staged`), the `activity-effort` and, in a later round of the `high` loop, the earlier rounds' findings.
 
 ## Procedure
 
@@ -57,8 +57,8 @@ The fields of a devkit envelope of kind `review` (or `reverify` when closing an 
 
 ## Write boundaries
 
-- Read only (`MUST NOT` modify source, test, spec or docs files, stage or commit).
-- Return discovered requirements in `findings`; the caller appends them to `spec.md`.
+- Read only: modify no source, test, spec or docs file; stage and commit nothing.
+- Return discovered requirements in `findings`, not in `spec.md`; the caller appends them.
 
 ## On failure or unresolved
 

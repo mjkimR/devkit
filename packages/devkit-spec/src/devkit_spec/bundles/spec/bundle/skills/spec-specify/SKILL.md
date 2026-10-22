@@ -10,8 +10,6 @@ Use this skill when a spec bundle `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` needs its
 - a feature or substantial enhancement (workflow `sdd-spec-feature`, also after `devkit spec proposal handoff`);
 - a defect (workflow `sdd-spec-bugfix`).
 
-This file holds the bundle creation, the choice of reference and the contracts both references share.
-
 ## 1. Prerequisites
 
 - Check whether an active spec already covers this work: `devkit spec list spec`. Completed specs are work history,
@@ -37,8 +35,7 @@ This file holds the bundle creation, the choice of reference and the contracts b
   - Never hand-make the bundle or its binding; run `devkit spec new`.
   - The slug is kebab-case, has no date or sequence number and is unique among specs (`RULE-id-convention`).
 - Read each skeleton before rewriting it, because some hosts refuse to overwrite an unread file.
-- `devkit workflow show --unit <dir>` shows the workflow; `devkit workflow next --unit <dir>` shows the current stage
-  and what is unmet.
+- `devkit workflow next --unit <dir>` shows the current stage and what is unmet.
 
 ## 3. Choose the reference
 

@@ -1,15 +1,15 @@
 # Choose the next repository work
 
-Use this procedure only when no Unit is in progress. In progress means a local or fetched plan-/dev- branch for its
-slug, a reviewing/accepted proposal, or an incomplete spec; queued drafts are not in progress. Never resume another
-task merely because its branch exists.
+Use this procedure only when no Unit is in progress; a local or fetched plan-/dev- branch for the slug also counts as
+in progress. Never resume another task merely because its branch exists.
 
-Milestones are global: consider queued drafts across all namespaces and keep the namespace in the recommendation.
+Milestones are global: rank queued drafts across all namespaces and keep the namespace in the recommendation.
 
 1. Query `devkit spec list proposal --all-namespaces -n 0` and `devkit spec list milestone --all-namespaces -n 0`.
    - Read frontmatter for ordering fields the output omits.
    - Use the displayed proposal status: a base draft with a Planning branch displays reviewing.
-2. Apply the direct unit prerequisite procedure below to every candidate, including critical drafts, before ranking.
+2. Apply the [direct unit prerequisite procedure](#direct-unit-prerequisite-procedure) to every candidate, including
+   critical drafts, before ranking.
    - Eligible drafts are unit-ready, have displayed status draft and no true `needs_decompose`.
    - A milestone is ready when every ID in depends_on is done or dropped. Use `--history` or resolve dependencies
      individually; never assume a hidden dependency is absent or ready.
@@ -37,11 +37,10 @@ Milestones are global: consider queued drafts across all namespaces and keep the
 
 ## Direct unit prerequisite procedure
 
-Use this procedure for idle recommendations, explicit proposal pickup and direct-spec intake. Direct-spec intake and
-explicit pickup inspect these same fields even when idle recommendation is not running.
-
-Dependencies are optional frontmatter, for example `depends_on: [PROP-foundation, SPEC-parser]`; omit the field when
-empty. The procedure adds no creation flag, readiness command, delivery certification, gate or hard readiness refusal.
+Use this procedure for idle recommendations, explicit proposal pickup and direct-spec intake. Dependencies are optional
+frontmatter, for example `depends_on: [PROP-foundation, SPEC-parser]`; omit the field when empty. The result is a
+status-based scheduling signal: never turn it into a gate, a refusal or a verification of tasks, reconciliation,
+approvals or outcome coverage.
 
 1. Identify the local base ref from the current worktree policy.
    - Resolve it once with `git rev-parse <base>` and report the base ref and commit.
@@ -53,21 +52,19 @@ empty. The procedure adds no creation flag, readiness command, delivery certific
    - Only an exact ID resolving to one SPEC anchor with status completed in that snapshot is satisfied.
    - Do not recursively reopen prerequisites of a completed SPEC.
    - No dependencies means unit-ready.
-   - This is a status-based scheduling signal, not verification of tasks, reconciliation, approvals or outcome
-     coverage.
 3. Report each blocked candidate and its exact prerequisite ID with the reason.
    - Reasons: unfinished proposal, rejected proposal, unfinished spec, or invalid/unknown target.
    - Missing, ambiguous, malformed or unreadable base evidence is a Backlog repair action; a hidden history target is
      not missing.
    - A critical blocked draft stays blocked.
-   - Apply the existing milestone readiness and critical-priority milestone exception only to unit-ready drafts.
+   - Apply the milestone readiness and critical-priority milestone exception only to unit-ready drafts.
 4. Explicit user pickup can override order: show the unsatisfied IDs and reasons and record the chosen override in the
    ordinary intent decision.
    - The override cannot waive malformed references or cycle diagnostics.
 
 ## Milestone close review
 
-- After known associated work finishes, you MAY offer the existing Backlog
+- After known associated work finishes, offer the Backlog
   [milestone completion review](../../spec/references/milestone-completion.md).
 - Never close silently after integration; never infer completion from empty membership or handoff.
 - The user confirms decomposition and direct work settlement on one current candidate. After an interruption,

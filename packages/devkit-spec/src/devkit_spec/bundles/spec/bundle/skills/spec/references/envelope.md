@@ -1,11 +1,11 @@
 # Delegation Input and Return Envelope
 
-Read this for support-role delegation (`scout`, `challenger`, `code-reviewer`, `reconcile-reviewer`), reviews, the final change report before `dev-integration`, or the integration result. Envelopes follow devkit's contract; this reference defines their spec-driven use. A `planning-worker` or `development-worker` writes its own records ([worker records](worker-records.md)).
+Read this for support-role delegation (`scout`, `challenger`, `code-reviewer`, `reconcile-reviewer`), reviews, the final change report before `dev-integration`, or the integration result. A `planning-worker` or `development-worker` writes its own records ([worker records](worker-records.md)).
 
 ## 1. Input payload
 
 - Pass all five fields, not the whole tree. The `spec-delegate` skill's `references/payload.md` defines each field and the rows per role.
-- When the host projection for this call is not `native` (`emulated`, `unsupported`), say so, so the substitute guarantee is explicit.
+- If the host projection for this call is `emulated` or `unsupported`, say so in the payload, so the substitute guarantee is explicit.
 
 ## 2. Return envelope
 
@@ -32,7 +32,7 @@ diff_scope: { base: "<ref>", head: "<sha>" }
 - `needs_input` names the missing input or the decision only the human can make.
 - `failed` covers timeout, cancellation, tool failure, unsupported host feature, or a stale `diff_scope`. A failed or stale result is never completion evidence.
 - Docs impact has no envelope key: it goes into `reconcile.md` (targets, or no-impact reasoning in its body), verified by a `reconcile-check` envelope ([completion](completion.md)).
-- Decide re-invocation or a stronger model from the failure reason and changed input; never repeat the same call.
+- After `failed`, choose re-invocation or a stronger model from the failure reason and the changed input; never repeat an unchanged call.
 
 ## 3. Final change report (before `dev-integration`)
 
@@ -46,7 +46,7 @@ devkit workflow envelope new --unit <dir> --kind final-report --stage final-chan
 
 Do not repeat changed paths (Git), docs impact and reconcile state (`reconcile.md`) or the review result (the latest review envelope). Record assumptions the user should see with `--assume`.
 
-When open feedback marked `severity: critical` exists (`devkit spec list feedback --status open --where severity=critical`), including items the `collect-feedback` sweep just recorded, list each in the report presented to the user as one line, `FB-<slug> → <target>`. The user or policy-authorized Host deciding `dev-integration` then sees that a feedback hygiene pass is due.
+If open feedback has `severity: critical` (`devkit spec list feedback --status open --where severity=critical`), including items the `collect-feedback` sweep just recorded, list each in the report presented to the user as one line, `FB-<slug> → <target>`, so whoever decides `dev-integration` sees that a feedback hygiene pass is due.
 
 ## 4. Integration result (after `spec-integrate`)
 
@@ -81,4 +81,4 @@ docs/proposals/PROP-<slug>/envelopes/<kind>-<NN>.yaml
 - `--check key=PASS|FAIL|SKIP[ detail]` is how `envelope-check-pass` stages (`feedback`, `red`, `green`) get their evidence.
 - `--head $(git rev-parse HEAD)` must be a real commit (`revision-ancestor` compares heads).
 - Check files with `devkit workflow envelope check --unit <dir>`.
-- A `session` task (session: no records) gets its reviewer subagent's result as a message. The conversation keeps the summary and the file path, never the whole envelope.
+- In the conversation, cite an envelope by its summary and file path, never the whole envelope. A `session` task (session: no records) receives its reviewer's result as a message.

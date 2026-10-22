@@ -5,9 +5,9 @@ description: Read before raising, returning, rendering or serializing errors, wa
 
 # Agent Advisory Protocol in Python (`devkit.advisory`)
 
-`devkit.advisory` implements the `agent-advisory` instruction's protocol. Read that instruction first for levels, modes and rendering rules.
+`devkit.advisory` implements the protocol of the `agent-advisory` instruction; read that instruction first for levels, modes and rendering rules.
 
-The library is standard-library only and ships as `devkit-advisory`. Make runtime code depend on `devkit-advisory`, not on `devkit-dist` or `devkit-agt`.
+Make runtime code depend on `devkit-advisory`, the standard-library-only package that ships the library, not on `devkit-dist` or `devkit-agt`.
 
 ## Raising errors
 
@@ -36,11 +36,11 @@ raise ConfigInvalidError(
 )
 ```
 
-A malformed argument or parameter raises `ArgumentError` (`ARGUMENT_INVALID`, `INPUT_ERROR`), the library's own class for that code; derive a project-specific argument error from it rather than declaring `ARGUMENT_INVALID` again.
+For a malformed argument or parameter, raise `ArgumentError` (`ARGUMENT_INVALID`, `INPUT_ERROR`), or a project-specific subclass of it, not a new class declaring `ARGUMENT_INVALID`.
 
-A code names one condition: it is declared by one class and its subclasses, in their bodies or through `code=` at a call (a subclass may redeclare its base's code). `RULE-advisory-unique-code` checks this in the `python` preset.
+Declare each code in one class and its subclasses only, in their bodies or through `code=` at a call; a subclass may redeclare its base's code. `RULE-advisory-unique-code` of this bundle's `python` preset checks it.
 
-For one-off errors, use the factories; they set every field that decides the mode, so a subclass default never changes it:
+For one-off errors, use the factories. They set every field that decides the mode, so a subclass default never changes it, and as classmethods `MyDomainError.blocked(...)` returns `MyDomainError`:
 
 | Factory | Mode | Fields set |
 | --- | --- | --- |
@@ -49,9 +49,11 @@ For one-off errors, use the factories; they set every field that decides the mod
 | `AdvisoryError.auto_fix(msg, *details, fix=, code=, target_files=)` | `AUTO` | `TOOL`, `AFTER_FIX` |
 | `AdvisoryError.interaction(msg, *details, code=, what_to_report=, fix=)` | `INTERACTION` | `USER`, `AFTER_FIX` |
 
-`exit_code` defaults to `ExitCode.ERROR` (`2`); an error reporting a negative result of a check that ran sets `ExitCode.FINDINGS` (`1`). An error with `ExitCode.OK`, or an `AUTO` error without `fix`, raises `ValueError`. `target_files` given as one string is one target.
+For other modes, set `actor`, `retry` and `retry_after`; a bare `AdvisoryError("...")` derives `HALT` (`actor=NONE`, `retry=UNSAFE`).
 
-A subclass that takes constructor arguments of its own forwards the advisory keywords typed with `AdvisoryFields`:
+`exit_code` defaults to `ExitCode.ERROR` (`2`); set `ExitCode.FINDINGS` (`1`) for a negative result of a check that ran. An error with `ExitCode.OK`, or an `AUTO` error without `fix`, raises `ValueError`. `target_files` given as one string is one target.
+
+If a subclass takes constructor arguments of its own, forward the advisory keywords typed with `AdvisoryFields`:
 
 ```python
 from typing import Unpack
@@ -69,11 +71,9 @@ class GitFailedError(AdvisoryError):
         self.returncode = returncode
 ```
 
-Factories are classmethods, so `MyDomainError.blocked(...)` returns `MyDomainError`. Other modes come from `actor`, `retry` and `retry_after`. A bare `AdvisoryError("...")` derives `HALT` (`actor=NONE`, `retry=UNSAFE`); set the fields that derive the intended mode instead.
-
 ## Returning warnings and notices
 
-A warning or notice is an `AdvisoryError` at level `WARNING` or `NOTICE`, returned with the result (by convention in a `notices` list), never raised. Its `exit_code` is `0`; `actor`, `retry`, `guardrail`, `input_error` and `retry_after` are ignored.
+Return a warning or notice, an `AdvisoryError` at level `WARNING` or `NOTICE`, with the result (by convention in a `notices` list); never raise it. Its `exit_code` is `0`; `actor`, `retry`, `guardrail`, `input_error` and `retry_after` are ignored.
 
 ```python
 from dataclasses import dataclass, field
@@ -133,7 +133,7 @@ def main() -> int:
 
 ## Testing
 
-Assert on `error.code` and `error.mode` rather than message strings, and check that `fix` and `target_files` are exact:
+Assert on `error.code` and `error.mode`, not message strings, and check that `fix` and `target_files` are exact:
 
 ```python
 assert exc_info.value.mode is ActionMode.INPUT_ERROR

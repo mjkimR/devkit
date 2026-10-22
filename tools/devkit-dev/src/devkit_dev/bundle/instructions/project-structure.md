@@ -3,79 +3,65 @@ name: project-structure
 description: Read before adding or moving repository Python modules or changing package dependencies.
 ---
 
-# Package boundaries and roles
+# Package and Layer Boundaries
 
-This repository is a Python monorepo managed with `uv` workspaces and `just`. Each wheel owns an independent
-regular Python package with explicit responsibility boundaries:
+## Packages
 
-- **`devkit-core` (`devkit_core`):** Shared foundation without CLI or application dependencies. Pure primitives
-  for filesystem, Git, parsing, and extension dispatch under `core/`, and shared base contracts (`BaseUseCase`,
-  MCP interfaces) under `base/`. `base` never imports `core`, and neither imports application packages.
-- **`devkit-cli` (`devkit_cli`):** The agent-first command-line boundary for any click command, depending on `click`
-  and `devkit-advisory` only. A semver contract with external consumers; `devkit_dist.adapters.cli` configures it for
-  devkit. Never imports `devkit_core` or an application package.
-- **`devkit-dist` (`devkit_dist`):** Agent asset distribution and the `devkit` CLI executable. Manages bundles,
-  agent projections, sync, context loading, operational playbooks, and native hooks. Never imports `devkit_agt` or
-  the MCP SDK.
-- **`devkit-agt` (`devkit_agt`):** Developer harness mounted under `devkit` CLI entry points. Owns the rule
-  engine, delivery workflows, commit gates, task worktrees, generated files, and integration coordination.
-- **`devkit-spec` (`devkit_spec`):** Spec-driven delivery commands and agent assets. Manages proposals, specs,
-  milestones, living spec reconciliation (`docs/`), and delivery handoffs.
-- **`devkit-mcp` (`devkit_mcp`):** Optional MCP transport adapter, native confirmation forms, and retained-runtime
-  registration provider. Domain services stay in their owning feature packages.
-- **`devkit-advisory` (`devkit.advisory`):** The Agent Advisory Protocol library. Preserved in its PEP 420 namespace
-  as a semver contract with external consumers.
-- **`devkit-viewer` (`devkit_viewer`):** Local read-only browser viewer for Living Spec, proposals, specs, and roadmaps.
-- **`devkit-catalog` & `devkit-starter`:** Content packages providing opt-in and example bundles.
-- **`devkit-dev` (`devkit_dev`):** Repository-only development tools, governance rules, and convention instructions.
-  Runtime packages must never depend on it.
+Each wheel owns one independent regular Python package; no installed path belongs to two wheels. Place a module in
+the package that owns its responsibility and keep its imports inside these limits:
 
+| Package | Owns | Import limits |
+| --- | --- | --- |
+| `devkit-core` (`devkit_core`) | Filesystem, Git, parsing and extension primitives under `core/`; shared contracts (`BaseUseCase`, MCP interfaces) under `base/` | `base` never imports `core`; neither imports an application package |
+| `devkit-cli` (`devkit_cli`) | The agent-first command-line boundary for any click command; a semver contract with external consumers | `click` and `devkit-advisory` only |
+| `devkit-advisory` (`devkit.advisory`) | The Agent Advisory Protocol library in its PEP 420 namespace; a semver contract | Add no `src/devkit/__init__.py` |
+| `devkit-dist` (`devkit_dist`) | The `devkit` executable, bundles, projections, sync, context loading, playbooks, native hooks; `adapters/cli.py` configures `devkit_cli` | Never `devkit_agt` or the MCP SDK |
+| `devkit-agt` (`devkit_agt`) | Rule engine, delivery workflows, commit gates, task worktrees, generated files, integration, mounted through `devkit.commands` entry points | |
+| `devkit-spec` (`devkit_spec`) | Proposals, specs, milestones, Living Spec reconciliation and delivery handoffs | |
+| `devkit-mcp` (`devkit_mcp`) | Optional MCP transport, native confirmation forms, retained-runtime registration; domain services stay in their feature packages | |
+| `devkit-viewer` (`devkit_viewer`) | The local read-only viewer | |
+| `devkit-catalog`, `devkit-starter` | Opt-in and example content bundles | |
+| `devkit-dev` (`devkit_dev`) | Repository-only tools, rules and instructions | No runtime package depends on it |
 
-# Feature structure and layer boundaries
+## Feature structure
 
-Executable application packages MUST place feature code under `features/<feature>/`.
-Use only populated `cli`, `mcp`, `http`, `usecases`, `services`, `repositories`, and `models` layers.
-A small layer MAY be a single Python module.
+- Place feature code of an application package under `features/<feature>/`, using only the populated `cli`, `mcp`,
+  `http`, `usecases`, `services`, `repositories` and `models` layers; a small layer can be a single module.
+- Keep `__init__.py` to package management: import/export control, dynamic loading, lazy attributes and
+  registration. Put domain decisions, execution workflows and command bodies in named layer modules.
+- Follow the layer directions `RULE-architecture` enforces: `models` and `errors` are contracts; `repositories` use
+  contracts; `services` use contracts and repositories; `usecases` coordinate services and repositories; transports
+  (`cli`, `mcp`, `http`) call usecases and contracts.
+- Create a package `base` (shared contracts) or `utils` (policy-free technical helpers) only when needed, and never
+  a package-level `core`; `devkit_core` owns the shared `base`/`core` foundation. `base` imports no features, utils,
+  adapters or core implementations; `utils` imports no features.
+- Put transport boundaries shared by features (such as CLI output framing) in a declared root `adapters/`; it calls
+  models and usecases, and lower execution layers never import it.
+- Import across features only through declared public APIs and the source feature's `feature_dependencies` in
+  `.devkit/architecture.toml`. Keep the feature graph acyclic, including dependencies through facade exports.
+- Declare source roots, feature names, resource areas, package and feature dependencies and adapter exceptions in
+  `.devkit/architecture.toml`.
 
-- **`__init__.py` responsibility:** Feature `__init__.py` files MAY implement package management, including
-  import/export control, dynamic loading, lazy attributes, and registration. They MUST NOT contain business logic:
-  put domain decisions, execution workflows, and command bodies in named layer modules.
-- **Layer import directions:** Imports MUST follow the layer directions declared by `RULE-architecture`:
-  `models` and `errors` are contracts; `repositories` use contracts; `services` use contracts and repositories;
-  `usecases` coordinate services and repositories; transports (`cli`, `mcp`, `http`) call usecases and contracts.
-- **Package base & utils:** Package `base` holds shared contracts; `utils` holds policy-free technical helpers.
-  Create neither until needed. General packages MUST NOT add `core`; `devkit_core` owns the shared `base/core` foundation.
-  Package `base` MUST NOT import features, utils, adapters, or core implementations; `utils` MUST NOT import features.
-- **Adapters:** A declared root `adapters/` MAY hold transport boundaries shared by features (e.g. CLI output framing);
-  it calls models and usecases, and lower execution layers MUST NOT import it.
-- **Cross-feature dependencies:** Cross-feature imports MUST use declared public APIs and follow the source feature's
-  explicit `feature_dependencies` declaration in `.devkit/architecture.toml`. The actual feature dependency graph
-  MUST be acyclic, including dependencies through facade exports.
-- **Architecture configuration:** `.devkit/architecture.toml` owns source roots, feature names, resource areas,
-  package and feature dependencies, and explicit adapter exceptions.
+## Use cases and adapters
 
+- Make every CLI and MCP execution entrypoint a concrete `BaseUseCase` subclass from `devkit_core.base.usecase` with
+  a fully typed `execute` method (sync or async). Adapters construct or receive the instance and call `execute`.
+- In a constructor, only retain inputs and wire dependencies; do execution, file access and subprocesses in
+  `execute`.
+- Keep internal composition helpers as functions; they are not transport entrypoints.
+- Define a feature-owned repository `Protocol` when test substitution or several backends need a contract. Add no
+  `BaseRepository`, Command abstraction or Unit of Work without a concrete requirement.
+- Split CLI modules by related command group where useful. Keep group assembly in transport wiring (`cli.py`,
+  `app.py`); command bodies translate arguments, format output and call usecases.
 
-# Contracts and adapters
+## Tests and bundle manifests
 
-CLI and MCP execution entrypoints MUST be concrete `BaseUseCase` subclasses from `devkit_core.base.usecase`,
-exposing a fully typed `execute` method (sync or async). Adapters construct or receive these use case instances and
-invoke `execute`; usecases coordinate domain services and repositories.
+- Organize package tests by the `testing` instruction.
+- Place each bundle manifest of an executable package at `bundles/<name>/bundle/bundle.toml`, with that bundle's
+  assets beside it. `devkit-dev`, `devkit-catalog` and `devkit-starter` keep their declared bundle-only layouts.
+  Declare static assets as resource areas in `.devkit/architecture.toml`.
 
-- **Constructors:** Constructors MUST only retain inputs and wire dependencies. They MUST NEVER perform execution,
-  filesystem reads/writes, or subprocess operations.
-- **Helpers:** Internal composition helpers MAY remain functions; they are not transport execution entrypoints.
-- **Repositories & Protocols:** Define feature-owned repository `Protocol` contracts when test substitution or multiple
-  backends need a contract. Do not mandate `BaseRepository`, a Command abstraction, or Unit of Work without a concrete
-  requirement.
-- **CLI Command Modules:** Split CLI modules by related command groups where useful. Keep group assembly in transport
-  wiring (`cli.py` / `app.py`); command bodies translate arguments, format output, and invoke usecases.
+## Completion
 
-
-# Tests and bundle manifests
-
-- **Tests:** Package tests MUST be organized into `tests/unit/`, `tests/integration/`, and `tests/e2e/` tiers.
-  See the `testing` instruction (`tools/devkit-dev/src/devkit_dev/bundle/instructions/testing.md`) for explicit tier
-  isolation boundaries, directory mirroring, and developer execution loops.
-- **Bundle Manifests:** Executable packages MUST place each bundle manifest at `bundles/<name>/bundle/bundle.toml`,
-  with that bundle's assets beside it. Content-only packages (devkit-dev, devkit-catalog, devkit-starter) MAY keep
-  their declared bundle-only layouts. Static assets are separately declared resource areas in `.devkit/architecture.toml`.
+`uv run devkit rules check` reports no `RULE-architecture` or `RULE-usecase-boundaries` violation for the changed
+modules.

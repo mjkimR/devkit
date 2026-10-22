@@ -5,9 +5,9 @@ description: Read before adding repository-specific rules, skills, playbooks, in
 
 # Repository-owned assets as an in-repository bundle
 
-Assets that belong to one repository ship like shared ones: as a content
-package inside the repository, installed as its development dependency and
-discovered through the same entry point as any other bundle.
+Ship assets that belong to one repository as a content package inside it,
+installed as a development dependency and discovered through the
+`devkit.bundles` entry point like any other bundle.
 
 ## Layout
 
@@ -60,9 +60,9 @@ kind = "rule"
 source = "rules/<slug>"                # a directory; a file source is refused
 ```
 
-The bundle name (used by `devkit add`, `get-context` and `.devkit/config.toml`)
-must be unique among the installed bundles and equal the entry point name.
-Validate before installing:
+Give the bundle a name that is unique among the installed bundles and equal to
+the entry point name; `devkit add`, `get-context` and `.devkit/config.toml` use
+it. Validate before installing, fix what is reported and rerun until both pass:
 
 ```bash
 uv run devkit bundle validate tools/<repo>-devkit/src/<repo>_devkit/bundle
@@ -71,8 +71,10 @@ uv run devkit bundle plan tools/<repo>-devkit/src/<repo>_devkit/bundle
 
 ## Installation
 
-In a uv workspace, add the package to the members and to the dev group next to
-the devkit requirement the project already declares:
+Install the package as a development dependency, so it never reaches consumers
+of the repository's own published package. In a uv workspace, add it to the
+members and to the dev group next to the devkit requirement the project already
+declares:
 
 ```toml
 # pyproject.toml at the repository root
@@ -87,10 +89,9 @@ devkit-dist = { git = "https://github.com/mjkimR/devkit.git", subdirectory = "pa
 "<repo>-devkit" = { workspace = true }
 ```
 
-If the project uses the harness, or its bundle ships rule, gate or workflow
-assets, declare `devkit-agt` instead (see the `harness` bundle's
-`harness-assets` instruction). It brings `devkit-dist`, so a project
-never declares both.
+If the bundle ships rule, gate or workflow assets, or the project runs their
+engines, declare `devkit-agt` instead of `devkit-dist`. It brings `devkit-dist`,
+so a project never declares both.
 
 In a single project, depend on it by path:
 
@@ -105,20 +106,17 @@ uv sync
 uv run devkit add <repo>
 ```
 
-As a development dependency, the bundle never reaches consumers of the
-repository's own published package.
+## Editing
 
-## Editing lifecycle
+- Edit sources under `tools/<repo>-devkit/src/<repo>_devkit/bundle/`, then run
+  `uv run devkit sync`. Leave the package version unchanged, because the
+  editable install exposes the change and sync compares file hashes.
+- Change the repository's own bundle at its source, not through an override;
+  overrides are for bundles the repository does not own.
+- Once other repositories depend on the package (published, or by Git URL with
+  `subdirectory`), bump `version` in `bundle.toml` with every change, so their
+  receipts record what they run.
 
-Edit sources under `tools/<repo>-devkit/src/<repo>_devkit/bundle/`, then run
-`uv run devkit sync`. The editable install exposes the change at once and sync
-compares file hashes, so the package version need not change.
+## Completion
 
-Edit the repository's own bundle at its source, not through an override; overrides
-are for bundles the repository does not own.
-
-## Sharing later
-
-Publish the package, or let other repositories depend on it with a Git URL
-and `subdirectory`. From then on, bump the bundle `version` in `bundle.toml` so
-consumers' receipts record what they run.
+`uv run devkit bundle validate` passes and `uv run devkit status` exits `0`.

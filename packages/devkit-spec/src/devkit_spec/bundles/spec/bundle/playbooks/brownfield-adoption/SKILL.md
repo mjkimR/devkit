@@ -42,8 +42,8 @@ git ls-files -- 'docs/*.md' 'specs/*.md' > /tmp/legacy.txt
 
 - The legacy set is the tracked Markdown under `docs/` and `specs/`. If `spec:docs-skeleton` was already added,
   remove its seeded paths (`devkit list` shows them).
-- If the set is long or has files already shaped like the Living Spec, review it with the user. Files already shaped
-  like the Living Spec stay in place and are fixed as ordinary work.
+- Remove files already shaped like the Living Spec from the set; they stay in place and are fixed as ordinary work.
+  If the set is long or such files exist, review it with the user.
 - Note, without moving them, legacy agent instructions (`AGENTS.md` outside the markers, `CLAUDE.md`, editor rule
   files) and docs outside `docs/` and `specs/`; they are inputs to Step 5.
 
@@ -94,8 +94,8 @@ migration, so moves and content edits stay reviewable apart.
 - **Policy**: show `uv run devkit spec policy`.
   - `plan-accept`, `proposal-handoff` and `dev-integration` each follow `ask|auto`.
   - Existing task authorization satisfies `plan-intent` without another prompt.
-  - Record user decisions and policy authority accurately (`[workflow.approvals]`, `[workflow.stages]`,
-    `[worktree]`, `[tool.spec]`) in `.devkit/config.toml`.
+  - Record the user's decisions in `.devkit/config.toml` (`[workflow.approvals]`, `[workflow.stages]`, `[worktree]`,
+    `[tool.spec]`).
 - **Commit gate**: sync installs the hooks; the `rules-check` gate (on by default) refuses a commit touching a file
   with an error finding.
   - The user chooses: fix, park or lower the rule in `[rules]`, or `enabled = false` in
@@ -144,5 +144,6 @@ Templates: `.devkit/managed/spec/templates/<kind>.md` (`capability`, `story`, `d
 
 - `uv run devkit rules check` exits `0`, and every entry added to `.devkit/config.toml` carries its reason.
 - One small real change has gone through the `spec` skill. An empty `_legacy/` is not required.
-- `git status` reviewed and the commits proposed (containment, then any migration); observations about this
-  procedure recorded with the `spec-feedback` skill when needed.
+- `uv run devkit gate status` exits `0`.
+- `git status` reviewed and the commits proposed (containment, then any migration). Record friction with this
+  procedure with the `spec-feedback` skill.

@@ -5,17 +5,18 @@ description: Read before running tests, linters or type checks outside a project
 
 # Running verification commands with `devkit run`
 
-`uv run devkit run -- <command>` keeps the complete output in a log file and
+When you run a test runner, linter or type checker yourself, run it as
+`uv run devkit run -- <command>`. It keeps the complete output in a log file and
 prints the outcome, the tool's summary lines and warnings and, on failure, an
-excerpt without progress and noise. When you run a test runner, linter or
-type checker yourself, run it through `devkit run` by default:
+excerpt without progress and noise:
 
 ```bash
 uv run devkit run -- uv run pytest tests/test_api.py -x
 uv run devkit run -- npm run check
 ```
 
-Run a recipe that already calls `devkit run` as it is, without a second `devkit run` around it.
+If a recipe already calls `devkit run`, run the recipe as it is, without a
+second `devkit run` around it.
 
 ## Reading the output
 
@@ -29,7 +30,8 @@ Run a recipe that already calls `devkit run` as it is, without a second `devkit 
 | `[RUN_OMITTED: ...]` | Something did not fit the budget; it is in the log. |
 | `[RUN_OUTPUT: shown=N omitted=N filtered=N]` | Failure only: the excerpt (head and tail) follows; `filtered` noise lines are only in the log. |
 
-Advisory blocks of nested `devkit` commands come on stderr, whole.
+- Advisory blocks of nested `devkit` commands come whole on stderr.
+- A `[... previous line repeated N more times ...]` line stands for copies of the line above it.
 
 Act on the excerpt first. Read the log at `log=` only when the excerpt is not
 enough, and only the part you need:
@@ -37,9 +39,6 @@ enough, and only the part you need:
 - If the excerpt has a `[... N characters omitted, log lines A-B ...]` line, read
   those lines (`sed -n 'A,Bp' <log>`).
 - Otherwise search the log (`rg -n "<test name>" <log>`).
-
-A `[... previous line repeated N more times ...]` line stands for copies of the
-line above it.
 
 `devkit run` exits `0` when the command passed, `1` when it failed, `2` when it
 could not be started (`RUN_COMMAND_NOT_STARTED`), and `128 + N` when signal `N`
@@ -60,4 +59,5 @@ lint:
 
 Shorten the tools' own reports as above: `pytest --tb=short` prints the
 failing line and `E` lines of each frame instead of the test source, and ruff's
-concise format one line per finding. Keep the long forms when the project needs them.
+concise format prints one line per finding. Keep the long forms when the project
+needs them.

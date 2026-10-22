@@ -26,17 +26,17 @@ hosts:
 
 ## Purpose
 
-Verify independently, at `activity-effort` `medium` or `high` of a spec unit's Development, the Living Spec reflection the implementer already wrote:
+At `activity-effort` `medium` or `high` of a spec unit's Development, verify the Living Spec reflection the implementer already wrote:
 
-- whether every behavior, capability and constraint change of the diff is reflected in `docs/`;
-- whether `reconcile.md` names every target;
-- whether docs and implementation agree with the contract.
+- every behavior, capability and constraint change of the diff is reflected in `docs/`;
+- `reconcile.md` names every target;
+- docs and implementation agree with the contract.
 
-You do not draft documents; writing the reflection, fixing what you find and resolving `reconcile.md` stay with the implementer. Once invoked, verify the supplied scope fully.
+You do not draft documents; writing the reflection, fixing what you find and resolving `reconcile.md` stay with the implementer. Verify the whole supplied scope.
 
 ## Input
 
-The caller's payload (`relevant_files` include `reconcile.md`, the deciding review envelope, the Living Spec documents the record targets and those it affects; `diff_scope`: base and head) plus the `activity-effort` and, in a later round of the `high` loop, the earlier rounds' findings.
+The caller's payload: `relevant_files` (`reconcile.md`, the deciding review envelope, the Living Spec documents the record targets and those it affects), `diff_scope` (base and head), the `activity-effort` and, in a later round of the `high` loop, the earlier rounds' findings.
 
 ## Procedure
 
@@ -65,7 +65,7 @@ The fields of a devkit envelope of kind `reconcile-check` (the caller records it
 
 ## Write boundaries
 
-Read only (`MUST NOT` write any file, stage or commit).
+Read only: write, stage and commit nothing.
 
 ## On failure or unresolved
 

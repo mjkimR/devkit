@@ -5,18 +5,10 @@ description: Triage open feedback files under specs/ in one hygiene session; gro
 
 # Feedback hygiene
 
-Run this playbook only in a hygiene session the user asks for. Feedback capture starts observations `open` and never
-changes their status; this playbook triages selected items:
-
-- `promoted` closes an item by routing it to follow-up work;
-- `dismissed` declines it;
-- `forwarded` records an authorized external submission.
-
-An authorized direct fix without promotion uses terminal `resolved` through the `spec` skill's
-[completion procedure](../../skills/spec/references/completion.md#source-feedback-resolution); it needs no hygiene
+Run this playbook only in a hygiene session the user asks for. It triages open feedback into `promoted`, `dismissed`
+or `forwarded` (Step 4). An authorized direct fix without promotion is resolved by the `spec` skill's
+[completion procedure](../../skills/spec/references/completion.md#source-feedback-resolution) and needs no hygiene
 session.
-
-Disposition records keep destinations traceable; promotion does not assert that the observation is fixed.
 
 ## Prerequisites
 
@@ -38,10 +30,9 @@ uv run devkit spec list feedback --status open --all-namespaces -n 0
 
 ## Step 2: Group and order
 
-- Determine ownership from the observed target and evidence: `repo`, `upstream` or `unknown`. Repository-owned
-  rules, skills, instructions and tools are the base targets.
-- Propose the resolution destination yourself; do not ask the user to classify tools.
-- An unknown or cross-tool item stays eligible; if it needs fixes in several tools, link each one.
+- Determine ownership from the observed target and evidence: `repo`, `upstream` or `unknown`; do not ask the user
+  to classify tools. An asset developed in this repository is `repo` even when other projects install it.
+- An unknown or cross-tool item stays eligible.
 - Group items with the same `target`; a group shares one decision.
 - Order groups and items: `critical`, then `recurring: true`, then `blocked`, `workaround`, `noise`.
 - Read each body's Evidence section. A suggestion without observed evidence is a dismissal candidate
@@ -49,8 +40,8 @@ uv run devkit spec list feedback --status open --all-namespaces -n 0
 
 ## Step 3: Decide the destination with the user
 
-Propose the resolution destination or destinations per group. Draft artifacts within existing authorization
-first; request decisions only beyond that scope:
+Propose the resolution destination or destinations per group yourself. Draft artifacts within existing
+authorization; ask the user for decisions beyond that scope:
 
 | Scope | Destination | Action |
 | :--- | :--- | :--- |
@@ -62,8 +53,7 @@ first; request decisions only beyond that scope:
 | `upstream` | Forward draft | Prepare a report for the owning tool or bundle, including devkit and devkit-spec; submit only with explicit external-send authorization |
 | `unknown` | Ownership review | Inspect the observed targets, propose repository or upstream destinations, and keep unresolved items open |
 
-An asset developed in this repository has `scope: repo` even when shipped as an upstream tool to other projects.
-Address it locally:
+Address a `repo` item locally:
 
 - a defect with clear expected behavior: a `bugfix` task (`sdd-session-bugfix`, or `sdd-spec-bugfix` when its
   behavior must be written down);
@@ -86,8 +76,8 @@ Set each item's status:
 - `forwarded`: only after authorized submission, citing the actual report location. A draft alone stays `open`, as
   does an item whose ownership is unresolved.
 
-For an issue spanning several tools, link all resolution destinations. Append a disposition line so each outcome is
-traceable:
+Append a disposition line so each outcome is traceable; for an item spanning several tools, link every resolution
+destination:
 
 ```markdown
 - **Disposition**: <destination ID, path or issue link>: <one-line summary of what was done>
@@ -107,8 +97,9 @@ A hygiene session also surfaces stalled work.
 - `uv run devkit worktree status --stale` prints the same as `[STALE_BRANCH: ...]` lines with the pull request state
   and the resume command.
 
-List them for the user with the two ways on, resume or discard, per §4 of the `spec` skill's
-`references/branches.md`. Do neither unasked: the warning never cleans anything up.
+List them for the user with the two ways on, resume or discard, per the `spec` skill's
+[leftovers and stale branches](../../skills/spec/references/branches.md#4-leftovers-and-stale-branches). Do neither
+unasked: the warning never cleans anything up.
 
 ## Step 6: Rejected proposals
 

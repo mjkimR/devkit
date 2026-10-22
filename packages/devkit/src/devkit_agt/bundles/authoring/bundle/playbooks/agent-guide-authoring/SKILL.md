@@ -7,11 +7,10 @@ description: Write or curate always-loaded agent guides (AGENTS.md, CLAUDE.md po
 
 Use this playbook when you write or substantially edit an agent guide, and when
 `RULE-agent-guide-size` reports one. Read [host loading](references/hosts.md)
-only when you add, move or point between guides (nested guides, `CLAUDE.md`).
+when you add, move or point between guides (nested guides, `CLAUDE.md`).
 
-Unlike a skill, a guide is loaded on every turn of every session, so it holds
-only what nearly every task needs. Move other content to where it is read on
-demand, not into references the guide links: agents follow a plain link unreliably.
+A guide is loaded on every turn of every session, so it holds only what nearly
+every task needs.
 
 ## Prerequisites
 
@@ -30,44 +29,34 @@ Keep only what applies to nearly every task in the directory the guide covers:
 - architecture boundaries and invariants an agent could break unknowingly;
 - the verification commands to run before finishing;
 - safety, commit and publication constraints;
-- pointers whose read condition is explicit ("Before changing schemas, read
-  `docs/schema.md`."); a pointer without a condition is rarely followed.
-
-Leave out, even when it looks helpful:
-
-- **Project structure trees.** A tree is large and goes stale unnoticed;
-  agents list files themselves, and the module map is enough orientation.
-- **Module-specific content.** Conventions, commands, configuration, layout or
-  architecture that apply to one module belong in that module's README or docs
-  (or a nested guide in its directory). The root guide keeps at most a link
-  with its read condition: "Before changing `packages/api`, read
-  `packages/api/README.md`."
+- pointers with an explicit read condition ("Before changing schemas, read
+  `docs/schema.md`."), because agents rarely follow a plain link.
 
 ## Step 2: Move everything else to where it is read on demand
 
 | Content | Destination |
 | --- | --- |
-| Module-specific conventions, commands, layout, architecture or API details | The module's README or `docs/`; the guide keeps a conditional link |
-| Project or directory structure trees | Nowhere; keep the one-line-per-module map |
+| Project or directory structure trees | Nowhere: a tree goes stale unnoticed and agents list files themselves; keep the module map |
+| Module-specific conventions, commands, configuration, layout, architecture or API details | The module's README or `docs/`, or a nested guide in its directory |
 | Judgment rules for one kind of work | An instruction |
 | Multi-step or occasional procedures | A playbook or skill |
 | Mechanically checkable invariants | A rule (then drop the prose, or keep one line) |
-| Guidance for one directory | A nested guide in that directory |
 
 Leave a conditional pointer only when an agent would otherwise not find the
-moved content at the moment it matters.
+moved content at the moment it matters: "Before changing `packages/api`, read
+`packages/api/README.md`."
 
 ## Step 3: Write for every turn
 
 - State invariants and decisions, not narratives or history.
-- Leave out facts that drift: structure trees, file inventories, counts, version
-  numbers, descriptions of current implementation details.
+- Leave out facts that drift: file inventories, counts, version numbers,
+  descriptions of current implementation details.
 - Do not repeat what a tool already enforces or what the agent host already
   instructs; repetition costs context on every request.
 - Write one precise sentence with a threshold or command instead of emphatic
   wording; capitals and absolute words make agents over-apply a rule.
 - Keep one source of truth: when `CLAUDE.md` exists for Claude Code, point it at
-  `AGENTS.md` instead of duplicating content (see references/hosts.md).
+  `AGENTS.md` instead of duplicating content.
 
 ## Step 4: Record a justified exception
 

@@ -4,15 +4,9 @@ Read this to run one turn of a proposal's Planning on its `plan-<slug>` branch, 
 
 ## Worktree context and refresh
 
-- Read operational instructions from the assigned worktree and run its CLI with that worktree as cwd. Entry-checkout
-  instructions do not establish support for newer commands in an older worktree.
-- Before starting or resuming a turn that needs documents or CLI features from a newer base, the Host incorporates
-  that base and synchronizes the assigned worktree's installed instructions under existing Git and permission policy,
-  then resumes with the refreshed context.
-- When the turn does not depend on the base's changes, do not refresh solely because the base advanced.
-- If a running worker discovers that a required document ID or CLI feature is absent, it records the dependency as a
-  problem for Host refresh. It does not merge, resolve IDs from another branch, hide missing references as plain
-  prose, or fabricate envelope YAML to emulate unsupported commands.
+- Read operational instructions from the assigned worktree and run its CLI with that worktree as cwd; the entry checkout's instructions do not prove that an older worktree supports newer commands.
+- If the turn needs documents or CLI features from a newer base, the Host incorporates that base and synchronizes the worktree's installed instructions under the existing Git and permission policy before starting or resuming the turn. Do not refresh only because the base advanced.
+- If a running worker finds a required document ID or CLI feature absent, it records the dependency as a problem for Host refresh. It does not merge, resolve IDs from another branch, hide missing references as plain prose, or fabricate envelope YAML to emulate unsupported commands.
 
 ## Steps
 
@@ -25,7 +19,7 @@ Read this to run one turn of a proposal's Planning on its `plan-<slug>` branch, 
    - Then fold the decisions into `proposal.md` and the PADRs in a separate commit.
    - Record a new PADR with `devkit spec proposal padr <slug> "<title>" --summary "<Y-statement by the decision-writing instruction>"`; `RULE-document-summary` refuses the handoff commit without a summary.
    - Read the scaffolded PADR before writing its body. Give an existing PADR without a summary one.
-   - Withdraw a PADR the answers dropped before `plan-accept` by deleting its file in the fold commit; Git keeps it, and handoff would otherwise promote every PADR left in `decisions/`. There is no withdrawn status. Name the withdrawn PADR ID and the reason in the proposal's Planning decisions, and remove or rewrite references to it.
+   - Withdraw a PADR the answers dropped by deleting its file in the fold commit, because handoff promotes every PADR left in `decisions/`; Git keeps it and there is no withdrawn status. Name the withdrawn PADR ID and the reason in the proposal's Planning decisions, and remove or rewrite references to it.
 3. Review the proposal to the end at the Planning `activity-effort`:
    - `low`: questions only, no `scout` or `challenger`.
    - `medium`: one `challenger` pass always, and a `scout` when the direction needs evidence.
@@ -37,14 +31,14 @@ Read this to run one turn of a proposal's Planning on its `plan-<slug>` branch, 
 4. Collect the questions for the user in one round, never stopping at the first: finish everything that does not depend on an answer first.
    - Give each question a recommended option when one is clear, else several options with one recommended.
    - An answer that leaves something ambiguous becomes a new question, never a guess.
-   - Put the questions into this turn's `worker` envelope (step 5), never into a file of their own.
-   - Before the final work commit, check `dev_effort` in `proposal.md` against the settled design and target boundaries; update it if the expected Development thoroughness changed.
-   - Before the final work commit, run `devkit rules check <proposal dir>/proposal.md` and clear every `RULE-proposal-boundaries` report. Name a path the Development will create by its nearest existing parent directory, with the new path in the proposal text.
-5. Record feedback, then end the turn with one `worker` envelope.
-   - Before the last work commit, record concrete observations in this proposal's `feedback/` under `capture=observed`, also when waiting for answers or stopping on a problem.
-   - Before every return, run the enabled `collect-feedback` sweep over this run and the committed records and write a fresh `feedback` envelope before the single `worker` envelope. Do not reuse a prior run's PASS as coverage.
+   - Put the questions into this turn's `worker` envelope (step 6), never into a file of their own.
+5. Before the final work commit, check `dev_effort` in `proposal.md` against the settled design and target boundaries; update it if the expected Development thoroughness changed.
+   - Run `devkit rules check <proposal dir>/proposal.md` and clear every `RULE-proposal-boundaries` report. Name a path the Development will create by its nearest existing parent directory, with the new path in the proposal text.
+   - Record concrete observations in this proposal's `feedback/` under `capture=observed`, also when waiting for answers or stopping on a problem.
+6. End the turn with exactly one `worker` envelope, after the feedback sweep.
+   - Before every return, run the enabled `collect-feedback` sweep over this run and the committed records and write a fresh `feedback` envelope before the `worker` envelope. Do not reuse a prior run's PASS as coverage.
    - Stage-off writes no sweep envelope but keeps observed capture; requested-only writes a policy-skip PASS without observations; incomplete coverage is `swept=FAIL <gap>` with `--unverified "<gap>"`. For the commands read [planning run coverage](../../spec-feedback/references/sweep.md#planning-run-coverage).
-   - End the turn with exactly one `worker` envelope: `devkit workflow envelope worker --unit <proposal dir> --stage <stage> --effort <activity-effort> --head <your last work commit> ...`. Pass as `--stage` the stage `next` names after the run's other records, and always pass `--effort`.
-   - When questions wait, add `--questions-file -`, which makes the envelope `needs_input`. Give each question `id`, `title`, `prompt`, `context` and `options` with one `recommended`, written for the user: `context` says what the answer decides and why it matters now, each option what it leads to.
+   - Write it with `devkit workflow envelope worker --unit <proposal dir> --stage <stage> --effort <activity-effort> --head <your last work commit> ...`, passing as `--stage` the stage `next` names after the run's other records.
+   - When questions wait, add `--questions-file -`, which makes the envelope `needs_input`. Write each question for the user: `context` says what the answer decides and why it matters now, each option what it leads to.
    - When you stop on a problem, add the problem.
    - Commit the envelope with the turn's last changes.

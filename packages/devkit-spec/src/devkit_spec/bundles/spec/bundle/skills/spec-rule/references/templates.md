@@ -1,8 +1,6 @@
 # spec-rule templates
 
-Read this at Step 2 of the `spec-rule` skill. These are starting points for a new rule asset in the repository's in-repository bundle (`tools/<repo>-devkit/src/<package>/bundle/`). The example is complete and fixable: Markdown files under the configured paths must end with a newline.
-
-Rename `RULE-myrepo-final-newline`, `final_newline` and the classes; keep the structure.
+Read this at Step 2 of the `spec-rule` skill. Start a new rule asset in the in-repository bundle (`tools/<repo>-devkit/src/<package>/bundle/`) from this complete, fixable example: Markdown files under the configured paths must end with a newline. Rename `RULE-myrepo-final-newline`, `final_newline` and the classes; keep the structure.
 
 ## Layout and registration
 
@@ -149,7 +147,7 @@ For a larger rule, keep the implementation in the bundle package (`<package>/rul
 
 ## Tests
 
-`rules/final_newline/tests/test_rule.py`. `devkit rules test RULE-myrepo-final-newline` runs it isolated (no project `conftest.py` or pytest configuration), so it imports only `devkit_agt.features.rules.services.testing` and the environment's packages.
+`rules/final_newline/tests/test_rule.py`, run isolated by `devkit rules test RULE-myrepo-final-newline` (no project pytest configuration either).
 
 ```python
 from __future__ import annotations
@@ -181,4 +179,6 @@ def test_settings_apply_per_path(tmp_path: Path) -> None:
     assert [v.file for v in check(RULE, tmp_path, files, settings=settings)] == ["guides/a.md"]
 ```
 
-`check` runs the real engine: settings go through the `[rules.settings.<id>]` parser (invalid values raise `RulesRunError`), and `fix=True` runs one fix pass and one recheck, so a repaired finding comes back with `fixed=True` and a second run returning nothing proves idempotency. `evaluate` returns the whole `EvaluationResult`. Branch on `v.rule_id`, `v.file` and `v.fixable`, not on message text.
+- `check` runs the real engine: settings go through the `[rules.settings.<id>]` parser (invalid values raise `RulesRunError`), and `fix=True` runs one fix pass and one recheck, so a repaired finding comes back with `fixed=True` and an empty second run proves idempotency.
+- Use `evaluate` when a test needs the whole `EvaluationResult`.
+- Assert on `v.rule_id`, `v.file` and `v.fixable`, not on message text.

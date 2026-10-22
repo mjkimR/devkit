@@ -26,8 +26,10 @@ This is a user/agent semantic review, not an automatic evaluator or an integrati
 
 The milestone body has exactly two plain assertions under `Completion review`:
 
+```text
 Decomposition: pending
 Direct proposal work: pending
+```
 
 Missing assertions on an existing open milestone mean unconfirmed. Stored confirmed assertions alone never
 authorize a later close. Present both confirmations together with the concrete candidate. The user's confirmation
@@ -38,9 +40,8 @@ Immediately before writing, re-read current scope and direct membership and rech
 
 - If semantic scope or relevant completion evidence changed, present the changed candidate again for confirmation.
 - After pause or context compaction, establish the approved candidate and recheck those facts;
-  unchanged authorization persists.
-- Reconfirm only when semantic scope or relevant completion evidence changed or the
-  approved candidate/evidence cannot be established. Interruption alone does not invalidate.
+  unchanged authorization persists. Interruption alone does not invalidate.
+- If the approved candidate/evidence cannot be established, present the candidate again for confirmation.
 
 ## Changes and terminal records
 

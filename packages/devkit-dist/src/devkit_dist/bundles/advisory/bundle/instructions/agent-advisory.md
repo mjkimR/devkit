@@ -5,36 +5,35 @@ description: Read before authoring CLI commands, tool or API errors, warnings, n
 
 # The Agent Advisory Protocol
 
-Every error, warning and notice an AI agent reads (CLI commands, rules, validation, MCP tools) follows this protocol, so agents act on explicit directives instead of guessing, improvising workarounds or retrying in loops.
+Follow this protocol for every error, warning and notice an agent reads (CLI commands, rules, validation, tool results), so the agent acts on an explicit directive instead of guessing, improvising a workaround or retrying in a loop.
 
 ## Principles
 
 - **Direct, do not describe.** `[ACTION]` says what to do next; the other lines supply what that step needs.
 - **Deterministic wording.** Directives never hedge ("likely", "might"); they forbid a blind retry and a workaround, not a rerun after the cause is fixed.
 - **Stable codes.** Every advisory has an `UPPER_SNAKE_CASE` code; callers branch on the code, never on message text.
-- **Context budget.** Emit an advisory only when it changes the agent's next step or must reach the user; other diagnostics are logs, hidden unless verbose.
 - **Channels.** In text mode the result goes to stdout as one-line sentinels and advisories to stderr; in JSON mode one JSON object on stdout carries both and nothing goes to stderr. Each advisory is printed once.
 
 ## Levels
 
-| Level | Headline | The operation | Exit code | `[ACTION]` |
-| --- | --- | --- | --- | --- |
-| `ERROR` | `[ERROR]` | did not do its job, or refused | the error's (`1` negative result, `2` could not run) | always; mode derived from the fields |
-| `WARNING` | `[WARN]` | succeeded; the user must learn or decide something | unchanged (a strict mode may turn `0` into `1`) | always; mode `CONTINUE` |
-| `NOTICE` | `[NOTICE]` | succeeded; something is worth knowing | unchanged | recommended; mode `NOTE`; may be omitted (`brief`) |
-
 Choose the level first:
 
-1. The command could not do its job, or a check it ran found a negative result: `ERROR`. A refusal is never a warning.
-2. It succeeded, and the user must learn or decide something afterwards: `WARNING`.
-3. It succeeded, and the agent may want to know why the result looks as it does or what it could do next: `NOTICE`.
-4. Nobody needs to act and nothing needs explaining: no advisory; log it at most.
+1. If the command could not do its job, refused, or a check it ran found a negative result: `ERROR`. A refusal is never a warning.
+2. If it succeeded and the user must learn or decide something afterwards: `WARNING`.
+3. If it succeeded and the agent may want to know why the result looks as it does or what it could do next: `NOTICE`.
+4. If nobody needs to act and nothing needs explaining: no advisory; log it at most.
+
+| Level | Headline | Exit code | `[ACTION]` |
+| --- | --- | --- | --- |
+| `ERROR` | `[ERROR]` | the error's (`1` negative result, `2` could not run) | always; mode derived from the fields |
+| `WARNING` | `[WARN]` | unchanged (a strict mode may turn `0` into `1`) | always; mode `CONTINUE` |
+| `NOTICE` | `[NOTICE]` | unchanged | recommended; mode `NOTE`; omitted when `brief` |
 
 The same condition can be an `ERROR` in one command and a `WARNING` in another; it keeps its code.
 
 ## Block format
 
-Render advisories as sentinel lines on standard error (or as the text of a tool result):
+Render an advisory as sentinel lines on standard error, or as the text of a tool result:
 
 ```text
 <HEADLINE> (<CODE>) <Concise description>
@@ -48,7 +47,7 @@ Render advisories as sentinel lines on standard error (or as the text of a tool 
 ```
 
 - Pad each sentinel to 9 characters.
-- Put the code in the headline, then the message: one concise sentence.
+- Write the message after the code as one concise sentence.
 - Omit `[ACTION]` only for a notice that is `brief` and has no `[FIX]`; a fix without a directive reads as an instruction to run it.
 - Omit any other line whose field is empty.
 - Continue a multi-line value on lines indented 9 spaces; a block never contains a blank line, colour, emoji or Markdown.
@@ -74,7 +73,7 @@ An error never exits `0`, even in `DEFER` or `INTERACTION` mode: the operation d
 
 ## Mode derivation
 
-The mode is never set directly; it is derived. The first matching rule wins:
+Do not set the mode; it is derived, and the first matching rule wins:
 
 0. `level = WARNING` → `CONTINUE`; `level = NOTICE` → `NOTE`
 1. `input_error` → `INPUT_ERROR`
@@ -86,7 +85,7 @@ The mode is never set directly; it is derived. The first matching rule wins:
 7. `retry = SAFE` → `DEFER`
 8. otherwise → `HALT`
 
-Choose fields by asking which directive the agent must follow, then confirm the derived mode matches.
+Choose the fields from the directive the agent must follow, then check that the derived mode matches it.
 
 ## Action modes
 
@@ -189,11 +188,11 @@ NOTE — For awareness only; nothing needs doing now. Continue. Mention it
 
 ## Warnings and notices in practice
 
-- **Never raised.** Return a warning or notice with the result (under `notices`), printed after the result; a raised one is a defect, reported as `UNEXPECTED_ERROR`.
+- **Never raised.** Return a warning or notice with the result (under `notices`), printed after it; a raised one is a defect reported as `UNEXPECTED_ERROR`.
 - **One advisory per condition.** Name all affected items in one advisory, not one block per file.
 - **Lasting conditions.** A condition the user must act on is a warning on every run until resolved; one that asks for nothing is a notice reported when it appears or changes, then left to data (a JSON field, a list command). A condition the user decided on is never announced again.
 - **Warnings first.** On stderr, warnings precede notices and errors come last; JSON keeps the collected order.
-- **Targets are files.** `[TARGET]` names a file, a flag or a `path:line:col` location; identifiers such as rule IDs belong in the message or `[DETAIL]`.
+- **Targets are files.** Put identifiers such as rule IDs in the message or `[DETAIL]`, not in `[TARGET]`.
 - **Fixes are runnable.** `[FIX]` is never a template with placeholders; for several candidates, name a listing command and give one exact command per candidate in `[DETAIL]`.
 - **Extension points.** An `ERROR` received from third-party code that must not fail the operation (a post-operation hook) is lowered to `WARNING`.
 - **Quiet output.** A quiet mode hides notices, never warnings or errors; JSON always carries every advisory.
@@ -207,3 +206,8 @@ Machine channels carry the same envelope as data:
 - **MCP tools**: a failed call returns the rendered error block as the error result text; a successful call appends its rendered warning and notice blocks after the result text.
 
 A consumer executes `fix` automatically only in `AUTO`, in `INTERACTION` after approval, and in `CONTINUE`/`NOTE` when the user asks. A transport adapter never executes `fix` on the agent's behalf.
+
+## Completion
+
+- Each advisory has a stable code, a level chosen by the steps under Levels, and fields that derive the mode whose directive the agent must follow.
+- `[FIX]` is a runnable command or absent; tests assert on the code and mode, not on message text.

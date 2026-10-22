@@ -47,11 +47,10 @@ failure condition remains after an attempted fix, including an incomplete fix, o
 failure condition alongside the earlier finding reference; the same file, topic or causal connection alone is
 insufficient. The out-of-scope exclusion in section 1 still applies.
 
-For example, if an earlier finding requires cleanup to check ownership, a fix that still permits deleting another
-owner's work is recurring. If that ownership failure is resolved but the replacement command uses an unsupported
-option, the unsupported option is a new finding with its own failure condition. A separate defect introduced by a
-fix uses no recurrence marker solely because the fix caused it; it still follows the same severity, minor-fix and
-round-cap rules. A different proposed remedy does not make an unresolved earlier failure a new finding.
+- A separate defect the fix introduced is a new finding with its own failure condition, under the same severity,
+  minor-fix and round-cap rules. A different proposed remedy does not make an unresolved earlier failure new.
+- Example: an earlier finding requires cleanup to check ownership. A fix that still permits deleting another owner's
+  work recurs; a fix that checks ownership but calls an unsupported option raises a new finding.
 
 ## 4. Bounded recovery
 
@@ -65,7 +64,7 @@ round-cap rules. A different proposed remedy does not make an unresolved earlier
 - At the cap round, any batch that would need another round returns for recovery, P2 and P3 included unless each is waived with a reason.
 - The Host owns recovery within the authorized goal, scope and constraints. A round cap, worker return or reviewer disagreement adds no user approval gate. Preserve the failed range, exact head, open findings and attempted remedies; do not restart the loop counter to hide a failed attempt.
 - A contested P1 may be closed only with evidence that its failure condition does not apply under the agreed contract. Record that reasoning and verification in `reverify`, or a new `reconcile-check`; unresolved defects remain open. For Planning that is the reverify closing the `challenger` round. Changing an acceptance criterion or waiving an agreed constraint requires the affected user decision, not an implementation-only waiver.
-- A Host-directed recovery attempt gets one further fresh round outside the cap, named by its `resolution` envelope. Record the completed attempt and evidence even when it fails. A failed recovery returns to the Host; choose a different concrete remedy or report a genuine blocker rather than entering an unbounded review loop. Never integrate while required findings remain open.
+- A Host-directed recovery attempt gets one further fresh round outside the cap, named by its `resolution` envelope. Record the completed attempt and evidence even when it fails. A failed recovery returns to the Host, which chooses a different concrete remedy or reports a genuine blocker instead of starting an unbounded review loop. Never integrate while required findings remain open.
 - Ask the user only for missing information the Host cannot obtain, a decision that changes the agreed goal, scope or constraints, or an outstanding main boundary whose effective policy is `ask`. Workers return their evidence to the Host; they do not request business approval for ordinary rework.
 - A Planning turn folding answers into an already reviewed proposal treats the fold as a new batch of the same loop, never a fresh loop. When that batch needs recovery at the cap, it gets one further fresh round outside the cap; its summary cites the `answer` envelope in place of a `resolution` when answers caused the recovery. Preserve the count; neither a new worker nor a new session resets the failed history.
 - `Decision needed:` findings of a `challenger` stay out of the loop and go to `plan-accept` under its effective policy.

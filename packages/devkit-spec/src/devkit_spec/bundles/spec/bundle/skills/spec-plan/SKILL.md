@@ -27,7 +27,7 @@ Use this skill at:
    - accepted ADRs: `devkit spec search "<topic>" --kind decision`;
    - module boundaries, import hierarchies, and runtime, packaging or dependency constraints in `docs/architecture/`;
    - capabilities it duplicates or breaks: `devkit spec refs <CAP-ID> --direction in` lists what depends on one.
-2. **Changed MUST.** If an architectural rule that MUST hold has to change, propose a new ADR with its reason:
+2. **Changed invariant.** If an architectural rule that must hold has to change, propose a new ADR with its reason:
    path `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, ID `ADR-<slug>`, template
    `.devkit/managed/spec/templates/decision.md`.
 3. **Design choices.** Inside the agreed intent, choose the recommended option and record its reason in the plan.
@@ -96,7 +96,8 @@ class FeatureConfig:
 ## 6. Verification & Test Plan
 - Unit test coverage targets.
 - Integration test scenarios.
-- Validation commands under the repository's policy: affected tests during development and before integration (e.g., `just test-affected`), any required full-suite checks, and lint, type and governance checks. State when existing results can be reused.
+- Validation commands under the repository's policy: affected tests (e.g., `just test-affected`), any required
+  full-suite checks, and lint, type and governance checks. State when existing results can be reused.
 ````
 
 ## 4. Completion

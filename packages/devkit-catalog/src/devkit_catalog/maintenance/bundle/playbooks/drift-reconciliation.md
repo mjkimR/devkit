@@ -5,12 +5,13 @@ description: Manually review a bounded Living Spec, code and guidance scope for 
 
 # Drift reconciliation
 
-Use only on explicit manual invocation through `devkit-playbook`; selecting the maintenance bundle does not run
-this procedure.
+Run only on explicit manual invocation through `devkit-playbook`; selecting the maintenance bundle does not run
+this procedure. It reviews accumulated drift in one bounded batch and complements per-work-unit reconciliation.
 
-- It complements per-work-unit reconciliation; it is not a detector or scheduler.
-- Neither code nor documentation automatically determines intended behavior.
-- This playbook adds no standalone skill or report store.
+- Neither code nor documentation decides intended behavior; the user decides each mismatch.
+- Changed paths, document age, entrypoints and passing checks locate evidence; they establish neither semantic
+  drift nor consistency. A deterministic failure proves only that check's condition, not which side is intended.
+- Preserve unrelated changes throughout.
 
 ## 1. Bound the review
 
@@ -18,35 +19,26 @@ this procedure.
    `git status --short`), selected contract IDs or one selected area, permitted implementation and guidance roots,
    report destination and prior reports.
 2. If scope is missing, clarify it before broad inspection.
-3. Follow repository instructions and read permissions; preserve unrelated changes.
-4. Store an ordinary Markdown report under the owning work unit's materials; when no unit exists, use the
+3. Store an ordinary Markdown report under the owning work unit's materials; when no unit exists, use the
    repository's existing materials location.
-5. Before review, enumerate candidate contracts, implementation interfaces and consumer guidance. Mark each
+4. Before review, enumerate candidate contracts, implementation interfaces and consumer guidance. Mark each
    reviewed, excluded (with reason), or a coverage gap.
-6. Split a large area into explicit batches before inspecting it; completion applies only to the declared batch.
-
-Changed paths and document age may help select scope but prove no drift.
+5. Split a large area into explicit batches before inspecting it; completion applies only to the declared batch.
 
 ## 2. Collect evidence
 
-Use available existing tools, not a new detector:
+Use existing tools; build no new detector, and install no tool or expand permissions without asking.
 
 - In a devkit-spec repository, navigate with `devkit spec resolve <ID>`, `devkit spec refs <ID> --direction out`
   and declared entrypoints.
-- Use applicable existing governance checks (for example `devkit rules check <path>` when the harness is
-  installed), relevant tests, and implementation and guidance inspection.
+- Run applicable governance checks (for example `devkit rules check <path>` when the harness is installed),
+  relevant tests, and inspect implementation and guidance.
 - In other repositories, use their existing lookup and validation tools.
 - Record the actual commands and results.
-- Do not install tools or expand permissions silently.
 
-Compare documented commands/options, interfaces, terminology and behavior to implementation/tests and guidance
-that restates the contract. Reuse path and reference checks.
-
-- Name missing tools, malformed documents, absent entrypoints, unavailable checks or insufficient evidence as
-  coverage gaps with reasons; do not omit them or claim a clean verdict.
-- Entrypoints locate evidence only: changed paths, age and passing checks establish neither semantic drift nor
-  consistency.
-- A deterministic failure proves only that check's condition, not which ledger is intended.
+Compare documented commands and options, interfaces, terminology and behavior with implementation, tests and the
+guidance that restates the contract. Record missing tools, malformed documents, absent entrypoints, unavailable
+checks and insufficient evidence as coverage gaps with reasons, never as a clean verdict.
 
 For every evidenced mismatch record:
 
@@ -54,10 +46,10 @@ For every evidenced mismatch record:
 - Code or guidance path and section/line citation at the recorded revision, including relevant dirty content.
 - Expected and observed behavior, affected user outcome and supporting command/test where applicable.
 - Classification: `deterministic` or `semantic-assessment`, with reasoning and uncertainty.
-- Proposed disposition. Unsupported suspicions stay investigation gaps, not confirmed mismatches.
+- Proposed disposition.
 
-Keep detailed evidence in the report. Preserve each existing command's output contract; do not invent machine
-sentinels or treat narrative review as a deterministic checker result.
+Record an unsupported suspicion as an investigation gap, not a mismatch. Keep detailed evidence in the report, and
+present narrative review as assessment, not as a check result.
 
 ## 3. Obtain dispositions together
 
@@ -71,43 +63,37 @@ an explicit user decision and reason for each key, with its decision provenance:
 | Defer | Record reason, existing or newly authorized feedback/proposal destination, and restart condition. |
 | Waive | Record the intentional gap and rationale. |
 
-- Before creating a follow-up, search existing open feedback/proposals by contract and mismatch. Reuse matching
-  records and link prior report keys.
+- Before creating a follow-up, search open feedback and proposals by contract and mismatch. Reuse a matching
+  record and link prior report keys.
 - On a repeat run, recheck the earlier disposition instead of duplicating work.
-- Unanswered findings remain pending; do not call the run fully reconciled.
-- Invocation, clean checks, or automatic integration policy never substitutes for explicit human arbitration of
-  each mismatch. A report alone authorizes no source correction.
+- Leave an unanswered finding pending. Invocation, clean checks and integration policy never substitute for the
+  user's decision, and the report alone authorizes no source correction.
 - If only an exercise is requested, label simulated decisions and apply no repository change.
 
 ## 4. Apply decided corrections
 
 1. Follow the repository's development workflow, write scope and approval policy for each decided correction.
    - Track corrections outside the selected scope as separate work.
-   - Leave broad structural cleanup to its own authorized review/refactoring task, not this sweep.
+   - Leave broad structural cleanup to its own authorized review or refactoring task.
    - Keep undecided findings unchanged.
-2. Before correction, compare HEAD and relevant dirty paths with intake. If they changed, revalidate the cited
+2. Before correcting, compare HEAD and relevant dirty paths with intake. If they changed, revalidate the cited
    evidence and decision applicability; obtain a new disposition when the intended correction changes.
-3. Preserve unrelated edits.
-4. Verify code fixes with regression evidence. For documentation corrections, recheck disputed claims, references
+3. Verify code fixes with regression evidence. For documentation corrections, recheck disputed claims, references
    and applicable checks.
-5. Record the correction revision, commands, actual results and remaining limitations per finding.
+4. Record the correction revision, commands, actual results and remaining limitations per finding.
 
 ## 5. Finish the bounded report
 
 1. Before final verification, recheck HEAD and relevant dirty paths and revalidate changed evidence.
-2. Record reviewed and excluded candidates, coverage gaps, detected/resolved/deferred/waived/pending counts,
-   decision provenance, verification evidence and follow-up destinations.
+2. Complete the report with these sections:
+   - Intake: repository, HEAD, dirty paths, batch, permitted roots, destination, prior reports.
+   - Coverage: candidate / reviewed, excluded or gap / evidence or reason.
+   - Findings: key / both citations / expected and observed / outcome / classification / evidence / proposal.
+   - Decisions: key / disposition and reason / provenance / destination and restart condition when deferred.
+   - Corrections: key / workflow destination / revision / verification and limits.
+   - Completion: detected, resolved, deferred, waived and pending counts; unresolved gaps; reused follow-ups;
+     revalidation evidence.
 
-- A zero-finding review still names its coverage and gaps.
-- A completed review may retain deferrals, waivers and coverage gaps, but must state them; pending decisions
-  prevent a fully reconciled claim.
-- Do not assert whole-repository consistency or equate a passing check with semantic truth.
-
-## Report outline
-
-- Intake: repository, HEAD, dirty paths, batch, permitted roots, destination, prior reports.
-- Coverage: candidate / reviewed, excluded or gap / evidence or reason.
-- Findings: key / both citations / expected and observed / outcome / classification / evidence / proposal.
-- Decisions: key / explicit disposition and reason / provenance / destination and restart condition when deferred.
-- Corrections: key / workflow destination / revision / verification and limits.
-- Completion: counts, unresolved gaps, pending decisions, reused follow-ups and revalidation evidence.
+The review is complete when the report names its coverage and gaps, even with zero findings. It may retain
+deferrals, waivers and coverage gaps when it states them. Claim the batch fully reconciled only with no pending
+decision, and never claim whole-repository consistency.

@@ -26,7 +26,7 @@ created_at: <YYYY-MM-DD>
 # [FB-<name>] <title>
 
 <!--
-One incident per file, at the configured detail level (brief/standard take about one minute).
+One incident per file, at the configured detail level.
 friction / question: fill Section 1 and remove Section 2; suggestion / change-request: the reverse.
 Evidence is only what you observed yourself: instruction or document excerpts, summarized command output, file state.
 Excerpt key lines instead of raw output, and mask local paths and identifiers (<repo>, <worktree>).
@@ -63,13 +63,13 @@ If category is other, state the nature in the first line below.
 Read the level from `FEEDBACK_POLICY detail` in `devkit spec policy`. At every level, keep complete frontmatter, the
 rules of the comment above and your own assessment.
 
-- **brief**: retain the applicable section with context/current procedure, actual observation or proposed change,
-  a short assessment and Evidence. Omit unused template bullets.
-- **standard**: fill the applicable kind-specific section and Evidence as shown above.
+- **brief**: keep the applicable section's context or current procedure, the actual observation or proposed change, a
+  short assessment and Evidence; omit the other bullets.
+- **standard**: fill the applicable section and Evidence as shown above.
 - **detailed**: standard plus the following section before Evidence.
-  - Fill a missing fact with `unknown`; never fabricate output, versions or reproduction results.
+  - Fill a missing fact with `unknown` instead of rerunning a risky or expensive command; never fabricate output,
+    versions or reproduction results.
   - Write `not applicable` where a field does not apply.
-  - Do not rerun risky or expensive commands just to complete the record; write `unknown` instead.
 
 ```markdown
 ## Diagnostic Details

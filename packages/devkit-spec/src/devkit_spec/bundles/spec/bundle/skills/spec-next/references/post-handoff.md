@@ -1,16 +1,16 @@
 # Post-handoff link check
 
-Read this immediately after every `devkit spec proposal handoff <slug>`, and run it in the same change.
+Run this in the same change as `devkit spec proposal handoff <slug>`.
 
-What the handoff already did:
+The handoff already did the following and reported each change as a `[REWRITTEN]`, `[DROPPED_RECORD]` or
+`[CARRIED_GATE]` line; do not redo it:
 
 - Moved the proposal into `specs/` and promoted PADRs to ADRs.
 - Moved `materials/` and settled feedback to `docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug>/`, and open feedback to the
   new spec's `feedback/`.
-- Dropped the proposal's envelopes and other workflow records (Planning sweeps do not satisfy Development's own) and
+- Dropped the proposal's envelopes and workflow records, because Planning sweeps do not satisfy Development's own;
   carried `gate:plan-intent` and `gate:plan-accept`.
 - Rewrote links, IDs and bundle-relative code-span paths under `docs/` and `specs/` (completed specs aside).
-- Reported each change as a `[REWRITTEN]`, `[DROPPED_RECORD]` or `[CARRIED_GATE]` line.
 
 Follow the `[FIX]` of any warning; `SPEC_PROPOSAL_GATE_NOT_CARRIED` names the answer command. Then
 `devkit workflow next --unit <spec dir>` shows pending checks and any gates still needing authority under their
@@ -33,4 +33,4 @@ effective policies.
    proposal of `SPEC-x`".
 4. Run `devkit rules check` and confirm `RULE-markdown-link` and `RULE-document-reference` pass.
 
-`devkit rules fix` (`RULE-document-reference`) fixes `PROP-<slug>` references added later on another branch.
+If another branch adds a `PROP-<slug>` reference later, `devkit rules fix` (`RULE-document-reference`) rewrites it.

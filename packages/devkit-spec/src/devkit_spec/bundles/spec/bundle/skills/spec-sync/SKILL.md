@@ -9,19 +9,16 @@ Use this skill right after `spec-review` passes: the `living-spec-draft` stage (
 It promotes what the feature spec established into the Living Spec. Read the `living-spec-writing` instruction before
 editing `docs/`.
 
----
-
 ## 1. Prerequisites & Inputs
 
 - The feature's `spec.md` and `tasks.md` in `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/`, and the actual code changes.
 - `docs/capabilities/`, `docs/stories/`, `docs/architecture/`, `docs/decisions/`.
 
----
-
 ## 2. Reconciliation Principles
 
 - Keep transient task lists in `specs/`.
-- A decision never changes in place: a changed decision is a new ADR that sets `supersedes`. Editing an ADR without changing its decision (wording, stale names, references, consolidation through the `adr-compaction` playbook) is allowed.
+- Record a changed decision as a new ADR that sets `supersedes`, not as an edit in place. Edits that keep the decision
+  (wording, stale names, references, consolidation through the `adr-compaction` playbook) are allowed.
 - Write no index tables in directory `README.md` files; `devkit spec list <kind>` and `devkit spec refs <ID>` list
   them.
 - Link capabilities and stories both ways by exact ID in frontmatter: `stories:` in a capability, `capabilities:` in a
@@ -49,6 +46,7 @@ editing `docs/`.
 ## 3. Reconciliation Workflow
 
 ### Step 1: Identify Impact on Permanent Backbone
+
 - Read `spec.md` and the code changes. Find the documents a changed behavior is described in with
   `devkit spec refs <ID> --direction in` and `devkit spec search "<topic>"`.
 - Map each change to its document:
@@ -56,10 +54,11 @@ editing `docs/`.
   - new capability → `docs/capabilities/<area>/CAP-<AREA>-<slug>.md`;
   - changed capability → edit it;
   - changed architecture → `docs/architecture/`.
-- If the change did introduce or rename a domain term, update `docs/glossary.md` where it exists, by the Glossary
+- If the change introduced or renamed a domain term, update `docs/glossary.md` where it exists, by the Glossary
   section of the `living-spec-writing` instruction.
 
 ### Step 2: Document Reconciliation Record
+
 The `spec` skill's `references/completion.md` holds the evidence rules (waivers, required mismatches). Retain resolved
 records in place.
 
@@ -77,15 +76,18 @@ targets:
     resolution: modified   # modified | waived (with a substantive rationale)
 ---
 ```
+
 - In a registered task worktree, then run `devkit spec scope update --spec <dir>`. On `SPEC_SCOPE_TOKEN_MISSING` the
   worktree is not registered: skip it. `[SCOPE_ACK]` overlaps inform scheduling, never block.
 
 ### Step 2a: Hand Off Deferred Work
+
 - Before deleting a source proposal or marking the spec completed, apply the Deferred Work Handoff in the `spec`
   skill's `references/completion.md`, and record the destination in `reconcile.md`.
 - Never transfer unmet requirements still in the agreed scope to make the feature appear complete.
 
 ### Step 2b: Resolve Source Feedback
+
 - Apply [Source feedback resolution](../spec/references/completion.md#source-feedback-resolution) to the spec's
   explicit open direct-fix sources.
 - Record their resolutions and verification, or remaining scope, in `reconcile.md`.
@@ -93,24 +95,25 @@ targets:
 - Handoff never resolves open feedback; unrelated newly captured feedback stays open.
 
 ### Step 2c: Sync Entrypoints from the Bundle
+
 - Run the `spec-entrypoints` skill for this bundle: derive (doc, code) candidates, review them, apply the chosen ones.
 - A document whose `entrypoints` changed is a `modified` target in `reconcile.md`.
 
 ### Step 3: Run Deterministic Lint Gates
+
 - Run `devkit rules check --staged` for staged changes or `devkit rules check --ci --base <ref>` for a committed
   branch. State which scope was checked and follow each violation's remediation.
 - Where the project's own lint (e.g., `just lint`) covers Markdown and Mermaid diagrams in the updated docs, run it.
 
 ### Step 4: Mark the Feature Spec Completed
-- Once every target is reflected or waived, set `reconcile.md` `status: resolved`, then `status: completed` in
-  `spec.md`. `devkit rules fix <dir>/spec.md` sets the spec status once every task is checked and the record is
-  resolved.
+
+- Once every target is reflected or waived, set `reconcile.md` `status: resolved`, then run
+  `devkit rules fix <dir>/spec.md`, which sets `spec.md` `status: completed` once every task is checked.
 - The stage exits on `frontmatter(reconcile.md status resolved)` and `anchor-status-completed`.
 - Put documentation updates in the same commit as the feature code or the one right after it.
 
----
+## 4. Definition of Done
 
-## 4. Definition of Done (DoD) for Sync
 - [ ] Capabilities and stories reflect the change, linked both ways.
 - [ ] `reconcile.md` `resolved`; concrete deferred work tracked or none retained; spec `completed`.
 - [ ] `devkit rules check` (`--staged` or `--ci --base <ref>`) and the project lint pass with 0 errors.

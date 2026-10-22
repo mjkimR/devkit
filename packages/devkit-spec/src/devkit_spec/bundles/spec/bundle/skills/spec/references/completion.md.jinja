@@ -2,7 +2,7 @@
 
 Read this when approaching review or completion, and before any gate or Git action.
 
-Every task MUST compare the final diff, the requirements, the check results and the Living Spec impact before reporting completion. Before reporting completion or integration, classify the Living Spec impact:
+Before reporting completion or integration, compare the final diff, the requirements, the check results and the Living Spec impact, and classify that impact:
 
 - Authorized contract changes go to capabilities/stories.
 - Structural changes go to architecture.
@@ -13,41 +13,38 @@ Every task MUST compare the final diff, the requirements, the check results and 
 
 ## Policy
 
-Read `devkit spec policy` before deciding gate or Git actions.
+Run `devkit spec policy` before deciding gate or Git actions.
 
 - The main boundaries are `plan-accept`, `proposal-handoff` and `dev-integration`, each independently `ask|auto`.
 - An `ask` boundary needs authority for its exact effects; reuse an explicit decision already given instead of asking again.
 - `auto` delegates that boundary to the Host after readiness checks; report policy as the authority, never as a human approval.
 - Auto requires the owning base and prospective policy to allow it; source-only policy edits cannot authorize themselves.
 - Existing task authorization satisfies `plan-intent` without a fourth repeated approval.
-- `accept_only` settles proposal direction and leaves Development for later.
-- `accept_and_handoff` can settle both boundaries in one interaction: ask only for the boundaries whose policy is `ask`, and disclose each effect.
-- A stale source/report invalidates the old request; inspect partial state and authorize only remaining effects. Preserve exact source SHA, report URI, authority and recovery state.
+- `accept_only` settles proposal direction and leaves Development for later. `accept_and_handoff` can settle both boundaries in one interaction: ask only for the boundaries whose policy is `ask`, and disclose each effect.
+- A stale source or report invalidates the old request; inspect partial state and authorize only remaining effects. Preserve exact source SHA, report URI, authority and recovery state.
 - Planning integration is part of `plan-accept`, not another `dev-integration` decision; that boundary governs the final Development result.
-- Neither mode bypasses readiness, host restrictions or publication policy.
-
+- Neither mode bypasses readiness, host restrictions or publication policy, grants commit or publication authority, or overrides host permissions. After a host refusal, do not switch execution routes to evade it.
+- Approval belongs to the Host after it validates worker boundaries, committed scope and required checks. Workers return that evidence and do not ask for business approval.
+{% if execution.environment == "local" %}- When the optional MCP runtime, connection or negotiated form UI is unavailable, install or connect it intentionally or use an independently authorized explicit CLI/PR route; missing UI is not approval.
+- Cloud execution exposes read-only inspection and cannot use interactive or resume tools. The owning configuration workspace controls this restriction, independently of source-branch provenance.
+{% else %}- Cloud execution provides CLI inspection and artifact operations only; mutation requires a separately authorized CLI/PR route. Missing authority is a boundary, never approval. Effective workspace configuration controls runtime restrictions independently of render provenance.
+{% endif %}
 For the final result:
 
 - `[GATE_POLICY: dev-integration policy=ask]`: present the verified result, then obtain the user's OK:
 {% if execution.environment == "local" %}  - Local MCP integration: call `integration_integrate` directly. Its native confirmation is the user's OK for this gate; it is bound to the verified source commit, the confirmation target and (within that call) its descendants, and the merge/cleanup scope. Ask no separate chat approval and do not require `integration_prepare` first.
   - A waiting `gate:dev-integration` permits this call; do not assert `--given dev-integration` before native acceptance.
   - CLI fallback: a conversational OK unless already authorized. A PR: its ready state, to which a runner binds the gate.
-  - Do not write the OK to a file. For a spec bundle, pass `--given dev-integration` to each `devkit workflow next --unit <dir>` after it. Name the OK (`mcp-elicitation` when confirmed through `integration_integrate`) as the authority in the integration report.
 {% else %}  - Explicit CLI route: a conversational OK unless already authorized. A PR: its ready state, to which a runner binds the gate.
-  - Do not write the OK to a file. For a spec bundle, pass `--given dev-integration` to each `devkit workflow next --unit <dir>` after it. Name the OK as the authority in the integration report.
-{% endif %}  - On an objection, take the stage's return path (`devkit workflow return --unit <dir> --to review-refine --note "..."`); an objection about direction is a close ([classification](classification.md) §4).
+{% endif %}  - Do not write the OK to a file. For a spec bundle, pass `--given dev-integration` to each `devkit workflow next --unit <dir>` after it. Name the OK{% if execution.environment == "local" %} (`mcp-elicitation` when confirmed through `integration_integrate`){% endif %} as the authority in the integration report.
+  - On an objection, take the stage's return path (`devkit workflow return --unit <dir> --to review-refine --note "..."`); an objection about direction is a close ([classification](classification.md) §4).
 - `policy=auto`: once review, reconciliation and required checks pass, at every effort, the policy delegates the gate. `devkit workflow next` lists `[GATE_PASSED: dev-integration ... source=policy]` (JSON `passed_gates`), the basis the integration report cites. Do not describe policy delegation as a human approval or review.
 {% if execution.environment == "local" %}- Shared base `policy=auto` also authorizes verified local merge and exact task cleanup through `integration_integrate`, reporting `authority: policy` without elicitation.
   - The Host invokes it after the final report; prepare alone grants no authority.
-  - Source-only auto cannot authorize its own merge.
   - Auto PR execution and cloud execution/resume refuse.
   - Prospective auto-to-ask revocation refuses before mutation; remaining cleanup requires unchanged auto policy.
-- Neither value grants commit or publication authority or overrides host permissions.
-  - After a host refusal, do not switch execution routes to evade it.
   - Without MCP, auto has no automatic CLI substitute; manual execution requires separate authority.
-{% else %}- Shared base `policy=auto` grants no cloud execution, resume or publication authority.
-  - There is no automatic CLI substitute: return verified results to the Host unless a separate explicit CLI/PR authorization exists.
-  - Neither policy value overrides host permissions; after a refusal, do not reroute.
+{% else %}- Shared base `policy=auto` grants no cloud execution, resume or publication authority. There is no automatic CLI substitute: return verified results to the Host unless a separate explicit CLI/PR authorization exists.
 {% endif %}- `GIT_POLICY` (worktree, pull request and branch cleanup): read [git policy](git-policy.md) and decide before the first edit.
 
 ## Reconciliation record
@@ -64,20 +61,16 @@ For the final result:
 - The commit gate counts the staged diff together with the branch's earlier commits since its merge base, so a target an earlier commit changed (the ADR the handoff promoted) needs no second edit.
 - Intermediate commits pass the same gate; a `pending` reconcile record is allowed while the spec is not `completed`.
 - An intermediate commit grants no merge authority and is never final completion evidence: the final cumulative check runs on the integrated head, and `dev-integration` still requires the Living Spec reflection and the resolved and completed states.
-
-{% if execution.environment == "local" %}- Before the native approval, prepare the task branch against the base, re-verify changed paths and run the cumulative check; this changes no base ref and cleans nothing up.
+- Before {% if execution.environment == "local" %}the native approval{% else %}integration approval{% endif %}, prepare the task branch against the base, re-verify changed paths and run the cumulative check; this changes no base ref and cleans nothing up.
 - After `dev-integration`, the `integrate` stage (`spec-integrate`) integrates the base branch, re-verifies only what conflict resolution changed, confirms the reconcile record and runs the cumulative check; it does not restart code review and adds no workflow gate.
 - Delegated support roles return the fields in [envelope](envelope.md) and never change the index or HEAD.
-{% else %}- Before integration approval, prepare the task branch against the base, re-verify changed paths and run the cumulative check; this changes no base ref and cleans nothing up.
-- After `dev-integration`, the `integrate` stage (`spec-integrate`) integrates the base branch, re-verifies only what conflict resolution changed, confirms the reconcile record and runs the cumulative check; it does not restart code review and adds no workflow gate.
-- Delegated support roles return the fields in [envelope](envelope.md) and never change the index or HEAD.
-{% endif %}- Reconcile verification is a `reconcile-check` envelope at `living-spec-draft` at every effort ([effort](effort.md), [review loop](review-loop.md)), naming who verified, the evidence and any omission reason; fix findings and write a new check.
+- Reconcile verification is a `reconcile-check` envelope at `living-spec-draft` at every effort ([effort](effort.md), [review loop](review-loop.md)), naming who verified, the evidence and any omission reason; fix findings and write a new check.
 - After review fixes or changed inputs, recheck impact; for new targets, return `reconcile.md` to pending.
 - Review final docs and governance changes too.
-- Never automatically delete a dirty worktree.
+- Never delete a dirty worktree automatically.
 - Report implementation complete, committed, integrated and session ended as distinct facts.
 
-`session` depth (session: no records):
+`session` depth (no records):
 
 - Run the checks and the effort's review.
 - Commit with a plain `git commit` before `dev-integration` (the approval covers committed work; a PR is pushed then), without `spec-integrate`.
@@ -87,49 +80,29 @@ For the final result:
 ## Source feedback resolution
 
 - Only `open` feedback is actionable.
-- `promoted` is terminal once handed to identified follow-up work; progress belongs to that destination, and
-  finishing it MUST NOT convert the source to `resolved`.
-- `resolved` is terminal for a directly addressed and verified observation without promotion, in either a session
-  or a spec task.
+- `promoted` is terminal once handed to identified follow-up work; progress belongs to that destination, and finishing it MUST NOT convert the source to `resolved`.
+- `resolved` is terminal for a directly addressed and verified observation without promotion, in either a session or a spec task.
 - Terminal source references remain traceability: they require no completion disposition, re-verification or edits.
 
-Before reporting completion, review only explicitly linked open sources addressed directly by the task against
-the final diff and verification. For a spec, record their outcomes in `reconcile.md` at `living-spec-draft`; for a
-session, do this at `report-session` before its commit and report outcomes without creating a new artifact.
-This obligation applies even with requested-only capture or `collect-feedback` off.
+Before reporting completion, review only the explicitly linked open sources the task addresses directly against the final diff and verification. Record their outcomes in `reconcile.md` at `living-spec-draft` for a spec; for a session, do this at `report-session` before its commit and report the outcomes without creating a new artifact. This applies even with requested-only capture or `collect-feedback` off.
 
-- Change an open direct-fix source to `resolved` only when the authorized implementation fully addresses it and
-  applicable tests/review verify the result. Append a Disposition naming the SPEC ID (or changed session paths),
-  implemented outcome and concrete verification evidence.
+- Change an open direct-fix source to `resolved` only when the authorized implementation fully addresses it and applicable tests or review verify the result. Append a Disposition naming the SPEC ID (or changed session paths), implemented outcome and concrete verification evidence.
 - Do not resolve unrelated feedback found by a sweep; it is not authorized.
-- Keep partial, deferred or unverified direct fixes open; report remaining scope and destination. Required work
-  still in the agreed scope cannot be deferred to claim completion.
-- Handoff, planning, document checks or integration alone are not fix verification. A branch resolution does not
-  assert integration; the implementation and FB update reach the base through normal integration.
-- If later changes invalidate the evidence of a resolution made by this task, restore that source to open and
-  explain remaining work before completion. Do not revisit pre-existing terminal sources.
-- Capture never changes status.
-- An authorized direct fix needs no separate hygiene session.
-- Only open sources requiring updates belong in delegated write scope; the Host handles an out-of-boundary
-  disposition.
+- Keep partial, deferred or unverified direct fixes open; report remaining scope and destination. Required work still in the agreed scope cannot be deferred to claim completion.
+- Handoff, planning, document checks or integration alone are not fix verification. A branch resolution does not assert integration; the implementation and FB update reach the base through normal integration.
+- If later changes invalidate the evidence of a resolution made by this task, restore that source to open and explain remaining work before completion. Do not revisit pre-existing terminal sources.
+- Capture never changes status. An authorized direct fix needs no separate hygiene session.
+- Only open sources requiring updates belong in delegated write scope; the Host handles an out-of-boundary disposition.
 
 ## Deferred Work Handoff
 
 Before deleting a source proposal or reporting completion, find concrete work its roadmap or the final scope explicitly retains for later.
 
-1. Each such follow-up MUST be tracked: by default as feedback for Backlog (`/spec-feedback`), or as a draft proposal when concrete enough. For a draft, link or update a matching open `PROP-...` (`devkit spec search "<topic>" --kind proposal`), else run `devkit spec proposal new <slug>`.
+1. Track each such follow-up: by default as feedback for Backlog (`/spec-feedback`), or as a draft proposal when concrete enough. For a draft, link or update a matching open `PROP-...` (`devkit spec search "<topic>" --kind proposal`), else run `devkit spec proposal new <slug>`.
 2. Record the source, remaining scope, reason for deferral, dependencies or restart conditions, and expected acceptance checks; group work with the same outcome.
 3. Reference the destination `FB-...` or `PROP-...` by full ID from the source `reconcile.md` (or a `session` task's final report). If the original proposal is removed, reference the retained source spec or Git history from the destination proposal. A future-work paragraph in a capability document is no handoff.
 4. Verify the destination exists (`devkit spec list feedback` or `devkit spec list proposal`) before claiming it is tracked.
 
 - Drafting a follow-up neither accepts it nor authorizes implementation.
-- Required acceptance criteria or defects still in the agreed scope MUST remain open; never move them to a proposal to claim completion.
+- Required acceptance criteria or defects still in the agreed scope remain open; never move them to a proposal to claim completion.
 - The handoff is part of completion in every route.
-
-{% if execution.environment == "local" %}Native MCP approval belongs to the Host after it validates worker boundaries, committed scope and required checks.
-Workers return that evidence and do not ask for business approval. When the optional runtime, connection or negotiated
-form UI is unavailable, use intentional installation/connection or an independently authorized explicit CLI/PR route;
-missing UI is not approval. Cloud execution exposes read-only inspection and cannot use interactive or resume tools.
-The owning configuration workspace controls this restriction, independently of source-branch provenance.
-{% else %}Approval belongs to the Host after it validates worker boundaries, committed scope and required checks. Workers return that evidence without requesting business approval. Cloud execution provides CLI inspection and artifact operations only; mutation requires a separately authorized CLI/PR route. Missing authority is a boundary, never approval. Effective workspace configuration controls runtime restrictions independently of render provenance.
-{% endif %}

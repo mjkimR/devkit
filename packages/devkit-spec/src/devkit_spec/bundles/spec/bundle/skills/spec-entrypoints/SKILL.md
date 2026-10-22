@@ -13,15 +13,13 @@ Use this skill when:
 The command joins declarations mechanically; this skill supplies the review that decides what is written. Path
 contract: `devkit rules explain RULE-code-entrypoints`.
 
----
-
 ## 1. Inputs
 
-- Code side: every `_Boundary` path in the bundle's `tasks.md` (`N/A`, globs, absolute paths and `docs/` or `specs/` paths are skipped).
-- Document side: `reconcile.md` targets under `docs/capabilities/` or `docs/stories/` (also under `docs/packages/<name>/`) that are not `waived`.
+- Code side: every `_Boundary` path in the bundle's `tasks.md` (`N/A`, globs, absolute paths and `docs/` or `specs/`
+  paths are skipped).
+- Document side: `reconcile.md` targets under `docs/capabilities/` or `docs/stories/` (also under
+  `docs/packages/<name>/`) that are not `waived`.
 - A candidate under another candidate of the same bundle is folded into the ancestor and never written.
-
----
 
 ## 2. Procedure for the current bundle
 
@@ -35,12 +33,11 @@ contract: `devkit rules explain RULE-code-entrypoints`.
      `__init__.py`) where reading starts, rather than internal helpers, models, schemas, or tests.
    - Choose a directory candidate (with trailing `/`) only when the document cleanly owns that entire package/module;
      otherwise choose its doorway files. Never choose an overly broad shared directory.
-   - A pair is a declaration join, not proof that the code implements that document.
 3. **Apply** the chosen pairs only:
    `devkit spec entrypoints derive --spec <dir> --apply --target <CAP-or-US-id> --code <path> [--code ...]`.
    - `--target` picks documents, `--code` keeps candidates equal to or under a path, `--exclude` drops hub paths every
      bundle touches (root `AGENTS.md`, `README.md`, agent guides).
-   - Without them every bearing target and candidate of the bundle is written.
+   - Without `--target` and `--code`, the command writes every bearing target and candidate of the bundle.
    - To declare a folded file instead of its directory, apply with `--all` (folding is per bundle) or edit the
      boundary.
    - The command appends and is idempotent; follow the `[FIX]` of any warning.
@@ -49,8 +46,6 @@ contract: `devkit rules explain RULE-code-entrypoints`.
    - `devkit spec list capability --file <path>` (or `story`) for one written path: the document must be listed.
 5. **Record**: a document whose `entrypoints` changed is a Living Spec change. Make it a `modified` target in the
    bundle's `reconcile.md`, or report it in a `session` task.
-
----
 
 ## 3. Backfill across completed specs
 
@@ -68,9 +63,8 @@ contract: `devkit rules explain RULE-code-entrypoints`.
 7. Backfill of many documents is a Living Spec change: record it through the current bundle's `reconcile.md` or the
    report of a `session` task.
 
----
-
 ## 4. Definition of Done
 
-- [ ] Each written document was reviewed, not applied blindly from the full candidate list; `devkit rules check` passes.
+- [ ] Each written document was reviewed, not applied blindly from the full candidate list; `devkit rules check`
+  passes.
 - [ ] Rejected or deferred candidates are stated in the report when they matter later.

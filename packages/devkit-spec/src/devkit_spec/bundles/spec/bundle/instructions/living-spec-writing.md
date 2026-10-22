@@ -14,20 +14,18 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
 
 ## Decision Placement and Duplication
 
-- Record decisions and their rationale in ADRs.
-- Do not repeat a decision, or keep appending references to individual ADRs, in guidance blocks, constitutions or
-  other always-loaded instructions only because it is important; Planning already searches related ADRs.
-- Reserve always-loaded guidance for common constraints an agent needs before it can search for task-specific
-  decisions. An exception SHOULD identify the concrete failure caused by missing that constraint before discovery;
-  include only the minimum operational rule and keep its detailed rationale in the ADR.
-- Capabilities describe the affected feature's current contract. Update that contract when behavior changes, but
-  do not copy the ADR's reasoning or background into it merely to make the decision more visible.
-- Choose placement by when the information is needed. Avoid the pattern "this decision is important, so add it
-  everywhere the agent reads"; use relevant ADR discovery instead of accumulating decision-specific context.
+- Record decisions and their rationale in ADRs; choose every other placement by when the reader needs the
+  information, not by how important it is.
+- Keep decisions and lists of individual ADR references out of guidance blocks, constitutions and other
+  always-loaded instructions, because Planning already searches related ADRs.
+- Exception: a common constraint an agent needs before it can search for task-specific decisions. The exception
+  SHOULD name the concrete failure that missing the constraint causes; include only the minimum operational rule and
+  keep its rationale in the ADR.
+- Update a capability's contract when behavior changes; do not copy the ADR's reasoning or background into it.
 
 ## Completed Specs and Traceability
 
-- A spec with `status: completed` remains in place as work history. Editing it is not prohibited; `RULE-spec-lifecycle` keeps its status consistent with its tasks and reconcile record.
+- A spec with `status: completed` remains in place as work history. It may still be edited; `RULE-spec-lifecycle` keeps its status consistent with its tasks and reconcile record.
 - For the current contract, read `docs/capabilities/` and `docs/stories/`; a completed spec is not a default discovery or orientation target.
 - Start a later behavior change in a new spec.
 - Stories and capabilities form an orthogonal M:N relationship. Link them through YAML `stories:` in capabilities and `capabilities:` in stories, both ways (`RULE-traceability-link`); do not physically nest either inside the other.
@@ -43,7 +41,7 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
 
 - Refer to ID-bearing internal documents with full IDs in prose and exact IDs in relationship fields; omit Markdown paths. IDs are path-derived slugs, never dates or sequence numbers (`RULE-id-convention`, `RULE-document-reference`).
 - Keep external URLs, images, code paths and documents without IDs as ordinary links. Code examples, non-ID inline code and H1 self IDs are not reference edges.
-- Renaming a document whose ID derives from its path (`CAP`, `US`, `ARCH`, `SPEC`, `PLAN`, `TASKS`, `REC`, `FB`): move the file, set the new ID and keep the old ID in `aliases` (own prefix, never a date- or number-based form); renaming a spec bundle keeps an alias on `spec.md`, `plan.md`, `tasks.md` and `reconcile.md`. An approved ADR is renamed or consolidated by compaction, whose replacement lists the retired IDs in `aliases`. Then run `devkit rules fix`: it moves current documents, ADRs included, to the new ID and leaves history as written (`CAP-DOCS-document-model`).
+- Renaming a document whose ID derives from its path (`CAP`, `US`, `ARCH`, `SPEC`, `PLAN`, `TASKS`, `REC`, `FB`): move the file, set the new ID and keep the old ID in `aliases` (own prefix, never a date- or number-based form); renaming a spec bundle keeps an alias on `spec.md`, `plan.md`, `tasks.md` and `reconcile.md`. An approved ADR is renamed or consolidated by compaction, whose replacement lists the retired IDs in `aliases`. Then run `devkit rules fix`: it moves current documents, ADRs included, to the new ID and leaves history as written.
 
 ## Glossary
 

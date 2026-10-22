@@ -39,6 +39,8 @@ the domain basics, and lacks only this repository's facts.
 
 ## Related Instructions
 
-- `contract-authoring`: normative keywords, measurable contracts, Non-Goals.
-- `living-spec-writing`: placement of decisions and history, summaries, references, terminology.
-- `decision-writing`, `capability-writing`, `story-writing`, `architecture-writing`: patterns per document kind.
+- Read `contract-authoring` when a document states a contract: normative keywords, measurable criteria, Non-Goals.
+- Read `living-spec-writing` when writing under `docs/` or `specs/`: placement, history, summaries, references,
+  terminology.
+- Read `decision-writing`, `capability-writing`, `story-writing` or `architecture-writing` when writing that document
+  kind.

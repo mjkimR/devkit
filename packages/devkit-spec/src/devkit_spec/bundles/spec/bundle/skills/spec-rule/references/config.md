@@ -1,6 +1,6 @@
 # Rule configuration (`[rules]`)
 
-Read this when a rule needs settings a project may tune (limits, extensions, paths), or when a project must change how an existing rule runs. Change a distributed rule's behavior only in `[rules]` of the Git-tracked `.devkit/config.toml`, never in its deployed copy under `.devkit/managed/`.
+Read this when a rule needs settings a project may tune (limits, extensions, paths), or when a project must change how an existing rule runs through `[rules]` of the Git-tracked `.devkit/config.toml`.
 
 ## Declaring settings (rule author)
 
@@ -8,8 +8,7 @@ Read this when a rule needs settings a project may tune (limits, extensions, pat
 - Declare fields as `int`, `float`, `str`, `bool` or `list[str]`, each optionally `| None` (the only fields that accept `null`); nested tables are rejected when the rule loads.
 - Override `validate_settings(settings)` to raise `ValueError` for values the types cannot express (a non-positive limit, a malformed pattern via `devkit_agt.features.rules.validate_pattern`). It runs on the defaults, the configured values and every override layer before any rule executes.
 - Read the effective values per file with `ctx.settings(self, rel)` inside `check` and `fix`; never cache them across runs or mutate them.
-
-When settings can change the result for unchanged files, the rule rescans its own targets: there is no per-rule configuration file to watch.
+- If settings can change the result for unchanged files, rescan the rule's own targets: there is no per-rule configuration file to watch.
 
 ## Configuring (project)
 

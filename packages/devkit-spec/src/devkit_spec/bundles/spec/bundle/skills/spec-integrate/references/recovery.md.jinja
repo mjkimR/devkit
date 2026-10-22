@@ -1,0 +1,28 @@
+# Integration recovery
+
+Read this when a Step 5 merge or a Step 6 cleanup does not complete cleanly: a refusal code, a pending, partial or
+unknown result{% if execution.environment == "local" %}, an unavailable native confirmation or a process restart{% endif %}.
+
+{% if execution.environment == "local" %}## Native integration
+
+| Result | Recovery |
+| :--- | :--- |
+| `INTEGRATION_CHECKS_PENDING` (incomplete success) | Wait for the checks with the returned bounded-watch directive, then resume on the unchanged checked target. Report a required check that never starts. |
+| `INTEGRATION_TARGET_MOVED` | Return to Step 1, re-verify and request a new approval. Report repeated movement to the user. |
+| `INTEGRATION_LANDED_UNCHECKED` | Cleanup still runs. Run the declared landed-target check in the retained base (`devkit rules check` for spec), report the landing as unchecked and fix a failure in a new unit. |
+| `status: "partial"` | Inspect with `integration_status` (`detail=true` for full evidence) and resume with `integration_resume`. It continues only onto the target its approving call built on; a later target needs a new `integration_integrate`. |
+| Timeout or unknown mutation | Call `integration_status` before any recovery. |
+| `INTEGRATION_CONFIRMATION_UNAVAILABLE` | Use the CLI path of Step 5. |
+| Process restart | Prepare and request approval afresh; no file restores authority. |
+
+{% else %}## PR route
+
+Report an incomplete or unknown mutation to the Host.
+
+{% endif %}## CLI path
+
+- Follow the `[FIX]` of a `devkit worktree finish` refusal: for `WORKTREE_BLOCKED`, resolve the problem; for a moved
+  base (`WORKTREE_MERGE_NOT_FF`), return to Step 1.
+- In cleanup, follow the `[FIX]` of each refusal or warning (finish, push and post-finish cleanup codes: the `spec`
+  skill's `references/worktree.md`), then rerun the same command once it is resolved.
+- Report what could not be removed or pushed, and why.

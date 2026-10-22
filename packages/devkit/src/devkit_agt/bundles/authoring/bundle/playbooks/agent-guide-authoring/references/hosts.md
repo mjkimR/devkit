@@ -1,8 +1,7 @@
 # How agent hosts load guides
 
-Read this when you add a nested guide, move content between guides, or connect
-`CLAUDE.md` to `AGENTS.md`. Host behavior changes between releases; confirm the
-current rules in the host's documentation before relying on a detail.
+Confirm a detail in the host's documentation before relying on it, because host
+behavior changes between releases.
 
 ## Codex
 
@@ -30,7 +29,7 @@ it supports imports. When it reads none of them, point its own guide file at
 
 - Write a nested guide only for rules that hold in that subtree and not
   elsewhere; repeat nothing from the root guide.
-- Keep nested guides smaller than the root guide; give them a lower `max_bytes`
-  with a path override when they start to grow.
-- A nested guide still loads on every turn in its subtree: the same "what stays"
-  test applies.
+- Apply the playbook's "what stays" test, because a nested guide loads on every
+  turn in its subtree.
+- Keep nested guides smaller than the root guide; give one a lower `max_bytes`
+  with a path override when it starts to grow.

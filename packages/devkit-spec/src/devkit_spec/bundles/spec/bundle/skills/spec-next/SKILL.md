@@ -8,15 +8,11 @@ description: Entry skill for orientation; inspect repository state and active sp
 Use this skill to orient at session start or to choose the next action: diagnose state and recommend one concrete step
 with evidence.
 
----
+## 1. Constraint: No Automatic Execution
 
-## 1. Operating Invariant: No Automatic Execution
-
-- `spec-next` MUST only diagnose state and explain the recommended next step.
-- The agent MUST NOT start implementing, creating files or executing code without the user's explicit approval;
-  end with the recommendation and wait for the user's instruction.
-
----
+- Diagnose state and explain the recommended next step; nothing more.
+- Do not implement, create files or run anything beyond the diagnosis commands until the user approves; end with the
+  recommendation and wait for the user's instruction.
 
 ## 2. Diagnosis Workflow
 
@@ -33,7 +29,8 @@ devkit workflow next --unit docs/proposals/PROP-<slug>            # a proposal b
 - Follow any `[FIX]` or `[ACTION]`.
 - For any other line (`[GATE]`, `[WAITING]`, `[REQUEST]`, `[DELEGATE]`, `[SKIPPED]`, an error line, ...) or an
   advisory, read [workflow signals](references/workflow-signals.md).
-- `devkit workflow show --unit <dir>` shows the whole flow. Steps 1 to 4 add what the CLI does not see.
+- `devkit workflow show --unit <dir>` shows the whole flow. `next` does not see Git state, PR state, feedback or other
+  units; Steps 1 to 4 cover those.
 
 ### Step 1: Check Working Tree & Git State
 
@@ -41,16 +38,14 @@ devkit workflow next --unit docs/proposals/PROP-<slug>            # a proposal b
    worktree or the base branch.
 2. Report leftovers from `devkit worktree status` at any `GIT_POLICY` level, each as `devkit worktree finish <branch>`
    or user-authorized removal.
-3. Report stale activity branches from `devkit worktree status --stale` (also warned by
-   `devkit rules check -p hygiene`), each with its resume or discard path, per §4 of the `spec` skill's
-   `references/branches.md`.
+3. Report stale activity branches from `devkit worktree status --stale`, each with its resume or discard path, per §4
+   of the `spec` skill's `references/branches.md`.
 4. Never remove or resume a leftover or stale branch unasked.
 
 ### Step 2: Check Active Change Specs (`specs/`)
 
-Run `devkit spec list spec` and follow any `[NEXT_CMD]`. Completed bundles are left out unless `--history`; inspect
-only the listed directories. Completed specs are work history: pass `--history --status completed` only when a task
-explicitly needs one.
+Run `devkit spec list spec` and follow any `[NEXT_CMD]`. Inspect only the listed directories; add
+`--history --status completed` only when the task needs a completed spec.
 
 - `tasks.md`: count tasks completed vs pending.
 - `reconcile.md`: prioritize pending required reconciliation after implementation review.
@@ -66,8 +61,6 @@ one ready for `devkit spec proposal handoff <slug>` (on `dev-<slug>`).
 
 Run `devkit spec list feedback --status open --where severity=critical` for the critical items, and the same without
 `--where` for the count of the rest.
-
----
 
 ## 3. Decision Matrix & Action Guidance
 
@@ -85,7 +78,7 @@ progress.
 | Diagnosed State | Status Criteria | Recommended Next Action |
 | :--- | :--- | :--- |
 | **Unit in progress** | Step 0 names a `[STAGE]` | Recommend its `[NEXT_SKILL]` with the `[UNMET]` evidence; gates, waits and other lines as [workflow signals](references/workflow-signals.md) describes. Multi-skill stages and `[NEXT_SKILL: -]`: below the table |
-| **Proposal Hand-off** | Proposal `status: accepted` (`plan-accept` given) and `next` reports it complete (`[STAGE: - complete=true]`) | Start or continue `dev-<slug>` (`devkit worktree start dev-<slug>`, `--no-worktree` in this checkout, or `--existing-branch`), run `devkit spec proposal handoff <slug>` there, then the post-handoff link check (§3.1) |
+| **Proposal Hand-off** | Proposal `status: accepted` (`plan-accept` given) and `next` reports it complete (`[STAGE: - complete=true]`) | Start or continue `dev-<slug>` (`devkit worktree start dev-<slug>`, `--no-worktree` in this checkout, or `--existing-branch`) and run `devkit spec proposal handoff <slug>` there. Right after every handoff, in the same change, run the [post-handoff link check](references/post-handoff.md) |
 | **Proposal Incubation** | Proposal in `draft` or `reviewing` | For a queued draft, [next-work selection](references/next-work.md) (Planning, direct acceptance or session reclassification). Review the hypothesis, add research to `materials/`, or draft a PADR (`devkit spec proposal padr <slug> <title>`); for a spike, delegate `scout`/`challenger` (`spec-delegate`) |
 | **Ended (Rejected)** | Proposal is `rejected` | Planning ended: the cleanup `SPEC_PROPOSAL_REJECTED_PENDING`'s `[FIX]` names (rejection ADR, then deletion; the user may invoke the `feedback-hygiene` playbook); never back to `reviewing` |
 | **Idle** | No in-progress Unit | Recommend eligible queued drafts and Backlog actions with [next-work selection](references/next-work.md) |
@@ -97,13 +90,6 @@ For a Unit in progress:
   `file-exists(plan.md)`, `tasks-exists`).
 - `[NEXT_SKILL: -]` (`build-verify`, `fix-verify`) means implement the next unchecked task within its `_Boundary:` and
   run its tests.
-
-### 3.1 Post-handoff link check
-
-Run it immediately after every `devkit spec proposal handoff <slug>`, in the same change:
-[post-handoff link check](references/post-handoff.md).
-
----
 
 ## 4. Output Standard
 
