@@ -86,9 +86,7 @@ def test_a_drifted_preset_is_a_violation(role: str, host: str | None, key: str, 
 def test_the_challenger_leaves_the_model_to_the_runtime() -> None:
     text = _rendered(BUNDLE / "subagents/challenger.md")
     assert "Choose a high-reasoning model at invocation time" not in text
-    assert (
-        "# The reasoning effort is preset per role (ADR-role-effort-presets); the model is left to the runtime." in text
-    )
+    assert "# The reasoning effort is preset per role; the model is left to the runtime." in text
 
 
 @pytest.mark.parametrize("role", ("scout", "challenger"))

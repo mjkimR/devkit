@@ -55,7 +55,9 @@ Path `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md` dated today, from the decis
 1. Delete the member files: `git rm <member paths>`.
 2. Run `uv run devkit rules fix`: it rewrites alias references in current documents to the replacement ID and leaves
    history as written.
-3. Run `uv run devkit sync` if a bundle source changed.
+3. If `devkit rules check` still reports a glossary Owner naming a retired ID, replace it with the replacement ID in
+   `docs/glossary.md` by hand; `devkit rules fix` does not rewrite glossary Owners.
+4. Run `uv run devkit sync` if a bundle source changed.
 
 ## Step 5: Verify
 
@@ -66,6 +68,8 @@ git diff --no-renames --name-only --diff-filter=D <base> -- docs/decisions/
 
 - Every deleted ADR ID resolves: `uv run devkit spec resolve <ID>` prints the replacement with `alias=<ID>`.
 - No remaining `supersedes` or `superseded_by` outside the replacements names a retired ID.
+- Every path, test and rule ID in a replacement's Confirmation section exists in the working tree; correct a path
+  that moved, and write "Review only" when no check exists.
 - Fidelity review: compare each replacement with its members (`git show <base>:<path>`), with each member's incoming
   references (`devkit spec refs <ID> --direction in`). Each in-effect statement must trace to a member, and no member's
   in-effect decision may be missing or altered. A change found here goes back to Step 3, or the member leaves the group.

@@ -7,7 +7,7 @@ record/commit access is permitted, it ends with its head returned and exactly on
 stops on a question or a problem.
 
 You validate the committed range, accept or block it, and decide what a recorded problem needs. Do not write the
-worker's records for it (`ADR-worker-delivers-committed-result`). Record formats: the `spec` skill's
+worker's records for it. Record formats: the `spec` skill's
 `references/worker-records.md`.
 
 ## The last accepted head

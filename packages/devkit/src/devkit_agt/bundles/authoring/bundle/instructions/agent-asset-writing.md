@@ -1,6 +1,6 @@
 ---
 name: agent-asset-writing
-description: Read before writing or editing a skill, playbook or instruction an agent executes. Defines directive sentences, degrees of freedom, defaults, feedback loops, completion criteria, emphasis and conditional references.
+description: Read before writing or editing a skill, playbook or instruction an agent executes. Defines directive sentences, degrees of freedom, defaults, feedback loops, completion criteria, emphasis, conditional references and bundle self-containment.
 ---
 
 # Agent Asset Writing
@@ -16,7 +16,8 @@ repository adds.
 - Pair a prohibition with its alternative when one exists: "Edit the bundle source, not the projected copy." A
   prohibition whose alternative is to do nothing stands alone.
 - Give a reason in one clause when it changes how the agent applies the directive: "..., because the file is
-  shared in the PR." Link background and history by ID or path instead of retelling them.
+  shared in the PR." Link background and history by ID or path instead of retelling them, within the limits of
+  Self-Containment.
 - Write without hedges ("likely", "might", "consider"); state the condition under which the directive applies.
 - Use plain directives instead of "CRITICAL", "ALWAYS", "NEVER" in capitals or bold. Emphatic wording makes current
   models over-apply a directive; its condition and reason give it the right force.
@@ -55,6 +56,21 @@ Match the precision of a step to how fragile it is:
 - Say whether the agent runs a script or reads it. A script prints only the slice the agent needs.
 - State no time-relative facts ("recently", "the new API"); describe the current state.
 
+## Self-Containment
+
+A bundle is the unit a package ships to other repositories, which have none of the authoring repository's
+documents. Each bundle is self-contained: its assets may reference each other, but nothing outside the bundle.
+
+- Link freely to the bundle's own assets: its skills and their references, instructions, playbooks, templates,
+  rules and workflows.
+- Write the rule and its one-clause reason in the asset instead of citing the authoring repository's ADR, capability,
+  story, spec or path: "Do not write the OK to a file." not "... (`ADR-...`)".
+- Refer to the consumer repository's own documents only through a placeholder (`docs/decisions/`, `ADR-<slug>`).
+- Name example IDs as obvious placeholders (`ADR-example`, `CAP-<AREA>-<slug>`), never as real IDs of the authoring
+  repository.
+- Before committing a bundle change, search the bundle for document IDs:
+  `rg -n '\b(ADR|CAP|US|ARCH|SPEC|MS)-[a-z]' <bundle directory>`; each hit is a placeholder or removed.
+
 ## Completion
 
 - Every line changes the agent's next action or is a needed condition, reason or example.
@@ -62,3 +78,4 @@ Match the precision of a step to how fragile it is:
   keywords.
 - Every required ordering names its enforcing command; the asset ends with checkable completion criteria.
 - Every reference is linked with a read condition, one level deep.
+- The bundle cites nothing outside itself except placeholders for the consumer repository's documents.
