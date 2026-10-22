@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T12:33:02.128770Z'
+status: completed
+summary: Swept repository and upstream observations; release defects resolved within scope, no independent deferred work.
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0
