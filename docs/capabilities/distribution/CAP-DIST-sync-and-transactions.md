@@ -88,7 +88,7 @@ The receipt is the single record of the installed state, committed to Git, `sche
   `guidance_block = false`. `AGENTS.md` itself is never listed under `files`.
 - `seeded`: for every selected seeded asset, the paths it seeds (bundle, asset id, path), sorted by path; present
   only while such an asset is selected, informational, never a selection input.
-- `tool`: the distributor that wrote the receipt, `devkit-dist` (`ADR-dist-config-receipt-ownership`). A different
+- `tool`: the distributor that wrote the receipt, `devkit-dist` (`ADR-package-split-and-namespaces`). A different
   running tool alone is not a change: a sync with nothing else to do keeps the receipt byte for byte (so
   `sync --check` stays clean across teammates on different versions); the next sync that writes anything records the
   running tool with a `TOOL_VERSION_CHANGED` notice, which names the package on both sides when it changed (a receipt
@@ -218,7 +218,7 @@ spec = "core"
   (`pull_request = "auto"`, `delete_branch = true`, `stale_after = "14d"`, no setup command; `setup = "uv sync"` is
   marked as an example), so each template lives with the engine that applies it and a standalone `devkit-dist`
   template shows no harness table. With `devkit-agt` installed these tables render right after the project's tables
-  and before any `[tool.*]` table, in the order and text shown above (`ADR-dist-config-receipt-ownership`). See `CAP-DLV-workflow-orchestration` and `CAP-WT-task-worktrees` for their
+  and before any `[tool.*]` table, in the order and text shown above (`ADR-package-split-and-namespaces`). See `CAP-DLV-workflow-orchestration` and `CAP-WT-task-worktrees` for their
   behavior.
 - **Tool tables**: a package registers a callable under the `devkit.config_template` entry-point group, named after
   its `[tool.<name>]` table. Called with no argument, it returns `list[devkit_dist.features.project.services.config_template.TemplateTable]`

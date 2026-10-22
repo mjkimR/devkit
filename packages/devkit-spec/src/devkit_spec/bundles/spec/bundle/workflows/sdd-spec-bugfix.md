@@ -4,7 +4,7 @@ title: "Spec bugfix (planning-depth spec, task-kind bugfix: characterize, reprod
 status: active
 schema_version: 1
 # dev-integration is asked after the change is final: its approval is passed as `--given dev-integration`, never
-# recorded (ADR-integration-approval-asserted).
+# recorded.
 gates:
   plan-intent: { policies: [ask, auto] }  # task intent; explicit user instructions need no repeated prompt
   dev-integration: { answer: given, policies: [ask, auto] }  # off would skip integration

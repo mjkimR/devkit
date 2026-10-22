@@ -39,7 +39,7 @@ Deferred work retained by `SPEC-writing-guidance-layers` (Non-Goal 1).
 - **Versions**: devkit-spec at the `SPEC-writing-guidance-layers` integration.
 - **Conditions**: Restart once `SPEC-writing-guidance-layers` is integrated.
 - **Workarounds Attempted**: not attempted.
-- **Related Assets**: `ADR-layered-writing-guidance`, `specs/2026-10/20261022-writing-guidance-layers/pilot.md`.
+- **Related Assets**: `ADR-writing-and-terminology-guidance`, `specs/2026-10/20261022-writing-guidance-layers/pilot.md`.
 
 ## Evidence
 

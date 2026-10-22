@@ -43,7 +43,7 @@ answer-01.yaml q1-split: auto dispatch (Q2) stays as open feedback; Q3 and Q4 be
 
 ## Disposition
 
-Dismissed under `ADR-feedback-terminal-outcomes`: promotion closes the originating feedback. Subsequent splitting
+Dismissed under `ADR-feedback-lifecycle`: promotion closes the originating feedback. Subsequent splitting
 or completion is tracked in the receiving work, without reopening the source or requiring a new source disposition.
 No additional Planning-worker permission to maintain terminal feedback is needed. The original observation is
 retained as history.

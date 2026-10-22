@@ -7,7 +7,7 @@ x-invocation: optional
 x-model-profile: high-reasoning
 x-git-actions: [read]
 hosts:
-  # The reasoning effort is preset per role (ADR-role-effort-presets); the model is left to the runtime.
+  # The reasoning effort is preset per role; the model is left to the runtime.
   # Shell access runs `git diff`; disallowedTools prevents file writes.
   claude-code:
     status: native

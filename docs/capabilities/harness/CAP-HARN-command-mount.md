@@ -22,7 +22,7 @@ devkit-spec has no executable of its own. Its click group `spec` (`devkit_spec.c
 the whole toolchain through the one `devkit` executable of the project environment. Every subcommand is built on
 `devkit_dist.adapters.cli` and follows devkit's agent-first output contract
 (`ARCH-08-1-agent-output`). Rationale:
-`ADR-mount-under-the-devkit-command-line`.
+`ADR-spec-package-on-devkit`.
 
 ## 2. Scope & Boundary
 

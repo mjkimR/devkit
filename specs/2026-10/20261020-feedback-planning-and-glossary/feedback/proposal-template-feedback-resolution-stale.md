@@ -19,7 +19,7 @@ created_at: 2026-10-20
 ## 1. Friction / Question
 
 - **Context**: Inspecting the proposal template while clarifying Planning decomposition recovery.
-- **Expectation**: Template guidance matches the terminal lifecycle in `ADR-feedback-terminal-outcomes`.
+- **Expectation**: Template guidance matches the terminal lifecycle in `ADR-feedback-lifecycle`.
 - **Actual**: Its Source feedback comment says promotion routes an observation and only verified task completion
   resolves it, which invites the superseded promoted-to-resolved transition.
 - **Workaround (or Interpretation Chosen)**: Applied the current completion procedure: only explicitly linked open
@@ -34,7 +34,7 @@ created_at: 2026-10-20
 - **Versions**: Repository base b4a1aaa2b9699b065b33225b9fc8a4d7d6552a1e.
 - **Conditions**: Source template is agent-facing guidance copied into proposals; this is a documentation mismatch.
 - **Workarounds Attempted**: Followed the current completion skill and accepted ADR; no template edit in this task.
-- **Related Assets**: `ADR-feedback-terminal-outcomes`, spec completion reference and proposal template.
+- **Related Assets**: `ADR-feedback-lifecycle`, spec completion reference and proposal template.
 
 ## Evidence
 
@@ -48,7 +48,7 @@ promoted is terminal once handed to identified follow-up work.
 ## Disposition
 
 The session corrected `packages/devkit-spec/src/devkit_spec/bundle/templates/proposal.md` to match
-`ADR-feedback-terminal-outcomes`: promotion is terminal handoff, and resolution is a verified direct fix
+`ADR-feedback-lifecycle`: promotion is terminal handoff, and resolution is a verified direct fix
 without promotion. Official bundle sync updated the installation receipt. No feedback-state migration was made.
 
 Verification: low-effort self-review compared the final template with the accepted terminal-state contract;

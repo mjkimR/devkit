@@ -19,7 +19,7 @@ created_at: 2026-10-19
 ## 1. Friction / Question (friction, question)
 
 - **Context**: Writing the terminology rules into the Glossary section of `living-spec-writing` under the 30-line bound
-  of `ADR-terminology-guidance-lives-in-living-spec-writing`.
+  of `ADR-writing-and-terminology-guidance`.
 - **Expectation**: The ADR counts lines "of at most 120 characters, the instruction's current style".
 - **Actual**: The instruction's existing bullets are one unwrapped line each (most well over 120 characters), and its
   `description` frontmatter line was already over 120 characters. Only the new Glossary text is wrapped at 120.
@@ -36,7 +36,7 @@ created_at: 2026-10-19
 - **Versions**: devkit-spec at the handoff base of this spec.
 - **Conditions**: not applicable.
 - **Workarounds Attempted**: The interpretation above; the bound holds at 25 added lines.
-- **Related Assets**: `ADR-terminology-guidance-lives-in-living-spec-writing`, `SPEC-terminology-authoring-guidance`.
+- **Related Assets**: `ADR-writing-and-terminology-guidance`, `SPEC-terminology-authoring-guidance`.
 
 ## Evidence
 

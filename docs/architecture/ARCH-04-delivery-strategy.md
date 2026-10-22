@@ -104,6 +104,9 @@ flowchart LR
 | **`spec`** | `sdd-spec-feature` | `sdd-spec-bugfix` |
 | **`proposal`** | `sdd-proposal` → `sdd-spec-feature` | `sdd-proposal` → `sdd-spec-bugfix` |
 
+`overall-refactor`, a structural change across the project that adds no behavior, has no depth: it runs
+`sdd-overall-refactor` in `direct` mode, without a Unit (`ADR-overall-refactor-workflow`).
+
 ```mermaid
 flowchart LR
     S["session<br/>in-memory / conversation"]:::host -->|contract or doc changes discovered| SP["spec<br/>spec Unit on dev-slug"]:::host
@@ -114,7 +117,7 @@ flowchart LR
     classDef host fill:#bfdbfe,stroke:#1d4ed8,color:#111
 ```
 
-Depth may escalate during Development (`session → spec`) when contract or documentation changes are discovered. Lowering depth is prohibited, with the sole exception of session reclassification of unreviewed draft proposals at pickup (`ADR-session-reclassification-of-a-queued-draft`).
+Depth may escalate during Development (`session → spec`) when contract or documentation changes are discovered. Lowering depth is prohibited, with the sole exception of session reclassification of unreviewed draft proposals at pickup (`ADR-delivery-classification`).
 
 ### 2.3 `activity-effort`
 Determines the thoroughness of inspection and review per activity (`low`, `medium`, `high`, default `medium`):

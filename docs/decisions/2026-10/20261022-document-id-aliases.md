@@ -71,7 +71,8 @@ Option 4.
   to the canonical ID (frontmatter and prose, through the existing rewrite service). In historical files (completed
   spec bundles, done or dropped milestones) and in decision records (ADRs under `docs/decisions/` and PADRs, which
   graduate into ADRs) it resolves silently and `devkit rules fix` never rewrites it, so a record that names the
-  retired ID as history keeps its meaning. A glossary Owner naming an alias is reported but not fixed.
+  retired ID as history keeps its meaning. (Decision records: replaced by `ADR-immutable-decisions-editable-records`,
+  which rewrites alias references in ADRs and PADRs too.) A glossary Owner naming an alias is reported but not fixed.
 - **Handoff**: carried aliases follow their document's handoff rename: a proposal's `PROP-` aliases become `SPEC-`
   aliases on `spec.md`, a promoted PADR's `PADR-` aliases become `ADR-` aliases on its ADR. A reference written with
   a carried alias is rewritten exactly like one written with the old ID, across the handoff's existing scan set (ADRs

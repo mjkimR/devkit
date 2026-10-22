@@ -159,8 +159,9 @@ def test_every_restatement_cites_the_loop(path: Path) -> None:
     assert "review-loop.md" in _text(path)
 
 
-def test_the_five_workflow_bodies_are_all_cited() -> None:
+def test_the_workflow_bodies_are_all_cited() -> None:
     assert [path.stem for path in WORKFLOWS] == [
+        "sdd-overall-refactor",
         "sdd-proposal",
         "sdd-session-bugfix",
         "sdd-session-feature",

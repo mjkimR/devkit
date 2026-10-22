@@ -75,7 +75,7 @@ environment where `importlib.metadata` cannot see the content packages of the pr
 `devkit` executable and adds what it needs: `uv tool install <devkit-dist requirement> --with <devkit-agt
 requirement>`, each a wheel path or a full Git requirement
 (`devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist`), never a bare package
-name the default index would resolve (`ADR-dist-command-composition`).
+name the default index would resolve (`ADR-package-split-and-namespaces`).
 
 - **Upgrade**: `uv lock --upgrade-package <package>`, then `uv run devkit sync`.
 - **Teardown**: `uv run devkit remove <bundle>`, then `uv remove --dev <package>`. Removal is always explicit: a
@@ -104,8 +104,8 @@ A consumer that does not want an auto-selected bundle opts it out with `[presets
 
 ## 4. The devkit Wheels and Their Built-in Bundles
 
-The CLI ships in two wheels released in lockstep with `devkit-core`, `devkit-cli`, `devkit-advisory` and `devkit-mcp` (`ADR-dist-foundation-ownership`,
-`ADR-dist-bundles-compatibility`):
+The CLI ships in two wheels released in lockstep with `devkit-core`, `devkit-cli`, `devkit-advisory` and `devkit-mcp`
+(`ADR-dist-foundation-ownership`, `ADR-package-split-and-namespaces`):
 
 - **`devkit-dist`** owns the `devkit` executable, distribution (this capability area), native host hooks, context
   loading and playbooks. Installed alone, it deploys every asset kind and runs none of the harness.
@@ -132,7 +132,7 @@ The `harness` bundle is the bundle of this capability; the `devkit-spec` capabil
 (`CAP-HARN-agent-guidance`) is unrelated to it. The `run` preset and the `devkit-run` and `run-pointer` assets belong
 to `harness`; the `devkit` bundle has no `run` preset, so a `devkit:run` selection fails with `SELECTION_INVALID`
 (whose fix lists `devkit:all, devkit:core`) and a project selects `harness:run` instead, and `devkit:all` deploys no
-`devkit run` guidance. No alias preset exists (`ADR-dist-bundles-compatibility`).
+`devkit run` guidance. No alias preset exists (`ADR-package-split-and-namespaces`).
 
 ### 4.1 Standalone Signals
 
@@ -185,7 +185,7 @@ The single pointer inserted into `AGENTS.md` stays within `CAP-DIST-manifest-spe
 including LF. This is not a limit on the whole guide or skill body. Deployment checks verify rendered text and
 projections; the authored examples in `MAT-response-style-rewrite-draft` illustrate the accepted design and do
 not measure model adherence, reader comprehension, comparative quality or host compaction behavior
-(`ADR-response-style-adaptive-replies`, `ADR-response-style-measurement`).
+(`ADR-response-style`, `ADR-response-style`).
 
 ## 6. Opt-in Maintenance
 

@@ -9,7 +9,7 @@ Decide in this order and state the result.
 
 | Axis | Values | Criterion |
 | --- | --- | --- |
-| `task-kind` | `feature` (default), `bugfix` | `bugfix` only for a defect against an agreed contract; it adds the characterization (spec depth) and the Red then Green evidence. Provisional until `plan-accept` or the spec Unit's creation. |
+| `task-kind` | `feature` (default), `bugfix`, `overall-refactor` | `bugfix` only for a defect against an agreed contract; it adds the characterization (spec depth) and the Red then Green evidence. `overall-refactor` only for a structural change across the project that adds no behavior (section 5). Provisional until `plan-accept` or the spec Unit's creation. |
 | `planning-depth` | `session`, `spec`, `proposal` | What must be settled before implementation, not size. Nothing (no design choice, no contract impact, verifiable in the session): `session`. The contract, with a clear direction: `spec`. The direction, with options to compare: `proposal`. Large but clear work is `spec`; small work whose direction is open is `proposal`. |
 | `activity-effort` | `low`, `medium` (default), `high` | How thorough the activity's review and verification are ([effort](effort.md)); none for Backlog and inline Planning. Never lowers gates, exit checks or `required` policies. |
 
@@ -97,3 +97,16 @@ Development never returns to Planning. Only a party that can talk to the user cl
   references or cycles.
 - Before supersede, reject, delete or session reclassification, follow Backlog's per-dependent incoming prerequisite
   disposition in the same authorized change; provenance never selects successors.
+
+## 5. Overall refactor
+
+- Use `overall-refactor` when a change adds no behavior and restructures several areas of the project at once
+  (package boundaries, conventions, document systems, ledgers) and its direction settles while the work proceeds.
+  A refactor inside one feature or module is `feature` work at its planning depth.
+- It has no planning depth and no Unit: run `sdd-overall-refactor` (`devkit workflow show sdd-overall-refactor`),
+  never a proposal or spec bundle. A draft proposal for it is reclassified at pickup.
+- Run it in `direct` only, with the user. Do not start `planning-worker` or `development-worker` for it; use general
+  subagents for parallel drafting, edits and research, and keep splitting, checking, the conversation and commits.
+- Change the Living Spec with the code; record a lasting policy as an ADR. Report what changed and why, the breaking
+  changes and the verification (full test suite, lint, types, `devkit rules check`) in the final response and the
+  commit body; write no other record.

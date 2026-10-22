@@ -28,11 +28,10 @@ only) one `MS` ID and `depends_on` (milestones only) a list of `MS` IDs, without
 - **Completed specs**: files of a spec bundle whose `spec.md` is `completed` (and `done` or `dropped` milestones) are
   history: checked only when named as explicit targets, without the `[ID]`, handoff and alias findings, and never
   rewritten.
-- **Aliases**: a document may declare previous or alternate IDs in `aliases` (`ADR-document-id-aliases`). A
+- **Aliases**: a document may declare previous or alternate IDs in `aliases`. A
   reference resolves through one canonical mapping: a declared ID always wins, and an alias resolves only when exactly
   one document declares it and no document has it as its ID. A reference written with another document's alias is
-  reported in current documents; in decision records (ADRs and PADRs), which name a retired ID on purpose, it
-  resolves silently. A document mentioning its own alias is not reported.
+  reported in current documents, decision records (ADRs and PADRs) included. A document mentioning its own alias is not reported.
 - **Declarations**: the duplicate-ID, shared-slug and alias checks (shape and collisions) cover every targeted
   document, materials and completed specs included.
 

@@ -16,7 +16,7 @@ updated: 2026-10-21
 ## Domain and identity
 
 `devkit_dist.features.shared` belongs to devkit-dist and uses core/advisory plus the project feature execution-context contract. It stores regenerable reports, never scope
-records, tokens, ownership or approval authority (`ADR-separate-shared-artifacts-from-scope`). The initial kind is
+records, tokens, ownership or approval authority (`ADR-mcp-runtime-and-shared-artifacts`). The initial kind is
 proposal-review. Inputs are a lowercase kebab slug (up to 120 characters), a full lowercase 40/64-hex source_sha,
 ko/en language and UTF-8 Markdown of at most 1 MiB. Consumers verify that source_sha is their actual reviewed commit.
 

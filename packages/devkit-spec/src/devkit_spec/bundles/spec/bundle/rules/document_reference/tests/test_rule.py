@@ -272,19 +272,33 @@ def test_alias_references_are_fixed_in_current_documents(tmp_path: Path) -> None
     assert check(RULE, tmp_path) == []
 
 
-def test_alias_references_in_history_and_decision_records_stay(tmp_path: Path) -> None:
+def test_alias_references_in_history_stay(tmp_path: Path) -> None:
     files = {
         "docs/new.md": _aliased("US-new", "US-old"),
         "specs/2026-10/20261001-done/spec.md": _doc("SPEC-done", "`US-old`\n", status="completed"),
         "docs/roadmap/MS-done.md": _doc("MS-done", "`US-old`\n", status="done"),
-        "docs/decisions/2026-10/20261001-x.md": _doc("ADR-x", "`US-old`\n", status="accepted"),
-        "docs/proposals/PROP-p/decisions/PADR-p.md": _doc("PADR-p", "`US-old`\n", status="draft"),
-        "docs/proposals/PROP-p/proposal.md": _doc("PROP-p", status="draft"),
     }
     assert check(RULE, tmp_path, files) == []
     check(RULE, tmp_path, fix=True)
     for name, text in files.items():
         assert (tmp_path / name).read_text() == text
+
+
+def test_alias_references_in_decision_records_are_fixed(tmp_path: Path) -> None:
+    files = {
+        "docs/new.md": _aliased("US-new", "US-old"),
+        "docs/decisions/2026-10/20261001-x.md": _doc("ADR-x", "`US-old`\n", status="accepted"),
+        "docs/proposals/PROP-p/decisions/PADR-p.md": _doc("PADR-p", "`US-old`\n", status="draft"),
+        "docs/proposals/PROP-p/proposal.md": _doc("PROP-p", status="draft"),
+    }
+    assert {(v.file, v.fixable) for v in check(RULE, tmp_path, files)} == {
+        ("docs/decisions/2026-10/20261001-x.md", True),
+        ("docs/proposals/PROP-p/decisions/PADR-p.md", True),
+    }
+    check(RULE, tmp_path, fix=True)
+    assert (tmp_path / "docs/decisions/2026-10/20261001-x.md").read_text().endswith("`US-new`\n")
+    assert (tmp_path / "docs/proposals/PROP-p/decisions/PADR-p.md").read_text().endswith("`US-new`\n")
+    assert check(RULE, tmp_path) == []
 
 
 def test_relation_field_typing_is_kept_for_aliases(tmp_path: Path) -> None:

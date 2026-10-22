@@ -22,7 +22,7 @@ created_at: 2026-10-17
 - **Proposed Procedure**: Evaluate native confirmation surfaces on Claude Code, Antigravity, and OpenCode (such as host-native confirmation tools or signed single-use confirmation tokens bound to `request.id` and `(source_sha, target_sha)`), and add host adapters in `devkit.host` plus corresponding routing guidance in `spec-integrate`.
 - **Expected Benefit**: Provides single-step, cryptographically bound `(source_sha, target_sha)` confirmation and local integration across all supported agent hosts, not only Codex MCP sessions.
 - **Cost & Risk**: Each host has distinct permission and elicitation semantics; any adapter must preserve the invariant that the agent cannot self-approve a request without an explicit user action bound to the exact prepared request scope.
-- **Attempted**: Deferred by design in `SPEC-hook-driven-integration-cleanup` Non-Goal 3 (`ADR-integration-approval-asserted`).
+- **Attempted**: Deferred by design in `SPEC-hook-driven-integration-cleanup` Non-Goal 3 (`ADR-delivery-decision-boundaries`).
 
 ## Diagnostic Details
 
@@ -31,7 +31,7 @@ created_at: 2026-10-17
 - **Versions**: `devkit-agt` `0.1.0` (`b510601d7cbe`), `devkit-spec` `0.1.0`.
 - **Conditions**: Running `spec-integrate` on hosts where MCP `ctx.elicit()` is not available.
 - **Workarounds Attempted**: Obtain conversational `dev-integration` approval from the user, then run `devkit worktree finish <branch> --merge --local-only` in the base checkout.
-- **Related Assets**: `SPEC-hook-driven-integration-cleanup`, `ADR-integration-approval-asserted`, `CAP-HARN-agent-guidance`, `src/devkit_spec/bundle/skills/spec-integrate/SKILL.md`.
+- **Related Assets**: `SPEC-hook-driven-integration-cleanup`, `ADR-delivery-decision-boundaries`, `CAP-HARN-agent-guidance`, `src/devkit_spec/bundle/skills/spec-integrate/SKILL.md`.
 
 ## Evidence
 

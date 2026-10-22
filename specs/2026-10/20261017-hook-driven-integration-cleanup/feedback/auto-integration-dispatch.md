@@ -22,7 +22,7 @@ created_at: 2026-10-17
 - **Proposed Procedure**: After `SPEC-hook-driven-integration-cleanup` is validated in real `dev-integration = ask` workflows, extend `devkit.integration` and `devkit_spec.integration` with an explicit `policy=auto` authority mode (`authority="policy-auto"`) that verifies `[workflow.approvals] dev-integration == "auto"`, all pre-integration readiness evidence (`check(context)`), and scoped cleanup targets before executing the same local fast-forward and worktree/branch/scope cleanup without interactive elicitation.
 - **Expected Benefit**: Enables unattended or local-orchestrated runs configured with `dev-integration = "auto"` to complete local integration and worktree cleanup deterministically without waiting for an interactive MCP confirmation prompt.
 - **Cost & Risk**: Auto-dispatch mutates the base branch and deletes the linked worktree and activity branch without an interactive prompt; any gap in readiness verification or scope-target validation would take effect immediately. Keeping it deferred until `dev-integration = ask` has operational mileage avoids premature automation risk.
-- **Attempted**: Deferred by design in `SPEC-hook-driven-integration-cleanup` Non-Goal 3 (`ADR-integration-approval-asserted`, `ADR-cleanup-after-worktree-finish`).
+- **Attempted**: Deferred by design in `SPEC-hook-driven-integration-cleanup` Non-Goal 3 (`ADR-delivery-decision-boundaries`, `ADR-worktrees-branches-and-scope`).
 
 ## Diagnostic Details
 
@@ -31,7 +31,7 @@ created_at: 2026-10-17
 - **Versions**: `devkit-agt` `0.1.0` (`b510601d7cbe`), `devkit-spec` `0.1.0`.
 - **Conditions**: Repositories configuring `[workflow.approvals] dev-integration = "auto"` with `[integration] provider = "spec"`.
 - **Workarounds Attempted**: Run `integration_integrate` with interactive confirmation or `devkit worktree finish <branch> --merge --local-only` from the base checkout.
-- **Related Assets**: `SPEC-hook-driven-integration-cleanup`, `ADR-integration-approval-asserted`, `ADR-cleanup-after-worktree-finish`, `CAP-DLV-delivery-workflows`, `CAP-DLV-project-policy`.
+- **Related Assets**: `SPEC-hook-driven-integration-cleanup`, `ADR-delivery-decision-boundaries`, `ADR-worktrees-branches-and-scope`, `CAP-DLV-delivery-workflows`, `CAP-DLV-project-policy`.
 
 ## Evidence
 
@@ -42,7 +42,7 @@ Rationale: These are explicitly retained follow-ups that depend on first verifyi
 When to Reconsider: Once the tracked follow-up items (FB-auto-integration-dispatch, FB-pr-remote-and-squash-integration, FB-multi-host-integration-ergonomics) meet their restart conditions."
 ```
 
-- **Disposition**: promoted to `SPEC-policy-authorized-integration`. The proposal owns the decision about policy-granted merge and deletion authority; `ADR-integration-approval-asserted` remains the current contract until a successor decision is accepted.
+- **Disposition**: promoted to `SPEC-policy-authorized-integration`. The proposal owns the decision about policy-granted merge and deletion authority; `ADR-delivery-decision-boundaries` remains the current contract until a successor decision is accepted.
 
 ## Promotion
 

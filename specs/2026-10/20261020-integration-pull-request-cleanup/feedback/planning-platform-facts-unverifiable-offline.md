@@ -53,7 +53,7 @@ challenger-01 unverified: All GitHub behaviour (required-check timing, async mer
 
 Official documentation verification found two concrete CLI premise errors before implementation: `gh repo view`
 and `gh api` do not accept universal `-R` binding, and `gh pr merge --merge` can enqueue implicitly even without
-`--auto`. The Host approved corrected mechanics recorded in `ADR-github-pull-request-repository-binding` while
+`--auto`. The Host approved corrected mechanics recorded in `ADR-local-and-pull-request-integration` while
 preserving the agreed explicit-repository and no-queue guarantees. This reinforces the existing recommendation
 to permit official documentation reads during Planning. No live remote mutation was used for verification.
 

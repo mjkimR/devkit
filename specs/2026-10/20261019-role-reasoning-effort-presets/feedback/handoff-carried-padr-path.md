@@ -29,13 +29,13 @@ created_at: 2026-10-19
 - **Cost & Risk**: one more pattern in the handoff's rewrite; a code span that names a PADR file on purpose (as
   history) would be rewritten too, which is acceptable because the ADR is the current record.
 - **Attempted**: in this run the drafted `spec.md` dropped the carried notes and recorded the promotion as an
-  assumption citing `ADR-role-effort-presets`.
+  assumption citing `ADR-orchestration-workers`.
 
 ## Diagnostic Details
 
 - **Reproduction**: hand off a proposal whose `proposal.md` names its PADR as a code-span path; read the carried
   section 5 of the new `spec.md`.
-- **Expected / Actual**: expected `ADR-role-effort-presets`; actual is the original PADR path.
+- **Expected / Actual**: expected `ADR-orchestration-workers`; actual is the original PADR path.
 - **Versions**: devkit 0.1.1, handoff commit of SPEC-role-reasoning-effort-presets.
 - **Conditions**: proposal with one PADR promoted at handoff.
 - **Workarounds Attempted**: manual rewrite while drafting; it worked.

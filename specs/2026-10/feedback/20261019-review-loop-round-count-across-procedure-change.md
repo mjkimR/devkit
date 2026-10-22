@@ -57,7 +57,7 @@ git -C <worktree> ls-tree plan-worktree-host-compatibility -- .../skills/spec/re
 
 Historical source: Git `1b8478093a44cf2d0b74c412bffc93f259459ef0:docs/proposals/PROP-worktree-host-compatibility/feedback/review-loop-round-count-across-procedure-change.md`; relative evidence paths refer to that proposal bundle.
 
-- **Disposition**: `SPEC-envelope-record-gaps` Q1 and `ADR-reverify-closes-challenger-rounds` explicitly receive
+- **Disposition**: `SPEC-envelope-record-gaps` Q1 and `ADR-review-and-reconcile-verification` explicitly receive
   unmarked high-effort round counting and answer-fold behavior. The accepted design keeps old high rounds in the
   count and grants the defined answer-fold recovery round. Implementation is pending; this is promotion, not resolution.
 - **Disposition (resolved)**: `SPEC-envelope-record-gaps` implemented it in `references/review-loop.md`: section 1

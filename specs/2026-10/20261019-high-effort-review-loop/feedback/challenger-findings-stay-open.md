@@ -38,5 +38,5 @@ created_at: 2026-10-19
 
 - **Disposition**: PROP-envelope-record-gaps: closing folded challenger findings and the round count before markers (Q1)
 - **Disposition (resolved)**: `SPEC-envelope-record-gaps` lets `devkit workflow envelope reverify --from envelopes/challenger-NN.yaml`
-  close a challenger round (`ADR-reverify-closes-challenger-rounds`); `envelope check` reports the deciding state of
+  close a challenger round (`ADR-review-and-reconcile-verification`); `envelope check` reports the deciding state of
   review and challenger rounds alike. Verified by `packages/devkit/tests/workflow/test_envelope_record_gaps.py` (AC-01 to AC-05).

@@ -14,10 +14,10 @@ created_at: 2026-10-19
 # [CAP-VIEW-repository-viewer] Local Repository Viewer
 
 The `devkit-viewer` distribution gives people a screen for what agents read through `devkit spec`: the Living Spec,
-proposals, specs and milestones (`ADR-roadmap-in-repository`, `ADR-milestone-documents`). It mounts
+proposals, specs and milestones (`ADR-roadmap-and-milestones`, `ADR-roadmap-and-milestones`). It mounts
 `devkit viewer` under the `devkit` command line (`CAP-HARN-command-mount`). devkit owns the viewer's source; autohub
-consumes its component library as a vendored tarball (`ADR-viewer-distribution-and-frontend-build`). The server's
-choices are `ADR-read-only-local-server-over-git-refs`. Command quick reference:
+consumes its component library as a vendored tarball (`ADR-viewer`). The server's
+choices are `ADR-viewer`. Command quick reference:
 [reference](../../development/reference/viewer.md).
 
 ## 1. Serving
@@ -127,7 +127,7 @@ library.
 
 `GET /review/<registered-repository-id>/<32-hex-generation-id>` reads exactly one `proposal-review` artifact
 through the registered repository's configured local shared adapter. This is the narrow non-Git exception in
-`ADR-local-immutable-proposal-review-view`; ordinary Git routes remain unchanged. The route accepts no path,
+`ADR-viewer`; ordinary Git routes remain unchanged. The route accepts no path,
 remote URL, adapter selector or revision expression. Remote adapters are unavailable here. It calls only exact
 `get`, never list, put or sweep. Namespace, kind, digest and expiry are validated. Source SHA, language and expiry
 are prominent; the artifact is evidence for that source, not a claim that the branch is still current.

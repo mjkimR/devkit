@@ -13,7 +13,7 @@ superseded_by: ADR-bounded-high-effort-review-loop
 
 Code review and reconcile verification compare different artifacts and require different instructions. Requiring a
 subagent after every fix repeats independent review even when the implementer can verify the correction directly.
-`ADR-reconcile-check-envelope` establishes separate reconcile evidence and its stage exit; those remain required.
+`ADR-review-and-reconcile-verification` establishes separate reconcile evidence and its stage exit; those remain required.
 
 ## Decision
 
@@ -36,6 +36,6 @@ subagent after every fix repeats independent review even when the implementer ca
 ## Consequences
 
 The initial medium reconcile check can be self-verification, while its evidence and completion check remain
-mandatory. This supplements the verifier assignment in `ADR-reconcile-check-envelope`; its envelope separation and
+mandatory. This supplements the verifier assignment in `ADR-review-and-reconcile-verification`; its envelope separation and
 stage check remain intact. Role names change in place, without aliases. Active units bound to renamed stage roles
 must rebind after inspecting workflow drift. Completed units remain history.

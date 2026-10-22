@@ -8,8 +8,8 @@ Checks every current document that is not a material (``rules.is_material``):
 - a reference to an ID no document declares, or that several declare;
 - a ``[ID]`` prose reference: the canonical form is `` `ID` `` (fixable);
 - a ``PROP-<slug>`` reference after the proposal was handed off to the only ``SPEC-<slug>`` (fixable);
-- a reference written with another document's alias (fixable), except in decision records (``ADR``, ``PADR``),
-  which name a retired ID on purpose; a document mentioning its own alias is not reported;
+- a reference written with another document's alias (fixable), decision records (``ADR``, ``PADR``) included; a
+  document mentioning its own alias is not reported;
 - a relative Markdown link to a document that has an ID;
 - an ID declared by several documents, and a ``PROP-<slug>`` beside a ``SPEC-<slug>`` or a ``SPEC-<slug>`` alias
   (handoff removes the proposal, so the pair is an unfinished handoff or a reused slug);
@@ -80,11 +80,6 @@ def _alias_target(index: DocumentIndex, document: Document, target: str) -> str 
     if found is None or found[1] is None or found[0] is document:
         return None
     return found[0].id
-
-
-def is_decision_record(document: Document) -> bool:
-    """ADRs and PADRs name a retired ID on purpose: an alias reference there resolves silently."""
-    return document.kind in (Kind.DECISION, Kind.PROPOSAL_DECISION)
 
 
 class DocumentReferenceRule(BaseRule):
@@ -218,7 +213,7 @@ class DocumentReferenceRule(BaseRule):
 
     def _alias(self, index: DocumentIndex, document: Document, ref: Reference, historical: bool, add: Add) -> None:
         canonical = _alias_target(index, document, ref.target)
-        if canonical is None or historical or is_decision_record(document):
+        if canonical is None or historical:
             return
         add(
             document,
@@ -370,7 +365,7 @@ class DocumentReferenceRule(BaseRule):
             mapping: dict[str, str] = {}
             for ref in document.references:
                 spec = _handed_off(index, ref.target)
-                if spec is None and not is_decision_record(document):
+                if spec is None:
                     spec = _alias_target(index, document, ref.target)
                 if spec is not None:
                     if ref.field == "depends_on" and is_unit_anchor(document) and target_problem(index, spec):

@@ -42,7 +42,7 @@ Before spawning, check native spawning, required nested roles (Host â†’ worker â
 
    Keep the worktree's absolute path for every later command.
 2. **Run a turn** (worker): `spec-delegate` with role `planning-worker` or `development-worker`, the payload as its payload reference lists.
-   - The worker runs from the stage `devkit workflow next` names, commits at every stage boundary through the commit gate, writes its own records and returns its head (`ADR-worker-delivers-committed-result`).
+   - The worker runs from the stage `devkit workflow next` names, commits at every stage boundary through the commit gate, writes its own records and returns its head.
    - Workers of independent units may run at the same time; never two workers, or a worker and you, in one worktree.
    - Where the worker's host status is `unsupported`, run the unit yourself in `direct` when allowed; required isolation stops with `needs_input`.
    - Codex workers use native invocation with emulated contracts, explicit absolute cwd/paths, `git -C` and separate scoped approvals. Role absence alone does not diagnose trust, and explicit trust restrictions stop generic fallback.

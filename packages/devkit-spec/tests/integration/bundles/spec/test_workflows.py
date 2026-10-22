@@ -14,7 +14,14 @@ from pathlib import Path
 import pytest
 import yaml
 
-WORKFLOWS = ("sdd-session-feature", "sdd-session-bugfix", "sdd-spec-feature", "sdd-spec-bugfix", "sdd-proposal")
+WORKFLOWS = (
+    "sdd-session-feature",
+    "sdd-session-bugfix",
+    "sdd-overall-refactor",
+    "sdd-spec-feature",
+    "sdd-spec-bugfix",
+    "sdd-proposal",
+)
 GATES = {"plan-intent", "plan-accept", "dev-integration", False}
 ROLES = ("challenger", "reconcile-reviewer", "code-reviewer", "scout")
 AGENT_FILES = (".claude/agents/{role}.md", ".codex/agents/{role}.toml", ".agents/agents/{role}.md")
@@ -147,7 +154,7 @@ def test_only_the_three_named_gates_are_used_and_development_has_no_direction_ga
         assert all(ret["to"] != "direction" for ret in stage.get("returns", [])), stage["id"]
 
 
-@pytest.mark.parametrize("workflow", ["sdd-session-feature", "sdd-session-bugfix"])
+@pytest.mark.parametrize("workflow", ["sdd-session-feature", "sdd-session-bugfix", "sdd-overall-refactor"])
 def test_a_session_requires_no_unit_envelope_spec_or_reconcile_artifact(workflow: str) -> None:
     data = _definition(workflow)
     assert "layout" not in data

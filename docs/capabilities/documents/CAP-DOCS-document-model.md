@@ -83,12 +83,12 @@ both as confirmed with status done in one commit. Missing assertions on open doc
 assertions alone do not authorize a later close. These are body content, not parsed fields, checklist items,
 reference edges or a machine-certified delivery contract. Actual semantic scope changes reset both to pending; normal handoff does not;
 existing done records remain historical without migration. `CAP-HARN-agent-guidance` owns review, invalidation,
-interruption and reopen procedures (`ADR-milestone-closure-confirmations`).
+interruption and reopen procedures (`ADR-roadmap-and-milestones`).
 
 ### Feedback lifecycle
 
 Feedback status is `open`, `promoted`, `resolved`, `dismissed` or `forwarded`
-(`ADR-feedback-terminal-outcomes`). Only open feedback is actionable. Promotion closes feedback by handing it to
+(`ADR-feedback-lifecycle`). Only open feedback is actionable. Promotion closes feedback by handing it to
 identified follow-up work, whose progress is tracked at the destination; it never implies implementation success.
 Resolution closes an observation directly fixed and verified without promotion, by a session or spec task. Both
 are terminal: completing promoted work does not convert its source to resolved. Dismissal records a reason and
@@ -177,9 +177,8 @@ The table order is the kind order: `devkit spec list` sorts by it. Living Spec d
 5. **Renaming**: a document whose ID derives from its path (`CAP`, `US`, `ARCH`, `SPEC`, `PLAN`, `TASKS`, `REC`,
    `FB`) is renamed by moving the file, setting the new ID and keeping the old ID in `aliases`; renaming a spec bundle
    keeps an alias on every file whose ID derives from the bundle slug (`spec.md`, `plan.md`, `tasks.md`,
-   `reconcile.md`). An approved ADR is not renamed; it gains aliases from its PADR at handoff
-   (`CAP-DLV-proposal-incubation`) or, as a compaction replacement, lists the IDs of the ADRs it retires
-   (`ADR-adr-compaction`). One `devkit rules fix` then moves current documents to the new ID.
+   `reconcile.md`). An ADR gains aliases from its PADR at handoff (`CAP-DLV-proposal-incubation`) or, as a compaction
+   replacement, lists the IDs of the ADRs it retires (`ADR-immutable-decisions-editable-records`). One `devkit rules fix` then moves current documents to the new ID.
 6. **Declaration across contracts**: wherever another contract refuses or reports an ID that a document declares (a
    taken spec or proposal slug, a duplicate PADR, a graduating ADR), an alias declaration counts as a declaration;
    wherever a command takes an ID argument that it resolves through the index (`devkit spec resolve`, `refs`,

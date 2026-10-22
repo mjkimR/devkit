@@ -108,8 +108,9 @@ exclusions and snapshot cache rules apply.
   and materials.
 - References resolve through the canonical mapping of `CAP-DOCS-document-model` (section 3.5). MUST report a
   reference written with another document's alias in a current document (fixable: rewritten to the canonical ID in
-  frontmatter and prose); relation-field prefix typing applies to the ID as written. In historical files and in
-  decision records (ADRs and PADRs) an alias reference resolves silently and `devkit rules fix` never rewrites it. A
+  frontmatter and prose); relation-field prefix typing applies to the ID as written. Decision records (ADRs and PADRs) are
+  current documents here (`ADR-immutable-decisions-editable-records`). In historical files an alias reference resolves
+  silently and `devkit rules fix` never rewrites it. A
   document mentioning its own alias is not reported. A reference to a colliding alias is reported as ambiguous and
   left unchanged.
 - MUST report a relative Markdown link to a document that has an ID. External URLs, images, code files, documents
@@ -259,7 +260,7 @@ every current document that declares a path the diff deletes. Not fixable. The f
 ### 3.12 `RULE-proposal-boundaries`
 
 A proposal's boundary is copied into its spec at handoff, so it names real paths by `plan-accept`
-(`ADR-proposal-boundaries-name-existing-paths`).
+(`ADR-proposal-acceptance`).
 
 - SHOULD report (severity `warning`), on the entry's line: for a proposal anchor (`docs/proposals/PROP-<slug>/proposal.md`
   or `docs/proposals/PROP-<slug>.md`) whose `status` is `draft`, `reviewing` or `accepted`, a `target_area` or
@@ -310,7 +311,7 @@ max_length = 300
 
 ### 4.3 Packaging
 
-Each rule is a class in `devkit_spec.features.governance.<name>` (`ADR-rules-implemented-in-the-package`). The bundle deploys
+Each rule is a class in `devkit_spec.features.governance.<name>` (`ADR-spec-package-on-devkit`). The bundle deploys
 `rules/<name>/rule.py`, a thin subclass (devkit instantiates only classes a rule file defines), and the guide
 `rules/<name>/guide.md`, to `.devkit/managed/spec/rules/<name>/`. Keeping the logic in the package means one tested
 implementation and a deployed file that never changes when the rule does. A rule whose judgment lives in a bundle
@@ -341,7 +342,7 @@ The existing spec hygiene extension also checks repository milestone membership 
 | `SPEC_MILESTONE_DONE_UNSETTLED` | WARNING | A done milestone still has unsettled members; review and reassign/clear those members, reject a proposal or finish the work before closing the milestone. |
 | `SPEC_MILESTONE_DROPPED_UNSETTLED` | WARNING | A dropped milestone still has unsettled members; review and reassign/clear or reject those members. |
 
-Warnings carry the milestone and member paths, deterministic remediation and the usual success exit code unless strict mode is requested. No out-of-order activation or close-candidate warning is emitted (`ADR-milestone-documents`).
+Warnings carry the milestone and member paths, deterministic remediation and the usual success exit code unless strict mode is requested. No out-of-order activation or close-candidate warning is emitted (`ADR-roadmap-and-milestones`).
 
 ### Milestone validation contract
 

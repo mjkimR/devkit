@@ -85,7 +85,7 @@ Option 2, as specified in `SPEC-high-effort-review-loop` §3.1 to §3.5:
   evidence.
 - Reviewer payloads grow by the earlier findings and the round's diff scope.
 - Like `ADR-medium-review-delegation`, this decision supplements the verifier assignment of
-  `ADR-reconcile-check-envelope`: `medium` may self-verify the initial reconcile under the stated conditions and
+  `ADR-review-and-reconcile-verification`: `medium` may self-verify the initial reconcile under the stated conditions and
   `high` may self-verify a batch of minor reconcile fixes.
-- The `medium` and `low` rules are unchanged in substance; `ADR-reconcile-check-envelope` keeps holding, since the initial reconcile
+- The `medium` and `low` rules are unchanged in substance; `ADR-review-and-reconcile-verification` keeps holding, since the initial reconcile
   verification at `high` stays independent.

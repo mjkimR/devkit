@@ -52,4 +52,4 @@ Recorded answer-02.yaml: one answer (harness-bundle-name, keep-harness) carrying
 - **Disposition**: PROP-envelope-record-gaps: a slot for assumptions the user settled (Q2)
 - **Disposition (resolved)**: `SPEC-envelope-record-gaps` adds `settles: [{assumption, decision}]` to `answer`
   envelopes, written with `devkit workflow envelope answer --settle N=DECISION`
-  (`ADR-answer-envelopes-settle-worker-assumptions`). Verified by `packages/devkit/tests/workflow/test_envelope_record_gaps.py` (AC-06, AC-07).
+  (`ADR-orchestration-workers`). Verified by `packages/devkit/tests/workflow/test_envelope_record_gaps.py` (AC-06, AC-07).

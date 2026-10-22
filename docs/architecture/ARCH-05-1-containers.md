@@ -73,7 +73,7 @@ Application wheels own independent regular packages: `devkit_dist`, `devkit_agt`
 continues to ship the PEP 420 `devkit.advisory` API; it never ships `devkit/__init__.py`.
 No installed file belongs to two wheels. Foundation and application distributions are released in
 lockstep from one tag, pinning workspace runtime dependencies to that exact version
-(`ADR-independent-package-namespaces-and-feature-layout`, `ADR-dist-bundles-compatibility`).
+(`ADR-package-split-and-namespaces`, `ADR-package-split-and-namespaces`).
 
 ### 2.1 `devkit-dist` (`packages/devkit-dist`)
 - **Distribution Wheel**: `devkit_dist-<version>-py3-none-any.whl`
@@ -91,7 +91,7 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
 - **Distribution Wheel**: `devkit_agt-<version>-py3-none-any.whl`
 - **CLI**: no console script; `devkit rules`, `devkit workflow`, `devkit gate`, `devkit worktree`, `devkit generated`,
   `devkit integration` and `devkit run` mount under the `devkit` executable through `devkit.commands`
-  (`ADR-dist-command-composition`).
+  (`ADR-package-split-and-namespaces`).
 - **Contents**: The developer harness: rules engine, delivery workflows, commit gates, task worktrees, tracked
   generated files, approval-bound integration and the compact runner, with the built-in bundles `authoring` and
   `harness` (auto-selected).
@@ -129,8 +129,8 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
 - **Dependencies**: `devkit-agt`, `devkit-core` and `click`. It consumes foundation primitives,
   distribution project support and `devkit.advisory`; it has no dependency on `devkit-spec` code,
   since the page parses the documents itself.
-- **Contracts**: `CAP-VIEW-repository-viewer`, `ADR-viewer-distribution-and-frontend-build`,
-  `ADR-read-only-local-server-over-git-refs`.
+- **Contracts**: `CAP-VIEW-repository-viewer`, `ADR-viewer`,
+  `ADR-viewer`.
 
 ### 2.6 Opt-in and Example Content Packages
 - **`devkit-catalog` (`packages/devkit-catalog`)**: Ships opt-in bundle assets (e.g. `host-observer`) that are installed in the environment but only deployed when explicitly selected (`devkit add <bundle>`).
@@ -150,4 +150,4 @@ acquires Python behavior. Its rules are separate from the reusable harness rules
 lockstep application wheel, depending on the exact dist release, `mcp>=1.30,<2` and `jsonschema`. It owns transport,
 form adaptation and `devkit.host.services` discovery; integration and handoff remain domain services. Dist imports
 no runtime module and keeps the executable, receipts, hooks and narrow project-registration reconciler.
-`ADR-independent-mcp-runtime-with-project-registration-and-environment-guards` defines this inversion.
+`ADR-mcp-runtime-and-shared-artifacts` defines this inversion.

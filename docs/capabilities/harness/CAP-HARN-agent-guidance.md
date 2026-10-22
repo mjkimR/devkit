@@ -37,7 +37,7 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
 - **Non-Goals**:
   - **Scope Excluded**: host-specific content. Skills and role contracts are written once, host-neutral; devkit
     projects them per host (`.claude/`, `.agents/`, `.codex/`).
-  - **Scope Excluded** (`ADR-docs-skeleton-is-opt-in`): seeding `docs/` by default. An existing `docs/` tree never
+  - **Scope Excluded** (`ADR-spec-package-on-devkit`): seeding `docs/` by default. An existing `docs/` tree never
     receives files it did not ask for.
 
 ## 3. Business Rules & Policies
@@ -61,7 +61,7 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
    envelope, gate record file or reconcile document. The Host raises the depth on its own judgment (`[tool.spec]
    depth_escalation = "ask"`: after the user's confirmation), never lowers it except through a proposal's handoff or,
    on the user's explicit decision at pickup, the session reclassification of a queued draft
-   (`ADR-session-reclassification-of-a-queued-draft`), and a `session` → `spec` raise keeps
+   (`ADR-delivery-classification`), and a `session` → `spec` raise keeps
    the work by adding a spec Unit; Development never returns to Planning, and a wrong direction is a close (depth
    escalation, supersede or abandon) under a new slug. The mode is chosen per activity: `direct` by default,
    `local-orchestrated` and `cloud-pr` only on the user's instruction. Explicit user instructions take precedence.
@@ -75,7 +75,7 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
 8. **Templates by path**: new documents start from `.devkit/managed/spec/templates/<kind>.md`; seeded files are
    written once where absent and are project-owned afterwards.
 9. **Skill names**: every skill of the bundle is named `spec` or `spec-<procedure>`. Rationale:
-   `ADR-skills-named-spec`.
+   `ADR-spec-package-on-devkit`.
 
 ## 4. Interfaces & Data Contracts
 
@@ -93,11 +93,11 @@ A project opts out of the bundle with `[presets] spec = false` in `.devkit/confi
 
 | Asset kind | Assets |
 | --- | --- |
-| `instruction` | `contract-authoring`, `living-spec-writing`, `document-writing`, `decision-writing`, `capability-writing`, `story-writing`, `architecture-writing` (`ADR-layered-writing-guidance`) |
+| `instruction` | `contract-authoring`, `living-spec-writing`, `document-writing`, `decision-writing`, `capability-writing`, `story-writing`, `architecture-writing` (`ADR-writing-and-terminology-guidance`) |
 | `guidance` | `spec-pointer` |
 | `rule` | `document-reference`, `id-convention`, `spec-format`, `traceability-link`, `task-coverage`, `spec-lifecycle`, `spec-progress`, `reconcile-contract`, `document-summary`, `code-entrypoints`, `proposal-boundaries` (`CAP-GOV-spec-rules`) |
 | `skill` | the 13 skills of 4.4 |
-| `workflow` | `sdd-session-feature`, `sdd-session-bugfix`, `sdd-spec-feature`, `sdd-spec-bugfix`, `sdd-proposal` |
+| `workflow` | `sdd-session-feature`, `sdd-session-bugfix`, `sdd-overall-refactor`, `sdd-spec-feature`, `sdd-spec-bugfix`, `sdd-proposal` |
 | `subagent` | `challenger`, `reconcile-reviewer`, `code-reviewer`, `scout`, `planning-worker`, `development-worker` |
 | `playbook` | `brownfield-adoption`, `feedback-hygiene`, `adr-compaction` |
 | `document` | `templates`; `docs-skeleton` (`seeded = true`, `target = "docs"`) |
@@ -125,7 +125,7 @@ The constitution's sections:
 | Asset | Read before |
 | --- | --- |
 | `contract-authoring` | Authoring or reviewing specifications, acceptance criteria, policies, instructions, rules or workflows: RFC 2119 wording, measurable contracts, Non-Goals, examples (policy exceptions are in the spec constitution). |
-| `living-spec-writing` | Authoring, editing or reviewing `docs/` or `specs/`: current-state writing, history placement, completed specs, traceability, summaries, ID references, and terminology and the glossary: eight domain-neutral naming rules in its Glossary section (`ADR-terminology-guidance-lives-in-living-spec-writing`) that inform naming, enforce nothing and do not authorize renaming code, APIs or schemas. |
+| `living-spec-writing` | Authoring, editing or reviewing `docs/` or `specs/`: current-state writing, history placement, completed specs, traceability, summaries, ID references, and terminology and the glossary: eight domain-neutral naming rules in its Glossary section (`ADR-writing-and-terminology-guidance`) that inform naming, enforce nothing and do not authorize renaming code, APIs or schemas. |
 | `document-writing` | Writing or editing any document: the sentence-level baseline (one directive or claim per sentence, condition first, prohibitions with their alternative, one-clause reasons with background by ID, no hedges or emphatic capitals, one default, concrete examples); the per-kind instructions add to it. |
 | `decision-writing` | Writing an ADR or PADR: Y-statement `summary`, context, drivers, options, outcome, consequences and the `Confirmation` section naming the check, test or review. |
 | `capability-writing` | Writing a capability: EARS business rules (`WHEN`, `WHILE`, `IF ... THEN`, `WHERE`) with RFC 2119 keywords and their enforcing rule or test, scope owners, exact interfaces. |
@@ -237,7 +237,7 @@ Hygiene determines ownership and proposes local fixes or upstream report drafts;
 resolution destinations. External submission requires explicit authorization, and `forwarded` requires an actual
 report location. Pending ownership or submission leaves feedback open. Capture never changes feedback status.
 
-Under `ADR-feedback-terminal-outcomes`, promoted and resolved feedback are terminal. Promotion hands tracking to
+Under `ADR-feedback-lifecycle`, promoted and resolved feedback are terminal. Promotion hands tracking to
 follow-up work; resolution records a direct verified fix without promotion, in a session or spec. Only open feedback
 needs action. Preserve source FB IDs and received scope for traceability through handoff and drafting. Terminal
 sources require no completion disposition or re-verification, and follow-up completion never converts them to resolved.
@@ -256,7 +256,7 @@ even under requested-only capture or a disabled collect-feedback stage, without 
 | --- | --- |
 | `brownfield-adoption` | Adopt spec-driven delivery in a repository that already has code and docs: install, take the baseline, contain legacy Markdown under `docs/materials/_legacy/` and record any deferral as a commented `.devkit/config.toml` entry the user decided, then migrate legacy content through normal work. |
 | `feedback-hygiene` | Triage open feedback in one batch: group by target, order by severity and recurrence, promote to rules, playbooks, decisions or spec work, or dismiss or forward, with the user's decision. |
-| `adr-compaction` | Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases and summarize their history, without changing any decision (`ADR-adr-compaction`). |
+| `adr-compaction` | Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases, without changing any decision (`ADR-immutable-decisions-editable-records`). |
 
 ### 4.6 Templates
 
@@ -279,7 +279,7 @@ docs/
 The directory READMEs state each directory's naming and authoring conventions and point at `devkit spec list` for
 discovery instead of catalog tables.
 
-The seeded `glossary.md` table is `Term | Definition | Owner | Avoid | Code identifiers` (`ADR-seeded-glossary-columns`):
+The seeded `glossary.md` table is `Term | Definition | Owner | Avoid | Code identifiers` (`ADR-writing-and-terminology-guidance`):
 the definition also states what a term excludes, `Owner` is the defining document ID or owning component, `Avoid` lists
 rejected synonyms (also synonyms of the term's cluster in `glossary.yaml`) and `Code identifiers` the matching fields,
 types and paths. Its "Avoided Generic Nouns" section holds the project's additions to the `living-spec-writing` default
@@ -305,9 +305,9 @@ integration retains its ready-state authority. Unavailable native confirmation i
 
 ### Repository Backlog and next work
 
-The spec classification reference routes Backlog to its repository-only procedure (`ADR-roadmap-in-repository`). Immediate session/spec requests use inline Planning; every request not starting now and every decomposition result is a draft proposal. Decomposed_from and supersedes preserve request origin through handoff. Backlog reviews feedback, places drafts in milestones and prepares explicit user decisions for milestone activation, closing and dropping. On the user's explicit `plan-accept`, Backlog may accept an eligible draft directly on the base checkout, after `devkit spec proposal accept --direct --check`, the Host's judgment that the direction leaves nothing to compare and its sweep of the acceptance session, with no Planning branch, run, effort or worker envelope (`ADR-direct-acceptance-command-and-handoff-guard`, `ADR-eligibility-for-direct-acceptance`); this ends the interim rule of `ADR-roadmap-in-repository` that small drafts run Planning at `low`. On the user's explicit decision at pickup, a queued draft without PADRs whose work is `session` depth may be deleted in one base commit that preserves its open feedback and done as a session under a new slug (`ADR-session-reclassification-of-a-queued-draft`). No issue field, tracker intake/closing or autohub dependency applies.
+The spec classification reference routes Backlog to its repository-only procedure (`ADR-roadmap-and-milestones`). Immediate session/spec requests use inline Planning; every request not starting now and every decomposition result is a draft proposal. Decomposed_from and supersedes preserve request origin through handoff. Backlog reviews feedback, places drafts in milestones and prepares explicit user decisions for milestone activation, closing and dropping. On the user's explicit `plan-accept`, Backlog may accept an eligible draft directly on the base checkout, after `devkit spec proposal accept --direct --check`, the Host's judgment that the direction leaves nothing to compare and its sweep of the acceptance session, with no Planning branch, run, effort or worker envelope (`ADR-proposal-acceptance`, `ADR-proposal-acceptance`); this ends the interim rule of `ADR-roadmap-and-milestones` that small drafts run Planning at `low`. On the user's explicit decision at pickup, a queued draft without PADRs whose work is `session` depth may be deleted in one base commit that preserves its open feedback and done as a session under a new slug (`ADR-delivery-classification`). No issue field, tracker intake/closing or autohub dependency applies.
 
-Milestones are global MS documents with goal, exit condition and non-goals, never copied work lists. User and agent jointly review the theme and decompose it into direct PROP members. Only proposal anchors declare membership; handoff omits milestone metadata and historical SPEC metadata is ignored. Authors SHOULD describe a multi-unit phase, release or architectural theme advancing `ARCH-01-introduction-and-goals`, with observable phase-level outcomes and capability boundaries. A theme may initially have one proposal when broader intended scope is not authored yet; it SHOULD NOT exist solely as a sequencing gate. CLI flags, branch names, file layouts and scenario tests belong in proposals/specs. Activation shows unmet dependencies but permits an explicit out-of-order decision. Close planned/active milestones through one current Backlog candidate: sufficient decomposition, direct proposal work delivered or explicitly excluded/moved, and the exit condition met for the resulting agreed scope. Inspect all direct PROP members across namespaces, the selected local base (report its commit without claiming remote freshness) and relevant known Planning/Development activity; focused code/Git inspection resolves missing proposals without reconstructing delivery lineage. Handoff, deletion, rejection, reassignment and empty membership alone never prove delivery. Outstanding in-scope work, an unmet exit condition or inconclusive required evidence keeps the milestone open with the remaining check named; missing confirmation is a separate gap. The user confirms both plain body assertions and status done together in one Backlog commit, without a third approval. Recheck scope, membership and relevant evidence immediately before writing; unchanged authorization survives interruption or compaction, while material changes or an unestablishable approved candidate/evidence require reconfirmation. Actual semantic scope changes (new required work, exclusion or moving scope elsewhere) reset both assertions to pending in the authorized scope edit. Normal handoff/mechanical identity relocation does not change scope/decomposition and requires no milestone review, reset or reconfirmation. No pre-handoff or integration hook is added; relevant completion evidence is checked at close. Pure wording/format corrections preserving meaning do not invalidate. Extending done scope requires user-owned reopen to active with pending assertions or another milestone. Unchanged done writes nothing, dropped is not a close candidate, and existing done records are not migrated. Drop prepares member reassignment/clearing/rejection and shows successor dependencies. Done/dropped records remain hidden history (`ADR-milestone-closure-confirmations`).
+Milestones are global MS documents with goal, exit condition and non-goals, never copied work lists. User and agent jointly review the theme and decompose it into direct PROP members. Only proposal anchors declare membership; handoff omits milestone metadata and historical SPEC metadata is ignored. Authors SHOULD describe a multi-unit phase, release or architectural theme advancing `ARCH-01-introduction-and-goals`, with observable phase-level outcomes and capability boundaries. A theme may initially have one proposal when broader intended scope is not authored yet; it SHOULD NOT exist solely as a sequencing gate. CLI flags, branch names, file layouts and scenario tests belong in proposals/specs. Activation shows unmet dependencies but permits an explicit out-of-order decision. Close planned/active milestones through one current Backlog candidate: sufficient decomposition, direct proposal work delivered or explicitly excluded/moved, and the exit condition met for the resulting agreed scope. Inspect all direct PROP members across namespaces, the selected local base (report its commit without claiming remote freshness) and relevant known Planning/Development activity; focused code/Git inspection resolves missing proposals without reconstructing delivery lineage. Handoff, deletion, rejection, reassignment and empty membership alone never prove delivery. Outstanding in-scope work, an unmet exit condition or inconclusive required evidence keeps the milestone open with the remaining check named; missing confirmation is a separate gap. The user confirms both plain body assertions and status done together in one Backlog commit, without a third approval. Recheck scope, membership and relevant evidence immediately before writing; unchanged authorization survives interruption or compaction, while material changes or an unestablishable approved candidate/evidence require reconfirmation. Actual semantic scope changes (new required work, exclusion or moving scope elsewhere) reset both assertions to pending in the authorized scope edit. Normal handoff/mechanical identity relocation does not change scope/decomposition and requires no milestone review, reset or reconfirmation. No pre-handoff or integration hook is added; relevant completion evidence is checked at close. Pure wording/format corrections preserving meaning do not invalidate. Extending done scope requires user-owned reopen to active with pending assertions or another milestone. Unchanged done writes nothing, dropped is not a close candidate, and existing done records are not migrated. Drop prepares member reassignment/clearing/rejection and shows successor dependencies. Done/dropped records remain hidden history (`ADR-roadmap-and-milestones`).
 
 Spec-next treats a slug with a plan-/dev- branch, a reviewing/accepted proposal or an incomplete spec as in progress; queued drafts do not suppress idle recommendations. After the unit prerequisite filter below, eligible draft order is critical first, milestone rank (active, ready planned, no milestone), milestone created_at/ID, priority, size, draft created_at/ID. Unready/finished milestone and needs_decompose drafts are Backlog actions; unit-ready critical drafts still rank first; milestone exceptions never bypass unit prerequisites. The skill supplies deterministic ties/defaults; the CLI adds no sorting. It recommends intent confirmation when absent, offers Planning, a direct acceptance or a session reclassification for the draft, and mentions open feedback hygiene. At three done milestones or 2027-01-31 it reports roadmap review due until ADR-roadmap-review exists; this is a reminder, not a gate.
 

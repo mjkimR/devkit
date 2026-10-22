@@ -231,6 +231,11 @@ kind = "workflow"
 source = "workflows/sdd-session-bugfix.md"
 
 [[assets]]
+id = "sdd-overall-refactor"
+kind = "workflow"
+source = "workflows/sdd-overall-refactor.md"
+
+[[assets]]
 id = "sdd-spec-feature"
 kind = "workflow"
 source = "workflows/sdd-spec-feature.md"
@@ -331,6 +336,7 @@ assets = [
     "spec-entrypoints",
     "sdd-session-feature",
     "sdd-session-bugfix",
+    "sdd-overall-refactor",
     "sdd-spec-feature",
     "sdd-spec-bugfix",
     "sdd-proposal",

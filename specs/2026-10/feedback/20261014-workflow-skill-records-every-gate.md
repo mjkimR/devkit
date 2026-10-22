@@ -18,7 +18,7 @@ created_at: 2026-10-14
 
 ## 1. Friction / Question (friction, question)
 
-- **Context**: Adopting `ADR-integration-approval-asserted`: G3 is asserted with `--given integration`, never recorded.
+- **Context**: Adopting `ADR-delivery-decision-boundaries`: G3 is asserted with `--given integration`, never recorded.
 - **Expectation**: Every entry point an agent may follow gives the same G3 instruction.
 - **Actual**: devkit generates the `devkit-workflow` entry skill, which tells an agent to record every gate answer with `devkit workflow answer --request gate:<name>`; the spec bundle cannot edit that generated file.
 - **Workaround (or Interpretation Chosen)**: The spec constitution, `spec`, `spec-next`, `spec-integrate`, `completion.md` and the workflow bodies state the G3 rule; an agent that loads the spec context reads it before acting.

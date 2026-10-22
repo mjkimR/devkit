@@ -64,7 +64,7 @@ creates one without a proposal, writing the document IDs the spec rules expect (
    `tasks.md`: the workflow writes them in
    `plan-tasks`, and skeletons would have to match the characterized criteria at the `characterize` stage's
    `lint-clean` exit (`RULE-task-coverage` skips a spec without `tasks.md`). Rationale:
-   `ADR-bugfix-bundles-start-with-spec-only`.
+   `ADR-delivery-classification`.
 7. **Optional fields**: `summary` is written to `spec.md` only when `--summary` is given; without it the agent adds
    the field when removing the marker. `namespace` is written when `--namespace` is given, else when the current
    directory lies in a registered namespace (`CAP-DOCS-namespaces` section 3.3, rule 3, without the every-namespace

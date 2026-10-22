@@ -20,7 +20,7 @@ created_at: 2026-10-22
 
 - **Context**: A Development worker implemented a recorded plan-intent that refuses unsupported `[presentation] language` values.
 - **Expectation**: The constitution says a lasting policy change needs an ADR; ADRs are append-only and replaced through `supersedes`.
-- **Actual**: `ADR-shared-language-preference-with-bounded-approval-content` (accepted) decides an English fallback for unsupported strings. The worker payload denied `docs/decisions/`, so no superseding ADR could be written; the capabilities were rewritten citing the spec while the accepted ADR still states the opposite outcome.
+- **Actual**: `ADR-configuration-language-and-rendering` (accepted) decides an English fallback for unsupported strings. The worker payload denied `docs/decisions/`, so no superseding ADR could be written; the capabilities were rewritten citing the spec while the accepted ADR still states the opposite outcome.
 - **Workaround (or Interpretation Chosen)**: Treated the explicit user plan-intent as taking precedence, recorded the conflict as a spec assumption and in `reconcile.md`, and left a superseding ADR to the Host.
 - **Suggestion**: When a Host writes a plan-intent or payload that reverses an accepted ADR's outcome, either include an exact superseding-ADR path in the write boundary or record the superseding ADR itself before delegation. Assessment: without one, `devkit spec search` keeps surfacing an accepted ADR that contradicts the current capability.
 
@@ -31,7 +31,7 @@ created_at: 2026-10-22
 - **Versions**: Unit base 490b0b28.
 - **Conditions**: Local-orchestrated Development worker, activity-effort low.
 - **Workarounds Attempted**: Assumption and reconcile note; no ADR edit.
-- **Related Assets**: `ADR-shared-language-preference-with-bounded-approval-content`, `SPEC-feedback-quick-fixes`, `spec-delegate/references/payload.md`.
+- **Related Assets**: `ADR-configuration-language-and-rendering`, `SPEC-feedback-quick-fixes`, `spec-delegate/references/payload.md`.
 
 ## Evidence
 
@@ -43,4 +43,4 @@ spec.md Assumption 3 records the replacement; reconcile.md leaves the supersedin
 
 ## Disposition
 
-Dismissed as moot. The user decision recorded with the return to build-verify (`decisions/02-return-build-verify.yaml`) withdrew the plan-intent's refusal and kept the English fallback that `ADR-shared-language-preference-with-bounded-approval-content` decides, only making it visible with a `PRESENTATION_LANGUAGE_UNSUPPORTED` warning. `SPEC-feedback-quick-fixes` now conforms to the accepted ADR, the capabilities agree with it again, and no superseding ADR is needed, so the conflict this item describes no longer exists.
+Dismissed as moot. The user decision recorded with the return to build-verify (`decisions/02-return-build-verify.yaml`) withdrew the plan-intent's refusal and kept the English fallback that `ADR-configuration-language-and-rendering` decides, only making it visible with a `PRESENTATION_LANGUAGE_UNSUPPORTED` warning. `SPEC-feedback-quick-fixes` now conforms to the accepted ADR, the capabilities agree with it again, and no superseding ADR is needed, so the conflict this item describes no longer exists.

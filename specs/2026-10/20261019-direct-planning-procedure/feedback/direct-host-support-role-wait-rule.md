@@ -20,7 +20,7 @@ created_at: 2026-10-19
 
 ## 2. Suggestion / Change Request (suggestion, change-request)
 
-- **Current Procedure**: `ADR-executor-neutral-planning-steps-in-a-spec-reference` keeps "wait for every role you
+- **Current Procedure**: `ADR-orchestration-workers` keeps "wait for every role you
   start, never end the turn while one is still running, a failed role is a problem" in the `planning-worker`
   contract. `spec/references/planning.md` and `spec-delegate/SKILL.md` carry no such rule, so a Host running
   Planning in `direct` mode that starts a background `challenger` has no written instruction to wait for it before

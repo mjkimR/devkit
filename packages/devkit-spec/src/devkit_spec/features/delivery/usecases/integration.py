@@ -42,7 +42,7 @@ REGULAR_MODES = {"100644", "100755"}
 SYMLINK_MODE = "120000"
 GITLINK_MODE = "160000"
 SPEC_WORKFLOWS = frozenset({"sdd-spec-feature", "sdd-spec-bugfix"})
-SESSION_KINDS = frozenset({"feature", "bugfix"})
+SESSION_KINDS = frozenset({"feature", "bugfix", "overall-refactor"})
 SESSION_EFFORTS = frozenset({"low", "medium", "high"})
 TARGET_BOUND = ("TARGET_SHA", "RESULT_SHA")
 DISCLOSURE = "CI rules only on the merged result; tests and review ran on the source only"
@@ -341,6 +341,12 @@ def _touched_units(snapshot: Snapshot, workspace: Path) -> set[str]:
     return units
 
 
+def _session_workflow(task_kind: object) -> str:
+    if task_kind == "overall-refactor":
+        return "sdd-overall-refactor"
+    return f"sdd-session-{task_kind}" if isinstance(task_kind, str) and task_kind in SESSION_KINDS else "unknown"
+
+
 def _check_session_task(
     context: IntegrationContext,
     snapshot: Snapshot,
@@ -384,7 +390,7 @@ def _check_session_task(
     task_kind = claims.get("task_kind")
     effort = claims.get("effort")
     if task_kind not in SESSION_KINDS:
-        reasons.append("session claims require task_kind in 'feature' or 'bugfix'")
+        reasons.append("session claims require task_kind in 'feature', 'bugfix' or 'overall-refactor'")
     if effort not in SESSION_EFFORTS:
         reasons.append("session claims require effort in 'low', 'medium' or 'high'")
     for field in ("review", "tests", "lint"):
@@ -397,7 +403,7 @@ def _check_session_task(
     if claims.get("blocked") is True or claims.get("pending_questions") is True:
         reasons.append("session claims report a blocked problem or pending question")
 
-    workflow_id = f"sdd-session-{task_kind}" if isinstance(task_kind, str) and task_kind in SESSION_KINDS else "unknown"
+    workflow_id = _session_workflow(task_kind)
     claims_summary = (
         f"kind={task_kind or 'invalid'},effort={effort or 'invalid'},"
         f"review={'pass' if _claim_passed(claims.get('review')) else 'fail'},"

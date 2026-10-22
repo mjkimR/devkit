@@ -30,7 +30,7 @@ prepares the request, awaits form elicitation, and continues into execution in t
 approval, decline, cancellation, unavailable form capability and transport failure perform no integration changes.
 Tool arguments cannot supply `approved`, authority tokens or serialized execution requests.
 
-Auto authority comes only from the retained base checkout shared configuration, never caller claims, local overlays, tool permission or a source-only policy edit. The immutable request binds its `approval_policy`, effective base and prospective-result policy digests, source/target commits, provider identities and exact cleanup scope. A prospective auto-to-ask result refuses before mutation; remaining effects require unchanged auto policy, including after merge. Auto PR requests refuse before remote operations. Required PR policy and cloud/read-only execution restrictions remain effective. Prepare grants no authority; the main-session Host invokes integrate after reporting verified work. Policy authorizes neither publication nor host permission changes (`ADR-policy-authorized-local-integration`).
+Auto authority comes only from the retained base checkout shared configuration, never caller claims, local overlays, tool permission or a source-only policy edit. The immutable request binds its `approval_policy`, effective base and prospective-result policy digests, source/target commits, provider identities and exact cleanup scope. A prospective auto-to-ask result refuses before mutation; remaining effects require unchanged auto policy, including after merge. Auto PR requests refuse before remote operations. Required PR policy and cloud/read-only execution restrictions remain effective. Prepare grants no authority; the main-session Host invokes integrate after reporting verified work. Policy authorizes neither publication nor host permission changes (`ADR-delivery-decision-boundaries`).
 
 The form leads with the action, `Approve local integration of "<branch>" into "<target>" with a merge commit?` (`by
 fast-forward?` under `ff-only`; `Approve cleanup of "<branch>", already merged into "<target>"?` for a cleanup-only
@@ -104,7 +104,7 @@ missing committer identity is refused before the confirmation (`WORKTREE_COMMIT_
 finish guards (with the merge base: the target, or the source for a cleanup-only request), plans scoped post-finish
 cleanup and builds nothing before showing confirmation.
 
-**Effective policy** (`ADR-effective-policy-digest`): the digest covers the parsed values devkit owns,
+**Effective policy** (`ADR-local-and-pull-request-integration`): the digest covers the parsed values devkit owns,
 `[workflow.approvals] dev-integration`, `[worktree] pull_request`, `delete_branch` and `merge`, and
 `[integration] provider`, with their defaults. Raw configuration and receipt bytes and asset hashes are not bound, so
 a bundle sync on the target leaves an open confirmation valid. The base's digest must be unchanged at every
@@ -113,7 +113,7 @@ must equal the one prospected from the source commit; after the merge the base's
 request expects the target's policy at prepare. `delete_branch=false` or `merge="ff-only"` in either the base's or the
 source's policy wins.
 
-**One build per approving call** (`ADR-merge-commit-outside-checkout`, `ADR-target-advance-readiness`): after the
+**One build per approving call** (`ADR-local-and-pull-request-integration`, `ADR-local-and-pull-request-integration`): after the
 native acceptance the call reads the current target (the build target), which must descend from the confirmation
 target (a reset or rewritten target is `INTEGRATION_REQUEST_STALE`). `devkit_agt.features.worktree.build_result` builds the result
 commit in the object store: under `no-ff` a commit with the build target as first parent, the approved source tip as
@@ -238,7 +238,7 @@ The approving call waits up to 20 seconds for the Git common-directory integrati
 (`devkit worktree finish --merge` takes it too), then reports `LOCK_HELD` with nothing changed and a `[FIX]` naming
 `integration_resume` while the target still equals the confirmation target, else a new `integration_integrate`.
 `integration_resume` never waits (`LOCK_HELD` at once). The 20-second wait, within the 30-second upper bound of
-`ADR-target-advance-readiness`, plus the 30-second `commit-tree` bound stays below Codex's default 60-second MCP tool
+`ADR-local-and-pull-request-integration`, plus the 30-second `commit-tree` bound stays below Codex's default 60-second MCP tool
 timeout; a host that cuts a call leaves the request inspectable with
 `integration_status`. Changed scope requires a new request and
 authorization; dirty, locked, replaced or unrelated worktrees are preserved. Permission remedies stay host-owned.
@@ -252,8 +252,8 @@ replay a serialized result as authority. A fresh auto request must derive curren
 
 ## 5a. GitHub pull request route
 
-`route="pull-request"` implements `ADR-github-pull-request-repository-binding` and
-`ADR-pull-request-merge-with-pinned-source-and-verified-landing`. The gh-backed injectable port lives in
+`route="pull-request"` implements `ADR-local-and-pull-request-integration` and
+`ADR-local-and-pull-request-integration`. The gh-backed injectable port lives in
 `devkit_agt.features.worktree`; provider/cleanup extensions remain local-only. Every repository operation binds the resolved host
 and owner/repository, using supported gh syntax, including Enterprise hosts and aliases resolved by gh. Credentials
 remain owned by gh. No caller-authored PR title or body is accepted; devkit composes them from validated names/task ID.

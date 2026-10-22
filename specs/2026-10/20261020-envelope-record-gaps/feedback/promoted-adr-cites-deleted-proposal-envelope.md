@@ -21,7 +21,7 @@ created_at: 2026-10-20
 - **Context**: Development of `SPEC-envelope-record-gaps` read the three ADRs its handoff promoted from PADRs.
 - **Expectation**: References in a promoted ADR resolve after handoff, as the handoff rewrites `PROP-`/`PADR-` IDs
   and moves `materials/` to `docs/materials/` (the ADRs' material links were rewritten).
-- **Actual**: `ADR-reverify-closes-challenger-rounds` and `ADR-proposal-boundaries-name-existing-paths` cite the
+- **Actual**: `ADR-review-and-reconcile-verification` and `ADR-proposal-acceptance` cite the
   user's answers as `envelopes/answer-01.yaml`, a file of the proposal bundle the handoff deleted. The path names
   nothing in the current tree and nothing says it is historical; the spike evidence, by contrast, carries a
   `Historical proposal source: Git <sha>:...` line for its deleted sources.

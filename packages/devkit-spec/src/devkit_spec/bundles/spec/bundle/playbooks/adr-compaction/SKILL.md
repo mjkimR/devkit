@@ -1,14 +1,15 @@
 ---
 name: adr-compaction
-description: Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases and summarize their history, deleting the retired files, without changing any decision (ADR-adr-compaction).
+description: Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases, deleting the retired files, without changing any decision.
 ---
 
 # ADR compaction
 
-Run this playbook only when the user asks for it; that request authorizes the run's ADR deletions
-(`ADR-adr-compaction`). It runs at `session` depth: no spec unit, envelope or reconcile record.
+Run this playbook only when the user asks for it; that request authorizes the run's ADR deletions. It runs at
+`session` depth: no spec unit, envelope or reconcile record.
 
-A compaction reorganizes decisions and never changes one. Anything that needs a decision changed leaves the run.
+A compaction is an editorial change of the decision records, never a change of decision: a reversed, invalidated or
+changed decision needs a new ADR with `supersedes`. Anything that needs a decision changed leaves the run.
 
 ## Prerequisites
 
@@ -45,25 +46,18 @@ Path `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md` dated today, from the decis
 - Frontmatter: `id: ADR-<slug>`, `title`, an English Y-statement `summary`, `status: accepted`, `created_at` today,
   `aliases:` every member ID and every alias a member declared. No `supersedes`, no `proposal`.
 - Sections 1 to 6: consolidated from the members. Section 4 lists only the statements in effect, one item per part,
-  each ending with its source ID in parentheses. Considered options keep the option a member rejected, labelled by
-  that member.
-- `## 7. History`: one row per member in decision order.
-
-  ```markdown
-  | ADR | Date | Status | Decision | Fate |
-  | --- | --- | --- | --- | --- |
-  | `ADR-<old>` | YYYY-MM-DD | accepted | <the decision in one line> | in effect / superseded by `ADR-<other>`: <what changed> / rejected: <why> |
-  ```
-
-  Add `Retired texts: git show <base>:<path>` below the table with the base commit from the prerequisites.
+  each ending with its source ID in parentheses; superseded parts are left out. Considered options keep the
+  option a member rejected, labelled by that member. No History section: retired texts stay in Git.
 - Keep wording faithful: no driver, option, scope or consequence is added, dropped or changed in meaning.
 
 ## Step 4: Apply
 
 1. Delete the member files: `git rm <member paths>`.
 2. Run `uv run devkit rules fix`: it rewrites alias references in current documents to the replacement ID and leaves
-   history and decision records as written.
-3. Run `uv run devkit sync` if a bundle source changed.
+   history as written.
+3. If `devkit rules check` still reports a glossary Owner naming a retired ID, replace it with the replacement ID in
+   `docs/glossary.md` by hand; `devkit rules fix` does not rewrite glossary Owners.
+4. Run `uv run devkit sync` if a bundle source changed.
 
 ## Step 5: Verify
 
@@ -72,9 +66,10 @@ uv run devkit rules check
 git diff --no-renames --name-only --diff-filter=D <base> -- docs/decisions/
 ```
 
-- Every deleted ADR ID resolves: `uv run devkit spec resolve <ID>` prints the replacement with `alias=<ID>`, and the
-  replacement's History lists it.
+- Every deleted ADR ID resolves: `uv run devkit spec resolve <ID>` prints the replacement with `alias=<ID>`.
 - No remaining `supersedes` or `superseded_by` outside the replacements names a retired ID.
+- Every path, test and rule ID in a replacement's Confirmation section exists in the working tree; correct a path
+  that moved, and write "Review only" when no check exists.
 - Fidelity review: compare each replacement with its members (`git show <base>:<path>`), with each member's incoming
   references (`devkit spec refs <ID> --direction in`). Each in-effect statement must trace to a member, and no member's
   in-effect decision may be missing or altered. A change found here goes back to Step 3, or the member leaves the group.

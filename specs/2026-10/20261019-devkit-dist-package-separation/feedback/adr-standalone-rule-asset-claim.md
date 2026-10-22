@@ -41,7 +41,7 @@ created_at: 2026-10-19
 - **Conditions**: Development of the spec handed off from PROP-devkit-dist-package-separation.
 - **Workarounds Attempted**: Interpretation above; verified by the standalone smoke (`devkit add advisory:python` in
   a `devkit-dist` only consumer exits 0 with `HARNESS_ENGINE_MISSING`).
-- **Related Assets**: `ADR-dist-bundles-compatibility`, `CAP-DIST-content-packages`,
+- **Related Assets**: `ADR-package-split-and-namespaces`, `CAP-DIST-content-packages`,
   `packages/devkit-dist/tests/distsupport/layering.py` (`BUNDLE_CONTENT_ALLOWED`).
 
 ## Evidence
