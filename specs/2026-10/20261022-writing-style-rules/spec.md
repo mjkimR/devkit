@@ -2,7 +2,7 @@
 id: SPEC-writing-style-rules
 title: Writing style rules and layout-free guidance tests
 summary: Adds a hygiene rule that flags hedges, emphatic capitals and time-relative words in agent assets, and makes bundle guidance tests match wording regardless of line wrapping.
-status: planned
+status: in-progress
 created: 2026-10-22
 related_capabilities: []
 related_usecases: []
