@@ -15,7 +15,7 @@ plan: PLAN-shared-python-node-index
 
 ## Phase 2: Rules Migration
 
-- [ ] **Task 2.1**: Migrate `RULE-architecture` and `RULE-usecase-boundaries` to `get_python_nodes`
+- [x] **Task 2.1**: Migrate `RULE-architecture` and `RULE-usecase-boundaries` to `get_python_nodes`
   - **_Boundary**: `tools/devkit-dev/src/devkit_dev/bundle/rules/architecture/`, `tools/devkit-dev/src/devkit_dev/bundle/rules/usecase-boundaries/`
   - _Requirements: AC-06_
   - **Verification**: `just test devkit-dev`
