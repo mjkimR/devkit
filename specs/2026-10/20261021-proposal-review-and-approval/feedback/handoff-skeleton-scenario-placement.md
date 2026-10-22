@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-21
 ---
 
@@ -40,3 +40,10 @@ created_at: 2026-10-21
 [UNMET: not-skeleton(spec.md) not-skeleton(plan.md) not-skeleton(tasks.md)]
 Generated spec: ## 3. Non-Goals followed by AC1: Publish a complete ko/en briefing ...
 ```
+
+## Disposition
+
+- **Disposition (resolved)**: `SPEC-feedback-guidance-fixes` classifies a proposal H2 that mixes non-goals with acceptance, validation or
+  verification as a carried contract, placed under `## 5. Carried Proposal Contract` after the acceptance criteria;
+  Non-Goals keep their placeholder. Verified by `test_proposal_body.py` and
+  `test_mixed_acceptance_and_non_goals_carry_as_contract` in `test_proposal_handoff.py`.

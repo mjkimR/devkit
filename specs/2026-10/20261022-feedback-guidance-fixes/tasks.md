@@ -48,6 +48,10 @@ plan: PLAN-feedback-guidance-fixes
 
 - [x] **Task 4.1**: Living Spec reflection, sync, source-feedback resolution and checks
   - **_Boundary**: `docs/capabilities/delivery/`, `docs/capabilities/harness/`, `.devkit/installation.json`,
-    the five source feedback files named in spec section 6
+    `specs/2026-10/20261021-weekly-report/feedback/proposal-report-template-discovery.md`,
+    `specs/2026-10/20261022-writing-guidance-layers/feedback/reverify-fix-omits-reconcile-check.md`,
+    `specs/2026-10/20261022-document-id-aliases-and-compaction/feedback/padr-withdrawal-unspecified.md`,
+    `specs/2026-10/20261022-document-id-aliases-and-compaction/feedback/answer-correction-unrecorded.md`,
+    `specs/2026-10/20261021-proposal-review-and-approval/feedback/handoff-skeleton-scenario-placement.md`
   - _Requirements: AC-10_
   - **Verification**: `just test-affected`, `uv run devkit rules check`, `uv run devkit status`

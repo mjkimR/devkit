@@ -2,7 +2,7 @@
 id: SPEC-feedback-guidance-fixes
 title: Feedback Guidance Fixes
 summary: 'Resolves five open feedback items: a discoverable proposal report template, a reverify fix that names the reconcile-check path, PADR withdrawal and answer-correction procedures in the Planning guides, and handoff placement of carried validation scenarios.'
-status: in-progress
+status: completed
 created: 2026-10-22
 namespace: global
 related_capabilities:
