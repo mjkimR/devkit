@@ -7,6 +7,7 @@ status: active
 entrypoints:
   - packages/devkit/src/devkit_agt/features/rules/services/builtins/base.py
   - packages/devkit/src/devkit_agt/features/rules/services/testing.py
+  - packages/devkit/src/devkit_agt/features/rules/repositories/workspace/cache.py
 created_at: 2026-10-17
 ---
 
