@@ -2,7 +2,7 @@
 id: PROP-document-id-aliases-and-compaction
 title: Document ID Aliases and ADR Compaction
 summary: "Introduces an optional aliases frontmatter field across Living Spec documents to preserve referential integrity during renaming and compaction, and defines an ADR compaction procedure to consolidate fragmented architectural decision chains."
-status: draft
+status: reviewing
 created_at: 2026-10-21
 target_area: capabilities/documents/
 priority: high
