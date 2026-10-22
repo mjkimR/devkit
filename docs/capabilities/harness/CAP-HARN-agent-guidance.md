@@ -99,7 +99,7 @@ A project opts out of the bundle with `[presets] spec = false` in `.devkit/confi
 | `skill` | the 13 skills of 4.4 |
 | `workflow` | `sdd-session-feature`, `sdd-session-bugfix`, `sdd-spec-feature`, `sdd-spec-bugfix`, `sdd-proposal` |
 | `subagent` | `challenger`, `reconcile-reviewer`, `code-reviewer`, `scout`, `planning-worker`, `development-worker` |
-| `playbook` | `brownfield-adoption`, `feedback-hygiene` |
+| `playbook` | `brownfield-adoption`, `feedback-hygiene`, `adr-compaction` |
 | `document` | `templates`; `docs-skeleton` (`seeded = true`, `target = "docs"`) |
 
 ### 4.2 Constitution
@@ -256,6 +256,7 @@ even under requested-only capture or a disabled collect-feedback stage, without 
 | --- | --- |
 | `brownfield-adoption` | Adopt spec-driven delivery in a repository that already has code and docs: install, take the baseline, contain legacy Markdown under `docs/materials/_legacy/` and record any deferral as a commented `.devkit/config.toml` entry the user decided, then migrate legacy content through normal work. |
 | `feedback-hygiene` | Triage open feedback in one batch: group by target, order by severity and recurrence, promote to rules, playbooks, decisions or spec work, or dismiss or forward, with the user's decision. |
+| `adr-compaction` | Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases and summarize their history, without changing any decision (`ADR-adr-compaction`). |
 
 ### 4.6 Templates
 
