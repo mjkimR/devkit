@@ -1,0 +1,13 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'goal: devkit-cli package (click + devkit-advisory only, import devkit_cli,
+  semver contract released with devkit-dist/devkit-agt) holding the reusable agent-first
+  CLI boundary; devkit-dist adapter builds on it; opt-in devkit-catalog cli bundle
+  with structure guide and rules for new CLI tools. scope excludes existing consumer
+  tools, use case base dependency, config/DI/plugin discovery. task-kind feature,
+  depth spec, dev effort medium.'
+by: user
+at: '2026-10-22T00:51:59.111371Z'
