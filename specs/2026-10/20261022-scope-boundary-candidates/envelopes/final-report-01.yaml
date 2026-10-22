@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T05:33:07.314641Z'
+status: completed
+summary: Spec bundles that declare _Boundary code paths now compare by declared and observed code only; target entrypoint candidates stay for proposals and code-less bundles; no-entrypoints unchanged. FB-scope-observation-candidates resolved; FB-reconcile-reviewer-diff-access recorded.
+findings: []
+assumptions:
+- no-entrypoints stays reported at every stage (Non-Goal 1) so UC-run-parallel-work-safely Scenario 4 holds unchanged
+checks:
+  tests: PASS just test-affected 1360 passed mode=partial
+  build: PASS just check devkit-spec (pyright 0 errors)
+  lint: PASS just lint-check devkit-spec; devkit rules check --ci --base 01cfbda5 0 errors; git diff --check clean
+diff_scope:
+  base: 01cfbda557f0f1a913c6e354b06c23dd7740789e
+  head: 322a394c232e0a2cb4c61b30b4f0c440e9f75ae4

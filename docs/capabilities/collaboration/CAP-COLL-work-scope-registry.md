@@ -88,9 +88,17 @@ path, no `..`, case-sensitive, `./` and a trailing `/` normalized), with its gra
 | --- | --- | --- | --- |
 | Proposal: `targets` of `docs/proposals/PROP-<slug>/target-docs.md` | document | `declared-doc` | `prop` |
 | Spec bundle: `targets` of `reconcile.md` (not `waived`); without `reconcile.md`, those of `target-docs.md` | document | `declared-doc` | `spec` (`prop` for `target-docs.md`) |
-| `entrypoints` of each capability or use case target (also under `docs/packages/<name>/`) | code | `candidate` | as its target |
-| `tasks.md` `_Boundary` entries | code | `declared-code` (wins over a candidate of the same path) | `spec` |
+| `entrypoints` of each capability or use case target (also under `docs/packages/<name>/`), while the bundle declares no code (below) | code | `candidate` | as its target |
+| `tasks.md` `_Boundary` entries | code | `declared-code` | `spec` |
 | Git in the registering worktree: the committed range (below), staged, unstaged, untracked | code | `observed` | `build` |
+
+Candidates estimate a task's code before it declares any. When at least one `_Boundary` entry of a spec bundle's
+`tasks.md` is a code path (`declared-code`), the bundle's code side is its declared code and it contributes no
+`candidate` path, however broad its targets' `entrypoints` are. A proposal, and a spec bundle whose `tasks.md` is
+missing, still the handoff skeleton, or names no code path (only `N/A`, placeholders, invalid paths, or paths under
+`docs/` or `specs/`), keeps its targets' `entrypoints` as candidates. A capability or use case target without `entrypoints` is
+unresolved (`no-entrypoints`) in both cases. A stored record changes from one rule to the other at the `register` or
+`update` that recollects its scope.
 
 `targets` is the same list in both files: `- file: <workspace-relative path>` with an optional `resolution`
 (`devkit spec proposal new --with-target-docs` scaffolds `targets: []`). Document IDs are not accepted. Observed paths
@@ -135,9 +143,10 @@ shallow clone whose history does not reach the fork point stays unresolved until
 ### 4.2 Comparison
 
 Two sets overlap on a **document** when both declare the same document path, and on **code** when a declared,
-candidate or observed path of one equals or contains (by whole segments) one of the other's. A pair reports both
-counts, each overlapping path with its granularity and the sources of both sides, and the unresolved count of both
-sides. Ranking and weighting are the consumer's.
+candidate or observed path of one equals or contains (by whole segments) one of the other's. A spec bundle that
+declares code is compared by its declared and observed code only (4.1), so a path that only its targets'
+`entrypoints` name is no overlap. A pair reports both counts, each overlapping path with its granularity and the
+sources of both sides, and the unresolved count of both sides. Ranking and weighting are the consumer's.
 
 ### 4.3 Registry
 

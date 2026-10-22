@@ -1,0 +1,22 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T05:31:18.991320Z'
+status: completed
+summary: 'round 1; reconcile-reviewer: CAP-COLL-work-scope-registry §4.1/§4.2 match from_spec; UC-run-parallel-work-safely no-impact confirmed; FB resolution justified; one P3 wording finding'
+findings:
+- issue: CAP §4.1 list of _Boundary values that are no code path omits invalid paths (e.g. a glob), which the code also treats as no code path
+  evidence: docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md:97-99; packages/devkit-spec/src/devkit_spec/features/entrypoints/services/derive.py:55-58
+  failure_condition: A reader takes the list as exhaustive and concludes a bundle whose only _Boundary entry is an invalid path loses its candidates; the code keeps them
+  suggested_action: Add invalid paths to the parenthetical in the CAP §4.1 rule paragraph
+  resolution: open
+  severity: P3
+assumptions:
+- tmp/reconcile-diff.patch is the complete docs/ and devkit-spec src diff of the range
+unverified_areas:
+- 'reviewer had no shell: staleness of head and tests not checked by it'
+checks: {}
+diff_scope:
+  base: 01cfbda557f0f1a913c6e354b06c23dd7740789e
+  head: b61af7b7201f2c9414e4a9fbdb1bada43c22164b

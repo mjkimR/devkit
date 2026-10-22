@@ -3,9 +3,11 @@
 - Proposal (``prop`` stage): the ``targets`` of ``docs/proposals/PROP-<slug>/target-docs.md`` are the document side,
   the ``entrypoints`` of the existing capability and use case targets the code candidates.
 - Spec bundle (``spec`` stage): ``reconcile.md`` ``targets`` (not ``waived``) are the document side, or, without
-  ``reconcile.md``, ``target-docs.md`` (``prop`` stage); ``tasks.md`` ``_Boundary`` entries are declared code (they win
-  over a candidate of the same path), the targets' ``entrypoints`` candidates. When both target lists exist, the
-  paths only one names are reported as ``Diff`` and not merged.
+  ``reconcile.md``, ``target-docs.md`` (``prop`` stage); ``tasks.md`` ``_Boundary`` entries are declared code. Once at
+  least one entry is a declared code path, it replaces the targets' ``entrypoints`` candidates; until then (no
+  ``tasks.md``, the handoff skeleton, or only entries that are no code path) the candidates stand in for it. A target
+  without ``entrypoints`` is ``no-entrypoints`` either way. When both target lists exist, the paths only one names
+  are reported as ``Diff`` and not merged.
 - Observed (``build`` stage): the paths changed on the task's side of its base branch (from the fork point
   ``git merge-base <base ref> HEAD`` to ``HEAD``, never wider than the record's fixed base revision to ``HEAD``; see
   ``observe_git``), staged, unstaged and untracked, relative to the workspace root.
@@ -107,11 +109,14 @@ def _entrypoints(root: Path, file: str) -> list[str]:
     return [item for item in value if isinstance(item, str)] if isinstance(value, list) else []
 
 
-def _add_doc_targets(root: Path, scope: ScopeSet, targets: list[tuple[str, str]], stage: Stage) -> None:
-    """Record document targets and the code candidates their entrypoints provide.
+def _add_doc_targets(
+    root: Path, scope: ScopeSet, targets: list[tuple[str, str]], stage: Stage, *, candidates: bool = True
+) -> None:
+    """Record document targets and, with ``candidates``, the code candidates their entrypoints provide.
 
     A waived target, an invalid path, a planned document (not in the working tree; it still counts as a document,
-    so a shared planned path overlaps) and a capability or use case without entrypoints are unresolved.
+    so a shared planned path overlaps) and a capability or use case without entrypoints are unresolved, also without
+    ``candidates``.
     """
     seen_docs = {path.path for path in scope.docs}
     seen_code = {path.path for path in scope.code}
@@ -139,6 +144,8 @@ def _add_doc_targets(root: Path, scope: ScopeSet, targets: list[tuple[str, str]]
         entries = _entrypoints(root, file)
         if not entries:
             scope.unresolved.append(Unresolved(file, "no-entrypoints", Source.CANDIDATE))
+            continue
+        if not candidates:
             continue
         for entry in entries:
             try:
@@ -199,6 +206,8 @@ def from_proposal(root: Path, slug: str) -> ScopeSet:
 def from_spec(root: Path, spec_dir: str) -> ScopeSet:
     """The ``spec``-stage scope of the bundle at the workspace-relative ``spec_dir`` (declarations only).
 
+    Declared code paths of ``tasks.md`` replace the targets' entrypoint candidates; without any, the candidates stay.
+
     Raises ``ScopeSpecNotFoundError`` when it is not a directory and ``ScopeInputInvalidError`` when an input
     cannot be read.
     """
@@ -230,16 +239,17 @@ def from_spec(root: Path, spec_dir: str) -> ScopeSet:
                     elif code not in seen:
                         seen.add(code)
                         scope.code.append(ScopePath(code, kind_of(root, code), Source.DECLARED_CODE, Stage.SPEC))
+    candidates = not scope.code  # only declared code is collected so far: it replaces the entrypoint candidates
     reconcile = _targets(base / RECONCILE, f"{spec_dir}/{RECONCILE}")
     blueprint = _targets(base / TARGET_DOCS, f"{spec_dir}/{TARGET_DOCS}")
     if reconcile is not None:
-        _add_doc_targets(root, scope, reconcile, Stage.SPEC)
+        _add_doc_targets(root, scope, reconcile, Stage.SPEC, candidates=candidates)
         if blueprint is not None:
             scope.diff = _diff(blueprint, reconcile)
     else:
         scope.unresolved.append(Unresolved(RECONCILE, "missing-reconcile", Source.DECLARED_DOC))
         if blueprint is not None:
-            _add_doc_targets(root, scope, blueprint, Stage.PROP)
+            _add_doc_targets(root, scope, blueprint, Stage.PROP, candidates=candidates)
     scope.code.sort(key=lambda path: path.path)
     return scope
 

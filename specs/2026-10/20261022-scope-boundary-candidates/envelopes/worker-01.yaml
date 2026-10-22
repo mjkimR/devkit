@@ -1,0 +1,21 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T05:33:22.294474Z'
+status: completed
+summary: 'Development from specify to final change report: from_spec drops target entrypoint candidates once tasks.md declares a _Boundary code path; CAP-COLL-work-scope-registry 4.1/4.2 state the rule; FB-scope-observation-candidates resolved; code-reviewer PASS, reconcile check closed after one P3 wording fix.'
+findings: []
+assumptions:
+- 'no-entrypoints stays reported at every stage (Non-Goal 1): it marks the target''s traceability gap, UC-run-parallel-work-safely Scenario 4 states it unqualified and the UC is outside the write scope, and spec-orchestrate orders by overlaps, not unresolved counts'
+- declares code means at least one _Boundary entry resolves to a declared-code path; N/A, placeholders, invalid or docs/specs paths keep candidates
+checks:
+  tests: PASS just test-affected 1360 passed mode=partial
+  lint: PASS just lint-check devkit-spec
+  typecheck: PASS just check devkit-spec
+  rules: PASS devkit rules check --ci --base 01cfbda5
+  whitespace: PASS git diff --check
+diff_scope:
+  base: 01cfbda557f0f1a913c6e354b06c23dd7740789e
+  head: a5e7adc39041715c220b383a589a751e2d57e8d6
+activity_effort: medium
