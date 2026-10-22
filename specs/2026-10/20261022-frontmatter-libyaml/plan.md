@@ -20,6 +20,7 @@ FrontmatterError mapping. The document memo already fingerprints this module and
 Build strict loaders with the existing duplicate-key validation for Python and optional C bases. Inspect C parser
 events to detect syntax nesting above an internal routing threshold, then use the Python loader for those inputs.
 The threshold selects a parser; it is not an input rejection limit. Alias events do not increase syntax depth.
+Route headers containing tabs to Python because libyaml accepts tab separators that Python rejects.
 For ordinary headers use the strict C loader. If C parsing or construction raises a YAML, value or recursion error,
 retry with the strict Python loader to retain the original diagnostics. Without CSafeLoader use Python directly.
 Keep load_header, locate and parse signatures unchanged.
