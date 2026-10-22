@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T12:33:21.191310Z'
+status: completed
+summary: One root VERSION prepares all 11 packages, 12 bundles, internal pins, lock and deployment receipt at 0.1.2; release checks stale metadata and tags.
+findings: []
+assumptions:
+- Single human-edited input generates tracked package/manifests/lock/receipt changes.
+- Local merge chosen under pull_request=auto; no platform review required. dev-integration=auto authorizes local integration after checks.
+unverified_areas:
+- Local devkit sync reports MCP_RUNTIME_UNAVAILABLE after package version change; no release or tag was published.
+checks:
+  tests: 'PASS just test-affected full fallback: 4952 passed, 12 skipped; latest targeted 19 passed'
+  build: PASS release-build v0.1.2; 11 wheel metadata and 12 embedded manifest versions verified; model 0.1.0 unchanged
+  lint: PASS just lint-check, just check, fresh script/test ruff and pyright, cumulative rules check
+diff_scope:
+  base: 2a1e4e3dc11bfa24c5ec3f5fdc0db4ebc7e99f17
+  head: b68e59475fc0af62d2cb7009019ae4f2f12ffe56
