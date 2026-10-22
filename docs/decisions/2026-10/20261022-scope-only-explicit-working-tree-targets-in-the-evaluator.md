@@ -1,22 +1,22 @@
 ---
-id: PADR-scope-only-explicit-working-tree-targets-in-the-evaluator
+id: ADR-scope-only-explicit-working-tree-targets-in-the-evaluator
 title: Scope only explicit working-tree targets in the evaluator
 summary: For deciding where scoping applies, we filter declared rules in evaluate_rules only for working-tree runs with explicit targets, keeping whole-workspace, commit-gate and CI snapshot runs complete, to speed lint-clean without weakening gates, accepting that the commit gate stays as slow as today.
-proposal: PROP-lint-clean-target-scoped-rules
-status: draft
+proposal: SPEC-lint-clean-target-scoped-rules
+status: accepted
 created_at: 2026-10-22
 ---
 
-# [PADR-scope-only-explicit-working-tree-targets-in-the-evaluator] Scope only explicit working-tree targets in the evaluator
+# [ADR-scope-only-explicit-working-tree-targets-in-the-evaluator] Scope only explicit working-tree targets in the evaluator
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-22
 
 ---
 
 ## 1. Context & Problem Statement
 
-Rules declare their inputs (`PADR-rules-declare-their-input-files-undeclared-rules-always-run`); the engine must
+Rules declare their inputs (`ADR-rules-declare-their-input-files-undeclared-rules-always-run`); the engine must
 decide in which runs, at which layer and against which target list a declared rule is skipped. Targets reach the
 evaluator from four callers: `devkit rules check|fix FILES`, `lint-clean` (`run_project_rules(root, targets=files)`),
 the Git snapshot gates (`check --staged` at commit time, `check --ci`) and library callers of `evaluate_rules`,
@@ -62,7 +62,7 @@ behavior (driver 2) and is reachable from the rule test helper (driver 3):
 ## 5. Consequences
 
 - Positive: `devkit workflow next` on a documentation-only spec unit drops from 3.65 s to about 1.4 s
-  (`materials/spike-evidence.md` §5); `devkit rules check <docs>` gains the same.
+  (`docs/materials/2026-10/20261022-lint-clean-target-scoped-rules/spike-evidence.md` §5); `devkit rules check <docs>` gains the same.
 - Negative: a documentation-only targeted run no longer reports violations of a skipped target-ignoring rule in
   files outside its targets, whether pre-existing or introduced by uncommitted work. For `lint-clean` at the
   build-verify and fix-verify exits this includes the unit's own code, which lives outside the unit directory; the

@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-lint-clean-target-scoped-rules
+by: user
+at: '2026-10-22T07:02:07.904047Z'

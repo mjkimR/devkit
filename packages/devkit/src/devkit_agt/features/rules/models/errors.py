@@ -128,8 +128,12 @@ class RulesTestUnavailableError(RulesError):
     fix = "uv add --dev pytest"
 
 
-class RuleDefinitionError(RulesError):
-    """A rule class declares an invalid combination of attributes (for example ``promote_to``)."""
+class RuleDefinitionError(RuleProblem):
+    """A rule declares an invalid attribute: a ``promote_to`` combination or an ``inputs`` declaration.
+
+    Raised when a ``BaseRule`` is constructed; collected, with the rule ID, when policy validation finds a malformed
+    ``inputs`` on a rule that satisfies the protocol without subclassing ``BaseRule``.
+    """
 
     code = "RULES_DEFINITION_INVALID"
 

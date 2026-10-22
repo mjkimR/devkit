@@ -1,0 +1,32 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T07:25:16.561537Z'
+status: completed
+summary: 'REVISE (P3 only): AC-01..AC-11 confirmed against 3015be11..218d75b0 by unit, integration and rule tests, explain rerun and evidence.md; both ADRs followed; three record findings'
+findings:
+- issue: The opened_files recorder test sits in packages/devkit/tests/integration/features/rules/cli/test_rule_tests.py, outside Task 2.1's _Boundary, with no stated reason.
+  evidence: packages/devkit/tests/integration/features/rules/cli/test_rule_tests.py:272; tasks.md Task 2.1 _Boundary
+  failure_condition: A diff-versus-boundary comparison finds an unexplained change outside _Boundary.
+  suggested_action: State the reason or widen Task 2.1's _Boundary.
+  resolution: open
+  severity: P3
+- issue: docs/development/reference/rules-library.md changed outside Task 3.1's _Boundary, with no stated reason.
+  evidence: docs/development/reference/rules-library.md:35-45,115-119; tasks.md Task 3.1 _Boundary
+  failure_condition: A diff-versus-boundary comparison finds an unexplained change outside _Boundary.
+  suggested_action: Record the reason or widen Task 3.1's _Boundary.
+  resolution: open
+  severity: P3
+- issue: AC-10's baseline was measured on the head with scope_rules patched, not on the integration base 3015be11.
+  evidence: specs/2026-10/20261022-lint-clean-target-scoped-rules/evidence.md:31-41; spec.md AC-10
+  failure_condition: If the patched head differs from 3015be11 in cost or output, the 3.71 s baseline and 0.41 ratio do not measure what AC-10 specifies.
+  suggested_action: Time the base commit cold three times and record its median, or record the deviation with its justification.
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS reviewer rerun 137 targeted + 3 rule test suites; just test-affected 2584 passed on 218d75b0
+  lint: PASS devkit rules check --ci --base 3015be11
+diff_scope:
+  base: 3015be11c1adb7ed02eb49936bd62b6c662f36c0
+  head: 218d75b0fe63287c37c4ca42b9a9e528a50a0c37

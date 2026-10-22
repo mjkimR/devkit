@@ -1,0 +1,16 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T07:31:23.917634Z'
+status: completed
+summary: 'Development from specify to the final change report: BaseRule.inputs with RULES_DEFINITION_INVALID validation, target scoping in evaluate_rules (skipped on EvaluationResult/ProjectRun, INFO log), inputs in devkit rules explain, opened_files test helper; inputs declared on RULE-architecture, RULE-usecase-boundaries, RULE-advisory-unique-code with skip, per-pattern and completeness tests; Living Spec and spec-rule skill updated; evidence: 9/9 target sets equal, workflow next 3.71 s -> 1.51 s; review-01 (3 P3) closed by reverify-01, reconcile-check-01 P3 fixed and self-verified in reconcile-check-02; 2 feedback items recorded. Pending: integrate (lint-ci-clean) by the Host'
+findings: []
+checks:
+  tests: PASS just test-affected 2584 passed; just test-e2e agt 215 passed
+  build: PASS just smoke; just check agt, dist, devkit-dev
+  lint: PASS just lint-check; devkit rules check --ci --base 3015be11; devkit sync --check; git diff --check
+diff_scope:
+  base: ''
+  head: f46ad35efa279cf5d97413aab7fd1fe28cd8445e
+activity_effort: medium

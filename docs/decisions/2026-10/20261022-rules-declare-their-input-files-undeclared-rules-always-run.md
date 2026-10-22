@@ -1,15 +1,15 @@
 ---
-id: PADR-rules-declare-their-input-files-undeclared-rules-always-run
+id: ADR-rules-declare-their-input-files-undeclared-rules-always-run
 title: Rules declare their input files; undeclared rules always run
 summary: For targeted rules runs, we let a rule declare the workspace path patterns of the files it reads (BaseRule inputs) and run undeclared rules as today, to skip whole-workspace rules no target can affect without missing a finding, accepting that a too-narrow declaration hides findings.
-proposal: PROP-lint-clean-target-scoped-rules
-status: draft
+proposal: SPEC-lint-clean-target-scoped-rules
+status: accepted
 created_at: 2026-10-22
 ---
 
-# [PADR-rules-declare-their-input-files-undeclared-rules-always-run] Rules declare their input files; undeclared rules always run
+# [ADR-rules-declare-their-input-files-undeclared-rules-always-run] Rules declare their input files; undeclared rules always run
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-22
 
 ---
@@ -20,7 +20,7 @@ A targeted run evaluates every active rule. Three rules need every Python file o
 `RULE-architecture` and `RULE-usecase-boundaries` ignore the targets and report the whole workspace, and
 `RULE-advisory-unique-code` indexes every Python file but reports only targeted ones. On a documentation-only unit
 they cost about 2.5 s of the 3.7 s `devkit workflow next` takes, and none of them reads a file such a unit holds
-(`materials/spike-evidence.md`). The engine cannot tell this from the outside: the `Rule` protocol says nothing
+(`docs/materials/2026-10/20261022-lint-clean-target-scoped-rules/spike-evidence.md`). The engine cannot tell this from the outside: the `Rule` protocol says nothing
 about what a rule reads, and rules come from built-ins, bundles and plugin directories alike.
 
 ## 2. Decision Drivers

@@ -1,5 +1,10 @@
 # Usecase boundaries
 
+The rule reads `.devkit/architecture.toml` and every Python file of the declared
+packages, and reports findings anywhere in the workspace. It declares these
+inputs (`**/*.py`, `.devkit/architecture.toml`), so a run with explicit targets
+that match none of them skips it; full runs, the commit gate and CI always run it.
+
 Expose each transport execution entrypoint as a concrete `BaseUseCase` subclass
 from `devkit_core.base.usecase`. Give `execute` explicit input/result annotations;
 both sync and async methods are allowed. CLI/MCP adapters construct or receive

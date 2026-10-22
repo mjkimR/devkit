@@ -10,6 +10,7 @@ from devkit_dist.features.project.repositories.receipt import MANAGED_PATH, OVER
 
 from devkit_agt.features.rules.models.contracts import Phase, Rule, Severity
 from devkit_agt.features.rules.models.errors import RuleDefinitionError
+from devkit_agt.features.rules.models.policy import check_inputs
 
 RELATED_REF = re.compile(r"[a-z][a-z0-9-]*:[a-z][a-z0-9-]*")
 
@@ -32,8 +33,13 @@ class BaseRule(Rule):
     # Instructions and playbooks that hold the judgment or procedure behind the rule, as ``<bundle>:<asset-id>``;
     # ``devkit rules explain`` resolves each to the file agents read (the project override, else the managed copy).
     related: tuple[str, ...] = ()
+    # Workspace-relative ``**`` patterns (``match_path`` grammar) of every file whose content can change the rule's
+    # findings. A run with explicit working-tree targets skips the rule when no target matches one of them; ``None``
+    # (undeclared) runs it in every run.
+    inputs: tuple[str, ...] | None = None
 
     def __post_init__(self) -> None:
+        check_inputs(self.id, self.inputs)
         for ref in self.related:
             if not RELATED_REF.fullmatch(ref):
                 raise RuleDefinitionError(

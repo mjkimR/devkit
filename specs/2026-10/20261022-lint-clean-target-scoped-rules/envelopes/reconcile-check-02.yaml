@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T07:29:30.884304Z'
+status: completed
+summary: 'Developer self-verification of the reconcile-check-01 P3: CAP-GOV-rule-authoring §2 now names ctx.relative_path, matching models/contracts.py; reconcile.md resolved with five modified targets; rules check of docs/capabilities/governance and the unit passes'
+findings: []
+checks:
+  lint: PASS devkit rules check docs/capabilities/governance specs/2026-10/20261022-lint-clean-target-scoped-rules
+diff_scope:
+  base: 3015be11c1adb7ed02eb49936bd62b6c662f36c0
+  head: 2622e7ddd6369c9a442347ffa5c934e246655716

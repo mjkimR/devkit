@@ -1,19 +1,22 @@
-"""One evaluation of a rule set: policy validation, phase filtering, checks, autofix and the convergence recheck."""
+"""One evaluation of a rule set: policy validation, phase filtering, target scoping, checks, autofix and the
+convergence recheck."""
 
 from __future__ import annotations
 
 import inspect
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field, replace
 
 from devkit.advisory import AdvisoryError, Level
 from devkit_core.core.logs import get_logger
+from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
 from devkit_agt.features.rules.models.contracts import Autofixable, Rule, RuleContext, Severity, Violation
 from devkit_agt.features.rules.models.errors import RuleExecutionError, RuleProblem, SettingsError
 from devkit_agt.features.rules.models.phases import effective_phase, runs_in_phase
 from devkit_agt.features.rules.models.policy import effective_severity, validate_policy
+from devkit_agt.features.rules.models.settings import match_path
 
 logger = get_logger(__name__)
 
@@ -22,6 +25,9 @@ logger = get_logger(__name__)
 class EvaluationResult:
     violations: list[Violation] = field(default_factory=list)
     errors: list[RuleProblem] = field(default_factory=list)
+    # IDs of the active rules the final check pass did not evaluate, because no explicit target matched their
+    # declared ``inputs`` (``scope_rules``).
+    skipped: list[str] = field(default_factory=list)
 
     @property
     def blocking_violations(self) -> list[Violation]:
@@ -39,15 +45,45 @@ def _finding_key(v: Violation) -> tuple[str, str, str]:
     return v.rule_id, v.file, v.message
 
 
+def scope_rules(ctx: RuleContext, rules: Sequence[Rule], modified: Iterable[str] = ()) -> tuple[list[Rule], list[str]]:
+    """The rules of ``rules`` a run must evaluate, and the IDs of those it can skip.
+
+    A rule with declared ``inputs`` (read with ``getattr``) is skipped only in a working-tree run with explicit
+    targets (``ctx.has_targets`` and no ``ctx.snapshot``) when no target, before ``[rules] exclude``, and no file in
+    ``modified`` (the files fixes wrote) matches one of its patterns. A target that is the project configuration
+    ``.devkit/config.toml`` keeps every rule, since ``[rules]`` policy can change any rule's findings. Undeclared rules
+    always run, and so does every rule of a whole-workspace or snapshot run.
+    """
+    if not ctx.has_targets or ctx.snapshot is not None:
+        return list(rules), []
+    names = list(ctx.targets)
+    names.extend(relative for path in modified if (relative := ctx.relative_path(path)) is not None)
+    if CONFIG_PATH in names:
+        return list(rules), []
+    selected: list[Rule] = []
+    skipped: list[str] = []
+    for rule in rules:
+        inputs: tuple[str, ...] | None = getattr(rule, "inputs", None)
+        if inputs is None or any(match_path(pattern, name) for pattern in inputs for name in names):
+            selected.append(rule)
+        else:
+            skipped.append(rule.id)
+    return selected, skipped
+
+
 def evaluate_rules(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
     """Evaluate ``rules`` in order against ``ctx``, applying autofix and one convergence recheck when asked.
 
-    The project policy in ``ctx`` is validated first; any policy problem is
-    returned without running a rule. Only rules active in ``ctx.phase`` (after
-    phase overrides) run. With ``ctx.fix`` (and not ``ctx.dry_run``) every
-    autofixable rule fixes, then every active rule checks again: a fixable
-    initial finding the recheck no longer reports is returned with ``fixed``
-    set, followed by the recheck's findings.
+    The project policy in ``ctx`` is validated first, together with every
+    rule's ``inputs`` declaration; any problem is returned without running a
+    rule. Only rules active in ``ctx.phase`` (after phase overrides) run, minus
+    those ``scope_rules`` skips for the explicit targets; their IDs are returned
+    in ``skipped``. With ``ctx.fix`` (and not ``ctx.dry_run``) every selected
+    autofixable rule fixes, then the rules ``scope_rules`` selects for the
+    targets plus the modified files check again (every active rule when a fix
+    failed, since its writes are unknown): a fixable initial finding the
+    recheck no longer reports is returned with ``fixed`` set, followed by the
+    recheck's findings.
     """
     resolvers, policy_errors = validate_policy(
         rules,
@@ -60,20 +96,32 @@ def evaluate_rules(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
     ctx.settings_resolvers = resolvers
 
     active = [r for r in rules if runs_in_phase(effective_phase(r, ctx.phase_overrides), ctx.phase)]
-    result = EvaluationResult()
-    initial = _check_rules(ctx, active, "execution", result.errors)
+    selected, skipped = scope_rules(ctx, active)
+    result = EvaluationResult(skipped=skipped)
+    _log_skipped(skipped)
+    initial = _check_rules(ctx, selected, "execution", result.errors)
     if not ctx.fix or ctx.dry_run or result.errors:
         result.violations = initial
         return result
 
-    modified = _apply_fixes(ctx, active, result.errors)
+    modified = _apply_fixes(ctx, selected, result.errors)
     if not modified and not result.errors:
         result.violations = initial
         return result
 
-    recheck = _check_rules(ctx, active, "recheck", result.errors)
+    if result.errors:
+        rechecked, skipped = active, []
+    else:
+        rechecked, skipped = scope_rules(ctx, active, modified)
+    result.skipped = skipped
+    recheck = _check_rules(ctx, rechecked, "recheck", result.errors)
     result.violations = recheck if result.errors else _mark_fixed(initial, recheck)
     return result
+
+
+def _log_skipped(skipped: Sequence[str]) -> None:
+    if skipped:
+        logger.info("Skipped rules no explicit target can affect (declared inputs): %s", ", ".join(skipped))
 
 
 def _check_rules(ctx: RuleContext, rules: Sequence[Rule], stage: str, errors: list[RuleProblem]) -> list[Violation]:

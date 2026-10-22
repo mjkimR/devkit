@@ -39,6 +39,7 @@ class ExplainRuleUseCase(BaseUseCase):
         self, rule: Rule, config: RulesConfig, resolver: SettingsResolver | None, workspace_root: Path
     ) -> dict[str, Any]:
         promote_to = declared_promotion(rule)
+        inputs = getattr(rule, "inputs", None)
         return {
             "rule_id": rule.id,
             "name": rule.name,
@@ -50,6 +51,7 @@ class ExplainRuleUseCase(BaseUseCase):
             "promote_to": promote_to.value if promote_to else None,
             "settings": resolver.to_dict() if resolver else None,
             "guide": ResolveRuleGuideUseCase().execute(rule, workspace_root),
+            "inputs": list(inputs) if inputs is not None else None,
         }
 
 

@@ -175,7 +175,7 @@ def print_explain(rule: Rule, entry: dict[str, Any], resolver: SettingsResolver 
         f"[RULE: {rule.id} name={_quote(rule.name)} phase={entry['default_phase']} "
         f"effective_phase={entry['effective_phase']} severity={entry['default_severity']} "
         f"effective_severity={entry['effective_severity']} promote_to={entry['promote_to'] or '-'} "
-        f"guide={entry['guide'] or '-'}]"
+        f"guide={entry['guide'] or '-'} inputs={_bare(','.join(entry['inputs'] or []))}]"
     )
     click.echo(f"[DESCRIPTION: {_quote(rule.description)}]")
     for item in entry.get("related", []):

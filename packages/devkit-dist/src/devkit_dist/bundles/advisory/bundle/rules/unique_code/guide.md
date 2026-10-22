@@ -12,6 +12,8 @@ Agents and `except` clauses branch on advisory codes, so a code names one condit
   are resolved, not matched by name). Its code declarations are `code = "X"` in its body and `code="X"` keywords at
   calls of the class or its classmethods (`MyError.blocked(..., code="X")`), with a string literal or a name bound to
   a module-level one (`CODE = "X"`).
+- **Inputs**: the rule reads Python files only and declares `inputs` `**/*.py`, so a run with explicit targets
+  and no Python file among them, such as `lint-clean` on a documentation-only unit, skips it.
 - **Not checked**: codes defined in installed packages outside the workspace, codes passed to `super().__init__` or
   `cls(...)`, computed codes, and test files (default `exclude`).
 
