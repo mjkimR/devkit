@@ -10,7 +10,7 @@ agent: claude-code
 origin: user
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -44,3 +44,9 @@ After sync with the unsupported value, .claude/ and .agents/ response-style SKIL
   "Use en as the default conversation language ..."  (identical sha256 in .devkit/transient/local-render.json)
 After setting the value to ko and re-syncing: "Use ko as the default conversation language ..."
 ```
+
+## Disposition
+
+Directly resolved by `SPEC-feedback-quick-fixes`. `validate_runtime_tables` now refuses any `[presentation] language` other than exactly `auto`, `en` or `ko` in the shared and the local file with `CONFIG_INVALID` (exit 2), naming the source file and the value, and a `[FIX]` naming the accepted values; `resolve_language` no longer falls back. No aliases are accepted.
+
+Verification: `test_presentation.py` refuses `korean`, `KO`, `ja` and the empty string in both files and resolves `auto`, `en`, `ko` unchanged; the sync scenario in `distribution/test_local_config.py` now expects the refusal and an unchanged render, and `devkit config show` exits 2 with the accepted values on stderr. The affected selection ran the full suite: 4461 passed, 14 skipped. Integration remains a separate Host step.

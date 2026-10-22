@@ -27,7 +27,7 @@ plan: PLAN-feedback-quick-fixes
 
 ## Phase 2: Projection and Living Spec
 
-- [ ] **Task 2.1**: Re-project bundle assets and reconcile capabilities and source feedback
+- [x] **Task 2.1**: Re-project bundle assets and reconcile capabilities and source feedback
   - **_Boundary**: `.claude/`, `.agents/`, `.codex/`, `.devkit/managed/`, `.devkit/installation.json` (through `uv run devkit sync` only), `docs/capabilities/distribution/`, `docs/capabilities/integration/CAP-INT-mcp-services.md`, `docs/capabilities/delivery/`, the four source feedback files
   - _Requirements: AC-01, AC-03, AC-04, AC-05_
   - **Verification**: `uv run devkit status`; `uv run devkit rules check specs/2026-10/20261022-feedback-quick-fixes`

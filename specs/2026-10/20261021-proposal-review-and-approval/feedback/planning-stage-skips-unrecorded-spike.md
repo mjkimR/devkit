@@ -10,7 +10,7 @@ agent: codex
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-21
 ---
 
@@ -42,3 +42,9 @@ DONE: intent-proposal spike
 STAGE: collect-feedback
 UNMET: envelope-check-pass(feedback swept)
 ```
+
+## Disposition
+
+Directly resolved by `SPEC-feedback-quick-fixes` as the wording-only clarification the suggestion asked for. The `spec` skill's Planning reference (step 3) and the `spec-next` workflow-signals reference state that `spike` has no exit check, so its `[DONE]` listing is not Planning evidence; the `scout` and `challenger` envelopes and their `reverify` recorded at `spike` are. `CAP-DLV-delivery-workflows` states the same. No workflow definition or `devkit workflow next` logic changed.
+
+Verification: `test_role_contracts.py` asserts both texts (52 passed); the full suite passed (4461 passed, 14 skipped). Integration remains a separate Host step.
