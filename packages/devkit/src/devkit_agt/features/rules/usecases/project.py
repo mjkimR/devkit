@@ -232,7 +232,7 @@ def _run(
         has_work = True
     else:
         changed = expand_targets(workspace_root, cache, targets) if expand else [Path(t).as_posix() for t in targets]
-        has_work = bool(changed)
+        has_work = bool(changed or (snapshot is not None and bool(snapshot.deleted)))
     context: RuleContext | None = None
     if has_work:
         # Targets are already workspace-relative (``expand_targets`` or the snapshot's diff).
@@ -293,9 +293,9 @@ class RunProjectRulesUseCase(BaseUseCase):
         otherwise each entry is a file or directory (relative to ``root`` or
         absolute inside it) and directories expand to the files under them. An
         empty selection checks nothing. ``[rules] exclude`` applies either way.
-        With explicit targets, a rule declaring ``inputs`` that no target matches
-        is skipped (``ProjectRun.skipped``, ``evaluate_rules``); snapshot runs
-        evaluate every rule.
+        With explicit targets or in a snapshot run, a rule declaring ``inputs``
+        that no target or deleted path matches is skipped (``ProjectRun.skipped``,
+        ``evaluate_rules``); whole-workspace runs evaluate every rule.
 
         With ``snapshot`` (from ``git_snapshot(root, ...)``) the snapshot's tree is
         materialized into a temporary directory that becomes the workspace: the

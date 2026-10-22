@@ -109,16 +109,57 @@ def test_a_declared_rule_no_target_matches_is_skipped() -> None:
         (("src/a.py",), {}),  # a matching target
         (("docs/a.md", "src/a.py"), {"exclude": ("src/**",)}),  # matched before [rules] exclude removes it
         (("docs/a.md", ".devkit/config.toml"), {}),  # project policy can change any rule's findings
+        (("docs/a.md", ".devkit/installation.json"), {}),  # installation receipt changes loaded rules
         ((), {}),  # the whole workspace
-        (("docs/a.md",), {"snapshot": _snapshot()}),  # a Git snapshot gate
+        (
+            ("src/a.py",),
+            {"snapshot": Snapshot(ROOT, "staged", "0" * 40, "1" * 40, ("src/a.py",), (), ())},
+        ),  # snapshot matching changed
+        (
+            (),
+            {"snapshot": Snapshot(ROOT, "staged", "0" * 40, "1" * 40, (), ("src/old.py",), ())},
+        ),  # snapshot matching deleted
+        (
+            (".devkit/config.toml",),
+            {"snapshot": Snapshot(ROOT, "staged", "0" * 40, "1" * 40, (".devkit/config.toml",), (), ())},
+        ),  # snapshot config
+        (
+            (".devkit/installation.json",),
+            {"snapshot": Snapshot(ROOT, "staged", "0" * 40, "1" * 40, (".devkit/installation.json",), (), ())},
+        ),  # snapshot receipt
     ],
-    ids=["matching", "excluded-matching", "config", "whole-workspace", "snapshot"],
+    ids=[
+        "matching",
+        "excluded-matching",
+        "config",
+        "receipt",
+        "whole-workspace",
+        "snapshot-matching",
+        "snapshot-deleted",
+        "snapshot-config",
+        "snapshot-receipt",
+    ],
 )
 def test_every_other_run_evaluates_the_declared_rule(targets: tuple[str, ...], options: dict[str, Any]) -> None:
     declared, undeclared = Probe("RULE-python", inputs=("**/*.py",)), Probe("RULE-any")
     result = evaluate_rules(_ctx(*targets, **options), [declared, undeclared])
     assert (declared.calls, undeclared.calls) == (1, 1)
     assert result.skipped == []
+
+
+def test_a_snapshot_run_no_diff_path_matches_is_skipped() -> None:
+    declared, undeclared = Probe("RULE-python", inputs=("**/*.py",)), Probe("RULE-any")
+    snapshot = Snapshot(ROOT, "staged", "0" * 40, "1" * 40, ("docs/a.md",), (), ())
+    result = evaluate_rules(_ctx("docs/a.md", snapshot=snapshot), [declared, undeclared])
+    assert (declared.calls, undeclared.calls) == (0, 1)
+    assert result.skipped == ["RULE-python"] and result.ok
+
+
+def test_snapshot_deleted_paths_are_not_in_targets() -> None:
+    snapshot = Snapshot(ROOT, "staged", "0" * 40, "1" * 40, (), ("src/old.py",), ())
+    ctx = _ctx(snapshot=snapshot)
+    assert ctx.targets == () and ctx.changed_files == []
+    assert not ctx.is_file_targeted("src/old.py")
 
 
 def test_a_root_level_file_matches_a_double_star_pattern() -> None:

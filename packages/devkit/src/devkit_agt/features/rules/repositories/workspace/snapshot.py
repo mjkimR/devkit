@@ -88,7 +88,7 @@ def _changes(root: Path, prior: str, tree: str) -> tuple[list[str], list[str]]:
     for status, name in zip(parts[0::2], parts[1::2], strict=True):
         path = _decode(name)
         changed.append(path)
-        if status.startswith(b"D"):
+        if status.startswith((b"D", b"T")):
             deleted.append(path)
     return changed, deleted
 

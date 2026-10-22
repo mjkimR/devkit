@@ -419,7 +419,7 @@ def test_explicit_targets_skip_a_declared_rule_none_of_them_matches(tmp_path: Pa
     assert whole.skipped == [] and [v.file for v in whole.result.violations] == ["src/seeded.py"]
 
 
-def test_a_snapshot_gate_evaluates_a_declared_rule_for_documentation_changes(tmp_path: Path) -> None:
+def test_a_snapshot_gate_skips_a_declared_rule_for_documentation_changes(tmp_path: Path) -> None:
     root = _committed_repo(tmp_path)
     _write(root, "rules/python/__init__.py", PYTHON_RULE.format(inputs='("**/*.py",)'))
     _git(root, "add", "rules")
@@ -427,6 +427,19 @@ def test_a_snapshot_gate_evaluates_a_declared_rule_for_documentation_changes(tmp
     _write(root, "docs/c.md", "# C\n")
     _git(root, "add", "docs/c.md")
     run = run_project_rules(root, snapshot=git_snapshot(root, staged=True), rules_dir=root / "rules")
+    assert run.skipped == ["RULE-python"] and run.result.violations == []
+
+
+def test_a_snapshot_gate_evaluates_a_declared_rule_for_deletion_only_changes(tmp_path: Path) -> None:
+    root = _committed_repo(tmp_path)
+    _write(root, "rules/python/__init__.py", PYTHON_RULE.format(inputs='("**/*.py",)'))
+    _write(root, "src/a.py", "x = 1\n")
+    _git(root, "add", "rules", "src/a.py")
+    _git(root, "-c", "user.email=a@b", "-c", "user.name=a", "commit", "-qm", "setup")
+    _git(root, "rm", "src/a.py")
+    snapshot = git_snapshot(root, staged=True)
+    assert snapshot.changed == () and snapshot.deleted == ("src/a.py",)
+    run = run_project_rules(root, snapshot=snapshot, rules_dir=root / "rules")
     assert run.skipped == [] and [v.rule_id for v in run.result.violations] == ["RULE-python"]
 
 
