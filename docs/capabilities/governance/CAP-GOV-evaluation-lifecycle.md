@@ -21,7 +21,7 @@ Related: `CAP-GOV-rules-engine`, `CAP-GOV-rule-authoring`,
 
 1. Build the `RuleContext` and `WorkspaceCache`; a Git snapshot gate first materializes the staged or CI tree and uses it as the root (section 6).
 2. Load rules (`CAP-GOV-rule-authoring`) and validate the project policy: phase overrides, severity overrides, typed settings and `exclude` patterns, together with every rule's `inputs` declaration. Any loading or policy problem stops the run before a rule executes.
-3. Select the active rules for the phase (`linter` or `hygiene`), leave out those explicit targets cannot affect (target scoping, section 3), and run their checks, collecting violations and execution errors.
+3. Select the active rules for the phase (`linter` or `hygiene`), leave out those explicit targets or snapshot diff candidate paths cannot affect (target scoping, section 3), and run their checks, collecting violations and execution errors.
 4. With `fix` (not `--dry-run`) and no execution error, run each selected `Autofixable.fix()` once, sequentially, then recheck once (section 2).
 5. Return the final violations and errors.
 
