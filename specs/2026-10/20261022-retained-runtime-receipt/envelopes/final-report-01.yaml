@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-22T05:13:57.587645Z'
+status: completed
+summary: Integration refuses a source that changes the receipt reader with INTEGRATION_RECEIPT_READER_CHANGED (CLI route from the source's code under separate authority) before the readiness provider, and a retained MCP service refuses non-read-only tools with MCP_RUNTIME_STALE (restart or reconnect) once a loaded devkit module differs from the installed source recorded at start; receipt validation stays strict and FB-retained-runtime-receipt-schema is resolved
+findings: []
+assumptions:
+- No live retained Codex or Claude MCP service was restarted against a changed install; MCP_RUNTIME_STALE is verified in-process through the SDK handler
+- 'INTEGRATION_RECEIPT_READER_CHANGED and MCP_RUNTIME_STALE use actor USER (INTERACTION): the user grants the CLI-route authority or restarts or reconnects the host''s MCP service'
+- The use case extension for the two codes is waived in reconcile.md and tracked as FB-integration-usecase-coded-extensions
+checks:
+  tests: 'PASS just test-affected mode=full: 4645 passed, 14 skipped (code unchanged since that run; later commits touch only the unit directory)'
+  build: 'PASS just smoke; just check agt, dist, mcp: 0 errors'
+  lint: PASS just lint-check agt, dist, mcp; uv run devkit rules check --ci --base 14d8e5a9; git diff --check
+diff_scope:
+  base: 14d8e5a9ede28cb3196ae5045fc87137b0517385
+  head: 971ed272029be23cf8316f1976ba73eec131a7c4
+activity_effort: medium
