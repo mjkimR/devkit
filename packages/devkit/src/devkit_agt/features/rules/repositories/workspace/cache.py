@@ -1,4 +1,4 @@
-"""Session cache of workspace files, frontmatter, links and the document catalog.
+"""Session cache of workspace files, frontmatter, links, parsed Python and the document catalog.
 
 File discovery skips dependency and cache directories and the hash-pinned
 copies ``devkit sync`` owns (``.devkit/managed/`` and ``.devkit/overrides/``),
@@ -19,6 +19,7 @@ compared in NFC, and a file reached under both spellings is listed once.
 
 from __future__ import annotations
 
+import ast
 import os
 import unicodedata
 from collections.abc import Iterable
@@ -48,10 +49,14 @@ def _nfc(name: str) -> str:
 
 
 class WorkspaceCache:
-    """In-memory workspace cache for file listings, bytes, text, frontmatter, links and the catalog.
+    """In-memory workspace cache for file listings, bytes, text, frontmatter, links, parsed Python and the catalog.
 
     Reads go through the cache and writes through ``write_text``; ``invalidate``
     drops one file (and every derived index), ``invalidate_all`` everything.
+    Each path argument is resolved (symlinks followed) once between
+    invalidations: the cache assumes the workspace does not change outside it
+    during a run, so a symlink retargeted without an invalidation keeps the
+    target it first resolved to. ``write_text`` always resolves afresh.
     """
 
     def __init__(self, workspace_root: Path | None = None, *, git_filter: bool = True) -> None:
@@ -64,22 +69,33 @@ class WorkspaceCache:
         self._text_cache: dict[str, str] = {}
         self._frontmatter_cache: dict[str, dict[str, Any] | None] = {}
         self._links_cache: dict[str, list[MarkdownLink]] = {}
+        # A parsed module, or the type and arguments of the error its parse raised.
+        self._ast_cache: dict[str, ast.Module | tuple[type[Exception], tuple[Any, ...]]] = {}
+        # The resolved path of each path argument as given, until the next invalidation.
+        self._resolved: dict[str | Path, Path] = {}
         self._catalog: DocumentCatalog | None = None
         self._files_cache: dict[tuple[Path, tuple[str, ...] | None], list[Path]] = {}
 
-    def _resolve_path(self, path: str | Path) -> Path:
+    def _resolve_fresh(self, path: str | Path) -> Path:
         p = Path(path)
         if not p.is_absolute():
             p = self.workspace_root / p
         return p.resolve()
 
+    def _resolve_path(self, path: str | Path) -> Path:
+        """``path`` resolved against the workspace root, once per path argument until an invalidation."""
+        resolved = self._resolved.get(path)
+        if resolved is None:
+            resolved = self._resolved[path] = self._resolve_fresh(path)
+        return resolved
+
     def _key(self, path: str | Path) -> str:
         return self._resolve_path(path).as_posix()
 
     def read_bytes(self, path: str | Path) -> bytes:
-        key = self._key(path)
+        resolved = self._resolve_path(path)
+        key = resolved.as_posix()
         if key not in self._bytes_cache:
-            resolved = self._resolve_path(path)
             if not resolved.is_file():
                 raise FileNotFoundError(f"File not found: {resolved}")
             self._bytes_cache[key] = resolved.read_bytes()
@@ -110,7 +126,7 @@ class WorkspaceCache:
         installation receipt pins their hashes, so writing one raises
         ``PinnedWriteError`` (``RULES_PINNED_WRITE_REFUSED``, ``BLOCKED``).
         """
-        resolved = self._resolve_path(path)
+        resolved = self._resolve_fresh(path)
         if not resolved.is_relative_to(self.workspace_root):
             raise UnsafePathError(
                 f"refusing to write outside the workspace root {self.workspace_root}: {path} resolves to {resolved}",
@@ -128,6 +144,37 @@ class WorkspaceCache:
         self.invalidate(path)
         self._text_cache[key] = content
         self._bytes_cache[key] = data
+
+    def get_python_ast(self, path: str | Path) -> ast.Module:
+        """The parsed module of a Python file, shared by every caller for the run: never modify it.
+
+        The file's bytes are parsed once as CPython reads source (a BOM and a
+        PEP 263 coding cookie are honoured), under its workspace-relative POSIX
+        name (the resolved absolute path for a file outside the workspace). A
+        ``SyntaxError`` or ``ValueError`` from the parse is remembered and
+        raised again, as a fresh exception of the same type and arguments, on
+        every later call. A missing file raises ``FileNotFoundError`` like
+        ``read_bytes`` and is not remembered. ``invalidate`` and
+        ``invalidate_all`` drop the tree or the error.
+        """
+        resolved = self._resolve_path(path)
+        key = resolved.as_posix()
+        outcome = self._ast_cache.get(key)
+        if outcome is None:
+            data = self.read_bytes(path)
+            try:
+                name = resolved.relative_to(self.workspace_root).as_posix()
+            except ValueError:
+                name = key
+            try:
+                outcome = ast.parse(data, filename=name)
+            except (SyntaxError, ValueError) as exc:
+                outcome = (type(exc), exc.args)
+            self._ast_cache[key] = outcome
+        if isinstance(outcome, ast.Module):
+            return outcome
+        error_type, args = outcome
+        raise error_type(*args)
 
     def get_frontmatter(self, path: str | Path) -> dict[str, Any] | None:
         """The YAML frontmatter mapping of a file (``devkit_core.core.frontmatter`` grammar), or ``None``.
@@ -254,11 +301,13 @@ class WorkspaceCache:
         return not path.is_symlink() or path.resolve().is_relative_to(self.workspace_root)
 
     def invalidate(self, path: str | Path) -> None:
+        self._resolved.clear()
         key = self._key(path)
         self._bytes_cache.pop(key, None)
         self._text_cache.pop(key, None)
         self._frontmatter_cache.pop(key, None)
         self._links_cache.pop(key, None)
+        self._ast_cache.pop(key, None)
         self._catalog = None
         self._files_cache.clear()
         self._git_files_loaded = False
@@ -268,6 +317,8 @@ class WorkspaceCache:
             self.invalidate(p)
 
     def invalidate_all(self) -> None:
+        self._resolved.clear()
+        self._ast_cache.clear()
         self._bytes_cache.clear()
         self._text_cache.clear()
         self._frontmatter_cache.clear()

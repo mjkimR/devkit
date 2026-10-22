@@ -175,7 +175,11 @@ class AdvisoryUniqueCodeRule(BaseRule):
             settings: UniqueCodeSettings = ctx.settings(self, rel)
             if any(match_path(pattern, rel) for pattern in settings.exclude):
                 continue
-            module = parse_module(rel, ctx.cache.read_text(path))
+            try:
+                tree = ctx.cache.get_python_ast(path)
+            except (SyntaxError, ValueError):
+                continue  # the linter of the language reports it
+            module = parse_module(rel, tree)
             if module is not None:
                 modules.append(module)
                 bases[rel] = settings.bases

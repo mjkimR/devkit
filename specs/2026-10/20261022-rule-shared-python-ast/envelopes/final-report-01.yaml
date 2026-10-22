@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T07:55:54.328798Z'
+status: completed
+summary: WorkspaceCache.get_python_ast shares one parsed tree or memoized parse error per file and run; the architecture, usecase-boundaries, unique_code and four catalog cli_tool rules parse through it; the cache memoizes path resolution until an invalidation (write_text resolves afresh) and RuleContext resolves only lexically outside paths. Exec-mode parses 1,529 to 539, devkit rules check --format json byte-identical, median wall time 4.02 s to 3.05 s (-0.97 s).
+findings: []
+assumptions:
+- AC-10 was timed sequentially in this worktree (before on base 47993c48, after on the change), not interleaved against main; the Host repeats the measurement on main after integration (spec Assumption 2)
+- Accepted edge-case changes (BOM, PEP 263 cookie, invalid UTF-8, usecase-boundaries abort message naming the file) apply to no file in this repository
+checks:
+  tests: 'PASS just test-affected mode=partial: 2699 passed; uv run devkit rules test: 21/21 passed'
+  build: 'PASS just smoke; just check devkit, devkit-dist, devkit-dev, devkit-catalog: 0 errors'
+  lint: PASS just lint-check; uv run devkit rules check --ci --base 47993c48; devkit sync --check; git diff --check
+diff_scope:
+  base: 47993c489113856db681b9b965cbd9f871f833b7
+  head: 585a8cafe379e0aa205b83b43c440b0c31b1dd80
+activity_effort: medium

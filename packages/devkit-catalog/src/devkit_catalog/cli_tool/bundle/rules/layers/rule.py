@@ -164,8 +164,8 @@ class LayersRule(BaseRule):
                 or (place.kind == "feature" and place.part == "cli")
             )
             try:
-                tree = ast.parse(ctx.cache.read_text(path), filename=rel)
-            except SyntaxError:
+                tree = ctx.cache.get_python_ast(path)
+            except (SyntaxError, ValueError):
                 continue  # the linter of the language reports it
             for node, top in _imports(list(tree.body), True):
                 for target in _targets(node, package, below):

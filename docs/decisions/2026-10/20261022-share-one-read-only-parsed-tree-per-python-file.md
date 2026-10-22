@@ -1,15 +1,15 @@
 ---
-id: PADR-share-one-read-only-parsed-tree-per-python-file
+id: ADR-share-one-read-only-parsed-tree-per-python-file
 title: Share one read-only parsed tree per Python file
 summary: For Python-source rules that each parse every file, we hand every rule the same cached ast.Module and require it to stay unmodified, to keep the parse saving (copying all trees costs more than parsing them), accepting that a rule that mutates a tree would corrupt later rules' input.
-proposal: PROP-rule-shared-python-ast
-status: draft
+proposal: SPEC-rule-shared-python-ast
+status: accepted
 created_at: 2026-10-22
 ---
 
-# [PADR-share-one-read-only-parsed-tree-per-python-file] Share one read-only parsed tree per Python file
+# [ADR-share-one-read-only-parsed-tree-per-python-file] Share one read-only parsed tree per Python file
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-22
 
 ---

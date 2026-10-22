@@ -75,8 +75,8 @@ class CommandBoundaryRule(BaseRule):
             if not any(match_path(pattern, rel) for pattern in settings.cli_modules):
                 continue
             try:
-                tree = ast.parse(ctx.cache.read_text(path), filename=rel)
-            except SyntaxError:
+                tree = ctx.cache.get_python_ast(path)
+            except (SyntaxError, ValueError):
                 continue  # the linter of the language reports it
             names = set(settings.boundary_names)
             for node in ast.walk(tree):

@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T07:54:13.798237Z'
+status: completed
+summary: 'Implementer self-verified the round-1 P3 fix in fa9344c7: CAP-GOV-rule-authoring §2 names the resolved absolute path for an outside file and CAP-GOV-rules-engine principle 3 says remembered parse error; wording only, matching cache.py, so no repeat reviewer call. reconcile.md resolved.'
+findings: []
+checks:
+  reconcile: PASS round-1 finding 1 resolved (implementer)
+  lint: PASS devkit rules check --ci --base 47993c48
+diff_scope:
+  base: 47993c489113856db681b9b965cbd9f871f833b7
+  head: fa9344c7fe4c9197381bd662e85acac383fdfe2e
+activity_effort: medium

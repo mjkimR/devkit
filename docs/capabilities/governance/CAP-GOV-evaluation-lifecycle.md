@@ -28,7 +28,7 @@ Related: `CAP-GOV-rules-engine`, `CAP-GOV-rule-authoring`,
 ## 2. Autofix and Convergence
 
 - **One repair pass, one recheck.** There is no repair loop, so a run always terminates with a predictable cost. The recheck evaluates the active rules target scoping selects for the targets plus the files the fixes modified, so a fix that writes a skipped rule's input is rechecked by that rule; after a failed fix, whose writes are unknown, it evaluates every active rule.
-- **Cache invalidation.** The paths a fixer returns are invalidated in `WorkspaceCache` (bytes, text, frontmatter, links) and dependent catalog indexes are refreshed before the recheck. A failed fix clears the whole cache and rechecks disk contents; it does not roll back writes.
+- **Cache invalidation.** The paths a fixer returns are invalidated in `WorkspaceCache` (bytes, text, frontmatter, links, parsed Python, and every remembered path resolution) and dependent catalog indexes are refreshed before the recheck. A failed fix clears the whole cache and rechecks disk contents; it does not roll back writes.
 - **Convergence.** A fixable finding is marked fixed only when the recheck reports fewer findings with the same rule, file and message (lines may move during a fix); whatever a failed or partial fix left is reported as remaining.
 - **No unsafe writes.** A file that is not valid UTF-8 is left untouched, writes keep every other byte (line endings included), and nothing under `.devkit/managed/` or `.devkit/overrides/` (copies pinned by the installation receipt) is written.
 - **Malformed frontmatter is not a run failure.** The document catalog records it in `frontmatter_errors` and keeps indexing; a bundle rule that requires valid frontmatter reports it as its own violation.

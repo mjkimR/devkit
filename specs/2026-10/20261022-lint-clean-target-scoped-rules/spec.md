@@ -71,7 +71,7 @@ report them.
 1. **Scope Excluded**: scoping Git snapshot runs (`check --staged`, `check --ci`); deleted paths are not targets there.
 2. **Scope Excluded**: declaring `inputs` on the Markdown rules or the `devkit-catalog` `cli_tool` rules.
 3. **Scope Excluded**: making the target-ignoring rules report only targeted files, or parsing Python faster (that is
-   `PROP-rule-shared-python-ast`, including any `WorkspaceCache.get_python_ast` accessor).
+   `SPEC-rule-shared-python-ast`, including any `WorkspaceCache.get_python_ast` accessor).
 4. **Scope Excluded**: new output fields in `devkit rules check` or `fix` stdout or JSON, and any change to the
    workflow feature (`lint-clean` gains scoping through `run_project_rules`).
 
@@ -168,6 +168,6 @@ report them.
 
 ## 6. Sequencing
 
-`PROP-rule-shared-python-ast` changes how the three rules read Python; this unit changes whether they run and adds
+`SPEC-rule-shared-python-ast` changes how the three rules read Python; this unit changes whether they run and adds
 one constructor argument to each. There is no design dependency. That sibling lands after this unit and rebases the
 three rule modules and the governance capabilities onto it.

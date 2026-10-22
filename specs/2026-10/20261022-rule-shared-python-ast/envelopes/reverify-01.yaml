@@ -1,0 +1,27 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T07:51:42.607663Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified both P3 fixes in 3d76add2: CAP-GOV-rules-engine principle 3 names parsed Python and the per-run resolution memo; spec.md assumptions numbered in order. Documentation only, no code change, so no repeat reviewer call.'
+findings:
+- issue: CAP-GOV-rules-engine principle 3 still lists the session cache contents without parsed Python or per-run path resolution.
+  evidence: docs/capabilities/governance/CAP-GOV-rules-engine.md:23
+  failure_condition: A reader of section 1 sees the cache hold only file lists, bytes, text, frontmatter and links, disagreeing with section 2 and cache.py.
+  suggested_action: Extend principle 3 with parsed Python and the per-run path resolution memo.
+  resolution: resolved
+  severity: P3
+- issue: 'The Assumptions list in spec.md is numbered out of order: item 6 sits between items 3 and 4.'
+  evidence: specs/2026-10/20261022-rule-shared-python-ast/spec.md:163
+  failure_condition: A reference to an assumption by number points to the wrong place in reading order.
+  suggested_action: Move the BOM/basename assumption after item 5.
+  resolution: resolved
+  severity: P3
+checks:
+  lint: PASS devkit rules check --ci --base 47993c48
+diff_scope:
+  base: 47993c489113856db681b9b965cbd9f871f833b7
+  head: 3d76add285563e7fb7eae42ca4e4a8ecd4ca8d83
+activity_effort: medium

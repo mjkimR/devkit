@@ -83,7 +83,7 @@ interpreter on Apple M4 Pro, median of three:
 | `.venv/bin/devkit workflow next --unit specs/2026-10/20261022-writing-style-rules` | 3.65 s |
 | the same command in a fresh process with the three rules' skip simulated in `evaluate_rules` | 1.37 s |
 
-## 6. Overlap with `PROP-rule-shared-python-ast`
+## 6. Overlap with `SPEC-rule-shared-python-ast`
 
 That proposal shares one `ast.parse` per file through `WorkspaceCache`; it changes how the Python rules read, not
 whether they run. The two touch the same three rule modules (here: one constructor argument each) and compose: after

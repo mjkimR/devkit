@@ -75,14 +75,10 @@ def _record_import(module: Module, node: ast.Import | ast.ImportFrom, imports: I
             imports.setdefault(alias.asname or alias.name, (source, alias.name))
 
 
-def parse_module(rel: str, text: str) -> Module | None:
-    """Index ``text`` as the module at ``rel``; ``None`` when it does not parse or names no module."""
+def parse_module(rel: str, tree: ast.Module) -> Module | None:
+    """Index ``tree``, the parsed module at ``rel`` (shared: never modified); ``None`` when ``rel`` names no module."""
     name, is_package = module_name(rel)
     if not name:
-        return None
-    try:
-        tree = ast.parse(text, filename=rel)
-    except (SyntaxError, ValueError):
         return None
     module = Module(name=name, file=rel, package=name if is_package else name.rpartition(".")[0], tree=tree)
     for node in _top_level(tree.body):

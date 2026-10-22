@@ -1,0 +1,21 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T07:53:58.201288Z'
+status: completed
+summary: 'reconcile-reviewer round 1: all three targets reflected, no-impact claims and the cache.py entrypoint hold; one P3 wording gap in CAP-GOV-rule-authoring and CAP-GOV-rules-engine'
+findings:
+- issue: CAP-GOV-rule-authoring §2 says get_python_ast parses under the workspace-relative name without the outside-workspace case; CAP-GOV-rules-engine principle 3 says a remembered syntax error although a ValueError is remembered too.
+  evidence: docs/capabilities/governance/CAP-GOV-rule-authoring.md:182, docs/capabilities/governance/CAP-GOV-rules-engine.md:23, cache.py get_python_ast
+  failure_condition: A rule author passing an outside absolute path expects a workspace-relative SyntaxError filename; a reader assumes a ValueError is not cached.
+  suggested_action: Add the resolved-absolute-path case to rule-authoring §2 and say 'parse error' in rules-engine principle 3.
+  resolution: open
+  severity: P3
+checks:
+  reconcile: PASS targets, no-impact claims and entrypoint verified against 47993c48..61eb58c5
+  lint: PASS devkit rules check docs/capabilities/governance and the unit
+diff_scope:
+  base: 47993c489113856db681b9b965cbd9f871f833b7
+  head: 61eb58c59217f03a065e5b071d08a03611b3bc62
+activity_effort: medium

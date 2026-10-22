@@ -64,5 +64,5 @@ targets:
 ## Deferred work
 
 None. The follow-ups both ADRs name have their own triggers and are not deferred work of this spec: declaring the
-Markdown rules' inputs, and scoping snapshot runs with deleted paths. `PROP-rule-shared-python-ast` is queued
+Markdown rules' inputs, and scoping snapshot runs with deleted paths. `SPEC-rule-shared-python-ast` is queued
 separately.

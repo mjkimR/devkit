@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-rule-shared-python-ast
+by: user
+at: '2026-10-22T07:15:11.912855Z'
