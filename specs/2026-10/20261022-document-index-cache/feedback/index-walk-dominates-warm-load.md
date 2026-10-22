@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/features/documents/repositories/ind
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -46,3 +46,5 @@ cProfile, warm load (0.164 s under the profiler), by internal time:
   pathlib relative_to 701 calls 0.048 s cumulative; pathlib __init__ 11514 calls
 In-process medians without the profiler: warm 53.3 ms, no memo 315.2 ms.
 ```
+
+- **Disposition (resolved)**: Replaced `os.walk` and repetitive `pathlib.Path` relative calculations with an `os.scandir` DFS walk in `_files` that carries workspace-relative POSIX paths and leverages cached `DirEntry.is_symlink`/`is_file`/`is_dir` results, cutting walk time from ~41.5 ms down to ~6.6 ms (84% walk speedup) while preserving exact directory and file order and `CAP-DOCS-document-model` 3.1 exclusions. Covered by updated `test_only_documents_under_docs_and_specs_are_indexed`, `test_symlinked_source_directory_is_skipped`, and `test_walk_traversal_deterministic_order` in `packages/devkit-spec/tests/integration/features/documents/test_index.py`.
