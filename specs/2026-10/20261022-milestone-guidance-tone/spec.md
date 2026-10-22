@@ -2,7 +2,7 @@
 id: SPEC-milestone-guidance-tone
 title: Recommend coarse milestones and allow merging small ones
 summary: "Softens the milestone granularity guidance from SHOULD rules to recommendations and lets small milestones of any status merge into a broader theme that keeps their IDs as aliases, while a done milestone's scope still extends only by reopening or another milestone."
-status: in-progress
+status: completed
 created: 2026-10-22
 related_capabilities:
   - CAP-DOCS-document-model
