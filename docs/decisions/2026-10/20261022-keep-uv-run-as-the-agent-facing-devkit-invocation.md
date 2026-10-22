@@ -1,16 +1,17 @@
 ---
-id: PADR-keep-uv-run-as-the-agent-facing-devkit-invocation
+id: ADR-keep-uv-run-as-the-agent-facing-devkit-invocation
 title: Keep uv run as the agent-facing devkit invocation
-summary: For agent guidance and hooks that call devkit, we keep uv run devkit as the documented form, to run the locked devkit from any directory and sync it after a lock change, accepting about 10-20 ms per call.
-proposal: PROP-direct-devkit-invocation
-status: draft
+summary: "For agent guidance that calls devkit, we keep uv run devkit as the documented form, to run the locked devkit from any directory and sync it after a lock change, accepting about 10-20 ms per call."
+status: accepted
 created_at: 2026-10-22
 ---
 
-# [PADR-keep-uv-run-as-the-agent-facing-devkit-invocation] Keep uv run as the agent-facing devkit invocation
+# [ADR-keep-uv-run-as-the-agent-facing-devkit-invocation] Keep uv run as the agent-facing devkit invocation
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-22
+- **Deciders**: the user, on the rejection of ~~`PROP-direct-devkit-invocation`~~ (Git `4672a101eec0`)
+- **Involved Components/Capabilities**: `capabilities/harness/`, `capabilities/distribution/`
 
 ---
 
@@ -61,4 +62,4 @@ Keep `uv run devkit` as the documented agent-facing form on every path.
 
 ## 6. Confirmation
 
-Review only: the measurements and failure probes in this proposal's `materials/invocation-forms.md`.
+Review only: the measurements and failure probes in the rejected proposal's `materials/invocation-forms.md` (Git `4672a101eec0`). A draft proposal that changes the documented invocation form cites a new measurement against this decision's follow-up threshold.

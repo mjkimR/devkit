@@ -37,7 +37,7 @@ created_at: 2026-10-22
 - **Versions**: Worktree revision 6f0d4600; uv 0.12.8.
 - **Conditions**: Claude Code planning worker; the shell inherited `VIRTUAL_ENV` from another project.
 - **Workarounds Attempted**: Prefixed every bare command with `uv run`; it worked.
-- **Related Assets**: `PROP-direct-devkit-invocation` (`materials/invocation-forms.md`), the `spec` bundle skills.
+- **Related Assets**: ~~`PROP-direct-devkit-invocation`~~ (`materials/invocation-forms.md`, Git `4672a101eec0`), `ADR-keep-uv-run-as-the-agent-facing-devkit-invocation`, the `spec` bundle skills.
 
 ## Evidence
 
