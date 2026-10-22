@@ -2,7 +2,7 @@
 id: SPEC-superseded-reference-cleanup
 title: Align leftover references with the current ownership and integration recoveries
 summary: Repoints the remaining references to devkit-dist as the foundation owner and to the superseded review loop ADR, adds the distinct integration recoveries of the retained runtime codes to the integration use case, and gives the reconcile reviewer read-only shell access to the diff it compares.
-status: in-progress
+status: completed
 created: 2026-10-22
 related_capabilities:
   - CAP-INT-mcp-services

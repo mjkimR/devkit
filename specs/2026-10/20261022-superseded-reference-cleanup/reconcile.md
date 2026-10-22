@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-superseded-reference-cleanup
-status: pending
+status: resolved
 targets:
   - file: docs/usecases/delivery/UC-drive-development-to-integration.md
     resolution: modified
