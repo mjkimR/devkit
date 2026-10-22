@@ -1,0 +1,18 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-22T05:14:12.554289Z'
+status: completed
+summary: Recorded the q1 answer, characterized both cases, reproduced them (Red), fixed them (INTEGRATION_RECEIPT_READER_CHANGED before the readiness provider; MCP_RUNTIME_STALE before non-read-only MCP tools), passed review after one P1 fix, reconciled CAP-MCP-runtime-registration and CAP-INT-mcp-services, resolved FB-retained-runtime-receipt-schema and recorded the final change report; ready for dev-integration (policy auto) through the Host
+findings: []
+checks:
+  tests: PASS just test-affected mode=full 4645 passed, 14 skipped
+  build: PASS just smoke; pyright agt, dist, mcp 0 errors
+  lint: PASS just lint-check agt, dist, mcp; devkit rules check --ci --base 14d8e5a9
+  review: PASS review-01 P1 resolved in reverify-01
+  reconcile: PASS reconcile-check-02 (P3 waived, tracked as FB-integration-usecase-coded-extensions)
+diff_scope:
+  base: 14d8e5a9ede28cb3196ae5045fc87137b0517385
+  head: f7f96ecb03b2bd199e198cefd0711d80916941cc
+activity_effort: medium
