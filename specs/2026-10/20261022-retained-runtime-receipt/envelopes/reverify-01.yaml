@@ -1,0 +1,22 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-22T05:07:53.659590Z'
+status: completed
+review: review-01.yaml
+summary: 'Finding 1 fixed and verified by the implementer: stale() checks only modules of the packages recorded at start; test_plugins_loaded_after_start_are_not_stale loads a devkit_rule plugin after build_server and a protected tool still runs; the reviewer''s probe now reports 0 stale modules after loading 15 managed rules'
+findings:
+- issue: The MCP_RUNTIME_STALE guard treats rule and gate plugin modules (devkit_rule_<sha>, devkit_gate_<sha>) loaded from .devkit/managed as unrecorded devkit modules, so every protected call after the first rules or gates load is refused although no installed code changed
+  evidence: packages/devkit-mcp/src/devkit_mcp/features/runtime/services/loaded_code.py (_devkit prefix match; unrecorded path counts as stale); packages/devkit-core/src/devkit_core/core/plugins.py (module_name <namespace>_<sha>); packages/devkit/src/devkit_agt/features/rules/services/registry.py (namespace devkit_rule)
+  failure_condition: 'In a retained devkit mcp serve process a protected tool loads rule or gate plugins, then a later protected tool is called: it is refused with MCP_RUNTIME_STALE naming devkit_rule_* modules (probe: record() -> RuleRegistry.discover_from_dir -> stale() gives 16 stale modules)'
+  suggested_action: Limit stale() to modules of the installed packages recorded at start (top-level names or import locations), keep the absent/unreadable/unrecorded/different conditions within that scope, and add a regression test that loads a devkit_rule plugin package after build_server and shows a protected tool is not refused
+  resolution: resolved
+  severity: P1
+checks:
+  tests: PASS just test mcp (21 passed)
+  lint: PASS just lint mcp, just check mcp
+diff_scope:
+  base: cf1d3a20a3a2448b34b8304036e80f778449252e
+  head: 4cf0c1477b48c621f639a613fef6b0da6075bbca
+activity_effort: medium

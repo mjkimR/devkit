@@ -1,0 +1,19 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-22T05:02:30.713639Z'
+status: completed
+summary: A reader-changing source is refused with INTEGRATION_RECEIPT_READER_CHANGED before the provider on both routes, and a retained server refuses protected tools with MCP_RUNTIME_STALE once a loaded devkit module changed; strict validation, RECEIPT_INVALID for corrupted receipts and read-only tools are preserved
+findings: []
+assumptions:
+- The two Red assertions on the advisory mode and dict path were adjusted with the fix (BLOCKED to INTERACTION, error.advisory fields); the reproduced failures happened before those assertions
+unverified_areas:
+- No live retained Codex or Claude MCP process was restarted against a changed install; the stale signal is verified in-process through the SDK handler
+checks:
+  resolved: 'PASS test_receipt_reader.py (4/4) and test_loaded_code.py (2/2): the reproduction conditions now give INTEGRATION_RECEIPT_READER_CHANGED and MCP_RUNTIME_STALE'
+  preserved: 'PASS just test-affected (mode=full fallback): 4644 passed, 14 skipped, including test_receipt.py, the integration, MCP runtime and shared transport suites'
+diff_scope:
+  base: 14d8e5a9ede28cb3196ae5045fc87137b0517385
+  head: ebd6b3f2b991fd8ab3c364cd4ca2f971385105ac
+activity_effort: medium

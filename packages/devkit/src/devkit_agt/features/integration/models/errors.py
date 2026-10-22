@@ -74,3 +74,14 @@ class ReceiptConflictError(IntegrationError):
         "Merge the target into the task branch in its worktree, run devkit sync there so the receipt matches the"
         " merged files, commit, re-verify and call integration_integrate again"
     )
+
+
+class ReceiptReaderChangedError(IntegrationError):
+    code = "INTEGRATION_RECEIPT_READER_CHANGED"
+    actor = Actor.USER
+    fix = (
+        "A runtime built from the target cannot read this source's receipt, and restarting the MCP service does not"
+        " help: obtain separately granted dev-integration authority for the CLI route, then run `devkit worktree"
+        " finish <branch> --merge --local-only` in the base checkout with a devkit runtime built from the source's"
+        " code. Do not edit the receipt or switch routes without that authority"
+    )

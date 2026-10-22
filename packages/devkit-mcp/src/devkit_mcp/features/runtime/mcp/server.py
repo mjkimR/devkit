@@ -1,4 +1,8 @@
-"""SDK-backed stdio transport. Tool approval never substitutes for a service's scoped confirmation."""
+"""SDK-backed stdio transport. Tool approval never substitutes for a service's scoped confirmation.
+
+The server records the installed devkit source when it is built (``devkit mcp serve`` start) and refuses every call
+other than ``read_only`` with ``MCP_RUNTIME_STALE`` once a loaded devkit module no longer matches it.
+"""
 
 from __future__ import annotations
 
@@ -21,12 +25,14 @@ from mcp.server.lowlevel import Server
 from mcp.server.stdio import stdio_server
 
 from devkit_mcp.features.runtime.usecases.discovery import load_tools
+from devkit_mcp.features.runtime.usecases.loaded_code import GuardLoadedCodeUseCase, RecordLoadedCodeUseCase
 
 
 def build_server(
     tools: dict[str, McpTool], binding: InvocationBinding | None = None, *, profile: str = "local"
 ) -> Server:
     server = Server("devkit", version=version("devkit-mcp"))
+    loaded_code = GuardLoadedCodeUseCase(RecordLoadedCodeUseCase().execute())
 
     @server.list_tools()
     async def list_tools() -> list[types.Tool]:
@@ -84,6 +90,7 @@ def build_server(
                 with invocation(binding) if binding is not None else nullcontext():
                     result = await tool.invoke(arguments, confirm)
             else:
+                loaded_code.execute()
                 with invocation(binding) if binding is not None else nullcontext():
                     guard_execution()
                     result = await tool.invoke(arguments, confirm)

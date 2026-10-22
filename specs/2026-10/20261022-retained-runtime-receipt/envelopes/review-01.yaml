@@ -1,0 +1,23 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-22T05:06:41.768472Z'
+status: completed
+summary: 'REVISE: AC-01, AC-02, AC-03 and AC-05 confirmed by test_receipt_reader.py, test_receipt.py and test_loaded_code.py; the stale guard counts devkit_rule_*/devkit_gate_* plugin modules loaded from .devkit/managed as unrecorded, so a retained service refuses protected tools after the first rules load'
+findings:
+- issue: The MCP_RUNTIME_STALE guard treats rule and gate plugin modules (devkit_rule_<sha>, devkit_gate_<sha>) loaded from .devkit/managed as unrecorded devkit modules, so every protected call after the first rules or gates load is refused although no installed code changed
+  evidence: packages/devkit-mcp/src/devkit_mcp/features/runtime/services/loaded_code.py (_devkit prefix match; unrecorded path counts as stale); packages/devkit-core/src/devkit_core/core/plugins.py (module_name <namespace>_<sha>); packages/devkit/src/devkit_agt/features/rules/services/registry.py (namespace devkit_rule)
+  failure_condition: 'In a retained devkit mcp serve process a protected tool loads rule or gate plugins, then a later protected tool is called: it is refused with MCP_RUNTIME_STALE naming devkit_rule_* modules (probe: record() -> RuleRegistry.discover_from_dir -> stale() gives 16 stale modules)'
+  suggested_action: Limit stale() to modules of the installed packages recorded at start (top-level names or import locations), keep the absent/unreadable/unrecorded/different conditions within that scope, and add a regression test that loads a devkit_rule plugin package after build_server and shows a protected tool is not refused
+  resolution: open
+  severity: P1
+assumptions:
+- Native code-reviewer subagent nested by the development-worker on claude-code; reviewed committed head cf1d3a20 with a clean worktree
+checks:
+  tests: PASS just test agt integration (127), just test mcp (20), just test dist test_receipt.py (70)
+  lint: PASS uv run devkit rules check --ci --base 14d8e5a9
+diff_scope:
+  base: 14d8e5a9ede28cb3196ae5045fc87137b0517385
+  head: cf1d3a20a3a2448b34b8304036e80f778449252e
+activity_effort: medium

@@ -9,7 +9,7 @@ entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/host/usecases/registrations.py
   - packages/devkit-core/src/devkit_core/base/mcp.py
 created: 2026-10-20
-updated: 2026-10-20
+updated: 2026-10-22
 ---
 
 # [CAP-MCP-runtime-registration] MCP Runtime and Project Registration
@@ -22,6 +22,14 @@ Services declare execution as read_only, bounded_write, preflight, interactive o
 interactive regardless of descriptive MCP annotations. Schema validation and duplicate/unloadable service failures
 remain deterministic. Native acceptance requires both accept and approve=true; decline, cancel, disconnect or
 missing negotiated form capability grants no authority. Stdout contains only protocol traffic during serve.
+
+The server records the installed devkit source when it starts: the SHA-256 of every Python file under the import
+locations of the top-level `devkit` namespace and each `devkit_*` package. Before every call other than read_only, a
+loaded module of those packages whose file is now absent, unreadable, unrecorded or different refuses the call with
+`MCP_RUNTIME_STALE`, naming the stale modules, before execution guards and the tool run; its directive is to restart
+or reconnect the retained service. Files the process never imported and rule or gate plugins loaded from managed
+assets do not count. The server never re-imports, restarts or reselects a runtime itself, and the refusal grants no
+authority. Read-only tools keep running.
 
 The launch descriptor names three distinct locations: retained executable/import installation, retained executor
 checkout and owning configuration workspace. The executor and workspace must share verified common Git identity.

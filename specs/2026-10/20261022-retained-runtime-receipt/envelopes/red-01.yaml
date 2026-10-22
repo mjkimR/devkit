@@ -1,0 +1,14 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-22T04:57:25.998410Z'
+status: completed
+summary: 'Both cases reproduced as characterized: a reader-changing source is refused with the provider''s RECEIPT_INVALID on the local and pull-request routes, and a protected MCP tool runs after a loaded devkit module changed on disk'
+findings: []
+checks:
+  reproduced: PASS test_receipt_reader.py (2 reader-change tests fail with RECEIPT_INVALID instead of INTEGRATION_RECEIPT_READER_CHANGED) and test_loaded_code.py::test_changed_loaded_module_refuses_protected_tools (the protected tool runs with stale code) fail as characterized; the preservation tests pass
+diff_scope:
+  base: 14d8e5a9ede28cb3196ae5045fc87137b0517385
+  head: 33518046b7ed5940b1c564d64fd1d9faba1f41d0
+activity_effort: medium

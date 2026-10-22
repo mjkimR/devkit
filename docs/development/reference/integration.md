@@ -44,6 +44,7 @@ and `already_merged`), `plan_finish`, `validate_finish` (`result=`, `target=`), 
 | `INTEGRATION_REQUEST_STALE` | Inspect completed progress and approve a new request for the remaining scope |
 | `INTEGRATION_TARGET_MOVED` | Nothing changed: resume while the target equals the last build target, else integrate again |
 | `INTEGRATION_RECEIPT_CONFLICT` | Merge the target into the branch, re-sync, re-verify and integrate again |
+| `INTEGRATION_RECEIPT_READER_CHANGED` | The source changes the receipt reader and its receipt only that reader accepts; restarting the service does not help. With separately granted authority, run the CLI route (`devkit worktree finish <branch> --merge --local-only`) from the source's code |
 | `INTEGRATION_AUTHORITY_REQUIRED` | Read the refusal: auto permits local execution only; resolve prospective policy revocation before retrying, never switch authority to bypass it. Otherwise call integrate for fresh shared-policy authorization or native ask confirmation; resume only an authorized retained request |
 | `INTEGRATION_CLEANUP_UNSCOPED` | Adapt the named legacy post-finish extension before approval |
 | `INTEGRATION_CLEANUP_INCOMPLETE` | Resolve the scoped cleanup condition and resume the same approved request |

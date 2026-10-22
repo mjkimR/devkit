@@ -1,0 +1,17 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-bugfix
+stage: intent
+note: 'Goal: resolve FB-retained-runtime-receipt-schema. A retained MCP integration
+  service whose loaded devkit code predates a receipt or configuration schema change
+  must not fail with an undiagnosed RECEIPT_INVALID: detect that the running runtime
+  is older than the installed or source version it reads, and refuse with a stable
+  UPPER_SNAKE code and a deterministic [ACTION] directing a service restart or re-registration.
+  Constraints: receipt validation stays strict (no unknown-key tolerance); no automatic
+  route substitution, runtime refresh or change of execution authority. Expected bugfix
+  behavior: reproduce the mismatch as a failing test first, then the diagnostic passes.
+  Living Spec: CAP-MCP-runtime-registration and CAP-INT-mcp-services state the diagnosis.
+  task-kind bugfix, planning-depth spec, activity-effort medium.'
+by: user
+at: '2026-10-22T04:34:52.570154Z'

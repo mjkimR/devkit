@@ -10,7 +10,8 @@ agent: codex
 origin: agent
 severity: blocked
 recurring: false
-status: open
+status: resolved
+resolved_at: 2026-10-22
 created_at: 2026-10-21
 ---
 
@@ -41,3 +42,5 @@ integration_integrate: RECEIPT_INVALID
 Feature sync --check: workspace matches the selection
 Host affected fallback: 4271 passed, 14 skipped
 ```
+
+- **Disposition**: `SPEC-retained-runtime-receipt`: a source that changes the receipt reader is refused before the readiness provider with `INTEGRATION_RECEIPT_READER_CHANGED` and a CLI-route directive under separately granted authority; a retained MCP service whose loaded devkit code differs from the installed code refuses protected tools with `MCP_RUNTIME_STALE` and a restart or reconnect directive. Receipt validation stays strict and authority is unchanged; verified by `test_receipt_reader.py` and `test_loaded_code.py`

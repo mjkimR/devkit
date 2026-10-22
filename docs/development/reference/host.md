@@ -53,6 +53,7 @@ and host validation. Setup does not prove native UI support.
 | `MCP_REGISTRATION_CONFLICT` | Inspect edited/unowned entries or journal/ledger state; restore exact ownership before sync |
 | `MCP_REGISTRATION_UNAVAILABLE` | Keep host-owned files unchanged; use host setup or an independently authorized CLI/PR route |
 | `MCP_RUNTIME_UNAVAILABLE` | Install/select a retained runtime with matching service packages, then reconcile |
+| `MCP_RUNTIME_STALE` | The serving process loaded devkit code that differs from the installed code; restart or reconnect the service, then call again (read-only tools still run) |
 | `MCP_WORKSPACE_UNAVAILABLE` | Reconnect from an existing retained checkout; inspect partial effects |
 | `MCP_INTERACTIVE_UNAVAILABLE` | Use a local interactive Host or independently authorized CLI/PR route |
 | `HOST_MCP_FAILED` | Correct installed service entry points/runtime and reconnect |

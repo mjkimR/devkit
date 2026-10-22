@@ -27,6 +27,7 @@ from devkit_agt.features.integration.models.errors import (
     ProviderError,
     ReadinessError,
 )
+from devkit_agt.features.integration.repositories.receipts import check_reader
 
 CONFIG_PATH = ".devkit/config.toml"
 DISCLOSURE_LIMIT = 200
@@ -141,8 +142,11 @@ def check(value: ReadinessProvider, context: IntegrationContext) -> Readiness:
     """Run the provider; fail closed on a malformed result, refuse on reasons.
 
     The result must bind the context's source, target and result commits, carry nonempty coded evidence, declare its
-    target-bound codes and a one-line result-check disclosure of 1 to ``DISCLOSURE_LIMIT`` characters.
+    target-bound codes and a one-line result-check disclosure of 1 to ``DISCLOSURE_LIMIT`` characters. A source that
+    changes the receipt reader and carries a receipt only that reader accepts is refused first
+    (``INTEGRATION_RECEIPT_READER_CHANGED``).
     """
+    check_reader(Path(context.finish.base), context.finish.source_sha, context.finish.target_sha)
     try:
         result = value.check(context)
         if (
