@@ -20,7 +20,7 @@ stories:
 - **Out-of-Scope**: Responsibilities handled by other capabilities or external systems (Non-Goals: Scope Excluded, with Rationale and When to Reconsider when they help).
 
 ## 3. Business Rules & Policies
-<!-- Core business rules. Use RFC 2119 keywords (MUST, SHOULD, MAY) for normative force -->
+<!-- One EARS sentence per rule with an RFC 2119 keyword (capability-writing): [WHEN <event> | WHILE <state> | IF <condition> THEN | WHERE <feature>,] <system> MUST <response>. End a checked rule with its RULE-<slug> or test path. -->
 1. **[Rule 1 Name]**: <!-- Rule specification and RFC 2119 keyword (MUST). Violation requires prior ADR -->
 2. **[Rule 2 Name]**: <!-- Rule specification and RFC 2119 keyword (MUST). -->
 3. **[Rule 3 Name]**: <!-- Rule specification and RFC 2119 keyword (SHOULD NOT). -->

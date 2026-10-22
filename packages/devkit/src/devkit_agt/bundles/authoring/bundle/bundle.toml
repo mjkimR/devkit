@@ -10,6 +10,12 @@ id = "skill-authoring"
 kind = "playbook"
 source = "playbooks/skill-authoring"
 
+# Sentence-level writing criteria for skills, playbooks and instructions an agent executes.
+[[assets]]
+id = "agent-asset-writing"
+kind = "instruction"
+source = "instructions/agent-asset-writing.md"
+
 # Hygiene warning when a skill or playbook Markdown file exceeds its byte budget.
 [[assets]]
 id = "skill-document-size"
@@ -29,7 +35,7 @@ kind = "rule"
 source = "rules/agent_guide_size"
 
 [presets.skill-authoring]
-assets = ["skill-authoring", "skill-document-size"]
+assets = ["skill-authoring", "agent-asset-writing", "skill-document-size"]
 
 [presets.agent-guide-authoring]
 assets = ["agent-guide-authoring", "agent-guide-size"]

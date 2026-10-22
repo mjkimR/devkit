@@ -1,0 +1,23 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-21T23:42:37.151242Z'
+status: completed
+summary: 'Planning turn 3: recorded answer-02 (worker-02 q1: a playbook alias is a previous asset ID in the same bundle, resolved by playbook get). Folded the user''s correction of the worker-01 q3 answer (only ADR file refactoring is out of scope): aliases is now one specification for every ID-bearing kind (ADR, MAT and lifecycle kinds included, no refusal list); materials get identity checks only; handoff translates carried aliases (PROP->SPEC, PADR->ADR), rewrites references written with them and refuses graduating-ID or alias clashes (restored, extended within one handoff and at scaffold). Support roles: one challenger (challenger-03, 7 findings: 2 P1, 2 P2, 3 P3), all folded and closed in reverify-04: carried-alias references rewritten at handoff in ADRs, playbook aliases cited as refining ADR-external-playbook-execution, PLAYBOOK_ALIAS_AMBIGUOUS and an alias result field, legacy-shaped aliases refused, alias-aware dependency projection and _handed_off, rename procedure for path-derived kinds. Owns gained CAP-DLV-proposal-incubation and docs/development/reference/distribution.md; size L and dev_effort medium kept. No scout. Feedback sweep feedback-03 (1 recorded). No question open; ready for plan-accept.'
+findings:
+- issue: The in-place playbook format break also affects the sibling workbench repository app-common, whose playbook onboard.md carries keyword aliases and which pins devkit by commit; its next pin bump fails bundle validation until that list moves into the description.
+  evidence: worker-02.yaml findings; challenger-02 assumptions (app-tools bundle playbooks/onboard.md:4; app-common pyproject.toml:23)
+  suggested_action: Note it as a follow-up for app-common when it adopts this change; it does not block this unit.
+  resolution: open
+assumptions:
+- The devkit-agt rules catalog (packages/devkit, outside owns) stays exact-ID.
+- The handoff is not gated on a clean rules-check, so alias clashes are refused by the handoff itself.
+unverified_areas:
+- Rule order inside devkit rules fix (RULE-id-convention vs RULE-document-reference; traceability duplicate entry) was not traced in devkit-agt; covered by planned tests.
+- No code probe was run; call sites come from static reading by the challenger and the worker.
+checks: {}
+diff_scope:
+  base: 79e7c949931b9c4fe8b48adf57ec8112f9a2d8ce
+  head: e34c8447313e43e8e31839c1167081d62d0d3364
+activity_effort: medium

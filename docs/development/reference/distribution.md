@@ -290,7 +290,7 @@ failing engine import cannot make the bundle unusable):
 | --- | --- | --- | --- | --- |
 | `advisory` | `devkit-dist` | `devkit_dist.bundles.advisory` | Auto-selected (`core`); `devkit add advisory:python` for Python repositories | Agent Advisory Protocol guides and, in `python`, `RULE-advisory-unique-code` (run by the rule engine of `devkit-agt`); see [devkit.advisory](advisory.md). |
 | `git-commits` | `devkit-dist` | `devkit_dist.bundles.git_commits` | Opt-in: `devkit add git-commits` | Commit message conventions and their `AGENTS.md` pointer; see [devkit_agt.features.gate](gate.md#built-in-git-commits-bundle). |
-| `authoring` | `devkit-agt` | `devkit_agt.bundles.authoring` | Opt-in: `devkit add authoring` (`all`), or one of the presets `skill-authoring`, `agent-guide-authoring` | Size rules and restructuring playbooks for skills and agent guides; see [devkit_agt.features.rules](rules.md#built-in-authoring-bundle). |
+| `authoring` | `devkit-agt` | `devkit_agt.bundles.authoring` | Opt-in: `devkit add authoring` (`all`), or one of the presets `skill-authoring`, `agent-guide-authoring` | Size rules and restructuring playbooks for skills and agent guides, and the `agent-asset-writing` instruction; see [devkit_agt.features.rules](rules.md#built-in-authoring-bundle). |
 | `harness` | `devkit-agt` | `devkit_agt.bundles.harness` | Auto-selected (`core`); `devkit add harness:run` for the `AGENTS.md` pointer | The harness guidance above. |
 
 ---

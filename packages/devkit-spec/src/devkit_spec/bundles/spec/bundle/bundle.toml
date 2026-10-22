@@ -16,6 +16,36 @@ id = "living-spec-writing"
 kind = "instruction"
 source = "instructions/living-spec-writing.md"
 
+# Sentence-level baseline every document follows; the per-kind writing instructions add to it.
+[[assets]]
+id = "document-writing"
+kind = "instruction"
+source = "instructions/document-writing.md"
+
+# ADR and PADR writing: Y-statement summary, options, outcome and Confirmation.
+[[assets]]
+id = "decision-writing"
+kind = "instruction"
+source = "instructions/decision-writing.md"
+
+# Capability writing: EARS business rules and their enforcing checks.
+[[assets]]
+id = "capability-writing"
+kind = "instruction"
+source = "instructions/capability-writing.md"
+
+# Story writing: narrative and Example Mapping to Given/When/Then scenarios.
+[[assets]]
+id = "story-writing"
+kind = "instruction"
+source = "instructions/story-writing.md"
+
+# Architecture writing: arc42 placement, constraints with enforcing checks, quality scenarios.
+[[assets]]
+id = "architecture-writing"
+kind = "instruction"
+source = "instructions/architecture-writing.md"
+
 # The AGENTS.md line that sends every session to the spec bundle's context before development work.
 [[assets]]
 id = "spec-pointer"
@@ -262,6 +292,11 @@ source = "playbooks/feedback-hygiene"
 assets = [
     "contract-authoring",
     "living-spec-writing",
+    "document-writing",
+    "decision-writing",
+    "capability-writing",
+    "story-writing",
+    "architecture-writing",
     "spec-pointer",
     "document-reference",
     "id-convention",

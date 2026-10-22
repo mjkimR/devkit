@@ -1,0 +1,57 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-21T23:40:22.731194Z'
+status: completed
+summary: 'round 3 (focused, fold 55a56b2d..38033c4a): direction holds; size L and dev_effort medium fit; 7 findings (2 P1, 2 P2, 3 P3): carried-alias references left dangling in ADRs at handoff, playbook alias lookup unreconciled with ADR-external-playbook-execution, playbook get code and fields unnamed, legacy-shaped aliases vs RULE-id-convention, projection and _handed_off not alias-aware, graduation clashes found only at handoff, no rename procedure for path-derived kinds.'
+findings:
+- issue: The handoff spec leaves references written with carried aliases untouched in decision records, but alias translation removes the only declaration of PROP-<old>/PADR-<old>, so such a reference in an ADR (including one promoted in the same handoff) resolves to nothing.
+  evidence: proposal.md 3.3; PADR-document-id-aliases.md Handoff; proposals/services/rewrite.py:127-153; handoff.py:442-447,563-573; CAP-DLV-proposal-incubation.md:345-364; document_reference.py:120-127,218-232
+  failure_condition: A PADR or ADR cites a carried alias; after handoff the new ADR fails RULE-document-reference and the only repair edits an approved ADR.
+  suggested_action: Rewrite carried-alias references at handoff wherever the old ID is rewritten (ADRs and promoted ADRs included, completed bundles excluded); limit "decision records are never rewritten" to devkit rules fix; add a handoff test.
+  resolution: open
+  severity: P1
+- issue: Playbook alias resolution contradicts the accepted ADR-external-playbook-execution (retrieval by exact identity, no fallback selection, explicit invocation by the exact ID), which neither the playbook PADR nor the proposal cites.
+  evidence: docs/decisions/2026-10/20261021-external-playbook-execution.md:4,39-47; PADR-playbook-aliases-as-identifiers.md; CAP-DIST-context-and-playbooks.md:147-149,197-200
+  failure_condition: The graduated ADR and ADR-external-playbook-execution state opposite retrieval rules; a schedule naming an old ID runs the renamed playbook with no stated authorization basis.
+  suggested_action: Cite ADR-external-playbook-execution in the playbook PADR and state the refinement (a declared alias is the playbook's identity, not fallback selection); update CAP-DIST section 5 so that naming an alias is explicit invocation of the canonical playbook get reports.
+  resolution: open
+  severity: P1
+- issue: The playbook get contract leaves the ambiguity code, the alias-used result field, when the retrieval-time uniqueness check runs and its place in the ordered resolution unnamed; docs/development/reference/distribution.md must change but is outside owns.
+  evidence: proposal.md 3.4; PADR-playbook-aliases-as-identifiers.md; CAP-DIST-context-and-playbooks.md:155-158,172-177,183-192; playbook_get.py:57-65; models/results.py:180-190
+  failure_condition: Agents cannot branch on an unnamed code; implementations diverge on whether an exact get is refused by another playbook's colliding override alias.
+  suggested_action: Name the code (PLAYBOOK_ALIAS_AMBIGUOUS) with a deterministic action and the JSON field (alias, null on an exact hit); run the effective-header check only on the alias path after an exact miss; place it in the resolution order; add docs/development/reference/distribution.md to owns.
+  resolution: open
+  severity: P2
+- issue: The alias shape rule accepts any well-formed own-prefix ID, but RULE-id-convention reports every date- or number-based ID, so a legacy alias such as ADR-0006 is valid under one rule and an error under the other.
+  evidence: governance/usecases/id_convention.py:20-23,71-75,402-403; documents/models/ids.py:50-51; proposal.md 3.1
+  failure_condition: An author keeps a legacy ADR-0001 as alias of a migrated ADR; rules-check fails and no edit satisfies both rules.
+  suggested_action: Have the alias shape check refuse legacy date- or number-based forms with RULE-id-convention's pattern, and test it.
+  resolution: open
+  severity: P2
+- issue: The handoff dependency projection builds an index by hand and substitutes only the exact source ID, and _handed_off maps PROP-<x> to SPEC-<x> even when SPEC-<x> is an alias after translation.
+  evidence: handoff.py:887-899; dependencies.py:10-19; document_reference.py:49-54,184-197,221-230,309-313
+  failure_condition: A unit whose depends_on holds the proposal's alias is refused at handoff; a late PROP-old is fixed to the alias SPEC-old and needs a second fix pass.
+  suggested_action: The projection copies the alias map and substitutes any target that canonicalises to the source; _handed_off returns the canonical target; add tests.
+  resolution: open
+  severity: P3
+- issue: Graduation clashes are detected only at handoff (check_spec_conflict, the PADR scaffold duplicate check and the PROP/SPEC slug-pair check read by_id only), and _check_targets does not compare graduating IDs and translated aliases among themselves.
+  evidence: proposals/usecases/scaffold.py:257-268,694; document_reference.py:108-119; handoff.py:796-804
+  failure_condition: A PROP-x whose SPEC-x is an existing alias passes Planning and is refused only after plan-accept; two PADRs declaring the same alias graduate into two ADRs with a collision.
+  suggested_action: Treat a SPEC-<slug> alias like a declared SPEC-<slug> in check_spec_conflict and the slug-pair check; refuse duplicates within one handoff; test both.
+  resolution: open
+  severity: P3
+- issue: No rename procedure is given for path-derived kinds; RULE-id-convention's fix resets id to the path-derived value, a spec bundle rename changes PLAN, TASKS and REC IDs with it, and REC (reconcile_id) is not in the test list.
+  evidence: id_convention.py:14-16,25-27; parse.py:52; handoff.py:552; proposal.md 3.1 and 4
+  failure_condition: An id edited without moving the file is reset by rules fix and equals its own alias; a renamed bundle keeps an alias on spec.md only and PLAN/TASKS references break.
+  suggested_action: State the rename procedure (move the path, set the ID, keep the old ID in aliases; for a spec bundle every slug-derived file) in CAP-DOCS-document-model and the living-spec-writing instruction; test every kind, REC included.
+  resolution: open
+  severity: P3
+assumptions:
+- The user decisions on all-kinds aliases and playbook alias resolution are fixed; only their specification was challenged.
+- The handoff is not gated on a clean rules-check, so collisions in Planning can reach the handoff.
+unverified_areas:
+- Whether spec-sync or reconcile mechanically flags a contradiction between two accepted ADRs was inferred, not traced.
+- devkit rules fix ordering between RULE-id-convention and RULE-document-reference was not traced in devkit-agt.
+checks: {}

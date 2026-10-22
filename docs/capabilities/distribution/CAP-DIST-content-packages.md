@@ -123,7 +123,7 @@ Bundles registered by either wheel are built in (`builtin` in `devkit list` and 
 | `advisory` | `devkit-dist` | Auto-selected (`core`); opt-in `python` | The Agent Advisory Protocol guides; `python` adds the library guide and `RULE-advisory-unique-code`. |
 | `git-commits` | `devkit-dist` | Opt-in | Commit message conventions and their `AGENTS.md` pointer. |
 | `harness` | `devkit-agt` | Auto-selected (`core`); opt-in `run`; `harness = false` opts out | The constitution with the rules-and-gates contract and the snapshot-gate contract (snapshot gates trust the committed receipt), the instructions `harness-consumption` (configuration tables of the engines, workflows, rules and commit gates), `harness-assets` (running and testing rule, gate and workflow assets, rules of an in-repository bundle in Git snapshot gates) and `devkit-run`; the `run` preset adds the `run-pointer` guidance line. |
-| `authoring` | `devkit-agt` | Opt-in | Size rules and restructuring playbooks for skills and agent guides. |
+| `authoring` | `devkit-agt` | Opt-in | Size rules and restructuring playbooks for skills and agent guides, and the `agent-asset-writing` instruction. |
 
 The `harness` bundle is the bundle of this capability; the `devkit-spec` capability area of the same name
 (`CAP-HARN-agent-guidance`) is unrelated to it. The `run` preset and the `devkit-run` and `run-pointer` assets belong
