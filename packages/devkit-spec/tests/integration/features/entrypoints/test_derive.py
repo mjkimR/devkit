@@ -16,6 +16,7 @@ from devkit_spec.features.entrypoints import (
     derive,
     entrypoint_bearing,
     exclude,
+    fold_by_directory_selectors,
     load_bundle,
     normalize,
     overlaps,
@@ -234,3 +235,37 @@ def test_exclude_and_select() -> None:
         exclude(pairs, ["../x"])
     with pytest.raises(EntrypointsPathError):
         select(pairs, ["src/*"])
+
+
+def test_fold_by_directory_selectors(workspace: Path, write: Write) -> None:
+    write("src/pkg/a.go", "package a\n")
+    write("src/pkg/b.go", "package b\n")
+    pairs = [
+        _pair("src/pkg/a.go", "SPEC-1", task=1),
+        _pair("src/pkg/b.go", "SPEC-1", task=2),
+        _pair("other/file.go", "SPEC-1", task=3),
+    ]
+
+    # Without trailing slash, pairs are unchanged
+    unmodified = fold_by_directory_selectors(workspace, pairs, ["src/pkg"], {})
+    assert len(unmodified) == 3
+    assert all(p.folded_into is None for p in unmodified)
+
+    # With trailing slash on an existing directory, directory pair is synthesized and children folded
+    folded = fold_by_directory_selectors(workspace, pairs, ["src/pkg/"], {})
+    assert len(folded) == 4
+    dir_pair = next(p for p in folded if p.code == "src/pkg")
+    assert dir_pair.folded_into is None and dir_pair.exists is True
+    child_a = next(p for p in folded if p.code == "src/pkg/a.go")
+    assert child_a.folded_into == "src/pkg"
+    child_b = next(p for p in folded if p.code == "src/pkg/b.go")
+    assert child_b.folded_into == "src/pkg"
+
+    # Non-existent directory with trailing slash raises EntrypointsPathError
+    with pytest.raises(EntrypointsPathError):
+        fold_by_directory_selectors(workspace, pairs, ["src/nonexistent/"], {})
+
+    # Regular file with trailing slash raises EntrypointsPathError
+    with pytest.raises(EntrypointsPathError):
+        fold_by_directory_selectors(workspace, pairs, ["src/pkg/a.go/"], {})
+

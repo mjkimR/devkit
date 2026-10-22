@@ -18,7 +18,16 @@ from devkit_spec.base.errors import (
     UnresolvedIdError,
 )
 from devkit_spec.features.documents import Document, DocumentIndex, Kind, is_id
-from devkit_spec.features.entrypoints import Applied, aggregate, apply, derive, exclude, load_bundle, select
+from devkit_spec.features.entrypoints import (
+    Applied,
+    aggregate,
+    apply,
+    derive,
+    exclude,
+    fold_by_directory_selectors,
+    load_bundle,
+    select,
+)
 from devkit_spec.features.entrypoints.models.derive import Pair, Reason, SkipKind, Skipped, State
 from devkit_spec.utils.paths import _bundle_dir
 
@@ -128,6 +137,7 @@ class DeriveEntrypointsUseCase(BaseUseCase):
                 skipped += bundle_skipped
             pairs = aggregate(per_bundle, 1 if min_count is None else min_count)
 
+        pairs = fold_by_directory_selectors(root, pairs, codes, documents)
         derived = {pair.doc_path for pair in pairs}
         pairs = select(pairs, codes)
         pairs, excluded = exclude(pairs, excludes)

@@ -184,3 +184,44 @@ def test_apply_target_named_by_an_alias(bundles: Path, write: Write) -> None:
     result = _derive(bundles, "--all", "--apply", "--target", "CAP-X-first")
     assert result.exit_code == 0, result.output
     assert f"[APPLIED: CAP-X-one path={CAP} added=src/other/,src/pkg/]" in result.stdout.splitlines()
+
+
+def test_derive_directory_code_folds_and_applies(bundles: Path, write: Write) -> None:
+    write("src/sub/one.go", "package sub\n")
+    write("src/sub/two.go", "package sub\n")
+    write("specs/2026-10/20261010-files/spec.md", "---\nid: SPEC-files\nstatus: completed\n---\n")
+    write(
+        "specs/2026-10/20261010-files/tasks.md",
+        "- [x] **Task 1**: sub\n  - **_Boundary**: src/sub/one.go, src/sub/two.go\n  - _Requirements: AC-01_\n",
+    )
+    write(
+        "specs/2026-10/20261010-files/reconcile.md",
+        f"---\nreconcile_id: REC-files\nstatus: resolved\ntargets:\n  - file: {CAP}\n    resolution: modified\n---\n",
+    )
+
+    bare_res = _derive(bundles, "--spec", "specs/2026-10/20261010-files", "--code", "src/sub")
+    assert bare_res.exit_code == 0
+    assert (
+        "[CANDIDATES: CAP-X-one path=docs/capabilities/x/CAP-X-one.md new=src/sub/one.go,src/sub/two.go missing=- folded=- declared=-]"
+        in bare_res.stdout
+    )
+
+    dir_res = _derive(bundles, "--spec", "specs/2026-10/20261010-files", "--code", "src/sub/")
+    assert dir_res.exit_code == 0
+    assert (
+        "[CANDIDATES: CAP-X-one path=docs/capabilities/x/CAP-X-one.md new=src/sub missing=- folded=src/sub/one.go,src/sub/two.go declared=-]"
+        in dir_res.stdout
+    )
+
+    apply_res = _derive(
+        bundles, "--spec", "specs/2026-10/20261010-files", "--apply", "--target", "CAP-X-one", "--code", "src/sub/"
+    )
+    assert apply_res.exit_code == 0
+    assert f"[APPLIED: CAP-X-one path={CAP} added=src/sub/]" in apply_res.stdout
+    cap_text = (bundles / CAP).read_text()
+    assert "src/sub/" in cap_text
+    assert "src/sub/one.go" not in cap_text
+
+    missing_res = _derive(bundles, "--spec", "specs/2026-10/20261010-files", "--code", "src/nonexistent/")
+    assert missing_res.exit_code == 2
+
