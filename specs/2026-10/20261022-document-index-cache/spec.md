@@ -2,7 +2,7 @@
 id: SPEC-document-index-cache
 title: Reuse the document index between commands
 summary: Persists each Living Spec document's parse result on disk, keyed by its path and a digest of its parsed text, so lookups such as devkit spec resolve and list stop re-parsing every document on each call.
-status: planned
+status: in-progress
 created: 2026-10-22
 related_capabilities:
   - CAP-DOCS-document-model

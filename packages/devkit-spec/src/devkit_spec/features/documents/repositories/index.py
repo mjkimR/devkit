@@ -1,15 +1,18 @@
 """The document index of a workspace: every ID-bearing Markdown file under ``docs/`` and ``specs/``.
 
-The index is rebuilt from the files on every load; there is no second source
-of truth to go stale. Symbolic links, directories starting with ``.``,
-``README.md`` files and templates (``*-template.md``, ``*_template.md``) are
-not documents. A file that cannot be read or whose frontmatter is malformed is
-left out and reported as a ``SPEC_DOCUMENT_INVALID`` warning, so one broken
-file never hides the others. IDs and references are repository-wide.
+Every load walks and reads the files; they are the only source of truth.
+Symbolic links, directories starting with ``.``, ``README.md`` files and
+templates (``*-template.md``, ``*_template.md``) are not documents. A file
+that cannot be read or whose frontmatter is malformed is left out and reported
+as a ``SPEC_DOCUMENT_INVALID`` warning, so one broken file never hides the
+others. IDs and references are repository-wide.
 
-A parsed document is reused by later loads while its file's text is
-unchanged, so the rules of one run, which each load the index, parse every
-file once.
+Only the parse of each file is reused, and only for the same path and text:
+within a process, so the rules of one run, which each load the index, parse
+every file once, and between processes through the parse memo
+(``repositories.memo``, ``.devkit/transient/spec/document-index.json``). The ID
+and alias maps, ``historical``, the problems and the order are built on every
+load.
 
 A document may declare ``aliases``, previous or alternate IDs
 (``ADR-document-id-aliases``). ``canonical`` is the one mapping from a written
@@ -31,11 +34,32 @@ from devkit_spec.base.errors import DocumentInvalidWarning, DuplicateIdError, Un
 from devkit_spec.features.documents.models.ids import Kind
 from devkit_spec.features.documents.models.model import Document, Reference
 from devkit_spec.features.documents.models.parse import parse_document
+from devkit_spec.features.documents.repositories.memo import (
+    UNSTORABLE_RESULT,
+    Entry,
+    Invalid,
+    MemoError,
+    Parsed,
+    ParseMemo,
+    decode_entry,
+    digest,
+    encode_entry,
+)
 
 SOURCE_DIRECTORIES = ("docs", "specs")
 COMPLETED = "completed"
 _PARSED_LIMIT = 20_000
-_parsed: dict[tuple[str, str], Document | None] = {}
+
+
+@dataclass(slots=True)
+class _Parse:
+    """The parse result of one path and text, and its memo entry once a memo needed it."""
+
+    result: Parsed
+    entry: Entry | None = None
+
+
+_parsed: dict[tuple[str, str], _Parse] = {}
 
 
 def is_document_file(name: str) -> bool:
@@ -49,13 +73,47 @@ def in_source_directory(relative: str) -> bool:
     return len(parts) > 1 and parts[0] in SOURCE_DIRECTORIES and not any(part.startswith(".") for part in parts[1:-1])
 
 
-def _parse(relative: str, text: str) -> Document | None:
+def _parse(relative: str, text: str, memo: ParseMemo | None) -> Parsed:
+    """The parse result of ``text`` at ``relative``: the in-process one, else the memo's, else a fresh parse."""
     key = (relative, text)
-    if key not in _parsed:
+    found = _parsed.get(key)
+    text_digest = None
+    if found is None:
+        if memo is not None:
+            text_digest = digest(text)
+            found = _reuse(relative, text, text_digest, memo)
+        if found is None:
+            found = _Parse(_fresh(relative, text))
         if len(_parsed) >= _PARSED_LIMIT:
             _parsed.clear()
-        _parsed[key] = parse_document(relative, text)
-    return _parsed[key]
+        _parsed[key] = found
+    if memo is not None:
+        if found.entry is None:
+            found.entry = encode_entry(text_digest or digest(text), found.result)
+        memo.keep(relative, found.entry)
+    return found.result
+
+
+def _reuse(relative: str, text: str, text_digest: str, memo: ParseMemo) -> _Parse | None:
+    """The memo's result for ``relative`` when its entry has ``text_digest`` and can be rebuilt."""
+    stored = memo.stored(relative)
+    if type(stored) is not list or not stored or stored[0] != text_digest:
+        return None
+    try:
+        result = decode_entry(relative, stored)
+    except MemoError:
+        memo.unusable()
+        return None
+    if result is UNSTORABLE_RESULT:
+        return _Parse(_fresh(relative, text), stored)
+    return _Parse(result, stored)  # type: ignore[arg-type]
+
+
+def _fresh(relative: str, text: str) -> Parsed:
+    try:
+        return parse_document(relative, text)
+    except FrontmatterError as exc:
+        return Invalid(exc.message)
 
 
 def _read(path: Path) -> str:
@@ -106,20 +164,29 @@ class DocumentIndex:
         ``files`` replaces the directory walk (absolute paths; anything that is not a document file under a source
         directory is skipped) and ``read`` the file reader (strict UTF-8; ``UnicodeDecodeError`` and ``OSError``
         become problems), so a rule run reads through its workspace cache.
+
+        The load reuses the parse memo of ``root`` when there is one; only a load with neither ``files`` nor
+        ``read`` writes it, and only when an entry changed.
         """
         index = cls(root=root.resolve())
+        memo = ParseMemo.open(index.root, writes=files is None and read is _read)
         for path in _files(index.root) if files is None else files:
             relative = path.relative_to(index.root).as_posix()
             if not (is_document_file(path.name) and in_source_directory(relative)):
                 continue
             try:
-                document = _parse(relative, read(path))
-            except (OSError, UnicodeDecodeError, FrontmatterError) as exc:
-                reason = exc.message if isinstance(exc, FrontmatterError) else str(exc)
-                index.problems.append(DocumentInvalidWarning(f"{relative}: {reason}", target_files=[relative]))
+                text = read(path)
+            except (OSError, UnicodeDecodeError) as exc:
+                index.problems.append(DocumentInvalidWarning(f"{relative}: {exc}", target_files=[relative]))
                 continue
-            if document is not None:
+            document = _parse(relative, text, memo)
+            if isinstance(document, Invalid):
+                message = f"{relative}: {document.reason}"
+                index.problems.append(DocumentInvalidWarning(message, target_files=[relative]))
+            elif document is not None:
                 index.add(document)
+        if memo is not None:
+            memo.save()
         index.documents.sort(key=lambda document: document.path)
         specs = {d.path: d for d in index.documents if d.path.endswith("/spec.md")}
         for document in index.documents:
