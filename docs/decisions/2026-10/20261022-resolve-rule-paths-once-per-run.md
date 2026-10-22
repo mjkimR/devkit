@@ -1,15 +1,15 @@
 ---
-id: PADR-resolve-rule-paths-once-per-run
+id: ADR-resolve-rule-paths-once-per-run
 title: Resolve rule paths once per run
 summary: For rules runs that resolve the same paths thousands of times, we resolve symlinks in RuleContext only when the lexical form fails and memoize WorkspaceCache keys per run, to save about 0.4 s, accepting that a symlink changed outside the cache mid-run keeps its old key.
-proposal: PROP-rule-shared-python-ast
-status: draft
+proposal: SPEC-rule-shared-python-ast
+status: accepted
 created_at: 2026-10-22
 ---
 
-# [PADR-resolve-rule-paths-once-per-run] Resolve rule paths once per run
+# [ADR-resolve-rule-paths-once-per-run] Resolve rule paths once per run
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-22
 
 ---
@@ -53,7 +53,7 @@ Chosen: **lazy resolution and a per-run key memo**.
   `invalidate_all` clear the whole memo, as `invalidate` already clears every file listing (driver 2).
 - `write_text` resolves its path afresh, without the memo, for the workspace-containment check, the pinned-directory
   check and the write destination (driver 3); writes are rare, so this costs nothing measurable.
-- The prototype (`materials/measurements.md` §3, path resolution only) cut the median from 4.29 s to 3.87 s with
+- The prototype (`docs/materials/2026-10/20261022-rule-shared-python-ast/measurements.md` §3, path resolution only) cut the median from 4.29 s to 3.87 s with
   byte-identical output, and to 3.23 s together with the shared parse.
 
 ## 5. Consequences

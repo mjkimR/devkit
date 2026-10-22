@@ -120,12 +120,12 @@ whose inputs no target can change, without missing a violation the targets intro
 - Scoping Git snapshot runs (commit gate, CI); deleted paths are not targets there.
 - Declaring `inputs` on the Markdown rules or the `devkit-catalog` `cli_tool` rules.
 - Making the target-ignoring rules report only targeted files, or parsing Python faster (that is
-  `PROP-rule-shared-python-ast`).
+  `SPEC-rule-shared-python-ast`).
 - New output fields in `devkit rules check` stdout or JSON.
 
 ### Sequencing
 
-`PROP-rule-shared-python-ast` (one `ast.parse` per file through `WorkspaceCache`) changes how the three rules read
+`SPEC-rule-shared-python-ast` (one `ast.parse` per file through `WorkspaceCache`) changes how the three rules read
 Python; this proposal changes whether they run and adds one constructor argument to each. There is no design
 dependency, so no `depends_on`. The sibling is planned to land first; whichever lands second rebases the three rule
 modules and the governance capabilities onto the other. Acceptance outcome 6 is relative to its own base and holds

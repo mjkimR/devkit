@@ -1,15 +1,15 @@
 ---
-id: PADR-parse-cached-bytes-once-and-memoize-the-outcome
+id: ADR-parse-cached-bytes-once-and-memoize-the-outcome
 title: Parse cached bytes once and memoize the outcome
 summary: For a shared AST accessor on WorkspaceCache, we parse cached bytes under the workspace-relative name, memoize the tree or syntax error and call it directly from every rule, to parse once as CPython reads source, accepting changed results on non-UTF-8 files.
-proposal: PROP-rule-shared-python-ast
-status: draft
+proposal: SPEC-rule-shared-python-ast
+status: accepted
 created_at: 2026-10-22
 ---
 
-# [PADR-parse-cached-bytes-once-and-memoize-the-outcome] Parse cached bytes once and memoize the outcome
+# [ADR-parse-cached-bytes-once-and-memoize-the-outcome] Parse cached bytes once and memoize the outcome
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-22
 
 ---
