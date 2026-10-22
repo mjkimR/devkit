@@ -212,14 +212,15 @@ _MERGE_TARGET_FIX = (
 )
 
 
-class MergeNotFastForwardError(_Interaction):
-    """The base moved on since the branch was created and the merge may not absorb it (``INTERACTION``).
+class MergeNotFastForwardError(WorktreeError):
+    """The base moved on since the branch was created and the merge may not absorb it (``AUTO``).
 
     ``finish --merge`` lands only a branch that contains the base HEAD; the integration service absorbs later target
     commits only under ``merge = "no-ff"`` and only after its approval.
     """
 
     code = "WORKTREE_MERGE_NOT_FF"
+    actor = Actor.TOOL
     fix = _MERGE_TARGET_FIX
 
 

@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T11:23:45.000000Z'
+status: completed
+summary: 'SPEC-merge-not-ff-auto completed: MergeNotFastForwardError actor set to TOOL (AUTO mode), verified by 102 affected test suites and living spec updated'
+findings: []
+checks:
+  tests: PASS 102 test files passed
+  build: PASS pyright 0 errors
+  lint: PASS devkit rules check --ci
+diff_scope:
+  base: efc35606a06d259c01b19b63207f906bb4598f9e
+  head: b889876abf47d5203ca5b3d2b476ed0bd6553136

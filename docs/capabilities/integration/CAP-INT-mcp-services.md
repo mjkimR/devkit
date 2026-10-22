@@ -99,7 +99,7 @@ conditions. Its evidence binds the context's source, target and result commits a
 
 Prepare checks clean base/source state, worktree identity/lock and safe local branch deletion. The source must
 contain the target, or the target must already contain the source, which prepares a cleanup-only request; any other
-pair is `WORKTREE_MERGE_NOT_FF`, whose fix merges the target into the branch (never a rebase). Under `no-ff` a
+pair is `WORKTREE_MERGE_NOT_FF` (`AUTO`), whose fix merges the target into the branch (never a rebase). Under `no-ff` a
 missing committer identity is refused before the confirmation (`WORKTREE_COMMIT_FAILED`). Prepare runs the existing
 finish guards (with the merge base: the target, or the source for a cleanup-only request), plans scoped post-finish
 cleanup and builds nothing before showing confirmation.
