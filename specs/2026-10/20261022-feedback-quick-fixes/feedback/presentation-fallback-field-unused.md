@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-22
 ---
 
@@ -41,3 +41,7 @@ Nature: a dead output field left for write-boundary reasons.
 return PresentationLanguage(requested, requested, config.sources["presentation.language"], False)
 reference docs: "reports the requested and resolved language, source and fallback"
 ```
+
+## Disposition
+
+Dismissed as moot. Under the user decision recorded with the return to build-verify (`decisions/02-return-build-verify.yaml`), an unsupported `[presentation] language` again resolves to `en` with `fallback=true`, and `language_notices` reads that field to return the `PRESENTATION_LANGUAGE_UNSUPPORTED` warning from `devkit sync`, `devkit status` and `devkit config show`. The field is no longer constant or unused.

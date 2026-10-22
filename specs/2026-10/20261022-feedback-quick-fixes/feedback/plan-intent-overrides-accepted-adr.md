@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-22
 ---
 
@@ -40,3 +40,7 @@ ADR Decision Outcome: "unsupported string fallback `en`"
 Payload: denied ... docs/decisions/
 spec.md Assumption 3 records the replacement; reconcile.md leaves the superseding ADR to the Host.
 ```
+
+## Disposition
+
+Dismissed as moot. The user decision recorded with the return to build-verify (`decisions/02-return-build-verify.yaml`) withdrew the plan-intent's refusal and kept the English fallback that `ADR-shared-language-preference-with-bounded-approval-content` decides, only making it visible with a `PRESENTATION_LANGUAGE_UNSUPPORTED` warning. `SPEC-feedback-quick-fixes` now conforms to the accepted ADR, the capabilities agree with it again, and no superseding ADR is needed, so the conflict this item describes no longer exists.
