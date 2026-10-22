@@ -36,7 +36,9 @@ verification by effort is in its `references/effort.md` and `references/review-l
    [source feedback](../spec/references/source-feedback.md), and record destinations and resolutions in
    `reconcile.md`.
 4. **Entrypoints**: run the `spec-entrypoints` skill for this bundle.
-5. **Verify**: run the reconcile check for the effort (a `reconcile-check` envelope). Return an
+5. **Verify**: run the reconcile check for the effort and record it with
+   `devkit workflow envelope new --unit <dir> --kind reconcile-check --stage living-spec-draft`; the other flags are in
+   the `spec` skill's [envelope reference](../spec/references/envelope.md). Return an
    implementation-versus-contract mismatch to `build-verify` (`fix-verify` for a bugfix); never document it away.
    Run `devkit rules check --staged` or `devkit rules check --ci --base <ref>`, plus the project lint where it covers
    Markdown.

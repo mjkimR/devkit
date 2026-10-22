@@ -2,7 +2,7 @@
 id: SPEC-guidance-followups
 title: Align milestone tone, role shell notes and traceability follow-ups
 summary: States the capability's milestone granularity guidance as a recommendation, drops the stale challenger no-shell note, links the integration use case with the runtime registration capability on both sides, and names the reconcile-check envelope command in spec-sync.
-status: planned
+status: in-progress
 created: 2026-10-22
 related_capabilities:
   - CAP-HARN-agent-guidance
