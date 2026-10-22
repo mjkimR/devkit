@@ -1239,7 +1239,7 @@
     },
     ".devkit/managed/advisory/bundle.toml": {
       "mode": 420,
-      "sha256": "92dd6c87f594d5e2eaf8a3a94b9d760e5f08b344a90ddb2d488b6715480bdc25"
+      "sha256": "284ab95e0846ce89a49f724fe76db1412879950a40031a7dd194c4736b664091"
     },
     ".devkit/managed/advisory/instructions/agent-advisory-python.md": {
       "mode": 420,
@@ -1267,7 +1267,7 @@
     },
     ".devkit/managed/authoring/bundle.toml": {
       "mode": 420,
-      "sha256": "ab51c8db30d58aaf499a22be2cdddb749968b836e4146c26b6d788e7b1396c8f"
+      "sha256": "553d91505cbb2f02eba951058adfcfccfbdc041bfbc3b3b95fda1205f8e04777"
     },
     ".devkit/managed/authoring/instructions/agent-asset-writing.md": {
       "mode": 420,
@@ -1307,7 +1307,7 @@
     },
     ".devkit/managed/devkit-dev/bundle.toml": {
       "mode": 420,
-      "sha256": "1f5447811115bfc0f869f2ebd7582564cd4b3ceebd53b25210ab7e47952785ab"
+      "sha256": "694c0e3ed75f29396bceda321494fc181b127ea02991b8137807ab7614bf065d"
     },
     ".devkit/managed/devkit-dev/instructions/project-structure.md": {
       "mode": 420,
@@ -1347,7 +1347,7 @@
     },
     ".devkit/managed/devkit/bundle.toml": {
       "mode": 420,
-      "sha256": "a6b18e833ed40ce5aad2ef694cafc3086a0161c30f17a446f72a094b5e09b429"
+      "sha256": "e92a86d3ae462d081960475a79383eaf51208cf063ce80ac1c9065b84e760d3e"
     },
     ".devkit/managed/devkit/instructions/consumption.md": {
       "mode": 420,
@@ -1367,7 +1367,7 @@
     },
     ".devkit/managed/harness/bundle.toml": {
       "mode": 420,
-      "sha256": "77eacb38b52f93764f5eccb038b24b54b19c6311140f32ad87207936478309d0"
+      "sha256": "846b9590af9e754cd5334d6428976175fc0904f4127dbd4159616e466843af5b"
     },
     ".devkit/managed/harness/instructions/devkit-run.md": {
       "mode": 420,
@@ -1383,7 +1383,7 @@
     },
     ".devkit/managed/response-style/bundle.toml": {
       "mode": 420,
-      "sha256": "2beae840f14e6fdf124f79937b85e7352416b75fbea77dbc2dd24e219cd047fb"
+      "sha256": "7ec5b6773c9d4f4e2206cdebf334b4373c1335987428dd02f6a27ca07ba5ad69"
     },
     ".devkit/managed/response-style/guidance/response-pointer.md": {
       "mode": 420,
@@ -1399,7 +1399,7 @@
     },
     ".devkit/managed/spec/bundle.toml": {
       "mode": 420,
-      "sha256": "801fb00445adb2c0522813a0fe2b25ebe36e42e62ab0fc88a49dee0ccd45102d"
+      "sha256": "1d020abb2488c737ccf65d7c28f0a41f34614cdb886066d565320d6c6f862e2b"
     },
     ".devkit/managed/spec/guidance/spec-pointer.md": {
       "mode": 420,
@@ -1822,45 +1822,45 @@
   "packages": [
     {
       "bundle": "advisory",
-      "bundle_version": "0.1.1",
+      "bundle_version": "0.1.2",
       "package": "devkit-dist",
-      "package_version": "0.1.1"
+      "package_version": "0.1.2"
     },
     {
       "bundle": "authoring",
-      "bundle_version": "0.1.1",
+      "bundle_version": "0.1.2",
       "package": "devkit-agt",
-      "package_version": "0.1.1"
+      "package_version": "0.1.2"
     },
     {
       "bundle": "devkit",
-      "bundle_version": "0.1.1",
+      "bundle_version": "0.1.2",
       "package": "devkit-dist",
-      "package_version": "0.1.1"
+      "package_version": "0.1.2"
     },
     {
       "bundle": "devkit-dev",
-      "bundle_version": "0.1.0",
+      "bundle_version": "0.1.2",
       "package": "devkit-dev",
-      "package_version": "0.1.0"
+      "package_version": "0.1.2"
     },
     {
       "bundle": "harness",
-      "bundle_version": "0.1.1",
+      "bundle_version": "0.1.2",
       "package": "devkit-agt",
-      "package_version": "0.1.1"
+      "package_version": "0.1.2"
     },
     {
       "bundle": "response-style",
-      "bundle_version": "0.1.0",
+      "bundle_version": "0.1.2",
       "package": "devkit-catalog",
-      "package_version": "0.1.0"
+      "package_version": "0.1.2"
     },
     {
       "bundle": "spec",
-      "bundle_version": "0.1.0",
+      "bundle_version": "0.1.2",
       "package": "devkit-spec",
-      "package_version": "0.1.0"
+      "package_version": "0.1.2"
     }
   ],
   "schema": 1,
@@ -1999,6 +1999,6 @@
   },
   "tool": {
     "package": "devkit-dist",
-    "version": "0.1.1"
+    "version": "0.1.2"
   }
 }
