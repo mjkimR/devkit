@@ -8,7 +8,7 @@ target: ADR-configuration-language-and-rendering
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -34,3 +34,11 @@ docs/decisions/2026-10/20261022-configuration-language-and-rendering.md section 
 "The foundation belongs to devkit-dist and cannot import the harness, following ADR-dist-foundation-ownership."
 packages/devkit-core/pyproject.toml: name = "devkit-core", the shared foundation
 ```
+
+## Disposition
+
+- **Disposition (resolved)**: `SPEC-superseded-reference-cleanup` rewords the driver of `ADR-configuration-language-and-rendering`
+  editorially under `ADR-immutable-decisions-editable-records` to "Project configuration belongs to devkit-dist, which
+  cannot import the harness (`ADR-foundation-and-mcp-package-ownership`)". Verified by `rg -n
+  'ADR-dist-foundation-ownership|foundation belongs'` on the ADR (no match), `devkit rules check` and the review
+  envelope `review-01`.

@@ -8,7 +8,7 @@ target: UC-drive-development-to-integration
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -34,3 +34,12 @@ created_at: 2026-10-22
 
 - `SPEC-retained-runtime-receipt` envelope `reconcile-check-01.yaml`: the use case's extensions at step 7 omit the two
   new codes; its steps and postconditions stay correct.
+
+## Disposition
+
+- **Disposition (resolved)**: `SPEC-superseded-reference-cleanup` adds extensions 7f (`INTEGRATION_RECEIPT_READER_CHANGED`: a
+  restart does not help; the CLI route from the source's code under separately granted authority) and 7g
+  (`MCP_RUNTIME_STALE`: restart or reconnect the retained service) with scenarios 17 and 18 to
+  `UC-drive-development-to-integration`, and states that the coded executor refusals it does not name are listed in
+  `CAP-INT-mcp-services`. Verified against both capabilities in its `reconcile.md`, `devkit rules check` and the
+  `reconcile-check` envelope.

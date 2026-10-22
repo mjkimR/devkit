@@ -8,7 +8,7 @@ target: packages/devkit/pyproject.toml
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -31,3 +31,10 @@ packages/devkit/pyproject.toml [project] dependencies:
 "devkit-core==0.1.1",
 "devkit-dist==0.1.1",  # the devkit executable and the shared foundation, released in lockstep from the same tag
 ```
+
+## Disposition
+
+- **Disposition (resolved)**: `SPEC-superseded-reference-cleanup` changes the `devkit-dist` requirement comment in
+  `packages/devkit/pyproject.toml` to "the devkit executable and distribution, released in lockstep from the same
+  tag"; `devkit-core` keeps the foundation. Verified by `rg -n 'devkit-dist==|shared foundation'` on the file (one
+  match, the new comment) and the review envelope `review-01`.

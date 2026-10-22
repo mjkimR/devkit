@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -47,3 +47,12 @@ created_at: 2026-10-22
 reconcile-reviewer return, unverified_areas: "I could not check that HEAD is still b61af7b7 (no shell), so
 staleness is unconfirmed." and "I did not run the tests or the rules check."
 ```
+
+## Disposition
+
+- **Disposition (resolved)**: `SPEC-superseded-reference-cleanup` gives the `reconcile-reviewer` the `challenger` host settings
+  (claude-code `Bash` with `Write` and `Edit` disallowed, codex `sandbox_mode: read-only`, antigravity `run_command`
+  under the sandbox policy), keeps `x-git-actions: [read]`, and directs it to run `git diff <base> <head>` for
+  `diff_scope` and compare `git rev-parse HEAD` with the `diff_scope` head. Verified by the new assertions in
+  `test_support_roles_shell_access`, `just test-affected` (mode=full, 4664 passed), the regenerated projections and
+  `devkit sync --check`.
