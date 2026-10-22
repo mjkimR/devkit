@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-rule-shared-python-ast
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/governance/CAP-GOV-rule-authoring.md
     resolution: modified
@@ -15,7 +15,8 @@ targets:
 ## Living Spec changes
 
 - `CAP-GOV-rule-authoring` §2 lists `ctx.cache.get_python_ast(path)`: one parse per file and run from the file's
-  bytes as CPython reads source, under the workspace-relative name; the shared tree that a rule MUST NOT modify (a
+  bytes as CPython reads source, under the workspace-relative name (the resolved absolute path outside the workspace,
+  `reconcile-check-01.yaml` finding 1); the shared tree that a rule MUST NOT modify (a
   rule that needs a changed tree parses its own copy); a fresh `SyntaxError` or `ValueError` of the same type and
   arguments on every call from one parse; `FileNotFoundError` for a missing file; each rule's own report-or-skip
   decision; and that a rule reading Python source parses through the accessor (AC-01, AC-02, AC-06, AC-07;

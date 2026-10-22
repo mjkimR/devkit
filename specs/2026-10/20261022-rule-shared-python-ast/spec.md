@@ -2,7 +2,7 @@
 id: SPEC-rule-shared-python-ast
 title: Parse each Python file once per rules run
 summary: Adds a parsed-AST accessor to the rules workspace cache so Python-source rules share one parse per file and run, and resolves each rule path once per run, removing about 1,000 repeated parses, their garbage collection and most repeated path resolution from devkit rules check.
-status: in-progress
+status: completed
 created: 2026-10-22
 related_capabilities: [CAP-GOV-rule-authoring, CAP-GOV-evaluation-lifecycle, CAP-GOV-rules-engine]
 related_usecases: []
