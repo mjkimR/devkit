@@ -2,7 +2,7 @@
 id: PROP-shared-python-node-index
 title: Walk each Python tree once per rules run
 summary: "Adds a per-run node index to the rules workspace cache so Python-source rules read the nodes they need from one shared traversal instead of each walking every tree."
-status: draft                         # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-22
 target_area: governance/
 priority: high                        # critical | high | medium | low
@@ -14,6 +14,7 @@ boundaries:
     - packages/devkit/src/devkit_agt/features/rules/
     - tools/devkit-dev/
     - packages/devkit-dist/src/devkit_dist/bundles/advisory/
+    - packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/
     - docs/capabilities/governance/
   excludes:
     - docs/decisions/
@@ -30,26 +31,76 @@ walk every shared tree themselves: a profile of `devkit rules check` (Measured o
 `ast.walk` steps and 5.4 million `iter_child_nodes` calls, mostly from `RULE-architecture` (`_imports`),
 `RULE-advisory-unique-code` and `RULE-usecase-boundaries`, which each traverse the whole tree to find a few node kinds.
 
-Hypothesis: one traversal per file that indexes nodes by type, cached beside the parsed tree, serves every rule and
-removes most of the remaining Python-analysis time.
+Hypothesis, confirmed by prototype measurements on this repository (Linux, Python 3.12, 826 files;
+`materials/measurements.md`): building a per-run index mapping node types to node tuples on first request costs only
+8.97 MB RSS across all 826 files, and replaces 1,151 ms of repeated `ast.walk` passes with 1.82 ms of index lookups
+(saving ~1.15 s of pure traversal time) with byte-identical output.
 
 ## 2. Technical Spike Questions
 
 - **Q1**: Which node kinds do the rules read (imports, function and class definitions, calls, string constants), and
   does any rule need traversal order or parent links that a by-type index loses?
+  - **Answer**: `architecture`, `usecase-boundaries`, `command_boundary`, and `library_output` read concrete types
+    (`Import`, `ImportFrom`, `Attribute`, `Call`, `FunctionDef`, `AsyncFunctionDef`) in document order, with no parent
+    links needed. Only `unique_code._calls` (tracking enclosing function lazy imports) and `layers._imports` (skipping
+    `if TYPE_CHECKING:`) perform specialized scope/conditional walks; these remain rule-internal, while flat walks
+    migrate to the index (`PADR-index-python-ast-nodes-by-type-in-workspacecache`).
 - **Q2**: What is the accessor shape (`get_python_nodes(path, *types)` returning a read-only sequence) and its memory
   cost next to the shared tree?
+  - **Answer**: `WorkspaceCache.get_python_nodes(path, *types: type[ast.AST]) -> tuple[ast.AST, ...]` returns nodes
+    matching any requested type in document traversal order. The index is built lazily on first node query for `path`
+    and cleared on cache invalidation; memory cost is ~9 MB across 826 files.
 
-## 3. Proposed Design & Impact
+## 3. Planning Decisions
 
-- `WorkspaceCache` builds the node index lazily on first request and keeps it for the run under the same
-  invalidation as the parsed tree; the shared-tree read-only contract extends to the index.
-- The three rules (and the catalog `cli_tool` rules where they walk trees) read from the index; outputs stay
-  byte-identical on this repository.
-- Acceptance: `devkit rules check` median measured on main before and after, interleaved; walk-step count recorded.
-- A smaller, safer step than `PROP-persistent-python-facts-cache`; its result decides whether that one is worth it.
+- **D1 — Shared node index in `WorkspaceCache`**: `PADR-index-python-ast-nodes-by-type-in-workspacecache`.
+- **D2 — Accessor contract**: `WorkspaceCache.get_python_nodes(path, *types: type[ast.AST]) -> tuple[ast.AST, ...]`:
+  returns shared nodes in document traversal order matching any requested type; raises `ValueError` if `types` is empty;
+  inherits the read-only contract of `ADR-share-one-read-only-parsed-tree-per-python-file`.
+- **D3 — Migration scope**:
+  - `RULE-architecture`: replaces 4 `ast.walk` passes in `_imports` with `get_python_nodes(path, ast.Import, ast.ImportFrom, ast.Attribute, ast.Call)`.
+  - `RULE-usecase-boundaries`: replaces `_imports` walk with `get_python_nodes(path, ast.Import, ast.ImportFrom)`.
+  - `RULE-cli-tool-command-boundary`: replaces `tree` walk with `get_python_nodes(path, ast.FunctionDef, ast.AsyncFunctionDef)`.
+  - `RULE-cli-tool-library-output`: replaces `_aliases` and check walks with `get_python_nodes(path, ast.Import, ast.ImportFrom, ast.Call)`.
+  - `RULE-advisory-unique-code`: `parse_module` reads top-level nodes through `get_python_nodes`; `_calls` remains rule-internal.
+  - `RULE-cli-tool-layers`: custom `_imports` remains rule-internal.
+- **D4 — Cache lifecycle**: the index is stored on `WorkspaceCache` beside `_ast_cache` and cleared on `invalidate`,
+  `write_text`, `invalidate_many`, `invalidate_all`.
 
-## 4. Lifecycle & Retirement Criteria
+## 4. Proposed Design & Impact
+
+### WorkspaceCache and RuleContext
+
+- `WorkspaceCache` adds `_nodes_cache: dict[str, dict[type[ast.AST], tuple[ast.AST, ...]]]` and
+  `get_python_nodes(path: str | Path, *types: type[ast.AST]) -> tuple[ast.AST, ...]`.
+- `invalidate(path)` and `invalidate_all()` clear `_nodes_cache`.
+
+### Rule migrations
+
+- `tools/devkit-dev/src/devkit_dev/bundle/rules/architecture/rule.py`: `_imports` uses `cache.get_python_nodes`.
+- `tools/devkit-dev/src/devkit_dev/bundle/rules/usecase-boundaries/rule.py`: `_imports` uses `cache.get_python_nodes`.
+- `packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/command_boundary/rule.py`: uses `cache.get_python_nodes`.
+- `packages/devkit-catalog/src/devkit_catalog/cli_tool/bundle/rules/library_output/rule.py`: uses `cache.get_python_nodes`.
+
+### Living Spec
+
+- `CAP-GOV-rule-authoring`: documents `ctx.cache.get_python_nodes(path, *types)` alongside `get_python_ast`.
+- `CAP-GOV-rules-engine`: lists node indexing in `cache.py` responsibilities.
+
+### Acceptance outcomes
+
+1. `devkit rules check --format json` produces byte-identical output before and after the change on this repository.
+2. Migrated rules make 0 whole-module `ast.walk` calls.
+3. Median wall time of `devkit rules check --format json` decreases measurably on this repository.
+4. Existing rule test suites and cache integration tests pass cleanly.
+
+### Non-Goals
+
+1. Indexing complex lexical scope hierarchies or AST parent links.
+2. Persistent cross-run facts caching (`PROP-persistent-python-facts-cache`).
+3. Changing any rule's file matching or finding messages.
+
+## 5. Lifecycle & Retirement Criteria
 <!--
 - Preliminary decisions: devkit spec proposal padr shared-python-node-index "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
 - Research: collect benchmarks and references in materials/.
