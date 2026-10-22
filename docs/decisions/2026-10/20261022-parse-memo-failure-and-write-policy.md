@@ -1,15 +1,15 @@
 ---
-id: PADR-parse-memo-failure-and-write-policy
+id: ADR-parse-memo-failure-and-write-policy
 title: Parse memo failure and write policy
 summary: For corrupt, stale or concurrent memos, we treat any unreadable or mismatched memo as empty, rebuild silently, write by atomic replace only from changed working-tree loads, with no lock, to keep every result a fresh build's, accepting lost updates between writers.
-proposal: PROP-document-index-cache
-status: draft
+proposal: SPEC-document-index-cache
+status: accepted
 created_at: 2026-10-22
 ---
 
-# [PADR-parse-memo-failure-and-write-policy] Parse memo failure and write policy
+# [ADR-parse-memo-failure-and-write-policy] Parse memo failure and write policy
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-22
 
 ---

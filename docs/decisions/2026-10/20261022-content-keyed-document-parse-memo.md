@@ -1,15 +1,15 @@
 ---
-id: PADR-content-keyed-document-parse-memo
+id: ADR-content-keyed-document-parse-memo
 title: Content-keyed document parse memo
 summary: For repeated document lookups, we persist each document's parse result keyed by its path and a digest of the exact text parsed, under a parser fingerprint, to stay identical to a fresh build across edits, branch switches and clock skew, accepting a read and hash of every document per load.
-proposal: PROP-document-index-cache
-status: draft
+proposal: SPEC-document-index-cache
+status: accepted
 created_at: 2026-10-22
 ---
 
-# [PADR-content-keyed-document-parse-memo] Content-keyed document parse memo
+# [ADR-content-keyed-document-parse-memo] Content-keyed document parse memo
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-22
 
 ---
@@ -19,7 +19,7 @@ created_at: 2026-10-22
 Every `DocumentIndex.load` walks `docs/` and `specs/`, reads each Markdown file and parses its frontmatter and prose.
 On this repository (693 candidate files, 637 documents) the load takes about 300 ms of the 430 ms that `devkit spec
 resolve` needs; YAML loading and prose scanning are most of it, while the walk takes 12 to 16 ms and reading the files
-8 to 53 ms (`materials/baseline-profile.md`). Each command is a new process, so the in-process memo that `index.py`
+8 to 53 ms (`docs/materials/2026-10/20261022-document-index-cache/baseline-profile.md`). Each command is a new process, so the in-process memo that `index.py`
 keeps, keyed by path and text, never survives between agent calls.
 
 `CAP-DOCS-document-model` lists "a persistent cache or database of documents" as a Non-Goal because a second source of
@@ -76,7 +76,7 @@ timestamp or clock assumption, and the prototype cut the index load from about 3
   file list and reader, because a text key is valid for any source of the text. In practice that is walk loads and
   spec rule runs on the working tree (and in-place staged runs); a materialized Git snapshot is a temporary
   directory without `.devkit/transient/` and has no memo. Which loads write it is
-  `PADR-parse-memo-failure-and-write-policy`.
+  `ADR-parse-memo-failure-and-write-policy`.
 - `WorkspaceCache.get_catalog` (devkit-agt) is not changed: it is a generic catalog without the document model, and
   `devkit-agt` cannot depend on `devkit-spec`.
 
