@@ -25,51 +25,62 @@ Commit the tracked paths with the change that required them. Projections stay
 ignored per the repository's `.gitignore`; devkit never edits it or the Git index.
 
 `uv run devkit sync` rebuilds the generated paths from the installed packages
-and the configuration. It halts with `SYNC_CONFLICT` on a modified managed file
-or a foreign file in its way, adopts a foreign file identical to what it would
-write, and never deletes foreign files. A modified file that is no longer
-selected stays in place as an `ORPHAN_LEFT` warning; ask the user before
-removing it. Follow each advisory's `[ACTION]`; report every `[WARN]` to the user.
+and the configuration:
+
+- On a modified managed file or a foreign file in its way, it halts with `SYNC_CONFLICT`.
+- It adopts a foreign file identical to what it would write and never deletes foreign files.
+- A modified file that is no longer selected stays in place as an `ORPHAN_LEFT`
+  warning; ask the user before removing it.
+- Follow each advisory's `[ACTION]`; report every `[WARN]` to the user.
 
 The root `AGENTS.md` block is regenerated from the selection and hash-guarded
-like a managed file: write project guidance outside the markers.
-`guidance_block = false` turns it off; a block edited by hand is then left in
+like a managed file. Write project guidance outside the markers.
+`guidance_block = false` turns the block off; a block edited by hand is then left in
 place with an `ORPHAN_LEFT` warning.
 
 Seeded files are scaffolding a bundle wrote on first sync (a docs tree, a
 policy file). Edit them freely; sync writes one again only when it was deleted
 while its asset is still selected.
 
-Selected `hook` assets register installed handlers at native host events;
-`devkit host status --format json` inspects registration, handler validity and
-the observer's last metadata. Removing the bundle removes only its owned
-groups. Host enablement, trust and execution permissions stay separate: a
-successful installation does not establish them.
+Selected `hook` assets register installed handlers at native host events.
+
+- Inspect registration, handler validity and the observer's last metadata with
+  `devkit host status --format json`.
+- Removing the bundle removes only its owned groups.
+- A successful installation does not establish host enablement, trust or
+  execution permissions; they stay separate.
 
 Rule, gate and workflow assets are deployed like any other kind; their engines
 come with `devkit-agt`, whose auto-selected `harness` bundle covers them.
 
-When a failing rule's remediation names a playbook, run the
-`uv run devkit playbook search` it names, read the chosen procedure from the
-returned path, loading its bundle's context (`uv run devkit get-context <bundle>`)
-first if not yet loaded, then apply it.
+When a failing rule's remediation names a playbook:
+
+1. Run the `uv run devkit playbook search` it names.
+2. If the chosen playbook's bundle context is not loaded yet, load it with
+   `uv run devkit get-context <bundle>`.
+3. Read the chosen procedure from the returned path, then apply it.
 
 ## Retrieving an explicitly named playbook
 
 When the user names an exact playbook for this task, or explicitly configures
-an external schedule with its ID, run `uv run devkit playbook get <bundle>/<playbook>`.
-The selector uses case-sensitive manifest IDs. The JSON-only result contains the
-complete body, effective metadata, canonical identity, source path and byte hash,
-and context requirements. Run its context argv in the same workspace (or pass `-w`)
-unless already loaded in this agent context; reload after loss, apply the full
-constitution and read relevant instructions. Read needed relative resources from
-the parent of `source.path`. Overrides are read live; selection uses the deployed
-receipt snapshot until sync. Retrieval never executes or synchronizes.
+an external schedule with its ID:
 
-Ordinary task wording does not authorize discovery or selection. Each execution
-starts fresh progress and checks prerequisites, workflow gates, permissions and
-user constraints. A schedule grants no future gated approval; unavailable approval
-UI is not approval. External systems own cadence, launch, retries, overlap and history.
+1. Run `uv run devkit playbook get <bundle>/<playbook>`. The selector uses case-sensitive
+   manifest IDs. The JSON-only result contains the complete body, effective metadata,
+   canonical identity, source path and byte hash, and context requirements.
+2. Unless already loaded in this agent context, run its context argv in the same
+   workspace (or pass `-w`); reload after loss.
+3. Apply the full constitution and read relevant instructions.
+4. Read needed relative resources from the parent of `source.path`.
+
+Overrides are read live; selection uses the deployed receipt snapshot until sync.
+Retrieval never executes or synchronizes.
+
+- Ordinary task wording does not authorize discovery or selection.
+- Each execution starts fresh progress and checks prerequisites, workflow gates,
+  permissions and user constraints.
+- A schedule grants no future gated approval; unavailable approval UI is not approval.
+- External systems own cadence, launch, retries, overlap and history.
 
 ## Changing what is deployed
 
@@ -85,21 +96,23 @@ uv run devkit sync --no-save --agent claude-code --agent codex   # narrow projec
 ```
 
 Without `agents` in `.devkit/config.toml`, every supported agent gets
-projections. A bundle must be installed (`uv add --dev <package>`) before it
-can be selected. `BUNDLE_AUTO_SELECTED` names an auto-selected bundle when it
-is first deployed: tell the user, and opt it out with `devkit remove <bundle>`
-only when they ask. A deployed bundle whose package is not installed fails the
-sync with `SELECTION_INVALID`, so a partial environment never deletes committed
-files: run `uv sync` when the package belongs in the environment, or
-`devkit remove <bundle>` when the user removed it.
+projections.
+
+- Install a bundle's package (`uv add --dev <package>`) before selecting the bundle.
+- When `BUNDLE_AUTO_SELECTED` names an auto-selected bundle on its first deployment,
+  tell the user. Opt it out with `devkit remove <bundle>` only when they ask.
+- A deployed bundle whose package is not installed fails the sync with
+  `SELECTION_INVALID`, so a partial environment never deletes committed files.
+  Run `uv sync` when the package belongs in the environment, or
+  `devkit remove <bundle>` when the user removed it.
 
 `uv run devkit config template` adds commented keys for what the file lacks,
 including the tables installed engines and tools register, with defaults or
-marked examples; it never changes a line, and `--print` shows the result under
+marked examples. It never changes a line; `--print` shows the result under
 `text` without writing. Read those comments to learn what a setting does.
 
 `devkit sync --locked` rebuilds only the Git-ignored copies the committed
-receipt records and never writes the receipt, the `AGENTS.md` block or seeded
+receipt records. It never writes the receipt, the `AGENTS.md` block or seeded
 files; when those would change, it writes nothing and fails with `RECEIPT_STALE`.
 It also permits eligible ignored personal output and `--cloud` or `--local` environment persistence.
 
@@ -131,16 +144,17 @@ uv run devkit override accept <bundle>:<asset>   # record the current upstream a
 uv run devkit override remove <bundle>:<asset>   # use upstream sources again
 ```
 
-`create` copies every file of the asset (a whole skill directory). An override
-file replaces its upstream file in projections, `get-context` and playbook
-search and exact retrieval; even an unchanged copy follows upstream only through `accept`. For a
-`.md.jinja` asset, edit the raw template override and sync; agents read the
-rendered managed `.md`. Bundle variables are set under
-`[bundles.<bundle>.variables]` in `.devkit/config.toml`. Drift is reported when
-any upstream file of the asset changes; `create --force` restarts the override
-from the current upstream. Only assets of selected bundles can be overridden;
-edit seeded files in place, and the repository's own assets in their source
-bundle (`in-repo-bundle`).
+`create` copies every file of the asset (a whole skill directory).
+
+- An override file replaces its upstream file in projections, `get-context`, playbook
+  search and exact retrieval. Even an unchanged copy follows upstream only through `accept`.
+- For a `.md.jinja` asset, edit the raw template override and sync; agents read the
+  rendered managed `.md`.
+- Set bundle variables under `[bundles.<bundle>.variables]` in `.devkit/config.toml`.
+- Drift is reported when any upstream file of the asset changes; `create --force`
+  restarts the override from the current upstream.
+- Override only assets of selected bundles. Edit seeded files in place, and the
+  repository's own assets in their source bundle (`in-repo-bundle`).
 
 ## Checking the installed state
 
@@ -148,14 +162,17 @@ bundle (`in-repo-bundle`).
 anything: managed files, override drift, the guidance block, seeded files,
 package availability, a pending journal and the devkit version that wrote the
 receipt. It lists what needs acting on under `errors`, each with its
-`advisory`, and exits 1 when there is any. `uv run devkit sync --check` exits 1
-with one `[CHANGE: ...]` line per pending write when a sync is needed. Concurrent
-configuration changes also exit 1 (`CONFIG_LOCAL_CHANGED`); other failures use their
-advisory exit status. Every command takes `-w <dir>` for another project.
+`advisory`, and exits 1 when there is any.
+
+`uv run devkit sync --check` exits 1 with one `[CHANGE: ...]` line per pending
+write when a sync is needed. Concurrent configuration changes also exit 1
+(`CONFIG_LOCAL_CHANGED`); other failures use their advisory exit status.
+
+Every command takes `-w <dir>` for another project.
 
 ## Recovering an interrupted sync
 
-`TRANSACTION_PENDING`: run `uv run devkit recover`, which restores the files
-the journal names to their state before the interrupted run, then run
-`devkit sync` again. `LOCK_HELD`: another devkit command is running; wait for
-it and never delete the lock.
+- `TRANSACTION_PENDING`: run `uv run devkit recover`, which restores the files
+  the journal names to their state before the interrupted run, then run
+  `devkit sync` again.
+- `LOCK_HELD`: another devkit command is running. Wait for it; do not delete the lock.

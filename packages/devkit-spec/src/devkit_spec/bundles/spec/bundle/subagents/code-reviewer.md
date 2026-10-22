@@ -36,16 +36,31 @@ The caller's payload: `task_goal` (verify this change against these acceptance c
 
 ## Procedure
 
-Run `uv run devkit get-context spec` once, then read `.devkit/managed/spec/skills/spec-review/SKILL.md` (or its override under `.devkit/overrides/` when one exists) and follow its sections 2 and 3: Steps 1 to 4 against `diff_scope`, and the review report fields. You return those fields; the caller records them. At `activity-effort` `high` you are one round of a bounded loop (`.devkit/managed/spec/skills/spec/references/review-loop.md`): round 1 covers the whole change, a later round every fix in its `diff_scope` and what it affects. Start a finding that repeats an earlier one with `recurs: <envelope> #<n>;` in `issue`.
+1. Run `uv run devkit get-context spec` once.
+2. Read `.devkit/managed/spec/skills/spec-review/SKILL.md`, or its override under `.devkit/overrides/` when one exists.
+3. Follow its sections 2 and 3: Steps 1 to 4 against `diff_scope`, and the review report fields. Return those fields; the caller records them.
+
+At `activity-effort` `high` you are one round of a bounded loop (`.devkit/managed/spec/skills/spec/references/review-loop.md`):
+
+- Round 1 covers the whole change; a later round covers every fix in its `diff_scope` and what it affects.
+- If a finding repeats an earlier one, start its `issue` with `recurs: <envelope> #<n>;`.
 
 ## Return
 
-The fields of a devkit envelope of kind `review` (or `reverify` when closing an earlier round), as YAML with findings as a list; do not write envelope files: `status`, `summary`, `findings` where each finding has `evidence` (path:line), `failure_condition` (required: under which input or state it fails) and `severity` (required at every effort: `P1`, `P2` or `P3` as the review loop reference defines them for code review), `checks` with the check results, and `diff_scope`. `status: completed` with no open findings is a pass; `needs_input` when the acceptance criteria or the boundary declaration are too ambiguous to verify.
+The fields of a devkit envelope of kind `review` (or `reverify` when closing an earlier round), as YAML with findings as a list. Do not write envelope files.
+
+- `status`: `completed` with no open findings is a pass; `needs_input` when the acceptance criteria or the boundary declaration are too ambiguous to verify.
+- `summary`.
+- `findings`, each with `evidence` (path:line), `failure_condition` (required: under which input or state it fails) and `severity` (required at every effort: `P1`, `P2` or `P3` as the review loop reference defines them for code review).
+- `checks` with the check results.
+- `diff_scope`.
 
 ## Write boundaries
 
-Read only (`MUST NOT` modify source, test, spec or docs files, stage or commit). Discovered requirements are returned in `findings` for the caller to append to `spec.md`.
+- Read only (`MUST NOT` modify source, test, spec or docs files, stage or commit).
+- Return discovered requirements in `findings`; the caller appends them to `spec.md`.
 
 ## On failure or unresolved
 
-Report concrete locations and failure conditions; do not manufacture defects. If the diff changed during review (new input, head moved), return `needs_input` and name the stale ref; the stale result is not completion evidence.
+- Report concrete locations and failure conditions; do not manufacture defects.
+- If the diff changed during review (new input, head moved), return `needs_input` and name the stale ref; the stale result is not completion evidence.

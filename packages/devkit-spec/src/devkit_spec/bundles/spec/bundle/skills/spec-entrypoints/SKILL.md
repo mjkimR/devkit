@@ -5,7 +5,13 @@ description: Derive capability/story entrypoints from a spec bundle's tasks.md (
 
 # spec-entrypoints: Entrypoint Derivation and Sync
 
-Use this skill when a spec bundle has both `tasks.md` and `reconcile.md` (normally inside `spec-sync`), or when capability/story documents lack `entrypoints` and completed specs can supply them. The command joins declarations mechanically; this skill supplies the review that decides what is written. Path contract: `devkit rules explain RULE-code-entrypoints`.
+Use this skill when:
+
+- a spec bundle has both `tasks.md` and `reconcile.md` (normally inside `spec-sync`);
+- capability/story documents lack `entrypoints` and completed specs can supply them.
+
+The command joins declarations mechanically; this skill supplies the review that decides what is written. Path
+contract: `devkit rules explain RULE-code-entrypoints`.
 
 ---
 
@@ -19,24 +25,48 @@ Use this skill when a spec bundle has both `tasks.md` and `reconcile.md` (normal
 
 ## 2. Procedure for the current bundle
 
-1. **Derive**: `devkit spec entrypoints derive --spec specs/<YYYY-MM>/<YYYYMMDD>-<slug>`; the `new=` paths of each `[CANDIDATES: <doc> ...]` line are what the review decides on.
-2. **Review** before writing. Drop a document when the bundle touched it only for metadata or wording (its reconcile target is `modified`, but the code paths belong to another capability). Keep entrypoints concise and lightweight:
-   - **Target 1–3 entrypoints per document**: avoid listing full file trees or multi-file collections.
-   - **Prefer doorway files**: choose the primary entry/interface file (e.g. `cli.py`, `usecase.py`, `service.py`, `index.ts`, `__init__.py`) where reading starts, rather than listing internal helpers, models, schemas, or tests.
-   - **Use a dedicated directory only when owned**: choose a directory candidate (with trailing `/`) only when the document cleanly owns that entire package/module. Never choose an overly broad shared directory.
+1. **Derive**: run `devkit spec entrypoints derive --spec specs/<YYYY-MM>/<YYYYMMDD>-<slug>`. The `new=` paths of each
+   `[CANDIDATES: <doc> ...]` line are what the review decides on.
+2. **Review** before writing.
+   - Drop a document when the bundle touched it only for metadata or wording (its reconcile target is `modified`, but
+     the code paths belong to another capability).
+   - Target 1–3 entrypoints per document; do not list full file trees or multi-file collections.
+   - Choose doorway files: the primary entry/interface file (e.g. `cli.py`, `usecase.py`, `service.py`, `index.ts`,
+     `__init__.py`) where reading starts, rather than internal helpers, models, schemas, or tests.
+   - Choose a directory candidate (with trailing `/`) only when the document cleanly owns that entire package/module;
+     otherwise choose its doorway files. Never choose an overly broad shared directory.
    - A pair is a declaration join, not proof that the code implements that document.
-3. **Apply** the chosen pairs only: `devkit spec entrypoints derive --spec <dir> --apply --target <CAP-or-US-id> --code <path> [--code ...]`. `--target` picks documents, `--code` keeps candidates equal to or under a path, `--exclude` drops hub paths every bundle touches (root `AGENTS.md`, `README.md`, agent guides). Without them every bearing target and candidate of the bundle is written. To declare a folded file instead of its directory, apply with `--all` (folding is per bundle) or edit the boundary. The command appends and is idempotent; follow the `[FIX]` of any warning.
-4. **Verify**: `devkit rules check <document>` (`RULE-code-entrypoints` checks that every written path exists) and `devkit spec list capability --file <path>` (or `story`) for one written path: the document must be listed.
-5. **Record**: a document whose `entrypoints` changed is a Living Spec change; make sure it is a `modified` target in the bundle's `reconcile.md` (or reported by a `session` task).
+3. **Apply** the chosen pairs only:
+   `devkit spec entrypoints derive --spec <dir> --apply --target <CAP-or-US-id> --code <path> [--code ...]`.
+   - `--target` picks documents, `--code` keeps candidates equal to or under a path, `--exclude` drops hub paths every
+     bundle touches (root `AGENTS.md`, `README.md`, agent guides).
+   - Without them every bearing target and candidate of the bundle is written.
+   - To declare a folded file instead of its directory, apply with `--all` (folding is per bundle) or edit the
+     boundary.
+   - The command appends and is idempotent; follow the `[FIX]` of any warning.
+4. **Verify**:
+   - `devkit rules check <document>`: `RULE-code-entrypoints` checks that every written path exists.
+   - `devkit spec list capability --file <path>` (or `story`) for one written path: the document must be listed.
+5. **Record**: a document whose `entrypoints` changed is a Living Spec change. Make it a `modified` target in the
+   bundle's `reconcile.md`, or report it in a `session` task.
 
 ---
 
 ## 3. Backfill across completed specs
 
-1. `devkit spec entrypoints derive --all` aggregates every `completed` and `in-progress` bundle; each path carries its spec count, `src/a.py(2)` (`--format json` for the spec IDs). Add `--status` to change the filter.
-2. Choose a threshold from the distribution: `--min-count 2` keeps pairs two or more specs agree on and removes most one-off joins. Inspect the remaining `new=` paths per document; `--format json` helps when the list is long.
-3. Apply per document so each decision is explicit: `devkit spec entrypoints derive --all --min-count <n> --apply --target <id> --code <path> ...`, adding `--exclude` for hub paths. Directories and files under them collapse to the directory. Then run `devkit rules check`.
-4. Report which documents were filled and which stayed empty with the reason (`missing-path`, no candidates, candidates rejected in review). Backfill of many documents is a Living Spec change: record it through the current bundle's `reconcile.md` or the report of a `session` task.
+1. Run `devkit spec entrypoints derive --all`. It aggregates every `completed` and `in-progress` bundle; each path
+   carries its spec count, `src/a.py(2)` (`--format json` for the spec IDs). Add `--status` to change the filter.
+2. Choose a threshold from the distribution: `--min-count 2` keeps pairs two or more specs agree on and removes most
+   one-off joins.
+3. Inspect the remaining `new=` paths per document; for a long list, use `--format json`.
+4. Apply per document so each decision is explicit:
+   `devkit spec entrypoints derive --all --min-count <n> --apply --target <id> --code <path> ...`, adding `--exclude`
+   for hub paths. Directories and files under them collapse to the directory.
+5. Run `devkit rules check`.
+6. Report which documents were filled and which stayed empty with the reason (`missing-path`, no candidates,
+   candidates rejected in review).
+7. Backfill of many documents is a Living Spec change: record it through the current bundle's `reconcile.md` or the
+   report of a `session` task.
 
 ---
 

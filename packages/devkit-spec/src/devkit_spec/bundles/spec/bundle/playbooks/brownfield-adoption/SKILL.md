@@ -11,13 +11,17 @@ aliases:
 
 # Brownfield adoption
 
-`devkit sync` writes nothing under `docs/` or `specs/`, but the spec rules check the Markdown already there: files in
-`docs/architecture/`, `docs/decisions/`, `docs/capabilities/`, `docs/stories/`, `docs/proposals/` and `specs/` break
-path and frontmatter conventions, and number-based references such as `ADR-0001` anywhere in `docs/` or `specs/`
-break `RULE-id-convention`. This playbook contains that debt so `devkit rules check` passes, then moves legacy content
-into the Living Spec as work touches it, each migration ordinary work started with the `spec` skill. Containment never
-edits a rule: legacy files move to `docs/materials/`, which the spec rules leave free-form, and any other deferral is
-a commented `.devkit/config.toml` entry the user decided.
+`devkit sync` writes nothing under `docs/` or `specs/`, but the spec rules check the Markdown already there:
+
+- files in `docs/architecture/`, `docs/decisions/`, `docs/capabilities/`, `docs/stories/`, `docs/proposals/` and
+  `specs/` break path and frontmatter conventions;
+- number-based references such as `ADR-0001` anywhere in `docs/` or `specs/` break `RULE-id-convention`.
+
+This playbook contains that debt so `devkit rules check` passes, then moves legacy content into the Living Spec as
+work touches it; each migration is ordinary work started with the `spec` skill.
+
+Contain the debt without editing a rule: move legacy files to `docs/materials/`, which the spec rules leave
+free-form, and record any other deferral as a commented `.devkit/config.toml` entry the user decided.
 
 ## Prerequisites
 
@@ -42,11 +46,12 @@ uv run devkit rules phases
 git ls-files -- 'docs/*.md' 'specs/*.md' > /tmp/legacy.txt
 ```
 
-The legacy set is the tracked Markdown under `docs/` and `specs/`, minus seeded paths if `spec:docs-skeleton` was
-already added (`devkit list` shows them). Review it with the user when it is long or has files already shaped like
-the Living Spec; those stay and are fixed as ordinary work. Also note, without moving them, legacy agent instructions
-(`AGENTS.md` outside the markers, `CLAUDE.md`, editor rule files) and docs outside `docs/` and `specs/`: inputs to
-Step 5.
+- The legacy set is the tracked Markdown under `docs/` and `specs/`. If `spec:docs-skeleton` was already added,
+  remove its seeded paths (`devkit list` shows them).
+- If the set is long or has files already shaped like the Living Spec, review it with the user. Files already shaped
+  like the Living Spec stay in place and are fixed as ordinary work.
+- Note, without moving them, legacy agent instructions (`AGENTS.md` outside the markers, `CLAUDE.md`, editor rule
+  files) and docs outside `docs/` and `specs/`; they are inputs to Step 5.
 
 ## Step 3: Contain
 
@@ -84,20 +89,24 @@ exclude = ["docs/decisions/0*.md"]
 RULE-markdown-link = "hygiene"
 ```
 
-`uv run devkit rules check` must exit `0`. Propose committing the containment as one change before any migration,
-so moves and content edits stay reviewable apart.
+Run `uv run devkit rules check`; it must exit `0`. Propose committing the containment as one change before any
+migration, so moves and content edits stay reviewable apart.
 
 ## Step 4: Docs skeleton, policy and commit gate
 
 - **Docs skeleton** (optional): `uv run devkit add spec:docs-skeleton` writes the Living Spec directories, arc42
   starter chapters and glossary only where no file exists; then they are project-owned. A link to a legacy index such
   as `docs/README.md` now reaches the starter; point it at the `_legacy/` copy when the reader needs the old content.
-- **Policy**: show `uv run devkit spec policy`. `plan-accept`, `proposal-handoff` and `dev-integration` each follow `ask|auto`.
-  Existing task authorization satisfies `plan-intent` without another prompt. Record user decisions and policy authority accurately (`[workflow.approvals]`, `[workflow.stages]`,
-  `[worktree]`, `[tool.spec]`) in `.devkit/config.toml`.
+- **Policy**: show `uv run devkit spec policy`.
+  - `plan-accept`, `proposal-handoff` and `dev-integration` each follow `ask|auto`.
+  - Existing task authorization satisfies `plan-intent` without another prompt.
+  - Record user decisions and policy authority accurately (`[workflow.approvals]`, `[workflow.stages]`,
+    `[worktree]`, `[tool.spec]`) in `.devkit/config.toml`.
 - **Commit gate**: sync installs the hooks; the `rules-check` gate (on by default) refuses a commit touching a file
-  with an error finding. The user chooses: fix, park or lower the rule in `[rules]`, or `enabled = false` in
-  `[gates.settings.rules-check]` for now. `uv run devkit gate status` must exit `0`.
+  with an error finding.
+  - The user chooses: fix, park or lower the rule in `[rules]`, or `enabled = false` in
+    `[gates.settings.rules-check]` for now.
+  - `uv run devkit gate status` must exit `0`.
 
 ## Step 5: Classify
 

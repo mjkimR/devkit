@@ -1,0 +1,82 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T00:24:00.447336Z'
+status: completed
+summary: 'Three native code-reviewer subagents (parts A, B, C) compared all 60 files base 134837b1 vs head b077ec93: constraints, commands, codes, links and Jinja placement preserved except 11 meaning shifts from hedge or ''prefer'' removal and one invented condition; no AC-01 finding'
+findings:
+- issue: Deferred Work Handoff back-reference names 'the proposal', ambiguous with the removed original
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/completion.md.jinja:122
+  failure_condition: The destination proposal ends up with no link to the retained source
+  suggested_action: Say 'from the destination proposal'
+  resolution: open
+  severity: P2
+- issue: Unconditional ban on spec searching or routing to playbooks became conditional
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/SKILL.md.jinja:75
+  failure_condition: spec routes to a playbook when devkit-playbook is invoked or a remediation names one
+  suggested_action: Keep the ban as its own bullet, separate from the run condition
+  resolution: open
+  severity: P2
+- issue: Bugfix routed-change step invents a validity condition for reproduction evidence
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-specify/references/bugfix.md:79
+  failure_condition: A changed contract keeps a Red envelope valid that no longer shows a defect
+  suggested_action: State whether the reproduction evidence still holds and re-examine the AC lists
+  resolution: open
+  severity: P1
+- issue: Optional milestone close review offer became mandatory
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-next/references/next-work.md:70
+  failure_condition: Every idle recommendation must include the offer
+  suggested_action: Keep MAY
+  resolution: open
+  severity: P2
+- issue: '''No preflight is needed'' became a prohibition on preflights'
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/hosts.md.jinja:35
+  failure_condition: A Host reads a narrow preflight as forbidden
+  suggested_action: Say starting a worker requires no preflight
+  resolution: open
+  severity: P3
+- issue: New spec-next completion item drops the explicit-approval qualifier
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-next/SKILL.md:131
+  failure_condition: An approved step makes the checklist report the skill as not done
+  suggested_action: Append 'without the user's explicit approval'
+  resolution: open
+  severity: P3
+- issue: '''Prefer devkit run'' became unconditional'
+  evidence: packages/devkit/src/devkit_agt/bundles/harness/bundle/instructions/devkit-run.md:10
+  failure_condition: A raw or interactive tool run reads as a violation
+  suggested_action: Say 'by default'
+  resolution: open
+  severity: P2
+- issue: '''preferably Python 3'' became required'
+  evidence: packages/devkit/src/devkit_agt/bundles/authoring/bundle/playbooks/skill-authoring/references/scripts.md:15
+  failure_condition: A shell helper script breaks step 3
+  suggested_action: Say 'by default in Python 3'
+  resolution: open
+  severity: P3
+- issue: '''typically in a notices list'' became a fixed requirement in the semver advisory guidance'
+  evidence: packages/devkit-dist/src/devkit_dist/bundles/advisory/bundle/instructions/agent-advisory-python.md:74
+  failure_condition: A consumer returning warnings in another field reads as non-conforming
+  suggested_action: Say 'by convention in a notices list'
+  resolution: open
+  severity: P3
+- issue: Reconcile-reviewer input widened from documents the record likely affects to those the diff can affect
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/reconcile-reviewer.md:39
+  failure_condition: Payloads must include every possibly affected document
+  suggested_action: Say 'those it affects'
+  resolution: open
+  severity: P3
+- issue: '''importance alone'' condition dropped from the ADR-reference rule'
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/living-spec-writing.md:18
+  failure_condition: An ADR reference in guidance for a reason other than importance reads as forbidden
+  suggested_action: Keep the condition on both clauses
+  resolution: open
+  severity: P3
+assumptions:
+- Review split across three isolated code-reviewer runs by file scope
+checks:
+  tests: PASS just test-affected (1431 passed)
+  lint: PASS devkit rules check --ci --base main
+diff_scope:
+  base: 134837b1923c1d948fd0d10be7400da95f19506a
+  head: b077ec931e73d67c7b6d86e3b9580699401f2d25

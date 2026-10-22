@@ -5,11 +5,17 @@ description: Read before raising, returning, rendering or serializing errors, wa
 
 # Agent Advisory Protocol in Python (`devkit.advisory`)
 
-`devkit.advisory` implements the `agent-advisory` instruction's protocol; read that first for levels, modes and rendering rules. It is standard-library only and ships as `devkit-advisory`: runtime code depends on `devkit-advisory`, never on `devkit-dist` or `devkit-agt`.
+`devkit.advisory` implements the `agent-advisory` instruction's protocol. Read that instruction first for levels, modes and rendering rules.
+
+The library is standard-library only and ships as `devkit-advisory`. Make runtime code depend on `devkit-advisory`, not on `devkit-dist` or `devkit-agt`.
 
 ## Raising errors
 
-Raise `AdvisoryError` subclasses, not bare `ValueError`, `RuntimeError` or framework exceptions, at boundaries agents read. Every field can be a class-level default on the subclass; a keyword argument other than `None` overrides it for one instance, and positional arguments after the message become `[DETAIL]` lines:
+At boundaries agents read, raise `AdvisoryError` subclasses, not bare `ValueError`, `RuntimeError` or framework exceptions.
+
+- Set any field as a class-level default on the subclass.
+- Pass a keyword argument other than `None` to override a default for one instance.
+- Pass positional arguments after the message to add `[DETAIL]` lines.
 
 ```python
 from devkit.advisory import Actor, AdvisoryError, Retry
@@ -61,11 +67,11 @@ class GitFailedError(AdvisoryError):
         self.returncode = returncode
 ```
 
-Factories are classmethods, so `MyDomainError.blocked(...)` returns `MyDomainError`. Other modes come from `actor`, `retry` and `retry_after`. A bare `AdvisoryError("...")` derives `HALT` (`actor=NONE`, `retry=UNSAFE`); choose fields deliberately instead.
+Factories are classmethods, so `MyDomainError.blocked(...)` returns `MyDomainError`. Other modes come from `actor`, `retry` and `retry_after`. A bare `AdvisoryError("...")` derives `HALT` (`actor=NONE`, `retry=UNSAFE`); set the fields that derive the intended mode instead.
 
 ## Returning warnings and notices
 
-A warning or notice is an `AdvisoryError` at level `WARNING` or `NOTICE`, returned with the result (typically in a `notices` list), never raised. Its `exit_code` is `0`; `actor`, `retry`, `guardrail`, `input_error` and `retry_after` are ignored.
+A warning or notice is an `AdvisoryError` at level `WARNING` or `NOTICE`, returned with the result (by convention in a `notices` list), never raised. Its `exit_code` is `0`; `actor`, `retry`, `guardrail`, `input_error` and `retry_after` are ignored.
 
 ```python
 from dataclasses import dataclass, field

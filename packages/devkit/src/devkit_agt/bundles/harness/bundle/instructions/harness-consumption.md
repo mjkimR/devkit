@@ -31,7 +31,7 @@ lacks them.
 A workflow definition makes `devkit sync` generate the `devkit-workflow` entry
 skill, which runs `devkit workflow next` to compute a work unit's current stage;
 the stage skills the definition names do the work. Follow the entry skill
-rather than inferring the stage yourself.
+instead of inferring the stage yourself.
 
 ## Rules and commit gates
 
@@ -46,7 +46,9 @@ uv run devkit rules explain <RULE-id>
 uv run devkit rules test [<RULE-id>]            # the tests in each rule's folder (needs pytest)
 ```
 
-Per-clone gate settings go in `.git/devkit.config`, which lists every
-installed gate as a commented table: uncomment a table's header and only the
-keys you change, each replacing its `.devkit/config.toml` value. The built-in `rules-check` gate runs the `--staged` evaluation on every commit; turn it
-off with `enabled = false` in `[gates.settings.rules-check]`.
+Put per-clone gate settings in `.git/devkit.config`, which lists every
+installed gate as a commented table. Uncomment a table's header and only the
+keys you change; each replaces its `.devkit/config.toml` value.
+
+The built-in `rules-check` gate runs the `--staged` evaluation on every commit.
+To turn it off, set `enabled = false` in `[gates.settings.rules-check]`.

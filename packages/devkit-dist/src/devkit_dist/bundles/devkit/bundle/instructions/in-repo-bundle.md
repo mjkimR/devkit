@@ -87,9 +87,9 @@ devkit-dist = { git = "https://github.com/mjkimR/devkit.git", subdirectory = "pa
 "<repo>-devkit" = { workspace = true }
 ```
 
-A project that uses the harness, or whose bundle ships rule, gate or workflow
-assets, declares `devkit-agt` instead (see the `harness` bundle's
-`harness-assets` instruction); it brings `devkit-dist`, so a project
+If the project uses the harness, or its bundle ships rule, gate or workflow
+assets, declare `devkit-agt` instead (see the `harness` bundle's
+`harness-assets` instruction). It brings `devkit-dist`, so a project
 never declares both.
 
 In a single project, depend on it by path:
@@ -111,9 +111,11 @@ repository's own published package.
 ## Editing lifecycle
 
 Edit sources under `tools/<repo>-devkit/src/<repo>_devkit/bundle/`, then run
-`uv run devkit sync`: the editable install exposes the change at once and sync
-compares file hashes, so the package version need not change. Overrides are
-for bundles the repository does not own; edit its own bundle's source.
+`uv run devkit sync`. The editable install exposes the change at once and sync
+compares file hashes, so the package version need not change.
+
+Edit the repository's own bundle at its source, not through an override; overrides
+are for bundles the repository does not own.
 
 ## Sharing later
 

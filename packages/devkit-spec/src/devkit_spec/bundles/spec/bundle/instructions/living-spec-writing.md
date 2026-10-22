@@ -7,16 +7,16 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
 
 ## Current State and History
 
-- `docs/` is a current-state ledger, not a changelog. Rewrite affected statements in place when behavior or a decision changes, citing the source ID (ADR, MAT, SPEC) where the reason matters.
+- When behavior or a decision changes, rewrite the affected statements in `docs/` in place, citing the source ID (ADR, MAT, SPEC) where the reason matters: `docs/` is a current-state ledger, not a changelog.
 - Do not add dated headings, correction notes ("corrected on ...", "changed from X to Y") or history sections to capabilities, stories, architecture, development guides, the glossary or proposals.
 - Change history belongs in Git, append-only ADRs (replace through `supersedes`) and dated `docs/materials/`. Frontmatter dates and ADR/material dates are metadata, not prose history.
 - Temporary checklists and PR task lists belong in `specs/`, never directly in `docs/`.
 
 ## Decision Placement and Duplication
 
-- Record decisions and their rationale in ADRs. Planning already searches related ADRs; importance alone is not a
-  reason to repeat a decision in guidance blocks, constitutions or other always-loaded instructions, or to keep
-  appending references to individual ADRs there.
+- Record decisions and their rationale in ADRs.
+- Do not repeat a decision, or keep appending references to individual ADRs, in guidance blocks, constitutions or
+  other always-loaded instructions only because it is important; Planning already searches related ADRs.
 - Reserve always-loaded guidance for common constraints an agent needs before it can search for task-specific
   decisions. An exception SHOULD identify the concrete failure caused by missing that constraint before discovery;
   include only the minimum operational rule and keep its detailed rationale in the ADR.
@@ -27,13 +27,15 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
 
 ## Completed Specs and Traceability
 
-- A spec with `status: completed` remains in place as work history. It is not a default discovery or orientation target; read `docs/capabilities/` and `docs/stories/` for the current contract. Later behavior changes start a new spec. Editing a completed spec is not prohibited. `RULE-spec-lifecycle` keeps its status consistent with its tasks and reconcile record.
+- A spec with `status: completed` remains in place as work history. Editing it is not prohibited; `RULE-spec-lifecycle` keeps its status consistent with its tasks and reconcile record.
+- For the current contract, read `docs/capabilities/` and `docs/stories/`; a completed spec is not a default discovery or orientation target.
+- Start a later behavior change in a new spec.
 - Stories and capabilities form an orthogonal M:N relationship. Link them through YAML `stories:` in capabilities and `capabilities:` in stories, both ways (`RULE-traceability-link`); do not physically nest either inside the other.
 
 ## Summaries
 
 - Capabilities, stories, decisions, architecture documents, proposals and specs carry `summary` in their frontmatter: one or two English sentences saying what the document defines (`RULE-document-summary`). Titles and bodies may be written in any language.
-- `devkit spec search` embeds the ID and the summary; a summary written for a reader who has never seen the document makes it findable by meaning. State the subject and its boundary; skip status, history and boilerplate ("This document describes ...").
+- Write the summary for a reader who has never seen the document, because `devkit spec search` embeds the ID and the summary and finds the document by meaning. State the subject and its boundary; skip status, history and boilerplate ("This document describes ...").
 - Rewrite the summary whenever the document's contract changes.
 - Write it as a double-quoted YAML string (`summary: "..."`): an unquoted value containing `: ` or starting with a backtick breaks the frontmatter, and the document drops out of the index.
 

@@ -40,7 +40,7 @@ message") and `hook` (a handler the agent host calls at a native event).
 | --- | --- | --- | --- |
 | `rule` | `rules/<slug>/`: a plugin package directory of `.py` modules, guide and tests | The rule engine of `devkit-agt` (checks, commit gate, CI); loaded from the receipt | none |
 | `gate` | `gates/<slug>/`: a plugin package directory | The commit gate of `devkit-agt` at a Git hook stage | none |
-| `skill` | `skills/<slug>/SKILL.md` or `SKILL.md.jinja`, and support files | The agent host lists it and invokes it as a tool; sync opens the body with the bundle context prerequisite, so never write it | name and description always; body on invocation |
+| `skill` | `skills/<slug>/SKILL.md` or `SKILL.md.jinja`, and support files | The agent host lists it and invokes it as a tool; sync opens the body with the bundle context prerequisite, so do not write that prerequisite in the source | name and description always; body on invocation |
 | `subagent` | native file per agent or `subagents/<slug>.md` contract | The host loads it when delegating | persona on load |
 | `workflow` | one Markdown definition with `id` and `stages` | The generated `devkit-workflow` entry skill, backed by the workflow engine of `devkit-agt` | stage output only |
 | `playbook` | `playbooks/<slug>.md` or directory with `SKILL.md` | Explicit discovery, rule remediation, or an exact ID named for the task/schedule | selected headers then body, or exact body |
@@ -81,8 +81,10 @@ message") and `hook` (a handler the agent host calls at a native event).
 ## Configurable Markdown
 
 Instruction, guidance, document and skill assets may use `.md.jinja` sources.
-Declare each input under `[variables.<name>]` with `type = "string"`,
-`"boolean"` or `"integer"` and an optional `default` (needed for a local
-`bundle plan` without project inputs), and use `{{ vars.<name> }}` in the
-template; consumers set `[bundles.<bundle>.variables]` in `.devkit/config.toml`.
-Guidance limits apply after rendering.
+
+- Declare each input under `[variables.<name>]` with `type = "string"`,
+  `"boolean"` or `"integer"` and an optional `default` (needed for a local
+  `bundle plan` without project inputs).
+- Use `{{ vars.<name> }}` in the template.
+- Consumers set `[bundles.<bundle>.variables]` in `.devkit/config.toml`.
+- Guidance limits apply after rendering.

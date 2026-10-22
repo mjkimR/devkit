@@ -10,7 +10,7 @@ agent: claude-code
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -47,3 +47,11 @@ Deferred work retained by `SPEC-writing-guidance-layers` (Non-Goal 1).
 Acceptance checks for the rollout: every rewritten file has a mapping table with zero dropped entries; for each
 scenario, the new text meets at least as many expected behaviors as the old text over several runs.
 ```
+
+## Disposition
+
+Resolved by `SPEC-writing-guidance-rollout`: 60 of the 67 in-scope bundle skills, playbooks, instructions and role
+contracts were rewritten under `agent-asset-writing`; the other 7 already conformed and stayed unchanged. The
+behavior comparison proposed above was replaced, at intent, by a content-preservation review. Verification: three
+isolated code-reviewer runs compared every changed file with its base version (11 meaning shifts found and fixed, then
+re-verified), `just test-affected` 1431 passed, frontmatter and Jinja constructs byte-identical.
