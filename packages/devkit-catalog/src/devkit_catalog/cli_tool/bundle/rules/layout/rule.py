@@ -11,7 +11,8 @@ from dataclasses import dataclass, field
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, match_path, validate_pattern
 from devkit_agt.features.rules.services.builtins import BaseRule
 
-ROOT_MODULES = ("__init__", "__main__", "cli", "errors", "base", "utils", "features")
+# __about__ and _version: version modules packaging tools generate or read.
+ROOT_MODULES = ("__init__", "__main__", "__about__", "_version", "cli", "errors", "base", "utils", "features")
 FEATURE_MODULES = ("__init__", "cli", "mcp", "usecases", "services", "repositories", "models", "errors", "utils")
 
 REMEDIATION = (
@@ -36,9 +37,12 @@ def _below_package(rel: str) -> list[str] | None:
     """The path segments below the tool's package (``src/<package>/``), without the ``.py`` suffix; ``None`` when the
     file is not inside a package below ``src``."""
     parts = rel.split("/")
-    if "src" not in parts[:-2]:
+    if "src" not in parts:
         return None
-    below = parts[len(parts) - parts[::-1].index("src") + 1 :]
+    start = len(parts) - 1 - parts[::-1].index("src")
+    if start > len(parts) - 3:
+        return None  # the last src is not followed by a package directory and a file
+    below = parts[start + 2 :]
     below[-1] = below[-1].removesuffix(".py")
     return below
 

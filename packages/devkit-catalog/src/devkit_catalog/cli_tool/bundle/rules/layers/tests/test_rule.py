@@ -36,13 +36,44 @@ def test_click_and_devkit_cli_stay_in_cli_modules(tmp_path: Path) -> None:  # AC
 def test_layers_import_downward_only(tmp_path: Path) -> None:  # AC-04
     files = {
         f"{SCAN}/models.py": "from pkg.features.scan.services import scan\n",
-        f"{SCAN}/repositories.py": "from ..models import Item\n",
+        f"{SCAN}/repositories.py": "from .models import Item\nfrom ..other.models import Other\n",
         f"{SCAN}/services.py": "import pkg.features.scan.repositories\n",
         f"{SCAN}/usecases.py": "\n\nfrom pkg.features.other import cli\n",
     }
     found = check(RULE, tmp_path, files)
     assert _found(found) == [(f"{SCAN}/models.py", 1), (f"{SCAN}/usecases.py", 3)]
     assert "models imports the higher layer services of its own feature" in {v.message.split(" (")[0] for v in found}
+
+
+def test_relative_imports_resolve_against_the_file_package(tmp_path: Path) -> None:
+    files = {
+        f"{SCAN}/services.py": "from ..other.cli import command\n",
+        f"{SCAN}/models.py": "from . import services\n",
+        f"{SCAN}/usecases/run.py": "from ..services import scan\nfrom ..cli import group\n",
+    }
+    assert _found(check(RULE, tmp_path, files)) == [
+        (f"{SCAN}/models.py", 1),
+        (f"{SCAN}/services.py", 1),
+        (f"{SCAN}/usecases/run.py", 2),
+    ]
+
+
+def test_command_line_libraries_are_confined_in_every_file_of_the_package(tmp_path: Path) -> None:
+    files = {
+        "src/pkg/features/__init__.py": "import click\n",
+        f"{SCAN}/__init__.py": "from devkit_cli import Boundary\n",
+        f"{SCAN}/schemas.py": "import click\nfrom pkg.features.scan.cli import scan\n",
+    }
+    assert _found(check(RULE, tmp_path, files)) == [
+        ("src/pkg/features/__init__.py", 1),
+        (f"{SCAN}/__init__.py", 1),
+        (f"{SCAN}/schemas.py", 1),
+    ]
+
+
+def test_a_file_in_a_nested_src_directory_does_not_stop_the_run(tmp_path: Path) -> None:
+    files = {"src/pkg/templates/src/x.py": "import click\n", f"{SCAN}/services.py": "import click\n"}
+    assert _found(check(RULE, tmp_path, files)) == [(f"{SCAN}/services.py", 1)]
 
 
 def test_transports_reach_any_lower_layer_but_lower_layers_never_reach_the_command_line(tmp_path: Path) -> None:

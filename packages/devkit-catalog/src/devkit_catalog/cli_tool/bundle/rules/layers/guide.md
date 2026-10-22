@@ -12,10 +12,15 @@ commands lazily, so `--help` and every command do not import every feature. A mo
   `cli-tool` bundle (`devkit add cli-tool`).
 - **What is checked**: every import of every Python file matching `include` and not `exclude` in a package below a
   `src` directory, read statically. Imports of the package are resolved by name (`pkg.features.scan.services`) and
-  relatively (`from ..models import Item`). Ranks, lowest first: `models`, `errors` and `utils`; `repositories`;
+  relatively (`from .models import Item` in a feature module, `from ..other.models import Item` across features). Ranks, lowest first: `models`, `errors` and `utils`; `repositories`;
   `services`; `usecases`; the transports `cli` and `mcp`.
-- **Not checked**: imports under `if TYPE_CHECKING:`, a feature's `__init__.py` (package management), imports of
-  other packages, which lower layer a transport uses, and anything a function does beyond its imports.
+- **Every file of the package** is checked for `click` and `devkit_cli`, also `__init__.py` files and modules an
+  `extra_*_modules` exception of `RULE-cli-tool-layout` allows; the layer directions apply to the modules that have
+  a layer.
+- **Not checked**: imports under `if TYPE_CHECKING:`; layer directions in `features/__init__.py`, a feature's
+  `__init__.py` (package management) and modules without a layer; imports of a feature package rather than one of its
+  layers (`from pkg.features import scan`, `from pkg.features.scan import Thing`); imports of other packages; which
+  lower layer a transport uses; anything a function does beyond its imports.
 
 ## 2. Cause of Violation
 

@@ -61,7 +61,7 @@ modules, `features/<feature>/` with fixed layer names, click confined to CLI mod
 
 ### [AC-04] Layers import downward only
 - **Given** `src/pkg/features/scan/` with `models.py` importing `pkg.features.scan.services`,
-  `repositories.py` importing `..models`, `services.py` importing `pkg.features.scan.repositories`, and
+  `repositories.py` importing `.models`, `services.py` importing `pkg.features.scan.repositories`, and
   `usecases.py` importing `pkg.features.other.cli`
 - **When** `RULE-cli-tool-layers` runs
 - **Then** it reports the import in `models.py` and the import in `usecases.py`, and not the other two
@@ -93,7 +93,9 @@ modules, `features/<feature>/` with fixed layer names, click confined to CLI mod
 
 - A tool's package is the directory directly below the last `src` segment; every rule reads files under `include`
   (default `**/src/**`) and skips the test patterns.
-- Package-level modules: `__init__`, `__main__`, `cli`, `errors`, `base`, `utils` and `features`. Feature modules:
+- Package-level modules: `__init__`, `__main__`, `__about__`, `_version` (packaging version modules), `cli`,
+  `errors`, `base`, `utils` and `features`. Namespace packages are not supported; files outside `src/<package>/` are
+  skipped. Feature modules:
   `__init__`, `cli`, `mcp`, `usecases`, `services`, `repositories`, `models`, `errors` and `utils`, each a module
   or a directory whose inside is free. `mcp` is allowed so a tool can add an MCP transport without restructuring.
 - Layer ranks for imports between features' modules: `models`, `errors` and `utils` lowest, then `repositories`,

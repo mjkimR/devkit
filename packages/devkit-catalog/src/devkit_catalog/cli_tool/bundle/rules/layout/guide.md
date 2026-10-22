@@ -10,11 +10,14 @@ in it. A module's place is also its layer, which `RULE-cli-tool-layers` checks i
   `cli-tool` bundle (`devkit add cli-tool`).
 - **What is checked**: the path of every Python file matching `include` and not `exclude` that lies in a package
   below a `src` directory (`src/<package>/...`, the last `src` of the path). Directly in the package, only
-  `__init__`, `__main__`, `cli`, `errors`, `base`, `utils` and `features` are allowed; in `features/` only feature
+  `__init__`, `__main__`, `__about__` and `_version` (version modules packaging tools use), `cli`, `errors`, `base`,
+  `utils` and `features` are allowed; in `features/` only feature
   directories (and `__init__.py`); in `features/<feature>/` only `__init__`, `cli`, `mcp`, `usecases`, `services`,
   `repositories`, `models`, `errors` and `utils`. Each may be a module or a directory.
 - **Not checked**: what a layer directory contains (`usecases/run.py`, `services/scan/...` are free), files outside a
-  `src/<package>/`, and file contents.
+  `src/<package>/` (a single-file `src/<module>.py`, a file directly in a nested `src/`), and file contents.
+- **Not supported**: namespace packages (`src/<namespace>/<package>/`): the first directory below `src` is the
+  package.
 
 ## 2. Cause of Violation
 

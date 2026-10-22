@@ -46,8 +46,13 @@ def test_feature_modules_outside_the_layers_are_reported(tmp_path: Path) -> None
 
 
 def test_files_outside_a_src_package_and_tests_are_not_checked(tmp_path: Path) -> None:
-    files = _files("scripts/tool.py", "src/pkg/tests/test_scan.py", "src/conftest.py", "tool/src/x.py")
+    files = _files("scripts/tool.py", "src/pkg/tests/test_scan.py", "src/conftest.py", "tool/src/x.py", "src/pkg.py")
     assert check(RULE, tmp_path, files) == []
+
+
+def test_version_modules_are_allowed_and_a_nested_src_file_does_not_stop_the_run(tmp_path: Path) -> None:
+    files = _files("src/pkg/__about__.py", "src/pkg/_version.py", "src/pkg/templates/src/x.py", "src/pkg/helpers.py")
+    assert [v.file for v in check(RULE, tmp_path, files)] == ["src/pkg/helpers.py"]
 
 
 def test_extra_modules_allow_a_justified_exception(tmp_path: Path) -> None:

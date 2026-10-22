@@ -48,12 +48,14 @@ class _Place:
 def _split(rel: str) -> tuple[str, list[str]] | None:
     """The package name and the module path below it (``.py`` removed), or ``None`` outside ``src/<package>/``."""
     parts = rel.split("/")
-    if "src" not in parts[:-2]:
+    if "src" not in parts:
         return None
-    start = len(parts) - parts[::-1].index("src")
-    below = parts[start + 1 :]
+    start = len(parts) - 1 - parts[::-1].index("src")
+    if start > len(parts) - 3:
+        return None  # the last src is not followed by a package directory and a file
+    below = parts[start + 2 :]
     below[-1] = below[-1].removesuffix(".py")
-    return parts[start], below
+    return parts[start + 1], below
 
 
 def _place(below: list[str]) -> _Place | None:
@@ -96,13 +98,13 @@ def _targets(node: ast.Import | ast.ImportFrom, package: str, below: list[str]) 
     return [module, *(f"{module}.{alias.name}" if module else alias.name for alias in node.names)]
 
 
-def _problem(place: _Place, target: str, package: str, top: bool, cli_module: bool) -> str | None:
+def _problem(place: _Place | None, target: str, package: str, top: bool, cli_module: bool) -> str | None:
     head = target.split(".")[0]
     if head in CLI_LIBRARIES:
         return None if cli_module else f"{head} is imported outside a CLI module"
     parts = target.split(".")
-    if parts[0] != package or len(parts) < 2:
-        return None
+    if place is None or parts[0] != package or len(parts) < 2:
+        return None  # a file without a layer is checked for the command line libraries only
     if parts[1] in {"cli", "__main__"}:
         if cli_module:
             return None
@@ -153,12 +155,13 @@ class LayersRule(BaseRule):
             if any(match_path(pattern, rel) for pattern in settings.exclude):
                 continue
             split = _split(rel)
-            place = _place(split[1]) if split else None
-            if split is None or place is None:
+            if split is None:
                 continue
             package, below = split
-            cli_module = (place.kind == "root" and place.part in {"cli", "__main__"}) or (
-                place.kind == "feature" and place.part == "cli"
+            place = _place(below)  # None: a features or feature __init__, or a module outside the layers
+            cli_module = place is not None and (
+                (place.kind == "root" and place.part in {"cli", "__main__"})
+                or (place.kind == "feature" and place.part == "cli")
             )
             try:
                 tree = ast.parse(ctx.cache.read_text(path), filename=rel)

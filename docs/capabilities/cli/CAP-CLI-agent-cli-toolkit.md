@@ -80,15 +80,16 @@ tool around it and checks the structure with five rules.
     `extra_heavy_modules` at import time; imports inside functions and under `if TYPE_CHECKING:` are allowed
     (`RULE-cli-tool-heavy-imports`).
 16. **Feature layout**: WHERE `cli-tool` is selected, a module of a package below `src/` MUST be one of `__init__`,
-    `__main__`, `cli`, `errors`, `base`, `utils` or `features`, and below `features/<feature>/` one of `__init__`,
+    `__main__`, `__about__`, `_version`, `cli`, `errors`, `base`, `utils` or `features`, and below `features/<feature>/` one of `__init__`,
     `cli`, `mcp`, `usecases`, `services`, `repositories`, `models`, `errors` or `utils`, each a module or a
     directory; a flat layout is not allowed (`RULE-cli-tool-layout`).
-17. **Command line confined**: WHERE `cli-tool` is selected, only the package-level `cli` and `__main__` and a
-    feature's `cli` MUST import `click`, `devkit_cli` or the package-level `cli` (`RULE-cli-tool-layers`).
+17. **Command line confined**: WHERE `cli-tool` is selected, a file of the package other than the package-level `cli`
+    and `__main__` and a feature's `cli` MUST NOT import `click` or `devkit_cli`, and a feature module other than a
+    feature's `cli` MUST NOT import the package-level `cli` (`RULE-cli-tool-layers`).
 18. **Layer direction**: WHERE `cli-tool` is selected, a feature module MUST import only feature layers of its own
     rank or lower (`models`, `errors`, `utils` < `repositories` < `services` < `usecases` < `cli`, `mcp`), and the
-    package-level `base`, `utils` and `errors` MUST import no feature; imports under `if TYPE_CHECKING:` are not
-    checked (`RULE-cli-tool-layers`).
+    package-level `base`, `utils` and `errors` MUST import no feature; imports under `if TYPE_CHECKING:` and imports
+    of a feature package rather than one of its layers are not checked (`RULE-cli-tool-layers`).
 19. **Lazy root group**: WHERE `cli-tool` is selected, the package-level `cli` MUST NOT import a feature module at
     module level (`RULE-cli-tool-layers`).
 
