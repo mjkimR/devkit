@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-21T23:24:29.281919Z'
+status: completed
+summary: 'Swept Planning turn 2 (answer record, fold, round-1 closure, challenger-02 and its fold) and the committed records: recorded FB-padr-withdrawal-unspecified; no duplicates. The sibling app-common keyword-alias impact is a proposal consequence reported in the worker findings, not feedback.'
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0
