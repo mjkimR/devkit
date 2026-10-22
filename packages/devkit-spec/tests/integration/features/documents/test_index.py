@@ -21,8 +21,18 @@ def test_only_documents_under_docs_and_specs_are_indexed(workspace: Path, write:
         write(f"docs/{skipped}", _doc("CAP-A-skipped"))
     write("other/d.md", _doc("CAP-A-d"))
     os.symlink(workspace / "docs/a.md", workspace / "docs/link.md")
+    # Symlinked directory is skipped
+    write("outside/target.md", _doc("CAP-A-target"))
+    os.symlink(workspace / "outside", workspace / "docs/sym_dir")
+    # Nested hidden directory is skipped
+    write("docs/nested/.secret/hidden.md", _doc("CAP-A-nested-hidden"))
+    write("docs/nested/visible.md", _doc("CAP-A-nested-visible"))
     index = DocumentIndex.load(workspace)
-    assert [document.path for document in index.documents] == ["docs/a.md", "specs/2026-10/20261001-b/spec.md"]
+    assert [document.path for document in index.documents] == [
+        "docs/a.md",
+        "docs/nested/visible.md",
+        "specs/2026-10/20261001-b/spec.md",
+    ]
 
 
 def test_a_malformed_file_is_a_warning_and_the_rest_is_indexed(workspace: Path, write: Write) -> None:
@@ -79,3 +89,27 @@ def test_a_completed_status_is_read_case_insensitively(workspace: Path, write: W
     write("specs/2026-10/20261001-done/plan.md", _doc("PLAN-done"))
     index = DocumentIndex.load(workspace)
     assert all(index.is_historical(document) for document in index.documents)
+
+
+def test_symlinked_source_directory_is_skipped(workspace: Path, write: Write) -> None:
+    write("external_docs/doc.md", _doc("CAP-A-ext"))
+    os.symlink(workspace / "external_docs", workspace / "docs")
+    write("specs/2026-10/20261001-b/spec.md", _doc("SPEC-b"))
+    index = DocumentIndex.load(workspace)
+    assert [document.path for document in index.documents] == ["specs/2026-10/20261001-b/spec.md"]
+
+
+def test_walk_traversal_deterministic_order(workspace: Path, write: Write) -> None:
+    write("docs/z_dir/b.md", _doc("CAP-B"))
+    write("docs/z_dir/a.md", _doc("CAP-A"))
+    write("docs/a_dir/b.md", _doc("CAP-C"))
+    write("docs/a_dir/a.md", _doc("CAP-D"))
+    from devkit_spec.features.documents.repositories.index import _files
+
+    paths = [rel for _, rel in _files(workspace)]
+    assert paths == [
+        "docs/a_dir/a.md",
+        "docs/a_dir/b.md",
+        "docs/z_dir/a.md",
+        "docs/z_dir/b.md",
+    ]
