@@ -16,10 +16,10 @@ created_at: 2026-10-22
 
 ## 1. Context & Problem Statement
 
-A document is found only by its exact ID. Renaming a capability, story, architecture document, milestone or any
-other ID-bearing document, or merging two of them, breaks every reference written with the old ID: `RULE-document-reference`
-reports each one as unresolved, and `devkit spec resolve <old-id>` finds nothing. The only rename handled today is
-the handed-off `PROP-<slug>` to `SPEC-<slug>` rewrite of the proposals lifecycle.
+A document is found only by its exact ID. Renaming a capability, story, architecture document, milestone or any other
+ID-bearing document, or merging two of them, breaks every reference written with the old ID: `RULE-document-reference`
+reports each one as unresolved, and `devkit spec resolve <old-id>` finds nothing. The only rename handled today is the
+handed-off `PROP-<slug>` to `SPEC-<slug>` rewrite of the proposals lifecycle.
 
 ## 2. Decision Drivers
 
@@ -53,7 +53,8 @@ Option 4.
   reference to a material's alias from a checked document resolves and is fixed like any other. Approved ADRs are
   append-only, so an ADR normally gains aliases when it is created (from its PADR, see Handoff), and an alias
   reference inside an ADR stays as written.
-- **Shape**: a list of full IDs with the declaring document's own prefix, never its own ID, no item repeated.
+- **Shape**: a list of full IDs with the declaring document's own prefix, never its own ID, no item repeated, never a
+  legacy date- or number-based form (the pattern `RULE-id-convention` reports, so the two rules never disagree).
   `aliases` entries are identity, not references: not a relation field, not counted as incoming references and never
   rewritten.
 - **Precedence and collisions**: a declared ID always wins. An alias resolves only when exactly one document declares
@@ -63,15 +64,22 @@ Option 4.
   target to its canonical document and whether an alias was used. `resolve()` itself uses it, as do `incoming()`,
   the `depends_on` cycle graphs, milestone membership in hygiene, the traceability reverse-link comparison, `refs`
   grouping and every caller that reads `by_id` or compares against `.id`. The devkit-agt rules catalog stays exact-ID.
-- **References**: an alias reference resolves. In a current document it is an error that `devkit rules fix`
-  rewrites to the canonical ID (frontmatter and prose, through the existing rewrite service). In historical files
-  (completed spec bundles, done or dropped milestones) and in decision records (ADRs under `docs/decisions/` and
-  PADRs, which graduate into ADRs) it resolves silently and is never rewritten, so a record that names the retired
-  ID as history keeps its meaning. A glossary Owner naming an alias is reported but not fixed.
+- **Renaming**: a document whose ID derives from its path is renamed by moving the file, setting the new ID and
+  keeping the old ID in `aliases`; renaming a spec bundle keeps an alias on every file whose ID derives from the
+  bundle slug (`spec.md`, `plan.md`, `tasks.md`, `reconcile.md`). `CAP-DOCS-document-model` states the procedure.
+- **References**: an alias reference resolves. In a current document it is an error that `devkit rules fix` rewrites
+  to the canonical ID (frontmatter and prose, through the existing rewrite service). In historical files (completed
+  spec bundles, done or dropped milestones) and in decision records (ADRs under `docs/decisions/` and PADRs, which
+  graduate into ADRs) it resolves silently and `devkit rules fix` never rewrites it, so a record that names the
+  retired ID as history keeps its meaning. A glossary Owner naming an alias is reported but not fixed.
 - **Handoff**: carried aliases follow their document's handoff rename: a proposal's `PROP-` aliases become `SPEC-`
   aliases on `spec.md`, a promoted PADR's `PADR-` aliases become `ADR-` aliases on its ADR. A reference written with
-  a carried alias is rewritten like one written with the old ID (current documents only). The handoff refuses, before
-  writing, when a graduating `ADR-<slug>` or `SPEC-<slug>`, or a translated alias, equals an existing ID or alias.
+  a carried alias is rewritten exactly like one written with the old ID, across the handoff's existing scan set (ADRs
+  included, completed bundles excluded), because the translation removes the alias's only declaration; this is the
+  handoff's own rename, not a `devkit rules fix` rewrite. The handoff refuses, before writing, when a graduating
+  `ADR-<slug>` or `SPEC-<slug>`, or a translated alias, equals an existing ID or alias or another one graduating in
+  the same handoff; scaffolding and the `PROP`/`SPEC` slug-pair check treat a `SPEC-<slug>` alias like a declared
+  `SPEC-<slug>`, so the clash surfaces before Planning.
 - **Output**: `devkit spec resolve <alias>` prints the canonical document with `alias=<alias>` in its `[DOCUMENT]`
   sentinel and an `alias` field in JSON; no notice is emitted. `devkit spec refs <canonical> --direction in` includes
   alias-written references, and `--direction out` groups an alias and its canonical ID as one target.

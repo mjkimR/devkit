@@ -19,6 +19,7 @@ boundaries:
     - packages/devkit-dist/tests/
     - docs/capabilities/delivery/CAP-DLV-proposal-incubation.md
     - docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md
+    - docs/development/reference/distribution.md
     - docs/capabilities/search/CAP-SRCH-document-search.md
     - docs/architecture/ARCH-08-2-resource-taxonomy.md
     - packages/devkit/src/devkit_agt/bundles/authoring/bundle/playbooks/
@@ -71,21 +72,30 @@ playbook `aliases` the same identifier meaning keeps one concept across devkit.
   `devkit spec search` pins an exact alias match. The devkit-agt rules catalog stays exact-ID.
 - **Alias references**: a fixable error in current documents, rewritten by `devkit rules fix`; historical files
   (completed spec bundles, done or dropped milestones) and decision records (ADRs and PADRs) resolve silently and are
-  never rewritten.
+  never rewritten by `devkit rules fix`. Legacy date- or number-based IDs are not valid aliases.
 - **Handoff**: carried aliases follow the handoff rename of their document (`PROP-` to `SPEC-` on `spec.md`, `PADR-`
-  to `ADR-` on each promoted ADR), and the handoff refuses when a graduating `ADR-<slug>` or `SPEC-<slug>`, or a
-  translated alias, equals an existing ID or alias.
+  to `ADR-` on each promoted ADR); the handoff rewrites references written with a carried alias wherever it rewrites
+  the old ID, and refuses when a graduating `ADR-<slug>` or `SPEC-<slug>`, or a translated alias, equals an existing
+  ID or alias or another one graduating in the same handoff. Scaffolding checks a `SPEC-<slug>` alias like a declared
+  `SPEC-<slug>`, so the clash is found before Planning.
 - **Playbooks** (`PADR-playbook-aliases-as-identifiers`, answer to `envelopes/worker-02.yaml` q1): playbook `aliases`
-  stop being search keywords and become previous asset IDs in the same bundle, resolved by `devkit playbook get`;
-  search ranks `name` and `description` only. Breaking change in place, no migration.
+  stop being search keywords and become previous asset IDs in the same bundle, resolved by `devkit playbook get`
+  as the playbook's own identity, refining (not reversing) `ADR-external-playbook-execution`; search ranks `name` and
+  `description` only. Breaking change in place, no migration.
 
 ## 3. Proposed Design & Impact
 
 ### 3.1 Document aliases (`CAP-DOCS-document-model`, `CAP-DOCS-document-lookup`)
 
 - `aliases: [<PREFIX>-<old-slug>, ...]` on any ID-bearing document (namespace documents included). Each item is a
-  well-formed ID with the declaring document's prefix, not its own ID, not repeated. A wrong shape is a recorded
-  issue. `aliases` is not a relation field.
+  well-formed ID with the declaring document's prefix, not its own ID, not repeated, and not a legacy date- or
+  number-based form (the pattern `RULE-id-convention` reports, so the two rules never disagree). A wrong shape is a
+  recorded issue. `aliases` is not a relation field.
+- Renaming a document whose ID derives from its path (`CAP`, `US`, `ARCH`, `SPEC`, `PLAN`, `TASKS`, `REC`, `FB`; an
+  approved ADR is not renamed and gains aliases from its PADR) means moving the file, setting the new ID and keeping
+  the old ID in `aliases`; renaming a spec bundle keeps an alias on every file whose ID derives from the bundle slug
+  (`spec.md`, `plan.md`, `tasks.md`, `reconcile.md`). `CAP-DOCS-document-model` and the bundled `living-spec-writing`
+  instruction state this procedure.
 - `DocumentIndex` (`packages/devkit-spec/src/devkit_spec/features/documents/repositories/index.py`) keeps the aliases
   beside `by_id` and exposes one canonical mapping returning the document and the alias used. A declared ID always
   wins; an alias resolves only when exactly one document declares it and none has it as its ID. A collision is
@@ -98,7 +108,10 @@ playbook `aliases` the same identifier meaning keeps one concept across devkit.
   `resolve()` and `incoming()` themselves; `RULE-document-reference` resolution, handed-off checks and `depends_on`
   cycle graph; `documents/services/dependencies.py`; the traceability link rule including its reverse-link
   comparison; hygiene milestone membership; browse (`refs` grouping); roadmap; scaffold; specs; entrypoints
-  `--target` derivation; handoff; the proposals rewrite service.
+  `--target` derivation; handoff, including `_check_dependency_projection` (copies the alias map and substitutes
+  any target that canonicalises to the source); `_handed_off`, which returns the canonical target so one fix pass
+  converges; `check_spec_conflict`, the PADR scaffold duplicate check and the `PROP`/`SPEC` slug-pair check, which
+  treat a `SPEC-<slug>` alias like a declared `SPEC-<slug>`; the proposals rewrite service.
 
 ### 3.2 Alias references (`RULE-document-reference`)
 
@@ -114,22 +127,30 @@ playbook `aliases` the same identifier meaning keeps one concept across devkit.
 
 - A proposal's `aliases` are carried to `spec.md` with the `PROP-` prefix replaced by `SPEC-`; each promoted PADR's
   `aliases` are kept on its ADR with `PADR-` replaced by `ADR-`, so the own-prefix rule holds after the rename.
-- The handoff's reference rewrite treats a reference written with a carried alias like one written with the old ID:
-  rewritten to the new canonical ID in current documents, untouched in historical files and decision records.
+- The handoff's reference rewrite treats a reference written with a carried alias exactly like one written with the
+  old ID: rewritten to the new canonical ID across the existing handoff scan set (ADRs and the ADRs promoted in the
+  same handoff included, completed bundles excluded), because translation removes the alias's only declaration. The
+  "never rewritten" rule for decision records applies to `devkit rules fix`, not to the handoff's own rename.
 - `_check_targets` (`features/proposals/usecases/handoff.py`) refuses, before any write, when a graduating
-  `ADR-<slug>` or `SPEC-<slug>`, or a translated alias, equals an existing document ID or an existing alias.
+  `ADR-<slug>` or `SPEC-<slug>`, or a translated alias, equals an existing document ID or an existing alias, or
+  another ID or translated alias graduating in the same handoff.
 
 ### 3.4 Playbook aliases (`CAP-DIST-context-and-playbooks`, `ARCH-08-2-resource-taxonomy`)
 
 - `packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/playbooks.py` validates `aliases` as
-  previous asset IDs (the `[a-z][a-z0-9-]*` manifest slug grammar, not frontmatter `name`), and `services/bundles/manifest.py` checks them unique against the bundle's playbook
-  IDs and the other playbooks' aliases; retrieval checks the effective headers again, since overrides can change them.
+  previous asset IDs (the `[a-z][a-z0-9-]*` manifest slug grammar, not frontmatter `name`), and
+  `services/bundles/manifest.py` checks them unique against the bundle's playbook IDs and the other playbooks'
+  aliases; retrieval checks the effective headers again, since overrides can change them.
 - `usecases/playbook_search.py` indexes `name` and `description` only; results keep `aliases` as identity metadata
   (`models/results.py`). `usecases/playbook_get.py` resolves `<bundle>/<alias>`: an exact asset ID always wins;
   otherwise the alias resolves only when exactly one effective playbook header of that bundle (overrides included)
-  declares it, and the result reports the canonical `id` and the alias used; an alias declared by more than one
-  effective playbook is refused with a stable code. The `CAP-DIST-context-and-playbooks` sentence that `get` does no
-  alias lookup and no fallback changes accordingly.
+  declares it, and the result reports the canonical `id` and the alias used in an `alias` field (`null` on an exact
+  hit; `alias=` in the text sentinel); an alias declared by more than one effective playbook is refused with
+  `PLAYBOOK_ALIAS_AMBIGUOUS` and a deterministic `[ACTION]`. The effective-header alias check runs only on the alias
+  path, after the exact match misses, so an exact ID is served without it; CAP-DIST places that step in its ordered
+  resolution and adds the code to its error table. The CAP-DIST sentence that `get` does no alias lookup and no
+  fallback changes accordingly, and its section 5 states that a request or schedule naming an alias is explicit
+  invocation of the canonical playbook `get` reports. `docs/development/reference/distribution.md` follows.
 - `services/installation/playbook_skill.py` (the projected `devkit-playbook` skill text) and the search service
   docstring (`features/search/services/index.py`, wording only) stop describing aliases as search text;
   `CAP-SRCH-document-search` changes its metadata example the same way.
@@ -141,24 +162,28 @@ playbook `aliases` the same identifier meaning keeps one concept across devkit.
 ## 4. Lifecycle & Verification
 
 - Unit tests (`packages/devkit-spec/tests/unit/features/documents/`): alias parsing and shape issues on every kind
-  (`CAP`, `ADR`, `MAT` and a lifecycle kind such as `PADR` among them), foreign prefixes, `aliases` entries not counted as references, declared-ID
-  precedence, collisions with declared IDs of any status and with other aliases (including an ID created after the
-  alias), the canonical mapping.
+  (`REC` through `reconcile_id` included), foreign prefixes, legacy date- or number-based aliases refused, `aliases`
+  entries not counted as references, declared-ID precedence, collisions with declared IDs of any status and with other
+  aliases (including an ID created after the alias), the canonical mapping.
 - Governance tests (the rule's own tests and `tests/unit/features/governance/`): alias references as fixable errors in
   current documents, the fix result, historical files and an ADR or PADR citing an alias byte-identical after
   `devkit rules fix`, a self-mention, relation-field prefix typing kept, traceability with an alias fixed without a
   duplicate entry, hygiene with an `MS` alias, a `depends_on` cycle through an alias, a
   material's alias collision reported while a reference inside a material stays unchecked, a reference to an `ADR`
   alias from a current document fixed.
-- Handoff tests: a proposal's and a PADR's aliases carried with the translated prefix, a reference written with a
-  carried alias rewritten, refusal when a graduating `ADR-<slug>` or `SPEC-<slug>` or a translated alias equals an
-  existing ID or alias.
+- Handoff tests: a proposal's and a PADR's aliases carried with the translated prefix; a PADR and an existing ADR each
+  citing a carried `PROP-` or `PADR-` alias, with rules-check clean after the handoff; a `depends_on` written with the
+  proposal's alias; refusal when a graduating `ADR-<slug>` or `SPEC-<slug>` or a translated alias equals an existing
+  ID or alias, and when two PADRs of one handoff declare the same alias. Scaffold test: a `PROP-<slug>` whose
+  `SPEC-<slug>` is an existing alias is refused. Rule test: a late `PROP-<alias>` fixed to the canonical `SPEC-` in
+  one pass.
 - CLI tests: `devkit spec resolve` (`alias=` and JSON field), `devkit spec refs --direction in` and `--direction out`
   with an alias and the canonical ID mixed, `devkit spec search`, entrypoints `--target` with an alias.
 - devkit-dist tests (`packages/devkit-dist/tests/`): keyword aliases refused, identifier aliases accepted, alias
   collisions refused at manifest validation and, through an override, at retrieval; search ignores aliases;
-  `devkit playbook get` with an exact ID, an alias, an exact ID shadowing an alias and an ambiguous alias
-  (stable refusal code).
+  `devkit playbook get` with an exact ID (served even when another playbook's override declares a colliding alias), an
+  alias (`alias` field and sentinel), an exact ID shadowing an alias and an ambiguous alias
+  (`PLAYBOOK_ALIAS_AMBIGUOUS`).
 - `just rules-check` clean on the repository; no file under `docs/decisions/` in the diff.
 
 ## 5. Open Decisions
