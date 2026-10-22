@@ -2,7 +2,7 @@
 id: SPEC-single-release-version
 title: One workspace release version
 summary: "A root VERSION file drives workspace package versions and internal dependency pins for one release tag."
-status: in-progress
+status: completed
 created: 2026-10-22
 related_capabilities: []
 related_usecases: []

@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-single-release-version
-status: pending
+status: resolved
 targets:
   - file: docs/architecture/ARCH-07-deployment.md
     resolution: modified
