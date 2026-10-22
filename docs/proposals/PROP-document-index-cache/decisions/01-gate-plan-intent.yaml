@@ -1,0 +1,11 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: 'Goal: cache the Living Spec document index on disk and re-read only changed
+  documents, with results identical to a fresh build, so devkit spec resolve/list/search/refs
+  stop re-parsing every document per call. User requested all four CLI performance
+  drafts be planned and delivered now. task-kind feature, planning-depth proposal.'
+by: user
+at: '2026-10-22T06:27:38.659515Z'
