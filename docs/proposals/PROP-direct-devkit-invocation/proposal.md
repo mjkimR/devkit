@@ -2,7 +2,7 @@
 id: PROP-direct-devkit-invocation
 title: Invoke the installed devkit directly on frequent paths
 summary: "Has agent guidance and hooks call the project's installed devkit executable on frequent paths instead of uv run, removing a fixed per-call overhead while keeping uv run where environment synchronization is needed."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-22
 target_area: harness/
 priority: low                          # critical | high | medium | low
