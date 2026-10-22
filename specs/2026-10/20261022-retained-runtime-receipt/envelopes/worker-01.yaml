@@ -1,0 +1,34 @@
+kind: worker
+stage: characterize
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-22T04:43:15.168071Z'
+status: needs_input
+summary: Characterized the refusal in spec.md (source of RECEIPT_INVALID, available version facts, preserved behavior). The reported case is a same-version bootstrap that no version or restart check can detect; the detection design needs a decision before the resolved-behavior criterion, plan and Red test.
+findings: []
+assumptions:
+- The reported refusal came from the devkit-spec readiness provider reading the source tree's receipt with the service's loaded reader; the feedback names no exact call site
+unverified_areas:
+- The exact call site of the reported refusal inside the retained service
+checks:
+  characterized: PASS parse_receipt refuses an unknown top-level key with RECEIPT_INVALID and the restore directive (reproduced with the current reader)
+diff_scope:
+  base: 149159eecb7ee4da5ae83ddf5b7fd6ef23a42222
+  head: f87dd3b7b47b43128eefb6afa4d630ab4439c683
+questions:
+- id: q1
+  title: How to detect a same-version reader
+  prompt: Which mechanism should identify a receipt reader older than the receipt it reads, so the refusal carries a stable code and a restart or re-registration directive instead of RECEIPT_INVALID?
+  context: 'In the reported case the retained service and the receipt writer both report devkit-dist 0.1.1: this repository does not bump versions for receipt changes, and ordinary sync keeps the committed tool version. The new key existed only on the feature branch, so the target-built runtime could not read it even after a restart (a bootstrap case). Version comparison and installed-versus-loaded checks therefore cannot detect the reported case; only a marker the writer records can. CAP-DIST-sync-and-transactions currently states one receipt schema with no version dispatch, and that document, the writer''s output and the repository''s .devkit/installation.json are outside this unit''s write scope. The answer decides the design, the acceptance criteria and whether the source feedback can be resolved by this unit.'
+  options:
+  - id: a
+    description: Writer-recorded reader revision. The receipt's tool record gains an integer receipt revision that the writer raises with each schema addition; a reader whose own revision is lower refuses with a new code (for example RECEIPT_READER_OUTDATED) and an [ACTION] to restart or re-register the retained service on a runtime that reads that revision (devkit mcp setup --executable PATH), or until one exists to obtain independent authority for the CLI or pull-request route. Unknown keys at the same revision stay RECEIPT_INVALID. Also refuse with a restart directive when the running process's loaded reader differs from the installed one. Resolves the feedback fully. Requires extending the write scope to the sync writer, CAP-DIST-sync-and-transactions and a re-synced .devkit/installation.json; current retained services cannot read the first receipt that carries the revision (a one-time bootstrap).
+    recommended: true
+  - id: b
+    description: Version and loaded-code detection only, inside the current write scope. Refuse with a new code when the receipt's tool.version is newer than the running devkit-dist, with a re-registration directive, or when the running process's loaded reader differs from the installed reader on disk (a service not restarted after an upgrade or merge), with a restart directive. No receipt schema change. The reported same-version bootstrap case keeps RECEIPT_INVALID, so the source feedback stays open for that remainder.
+    recommended: false
+  - id: c
+    description: Close this unit and open a proposal for receipt contract evolution (revision marker, bootstrap integration route), since the fix changes the receipt contract that CAP-DIST-sync-and-transactions owns.
+    recommended: false
+  allow_note: true
+activity_effort: medium
