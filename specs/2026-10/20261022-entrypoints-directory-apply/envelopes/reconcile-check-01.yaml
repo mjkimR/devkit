@@ -1,0 +1,9 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-22T11:07:02.240112Z'
+status: completed
+summary: 'Reconcile verified: CAP-TRACE-code-entrypoints updated with directory code folding contract'
+findings: []
+checks: {}

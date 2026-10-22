@@ -128,6 +128,8 @@ supplied `relative` diagnostic path. It does not normalize paths or change the r
    path): folded pairs are left out, each merged pair carries `count` (the number of specs that produced it) and
    `specs`, and pairs below `--min-count` (default `1`) are dropped.
 3. **`--code <path>`** (repeatable) keeps only candidates equal to or under a path: the review's selection.
+   A `--code` path ending with `/` requires an existing workspace directory; candidate pairs under that directory
+   are folded into a single directory pair, which `--apply` records with a trailing `/`.
 4. **`--exclude <path>`** (repeatable) drops candidates equal to or under a path (hub files every bundle touches) and
    reports each as `reason=excluded` (`kind=boundary`).
 5. `--code` and `--exclude` values follow the path contract (`SPEC_ENTRYPOINTS_PATH_INVALID`).
