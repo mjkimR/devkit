@@ -243,6 +243,7 @@ Commands that print documents in JSON use the record `id`, `kind`, `path` (works
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
 | `SPEC_DOCUMENT_INVALID` | `WARNING` | `DocumentInvalidWarning` | A file under `docs/` or `specs/` cannot be read as UTF-8 or has malformed frontmatter (including a non-string `id`, `reconcile_id` or `status`); it is left out of the index. Returned under `notices`; exit `0`, `1` under `--strict`. |
+| `YAML_BINDING_UNAVAILABLE` | `ERROR` (execution failure) | `YamlBindingUnavailableError` | A YAML read starts without PyYAML's `CSafeLoader`; exit `2` before parsing or memo reuse, and never as `SPEC_DOCUMENT_INVALID`. |
 | `SPEC_ID_UNRESOLVED` | `ERROR` (`INPUT_ERROR`) | `UnresolvedIdError` | No document declares the ID. |
 | `SPEC_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | More than one document declares the ID, or (no document declaring it as its ID) the alias; `[TARGET]` lists them. |
 

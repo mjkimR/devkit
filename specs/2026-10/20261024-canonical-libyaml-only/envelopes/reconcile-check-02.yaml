@@ -1,0 +1,22 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-23T16:57:54.060034Z'
+status: completed
+summary: Fresh reconcile review verified the expanded targets and found that the document-model error catalog still omitted YAML_BINDING_UNAVAILABLE.
+findings:
+- issue: The document-model error table omits YAML_BINDING_UNAVAILABLE, although its frontmatter contract requires this distinct execution failure.
+  evidence: docs/capabilities/documents/CAP-DOCS-document-model.md:68-70, 241-247
+  failure_condition: A reader consulting the document-model error catalog cannot find the new code, level, or exit behavior.
+  suggested_action: Add YAML_BINDING_UNAVAILABLE to the error table with its execution-failure semantics and exit code 2.
+  resolution: open
+  severity: P2
+unverified_areas:
+- The read-only reviewer did not rerun development tests.
+checks:
+  reconciliation: FAIL document-model error catalog incomplete
+diff_scope:
+  base: dcff444fa35c06642f775ed21514047e87b86472
+  head: c396a495411429cf2b54858d50dd81a25a42ba32
+activity_effort: medium
