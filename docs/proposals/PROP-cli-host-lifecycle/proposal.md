@@ -2,7 +2,7 @@
 id: PROP-cli-host-lifecycle
 title: CLI execution for Host lifecycle operations
 summary: "Move Host acceptance, handoff and integration execution to CLI commands and conversational workflow approval. Retain MCP for worker access to shared resources without adding a durable recovery runtime."
-status: reviewing
+status: accepted
 created_at: 2026-10-23
 target_area: capabilities/integration/
 priority: high
