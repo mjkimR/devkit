@@ -133,7 +133,7 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
   `ADR-viewer`.
 
 ### 2.6 Opt-in and Example Content Packages
-- **`devkit-catalog` (`packages/devkit-catalog`)**: Ships opt-in bundle assets (e.g. `host-observer`) that are installed in the environment but only deployed when explicitly selected (`devkit add <bundle>`).
+- **`devkit-catalog` (`packages/devkit-catalog`)**: Ships opt-in bundle assets that are installed in the environment but only deployed when explicitly selected (`devkit add <bundle>`).
 - **`devkit-starter` (`packages/devkit-starter`)**: Example external content package demonstrating bundle authoring.
 - Both test their bundles against the manifest reader of `devkit-dist`, their only development dependency.
 - **`devkit-embed` (`models/devkit-embed`)**: Hand-built data package containing the default dense embedding model for the `search` extra of `devkit-dist` (and `devkit-agt[search]`).

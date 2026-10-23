@@ -11,7 +11,7 @@ depends_on: []
 
 ## Goal
 
-Advances `ARCH-01-introduction-and-goals` §1.1 (Asset Distribution & Guidance Delivery), §1.8 (Document Search), and §2 (Bounded Context) by expanding `devkit-catalog` (`CAP-DIST-content-packages`) beyond `host-observer` and addressing bounded context exposure as bundle instruction catalogs grow (`ARCH-08-2-resource-taxonomy`, `CAP-DIST-context-and-playbooks`).
+Advances `ARCH-01-introduction-and-goals` §1.1 (Asset Distribution & Guidance Delivery), §1.8 (Document Search), and §2 (Bounded Context) by expanding `devkit-catalog` (`CAP-DIST-content-packages`) and addressing bounded context exposure as bundle instruction catalogs grow (`ARCH-08-2-resource-taxonomy`, `CAP-DIST-context-and-playbooks`).
 
 ## Exit condition
 

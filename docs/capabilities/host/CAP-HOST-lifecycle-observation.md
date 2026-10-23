@@ -147,23 +147,8 @@ observations can overwrite the latest timestamp; counts and exactly-once deliver
 Codex process. Trust and execution permissions are always `unknown`. `devkit status` includes hook installation
 problems without loading service handlers. Neither status command establishes effective host enablement.
 
-For an opt-in test, install `devkit-catalog`, then run:
-
-```bash
-uv run devkit add host-observer
-uv run devkit host status --format json
-```
-
-Review the generated configuration, start a local Codex CLI session with devkit on PATH and complete Codex's own
-project/hook trust flow. Trigger a tool call and stop a turn. Inspect `host status` again for actual observations.
-Business approvals, setup/trust prompts and execution-permission prompts are separate observations. To remove:
-
-```bash
-uv run devkit remove host-observer
-```
-
-This removes registrations and managed definitions; local observation metadata stays under the ignored transient
-directory. Reinstalling can expose an older timestamp, so compare it with the current validation session.
+The observer handler remains available to hook definitions supplied by installed bundles. Business approvals, setup
+and trust prompts, and execution-permission prompts are separate observations.
 
 ## 8. Project MCP registration
 

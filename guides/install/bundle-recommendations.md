@@ -31,7 +31,6 @@ recommend comes from it.
 | `cli-tool` (`devkit-catalog`) | The repository builds, or the user plans, a Python command-line tool that agents run. | Default `all`: the `cli-tool-structure` instruction (click, `devkit-cli`, the required feature layout, import budget) and five structure rules run by `devkit-agt`; `guide`: the instruction only (the preset to take with `devkit-dist` alone). |
 | `response-style` (`devkit-catalog`) | The user wants answer-first replies that keep decision-critical facts, or a configurable default conversation language. | Default `all`: the `response-style` skill and an `AGENTS.md` line; `[presentation] language = "ko"` supplies an inherited Korean default; an explicit `[bundles.response-style.variables] language` value wins. Run sync after edits. |
 | `maintenance` (`devkit-catalog`) | The user wants bounded drift review or evidence-based weekly reports with separately authorized publication. | `upkeep`: drift-reconciliation; `reporting`: weekly-report; default `all`: both independent playbooks. Selection never executes them; unavailable evidence remains explicit gaps. |
-| `host-observer` (`devkit-catalog`) | The user wants to validate Codex CLI lifecycle hook delivery. | Default `all`: five metadata-only observer hooks; requires devkit on the host PATH and separate host trust review. |
 
 With `devkit-dist` alone, recommend no `devkit-agt` bundle and no rule asset (`advisory:python`, `cli-tool` other than
 `cli-tool:guide`): nothing runs them.

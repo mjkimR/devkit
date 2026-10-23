@@ -130,8 +130,8 @@ wheel from the release `packages/devkit-dist/pyproject.toml` pins: uv applies a 
 dependency's own sources. Declare none of them again with another source, or uv
 reports conflicting URLs. The example content
 package `devkit-starter` is in each release too: add its wheel the same way, then
-`uv run devkit add starter`. So is `devkit-catalog`, whose opt-in bundles
-(such as `host-observer`) deploy only after `uv run devkit add <bundle>`.
+`uv run devkit add starter`. So is `devkit-catalog`, whose opt-in bundles deploy
+only after `uv run devkit add <bundle>`.
 So is `devkit-viewer`, which mounts `devkit viewer serve`.
 
 ```bash

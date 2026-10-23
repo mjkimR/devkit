@@ -1,4 +1,0 @@
-host = "codex"
-event = "Stop"
-handler = "observe"
-timeout = 10

@@ -200,7 +200,7 @@ with discover_bundles() as bundles:
         'devkit': 'devkit-dist', 'advisory': 'devkit-dist', 'git-commits': 'devkit-dist',
         'authoring': 'devkit-agt', 'harness': 'devkit-agt',
     }
-    assert {item.bundle.name for item in bundles if item.package == 'devkit-catalog'} == {'host-observer', 'response-style', 'maintenance', 'cli-tool'}
+    assert {item.bundle.name for item in bundles if item.package == 'devkit-catalog'} == {'response-style', 'maintenance', 'cli-tool'}
 "
     echo "--- devkit sync (built-in bundles are selected by default)"
     uv run devkit sync >/dev/null
@@ -209,7 +209,6 @@ with discover_bundles() as bundles:
     grep -q '"harness"' .devkit/installation.json
     test -d .devkit/managed/devkit
     test -f .devkit/managed/harness/instructions/devkit-run.md
-    test ! -e .devkit/managed/host-observer
     test ! -e .devkit/managed/response-style
     test ! -e .devkit/managed/cli-tool
     echo "--- response templates: lazy imports, configured language and final output"
@@ -257,34 +256,6 @@ assert expected <= found, found
 PY
     rm -r src/smoketool
     uv run devkit remove cli-tool >/dev/null
-    echo "--- host hooks: preserve foreign entries, dispatch from a subdirectory, inspect and remove"
-    mkdir -p .codex host-subdir
-    cat > .codex/hooks.json <<'JSON'
-{"description":"Consumer hooks","hooks":{"Stop":[{"hooks":[{"type":"command","command":"true"}]}]}}
-JSON
-    uv run devkit add host-observer >/dev/null
-    uv run python -c '
-import json, os, pathlib, subprocess, sys
-root = pathlib.Path.cwd()
-environment = dict(os.environ, PATH=str(pathlib.Path(sys.executable).parent) + os.pathsep + os.environ["PATH"])
-config = json.loads((root / ".codex/hooks.json").read_bytes())
-assert config["description"] == "Consumer hooks"
-command = config["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
-event = {"hook_event_name":"PreToolUse", "cwd":str(root / "host-subdir"), "tool_input":{"command":"PRIVATE"}}
-run = subprocess.run(command, shell=True, cwd=root / "host-subdir", env=environment, input=json.dumps(event), text=True, capture_output=True)
-assert run.returncode == 0 and run.stderr == "" and json.loads(run.stdout) == {}, run
-status = subprocess.run(["devkit", "host", "status", "--format", "json"], env=environment, check=True, text=True, capture_output=True)
-report = json.loads(status.stdout)
-assert report["ok"] and len(report["hooks"]) == 5
-assert next(item for item in report["hooks"] if item["asset"] == "host-observer:pre-tool")["last_received"]
-assert "PRIVATE" not in json.dumps(report)
-'
-    uv run devkit sync --check >/dev/null
-    uv run devkit remove host-observer >/dev/null
-    uv run python -c '
-import json, pathlib
-assert json.loads(pathlib.Path(".codex/hooks.json").read_bytes()) == {"description":"Consumer hooks","hooks":{"Stop":[{"hooks":[{"type":"command","command":"true"}]}]}}
-'
     echo "--- devkit add starter"
     uv run devkit add starter
     echo "--- devkit sync --check (must exit 0)"

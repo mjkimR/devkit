@@ -1,4 +1,0 @@
-host = "codex"
-event = "PostToolUse"
-handler = "observe"
-timeout = 10

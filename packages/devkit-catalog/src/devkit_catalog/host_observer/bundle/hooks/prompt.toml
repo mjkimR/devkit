@@ -1,4 +1,0 @@
-host = "codex"
-event = "UserPromptSubmit"
-handler = "observe"
-timeout = 10
