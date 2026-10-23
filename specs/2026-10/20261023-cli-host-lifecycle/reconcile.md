@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-cli-host-lifecycle
-status: pending
+status: resolved
 targets:
   - file: docs/architecture/ARCH-04-2-delivery-policy.md
     resolution: modified

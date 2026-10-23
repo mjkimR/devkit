@@ -1,0 +1,17 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-23T13:23:05.934732Z'
+status: completed
+summary: closes reconcile-check-01; verified all 18 Living Spec targets, removed stale form and MCP recovery instructions, and confirmed source actions use current CLI and observed state.
+findings: []
+checks:
+  targets: PASS all 18 reconcile targets rechecked
+  reflection: PASS Host conversation and retained-base policy are stated; no current lifecycle guidance points to removed MCP actions
+  tests: PASS 4940 passed, 12 skipped via just test-affected --base main
+  rules: PASS just rules-check; devkit rules check --ci --base main
+diff_scope:
+  base: 4fd1add3cda3f7f97dd97885f968dac17a703193
+  head: 3f7c75331a3a20685ebfd6870b753b8645f8dcea
+activity_effort: medium

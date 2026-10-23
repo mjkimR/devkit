@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-23T13:24:01.868382Z'
+status: completed
+summary: Swept this Development session; recorded one upstream sandbox friction observation and found no duplicate open feedback.
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0
