@@ -1,0 +1,22 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-23T12:05:45.242939Z'
+status: completed
+review: challenger-01.yaml
+summary: Added a post-fast-forward failure scenario with a no-duplicate-merge and scoped-cleanup check; retained the conversational ask authority decision as open for plan-accept.
+findings:
+- issue: Conversational ask approval conflicts with the accepted native-confirmation authority model.
+  evidence: docs/proposals/PROP-cli-host-lifecycle/proposal.md:45-53,97-110; ADR-mcp-runtime-and-shared-artifacts direct/local-orchestrated approvals; ADR-delivery-decision-boundaries decision drivers and options 9-10
+  failure_condition: If Planning accepts the proposal without deciding whether a conversation response alone authorizes the exact CLI mutation, implementation either retains native confirmation and fails AC-2/AC-6 or removes it while contradicting accepted ADRs that make native confirmation the connected route and CLI/PR execution recovery.
+  suggested_action: 'Decision needed: At plan-accept, confirm that under ask the Host may execute after presenting exact scope and receiving a conversational decision, while the CLI revalidates identity and policy but does not authenticate that decision; record the accepted tradeoff and superseded ADRs in a PADR.'
+  resolution: open
+  severity: P1
+- issue: AC-4 does not name a representative failure or define recovery verification.
+  evidence: docs/proposals/PROP-cli-host-lifecycle/proposal.md:112-120,137-138; packages/devkit/src/devkit_agt/features/integration/usecases/service.py:245-255,486-504
+  failure_condition: If Development chooses the failure point or retry behavior without a specified scenario, acceptance can pass without proving safe recovery after merge when the process-local request and exact cleanup scope are unavailable.
+  suggested_action: Name an injected post-merge failure and verify recovery observes the landed commit, performs only remaining scoped cleanup, and does not merge again or delete an unrelated branch.
+  resolution: resolved
+  severity: P2
+checks: {}
