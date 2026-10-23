@@ -24,12 +24,13 @@ Run steps 1 to 4 in the task worktree.
 2. Inspect `git diff --name-only <pre-merge-head> HEAD` and run the repository's affected checks on it (for example `just test-affected --base <base-ref>`). If bundle sources changed, run `devkit sync` and commit its tracked changes before approval. Return a defect beyond integration scope to the build stage.
 3. Re-check the `reconcile.md` targets against the merged impact; if resolution touched contracts, add targets and their docs reflection.
 4. Run `devkit rules check --ci --base <base-ref>` and the repository's required local checks; reuse valid results for unchanged content.
-{% if execution.environment == "local" %}5. Present the verified change report and the merge and cleanup effects. After the user's conversational OK under `ask`, run `devkit integration integrate <branch> --task-kind unit --task-id <id> --unit <dir> --route local` from the retained base.
-   - Use `--route pull-request` only when `dev-integration=ask` and publication effects have separate authority. `auto` authorizes the local route only.
+{% if execution.environment == "local" %}5. Run `devkit integration prepare <branch> --task-kind unit --task-id <id> --unit <dir> --route local --format json` from the retained base. Present its exact scope with the verified change report. After the user's conversational OK under `ask`, run `devkit integration integrate <branch> --task-kind unit --task-id <id> --unit <dir> --route local --expected-digest <request.digest>` with that prepared digest. A scope mismatch requires a fresh preparation and decision; the digest is a concurrency guard, not approval. Under `auto`, preparation and the digest are optional.
+   - For the PR route, use `--route pull-request` in both prepare and integrate. Use it only when `dev-integration=ask` and publication effects have separate authority. `auto` authorizes the local route only.
    - After an unknown or partial result, inspect `devkit worktree status` and Git or PR state. If the local merge landed, run `devkit worktree finish <branch> --local-only` to perform only remaining guarded cleanup. A moved target requires a fresh review and conversational decision.
 {% else %}5. Present the verified change report and the merge and cleanup effects, then merge by the separately authorized route:
    - PR: before merging, verify the required checks and the unchanged approved source and base; afterwards run `devkit worktree finish <branch>`. Report an incomplete or unknown mutation to the Host.
-{% endif %}   - CLI execution revalidates source, target, readiness and cleanup scope in one call; it does not authenticate the conversational decision.
+{% endif %}   - A remote deletion failure preserves the local worktree and branch for recovery. Inspect the merged PR and remote ref, prepare the remaining scope and retry with its new digest.
+   - CLI execution revalidates source, target, readiness and cleanup scope in one call; it does not authenticate the conversational decision.
 6. After bundle changes land, run `devkit sync` in the base checkout. Report the result in the conversation (the `spec` skill's `references/envelope.md`, Integration result), naming the actual `dev-integration` authority.
 
 If a retry cap is exceeded or a tool fails, return `exception` with the cause and evidence; do not open a new task to bypass the cap.

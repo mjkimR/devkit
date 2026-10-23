@@ -23,12 +23,18 @@ interface. `ADR-local-and-pull-request-integration` remains authoritative for me
 
 ```text
 devkit integration prepare <branch> --task-kind unit|session --task-id <id> [--unit <dir>] [--route local|pull-request] [--claims <json>]
-devkit integration integrate <branch> --task-kind unit|session --task-id <id> [--unit <dir>] [--route local|pull-request] [--claims <json>]
+devkit integration integrate <branch> --task-kind unit|session --task-id <id> [--unit <dir>] [--route local|pull-request] [--claims <json>] [--expected-digest <digest>]
 ```
 
 `prepare` validates the committed source, target, project policy, readiness provider and exact cleanup scope. It
 performs no integration mutation. The Host presents its result and obtains the business decision before invoking
-`integrate` under `ask`; `integrate` constructs a fresh request and repeats all checks before mutation. The CLI accepts
+`integrate --expected-digest <digest>` under `ask`, using the `request.digest` from that preparation.
+WHEN the owning policy is `ask`, the CLI MUST require the prepared digest and refuse a changed digest with
+`INTEGRATION_REQUEST_STALE` before integration effects. The digest excludes the transient request ID and binds the
+source, target, policy, readiness and cleanup scope. It is a concurrency precondition, not an approval credential.
+Under `auto`, the digest is optional; a supplied digest MUST still match. These checks are covered by
+`packages/devkit/tests/integration/features/integration/test_cli.py`.
+`integrate` constructs a fresh request and repeats all checks before mutation. The CLI accepts
 no approval boolean, token, request ID, cleanup path or merge strategy. Caller `claims` are provider declarations,
 not evidence or authority.
 
@@ -70,6 +76,11 @@ approval or recovery journal survives the invocation.
   perform only remaining guarded Git cleanup. When Git cleanup completed but a scoped post-finish action failed, run
   that extension's owning command against the exact reported cleanup target (proposal directories, for example, use
   `devkit spec proposal prune <slug>`).
+- On the pull-request route, leased remote branch deletion MUST complete before local worktree and branch deletion.
+  IF remote deletion fails or its outcome is unknown, THEN the operation MUST preserve the local recovery identity.
+  After resolving the blocker and inspecting the merged PR and remote ref, prepare the remaining scope and execute
+  with its fresh digest; the merged PR is validated and never merged twice. This is covered by
+  `packages/devkit/tests/integration/features/integration/test_pull_request.py`.
 - If the result is unknown, inspect Git or the pull request before another mutation. Never replay an unknown remote
   write or remove a worktree whose identity is ambiguous.
 - A changed target requires the source to incorporate that target, fresh readiness and a fresh Host decision under

@@ -1,0 +1,13 @@
+kind: red
+stage: build-verify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-23T14:24:47.789500Z'
+status: completed
+summary: Review-02 regressions reproduce approval scope drift and loss of PR cleanup recovery identity before fixes.
+findings: []
+checks:
+  tests: 'FAIL source drift test: unexpected completed integration; PR fresh retry test: worktree removed before remote cleanup'
+diff_scope:
+  base: 6877909dd973fa2f053d343aa872700c2c2e4fb4
+  head: 6877909dd973fa2f053d343aa872700c2c2e4fb4

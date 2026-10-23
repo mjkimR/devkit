@@ -68,6 +68,11 @@ def prepare(
 @click.option(
     "--claims", default="{}", help="Provider-specific caller declarations as JSON; exclude secrets and transcripts"
 )
+@click.option(
+    "--expected-digest",
+    default=None,
+    help="Prepared scope digest presented for approval; required under ask, optional under auto",
+)
 @workspace_option()
 @FORMAT_OPTION
 @boundary
@@ -78,12 +83,13 @@ def integrate(
     unit: str | None,
     route: str,
     claims: str,
+    expected_digest: str | None,
     workspace_root: str | None,
     output_format: str,
 ) -> None:
     """Integrate committed BRANCH after Host-carried approval; auto policy is read from the retained base."""
     result = IntegrateUseCase(IntegrationService(resolve_root(workspace_root))).execute(
-        branch, Task(task_kind, task_id, unit, claims), route
+        branch, Task(task_kind, task_id, unit, claims), route, expected_digest=expected_digest
     )
     payload = result.compact_dict()
     if is_json(output_format):

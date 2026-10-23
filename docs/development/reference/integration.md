@@ -5,15 +5,15 @@ Canonical behavior: `CAP-INT-mcp-services`.
 | Interface | Purpose |
 | --- | --- |
 | `devkit integration prepare BRANCH --task-kind unit|session --task-id ID [--unit DIR] [--route local|pull-request] [--claims JSON] [-w DIR] [--format json]` | Inspect readiness and exact execution scope without integration mutations |
-| `devkit integration integrate BRANCH --task-kind unit|session --task-id ID [--unit DIR] [--route local|pull-request] [--claims JSON] [-w DIR] [--format json]` | Rebuild scope and execute after Host-carried approval under `ask`, or retained-base policy authority under `auto` |
+| `devkit integration integrate BRANCH --task-kind unit|session --task-id ID [--unit DIR] [--route local|pull-request] [--claims JSON] [--expected-digest DIGEST] [-w DIR] [--format json]` | Rebuild scope and execute after Host-carried approval under `ask`, or retained-base policy authority under `auto` |
 | `devkit worktree finish BRANCH --merge --local-only` | Public merge/cleanup operation excluding fetch and push (a merge commit, or a fast-forward under `[worktree] merge = "ff-only"`; the branch must contain the base HEAD); caller supplies existing authority |
 
 The CLI accepts `branch`, `task_kind`, `task_id`, optional `unit`, optional `claims`, and `route=local|pull-request` (default local). On the PR route only, `task_id` must contain 1–256 characters matching `[A-Za-z0-9][A-Za-z0-9_.:-]{0,255}`. No command accepts an approval boolean, arbitrary command, cleanup path or merge strategy:
 the merge method is the project policy (`[worktree] merge`, `ff-only` in either the base's or the source's policy wins).
 
-Under `ask`, the Host presents the exact report, target and cleanup effects, receives the user's conversational decision, then invokes `integrate`. The CLI revalidates the complete operation but does not authenticate that decision. Shared base `dev-integration="auto"` authorizes only local integration and reports `authority: policy`. Auto PR execution refuses, prospective revocation blocks before merge and remaining effects require unchanged policy. Host permissions remain independent. Prepare and source-only policy changes grant no authority.
+Under `ask`, the Host presents the exact report, target and cleanup effects, receives the user's conversational decision, then invokes `integrate --expected-digest <digest>` with the prepared `request.digest`. Under `ask`, a missing digest refuses and a changed scope returns `INTEGRATION_REQUEST_STALE` before integration effects. Under `auto`, the digest is optional and checked when supplied. It is a concurrency precondition, not approval. The CLI revalidates the complete operation but does not authenticate that decision. Shared base `dev-integration="auto"` authorizes only local integration and reports `authority: policy`. Auto PR execution refuses, prospective revocation blocks before merge and remaining effects require unchanged policy. Host permissions remain independent. Prepare and source-only policy changes grant no authority.
 
-The CLI execution absorbs target commits that land during the Host conversation in one build (Git 2.38 or later for
+The CLI execution absorbs target commits that land after its prepared-scope comparison in one build (Git 2.38 or later for
 `git merge-tree --write-tree`) and waits up to 20 seconds (`LOCK_WAIT`) for another devkit integration. The result
 reports the prepared target, build target and result commit under `build`. After an unknown outcome, inspect
 `devkit worktree status`, Git or PR state. If local merge completed before cleanup failed, rerun
@@ -53,7 +53,10 @@ operations return notices; execution failures carry structured partial progress.
 output and exit conventions.
 
 The native PR route binds the resolved GitHub repository and source SHA, pushes/creates the PR after approval,
-merges synchronously with a head pin, verifies landing evidence and performs disclosed cleanup. `ff-only` refuses it.
+merges synchronously with a head pin, verifies landing evidence and performs disclosed cleanup. Leased remote deletion
+precedes local worktree and branch deletion. A remote deletion failure preserves those local identities; inspect the
+merged PR and remote ref, prepare the remaining scope and retry with its fresh digest. The confirmed merge is not
+repeated. `ff-only` refuses the PR route.
 Pending checks return `INTEGRATION_CHECKS_PENDING` as an incomplete result; inspect the pull request and checks before
 invoking another operation. `INTEGRATION_TARGET_MOVED` requires target integration into source, verification and new approval.
 `INTEGRATION_LANDED_UNCHECKED` is a warning: run the provider's landed-target check after cleanup and do not report

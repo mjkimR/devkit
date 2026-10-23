@@ -301,7 +301,9 @@ class IntegrationService:
         result.authority = "mcp-elicitation"
         return await asyncio.to_thread(self._run, request.id, LOCK_WAIT, True)
 
-    def execute_cli(self, branch: str, task: Task, route: str = "local") -> IntegrationResult:
+    def execute_cli(
+        self, branch: str, task: Task, route: str = "local", *, expected_digest: str | None = None
+    ) -> IntegrationResult:
         """Execute one CLI invocation after Host-carried conversational approval.
 
         The CLI boundary does not authenticate the conversation or accept a serialized
@@ -309,13 +311,27 @@ class IntegrationService:
         after it has presented the prepared scope and received the user's decision.
         The complete request is prepared again here, then all normal source, target,
         policy, provider, readiness, lock and cleanup checks run before effects.
+        Under ask, expected_digest pins the presented scope across the separate
+        prepare and execute calls; it is a concurrency precondition, not approval.
         """
         guard_execution()
         result = self.prepare(branch, task, route)
         request = result.request
+        if expected_digest is not None and expected_digest != request.digest:
+            raise StaleRequestError(
+                "the source, target, policy, readiness or cleanup scope differs from the prepared scope",
+                fix="Run `devkit integration prepare` for the current scope, obtain fresh Host approval under ask, "
+                "then pass its digest to `devkit integration integrate --expected-digest <digest>`",
+            )
         if request.approval_policy == "auto":
             result.authority = "policy"
         else:
+            if expected_digest is None:
+                raise AuthorityError(
+                    "ask integration requires the digest of the scope presented for conversational approval",
+                    fix="Run `devkit integration prepare`, present its exact scope and obtain Host approval, "
+                    "then run `devkit integration integrate --expected-digest <digest>`",
+                )
             result.authority = "host-conversation"
         record = self._record(request.id)
         record.approved = True

@@ -9,6 +9,7 @@ import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
 from click.testing import CliRunner
 from devkit_agt.features.integration import IntegrationService
 from devkit_agt.features.integration.cli import cli
+from devkit_agt.features.integration.models.contracts import Task
 from devkit_agt.features.worktree import RemoveFailedError
 from testsupport.rules import git
 
@@ -32,6 +33,8 @@ def test_integrate_cli_executes_after_host_conversation(repo):
             "session",
             "--task-id",
             "fixture",
+            "--expected-digest",
+            IntegrationService(base).prepare("dev-demo", Task("session", "fixture")).request.digest,
             "--workspace-root",
             str(base),
             "--format",
@@ -103,6 +106,8 @@ def test_integrate_cli_executes_pull_request_route(repo, tmp_path, ready_provide
             "fixture",
             "--route",
             "pull-request",
+            "--expected-digest",
+            service.prepare("dev-demo", Task("session", "fixture"), "pull-request").request.digest,
             "--workspace-root",
             str(base),
             "--format",
@@ -145,6 +150,8 @@ def test_integrate_cli_retries_observed_cleanup_without_merging_twice(repo, monk
                 "session",
                 "--task-id",
                 "fixture",
+                "--expected-digest",
+                service.prepare("dev-demo", Task("session", "fixture")).request.digest,
                 "--workspace-root",
                 str(base),
                 "--format",
@@ -169,3 +176,76 @@ def test_integrate_cli_retries_observed_cleanup_without_merging_twice(repo, monk
     assert git(base, "rev-parse", "HEAD") == landed
     assert remove_attempts == 2
     assert not worktree.exists()
+
+
+def test_integrate_cli_refuses_source_changed_after_preparation(repo):
+    base, worktree = repo
+    task = Task("session", "fixture")
+    prepared = IntegrationService(base).prepare("dev-demo", task)
+    reviewed_digest = prepared.request.digest
+    reviewed_source = prepared.request.context.finish.source_sha
+    before = git(base, "rev-parse", "HEAD")
+    (worktree / "after-approval.txt").write_text("Changed after conversational approval\n")
+    git(worktree, "add", "after-approval.txt")
+    git(worktree, "commit", "-qm", "Advance source after approval")
+    assert git(worktree, "rev-parse", "HEAD") != reviewed_source
+
+    result = CliRunner().invoke(
+        cli,
+        [
+            "integrate",
+            "dev-demo",
+            "--task-kind",
+            "session",
+            "--task-id",
+            "fixture",
+            "--expected-digest",
+            reviewed_digest,
+            "-w",
+            str(base),
+        ],
+    )
+
+    assert result.exit_code == 2, result.output
+    assert "INTEGRATION_REQUEST_STALE" in result.output
+    assert git(base, "rev-parse", "HEAD") == before
+    assert worktree.exists()
+
+
+def test_integrate_cli_requires_prepared_scope_under_ask(repo):
+    base, worktree = repo
+    before = git(base, "show-ref")
+    result = CliRunner().invoke(
+        cli, ["integrate", "dev-demo", "--task-kind", "session", "--task-id", "fixture", "-w", str(base)]
+    )
+    assert result.exit_code == 2, result.output
+    assert "INTEGRATION_AUTHORITY_REQUIRED" in result.output
+    assert "--expected-digest" in result.output
+    assert git(base, "show-ref") == before
+    assert worktree.exists()
+
+
+def test_integrate_cli_refuses_target_changed_after_preparation(repo):
+    base, worktree = repo
+    reviewed_digest = IntegrationService(base).prepare("dev-demo", Task("session", "fixture")).request.digest
+    git(base, "merge", "--ff-only", "dev-demo")
+    before = git(base, "show-ref")
+    result = CliRunner().invoke(
+        cli,
+        [
+            "integrate",
+            "dev-demo",
+            "--task-kind",
+            "session",
+            "--task-id",
+            "fixture",
+            "--expected-digest",
+            reviewed_digest,
+            "-w",
+            str(base),
+        ],
+    )
+    assert result.exit_code == 2, result.output
+    assert "INTEGRATION_REQUEST_STALE" in result.output
+    assert git(base, "show-ref") == before
+    assert worktree.exists()

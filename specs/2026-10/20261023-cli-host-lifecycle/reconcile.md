@@ -50,3 +50,8 @@ Entrypoints were updated for the proposal lifecycle CLI and use cases, the integ
 CLI, and worktree integration guidance. Candidates that were only tests, schemas, package configuration, or helper
 directories were rejected as non-doorways. The existing bundle root remains the entrypoint for agent guidance;
 architecture, ADRs, references and the install guide are not entrypoint-bearing documents.
+
+Integration preparation exposes a stable digest excluding the transient request ID. Ask execution requires that
+digest as a concurrency precondition and rejects scope drift before effects. PR cleanup performs leased remote
+deletion before removing local recovery identities, so a fresh invocation can validate the merged PR and finish
+remaining cleanup. The integration reference, delivery use case and bundled Host instructions carry these rules.

@@ -34,7 +34,7 @@ def git(root: Path, *args: str) -> str:
     return subprocess.check_output(["git", "-C", str(root), *args], text=True).strip()
 
 
-async def conversation(root: Path, worktree: Path) -> None:
+async def conversation(root: Path, worktree: Path, prepared_digest: str) -> None:
     args = ["-m", "devkit_dist", "mcp", "serve", "--workspace-root", str(root), "--configuration-workspace", str(root)]
     params = StdioServerParameters(command=sys.executable, args=args)
     async with (
@@ -63,6 +63,8 @@ async def conversation(root: Path, worktree: Path) -> None:
                 "session",
                 "--task-id",
                 "installed-fixture",
+                "--expected-digest",
+                prepared_digest,
                 "--workspace-root",
                 str(root),
                 "--format",
@@ -113,7 +115,7 @@ def main() -> None:
                     "--task-kind",
                     "session",
                     "--task-id",
-                    "fixture",
+                    "installed-fixture",
                     "-w",
                     str(root),
                     "--format",
@@ -123,8 +125,9 @@ def main() -> None:
                 capture_output=True,
             )
             assert result.returncode == 0, result.stdout + result.stderr
-            assert json.loads(result.stdout)["status"] == "prepared"
-            asyncio.run(conversation(root, worktree))
+            prepared = json.loads(result.stdout)
+            assert prepared["status"] == "prepared"
+            asyncio.run(conversation(root, worktree, prepared["request"]["digest"]))
     finally:
         module.unlink(missing_ok=True)
         shutil.rmtree(metadata, ignore_errors=True)

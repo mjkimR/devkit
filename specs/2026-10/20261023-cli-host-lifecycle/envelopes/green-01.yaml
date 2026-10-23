@@ -1,0 +1,15 @@
+kind: green
+stage: build-verify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-23T14:24:48.030568Z'
+status: completed
+summary: 'Both review-02 regressions pass: ask execution pins the prepared digest; remote cleanup failure preserves local identity for fresh-service retry.'
+findings: []
+assumptions:
+- Checks include uncommitted fixes following reviewed head 6877909d.
+checks:
+  tests: PASS integration CLI 8 tests and PR integration 32 tests
+diff_scope:
+  base: 6877909dd973fa2f053d343aa872700c2c2e4fb4
+  head: 6877909dd973fa2f053d343aa872700c2c2e4fb4

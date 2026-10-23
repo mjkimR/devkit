@@ -59,7 +59,7 @@ The main scenario follows a spec Unit at the default `activity-effort` `medium`,
 6. The agent merges the base into the branch, re-verifies only what conflict resolution and docs reflection changed,
    rechecks the reconcile targets and runs the cumulative check (`CAP-DLV-delivery-workflows`).
 7. The agent reads the effective policy, presents the verified report and exact merge/cleanup effects, receives the
-   user's conversational approval under `ask`, then invokes `devkit integration integrate` (`CAP-DLV-project-policy`, `CAP-INT-mcp-services`).
+   user's conversational approval under `ask`, then requests integration pinned to the prepared scope (`CAP-DLV-project-policy`, `CAP-INT-mcp-services`).
 8. The system builds the result commit outside the base checkout, fast-forwards the base onto it without network
    operations, removes the task worktree, deletes the local branch as the policy selects and runs the scoped
    post-finish cleanup (`CAP-INT-mcp-services`, `CAP-WT-task-worktrees`).
@@ -155,7 +155,7 @@ The integration executor's coded refusals this section does not name, and their 
 - **Given**: a verified `dev-<slug>` branch whose final change report holds, under `dev-integration = "ask"`,
   `pull_request = "auto"` and the default `merge = "no-ff"` and `delete_branch = true`
 - **When**: the Host presents the verified report and cleanup scope, the user approves in conversation, and the agent
-  runs `devkit integration integrate dev-<slug> --task-kind unit --task-id <id> --unit <dir> --route local`
+  runs `devkit integration integrate dev-<slug> --task-kind unit --task-id <id> --unit <dir> --route local --expected-digest <request.digest>`
 - **Then**: the base holds the merge commit `chore(merge): integrate dev-<slug> into <base>`, no fetch or push ran,
   the task worktree and the local `dev-<slug>` branch are gone, the scoped post-finish cleanup ran, and the agent
   passes `--given dev-integration` to later `devkit workflow next` calls
@@ -239,7 +239,7 @@ The integration executor's coded refusals this section does not name, and their 
 - **Covers**: 7d
 - **Given**: a verified local change under `dev-integration = "ask"`
 - **When**: the user approves the integration in the conversation
-- **Then**: the agent runs `devkit integration integrate dev-<slug> --task-kind unit --task-id <id> --unit <dir> --route local`,
+- **Then**: the agent runs `devkit integration integrate dev-<slug> --task-kind unit --task-id <id> --unit <dir> --route local --expected-digest <request.digest>`,
   and declares `devkit workflow next --unit <dir> --given dev-integration --given lint-ci-clean --given merged`
 
 ### Scenario 14: A held Unit is not merged

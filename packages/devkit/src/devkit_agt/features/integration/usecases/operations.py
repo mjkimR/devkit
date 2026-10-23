@@ -24,8 +24,10 @@ class IntegrateUseCase(BaseUseCase):
     def __init__(self, service: IntegrationService) -> None:
         self.service = service
 
-    def execute(self, branch: str, task: Task, route: str = "local") -> IntegrationResult:
-        return self.service.execute_cli(branch, task, route)
+    def execute(
+        self, branch: str, task: Task, route: str = "local", *, expected_digest: str | None = None
+    ) -> IntegrationResult:
+        return self.service.execute_cli(branch, task, route, expected_digest=expected_digest)
 
 
 class ResumeIntegrationUseCase(BaseUseCase):

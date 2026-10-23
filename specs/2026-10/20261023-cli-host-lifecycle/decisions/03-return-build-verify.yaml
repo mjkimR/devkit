@@ -1,0 +1,8 @@
+request: return:build-verify
+kind: return
+action: accept
+workflow: sdd-spec-feature
+stage: build-verify
+note: Fix additional review-02 stale-source and stateless PR cleanup defects
+by: host
+at: '2026-10-23T14:21:04.828794Z'

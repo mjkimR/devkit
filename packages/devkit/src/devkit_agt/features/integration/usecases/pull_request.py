@@ -516,6 +516,23 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
             guard_execution()
             fast_forward(root, target)
             result.steps[operation] = "completed"
+            _validate(service, result, merged=True, finalized=record.finalized)
+            operation = "remote_delete"
+            if plan.delete_branch and result.steps[operation] != "completed":
+                remote_source = port.ref(repository, f"refs/heads/{plan.branch}")
+                if remote_source:
+                    if remote_source != plan.source_sha or port.dependents(repository, plan.branch):
+                        raise _error(
+                            "INTEGRATION_REMOTE_DELETE_BLOCKED",
+                            "Remote source moved or is the base of an open PR",
+                            "Inspect the lease and dependent PRs; preserve the local and remote branches, resolve the blocker, then prepare and approve a fresh CLI cleanup request",
+                        )
+                    result.steps[operation] = "unknown"
+                    guard_execution(terminal=record.finalized)
+                    port.delete(repository, plan.source_sha, plan.branch)
+                    if port.ref(repository, f"refs/heads/{plan.branch}") is not None:
+                        raise _error("INTEGRATION_STEP_UNKNOWN", "Remote deletion is unconfirmed")
+                result.steps[operation] = "completed"
             if not record.finalized:
                 _validate(service, result, merged=True)
 
@@ -541,22 +558,6 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                 result.steps["worktree_remove"] = "completed"
                 result.steps["branch_delete" if plan.delete_branch else "marker_clear"] = "completed"
             _validate(service, result, merged=True, finalized=True)
-            operation = "remote_delete"
-            if plan.delete_branch and result.steps[operation] != "completed":
-                remote_source = port.ref(repository, f"refs/heads/{plan.branch}")
-                if remote_source:
-                    if remote_source != plan.source_sha or port.dependents(repository, plan.branch):
-                        raise _error(
-                            "INTEGRATION_REMOTE_DELETE_BLOCKED",
-                            "Remote source moved or is the base of an open PR",
-                            "Inspect the lease and dependent PRs; preserve the remote branch and resume after resolution",
-                        )
-                    result.steps[operation] = "unknown"
-                    guard_execution(terminal=True)
-                    port.delete(repository, plan.source_sha, plan.branch)
-                    if port.ref(repository, f"refs/heads/{plan.branch}") is not None:
-                        raise _error("INTEGRATION_STEP_UNKNOWN", "Remote deletion is unconfirmed")
-                result.steps[operation] = "completed"
             operation = "post_finish"
             assert result.finish is not None
             for scope in request.cleanup:
