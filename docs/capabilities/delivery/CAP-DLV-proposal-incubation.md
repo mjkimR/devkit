@@ -1,16 +1,16 @@
 ---
 id: CAP-DLV-proposal-incubation
 title: Proposal Incubation and Handoff
-summary: "Proposal incubation and handoff preserve approved scope, decisions, materials and feedback, validating projected direct prerequisites before writes and relocating live references without carrying milestone membership."
+summary: "Proposal incubation and handoff preserve approved scope, decisions, materials and feedback, validate projected direct prerequisites before writes, relocate live references without carrying milestone membership, and compose source-bound acceptance and handoff through Host-authorized CLI operations."
 area: delivery
 status: active
 created_at: 2026-10-13
 usecases:
   - UC-incubate-and-hand-off-a-proposal
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/features/proposals/
   - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
-  - packages/devkit-spec/src/devkit_spec/features/delivery/mcp/
+  - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py
+  - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py
 ---
 
 # [CAP-DLV-proposal-incubation] Proposal Incubation and Handoff

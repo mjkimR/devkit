@@ -1,13 +1,12 @@
 ---
 id: CAP-WT-task-worktrees
 title: "Task Worktrees"
-summary: "Task worktree isolation, creation-time local preference snapshots, activity branches, merge gates, and stale checkout cleanup."
+summary: "Task worktree isolation, creation-time local preference snapshots, activity branches, Host-authorized CLI integration with local or pull-request routes, merge gates, and stale checkout cleanup."
 area: worktree
 status: active
 entrypoints:
   - packages/devkit/src/devkit_agt/features/worktree/usecases/lifecycle.py
-  - packages/devkit/src/devkit_agt/features/worktree/services/merging.py
-  - packages/devkit/src/devkit_agt/features/worktree/repositories/pull_request.py
+  - packages/devkit/src/devkit_agt/features/integration/cli.py
 created_at: 2026-10-17
 usecases:
   - UC-drive-development-to-integration

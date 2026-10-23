@@ -1,0 +1,34 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-23T13:03:53.857808Z'
+status: completed
+summary: round 1; REVISE — independent review found an authority gate mismatch, missing CLI recovery-route coverage and duplicate handoff advisories.
+findings:
+- issue: Plan acceptance automatic authority is incorrectly coupled to dev-integration=auto.
+  evidence: packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py:304-306 and :187-188; packages/devkit/src/devkit_agt/features/integration/usecases/service.py:128-136
+  failure_condition: The retained base sets plan-accept=auto and dev-integration=ask; composed acceptance cannot proceed with --by policy despite the plan-accept gate granting automatic authority.
+  suggested_action: Pass lifecycle.approval_gate explicitly to _prepare and test plan-accept=auto with dev-integration=ask.
+  resolution: open
+  severity: P1
+- issue: The integration CLI lacked direct pull-request and partial-result recovery coverage.
+  evidence: packages/devkit/tests/integration/features/integration/test_cli.py covered only local conversational and local automatic success; PR and partial-recovery coverage exercised IntegrationService.integrate instead of execute_cli.
+  failure_condition: A defect specific to execute_cli on --route pull-request or cleanup-only retry can break AC-06/AC-07 while the existing native path tests still pass.
+  suggested_action: Add CLI tests for pull-request route limits and a partial cleanup retry that does not merge twice.
+  resolution: open
+  severity: P2
+- issue: Combined accept-and-handoff can emit handoff advisories twice.
+  evidence: packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py:361-373 copies handoff errors/notices to the top level; packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py:73-77 also reads nested handoff advisories.
+  failure_condition: A combined operation returns a handoff error or notice; text output emits duplicate advisory blocks and may apply strict warning handling twice.
+  suggested_action: Collect advisories from either the nested handoff result or top-level copies, never both.
+  resolution: open
+  severity: P3
+checks:
+  focused-tests: PASS 11 passed
+  lint: PASS Ruff and rules; Pyright 0 errors
+  affected-suite: FAIL 4935 passed, 12 skipped, 1 failed; missing two documented codes, fixed and focused code test passed
+diff_scope:
+  base: 4fd1add3cda3f7f97dd97885f968dac17a703193
+  head: ce883ffc170be68a7539543a09e89d83774da297
+activity_effort: medium

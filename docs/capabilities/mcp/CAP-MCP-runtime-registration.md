@@ -1,7 +1,7 @@
 ---
 id: CAP-MCP-runtime-registration
 title: "MCP Runtime and Project Registration"
-summary: "An optional retained MCP runtime binds approval and presentation context to an owning workspace, while reconciling ignored project registrations without changing host trust."
+summary: "An optional retained MCP runtime binds invocation and presentation context to an owning workspace and reconciles ignored project registrations without changing host trust; lifecycle mutations run through Host-authorized CLI operations while shared artifact MCP remains available."
 status: active
 area: mcp
 usecases:

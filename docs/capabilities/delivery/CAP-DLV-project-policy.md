@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-project-policy
 title: Project Policy
-summary: "Effective approval, stage, Git (auto or required worktree and pull request levels) and repository-first feedback policy reported by devkit spec policy, with strict validation and commented defaults for the tool.spec configuration."
+summary: "Effective approval, stage, Git (auto or required worktree and pull request levels) and repository-first feedback policy reported by devkit spec policy, including Host conversational approval and retained-base automatic authority for lifecycle CLI operations."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -12,6 +12,7 @@ usecases:
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/policy/services/config.py
   - packages/devkit-spec/src/devkit_spec/features/policy/cli/commands.py
+  - packages/devkit/src/devkit_agt/features/integration/cli.py
 ---
 
 # [CAP-DLV-project-policy] Project Policy

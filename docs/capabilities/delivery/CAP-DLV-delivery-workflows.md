@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-delivery-workflows
 title: Delivery Workflows
-summary: "Five delivery workflows define stages, gates, checks, bounded reviews and run records, verified source-feedback resolution, integration readiness, informational committed worker-result inspection, and native Codex workers with emulated boundaries and scoped approvals."
+summary: "Five delivery workflows define stages, gates, checks, bounded reviews, run records, feedback resolution and integration readiness. They support Host-authorized local and pull-request CLI integration, worker-result inspection, and native or emulated roles."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -12,8 +12,8 @@ usecases:
   - UC-handle-delivery-problems-and-exceptions
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/
-  - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py
+  - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
+  - packages/devkit/src/devkit_agt/features/integration/cli.py
 ---
 
 # [CAP-DLV-delivery-workflows] Delivery Workflows

@@ -1,0 +1,35 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-23T13:04:13.752095Z'
+status: completed
+review: review-01.yaml
+summary: Developer reverified all round-one fixes; the auto gate regression, pull-request execution, cleanup-only retry and advisory single-emission tests pass.
+findings:
+- issue: Plan acceptance automatic authority is incorrectly coupled to dev-integration=auto.
+  evidence: packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py:304-306 and :187-188; packages/devkit/src/devkit_agt/features/integration/usecases/service.py:128-136
+  failure_condition: The retained base sets plan-accept=auto and dev-integration=ask; composed acceptance cannot proceed with --by policy despite the plan-accept gate granting automatic authority.
+  suggested_action: Pass lifecycle.approval_gate explicitly to _prepare and test plan-accept=auto with dev-integration=ask.
+  resolution: resolved
+  severity: P1
+- issue: The integration CLI lacked direct pull-request and partial-result recovery coverage.
+  evidence: packages/devkit/tests/integration/features/integration/test_cli.py covered only local conversational and local automatic success; PR and partial-recovery coverage exercised IntegrationService.integrate instead of execute_cli.
+  failure_condition: A defect specific to execute_cli on --route pull-request or cleanup-only retry can break AC-06/AC-07 while the existing native path tests still pass.
+  suggested_action: Add CLI tests for pull-request route limits and a partial cleanup retry that does not merge twice.
+  resolution: resolved
+  severity: P2
+- issue: Combined accept-and-handoff can emit handoff advisories twice.
+  evidence: packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py:361-373 copies handoff errors/notices to the top level; packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py:73-77 also reads nested handoff advisories.
+  failure_condition: A combined operation returns a handoff error or notice; text output emits duplicate advisory blocks and may apply strict warning handling twice.
+  suggested_action: Collect advisories from either the nested handoff result or top-level copies, never both.
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS just test-affected --base main; 4940 passed, 12 skipped
+  focused-regressions: PASS integration CLI 5, acceptance CLI 4, proposal report 21
+  lint: PASS Ruff and rules; Pyright 0 errors
+diff_scope:
+  base: 4fd1add3cda3f7f97dd97885f968dac17a703193
+  head: 5ded628fa084325f3d31dcc0f96c72cdb1323a8a
+activity_effort: medium

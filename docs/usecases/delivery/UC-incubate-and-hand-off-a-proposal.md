@@ -1,7 +1,7 @@
 ---
 id: UC-incubate-and-hand-off-a-proposal
 title: Incubate a Proposal and Hand It Off to a Spec
-summary: "An AI coding agent shapes an idea whose direction must be decided first in a proposal bundle, or accepts a settled draft directly, records the user's acceptance in one step, and hands it off to a bound spec bundle with decisions promoted, materials moved, approvals carried and references rewritten."
+summary: "An AI coding agent develops a proposal and its decisions, obtains Host approval against a source-bound report, then accepts or hands it off through CLI operations while preserving materials, approvals and references."
 area: delivery
 primary_actor: AI coding agent (Host)
 supporting_actors:
@@ -11,9 +11,9 @@ supporting_actors:
   - planning-worker (local-orchestrated mode only)
 status: active
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/sdd-proposal.md
-  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/accept.py
-  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py
+  - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py
+  - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
+  - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py
 created_at: 2026-10-13
 capabilities:
   - CAP-DLV-proposal-incubation
