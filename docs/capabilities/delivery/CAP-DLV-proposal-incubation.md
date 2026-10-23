@@ -604,7 +604,8 @@ integration. Only the service-created acceptance record/status delta and its dir
 normal commit gates and the complete integration readiness provider still run. The base cannot advance. Cleanup
 revisions equal to the source SHA may follow only that exact verified acceptance child with identical targets.
 `accept_only` stops after accepted merge/cleanup; combined pins the landed result before setup/handoff. No final
-Development merge is authorized. Decline/cancel/unavailable forms mutate no lifecycle state.
+Development merge is authorized. If the Host conversation is declined, canceled or unavailable, the Host does not
+invoke the CLI and no lifecycle state changes.
 
 Partial progress returns completed steps, source/acceptance/landed SHAs, integration progress, worktree results and
 a next action. No authority survives a return or restart. Fresh reports and Host decisions cover only remaining
@@ -615,7 +616,7 @@ merely because a branch exists. See `ADR-proposal-acceptance` and `ADR-host-cli-
 | Code | Meaning | Action |
 | --- | --- | --- |
 | `PROPOSAL_REVIEW_INVALID` | Report source, structure or identity is invalid; the message starts with the failed field class. | Fill the template from `devkit spec proposal report <slug> --source-sha <sha> --template` for clean current source and publish again. |
-| `PROPOSAL_REVIEW_REFRESH_REQUIRED` | Exact report is missing, expired, changed or bound to another source/language. | Publish a new report outside any pending form and request fresh review. |
+| `PROPOSAL_REVIEW_REFRESH_REQUIRED` | Exact report is missing, expired, changed or bound to another source/language. | Publish a new report, have the Host present it and obtain fresh conversational approval before invoking the CLI. |
 | `PROPOSAL_APPROVAL_NOT_READY` | Planning or worktree prerequisites do not hold. | Resolve the named prerequisite and rerun the CLI operation with current review evidence. |
 | `PROPOSAL_APPROVAL_STALE` | Reviewed scope or exact acceptance delta changed. | Inspect preserved effects, refresh evidence and obtain Host authority for remaining scope. |
 

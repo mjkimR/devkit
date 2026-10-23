@@ -28,13 +28,13 @@ class ProviderError(IntegrationError):
 class StaleRequestError(IntegrationError):
     code = "INTEGRATION_REQUEST_STALE"
     guardrail = True
-    fix = "Inspect Git and cleanup state, preserve completed steps and obtain approval for a new request covering only the remaining scope"
+    fix = "Inspect Git, PR and cleanup state, preserve completed steps, then obtain Host approval for a new `devkit integration integrate` invocation covering only the remaining scope"
 
 
 class AuthorityError(IntegrationError):
     code = "INTEGRATION_AUTHORITY_REQUIRED"
     guardrail = True
-    fix = "Call integration_integrate for current shared-policy authority or native ask confirmation; resume only an authorized request retained in this server process"
+    fix = "Inspect the retained base policy and selected route; under `ask`, obtain Host conversational approval before running `devkit integration integrate`, and obtain separate publication authority for the pull-request route"
 
 
 class CleanupContractError(IntegrationError):
@@ -48,13 +48,13 @@ class CleanupContractError(IntegrationError):
 class RuntimeLocationError(IntegrationError):
     code = "INTEGRATION_RUNTIME_IN_WORKTREE"
     guardrail = True
-    fix = "Run the MCP server from the retained base checkout using an installed runtime outside the worktree being removed"
+    fix = "Run `devkit integration integrate` from the retained base checkout with an installed runtime outside the worktree being removed"
 
 
 class CleanupIncompleteWarning(IntegrationError):
     code = "INTEGRATION_CLEANUP_INCOMPLETE"
     level = Level.WARNING
-    fix = "Inspect the approved cleanup targets, resolve the reported condition and call integration_resume with the same request id"
+    fix = "Inspect the approved cleanup targets and actual Git or PR state, resolve the reported condition, then rerun `devkit integration integrate` only when the source and remaining cleanup scope can be revalidated"
 
 
 class TargetMovedError(IntegrationError):
@@ -62,8 +62,8 @@ class TargetMovedError(IntegrationError):
     guardrail = True
     fix = (
         "Inspect the base branch: a non-devkit write moved it between the build and its fast-forward; nothing changed"
-        " on the target. Call integration_resume while the target still equals the last build target, else call"
-        " integration_integrate for a new confirmation"
+        " on the target. Recheck the source, target and readiness, then obtain fresh Host approval and run"
+        " `devkit integration integrate` for the current observed state"
     )
 
 
@@ -72,7 +72,7 @@ class ReceiptConflictError(IntegrationError):
     guardrail = True
     fix = (
         "Merge the target into the task branch in its worktree, run devkit sync there so the receipt matches the"
-        " merged files, commit, re-verify and call integration_integrate again"
+        " merged files, commit, re-verify and rerun `devkit integration integrate <branch>` after Host approval"
     )
 
 
@@ -80,8 +80,8 @@ class ReceiptReaderChangedError(IntegrationError):
     code = "INTEGRATION_RECEIPT_READER_CHANGED"
     actor = Actor.USER
     fix = (
-        "A runtime built from the target cannot read this source's receipt, and restarting the MCP service does not"
-        " help: obtain separately granted dev-integration authority for the CLI route, then run `devkit worktree"
-        " finish <branch> --merge --local-only` in the base checkout with a devkit runtime built from the source's"
-        " code. Do not edit the receipt or switch routes without that authority"
+        "A runtime built from the target cannot read this source's receipt; restarting the MCP server does not help."
+        " Resolve the runtime mismatch, then obtain"
+        " Host authority for `devkit integration integrate <branch>` in the base checkout using a runtime built from"
+        " the source's code. Do not edit the receipt or switch routes without that authority"
     )

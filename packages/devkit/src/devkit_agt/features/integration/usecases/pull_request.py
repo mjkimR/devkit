@@ -46,7 +46,9 @@ def _git(root: Path, *args: str) -> str:
 
 
 def _error(
-    code: str, message: str, fix: str = "Inspect integration_status, preserve completed steps and prepare again"
+    code: str,
+    message: str,
+    fix: str = "Inspect Git and PR state, preserve completed steps, then rerun `devkit integration integrate --route pull-request` after Host approval",
 ) -> PullRequestError:
     return PullRequestError(code, message, fix)
 
@@ -417,7 +419,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                     notice = _error(
                         "INTEGRATION_CHECKS_PENDING",
                         "Pending: " + ", ".join(pending),
-                        f"Wait with gh pr checks {pr['number']} -R {repository.selector} --watch using an agent bound, then integration_resume; report checks that do not start",
+                        f"Wait with `gh pr checks {pr['number']} -R {repository.selector} --watch` using an agent bound, then inspect the PR and rerun `devkit integration integrate {plan.branch} --task-kind <kind> --task-id <id> --route pull-request` after Host approval; report checks that do not start",
                     )
                     notice.level = Level.NOTICE
                     result.notices.append(notice)
@@ -496,13 +498,13 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                 raise _error(
                     "INTEGRATION_LOCAL_TARGET_BLOCKED",
                     "Base checkout is dirty or on another branch",
-                    "Make the base checkout clean on the target branch, then integration_resume",
+                    "Make the base checkout clean on the target branch, inspect the merged PR and rerun `devkit integration integrate <branch> --task-kind <kind> --task-id <id> --route pull-request` after Host approval",
                 )
             if not is_ancestor(root, _git(root, "rev-parse", "HEAD"), target):
                 raise _error(
                     "INTEGRATION_LOCAL_TARGET_BLOCKED",
                     "Local target cannot fast-forward",
-                    "Make the base checkout clean and fast-forwardable, then integration_resume",
+                    "Make the base checkout clean and fast-forwardable, inspect the merged PR and rerun `devkit integration integrate <branch> --task-kind <kind> --task-id <id> --route pull-request` after Host approval",
                 )
             validate_finish(
                 plan,
@@ -568,7 +570,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                         raise _error(
                             "INTEGRATION_CLEANUP_INCOMPLETE",
                             "Scoped cleanup is incomplete",
-                            "Inspect cleanup and integration_resume",
+                            "Inspect Git, PR and cleanup state, then rerun `devkit integration integrate <branch> --task-kind <kind> --task-id <id> --route pull-request` after Host approval",
                         )
                     result.cleanup_steps[scope.extension] = "completed"
             result.steps[operation] = "completed"

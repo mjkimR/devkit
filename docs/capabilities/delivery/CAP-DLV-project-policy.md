@@ -41,7 +41,7 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
     skill's worktree procedure.
 - **Non-Goals**:
   - **Scope Excluded**: writing policy. The command only reads; the project edits `.devkit/config.toml`.
-  - **Scope Excluded**: granting commit, publication or host permission authority. Explicit shared base auto grants only the verified local MCP integration and exact cleanup authority defined by `CAP-INT-mcp-services`.
+  - **Scope Excluded**: granting commit, publication or host permission authority. Explicit retained-base auto grants only the verified local integration CLI and exact cleanup authority defined by `CAP-INT-mcp-services`.
 
 ## 3. Business Rules & Policies
 
@@ -216,6 +216,7 @@ tables = template()  # list[devkit_dist.features.project.services.config_templat
 devkit's own errors pass through: `CONFIG_INVALID` (an unreadable file), `WORKFLOW_CONFIG_INVALID`,
 `WORKTREE_CONFIG_INVALID`.
 
-On the native PR route (`CAP-INT-mcp-services`), `delete_branch` selects local and remote branch deletion in the
-confirmation form; it grants no authority. GitHub automatic branch deletion is separately disclosed. Required PR
-policy restricts route selection without granting push, merge or cleanup permission.
+On the pull-request route (`CAP-INT-mcp-services`), `delete_branch` selects local and remote branch deletion in the
+report the Host presents before conversational approval; it grants no authority. GitHub automatic branch deletion
+is separately disclosed. Required PR policy restricts route selection without granting push, merge or cleanup
+permission.

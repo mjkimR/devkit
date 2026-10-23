@@ -65,8 +65,11 @@ approval or recovery journal survives the invocation.
 
 - If local merge did not land, inspect the reported source and target and obtain fresh Host authority before running
   another integration.
-- If local merge landed but cleanup failed, inspect `devkit worktree status` and the target branch. Then run
-  `devkit worktree finish <branch> --local-only`; its already-merged checks perform only remaining guarded cleanup.
+- If local merge landed but worktree cleanup failed, inspect `devkit worktree status` and the target branch. When
+  the marked worktree remains, run `devkit worktree finish <branch> --merge --local-only`; its already-merged checks
+  perform only remaining guarded Git cleanup. When Git cleanup completed but a scoped post-finish action failed, run
+  that extension's owning command against the exact reported cleanup target (proposal directories, for example, use
+  `devkit spec proposal prune <slug>`).
 - If the result is unknown, inspect Git or the pull request before another mutation. Never replay an unknown remote
   write or remove a worktree whose identity is ambiguous.
 - A changed target requires the source to incorporate that target, fresh readiness and a fresh Host decision under
@@ -83,9 +86,10 @@ registered.
 | `INTEGRATION_CONFIG_INVALID` | Configure or install the named readiness provider and use a supported route. |
 | `INTEGRATION_NOT_READY` | Resolve the reported completion condition and prepare the committed source again. |
 | `INTEGRATION_PROVIDER_FAILED` | Repair the installed provider or its evidence contract. |
+| `INTEGRATION_AUTHORITY_REQUIRED` | Inspect the retained base policy and selected route; under `ask`, obtain Host conversational approval before invoking `devkit integration integrate`. |
 | `INTEGRATION_REQUEST_STALE` | Inspect completed effects and revalidate the remaining scope before fresh Host authority. |
-| `INTEGRATION_TARGET_MOVED` | Merge the current base into the source, rerun required checks and obtain fresh Host authority. |
-| `INTEGRATION_CLEANUP_INCOMPLETE` | Inspect Git and worktree state; after verified landing, run the guarded already-merged finish path. |
+| `INTEGRATION_TARGET_MOVED` | Merge the current base into the source, rerun required checks and obtain fresh Host authority or re-evaluate retained-base auto policy before `devkit integration integrate`. |
+| `INTEGRATION_CLEANUP_INCOMPLETE` | Inspect Git and worktree state; run guarded already-merged finish for a marked remaining worktree, or the owning extension command for a remaining scoped post-finish target. |
 | `INTEGRATION_LANDED_UNCHECKED` | Run the provider's landed-target check and do not report checked integration until it passes. |
 
 Public API: `devkit_agt.features.integration` exports `IntegrationService`, `Task`, `IntegrationContext`, `Evidence`,

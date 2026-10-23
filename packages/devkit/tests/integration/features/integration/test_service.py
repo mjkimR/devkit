@@ -225,7 +225,7 @@ def test_merge_then_permission_failure_resumes_cleanup_without_second_merge_or_a
     def deny(_base, _path):
         raise RemoveFailedError(
             "permission denied",
-            fix="Grant execution access to the approved path, then call integration_resume with the same request id",
+            fix="Grant execution access to the approved path, inspect Git state and rerun the integration CLI after Host approval",
         )
 
     monkeypatch.setattr(merging, "run_git", run)

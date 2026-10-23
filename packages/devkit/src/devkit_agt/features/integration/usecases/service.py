@@ -5,8 +5,8 @@ since the confirmation in one build: the target must descend from the confirmati
 outside the base checkout (``devkit_agt.features.worktree.services.merging``), the guards and the readiness provider run again with the
 execution context (source, build target, result), the result's effective policy must equal the prospected one and
 the merge must leave no receipt record inconsistent; the base then fast-forwards onto the result only while it still
-points at the build target. ``integration_resume`` continues only onto the last build target (or, without a build,
-the confirmation target). See ``ADR-target-advance-readiness``.
+points at the build target. A later CLI invocation observes current Git and PR state and requires fresh authority
+for remaining effects. See ``ADR-target-advance-readiness``.
 """
 
 from __future__ import annotations
@@ -67,7 +67,7 @@ from devkit_agt.features.worktree import (
     validate_finish,
 )
 
-LOCK_WAIT = 20.0  # seconds the approving call waits for another devkit integration; integration_resume never waits
+LOCK_WAIT = 20.0  # seconds the approving call waits for another devkit integration
 
 
 def _git(root: Path, *args: str) -> str:
@@ -528,10 +528,9 @@ class IntegrationService:
                 result = record.result
                 result.observed = self._observe(result.request)
                 exc.fix = (
-                    "Call integration_resume with the same request id once the other devkit integration finishes"
+                    "Wait for the other devkit integration to finish, inspect Git state and rerun `devkit integration integrate` after Host approval"
                     if result.observed.get("target_sha") == plan.target_sha
-                    else "Call integration_integrate for a new confirmation: the target moved past the confirmation"
-                    " target and integration_resume does not absorb it"
+                    else "Inspect the moved target and source, rerun readiness and obtain Host approval for a new `devkit integration integrate` invocation"
                 )
                 result.errors[:] = [exc]
                 result.failing_operation = "lock"
@@ -699,8 +698,8 @@ class IntegrationService:
         elif not approving:
             if head != plan.target_sha:
                 raise StaleRequestError(
-                    "the target moved since the confirmation; integration_resume does not absorb it, so a later target"
-                    " needs a new confirmation"
+                    "the target moved since the last invocation; inspect current Git state, rerun readiness and obtain"
+                    " Host approval for a new `devkit integration integrate` invocation"
                 )
         elif head is None or not is_ancestor(self.root, plan.target_sha, head):
             raise StaleRequestError("the target no longer descends from the confirmation target (reset or rewritten)")

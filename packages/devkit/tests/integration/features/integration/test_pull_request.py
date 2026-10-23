@@ -374,7 +374,7 @@ def test_git_mutation_timeout_preserves_unknown_recovery(remote_service, monkeyp
     result = run(service)
     assert result.errors[0].code == "INTEGRATION_STEP_UNKNOWN"
     assert result.steps["remote_delete" if deletion else "push"] == "unknown"
-    assert "integration_status" in result.errors[0].fix
+    assert "devkit integration integrate" in result.errors[0].fix
     assert worktree.exists() != deletion
 
 

@@ -75,9 +75,9 @@ sequence.
    stage belongs to no activity. Numbered gate names are not used.
 5. **Decision boundaries and authority**: `plan-accept`, `proposal-handoff`, and `dev-integration` independently permit
    `ask` or `auto`, default `ask`. User decisions are explicit; policy delegation is reported as policy, never fabricated
-   user consent. `accept --by user|policy` records acceptance and status together; `policy` requires owning base auto
-   and prospective source auto. Planning merge is an acceptance effect, not Development result acceptance. Native
-   accept-and-handoff may combine included asks into one form. Verified local effects still obey readiness, exact report,
+   user consent. `accept --by user|policy` records acceptance and status together; `policy` requires the retained
+   base's `plan-accept=auto` policy. Planning merge is an acceptance effect, not Development result acceptance. Under
+   `ask`, the Host may combine acceptance and handoff in one conversation, then invokes the CLI. Verified local effects still obey readiness, exact report,
    SHA, worktree, cleanup and environment guards; publication and host permissions remain separate.
    `workflow return` voids the stage and later decision records and envelopes. Policy delegation never disables checks.
 6. **`plan-intent` opens every task**: goal, scope, verification (for a bugfix, the expected behavior), `task-kind`
