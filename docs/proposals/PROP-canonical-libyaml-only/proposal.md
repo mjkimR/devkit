@@ -2,7 +2,7 @@
 id: PROP-canonical-libyaml-only
 title: Require libyaml for consistent YAML parsing
 summary: Require PyYAML's LibYAML C binding for YAML parsing across frontmatter and standalone YAML inputs, and fail clearly when the binding is unavailable. Define the supported installation matrix and verify consistent parsing and error handling.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing
 created_at: 2026-10-23
 target_area: capabilities/documents/
 priority: medium                      # critical | high | medium | low
