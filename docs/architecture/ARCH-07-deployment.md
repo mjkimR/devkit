@@ -58,7 +58,7 @@ The version source and generated metadata policy is `ADR-single-release-version`
 `uv tool install <devkit-dist requirement> --with <devkit-agt requirement>` (`ARCH-05-3-command-plugins`). The viewer's Svelte library is not a release asset: a host such as autohub
 vendors its `npm pack` tarball from a pinned commit (`CAP-VIEW-repository-viewer`). Release-wheel installations
 name every required local package wheel explicitly (a `devkit-agt` installation names the `devkit-dist`, `devkit-core`,
-`devkit-cli` and `devkit-advisory` wheels too); release notes include the harness, distribution-only, SDD, viewer and tool installation
+`devkit-cli` and `devkit-advisory` wheels too; `devkit-spec` also names `devkit-mcp`); release notes include the harness, distribution-only, SDD, viewer and tool installation
 commands, and the runtime-only `devkit-advisory` and `devkit-cli` (with `devkit-advisory`) installations.
 
 Synchronization also runs `uv run --no-active devkit sync` after locking to refresh deployed bundles and

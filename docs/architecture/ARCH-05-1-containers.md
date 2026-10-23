@@ -117,7 +117,8 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
 - **CLI**: `devkit spec`, mounted through `devkit.commands`.
 - **Contents**: The SDD document model and commands, proposals, spec bundles, code entrypoints, scope registry,
   and the `spec` guidance bundle with its workflows, rules, templates and opt-in docs skeleton.
-- **Dependencies**: `devkit-agt`, `devkit-core` and `click`; the base harness remains SDD-agnostic.
+- **Dependencies**: `devkit-agt`, `devkit-core`, `devkit-mcp` and `click`; Spec includes the native MCP runtime for
+  its handoff tools while the base harness remains SDD-agnostic.
 - **Contracts**: `CAP-HARN-command-mount`, `CAP-HARN-agent-guidance`.
 
 ### 2.5 `devkit-viewer` (`packages/devkit-viewer`)

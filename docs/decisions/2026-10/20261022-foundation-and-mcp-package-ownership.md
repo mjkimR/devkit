@@ -70,9 +70,10 @@ dependency-direction rules are carried over unchanged.
   `devkit-advisory` and PyYAML and MUST NOT import application packages or the MCP SDK. `devkit-dist`, `devkit-agt`
   and `devkit-mcp` depend on it at the same version. This replaces the foundation clause of
   `ADR-dist-foundation-ownership`.
-- **MCP extra**: the MCP transport ships as `devkit-mcp`, which depends on `devkit-core`, `devkit-dist` and the MCP
-  SDK. `devkit-agt` declares the `mcp` extra requiring `devkit-mcp` at the same version; `devkit-dist` declares no
-  `mcp` extra and never imports `devkit_agt` or the MCP SDK.
+- **MCP runtime**: the MCP transport ships as `devkit-mcp`, which depends on `devkit-core`, `devkit-dist` and the MCP
+  SDK. `devkit-agt` declares the `mcp` extra requiring `devkit-mcp` at the same version for agt-only installs.
+  `devkit-spec` requires `devkit-mcp` at the same version because its native handoff tools are part of the Spec
+  package's default capability. `devkit-dist` declares no `mcp` extra and never imports `devkit_agt` or the MCP SDK.
 - Project configuration, receipts and execution binding stay in the distribution's project feature, and the
   namespace, module split and `search` extra stay as `ADR-package-split-and-namespaces` decides.
 

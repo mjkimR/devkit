@@ -12,8 +12,8 @@ and `CAP-HARN-agent-guidance`; repository documentation starts at [docs/README.m
 
 ## Use in a project
 
-Install from this monorepo's package subdirectory. uv resolves devkit-agt (the harness it builds on), devkit-dist
-and devkit-advisory from the same commit:
+Install from this monorepo's package subdirectory. uv resolves devkit-agt (the harness it builds on), devkit-mcp
+(the native handoff runtime), devkit-dist and devkit-advisory from the same commit:
 
 ```bash
 uv add --dev "devkit-spec @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-spec"
@@ -23,7 +23,7 @@ uv run devkit spec --version         # [VERSION: devkit-spec <version>]
 ```
 
 For release wheels, install the extension and its base dependencies explicitly because they are not hosted on a
-package index. Use the filenames and commands in the chosen GitHub Release; see [Releasing](../../README.md#releasing).
+package index. Include the matching `devkit-mcp` wheel; see [Releasing](../../README.md#releasing).
 
 A project opts out of the bundle with `[presets] spec = false` in `.devkit/config.toml`. `uv run devkit config
 template` writes the supported keys as commented defaults, including this extension's `[tool.spec]` tables.

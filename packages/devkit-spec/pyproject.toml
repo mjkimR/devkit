@@ -8,6 +8,7 @@ dependencies = [
     "devkit-core==0.1.2",
     "click>=8.1.7",
     "devkit-agt==0.1.2",
+    "devkit-mcp==0.1.2",
 ]
 
 [project.optional-dependencies]
@@ -57,6 +58,7 @@ dev = [
 [tool.uv.sources]
 devkit-core = { workspace = true }
 devkit-agt = { workspace = true }
+devkit-mcp = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

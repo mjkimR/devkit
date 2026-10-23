@@ -1,10 +1,10 @@
-# Optional MCP runtime and native approval
+# MCP runtime and native approval
 
-Install `devkit-mcp` intentionally in the retained base environment, or select `devkit-agt[mcp]` on an existing
-harness requirement. Source installations must name the source for the optional wheel too; release-wheel installs
-name the matching `devkit-dist`, `devkit-core`, `devkit-cli`, `devkit-advisory` and `devkit-mcp` wheels (the release
-notes' MCP command). Runtime installation alone can discover an empty service
-set. Install agt for integration and spec for handoff; domain packages do not need the SDK to import.
+Installing `devkit-spec` includes `devkit-mcp` for its native handoff tools. For an agt-only installation, add
+`devkit-agt[mcp]` or install `devkit-mcp` directly in the retained base environment. Release-wheel installs must
+name the matching `devkit-dist`, `devkit-core`, `devkit-cli`, `devkit-advisory` and `devkit-mcp` wheels when
+installing Spec; see the release notes. Runtime installation alone can discover an empty service set. Install agt
+for integration and spec for handoff; domain services use SDK-free contracts.
 
 Run `devkit sync` in the owning checkout. Selected Codex CLI, Claude Code and Antigravity project entries are reconciled under
 `.codex/config.toml`, `.mcp.json` and `.agents/mcp_config.json`; `[mcp] register = false` opts out. `devkit mcp status --descriptor --format json` inspects
