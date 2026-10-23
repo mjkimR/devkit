@@ -220,8 +220,16 @@ def _run(
     rules_dir: Path | None,
     source_root: Path | None,
     snapshot: Snapshot | None = None,
+    facts_enabled: bool = True,
 ) -> ProjectRun:
-    cache = WorkspaceCache(workspace_root, git_filter=source_root is None)
+    cache = WorkspaceCache(
+        workspace_root,
+        git_filter=source_root is None,
+        facts_root=source_root or workspace_root,
+        facts_enabled=facts_enabled,
+        facts_writer=snapshot is None and not dry_run,
+        facts_prune=targets is None and snapshot is None,
+    )
     project = load_project_rules(workspace_root, rules_dir, source_root=source_root)
     config = project.config
 
@@ -254,6 +262,8 @@ def _run(
     result = EvaluationResult()
     if context is not None and not project.load_errors:
         result = evaluate_rules(context, project.rules)
+        if not result.errors:
+            cache.flush_file_facts()
     return ProjectRun(
         workspace_root=workspace_root,
         phase=phase,
@@ -281,6 +291,7 @@ class RunProjectRulesUseCase(BaseUseCase):
         fix: bool = False,
         dry_run: bool = False,
         rules_dir: Path | None = None,
+        facts_enabled: bool = True,
     ) -> ProjectRun:
         """Load the project's rule policy and rules, then evaluate them.
 
@@ -331,6 +342,7 @@ class RunProjectRulesUseCase(BaseUseCase):
                 dry_run=dry_run,
                 rules_dir=rules_dir,
                 source_root=None,
+                facts_enabled=facts_enabled,
             )
         if targets is not None:
             raise ValueError("a snapshot run checks the snapshot's changed files; do not pass targets")
@@ -350,6 +362,7 @@ class RunProjectRulesUseCase(BaseUseCase):
                 dry_run=False,
                 rules_dir=None,
                 source_root=None,
+                facts_enabled=facts_enabled,
                 snapshot=snapshot,
             )
         rules_rel = _snapshot_rules_dir(snapshot, rules_dir)
@@ -375,6 +388,7 @@ class RunProjectRulesUseCase(BaseUseCase):
                 dry_run=False,
                 rules_dir=snapshot_rules,
                 source_root=snapshot.root,
+                facts_enabled=facts_enabled,
                 snapshot=snapshot,
             )
 

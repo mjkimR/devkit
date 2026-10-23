@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import ast
 import importlib.util
 import tomllib
 from dataclasses import dataclass
@@ -11,17 +10,12 @@ from pathlib import Path
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, WorkspaceCache
 from devkit_agt.features.rules.services.builtins.base import BaseRule
 
+from .facts import Expression, Scope, descriptor
+
+FACTS = descriptor(__name__, __file__)
+
 BASE = "devkit_core.base.usecase.BaseUseCase"
 TRANSPORTS = {"cli", "mcp", "adapters"}
-Function = ast.FunctionDef | ast.AsyncFunctionDef
-
-
-def _walk(tree: ast.AST):
-    """Walk one execution scope, excluding nested declarations."""
-    yield tree
-    for child in ast.iter_child_nodes(tree):
-        if not isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
-            yield from _walk(child)
 
 
 @dataclass
@@ -29,7 +23,7 @@ class Module:
     name: str
     path: str
     layer: str | None
-    tree: ast.Module
+    tree: Scope
     package: bool
     bindings: dict[str, str]
 
@@ -40,43 +34,38 @@ class Value:
     instance: bool = False
 
 
-def _attribute(node: ast.AST) -> str | None:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute) and (parent := _attribute(node.value)):
-        return f"{parent}.{node.attr}"
+def _attribute(node: Expression) -> str | None:
+    if node.kind == "name":
+        return node.name
+    if node.kind == "attribute" and node.value is not None and (parent := _attribute(node.value)):
+        return f"{parent}.{node.name}"
     return None
 
 
-def _imports(module: Module, tree: ast.AST, cache: WorkspaceCache | None = None) -> dict[str, str]:
+def _imports(module: Module, tree: Scope) -> dict[str, str]:
     bindings: dict[str, str] = {}
-    if cache is not None:
-        nodes = cache.get_python_nodes(module.path, ast.Import, ast.ImportFrom)
-    else:
-        nodes = tuple(node for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom)))
-    for node in nodes:
-        if isinstance(node, ast.Import):
-            for alias in node.names:
-                bindings[alias.asname or alias.name.split(".")[0]] = (
-                    alias.name if alias.asname else alias.name.split(".")[0]
-                )
-        elif isinstance(node, ast.ImportFrom):
-            name = node.module or ""
+    for node in tree.imports:
+        if node.module is None:
+            for name, asname in node.names:
+                bindings[asname or name.split(".")[0]] = name if asname else name.split(".")[0]
+        else:
+            name = node.module
             if node.level:
                 context = module.name if module.package else module.name.rpartition(".")[0]
                 try:
                     name = importlib.util.resolve_name("." * node.level + name, context)
                 except ImportError:
                     continue
-            for alias in node.names:
-                bindings[alias.asname or alias.name] = f"{name}.{alias.name}"
+            for alias, asname in node.names:
+                bindings[asname or alias] = f"{name}.{alias}"
     return bindings
 
 
 class Index:
     def __init__(self, root: Path, config: dict, cache: WorkspaceCache) -> None:
         self.modules: dict[str, Module] = {}
-        self.definitions: dict[str, ast.ClassDef | Function] = {}
+        self.definitions: dict[str, Scope] = {}
+        fact_paths: list[str] = []
         for package in config["packages"]:
             source = root / package["root"]
             for path in sorted(source.rglob("*.py")):
@@ -92,37 +81,40 @@ class Index:
                     name,
                     path.relative_to(root).as_posix(),
                     layer,
-                    cache.get_python_ast(path),
+                    cache.get_file_facts(path, FACTS),
                     relative[-1] == "__init__",
                     {},
                 )
-                module.bindings = _imports(module, module.tree, cache)
+                module.bindings = _imports(module, module.tree)
+                fact_paths.append(module.path)
                 self.modules[name] = module
-                for statement in module.tree.body:
-                    if isinstance(statement, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+                for statement in module.tree.declarations:
+                    if statement.kind in {"class", "function", "async"}:
                         self.definitions[f"{name}.{statement.name}"] = statement
-                        if isinstance(statement, ast.ClassDef):
-                            for method in statement.body:
-                                if isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        if statement.kind == "class":
+                            for method in statement.declarations:
+                                if method.kind in {"function", "async"}:
                                     self.definitions[f"{name}.{statement.name}.{method.name}"] = method
                 # Explicit aliases in public facades are resolved as well as import re-exports.
-                for statement in module.tree.body:
-                    if isinstance(statement, ast.Assign) and (value := _attribute(statement.value)):
+                for statement in module.tree.aliases:
+                    if statement.value is not None and (value := _attribute(statement.value)):
                         head, _, tail = value.partition(".")
                         target = module.bindings.get(head, f"{name}.{head}") + (f".{tail}" if tail else "")
                         for destination in statement.targets:
-                            if isinstance(destination, ast.Name):
-                                module.bindings[destination.id] = target
+                            if destination.kind == "name":
+                                module.bindings[destination.name] = target
 
         # Resolve bound-method facade aliases only after every class is indexed.
         for module in self.modules.values():
-            for statement in module.tree.body:
-                if isinstance(statement, ast.Assign) and isinstance(statement.value, ast.Attribute):
+            for statement in module.tree.aliases:
+                if statement.value is not None and statement.value.kind == "attribute":
                     value = self.value(statement.value, module, {})
                     if value:
                         for destination in statement.targets:
-                            if isinstance(destination, ast.Name):
-                                module.bindings[destination.id] = value.symbol
+                            if destination.kind == "name":
+                                module.bindings[destination.name] = value.symbol
+
+        cache.complete_file_facts(FACTS, fact_paths)
 
     def resolve(self, symbol: str, trail: frozenset[str] = frozenset()) -> str:
         if symbol in self.definitions or symbol == BASE or symbol in trail:
@@ -148,10 +140,10 @@ class Index:
             return True
         definition = self.definitions.get(symbol)
         module = self.owner(symbol)
-        if not isinstance(definition, ast.ClassDef) or not module or symbol in trail:
+        if (definition is None or definition.kind != "class") or not module or symbol in trail:
             return False
         for base in definition.bases:
-            if isinstance(base, ast.Subscript):
+            if base.kind == "subscript" and base.value is not None:
                 base = base.value
             name = _attribute(base)
             if name:
@@ -161,8 +153,10 @@ class Index:
                     return True
         return False
 
-    def value(self, node: ast.AST, module: Module, bindings: dict[str, Value]) -> Value | None:
-        if isinstance(node, ast.Await):
+    def value(self, node: Expression | None, module: Module, bindings: dict[str, Value]) -> Value | None:
+        if node is None:
+            return None
+        if node.kind == "await" and node.value is not None:
             return self.value(node.value, module, bindings)
         name = _attribute(node)
         if name:
@@ -175,44 +169,33 @@ class Index:
             head, _, rest = name.partition(".")
             target = module.bindings.get(head, f"{module.name}.{head}")
             return Value(self.resolve(target + (f".{rest}" if rest else "")))
-        if isinstance(node, ast.Attribute):
+        if node.kind == "attribute" and node.value is not None:
             receiver = self.value(node.value, module, bindings)
             if receiver:
-                return Value(self.resolve(f"{receiver.symbol}.{node.attr}"), receiver.instance)
-        if isinstance(node, ast.Call):
-            target = self.value(node.func, module, bindings)
-            if target and isinstance(self.definitions.get(target.symbol), ast.ClassDef):
+                return Value(self.resolve(f"{receiver.symbol}.{node.name}"), receiver.instance)
+        if node.kind == "call" and node.value is not None:
+            target = self.value(node.value, module, bindings)
+            if target and (
+                self.definitions.get(target.symbol) is not None and self.definitions[target.symbol].kind == "class"
+            ):
                 return Value(target.symbol, True)
         return None
 
-    def assignments(self, tree: ast.AST, module: Module, bindings: dict[str, Value]) -> None:
-        # A few passes cover aliases and retained `self.operation = Operation(...)`.
+    def assignments(self, tree: Scope, module: Module, bindings: dict[str, Value]) -> None:
         for _ in range(3):
-            for node in _walk(tree):
-                if isinstance(node, ast.Assign):
-                    value = self.value(node.value, module, bindings)
-                    if value:
-                        for target in node.targets:
-                            if name := _attribute(target):
-                                bindings[name] = value
-                elif isinstance(node, ast.AnnAssign):
-                    value = self.value(node.value, module, bindings) if node.value else None
-                    value = value or self.annotation(node.annotation, module, bindings)
-                    if value and (name := _attribute(node.target)):
-                        bindings[name] = value
+            for node in tree.assignments:
+                value = self.value(node.value, module, bindings) if node.value is not None else None
+                if value is None and node.annotation is not None:
+                    value = self.annotation(node.annotation, module, bindings)
+                if value:
+                    for target in node.targets:
+                        if name := _attribute(target):
+                            bindings[name] = value
 
-    def annotation(self, node: ast.AST, module: Module, bindings: dict[str, Value]) -> Value | None:
-        if isinstance(node, ast.Constant) and isinstance(node.value, str):
-            try:
-                node = ast.parse(node.value, mode="eval").body
-            except SyntaxError:
-                return None
+    def annotation(self, node: Expression, module: Module, bindings: dict[str, Value]) -> Value | None:
         value = self.value(node, module, bindings)
-        return (
-            Value(value.symbol, True)
-            if value and isinstance(self.definitions.get(value.symbol), ast.ClassDef)
-            else None
-        )
+        definition = self.definitions.get(value.symbol) if value else None
+        return Value(value.symbol, True) if value and definition and definition.kind == "class" else None
 
 
 def inspect_usecases(
@@ -241,7 +224,7 @@ def inspect_usecases(
     findings: set[tuple[str, int, str]] = set()
     used: set[tuple[str, str]] = set()
 
-    def report(module: Module, node: ast.AST, message: str, target: str | None = None) -> None:
+    def report(module: Module, node: Expression | Scope, message: str, target: str | None = None) -> None:
         key = (module.name, target)
         if target and key in permitted:
             used.add((module.name, target))
@@ -249,45 +232,40 @@ def inspect_usecases(
             findings.add((module.path, getattr(node, "lineno", 1), message))
 
     for symbol, definition in index.definitions.items():
-        if not isinstance(definition, ast.ClassDef) or not index.usecase(symbol) or symbol == BASE:
+        if (definition is None or definition.kind != "class") or not index.usecase(symbol) or symbol == BASE:
             continue
         module = index.owner(symbol)
         assert module is not None
         if module.layer != "usecases":
             report(module, definition, f"BaseUseCase implementation belongs in features/<feature>/usecases: {symbol}")
         execute = next(
-            (
-                node
-                for node in definition.body
-                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "execute"
-            ),
+            (node for node in definition.declarations if node.kind in {"function", "async"} and node.name == "execute"),
             None,
         )
         if execute is None:
             report(module, definition, f"usecase must declare execute: {symbol}")
         else:
-            arguments = [*execute.args.posonlyargs, *execute.args.args, *execute.args.kwonlyargs]
-            arguments += [arg for arg in (execute.args.vararg, execute.args.kwarg) if arg]
-            if execute.returns is None or any(
+            arguments = [*execute.parameters, *execute.variadics]
+            if not execute.returns or any(
                 arg.annotation is None for arg in arguments if arg.arg not in {"self", "cls"}
             ):
                 report(module, execute, f"usecase execute requires explicit input and result annotations: {symbol}")
         constructor = next(
-            (node for node in definition.body if isinstance(node, ast.FunctionDef) and node.name == "__init__"), None
+            (node for node in definition.declarations if node.kind == "function" and node.name == "__init__"), None
         )
         if constructor:
             bindings: dict[str, Value] = {}
-            for node in ast.walk(constructor):
-                if isinstance(node, ast.Call):
-                    target = index.value(node.func, module, bindings)
-                    name = _attribute(node.func) or ""
+            for node in constructor.all_calls:
+                if node.value is not None:
+                    target = index.value(node.value, module, bindings)
+                    name = _attribute(node.value) or ""
                     # Dependency construction is wiring; invoking an operation is not.
                     if name in {"super", "dict", "list", "set", "tuple"} or (
-                        isinstance(node.func, ast.Attribute) and node.func.attr == "__init__"
+                        node.value.kind == "attribute" and node.value.name == "__init__"
                     ):
                         continue
                     known = index.definitions.get(target.symbol) if target else None
-                    is_constructor = isinstance(known, ast.ClassDef) or (
+                    is_constructor = (known is not None and known.kind == "class") or (
                         target is not None
                         and known is None
                         and name.split(".")[0] in module.bindings
@@ -305,63 +283,51 @@ def inspect_usecases(
             continue
         global_bindings: dict[str, Value] = {}
         index.assignments(module.tree, module, global_bindings)
-        contexts: list[tuple[ast.AST, dict[str, Value]]] = [(module.tree, {})]
-        for statement in module.tree.body:
-            if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        contexts: list[tuple[Scope, dict[str, Value]]] = [(module.tree, {})]
+        for statement in module.tree.declarations:
+            if statement.kind in {"function", "async"}:
                 contexts.append((statement, {}))
-            elif isinstance(statement, ast.ClassDef):
+            elif statement.kind == "class":
                 retained: dict[str, Value] = {}
                 constructor = next(
                     (
                         method
-                        for method in statement.body
-                        if isinstance(method, ast.FunctionDef) and method.name == "__init__"
+                        for method in statement.declarations
+                        if method.kind == "function" and method.name == "__init__"
                     ),
                     None,
                 )
                 if constructor:
-                    for arg in [*constructor.args.posonlyargs, *constructor.args.args, *constructor.args.kwonlyargs]:
+                    for arg in constructor.parameters:
                         if arg.annotation and (value := index.annotation(arg.annotation, module, retained)):
                             retained[arg.arg] = value
                     index.assignments(constructor, module, retained)
                 contexts.extend(
-                    (method, retained)
-                    for method in statement.body
-                    if isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef))
+                    (method, retained) for method in statement.declarations if method.kind in {"function", "async"}
                 )
         for function, retained in contexts:
             bindings = {**global_bindings, **retained}
-            if isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if function.kind in {"function", "async"}:
                 bindings.update({name: Value(target) for name, target in _imports(module, function).items()})
-                for arg in [*function.args.posonlyargs, *function.args.args, *function.args.kwonlyargs]:
+                for arg in function.parameters:
                     if arg.annotation and (value := index.annotation(arg.annotation, module, bindings)):
                         bindings[arg.arg] = value
             index.assignments(function, module, bindings)
 
-            def nested(tree: ast.AST):
-                for child in ast.iter_child_nodes(tree):
-                    if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
-                        yield child
-                    elif not isinstance(child, ast.ClassDef):
-                        yield from nested(child)
-
-            contexts.extend((child, dict(bindings)) for child in nested(function))
-            for node in _walk(function):
-                if not isinstance(node, ast.Call):
-                    continue
-                for argument in [*node.args, *(keyword.value for keyword in node.keywords)]:
+            contexts.extend((child, dict(bindings)) for child in function.nested)
+            for node in function.calls:
+                for argument in [*node.args, *node.keywords]:
                     callback = index.value(argument, module, bindings)
                     if callback:
                         callback_owner = index.owner(callback.symbol)
                         if (
                             callback_owner
                             and callback_owner.layer in {"usecases", "services", "repositories"}
-                            and isinstance(
-                                index.definitions.get(callback.symbol), (ast.FunctionDef, ast.AsyncFunctionDef)
-                            )
+                            and index.definitions.get(callback.symbol) is not None
+                            and index.definitions[callback.symbol].kind in {"function", "async"}
                             and not any(
                                 _attribute(decorator) == "property"
-                                for decorator in index.definitions[callback.symbol].decorator_list
+                                for decorator in index.definitions[callback.symbol].decorators
                             )
                             and not (
                                 callback.instance
@@ -375,20 +341,20 @@ def inspect_usecases(
                                 f"transport passes raw execution callback: {callback.symbol}",
                                 callback.symbol,
                             )
-                target = index.value(node.func, module, bindings)
+                target = index.value(node.value, module, bindings)
                 if not target:
                     continue
                 owner = index.owner(target.symbol)
                 if not owner or owner.layer not in {"usecases", "services", "repositories"}:
                     continue
                 definition = index.definitions.get(target.symbol)
-                if isinstance(definition, ast.ClassDef):
+                if definition is not None and definition.kind == "class":
                     if (
                         owner.layer == "usecases"
                         and not index.usecase(target.symbol)
                         and any(
-                            isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef)) and method.name == "execute"
-                            for method in definition.body
+                            method.kind in {"function", "async"} and method.name == "execute"
+                            for method in definition.declarations
                         )
                     ):
                         report(
@@ -405,23 +371,26 @@ def inspect_usecases(
                 ):
                     continue
                 # Attribute calls on retained instances resolve against their concrete class.
-                if isinstance(node.func, ast.Attribute):
-                    receiver = index.value(node.func.value, module, bindings)
+                if node.value is not None and node.value.kind == "attribute":
+                    receiver = index.value(node.value.value, module, bindings)
                     if (
                         receiver
                         and receiver.instance
                         and (
                             index.usecase(receiver.symbol)
-                            or isinstance(index.definitions.get(target.symbol), (ast.FunctionDef, ast.AsyncFunctionDef))
+                            or (
+                                index.definitions.get(target.symbol) is not None
+                                and index.definitions[target.symbol].kind in {"function", "async"}
+                            )
                         )
                     ):
-                        if index.usecase(receiver.symbol) and node.func.attr == "execute":
+                        if index.usecase(receiver.symbol) and node.value.name == "execute":
                             continue
                         report(
                             module, node, f"transport must invoke BaseUseCase.execute: {target.symbol}", target.symbol
                         )
                         continue
-                if isinstance(definition, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                if definition is not None and definition.kind in {"function", "async"}:
                     report(
                         module,
                         node,

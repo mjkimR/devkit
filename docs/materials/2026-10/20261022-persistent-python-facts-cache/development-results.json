@@ -1,0 +1,1309 @@
+{
+  "head": "bcc65602a3156f5163b27a4c2fb7ace20e11f8bc",
+  "python": "3.12.3",
+  "index_tree": "56c88a4204c8fe7fc773302b8b10745c38ff326c",
+  "samples_per_mode": 5,
+  "memo_bytes": {
+    "RULE-architecture.json": 1383736,
+    "RULE-advisory-unique-code.json": 459717,
+    "RULE-usecase-boundaries.json": 4430998
+  },
+  "results": {
+    "full": {
+      "disabled": {
+        "median_seconds": 5.902290743999856,
+        "samples": [
+          {
+            "timings": {
+              "source_read": 0.033600062994992186,
+              "source_hash": 0.0033126190051007143,
+              "extraction": 2.6570926559993495,
+              "facts_lookup": 2.795572588000141,
+              "evaluation": 4.900741468999968,
+              "cli_in_process": 4.973882043000231,
+              "judgment_and_other_rules": 2.105168880999827,
+              "store_load_including_fingerprint": 0.0,
+              "fingerprint": 0.0,
+              "json_load_and_entry_validation": 0.0
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 5.94119291700008
+          },
+          {
+            "timings": {
+              "source_read": 0.03501775997983714,
+              "source_hash": 0.00346621500875699,
+              "extraction": 2.6787934770063657,
+              "facts_lookup": 2.8213168760080407,
+              "evaluation": 4.969508132000101,
+              "cli_in_process": 5.041329873999985,
+              "judgment_and_other_rules": 2.14819125599206,
+              "store_load_including_fingerprint": 0.0,
+              "fingerprint": 0.0,
+              "json_load_and_entry_validation": 0.0
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 6.037613353000324
+          },
+          {
+            "timings": {
+              "source_read": 0.0337410849851949,
+              "source_hash": 0.003141858000162756,
+              "extraction": 2.6228800029989543,
+              "facts_lookup": 2.760056434996841,
+              "evaluation": 4.864974979999715,
+              "cli_in_process": 4.939404150999962,
+              "judgment_and_other_rules": 2.1049185450028745,
+              "store_load_including_fingerprint": 0.0,
+              "fingerprint": 0.0,
+              "json_load_and_entry_validation": 0.0
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 5.902290743999856
+          },
+          {
+            "timings": {
+              "source_read": 0.03181801600931067,
+              "source_hash": 0.0030778819955230574,
+              "extraction": 2.569979312009309,
+              "facts_lookup": 2.7018934339935186,
+              "evaluation": 4.729845818000285,
+              "cli_in_process": 4.803567125999962,
+              "judgment_and_other_rules": 2.027952384006767,
+              "store_load_including_fingerprint": 0.0,
+              "fingerprint": 0.0,
+              "json_load_and_entry_validation": 0.0
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 5.7791941349996705
+          },
+          {
+            "timings": {
+              "source_read": 0.03311515000177678,
+              "source_hash": 0.0031078460037861078,
+              "extraction": 2.581169823998607,
+              "facts_lookup": 2.7150812219974796,
+              "evaluation": 4.7606651240002975,
+              "cli_in_process": 4.832766676000119,
+              "judgment_and_other_rules": 2.045583902002818,
+              "store_load_including_fingerprint": 0.0,
+              "fingerprint": 0.0,
+              "json_load_and_entry_validation": 0.0
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 5.792694054000094
+          }
+        ]
+      },
+      "cold": {
+        "median_seconds": 6.733357884999805,
+        "samples": [
+          {
+            "timings": {
+              "source_read": 0.031815834001008625,
+              "source_hash": 0.002915794996170007,
+              "fingerprint": 0.00034532499967099284,
+              "store_load_including_fingerprint": 0.001028920999942784,
+              "extraction": 2.7524850069953573,
+              "facts_lookup": 3.493741170986141,
+              "evaluation": 5.3072863720003625,
+              "write": 0.01753872599965689,
+              "cli_in_process": 5.552231337999729,
+              "judgment_and_other_rules": 1.8135452010142217,
+              "json_load_and_entry_validation": 0.0006835960002717911
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 6.727874835999955
+          },
+          {
+            "timings": {
+              "source_read": 0.03240217298980497,
+              "source_hash": 0.0029814229988005536,
+              "fingerprint": 0.0003623200000220095,
+              "store_load_including_fingerprint": 0.0011151219996463624,
+              "extraction": 2.7895252269986486,
+              "facts_lookup": 3.539732612001899,
+              "evaluation": 5.350049266000042,
+              "write": 0.03189550900015092,
+              "cli_in_process": 5.60555781300036,
+              "judgment_and_other_rules": 1.810316653998143,
+              "json_load_and_entry_validation": 0.0007528019996243529
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 6.785078302999864
+          },
+          {
+            "timings": {
+              "source_read": 0.03205782900022314,
+              "source_hash": 0.003020464994278882,
+              "fingerprint": 0.00046828299991830136,
+              "store_load_including_fingerprint": 0.0011702799997692637,
+              "extraction": 2.7636415490078434,
+              "facts_lookup": 3.5088241879971065,
+              "evaluation": 5.3089300040001035,
+              "write": 0.023965574999692763,
+              "cli_in_process": 5.554410035000274,
+              "judgment_and_other_rules": 1.800105816002997,
+              "json_load_and_entry_validation": 0.0007019969998509623
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 6.733357884999805
+          },
+          {
+            "timings": {
+              "source_read": 0.03167186600785499,
+              "source_hash": 0.003104358999280521,
+              "fingerprint": 0.00035047800020038267,
+              "store_load_including_fingerprint": 0.0010623100006341701,
+              "extraction": 2.7994570739829214,
+              "facts_lookup": 3.5418020709962548,
+              "evaluation": 5.364731386999665,
+              "write": 0.016469222999603517,
+              "cli_in_process": 5.602762036000058,
+              "judgment_and_other_rules": 1.8229293160034103,
+              "json_load_and_entry_validation": 0.0007118320004337875
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 6.748279549000017
+          },
+          {
+            "timings": {
+              "source_read": 0.030713505000676378,
+              "source_hash": 0.0031347360095423937,
+              "fingerprint": 0.0003324859999338514,
+              "store_load_including_fingerprint": 0.0010467209999660554,
+              "extraction": 2.7387968289981472,
+              "facts_lookup": 3.4768763420015603,
+              "evaluation": 5.272638422999989,
+              "write": 0.016016656000374496,
+              "cli_in_process": 5.513349130000279,
+              "judgment_and_other_rules": 1.7957620809984292,
+              "json_load_and_entry_validation": 0.000714235000032204
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 6.688441842999964
+          }
+        ]
+      },
+      "warm": {
+        "median_seconds": 3.301368394000292,
+        "samples": [
+          {
+            "timings": {
+              "source_read": 0.028231573989614844,
+              "source_hash": 0.002369420002651168,
+              "fingerprint": 0.0003302989998701378,
+              "store_load_including_fingerprint": 0.2111093109997455,
+              "facts_lookup": 0.8829942910037971,
+              "evaluation": 2.659455233999779,
+              "cli_in_process": 2.7307188589998077,
+              "judgment_and_other_rules": 1.776460942995982,
+              "json_load_and_entry_validation": 0.21077901199987537
+            },
+            "extraction_counts": {},
+            "extraction_paths": {},
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 3.301368394000292
+          },
+          {
+            "timings": {
+              "source_read": 0.02899351799123906,
+              "source_hash": 0.0024440049915028794,
+              "fingerprint": 0.00033085099994423217,
+              "store_load_including_fingerprint": 0.212146816000768,
+              "facts_lookup": 0.8783578010029487,
+              "evaluation": 2.666558849000012,
+              "cli_in_process": 2.738276087000031,
+              "judgment_and_other_rules": 1.7882010479970631,
+              "json_load_and_entry_validation": 0.21181596500082378
+            },
+            "extraction_counts": {},
+            "extraction_paths": {},
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 3.296217252999668
+          },
+          {
+            "timings": {
+              "source_read": 0.028431930995793664,
+              "source_hash": 0.002398470001480746,
+              "fingerprint": 0.0003247949998694821,
+              "store_load_including_fingerprint": 0.21382482500030164,
+              "facts_lookup": 0.9004144189962062,
+              "evaluation": 2.690394531000038,
+              "cli_in_process": 2.76111003799997,
+              "judgment_and_other_rules": 1.789980112003832,
+              "json_load_and_entry_validation": 0.21350003000043216
+            },
+            "extraction_counts": {},
+            "extraction_paths": {},
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 3.3264798260001953
+          },
+          {
+            "timings": {
+              "source_read": 0.02843976900430789,
+              "source_hash": 0.0023788559974491363,
+              "fingerprint": 0.00032641200050420593,
+              "store_load_including_fingerprint": 0.21443926999972973,
+              "facts_lookup": 0.8773431420008819,
+              "evaluation": 2.6729791479997402,
+              "cli_in_process": 2.744044444999872,
+              "judgment_and_other_rules": 1.7956360059988583,
+              "json_load_and_entry_validation": 0.21411285799922553
+            },
+            "extraction_counts": {},
+            "extraction_paths": {},
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 3.3088488049997977
+          },
+          {
+            "timings": {
+              "source_read": 0.02907860300047105,
+              "source_hash": 0.00237718100697748,
+              "fingerprint": 0.00036870699977953336,
+              "store_load_including_fingerprint": 0.21434599099984553,
+              "facts_lookup": 0.8676515970018954,
+              "evaluation": 2.6397671970003103,
+              "cli_in_process": 2.7132497490001697,
+              "judgment_and_other_rules": 1.7721155999984148,
+              "json_load_and_entry_validation": 0.213977284000066
+            },
+            "extraction_counts": {},
+            "extraction_paths": {},
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 3.294222514000012
+          }
+        ]
+      }
+    },
+    "edit": {
+      "disabled": {
+        "median_seconds": 5.7318721699998605,
+        "samples": [
+          {
+            "timings": {
+              "source_read": 0.03184675898592104,
+              "source_hash": 0.002982132009947236,
+              "extraction": 2.5919502489982733,
+              "facts_lookup": 2.7261668320047647,
+              "evaluation": 4.7510760780000965,
+              "cli_in_process": 4.8243956599999365,
+              "judgment_and_other_rules": 2.0249092459953317,
+              "store_load_including_fingerprint": 0.0,
+              "fingerprint": 0.0,
+              "json_load_and_entry_validation": 0.0
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 5.762788649999948
+          },
+          {
+            "timings": {
+              "source_read": 0.03127329901144549,
+              "source_hash": 0.003046378996259591,
+              "extraction": 2.5229423579999093,
+              "facts_lookup": 2.6515448660138645,
+              "evaluation": 4.667306007000207,
+              "cli_in_process": 4.738660451000214,
+              "judgment_and_other_rules": 2.015761140986342,
+              "store_load_including_fingerprint": 0.0,
+              "fingerprint": 0.0,
+              "json_load_and_entry_validation": 0.0
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 5.683154017000106
+          },
+          {
+            "timings": {
+              "source_read": 0.03185946499206693,
+              "source_hash": 0.003045582008326164,
+              "extraction": 2.5436115729980884,
+              "facts_lookup": 2.677749838005184,
+              "evaluation": 4.665478329000052,
+              "cli_in_process": 4.737248950999856,
+              "judgment_and_other_rules": 1.9877284909948685,
+              "store_load_including_fingerprint": 0.0,
+              "fingerprint": 0.0,
+              "json_load_and_entry_validation": 0.0
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 5.6903189380000185
+          },
+          {
+            "timings": {
+              "source_read": 0.030738459008716745,
+              "source_hash": 0.003005348991791834,
+              "extraction": 2.5500903040074263,
+              "facts_lookup": 2.68092959599835,
+              "evaluation": 4.686057656999765,
+              "cli_in_process": 4.7583887279997725,
+              "judgment_and_other_rules": 2.0051280610014146,
+              "store_load_including_fingerprint": 0.0,
+              "fingerprint": 0.0,
+              "json_load_and_entry_validation": 0.0
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 5.7318721699998605
+          },
+          {
+            "timings": {
+              "source_read": 0.03097943298826067,
+              "source_hash": 0.0029244979969007545,
+              "extraction": 2.5501803660090445,
+              "facts_lookup": 2.680062670996449,
+              "evaluation": 4.798644798999703,
+              "cli_in_process": 4.87083080299999,
+              "judgment_and_other_rules": 2.118582128003254,
+              "store_load_including_fingerprint": 0.0,
+              "fingerprint": 0.0,
+              "json_load_and_entry_validation": 0.0
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 5.825290212999789
+          }
+        ]
+      },
+      "cold": {
+        "median_seconds": 6.876283478000005,
+        "samples": [
+          {
+            "timings": {
+              "source_read": 0.03250960300420047,
+              "source_hash": 0.003109671999936836,
+              "fingerprint": 0.0003309359999548178,
+              "store_load_including_fingerprint": 0.0010240349997729936,
+              "extraction": 2.785506013984559,
+              "facts_lookup": 3.54475274199649,
+              "evaluation": 5.3921579210000345,
+              "write": 0.025630207999256527,
+              "cli_in_process": 5.650745913999799,
+              "judgment_and_other_rules": 1.8474051790035446,
+              "json_load_and_entry_validation": 0.0006930989998181758
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 6.876283478000005
+          },
+          {
+            "timings": {
+              "source_read": 0.031799326990039845,
+              "source_hash": 0.003121496996300266,
+              "fingerprint": 0.00034033499969154946,
+              "store_load_including_fingerprint": 0.0010065650003525661,
+              "extraction": 2.758636314006253,
+              "facts_lookup": 3.5173553359968537,
+              "evaluation": 5.312732603000313,
+              "write": 0.02501579900035722,
+              "cli_in_process": 5.559879917000217,
+              "judgment_and_other_rules": 1.7953772670034596,
+              "json_load_and_entry_validation": 0.0006662300006610167
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 6.7728128700000525
+          },
+          {
+            "timings": {
+              "source_read": 0.03348007098929884,
+              "source_hash": 0.003158506998715893,
+              "fingerprint": 0.00037441899985424243,
+              "store_load_including_fingerprint": 0.0011044999996556726,
+              "extraction": 2.8670632009934707,
+              "facts_lookup": 3.6506889189990943,
+              "evaluation": 5.5537247469997055,
+              "write": 0.02716549099977783,
+              "cli_in_process": 5.823230047999914,
+              "judgment_and_other_rules": 1.9030358280006112,
+              "json_load_and_entry_validation": 0.0007300809998014302
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 7.155524790000072
+          },
+          {
+            "timings": {
+              "source_read": 0.03729478999184721,
+              "source_hash": 0.0032665620046827826,
+              "fingerprint": 0.0004063100004714215,
+              "store_load_including_fingerprint": 0.0011476409999886528,
+              "extraction": 2.879599493000569,
+              "facts_lookup": 3.667350750998139,
+              "evaluation": 5.636413306999657,
+              "write": 0.016534243000023707,
+              "cli_in_process": 5.92312386399999,
+              "judgment_and_other_rules": 1.9690625560015178,
+              "json_load_and_entry_validation": 0.0007413309995172312
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 7.144741711000279
+          },
+          {
+            "timings": {
+              "source_read": 0.03428364700766906,
+              "source_hash": 0.0030932249910620158,
+              "fingerprint": 0.00040942399982668576,
+              "store_load_including_fingerprint": 0.001223171999299666,
+              "extraction": 2.80593367700385,
+              "facts_lookup": 3.581770525999673,
+              "evaluation": 5.419929844999842,
+              "write": 0.01639611799919294,
+              "cli_in_process": 5.670060359999752,
+              "judgment_and_other_rules": 1.8381593190001695,
+              "json_load_and_entry_validation": 0.0008137479994729802
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 6.8702477490001
+          }
+        ]
+      },
+      "warm": {
+        "median_seconds": 3.4682242630001383,
+        "samples": [
+          {
+            "timings": {
+              "source_read": 0.029712833008488815,
+              "source_hash": 0.0024696479940757854,
+              "fingerprint": 0.0003426739999667916,
+              "store_load_including_fingerprint": 0.22135336499968616,
+              "facts_lookup": 0.9034212829992612,
+              "extraction": 0.004387025000596623,
+              "evaluation": 2.680346199000269,
+              "write": 0.01862347399992359,
+              "cli_in_process": 2.8846359419999317,
+              "judgment_and_other_rules": 1.7769249160010077,
+              "json_load_and_entry_validation": 0.22101069099971937
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 1,
+              "RULE-architecture": 1,
+              "RULE-usecase-boundaries": 1
+            },
+            "extraction_paths": {
+              "RULE-advisory-unique-code": [
+                "packages/devkit/src/devkit_agt/features/rules/models/phases.py"
+              ],
+              "RULE-architecture": [
+                "packages/devkit/src/devkit_agt/features/rules/models/phases.py"
+              ],
+              "RULE-usecase-boundaries": [
+                "packages/devkit/src/devkit_agt/features/rules/models/phases.py"
+              ]
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 3.4682242630001383
+          },
+          {
+            "timings": {
+              "source_read": 0.029645014993548102,
+              "source_hash": 0.0025447190027989564,
+              "fingerprint": 0.0003449900000305206,
+              "store_load_including_fingerprint": 0.2361583030001384,
+              "facts_lookup": 0.9609095790119682,
+              "extraction": 0.00437574300030974,
+              "evaluation": 2.751350937999632,
+              "write": 0.025377059999755147,
+              "cli_in_process": 2.9578991859998496,
+              "judgment_and_other_rules": 1.790441358987664,
+              "json_load_and_entry_validation": 0.23581331300010788
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 1,
+              "RULE-architecture": 1,
+              "RULE-usecase-boundaries": 1
+            },
+            "extraction_paths": {
+              "RULE-advisory-unique-code": [
+                "packages/devkit/src/devkit_agt/features/rules/models/phases.py"
+              ],
+              "RULE-architecture": [
+                "packages/devkit/src/devkit_agt/features/rules/models/phases.py"
+              ],
+              "RULE-usecase-boundaries": [
+                "packages/devkit/src/devkit_agt/features/rules/models/phases.py"
+              ]
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 3.5433304140001383
+          },
+          {
+            "timings": {
+              "source_read": 0.029455983997650037,
+              "source_hash": 0.0023700399983681564,
+              "fingerprint": 0.00033685200060062925,
+              "store_load_including_fingerprint": 0.21576521500037416,
+              "facts_lookup": 0.8739803670014226,
+              "extraction": 0.004530004000571353,
+              "evaluation": 2.637823154999751,
+              "write": 0.016463273999306693,
+              "cli_in_process": 2.83674792399961,
+              "judgment_and_other_rules": 1.7638427879983283,
+              "json_load_and_entry_validation": 0.21542836299977353
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 1,
+              "RULE-architecture": 1,
+              "RULE-usecase-boundaries": 1
+            },
+            "extraction_paths": {
+              "RULE-advisory-unique-code": [
+                "packages/devkit/src/devkit_agt/features/rules/models/phases.py"
+              ],
+              "RULE-architecture": [
+                "packages/devkit/src/devkit_agt/features/rules/models/phases.py"
+              ],
+              "RULE-usecase-boundaries": [
+                "packages/devkit/src/devkit_agt/features/rules/models/phases.py"
+              ]
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 3.4013139680000677
+          },
+          {
+            "timings": {
+              "source_read": 0.028795680998427997,
+              "source_hash": 0.0024383719992329134,
+              "fingerprint": 0.0003205610005352355,
+              "store_load_including_fingerprint": 0.21733946699987428,
+              "facts_lookup": 0.8918142430070475,
+              "extraction": 0.004017522000140161,
+              "evaluation": 2.6411566450001374,
+              "write": 0.023454918000425096,
+              "cli_in_process": 2.8562516490001144,
+              "judgment_and_other_rules": 1.7493424019930899,
+              "json_load_and_entry_validation": 0.21701890599933904
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 1,
+              "RULE-architecture": 1,
+              "RULE-usecase-boundaries": 1
+            },
+            "extraction_paths": {
+              "RULE-advisory-unique-code": [
+                "packages/devkit/src/devkit_agt/features/rules/models/phases.py"
+              ],
+              "RULE-architecture": [
+                "packages/devkit/src/devkit_agt/features/rules/models/phases.py"
+              ],
+              "RULE-usecase-boundaries": [
+                "packages/devkit/src/devkit_agt/features/rules/models/phases.py"
+              ]
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 3.4302723470000274
+          },
+          {
+            "timings": {
+              "source_read": 0.029200479007613467,
+              "source_hash": 0.002427420004551095,
+              "fingerprint": 0.00034335100099269766,
+              "store_load_including_fingerprint": 0.2160111439998218,
+              "facts_lookup": 0.9014231929963898,
+              "extraction": 0.004161053000188986,
+              "evaluation": 2.673815308999565,
+              "write": 0.017473596999479923,
+              "cli_in_process": 2.876486078000198,
+              "judgment_and_other_rules": 1.772392116003175,
+              "json_load_and_entry_validation": 0.2156677929988291
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 1,
+              "RULE-architecture": 1,
+              "RULE-usecase-boundaries": 1
+            },
+            "extraction_paths": {
+              "RULE-advisory-unique-code": [
+                "packages/devkit/src/devkit_agt/features/rules/models/phases.py"
+              ],
+              "RULE-architecture": [
+                "packages/devkit/src/devkit_agt/features/rules/models/phases.py"
+              ],
+              "RULE-usecase-boundaries": [
+                "packages/devkit/src/devkit_agt/features/rules/models/phases.py"
+              ]
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 3.5235100740001144
+          }
+        ]
+      }
+    },
+    "snapshot": {
+      "disabled": {
+        "median_seconds": 5.130762288000369,
+        "samples": [
+          {
+            "timings": {
+              "source_read": 0.05784304302324017,
+              "source_hash": 0.0031330230140156345,
+              "extraction": 2.618581316012751,
+              "facts_lookup": 2.753370938999069,
+              "evaluation": 3.9778795499996704,
+              "cli_in_process": 4.093137983000815,
+              "judgment_and_other_rules": 1.2245086110006014,
+              "store_load_including_fingerprint": 0.0,
+              "fingerprint": 0.0,
+              "json_load_and_entry_validation": 0.0
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 5.028638609000154
+          },
+          {
+            "timings": {
+              "source_read": 0.09152653896217089,
+              "source_hash": 0.0030401029989661765,
+              "extraction": 2.729070857005354,
+              "facts_lookup": 2.8683010159911646,
+              "evaluation": 4.333311861999391,
+              "cli_in_process": 4.438006856999891,
+              "judgment_and_other_rules": 1.4650108460082265,
+              "store_load_including_fingerprint": 0.0,
+              "fingerprint": 0.0,
+              "json_load_and_entry_validation": 0.0
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 5.488142817000153
+          },
+          {
+            "timings": {
+              "source_read": 0.05962965101207374,
+              "source_hash": 0.0032298270098181092,
+              "extraction": 2.7493813089959076,
+              "facts_lookup": 2.8927514289780447,
+              "evaluation": 4.173975332000737,
+              "cli_in_process": 4.299491513999783,
+              "judgment_and_other_rules": 1.281223903022692,
+              "store_load_including_fingerprint": 0.0,
+              "fingerprint": 0.0,
+              "json_load_and_entry_validation": 0.0
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 5.277675505999468
+          },
+          {
+            "timings": {
+              "source_read": 0.05675334902934992,
+              "source_hash": 0.0031584850103172357,
+              "extraction": 2.6276659120057957,
+              "facts_lookup": 2.76532070000394,
+              "evaluation": 4.003883836000568,
+              "cli_in_process": 4.117878699000357,
+              "judgment_and_other_rules": 1.2385631359966283,
+              "store_load_including_fingerprint": 0.0,
+              "fingerprint": 0.0,
+              "json_load_and_entry_validation": 0.0
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 5.057264856999609
+          },
+          {
+            "timings": {
+              "source_read": 0.056980909988851636,
+              "source_hash": 0.0030797510044067167,
+              "extraction": 2.6920671119805775,
+              "facts_lookup": 2.8328005889925407,
+              "evaluation": 4.072150261000388,
+              "cli_in_process": 4.178263580999555,
+              "judgment_and_other_rules": 1.2393496720078474,
+              "store_load_including_fingerprint": 0.0,
+              "fingerprint": 0.0,
+              "json_load_and_entry_validation": 0.0
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 5.130762288000369
+          }
+        ]
+      },
+      "cold": {
+        "median_seconds": 6.42716863700025,
+        "samples": [
+          {
+            "timings": {
+              "source_read": 0.060087260998443526,
+              "source_hash": 0.0034699400021054316,
+              "fingerprint": 0.00034520300050644437,
+              "store_load_including_fingerprint": 0.0010621810006341548,
+              "extraction": 2.608408970995697,
+              "facts_lookup": 3.6222575829988273,
+              "evaluation": 5.083959589999722,
+              "cli_in_process": 5.198445930000162,
+              "judgment_and_other_rules": 1.4617020070008948,
+              "json_load_and_entry_validation": 0.0007169780001277104
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 6.42716863700025
+          },
+          {
+            "timings": {
+              "source_read": 0.05796111401195958,
+              "source_hash": 0.0032901960184972268,
+              "fingerprint": 0.00034786800006259,
+              "store_load_including_fingerprint": 0.0011608639988480718,
+              "extraction": 2.5874346010041336,
+              "facts_lookup": 3.5999126289789274,
+              "evaluation": 5.100097209000523,
+              "cli_in_process": 5.224891390999801,
+              "judgment_and_other_rules": 1.500184580021596,
+              "json_load_and_entry_validation": 0.0008129959987854818
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 6.419167134999952
+          },
+          {
+            "timings": {
+              "source_read": 0.05848858702756843,
+              "source_hash": 0.0033276769800067996,
+              "fingerprint": 0.00033136799993371824,
+              "store_load_including_fingerprint": 0.0011008590008714236,
+              "extraction": 2.595635515995127,
+              "facts_lookup": 3.6381654130000243,
+              "evaluation": 5.121040123999592,
+              "cli_in_process": 5.229892480000672,
+              "judgment_and_other_rules": 1.4828747109995675,
+              "json_load_and_entry_validation": 0.0007694910009377054
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 6.410217083000134
+          },
+          {
+            "timings": {
+              "source_read": 0.07218744497004081,
+              "source_hash": 0.005428350009424321,
+              "fingerprint": 0.00047062399971764535,
+              "store_load_including_fingerprint": 0.0012829359993702383,
+              "extraction": 3.1489471699860587,
+              "facts_lookup": 4.326271647001704,
+              "evaluation": 6.04268133000005,
+              "cli_in_process": 6.1589162460004445,
+              "judgment_and_other_rules": 1.7164096829983464,
+              "json_load_and_entry_validation": 0.0008123119996525929
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 7.358216980000179
+          },
+          {
+            "timings": {
+              "source_read": 0.0658133479882963,
+              "source_hash": 0.0030727210078111966,
+              "fingerprint": 0.00035078299970336957,
+              "store_load_including_fingerprint": 0.0010104600005433895,
+              "extraction": 2.8601277590123573,
+              "facts_lookup": 3.973259155020969,
+              "evaluation": 5.555637445999309,
+              "cli_in_process": 5.664170981999632,
+              "judgment_and_other_rules": 1.5823782909783404,
+              "json_load_and_entry_validation": 0.0006596770008400199
+            },
+            "extraction_counts": {
+              "RULE-advisory-unique-code": 547,
+              "RULE-architecture": 498,
+              "RULE-usecase-boundaries": 498
+            },
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 7.014106698999967
+          }
+        ]
+      },
+      "warm": {
+        "median_seconds": 3.0130754540005,
+        "samples": [
+          {
+            "timings": {
+              "source_read": 0.12062705001153518,
+              "source_hash": 0.0036744980006915284,
+              "fingerprint": 0.00037927599987597205,
+              "store_load_including_fingerprint": 0.30459923799844546,
+              "facts_lookup": 1.3164189759645524,
+              "evaluation": 3.3933991419999074,
+              "cli_in_process": 3.530869473999701,
+              "judgment_and_other_rules": 2.076980166035355,
+              "json_load_and_entry_validation": 0.3042199619985695
+            },
+            "extraction_counts": {},
+            "extraction_paths": {},
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 4.252580375999969
+          },
+          {
+            "timings": {
+              "source_read": 0.05993235798450769,
+              "source_hash": 0.003168242004903732,
+              "fingerprint": 0.0003496830004223739,
+              "store_load_including_fingerprint": 0.26693429199985985,
+              "facts_lookup": 1.0272985739984506,
+              "evaluation": 2.5835946970000805,
+              "cli_in_process": 2.724373246000141,
+              "judgment_and_other_rules": 1.55629612300163,
+              "json_load_and_entry_validation": 0.2665846089994375
+            },
+            "extraction_counts": {},
+            "extraction_paths": {},
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 3.3205292049997297
+          },
+          {
+            "timings": {
+              "source_read": 0.05543541499901039,
+              "source_hash": 0.0026833570054805023,
+              "fingerprint": 0.00031956399925547885,
+              "store_load_including_fingerprint": 0.21170487700055673,
+              "facts_lookup": 0.8654965599962452,
+              "evaluation": 2.2224848949999796,
+              "cli_in_process": 2.329813772000307,
+              "judgment_and_other_rules": 1.3569883350037344,
+              "json_load_and_entry_validation": 0.21138531300130126
+            },
+            "extraction_counts": {},
+            "extraction_paths": {},
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 2.888540785999794
+          },
+          {
+            "timings": {
+              "source_read": 0.05551838801602571,
+              "source_hash": 0.0024865500099622295,
+              "fingerprint": 0.0006270809990382986,
+              "store_load_including_fingerprint": 0.22005834600076923,
+              "facts_lookup": 0.8887936409946633,
+              "evaluation": 2.2791481349995593,
+              "cli_in_process": 2.4023700569996436,
+              "judgment_and_other_rules": 1.390354494004896,
+              "json_load_and_entry_validation": 0.21943126500173094
+            },
+            "extraction_counts": {},
+            "extraction_paths": {},
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 2.9533581690002393
+          },
+          {
+            "timings": {
+              "source_read": 0.05636023298029613,
+              "source_hash": 0.002455184987411485,
+              "fingerprint": 0.00034882700037996983,
+              "store_load_including_fingerprint": 0.23530486500021652,
+              "facts_lookup": 0.9309841150006832,
+              "evaluation": 2.319679740999163,
+              "cli_in_process": 2.4319322410001405,
+              "judgment_and_other_rules": 1.38869562599848,
+              "json_load_and_entry_validation": 0.23495603799983655
+            },
+            "extraction_counts": {},
+            "extraction_paths": {},
+            "exit": 0,
+            "result": {
+              "violations": [],
+              "errors": [],
+              "notices": []
+            },
+            "stderr": "",
+            "seconds": 3.0130754540005
+          }
+        ]
+      }
+    }
+  }
+}

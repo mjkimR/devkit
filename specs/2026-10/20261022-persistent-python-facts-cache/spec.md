@@ -2,7 +2,7 @@
 id: SPEC-persistent-python-facts-cache
 title: Persist per-file rule facts between runs
 summary: "Reuses rule-owned per-file Python facts between processes while preserving discovery, judgment and snapshot authority."
-status: planned
+status: in-progress
 created: 2026-10-22
 related_capabilities: [CAP-GOV-rules-engine, CAP-GOV-rule-authoring, CAP-GOV-evaluation-lifecycle, CAP-ADV-agent-advisory-protocol]
 related_usecases: []

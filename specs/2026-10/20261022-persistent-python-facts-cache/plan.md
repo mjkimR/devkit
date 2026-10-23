@@ -65,10 +65,25 @@ used for the digest are the same cached bytes extraction consumes. Dry-run fix b
 ## 6. Verification & Test Plan
 
 Before production changes, collect at least five full fresh-process baseline samples on this branch.
-Engine unit tests cover identity, corruption, safety, concurrency, invalidation, partial/full pruning and no-op writes
+Engine integration tests cover identity, corruption, safety, concurrency, invalidation, partial/full pruning and no-op writes
 (AC-02, AC-04, AC-06). Co-located rule tests compare enabled/disabled full findings and assert no AST/node acquisition
 on warm facts (AC-01, AC-03). Project/snapshot integration tests retain receipt and policy checks (AC-05).
 A reproducible fresh-process benchmark compares disabled/cold/warm full, edited-file and snapshot checks with at least
 five samples, medians, stage counters/timing and memo size (AC-07). A warm full-check saving below 20% requires design
 revision before the hypothesis is claimed. Run `just lint-check`, `just check`, `just test-affected --base main` and
 workspace governance checks. Independent code review and reconciliation review apply at medium effort.
+
+## 7. Implemented Schema and Verification Evidence
+
+Architecture uses immutable `Import`, `Reference` and `ArchitectureFacts` records. Advisory uses immutable
+`Expression`, `Import`, `Class`, `Call` and `AdvisoryFacts` records. Usecase boundaries use immutable `Expression`,
+`Parameter`, `Assignment`, `Import` and `Scope` records; its JSON codec shares expressions/scopes through validated
+reference tables. Decoders reject semantic role mismatches, not only JSON field types. No AST reconstruction is used.
+
+The explicit source dependency sets are asserted in each rule's tests. Snapshot tests include actual dynamic rule
+and helper modules whose staged contents diverge from the host, in addition to read-only in-place/materialized/CI
+assembly tests. Initial independent review findings and their verified fixes are recorded in review/reverify envelopes.
+
+`development-measurements.md` in the preserved materials records all nine five-sample mode/scenario combinations,
+input tree identity, stage timing and memo sizes. Warm full checks meet the 20% target; cold extraction and initial
+persistence cost more than disabled execution. The result does not claim sub-millisecond total memo lookup.

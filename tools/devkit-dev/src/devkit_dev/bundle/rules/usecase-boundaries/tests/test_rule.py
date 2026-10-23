@@ -376,3 +376,91 @@ def test_a_source_that_does_not_parse_aborts_with_one_finding_naming_it(tmp_path
     assert file == ".devkit/architecture.toml"
     assert message.startswith("cannot inspect usecase boundaries: ")
     assert message.endswith("(broken.py, line 1)")  # the file name, no longer <unknown>
+
+
+def test_persistent_facts_roundtrip_callbacks_and_cross_file_edits(tmp_path: Path, monkeypatch) -> None:
+    from devkit_agt.features.rules import WorkspaceCache
+
+    inspect(
+        tmp_path,
+        {
+            "src/sample/features/one/usecases.py": VALID,
+            "src/sample/features/one/services.py": "def helper(): pass\n",
+            "src/sample/features/one/__init__.py": "from .usecases import Run as Operation\n",
+            "src/sample/features/one/cli.py": """from . import Operation
+from .services import helper
+class Handler:
+ def __init__(self, operation: "Operation"):
+  self.operation: Operation = operation
+ def invoke(self):
+  alias = self.operation.execute
+  def nested():
+   register(helper, operation=alias)
+  return nested()
+""",
+        },
+    )
+    (tmp_path / ".devkit/transient").mkdir()
+    disabled = inspect_usecases(tmp_path, cache=WorkspaceCache(tmp_path, facts_enabled=False))
+    assert any("raw execution callback" in message for _, _, message in disabled)
+    cache = WorkspaceCache(tmp_path, facts_writer=True)
+    assert inspect_usecases(tmp_path, cache=cache) == disabled
+    cache.flush_file_facts()
+    warm = WorkspaceCache(tmp_path)
+    monkeypatch.setattr(warm, "get_python_ast", lambda *args: pytest.fail("warm facts requested AST"))
+    monkeypatch.setattr(warm, "get_python_nodes", lambda *args: pytest.fail("warm facts requested nodes"))
+    assert inspect_usecases(tmp_path, cache=warm) == disabled
+    target = tmp_path / "src/sample/features/one/usecases.py"
+    target.write_text("class Run:\n def execute(self): pass\n")
+    assert inspect_usecases(tmp_path, cache=WorkspaceCache(tmp_path)) == inspect_usecases(
+        tmp_path, cache=WorkspaceCache(tmp_path, facts_enabled=False)
+    )
+    descriptor = sys.modules[RULE.__module__].FACTS
+    assert {d.name for d in descriptor.source_dependencies} == {
+        "RULE-usecase-boundaries.rule",
+        "RULE-usecase-boundaries.facts",
+    }
+
+
+@pytest.mark.parametrize("corruption", ["calls", "all_calls", "root", "receiver"])
+def test_malformed_warm_execution_records_reextract(tmp_path: Path, corruption: str, monkeypatch) -> None:
+    import json
+
+    from devkit_agt.features.rules import WorkspaceCache
+
+    inspect(
+        tmp_path,
+        {
+            "src/sample/features/one/usecases.py": "def run(): pass\n",
+            "src/sample/features/one/cli.py": "from .usecases import run\nrun()\n",
+        },
+    )
+    (tmp_path / ".devkit/transient").mkdir()
+    expected = inspect_usecases(tmp_path, cache=WorkspaceCache(tmp_path, facts_enabled=False))
+    assert any("execution function" in message for _, _, message in expected)
+    cache = WorkspaceCache(tmp_path, facts_writer=True)
+    assert inspect_usecases(tmp_path, cache=cache) == expected
+    cache.flush_file_facts()
+    memo = tmp_path / ".devkit/transient/rules/facts/RULE-usecase-boundaries.json"
+    value = json.loads(memo.read_text())
+    exprs, scopes = value["entries"]["src/sample/features/one/cli.py"]["payload"]
+    if corruption in {"calls", "all_calls"}:
+        position = 11 if corruption == "calls" else 12
+        reference = scopes[0][position][0]
+        exprs[reference] = ["name", "run", None, [], [], 2]
+    elif corruption == "root":
+        scopes[0][0], scopes[0][1] = "class", "ImpossibleRoot"
+    else:
+        exprs[scopes[0][11][0]][2] = None
+    memo.write_text(json.dumps(value))
+    fresh = WorkspaceCache(tmp_path)
+    extracted = []
+    original = fresh.get_python_ast
+
+    def parse(path):
+        extracted.append(Path(path).relative_to(tmp_path).as_posix())
+        return original(path)
+
+    monkeypatch.setattr(fresh, "get_python_ast", parse)
+    assert inspect_usecases(tmp_path, cache=fresh) == expected
+    assert extracted == ["src/sample/features/one/cli.py"]

@@ -469,3 +469,69 @@ def test_a_source_that_does_not_parse_is_reported_at_its_file(tmp_path: Path) ->
     file, line, message = found[0]
     assert (file, line) == ("src/sample/features/one/broken.py", 1)
     assert message.startswith("cannot parse source: ") and message.endswith("(broken.py, line 1)")
+
+
+def test_persistent_facts_roundtrip_and_current_policy(tmp_path: Path, monkeypatch) -> None:
+    import sys
+
+    from devkit_agt.features.rules import WorkspaceCache
+
+    _inspect(
+        tmp_path,
+        {
+            "src/sample/features/one/models.py": 'import importlib as loader\nfrom . import usecases\nloader.import_module(".usecases", package="sample.features.one")\nENTRY="sample.features.one.usecases:run"\n',
+            "src/sample/features/one/usecases.py": "def run(): pass\n",
+            "src/sample/features/two/__init__.py": "from ..one.usecases import run as exported\n",
+            "src/sample/features/two/services.py": "from . import exported\n",
+        },
+    )
+    module = sys.modules[inspect_architecture]
+    (tmp_path / ".devkit/transient").mkdir()
+    disabled = module.inspect_architecture(tmp_path, cache=WorkspaceCache(tmp_path, facts_enabled=False))
+    cache = WorkspaceCache(tmp_path, facts_writer=True, facts_prune=True)
+    assert module.inspect_architecture(tmp_path, cache=cache) == disabled
+    cache.flush_file_facts()
+    warm = WorkspaceCache(tmp_path)
+    monkeypatch.setattr(warm, "get_python_ast", lambda *args: pytest.fail("warm facts requested AST"))
+    monkeypatch.setattr(warm, "get_python_nodes", lambda *args: pytest.fail("warm facts requested nodes"))
+    assert module.inspect_architecture(tmp_path, cache=warm) == disabled
+    config = tmp_path / ".devkit/architecture.toml"
+    config.write_text(config.read_text().replace('one = ["sample.features.two"]', "one = []"))
+    assert module.inspect_architecture(tmp_path, cache=WorkspaceCache(tmp_path)) == module.inspect_architecture(
+        tmp_path, cache=WorkspaceCache(tmp_path, facts_enabled=False)
+    )
+    assert {d.name for d in module.FACTS.source_dependencies} == {"RULE-architecture.rule", "RULE-architecture.facts"}
+
+
+def test_caught_parse_failure_does_not_prune_unseen_entries(tmp_path: Path) -> None:
+    import json
+    import sys
+
+    from devkit_agt.features.rules import WorkspaceCache
+
+    _inspect(
+        tmp_path,
+        {
+            "src/sample/features/one/good.py": "value=1\n",
+            "src/sample/features/one/gone.py": "value=2\n",
+        },
+    )
+    (tmp_path / ".devkit/transient").mkdir()
+    inspect = sys.modules[inspect_architecture].inspect_architecture
+    cache = WorkspaceCache(tmp_path, facts_writer=True, facts_prune=True)
+    inspect(tmp_path, cache=cache)
+    cache.flush_file_facts()
+    gone = "src/sample/features/one/gone.py"
+    (tmp_path / gone).unlink()
+    bad = tmp_path / "src/sample/features/one/bad.py"
+    bad.write_text("def broken(")
+    cache = WorkspaceCache(tmp_path, facts_writer=True, facts_prune=True)
+    assert any("cannot parse source" in m for _, _, m in inspect(tmp_path, cache=cache))
+    cache.flush_file_facts()
+    memo = tmp_path / ".devkit/transient/rules/facts/RULE-architecture.json"
+    assert gone in json.loads(memo.read_text())["entries"]
+    bad.write_text("value=3\n")
+    cache = WorkspaceCache(tmp_path, facts_writer=True, facts_prune=True)
+    inspect(tmp_path, cache=cache)
+    cache.flush_file_facts()
+    assert gone not in json.loads(memo.read_text())["entries"]

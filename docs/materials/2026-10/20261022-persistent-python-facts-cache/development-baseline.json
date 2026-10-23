@@ -1,0 +1,67 @@
+{
+  "head": "bcc65602a3156f5163b27a4c2fb7ace20e11f8bc",
+  "python": "3.12.3",
+  "command": [
+    ".venv/bin/python3",
+    "-m",
+    "devkit_dist",
+    "rules",
+    "check",
+    "--format",
+    "json"
+  ],
+  "median_seconds": 4.392521967999983,
+  "samples": [
+    {
+      "seconds": 4.690600566999819,
+      "exit": 0,
+      "result": {
+        "violations": [],
+        "errors": [],
+        "notices": []
+      },
+      "stderr": ""
+    },
+    {
+      "seconds": 4.351870480999878,
+      "exit": 0,
+      "result": {
+        "violations": [],
+        "errors": [],
+        "notices": []
+      },
+      "stderr": ""
+    },
+    {
+      "seconds": 4.230881087000398,
+      "exit": 0,
+      "result": {
+        "violations": [],
+        "errors": [],
+        "notices": []
+      },
+      "stderr": ""
+    },
+    {
+      "seconds": 4.392521967999983,
+      "exit": 0,
+      "result": {
+        "violations": [],
+        "errors": [],
+        "notices": []
+      },
+      "stderr": ""
+    },
+    {
+      "seconds": 4.51801634200001,
+      "exit": 0,
+      "result": {
+        "violations": [],
+        "errors": [],
+        "notices": []
+      },
+      "stderr": ""
+    }
+  ],
+  "command_path_normalized": true
+}

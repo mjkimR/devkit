@@ -450,3 +450,127 @@ def test_a_malformed_inputs_declaration_is_a_loading_error(tmp_path: Path) -> No
     assert problem.code == "RULES_LOAD_FAILED" and "RULE-python: inputs must be None or a non-empty tuple" in str(
         problem
     )
+
+
+@pytest.mark.parametrize("snapshot_mode,materialized", [("staged", False), ("staged", True), ("ci", True)])
+def test_snapshot_borrows_origin_facts_read_only(
+    tmp_path: Path, monkeypatch, snapshot_mode: str, materialized: bool
+) -> None:
+    import ast
+
+    from devkit_agt.features.rules import FactsDependency, FileFactsDescriptor, FileFactsSource
+    from devkit_agt.features.rules.services.builtins.base import BaseRule
+    from devkit_agt.features.rules.services.registry import RuleRegistry
+    from devkit_agt.features.rules.usecases import project
+
+    root = init_repo(tmp_path / "repo")
+    _write(root, ".gitignore", ".devkit/transient/\n")
+    _write(root, "value.py", "value=1\n")
+    (root / ".devkit/transient").mkdir(parents=True)
+    _git(root, "add", ".")
+
+    def extract(source: FileFactsSource) -> int:
+        statement = source.get_python_ast().body[0]
+        assert isinstance(statement, ast.Assign) and isinstance(statement.value, ast.Constant)
+        assert type(statement.value.value) is int
+        return statement.value.value
+
+    def decode(value):
+        assert type(value) is int
+        return value
+
+    descriptor = FileFactsDescriptor(
+        "RULE-snapshot-probe",
+        1,
+        (FactsDependency("probe", b"v1"),),
+        extract,
+        lambda value: value,
+        decode,
+    )
+
+    class ProbeRule(BaseRule):
+        def __init__(self):
+            super().__init__(id="RULE-snapshot-probe", name="probe", description="probe", inputs=("**/*.py",))
+
+        def check(self, ctx):
+            assert ctx.cache.get_file_facts("value.py", descriptor) == 1
+            return []
+
+    def registry(*args, **kwargs):
+        result = RuleRegistry()
+        result.register(ProbeRule())
+        return result
+
+    monkeypatch.setattr(project, "build_project_registry", registry)
+    assert run_project_rules(root).ok
+    memo = root / ".devkit/transient/rules/facts/RULE-snapshot-probe.json"
+    original = memo.read_bytes()
+    stamp = memo.stat().st_mtime_ns
+    if snapshot_mode == "ci":
+        _git(root, "commit", "-q", "-m", "probe source")
+        snapshot = git_snapshot(root, staged=False, base="HEAD~1")
+    else:
+        snapshot = git_snapshot(root, staged=True)
+    if materialized:
+        _write(root, "value.py", "value=9\n")
+    monkeypatch.setattr(WorkspaceCache, "get_python_ast", lambda *args: pytest.fail("snapshot memo hit parsed AST"))
+    run = run_project_rules(root, snapshot=snapshot)
+    assert run.ok
+    assert (run.workspace_root != root) == materialized
+    assert memo.read_bytes() == original and memo.stat().st_mtime_ns == stamp
+    assert run.context is not None
+    assert not run.context.cache._file_facts.writer
+
+
+def test_dry_project_check_does_not_enable_facts_writer(tmp_path: Path) -> None:
+    (tmp_path / ".devkit/transient").mkdir(parents=True)
+    run = run_project_rules(tmp_path, dry_run=True)
+    assert run.context is not None
+    assert not run.context.cache._file_facts.writer
+
+
+def test_snapshot_facts_match_executing_helper_and_source_bytes(tmp_path: Path) -> None:
+    root = init_repo(tmp_path / "repo")
+    _write(root, ".gitignore", ".devkit/transient/\n")
+    (root / ".devkit/transient").mkdir(parents=True)
+    _write(root, "one.py", "value=1\n")
+    helper = """from devkit_agt.features.rules import capture_facts_dependency
+FACTOR = 1
+SOURCE = capture_facts_dependency("probe.helper", __file__, module_name=__name__)
+"""
+    rule = """from devkit_agt.features.rules import FileFactsDescriptor, Violation, capture_facts_dependency
+from devkit_agt.features.rules.services.builtins.base import BaseRule
+from .helper import FACTOR, SOURCE
+
+def extract(source):
+    return source.get_python_ast().body[0].value.value * FACTOR
+
+FACTS = FileFactsDescriptor("RULE-helper-probe", 1,
+    (capture_facts_dependency("probe.rule", __file__, module_name=__name__), SOURCE),
+    extract, lambda value: value, lambda value: value)
+
+class ProbeRule(BaseRule):
+    def __init__(self):
+        super().__init__(id="RULE-helper-probe", name="probe", description="probe", inputs=("**/*.py",))
+    def check(self, ctx):
+        value = ctx.cache.get_file_facts("one.py", FACTS)
+        return [Violation(self.id, "one.py", 1, str(value))]
+"""
+    _write(root, "rules/probe/helper.py", helper)
+    _write(root, "rules/probe/rule.py", rule)
+    host = run_project_rules(root, rules_dir=root / "rules")
+    assert [v.message for v in host.result.violations] == ["1"]
+    memo = root / ".devkit/transient/rules/facts/RULE-helper-probe.json"
+    original = memo.read_bytes()
+    _write(root, "rules/probe/helper.py", helper.replace("FACTOR = 1", "FACTOR = 2"))
+    _git(root, "add", ".")
+    snapshot = git_snapshot(root, staged=True)
+    _write(root, "one.py", "value=9\n")
+    _write(root, "rules/probe/helper.py", helper.replace("FACTOR = 1", "FACTOR = 9"))
+    _write(root, "rules/probe/rule.py", rule.replace(" * FACTOR", " * 100"))
+    enabled = run_project_rules(root, snapshot=snapshot, rules_dir=root / "rules")
+    disabled = run_project_rules(root, snapshot=snapshot, rules_dir=root / "rules", facts_enabled=False)
+    assert not enabled.errors and not disabled.errors
+    assert [v.to_dict() for v in enabled.result.violations] == [v.to_dict() for v in disabled.result.violations]
+    assert [v.message for v in enabled.result.violations] == ["2"]
+    assert memo.read_bytes() == original
