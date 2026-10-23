@@ -106,7 +106,19 @@ mkdir -p "$standalone"
     cd "$standalone"
     unset VIRTUAL_ENV
     uv init --bare --name smoke-standalone --no-workspace >/dev/null
-    uv add --dev "$dist_wheel" "$core_wheel" "$cli_wheel" "$advisory_wheel" >/dev/null
+    uv add --no-build-package pyyaml --dev "$dist_wheel" "$core_wheel" "$cli_wheel" "$advisory_wheel" >/dev/null
+    uv run python -c '
+import yaml
+from devkit_core.core import YamlBindingUnavailableError, safe_load
+assert hasattr(yaml, "CSafeLoader")
+del yaml.CSafeLoader
+try:
+    safe_load("key: value")
+except YamlBindingUnavailableError as exc:
+    assert exc.code == "YAML_BINDING_UNAVAILABLE"
+else:
+    raise AssertionError("missing LibYAML binding was not reported")
+'
     uv run devkit --version
     uv run python -c "
 import importlib.util
@@ -167,7 +179,7 @@ echo "==> tool installation: devkit-dist owns the executable, devkit-agt adds th
 (
     unset VIRTUAL_ENV
     export UV_TOOL_DIR="$work/tools" UV_TOOL_BIN_DIR="$work/tool-bin"
-    uv tool install "$dist_wheel" --with "$devkit_wheel" --with "$core_wheel" --with "$cli_wheel" --with "$advisory_wheel" >/dev/null 2>&1
+    uv tool install "$dist_wheel" --no-build-package pyyaml --with "$devkit_wheel" --with "$core_wheel" --with "$cli_wheel" --with "$advisory_wheel" >/dev/null 2>&1
     "$work/tool-bin/devkit" --version
     "$work/tool-bin/devkit" rules --help >/dev/null
     "$work/tool-bin/devkit" run --help >/dev/null
@@ -178,7 +190,19 @@ echo "==> creating a fresh consumer project"
     cd "$project"
     unset VIRTUAL_ENV
     uv init --bare --name smoke-consumer --no-workspace >/dev/null
-    uv add --dev "$devkit_wheel" "$dist_wheel" "$core_wheel" "$cli_wheel" "$advisory_wheel" "$starter_wheel" "$catalog_wheel" >/dev/null
+    uv add --no-build-package pyyaml --dev "$devkit_wheel" "$dist_wheel" "$core_wheel" "$cli_wheel" "$advisory_wheel" "$starter_wheel" "$catalog_wheel" >/dev/null
+    uv run python -c '
+import yaml
+from devkit_core.core import YamlBindingUnavailableError, safe_load
+assert hasattr(yaml, "CSafeLoader")
+del yaml.CSafeLoader
+try:
+    safe_load("key: value")
+except YamlBindingUnavailableError as exc:
+    assert exc.code == "YAML_BINDING_UNAVAILABLE"
+else:
+    raise AssertionError("missing LibYAML binding was not reported")
+'
     echo "--- devkit --version"
     uv run devkit --version
     uv run python -c "

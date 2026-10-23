@@ -1438,7 +1438,7 @@
     },
     ".devkit/managed/spec/instructions/document-writing.md": {
       "mode": 420,
-      "sha256": "0df69e7b8dd19b57cdb33e5b1cdf20181198947609cc57f630c7f57c98fcc050"
+      "sha256": "cf968a8801612d2722eecae72d0cfd9b21e8c605fac37f41173490391d968ed0"
     },
     ".devkit/managed/spec/instructions/living-spec-writing.md": {
       "mode": 420,

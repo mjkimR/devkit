@@ -42,6 +42,7 @@ from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, m
 from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import BOM, load_header, locate
+from devkit_core.core.yaml import safe_load
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
 from devkit_spec.features.documents import Document, DocumentIndex, in_source_directory, is_document_file
@@ -380,7 +381,7 @@ def _h1_title(body: str) -> str:
 def _scalar(value: str) -> str:
     """``value`` as a YAML scalar that reads back as the same string: plain when it does, else double-quoted."""
     try:
-        if yaml.safe_load(f"k: {value}") == {"k": value}:
+        if safe_load(f"k: {value}", source="frontmatter scalar") == {"k": value}:
             return value
     except yaml.YAMLError:
         pass

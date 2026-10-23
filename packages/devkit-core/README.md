@@ -1,7 +1,7 @@
 # devkit-core
 
 Shared foundation in the independent `devkit_core` Python package. Implementations live in
-`devkit_core.core`: atomic file writes, locks, paths, Git execution, deadlines, frontmatter,
+`devkit_core.core`: atomic file writes, locks, paths, Git execution, deadlines, frontmatter and the shared LibYAML safe parser,
 plugin loading, extension dispatch and logging. Shared errors and SDK-free MCP contracts live in
 `devkit_core.base.errors` and `devkit_core.base.mcp`. The thin `devkit_core.base.usecase.BaseUseCase`
 identifies application entrypoints through an abstract `execute` method. Concrete synchronous or asynchronous

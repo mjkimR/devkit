@@ -25,6 +25,7 @@ from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, m
 from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import locate
+from devkit_core.core.yaml import safe_compose
 
 from devkit_spec.base.errors import EntrypointsPathError
 from devkit_spec.features.documents import Document, DocumentIndex, Kind
@@ -39,7 +40,6 @@ REMEDIATION = (
     "remove obsolete declarations"
 )
 _KINDS = (Kind.CAPABILITY, Kind.USECASE)
-_COMPOSER: type[yaml.SafeLoader] = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 
 
 class CodeEntrypointsRule(BaseRule):
@@ -127,7 +127,7 @@ def _lines(text: str) -> tuple[int, list[int]]:
         return 1, []
     first = text.count("\n", 0, block.header_start) + 1
     try:
-        root: Any = yaml.compose(block.header, Loader=_COMPOSER)
+        root: Any = safe_compose(block.header, source="capability frontmatter")
     except yaml.YAMLError:
         return 1, []
     if not isinstance(root, yaml.MappingNode):

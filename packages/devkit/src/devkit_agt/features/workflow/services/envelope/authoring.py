@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from devkit_core.core.yaml import safe_load
 
 from devkit_agt.features.workflow.models.envelope import Answer, Envelope, Envelopes, Finding, Problem, Question, Settle
 from devkit_agt.features.workflow.models.errors import (
@@ -145,7 +146,7 @@ def parse_resolve_flag(text: str) -> int | None:
 def parse_findings(text: str, kind: str) -> tuple[Finding, ...]:
     """A YAML list of findings; ``issue`` and ``evidence`` are required, ``resolution`` defaults to open."""
     try:
-        data = yaml.safe_load(text)
+        data = safe_load(text, source="--findings-file")
     except yaml.YAMLError as exc:
         raise EnvelopeFindingsError(
             f"--findings-file: yaml: {exc}",
@@ -185,7 +186,7 @@ def parse_findings(text: str, kind: str) -> tuple[Finding, ...]:
 def _items(text: str, flag: str, keys: tuple[str, ...]) -> list[Any]:
     """The YAML list a ``--questions-file`` or ``--answers-file`` holds."""
     try:
-        data = yaml.safe_load(text)
+        data = safe_load(text, source=flag)
     except yaml.YAMLError as exc:
         raise EnvelopeItemsError(
             f"{flag}: yaml: {exc}",

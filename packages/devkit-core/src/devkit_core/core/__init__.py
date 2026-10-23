@@ -9,6 +9,7 @@ from devkit_core.base.errors import (
     LockHeldError,
     LockUnsupportedError,
     UnsafePathError,
+    YamlBindingUnavailableError,
 )
 from devkit_core.core.deadline import Deadline
 from devkit_core.core.files import atomic_write_bytes, atomic_write_text, remove_empty_tree
@@ -24,6 +25,7 @@ from devkit_core.core.plugins import (
     iter_plugin_packages,
     load_subclasses,
 )
+from devkit_core.core.yaml import require_libyaml, safe_compose, safe_load
 
 __all__ = [
     "ArgumentError",
@@ -41,6 +43,7 @@ __all__ = [
     "PluginLoad",
     "PluginPackage",
     "UnsafePathError",
+    "YamlBindingUnavailableError",
     "atomic_write_bytes",
     "atomic_write_text",
     "file_lock",
@@ -49,6 +52,9 @@ __all__ = [
     "load_subclasses",
     "normalize_relpath",
     "remove_empty_tree",
+    "require_libyaml",
     "resolve_within",
     "run_git",
+    "safe_compose",
+    "safe_load",
 ]

@@ -11,9 +11,11 @@ from pathlib import Path
 import yaml
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.worktree import find, locate
+from devkit_core.base.errors import YamlBindingUnavailableError
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import run_git
 from devkit_core.core.frontmatter import parse
+from devkit_core.core.yaml import safe_load
 from devkit_dist.features.project.usecases.configuration import approval_language
 from devkit_dist.features.project.usecases.invocation import guard_execution
 from devkit_dist.features.shared import Artifact, PutRequest, adapter
@@ -114,7 +116,7 @@ def source(root: Path, slug: str, sha: str) -> Source:
                     raise ReportInvalidError("source: PADR identity must match its committed filename")
                 padrs.append(identifier)
             if path.startswith(unit + "envelopes/") and path.endswith((".yaml", ".yml")):
-                record = yaml.safe_load(text)
+                record = safe_load(text, source=path)
                 if not isinstance(record, dict):
                     raise ReportInvalidError("source: invalid committed envelope")
                 coverage.append(Path(path).name)
@@ -134,6 +136,8 @@ def source(root: Path, slug: str, sha: str) -> Source:
             dev_effort,
         )
     except ReportInvalidError:
+        raise
+    except YamlBindingUnavailableError:
         raise
     except (AdvisoryError, ValueError, UnicodeError, yaml.YAMLError) as exc:
         raise ReportInvalidError("source: cannot read the exact committed proposal records") from exc

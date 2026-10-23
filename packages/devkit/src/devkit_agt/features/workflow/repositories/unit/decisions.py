@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from devkit_core.core.yaml import safe_load
 
 from devkit_agt.features.workflow.models.decision_records import _TIME_OF_DAY as _TIME_OF_DAY
 from devkit_agt.features.workflow.models.decision_records import CHECK_PREFIX as CHECK_PREFIX
@@ -162,7 +163,7 @@ def load_decisions(unit_dir: Path) -> Decisions:
         out.max_seq = max(out.max_seq, seq)
         rel = f"{DECISIONS_DIR}/{name}"
         try:
-            data = yaml.safe_load(path.read_text("utf-8"))
+            data = safe_load(path.read_text("utf-8"), source=rel)
             out.records.append(parse_record(data, rel, seq))
         except DecisionRecordError as exc:
             exc.file = rel

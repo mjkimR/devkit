@@ -14,6 +14,7 @@ from typing import Any
 import yaml
 from devkit_core.base.errors import FrontmatterError
 from devkit_core.core.frontmatter import load_header
+from devkit_core.core.yaml import safe_load
 
 from devkit_dist.features.distribution.models.errors import BundleError
 from devkit_dist.features.distribution.services.bundles.common import SHARED_SKILL_AGENTS, locate_frontmatter
@@ -31,18 +32,18 @@ def codex_policy(implicit: bool) -> bytes:
 
 
 def _skill_header(data: bytes, context: str) -> dict[str, Any]:
-    _, block = locate_frontmatter(data, context, "skill")
+    text, block = locate_frontmatter(data, context, "skill")
     if block is None:
         return {}
     try:
-        return load_header(block.header)
+        return load_header(block.header, line_offset=text.count("\n", 0, block.header_start), source=context)
     except FrontmatterError as exc:
         raise BundleError(f"{context}: {exc}") from exc
 
 
 def _codex_settings(data: bytes, context: str) -> dict[str, Any]:
     try:
-        value = yaml.safe_load(data.decode("utf-8"))
+        value = safe_load(data.decode("utf-8"), source=context)
     except (UnicodeError, yaml.YAMLError, RecursionError) as exc:
         raise BundleError(f"{context}: invalid YAML: {exc}") from exc
     if value is None:

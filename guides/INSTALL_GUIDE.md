@@ -66,11 +66,12 @@ pins the commit. Declare exactly one devkit requirement:
 
 ```bash
 # the full harness (the default): distribution plus rules, commit gates, workflows, worktrees and devkit run
-uv add --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
+uv add --no-build-package pyyaml --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
 # or distribution only, when the user wants agent assets without rules, gates or workflows
-uv add --dev "devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist"
+uv add --no-build-package pyyaml --dev "devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist"
 
 uv add --dev "devkit-catalog @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-catalog"
+uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibYAML binding is unavailable'"
 ```
 
 - `devkit-agt` (the default) brings `devkit-dist`, the CLI and every built-in bundle (`devkit`, `advisory` and the
@@ -82,6 +83,8 @@ uv add --dev "devkit-catalog @ git+https://github.com/mjkimR/devkit.git#subdirec
   [recommended bundle](install/bundle-recommendations.md) comes from it.
 - Both packages require Python 3.12 or newer; the project's `requires-python` must allow 3.12 (the route documents
   cover a project that does not).
+- `--no-build-package pyyaml` prevents a new source build; after installation, check the runtime binding because uv
+  can reuse a cached wheel. Compatible binary wheels do not require local LibYAML headers.
 - An approved local integration whose target advanced during its confirmation (`devkit-agt`) merges with
   `git merge-tree --write-tree`, which needs Git 2.38 or newer; older Git refuses only that case
   (`WORKTREE_GIT_UNSUPPORTED`).

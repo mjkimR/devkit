@@ -28,6 +28,7 @@ from devkit.advisory import AdvisoryError
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
+from devkit_core.core.yaml import safe_load
 from devkit_dist.features.search import SearchDocument, SearchIndex, SearchMode, tokenize
 
 from devkit_spec.base.errors import GlossaryInvalidError
@@ -65,7 +66,7 @@ def load_glossary(root: Path) -> dict[tuple[str, ...], list[str]]:
     if not path.is_file():
         return {}
     try:
-        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        data = safe_load(path.read_text(encoding="utf-8"), source=GLOSSARY_PATH) or {}
     except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
         raise GlossaryInvalidError(f"{GLOSSARY_PATH}: {exc}") from exc
     terms = data.get("terms", []) if isinstance(data, dict) else None

@@ -21,6 +21,18 @@ class FrontmatterError(DevkitCoreError):
     input_error = True
 
 
+class YamlBindingUnavailableError(DevkitCoreError):
+    """The current PyYAML installation does not expose its LibYAML safe parser."""
+
+    code = "YAML_BINDING_UNAVAILABLE"
+    actor = Actor.DEVELOPER
+    retry = Retry.AFTER_FIX
+    fix = "Install PyYAML from a compatible binary wheel in the active environment, then rerun the command"
+
+    def __init__(self, source: str = "YAML input") -> None:
+        super().__init__(f"LibYAML's PyYAML binding is unavailable while reading {source}")
+
+
 class ArgumentError(DevkitCoreError, AdvisoryArgumentError):
     """A command argument or library parameter is malformed or names something that does not exist.
 
