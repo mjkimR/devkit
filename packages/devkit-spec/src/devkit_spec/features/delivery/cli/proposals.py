@@ -10,8 +10,10 @@ Text output (paths are relative to the workspace root):
 - ``prune``: ``[PRUNED: <dir>]`` per empty proposal directory removed, else ``[OK: nothing to prune]``.
 - ``report``: ``[PROPOSAL_REVIEW: <uri> source_sha= language= expires_at=]`` after publication; with ``--template``
   the report template Markdown itself (JSON: ``proposal``, ``source_sha``, ``template``) and nothing published.
-- ``accept``: ``[ACCEPTED: <id> form=planning|direct|repair path= status=accepted decision=]``; with ``--check``
-  ``[ACCEPT_CHECK: <id> form= path= eligible=yes pending=<requests>|-]`` and nothing written. Refusals:
+- ``accept``: ``[ACCEPTED: ...]`` with basic Backlog acceptance or composed lifecycle mode, and
+  ``[ACCEPT_CHECK: ...]`` with ``--check`` and nothing written. Composed acceptance reports status, authority and
+  completed effects; refusals and partial effects carry stable advisory codes and exit status.
+  Refusals:
   ``SPEC_PROPOSAL_ACCEPT_REFUSED``, ``SPEC_PROPOSAL_NOT_ELIGIBLE``, ``SPEC_PROPOSAL_WRONG_WORKTREE``,
   ``SPEC_PROPOSAL_GATE_NOT_OPEN``.
 - ``check``: ``[PROPOSAL: <id> path= status=draft editable=yes]`` when Backlog may edit, split or delete the proposal;
@@ -25,7 +27,8 @@ Text output (paths are relative to the workspace root):
   ``[REWRITTEN: <path>:<line> kind=link|id|path from= to=]`` per rewritten link, reference or code-span path, one
   ``[UNRESOLVED_LINK: <path>:<line> kind= target= reason=]`` per link or reference left as it was,
   ``[SCOPE: <task> namespace= ... token=]`` when it registered the bundle's work scope, and
-  ``[NEXT_CMD: devkit workflow next --unit <dir>]`` when ``spec.md`` is bound to a workflow.
+  ``[NEXT_CMD: devkit workflow next --unit <dir>]`` when ``spec.md`` is bound to a workflow. With ``--report-uri``
+  and ``--effort``, it composes Development worktree creation and handoff, reporting status and authority.
 
 A handoff inside a linked worktree registers the new bundle in the work-scope registry (``devkit spec scope
 register``) at either ``[tool.spec] worktree`` level; a registration failure is a ``SPEC_SCOPE_REGISTER_FAILED``
@@ -41,6 +44,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import click
+from devkit.advisory import Actor, AdvisoryError, Level, Retry
 from devkit_dist.adapters.cli import (
     FORMAT_OPTION,
     boundary,
@@ -53,6 +57,9 @@ from devkit_dist.adapters.cli import (
 )
 
 from devkit_spec.features.delivery.usecases.handoff import HandoffProposalUseCase
+from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase
+from devkit_spec.features.delivery.usecases.native_plan_accept import PlanAcceptUseCase
+from devkit_spec.features.proposals.models.axes import EFFORTS
 from devkit_spec.features.proposals.usecases.accept import ACTOR, AcceptProposalUseCase
 from devkit_spec.features.proposals.usecases.backlog import CheckBacklogUseCase
 from devkit_spec.features.proposals.usecases.prune import PruneProposalsUseCase
@@ -61,6 +68,31 @@ from devkit_spec.features.scope.cli.output import echo_registered, registered_di
 from devkit_spec.utils.output import sentinel
 
 WORKSPACE = workspace_option()
+
+
+def _result_advisories(result: dict) -> list[AdvisoryError]:
+    items = list(result.get("errors", [])) + list(result.get("notices", []))
+    handoff = result.get("handoff", {})
+    items.extend(handoff.get("errors", []))
+    items.extend(handoff.get("notices", []))
+    advisories = []
+    for item in items:
+        envelope = item.get("advisory", {})
+        advisories.append(
+            AdvisoryError(
+                item.get("message", "Lifecycle operation reported an advisory"),
+                code=item.get("code"),
+                level=Level(item.get("level", "ERROR")),
+                actor=Actor(envelope.get("actor", "NONE")),
+                retry=Retry(envelope.get("retry", "UNSAFE")),
+                guardrail=bool(envelope.get("guardrail", False)),
+                input_error=bool(envelope.get("input_error", False)),
+                fix=envelope.get("fix"),
+                what_to_report=envelope.get("what_to_report"),
+                target_files=envelope.get("target_files"),
+            )
+        )
+    return advisories
 
 
 @click.group(name="proposal")
@@ -224,6 +256,9 @@ def padr_cmd(
     "no gate:plan-accept record and no worker envelope",
 )
 @click.option("--check", "check_only", is_flag=True, help="Run every check and write nothing")
+@click.option("--report-uri", default=None, help="Exact immutable proposal review report URI for composed acceptance")
+@click.option("--mode", type=click.Choice(["accept_only", "accept_and_handoff"]), default=None)
+@click.option("--effort", type=click.Choice(list(EFFORTS)), default=None)
 @WORKSPACE
 @FORMAT_OPTION
 @boundary
@@ -233,14 +268,46 @@ def accept_cmd(
     note: str,
     direct: bool,
     check_only: bool,
+    report_uri: str | None,
+    mode: str | None,
+    effort: str | None,
     workspace_root: str | None,
     output_format: str,
 ) -> None:
-    """Record the user's acceptance of proposal SLUG: status accepted and gate:plan-accept, in one step.
+    """Accept proposal SLUG; with --report-uri, validate its exact review report and compose lifecycle effects.
 
-    Without --direct: a proposal in review, on its plan-<slug>. With --direct: an eligible draft on the base
-    checkout (Backlog work). Never records plan-intent, commits, merges or hands off.
+    Without --report-uri, preserve the basic Backlog acceptance operation. With --report-uri, --mode selects
+    acceptance only or acceptance plus handoff. Under ask policy this command follows Host conversational approval;
+    policy authority is available only when the retained base declares automatic plan-acceptance.
     """
+    if report_uri is not None:
+        if direct or check_only or mode is None:
+            raise click.UsageError("composed acceptance requires --mode and cannot use --direct or --check")
+        result = PlanAcceptUseCase(resolve_root(workspace_root)).execute(
+            slug, report_uri, mode=mode, effort=effort, by=actor
+        )
+        if is_json(output_format):
+            echo_json(result)
+        else:
+            click.echo(
+                sentinel(
+                    "ACCEPTED",
+                    f"PROP-{slug}",
+                    status=result.get("status", "blocked"),
+                    mode=mode,
+                    authority=result.get("acceptance_authority", "-"),
+                    completed=",".join(result.get("completed_steps", [])) or "-",
+                )
+            )
+            echo_notices(_result_advisories(result))
+        exit_on_warnings(_result_advisories(result))
+        if result.get("status") == "blocked" and not result.get("completed_steps"):
+            raise click.exceptions.Exit(2)
+        if result.get("status") == "needs_recovery" or result.get("errors"):
+            raise click.exceptions.Exit(1)
+        return
+    if mode is not None or effort is not None:
+        raise click.UsageError("--mode and --effort require --report-uri")
     result = AcceptProposalUseCase().execute(
         resolve_root(workspace_root), slug, by=actor, note=note, direct=direct, check=check_only
     )
@@ -273,12 +340,46 @@ def accept_cmd(
 
 @proposal_group.command(name="handoff")
 @click.argument("slug")
+@click.option("--report-uri", default=None, help="Exact immutable proposal review report URI")
+@click.option("--effort", type=click.Choice(list(EFFORTS)), default=None)
 @WORKSPACE
 @FORMAT_OPTION
 @boundary
-def handoff_cmd(slug: str, workspace_root: str | None, output_format: str) -> None:
-    """Hand the accepted proposal SLUG off to a spec bundle sdd-spec-<task_kind> and remove the proposal."""
+def handoff_cmd(
+    slug: str, report_uri: str | None, effort: str | None, workspace_root: str | None, output_format: str
+) -> None:
+    """Hand off SLUG; with report and effort, compose Development worktree creation and handoff."""
     root = resolve_root(workspace_root)
+    if report_uri is not None:
+        if effort is None:
+            raise click.UsageError("composed handoff requires --effort low|medium|high")
+        result = HandoffUseCase(root).execute(slug, report_uri, effort)
+        if is_json(output_format):
+            echo_json(result)
+        else:
+            handoff = result.get("handoff", {})
+            worktree = result.get("worktree", {})
+            click.echo(
+                sentinel(
+                    "HANDOFF",
+                    f"PROP-{slug}",
+                    status=result.get("status", "blocked"),
+                    spec=handoff.get("spec", "-"),
+                    dir=handoff.get("dir", "-"),
+                    worktree=worktree.get("path", "-"),
+                    effort=effort,
+                    authority=result.get("authority", "-"),
+                )
+            )
+            echo_notices(_result_advisories(result))
+        exit_on_warnings(_result_advisories(result))
+        if result.get("status") == "blocked" and not result.get("worktree", {}).get("created"):
+            raise click.exceptions.Exit(2)
+        if result.get("status") == "needs_recovery" or result.get("errors"):
+            raise click.exceptions.Exit(1)
+        return
+    if effort is not None:
+        raise click.UsageError("--effort requires --report-uri")
     completed = HandoffProposalUseCase().execute(root, slug)
     result, registered = completed.handoff, completed.registered
     if is_json(output_format):

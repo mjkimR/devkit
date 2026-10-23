@@ -133,5 +133,5 @@ An eligible local merge that fails reports `WORKTREE_MERGE_FAILED`: inspect Git 
 then resume the remaining approved scope. It is separate from `WORKTREE_MERGE_NOT_FF`, which requires reconciling
 the task branch with the base before preparing fresh approval.
 
-Native approved GitHub integration is `integration_integrate(route="pull-request")`; its pinned merge and leased
-remote cleanup are defined by `CAP-INT-mcp-services`. `devkit worktree finish --merge` does not implement this route.
+Host-approved GitHub integration uses `devkit integration integrate --route pull-request`; its pinned merge and
+leased remote cleanup are defined by `CAP-INT-mcp-services`. `devkit worktree finish --merge` does not implement this route.

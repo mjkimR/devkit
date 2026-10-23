@@ -12,11 +12,13 @@ once. Record only the authority actually given:
 
 - `plan-intent`: an existing explicit task instruction counts;
   `devkit workflow answer --unit <dir> --request gate:plan-intent --action accept --by user`.
-- `plan-accept`: only `devkit spec proposal accept <slug> --by user`. `proposal-handoff` can share its request; each
+- `plan-accept`: after the Host presents the exact report and effects and receives the user's decision, run
+  `devkit spec proposal accept <slug> --report-uri <uri> --mode accept_only|accept_and_handoff --by user`.
+  `proposal-handoff` can share the same conversation; each
   policy stays independent.
 - A decline: `devkit workflow answer --unit <dir> --request gate:<gate> --action decline --by user --note "<decision>"`.
-{% if execution.environment == "local" %}- `dev-integration`: present the verified report and recommend `integration_integrate`, whose native confirmation is
-  the approval (CLI and PR routes: [policy](../../spec/references/completion.md#policy)).
+{% if execution.environment == "local" %}- `dev-integration`: present the verified report and effects, obtain conversational approval, then run
+  `devkit integration integrate` ([policy](../../spec/references/completion.md#policy)).
 {% else %}- `dev-integration`: present the verified report and return it to the Host unless a separately authorized CLI/PR
   route exists ([policy](../../spec/references/completion.md#policy)).
 {% endif %}

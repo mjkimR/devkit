@@ -91,11 +91,11 @@ permission state, without returning environment values or other servers' setting
 
 ## Host workflow
 
-The Host validates worker boundaries, committed scope and required checks, presents the result and calls the native
-approval tool. Workers do not request business approval. No extra chat approval or prepare call is required when
-connected native forms work. Trust/tool/sandbox prompts remain independent. Missing UI is never approval: install
-and connect intentionally, or use an independently authorized explicit CLI/PR route. Real Codex and Claude terminal
-UI validation is separate evidence from simulated protocol tests; desktop and VS Code adapters are outside scope.
+The Host validates worker boundaries, committed scope and required checks, presents the exact report, target and
+effects, obtains conversational approval under `ask`, then invokes lifecycle CLI operations. The CLI revalidates
+source identity and policy but does not authenticate the conversational decision. Workers do not request business
+approval. Shared artifact MCP services retain their existing access rules. Trust, tool and sandbox prompts remain
+independent from business approval.
 
 
 Trusted lifecycle child operations inherit a refusal-only execution constraint naming the original configuration

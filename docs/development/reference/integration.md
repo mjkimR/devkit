@@ -4,28 +4,24 @@ Canonical behavior: `CAP-INT-mcp-services`.
 
 | Interface | Purpose |
 | --- | --- |
-| `devkit integration prepare BRANCH --task-kind unit|session --task-id ID [--unit DIR] [--claims JSON] [-w DIR] [--format json]` | Inspect readiness and exact scope, without approval or integration mutations |
-| MCP `integration_prepare` | Optional preflight in the retained service process; not required before integrate |
-| MCP `integration_integrate` | Normal entry point: prepare, derive shared base auto authority for local execution or obtain native ask confirmation, and execute; no prior chat approval |
-| MCP `integration_status` | Inspect concise progress and observed Git state; detail=true returns full retained diagnostics |
-| MCP `integration_resume` | Recover only the remaining scope of an already approved request in this process |
+| `devkit integration prepare BRANCH --task-kind unit|session --task-id ID [--unit DIR] [--route local|pull-request] [--claims JSON] [-w DIR] [--format json]` | Inspect readiness and exact execution scope without integration mutations |
+| `devkit integration integrate BRANCH --task-kind unit|session --task-id ID [--unit DIR] [--route local|pull-request] [--claims JSON] [-w DIR] [--format json]` | Rebuild scope and execute after Host-carried approval under `ask`, or retained-base policy authority under `auto` |
 | `devkit worktree finish BRANCH --merge --local-only` | Public merge/cleanup operation excluding fetch and push (a merge commit, or a fast-forward under `[worktree] merge = "ff-only"`; the branch must contain the base HEAD); caller supplies existing authority |
 
-Task tools accept `branch`, `task_kind`, `task_id`, optional `unit`, optional `claims`, and `route="local"|"pull-request"` (default local). On the PR route only, `task_id` must contain 1–256 characters matching `[A-Za-z0-9][A-Za-z0-9_.:-]{0,255}`. Status accepts `request_id` and optional boolean `detail` (default false); resume accepts only `request_id`. No tool accepts an approval boolean, arbitrary command, cleanup path or merge strategy:
+The CLI accepts `branch`, `task_kind`, `task_id`, optional `unit`, optional `claims`, and `route=local|pull-request` (default local). On the PR route only, `task_id` must contain 1–256 characters matching `[A-Za-z0-9][A-Za-z0-9_.:-]{0,255}`. No command accepts an approval boolean, arbitrary command, cleanup path or merge strategy:
 the merge method is the project policy (`[worktree] merge`, `ff-only` in either the base's or the source's policy wins).
 
-Shared base `dev-integration="auto"` executes only the local route without elicitation and reports `authority: policy`; ask remains native confirmation. Auto PR and cloud execution refuse, prospective revocation blocks before merge and remaining effects require unchanged policy. Host permissions remain independent. Prepare and source-only policy changes grant no authority.
+Under `ask`, the Host presents the exact report, target and cleanup effects, receives the user's conversational decision, then invokes `integrate`. The CLI revalidates the complete operation but does not authenticate that decision. Shared base `dev-integration="auto"` authorizes only local integration and reports `authority: policy`. Auto PR execution refuses, prospective revocation blocks before merge and remaining effects require unchanged policy. Host permissions remain independent. Prepare and source-only policy changes grant no authority.
 
-The authorizing `integration_integrate` call absorbs target commits that land during the confirmation in one build
-(Git 2.38 or later for `git merge-tree --write-tree`), and waits up to 20 seconds (`LOCK_WAIT`) for another devkit
-integration; `integration_resume` continues only onto the last build target (or the confirmation target when no
-build ran) and never waits for the lock. The result reports the confirmation target, build target and result commit
-under `build`.
+The CLI execution absorbs target commits that land during the Host conversation in one build (Git 2.38 or later for
+`git merge-tree --write-tree`) and waits up to 20 seconds (`LOCK_WAIT`) for another devkit integration. The result
+reports the prepared target, build target and result commit under `build`. After an unknown outcome, inspect
+`devkit worktree status`, Git or PR state. If local merge completed before cleanup failed, rerun
+`devkit worktree finish BRANCH --local-only`; its already-merged guards perform only remaining cleanup.
 
-All four tools return concise scope/progress by default. Internal validation identities, policy hashes, registrations,
-evidence and cleanup revisions remain bound to the request digest and are available through detailed status.
-Partial results retain steps, errors, failing operation, observed state and the latest build. Text and structured MCP
-outputs agree.
+CLI text emits a concise sentinel and JSON emits one result object. Internal validation identities, policy hashes,
+registrations, evidence and cleanup revisions remain bound to the in-memory invocation. Partial results retain steps,
+errors, failing operation, observed state and the latest build.
 
 Public API: `devkit_agt.features.integration` exports `IntegrationService`, `Task`, `IntegrationContext`, `Evidence`, `Readiness`,
 `ReadinessProvider`, `IntegrationRequest`, `IntegrationResult`, `CleanupTarget`, `CleanupScope`, `CleanupResult`,
@@ -42,28 +38,28 @@ and `already_merged`), `plan_finish`, `validate_finish` (`result=`, `target=`), 
 | `INTEGRATION_NOT_READY` | Resolve completion conditions and prepare final committed work |
 | `INTEGRATION_PROVIDER_FAILED` | Repair the installed provider or its evidence contract |
 | `INTEGRATION_REQUEST_STALE` | Inspect completed progress and approve a new request for the remaining scope |
-| `INTEGRATION_TARGET_MOVED` | Nothing changed: resume while the target equals the last build target, else integrate again |
+| `INTEGRATION_TARGET_MOVED` | Merge nothing: merge the current base into the source and obtain fresh Host approval before integrating again |
 | `INTEGRATION_RECEIPT_CONFLICT` | Merge the target into the branch, re-sync, re-verify and integrate again |
 | `INTEGRATION_RECEIPT_READER_CHANGED` | The source changes the receipt reader and its receipt only that reader accepts; restarting the service does not help. With separately granted authority, run the CLI route (`devkit worktree finish <branch> --merge --local-only`) from the source's code |
-| `INTEGRATION_AUTHORITY_REQUIRED` | Read the refusal: auto permits local execution only; resolve prospective policy revocation before retrying, never switch authority to bypass it. Otherwise call integrate for fresh shared-policy authorization or native ask confirmation; resume only an authorized retained request |
+| `INTEGRATION_AUTHORITY_REQUIRED` | Read the refusal: auto permits local execution only; resolve prospective policy revocation before retrying, never switch authority to bypass it. Under ask, present the exact scope and obtain a fresh Host decision before invoking integrate |
 | `INTEGRATION_CLEANUP_UNSCOPED` | Adapt the named legacy post-finish extension before approval |
-| `INTEGRATION_CLEANUP_INCOMPLETE` | Resolve the scoped cleanup condition and resume the same approved request |
+| `INTEGRATION_CLEANUP_INCOMPLETE` | Inspect Git/worktree state; after a verified local landing, run `devkit worktree finish <branch> --local-only` for the remaining guarded cleanup |
 | `INTEGRATION_RUNTIME_IN_WORKTREE` | Move the server runtime to the retained base/installed environment |
 
 Existing worktree/core advisories retain their codes; a build refusal passes its `WORKTREE_*` code through
 (`WORKTREE_MERGE_CONFLICT`, `WORKTREE_GIT_UNSUPPORTED`, `WORKTREE_COMMIT_FAILED`, `WORKTREE_MERGE_NOT_FF`), and
-`LOCK_HELD` from the approving call names `integration_resume` or a new `integration_integrate`. Successful operations return notices; execution failures
-carry structured partial progress. The CLI preparation command follows normal devkit output and exit conventions;
-the MCP adapter returns one structured tool result with its error/advisory data.
+`LOCK_HELD` requires inspection and a fresh invocation after the other devkit integration completes. Successful
+operations return notices; execution failures carry structured partial progress. CLI results follow normal devkit
+output and exit conventions.
 
 The native PR route binds the resolved GitHub repository and source SHA, pushes/creates the PR after approval,
 merges synchronously with a head pin, verifies landing evidence and performs disclosed cleanup. `ff-only` refuses it.
-Pending checks return `INTEGRATION_CHECKS_PENDING` as a successful incomplete result; resume on the same checked
-target. `INTEGRATION_TARGET_MOVED` requires target integration into source, verification and new approval.
+Pending checks return `INTEGRATION_CHECKS_PENDING` as an incomplete result; inspect the pull request and checks before
+invoking another operation. `INTEGRATION_TARGET_MOVED` requires target integration into source, verification and new approval.
 `INTEGRATION_LANDED_UNCHECKED` is a warning: run the provider's landed-target check after cleanup and do not report
 checked integration. `INTEGRATION_SOURCE_NOT_CONTAINED` prevents deletion. Unknown mutations require remote
 inspection before recovery. Network subprocesses have 5-second bounds and each phase a 20-second budget; readiness
-and local checks can outlast host timeouts, leaving the server thread running. Inspect status before retrying.
+and local checks can outlast Host timeouts. Inspect GitHub state before retrying.
 
 | PR route code | Required next action |
 | --- | --- |
@@ -75,17 +71,17 @@ and local checks can outlast host timeouts, leaving the server thread running. I
 | `INTEGRATION_REMOTE_BRANCH_DIVERGED` | Reconcile the remote source without force and prepare again |
 | `INTEGRATION_MERGE_REFUSED` | Resolve required checks, review, conflicts or platform policy and prepare again |
 | `INTEGRATION_MERGE_UNCONFIRMED` | Preserve branches and report unconfirmed merge evidence |
-| `INTEGRATION_STEP_UNKNOWN` | Inspect remote state through status/resume; never repeat an unconfirmed mutation |
-| `INTEGRATION_LOCAL_TARGET_BLOCKED` | Restore a clean fast-forwardable target checkout and resume |
+| `INTEGRATION_STEP_UNKNOWN` | Inspect GitHub state; never repeat an unconfirmed mutation |
+| `INTEGRATION_LOCAL_TARGET_BLOCKED` | Restore a clean fast-forwardable target checkout and inspect the PR state before another invocation |
 | `INTEGRATION_REMOTE_DELETE_BLOCKED` | Preserve the remote branch until changed-head/dependent-PR conditions resolve |
 
 For shared or personal approval/response defaults, set `[presentation] language = "ko"` (`auto`, `en`, `ko`)
 in shared config or ignored `.devkit/config.local.toml`. `devkit config show --effective` reports the requested and
 resolved language, source and fallback; another value falls back to `en`, which `devkit sync`, `devkit status`
 and `devkit config show` report as a `PRESENTATION_LANGUAGE_UNSUPPORTED` warning. Run sync for response-style
-assets; approval forms read per request.
+assets. The Host presents conversational approval in its own language.
 Explicit response-style bundle variables win. See `CAP-DIST-sync-and-transactions` and `CAP-INT-mcp-services`;
 this does not localize host-owned controls or establish visible native Korean form support.
 
 
-Proposal acceptance uses `spec_plan_accept(slug, report_uri)` with explicit accept_only/accept_and_handoff. Its private lifecycle composition never transfers authority to integration_resume; partial recovery requires fresh approval. See `CAP-DLV-proposal-incubation` and `CAP-INT-mcp-services`.
+Proposal acceptance uses `devkit spec proposal accept <slug> --report-uri <uri> --mode accept_only|accept_and_handoff --by user`. Partial effects are recovered from observable state and require fresh Host authority. See `CAP-DLV-proposal-incubation` and `CAP-INT-mcp-services`.

@@ -1,4 +1,4 @@
-"""One native decision for proposal acceptance, checked integration and optional handoff."""
+"""Compose source-bound proposal acceptance and optional handoff for the Host-authorized CLI."""
 
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ from devkit_agt.features.integration.models.contracts import (
     Readiness,
     Task,
 )
+from devkit_agt.features.integration import AuthorityError
 from devkit_agt.features.integration.usecases.service import IntegrationService
 from devkit_agt.features.workflow import Workspace
 from devkit_agt.features.worktree import locate, path_for, read_worktree_config
@@ -41,12 +42,12 @@ from devkit_spec.features.proposals.usecases.scaffold import require_slug
 
 class ProposalApprovalStaleError(SpecError):
     code = "PROPOSAL_APPROVAL_STALE"
-    fix = "Inspect completed effects, refresh the report and request a fresh native approval for remaining effects"
+    fix = "Inspect completed effects, publish a current report and obtain Host authority for the remaining CLI effects"
 
 
 class ProposalApprovalNotReadyError(SpecError):
     code = "PROPOSAL_APPROVAL_NOT_READY"
-    fix = "Resolve the reported Planning prerequisite and publish a fresh report before requesting approval"
+    fix = "Resolve the reported Planning prerequisite and publish a fresh report before invoking the CLI operation"
 
 
 def _proposal_error(error: AdvisoryError) -> AdvisoryError:
@@ -281,6 +282,202 @@ class PlanAcceptUseCase(BaseUseCase):
         self.root = root
         self._lock = asyncio.Lock()
 
+    def execute(
+        self, slug: str, report_uri: str, *, mode: str, effort: str | None = None, by: str = "user"
+    ) -> dict[str, Any]:
+        """Accept and integrate a reviewed proposal after Host-carried approval."""
+        from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase, prepare
+        from devkit_spec.features.proposals.usecases.report import validate_artifact
+
+        self.root = self.root.resolve()
+        slug = require_slug(slug)
+        if mode not in {"accept_only", "accept_and_handoff"}:
+            raise ProposalApprovalNotReadyError("choose accept_only or accept_and_handoff")
+        if mode == "accept_and_handoff" and effort not in EFFORTS:
+            raise ProposalApprovalNotReadyError("choose low, medium or high Development effort")
+        guard_execution()
+        position = locate(self.root)
+        if position.linked or not position.branch or position.branch.startswith(("dev-", "plan-")):
+            raise ProposalApprovalNotReadyError("run the service from the retained base checkout")
+        lifecycle = _Acceptance(self.root, slug, report_uri, mode)
+        integration = IntegrationService(self.root)
+        request = integration._prepare(
+            f"plan-{slug}", Task("unit", f"PROP-{slug}", lifecycle.unit), lifecycle=lifecycle
+        ).request
+        lifecycle.validate(request)
+        automatic = lifecycle.automatic(request)
+        if automatic is not None:
+            lifecycle.select(automatic)
+            authority = "policy"
+        else:
+            if by == "policy":
+                raise AuthorityError("--by policy requires retained plan-accept=auto authority")
+            lifecycle.actor = "user"
+            lifecycle.select({"mode": mode, "activity_effort": effort or lifecycle.effort})
+            authority = "host-conversation"
+        try:
+            result = integration._compose_execute(request, lifecycle, authority)
+        except AdvisoryError as exc:
+            return {
+                "status": "needs_recovery" if lifecycle.completed else "blocked",
+                "completed_steps": lifecycle.completed,
+                "acceptance_sha": lifecycle.acceptance_sha,
+                "errors": [_proposal_error(exc).to_dict()],
+                "next_action": exc.fix,
+            }
+        completed = list(lifecycle.completed)
+        completed += [name for name, state in result.steps.items() if state == "completed"]
+        payload: dict[str, Any] = {
+            "status": result.status,
+            "completed_steps": completed,
+            "source_sha": request.context.finish.source_sha,
+            "acceptance_sha": lifecycle.acceptance_sha,
+            "integration": result.compact_dict(),
+            "errors": [_proposal_error(error).to_dict() for error in result.errors],
+            "activity_effort": lifecycle.effort,
+            "acceptance_authority": lifecycle.actor,
+            "next_action": "Inspect completed effects and resolve the reported integration step",
+        }
+        if result.status != "completed":
+            payload["status"] = "needs_recovery" if completed else "blocked"
+            return payload
+        landed = result.result_sha or request.context.finish.source_sha
+        if _git(self.root, "rev-parse", "HEAD") != landed:
+            return {
+                **payload,
+                "status": "needs_recovery",
+                "landed_sha": landed,
+                "next_action": "Inspect the base and request fresh approval for remaining effects",
+            }
+        payload.update(status="accepted", landed_sha=landed, next_action="Acceptance complete")
+        if lifecycle.mode == "accept_only":
+            return payload
+        try:
+            validate_artifact(self.root, slug, lifecycle.report.metadata.source_sha, report_uri)
+            preview = prepare(self.root, slug)
+            if preview.head != landed:
+                raise ProposalApprovalStaleError("base changed between integration and handoff")
+            handed = HandoffUseCase(self.root)._execute(preview, lifecycle.effort)
+            payload.update(
+                status=handed["status"],
+                handoff=handed,
+                next_action=handed.get("next_command", "Inspect preserved handoff effects"),
+            )
+            if handed["status"] == "handed_off":
+                payload["completed_steps"] += ["worktree_setup", "handoff"]
+                if handed.get("scope_token"):
+                    payload["completed_steps"].append("scope_registration")
+            elif handed.get("worktree", {}).get("created"):
+                payload["completed_steps"].append("worktree_setup")
+            payload["errors"] = handed.get("errors", [])
+            payload["notices"] = handed.get("notices", [])
+        except AdvisoryError as exc:
+            payload.update(status="needs_recovery", errors=[exc.to_dict()], next_action=exc.fix)
+        return payload
+
+    async def execute_async_legacy(
+        self, slug: str, report_uri: str, *, mode: str, effort: str | None = None, by: str = "user"
+    ) -> dict[str, Any]:
+        """Accept and integrate a reviewed proposal after Host-carried approval.
+
+        Under ``ask`` the Host has already presented the report and exact effects and
+        received the conversational decision. This boundary deliberately takes no
+        confirmation callback or approval credential; it revalidates all bound state
+        and derives automatic authority only from the retained base policy.
+        """
+        from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase, prepare
+
+        self.root = self.root.resolve()
+        slug = require_slug(slug)
+        if mode not in {"accept_only", "accept_and_handoff"}:
+            raise ProposalApprovalNotReadyError("choose accept_only or accept_and_handoff")
+        if mode == "accept_and_handoff" and effort not in EFFORTS:
+            raise ProposalApprovalNotReadyError("choose low, medium or high Development effort")
+        guard_execution()
+        self._lock = asyncio.Lock()
+        async with self._lock:
+            position = locate(self.root)
+            if position.linked or not position.branch or position.branch.startswith(("dev-", "plan-")):
+                raise ProposalApprovalNotReadyError("run the service from the retained base checkout")
+            lifecycle = _Acceptance(self.root, slug, report_uri, mode)
+            integration = IntegrationService(self.root)
+            request_result = await asyncio.to_thread(
+                integration._prepare,
+                f"plan-{slug}",
+                Task("unit", f"PROP-{slug}", lifecycle.unit),
+                "local",
+                lifecycle=lifecycle,
+            )
+            request = request_result.request
+            lifecycle.validate(request)
+            automatic = lifecycle.automatic(request)
+            if automatic is not None:
+                lifecycle.select(automatic)
+                authority = "policy"
+            else:
+                if by == "policy":
+                    raise AuthorityError("--by policy requires retained plan-accept=auto authority")
+                lifecycle.actor = "user"
+                selection = {"mode": mode, "activity_effort": effort or lifecycle.effort}
+                lifecycle.select(selection)
+                authority = "host-conversation"
+            try:
+                result = await asyncio.to_thread(integration._compose_execute, request, lifecycle, authority)
+            except AdvisoryError as exc:
+                return {
+                    "status": "needs_recovery" if lifecycle.completed else "blocked",
+                    "completed_steps": lifecycle.completed,
+                    "acceptance_sha": lifecycle.acceptance_sha,
+                    "errors": [_proposal_error(exc).to_dict()],
+                    "next_action": exc.fix,
+                }
+            payload: dict[str, Any] = {
+                "status": result.status,
+                "completed_steps": list(lifecycle.completed),
+                "source_sha": request.context.finish.source_sha,
+                "acceptance_sha": lifecycle.acceptance_sha,
+                "integration": result.compact_dict(),
+                "errors": [_proposal_error(error).to_dict() for error in result.errors],
+                "activity_effort": lifecycle.effort,
+                "acceptance_authority": lifecycle.actor,
+                "next_action": "Inspect completed effects and resolve the reported integration step",
+            }
+            payload["completed_steps"] += [name for name, state in result.steps.items() if state == "completed"]
+            if result.status != "completed":
+                payload["status"] = "needs_recovery" if payload["completed_steps"] else "blocked"
+                return payload
+            landed = result.result_sha or request.context.finish.source_sha
+            if _git(self.root, "rev-parse", "HEAD") != landed:
+                return {
+                    **payload,
+                    "status": "needs_recovery",
+                    "landed_sha": landed,
+                    "next_action": "Inspect the base and request fresh approval for remaining effects",
+                }
+            payload.update(status="accepted", landed_sha=landed, next_action="Acceptance complete")
+            if lifecycle.mode == "accept_only":
+                return payload
+            try:
+                from devkit_spec.features.proposals.usecases.report import validate_artifact
+
+                validate_artifact(self.root, slug, lifecycle.report.metadata.source_sha, report_uri)
+                preview = await asyncio.to_thread(prepare, self.root, slug)
+                if preview.head != landed:
+                    raise ProposalApprovalStaleError("base changed between integration and handoff")
+                handed = await asyncio.to_thread(HandoffUseCase(self.root)._execute, preview, lifecycle.effort)
+                payload.update(
+                    status=handed["status"],
+                    handoff=handed,
+                    next_action=handed.get("next_command", "Inspect preserved handoff effects"),
+                )
+                if handed["status"] == "handed_off":
+                    payload["completed_steps"] += ["worktree_setup", "handoff"]
+                    if handed.get("scope_token"):
+                        payload["completed_steps"].append("scope_registration")
+            except AdvisoryError as exc:
+                payload.update(status="needs_recovery", errors=[exc.to_dict()], next_action=exc.fix)
+            return payload
+
     async def _remaining(self, slug: str, report_uri: str, confirm: Confirmation, mode: str) -> dict:
         from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase, prepare
         from devkit_spec.features.proposals.usecases.report import validate
@@ -342,7 +539,7 @@ class PlanAcceptUseCase(BaseUseCase):
             "next_action": handed.get("next_command", result["next_action"]),
         }
 
-    async def execute(
+    async def execute_native(
         self, slug: str, report_uri: str, confirm: Confirmation, *, mode: str = "accept_and_handoff"
     ) -> dict[str, Any]:
         self.root = self.root.resolve()

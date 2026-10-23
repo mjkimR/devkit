@@ -598,21 +598,21 @@ class ScopeRegisterFailedWarning(ScopeError):
 
 
 class HandoffNotReadyError(SpecError):
-    """The local MCP handoff lacks a clean base or accepted, completed proposal."""
+    """The CLI handoff lacks a clean base or accepted, completed proposal."""
 
     code = "SPEC_HANDOFF_NOT_READY"
-    fix = "Resolve the reported prerequisite in the base checkout, then call spec_handoff again"
+    fix = "Resolve the reported prerequisite in the base checkout, then rerun devkit spec proposal handoff with the current report URI"
 
 
 class HandoffReplyError(SpecError):
-    """An affirmative native handoff reply has no valid activity effort."""
+    """The CLI handoff has no valid activity effort."""
 
     code = "SPEC_HANDOFF_REPLY_INVALID"
-    fix = "Call spec_handoff again and choose low, medium or high in the native form"
+    fix = "Rerun devkit spec proposal handoff with --effort low, --effort medium or --effort high"
 
 
 class HandoffStaleError(SpecError):
     """The approved proposal, base commit or policy changed before handoff."""
 
     code = "SPEC_HANDOFF_STALE"
-    fix = "Inspect the changed base or worktree and call spec_handoff again for a fresh review"
+    fix = "Inspect the changed base or worktree, publish a current report and rerun devkit spec proposal handoff"

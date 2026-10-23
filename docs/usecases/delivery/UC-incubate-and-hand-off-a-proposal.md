@@ -208,14 +208,13 @@ capabilities:
 - **Then**: the proposal is `accepted` with `gate:plan-accept` recorded by `policy`, and the report names the policy,
   never a user approval
 
-### Scenario 12: Native handoff starts Development with a chosen effort
+### Scenario 12: Host-authorized CLI handoff starts Development with a chosen effort
 - **Covers**: 7a
-- **Given**: an accepted proposal on a clean base checkout with native form support, under `proposal-handoff`
-  policy `ask`
-- **When**: the agent calls `spec_handoff` and the user accepts the form with `approve=true` and `activity_effort`
-  `high`
+- **Given**: an accepted proposal on a clean base checkout under `proposal-handoff=ask`
+- **When**: the Host presents the report and setup/worktree effects, receives the user's conversational approval, then
+  runs `devkit spec proposal handoff <slug> --report-uri <uri> --effort high`
 - **Then**: `dev-<slug>` and its worktree exist, the handoff ran there, and the result returns `status=handed_off`
-  with `activity_effort` `high` and the `next_command`; a declined form changes nothing
+  with effort `high`; without the user's decision, the Host does not invoke the command
 
 ### Scenario 13: Approval is never inferred
 - **Covers**: 7b

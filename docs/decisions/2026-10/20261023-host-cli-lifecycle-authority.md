@@ -5,6 +5,9 @@ summary: For Host lifecycle execution in local shells, we accept conversational 
 proposal: SPEC-cli-host-lifecycle
 status: accepted
 created_at: 2026-10-23
+supersedes:
+  - ADR-delivery-decision-boundaries
+  - ADR-local-and-pull-request-integration
 ---
 
 # [ADR-host-cli-lifecycle-authority] Conversational Host authorization for CLI lifecycle execution

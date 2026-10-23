@@ -70,7 +70,7 @@ integrated. It never grants or blocks a write, and it is not exclusive ownership
    removed) is a `SPEC_PROPOSAL_CLEANUP_FAILED` warning whose fix is `devkit spec proposal prune <slug>`, and the
    record removal still runs. When the record removal fails (a malformed `[tool.spec]`, a registry timeout), its
    error (`SPEC_CONFIG_INVALID`, `SPEC_SCOPE_TIMEOUT`, ...) is returned beside the prune notices, devkit reports it as
-   a warning with its own code, and its fix ends with `devkit spec scope sweep --apply` (or `integration_resume` on a partial `IntegrationService` run). Nothing is released before
+   a warning with its own code, and its fix ends with `devkit spec scope sweep --apply` (or `devkit worktree finish <branch> --local-only` after a verified local landing). Nothing is released before
    the finish, so a refused finish leaves the task registered. Rationale: `ADR-worktrees-branches-and-scope`, `SPEC-hook-driven-integration-cleanup`.
 10. **Absolute shared path**: a configured `shared_path` MUST be absolute (a relative path would resolve to a
     different directory in each worktree).
@@ -293,7 +293,7 @@ devkit's `workflow next` and `worktree finish` know nothing of devkit-spec, so t
 - `spec-tasks` after writing `tasks.md`, and `spec-sync` after writing `reconcile.md`, run
   `devkit spec scope update --spec <dir>` in a registered worktree; `SPEC_SCOPE_TOKEN_MISSING` means the worktree
   takes no part and the step is skipped.
-- After `devkit worktree finish` or `integration_integrate` succeeds, its post-finish extension removes the record of the removed worktree (item 9).
+- After `devkit worktree finish` or `devkit integration integrate` succeeds, its post-finish extension removes the record of the removed worktree (item 9).
   `devkit spec scope sweep --apply` removes other stale records; `devkit spec scope release -w <worktree>` withdraws
   an abandoned task.
 

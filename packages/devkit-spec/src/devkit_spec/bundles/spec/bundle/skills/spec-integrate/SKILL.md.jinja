@@ -1,12 +1,12 @@
 ---
 name: spec-integrate
-{% if execution.environment == "local" %}description: Integrate a verified branch by merging the base, re-verify what changed, confirm reconcile, run the cumulative check, then merge via native MCP approval, CLI or PR.
+{% if execution.environment == "local" %}description: Integrate a verified branch by merging the base, re-verify what changed, confirm reconcile, run the cumulative check, then integrate through the Host-authorized CLI or PR route.
 {% else %}description: Integrate a verified branch by merging the base, re-verify what changed, confirm reconcile, run the cumulative check, then use a separately authorized CLI/PR route or return results to the Host.
 {% endif %}---
 
 # spec-integrate: Integration
 
-{% if execution.environment == "local" %}Use this skill for the `integrate` stage: prepare the branch before the native `dev-integration` approval, then merge.
+{% if execution.environment == "local" %}Use this skill for the `integrate` stage: prepare the branch, present the exact integration effects, then invoke the CLI after Host-carried `dev-integration` approval.
 {% else %}Use this skill for the `integrate` stage only with separately existing CLI/PR `dev-integration` authorization; without it, return verified results to the Host.
 {% endif %}Authority and `--given dev-integration`: the `spec` skill's [completion policy](../spec/references/completion.md#policy). Worktree cleanup and finish codes: its [worktree procedure](../spec/references/worktree.md) §3.
 
@@ -24,14 +24,12 @@ Run steps 1 to 4 in the task worktree.
 2. Inspect `git diff --name-only <pre-merge-head> HEAD` and run the repository's affected checks on it (for example `just test-affected --base <base-ref>`). If bundle sources changed, run `devkit sync` and commit its tracked changes before approval. Return a defect beyond integration scope to the build stage.
 3. Re-check the `reconcile.md` targets against the merged impact; if resolution touched contracts, add targets and their docs reflection.
 4. Run `devkit rules check --ci --base <base-ref>` and the repository's required local checks; reuse valid results for unchanged content.
-{% if execution.environment == "local" %}5. Present the verified change report and the merge and cleanup effects, then merge by the policy's route:
-   - Local merge (`pull_request=auto`): from the base checkout, call `integration_integrate` with `branch`, `task_kind="unit"`, `task_id` and `unit` (a session task: `task_kind="session"`, `task_id`, `claims`). It merges, takes in target commits that land during the confirmation, and cleans up.
-   - PR (`pull_request=required`, or chosen under `auto`): the same call with `route="pull-request"`; it pushes, opens or reuses the PR, merges it and cleans up.
-   - On `status: "partial"`, resume with `integration_resume`; after a timeout or an unknown result, call `integration_status` before any recovery. A moved target sends you back to step 1.
-   - When native confirmation is unavailable, use the CLI path below only with the user's conversational `dev-integration` OK; under `auto` there is no CLI substitute.
+{% if execution.environment == "local" %}5. Present the verified change report and the merge and cleanup effects. After the user's conversational OK under `ask`, run `devkit integration integrate <branch> --task-kind unit --task-id <id> --unit <dir> --route local` from the retained base.
+   - Use `--route pull-request` only when `dev-integration=ask` and publication effects have separate authority. `auto` authorizes the local route only.
+   - After an unknown or partial result, inspect `devkit worktree status` and Git or PR state. If the local merge landed, run `devkit worktree finish <branch> --local-only` to perform only remaining guarded cleanup. A moved target requires a fresh review and conversational decision.
 {% else %}5. Present the verified change report and the merge and cleanup effects, then merge by the separately authorized route:
    - PR: before merging, verify the required checks and the unchanged approved source and base; afterwards run `devkit worktree finish <branch>`. Report an incomplete or unknown mutation to the Host.
-{% endif %}   - CLI, with the user's conversational `dev-integration` OK: run `devkit worktree finish <branch> --merge --local-only` in the base checkout, rerun the cumulative check on the result, then declare it: `devkit workflow next --unit <dir> --given dev-integration --given lint-ci-clean --given merged`.
+{% endif %}   - CLI execution revalidates source, target, readiness and cleanup scope in one call; it does not authenticate the conversational decision.
 6. After bundle changes land, run `devkit sync` in the base checkout. Report the result in the conversation (the `spec` skill's `references/envelope.md`, Integration result), naming the actual `dev-integration` authority.
 
 If a retry cap is exceeded or a tool fails, return `exception` with the cause and evidence; do not open a new task to bypass the cap.

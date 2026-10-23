@@ -14,19 +14,18 @@ The constitution defines the boundaries and their `ask|auto` values. Run `devkit
 - Planning integration is part of `plan-accept`; `dev-integration` governs only the final Development result.
 - Neither value bypasses readiness, host restrictions or publication policy, or grants commit or publication authority. After a host refusal, do not switch execution routes to evade it.
 - The Host gives approval after validating worker boundaries, committed scope and required checks; workers return that evidence and never ask for business approval.
-{% if execution.environment == "local" %}- Missing native form UI is not approval: connect it, or use an independently authorized explicit CLI/PR route. Cloud execution cannot use interactive or resume tools.
+{% if execution.environment == "local" %}- Under `ask`, the Host presents the exact source, report, target and effects, obtains the user's conversational decision, then invokes the CLI. CLI invocation alone is not approval, and the CLI does not authenticate the conversation.
 {% else %}- Cloud execution provides CLI inspection and artifact operations only; mutation requires a separately authorized CLI/PR route. Missing authority is a boundary, never approval.
 {% endif %}
 ### `dev-integration`
 
 - `policy=ask`: present the verified result, then obtain the user's OK:
-{% if execution.environment == "local" %}  - Call `integration_integrate` directly; its native confirmation is the OK, bound to the verified source commit, its descendants within that call and the merge and cleanup scope. Ask no separate chat approval and do not require `integration_prepare` first. Do not assert `--given dev-integration` before native acceptance.
-  - CLI fallback: a conversational OK unless already authorized. A PR: its ready state.
+{% if execution.environment == "local" %}  - Present the verified result and cleanup effects, then run `devkit integration integrate <branch> --task-kind unit --task-id <id> --unit <dir> --route local` after the user's conversational OK. A PR route uses `--route pull-request` and requires separate publication authority.
 {% else %}  - Explicit CLI route: a conversational OK unless already authorized. A PR: its ready state.
-{% endif %}  - Never write the OK to a file. Pass `--given dev-integration` to each later `devkit workflow next --unit <dir>`, and name the OK{% if execution.environment == "local" %} (`mcp-elicitation` through `integration_integrate`){% endif %} as the authority in the integration report.
+{% endif %}  - Never write the OK to a file. Pass `--given dev-integration` to each later `devkit workflow next --unit <dir>`, and name the actual conversational or policy authority in the integration report.
   - On an objection, run `devkit workflow return --unit <dir> --to review-refine --note "..."`; an objection about direction is a [close](depth-and-close.md).
 - `policy=auto`: once review, reconciliation and required checks pass, `devkit workflow next` lists `[GATE_PASSED: dev-integration ... source=policy]`, which the integration report cites.
-{% if execution.environment == "local" %}  - Shared base `auto` authorizes verified local merge and exact cleanup through `integration_integrate` after the final report (`authority: policy`, no elicitation); preparation alone grants nothing. Auto PR and cloud execution refuse, and without MCP there is no automatic CLI substitute.
+{% if execution.environment == "local" %}  - Shared base `auto` authorizes verified local merge and exact cleanup through `devkit integration integrate` after the final report (`authority: policy`). The CLI reads authority from the retained base. Auto PR execution remains refused.
 {% else %}  - Shared base `auto` grants no cloud execution, resume or publication authority, and has no automatic CLI substitute: return verified results to the Host unless a separate explicit CLI/PR authorization exists.
 {% endif %}
 ## Reconciliation evidence

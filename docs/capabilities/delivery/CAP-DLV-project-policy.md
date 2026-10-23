@@ -56,7 +56,7 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
    and task intent permits `ask` or `auto`, default `ask`; `off` is `SPEC_CONFIG_INVALID`.
    `plan-intent` records an already instructed task without another confirmation. An uninstructed Backlog item does
    not become authorized merely because an agent discovers it. Main boundaries are independent: direction acceptance
-   may wait in Backlog before Development starts. One native form may explicitly approve acceptance and handoff together.
+   may wait in Backlog before Development starts. The Host may carry one conversational decision across acceptance and handoff when the exact effects are presented together.
    Owning base auto, also retained by the prospective source, delegates only that boundary's verified local effects.
    A task branch cannot authorize itself; revocation stops remaining effects. Authority is reported as `policy`, never
    as a human approval. The Planning acceptance merge belongs to `plan-accept`, not Development's `dev-integration`.

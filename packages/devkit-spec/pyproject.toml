@@ -45,7 +45,7 @@ spec-rejected-proposals = "devkit_spec.features.governance.usecases.hygiene:reje
 spec = "devkit_spec.features.policy.services.config:template"
 
 [project.entry-points."devkit.host.services"]
-spec = "devkit_spec.features.delivery.mcp.handoff:create_tools"
+spec-proposal-report = "devkit_spec.features.proposals.mcp.report:create_tools"
 
 [dependency-groups]
 dev = [

@@ -506,10 +506,10 @@ Include source files needing updates in task/delegation boundaries; otherwise th
 Recheck only resolutions newly made by this task if later changes invalidate evidence. This obligation is independent
 of capture settings and collect-feedback policy and grants no integration authority or additional workflow gate.
 
-Native local Development starts may use `spec_handoff` (`CAP-DLV-proposal-incubation`): its confirmation form shows
-the accepted plan and lets the user override the `dev_effort` hint before the worktree and spec handoff are created.
-The returned `activity_effort` is the run input and is recorded on that run's worker envelope. This supplies the
-local user interaction otherwise provided by an external runner; final integration retains its separate approval.
+Local Development starts use `devkit spec proposal handoff` after the Host presents the accepted proposal, current
+report and worktree/setup effects and receives conversational approval under `ask`. The command returns the selected
+effort as the run input; the worker envelope records that effort. Under `auto`, the command reads the policy from the
+retained base and uses the proposal's declared `dev_effort`. Final integration retains its separate gate.
 
 ## Worker result inspection
 

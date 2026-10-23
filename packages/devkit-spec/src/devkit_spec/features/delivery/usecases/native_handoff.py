@@ -1,4 +1,4 @@
-"""Local Planning-to-Development handoff using the host's native form confirmation."""
+"""Host-authorized, source-bound handoff of a reviewed proposal to Development."""
 
 from __future__ import annotations
 
@@ -115,7 +115,23 @@ class HandoffUseCase(BaseUseCase):
         self.root = root
         self._lock = asyncio.Lock()
 
-    async def execute(self, slug: str, report_uri: str, confirm: Confirmation) -> dict[str, Any]:
+    def execute(self, slug: str, report_uri: str, effort: str) -> dict[str, Any]:
+        """Start Development after Host-carried approval, rechecking the exact report and base."""
+        self.root = self.root.resolve()
+        if effort not in EFFORTS:
+            raise HandoffReplyError("choose low, medium or high Development effort")
+        guard_execution()
+        preview = prepare(self.root, slug, report_uri)
+        validate(self.root, slug, preview.head, report_uri)
+        authority = approval_policy(self.root, "proposal-handoff")
+        if authority not in {"ask", "auto"}:
+            raise HandoffNotReadyError("proposal-handoff policy must be ask or auto")
+        if authority == "auto" and effort != preview.effort:
+            raise HandoffReplyError("automatic handoff must use the proposal's declared dev_effort")
+        result = self._execute(preview, effort)
+        return {**result, "authority": "policy" if authority == "auto" else "host-conversation"}
+
+    async def execute_native(self, slug: str, report_uri: str, confirm: Confirmation) -> dict[str, Any]:
         self.root = self.root.resolve()
         guard_execution()
         async with self._lock:

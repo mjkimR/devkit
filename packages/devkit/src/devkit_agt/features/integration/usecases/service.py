@@ -301,6 +301,26 @@ class IntegrationService:
         result.authority = "mcp-elicitation"
         return await asyncio.to_thread(self._run, request.id, LOCK_WAIT, True)
 
+    def execute_cli(self, branch: str, task: Task, route: str = "local") -> IntegrationResult:
+        """Execute one CLI invocation after Host-carried conversational approval.
+
+        The CLI boundary does not authenticate the conversation or accept a serialized
+        approval assertion. Under ``ask``, invoking this operation is the Host's act
+        after it has presented the prepared scope and received the user's decision.
+        The complete request is prepared again here, then all normal source, target,
+        policy, provider, readiness, lock and cleanup checks run before effects.
+        """
+        guard_execution()
+        result = self.prepare(branch, task, route)
+        request = result.request
+        if request.approval_policy == "auto":
+            result.authority = "policy"
+        else:
+            result.authority = "host-conversation"
+        record = self._record(request.id)
+        record.approved = True
+        return self._run(request.id, LOCK_WAIT, True)
+
     async def _compose(
         self, branch: str, task: Task, lifecycle: AcceptanceLifecycle, confirm: Confirmation
     ) -> IntegrationResult:
@@ -392,7 +412,7 @@ class IntegrationService:
             record = self._record(fresh.request.id)
             with record.lock:
                 record.approved = True
-                fresh.authority = "policy" if ui_action == "policy" else "mcp-elicitation"
+                fresh.authority = "policy" if ui_action == "policy" else "host-conversation"
                 try:
                     return self._execute(record, False)
                 finally:
