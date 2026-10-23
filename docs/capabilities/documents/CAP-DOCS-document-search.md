@@ -1,13 +1,14 @@
 ---
 id: CAP-DOCS-document-search
 title: Document Search
-summary: Defines devkit spec search, which ranks spec documents for a free-text query on top of devkit's lexical, dense and hybrid search, embedding only the ID and English summary, pinning exact IDs and paths, expanding glossary synonyms and narrowing by kind, history and namespace.
+summary: "Defines devkit spec search, which ranks spec documents for a free-text query, expands glossary synonyms through a required LibYAML safe parser, and narrows results by kind, history and namespace."
 area: documents
 status: active
 usecases:
   - UC-find-the-right-documents
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/documents/usecases/search.py
+  - packages/devkit-core/src/devkit_core/core/yaml.py
   - packages/devkit-spec/src/devkit_spec/features/documents/cli/commands.py
 created_at: 2026-10-13
 ---
@@ -44,13 +45,13 @@ expansion. Going from a known ID to its path stays `devkit spec resolve` (`CAP-D
 3. **Pinning**: a query equal to a document's ID, one of its declared `aliases`, its workspace-relative path or file
    name (compared case-insensitively after trimming) MUST put that document first, whatever the ranking, with
    `score=-` (`null` in JSON) and `pinned=yes`. A pinned document is not repeated among the ranked hits.
-4. **Glossary expansion**: the optional, project-owned `docs/glossary.yaml` expands the query. Terms and query are
+4. **Glossary expansion**: the optional, project-owned `docs/glossary.yaml` expands the query through the shared `devkit_core.core.yaml` LibYAML safe parser. Terms and query are
    compared as the words of devkit's `tokenize` (casefolded, split on `-`, `_`, `.` and other non-word characters,
    Latin accents dropped), so `Work_Scope` matches the term `work-scope` and `cafe` the term `café`. When the query
    contains every word of a term of a cluster, consecutively and in order, the whole cluster (`primary` plus
    `synonyms`) is appended, minus terms whose words the query already contains. Useful for terms in another language.
    Terms of different clusters that tokenize to the same words (`C++` and `C#` are both `c`) expand to the union of
-   their clusters, in glossary order, so no cluster is lost. Without the file there is no expansion.
+   their clusters, in glossary order, so no cluster is lost. Without the file there is no expansion. If the PyYAML LibYAML binding is unavailable while reading the file, search MUST fail with `YAML_BINDING_UNAVAILABLE` and exit `2`; it MUST NOT report `SPEC_GLOSSARY_INVALID` or fall back to Python parsing.
 5. **Modes**: `--mode auto` (default) is `hybrid` when devkit's search extra is installed
    (`uv add 'devkit-spec[search]'`, which adds `devkit[search]`), else `lexical`. `lexical`, `dense` and `hybrid`
    force one; an explicit `dense` or `hybrid` without the extra MUST fail with devkit's `SEARCH_EXTRA_MISSING`.
@@ -116,6 +117,7 @@ terms:
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
 | `SPEC_GLOSSARY_INVALID` | `ERROR` (`INPUT_ERROR`) | `GlossaryInvalidError` | `docs/glossary.yaml` cannot be read or is not `terms: [{primary, synonyms}]`. |
+| `YAML_BINDING_UNAVAILABLE` | `ERROR` (execution failure) | `YamlBindingUnavailableError` | PyYAML has no usable LibYAML binding when a YAML read begins; exit `2`, before glossary validation. |
 
 devkit's `SEARCH_EXTRA_MISSING`, `SEARCH_MODEL_NOT_FOUND` and `SEARCH_MODEL_INVALID` pass through for explicit dense
 or hybrid searches; `ARGUMENT_INVALID` for a blank query, a negative `--limit` or an invalid namespace

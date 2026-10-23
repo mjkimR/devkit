@@ -28,7 +28,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from devkit_core.core import FrontmatterError
+from devkit_core.core import FrontmatterError, require_libyaml
 
 from devkit_spec.base.errors import DocumentInvalidWarning, DuplicateIdError, UnresolvedIdError
 from devkit_spec.features.documents.models.ids import Kind
@@ -186,6 +186,7 @@ class DocumentIndex:
         The load reuses the parse memo of ``root`` when there is one; only a load with neither ``files`` nor
         ``read`` writes it, and only when an entry changed.
         """
+        require_libyaml(source="document index")
         index = cls(root=root.resolve())
         memo = ParseMemo.open(index.root, writes=files is None and read is _read)
         items: Iterable[tuple[Path, str]] = (

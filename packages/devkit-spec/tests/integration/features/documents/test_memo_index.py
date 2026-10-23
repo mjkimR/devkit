@@ -12,8 +12,10 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 from click.testing import CliRunner, Result
 from devkit_agt.features.rules.services.testing import check, load_rule
+from devkit_core.core import YamlBindingUnavailableError
 from devkit_dist.cli import cli as devkit_cli
 from spec_support.types import Write
 
@@ -117,6 +119,17 @@ def test_a_warm_memo_parses_nothing_and_equals_a_fresh_build(transient: Path, wr
     warm = _view(_load(transient))
     assert parses == []
     assert warm == _view(_fresh(transient))
+
+
+def test_a_warm_memo_does_not_hide_a_missing_libyaml_binding(
+    transient: Path, write: Write, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _base(write)
+    _load(transient)
+    assert (transient / MEMO).is_file()
+    monkeypatch.delattr(yaml, "CSafeLoader")
+    with pytest.raises(YamlBindingUnavailableError):
+        _load(transient)
 
 
 def _rename(root: Path) -> None:

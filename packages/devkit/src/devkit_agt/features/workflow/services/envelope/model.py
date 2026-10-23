@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from devkit_core.core.yaml import safe_load
 
 from devkit_agt.features.workflow.models.envelope import CLOSABLE as CLOSABLE
 from devkit_agt.features.workflow.models.envelope import WORKER_REF as WORKER_REF
@@ -406,7 +407,7 @@ def parse_envelope_text(name: str, rel: str, text: str) -> Envelope:
     if match is None:
         raise EnvelopeFormatError(f"file name must be <kind>-<NN>.yaml with kind matching {IDENT_HINT}", file=rel)
     try:
-        data = yaml.safe_load(text)
+        data = safe_load(text, source=rel)
     except yaml.YAMLError as exc:
         raise EnvelopeFormatError(f"yaml: {exc}", file=rel) from exc
     return parse_envelope(rel, int(match.group(2)), match.group(1), data)
@@ -447,7 +448,7 @@ def collect_envelopes(files: Iterable[tuple[str, Callable[[], str]]]) -> Envelop
 def _readable_scope(text: str) -> tuple[str, str]:
     """The ``stage`` and ``workflow`` a malformed envelope still states, when its YAML is a mapping."""
     try:
-        data = yaml.safe_load(text)
+        data = safe_load(text, source="envelope YAML")
     except yaml.YAMLError:
         return "", ""
     if not isinstance(data, dict):

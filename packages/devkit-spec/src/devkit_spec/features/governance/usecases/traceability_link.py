@@ -29,6 +29,7 @@ from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
 from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import locate
+from devkit_core.core.yaml import safe_compose
 
 from devkit_spec.features.documents import Document, DocumentIndex, Reference
 from devkit_spec.features.documents.services.namespaces import living_path
@@ -41,7 +42,6 @@ CAPABILITIES_DIRECTORY = "docs/capabilities/"
 # The field of each side that holds the IDs of the other side.
 USECASE_FIELD = "capabilities"
 CAPABILITY_FIELD = "usecases"
-_COMPOSER: type[yaml.SafeLoader] = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 
 
 @dataclass(frozen=True, slots=True)
@@ -175,7 +175,7 @@ def _add_items(text: str, field: str, ids: list[str]) -> str | None:
         return None
     newline = block.newline or "\n"
     try:
-        root = yaml.compose(block.header, Loader=_COMPOSER)
+        root = safe_compose(block.header, source="frontmatter fixer")
     except yaml.YAMLError:
         return None
     if root is None:

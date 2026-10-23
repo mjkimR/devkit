@@ -8,7 +8,7 @@ target: packages/devkit-core/src/devkit_core/core/frontmatter.py and CLI YAML va
 origin: user
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -55,3 +55,7 @@ Strict C accepts a: |# followed by a block body; strict Python raises Frontmatte
 Strict C ignores trailing U+FEFF; strict Python raises FrontmatterError.
 The compatibility guard makes all 2,960 sampled insertion inputs agree.
 ```
+
+## Disposition
+
+Resolved by `SPEC-canonical-libyaml-only`: the inventoried Python YAML value, node and scalar-validation readers now use the shared LibYAML safe boundary, including frontmatter, workflow records, bundle invocation and governance fixers. Missing bindings fail with `YAML_BINDING_UNAVAILABLE` instead of falling back to Python parsing. Verification: `just test-affected` passed (4,887 passed, 12 skipped), `just test-e2e` passed (272 passed, 11 skipped), `just smoke` passed, and targeted workflow, distribution, document and fixer integration suites passed.

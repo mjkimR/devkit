@@ -52,7 +52,7 @@ FORMAT_VERSION = 1
 MEMO_PARTS = (".devkit", "transient", "spec", "document-index.json")
 # The read, parse and codec path: every module of these packages, and these modules.
 FINGERPRINT_PACKAGES = ("devkit_spec.features.documents.models", "devkit_spec.features.documents.repositories")
-FINGERPRINT_MODULES = ("devkit_core.core.frontmatter", "devkit_core.base.errors")
+FINGERPRINT_MODULES = ("devkit_core.core.frontmatter", "devkit_core.core.yaml", "devkit_core.base.errors")
 
 DOCUMENT = "d"
 NO_DOCUMENT = "n"

@@ -81,7 +81,8 @@ Then, for every route (the harness by default; `devkit-dist` instead only for a 
 [Installation Guide, step 3](../INSTALL_GUIDE.md#step-3-package-sources)):
 
 ```bash
-uv add --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
+uv add --no-build-package pyyaml --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
+uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibYAML binding is unavailable'"
 uv run devkit --version
 uv run devkit sync --dry-run --agent <agent>     # plan only: check for SYNC_CONFLICT before any write
 uv run devkit sync --agent <agent>

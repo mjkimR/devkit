@@ -8,6 +8,7 @@ entrypoints:
   - packages/devkit/src/devkit_agt/features/workflow/cli/envelope.py
   - packages/devkit/src/devkit_agt/features/workflow/services/envelope/authoring.py
   - packages/devkit/src/devkit_agt/features/workflow/services/envelope/model.py
+  - packages/devkit-core/src/devkit_core/core/yaml.py
 created_at: 2026-10-17
 usecases:
   - UC-drive-development-to-integration
@@ -22,6 +23,8 @@ usecases:
 ## 1. File Contract
 
 Delegated roles and reviews return a YAML envelope written to `<unit>/envelopes/<kind>-<NN>.yaml`. `kind` matches `[a-z][a-z0-9-]*`; `NN` is a sequence per kind of at least two digits (`01` ... `99`, `100`, ...). The highest sequence is current and earlier files are history. Files are never overwritten; the authoring commands ([Authoring](#2-authoring)) write the next number under the same directory lock as decision records, and writes the file whole (a hidden temporary file that takes its name without replacing a file, `CAP-DLV-human-interaction`), so an interrupted write leaves no partial envelope. Files named `.<name>.<12 hex digits>.tmp` are such temporary files and are never loaded.
+
+Envelope and workflow-decision YAML syntax is parsed through the shared `devkit_core.core.yaml` LibYAML safe boundary. The owning envelope or decision format continues to validate its own schema, fields and empty-document behavior. If the PyYAML C binding is unavailable, the read fails with `YAML_BINDING_UNAVAILABLE` and exit `2` before format validation; malformed YAML continues through the owning format's existing malformed-input behavior.
 
 ```yaml
 kind: review

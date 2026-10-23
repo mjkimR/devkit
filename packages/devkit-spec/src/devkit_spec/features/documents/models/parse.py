@@ -19,7 +19,7 @@ import re
 from typing import Any
 
 import yaml
-from devkit_core.core import FrontmatterError
+from devkit_core.core import FrontmatterError, safe_compose
 from devkit_core.core.frontmatter import load_header, locate
 
 from devkit_spec.features.documents.models.ids import ID_SOURCE, Kind, is_id, is_legacy_id, kind_of
@@ -50,8 +50,8 @@ def parse_document(path: str, text: str) -> Document | None:
     block = locate(text)
     if block is None:
         return None
-    data = load_header(block.header)
     header_line = text.count("\n", 0, block.header_start) + 1
+    data = load_header(block.header, line_offset=header_line - 1, source=path)
     for name in _STRING_FIELDS:
         if name in data and not isinstance(data[name], str):
             raise FrontmatterError(f"{path}: frontmatter {name} must be a string", target_files=[path])
@@ -84,10 +84,6 @@ def parse_document(path: str, text: str) -> Document | None:
     return document
 
 
-# libyaml when PyYAML has it: the header is composed again only for the positions of its values.
-_COMPOSER: type[yaml.SafeLoader] = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
-
-
 def _line_starts(text: str) -> list[int]:
     """The offset of the first character of each line (index 0 is line 1)."""
     starts = [0]
@@ -99,7 +95,7 @@ def _line_starts(text: str) -> list[int]:
 
 
 def _field_nodes(header: str) -> dict[str, yaml.Node]:
-    root = yaml.compose(header, Loader=_COMPOSER)
+    root = safe_compose(header, source="document frontmatter")
     if not isinstance(root, yaml.MappingNode):
         return {}
     return {key.value: value for key, value in root.value if isinstance(key, yaml.ScalarNode)}

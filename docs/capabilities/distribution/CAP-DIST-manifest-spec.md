@@ -6,6 +6,7 @@ area: distribution
 status: active
 entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/
+  - packages/devkit-core/src/devkit_core/core/yaml.py
 created_at: 2026-10-17
 ---
 
@@ -188,6 +189,7 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
   `.md` for `claude-code` and `antigravity`.
 - **Headers**: instruction, playbook and workflow headers and role contracts follow the frontmatter grammar of
   `devkit_core.core.frontmatter` (a `---` opener, a `---` or `...` closer, a YAML mapping without duplicate keys).
+  Python YAML syntax uses `devkit_core.core.yaml` and its LibYAML safe loader. If the PyYAML C binding is unavailable, the read fails with `YAML_BINDING_UNAVAILABLE` and exit `2`; it does not become a `BUNDLE_INVALID` header warning or use Python parsing.
 - **Role contracts**: a `subagent` declared with `source` is a single Markdown file whose frontmatter has `role` equal
   to the asset id, `title`, `description`, a `hosts` table with a block for every supported agent (valid statuses,
   allowlisted keys), and a nonempty body (`CAP-DIST-agent-projections`).

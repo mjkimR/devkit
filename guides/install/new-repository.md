@@ -38,7 +38,8 @@ __pycache__/
 ## 3. Install devkit
 
 ```bash
-uv add --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
+uv add --no-build-package pyyaml --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
+uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibYAML binding is unavailable'"
 uv run devkit --version
 uv run devkit sync --agent <agent> [--agent <agent> ...]
 ```

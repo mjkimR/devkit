@@ -232,7 +232,7 @@ def test_the_fingerprint_covers_versions_and_sources() -> None:
     modules = memo.fingerprint_modules()
     assert "devkit_spec.features.documents.repositories.memo" in modules
     assert "devkit_spec.features.documents.models.parse" in modules
-    assert {"devkit_core.core.frontmatter", "devkit_core.base.errors"} <= set(modules)
+    assert {"devkit_core.core.frontmatter", "devkit_core.core.yaml", "devkit_core.base.errors"} <= set(modules)
     assert memo.fingerprint() == memo.fingerprint() and memo.fingerprint() is not None
     assert yaml.__version__  # part of the fingerprint
 

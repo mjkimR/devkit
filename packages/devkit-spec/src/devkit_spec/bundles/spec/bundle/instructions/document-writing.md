@@ -35,10 +35,17 @@ the domain basics, and lacks only this repository's facts.
 
 Order content by when the reader needs it: purpose, constraints, procedure, completion check, references.
 
-## Related Instructions
+## YAML Frontmatter
+
+- Devkit reads Markdown frontmatter with PyYAML's LibYAML safe parser. Keep frontmatter valid for that parser and use
+  the owning devkit validation command to check it.
+- If a YAML-reading command reports `YAML_BINDING_UNAVAILABLE`, install PyYAML from a compatible binary wheel in the
+  active environment and verify `uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader')"`.
 
 - Read `contract-authoring` when a document states a contract: normative keywords, measurable criteria, Non-Goals.
 - Read `living-spec-writing` when writing under `docs/` or `specs/`: placement, history, summaries, references,
   terminology.
 - Read `decision-writing`, `capability-writing`, `usecase-writing` or `architecture-writing` when writing that
   document kind.
+
+## Related Instructions

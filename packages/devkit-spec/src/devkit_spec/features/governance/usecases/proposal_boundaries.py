@@ -25,6 +25,7 @@ from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
 from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import locate
+from devkit_core.core.yaml import safe_compose
 
 from devkit_spec.base.errors import EntrypointsPathError
 from devkit_spec.features.documents import Document
@@ -45,7 +46,6 @@ REMEDIATION = (
     "name its nearest existing parent directory and the new path in the proposal text"
 )
 PLACEHOLDER_REMEDIATION = "Replace the placeholder with the capability area (for example delivery/) or repository path"
-_COMPOSER: type[yaml.SafeLoader] = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 
 
 class ProposalBoundariesRule(BaseRule):
@@ -166,7 +166,7 @@ class _Lines:
         first = text.count("\n", 0, block.header_start) + 1
         lines = cls(first)
         try:
-            root: Any = yaml.compose(block.header, Loader=_COMPOSER)
+            root: Any = safe_compose(block.header, source="proposal frontmatter")
         except yaml.YAMLError:
             return lines
         if not isinstance(root, yaml.MappingNode):
