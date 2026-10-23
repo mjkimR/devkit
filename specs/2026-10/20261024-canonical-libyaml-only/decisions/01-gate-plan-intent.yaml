@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-canonical-libyaml-only: User requested a proposal for requiring PyYAML''s
+  LibYAML C loader and failing when it is unavailable.'
+by: user
+at: '2026-10-23T16:18:03.558573Z'

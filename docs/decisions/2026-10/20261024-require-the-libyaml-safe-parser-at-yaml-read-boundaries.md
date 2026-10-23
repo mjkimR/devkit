@@ -1,15 +1,15 @@
 ---
-id: PADR-require-the-libyaml-safe-parser-at-yaml-read-boundaries
+id: ADR-require-the-libyaml-safe-parser-at-yaml-read-boundaries
 title: Require the LibYAML safe parser at YAML read boundaries
 summary: "For consistent Python YAML inputs, we require the LibYAML safe loader at read boundaries, to align accepted syntax and diagnostics, accepting loss of Python-parser fallback."
-proposal: PROP-canonical-libyaml-only
-status: draft
+proposal: SPEC-canonical-libyaml-only
+status: accepted
 created_at: 2026-10-24
 ---
 
-# [PADR-require-the-libyaml-safe-parser-at-yaml-read-boundaries] Require the LibYAML safe parser at YAML read boundaries
+# [ADR-require-the-libyaml-safe-parser-at-yaml-read-boundaries] Require the LibYAML safe parser at YAML read boundaries
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-24
 
 ---
@@ -18,7 +18,7 @@ created_at: 2026-10-24
 
 Python YAML readers select different parsers, and the shared frontmatter reader preserves Python acceptance with
 scanner/depth routing and a fallback. Fixers compose nodes separately. A missing optional PyYAML C extension can
-therefore change accepted syntax. `PROP-canonical-libyaml-only` inventories these readers and their failure paths.
+therefore change accepted syntax. `SPEC-canonical-libyaml-only` inventories these readers and their failure paths.
 
 ## 2. Decision Drivers
 

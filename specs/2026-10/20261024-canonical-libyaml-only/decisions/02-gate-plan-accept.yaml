@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-canonical-libyaml-only
+by: user
+at: '2026-10-23T16:18:03.563716Z'
