@@ -2,6 +2,10 @@
 reconcile_id: REC-persistent-python-facts-cache
 status: pending
 targets:
+  - file: docs/decisions/2026-10/20261022-pull-per-file-python-facts.md
+    resolution: modified
+  - file: docs/decisions/2026-10/20261022-persist-python-facts-and-reuse-in-snapshots.md
+    resolution: modified
   - file: docs/capabilities/governance/CAP-GOV-rules-engine.md
     resolution: modified
   - file: docs/capabilities/governance/CAP-GOV-rule-authoring.md
@@ -27,7 +31,7 @@ targets:
 - The library reference documents the supported controls and authoring entrypoints; the glossary registers per-file rule facts.
 - The architecture, usecase-boundaries and advisory rule guides mirror the persistence and failure behavior.
 
-The two accepted ADRs retain their decisions. Existing document memos, shared AST immutability, rule selection,
+The two accepted ADRs were promoted by the inherited approved handoff and are additions in the cumulative branch diff; both are targets here. Development retains their decisions. Existing document memos, shared AST immutability, rule selection,
 receipt verification and public advisory/CLI runtime APIs retain their contracts; no additional contract target is needed.
 Incoming-reference checks covered current governance, gate, distribution, workflow and worktree documents. Their
 selection, receipt and authority promises are unchanged. Completed specs remain history.
@@ -50,3 +54,8 @@ Broad directory and test candidates were rejected as reading doorways. The exist
 rule-authoring cache entrypoints remain sufficient. Lifecycle adds project orchestration; advisory adds its
 static uniqueness rule. Task 2, 4 and 6 boundaries name their concrete implemented files so derive can select
 the doorway files rather than broad directory candidates.
+
+The inherited handoff retires the accepted proposal after preserving its investigation in dated materials and its
+records in the feature unit. Those historical material moves and retired proposal files change no additional
+current contract. The Development baseline, preliminary measurements and final measurements are historical
+evidence, not separate Living Spec capabilities.
