@@ -6,6 +6,7 @@ status: in-progress
 created: 2026-10-24
 related_capabilities:
   - CAP-DOCS-document-model
+  - CAP-DOCS-document-search
   - CAP-DLV-workflow-envelopes
   - CAP-DLV-workflow-definitions
   - CAP-DIST-manifest-spec
@@ -92,6 +93,7 @@ The accepted parser decision is `ADR-require-the-libyaml-safe-parser-at-yaml-rea
 
 - `ADR-require-the-libyaml-safe-parser-at-yaml-read-boundaries`
 - `CAP-DOCS-document-model`
+- `CAP-DOCS-document-search`
 - `CAP-DLV-workflow-envelopes`
 - `CAP-DLV-workflow-definitions`
 - `CAP-DIST-manifest-spec`

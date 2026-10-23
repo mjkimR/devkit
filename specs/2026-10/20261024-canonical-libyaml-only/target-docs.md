@@ -6,6 +6,7 @@ spec: SPEC-canonical-libyaml-only
 created_at: 2026-10-24
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-model.md
+  - file: docs/capabilities/documents/CAP-DOCS-document-search.md
   - file: docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md
   - file: docs/capabilities/delivery/CAP-DLV-workflow-definitions.md
   - file: docs/capabilities/distribution/CAP-DIST-manifest-spec.md
@@ -21,6 +22,7 @@ expand these targets based on the behavior that actually ships.
 
 - `CAP-DOCS-document-model`: specify LibYAML as the required safe parser for Python frontmatter reads, the distinct
   missing-binding execution failure, and preservation of frontmatter validation and parser locations.
+- `CAP-DOCS-document-search`: record the LibYAML boundary for optional glossary expansion and its distinct missing-binding error.
 - `CAP-DLV-workflow-envelopes` and `CAP-DLV-workflow-definitions`: document that workflow YAML syntax is parsed through
   the shared safe boundary while envelope and decision schemas remain format-owned; document how a missing binding
   propagates as an execution failure.
