@@ -22,8 +22,11 @@ Windows wheels do not remove devkit's POSIX locking limitation.
 
 ## Install behavior
 
-Use the documented uv route with `--only-binary pyyaml` to refuse source fallback when no compatible wheel resolves.
-Runtime still checks CSafeLoader because the package dependency cannot express an optional extension.
+Use `--no-build-package pyyaml` with the documented `uv add` and `uv tool install` routes to refuse new source
+builds. Cached source-built wheels can still be reused, so this flag does not certify the extension. Runtime
+checks CSafeLoader because the package dependency cannot express an optional extension.
+See the [uv CLI reference](https://docs.astral.sh/uv/reference/cli/#uv-add--no-build-package); both command help
+outputs were inspected locally. The pip-interface `--only-binary` spelling is not accepted by these project/tool routes.
 An existing pure-Python installation fails at its first YAML operation with `YAML_BINDING_UNAVAILABLE`, exit 2.
 An eligible source build must expose a usable C binding; no automatic toolchain setup is added.
 

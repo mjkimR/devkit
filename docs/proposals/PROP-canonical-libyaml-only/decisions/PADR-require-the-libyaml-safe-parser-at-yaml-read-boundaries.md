@@ -63,5 +63,6 @@ The normal binary-wheel installation route needs no system libyaml development h
 - Document memo tests cover invalidation and cold/warm dependency failure.
 - Existing governance/entrypoint fixer tests verify Unicode positions, comments, line endings and no unsafe writes.
 - Workflow/distribution tests cover standalone and CLI YAML, error propagation and typed-record round trips.
-- Existing installed-wheel smoke scripts cover isolated consumers; review audits production load/compose calls.
+- Existing `tests/e2e/smoke.sh` wheel scenarios cover isolated consumers through the thin `scripts/smoke.sh` entrypoint;
+  review audits production load/compose calls.
 - `just lint-check`, `just check`, `just test-affected`, `just test-dist` and `just smoke` supply Development verification.

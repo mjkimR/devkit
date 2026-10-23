@@ -49,3 +49,8 @@ Run `./.venv/bin/python docs/proposals/PROP-canonical-libyaml-only/materials/pro
 `probe-results.json` records the run before these Planning materials were added to the document corpus.
 The probe compares currently accepted Markdown headers with the existing strict C subclass; it is not the final
 implementation or exhaustive coverage. It does not execute fixers, installed consumers or foreign-platform wheels.
+
+## Installed-consumer verification owner
+
+`just smoke` enters `scripts/smoke.sh`, a thin exec wrapper. Existing dist-only and harness wheel scenarios live in
+`tests/e2e/smoke.sh`; extend those scenarios for AC-6 rather than placing test logic in the wrapper.

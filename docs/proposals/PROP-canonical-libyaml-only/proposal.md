@@ -28,7 +28,8 @@ boundaries:
     - docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md
     - docs/capabilities/delivery/CAP-DLV-workflow-definitions.md
     - docs/capabilities/distribution/CAP-DIST-manifest-spec.md
-    - scripts/
+    - scripts/smoke.sh
+    - tests/e2e/smoke.sh
   excludes:
     - docs/decisions/
     - packages/devkit-viewer/frontend/
@@ -67,8 +68,9 @@ The reference also has Windows wheels, but this work does not promise Windows su
 See `materials/installation.md` for exact evidence and exclusions.
 
 Use a compatible PyYAML binary wheel as the normal installation route; no system libyaml development package is
-needed for that route. Installation guides SHOULD show `--only-binary pyyaml` on the documented uv installation
-route so an absent wheel stops resolution instead of silently building a pure-Python package.
+needed for that route. Installation guides SHOULD show `--no-build-package pyyaml` on the documented `uv add` and
+`uv tool install` routes to refuse new PyYAML source builds. Cached source-built wheels can still be reused,
+so this option does not prove C availability; the runtime binding check remains authoritative.
 An existing source-built installation is eligible only when `yaml.CSafeLoader` is usable.
 Source-build troubleshooting is an exception route, not a new supported build matrix.
 No package-version upper bound or new Python/platform support promise is introduced.
@@ -142,7 +144,8 @@ Use one shared implementation boundary while leaving format schemas and serializ
 2. Migrate standalone readers and node consumers. Update index memo fingerprints to include the shared module and
    check availability before warm-cache use. Verify error propagation and no writes on dependency failure.
 3. Verify fixers and generated YAML round trips, including Unicode marks, comments, quoted text and line endings.
-   Add installed-wheel consumer coverage through the existing scripts smoke path, including dist without agt.
+   Add installed-wheel consumer coverage in the existing `tests/e2e/smoke.sh` scenarios, including dist without agt.
+   Keep `scripts/smoke.sh` as the thin entrypoint.
 4. Reconcile the affected contracts and installation guide. Update source agent guidance and run normal sync;
    generated deployment receipts and projections are only outputs of that tool, never manually edited sources.
 
@@ -157,6 +160,13 @@ Use one shared implementation boundary while leaving format schemas and serializ
 | AC-5 | Given a previously persisted memo, when the shared parser implementation changes, then the fingerprint invalidates it. A warm memo cannot hide a missing binding. |
 | AC-6 | Given installed wheels and the documented installation route, when the smoke consumer parses YAML, then CSafeLoader is present and parsing succeeds; a simulated missing binding returns the same execution advisory for dist-only and harness consumers. |
 | AC-7 | Given typed CLI record creation and scalar quoting, when the emitted YAML is read through C parsing, then typed values and existing schema validation hold. Guidance names the canonical syntax and supported installation route. |
+
+### Challenger review disposition
+
+The medium Challenger pass found two P2 issues: an unsupported uv install option and an omitted installed-consumer
+scenario owner. Both are folded into this proposal. The documented routes use `--no-build-package pyyaml`, with
+runtime checks authoritative for cached wheels. Development owns `tests/e2e/smoke.sh` for the existing scenarios.
+The Host reverifies those changes; no findings are waived and no design question remains open.
 
 ### Contract reconciliation
 
