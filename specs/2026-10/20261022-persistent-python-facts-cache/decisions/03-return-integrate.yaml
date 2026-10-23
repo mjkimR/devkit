@@ -1,0 +1,8 @@
+request: return:integrate
+kind: return
+action: accept
+workflow: sdd-spec-feature
+stage: integrate
+note: Native integration readiness refused source rules under the retained base runtime;
+  no merge or cleanup occurred.
+at: '2026-10-23T01:37:50.140612Z'
