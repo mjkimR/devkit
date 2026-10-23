@@ -1,53 +1,105 @@
 ---
 id: SPEC-persistent-python-facts-cache
 title: Persist per-file rule facts between runs
-summary: Lets Python-source rules declare a per-file facts function whose results persist between runs keyed by content digest, so a rules run parses and walks only changed files.
+summary: "Reuses rule-owned per-file Python facts between processes while preserving discovery, judgment and snapshot authority."
 status: planned
 created: 2026-10-22
-related_capabilities: []
+related_capabilities: [CAP-GOV-rules-engine, CAP-GOV-rule-authoring, CAP-GOV-evaluation-lifecycle, CAP-ADV-agent-advisory-protocol]
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-persistent-python-facts-cache] Persist per-file rule facts between runs
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-persistent-python-facts-cache on 2026-10-22.
-- **Preserved Materials**: `docs/materials/2026-10/20261022-persistent-python-facts-cache`
+Repeated CLI processes discard shared Python ASTs and node indexes. Persist rule-owned extraction while rerunning
+file discovery, settings and cross-file judgment. Planning's synthetic JSON measurements do not establish actual
+lookup latency or end-to-end savings. The preserved investigation is in
+`docs/materials/2026-10/20261022-persistent-python-facts-cache/`.
 
-### 1. Background & Hypothesis
-
-Repeated CLI processes discard `WorkspaceCache`'s shared Python AST and node index. The baseline in
-[the baseline measurements](../../../docs/materials/2026-10/20261022-persistent-python-facts-cache/measurements.md) identifies extraction as a candidate
-cost, but does not measure an implemented persistent facts path. Its 0.84 ms number is synthetic JSON decoding,
-not total lookup latency. Separately cold rule measurements can double-count AST work shared in a real evaluation;
-the claimed 6.0 s to 1.8–2.0 s reduction is not established by the measured 2.5 s difference.
-
-Hypothesis: persist rule-owned, per-file facts while rerunning file discovery, configuration and cross-file judgment.
-Every finding, location, ordering, severity, fix behavior, advisory and exit code must match cache-disabled execution.
-`ADR-pull-per-file-python-facts` defines the extraction boundary;
-`ADR-persist-python-facts-and-reuse-in-snapshots` defines storage and snapshot reuse.
+The accepted decisions are `ADR-pull-per-file-python-facts` and
+`ADR-persist-python-facts-and-reuse-in-snapshots`.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Persist per-file rule facts between runs so that system capabilities are extended.
+- **US-1**: As a rule author, I can declare a typed per-file extractor and JSON codec without changing rule scheduling.
+- **US-2**: As an agent, I can reuse unchanged extraction across checks and snapshots with identical results.
+- **US-3**: As a maintainer, I can measure actual process savings and delete derived state without changing behavior.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+**Scope Excluded**: persistent ASTs or pickle, cached judgments, automatic dependency discovery, mtime fast paths,
+cross-worktree stores, document-memo changes, CLI/configuration flags, and migration of other Python rules.
+The public `devkit.advisory` and `devkit_cli` runtime APIs remain outside this feature.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Fresh-run equivalence
 
-## 5. Carried Proposal Notes
+- **Given** the approved three-rule migration and an equivalent cache-disabled execution.
+- **When** the following verification cases run.
+- **Then** compare enabled and disabled evaluation for all three migrated rules on fixtures
+  exercising imports/re-exports, dynamic imports, relative imports, package layout, advisory inherited codes,
+  imported constants, scoped lazy imports, usecase constructors/annotations/aliases and raw callbacks. Compare
+  full violation values/order and CLI advisories/exit codes, including settings and exclusions changes with warm facts.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] Identity
+
+- **Given** the approved three-rule migration and an equivalent cache-disabled execution.
+- **When** the following verification cases run.
+- **Then** edit with restored mtime and same size, rename, delete, change branch and return, change context
+  and rule/helper/framework/codec source, schema or Python version; every result equals a disabled run. BOM,
+  PEP 263 source, invalid bytes and syntax errors preserve existing rule behavior. Extraction failures propagate as
+  before and are never persisted as a successful empty result.
+
+### [AC-03] Extraction reuse
+
+- **Given** the approved three-rule migration and an equivalent cache-disabled execution.
+- **When** the following verification cases run.
+- **Then** in separate processes, a fully warm run invokes none of the three migrated extractors
+  and makes no AST/node requests for their fact acquisition. Editing one source re-extracts only that source for
+  each consuming descriptor. Other rules may still parse it; no global zero-AST claim is made.
+
+### [AC-04] Safe persistence
+
+- **Given** the approved three-rule migration and an equivalent cache-disabled execution.
+- **When** the following verification cases run.
+- **Then** corrupt or wrong-shaped JSON/entries, mismatched fingerprints, unsupported schema,
+  unreadable sources and unwritable/non-regular/symlink memo locations fall back without changed results, new
+  advisories or exit status. Test atomic concurrent writers, no steady-state write, partial-run preservation and
+  bounded full-run pruning. Warm several files, abort enumeration early through a caught source error, and verify
+  unseen entries survive; only an explicitly completed path set permits pruning. Invalid encoder values bypass
+  persistence; extractor errors retain prior semantics.
+
+### [AC-05] Snapshot isolation
+
+- **Given** the approved three-rule migration and an equivalent cache-disabled execution.
+- **When** the following verification cases run.
+- **Then** warm the host memo, then run materialized and in-place staged and CI snapshots with
+  different unstaged source and rule/helper code. Hits require snapshot identities; misses compute from the snapshot.
+  Assert the host memo and temporary snapshot memo paths are unchanged or absent. Run the existing receipt-tamper
+  and snapshot-scoping tests to prove reuse did not bypass rule loading checks.
+
+### [AC-06] Rechecks and mutation
+
+- **Given** the approved three-rule migration and an equivalent cache-disabled execution.
+- **When** the following verification cases run.
+- **Then** warm facts, apply fixes/dry-run fixes and explicit invalidations, then compare
+  rechecks against disabled execution; neither facts nor cross-file judgments retain the previous bytes/context.
+
+### [AC-07] Performance evidence
+
+- **Given** the approved three-rule migration and an equivalent cache-disabled execution.
+- **When** the following verification cases run.
+- **Then** before refactoring, record a reproducible baseline on the Development branch.
+  Compare disabled, cold-store and warm-store fresh processes using identical policy/inputs and at least five timed
+  samples per mode. Report median end-to-end time, extraction counts, source read/hash, fingerprint, JSON load,
+  judgment, write time and memo size for a full check, one-file edit and snapshot check. Target a warm full-check
+  median at least 20% below disabled execution; if unmet, revisit the design before claiming the hypothesis proved.
+  Neither <1 ms total load nor 1.8–2.0 s full execution is an accepted performance claim.
+
+## 5. Implementation Constraints
 
 ### 2. Technical Spike Results
 
@@ -90,38 +142,6 @@ Sections of the proposal that did not map to a spec section. Trim or promote the
    `CAP-ADV-agent-advisory-protocol`, the rules library reference and affected rule guides. Register per-file rule facts in
    the glossary. PADRs become ADRs at handoff; no existing ADR is rewritten by Planning.
 
-#### Development verification criteria
-
-- **AC1 — Fresh-run equivalence**: compare enabled and disabled evaluation for all three migrated rules on fixtures
-  exercising imports/re-exports, dynamic imports, relative imports, package layout, advisory inherited codes,
-  imported constants, scoped lazy imports, usecase constructors/annotations/aliases and raw callbacks. Compare
-  full violation values/order and CLI advisories/exit codes, including settings and exclusions changes with warm facts.
-- **AC2 — Identity**: edit with restored mtime and same size, rename, delete, change branch and return, change context
-  and rule/helper/framework/codec source, schema or Python version; every result equals a disabled run. BOM,
-  PEP 263 source, invalid bytes and syntax errors preserve existing rule behavior. Extraction failures propagate as
-  before and are never persisted as a successful empty result.
-- **AC3 — Extraction reuse**: in separate processes, a fully warm run invokes none of the three migrated extractors
-  and makes no AST/node requests for their fact acquisition. Editing one source re-extracts only that source for
-  each consuming descriptor. Other rules may still parse it; no global zero-AST claim is made.
-- **AC4 — Safe persistence**: corrupt or wrong-shaped JSON/entries, mismatched fingerprints, unsupported schema,
-  unreadable sources and unwritable/non-regular/symlink memo locations fall back without changed results, new
-  advisories or exit status. Test atomic concurrent writers, no steady-state write, partial-run preservation and
-  bounded full-run pruning. Warm several files, abort enumeration early through a caught source error, and verify
-  unseen entries survive; only an explicitly completed path set permits pruning. Invalid encoder values bypass
-  persistence; extractor errors retain prior semantics.
-- **AC5 — Snapshot isolation**: warm the host memo, then run materialized and in-place staged and CI snapshots with
-  different unstaged source and rule/helper code. Hits require snapshot identities; misses compute from the snapshot.
-  Assert the host memo and temporary snapshot memo paths are unchanged or absent. Run the existing receipt-tamper
-  and snapshot-scoping tests to prove reuse did not bypass rule loading checks.
-- **AC6 — Rechecks and mutation**: warm facts, apply fixes/dry-run fixes and explicit invalidations, then compare
-  rechecks against disabled execution; neither facts nor cross-file judgments retain the previous bytes/context.
-- **AC7 — Performance evidence**: before refactoring, record a reproducible baseline on the Development branch.
-  Compare disabled, cold-store and warm-store fresh processes using identical policy/inputs and at least five timed
-  samples per mode. Report median end-to-end time, extraction counts, source read/hash, fingerprint, JSON load,
-  judgment, write time and memo size for a full check, one-file edit and snapshot check. Target a warm full-check
-  median at least 20% below disabled execution; if unmet, revisit the design before claiming the hypothesis proved.
-  Neither <1 ms total load nor 1.8–2.0 s full execution is an accepted performance claim.
-
 #### Boundaries and Non-Goals
 
 The expanded boundaries include the actual rule owners and their co-located tests. Engine tests belong in
@@ -149,9 +169,3 @@ migration of other Python rules. Cache-disabled execution is an internal test/li
   facts; advisory facts; usecase facts; snapshot isolation and equivalence/performance checks; Living Spec reflection.
   Handoff creates the feature spec, technical plan and independently verifiable tasks; Planning changes no production code.
 
-### 5. Lifecycle & Retirement Criteria
-
-Planning is ready for `plan-accept` after Scout evidence, Challenger findings and closures, proposal boundary checks,
-feedback coverage and a committed worker record. Acceptance approves the two PADRs and expanded Development scope.
-Development requires the separate `proposal-handoff` approval. If benchmarks do not validate the hypothesis, return
-with evidence and revise the direction instead of substituting synthetic JSON timing for an implemented result.
