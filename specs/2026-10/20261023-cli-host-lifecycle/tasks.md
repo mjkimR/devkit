@@ -9,7 +9,7 @@ plan: PLAN-cli-host-lifecycle
 ## Phase 1: Lifecycle CLI operations
 
 - [x] **Task 1**: Compose proposal acceptance and handoff through CLI use cases
-  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py`, `packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py`, `packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py`, `packages/devkit-spec/src/devkit_spec/features/proposals/cli/`, `packages/devkit-spec/src/devkit_spec/features/proposals/usecases/`, `packages/devkit-spec/src/devkit_spec/base/errors.py`, `packages/devkit-spec/tests/integration/features/delivery/`, `packages/devkit-spec/tests/integration/features/proposals/`, `packages/devkit-spec/tests/e2e/features/delivery/`
+  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py`, `packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py`, `packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py`, `packages/devkit-spec/src/devkit_spec/features/proposals/cli/`, `packages/devkit-spec/src/devkit_spec/features/proposals/usecases/`, `packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py`, `packages/devkit-spec/src/devkit_spec/base/errors.py`, `packages/devkit-spec/tests/integration/features/delivery/`, `packages/devkit-spec/tests/integration/features/proposals/`, `packages/devkit-spec/tests/e2e/features/delivery/`
   - _Requirements: AC-01, AC-02, AC-03, AC-05, AC-09_
   - **Verification**: `just test devkit-spec tests/integration/features/proposals/ tests/integration/features/delivery/ tests/e2e/features/delivery/`
 

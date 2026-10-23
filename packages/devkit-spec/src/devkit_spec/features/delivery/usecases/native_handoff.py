@@ -152,7 +152,7 @@ class HandoffUseCase(BaseUseCase):
             guard_execution()
             effort = reply.content.get("activity_effort")
             if effort not in EFFORTS:
-                raise HandoffReplyError("choose low, medium or high in the native form")
+                raise HandoffReplyError("Host approval must include a Development effort of low, medium or high")
             result = await asyncio.to_thread(self._execute, preview, effort)
             return {**result, "authority": "user"}
 

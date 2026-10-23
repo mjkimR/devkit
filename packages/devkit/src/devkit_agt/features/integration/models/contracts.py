@@ -56,8 +56,8 @@ class Readiness:
 
     ``target_bound`` names the evidence codes whose values may change when the target advances (all other evidence
     must equal the approved evidence at each build); ``disclosure`` is the one-line, at most 200-character statement
-    of what the provider checks on the merged result, shown in the confirmation form. Both are part of the approved
-    request digest.
+    of what the provider checks on the merged result, included in the report the Host presents before approval. Both
+    are part of the request digest.
     """
 
     source_sha: str
