@@ -120,3 +120,44 @@ def test_accept_cli_refuses_changed_report_before_writing(pending):
     assert result.exit_code == 2
     assert "PROPOSAL_REVIEW" in result.output
     assert git(repo, "show-ref") == before and planning.exists()
+
+
+def test_accept_cli_uses_plan_accept_auto_when_development_remains_ask(pending):
+    repo, planning, _uri = pending
+    config = repo / ".devkit/config.toml"
+    config.write_text(config.read_text() + '\n[workflow.approvals]\nplan-accept = "auto"\ndev-integration = "ask"\n')
+    git(repo, "add", ".devkit/config.toml")
+    git(repo, "commit", "-m", "Delegate proposal acceptance to policy")
+    git(planning, "merge", "--no-edit", "main")
+    source_sha = git(planning, "rev-parse", "HEAD")
+    body = template(planning, "idea", source_sha)
+    body = (
+        "\n".join(
+            line + "\nEvidence reviewed." if line.startswith(("## ", "#### ")) else line for line in body.splitlines()
+        )
+        + "\n"
+    )
+    uri = publish(planning, "idea", source_sha, body).metadata.artifact_uri
+
+    result = CliRunner().invoke(
+        proposal_group,
+        [
+            "accept",
+            "idea",
+            "--by",
+            "policy",
+            "--report-uri",
+            uri,
+            "--mode",
+            "accept_only",
+            "-w",
+            str(repo),
+            "--format",
+            "json",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["status"] == "accepted"
+    assert payload["acceptance_authority"] == "policy"

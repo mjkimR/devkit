@@ -214,6 +214,18 @@ def test_mcp_exposes_report_publication_but_not_template(repo):
     assert sha
 
 
+def test_composed_handoff_advisories_are_emitted_once():
+    from devkit_spec.features.delivery.cli.proposals import _result_advisories
+
+    advisory = {
+        "code": "SPEC_SCOPE_REGISTER_FAILED",
+        "message": "scope registration failed",
+        "level": "WARNING",
+        "advisory": {"actor": "USER", "retry": "SAFE"},
+    }
+    assert len(_result_advisories({"notices": [advisory], "handoff": {"notices": [advisory]}})) == 1
+
+
 @pytest.mark.parametrize(
     ("old", "new", "prefix", "named"),
     [

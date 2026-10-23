@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from devkit.advisory import AdvisoryError
+from devkit_agt.features.integration import AuthorityError
 from devkit_agt.features.integration.models.contracts import (
     Evidence,
     IntegrationContext,
@@ -17,7 +18,6 @@ from devkit_agt.features.integration.models.contracts import (
     Readiness,
     Task,
 )
-from devkit_agt.features.integration import AuthorityError
 from devkit_agt.features.integration.usecases.service import IntegrationService
 from devkit_agt.features.workflow import Workspace
 from devkit_agt.features.worktree import locate, path_for, read_worktree_config
@@ -302,7 +302,10 @@ class PlanAcceptUseCase(BaseUseCase):
         lifecycle = _Acceptance(self.root, slug, report_uri, mode)
         integration = IntegrationService(self.root)
         request = integration._prepare(
-            f"plan-{slug}", Task("unit", f"PROP-{slug}", lifecycle.unit), lifecycle=lifecycle
+            f"plan-{slug}",
+            Task("unit", f"PROP-{slug}", lifecycle.unit),
+            lifecycle=lifecycle,
+            approval_gate=lifecycle.approval_gate,
         ).request
         lifecycle.validate(request)
         automatic = lifecycle.automatic(request)

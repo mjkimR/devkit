@@ -72,9 +72,9 @@ WORKSPACE = workspace_option()
 
 def _result_advisories(result: dict) -> list[AdvisoryError]:
     items = list(result.get("errors", [])) + list(result.get("notices", []))
-    handoff = result.get("handoff", {})
-    items.extend(handoff.get("errors", []))
-    items.extend(handoff.get("notices", []))
+    if not items:
+        handoff = result.get("handoff", {})
+        items = list(handoff.get("errors", [])) + list(handoff.get("notices", []))
     advisories = []
     for item in items:
         envelope = item.get("advisory", {})
