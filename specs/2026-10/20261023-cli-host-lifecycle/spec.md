@@ -2,7 +2,7 @@
 id: SPEC-cli-host-lifecycle
 title: CLI execution for Host lifecycle operations
 summary: "The Host accepts and hands off proposals and integrates verified Development work through CLI operations with source-bound validation. Under ask, the Host carries conversational approval; shared-resource MCP remains available."
-status: planned
+status: in-progress
 created: 2026-10-23
 related_capabilities:
   - CAP-DLV-proposal-incubation
