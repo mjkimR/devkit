@@ -2,7 +2,7 @@
 id: PROP-canonical-libyaml-only
 title: Require libyaml for consistent YAML parsing
 summary: "Require PyYAML LibYAML safe parsing for Python runtime frontmatter and standalone YAML inputs. Define installation eligibility, distinct missing-binding failures, and parser and fixer verification."
-status: reviewing
+status: accepted
 created_at: 2026-10-23
 target_area: capabilities/documents/
 priority: medium                      # critical | high | medium | low
