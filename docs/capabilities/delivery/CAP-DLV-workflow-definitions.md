@@ -4,6 +4,8 @@ title: "Workflow Definitions and Checks"
 summary: "Workflow schema, stage definitions, entry and exit checks, and workflow ID bindings."
 area: delivery
 status: active
+entrypoints:
+  - packages/devkit-core/src/devkit_core/core/yaml.py
 created_at: 2026-10-17
 ---
 
@@ -14,7 +16,7 @@ created_at: 2026-10-17
 
 ## 1. Workflow Definition File
 
-A definition is a Markdown file in `definitions_dir` (default `.devkit/workflows/`) or a synchronized `kind = "workflow"` asset. Only the YAML frontmatter is parsed; the body holds prose gate rules.
+A definition is a Markdown file in `definitions_dir` (default `.devkit/workflows/`) or a synchronized `kind = "workflow"` asset. Only the YAML frontmatter is parsed; the body holds prose gate rules. Python YAML syntax is read through `devkit_core.core.yaml` with PyYAML's LibYAML safe loader. If its C binding is unavailable, the read fails with `YAML_BINDING_UNAVAILABLE` and exit `2`; the definition is not reported as malformed workflow input.
 
 ```markdown
 ---

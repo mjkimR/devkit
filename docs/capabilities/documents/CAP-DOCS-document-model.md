@@ -1,7 +1,7 @@
 ---
 id: CAP-DOCS-document-model
 title: Document Model
-summary: "Defines Markdown document identity, references and indexing, including typed direct unit prerequisites, terminal completed targets and proposal-only milestone membership and plain body closure assertions."
+summary: "Defines Markdown document identity, references and indexing with a required LibYAML safe parser for frontmatter, including strict schema checks, parser locations and a distinct missing-binding failure."
 area: documents
 status: active
 usecases:
@@ -10,6 +10,7 @@ usecases:
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/documents/
   - packages/devkit-core/src/devkit_core/core/frontmatter.py
+  - packages/devkit-core/src/devkit_core/core/yaml.py
 created_at: 2026-10-13
 ---
 
@@ -59,15 +60,16 @@ stays ID-free and unindexed, and its Owner references do not become graph edges.
 3. **Identity**: A file is a document only when its frontmatter declares a well-formed ID (section 3.2) in `id`, or
    in `reconcile_id` for a reconcile record. A file without frontmatter, without an ID, or with an ID outside the
    grammar is not a document (a README, a glossary, a guide) and is silently left out.
-4. **Frontmatter grammar**: The frontmatter MUST follow devkit's grammar (`devkit_core.core.frontmatter`); `id`,
-   `reconcile_id` and `status`, when present, MUST be strings. A file that cannot be read as UTF-8, or whose
-   frontmatter breaks either requirement, MUST be left out of the index and reported as a `SPEC_DOCUMENT_INVALID`
-   warning; every other document MUST stay usable.
-   WHERE PyYAML provides libyaml, the shared loader MUST accelerate ordinary headers while preserving Python
-   value types and strict duplicate-key validation. Headers with tabs, question marks, hashes, U+FEFF or deeply
-   nested collection syntax use the Python loader. C-parser failures are retried with the Python loader to preserve its FrontmatterError diagnostics.
-   Without libyaml, the Python loader remains available. These routes are verified by
-   `packages/devkit-core/tests/unit/core/test_frontmatter.py`.
+4. **Frontmatter grammar**: The frontmatter MUST follow devkit's grammar (`devkit_core.core.frontmatter`) and
+   MUST be parsed through the shared LibYAML safe boundary (`devkit_core.core.yaml`). The parser preserves Python
+   value types and rejects duplicate keys. `id`, `reconcile_id` and `status`, when present, MUST be strings. A file
+   that cannot be read as UTF-8, or whose frontmatter breaks either requirement, MUST be left out of the index and
+   reported as a `SPEC_DOCUMENT_INVALID` warning; every other document MUST stay usable. Parser marks, when
+   available, MUST be reported as 1-based document lines and columns. IF the PyYAML LibYAML binding is unavailable,
+   THEN a YAML-reading operation MUST fail with `YAML_BINDING_UNAVAILABLE` and exit `2` before reusing a memoized
+   parse result; it MUST NOT fall back to Python parsing or report the binding failure as `SPEC_DOCUMENT_INVALID`.
+   These contracts are verified by `packages/devkit-core/tests/unit/core/test_frontmatter.py` and
+   `packages/devkit-spec/tests/integration/features/documents/test_memo_index.py`.
 5. **Uniqueness**: IDs are repository-wide and MUST be unique across `docs/`, `specs/` and every namespace docs root.
    The index keeps every declaration of an ID, so a duplicate is detectable (`SPEC_ID_DUPLICATE`). Aliases share
    this namespace (section 3.5).

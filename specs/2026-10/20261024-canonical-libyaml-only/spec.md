@@ -22,13 +22,17 @@ Python YAML readers currently choose different parsers. The frontmatter reader p
 
 This feature gives Python runtime YAML reads one safe LibYAML parser boundary. It keeps schema validation owned by each format and preserves targeted text edits. If the binding is missing, an operation that reads YAML fails as an execution error before using a cached YAML result or writing a fixer output.
 
-The accepted parser decision is `ADR-require-the-libyaml-safe-parser-at-yaml-read-boundaries`. The source feedback `FB-canonical-c-yaml-contract` remains open until this feature is implemented and verified.
+The accepted parser decision is `ADR-require-the-libyaml-safe-parser-at-yaml-read-boundaries`. This feature directly addresses `FB-canonical-c-yaml-contract`; reconcile records its final disposition after verification.
 
 ## 2. User Stories
 
 - **US-01**: As a developer or coding agent, I want every Python YAML reader to use the same LibYAML implementation so that a document has consistent acceptance and parser locations across validation, workflow and distribution commands.
 - **US-02**: As a developer or coding agent, I want a clear installation error when LibYAML is unavailable so that a command does not misreport a dependency problem as invalid user YAML or silently skip a document.
 - **US-03**: As a developer or coding agent, I want existing metadata fixers to preserve unrelated text so that adopting one parser does not rewrite comments, formatting or document bodies.
+
+## Source feedback
+
+- `FB-canonical-c-yaml-contract`: adopt one LibYAML safe parser across Python YAML readers and define a distinct missing-binding failure.
 
 ## 3. Non-Goals
 

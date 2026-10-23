@@ -61,6 +61,8 @@ name every required local package wheel explicitly (a `devkit-agt` installation 
 `devkit-cli` and `devkit-advisory` wheels too; `devkit-spec` also names `devkit-mcp`); release notes include the harness, distribution-only, SDD, viewer and tool installation
 commands, and the runtime-only `devkit-advisory` and `devkit-cli` (with `devkit-advisory`) installations.
 
+Python runtime YAML reads require PyYAML's `yaml.CSafeLoader`; package dependency metadata does not guarantee that optional binding. For uv-managed environments, install PyYAML without building it from source with `uv add --no-build-package pyyaml ...` or `uv tool install --no-build-package pyyaml ...`. A compatible binary wheel needs no system LibYAML development headers. Installation guidance then checks the active interpreter with `uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader')"`; runtime availability is authoritative, and a missing binding raises `YAML_BINDING_UNAVAILABLE` with exit `2` at the first YAML read. This check does not guarantee support for every operating system or Python build.
+
 Synchronization also runs `uv run --no-active devkit sync` after locking to refresh deployed bundles and
 `.devkit/installation.json`. Commit the refreshed receipt with the release metadata. A sync failure stops release
 preparation without a success sentinel; resolve its advisory and rerun `just version-sync`.
