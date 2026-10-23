@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-persistent-python-facts-cache
-status: pending
+status: resolved
 targets:
   - file: docs/decisions/2026-10/20261022-pull-per-file-python-facts.md
     resolution: modified

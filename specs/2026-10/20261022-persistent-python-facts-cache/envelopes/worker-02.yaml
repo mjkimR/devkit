@@ -1,0 +1,19 @@
+kind: worker
+stage: build-verify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-23T01:34:42.092772Z'
+status: completed
+summary: Implemented the approved facts descriptor/store, three syntax-only rule migrations, snapshot read-only borrowing, strict codecs and regression/performance evidence; no required scope deferred.
+findings: []
+assumptions:
+- Continued the existing named worktree with inherited approved handoff; generated installation receipt is a required scope consequence.
+- Independent medium-effort code review and follow-up verified both P1 fixes; independent reconciliation verified all targets.
+checks:
+  tests: PASS just test-affected --base main 2770 passed; 45 final fresh CLI benchmark samples equivalent
+  build: PASS devkit-agt, devkit-dist and devkit-dev wheels built; new facts modules verified in archives
+  lint: PASS just lint-check all; just check all; CI snapshot governance zero warnings/errors
+diff_scope:
+  base: 4df13b86c8d0d8f70a96bc504019af2860a7c062
+  head: c487734362f3a96d4025d99a747927edcf979865
+activity_effort: medium

@@ -2,7 +2,7 @@
 id: SPEC-persistent-python-facts-cache
 title: Persist per-file rule facts between runs
 summary: "Reuses rule-owned per-file Python facts between processes while preserving discovery, judgment and snapshot authority."
-status: in-progress
+status: completed
 created: 2026-10-22
 related_capabilities: [CAP-GOV-rules-engine, CAP-GOV-rule-authoring, CAP-GOV-evaluation-lifecycle, CAP-ADV-agent-advisory-protocol]
 related_usecases: []
@@ -168,4 +168,3 @@ migration of other Python rules. Cache-disabled execution is an internal test/li
 - Suggested implementation order: baseline and descriptor/store; engine invalidation and writer wiring; architecture
   facts; advisory facts; usecase facts; snapshot isolation and equivalence/performance checks; Living Spec reflection.
   Handoff creates the feature spec, technical plan and independently verifiable tasks; Planning changes no production code.
-
