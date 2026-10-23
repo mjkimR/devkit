@@ -1,0 +1,73 @@
+{
+  "python": "3.12.3",
+  "pyyaml": "6.0.3",
+  "libyaml": true,
+  "corpus": {
+    "headers": 713,
+    "c_rejected": 0,
+    "value_changes": 0
+  },
+  "differences": [],
+  "fixtures": {
+    "tab_in_plain": {
+      "python": {
+        "exception": "ScannerError",
+        "line": 1,
+        "column": 5
+      },
+      "c": "{'key': 'value'}"
+    },
+    "tab_in_quotes": {
+      "python": "{'key': 'a\\tb'}",
+      "c": "{'key': 'a\\tb'}"
+    },
+    "question_in_plain": {
+      "python": "{'key': 'value?x'}",
+      "c": "{'key': 'value?x'}"
+    },
+    "hash_in_quotes": {
+      "python": "{'key': 'a#b'}",
+      "c": "{'key': 'a#b'}"
+    },
+    "unicode": {
+      "python": "{'key': '한글😀'}",
+      "c": "{'key': '한글😀'}"
+    },
+    "invalid_date": {
+      "python": {
+        "exception": "ValueError",
+        "line": null,
+        "column": null
+      },
+      "c": {
+        "exception": "ValueError",
+        "line": null,
+        "column": null
+      }
+    },
+    "duplicate": {
+      "python": {
+        "exception": "ConstructorError",
+        "line": 2,
+        "column": 1
+      },
+      "c": {
+        "exception": "ConstructorError",
+        "line": 2,
+        "column": 1
+      }
+    },
+    "unsafe_tag": {
+      "python": {
+        "exception": "ConstructorError",
+        "line": 1,
+        "column": 6
+      },
+      "c": {
+        "exception": "ConstructorError",
+        "line": 1,
+        "column": 6
+      }
+    }
+  }
+}
