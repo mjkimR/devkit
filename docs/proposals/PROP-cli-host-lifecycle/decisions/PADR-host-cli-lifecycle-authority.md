@@ -35,7 +35,7 @@ The proposed operating model assigns these effects to the Host, which can presen
 
 This keeps the current approval binding and process-local recovery model. It requires a connected MCP service for acceptance, handoff and integration, so it does not meet the proposal's Host CLI requirement.
 
-### Let the Host obtain conversational approval and execute through CLI (recommended; decision needed)
+### Let the Host obtain conversational approval and execute through CLI (selected in `answer-01`)
 
 This removes the lifecycle MCP requirement and uses host instructions to present the exact scope before execution. The CLI revalidates the operation but does not authenticate the conversational decision. This makes the Host responsible for carrying the user's answer correctly.
 
@@ -45,7 +45,7 @@ This could bind a later command to an earlier decision, but it introduces durabl
 
 ## 4. Decision Outcome
 
-**Decision needed at `plan-accept`:** authorize conversational Host approval under `ask`, followed by a CLI operation that revalidates scope but accepts no approval token or proof of user identity. This is the recommended option because the Host owns lifecycle execution and the CLI path must work without lifecycle MCP.
+Under `ask`, the Host obtains the user's conversational decision after presenting the exact execution scope, then invokes the CLI. The CLI revalidates scope but accepts no approval token or proof of user identity. The user selected this option in `answer-01` because the Host owns lifecycle execution and the CLI path must work without lifecycle MCP. The plan-accept command records acceptance separately.
 
 Under `auto`, the CLI reads effective policy from the retained base and applies the same readiness and identity checks. Caller arguments, local overlays and host command permission do not grant policy authority. Pull-request policy and remote publication limits remain unchanged.
 

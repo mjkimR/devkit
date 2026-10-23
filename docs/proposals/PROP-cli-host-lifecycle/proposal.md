@@ -56,7 +56,7 @@ operating model.
 
 Planning settles the CLI surface and the identity and recovery checks below. One authority decision remains for `plan-accept`:
 
-- **D1 — `ask` authority**: The Host presents the exact source, report, target and effects in conversation, obtains the user's decision, then invokes the CLI. The CLI revalidates operation scope but accepts no approval credential and does not authenticate the conversational answer. This changes accepted authority guidance; see `PADR-host-cli-lifecycle-authority`. **Decision needed at `plan-accept`.**
+- **D1 — `ask` authority**: The Host presents the exact source, report, target and effects in conversation, obtains the user's decision, then invokes the CLI. The CLI revalidates operation scope but accepts no approval credential and does not authenticate the conversational answer. This changes accepted authority guidance; the user selected this model in `answer-01`; the plan-accept gate is recorded separately. See `PADR-host-cli-lifecycle-authority`.
 - **D2 — composed operations**: Extend the existing `devkit spec proposal accept` and `devkit spec proposal handoff` surfaces to expose their composed lifecycle behavior. Expose the existing integration CLI group, currently hidden and limited to preparation, for scoped integration execution. Do not make the Host reproduce internal checks by manually assembling lower-level commands.
 - **D3 — identity binding**: Each operation receives or recomputes the proposal slug, exact report URI and source SHA, task and Unit identity, target branch and commit, route, effective base policy, and exact worktree and cleanup identity it needs. Reject stale identities or expanded effects before mutation. `auto` authority is read from the retained base; caller claims and CLI tool permission confer no business authority.
 - **D4 — inspection and recovery**: Keep preparation read-only. Use `devkit worktree status` and Git or PR inspection to establish actual state. After a merge followed by cleanup failure, use the existing already-merged `devkit worktree finish` path to perform only remaining guarded cleanup. Do not add `integration_status`, `integration_resume`, a request journal or an approval session. An operation reports completed effects and the failing step; after an unknown outcome the Host inspects actual state before invoking another operation.
@@ -103,7 +103,7 @@ Reconcile `CAP-INT-mcp-services`, `CAP-MCP-runtime-registration`, `CAP-WT-task-w
 
 ## 4. Lifecycle & Retirement Criteria
 
-Keep this proposal in `reviewing` until the `plan-accept` decision. The recommended CLI surface and acceptance criteria are settled for review; the conversational `ask` authority decision remains open and is recorded in `PADR-host-cli-lifecycle-authority`. Acceptance approves the CLI lifecycle and stated exclusions. Development begins only through the normal handoff boundary.
+Keep this proposal in `reviewing` until the `plan-accept` decision. The user selected conversational Host authorization under `ask` in `answer-01`; `devkit spec proposal accept` records the plan-accept gate. The acceptance gate approves the CLI lifecycle and stated exclusions. Development begins only through the normal handoff boundary.
 
 Retire the proposal through handoff when its decisions and requirements are carried into a spec bundle.
 Development completes when CLI lifecycle coverage, shared MCP regression checks, relevant package checks and
