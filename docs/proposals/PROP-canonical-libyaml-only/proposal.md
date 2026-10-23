@@ -1,7 +1,7 @@
 ---
 id: PROP-canonical-libyaml-only
 title: Require libyaml for consistent YAML parsing
-summary: Require PyYAML's LibYAML C binding for YAML parsing across frontmatter and standalone YAML inputs, and fail clearly when the binding is unavailable. Define the supported installation matrix and verify consistent parsing and error handling.
+summary: "Require PyYAML LibYAML safe parsing for Python runtime frontmatter and standalone YAML inputs. Define installation eligibility, distinct missing-binding failures, and parser and fixer verification."
 status: reviewing
 created_at: 2026-10-23
 target_area: capabilities/documents/
@@ -11,15 +11,27 @@ planning_effort: medium               # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
 boundaries:
   owns:
-    - packages/devkit-core/src/devkit_core/core/frontmatter.py
-    - packages/devkit-core/tests/unit/core/test_frontmatter.py
+    - packages/devkit-core/src/devkit_core/core/
+    - packages/devkit-core/src/devkit_core/base/errors.py
+    - packages/devkit-core/tests/unit/core/
     - packages/devkit-spec/src/devkit_spec/features/
+    - packages/devkit-spec/tests/
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/document-writing.md
     - packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/invocation.py
+    - packages/devkit-dist/tests/integration/features/distribution/test_skill_invocation.py
     - packages/devkit/src/devkit_agt/features/workflow/
+    - packages/devkit/tests/integration/features/workflow/
+    - packages/devkit-core/README.md
+    - guides/INSTALL_GUIDE.md
+    - docs/architecture/ARCH-07-deployment.md
     - docs/capabilities/documents/CAP-DOCS-document-model.md
+    - docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md
+    - docs/capabilities/delivery/CAP-DLV-workflow-definitions.md
+    - docs/capabilities/distribution/CAP-DIST-manifest-spec.md
+    - scripts/
   excludes:
     - docs/decisions/
+    - packages/devkit-viewer/frontend/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
 workflow: sdd-proposal
 ---
@@ -27,72 +39,148 @@ workflow: sdd-proposal
 # [PROP-canonical-libyaml-only] Require libyaml for consistent YAML parsing
 
 ## 1. Background & Hypothesis
-`SPEC-frontmatter-libyaml` currently uses the LibYAML C loader as an optimization, then routes scanner-sensitive
-input and C-loader errors through the Python loader to preserve the existing grammar. Production code also reads
-standalone YAML inputs, including glossary data, bundle invocation settings, workflow decision and envelope records,
-and YAML supplied to workflow commands. Some frontmatter validators compose YAML nodes directly. These paths do not
-all share one loader, so accepted syntax and diagnostics can depend on the call site or whether the C binding is
-installed.
 
-This proposal replaces that compatibility behavior with one implementation rule: YAML parsing uses PyYAML's
-LibYAML C loader. A supported installation should select a PyYAML distribution that provides that binding. If the
-binding is absent, devkit reports a stable execution failure instead of silently using the Python loader. Inputs
-rejected by LibYAML remain parse failures.
+`CAP-DOCS-document-model` defines a Python-compatible frontmatter grammar with C acceleration and fallback.
+Standalone workflow records, bundle invocation settings and glossary YAML use separate readers.
+Node-based document readers and fixers also select their own loader.
+The same input can therefore produce different acceptance and diagnostics across Python operations.
 
-## Source feedback (when this proposal receives feedback)
+Require one LibYAML safe parser boundary for Python runtime reads, accepting its syntax differences from the
+Python parser. Preserve each format's existing schema validation and the surgical editing of document text.
+The persistent decision is `PADR-require-the-libyaml-safe-parser-at-yaml-read-boundaries`.
 
-- `FB-canonical-c-yaml-contract`: address parser differences across frontmatter, CLI validation and fixer call sites
-  by requiring the LibYAML C loader and failing explicitly when it is unavailable. The feedback remains open until
-  the accepted follow-up is implemented and verified.
+### Source feedback
 
-## 2. Technical Spike Questions
-- **Q1**: Which supported Python, OS, architecture and Linux ABI combinations receive a PyYAML wheel with
-  `CSafeLoader`, and what install failure should users see when no such wheel is available?
-- **Q2**: Which production YAML readers should use the C loader, including frontmatter, standalone documents,
-  workflow records and CLI-supplied YAML, and should the missing-binding check run at command startup or when parsing
-  is first requested? Which YAML serializers only produce data and do not need loader changes?
-- **Q3**: Can existing accepted documents and fixer operations retain their values and comments under the C loader,
-  and which inputs should now fail because LibYAML rejects them?
-- **Q4**: Which parser diagnostics can be presented consistently with the document path, line and column, a stable
-  error code, and a deterministic corrective action?
-- **Q5**: Which frontmatter fields are already created or updated by typed CLI operations, and are any additional
-  CLI operations justified for metadata with a stable schema?
+`FB-canonical-c-yaml-contract` remains open until Development implements and verifies this contract.
+Planning alone does not resolve it.
+
+## 2. Technical Spike Answers
+
+### Q1: Installation eligibility
+
+Retain Python `>=3.12` and the existing `pyyaml>=6.0.1` dependency declarations.
+Dependency metadata cannot require an optional extension; runtime capability is the acceptance condition.
+The audited wheel reference is PyYAML 6.0.3, already selected by `uv.lock`.
+Its CPython 3.12–3.14 standard-ABI files cover Linux glibc 2.17+ and musl 1.2+ on x86_64/aarch64,
+macOS 10.13+ x86_64 and macOS 11+ arm64. Wheel availability is distinct from devkit's tested platform support.
+The reference also has Windows wheels, but this work does not promise Windows support for devkit's POSIX locks.
+See `materials/installation.md` for exact evidence and exclusions.
+
+Use a compatible PyYAML binary wheel as the normal installation route; no system libyaml development package is
+needed for that route. Installation guides SHOULD show `--only-binary pyyaml` on the documented uv installation
+route so an absent wheel stops resolution instead of silently building a pure-Python package.
+An existing source-built installation is eligible only when `yaml.CSafeLoader` is usable.
+Source-build troubleshooting is an exception route, not a new supported build matrix.
+No package-version upper bound or new Python/platform support promise is introduced.
+
+### Q2: Reader coverage and availability timing
+
+Add `devkit_core.core.yaml` with lazy availability checking, safe value loading and node composition.
+Check at the first YAML operation rather than module import or global CLI startup.
+An index load that consumes previously parsed YAML is a YAML operation and MUST check availability before memo reuse.
+`locate()` remains a text-only operation that needs no binding.
+Do not cache a missing-binding result or let an already-selected loader conceal an unavailable installation in tests.
+
+Migrate the production Python load/compose sites and scalar round-trip probe listed in `materials/readers.md`.
+Retain `yaml.safe_dump` for output-only serialization.
+Frontmatter keeps strict duplicate-key rejection, top-level mapping/string-key validation, date/datetime values,
+recursive-alias identity, BOM/delimiter rules and body offsets. Standalone formats keep their current schema,
+duplicate-key and empty-document behavior; this proposal does not impose frontmatter's schema on them.
+Node composition uses the same C parser while validation remains in its existing owner.
+
+### Q3: Existing values, syntax and fixers
+
+The Planning probe on Python 3.12.3 / PyYAML 6.0.3 found 713 currently accepted Markdown headers under `docs/` and
+`specs/`, with zero C-only rejections and zero value changes. This is a local corpus result, not platform coverage.
+The probe excluded headers already invalid under the current parser.
+The synthetic `key:\tvalue` input changes from a Python scanner failure to C acceptance; this is intentional.
+Both parsers rejected duplicate keys, unsafe Python tags and impossible dates in the focused probe.
+Remove Python-parity tests, scanner-character routing and event-depth preflight; test C behavior explicitly.
+Do not claim byte-for-byte Python diagnostics or a YAML 1.2 grammar.
+
+Keep fixers' targeted text replacements. Preserve unrelated fields, comments, quote style, CRLF and body bytes.
+Validate a replacement with the canonical parser before writing; refuse unsafe repairs without modifying the file.
+Test Unicode node positions and recursive/deep inputs explicitly; handle constructor errors without fallback.
+
+### Q4: Error semantics
+
+Introduce `YamlBindingUnavailableError`, a sibling of `FrontmatterError` under `DevkitCoreError`, with code
+`YAML_BINDING_UNAVAILABLE`. It MUST be an execution failure (CLI exit 2), including `--format json` and `--strict`.
+It MUST NOT inherit from `FrontmatterError`, `yaml.YAMLError` or `ValueError`, because those are caught as bad input.
+Its deterministic action instructs the agent to reinstall PyYAML from a compatible binary wheel in the environment
+that runs devkit and rerun the command. Include that interpreter/environment in the diagnostic when available.
+The implementation MUST audit broad exception handlers too; a sibling type alone does not prove propagation.
+The same error must reach the existing CLI and MCP advisory boundaries without library printing or a raw traceback.
+
+Malformed YAML keeps the owning format's existing code and exit/notice semantics. An invalid indexed document still
+produces `SPEC_DOCUMENT_INVALID` while valid documents stay usable; a missing binding aborts the operation instead.
+Retain parser problem/context marks as structured information. File readers report a workspace-relative path and
+1-based document line/column when marks exist; frontmatter adds the opener-line offset. CLI item inputs identify
+their supplied path or stdin. A constructor failure without marks reports the source and reason without inventing
+coordinates. Actions instruct the agent to correct the indicated YAML and rerun validation.
+
+### Q5: Typed metadata operations
+
+Existing proposal/spec creation, proposal acceptance/PADR creation, workflow binding, entrypoint apply and envelope
+authoring already serialize typed records. Prefer those commands for their owned operations.
+No additional generic metadata writer is justified by this parser defect.
+Manual frontmatter editing remains supported. Update the source `document-writing` instruction with concise
+indentation, quoted ambiguous scalar and block-scalar examples and the canonical contract reference.
 
 ## 3. Proposed Design & Impact
-Inventory production PyYAML parsing and composition call sites in the repository, distinguishing frontmatter from
-standalone YAML formats and generated YAML output. Route the agreed readers through the LibYAML C loader. Remove
-Python-loader fallbacks and scanner-based compatibility routing from the shared frontmatter path. Check for
-`CSafeLoader` before parsing and return a stable, actionable failure if PyYAML was installed without its C binding.
-Document and verify the supported installation matrix; do not require users to install a system `libyaml`
-development package when a compatible PyYAML wheel is available. Keep each format's schema and validation rules
-separate; sharing a parser does not make the documents interchangeable.
 
-Prefer existing typed CLI operations for creating structured YAML records and changing workflow-managed metadata;
-they can serialize known schemas without asking an agent to hand-author YAML. Add a CLI operation only where a
-repeatable metadata change has a stable schema and a concrete authoring failure. Keep prose and ordinary document
-editing available in Markdown editors, with `document-writing` guidance and validation for manually edited
-frontmatter. Do not require every YAML edit to pass through a generic CLI writer, which would need to preserve
-unrelated fields, comments and formatting across distinct document schemas.
+### Planning decision and alternatives
 
-Keep the accepted syntax defined by the selected LibYAML implementation rather than adding a second custom grammar.
-Verify document validation and fixer behavior against representative accepted and rejected YAML, preserving values and
-comments for any automatic transformations. Update `CAP-DOCS-document-model` with the parser requirement and failure
-behavior. For malformed frontmatter, report the document path and parser location when available, explain the parse
-failure, and return a stable advisory code with a deterministic action. For a missing C binding, report a distinct
-code and an action that identifies the supported installation requirement. Update the source `document-writing`
-instruction so agents write Markdown frontmatter in valid LibYAML-compatible YAML, with concrete guidance for indentation,
-quoting ambiguous values and block scalars, and a link to the canonical contract. Keep that instruction concise and
-leave unrelated YAML style preferences out of scope.
+Choose required lazy C parsing over the current compatibility fallback or fail-at-import behavior.
+The former leaves parser-dependent results; the latter blocks commands that do not read YAML.
+Use one shared implementation boundary while leaving format schemas and serialization ownership in place.
 
-This proposal does not require unrelated parser changes or a broad YAML style guide.
+### Development sequence
+
+1. Add the shared parser and distinct binding error in devkit-core. Replace frontmatter's fallback routes and test
+   C syntax, duplicate handling, aliases, safe construction, deep inputs and missing-binding imports/reads.
+2. Migrate standalone readers and node consumers. Update index memo fingerprints to include the shared module and
+   check availability before warm-cache use. Verify error propagation and no writes on dependency failure.
+3. Verify fixers and generated YAML round trips, including Unicode marks, comments, quoted text and line endings.
+   Add installed-wheel consumer coverage through the existing scripts smoke path, including dist without agt.
+4. Reconcile the affected contracts and installation guide. Update source agent guidance and run normal sync;
+   generated deployment receipts and projections are only outputs of that tool, never manually edited sources.
+
+### Acceptance checks for the Development spec
+
+| ID | Given / When / Then |
+| --- | --- |
+| AC-1 | Given each inventoried Python YAML read/compose path, when it reads YAML, then it uses the shared C boundary and its existing format schema. A source audit finds no Python-loader fallback in production readers. |
+| AC-2 | Given an unavailable C binding, when a value read, composition, cold/warm index load or fixer runs, then `YAML_BINDING_UNAVAILABLE` reaches the boundary as exit 2, with one JSON error object under JSON mode and no file writes or invalid-document substitution. Non-YAML help and text-only locate still work. |
+| AC-3 | Given representative valid/invalid frontmatter, when parsed or indexed, then C acceptance, strict duplicate-key policy, date types, aliases and existing delimiters hold. Malformed input retains its owner code and source location when available. |
+| AC-4 | Given comments, Unicode before an edited node, quoted scalars, flow/block lists and CRLF, when an existing fixer rewrites a supported field, then unrelated text and body bytes remain identical and the result reloads under C parsing. Unsupported repairs leave bytes unchanged. |
+| AC-5 | Given a previously persisted memo, when the shared parser implementation changes, then the fingerprint invalidates it. A warm memo cannot hide a missing binding. |
+| AC-6 | Given installed wheels and the documented installation route, when the smoke consumer parses YAML, then CSafeLoader is present and parsing succeeds; a simulated missing binding returns the same execution advisory for dist-only and harness consumers. |
+| AC-7 | Given typed CLI record creation and scalar quoting, when the emitted YAML is read through C parsing, then typed values and existing schema validation hold. Guidance names the canonical syntax and supported installation route. |
+
+### Contract reconciliation
+
+- `CAP-DOCS-document-model`: replace compatibility grammar/diagnostic routing and extend the memo fingerprint contract.
+- `CAP-DLV-workflow-envelopes` and `CAP-DLV-workflow-definitions`: document canonical Python reads and dependency failure.
+- `CAP-DIST-manifest-spec`: document invocation YAML parsing and missing-binding propagation.
+- `ARCH-07-deployment`, core README and installation guide: runtime prerequisite, wheel eligibility and actual test coverage.
+- The PADR is promoted to an ADR by handoff; ordinary Development does not edit existing ADRs.
+
+Run `just lint-check`, `just check` and `just test-affected` for Development's final affected content, preserving the
+selector's full fallback. Run `just test-dist` and `just smoke` for the isolated installed-consumer acceptance.
+Cross-platform wheel availability is metadata evidence until an actual runner verifies it; report that limitation.
+
+### Non-goals
+
+- Scope Excluded: browser/npm YAML parsing and viewer frontend behavior; the browser renderer is not the Python validation authority.
+- Scope Excluded: a YAML 1.2 implementation, universal duplicate-key policy, generic metadata CLI or YAML style rules beyond parser-safe authoring.
+- Scope Excluded: serializer replacement, general round-trip reformatting, automatic repair of malformed YAML or source-build toolchain management.
+- Scope Excluded: PyYAML extension guarantees through dependency metadata, new OS support, or a full platform CI matrix.
 
 ## 4. Lifecycle & Retirement Criteria
-<!--
-- Preliminary decisions: devkit spec proposal padr canonical-libyaml-only "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
-- Research: collect benchmarks and references in materials/.
-- On acceptance (plan-accept): devkit spec proposal accept canonical-libyaml-only --by user records gate:plan-accept and status:
-  accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
-  without Planning. Development starts with devkit spec proposal handoff canonical-libyaml-only.
-- On rejection: change only status: rejected, with the user's reason in the commit message; a later hygiene pass
-  writes the rejection ADR and deletes the proposal directory.
--->
+
+Planning is complete when the evidence, PADR, Challenger review and reverify are committed and boundary rules pass.
+`dev_effort: medium` remains appropriate: several internal packages change, with no data migration or external API
+change to devkit-advisory/devkit-cli. Development still requires independent code review and reconciliation review.
+`plan-accept=ask` requires the user's direction decision before Planning integration.
+`proposal-handoff=ask` separately authorizes Development. Neither gate is supplied by this Planning request.
