@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-23T12:06:40.685514Z'
+status: completed
+summary: Swept the Planning run and current diff; no repository-owned feedback observations or duplicates.
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0

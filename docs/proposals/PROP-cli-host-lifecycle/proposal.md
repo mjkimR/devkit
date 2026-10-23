@@ -52,105 +52,58 @@ native approval UI, retained approval sessions and duplicate transport behavior.
 failure using CLI inspection and targeted operations. A dedicated durable recovery engine is unnecessary for this
 operating model.
 
-## 2. Technical Spike Questions
+## 2. Planning Decisions
 
-- **Q1**: Which acceptance, handoff and integration services can become transport-independent operations, and which
-  interfaces require `Confirmation` or retained approval records?
-- **Q2**: What is the smallest CLI surface for inspection, composed execution and remaining-step cleanup? Prefer
-  extending existing commands. Identify a concrete missing operation before introducing another command.
-- **Q3**: Which source, report, policy and cleanup identifiers must execution receive or recompute to detect scope
-  changes after conversational review without an approval credential or stored approval session?
-- **Q4**: Which native form adapters, language assets, registration hooks and approval-specific contracts become
-  unused? Preserve dependencies required by shared artifacts and proposal report publication.
-- **Q5**: Which ADRs require supersession, and which local/PR policy constraints remain independent of transport?
-  Moving to CLI does not itself expand remote publication authority or change `auto` PR policy.
+Planning settles the CLI surface and the identity and recovery checks below. One authority decision remains for `plan-accept`:
+
+- **D1 — `ask` authority**: The Host presents the exact source, report, target and effects in conversation, obtains the user's decision, then invokes the CLI. The CLI revalidates operation scope but accepts no approval credential and does not authenticate the conversational answer. This changes accepted authority guidance; see `PADR-host-cli-lifecycle-authority`. **Decision needed at `plan-accept`.**
+- **D2 — composed operations**: Extend the existing `devkit spec proposal accept` and `devkit spec proposal handoff` surfaces to expose their composed lifecycle behavior. Expose the existing integration CLI group, currently hidden and limited to preparation, for scoped integration execution. Do not make the Host reproduce internal checks by manually assembling lower-level commands.
+- **D3 — identity binding**: Each operation receives or recomputes the proposal slug, exact report URI and source SHA, task and Unit identity, target branch and commit, route, effective base policy, and exact worktree and cleanup identity it needs. Reject stale identities or expanded effects before mutation. `auto` authority is read from the retained base; caller claims and CLI tool permission confer no business authority.
+- **D4 — inspection and recovery**: Keep preparation read-only. Use `devkit worktree status` and Git or PR inspection to establish actual state. After a merge followed by cleanup failure, use the existing already-merged `devkit worktree finish` path to perform only remaining guarded cleanup. Do not add `integration_status`, `integration_resume`, a request journal or an approval session. An operation reports completed effects and the failing step; after an unknown outcome the Host inspects actual state before invoking another operation.
+- **D5 — MCP boundaries and decisions**: Remove MCP registrations for `spec_plan_accept`, `spec_handoff`, `integration_prepare`, `integration_integrate`, `integration_resume`, `integration_status` and `spec_proposal_report_template` after CLI coverage exists. Retain `spec_proposal_report` for publication and the shared artifact tools `shared_put`, `shared_get`, `shared_list`, `shared_sweep` and `shared_sweep_apply`. Do not add scope-registry MCP operations. Supersede only the native lifecycle execution and process-local approval/recovery clauses in `ADR-delivery-decision-boundaries` and `ADR-local-and-pull-request-integration`; retain their gate, policy, local merge, PR, readiness and cleanup constraints. `ADR-mcp-runtime-and-shared-artifacts` remains in force.
 
 ## 3. Proposed Design & Impact
 
 ### Host and worker responsibilities
 
-The Host prepares Planning and Development worktrees before assigning workers. It performs acceptance, integration,
-branch deletion and worktree removal through CLI commands. Workers commit through Git CLI with the necessary Git
-write permissions. This proposal adds no worktree creation/deletion MCP and no scope registry MCP.
+The Host creates Planning and Development worktrees, reviews the exact operation scope, obtains conversational decisions under `ask`, and executes lifecycle commands. Workers use Git CLI in their assigned worktrees and retain access to shared MCP resources. Host filesystem permission, MCP tool permission and workflow business approval remain separate controls.
 
-Retain `shared_put`, `shared_get`, `shared_list`, `shared_sweep` and `shared_sweep_apply`.
-Retain `spec_proposal_report` for publication into shared storage. Shared artifact behavior and external scope
-registry access policy remain outside this change.
+### CLI execution
 
-### CLI execution and MCP removal
+Extend `devkit spec proposal accept` to validate the exact committed review report and perform the selected `accept_only` or `accept_and_handoff` operation, including the checked Planning merge. Keep acceptance and handoff policy boundaries independent. Make the selected mode and Development effort explicit inputs.
 
-Expose the composed behavior of `spec_plan_accept`, `spec_handoff` and `integration_integrate` through application
-use cases and CLI adapters. Acceptance mode selection and Development effort become explicit CLI inputs.
-Keep one operation for each composed lifecycle action; the Host should not have to reproduce internal checks
-and mutations by manually assembling lower-level commands.
+Extend `devkit spec proposal handoff` to compose Development worktree creation and proposal-to-spec handoff. It reports the worktree path and selected effort so the Host can continue there and record the run input.
 
-Use CLI inspection for `integration_prepare` and a local CLI for `spec_proposal_report_template`.
-Remove these lifecycle and template MCP registrations after the CLI covers their behavior. Remove
-`integration_status` and `integration_resume` with the process-local integration session model. Provide only the
-inspection or targeted execution operations needed to cover concrete gaps in the existing CLI and Git tools.
-Do not retain native approval MCP as an optional second lifecycle interface.
+Expose `devkit integration prepare` for read-only inspection and add one `devkit integration integrate` operation for local or pull-request execution. It performs the existing readiness, policy, source, target, cleanup and landing checks before mutation. The Host invokes it only after `ask` approval or when `auto` policy authorizes it. It requires no interactive stdin, MCP request ID or approval token.
 
-Preserve readiness checks, finish guards, policy enforcement, source/report identity checks, integration locking,
-worktree identity protections and scoped deletion validation. Keep local and pull-request execution behavior
-explicit. Shared-storage operations continue to use their established access boundaries.
+Use `devkit worktree status`, Git and PR state to inspect execution results. Use existing guarded worktree finish for cleanup after a verified merge. Add another inspection or cleanup command only if Development identifies a concrete state or effect that these operations cannot represent.
 
-### Conversational decisions
+### Identity, authority and failure handling
 
-Under `ask`, the workflow instructs the Host to present the operation, source/report identity, target branch,
-merge or handoff mode, Development effort when relevant, cleanup scope and any remote effects. The Host obtains
-that decision before executing those effects and reuses an existing decision for the same scope.
+Every mutation revalidates the current source and target, report URI where applicable, effective policy, readiness evidence, worktree identity and exact cleanup targets. A changed source or report, policy change, failed readiness check or mismatched cleanup identity refuses the affected mutation with a stable code. The CLI does not infer `ask` approval from a flag or host permission. Under `auto`, it derives authority from the retained base configuration and preserves the existing refusal of automatic pull-request execution and remote publication authority.
 
-Under `auto`, the Host executes after reporting the result and satisfying applicable policy and readiness checks.
-Both modes use the same CLI execution operations. Host permission review remains independent; it is not treated as
-proof of business approval. CLI commands do not require interactive stdin or native forms.
+A result identifies completed effects, the failing step and actionable errors using the existing agent output protocol. No durable request store or process-local approval session remains. For an unknown result, the Host inspects the actual proposal, Git, worktree and PR state. It runs only a remaining operation whose inputs and cleanup scope can be revalidated. If the merge completed but cleanup failed, the existing already-merged finish path must skip another merge and remove only its validated worktree and branch.
 
-Execution validates relevant identities and policy again before mutation. If the source/report changes or requested
-effects expand, the Host presents the changed scope for a fresh decision under `ask`. Planning should preserve
-existing bounded handling of target advancement unless a concrete CLI constraint requires a change.
-No approval token, signed receipt, persisted approval file or service-side proof of user identity is introduced.
+### Shared services and contracts
 
-### Failure handling
+Retain `shared_put`, `shared_get`, `shared_list`, `shared_sweep` and `shared_sweep_apply`. Retain `spec_proposal_report` for publication to shared storage. Replace the template MCP call with the existing `devkit spec proposal report <slug> --source-sha <sha> --template` CLI output.
 
-CLI results identify completed effects, the failing step and actionable errors using stable codes and the existing
-agent output protocol. The Host inspects actual Git, worktree, proposal and PR state before continuing after an
-unknown outcome. It uses existing CLI and Git/PR tools to perform only the remaining work.
+Reconcile `CAP-INT-mcp-services`, `CAP-MCP-runtime-registration`, `CAP-WT-task-worktrees`, `CAP-COLL-work-scope-registry`, affected delivery proposal contracts and delivery use cases. Update source skills, workflow guidance, references, package documentation and installation guides that require lifecycle MCP tools. Record the authorization change in `PADR-host-cli-lifecycle-authority` and supersede the conflicting ADR clauses identified in D5.
 
-Preserve protections against unrelated branch deletion, scope expansion and destructive repetition. Do not build
-a durable request store, recovery daemon, cross-command approval session or general automatic resume state machine.
-A failure result may contain execution details needed for the Host's next action without making them credentials.
+### Acceptance criteria
 
-### Contracts and verification
+- **AC-1**: With lifecycle MCP tools unavailable, the Host can accept a reviewed proposal, create its Development worktree through composed handoff, and integrate and clean up a verified result through CLI.
+- **AC-2**: Under `ask`, Host instructions present the exact operation scope and require a conversational decision before invoking a mutating CLI command. Under `auto`, the CLI uses the same execution path without native forms or interactive stdin.
+- **AC-3**: A stale source or report, changed policy, failed readiness check or mismatched cleanup identity refuses the affected mutation with a stable error code. Removing lifecycle MCP does not bypass required PR policy.
+- **AC-4**: When an injected failure occurs after the base fast-forward and before cleanup completes, the Host can inspect actual state and rerun only guarded cleanup. Verification proves the merge is not repeated and an unrelated branch or worktree is not removed.
+- **AC-5**: Shared artifact access and proposal report publication still work through MCP. Removed lifecycle and report-template tools are absent from registration and workflow instructions.
+- **AC-6**: Local and pull-request integration retain applicable readiness checks, effect disclosure and authority limits. CLI execution requires neither an MCP connection nor an MCP process-local request ID.
 
-Reconcile CAP-INT-mcp-services, CAP-MCP-runtime-registration, CAP-WT-task-worktrees,
-CAP-COLL-work-scope-registry, affected proposal delivery contracts and delivery use cases. Update source skills,
-workflow guidance, references, package documentation and installation guides that require native approval tools.
-Record the lasting transport and approval policy decision in an ADR; supersede conflicting decisions as needed.
-
-Development acceptance should demonstrate:
-
-- **AC-1**: With lifecycle MCP unavailable, the Host can accept a reviewed proposal, create its Development
-  worktree through composed handoff, and integrate and clean up a verified Development result through CLI.
-- **AC-2**: `ask` instructions request a conversational decision with the execution scope; `auto` uses the same
-  execution path without native forms or interactive stdin.
-- **AC-3**: A stale source/report, changed policy, failed readiness check or mismatched cleanup identity refuses
-  the affected mutation with a stable error code. Transport removal does not bypass required PR policy.
-- **AC-4**: After a representative failure following a successful merge, the Host can inspect actual state and
-  complete remaining cleanup with available tools without another merge or deletion outside the requested scope.
-- **AC-5**: Shared artifact access and proposal report publication still work through MCP; removed lifecycle tools
-  are absent from registration and workflow instructions.
-- **AC-6**: Both local and pull-request integration retain applicable validation, effect disclosure and authority
-  limits. CLI execution requires neither an MCP connection nor an MCP process-local request ID.
-
-Scope excluded: approval authenticity infrastructure, durable recovery orchestration, optional native approval UI,
-changes to shared artifact semantics, scope registry transport additions, host permission configuration, new
-remote-publication authority and unrelated lifecycle features.
+**Scope Excluded**: Approval authenticity infrastructure, durable recovery orchestration, optional native approval UI, changes to shared artifact semantics, scope-registry transport additions, host permission configuration, new remote-publication authority and unrelated lifecycle features.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Keep this proposal draft until picked up for Planning. Planning settles command names, input identities, the
-minimum missing inspection/cleanup operations, obsolete approval machinery and ADR supersession targets.
-Acceptance approves the CLI lifecycle and conversational decision model with the stated exclusions.
-Development begins only through the normal handoff boundary.
+Keep this proposal in `reviewing` until the `plan-accept` decision. The recommended CLI surface and acceptance criteria are settled for review; the conversational `ask` authority decision remains open and is recorded in `PADR-host-cli-lifecycle-authority`. Acceptance approves the CLI lifecycle and stated exclusions. Development begins only through the normal handoff boundary.
 
 Retire the proposal through handoff when its decisions and requirements are carried into a spec bundle.
 Development completes when CLI lifecycle coverage, shared MCP regression checks, relevant package checks and
