@@ -4,6 +4,8 @@ title: "Agent Advisory Protocol"
 summary: "Structured error, warning, and notice protocol with machine-actionable directives."
 area: advisory
 status: active
+entrypoints:
+  - packages/devkit-dist/src/devkit_dist/bundles/advisory/bundle/rules/unique_code/rule.py
 created_at: 2026-10-17
 ---
 
@@ -279,7 +281,19 @@ Machine channels carry the same envelope as data:
 
 A consumer never executes `fix` automatically outside `AUTO` (and `INTERACTION` after approval, `CONTINUE`/`NOTE` when the user asks). A transport adapter never executes `fix` on the agent's behalf.
 
-## 10. Authoring Checklist
+## 10. Static Code Uniqueness
+
+`RULE-advisory-unique-code` reads Python source statically and compares unrelated advisory owners across the workspace.
+It reuses immutable per-file class declarations, constants, unresolved expressions and scoped candidate calls through
+`CAP-GOV-rule-authoring`. Import bindings, inheritance, imported constants and per-path `bases`/`exclude` settings
+are resolved on every check. No final declarations or violations are persisted.
+
+**Cache transparency**: WHEN the uniqueness rule uses persisted extraction, it MUST preserve the cache-disabled
+findings, locations, ordering, severity and target filtering.
+`packages/devkit-dist/src/devkit_dist/bundles/advisory/bundle/rules/unique_code/tests/test_rule.py`.
+Malformed records cause re-extraction. This changes neither the public `devkit.advisory` API nor advisory output.
+
+## 11. Authoring Checklist
 
 When writing an advisory in any language or rule format:
 

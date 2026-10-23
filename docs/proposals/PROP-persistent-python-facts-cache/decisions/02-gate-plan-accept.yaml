@@ -1,9 +1,0 @@
-request: gate:plan-accept
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: direction-handoff
-note: Approve the reviewed direction, two preliminary decisions and expanded three-rule
-  Development scope; integrate the Planning branch.
-by: user
-at: '2026-10-22T12:25:10.364961Z'

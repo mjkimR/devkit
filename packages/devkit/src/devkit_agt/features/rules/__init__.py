@@ -25,6 +25,7 @@ from devkit_agt.features.rules.models.errors import (
     SnapshotError,
     TargetError,
 )
+from devkit_agt.features.rules.models.file_facts import FactsDependency, FileFactsDescriptor, FileFactsSource, JsonValue
 from devkit_agt.features.rules.models.phases import PhaseEntry, resolve_phases
 from devkit_agt.features.rules.models.policy import validate_policy
 from devkit_agt.features.rules.models.settings import RawSettings, SettingsResolver, match_path, validate_pattern
@@ -33,6 +34,7 @@ from devkit_agt.features.rules.repositories.config import RulesConfig, load_rule
 from devkit_agt.features.rules.repositories.discovery import ManagedRules, resolve_managed_rules
 from devkit_agt.features.rules.repositories.workspace.cache import WorkspaceCache
 from devkit_agt.features.rules.repositories.workspace.catalog import Document, DocumentCatalog
+from devkit_agt.features.rules.repositories.workspace.facts import capture_facts_dependency
 from devkit_agt.features.rules.repositories.workspace.markdown import MarkdownLink, count_tasks, extract_links
 from devkit_agt.features.rules.repositories.workspace.relocation import (
     LinkRelocation,
@@ -60,6 +62,10 @@ __all__ = [
     "Document",
     "DocumentCatalog",
     "EvaluationResult",
+    "FactsDependency",
+    "FileFactsDescriptor",
+    "FileFactsSource",
+    "JsonValue",
     "LinkRelocation",
     "LinkRelocationReport",
     "ManagedRules",
@@ -99,6 +105,7 @@ __all__ = [
     "Violation",
     "WorkspaceCache",
     "build_project_registry",
+    "capture_facts_dependency",
     "count_tasks",
     "default_rule_registry",
     "evaluate_rules",

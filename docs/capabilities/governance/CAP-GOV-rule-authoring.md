@@ -181,12 +181,40 @@ Rules read files through `ctx.cache`, not direct disk I/O:
 - `ctx.cache.write_text(path, content)`: Writes exact UTF-8 bytes (no newline translation), replacing the file atomically with its permission bits kept, and refreshes the cache; a path that resolves (symlinks followed) outside the workspace root is refused with `UnsafePathError` (`PATH_UNSAFE`), and paths under `.devkit/managed/` and `.devkit/overrides/` with `PinnedWriteError` (`RULES_PINNED_WRITE_REFUSED`).
 - `ctx.cache.get_python_ast(path)`: The parsed `ast.Module` of a Python file, parsed once per run from its bytes as CPython reads source (a BOM and a PEP 263 coding cookie honoured), under its workspace-relative name (the resolved absolute path for a file outside the workspace). Every rule that asks receives the same tree, so a rule MUST NOT modify it; a rule that needs a changed tree parses its own copy (`ADR-share-one-read-only-parsed-tree-per-python-file`). A file that does not parse raises a fresh `SyntaxError` (or `ValueError`) of the same type and arguments on every call from one parse, and a missing file raises `FileNotFoundError`; each rule decides whether to report or skip it. A rule that reads Python source parses it through this accessor, not with `ast.parse` of its own (`ADR-parse-cached-bytes-once-and-memoize-the-outcome`).
 - `ctx.cache.get_python_nodes(path, *types)`: Nodes of the requested `ast.AST` types from a Python file, in document traversal order, built once per file on first request from `get_python_ast(path)`. Callers receive a shared immutable tuple of matching nodes and MUST NOT modify them (`ADR-index-python-ast-nodes-by-type-in-workspacecache`). Raises `ValueError` when no types are passed, and re-raises any syntax error from `get_python_ast`. A rule that queries specific node types calls this accessor instead of walking the tree itself.
+- `ctx.cache.get_file_facts(path, descriptor, *, context_key=None)`: Immutable rule-owned syntax facts. A
+  `FileFactsDescriptor[T]` declares `rule_id`, `schema_version`, `source_dependencies`, `extract`, `encode` and
+  `decode`. Identity and safe persistence follow `CAP-GOV-rules-engine`; extraction is not a `BaseRule` lifecycle hook.
+- `ctx.cache.complete_file_facts(descriptor, paths)`: Supplies the descriptor's complete logical path set after
+  successful enumeration. A caught source/parse failure must skip this marker. Partial runs cannot authorize pruning.
+- `ctx.cache.flush_file_facts()`: Flushes only an explicitly enabled writer. Project execution owns this call;
+  library caches default to read-only.
 - `ctx.cache.get_frontmatter(path)`: The YAML frontmatter mapping (`devkit_core.core.frontmatter` grammar) or `None`; raises `devkit_core.base.errors.FrontmatterError` (`FRONTMATTER_INVALID`) for a malformed block.
 - `ctx.cache.get_links(path)`: Inline Markdown links (`MarkdownLink`: `text`, `target` as written, `line`, `start`/`end` of the link and `target_start`/`target_end` of the destination on its line), skipping fenced code and code spans. `devkit_agt.features.rules.extract_links(text)` does the same for a string.
 - `ctx.cache.get_catalog(root)`: The `DocumentCatalog`: every Markdown path, a basename index for link repair, and the frontmatter `id`, `title` and `status` of each file recorded verbatim (with duplicate `id`s listed). A file whose frontmatter cannot be parsed is listed in `frontmatter_errors` instead of failing the run. It applies no identifier grammar and extracts no references; a rule that needs those parses the body itself.
 - `ctx.cache.get_or_compute(key, factory)`: A run-scoped computed cache slot; calls `factory()` on first access and retains the result until an invalidation (`write_text`, `invalidate_all`). Custom rules use this to share expensive calculations or indices across rules in the same run without redundant work.
 - `ctx.settings(rule, path)`: The rule's effective settings for a workspace-relative or absolute path inside the workspace.
 - `devkit_agt.features.rules.count_tasks(text)`: `(checked, total)` Markdown checklist items, ignoring YAML frontmatter and fenced code. `devkit_agt.features.workflow`'s `tasks-checked` check uses the same function, so a rule and a workflow gate never disagree.
+
+### Per-file extraction contracts
+
+1. **File-local extraction**: WHEN an extractor runs, it MUST use only its `FileFactsSource.path`, immutable
+   `context` and file-local `get_python_ast()` / `get_python_nodes(*types)` accessors. Outside inputs belong in current
+   judgment or the canonical extraction context. Independent code review verifies dependency completeness.
+2. **Immutable records**: WHEN extraction succeeds, it MUST return immutable rule-owned syntax/scope records without
+   live AST nodes or resolved cross-file judgments. Shared trees remain read-only.
+3. **Executing provenance**: WHEN a descriptor declares its source dependencies, it MUST capture its implementation,
+   helpers and codec at module load, using `capture_facts_dependency(name, filename, module_name=__name__)` in each
+   implementing module. Framework source and Python implementation/full version also participate in identity.
+   Missing provenance disables persistent reuse. `packages/devkit/tests/integration/features/rules/workspace/test_file_facts.py`.
+4. **Strict codecs**: WHEN decoding memo payloads, the rule MUST reject invalid shapes and semantic record roles with
+   `ValueError` or `TypeError`, including impossible receiver or call-collection records. Warm corruption regressions
+   live in the advisory and usecase-boundaries rule tests.
+
+Supported `FileFactsSource.context` is frozen recursively. Canonical strict JSON context supports string-keyed JSON objects,
+arrays, finite numbers, booleans, strings and null; unsupported contexts bypass retention and persistent reuse.
+Invalid encoder values bypass persistence. Exceptions in extraction or encoding retain rule execution semantics.
+The architecture, advisory unique-code and usecase-boundaries rules opt in with empty extraction context; they
+rebuild module identity, settings, bindings, inheritance and execution judgments on every check.
 
 ## 3. Implementing a Custom Rule Example
 

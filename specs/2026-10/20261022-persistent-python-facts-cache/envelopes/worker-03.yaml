@@ -1,0 +1,21 @@
+kind: worker
+stage: exception
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-23T01:37:51.401717Z'
+status: needs_input
+summary: Implementation and verification complete; native local integration refused before mutation because the retained base runtime cannot import the source facts API.
+findings: []
+unverified_areas:
+- Local merge and worktree/branch cleanup were not performed.
+checks:
+  implementation: PASS code review, reconciliation, 2770 affected tests, lint, types, three wheels and 45 equivalent CLI samples
+diff_scope:
+  base: 4df13b86c8d0d8f70a96bc504019af2860a7c062
+  head: 7af422f8158ae4910f7dcd636f01281afc208d97
+problem:
+  cause: 'INTEGRATION_NOT_READY: source rule packages require FileFactsDescriptor/FileFactsSource absent from the retained main runtime. The verified source remains unmerged and its worktree remains intact.'
+  attempts:
+  - integration_integrate local for dev-persistent-python-facts-cache; provider refused with RULES_RUN_FAILED and RULES_LOAD_FAILED. Source-runtime CI governance passed; known dogfood mismatch documented by FB-readiness-rule-api-change-undiagnosed.
+  recovery: Obtain explicit user authorization for the source-runtime CLI local merge and policy cleanup. Record resolution and resume integration under that authority; do not retry unchanged MCP readiness or bypass its refusal without user authorization.
+activity_effort: medium

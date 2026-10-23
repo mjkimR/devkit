@@ -34,3 +34,8 @@ and other package management code. Business logic belongs in named layer modules
 The static check enforces import directions there but cannot distinguish package
 management from business semantics; review that responsibility explicitly rather
 than treating any function/class declaration as a violation.
+
+Per-file syntax extraction can reuse disposable facts under `.devkit/transient/rules/facts/` when a safe transient
+directory exists. Every check rebuilds discovery, settings and cross-file judgment. Working-tree checks/fixes may
+warm the memo after successful evaluation; snapshots and dry runs only read it. Missing or malformed memos cause
+re-extraction without different findings or advisories. `CAP-GOV-rule-authoring` defines the descriptor contract.

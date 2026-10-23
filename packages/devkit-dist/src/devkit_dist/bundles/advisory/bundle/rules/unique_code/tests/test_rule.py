@@ -241,3 +241,92 @@ def test_sources_are_parsed_once_through_the_shared_cache(tmp_path: Path, monkey
         "src/kit/b.py": ADVISORY + 'class B(AdvisoryError):\n    code = "DUP"\n',
     }
     _parses_through_the_shared_cache(tmp_path, monkeypatch, files)
+
+
+def test_persistent_facts_roundtrip_lazy_imports_and_constant_edit(tmp_path: Path, monkeypatch) -> None:
+    import sys
+
+    from devkit_agt.features.rules import RuleContext, WorkspaceCache
+    from devkit_agt.features.rules.services.evaluator import evaluate_rules
+
+    write_files(
+        tmp_path,
+        {
+            "src/kit/codes.py": 'CODE="DUP"\n',
+            "src/kit/a.py": ADVISORY + "from .codes import CODE\nclass A(AdvisoryError):\n code=CODE\n",
+            "src/kit/b.py": ADVISORY
+            + """class B(AdvisoryError): pass
+def outer():
+ from .codes import CODE
+ def inner():
+  return B(code=CODE)
+ return inner()
+""",
+        },
+    )
+    (tmp_path / ".devkit/transient").mkdir(parents=True)
+
+    def run(cache):
+        return evaluate_rules(RuleContext(tmp_path, cache=cache), [RULE]).violations
+
+    disabled = run(WorkspaceCache(tmp_path, facts_enabled=False))
+    assert len(disabled) == 2
+    cache = WorkspaceCache(tmp_path, facts_writer=True)
+    assert run(cache) == disabled
+    cache.flush_file_facts()
+    warm = WorkspaceCache(tmp_path)
+    monkeypatch.setattr(warm, "get_python_ast", lambda *args: pytest.fail("warm facts requested AST"))
+    monkeypatch.setattr(warm, "get_python_nodes", lambda *args: pytest.fail("warm facts requested nodes"))
+    assert run(warm) == disabled
+    (tmp_path / "src/kit/codes.py").write_text('CODE="OTHER"\n')
+    assert run(WorkspaceCache(tmp_path)) == run(WorkspaceCache(tmp_path, facts_enabled=False))
+    assert {d.name for d in sys.modules[RULE.__module__].FACTS.source_dependencies} == {
+        "RULE-advisory-unique-code.rule",
+        "RULE-advisory-unique-code.index",
+        "RULE-advisory-unique-code.facts",
+    }
+
+
+@pytest.mark.parametrize("corruption", ["callee", "base"])
+def test_malformed_warm_attribute_records_reextract(tmp_path: Path, corruption: str, monkeypatch) -> None:
+    import json
+
+    from devkit_agt.features.rules import RuleContext, WorkspaceCache
+    from devkit_agt.features.rules.services.evaluator import evaluate_rules
+
+    write_files(
+        tmp_path,
+        {
+            "a.py": 'import devkit.advisory as adv\nclass A(adv.AdvisoryError):\n code="DUP"\n',
+            "b.py": ADVISORY + 'class B(AdvisoryError): pass\ndef run(): B.blocked(code="DUP")\n',
+        },
+    )
+    (tmp_path / ".devkit/transient").mkdir(parents=True)
+
+    def run(cache):
+        return evaluate_rules(RuleContext(tmp_path, cache=cache), [RULE]).violations
+
+    expected = run(WorkspaceCache(tmp_path, facts_enabled=False))
+    assert len(expected) == 2
+    cache = WorkspaceCache(tmp_path, facts_writer=True)
+    assert run(cache) == expected
+    cache.flush_file_facts()
+    memo = tmp_path / ".devkit/transient/rules/facts/RULE-advisory-unique-code.json"
+    value = json.loads(memo.read_text())
+    name = "b.py" if corruption == "callee" else "a.py"
+    payload = value["entries"][name]["payload"]
+    expression = payload[3][0][0] if corruption == "callee" else payload[0][0][1][0]
+    assert expression[0] == "attribute"
+    expression[2] = None
+    memo.write_text(json.dumps(value))
+    fresh = WorkspaceCache(tmp_path)
+    extracted = []
+    original = fresh.get_python_ast
+
+    def parse(path):
+        extracted.append(Path(path).relative_to(tmp_path).as_posix())
+        return original(path)
+
+    monkeypatch.setattr(fresh, "get_python_ast", parse)
+    assert run(fresh) == expected
+    assert extracted == [name]

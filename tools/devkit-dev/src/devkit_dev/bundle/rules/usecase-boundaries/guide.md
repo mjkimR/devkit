@@ -21,3 +21,8 @@ exceptions for domain operation entrypoints or whole modules.
 Computed dynamic dispatch, arbitrary dependency behavior and control-flow semantics
 cannot be proven statically. Review those boundaries; approval policies are enforced
 by the execution mechanism, not by inheritance alone.
+
+Per-file syntax extraction can reuse disposable facts under `.devkit/transient/rules/facts/` when a safe transient
+directory exists. Every check rebuilds discovery, settings and cross-file judgment. Working-tree checks/fixes may
+warm the memo after successful evaluation; snapshots and dry runs only read it. Missing or malformed memos cause
+re-extraction without different findings or advisories. `CAP-GOV-rule-authoring` defines the descriptor contract.

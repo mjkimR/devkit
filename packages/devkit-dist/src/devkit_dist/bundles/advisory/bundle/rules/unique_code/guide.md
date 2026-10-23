@@ -58,3 +58,8 @@ a standalone `**` matches zero or more path segments.
 
 There is no per-code exception: two conditions sharing a code is the defect itself. Leave generated or vendored
 sources out with `exclude`, with the reason in a comment directly above the setting.
+
+Per-file syntax extraction can reuse disposable facts under `.devkit/transient/rules/facts/` when a safe transient
+directory exists. Every check rebuilds discovery, settings and cross-file judgment. Working-tree checks/fixes may
+warm the memo after successful evaluation; snapshots and dry runs only read it. Missing or malformed memos cause
+re-extraction without different findings or advisories. `CAP-GOV-rule-authoring` defines the descriptor contract.

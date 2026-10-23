@@ -1,0 +1,14 @@
+kind: resolution
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-23T01:56:25.390114Z'
+status: completed
+summary: CLI integration executes the candidate runtime, which provides the facts API required by the candidate rule assets. The incompatible retained MCP readiness runtime is excluded from this recovery route; implementation and review evidence are unchanged.
+findings: []
+checks:
+  runtime: PASS FileFactsDescriptor and FileFactsSource import from candidate runtime
+diff_scope:
+  base: 4df13b86c8d0d8f70a96bc504019af2860a7c062
+  head: 65039ca03da19f95e98e8700e794e42509612550
+resolves: worker-03.yaml

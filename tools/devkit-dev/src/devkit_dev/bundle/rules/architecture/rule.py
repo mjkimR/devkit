@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import ast
 import importlib.util
 import tomllib
 from dataclasses import dataclass
@@ -11,6 +10,10 @@ from typing import Any
 
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, WorkspaceCache
 from devkit_agt.features.rules.services.builtins.base import BaseRule
+
+from .facts import ArchitectureFacts, Import, descriptor
+
+FACTS = descriptor(__name__, __file__)
 
 LAYERS = {"cli", "mcp", "http", "usecases", "services", "repositories", "models"}
 CONTRACTS = {"models", "errors"}
@@ -33,7 +36,7 @@ class Module:
     path: str
     package: str
     parts: tuple[str, ...]
-    tree: ast.Module
+    facts: ArchitectureFacts
     is_package: bool
 
     @property
@@ -51,27 +54,14 @@ def _imports(module: Module, cache: WorkspaceCache | None = None) -> list[tuple[
     """Resolve relative imports, including from-import submodules, without importing code."""
     result: list[tuple[str, int]] = []
     package = module.name if module.is_package else module.name.rpartition(".")[0]
-    dynamic_names = {"__import__"}
     bindings: dict[str, str] = {}
-
-    if cache is not None:
-        import_nodes = cache.get_python_nodes(module.path, ast.Import, ast.ImportFrom)
-        attribute_nodes = cache.get_python_nodes(module.path, ast.Attribute)
-        scan_nodes = cache.get_python_nodes(module.path, ast.Import, ast.ImportFrom, ast.Call, ast.Constant)
-    else:
-        import_nodes = tuple(n for n in ast.walk(module.tree) if isinstance(n, (ast.Import, ast.ImportFrom)))
-        attribute_nodes = tuple(n for n in ast.walk(module.tree) if isinstance(n, ast.Attribute))
-        scan_nodes = tuple(
-            n for n in ast.walk(module.tree) if isinstance(n, (ast.Import, ast.ImportFrom, ast.Call, ast.Constant))
-        )
-
-    for node in import_nodes:
-        if isinstance(node, ast.Import):
+    for node in module.facts.imports:
+        if node.kind == "import":
             for alias in node.names:
                 bindings[alias.asname or alias.name.split(".")[0]] = (
                     alias.name if alias.asname else alias.name.split(".")[0]
                 )
-        elif isinstance(node, ast.ImportFrom):
+        else:
             base = node.module or ""
             if node.level:
                 try:
@@ -80,23 +70,13 @@ def _imports(module: Module, cache: WorkspaceCache | None = None) -> list[tuple[
                     continue
             for alias in node.names:
                 bindings[alias.asname or alias.name] = f"{base}.{alias.name}"
-    # Inspect imported module attributes too: `import facade as api; api.run()`
-    # must obey the defining implementation's layer, just like a from-import.
-    for node in attribute_nodes:
-        attributes: list[str] = []
-        value = node
-        while isinstance(value, ast.Attribute):
-            attributes.append(value.attr)
-            value = value.value
-        if isinstance(value, ast.Name) and value.id in bindings:
-            result.append((".".join((bindings[value.id], *reversed(attributes))), node.lineno))
-    for node in import_nodes:
-        if isinstance(node, ast.ImportFrom) and node.module == "importlib":
-            dynamic_names.update(alias.asname or alias.name for alias in node.names if alias.name == "import_module")
-    for node in scan_nodes:
-        if isinstance(node, ast.Import):
+    for head, attributes, line in module.facts.attributes:
+        if head in bindings:
+            result.append((".".join((bindings[head], *attributes)), line))
+    for node in module.facts.scan:
+        if isinstance(node, Import) and node.kind == "import":
             result.extend((alias.name, node.lineno) for alias in node.names)
-        elif isinstance(node, ast.ImportFrom):
+        elif isinstance(node, Import):
             name = node.module or ""
             if node.level:
                 try:
@@ -105,27 +85,14 @@ def _imports(module: Module, cache: WorkspaceCache | None = None) -> list[tuple[
                     result.append(("<invalid-relative-import>", node.lineno))
                     continue
             result.extend((name if alias.name == "*" else f"{name}.{alias.name}", node.lineno) for alias in node.names)
-        elif isinstance(node, ast.Call):
-            function = node.func
-            dynamic = (isinstance(function, ast.Name) and function.id in dynamic_names) or (
-                isinstance(function, ast.Attribute) and function.attr == "import_module"
-            )
-            if dynamic and node.args and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str):
-                name = node.args[0].value
-                if name.startswith("."):
-                    context = next((keyword.value for keyword in node.keywords if keyword.arg == "package"), None)
-                    if context is None and len(node.args) > 1:
-                        context = node.args[1]
-                    if isinstance(context, ast.Constant) and isinstance(context.value, str):
-                        try:
-                            name = importlib.util.resolve_name(name, context.value)
-                        except ImportError:
-                            name = "<invalid-relative-import>"
-                result.append((name, node.lineno))
-        elif isinstance(node, ast.Constant) and isinstance(node.value, str) and ":" in node.value:
-            name = node.value.split(":", 1)[0]
-            if all(part.isidentifier() for part in name.split(".")):
-                result.append((name, node.lineno))
+        else:
+            name = node.name
+            if node.kind == "dynamic" and name.startswith(".") and node.context is not None:
+                try:
+                    name = importlib.util.resolve_name(name, node.context)
+                except ImportError:
+                    name = "<invalid-relative-import>"
+            result.append((name, node.lineno))
     return list(dict.fromkeys(result))
 
 
@@ -294,6 +261,8 @@ def inspect_architecture(
                     )
 
     modules: dict[str, Module] = {}
+    complete = True
+    fact_paths: list[str] = []
     for package in packages:
         source = root / package["root"]
         for path in sorted(source.rglob("*.py")):
@@ -320,13 +289,15 @@ def inspect_architecture(
             if issue:
                 findings.append((rel, 1, issue))
             try:
-                tree = cache.get_python_ast(path)
+                facts = cache.get_file_facts(path, FACTS)
+                fact_paths.append(rel)
             except (SyntaxError, ValueError) as exc:
+                complete = False
                 findings.append((rel, getattr(exc, "lineno", 1) or 1, f"cannot parse source: {exc}"))
                 continue
             parts = relative[:-1] if relative[-1] == "__init__" else relative
             name = ".".join((package["namespace"], *parts))
-            modules[name] = Module(name, rel, package["namespace"], parts, tree, relative[-1] == "__init__")
+            modules[name] = Module(name, rel, package["namespace"], parts, facts, relative[-1] == "__init__")
 
     for package in packages:
         for public in package.get("public_modules", []):
@@ -383,8 +354,8 @@ def inspect_architecture(
         destination = modules.get(target)
         if destination and imported != target:
             attribute, _, remainder = imported[len(target) + 1 :].partition(".")
-            for statement in destination.tree.body:
-                if isinstance(statement, ast.Import):
+            for statement in destination.facts.facade:
+                if statement.kind == "import":
                     for alias in statement.names:
                         binding = alias.asname or alias.name.split(".")[0]
                         if binding == attribute:
@@ -394,7 +365,7 @@ def inspect_architecture(
                             resolved = resolve(forwarded, trail | {imported})
                             if resolved:
                                 return resolved
-                if not isinstance(statement, ast.ImportFrom):
+                if statement.kind != "from":
                     continue
                 base = statement.module or ""
                 if statement.level:
@@ -494,6 +465,8 @@ def inspect_architecture(
         findings.append((path, line, f"feature dependency cycle: {' -> '.join(cycle)}"))
     for source, target in sorted(permitted - used):
         findings.append((config_path, 1, f"unused import exception: {source} -> {target}"))
+    if complete:
+        cache.complete_file_facts(FACTS, fact_paths)
     return findings
 
 

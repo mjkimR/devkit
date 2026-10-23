@@ -1,0 +1,32 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-23T01:21:50.633353Z'
+status: completed
+summary: Independent medium-effort review found two P1 codec-shape defects; original staged diff unchanged during review.
+findings:
+- issue: Usecase codec accepts non-call records in call collections.
+  evidence: tools/devkit-dev/src/devkit_dev/bundle/rules/usecase-boundaries/facts.py decoder accepted a name expression referenced by calls/all_calls; independent reviewer reproduced loss of an execution edge.
+  failure_condition: A memo with valid fingerprint and source identity contains a non-call expression in a call collection, causing warm judgment to omit a violation instead of re-extracting.
+  suggested_action: Validate call collection roles and compare complete findings after corrupting a warmed payload.
+  resolution: open
+  severity: P1
+- issue: Advisory codec accepts attributes without their required parent.
+  evidence: packages/devkit-dist/src/devkit_dist/bundles/advisory/bundle/rules/unique_code/facts.py decoder accepted an attribute callee with null parent; independent reviewer reproduced unresolved declarations.
+  failure_condition: A warmed payload contains a parentless attribute callee or class base, losing advisory declarations or inheritance edges instead of rejecting the payload.
+  suggested_action: Require a parent exactly for attribute expressions and add warmed-memo corruption regressions for callees and bases.
+  resolution: open
+  severity: P1
+assumptions:
+- Codex isolation is emulated; reviewer used read-only inspection, in-memory probes and diff fingerprint comparison.
+- 'Review includes uncommitted staged implementation: staged diff SHA256 5a15c8a802893923a81d64327820c26bac8b2a13ce9a009c7de1796f2eb8be31; HEAD alone does not identify the implementation.'
+unverified_areas:
+- Final cumulative checks, performance acceptance and Living Spec reconciliation are verified by the Host after fixes.
+checks:
+  tests: PASS supplied rule/cache tests 103; project/cache tests 68
+  lint: PASS just lint-check all
+diff_scope:
+  base: 4df13b86c8d0d8f70a96bc504019af2860a7c062
+  head: bcc65602a3156f5163b27a4c2fb7ace20e11f8bc
+activity_effort: medium

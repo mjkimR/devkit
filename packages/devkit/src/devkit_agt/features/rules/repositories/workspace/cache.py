@@ -31,6 +31,8 @@ from devkit_core.core.frontmatter import parse as parse_frontmatter
 from devkit_dist.features.project.repositories.receipt import MANAGED_PATH, OVERRIDES_PATH
 
 from devkit_agt.features.rules.models.errors import PinnedWriteError
+from devkit_agt.features.rules.models.file_facts import FileFactsDescriptor, JsonValue
+from devkit_agt.features.rules.repositories.workspace.file_facts import FileFactsCache
 from devkit_agt.features.rules.repositories.workspace.markdown import MarkdownLink, extract_links
 
 if TYPE_CHECKING:
@@ -62,7 +64,16 @@ class WorkspaceCache:
     target it first resolved to. ``write_text`` always resolves afresh.
     """
 
-    def __init__(self, workspace_root: Path | None = None, *, git_filter: bool = True) -> None:
+    def __init__(
+        self,
+        workspace_root: Path | None = None,
+        *,
+        git_filter: bool = True,
+        facts_enabled: bool = True,
+        facts_root: Path | None = None,
+        facts_writer: bool = False,
+        facts_prune: bool = False,
+    ) -> None:
         self.workspace_root = workspace_root.resolve() if workspace_root else Path.cwd().resolve()
         self._git_filter = git_filter
         self._git_files: set[str] | None = None
@@ -87,6 +98,31 @@ class WorkspaceCache:
         self._catalog: DocumentCatalog | None = None
         self._files_cache: dict[tuple[Path, tuple[str, ...] | None], list[Path]] = {}
         self._computed_cache: dict[str, Any] = {}
+        self._file_facts = FileFactsCache(
+            self,
+            root=facts_root or self.workspace_root,
+            enabled=facts_enabled,
+            writer=facts_writer,
+            prune=facts_prune,
+        )
+
+    def get_file_facts(
+        self,
+        path: str | Path,
+        descriptor: FileFactsDescriptor[T],
+        *,
+        context_key: JsonValue = None,
+    ) -> T:
+        """Pull immutable rule-owned extraction; persistent reuse still verifies exact cached source bytes."""
+        return self._file_facts.get(path, descriptor, context_key)
+
+    def complete_file_facts(self, descriptor: FileFactsDescriptor[Any], paths: list[str]) -> None:
+        """Mark a complete successful enumeration; caught source failures must skip this call."""
+        self._file_facts.complete(descriptor, paths)
+
+    def flush_file_facts(self) -> None:
+        """Flush only with an explicit writer after successful evaluation and final rechecks."""
+        self._file_facts.flush()
 
     def _resolve_fresh(self, path: str | Path) -> Path:
         p = Path(path)
@@ -151,6 +187,8 @@ class WorkspaceCache:
             )
         key = resolved.as_posix()
         data = content.encode("utf-8")
+        if dry_run:
+            self._file_facts.writer = False
         if not dry_run:
             atomic_write_bytes(resolved, data)
         self.invalidate(path)
@@ -375,8 +413,10 @@ class WorkspaceCache:
         return not path.is_symlink() or path.resolve().is_relative_to(self.workspace_root)
 
     def invalidate(self, path: str | Path) -> None:
+        self._file_facts.invalidate(self._key(path))
         self._resolved.clear()
         key = self._key(path)
+        self._file_facts.invalidate(key)
         self._bytes_cache.pop(key, None)
         self._text_cache.pop(key, None)
         self._frontmatter_cache.pop(key, None)
@@ -393,6 +433,7 @@ class WorkspaceCache:
             self.invalidate(p)
 
     def invalidate_all(self) -> None:
+        self._file_facts.invalidate()
         self._resolved.clear()
         self._ast_cache.clear()
         self._nodes_cache.clear()

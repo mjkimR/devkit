@@ -1,0 +1,31 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-23T01:22:59.061410Z'
+status: completed
+review: review-01.yaml
+summary: Independent reviewer verified both P1 fixes and Host-added snapshot tests; no new defects. Full lint/type checks and 2770 affected tests pass.
+findings:
+- issue: Usecase codec accepts non-call records in call collections.
+  evidence: tools/devkit-dev/src/devkit_dev/bundle/rules/usecase-boundaries/facts.py decoder accepted a name expression referenced by calls/all_calls; independent reviewer reproduced loss of an execution edge.
+  failure_condition: A memo with valid fingerprint and source identity contains a non-call expression in a call collection, causing warm judgment to omit a violation instead of re-extracting.
+  suggested_action: Validate call collection roles and compare complete findings after corrupting a warmed payload.
+  resolution: resolved
+  severity: P1
+- issue: Advisory codec accepts attributes without their required parent.
+  evidence: packages/devkit-dist/src/devkit_dist/bundles/advisory/bundle/rules/unique_code/facts.py decoder accepted an attribute callee with null parent; independent reviewer reproduced unresolved declarations.
+  failure_condition: A warmed payload contains a parentless attribute callee or class base, losing advisory declarations or inheritance edges instead of rejecting the payload.
+  suggested_action: Require a parent exactly for attribute expressions and add warmed-memo corruption regressions for callees and bases.
+  resolution: resolved
+  severity: P1
+assumptions:
+- 'Uncommitted fixes verified against original staged review: working diff SHA256 b3431dd9ec408891e563d25b88bb913f446be54328239df0a354397ff33ffb58.'
+- 'Reviewer source SHA256: advisory facts 1363998d3f21c78fa5b67379a6ff2984ef79ddf43fdfd72f1a7deeb8cdee5574; usecase facts 06a8fe03d96b94cd7a34418b3f1bab3433a459e12ccb9427575954035f640fe7.'
+checks:
+  tests: PASS independent failure probes; rule suites 84; just test-affected --base main 2770 passed
+  lint: PASS just lint-check all; just check all
+diff_scope:
+  base: 4df13b86c8d0d8f70a96bc504019af2860a7c062
+  head: bcc65602a3156f5163b27a4c2fb7ace20e11f8bc
+activity_effort: medium

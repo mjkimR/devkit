@@ -7,15 +7,37 @@ class and its subclasses, in their bodies or through ``code=`` keywords at calls
 
 from __future__ import annotations
 
-import ast
 from collections import defaultdict
-from collections.abc import Iterator
 from dataclasses import dataclass, field
 
-from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, match_path, validate_pattern
+from devkit_agt.features.rules import (
+    FileFactsDescriptor,
+    Phase,
+    RuleContext,
+    Severity,
+    Violation,
+    capture_facts_dependency,
+    match_path,
+    validate_pattern,
+)
 from devkit_agt.features.rules.services.builtins import BaseRule
 
+from .facts import SOURCE, Expression, decode, encode, extract
+from .index import SOURCE as INDEX_SOURCE
 from .index import Imports, Index, Module, Target, function_imports, parse_module
+
+FACTS = FileFactsDescriptor(
+    "RULE-advisory-unique-code",
+    1,
+    (
+        capture_facts_dependency("RULE-advisory-unique-code.rule", __file__, module_name=__name__),
+        SOURCE,
+        INDEX_SOURCE,
+    ),
+    extract,
+    encode,
+    decode,
+)
 
 REMEDIATION = (
     "Give the condition a code of its own, or derive the class from the class that owns the code"
@@ -43,19 +65,12 @@ class _Declaration:
     in_body: bool  # declared in the owner's class body, not passed at a call
 
 
-def _calls(module: Module) -> Iterator[tuple[ast.Call, Imports]]:
-    """Every call of ``module`` with the lazy imports of the functions enclosing it, innermost first."""
-
-    def visit(node: ast.AST, local: Imports) -> Iterator[tuple[ast.Call, Imports]]:
-        for child in ast.iter_child_nodes(node):
-            inner = local
-            if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef):
-                inner = {**local, **function_imports(module, child)}
-            elif isinstance(child, ast.Call):
-                yield child, local
-            yield from visit(child, inner)
-
-    yield from visit(module.tree, {})
+def _calls(module: Module):
+    for call in module.facts.calls:
+        local: Imports = {}
+        for scope in call.scopes:
+            local = {**local, **function_imports(module, scope)}
+        yield call, local
 
 
 class _Analysis:
@@ -95,31 +110,24 @@ class _Analysis:
             owner = Target("class", f"{module.name}.{name}")
             if not self.is_advisory(owner, module.file):
                 continue
-            for statement in node.body:
-                targets = statement.targets if isinstance(statement, ast.Assign) else []
-                if isinstance(statement, ast.AnnAssign) and statement.value is not None:
-                    targets = [statement.target]
-                value = statement.value if isinstance(statement, ast.Assign | ast.AnnAssign) else None
-                if value is None or not any(isinstance(t, ast.Name) and t.id == "code" for t in targets):
-                    continue
+            for value, line in node.codes:
                 code = self.index.string_value(module.name, value)
                 if code:
-                    found.append(_Declaration(code, owner, module.file, statement.lineno, in_body=True))
+                    found.append(_Declaration(code, owner, module.file, line, in_body=True))
         for node, local in _calls(module):
-            keyword = next((k for k in node.keywords if k.arg == "code"), None)
-            code = self.index.string_value(module.name, keyword.value, local) if keyword else None
-            callee = self.callee(module, node.func, local) if code else None
+            code = self.index.string_value(module.name, node.code, local) if node.code is not None else None
+            callee = self.callee(module, node.function, local) if code else None
             if code and callee is not None:
-                found.append(_Declaration(code, callee, module.file, node.lineno, in_body=False))
+                found.append(_Declaration(code, callee, module.file, node.line, in_body=False))
         return found
 
-    def callee(self, module: Module, func: ast.expr, local: Imports) -> Target | None:
+    def callee(self, module: Module, func: Expression, local: Imports) -> Target | None:
         """The advisory class a call constructs or calls a classmethod of (``Error(...)``, ``Error.blocked(...)``)."""
         target = self.index.resolve_expression(module.name, func, local)
         if target is not None and self.is_advisory(target, module.file):
             return target
-        if isinstance(func, ast.Attribute):  # a classmethod of a base outside the workspace
-            owner = self.index.resolve_expression(module.name, func.value, local)
+        if func.kind == "attribute" and func.parent is not None:  # a classmethod of a base outside the workspace
+            owner = self.index.resolve_expression(module.name, func.parent, local)
             if owner is not None and owner.kind == "external" and self.is_advisory(owner, module.file):
                 return owner
         return None
@@ -170,16 +178,20 @@ class AdvisoryUniqueCodeRule(BaseRule):
     def check(self, ctx: RuleContext) -> list[Violation]:
         modules: list[Module] = []
         bases: dict[str, list[str]] = {}
+        complete = True
+        fact_paths: list[str] = []
         for path in ctx.cache.find_files(ctx.workspace_root, extensions=(".py",)):
             rel = path.relative_to(ctx.workspace_root).as_posix()
             settings: UniqueCodeSettings = ctx.settings(self, rel)
             if any(match_path(pattern, rel) for pattern in settings.exclude):
                 continue
             try:
-                tree = ctx.cache.get_python_ast(path)
+                facts = ctx.cache.get_file_facts(path, FACTS)
+                fact_paths.append(rel)
             except (SyntaxError, ValueError):
+                complete = False
                 continue  # the linter of the language reports it
-            module = parse_module(rel, tree)
+            module = parse_module(rel, facts)
             if module is not None:
                 modules.append(module)
                 bases[rel] = settings.bases
@@ -215,4 +227,6 @@ class AdvisoryUniqueCodeRule(BaseRule):
                         phase=self.phase,
                     )
                 )
+        if complete:
+            ctx.cache.complete_file_facts(FACTS, fact_paths)
         return sorted(violations, key=lambda v: (v.file, v.line, v.message))

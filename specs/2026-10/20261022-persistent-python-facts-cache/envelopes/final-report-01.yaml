@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-23T01:35:48.249924Z'
+status: completed
+summary: 'Persistent per-file Python facts implemented for architecture, advisory uniqueness and usecase boundaries. Independent code review and reconciliation passed. Five-sample full CLI medians: disabled 5.902s, cold 6.733s, warm 3.301s (44.1% saving); all scenario outputs equal.'
+findings: []
+assumptions:
+- User-selected existing worktree used throughout Development; pull_request=auto chooses local integration because local verification covers the change and no platform review or publication is required.
+- Shared-base dev-integration=auto authorizes verified local native integration and policy cleanup (delete_branch=yes); this is policy authority, not human approval.
+- Cold extraction/persistence is slower than disabled execution; the measured benefit is repeated warm checks. Original pre-refactor baseline uses different instrumentation and is not a controlled speedup comparison.
+checks:
+  tests: PASS just test-affected --base main 2770 passed; 45 final fresh-process samples equivalent with zero full/snapshot warm extraction and one extraction per descriptor for one-file edit
+  build: PASS devkit-agt, devkit-dist and devkit-dev wheels built and new facts modules verified in archives
+  lint: PASS just lint-check all; just check all; devkit rules check --ci --base main zero errors/warnings
+diff_scope:
+  base: 4df13b86c8d0d8f70a96bc504019af2860a7c062
+  head: 1fb6c3828503b393199885e46174de2cc3f25bac
+activity_effort: medium
