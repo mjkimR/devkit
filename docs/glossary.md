@@ -22,6 +22,7 @@ The ubiquitous terms of devkit as its documents, commands and bundles use them. 
 | Term | Definition | Owner | Avoid | Code identifiers |
 | :--- | :--- | :--- | :--- | :--- |
 | **Governance rule** | A deterministic invariant evaluated by `devkit rules check` with optional automatic repair (`devkit rules fix`). | `CAP-GOV-rules-engine` |  |  |
+| **Per-file rule facts** | Immutable rule-owned syntax extracted from one logical Python path; persistent reuse is keyed by cached source bytes, explicit extraction context and executing-source fingerprint. Excludes shared AST objects and cross-file judgments. | `CAP-GOV-rule-authoring` |  | `FileFactsDescriptor`, `WorkspaceCache.get_file_facts` |
 | **Rule phase** | Execution category of a rule: `syntax`, `hygiene`, `linter`, `contract`. | `CAP-GOV-rules-engine` |  |  |
 | **Snapshot run** | Rule execution against an exact Git snapshot: staged tree (`devkit rules check --staged`) or base commit comparison (`--ci --base <ref>`). | `CAP-GOV-rules-engine` |  |  |
 

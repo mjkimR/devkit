@@ -6,6 +6,7 @@ area: governance
 status: active
 entrypoints:
   - packages/devkit/src/devkit_agt/features/rules/services/evaluator.py
+  - packages/devkit/src/devkit_agt/features/rules/usecases/project.py
 created_at: 2026-10-17
 usecases:
   - UC-resolve-stale-activity-branches
@@ -23,12 +24,13 @@ Related: `CAP-GOV-rules-engine`, `CAP-GOV-rule-authoring`,
 2. Load rules (`CAP-GOV-rule-authoring`) and validate the project policy: phase overrides, severity overrides, typed settings and `exclude` patterns, together with every rule's `inputs` declaration. Any loading or policy problem stops the run before a rule executes.
 3. Select the active rules for the phase (`linter` or `hygiene`), leave out those explicit targets or snapshot diff candidate paths cannot affect (target scoping, section 3), and run their checks, collecting violations and execution errors.
 4. With `fix` (not `--dry-run`) and no execution error, run each selected `Autofixable.fix()` once, sequentially, then recheck once (section 2).
-5. Return the final violations and errors.
+5. After successful working-tree evaluation and final rechecks, flush explicitly enabled per-file facts writers.
+6. Return the final violations and errors.
 
 ## 2. Autofix and Convergence
 
 - **One repair pass, one recheck.** There is no repair loop, so a run always terminates with a predictable cost. The recheck evaluates the active rules target scoping selects for the targets plus the files the fixes modified, so a fix that writes a skipped rule's input is rechecked by that rule; after a failed fix, whose writes are unknown, it evaluates every active rule.
-- **Cache invalidation.** The paths a fixer returns are invalidated in `WorkspaceCache` (bytes, text, frontmatter, links, parsed Python, and every remembered path resolution) and dependent catalog indexes are refreshed before the recheck. A failed fix clears the whole cache and rechecks disk contents; it does not roll back writes.
+- **Cache invalidation.** The paths a fixer returns are invalidated in `WorkspaceCache` (bytes, text, frontmatter, links, parsed Python, per-file facts and pending facts writes, and every remembered path resolution) and dependent catalog indexes are refreshed before the recheck. A failed fix clears the whole cache and rechecks disk contents; it does not roll back writes.
 - **Convergence.** A fixable finding is marked fixed only when the recheck reports fewer findings with the same rule, file and message (lines may move during a fix); whatever a failed or partial fix left is reported as remaining.
 - **No unsafe writes.** A file that is not valid UTF-8 is left untouched, writes keep every other byte (line endings included), and nothing under `.devkit/managed/` or `.devkit/overrides/` (copies pinned by the installation receipt) is written.
 - **Malformed frontmatter is not a run failure.** The document catalog records it in `frontmatter_errors` and keeps indexing; a bundle rule that requires valid frontmatter reports it as its own violation.
@@ -45,6 +47,24 @@ Command synopsis, output and exit codes: [Rules Reference, CLI usage](../../deve
 - **Targets**: workspace-relative or absolute paths inside the workspace. A file named on the command line is checked as is, by every rule the run evaluates (also those that scan the workspace with `find_files`), even when Git ignores it (for example a workflow unit under `.devkit/transient/`) or it sits in a dependency or cache directory (`.venv/`, `node_modules/`). A directory expands recursively to its regular files with the same discovery as a whole-workspace scan: dependency and cache directories (`.git`, `.venv`, `node_modules`, ...), `.devkit/managed/` and `.devkit/overrides/`, and symlinks resolving outside the workspace are skipped, and inside a Git work tree only files Git does not ignore are listed (tracked plus untracked; names are compared in Unicode NFC, so a file whose on-disk name is decomposed, as macOS may store it, still matches Git's precomposed name). No targets means the whole workspace; a directory without files checks nothing. A target that is neither an existing file nor a directory inside the workspace, including a file or directory symlink that resolves outside it, and a file or directory inside `.devkit/managed/` or `.devkit/overrides/` (receipt-pinned copies rules never read), fails with `RULES_TARGET_INVALID` before any rule runs. Link repair still indexes every Markdown file in the workspace when checking selected files.
 - **Target scoping**: a run with explicit targets in the working tree (`devkit rules check FILES`, `devkit rules fix FILES`, the workflow engine's `lint-clean`, a library call of `evaluate_rules` whose context names targets) or a Git snapshot run (`check --staged`, `check --ci`) skips each active rule that declares `inputs` (`CAP-GOV-rule-authoring`) when no candidate path matches one of its patterns. For working-tree runs, candidate paths are the targets as named and expanded from directories, before `[rules] exclude` removes any (Exclusions, below), because a rule that reads the whole workspace does not honor them. For Git snapshot runs, candidate paths are the targets plus `snapshot.deleted` (including typechanges and old paths of renames), while `RuleContext.targets` holds only present files. A candidate that is `.devkit/config.toml` or `.devkit/installation.json` keeps every rule for the run, since `[rules]` policy and rule definitions can change any rule's findings. Undeclared rules always run; whole-workspace runs without targets or snapshot changes evaluate every active rule. A skipped rule reports nothing, so a documentation-only run no longer reports what such a rule finds in files outside the targets, pre-existing or introduced by uncommitted work; full-workspace CI runs (`just rules-check` in `.github/workflows/ci.yml`) and full runs still do. The skipped rule IDs are returned on `EvaluationResult.skipped` and `ProjectRun.skipped` and logged at `INFO` (`-v`); stdout and the JSON result do not change.
 - **Exclusions**: `exclude` under `[rules]` lists workspace-relative patterns (the `**` grammar of settings overrides, section 5) that no rule targets. Excluded paths are removed from explicit, directory-expanded and snapshot targets, and `ctx.is_file_targeted` is `False` for them; a run whose explicit targets are all excluded checks nothing rather than falling back to the whole workspace. They stay in the document catalog, so link repair can still resolve to them. An invalid pattern is a policy error.
+
+### Per-file facts lifecycle
+
+- **Read-only contexts**: WHERE evaluation is a dry run, a snapshot or a default library cache, the cache MUST write
+  no facts memo. `packages/devkit/tests/integration/features/rules/engine/test_project.py`.
+- **Snapshot borrowing**: WHEN the project evaluates an in-place staged, materialized staged or CI snapshot, it MUST
+  borrow only the originating worktree's memo directory in read-only mode.
+  `packages/devkit/tests/integration/features/rules/engine/test_project.py`.
+- **Snapshot identity**: WHEN borrowed facts are considered, reuse MUST match snapshot source bytes and the actual
+  executing rule/helper fingerprint after the existing receipt and rule-loading checks.
+  `packages/devkit/tests/integration/features/rules/engine/test_project.py`.
+- **Recheck identity**: WHEN `invalidate`, `invalidate_many`, `invalidate_all` or `write_text` invalidates input,
+  the cache MUST discard affected in-memory facts and pending writes before recheck. Loaded stores stay separate;
+  reuse still validates a fresh digest. `packages/devkit/tests/integration/features/rules/workspace/test_file_facts.py`.
+
+A snapshot miss extracts from its evaluation workspace and creates no memo there or in the host. Borrowing changes
+neither rule membership nor snapshot policy authority. Git worktrees retain separate memo roots.
+`CAP-GOV-rules-engine` and `ADR-persist-python-facts-and-reuse-in-snapshots` define storage and pruning.
 
 ## 4. Phase Transitions: Overrides and Promotions
 

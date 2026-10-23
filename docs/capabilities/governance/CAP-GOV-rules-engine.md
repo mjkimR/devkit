@@ -1,7 +1,7 @@
 ---
 id: CAP-GOV-rules-engine
 title: "Governance Rules Engine"
-summary: "Deterministic static invariant verification, convergence checking, phases, and autofix engine."
+summary: "Deterministic static invariant verification, convergence checking and rule-owned per-file extraction reuse."
 area: governance
 status: active
 entrypoints:
@@ -24,33 +24,26 @@ Related: `CAP-GOV-evaluation-lifecycle`, `CAP-GOV-rule-authoring`, [Rules Refere
 4. **Convergent autofix**: one repair pass followed by one recheck, never a repair loop (`CAP-GOV-evaluation-lifecycle`).
 5. **One evaluation path**: the CLI, the `rules-check` commit gate and the workflow engine's `lint-clean` check both call `run_project_rules`, so they cannot disagree on policy; target scoping lives in `evaluate_rules`, so they also agree on which rules explicit targets and snapshot diffs can affect (`CAP-GOV-evaluation-lifecycle`).
 
+6. **Persistent extraction**: rule-owned per-file Python facts reuse syntax extraction across processes; discovery, current configuration and cross-file judgments run on every evaluation (`ADR-pull-per-file-python-facts`).
+
 ## 2. Subsystem Layout
 
 ```text
 src/devkit_agt/features/rules/
-├── engine/                  # Core evaluation engine & contracts
-│   ├── models.py            # Violation, RuleContext, Rule, Autofixable protocols
-│   ├── config.py            # [rules] section of .devkit/config.toml (phase/severity overrides, settings)
-│   ├── settings.py          # Typed per-rule settings, path-scoped overrides, resolver
-│   ├── discovery.py         # Rule assets recorded by devkit sync in the installation receipt
-│   ├── project.py           # run_project_rules: config, registry, context and evaluation in one call
-│   ├── phases.py            # Effective phase resolution, overrides, promotions
-│   ├── policy.py            # validate_policy: inputs declarations, phase, severity and settings policy in one pass
-│   ├── errors.py            # RulesError hierarchy: raised errors and collected RuleProblems with codes
-│   ├── registry.py          # RuleRegistry & default_rule_registry (plugin packages via devkit_core.core.plugins)
-│   ├── evaluator.py         # Target scoping, sequential rule evaluation, single autofix pass & convergence recheck
-│   └── rule_tests.py        # rule_folder and run_rule_tests: each rule's tests/ in a pytest subprocess
-├── testing.py               # load_rule, check, evaluate, opened_files: helpers for the tests in a rule's folder
-├── workspace/               # Shared file caching, Markdown file catalog and Git snapshots
-│   ├── cache.py             # WorkspaceCache (file discovery, bytes, text, frontmatter, links, parsed Python, node index, per-run path resolution, run-scoped get_or_compute)
-│   ├── catalog.py           # DocumentCatalog (paths, basenames, frontmatter id/title/status)
-│   ├── markdown.py          # Fences, inline links, count_tasks (the checklist counter shared with devkit_agt.features.workflow)
-│   └── snapshot.py          # Staged / CI Git trees for gate evaluation (in place or materialized)
-├── rules/                   # Built-in governance rules (repository-generic only)
-│   ├── base.py              # Base rule helper class (settings, guide, related, promote_to, inputs)
-│   └── <name>/              # one folder per rule: rule.py, guide.md, tests/ (markdown_link, file_length,
-│                            # secret_leak, clean_artifacts)
-└── cli/                     # commands.py (check, fix, phases, explain, test) and output.py (text and JSON rendering)
+├── models/                  # Rule/context contracts, settings, phases, snapshots and facts descriptors
+├── repositories/
+│   ├── config.py            # Project rules policy
+│   ├── discovery.py         # Receipt-verified rule assets
+│   └── workspace/
+│       ├── cache.py         # Shared file/AST/node cache and public facts pull API
+│       ├── file_facts.py    # Run-local facts identity and invalidation
+│       ├── facts.py         # Source provenance and per-rule JSON stores
+│       ├── catalog.py       # Markdown paths and frontmatter
+│       ├── markdown.py      # Markdown links and task counting
+│       └── snapshot.py      # Staged and CI Git trees
+├── services/                # Evaluator, registry, rule-test helpers and built-in rules
+├── usecases/                # Project assembly, snapshot capture and rule operations
+└── cli/                     # Command adapters and text/JSON output
 ```
 
 Library callers import the public API from `devkit_agt.features.rules`; built-in rule classes are exported by `devkit_agt.features.rules.services.builtins`. The opt-in `authoring` bundle (size and wording rules with their tests, playbooks and the `agent-asset-writing` instruction) lives outside this module, in the data-only `devkit_agt.bundles.authoring` (`src/devkit_agt/bundles/authoring/bundle/`): its rules use only the public API and are loaded from the synchronized copies like any bundle rule, and discovering the bundle never imports the engine.
@@ -64,3 +57,27 @@ Library callers import the public API from `devkit_agt.features.rules`; built-in
 ## 4. Shared Foundation
 
 `devkit_agt.features.rules` uses the shared foundation and distribution project support without reimplementing them: frontmatter is parsed with `devkit_core.core.frontmatter` (the grammar the workflow engine reads), the installation receipt with `devkit_dist.features.project.repositories.receipt`, Git commands run through `devkit_core.core.git.run_git`, snapshot paths are validated with `devkit_core.core.paths`, and rule packages are loaded with `devkit_core.core.plugins` (atomic per package, classes in module then definition order). `devkit rules test` runs each rule's tests through `devkit_agt.features.compact.run_command` (full log on disk, bounded view in the result), imported only when tests run. The CLI's default workspace root is `devkit_dist.features.project.repositories.project.find_project_root` of the current directory.
+
+## 5. Per-file Rule Facts
+
+1. **Fresh judgment**: WHEN a rule pulls per-file facts, the engine MUST key persistent reuse by logical relative
+   POSIX path, digest of the exact cached source bytes, canonical extraction context and executing-source fingerprint.
+   `packages/devkit/tests/integration/features/rules/workspace/test_file_facts.py`.
+2. **Derived state**: IF a memo is absent, malformed, incompatible or inaccessible, THEN the engine MUST compute
+   facts without adding advisories or changing findings, their order or exit status. Extractor programming failures
+   retain normal rule execution semantics. `packages/devkit/tests/integration/features/rules/workspace/test_file_facts.py`.
+3. **Safe memo paths**: WHEN an explicitly enabled writer flushes, it MUST use atomic per-rule JSON replacement under
+   an existing safe `.devkit/transient/`, rejecting symlinks and non-regular memo components.
+   `packages/devkit/tests/integration/features/rules/workspace/test_file_facts.py`.
+4. **Persistence authority**: WHERE a project runs working-tree checks or fixes without dry run, the project use case
+   MUST flush derived facts only after evaluation and rechecks finish without execution problems.
+   `packages/devkit/tests/integration/features/rules/engine/test_project.py`.
+5. **Bounded pruning**: WHEN a full untargeted working-tree evaluation flushes, it MUST prune only descriptors with
+   an explicit complete logical path set. Partial runs and caught source failures preserve unseen entries.
+   `tools/devkit-dev/src/devkit_dev/bundle/rules/architecture/tests/test_rule.py`.
+
+The memo format is `version`, `fingerprint` and `entries`; each logical path maps to `digest`, canonical `context`
+and rule-codec `payload`. The memo is trusted local derived state, not authenticated execution state.
+Unchanged serialized bytes cause no replacement. Concurrent writers use last atomic replacement; lost entries cause
+later misses. Stores remain loaded separately from computed judgments across invalidations.
+`ADR-persist-python-facts-and-reuse-in-snapshots` owns the storage and writer policy.

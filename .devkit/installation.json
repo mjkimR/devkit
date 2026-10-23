@@ -1258,7 +1258,7 @@
     },
     ".devkit/managed/advisory/rules/unique_code/guide.md": {
       "mode": 420,
-      "sha256": "1e3dc6e81d440ed7d3ad74800e8ed48080919eda93f0a22f96c315d8e634be96"
+      "sha256": "63251543f1e99f713bfb2a827e907353577a4b35ecd2e008fad7ec28b69263ed"
     },
     ".devkit/managed/advisory/rules/unique_code/index.py": {
       "mode": 420,
@@ -1330,7 +1330,7 @@
     },
     ".devkit/managed/devkit-dev/rules/architecture/guide.md": {
       "mode": 420,
-      "sha256": "791843d6306be5f4954c7be6a057ca7c974dafe25fafe132343ba540b473acb4"
+      "sha256": "d006aa67437ee2494cbe65607710fb3f6271ff710dc2d3ba77a208eb3b46c075"
     },
     ".devkit/managed/devkit-dev/rules/architecture/rule.py": {
       "mode": 420,
@@ -1346,7 +1346,7 @@
     },
     ".devkit/managed/devkit-dev/rules/usecase-boundaries/guide.md": {
       "mode": 420,
-      "sha256": "b93ca62bd20778ff1d6aeafde86f2c6735c0d299c066dfc9d0b184e4152f380a"
+      "sha256": "4cd145cd2d556124f99927e803e8f78e438d29c8724d7d8b3205455b32d6163d"
     },
     ".devkit/managed/devkit-dev/rules/usecase-boundaries/rule.py": {
       "mode": 420,

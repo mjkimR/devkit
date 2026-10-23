@@ -26,7 +26,7 @@ for violation in run.blocking_violations:  # unfixed error-severity findings
 ```
 
 Keyword arguments are `targets`, `snapshot`, `phase`, `fix`, `dry_run` and
-`rules_dir`. Configuration, target, rules-directory and snapshot failures are
+`rules_dir` and the internal library/test control `facts_enabled` (default `True`). Configuration, target, rules-directory and snapshot failures are
 raised ([Errors](rules.md#errors)). Rule loading problems, such as a malformed receipt or
 a missing or drifted synchronized rule, are returned in `run.load_errors`, and
 no rule is evaluated. `run.blocking_violations` (also on `EvaluationResult`)
@@ -179,3 +179,22 @@ class BannedWordsRule(BaseRule):
                 out.append(Violation(self.id, rel, 1, "banned marker"))
         return out
 ```
+
+### Per-file rule facts
+
+The persistence contract and descriptor authoring rules are in `CAP-GOV-rules-engine` and `CAP-GOV-rule-authoring`.
+Import `FileFactsDescriptor`, `FileFactsSource`, `FactsDependency`, `JsonValue` and `capture_facts_dependency` from
+`devkit_agt.features.rules`. Call `cache.get_file_facts(path, descriptor, context_key=None)` to pull typed facts.
+Declare each implementation/helper dependency at module load and supply strict JSON encode/decode functions.
+`cache.complete_file_facts(descriptor, paths)` marks complete successful enumeration; a caught parse failure skips it.
+
+`WorkspaceCache(root)` may read safe local memos but never writes them by default. An explicit library writer uses
+`WorkspaceCache(root, facts_writer=True)` and calls `flush_file_facts()` after successful evaluation/rechecks.
+`facts_prune=True` additionally permits pruning after a complete marker. `facts_root` supplies a read-only borrow
+root for a snapshot; project orchestration sets that root and never enables snapshot writes.
+`facts_enabled=False` disables persistent reads/writes for equivalence tests. `run_project_rules(...,
+facts_enabled=False)` applies that control to the project execution path without introducing a CLI flag.
+
+The architecture, advisory uniqueness and usecase-boundary rules persist syntax only. Configuration changes and
+cross-file changes still rebuild judgments. Memos live under an existing `.devkit/transient/rules/facts/`; deleting
+them causes extraction misses. Unchanged warm runs perform no steady-state memo replacement.
