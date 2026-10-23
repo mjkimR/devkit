@@ -81,15 +81,15 @@ flowchart TD
     B -->|yes| P2[Pull Request only<br/>finish --merge refused]:::req
     B -->|no · auto| C{"PR needed?<br/>branch protection · CI · external review"}
     C -->|yes| P3[Pull Request]:::need
-    C -->|no| M["Local merge & cleanup<br/>finish --merge (pushes base)<br/>or MCP local route (no push)"]
+    C -->|no| M["Local merge & cleanup<br/>integration CLI (no push)<br/>or finish --merge (pushes base)"]
     P2 & P3 --> W[Push & PR creation<br/>spec-integrate]
 
     classDef need fill:#dbeafe,stroke:#1d4ed8,color:#111
     classDef req fill:#fee2e2,stroke:#b91c1c,color:#111
 ```
 
-- When `pull_request = "required"`, local integration commands (`finish --merge`, `integration_integrate`) fail closed with `WORKTREE_PR_POLICY`.
-- In `auto`, local integration verifies readiness, executes fast-forward merges, and triggers scoped cleanup (`CAP-INT-mcp-services`). The MCP `local` route strictly excludes network operations (no fetch/push), whereas CLI `devkit worktree finish --merge` pushes base upstream.
+- When `pull_request = "required"`, local integration commands (`finish --merge`, `devkit integration integrate --route local`) fail closed with `WORKTREE_PR_POLICY`.
+- The `devkit integration integrate` CLI rebuilds readiness and policy from the retained base after Host conversational approval; automatic authority comes only from that base's policy. Its `local` route excludes fetch and push and triggers scoped cleanup (`CAP-INT-mcp-services`). The separate `devkit worktree finish --merge` command pushes base upstream.
 
 ---
 

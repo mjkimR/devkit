@@ -13,7 +13,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from devkit_agt.features.worktree import locate, start
-from mcp import ClientSession, StdioServerParameters, types
+from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 PROVIDER = """
@@ -34,52 +34,50 @@ def git(root: Path, *args: str) -> str:
     return subprocess.check_output(["git", "-C", str(root), *args], text=True).strip()
 
 
-async def conversation(root: Path, worktree: Path) -> None:
-    approvals: list[str] = []
-
-    async def confirm(context, params):
-        approvals.append(params.message)
-        return types.ElicitResult(action="accept", content={"approve": len(approvals) == 2})
-
+async def conversation(root: Path, worktree: Path, prepared_digest: str) -> None:
     args = ["-m", "devkit_dist", "mcp", "serve", "--workspace-root", str(root), "--configuration-workspace", str(root)]
     params = StdioServerParameters(command=sys.executable, args=args)
     async with (
         stdio_client(params) as (read, write),
-        ClientSession(read, write, read_timeout_seconds=timedelta(seconds=30), elicitation_callback=confirm) as session,
+        ClientSession(read, write, read_timeout_seconds=timedelta(seconds=30)) as session,
     ):
         await session.initialize()
         tools = await session.list_tools()
-        assert "integration_integrate" in {tool.name for tool in tools.tools}
-        request = {"branch": "dev-smoke", "task_kind": "session", "task_id": "installed-fixture"}
+        names = {tool.name for tool in tools.tools}
+        assert not names.intersection(
+            {"integration_prepare", "integration_integrate", "integration_status", "integration_resume"}
+        )
+        assert {"shared_put", "shared_get"} <= names
         tip = git(worktree, "rev-parse", "HEAD")
         before = git(root, "rev-parse", "HEAD")
-        preview = await session.call_tool("integration_prepare", request)
-        assert preview.structuredContent is not None and preview.structuredContent["status"] == "prepared"
-        refused = await session.call_tool(
-            "integration_resume", {"request_id": preview.structuredContent["request"]["id"]}
+        assert worktree.exists() and before == git(root, "rev-parse", "HEAD")
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "devkit_dist",
+                "integration",
+                "integrate",
+                "dev-smoke",
+                "--task-kind",
+                "session",
+                "--task-id",
+                "installed-fixture",
+                "--expected-digest",
+                prepared_digest,
+                "--workspace-root",
+                str(root),
+                "--format",
+                "json",
+            ],
+            text=True,
+            capture_output=True,
         )
-        assert (
-            refused.structuredContent is not None
-            and refused.structuredContent["error"]["code"] == "INTEGRATION_AUTHORITY_REQUIRED"
-        )
-        nonapproved = await session.call_tool("integration_integrate", request)
-        assert nonapproved.structuredContent is not None and nonapproved.structuredContent["status"] == "not_approved"
-        assert worktree.exists() and git(root, "rev-parse", "HEAD") == before
-        approved = await session.call_tool("integration_integrate", request)
-        assert approved.structuredContent is not None and approved.structuredContent["status"] == "completed", approved
-        assert len(approvals) == 2 and tip in approvals[1] and before in approvals[1]
+        assert result.returncode == 0, result.stdout + result.stderr
+        integrated = json.loads(result.stdout)
+        assert integrated["status"] == "completed", integrated
+        assert integrated["authority"] == "host-conversation"
         assert not worktree.exists() and git(root, "rev-parse", "HEAD^1", "HEAD^2").split() == [before, tip]
-        assert approved.structuredContent["request"]["network_operations"] == "excluded"
-        assert "context" not in approved.structuredContent["request"]
-        assert "SMOKE_CHECK_PASSED" not in approvals[1]
-        request_id = approved.structuredContent["request"]["id"]
-        inspected = await session.call_tool("integration_status", {"request_id": request_id})
-        assert inspected.structuredContent is not None and "context" not in inspected.structuredContent["request"]
-        detailed = await session.call_tool("integration_status", {"request_id": request_id, "detail": True})
-        assert detailed.structuredContent is not None and detailed.structuredContent["request"]["readiness"]["evidence"]
-        resumed = await session.call_tool("integration_resume", {"request_id": request_id})
-        assert resumed.structuredContent is not None and resumed.structuredContent["status"] == "completed"
-        assert len(approvals) == 2
 
 
 def main() -> None:
@@ -117,7 +115,7 @@ def main() -> None:
                     "--task-kind",
                     "session",
                     "--task-id",
-                    "fixture",
+                    "installed-fixture",
                     "-w",
                     str(root),
                     "--format",
@@ -127,8 +125,9 @@ def main() -> None:
                 capture_output=True,
             )
             assert result.returncode == 0, result.stdout + result.stderr
-            assert json.loads(result.stdout)["status"] == "prepared"
-            asyncio.run(conversation(root, worktree))
+            prepared = json.loads(result.stdout)
+            assert prepared["status"] == "prepared"
+            asyncio.run(conversation(root, worktree, prepared["request"]["digest"]))
     finally:
         module.unlink(missing_ok=True)
         shutil.rmtree(metadata, ignore_errors=True)

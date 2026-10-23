@@ -10,7 +10,7 @@ tuple of deterministic ``Evidence`` items, with any unmet conditions listed in `
 The unit (or session) is evaluated from the source tree; the CI rules run on the result tree with the diff from the
 build target once a result exists (before it, on the source tree with the diff from the merge base). ``SPEC_POLICY``
 binds the parsed ``[tool.spec]`` of the target and of the result (the source before a build). Tests are not re-run on
-the result; ``DISCLOSURE`` says so in the confirmation form.
+the result; ``DISCLOSURE`` is included in the report the Host presents before conversational approval.
 """
 
 from __future__ import annotations

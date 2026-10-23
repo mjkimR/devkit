@@ -63,7 +63,7 @@ def test_reader_changing_source_is_refused_before_the_provider(repo, reading_pro
     assert raised.value.code == "INTEGRATION_RECEIPT_READER_CHANGED"
     assert raised.value.mode is ActionMode.INTERACTION
     assert "restarting" in (raised.value.fix or "")
-    assert "devkit worktree finish" in (raised.value.fix or "")
+    assert "devkit integration integrate" in (raised.value.fix or "")
     assert raised.value.target_files == (RECEIPT_PATH,)
     assert reading_provider.calls == []
     assert service._records == {}

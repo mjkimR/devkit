@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-delivery-workflows
 title: Delivery Workflows
-summary: "Five delivery workflows define stages, gates, checks, bounded reviews and run records, verified source-feedback resolution, integration readiness, informational committed worker-result inspection, and native Codex workers with emulated boundaries and scoped approvals."
+summary: "Five delivery workflows define stages, gates, checks, bounded reviews, run records, feedback resolution and integration readiness. They support Host-authorized local and pull-request CLI integration, worker-result inspection, and native or emulated roles."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -12,8 +12,8 @@ usecases:
   - UC-handle-delivery-problems-and-exceptions
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/
-  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/
-  - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py
+  - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
+  - packages/devkit/src/devkit_agt/features/integration/cli.py
 ---
 
 # [CAP-DLV-delivery-workflows] Delivery Workflows
@@ -75,9 +75,9 @@ sequence.
    stage belongs to no activity. Numbered gate names are not used.
 5. **Decision boundaries and authority**: `plan-accept`, `proposal-handoff`, and `dev-integration` independently permit
    `ask` or `auto`, default `ask`. User decisions are explicit; policy delegation is reported as policy, never fabricated
-   user consent. `accept --by user|policy` records acceptance and status together; `policy` requires owning base auto
-   and prospective source auto. Planning merge is an acceptance effect, not Development result acceptance. Native
-   accept-and-handoff may combine included asks into one form. Verified local effects still obey readiness, exact report,
+   user consent. `accept --by user|policy` records acceptance and status together; `policy` requires the retained
+   base's `plan-accept=auto` policy. Planning merge is an acceptance effect, not Development result acceptance. Under
+   `ask`, the Host may combine acceptance and handoff in one conversation, then invokes the CLI. Verified local effects still obey readiness, exact report,
    SHA, worktree, cleanup and environment guards; publication and host permissions remain separate.
    `workflow return` voids the stage and later decision records and envelopes. Policy delegation never disables checks.
 6. **`plan-intent` opens every task**: goal, scope, verification (for a bugfix, the expected behavior), `task-kind`
@@ -506,10 +506,10 @@ Include source files needing updates in task/delegation boundaries; otherwise th
 Recheck only resolutions newly made by this task if later changes invalidate evidence. This obligation is independent
 of capture settings and collect-feedback policy and grants no integration authority or additional workflow gate.
 
-Native local Development starts may use `spec_handoff` (`CAP-DLV-proposal-incubation`): its confirmation form shows
-the accepted plan and lets the user override the `dev_effort` hint before the worktree and spec handoff are created.
-The returned `activity_effort` is the run input and is recorded on that run's worker envelope. This supplies the
-local user interaction otherwise provided by an external runner; final integration retains its separate approval.
+Local Development starts use `devkit spec proposal handoff` after the Host presents the accepted proposal, current
+report and worktree/setup effects and receives conversational approval under `ask`. The command returns the selected
+effort as the run input; the worker envelope records that effort. Under `auto`, the command reads the policy from the
+retained base and uses the proposal's declared `dev_effort`. Final integration retains its separate gate.
 
 ## Worker result inspection
 

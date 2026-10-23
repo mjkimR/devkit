@@ -1,9 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: Draft CLI Host lifecycle proposal; retain shared-resource MCP and delegate recovery
-  to the Host using available tools
-by: user
-at: '2026-10-23T11:54:44.334378Z'

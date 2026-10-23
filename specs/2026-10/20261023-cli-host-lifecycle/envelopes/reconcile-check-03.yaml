@@ -1,0 +1,22 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-23T14:31:55.230403Z'
+status: completed
+summary: round 3; REVISE — digest binding and PR cleanup sequencing match, but the delivery use case retains obsolete approval and recovery instructions.
+findings:
+- issue: The delivery use case still directs native lifecycle approval and retained-request recovery that the CLI contract removed.
+  evidence: docs/usecases/delivery/UC-drive-development-to-integration.md:106-127; :135-138; :260-263
+  failure_condition: Readers following extensions 7c/7d/7g or 8b expect native confirmation, a lifecycle MCP call or retained approved request. These interfaces were removed. Scenario 16 directs worktree finish after extension done=false even when Git cleanup has already removed the branch and the owning extension command is required.
+  suggested_action: Replace native authority wording with Host conversation, use missing or changed prepared-digest refusal with fresh preparation and decision, replace lifecycle MCP staleness with a CLI-relevant refusal and matching coverage, and recover from observed effects using guarded finish only while the marked branch remains or the owning extension command after Git cleanup.
+  resolution: open
+  severity: P1
+assumptions:
+- Read-only emulated independent reconcile review; source and HEAD unchanged during verification.
+checks:
+  targets: PASS all changed Living Spec files are listed; entrypoints unchanged
+diff_scope:
+  base: 6877909dd973fa2f053d343aa872700c2c2e4fb4
+  head: e903741c23d2d4f9e8e55b8c12297da1281173c1
+activity_effort: high

@@ -1,15 +1,18 @@
 ---
-id: PADR-host-cli-lifecycle-authority
+id: ADR-host-cli-lifecycle-authority
 title: Conversational Host authorization for CLI lifecycle execution
 summary: For Host lifecycle execution in local shells, we accept conversational ask decisions and let CLI revalidate scope without an approval credential, to remove the mandatory MCP path, accepting that devkit cannot authenticate the user's conversational decision.
-proposal: PROP-cli-host-lifecycle
-status: draft
+proposal: SPEC-cli-host-lifecycle
+status: accepted
 created_at: 2026-10-23
+supersedes:
+  - ADR-delivery-decision-boundaries
+  - ADR-local-and-pull-request-integration
 ---
 
-# [PADR-host-cli-lifecycle-authority] Conversational Host authorization for CLI lifecycle execution
+# [ADR-host-cli-lifecycle-authority] Conversational Host authorization for CLI lifecycle execution
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-23
 
 ---

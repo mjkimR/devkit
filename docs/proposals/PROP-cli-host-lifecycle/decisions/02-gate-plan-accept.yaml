@@ -1,9 +1,0 @@
-request: gate:plan-accept
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: direction-handoff
-note: Approved conversational Host authorization for CLI lifecycle operations; authorize
-  CLI Planning merge and Development handoff.
-by: user
-at: '2026-10-23T12:09:28.168585Z'

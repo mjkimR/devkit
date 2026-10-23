@@ -235,15 +235,39 @@ def test_failed_required_check_does_not_merge(remote_service):
     assert fake.merge_calls == 0 and worktree.exists()
 
 
-def test_dependent_pr_preserves_remote_branch_after_local_cleanup(remote_service):
+def test_dependent_pr_preserves_local_and_remote_cleanup_identity(remote_service):
     service, fake, _base, worktree = remote_service
     fake.block_delete = True
     result = run(service)
     assert result.errors[0].code == "INTEGRATION_REMOTE_DELETE_BLOCKED"
-    assert not worktree.exists() and fake.ref(result.request.repository, "refs/heads/dev-demo")
+    assert worktree.exists() and fake.ref(result.request.repository, "refs/heads/dev-demo")
     fake.block_delete = False
     result = service.resume(result.request.id)
     assert result.status == "completed", result.to_dict()
+
+
+def test_fresh_cli_retry_preserves_source_until_remote_cleanup_completes(remote_service):
+    service, fake, base, worktree = remote_service
+    source = git(worktree, "rev-parse", "HEAD")
+    fake.block_delete = True
+    digest = service.prepare("dev-demo", TASK, "pull-request").request.digest
+    result = service.execute_cli("dev-demo", TASK, "pull-request", expected_digest=digest)
+    assert result.status == "partial", result.to_dict()
+    assert result.errors[0].code == "INTEGRATION_REMOTE_DELETE_BLOCKED"
+    assert result.steps["merge"] == "completed"
+    assert worktree.exists() and git(base, "rev-parse", "refs/heads/dev-demo") == source
+    assert fake.ref(result.request.repository, "refs/heads/dev-demo") == source
+    landed = git(base, "rev-parse", "HEAD")
+
+    fake.block_delete = False
+    restarted = IntegrationService(base)
+    restarted.github = fake
+    digest = restarted.prepare("dev-demo", TASK, "pull-request").request.digest
+    recovered = restarted.execute_cli("dev-demo", TASK, "pull-request", expected_digest=digest)
+    assert recovered.status == "completed", recovered.to_dict()
+    assert fake.merge_calls == 1 and git(base, "rev-parse", "HEAD") == landed
+    assert not worktree.exists() and not git(base, "branch", "--list", "dev-demo")
+    assert fake.ref(recovered.request.repository, "refs/heads/dev-demo") is None
 
 
 def test_restart_cleanup_reports_no_recorded_landing(remote_service):
@@ -362,7 +386,7 @@ def test_git_mutation_timeout_preserves_unknown_recovery(remote_service, monkeyp
     import devkit_agt.features.worktree.repositories.pull_request as adapter
     from devkit_core.base.errors import GitError
 
-    service, _fake, _base, worktree = remote_service
+    service, fake, base, worktree = remote_service
     original = adapter.run_git
 
     def fail_mutation(root, *args, **kwargs):
@@ -374,8 +398,16 @@ def test_git_mutation_timeout_preserves_unknown_recovery(remote_service, monkeyp
     result = run(service)
     assert result.errors[0].code == "INTEGRATION_STEP_UNKNOWN"
     assert result.steps["remote_delete" if deletion else "push"] == "unknown"
-    assert "integration_status" in result.errors[0].fix
-    assert worktree.exists() != deletion
+    assert "devkit integration integrate" in result.errors[0].fix
+    assert worktree.exists()
+    monkeypatch.setattr(adapter, "run_git", original)
+    restarted = IntegrationService(base)
+    restarted.github = fake
+    digest = restarted.prepare("dev-demo", TASK, "pull-request").request.digest
+    recovered = restarted.execute_cli("dev-demo", TASK, "pull-request", expected_digest=digest)
+    assert recovered.status == "completed", recovered.to_dict()
+    assert fake.merge_calls == 1 and not worktree.exists()
+    assert fake.ref(recovered.request.repository, "refs/heads/dev-demo") is None
 
 
 def test_cleanup_only_confirmation_describes_only_remaining_operations(remote_service):

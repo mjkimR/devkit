@@ -87,9 +87,9 @@ def test_complete_maintained_cloud_inventory(agent: str, tmp_path: Path):
         assert required in combined
     local = desired_inventory(selected, {item.bundle.name: ["all"] for item in selected}, [agent], environment="local")
     review = flat(local.files[".devkit/managed/spec/skills/spec-review-proposal/SKILL.md"].data.decode())
-    assert "spec_plan_accept" in review
-    # AC-05: the local rendering names the MCP template tool; the cloud one names the CLI template route.
-    assert "spec_proposal_report_template" in review
+    assert "devkit spec proposal accept" in review
+    assert "--report-uri" in review
+    assert "--template" in review
     cloud_review = flat(inventory.files[".devkit/managed/spec/skills/spec-review-proposal/SKILL.md"].data.decode())
     assert "--template" in cloud_review
     orchestrate = flat(local.files[".devkit/managed/spec/skills/spec-orchestrate/SKILL.md"].data.decode())

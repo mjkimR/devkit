@@ -49,9 +49,6 @@ worktree-stale = "devkit_agt.features.worktree.usecases.stale:hygiene"
 [project.entry-points."devkit.finish_guard"]
 workflow-envelopes = "devkit_agt.features.workflow.usecases.integration:finish_guard"
 
-[project.entry-points."devkit.host.services"]
-integration = "devkit_agt.features.integration.mcp:create_tools"
-
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",

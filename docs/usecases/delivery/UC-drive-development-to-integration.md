@@ -1,7 +1,7 @@
 ---
 id: UC-drive-development-to-integration
 title: Drive Development to Integration
-summary: "An AI coding agent executes an agreed development task through its workflow stages, runs review and reconcile verification at the chosen activity-effort, and integrates the verified change locally or through a pull request under the project's dev-integration policy."
+summary: "An AI coding agent implements an agreed task through workflow stages, completes effort-appropriate review and reconcile checks, obtains Host approval when required, then integrates locally or by pull request under dev-integration policy."
 area: delivery
 primary_actor: AI coding agent (Host)
 supporting_actors:
@@ -11,6 +11,9 @@ supporting_actors:
   - User (gives dev-integration under policy ask)
   - GitHub (pull request route)
 status: active
+entrypoints:
+  - packages/devkit/src/devkit_agt/features/integration/cli.py
+  - packages/devkit/src/devkit_agt/features/integration/usecases/service.py
 created_at: 2026-10-21
 capabilities:
   - CAP-DLV-delivery-workflows
@@ -29,7 +32,7 @@ capabilities:
   it on the base branch, so that the change conforms to the agreed requirements and Living Spec contracts and lands
   cleanly with complete evidence.
 - **Scope**: the Development stages of the `sdd-spec-*` and `sdd-session-*` workflows, workflow envelopes, the
-  `devkit_agt.features.integration` MCP tools and `devkit worktree finish`.
+  `devkit integration` CLI and `devkit worktree finish`.
 - **Trigger**: A spec Unit's `plan-intent` is recorded (`UC-route-development-intent`), or a proposal is handed off
   (`UC-incubate-and-hand-off-a-proposal`).
 - **Preconditions**: The Unit is on its `dev-<slug>` activity branch, in a task worktree or the current checkout.
@@ -55,8 +58,8 @@ The main scenario follows a spec Unit at the default `activity-effort` `medium`,
    (`CAP-DLV-delivery-workflows`, `CAP-DLV-workflow-envelopes`).
 6. The agent merges the base into the branch, re-verifies only what conflict resolution and docs reflection changed,
    rechecks the reconcile targets and runs the cumulative check (`CAP-DLV-delivery-workflows`).
-7. The agent reads the effective policy, presents the verified change and requests integration; the user approves the
-   exact merge and cleanup scope in the native form (`CAP-DLV-project-policy`, `CAP-INT-mcp-services`).
+7. The agent reads the effective policy, presents the verified report and exact merge/cleanup effects, receives the
+   user's conversational approval under `ask`, then requests integration pinned to the prepared scope (`CAP-DLV-project-policy`, `CAP-INT-mcp-services`).
 8. The system builds the result commit outside the base checkout, fast-forwards the base onto it without network
    operations, removes the task worktree, deletes the local branch as the policy selects and runs the scoped
    post-finish cleanup (`CAP-INT-mcp-services`, `CAP-WT-task-worktrees`).
@@ -100,12 +103,12 @@ The integration executor's coded refusals this section does not name, and their 
 - **7b.** The policy requires pull requests: the local path is refused with `WORKTREE_PR_POLICY`, and the agent
   integrates through the pull-request route, which publishes the branch, opens or reuses the pull request and merges it
   once the required checks and reviews pass (`CAP-DLV-project-policy`, `CAP-INT-mcp-services`); resumes at step 9.
-- **7c.** The user declines the form or objects to the change: nothing is integrated, and an objection about the
+- **7c.** The user declines conversational approval or objects to the change: nothing is integrated, and an objection about the
   change takes the workflow's return to review (`CAP-INT-mcp-services`, `CAP-DLV-delivery-workflows`); resumes at
   step 3.
-- **7d.** Native confirmation is unavailable under `ask`: no authority is inferred; with the user's conversational
-  approval the agent finishes the branch through the local CLI path from the base checkout and reruns the cumulative
-  check on the result (`CAP-INT-mcp-services`, `CAP-WT-task-worktrees`); resumes at step 9.
+- **7d.** Ask execution lacks a prepared digest or its scope changed: the system refuses before integration effects
+  with `INTEGRATION_AUTHORITY_REQUIRED` or `INTEGRATION_REQUEST_STALE`; the agent prepares the current scope and
+  obtains a fresh conversational decision (`CAP-INT-mcp-services`); resumes at step 7.
 - **7e.** A Unit the branch changed holds an unresolved problem, an unanswered question or a malformed worker
   envelope: the gate is held and the merge is refused with `WORKTREE_BLOCKED` (`CAP-DLV-workflow-envelopes`); the use
   case ends and `UC-handle-delivery-problems-and-exceptions` continues.
@@ -113,15 +116,19 @@ The integration executor's coded refusals this section does not name, and their 
   with `INTEGRATION_RECEIPT_READER_CHANGED` and changes nothing; restarting the service does not help, and the agent
   never changes the route itself but, with separately granted authority, finishes the branch through the local CLI
   path run from the source's code (`CAP-INT-mcp-services`); resumes at step 9.
-- **7g.** The retained MCP service runs devkit code that differs from the installed code: the system refuses the call
-  with `MCP_RUNTIME_STALE` before it runs, and the agent restarts or reconnects the retained service and calls again
-  (`CAP-MCP-runtime-registration`, `CAP-INT-mcp-services`); resumes at step 7.
+- **7g.** The CLI runtime is inside the worktree that integration would remove: the system refuses with
+  `INTEGRATION_RUNTIME_IN_WORKTREE`; the agent uses a retained runtime outside that worktree, prepares the scope and
+  obtains any required conversational decision (`CAP-INT-mcp-services`); resumes at step 7.
 - **8a.** The base moved after the result was built: the system refuses with `INTEGRATION_TARGET_MOVED`, or with
   `INTEGRATION_REQUEST_STALE` for a later request, and changes nothing on the target (`CAP-INT-mcp-services`); resumes
   at step 6.
-- **8b.** A cleanup step stays incomplete after the merge: the result is partial with
-  `INTEGRATION_CLEANUP_INCOMPLETE`, and the agent resumes the approved request for the remaining steps without a second
-  form (`CAP-INT-mcp-services`); resumes at step 9.
+- **8b.** A cleanup step stays incomplete after the merge: the partial result reports the failing operation and
+  completed effects. The agent inspects Git and PR state, uses guarded finish while the marked local branch remains,
+  or runs the owning extension command when Git cleanup already completed. A blocked PR remote deletion preserves
+  the local recovery identity; after resolving the blocker the agent prepares and authorizes the remaining scope
+  without repeating the merge (`CAP-INT-mcp-services`); resumes at step 9.
+- **8c.** The command outcome is unknown: the agent inspects Git, worktree and PR state, then authorizes only the
+  remaining effects whose source and cleanup identities can be verified (`CAP-INT-mcp-services`); resumes at step 8.
 
 ---
 
@@ -129,11 +136,11 @@ The integration executor's coded refusals this section does not name, and their 
 
 - **Success guarantee**: The base branch contains the verified change with its Living Spec reflection, a resolved
   `reconcile.md` and a completed spec (a session: its final report), the task worktree is removed, the local branch is
-  deleted or kept as `delete_branch` selects, and the report names the authority: the user's native approval, the
-  conversational approval, the pull request's ready state or `policy`.
-- **Minimal guarantee**: Nothing reaches the base before `dev-integration`. A declined, cancelled or unavailable
-  confirmation changes nothing. A refusal before the merge leaves the target unchanged, and a partial result reports
-  its completed steps for resumption.
+  deleted or kept as `delete_branch` selects, and the report names the authority: Host-carried conversational
+  approval or retained-base `policy`, with publication authority for the pull-request route.
+- **Minimal guarantee**: Nothing reaches the base before `dev-integration`. Without required conversational
+  approval, the Host invokes no integration. A refusal before the merge leaves the target unchanged, and a partial
+  result reports completed effects and the remaining scope for recovery from observed state.
 
 ---
 
@@ -147,12 +154,12 @@ The integration executor's coded refusals this section does not name, and their 
   `reconcile.md`, and an independent `reconcile-reviewer` verifies contract coverage, recorded as a
   `reconcile-check` envelope
 
-### Scenario 2: Native approval lands the change locally
+### Scenario 2: Host-carried approval lands the change locally
 - **Covers**: main success scenario
 - **Given**: a verified `dev-<slug>` branch whose final change report holds, under `dev-integration = "ask"`,
   `pull_request = "auto"` and the default `merge = "no-ff"` and `delete_branch = true`
-- **When**: the agent calls `integration_integrate` on the default `local` route and the user accepts the native form
-  with `approve=true`
+- **When**: the Host presents the verified report and cleanup scope, the user approves in conversation, and the agent
+  runs `devkit integration integrate dev-<slug> --task-kind unit --task-id <id> --unit <dir> --route local --expected-digest <request.digest>`
 - **Then**: the base holds the merge commit `chore(merge): integrate dev-<slug> into <base>`, no fetch or push ran,
   the task worktree and the local `dev-<slug>` branch are gone, the scoped post-finish cleanup ran, and the agent
   passes `--given dev-integration` to later `devkit workflow next` calls
@@ -212,7 +219,7 @@ The integration executor's coded refusals this section does not name, and their 
 - **Covers**: 7a
 - **Given**: a completed task branch satisfying every readiness check under `[workflow.approvals]
   dev-integration = "auto"` in the shared base
-- **When**: the agent calls the `integration_integrate` MCP tool on the default `local` route
+- **When**: the agent runs `devkit integration integrate dev-<slug> --task-kind unit --task-id <id> --unit <dir> --route local`
 - **Then**: no form is shown, the result reports `authority: policy`, the base is advanced without fetch or push, the
   task worktree is removed, the local `dev-<slug>` branch is deleted and the scoped post-finish cleanup runs, and
   `devkit workflow next` lists `[GATE_PASSED: dev-integration ... source=policy]`
@@ -222,23 +229,23 @@ The integration executor's coded refusals this section does not name, and their 
 - **Given**: a project configured with `[worktree] pull_request = "required"`
 - **When**: the agent attempts `devkit worktree finish --merge` or local integration
 - **Then**: the local command is refused with `WORKTREE_PR_POLICY`, and the agent integrates through
-  `integration_integrate` with `route="pull-request"`, which merges the pull request only after the required checks
+  `devkit integration integrate` with `--route pull-request`, which merges the pull request only after the required checks
   and reviews pass
 
-### Scenario 12: A declined form changes nothing
+### Scenario 12: A conversational objection changes nothing
 - **Covers**: 7c
-- **Given**: a pending native integration form under `dev-integration = "ask"`
-- **When**: the user declines it because of the change
-- **Then**: no integration step runs, and the agent returns with `devkit workflow return --unit <dir> --to
+- **Given**: a verified change under `dev-integration = "ask"`
+- **When**: the user objects to the change in conversation
+- **Then**: the agent does not invoke integration and returns with `devkit workflow return --unit <dir> --to
   review-refine --note "..."`
 
-### Scenario 13: Without a native form the CLI path needs the user's approval
+### Scenario 13: Ask execution refuses a missing or changed prepared scope
 - **Covers**: 7d
-- **Given**: a host without native form capability under `dev-integration = "ask"`
-- **When**: the user approves the integration in the conversation
-- **Then**: the agent runs `devkit worktree finish dev-<slug> --merge --local-only` in the base checkout, reruns the
-  cumulative check, and declares `devkit workflow next --unit <dir> --given dev-integration --given lint-ci-clean
-  --given merged`; under `auto` there is no CLI substitute
+- **Given**: a verified local change under `dev-integration = "ask"` whose prepared digest is missing or whose source
+  changed after preparation
+- **When**: the agent invokes integration without the digest or with the earlier digest
+- **Then**: the system refuses with `INTEGRATION_AUTHORITY_REQUIRED` or `INTEGRATION_REQUEST_STALE` before merge or
+  cleanup, and the Host prepares the current scope and obtains a fresh decision
 
 ### Scenario 14: A held Unit is not merged
 - **Covers**: 7e
@@ -253,23 +260,39 @@ The integration executor's coded refusals this section does not name, and their 
 - **Then**: it refuses with `INTEGRATION_TARGET_MOVED`, the merge step is `not_run`, the target is unchanged, and the
   agent merges the base into the branch and requests a new integration
 
-### Scenario 16: An incomplete cleanup resumes without a second form
+### Scenario 16: An incomplete cleanup recovers from observed state
 - **Covers**: 8b
-- **Given**: an approved integration whose merge completed and whose cleanup extension reported `done=false`
-- **When**: the agent calls `integration_resume` with the request ID
-- **Then**: only the remaining cleanup runs, the merge is not repeated, and no new confirmation is asked
+- **Given**: an approved integration whose merge and Git cleanup completed but whose scoped cleanup extension
+  reported `done=false`
+- **When**: the agent inspects the completed effects and runs that extension's owning command against its exact
+  reported target, such as `devkit spec proposal prune <slug>`
+- **Then**: only that scoped cleanup runs and the merge is not repeated
 
-### Scenario 17: A changed receipt reader refuses the MCP route
+### Scenario 17: A changed receipt reader refuses CLI integration
 - **Covers**: 7f
 - **Given**: a `dev-<slug>` branch whose range changes a receipt reader module and whose committed receipt only the
   changed reader accepts, under a retained service built from the target
-- **When**: the agent calls `integration_integrate`
-- **Then**: it refuses with `INTEGRATION_RECEIPT_READER_CHANGED`, the target is unchanged, and the agent runs the CLI
-  route from the source's code only with separately granted authority, without restarting the service
+- **When**: the agent runs `devkit integration integrate`
+- **Then**: it refuses with `INTEGRATION_RECEIPT_READER_CHANGED`, the target is unchanged, and the agent resolves the
+  receipt mismatch before obtaining fresh Host authority and retrying
 
-### Scenario 18: A stale retained runtime refuses until it is restarted
+### Scenario 18: An unknown result is inspected before retry
+- **Covers**: 8c
+- **Given**: the CLI result is unknown after a local merge or pull-request mutation
+- **When**: the agent inspects Git, `devkit worktree status` and the pull request state
+- **Then**: it invokes only a remaining operation whose target and cleanup identity are verified, and never repeats an
+  unknown mutation or removes an unrelated worktree
+
+### Scenario 19: A worktree-owned runtime cannot remove itself
 - **Covers**: 7g
-- **Given**: a retained MCP service with a loaded devkit module whose installed file has changed since it started
-- **When**: the agent calls `integration_integrate`
-- **Then**: the call is refused with `MCP_RUNTIME_STALE` naming the stale modules before any execution guard runs,
-  read-only tools still answer, and the same call proceeds after the service is restarted or reconnected
+- **Given**: the CLI interpreter is inside the worktree selected for cleanup
+- **When**: the Host requests integration
+- **Then**: the system refuses with `INTEGRATION_RUNTIME_IN_WORKTREE`, and the Host uses a retained runtime outside
+  that worktree before preparing and authorizing the scope again
+
+### Scenario 20: A blocked remote deletion retains fresh-invocation recovery
+- **Covers**: 8b
+- **Given**: PR integration merged once but remote deletion is blocked by a dependent PR
+- **When**: the Host resolves the blocker, inspects the merged PR and remote ref, prepares the remaining scope and
+  retries with the new digest
+- **Then**: remote deletion completes before local worktree and branch deletion, and the PR is not merged again

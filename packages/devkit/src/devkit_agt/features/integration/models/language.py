@@ -84,8 +84,8 @@ def confirmation_message(request: IntegrationRequest, language: str) -> str:
                     f"결과 검사: {display(request.readiness.disclosure)}; 정리 후 병합된 대상 검사: {display(request.readiness.landed_check)}",
                 ),
                 t(
-                    "A host timeout can leave execution running; inspect integration_status before recovery.",
-                    "호스트 시간 초과 후에도 실행이 계속될 수 있습니다. 복구 전에 integration_status를 확인하세요.",
+                    "A host timeout can leave execution running; inspect worktree and Git/PR state before recovery.",
+                    "호스트 시간 초과 후에도 실행이 계속될 수 있습니다. 복구 전에 worktree와 Git/PR 상태를 확인하세요.",
                 ),
             ]
         )

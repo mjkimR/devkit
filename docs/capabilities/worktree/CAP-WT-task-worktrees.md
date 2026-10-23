@@ -1,13 +1,12 @@
 ---
 id: CAP-WT-task-worktrees
 title: "Task Worktrees"
-summary: "Task worktree isolation, creation-time local preference snapshots, activity branches, merge gates, and stale checkout cleanup."
+summary: "Task worktree isolation, creation-time local preference snapshots, activity branches, Host-authorized CLI integration with local or pull-request routes, merge gates, and stale checkout cleanup."
 area: worktree
 status: active
 entrypoints:
   - packages/devkit/src/devkit_agt/features/worktree/usecases/lifecycle.py
-  - packages/devkit/src/devkit_agt/features/worktree/services/merging.py
-  - packages/devkit/src/devkit_agt/features/worktree/repositories/pull_request.py
+  - packages/devkit/src/devkit_agt/features/integration/cli.py
 created_at: 2026-10-17
 usecases:
   - UC-drive-development-to-integration
@@ -100,7 +99,7 @@ Installed callbacks and native Git hooks must obey the local-only contract; this
 
 These checks, and those of step 1, run before the first change, so each of their refusals leaves the repository as it was; only uncommitted changes in the worktree surface later, at step 3:
 
-The local MCP executor may authorize these exact effects from shared base `dev-integration=auto`, without native elicitation, while preserving all dirty/locked/identity checks and selected branch retention (`CAP-INT-mcp-services`). This authority does not extend to the public CLI, remote operations, force cleanup or unrelated worktrees.
+The integration CLI authorizes these exact effects from shared base `dev-integration=auto` or after Host-carried conversational approval under `ask`, while preserving all dirty/locked/identity checks and selected branch retention (`CAP-INT-mcp-services`). This authority does not extend to automatic remote operations, force cleanup or unrelated worktrees.
 
 1. **Integrate.**
    - With `--merge`: refused under `[worktree] pull_request = "required"` (`WORKTREE_PR_POLICY`; the default `"auto"` allows it). The base must be on a branch (`WORKTREE_BASE_DETACHED`: a fast-forward of a detached HEAD moves no branch and pushes nothing, so the task's commits would end up on no branch) and clean (`WORKTREE_BASE_DIRTY`). Every `devkit.finish_guard` entry point of the installed packages is then called, in sorted name order, as `extension(base, branch, merge_base, tip)`: the base checkout's root, the branch, the commit id of its merge base with the base HEAD (empty when there is none) and of its tip. It returns `None` or a list of reasons; any reason refuses with `WORKTREE_BLOCKED`, each reason a detail, and nothing changed. An extension that raises or returns anything else refuses with `WORKTREE_GUARD_FAILED`: the branch was not verified. devkit-agt registers one: `devkit_agt.features.workflow` refuses a branch whose units hold an unresolved problem, an unanswered question or a malformed worker envelope (`CAP-DLV-workflow-envelopes`). The library's `finish` takes the same check as its `guard(merge_base, tip)` callback and runs no extension itself. When the base branch has a configured upstream (`branch.<base>.remote` and `.merge`), its remote ref is fetched first (never prompting, within 120 seconds); a fetched tip the base does not contain is `WORKTREE_BASE_BEHIND`, whose `[FIX]` is `git pull --ff-only` of it. A fetch that fails (offline, an unreachable remote, a remote ref that does not exist yet) skips this check: the push below reports what remains. Before the guards, the branch must contain the base HEAD (`WORKTREE_MERGE_NOT_FF` (`AUTO`) otherwise, whose `[FIX]` merges the base into the branch in its worktree with a message the commit-msg gate accepts and never rebases, since the task's records cite its commit SHAs), and under `[worktree] merge = "no-ff"` Git must have a committer identity (`WORKTREE_COMMIT_FAILED`). The command takes the Git common directory's devkit integration lock (`devkit-integration.lock`, shared with `CAP-INT-mcp-services`; `LOCK_HELD` while another integration holds it). The branch must still point at the commit the guard checked (`WORKTREE_CONFLICT` when a run committed to it meanwhile; rerun once it ends). Then the base lands it (`ADR-local-and-pull-request-integration`): under `merge = "no-ff"` (the default) `merging.build_result` builds, in the object store, a merge commit whose first parent is the base HEAD, whose second is the checked tip, whose tree is the branch's tree and whose message is `chore(merge): integrate <branch> into <base branch>` (`git commit-tree`, signed when `commit.gpgSign` is on, within 30 seconds, `WORKTREE_COMMIT_FAILED` with nothing changed on failure), and `git merge --ff-only <that commit>` fast-forwards the base onto it, so the base checkout never stops mid-merge; under `merge = "ff-only"` it fast-forwards onto the tip. `"ff-only"` in the base's or the branch's committed policy wins. A branch the base already contains builds nothing. The base branch is then pushed to that upstream (an explicit refspec, never forced, never prompting, within 120 seconds). A base branch without an upstream is not pushed (`push=no-upstream`). A push the upstream rejects because it moved on since the fetch is a `WORKTREE_PUSH_REJECTED` warning (`push=rejected`) whose `[FIX]` fetches the upstream ref and merges it with `git merge --no-ff -m "chore(merge): integrate <remote>/<ref> into <base branch>" FETCH_HEAD`, then pushes: the task's commits keep their SHAs (`git pull --rebase`, and also `--rebase=merges`, would rewrite them), at the cost of the upstream's commits becoming the second parent of that merge, and a conflict leaves the base checkout mid-merge (`git merge --abort`). Any other failed push is a `WORKTREE_PUSH_FAILED` warning (`push=failed`) whose `[FIX]` is the push to rerun. Either way the cleanup continues.
@@ -149,7 +148,7 @@ setup = "uv sync"       # run in each new worktree (default: none)
 stale_after = "14d"     # an activity branch idle this long is stale (default "14d"; "<N>d" or "<N>w")
 ```
 
-The table is read from the devkit project containing the directory a command runs in (`-w`, else the current directory). An unknown key, a wrong type, a `pull_request` other than `"auto"` or `"required"`, a `merge` other than `"no-ff"` or `"ff-only"` or a `stale_after` other than `"<N>d"` or `"<N>w"` (`N` from 1 to 9999) is `WORKTREE_CONFIG_INVALID`. `pull_request` states whether integration must go through a pull request, not whether one is opened: the confirmed `pull-request` route in `CAP-INT-mcp-services` can push the task branch and open its PR. Under `"auto"` the caller chooses the route; `finish --merge` remains local and refuses required PR policy with a directive naming the native PR route.
+The table is read from the devkit project containing the directory a command runs in (`-w`, else the current directory). An unknown key, a wrong type, a `pull_request` other than `"auto"` or `"required"`, a `merge` other than `"no-ff"` or `"ff-only"` or a `stale_after` other than `"<N>d"` or `"<N>w"` (`N` from 1 to 9999) is `WORKTREE_CONFIG_INVALID`. `pull_request` states whether integration must go through a pull request, not whether one is opened: the Host-authorized `pull-request` CLI route in `CAP-INT-mcp-services` can push the task branch and open its PR. Under `"auto"` the caller chooses the route; `finish --merge` remains local and refuses required PR policy with a directive naming the integration CLI route.
 
 ## 6. Stale Branches
 
@@ -179,7 +178,7 @@ The library's `start(position, branch, ..., revision=COMMIT)` optionally pins th
 revision before remote branch checks and passes the resolved commit to `git worktree add`, so configured setup
 runs from that commit even when another process advances the base meanwhile. Cleanup after failed creation uses
 the pinned commit as its origin. Omitting `revision` preserves creation from the base's current HEAD. The local
-MCP proposal handoff uses this option to keep setup bound to the reviewed commit.
+Proposal handoff uses this option to keep setup bound to the reviewed commit.
 
 Project MCP registration preserves worktree cleanliness: tracked host files and visible foreign untracked files
 remain unchanged; generated entries and their ownership ledger remain ignored. Clone-local exclusions are narrowly

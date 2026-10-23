@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-project-policy
 title: Project Policy
-summary: "Effective approval, stage, Git (auto or required worktree and pull request levels) and repository-first feedback policy reported by devkit spec policy, with strict validation and commented defaults for the tool.spec configuration."
+summary: "Effective approval, stage, Git (auto or required worktree and pull request levels) and repository-first feedback policy reported by devkit spec policy, including Host conversational approval and retained-base automatic authority for lifecycle CLI operations."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -12,6 +12,7 @@ usecases:
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/policy/services/config.py
   - packages/devkit-spec/src/devkit_spec/features/policy/cli/commands.py
+  - packages/devkit/src/devkit_agt/features/integration/cli.py
 ---
 
 # [CAP-DLV-project-policy] Project Policy
@@ -40,7 +41,7 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
     skill's worktree procedure.
 - **Non-Goals**:
   - **Scope Excluded**: writing policy. The command only reads; the project edits `.devkit/config.toml`.
-  - **Scope Excluded**: granting commit, publication or host permission authority. Explicit shared base auto grants only the verified local MCP integration and exact cleanup authority defined by `CAP-INT-mcp-services`.
+  - **Scope Excluded**: granting commit, publication or host permission authority. Explicit retained-base auto grants only the verified local integration CLI and exact cleanup authority defined by `CAP-INT-mcp-services`.
 
 ## 3. Business Rules & Policies
 
@@ -56,7 +57,7 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
    and task intent permits `ask` or `auto`, default `ask`; `off` is `SPEC_CONFIG_INVALID`.
    `plan-intent` records an already instructed task without another confirmation. An uninstructed Backlog item does
    not become authorized merely because an agent discovers it. Main boundaries are independent: direction acceptance
-   may wait in Backlog before Development starts. One native form may explicitly approve acceptance and handoff together.
+   may wait in Backlog before Development starts. The Host may carry one conversational decision across acceptance and handoff when the exact effects are presented together.
    Owning base auto, also retained by the prospective source, delegates only that boundary's verified local effects.
    A task branch cannot authorize itself; revocation stops remaining effects. Authority is reported as `policy`, never
    as a human approval. The Planning acceptance merge belongs to `plan-accept`, not Development's `dev-integration`.
@@ -215,6 +216,7 @@ tables = template()  # list[devkit_dist.features.project.services.config_templat
 devkit's own errors pass through: `CONFIG_INVALID` (an unreadable file), `WORKFLOW_CONFIG_INVALID`,
 `WORKTREE_CONFIG_INVALID`.
 
-On the native PR route (`CAP-INT-mcp-services`), `delete_branch` selects local and remote branch deletion in the
-confirmation form; it grants no authority. GitHub automatic branch deletion is separately disclosed. Required PR
-policy restricts route selection without granting push, merge or cleanup permission.
+On the pull-request route (`CAP-INT-mcp-services`), `delete_branch` selects local and remote branch deletion in the
+report the Host presents before conversational approval; it grants no authority. GitHub automatic branch deletion
+is separately disclosed. Required PR policy restricts route selection without granting push, merge or cleanup
+permission.

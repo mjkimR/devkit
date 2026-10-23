@@ -2,8 +2,9 @@
 id: ADR-delivery-decision-boundaries
 title: Delivery decision boundaries, approval gates and agent autonomy
 summary: "For delivery approvals, we use devkit gates with plan-accept, proposal-handoff and dev-integration as ask-or-auto boundaries, let auto authorize verified local integration and keep agents autonomous between them, to stop only where decisions are due, accepting assertion-based consent."
-status: accepted
+status: superseded
 created_at: 2026-10-22
+superseded_by: ADR-host-cli-lifecycle-authority
 aliases:
   - ADR-approval-gates-intent-direction-integration
   - ADR-integration-approval-asserted
@@ -13,6 +14,9 @@ aliases:
 ---
 
 # [ADR-delivery-decision-boundaries] Delivery decision boundaries, approval gates and agent autonomy
+
+`ADR-host-cli-lifecycle-authority` supersedes only this decision's native MCP lifecycle execution and confirmation clauses.
+Independent `plan-accept`, `proposal-handoff` and `dev-integration` gates, policy-owned `auto` authority and Host autonomy between gates remain in force.
 
 - **Status**: Accepted
 - **Date**: 2026-10-22

@@ -204,31 +204,26 @@ def test_cli_template_and_body_are_exclusive(repo, extra):
     assert not LocalAdapter(discover(root)).list("proposal-review", "example").entries
 
 
-def test_mcp_template_is_read_only_and_matches_cli(repo):
-    # AC-03
-    import asyncio
-
+def test_mcp_exposes_report_publication_but_not_template(repo):
     from devkit_spec.features.proposals.mcp.report import create_tools
 
     root, sha = repo
     tools = {tool.name: tool for tool in create_tools(root)}
-    tool = tools["spec_proposal_report_template"]
-    assert tool.execution == "read_only" and tool.read_only
-    assert "spec_proposal_report_template" in tools["spec_proposal_report"].description
+    assert set(tools) == {"spec_proposal_report"}
     assert "--template" in tools["spec_proposal_report"].description
+    assert sha
 
-    async def forbidden_confirm(*args):
-        raise AssertionError("the template must not request approval")
 
-    async def invoke():
-        return await tool.invoke({"slug": "example", "source_sha": sha}, forbidden_confirm)
+def test_composed_handoff_advisories_are_emitted_once():
+    from devkit_spec.features.delivery.cli.proposals import _result_advisories
 
-    response = asyncio.run(invoke())
-    assert response == {
-        "proposal": "PROP-example",
-        "source_sha": sha,
-        "template": reports.template(root, "example", sha),
+    advisory = {
+        "code": "SPEC_SCOPE_REGISTER_FAILED",
+        "message": "scope registration failed",
+        "level": "WARNING",
+        "advisory": {"actor": "USER", "retry": "SAFE"},
     }
+    assert len(_result_advisories({"notices": [advisory], "handoff": {"notices": [advisory]}})) == 1
 
 
 @pytest.mark.parametrize(

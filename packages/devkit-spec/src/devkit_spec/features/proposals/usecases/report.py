@@ -60,7 +60,7 @@ class ReportInvalidError(SpecError):
 
 class ReviewRefreshRequiredError(SpecError):
     code = "PROPOSAL_REVIEW_REFRESH_REQUIRED"
-    fix = "Regenerate the report for the current source and request a fresh approval form"
+    fix = "Regenerate the report for the current source, have the Host present it and obtain fresh conversational approval before invoking the CLI"
 
 
 @dataclass(frozen=True)

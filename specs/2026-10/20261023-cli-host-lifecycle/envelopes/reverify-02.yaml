@@ -1,0 +1,29 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-23T14:31:09.442369Z'
+status: completed
+review: review-02.yaml
+summary: Both review-02 findings resolved and verified by independent code-review round 3 plus regression tests.
+findings:
+- issue: Integration silently accepts a source commit that changed after the Host presented the prepared scope for approval.
+  evidence: packages/devkit/src/devkit_agt/features/integration/usecases/service.py:314; packages/devkit/src/devkit_agt/features/integration/cli.py:85
+  failure_condition: The Host prepares source A and obtains conversational approval for A; the branch advances to B before integrate. execute_cli prepares B and marks it approved without comparing the presented source or digest. Reproduction prepared e42dbc0e39288eab4d77389f1ce8f565e3624308, committed after-approval.txt as 706b62491e84e78bc6838bc8289f03ff30a40e4b, then integration returned completed without errors and landed the new file. This violates AC-05.
+  suggested_action: Carry the prepared source SHA or scope digest as an explicit concurrency precondition, distinct from approval credentials; compare before mutation and add a regression asserting stale-source refusal without merge or cleanup.
+  resolution: resolved
+  severity: P1
+- issue: A fresh CLI invocation cannot resume remaining PR cleanup after local branch deletion.
+  evidence: packages/devkit/src/devkit_agt/features/integration/usecases/service.py:314; packages/devkit/src/devkit_agt/features/integration/usecases/pull_request.py:114; packages/devkit/src/devkit_agt/features/integration/usecases/pull_request.py:542
+  failure_condition: PR integration merges and deletes the local worktree and branch, then remote_delete fails due to a dependent PR. Resolving the blocker and retrying through a fresh service fails in prepare because refs/heads/<branch> no longer exists. Reproduction returned partial with INTEGRATION_REMOTE_DELETE_BLOCKED, then GIT_FAILED; the remote branch remained and merge_calls stayed 1. Existing retained service.resume coverage misses this stateless CLI failure.
+  suggested_action: Provide guarded observed-state cleanup that validates the merged PR and exact remote lease without requiring the deleted local branch; update recovery directives and add a fresh-service retry regression.
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS CLI 8 and PR 32 focused tests; full affected suite 4944 passed, 12 skipped
+  build: PASS just smoke
+  lint: PASS Ruff, Pyright and committed-head rules
+diff_scope:
+  base: 6877909dd973fa2f053d343aa872700c2c2e4fb4
+  head: e903741c23d2d4f9e8e55b8c12297da1281173c1
+activity_effort: high

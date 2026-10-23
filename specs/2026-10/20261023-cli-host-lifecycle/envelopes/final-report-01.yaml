@@ -1,0 +1,16 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-23T13:29:32.919437Z'
+status: completed
+summary: Implemented Host-authorized lifecycle CLI operations, removed lifecycle MCP registrations, reconciled current contracts, and updated the installed-consumer smoke path.
+findings: []
+checks:
+  tests: 'PASS just test-affected --base main: 4940 passed, 12 skipped'
+  build: 'PASS just smoke: all package wheels built and fresh-consumer smoke passed'
+  lint: PASS Ruff checks for devkit and devkit-spec plus smoke integration script
+  rules: PASS just rules-check and devkit rules check --ci --base main
+diff_scope:
+  base: 1e0781e9d5fa4b43e73aca1b1c45ffda9b602857
+  head: 12c253171d5ed3f60ece81977a4d7e502aae3ac3

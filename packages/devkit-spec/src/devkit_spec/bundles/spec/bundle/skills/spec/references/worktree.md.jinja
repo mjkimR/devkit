@@ -8,14 +8,9 @@ Read this before work that runs in a task worktree: every `spec` and `proposal` 
 ## 1. Start (in `<base>`, before any bundle or edit)
 
 - `proposal` Planning: `devkit worktree start plan-<slug>` and the printed `cd`; the proposal bundle is the unit.
-{% if execution.environment == "local" %}- `proposal` Development with native MCP: call `spec_handoff` with the accepted proposal's `slug` from the base; it creates the worktree and hands off. Do not create the branch first or ask the same approval in chat.
-  - Continue in the returned `worktree.path` with the returned effort; run `next_command` and the post-handoff link check.
-  - On `needs_recovery`, follow its advisories; do not delete the created worktree or retry a fresh start.
-  - If the native form is unavailable, use the CLI path below; that never implies approval.
-{% endif %}- `proposal` Development through CLI, once `proposal-handoff` authority exists ([completion policy](completion.md#policy)) and the accepted proposal is on the base:
-  1. `devkit worktree start dev-<slug>` and the printed `cd` (or `--no-worktree`, which switches the base checkout).
-  2. `devkit spec proposal handoff <slug>` on `dev-<slug>` as Development's first step.
-  3. Check the proposal's premises against the current base.
+- `proposal` Development: present the accepted proposal, report and worktree/setup effects, obtain conversational approval under `ask`, then run `devkit spec proposal handoff <slug> --report-uri <uri> --effort low|medium|high` from the retained base. Under `auto`, the command reads `proposal-handoff` from the base and uses the declared `dev_effort`.
+  - Continue in the returned worktree path with the selected effort; run `devkit workflow next --unit <dir>` and the post-handoff link check.
+  - On a partial result, inspect `devkit worktree status` and preserve the created worktree for recovery.
 - `spec` depth: `devkit worktree start dev-<slug>`, the printed `cd`, then `devkit spec new <slug>` (`--workflow sdd-spec-bugfix` for a defect); record `plan-intent` and commit.
 - `session` depth bound for a PR: `dev-<slug>`, in a worktree only when the `GIT_POLICY` levels call for one, else `--no-worktree`; no bundle.
 - On `WORKTREE_BRANCH_EXISTS`, continue the branch ([branches](branches.md) §3) or choose another slug.
@@ -30,7 +25,7 @@ Integrate with `spec-integrate`; it owns the merge routes and their recovery. Fi
 
 - Through a PR: after the merge, run `devkit worktree finish <branch>` (no `--merge`). A PR merged by squash or rebase stays `WORKTREE_UNMERGED`; remove that worktree and branch only with the user's authorization.
 - A conflict in `.devkit/installation.json` when integrating the base: keep either side, run `devkit sync` and stage the receipt it writes.
-- On `POST_FINISH_EXTENSION_FAILED`, resolve the cause, then run `devkit spec scope sweep --apply` and `devkit spec proposal prune <slug>`.{% if execution.environment == "local" %} After `integration_integrate` stopped in `status: "partial"`, use `integration_resume` instead.{% endif %}
+- On `POST_FINISH_EXTENSION_FAILED`, resolve the cause, then run `devkit spec scope sweep --apply` and `devkit spec proposal prune <slug>`. After local integration has already landed, `devkit worktree finish <branch> --local-only` validates and performs only remaining guarded cleanup.
 - A refused finish runs no cleanup and leaves the task registered; `devkit spec scope release -w <worktree path>` withdraws an abandoned task.
 - `WORKTREE_DIRTY`: commit or discard in the worktree, never remove it by force. `WORKTREE_LOCKED`, and `WORKTREE_NOT_FOUND` for a merged branch devkit did not create: act only once the user agrees.
 

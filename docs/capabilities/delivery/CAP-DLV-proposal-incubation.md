@@ -1,16 +1,16 @@
 ---
 id: CAP-DLV-proposal-incubation
 title: Proposal Incubation and Handoff
-summary: "Proposal incubation and handoff preserve approved scope, decisions, materials and feedback, validating projected direct prerequisites before writes and relocating live references without carrying milestone membership."
+summary: "Proposal incubation and handoff preserve approved scope, decisions, materials and feedback, validate projected direct prerequisites before writes, relocate live references without carrying milestone membership, and compose source-bound acceptance and handoff through Host-authorized CLI operations."
 area: delivery
 status: active
 created_at: 2026-10-13
 usecases:
   - UC-incubate-and-hand-off-a-proposal
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/features/proposals/
   - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
-  - packages/devkit-spec/src/devkit_spec/features/delivery/mcp/
+  - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py
+  - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py
 ---
 
 # [CAP-DLV-proposal-incubation] Proposal Incubation and Handoff
@@ -403,7 +403,7 @@ base checkout but leaves their directories. `devkit spec proposal prune [<slug>]
 holds no file at any depth (a symbolic link counts as a file; devkit's `remove_empty_tree`). A directory holding any
 file is kept, and one that cannot be listed fails the prune before anything is removed. devkit-spec's
 `devkit.post_finish` extension (`devkit_spec.features.delivery.usecases.cleanup.after_finish`) prunes the finished slug after a successful `devkit worktree finish`
-(`ADR-worktrees-branches-and-scope`) and, on the approval-bound `IntegrationService` path (`SPEC-hook-driven-integration-cleanup`), plans and executes the exact `CleanupTarget(kind="proposal-prune", identity="docs/proposals/PROP-<slug>", revision=<source_sha>)` target, emitting `SPEC_POST_FINISH_CLEANUP` notices; the command remains for other checkouts and a failed extension (`integration_resume` retries a partial post-finish run).
+(`ADR-worktrees-branches-and-scope`) and, on the guarded integration path (`SPEC-hook-driven-integration-cleanup`), plans and executes the exact `CleanupTarget(kind="proposal-prune", identity="docs/proposals/PROP-<slug>", revision=<source_sha>)` target, emitting `SPEC_POST_FINISH_CLEANUP` notices; the command remains for other checkouts and a failed extension is retried after inspecting current Git state and rerunning the appropriate CLI operation.
 
 ### 4.9 Commands and Options
 
@@ -523,6 +523,8 @@ directory whose namespace applies when `namespace` is omitted);
 | `SPEC_PROPOSAL_EXISTS` | `ERROR` (`INPUT_ERROR`) | `ProposalExistsError` | `new`: the bundle or `PROP-<slug>.md` exists, or another document declares `PROP-<slug>` as an alias. `padr`: a document already declares the PADR ID; `[TARGET]` lists it. |
 | `SPEC_PROPOSAL_SLUG_CONFLICT` | `ERROR` (`INTERACTION`) | `ProposalSlugConflictError` | `SPEC-<slug>` exists (`[TARGET]`); the user picks another slug or drops the duplicate. |
 | `SPEC_PROPOSAL_NOT_FOUND` | `ERROR` (`INPUT_ERROR`) | `ProposalNotFoundError` | No bundle or single-file proposal has the slug (`padr`: no bundle); `new`: `--supersedes` names a proposal that does not exist. |
+| `SPEC_HANDOFF_NOT_READY` | `ERROR` (`BLOCKED`) | `HandoffNotReadyError` | The composed `proposal handoff` CLI finds an unaccepted proposal, incomplete Planning workflow, or unmet base prerequisite; resolve the named prerequisite and rerun with a current report URI. |
+| `SPEC_HANDOFF_REPLY_INVALID` | `ERROR` (`INPUT_ERROR`) | `HandoffReplyError` | The composed `proposal handoff` CLI needs `--effort low`, `--effort medium` or `--effort high`. |
 | `SPEC_PROPOSAL_REJECTED_PENDING` | `WARNING` | `ProposalRejectedPendingWarning` | `rules check -p hygiene` (whole workspace): a rejected proposal is still in the base; `[FIX]` finds the rejection commit, writes the rejection ADR and deletes the proposal in one commit (rule 9). |
 | `SPEC_PROPOSAL_IN_PLANNING` | `ERROR` (`INPUT_ERROR`) | `ProposalInPlanningError` | `check`: Backlog may not change the proposal, because its `plan-<slug>` exists (locally or fetched; rule 13) or it is no longer `draft`. `padr`: `plan-<slug>` exists and the checkout is not on it. |
 | `SPEC_PROPOSAL_INVALID` | `ERROR` (`MAINTENANCE`) | `ProposalInvalidError` | The proposal, its blueprint or a PADR cannot be read or its frontmatter does not parse; or, at handoff, `namespace` is not a string naming `global` or a registered namespace, `summary` is not a string, `task_kind` is not `feature` or `bugfix`, or `planning_effort`/`dev_effort` is present and not `low`, `medium` or `high`. |
@@ -545,57 +547,28 @@ directory whose namespace applies when `namespace` is omitted);
 | `SPEC_SCOPE_REGISTER_FAILED` | `WARNING` | `ScopeRegisterFailedWarning` | A handoff in a task worktree could not register its bundle (`CAP-COLL-work-scope-registry`). |
 
 
-## Local native MCP handoff
+## Host-authorized proposal lifecycle CLI
 
-Installing devkit-spec registers `spec_handoff` through `devkit_dist.features.host.services`. This is the local alternative to
-an external runner's user interaction; it does not call or modify AutoHub. The caller supplies the accepted proposal slug and exact `report_uri`. From a clean retained base checkout on its base branch, the service reads the committed proposal
-and requires its `sdd-proposal` workflow to be complete with satisfied `plan-intent` and `plan-accept` gates;
-disabling their stages does not replace those approvals. A native form displays the title, goal, immutable report link,
-base commit, Development branch/worktree, configured setup command and asset restoration effects. The form's
-`activity_effort` enum is `low`, `medium`, `high`, defaulting to `dev_effort` or `medium` when absent; `approve`
-defaults false. Only an accepted form with `approve=true` and a valid effort starts Development. Decline, cancel,
-non-approval, unavailable native confirmation and malformed replies perform no handoff mutations.
+The Host presents the exact immutable report, source commit, target branch, worktree path and effects, receives the
+user's conversational decision under `ask`, then invokes the CLI. CLI invocation alone does not establish approval;
+the CLI does not accept a proof or token and cannot authenticate the conversation. It revalidates report identity,
+source, base policy, workflow readiness, worktree provenance and cleanup targets before each mutation. `auto`
+authority comes only from the retained base policy.
 
-The service revalidates the reviewed base and configuration before creating `dev-<slug>` and its worktree through
-the existing worktree library, pinning creation and setup to the reviewed commit. An existing worktree is reusable only when its devkit marker, registered path, common Git identity, base, branch, exact accepted HEAD and clean state match. The fresh form discloses completed creation and remaining setup/handoff. Dirty, moved or unknown worktrees refuse and are preserved. Setup/sync failure preserves the worktree with
-`status=needs_recovery`; a changed or dirty source after setup refuses handoff. On success it calls the existing
-proposal handoff and work-scope registration, returning `status=handed_off`, the worktree, handoff result,
-`activity_effort`, `next_command`, notices and any scope token. The caller continues Development in that worktree
-and records the confirmed effort on its worker envelope; the proposal hint remains non-authoritative. The base
-proposal remains until final integration. A handoff failure returns its error with the created worktree for
-inspection; no automatic rollback deletes the worktree and a lost response is recovered by inspecting Git.
+`devkit spec proposal accept <slug> --report-uri <uri> --mode accept_only|accept_and_handoff --by user` validates
+the reviewed `plan-<slug>`, records `status: accepted` and `gate:plan-accept`, commits the exact acceptance delta,
+and executes the checked local Planning integration. `accept_only` stops after acceptance. The combined mode also
+starts Development using the selected `--effort low|medium|high`.
 
-This service grants no final merge authority, dispatches no worker and creates no PR. Configured setup is trusted
-project code and may install dependencies; the MCP tool declares `openWorldHint=true`, and the form does not promise that setup is network-free. Its process-local
-lock serializes calls to this service, not arbitrary Git/editor processes. Native rendering remains host-owned.
+`devkit spec proposal handoff <slug> --report-uri <uri> --effort low|medium|high` validates an already accepted
+proposal on the retained base, creates or validates `dev-<slug>`, runs setup and sync, then performs proposal handoff
+and scope registration. An automatic handoff uses the proposal's declared `dev_effort`. The command reports the
+worktree, spec bundle, selected effort, notices and completed effects. Setup or handoff failures preserve the
+proposal and any created worktree for inspection; the command never rolls those effects back automatically.
 
-| Code | Meaning | Action |
-| --- | --- | --- |
-| `SPEC_HANDOFF_NOT_READY` | Base or accepted proposal is not ready. | Resolve the named prerequisite and call again. |
-| `SPEC_HANDOFF_REPLY_INVALID` | Accepted native form has no valid effort. | Choose low, medium or high in a fresh form. |
-| `SPEC_HANDOFF_STALE` | Reviewed base, proposal or configuration changed. | Inspect the current scope and obtain a fresh confirmation. |
-
-Native handoff is Host-owned. The Host reviews the accepted proposal and worker evidence, then uses the native form
-for exact Development-start authority and effort selection. The explicit owning configuration workspace must remain
-valid and local before the form, after its reply and before subsequent handoff mutations. Cloud cannot start worktree
-creation through MCP. A later environment transition preserves already completed effects as recovery state; it does
-not authorize final integration. See `CAP-MCP-runtime-registration` for runtime/registration and fallback boundaries.
-
-### Handoff presentation language
-
-The service snapshots the owning configuration workspace's `presentation.language` before each confirmation,
-independently of the retained executor. English is deterministic for auto/unsupported strings (an unsupported string is a
-`PRESENTATION_LANGUAGE_UNSUPPORTED` warning from sync, status and config show); ko selects Korean.
-Static copy covers Development start, setup/restoration effects, effort meanings, required checks, absent markers
-and separate final-merge approval. Both messages pair canonical `low`, `medium`, `high` with their localized meanings
-and explain that effort does not change model reasoning settings, so omitted field metadata loses no decision facts.
-Titles and other owned schema text are localized; keys, enum values, defaults, required fields and reply parsing
-remain canonical. Accepted title/summary, report URI, paths, commands and SHAs remain verbatim with JSON escaping.
-
-A preference edit during an open form leaves its displayed copy fixed but invalidates a differently localized report; fresh report and confirmation are required. Existing
-whole-preview/policy equality, workspace identity and environment checks remain independent and can still refuse
-changed configuration. No presentation data is added to preview equality. Native display and host controls are
-client-owned; per-host visible localization is unverified in `MAT-language-development-evidence`.
+These operations do not dispatch a worker, create a pull request or authorize final Development integration. A
+partial result requires Git/worktree inspection; after an already-landed operation, recovery runs only a guarded
+remaining cleanup. `ADR-host-cli-lifecycle-authority` defines Host authorization and recovery boundaries.
 
 
 ## Source-bound proposal review reports and combined acceptance
@@ -603,11 +576,10 @@ client-owned; per-host visible localization is unverified in `MAT-language-devel
 `devkit spec proposal report <slug> --source-sha <sha> --body-file <path-or-dash>` and
 `spec_proposal_report(slug, source_sha, body)` publish authored Markdown through `CAP-COLL-shared-artifacts`.
 `devkit spec proposal report <slug> --source-sha <sha> --template` (exactly one of `--template` and `--body-file`,
-else `ARGUMENT_INVALID`) and the read-only `spec_proposal_report_template(slug, source_sha)` return the domain
-template for the same source without publishing: Markdown on stdout, or `proposal`, `source_sha` and `template` in
-JSON and MCP. The `spec_proposal_report` description names this route.
+else `ARGUMENT_INVALID`) returns the domain template for the same source without publishing. MCP retains only
+`spec_proposal_report` for publication; `spec_proposal_report_template` is not registered.
 The source is a real full commit at clean current `plan-<slug>` HEAD (reviewing or accepted), or a clean accepted
-base HEAD for standalone handoff. The MCP producer resolves the Planning worktree from the retained base.
+base HEAD for standalone handoff.
 Language is the owning workspace preference, normalized to ko/en. Report frontmatter binds `proposal`,
 `source_sha`, `language` and `repository_namespace`; the domain template supplies bilingual sections for outcome,
 decisions, boundary impacts, Planning effort/support, open decisions/waivers, unverified areas, recommended
@@ -622,11 +594,9 @@ retries keep the generation, expired retries create a different one. Publication
 metadata and available local links without repeating the submitted Markdown; `shared_get` retrieves the body.
 No read refreshes or deletes an artifact.
 
-`spec_plan_accept(slug, report_uri)` requires local native confirmation even when Development integration policy
-is auto. Its message includes title, summary, PADR IDs, report link, Planning support, recommended effort and exact
-acceptance, merge, cleanup and Development setup scope. Canonical `mode` is `accept_and_handoff` (default) or
-`accept_only`; `approve` defaults false; `activity_effort` is low/medium/high and ignored for accept-only. Only
-native action accept plus Boolean true authorizes effects. Required-PR refuses this local combined route.
+`devkit spec proposal accept` requires the Host to present the exact report and effects before an `ask` invocation.
+Its result includes acceptance, integration and optional handoff progress. `--by user` records decision provenance;
+it is not an authenticated credential. Required-PR refuses this local combined route.
 
 The invocation binds exact source/base commits, Git and extension identities, effective configuration, environment,
 report digest/language/expiry and cleanup targets. The common-directory integration lock covers acceptance and
@@ -634,30 +604,30 @@ integration. Only the service-created acceptance record/status delta and its dir
 normal commit gates and the complete integration readiness provider still run. The base cannot advance. Cleanup
 revisions equal to the source SHA may follow only that exact verified acceptance child with identical targets.
 `accept_only` stops after accepted merge/cleanup; combined pins the landed result before setup/handoff. No final
-Development merge is authorized. Decline/cancel/unavailable forms mutate no lifecycle state.
+Development merge is authorized. If the Host conversation is declined, canceled or unavailable, the Host does not
+invoke the CLI and no lifecycle state changes.
 
 Partial progress returns completed steps, source/acceptance/landed SHAs, integration progress, worktree results and
-a next action. No authority survives a return or restart. Fresh reports and forms approve only remaining effects:
-accepted Planning commits are never replayed, accepted base recovery starts only Development, and strictly matched
-clean pinned worktrees can retry setup/handoff. Dirty or mismatched partial state requires inspection; it is never
-rolled back or treated as completed merely because a branch exists. Host link/render fidelity is not asserted by
-protocol tests. See `ADR-proposal-acceptance`.
+a next action. No authority survives a return or restart. Fresh reports and Host decisions cover only remaining
+effects: accepted Planning commits are never replayed, and strictly matched clean pinned worktrees can retry
+setup/handoff. Dirty or mismatched partial state requires inspection; it is never rolled back or treated as completed
+merely because a branch exists. See `ADR-proposal-acceptance` and `ADR-host-cli-lifecycle-authority`.
 
 | Code | Meaning | Action |
 | --- | --- | --- |
-| `PROPOSAL_REVIEW_INVALID` | Report source, structure or identity is invalid; the message starts with the failed field class. | Fill the template from `--template` or `spec_proposal_report_template` for clean current source and publish again. |
-| `PROPOSAL_REVIEW_REFRESH_REQUIRED` | Exact report is missing, expired, changed or bound to another source/language. | Publish a new report outside any pending form and request fresh review. |
-| `PROPOSAL_APPROVAL_NOT_READY` | Planning or native reply prerequisites do not hold. | Resolve the named prerequisite and request a fresh form. |
-| `PROPOSAL_APPROVAL_STALE` | Reviewed scope or exact acceptance delta changed. | Inspect preserved effects, refresh evidence and approve only remaining scope. |
+| `PROPOSAL_REVIEW_INVALID` | Report source, structure or identity is invalid; the message starts with the failed field class. | Fill the template from `devkit spec proposal report <slug> --source-sha <sha> --template` for clean current source and publish again. |
+| `PROPOSAL_REVIEW_REFRESH_REQUIRED` | Exact report is missing, expired, changed or bound to another source/language. | Publish a new report, have the Host present it and obtain fresh conversational approval before invoking the CLI. |
+| `PROPOSAL_APPROVAL_NOT_READY` | Planning or worktree prerequisites do not hold. | Resolve the named prerequisite and rerun the CLI operation with current review evidence. |
+| `PROPOSAL_APPROVAL_STALE` | Reviewed scope or exact acceptance delta changed. | Inspect preserved effects, refresh evidence and obtain Host authority for remaining scope. |
 
-### Policy-aware native decision boundaries
+### Policy-aware decision boundaries
 
 `plan-accept`, `proposal-handoff`, and `dev-integration` independently allow `ask` or `auto`, default `ask`.
-`spec_plan_accept` binds the exact immutable report, source and base commits, configuration, environment and setup.
+CLI acceptance binds the exact immutable report, source and base commits, configuration, environment and setup.
 Owning `plan-accept=auto` authorizes checked acceptance and the Planning merge regardless of Development's final-result
 policy. Source-only auto cannot grant authority, and prospective revocation refuses execution. With handoff auto it
 continues into Development using the accepted `dev_effort`; with handoff ask it leaves the accepted proposal waiting
-for its separate start decision. A native user form can explicitly include both acceptance and handoff once. The optional operation `mode` is `accept_only` or `accept_and_handoff` (default); `accept_only` never starts Development even when both policies are auto, and its form cannot widen that requested scope.
-`spec_handoff` uses a form under ask and the default effort under auto. The low-level CLI handoff is an instructed executor: the Host must already possess user or policy authority for `proposal-handoff`; invoking it does not itself prove approval. Exact report validation, snapshot checks,
-readiness, rollback and partial-effect recovery apply under either authority. Internal worker sequencing, review,
+for its separate start decision. The CLI `mode` is `accept_only` or `accept_and_handoff`; `accept_only` never starts Development even when both policies are auto, and cannot widen that requested scope.
+Handoff runs under Host-carried authority for `ask` or base policy authority for `auto`. Exact report validation, snapshot checks,
+readiness and partial-effect recovery apply under either authority. Internal worker sequencing, review,
 retries and fixes inside the approved scope are delegated to the Host, rather than additional user approval gates.

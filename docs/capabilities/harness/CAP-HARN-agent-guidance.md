@@ -146,19 +146,19 @@ Living Spec and `specs/` holds feature specs.
 | `spec-tasks` | Write `tasks.md` with `_Boundary:` and `_Requirements:`. | `list spec`, `scope update` |
 | `spec-review` | Verify the change against the spec, the diff and the checks before completion. | |
 | `spec-sync` | Reconcile the change into the Living Spec and resolve `reconcile.md`. | `list`, `refs`, `search`, `proposal new`, `scope update` |
-| `spec-integrate` | Local guidance: prepare integration: conflicts, re-verification, reconcile confirmation, cumulative check, then one native approval through direct `integration_integrate` (optional preflight `integration_prepare`, inspection `integration_status`, approved recovery `integration_resume`) or CLI fallback (`devkit worktree finish --merge --local-only`), cleanup. | `policy`, `scope sweep`, `proposal prune` |
+| `spec-integrate` | Prepare integration: conflicts, re-verification, reconcile confirmation and cumulative check; obtain Host conversational approval, then run `devkit integration integrate` and recover from observed Git or PR state; clean up. | `policy`, `scope sweep`, `proposal prune` |
 | `spec-delegate` | Delegate to a role contract as the `activity-effort` asks, record its envelope, validate a worker's committed range and handle its questions and problems. | |
-| `spec-review-proposal` | Review an exact source-bound ko/en report and all PADRs; preserve exclusive Planning ownership during refinement, commit/review changes and explicitly refresh reports. | `proposal report`, `spec_proposal_report_template`, `spec_proposal_report`, `spec_plan_accept`, `spec_handoff` |
+| `spec-review-proposal` | Review an exact source-bound ko/en report and all PADRs; preserve exclusive Planning ownership during refinement, commit/review changes and explicitly refresh reports. | `proposal report --template`, `spec_proposal_report`, `proposal accept`, `proposal handoff` |
 | `spec-orchestrate` | User-invoked `local-orchestrated` mode per activity: one-shot Planning and Development workers in their own worktrees, the Host keeping preparation, validation, questions, problems and integration; a plain instruction returns to `direct`. | `new`, `proposal accept`, `scope register`, `scope query`, `scope update` |
 | `spec-rule` | Author or tune a project rule for `devkit rules` in the project's own bundle. | |
 | `spec-feedback` | Record and sweep feedback observations (`specs/<YYYY-MM>/feedback/`). | `list feedback`, `resolve`, `policy` |
 | `spec-entrypoints` | Derive capability and use case entrypoints from spec bundles, review and apply them. | `entrypoints derive`, `list capability` |
 
 Skill references, each read at the moment it names: `spec/references/completion.md` (completion classification,
-policy, `mcp-elicitation` confirmation authority for `integration_integrate`, reconciliation evidence),
+policy, Host conversational approval and CLI execution, reconciliation evidence),
 `spec/references/depth-and-close.md` (raising the depth and closing without a merge),
 `spec/references/source-feedback.md` (tasks that address named feedback), `spec/references/envelope.md` (return
-envelope, final change report, integration result), `spec/references/git-policy.md` (worktree, pull request and branch cleanup levels), `spec/references/worktree.md` (task worktree start, work, approval-bound `integration_integrate` and `devkit worktree finish --local-only`, leftovers),
+envelope, final change report, integration result), `spec/references/git-policy.md` (worktree, pull request and branch cleanup levels), `spec/references/worktree.md` (task worktree start, work, Host-approved CLI integration and observed-state recovery, leftovers),
 `spec-next/references/post-handoff.md` (follow-up of `[REWRITTEN]` and `[UNRESOLVED_LINK]` lines),
 `spec-next/references/workflow-signals.md` (`devkit workflow next` lines and advisories),
 `spec-delegate/references/hosts.md` (spawning a role on each host), `spec-delegate/references/payload.md` (payload
@@ -292,17 +292,13 @@ The package regression test verifies all seeded architecture IDs and preservatio
 consumer wheel smoke installs devkit-spec after the base-only checks, verifies its command mount, and checks
 opt-in docs seeding and discovery in the installed package.
 
-### Native local integration approval
+### Host-approved CLI integration
 
-Execution-aware rendering retains the native route below for local guidance. Cloud guidance supplies CLI inspection and artifact operations; mutation requires a separately authorized CLI/PR route or returns verified results to the Host. Rendering grants no runtime authority and does not change workspace execution guards.
-
-After checks, review, reconcile and the final report, the MCP path calls integration_integrate directly for a single
-native confirmation. No separate chat approval or mandatory integration_prepare precedes it. Readiness preparation
-on the task branch may run before that form; base advancement and cleanup require acceptance. A workflow waiting
-on dev-integration permits requesting native approval; --given dev-integration follows acceptance only. Optional
-prepare is read-only inspection, status exposes concise progress or detail=true internals, and resume continues
-only already approved remaining work without another form. CLI fallback retains conversational approval and PR
-integration retains its ready-state authority. Unavailable native confirmation is reported, never inferred as approval.
+After checks, review, reconcile and the final report, the agent asks the Host for conversational approval and then
+runs `devkit integration integrate`. The CLI rebuilds readiness from the retained task base and derives automatic
+authority only from that base's policy. It does not accept an approval token or persist a lifecycle request. Local
+and pull-request routes are explicit; after interruption, inspect Git or remote PR state and rerun only against
+the observed state. Approval is never inferred from a successful prepare or a prior process result.
 
 ### Repository Backlog and next work
 

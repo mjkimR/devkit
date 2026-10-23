@@ -1,6 +1,6 @@
-# MCP runtime and native approval
+# MCP runtime and shared services
 
-Installing `devkit-spec` includes `devkit-mcp` for its native handoff tools. For an agt-only installation, add
+Installing `devkit-spec` includes `devkit-mcp` for source-bound proposal report publication. For an agt-only installation, add
 `devkit-agt[mcp]` or install `devkit-mcp` directly in the retained base environment. Release-wheel installs must
 name the matching `devkit-dist`, `devkit-core`, `devkit-cli`, `devkit-advisory` and `devkit-mcp` wheels when
 installing Spec; see the release notes. Runtime installation alone can discover an empty service set. Install agt
@@ -18,13 +18,15 @@ devkit never mutates global settings, trust or permission policy. `devkit mcp re
 entries; exclusions remain until manually reviewed across every linked worktree.
 
 Reconnect the terminal host and inspect `devkit mcp status --format json`. Registration, connection, discovery,
-native form support, trust and execution permissions are separate facts. Complete the host's own trust flow and
-verify tool discovery, decline/cancel and approved effects separately; record host versions with UI evidence.
-Protocol tests do not establish actual terminal UI support. Desktop/VS Code adapters are outside this scope.
+trust and execution permissions are separate facts. Complete the host's own trust flow and verify tool discovery.
+MCP retains shared artifact services and `spec_proposal_report`; lifecycle acceptance, handoff and integration run
+through CLI commands after Host-carried conversational approval. Protocol tests do not establish actual terminal UI
+support. Desktop/VS Code adapters are outside this scope.
 
-The Host reviews committed scope and required checks, then calls `integration_integrate` or `spec_handoff` for
-one native business approval. It needs no extra chat approval or integration prepare call. Workers return verified
-scope to the Host and never request business approval. Trust, tool and sandbox prompts may still appear.
+The Host reviews committed scope and required checks, presents the exact report, target and effects, obtains the
+user's conversational decision under `ask`, then invokes the corresponding CLI command. The CLI revalidates scope
+and policy but does not authenticate the conversation. Workers return verified scope to the Host and never request
+business approval. Trust, tool and sandbox prompts may still appear.
 
 Cloud exposes only declared read-only tools and refuses interactive/preflight/resume execution even through stale
 registrations. Its transport connectivity is separately host-dependent. Missing runtime, disconnected server,
@@ -43,6 +45,6 @@ metadata remain client-owned. Visible localized forms on both terminal hosts rem
 
 ## Cloud setup
 
-For cloud execution, run `uv run devkit sync --cloud` and use CLI inspection and artifact commands. This saves the checkout-local execution setting and records the actual render environment in the receipt. Optional native-service onboarding is for local execution only; skip it in cloud setup. Cloud mutation still requires a separately authorized CLI/PR route.
+For cloud execution, run `uv run devkit sync --cloud` and use CLI inspection and artifact commands. This saves the checkout-local execution setting and records the actual render environment in the receipt. MCP service onboarding supports shared resources and report publication; lifecycle mutation still requires Host-carried authority and CLI execution.
 
 `sync --no-save --cloud` renders cloud guidance and records its provenance without changing persisted runtime authorization. The next ordinary sync uses the saved/default environment; status/check reports the pending difference. `sync --local` restores local guidance. Locked sync refuses canonical environment changes; use ordinary sync and commit the resulting tracked output.

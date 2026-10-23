@@ -58,7 +58,7 @@ and host validation. Setup does not prove native UI support.
 | `MCP_INTERACTIVE_UNAVAILABLE` | Use a local interactive Host or independently authorized CLI/PR route |
 | `HOST_MCP_FAILED` | Correct installed service entry points/runtime and reconnect |
 | `HOST_MCP_ARGUMENT_INVALID` | Supply only the advertised tool schema's arguments |
-| `HOST_CONFIRMATION_UNAVAILABLE` | Use a client with negotiated native form capability; no authority was granted |
+| `HOST_CONFIRMATION_UNAVAILABLE` | Obtain conversational approval from the Host before invoking the lifecycle CLI; no authority was granted |
 
 `mcp serve` is a native-protocol exception to ordinary output/format flags; startup errors remain advisories on
 stderr. Other commands emit one JSON object or an MCP result sentinel and advisory notices. No output includes

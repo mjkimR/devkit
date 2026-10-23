@@ -303,7 +303,7 @@ def test_lock_held_past_the_wait_changes_nothing_and_names_resume(repo, monkeypa
         started = time.monotonic()
         result = integrate(service, approve_after())
         assert result.status == "blocked" and result.errors[0].code == "LOCK_HELD"
-        assert "integration_resume" in (result.errors[0].fix or "") and git(base, "show-ref") == before
+        assert "devkit integration integrate" in (result.errors[0].fix or "") and git(base, "show-ref") == before
         with pytest.raises(LockHeldError):
             service.resume(result.request.id)
         assert time.monotonic() - started < 5

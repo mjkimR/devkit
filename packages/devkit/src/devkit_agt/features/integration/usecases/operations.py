@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from devkit_core.base.mcp import Confirmation
 from devkit_core.base.usecase import BaseUseCase
 
 from devkit_agt.features.integration.models.contracts import IntegrationResult, Task
@@ -20,13 +19,15 @@ class PrepareIntegrationUseCase(BaseUseCase):
 
 
 class IntegrateUseCase(BaseUseCase):
-    """Execute through the integration engine's existing approval contract."""
+    """Execute one Host-authorized invocation after rebuilding and checking its full scope."""
 
     def __init__(self, service: IntegrationService) -> None:
         self.service = service
 
-    async def execute(self, branch: str, task: Task, confirm: Confirmation, route: str = "local") -> IntegrationResult:
-        return await self.service.integrate(branch, task, confirm, route)
+    def execute(
+        self, branch: str, task: Task, route: str = "local", *, expected_digest: str | None = None
+    ) -> IntegrationResult:
+        return self.service.execute_cli(branch, task, route, expected_digest=expected_digest)
 
 
 class ResumeIntegrationUseCase(BaseUseCase):

@@ -2,8 +2,9 @@
 id: ADR-local-and-pull-request-integration
 title: Local and Pull Request Integration of Approved Sources
 summary: "For integrating an approved source locally or through a GitHub pull request, we land a merge commit built outside the checkout or a head-pinned PR merge with readiness on the result and a policy digest, to land only checked trees, accepting disclosed unchecked landings."
-status: accepted
+status: superseded
 created_at: 2026-10-22
+superseded_by: ADR-host-cli-lifecycle-authority
 aliases:
   - ADR-merge-commit-outside-checkout
   - ADR-target-advance-readiness
@@ -14,6 +15,8 @@ aliases:
 ---
 
 # [ADR-local-and-pull-request-integration] Local and Pull Request Integration of Approved Sources
+
+`ADR-host-cli-lifecycle-authority` supersedes this decision's process-local lifecycle request, native confirmation and resume interface. The merge construction, readiness, policy binding, pull-request route limits, landing validation, integration locking and exact cleanup guards remain in force.
 
 - **Status**: Accepted
 - **Date**: 2026-10-22
