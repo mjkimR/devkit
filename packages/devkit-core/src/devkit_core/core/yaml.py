@@ -19,7 +19,10 @@ def require_libyaml(*, source: str = "YAML input") -> type[Any]:
 
 def safe_load(text: str, *, source: str = "YAML input", loader: type[Any] | None = None) -> Any:
     """Load a YAML value with LibYAML, optionally using a C-safe-loader subclass."""
-    selected = loader or require_libyaml(source=source)
+    base = require_libyaml(source=source)
+    selected = loader or base
+    if not issubclass(selected, base):
+        raise TypeError("a custom YAML loader must subclass yaml.CSafeLoader")
     return yaml.load(text, Loader=selected)
 
 

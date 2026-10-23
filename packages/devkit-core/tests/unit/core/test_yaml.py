@@ -16,6 +16,11 @@ def test_safe_load_rejects_python_object_tags() -> None:
         safe_load("!!python/object:builtins.object {}\n")
 
 
+def test_safe_load_rejects_non_c_loader_overrides() -> None:
+    with pytest.raises(TypeError, match=r"must subclass yaml.CSafeLoader"):
+        safe_load("key: value\n", loader=yaml.SafeLoader)
+
+
 def test_missing_binding_is_checked_lazily(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delattr(yaml, "CSafeLoader", raising=False)
     with pytest.raises(YamlBindingUnavailableError) as error:

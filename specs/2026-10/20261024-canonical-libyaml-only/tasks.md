@@ -33,4 +33,3 @@ plan: PLAN-canonical-libyaml-only
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/instructions/document-writing.md`, `packages/devkit-core/README.md`, `guides/INSTALL_GUIDE.md`, `guides/install/`, `tests/e2e/smoke.sh`, `.devkit/installation.json`
   - _Requirements: AC-01, AC-07_
   - **Verification**: `just smoke`; `just test-e2e`
-
