@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-canonical-libyaml-only
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-model.md
     resolution: modified

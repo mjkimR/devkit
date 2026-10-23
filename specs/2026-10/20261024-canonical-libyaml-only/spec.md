@@ -2,7 +2,7 @@
 id: SPEC-canonical-libyaml-only
 title: Require libyaml for consistent YAML parsing
 summary: "Require PyYAML LibYAML safe parsing for Python runtime frontmatter and standalone YAML inputs. Define installation eligibility, distinct missing-binding failures, and parser and fixer verification."
-status: in-progress
+status: completed
 created: 2026-10-24
 related_capabilities:
   - CAP-DOCS-document-model
