@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: User requested a proposal for requiring PyYAML's LibYAML C loader and failing
+  when it is unavailable.
+by: user
+at: '2026-10-23T14:56:35.237677Z'
