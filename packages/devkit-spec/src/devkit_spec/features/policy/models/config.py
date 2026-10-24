@@ -10,7 +10,7 @@ SCOPE_TIMEOUT_DEFAULT = 10
 class ProposalReviewConfig:
     """``[tool.spec.proposal_review]``: whether agents automatically publish review reports before acceptance."""
 
-    auto_write: bool = True
+    auto_write: bool = False
 
 
 @dataclass(frozen=True)

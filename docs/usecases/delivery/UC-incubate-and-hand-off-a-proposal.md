@@ -257,12 +257,12 @@ capabilities:
 
 ### Scenario 18: A Planning review report is published once before acceptance
 - **Covers**: main success scenario, step 5
-- **Given**: a Planning proposal ready for `plan-accept` and `auto_write=true` or omitted
+- **Given**: a Planning proposal ready for `plan-accept` and `auto_write=true`
 - **When**: the agent finishes the final committed review
 - **Then**: one report exists for that source SHA before the acceptance request, and acceptance consumes its exact URI without publishing again
 
 ### Scenario 19: Automatic review publication is disabled
 - **Covers**: main success scenario, step 5
-- **Given**: a Planning proposal ready for `plan-accept` and `auto_write=false`
+- **Given**: a Planning proposal ready for `plan-accept` and `auto_write=false` or omitted
 - **When**: the agent reaches the acceptance request
 - **Then**: it reuses an exact report if one exists; otherwise it does not automatically author or publish one, and acceptance waits for explicit publication

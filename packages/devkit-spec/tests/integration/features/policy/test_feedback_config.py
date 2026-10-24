@@ -65,7 +65,7 @@ def test_policy_exposes_configured_values_alongside_stage_switch(workspace: Path
     assert result.stdout.splitlines()[-2] == (
         "[FEEDBACK_POLICY: capture=requested-only coverage=repo-and-upstream detail=detailed reminder=off]"
     )
-    assert result.stdout.splitlines()[-1] == "[PROPOSAL_REVIEW_POLICY: auto_write=true]"
+    assert result.stdout.splitlines()[-1] == "[PROPOSAL_REVIEW_POLICY: auto_write=false]"
     result = runner.invoke(devkit_cli, [*args, "--format", "json"])
     assert result.exit_code == 0
     payload = json.loads(result.stdout)
@@ -78,7 +78,9 @@ def test_policy_exposes_configured_values_alongside_stage_switch(workspace: Path
     assert payload["stages_off"] == ["collect-feedback"]
 
 
-def test_proposal_review_auto_write_defaults_on_and_accepts_false(workspace: Path, write: Write) -> None:
+def test_proposal_review_auto_write_defaults_off_and_accepts_true(workspace: Path, write: Write) -> None:
+    assert read_spec_config(workspace).proposal_review.auto_write is False
+    write(".devkit/config.toml", "[tool.spec.proposal_review]\nauto_write = true\n")
     assert read_spec_config(workspace).proposal_review.auto_write is True
     write(".devkit/config.toml", "[tool.spec.proposal_review]\nauto_write = false\n")
     assert read_spec_config(workspace).proposal_review.auto_write is False

@@ -15,7 +15,7 @@ name = "api"
 path = "services/api"
 
 [tool.spec.proposal_review]
-auto_write = true          # agent writes/publishes one review before plan-accept; false requires explicit publication
+auto_write = false         # default: explicit publication; true lets the agent write/publish before plan-accept
 
 [tool.spec.feedback]
 capture = "observed"       # concrete observations recorded autonomously; or requested-only
@@ -273,7 +273,7 @@ def _proposal_review(value: object) -> ProposalReviewConfig:
     unknown = sorted(set(value) - {"auto_write"})
     if unknown:
         raise SpecConfigError(f"{where}: unknown keys: {', '.join(unknown)}")
-    auto_write = value.get("auto_write", True)
+    auto_write = value.get("auto_write", False)
     if not isinstance(auto_write, bool):
         raise SpecConfigError(f"{where}.auto_write: expected a boolean, got {auto_write!r}")
     return ProposalReviewConfig(auto_write=auto_write)

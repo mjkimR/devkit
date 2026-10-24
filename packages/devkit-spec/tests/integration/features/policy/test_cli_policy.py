@@ -27,7 +27,7 @@ def test_defaults(workspace: Path) -> None:
         "[GIT_POLICY: worktree=auto pull_request=auto delete_branch=yes setup=-]",
         "[ROUTING_POLICY: depth_escalation=auto]",
         "[FEEDBACK_POLICY: capture=observed coverage=repo detail=standard reminder=contextual]",
-        "[PROPOSAL_REVIEW_POLICY: auto_write=true]",
+        "[PROPOSAL_REVIEW_POLICY: auto_write=false]",
     ]
 
 
