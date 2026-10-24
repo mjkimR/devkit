@@ -51,8 +51,7 @@ capabilities:
 4. The agent puts every open question to the user in one round, folds the answers into the proposal and its PADRs,
    refines the Development effort hint, and records fresh feedback-sweep coverage before each return to the user
    (`CAP-DLV-delivery-workflows`).
-5. After the final Planning commit, the agent publishes one source-bound review according to
-   `[tool.spec.proposal_review].auto_write`; acceptance uses that exact report and does not publish another one
+5. After the final Planning commit, the agent reviews the proposal, PADRs and envelopes, and presents findings to the user
    (`CAP-DLV-proposal-incubation`).
 6. The user accepts the direction; the agent records the acceptance and the accepted status in one step
    (`CAP-DLV-proposal-incubation`).
@@ -214,8 +213,8 @@ capabilities:
 ### Scenario 12: Host-authorized CLI handoff starts Development with a chosen effort
 - **Covers**: 7a
 - **Given**: an accepted proposal on a clean base checkout under `proposal-handoff=ask`
-- **When**: the Host presents the report and setup/worktree effects, receives the user's conversational approval, then
-  runs `devkit spec proposal handoff <slug> --report-uri <uri> --effort high`
+- **When**: the Host presents the findings and setup/worktree effects, receives the user's conversational approval, then
+  runs `devkit spec proposal handoff <slug> --effort high`
 - **Then**: `dev-<slug>` and its worktree exist, the handoff ran there, and the result returns `status=handed_off`
   with effort `high`; without the user's decision, the Host does not invoke the command
 
@@ -255,14 +254,8 @@ capabilities:
   moved back, and the proposal stays for a rerun
 
 
-### Scenario 18: A Planning review report is published once before acceptance
+### Scenario 18: Proposal review briefing can be viewed before acceptance
 - **Covers**: main success scenario, step 5
-- **Given**: a Planning proposal ready for `plan-accept` and `auto_write=true`
-- **When**: the agent finishes the final committed review
-- **Then**: one report exists for that source SHA before the acceptance request, and acceptance consumes its exact URI without publishing again
-
-### Scenario 19: Automatic review publication is disabled
-- **Covers**: main success scenario, step 5
-- **Given**: a Planning proposal ready for `plan-accept` and `auto_write=false` or omitted
-- **When**: the agent reaches the acceptance request
-- **Then**: it reuses an exact report if one exists; otherwise it does not automatically author or publish one, and acceptance waits for explicit publication
+- **Given**: a Planning proposal ready for `plan-accept`
+- **When**: the agent or user runs `devkit spec proposal report <slug>`
+- **Then**: the briefing template is rendered for that source SHA without requiring shared artifact publication

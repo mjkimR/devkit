@@ -44,7 +44,7 @@ from devkit_dist.features.project.models.templates import TemplateKey, TemplateT
 from devkit_dist.features.project.repositories.project import read_project_config
 
 from devkit_spec.base.errors import SpecConfigError
-from devkit_spec.features.policy.models.config import SCOPE_TIMEOUT_DEFAULT, ProposalReviewConfig, ScopeConfig
+from devkit_spec.features.policy.models.config import SCOPE_TIMEOUT_DEFAULT, ScopeConfig
 
 TABLE = "spec"
 GLOBAL = "global"
@@ -96,7 +96,6 @@ class SpecConfig:
     namespaces: tuple[Namespace, ...] = field(default=())
     scope: ScopeConfig = field(default=ScopeConfig())
     feedback: FeedbackConfig = field(default=FeedbackConfig())
-    proposal_review: ProposalReviewConfig = field(default=ProposalReviewConfig())
 
 
 def template() -> list[TemplateTable]:
@@ -167,18 +166,6 @@ def template() -> list[TemplateTable]:
             help="The work-scope registry of `devkit spec scope`.",
         ),
         TemplateTable(
-            (
-                TemplateKey(
-                    "auto_write",
-                    defaults.proposal_review.auto_write,
-                    "agents automatically write and publish one source-bound proposal review before plan-accept; false requires explicit publication",
-                    kind="boolean",
-                ),
-            ),
-            path=("proposal_review",),
-            help="Proposal review report authoring and publication.",
-        ),
-        TemplateTable(
             tuple(
                 TemplateKey(
                     key,
@@ -217,9 +204,7 @@ def read_spec_config(root: Path) -> SpecConfig:
     table = tool.get(TABLE, {}) if isinstance(tool, dict) else None
     if not isinstance(table, dict):
         raise SpecConfigError("config tool.spec: expected a table")
-    unknown = sorted(
-        set(table) - {"worktree", "depth_escalation", "namespaces", "scope", "feedback", "proposal_review"}
-    )
+    unknown = sorted(set(table) - {"worktree", "depth_escalation", "namespaces", "scope", "feedback"})
     if unknown:
         raise SpecConfigError(f"config tool.spec: unknown keys: {', '.join(unknown)}")
     worktree = table.get("worktree", "auto")
@@ -234,7 +219,6 @@ def read_spec_config(root: Path) -> SpecConfig:
         namespaces=_namespaces(table.get("namespaces", [])),
         scope=_scope(table.get("scope", {})),
         feedback=_feedback(table.get("feedback", {})),
-        proposal_review=_proposal_review(table.get("proposal_review", {})),
     )
 
 
@@ -264,19 +248,6 @@ def _feedback(value: object) -> FeedbackConfig:
             raise SpecConfigError(f"{where}.{key}: expected {' | '.join(choices)}, got {entry!r}")
         settings[key] = entry
     return FeedbackConfig(**settings)
-
-
-def _proposal_review(value: object) -> ProposalReviewConfig:
-    where = "config tool.spec.proposal_review"
-    if not isinstance(value, dict):
-        raise SpecConfigError(f"{where}: expected a table")
-    unknown = sorted(set(value) - {"auto_write"})
-    if unknown:
-        raise SpecConfigError(f"{where}: unknown keys: {', '.join(unknown)}")
-    auto_write = value.get("auto_write", False)
-    if not isinstance(auto_write, bool):
-        raise SpecConfigError(f"{where}.auto_write: expected a boolean, got {auto_write!r}")
-    return ProposalReviewConfig(auto_write=auto_write)
 
 
 def _scope(value: object) -> ScopeConfig:

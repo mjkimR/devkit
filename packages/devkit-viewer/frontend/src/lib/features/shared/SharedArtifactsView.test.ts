@@ -60,8 +60,8 @@ describe('SharedArtifactsView', () => {
 		render(SharedArtifactsView, { props: { source } });
 
 		await waitFor(() => {
-			expect(screen.getByText('저장소에 공유된 아티팩트가 없습니다.')).toBeTruthy();
-			expect(screen.getByText('공유 공간 (Shared Space)')).toBeTruthy();
+			expect(screen.getByText('No shared artifacts in repository.')).toBeTruthy();
+			expect(screen.getByText('Shared Space')).toBeTruthy();
 		});
 	});
 
@@ -94,11 +94,11 @@ describe('SharedArtifactsView', () => {
 			expect(screen.getByText('Review for beta-feature')).toBeTruthy();
 		});
 
-		const rawBtn = screen.getByText('Raw 보기');
+		const rawBtn = screen.getByText('Raw View');
 		await fireEvent.click(rawBtn);
 
 		await waitFor(() => {
-			expect(screen.getByText('Markdown 뷰')).toBeTruthy();
+			expect(screen.getByText('Markdown View')).toBeTruthy();
 			expect(screen.getByText(/# Review for beta-feature/)).toBeTruthy();
 		});
 	});
@@ -113,7 +113,7 @@ describe('SharedArtifactsView', () => {
 			expect(within(list as HTMLElement).getByText('beta-feature')).toBeTruthy();
 		});
 
-		const searchInput = screen.getByPlaceholderText('슬러그, SHA, ID 검색...');
+		const searchInput = screen.getByPlaceholderText('Search slug, SHA, ID...');
 		await fireEvent.input(searchInput, { target: { value: 'beta' } });
 
 		await waitFor(() => {
@@ -128,22 +128,22 @@ describe('SharedArtifactsView', () => {
 		render(SharedArtifactsView, { props: { source, repoId: 'test-repo' } });
 
 		await waitFor(() => {
-			expect(screen.getByText('문서 메타 정보')).toBeTruthy();
-			expect(screen.getByText('식별 정보')).toBeTruthy();
+			expect(screen.getByText('Document Metadata')).toBeTruthy();
+			expect(screen.getByText('Identification')).toBeTruthy();
 		});
 
-		const toggleBtn = screen.getByTitle('메타 정보 서랍 닫기');
+		const toggleBtn = screen.getByTitle('Close Metadata Drawer');
 		await fireEvent.click(toggleBtn);
 
 		await waitFor(() => {
-			expect(screen.queryByText('식별 정보')).toBeNull();
+			expect(screen.queryByText('Identification')).toBeNull();
 		});
 
-		const openBtn = screen.getByTitle('메타 정보 서랍 열기');
+		const openBtn = screen.getByTitle('Open Metadata Drawer');
 		await fireEvent.click(openBtn);
 
 		await waitFor(() => {
-			expect(screen.getByText('식별 정보')).toBeTruthy();
+			expect(screen.getByText('Identification')).toBeTruthy();
 		});
 	});
 });

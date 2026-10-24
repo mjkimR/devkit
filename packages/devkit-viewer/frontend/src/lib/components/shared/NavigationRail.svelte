@@ -10,7 +10,7 @@
 		{ id: 'proposals', label: 'Proposals', icon: '💡', title: 'Proposals' },
 		{ id: 'specs', label: 'Specs', icon: '📋', title: 'Feature Specs' },
 		{ id: 'roadmap', label: 'Roadmap', icon: '🗺️', title: 'Roadmap' },
-		{ id: 'shared', label: 'Shared', icon: '🤝', title: 'Shared Space (공유 공간)' },
+		{ id: 'shared', label: 'Shared', icon: '🤝', title: 'Shared Space' },
 		{ id: 'files', label: 'Files', icon: '📁', title: 'Repository Files' }
 	] as const;
 </script>

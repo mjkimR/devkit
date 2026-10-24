@@ -16,7 +16,6 @@ def test_the_template_renders() -> None:
         (),
         ("namespaces",),
         ("scope",),
-        ("proposal_review",),
         ("feedback",),
     ]
 
@@ -37,4 +36,3 @@ def test_uncommented_examples_are_valid(workspace: Path, write: Write) -> None:
     config = read_spec_config(workspace)
     assert config.namespaces == (Namespace("api", "services/api"),)
     assert config.scope == ScopeConfig(shared_path=Path("/srv/devkit-spec-scope"), namespace="team", timeout=10)
-    assert config.proposal_review.auto_write is False

@@ -8,7 +8,6 @@ dependencies = [
     "devkit-core==0.1.3",
     "click>=8.1.7",
     "devkit-agt==0.1.3",
-    "devkit-mcp==0.1.3",
 ]
 
 [project.optional-dependencies]
@@ -44,9 +43,6 @@ spec-rejected-proposals = "devkit_spec.features.governance.usecases.hygiene:reje
 [project.entry-points."devkit.config_template"]
 spec = "devkit_spec.features.policy.services.config:template"
 
-[project.entry-points."devkit.host.services"]
-spec-proposal-report = "devkit_spec.features.proposals.mcp.report:create_tools"
-
 [dependency-groups]
 dev = [
     "pyright>=1.1.390",
@@ -58,7 +54,6 @@ dev = [
 [tool.uv.sources]
 devkit-core = { workspace = true }
 devkit-agt = { workspace = true }
-devkit-mcp = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

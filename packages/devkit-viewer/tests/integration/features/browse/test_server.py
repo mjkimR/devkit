@@ -286,7 +286,7 @@ def test_review_refuses_invalid_or_expired_artifact(server: ViewerServer, review
     response = request(server, f"/review/alpha/{artifact.metadata.generation_id}")
     assert response.status == (410 if change == "expired" else 400)
     if change == "expired":
-        assert "Ask the Host to regenerate" in response.body.decode()
+        assert "The requested shared artifact is unavailable" in response.body.decode()
         assert response.headers["content-type"].startswith("text/html")
         assert response.headers["cache-control"] == "no-store"
     assert path.read_bytes() == before
@@ -297,8 +297,8 @@ def test_missing_review_has_read_only_host_refresh_page(server: ViewerServer, re
     before = {p.name: p.read_bytes() for p in selected.root.iterdir()}
     response = request(server, "/review/alpha/" + "0" * 32)
     assert response.status == 404
-    assert "Proposal review unavailable" in response.body.decode()
-    assert "Ask the Host to regenerate" in response.body.decode()
+    assert "Shared artifact unavailable" in response.body.decode()
+    assert "The requested shared artifact is unavailable" in response.body.decode()
     assert response.headers["content-type"].startswith("text/html")
     assert response.headers["cache-control"] == "no-store"
     assert "default-src 'none'" in response.headers["content-security-policy"]

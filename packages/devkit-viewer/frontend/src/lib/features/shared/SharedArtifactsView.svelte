@@ -3,6 +3,7 @@
 	import DOMPurify from 'dompurify';
 	import MarkdownArticle from '../document/MarkdownArticle.svelte';
 	import RawViewer from '../document/RawViewer.svelte';
+	import { parseFrontmatterAndMarkdown } from '../document/document-parser';
 	import type {
 		RepositoryDataSource,
 		SharedArtifactDetail,
@@ -49,24 +50,32 @@
 		})
 	);
 
-	let renderedHtml = $derived(
+	let parsedDoc = $derived(
 		selectedDetail?.content
-			? DOMPurify.sanitize(marked.parse(selectedDetail.content, { async: false }) as string)
+			? parseFrontmatterAndMarkdown(selectedDetail.content)
+			: { frontmatter: null, content: '' }
+	);
+
+	let renderedHtml = $derived(
+		parsedDoc.content
+			? DOMPurify.sanitize(marked.parse(parsedDoc.content, { async: false }) as string)
 			: ''
 	);
 
+	let parsedFrontmatter = $derived(parsedDoc.frontmatter);
+
 	function formatExpiry(expiresAt: string): { label: string; expired: boolean } {
 		const diff = new Date(expiresAt).getTime() - Date.now();
-		if (diff <= 0) return { label: '만료됨', expired: true };
+		if (diff <= 0) return { label: 'Expired', expired: true };
 		const hours = Math.floor(diff / (1000 * 60 * 60));
 		const days = Math.floor(hours / 24);
 		if (days > 0) {
 			const remHours = hours % 24;
-			return { label: `${days}일 ${remHours}시간 남음`, expired: false };
+			return { label: `${days}d ${remHours}h left`, expired: false };
 		}
-		if (hours > 0) return { label: `${hours}시간 남음`, expired: false };
+		if (hours > 0) return { label: `${hours}h left`, expired: false };
 		const mins = Math.floor(diff / (1000 * 60));
-		return { label: `${mins}분 남음`, expired: false };
+		return { label: `${mins}m left`, expired: false };
 	}
 
 	function formatBytes(bytes: number): string {
@@ -125,7 +134,7 @@
 			}
 		} catch (e: any) {
 			if (e.name !== 'AbortError') {
-				error = e.message || '공유 아티팩트 목록을 불러오지 못했습니다.';
+				error = e.message || 'Failed to load shared artifacts.';
 			}
 		} finally {
 			loading = false;
@@ -178,15 +187,15 @@
 	<aside class="shared-sidebar">
 		<div class="sidebar-header">
 			<div class="title-row">
-				<h2>공유 아티팩트</h2>
-				<button class="icon-btn" title="새로고침" onclick={loadArtifacts}>
+				<h2>Shared Artifacts</h2>
+				<button class="icon-btn" title="Refresh" onclick={loadArtifacts}>
 					<span class="refresh-icon" class:spin={loading}>↻</span>
 				</button>
 			</div>
 			<div class="search-box">
 				<input
 					type="search"
-					placeholder="슬러그, SHA, ID 검색..."
+					placeholder="Search slug, SHA, ID..."
 					bind:value={searchQuery}
 					aria-label="Search shared artifacts"
 				/>
@@ -201,7 +210,7 @@
 								kindFilter = k;
 							}}
 						>
-							{k === 'all' ? '전체' : k}
+							{k === 'all' ? 'All' : k}
 						</button>
 					{/each}
 				</div>
@@ -210,15 +219,15 @@
 
 		<div class="artifact-list" role="list">
 			{#if loading && artifacts.length === 0}
-				<div class="empty-state">아티팩트를 조회하는 중...</div>
+				<div class="empty-state">Loading artifacts...</div>
 			{:else if error}
 				<div class="error-state">{error}</div>
 			{:else if filteredArtifacts.length === 0}
 				<div class="empty-state">
 					{#if artifacts.length === 0}
-						저장소에 공유된 아티팩트가 없습니다.
+						No shared artifacts in repository.
 					{:else}
-						검색 조건에 맞는 아티팩트가 없습니다.
+						No matching artifacts found.
 					{/if}
 				</div>
 			{:else}
@@ -255,16 +264,13 @@
 		{#if !selectedId || !selectedDetail}
 			<div class="detail-empty">
 				{#if detailLoading}
-					<p>아티팩트 내용을 불러오는 중...</p>
+					<p>Loading artifact content...</p>
 				{:else}
 					<div class="guide-box">
-						<h3>공유 공간 (Shared Space)</h3>
-						<p>
-							작업 트리 간에 협업 중 생성된 7일 만료의 불변 아티팩트(예: proposal-review 리포트)를
-							안전하게 공유하고 조회할 수 있습니다.
-						</p>
+						<h3>Shared Space</h3>
+						<p>Safely view immutable artifacts shared across worktrees with a 7-day expiration.</p>
 						<div class="guide-tip">
-							<strong>💡 안내:</strong> 좌측 목록에서 열람할 아티팩트를 선택하세요.
+							<strong>💡 Tip:</strong> Select an artifact from the list on the left.
 						</div>
 					</div>
 				{/if}
@@ -280,7 +286,7 @@
 						<span
 							class="expiry-tag-compact"
 							class:expired={expiry.expired}
-							title={`만료: ${new Date(meta.expires_at).toLocaleString()}`}
+							title={`Expires: ${new Date(meta.expires_at).toLocaleString()}`}
 						>
 							{expiry.label}
 						</span>
@@ -294,18 +300,18 @@
 							target="_blank"
 							rel="noopener noreferrer"
 							class="action-btn"
-							title="독립 HTML 페이지로 새 탭에서 열기"
+							title="Open in new tab as standalone HTML page"
 						>
-							↗ 새 탭에서 열기
+							↗ Open in New Tab
 						</a>
 					{/if}
 					<button
 						class="action-btn"
 						onclick={() =>
 							copyToClipboard(meta.artifact_uri || `shared://${meta.generation_id}`, 'uri')}
-						title="Logical URI 복사"
+						title="Copy Logical URI"
 					>
-						{copiedUri ? '✓ 복사됨' : 'URI 복사'}
+						{copiedUri ? '✓ Copied' : 'Copy URI'}
 					</button>
 					<button
 						class="action-btn"
@@ -314,7 +320,7 @@
 							rawMode = !rawMode;
 						}}
 					>
-						{rawMode ? 'Markdown 뷰' : 'Raw 보기'}
+						{rawMode ? 'Markdown View' : 'Raw View'}
 					</button>
 					<button
 						class="action-btn drawer-toggle"
@@ -322,10 +328,10 @@
 						onclick={() => {
 							drawerOpen = !drawerOpen;
 						}}
-						title={drawerOpen ? '메타 정보 서랍 닫기' : '메타 정보 서랍 열기'}
+						title={drawerOpen ? 'Close Metadata Drawer' : 'Open Metadata Drawer'}
 					>
 						<span class="btn-icon">ℹ️</span>
-						<span>메타 정보</span>
+						<span>Metadata</span>
 					</button>
 				</div>
 			</header>
@@ -333,7 +339,7 @@
 			<div class="detail-main">
 				<div class="detail-body">
 					{#if detailLoading}
-						<div class="loading-overlay">내용을 읽는 중...</div>
+						<div class="loading-overlay">Loading content...</div>
 					{:else if rawMode}
 						<RawViewer content={selectedDetail.content} />
 					{:else}
@@ -344,16 +350,16 @@
 				</div>
 
 				{#if drawerOpen}
-					<aside class="meta-drawer" aria-label="문서 메타 정보">
+					<aside class="meta-drawer" aria-label="Document Metadata">
 						<div class="drawer-header">
-							<h3>문서 메타 정보</h3>
+							<h3>Document Metadata</h3>
 							<button
 								class="drawer-close-btn"
 								onclick={() => {
 									drawerOpen = false;
 								}}
-								title="서랍 닫기"
-								aria-label="서랍 닫기"
+								title="Close Drawer"
+								aria-label="Close Drawer"
 							>
 								✕
 							</button>
@@ -361,38 +367,38 @@
 
 						<div class="drawer-content">
 							<section class="drawer-section">
-								<h4 class="section-title">식별 정보</h4>
+								<h4 class="section-title">Identification</h4>
 								<div class="drawer-field">
-									<span class="field-label">종류 (Kind)</span>
+									<span class="field-label">Kind</span>
 									<span class="field-value">
 										<span class="kind-badge {meta.kind}">{meta.kind}</span>
 									</span>
 								</div>
 								<div class="drawer-field">
-									<span class="field-label">제안 슬러그</span>
+									<span class="field-label">Slug</span>
 									<span class="field-value selectable-text">{meta.slug}</span>
 								</div>
 								<div class="drawer-field">
-									<span class="field-label">세대 ID (Generation)</span>
+									<span class="field-label">Generation ID</span>
 									<div class="copyable-row">
 										<code class="code-val" title={meta.generation_id}>{meta.generation_id}</code>
 										<button
 											class="copy-icon-btn"
 											onclick={() => copyToClipboard(meta.generation_id, 'gen')}
-											title="세대 ID 복사"
+											title="Copy Generation ID"
 										>
 											{copiedField === 'gen' ? '✓' : '📋'}
 										</button>
 									</div>
 								</div>
 								<div class="drawer-field">
-									<span class="field-label">소스 커밋 SHA</span>
+									<span class="field-label">Source Commit SHA</span>
 									<div class="copyable-row">
 										<code class="code-val" title={meta.source_sha}>{meta.source_sha}</code>
 										<button
 											class="copy-icon-btn"
 											onclick={() => copyToClipboard(meta.source_sha, 'sha')}
-											title="커밋 SHA 복사"
+											title="Copy Commit SHA"
 										>
 											{copiedField === 'sha' ? '✓' : '📋'}
 										</button>
@@ -401,32 +407,32 @@
 							</section>
 
 							<section class="drawer-section">
-								<h4 class="section-title">생명주기 및 속성</h4>
+								<h4 class="section-title">Lifecycle & Attributes</h4>
 								<div class="drawer-field">
-									<span class="field-label">생성 일시</span>
+									<span class="field-label">Created At</span>
 									<span class="field-value">{new Date(meta.created_at).toLocaleString()}</span>
 								</div>
 								<div class="drawer-field">
-									<span class="field-label">만료 일시</span>
+									<span class="field-label">Expires At</span>
 									<div class="field-value-group">
 										<span class="expiry-tag" class:expired={expiry.expired}>{expiry.label}</span>
 										<span class="field-sub">{new Date(meta.expires_at).toLocaleString()}</span>
 									</div>
 								</div>
 								<div class="drawer-field">
-									<span class="field-label">작성 언어</span>
+									<span class="field-label">Language</span>
 									<span class="field-value">
 										<span class="lang-badge">{meta.language.toUpperCase()}</span>
 									</span>
 								</div>
 								<div class="drawer-field">
-									<span class="field-label">본문 크기</span>
+									<span class="field-label">Content Size</span>
 									<span class="field-value"
 										>{formatBytes(meta.byte_count)} ({meta.byte_count.toLocaleString()} bytes)</span
 									>
 								</div>
 								<div class="drawer-field">
-									<span class="field-label">본문 해시 (SHA-256)</span>
+									<span class="field-label">Content Hash (SHA-256)</span>
 									<div class="copyable-row">
 										<code class="code-val" title={meta.content_sha256}>
 											{meta.content_sha256.slice(0, 16)}...
@@ -434,7 +440,7 @@
 										<button
 											class="copy-icon-btn"
 											onclick={() => copyToClipboard(meta.content_sha256, 'hash')}
-											title="전체 해시 복사"
+											title="Copy Full Hash"
 										>
 											{copiedField === 'hash' ? '✓' : '📋'}
 										</button>
@@ -443,7 +449,7 @@
 							</section>
 
 							<section class="drawer-section">
-								<h4 class="section-title">공유 공간 URI</h4>
+								<h4 class="section-title">Shared Space URI</h4>
 								<div class="drawer-field">
 									<div class="copyable-row uri-box">
 										<code class="code-val uri-code"
@@ -456,13 +462,27 @@
 													meta.artifact_uri || `shared://${meta.generation_id}`,
 													'drawer-uri'
 												)}
-											title="URI 복사"
+											title="Copy URI"
 										>
 											{copiedField === 'drawer-uri' ? '✓' : '📋'}
 										</button>
 									</div>
 								</div>
 							</section>
+
+							{#if parsedFrontmatter && Object.keys(parsedFrontmatter).length > 0}
+								<section class="drawer-section">
+									<h4 class="section-title">Document Frontmatter</h4>
+									{#each Object.entries(parsedFrontmatter) as [key, value]}
+										<div class="drawer-field">
+											<span class="field-label">{key}</span>
+											<span class="field-value selectable-text">
+												{typeof value === 'object' ? JSON.stringify(value) : String(value)}
+											</span>
+										</div>
+									{/each}
+								</section>
+							{/if}
 						</div>
 					</aside>
 				{/if}
@@ -629,12 +649,6 @@
 		text-transform: uppercase;
 		background-color: var(--bg-btn);
 		color: var(--text-btn);
-	}
-
-	.kind-badge.proposal-review {
-		background-color: rgba(99, 102, 241, 0.15);
-		color: #818cf8;
-		border: 1px solid rgba(99, 102, 241, 0.3);
 	}
 
 	.lang-badge {

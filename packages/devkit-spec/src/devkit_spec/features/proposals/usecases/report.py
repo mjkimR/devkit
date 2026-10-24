@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import hashlib
 import re
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
@@ -17,11 +15,11 @@ from devkit_core.core import run_git
 from devkit_core.core.frontmatter import parse
 from devkit_core.core.yaml import safe_load
 from devkit_dist.features.project.usecases.configuration import approval_language
-from devkit_dist.features.project.usecases.invocation import guard_execution
-from devkit_dist.features.shared import Artifact, PutRequest, adapter
-from devkit_dist.features.shared.models.api import MAX_BYTES, SHA, SLUG
 
 from devkit_spec.base.errors import SpecError
+
+SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*\Z")
+SHA = re.compile(r"^[0-9a-f]{40}(?:[0-9a-f]{24})?\Z")
 
 SECTIONS = {
     "en": (
@@ -45,14 +43,9 @@ class ReportInvalidError(SpecError):
     code = "PROPOSAL_REVIEW_INVALID"
     input_error = True
     fix = (
-        "Fill the report template of the current clean committed proposal and publish it again: "
-        "`devkit spec proposal report <slug> --source-sha <sha> --template` (MCP: spec_proposal_report_template)"
+        "Fill the report template of the current clean committed proposal: "
+        "`devkit spec proposal report <slug> [--source-sha <sha>]`"
     )
-
-
-class ReviewRefreshRequiredError(SpecError):
-    code = "PROPOSAL_REVIEW_REFRESH_REQUIRED"
-    fix = "Regenerate the report for the current source, have the Host present it and obtain fresh conversational approval before invoking the CLI"
 
 
 @dataclass(frozen=True)
@@ -76,7 +69,7 @@ def source(root: Path, slug: str, sha: str) -> Source:
         ):
             raise ReportInvalidError("source: source_sha must be the current full commit identity")
         if run_git(root, "status", "--porcelain", "--untracked-files=normal").strip():
-            raise ReportInvalidError("source: commit or resolve worktree changes before publishing")
+            raise ReportInvalidError("source: commit or resolve worktree changes before generating report")
         unit = f"docs/proposals/PROP-{slug}/"
         entries = run_git(root, "ls-tree", "-r", sha, "--", unit).decode().splitlines()
         files = {}
@@ -133,84 +126,14 @@ def source(root: Path, slug: str, sha: str) -> Source:
         raise ReportInvalidError("source: cannot read the exact committed proposal records") from exc
 
 
-def _sections(body: str, level: int) -> dict[str, str]:
-    matches = list(re.finditer(rf"(?m)^{'#' * level} ([^\n]+)\n", body))
-    result = {}
-    for index, match in enumerate(matches):
-        name = match[1].strip()
-        if name in result:
-            raise ReportInvalidError(f"sections: duplicate report section {name!r}")
-        result[name] = body[match.end() : matches[index + 1].start() if index + 1 < len(matches) else len(body)].strip()
-    return result
-
-
-def planning_support(report: Artifact) -> str:
-    """Read the Planning effort/support section from a validated localized report."""
-    sections = _sections(report.content, 2)
-    for candidate in ("Planning effort and support", "Planning 노력 및 지원"):
-        if candidate in sections:
-            return sections[candidate]
-    headings = SECTIONS.get(report.metadata.language, SECTIONS["en"])
-    effects_heading = headings[2]
-    if effects_heading in sections:
-        return sections[effects_heading]
-    return f"language={report.metadata.language}"
-
-
-def _check(body: str, slug: str, selected: Source, namespace: str) -> None:
-    """Refuse a briefing that misses part of the template; each message starts with the failed field class."""
-    if not isinstance(body, str) or len(body.encode("utf-8")) > MAX_BYTES:
-        raise ReportInvalidError("size: report exceeds the 1 MiB envelope limit")
-    parsed = parse(body)
-    meta = parsed.data or {}
-    expected = {
-        "proposal": f"PROP-{slug}",
-        "source_sha": selected.sha,
-        "language": selected.language,
-        "repository_namespace": namespace,
-    }
-    mismatched = [key for key, value in expected.items() if meta.get(key) != value]
-    if mismatched:
-        raise ReportInvalidError(
-            "identity: frontmatter does not match repository, proposal, source or language: " + ", ".join(mismatched)
-        )
-    if not re.search(r"(?m)^# [^\n]+", body):
-        raise ReportInvalidError("title: report needs an H1 title")
-    sections = _sections(body, 2)
-    headings = SECTIONS[selected.language]
-    missing = [heading for heading in headings if not sections.get(heading)]
-    if missing:
-        raise ReportInvalidError("sections: missing or empty mandatory section: " + ", ".join(missing))
-    decisions = _sections(sections[headings[1]], 3)
-    if set(decisions) != set(selected.padrs):
-        absent = sorted(set(selected.padrs) - set(decisions))
-        extra = sorted(set(decisions) - set(selected.padrs))
-        raise ReportInvalidError(
-            "decisions: report must account for every current PADR exactly once"
-            + (f"; missing {', '.join(absent)}" if absent else "")
-            + (f"; unknown {', '.join(extra)}" if extra else "")
-        )
-    for identifier, content in decisions.items():
-        fields = _sections(content, 4)
-        empty = [field for field in DECISION_FIELDS[selected.language] if not fields.get(field)]
-        if empty:
-            raise ReportInvalidError(f"decision fields: {identifier} needs {', '.join(empty)}")
-    if selected.dev_effort not in sections[headings[2]]:
-        raise ReportInvalidError(
-            f"dev_effort: section {headings[2]!r} must identify the recommended dev_effort {selected.dev_effort}"
-        )
-
-
 def template(root: Path, slug: str, sha: str) -> str:
-    """Return the structure to complete; placeholders are not a semantic briefing."""
+    """Return the report structure for this proposal source."""
     selected = source(root, slug, sha)
-    namespace = adapter(root).repository_namespace
     header = yaml.safe_dump(
         {
             "proposal": f"PROP-{slug}",
             "source_sha": sha,
             "language": selected.language,
-            "repository_namespace": namespace,
         },
         sort_keys=False,
     )
@@ -228,64 +151,6 @@ def template(root: Path, slug: str, sha: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def publish(root: Path, slug: str, sha: str, body: str) -> Artifact:
-    """Compose the application entrypoint for internal callers."""
-    return PublishProposalReportUseCase().execute(root, slug, sha, body)
-
-
-def validate_artifact(root: Path, slug: str, sha: str, uri: str) -> Artifact:
-    """Check immutable identity and expiry even after an authorized acceptance commit."""
-    try:
-        store = adapter(root)
-        artifact = store.get(uri)
-        meta = artifact.metadata
-        if (
-            not SHA.fullmatch(sha)
-            or meta.artifact_uri != uri
-            or meta.repository_namespace != store.repository_namespace
-            or meta.kind != "proposal-review"
-            or meta.slug != slug
-            or meta.source_sha != sha
-            or meta.language != approval_language(root)
-            or meta.content_sha256 != hashlib.sha256(artifact.content.encode()).hexdigest()
-            or not meta.live(datetime.now(UTC))
-        ):
-            raise ReportInvalidError("report metadata is stale or mismatched")
-        return artifact
-    except (AdvisoryError, ValueError, UnicodeError) as exc:
-        raise ReviewRefreshRequiredError("the exact report is unavailable or no longer matches its identity") from exc
-
-
-def validate(root: Path, slug: str, sha: str, uri: str) -> Artifact:
-    """Read an exact live report; never refresh, list, sweep or publish implicitly."""
-    try:
-        selected = source(root, slug, sha)
-        artifact = validate_artifact(root, slug, sha, uri)
-        _check(artifact.content, slug, selected, artifact.metadata.repository_namespace)
-        return artifact
-    except YamlBindingUnavailableError:
-        raise
-    except (AdvisoryError, ValueError, UnicodeError) as exc:
-        raise ReviewRefreshRequiredError(
-            "the exact report is unavailable, incomplete or no longer matches the source"
-        ) from exc
-
-
-def publish_workspace_report(root: Path, slug: str, source_sha: str, body: str) -> Artifact:
-    """Compose the application entrypoint for internal callers."""
-    return PublishWorkspaceProposalReportUseCase().execute(root, slug, source_sha, body)
-
-
-class PublishProposalReportUseCase(BaseUseCase):
-    """Application entrypoint for publish."""
-
-    def execute(self, root: Path, slug: str, sha: str, body: str) -> Artifact:
-        selected = source(root, slug, sha)
-        store = adapter(root)
-        _check(body, slug, selected, store.repository_namespace)
-        return store.put(PutRequest("proposal-review", slug, sha, selected.language, body))
-
-
 def _workspace_source(root: Path, slug: str, source_sha: str) -> Path:
     """The checkout holding ``source_sha``: ``root``, or the ``plan-<slug>`` worktree of a retained base."""
     position = locate(root)
@@ -294,18 +159,11 @@ def _workspace_source(root: Path, slug: str, source_sha: str) -> Path:
     return root
 
 
-class PublishWorkspaceProposalReportUseCase(BaseUseCase):
-    """Application entrypoint for publish workspace report."""
-
-    def execute(self, root: Path, slug: str, source_sha: str, body: str) -> Artifact:
-        """Publish from the matching Planning source without changing the caller's checkout."""
-        guard_execution()
-        return publish(_workspace_source(root, slug, source_sha), slug, source_sha, body)
-
-
 class ReportTemplateUseCase(BaseUseCase):
-    """Application entrypoint for the report template; read-only, publishes nothing."""
+    """Application entrypoint for the report template/briefing; read-only."""
 
-    def execute(self, root: Path, slug: str, source_sha: str) -> str:
+    def execute(self, root: Path, slug: str, source_sha: str | None = None) -> str:
         """The template to complete for ``source_sha``, read from the matching Planning source."""
+        if source_sha is None:
+            source_sha = run_git(root, "rev-parse", "HEAD").decode().strip()
         return template(_workspace_source(root, slug, source_sha), slug, source_sha)

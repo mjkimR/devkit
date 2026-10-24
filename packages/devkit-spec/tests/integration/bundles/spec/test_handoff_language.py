@@ -20,10 +20,8 @@ def test_handoff_cli_uses_host_or_retained_policy_authority(tmp_path, monkeypatc
         "summary",
         "plan",
         "medium",
-        "shared://fixture",
     )
     monkeypatch.setattr("devkit_spec.features.delivery.usecases.native_handoff.prepare", lambda *args: preview)
-    monkeypatch.setattr("devkit_spec.features.delivery.usecases.native_handoff.validate", lambda *args: None)
     monkeypatch.setattr("devkit_spec.features.delivery.usecases.native_handoff.approval_policy", lambda *_args: policy)
     executed = []
     service = HandoffUseCase(tmp_path)
@@ -33,7 +31,7 @@ def test_handoff_cli_uses_host_or_retained_policy_authority(tmp_path, monkeypatc
         lambda current, selected: executed.append((current, selected)) or {"status": "handed_off"},
     )
 
-    result = service.execute("idea", "shared://fixture", effort)
+    result = service.execute("idea", effort)
     assert result["authority"] == authority
     assert result["status"] == "handed_off"
     assert executed == [(preview, effort)]
@@ -42,7 +40,6 @@ def test_handoff_cli_uses_host_or_retained_policy_authority(tmp_path, monkeypatc
 def test_automatic_handoff_uses_the_declared_effort(tmp_path, monkeypatch):
     preview = HandoffPreview(tmp_path, "idea", "sha", "main", "/worktree", None, "digest", "title", "", "plan", "high")
     monkeypatch.setattr("devkit_spec.features.delivery.usecases.native_handoff.prepare", lambda *args: preview)
-    monkeypatch.setattr("devkit_spec.features.delivery.usecases.native_handoff.validate", lambda *args: None)
     monkeypatch.setattr("devkit_spec.features.delivery.usecases.native_handoff.approval_policy", lambda *_args: "auto")
     with pytest.raises(HandoffReplyError):
-        HandoffUseCase(tmp_path).execute("idea", "shared://fixture", "medium")
+        HandoffUseCase(tmp_path).execute("idea", "medium")

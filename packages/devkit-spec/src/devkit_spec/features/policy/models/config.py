@@ -7,13 +7,6 @@ SCOPE_TIMEOUT_DEFAULT = 10
 
 
 @dataclass(frozen=True)
-class ProposalReviewConfig:
-    """``[tool.spec.proposal_review]``: whether agents automatically publish review reports before acceptance."""
-
-    auto_write: bool = False
-
-
-@dataclass(frozen=True)
 class ScopeConfig:
     """``[tool.spec.scope]``: where the work-scope registry lives and how long one command may wait.
 

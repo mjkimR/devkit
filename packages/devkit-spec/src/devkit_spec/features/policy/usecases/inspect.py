@@ -40,7 +40,6 @@ class InspectPolicyUseCase(BaseUseCase):
         }
         stages_off = sorted(stage for stage in workflow.stages if workflow.stage_policy(stage) == "off")
         feedback = asdict(spec.feedback)
-        proposal_review = asdict(spec.proposal_review)
         git = {
             "worktree": spec.worktree,
             "pull_request": worktree.pull_request,
@@ -54,5 +53,4 @@ class InspectPolicyUseCase(BaseUseCase):
             "git": git,
             "routing": routing,
             "feedback": feedback,
-            "proposal_review": proposal_review,
         }, notices

@@ -148,7 +148,7 @@ Living Spec and `specs/` holds feature specs.
 | `spec-sync` | Reconcile the change into the Living Spec and resolve `reconcile.md`. | `list`, `refs`, `search`, `proposal new`, `scope update` |
 | `spec-integrate` | Prepare integration: conflicts, re-verification, reconcile confirmation and cumulative check; obtain Host conversational approval, then run `devkit integration integrate` and recover from observed Git or PR state; clean up. | `policy`, `scope sweep`, `proposal prune` |
 | `spec-delegate` | Delegate to a role contract as the `activity-effort` asks, record its envelope, validate a worker's committed range and handle its questions and problems. | |
-| `spec-review-proposal` | Review an exact source-bound ko/en report and all PADRs; preserve exclusive Planning ownership during refinement, commit/review changes and explicitly refresh reports. | `proposal report --template`, `spec_proposal_report`, `proposal accept`, `proposal handoff` |
+| `spec-review-proposal` | Review a committed proposal and all PADRs; preserve exclusive Planning ownership during refinement, commit/review changes and present findings for approval. | `proposal report`, `proposal accept`, `proposal handoff` |
 | `spec-orchestrate` | User-invoked `local-orchestrated` mode per activity: one-shot Planning and Development workers in their own worktrees, the Host keeping preparation, validation, questions, problems and integration; a plain instruction returns to `direct`. | `new`, `proposal accept`, `scope register`, `scope query`, `scope update` |
 | `spec-rule` | Author or tune a project rule for `devkit rules` in the project's own bundle. | |
 | `spec-feedback` | Record and sweep feedback observations (`specs/<YYYY-MM>/feedback/`). | `list feedback`, `resolve`, `policy` |

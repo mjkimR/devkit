@@ -39,7 +39,6 @@ def message(preview: HandoffPreview, language: str) -> str:
                 "Required checks apply at every level. This selection does not change model reasoning settings.",
                 "모든 수준에서 필수 검사를 수행합니다. 이 선택은 모델 추론 설정을 변경하지 않습니다.",
             ),
-            t("Review report: ", "검토 보고서: ") + show(preview.report_uri),
             t("Repository: ", "저장소: ") + show(str(preview.root)),
             t("Base: ", "기준: ") + f"{show(preview.base_branch)} @ {preview.head}",
             t("Reuse branch: ", "재사용할 브랜치: ") + show("dev-" + preview.slug)

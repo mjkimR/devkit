@@ -10,7 +10,6 @@ from spec_support.delivery import _cli, _make_synced_repo, _start_worktree
 from spec_support.scope import git
 
 from devkit_spec.features.delivery.cli.proposals import proposal_group
-from devkit_spec.features.proposals.usecases.report import publish, template
 
 
 @pytest.fixture(scope="module")
@@ -59,20 +58,12 @@ def pending(tmp_path: Path, proposal_seed_template: Path):
     git(repo, "config", "branch.plan-idea.devkitWorktree", "true")
     git(repo, "config", "branch.plan-idea.devkitBase", "main")
     shutil.copytree(repo / ".devkit/managed", wt / ".devkit/managed", dirs_exist_ok=True)
-    sha = git(wt, "rev-parse", "HEAD")
-    body = template(wt, "idea", sha)
-    body = (
-        "\n".join(
-            line + "\nEvidence reviewed." if line.startswith(("## ", "#### ")) else line for line in body.splitlines()
-        )
-        + "\n"
-    )
-    return repo, wt, publish(wt, "idea", sha, body).metadata.artifact_uri
+    return repo, wt
 
 
 @pytest.mark.parametrize("mode", ["accept_only", "accept_and_handoff"])
 def test_accept_cli_commits_and_merges_exact_reviewed_plan(pending, mode):
-    repo, planning, uri = pending
+    repo, planning = pending
     result = CliRunner().invoke(
         proposal_group,
         [
@@ -80,8 +71,6 @@ def test_accept_cli_commits_and_merges_exact_reviewed_plan(pending, mode):
             "idea",
             "--by",
             "user",
-            "--report-uri",
-            uri,
             "--mode",
             mode,
             "--effort",
@@ -110,34 +99,25 @@ def test_accept_cli_commits_and_merges_exact_reviewed_plan(pending, mode):
         assert "worktree_setup" in payload["completed_steps"]
 
 
-def test_accept_cli_refuses_changed_report_before_writing(pending):
-    repo, planning, uri = pending
+def test_accept_cli_refuses_invalid_mode(pending):
+    repo, planning = pending
     before = git(repo, "show-ref")
     result = CliRunner().invoke(
         proposal_group,
-        ["accept", "idea", "--by", "user", "--report-uri", uri + "-stale", "--mode", "accept_only", "-w", str(repo)],
+        ["accept", "idea", "--by", "user", "--mode", "invalid_mode", "-w", str(repo)],
     )
     assert result.exit_code == 2
-    assert "PROPOSAL_REVIEW" in result.output
+    assert "Invalid value for '--mode'" in result.output
     assert git(repo, "show-ref") == before and planning.exists()
 
 
 def test_accept_cli_uses_plan_accept_auto_when_development_remains_ask(pending):
-    repo, planning, _uri = pending
+    repo, planning = pending
     config = repo / ".devkit/config.toml"
     config.write_text(config.read_text() + '\n[workflow.approvals]\nplan-accept = "auto"\ndev-integration = "ask"\n')
     git(repo, "add", ".devkit/config.toml")
     git(repo, "commit", "-m", "Delegate proposal acceptance to policy")
     git(planning, "merge", "--no-edit", "main")
-    source_sha = git(planning, "rev-parse", "HEAD")
-    body = template(planning, "idea", source_sha)
-    body = (
-        "\n".join(
-            line + "\nEvidence reviewed." if line.startswith(("## ", "#### ")) else line for line in body.splitlines()
-        )
-        + "\n"
-    )
-    uri = publish(planning, "idea", source_sha, body).metadata.artifact_uri
 
     result = CliRunner().invoke(
         proposal_group,
@@ -146,8 +126,6 @@ def test_accept_cli_uses_plan_accept_auto_when_development_remains_ask(pending):
             "idea",
             "--by",
             "policy",
-            "--report-uri",
-            uri,
             "--mode",
             "accept_only",
             "-w",

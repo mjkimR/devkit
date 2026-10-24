@@ -8,7 +8,7 @@ Read this before work that runs in a task worktree: every `spec` and `proposal` 
 ## 1. Start (in `<base>`, before any bundle or edit)
 
 - `proposal` Planning: `devkit worktree start plan-<slug>` and the printed `cd`; the proposal bundle is the unit.
-- `proposal` Development: present the accepted proposal, report and worktree/setup effects, obtain conversational approval under `ask`, then run `devkit spec proposal handoff <slug> --report-uri <uri> --effort low|medium|high` from the retained base. Under `auto`, the command reads `proposal-handoff` from the base and uses the declared `dev_effort`.
+- `proposal` Development: present the accepted proposal and worktree/setup effects, obtain conversational approval under `ask`, then run `devkit spec proposal handoff <slug> --effort low|medium|high` from the retained base. Under `auto`, the command reads `proposal-handoff` from the base and uses the declared `dev_effort`.
   - Continue in the returned worktree path with the selected effort; run `devkit workflow next --unit <dir>` and the post-handoff link check.
   - On a partial result, inspect `devkit worktree status` and preserve the created worktree for recovery.
 - `spec` depth: `devkit worktree start dev-<slug>`, the printed `cd`, then `devkit spec new <slug>` (`--workflow sdd-spec-bugfix` for a defect); record `plan-intent` and commit.

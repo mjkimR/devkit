@@ -24,7 +24,6 @@ from devkit_spec.features.policy.usecases.approvals import approval_policy
 from devkit_spec.features.proposals.models.approval import schema as approval_schema
 from devkit_spec.features.proposals.models.axes import EFFORTS, TASK_KINDS
 from devkit_spec.features.proposals.models.handoff import HandoffPreview
-from devkit_spec.features.proposals.usecases.report import validate
 
 
 def _existing(root: Path, slug: str, head: str) -> bool:
@@ -54,15 +53,13 @@ def _existing(root: Path, slug: str, head: str) -> bool:
     return True
 
 
-def prepare(root: Path, slug: str, report_uri: str = "") -> HandoffPreview:
+def prepare(root: Path, slug: str) -> HandoffPreview:
     position = locate(root)
     if position.linked or not position.branch or position.branch.startswith(("dev-", "plan-")):
         raise HandoffNotReadyError("run the handoff service from the retained base checkout on its base branch")
     if run_git(position.base, "status", "--porcelain", "--untracked-files=normal").strip():
         raise HandoffNotReadyError("the base checkout has uncommitted changes; commit or resolve them before review")
     head = run_git(position.base, "rev-parse", "HEAD").decode().strip()
-    if report_uri:
-        validate(root, slug, head, report_uri)
     relative = root.relative_to(position.base)
     unit = f"docs/proposals/PROP-{slug}"
     anchor = relative / unit / "proposal.md"
@@ -105,7 +102,6 @@ def prepare(root: Path, slug: str, report_uri: str = "") -> HandoffPreview:
         str(meta.get("summary") or ""),
         text,
         effort,
-        report_uri,
         _existing(root, slug, head),
     )
 
@@ -115,14 +111,13 @@ class HandoffUseCase(BaseUseCase):
         self.root = root
         self._lock = asyncio.Lock()
 
-    def execute(self, slug: str, report_uri: str, effort: str) -> dict[str, Any]:
-        """Start Development after Host-carried approval, rechecking the exact report and base."""
+    def execute(self, slug: str, effort: str) -> dict[str, Any]:
+        """Start Development after Host-carried approval, rechecking the base."""
         self.root = self.root.resolve()
         if effort not in EFFORTS:
             raise HandoffReplyError("choose low, medium or high Development effort")
         guard_execution()
-        preview = prepare(self.root, slug, report_uri)
-        validate(self.root, slug, preview.head, report_uri)
+        preview = prepare(self.root, slug)
         authority = approval_policy(self.root, "proposal-handoff")
         if authority not in {"ask", "auto"}:
             raise HandoffNotReadyError("proposal-handoff policy must be ask or auto")
@@ -131,14 +126,13 @@ class HandoffUseCase(BaseUseCase):
         result = self._execute(preview, effort)
         return {**result, "authority": "policy" if authority == "auto" else "host-conversation"}
 
-    async def execute_native(self, slug: str, report_uri: str, confirm: Confirmation) -> dict[str, Any]:
+    async def execute_native(self, slug: str, confirm: Confirmation) -> dict[str, Any]:
         self.root = self.root.resolve()
         guard_execution()
         async with self._lock:
             guard_execution()
             language = approval_language(self.root)
-            preview = await asyncio.to_thread(prepare, self.root, slug, report_uri)
-            await asyncio.to_thread(validate, self.root, slug, preview.head, report_uri)
+            preview = await asyncio.to_thread(prepare, self.root, slug)
             guard_execution()
             if approval_policy(self.root, "proposal-handoff") == "auto":
                 result = await asyncio.to_thread(self._execute, preview, preview.effort)
@@ -158,7 +152,7 @@ class HandoffUseCase(BaseUseCase):
 
     def _execute(self, preview: HandoffPreview, effort: str) -> dict:
         guard_execution()
-        if prepare(self.root, preview.slug, preview.report_uri) != preview:
+        if prepare(self.root, preview.slug) != preview:
             raise HandoffStaleError("the base, accepted plan or policy changed after review")
         position = locate(self.root)
         guard_execution()

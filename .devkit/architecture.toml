@@ -130,7 +130,6 @@ public_modules = [
     "devkit_spec.features.proposals.usecases.accept",
     "devkit_spec.features.proposals.usecases.backlog",
     "devkit_spec.features.proposals.usecases.report",
-    "devkit_spec.features.proposals.mcp.report",
     "devkit_spec.features.proposals.usecases.prune",
     "devkit_spec.features.proposals.usecases.scaffold",
     "devkit_spec.features.proposals.usecases.specs",

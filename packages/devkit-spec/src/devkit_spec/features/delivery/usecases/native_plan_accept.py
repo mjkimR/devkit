@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
-import re
 from pathlib import Path
 from typing import Any
 
@@ -92,8 +91,8 @@ def _schema(effort: str, language: str, mode: str = "accept_and_handoff") -> dic
 class _Acceptance:
     approval_gate = "plan-accept"
 
-    def __init__(self, root: Path, slug: str, report_uri: str, mode: str = "accept_and_handoff"):
-        self.root, self.slug, self.report_uri = root, slug, report_uri
+    def __init__(self, root: Path, slug: str, mode: str = "accept_and_handoff"):
+        self.root, self.slug = root, slug
         self.unit = f"docs/proposals/PROP-{slug}"
         self.requested_mode = mode
         self.mode, self.effort = mode, "medium"
@@ -104,12 +103,9 @@ class _Acceptance:
         self.snapshot: tuple | None = None
 
     def preview(self, context: IntegrationContext) -> Readiness:
-        from devkit_spec.features.proposals.usecases.report import validate
-
         plan = context.finish
         relative = self.root.relative_to(locate(self.root).base)
         self.source = Path(plan.path) / relative
-        report = validate(self.source, self.slug, plan.source_sha, self.report_uri)
         meta = parse((self.source / self.unit / "proposal.md").read_text()).data or {}
         workspace = Workspace(self.source)
         ref = workspace.resolve_unit(self.unit)
@@ -133,14 +129,12 @@ class _Acceptance:
         self.effort = str(meta.get("dev_effort", "medium"))
         if self.effort not in EFFORTS:
             raise ProposalApprovalNotReadyError("dev_effort must be low, medium or high")
-        if report.metadata.language != approval_language(self.root):
-            raise ProposalApprovalNotReadyError("report language differs from the owning workspace")
-        self.meta, self.report = meta, report
+        self.meta = meta
         self.snapshot = self._snapshot()
         return Readiness(
             plan.source_sha,
             plan.target_sha,
-            (Evidence("PROPOSAL_REVIEW", report.metadata.content_sha256),),
+            (Evidence("PROPOSAL", plan.source_sha),),
             disclosure="Validate completed acceptance and all integration readiness before merge",
         )
 
@@ -158,24 +152,15 @@ class _Acceptance:
         )
 
     def validate(self, request: IntegrationRequest) -> None:
-        from devkit_spec.features.proposals.usecases.report import validate_artifact
-
         if self.snapshot != self._snapshot():
             raise ProposalApprovalStaleError("source, base, configuration or execution environment changed")
-        assert self.source is not None
-        current = validate_artifact(self.source, self.slug, request.context.finish.source_sha, self.report_uri)
-        if current != self.report:
-            raise ProposalApprovalStaleError("the exact report changed after review")
 
     def before_merge(self, request: IntegrationRequest) -> None:
-        from devkit_spec.features.proposals.usecases.report import validate_artifact
-
         assert self.source is not None and self.snapshot is not None
         current = self._snapshot()
         expected = (self.snapshot[0], self.acceptance_sha, *self.snapshot[2:])
         if current != expected:
             raise ProposalApprovalStaleError("environment, base or acceptance changed before merge")
-        validate_artifact(self.source, self.slug, self.report.metadata.source_sha, self.report_uri)
 
     def automatic(self, request: IntegrationRequest) -> dict | None:
         assert self.source is not None
@@ -211,18 +196,12 @@ class _Acceptance:
         )
         message = (
             f"{title}\n{self.meta.get('title', self.slug)}\n{self.meta.get('summary', '')}\n"
-            f"Report: {self.report_uri}\nPADRs: {re.findall(r'PADR-[A-Za-z0-9-]+', self.report.content)}\n"
-            f"Planning support: {self._support()}\n{effects}\n"
+            f"{effects}\n"
             f"dev_effort={self.effort}; completed={self.completed}\n"
             f"Development worktree: {path_for(position, 'dev-' + self.slug)}\nSetup: {setup!r}\n"
             f"{request.confirmation_message(language)}"
         )
         return message, _schema(self.effort, language, self.requested_mode)
-
-    def _support(self) -> str:
-        from devkit_spec.features.proposals.usecases.report import planning_support
-
-        return planning_support(self.report)
 
     def select(self, content: dict) -> None:
         mode, effort = content.get("mode"), content.get("activity_effort")
@@ -283,11 +262,10 @@ class PlanAcceptUseCase(BaseUseCase):
         self._lock = asyncio.Lock()
 
     def execute(
-        self, slug: str, report_uri: str, *, mode: str, effort: str | None = None, by: str = "user"
+        self, slug: str, *, mode: str = "accept_and_handoff", effort: str | None = None, by: str = "user"
     ) -> dict[str, Any]:
         """Accept and integrate a reviewed proposal after Host-carried approval."""
         from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase, prepare
-        from devkit_spec.features.proposals.usecases.report import validate_artifact
 
         self.root = self.root.resolve()
         slug = require_slug(slug)
@@ -299,7 +277,7 @@ class PlanAcceptUseCase(BaseUseCase):
         position = locate(self.root)
         if position.linked or not position.branch or position.branch.startswith(("dev-", "plan-")):
             raise ProposalApprovalNotReadyError("run the service from the retained base checkout")
-        lifecycle = _Acceptance(self.root, slug, report_uri, mode)
+        lifecycle = _Acceptance(self.root, slug, mode)
         integration = IntegrationService(self.root)
         request = integration._prepare(
             f"plan-{slug}",
@@ -356,7 +334,6 @@ class PlanAcceptUseCase(BaseUseCase):
         if lifecycle.mode == "accept_only":
             return payload
         try:
-            validate_artifact(self.root, slug, lifecycle.report.metadata.source_sha, report_uri)
             preview = prepare(self.root, slug)
             if preview.head != landed:
                 raise ProposalApprovalStaleError("base changed between integration and handoff")
@@ -378,115 +355,10 @@ class PlanAcceptUseCase(BaseUseCase):
             payload.update(status="needs_recovery", errors=[exc.to_dict()], next_action=exc.fix)
         return payload
 
-    async def execute_async_legacy(
-        self, slug: str, report_uri: str, *, mode: str, effort: str | None = None, by: str = "user"
-    ) -> dict[str, Any]:
-        """Accept and integrate a reviewed proposal after Host-carried approval.
-
-        Under ``ask`` the Host has already presented the report and exact effects and
-        received the conversational decision. This boundary deliberately takes no
-        confirmation callback or approval credential; it revalidates all bound state
-        and derives automatic authority only from the retained base policy.
-        """
+    async def _remaining(self, slug: str, confirm: Confirmation, mode: str) -> dict:
         from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase, prepare
 
-        self.root = self.root.resolve()
-        slug = require_slug(slug)
-        if mode not in {"accept_only", "accept_and_handoff"}:
-            raise ProposalApprovalNotReadyError("choose accept_only or accept_and_handoff")
-        if mode == "accept_and_handoff" and effort not in EFFORTS:
-            raise ProposalApprovalNotReadyError("choose low, medium or high Development effort")
-        guard_execution()
-        self._lock = asyncio.Lock()
-        async with self._lock:
-            position = locate(self.root)
-            if position.linked or not position.branch or position.branch.startswith(("dev-", "plan-")):
-                raise ProposalApprovalNotReadyError("run the service from the retained base checkout")
-            lifecycle = _Acceptance(self.root, slug, report_uri, mode)
-            integration = IntegrationService(self.root)
-            request_result = await asyncio.to_thread(
-                integration._prepare,
-                f"plan-{slug}",
-                Task("unit", f"PROP-{slug}", lifecycle.unit),
-                "local",
-                lifecycle=lifecycle,
-            )
-            request = request_result.request
-            lifecycle.validate(request)
-            automatic = lifecycle.automatic(request)
-            if automatic is not None:
-                lifecycle.select(automatic)
-                authority = "policy"
-            else:
-                if by == "policy":
-                    raise AuthorityError("--by policy requires retained plan-accept=auto authority")
-                lifecycle.actor = "user"
-                selection = {"mode": mode, "activity_effort": effort or lifecycle.effort}
-                lifecycle.select(selection)
-                authority = "host-conversation"
-            try:
-                result = await asyncio.to_thread(integration._compose_execute, request, lifecycle, authority)
-            except AdvisoryError as exc:
-                return {
-                    "status": "needs_recovery" if lifecycle.completed else "blocked",
-                    "completed_steps": lifecycle.completed,
-                    "acceptance_sha": lifecycle.acceptance_sha,
-                    "errors": [_proposal_error(exc).to_dict()],
-                    "next_action": exc.fix,
-                }
-            payload: dict[str, Any] = {
-                "status": result.status,
-                "completed_steps": list(lifecycle.completed),
-                "source_sha": request.context.finish.source_sha,
-                "acceptance_sha": lifecycle.acceptance_sha,
-                "integration": result.compact_dict(),
-                "errors": [_proposal_error(error).to_dict() for error in result.errors],
-                "activity_effort": lifecycle.effort,
-                "acceptance_authority": lifecycle.actor,
-                "next_action": "Inspect completed effects and resolve the reported integration step",
-            }
-            payload["completed_steps"] += [name for name, state in result.steps.items() if state == "completed"]
-            if result.status != "completed":
-                payload["status"] = "needs_recovery" if payload["completed_steps"] else "blocked"
-                return payload
-            landed = result.result_sha or request.context.finish.source_sha
-            if _git(self.root, "rev-parse", "HEAD") != landed:
-                return {
-                    **payload,
-                    "status": "needs_recovery",
-                    "landed_sha": landed,
-                    "next_action": "Inspect the base and request fresh approval for remaining effects",
-                }
-            payload.update(status="accepted", landed_sha=landed, next_action="Acceptance complete")
-            if lifecycle.mode == "accept_only":
-                return payload
-            try:
-                from devkit_spec.features.proposals.usecases.report import validate_artifact
-
-                validate_artifact(self.root, slug, lifecycle.report.metadata.source_sha, report_uri)
-                preview = await asyncio.to_thread(prepare, self.root, slug)
-                if preview.head != landed:
-                    raise ProposalApprovalStaleError("base changed between integration and handoff")
-                handed = await asyncio.to_thread(HandoffUseCase(self.root)._execute, preview, lifecycle.effort)
-                payload.update(
-                    status=handed["status"],
-                    handoff=handed,
-                    next_action=handed.get("next_command", "Inspect preserved handoff effects"),
-                )
-                if handed["status"] == "handed_off":
-                    payload["completed_steps"] += ["worktree_setup", "handoff"]
-                    if handed.get("scope_token"):
-                        payload["completed_steps"].append("scope_registration")
-            except AdvisoryError as exc:
-                payload.update(status="needs_recovery", errors=[exc.to_dict()], next_action=exc.fix)
-            return payload
-
-    async def _remaining(self, slug: str, report_uri: str, confirm: Confirmation, mode: str) -> dict:
-        from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase, prepare
-        from devkit_spec.features.proposals.usecases.report import validate
-
-        preview = await asyncio.to_thread(prepare, self.root, slug, report_uri)
-        validate(self.root, slug, preview.head, report_uri)
+        preview = await asyncio.to_thread(prepare, self.root, slug)
         language = approval_language(self.root)
         snapshot = _configuration(self.root)
         message = (
@@ -528,9 +400,8 @@ class PlanAcceptUseCase(BaseUseCase):
             selected_mode == "accept_and_handoff" and effort not in EFFORTS
         ):
             raise ProposalApprovalNotReadyError("choose a valid mode and Development effort")
-        validate(self.root, slug, preview.head, report_uri)
-        if _configuration(self.root) != snapshot or prepare(self.root, slug, report_uri) != preview:
-            raise ProposalApprovalStaleError("accepted base, report, policy or environment changed")
+        if _configuration(self.root) != snapshot or prepare(self.root, slug) != preview:
+            raise ProposalApprovalStaleError("accepted base, policy or environment changed")
         if selected_mode == "accept_only":
             return {**result, "status": "accepted", "next_action": "Acceptance already complete"}
         handed = await asyncio.to_thread(HandoffUseCase(self.root)._execute, preview, str(effort))
@@ -543,7 +414,7 @@ class PlanAcceptUseCase(BaseUseCase):
         }
 
     async def execute_native(
-        self, slug: str, report_uri: str, confirm: Confirmation, *, mode: str = "accept_and_handoff"
+        self, slug: str, confirm: Confirmation, *, mode: str = "accept_and_handoff"
     ) -> dict[str, Any]:
         self.root = self.root.resolve()
         slug = require_slug(slug)
@@ -559,8 +430,8 @@ class PlanAcceptUseCase(BaseUseCase):
             except GitError as exc:
                 if exc.returncode is None:
                     raise
-                return await self._remaining(slug, report_uri, confirm, mode)
-            lifecycle = _Acceptance(self.root, slug, report_uri, mode)
+                return await self._remaining(slug, confirm, mode)
+            lifecycle = _Acceptance(self.root, slug, mode)
             integration = IntegrationService(self.root)
             try:
                 result = await integration._compose(
@@ -577,7 +448,7 @@ class PlanAcceptUseCase(BaseUseCase):
             payload = {
                 "status": "held",
                 "completed_steps": list(lifecycle.completed),
-                "source_sha": lifecycle.report.metadata.source_sha,
+                "source_sha": result.request.context.finish.source_sha,
                 "acceptance_sha": lifecycle.acceptance_sha,
                 "integration": result.compact_dict(),
                 "errors": [_proposal_error(error).to_dict() for error in result.errors],
@@ -598,7 +469,7 @@ class PlanAcceptUseCase(BaseUseCase):
                     **payload,
                     "status": "needs_recovery",
                     "landed_sha": landed,
-                    "next_action": "Base moved after integration; refresh report and request remaining-effects approval",
+                    "next_action": "Base moved after integration; request remaining-effects approval",
                 }
             payload.update(status="accepted", landed_sha=landed, next_action="Acceptance complete")
             payload["acceptance_authority"] = lifecycle.actor
@@ -614,9 +485,6 @@ class PlanAcceptUseCase(BaseUseCase):
 
             try:
                 guard_execution()
-                from devkit_spec.features.proposals.usecases.report import validate_artifact
-
-                validate_artifact(self.root, slug, lifecycle.report.metadata.source_sha, report_uri)
                 preview = prepare(self.root, slug)
                 if preview.setup != lifecycle.setup:
                     raise ProposalApprovalStaleError("setup differs from the disclosed prospective source setup")
@@ -629,7 +497,7 @@ class PlanAcceptUseCase(BaseUseCase):
                     next_action=handed.get("next_command")
                     or (
                         "Inspect the preserved accepted base and Development worktree; resolve reported setup/handoff "
-                        "failure, publish a fresh accepted-base report and request fresh approval for remaining effects"
+                        "failure, and request fresh approval for remaining effects"
                     ),
                 )
                 if handed["status"] == "handed_off":
@@ -641,6 +509,6 @@ class PlanAcceptUseCase(BaseUseCase):
                     status="needs_recovery",
                     errors=[exc.to_dict()],
                     next_action="Inspect the preserved accepted base and Development worktree; resolve the reported "
-                    "prerequisite, publish a fresh accepted-base report and request fresh approval for remaining effects",
+                    "prerequisite, and request fresh approval for remaining effects",
                 )
             return payload
