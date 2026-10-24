@@ -73,6 +73,10 @@ gate *args:
 viewer action *args:
     bash scripts/viewer.sh "$@"
 
+# Serve the Living Spec and repository documents locally (devkit viewer serve)
+viewer-serve *args:
+    uv run --no-active --package devkit-viewer devkit viewer serve "$@"
+
 # Build all wheels and exercise them from a fresh consumer project (needs git)
 smoke:
     bash scripts/smoke.sh
