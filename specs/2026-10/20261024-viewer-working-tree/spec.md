@@ -2,7 +2,7 @@
 id: SPEC-viewer-working-tree
 title: Show the working tree for the current branch
 summary: "The local repository viewer reads saved files from each registered checkout, including uncommitted edits, and identifies the checked-out branch without offering branch selection."
-status: in-progress
+status: completed
 created: 2026-10-24
 related_capabilities:
   - CAP-VIEW-repository-viewer
