@@ -2,7 +2,7 @@
 id: SPEC-proposal-review-auto-write
 title: Publish proposal review before acceptance
 summary: Publish one source-bound proposal review before plan-accept, avoid composing it during acceptance, and configure automatic publication in the project settings.
-status: planned
+status: in-progress
 created: 2026-10-24
 related_capabilities: [CAP-DLV-proposal-incubation]
 related_usecases: [UC-incubate-and-hand-off-a-proposal]
@@ -29,14 +29,14 @@ Proposal review uses a source-bound report stored through the shared artifact ad
 ## 4. Acceptance Criteria & Behavioral Contracts
 
 ### [AC-01] Automatic report publication happens before acceptance
-- **Given** a proposal is ready for `plan-accept` and `[tool.spec.proposal_review].auto_write` is `true` or omitted
+- **Given** a Planning proposal has `status: reviewing`, is ready for `plan-accept`, and `[tool.spec.proposal_review].auto_write` is `true` or omitted
 - **When** the Planning agent finishes reviewing the committed proposal revision
-- **Then** it writes and publishes one complete source-bound report through the shared adapter before presenting the acceptance request
+- **Then** it reuses a complete report for that exact source SHA or writes and publishes one complete source-bound report through the shared adapter before presenting the acceptance request
 - **And** the acceptance request carries that report's exact URI and source SHA
 - **And** acceptance validates and consumes that report without composing or publishing another report
 
 ### [AC-02] Automatic publication can be disabled
-- **Given** `[tool.spec.proposal_review].auto_write` is `false`
+- **Given** a Planning proposal has `status: reviewing` and `[tool.spec.proposal_review].auto_write` is `false`
 - **When** the proposal reaches `plan-accept`
 - **Then** the agent does not automatically write or publish a report
 - **And** the acceptance flow requires a report published explicitly before acceptance and consumes its exact URI without publishing another report
