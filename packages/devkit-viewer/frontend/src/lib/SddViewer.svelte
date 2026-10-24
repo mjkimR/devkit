@@ -33,7 +33,8 @@
 		initialAnchor = '',
 		theme = 'dark',
 		dataSource = undefined,
-		onselectpath = undefined
+		onselectpath = undefined,
+		picker = undefined
 	}: {
 		repoId?: string;
 		apiBase?: string;
@@ -44,6 +45,7 @@
 		theme?: string;
 		dataSource?: RepositoryDataSource;
 		onselectpath?: (path: string) => void;
+		picker?: import('svelte').Snippet;
 	} = $props();
 
 	let currentTheme = $state<'dark' | 'light'>('dark');
@@ -414,29 +416,35 @@
 				</svg>
 			</div>
 			<span class="brand-title">Sdd Viewer</span>
-			{#if repoId || repoInfo?.repo_id}
-				<span class="repo-tag">{repoId || repoInfo?.repo_id}</span>
+			{#if picker}
+				{@render picker()}
+			{:else}
+				{#if repoId || repoInfo?.repo_id}
+					<span class="repo-tag">{repoId || repoInfo?.repo_id}</span>
+				{/if}
+				<span class="branch-tag">🌿 {branch}</span>
 			{/if}
-			<span class="branch-tag">🌿 {branch}</span>
 		</div>
 
 		<!-- Breadcrumbs -->
-		<nav class="breadcrumb-bar" aria-label="Breadcrumb">
-			<button class="crumb-btn" onclick={() => navigateTo('', true)}>root</button>
-			{#each breadcrumbs as part, idx}
-				<span class="crumb-sep">/</span>
-				{#if idx === breadcrumbs.length - 1 && !currentPath.endsWith('/')}
-					<span class="crumb-current">{part}</span>
-				{:else}
-					<button
-						class="crumb-btn"
-						onclick={() => navigateTo(breadcrumbs.slice(0, idx + 1).join('/') + '/', true)}
-					>
-						{part}
-					</button>
-				{/if}
-			{/each}
-		</nav>
+		{#if view === 'files' || breadcrumbs.length}
+			<nav class="breadcrumb-bar" aria-label="Breadcrumb">
+				<button class="crumb-btn" onclick={() => navigateTo('', true)}>root</button>
+				{#each breadcrumbs as part, idx}
+					<span class="crumb-sep">/</span>
+					{#if idx === breadcrumbs.length - 1 && !currentPath.endsWith('/')}
+						<span class="crumb-current">{part}</span>
+					{:else}
+						<button
+							class="crumb-btn"
+							onclick={() => navigateTo(breadcrumbs.slice(0, idx + 1).join('/') + '/', true)}
+						>
+							{part}
+						</button>
+					{/if}
+				{/each}
+			</nav>
+		{/if}
 
 		<div class="action-zone">
 			{#if currentBlob && view === 'files'}
@@ -454,174 +462,187 @@
 		</div>
 	</header>
 
-	<nav class="view-tabs" aria-label="Views">
-		{#each [{ id: 'book', label: 'Book' }, { id: 'proposals', label: 'Proposals' }, { id: 'specs', label: 'Specs' }, { id: 'roadmap', label: 'Roadmap' }, { id: 'files', label: 'Files' }] as tab}
-			<button
-				aria-pressed={view === tab.id}
-				class:active={view === tab.id}
-				onclick={() => {
-					view = tab.id as typeof view;
-				}}>{tab.label}</button
-			>
-		{/each}
-	</nav>
-	{#if view === 'roadmap'}
-		<div class="knowledge-host">
-			<RoadmapView
-				{source}
-				{branch}
-				onOpen={(path) => {
-					currentPath = path;
-					view = 'files';
-				}}
-			/>
-		</div>
-	{:else if view !== 'files'}
-		<div class="knowledge-host">
-			<KnowledgeViews
-				{view}
-				{source}
-				{branch}
-				theme={currentTheme}
-				requestedPath={initialPath}
-				requestedAnchor={initialAnchor}
-				diagrams={renderDiagrams}
-				onOpen={(path) => {
-					currentPath = path;
-					view = 'files';
-				}}
-				onLocation={(path, anchor, selectedView, frontmatter) => {
-					dispatchItemSelected(path, frontmatter);
-					hostEl?.dispatchEvent(
-						new CustomEvent('sdd:path-change', {
-							detail: { path, anchor, view: selectedView, repoId, branch },
-							bubbles: true,
-							composed: true
-						})
-					);
-				}}
-			/>
-		</div>
-	{/if}
-	<!-- Main Body Layout -->
-	<div class="viewer-layout" class:hidden={view !== 'files'}>
-		<!-- Left Sidebar: Explorer -->
-		<aside class="sidebar-explorer">
-			<div class="sidebar-header">
-				<span class="section-label">EXPLORER</span>
-				{#if currentPath}
-					<button class="up-btn" title="Up one level" onclick={navigateParent}> ⬆ Up </button>
-				{/if}
-			</div>
+	<div class="viewer-body">
+		<!-- Left Navigation Rail -->
+		<nav class="view-rail view-tabs" aria-label="Views">
+			{#each [{ id: 'book', label: 'Book', icon: '📖', title: 'Living Spec (Book)' }, { id: 'proposals', label: 'Proposals', icon: '💡', title: 'Proposals' }, { id: 'specs', label: 'Specs', icon: '📋', title: 'Feature Specs' }, { id: 'roadmap', label: 'Roadmap', icon: '🗺️', title: 'Roadmap' }, { id: 'files', label: 'Files', icon: '📁', title: 'Repository Files' }] as tab}
+				<button
+					aria-pressed={view === tab.id}
+					aria-label={tab.label}
+					class:active={view === tab.id}
+					title={tab.title}
+					onclick={() => {
+						view = tab.id as typeof view;
+					}}
+				>
+					<span class="rail-icon">{tab.icon}</span>
+					<span class="rail-label">{tab.label}</span>
+				</button>
+			{/each}
+		</nav>
 
-			<div class="search-box">
-				<input
-					type="text"
-					placeholder="Filter files..."
-					bind:value={searchQuery}
-					class="filter-input"
-				/>
-			</div>
-
-			<div class="file-tree">
-				{#if loading && !treeItems.length}
-					<div class="loading-state">Loading directory...</div>
-				{:else if filteredItems.length === 0}
-					<div class="empty-state">No matching items</div>
-				{:else}
-					{#each filteredItems as item}
-						<button
-							class="tree-node"
-							class:selected={currentPath === item.path ||
-								(currentBlob && currentBlob.path === item.path)}
-							onclick={() => navigateTo(item.path, item.type === 'tree')}
-						>
-							{#if item.type === 'tree'}
-								<span class="node-icon folder">📁</span>
-							{:else if item.name.endsWith('.md')}
-								<span class="node-icon spec-file">📄</span>
-							{:else}
-								<span class="node-icon file">📑</span>
-							{/if}
-							<span class="node-name">{item.name}</span>
-						</button>
-					{/each}
-				{/if}
-			</div>
-		</aside>
-
-		<!-- Right Content Area -->
-		<main class="content-viewport">
-			{#if error}
-				<div class="error-banner">
-					<span class="error-icon">⚠️</span>
-					<span>{error}</span>
+		<!-- Main Workspace Area -->
+		<div class="view-stage">
+			{#if view === 'roadmap'}
+				<div class="knowledge-host">
+					<RoadmapView
+						{source}
+						{branch}
+						onOpen={(path) => {
+							currentPath = path;
+							view = 'files';
+						}}
+					/>
+				</div>
+			{:else if view !== 'files'}
+				<div class="knowledge-host">
+					<KnowledgeViews
+						{view}
+						{source}
+						{branch}
+						theme={currentTheme}
+						requestedPath={initialPath}
+						requestedAnchor={initialAnchor}
+						diagrams={renderDiagrams}
+						onOpen={(path) => {
+							currentPath = path;
+							view = 'files';
+						}}
+						onLocation={(path, anchor, selectedView, frontmatter) => {
+							dispatchItemSelected(path, frontmatter);
+							hostEl?.dispatchEvent(
+								new CustomEvent('sdd:path-change', {
+									detail: { path, anchor, view: selectedView, repoId, branch },
+									bubbles: true,
+									composed: true
+								})
+							);
+						}}
+					/>
 				</div>
 			{/if}
+			<!-- Main Body Layout -->
+			<div class="viewer-layout" class:hidden={view !== 'files'}>
+				<!-- Left Sidebar: Explorer -->
+				<aside class="sidebar-explorer">
+					<div class="sidebar-header">
+						<span class="section-label">EXPLORER</span>
+						{#if currentPath}
+							<button class="up-btn" title="Up one level" onclick={navigateParent}> ⬆ Up </button>
+						{/if}
+					</div>
 
-			{#if loading && !currentBlob}
-				<div class="loading-placeholder">
-					<div class="spinner"></div>
-					<p>Fetching content...</p>
-				</div>
-			{:else if currentBlob}
-				<!-- Document Header with Frontmatter Badges -->
-				<div class="document-container">
-					{#if currentBlob.frontmatter}
-						<div class="frontmatter-panel">
-							<div class="fm-header">
-								{#if currentBlob.frontmatter.id}
-									<span class="fm-id-badge">{currentBlob.frontmatter.id}</span>
-								{/if}
-								{#if currentBlob.frontmatter.status}
-									<span class="fm-status-badge status-{currentBlob.frontmatter.status}">
-										{currentBlob.frontmatter.status}
-									</span>
-								{/if}
-								{#if currentBlob.frontmatter.priority}
-									<span class="fm-badge priority-{currentBlob.frontmatter.priority}">
-										{currentBlob.frontmatter.priority}
-									</span>
-								{/if}
-								{#if currentBlob.frontmatter.milestone}
-									<span class="fm-badge milestone">
-										🎯 {currentBlob.frontmatter.milestone}
-									</span>
-								{/if}
-								{#if currentBlob.frontmatter.target_area}
-									<span class="fm-badge area">
-										📂 {currentBlob.frontmatter.target_area}
-									</span>
-								{/if}
-							</div>
-							{#if currentBlob.frontmatter.title}
-								<h1 class="document-title">{currentBlob.frontmatter.title}</h1>
-							{/if}
+					<div class="search-box">
+						<input
+							type="text"
+							placeholder="Filter files..."
+							bind:value={searchQuery}
+							class="filter-input"
+						/>
+					</div>
+
+					<div class="file-tree">
+						{#if loading && !treeItems.length}
+							<div class="loading-state">Loading directory...</div>
+						{:else if filteredItems.length === 0}
+							<div class="empty-state">No matching items</div>
+						{:else}
+							{#each filteredItems as item}
+								<button
+									class="tree-node"
+									class:selected={currentPath === item.path ||
+										(currentBlob && currentBlob.path === item.path)}
+									onclick={() => navigateTo(item.path, item.type === 'tree')}
+								>
+									{#if item.type === 'tree'}
+										<span class="node-icon folder">📁</span>
+									{:else if item.name.endsWith('.md')}
+										<span class="node-icon spec-file">📄</span>
+									{:else}
+										<span class="node-icon file">📑</span>
+									{/if}
+									<span class="node-name">{item.name}</span>
+								</button>
+							{/each}
+						{/if}
+					</div>
+				</aside>
+
+				<!-- Right Content Area -->
+				<main class="content-viewport">
+					{#if error}
+						<div class="error-banner">
+							<span class="error-icon">⚠️</span>
+							<span>{error}</span>
 						</div>
 					{/if}
 
-					<!-- Document Body -->
-					{#if rawMode}
-						<pre class="raw-content"><code>{currentBlob.content}</code></pre>
+					{#if loading && !currentBlob}
+						<div class="loading-placeholder">
+							<div class="spinner"></div>
+							<p>Fetching content...</p>
+						</div>
+					{:else if currentBlob}
+						<!-- Document Header with Frontmatter Badges -->
+						<div class="document-container">
+							{#if currentBlob.frontmatter}
+								<div class="frontmatter-panel">
+									<div class="fm-header">
+										{#if currentBlob.frontmatter.id}
+											<span class="fm-id-badge">{currentBlob.frontmatter.id}</span>
+										{/if}
+										{#if currentBlob.frontmatter.status}
+											<span class="fm-status-badge status-{currentBlob.frontmatter.status}">
+												{currentBlob.frontmatter.status}
+											</span>
+										{/if}
+										{#if currentBlob.frontmatter.priority}
+											<span class="fm-badge priority-{currentBlob.frontmatter.priority}">
+												{currentBlob.frontmatter.priority}
+											</span>
+										{/if}
+										{#if currentBlob.frontmatter.milestone}
+											<span class="fm-badge milestone">
+												🎯 {currentBlob.frontmatter.milestone}
+											</span>
+										{/if}
+										{#if currentBlob.frontmatter.target_area}
+											<span class="fm-badge area">
+												📂 {currentBlob.frontmatter.target_area}
+											</span>
+										{/if}
+									</div>
+									{#if currentBlob.frontmatter.title}
+										<h1 class="document-title">{currentBlob.frontmatter.title}</h1>
+									{/if}
+								</div>
+							{/if}
+
+							<!-- Document Body -->
+							{#if rawMode}
+								<pre class="raw-content"><code>{currentBlob.content}</code></pre>
+							{:else}
+								{#key `${currentBlob.path}-${currentTheme}`}
+									<article class="markdown-body" use:renderDiagrams>
+										{@html currentBlob.html}
+									</article>
+								{/key}
+							{/if}
+						</div>
 					{:else}
-						{#key `${currentBlob.path}-${currentTheme}`}
-							<article class="markdown-body" use:renderDiagrams>
-								{@html currentBlob.html}
-							</article>
-						{/key}
+						<!-- Directory Overview Placeholder -->
+						<div class="directory-placeholder">
+							<div class="placeholder-icon">📚</div>
+							<h2>Living Spec & Repository Explorer</h2>
+							<p>
+								Select a spec, blueprint, or document from the explorer on the left to start
+								viewing.
+							</p>
+						</div>
 					{/if}
-				</div>
-			{:else}
-				<!-- Directory Overview Placeholder -->
-				<div class="directory-placeholder">
-					<div class="placeholder-icon">📚</div>
-					<h2>Living Spec & Repository Explorer</h2>
-					<p>
-						Select a spec, blueprint, or document from the explorer on the left to start viewing.
-					</p>
-				</div>
-			{/if}
-		</main>
+				</main>
+			</div>
+		</div>
 	</div>
 
 	{#if fullscreenSvg}
@@ -678,28 +699,75 @@
 </div>
 
 <style>
-	.view-tabs {
+	.viewer-body {
 		display: flex;
-		gap: 8px;
-		padding: 10px 16px;
-		border-bottom: 1px solid var(--border-panel);
-		background: var(--bg-header);
+		flex: 1;
+		min-height: 0;
+		overflow: hidden;
 	}
-	.view-tabs button {
-		font: inherit;
-		cursor: pointer;
-		padding: 8px 14px;
-		border: 0;
-		border-radius: 6px;
+	.view-rail {
+		display: flex;
+		flex-direction: column;
+		width: 56px;
+		flex-shrink: 0;
+		background-color: var(--bg-sidebar);
+		border-right: 1px solid var(--border-sidebar);
+		padding: 8px 0;
+		gap: 6px;
+		align-items: center;
+		box-sizing: border-box;
+	}
+	.view-rail button {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		width: 46px;
+		height: 46px;
+		border-radius: 8px;
+		border: 1px solid transparent;
 		background: transparent;
-		color: var(--text-secondary);
+		color: var(--text-dim);
+		cursor: pointer;
+		padding: 3px 2px;
+		transition: all 0.15s ease;
+		box-sizing: border-box;
+		font: inherit;
 	}
-	.view-tabs button.active {
+	.view-rail button:hover {
+		background: var(--tree-hover-bg);
+		color: var(--text-primary);
+	}
+	.view-rail button.active {
 		background: var(--tree-selected-bg);
 		color: var(--tree-selected-text);
+		border-color: rgba(99, 102, 241, 0.3);
+		font-weight: 600;
 	}
-	.view-tabs button:focus-visible {
+	.view-rail button:focus-visible {
 		outline: 2px solid var(--tree-selected-text);
+	}
+	.rail-icon {
+		font-size: 16px;
+		line-height: 1.1;
+	}
+	.rail-label {
+		font-size: 9.5px;
+		letter-spacing: -0.2px;
+		line-height: 1.1;
+		text-align: center;
+		max-width: 44px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.view-stage {
+		flex: 1;
+		min-width: 0;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
 	}
 	.knowledge-host {
 		flex: 1;
@@ -798,33 +866,38 @@
 		display: flex;
 		align-items: center;
 		gap: 12px;
-		padding: 10px 16px;
+		height: 40px;
+		padding: 0 14px;
 		background-color: var(--bg-header);
 		border-bottom: 1px solid var(--border-header);
 		flex-shrink: 0;
+		box-sizing: border-box;
 	}
 
 	.brand-zone {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: 10px;
+		flex-shrink: 0;
 	}
 
 	.logo-badge {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 26px;
-		height: 26px;
+		width: 22px;
+		height: 22px;
 		background: linear-gradient(135deg, #6366f1, #a855f7);
 		color: #ffffff;
-		border-radius: 6px;
+		border-radius: 5px;
+		flex-shrink: 0;
 	}
 
 	.brand-title {
 		font-weight: 700;
-		font-size: 14px;
+		font-size: 13px;
 		color: var(--text-primary);
+		white-space: nowrap;
 	}
 
 	.repo-tag {

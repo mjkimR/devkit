@@ -271,40 +271,6 @@
 </script>
 
 <div class="knowledge" bind:this={root}>
-	<div class="filters">
-		<label
-			>Scope <select aria-label="Scope" bind:value={namespace}
-				><option value="all">All</option>{#each namespaces as name}<option value={name}
-						>{name === 'global' ? 'Global' : name + ' + Global'}</option
-					>{/each}</select
-			></label
-		>
-		{#if view !== 'book'}
-			<input aria-label="Search title or ID" placeholder="Search title or ID" bind:value={query} />
-			<select aria-label="Status" bind:value={status}
-				><option value="">All statuses</option>{#each statuses as s}<option value={s}>{s}</option
-					>{/each}</select
-			>
-			{#if view === 'proposals'}
-				<select aria-label="Priority" bind:value={priority}
-					><option value="">All priorities</option
-					>{#each ['critical', 'high', 'medium', 'low'] as p}<option value={p}>{p}</option
-						>{/each}</select
-				>
-				<select aria-label="Size" bind:value={size}
-					><option value="">All sizes</option>{#each ['S', 'M', 'L', 'XL'] as s}<option value={s}
-							>{s}</option
-						>{/each}</select
-				>
-				<select aria-label="Target area" bind:value={area}
-					><option value="">All areas</option>{#each areas as a}<option value={a}>{a}</option
-						>{/each}</select
-				>
-			{:else}
-				<label><input type="checkbox" bind:checked={includeCompleted} /> Include completed</label>
-			{/if}
-		{/if}
-	</div>
 	{#if errors.length}<details class="index-errors">
 			<summary>{errors.length} documents failed to load</summary>{#each errors as error}<p>
 					{error}
@@ -315,6 +281,54 @@
 	{:else}
 		<div class="reading-layout">
 			<aside class="outline" aria-label={view === 'book' ? 'Table of contents' : 'Bundle list'}>
+				<div class="filters">
+					<label
+						>Scope <select aria-label="Scope" bind:value={namespace}
+							><option value="all">All</option>{#each namespaces as name}<option value={name}
+									>{name === 'global' ? 'Global' : name + ' + Global'}</option
+								>{/each}</select
+						></label
+					>
+					{#if view !== 'book'}
+						<input
+							aria-label="Search title or ID"
+							placeholder="Search title or ID"
+							bind:value={query}
+						/>
+						<div class="filter-row">
+							<select aria-label="Status" bind:value={status}
+								><option value="">All statuses</option>{#each statuses as s}<option value={s}
+										>{s}</option
+									>{/each}</select
+							>
+							{#if view === 'proposals'}
+								<select aria-label="Priority" bind:value={priority}
+									><option value="">All priorities</option
+									>{#each ['critical', 'high', 'medium', 'low'] as p}<option value={p}>{p}</option
+										>{/each}</select
+								>
+							{/if}
+						</div>
+						{#if view === 'proposals'}
+							<div class="filter-row">
+								<select aria-label="Size" bind:value={size}
+									><option value="">All sizes</option>{#each ['S', 'M', 'L', 'XL'] as s}<option
+											value={s}>{s}</option
+										>{/each}</select
+								>
+								<select aria-label="Target area" bind:value={area}
+									><option value="">All areas</option>{#each areas as a}<option value={a}
+											>{a}</option
+										>{/each}</select
+								>
+							</div>
+						{:else}
+							<label class="checkbox-label"
+								><input type="checkbox" bind:checked={includeCompleted} /> Include completed</label
+							>
+						{/if}
+					{/if}
+				</div>
 				{#if view === 'book'}
 					{#each bookGroups as group}
 						{#if book.some((d) => bookGroup(d) === group)}<h2>{group}</h2>{/if}
@@ -427,17 +441,37 @@
 	}
 	.filters {
 		display: flex;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 10px;
-		padding: 16px;
+		flex-direction: column;
+		gap: 8px;
+		padding-bottom: 12px;
 		border-bottom: 1px solid var(--border-panel);
+		margin-bottom: 12px;
+	}
+	.filter-row {
+		display: flex;
+		gap: 6px;
+	}
+	.filter-row select {
+		flex: 1;
+		min-width: 0;
+	}
+	.checkbox-label {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 12px;
+		color: var(--text-secondary);
 	}
 	label {
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
 		gap: 8px;
-		font-size: 13px;
+		font-size: 12px;
+	}
+	label select {
+		flex: 1;
+		min-width: 0;
 	}
 	button,
 	input,
@@ -447,7 +481,8 @@
 	}
 	input,
 	select {
-		padding: 8px;
+		padding: 6px 8px;
+		font-size: 12px;
 		border: 1px solid var(--border-input);
 		background: var(--bg-input);
 		border-radius: 6px;
