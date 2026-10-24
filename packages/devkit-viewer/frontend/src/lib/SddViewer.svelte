@@ -6,6 +6,7 @@
 	import KnowledgeViews from './KnowledgeViews.svelte';
 	import RoadmapView from './RoadmapView.svelte';
 	import SharedArtifactsView from './features/shared/SharedArtifactsView.svelte';
+	import DashboardView from './features/dashboard/DashboardView.svelte';
 	import ViewerHeader from './components/shared/ViewerHeader.svelte';
 	import NavigationRail from './components/shared/NavigationRail.svelte';
 	import FileExplorer from './features/explorer/FileExplorer.svelte';
@@ -61,14 +62,16 @@
 		}
 	});
 
-	let view = $state<'files' | 'book' | 'proposals' | 'specs' | 'roadmap' | 'shared'>('files');
+	let view = $state<'dashboard' | 'files' | 'book' | 'proposals' | 'specs' | 'roadmap' | 'shared'>(
+		'dashboard'
+	);
 	let currentPath = $state('docs/');
 	let selectedSharedSlug = $state('');
 
 	$effect(() => {
-		view = ['book', 'proposals', 'specs', 'roadmap', 'shared'].includes(initialView)
+		view = ['dashboard', 'book', 'proposals', 'specs', 'roadmap', 'shared'].includes(initialView)
 			? (initialView as typeof view)
-			: 'files';
+			: 'dashboard';
 	});
 
 	let treeItems = $state<TreeItem[]>([]);
@@ -272,7 +275,19 @@
 		<NavigationRail bind:view />
 
 		<div class="view-stage">
-			{#if view === 'roadmap'}
+			{#if view === 'dashboard'}
+				<div class="knowledge-host">
+					<DashboardView
+						{source}
+						{branch}
+						{repoId}
+						onNavigate={(targetView, targetPath) => {
+							if (targetPath) currentPath = targetPath;
+							view = targetView;
+						}}
+					/>
+				</div>
+			{:else if view === 'roadmap'}
 				<div class="knowledge-host">
 					<RoadmapView
 						{source}
