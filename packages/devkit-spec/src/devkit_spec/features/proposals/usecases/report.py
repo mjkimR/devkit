@@ -27,27 +27,17 @@ SECTIONS = {
     "en": (
         "Outcome",
         "Decisions",
-        "Boundary impacts",
-        "Planning effort and support",
-        "Open decisions and waived findings",
-        "Unverified areas",
-        "Recommended Development effort",
         "Proposed approval effects",
     ),
     "ko": (
         "결론",
         "결정",
-        "범위 영향",
-        "Planning 노력 및 지원",
-        "열린 결정 및 면제된 지적",
-        "미검증 영역",
-        "권장 Development 노력",
         "제안된 승인 효과",
     ),
 }
 DECISION_FIELDS = {
-    "en": ("Problem", "Choice", "Rejected alternatives", "Consequences"),
-    "ko": ("문제", "선택", "기각한 대안", "결과"),
+    "en": ("Problem", "Choice"),
+    "ko": ("문제", "선택"),
 }
 
 
@@ -156,8 +146,15 @@ def _sections(body: str, level: int) -> dict[str, str]:
 
 def planning_support(report: Artifact) -> str:
     """Read the Planning effort/support section from a validated localized report."""
-    heading = SECTIONS[report.metadata.language][3]
-    return _sections(report.content, 2)[heading]
+    sections = _sections(report.content, 2)
+    for candidate in ("Planning effort and support", "Planning 노력 및 지원"):
+        if candidate in sections:
+            return sections[candidate]
+    headings = SECTIONS.get(report.metadata.language, SECTIONS["en"])
+    effects_heading = headings[2]
+    if effects_heading in sections:
+        return sections[effects_heading]
+    return f"language={report.metadata.language}"
 
 
 def _check(body: str, slug: str, selected: Source, namespace: str) -> None:
@@ -198,16 +195,9 @@ def _check(body: str, slug: str, selected: Source, namespace: str) -> None:
         empty = [field for field in DECISION_FIELDS[selected.language] if not fields.get(field)]
         if empty:
             raise ReportInvalidError(f"decision fields: {identifier} needs {', '.join(empty)}")
-    coverage = sections[headings[3]]
-    uncovered = [token for token in (*selected.coverage, selected.effort) if token not in coverage]
-    if uncovered:
+    if selected.dev_effort not in sections[headings[2]]:
         raise ReportInvalidError(
-            f"coverage: section {headings[3]!r} must name every envelope and applied effort; missing "
-            + ", ".join(uncovered)
-        )
-    if selected.dev_effort not in sections[headings[6]]:
-        raise ReportInvalidError(
-            f"dev_effort: section {headings[6]!r} must identify the recommended dev_effort {selected.dev_effort}"
+            f"dev_effort: section {headings[2]!r} must identify the recommended dev_effort {selected.dev_effort}"
         )
 
 
@@ -233,9 +223,7 @@ def template(root: Path, slug: str, sha: str) -> str:
                 lines.extend(f"#### {field}\n\n" for field in DECISION_FIELDS[selected.language])
             if not selected.padrs:
                 lines.append("None." if selected.language == "en" else "없음.")
-        elif index == 3:
-            lines.append("\n".join((selected.effort, *selected.coverage)))
-        elif index == 6:
+        elif index == 2:
             lines.append(selected.dev_effort)
     return "\n".join(lines) + "\n"
 

@@ -69,9 +69,7 @@ def test_validation_preserves_missing_yaml_binding_error(repo, monkeypatch):
     assert caught.value.fix and "binary wheel" in caught.value.fix
 
 
-@pytest.mark.parametrize(
-    "replace", ["PADR-choice", "review-01.yaml", "Consequences", "source_sha", "repository_namespace"]
-)
+@pytest.mark.parametrize("replace", ["PADR-choice", "Choice", "source_sha", "repository_namespace"])
 def test_incomplete_or_false_report_refused(repo, replace):
     root, sha = repo
     body = briefing(root, sha).replace(replace, "wrong")
@@ -200,7 +198,8 @@ def test_cli_template_prints_without_publishing(repo):
     assert text.output == reports.template(root, "example", sha)
     for token in ("proposal: PROP-example", f"source_sha: {sha}", "repository_namespace:", "### PADR-choice"):
         assert token in text.output
-    assert "review-01.yaml" in text.output
+    assert "Proposed approval effects" in text.output
+    assert "high" in text.output
     data = _cli("example", "--source-sha", sha, "--template", "--workspace-root", str(root), "--format", "json")
     assert data.exit_code == 0, data.output
     assert json.loads(data.output) == {"proposal": "PROP-example", "source_sha": sha, "template": text.output}
@@ -244,8 +243,8 @@ def test_composed_handoff_advisories_are_emitted_once():
     [
         ("source_sha: ", "source_sha: x", "identity:", "source_sha"),
         ("### PADR-choice", "### PADR-other", "decisions:", "PADR-choice"),
-        ("#### Consequences", "#### Other", "decision fields:", "Consequences"),
-        ("review-01.yaml", "wrong", "coverage:", "review-01.yaml"),
+        ("#### Choice", "#### Other", "decision fields:", "Choice"),
+        ("\nhigh", "\nwrong", "dev_effort:", "Proposed approval effects"),
     ],
 )
 def test_refusal_names_field_class_and_template_route(repo, old, new, prefix, named):
@@ -258,3 +257,22 @@ def test_refusal_names_field_class_and_template_route(repo, old, new, prefix, na
     assert named in caught.value.message
     fix = caught.value.fix or ""
     assert "--template" in fix and "spec_proposal_report_template" in fix
+
+
+def test_optional_sections_permitted_and_planning_support(repo):
+    root, sha = repo
+    body = briefing(root, sha)
+    # Add optional sections
+    augmented = (
+        body
+        + "\n## Boundary impacts\n\nNo breaking boundary changes.\n"
+        + "\n## Planning effort and support\n\nreview-01.yaml medium\n"
+        + "\n## Unverified areas\n\nNone.\n"
+    )
+    artifact = reports.publish(root, "example", sha, augmented)
+    assert reports.validate(root, "example", sha, artifact.metadata.artifact_uri) == artifact
+    assert "review-01.yaml medium" in reports.planning_support(artifact)
+
+    # Base 3-section report returns approval effects as planning support fallback
+    base_artifact = reports.publish(root, "example", sha, body)
+    assert "high" in reports.planning_support(base_artifact)

@@ -894,7 +894,7 @@
     },
     ".agents/skills/spec-review-proposal/SKILL.md": {
       "mode": 420,
-      "sha256": "74245d59f853843966bfbdd575872dab907f13d18c30c257877ce2c28dc1c410"
+      "sha256": "aa0011ecd64162b35d76116734f485bc9c2c2da3734726ee1d8d1d4201559a6f"
     },
     ".agents/skills/spec-review/SKILL.md": {
       "mode": 420,
@@ -1098,7 +1098,7 @@
     },
     ".claude/skills/spec-review-proposal/SKILL.md": {
       "mode": 420,
-      "sha256": "74245d59f853843966bfbdd575872dab907f13d18c30c257877ce2c28dc1c410"
+      "sha256": "aa0011ecd64162b35d76116734f485bc9c2c2da3734726ee1d8d1d4201559a6f"
     },
     ".claude/skills/spec-review/SKILL.md": {
       "mode": 420,
@@ -1662,7 +1662,7 @@
     },
     ".devkit/managed/spec/skills/spec-review-proposal/SKILL.md": {
       "mode": 420,
-      "sha256": "74245d59f853843966bfbdd575872dab907f13d18c30c257877ce2c28dc1c410"
+      "sha256": "aa0011ecd64162b35d76116734f485bc9c2c2da3734726ee1d8d1d4201559a6f"
     },
     ".devkit/managed/spec/skills/spec-review/SKILL.md": {
       "mode": 420,
@@ -1814,7 +1814,7 @@
     },
     ".devkit/managed/spec/workflows/sdd-proposal.md": {
       "mode": 420,
-      "sha256": "7bd01fea6f6383dbb70ff9b151be9962a35f290c315107c986684a6f67ff9621"
+      "sha256": "db5a436fb05e22b2e36061ee93351bd8239d6173e1614d9507c5e703e2707cad"
     },
     ".devkit/managed/spec/workflows/sdd-session-bugfix.md": {
       "mode": 420,

@@ -1,0 +1,9 @@
+kind: reconcile-check
+stage: '-'
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-24T10:16:57.471631Z'
+status: completed
+summary: Reconciled proposal review report template contract in CAP-DLV-proposal-incubation
+findings: []
+checks: {}

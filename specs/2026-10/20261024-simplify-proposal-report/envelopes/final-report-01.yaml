@@ -1,0 +1,12 @@
+kind: final-report
+stage: '-'
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-24T10:18:28.159912Z'
+status: completed
+summary: Streamlined proposal review report template to three core sections
+findings: []
+checks:
+  tests: PASS
+  build: PASS
+  lint: PASS
