@@ -1,7 +1,7 @@
 ---
 id: PROP-automatic-scope-collection
 title: Automatic work scope collection at delivery CLI boundaries
-summary: "Collects work scope at proposal handoff, spec creation and explicit workflow next calls, removing mandatory agent scope updates while retaining a hidden maintenance command. Planning validates timing, ownership and isolated cloud checkout behavior."
+summary: "Collects work scope at handoff, spec creation and explicit workflow next calls, removing agent update duties and hiding the maintenance command. Automatic collection failures stay silent and preserve primary outcomes; Planning validates timing and ownership."
 status: draft
 created_at: 2026-10-25
 target_area: collaboration/
@@ -68,9 +68,10 @@ first parallel dispatch and reconciliation timing require evidence before direct
 - **Q3 — Dispatch boundary**: Which optional extension contract lets the explicit `workflow next` application
   operation invoke the spec collector once, without running it from internal evaluation, checks or integration
   readiness? Recommend a harness-owned typed contract implemented through the existing entry-point mechanism.
-- **Q4 — Outcome and cost**: What separate budget, stable advisory codes and structured result fields expose
-  collection failure while preserving the workflow verdict? Recommend one attempt per invocation, no retries or
-  writes for an unchanged semantic snapshot, and warnings under the established `--strict` behavior.
+- **Q4 — Outcome and cost**: What separate budget and diagnostic identifiers make it possible to inspect
+  collection diagnostics only under `-v` while preserving the primary command result? Recommend one bounded
+  attempt per invocation, no immediate retries and no writes for an unchanged semantic snapshot. Automatic
+  collection failures produce no advisories or result fields and never affect `--strict`.
 - **Q5 — Ownership and concurrency**: How do a wrong `--unit`, concurrent calls, a moved/deleted base ref and a
   missing record/token behave? Recommend preserving token ownership and optimistic concurrency; never silently
   rebind an existing token to a different spec. Settle recovery without a mandatory `scope update` directive.
@@ -92,8 +93,9 @@ Proposal units, session workflows and unrelated workflow units do not become spe
 The trigger belongs to an explicit application operation, behind the thin CLI adapter. Pure evaluation and
 library callers of `EvaluateUnitUseCase` or `Workspace.evaluate_unit` remain free of automatic scope mutation.
 The shared CLI error boundary is not a trigger. Internal evaluation by `answer`, `handoff`, readiness, rules or
-worker inspection must not refresh scope implicitly. The operation returns notices through the CLI boundary;
-providers never print. `devkit-agt` must not import `devkit-spec` or require its installation.
+worker inspection must not refresh scope implicitly. Automatic collector diagnostics use logging visible only
+under `-v`; providers never print. The collector does not add notices to the primary operation. `devkit-agt` must
+not import `devkit-spec` or require its installation.
 
 ### 3.2 Collection and publication
 
@@ -112,11 +114,35 @@ relocation or automatic remote transport are proposed. A cloud job can collect l
 see that snapshot without an independently available shared storage arrangement. This proposal does not claim
 cross-cloud overlap detection.
 
-Scope refresh has its own bounded execution budget. A failed refresh preserves the last successfully published
-record and the workflow result. It returns a stable advisory with a deterministic action for the failing cause.
-Ordinary workflow exit behavior remains, except for existing strict-warning handling. Successful no-change
-collection adds no stdout lines, progress output or agent context. Settle structured failure reporting and
-codes in Q4; failure must not be represented as a successful fresh observation.
+Automatic collection at all three triggers is best-effort observation, including initial registration.
+It has a separate finite execution budget and makes one attempt per invocation. Failure produces no default
+stdout, stderr, advisory block, JSON error/notice/status field, workflow request or agent-facing recovery task.
+It never changes the primary command's result, exit code, gate verdict or `--strict` behavior. Existing errors
+and notices from the primary operation retain their own semantics. Successful creation or handoff remains
+successful when its automatic registration fails; explicit `next` preserves any original lint error.
+
+The automatic collection boundary isolates collection, optional-provider loading and publication failures.
+It does not suppress errors from the primary command or process cancellation/termination. Record diagnostic
+identifiers and causes through logging visible only under `-v`, using the repository's verbose `[INFO]` channel;
+do not emit default warning/error logs or prescribe a manual recovery action. Diagnostic logging failure must
+not fail the primary command.
+
+A failure before publication leaves the last successfully stored snapshot intact, or no record if initial
+registration never succeeded. If publication succeeded but its journal append failed, retain the published
+snapshot; do not roll it back or claim that no publication occurred. Respect existing atomicity, token cleanup
+and optimistic concurrency. Do not add failure-journal writes, immediate retries, permission prompts or fallback
+storage. The next ordinary eligible CLI invocation makes a fresh attempt, including safe initial registration
+when no owned record exists; Q2/Q5 must settle incomplete-token and partial-registration recovery. The collector
+must not request broader permissions on the agent's behalf.
+
+Silent failure accepts that the registry can lag or omit a running task without notifying the agent. A workflow
+result does not certify snapshot freshness. Queries retain the stored snapshot's actual revision and timestamp;
+a failed attempt must not advance either. Scope evidence remains advisory and cannot certify independence.
+The separate collection deadline bounds added latency; this is not a promise of zero execution cost.
+
+This automatic-path policy does not change explicit maintenance commands: a directly invoked hidden
+`scope update` retains its ACK, errors, notices and exit behavior. It also does not silence an explicitly invoked
+`scope register`, query or other diagnostic command.
 
 ### 3.3 Agent guidance and hidden maintenance command
 
@@ -146,8 +172,12 @@ sweep interfaces. `query`, `query --history` and `compare` remain read-only and 
   existing task never changes attribution. Concurrent publication preserves the revision guard and the winning
   snapshot. Q2 supplies a reproducible standalone cloud checkout test with no manual registration/update call.
 - **AC-05 — Failure isolation**: Permission refusal, lock timeout, malformed scope inputs and stale revision
-  preserve the workflow verdict and previous record, return stable warning codes/actions and respect `--strict`.
-  A workflow result carrying a lint error retains that error alongside collection notices.
+  preserve the primary result and exit code in text and JSON, both with and without `--strict`. Assert no added
+  default stdout/stderr, notices, errors, requests or recovery directives for automatic collection failures at
+  all three triggers. A primary lint error remains unchanged. Diagnostics appear only under `-v`; provider-loading
+  and diagnostic-logging failures also cannot fail the primary command. A failure before publication preserves
+  the previous snapshot; a journal failure after publication preserves the published snapshot. No immediate
+  retry or escalation occurs. After transient failure, the next ordinary eligible call attempts collection again.
 - **AC-06 — Bounded idempotence**: Unchanged inputs produce no revision or update-journal churn. Collection has
   a finite separate deadline, no nested retry loop and no sibling-checkout traversal. Measure added cost with
   representative small and large diffs during the spike; settle the performance threshold before acceptance.
@@ -159,13 +189,16 @@ sweep interfaces. `query`, `query --history` and `compare` remain read-only and 
 Non-goals: native/Git hooks, continuous observation, automatic worker dispatch, remote aggregation, OTel adoption,
 exclusive ownership, overlap-based write refusal, and changes to workflow gates or approval authority.
 
+The silent automatic-path failure policy is an explicit exception to treating those collection failures as operation advisories; explicit command failures keep the
+Agent Advisory Protocol contract.
+
 ## 4. Lifecycle & Retirement Criteria
 
 Keep this proposal in draft for Planning review. The author self-review in `materials/self-review.md` records
 code evidence, folded corrections and unresolved acceptance blockers; it is not an independent Planning review.
 Before direction acceptance, demonstrate Q1 timing traces, Q2 standalone ownership behavior, Q3 dispatch isolation
-and Q4 bounded result reporting. A mandatory automatic-update call cannot be used to make those demonstrations
-pass. Compare the chosen design with handoff-only snapshots and optional hooks during Planning.
+and Q4 silent failure isolation with bounded diagnostics. A mandatory automatic-update call cannot be used
+to make those demonstrations pass. Compare the chosen design with handoff-only snapshots and optional hooks during Planning.
 
 Planning must create a PADR replacing the skill-maintained refresh decision in
 ADR-worktrees-branches-and-scope and documenting the explicit `workflow next` observation side effect. If Q2
