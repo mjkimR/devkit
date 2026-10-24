@@ -1,11 +1,14 @@
 <script lang="ts">
 	let {
-		view = $bindable<'files' | 'book' | 'proposals' | 'specs' | 'roadmap' | 'shared'>('files')
+		view = $bindable<'dashboard' | 'files' | 'book' | 'proposals' | 'specs' | 'roadmap' | 'shared'>(
+			'dashboard'
+		)
 	}: {
-		view?: 'files' | 'book' | 'proposals' | 'specs' | 'roadmap' | 'shared';
+		view?: 'dashboard' | 'files' | 'book' | 'proposals' | 'specs' | 'roadmap' | 'shared';
 	} = $props();
 
 	const tabs = [
+		{ id: 'dashboard', label: 'Dashboard', icon: '📊', title: 'Status Dashboard' },
 		{ id: 'book', label: 'Book', icon: '📖', title: 'Living Spec (Book)' },
 		{ id: 'proposals', label: 'Proposals', icon: '💡', title: 'Proposals' },
 		{ id: 'specs', label: 'Specs', icon: '📋', title: 'Feature Specs' },

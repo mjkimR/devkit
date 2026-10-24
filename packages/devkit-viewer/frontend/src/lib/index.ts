@@ -3,6 +3,8 @@ export { default as SddViewer } from './SddViewer.svelte';
 export { default as KnowledgeViews } from './KnowledgeViews.svelte';
 export { default as RoadmapView } from './RoadmapView.svelte';
 export { default as SharedArtifactsView } from './features/shared/SharedArtifactsView.svelte';
+export { default as DashboardView } from './features/dashboard/DashboardView.svelte';
+export { extractDashboardData, type DashboardData } from './features/dashboard/dashboard';
 export {
 	httpDataSource,
 	normalizeTree,

@@ -76,7 +76,13 @@
 
 	{#if source && branch}
 		{#key `${repoId}@${branch}`}
-			<SddViewer dataSource={source} {repoId} {branch} initialView="book" picker={pickerSnippet} />
+			<SddViewer
+				dataSource={source}
+				{repoId}
+				{branch}
+				initialView="dashboard"
+				picker={pickerSnippet}
+			/>
 		{/key}
 	{:else}
 		<header class="loading-header">
