@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-24T09:23:57.816705Z'
+status: completed
+summary: Added configurable proposal-review auto-publication before acceptance; review and reconciliation passed.
+findings: []
+checks:
+  tests: PASS 1463 just test-affected
+  build: PASS uv build --package devkit-spec --wheel
+  lint: PASS just lint-check devkit-spec; just check devkit-spec; devkit rules check --ci --base main
+diff_scope:
+  base: bd0e260279c465b78fb2a49d24e58c2ec92ef7ea
+  head: 63efe65e570119d0b3cd79732f8cbe5244c0ff87
