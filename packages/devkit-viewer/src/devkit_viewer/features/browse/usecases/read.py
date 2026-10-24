@@ -19,6 +19,8 @@ def read_repository(repo: Repository, endpoint: str, target: str, *, recursive: 
     reader = WorkingTreeReader(repo.root)
     if endpoint == "info":
         return {"repo_id": repo.id, "default_branch": reader.branch()}
+    if endpoint == "dashboard-list":
+        return reader.dashboard_headers(target)
     if endpoint not in ("tree", "blob"):
         raise ReadError(HTTPStatus.NOT_FOUND, "VIEWER_NOT_FOUND", f"no API endpoint '/api/repos/{repo.id}/{endpoint}'")
     if endpoint == "tree":

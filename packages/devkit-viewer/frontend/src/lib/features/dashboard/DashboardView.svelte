@@ -2,19 +2,15 @@
 	import { type RepositoryDocument } from '../../api/documents';
 	import { clearRepositoryCache } from '../../api/cache';
 	import {
-		cachedSection,
+		cachedDashboardPage,
 		dashboardSections,
-		loadDashboardSection,
+		openDashboardPage,
+		nextDashboardPage,
+		type SectionSnapshot,
 		type DashboardSection
 	} from './loading';
 	import type { RepositoryDataSource } from '../../api/repository';
-	import {
-		extractDashboardData,
-		type DashboardData,
-		type FeedbackItemData,
-		type MilestoneItemData,
-		type ProposalItemData
-	} from './dashboard';
+	import { extractDashboardData, type DashboardData } from './dashboard';
 
 	let {
 		source = null,
@@ -31,7 +27,12 @@
 		) => void;
 	} = $props();
 
-	type SectionState = { documents: RepositoryDocument[]; loading: boolean; errors: string[] };
+	type SectionState = {
+		documents: RepositoryDocument[];
+		loading: boolean;
+		errors: string[];
+		snapshot?: SectionSnapshot;
+	};
 	const emptySection = (): SectionState => ({ documents: [], loading: true, errors: [] });
 	let sections = $state<Record<DashboardSection, SectionState>>({
 		milestones: emptySection(),
@@ -40,12 +41,31 @@
 	});
 	let refreshGeneration = $state(0);
 	const loading = $derived(dashboardSections.some((section) => sections[section].loading));
-	let milestoneLimit = 6;
-	let proposalLimit = 9;
-	let feedbackLimit = 6;
-	let showAllMilestones = $state(false);
-	let showAllProposals = $state(false);
-	let showAllFeedback = $state(false);
+	let controller: AbortController | undefined;
+	async function loadMore(section: DashboardSection) {
+		const repository = source;
+		const ref = branch;
+		const active = controller;
+		const snapshot = sections[section].snapshot;
+		if (!repository || !snapshot || !active || active.signal.aborted || sections[section].loading)
+			return;
+		sections[section] = { ...sections[section], loading: true };
+		const result = await nextDashboardPage(repository, ref, section, snapshot, active.signal);
+		if (!active.signal.aborted) sections[section] = { ...result, snapshot: result, loading: false };
+	}
+	function hasMore(section: DashboardSection) {
+		const snapshot = sections[section].snapshot;
+		return snapshot && snapshot.documents.length < snapshot.paths.length;
+	}
+	function sectionData(section: DashboardSection) {
+		const state = sections[section];
+		const metadata = new Map(state.snapshot?.metadata.map((doc) => [doc.path, doc]) ?? []);
+		// Freeze ordering and membership from the list; bodies supply titles and summaries.
+		return state.documents.map((doc) => ({
+			...doc,
+			meta: metadata.get(doc.path)?.meta ?? doc.meta
+		}));
+	}
 
 	function refresh() {
 		if (source) clearRepositoryCache(source);
@@ -55,22 +75,21 @@
 		const repository = source;
 		const ref = branch;
 		refreshGeneration;
-		const controller = new AbortController();
-		showAllMilestones = false;
-		showAllProposals = false;
-		showAllFeedback = false;
+		const active = new AbortController();
+		controller = active;
 		for (const section of dashboardSections) {
-			const cached = repository ? cachedSection(repository, ref, section) : undefined;
+			const cached = repository ? cachedDashboardPage(repository, ref, section) : undefined;
 			sections[section] = cached
-				? { ...cached, loading: false }
+				? { ...cached, snapshot: cached, loading: false }
 				: { ...emptySection(), loading: Boolean(repository) };
 			if (!repository || cached) continue;
-			void loadDashboardSection(repository, ref, section, controller.signal)
+			void openDashboardPage(repository, ref, section, active.signal)
 				.then((result) => {
-					if (!controller.signal.aborted) sections[section] = { ...result, loading: false };
+					if (!active.signal.aborted)
+						sections[section] = { ...result, snapshot: result, loading: false };
 				})
 				.catch((error: unknown) => {
-					if (!controller.signal.aborted)
+					if (!active.signal.aborted)
 						sections[section] = {
 							documents: [],
 							loading: false,
@@ -78,23 +97,20 @@
 						};
 				});
 		}
-		return () => controller.abort();
+		return () => active.abort();
 	});
 	const data: DashboardData = $derived(
-		extractDashboardData(dashboardSections.flatMap((section) => sections[section].documents))
+		extractDashboardData(
+			dashboardSections.flatMap((section) => sections[section].snapshot?.metadata ?? [])
+		)
 	);
-
 	const displayedMilestones = $derived(
-		showAllMilestones ? data.milestones.open : data.milestones.open.slice(0, milestoneLimit)
+		extractDashboardData(sectionData('milestones')).milestones.open
 	);
-
 	const displayedProposals = $derived(
-		showAllProposals ? data.proposals.active : data.proposals.active.slice(0, proposalLimit)
+		extractDashboardData(sectionData('proposals')).proposals.active
 	);
-
-	const displayedFeedback = $derived(
-		showAllFeedback ? data.feedback.open : data.feedback.open.slice(0, feedbackLimit)
-	);
+	const displayedFeedback = $derived(extractDashboardData(sectionData('feedback')).feedback.open);
 
 	function handleItemClick(
 		targetView: 'files' | 'book' | 'proposals' | 'specs' | 'roadmap' | 'shared',
@@ -264,13 +280,17 @@
 					>
 				</div>
 				<div class="section-actions">
-					{#if data.milestones.open.length > milestoneLimit}
+					{#if hasMore('milestones')}
 						<button
 							class="toggle-btn"
-							onclick={() => (showAllMilestones = !showAllMilestones)}
-							aria-expanded={showAllMilestones}
+							disabled={sections.milestones.loading}
+							onclick={() => loadMore('milestones')}
 						>
-							{showAllMilestones ? 'Show Less' : `Show All (${data.milestones.openCount})`}
+							{sections.milestones.loading
+								? 'Loading…'
+								: sections.milestones.errors.length
+									? 'Retry'
+									: 'Load more'}
 						</button>
 					{/if}
 					<button class="nav-btn" onclick={() => handleItemClick('roadmap')}>Roadmap View →</button>
@@ -286,7 +306,7 @@
 				</div>
 			{/if}
 			<div class="cards-grid">
-				{#each displayedMilestones as milestone (milestone.id)}
+				{#each displayedMilestones as milestone (milestone.path)}
 					<div
 						class="dashboard-card clickable"
 						role="button"
@@ -342,13 +362,17 @@
 					>
 				</div>
 				<div class="section-actions">
-					{#if data.proposals.active.length > proposalLimit}
+					{#if hasMore('proposals')}
 						<button
 							class="toggle-btn"
-							onclick={() => (showAllProposals = !showAllProposals)}
-							aria-expanded={showAllProposals}
+							disabled={sections.proposals.loading}
+							onclick={() => loadMore('proposals')}
 						>
-							{showAllProposals ? 'Show Less' : `Show All (${data.proposals.activeCount})`}
+							{sections.proposals.loading
+								? 'Loading…'
+								: sections.proposals.errors.length
+									? 'Retry'
+									: 'Load more'}
 						</button>
 					{/if}
 					<button class="nav-btn" onclick={() => handleItemClick('proposals')}
@@ -366,7 +390,7 @@
 				</div>
 			{/if}
 			<div class="cards-grid">
-				{#each displayedProposals as proposal (proposal.id)}
+				{#each displayedProposals as proposal (proposal.path)}
 					<div
 						class="dashboard-card clickable"
 						role="button"
@@ -419,13 +443,17 @@
 					>
 				</div>
 				<div class="section-actions">
-					{#if data.feedback.open.length > feedbackLimit}
+					{#if hasMore('feedback')}
 						<button
 							class="toggle-btn"
-							onclick={() => (showAllFeedback = !showAllFeedback)}
-							aria-expanded={showAllFeedback}
+							disabled={sections.feedback.loading}
+							onclick={() => loadMore('feedback')}
 						>
-							{showAllFeedback ? 'Show Less' : `Show All (${data.feedback.openCount})`}
+							{sections.feedback.loading
+								? 'Loading…'
+								: sections.feedback.errors.length
+									? 'Retry'
+									: 'Load more'}
 						</button>
 					{/if}
 					<button class="nav-btn" onclick={() => handleItemClick('files')}>Files View →</button>
@@ -441,7 +469,7 @@
 				</div>
 			{/if}
 			<div class="cards-grid">
-				{#each displayedFeedback as fb (fb.id)}
+				{#each displayedFeedback as fb (fb.path)}
 					<div
 						class="dashboard-card clickable"
 						role="button"

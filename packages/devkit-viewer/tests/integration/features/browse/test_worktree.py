@@ -73,3 +73,61 @@ def test_recursive_tree_rejects_invalid_paths(repo: Path, path: str) -> None:
     with pytest.raises(ReadError) as caught:
         WorkingTreeReader(repo).tree(path, recursive=True)
     assert caught.value.code == "VIEWER_PATH_INVALID"
+
+
+def test_dashboard_reads_only_candidate_frontmatter(repo: Path) -> None:
+    files = {
+        "docs/roadmap/MS-a.md": "---\nid: MS-a\nstatus: active\n---\nBODY MUST NOT APPEAR\n",
+        "docs/roadmap/README.md": "ignore",
+        "docs/roadmap/nested/MS-b.md": "ignore",
+        "docs/proposals/PROP-a/proposal.md": "---\nid: PROP-a\n---\nproposal body",
+        "docs/proposals/PROP-a/plan.md": "ignore",
+        "specs/month/unit/feedback/deep/a.md": "---\nid: FB-a\nseverity: critical\n---\nfeedback body",
+        "specs/month/unit/feedback/README.md": "ignore",
+        "docs/materials/feedback/plain.md": "# No frontmatter\nbody",
+    }
+    for path, content in files.items():
+        target = repo / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content)
+    (repo / "docs/roadmap/MS-alias.md").symlink_to(repo / "docs/roadmap/MS-a.md")
+    reader = WorkingTreeReader(repo)
+    milestones = reader.dashboard_headers("milestones")
+    assert milestones == {
+        "items": [
+            {"path": "docs/roadmap/MS-a.md", "content": "---\nid: MS-a\nstatus: active\n---\n", "encoding": "utf-8"}
+        ],
+        "errors": [],
+    }
+    proposals = reader.dashboard_headers("proposals")
+    assert "proposal body" not in str(proposals)
+    assert "PROP-a" in str(proposals)
+    feedback = reader.dashboard_headers("feedback")
+    assert "feedback body" not in str(feedback)
+    assert "FB-a" in str(feedback)
+    assert "README" not in str(feedback)
+    assert "docs/materials/feedback/plain.md" in str(feedback)
+    with pytest.raises(ReadError) as caught:
+        reader.dashboard_headers("../outside")
+    assert caught.value.code == "VIEWER_PATH_INVALID"
+
+
+def test_dashboard_header_errors_and_absent_roots(repo: Path) -> None:
+    reader = WorkingTreeReader(repo)
+    assert reader.dashboard_headers("milestones") == {"items": [], "errors": []}
+    folder = repo / "docs/roadmap"
+    folder.mkdir()
+    (folder / "MS-bad.md").write_text("---\nid: broken\n")
+    result = reader.dashboard_headers("milestones")
+    assert result["items"] == []
+    assert "unterminated YAML frontmatter" in str(result["errors"])
+    with pytest.raises(ReadError):
+        reader.frontmatter("../outside")
+
+
+def test_frontmatter_does_not_decode_body(repo: Path) -> None:
+    target = repo / "docs/a.md"
+    target.write_bytes(b"---\r\nid: MS-a\r\n---\r\n\xff\xfe")
+    assert WorkingTreeReader(repo).frontmatter("docs/a.md") == "---\r\nid: MS-a\r\n---\r\n"
+    target.write_bytes(b"# Title\n\xff\xfe")
+    assert WorkingTreeReader(repo).frontmatter("docs/a.md") == ""

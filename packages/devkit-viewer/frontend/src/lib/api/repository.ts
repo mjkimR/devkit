@@ -57,6 +57,15 @@ export interface RepositoryDataSource {
 	/** Optional metadata-only recursive listing; hosts without it use directory discovery. */
 	treeRecursive?(path: string, ref: string, signal: AbortSignal): Promise<any>;
 	blob(path: string, ref: string, signal: AbortSignal): Promise<any>;
+	/** Optional frontmatter-only section listing; bodies are fetched per visible page. */
+	dashboardList?(
+		section: string,
+		ref: string,
+		signal: AbortSignal
+	): Promise<{
+		items: RepositoryBlob[];
+		errors: string[];
+	}>;
 	/** Optional branch metadata for hosts that expose it. */
 	refs?(signal: AbortSignal): Promise<RepositoryRefs>;
 	/** Optional: shared space artifacts (e.g. proposal reviews) */
@@ -76,6 +85,7 @@ export function httpDataSource(base: string): RepositoryDataSource {
 	const query = (path: string) => new URLSearchParams({ path });
 	return {
 		info: (signal) => get('info', signal),
+		dashboardList: (section, _ref, signal) => get(`dashboard-list?${query(section)}`, signal),
 		tree: (path, _ref, signal) => get(`tree?${query(path)}`, signal),
 		treeRecursive: (path, _ref, signal) => get(`tree?${query(path)}&recursive=true`, signal),
 		blob: (path, _ref, signal) => get(`blob?${query(path)}`, signal),

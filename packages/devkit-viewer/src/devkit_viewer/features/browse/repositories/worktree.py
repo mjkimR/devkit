@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from os import scandir
 from pathlib import Path
@@ -9,7 +10,7 @@ from pathlib import Path
 from devkit_core.base.errors import GitError
 from devkit_core.core.git import run_git
 
-from devkit_viewer.features.browse.models.errors import path_invalid, path_not_found
+from devkit_viewer.features.browse.models.errors import ReadError, path_invalid, path_not_found
 
 
 @dataclass(frozen=True)
@@ -105,3 +106,70 @@ class WorkingTreeReader:
             return target.read_bytes()
         except OSError as exc:
             raise path_not_found(path, "file") from exc
+
+    def frontmatter(self, path: str) -> str:
+        """Read the YAML envelope only; leave document bodies unread."""
+        target = self._resolve(path)
+        if not target.is_file():
+            raise path_not_found(path, "file")
+        try:
+            with target.open("rb") as stream:
+                first = stream.readline(5)
+                if first not in (b"---\n", b"---\r\n"):
+                    return ""
+                lines = [first]
+                for line in stream:
+                    lines.append(line)
+                    if line.rstrip(b"\r\n") == b"---":
+                        return b"".join(lines).decode("utf-8")
+            raise ValueError("unterminated YAML frontmatter")
+        except OSError as exc:
+            raise path_not_found(path, "file") from exc
+
+    def dashboard_headers(self, section: str) -> dict[str, object]:
+        """Discover dashboard candidates and return only their frontmatter."""
+        if section not in ("milestones", "proposals", "feedback"):
+            raise path_invalid(section)
+        roots = (
+            ["docs/roadmap"]
+            if section == "milestones"
+            else ["docs/proposals"]
+            if section == "proposals"
+            else ["docs", "specs"]
+        )
+        paths: list[str] = []
+        errors: list[str] = []
+        for root in roots:
+            if not (self.root / root).exists():
+                continue
+            try:
+                entries = self.tree(root, recursive=section == "feedback")
+                if section == "proposals":
+                    paths.extend(
+                        f"{item.path}/proposal.md"
+                        for item in entries
+                        if item.type == "tree"
+                        and re.fullmatch(r"docs/proposals/PROP-[^/]+", item.path)
+                        and not (self.root / item.path / "proposal.md").is_symlink()
+                        and (self.root / item.path / "proposal.md").is_file()
+                    )
+                else:
+                    paths.extend(
+                        item.path
+                        for item in entries
+                        if item.type == "blob"
+                        and (
+                            re.fullmatch(r"docs/roadmap/MS-[^/]+\.md", item.path)
+                            if section == "milestones"
+                            else "/feedback/" in item.path and item.name.endswith(".md") and item.name != "README.md"
+                        )
+                    )
+            except ReadError as exc:
+                errors.append(f"{root}: {exc}")
+        items: list[dict[str, str]] = []
+        for path in sorted(set(paths)):
+            try:
+                items.append({"path": path, "content": self.frontmatter(path), "encoding": "utf-8"})
+            except (ReadError, OSError, ValueError) as exc:
+                errors.append(f"{path}: {exc}")
+        return {"items": items, "errors": errors}

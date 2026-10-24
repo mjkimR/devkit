@@ -202,4 +202,41 @@ describe('DashboardView', () => {
 		);
 		expect(screen.queryByText(/old feedback failure/)).toBeNull();
 	});
+	it('loads pages on demand, retries without losing cards and restores expanded pages', async () => {
+		const entries = Array.from({ length: 15 }, (_, i) => ({
+			path: `specs/month/unit/feedback/${String(i).padStart(2, '0')}.md`,
+			encoding: 'utf-8',
+			content: `---\nid: FB-${i}\ntitle: Issue ${i}\nstatus: open\nseverity: friction\n---\n`
+		}));
+		const source = mockSource();
+		source.dashboardList = vi.fn(async (section) => ({
+			items: section === 'feedback' ? entries : [],
+			errors: []
+		}));
+		source.blob = vi.fn(async (path) => ({
+			path,
+			encoding: 'utf-8',
+			content: entries.find((e) => e.path === path)!.content + 'Summary'
+		}));
+		const props = { source, branch: 'main' };
+		const view = render(DashboardView, { props });
+		const cards = () => screen.getAllByRole('heading', { level: 3, name: /^Issue / });
+		await waitFor(() => expect(cards()).toHaveLength(6));
+		expect(source.blob).toHaveBeenCalledTimes(6);
+		vi.mocked(source.blob).mockRejectedValueOnce(new Error('page failure'));
+		await fireEvent.click(screen.getByRole('button', { name: 'Load more' }));
+		await waitFor(() => expect(screen.getByRole('button', { name: 'Retry' })).toBeTruthy());
+		expect(cards()).toHaveLength(6);
+		await fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+		await waitFor(() => expect(cards()).toHaveLength(12));
+		const calls = vi.mocked(source.blob).mock.calls.length;
+		view.unmount();
+		render(DashboardView, { props });
+		await waitFor(() => expect(cards()).toHaveLength(12));
+		expect(source.blob).toHaveBeenCalledTimes(calls);
+		expect(source.dashboardList).toHaveBeenCalledTimes(3);
+		await fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
+		await waitFor(() => expect(cards()).toHaveLength(6));
+		expect(source.blob).toHaveBeenCalledTimes(calls + 6);
+	});
 });
