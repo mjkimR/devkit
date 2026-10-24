@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-24T13:40:10.289571Z'
+status: completed
+summary: 'PASS self-verification: all AC-01 through AC-06 map to the updated viewer capability and three references; existing entrypoints remain valid.'
+findings: []
+assumptions:
+- 'Medium effort self-check: one package and capability area only; no ambiguous or cross-component contracts. Candidate test entrypoint rejected because tests are not a doorway.'
+checks:
+  contract: PASS selective loaders, independent UI state, cache rules and recursive path protections agree with the documented contract
+diff_scope:
+  base: 6db5bab3ff9445f72e6a8c7155a24054f53ecf6d
+  head: 990b404ff4f3e2178323edebd36dd5944b3e9704
