@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: The user requested a single proposal review publication before acceptance and
+  a config.toml toggle for automatic writing.
+by: user
+at: '2026-10-24T09:08:58.413194Z'

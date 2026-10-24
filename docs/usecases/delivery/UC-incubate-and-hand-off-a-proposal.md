@@ -1,7 +1,7 @@
 ---
 id: UC-incubate-and-hand-off-a-proposal
 title: Incubate a Proposal and Hand It Off to a Spec
-summary: "An AI coding agent develops a proposal and its decisions, obtains Host approval against a source-bound report, then accepts or hands it off through CLI operations while preserving materials, approvals and references."
+summary: "An AI coding agent develops a proposal, publishes one source-bound review before acceptance under project policy, obtains Host approval against that report, then accepts or hands it off while preserving materials, approvals and references."
 area: delivery
 primary_actor: AI coding agent (Host)
 supporting_actors:
@@ -14,6 +14,8 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py
   - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
   - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/SKILL.md.jinja
+  - packages/devkit-spec/src/devkit_spec/features/policy/cli/commands.py
 created_at: 2026-10-13
 capabilities:
   - CAP-DLV-proposal-incubation
@@ -49,15 +51,18 @@ capabilities:
 4. The agent puts every open question to the user in one round, folds the answers into the proposal and its PADRs,
    refines the Development effort hint, and records fresh feedback-sweep coverage before each return to the user
    (`CAP-DLV-delivery-workflows`).
-5. The user accepts the direction; the agent records the acceptance and the accepted status in one step
+5. After the final Planning commit, the agent publishes one source-bound review according to
+   `[tool.spec.proposal_review].auto_write`; acceptance uses that exact report and does not publish another one
    (`CAP-DLV-proposal-incubation`).
-6. The agent integrates the Planning branch under `plan-accept`'s authority; the workflow reports the proposal unit
+6. The user accepts the direction; the agent records the acceptance and the accepted status in one step
+   (`CAP-DLV-proposal-incubation`).
+7. The agent integrates the Planning branch under `plan-accept`'s authority; the workflow reports the proposal unit
    complete (`CAP-DLV-delivery-workflows`).
-7. With `proposal-handoff` authority, the agent starts `dev-<slug>` and hands the proposal off: the system creates the
+8. With `proposal-handoff` authority, the agent starts `dev-<slug>` and hands the proposal off: the system creates the
    spec bundle bound to `sdd-spec-<task_kind>`, promotes the PADRs to accepted ADRs, moves materials and open
    feedback, carries the `plan-intent` and `plan-accept` records by name, rewrites what pointed into the proposal and
    removes it (`CAP-DLV-proposal-incubation`, `CAP-DLV-spec-bundles`).
-8. The agent rereads the rewritten references, fixes unresolved links in the same change and follows the spec
+9. The agent rereads the rewritten references, fixes unresolved links in the same change and follows the spec
    workflow's next stage (`CAP-DLV-proposal-incubation`).
 
 ---
@@ -106,11 +111,9 @@ capabilities:
 - **7f.** A write fails during the handoff: the system rolls back what it wrote and moved, keeps the proposal and
   reports `SPEC_PROPOSAL_HANDOFF_FAILED` (`CAP-DLV-proposal-incubation`); resumes at step 7.
 
----
-
 ## 4. Postconditions
 
-- **Success guarantee**: One spec bundle `SPEC-<slug>` replaces the proposal and is bound to `sdd-spec-<task_kind>`.
+- **Success guarantee**: A Planning proposal has one source-bound review published before its acceptance. One spec bundle `SPEC-<slug>` replaces the proposal and is bound to `sdd-spec-<task_kind>`.
   Its PADRs are accepted ADRs, its materials and settled feedback live under `docs/materials/`, its open feedback
   sits in the spec with unchanged IDs, statuses and observation dates, and its `plan-intent` and `plan-accept` records
   are carried by name. Live references name the spec and the ADRs. After a direct acceptance the same holds without a
@@ -250,3 +253,16 @@ capabilities:
 - **When**: the agent runs `devkit spec proposal handoff <slug>`
 - **Then**: the command exits `2` with `SPEC_PROPOSAL_HANDOFF_FAILED`, what was written is removed, what was moved is
   moved back, and the proposal stays for a rerun
+
+
+### Scenario 18: A Planning review report is published once before acceptance
+- **Covers**: main success scenario, step 5
+- **Given**: a Planning proposal ready for `plan-accept` and `auto_write=true` or omitted
+- **When**: the agent finishes the final committed review
+- **Then**: one report exists for that source SHA before the acceptance request, and acceptance consumes its exact URI without publishing again
+
+### Scenario 19: Automatic review publication is disabled
+- **Covers**: main success scenario, step 5
+- **Given**: a Planning proposal ready for `plan-accept` and `auto_write=false`
+- **When**: the agent reaches the acceptance request
+- **Then**: it reuses an exact report if one exists; otherwise it does not automatically author or publish one, and acceptance waits for explicit publication

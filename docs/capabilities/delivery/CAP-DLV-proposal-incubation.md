@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-proposal-incubation
 title: Proposal Incubation and Handoff
-summary: "Proposal incubation and handoff preserve approved scope, decisions, materials and feedback, validate projected direct prerequisites before writes, relocate live references without carrying milestone membership, and compose source-bound acceptance and handoff through Host-authorized CLI operations."
+summary: "Proposal incubation and handoff preserve approved scope, decisions, materials and feedback. They validate direct prerequisites, publish source-bound Planning reviews before acceptance, relocate live references, and compose acceptance and handoff through Host-authorized CLI operations."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -11,6 +11,8 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
   - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py
   - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/SKILL.md.jinja
+  - packages/devkit-spec/src/devkit_spec/features/policy/cli/commands.py
 ---
 
 # [CAP-DLV-proposal-incubation] Proposal Incubation and Handoff
@@ -159,6 +161,8 @@ removes it.
     checks and hold reasons (`SPEC_PROPOSAL_GATE_NOT_OPEN`). `--check` runs every check and writes nothing; there a
     missing `gate:plan-intent` is `pending`, not blocking, because one request may ask both gates. `accept` never
     records `plan-intent`, commits, merges or hands off; Backlog commits a direct acceptance on the base.
+
+15. **Publish the Planning review before acceptance**: when a bound proposal in Planning reaches `plan-accept`, the agent MUST ensure one complete `proposal-review` artifact exists through the shared adapter for the final committed `plan-<slug>` source before presenting acceptance, reusing a complete exact-source report when available. `[tool.spec.proposal_review].auto_write` defaults to `true` and controls whether the agent writes and publishes a missing report automatically; when `false`, the agent MUST wait for explicit publication if no complete exact-source report exists. Acceptance MUST validate and consume the exact `report_uri` and MUST NOT compose or publish a report. A missing or stale report remains a refusal and requires publication for the current source. `devkit spec policy` exposes the setting as `[PROPOSAL_REVIEW_POLICY: auto_write=<boolean>]` and JSON `proposal_review.auto_write`; malformed values fail with `SPEC_CONFIG_INVALID` (`packages/devkit-spec/tests/integration/features/policy/test_feedback_config.py`, `packages/devkit-spec/src/devkit_spec/features/proposals/usecases/report.py`).
 
 ### 3.1 Planning feedback retirement
 
@@ -584,7 +588,7 @@ Language is the owning workspace preference, normalized to ko/en. Report frontma
 `source_sha`, `language` and `repository_namespace`; the domain template supplies bilingual sections for outcome,
 decisions, boundary impacts, Planning effort/support, open decisions/waivers, unverified areas, recommended
 Development effort and approval effects. Every current committed PADR has problem, choice, rejected alternatives
-and consequences; committed envelope names and declared effort are accounted for. The Host verifies meaning.
+and consequences; committed envelope names and declared effort are accounted for. The Host verifies meaning. `[tool.spec.proposal_review].auto_write` defaults to `true`; `devkit spec policy` reports `[PROPOSAL_REVIEW_POLICY: auto_write=<boolean>]` and JSON `proposal_review.auto_write`. For a Planning proposal, the agent ensures one report is available for the final committed source before presenting `plan-accept`; an exact complete report is reused, `auto_write=true` publishes a missing report, and `auto_write=false` requires explicit publication when the report is missing. Acceptance consumes and validates the exact report URI and never composes or publishes a report. A missing, expired or source-mismatched report is refused until a current report is published.
 Publication rejects incomplete or false identity and oversized content; it never edits tracked documents.
 A `PROPOSAL_REVIEW_INVALID` message starts with the failed field class (`source`, `size`, `identity`, `title`,
 `sections`, `decisions`, `decision fields`, `coverage`, `dev_effort`) and names the mismatched keys, headings, PADR
