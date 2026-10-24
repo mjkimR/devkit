@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { indexDocuments, type RepositoryDocument } from '../../api/documents';
-	import type { RepositoryDataSource, SharedArtifactMetadata } from '../../api/repository';
+	import type { RepositoryDataSource } from '../../api/repository';
 	import { isActivityBranch } from '../../api/roadmap';
 	import {
 		extractDashboardData,
@@ -26,7 +26,6 @@
 	} = $props();
 
 	let documents = $state<RepositoryDocument[]>([]);
-	let sharedArtifacts = $state<SharedArtifactMetadata[]>([]);
 	let allBranches = $state<string[]>([]);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
@@ -51,10 +50,9 @@
 
 		void (async () => {
 			try {
-				const [docsResult, refsResult, sharedResult] = await Promise.allSettled([
+				const [docsResult, refsResult] = await Promise.allSettled([
 					indexDocuments(repository, ref, controller.signal),
-					repository.refs ? repository.refs(controller.signal) : Promise.resolve(null),
-					repository.sharedList ? repository.sharedList(controller.signal) : Promise.resolve(null)
+					repository.refs ? repository.refs(controller.signal) : Promise.resolve(null)
 				]);
 
 				if (controller.signal.aborted) return;
@@ -67,10 +65,6 @@
 
 				if (refsResult.status === 'fulfilled' && refsResult.value) {
 					allBranches = refsResult.value.branches || [];
-				}
-
-				if (sharedResult.status === 'fulfilled' && sharedResult.value) {
-					sharedArtifacts = sharedResult.value.artifacts || [];
 				}
 			} catch (err: any) {
 				if (!controller.signal.aborted) {
@@ -103,14 +97,6 @@
 	const activityBranches = $derived(
 		allBranches.filter((name) => name !== branch && isActivityBranch(name))
 	);
-
-	const recentProposalReviews = $derived(
-		sharedArtifacts.filter((a) => a.kind === 'proposal-review').slice(0, 4)
-	);
-
-	function hasMatchingReview(slug: string): boolean {
-		return recentProposalReviews.some((r) => r.slug === slug);
-	}
 
 	function handleItemClick(
 		targetView: 'files' | 'book' | 'proposals' | 'specs' | 'roadmap' | 'shared',
@@ -153,10 +139,6 @@
 						', '
 					) || 'none'})
 				</li>
-				<li>
-					Recent Shared Reviews: {recentProposalReviews.length} proposal-review artifact(s) in shared
-					storage
-				</li>
 			</ul>
 			<h3>Guidance for answering user queries:</h3>
 			<ul>
@@ -166,9 +148,9 @@
 					proposals under development or planning.
 				</li>
 				<li>
-					<strong>Proposal review inquiries ("proposal review", "제안 검토"):</strong>
-					Refer to the Recent Shared Reviews and Active Proposals sections. Mention any accepted PADRs,
-					Challenger critique outcomes, and whether reviews are completed in Shared Space.
+					<strong>Proposals inquiries ("proposal", "제안 현황"):</strong>
+					Refer to the Active Proposals section. Mention status (draft/review/accepted), task kind, and
+					planning/dev effort.
 				</li>
 				<li>
 					<strong>Friction and blocker inquiries ("피드백", "문제점", "블로커"):</strong>
@@ -176,7 +158,7 @@
 				</li>
 				<li>
 					<strong>Recommended CLI commands:</strong>
-					`uv run devkit spec list`, `uv run devkit workflow next`, `uv run devkit shared list`.
+					`uv run devkit spec list`, `uv run devkit workflow next`.
 				</li>
 			</ul>
 		</div>
@@ -221,13 +203,6 @@
 					<span class="stat-label">Open Feedback</span>
 				</div>
 			</div>
-			<div class="stat-card">
-				<div class="stat-icon">🤝</div>
-				<div class="stat-content">
-					<span class="stat-value">{recentProposalReviews.length}</span>
-					<span class="stat-label">Shared Reviews</span>
-				</div>
-			</div>
 		</div>
 	</header>
 
@@ -238,12 +213,12 @@
 		</div>
 	{/if}
 
-	<!-- Section 1: Active Sessions & Shared Reviews -->
+	<!-- Section 1: Active Worktree Sessions -->
 	<section class="dashboard-section" aria-labelledby="section-sessions">
 		<div class="section-header">
 			<div class="section-title-wrap">
 				<span class="section-icon">🚀</span>
-				<h2 id="section-sessions" class="section-title">Active Sessions & Shared Reviews</h2>
+				<h2 id="section-sessions" class="section-title">Active Worktree Sessions</h2>
 			</div>
 			<span class="section-meta">
 				Current: <code>{branch}</code>
@@ -272,39 +247,21 @@
 				</div>
 			</div>
 
-			<!-- Recent Shared Proposal Reviews -->
-			{#if recentProposalReviews.length > 0}
-				{#each recentProposalReviews as review (review.generation_id)}
-					<div
-						class="dashboard-card session-card clickable"
-						role="button"
-						tabindex="0"
-						onclick={() => handleItemClick('shared')}
-						onkeydown={(e) => e.key === 'Enter' && handleItemClick('shared')}
-					>
-						<div class="card-top">
-							<span class="badge badge-review">Proposal Review</span>
-							<span class="timestamp-tag">{review.created_at.slice(0, 10)}</span>
-						</div>
-						<h3 class="card-heading">{review.slug}</h3>
-						<p class="card-desc">
-							Shared proposal review artifact in store. Revision {review.source_sha.slice(0, 8)}.
-						</p>
-						<div class="card-bottom">
-							<span class="action-link">Open in Shared Space →</span>
-						</div>
-						<!-- AI Hidden details -->
-						<div class="sr-only">
-							Review artifact generation {review.generation_id}, slug: {review.slug}, source commit: {review.source_sha},
-							language: {review.language}. Click to inspect in Shared Space.
-						</div>
+			<!-- Other active activity branches -->
+			{#each activityBranches as actBranch (actBranch)}
+				<div class="dashboard-card session-card">
+					<div class="card-top">
+						<span class="badge badge-branch">Activity Branch</span>
+						<span class="branch-pill">{actBranch}</span>
 					</div>
-				{/each}
-			{:else}
-				<div class="dashboard-card empty-card">
-					<p class="empty-text">No shared proposal review artifacts currently active.</p>
+					<h3 class="card-heading">{actBranch}</h3>
+					<p class="card-desc">In-progress delivery task worktree or activity branch.</p>
+					<!-- AI Hidden details -->
+					<div class="sr-only">
+						Activity branch {actBranch} active in repository {repoId}.
+					</div>
 				</div>
-			{/if}
+			{/each}
 		</div>
 	</section>
 
@@ -403,12 +360,7 @@
 				>
 					<div class="card-top">
 						<span class="card-id">{proposal.id}</span>
-						<div class="badge-group">
-							{#if hasMatchingReview(proposal.slug)}
-								<span class="badge badge-highlight">Review Live</span>
-							{/if}
-							<span class="badge badge-status-{proposal.status}">{proposal.status}</span>
-						</div>
+						<span class="badge badge-status-{proposal.status}">{proposal.status}</span>
 					</div>
 					<h3 class="card-heading">{proposal.title}</h3>
 					<p class="card-desc line-clamp-2">{proposal.summary || 'No summary provided.'}</p>
@@ -421,11 +373,7 @@
 					<div class="sr-only">
 						Full Proposal Details: ID {proposal.id}, Title: {proposal.title}, Status: {proposal.status},
 						Slug: {proposal.slug}, Task kind: {proposal.taskKind}, Planning effort: {proposal.planningEffort},
-						Dev effort: {proposal.devEffort}, Path: {proposal.path}. Review live in shared storage: {hasMatchingReview(
-							proposal.slug
-						)
-							? 'yes'
-							: 'no'}. Full summary: {proposal.summary}.
+						Dev effort: {proposal.devEffort}, Path: {proposal.path}. Full summary: {proposal.summary}.
 					</div>
 				</div>
 			{:else}
