@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { loadDashboardSection } from './loading';
+import {
+	loadDashboardSection,
+	openDashboardPage,
+	nextDashboardPage,
+	cachedDashboardPage
+} from './loading';
 import { indexDocuments, scanDocuments } from '../../api/documents';
 import { cachedResult, cacheGeneration, cacheResult, clearRepositoryCache } from '../../api/cache';
 import type { RepositoryDataSource } from '../../api/repository';
@@ -173,5 +178,129 @@ describe('dashboard loading', () => {
 		expect(source.treeRecursive).toHaveBeenCalledTimes(2);
 		expect(source.tree).not.toHaveBeenCalled();
 		expect(source.blob).toHaveBeenCalledTimes(3);
+	});
+});
+
+describe('dashboard pages', () => {
+	function pagedSource(count = 20) {
+		const entries = Array.from({ length: count }, (_, i) => {
+			const path = `specs/month/unit/feedback/${String(i).padStart(2, '0')}.md`;
+			const header = `---\nid: FB-${String(i).padStart(2, '0')}\nstatus: ${i === 19 ? 'resolved' : 'open'}\nseverity: ${i === 12 ? 'critical' : 'friction'}\n---\n`;
+			return { path, content: header, encoding: 'utf-8' };
+		});
+		const source = fixture(
+			Object.fromEntries(entries.map((e) => [e.path, e.content + '# Body\nsummary']))
+		);
+		source.dashboardList = vi.fn(async () => ({ items: [...entries].reverse(), errors: [] }));
+		return source;
+	}
+	it('fetches only each visible page in global severity/ID order and reuses all loaded pages', async () => {
+		const source = pagedSource();
+		const first = await openDashboardPage(source, 'main', 'feedback', signal());
+		expect(first.paths).toHaveLength(19);
+		expect(first.paths[0]).toContain('/12.md');
+		expect(first.documents.map((d) => d.path)).toEqual(first.paths.slice(0, 6));
+		expect(source.blob).toHaveBeenCalledTimes(6);
+		expect(source.tree).not.toHaveBeenCalled();
+		const next = await nextDashboardPage(source, 'main', 'feedback', first, signal());
+		expect(next.documents.map((d) => d.path)).toEqual(first.paths.slice(0, 12));
+		expect(source.blob).toHaveBeenCalledTimes(12);
+		expect(await openDashboardPage(source, 'main', 'feedback', signal())).toBe(next);
+		expect(source.dashboardList).toHaveBeenCalledTimes(1);
+		expect(source.blob).toHaveBeenCalledTimes(12);
+	});
+	it('does not extend snapshot expiry on more pages and refresh rejects stale cache writes', async () => {
+		vi.useFakeTimers();
+		const source = pagedSource();
+		const first = await openDashboardPage(source, 'main', 'feedback', signal());
+		vi.advanceTimersByTime(20_000);
+		const next = await nextDashboardPage(source, 'main', 'feedback', first, signal());
+		expect(next.expires).toBe(first.expires);
+		vi.advanceTimersByTime(10_000);
+		await openDashboardPage(source, 'main', 'feedback', signal());
+		expect(source.dashboardList).toHaveBeenCalledTimes(2);
+		clearRepositoryCache(source);
+		await nextDashboardPage(source, 'main', 'feedback', first, signal());
+		expect(cachedDashboardPage(source, 'main', 'feedback')).toBeUndefined();
+	});
+	it('keeps existing cards and cursor on a failed page, permits retry and rejects aborted publication', async () => {
+		const source = pagedSource();
+		const first = await openDashboardPage(source, 'main', 'feedback', signal());
+		vi.mocked(source.blob).mockRejectedValueOnce(new Error('unreadable'));
+		const failed = await nextDashboardPage(source, 'main', 'feedback', first, signal());
+		expect(failed.documents).toBe(first.documents);
+		expect(failed.errors).toHaveLength(1);
+		const retry = await nextDashboardPage(source, 'main', 'feedback', failed, signal());
+		expect(retry.documents.map((d) => d.path)).toEqual(first.paths.slice(0, 12));
+		expect(retry.errors).toEqual([]);
+		clearRepositoryCache(source);
+		const abort = new AbortController();
+		abort.abort();
+		const cancelled = await nextDashboardPage(source, 'main', 'feedback', retry, abort.signal);
+		expect(cancelled.documents).toBe(retry.documents);
+		expect(cachedDashboardPage(source, 'main', 'feedback')).toBeUndefined();
+	});
+	it('uses path tie-breakers, ignores hostile entries, and retains legacy hosts', async () => {
+		const source = pagedSource(2);
+		source.dashboardList = vi.fn(async () => ({
+			items: [
+				{ path: 'specs/a/feedback/z.md', content: '---\nid: FB-same\n---\n', encoding: 'utf-8' },
+				{ path: 'specs/a/feedback/a.md', content: '---\nid: FB-same\n---\n', encoding: 'utf-8' },
+				{ path: 'specs/../feedback/private.md', content: '', encoding: 'utf-8' }
+			],
+			errors: []
+		}));
+		source.blob = vi.fn(async (path) => ({ path, content: '# Body', encoding: 'utf-8' }));
+		const result = await openDashboardPage(source, 'main', 'feedback', signal());
+		expect(result.errors).toEqual([]);
+		expect(result.paths).toEqual(['specs/a/feedback/a.md', 'specs/a/feedback/z.md']);
+		const legacy = fixture(files);
+		expect(
+			(await openDashboardPage(legacy, 'main', 'milestones', signal())).documents
+		).toHaveLength(1);
+	});
+});
+
+describe('page worker ordering', () => {
+	it('keeps snapshot order with delayed bodies and at most six requests in flight', async () => {
+		const entries = Array.from({ length: 12 }, (_, i) => ({
+			path: `docs/proposals/PROP-${String(i).padStart(2, '0')}/proposal.md`,
+			encoding: 'utf-8',
+			content: `---\nid: PROP-${String(i).padStart(2, '0')}\nstatus: draft\n---\n`
+		}));
+		let release!: () => void;
+		const slow = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		let active = 0,
+			maximum = 0;
+		const source: RepositoryDataSource = {
+			info: async () => ({}),
+			tree: async () => [],
+			dashboardList: async () => ({ items: entries, errors: [] }),
+			blob: vi.fn(async (path) => {
+				maximum = Math.max(maximum, ++active);
+				if (path === entries[0].path) await slow;
+				active--;
+				return entries.find((e) => e.path === path)!;
+			})
+		};
+		const work = openDashboardPage(source, 'main', 'proposals', signal());
+		await vi.waitFor(() => expect(source.blob).toHaveBeenCalledTimes(9));
+		expect(maximum).toBeLessThanOrEqual(6);
+		release();
+		const first = await work;
+		expect(first.documents.map((d) => d.path)).toEqual(entries.slice(0, 9).map((e) => e.path));
+		const last = await nextDashboardPage(source, 'main', 'proposals', first, signal());
+		expect(last.documents.map((d) => d.path)).toEqual(entries.map((e) => e.path));
+		expect(source.blob).toHaveBeenCalledTimes(12);
+		clearRepositoryCache(source);
+		const controller = new AbortController();
+		source.blob = vi.fn(async (path) => {
+			controller.abort();
+			return entries.find((e) => e.path === path)!;
+		});
+		await openDashboardPage(source, 'main', 'proposals', controller.signal);
+		expect(cachedDashboardPage(source, 'main', 'proposals')).toBeUndefined();
 	});
 });

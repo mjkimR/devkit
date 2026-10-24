@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-24T13:59:39.523844Z'
+status: completed
+summary: Cached ordered dashboard lists and incremental 6/9/6 body pages are implemented, independently reviewed and reconciled; ready for local integration
+findings: []
+assumptions:
+- All candidate headers must be read for existing global status/severity sorting and exact counts; only displayed bodies load initially
+- Worktree required by policy; pull_request=auto selects local integration because no platform review, CI or publication is needed
+- Independent medium code review PASS; reconcile self-check uses documented single-capability exception
+checks:
+  tests: PASS frontend 45; final affected Python 116; source unchanged since reviewed checks
+  build: PASS app build, library pack and generated viewer-assets current
+  lint: PASS frontend formatting/Svelte diagnostics, Python Ruff/Pyright and CI governance checks
+diff_scope:
+  base: a53ddabb83ec008c41c4409c6143ad68444c6275
+  head: bac377afdf8125bbd2d135b3ebadf936996d085c

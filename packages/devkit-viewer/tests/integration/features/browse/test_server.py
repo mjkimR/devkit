@@ -379,3 +379,19 @@ def test_recursive_metadata_endpoint_includes_descendants(server: ViewerServer) 
         item["path"] for item in request(server, "/api/repos/alpha/tree?path=docs").json()["items"]
     }
     assert request(server, "/api/repos/alpha/tree?path=../&recursive=true").status == 400
+
+
+def test_dashboard_metadata_endpoint(server: ViewerServer) -> None:
+    repo = server.repositories["alpha"].root
+    folder = repo / "docs/roadmap"
+    folder.mkdir()
+    (folder / "MS-a.md").write_text("---\nid: MS-a\nstatus: active\n---\nprivate body\n")
+    response = request(server, "/api/repos/alpha/dashboard-list?path=milestones")
+    assert response.status == 200
+    assert response.json() == {
+        "items": [
+            {"path": "docs/roadmap/MS-a.md", "content": "---\nid: MS-a\nstatus: active\n---\n", "encoding": "utf-8"}
+        ],
+        "errors": [],
+    }
+    assert request(server, "/api/repos/alpha/dashboard-list?path=invalid").status == 400

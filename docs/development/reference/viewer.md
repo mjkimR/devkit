@@ -41,6 +41,7 @@ GET /api/repos                              {"repos": [{"id", "default_branch"}]
 GET /api/repos/<id>/info                    {"repo_id", "default_branch"}
 GET /api/repos/<id>/tree?path=<dir>         {"items": [{"name", "path", "type": "tree"|"blob", "size"?}]}
 GET /api/repos/<id>/tree?path=<dir>&recursive=true  {"items": [...descendant metadata...] }
+GET /api/repos/<id>/dashboard-list?path=<section>  {"items": [{"path", "content", "encoding": "utf-8"}], "errors": []}
 GET /api/repos/<id>/blob?path=<file>        {"path", "encoding": "base64", "content", "size"}
 error                                       {"error": {"code", "message"}}
 ```
@@ -52,7 +53,7 @@ error                                       {"error": {"code", "message"}}
 | `VIEWER_HOST_REFUSED` | 403 |
 | `VIEWER_METHOD_NOT_ALLOWED` | 405 |
 
-The dashboard loads each section independently. Tab results remain reusable for 30 seconds; use Dashboard Refresh to reload saved changes immediately. Recursive tree reads list metadata only and omit symlinks and `.git`.
+The dashboard loads each section independently: candidate frontmatter supplies sorted lists and counts; only visible pages fetch full bodies (6 milestones, 9 proposals, 6 feedback per page). Load more appends one page in the existing order. Cached lists and displayed pages remain reusable for 30 seconds from list completion; use Dashboard Refresh to reload saved changes and reset to the first page. Recursive tree reads list metadata only and omit symlinks and `.git`.
 
 ## Frontend
 

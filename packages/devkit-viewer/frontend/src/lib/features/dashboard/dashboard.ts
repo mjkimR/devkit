@@ -196,7 +196,7 @@ export function extractDashboardData(documents: RepositoryDocument[]): Dashboard
 		const orderA = MILESTONE_STATUS_ORDER[a.status] ?? 99;
 		const orderB = MILESTONE_STATUS_ORDER[b.status] ?? 99;
 		if (orderA !== orderB) return orderA - orderB;
-		return a.id.localeCompare(b.id);
+		return a.id.localeCompare(b.id) || a.path.localeCompare(b.path);
 	});
 	const openMilestones = allMilestones.filter(
 		(m) => m.status === 'active' || m.status === 'planned'
@@ -207,7 +207,7 @@ export function extractDashboardData(documents: RepositoryDocument[]): Dashboard
 		const orderA = PROPOSAL_STATUS_ORDER[a.status] ?? 99;
 		const orderB = PROPOSAL_STATUS_ORDER[b.status] ?? 99;
 		if (orderA !== orderB) return orderA - orderB;
-		return a.id.localeCompare(b.id);
+		return a.id.localeCompare(b.id) || a.path.localeCompare(b.path);
 	});
 	const activeProposals = allProposals.filter(
 		(p) => p.status === 'draft' || p.status === 'review' || p.status === 'accepted'
@@ -218,7 +218,7 @@ export function extractDashboardData(documents: RepositoryDocument[]): Dashboard
 		const orderA = FEEDBACK_SEVERITY_ORDER[a.severity] ?? 99;
 		const orderB = FEEDBACK_SEVERITY_ORDER[b.severity] ?? 99;
 		if (orderA !== orderB) return orderA - orderB;
-		return a.id.localeCompare(b.id);
+		return a.id.localeCompare(b.id) || a.path.localeCompare(b.path);
 	});
 	const openFeedback = allFeedback.filter((f) => f.status === 'open');
 

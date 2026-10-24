@@ -36,12 +36,13 @@ export function cacheResult<T>(
 	ref: string,
 	purpose: string,
 	value: T,
-	generation: ReturnType<typeof cacheGeneration>
+	generation: ReturnType<typeof cacheGeneration>,
+	expires = Date.now() + CACHE_TTL_MS
 ) {
 	if (caches.get(source) !== generation) return;
 	const key = keyOf(ref, purpose);
 	generation.delete(key);
-	generation.set(key, { value, expires: Date.now() + CACHE_TTL_MS });
+	generation.set(key, { value, expires });
 	while (generation.size > MAX_ENTRIES) generation.delete(generation.keys().next().value!);
 }
 export function clearRepositoryCache(source: RepositoryDataSource) {
