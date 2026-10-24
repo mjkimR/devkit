@@ -1,0 +1,12 @@
+kind: review
+stage: '-'
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-24T10:16:02.917541Z'
+status: completed
+summary: Streamline proposal review report template to 3 mandatory sections and compact PADR fields
+findings: []
+checks:
+  tests: PASS
+  lint: PASS
+  types: PASS
