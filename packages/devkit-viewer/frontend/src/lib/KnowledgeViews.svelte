@@ -261,60 +261,60 @@
 	}
 	const fileLabel = (path: string) =>
 		({
-			'proposal.md': '제안서',
-			'spec.md': '요구사항',
-			'plan.md': '설계',
-			'tasks.md': '태스크',
-			'reconcile.md': '문서 반영',
-			'target-docs.md': '목표 문서'
+			'proposal.md': 'Proposal',
+			'spec.md': 'Spec',
+			'plan.md': 'Plan',
+			'tasks.md': 'Tasks',
+			'reconcile.md': 'Reconcile',
+			'target-docs.md': 'Target Docs'
 		})[path.split('/').at(-1)!] ?? path.split('/').slice(-2).join('/');
 </script>
 
 <div class="knowledge" bind:this={root}>
 	<div class="filters">
 		<label
-			>문서 범위 <select aria-label="문서 범위" bind:value={namespace}
-				><option value="all">전체</option>{#each namespaces as name}<option value={name}
-						>{name === 'global' ? '공통' : name + ' + 공통'}</option
+			>Scope <select aria-label="Scope" bind:value={namespace}
+				><option value="all">All</option>{#each namespaces as name}<option value={name}
+						>{name === 'global' ? 'Global' : name + ' + Global'}</option
 					>{/each}</select
 			></label
 		>
 		{#if view !== 'book'}
-			<input aria-label="제목 또는 ID 검색" placeholder="제목 또는 ID 검색" bind:value={query} />
-			<select aria-label="상태" bind:value={status}
-				><option value="">모든 상태</option>{#each statuses as s}<option value={s}>{s}</option
+			<input aria-label="Search title or ID" placeholder="Search title or ID" bind:value={query} />
+			<select aria-label="Status" bind:value={status}
+				><option value="">All statuses</option>{#each statuses as s}<option value={s}>{s}</option
 					>{/each}</select
 			>
 			{#if view === 'proposals'}
-				<select aria-label="우선순위" bind:value={priority}
-					><option value="">모든 우선순위</option
+				<select aria-label="Priority" bind:value={priority}
+					><option value="">All priorities</option
 					>{#each ['critical', 'high', 'medium', 'low'] as p}<option value={p}>{p}</option
 						>{/each}</select
 				>
-				<select aria-label="규모" bind:value={size}
-					><option value="">모든 규모</option>{#each ['S', 'M', 'L', 'XL'] as s}<option value={s}
+				<select aria-label="Size" bind:value={size}
+					><option value="">All sizes</option>{#each ['S', 'M', 'L', 'XL'] as s}<option value={s}
 							>{s}</option
 						>{/each}</select
 				>
-				<select aria-label="대상 영역" bind:value={area}
-					><option value="">모든 영역</option>{#each areas as a}<option value={a}>{a}</option
+				<select aria-label="Target area" bind:value={area}
+					><option value="">All areas</option>{#each areas as a}<option value={a}>{a}</option
 						>{/each}</select
 				>
 			{:else}
-				<label><input type="checkbox" bind:checked={includeCompleted} /> 완료 포함</label>
+				<label><input type="checkbox" bind:checked={includeCompleted} /> Include completed</label>
 			{/if}
 		{/if}
 	</div>
 	{#if errors.length}<details class="index-errors">
-			<summary>불러오지 못한 문서 {errors.length}개</summary>{#each errors as error}<p>
+			<summary>{errors.length} documents failed to load</summary>{#each errors as error}<p>
 					{error}
 				</p>{/each}
 		</details>{/if}
-	{#if loading}<p role="status">문서를 불러오는 중…</p>
-	{:else if !source}<p>저장소를 연결하면 문서를 탐색할 수 있습니다.</p>
+	{#if loading}<p role="status">Loading documents…</p>
+	{:else if !source}<p>Connect a repository to browse documents.</p>
 	{:else}
 		<div class="reading-layout">
-			<aside class="outline" aria-label={view === 'book' ? '전체 목차' : '번들 목록'}>
+			<aside class="outline" aria-label={view === 'book' ? 'Table of contents' : 'Bundle list'}>
 				{#if view === 'book'}
 					{#each bookGroups as group}
 						{#if book.some((d) => bookGroup(d) === group)}<h2>{group}</h2>{/if}
@@ -337,7 +337,7 @@
 						{/each}
 					{/each}
 				{:else}
-					<p class="count">{entries.length}개 {view === 'proposals' ? '제안' : '작업 명세'}</p>
+					<p class="count">{entries.length} {view === 'proposals' ? 'proposals' : 'specs'}</p>
 					{#each entries as doc}
 						<button
 							class="entry"
@@ -358,7 +358,7 @@
 							>
 						</button>
 					{/each}
-					{#if !entries.length}<p>조건에 맞는 항목이 없습니다.</p>{/if}
+					{#if !entries.length}<p>No matching items found.</p>{/if}
 				{/if}
 			</aside>
 			<main class="reading-content" use:linkNavigation>
@@ -367,15 +367,15 @@
 						<h1>{selected.title}</h1>
 						<p>{selected.meta.id} · {selected.meta.status ?? 'unknown'}</p>
 						{#if taskChecks.total}<p>
-								태스크 체크: {taskChecks.checked}/{taskChecks.total} — 검증·통합 상태는 해당 기록에서
-								확인하세요.
+								Task checks: {taskChecks.checked}/{taskChecks.total} — see records for verification and
+								integration state.
 							</p>{/if}
 						{#if relations.length}<div class="relations">
-								관련 문서: {#each relations as id}{#if ids.has(id)}<button
+								Related: {#each relations as id}{#if ids.has(id)}<button
 											onclick={() => onOpen(ids.get(id)!.path)}>{id}</button
 										>{:else}<span>{id}</span>{/if}{/each}
 							</div>{/if}
-						<nav aria-label="번들 문서">
+						<nav aria-label="Bundle documents">
 							{#each bundle as doc}<button
 									class:active={detail?.path === doc.path}
 									onclick={() => {
@@ -385,7 +385,7 @@
 									}}>{fileLabel(doc.path)}</button
 								>{/each}
 						</nav>
-						{#if detail}<nav class="detail-toc" aria-label="문서 목차">
+						{#if detail}<nav class="detail-toc" aria-label="Document outline">
 								{#each rendered.get(detail.path)?.headings ?? [] as h}<button
 										onclick={() => jump(detail.path, h.id)}>{h.title}</button
 									>{/each}
@@ -400,7 +400,7 @@
 								<h2>{doc.title}</h2>
 								<small>{doc.meta.id ? doc.meta.id + ' · ' : ''}{doc.path}</small>
 							</div>
-							<button onclick={() => onOpen(doc.path)}>원본 보기</button>
+							<button onclick={() => onOpen(doc.path)}>View raw</button>
 						</header>
 						{#key `${doc.path}-${branch}-${theme}-${doc.raw}`}
 							<article class="markdown-body" use:lazyDiagrams use:trackHeading>
@@ -410,7 +410,7 @@
 					</section>
 				{/each}
 				{#if !visibleDocs.length}<p class="empty">
-						{view === 'book' ? '읽을 문서가 없습니다.' : '목록에서 항목을 선택하세요.'}
+						{view === 'book' ? 'No documents to display.' : 'Select an item from the list.'}
 					</p>{/if}
 			</main>
 		</div>

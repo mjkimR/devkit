@@ -135,7 +135,8 @@
 					if (!controller.signal.aborted) repoInfo = info;
 				})
 				.catch((err: any) => {
-					if (!controller.signal.aborted) error = `저장소 정보 로드 실패: ${err?.message ?? err}`;
+					if (!controller.signal.aborted)
+						error = `Failed to load repository info: ${err?.message ?? err}`;
 				});
 		}
 		return () => controller.abort();
@@ -195,7 +196,7 @@
 			dispatchPathChange(path);
 		} catch (err: any) {
 			if (id !== generation || signal.aborted) return;
-			error = `트리 로드 실패 (${path}): ${err.message}`;
+			error = `Failed to load tree (${path}): ${err.message}`;
 		} finally {
 			if (id === generation) loading = false;
 		}
@@ -242,7 +243,7 @@
 			dispatchItemSelected(path, frontmatter);
 		} catch (err: any) {
 			if (id !== generation || signal.aborted) return;
-			error = `파일 로드 실패 (${path}): ${err.message}`;
+			error = `Failed to load file (${path}): ${err.message}`;
 		} finally {
 			if (id === generation) loading = false;
 		}
@@ -337,7 +338,7 @@
 						const expandBtn = document.createElement('button');
 						expandBtn.type = 'button';
 						expandBtn.className = 'diagram-action-btn';
-						expandBtn.title = '다이어그램 전체화면 보기 (Fullscreen)';
+						expandBtn.title = 'View diagram fullscreen';
 						expandBtn.innerHTML = `⛶ Fullscreen`;
 						expandBtn.addEventListener('click', () => {
 							openFullscreen(svg);
@@ -362,7 +363,7 @@
 				}
 			}
 		})().catch((err) => {
-			if (active) error = `다이어그램 로드 실패: ${String(err)}`;
+			if (active) error = `Failed to load diagram: ${String(err)}`;
 		});
 		return {
 			destroy() {
@@ -445,7 +446,7 @@
 			{/if}
 			<button
 				class="theme-toggle-btn"
-				title={currentTheme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+				title={currentTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
 				onclick={toggleTheme}
 			>
 				{currentTheme === 'dark' ? '☀️ Light' : '🌙 Dark'}
@@ -453,8 +454,8 @@
 		</div>
 	</header>
 
-	<nav class="view-tabs" aria-label="탐색 방식">
-		{#each [{ id: 'book', label: '문서 읽기' }, { id: 'proposals', label: 'Proposals' }, { id: 'specs', label: 'Specs' }, { id: 'roadmap', label: '로드맵' }, { id: 'files', label: '파일 탐색' }] as tab}
+	<nav class="view-tabs" aria-label="Views">
+		{#each [{ id: 'book', label: 'Book' }, { id: 'proposals', label: 'Proposals' }, { id: 'specs', label: 'Specs' }, { id: 'roadmap', label: 'Roadmap' }, { id: 'files', label: 'Files' }] as tab}
 			<button
 				aria-pressed={view === tab.id}
 				class:active={view === tab.id}
@@ -646,20 +647,20 @@
 						<button
 							class="modal-btn"
 							onclick={() => (zoomLevel = Math.max(0.3, +(zoomLevel - 0.2).toFixed(1)))}
-							title="축소 (Ctrl + 휠 아래)">➖</button
+							title="Zoom out (Ctrl + wheel down)">➖</button
 						>
 						<span class="zoom-indicator">{Math.round(zoomLevel * 100)}%</span>
 						<button
 							class="modal-btn"
 							onclick={() => (zoomLevel = Math.min(4, +(zoomLevel + 0.2).toFixed(1)))}
-							title="확대 (Ctrl + 휠 위)">➕</button
+							title="Zoom in (Ctrl + wheel up)">➕</button
 						>
 						<button
 							class="modal-btn reset-btn"
 							onclick={() => (zoomLevel = 1)}
-							title="기본 크기 (100%)">Reset</button
+							title="Reset zoom (100%)">Reset</button
 						>
-						<button class="modal-btn close-btn" onclick={closeFullscreen} title="닫기 (ESC)"
+						<button class="modal-btn close-btn" onclick={closeFullscreen} title="Close (ESC)"
 							>✕ Close</button
 						>
 					</div>

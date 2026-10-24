@@ -45,12 +45,12 @@ describe('App', () => {
 		await waitFor(() => expect(reads('/api/repos/alpha/').length).toBeGreaterThan(0));
 		expect(reads('/api/repos/alpha/tree').every((url) => url.includes('ref=main'))).toBe(true);
 
-		await fireEvent.change(screen.getByLabelText('저장소'), { target: { value: 'beta' } });
+		await fireEvent.change(screen.getByLabelText('Repository'), { target: { value: 'beta' } });
 		await waitFor(() => expect(calls).toContain('/api/repos/beta/refs'));
 		await waitFor(() => expect(reads('/api/repos/beta/tree').length).toBeGreaterThan(0));
 
 		calls = [];
-		await fireEvent.change(screen.getByLabelText('브랜치'), { target: { value: 'plan-x' } });
+		await fireEvent.change(screen.getByLabelText('Branch'), { target: { value: 'plan-x' } });
 		await waitFor(() => expect(reads('/api/repos/beta/tree').length).toBeGreaterThan(0));
 		const after = calls.filter((url) => url.startsWith('/api/repos/') && url.includes('ref='));
 		expect(

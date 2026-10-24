@@ -88,22 +88,24 @@
 
 <div class="roadmap">
 	<div class="filters">
-		<label><input type="checkbox" bind:checked={history} /> 완료·중단 포함</label>
-		{#if baseRef}<span class="note">기준: {baseRef} 브랜치</span>{/if}
+		<label><input type="checkbox" bind:checked={history} /> Include completed/abandoned</label>
+		{#if baseRef}<span class="note">Base: {baseRef} branch</span>{/if}
 		{#if branchesUnavailable}
-			<span class="note">작업 브랜치 목록을 읽을 수 없어 {baseRef} 브랜치만 표시합니다.</span>
+			<span class="note">Unable to read branch list; displaying {baseRef} branch only.</span>
 		{:else if branches.length}
-			<span class="note">작업 브랜치 {branches.length}개 포함</span>
+			<span class="note"
+				>Includes {branches.length} active {branches.length === 1 ? 'branch' : 'branches'}</span
+			>
 		{/if}
 	</div>
 	{#if errors.length}<details class="index-errors">
-			<summary>불러오지 못한 문서 {errors.length}개</summary>{#each errors as error}<p>
+			<summary>{errors.length} documents failed to load</summary>{#each errors as error}<p>
 					{error}
 				</p>{/each}
 		</details>{/if}
-	{#if loading}<p role="status">로드맵을 불러오는 중…</p>
-	{:else if !source}<p>저장소를 연결하면 로드맵을 볼 수 있습니다.</p>
-	{:else if !milestones.length}<p class="empty">표시할 마일스톤이 없습니다.</p>
+	{#if loading}<p role="status">Loading roadmap…</p>
+	{:else if !source}<p>Connect a repository to view the roadmap.</p>
+	{:else if !milestones.length}<p class="empty">No milestones to display.</p>
 	{:else}
 		<ol class="milestones">
 			{#each milestones as milestone (milestone.id)}
@@ -112,19 +114,19 @@
 						<span class="id">{milestone.id}</span>
 						<span class="status status-{milestone.status}">{milestone.status}</span>
 						{#if milestone.ready}
-							<span class="readiness ready">시작 가능</span>
+							<span class="readiness ready">Ready</span>
 						{:else}
 							{#if milestone.waitingFor.length}
-								<span class="readiness waiting">선행 대기: {milestone.waitingFor.join(', ')}</span>
+								<span class="readiness waiting">Blocked by: {milestone.waitingFor.join(', ')}</span>
 							{/if}
 							{#if milestone.unknown.length}
 								<span class="readiness unknown"
-									>알 수 없는 선행: {milestone.unknown.join(', ')}</span
+									>Unknown dependencies: {milestone.unknown.join(', ')}</span
 								>
 							{/if}
 						{/if}
 						{#if opens(null)}
-							<button onclick={() => onOpen(milestone.path)}>원본 보기</button>
+							<button onclick={() => onOpen(milestone.path)}>View raw</button>
 						{/if}
 					</header>
 					<h2>{milestone.title}</h2>
@@ -133,7 +135,7 @@
 							{#each milestone.members as member (member.id)}
 								<li>
 									<span class="settled" class:done={member.settled}
-										>{member.settled ? '정리됨' : '진행 중'}</span
+										>{member.settled ? 'Settled' : 'In progress'}</span
 									>
 									{#if opens(member.branch)}
 										<button class="title" onclick={() => onOpen(member.path)}>{member.title}</button
@@ -147,7 +149,7 @@
 							{/each}
 						</ul>
 					{:else}
-						<p class="empty-members">구성원 없음</p>
+						<p class="empty-members">No members</p>
 					{/if}
 				</li>
 			{/each}

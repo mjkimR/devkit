@@ -72,6 +72,6 @@ describe('RoadmapView', () => {
 		await screen.findByText('Main milestone');
 		await waitFor(() => expect(new Set(reads)).toEqual(new Set(['main'])));
 		expect(screen.queryByText('In planning')).toBeNull();
-		expect(screen.getByText(/main 브랜치만 표시합니다/)).toBeTruthy();
+		expect(screen.getByText(/displaying main branch only/)).toBeTruthy();
 	});
 });

@@ -227,26 +227,26 @@ export function bookGroup(doc: RepositoryDocument) {
 		/\/README\.md$/i.test(path)
 	)
 		return null;
-	if (path === 'docs/glossary.md') return '용어';
+	if (path === 'docs/glossary.md') return 'Glossary';
 	for (const [directory, title] of [
-		['architecture', '아키텍처'],
-		['capabilities', '역량'],
-		['usecases', '유스케이스'],
-		['decisions', '의사결정'],
-		['development', '개발 가이드']
+		['architecture', 'Architecture'],
+		['capabilities', 'Capabilities'],
+		['usecases', 'Use Cases'],
+		['decisions', 'Decisions'],
+		['development', 'Development']
 	]) {
 		if (path.startsWith(`docs/${directory}/`)) return title;
 	}
-	return '개요';
+	return 'Overview';
 }
 export const bookGroups = [
-	'개요',
-	'아키텍처',
-	'역량',
-	'유스케이스',
-	'용어',
-	'의사결정',
-	'개발 가이드'
+	'Overview',
+	'Architecture',
+	'Capabilities',
+	'Use Cases',
+	'Glossary',
+	'Decisions',
+	'Development'
 ];
 export const namespaceOf = (doc: RepositoryDocument) =>
 	doc.path.match(/^docs\/packages\/([^/]+)\//)?.[1] ?? String(doc.meta.namespace ?? 'global');

@@ -24,7 +24,7 @@
 				repoId = items.some((r) => r.id === requested.repo) ? requested.repo : (items[0]?.id ?? '');
 			})
 			.catch((err) => {
-				if (!controller.signal.aborted) error = `저장소 목록을 불러오지 못했습니다: ${err.message}`;
+				if (!controller.signal.aborted) error = `Failed to load repositories: ${err.message}`;
 			});
 		return () => controller.abort();
 	});
@@ -42,7 +42,7 @@
 				branch = refs.branches.includes(wanted) ? wanted : refs.default_branch;
 			})
 			.catch((err) => {
-				if (!controller.signal.aborted) error = `브랜치 목록을 불러오지 못했습니다: ${err.message}`;
+				if (!controller.signal.aborted) error = `Failed to load branches: ${err.message}`;
 			});
 		return () => controller.abort();
 	});
@@ -55,16 +55,16 @@
 </script>
 
 <div class="app">
-	<nav class="picker" aria-label="저장소 선택">
+	<nav class="picker" aria-label="Repository selection">
 		<label>
-			저장소
-			<select aria-label="저장소" bind:value={repoId}>
+			Repository
+			<select aria-label="Repository" bind:value={repoId}>
 				{#each repos as repo (repo.id)}<option value={repo.id}>{repo.id}</option>{/each}
 			</select>
 		</label>
 		<label>
-			브랜치
-			<select aria-label="브랜치" bind:value={branch} disabled={!branches.length}>
+			Branch
+			<select aria-label="Branch" bind:value={branch} disabled={!branches.length}>
 				{#if branch && !branches.includes(branch)}<option value={branch}>{branch}</option>{/if}
 				{#each branches as name (name)}<option value={name}>{name}</option>{/each}
 			</select>
