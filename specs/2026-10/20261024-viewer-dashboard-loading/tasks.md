@@ -3,12 +3,14 @@ id: TASKS-viewer-dashboard-loading
 spec: SPEC-viewer-dashboard-loading
 plan: PLAN-viewer-dashboard-loading
 ---
-<!-- devkit:skeleton -->
 
-# Task Breakdown: `SPEC-viewer-dashboard-loading` Incremental dashboard loading
+# Task Breakdown: `SPEC-viewer-dashboard-loading`
 
-## Phase 1: Implementation
-- [ ] **Task 1.1**: Core Implementation
-  - **_Boundary**: <target area>
-  - _Requirements: AC-01_
-  - **Verification**: <command that verifies the task>
+- [ ] **Task 1**: Add bounded caching, continuous workers, selective dashboard loaders and regression tests.
+  - **_Boundary**: `packages/devkit-viewer/frontend/src/lib/api/`, `packages/devkit-viewer/frontend/src/lib/features/dashboard/loading.ts`
+  - _Requirements: AC-01, AC-03, AC-04, AC-05_
+  - **Verification**: `just viewer test`, `just viewer check`
+- [ ] **Task 2**: Render independent sections with refresh and cancellation, verify components and rebuild assets.
+  - **_Boundary**: `packages/devkit-viewer/frontend/src/lib/features/dashboard/`, `packages/devkit-viewer/src/devkit_viewer/static/`
+  - _Requirements: AC-02, AC-03, AC-04_
+  - **Verification**: `just viewer lint`, `just viewer check`, `just viewer test`, `just viewer build`, `just viewer pack`
