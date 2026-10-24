@@ -30,11 +30,13 @@
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 
-	// Display limits with expansion toggles
-	let milestoneLimit = 5;
-	let proposalLimit = 4;
-	let feedbackLimit = 5;
+	// Display limits (multiples of 3 for 3-column layout)
+	let sessionLimit = 3;
+	let milestoneLimit = 6;
+	let proposalLimit = 9;
+	let feedbackLimit = 6;
 
+	let showAllSessions = $state(false);
 	let showAllMilestones = $state(false);
 	let showAllProposals = $state(false);
 	let showAllFeedback = $state(false);
@@ -96,6 +98,10 @@
 
 	const activityBranches = $derived(
 		allBranches.filter((name) => name !== branch && isActivityBranch(name))
+	);
+
+	const displayedActivityBranches = $derived(
+		showAllSessions ? activityBranches : activityBranches.slice(0, Math.max(0, sessionLimit - 1))
 	);
 
 	function handleItemClick(
@@ -220,12 +226,23 @@
 				<span class="section-icon">🚀</span>
 				<h2 id="section-sessions" class="section-title">Active Worktree Sessions</h2>
 			</div>
-			<span class="section-meta">
-				Current: <code>{branch}</code>
-				{#if activityBranches.length}
-					| {activityBranches.length} other activity branch(es)
+			<div class="section-actions">
+				{#if activityBranches.length > sessionLimit - 1}
+					<button
+						class="toggle-btn"
+						onclick={() => (showAllSessions = !showAllSessions)}
+						aria-expanded={showAllSessions}
+					>
+						{showAllSessions ? 'Show Less' : `Show All (${activityBranches.length + 1})`}
+					</button>
 				{/if}
-			</span>
+				<span class="section-meta">
+					Current: <code>{branch}</code>
+					{#if activityBranches.length}
+						| {activityBranches.length} other activity branch(es)
+					{/if}
+				</span>
+			</div>
 		</div>
 
 		<div class="cards-grid">
@@ -248,7 +265,7 @@
 			</div>
 
 			<!-- Other active activity branches -->
-			{#each activityBranches as actBranch (actBranch)}
+			{#each displayedActivityBranches as actBranch (actBranch)}
 				<div class="dashboard-card session-card">
 					<div class="card-top">
 						<span class="badge badge-branch">Activity Branch</span>
