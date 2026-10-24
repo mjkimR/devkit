@@ -1,28 +1,28 @@
 <script lang="ts">
-	import KnowledgeViews from './KnowledgeViews.svelte';
-	import RoadmapView from './RoadmapView.svelte';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
-	import { parseDocument } from 'yaml';
+	import type { Snippet } from 'svelte';
 
+	import KnowledgeViews from './KnowledgeViews.svelte';
+	import RoadmapView from './RoadmapView.svelte';
+	import ViewerHeader from './components/shared/ViewerHeader.svelte';
+	import NavigationRail from './components/shared/NavigationRail.svelte';
+	import FileExplorer from './features/explorer/FileExplorer.svelte';
+	import DocumentViewer from './features/document/DocumentViewer.svelte';
+	import FullscreenDiagramModal from './features/diagrams/FullscreenDiagramModal.svelte';
+	import { createDiagramRenderer } from './features/diagrams/mermaid';
+	import {
+		parseFrontmatterAndMarkdown,
+		type Frontmatter
+	} from './features/document/document-parser';
+	import { ThemeState } from './state/theme.svelte';
 	import {
 		httpDataSource,
 		normalizeTree,
 		type TreeItem,
 		type RepositoryDataSource,
 		type RepositoryInfo
-	} from './repository';
-
-	interface Frontmatter {
-		id?: string;
-		title?: string;
-		status?: string;
-		target_area?: string;
-		milestone?: string;
-		priority?: string;
-		size?: string;
-		[key: string]: any;
-	}
+	} from './api/repository';
 
 	let {
 		repoId = '',
@@ -45,42 +45,30 @@
 		theme?: string;
 		dataSource?: RepositoryDataSource;
 		onselectpath?: (path: string) => void;
-		picker?: import('svelte').Snippet;
+		picker?: Snippet;
 	} = $props();
 
-	let currentTheme = $state<'dark' | 'light'>('dark');
+	const themeState = new ThemeState();
 
 	$effect(() => {
-		if (theme === 'light' || theme === 'dark') {
-			currentTheme = theme;
-		} else if (typeof localStorage !== 'undefined') {
-			const saved = localStorage.getItem('sdd-theme');
-			if (saved === 'light' || saved === 'dark') {
-				currentTheme = saved;
-			}
-		}
+		themeState.sync(theme);
 	});
 
 	$effect(() => {
 		if (hostEl) {
-			hostEl.setAttribute('data-theme', currentTheme);
+			hostEl.setAttribute('data-theme', themeState.current);
 		}
 	});
 
-	function toggleTheme() {
-		currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-		try {
-			localStorage?.setItem('sdd-theme', currentTheme);
-		} catch {}
-	}
-
 	let view = $state<'files' | 'book' | 'proposals' | 'specs' | 'roadmap'>('files');
 	let currentPath = $state('docs/');
+
 	$effect(() => {
 		view = ['book', 'proposals', 'specs', 'roadmap'].includes(initialView)
 			? (initialView as typeof view)
 			: 'files';
 	});
+
 	let treeItems = $state<TreeItem[]>([]);
 	let currentBlob = $state<{
 		path: string;
@@ -90,40 +78,20 @@
 	} | null>(null);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
-	let searchQuery = $state('');
 	let rawMode = $state(false);
 	let hostEl: HTMLElement | null = null;
 	let generation = 0;
 	let repoInfo = $state<RepositoryInfo | null>(null);
 	let fullscreenSvg = $state<string | null>(null);
-	let zoomLevel = $state(1);
 
 	function openFullscreen(svg: string) {
 		fullscreenSvg = svg;
-		zoomLevel = 1;
 	}
 
 	function closeFullscreen() {
 		fullscreenSvg = null;
 	}
 
-	function handleWheel(e: WheelEvent) {
-		if (e.ctrlKey || e.metaKey) {
-			e.preventDefault();
-			const delta = e.deltaY < 0 ? 0.15 : -0.15;
-			zoomLevel = Math.max(0.3, Math.min(4, +(zoomLevel + delta).toFixed(2)));
-		}
-	}
-
-	$effect(() => {
-		if (fullscreenSvg) {
-			const handleKey = (e: KeyboardEvent) => {
-				if (e.key === 'Escape') closeFullscreen();
-			};
-			window.addEventListener('keydown', handleKey);
-			return () => window.removeEventListener('keydown', handleKey);
-		}
-	});
 	const source = $derived(dataSource ?? (apiBase ? httpDataSource(apiBase) : null));
 
 	$effect(() => {
@@ -164,21 +132,6 @@
 		}
 		return () => controller.abort();
 	});
-
-	function parseFrontmatterAndMarkdown(text: string): {
-		frontmatter: Frontmatter | null;
-		content: string;
-	} {
-		const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
-		if (!match) return { frontmatter: null, content: text };
-		const document = parseDocument(match[1]);
-		if (document.errors.length) throw new Error(document.errors[0].message);
-		const parsed = document.toJS({ maxAliasCount: 100 });
-		return {
-			frontmatter: parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null,
-			content: text.slice(match[0].length)
-		};
-	}
 
 	async function loadTree(
 		path: string,
@@ -270,109 +223,15 @@
 		hostEl?.dispatchEvent(event);
 	}
 
-	// Render into a detached host so Mermaid can use document-level SVG lookups.
-	// Only sanitized SVG is inserted into the viewer.
-	function renderDiagrams(node: HTMLElement) {
-		const blob = currentBlob;
-		let active = true;
-		void (async () => {
-			const diagrams = node.querySelectorAll<HTMLElement>('pre > code.language-mermaid');
-			if (!diagrams.length) return;
-			const { default: mermaid } = await import('mermaid');
-			const isDark = currentTheme === 'dark';
-			mermaid.initialize({
-				startOnLoad: false,
-				securityLevel: 'strict',
-				htmlLabels: false,
-				flowchart: { htmlLabels: false },
-				theme: isDark ? 'dark' : 'default',
-				themeVariables: isDark
-					? {
-							darkMode: true,
-							background: '#111827',
-							mainBkg: '#1e293b',
-							primaryColor: '#1e293b',
-							primaryTextColor: '#f8fafc',
-							primaryBorderColor: '#475569',
-							lineColor: '#94a3b8',
-							textColor: '#e2e8f0',
-							edgeLabelBackground: '#1e293b',
-							tertiaryColor: '#0f172a',
-							tertiaryTextColor: '#f8fafc',
-							nodeBorder: '#475569',
-							clusterBkg: '#0f172a',
-							clusterBorder: '#334155'
-						}
-					: {
-							darkMode: false,
-							background: '#f8fafc',
-							mainBkg: '#ffffff',
-							primaryColor: '#ffffff',
-							primaryTextColor: '#0f172a',
-							primaryBorderColor: '#cbd5e1',
-							lineColor: '#334155',
-							textColor: '#1e293b',
-							edgeLabelBackground: '#ffffff',
-							nodeBorder: '#cbd5e1',
-							clusterBkg: '#f1f5f9',
-							clusterBorder: '#cbd5e1'
-						}
-			});
-			for (const code of diagrams) {
-				if (!active || blob !== currentBlob) return;
-				const container = document.createElement('div');
-				container.style.position = 'absolute';
-				container.style.visibility = 'hidden';
-				document.body.append(container);
-				try {
-					const { svg } = await mermaid.render(
-						`sdd-${crypto.randomUUID()}`,
-						code.textContent || '',
-						container
-					);
-					if (active && blob === currentBlob) {
-						const diagram = document.createElement('div');
-						diagram.className = 'mermaid-diagram';
-
-						const toolbar = document.createElement('div');
-						toolbar.className = 'diagram-toolbar';
-
-						const expandBtn = document.createElement('button');
-						expandBtn.type = 'button';
-						expandBtn.className = 'diagram-action-btn';
-						expandBtn.title = 'View diagram fullscreen';
-						expandBtn.innerHTML = `⛶ Fullscreen`;
-						expandBtn.addEventListener('click', () => {
-							openFullscreen(svg);
-						});
-
-						toolbar.appendChild(expandBtn);
-
-						const svgWrap = document.createElement('div');
-						svgWrap.className = 'diagram-svg-wrap';
-						svgWrap.innerHTML = DOMPurify.sanitize(svg, {
-							USE_PROFILES: { svg: true, svgFilters: true }
-						});
-
-						diagram.appendChild(toolbar);
-						diagram.appendChild(svgWrap);
-						code.parentElement?.replaceWith(diagram);
-					}
-				} catch (err) {
-					if (active) code.parentElement?.setAttribute('title', `Mermaid: ${String(err)}`);
-				} finally {
-					container.remove();
-				}
+	const diagramRenderer = $derived(
+		createDiagramRenderer(
+			() => themeState.current,
+			openFullscreen,
+			(msg) => {
+				error = msg;
 			}
-		})().catch((err) => {
-			if (active) error = `Failed to load diagram: ${String(err)}`;
-		});
-		return {
-			destroy() {
-				active = false;
-			}
-		};
-	}
+		)
+	);
 
 	function navigateTo(path: string, isTree: boolean) {
 		currentPath = isTree ? (path.endsWith('/') ? path : path + '/') : path;
@@ -388,100 +247,28 @@
 		}
 	}
 
-	const filteredItems = $derived(
-		treeItems.filter(
-			(item) => !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase())
-		)
-	);
-
 	const breadcrumbs = $derived(currentPath ? currentPath.split('/').filter(Boolean) : []);
 </script>
 
-<div class="sdd-viewer-root" class:theme-light={currentTheme === 'light'} bind:this={hostEl}>
-	<!-- Top Navigation Header -->
-	<header class="viewer-header">
-		<div class="brand-zone">
-			<div class="logo-badge">
-				<svg
-					viewBox="0 0 24 24"
-					width="16"
-					height="16"
-					stroke="currentColor"
-					stroke-width="2"
-					fill="none"
-				>
-					<polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-					<polyline points="2 17 12 22 22 17"></polyline>
-					<polyline points="2 12 12 17 22 12"></polyline>
-				</svg>
-			</div>
-			<span class="brand-title">Sdd Viewer</span>
-			{#if picker}
-				{@render picker()}
-			{:else}
-				{#if repoId || repoInfo?.repo_id}
-					<span class="repo-tag">{repoId || repoInfo?.repo_id}</span>
-				{/if}
-				<span class="branch-tag">🌿 {branch}</span>
-			{/if}
-		</div>
-
-		<!-- Breadcrumbs -->
-		{#if view === 'files' || breadcrumbs.length}
-			<nav class="breadcrumb-bar" aria-label="Breadcrumb">
-				<button class="crumb-btn" onclick={() => navigateTo('', true)}>root</button>
-				{#each breadcrumbs as part, idx}
-					<span class="crumb-sep">/</span>
-					{#if idx === breadcrumbs.length - 1 && !currentPath.endsWith('/')}
-						<span class="crumb-current">{part}</span>
-					{:else}
-						<button
-							class="crumb-btn"
-							onclick={() => navigateTo(breadcrumbs.slice(0, idx + 1).join('/') + '/', true)}
-						>
-							{part}
-						</button>
-					{/if}
-				{/each}
-			</nav>
-		{/if}
-
-		<div class="action-zone">
-			{#if currentBlob && view === 'files'}
-				<button class="mode-toggle-btn" class:active={rawMode} onclick={() => (rawMode = !rawMode)}>
-					{rawMode ? '👁️ Preview' : '📝 Raw'}
-				</button>
-			{/if}
-			<button
-				class="theme-toggle-btn"
-				title={currentTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-				onclick={toggleTheme}
-			>
-				{currentTheme === 'dark' ? '☀️ Light' : '🌙 Dark'}
-			</button>
-		</div>
-	</header>
+<div class="sdd-viewer-root" class:theme-light={themeState.current === 'light'} bind:this={hostEl}>
+	<ViewerHeader
+		{repoId}
+		{repoInfo}
+		{branch}
+		{view}
+		{breadcrumbs}
+		{currentPath}
+		hasCurrentBlob={Boolean(currentBlob)}
+		bind:rawMode
+		theme={themeState.current}
+		{picker}
+		onnavigate={navigateTo}
+		ontoggletheme={() => themeState.toggle()}
+	/>
 
 	<div class="viewer-body">
-		<!-- Left Navigation Rail -->
-		<nav class="view-rail view-tabs" aria-label="Views">
-			{#each [{ id: 'book', label: 'Book', icon: '📖', title: 'Living Spec (Book)' }, { id: 'proposals', label: 'Proposals', icon: '💡', title: 'Proposals' }, { id: 'specs', label: 'Specs', icon: '📋', title: 'Feature Specs' }, { id: 'roadmap', label: 'Roadmap', icon: '🗺️', title: 'Roadmap' }, { id: 'files', label: 'Files', icon: '📁', title: 'Repository Files' }] as tab}
-				<button
-					aria-pressed={view === tab.id}
-					aria-label={tab.label}
-					class:active={view === tab.id}
-					title={tab.title}
-					onclick={() => {
-						view = tab.id as typeof view;
-					}}
-				>
-					<span class="rail-icon">{tab.icon}</span>
-					<span class="rail-label">{tab.label}</span>
-				</button>
-			{/each}
-		</nav>
+		<NavigationRail bind:view />
 
-		<!-- Main Workspace Area -->
 		<div class="view-stage">
 			{#if view === 'roadmap'}
 				<div class="knowledge-host">
@@ -500,10 +287,10 @@
 						{view}
 						{source}
 						{branch}
-						theme={currentTheme}
+						theme={themeState.current}
 						requestedPath={initialPath}
 						requestedAnchor={initialAnchor}
-						diagrams={renderDiagrams}
+						diagrams={diagramRenderer}
 						onOpen={(path) => {
 							currentPath = path;
 							view = 'files';
@@ -521,263 +308,34 @@
 					/>
 				</div>
 			{/if}
-			<!-- Main Body Layout -->
+
 			<div class="viewer-layout" class:hidden={view !== 'files'}>
-				<!-- Left Sidebar: Explorer -->
-				<aside class="sidebar-explorer">
-					<div class="sidebar-header">
-						<span class="section-label">EXPLORER</span>
-						{#if currentPath}
-							<button class="up-btn" title="Up one level" onclick={navigateParent}> ⬆ Up </button>
-						{/if}
-					</div>
-
-					<div class="search-box">
-						<input
-							type="text"
-							placeholder="Filter files..."
-							bind:value={searchQuery}
-							class="filter-input"
-						/>
-					</div>
-
-					<div class="file-tree">
-						{#if loading && !treeItems.length}
-							<div class="loading-state">Loading directory...</div>
-						{:else if filteredItems.length === 0}
-							<div class="empty-state">No matching items</div>
-						{:else}
-							{#each filteredItems as item}
-								<button
-									class="tree-node"
-									class:selected={currentPath === item.path ||
-										(currentBlob && currentBlob.path === item.path)}
-									onclick={() => navigateTo(item.path, item.type === 'tree')}
-								>
-									{#if item.type === 'tree'}
-										<span class="node-icon folder">📁</span>
-									{:else if item.name.endsWith('.md')}
-										<span class="node-icon spec-file">📄</span>
-									{:else}
-										<span class="node-icon file">📑</span>
-									{/if}
-									<span class="node-name">{item.name}</span>
-								</button>
-							{/each}
-						{/if}
-					</div>
-				</aside>
-
-				<!-- Right Content Area -->
-				<main class="content-viewport">
-					{#if error}
-						<div class="error-banner">
-							<span class="error-icon">⚠️</span>
-							<span>{error}</span>
-						</div>
-					{/if}
-
-					{#if loading && !currentBlob}
-						<div class="loading-placeholder">
-							<div class="spinner"></div>
-							<p>Fetching content...</p>
-						</div>
-					{:else if currentBlob}
-						<!-- Document Header with Frontmatter Badges -->
-						<div class="document-container">
-							{#if currentBlob.frontmatter}
-								<div class="frontmatter-panel">
-									<div class="fm-header">
-										{#if currentBlob.frontmatter.id}
-											<span class="fm-id-badge">{currentBlob.frontmatter.id}</span>
-										{/if}
-										{#if currentBlob.frontmatter.status}
-											<span class="fm-status-badge status-{currentBlob.frontmatter.status}">
-												{currentBlob.frontmatter.status}
-											</span>
-										{/if}
-										{#if currentBlob.frontmatter.priority}
-											<span class="fm-badge priority-{currentBlob.frontmatter.priority}">
-												{currentBlob.frontmatter.priority}
-											</span>
-										{/if}
-										{#if currentBlob.frontmatter.milestone}
-											<span class="fm-badge milestone">
-												🎯 {currentBlob.frontmatter.milestone}
-											</span>
-										{/if}
-										{#if currentBlob.frontmatter.target_area}
-											<span class="fm-badge area">
-												📂 {currentBlob.frontmatter.target_area}
-											</span>
-										{/if}
-									</div>
-									{#if currentBlob.frontmatter.title}
-										<h1 class="document-title">{currentBlob.frontmatter.title}</h1>
-									{/if}
-								</div>
-							{/if}
-
-							<!-- Document Body -->
-							{#if rawMode}
-								<pre class="raw-content"><code>{currentBlob.content}</code></pre>
-							{:else}
-								{#key `${currentBlob.path}-${currentTheme}`}
-									<article class="markdown-body" use:renderDiagrams>
-										{@html currentBlob.html}
-									</article>
-								{/key}
-							{/if}
-						</div>
-					{:else}
-						<!-- Directory Overview Placeholder -->
-						<div class="directory-placeholder">
-							<div class="placeholder-icon">📚</div>
-							<h2>Living Spec & Repository Explorer</h2>
-							<p>
-								Select a spec, blueprint, or document from the explorer on the left to start
-								viewing.
-							</p>
-						</div>
-					{/if}
-				</main>
+				<FileExplorer
+					{treeItems}
+					{currentPath}
+					currentBlobPath={currentBlob?.path ?? ''}
+					{loading}
+					onnavigate={navigateTo}
+					onparent={navigateParent}
+				/>
+				<DocumentViewer
+					{currentBlob}
+					{loading}
+					{error}
+					{rawMode}
+					theme={themeState.current}
+					diagramAction={diagramRenderer}
+				/>
 			</div>
 		</div>
 	</div>
 
 	{#if fullscreenSvg}
-		<div
-			class="diagram-modal-backdrop"
-			onclick={(e) => {
-				if (e.target === e.currentTarget) closeFullscreen();
-			}}
-			onkeydown={(e) => {
-				if (e.key === 'Escape') closeFullscreen();
-			}}
-			role="dialog"
-			aria-modal="true"
-			aria-label="Diagram Fullscreen View"
-			tabindex="-1"
-		>
-			<div class="diagram-modal-window">
-				<div class="modal-header">
-					<div class="modal-title">
-						<span>📊 Mermaid Diagram</span>
-					</div>
-					<div class="modal-controls">
-						<button
-							class="modal-btn"
-							onclick={() => (zoomLevel = Math.max(0.3, +(zoomLevel - 0.2).toFixed(1)))}
-							title="Zoom out (Ctrl + wheel down)">➖</button
-						>
-						<span class="zoom-indicator">{Math.round(zoomLevel * 100)}%</span>
-						<button
-							class="modal-btn"
-							onclick={() => (zoomLevel = Math.min(4, +(zoomLevel + 0.2).toFixed(1)))}
-							title="Zoom in (Ctrl + wheel up)">➕</button
-						>
-						<button
-							class="modal-btn reset-btn"
-							onclick={() => (zoomLevel = 1)}
-							title="Reset zoom (100%)">Reset</button
-						>
-						<button class="modal-btn close-btn" onclick={closeFullscreen} title="Close (ESC)"
-							>✕ Close</button
-						>
-					</div>
-				</div>
-				<div class="modal-content" onwheel={handleWheel}>
-					<div class="modal-svg-canvas" style="transform: scale({zoomLevel});">
-						{@html DOMPurify.sanitize(fullscreenSvg, {
-							USE_PROFILES: { svg: true, svgFilters: true }
-						})}
-					</div>
-				</div>
-			</div>
-		</div>
+		<FullscreenDiagramModal svg={fullscreenSvg} onclose={closeFullscreen} />
 	{/if}
 </div>
 
 <style>
-	.viewer-body {
-		display: flex;
-		flex: 1;
-		min-height: 0;
-		overflow: hidden;
-	}
-	.view-rail {
-		display: flex;
-		flex-direction: column;
-		width: 56px;
-		flex-shrink: 0;
-		background-color: var(--bg-sidebar);
-		border-right: 1px solid var(--border-sidebar);
-		padding: 8px 0;
-		gap: 6px;
-		align-items: center;
-		box-sizing: border-box;
-	}
-	.view-rail button {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		width: 46px;
-		height: 46px;
-		border-radius: 8px;
-		border: 1px solid transparent;
-		background: transparent;
-		color: var(--text-dim);
-		cursor: pointer;
-		padding: 3px 2px;
-		transition: all 0.15s ease;
-		box-sizing: border-box;
-		font: inherit;
-	}
-	.view-rail button:hover {
-		background: var(--tree-hover-bg);
-		color: var(--text-primary);
-	}
-	.view-rail button.active {
-		background: var(--tree-selected-bg);
-		color: var(--tree-selected-text);
-		border-color: rgba(99, 102, 241, 0.3);
-		font-weight: 600;
-	}
-	.view-rail button:focus-visible {
-		outline: 2px solid var(--tree-selected-text);
-	}
-	.rail-icon {
-		font-size: 16px;
-		line-height: 1.1;
-	}
-	.rail-label {
-		font-size: 9.5px;
-		letter-spacing: -0.2px;
-		line-height: 1.1;
-		text-align: center;
-		max-width: 44px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	.view-stage {
-		flex: 1;
-		min-width: 0;
-		min-height: 0;
-		display: flex;
-		flex-direction: column;
-		overflow: hidden;
-	}
-	.knowledge-host {
-		flex: 1;
-		min-height: 0;
-		overflow: hidden;
-	}
-	.viewer-layout.hidden {
-		display: none;
-	}
-
 	*,
 	*::before,
 	*::after {
@@ -861,692 +419,35 @@
 		--branch-text: #475569;
 	}
 
-	/* Header */
-	.viewer-header {
+	.viewer-body {
 		display: flex;
-		align-items: center;
-		gap: 12px;
-		height: 40px;
-		padding: 0 14px;
-		background-color: var(--bg-header);
-		border-bottom: 1px solid var(--border-header);
-		flex-shrink: 0;
-		box-sizing: border-box;
+		flex: 1;
+		min-height: 0;
+		overflow: hidden;
 	}
 
-	.brand-zone {
+	.view-stage {
+		flex: 1;
+		min-width: 0;
+		min-height: 0;
 		display: flex;
-		align-items: center;
-		gap: 10px;
-		flex-shrink: 0;
+		flex-direction: column;
+		overflow: hidden;
 	}
 
-	.logo-badge {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 22px;
-		height: 22px;
-		background: linear-gradient(135deg, #6366f1, #a855f7);
-		color: #ffffff;
-		border-radius: 5px;
-		flex-shrink: 0;
+	.knowledge-host {
+		flex: 1;
+		min-height: 0;
+		overflow: hidden;
 	}
 
-	.brand-title {
-		font-weight: 700;
-		font-size: 13px;
-		color: var(--text-primary);
-		white-space: nowrap;
-	}
-
-	.repo-tag {
-		font-size: 11px;
-		font-weight: 600;
-		padding: 2px 6px;
-		border-radius: 4px;
-		background-color: var(--bg-viewport);
-		color: #38bdf8;
-		border: 1px solid #0284c7;
-	}
-
-	.branch-tag {
-		font-size: 11px;
-		padding: 2px 6px;
-		border-radius: 4px;
-		background-color: var(--branch-bg);
-		color: var(--branch-text);
-	}
-
-	.breadcrumb-bar {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		font-size: 12px;
-		margin-left: 12px;
-		overflow-x: auto;
-		white-space: nowrap;
-	}
-
-	.crumb-btn {
-		background: none;
-		border: none;
-		color: var(--text-muted);
-		cursor: pointer;
-		padding: 2px 6px;
-		border-radius: 4px;
-		font-size: 12px;
-	}
-
-	.crumb-btn:hover {
-		color: var(--text-primary);
-		background-color: var(--btn-hover-bg);
-	}
-
-	.crumb-sep {
-		color: var(--text-dim);
-	}
-
-	.crumb-current {
-		color: var(--text-primary);
-		font-weight: 600;
-		padding: 2px 6px;
-	}
-
-	.action-zone {
-		margin-left: auto;
-		display: flex;
-		align-items: center;
-		gap: 8px;
-	}
-
-	.mode-toggle-btn {
-		background-color: var(--bg-btn);
-		border: 1px solid var(--border-btn);
-		color: var(--text-btn);
-		padding: 4px 10px;
-		border-radius: 6px;
-		font-size: 12px;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.15s ease;
-	}
-
-	.mode-toggle-btn:hover {
-		background-color: var(--btn-hover-bg);
-		color: var(--text-primary);
-	}
-
-	.mode-toggle-btn.active {
-		background-color: #4f46e5;
-		border-color: #6366f1;
-		color: #ffffff;
-	}
-
-	.theme-toggle-btn {
-		background-color: var(--bg-btn);
-		border: 1px solid var(--border-btn);
-		color: var(--text-btn);
-		padding: 4px 10px;
-		border-radius: 6px;
-		font-size: 12px;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.15s ease;
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-	}
-
-	.theme-toggle-btn:hover {
-		background-color: var(--btn-hover-bg);
-		color: var(--text-primary);
-	}
-
-	/* Layout */
 	.viewer-layout {
 		display: flex;
 		flex: 1;
 		min-height: 0;
 	}
 
-	/* Sidebar */
-	.sidebar-explorer {
-		width: 280px;
-		background-color: var(--bg-sidebar);
-		border-right: 1px solid var(--border-sidebar);
-		display: flex;
-		flex-direction: column;
-		flex-shrink: 0;
-	}
-
-	.sidebar-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 10px 12px;
-		border-bottom: 1px solid var(--border-sidebar);
-	}
-
-	.section-label {
-		font-size: 11px;
-		font-weight: 700;
-		color: var(--text-dim);
-		letter-spacing: 0.05em;
-	}
-
-	.up-btn {
-		background: none;
-		border: 1px solid var(--border-input);
-		color: var(--text-muted);
-		font-size: 11px;
-		padding: 2px 6px;
-		border-radius: 4px;
-		cursor: pointer;
-	}
-
-	.up-btn:hover {
-		background-color: var(--tree-hover-bg);
-		color: var(--text-primary);
-	}
-
-	.search-box {
-		padding: 8px 12px;
-		border-bottom: 1px solid var(--border-sidebar);
-	}
-
-	.filter-input {
-		width: 100%;
-		background-color: var(--bg-input);
-		border: 1px solid var(--border-input);
-		border-radius: 4px;
-		padding: 6px 8px;
-		font-size: 12px;
-		color: var(--text-primary);
-		outline: none;
-	}
-
-	.filter-input:focus {
-		border-color: #6366f1;
-	}
-
-	.file-tree {
-		flex: 1;
-		overflow-y: auto;
-		padding: 6px;
-	}
-
-	.tree-node {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		width: 100%;
-		padding: 6px 8px;
-		background: none;
-		border: none;
-		border-radius: 6px;
-		color: var(--text-muted);
-		font-size: 13px;
-		cursor: pointer;
-		text-align: left;
-		transition: background-color 0.1s ease;
-	}
-
-	.tree-node:hover {
-		background-color: var(--tree-hover-bg);
-		color: var(--text-primary);
-	}
-
-	.tree-node.selected {
-		background-color: var(--tree-selected-bg);
-		color: var(--tree-selected-text);
-		font-weight: 600;
-	}
-
-	.node-icon {
-		font-size: 14px;
-	}
-
-	.node-name {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.loading-state,
-	.empty-state {
-		padding: 24px;
-		text-align: center;
-		font-size: 12px;
-		color: var(--text-dim);
-	}
-
-	/* Viewport */
-	.content-viewport {
-		flex: 1;
-		overflow-y: auto;
-		background-color: var(--bg-viewport);
-		padding: 24px 32px;
-		position: relative;
-	}
-
-	.error-banner {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 10px 14px;
-		background-color: #7f1d1d;
-		border: 1px solid #b91c1c;
-		border-radius: 6px;
-		color: #fecaca;
-		font-size: 13px;
-		margin-bottom: 20px;
-	}
-
-	.loading-placeholder {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		height: 300px;
-		color: var(--text-muted);
-	}
-
-	.spinner {
-		width: 32px;
-		height: 32px;
-		border: 3px solid var(--border-btn);
-		border-top-color: #6366f1;
-		border-radius: 50%;
-		animation: spin 0.8s linear infinite;
-		margin-bottom: 12px;
-	}
-
-	@keyframes spin {
-		to {
-			transform: rotate(360deg);
-		}
-	}
-
-	.document-container {
-		max-width: 900px;
-		margin: 0 auto;
-	}
-
-	.frontmatter-panel {
-		background-color: var(--bg-panel);
-		border: 1px solid var(--border-panel);
-		border-radius: 8px;
-		padding: 16px 20px;
-		margin-bottom: 24px;
-	}
-
-	.fm-header {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 8px;
-		margin-bottom: 10px;
-	}
-
-	.fm-id-badge {
-		font-family: monospace;
-		font-size: 12px;
-		font-weight: 700;
-		background-color: #1e1b4b;
-		color: #a5b4fc;
-		padding: 2px 8px;
-		border-radius: 4px;
-		border: 1px solid #4338ca;
-	}
-
-	.fm-status-badge {
-		font-size: 11px;
-		font-weight: 600;
-		text-transform: uppercase;
-		padding: 2px 8px;
-		border-radius: 4px;
-	}
-
-	.status-accepted,
-	.status-done {
-		background-color: #064e3b;
-		color: #6ee7b7;
-	}
-
-	.status-draft,
-	.status-reviewing {
-		background-color: #78350f;
-		color: #fde68a;
-	}
-
-	.fm-badge {
-		font-size: 11px;
-		padding: 2px 8px;
-		border-radius: 4px;
-		background-color: var(--badge-bg);
-		color: var(--badge-text);
-	}
-
-	.document-title {
-		font-size: 20px;
-		font-weight: 700;
-		color: var(--text-primary);
-		margin: 0;
-	}
-
-	.raw-content {
-		background-color: var(--pre-bg);
-		border: 1px solid var(--pre-border);
-		border-radius: 8px;
-		padding: 20px;
-		overflow-x: auto;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-		font-size: 13px;
-		line-height: 1.6;
-		color: var(--pre-text);
-	}
-
-	/* Markdown Body Styles */
-	.markdown-body {
-		font-size: 15px;
-		line-height: 1.7;
-		color: var(--text-secondary);
-	}
-
-	.markdown-body :global(h1) {
-		font-size: 26px;
-		font-weight: 700;
-		color: var(--text-primary);
-		border-bottom: 1px solid var(--border-panel);
-		padding-bottom: 8px;
-		margin-top: 24px;
-		margin-bottom: 16px;
-	}
-
-	.markdown-body :global(h2) {
-		font-size: 20px;
-		font-weight: 600;
-		color: var(--text-primary);
-		border-bottom: 1px solid var(--border-panel);
-		padding-bottom: 6px;
-		margin-top: 28px;
-		margin-bottom: 14px;
-	}
-
-	.markdown-body :global(h3) {
-		font-size: 16px;
-		font-weight: 600;
-		color: var(--text-primary);
-		margin-top: 20px;
-		margin-bottom: 10px;
-	}
-
-	.markdown-body :global(p) {
-		margin-bottom: 16px;
-	}
-
-	.markdown-body :global(ul),
-	.markdown-body :global(ol) {
-		padding-left: 24px;
-		margin-bottom: 16px;
-	}
-
-	.markdown-body :global(li) {
-		margin-bottom: 6px;
-	}
-
-	.markdown-body :global(code) {
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-		font-size: 13px;
-		background-color: var(--code-bg);
-		color: var(--code-color);
-		padding: 2px 6px;
-		border-radius: 4px;
-	}
-
-	.markdown-body :global(pre) {
-		background-color: var(--pre-bg);
-		border: 1px solid var(--pre-border);
-		border-radius: 8px;
-		padding: 16px;
-		overflow-x: auto;
-		margin-bottom: 16px;
-	}
-
-	.markdown-body :global(pre code) {
-		background: none;
-		color: var(--pre-text);
-		padding: 0;
-	}
-
-	.markdown-body :global(table) {
-		width: 100%;
-		border-collapse: collapse;
-		margin-bottom: 20px;
-	}
-
-	.markdown-body :global(th),
-	.markdown-body :global(td) {
-		border: 1px solid var(--table-border);
-		padding: 8px 12px;
-		font-size: 13px;
-	}
-
-	.markdown-body :global(th) {
-		background-color: var(--th-bg);
-		color: var(--th-text);
-		font-weight: 600;
-	}
-
-	.markdown-body :global(blockquote) {
-		border-left: 4px solid #6366f1;
-		padding-left: 14px;
-		margin: 16px 0;
-		color: var(--text-muted);
-	}
-
-	/* Mermaid Diagram Container */
-	.markdown-body :global(.mermaid-diagram) {
-		position: relative;
-		display: flex;
-		flex-direction: column;
-		margin: 24px 0;
-		padding: 12px 16px 16px;
-		border-radius: 8px;
-		background-color: var(--bg-panel);
-		border: 1px solid var(--border-panel);
-		transition: border-color 0.15s ease;
-	}
-
-	.markdown-body :global(.mermaid-diagram:hover) {
-		border-color: var(--border-btn);
-	}
-
-	.markdown-body :global(.diagram-toolbar) {
-		display: flex;
-		justify-content: flex-end;
-		margin-bottom: 8px;
-	}
-
-	.markdown-body :global(.diagram-action-btn) {
-		background-color: var(--bg-btn);
-		border: 1px solid var(--border-btn);
-		color: var(--text-btn);
-		padding: 3px 8px;
-		border-radius: 5px;
-		font-size: 11px;
-		font-weight: 500;
-		cursor: pointer;
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		transition: all 0.15s ease;
-		opacity: 0.75;
-	}
-
-	.markdown-body :global(.mermaid-diagram:hover .diagram-action-btn) {
-		opacity: 1;
-	}
-
-	.markdown-body :global(.diagram-action-btn:hover) {
-		background-color: var(--btn-hover-bg);
-		color: var(--text-primary);
-	}
-
-	.markdown-body :global(.diagram-svg-wrap) {
-		display: flex;
-		justify-content: center;
-		overflow-x: auto;
-		width: 100%;
-	}
-
-	.markdown-body :global(.diagram-svg-wrap svg) {
-		max-width: 100%;
-		height: auto;
-	}
-
-	/* Fullscreen Diagram Modal */
-	.diagram-modal-backdrop {
-		position: fixed;
-		inset: 0;
-		z-index: 99999;
-		background-color: rgba(0, 0, 0, 0.82);
-		backdrop-filter: blur(8px);
-		display: flex;
-		flex-direction: column;
-		padding: 16px;
-		box-sizing: border-box;
-		animation: fadeIn 0.15s ease;
-	}
-
-	@keyframes fadeIn {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
-	}
-
-	.diagram-modal-window {
-		display: flex;
-		flex-direction: column;
-		width: 100%;
-		height: 100%;
-		background-color: var(--bg-viewport);
-		border: 1px solid var(--border-header);
-		border-radius: 10px;
-		overflow: hidden;
-		box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-	}
-
-	.modal-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 12px 18px;
-		background-color: var(--bg-header);
-		border-bottom: 1px solid var(--border-header);
-		flex-shrink: 0;
-	}
-
-	.modal-title {
-		font-size: 13px;
-		font-weight: 600;
-		color: var(--text-primary);
-		display: flex;
-		align-items: center;
-		gap: 8px;
-	}
-
-	.modal-controls {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-	}
-
-	.modal-btn {
-		background-color: var(--bg-btn);
-		border: 1px solid var(--border-btn);
-		color: var(--text-btn);
-		padding: 4px 10px;
-		border-radius: 6px;
-		font-size: 12px;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.15s ease;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.modal-btn:hover {
-		background-color: var(--btn-hover-bg);
-		color: var(--text-primary);
-	}
-
-	.modal-btn.close-btn {
-		background-color: #dc2626;
-		border-color: #ef4444;
-		color: #ffffff;
-		margin-left: 8px;
-	}
-
-	.modal-btn.close-btn:hover {
-		background-color: #b91c1c;
-	}
-
-	.zoom-indicator {
-		font-size: 12px;
-		font-weight: 600;
-		color: var(--text-muted);
-		min-width: 44px;
-		text-align: center;
-		user-select: none;
-	}
-
-	.modal-content {
-		flex: 1;
-		overflow: auto;
-		padding: 32px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background-color: var(--bg-panel);
-	}
-
-	.modal-svg-canvas {
-		transform-origin: center center;
-		transition: transform 0.1s ease-out;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.modal-svg-canvas :global(svg) {
-		max-width: none !important;
-		height: auto !important;
-	}
-
-	/* Placeholder */
-	.directory-placeholder {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		text-align: center;
-		height: 400px;
-		color: var(--text-dim);
-	}
-
-	.placeholder-icon {
-		font-size: 48px;
-		margin-bottom: 16px;
-	}
-
-	.directory-placeholder h2 {
-		color: var(--text-primary);
-		margin-bottom: 8px;
+	.viewer-layout.hidden {
+		display: none;
 	}
 </style>
