@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from os import scandir
 from pathlib import Path
 
 from devkit_core.base.errors import GitError
@@ -68,24 +69,32 @@ class WorkingTreeReader:
             raise path_not_found(path, "path") from exc
         return resolved
 
-    def tree(self, path: str) -> list[TreeItem]:
-        """List immediate regular files and directories, omitting symlinks and special files."""
+    def tree(self, path: str, *, recursive: bool = False) -> list[TreeItem]:
+        """List regular entries, optionally including descendants, without following symlinks."""
         directory = self._resolve(path)
         if not directory.is_dir():
             raise path_not_found(path, "directory")
         items: list[TreeItem] = []
+        pending = [directory]
         try:
-            for child in directory.iterdir():
-                if child.is_symlink() or child.name.casefold() == ".git":
-                    continue
-                relative = child.relative_to(self.root).as_posix()
-                if child.is_dir():
-                    items.append(TreeItem(child.name, relative, "tree"))
-                elif child.is_file():
-                    items.append(TreeItem(child.name, relative, "blob", child.stat().st_size))
+            while pending:
+                with scandir(pending.pop()) as children:
+                    for child in children:
+                        if child.name.casefold() == ".git" or child.is_symlink():
+                            continue
+                        child_path = Path(child.path)
+                        relative = child_path.relative_to(self.root).as_posix()
+                        if child.is_dir(follow_symlinks=False):
+                            items.append(TreeItem(child.name, relative, "tree"))
+                            if recursive:
+                                pending.append(child_path)
+                        elif child.is_file(follow_symlinks=False):
+                            items.append(
+                                TreeItem(child.name, relative, "blob", child.stat(follow_symlinks=False).st_size)
+                            )
         except OSError as exc:
             raise path_not_found(path, "directory") from exc
-        return sorted(items, key=lambda item: (item.type != "tree", item.name))
+        return sorted(items, key=lambda item: (item.type != "tree", item.path))
 
     def blob(self, path: str) -> bytes:
         """Read one regular file from the current working tree."""

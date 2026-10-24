@@ -42,3 +42,34 @@ def test_missing_paths_return_stable_error(repo: Path) -> None:
     with pytest.raises(ReadError) as caught:
         WorkingTreeReader(repo).blob("docs/missing.md")
     assert (caught.value.status, caught.value.code) == (404, "VIEWER_PATH_NOT_FOUND")
+
+
+def test_recursive_tree_uses_metadata_and_excludes_symlinks_and_git(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    nested = repo / "docs/sub/feedback"
+    nested.mkdir(parents=True)
+    (nested / "issue.md").write_text("feedback")
+    (nested / ".git").mkdir()
+    (nested / ".git/secret").write_text("hidden")
+    (nested / "outside").symlink_to(repo.parent, target_is_directory=True)
+    (repo / "docs/alias.md").symlink_to(repo / "docs/a.md")
+
+    def refuse_content(*args: object, **kwargs: object) -> None:
+        raise AssertionError("recursive metadata must not read file bodies")
+
+    monkeypatch.setattr(Path, "read_bytes", refuse_content)
+    monkeypatch.setattr(Path, "read_text", refuse_content)
+    items = WorkingTreeReader(repo).tree("docs", recursive=True)
+    assert {item.path for item in items} == {"docs/a.md", "docs/sub", "docs/sub/feedback", "docs/sub/feedback/issue.md"}
+    assert next(item.size for item in items if item.path.endswith("issue.md")) == 8
+    with pytest.raises(ReadError) as caught:
+        WorkingTreeReader(repo).tree("docs/sub/feedback/outside", recursive=True)
+    assert caught.value.code == "VIEWER_PATH_NOT_FOUND"
+
+
+@pytest.mark.parametrize("path", ["../outside", ".git", "docs/../.git", "/docs"])
+def test_recursive_tree_rejects_invalid_paths(repo: Path, path: str) -> None:
+    with pytest.raises(ReadError) as caught:
+        WorkingTreeReader(repo).tree(path, recursive=True)
+    assert caught.value.code == "VIEWER_PATH_INVALID"

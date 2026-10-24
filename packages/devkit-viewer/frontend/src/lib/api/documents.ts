@@ -1,7 +1,8 @@
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { parseDocument } from 'yaml';
-import { normalizeTree, type RepositoryDataSource } from './repository';
+import { normalizeTree, type RepositoryDataSource, type TreeItem } from './repository';
+import { cachedResult, cacheGeneration, cacheResult } from './cache';
 
 export interface RepositoryDocument {
 	path: string;
@@ -54,55 +55,100 @@ export function parseBlob(path: string, content: string, encoding: string): Repo
 	return { path, meta, body, raw, title };
 }
 
-// One pool serves directory discovery and blob reads, including recursive trees.
-export async function indexDocuments(
+export interface DocumentIndex {
+	documents: RepositoryDocument[];
+	errors: string[];
+}
+
+/** Continuous workers refill after each job, including newly discovered descendants. */
+export async function scanDocuments(
 	source: RepositoryDataSource,
 	ref: string,
-	signal: AbortSignal
-) {
-	type Job = { path: string; kind: 'tree' | 'blob' };
-	const jobs: Job[] = [
-		{ path: 'docs', kind: 'tree' },
-		{ path: 'specs', kind: 'tree' }
-	];
+	signal: AbortSignal,
+	roots: string[],
+	select: (item: TreeItem) => boolean = (item) => item.name.endsWith('.md'),
+	descend: (item: TreeItem) => boolean = () => true,
+	optionalRoots = false,
+	recursive = true
+): Promise<DocumentIndex> {
+	type Job = { path: string; kind: 'tree' | 'recursive' | 'blob' };
+	const jobs: Job[] = roots.map((path) => ({
+		path,
+		kind: recursive && source.treeRecursive ? 'recursive' : 'tree'
+	}));
 	const seen = new Set<string>();
 	const documents: RepositoryDocument[] = [];
 	const errors: string[] = [];
-	while (jobs.length && !signal.aborted) {
-		const batch = jobs.splice(0, 6);
-		await Promise.all(
-			batch.map(async (job) => {
+	await new Promise<void>((resolve) => {
+		let active = 0;
+		function pump() {
+			if (signal.aborted) jobs.length = 0;
+			while (active < 6 && jobs.length) {
+				const job = jobs.shift()!;
 				const key = `${job.kind}:${job.path}`;
-				if (seen.has(key)) return;
+				if (seen.has(key)) continue;
 				seen.add(key);
-				try {
-					if (job.kind === 'tree') {
-						const items = normalizeTree(await source.tree(job.path, ref, signal));
-						for (const item of items) {
-							// Hosts must return descendants; reject cycles and out-of-scope paths.
-							if (
-								!item.path.startsWith(`${job.path}/`) ||
-								item.path.split('/').some((p) => p === '..' || p === '.')
-							)
-								continue;
-							if (item.type === 'tree') jobs.push({ path: item.path, kind: 'tree' });
-							else if (item.name.endsWith('.md')) jobs.push({ path: item.path, kind: 'blob' });
+				active++;
+				void (async () => {
+					try {
+						if (job.kind !== 'blob') {
+							const items = normalizeTree(
+								await (job.kind === 'recursive'
+									? source.treeRecursive!(job.path, ref, signal)
+									: source.tree(job.path, ref, signal))
+							);
+							for (const item of items) {
+								if (
+									!item.path.startsWith(`${job.path}/`) ||
+									item.path.split('/').some((p) => p === '..' || p === '.')
+								)
+									continue;
+								if (job.kind === 'tree' && item.type === 'tree' && descend(item))
+									jobs.push({ path: item.path, kind: 'tree' });
+								else if (item.type === 'blob' && select(item))
+									jobs.push({ path: item.path, kind: 'blob' });
+							}
+						} else {
+							const blob = await source.blob(job.path, ref, signal);
+							documents.push(parseBlob(job.path, blob.content, blob.encoding));
 						}
-					} else {
-						const blob = await source.blob(job.path, ref, signal);
-						documents.push(parseBlob(job.path, blob.content, blob.encoding));
+					} catch (error) {
+						const message = error instanceof Error ? error.message : String(error);
+						// Only an absent optional scan root is empty; permission and parse failures remain visible.
+						const absentRoot =
+							optionalRoots &&
+							job.kind !== 'blob' &&
+							roots.includes(job.path) &&
+							/^HTTP 404(?:\b|:)/.test(message);
+						if (!signal.aborted && !absentRoot) errors.push(`${job.path}: ${message}`);
+					} finally {
+						active--;
+						pump();
 					}
-				} catch (error) {
-					if (!signal.aborted)
-						errors.push(`${job.path}: ${error instanceof Error ? error.message : error}`);
-				}
-			})
-		);
-	}
+				})();
+			}
+			if (!active && !jobs.length) resolve();
+		}
+		pump();
+	});
 	return {
 		documents: documents.sort((a, b) => a.path.localeCompare(b.path, undefined, { numeric: true })),
 		errors
 	};
+}
+
+export async function indexDocuments(
+	source: RepositoryDataSource,
+	ref: string,
+	signal: AbortSignal
+): Promise<DocumentIndex> {
+	const cached = cachedResult<DocumentIndex>(source, ref, 'documents');
+	if (cached && !signal.aborted) return cached;
+	const generation = cacheGeneration(source);
+	const result = await scanDocuments(source, ref, signal, ['docs', 'specs']);
+	if (!signal.aborted && !result.errors.length)
+		cacheResult(source, ref, 'documents', result, generation);
+	return result;
 }
 
 export function idIndex(documents: RepositoryDocument[]) {

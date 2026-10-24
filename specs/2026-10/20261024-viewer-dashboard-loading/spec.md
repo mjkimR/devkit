@@ -57,3 +57,9 @@ The dashboard indexes all Markdown before rendering. Tab remounts repeat the ind
 - **Given** one slow request and queued work
 - **When** another request finishes
 - **Then** another queued job starts without waiting for the slow request, with at most six requests per scan.
+
+### [AC-06] Recursive directory metadata
+
+- **Given** a local repository with nested feedback and symlinks
+- **When** a recursive metadata listing is requested with recursive=true
+- **Then** the server returns descendant metadata in one response without reading blob content, following symlinks or including .git entries. The browser uses this optional capability for recursive scans and falls back to directory requests for other hosts.

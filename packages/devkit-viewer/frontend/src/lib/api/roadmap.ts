@@ -1,3 +1,4 @@
+import { cachedResult, cacheGeneration, cacheResult } from './cache';
 import { parseBlob, type RepositoryDocument } from './documents';
 import { normalizeTree, type RepositoryDataSource } from './repository';
 
@@ -120,6 +121,13 @@ export async function loadRoadmapDocuments(
 	ref: string,
 	signal: AbortSignal
 ): Promise<{ documents: RepositoryDocument[]; errors: string[] }> {
+	const cached = cachedResult<{ documents: RepositoryDocument[]; errors: string[] }>(
+		source,
+		ref,
+		'roadmap'
+	);
+	if (cached && !signal.aborted) return cached;
+	const generation = cacheGeneration(source);
 	const errors: string[] = [];
 	const list = async (path: string) => {
 		try {
@@ -161,5 +169,7 @@ export async function loadRoadmapDocuments(
 				}
 			})
 		);
-	return { documents: documents.sort((a, b) => a.path.localeCompare(b.path)), errors };
+	const result = { documents: documents.sort((a, b) => a.path.localeCompare(b.path)), errors };
+	if (!signal.aborted && !errors.length) cacheResult(source, ref, 'roadmap', result, generation);
+	return result;
 }

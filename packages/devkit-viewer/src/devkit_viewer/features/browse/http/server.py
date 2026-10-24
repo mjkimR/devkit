@@ -170,7 +170,9 @@ class Handler(BaseHTTPRequestHandler):
                 kind=query.get("kind", [""])[0] or None,
                 slug=query.get("slug", [""])[0] or None,
             )
-        return read_repository(repo, parts[2], query.get("path", [""])[0])
+        return read_repository(
+            repo, parts[2], query.get("path", [""])[0], recursive=query.get("recursive", [""])[0] == "true"
+        )
 
     def _review(self, path: str) -> None:
         parts = [unquote(part) for part in path.split("/")[2:]]

@@ -112,7 +112,7 @@ describe('DashboardView', () => {
 		});
 
 		expect(screen.getByText('Test Proposal')).toBeTruthy();
-		expect(screen.getByText('CLI Issue')).toBeTruthy();
+		await waitFor(() => expect(screen.getByText('CLI Issue')).toBeTruthy());
 		expect(screen.getByText('Active Worktree Session')).toBeTruthy();
 		expect(source.refs).not.toHaveBeenCalled();
 		expect(screen.queryByText('dev-feature-x')).toBeNull();
@@ -143,5 +143,63 @@ describe('DashboardView', () => {
 
 		await fireEvent.click(screen.getByText('Test Proposal'));
 		expect(onNavigate).toHaveBeenCalledWith('proposals', 'docs/proposals/PROP-test/proposal.md');
+	});
+	it('publishes fast sections independently, reuses cache on remount and refreshes', async () => {
+		const source = mockSource();
+		const original = source.blob;
+		let release!: () => void;
+		const slow = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		source.blob = vi.fn(async (...args: Parameters<RepositoryDataSource['blob']>) => {
+			if (args[0].includes('/feedback/')) await slow;
+			return original(...args);
+		});
+		const props = { source, repoId: 'test', branch: 'main' };
+		const view = render(DashboardView, { props });
+		await waitFor(() => expect(screen.getByText('Core System')).toBeTruthy());
+		expect(screen.getByText('Loading feedback…')).toBeTruthy();
+		expect(screen.queryByText('No open feedback items found.')).toBeNull();
+		release();
+		await waitFor(() => expect(screen.getByText('CLI Issue')).toBeTruthy());
+		const calls = vi.mocked(source.blob).mock.calls.length;
+		view.unmount();
+		render(DashboardView, { props });
+		await waitFor(() => expect(screen.getByText('CLI Issue')).toBeTruthy());
+		expect(source.blob).toHaveBeenCalledTimes(calls);
+		await fireEvent.click(screen.getByText('Refresh'));
+		await waitFor(() => expect(source.blob).toHaveBeenCalledTimes(calls * 2));
+	});
+	it('keeps errors local and ignores the old source after switching', async () => {
+		const source = mockSource();
+		const original = source.blob;
+		let release!: () => void;
+		const slow = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		source.blob = vi.fn(async (...args: Parameters<RepositoryDataSource['blob']>) => {
+			if (args[0].includes('/feedback/')) {
+				await slow;
+				throw new Error('old feedback failure');
+			}
+			return original(...args);
+		});
+		const view = render(DashboardView, { props: { source, branch: 'main' } });
+		await waitFor(() => expect(screen.getByText('Core System')).toBeTruthy());
+		const replacement = mockSource();
+		replacement.blob = vi.fn(async () => {
+			throw new Error('new source failure');
+		});
+		await view.rerender({ source: replacement, branch: 'other' });
+		await waitFor(() => expect(screen.getAllByRole('alert').length).toBe(3));
+		expect(screen.queryByText('Core System')).toBeNull();
+		expect(screen.queryByText('No open milestones found.')).toBeNull();
+		release();
+		await waitFor(() =>
+			expect(vi.mocked(source.blob).mock.settledResults.every((r) => r.type !== 'incomplete')).toBe(
+				true
+			)
+		);
+		expect(screen.queryByText(/old feedback failure/)).toBeNull();
 	});
 });
