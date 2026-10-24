@@ -1,0 +1,17 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-24T13:17:10.101182Z'
+status: completed
+summary: 'SELF-CHECK PASS: the capability, superseding ADR, prior ADR status, command reference, and package README describe the implemented current-working-tree contract; entrypoints remain valid.'
+findings: []
+assumptions:
+- 'At medium effort, skipped a separate reconcile-reviewer: all affected documents are identified in reconcile.md; implementation behavior is within devkit-viewer and one capability area; comparison found no cross-component or interpretive issue.'
+checks:
+  docs: PASS reconciliation targets compared with committed diff
+  entrypoints: PASS existing browse and frontend entrypoints remain valid; derived README/frontend-root/test candidates are not implementation doorways
+diff_scope:
+  base: 289f44ebe6d847bcf16585020f5bc2e611b8cd76
+  head: 195a683fe7c7cd3b20d951e1f2c207b3f6e52803
+activity_effort: medium
