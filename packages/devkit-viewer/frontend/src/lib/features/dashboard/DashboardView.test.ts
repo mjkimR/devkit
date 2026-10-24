@@ -114,6 +114,9 @@ describe('DashboardView', () => {
 		expect(screen.getByText('Test Proposal')).toBeTruthy();
 		expect(screen.getByText('CLI Issue')).toBeTruthy();
 		expect(screen.getByText('Active Worktree Session')).toBeTruthy();
+		expect(source.refs).not.toHaveBeenCalled();
+		expect(screen.queryByText('dev-feature-x')).toBeNull();
+		expect(screen.queryByText('plan-proposal-y')).toBeNull();
 
 		// Check AI invisible guide section
 		const aiSection = document.querySelector(

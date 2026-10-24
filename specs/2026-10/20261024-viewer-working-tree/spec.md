@@ -37,8 +37,8 @@ The viewer currently reads committed Git objects and offers a branch picker. A d
 - **When** the viewer lists the relevant directories through the tree endpoint
 - **Then** the entries include the untracked file and nested directory with the existing `{items: [{name, path, type, size?}]}` payload shape
 
-### [AC-03] Repository paths cannot escape through traversal or symlinks
-- **Given** a request path with an absolute path, a `..` segment, or a path resolving outside the registered root
+### [AC-03] Repository paths cannot expose Git metadata or escape through traversal and symlinks
+- **Given** a request path with an absolute path, a `.git` segment, a `..` segment, or a path resolving outside the registered root
 - **When** the viewer reads a tree or blob
 - **Then** it returns `400 VIEWER_PATH_INVALID` for syntactically invalid paths or `404 VIEWER_PATH_NOT_FOUND` for absent or out-of-root paths, without returning outside content
 

@@ -17,7 +17,7 @@ The `devkit-viewer` distribution gives people a screen for what agents read thro
 proposals, specs and milestones (`ADR-roadmap-and-milestones`, `ADR-roadmap-and-milestones`). It mounts
 `devkit viewer` under the `devkit` command line (`CAP-HARN-command-mount`). devkit owns the viewer's source; autohub
 consumes its component library as a vendored tarball (`ADR-viewer`). The server's
-choices are `ADR-viewer`. Command quick reference:
+choices are `ADR-viewer` as superseded by `ADR-viewer-working-tree`. Command quick reference:
 [reference](../../development/reference/viewer.md).
 
 ## 1. Serving
@@ -42,17 +42,16 @@ Nothing else is written to stdout. Request logs are `[INFO]` lines on stderr und
 
 ## 2. Reading the working tree
 
-Ordinary tree and blob endpoints read saved files below the registered repository root. They include uncommitted and untracked files. A request path is repository-relative; absolute paths, `.` segments, `..` segments, empty segments and backslashes are invalid. Symlinks are omitted from listings and cannot be read. No ordinary content request starts Git or selects another branch.
+Ordinary tree and blob endpoints read saved files below the registered repository root. They include uncommitted and untracked files. A request path is repository-relative; absolute paths, `.git` segments, `.` segments, `..` segments, empty segments and backslashes are invalid. Symlinks and `.git` directories are omitted from listings and cannot be read. No ordinary content request starts Git or selects another branch.
 
 | Endpoint (`GET`) | Answer |
 | --- | --- |
 | `/api/repos` | `{"repos": [{"id", "default_branch"}]}`, sorted by ID |
 | `/api/repos/<id>/info` | `{"repo_id", "default_branch"}` |
-| `/api/repos/<id>/refs` | `{"default_branch", "branches"}`: local branches, sorted |
 | `/api/repos/<id>/tree?path=` | `{"items": [{"name", "path", "type": "tree"\|"blob", "size"?}]}`: one directory, directories first |
 | `/api/repos/<id>/blob?path=` | `{"path", "encoding": "base64", "content", "size"}` |
 
-`default_branch` is the branch checked out in the registered work tree (`HEAD` when detached). An empty `path` is the root. A legacy `ref` query parameter is ignored and cannot select another branch. Errors are `{"error": {"code", "message"}}`: `VIEWER_REPO_UNKNOWN`, `VIEWER_PATH_NOT_FOUND` (absent or a symlink), `VIEWER_NOT_FOUND` (no such endpoint or file) with `404`; `VIEWER_PATH_INVALID` (a leading `/`, a backslash, an empty, `.` or `..` segment) with `400`; `VIEWER_GIT_FAILED` with `500` when the branch label cannot be read.
+`default_branch` is the branch checked out in the registered work tree (`HEAD` when detached). An empty `path` is the root. A legacy `ref` query parameter is ignored and cannot select another branch. Errors are `{"error": {"code", "message"}}`: `VIEWER_REPO_UNKNOWN`, `VIEWER_PATH_NOT_FOUND` (absent or a symlink), `VIEWER_NOT_FOUND` (no such endpoint or file) with `404`; `VIEWER_PATH_INVALID` (a leading `/`, a `.git` segment, a backslash, an empty, `.` or `..` segment) with `400`.
 
 ## 3. Local and read-only
 
@@ -116,8 +115,8 @@ library.
 ## Immutable local proposal review page
 
 `GET /review/<registered-repository-id>/<32-hex-generation-id>` reads exactly one `proposal-review` artifact
-through the registered repository's configured local shared adapter. This is the narrow non-Git exception in
-`ADR-viewer`; ordinary Git routes remain unchanged. The route accepts no path,
+through the registered repository's configured local shared adapter. This exact-generation route is the exception in
+`ADR-viewer`; ordinary working-tree reads remain unchanged. The route accepts no path,
 remote URL, adapter selector or revision expression. Remote adapters are unavailable here. It calls only exact
 `get`, never list, put or sweep. Namespace, kind, digest and expiry are validated. Source SHA, language and expiry
 are prominent; the artifact is evidence for that source, not a claim that the branch is still current.

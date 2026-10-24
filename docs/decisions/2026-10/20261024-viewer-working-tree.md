@@ -20,7 +20,7 @@ supersedes: ADR-viewer
 
 The viewer reads committed Git objects and offers branch selection. A developer cannot inspect a saved edit until committing it. The intended use is to review the current checkout, with the current branch name as context.
 
-The registered repository root remains the boundary for file reads. The local web server must continue to protect against path traversal and must not write to repositories. Proposal-review artifacts remain an exact-generation exception with their existing local adapter and expiry rules.
+The registered repository root remains the boundary for file reads. The local web server must continue to protect against path traversal and must not write to repositories. Git metadata and symlinks must not be served. Proposal-review artifacts remain an exact-generation exception with their existing local adapter and expiry rules.
 
 ## 2. Decision Drivers
 
@@ -46,7 +46,7 @@ The registered repository root remains the boundary for file reads. The local we
 
 ## 4. Decision Outcome
 
-We read tree and blob content directly from the registered current working directory and display the checked-out branch as a label. Ordinary content requests ignore any `ref` query parameter. Directory listings omit symlinks, and requests for symlinks fail as missing paths. A resolved path outside the registered root is never served. The UI and roadmap read only the current checkout.
+We read tree and blob content directly from the registered current working directory and display the checked-out branch as a label. Ordinary content requests ignore any `ref` query parameter. Directory listings omit symlinks and `.git` directories; requests for symlinks fail as missing paths and `.git` paths are invalid. A resolved path outside the registered root is never served. The UI and roadmap read only the current checkout.
 
 The exact-generation proposal-review route remains unchanged. The server continues to bind to loopback, refuse foreign Host headers, answer GET only, and write nothing.
 

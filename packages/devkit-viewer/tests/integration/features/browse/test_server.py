@@ -67,12 +67,9 @@ def test_repos(server: ViewerServer) -> None:
     assert response.headers["cache-control"] == "no-store"
 
 
-def test_info_and_refs(server: ViewerServer) -> None:
+def test_info_reports_current_branch_and_branch_list_is_not_exposed(server: ViewerServer) -> None:
     assert request(server, "/api/repos/alpha/info").json() == {"repo_id": "alpha", "default_branch": "main"}
-    assert request(server, "/api/repos/alpha/refs").json() == {
-        "default_branch": "main",
-        "branches": ["main", "plan-x"],
-    }
+    assert request(server, "/api/repos/alpha/refs").status == 404
 
 
 def test_tree(server: ViewerServer) -> None:
@@ -88,31 +85,51 @@ def test_tree(server: ViewerServer) -> None:
     assert [item["path"] for item in root["items"]] == [".devkit", "docs"]
 
 
-def test_blob_at_another_branch(server: ViewerServer) -> None:
+def test_blob_reads_the_checked_out_working_tree_and_ignores_legacy_ref(server: ViewerServer) -> None:
+    (server.repositories["alpha"].root / "docs/a.md").write_text("saved edit\n")
     response = request(server, "/api/repos/alpha/blob?path=docs/a.md&ref=plan-x")
     assert response.status == 200
     assert response.json() == {
         "path": "docs/a.md",
         "encoding": "base64",
-        "content": base64.b64encode(b"plan a\n").decode(),
-        "size": 7,
+        "content": base64.b64encode(b"saved edit\n").decode(),
+        "size": 11,
     }
-    default = request(server, "/api/repos/alpha/blob?path=docs/a.md").json()
-    assert base64.b64decode(default["content"]) == b"main a\n"
+
+
+def test_tree_includes_untracked_files(server: ViewerServer) -> None:
+    root = server.repositories["alpha"].root
+    (root / "docs/new").mkdir()
+    (root / "docs/new/note.md").write_text("untracked\n")
+    response = request(server, "/api/repos/alpha/tree?path=docs&ref=plan-x")
+    assert response.status == 200
+    assert {item["path"] for item in response.json()["items"]} == {
+        "docs/a.md",
+        "docs/new",
+        "docs/sub",
+    }
+
+
+def test_symlinks_are_hidden_and_cannot_be_read(server: ViewerServer, tmp_path: Path) -> None:
+    root = server.repositories["alpha"].root
+    secret = tmp_path / "secret.md"
+    secret.write_text("outside\n")
+    (root / "docs/secret.md").symlink_to(secret)
+    tree = request(server, "/api/repos/alpha/tree?path=docs").json()
+    assert "docs/secret.md" not in {item["path"] for item in tree["items"]}
+    response = request(server, "/api/repos/alpha/blob?path=docs/secret.md")
+    assert response.status == 404
+    assert response.json()["error"]["code"] == "VIEWER_PATH_NOT_FOUND"
 
 
 @pytest.mark.parametrize(
     ("path", "status", "code"),
     [
         ("/api/repos/gamma/info", 404, "VIEWER_REPO_UNKNOWN"),
-        ("/api/repos/alpha/tree?path=docs&ref=nope", 404, "VIEWER_REF_UNKNOWN"),
-        ("/api/repos/alpha/tree?path=docs&ref=-x", 404, "VIEWER_REF_UNKNOWN"),
-        ("/api/repos/alpha/blob?path=docs/a.md&ref=origin/z", 404, "VIEWER_REF_UNKNOWN"),
-        ("/api/repos/alpha/blob?path=docs/a.md&ref=main~0", 404, "VIEWER_REF_UNKNOWN"),
-        ("/api/repos/alpha/blob?path=docs/none.md&ref=main", 404, "VIEWER_PATH_NOT_FOUND"),
+        ("/api/repos/alpha/blob?path=docs/none.md", 404, "VIEWER_PATH_NOT_FOUND"),
         ("/api/repos/alpha/blob?path=docs/../x&ref=main", 400, "VIEWER_PATH_INVALID"),
         ("/api/repos/alpha/tree?path=./docs&ref=main", 400, "VIEWER_PATH_INVALID"),
-        ("/api/repos/alpha/blob?path=docs&ref=main", 404, "VIEWER_PATH_NOT_FOUND"),
+        ("/api/repos/alpha/blob?path=docs", 404, "VIEWER_PATH_NOT_FOUND"),
         ("/api/repos/alpha/other", 404, "VIEWER_NOT_FOUND"),
         ("/api/nothing", 404, "VIEWER_NOT_FOUND"),
     ],

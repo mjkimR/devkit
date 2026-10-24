@@ -39,7 +39,7 @@ The server keeps no document cache or persistent index. Each request reads the s
 ## 5. Error Handling & Edge Cases
 
 - Preserve UTF-8/base64 payload compatibility, sorting with directories before files, and blob byte sizes.
-- Exclude symlinks from directory listings and refuse a requested symlink path. This prevents traversal outside the registration root and symlink cycles.
+- Exclude symlinks and `.git` directories from listings and refuse requested symlink or `.git` paths. This prevents traversal outside the registration root, symlink cycles, and serving Git metadata.
 - Treat an unresolvable checked-out branch as `HEAD`, including detached checkouts.
 - Preserve loopback binding, Host refusal, GET-only behavior and no-write guarantees.
 

@@ -18,7 +18,7 @@ export interface RepositoryBlob {
 	encoding: string;
 	[key: string]: any;
 }
-/** The local branches a host can read; the roadmap reads members on `plan-` and `dev-` branches from it. */
+/** Branch metadata available from a host that supports branch enumeration. */
 export interface RepositoryRefs {
 	default_branch: string;
 	branches: string[];
@@ -55,7 +55,7 @@ export interface RepositoryDataSource {
 	info(signal: AbortSignal): Promise<any>;
 	tree(path: string, ref: string, signal: AbortSignal): Promise<any>;
 	blob(path: string, ref: string, signal: AbortSignal): Promise<any>;
-	/** Optional: without it the roadmap reads the default branch only. */
+	/** Optional branch metadata for hosts that expose it. */
 	refs?(signal: AbortSignal): Promise<RepositoryRefs>;
 	/** Optional: shared space artifacts (e.g. proposal reviews) */
 	sharedList?(
@@ -71,12 +71,11 @@ export function httpDataSource(base: string): RepositoryDataSource {
 		if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 		return response.json();
 	}
-	const query = (path: string, ref: string) => new URLSearchParams({ path, ref });
+	const query = (path: string) => new URLSearchParams({ path });
 	return {
 		info: (signal) => get('info', signal),
-		tree: (path, ref, signal) => get(`tree?${query(path, ref)}`, signal),
-		blob: (path, ref, signal) => get(`blob?${query(path, ref)}`, signal),
-		refs: (signal) => get('refs', signal),
+		tree: (path, _ref, signal) => get(`tree?${query(path)}`, signal),
+		blob: (path, _ref, signal) => get(`blob?${query(path)}`, signal),
 		sharedList: (signal, options) => {
 			const params = new URLSearchParams();
 			if (options?.kind) params.set('kind', options.kind);

@@ -63,17 +63,9 @@ def repo_unknown(repo_id: str) -> ReadError:
     return ReadError(404, "VIEWER_REPO_UNKNOWN", f"no registered repository has the ID {repo_id!r}")
 
 
-def ref_unknown(ref: str) -> ReadError:
-    return ReadError(404, "VIEWER_REF_UNKNOWN", f"{ref!r} names no commit of this repository")
-
-
 def path_not_found(path: str, kind: str) -> ReadError:
-    return ReadError(404, "VIEWER_PATH_NOT_FOUND", f"no {kind} at {path!r} in this ref")
+    return ReadError(404, "VIEWER_PATH_NOT_FOUND", f"no {kind} at {path!r} in this working tree")
 
 
 def path_invalid(path: str) -> ReadError:
     return ReadError(400, "VIEWER_PATH_INVALID", f"{path!r} is not a repository-relative path")
-
-
-def git_failed(detail: str) -> ReadError:
-    return ReadError(500, "VIEWER_GIT_FAILED", f"git failed: {detail}")
