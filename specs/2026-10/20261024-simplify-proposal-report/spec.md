@@ -2,7 +2,7 @@
 id: SPEC-simplify-proposal-report
 title: Simplify proposal review report template
 summary: Reduce mandatory report sections to three core sections and simplify PADR decision fields for concise approval briefings
-status: planned
+status: in-progress
 created: 2026-10-24
 related_capabilities:
   - CAP-DLV-proposal-incubation
