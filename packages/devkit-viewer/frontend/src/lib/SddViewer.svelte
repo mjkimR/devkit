@@ -5,6 +5,7 @@
 
 	import KnowledgeViews from './KnowledgeViews.svelte';
 	import RoadmapView from './RoadmapView.svelte';
+	import SharedArtifactsView from './features/shared/SharedArtifactsView.svelte';
 	import ViewerHeader from './components/shared/ViewerHeader.svelte';
 	import NavigationRail from './components/shared/NavigationRail.svelte';
 	import FileExplorer from './features/explorer/FileExplorer.svelte';
@@ -60,11 +61,12 @@
 		}
 	});
 
-	let view = $state<'files' | 'book' | 'proposals' | 'specs' | 'roadmap'>('files');
+	let view = $state<'files' | 'book' | 'proposals' | 'specs' | 'roadmap' | 'shared'>('files');
 	let currentPath = $state('docs/');
+	let selectedSharedSlug = $state('');
 
 	$effect(() => {
-		view = ['book', 'proposals', 'specs', 'roadmap'].includes(initialView)
+		view = ['book', 'proposals', 'specs', 'roadmap', 'shared'].includes(initialView)
 			? (initialView as typeof view)
 			: 'files';
 	});
@@ -281,6 +283,15 @@
 						}}
 					/>
 				</div>
+			{:else if view === 'shared'}
+				<div class="knowledge-host">
+					<SharedArtifactsView
+						{source}
+						{repoId}
+						initialSlug={selectedSharedSlug}
+						diagramAction={diagramRenderer}
+					/>
+				</div>
 			{:else if view !== 'files'}
 				<div class="knowledge-host">
 					<KnowledgeViews
@@ -294,6 +305,10 @@
 						onOpen={(path) => {
 							currentPath = path;
 							view = 'files';
+						}}
+						onOpenShared={(slug) => {
+							selectedSharedSlug = slug;
+							view = 'shared';
 						}}
 						onLocation={(path, anchor, selectedView, frontmatter) => {
 							dispatchItemSelected(path, frontmatter);

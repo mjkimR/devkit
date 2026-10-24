@@ -304,3 +304,47 @@ def test_missing_review_has_read_only_host_refresh_page(server: ViewerServer, re
     assert "default-src 'none'" in response.headers["content-security-policy"]
     assert "access-control-allow-origin" not in response.headers
     assert {p.name: p.read_bytes() for p in selected.root.iterdir()} == before
+
+
+def test_shared_api_list_and_get(server: ViewerServer, review_artifact) -> None:
+    _selected, artifact = review_artifact
+    gen_id = artifact.metadata.generation_id
+
+    # List all
+    res = request(server, "/api/repos/alpha/shared")
+    assert res.status == 200
+    data = res.json()
+    assert "artifacts" in data
+    assert len(data["artifacts"]) >= 1
+    item = next(a for a in data["artifacts"] if a["generation_id"] == gen_id)
+    assert item["slug"] == "sample"
+    assert item["kind"] == "proposal-review"
+
+    # Filter by slug
+    res_slug = request(server, "/api/repos/alpha/shared?slug=sample")
+    assert res_slug.status == 200
+    assert any(a["generation_id"] == gen_id for a in res_slug.json()["artifacts"])
+
+    # Filter by non-existent slug
+    res_empty = request(server, "/api/repos/alpha/shared?slug=non-existent")
+    assert res_empty.status == 200
+    assert res_empty.json()["artifacts"] == []
+
+    # Get single artifact
+    res_single = request(server, f"/api/repos/alpha/shared?generation={gen_id}")
+    assert res_single.status == 200
+    single_data = res_single.json()
+    assert single_data["metadata"]["generation_id"] == gen_id
+    assert "# Review" in single_data["content"]
+    assert single_data["artifact_uri"].startswith("shared://")
+
+    # Invalid generation
+    assert request(server, "/api/repos/alpha/shared?generation=invalid").status == 400
+
+    # Missing generation
+    assert request(server, "/api/repos/alpha/shared?generation=" + "0" * 32).status == 404
+
+    # Repo without shared artifacts returns empty list
+    res_beta = request(server, "/api/repos/beta/shared")
+    assert res_beta.status == 200
+    assert res_beta.json() == {"artifacts": []}

@@ -17,4 +17,3 @@
 		color: var(--pre-text);
 	}
 </style>
-

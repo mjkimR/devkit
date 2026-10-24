@@ -25,4 +25,3 @@ export function parseFrontmatterAndMarkdown(text: string): {
 		content: text.slice(match[0].length)
 	};
 }
-

@@ -2,6 +2,7 @@
 export { default as SddViewer } from './SddViewer.svelte';
 export { default as KnowledgeViews } from './KnowledgeViews.svelte';
 export { default as RoadmapView } from './RoadmapView.svelte';
+export { default as SharedArtifactsView } from './features/shared/SharedArtifactsView.svelte';
 export {
 	httpDataSource,
 	normalizeTree,
@@ -9,6 +10,9 @@ export {
 	type RepositoryDataSource,
 	type RepositoryInfo,
 	type RepositoryRefs,
+	type SharedArtifactMetadata,
+	type SharedArtifactDetail,
+	type SharedArtifactsResponse,
 	type TreeItem
 } from './repository';
 export { buildRoadmap, type Member, type Milestone } from './roadmap';

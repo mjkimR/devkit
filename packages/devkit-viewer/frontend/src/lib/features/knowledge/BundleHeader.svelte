@@ -9,10 +9,12 @@
 		relations = [],
 		ids,
 		rendered,
+		view = '',
 		onOpen,
 		onLocation,
 		onJump,
-		onSelectDetail
+		onSelectDetail,
+		onOpenShared = undefined
 	}: {
 		selected: RepositoryDocument;
 		bundle: RepositoryDocument[];
@@ -21,10 +23,12 @@
 		relations: string[];
 		ids: Map<string, RepositoryDocument>;
 		rendered: Map<string, RenderedDocument>;
+		view?: string;
 		onOpen: (path: string) => void;
 		onLocation: (path: string, anchor: string, meta: Record<string, any>) => void;
 		onJump: (path: string, headingId: string) => void;
 		onSelectDetail: (path: string) => void;
+		onOpenShared?: (slug: string) => void;
 	} = $props();
 
 	const fileLabel = (path: string) =>
@@ -70,6 +74,19 @@
 				{fileLabel(doc.path)}
 			</button>
 		{/each}
+		{#if view === 'proposals' && onOpenShared}
+			<button
+				class="shared-report-btn"
+				title="이 제안의 공유 공간 리포트 확인"
+				onclick={() => {
+					const parts = selected.path.split('/');
+					const slug = selected.meta.slug || parts[2] || selected.meta.id;
+					onOpenShared(slug);
+				}}
+			>
+				🤝 공유 리포트
+			</button>
+		{/if}
 	</nav>
 	{#if detail}
 		<nav class="detail-toc" aria-label="Document outline">
@@ -119,5 +136,22 @@
 
 	.detail-toc button {
 		font-size: 12px;
+	}
+
+	.shared-report-btn {
+		background-color: var(--badge-bg);
+		border: 1px dashed var(--border-btn) !important;
+		color: var(--text-btn) !important;
+		font-size: 13px;
+		padding: 6px 12px;
+		border-radius: 6px;
+		cursor: pointer;
+		margin-left: 8px;
+	}
+
+	.shared-report-btn:hover {
+		background-color: var(--bg-btn) !important;
+		border-style: solid !important;
+		color: var(--text-primary) !important;
 	}
 </style>

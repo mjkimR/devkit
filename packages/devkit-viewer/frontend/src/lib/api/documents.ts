@@ -271,4 +271,3 @@ export function taskProgress(body: string) {
 	visit(marked.lexer(body));
 	return { total, checked };
 }
-

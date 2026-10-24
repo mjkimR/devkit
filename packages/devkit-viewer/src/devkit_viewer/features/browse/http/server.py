@@ -8,7 +8,8 @@ content through the browser by DNS rebinding; no response carries a CORS header.
 - ``/api/repos/<id>/info``: ``{"repo_id", "default_branch"}``;
 - ``/api/repos/<id>/refs``: ``{"default_branch", "branches"}`` (local branches);
 - ``/api/repos/<id>/tree?path=&ref=``: ``{"items": [{"name", "path", "type", "size"?}]}``;
-- ``/api/repos/<id>/blob?path=&ref=``: ``{"path", "encoding": "base64", "content", "size"}``.
+- ``/api/repos/<id>/blob?path=&ref=``: ``{"path", "encoding": "base64", "content", "size"}``;
+- ``/api/repos/<id>/shared?generation=&kind=&slug=``: ``{"artifacts": [...]}`` or ``{"metadata", "content", "artifact_uri"}``.
 
 ``ref`` is ``HEAD`` or a local branch name and defaults to the checked-out branch. Errors are
 ``{"error": {"code", "message"}}`` with the status of the ``ReadError``. Any other path serves a file the bundled
@@ -33,6 +34,7 @@ from devkit_viewer.features.browse.models.errors import PortInUseError, ReadErro
 from devkit_viewer.features.browse.models.repository import Repository
 from devkit_viewer.features.browse.usecases.read import list_repositories, read_repository
 from devkit_viewer.features.browse.usecases.review import UNAVAILABLE_CODES, report_page, unavailable_page
+from devkit_viewer.features.browse.usecases.shared import list_shared_artifacts, read_shared_artifact
 
 HOST = "127.0.0.1"
 # Under the devkit logger hierarchy, so `-v` prints one line per request.
@@ -159,6 +161,15 @@ class Handler(BaseHTTPRequestHandler):
         repo = self.server.repositories.get(parts[1])
         if repo is None:
             raise repo_unknown(parts[1])
+        if parts[2] == "shared":
+            generation = query.get("generation", [""])[0]
+            if generation:
+                return read_shared_artifact(repo, generation)
+            return list_shared_artifacts(
+                repo,
+                kind=query.get("kind", [""])[0] or None,
+                slug=query.get("slug", [""])[0] or None,
+            )
         return read_repository(repo, parts[2], query.get("path", [""])[0], query.get("ref", [""])[0])
 
     def _review(self, path: str) -> None:

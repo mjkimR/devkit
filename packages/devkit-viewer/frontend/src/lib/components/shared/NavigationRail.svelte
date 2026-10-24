@@ -1,8 +1,8 @@
 <script lang="ts">
 	let {
-		view = $bindable<'files' | 'book' | 'proposals' | 'specs' | 'roadmap'>('files')
+		view = $bindable<'files' | 'book' | 'proposals' | 'specs' | 'roadmap' | 'shared'>('files')
 	}: {
-		view?: 'files' | 'book' | 'proposals' | 'specs' | 'roadmap';
+		view?: 'files' | 'book' | 'proposals' | 'specs' | 'roadmap' | 'shared';
 	} = $props();
 
 	const tabs = [
@@ -10,6 +10,7 @@
 		{ id: 'proposals', label: 'Proposals', icon: '💡', title: 'Proposals' },
 		{ id: 'specs', label: 'Specs', icon: '📋', title: 'Feature Specs' },
 		{ id: 'roadmap', label: 'Roadmap', icon: '🗺️', title: 'Roadmap' },
+		{ id: 'shared', label: 'Shared', icon: '🤝', title: 'Shared Space (공유 공간)' },
 		{ id: 'files', label: 'Files', icon: '📁', title: 'Repository Files' }
 	] as const;
 </script>
@@ -95,4 +96,3 @@
 		white-space: nowrap;
 	}
 </style>
-

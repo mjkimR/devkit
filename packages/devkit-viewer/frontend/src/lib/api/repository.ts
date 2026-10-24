@@ -24,6 +24,32 @@ export interface RepositoryRefs {
 	branches: string[];
 }
 
+export interface SharedArtifactMetadata {
+	generation_id: string;
+	kind: string;
+	slug: string;
+	source_sha: string;
+	language: string;
+	content_sha256: string;
+	content_type: string;
+	byte_count: number;
+	created_at: string;
+	expires_at: string;
+	revision: string;
+	repository_namespace?: string;
+	artifact_uri?: string;
+}
+
+export interface SharedArtifactDetail {
+	metadata: SharedArtifactMetadata;
+	content: string;
+	artifact_uri: string;
+}
+
+export interface SharedArtifactsResponse {
+	artifacts: SharedArtifactMetadata[];
+}
+
 /** Hosts own authentication and renewal; credentials never become element attributes. */
 export interface RepositoryDataSource {
 	info(signal: AbortSignal): Promise<any>;
@@ -31,6 +57,12 @@ export interface RepositoryDataSource {
 	blob(path: string, ref: string, signal: AbortSignal): Promise<any>;
 	/** Optional: without it the roadmap reads the default branch only. */
 	refs?(signal: AbortSignal): Promise<RepositoryRefs>;
+	/** Optional: shared space artifacts (e.g. proposal reviews) */
+	sharedList?(
+		signal: AbortSignal,
+		options?: { kind?: string; slug?: string }
+	): Promise<SharedArtifactsResponse>;
+	sharedBlob?(generationId: string, signal: AbortSignal): Promise<SharedArtifactDetail>;
 }
 
 export function httpDataSource(base: string): RepositoryDataSource {
@@ -44,7 +76,16 @@ export function httpDataSource(base: string): RepositoryDataSource {
 		info: (signal) => get('info', signal),
 		tree: (path, ref, signal) => get(`tree?${query(path, ref)}`, signal),
 		blob: (path, ref, signal) => get(`blob?${query(path, ref)}`, signal),
-		refs: (signal) => get('refs', signal)
+		refs: (signal) => get('refs', signal),
+		sharedList: (signal, options) => {
+			const params = new URLSearchParams();
+			if (options?.kind) params.set('kind', options.kind);
+			if (options?.slug) params.set('slug', options.slug);
+			const qs = params.toString() ? `?${params.toString()}` : '';
+			return get(`shared${qs}`, signal);
+		},
+		sharedBlob: (generationId, signal) =>
+			get(`shared?generation=${encodeURIComponent(generationId)}`, signal)
 	};
 }
 
@@ -59,4 +100,3 @@ export function normalizeTree(response: TreeResponse): TreeItem[] {
 			a.type !== b.type ? (a.type === 'tree' ? -1 : 1) : a.name.localeCompare(b.name)
 		);
 }
-

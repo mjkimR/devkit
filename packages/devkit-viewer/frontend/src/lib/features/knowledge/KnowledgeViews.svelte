@@ -25,7 +25,8 @@
 		requestedAnchor,
 		onOpen,
 		onLocation,
-		diagrams
+		diagrams,
+		onOpenShared = undefined
 	}: {
 		view: 'book' | 'proposals' | 'specs';
 		theme: string;
@@ -36,6 +37,7 @@
 		onOpen: (path: string) => void;
 		onLocation: (path: string, anchor: string, view: string, meta: Record<string, any>) => void;
 		diagrams: (node: HTMLElement) => { destroy: () => void };
+		onOpenShared?: (slug: string) => void;
 	} = $props();
 
 	let documents = $state<RepositoryDocument[]>([]);
@@ -317,7 +319,9 @@
 						{relations}
 						{ids}
 						{rendered}
+						{view}
 						{onOpen}
+						{onOpenShared}
 						onLocation={(path, anchor, meta) => onLocation(path, anchor, view, meta)}
 						onJump={(path, headingId) => jump(path, headingId)}
 						onSelectDetail={(path) => {
@@ -401,4 +405,3 @@
 		}
 	}
 </style>
-

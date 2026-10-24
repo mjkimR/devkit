@@ -37,4 +37,3 @@
 		color: var(--text-primary);
 	}
 </style>
-

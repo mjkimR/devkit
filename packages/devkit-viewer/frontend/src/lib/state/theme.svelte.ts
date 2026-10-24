@@ -23,4 +23,3 @@ export class ThemeState {
 		this.set(this.current === 'dark' ? 'light' : 'dark');
 	}
 }
-
