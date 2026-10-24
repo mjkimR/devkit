@@ -1,6 +1,6 @@
 [project]
 name = "devkit-dev"
-version = "0.1.2"
+version = "0.1.3"
 description = "Repository development conventions and structure checks"
 readme = "README.md"
 requires-python = ">=3.12"

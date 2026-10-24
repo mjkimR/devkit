@@ -1,6 +1,6 @@
 schema = 1
 name = "git-commits"
-version = "0.1.2"
+version = "0.1.3"
 # Built in but opt-in (no auto_select): `devkit add git-commits` deploys it.
 default_preset = "core"
 

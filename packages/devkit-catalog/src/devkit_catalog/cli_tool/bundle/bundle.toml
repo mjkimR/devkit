@@ -1,6 +1,6 @@
 schema = 1
 name = "cli-tool"
-version = "0.1.2"
+version = "0.1.3"
 default_preset = "all"  # the structure guide and its five rules (the rules run where devkit-agt is installed)
 
 [[assets]]

@@ -1,6 +1,6 @@
 schema = 1
 name = "advisory"
-version = "0.1.2"
+version = "0.1.3"
 default_preset = "core"
 # Deployed without `devkit add`; `devkit remove` opts a project out.
 auto_select = true
