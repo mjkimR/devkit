@@ -41,7 +41,6 @@ def policy_cmd(workspace_root: str | None, output_format: str) -> None:
     git = policy["git"]
     routing = policy["routing"]
     feedback = policy["feedback"]
-    proposal_review = policy["proposal_review"]
     if is_json(output_format):
         echo_json(
             {
@@ -50,7 +49,6 @@ def policy_cmd(workspace_root: str | None, output_format: str) -> None:
                 "git": git,
                 "routing": routing,
                 "feedback": feedback,
-                "proposal_review": proposal_review,
                 "notices": [notice.to_dict() for notice in notices],
             }
         )
@@ -63,6 +61,5 @@ def policy_cmd(workspace_root: str | None, output_format: str) -> None:
     click.echo(fields_line("GIT_POLICY", **git))
     click.echo(fields_line("ROUTING_POLICY", **routing))
     click.echo(fields_line("FEEDBACK_POLICY", **feedback))
-    click.echo(fields_line("PROPOSAL_REVIEW_POLICY", auto_write=str(proposal_review["auto_write"]).lower()))
     echo_notices(notices)
     exit_on_warnings(notices)

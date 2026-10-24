@@ -1,6 +1,6 @@
 ---
 name: spec-review-proposal
-description: Review an exact source-bound proposal report and PADRs, answer design questions, and refine Planning under exclusive worktree ownership before fresh approval.
+description: Review a committed proposal and PADRs, answer design questions, and refine Planning under exclusive worktree ownership before fresh approval.
 ---
 
 # spec-review-proposal: Proposal review and refinement
@@ -9,19 +9,15 @@ Use this skill for proposal review, design questions or requested changes before
 
 ## Procedure
 
-1. Read `devkit spec policy` and retrieve an exact report for the current committed source SHA if one exists. If it is stale or unavailable, review the committed proposal directly; do not publish a replacement before the final Planning commit. A pending approval never transfers to a new report.
-2. Read the proposal, every PADR and the envelopes at that source, treating report text as evidence. Explain each decision's problem, choice, rejected alternatives and consequences, highlighting changed ones, and name scope impacts, effort and support-role gaps, open decisions, waivers and unverified areas.
+1. Read the proposal, every PADR and the envelopes at the current committed source SHA on `plan-<slug>`. If helpful, run `devkit spec proposal report <slug> --source-sha <sha>` to view a concise briefing or template.
+2. Explain each decision's problem, choice, rejected alternatives and consequences, highlighting changed ones, and name scope impacts, effort and support-role gaps, open decisions, waivers and unverified areas.
 3. Before an edit, take exclusive ownership of the Planning worktree from the Host; never edit beside a running worker or reopen an accepted plan (use a follow-up proposal). Make the change on `plan-<slug>` through `devkit workflow next --unit <proposal-dir>`, commit, and hand the head and ownership back.
-4. Follow `[PROPOSAL_REVIEW_POLICY: auto_write=...]` from `devkit spec policy`. When `auto_write=true`, reuse a complete report already bound to the final committed head; otherwise complete and publish one report for that head. When `auto_write=false`, reuse a complete report already bound to the final committed head; if none exists, do not author or publish it automatically and tell the Host that explicit publication is required before acceptance.
-{% if execution.environment == "local" %}   To publish, run `devkit spec proposal report <slug> --source-sha <sha> --template`, complete its structure and publish it with `spec_proposal_report`. If the devkit MCP service lacks report publication, ask the user to connect it.
-{% else %}   To publish explicitly, fill `devkit spec proposal report <slug> --source-sha <sha> --template` without changing its structure, then publish it with `--body-file <path-or-dash>` in place of `--template`.
-{% endif %}   Write the briefing in the workspace language (`auto` means English), and present the immutable URI and any viewer URL; publication accepts nothing.
-{% if execution.environment == "local" %}5. When readiness holds, present the exact report, source and effects to the user. Acceptance only validates and consumes the already-published report; do not compose or publish a report in this step. Then run `devkit spec proposal accept <slug> --report-uri <uri> --mode accept_only|accept_and_handoff --by user`, or run `devkit spec proposal handoff <slug> --report-uri <uri> --effort low|medium|high` for an already accepted base. The Host carries conversational approval under `ask`; the CLI revalidates the report and current policy. Inspect actual Git and worktree state after a partial result before retrying remaining effects.
-{% else %}5. Return the report URI and source SHA to the Host; acceptance only validates and consumes that already-published report. Do not compose or publish a report during acceptance. Only a separately authorized CLI/PR route records acceptance (`devkit spec proposal accept`) and hands off.
+{% if execution.environment == "local" %}4. When readiness holds, present the findings, committed source and prospective effects to the user. Then run `devkit spec proposal accept <slug> --mode accept_only|accept_and_handoff --by user`, or run `devkit spec proposal handoff <slug> --effort low|medium|high` for an already accepted base. The Host carries conversational approval under `ask`. Inspect actual Git and worktree state after a partial result before retrying remaining effects.
+{% else %}4. When readiness holds, return the committed source SHA and review findings to the Host. Only a separately authorized CLI/PR route records acceptance (`devkit spec proposal accept`) and hands off.
 {% endif %}
 ## Completion
 
-- The published report is bound to the committed `plan-<slug>` head and its URI was presented.
+- The review is bound to the committed `plan-<slug>` head and presented to the user.
 {% if execution.environment == "local" %}- Acceptance and handoff results report the CLI operation, selected effort and completed effects.
 {% else %}- Nothing was accepted or handed off without separate authorization.
 {% endif %}

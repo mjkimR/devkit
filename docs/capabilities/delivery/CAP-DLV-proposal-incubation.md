@@ -162,7 +162,7 @@ removes it.
     missing `gate:plan-intent` is `pending`, not blocking, because one request may ask both gates. `accept` never
     records `plan-intent`, commits, merges or hands off; Backlog commits a direct acceptance on the base.
 
-15. **Publish the Planning review before acceptance**: when a bound proposal in Planning reaches `plan-accept`, the agent MUST ensure one complete `proposal-review` artifact exists through the shared adapter for the final committed `plan-<slug>` source before presenting acceptance, reusing a complete exact-source report when available. `[tool.spec.proposal_review].auto_write` defaults to `true` and controls whether the agent writes and publishes a missing report automatically; when `false`, the agent MUST wait for explicit publication if no complete exact-source report exists. Acceptance MUST validate and consume the exact `report_uri` and MUST NOT compose or publish a report. A missing or stale report remains a refusal and requires publication for the current source. `devkit spec policy` exposes the setting as `[PROPOSAL_REVIEW_POLICY: auto_write=<boolean>]` and JSON `proposal_review.auto_write`; malformed values fail with `SPEC_CONFIG_INVALID` (`packages/devkit-spec/tests/integration/features/policy/test_feedback_config.py`, `packages/devkit-spec/src/devkit_spec/features/proposals/usecases/report.py`).
+15. **Planning review before acceptance**: when a bound proposal in Planning reaches `plan-accept`, the agent reviews the proposal, PADRs and envelopes directly for the final committed `plan-<slug>` source before presenting acceptance. Acceptance operates on the committed proposal directly and does not require a shared artifact report. `devkit spec proposal report <slug> [--source-sha <sha>]` can be run to inspect a summary briefing. Acceptance records `status: accepted` and `gate:plan-accept` on the committed proposal.
 
 ### 3.1 Planning feedback retirement
 
@@ -559,12 +559,12 @@ the CLI does not accept a proof or token and cannot authenticate the conversatio
 source, base policy, workflow readiness, worktree provenance and cleanup targets before each mutation. `auto`
 authority comes only from the retained base policy.
 
-`devkit spec proposal accept <slug> --report-uri <uri> --mode accept_only|accept_and_handoff --by user` validates
+`devkit spec proposal accept <slug> --mode accept_only|accept_and_handoff --by user` validates
 the reviewed `plan-<slug>`, records `status: accepted` and `gate:plan-accept`, commits the exact acceptance delta,
 and executes the checked local Planning integration. `accept_only` stops after acceptance. The combined mode also
 starts Development using the selected `--effort low|medium|high`.
 
-`devkit spec proposal handoff <slug> --report-uri <uri> --effort low|medium|high` validates an already accepted
+`devkit spec proposal handoff <slug> --effort low|medium|high` validates an already accepted
 proposal on the retained base, creates or validates `dev-<slug>`, runs setup and sync, then performs proposal handoff
 and scope registration. An automatic handoff uses the proposal's declared `dev_effort`. The command reports the
 worktree, spec bundle, selected effort, notices and completed effects. Setup or handoff failures preserve the
@@ -575,36 +575,22 @@ partial result requires Git/worktree inspection; after an already-landed operati
 remaining cleanup. `ADR-host-cli-lifecycle-authority` defines Host authorization and recovery boundaries.
 
 
-## Source-bound proposal review reports and combined acceptance
+## Proposal review briefings and combined acceptance
 
-`devkit spec proposal report <slug> --source-sha <sha> --body-file <path-or-dash>` and
-`spec_proposal_report(slug, source_sha, body)` publish authored Markdown through `CAP-COLL-shared-artifacts`.
-`devkit spec proposal report <slug> --source-sha <sha> --template` (exactly one of `--template` and `--body-file`,
-else `ARGUMENT_INVALID`) returns the domain template for the same source without publishing. MCP retains only
-`spec_proposal_report` for publication; `spec_proposal_report_template` is not registered.
-The source is a real full commit at clean current `plan-<slug>` HEAD (reviewing or accepted), or a clean accepted
-base HEAD for standalone handoff.
-Language is the owning workspace preference, normalized to ko/en. Report frontmatter binds `proposal`,
-`source_sha`, `language` and `repository_namespace`; the domain template supplies three mandatory bilingual
-sections for outcome, decisions and proposed approval effects (identifying the recommended Development effort).
-Optional sections may report boundary impacts, planning effort/support, open decisions/waivers and unverified areas.
-Every current committed PADR has problem and choice; rejected alternatives and consequences are optional. The Host
-verifies meaning. `[tool.spec.proposal_review].auto_write` defaults to `false`; `devkit spec policy` reports `[PROPOSAL_REVIEW_POLICY: auto_write=<boolean>]` and JSON `proposal_review.auto_write`. For a Planning proposal, the agent ensures one report is available for the final committed source before presenting `plan-accept`; an exact complete report is reused, `auto_write=true` publishes a missing report, and `auto_write=false` requires explicit publication when the report is missing. Acceptance consumes and validates the exact report URI and never composes or publishes a report. A missing, expired or source-mismatched report is refused until a current report is published.
-Publication rejects incomplete or false identity and oversized content; it never edits tracked documents.
-A `PROPOSAL_REVIEW_INVALID` message starts with the failed field class (`source`, `size`, `identity`, `title`,
-`sections`, `decisions`, `decision fields`, `dev_effort`) and names the mismatched keys, headings, PADR
-IDs or tokens; its `[FIX]` names both template routes.
-Exact immutable URI, content digest, generation and seven-day expiry come from the shared adapter; identical live
-retries keep the generation, expired retries create a different one. Publication responses contain the exact URI,
-metadata and available local links without repeating the submitted Markdown; `shared_get` retrieves the body.
-No read refreshes or deletes an artifact.
+`devkit spec proposal report <slug> [--source-sha <sha>] [--template]` generates a domain template or briefing
+for the proposal at that source. The source is a real full commit at clean current `plan-<slug>` HEAD (reviewing or accepted),
+or a clean accepted base HEAD for standalone handoff.
+Language is the owning workspace preference, normalized to ko/en. The briefing reports three sections for outcome,
+decisions and proposed approval effects (identifying the recommended Development effort), plus any boundary impacts,
+planning effort/support, open decisions/waivers and unverified areas.
+Proposal reports are not stored as shared artifacts; acceptance operates directly on the committed proposal files and git HEAD.
 
-`devkit spec proposal accept` requires the Host to present the exact report and effects before an `ask` invocation.
+`devkit spec proposal accept` requires the Host to present the findings and effects before an `ask` invocation.
 Its result includes acceptance, integration and optional handoff progress. `--by user` records decision provenance;
 it is not an authenticated credential. Required-PR refuses this local combined route.
 
 The invocation binds exact source/base commits, Git and extension identities, effective configuration, environment,
-report digest/language/expiry and cleanup targets. The common-directory integration lock covers acceptance and
+and cleanup targets. The common-directory integration lock covers acceptance and
 integration. Only the service-created acceptance record/status delta and its direct-child commit are permitted;
 normal commit gates and the complete integration readiness provider still run. The base cannot advance. Cleanup
 revisions equal to the source SHA may follow only that exact verified acceptance child with identical targets.
@@ -613,26 +599,25 @@ Development merge is authorized. If the Host conversation is declined, canceled 
 invoke the CLI and no lifecycle state changes.
 
 Partial progress returns completed steps, source/acceptance/landed SHAs, integration progress, worktree results and
-a next action. No authority survives a return or restart. Fresh reports and Host decisions cover only remaining
+a next action. No authority survives a return or restart. Fresh reviews and Host decisions cover only remaining
 effects: accepted Planning commits are never replayed, and strictly matched clean pinned worktrees can retry
 setup/handoff. Dirty or mismatched partial state requires inspection; it is never rolled back or treated as completed
 merely because a branch exists. See `ADR-proposal-acceptance` and `ADR-host-cli-lifecycle-authority`.
 
 | Code | Meaning | Action |
 | --- | --- | --- |
-| `PROPOSAL_REVIEW_INVALID` | Report source, structure or identity is invalid; the message starts with the failed field class. | Fill the template from `devkit spec proposal report <slug> --source-sha <sha> --template` for clean current source and publish again. |
-| `PROPOSAL_REVIEW_REFRESH_REQUIRED` | Exact report is missing, expired, changed or bound to another source/language. | Publish a new report, have the Host present it and obtain fresh conversational approval before invoking the CLI. |
-| `PROPOSAL_APPROVAL_NOT_READY` | Planning or worktree prerequisites do not hold. | Resolve the named prerequisite and rerun the CLI operation with current review evidence. |
+| `PROPOSAL_REVIEW_INVALID` | Proposal structure, branch or source is invalid. | Inspect `proposal.md` and ensure it is committed on the expected branch. |
+| `PROPOSAL_APPROVAL_NOT_READY` | Planning or worktree prerequisites do not hold. | Resolve the named prerequisite and rerun the CLI operation. |
 | `PROPOSAL_APPROVAL_STALE` | Reviewed scope or exact acceptance delta changed. | Inspect preserved effects, refresh evidence and obtain Host authority for remaining scope. |
 
 ### Policy-aware decision boundaries
 
 `plan-accept`, `proposal-handoff`, and `dev-integration` independently allow `ask` or `auto`, default `ask`.
-CLI acceptance binds the exact immutable report, source and base commits, configuration, environment and setup.
+CLI acceptance binds the source and base commits, configuration, environment and setup.
 Owning `plan-accept=auto` authorizes checked acceptance and the Planning merge regardless of Development's final-result
 policy. Source-only auto cannot grant authority, and prospective revocation refuses execution. With handoff auto it
 continues into Development using the accepted `dev_effort`; with handoff ask it leaves the accepted proposal waiting
 for its separate start decision. The CLI `mode` is `accept_only` or `accept_and_handoff`; `accept_only` never starts Development even when both policies are auto, and cannot widen that requested scope.
-Handoff runs under Host-carried authority for `ask` or base policy authority for `auto`. Exact report validation, snapshot checks,
+Handoff runs under Host-carried authority for `ask` or base policy authority for `auto`. Snapshot checks,
 readiness and partial-effect recovery apply under either authority. Internal worker sequencing, review,
 retries and fixes inside the approved scope are delegated to the Host, rather than additional user approval gates.

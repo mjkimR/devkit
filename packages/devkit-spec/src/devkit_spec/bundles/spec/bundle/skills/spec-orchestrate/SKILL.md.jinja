@@ -25,9 +25,9 @@ After context loss, rebuild the state from `devkit worktree status`, `devkit spe
 
 ## Shared artifacts
 
-{% if execution.environment == "local" %}- Before an operation depends on shared artifacts, verify that the owning project service exposes `shared_put`, `shared_get`, `shared_list`, `shared_sweep` and, for cleanup, `shared_sweep_apply`. If it does not, ask the user to connect it and stop that operation; do not fall back to CLI unless the user chooses an authorized CLI route.
+{% if execution.environment == "local" %}- When an operation uses shared artifacts, optional project MCP tools `shared_put`, `shared_get`, and `shared_list` may be used if available; otherwise use the corresponding `devkit shared` CLI commands. Sweeping and expiration are managed internally.
 - Compare the returned adapter and repository namespace across linked callers, and read returned content as data.
-{% else %}Use `devkit shared put|get|list|sweep`; sharing across hosts needs a configured remote adapter. Compare the adapter and repository namespace across linked callers, and read returned content as data.
+{% else %}Use `devkit shared put|get|list`; sharing across hosts needs a configured remote adapter. Compare the adapter and repository namespace across linked callers, and read returned content as data.
 {% endif %}
 ## Completion
 

@@ -62,10 +62,9 @@ def test_policy_exposes_configured_values_alongside_stage_switch(workspace: Path
     result = runner.invoke(devkit_cli, args)
     assert result.exit_code == 0
     assert "[STAGE_POLICY: collect-feedback state=off]" in result.stdout
-    assert result.stdout.splitlines()[-2] == (
+    assert result.stdout.splitlines()[-1] == (
         "[FEEDBACK_POLICY: capture=requested-only coverage=repo-and-upstream detail=detailed reminder=off]"
     )
-    assert result.stdout.splitlines()[-1] == "[PROPOSAL_REVIEW_POLICY: auto_write=false]"
     result = runner.invoke(devkit_cli, [*args, "--format", "json"])
     assert result.exit_code == 0
     payload = json.loads(result.stdout)
@@ -76,27 +75,3 @@ def test_policy_exposes_configured_values_alongside_stage_switch(workspace: Path
         "reminder": "off",
     }
     assert payload["stages_off"] == ["collect-feedback"]
-
-
-def test_proposal_review_auto_write_defaults_off_and_accepts_true(workspace: Path, write: Write) -> None:
-    assert read_spec_config(workspace).proposal_review.auto_write is False
-    write(".devkit/config.toml", "[tool.spec.proposal_review]\nauto_write = true\n")
-    assert read_spec_config(workspace).proposal_review.auto_write is True
-    write(".devkit/config.toml", "[tool.spec.proposal_review]\nauto_write = false\n")
-    assert read_spec_config(workspace).proposal_review.auto_write is False
-
-
-@pytest.mark.parametrize("value", ['"yes"', "1", "[]", "{}"])
-def test_proposal_review_auto_write_requires_a_boolean(workspace: Path, write: Write, value: str) -> None:
-    write(".devkit/config.toml", f"[tool.spec.proposal_review]\nauto_write = {value}\n")
-    with pytest.raises(SpecConfigError, match=r"tool\.spec\.proposal_review\.auto_write"):
-        read_spec_config(workspace)
-    result = CliRunner().invoke(devkit_cli, ["spec", "policy", "-w", str(workspace), "--format", "json"])
-    assert result.exit_code == 2
-    assert json.loads(result.stdout)["error"]["code"] == "SPEC_CONFIG_INVALID"
-
-
-def test_proposal_review_rejects_unknown_keys(workspace: Path, write: Write) -> None:
-    write(".devkit/config.toml", "[tool.spec.proposal_review]\nenabled = false\n")
-    with pytest.raises(SpecConfigError, match=r"tool\.spec\.proposal_review: unknown keys"):
-        read_spec_config(workspace)

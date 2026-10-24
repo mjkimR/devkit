@@ -48,10 +48,8 @@ def test_local_put_never_elicits_and_cloud_hides_and_refuses(project):
             return await client.list_tools()
 
     listing = asyncio.run(list_tools())
-    assert {tool.name for tool in listing} == {"shared_get", "shared_list", "shared_sweep"}
+    assert {tool.name for tool in listing} == {"shared_get", "shared_list"}
     assert call(cloud, "shared_put", args).is_error
-    assert call(cloud, "shared_sweep_apply", {}).is_error
-    assert call(cloud, "shared_sweep", {"apply": True}).is_error
     (project / ".devkit/config.local.toml").write_text('[execution]\nenvironment="cloud"\n')
     assert call(server, "shared_put", args).is_error
     assert result.structured_content is not None

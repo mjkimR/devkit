@@ -27,8 +27,8 @@ Text output (paths are relative to the workspace root):
   ``[REWRITTEN: <path>:<line> kind=link|id|path from= to=]`` per rewritten link, reference or code-span path, one
   ``[UNRESOLVED_LINK: <path>:<line> kind= target= reason=]`` per link or reference left as it was,
   ``[SCOPE: <task> namespace= ... token=]`` when it registered the bundle's work scope, and
-  ``[NEXT_CMD: devkit workflow next --unit <dir>]`` when ``spec.md`` is bound to a workflow. With ``--report-uri``
-  and ``--effort``, it composes Development worktree creation and handoff, reporting status and authority.
+  ``[NEXT_CMD: devkit workflow next --unit <dir>]`` when ``spec.md`` is bound to a workflow. With ``--effort``,
+  it composes Development worktree creation and handoff, reporting status and authority.
 
 A handoff inside a linked worktree registers the new bundle in the work-scope registry (``devkit spec scope
 register``) at either ``[tool.spec] worktree`` level; a registration failure is a ``SPEC_SCOPE_REGISTER_FAILED``
@@ -256,7 +256,6 @@ def padr_cmd(
     "no gate:plan-accept record and no worker envelope",
 )
 @click.option("--check", "check_only", is_flag=True, help="Run every check and write nothing")
-@click.option("--report-uri", default=None, help="Exact immutable proposal review report URI for composed acceptance")
 @click.option("--mode", type=click.Choice(["accept_only", "accept_and_handoff"]), default=None)
 @click.option("--effort", type=click.Choice(list(EFFORTS)), default=None)
 @WORKSPACE
@@ -268,24 +267,21 @@ def accept_cmd(
     note: str,
     direct: bool,
     check_only: bool,
-    report_uri: str | None,
     mode: str | None,
     effort: str | None,
     workspace_root: str | None,
     output_format: str,
 ) -> None:
-    """Accept proposal SLUG; with --report-uri, validate its exact review report and compose lifecycle effects.
+    """Accept proposal SLUG; with --mode, compose lifecycle effects.
 
-    Without --report-uri, preserve the basic Backlog acceptance operation. With --report-uri, --mode selects
+    Without --mode, preserve the basic Backlog acceptance operation. With --mode, selects
     acceptance only or acceptance plus handoff. Under ask policy this command follows Host conversational approval;
     policy authority is available only when the retained base declares automatic plan-acceptance.
     """
-    if report_uri is not None:
-        if direct or check_only or mode is None:
-            raise click.UsageError("composed acceptance requires --mode and cannot use --direct or --check")
-        result = PlanAcceptUseCase(resolve_root(workspace_root)).execute(
-            slug, report_uri, mode=mode, effort=effort, by=actor
-        )
+    if mode is not None:
+        if direct or check_only:
+            raise click.UsageError("composed acceptance cannot use --direct or --check")
+        result = PlanAcceptUseCase(resolve_root(workspace_root)).execute(slug, mode=mode, effort=effort, by=actor)
         if is_json(output_format):
             echo_json(result)
         else:
@@ -306,8 +302,8 @@ def accept_cmd(
         if result.get("status") == "needs_recovery" or result.get("errors"):
             raise click.exceptions.Exit(1)
         return
-    if mode is not None or effort is not None:
-        raise click.UsageError("--mode and --effort require --report-uri")
+    if effort is not None:
+        raise click.UsageError("--effort requires --mode")
     result = AcceptProposalUseCase().execute(
         resolve_root(workspace_root), slug, by=actor, note=note, direct=direct, check=check_only
     )
@@ -340,20 +336,15 @@ def accept_cmd(
 
 @proposal_group.command(name="handoff")
 @click.argument("slug")
-@click.option("--report-uri", default=None, help="Exact immutable proposal review report URI")
 @click.option("--effort", type=click.Choice(list(EFFORTS)), default=None)
 @WORKSPACE
 @FORMAT_OPTION
 @boundary
-def handoff_cmd(
-    slug: str, report_uri: str | None, effort: str | None, workspace_root: str | None, output_format: str
-) -> None:
-    """Hand off SLUG; with report and effort, compose Development worktree creation and handoff."""
+def handoff_cmd(slug: str, effort: str | None, workspace_root: str | None, output_format: str) -> None:
+    """Hand off SLUG; with --effort, compose Development worktree creation and handoff."""
     root = resolve_root(workspace_root)
-    if report_uri is not None:
-        if effort is None:
-            raise click.UsageError("composed handoff requires --effort low|medium|high")
-        result = HandoffUseCase(root).execute(slug, report_uri, effort)
+    if effort is not None:
+        result = HandoffUseCase(root).execute(slug, effort)
         if is_json(output_format):
             echo_json(result)
         else:
@@ -378,8 +369,6 @@ def handoff_cmd(
         if result.get("status") == "needs_recovery" or result.get("errors"):
             raise click.exceptions.Exit(1)
         return
-    if effort is not None:
-        raise click.UsageError("--effort requires --report-uri")
     completed = HandoffProposalUseCase().execute(root, slug)
     result, registered = completed.handoff, completed.registered
     if is_json(output_format):
@@ -467,55 +456,25 @@ def check_cmd(slug: str, workspace_root: str | None, output_format: str) -> None
 
 @proposal_group.command(name="report")
 @click.argument("slug")
-@click.option("--source-sha", required=True, help="Exact current committed Planning or accepted base SHA")
-@click.option(
-    "--body-file",
-    type=click.File("r", encoding="utf-8"),
-    help="Complete Markdown briefing to publish, or - for stdin",
-)
+@click.option("--source-sha", default=None, help="Exact current committed Planning or accepted base SHA")
 @click.option(
     "--template",
     "show_template",
     is_flag=True,
-    help="Print the report template to complete for this source instead of publishing",
+    help="Print the report template for this source",
 )
 @WORKSPACE
 @FORMAT_OPTION
 @boundary
 def report_cmd(
-    slug: str, source_sha: str, body_file, show_template: bool, workspace_root: str | None, output_format: str
+    slug: str, source_sha: str | None, show_template: bool, workspace_root: str | None, output_format: str
 ) -> None:
-    """Publish a source-bound proposal review report through the shared adapter, or print its template."""
-    from devkit_core.base.errors import ArgumentError
-    from devkit_dist.features.shared.models.api import MAX_BYTES
+    """Print the proposal review report/briefing for SLUG."""
+    from devkit_spec.features.proposals.usecases.report import ReportTemplateUseCase
 
-    from devkit_spec.features.proposals.usecases.report import PublishProposalReportUseCase, ReportTemplateUseCase
-
-    if show_template == (body_file is not None):
-        raise ArgumentError(
-            "pass exactly one of --template and --body-file",
-            target_files=["--template", "--body-file"],
-            fix="Use --template to print the report template, then --body-file <path-or-dash> to publish the"
-            " completed report",
-        )
     root = resolve_root(workspace_root)
-    if show_template:
-        text = ReportTemplateUseCase().execute(root, slug, source_sha)
-        if is_json(output_format):
-            echo_json({"proposal": f"PROP-{slug}", "source_sha": source_sha, "template": text})
-        else:
-            click.echo(text, nl=False)
-        return
-    result = PublishProposalReportUseCase().execute(root, slug, source_sha, body_file.read(MAX_BYTES + 1))
+    text = ReportTemplateUseCase().execute(root, slug, source_sha)
     if is_json(output_format):
-        echo_json(result.receipt_dict())
+        echo_json({"proposal": f"PROP-{slug}", "source_sha": source_sha or "", "report": text})
     else:
-        click.echo(
-            sentinel(
-                "PROPOSAL_REVIEW",
-                result.metadata.artifact_uri,
-                source_sha=source_sha,
-                language=result.metadata.language,
-                expires_at=result.metadata.expires_at,
-            )
-        )
+        click.echo(text, nl=False)

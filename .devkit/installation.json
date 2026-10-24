@@ -878,11 +878,11 @@
     },
     ".agents/skills/spec-next/references/workflow-signals.md": {
       "mode": 420,
-      "sha256": "c5cd8e21116aecb22e59930db2d66f12cc6b2da7a374df4667742c2e857b0e11"
+      "sha256": "8c94b03c0af4ac43e488ad5b2dffb6630840c8429ab2080d930574f0901d8c9c"
     },
     ".agents/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
-      "sha256": "43665d56afb597de20aada871198e01c01a2be5f035c20dde4bfbc06af317648"
+      "sha256": "796bd45e125b57a5a60ac56554e80290e06048c29c13f6bfb8f2a00fec35a473"
     },
     ".agents/skills/spec-orchestrate/agents/openai.yaml": {
       "mode": 420,
@@ -894,7 +894,7 @@
     },
     ".agents/skills/spec-review-proposal/SKILL.md": {
       "mode": 420,
-      "sha256": "aa0011ecd64162b35d76116734f485bc9c2c2da3734726ee1d8d1d4201559a6f"
+      "sha256": "c5ff9a4d92c865faabaaa6e915f795dba32a5903ebdbf06321f8f3e21e6a4c8e"
     },
     ".agents/skills/spec-review/SKILL.md": {
       "mode": 420,
@@ -994,7 +994,7 @@
     },
     ".agents/skills/spec/references/worktree.md": {
       "mode": 420,
-      "sha256": "21f92deb304b230a8cb5fd58b93ad81ce3f85ba7289bfc66650c6f0ec5d1c223"
+      "sha256": "4100513218ae85261c69f044e3ef5fde5263c758b3707b054319958bd34112e1"
     },
     ".claude/agents/challenger.md": {
       "mode": 420,
@@ -1086,11 +1086,11 @@
     },
     ".claude/skills/spec-next/references/workflow-signals.md": {
       "mode": 420,
-      "sha256": "c5cd8e21116aecb22e59930db2d66f12cc6b2da7a374df4667742c2e857b0e11"
+      "sha256": "8c94b03c0af4ac43e488ad5b2dffb6630840c8429ab2080d930574f0901d8c9c"
     },
     ".claude/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
-      "sha256": "52eb650b588791d6fec1f7987fcbebf30c79c8809c2f5c397652c80146812940"
+      "sha256": "5215a31efb2bf6c88b70b83eba9ec04a16d638a81bdbbd7faf9e0e186311ca4f"
     },
     ".claude/skills/spec-plan/SKILL.md": {
       "mode": 420,
@@ -1098,7 +1098,7 @@
     },
     ".claude/skills/spec-review-proposal/SKILL.md": {
       "mode": 420,
-      "sha256": "aa0011ecd64162b35d76116734f485bc9c2c2da3734726ee1d8d1d4201559a6f"
+      "sha256": "c5ff9a4d92c865faabaaa6e915f795dba32a5903ebdbf06321f8f3e21e6a4c8e"
     },
     ".claude/skills/spec-review/SKILL.md": {
       "mode": 420,
@@ -1198,7 +1198,7 @@
     },
     ".claude/skills/spec/references/worktree.md": {
       "mode": 420,
-      "sha256": "21f92deb304b230a8cb5fd58b93ad81ce3f85ba7289bfc66650c6f0ec5d1c223"
+      "sha256": "4100513218ae85261c69f044e3ef5fde5263c758b3707b054319958bd34112e1"
     },
     ".codex/agents/challenger.toml": {
       "mode": 420,
@@ -1650,11 +1650,11 @@
     },
     ".devkit/managed/spec/skills/spec-next/references/workflow-signals.md": {
       "mode": 420,
-      "sha256": "c5cd8e21116aecb22e59930db2d66f12cc6b2da7a374df4667742c2e857b0e11"
+      "sha256": "8c94b03c0af4ac43e488ad5b2dffb6630840c8429ab2080d930574f0901d8c9c"
     },
     ".devkit/managed/spec/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
-      "sha256": "43665d56afb597de20aada871198e01c01a2be5f035c20dde4bfbc06af317648"
+      "sha256": "796bd45e125b57a5a60ac56554e80290e06048c29c13f6bfb8f2a00fec35a473"
     },
     ".devkit/managed/spec/skills/spec-plan/SKILL.md": {
       "mode": 420,
@@ -1662,7 +1662,7 @@
     },
     ".devkit/managed/spec/skills/spec-review-proposal/SKILL.md": {
       "mode": 420,
-      "sha256": "aa0011ecd64162b35d76116734f485bc9c2c2da3734726ee1d8d1d4201559a6f"
+      "sha256": "c5ff9a4d92c865faabaaa6e915f795dba32a5903ebdbf06321f8f3e21e6a4c8e"
     },
     ".devkit/managed/spec/skills/spec-review/SKILL.md": {
       "mode": 420,
@@ -1762,7 +1762,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/worktree.md": {
       "mode": 420,
-      "sha256": "21f92deb304b230a8cb5fd58b93ad81ce3f85ba7289bfc66650c6f0ec5d1c223"
+      "sha256": "4100513218ae85261c69f044e3ef5fde5263c758b3707b054319958bd34112e1"
     },
     ".devkit/managed/spec/subagents/challenger.md": {
       "mode": 420,
@@ -1814,7 +1814,7 @@
     },
     ".devkit/managed/spec/workflows/sdd-proposal.md": {
       "mode": 420,
-      "sha256": "db5a436fb05e22b2e36061ee93351bd8239d6173e1614d9507c5e703e2707cad"
+      "sha256": "7bd01fea6f6383dbb70ff9b151be9962a35f290c315107c986684a6f67ff9621"
     },
     ".devkit/managed/spec/workflows/sdd-session-bugfix.md": {
       "mode": 420,

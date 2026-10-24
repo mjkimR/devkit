@@ -3,6 +3,7 @@
 	import DOMPurify from 'dompurify';
 	import MarkdownArticle from '../document/MarkdownArticle.svelte';
 	import RawViewer from '../document/RawViewer.svelte';
+	import { parseFrontmatterAndMarkdown } from '../document/document-parser';
 	import type {
 		RepositoryDataSource,
 		SharedArtifactDetail,
@@ -49,11 +50,19 @@
 		})
 	);
 
-	let renderedHtml = $derived(
+	let parsedDoc = $derived(
 		selectedDetail?.content
-			? DOMPurify.sanitize(marked.parse(selectedDetail.content, { async: false }) as string)
+			? parseFrontmatterAndMarkdown(selectedDetail.content)
+			: { frontmatter: null, content: '' }
+	);
+
+	let renderedHtml = $derived(
+		parsedDoc.content
+			? DOMPurify.sanitize(marked.parse(parsedDoc.content, { async: false }) as string)
 			: ''
 	);
+
+	let parsedFrontmatter = $derived(parsedDoc.frontmatter);
 
 	function formatExpiry(expiresAt: string): { label: string; expired: boolean } {
 		const diff = new Date(expiresAt).getTime() - Date.now();
@@ -259,10 +268,7 @@
 				{:else}
 					<div class="guide-box">
 						<h3>공유 공간 (Shared Space)</h3>
-						<p>
-							작업 트리 간에 협업 중 생성된 7일 만료의 불변 아티팩트(예: proposal-review 리포트)를
-							안전하게 공유하고 조회할 수 있습니다.
-						</p>
+						<p>작업 트리 간에 공유된 7일 만료의 불변 아티팩트를 안전하게 조회할 수 있습니다.</p>
 						<div class="guide-tip">
 							<strong>💡 안내:</strong> 좌측 목록에서 열람할 아티팩트를 선택하세요.
 						</div>
@@ -369,7 +375,7 @@
 									</span>
 								</div>
 								<div class="drawer-field">
-									<span class="field-label">제안 슬러그</span>
+									<span class="field-label">슬러그</span>
 									<span class="field-value selectable-text">{meta.slug}</span>
 								</div>
 								<div class="drawer-field">
@@ -463,6 +469,20 @@
 									</div>
 								</div>
 							</section>
+
+							{#if parsedFrontmatter && Object.keys(parsedFrontmatter).length > 0}
+								<section class="drawer-section">
+									<h4 class="section-title">문서 Frontmatter</h4>
+									{#each Object.entries(parsedFrontmatter) as [key, value]}
+										<div class="drawer-field">
+											<span class="field-label">{key}</span>
+											<span class="field-value selectable-text">
+												{typeof value === 'object' ? JSON.stringify(value) : String(value)}
+											</span>
+										</div>
+									{/each}
+								</section>
+							{/if}
 						</div>
 					</aside>
 				{/if}
@@ -629,12 +649,6 @@
 		text-transform: uppercase;
 		background-color: var(--bg-btn);
 		color: var(--text-btn);
-	}
-
-	.kind-badge.proposal-review {
-		background-color: rgba(99, 102, 241, 0.15);
-		color: #818cf8;
-		border: 1px solid rgba(99, 102, 241, 0.3);
 	}
 
 	.lang-badge {

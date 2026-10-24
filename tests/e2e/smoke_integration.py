@@ -39,7 +39,7 @@ async def conversation(root: Path, worktree: Path, prepared_digest: str) -> None
     params = StdioServerParameters(command=sys.executable, args=args)
     async with (
         stdio_client(params) as (read, write),
-        ClientSession(read, write, read_timeout_seconds=timedelta(seconds=30)) as session,
+        ClientSession(read, write, read_timeout_seconds=30.0) as session,
     ):
         await session.initialize()
         tools = await session.list_tools()

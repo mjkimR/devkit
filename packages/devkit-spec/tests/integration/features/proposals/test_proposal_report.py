@@ -1,13 +1,12 @@
 from __future__ import annotations
 
+import json
 import subprocess
-from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-import yaml
-from devkit_core.base.errors import YamlBindingUnavailableError
-from devkit_dist.features.shared.repositories.local import LocalAdapter, discover
+from click.testing import CliRunner
+from devkit_dist.cli import cli
 
 from devkit_spec.features.proposals.usecases import report as reports
 
@@ -35,136 +34,23 @@ def repo(tmp_path: Path) -> tuple[Path, str]:
     return tmp_path, git(tmp_path, "rev-parse", "HEAD")
 
 
-def briefing(root: Path, sha: str) -> str:
-    # Complete each required section with authored evidence, preserving template identity.
-    text = reports.template(root, "example", sha)
-    return (
-        "\n".join(line + "\nEvidence." if line.startswith(("## ", "#### ")) else line for line in text.splitlines())
-        + "\n"
-    )
+def _cli(*args: str, input: str | None = None):
+    return CliRunner().invoke(cli, ["spec", "proposal", "report", *args], input=input)
 
 
-@pytest.mark.parametrize("language", ["en", "ko"])
-def test_publication_retry_validation_and_language(repo, monkeypatch, language):
+def test_cli_report_template_prints(repo):
     root, sha = repo
-    monkeypatch.setattr(reports, "approval_language", lambda _: language)
-    body = briefing(root, sha)
-    first = reports.publish(root, "example", sha, body)
-    assert reports.publish(root, "example", sha, body) == first
-    assert reports.validate(root, "example", sha, first.metadata.artifact_uri) == first
-    assert git(root, "status", "--porcelain") == ""
-    monkeypatch.setattr(reports, "approval_language", lambda _: "ko" if language == "en" else "en")
-    with pytest.raises(reports.ReviewRefreshRequiredError):
-        reports.validate(root, "example", sha, first.metadata.artifact_uri)
+    text = _cli("example", "--source-sha", sha, "--template", "--workspace-root", str(root))
+    assert text.exit_code == 0, text.output
+    assert text.output == reports.template(root, "example", sha)
+    for token in ("proposal: PROP-example", f"source_sha: {sha}", "### PADR-choice"):
+        assert token in text.output
+    assert "Proposed approval effects" in text.output
+    assert "high" in text.output
 
-
-def test_validation_preserves_missing_yaml_binding_error(repo, monkeypatch):
-    root, sha = repo
-    artifact = reports.publish(root, "example", sha, briefing(root, sha))
-    monkeypatch.delattr(yaml, "CSafeLoader")
-    with pytest.raises(YamlBindingUnavailableError) as caught:
-        reports.validate(root, "example", sha, artifact.metadata.artifact_uri)
-    assert caught.value.code == "YAML_BINDING_UNAVAILABLE"
-    assert caught.value.exit_code == 2
-    assert caught.value.fix and "binary wheel" in caught.value.fix
-
-
-@pytest.mark.parametrize("replace", ["PADR-choice", "Choice", "source_sha", "repository_namespace"])
-def test_incomplete_or_false_report_refused(repo, replace):
-    root, sha = repo
-    body = briefing(root, sha).replace(replace, "wrong")
-    with pytest.raises(reports.ReportInvalidError):
-        reports.publish(root, "example", sha, body)
-
-
-def test_dirty_false_sha_and_stale_source(repo):
-    root, sha = repo
-    body = briefing(root, sha)
-    artifact = reports.publish(root, "example", sha, body)
-    with pytest.raises(reports.ReportInvalidError):
-        reports.publish(root, "example", "a" * 40, body)
-    (root / "new").write_text("dirty")
-    with pytest.raises(reports.ReportInvalidError):
-        reports.publish(root, "example", sha, body)
-    git(root, "add", ".")
-    git(root, "commit", "-m", "new")
-    with pytest.raises(reports.ReviewRefreshRequiredError):
-        reports.validate(root, "example", sha, artifact.metadata.artifact_uri)
-    assert reports.validate_artifact(root, "example", sha, artifact.metadata.artifact_uri) == artifact
-
-
-def test_expired_retry_new_generation(repo, monkeypatch):
-    root, sha = repo
-    now = datetime.now(UTC)
-    local = LocalAdapter(discover(root), clock=lambda: now)
-    monkeypatch.setattr(reports, "adapter", lambda _: local)
-    body = briefing(root, sha)
-    first = reports.publish(root, "example", sha, body)
-    now += timedelta(days=8)
-    with pytest.raises(reports.ReviewRefreshRequiredError):
-        reports.validate(root, "example", sha, first.metadata.artifact_uri)
-    second = reports.publish(root, "example", sha, body)
-    assert first.metadata.artifact_uri != second.metadata.artifact_uri
-
-
-def test_size_and_wrong_repository(repo, tmp_path_factory):
-    root, sha = repo
-    body = briefing(root, sha)
-    with pytest.raises(reports.ReportInvalidError):
-        reports.publish(root, "example", sha, body + "x" * reports.MAX_BYTES)
-    artifact = reports.publish(root, "example", sha, body)
-    uri = artifact.metadata.artifact_uri.replace(artifact.metadata.repository_namespace, "0" * 64)
-    with pytest.raises(reports.ReviewRefreshRequiredError):
-        reports.validate(root, "example", sha, uri)
-
-
-def test_cli_and_mcp_publish_same_artifact(repo):
-    import asyncio
-    import json
-
-    from click.testing import CliRunner
-    from devkit_dist.cli import cli
-
-    from devkit_spec.features.proposals.mcp.report import create_tools
-
-    root, sha = repo
-    body = briefing(root, sha)
-    result = CliRunner().invoke(
-        cli,
-        [
-            "spec",
-            "proposal",
-            "report",
-            "example",
-            "--source-sha",
-            sha,
-            "--body-file",
-            "-",
-            "--workspace-root",
-            str(root),
-            "--format",
-            "json",
-        ],
-        input=body,
-    )
-    assert result.exit_code == 0, result.output
-
-    async def forbidden_confirm(*args):
-        raise AssertionError("report publication must not request approval")
-
-    tool = create_tools(root)[0]
-    assert tool.execution == "bounded_write"
-
-    async def invoke():
-        return await tool.invoke({"slug": "example", "source_sha": sha, "body": body}, forbidden_confirm)
-
-    response = asyncio.run(invoke())
-    assert response == json.loads(result.output)
-    assert "content" not in response
-    artifact = reports.publish_workspace_report(root, "example", sha, body)
-    assert artifact.content == body
-    assert reports.validate(root, "example", sha, response["artifact_uri"]) == artifact
-    assert response == artifact.receipt_dict()
+    data = _cli("example", "--source-sha", sha, "--template", "--workspace-root", str(root), "--format", "json")
+    assert data.exit_code == 0, data.output
+    assert json.loads(data.output) == {"proposal": "PROP-example", "source_sha": sha, "report": text.output}
 
 
 def test_accepted_base_and_wrong_branch(repo):
@@ -177,53 +63,8 @@ def test_accepted_base_and_wrong_branch(repo):
     git(root, "add", ".")
     git(root, "commit", "-m", "accepted")
     sha = git(root, "rev-parse", "HEAD")
-    report = reports.publish(root, "example", sha, briefing(root, sha))
-    assert reports.validate(root, "example", sha, report.metadata.artifact_uri) == report
-
-
-def _cli(*args: str, input: str | None = None):
-    from click.testing import CliRunner
-    from devkit_dist.cli import cli
-
-    return CliRunner().invoke(cli, ["spec", "proposal", "report", *args], input=input)
-
-
-def test_cli_template_prints_without_publishing(repo):
-    # AC-01
-    import json
-
-    root, sha = repo
-    text = _cli("example", "--source-sha", sha, "--template", "--workspace-root", str(root))
-    assert text.exit_code == 0, text.output
-    assert text.output == reports.template(root, "example", sha)
-    for token in ("proposal: PROP-example", f"source_sha: {sha}", "repository_namespace:", "### PADR-choice"):
-        assert token in text.output
-    assert "Proposed approval effects" in text.output
-    assert "high" in text.output
-    data = _cli("example", "--source-sha", sha, "--template", "--workspace-root", str(root), "--format", "json")
-    assert data.exit_code == 0, data.output
-    assert json.loads(data.output) == {"proposal": "PROP-example", "source_sha": sha, "template": text.output}
-    assert not LocalAdapter(discover(root)).list("proposal-review", "example").entries
-
-
-@pytest.mark.parametrize("extra", [("--template", "--body-file", "-"), ()])
-def test_cli_template_and_body_are_exclusive(repo, extra):
-    # AC-02
-    root, sha = repo
-    result = _cli("example", "--source-sha", sha, *extra, "--workspace-root", str(root), input="x")
-    assert result.exit_code == 2
-    assert "ARGUMENT_INVALID" in result.output
-    assert not LocalAdapter(discover(root)).list("proposal-review", "example").entries
-
-
-def test_mcp_exposes_report_publication_but_not_template(repo):
-    from devkit_spec.features.proposals.mcp.report import create_tools
-
-    root, sha = repo
-    tools = {tool.name: tool for tool in create_tools(root)}
-    assert set(tools) == {"spec_proposal_report"}
-    assert "--template" in tools["spec_proposal_report"].description
-    assert sha
+    text = reports.template(root, "example", sha)
+    assert "proposal: PROP-example" in text
 
 
 def test_composed_handoff_advisories_are_emitted_once():
@@ -236,43 +77,3 @@ def test_composed_handoff_advisories_are_emitted_once():
         "advisory": {"actor": "USER", "retry": "SAFE"},
     }
     assert len(_result_advisories({"notices": [advisory], "handoff": {"notices": [advisory]}})) == 1
-
-
-@pytest.mark.parametrize(
-    ("old", "new", "prefix", "named"),
-    [
-        ("source_sha: ", "source_sha: x", "identity:", "source_sha"),
-        ("### PADR-choice", "### PADR-other", "decisions:", "PADR-choice"),
-        ("#### Choice", "#### Other", "decision fields:", "Choice"),
-        ("\nhigh", "\nwrong", "dev_effort:", "Proposed approval effects"),
-    ],
-)
-def test_refusal_names_field_class_and_template_route(repo, old, new, prefix, named):
-    # AC-04
-    root, sha = repo
-    body = briefing(root, sha).replace(old, new, 1)
-    with pytest.raises(reports.ReportInvalidError) as caught:
-        reports.publish(root, "example", sha, body)
-    assert caught.value.message.startswith(prefix)
-    assert named in caught.value.message
-    fix = caught.value.fix or ""
-    assert "--template" in fix and "spec_proposal_report_template" in fix
-
-
-def test_optional_sections_permitted_and_planning_support(repo):
-    root, sha = repo
-    body = briefing(root, sha)
-    # Add optional sections
-    augmented = (
-        body
-        + "\n## Boundary impacts\n\nNo breaking boundary changes.\n"
-        + "\n## Planning effort and support\n\nreview-01.yaml medium\n"
-        + "\n## Unverified areas\n\nNone.\n"
-    )
-    artifact = reports.publish(root, "example", sha, augmented)
-    assert reports.validate(root, "example", sha, artifact.metadata.artifact_uri) == artifact
-    assert "review-01.yaml medium" in reports.planning_support(artifact)
-
-    # Base 3-section report returns approval effects as planning support fallback
-    base_artifact = reports.publish(root, "example", sha, body)
-    assert "high" in reports.planning_support(base_artifact)

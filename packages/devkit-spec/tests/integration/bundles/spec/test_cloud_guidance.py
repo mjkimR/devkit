@@ -78,7 +78,7 @@ def test_complete_maintained_cloud_inventory(agent: str, tmp_path: Path):
     assert classified == set(inventory.files)
     combined = flat("\n".join(v.data.decode() for k, v in inventory.files.items() if k.endswith(".md")))
     for required in (
-        "devkit shared put|get|list|sweep",
+        "devkit shared put|get|list",
         "devkit spec proposal report",
         "separately authorized",
         "devkit playbook get",
@@ -88,9 +88,9 @@ def test_complete_maintained_cloud_inventory(agent: str, tmp_path: Path):
     local = desired_inventory(selected, {item.bundle.name: ["all"] for item in selected}, [agent], environment="local")
     review = flat(local.files[".devkit/managed/spec/skills/spec-review-proposal/SKILL.md"].data.decode())
     assert "devkit spec proposal accept" in review
-    assert "--report-uri" in review
-    assert "--template" in review
+    assert "--report-uri" not in review
+    assert "devkit spec proposal report" in review
     cloud_review = flat(inventory.files[".devkit/managed/spec/skills/spec-review-proposal/SKILL.md"].data.decode())
-    assert "--template" in cloud_review
+    assert "--report-uri" not in cloud_review
     orchestrate = flat(local.files[".devkit/managed/spec/skills/spec-orchestrate/SKILL.md"].data.decode())
-    assert "do not fall back to CLI unless the user chooses an authorized CLI route" in orchestrate
+    assert "optional project MCP tools" in orchestrate

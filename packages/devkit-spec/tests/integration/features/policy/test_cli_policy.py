@@ -27,7 +27,6 @@ def test_defaults(workspace: Path) -> None:
         "[GIT_POLICY: worktree=auto pull_request=auto delete_branch=yes setup=-]",
         "[ROUTING_POLICY: depth_escalation=auto]",
         "[FEEDBACK_POLICY: capture=observed coverage=repo detail=standard reminder=contextual]",
-        "[PROPOSAL_REVIEW_POLICY: auto_write=false]",
     ]
 
 
@@ -36,17 +35,15 @@ def test_configured(workspace: Path, write: Write) -> None:
         ".devkit/config.toml",
         '[workflow.approvals]\ndev-integration = "auto"\nhandoff = "off"\n[workflow.stages]\ncollect-feedback = "off"\n'
         '[worktree]\npull_request = "required"\nsetup = "uv sync"\n[tool.spec]\nworktree = "required"\n'
-        'depth_escalation = "ask"\n'
-        "[tool.spec.proposal_review]\nauto_write = false\n",
+        'depth_escalation = "ask"\n',
     )
     lines = _policy(workspace).stdout.splitlines()
     assert "[GATE_POLICY: dev-integration policy=auto source=config]" in lines
     assert "[GATE_POLICY: handoff policy=off source=config]" in lines
     assert "[STAGE_POLICY: collect-feedback state=off]" in lines
-    assert lines[-4] == '[GIT_POLICY: worktree=required pull_request=required delete_branch=yes setup="uv sync"]'
-    assert lines[-3] == "[ROUTING_POLICY: depth_escalation=ask]"
-    assert lines[-1] == "[PROPOSAL_REVIEW_POLICY: auto_write=false]"
-    assert lines[-1] == "[PROPOSAL_REVIEW_POLICY: auto_write=false]"
+    assert lines[-3] == '[GIT_POLICY: worktree=required pull_request=required delete_branch=yes setup="uv sync"]'
+    assert lines[-2] == "[ROUTING_POLICY: depth_escalation=ask]"
+    assert lines[-1] == "[FEEDBACK_POLICY: capture=observed coverage=repo detail=standard reminder=contextual]"
     payload = json.loads(_policy(workspace, "--format", "json").stdout)
     assert payload["git"] == {
         "worktree": "required",
@@ -56,7 +53,6 @@ def test_configured(workspace: Path, write: Write) -> None:
     }
     assert payload["stages_off"] == ["collect-feedback"]
     assert payload["routing"] == {"depth_escalation": "ask"}
-    assert payload["proposal_review"] == {"auto_write": False}
 
 
 @pytest.mark.parametrize("gate", ["plan-intent", "plan-accept", "proposal-handoff", "dev-integration"])

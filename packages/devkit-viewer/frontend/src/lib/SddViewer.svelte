@@ -306,10 +306,6 @@
 							currentPath = path;
 							view = 'files';
 						}}
-						onOpenShared={(slug) => {
-							selectedSharedSlug = slug;
-							view = 'shared';
-						}}
 						onLocation={(path, anchor, selectedView, frontmatter) => {
 							dispatchItemSelected(path, frontmatter);
 							hostEl?.dispatchEvent(

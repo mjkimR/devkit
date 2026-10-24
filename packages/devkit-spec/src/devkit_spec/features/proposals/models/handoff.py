@@ -17,7 +17,6 @@ class HandoffPreview:
     summary: str
     plan: str
     effort: str
-    report_uri: str = ""
     existing: bool = False
 
     def message(self, language: str = "en") -> str:

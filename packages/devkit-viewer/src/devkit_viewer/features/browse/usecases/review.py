@@ -41,13 +41,14 @@ def report_page(repo: Repository, generation_id: str) -> bytes:
     page = (
         '<!doctype html><html><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
-        "<title>Proposal review</title></head><body><main><h1>Proposal review</h1>"
+        "<title>Shared artifact</title></head><body><main><h1>Shared artifact</h1>"
         f"<dl><dt>Repository</dt><dd>{escape(repo.id)}</dd>"
-        f"<dt>Proposal</dt><dd>{escape(meta.slug)}</dd>"
+        f"<dt>Kind</dt><dd>{escape(meta.kind)}</dd>"
+        f"<dt>Slug</dt><dd>{escape(meta.slug)}</dd>"
         f"<dt>Source SHA</dt><dd>{escape(meta.source_sha)}</dd>"
         f"<dt>Language</dt><dd>{escape(meta.language)}</dd>"
         f"<dt>Expires</dt><dd>{escape(meta.expires_at)}</dd></dl>"
-        "<p>This immutable report does not assert that the branch remains current.</p>"
+        "<p>This immutable artifact does not assert that the branch remains current.</p>"
         f"<pre>{escape(artifact.content)}</pre></main></body></html>"
     )
     return page.encode("utf-8")
@@ -56,10 +57,9 @@ def report_page(repo: Repository, generation_id: str) -> bytes:
 def unavailable_page(error: ReadError) -> bytes:
     """Stable no-write unavailable page for an exact missing or expired generation."""
     return (
-        '<!doctype html><html><head><meta charset="utf-8"><title>Proposal review unavailable</title></head>'
-        "<body><main><h1>Proposal review unavailable</h1>"
+        '<!doctype html><html><head><meta charset="utf-8"><title>Shared artifact unavailable</title></head>'
+        "<body><main><h1>Shared artifact unavailable</h1>"
         f"<p>{escape(error.code)}: {escape(error.message)}</p>"
-        "<p>Ask the Host to regenerate the proposal review report for the current committed source "
-        "and provide its new exact report link. This viewer never refreshes or publishes reports.</p>"
+        "<p>The requested shared artifact is unavailable or has expired. This viewer never refreshes or publishes artifacts.</p>"
         "</main></body></html>"
     ).encode()

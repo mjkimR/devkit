@@ -626,7 +626,6 @@ dependencies = [
     { name = "click" },
     { name = "devkit-agt" },
     { name = "devkit-core" },
-    { name = "devkit-mcp" },
 ]
 
 [package.optional-dependencies]
@@ -648,7 +647,6 @@ requires-dist = [
     { name = "devkit-agt", editable = "packages/devkit" },
     { name = "devkit-agt", extras = ["search"], marker = "extra == 'search'", editable = "packages/devkit" },
     { name = "devkit-core", editable = "packages/devkit-core" },
-    { name = "devkit-mcp", editable = "packages/devkit-mcp" },
 ]
 provides-extras = ["search"]
 

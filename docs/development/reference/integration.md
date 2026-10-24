@@ -87,4 +87,4 @@ Explicit response-style bundle variables win. See `CAP-DIST-sync-and-transaction
 this does not localize host-owned controls or establish visible native Korean form support.
 
 
-Proposal acceptance uses `devkit spec proposal accept <slug> --report-uri <uri> --mode accept_only|accept_and_handoff --by user`. Partial effects are recovered from observable state and require fresh Host authority. See `CAP-DLV-proposal-incubation` and `CAP-INT-mcp-services`.
+Proposal acceptance uses `devkit spec proposal accept <slug> --mode accept_only|accept_and_handoff --by user`. Partial effects are recovered from observable state and require fresh Host authority. See `CAP-DLV-proposal-incubation` and `CAP-INT-mcp-services`.

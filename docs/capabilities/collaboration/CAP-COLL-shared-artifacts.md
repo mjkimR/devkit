@@ -56,8 +56,8 @@ SHARED_ARTIFACT_INVALID. Discovery, lock waits and IO checkpoints share a ten-se
 ## Operations and configuration
 
 CLI commands are devkit shared put|get|list|sweep. Put reads stdin; --format json emits one object. Equivalent MCP
-tools are shared_put, shared_get, shared_list, shared_sweep (plan only) and shared_sweep_apply. Fixed bounded-write
-classification applies only to put/apply-sweep; cloud excludes and refuses these tools. Local writes elicit no
+tools are shared_put, shared_get, and shared_list (sweeping is managed internally and not exposed as an MCP tool). Fixed bounded-write
+classification applies only to put; cloud excludes and refuses write tools. Local writes elicit no
 business approval form. `CAP-MCP-runtime-registration` owns transport execution guards.
 Put responses return the exact artifact URI, metadata and available local links without echoing the submitted
 Markdown body. Get returns the full body for that exact URI. Adapter and use-case artifacts retain their content.
