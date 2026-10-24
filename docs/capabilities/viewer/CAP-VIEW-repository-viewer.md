@@ -1,7 +1,7 @@
 ---
 id: CAP-VIEW-repository-viewer
 title: "Local Repository Viewer"
-summary: "A read-only local page, served by devkit viewer serve, that shows the Living Spec, proposals, specs and milestone roadmap of several devkit repositories at any local branch, plus the Svelte viewer library autohub vendors."
+summary: "A read-only local page, served by devkit viewer serve, that shows saved working-tree files and the checked-out branch for several devkit repositories, plus the Svelte viewer library autohub vendors."
 area: viewer
 status: active
 entrypoints:
@@ -40,26 +40,19 @@ Nothing else is written to stdout. Request logs are `[INFO]` lines on stderr und
   `VIEWER_PORT_IN_USE`.
 - It is not a daemon (`ARCH-01-introduction-and-goals` §3.4): a person starts and stops it.
 
-## 2. Reading through Git
+## 2. Reading the working tree
 
-Every ordinary Git endpoint read names a repository, a ref and a repository-relative path, and Git resolves the path inside that commit's
-tree: no file outside the repository and no uncommitted content is reachable. A ref is `HEAD` or the exact name of a
-local branch, which is read without switching a checkout; a remote-tracking branch, a tag, a commit ID or a revision
-expression (`main~1`) is `VIEWER_REF_UNKNOWN`, and nothing is fetched. The working tree and `HEAD` are never touched.
+Ordinary tree and blob endpoints read saved files below the registered repository root. They include uncommitted and untracked files. A request path is repository-relative; absolute paths, `.` segments, `..` segments, empty segments and backslashes are invalid. Symlinks are omitted from listings and cannot be read. No ordinary content request starts Git or selects another branch.
 
 | Endpoint (`GET`) | Answer |
 | --- | --- |
 | `/api/repos` | `{"repos": [{"id", "default_branch"}]}`, sorted by ID |
 | `/api/repos/<id>/info` | `{"repo_id", "default_branch"}` |
 | `/api/repos/<id>/refs` | `{"default_branch", "branches"}`: local branches, sorted |
-| `/api/repos/<id>/tree?path=&ref=` | `{"items": [{"name", "path", "type": "tree"\|"blob", "size"?}]}`: one directory, directories first |
-| `/api/repos/<id>/blob?path=&ref=` | `{"path", "encoding": "base64", "content", "size"}` |
+| `/api/repos/<id>/tree?path=` | `{"items": [{"name", "path", "type": "tree"\|"blob", "size"?}]}`: one directory, directories first |
+| `/api/repos/<id>/blob?path=` | `{"path", "encoding": "base64", "content", "size"}` |
 
-`default_branch` is the branch checked out in the registered work tree (`HEAD` when detached); `ref` defaults to it.
-An empty `path` is the root. Errors are `{"error": {"code", "message"}}`: `VIEWER_REPO_UNKNOWN`,
-`VIEWER_REF_UNKNOWN` (also a ref starting with `-`), `VIEWER_PATH_NOT_FOUND` (absent at the ref, or the wrong kind),
-`VIEWER_NOT_FOUND` (no such endpoint or file) with `404`; `VIEWER_PATH_INVALID` (a leading `/`, a backslash, an empty,
-`.` or `..` segment) with `400`; `VIEWER_GIT_FAILED` with `500`.
+`default_branch` is the branch checked out in the registered work tree (`HEAD` when detached). An empty `path` is the root. A legacy `ref` query parameter is ignored and cannot select another branch. Errors are `{"error": {"code", "message"}}`: `VIEWER_REPO_UNKNOWN`, `VIEWER_PATH_NOT_FOUND` (absent or a symlink), `VIEWER_NOT_FOUND` (no such endpoint or file) with `404`; `VIEWER_PATH_INVALID` (a leading `/`, a backslash, an empty, `.` or `..` segment) with `400`; `VIEWER_GIT_FAILED` with `500` when the branch label cannot be read.
 
 ## 3. Local and read-only
 
@@ -77,13 +70,13 @@ else is `404`, so no encoded `..` or absolute path reaches a file outside the bu
 
 ## 4. The page
 
-The page is the viewer moved from autohub, with a repository and branch picker on top. Its tabs:
+The page is the viewer moved from autohub, with a repository picker and a label for the checked-out branch. Its tabs read only the registered working tree:
 
 - **문서 읽기**: the Living Spec under `docs/`, grouped by chapter, with in-page links between documents by ID.
 - **Proposals** and **Specs**: `docs/proposals/PROP-*/proposal.md` and `specs/<YYYY-MM>/<bundle>/spec.md`, with their
   bundle files, filters and task progress.
-- **로드맵**: the milestones under `docs/roadmap/` (§5).
-- **파일 탐색**: the repository tree at the ref, with Markdown, frontmatter and Mermaid rendering.
+- **로드맵**: the milestones under `docs/roadmap/` in the registered working tree (§5).
+- **파일 탐색**: the repository working tree, with Markdown, frontmatter and Mermaid rendering.
 
 Documents are parsed in the browser, so the server never runs a repository's own devkit and repositories pinning
 different `devkit-spec` versions are all readable. A document with unknown kinds or fields renders like any other; one
@@ -96,14 +89,11 @@ shown. Rendered Markdown and SVG pass through DOMPurify.
   ID.
 - **Readiness**: a milestone is ready when every milestone in its `depends_on` is `done` or `dropped`. A `depends_on`
   naming no milestone is shown as unknown and never counts as satisfied.
-- **Source**: milestones come from the default branch, whatever branch the viewer shows. Members come from the
-  default branch and, when the data source lists refs, from each local `plan-` and `dev-` branch. Without `refs` (a
-  data source that does not provide it, or a failing one), only the default branch is read, and the page says so.
-- **Members**: direct PROP anchors whose `milestone` names the milestone. Rejected proposals are not members.
+- **Source**: milestones and members come from the registered working tree. Other branches are not enumerated.
+- **Members**: direct PROP anchors whose `milestone` names the milestone in the registered working tree. Rejected proposals are not members.
   SPEC milestone metadata is ignored, including historical metadata; SPECs never replace proposals by slug.
   The roadmap loader reads milestone and proposal anchors only. Direct proposals do not certify completion.
-  One member per slug: an activity branch replaces the default branch's proposal copy. A member found on an activity branch shows that branch. A document opens
-  in the file explorer only when it was read from the branch the viewer shows.
+  One member per slug is displayed.
 
 ## 6. The library for autohub
 
