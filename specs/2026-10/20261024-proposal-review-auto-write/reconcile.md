@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-proposal-review-auto-write
 spec: SPEC-proposal-review-auto-write
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md
     resolution: modified

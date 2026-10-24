@@ -2,7 +2,7 @@
 id: SPEC-proposal-review-auto-write
 title: Publish proposal review before acceptance
 summary: Publish one source-bound proposal review before plan-accept, avoid composing it during acceptance, and configure automatic publication in the project settings.
-status: in-progress
+status: completed
 created: 2026-10-24
 related_capabilities: [CAP-DLV-proposal-incubation]
 related_usecases: [UC-incubate-and-hand-off-a-proposal]
