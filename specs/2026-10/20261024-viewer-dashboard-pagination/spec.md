@@ -2,7 +2,7 @@
 id: SPEC-viewer-dashboard-pagination
 title: Dashboard cached lists and incremental pages
 summary: Preserve section ordering and counts with cached metadata snapshots; fetch document bodies only for visible pages.
-status: planned
+status: in-progress
 created: 2026-10-24
 related_capabilities: []
 related_usecases: []
