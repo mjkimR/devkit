@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-24T13:59:17.412603Z'
+status: completed
+summary: 'PASS self-verified single-capability reconcile: endpoint, page bounds, sorting, retry, fixed TTL and host fallback agree with reviewed code and all four documentation targets'
+findings: []
+assumptions:
+- 'Medium exception: single viewer package and capability; all four affected documents identified and compared, no cross-component behavior or ambiguous contract'
+checks:
+  contract: PASS all AC-01 through AC-05 reflected in CAP-VIEW-repository-viewer and quick-reference mirrors
+  entrypoints: PASS existing package and library doorway declarations cover implementation; rejected tests candidate
+diff_scope:
+  base: a53ddabb83ec008c41c4409c6143ad68444c6275
+  head: d58c9000163ba45c45a014cffe173fdd02e95805
