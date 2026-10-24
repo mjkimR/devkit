@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-24T13:18:08.056896Z'
+status: completed
+summary: The viewer now reads files from the current working tree and displays only the current branch name. Code review and reconcile checks passed; no measured latency benchmark was run.
+findings: []
+assumptions:
+- Detached HEAD is displayed as HEAD; the page remains read-only.
+checks:
+  tests: 'PASS just test-affected: 4860 passed, 12 skipped (full fallback); just viewer test: 28 passed'
+  build: PASS just viewer build; just viewer pack; generated check viewer-assets
+  lint: PASS just lint-check viewer; just check viewer
+diff_scope:
+  base: 289f44ebe6d847bcf16585020f5bc2e611b8cd76
+  head: 09dbfec3f82cce10a07a0cba60039d16d66b6609

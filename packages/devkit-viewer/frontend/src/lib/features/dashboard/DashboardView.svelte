@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { indexDocuments, type RepositoryDocument } from '../../api/documents';
 	import type { RepositoryDataSource } from '../../api/repository';
-	import { isActivityBranch } from '../../api/roadmap';
 	import {
 		extractDashboardData,
 		type DashboardData,
@@ -26,17 +25,14 @@
 	} = $props();
 
 	let documents = $state<RepositoryDocument[]>([]);
-	let allBranches = $state<string[]>([]);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 
 	// Display limits (multiples of 3 for 3-column layout)
-	let sessionLimit = 3;
 	let milestoneLimit = 6;
 	let proposalLimit = 9;
 	let feedbackLimit = 6;
 
-	let showAllSessions = $state(false);
 	let showAllMilestones = $state(false);
 	let showAllProposals = $state(false);
 	let showAllFeedback = $state(false);
@@ -52,22 +48,11 @@
 
 		void (async () => {
 			try {
-				const [docsResult, refsResult] = await Promise.allSettled([
-					indexDocuments(repository, ref, controller.signal),
-					repository.refs ? repository.refs(controller.signal) : Promise.resolve(null)
-				]);
+				const result = await indexDocuments(repository, ref, controller.signal);
 
 				if (controller.signal.aborted) return;
-
-				if (docsResult.status === 'fulfilled') {
-					documents = docsResult.value.documents;
-				} else {
-					error = `Failed to index documents: ${docsResult.reason?.message || docsResult.reason}`;
-				}
-
-				if (refsResult.status === 'fulfilled' && refsResult.value) {
-					allBranches = refsResult.value.branches || [];
-				}
+				documents = result.documents;
+				if (result.errors.length) error = `Failed to index documents: ${result.errors.join('; ')}`;
 			} catch (err: any) {
 				if (!controller.signal.aborted) {
 					error = err?.message || String(err);
@@ -94,14 +79,6 @@
 
 	const displayedFeedback = $derived(
 		showAllFeedback ? data.feedback.open : data.feedback.open.slice(0, feedbackLimit)
-	);
-
-	const activityBranches = $derived(
-		allBranches.filter((name) => name !== branch && isActivityBranch(name))
-	);
-
-	const displayedActivityBranches = $derived(
-		showAllSessions ? activityBranches : activityBranches.slice(0, Math.max(0, sessionLimit - 1))
 	);
 
 	function handleItemClick(
@@ -140,11 +117,6 @@
 					</li>
 					<li>
 						Feedback: {data.feedback.openCount} open out of {data.feedback.totalCount} total
-					</li>
-					<li>
-						Active Activity Branches: {activityBranches.length} branch(es) ({activityBranches.join(
-							', '
-						) || 'none'})
 					</li>
 				</ul>
 				<h3>Guidance for answering user queries:</h3>
@@ -228,21 +200,7 @@
 					<h2 id="section-sessions" class="section-title">Active Worktree Sessions</h2>
 				</div>
 				<div class="section-actions">
-					{#if activityBranches.length > sessionLimit - 1}
-						<button
-							class="toggle-btn"
-							onclick={() => (showAllSessions = !showAllSessions)}
-							aria-expanded={showAllSessions}
-						>
-							{showAllSessions ? 'Show Less' : `Show All (${activityBranches.length + 1})`}
-						</button>
-					{/if}
-					<span class="section-meta">
-						Current: <code>{branch}</code>
-						{#if activityBranches.length}
-							| {activityBranches.length} other activity branch(es)
-						{/if}
-					</span>
+					<span class="section-meta">Current: <code>{branch}</code></span>
 				</div>
 			</div>
 
@@ -255,31 +213,13 @@
 					</div>
 					<h3 class="card-heading">Active Worktree Session</h3>
 					<p class="card-desc">
-						Checked out branch is currently served. AI assistants evaluate repository documents
-						against this workspace ref.
+						The viewer reads saved repository files from this checked-out branch.
 					</p>
 					<!-- AI Hidden details -->
 					<div class="sr-only">
-						Full details: Active repository {repoId}, checked-out ref {branch}. Other activity
-						branches: {activityBranches.join(', ') || 'none'}.
+						Active repository {repoId}, checked-out branch {branch}.
 					</div>
 				</div>
-
-				<!-- Other active activity branches -->
-				{#each displayedActivityBranches as actBranch (actBranch)}
-					<div class="dashboard-card session-card">
-						<div class="card-top">
-							<span class="badge badge-branch">Activity Branch</span>
-							<span class="branch-pill">{actBranch}</span>
-						</div>
-						<h3 class="card-heading">{actBranch}</h3>
-						<p class="card-desc">In-progress delivery task worktree or activity branch.</p>
-						<!-- AI Hidden details -->
-						<div class="sr-only">
-							Activity branch {actBranch} active in repository {repoId}.
-						</div>
-					</div>
-				{/each}
 			</div>
 		</section>
 

@@ -1,0 +1,16 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-24T13:17:35.546277Z'
+status: completed
+summary: Sweep covered the implementation and workflow. No new observation remained; sandbox worktree friction duplicates FB-worktree-sandbox-location.
+findings: []
+assumptions:
+- Duplicate resolved to the existing open feedback item FB-worktree-sandbox-location.
+checks:
+  swept: PASS recorded=0 duplicates=1
+diff_scope:
+  base: 289f44ebe6d847bcf16585020f5bc2e611b8cd76
+  head: 195a683fe7c7cd3b20d951e1f2c207b3f6e52803
+activity_effort: medium

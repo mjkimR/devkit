@@ -3,7 +3,6 @@
 	import {
 		listRepositories,
 		readLocation,
-		repositoryRefs,
 		repositorySource,
 		writeLocation,
 		type RepositorySummary
@@ -11,7 +10,6 @@
 
 	let repos = $state<RepositorySummary[]>([]);
 	let repoId = $state('');
-	let branches = $state<string[]>([]);
 	let branch = $state('');
 	let error = $state('');
 	const requested = readLocation(window.location.hash);
@@ -30,25 +28,11 @@
 	});
 
 	$effect(() => {
-		const id = repoId;
-		if (!id) return;
-		const controller = new AbortController();
-		branches = [];
-		branch = '';
-		repositoryRefs(id, controller.signal)
-			.then((refs) => {
-				branches = refs.branches;
-				const wanted = id === requested.repo ? requested.ref : '';
-				branch = refs.branches.includes(wanted) ? wanted : refs.default_branch;
-			})
-			.catch((err) => {
-				if (!controller.signal.aborted) error = `Failed to load branches: ${err.message}`;
-			});
-		return () => controller.abort();
+		branch = repos.find((repo) => repo.id === repoId)?.default_branch ?? '';
 	});
 
 	$effect(() => {
-		if (repoId && branch) history.replaceState(null, '', writeLocation(repoId, branch));
+		if (repoId) history.replaceState(null, '', writeLocation(repoId));
 	});
 
 	const source = $derived(repoId ? repositorySource(repoId) : null);
@@ -63,13 +47,7 @@
 					{#each repos as repo (repo.id)}<option value={repo.id}>{repo.id}</option>{/each}
 				</select>
 			</label>
-			<label>
-				Branch
-				<select aria-label="Branch" bind:value={branch} disabled={!branches.length}>
-					{#if branch && !branches.includes(branch)}<option value={branch}>{branch}</option>{/if}
-					{#each branches as name (name)}<option value={name}>{name}</option>{/each}
-				</select>
-			</label>
+			{#if branch}<span class="branch-tag">Branch: {branch}</span>{/if}
 			{#if error}<span class="error" role="alert">{error}</span>{/if}
 		</nav>
 	{/snippet}

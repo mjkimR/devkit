@@ -32,25 +32,24 @@ uv run devkit viewer --version
 
 ## HTTP API
 
-`GET` only; another method is `405`, a `Host` other than `127.0.0.1:<port>` or `localhost:<port>` is `403`. `ref` is
-`HEAD` or the exact name of a local branch and defaults to the checked-out branch.
+`GET` only; another method is `405`, a `Host` other than `127.0.0.1:<port>` or `localhost:<port>` is `403`. The
+checked-out branch (or `HEAD` when detached) is displayed. Tree and blob reads use saved files from the working
+directory; a legacy `ref` parameter is ignored.
 
 ```text
 GET /api/repos                              {"repos": [{"id", "default_branch"}]}
 GET /api/repos/<id>/info                    {"repo_id", "default_branch"}
-GET /api/repos/<id>/refs                    {"default_branch", "branches"}
-GET /api/repos/<id>/tree?path=<dir>&ref=    {"items": [{"name", "path", "type": "tree"|"blob", "size"?}]}
-GET /api/repos/<id>/blob?path=<file>&ref=   {"path", "encoding": "base64", "content", "size"}
+GET /api/repos/<id>/tree?path=<dir>         {"items": [{"name", "path", "type": "tree"|"blob", "size"?}]}
+GET /api/repos/<id>/blob?path=<file>        {"path", "encoding": "base64", "content", "size"}
 error                                       {"error": {"code", "message"}}
 ```
 
 | Code | Status |
 | --- | --- |
-| `VIEWER_REPO_UNKNOWN`, `VIEWER_REF_UNKNOWN`, `VIEWER_PATH_NOT_FOUND`, `VIEWER_NOT_FOUND` | 404 |
+| `VIEWER_REPO_UNKNOWN`, `VIEWER_PATH_NOT_FOUND`, `VIEWER_NOT_FOUND` | 404 |
 | `VIEWER_PATH_INVALID` | 400 |
 | `VIEWER_HOST_REFUSED` | 403 |
 | `VIEWER_METHOD_NOT_ALLOWED` | 405 |
-| `VIEWER_GIT_FAILED` | 500 |
 
 ## Frontend
 

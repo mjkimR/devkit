@@ -44,7 +44,12 @@ function source(withRefs: boolean, reads: string[]): RepositoryDataSource {
 			return { path, content, encoding: 'utf-8' };
 		},
 		...(withRefs
-			? { refs: async () => ({ default_branch: 'main', branches: ['main', 'other', 'plan-x'] }) }
+			? {
+					refs: vi.fn(async () => ({
+						default_branch: 'main',
+						branches: ['main', 'other', 'plan-x']
+					}))
+				}
 			: {})
 	};
 }
@@ -52,26 +57,26 @@ function source(withRefs: boolean, reads: string[]): RepositoryDataSource {
 afterEach(cleanup);
 
 describe('RoadmapView', () => {
-	it('reads the default branch and the activity branches, whatever branch is shown', async () => {
+	it('reads only the checked out branch and does not enumerate branches', async () => {
 		const reads: string[] = [];
 		const onOpen = vi.fn();
-		render(RoadmapView, { source: source(true, reads), branch: 'plan-x', onOpen });
-		await screen.findByText('Main milestone');
-		expect(new Set(reads)).toEqual(new Set(['main', 'plan-x']));
+		const repository = source(true, reads);
+		render(RoadmapView, { source: repository, branch: 'plan-x', onOpen });
+		await screen.findByText('Stale copy');
+		expect(new Set(reads)).toEqual(new Set(['plan-x']));
+		expect(repository.refs).not.toHaveBeenCalled();
 		expect(screen.queryByText('Done on main')).toBeNull();
 		expect(screen.getByText('In planning')).toBeTruthy();
 		await fireEvent.click(screen.getByRole('button', { name: 'In planning' }));
 		expect(onOpen).toHaveBeenCalledWith('docs/proposals/PROP-x/proposal.md');
 		expect(screen.queryByText('Not an activity branch')).toBeNull();
-		expect(screen.queryByText('Stale copy')).toBeNull();
 	});
 
-	it('falls back to the default branch alone without refs', async () => {
+	it('reads the checked out branch when the source does not enumerate refs', async () => {
 		const reads: string[] = [];
 		render(RoadmapView, { source: source(false, reads), branch: 'plan-x', onOpen: () => {} });
-		await screen.findByText('Main milestone');
-		await waitFor(() => expect(new Set(reads)).toEqual(new Set(['main'])));
-		expect(screen.queryByText('In planning')).toBeNull();
-		expect(screen.getByText(/displaying main branch only/)).toBeTruthy();
+		await screen.findByText('Stale copy');
+		await waitFor(() => expect(new Set(reads)).toEqual(new Set(['plan-x'])));
+		expect(screen.getByText('In planning')).toBeTruthy();
 	});
 });

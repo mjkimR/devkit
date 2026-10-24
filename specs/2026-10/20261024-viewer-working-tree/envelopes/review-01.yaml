@@ -1,0 +1,19 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-24T13:15:53.232801Z'
+status: completed
+summary: 'PASS: AC-01 through AC-06 are covered by the working-tree reader, current-branch UI, path guards and tests; no findings.'
+findings: []
+assumptions:
+- The Codex reviewer ran emulated; its committed-diff review did not change the worktree.
+checks:
+  tests: 'PASS just test-affected: 4860 passed, 12 skipped; browse 95 passed; frontend 28 passed'
+  lint: PASS just lint-check viewer; just viewer lint
+  type_check: 'PASS just check viewer; just viewer check: 0 errors, 0 warnings'
+  build: PASS just viewer build; just viewer pack; generated check viewer-assets
+diff_scope:
+  base: 289f44ebe6d847bcf16585020f5bc2e611b8cd76
+  head: 6cdae5090771ed586e8cfb19bab01a8bfda57887
+activity_effort: medium

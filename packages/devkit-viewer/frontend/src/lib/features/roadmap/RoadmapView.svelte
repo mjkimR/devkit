@@ -1,12 +1,7 @@
 <script lang="ts">
 	import type { RepositoryDocument } from '../../api/documents';
 	import type { RepositoryDataSource } from '../../api/repository';
-	import {
-		buildRoadmap,
-		isActivityBranch,
-		loadRoadmapDocuments,
-		type BranchDocuments
-	} from '../../api/roadmap';
+	import { buildRoadmap, loadRoadmapDocuments, type BranchDocuments } from '../../api/roadmap';
 	import MilestoneItem from './MilestoneItem.svelte';
 
 	let {
@@ -21,69 +16,32 @@
 
 	let base = $state<RepositoryDocument[]>([]);
 	let baseRef = $state('');
-	let branches = $state<BranchDocuments[]>([]);
+	let branches: BranchDocuments[] = [];
 	let errors = $state<string[]>([]);
 	let loading = $state(false);
-	let branchesUnavailable = $state(false);
 	let history = $state(false);
-
-	// Milestones and their members come from the default branch, whatever branch the viewer shows; Units still in
-	// progress are read from the local plan- and dev- branches the data source lists.
-	async function defaultBranch(repository: RepositoryDataSource, signal: AbortSignal) {
-		if (repository.refs) {
-			try {
-				const refs = await repository.refs(signal);
-				return { name: refs.default_branch, others: refs.branches };
-			} catch {
-				// Fall through: without refs only the default branch is read.
-			}
-		}
-		try {
-			return {
-				name: String((await repository.info(signal)).default_branch || branch),
-				others: null
-			};
-		} catch {
-			return { name: branch, others: null };
-		}
-	}
 
 	$effect(() => {
 		const repository = source;
+		const currentBranch = branch;
 		const controller = new AbortController();
 		base = [];
-		baseRef = '';
-		branches = [];
+		baseRef = currentBranch;
 		errors = [];
-		branchesUnavailable = false;
 		loading = Boolean(repository);
 		if (repository)
 			void (async () => {
 				const signal = controller.signal;
-				const { name, others } = await defaultBranch(repository, signal);
-				const names = (others ?? []).filter((n) => n !== name && isActivityBranch(n));
-				const [selected, ...rest] = await Promise.all(
-					[name, ...names].map(async (ref) => ({
-						name: ref,
-						...(await loadRoadmapDocuments(repository, ref, signal))
-					}))
-				);
+				const selected = await loadRoadmapDocuments(repository, currentBranch, signal);
 				if (signal.aborted) return;
 				base = selected.documents;
-				baseRef = name;
-				branchesUnavailable = others === null;
-				branches = rest.map(({ name, documents }) => ({ name, documents }));
-				errors = [
-					...selected.errors,
-					...rest.flatMap((o) => o.errors.map((error) => `${o.name}: ${error}`))
-				];
+				errors = selected.errors;
 				loading = false;
 			})();
 		return () => controller.abort();
 	});
 
-	// The file explorer shows the viewer's branch, so a document opens there only when it was read from that branch.
-	const opens = (ref: string | null) => (ref ?? baseRef) === branch;
+	const opens = (_ref: string | null) => baseRef === branch;
 	const milestones = $derived(buildRoadmap(base, branches, { history }));
 </script>
 
@@ -91,13 +49,6 @@
 	<div class="filters">
 		<label><input type="checkbox" bind:checked={history} /> Include completed/abandoned</label>
 		{#if baseRef}<span class="note">Base: {baseRef} branch</span>{/if}
-		{#if branchesUnavailable}
-			<span class="note">Unable to read branch list; displaying {baseRef} branch only.</span>
-		{:else if branches.length}
-			<span class="note"
-				>Includes {branches.length} active {branches.length === 1 ? 'branch' : 'branches'}</span
-			>
-		{/if}
 	</div>
 	{#if errors.length}
 		<details class="index-errors">

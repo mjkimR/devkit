@@ -9,9 +9,7 @@ const answers: Record<string, unknown> = {
 			{ id: 'alpha', default_branch: 'main' },
 			{ id: 'beta', default_branch: 'main' }
 		]
-	},
-	'/api/repos/alpha/refs': { default_branch: 'main', branches: ['main'] },
-	'/api/repos/beta/refs': { default_branch: 'main', branches: ['dev-y', 'main', 'plan-x'] }
+	}
 };
 
 let calls: string[] = [];
@@ -40,37 +38,32 @@ const reads = (prefix: string) =>
 	calls.filter((url) => url.startsWith(prefix) && !url.endsWith('/refs'));
 
 describe('App', () => {
-	it('sends every viewer read to the picked repository and branch', async () => {
+	it('sends reads to the selected repository and displays its current branch without a selector', async () => {
 		render(App);
 		await waitFor(() => expect(reads('/api/repos/alpha/').length).toBeGreaterThan(0));
-		expect(reads('/api/repos/alpha/tree').every((url) => url.includes('ref=main'))).toBe(true);
+		expect(reads('/api/repos/alpha/tree').every((url) => !url.includes('ref='))).toBe(true);
 
 		await fireEvent.change(screen.getByLabelText('Repository'), { target: { value: 'beta' } });
-		await waitFor(() => expect(calls).toContain('/api/repos/beta/refs'));
 		await waitFor(() => expect(reads('/api/repos/beta/tree').length).toBeGreaterThan(0));
-
-		calls = [];
-		await fireEvent.change(screen.getByLabelText('Branch'), { target: { value: 'plan-x' } });
-		await waitFor(() => expect(reads('/api/repos/beta/tree').length).toBeGreaterThan(0));
-		const after = calls.filter((url) => url.startsWith('/api/repos/') && url.includes('ref='));
-		expect(
-			after.every((url) => url.startsWith('/api/repos/beta/') && url.includes('ref=plan-x'))
-		).toBe(true);
-		expect(window.location.hash).toBe(writeLocation('beta', 'plan-x'));
+		expect(reads('/api/repos/beta/tree').every((url) => !url.includes('ref='))).toBe(true);
+		expect(screen.queryByLabelText('Branch')).toBeNull();
+		expect(screen.getByText('Branch: main')).toBeTruthy();
+		expect(window.location.hash).toBe(writeLocation('beta'));
 	});
 
-	it('opens the repository and branch named in the address', async () => {
-		window.location.hash = writeLocation('beta', 'dev-y');
+	it('opens the repository in the address and ignores an old branch fragment', async () => {
+		window.location.hash = '#repo=beta&ref=dev-y';
 		render(App);
 		await waitFor(() => expect(reads('/api/repos/beta/tree').length).toBeGreaterThan(0));
-		expect(reads('/api/repos/beta/tree').every((url) => url.includes('ref=dev-y'))).toBe(true);
+		expect(reads('/api/repos/beta/tree').every((url) => !url.includes('ref='))).toBe(true);
 		expect(reads('/api/repos/alpha/')).toEqual([]);
 	});
 });
 
 describe('location', () => {
-	it('round-trips repository and branch', () => {
-		expect(readLocation(writeLocation('a b', 'dev-x/y'))).toEqual({ repo: 'a b', ref: 'dev-x/y' });
-		expect(readLocation('')).toEqual({ repo: '', ref: '' });
+	it('round-trips the repository and ignores branch selection', () => {
+		expect(readLocation(writeLocation('a b'))).toEqual({ repo: 'a b' });
+		expect(readLocation('#repo=a&ref=dev-x')).toEqual({ repo: 'a' });
+		expect(readLocation('')).toEqual({ repo: '' });
 	});
 });
