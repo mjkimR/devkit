@@ -117,6 +117,26 @@
 		background: #0b0f17;
 		font-family:
 			-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+		scrollbar-width: thin;
+		scrollbar-color: #334155 transparent;
+	}
+
+	:global(::-webkit-scrollbar) {
+		width: 8px;
+		height: 8px;
+	}
+
+	:global(::-webkit-scrollbar-track) {
+		background: transparent;
+	}
+
+	:global(::-webkit-scrollbar-thumb) {
+		background: #334155;
+		border-radius: 4px;
+	}
+
+	:global(::-webkit-scrollbar-thumb:hover) {
+		background: #475569;
 	}
 	:global(#app) {
 		height: 100%;

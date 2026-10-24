@@ -408,6 +408,26 @@
 		width: 100%;
 		background-color: var(--bg-viewport);
 		color: var(--text-secondary);
+		scrollbar-width: thin;
+		scrollbar-color: var(--border-btn) transparent;
+	}
+
+	.sdd-viewer-root :global(*)::-webkit-scrollbar {
+		width: 8px;
+		height: 8px;
+	}
+
+	.sdd-viewer-root :global(*)::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.sdd-viewer-root :global(*)::-webkit-scrollbar-thumb {
+		background-color: var(--border-btn);
+		border-radius: 4px;
+	}
+
+	.sdd-viewer-root :global(*)::-webkit-scrollbar-thumb:hover {
+		background-color: var(--btn-hover-bg);
 	}
 
 	.sdd-viewer-root.theme-light {

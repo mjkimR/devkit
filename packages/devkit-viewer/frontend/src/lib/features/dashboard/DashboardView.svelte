@@ -114,350 +114,352 @@
 	}
 </script>
 
-<div class="dashboard-container">
-	<!-- Hidden Semantic AI Context & Operating Guidelines for Chrome Gemini / Assistive AI -->
-	<section
-		class="sr-only"
-		role="note"
-		aria-label="AI Assistant Instructions and SDD Dashboard Guide"
-	>
-		<h2>Project SDD Dashboard - AI Context and Operating Guidelines</h2>
-		<p>
-			This dashboard summarizes the current Spec-Driven Development status of repository: <strong
-				>{repoId}</strong
-			>
-			on branch: <strong>{branch}</strong>.
-		</p>
-		<div class="ai-summary-metrics">
-			<h3>Repository Status Counts:</h3>
-			<ul>
-				<li>
-					Milestones: {data.milestones.openCount} open out of {data.milestones.totalCount} total
-				</li>
-				<li>
-					Proposals: {data.proposals.activeCount} active/draft out of {data.proposals.totalCount} total
-				</li>
-				<li>
-					Feedback: {data.feedback.openCount} open out of {data.feedback.totalCount} total
-				</li>
-				<li>
-					Active Activity Branches: {activityBranches.length} branch(es) ({activityBranches.join(
-						', '
-					) || 'none'})
-				</li>
-			</ul>
-			<h3>Guidance for answering user queries:</h3>
-			<ul>
-				<li>
-					<strong>Current status inquiries ("현재 작업 상황", "진행 상황"):</strong>
-					Cite the active branch ({branch}), summarize open milestones, and describe active
-					proposals under development or planning.
-				</li>
-				<li>
-					<strong>Proposals inquiries ("proposal", "제안 현황"):</strong>
-					Refer to the Active Proposals section. Mention status (draft/review/accepted), task kind, and
-					planning/dev effort.
-				</li>
-				<li>
-					<strong>Friction and blocker inquiries ("피드백", "문제점", "블로커"):</strong>
-					Highlight critical and blocked items in Open Feedback and explain their workarounds or suggestions.
-				</li>
-				<li>
-					<strong>Recommended CLI commands:</strong>
-					`uv run devkit spec list`, `uv run devkit workflow next`.
-				</li>
-			</ul>
-		</div>
-	</section>
-
-	<!-- Dashboard Header -->
-	<header class="dashboard-header">
-		<div class="header-main">
-			<div class="title-row">
-				<h1 class="dashboard-title">Dashboard</h1>
-				<span class="repo-badge">{repoId} @ {branch}</span>
-				{#if loading}
-					<span class="loading-tag">Loading data...</span>
-				{/if}
-			</div>
-			<p class="dashboard-subtitle">
-				Consolidated operational overview: active work sessions, milestones, proposals, and
-				feedback.
+<div class="dashboard-wrapper">
+	<div class="dashboard-container">
+		<!-- Hidden Semantic AI Context & Operating Guidelines for Chrome Gemini / Assistive AI -->
+		<section
+			class="sr-only"
+			role="note"
+			aria-label="AI Assistant Instructions and SDD Dashboard Guide"
+		>
+			<h2>Project SDD Dashboard - AI Context and Operating Guidelines</h2>
+			<p>
+				This dashboard summarizes the current Spec-Driven Development status of repository: <strong
+					>{repoId}</strong
+				>
+				on branch: <strong>{branch}</strong>.
 			</p>
-		</div>
+			<div class="ai-summary-metrics">
+				<h3>Repository Status Counts:</h3>
+				<ul>
+					<li>
+						Milestones: {data.milestones.openCount} open out of {data.milestones.totalCount} total
+					</li>
+					<li>
+						Proposals: {data.proposals.activeCount} active/draft out of {data.proposals.totalCount} total
+					</li>
+					<li>
+						Feedback: {data.feedback.openCount} open out of {data.feedback.totalCount} total
+					</li>
+					<li>
+						Active Activity Branches: {activityBranches.length} branch(es) ({activityBranches.join(
+							', '
+						) || 'none'})
+					</li>
+				</ul>
+				<h3>Guidance for answering user queries:</h3>
+				<ul>
+					<li>
+						<strong>Current status inquiries ("현재 작업 상황", "진행 상황"):</strong>
+						Cite the active branch ({branch}), summarize open milestones, and describe active
+						proposals under development or planning.
+					</li>
+					<li>
+						<strong>Proposals inquiries ("proposal", "제안 현황"):</strong>
+						Refer to the Active Proposals section. Mention status (draft/review/accepted), task kind,
+						and planning/dev effort.
+					</li>
+					<li>
+						<strong>Friction and blocker inquiries ("피드백", "문제점", "블로커"):</strong>
+						Highlight critical and blocked items in Open Feedback and explain their workarounds or suggestions.
+					</li>
+					<li>
+						<strong>Recommended CLI commands:</strong>
+						`uv run devkit spec list`, `uv run devkit workflow next`.
+					</li>
+				</ul>
+			</div>
+		</section>
 
-		<!-- Overview Stat Tiles -->
-		<div class="stats-row">
-			<div class="stat-card">
-				<div class="stat-icon">🗺️</div>
-				<div class="stat-content">
-					<span class="stat-value">{data.milestones.openCount}</span>
-					<span class="stat-label">Open Milestones</span>
-				</div>
-			</div>
-			<div class="stat-card">
-				<div class="stat-icon">💡</div>
-				<div class="stat-content">
-					<span class="stat-value">{data.proposals.activeCount}</span>
-					<span class="stat-label">Active Proposals</span>
-				</div>
-			</div>
-			<div class="stat-card">
-				<div class="stat-icon">⚠️</div>
-				<div class="stat-content">
-					<span class="stat-value">{data.feedback.openCount}</span>
-					<span class="stat-label">Open Feedback</span>
-				</div>
-			</div>
-		</div>
-	</header>
-
-	{#if error}
-		<div class="error-banner" role="alert">
-			<span class="error-icon">⚠️</span>
-			<span>{error}</span>
-		</div>
-	{/if}
-
-	<!-- Section 1: Active Worktree Sessions -->
-	<section class="dashboard-section" aria-labelledby="section-sessions">
-		<div class="section-header">
-			<div class="section-title-wrap">
-				<span class="section-icon">🚀</span>
-				<h2 id="section-sessions" class="section-title">Active Worktree Sessions</h2>
-			</div>
-			<div class="section-actions">
-				{#if activityBranches.length > sessionLimit - 1}
-					<button
-						class="toggle-btn"
-						onclick={() => (showAllSessions = !showAllSessions)}
-						aria-expanded={showAllSessions}
-					>
-						{showAllSessions ? 'Show Less' : `Show All (${activityBranches.length + 1})`}
-					</button>
-				{/if}
-				<span class="section-meta">
-					Current: <code>{branch}</code>
-					{#if activityBranches.length}
-						| {activityBranches.length} other activity branch(es)
+		<!-- Dashboard Header -->
+		<header class="dashboard-header">
+			<div class="header-main">
+				<div class="title-row">
+					<h1 class="dashboard-title">Dashboard</h1>
+					<span class="repo-badge">{repoId} @ {branch}</span>
+					{#if loading}
+						<span class="loading-tag">Loading data...</span>
 					{/if}
-				</span>
-			</div>
-		</div>
-
-		<div class="cards-grid">
-			<!-- Current checkout session card -->
-			<div class="dashboard-card session-card active-session">
-				<div class="card-top">
-					<span class="badge badge-branch">Current Branch</span>
-					<span class="branch-pill">{branch}</span>
 				</div>
-				<h3 class="card-heading">Active Worktree Session</h3>
-				<p class="card-desc">
-					Checked out branch is currently served. AI assistants evaluate repository documents
-					against this workspace ref.
+				<p class="dashboard-subtitle">
+					Consolidated operational overview: active work sessions, milestones, proposals, and
+					feedback.
 				</p>
-				<!-- AI Hidden details -->
-				<div class="sr-only">
-					Full details: Active repository {repoId}, checked-out ref {branch}. Other activity
-					branches: {activityBranches.join(', ') || 'none'}.
-				</div>
 			</div>
 
-			<!-- Other active activity branches -->
-			{#each displayedActivityBranches as actBranch (actBranch)}
-				<div class="dashboard-card session-card">
-					<div class="card-top">
-						<span class="badge badge-branch">Activity Branch</span>
-						<span class="branch-pill">{actBranch}</span>
-					</div>
-					<h3 class="card-heading">{actBranch}</h3>
-					<p class="card-desc">In-progress delivery task worktree or activity branch.</p>
-					<!-- AI Hidden details -->
-					<div class="sr-only">
-						Activity branch {actBranch} active in repository {repoId}.
+			<!-- Overview Stat Tiles -->
+			<div class="stats-row">
+				<div class="stat-card">
+					<div class="stat-icon">🗺️</div>
+					<div class="stat-content">
+						<span class="stat-value">{data.milestones.openCount}</span>
+						<span class="stat-label">Open Milestones</span>
 					</div>
 				</div>
-			{/each}
-		</div>
-	</section>
-
-	<!-- Section 2: Open Milestones -->
-	<section class="dashboard-section" aria-labelledby="section-milestones">
-		<div class="section-header">
-			<div class="section-title-wrap">
-				<span class="section-icon">🗺️</span>
-				<h2 id="section-milestones" class="section-title">Open Milestones</h2>
-				<span class="count-badge">{data.milestones.openCount}</span>
-			</div>
-			<div class="section-actions">
-				{#if data.milestones.open.length > milestoneLimit}
-					<button
-						class="toggle-btn"
-						onclick={() => (showAllMilestones = !showAllMilestones)}
-						aria-expanded={showAllMilestones}
-					>
-						{showAllMilestones ? 'Show Less' : `Show All (${data.milestones.openCount})`}
-					</button>
-				{/if}
-				<button class="nav-btn" onclick={() => handleItemClick('roadmap')}>Roadmap View →</button>
-			</div>
-		</div>
-
-		<div class="cards-grid">
-			{#each displayedMilestones as milestone (milestone.id)}
-				<div
-					class="dashboard-card clickable"
-					role="button"
-					tabindex="0"
-					onclick={() => handleItemClick('roadmap')}
-					onkeydown={(e) => e.key === 'Enter' && handleItemClick('roadmap')}
-				>
-					<div class="card-top">
-						<span class="card-id">{milestone.id}</span>
-						<span class="badge badge-status-{milestone.status}">{milestone.status}</span>
+				<div class="stat-card">
+					<div class="stat-icon">💡</div>
+					<div class="stat-content">
+						<span class="stat-value">{data.proposals.activeCount}</span>
+						<span class="stat-label">Active Proposals</span>
 					</div>
-					<h3 class="card-heading">{milestone.title}</h3>
-					<p class="card-desc line-clamp-2">{milestone.summary || 'No summary provided.'}</p>
-					{#if milestone.dependsOn.length > 0}
-						<div class="card-tags">
-							<span class="tag-label">Depends on:</span>
-							{#each milestone.dependsOn as dep}
-								<span class="tag">{dep}</span>
-							{/each}
-						</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-icon">⚠️</div>
+					<div class="stat-content">
+						<span class="stat-value">{data.feedback.openCount}</span>
+						<span class="stat-label">Open Feedback</span>
+					</div>
+				</div>
+			</div>
+		</header>
+
+		{#if error}
+			<div class="error-banner" role="alert">
+				<span class="error-icon">⚠️</span>
+				<span>{error}</span>
+			</div>
+		{/if}
+
+		<!-- Section 1: Active Worktree Sessions -->
+		<section class="dashboard-section" aria-labelledby="section-sessions">
+			<div class="section-header">
+				<div class="section-title-wrap">
+					<span class="section-icon">🚀</span>
+					<h2 id="section-sessions" class="section-title">Active Worktree Sessions</h2>
+				</div>
+				<div class="section-actions">
+					{#if activityBranches.length > sessionLimit - 1}
+						<button
+							class="toggle-btn"
+							onclick={() => (showAllSessions = !showAllSessions)}
+							aria-expanded={showAllSessions}
+						>
+							{showAllSessions ? 'Show Less' : `Show All (${activityBranches.length + 1})`}
+						</button>
 					{/if}
+					<span class="section-meta">
+						Current: <code>{branch}</code>
+						{#if activityBranches.length}
+							| {activityBranches.length} other activity branch(es)
+						{/if}
+					</span>
+				</div>
+			</div>
+
+			<div class="cards-grid">
+				<!-- Current checkout session card -->
+				<div class="dashboard-card session-card active-session">
+					<div class="card-top">
+						<span class="badge badge-branch">Current Branch</span>
+						<span class="branch-pill">{branch}</span>
+					</div>
+					<h3 class="card-heading">Active Worktree Session</h3>
+					<p class="card-desc">
+						Checked out branch is currently served. AI assistants evaluate repository documents
+						against this workspace ref.
+					</p>
 					<!-- AI Hidden details -->
 					<div class="sr-only">
-						Full Milestone Details: ID {milestone.id}, Title: {milestone.title}, Status: {milestone.status},
-						Path: {milestone.path}, Dependencies: {milestone.dependsOn.join(', ') || 'none'}. Full
-						summary: {milestone.summary}.
+						Full details: Active repository {repoId}, checked-out ref {branch}. Other activity
+						branches: {activityBranches.join(', ') || 'none'}.
 					</div>
 				</div>
-			{:else}
-				<div class="dashboard-card empty-card">
-					<p class="empty-text">No open milestones found.</p>
-				</div>
-			{/each}
-		</div>
-	</section>
 
-	<!-- Section 3: Active Proposals -->
-	<section class="dashboard-section" aria-labelledby="section-proposals">
-		<div class="section-header">
-			<div class="section-title-wrap">
-				<span class="section-icon">💡</span>
-				<h2 id="section-proposals" class="section-title">Active Proposals</h2>
-				<span class="count-badge">{data.proposals.activeCount}</span>
-			</div>
-			<div class="section-actions">
-				{#if data.proposals.active.length > proposalLimit}
-					<button
-						class="toggle-btn"
-						onclick={() => (showAllProposals = !showAllProposals)}
-						aria-expanded={showAllProposals}
-					>
-						{showAllProposals ? 'Show Less' : `Show All (${data.proposals.activeCount})`}
-					</button>
-				{/if}
-				<button class="nav-btn" onclick={() => handleItemClick('proposals')}
-					>Proposals View →</button
-				>
-			</div>
-		</div>
-
-		<div class="cards-grid">
-			{#each displayedProposals as proposal (proposal.id)}
-				<div
-					class="dashboard-card clickable"
-					role="button"
-					tabindex="0"
-					onclick={() => handleItemClick('proposals', proposal.path)}
-					onkeydown={(e) => e.key === 'Enter' && handleItemClick('proposals', proposal.path)}
-				>
-					<div class="card-top">
-						<span class="card-id">{proposal.id}</span>
-						<span class="badge badge-status-{proposal.status}">{proposal.status}</span>
-					</div>
-					<h3 class="card-heading">{proposal.title}</h3>
-					<p class="card-desc line-clamp-2">{proposal.summary || 'No summary provided.'}</p>
-					<div class="card-tags">
-						<span class="tag">kind: {proposal.taskKind}</span>
-						<span class="tag">plan: {proposal.planningEffort}</span>
-						<span class="tag">dev: {proposal.devEffort}</span>
-					</div>
-					<!-- AI Hidden details -->
-					<div class="sr-only">
-						Full Proposal Details: ID {proposal.id}, Title: {proposal.title}, Status: {proposal.status},
-						Slug: {proposal.slug}, Task kind: {proposal.taskKind}, Planning effort: {proposal.planningEffort},
-						Dev effort: {proposal.devEffort}, Path: {proposal.path}. Full summary: {proposal.summary}.
-					</div>
-				</div>
-			{:else}
-				<div class="dashboard-card empty-card">
-					<p class="empty-text">No active proposals found.</p>
-				</div>
-			{/each}
-		</div>
-	</section>
-
-	<!-- Section 4: Open Feedback -->
-	<section class="dashboard-section" aria-labelledby="section-feedback">
-		<div class="section-header">
-			<div class="section-title-wrap">
-				<span class="section-icon">⚠️</span>
-				<h2 id="section-feedback" class="section-title">Open Feedback & Blockers</h2>
-				<span class="count-badge count-badge-amber">{data.feedback.openCount}</span>
-			</div>
-			<div class="section-actions">
-				{#if data.feedback.open.length > feedbackLimit}
-					<button
-						class="toggle-btn"
-						onclick={() => (showAllFeedback = !showAllFeedback)}
-						aria-expanded={showAllFeedback}
-					>
-						{showAllFeedback ? 'Show Less' : `Show All (${data.feedback.openCount})`}
-					</button>
-				{/if}
-				<button class="nav-btn" onclick={() => handleItemClick('files')}>Files View →</button>
-			</div>
-		</div>
-
-		<div class="cards-grid">
-			{#each displayedFeedback as fb (fb.id)}
-				<div
-					class="dashboard-card clickable"
-					role="button"
-					tabindex="0"
-					onclick={() => handleItemClick('files', fb.path)}
-					onkeydown={(e) => e.key === 'Enter' && handleItemClick('files', fb.path)}
-				>
-					<div class="card-top">
-						<span class="card-id">{fb.id}</span>
-						<span class="badge badge-sev-{fb.severity}">{fb.severity}</span>
-					</div>
-					<h3 class="card-heading">{fb.title}</h3>
-					<p class="card-desc line-clamp-2">{fb.summary || 'No summary text.'}</p>
-					{#if fb.target}
-						<div class="card-tags">
-							<span class="tag-label">Target:</span>
-							<span class="tag code-tag">{fb.target}</span>
+				<!-- Other active activity branches -->
+				{#each displayedActivityBranches as actBranch (actBranch)}
+					<div class="dashboard-card session-card">
+						<div class="card-top">
+							<span class="badge badge-branch">Activity Branch</span>
+							<span class="branch-pill">{actBranch}</span>
 						</div>
-					{/if}
-					<!-- AI Hidden details -->
-					<div class="sr-only">
-						Full Feedback Details: ID {fb.id}, Title: {fb.title}, Status: {fb.status}, Severity: {fb.severity},
-						Category: {fb.category}, Scope: {fb.scope}, Target: {fb.target}, Origin: {fb.origin},
-						Path: {fb.path}. Summary: {fb.summary}.
+						<h3 class="card-heading">{actBranch}</h3>
+						<p class="card-desc">In-progress delivery task worktree or activity branch.</p>
+						<!-- AI Hidden details -->
+						<div class="sr-only">
+							Activity branch {actBranch} active in repository {repoId}.
+						</div>
 					</div>
+				{/each}
+			</div>
+		</section>
+
+		<!-- Section 2: Open Milestones -->
+		<section class="dashboard-section" aria-labelledby="section-milestones">
+			<div class="section-header">
+				<div class="section-title-wrap">
+					<span class="section-icon">🗺️</span>
+					<h2 id="section-milestones" class="section-title">Open Milestones</h2>
+					<span class="count-badge">{data.milestones.openCount}</span>
 				</div>
-			{:else}
-				<div class="dashboard-card empty-card">
-					<p class="empty-text">No open feedback items found.</p>
+				<div class="section-actions">
+					{#if data.milestones.open.length > milestoneLimit}
+						<button
+							class="toggle-btn"
+							onclick={() => (showAllMilestones = !showAllMilestones)}
+							aria-expanded={showAllMilestones}
+						>
+							{showAllMilestones ? 'Show Less' : `Show All (${data.milestones.openCount})`}
+						</button>
+					{/if}
+					<button class="nav-btn" onclick={() => handleItemClick('roadmap')}>Roadmap View →</button>
 				</div>
-			{/each}
-		</div>
-	</section>
+			</div>
+
+			<div class="cards-grid">
+				{#each displayedMilestones as milestone (milestone.id)}
+					<div
+						class="dashboard-card clickable"
+						role="button"
+						tabindex="0"
+						onclick={() => handleItemClick('roadmap')}
+						onkeydown={(e) => e.key === 'Enter' && handleItemClick('roadmap')}
+					>
+						<div class="card-top">
+							<span class="card-id">{milestone.id}</span>
+							<span class="badge badge-status-{milestone.status}">{milestone.status}</span>
+						</div>
+						<h3 class="card-heading">{milestone.title}</h3>
+						<p class="card-desc line-clamp-2">{milestone.summary || 'No summary provided.'}</p>
+						{#if milestone.dependsOn.length > 0}
+							<div class="card-tags">
+								<span class="tag-label">Depends on:</span>
+								{#each milestone.dependsOn as dep}
+									<span class="tag">{dep}</span>
+								{/each}
+							</div>
+						{/if}
+						<!-- AI Hidden details -->
+						<div class="sr-only">
+							Full Milestone Details: ID {milestone.id}, Title: {milestone.title}, Status: {milestone.status},
+							Path: {milestone.path}, Dependencies: {milestone.dependsOn.join(', ') || 'none'}. Full
+							summary: {milestone.summary}.
+						</div>
+					</div>
+				{:else}
+					<div class="dashboard-card empty-card">
+						<p class="empty-text">No open milestones found.</p>
+					</div>
+				{/each}
+			</div>
+		</section>
+
+		<!-- Section 3: Active Proposals -->
+		<section class="dashboard-section" aria-labelledby="section-proposals">
+			<div class="section-header">
+				<div class="section-title-wrap">
+					<span class="section-icon">💡</span>
+					<h2 id="section-proposals" class="section-title">Active Proposals</h2>
+					<span class="count-badge">{data.proposals.activeCount}</span>
+				</div>
+				<div class="section-actions">
+					{#if data.proposals.active.length > proposalLimit}
+						<button
+							class="toggle-btn"
+							onclick={() => (showAllProposals = !showAllProposals)}
+							aria-expanded={showAllProposals}
+						>
+							{showAllProposals ? 'Show Less' : `Show All (${data.proposals.activeCount})`}
+						</button>
+					{/if}
+					<button class="nav-btn" onclick={() => handleItemClick('proposals')}
+						>Proposals View →</button
+					>
+				</div>
+			</div>
+
+			<div class="cards-grid">
+				{#each displayedProposals as proposal (proposal.id)}
+					<div
+						class="dashboard-card clickable"
+						role="button"
+						tabindex="0"
+						onclick={() => handleItemClick('proposals', proposal.path)}
+						onkeydown={(e) => e.key === 'Enter' && handleItemClick('proposals', proposal.path)}
+					>
+						<div class="card-top">
+							<span class="card-id">{proposal.id}</span>
+							<span class="badge badge-status-{proposal.status}">{proposal.status}</span>
+						</div>
+						<h3 class="card-heading">{proposal.title}</h3>
+						<p class="card-desc line-clamp-2">{proposal.summary || 'No summary provided.'}</p>
+						<div class="card-tags">
+							<span class="tag">kind: {proposal.taskKind}</span>
+							<span class="tag">plan: {proposal.planningEffort}</span>
+							<span class="tag">dev: {proposal.devEffort}</span>
+						</div>
+						<!-- AI Hidden details -->
+						<div class="sr-only">
+							Full Proposal Details: ID {proposal.id}, Title: {proposal.title}, Status: {proposal.status},
+							Slug: {proposal.slug}, Task kind: {proposal.taskKind}, Planning effort: {proposal.planningEffort},
+							Dev effort: {proposal.devEffort}, Path: {proposal.path}. Full summary: {proposal.summary}.
+						</div>
+					</div>
+				{:else}
+					<div class="dashboard-card empty-card">
+						<p class="empty-text">No active proposals found.</p>
+					</div>
+				{/each}
+			</div>
+		</section>
+
+		<!-- Section 4: Open Feedback -->
+		<section class="dashboard-section" aria-labelledby="section-feedback">
+			<div class="section-header">
+				<div class="section-title-wrap">
+					<span class="section-icon">⚠️</span>
+					<h2 id="section-feedback" class="section-title">Open Feedback & Blockers</h2>
+					<span class="count-badge count-badge-amber">{data.feedback.openCount}</span>
+				</div>
+				<div class="section-actions">
+					{#if data.feedback.open.length > feedbackLimit}
+						<button
+							class="toggle-btn"
+							onclick={() => (showAllFeedback = !showAllFeedback)}
+							aria-expanded={showAllFeedback}
+						>
+							{showAllFeedback ? 'Show Less' : `Show All (${data.feedback.openCount})`}
+						</button>
+					{/if}
+					<button class="nav-btn" onclick={() => handleItemClick('files')}>Files View →</button>
+				</div>
+			</div>
+
+			<div class="cards-grid">
+				{#each displayedFeedback as fb (fb.id)}
+					<div
+						class="dashboard-card clickable"
+						role="button"
+						tabindex="0"
+						onclick={() => handleItemClick('files', fb.path)}
+						onkeydown={(e) => e.key === 'Enter' && handleItemClick('files', fb.path)}
+					>
+						<div class="card-top">
+							<span class="card-id">{fb.id}</span>
+							<span class="badge badge-sev-{fb.severity}">{fb.severity}</span>
+						</div>
+						<h3 class="card-heading">{fb.title}</h3>
+						<p class="card-desc line-clamp-2">{fb.summary || 'No summary text.'}</p>
+						{#if fb.target}
+							<div class="card-tags">
+								<span class="tag-label">Target:</span>
+								<span class="tag code-tag">{fb.target}</span>
+							</div>
+						{/if}
+						<!-- AI Hidden details -->
+						<div class="sr-only">
+							Full Feedback Details: ID {fb.id}, Title: {fb.title}, Status: {fb.status}, Severity: {fb.severity},
+							Category: {fb.category}, Scope: {fb.scope}, Target: {fb.target}, Origin: {fb.origin},
+							Path: {fb.path}. Summary: {fb.summary}.
+						</div>
+					</div>
+				{:else}
+					<div class="dashboard-card empty-card">
+						<p class="empty-text">No open feedback items found.</p>
+					</div>
+				{/each}
+			</div>
+		</section>
+	</div>
 </div>
 
 <style>
@@ -474,6 +476,33 @@
 		border-width: 0;
 	}
 
+	.dashboard-wrapper {
+		width: 100%;
+		height: 100%;
+		overflow-y: auto;
+		overflow-x: hidden;
+		scrollbar-width: thin;
+		scrollbar-color: var(--border-btn) transparent;
+	}
+
+	.dashboard-wrapper::-webkit-scrollbar {
+		width: 8px;
+		height: 8px;
+	}
+
+	.dashboard-wrapper::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.dashboard-wrapper::-webkit-scrollbar-thumb {
+		background-color: var(--border-btn);
+		border-radius: 4px;
+	}
+
+	.dashboard-wrapper::-webkit-scrollbar-thumb:hover {
+		background-color: var(--btn-hover-bg, #475569);
+	}
+
 	.dashboard-container {
 		display: flex;
 		flex-direction: column;
@@ -484,7 +513,6 @@
 		width: 100%;
 		box-sizing: border-box;
 		color: var(--text-primary);
-		overflow-y: auto;
 	}
 
 	/* Header */
