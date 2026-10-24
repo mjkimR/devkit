@@ -107,17 +107,20 @@
 	:global(body) {
 		margin: 0;
 		height: 100%;
+		overflow: hidden;
 		background: #0b0f17;
 		font-family:
 			-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 	}
 	:global(#app) {
 		height: 100%;
+		overflow: hidden;
 	}
 	.app {
 		display: flex;
 		flex-direction: column;
 		height: 100%;
+		overflow: hidden;
 	}
 	.picker {
 		display: flex;

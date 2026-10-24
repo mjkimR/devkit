@@ -365,11 +365,13 @@
 		grid-template-columns: 280px minmax(0, 1fr);
 		flex: 1;
 		min-height: 0;
+		height: 100%;
+		overflow: hidden;
 	}
 
 	.reading-content {
-		overflow: auto;
-		padding: 24px clamp(16px, 4vw, 64px);
+		overflow-y: auto;
+		padding: 24px clamp(16px, 4vw, 64px) 80px;
 		scroll-behavior: smooth;
 	}
 

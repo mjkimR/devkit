@@ -122,4 +122,28 @@ describe('SharedArtifactsView', () => {
 			expect(within(list as HTMLElement).getByText('beta-feature')).toBeTruthy();
 		});
 	});
+
+	it('toggles the right meta drawer', async () => {
+		const source = createMockSource(mockArtifacts);
+		render(SharedArtifactsView, { props: { source, repoId: 'test-repo' } });
+
+		await waitFor(() => {
+			expect(screen.getByText('문서 메타 정보')).toBeTruthy();
+			expect(screen.getByText('식별 정보')).toBeTruthy();
+		});
+
+		const toggleBtn = screen.getByTitle('메타 정보 서랍 닫기');
+		await fireEvent.click(toggleBtn);
+
+		await waitFor(() => {
+			expect(screen.queryByText('식별 정보')).toBeNull();
+		});
+
+		const openBtn = screen.getByTitle('메타 정보 서랍 열기');
+		await fireEvent.click(openBtn);
+
+		await waitFor(() => {
+			expect(screen.getByText('식별 정보')).toBeTruthy();
+		});
+	});
 });

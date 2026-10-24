@@ -31,6 +31,8 @@
 	let kindFilter = $state('all');
 	let rawMode = $state(false);
 	let copiedUri = $state(false);
+	let drawerOpen = $state(true);
+	let copiedField = $state<string | null>(null);
 
 	let kinds = $derived(['all', ...Array.from(new Set(artifacts.map((a) => a.kind)))]);
 
@@ -73,13 +75,20 @@
 		return `${kb} KB`;
 	}
 
-	async function copyToClipboard(text: string) {
+	async function copyToClipboard(text: string, fieldName = 'uri') {
 		try {
 			await navigator.clipboard.writeText(text);
-			copiedUri = true;
-			setTimeout(() => {
-				copiedUri = false;
-			}, 2000);
+			if (fieldName === 'uri') {
+				copiedUri = true;
+				setTimeout(() => {
+					copiedUri = false;
+				}, 2000);
+			} else {
+				copiedField = fieldName;
+				setTimeout(() => {
+					copiedField = null;
+				}, 2000);
+			}
 		} catch (e) {
 			console.error('Failed to copy', e);
 		}
@@ -268,29 +277,12 @@
 					<div class="detail-title-row">
 						<span class="kind-badge {meta.kind}">{meta.kind}</span>
 						<h1>{meta.slug}</h1>
-					</div>
-					<div class="meta-pills">
-						<span class="pill" title="Source commit">
-							<strong>Commit:</strong> <code>{meta.source_sha}</code>
-						</span>
-						<span class="pill" title="Generation ID">
-							<strong>Generation:</strong> <code>{meta.generation_id}</code>
-						</span>
-						<span class="pill" title="Created date">
-							<strong>생성:</strong>
-							{new Date(meta.created_at).toLocaleString()}
-						</span>
-						<span class="pill" class:expired={expiry.expired} title="Expiration">
-							<strong>만료:</strong>
+						<span
+							class="expiry-tag-compact"
+							class:expired={expiry.expired}
+							title={`만료: ${new Date(meta.expires_at).toLocaleString()}`}
+						>
 							{expiry.label}
-						</span>
-						<span class="pill">
-							<strong>크기:</strong>
-							{formatBytes(meta.byte_count)}
-						</span>
-						<span class="pill">
-							<strong>언어:</strong>
-							{meta.language.toUpperCase()}
 						</span>
 					</div>
 				</div>
@@ -309,7 +301,8 @@
 					{/if}
 					<button
 						class="action-btn"
-						onclick={() => copyToClipboard(meta.artifact_uri || `shared://${meta.generation_id}`)}
+						onclick={() =>
+							copyToClipboard(meta.artifact_uri || `shared://${meta.generation_id}`, 'uri')}
 						title="Logical URI 복사"
 					>
 						{copiedUri ? '✓ 복사됨' : 'URI 복사'}
@@ -323,18 +316,155 @@
 					>
 						{rawMode ? 'Markdown 뷰' : 'Raw 보기'}
 					</button>
+					<button
+						class="action-btn drawer-toggle"
+						class:active={drawerOpen}
+						onclick={() => {
+							drawerOpen = !drawerOpen;
+						}}
+						title={drawerOpen ? '메타 정보 서랍 닫기' : '메타 정보 서랍 열기'}
+					>
+						<span class="btn-icon">ℹ️</span>
+						<span>메타 정보</span>
+					</button>
 				</div>
 			</header>
 
-			<div class="detail-body">
-				{#if detailLoading}
-					<div class="loading-overlay">내용을 읽는 중...</div>
-				{:else if rawMode}
-					<RawViewer content={selectedDetail.content} />
-				{:else}
-					<div class="article-wrapper">
-						<MarkdownArticle html={renderedHtml} {diagramAction} />
-					</div>
+			<div class="detail-main">
+				<div class="detail-body">
+					{#if detailLoading}
+						<div class="loading-overlay">내용을 읽는 중...</div>
+					{:else if rawMode}
+						<RawViewer content={selectedDetail.content} />
+					{:else}
+						<div class="article-wrapper">
+							<MarkdownArticle html={renderedHtml} {diagramAction} />
+						</div>
+					{/if}
+				</div>
+
+				{#if drawerOpen}
+					<aside class="meta-drawer" aria-label="문서 메타 정보">
+						<div class="drawer-header">
+							<h3>문서 메타 정보</h3>
+							<button
+								class="drawer-close-btn"
+								onclick={() => {
+									drawerOpen = false;
+								}}
+								title="서랍 닫기"
+								aria-label="서랍 닫기"
+							>
+								✕
+							</button>
+						</div>
+
+						<div class="drawer-content">
+							<section class="drawer-section">
+								<h4 class="section-title">식별 정보</h4>
+								<div class="drawer-field">
+									<span class="field-label">종류 (Kind)</span>
+									<span class="field-value">
+										<span class="kind-badge {meta.kind}">{meta.kind}</span>
+									</span>
+								</div>
+								<div class="drawer-field">
+									<span class="field-label">제안 슬러그</span>
+									<span class="field-value selectable-text">{meta.slug}</span>
+								</div>
+								<div class="drawer-field">
+									<span class="field-label">세대 ID (Generation)</span>
+									<div class="copyable-row">
+										<code class="code-val" title={meta.generation_id}>{meta.generation_id}</code>
+										<button
+											class="copy-icon-btn"
+											onclick={() => copyToClipboard(meta.generation_id, 'gen')}
+											title="세대 ID 복사"
+										>
+											{copiedField === 'gen' ? '✓' : '📋'}
+										</button>
+									</div>
+								</div>
+								<div class="drawer-field">
+									<span class="field-label">소스 커밋 SHA</span>
+									<div class="copyable-row">
+										<code class="code-val" title={meta.source_sha}>{meta.source_sha}</code>
+										<button
+											class="copy-icon-btn"
+											onclick={() => copyToClipboard(meta.source_sha, 'sha')}
+											title="커밋 SHA 복사"
+										>
+											{copiedField === 'sha' ? '✓' : '📋'}
+										</button>
+									</div>
+								</div>
+							</section>
+
+							<section class="drawer-section">
+								<h4 class="section-title">생명주기 및 속성</h4>
+								<div class="drawer-field">
+									<span class="field-label">생성 일시</span>
+									<span class="field-value">{new Date(meta.created_at).toLocaleString()}</span>
+								</div>
+								<div class="drawer-field">
+									<span class="field-label">만료 일시</span>
+									<div class="field-value-group">
+										<span class="expiry-tag" class:expired={expiry.expired}>{expiry.label}</span>
+										<span class="field-sub">{new Date(meta.expires_at).toLocaleString()}</span>
+									</div>
+								</div>
+								<div class="drawer-field">
+									<span class="field-label">작성 언어</span>
+									<span class="field-value">
+										<span class="lang-badge">{meta.language.toUpperCase()}</span>
+									</span>
+								</div>
+								<div class="drawer-field">
+									<span class="field-label">본문 크기</span>
+									<span class="field-value"
+										>{formatBytes(meta.byte_count)} ({meta.byte_count.toLocaleString()} bytes)</span
+									>
+								</div>
+								<div class="drawer-field">
+									<span class="field-label">본문 해시 (SHA-256)</span>
+									<div class="copyable-row">
+										<code class="code-val" title={meta.content_sha256}>
+											{meta.content_sha256.slice(0, 16)}...
+										</code>
+										<button
+											class="copy-icon-btn"
+											onclick={() => copyToClipboard(meta.content_sha256, 'hash')}
+											title="전체 해시 복사"
+										>
+											{copiedField === 'hash' ? '✓' : '📋'}
+										</button>
+									</div>
+								</div>
+							</section>
+
+							<section class="drawer-section">
+								<h4 class="section-title">공유 공간 URI</h4>
+								<div class="drawer-field">
+									<div class="copyable-row uri-box">
+										<code class="code-val uri-code"
+											>{meta.artifact_uri || `shared://${meta.generation_id}`}</code
+										>
+										<button
+											class="copy-icon-btn"
+											onclick={() =>
+												copyToClipboard(
+													meta.artifact_uri || `shared://${meta.generation_id}`,
+													'drawer-uri'
+												)}
+											title="URI 복사"
+										>
+											{copiedField === 'drawer-uri' ? '✓' : '📋'}
+										</button>
+									</div>
+								</div>
+							</section>
+						</div>
+					</aside>
 				{/if}
 			</div>
 		{/if}
@@ -346,18 +476,22 @@
 		display: flex;
 		flex: 1;
 		min-height: 0;
+		height: 100%;
 		width: 100%;
+		overflow: hidden;
 		background-color: var(--bg-viewport);
 	}
 
 	.shared-sidebar {
-		width: 340px;
+		width: 320px;
 		flex-shrink: 0;
 		display: flex;
 		flex-direction: column;
+		height: 100%;
+		min-height: 0;
+		overflow: hidden;
 		background-color: var(--bg-sidebar);
 		border-right: 1px solid var(--border-sidebar);
-		overflow: hidden;
 	}
 
 	.sidebar-header {
@@ -366,6 +500,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
+		flex-shrink: 0;
 	}
 
 	.title-row {
@@ -450,6 +585,7 @@
 
 	.artifact-list {
 		flex: 1;
+		min-height: 0;
 		overflow-y: auto;
 		padding: 8px;
 		display: flex;
@@ -533,8 +669,26 @@
 		border-radius: 3px;
 	}
 
+	.expiry-tag {
+		font-size: 11px;
+	}
+
 	.expiry-tag.expired {
 		color: #ef4444;
+	}
+
+	.expiry-tag-compact {
+		font-size: 11px;
+		padding: 2px 8px;
+		border-radius: 4px;
+		background-color: var(--badge-bg);
+		color: var(--text-muted);
+		border: 1px solid var(--border-panel);
+	}
+
+	.expiry-tag-compact.expired {
+		color: #ef4444;
+		border-color: #ef4444;
 	}
 
 	.empty-state,
@@ -552,6 +706,8 @@
 	.shared-content {
 		flex: 1;
 		min-width: 0;
+		min-height: 0;
+		height: 100%;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
@@ -593,19 +749,20 @@
 	}
 
 	.detail-header {
-		padding: 18px 24px;
+		padding: 14px 24px;
 		border-bottom: 1px solid var(--border-panel);
 		background-color: var(--bg-panel);
 		display: flex;
 		justify-content: space-between;
-		align-items: flex-start;
+		align-items: center;
 		gap: 16px;
 		flex-wrap: wrap;
+		flex-shrink: 0;
 	}
 
 	.detail-title-group {
 		display: flex;
-		flex-direction: column;
+		align-items: center;
 		gap: 8px;
 		min-width: 0;
 	}
@@ -619,37 +776,10 @@
 
 	.detail-title-row h1 {
 		margin: 0;
-		font-size: 20px;
+		font-size: 18px;
 		font-weight: 700;
 		color: var(--text-primary);
 		word-break: break-all;
-	}
-
-	.meta-pills {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-		font-size: 12px;
-	}
-
-	.pill {
-		background-color: var(--bg-viewport);
-		border: 1px solid var(--border-panel);
-		padding: 2px 8px;
-		border-radius: 4px;
-		color: var(--text-secondary);
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-	}
-
-	.pill code {
-		font-family: ui-monospace, SFMono-Regular, monospace;
-		color: var(--code-color);
-	}
-
-	.pill.expired {
-		color: #ef4444;
 	}
 
 	.detail-actions {
@@ -670,7 +800,7 @@
 		text-decoration: none;
 		display: inline-flex;
 		align-items: center;
-		gap: 4px;
+		gap: 5px;
 		font-weight: 500;
 	}
 
@@ -685,11 +815,25 @@
 		color: var(--tree-selected-text);
 	}
 
+	.btn-icon {
+		font-size: 12px;
+	}
+
+	.detail-main {
+		flex: 1;
+		min-height: 0;
+		height: 100%;
+		display: flex;
+		overflow: hidden;
+	}
+
 	.detail-body {
 		flex: 1;
-		overflow-y: auto;
-		padding: 24px 32px;
 		min-height: 0;
+		min-width: 0;
+		overflow-y: auto;
+		padding: 24px 32px 80px;
+		scroll-behavior: smooth;
 	}
 
 	.article-wrapper {
@@ -701,5 +845,160 @@
 		padding: 32px;
 		text-align: center;
 		color: var(--text-muted);
+	}
+
+	/* Right Drawer Styles */
+	.meta-drawer {
+		width: 330px;
+		flex-shrink: 0;
+		border-left: 1px solid var(--border-panel);
+		background-color: var(--bg-panel);
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 0;
+		overflow: hidden;
+		box-sizing: border-box;
+	}
+
+	.drawer-header {
+		padding: 14px 18px;
+		border-bottom: 1px solid var(--border-panel);
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex-shrink: 0;
+	}
+
+	.drawer-header h3 {
+		margin: 0;
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	.drawer-close-btn {
+		background: none;
+		border: none;
+		color: var(--text-muted);
+		font-size: 14px;
+		cursor: pointer;
+		padding: 4px;
+		border-radius: 4px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.drawer-close-btn:hover {
+		background-color: var(--bg-btn);
+		color: var(--text-primary);
+	}
+
+	.drawer-content {
+		flex: 1;
+		overflow-y: auto;
+		padding: 16px 18px 40px;
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	.drawer-section {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.section-title {
+		margin: 0;
+		font-size: 11px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--text-dim);
+		border-bottom: 1px solid var(--border-sidebar);
+		padding-bottom: 4px;
+	}
+
+	.drawer-field {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.field-label {
+		font-size: 11px;
+		color: var(--text-muted);
+		font-weight: 500;
+	}
+
+	.field-value {
+		font-size: 13px;
+		color: var(--text-secondary);
+		word-break: break-all;
+	}
+
+	.field-value.selectable-text {
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	.field-value-group {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.field-sub {
+		font-size: 11px;
+		color: var(--text-dim);
+	}
+
+	.copyable-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 6px;
+		background-color: var(--bg-viewport);
+		border: 1px solid var(--border-panel);
+		border-radius: 5px;
+		padding: 4px 8px;
+	}
+
+	.code-val {
+		font-family: ui-monospace, SFMono-Regular, monospace;
+		font-size: 12px;
+		color: var(--code-color);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		flex: 1;
+	}
+
+	.uri-box {
+		padding: 6px 8px;
+	}
+
+	.uri-code {
+		white-space: normal;
+		word-break: break-all;
+		font-size: 11px;
+	}
+
+	.copy-icon-btn {
+		background: none;
+		border: none;
+		color: var(--text-muted);
+		cursor: pointer;
+		font-size: 12px;
+		padding: 2px 4px;
+		border-radius: 3px;
+		flex-shrink: 0;
+	}
+
+	.copy-icon-btn:hover {
+		background-color: var(--bg-btn);
+		color: var(--text-primary);
 	}
 </style>

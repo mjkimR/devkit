@@ -62,9 +62,11 @@
 <style>
 	.content-viewport {
 		flex: 1;
+		min-height: 0;
+		height: 100%;
 		overflow-y: auto;
 		background-color: var(--bg-viewport);
-		padding: 24px 32px;
+		padding: 24px 32px 80px;
 		position: relative;
 	}
 
