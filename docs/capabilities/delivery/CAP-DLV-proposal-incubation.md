@@ -11,6 +11,8 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
   - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py
   - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py
+  - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/SKILL.md.jinja
+  - packages/devkit-spec/src/devkit_spec/features/policy/cli/commands.py
 ---
 
 # [CAP-DLV-proposal-incubation] Proposal Incubation and Handoff
