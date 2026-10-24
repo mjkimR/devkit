@@ -585,13 +585,14 @@ else `ARGUMENT_INVALID`) returns the domain template for the same source without
 The source is a real full commit at clean current `plan-<slug>` HEAD (reviewing or accepted), or a clean accepted
 base HEAD for standalone handoff.
 Language is the owning workspace preference, normalized to ko/en. Report frontmatter binds `proposal`,
-`source_sha`, `language` and `repository_namespace`; the domain template supplies bilingual sections for outcome,
-decisions, boundary impacts, Planning effort/support, open decisions/waivers, unverified areas, recommended
-Development effort and approval effects. Every current committed PADR has problem, choice, rejected alternatives
-and consequences; committed envelope names and declared effort are accounted for. The Host verifies meaning. `[tool.spec.proposal_review].auto_write` defaults to `false`; `devkit spec policy` reports `[PROPOSAL_REVIEW_POLICY: auto_write=<boolean>]` and JSON `proposal_review.auto_write`. For a Planning proposal, the agent ensures one report is available for the final committed source before presenting `plan-accept`; an exact complete report is reused, `auto_write=true` publishes a missing report, and `auto_write=false` requires explicit publication when the report is missing. Acceptance consumes and validates the exact report URI and never composes or publishes a report. A missing, expired or source-mismatched report is refused until a current report is published.
+`source_sha`, `language` and `repository_namespace`; the domain template supplies three mandatory bilingual
+sections for outcome, decisions and proposed approval effects (identifying the recommended Development effort).
+Optional sections may report boundary impacts, planning effort/support, open decisions/waivers and unverified areas.
+Every current committed PADR has problem and choice; rejected alternatives and consequences are optional. The Host
+verifies meaning. `[tool.spec.proposal_review].auto_write` defaults to `false`; `devkit spec policy` reports `[PROPOSAL_REVIEW_POLICY: auto_write=<boolean>]` and JSON `proposal_review.auto_write`. For a Planning proposal, the agent ensures one report is available for the final committed source before presenting `plan-accept`; an exact complete report is reused, `auto_write=true` publishes a missing report, and `auto_write=false` requires explicit publication when the report is missing. Acceptance consumes and validates the exact report URI and never composes or publishes a report. A missing, expired or source-mismatched report is refused until a current report is published.
 Publication rejects incomplete or false identity and oversized content; it never edits tracked documents.
 A `PROPOSAL_REVIEW_INVALID` message starts with the failed field class (`source`, `size`, `identity`, `title`,
-`sections`, `decisions`, `decision fields`, `coverage`, `dev_effort`) and names the mismatched keys, headings, PADR
+`sections`, `decisions`, `decision fields`, `dev_effort`) and names the mismatched keys, headings, PADR
 IDs or tokens; its `[FIX]` names both template routes.
 Exact immutable URI, content digest, generation and seven-day expiry come from the shared adapter; identical live
 retries keep the generation, expired retries create a different one. Publication responses contain the exact URI,
