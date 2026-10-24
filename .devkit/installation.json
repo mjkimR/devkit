@@ -1438,7 +1438,7 @@
     },
     ".devkit/managed/spec/instructions/document-writing.md": {
       "mode": 420,
-      "sha256": "cf968a8801612d2722eecae72d0cfd9b21e8c605fac37f41173490391d968ed0"
+      "sha256": "c8536301115e689375305f24421a931e44e048a8a76fc59270d86f96150a7786"
     },
     ".devkit/managed/spec/instructions/living-spec-writing.md": {
       "mode": 420,
@@ -1594,7 +1594,7 @@
     },
     ".devkit/managed/spec/rules/traceability_link/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "8d6136aff6bec692e5796d81dff72d1d826b3f2330311eceb4a1f46c12ba7ad2"
+      "sha256": "fbc03d149bc16ffcbaa7f2621a861d29026a35e5a62e7217a1b0c43031a4df72"
     },
     ".devkit/managed/spec/skills/spec-delegate/SKILL.md": {
       "mode": 420,

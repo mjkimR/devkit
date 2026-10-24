@@ -275,6 +275,8 @@ def validate(root: Path, slug: str, sha: str, uri: str) -> Artifact:
         artifact = validate_artifact(root, slug, sha, uri)
         _check(artifact.content, slug, selected, artifact.metadata.repository_namespace)
         return artifact
+    except YamlBindingUnavailableError:
+        raise
     except (AdvisoryError, ValueError, UnicodeError) as exc:
         raise ReviewRefreshRequiredError(
             "the exact report is unavailable, incomplete or no longer matches the source"

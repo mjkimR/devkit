@@ -28,7 +28,7 @@ import yaml
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
 from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
-from devkit_core.core.frontmatter import locate
+from devkit_core.core.frontmatter import load_header, locate
 from devkit_core.core.yaml import safe_compose
 
 from devkit_spec.features.documents import Document, DocumentIndex, Reference
@@ -162,6 +162,30 @@ class TraceabilityLinkRule(BaseRule):
 
 
 def _add_items(text: str, field: str, ids: list[str]) -> str | None:
+    """Append IDs only when reparsing confirms that no other field changed."""
+    try:
+        block = locate(text)
+        if block is None:
+            return None
+        original = load_header(block.header, source="frontmatter fixer")
+        items = original.get(field, [])
+        if not isinstance(items, list):
+            return None
+        updated = _append_items(text, field, ids)
+        if updated is None:
+            return None
+        replacement = locate(updated)
+        if replacement is None:
+            return None
+        expected = original | {field: [*items, *ids]}
+        if load_header(replacement.header, source="frontmatter fixer") != expected:
+            return None
+    except (FrontmatterError, RecursionError):
+        return None
+    return updated
+
+
+def _append_items(text: str, field: str, ids: list[str]) -> str | None:
     """``text`` with ``ids`` appended to the frontmatter list ``field``; ``None`` when that is not safe.
 
     An absent field is added at the end of the header as a block list; a flow list (``[]``, ``[A]``) gets the IDs
@@ -201,9 +225,9 @@ def _add_items(text: str, field: str, ids: list[str]) -> str | None:
         return text[:at] + ", ".join(ids) + text[at:]
     if not node.value:
         return None
-    end = text.find("\n", offset(node.value[-1].end_mark))
-    if end < 0:
-        return None
+    # A block scalar ends at the next line's start, unlike a plain or quoted
+    # scalar. The sequence's end mark is the insertion boundary in both cases.
+    end = block.header_start + node.end_mark.index
     indent = " " * node.start_mark.column
     entries = "".join(f"{indent}- {item}{newline}" for item in ids)
-    return text[: end + 1] + entries + text[end + 1 :]
+    return text[:end] + entries + text[end:]

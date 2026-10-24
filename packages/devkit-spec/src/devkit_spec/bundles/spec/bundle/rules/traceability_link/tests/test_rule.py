@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 from devkit_agt.features.rules import Autofixable, RuleContext, Violation
 from devkit_agt.features.rules.services.testing import check, load_rule, write_files
 
@@ -94,6 +95,31 @@ def test_fix_keeps_list_style(tmp_path: Path) -> None:
     }
     assert _found(check(RULE, tmp_path, files, fix=True)) == []
     assert "usecases:\n- 'UC-zero'  # first\n- UC-one\n- UC-two\ntitle: x\n" in (tmp_path / cap).read_text()
+
+
+@pytest.mark.parametrize("newline", ["\n", "\r\n"])
+@pytest.mark.parametrize("style", [">-", "|-"])
+@pytest.mark.parametrize("following", ["title: 한글 # keep\n", ""])
+def test_fix_after_block_scalar_preserves_other_bytes(tmp_path: Path, newline: str, style: str, following: str) -> None:
+    header = f"usecases:\n  - {style}\n    UC-zero\n{following}"
+    cap = _one_sided(tmp_path, header)
+    original = cap.read_bytes().replace(b"\n", newline.encode())
+    cap.write_bytes(original)
+    assert isinstance(RULE, Autofixable)
+    assert RULE.fix(RuleContext(workspace_root=tmp_path, fix=True)) == [CAP]
+    expected = original.replace(
+        f"    UC-zero{newline}".encode(),
+        f"    UC-zero{newline}  - UC-test-usecase{newline}".encode(),
+    )
+    assert cap.read_bytes() == expected
+
+
+def test_fix_refuses_alias_changes_to_other_fields(tmp_path: Path) -> None:
+    cap = _one_sided(tmp_path, "usecases: &links [UC-zero]\nother: *links\n")
+    original = cap.read_bytes()
+    assert isinstance(RULE, Autofixable)
+    assert RULE.fix(RuleContext(workspace_root=tmp_path, fix=True)) == []
+    assert cap.read_bytes() == original
 
 
 def test_exact_ids_only(tmp_path: Path) -> None:

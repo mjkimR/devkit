@@ -42,10 +42,10 @@ Order content by when the reader needs it: purpose, constraints, procedure, comp
 - If a YAML-reading command reports `YAML_BINDING_UNAVAILABLE`, install PyYAML from a compatible binary wheel in the
   active environment and verify `uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader')"`.
 
+## Related Instructions
+
 - Read `contract-authoring` when a document states a contract: normative keywords, measurable criteria, Non-Goals.
 - Read `living-spec-writing` when writing under `docs/` or `specs/`: placement, history, summaries, references,
   terminology.
 - Read `decision-writing`, `capability-writing`, `usecase-writing` or `architecture-writing` when writing that
   document kind.
-
-## Related Instructions

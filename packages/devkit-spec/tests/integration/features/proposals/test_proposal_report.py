@@ -5,6 +5,8 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+import yaml
+from devkit_core.base.errors import YamlBindingUnavailableError
 from devkit_dist.features.shared.repositories.local import LocalAdapter, discover
 
 from devkit_spec.features.proposals.usecases import report as reports
@@ -54,6 +56,17 @@ def test_publication_retry_validation_and_language(repo, monkeypatch, language):
     monkeypatch.setattr(reports, "approval_language", lambda _: "ko" if language == "en" else "en")
     with pytest.raises(reports.ReviewRefreshRequiredError):
         reports.validate(root, "example", sha, first.metadata.artifact_uri)
+
+
+def test_validation_preserves_missing_yaml_binding_error(repo, monkeypatch):
+    root, sha = repo
+    artifact = reports.publish(root, "example", sha, briefing(root, sha))
+    monkeypatch.delattr(yaml, "CSafeLoader")
+    with pytest.raises(YamlBindingUnavailableError) as caught:
+        reports.validate(root, "example", sha, artifact.metadata.artifact_uri)
+    assert caught.value.code == "YAML_BINDING_UNAVAILABLE"
+    assert caught.value.exit_code == 2
+    assert caught.value.fix and "binary wheel" in caught.value.fix
 
 
 @pytest.mark.parametrize(
