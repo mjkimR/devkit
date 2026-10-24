@@ -148,7 +148,8 @@ acquires Python behavior. Its rules are separate from the reusable harness rules
 ### Optional MCP runtime
 
 `packages/devkit-mcp` ships `devkit_mcp` and mounts `devkit mcp` through `devkit.commands`. It is a
-lockstep application wheel, depending on the exact dist release, `mcp>=1.30,<2` and `jsonschema`. It owns transport,
+lockstep application wheel, depending on the exact dist release, `fastmcp>=4.0.3,<5`, `mcp-types>=2,<3` and
+`jsonschema`. It owns transport,
 form adaptation and `devkit.host.services` discovery; integration and handoff remain domain services. Dist imports
 no runtime module and keeps the executable, receipts, hooks and narrow project-registration reconciler.
 `ADR-mcp-runtime-and-shared-artifacts` defines this inversion.

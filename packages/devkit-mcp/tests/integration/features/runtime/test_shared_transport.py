@@ -7,7 +7,7 @@ from devkit_core.core.git import run_git
 from devkit_dist.features.project.repositories.invocation import ExecutionBinding
 from devkit_dist.features.shared.mcp import tools
 from devkit_mcp.features.runtime.mcp.server import build_server
-from mcp import types
+from fastmcp import Client
 
 
 @pytest.fixture
@@ -25,14 +25,11 @@ def project(tmp_path):
 
 
 def call(server, name, arguments):
-    result = asyncio.run(
-        server.request_handlers[types.CallToolRequest](
-            types.CallToolRequest(
-                method="tools/call", params=types.CallToolRequestParams(name=name, arguments=arguments)
-            )
-        )
-    )
-    return result.root
+    async def invoke():
+        async with Client(server, mode="legacy") as client:
+            return await client.call_tool(name, arguments, raise_on_error=False)
+
+    return asyncio.run(invoke())
 
 
 def test_local_put_never_elicits_and_cloud_hides_and_refuses(project):
@@ -41,22 +38,25 @@ def test_local_put_never_elicits_and_cloud_hides_and_refuses(project):
     args = dict(kind="proposal-review", slug="test", source_sha="a" * 40, language="en", content="# Test")
     # No request context/session exists: any form elicitation would fail this call.
     result = call(server, "shared_put", args)
-    assert not result.isError, result
-    assert result.structuredContent["metadata"]["source_sha"] == "a" * 40
+    assert not result.is_error, result
+    assert result.structured_content is not None
+    assert result.structured_content["metadata"]["source_sha"] == "a" * 40
     cloud = build_server(declared, ExecutionBinding(project, project), profile="read-only")
 
     async def list_tools():
-        return await cloud.request_handlers[types.ListToolsRequest](types.ListToolsRequest(method="tools/list"))
+        async with Client(cloud, mode="legacy") as client:
+            return await client.list_tools()
 
     listing = asyncio.run(list_tools())
-    assert isinstance(listing.root, types.ListToolsResult)
-    assert {t.name for t in listing.root.tools} == {"shared_get", "shared_list", "shared_sweep"}
-    assert call(cloud, "shared_put", args).isError
-    assert call(cloud, "shared_sweep_apply", {}).isError
-    assert call(cloud, "shared_sweep", {"apply": True}).isError
+    assert {tool.name for tool in listing} == {"shared_get", "shared_list", "shared_sweep"}
+    assert call(cloud, "shared_put", args).is_error
+    assert call(cloud, "shared_sweep_apply", {}).is_error
+    assert call(cloud, "shared_sweep", {"apply": True}).is_error
     (project / ".devkit/config.local.toml").write_text('[execution]\nenvironment="cloud"\n')
-    assert call(server, "shared_put", args).isError
-    assert not call(server, "shared_get", {"artifact_uri": result.structuredContent["artifact_uri"]}).isError
+    assert call(server, "shared_put", args).is_error
+    assert result.structured_content is not None
+    get_result = call(server, "shared_get", {"artifact_uri": result.structured_content["artifact_uri"]})
+    assert not get_result.is_error
 
 
 def test_read_and_write_use_owning_configuration(project, tmp_path):
@@ -65,7 +65,8 @@ def test_read_and_write_use_owning_configuration(project, tmp_path):
     (project / ".devkit/config.local.toml").write_text('[shared]\nadapter="missing"\n')
     server = build_server({t.name: t for t in tools(project)}, ExecutionBinding(linked, project))
     result = call(server, "shared_list", {"kind": "proposal-review", "slug": "test"})
-    assert not result.isError, result
+    assert not result.is_error, result
     (linked / ".devkit/config.local.toml").write_text('[shared]\nadapter="missing"\n')
     result = call(server, "shared_list", {"kind": "proposal-review", "slug": "test"})
-    assert result.structuredContent["error"]["code"] == "SHARED_ADAPTER_UNAVAILABLE"
+    assert result.structured_content is not None
+    assert result.structured_content["error"]["code"] == "SHARED_ADAPTER_UNAVAILABLE"

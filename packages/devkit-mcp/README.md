@@ -1,6 +1,6 @@
 # devkit-mcp
 
-Optional stdio transport, native forms and installed service discovery. `devkit-dist` owns the `devkit`
+Optional FastMCP stdio transport, native forms and installed service discovery. `devkit-dist` owns the `devkit`
 executable and project registration; domain services stay in their packages. Install this wheel intentionally,
 then run `devkit sync` from a retained runtime to reconcile local Codex/Claude/Antigravity project registrations.
 
@@ -17,5 +17,5 @@ See `CAP-COLL-shared-artifacts` and `CAP-MCP-runtime-registration` for the domai
 
 `src/devkit_mcp/features/runtime/` owns the optional runtime feature: `cli/` adapts command input/output,
 `usecases/` coordinates registration changes, discovers installed tool contracts and verifies retained runtimes,
-and `mcp/` implements the SDK-backed stdio transport. Domain operations remain in the packages that
+and `mcp/` adapts the SDK-free tool contracts to FastMCP's stdio transport. Domain operations remain in the packages that
 declare their tool contracts.

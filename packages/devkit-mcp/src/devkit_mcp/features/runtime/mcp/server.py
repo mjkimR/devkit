@@ -1,74 +1,64 @@
-"""SDK-backed stdio transport. Tool approval never substitutes for a service's scoped confirmation.
+"""FastMCP stdio transport. Tool approval never substitutes for scoped confirmation.
 
-The server records the installed devkit source when it is built (``devkit mcp serve`` start) and refuses every call
-other than ``read_only`` with ``MCP_RUNTIME_STALE`` once a loaded devkit module no longer matches it.
+The server records the installed devkit source when it starts and refuses every call
+other than ``read_only`` with ``MCP_RUNTIME_STALE`` once a loaded devkit module no
+longer matches it.
 """
 
 from __future__ import annotations
 
-import asyncio
-import contextlib
 import json
-import os
 from contextlib import nullcontext
 from importlib.metadata import version
 from pathlib import Path
+from typing import Any
 
 from devkit.advisory import AdvisoryError
 from devkit_core.base.mcp import ConfirmationReply, McpTool
 from devkit_dist.features.host.models.errors import HostConfirmationError, HostMcpError, HostMcpInputError
 from devkit_dist.features.project.models.invocation import InvocationBinding
 from devkit_dist.features.project.usecases.invocation import execution_binding, guard_execution, invocation
+from fastmcp import FastMCP
+from fastmcp.server.dependencies import get_context
+from fastmcp.tools import Tool, ToolResult
 from jsonschema import Draft202012Validator
-from mcp import types
-from mcp.server.lowlevel import Server
-from mcp.server.stdio import stdio_server
+from mcp_types import TextContent, ToolAnnotations
+from pydantic import PrivateAttr
 
 from devkit_mcp.features.runtime.usecases.discovery import load_tools
 from devkit_mcp.features.runtime.usecases.loaded_code import GuardLoadedCodeUseCase, RecordLoadedCodeUseCase
 
 
-def build_server(
-    tools: dict[str, McpTool], binding: InvocationBinding | None = None, *, profile: str = "local"
-) -> Server:
-    server = Server("devkit", version=version("devkit-mcp"))
-    loaded_code = GuardLoadedCodeUseCase(RecordLoadedCodeUseCase().execute())
+class _DevkitTool(Tool):
+    _service: McpTool = PrivateAttr()
+    _binding: InvocationBinding | None = PrivateAttr()
+    _profile: str = PrivateAttr()
+    _loaded_code: GuardLoadedCodeUseCase = PrivateAttr()
 
-    @server.list_tools()
-    async def list_tools() -> list[types.Tool]:
-        return [
-            types.Tool(
-                name=tool.name,
-                description=tool.description,
-                inputSchema=tool.input_schema,
-                annotations=types.ToolAnnotations(
-                    readOnlyHint=tool.read_only, destructiveHint=tool.destructive, openWorldHint=tool.open_world
-                ),
-            )
-            for tool in tools.values()
-            if profile != "read-only" or tool.execution == "read_only"
-        ]
+    async def run(self, arguments: dict[str, Any]) -> ToolResult:
+        result: dict[str, Any]
 
-    @server.call_tool(validate_input=False)
-    async def call_tool(name: str, arguments: dict) -> types.CallToolResult:
-        async def confirm(message: str, schema: dict) -> ConfirmationReply:
-            if binding is not None:
-                binding.guard()
+        async def confirm(message: str, schema: dict[str, Any]) -> ConfirmationReply:
+            if self._binding is not None:
+                self._binding.guard()
             guard_execution()
-            context = server.request_context
-            capability = (
-                context.session.client_params.capabilities.elicitation if context.session.client_params else None
-            )
-            if capability is None or capability.form is None:
+            context = get_context()
+            capabilities = context.session.client_capabilities
+            elicitation = capabilities.elicitation if capabilities else None
+            if elicitation is None or elicitation.form is None:
                 raise HostConfirmationError(
                     "client did not advertise native form elicitation; no authority was granted"
                 )
             try:
-                result = await context.session.elicit_form(message, schema, related_request_id=context.request_id)
-                if binding is not None:
-                    binding.guard()
+                response = await context.session.elicit_form(
+                    message,
+                    schema,
+                    related_request_id=context.request_id,
+                )
+                if self._binding is not None:
+                    self._binding.guard()
                 guard_execution()
-                return ConfirmationReply(result.action, result.content or {})
+                return ConfirmationReply(response.action, response.content or {})
             except AdvisoryError:
                 raise
             except Exception as exc:
@@ -77,46 +67,61 @@ def build_server(
                 ) from exc
 
         try:
-            tool = tools.get(name)
-            if (
-                tool is None
-                or tool.execution not in {"read_only", "bounded_write", "preflight", "interactive", "approved_resume"}
-                or not Draft202012Validator(tool.input_schema).is_valid(arguments)
-            ):
+            if (self._profile == "read-only" and self._service.execution != "read_only") or not Draft202012Validator(
+                self._service.input_schema
+            ).is_valid(arguments):
                 raise HostMcpInputError("unknown tool or invalid arguments; inspect the tool's input schema")
-            if profile == "read-only" and tool.execution != "read_only":
-                raise HostMcpInputError("tool is not available in the read-only profile")
-            if tool.execution == "read_only":
-                with invocation(binding) if binding is not None else nullcontext():
-                    result = await tool.invoke(arguments, confirm)
+            if self._service.execution == "read_only":
+                with invocation(self._binding) if self._binding is not None else nullcontext():
+                    result = await self._service.invoke(arguments, confirm)
             else:
-                loaded_code.execute()
-                with invocation(binding) if binding is not None else nullcontext():
+                self._loaded_code.execute()
+                with invocation(self._binding) if self._binding is not None else nullcontext():
                     guard_execution()
-                    result = await tool.invoke(arguments, confirm)
+                    result = await self._service.invoke(arguments, confirm)
             if not isinstance(result, dict):
                 raise HostMcpError("service returned a non-object result")
         except AdvisoryError as exc:
             result = {"error": exc.to_dict()}
         except Exception as exc:
             result = {"error": HostMcpError(f"service execution failed ({type(exc).__name__})").to_dict()}
-        return types.CallToolResult(
-            content=[types.TextContent(type="text", text=json.dumps(result, ensure_ascii=False))],
-            structuredContent=result,
-            isError=bool(result.get("error") or result.get("errors")),
+
+        return ToolResult(
+            content=[TextContent(type="text", text=json.dumps(result, ensure_ascii=False))],
+            structured_content=result,
+            is_error=bool(result.get("error") or result.get("errors")),
         )
 
-    return server
+
+def build_server(
+    tools: dict[str, McpTool], binding: InvocationBinding | None = None, *, profile: str = "local"
+) -> FastMCP:
+    mcp = FastMCP("devkit", version=version("devkit-mcp"))
+    loaded_code = GuardLoadedCodeUseCase(RecordLoadedCodeUseCase().execute())
+
+    for service in tools.values():
+        if profile == "read-only" and service.execution != "read_only":
+            continue
+        tool = _DevkitTool(
+            name=service.name,
+            description=service.description,
+            parameters=service.input_schema,
+            annotations=ToolAnnotations(
+                read_only_hint=service.read_only,
+                destructive_hint=service.destructive,
+                open_world_hint=service.open_world,
+            ),
+        )
+        tool._service = service
+        tool._binding = binding
+        tool._profile = profile
+        tool._loaded_code = loaded_code
+        mcp.add_tool(tool)
+
+    return mcp
 
 
 def serve(root: Path, configuration_workspace: Path, *, profile: str = "local") -> None:
-    """Run a local stdio server; stdout belongs exclusively to the MCP SDK."""
+    """Run a local stdio server; stdout belongs exclusively to the MCP protocol."""
     server = build_server(load_tools(root), execution_binding(configuration_workspace, root), profile=profile)
-
-    async def run() -> None:
-        async with stdio_server() as (read, write):
-            # The SDK captured the real output stream; library prints cannot corrupt the wire.
-            with open(os.devnull, "w") as sink, contextlib.redirect_stdout(sink):
-                await server.run(read, write, server.create_initialization_options())
-
-    asyncio.run(run())
+    server.run(transport="stdio", show_banner=False)

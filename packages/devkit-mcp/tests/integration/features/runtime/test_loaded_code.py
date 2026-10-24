@@ -12,7 +12,7 @@ from devkit_core.base.mcp import McpTool
 from devkit_core.core.plugins import iter_plugin_packages, load_subclasses
 from devkit_dist.features.project.repositories.invocation import ExecutionBinding
 from devkit_mcp.features.runtime.mcp.server import build_server
-from mcp import types
+from fastmcp import Client
 
 from .test_runtime import git
 
@@ -62,23 +62,23 @@ def _tools(calls: list[str]) -> dict[str, McpTool]:
 
 
 def _call(server, name):
-    result = asyncio.run(
-        server.request_handlers[types.CallToolRequest](
-            types.CallToolRequest(method="tools/call", params=types.CallToolRequestParams(name=name, arguments={}))
-        )
-    )
-    return result.root
+    async def call():
+        async with Client(server, mode="legacy") as client:
+            return await client.call_tool(name, {}, raise_on_error=False)
+
+    return asyncio.run(call())
 
 
 def test_changed_loaded_module_refuses_protected_tools(project, loaded):
     calls: list[str] = []
     server = build_server(_tools(calls), ExecutionBinding(project, project))
-    assert not _call(server, "write").isError
+    assert not _call(server, "write").is_error
     (loaded / "model.py").write_text("MEMBERS = ('SPEC', 'USECASE')\n")
     for name in ("write", "prepare"):
         result = _call(server, name)
-        assert result.isError
-        error = result.structuredContent["error"]
+        assert result.is_error
+        assert result.structured_content is not None
+        error = result.structured_content["error"]
         assert error["code"] == "MCP_RUNTIME_STALE"
         assert error["advisory"]["mode"] == "INTERACTION"
         assert "Restart or reconnect" in error["advisory"]["fix"]
@@ -90,9 +90,9 @@ def test_read_only_tools_and_unloaded_changes_are_not_refused(project, loaded):
     calls: list[str] = []
     server = build_server(_tools(calls), ExecutionBinding(project, project))
     (loaded / "unused.py").write_text("VALUE = 2\n")
-    assert not _call(server, "write").isError
+    assert not _call(server, "write").is_error
     (loaded / "model.py").write_text("MEMBERS = ('SPEC', 'USECASE')\n")
-    assert not _call(server, "read").isError
+    assert not _call(server, "read").is_error
     assert calls == ["write", "read"]
 
 
@@ -108,7 +108,7 @@ def test_plugins_loaded_after_start_are_not_stale(project, loaded, tmp_path):
         assert not failures
         assert load_subclasses(packages, object, namespace="devkit_rule").plugins
         assert any(name.startswith("devkit_rule_") for name in set(sys.modules) - before)
-        assert not _call(server, "write").isError
+        assert not _call(server, "write").is_error
     finally:
         for name in set(sys.modules) - before:
             del sys.modules[name]

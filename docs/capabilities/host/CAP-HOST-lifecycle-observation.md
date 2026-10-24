@@ -27,7 +27,7 @@ execution, SDD models or approval policy inside an adapter. Quick reference: [re
 - `distribution`: manifest validation, selection, overrides, shared-file planning, receipt, transaction and removal.
 
 `host` depends only on `core` and `advisory`; `distribution` may depend on `host`. No service is required to import
-distribution internals. The separate `devkit_mcp` runtime supplies optional SDK stdio transport and native
+distribution internals. The separate `devkit_mcp` runtime supplies optional FastMCP stdio transport and native
 confirmation for installed service factories (`devkit_dist.features.host.services`). `CAP-INT-mcp-services` defines the domain
 approval contract, while `host/registrations` reconciles exact local project entries. Host adapters grant no filesystem/network permission and
 contain no Git executor, automatic policy dispatch or background recovery. Setup: [MCP services](../../development/reference/host.md#mcp-services).

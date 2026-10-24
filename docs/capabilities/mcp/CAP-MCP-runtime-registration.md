@@ -18,8 +18,9 @@ updated: 2026-10-22
 
 ## Runtime contract
 
-`devkit-mcp` ships `devkit_mcp`, mounts `devkit mcp`, discovers `devkit_dist.features.host.services` and owns SDK stdio/form
-adaptation. `devkit_core.base.mcp` supplies dependency-free `McpTool`, `Confirmation` and `ConfirmationReply`.
+`devkit-mcp` ships `devkit_mcp`, mounts `devkit mcp`, discovers `devkit_dist.features.host.services` and adapts the
+SDK-free contracts to FastMCP's stdio transport. `devkit_core.base.mcp` supplies dependency-free `McpTool`,
+`Confirmation` and `ConfirmationReply`.
 Services declare execution as read_only, bounded_write, preflight, interactive or approved_resume; omitted classification is
 interactive regardless of descriptive MCP annotations. Schema validation and duplicate/unloadable service failures
 remain deterministic. Native acceptance requires both accept and approve=true; decline, cancel, disconnect or

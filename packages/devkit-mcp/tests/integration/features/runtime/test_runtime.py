@@ -18,7 +18,7 @@ from devkit_dist.features.project.repositories.invocation import (
 from devkit_dist.features.project.usecases.invocation import invocation
 from devkit_mcp.features.runtime.usecases import configuration
 from devkit_mcp.features.runtime.usecases import discovery as services
-from mcp import types
+from mcp_types import ClientCapabilities
 
 
 def git(root, *args):
@@ -122,7 +122,7 @@ def test_service_classification_is_separate_from_annotations(monkeypatch, tmp_pa
 
 @pytest.mark.parametrize("capability,form", [({}, False), ({"form": {}}, True), ({"url": {}}, False)])
 def test_installed_sdk_normalizes_form_capability(capability, form):
-    parsed = types.ClientCapabilities.model_validate({"elicitation": capability})
+    parsed = ClientCapabilities.model_validate({"elicitation": capability})
     assert parsed.elicitation is not None
     assert (parsed.elicitation.form is not None) is form
 
