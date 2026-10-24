@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-24T13:42:21.296197Z'
+status: completed
+summary: Dashboard selective loading, independent section publication, bounded tab caches, refresh and recursive metadata complete. Independent code review PASS; viewer contract reconciled.
+findings: []
+assumptions:
+- 'Local integration selected under pull_request=auto: no platform review or remote publication required.'
+- Worktree=required satisfied; merge and exact cleanup use retained-base dev-integration=auto policy authority.
+unverified_areas:
+- Local HTTP timing is one warm-filesystem run and excludes browser rendering; not a latency guarantee.
+checks:
+  tests: PASS just test-affected 112; frontend 39
+  build: PASS viewer build, pack and generated viewer-assets check
+  lint: PASS viewer lint/check, Python lint/type checks and rules CI
+diff_scope:
+  base: 6db5bab3ff9445f72e6a8c7155a24054f53ecf6d
+  head: 0de206c5296be83cddd60bb6c279b38da4eb0148

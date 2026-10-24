@@ -365,3 +365,17 @@ def test_shared_api_list_and_get(server: ViewerServer, review_artifact) -> None:
     res_beta = request(server, "/api/repos/beta/shared")
     assert res_beta.status == 200
     assert res_beta.json() == {"artifacts": []}
+
+
+def test_recursive_metadata_endpoint_includes_descendants(server: ViewerServer) -> None:
+    root = server.repositories["alpha"].root
+    (root / "docs/sub/nested.md").write_text("saved")
+    response = request(server, "/api/repos/alpha/tree?path=docs&recursive=true")
+    assert response.status == 200
+    items = response.json()["items"]
+    assert "docs/sub/nested.md" in {item["path"] for item in items}
+    assert all("content" not in item for item in items)
+    assert "docs/sub/nested.md" not in {
+        item["path"] for item in request(server, "/api/repos/alpha/tree?path=docs").json()["items"]
+    }
+    assert request(server, "/api/repos/alpha/tree?path=../&recursive=true").status == 400

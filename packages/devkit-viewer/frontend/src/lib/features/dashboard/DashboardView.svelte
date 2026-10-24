@@ -1,5 +1,12 @@
 <script lang="ts">
-	import { indexDocuments, type RepositoryDocument } from '../../api/documents';
+	import { type RepositoryDocument } from '../../api/documents';
+	import { clearRepositoryCache } from '../../api/cache';
+	import {
+		cachedSection,
+		dashboardSections,
+		loadDashboardSection,
+		type DashboardSection
+	} from './loading';
 	import type { RepositoryDataSource } from '../../api/repository';
 	import {
 		extractDashboardData,
@@ -24,50 +31,58 @@
 		) => void;
 	} = $props();
 
-	let documents = $state<RepositoryDocument[]>([]);
-	let loading = $state(false);
-	let error = $state<string | null>(null);
-
-	// Display limits (multiples of 3 for 3-column layout)
+	type SectionState = { documents: RepositoryDocument[]; loading: boolean; errors: string[] };
+	const emptySection = (): SectionState => ({ documents: [], loading: true, errors: [] });
+	let sections = $state<Record<DashboardSection, SectionState>>({
+		milestones: emptySection(),
+		proposals: emptySection(),
+		feedback: emptySection()
+	});
+	let refreshGeneration = $state(0);
+	const loading = $derived(dashboardSections.some((section) => sections[section].loading));
 	let milestoneLimit = 6;
 	let proposalLimit = 9;
 	let feedbackLimit = 6;
-
 	let showAllMilestones = $state(false);
 	let showAllProposals = $state(false);
 	let showAllFeedback = $state(false);
 
+	function refresh() {
+		if (source) clearRepositoryCache(source);
+		refreshGeneration++;
+	}
 	$effect(() => {
 		const repository = source;
 		const ref = branch;
-		if (!repository) return;
-
+		refreshGeneration;
 		const controller = new AbortController();
-		loading = true;
-		error = null;
-
-		void (async () => {
-			try {
-				const result = await indexDocuments(repository, ref, controller.signal);
-
-				if (controller.signal.aborted) return;
-				documents = result.documents;
-				if (result.errors.length) error = `Failed to index documents: ${result.errors.join('; ')}`;
-			} catch (err: any) {
-				if (!controller.signal.aborted) {
-					error = err?.message || String(err);
-				}
-			} finally {
-				if (!controller.signal.aborted) {
-					loading = false;
-				}
-			}
-		})();
-
+		showAllMilestones = false;
+		showAllProposals = false;
+		showAllFeedback = false;
+		for (const section of dashboardSections) {
+			const cached = repository ? cachedSection(repository, ref, section) : undefined;
+			sections[section] = cached
+				? { ...cached, loading: false }
+				: { ...emptySection(), loading: Boolean(repository) };
+			if (!repository || cached) continue;
+			void loadDashboardSection(repository, ref, section, controller.signal)
+				.then((result) => {
+					if (!controller.signal.aborted) sections[section] = { ...result, loading: false };
+				})
+				.catch((error: unknown) => {
+					if (!controller.signal.aborted)
+						sections[section] = {
+							documents: [],
+							loading: false,
+							errors: [error instanceof Error ? error.message : String(error)]
+						};
+				});
+		}
 		return () => controller.abort();
 	});
-
-	const data: DashboardData = $derived(extractDashboardData(documents));
+	const data: DashboardData = $derived(
+		extractDashboardData(dashboardSections.flatMap((section) => sections[section].documents))
+	);
 
 	const displayedMilestones = $derived(
 		showAllMilestones ? data.milestones.open : data.milestones.open.slice(0, milestoneLimit)
@@ -110,13 +125,16 @@
 				<h3>Repository Status Counts:</h3>
 				<ul>
 					<li>
-						Milestones: {data.milestones.openCount} open out of {data.milestones.totalCount} total
+						Milestones: {#if sections.milestones.loading}Loading…{:else if sections.milestones.errors.length}Incomplete{:else}{data
+								.milestones.openCount} open out of {data.milestones.totalCount} total{/if}
 					</li>
 					<li>
-						Proposals: {data.proposals.activeCount} active/draft out of {data.proposals.totalCount} total
+						Proposals: {#if sections.proposals.loading}Loading…{:else if sections.proposals.errors.length}Incomplete{:else}{data
+								.proposals.activeCount} active/draft out of {data.proposals.totalCount} total{/if}
 					</li>
 					<li>
-						Feedback: {data.feedback.openCount} open out of {data.feedback.totalCount} total
+						Feedback: {#if sections.feedback.loading}Loading…{:else if sections.feedback.errors.length}Incomplete{:else}{data
+								.feedback.openCount} open out of {data.feedback.totalCount} total{/if}
 					</li>
 				</ul>
 				<h3>Guidance for answering user queries:</h3>
@@ -149,6 +167,7 @@
 				<div class="title-row">
 					<h1 class="dashboard-title">Dashboard</h1>
 					<span class="repo-badge">{repoId} @ {branch}</span>
+					<button class="nav-btn" onclick={refresh}>Refresh</button>
 					{#if loading}
 						<span class="loading-tag">Loading data...</span>
 					{/if}
@@ -164,33 +183,38 @@
 				<div class="stat-card">
 					<div class="stat-icon">🗺️</div>
 					<div class="stat-content">
-						<span class="stat-value">{data.milestones.openCount}</span>
+						<span class="stat-value"
+							>{sections.milestones.loading || sections.milestones.errors.length
+								? '—'
+								: data.milestones.openCount}</span
+						>
 						<span class="stat-label">Open Milestones</span>
 					</div>
 				</div>
 				<div class="stat-card">
 					<div class="stat-icon">💡</div>
 					<div class="stat-content">
-						<span class="stat-value">{data.proposals.activeCount}</span>
+						<span class="stat-value"
+							>{sections.proposals.loading || sections.proposals.errors.length
+								? '—'
+								: data.proposals.activeCount}</span
+						>
 						<span class="stat-label">Active Proposals</span>
 					</div>
 				</div>
 				<div class="stat-card">
 					<div class="stat-icon">⚠️</div>
 					<div class="stat-content">
-						<span class="stat-value">{data.feedback.openCount}</span>
+						<span class="stat-value"
+							>{sections.feedback.loading || sections.feedback.errors.length
+								? '—'
+								: data.feedback.openCount}</span
+						>
 						<span class="stat-label">Open Feedback</span>
 					</div>
 				</div>
 			</div>
 		</header>
-
-		{#if error}
-			<div class="error-banner" role="alert">
-				<span class="error-icon">⚠️</span>
-				<span>{error}</span>
-			</div>
-		{/if}
 
 		<!-- Section 1: Active Worktree Sessions -->
 		<section class="dashboard-section" aria-labelledby="section-sessions">
@@ -224,12 +248,20 @@
 		</section>
 
 		<!-- Section 2: Open Milestones -->
-		<section class="dashboard-section" aria-labelledby="section-milestones">
+		<section
+			class="dashboard-section"
+			aria-labelledby="section-milestones"
+			aria-busy={sections.milestones.loading}
+		>
 			<div class="section-header">
 				<div class="section-title-wrap">
 					<span class="section-icon">🗺️</span>
 					<h2 id="section-milestones" class="section-title">Open Milestones</h2>
-					<span class="count-badge">{data.milestones.openCount}</span>
+					<span class="count-badge"
+						>{sections.milestones.loading || sections.milestones.errors.length
+							? '—'
+							: data.milestones.openCount}</span
+					>
 				</div>
 				<div class="section-actions">
 					{#if data.milestones.open.length > milestoneLimit}
@@ -245,6 +277,14 @@
 				</div>
 			</div>
 
+			{#if sections.milestones.loading}
+				<p role="status">Loading milestones…</p>
+			{/if}
+			{#if sections.milestones.errors.length}
+				<div class="error-banner" role="alert">
+					Could not load all milestones: {sections.milestones.errors.join('; ')}
+				</div>
+			{/if}
 			<div class="cards-grid">
 				{#each displayedMilestones as milestone (milestone.id)}
 					<div
@@ -276,20 +316,30 @@
 						</div>
 					</div>
 				{:else}
-					<div class="dashboard-card empty-card">
-						<p class="empty-text">No open milestones found.</p>
-					</div>
+					{#if !sections.milestones.loading && !sections.milestones.errors.length}
+						<div class="dashboard-card empty-card">
+							<p class="empty-text">No open milestones found.</p>
+						</div>
+					{/if}
 				{/each}
 			</div>
 		</section>
 
 		<!-- Section 3: Active Proposals -->
-		<section class="dashboard-section" aria-labelledby="section-proposals">
+		<section
+			class="dashboard-section"
+			aria-labelledby="section-proposals"
+			aria-busy={sections.proposals.loading}
+		>
 			<div class="section-header">
 				<div class="section-title-wrap">
 					<span class="section-icon">💡</span>
 					<h2 id="section-proposals" class="section-title">Active Proposals</h2>
-					<span class="count-badge">{data.proposals.activeCount}</span>
+					<span class="count-badge"
+						>{sections.proposals.loading || sections.proposals.errors.length
+							? '—'
+							: data.proposals.activeCount}</span
+					>
 				</div>
 				<div class="section-actions">
 					{#if data.proposals.active.length > proposalLimit}
@@ -307,6 +357,14 @@
 				</div>
 			</div>
 
+			{#if sections.proposals.loading}
+				<p role="status">Loading proposals…</p>
+			{/if}
+			{#if sections.proposals.errors.length}
+				<div class="error-banner" role="alert">
+					Could not load all proposals: {sections.proposals.errors.join('; ')}
+				</div>
+			{/if}
 			<div class="cards-grid">
 				{#each displayedProposals as proposal (proposal.id)}
 					<div
@@ -335,20 +393,30 @@
 						</div>
 					</div>
 				{:else}
-					<div class="dashboard-card empty-card">
-						<p class="empty-text">No active proposals found.</p>
-					</div>
+					{#if !sections.proposals.loading && !sections.proposals.errors.length}
+						<div class="dashboard-card empty-card">
+							<p class="empty-text">No active proposals found.</p>
+						</div>
+					{/if}
 				{/each}
 			</div>
 		</section>
 
 		<!-- Section 4: Open Feedback -->
-		<section class="dashboard-section" aria-labelledby="section-feedback">
+		<section
+			class="dashboard-section"
+			aria-labelledby="section-feedback"
+			aria-busy={sections.feedback.loading}
+		>
 			<div class="section-header">
 				<div class="section-title-wrap">
 					<span class="section-icon">⚠️</span>
 					<h2 id="section-feedback" class="section-title">Open Feedback & Blockers</h2>
-					<span class="count-badge count-badge-amber">{data.feedback.openCount}</span>
+					<span class="count-badge count-badge-amber"
+						>{sections.feedback.loading || sections.feedback.errors.length
+							? '—'
+							: data.feedback.openCount}</span
+					>
 				</div>
 				<div class="section-actions">
 					{#if data.feedback.open.length > feedbackLimit}
@@ -364,6 +432,14 @@
 				</div>
 			</div>
 
+			{#if sections.feedback.loading}
+				<p role="status">Loading feedback…</p>
+			{/if}
+			{#if sections.feedback.errors.length}
+				<div class="error-banner" role="alert">
+					Could not load all feedback: {sections.feedback.errors.join('; ')}
+				</div>
+			{/if}
 			<div class="cards-grid">
 				{#each displayedFeedback as fb (fb.id)}
 					<div
@@ -393,9 +469,11 @@
 						</div>
 					</div>
 				{:else}
-					<div class="dashboard-card empty-card">
-						<p class="empty-text">No open feedback items found.</p>
-					</div>
+					{#if !sections.feedback.loading && !sections.feedback.errors.length}
+						<div class="dashboard-card empty-card">
+							<p class="empty-text">No open feedback items found.</p>
+						</div>
+					{/if}
 				{/each}
 			</div>
 		</section>

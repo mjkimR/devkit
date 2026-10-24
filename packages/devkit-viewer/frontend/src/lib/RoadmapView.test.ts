@@ -79,4 +79,16 @@ describe('RoadmapView', () => {
 		await waitFor(() => expect(new Set(reads)).toEqual(new Set(['plan-x'])));
 		expect(screen.getByText('In planning')).toBeTruthy();
 	});
+	it('reuses roadmap results when the tab is reopened', async () => {
+		const reads: string[] = [];
+		const repository = source(false, reads);
+		const props = { source: repository, branch: 'plan-x', onOpen: vi.fn() };
+		const view = render(RoadmapView, props);
+		await screen.findByText('In planning');
+		const count = reads.length;
+		view.unmount();
+		render(RoadmapView, props);
+		await screen.findByText('In planning');
+		expect(reads).toHaveLength(count);
+	});
 });

@@ -54,6 +54,8 @@ export interface SharedArtifactsResponse {
 export interface RepositoryDataSource {
 	info(signal: AbortSignal): Promise<any>;
 	tree(path: string, ref: string, signal: AbortSignal): Promise<any>;
+	/** Optional metadata-only recursive listing; hosts without it use directory discovery. */
+	treeRecursive?(path: string, ref: string, signal: AbortSignal): Promise<any>;
 	blob(path: string, ref: string, signal: AbortSignal): Promise<any>;
 	/** Optional branch metadata for hosts that expose it. */
 	refs?(signal: AbortSignal): Promise<RepositoryRefs>;
@@ -75,6 +77,7 @@ export function httpDataSource(base: string): RepositoryDataSource {
 	return {
 		info: (signal) => get('info', signal),
 		tree: (path, _ref, signal) => get(`tree?${query(path)}`, signal),
+		treeRecursive: (path, _ref, signal) => get(`tree?${query(path)}&recursive=true`, signal),
 		blob: (path, _ref, signal) => get(`blob?${query(path)}`, signal),
 		sharedList: (signal, options) => {
 			const params = new URLSearchParams();

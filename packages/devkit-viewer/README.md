@@ -9,9 +9,11 @@ devkit viewer serve --repo ../a --repo ../b # several repositories
 devkit viewer serve --scan repos/           # every devkit repository directly under repos/
 ```
 
-`serve` prints `[VIEWER: url=http://127.0.0.1:<port>/ repos=<n>]` and serves until interrupted. It reads committed
+`serve` prints `[VIEWER: url=http://127.0.0.1:<port>/ repos=<n>]` and serves until interrupted. It reads
 saved working-tree content and identifies each checkout's current branch, binds to `127.0.0.1` only, answers `GET` only and writes nothing. Approvals
 stay where they are: the viewer records no decision and talks to no MCP tool.
+
+The dashboard reads only its section documents and displays sections as they finish. Completed dashboard, document-index and roadmap results are cached for 30 seconds across tab visits. Dashboard Refresh reloads saved changes. Recursive metadata requests avoid one request per directory.
 
 Contract: `CAP-VIEW-repository-viewer`. Decisions: `ADR-viewer-distribution-and-frontend-build`,
 `ADR-viewer-working-tree` supersedes `ADR-read-only-local-server-over-git-refs`. Command reference:
@@ -20,7 +22,7 @@ Contract: `CAP-VIEW-repository-viewer`. Decisions: `ADR-viewer-distribution-and-
 ## Layout
 
 - `src/devkit_viewer/features/browse/`: `cli/` exposes the command, `http/` serves read-only routes,
-  `usecases/` selects repositories, reads documents and renders retained reports; `repositories/` reads committed
+  `usecases/` selects repositories, reads documents and renders retained reports; `repositories/` reads saved
   working-tree files, and `models/` holds repository identity and errors. Models never import repository implementations.
 - `src/devkit_viewer/static/`: the committed app build, a tracked generated artifact (`viewer-assets` in
   `.devkit/generated.toml`). Rebuild it with `just viewer build`; `devkit generated check viewer-assets` refuses a
