@@ -141,4 +141,3 @@ describe('extractDashboardData', () => {
 		expect(result.feedback.open[1].severity).toBe('friction');
 	});
 });
-

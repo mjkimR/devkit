@@ -99,23 +99,6 @@ describe('DashboardView', () => {
 			refs: vi.fn(async () => ({
 				default_branch: 'main',
 				branches: ['main', 'dev-feature-x', 'plan-proposal-y']
-			})),
-			sharedList: vi.fn(async () => ({
-				artifacts: [
-					{
-						generation_id: 'gen-12345',
-						kind: 'proposal-review',
-						slug: 'test',
-						source_sha: 'abcdef123456',
-						language: 'ko',
-						content_sha256: 'sha-hash',
-						content_type: 'text/markdown',
-						byte_count: 120,
-						created_at: '2026-10-24T12:00:00Z',
-						expires_at: '2026-10-31T12:00:00Z',
-						revision: 'rev-1'
-					}
-				]
 			}))
 		};
 	}
@@ -159,4 +142,3 @@ describe('DashboardView', () => {
 		expect(onNavigate).toHaveBeenCalledWith('proposals', 'docs/proposals/PROP-test/proposal.md');
 	});
 });
-
