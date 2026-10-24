@@ -13,7 +13,7 @@ devkit viewer serve --scan repos/           # every devkit repository directly u
 saved working-tree content and identifies each checkout's current branch, binds to `127.0.0.1` only, answers `GET` only and writes nothing. Approvals
 stay where they are: the viewer records no decision and talks to no MCP tool.
 
-The dashboard reads only its section documents and displays sections as they finish. Completed dashboard, document-index and roadmap results are cached for 30 seconds across tab visits. Dashboard Refresh reloads saved changes. Recursive metadata requests avoid one request per directory.
+The dashboard lists candidate frontmatter per section, then reads only the first page of full bodies (6 milestones, 9 proposals, 6 feedback). Load more appends one sorted page. Lists and displayed pages are reused across tab visits for 30 seconds from list completion; additional pages do not extend expiry. Dashboard Refresh reloads saved changes and resets the first page. Document-index and roadmap results retain their 30-second caches. Recursive metadata requests avoid one request per directory.
 
 Contract: `CAP-VIEW-repository-viewer`. Decisions: `ADR-viewer-distribution-and-frontend-build`,
 `ADR-viewer-working-tree` supersedes `ADR-read-only-local-server-over-git-refs`. Command reference:

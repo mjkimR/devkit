@@ -1,7 +1,7 @@
 ---
 id: CAP-VIEW-repository-viewer
 title: "Local Repository Viewer"
-summary: "A read-only local page, served by devkit viewer serve, that shows saved working-tree files and the checked-out branch for several devkit repositories, loads dashboard sections independently with bounded tab caches, and supplies the Svelte viewer library autohub vendors."
+summary: "A read-only local page, served by devkit viewer serve, that shows saved working-tree files and the checked-out branch for several devkit repositories, loads dashboard sections as cached ordered lists with incremental body pages, and supplies the Svelte viewer library autohub vendors."
 area: viewer
 status: active
 entrypoints:
@@ -49,9 +49,12 @@ Ordinary tree and blob endpoints read saved files below the registered repositor
 | `/api/repos` | `{"repos": [{"id", "default_branch"}]}`, sorted by ID |
 | `/api/repos/<id>/info` | `{"repo_id", "default_branch"}` |
 | `/api/repos/<id>/tree?path=` | `{"items": [{"name", "path", "type": "tree"\|"blob", "size"?}]}`: one directory, directories first |
+| `/api/repos/<id>/dashboard-list?path=<section>` | `{"items": [{"path", "content", "encoding": "utf-8"}], "errors": ["path: error"]}`: frontmatter only for `milestones`, `proposals` or `feedback` |
 | `/api/repos/<id>/blob?path=` | `{"path", "encoding": "base64", "content", "size"}` |
 
 `tree?path=<dir>&recursive=true` returns the same metadata fields for all descendants in one response. It reads no file bodies and applies the same path, symlink and `.git` exclusions as a shallow listing. The default listing remains one directory.
+
+The dashboard listing reads candidate frontmatter through the closing YAML delimiter, without decoding document bodies. An absent optional root is empty; discovery/read failures are listed in `errors`. Invalid section names return `400 VIEWER_PATH_INVALID`. The browser parses YAML and reports malformed entries. File paths and symlinks obey the same working-tree guards.
 
 `default_branch` is the branch checked out in the registered work tree (`HEAD` when detached). An empty `path` is the root. A legacy `ref` query parameter is ignored and cannot select another branch. Errors are `{"error": {"code", "message"}}`: `VIEWER_REPO_UNKNOWN`, `VIEWER_PATH_NOT_FOUND` (absent or a symlink), `VIEWER_NOT_FOUND` (no such endpoint or file) with `404`; `VIEWER_PATH_INVALID` (a leading `/`, a `.git` segment, a backslash, an empty, `.` or `..` segment) with `400`.
 
@@ -87,13 +90,16 @@ shown. Rendered Markdown and SVG pass through DOMPurify.
 
 ### 4.1 Dashboard loading and tab caches
 
-- **Selective reads**: WHEN the dashboard loads, it MUST request blob content only for direct `docs/roadmap/MS-*.md` files, `docs/proposals/PROP-*/proposal.md` anchors, and non-README Markdown below any `feedback/` directory within `docs/` or `specs/`. Feedback discovery uses recursive directory metadata where the host supports it. Check: `frontend/src/lib/features/dashboard/loading.test.ts`.
+- **Selective reads**: WHEN a local dashboard section opens, it MUST list frontmatter only for direct `docs/roadmap/MS-*.md` files, `docs/proposals/PROP-*/proposal.md` anchors, or non-README Markdown below any `feedback/` directory within `docs/` or `specs/`. Check: `tests/integration/features/browse/test_worktree.py`.
+- **Initial pages**: WHEN a section opens through a source with `dashboardList`, it MUST request full bodies only for its first 6 eligible milestones, 9 proposals or 6 feedback entries. All candidate headers are read once to determine global ordering and exact counts. Check: `frontend/src/lib/features/dashboard/loading.test.ts`.
+- **Page ordering**: WHEN Load more is selected, the section MUST append at most one page using the same ordered list. Milestones order by active then planned; proposals by review, draft then accepted; open feedback by critical, blocked, workaround then friction, followed by unknown severities. Each group sorts by ID, then path to resolve ties. Membership and sort metadata stay fixed until Refresh or a fresh tab load after expiry. Check: `frontend/src/lib/features/dashboard/loading.test.ts`.
+- **Page failure**: IF a body page fails, THEN the section MUST retain its previous cards and cursor and offer Retry for that page. Check: `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
 - **Independent sections**: WHEN a section finishes, the dashboard MUST display its cards without waiting for other sections. Pending and failed sections MUST show loading or error state with an unknown count instead of a successful empty state. Check: `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
-- **Cache reuse**: WHEN a dashboard section, full document index or roadmap is requested again within 30 seconds of successful completion, the viewer MUST reuse its parsed result for the same source identity, branch and purpose. Each source retains at most eight entries. Errors and aborted scans MUST NOT be cached. Check: `frontend/src/lib/features/dashboard/loading.test.ts` and `frontend/src/lib/RoadmapView.test.ts`.
+- **Cache reuse**: WHEN the same source identity and branch reopen a dashboard section within 30 seconds of successful list completion, the viewer MUST reuse its list and successfully displayed pages, including the expanded card count. Page loads MUST NOT renew the list expiry. Full document indexes and roadmap results remain reusable for 30 seconds after their successful completion. Each source retains at most eight purpose entries. Failed pages MUST NOT replace a successful cached snapshot; aborted scans MUST NOT be cached. Check: `frontend/src/lib/features/dashboard/loading.test.ts`, `frontend/src/lib/features/dashboard/DashboardView.test.ts` and `frontend/src/lib/RoadmapView.test.ts`.
 - **Freshness**: WHEN the dashboard Refresh button is selected, the viewer MUST invalidate that source's result caches and reload the sections. Expired entries reload on the next access. Browser reload clears memory; there is no background filesystem subscription. Check: `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
 - **Disposal**: WHEN the repository or branch changes or a view is disposed, pending work MUST NOT publish to the replacement view or populate a refreshed cache generation. Check: `frontend/src/lib/features/dashboard/DashboardView.test.ts` and `frontend/src/lib/features/dashboard/loading.test.ts`.
 
-The local source supports recursive metadata requests to avoid one HTTP call per directory. Other library hosts use a queue of at most six concurrent requests per scan; a completed request immediately frees its worker for queued work.
+The local source supports recursive metadata requests to avoid one HTTP call per directory. Library hosts without `dashboardList` retain selective full-document discovery to determine ordering and counts; their cold load may read all matching bodies, while the UI still pages cards. Other library hosts use a queue of at most six concurrent requests per scan; a completed request immediately frees its worker for queued work.
 
 ## 5. Roadmap
 
@@ -120,7 +126,7 @@ The local source supports recursive metadata requests to avoid one HTTP call per
   `httpDataSource`, `normalizeTree`, `buildRoadmap` and the `RepositoryDataSource` type; `svelte` is a peer
   dependency; the tarball holds no file of the page or the server. Nothing is published to a registry.
 
-A host passes its own `RepositoryDataSource` (`info`, `tree(path, ref)`, `blob(path, ref)`, optional `refs` and `treeRecursive(path, ref)`), keeping
+A host passes its own `RepositoryDataSource` (`info`, `tree(path, ref)`, `blob(path, ref)`, optional `refs`, `treeRecursive(path, ref)` and `dashboardList(section, ref, signal)`), keeping
 authentication and renewal on its side. autohub's Git browser and run and decision panels are not part of the
 library.
 

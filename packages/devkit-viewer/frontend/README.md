@@ -2,7 +2,7 @@
 
 The viewer of devkit repositories as a Svelte 5 component library: `SddViewer` (the Living Spec, proposals, specs,
 roadmap and file tabs), `KnowledgeViews`, `RoadmapView`, `buildRoadmap`, `httpDataSource` and the
-`RepositoryDataSource` contract a host implements (`info`, `tree(path, ref)`, `blob(path, ref)`, optional `refs` and `treeRecursive(path, ref)`).
+`RepositoryDataSource` contract a host implements (`info`, `tree(path, ref)`, `blob(path, ref)`, optional `refs`, `treeRecursive(path, ref)` and `dashboardList(section, ref, signal)`).
 
 ```svelte
 <script lang="ts">
@@ -24,3 +24,5 @@ just viewer pack /absolute/path/to/host/vendor   # writes devkit-viewer-<version
 
 and depends on it with `"devkit-viewer": "file:vendor/devkit-viewer-<version>.tgz"`, reinstalling it to refresh the
 lockfile integrity. Contract: `CAP-VIEW-repository-viewer` in the devkit repository.
+
+`dashboardList` returns `{items: RepositoryBlob[], errors: string[]}` for `milestones`, `proposals` or `feedback`. Each item contains only UTF-8 frontmatter, including delimiters, or empty content when there is no frontmatter. The browser derives status/severity ordering and exact counts before fetching only visible full bodies. Load more appends 6 milestones, 9 proposals or 6 feedback entries. Cached lists retain loaded pages and their displayed count for 30 seconds from list completion; page loads do not renew expiry. Refresh resets the list and first page. Hosts without this optional method retain selective full scans on cold load and paged rendering.
