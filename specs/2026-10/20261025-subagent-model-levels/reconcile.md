@@ -16,6 +16,8 @@ targets:
     resolution: modified
   - file: docs/glossary.md
     resolution: modified
+  - file: docs/materials/2026-10/20261025-subagent-model-levels/configuration-design.md
+    resolution: modified
 ---
 
 # Reconcile: `SPEC-subagent-model-levels`
@@ -36,3 +38,7 @@ Entrypoints retain existing inventory/config command entryways; the new pure res
 for model policy. Broad derived distribution/project/bundle directories and all test paths were rejected.
 The exact resolver doorway was written directly because directory candidates fold narrower selectors
 (the known FB-entrypoint-narrow-selector-folding limitation). Existing other entrypoints remain accurate.
+
+The retained configuration material clarifies unusable installed discovery entries.
+Observed workflow evidence friction is tracked independently in `FB-reverify-after-workflow-return`; no runtime
+feature requirement is deferred to that feedback.
