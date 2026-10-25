@@ -33,7 +33,7 @@ def refs(root: Path, deadline: Deadline) -> list[Candidate]:
 
 def worktrees(root: Path, deadline: Deadline) -> list[Candidate]:
     raw = git(root, "worktree", "list", "--porcelain", "-z", deadline=deadline)
-    prefix = git(root, "rev-parse", "--show-prefix", deadline=deadline).decode().strip()
+    prefix = git(root, "rev-parse", "--show-prefix", deadline=deadline).decode().removesuffix("\n")
     result = []
     for block in raw.split(b"\0\0"):
         deadline.check("scope worktree inventory")

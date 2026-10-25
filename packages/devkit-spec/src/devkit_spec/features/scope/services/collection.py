@@ -62,6 +62,7 @@ class Collector:
         self.successful_inventory = 0
         self.comparisons_complete = True
         self.evidence_left = MAX_EVIDENCE
+        self.inactive_keys: set[str] = set()
         self.last_pair: str | None = None
         self.pairs_attempted = 0
         self.pairs_total = 0
@@ -78,6 +79,10 @@ class Collector:
     def retain(self, value: Any) -> bool:
         rendered = encoded(value)
         size = len(rendered) + rendered.count(b"\n") * 8 + 128
+        if isinstance(value, dict) and "a" in value and "b" in value and "docs" in value and "code" in value:
+            # Text repeats both IDs on every evidence line; cover that representation too.
+            evidence_count = len(value["docs"]) + len(value["code"])
+            size += evidence_count * (len(encoded(value["a"])) + len(encoded(value["b"])) + 256)
         if size > self.bytes_left:
             self.problem("report", "result-limit")
             return False
@@ -168,7 +173,8 @@ class Collector:
     def snapshot(self, candidate: Candidate) -> Observation:
         assert candidate.record is not None
         record = candidate.record
-        key = task_key(record.namespace, record.task_id, record.spec)
+        # task_id is a registration alias, not necessarily the anchor ID.
+        key = None
         candidate.task_key = key
         candidate.reason = "snapshot-only"
         scope = record.to_set()
@@ -178,6 +184,9 @@ class Collector:
             scope,
             dict(
                 source="snapshot",
+                registered_task_id=record.task_id,
+                namespace=record.namespace,
+                unit=record.spec,
                 published_at=record.updated_at,
                 observed_at=now(),
                 revision=record.revision,
@@ -260,9 +269,7 @@ class Collector:
         missing = ["live-declarations"] if fallback else []
         record = candidate.record
         if record is None:
-            matches = [
-                r for r in self.records if r.spec == unit and r.task_id == meta["id"] and r.namespace == self.namespace
-            ]
+            matches = [r for r in self.records if r.spec == unit and r.namespace == self.namespace]
             if len(matches) == 1:
                 record = matches[0]
         base_ref, base_source = select_base(root, candidate, self.options.base, record, deadline)
@@ -317,6 +324,10 @@ class Collector:
                     self.problem(
                         candidate.source_id, "identity-ambiguous" if observation.task_key is None else "unknown-base"
                     )
+                if candidate.activity == "inactive":
+                    if observation.task_key:
+                        self.inactive_keys.add(observation.task_key)
+                    continue
                 key = semantic_key(observation)
                 if not candidate.worktree and key in keys and observation.provenance["source"] != "snapshot":
                     if self.retain(candidate.source_id):
@@ -332,14 +343,50 @@ class Collector:
             except (AdvisoryError, OSError, ValueError, InputLimitError) as exc:
                 candidate.reason = self.reason(exc)
                 self.problem(candidate.source_id, candidate.reason)
-        # Live sources supersede successful layers, but history remains explicitly separate fallback evidence.
+        # Reconcile registration aliases only with a uniquely observed canonical anchor.
+        live: dict[tuple[str, str], set[str]] = {}
+        for observation in self.observations:
+            if observation.task_key and observation.provenance["source"] != "snapshot":
+                namespace, _, unit = json.loads(observation.task_key)
+                live.setdefault((namespace, unit), set()).add(observation.task_key)
+        for key in self.inactive_keys:
+            namespace, _, unit = json.loads(key)
+            live.setdefault((namespace, unit), set()).add(key)
+        active_keys = {o.task_key for o in self.observations if o.provenance["source"] != "snapshot"}
         live_keys = {
             o.task_key for o in self.observations if o.provenance["source"] != "snapshot" and not o.missing_layers
         }
+        uncertain_units = {
+            (record.namespace, record.spec)
+            for candidate in self.candidates
+            if candidate.source_id.startswith("worktree:")
+            and candidate.task_key is None
+            and candidate.activity != "inactive"
+            for record in self.records
+            if record.hostname == socket.gethostname() and Path(record.worktree) == Path(candidate.worktree)
+        }
         for observation in self.observations:
-            if observation.provenance["source"] == "snapshot" and observation.task_key in live_keys:
-                observation.provenance["historical"] = True
-                observation.provenance["comparison_eligible"] = False
+            if observation.provenance["source"] != "snapshot":
+                continue
+            binding = (observation.provenance["namespace"], observation.provenance["unit"])
+            identities = live.get(binding, set())
+            if len(identities) == 1:
+                observation.task_key = next(iter(identities))
+                for candidate in self.candidates:
+                    if candidate.source_id == observation.observation_id:
+                        candidate.task_key = observation.task_key
+                terminal = (
+                    observation.task_key in self.inactive_keys
+                    and observation.task_key not in active_keys
+                    and binding not in uncertain_units
+                )
+                if observation.task_key in live_keys or terminal:
+                    observation.provenance["historical"] = True
+                    observation.provenance["comparison_eligible"] = False
+                    if terminal:
+                        for candidate in self.candidates:
+                            if candidate.source_id == observation.observation_id:
+                                candidate.activity, candidate.reason = "inactive", "terminal-snapshot"
 
     def check_identities(self) -> None:
         units: dict[tuple[str, str], set[str]] = {}

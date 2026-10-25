@@ -315,9 +315,10 @@ def test_source_timeout_retains_inventory_with_explicit_gap(repo: Path, monkeypa
     assert any(p["reason"] == "source-timeout" for p in data["coverage"]["problems"])
 
 
-def test_nested_workspace_observes_workspace_relative_paths(tmp_path: Path) -> None:
+@pytest.mark.parametrize("folder", ["project", " project "])
+def test_nested_workspace_observes_workspace_relative_paths(tmp_path: Path, folder: str) -> None:
     root = base_repo(tmp_path / "root")
-    nested = root / "project"
+    nested = root / folder
     nested.mkdir()
     write(nested, ".devkit/config.toml", "")
     write(nested, "src/shared.py", "nested = 1\n")
@@ -353,3 +354,145 @@ def test_bounded_git_kills_slow_process_group(tmp_path: Path, monkeypatch: pytes
     with pytest.raises(collection.ScopeTimeoutError):
         collection_git.git(tmp_path, "status", deadline=Deadline(0.05))
     assert time.monotonic() - started < 2
+
+
+def test_leading_and_trailing_whitespace_in_git_paths_is_preserved(repo: Path) -> None:
+    paths = [" leading.py", "src/trailing .py", "src/name\nwith-newline.py"]
+    for path in paths:
+        write(repo, path, "changed = 1\n")
+    git(repo, "add", ".")
+    data = collect(repo, base="main")
+    live = next(o for o in data["observations"] if o["provenance"]["source"] == "worktree")
+    observed = {p["path"] for p in live["scope"]["observed"]}
+    assert " leading.py" in observed and "src/trailing .py" in observed
+    assert any(p["reason"] == "invalid-path" for p in live["scope"]["unresolved"])
+
+
+def test_custom_registration_alias_reconciles_with_live_anchor_and_caps_refs(repo: Path, tmp_path: Path) -> None:
+    linked = tmp_path / "linked"
+    git(repo, "worktree", "add", "-qb", "dev-b", str(linked), "main")
+    unit = task(linked, "b")
+    write(linked, "src/pre.py", "before = 1\n")
+    git(linked, "add", ".")
+    git(linked, "commit", "-qm", "before registration")
+    cap = git(linked, "rev-parse", "HEAD")
+    register(open_session(linked), unit, task_id="custom-running-task")
+    data = collect(repo, base="main")
+    live = [
+        o
+        for o in data["observations"]
+        if o["provenance"].get("unit") == unit and o["provenance"]["source"] != "snapshot"
+    ]
+    snapshot = next(
+        o for o in data["observations"] if o["provenance"].get("registered_task_id") == "custom-running-task"
+    )
+    assert snapshot["task_key"] and all(o["task_key"] == snapshot["task_key"] for o in live)
+    assert all(o["provenance"]["cap"] == cap for o in live)
+    assert all("src/pre.py" not in {p["path"] for p in o["scope"]["observed"]} for o in live)
+    assert snapshot["provenance"]["comparison_eligible"] is False
+    snapshot_only = collect(repo, "snapshot")["observations"][0]
+    assert snapshot_only["task_key"] is None
+    assert snapshot_only["provenance"]["registered_task_id"] == "custom-running-task"
+
+
+def test_timeout_kills_descendant_even_after_parent_exit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import time
+
+    fake = tmp_path / "git"
+    marker = tmp_path / "survived"
+    fake.write_text(f"#!/bin/sh\n(sleep 0.3; touch '{marker}') &\nexit 0\n")
+    fake.chmod(0o755)
+    monkeypatch.setenv("PATH", str(tmp_path) + ":/usr/bin:/bin")
+    with pytest.raises(collection.ScopeTimeoutError):
+        collection_git.git(tmp_path, "status", deadline=Deadline(0.05))
+    time.sleep(0.4)
+    assert not marker.exists()
+
+
+def test_registered_terminal_clean_snapshot_is_not_compared_with_active_task(repo: Path, tmp_path: Path) -> None:
+    register(open_session(repo), UNIT)
+    write(repo, f"{UNIT}/spec.md", "---\nid: SPEC-a\nstatus: completed\n---\n")
+    git(repo, "add", ".")
+    git(repo, "commit", "-qm", "finish a")
+    linked = tmp_path / "b"
+    git(repo, "worktree", "add", "-qb", "dev-b", str(linked), "main")
+    task(linked, "b")
+    data = collect(repo, base="main")
+    snapshot = next(o for o in data["observations"] if o["provenance"]["source"] == "snapshot")
+    assert snapshot["provenance"]["comparison_eligible"] is False
+    assert all(p["a"] != snapshot["observation_id"] and p["b"] != snapshot["observation_id"] for p in data["pairs"])
+    assert next(c for c in data["inventory"] if c["source_id"] == snapshot["observation_id"])["activity"] == "inactive"
+
+
+def test_dense_text_with_long_observation_ids_respects_result_limit(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import io
+    from contextlib import redirect_stdout
+
+    from devkit_spec.features.scope.cli.collection_output import render
+    from devkit_spec.features.scope.models.model import Granularity, ScopePath, ScopeSet, Source, Stage
+    from devkit_spec.features.scope.models.observation import Observation
+
+    limit = 64 * 1024
+    monkeypatch.setattr(collection, "MAX_REPORT_BYTES", limit)
+    monkeypatch.setattr(collection, "RESERVED_BYTES", 4096)
+    observer = Collector(repo, CollectionOptions())
+    prefix = "src/" + "nested/" * 8
+    first = ScopeSet(
+        "a", code=[ScopePath(prefix + str(i), Granularity.DIR, Source.DECLARED_CODE, Stage.SPEC) for i in range(10)]
+    )
+    second = ScopeSet(
+        "b",
+        code=[
+            ScopePath(prefix + f"{i}/file{j}.py", Granularity.FILE, Source.DECLARED_CODE, Stage.SPEC)
+            for i in range(10)
+            for j in range(10)
+        ],
+    )
+    one = Observation(
+        "worktree:/" + "valid-nested/" * 60 + "a",
+        json.dumps(["ns", "SPEC-a", "specs/a"]),
+        first,
+        {"source": "worktree"},
+    )
+    two = Observation(
+        "worktree:/" + "valid-nested/" * 60 + "b",
+        json.dumps(["ns", "SPEC-b", "specs/b"]),
+        second,
+        {"source": "worktree"},
+    )
+
+    def discover():
+        observer.discovered_count = 2
+        observer.observations = [one, two]
+
+    monkeypatch.setattr(observer, "discover", discover)
+    monkeypatch.setattr(observer, "read_sources", lambda: None)
+    data = observer.execute().data
+    output = io.StringIO()
+    with redirect_stdout(output):
+        render(data)
+    assert len(output.getvalue().encode()) <= limit
+    assert data["coverage"]["status"] == "partial" and not data["coverage"]["comparisons_complete"]
+
+
+def test_ambiguous_dirty_worktree_prevents_terminal_snapshot_exclusion(repo: Path) -> None:
+    register(open_session(repo), UNIT)
+    write(repo, f"{UNIT}/spec.md", "---\nid: SPEC-a\nstatus: completed\n---\n")
+    git(repo, "add", ".")
+    git(repo, "commit", "-qm", "terminal")
+    write(repo, f"{UNIT}/spec.md", "---\nstatus: malformed\n---\n")
+    data = collect(repo, base="main")
+    snapshot = next(o for o in data["observations"] if o["provenance"]["source"] == "snapshot")
+    assert snapshot["provenance"].get("comparison_eligible", True)
+    assert data["coverage"]["status"] == "partial"
+
+
+def test_symlink_loop_is_partial_coverage_not_unexpected_failure(repo: Path) -> None:
+    declaration = repo / UNIT / "tasks.md"
+    declaration.unlink()
+    declaration.symlink_to("tasks.md")
+    data = collect(repo, base="main")
+    assert data["coverage"]["status"] == "partial"
+    assert data["observations"]

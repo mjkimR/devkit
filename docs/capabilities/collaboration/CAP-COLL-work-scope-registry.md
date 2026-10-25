@@ -371,7 +371,10 @@ another-host record path is never opened merely because the same path exists her
 
 Declarations, targets, entrypoints and path kinds come from one filesystem or pinned tree source. Valid local unit
 markers take precedence over exact activity-slug discovery; stale/mismatched markers stay unresolved. Task keys
-combine namespace, anchor ID and unit path. Duplicate anchor IDs at distinct unit paths have unknown attribution.
+combine namespace, anchor ID and unit path. Registry `task_id` is a separate registration alias; snapshot-only
+observations have unknown canonical identity until a unique live anchor confirms the namespace/unit binding.
+The registration alias remains in provenance, and a confirmed custom alias retains its historical range cap.
+Duplicate anchor IDs at distinct unit paths have unknown attribution.
 Worktree HEAD/status and fingerprints for declaration files read are checked before/after observation; detected
 changes produce partial coverage without retries. This cannot detect every change-and-revert or provide a single
 atomic snapshot across worktrees.
@@ -387,7 +390,8 @@ Each observation has its own ID, task key, scope, aliases, provenance and observ
 base, historical cap, range method and effective declaration evidence must agree before deduplication. Divergent
 or ancestor refs retain separate observations and provenance relations. Dirty worktrees remain distinct. Unreadable
 live declarations can fall back to pinned declarations, explicitly marked as fallback. Historical snapshots remain
-separate; a successful current observation disables their obsolete evidence for comparison. Pairs name observation
+separate; a successful current observation or verified terminal-clean lifecycle disables their obsolete evidence
+for comparison unless dirty/unknown live evidence contradicts that lifecycle. Pairs name observation
 IDs and skip only confirmed same-task observations. Counts are observation-pair counts, never a proof of independence.
 
 JSON is one object with `mode`, `started_at`, `finished_at`, `coverage`, `inventory`, `observations`, `pairs`, `summary`
@@ -406,7 +410,8 @@ Total `--timeout` defaults to 30 seconds and `--source-timeout` to 5 seconds, ea
 at most the total computation time remaining; fetch shares that budget. Computation reserves finalization time,
 checks comparison loops and bounds Git output while reading. Slow stdout consumers are outside computation timing.
 Limits are 1 MiB per declaration, 16 MiB total declaration bytes, 256 retained source candidates, 10,000 complete
-pairs, 10,000 evidence entries and an 8 MiB encoded report including framing/notices. Limits preserve complete
+pairs, 10,000 evidence entries and an 8 MiB encoded report including framing/notices. Retention conservatively covers JSON and text, including
+repeated observation IDs on evidence lines. Limits preserve complete
 entries and bounded coverage/summary diagnostics; `input-limit` and `result-limit` report omitted work. Timeouts use
 `source-timeout`; other reasons include `unknown-base`, `identity-ambiguous`, `fetch-failed`, `source-unreadable`,
 `unresolved-input` and `observation-changed`. Uncomputed pairs never count as zero overlap.

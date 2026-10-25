@@ -55,7 +55,7 @@ class ReadBudget:
 class TreeReader:
     def __init__(self, root: Path, sha: str, deadline: Deadline, budget: ReadBudget) -> None:
         self.root, self.sha, self.deadline, self.budget = root, sha, deadline, budget
-        self.prefix = git(root, "rev-parse", "--show-prefix", deadline=deadline).decode().strip()
+        self.prefix = git(root, "rev-parse", "--show-prefix", deadline=deadline).decode().removesuffix("\n")
         self.entries: dict[str, str] = {"": "tree", ".": "tree"}
         for entry in git(root, "ls-tree", "-rz", "--full-tree", sha, deadline=deadline).split(b"\0"):
             deadline.check("scope tree inventory")
@@ -91,7 +91,10 @@ class FilesystemReader:
 
     def _path(self, path: str) -> Path:
         self.deadline.check("scope filesystem read")
-        target = (self.root / path).resolve()
+        try:
+            target = (self.root / path).resolve()
+        except RuntimeError as exc:
+            raise OSError("Declaration symlink cannot be resolved") from exc
         if not target.is_relative_to(self.root):
             raise OSError("Declaration path escapes the worktree")
         return target

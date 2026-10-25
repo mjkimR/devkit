@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import selectors
 import signal
@@ -37,6 +38,7 @@ def git(root: Path, *args: str, deadline: Deadline, limit: int = MAX_GIT_BYTES) 
         )
     except OSError as exc:
         raise GitError("Cannot start Git for scope observation", command=command) from exc
+    completed = False
     output = bytearray()
     size = 0
     try:
@@ -59,12 +61,16 @@ def git(root: Path, *args: str, deadline: Deadline, limit: int = MAX_GIT_BYTES) 
             process.wait(timeout=max(0.001, deadline.remaining()))
         if process.returncode:
             raise GitError("Git scope observation failed", command=command, returncode=process.returncode)
+        completed = True
         return bytes(output)
     except subprocess.TimeoutExpired as exc:
         raise deadline.exceeded("scope Git observation") from exc
     finally:
+        if not completed:
+            # A child can hold pipes after Git's parent exits; kill the whole failed operation.
+            with contextlib.suppress(ProcessLookupError):
+                os.killpg(process.pid, signal.SIGKILL)
         if process.poll() is None:
-            os.killpg(process.pid, signal.SIGKILL)
             process.wait()
         if process.stdout is not None:
             process.stdout.close()
@@ -73,7 +79,7 @@ def git(root: Path, *args: str, deadline: Deadline, limit: int = MAX_GIT_BYTES) 
 
 
 def text(root: Path, *args: str, deadline: Deadline) -> str:
-    return git(root, *args, deadline=deadline).decode("utf-8", errors="surrogateescape").strip()
+    return git(root, *args, deadline=deadline).decode("utf-8", errors="surrogateescape").removesuffix("\n")
 
 
 def optional(root: Path, *args: str, deadline: Deadline) -> str:
