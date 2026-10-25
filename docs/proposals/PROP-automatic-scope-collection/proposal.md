@@ -47,23 +47,22 @@ Hypothesis: creation snapshots plus on-demand Host observation provide useful ov
 protocol and no workflow observation hooks. This accepts gaps between Host invocations and incomplete visibility
 into other machines. The Host report must distinguish observed evidence from missing coverage.
 
-## 2. Technical Spike Questions
+## 2. Planning findings and decisions
 
-- **Q1 — Inventory and active work**: How can the collector enumerate linked worktrees, local activity branches and
-  remote-tracking activity refs without requiring registry participation? Recommend activity-branch conventions,
-  unit lifecycle evidence and registry bindings as explicit selection evidence. Branch existence alone is not proof
-  of active work. Include ambiguous candidates as unknown or excluded with a reason, never silently inactive.
-- **Q2 — Ref inputs and attribution**: How can declaration parsers read a pinned commit tree without a checkout?
-  Establish task identity, base selection and committed-diff semantics for unregistered branches. Do not use the
-  current checkout's documents or changes for another ref. Report ambiguous identity/base inputs.
-- **Q3 — Modes and reconciliation**: Validate the modes below. Settle CLI spelling, source precedence and local/remote
-  deduplication. Recommend `worktrees` as the default. Preserve divergent refs and known snapshot-only tasks.
-- **Q4 — Cost and partial coverage**: Set finite total and per-source budgets for inventory, declaration reads,
-  Git observation and comparisons. Measure representative repositories. Define stable codes and output fields for
-  complete, partial and failed observation; timeout or inaccessible candidates cannot become zero overlap.
-- **Q5 — Creation and discovery**: Retain creation registration without worker recovery duties. Verify automatic-path
-  failure isolation and hidden maintenance discovery in CLI and generated agent surfaces. Keep Host recovery guidance
-  separate from worker publication/ACK obligations.
+Planning uses `activity-effort: medium` with isolated Scout evidence and one Challenger round. The base snapshot is
+`main` at `10269581972a4dce7eddf8ffaf77b8bb3bfc6bfd`; it has no declared prerequisites for this proposal.
+
+| Question | Planning resolution |
+| --- | --- |
+| Q1: Inventory | Token-free enumeration of worktrees, full local/remote activity refs and registry records; report activity separately from identity and physical accessibility. |
+| Q2: Ref inputs | A scope-owned source reader reads declarations, target entrypoints and path kinds consistently from one filesystem or pinned Git tree. Keep registered history caps; label unregistered ranges conservative. |
+| Q3: Modes | `collect --mode snapshot|refs|worktrees`, default `worktrees`; preserve per-source scope observations instead of merging conflicting declarations. |
+| Q4: Cost/results | Explicit total/source deadlines, observable partial coverage and bounded comparison; no silent truncation or promise of global completeness. |
+| Q5: Responsibilities | Creation registration stays best effort; workers publish nothing; hidden maintenance remains callable; Host failures use ordinary advisories. |
+
+The operational contract below settles these questions for Development. Supporting source evidence, experiments
+and remaining implementation checks are in `materials/planning-evidence.md`. The preliminary decision is
+PADR-host-owned-scope-observation. Direction acceptance remains a user gate.
 
 ## 3. Proposed Design & Impact
 
@@ -91,8 +90,8 @@ collection failure or maintenance failure.
 
 ### 3.2 Explicit Host collection
 
-Provide an explicit Host-facing operation under `devkit spec scope`. An illustrative invocation is
-`devkit spec scope collect --mode worktrees`; Planning settles the command and option names.
+Provide an explicit Host-facing operation under `devkit spec scope`. The default invocation is
+`devkit spec scope collect --mode worktrees`; The settled command is `collect`; the example omits optional filters and budgets.
 
 The operation builds an invocation-local observation report. It does not update worker records, revisions, tokens
 or journals, and it does not require worker token access. Reuse path parsing, source labels and overlap comparison
@@ -111,8 +110,7 @@ inventory. A missing record does not exclude an otherwise discoverable task.
 Higher modes attempt additional evidence rather than implying full visibility for every task. If a source cannot be
 read, retain usable evidence and report the missing source and reason. Current declarations supersede older ones for
 the same confirmed task/source. Unobserved portions remain explicitly snapshot-only or unresolved. Do not silently
-union obsolete declarations into current scope or present fallback snapshots as fresh observations. Planning settles
-exact source reconciliation rules, including snapshot fields unsupported by observable refs.
+union obsolete declarations into current scope or present fallback snapshots as fresh observations. Section 3.6 defines source reconciliation, including snapshot fields unsupported by observable refs.
 
 Select observation inputs with `--mode`; select network refresh separately with explicit `--fetch`. Without
 `--fetch`, collection performs no network refresh. With it, fetch before pinning remote refs and report failure or
@@ -136,7 +134,7 @@ never claim one atomic snapshot across all worktrees. Track collection start/end
 
 Return one structured report with inventory coverage, per-source problems, scopes and pairwise overlap evidence.
 A partially readable inventory, timeout, unknown base or missing declaration is not evidence of no overlap.
-Planning defines stable codes, text sentinels, JSON fields and exit semantics through the Agent Advisory Protocol.
+Section 3.6 defines codes, output fields and exits through the Agent Advisory Protocol.
 Usable partial results carry notices; an operation that cannot run raises an advisory error. Do not manufacture
 worker ACKs or permission requests. Scope evidence never grants or refuses writes.
 
@@ -195,15 +193,111 @@ ownership, overlap-based refusal, semantic merge-conflict detection and workflow
 Silent creation-registration handling is an explicit exception for automatic observation failures. Explicit Host
 operations and maintenance commands retain Agent Advisory Protocol error/notice semantics.
 
+### 3.6 Settled operational contract
+
+**Invocation and budgets.** Expose `devkit spec scope collect --mode snapshot|refs|worktrees` (default `worktrees`),
+`--base <ref>` for an explicit integration-base override, repeatable `--fetch <remote>`, `--timeout <seconds>`
+(default 30, integer 1–300) and `--source-timeout <seconds>` (default 5, integer 1–300). Existing output/workspace
+options apply. The total deadline starts before inventory and includes optional fetch, parsing and comparison.
+Each source gets at most the smaller of its source budget and total remaining time. Fetch is a source, never a
+second independent total budget. Check the deadline during parsing and comparison; a long Python loop must yield
+partial evidence rather than defeating the Git subprocess timeout. No retries run within the invocation.
+
+`--fetch <remote>` accepts only configured remotes. Fetch only branch refs into that remote's tracking namespace,
+without tags, pruning or submodule recursion. Use noninteractive authentication and bounded subprocesses. Never
+push, deepen history, invoke PR tooling or update local activity branches. Reject snapshot-plus-fetch and invalid
+budgets/remotes as `ARGUMENT_INVALID`. After a failed fetch, retain cached refs with explicit fetch-failure coverage.
+A successful fetch stamps this invocation's refresh time; cached refs have unknown freshness unless independently
+known. This is not a remote registry transport.
+
+**Candidate selection.** Snapshot mode reads existing records only. Refs mode adds all `plan-*` and `dev-*` full refs
+under `refs/heads/` and configured `refs/remotes/<remote>/`, excluding symbolic remote HEAD aliases. Worktrees mode
+also inventories all linked worktrees, including the main checkout and detached entries. Read registry records via
+shared read locking without token lookup or cleanup. A missing registry is empty evidence, not a discovery failure;
+an unreadable existing namespace is a coverage gap and does not prevent usable Git observation.
+
+Resolve local branch markers `branch.<name>.devkitUnit` only after validating their target anchor at the pinned
+SHA; otherwise use an exact activity-slug match. Remote refs have no remote branch-config authority. Prefer the
+handed-off spec over its carried proposal when the relationship is unambiguous. Use the repository namespace,
+anchor ID and unit path as the confirmed task key. Conflicting/malformed markers, zero/multiple matching anchors
+or duplicate IDs on distinct unit paths yield unknown attribution, not a guessed identity. Detached or non-activity
+worktrees without a verified record binding remain unknown candidates with separately attributable dirty paths;
+do not assign their changes to every spec present in the tree.
+
+An anchor with supported nonterminal lifecycle is an `active-candidate`, not proof of a running process. Terminal
+`completed` specs and `rejected` proposals are `inactive` only when there is no contradictory evidence; in
+worktrees mode this requires checking for dirty changes. Dirty terminal worktrees, unsupported statuses, mismatched
+bindings or unreadable lifecycle are `unknown` and remain visible. Do not use commit age to infer inactivity.
+The report retains inactive exclusions and reasons. Never read a registry-supplied path on another host merely
+because it also exists locally. A live worktree read requires membership in this repository's Git worktree inventory
+and matching common-directory identity; otherwise use its record as snapshot evidence only.
+
+**Consistent source reads and bases.** The scope feature owns a small reader contract for text, existence, path kind
+and file enumeration, with filesystem and pinned-tree adapters. Read anchors, `tasks.md`, reconciliation targets,
+capability/use-case entrypoints and file/directory kinds from that same source. Extract shared parsing beneath use
+cases; do not import worker/delivery use cases or add a cross-application dependency for discovery.
+
+Base precedence is explicit `--base`, validated local `devkitBase`, a confirmed record's `base_ref`, then a uniquely
+resolvable integration-base hint. Integration hints are the source remote's symbolic HEAD when available or the
+non-activity branch of the base checkout; if both disagree, report an ambiguous base instead of choosing. Record
+`base_source` and the pinned base SHA. A tracking peer of the same activity branch is not an integration base.
+Missing bases, no common history or multiple merge bases leave committed coverage unresolved.
+
+For confirmed registered observations, retain the existing registration-HEAD cap/intersection algorithm, with
+pinned tip replacing `HEAD`. An explicit base does not remove that cap. If a recorded base ref is unavailable but
+its historical revision remains readable, retain the existing historical fallback and mark its unresolved base.
+For unregistered observations, use paths from `git diff --name-only --no-renames -z <unique merge-base> <tip>`.
+Label this range `branch-relative`: it can include inherited stacked-task changes. Do not invent a registration cap
+from the spec-creation commit. Missing history removes only the unavailable layer, not declarations or dirty paths.
+
+**Observation reconciliation.** Give each source observation its own `observation_id` and `task_key` (nullable).
+For one confirmed task at one SHA, deduplicate committed evidence while retaining all ref aliases and any distinct
+dirty worktree observation. At different SHAs, preserve separate observations and show ancestor/divergent relations;
+never union their declaration lists. For a live worktree, current filesystem declarations supersede its committed
+version; if unreadable, keep the committed version as labelled fallback. Preserve malformed/unreadable-input gaps.
+
+A confirmed record supplies fallback only for layers that could not be observed. Retain historical evidence in
+its own snapshot observation, with the original publication time. Do not mix its obsolete declarations or observed
+paths into a successful current observation. Unmatched records remain snapshot-only candidates. Comparisons name
+observation IDs, not ambiguous task IDs; skip comparisons within the same confirmed task. Unknown task identity
+remains a separate candidate and may be compared conservatively. Pair counts are observation-pair counts.
+
+**Output and outcome.** JSON is one object with `mode`, `started_at`, `finished_at`, `coverage`, `inventory`,
+`observations`, `pairs`, `summary` and `notices`. `coverage` contains `status=complete|partial`, discovery/fetch layer
+outcomes, pending/skipped source IDs and whether all requested comparisons finished. Complete means the requested
+observable layers were attempted successfully for the discovered candidates; it never means all machines or private
+changes are visible. Each observation carries task/commit/base provenance, observed/missing layers and unresolved
+inputs. Each candidate has `activity=active-candidate|inactive|unknown`, identity evidence and inclusion reasons.
+Text uses `[SCOPE_CANDIDATE: ...]`, `[SCOPE_OBSERVATION: ...]`, existing `[PAIR: ...]`/`[EVIDENCE: ...]` keyed by
+observation IDs, and `[SUMMARY: ... coverage=complete|partial comparisons_complete=yes|no]`.
+
+Use `SPEC_SCOPE_COLLECTION_PARTIAL` warnings for incomplete inventory, unstable reads, source failures and uncomputed
+comparisons, with structured reasons such as `source-timeout`, `unknown-base`, `identity-ambiguous`, `fetch-failed`,
+`source-unreadable` or `observation-changed`. Keep those reasons and affected IDs in result coverage as well as
+notices. Positive overlap does not change the exit code. A usable result, including a genuinely empty successful
+inventory, exits 0; warning-bearing partial results exit 1 only under `--strict`. If no selected inventory source
+can be read and no usable observation exists, raise `SPEC_SCOPE_COLLECTION_FAILED` and exit 2. Preserve existing
+argument and configuration errors. A failed command uses the ordinary error-boundary JSON/text contract.
+
+Read worktree HEAD/status before and after collecting and compare fingerprints for declaration files actually read.
+If any differ, mark that observation unstable and coverage partial without retrying. This is best-effort change
+detection: a change-and-revert or concurrent edit of an unread file can escape it. Do not certify atomicity.
+
+**Verification limits.** Performance probes establish feasibility, not production latency. Development must validate
+total/source deadline enforcement with deterministic slow-reader, slow-Git and comparison fixtures, including
+partial output before the deadline. The final implementation is not allowed to hide truncated pairs behind a
+complete status. Source-reader extraction, identity classification and the public output contract require targeted
+integration tests; ordinary overlap semantics and explicit maintenance behavior remain regression checks.
+
 ## 4. Lifecycle & Retirement Criteria
 
-Keep the proposal draft until Planning settles Q1–Q5. The source-backed self-review in `materials/self-review.md`
-is not independent Planning acceptance. Validate inventory, ref inputs, provenance, partial coverage and bounded cost
-before direction acceptance. No worker update or workflow trigger may compensate for gaps.
+Keep `status: reviewing` until the user accepts the committed Planning result. Planning support evidence and
+remaining runtime checks are recorded in the materials and envelopes; author self-review alone is not acceptance.
+Implementation tests for AC-01–AC-08 belong to Development and are not claimed as passed by this Planning run.
 
-Create a PADR replacing the skill-maintained refresh decision in ADR-worktrees-branches-and-scope with retained
-creation registration and explicit Host observation. Preserve linked-worktree registration, storage, ownership and
-cleanup decisions. Record silent creation failures and multi-machine visibility limits. Reconcile
-CAP-COLL-work-scope-registry, UC-run-parallel-work-safely and CAP-HARN-agent-guidance during Development.
-CAP-DLV-workflow-orchestration needs no observation-extension contract. No direction acceptance, Development handoff
-or runtime implementation is part of this Backlog edit.
+PADR-host-owned-scope-observation replaces only the skill-maintained refresh portion of
+ADR-worktrees-branches-and-scope. Preserve linked-worktree registration, storage, ownership and cleanup decisions.
+Reconcile CAP-COLL-work-scope-registry, UC-run-parallel-work-safely and CAP-HARN-agent-guidance during Development.
+CAP-DLV-workflow-orchestration needs no observation-extension contract. No Development handoff or runtime
+implementation is part of this Planning run. Development effort remains `medium` because the change is local and
+reversible, with independent code and reconciliation reviews required by the workflow.

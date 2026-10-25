@@ -53,6 +53,15 @@ projected files. Hide `scope update` from ordinary help and generated agent disc
 maintenance invocation. Inspect discovery before widening implementation ownership. No harness runtime hook is
 part of this design.
 
+## Settled Planning direction
+
+PADR-host-owned-scope-observation replaces only the skill-refresh portion of ADR-worktrees-branches-and-scope.
+The command is `scope collect`, defaulting to `worktrees`, with `snapshot` and `refs` alternatives. Explicit
+`--fetch <remote>` is separate from observation depth. Default budgets are 30 seconds total and 5 seconds per source.
+Preserve per-source observations, conservative unregistered ranges, lifecycle ambiguity and partial comparison
+coverage. Development validates the output contract and runtime bounds defined in the proposal; the synthetic
+Planning measurements are not end-to-end acceptance evidence.
+
 ## Before and after
 
 Before: creation registers initial linked-worktree scope; workers must publish subsequent changes.
