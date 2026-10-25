@@ -302,6 +302,9 @@ Further gaps followed on the same runs:
 
 ### Role reasoning effort presets
 
+This decision alone is superseded by `ADR-subagent-level-projection`; the other decisions in this consolidated
+ADR remain in force. The preset-specific consequences and confirmation below are historical for this decision.
+
 - Reviewer presets: `scout` and `reconcile-reviewer` `medium`; `code-reviewer` and `challenger` `high`. The
   `claude-code` block sets `effort` and the `codex` block sets `model_reasoning_effort` to the role's value; a `codex`
   block whose status is `unsupported` gets none. Antigravity stays unset. The workers set no preset.
