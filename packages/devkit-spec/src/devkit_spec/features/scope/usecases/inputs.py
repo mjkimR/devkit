@@ -1,257 +1,24 @@
-"""Scope inputs: what a proposal or spec bundle declares, and what Git observes in a worktree.
-
-- Proposal (``prop`` stage): the ``targets`` of ``docs/proposals/PROP-<slug>/target-docs.md`` are the document side,
-  the ``entrypoints`` of the existing capability and use case targets the code candidates.
-- Spec bundle (``spec`` stage): ``reconcile.md`` ``targets`` (not ``waived``) are the document side, or, without
-  ``reconcile.md``, ``target-docs.md`` (``prop`` stage); ``tasks.md`` ``_Boundary`` entries are declared code. Once at
-  least one entry is a declared code path, it replaces the targets' ``entrypoints`` candidates; until then (no
-  ``tasks.md``, the handoff skeleton, or only entries that are no code path) the candidates stand in for it. A target
-  without ``entrypoints`` is ``no-entrypoints`` either way. When both target lists exist, the paths only one names
-  are reported as ``Diff`` and not merged.
-- Observed (``build`` stage): the paths changed on the task's side of its base branch (from the fork point
-  ``git merge-base <base ref> HEAD`` to ``HEAD``, never wider than the record's fixed base revision to ``HEAD``; see
-  ``observe_git``), staged, unstaged and untracked, relative to the workspace root.
-
-``targets`` is a list of ``{file: <workspace-relative path>, resolution: ...}`` in both files. Paths follow the
-entrypoint path contract. What cannot become a path is ``Unresolved`` with its reason, never dropped silently.
-"""
+"""Checkout declaration operations and Git scope observations."""
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
-from devkit_core.core import FrontmatterError, GitError, run_git
-from devkit_core.core.frontmatter import parse
+from devkit_core.core import GitError, run_git
 
-from devkit_spec.base.errors import (
-    EntrypointsPathError,
-    ProposalNotFoundError,
-    ScopeInputInvalidError,
-    ScopeSpecNotFoundError,
-)
-from devkit_spec.features.entrypoints import classify_boundary, entrypoint_bearing, normalize, parse_boundaries
-from devkit_spec.features.proposals.usecases.scaffold import PROPOSAL_FILE, PROPOSALS, TARGET_DOCS, clean_slug
-from devkit_spec.features.proposals.usecases.specs import SKELETON_MARKER
+from devkit_spec.base.errors import EntrypointsPathError
+from devkit_spec.features.entrypoints import normalize
+from devkit_spec.features.proposals.usecases.scaffold import clean_slug
 from devkit_spec.features.scope.models.deadline import Deadline
-from devkit_spec.features.scope.models.model import Diff, Granularity, ScopePath, ScopeSet, Source, Stage, Unresolved
+from devkit_spec.features.scope.models.model import ScopePath, ScopeSet, Source, Stage, Unresolved
 from devkit_spec.features.scope.repositories.git import git_lines
-
-RECONCILE = "reconcile.md"
-TASKS = "tasks.md"
-SPEC = "spec.md"
-WAIVED = "waived"
-
-
-def _is_placeholder(raw: str) -> bool:
-    stripped = raw.strip()
-    return len(stripped) >= 2 and stripped.startswith("<") and stripped.endswith(">")
-
-
-def kind_of(root: Path, path: str) -> Granularity:
-    """Whether the workspace-relative ``path`` is a file or a directory of the working tree, else ``unknown``."""
-    target = root / path
-    if target.is_dir():
-        return Granularity.DIR
-    if target.is_file():
-        return Granularity.FILE
-    return Granularity.UNKNOWN
-
-
-def _frontmatter(path: Path, relative: str) -> dict[str, Any] | None:
-    """The frontmatter of ``path``; ``None`` when it has none; ``ScopeInputInvalidError`` when unreadable."""
-    try:
-        return parse(path.read_text(encoding="utf-8")).data
-    except (OSError, UnicodeDecodeError) as exc:
-        raise ScopeInputInvalidError(f"cannot read {relative}: {exc}", target_files=[relative]) from exc
-    except FrontmatterError as exc:
-        raise ScopeInputInvalidError(f"cannot read {relative}: {exc.message}", target_files=[relative]) from exc
-
-
-def _declared_id(path: Path) -> str:
-    """The ``id`` of a document's frontmatter, ``""`` when it has none or cannot be read."""
-    try:
-        data = parse(path.read_text(encoding="utf-8")).data or {}
-    except (OSError, UnicodeDecodeError, FrontmatterError):
-        return ""
-    value = data.get("id")
-    return value.strip() if isinstance(value, str) else ""
-
-
-def _targets(path: Path, relative: str) -> list[tuple[str, str]] | None:
-    """``(file, resolution)`` of each target; ``None`` when the file does not exist or declares no ``targets``."""
-    if not path.is_file():
-        return None
-    data = _frontmatter(path, relative) or {}
-    if "targets" not in data:
-        return None
-    value = data["targets"] or []
-    if not isinstance(value, list):
-        raise ScopeInputInvalidError(f"cannot read {relative}: targets must be a list", target_files=[relative])
-    targets = []
-    for position, entry in enumerate(value, 1):
-        if not isinstance(entry, dict) or not isinstance(entry.get("file", ""), str):
-            raise ScopeInputInvalidError(
-                f"cannot read {relative}: targets[{position}] must be a mapping with a string file",
-                target_files=[relative],
-            )
-        resolution = entry.get("resolution")
-        targets.append((entry.get("file", "").strip(), resolution.strip() if isinstance(resolution, str) else ""))
-    return targets
-
-
-def _entrypoints(root: Path, file: str) -> list[str]:
-    try:
-        data = parse((root / file).read_text(encoding="utf-8")).data or {}
-    except (OSError, UnicodeDecodeError, FrontmatterError):
-        return []
-    value = data.get("entrypoints")
-    return [item for item in value if isinstance(item, str)] if isinstance(value, list) else []
-
-
-def _add_doc_targets(
-    root: Path, scope: ScopeSet, targets: list[tuple[str, str]], stage: Stage, *, candidates: bool = True
-) -> None:
-    """Record document targets and, with ``candidates``, the code candidates their entrypoints provide.
-
-    A waived target, an invalid path, a planned document (not in the working tree; it still counts as a document,
-    so a shared planned path overlaps) and a capability or use case without entrypoints are unresolved, also without
-    ``candidates``.
-    """
-    seen_docs = {path.path for path in scope.docs}
-    seen_code = {path.path for path in scope.code}
-    for raw, resolution in targets:
-        if not raw:
-            continue
-        if resolution.lower() == WAIVED:
-            scope.unresolved.append(Unresolved(raw, "waived", Source.DECLARED_DOC))
-            continue
-        try:
-            file = normalize(raw)
-        except EntrypointsPathError:
-            scope.unresolved.append(Unresolved(raw, "invalid-path", Source.DECLARED_DOC))
-            continue
-        if file in seen_docs:
-            continue
-        seen_docs.add(file)
-        kind = kind_of(root, file)
-        scope.docs.append(ScopePath(file, kind, Source.DECLARED_DOC, stage))
-        if kind is Granularity.UNKNOWN:
-            scope.unresolved.append(Unresolved(file, "planned-doc", Source.DECLARED_DOC))
-            continue
-        if not entrypoint_bearing(file):
-            continue
-        entries = _entrypoints(root, file)
-        if not entries:
-            scope.unresolved.append(Unresolved(file, "no-entrypoints", Source.CANDIDATE))
-            continue
-        if not candidates:
-            continue
-        for entry in entries:
-            try:
-                code = normalize(entry)
-            except EntrypointsPathError:
-                continue
-            if code not in seen_code:
-                seen_code.add(code)
-                scope.code.append(ScopePath(code, kind_of(root, code), Source.CANDIDATE, stage))
-    scope.docs.sort(key=lambda path: path.path)
-    scope.code.sort(key=lambda path: path.path)
-
-
-def _diff(blueprint: list[tuple[str, str]], reconcile: list[tuple[str, str]]) -> list[Diff]:
-    def paths(targets: list[tuple[str, str]]) -> set[str]:
-        found = set()
-        for raw, resolution in targets:
-            if resolution.lower() == WAIVED:
-                continue
-            try:
-                found.add(normalize(raw))
-            except EntrypointsPathError:
-                continue
-        return found
-
-    planned, reconciled = paths(blueprint), paths(reconcile)
-    diff = [Diff(path, "target-docs") for path in planned - reconciled]
-    diff += [Diff(path, "reconcile") for path in reconciled - planned]
-    return sorted(diff, key=lambda item: (item.path, item.side))
+from devkit_spec.features.scope.services.declarations import from_proposal as declared_proposal
+from devkit_spec.features.scope.services.declarations import from_spec as declared_spec
+from devkit_spec.features.scope.services.declarations import kind_of
 
 
 def from_proposal(root: Path, slug: str) -> ScopeSet:
-    """The ``prop``-stage scope of proposal ``slug`` (a ``PROP-`` prefix is accepted).
-
-    Raises ``ProposalNotFoundError`` when no bundle or single-file proposal has the slug.
-    """
-    clean = clean_slug(slug)
-    bundle = root / PROPOSALS / f"PROP-{clean}"
-    single = root / PROPOSALS / f"PROP-{clean}.md"
-    if (bundle / PROPOSAL_FILE).is_file():
-        anchor = bundle / PROPOSAL_FILE
-    elif single.is_file():
-        anchor = single
-    else:
-        raise ProposalNotFoundError(f"no proposal has the slug {clean!r}", target_files=[f"{PROPOSALS}/PROP-{clean}"])
-    scope = ScopeSet(id=_declared_id(anchor) or f"PROP-{clean}")
-    relative = f"{PROPOSALS}/PROP-{clean}/{TARGET_DOCS}"
-    blueprint = bundle / TARGET_DOCS
-    targets = _targets(blueprint, relative)
-    if targets is None:
-        reason = "no-targets" if blueprint.is_file() else "missing-target-docs"
-        scope.unresolved.append(Unresolved(TARGET_DOCS, reason, Source.DECLARED_DOC))
-        return scope
-    _add_doc_targets(root, scope, targets, Stage.PROP)
-    return scope
-
-
-def from_spec(root: Path, spec_dir: str) -> ScopeSet:
-    """The ``spec``-stage scope of the bundle at the workspace-relative ``spec_dir`` (declarations only).
-
-    Declared code paths of ``tasks.md`` replace the targets' entrypoint candidates; without any, the candidates stay.
-
-    Raises ``ScopeSpecNotFoundError`` when it is not a directory and ``ScopeInputInvalidError`` when an input
-    cannot be read.
-    """
-    base = root / spec_dir
-    if not base.is_dir():
-        raise ScopeSpecNotFoundError(f"spec bundle not found: {spec_dir}", target_files=[spec_dir])
-    scope = ScopeSet(id=_declared_id(base / SPEC) or base.name)
-    tasks_path = base / TASKS
-    if not tasks_path.is_file():
-        scope.unresolved.append(Unresolved(TASKS, "missing-tasks", Source.DECLARED_CODE))
-    else:
-        try:
-            text = tasks_path.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError) as exc:
-            relative = f"{spec_dir}/{TASKS}"
-            raise ScopeInputInvalidError(f"cannot read {relative}: {exc}", target_files=[relative]) from exc
-        if SKELETON_MARKER in text:
-            scope.unresolved.append(Unresolved(TASKS, "missing-tasks", Source.DECLARED_CODE))
-        else:
-            seen: set[str] = set()
-            for task in parse_boundaries(text):
-                for raw in task.values:
-                    if _is_placeholder(raw):
-                        scope.unresolved.append(Unresolved(raw, "not-a-path", Source.DECLARED_CODE))
-                        continue
-                    code, reason = classify_boundary(raw)
-                    if code is None:
-                        scope.unresolved.append(Unresolved(raw, str(reason), Source.DECLARED_CODE))
-                    elif code not in seen:
-                        seen.add(code)
-                        scope.code.append(ScopePath(code, kind_of(root, code), Source.DECLARED_CODE, Stage.SPEC))
-    candidates = not scope.code  # only declared code is collected so far: it replaces the entrypoint candidates
-    reconcile = _targets(base / RECONCILE, f"{spec_dir}/{RECONCILE}")
-    blueprint = _targets(base / TARGET_DOCS, f"{spec_dir}/{TARGET_DOCS}")
-    if reconcile is not None:
-        _add_doc_targets(root, scope, reconcile, Stage.SPEC, candidates=candidates)
-        if blueprint is not None:
-            scope.diff = _diff(blueprint, reconcile)
-    else:
-        scope.unresolved.append(Unresolved(RECONCILE, "missing-reconcile", Source.DECLARED_DOC))
-        if blueprint is not None:
-            _add_doc_targets(root, scope, blueprint, Stage.PROP, candidates=candidates)
-    scope.code.sort(key=lambda path: path.path)
-    return scope
+    return declared_proposal(root, clean_slug(slug))
 
 
 def _fork_point(root: Path, base_ref: str, deadline: Deadline) -> str:
@@ -337,3 +104,7 @@ def observe_git(
     add(git_lines(root, "ls-files", "-z", "--others", "--exclude-standard", deadline=deadline))
     observed.sort(key=lambda path: path.path)
     return observed, unresolved
+
+
+def from_spec(root: Path, spec_dir: str) -> ScopeSet:
+    return declared_spec(root, spec_dir)

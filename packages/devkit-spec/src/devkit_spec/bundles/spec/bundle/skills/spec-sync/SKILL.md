@@ -31,7 +31,6 @@ verification by effort is in its `references/effort.md` and `references/review-l
    ---
    ```
 
-   In a registered task worktree, then run `devkit spec scope update --spec <dir>`.
 3. **Deferred work and source feedback**: apply the Deferred Work Handoff of `completion.md` and
    [source feedback](../spec/references/source-feedback.md), and record destinations and resolutions in
    `reconcile.md`.

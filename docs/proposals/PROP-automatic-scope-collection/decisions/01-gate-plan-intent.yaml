@@ -1,9 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: Draft the three-trigger automatic scope collection proposal, remove explicit
-  update obligations, hide the maintenance command and record an author self-review.
-by: user
-at: '2026-10-24T15:35:24.264673Z'

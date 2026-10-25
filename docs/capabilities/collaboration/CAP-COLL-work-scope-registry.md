@@ -1,7 +1,7 @@
 ---
 id: CAP-COLL-work-scope-registry
 title: Work Scope Comparison and Shared Registry
-summary: "devkit spec scope compares parallel task scopes in a registry and journal shared across repository worktrees. Queries use side-effect-free shared locks; overlaps inform scheduling without granting or blocking writes."
+summary: "Scope comparison uses creation snapshots and explicit bounded host observation of branch and worktree evidence. Partial coverage remains visible without worker publication or write authority."
 area: collaboration
 status: active
 created_at: 2026-10-13
@@ -26,8 +26,8 @@ integrated. It never grants or blocks a write, and it is not exclusive ownership
 ## 2. Scope & Boundary
 
 - **In-Scope**: building scope sets from proposals, spec bundles and Git; pairwise comparison; the local file registry
-  (records, owner tokens, locking, deadlines, sweep) and its event journal; the `compare`, `register`, `query`,
-  `update`, `release` and `sweep` commands; the registration a handoff performs; the dual-mode `devkit.post_finish`
+  (records, owner tokens, locking, deadlines, sweep) and its event journal; the `compare`, `collect`, `register`, `query`,
+  hidden `update`, `release` and `sweep` commands; the registration a handoff performs; the dual-mode `devkit.post_finish`
   extension (`devkit_spec.features.delivery.usecases.cleanup.after_finish`, classic callable and `ScopedCleanup`).
 - **Out-of-Scope**:
   - The entrypoint path contract and `_Boundary` parsing: `CAP-TRACE-code-entrypoints`.
@@ -62,7 +62,8 @@ integrated. It never grants or blocks a write, and it is not exclusive ownership
    shared readers exclude exclusive writers and never see a partial record. An absent namespace observation is empty
    and may precede a concurrent first registration.
 8. **The journal is diagnostic**: it is never an input to an overlap, stale or stage verdict, and a failed append
-   never changes an operation's result or exit code (only a `SPEC_SCOPE_JOURNAL_UNAVAILABLE` warning).
+   never changes an operation's result or exit code. Explicit mutations report `SPEC_SCOPE_JOURNAL_UNAVAILABLE`;
+   automatic creation registration exposes only verbose diagnostics.
 9. **Cleanup after finish**: devkit-spec's `devkit.post_finish` extension (`devkit_spec.features.delivery.usecases.cleanup.after_finish`) implements both the classic callable contract for `devkit worktree finish` and `devkit_agt.features.integration.ScopedCleanup` (`integration_local_only = True`, `integration_plan`, `integration_validate`, `integration_run`) for `IntegrationService`. It runs in the
    base after the worktree finish succeeds and removes the records whose worktree is the finished one, at the
    revision it read (`sweep --apply` restricted to those tasks; or `release` for a `--no-worktree` base checkout task); other stale records stay for an explicit sweep. On the `ScopedCleanup` path, `integration_plan` binds each scope record as `CleanupTarget(kind="scope-record", identity=<task_id>, revision="<mode>:<namespace>:<revision>")` (`mode` in `worktree|base`) and `CleanupTarget(kind="proposal-prune", identity="docs/proposals/PROP-<slug>", revision=<source_sha>)`, `integration_validate` rejects any revision, namespace or mode drift (`INTEGRATION_REQUEST_STALE`) while permitting already-removed records once the Git part is done: the base HEAD contains the integration's result commit (`context.result_sha`; the source under `[worktree] merge = "ff-only"` or for a cleanup-only request, so later commits on the base are allowed) and the worktree is gone (`SPEC-integration-follow-ups`), and `integration_run` emits `SPEC_POST_FINISH_CLEANUP` notices (`CleanupResult(done=..., notices=...)`).
@@ -79,8 +80,8 @@ integrated. It never grants or blocks a write, and it is not exclusive ownership
 
 ### 4.1 Scope Inputs
 
-A scope set has a document side, a code side, observed paths and unresolved inputs. Every path is a literal
-workspace-relative path under the entrypoint path contract of `CAP-TRACE-code-entrypoints` (no glob, no absolute
+A scope set has a document side, a code side, observed paths and unresolved inputs. Both filesystem and pinned-tree declaration readers use the same target/boundary/entrypoint parser.
+Every path is a literal workspace-relative path under the entrypoint path contract of `CAP-TRACE-code-entrypoints` (no glob, no absolute
 path, no `..`, case-sensitive, `./` and a trailing `/` normalized), with its granularity in the working tree (`file`,
 `dir`, or `unknown` when it does not exist), its source and its stage.
 
@@ -231,6 +232,7 @@ sentinel per line, warnings follow on stderr, and JSON is one object with the sa
 
 | Command | Does |
 | --- | --- |
+| `devkit spec scope collect [--mode snapshot\|refs\|worktrees] [--base <ref>] [--fetch <remote>] [--timeout <seconds>] [--source-timeout <seconds>]` | Observes host-visible work; repeat --fetch for configured remotes. See 4.9. |
 | `devkit spec scope compare (--proposal <slug> \| --spec <dir>)...` | Compares two or more declared scopes pairwise without the registry or Git. |
 | `devkit spec scope register --spec <dir> [--task-id <id>]` | Registers this worktree's task (task ID default: the spec ID) and prints its token once. |
 | `devkit spec scope query [--spec <dir>]` | Lists the namespace's records and this worktree's overlaps with the others (every pair when this worktree registered nothing, or its record is gone or may be unreadable). `--spec` compares that bundle's declared scope with every record not owned here, for a task about to start. |
@@ -267,7 +269,8 @@ Argument errors (`ARGUMENT_INVALID`): `register`/`update` without `--spec`, `com
 ```
 
 - `[PAIR]` lines are followed by their `[EVIDENCE]` lines; `[DIFF]` carries `in=target-docs|reconcile`.
-- `register` is the only place the owner token is ever printed; `query` records never carry the token hash.
+- Explicit `register` and successful creation registration may print the owner token once; collection and `query`
+  never expose an owner token or its hash.
 - `overlaps` in the ACK is the number of other records this task overlaps. An update that does not apply prints its
   `[SCOPE_ACK: status=failed|stale|timeout ...]`, then its error (`SPEC_SCOPE_TOKEN_MISSING`,
   `SPEC_SCOPE_STALE_REVISION`, `SPEC_SCOPE_TIMEOUT`, ...), exiting 2; JSON carries the ACK and the error under
@@ -280,22 +283,22 @@ JSON shapes: `compare` `{sets, pairs, summary}`; `register` `{record, token, nam
 `{ack, pairs, notices[, errors]}`; `release` `{task, released, registered, already, revision, notices}`; `sweep`
 `{results, summary, notices[, errors]}`.
 
-### 4.6 Where the Workflow Calls It
+### 4.6 Creation and Host responsibilities
 
-devkit's `workflow next` and `worktree finish` know nothing of devkit-spec, so the bundle's skills call the commands
-(the `spec` skill's `references/worktree.md`):
+`devkit spec proposal handoff` (both forms) and `devkit spec new` register initial scope after successful creation
+in an eligible linked worktree. Base and standalone checkouts register nothing automatically. Skeleton declarations
+remain unresolved. Automatic registration is best effort: failures and journal notices produce no default advisory,
+error/notice/status field or worker recovery task, and preserve primary output, exit code and `--strict` behavior.
+Primary-operation errors/notices remain unchanged. Verbose-only INFO diagnostics identify automatic collection
+failures, and logging failures cannot fail creation. Cancellation/termination propagate normally. Published records
+survive a journal append failure; no retry, storage fallback or permission escalation is performed.
 
-- `devkit spec proposal handoff` run inside a linked worktree, at either `[tool.spec] worktree` level, registers the
-  new bundle itself (journal `source=handoff`) and prints the `[SCOPE: ...]` line with the token; a registration
-  failure is a `SPEC_SCOPE_REGISTER_FAILED` warning and the handoff stays done. Outside Git or in the base checkout
-  nothing is registered. After `devkit spec new` in a task worktree, the skill runs
-  `devkit spec scope register --spec <dir>`.
-- `spec-tasks` after writing `tasks.md`, and `spec-sync` after writing `reconcile.md`, run
-  `devkit spec scope update --spec <dir>` in a registered worktree; `SPEC_SCOPE_TOKEN_MISSING` means the worktree
-  takes no part and the step is skipped.
-- After `devkit worktree finish` or `devkit integration integrate` succeeds, its post-finish extension removes the record of the removed worktree (item 9).
-  `devkit spec scope sweep --apply` removes other stale records; `devkit spec scope release -w <worktree>` withdraws
-  an abandoned task.
+Workers have no scope registration, update or ACK duty. Explicit and internal `workflow next`, readiness and worker
+inspection do not collect or publish scope. The Host requests explicit observation when evidence is needed for
+scheduling. `query`, history and `compare` retain their read-only meanings. A directly invoked hidden maintenance
+`update` retains its token/revision/ACK/error contract. Post-finish cleanup retains rule 9.
+
+Rationale: ADR-host-owned-scope-observation.
 
 ### 4.7 Configuration
 
@@ -331,8 +334,88 @@ A malformed table is `SPEC_CONFIG_INVALID` (`CAP-DLV-project-policy`).
 | `SPEC_SCOPE_SHARED_WORKTREE` | `WARNING` | `ScopeSharedWorktreeWarning` | Another task registered the same worktree. |
 | `SPEC_SCOPE_JOURNAL_UNAVAILABLE` | `WARNING` | `ScopeJournalWarning` | The journal could not be written. |
 | `SPEC_SCOPE_JOURNAL_LINE_INVALID` | `WARNING` | `ScopeJournalLineWarning` | `query --history` skipped lines that are not JSON events. |
-| `SPEC_SCOPE_REGISTER_FAILED` | `WARNING` | `ScopeRegisterFailedWarning` | A handoff in a task worktree could not register its bundle. |
+| `SPEC_SCOPE_COLLECTION_PARTIAL` | `WARNING` | `ScopeCollectionPartialWarning` | Some requested source, input or comparison coverage is missing. |
+| `SPEC_SCOPE_COLLECTION_FAILED` | `ERROR` | `ScopeCollectionFailedError` | No selected inventory source can be read, or report metadata cannot fit the bounded result. |
 | `SPEC_POST_FINISH_CLEANUP` | `NOTICE` | `PostFinishCleanupNotice` | `ScopedCleanup.integration_run` removed an empty proposal directory or a finished worktree's scope record during approval-bound local integration. |
 
 devkit's own errors pass through: `ARGUMENT_INVALID` (4.4), `GIT_FAILED`, `SPEC_PROPOSAL_NOT_FOUND` (compare),
 `SPEC_CONFIG_INVALID`.
+
+
+### 4.9 Explicit Host observation
+
+`devkit spec scope collect` returns invocation-local evidence and does not read owner tokens or mutate records,
+revisions, temporary files or the journal. It inventories existing registry records with shared read locking.
+Missing registry storage is empty evidence; unreadable storage is a coverage gap while available Git evidence
+remains usable. This is independent of registry participation and creates no persistent observation cache.
+
+| Mode | Sources |
+| --- | --- |
+| `snapshot` | Existing creation/maintenance records only |
+| `refs` | Snapshots plus full local and configured remote-tracking `plan-*`/`dev-*` refs at pinned commits |
+| `worktrees` (default) | Refs plus accessible main/linked worktree declarations, committed, staged, unstaged and untracked paths |
+
+The Host chooses observation depth with `--mode`. Network refresh is separate: repeatable `--fetch <remote>` accepts
+only configured remotes and updates only their remote-tracking branch namespace, without tags, pruning, submodules,
+interactive prompts, pushes or automatic deepening. Snapshot-plus-fetch is `ARGUMENT_INVALID`. Without fetch, refs
+are locally cached evidence. Successful fetch times are in `coverage.layers.fetch`; previous cache freshness is
+unknown. No observation reads another PC's private/unpushed changes. Separate clones do not share registry snapshots
+by default. PRs with pushed declarations/changes are recommended for frequent multi-PC work. A cloud-backed registry
+repository for initial snapshot sharing is a future direction under ADR-host-owned-scope-observation, not a deployed
+backend or distributed watcher.
+
+Each candidate exposes `activity=active-candidate|inactive|unknown`, identity evidence and a reason. Physical worktree
+access and lifecycle evidence are distinct. Terminal clean units are excluded from comparison; terminal dirty
+worktrees and ambiguous bindings remain visible. Clean non-activity checkouts without a task binding are excluded
+as `clean-unbound`. An accessible worktree must belong to this repository's worktree inventory and common directory;
+another-host record path is never opened merely because the same path exists here.
+
+Declarations, targets, entrypoints and path kinds come from one filesystem or pinned tree source. Valid local unit
+markers take precedence over exact activity-slug discovery; stale/mismatched markers stay unresolved. Task keys
+combine namespace, anchor ID and unit path. Registry `task_id` is a separate registration alias; snapshot-only
+observations have unknown canonical identity until a unique live anchor confirms the namespace/unit binding.
+The registration alias remains in provenance, and a confirmed custom alias retains its historical range cap.
+Duplicate anchor IDs at distinct unit paths have unknown attribution.
+Worktree HEAD/status and fingerprints for declaration files read are checked before/after observation; detected
+changes produce partial coverage without retries. This cannot detect every change-and-revert or provide a single
+atomic snapshot across worktrees.
+
+Base selection uses explicit `--base`, a validated local `devkitBase`, a confirmed record base, then a uniquely
+resolvable integration hint. Hints use remote symbolic HEAD or the non-activity main checkout branch and expose
+ambiguity. A tracking peer of the same task is not its integration base. Confirmed registered observations retain
+the registration-HEAD cap/intersection from 4.1; unregistered observations use a unique merge-base-to-tip diff,
+labelled `branch-relative` because stacked parent work can be included. Missing history/base evidence leaves that
+layer unresolved. Available declaration/dirty evidence remains usable.
+
+Each observation has its own ID, task key, scope, aliases, provenance and observed/missing layers. Commit, selected
+base, historical cap, range method and effective declaration evidence must agree before deduplication. Divergent
+or ancestor refs retain separate observations and provenance relations. Dirty worktrees remain distinct. Unreadable
+live declarations can fall back to pinned declarations, explicitly marked as fallback. Historical snapshots remain
+separate; a successful current observation or verified terminal-clean lifecycle disables their obsolete evidence
+for comparison unless dirty/unknown live evidence contradicts that lifecycle. Pairs name observation
+IDs and skip only confirmed same-task observations. Counts are observation-pair counts, never a proof of independence.
+
+JSON is one object with `mode`, `started_at`, `finished_at`, `coverage`, `inventory`, `observations`, `pairs`, `summary`
+and `notices`. Coverage carries source/fetch outcomes, bounded problem examples and total count, discovered/retained
+source counts, `comparisons_complete`, total/completed pair counts and the last completed pair key. Complete means
+requested observable layers for discovered candidates, not global/private visibility. Missing inputs, unknown bases,
+ambiguous identity, inaccessible/unstable sources and exhausted budgets produce `SPEC_SCOPE_COLLECTION_PARTIAL`.
+Usable results exit 0, warning-bearing results exit 1 only under `--strict`, and inability to read any inventory
+source raises `SPEC_SCOPE_COLLECTION_FAILED` with exit 2. Invalid arguments remain `ARGUMENT_INVALID`.
+
+Text renders `[SCOPE_CANDIDATE: ...]`, `[SCOPE_OBSERVATION: ...]`, `[PAIR: ...]`, `[EVIDENCE: ...]` and a `[SUMMARY: ...
+coverage=complete|partial comparisons_complete=yes|no]`. It emits no worker ACK. The CLI uses the existing advisory
+boundary for errors, notices and strict behavior.
+
+Total `--timeout` defaults to 30 seconds and `--source-timeout` to 5 seconds, each an integer 1–300. A source receives
+at most the total computation time remaining; fetch shares that budget. Computation reserves finalization time,
+checks comparison loops and bounds Git output while reading. Slow stdout consumers are outside computation timing.
+Limits are 1 MiB per declaration, 16 MiB total declaration bytes, 256 retained source candidates, 10,000 complete
+pairs, 10,000 evidence entries and an 8 MiB encoded report including framing/notices. Retention conservatively covers JSON and text, including
+repeated observation IDs on evidence lines. Limits preserve complete
+entries and bounded coverage/summary diagnostics; `input-limit` and `result-limit` report omitted work. Timeouts use
+`source-timeout`; other reasons include `unknown-base`, `identity-ambiguous`, `fetch-failed`, `source-unreadable`,
+`unresolved-input` and `observation-changed`. Uncomputed pairs never count as zero overlap.
+
+Checks: `packages/devkit-spec/tests/integration/features/scope/test_collection.py` and creation tests under
+`packages/devkit-spec/tests/integration/features/delivery/`.

@@ -1,70 +1,80 @@
 ---
-id: PROP-automatic-scope-collection
+id: SPEC-automatic-scope-collection
 title: Creation snapshots and explicit host work scope collection
-summary: "Retains automatic creation snapshots and replaces worker scope updates with explicit host collection from snapshots, branch refs and accessible worktrees. Observation modes expose incomplete coverage and remote visibility limits without mutating worker registrations."
-status: accepted
-created_at: 2026-10-25
-target_area: collaboration/
-priority: high
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/features/scope/
-    - packages/devkit-spec/src/devkit_spec/features/delivery/
-    - packages/devkit-spec/src/devkit_spec/base/errors.py
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
-    - packages/devkit-spec/tests/
-    - docs/capabilities/collaboration/
-    - docs/capabilities/harness/
-    - docs/usecases/collaboration/
-    - docs/decisions/
-  excludes:
-    - Workflow evaluation and workflow next collection hooks
-    - Remote registry transports and cross-cloud aggregation
-    - Native agent hooks and Git hooks
-    - OpenTelemetry SDKs, exporters and collectors
-    - Changes to overlap matching and workflow approval authority
-task_kind: feature
-workflow: sdd-proposal
+summary: "Retains creation snapshots and replaces worker scope publication with bounded explicit host observation of registry, branch and worktree evidence."
+status: completed
+created: 2026-10-25
+related_capabilities: [CAP-COLL-work-scope-registry, CAP-HARN-agent-guidance, CAP-HARN-command-mount, CAP-DLV-spec-bundles, CAP-DLV-proposal-incubation]
+related_usecases: [UC-run-parallel-work-safely]
+workflow: sdd-spec-feature
 ---
 
-# [PROP-automatic-scope-collection] Creation snapshots and explicit host work scope collection
+# [SPEC-automatic-scope-collection] Creation snapshots and explicit host work scope collection
 
-## 1. Background & Hypothesis
+## Problem and user stories
 
-The registry supports scheduling by comparing declared and observed work scope. Its snapshots do not grant write
-permission or certify independence. `devkit spec proposal handoff` and `devkit spec new` already compose automatic
-registration through `auto_register`. Registration currently applies only to linked worktrees. Initial spec
-skeletons do not contain completed task boundaries or later implementation changes.
+The Host needs overlap evidence at scheduling time without worker publication/ACK duties. As the Host, I can
+choose snapshot, ref or live-worktree evidence and see attribution, freshness and coverage gaps. As a worker, I
+continue the normal workflow without maintaining scope records. ADR-host-owned-scope-observation authorizes this
+change while preserving storage, registration eligibility and cleanup.
 
-Worker guidance requires `scope update` after task writing, reconciliation and accepted worker changes. Remove
-those duties. Retain creation snapshots as initial evidence and let the Host explicitly collect the evidence
-available when it makes a scheduling or integration-order decision. Do not add collection to `workflow next`.
+## Non-goals
 
-Hypothesis: creation snapshots plus on-demand Host observation provide useful overlap evidence with less worker
-protocol and no workflow observation hooks. This accepts gaps between Host invocations and incomplete visibility
-into other machines. The Host report must distinguish observed evidence from missing coverage.
+**Scope Excluded**: workflow collection hooks, worker refresh protocols, cloud registry implementation, continuous
+watching, PR polling, automatic dispatch, exclusive claims and semantic merge-conflict detection. Future cloud
+snapshot sharing is a direction only; remote private work stays invisible.
 
-## 2. Planning findings and decisions
+## Acceptance Criteria
 
-Planning uses `activity-effort: medium` with isolated Scout evidence and one Challenger round. The base snapshot is
-`main` at `10269581972a4dce7eddf8ffaf77b8bb3bfc6bfd`; it has no declared prerequisites for this proposal.
+### [AC-01] Creation
 
-| Question | Planning resolution |
-| --- | --- |
-| Q1: Inventory | Token-free enumeration of worktrees, full local/remote activity refs and registry records; report activity separately from identity and physical accessibility. |
-| Q2: Ref inputs | A scope-owned source reader reads declarations, target entrypoints and path kinds consistently from one filesystem or pinned Git tree. Keep registered history caps; label unregistered ranges conservative. |
-| Q3: Modes | `collect --mode snapshot|refs|worktrees`, default `worktrees`; preserve per-source scope observations instead of merging conflicting declarations. |
-| Q4: Cost/results | Explicit total/source deadlines, observable partial coverage and bounded comparison; no silent truncation or promise of global completeness. |
-| Q5: Responsibilities | Creation registration stays best effort; workers publish nothing; hidden maintenance remains callable; Host failures use ordinary advisories. |
+- **Given** an eligible linked worktree and creation operation.
+- **When** registration succeeds or any automatic observer component fails.
+- **Then** initial registration is retained on success; failures produce no default notices/errors and preserve primary output and exits including strict.
 
-The operational contract below settles these questions for Development. Supporting source evidence, experiments
-and remaining implementation checks are in `materials/planning-evidence.md`. The preliminary decision is
-PADR-host-owned-scope-observation. Direction acceptance remains a user gate.
+### [AC-02] Worker removal
 
-## 3. Proposed Design & Impact
+- **Given** source guidance and CLI discovery.
+- **When** task writing, reconciliation or worker acceptance runs.
+- **Then** no scope publication or ACK is required; update is hidden but directly callable.
+
+### [AC-03] Workflow isolation
+
+- **Given** explicit next, evaluation, readiness and worker inspection.
+- **When** the operations run.
+- **Then** no scope collection/publication or additional harness provider occurs.
+
+### [AC-04] Observation modes
+
+- **Given** snapshot records, activity refs and live dirty worktrees.
+- **When** collect runs in each mode.
+- **Then** only requested live layers are read; qualifying unregistered work is observable without reading or writing owner tokens.
+
+### [AC-05] Identity and refs
+
+- **Given** same-tip refs with equivalent or different base/cap inputs and divergent refs.
+- **When** collection reconciles sources.
+- **Then** only equivalent effective inputs deduplicate; distinct observations retain provenance and dirty paths; missing bases remain unresolved.
+
+### [AC-06] Bounded partial coverage
+
+- **Given** inaccessible, malformed, unstable, slow or oversized sources and dense overlap.
+- **When** collection hits a source, deadline or data limit.
+- **Then** coverage is partial with stable reason codes and bounded complete entries; explicit strict warnings exit 1 and ordinary usable results exit 0.
+
+### [AC-07] Remote boundary
+
+- **Given** separate clones and cached refs.
+- **When** collect runs without fetch, with a requested fetch, or with invalid snapshot-plus-fetch.
+- **Then** only requested fetch performs network refresh; no other-PC private changes are claimed; invalid combinations exit 2 with ARGUMENT_INVALID.
+
+### [AC-08] Read separation
+
+- **Given** existing registry, journal and token files.
+- **When** host collection or ordinary query/history/compare runs.
+- **Then** registry bytes, revisions and token files remain unchanged; creation ownership, maintenance ACK and cleanup retain their contracts.
+
+## Approved operational contract
 
 ### 3.1 Creation snapshots and worker responsibilities
 
@@ -159,39 +169,6 @@ snapshot-only or unverifiable. Unknown tasks cannot be discovered from an inacce
 For frequent multi-PC or isolated-cloud work, recommend a PR with pushed declarations and implementation changes as
 the shared review/integration surface. A PR improves published-change visibility; it does not expose private dirty
 worktrees or unpushed commits. This proposal adds no PR polling, distributed watcher or remote registry service.
-
-### 3.5 Proposed acceptance evidence
-
-- **AC-01 — Creation**: Both handoff forms and `spec new` retain registration in eligible linked worktrees.
-  Skeleton inputs remain unresolved. Base and isolated checkouts do not gain automatic registration. Registration
-  failures preserve primary text/JSON results and strict/non-strict exits without worker recovery output.
-  Verbose diagnostics and post-publication journal failure follow section 3.1.
-- **AC-02 — Worker removal**: Source guidance has no mandatory scope publication, registration or ACK steps.
-  Help/discovery omit `update`; direct maintenance help and invocation retain their contract.
-- **AC-03 — Workflow isolation**: Explicit `next`, internal evaluation, readiness and worker inspection perform no
-  scope collection/publication. The harness needs no new provider or `devkit-spec` dependency.
-- **AC-04 — Modes**: Fixtures distinguish snapshots, committed local/remote declarations and live dirty paths.
-  Only the requested mode's live inputs are read. Host collection finds qualifying unregistered tasks without
-  reading/creating owner tokens. Queries/history/compare stay unchanged.
-- **AC-05 — Identity and refs**: Confirmed copies with identical effective scope inputs deduplicate without losing dirty evidence. Same-SHA observations with different bases or registration caps remain distinct.
-  Divergent refs retain their evidence. Stale lifecycle evidence, ambiguous identity and unknown/moved/deleted bases
-  have explicit classifications. Ref declarations come from pinned SHAs, not another checkout.
-- **AC-06 — Coverage**: Inaccessible worktrees, malformed inputs, inventory failures and timeouts produce explicit
-  gaps and stable codes. Unaffected evidence remains usable. Results do not certify independence or atomic
-  cross-worktree observation. Budgets are finite and measured before acceptance. Dense-overlap and oversized-input fixtures enforce result/data limits with explicit incomplete coverage.
-- **AC-07 — Remote boundary**: Separate clones do not share snapshots by default. No-fetch results identify locally
-  available refs; fetch success/failure has explicit coverage. Neither mode nor fetch claims another PC's dirty or
-  unpushed changes. Reject snapshot-plus-fetch. PR guidance describes only published visibility.
-- **AC-08 — Read separation**: Collection leaves registry records, revisions, tokens and journal unchanged.
-  Only explicit `--fetch` updates remote-tracking refs. Registration ownership, optimistic concurrency,
-  comparison and post-finish cleanup continue to work.
-
-Non-goals: worker refresh protocols, `workflow next` observation, standalone auto-registration, continuous watching,
-remote registry transport, cross-cloud aggregation, native/Git hooks, automatic dispatch, PR polling, exclusive
-ownership, overlap-based refusal, semantic merge-conflict detection and workflow approval changes.
-
-Silent creation-registration handling is an explicit exception for automatic observation failures. Explicit Host
-operations and maintenance commands retain Agent Advisory Protocol error/notice semantics.
 
 ### 3.6 Settled operational contract
 
@@ -303,15 +280,9 @@ partial output preparation before the deadline and bounded retained/encoded evid
 complete status. Source-reader extraction, identity classification and the public output contract require targeted
 integration tests; ordinary overlap semantics and explicit maintenance behavior remain regression checks.
 
-## 4. Lifecycle & Retirement Criteria
 
-Keep `status: reviewing` until the user accepts the committed Planning result. Planning support evidence and
-remaining runtime checks are recorded in the materials and envelopes; author self-review alone is not acceptance.
-Implementation tests for AC-01–AC-08 belong to Development and are not claimed as passed by this Planning run.
+## Verification provenance
 
-PADR-host-owned-scope-observation replaces only the skill-maintained refresh portion of
-ADR-worktrees-branches-and-scope. Preserve linked-worktree registration, storage, ownership and cleanup decisions.
-Reconcile CAP-COLL-work-scope-registry, UC-run-parallel-work-safely and CAP-HARN-agent-guidance during Development.
-CAP-DLV-workflow-orchestration needs no observation-extension contract. No Development handoff or runtime
-implementation is part of this Planning run. Development effort remains `medium` because the change is local and
-reversible, with independent code and reconciliation reviews required by the workflow.
+Planning experiments are in `docs/materials/2026-10/20261025-automatic-scope-collection/planning-evidence.md`.
+They demonstrate feasibility only; Development must exercise AC-01–AC-08. No change to workflow approval authority
+or overlap matching is authorized.

@@ -2,7 +2,7 @@
 id: PROP-automatic-scope-collection-target
 title: Target Living Spec for creation snapshots and host scope collection
 status: draft
-proposal: PROP-automatic-scope-collection
+proposal: SPEC-automatic-scope-collection
 created_at: 2026-10-25
 targets:
   - file: docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md

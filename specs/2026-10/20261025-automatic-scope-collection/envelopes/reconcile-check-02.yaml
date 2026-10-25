@@ -1,0 +1,19 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T03:21:53.403207Z'
+status: completed
+summary: 'Independent follow-up PASS: nine targets align; all prior documentation findings and stale creation claims corrected'
+findings: []
+assumptions:
+- Codex emulated read-only verification; reused prior source review and inspected narrow 8a012346..09495073 diff
+unverified_areas:
+- Cloud/auth/distributed backend excluded; no broad runtime re-review
+checks:
+  targets: PASS all nine modified targets
+  contracts: PASS modes limits aliases creation guidance and references
+  stability: PASS clean source unchanged
+diff_scope:
+  base: ad1f179a6a7d36ae4b951fb70cfed3ca1a3e9879
+  head: 0949507389486af2ae80cc3342a112ba19dda28d

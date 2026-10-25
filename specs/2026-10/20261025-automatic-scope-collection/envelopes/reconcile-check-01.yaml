@@ -1,0 +1,35 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T03:19:07.737747Z'
+status: completed
+summary: 'Independent reconcile review: six declared targets align; three documentation corrections required'
+findings:
+- issue: Promoted ADR body references retired proposal instead of current spec.
+  evidence: docs/decisions/2026-10/20261025-host-owned-scope-observation.md:49,77 at 8a012346
+  failure_condition: Operational and AC references point at deleted proposal after handoff.
+  suggested_action: Replace normative body references with SPEC-automatic-scope-collection without changing decision semantics.
+  resolution: open
+  severity: P2
+- issue: Agent-guidance skill command rows retain removed worker maintenance.
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md:146,148,152 at 8a012346
+  failure_condition: Task-writing, reconciliation and orchestration table contradict source guidance and AC-02.
+  suggested_action: Remove task/sync updates and show Host collect for orchestration.
+  resolution: open
+  severity: P2
+- issue: Mounted command catalog omits collect and its target is missing.
+  evidence: docs/capabilities/harness/CAP-HARN-command-mount.md:83; reconcile.md:4-16 at 8a012346
+  failure_condition: Canonical command discovery omits new public command and reflection cannot verify it.
+  suggested_action: Add collect and name command-mount as modified reconcile target.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex emulated read-only verification; reviewed committed 8a012346 with clean tree
+unverified_areas:
+- No cloud backend or exhaustive platform checks
+checks:
+  reflection: FAIL stale references command rows and catalog
+diff_scope:
+  base: ad1f179a6a7d36ae4b951fb70cfed3ca1a3e9879
+  head: 8a012346be2f86ed99f57c0cbe3c35ddd3964583
