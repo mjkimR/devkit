@@ -1,10 +1,11 @@
 ---
 id: CAP-DIST-agent-projections
 title: "Native Agent Projections"
-summary: "Projection matrix and role contracts for Claude Code, Codex, and Antigravity."
+summary: "Projects role contracts and opt-in model levels into native Claude Code, Codex and Antigravity files, with inherited defaults and project mappings."
 area: distribution
 status: active
 entrypoints:
+  - packages/devkit-dist/src/devkit_dist/features/distribution/services/subagents.py
   - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/inventory.py
 created_at: 2026-10-17
 ---
@@ -55,7 +56,7 @@ and are reached through `get-context`, playbook search or their paths.
   for Claude Code and Antigravity). Native variants do not support templates. No conversion or key stripping: an agent without a variant gets no projection,
   and `devkit sync` reports it under `unprojected` and as an `ASSET_UNPROJECTED` notice (remedies: add the
   variant, ship a role contract, or narrow `agents`).
-- **Role contracts** (`source`): one host-neutral Markdown file, optionally an explicit `.md.jinja` template, whose `hosts` table holds an explicit block per agent. Templates render and validate before any projection, including with no selected agents. Managed output and cited contract paths use final `.md` names; overrides retain raw template provenance. The projection is rendered deterministically from that block (frontmatter keys for Claude Code and
+- **Role contracts** (`source`): one host-neutral Markdown file, optionally an explicit `.md.jinja` template, whose `hosts` table holds an explicit block per agent. Templates render and validate before any projection, including with no selected agents. Managed output and cited contract paths use final `.md` names; overrides retain raw template provenance. The projection is rendered deterministically from that block and its resolved model level (frontmatter keys for Claude Code and
   Antigravity, TOML keys plus `developer_instructions` for Codex), and the prompt is prefixed with the contract's
   managed path, its procedure skill and the host status. Only the host's allowlisted keys are accepted, a host with
   `status: unsupported` gets no file, and a contract that does not name every agent is invalid (`BUNDLE_INVALID`
@@ -75,6 +76,7 @@ role: reviewer                      # equals the asset id and the projected file
 title: Reviewer
 description: Reviews a change against its specification and returns findings with evidence.
 skill: review                       # optional: the procedure the role executes
+level: deep                         # optional: inherit | light | standard | deep; conflicts with native model/effort
 hosts:
   claude-code:
     status: native                  # native | emulated | unsupported | unverified
@@ -103,3 +105,34 @@ Keys of the form `x-<name>` (`x-[a-z][a-z0-9-]*`, any YAML value) are extension 
 (for example `x-model-profile`, `x-git-actions`). devkit validates only their shape, never renders or interprets
 them; they stay readable in the managed copy and in `read_contract(...).extensions`. Any other unknown key is
 rejected.
+
+## 3. Subagent Model Levels
+
+1. **Default inheritance**: WHEN a common contract has no explicit level or project selection, devkit MUST retain
+   authored native model/effort fields; contracts without those fields inherit through the host's native rules.
+   `packages/devkit-dist/tests/integration/features/distribution/test_subagent_contracts.py`.
+2. **Source conflicts**: IF an explicit source `level` is combined with native `model`, `effort` or
+   `model_reasoning_effort` in any host block, THEN validation MUST reject it with `BUNDLE_INVALID`.
+   `packages/devkit-dist/tests/integration/features/distribution/test_subagent_contracts.py`.
+3. **Explicit resolution**: WHEN a level is explicitly selected, devkit MUST replace only model/effort fields
+   with its resolved settings; `inherit` removes both fields. `level` is not emitted as a native field.
+   `packages/devkit-dist/tests/unit/features/distribution/test_subagent_levels.py`.
+4. **Variant boundary**: WHERE a subagent ships native variants, devkit MUST preserve their bytes and skip global
+   level selection; a role-specific override in a selected bundle is `CONFIG_INVALID`, including an excluded asset.
+   Unsupported host blocks still emit no file. `packages/devkit-dist/tests/integration/features/distribution/test_subagent_contracts.py`.
+
+| Subagent model level | Claude Code model / effort | Codex model / effort | Antigravity model |
+| --- | --- | --- | --- |
+| `inherit` | omit / omit | omit / omit | omit |
+| `light` | `haiku` / `low` | `gpt-6-luna` / `low` | `flash` |
+| `standard` | `sonnet` / `medium` | `gpt-6.1-sol` / `medium` | `pro` |
+| `deep` | `opus` / `high` | `gpt-6-astra` / `high` | `pro` |
+
+Antigravity has no supported effort field. Multiple levels may share a native tier. Mappings are resource presets,
+not quality or compute equivalences. Host defaults, provider alias resolution, invocation settings and organization
+policy can override the requested runtime behavior. Omission does not guarantee the parent's exact effort on
+Antigravity. Model/effort inheritance is independent of conversation-history inheritance.
+
+`CAP-DIST-sync-and-transactions` defines shared project overrides, validation and precedence. Delivery
+`activity-effort` remains procedural depth. Bundle plan uses built-in mappings and source levels without reading
+project config. `ADR-subagent-level-projection` records this policy and its native-runtime limitations.

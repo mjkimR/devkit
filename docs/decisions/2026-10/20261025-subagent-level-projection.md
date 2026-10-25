@@ -1,13 +1,14 @@
 ---
-id: PADR-subagent-level-projection
+id: ADR-subagent-level-projection
 title: Resolve subagent levels at distribution time with inherited defaults
 summary: "For reusable roles across three hosts, we resolve opt-in model levels during distribution and inherit by default, to keep role prompts portable, accepting maintained host mappings and native inheritance limits."
-proposal: PROP-subagent-model-levels
-status: draft
+spec: SPEC-subagent-model-levels
+supersedes: ADR-role-effort-presets
+status: accepted
 created_at: 2026-10-25
 ---
 
-# [PADR-subagent-level-projection] Resolve subagent levels at distribution time with inherited defaults
+# [ADR-subagent-level-projection] Resolve subagent levels at distribution time with inherited defaults
 
 ## 1. Context & Problem Statement
 
@@ -34,9 +35,8 @@ replacing prompts. Host defaults and field capabilities differ.
 
 ## 4. Decision Outcome
 
-Propose option 2, subject to plan acceptance. The proposal's settled design and its configuration material
-specify the schema, resolution and diagnostics. Its host mapping material records the exact built-in defaults
-and their official evidence.
+Choose option 2. `CAP-DIST-agent-projections` and `CAP-DIST-sync-and-transactions` define the
+schema, resolution, diagnostics and built-in mappings. Retained host evidence documents native limitations.
 
 - Use `inherit`, `light`, `standard`, `deep`; the default emits no devkit model or effort override.
 - Keep overrides in shared `.devkit/config.toml`; no checkout-local policy or host-global mutations.
@@ -46,8 +46,8 @@ and their official evidence.
   overrides on native variants in selected bundles.
 - All shipped spec roles inherit model and effort. Remove fixed effort and uninterpreted profile metadata.
 - Replace only the role reasoning effort preset and model-selection exclusion portions of
-  `ADR-orchestration-workers`; retain its other worker and orchestration decisions. On promotion, express this
-  limited supersession explicitly rather than marking every decision in that consolidated ADR obsolete.
+  `ADR-orchestration-workers`; its other worker and orchestration decisions remain in force. The supersedes
+  field names its effort-preset alias and applies only to that decision.
 - Delivery `activity-effort` continues selecting procedural depth independently of model policy.
 
 ## 5. Consequences
@@ -60,7 +60,7 @@ Removing reviewer effort pins means expensive parent settings can propagate unti
 
 ## 6. Confirmation
 
-Development adds resolver and sync tests in `packages/devkit-dist/tests/` covering every AC in the proposal.
+Resolver and sync tests live in `packages/devkit-dist/tests/` covering every AC in the proposal.
 `packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py` verifies inherited shipped roles.
 Review compares generated native keys with the recorded host sources and checks limited ADR supersession.
 No live model availability guarantee is made by offline tests.

@@ -1,0 +1,19 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T09:55:17.215537Z'
+status: completed
+summary: 'Independent PASS: all eight targets match AC-01–07, model settings, shared resets/precedence, dormant discovery and role defaults; limited ADR supersession preserves unrelated decisions.'
+findings: []
+assumptions:
+- Emulated reconcile reviewer used read-only worktree access; clean status and unchanged HEAD verified.
+unverified_areas:
+- Native execution, account entitlement, host versions and actual host runtime override resolution were not tested.
+checks:
+  coverage: PASS all eight targets reflected with no waiver
+  contract: PASS mappings resets variants dormant discovery and six role defaults agree
+  entrypoints: PASS exact resolver doorway and existing ownership
+diff_scope:
+  base: 5cf59bdf16e0dca18d466ef831ffd250fd6d8a2c
+  head: 5b5e42053683d32004c7c3dc658c7703f9582f94

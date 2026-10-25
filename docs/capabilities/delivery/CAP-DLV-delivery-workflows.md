@@ -53,9 +53,9 @@ sequence.
   - **Scope Excluded**: a runner. Dispatching stages, the integration queue, the shared-docs write lock, retry caps,
     executing merges and declaring `lint-ci-clean` and `merged` belong to an external runner, or to the executor
     declaring them with `--given` when none exists.
-  - **Scope Excluded**: model selection. The model is the runtime's setting; role contracts preset only a
-    model-independent reasoning effort per role (§4.6, `ADR-orchestration-workers`), independent of `activity-effort`,
-    which sets only how thorough an activity's review and verification are.
+  - **Scope Excluded**: runtime model routing. Distribution owns opt-in subagent model levels and shared project
+    overrides (`CAP-DIST-agent-projections`); `activity-effort` determines review and verification thoroughness.
+
 
 ## 3. Business Rules & Policies
 
@@ -363,28 +363,23 @@ has no envelope key: it lives in `reconcile.md`.
 One Markdown contract per role in devkit's
 `CAP-DIST-agent-projections`:
 `role`, `title`, `description`, an optional `skill` and a `hosts` block for `claude-code`, `codex` and `antigravity`.
-Extension keys devkit does not interpret: `x-execution` (`isolated`), `x-invocation` (`optional`), `x-model-profile`
-(`light-medium`, `general-high`, `high-reasoning`; never a host model name) and `x-git-actions` (`[read]` for every
-role but the two workers, `[read, commit]`).
+Extension keys devkit does not interpret: `x-execution` (`isolated`), `x-invocation` (`optional`) and
+`x-git-actions` (`[read]` for every role but the two workers, `[read, commit]`).
 
-The four read-only roles preset a reasoning effort in their host blocks, with no model name
-(`ADR-orchestration-workers`): `medium` for the `light-medium` profile, `high` for `general-high` and `high-reasoning`,
-as `effort` under `claude-code` and `model_reasoning_effort` under a `codex` block that is not `unsupported`, at
-`low`, `medium` or `high` only. Antigravity has no such key. The two workers set none, whatever their profile, so
-they run at the session's effort like the Host whose work they take over. The preset is independent of
-`activity-effort` and applies only when the projected agent is spawned: a role the main session runs itself uses
-the session's effort. An emulated named-role projection still applies its declared preset; workers declare none. On Claude Code a per-call `effort` or
-`CLAUDE_CODE_EFFORT_LEVEL` overrides the preset; on Codex the preset wins over a spawn value.
-`packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py` pins role, profile and preset for every contract.
+All shipped roles omit model, effort, neutral level and `x-model-profile` settings. They inherit through native
+host defaults unless the project selects a subagent model level in `.devkit/config.toml`.
+`CAP-DIST-agent-projections` defines mappings and native limitations; `ADR-subagent-level-projection` replaces
+the fixed effort-preset decision. No model level changes `activity-effort`, write scope or verification gates.
+`packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py` checks every shipped role.
 
-| Role | Skill | Model profile | Reasoning effort | Writes | Envelope kind |
-| --- | --- | --- | --- | --- | --- |
-| `challenger` | none: the procedure is in the contract | `high-reasoning` | `high` | nothing | `challenger` |
-| `reconcile-reviewer` | `spec-sync` | `light-medium` | `medium` | nothing: verifies the implementer's reconcile at `medium`/`high`, subject to rule 15 | `reconcile-check` |
-| `code-reviewer` | `spec-review` | `general-high` | `high` | nothing: verifies implementation against requirements and checks | `review`, `reverify`, or a message for a session |
-| `scout` | none: the procedure is in the contract | `light-medium` | `medium` | nothing, or the proposal's `materials/` on request | `scout` |
-| `planning-worker` | none: the procedure is in `spec/references/planning.md`, which the contract cites | `general-high` | session | the proposal directory in its `plan-` worktree, committed | `worker` (its own) |
-| `development-worker` | none: the procedure is in the contract | `general-high` | session | the unit's write scope in its `dev-` worktree, committed at every stage boundary | `worker` (its own) and the stage envelopes |
+| Role | Skill | Default model / effort | Writes | Envelope kind |
+| --- | --- | --- | --- | --- |
+| `challenger` | none: procedure in contract | inherit | nothing | `challenger` |
+| `reconcile-reviewer` | `spec-sync` | inherit | nothing: verifies implementer's reconcile at medium/high | `reconcile-check` |
+| `code-reviewer` | `spec-review` | inherit | nothing: verifies implementation against requirements | `review`, `reverify`, or session message |
+| `scout` | none: procedure in contract | inherit | nothing, or proposal materials on request | `scout` |
+| `planning-worker` | planning reference cited by contract | inherit | proposal directory in plan worktree, committed | `worker` |
+| `development-worker` | none: procedure in contract | inherit | unit write scope in dev worktree, committed | `worker` and stage envelopes |
 
 The contract body is the role's prompt and holds only what the role needs: purpose, input fields, return fields,
 write boundaries, failure handling and, for a role whose procedure no main session runs (`challenger`, `scout`, the
@@ -424,7 +419,7 @@ from review and integration without discarding anything until a resolution names
 (`ADR-orchestration-workers`, `ADR-orchestration-workers`). Host statuses: Claude Code
 `native`, Codex `emulated` with `sandbox_mode: workspace-write`, Antigravity `unverified`
 (`ADR-orchestration-workers`). Native Codex spawning does not enforce the worker's role/path boundary;
-Git administration remains shared. Workers inherit model and reasoning effort and set no approval-policy override.
+Git administration remains shared. Workers declare no model, reasoning effort or approval-policy override; project model levels follow distribution policy.
 
 Prefer the projected named role with payload only. An unavailable role can mean projection or session-root
 availability; role absence alone does not prove missing trust. Normal status/sync repairs missing or stale

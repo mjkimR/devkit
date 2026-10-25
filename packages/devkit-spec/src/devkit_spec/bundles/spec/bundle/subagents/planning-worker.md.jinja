@@ -4,7 +4,6 @@ title: Planning worker (one Planning turn of a proposal in its own worktree)
 description: Reviews a proposal on its plan- branch, collects the user's questions in one round, folds the answers into the proposal and its PADRs, writes its own records and commits before it ends.
 x-execution: isolated
 x-invocation: optional
-x-model-profile: general-high
 x-git-actions: [read, commit]
 hosts:
   # The worker shares the session's directory: absolute paths and `git -C`. Agent spawns scout and challenger as

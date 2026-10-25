@@ -4,19 +4,16 @@ title: Scout (librarian and researcher)
 description: Answers one question with evidence from internal code, documents and constraints or external official sources, keeping the search out of the main session.
 x-execution: isolated
 x-invocation: optional
-x-model-profile: light-medium
 x-git-actions: [read]
 hosts:
   # Bash runs the `devkit spec` queries; no Write or Edit, so path limits rest on the caller's diff comparison.
   claude-code:
     status: native
     tools: [Read, Grep, Glob, WebFetch, Bash]
-    effort: medium
   # The sandbox is not a path-level boundary; the caller compares the diff afterwards.
   codex:
     status: emulated
     sandbox_mode: read-only
-    model_reasoning_effort: medium
   antigravity:
     status: native
     tools: [view_file, grep_search, run_command]

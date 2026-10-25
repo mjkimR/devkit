@@ -8,6 +8,7 @@ from pathlib import Path
 
 from devkit_dist.features.distribution.models.content import Content, normal_mode
 from devkit_dist.features.distribution.models.errors import BundleConflictError, BundleError, SelectionError
+from devkit_dist.features.distribution.models.subagents import SubagentPolicy
 from devkit_dist.features.distribution.models.unprojected import Unprojected
 from devkit_dist.features.distribution.services.bundles.fragments import read_fragment, references, render_fragment
 from devkit_dist.features.distribution.services.bundles.guidance import prepend_context
@@ -42,6 +43,7 @@ from devkit_dist.features.distribution.services.installation.overrides import (
     resolve_source,
     track_override,
 )
+from devkit_dist.features.distribution.services.subagents import resolve_settings
 from devkit_dist.features.host import adapter_for, read_hook
 from devkit_dist.features.project.repositories.receipt import (
     MANAGED_PATH,
@@ -149,12 +151,14 @@ class _BundleInventory:
         variables: dict[str, Scalar],
         language: str | None,
         environment: str,
+        subagents: SubagentPolicy,
     ) -> None:
         self.inventory = inventory
         self.bundle = bundle
         self.agents = agents
         self.root = root
         self.environment = environment
+        self.subagents = subagents
         self.variables = resolve_variables(bundle.variables, variables, bundle.name, language=language)
         self.prefix = f"{MANAGED_PATH}/{bundle.name}/"
         self.context_files: set[Path] = set()
@@ -266,6 +270,9 @@ class _BundleInventory:
                         data = prepend_context(data, context, dest)
                     self.inventory.put(dest, Content(data, normal_mode(path.stat().st_mode)))
                 else:
+                    if asset.kind == "subagent" and "common" in dict(asset.sources):
+                        read_from, cited = resolve_source(self.root, self.bundle, rel)
+                        read_contract(read_from.read_bytes(), cited, asset.id)
                     if asset.kind == "skill":
                         read_from, cited = resolve_source(self.root, self.bundle, rel)
                         check_skill_file(
@@ -352,7 +359,8 @@ class _BundleInventory:
             data = render_template(data, self.variables, cited, environment=self.environment)
             cited = self.prefix + output_path(rel)
         contract = read_contract(data, f"{self.bundle.name}/{asset.id}", asset.id)
-        rendered = render_projection(agent, contract, cited)
+        settings = resolve_settings(self.subagents, f"{self.bundle.name}:{asset.id}", contract.level, agent)
+        rendered = render_projection(agent, contract, cited, settings=settings)
         if rendered is None:
             return set()
         dest = projection_path(agent, asset.id)
@@ -388,6 +396,7 @@ def desired_inventory(
     variables: dict[str, dict[str, Scalar]] | None = None,
     language: str | None = None,
     environment: str = "local",
+    subagents: SubagentPolicy | None = None,
 ) -> Inventory:
     """Everything ``installed`` deploys for ``presets`` and ``agents``.
 
@@ -407,7 +416,14 @@ def desired_inventory(
         bundle = item.bundle
         inventory.packages.append(PackageRecord(item.package, item.package_version, bundle.name, bundle.version))
         _BundleInventory(
-            inventory, bundle, agents, root, (variables or {}).get(bundle.name, {}), language, environment
+            inventory,
+            bundle,
+            agents,
+            root,
+            (variables or {}).get(bundle.name, {}),
+            language,
+            environment,
+            subagents or SubagentPolicy(),
         ).add(presets[bundle.name], dict((previous_overrides or {}).get(bundle.name, {})))
     for kind, module in GENERATED_SKILLS.items():
         if not any(asset.kind == kind for asset in inventory.assets):

@@ -1,7 +1,7 @@
 ---
 id: CAP-DIST-sync-and-transactions
 title: "Synchronization & Transactions"
-summary: "Transactional deployment, canonical receipts and restricted checkout-local configuration, including execution-render provenance, presentation-language inheritance and personal rendering evidence."
+summary: "Transactional deployment, canonical receipts, shared subagent model policy and restricted checkout-local configuration, with execution, presentation and personal rendering provenance."
 area: distribution
 status: active
 entrypoints:
@@ -130,7 +130,7 @@ devkit = false                          # opt out of an auto-selected bundle
 ```
 
 - **Top-level keys**: `schema`, `agents`, `presets`, `playbooks`, `rules`, `workflow`, `gates`, `worktree`,
-  `integration`, `guidance_block`, `override_drift`, `bundles`, `tool`, `execution`, `mcp`, `presentation`, `shared`; anything else is `CONFIG_INVALID`. The list is
+  `integration`, `guidance_block`, `override_drift`, `bundles`, `tool`, `execution`, `mcp`, `presentation`, `shared`, `subagents`; anything else is `CONFIG_INVALID`. The list is
   the same whether or not `devkit-agt` is installed, so a configuration reads the same in both installations and
   typos are still caught.
 - **`schema`**: optional; `1` is the only version. `devkit add` writes it when it creates the file.
@@ -153,6 +153,57 @@ devkit = false                          # opt out of an auto-selected bundle
 - **`[tool.<name>]`**: the extension namespace, as in `pyproject.toml`. A tool built on devkit keeps its own policy
   there and reads it itself; devkit only checks that `<name>` matches `[a-z][a-z0-9_-]*` and the value is a table,
   so a mistyped devkit key elsewhere is still an error.
+
+### Shared subagent model policy
+
+`[subagents]` is owned by distribution and controls common subagent contracts only. It is forbidden in
+`.devkit/config.local.toml` (`CONFIG_LOCAL_KEY_FORBIDDEN`). All template keys remain commented, so refreshing
+configuration activates no policy. Source levels and built-in host mappings are in `CAP-DIST-agent-projections`.
+
+```toml
+[subagents]
+default_level = "inherit"                # optional; absence allows each contract's level
+[subagents.levels.deep.codex]
+model = "gpt-6.1-sol"                     # partial override; effort remains high
+effort = "inherit"                       # explicitly omit effort instead
+[subagents.roles."spec:scout"]
+level = "light"
+```
+
+The accepted keys are `default_level`, `levels`, `roles`. Selection precedence is role override, explicitly
+configured project default, source `level`, then implicit inheritance. Explicit `inherit` removes lower-precedence
+model/effort, including authored native fields. Without any neutral selection, explicit native source fields stay.
+`default_level` accepts `inherit`, `light`, `standard`, `deep`; custom levels are invalid.
+
+`levels.<light|standard|deep>.<claude-code|codex|antigravity>` accepts `model` and `effort` strings only. Omission
+retains each built-in field. String `inherit` resets that field to omission; empty strings and null-like values
+are invalid. Model-only overrides retain the built-in effort unless explicitly reset.
+Antigravity model accepts `flash`, `pro`, `inherit` only; Claude Code/Codex accept opaque nonempty native identifiers
+without control characters. Their actual existence and account availability are runtime-owned.
+
+| Host | Allowed effort values, in addition to field reset `inherit` |
+| --- | --- |
+| `claude-code` | `low`, `medium`, `high`, `xhigh`, `max` |
+| `codex` | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
+| `antigravity` | none; omit or reset the field |
+
+Exact Codex identifiers `gpt-6.1-sol` and `gpt-6-astra` reject `none`; `gpt-6-luna` accepts it. Do not infer
+capabilities from custom IDs, prefixes or provider-dependent Claude aliases. Other compatibility checks belong
+to the host. Extending the accepted effort token set requires documented support, a contract change and tests.
+
+`roles` uses bundle-qualified asset keys with a table containing only `level`. Names absent from installed discovery are invalid, including when no role is selected. For a selected bundle, a missing/non-subagent asset or native variant is invalid, even outside the
+selected preset. Installed unselected bundles retain dormant well-formed entries, including discovery load failures;
+selected unusable packages retain their existing package error. common assets excluded by a
+preset also remain dormant. Invalid mapping fields always fail, including unused hosts and levels.
+
+**Policy preflight**: IF shared policy is invalid, THEN distribution MUST raise `CONFIG_INVALID` with an
+`INPUT_ERROR` directive before projection or receipt writes.
+`packages/devkit-dist/tests/integration/features/distribution/test_subagent_contracts.py`.
+Resolved bytes feed existing receipt hashes; no separate model policy receipt schema exists. Dry-run uses the
+same resolution as sync. Status reports desired subagent projection changes through existing `NOT_SYNCHRONIZED`
+errors; `sync --check` remains the general synchronization gate. Repeated sync is idempotent, and returning to
+inheritance removes stale owned model fields without changing foreign files or unrelated configuration.
+After editing shared policy, run `uv run devkit sync`; use `uv run devkit sync --check` to check desired state.
 
 ### Commented Template
 

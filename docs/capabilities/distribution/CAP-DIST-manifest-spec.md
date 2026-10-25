@@ -193,6 +193,10 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
 - **Role contracts**: a `subagent` declared with `source` is a single Markdown file whose frontmatter has `role` equal
   to the asset id, `title`, `description`, a `hosts` table with a block for every supported agent (valid statuses,
   allowlisted keys), and a nonempty body (`CAP-DIST-agent-projections`).
+  Optional top-level `level` selects `inherit`, `light`, `standard` or `deep`. An explicit level conflicts with
+  native model/effort fields in any host block (`BUNDLE_INVALID`). Common and rendered template contracts use the
+  same validation; `CAP-DIST-agent-projections` defines built-in mapping and source inheritance semantics.
+
 - **Workflows**: two `workflow` assets of one bundle may not declare the same header `id`.
 - **Playbook aliases**: across the `playbook` assets of one bundle, no header alias may equal a playbook asset ID of
   the bundle (its own included) or an alias another playbook already declares (`BUNDLE_INVALID`;

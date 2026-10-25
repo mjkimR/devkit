@@ -96,7 +96,8 @@ An unsupported host block continues producing no file, regardless of the level.
 
 Validate role keys against discovered installed bundles: an unknown bundle is invalid; when its bundle is
 selected, a missing/non-subagent asset is invalid. An installed unselected bundle's well-formed role entry is
-retained but dormant. Selected common assets excluded by a preset are also dormant. Malformed mapping fields
+retained but dormant, including installed discovery load failures. Selected unusable bundles retain their
+existing package error. Selected common assets excluded by a preset are also dormant. Malformed mapping fields
 are always invalid even if their level or host is not selected. A role-specific native-variant override is
 invalid for a selected bundle even if its asset is excluded by a preset, avoiding selection-dependent mistakes.
 
