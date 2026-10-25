@@ -2,7 +2,7 @@
 id: PROP-subagent-model-levels
 title: Host-neutral subagent model levels and project overrides
 summary: "Adds opt-in subagent levels that map model families and reasoning effort to Claude Code, Codex and Antigravity, with inheritance by default and project configuration overrides."
-status: draft
+status: reviewing
 created_at: 2026-10-25
 target_area: capabilities/distribution/
 priority: medium

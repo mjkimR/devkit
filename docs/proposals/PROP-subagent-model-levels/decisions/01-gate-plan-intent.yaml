@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: Create the proposal and proceed with Planning for inherited defaults and three-host
+  level mappings with project overrides.
+by: user
+at: '2026-10-25T07:29:56.367164Z'
