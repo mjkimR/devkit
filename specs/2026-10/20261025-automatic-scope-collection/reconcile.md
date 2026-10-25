@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-automatic-scope-collection
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md
     resolution: modified
