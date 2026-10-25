@@ -1,13 +1,13 @@
 ---
-id: PADR-subagent-level-projection
+id: ADR-subagent-level-projection
 title: Resolve subagent levels at distribution time with inherited defaults
 summary: "For reusable roles across three hosts, we resolve opt-in model levels during distribution and inherit by default, to keep role prompts portable, accepting maintained host mappings and native inheritance limits."
-proposal: PROP-subagent-model-levels
-status: draft
+proposal: SPEC-subagent-model-levels
+status: accepted
 created_at: 2026-10-25
 ---
 
-# [PADR-subagent-level-projection] Resolve subagent levels at distribution time with inherited defaults
+# [ADR-subagent-level-projection] Resolve subagent levels at distribution time with inherited defaults
 
 ## 1. Context & Problem Statement
 

@@ -1,37 +1,23 @@
 ---
-id: PROP-subagent-model-levels
+id: SPEC-subagent-model-levels
 title: Host-neutral subagent model levels and project overrides
-summary: "Adds opt-in subagent levels that map model families and reasoning effort to Claude Code, Codex and Antigravity, with inheritance by default and project configuration overrides."
-status: accepted
-created_at: 2026-10-25
-target_area: capabilities/distribution/
-priority: medium
-size: M
-planning_effort: medium
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-dist/src/devkit_dist/features/distribution/
-    - packages/devkit-dist/src/devkit_dist/features/project/
-    - packages/devkit-dist/tests/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
-    - packages/devkit-spec/tests/
-    - docs/capabilities/distribution/
-    - docs/capabilities/delivery/
-    - docs/decisions/
-    - docs/glossary.md
-  excludes:
-    - packages/devkit-core/
-    - packages/devkit-mcp/
-    - packages/devkit-advisory/
-    - packages/devkit-cli/
-task_kind: feature
-workflow: sdd-proposal
+summary: Adds opt-in subagent levels that map model families and reasoning effort to Claude Code, Codex and Antigravity, with inheritance by default and project configuration overrides.
+status: planned
+created: 2026-10-25
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-subagent-model-levels] Host-neutral subagent model levels and project overrides
+# [SPEC-subagent-model-levels] Host-neutral subagent model levels and project overrides
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-subagent-model-levels on 2026-10-25.
+- **Preserved Materials**: `docs/materials/2026-10/20261025-subagent-model-levels`
+
+### 1. Background & Hypothesis
 
 `CAP-DIST-agent-projections` permits host-native model and effort fields in common role contracts.
 The renderer forwards those fields without interpreting a neutral model selection policy. The spec bundle
@@ -45,10 +31,29 @@ role prompts or editing generated files.
 Hypothesis: a level resolver in devkit-dist can support `claude-code`, `codex` and `antigravity` while preserving
 deterministic projection and the existing sync ownership boundary.
 
-## 2. Planning Findings and Decisions
+## 2. User Stories
 
-The proposed direction is specified by `PADR-subagent-level-projection`, with implementation details in
-`materials/configuration-design.md` and official-source evidence in `materials/host-mappings.md`.
+- **US-1**: As a developer/agent, I want to implement Host-neutral subagent model levels and project overrides so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Planning Findings and Decisions
+
+The proposed direction is specified by `ADR-subagent-level-projection`, with implementation details in
+`docs/materials/2026-10/20261025-subagent-model-levels/configuration-design.md` and official-source evidence in `docs/materials/2026-10/20261025-subagent-model-levels/host-mappings.md`.
 
 - Model inheritance means omitting devkit overrides; host defaults, environment and invocation settings can still
   affect runtime selection. Antigravity's omitted effort does not establish exact parent-effort inheritance.
@@ -61,9 +66,9 @@ The proposed direction is specified by `PADR-subagent-level-projection`, with im
 - Offline validation checks schemas and known native effort constraints, not account availability or arbitrary
   model identifiers. Host runtime remains responsible for actual alias resolution and compatibility.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Neutral subagent levels
+#### Neutral subagent levels
 
 Proposed level names and semantics:
 
@@ -79,7 +84,7 @@ Do not inspect and freeze the parent's model at sync time. Host-global subagent 
 change runtime behavior; document those limits instead of promising exact parent values in every environment.
 The level is independent of delivery `activity-effort`, which controls procedure and verification depth.
 
-### Host mappings
+#### Host mappings
 
 Ship a deterministic built-in mapping for every non-inherit level on all three hosts:
 
@@ -105,7 +110,7 @@ These are ascending resource presets, not benchmarked quality equivalences. Clau
 Haiku 5.5 requires Claude Code v2.1.293. Native model availability is not checked by sync.
 The host evidence material records official references and runtime limitations.
 
-### Project overrides
+#### Project overrides
 
 Add a distribution-owned `[subagents]` section in `.devkit/config.toml`:
 
@@ -133,7 +138,7 @@ provider-dependent Claude aliases. See the configuration material for role-key v
 Use bundle-qualified asset identities for role overrides. Validate effective settings before sync writes files.
 Preserve unrelated configuration, role prompts, tools, permissions, isolation and host selection.
 
-### Existing role transition and documentation
+#### Existing role transition and documentation
 
 Remove hard-coded effort presets from shipped spec roles so their default becomes inherited model and effort.
 Do not silently convert old metadata into mandatory non-inherit levels. Replace or remove `x-model-profile` so
@@ -147,7 +152,7 @@ Update source role contracts, configuration examples and role-contract tests tog
 Reconcile `CAP-DIST-agent-projections`, `CAP-DIST-sync-and-transactions`, the affected manifest contract and
 `CAP-DLV-delivery-workflows`. Record replacement of the role-effort decision in an ADR during Development.
 
-### Acceptance checks for Development
+#### Acceptance checks for Development
 
 - **AC-1 — Default inheritance:** Given an unconfigured project and shipped roles, when sync renders each host's
   role files, then no model or effort override is emitted, including for roles that previously pinned effort.
@@ -176,7 +181,7 @@ Scope excluded: runtime subagent launching, task-text model routing, automatic b
 availability discovery, credentials, additional hosts, conversation-history inheritance controls and changes to
 role permissions or delivery verification policy. Host-global model settings remain outside distribution ownership.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning is in review on `plan-subagent-model-levels`. The proposed direction, mappings and schema require
 `plan-accept`; Development requires the separate proposal handoff authorization. No runtime code changes are
@@ -187,3 +192,4 @@ Planning completion evidence is the Scout, Challenger and closing reverify envel
 boundaries, fresh feedback coverage and one worker record for this run. Keep runtime evidence gaps visible.
 Development completes when AC-1 through AC-7 pass, the Living Spec and source bundle agree, and required lint,
 type, affected-test and governance checks pass. Follow `CAP-DLV-proposal-incubation` for acceptance and handoff.
+
