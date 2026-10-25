@@ -626,10 +626,10 @@ def _templates() -> tuple[list[ToolTemplate], list[ToolTemplate], list[AdvisoryE
                         TemplateKey(
                             "roles",
                             tomlkit.inline_table(),
-                            'Bundle-qualified role overrides: {"spec:scout" = {level = "light"}}; common contracts only',
+                            'Bundle-qualified role overrides: {"spec:scout" = {level = "compact"}}; common contracts only',
                         ),
                     ),
-                    help="Shared-only subagent model policy; levels: inherit, light, standard, deep. Antigravity supports model tiers but no effort.",
+                    help="Shared-only subagent model policy; levels: inherit, minimal, compact, standard, deep, maximal. Antigravity supports model tiers but no effort.",
                 ),
             ),
             "devkit-dist",

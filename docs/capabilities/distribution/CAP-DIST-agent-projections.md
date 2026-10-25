@@ -76,7 +76,7 @@ role: reviewer                      # equals the asset id and the projected file
 title: Reviewer
 description: Reviews a change against its specification and returns findings with evidence.
 skill: review                       # optional: the procedure the role executes
-level: deep                         # optional: inherit | light | standard | deep; conflicts with native model/effort
+level: deep                         # optional: inherit | minimal | compact | standard | deep | maximal; conflicts with native model/effort
 hosts:
   claude-code:
     status: native                  # native | emulated | unsupported | unverified
@@ -121,18 +121,27 @@ rejected.
    level selection; a role-specific override in a selected bundle is `CONFIG_INVALID`, including an excluded asset.
    Unsupported host blocks still emit no file. `packages/devkit-dist/tests/integration/features/distribution/test_subagent_contracts.py`.
 
-| Subagent model level | Claude Code model / effort | Codex model / effort | Antigravity model |
+| Subagent model level | Claude Code model / effort | Codex model / effort | Antigravity model / effort |
 | --- | --- | --- | --- |
-| `inherit` | omit / omit | omit / omit | omit |
-| `light` | `haiku` / `low` | `gpt-6-luna` / `low` | `flash` |
-| `standard` | `sonnet` / `medium` | `gpt-6.1-sol` / `medium` | `pro` |
-| `deep` | `opus` / `high` | `gpt-6-astra` / `high` | `pro` |
+| `inherit` | omit / omit | omit / omit | omit / omit |
+| `minimal` | `haiku` / `low` | `gpt-6-luna` / `low` | omit / omit |
+| `compact` | `haiku` / omit | `gpt-6-luna` / omit | `flash` / omit |
+| `standard` | `sonnet` / omit | `gpt-6.1-sol` / omit | omit / omit |
+| `deep` | `opus` / omit | `gpt-6-astra` / omit | omit / omit |
+| `maximal` | `opus` / `high` | `gpt-6-astra` / `high` | omit / omit |
 
-Antigravity has no supported effort field. Multiple levels may share a native tier. Mappings are resource presets,
-not quality or compute equivalences. Host defaults, provider alias resolution, invocation settings and organization
-policy can override the requested runtime behavior. Omission does not guarantee the parent's exact effort on
-Antigravity. Model/effort inheritance is independent of conversation-history inheritance.
+Omitted effort follows native runtime inheritance. The five opt-in names are distinct from native effort tokens;
+`inherit` is the implicit default outside those presets. `light` is invalid rather than an alias.
+
+**Native fallback**: WHEN an Antigravity built-in preset cannot express its intended model/effort pair, devkit
+MUST omit both model and effort without warnings. Only compact selects Flash. No preset substitutes Pro for Argon,
+and no unsupported native effort field is emitted. Explicit project mappings remain subject to strict native
+validation. `packages/devkit-dist/tests/integration/features/distribution/test_subagent_contracts.py`.
+
+Mappings are resource presets, not quality or compute equivalences. Host defaults, provider alias resolution,
+invocation settings and organization policy can override requested runtime behavior. Omission does not guarantee
+the parent's exact effort on Antigravity. Model/effort inheritance is independent of conversation history.
 
 `CAP-DIST-sync-and-transactions` defines shared project overrides, validation and precedence. Delivery
 `activity-effort` remains procedural depth. Bundle plan uses built-in mappings and source levels without reading
-project config. `ADR-subagent-level-projection` records this policy and its native-runtime limitations.
+project config. `ADR-five-subagent-levels` records this policy and its native-runtime limitations.

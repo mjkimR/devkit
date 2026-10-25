@@ -163,21 +163,25 @@ configuration activates no policy. Source levels and built-in host mappings are 
 ```toml
 [subagents]
 default_level = "inherit"                # optional; absence allows each contract's level
-[subagents.levels.deep.codex]
+[subagents.levels.maximal.codex]
 model = "gpt-6.1-sol"                     # partial override; effort remains high
 effort = "inherit"                       # explicitly omit effort instead
 [subagents.roles."spec:scout"]
-level = "light"
+level = "compact"
 ```
 
 The accepted keys are `default_level`, `levels`, `roles`. Selection precedence is role override, explicitly
 configured project default, source `level`, then implicit inheritance. Explicit `inherit` removes lower-precedence
 model/effort, including authored native fields. Without any neutral selection, explicit native source fields stay.
-`default_level` accepts `inherit`, `light`, `standard`, `deep`; custom levels are invalid.
+`default_level` accepts `inherit`, `minimal`, `compact`, `standard`, `deep`, `maximal`; custom levels and the
+removed name `light` are invalid.
 
-`levels.<light|standard|deep>.<claude-code|codex|antigravity>` accepts `model` and `effort` strings only. Omission
+`levels.<minimal|compact|standard|deep|maximal>.<claude-code|codex|antigravity>` accepts `model` and `effort` strings only. Omission
 retains each built-in field. String `inherit` resets that field to omission; empty strings and null-like values
-are invalid. Model-only overrides retain the built-in effort unless explicitly reset.
+are invalid. Model-only overrides retain the built-in effort unless explicitly reset. On Claude Code and Codex,
+compact, standard and deep have no built-in effort override; minimal fixes low and maximal fixes high.
+Antigravity compact selects Flash with no effort override; every other built-in preset inherits both fields.
+This built-in capability fallback does not relax explicit invalid mapping validation.
 Antigravity model accepts `flash`, `pro`, `inherit` only; Claude Code/Codex accept opaque nonempty native identifiers
 without control characters. Their actual existence and account availability are runtime-owned.
 
