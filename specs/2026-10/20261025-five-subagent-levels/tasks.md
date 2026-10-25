@@ -3,12 +3,14 @@ id: TASKS-five-subagent-levels
 spec: SPEC-five-subagent-levels
 plan: PLAN-five-subagent-levels
 ---
-<!-- devkit:skeleton -->
 
-# Task Breakdown: `SPEC-five-subagent-levels` Five neutral subagent levels and compact scout default
+# Task Breakdown: `SPEC-five-subagent-levels`
 
-## Phase 1: Implementation
-- [ ] **Task 1.1**: Core Implementation
-  - **_Boundary**: <target area>
-  - _Requirements: AC-01_
-  - **Verification**: <command that verifies the task>
+- [ ] **Task 1**: Five-level registry, exact native mappings and policy validation with tests.
+  - **_Boundary**: packages/devkit-dist/src/devkit_dist/features/distribution/, packages/devkit-dist/tests/
+  - _Requirements: AC-01, AC-02, AC-04, AC-05, AC-06_
+  - **Verification**: just test dist distribution
+- [ ] **Task 2**: Compact source scout and inherited remaining roles with source/projection checks.
+  - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/, packages/devkit-spec/tests/
+  - _Requirements: AC-03, AC-04_
+  - **Verification**: just test spec bundles
