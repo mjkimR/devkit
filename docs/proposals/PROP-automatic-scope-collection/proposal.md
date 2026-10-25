@@ -120,7 +120,7 @@ leaves worker registrations unchanged. Do not add implicit branch checkout, work
 ### 3.3 Identity, provenance and incomplete coverage
 
 Bind each observed source to exact task identity, ref/commit SHA or worktree path. A matching branch name alone is
-insufficient to merge identities. Deduplicate confirmed copies at the same commit. If local and remote tips diverge,
+insufficient to merge identities. Deduplicate confirmed copies only when commit and effective scope inputs agree (section 3.6). If tips diverge,
 preserve both observations and expose divergence rather than arbitrarily selecting one. Worktree dirty changes
 remain separate evidence even when its HEAD matches a remote ref.
 
@@ -173,12 +173,12 @@ worktrees or unpushed commits. This proposal adds no PR polling, distributed wat
 - **AC-04 — Modes**: Fixtures distinguish snapshots, committed local/remote declarations and live dirty paths.
   Only the requested mode's live inputs are read. Host collection finds qualifying unregistered tasks without
   reading/creating owner tokens. Queries/history/compare stay unchanged.
-- **AC-05 — Identity and refs**: Confirmed same-task/same-SHA copies deduplicate without losing dirty evidence.
+- **AC-05 — Identity and refs**: Confirmed copies with identical effective scope inputs deduplicate without losing dirty evidence. Same-SHA observations with different bases or registration caps remain distinct.
   Divergent refs retain their evidence. Stale lifecycle evidence, ambiguous identity and unknown/moved/deleted bases
   have explicit classifications. Ref declarations come from pinned SHAs, not another checkout.
 - **AC-06 — Coverage**: Inaccessible worktrees, malformed inputs, inventory failures and timeouts produce explicit
   gaps and stable codes. Unaffected evidence remains usable. Results do not certify independence or atomic
-  cross-worktree observation. Budgets are finite and measured before acceptance.
+  cross-worktree observation. Budgets are finite and measured before acceptance. Dense-overlap and oversized-input fixtures enforce result/data limits with explicit incomplete coverage.
 - **AC-07 — Remote boundary**: Separate clones do not share snapshots by default. No-fetch results identify locally
   available refs; fetch success/failure has explicit coverage. Neither mode nor fetch claims another PC's dirty or
   unpushed changes. Reject snapshot-plus-fetch. PR guidance describes only published visibility.
@@ -201,7 +201,20 @@ operations and maintenance commands retain Agent Advisory Protocol error/notice 
 options apply. The total deadline starts before inventory and includes optional fetch, parsing and comparison.
 Each source gets at most the smaller of its source budget and total remaining time. Fetch is a source, never a
 second independent total budget. Check the deadline during parsing and comparison; a long Python loop must yield
-partial evidence rather than defeating the Git subprocess timeout. No retries run within the invocation.
+partial evidence rather than defeating the Git subprocess timeout. No retries run within the invocation. The total budget includes result preparation/encoding; blocking writes to a
+slow output consumer are outside the computation deadline and are not a wall-clock completion guarantee.
+
+Bound retained data as well as CPU time. Accept at most 1 MiB per declaration document and 16 MiB of declaration
+content per invocation. Bound Git command output during reading, rather than buffering unlimited output before a
+size check. The encoded report limit is 8 MiB, including notices and JSON/text framing. Reserve space for coverage
+and summary before collecting evidence. Limit the report to 256 source observations, 10,000 returned pairs and
+10,000 evidence entries in total; stop retaining entries earlier if the byte budget is reached. Check budgets
+incrementally while reading, constructing and encoding the result, not after an unbounded allocation. Preserve
+only complete result entries. Use `result-limit`/`input-limit` reasons, return coverage partial and mark remaining
+sources/comparisons uncomputed. Represent omitted combinations by deterministic pair ordering plus counts and a
+last-completed key, not by an unbounded list of missing pairs. These are fixed initial safety limits, not new
+storage configuration; Development tests each limit and reserved-space behavior. Result-limit notices aggregate
+counts and bounded examples so diagnostics cannot defeat the limit.
 
 `--fetch <remote>` accepts only configured remotes. Fetch only branch refs into that remote's tracking namespace,
 without tags, pruning or submodule recursion. Use noninteractive authentication and bounded subprocesses. Never
@@ -251,8 +264,9 @@ Label this range `branch-relative`: it can include inherited stacked-task change
 from the spec-creation commit. Missing history removes only the unavailable layer, not declarations or dirty paths.
 
 **Observation reconciliation.** Give each source observation its own `observation_id` and `task_key` (nullable).
-For one confirmed task at one SHA, deduplicate committed evidence while retaining all ref aliases and any distinct
-dirty worktree observation. At different SHAs, preserve separate observations and show ancestor/divergent relations;
+For one confirmed task, deduplicate committed evidence only when the pinned tip, selected base SHA, historical
+registration cap, range method and declaration-source identity all agree. Same task/SHA with a different effective
+base or cap remains a separate observation. Retain all aliases and distinct dirty worktree observations. At different SHAs, preserve separate observations and show ancestor/divergent relations;
 never union their declaration lists. For a live worktree, current filesystem declarations supersede its committed
 version; if unreadable, keep the committed version as labelled fallback. Preserve malformed/unreadable-input gaps.
 
@@ -273,7 +287,7 @@ observation IDs, and `[SUMMARY: ... coverage=complete|partial comparisons_comple
 
 Use `SPEC_SCOPE_COLLECTION_PARTIAL` warnings for incomplete inventory, unstable reads, source failures and uncomputed
 comparisons, with structured reasons such as `source-timeout`, `unknown-base`, `identity-ambiguous`, `fetch-failed`,
-`source-unreadable` or `observation-changed`. Keep those reasons and affected IDs in result coverage as well as
+`source-unreadable`, `observation-changed`, `result-limit` or `input-limit`. Keep those reasons and affected IDs in result coverage as well as
 notices. Positive overlap does not change the exit code. A usable result, including a genuinely empty successful
 inventory, exits 0; warning-bearing partial results exit 1 only under `--strict`. If no selected inventory source
 can be read and no usable observation exists, raise `SPEC_SCOPE_COLLECTION_FAILED` and exit 2. Preserve existing
@@ -285,7 +299,7 @@ detection: a change-and-revert or concurrent edit of an unread file can escape i
 
 **Verification limits.** Performance probes establish feasibility, not production latency. Development must validate
 total/source deadline enforcement with deterministic slow-reader, slow-Git and comparison fixtures, including
-partial output before the deadline. The final implementation is not allowed to hide truncated pairs behind a
+partial output preparation before the deadline and bounded retained/encoded evidence. The final implementation is not allowed to hide truncated pairs behind a
 complete status. Source-reader extraction, identity classification and the public output contract require targeted
 integration tests; ordinary overlap semantics and explicit maintenance behavior remain regression checks.
 

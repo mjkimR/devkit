@@ -68,3 +68,19 @@ obligations and agent-facing listings must omit it; do not alter Click's dispatc
 No production source-reader extraction, total-deadline cancellation, fetch/auth integration, permission denial,
 unstable worktree detection or full output-schema test was performed. AC-01–AC-08 require Development fixtures for
 these behaviors. Source analysis, synthetic probes and a Challenger review support a direction decision only.
+
+## Challenger resolution and Host verification
+
+The independent medium-effort Challenger reviewed committed source `4ae2de071c86b99a1db5dc65545aeafe3f3516e2`
+and returned two P2 findings. The Host folded both within the settled direction:
+
+1. Deduplication now requires equivalent tip, selected base, historical cap, range semantics and declaration source.
+   AC-05 retains same-SHA/different-base observations. Dirty layers remain distinct.
+2. Section 3.6 caps declaration bytes, retained observations/pairs/evidence and encoded report size. It reserves
+   summary/coverage space, returns complete entries only, and marks omitted work partial using bounded diagnostics.
+   AC-06 requires dense-overlap and oversized-input fixtures. Result preparation uses the total deadline;
+   blocked stdout consumers are explicitly outside its computation guarantee.
+
+The Host checked the amended contract, acceptance criteria and PADR for agreement. No waiver was taken. Runtime
+verification of these limits remains Development work; the original disjoint benchmark does not prove them.
+The PADR also carries a machine-readable limited `supersedes` link and a metadata-only reciprocal ADR target.
