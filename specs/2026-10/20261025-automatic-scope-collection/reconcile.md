@@ -12,6 +12,12 @@ targets:
     resolution: modified
   - file: docs/decisions/2026-10/20261022-worktrees-branches-and-scope.md
     resolution: modified
+  - file: docs/capabilities/harness/CAP-HARN-command-mount.md
+    resolution: modified
+  - file: docs/capabilities/delivery/CAP-DLV-spec-bundles.md
+    resolution: modified
+  - file: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md
+    resolution: modified
   - file: docs/glossary.md
     resolution: modified
 ---
@@ -48,3 +54,11 @@ Independent code review returned five P2 findings; the Host fixed all with regre
 aliases and history caps, whitespace paths, orphaned helper cleanup, actual text-size bounds and terminal snapshots.
 Targeted collector tests pass 34 cases; the affected suite passed 1478 before the final path-edge fixtures.
 Final cumulative verification is recorded in the final-report envelope.
+
+## Reconcile review corrections
+
+The independent reconcile review found retired proposal body references, obsolete worker-command table rows and a
+missing mounted-command catalog entry. All are corrected. A further cross-reference sweep repaired the two delivery
+capabilities' old automatic-registration warning/recovery claims. These are necessary documentation-only boundary
+extensions for already-approved creation failure isolation; no workflow runtime or new capability is introduced.
+The reciprocal ADR link and all existing storage/ownership/cleanup decisions remain unchanged.

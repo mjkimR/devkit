@@ -80,7 +80,7 @@ spec = "devkit_spec.cli:cli"         # the command group mounted as `devkit spec
 | `devkit spec new` | `CAP-DLV-spec-bundles` |
 | `devkit spec proposal new\|padr\|accept\|handoff\|prune\|check` | `CAP-DLV-proposal-incubation` |
 | `devkit spec policy` | `CAP-DLV-project-policy` |
-| `devkit spec scope compare\|register\|query\|update\|release\|sweep` | `CAP-COLL-work-scope-registry` |
+| `devkit spec scope compare\|collect\|register\|query\|update\|release\|sweep` | `CAP-COLL-work-scope-registry` |
 
 ### 4.3 Shared Options
 

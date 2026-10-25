@@ -46,7 +46,7 @@ records that limited replacement; Development adds the reciprocal metadata witho
 
 ## 4. Decision Outcome
 
-Choose creation snapshots plus explicit Host collection as specified in PROP-automatic-scope-collection.
+Choose creation snapshots plus explicit Host collection as specified in SPEC-automatic-scope-collection.
 
 - Keep automatic creation registration best effort with verbose-only failure diagnostics and unchanged primary
   results, including `--strict`. No replacement worker recovery action is required.
@@ -74,7 +74,7 @@ Choose creation snapshots plus explicit Host collection as specified in PROP-aut
 
 ## 6. Confirmation
 
-Development verifies AC-01–AC-08 in PROP-automatic-scope-collection with scope/delivery integration tests and source
+Development verifies AC-01–AC-08 in SPEC-automatic-scope-collection with scope/delivery integration tests and source
 bundle guidance checks. Tests cover no token/registry writes, pinned-ref inputs, divergent refs, malformed or absent
 inputs, source/total deadlines, comparison truncation, dense-output/input size limits, fetch outcomes and strict/non-strict output. Existing
 ownership, maintenance ACK and post-finish cleanup tests remain regression checks. Planning evidence does not

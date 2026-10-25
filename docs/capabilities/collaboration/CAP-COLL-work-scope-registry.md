@@ -269,7 +269,8 @@ Argument errors (`ARGUMENT_INVALID`): `register`/`update` without `--spec`, `com
 ```
 
 - `[PAIR]` lines are followed by their `[EVIDENCE]` lines; `[DIFF]` carries `in=target-docs|reconcile`.
-- `register` is the only place the owner token is ever printed; `query` records never carry the token hash.
+- Explicit `register` and successful creation registration may print the owner token once; collection and `query`
+  never expose an owner token or its hash.
 - `overlaps` in the ACK is the number of other records this task overlaps. An update that does not apply prints its
   `[SCOPE_ACK: status=failed|stale|timeout ...]`, then its error (`SPEC_SCOPE_TOKEN_MISSING`,
   `SPEC_SCOPE_STALE_REVISION`, `SPEC_SCOPE_TIMEOUT`, ...), exiting 2; JSON carries the ACK and the error under
