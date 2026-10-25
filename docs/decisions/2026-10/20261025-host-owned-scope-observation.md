@@ -1,16 +1,16 @@
 ---
-id: PADR-host-owned-scope-observation
+id: ADR-host-owned-scope-observation
 title: Creation snapshots and host-owned scope observation
 summary: "For parallel work scope evidence, we retain creation snapshots and use explicit host observation, to remove worker publication duties, accepting incomplete remote visibility."
 supersedes: ADR-worktrees-branches-and-scope
-proposal: PROP-automatic-scope-collection
-status: draft
+proposal: SPEC-automatic-scope-collection
+status: accepted
 created_at: 2026-10-25
 ---
 
-# [PADR-host-owned-scope-observation] Creation snapshots and host-owned scope observation
+# [ADR-host-owned-scope-observation] Creation snapshots and host-owned scope observation
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-25
 
 ---
