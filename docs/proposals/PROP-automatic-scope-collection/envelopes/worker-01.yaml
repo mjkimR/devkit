@@ -1,0 +1,20 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-25T02:36:29.927983Z'
+status: completed
+summary: Planning settled Host collection contract with two Scout passes and one Challenger round; two P2 findings resolved; awaiting user plan-accept, no Development handoff
+findings: []
+assumptions:
+- Direct Planning on policy-required plan-automatic-scope-collection worktree; Codex support-role isolation emulated
+unverified_areas:
+- Production collector, cloud backend, fetch/auth and failure-injection checks belong to Development
+checks:
+  tests: PASS 9 affected tests
+  lint: PASS proposal rules and whitespace
+  probe: PASS pinned-ref merged-base stacked assertions and repeated timings
+diff_scope:
+  base: 10269581972a4dce7eddf8ffaf77b8bb3bfc6bfd
+  head: 7c64ace3176115daa5b02524119bfbc4b456a7f8
+activity_effort: medium

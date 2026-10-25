@@ -1,0 +1,27 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-25T02:36:29.449278Z'
+status: completed
+review: challenger-01.yaml
+summary: Host verified equivalent-range deduplication and bounded input/result contract; both P2 findings resolved without waivers
+findings:
+- issue: Same-task/same-SHA deduplication can discard a different committed scope.
+  evidence: proposal.md:240-255 at 4ae2de07; packages/devkit-spec/src/devkit_spec/features/scope/usecases/inputs.py:311-334
+  failure_condition: Local and remote observations share task/tip but have different validated bases or historical registration caps; task/SHA dedup drops scope evidence.
+  suggested_action: Deduplicate only equivalent task, tip, selected base, cap/range semantics and resolved evidence; add same-tip/different-base fixture.
+  resolution: resolved
+  severity: P2
+- issue: The bounded-observation contract leaves result memory and serialization volume unbounded.
+  evidence: proposal.md:198-204,265-272,286-288 at 4ae2de07; packages/devkit-spec/src/devkit_spec/features/scope/services/compare.py:24-37; materials/probe-results.json
+  failure_condition: Dense directory/file overlap accumulates a large evidence graph; sorting/serialization exceeds finite response budget or memory.
+  suggested_action: Define report/data caps and truncation coverage; reserve finalization time; distinguish stdout backpressure; add dense-overlap fixture.
+  resolution: resolved
+  severity: P2
+checks:
+  contracts: PASS proposal AC-05 AC-06 and PADR agree
+  tests: PASS 9 affected tests
+diff_scope:
+  base: 4ae2de071c86b99a1db5dc65545aeafe3f3516e2
+  head: 7c64ace3176115daa5b02524119bfbc4b456a7f8
