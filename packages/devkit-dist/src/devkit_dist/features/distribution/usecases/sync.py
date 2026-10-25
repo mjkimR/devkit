@@ -40,7 +40,11 @@ from devkit_dist.features.distribution.services.installation.config import (
     parse_config,
     read_config,
 )
-from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle, unusable_notices
+from devkit_dist.features.distribution.services.installation.discovery import (
+    InstalledBundle,
+    unusable_bundles,
+    unusable_notices,
+)
 from devkit_dist.features.distribution.services.installation.engines import engine_notices
 from devkit_dist.features.distribution.services.installation.extensions import run_post_sync
 from devkit_dist.features.distribution.services.installation.host_hooks import plan_host_hooks
@@ -339,7 +343,7 @@ def _subagent_policy(
     root: Path, installed: list[InstalledBundle], selection: Selection, *, effective: bool
 ) -> SubagentPolicy:
     policy = read_config(root, effective=effective).subagents
-    validate_role_overrides(policy, installed, set(selection.presets))
+    validate_role_overrides(policy, installed, set(selection.presets), unusable=unusable_bundles(installed))
     return policy
 
 

@@ -435,3 +435,24 @@ def test_preset_excluded_common_is_dormant_but_variant_override_is_invalid(tmp_p
     else:
         with pytest.raises(ConfigError, match="common subagent"):
             sync_project(target, [item])
+
+
+def test_unusable_installed_bundle_keeps_dormant_role_overrides(tmp_path: Path) -> None:
+    from devkit_dist.features.distribution.models.errors import PackageError
+    from devkit_dist.features.distribution.services.installation.discovery import Discovered
+
+    target = tmp_path / "consumer"
+    (target / ".devkit").mkdir(parents=True)
+    config = target / ".devkit/config.toml"
+    config.write_text(
+        'schema=1\nagents=["codex"]\n[presets]\nteam=false\n[subagents.roles."team:reviewer"]\nlevel="deep"\n'
+    )
+    installed = Discovered([], {"team": PackageError("team: unavailable installed content")})
+    result = sync_project(target, installed)
+    assert [notice.code for notice in result.notices] == ["BUNDLE_PACKAGE_INVALID"]
+    assert not (target / ".codex/agents/reviewer.toml").exists()
+    config.write_text(config.read_text().replace("team=false", 'team="all"'))
+    with pytest.raises(PackageError, match="unavailable installed content"):
+        sync_project(target, installed)
+    # One-run deselection is still a valid recovery without deleting the persisted role entry.
+    sync_project(target, installed, deselect=("team",))

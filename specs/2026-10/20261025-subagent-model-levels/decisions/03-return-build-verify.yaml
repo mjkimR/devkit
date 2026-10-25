@@ -1,0 +1,7 @@
+request: return:build-verify
+kind: return
+action: accept
+workflow: sdd-spec-feature
+stage: build-verify
+note: Fix reviewer P1 for installed unusable dormant bundle overrides.
+at: '2026-10-25T09:47:18.198912Z'

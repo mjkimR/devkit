@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 from devkit_dist.base.errors import ConfigError
+from devkit_dist.features.distribution.models.errors import PackageError
 from devkit_dist.features.distribution.models.subagents import HOSTS, LEVELS, ModelSettings, SubagentPolicy
 
 if TYPE_CHECKING:
@@ -117,12 +119,22 @@ def resolve_settings(
     return DEFAULTS[level][host]
 
 
-def validate_role_overrides(policy: SubagentPolicy, installed: list[InstalledBundle], selected: set[str]) -> None:
+def validate_role_overrides(
+    policy: SubagentPolicy,
+    installed: list[InstalledBundle],
+    selected: set[str],
+    *,
+    unusable: Mapping[str, PackageError] | None = None,
+) -> None:
     """Unknown bundles fail; entries in installed unselected bundles stay dormant."""
     bundles = {item.bundle.name: item.bundle for item in installed}
     for identity, _ in policy.roles:
         name, asset_id = identity.split(":")
         context = f"subagents.roles.{identity}"
+        if unusable is not None and name in unusable:
+            if name in selected:
+                raise unusable[name]
+            continue
         if name not in bundles:
             raise _invalid(context, "bundle is not installed; install it or remove its role override")
         if name not in selected:
