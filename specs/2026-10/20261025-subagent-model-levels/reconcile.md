@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-subagent-model-levels
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-agent-projections.md
     resolution: modified
