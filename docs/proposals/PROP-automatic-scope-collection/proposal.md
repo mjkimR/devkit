@@ -2,7 +2,7 @@
 id: PROP-automatic-scope-collection
 title: Creation snapshots and explicit host work scope collection
 summary: "Retains automatic creation snapshots and replaces worker scope updates with explicit host collection from snapshots, branch refs and accessible worktrees. Observation modes expose incomplete coverage and remote visibility limits without mutating worker registrations."
-status: reviewing
+status: accepted
 created_at: 2026-10-25
 target_area: collaboration/
 priority: high
