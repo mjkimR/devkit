@@ -1,50 +1,44 @@
 # Author self-review of PROP-automatic-scope-collection
 
-This is a source-backed review of a Backlog draft, not an independent challenger review or Planning acceptance.
-No runtime implementation or cloud experiment was performed. Findings marked open block direction acceptance;
-folded findings have corresponding design constraints but still require implementation verification.
+This is a source-backed review of a Backlog draft, not independent Planning acceptance. No runtime implementation,
+remote observation experiment or performance measurement was performed. Open findings must be settled in Planning.
 
-## Findings
+## Source evidence and findings
 
-| Finding | Failure condition and source evidence | Disposition |
+Source paths below are relative to `packages/devkit-spec/src/devkit_spec/` unless otherwise stated.
+
+| Finding | Source evidence and failure condition | Disposition |
 | --- | --- | --- |
-| P1: Standalone cloud participation is absent | `features/scope/usecases/flow.py:233-242` skips `auto_register` outside linked worktrees. A cloud checkout with no token cannot refresh through the existing updater. | Open: Q2 requires a concrete eligibility/ownership design and a tokenless standalone test. Local collection does not imply cross-cloud visibility. |
-| P1: Creation snapshots do not prove dispatch readiness | `bundle/skills/spec-orchestrate/SKILL.md.jinja:14` schedules using `scope query`; its prepare/run loop does not establish that a worker has written `tasks.md` and called `next` before the Host dispatches another task. Creation skeletons contain no completed boundaries. | Open: Q1 requires execution traces through first dispatch, continuation, reconciliation and worker acceptance. Do not claim continuous freshness or add a compensating manual update command. |
-| P1: A generic evaluation hook has unintended write effects | `workflow/usecases/operations.py:41-57` exposes evaluation; `:77` evaluates during workflow handoff, and `delivery/usecases/integration.py:228` evaluates during integration readiness. A callback inside `Workspace.evaluate_unit` would mutate state in unrelated callers. | Folded: section 3.1 limits the trigger to the explicit next application operation and AC-03 requires negative call-count tests. The optional extension contract remains Q3. |
-| P1: Existing update can retarget a registration | `features/scope/usecases/flow.py:413-421` constructs an update with the supplied `spec_dir`. Invoking next for another spec must not transfer attribution to it. | Folded: Q5 and AC-04 require same-unit identity validation before mutation and safe automatic handling of mismatches without changing attribution. |
-| P2: Repeated next calls create churn if they reuse update unchanged | `features/scope/usecases/flow.py:400-421` generates a request ID and calls registry update for each non-replayed request; `:433-453` journals outcomes. | Folded: compare semantic inputs first; unchanged scope produces no update revision or journal entry. Performance and the finite budget remain Q4/AC-06. |
-| P2: Silent failure leaves stale or absent evidence | Registry mutations need permissions and locks. A successful primary command does not prove publication; initial registration may also fail. | Accepted tradeoff: no automatic-path notices, result fields or exit-code changes, even under `--strict`. Preserve actual stored timestamps/revisions and expose diagnostics only under `-v`. Scope evidence cannot certify independence. Verify all three triggers under AC-05. |
-| P2: Reusing the explicit updater leaks its failure protocol | The explicit updater returns ACK/errors/notices and journals outcomes. Passing those through creation or next would add agent-facing failure output. | Folded: isolate the automatic path, including provider loading and logging, from the maintenance command's result protocol. Explicit hidden update retains its behavior. AC-05 checks text/JSON and strict/non-strict output. |
-| P2: Failure after publication is not a failed write | A journal append can fail after a scope record was atomically published. Reverting the record or reporting the old timestamp misrepresents committed state. | Folded: retain a published snapshot on journal failure; pre-publication failures preserve the previous snapshot. Do not add failure-journal writes or immediate retries. |
-| P2: Silent first-registration failure can prevent later refresh | A later next call may have no token, or encounter partial registration state. Blindly calling the existing updater cannot recover initial participation. | Open under Q2/Q5: demonstrate safe automatic participation/recovery at the next ordinary eligible call without permission escalation, manual instructions, stealing ownership or retargeting another unit. |
-| P2: Hidden Click command may remain in generated discovery | Click hiding addresses ordinary help only; this review did not demonstrate every generated command discovery path. | Open: AC-07 requires discovery inspection and explicit maintenance invocation tests. Expand boundaries before modifying any additional shared discovery owner. |
-| P2: An accepted decision explicitly retains skill refresh | ADR-worktrees-branches-and-scope, section 4, assigns updates to skills and limits normal registry participation to linked worktrees. | Folded: proposal retirement criteria require a PADR replacing the refresh decision and, if chosen, the linked-only participation decision. Do not rewrite the accepted ADR in place. |
+| Creation registration already exists | `features/delivery/usecases/handoff.py` and `specs.py` call `auto_register`; `features/scope/usecases/flow.py` limits it to linked worktrees. | Retain both paths and linked-worktree eligibility. A base or isolated checkout does not gain registration. |
+| Initial scope is incomplete | `features/scope/usecases/inputs.py:from_spec` marks skeleton tasks unresolved and uses target entrypoints as candidates until code boundaries exist. | Retain initial evidence without claiming completed scope. Host live collection supplies later observable evidence. |
+| Worker guidance publishes scope | Source skills `spec-tasks`, `spec-sync` and `spec-delegate/references/worker.md` require `scope update`. | Remove publication/registration/ACK duties. Hidden maintenance invocation remains available to operators. |
+| Stored query is not live collection | `features/scope/usecases/query.py:QueryScopesUseCase` compares stored records; `--spec` reads only the supplied local declaration. | Provide a distinct explicit Host operation; preserve current query/history/compare meanings. |
+| Inputs are checkout-oriented | `features/scope/usecases/inputs.py:from_spec` reads files through `Path`; `observe_git` observes the execution checkout. | Open Q2: introduce pinned-ref declaration inputs and suitable base semantics without misattributing the Host checkout. |
+| Branch inventory has reusable precedents | `features/policy/repositories/branches.py` enumerates planning refs; `packages/devkit/src/devkit_agt/features/worktree/usecases/stale.py` enumerates local/remote refs. | Open Q1: validate development/activity candidate discovery and lifecycle classification. Do not treat ref existence as proof of active work or import higher application layers. |
+| Registry is not distributed discovery | CAP-COLL-work-scope-registry uses Git common-directory storage and classifies other-host records as unverifiable. | Explicit remote boundary: no automatic snapshot sharing across clones; other-PC dirty/unpushed work stays invisible. |
+| Local and remote sources can disagree | The same named branch can have different tips; worktree dirtiness is independent of HEAD identity. | Open Q3: merge only confirmed identities, preserve divergence and dirty layers, and define source precedence. |
+| Partial observation can resemble independence | Inaccessible paths, shallow history, missing refs and deadlines limit observable scope. | Open Q4: explicit coverage/provenance, stable codes and finite budgets; never translate unknown inputs into zero overlap. |
+| Automatic creation currently asks for repair | `features/scope/usecases/flow.py:auto_register` returns `SPEC_SCOPE_REGISTER_FAILED` with a worker-side registration directive. | Q5/AC-01 require silent best-effort creation failures, verbose diagnostics and no replacement worker recovery duty. Explicit Host/maintenance errors remain visible. |
+| Click hiding alone may not cover discovery | `features/scope/cli/commands.py` exposes `update` and its ACK; generated discovery needs separate inspection. | Open Q5/AC-02: verify ordinary and generated discovery plus direct maintenance invocation. |
+| Accepted refresh decision needs replacement | ADR-worktrees-branches-and-scope assigns updates to skills and retains linked-worktree participation/storage. | Require a PADR replacing only the affected maintenance decision; retain ownership/storage/cleanup. |
 
-## Corrections incorporated before this review record
+## Design consistency review
 
-- Both direct creation and handoff already compose automatic initial registration. See
-  `features/delivery/usecases/specs.py:54-58` and `features/delivery/usecases/handoff.py:53-57`.
-  The proposal treats those as existing paths to retain and test, rather than missing features.
-- The design no longer adds envelope or worker-inspect triggers. Only the three requested CLI operations collect.
-- Query/history/compare stay read-only; the current source checkout is the only collection source.
-- Automatic collection failures at creation, handoff and next are silent by default. This includes `--strict`;
-  primary-operation errors and explicit maintenance commands retain their behavior. Only verbose diagnostics
-  expose collector failures. The primary result never asserts collection freshness.
-- The next ordinary eligible call attempts collection again. There is no immediate retry, agent recovery request
-  or automatic permission escalation. A finite separate deadline bounds the remaining latency cost.
-- OTel, hooks and remote registry transport remain outside the proposal. They do not resolve local trigger timing
-  or ownership by themselves.
+- The proposal has no worker refresh or `workflow next` collection trigger. The harness needs no runtime extension.
+- Standalone registration/recovery and workflow-boundary timing experiments are outside this direction.
+- Host observation is invocation-local and needs no worker token or registry mutation.
+- `snapshot`, `refs` and `worktrees` select observation inputs; fetch is explicit and separate. Snapshot-plus-fetch
+  is rejected. Illustrative CLI spelling remains subject to Planning.
+- Creation failures are silent best effort. Explicit Host partial results and failures retain the advisory contract.
+- Source timestamps, pinned commits, missing layers and divergent refs prevent fallback evidence appearing current.
+- Initial handoff helps only where its snapshot or committed declarations are available to the Host. PR guidance
+  improves published-change visibility without promising private worktree observation.
 
-## Review judgment
+## Review judgment and verification scope
 
-The three-trigger direction is a reviewable hypothesis, not yet a demonstrated sufficient collection schedule.
-Keep the proposal draft. Planning should first test dispatch timing and tokenless standalone ownership, then
-finalize the extension and verify silent failure isolation, including initial registration recovery. If the timing
-trace requires another trigger, bring that scope change back for a direction decision rather than embedding another agent instruction.
+The direction is suitable for Planning as creation snapshots plus explicit Host observation. Remaining acceptance
+blockers are inventory/active-work criteria, ref-based parsing and attribution, evidence reconciliation, output
+contracts, measured budgets and discovery/failure-isolation verification. They do not justify adding worker duties.
 
-## Verification scope
-
-This task validates document governance, intent records and the final diff. Runtime acceptance checks AC-01
-through AC-08 belong to Planning experiments and Development; none are claimed as passed by this document.
-Source paths above are relative to their owning packages: `features/` under `devkit_spec`, `workflow/` under
-`devkit_agt/features`, and `bundle/` under `devkit_spec/bundles/spec`.
+This Backlog edit validates proposal consistency and document governance. AC-01 through AC-08 describe future
+Planning/Development evidence; none are claimed as runtime checks passed by this document.

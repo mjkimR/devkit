@@ -1,13 +1,12 @@
 ---
 id: PROP-automatic-scope-collection-target
-title: Target Living Spec for automatic work scope collection
+title: Target Living Spec for creation snapshots and host scope collection
 status: draft
 proposal: PROP-automatic-scope-collection
 created_at: 2026-10-25
 targets:
   - file: docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md
   - file: docs/usecases/collaboration/UC-run-parallel-work-safely.md
-  - file: docs/capabilities/delivery/CAP-DLV-workflow-orchestration.md
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
 ---
 
@@ -15,37 +14,45 @@ targets:
 
 ## Capability and use case changes
 
-- CAP-COLL-work-scope-registry: define the three automatic triggers, local observation and publication,
-  unchanged-snapshot behavior, ownership, silent bounded failure isolation and the hidden maintenance command.
-  Preserve side-effect-free queries and the limitation on visibility between isolated registries.
-- UC-run-parallel-work-safely: replace manual-update scenarios with creation and workflow-boundary collection.
-  Include timing gaps, cloud standalone identity, ownership mismatch and publication failure scenarios.
-- CAP-DLV-workflow-orchestration: document the explicit `next` operation's optional observation extension,
-  unchanged primary outcomes under collection failure, verbose-only diagnostics and a separate budget.
-  Keep internal evaluation free of observation side effects.
-- CAP-HARN-agent-guidance: remove explicit scope refresh duties from task writing, reconciliation and worker
-  acceptance; describe automatic collection at existing CLI boundaries.
+- CAP-COLL-work-scope-registry: retain automatic creation registration and introduce explicit Host collection.
+  Define `snapshot`, `refs` and `worktrees` observation modes, independent opt-in fetch, inventory selection,
+  ref-based inputs, provenance, identity/deduplication, partial coverage and bounded execution. Collection leaves
+  worker records, tokens, revisions and journals unchanged. Preserve read-only query/history/compare behavior,
+  explicit maintenance semantics and post-finish cleanup. Hide `update` from ordinary discovery.
+- UC-run-parallel-work-safely: replace mandatory worker-update scenarios with initial evidence and explicit Host
+  observation before scheduling decisions. Include unregistered branches, divergent refs, inaccessible worktrees,
+  snapshot-only tasks, partial results and private changes on other machines. Overlap evidence does not grant
+  writes or certify independence.
+- CAP-HARN-agent-guidance: remove worker scope registration/update/ACK obligations from task writing,
+  reconciliation and worker acceptance. Explain Host observation modes and recommend PRs with pushed changes
+  for frequent multi-PC work. Do not add a replacement worker command or workflow trigger.
 
-Automatic registration and refresh failures at all three triggers produce no default output or structured
-failure fields and do not affect exit codes or `--strict`. Preserve primary-operation failures and explicit
-maintenance-command behavior. Retry only on the next ordinary eligible invocation. Document the accepted risk
-of silently stale or absent snapshots, and preserve actual publication timestamps/revisions.
+CAP-DLV-workflow-orchestration requires no collection extension or evaluation side effect. Explicit and internal
+`workflow next` calls remain free of scope collection and publication.
+
+Creation registration failures preserve primary outcomes, including `--strict`, and produce only verbose
+diagnostics without worker recovery duties. Explicit Host collection reports incomplete coverage through stable
+codes and notices; an operation that cannot run raises an advisory error. Explicit maintenance failures keep their
+own error/ACK contract. Preserve actual snapshot publication times and report fresh observation times separately.
 
 ## Decision impact
 
-Planning will create a PADR replacing the skill-maintained refresh decision in
-ADR-worktrees-branches-and-scope and recording the observation side effect of explicit `next` and its silent
-best-effort failure policy. Its linked-worktree-only participation decision also needs replacement if standalone
-registration is selected. Add the exact resulting ADR target when that decision exists; this draft does not pre-approve a change to its storage or ownership contract.
+Planning creates a PADR replacing the skill-maintained refresh decision in ADR-worktrees-branches-and-scope with
+creation snapshots and explicit Host observation. Preserve linked-worktree registration eligibility, Git storage,
+owner tokens and post-finish cleanup. Document silent creation failure handling and the boundary between local
+worktree observation, fetched remote commits and invisible private changes. Add the resulting ADR target when it
+exists; this draft does not approve a change to storage or ownership.
 
 ## Agent assets and command discovery
 
-Change the source spec bundle and regenerate projections through ordinary sync. Keep managed and projected files
-outside manual edits. Hide `scope update` from normal help and generated agent discovery while retaining explicit
-maintenance invocation. Confirm discovery behavior before widening implementation boundaries.
+Change the source spec bundle and regenerate projections through ordinary sync. Do not manually edit managed or
+projected files. Hide `scope update` from ordinary help and generated agent discovery while retaining direct
+maintenance invocation. Inspect discovery before widening implementation ownership. No harness runtime hook is
+part of this design.
 
 ## Before and after
 
-Before: linked-worktree creation registers initial scope; agents explicitly publish later changes.
-After: creation registers initial scope and explicit `workflow next` refreshes the current task automatically.
-Standalone cloud participation remains an acceptance-blocking design question until Q2 is demonstrated.
+Before: creation registers initial linked-worktree scope; workers must publish subsequent changes.
+After: creation retains initial registration; the Host explicitly collects available evidence at the requested
+observation mode. Separate clones do not automatically share registry snapshots. Remote refs and PRs expose only
+published commits, and no mode observes another PC's dirty or unpushed work.
