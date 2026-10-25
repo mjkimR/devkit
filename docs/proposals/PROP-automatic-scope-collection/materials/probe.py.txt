@@ -1,0 +1,125 @@
+"""Run from devkit with uv run python /tmp/scope_collection_scout_probe.py.
+Creates only /tmp fixtures; no production collector or network calls.
+"""
+from __future__ import annotations
+import json
+import platform
+import subprocess
+import tempfile
+import time
+from pathlib import Path
+from statistics import median
+
+from devkit_spec.features.entrypoints import parse_boundaries
+from devkit_spec.features.scope.models.model import Granularity, ScopePath, ScopeSet, Source, Stage
+from devkit_spec.features.scope.services.compare import compare_all
+
+root = Path(tempfile.mkdtemp(prefix='scope-scout-probe-', dir='/tmp'))
+repo = root / 'repo'
+repo.mkdir()
+command_count = 0
+
+def git(*args: str) -> str:
+    global command_count
+    command_count += 1
+    return subprocess.check_output(['git', '-C', str(repo), *args], stderr=subprocess.PIPE).decode()
+
+def write(path: str, text: str) -> None:
+    dest = repo / path
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(text)
+
+def commit(message: str) -> str:
+    git('add', '.')
+    git('commit', '-qm', message)
+    return git('rev-parse', 'HEAD').strip()
+
+git('init', '-q', '-b', 'main')
+git('config', 'user.name', 'Probe')
+git('config', 'user.email', 'probe@example.invalid')
+write('src/base.py', 'base = 1\n')
+base = commit('base')
+refs = []
+for i in range(80):
+    branch = f'dev-probe-{i:02}'
+    git('checkout', '-q', '-b', branch, base)
+    unit = f'specs/2026-10/20261025-probe-{i:02}'
+    write(f'{unit}/spec.md', f'---\nid: SPEC-probe-{i:02}\nstatus: planned\nworkflow: sdd-spec-feature\n---\n')
+    write(f'{unit}/tasks.md', f'## Tasks\n\n- [ ] 1. Change\n  **_Boundary**: `src/task-{i:02}.py`\n')
+    write(f'{unit}/reconcile.md', '---\ntargets: []\n---\n')
+    write(f'src/task-{i:02}.py', f'task = {i}\n')
+    commit(f'task {i}')
+    refs.append(f'refs/heads/{branch}')
+git('checkout', '-q', 'main')
+
+# The minimal pipeline reads exactly the pinned ref, not the host checkout.
+def pipeline(ref: str) -> dict[str, object]:
+    sha = git('rev-parse', f'{ref}^{{commit}}').strip()
+    files = git('ls-tree', '-rz', '--name-only', sha, '--', 'specs').split('\0')
+    anchor = [f for f in files if f.endswith('/spec.md')]
+    assert len(anchor) == 1, anchor
+    unit = anchor[0].rsplit('/', 1)[0]
+    spec = git('show', f'{sha}:{unit}/spec.md')
+    tasks = git('show', f'{sha}:{unit}/tasks.md')
+    reconcile = git('show', f'{sha}:{unit}/reconcile.md')
+    boundaries = [value for task in parse_boundaries(tasks) for value in task.values]
+    bases = git('merge-base', '--all', base, sha).splitlines()
+    assert len(bases) == 1
+    changed = [p for p in git('diff', '--name-only', '--no-renames', '-z', bases[0], sha).split('\0') if p]
+    assert boundaries and boundaries[0] in changed, (boundaries, changed)
+    assert 'workflow: sdd-spec-feature' in spec and 'targets: []' in reconcile
+    return {'sha': sha, 'unit': unit, 'boundaries': boundaries, 'changed': changed}
+
+start = command_count
+samples = []
+for size in (8, 80):
+    repeats = []
+    calls = []
+    for _ in range(3):
+        before = command_count
+        t0 = time.perf_counter()
+        [pipeline(ref) for ref in refs[:size]]
+        repeats.append(time.perf_counter() - t0)
+        calls.append(command_count - before)
+    samples.append({'refs': size, 'seconds': repeats, 'median_seconds': median(repeats), 'git_calls': calls, 'calls_per_ref': calls[0] // size})
+
+# Merge a moving integration base: upstream-only path must not be task scope.
+git('checkout', '-q', 'main')
+write('src/upstream.py', 'upstream = 1\n')
+commit('upstream')
+git('checkout', '-q', 'dev-probe-00')
+git('merge', '-q', '--no-edit', 'main')
+tip = git('rev-parse', 'HEAD').strip()
+fork = git('merge-base', 'main', tip).strip()
+merged_paths = set(git('diff', '--name-only', '--no-renames', '-z', fork, tip).split('\0')) - {''}
+assert 'src/task-00.py' in merged_paths and 'src/upstream.py' not in merged_paths
+
+# Stacked branch relative to main conservatively includes its parent's changes.
+git('checkout', '-q', '-b', 'dev-stack-child')
+write('src/child.py', 'child = 1\n')
+child = commit('child')
+fork = git('merge-base', 'main', child).strip()
+stacked_paths = set(git('diff', '--name-only', '--no-renames', '-z', fork, child).split('\0')) - {''}
+assert {'src/task-00.py', 'src/child.py'} <= stacked_paths
+
+# Ref declaration isolation: dirty local text must not affect a pinned read.
+unit = 'specs/2026-10/20261025-probe-00'
+write(f'{unit}/tasks.md', 'HOST DIRTY TEXT\n')
+pinned_tasks = git('show', f'{tip}:{unit}/tasks.md')
+assert 'HOST DIRTY TEXT' not in pinned_tasks and 'src/task-00.py' in pinned_tasks
+
+compare_samples = []
+for nsets, npaths in ((8, 20), (80, 100)):
+    sets = [ScopeSet(id=f'SPEC-{i}', code=[ScopePath(f'src/task-{i}/file-{j}.py', Granularity.FILE, Source.DECLARED_CODE, Stage.SPEC) for j in range(npaths)]) for i in range(nsets)]
+    repeats = []
+    for _ in range(3):
+        t0 = time.perf_counter()
+        pairs = compare_all(sets)
+        repeats.append(time.perf_counter() - t0)
+        assert len(pairs) == nsets * (nsets - 1) // 2
+        assert not any(pair.overlapping for pair in pairs)
+    compare_samples.append({'sets': nsets, 'paths_per_set': npaths, 'pairs': len(pairs), 'path_pair_checks': len(pairs) * npaths * npaths, 'seconds': repeats, 'median_seconds': median(repeats)})
+
+report = {'fixture': str(root), 'python': platform.python_version(), 'platform': platform.platform(), 'git': git('--version').strip(), 'pipeline': samples, 'compare_all': compare_samples, 'assertions': {'pinned_ref_ignores_dirty_host': True, 'merged_base_excludes_upstream': True, 'stacked_base_relative_diff_includes_parent': True}, 'merged_paths': sorted(merged_paths), 'stacked_paths': sorted(stacked_paths), 'limits': ['Synthetic local repository on /tmp; warm OS caches and tiny objects', 'Pipeline omits filesystem permissions, registry IO, network fetch, symlink traversal and large trees', 'No actual collector implementation or source-reader extraction exercised', 'Disjoint path benchmark exercises exhaustive existing comparison without overlap output allocation', 'No universal latency guarantee; bounded partial results and comparison budgeting still required']}
+(root / 'results.json').write_text(json.dumps(report, indent=2))
+print(json.dumps(report, indent=2))

@@ -1,0 +1,52 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-25T02:33:19.938893Z'
+status: completed
+summary: Source-backed inventory and pinned-reader recommendations; retain registered caps and conservative unregistered attribution
+findings:
+- issue: Preserve every inventory source, not one preferred ref per slug
+  evidence: packages/devkit-spec/src/devkit_spec/features/policy/repositories/branches.py:104-129; packages/devkit/src/devkit_agt/features/worktree/usecases/stale.py:129-150
+  failure_condition: Local and remote activity refs diverge.
+  suggested_action: Inventory full refs and deduplicate only confirmed identities and SHAs.
+  resolution: open
+- issue: Extract pinned-tree discovery below use cases
+  evidence: packages/devkit-spec/src/devkit_spec/features/worker/usecases/inputs.py:48-59,106-130
+  failure_condition: Historical specs, stale markers or carried proposals make unit identity ambiguous.
+  suggested_action: Use scope-owned source reader and exact validated unit identity.
+  resolution: open
+- issue: Activity evidence is separate from physical liveness
+  evidence: packages/devkit-spec/src/devkit_spec/features/delivery/usecases/attach.py:85-94; packages/devkit/src/devkit_agt/features/worktree/usecases/stale.py:197-247
+  failure_condition: Completed anchor remains on a branch or has new dirty changes.
+  suggested_action: Expose lifecycle classifications; keep terminal dirty work visible.
+  resolution: open
+- issue: Replace all filesystem lookups in ref-backed parsing
+  evidence: packages/devkit-spec/src/devkit_spec/features/scope/usecases/inputs.py:71-109,137-157,206-254
+  failure_condition: Target entrypoints or path kinds differ between host and pinned ref.
+  suggested_action: Read all declarations, targets and kinds from the same source.
+  resolution: open
+- issue: Registered range cap is unavailable for unregistered refs
+  evidence: packages/devkit-spec/src/devkit_spec/features/scope/usecases/inputs.py:311-334; tests/integration/features/scope/test_flow.py:235-309
+  failure_condition: Stacked work or base merges are misattributed.
+  suggested_action: Retain registered cap and label unregistered merge-base-to-tip paths branch-relative.
+  resolution: open
+- issue: Upstream tracking peer is not an integration base
+  evidence: packages/devkit-spec/src/devkit_spec/features/worker/usecases/inputs.py:148-156; features/scope/repositories/location.py:121-130
+  failure_condition: Remote branch has no base marker or base checkout changed to another activity.
+  suggested_action: Use explicit deterministic base precedence, pinned SHA and unresolved ambiguity.
+  resolution: open
+- issue: Shallow history cannot mean empty scope
+  evidence: packages/devkit-spec/src/devkit_spec/features/scope/usecases/inputs.py:257-264,314-329
+  failure_condition: Merge base or historical object is missing.
+  suggested_action: Retain other evidence and mark committed layer unavailable without auto-deepening.
+  resolution: open
+assumptions:
+- Codex emulated read-only role; no repository/index/HEAD writes; base snapshot reviewed
+unverified_areas:
+- Runtime implementation and lifecycle vocabulary not exercised by source pass
+checks:
+  sources: PASS source and contract evidence reviewed
+diff_scope:
+  base: 10269581972a4dce7eddf8ffaf77b8bb3bfc6bfd
+  head: 10269581972a4dce7eddf8ffaf77b8bb3bfc6bfd

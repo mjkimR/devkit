@@ -8,6 +8,7 @@ targets:
   - file: docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md
   - file: docs/usecases/collaboration/UC-run-parallel-work-safely.md
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
+  - file: docs/decisions/2026-10/20261022-worktrees-branches-and-scope.md
 ---
 
 # Target Living Spec for PROP-automatic-scope-collection
@@ -52,6 +53,16 @@ Change the source spec bundle and regenerate projections through ordinary sync. 
 projected files. Hide `scope update` from ordinary help and generated agent discovery while retaining direct
 maintenance invocation. Inspect discovery before widening implementation ownership. No harness runtime hook is
 part of this design.
+
+## Settled Planning direction
+
+PADR-host-owned-scope-observation replaces only the skill-refresh portion of ADR-worktrees-branches-and-scope.
+Add the reciprocal `superseded_by` metadata to the prior ADR without changing its decision text.
+The command is `scope collect`, defaulting to `worktrees`, with `snapshot` and `refs` alternatives. Explicit
+`--fetch <remote>` is separate from observation depth. Default budgets are 30 seconds total and 5 seconds per source.
+Preserve per-source observations, conservative unregistered ranges, lifecycle ambiguity and partial comparison
+coverage. Development validates the output contract and runtime bounds defined in the proposal; the synthetic
+Planning measurements are not end-to-end acceptance evidence.
 
 ## Before and after
 
