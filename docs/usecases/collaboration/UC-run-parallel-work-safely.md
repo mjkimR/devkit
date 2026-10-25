@@ -7,6 +7,9 @@ primary_actor: AI coding agent orchestrating parallel tasks
 supporting_actors:
   - Workers or developer sessions running the other tasks in their own worktrees
   - Git (the repository's common directory and its worktrees)
+entrypoints:
+  - packages/devkit-spec/src/devkit_spec/features/scope/cli/commands.py
+  - packages/devkit-spec/src/devkit_spec/features/scope/usecases/collection.py
 status: active
 created_at: 2026-10-13
 capabilities:

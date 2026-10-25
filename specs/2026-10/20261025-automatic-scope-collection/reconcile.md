@@ -33,3 +33,18 @@ Carried Planning materials are historical handoff artifacts, not new runtime con
 FB-cloud-scope-snapshot-sharing retains the cloud-backed repository direction for initial cross-PC snapshots.
 No backend, transport or cross-machine registration eligibility is implemented here. Restart when multi-PC snapshot
 sharing is an implementation requirement; private dirty/unpushed changes remain outside that visibility.
+
+## Entrypoint review
+
+Keep the scope capability's existing feature doorway and the guidance capability's source-bundle doorway. Reject
+error models, tests and broad cross-feature bundle paths as use-case entrypoints. The use case receives only
+`features/scope/cli/commands.py` and `features/scope/usecases/collection.py` beneath devkit-spec. Derivation reported
+these narrower choices as folded beneath a task directory boundary and applied zero; the reviewed document pairs
+were written directly without broadening runtime scope. FB-entrypoint-narrow-selector-folding records that tool gap.
+
+## Verification
+
+Independent code review returned five P2 findings; the Host fixed all with regressions for custom registration
+aliases and history caps, whitespace paths, orphaned helper cleanup, actual text-size bounds and terminal snapshots.
+Targeted collector tests pass 34 cases; the affected suite passed 1478 before the final path-edge fixtures.
+Final cumulative verification is recorded in the final-report envelope.
