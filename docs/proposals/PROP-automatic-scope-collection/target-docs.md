@@ -39,7 +39,10 @@ own error/ACK contract. Preserve actual snapshot publication times and report fr
 
 Planning creates a PADR replacing the skill-maintained refresh decision in ADR-worktrees-branches-and-scope with
 creation snapshots and explicit Host observation. Preserve linked-worktree registration eligibility, Git storage,
-owner tokens and post-finish cleanup. Document silent creation failure handling and the boundary between local
+owner tokens and post-finish cleanup. Record cloud-backed shared registry storage (for example Firestore) as a
+future direction for cross-PC handoff snapshot sharing, conditional on backend configuration, shared identity,
+credentials and publication/ownership contracts. Do not add a cloud adapter or its acceptance checks in this scope.
+Document silent creation failure handling and the boundary between local
 worktree observation, fetched remote commits and invisible private changes. Add the resulting ADR target when it
 exists; this draft does not approve a change to storage or ownership.
 

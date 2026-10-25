@@ -146,6 +146,14 @@ The default registry is shared by linked worktrees in one Git common directory, 
 or machines. Initial handoff evidence helps a Host only when that snapshot, or the initial committed proposal/spec,
 is actually available to it. Do not claim universal visibility from handoff alone.
 
+The intended future direction is to allow a cloud-backed shared registry repository, for example Firestore, so
+initial handoff snapshots published on one PC can be read by a Host on another. This assumes a configured shared
+backend, repository/namespace identity, access credentials and a defined publication/ownership contract. It does
+not follow from the local filesystem adapter. This proposal records the direction only: backend selection,
+cloud adapter implementation and cross-machine registration eligibility are outside its acceptance scope.
+Reconsider cloud support when multi-PC snapshot sharing becomes an implementation requirement. Even with that
+backend, creation snapshots do not reveal subsequent private worktree changes without further publication.
+
 Remote-tracking refs expose only fetched committed content. Another machine's uncommitted, untracked or unpushed
 changes cannot be observed, including after `--fetch`. A registered other-host task without usable refs remains
 snapshot-only or unverifiable. Unknown tasks cannot be discovered from an inaccessible machine.

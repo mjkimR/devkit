@@ -31,6 +31,9 @@ Source paths below are relative to `packages/devkit-spec/src/devkit_spec/` unles
   is rejected. Illustrative CLI spelling remains subject to Planning.
 - Creation failures are silent best effort. Explicit Host partial results and failures retain the advisory contract.
 - Source timestamps, pinned commits, missing layers and divergent refs prevent fallback evidence appearing current.
+- Cross-PC handoff snapshot sharing assumes a future cloud-backed registry repository, such as Firestore, with
+  shared identity, credentials and publication/ownership contracts. This draft records that direction without
+  implementing an adapter or extending registration eligibility. It cannot expose later private changes.
 - Initial handoff helps only where its snapshot or committed declarations are available to the Host. PR guidance
   improves published-change visibility without promising private worktree observation.
 
