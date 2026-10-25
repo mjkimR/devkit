@@ -2,7 +2,7 @@
 id: SPEC-automatic-scope-collection
 title: Creation snapshots and explicit host work scope collection
 summary: "Retains creation snapshots and replaces worker scope publication with bounded explicit host observation of registry, branch and worktree evidence."
-status: planned
+status: in-progress
 created: 2026-10-25
 related_capabilities: [CAP-COLL-work-scope-registry, CAP-HARN-agent-guidance]
 related_usecases: [UC-run-parallel-work-safely]
