@@ -1,195 +1,87 @@
 ---
 id: SPEC-subagent-model-levels
 title: Host-neutral subagent model levels and project overrides
-summary: Adds opt-in subagent levels that map model families and reasoning effort to Claude Code, Codex and Antigravity, with inheritance by default and project configuration overrides.
+summary: "Resolves opt-in subagent model levels for three hosts during distribution, with shared project overrides and inherited defaults."
 status: planned
 created: 2026-10-25
-related_capabilities: []
+related_capabilities: [CAP-DIST-agent-projections, CAP-DIST-sync-and-transactions, CAP-DLV-delivery-workflows]
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-subagent-model-levels] Host-neutral subagent model levels and project overrides
 
 ## 1. Problem Statement & Motivation
 
-Handed off from proposal PROP-subagent-model-levels on 2026-10-25.
-- **Preserved Materials**: `docs/materials/2026-10/20261025-subagent-model-levels`
-
-### 1. Background & Hypothesis
-
-`CAP-DIST-agent-projections` permits host-native model and effort fields in common role contracts.
-The renderer forwards those fields without interpreting a neutral model selection policy. The spec bundle
-assigns effort presets to read-only roles but does not select model families. Its `x-model-profile` values
-are uninterpreted metadata under `CAP-DLV-delivery-workflows`.
-
-The desired default is inheritance from the calling session. An explicit subagent level selects a model family
-and supported effort for the host. Projects override the mapping in `.devkit/config.toml` without replacing
-role prompts or editing generated files.
-
-Hypothesis: a level resolver in devkit-dist can support `claude-code`, `codex` and `antigravity` while preserving
-deterministic projection and the existing sync ownership boundary.
+Subagent role contracts accept native model settings but cannot select portable model levels or project-wide
+mapping overrides. Implement `ADR-subagent-level-projection` and the settled design retained in
+`docs/materials/2026-10/20261025-subagent-model-levels/configuration-design.md`.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Host-neutral subagent model levels and project overrides so that system capabilities are extended.
+- **US-1**: As a bundle author, I select an optional subagent level without duplicating host settings.
+- **US-2**: As a project owner, I override level selection and native mappings without replacing role prompts.
+- **US-3**: As a caller, I receive deterministic offline validation and native projections that inherit by default.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+**Scope Excluded**: Runtime launching, model availability or credential probes, automatic benchmarking, additional
+hosts, checkout-local subagent policy, custom levels, raw per-role model settings, conversation-history controls,
+changes to role permissions, and tying model selection to delivery activity-effort.
 
-## 4. Acceptance Criteria & Behavioral Contracts
+## 4. Acceptance Criteria
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] Inherited shipped defaults and native escape hatch
 
-## 5. Carried Proposal Notes
+- **Given** unconfigured projects and shipped spec roles, or another common contract with explicit native settings.
+- **When** roles are projected for each supported host.
+- **Then** shipped roles emit no model/effort override or x-model-profile; authored native settings remain unchanged
+  unless an explicit project selection replaces them.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] Neutral source levels and built-in host mappings
 
-### 2. Planning Findings and Decisions
+- **Given** a common contract with level inherit, light, standard or deep.
+- **When** rendering each host.
+- **Then** inherit emits neither field; light/standard/deep use Claude haiku/low, sonnet/medium, opus/high;
+  Codex gpt-6-luna/low, gpt-6.1-sol/medium, gpt-6-astra/high; Antigravity flash, pro, pro without effort.
 
-The proposed direction is specified by `ADR-subagent-level-projection`, with implementation details in
-`docs/materials/2026-10/20261025-subagent-model-levels/configuration-design.md` and official-source evidence in `docs/materials/2026-10/20261025-subagent-model-levels/host-mappings.md`.
+### [AC-03] Partial mapping overrides and explicit field reset
 
-- Model inheritance means omitting devkit overrides; host defaults, environment and invocation settings can still
-  affect runtime selection. Antigravity's omitted effort does not establish exact parent-effort inheritance.
-- Use four fixed levels, `inherit`, `light`, `standard`, `deep`, independent of delivery `activity-effort`.
-- Shared project configuration overrides role selection and host mapping fields. No checkout-local policy.
-- Preserve native variants verbatim. Apply global level policy only to common contracts and reject explicit
-  role overrides on native variants in selected bundles.
-- Remove spec role effort pins and `x-model-profile`. Supersede only the relevant portions of
-  `ADR-orchestration-workers`, preserving unrelated orchestration policy.
-- Offline validation checks schemas and known native effort constraints, not account availability or arbitrary
-  model identifiers. Host runtime remains responsible for actual alias resolution and compatibility.
+- **Given** shared subagents.levels mappings with model/effort fields omitted, overridden or set to inherit.
+- **When** a selected level resolves.
+- **Then** omitted fields retain built-ins; inherit omits that field; supplied values replace built-ins. Other
+  levels/hosts remain unchanged. Changing model alone retains default effort subject to exact known constraints.
 
-### 3. Proposed Design & Impact
+### [AC-04] Selection precedence and shared-only configuration
 
-#### Neutral subagent levels
+- **Given** source levels, an optional project default and bundle-qualified role overrides.
+- **When** resolving policy.
+- **Then** role override wins over explicit project default, source level and implicit inheritance, in that order.
+  Explicit inherit clears lower-precedence model and effort. Commented templates activate no defaults.
+  Checkout-local subagents settings fail with CONFIG_LOCAL_KEY_FORBIDDEN.
 
-Proposed level names and semantics:
+### [AC-05] Deterministic invalid-input preflight
 
-| Level | Intent | Projection |
-| --- | --- | --- |
-| `inherit` | Follow native session inheritance; the default | Emit no devkit model or effort override |
-| `light` | Fast, lower-cost bounded tasks | Host lightweight family and supported effort |
-| `standard` | General implementation and analysis | Host general-purpose family and supported effort |
-| `deep` | Difficult reasoning and review | Host selected reasoning family and supported effort |
+- **Given** invalid levels/keys/types, malformed role identities, unknown installed bundles, selected missing roles,
+  conflicting source level/native settings, unsupported tiers/effort or exact known incompatible Codex pairs.
+- **When** validating sources or planning sync.
+- **Then** source errors are BUNDLE_INVALID; project errors are CONFIG_INVALID with INPUT_ERROR before writes.
+  Antigravity model accepts flash/pro/inherit only. Effort accepts Claude low/medium/high/xhigh/max,
+  Codex none/low/medium/high/xhigh/max and field reset inherit; Antigravity accepts reset inherit only.
+  Exact Sol/Astra reject none. Opaque Claude/Codex IDs and provider-dependent aliases are not availability checks.
 
-Omitting the level selects `inherit`. Explicit `inherit` clears lower-precedence devkit model/effort choices.
-Do not inspect and freeze the parent's model at sync time. Host-global subagent defaults or forced settings can
-change runtime behavior; document those limits instead of promising exact parent values in every environment.
-The level is independent of delivery `activity-effort`, which controls procedure and verification depth.
+### [AC-06] Sync lifecycle and receipts
 
-#### Host mappings
+- **Given** mapping changes and repeat sync, dry-run or status calls.
+- **When** computing desired output.
+- **Then** the same policy determines projection bytes and receipt hashes; repeated sync is idempotent; returning
+  to inheritance removes stale owned fields; foreign files and unrelated configuration remain unchanged.
 
-Ship a deterministic built-in mapping for every non-inherit level on all three hosts:
+### [AC-07] Common contracts, variants and dormant entries
 
-| Host | Model field | Effort field |
-| --- | --- | --- |
-| `claude-code` | `model`, using a supported family alias or identifier | `effort` |
-| `codex` | `model`, using a supported identifier or alias | `model_reasoning_effort` |
-| `antigravity` | `model`, using a supported tier | Omit unless a native field is documented and supported |
-
-Multiple levels may map to the same tier when a host offers fewer tiers. Built-in mappings explicitly represent
-unavailable effort. Do not emulate effort through prompt instructions. An explicit project request for an
-unsupported field produces a stable diagnostic instead of being silently discarded.
-Proposed built-in defaults:
-
-| Level | Claude Code | Codex | Antigravity |
-| --- | --- | --- | --- |
-| `inherit` | omit model/effort | omit model/effort | omit model/effort |
-| `light` | `haiku` / `low` | `gpt-6-luna` / `low` | `flash` / no effort |
-| `standard` | `sonnet` / `medium` | `gpt-6.1-sol` / `medium` | `pro` / no effort |
-| `deep` | `opus` / `high` | `gpt-6-astra` / `high` | `pro` / no effort |
-
-These are ascending resource presets, not benchmarked quality equivalences. Claude aliases differ by provider;
-Haiku 5.5 requires Claude Code v2.1.293. Native model availability is not checked by sync.
-The host evidence material records official references and runtime limitations.
-
-#### Project overrides
-
-Add a distribution-owned `[subagents]` section in `.devkit/config.toml`:
-
-```toml
-[subagents]
-default_level = "inherit"
-
-[subagents.levels.deep.codex]
-effort = "high" # Model retains the built-in gpt-6-astra mapping.
-
-[subagents.roles."spec:scout"]
-level = "light"
-```
-
-Selection precedence: project role override, explicitly configured project default, role contract level,
-then implicit `inherit`. Explicit project default `inherit` resets opted-in bundle levels.
-For the selected level, project mapping fields override built-in mapping fields. Define omission and explicit
-reset separately: omission retains the built-in field; string `inherit` removes that field. Empty strings and
-unknown keys fail validation. No custom levels or per-role raw model overrides. On Antigravity only effort
-`inherit` is permitted; any explicit effort value fails validation. The config template comments out every key.
-Antigravity model mappings accept only `flash`, `pro`, `inherit`. Claude Code and Codex retain opaque native
-model identifiers. Effort values are explicitly enumerated in the configuration material; unknown effort strings
-fail preflight. Model-specific restrictions apply only to documented exact Codex identifiers, never to
-provider-dependent Claude aliases. See the configuration material for role-key validation and dormant entries.
-Use bundle-qualified asset identities for role overrides. Validate effective settings before sync writes files.
-Preserve unrelated configuration, role prompts, tools, permissions, isolation and host selection.
-
-#### Existing role transition and documentation
-
-Remove hard-coded effort presets from shipped spec roles so their default becomes inherited model and effort.
-Do not silently convert old metadata into mandatory non-inherit levels. Replace or remove `x-model-profile` so
-there is one actionable selection mechanism. A contract's explicit `level` plus native model/effort is
-`BUNDLE_INVALID`. Without a neutral selection, explicit native fields remain supported. An explicit project
-selection replaces those fields; project `inherit` clears them. A role override on a native variant in a selected
-bundle is `CONFIG_INVALID`; global defaults skip native variants. Invalid shared settings use `CONFIG_INVALID`
-and an `INPUT_ERROR` directive. Local subagent settings use `CONFIG_LOCAL_KEY_FORBIDDEN`.
-Update source role contracts, configuration examples and role-contract tests together.
-
-Reconcile `CAP-DIST-agent-projections`, `CAP-DIST-sync-and-transactions`, the affected manifest contract and
-`CAP-DLV-delivery-workflows`. Record replacement of the role-effort decision in an ADR during Development.
-
-#### Acceptance checks for Development
-
-- **AC-1 — Default inheritance:** Given an unconfigured project and shipped roles, when sync renders each host's
-  role files, then no model or effort override is emitted, including for roles that previously pinned effort.
-  Explicit native fields on other authored contracts remain explicit overrides until a project level replaces them.
-- **AC-2 — Explicit levels:** Given every non-inherit level, when rendered for each host, then native fields equal
-  the documented built-in mapping. Unsupported effort is represented explicitly and no fabricated field is emitted.
-- **AC-3 — Mapping overrides:** Given partial project overrides, when sync runs, then overrides and retained
-  defaults follow documented merge/reset rules. Other levels and hosts remain unaffected.
-- **AC-4 — Selection precedence:** Given contract levels, project defaults and role overrides, when resolved, then
-  documented precedence holds. Explicit `inherit` clears lower-precedence choices. Role keys distinguish bundles.
-  Omission retains mapping fields while field-level `inherit` removes them; commented templates do not opt in.
-- **AC-5 — Invalid settings:** Given unknown levels, malformed mappings, ambiguous declarations or unsupported
-  explicit settings, when validated, then stable codes and deterministic actions identify the problem before
-  projection or receipt writes. Include invalid Antigravity model tiers, unknown effort tokens, exact Codex
-  model/effort restrictions and provider-dependent Claude aliases. Do not probe provider credentials.
-- **AC-6 — Sync lifecycle:** Given mapping changes and repeated sync, when rendering completes, then output and
-  receipt digests reflect effective settings and repeated sync is idempotent. Returning to inheritance removes
-  stale fields while preserving foreign files and unrelated configuration.
-- **AC-7 — Asset forms:** Given common contracts, templated contracts and native variants, when level policy is
-  applied or rejected, then common and templated contracts resolve identically; variants remain verbatim and
-  reject applicable role-specific overrides. Unsupported host blocks still produce no file. Level selection
-  preserves role prompts
-  and permission settings, and remains independent of `activity-effort`.
-
-Scope excluded: runtime subagent launching, task-text model routing, automatic benchmarking, pricing or model
-availability discovery, credentials, additional hosts, conversation-history inheritance controls and changes to
-role permissions or delivery verification policy. Host-global model settings remain outside distribution ownership.
-
-### 4. Lifecycle & Retirement Criteria
-
-Planning is in review on `plan-subagent-model-levels`. The proposed direction, mappings and schema require
-`plan-accept`; Development requires the separate proposal handoff authorization. No runtime code changes are
-part of Planning. Recommended Development effort remains `medium` because the change is reversible and has no
-external schema consumers.
-
-Planning completion evidence is the Scout, Challenger and closing reverify envelopes, validated proposal/PADR
-boundaries, fresh feedback coverage and one worker record for this run. Keep runtime evidence gaps visible.
-Development completes when AC-1 through AC-7 pass, the Living Spec and source bundle agree, and required lint,
-type, affected-test and governance checks pass. Follow `CAP-DLV-proposal-incubation` for acceptance and handoff.
-
+- **Given** ordinary or templated common contracts, native variants, unsupported host blocks and dormant config.
+- **When** building inventory.
+- **Then** common forms resolve identically; unsupported hosts emit no file; variants remain verbatim and ignore
+  global defaults. Role overrides targeting variants in selected bundles fail even outside a preset. Installed
+  unselected bundles and excluded common assets retain dormant role settings; malformed mappings always fail.
+  Bundle plan uses built-in/source policy without project reads; role permissions and prompts are preserved.

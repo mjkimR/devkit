@@ -3,12 +3,18 @@ id: TASKS-subagent-model-levels
 spec: SPEC-subagent-model-levels
 plan: PLAN-subagent-model-levels
 ---
-<!-- devkit:skeleton -->
 
-# Task Breakdown: `SPEC-subagent-model-levels` Host-neutral subagent model levels and project overrides
+# Task Breakdown: `SPEC-subagent-model-levels`
 
-## Phase 1: Implementation
-- [ ] **Task 1.1**: Core Implementation
-  - **_Boundary**: packages/devkit-dist/src/devkit_dist/features/distribution/, packages/devkit-dist/src/devkit_dist/features/project/, packages/devkit-dist/tests/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/, packages/devkit-spec/tests/, docs/capabilities/distribution/, docs/capabilities/delivery/, docs/decisions/, docs/glossary.md
-  - _Requirements: AC-01_
-  - **Verification**: <command that verifies the task>
+- [ ] **Task 1**: Typed policy, validation and native resolution with resolver tests.
+  - **_Boundary**: packages/devkit-dist/src/devkit_dist/features/distribution/, packages/devkit-dist/tests/
+  - _Requirements: AC-02, AC-03, AC-04, AC-05_
+  - **Verification**: just test dist distribution
+- [ ] **Task 2**: Shared config, inventory and sync policy plumbing with integration tests.
+  - **_Boundary**: packages/devkit-dist/src/devkit_dist/features/distribution/, packages/devkit-dist/src/devkit_dist/features/project/, packages/devkit-dist/tests/
+  - _Requirements: AC-01, AC-03, AC-04, AC-05, AC-06, AC-07_
+  - **Verification**: just test dist distribution
+- [ ] **Task 3**: Shipped role inheritance and matching bundle checks.
+  - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/, packages/devkit-spec/tests/
+  - _Requirements: AC-01, AC-07_
+  - **Verification**: just test spec bundles
