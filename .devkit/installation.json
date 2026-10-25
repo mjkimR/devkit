@@ -802,7 +802,7 @@
     },
     ".agents/agents/scout.md": {
       "mode": 420,
-      "sha256": "5d6536f0169b8fe7795ffab02f8539b51a391711de64447b2f60c9adf48a5779"
+      "sha256": "47c69fcc9a793c616427b01595a6a8791188a454ccb753d1d5dcf8db5250db2b"
     },
     ".agents/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
@@ -1018,7 +1018,7 @@
     },
     ".claude/agents/scout.md": {
       "mode": 420,
-      "sha256": "03a7ee801c9bdbf928b217bd7ea0295dc0705abd5b90e763525d96d84d1e0a8b"
+      "sha256": "50799d751b43c6d82b5802261bb4b666d4128ba377487c514db5c766e33365a9"
     },
     ".claude/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
@@ -1222,7 +1222,7 @@
     },
     ".codex/agents/scout.toml": {
       "mode": 420,
-      "sha256": "3c31e353f16cd0f35930cd1d350b2de75d0b3c3376a142b026900867b8bef064"
+      "sha256": "50537a217f20aedbc4fec1e07c4b6c954bc2b2399fc848a311061523cb4ede85"
     },
     ".devkit/managed/_devkit/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
@@ -1786,7 +1786,7 @@
     },
     ".devkit/managed/spec/subagents/scout.md": {
       "mode": 420,
-      "sha256": "2d01feb54df4ecc315beb6d3114e59ac42f8c1b0ccc3553e3e346e91a696b846"
+      "sha256": "cfeea96f0b14de24cc89ce9fcae6ac8924b4444ea7f8d2efc233f9819aa52d8a"
     },
     ".devkit/managed/spec/templates/capability.md": {
       "mode": 420,
