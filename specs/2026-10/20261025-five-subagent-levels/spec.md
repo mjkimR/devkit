@@ -2,7 +2,7 @@
 id: SPEC-five-subagent-levels
 title: Five neutral subagent levels and compact scout default
 summary: "Defines five model-family presets with inherited effort between bounded extremes, preserves default inheritance and selects compact for the SDD scout."
-status: in-progress
+status: completed
 created: 2026-10-25
 related_capabilities:
   - CAP-DIST-agent-projections
