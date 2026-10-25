@@ -181,6 +181,19 @@ worktree, inspects and commits tracked receipt/projection updates, then verifies
 integration approval. Workers report source changes without writing `.devkit/`. After landing, the Host synchronizes
 base-checkout projections and reports failures or unexpected tracked changes for inspection.
 
+### Host scope observation
+
+Task writing, reconciliation and worker acceptance carry no scope publication, registration or ACK obligation.
+Creation retains best-effort automatic linked-worktree registration. Before scheduling or reconstructing parallel
+work, the Host uses `devkit spec scope collect --mode worktrees`; `snapshot` and `refs` select less live evidence.
+Fetch is explicit and separate from observation depth. Partial coverage and unknown attribution inform scheduling
+without granting or refusing writes. Other-PC dirty/unpushed work is invisible; PRs improve published-change
+visibility. Future cloud snapshot sharing is a direction only. `workflow next` has no collection side effect.
+The hidden maintenance `update` is directly callable by an operator but is not a worker step.
+
+The contract is CAP-COLL-work-scope-registry; the rationale is ADR-host-owned-scope-observation. Source assets are
+`spec-tasks`, `spec-sync`, `spec-delegate/references/worker.md` and `spec-orchestrate`.
+
 ### Repository verification policy
 
 `spec-plan`, `spec-review` and `spec-integrate` follow the consuming repository's verification policy. They plan and
