@@ -10,7 +10,8 @@ spec: SPEC-five-subagent-levels
 The user explicitly replaces the preset cardinality/default pairs and all-role inheritance rule from
 `ADR-subagent-level-projection`. A scoped successor decision records the five names and compact scout exception.
 Inherited neutral defaults, shared-only configuration, native variant bytes and layer boundaries remain unchanged.
-Antigravity's pending behavior is not inferred from session-only model/effort flags.
+Antigravity's built-in unavailable combinations inherit as the user selected; session-only model/effort flags
+do not become custom-agent fields.
 
 ## 2. Architecture Overview & Impact
 
@@ -24,13 +25,13 @@ status and dry-run reuse the existing policy path. No migration reader for light
 `LEVELS = (inherit, minimal, compact, standard, deep, maximal)` defines configuration and source validation.
 `resolve_settings` retains its interface and native escape-hatch behavior. Mapping fields remain partial overrides;
 field inherit resets to omission. Source scout gains level compact; other role sources are untouched.
-The Antigravity resolution behavior is finalized after the Host supplies the user's pending decision.
+Antigravity compact resolves to ModelSettings(flash, None); every other built-in preset resolves to empty
+ModelSettings. Explicit project overrides still validate model=flash/pro/inherit and effort=inherit only.
 
 ## 6. Verification & Test Plan
 
 Parametrized unit tests assert exact presets and reset/override behavior. Integration tests parse native files to
 verify omitted effort for inherited presets, explicit low/high bounds, source scout defaults, project resets and
 stable sync lifecycle. Existing strict configuration and native variant regressions remain.
-Run focused tests while only settled mappings change; run just test-affected --base main after the final host
-contract is settled. Run dist/spec lint-check and Pyright, independent code review and separate reconcile review.
+Run focused tests and just test-affected --base main on the complete settled host contract. Run dist/spec lint-check and Pyright, independent code review and separate reconcile review.
 Host owns final sync, tracked deployment artifacts and integration.

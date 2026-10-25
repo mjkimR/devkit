@@ -73,16 +73,21 @@ shipped role that selects a model level.
 - **Then** valid projections have deterministic receipt hashes and repeated sync is idempotent; invalid policy
   fails before file writes, and native variants, dormant selections and unsupported host blocks keep their contracts.
 
-### [AC-06] Honest Antigravity support boundary
-- **Given** the requested Antigravity mappings and the native custom-agent schema
-- **When** an Antigravity projection is planned
-- **Then** compact emits model flash with no effort override, inherit emits no override, and devkit never fabricates
-  an Argon or effort field or silently substitutes a different model family.
+### [AC-06] Native Antigravity inheritance fallback
+- **Given** a built-in preset on Antigravity
+- **When** its native settings are rendered
+- **Then** compact emits model flash with effort omitted; minimal, standard, deep and maximal emit neither model
+  nor effort. The entire unsupported combination inherits, without Argon/Pro substitution, fabricated effort or
+  warning spam. Explicit project mappings retain strict existing native model/effort validation.
 
-## 5. Host Decision Pending
+## 5. Native Capability Evidence and Scope Decision
 
-The native Antigravity custom-agent schema cannot express requested Flash low/high or Argon presets.
-The Host is obtaining the user's selection between explicit rejection of unsupported requested combinations and
-explicitly authorized compatible mappings. AC-06 and the final host mapping table will be completed from that
-selection before dependent implementation, tests, review and completion. Independent Claude/Codex and scout work
-can proceed without choosing the unavailable projection behavior.
+The user selects whole-combination inheritance for built-in Antigravity presets that cannot be expressed natively.
+The official custom-subagent schema and inspected agy 1.4.7 validator accept native tiers rather than Argon/session
+slugs; no role effort field is established. This fallback does not relax invalid explicit project configuration.
+
+- https://www.antigravity.google/docs/subagents/#frontmatter-configuration-yaml
+- https://www.antigravity.google/docs/cli/headless/#select-a-model-effort-or-agent
+
+No provider call or native subagent execution is part of the evidence. User correction settles the scope directly;
+there are no unanswered business questions.
