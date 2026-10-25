@@ -1,0 +1,22 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T09:50:16.109611Z'
+status: completed
+review: review-01.yaml
+summary: 'Self-verified reviewer fix: unusable installed identities remain dormant when unselected; selected entries preserve PackageError. Regression reproduced failure before the fix and passes after.'
+findings:
+- issue: Installed but unusable unselected bundles are treated as uninstalled.
+  evidence: services/subagents.py validates only usable entries, while discovery.Discovered.unusable retains installed failures; contradicts AC-07.
+  failure_condition: An unselected or opted-out installed bundle fails to load and has a persisted role override; sync raises CONFIG_INVALID instead of retaining it dormant and reporting a package warning.
+  suggested_action: Include unusable installed names, preserve PackageError when selected and cover dormant override and deselection recovery.
+  resolution: resolved
+  severity: P1
+checks:
+  tests: PASS 2568 passed 1 skipped mode=partial paths=135
+  regression: PASS failed before fix; dormant opted-out and deselection recovery pass after
+  types: PASS dist Pyright zero errors
+diff_scope:
+  base: d66c3f7332cc2dade99511a1eb522d6fe44c609b
+  head: 1057243835ee58e237bf093dde4d98426316ae18
