@@ -244,3 +244,194 @@ def test_contract_extension_keys_are_kept_but_never_rendered(tmp_path: Path) -> 
     sync_project(target, [item])
     assert "x-model-profile" in (target / ".devkit/managed/team/subagents/reviewer.md").read_text()
     assert "x-model-profile" not in (target / ".claude/agents/reviewer.md").read_text()
+
+
+@pytest.mark.parametrize("level", ["inherit", "light", "standard", "deep"])
+def test_source_level_projects_all_hosts(level: str) -> None:
+    body = CONTRACT.replace("skill: review", f"level: {level}\nskill: review").replace(
+        "  antigravity: unsupported", "  antigravity: native"
+    )
+    contract = read_contract(body.encode(), "x")
+    for host in ("claude-code", "codex", "antigravity"):
+        rendered = render_projection(host, contract, "contract.md")
+        assert rendered is not None
+        data = (
+            tomllib.loads(rendered.decode()) if host == "codex" else yaml.safe_load(rendered.decode().split("---\n")[1])
+        )
+        assert "level" not in data
+        assert ("model" in data) == (level != "inherit")
+        assert "maxTurns" in data if host == "claude-code" else True
+        if host == "antigravity":
+            assert "effort" not in data
+
+
+@pytest.mark.parametrize("native", ["    model: custom\n", "    model_reasoning_effort: high\n"])
+def test_source_level_conflicts_with_native_fields(native: str) -> None:
+    body = CONTRACT.replace("skill: review", "level: inherit\nskill: review").replace(
+        "    sandbox_mode: read-only\n", "    sandbox_mode: read-only\n" + native
+    )
+    with pytest.raises(BundleError, match="conflicts"):
+        read_contract(body.encode(), "x")
+
+
+def test_policy_sync_reset_digests_dry_run_and_foreign_files(tmp_path: Path) -> None:
+    from devkit_dist.features.distribution.usecases.status import get_project_status
+
+    target = tmp_path / "consumer"
+    target.mkdir()
+    item = make_bundle(tmp_path, "team")
+    update_config(target, presets={"team": ["all"]}, agents=["codex"])
+    config = target / ".devkit/config.toml"
+    initial_config = config.read_text()
+    config.write_text(initial_config + '\n[subagents]\ndefault_level = "deep"\n')
+    sync_project(target, [item])
+    projection = target / ".codex/agents/reviewer.toml"
+    deep = projection.read_bytes()
+    assert tomllib.loads(deep.decode())["model"] == "gpt-6-astra"
+    receipt = (target / RECEIPT_PATH).read_bytes()
+    foreign = target / ".codex/agents/foreign.toml"
+    foreign.write_text("foreign")
+    config.write_text(initial_config + '\n[subagents]\ndefault_level = "inherit"\n')
+    dry = sync_project(target, [item], dry_run=True)
+    assert any(action.path == ".codex/agents/reviewer.toml" for action in dry.actions)
+    assert projection.read_bytes() == deep and (target / RECEIPT_PATH).read_bytes() == receipt
+    # Status uses the same preflight; it reports drift without modifying the deployment.
+    assert any(error.code == "NOT_SYNCHRONIZED" for error in get_project_status(target, [item]).errors)
+    sync_project(target, [item])
+    assert "model" not in tomllib.loads(projection.read_text())
+    assert (target / RECEIPT_PATH).read_bytes() != receipt
+    assert foreign.read_text() == "foreign"
+    assert sync_project(target, [item]).actions == []
+    assert config.read_text().startswith(initial_config)
+
+
+@pytest.mark.parametrize(
+    "tail",
+    [
+        '[subagents.roles."missing:reviewer"]\nlevel="deep"\n',
+        '[subagents.roles."team:missing"]\nlevel="deep"\n',
+        '[subagents.levels.deep.antigravity]\nmodel="por"\n',
+    ],
+)
+def test_invalid_policy_leaves_owned_files_unchanged(tmp_path: Path, tail: str) -> None:
+    from devkit_dist.base.errors import ConfigError
+
+    target = tmp_path / "consumer"
+    target.mkdir()
+    item = make_bundle(tmp_path, "team")
+    update_config(target, presets={"team": ["all"]}, agents=["codex"])
+    sync_project(target, [item])
+    before = {p.relative_to(target): p.read_bytes() for p in target.rglob("*") if p.is_file()}
+    config = target / ".devkit/config.toml"
+    config.write_text(config.read_text() + "\n" + tail)
+    before[config.relative_to(target)] = config.read_bytes()
+    with pytest.raises(ConfigError):
+        sync_project(target, [item])
+    assert {p.relative_to(target): p.read_bytes() for p in target.rglob("*") if p.is_file()} == before
+
+
+def test_explicit_project_inherit_clears_native_escape_hatch(tmp_path: Path) -> None:
+    target = tmp_path / "consumer"
+    target.mkdir()
+    body = CONTRACT.replace(
+        "    sandbox_mode: read-only", "    sandbox_mode: read-only\n    model: custom\n    model_reasoning_effort: max"
+    )
+    item = make_bundle(tmp_path, "team", body)
+    update_config(target, presets={"team": ["all"]}, agents=["codex"])
+    sync_project(target, [item])
+    projection = target / ".codex/agents/reviewer.toml"
+    assert tomllib.loads(projection.read_text())["model"] == "custom"
+    config = target / ".devkit/config.toml"
+    config.write_text(config.read_text() + '\n[subagents.roles."team:reviewer"]\nlevel="inherit"\n')
+    sync_project(target, [item])
+    data = tomllib.loads(projection.read_text())
+    assert not {"model", "model_reasoning_effort"} & data.keys()
+    assert data["sandbox_mode"] == "read-only"
+
+
+def test_native_variants_stay_verbatim_and_reject_role_overrides(tmp_path: Path) -> None:
+    from devkit_dist.base.errors import ConfigError
+
+    native = 'name = "reviewer"\ndescription = "Native"\nmodel = "custom"\ndeveloper_instructions = "body"\n'
+    root = tmp_path / "native"
+    root.mkdir()
+    (root / "reviewer.toml").write_text(native)
+    (root / "bundle.toml").write_text(
+        'schema=1\nname="native"\nversion="0.1.0"\n[[assets]]\nid="reviewer"\nkind="subagent"\n[assets.variants]\ncodex="reviewer.toml"\n'
+    )
+    item = InstalledBundle("native", "0.1.0", load_bundle(root))
+    target = tmp_path / "consumer"
+    target.mkdir()
+    update_config(target, presets={"native": ["all"]}, agents=["codex"])
+    config = target / ".devkit/config.toml"
+    config.write_text(config.read_text() + '\n[subagents]\ndefault_level="deep"\n')
+    sync_project(target, [item])
+    assert (target / ".codex/agents/reviewer.toml").read_text() == native
+    config.write_text(config.read_text() + '\n[subagents.roles."native:reviewer"]\nlevel="inherit"\n')
+    with pytest.raises(ConfigError, match="common subagent"):
+        sync_project(target, [item])
+
+
+def test_installed_unselected_role_override_is_dormant(tmp_path: Path) -> None:
+    item = make_bundle(tmp_path, "team")
+    target = tmp_path / "consumer"
+    target.mkdir()
+    update_config(target, presets={"team": ["all"]}, agents=["codex"])
+    config = target / ".devkit/config.toml"
+    config.write_text(
+        'schema=1\nagents=["codex"]\n[presets]\nteam=false\n[subagents.roles."team:missing"]\nlevel="deep"\n'
+    )
+    sync_project(target, [item])
+    assert not (target / ".codex/agents/reviewer.toml").exists()
+
+
+def test_templated_source_level_and_bundle_plan(tmp_path: Path) -> None:
+    from devkit_dist.features.distribution.services.installation.plan import plan_bundle
+
+    item = make_bundle(tmp_path, "team", CONTRACT.replace("skill: review", "level: deep\nskill: review"))
+    source = item.bundle.root / "subagents/reviewer.md"
+    source.rename(source.with_suffix(".md.jinja"))
+    manifest = item.bundle.root / "bundle.toml"
+    manifest.write_text(manifest.read_text().replace("reviewer.md", "reviewer.md.jinja"))
+    item = InstalledBundle("team-content", "0.1.0", load_bundle(item.bundle.root))
+    target = tmp_path / "consumer"
+    target.mkdir()
+    update_config(target, presets={"team": ["all"]}, agents=["codex"])
+    sync_project(target, [item])
+    projection = target / ".codex/agents/reviewer.toml"
+    data = tomllib.loads(projection.read_text())
+    assert data["model"] == "gpt-6-astra" and data["model_reasoning_effort"] == "high"
+    planned = plan_bundle(item.bundle, agents=["codex"])
+    assert (
+        next(file.sha256 for file in planned.files if file.destination == ".codex/agents/reviewer.toml")
+        == json.loads((target / RECEIPT_PATH).read_text())["files"][".codex/agents/reviewer.toml"]["sha256"]
+    )
+
+
+@pytest.mark.parametrize("common", [True, False])
+def test_preset_excluded_common_is_dormant_but_variant_override_is_invalid(tmp_path: Path, common: bool) -> None:
+    from devkit_dist.base.errors import ConfigError
+
+    item = make_bundle(tmp_path, "team")
+    root = item.bundle.root
+    manifest = root / "bundle.toml"
+    text = manifest.read_text()
+    if not common:
+        (root / "native.toml").write_text('name="reviewer"\ndescription="native"\ndeveloper_instructions="body"\n')
+        text = text.replace('source = "subagents/reviewer.md"', '[assets.variants]\ncodex="native.toml"')
+    (root / "note.md").write_text("Retained document")
+    manifest.write_text(
+        text + '\n[[assets]]\nid="note"\nkind="document"\nsource="note.md"\n[presets.empty]\nassets=["note"]\n'
+    )
+    item = InstalledBundle("team-content", "0.1.0", load_bundle(root))
+    target = tmp_path / "consumer"
+    target.mkdir()
+    update_config(target, presets={"team": ["empty"]}, agents=["codex"])
+    config = target / ".devkit/config.toml"
+    config.write_text(config.read_text() + '\n[subagents.roles."team:reviewer"]\nlevel="deep"\n')
+    if common:
+        sync_project(target, [item])
+        assert not (target / ".codex/agents/reviewer.toml").exists()
+    else:
+        with pytest.raises(ConfigError, match="common subagent"):
+            sync_project(target, [item])

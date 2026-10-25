@@ -53,6 +53,7 @@ from devkit_dist.features.distribution.usecases.sync import (
     edited_files_error,
     guidance_block_error,
     planned_guidance_block,
+    planned_subagent_changes,
     read_deployed,
     require_project_dir,
     tool_identity,
@@ -399,6 +400,19 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
                     exit_code=ExitCode.FINDINGS,
                 )
             )
+        if receipt is not None and not packages:
+            try:
+                changed_roles = planned_subagent_changes(root, installed, config, receipt)
+                if changed_roles:
+                    packages.append(
+                        NotSynchronizedError(
+                            "subagent projections differ from the desired model policy; run devkit sync",
+                            target_files=changed_roles,
+                            exit_code=ExitCode.FINDINGS,
+                        )
+                    )
+            except AdvisoryError as exc:
+                packages.append(exc)
         host_hooks: list[dict[str, Any]] = []
         host_errors: list[AdvisoryError] = []
         for host in sorted({record.host for record in receipt.host_hooks} if receipt else set()):

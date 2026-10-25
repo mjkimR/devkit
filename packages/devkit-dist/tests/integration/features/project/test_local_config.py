@@ -41,6 +41,7 @@ def test_effective_provenance_and_explicit_execution_root(tmp_path: Path) -> Non
         ("[rules]\nx=false", "CONFIG_LOCAL_KEY_FORBIDDEN"),
         ("[workflow]\nx=false", "CONFIG_LOCAL_KEY_FORBIDDEN"),
         ("agents=[]", "CONFIG_LOCAL_KEY_FORBIDDEN"),
+        ('[subagents]\ndefault_level="deep"', "CONFIG_LOCAL_KEY_FORBIDDEN"),
         ('[bundles.style]\npreset="all"', "CONFIG_LOCAL_KEY_FORBIDDEN"),
         ("schema=2", "CONFIG_INVALID"),
         ("schema=true", "CONFIG_INVALID"),

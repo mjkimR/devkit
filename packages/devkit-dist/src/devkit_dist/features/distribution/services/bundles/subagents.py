@@ -12,12 +12,14 @@ with ``status: unsupported`` gets no file. The body is the role's prompt.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
 from devkit_dist.features.distribution.models.errors import BundleError
+from devkit_dist.features.distribution.models.subagents import LEVELS, ModelSettings, SubagentPolicy
 from devkit_dist.features.distribution.services.bundles.common import EXTENSION_KEY, SLUG, read_frontmatter
+from devkit_dist.features.distribution.services.subagents import resolve_settings
 
 STATUSES = ("native", "emulated", "unsupported", "unverified")
 ALLOWED_KEYS: dict[str, tuple[str, ...]] = {
@@ -41,7 +43,7 @@ ALLOWED_KEYS: dict[str, tuple[str, ...]] = {
 HOST_FILES = {"claude-code": ".md", "codex": ".toml", "antigravity": ".md"}
 # Frontmatter every Antigravity subagent file carries in addition to the contract's keys.
 ANTIGRAVITY_FIXED: tuple[tuple[str, Any], ...] = (("subagent", True), ("mainAgent", False))
-FIELDS = {"role", "title", "description", "skill", "hosts"}
+FIELDS = {"role", "title", "description", "skill", "hosts", "level"}
 
 
 @dataclass(frozen=True)
@@ -60,6 +62,7 @@ class Contract:
     body: str
     # ``x-*`` frontmatter keys in document order, verbatim; devkit does not interpret them.
     extensions: tuple[tuple[str, Any], ...] = ()
+    level: str | None = None
 
 
 def subagent_entry(root: Path, source: str) -> Path:
@@ -131,9 +134,17 @@ def read_contract(data: bytes, context: str, asset_id: str | None = None) -> Con
             f"{context}: hosts must name every agent; missing {missing}",
             fix="Add a hosts block for each missing agent; `status: unsupported` gives a host no file",
         )
+    level = metadata.get("level")
+    if "level" in metadata:
+        if not isinstance(level, str) or level not in LEVELS:
+            raise BundleError(f"{context}: level must be one of {list(LEVELS)}")
+        if any(
+            key in {"model", "effort", "model_reasoning_effort"} for host in hosts.values() for key, _ in host.settings
+        ):
+            raise BundleError(f"{context}: level conflicts with native model/effort; choose one source mechanism")
     if not body.strip():
         raise BundleError(f"{context}: subagent contract body (the prompt) is empty")
-    return Contract(role, title.strip(), description.strip(), skill, hosts, body, extensions)
+    return Contract(role, title.strip(), description.strip(), skill, hosts, body, extensions, level)
 
 
 SUBAGENT_DIRS = {"claude-code": ".claude/agents", "codex": ".codex/agents", "antigravity": ".agents/agents"}
@@ -143,7 +154,13 @@ def projection_path(agent: str, role: str) -> str:
     return f"{SUBAGENT_DIRS[agent]}/{role}{HOST_FILES[agent]}"
 
 
-def render_projection(agent: str, contract: Contract, contract_path: str) -> bytes | None:
+def render_projection(
+    agent: str,
+    contract: Contract,
+    contract_path: str,
+    *,
+    settings: ModelSettings | None = None,
+) -> bytes | None:
     """Projection bytes for ``agent``; ``None`` when the host is unsupported for this role.
 
     ``contract_path`` is the workspace-relative location of the contract, cited in the prompt.
@@ -153,6 +170,17 @@ def render_projection(agent: str, contract: Contract, contract_path: str) -> byt
         raise BundleError(f"{contract.role}: contract declares no projection for {agent}")
     if block.status == "unsupported":
         return None
+    if settings is None:
+        settings = resolve_settings(SubagentPolicy(), contract.role, contract.level, agent)
+    if settings is not None:
+        native = [
+            (key, value) for key, value in block.settings if key not in {"model", "effort", "model_reasoning_effort"}
+        ]
+        if settings.model is not None:
+            native.append(("model", settings.model))
+        if settings.effort is not None:
+            native.append(("model_reasoning_effort" if agent == "codex" else "effort", settings.effort))
+        block = replace(block, settings=tuple(native))
     description = f"{contract.title}. {contract.description}"
     header = [f"Role contract: `{contract_path}`.", f"Host projection: {block.status}."]
     if contract.skill:

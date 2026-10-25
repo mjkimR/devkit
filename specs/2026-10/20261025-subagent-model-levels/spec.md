@@ -2,7 +2,7 @@
 id: SPEC-subagent-model-levels
 title: Host-neutral subagent model levels and project overrides
 summary: "Resolves opt-in subagent model levels for three hosts during distribution, with shared project overrides and inherited defaults."
-status: planned
+status: in-progress
 created: 2026-10-25
 related_capabilities: [CAP-DIST-agent-projections, CAP-DIST-sync-and-transactions, CAP-DLV-delivery-workflows]
 related_usecases: []

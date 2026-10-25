@@ -4,7 +4,6 @@ title: Development worker (one Development turn of a spec unit in its own worktr
 description: Runs a spec unit's Development from the stage devkit workflow next names to the final change report, writes its own records, commits at every stage boundary and ends with a committed result or a recorded problem.
 x-execution: isolated
 x-invocation: optional
-x-model-profile: general-high
 x-git-actions: [read, commit]
 hosts:
   # The worker shares the session's directory: absolute paths and `git -C`, guaranteed by the caller's check of the
