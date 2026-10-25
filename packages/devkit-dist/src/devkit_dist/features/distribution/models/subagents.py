@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-LEVELS = ("inherit", "light", "standard", "deep")
+LEVELS = ("inherit", "minimal", "compact", "standard", "deep", "maximal")
 HOSTS = ("claude-code", "codex", "antigravity")
 
 

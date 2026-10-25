@@ -366,18 +366,19 @@ One Markdown contract per role in devkit's
 Extension keys devkit does not interpret: `x-execution` (`isolated`), `x-invocation` (`optional`) and
 `x-git-actions` (`[read]` for every role but the two workers, `[read, commit]`).
 
-All shipped roles omit model, effort, neutral level and `x-model-profile` settings. They inherit through native
-host defaults unless the project selects a subagent model level in `.devkit/config.toml`.
-`CAP-DIST-agent-projections` defines mappings and native limitations; `ADR-subagent-level-projection` replaces
-the fixed effort-preset decision. No model level changes `activity-effort`, write scope or verification gates.
+The source scout contract selects `level: compact`; it requests Haiku, Luna or Flash with effort omitted.
+All other shipped roles omit neutral level, model, effort and `x-model-profile` settings and inherit through
+native host defaults. Projects can override or reset scout's level in `.devkit/config.toml`.
+`CAP-DIST-agent-projections` defines mappings and native limitations; `ADR-five-subagent-levels` defines the scout
+exception and five presets. No model level changes `activity-effort`, write scope or verification gates.
 `packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py` checks every shipped role.
 
-| Role | Skill | Default model / effort | Writes | Envelope kind |
+| Role | Skill | Default model level / effort | Writes | Envelope kind |
 | --- | --- | --- | --- | --- |
 | `challenger` | none: procedure in contract | inherit | nothing | `challenger` |
 | `reconcile-reviewer` | `spec-sync` | inherit | nothing: verifies implementer's reconcile at medium/high | `reconcile-check` |
 | `code-reviewer` | `spec-review` | inherit | nothing: verifies implementation against requirements | `review`, `reverify`, or session message |
-| `scout` | none: procedure in contract | inherit | nothing, or proposal materials on request | `scout` |
+| `scout` | none: procedure in contract | compact / inherited | nothing, or proposal materials on request | `scout` |
 | `planning-worker` | planning reference cited by contract | inherit | proposal directory in plan worktree, committed | `worker` |
 | `development-worker` | none: procedure in contract | inherit | unit write scope in dev worktree, committed | `worker` and stage envelopes |
 

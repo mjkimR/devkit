@@ -78,6 +78,7 @@ def test_read_contract() -> None:
         (("role: reviewer", "role: other"), "must equal the asset id"),
         (("title: Reviewer", "title: ''"), "title is required"),
         (("skill: review", "skill: Bad Skill"), "skill must be a lowercase slug"),
+        (("skill: review", "level: light\nskill: review"), "level must be one of"),
         (("  codex:", "  gemini:"), "unknown host"),
         (("status: native", "status: maybe"), "status must be one of"),
         (("    tools: [Read, Grep, Glob]", "    rocket: true"), "not allowed"),
@@ -246,7 +247,7 @@ def test_contract_extension_keys_are_kept_but_never_rendered(tmp_path: Path) -> 
     assert "x-model-profile" not in (target / ".claude/agents/reviewer.md").read_text()
 
 
-@pytest.mark.parametrize("level", ["inherit", "light", "standard", "deep"])
+@pytest.mark.parametrize("level", ["inherit", "minimal", "compact", "standard", "deep", "maximal"])
 def test_source_level_projects_all_hosts(level: str) -> None:
     body = CONTRACT.replace("skill: review", f"level: {level}\nskill: review").replace(
         "  antigravity: unsupported", "  antigravity: native"
@@ -259,7 +260,9 @@ def test_source_level_projects_all_hosts(level: str) -> None:
             tomllib.loads(rendered.decode()) if host == "codex" else yaml.safe_load(rendered.decode().split("---\n")[1])
         )
         assert "level" not in data
-        assert ("model" in data) == (level != "inherit")
+        assert ("model" in data) == (level != "inherit" and (host != "antigravity" or level == "compact"))
+        effort_key = "model_reasoning_effort" if host == "codex" else "effort"
+        assert (effort_key in data) == (host != "antigravity" and level in {"minimal", "maximal"})
         assert "maxTurns" in data if host == "claude-code" else True
         if host == "antigravity":
             assert "effort" not in data
@@ -388,7 +391,7 @@ def test_installed_unselected_role_override_is_dormant(tmp_path: Path) -> None:
 def test_templated_source_level_and_bundle_plan(tmp_path: Path) -> None:
     from devkit_dist.features.distribution.services.installation.plan import plan_bundle
 
-    item = make_bundle(tmp_path, "team", CONTRACT.replace("skill: review", "level: deep\nskill: review"))
+    item = make_bundle(tmp_path, "team", CONTRACT.replace("skill: review", "level: maximal\nskill: review"))
     source = item.bundle.root / "subagents/reviewer.md"
     source.rename(source.with_suffix(".md.jinja"))
     manifest = item.bundle.root / "bundle.toml"
@@ -456,3 +459,65 @@ def test_unusable_installed_bundle_keeps_dormant_role_overrides(tmp_path: Path) 
         sync_project(target, installed)
     # One-run deselection is still a valid recovery without deleting the persisted role entry.
     sync_project(target, installed, deselect=("team",))
+
+
+@pytest.mark.parametrize("level", ["minimal", "standard", "deep", "maximal"])
+def test_antigravity_fallback_clears_authored_fields_without_notices(tmp_path: Path, level: str) -> None:
+    body = CONTRACT.replace("  antigravity: unsupported", "  antigravity:\n    status: native\n    model: flash")
+    item = make_bundle(tmp_path, "team", body)
+    target = tmp_path / "consumer"
+    target.mkdir()
+    update_config(target, presets={"team": ["all"]}, agents=["antigravity"])
+    config = target / ".devkit/config.toml"
+    config.write_text(config.read_text() + f'\n[subagents]\ndefault_level="{level}"\n')
+    result = sync_project(target, [item])
+    assert result.notices == []
+    projection = target / ".agents/agents/reviewer.md"
+    metadata = yaml.safe_load(projection.read_text().split("---\n")[1])
+    assert not {"model", "effort"} & metadata.keys()
+    assert sync_project(target, [item]).actions == []
+
+
+@pytest.mark.parametrize("level", ["compact", "standard", "deep"])
+def test_inherited_effort_presets_remove_authored_codex_effort(tmp_path: Path, level: str) -> None:
+    body = CONTRACT.replace(
+        "    sandbox_mode: read-only", "    sandbox_mode: read-only\n    model_reasoning_effort: high"
+    )
+    item = make_bundle(tmp_path, "team", body)
+    target = tmp_path / "consumer"
+    target.mkdir()
+    update_config(target, presets={"team": ["all"]}, agents=["codex"])
+    config = target / ".devkit/config.toml"
+    config.write_text(config.read_text() + f'\n[subagents]\ndefault_level="{level}"\n')
+    sync_project(target, [item])
+    metadata = tomllib.loads((target / ".codex/agents/reviewer.toml").read_text())
+    assert "model" in metadata and "model_reasoning_effort" not in metadata
+
+
+@pytest.mark.parametrize("role_override", [False, True])
+def test_project_inherit_resets_source_compact_on_all_hosts(tmp_path: Path, role_override: bool) -> None:
+    body = CONTRACT.replace("skill: review", "level: compact\nskill: review").replace(
+        "  antigravity: unsupported", "  antigravity: native"
+    )
+    item = make_bundle(tmp_path, "team", body)
+    target = tmp_path / "consumer"
+    target.mkdir()
+    update_config(target, presets={"team": ["all"]}, agents=["claude-code", "codex", "antigravity"])
+    sync_project(target, [item])
+    projections = [
+        (".claude/agents/reviewer.md", False),
+        (".codex/agents/reviewer.toml", True),
+        (".agents/agents/reviewer.md", False),
+    ]
+    config = target / ".devkit/config.toml"
+    setting = (
+        '[subagents.roles."team:reviewer"]\nlevel="inherit"'
+        if role_override
+        else '[subagents]\ndefault_level="inherit"'
+    )
+    config.write_text(config.read_text() + f"\n{setting}\n")
+    sync_project(target, [item])
+    for relative, is_toml in projections:
+        text = (target / relative).read_text()
+        metadata = tomllib.loads(text) if is_toml else yaml.safe_load(text.split("---\n")[1])
+        assert not {"model", "effort", "model_reasoning_effort"} & metadata.keys()

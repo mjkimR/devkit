@@ -13,21 +13,32 @@ from devkit_dist.features.distribution.models.subagents import HOSTS, LEVELS, Mo
 if TYPE_CHECKING:
     from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
 
+# Empty Antigravity settings inherit the entire unavailable native combination.
 DEFAULTS = {
-    "light": {
+    "minimal": {
         "claude-code": ModelSettings("haiku", "low"),
         "codex": ModelSettings("gpt-6-luna", "low"),
+        "antigravity": ModelSettings(),
+    },
+    "compact": {
+        "claude-code": ModelSettings("haiku"),
+        "codex": ModelSettings("gpt-6-luna"),
         "antigravity": ModelSettings("flash"),
     },
     "standard": {
-        "claude-code": ModelSettings("sonnet", "medium"),
-        "codex": ModelSettings("gpt-6.1-sol", "medium"),
-        "antigravity": ModelSettings("pro"),
+        "claude-code": ModelSettings("sonnet"),
+        "codex": ModelSettings("gpt-6.1-sol"),
+        "antigravity": ModelSettings(),
     },
     "deep": {
+        "claude-code": ModelSettings("opus"),
+        "codex": ModelSettings("gpt-6-astra"),
+        "antigravity": ModelSettings(),
+    },
+    "maximal": {
         "claude-code": ModelSettings("opus", "high"),
         "codex": ModelSettings("gpt-6-astra", "high"),
-        "antigravity": ModelSettings("pro"),
+        "antigravity": ModelSettings(),
     },
 }
 EFFORTS = {

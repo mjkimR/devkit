@@ -1,0 +1,22 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T14:23:40.190653Z'
+status: completed
+summary: Completed five model presets and compact-only scout with inherited defaults and Antigravity whole-pair fallback; code and seven-target reconciliation reviews pass. Ready for Host sync and integration.
+findings: []
+assumptions:
+- Codex worker and reviewers are emulated; explicit paths, per-operation approval and committed scope checks substitute for native enforcement.
+- A transient approval-review quota failure ran no mutation; same route resumed only after read-only reset/availability evidence.
+unverified_areas:
+- Actual native host invocation/account availability and Host-owned sync/deployment artifacts/integration.
+checks:
+  tests: PASS affected mode=partial 134 paths 2575 passed 1 skipped
+  build: PASS dist/spec sdist and wheel builds
+  lint: PASS dist/spec lint-check and Pyright zero errors; cumulative governance clean
+  review: PASS independent code review and reconcile follow-up; P1 reciprocal ADR metadata corrected
+diff_scope:
+  base: def96068840ba9106b21a763fd0665a69d0cdda9
+  head: 73b939ce24392d84cc096313d8ff0ab7b4212621
+activity_effort: medium

@@ -25,10 +25,13 @@ def _contract(role: str) -> tuple[dict[str, Any], str]:
 
 
 @pytest.mark.parametrize("role", ROLES)
-def test_shipped_roles_inherit_model_and_effort(role: str) -> None:
+def test_scout_is_compact_and_other_roles_inherit(role: str) -> None:
     metadata, _ = _contract(role)
     assert "x-model-profile" not in metadata
-    assert "level" not in metadata
+    if role == "scout":
+        assert metadata["level"] == "compact"
+    else:
+        assert "level" not in metadata
     for host in metadata["hosts"].values():
         assert not {"model", "effort", "model_reasoning_effort", "reasoning_effort"} & host.keys()
 
@@ -351,3 +354,17 @@ def test_a_condition_free_spike_completion_is_not_planning_evidence() -> None:
     assert "only the recorded `scout`, `challenger` and `reverify` envelopes are Planning evidence" in planning
     assert "`[DONE: ... spike]` is not Planning evidence" in signals
     assert "`scout` and `challenger` envelopes and their `reverify` recorded at `spike`" in signals
+
+
+@pytest.mark.parametrize(
+    "host,expected_model", [("claude-code", "haiku"), ("codex", "gpt-6-luna"), ("antigravity", "flash")]
+)
+def test_scout_projection_selects_lightweight_family_and_omits_effort(host: str, expected_model: str) -> None:
+    contract = read_contract(raw("subagents/scout.md").encode(), "scout", "scout")
+    rendered = render_projection(host, contract, "contract.md")
+    assert rendered is not None
+    metadata = (
+        tomllib.loads(rendered.decode()) if host == "codex" else yaml.safe_load(rendered.decode().split("---\n")[1])
+    )
+    assert metadata["model"] == expected_model
+    assert not {"effort", "model_reasoning_effort", "level"} & metadata.keys()

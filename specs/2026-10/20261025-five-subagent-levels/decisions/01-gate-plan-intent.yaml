@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: Implement the five agreed model levels, keep default inheritance and select
+  compact only for the SDD scout; review other role settings as recommendations only.
+by: user
+at: '2026-10-25T11:02:53.031285Z'
