@@ -126,7 +126,10 @@ For the selected level, project mapping fields override built-in mapping fields.
 reset separately: omission retains the built-in field; string `inherit` removes that field. Empty strings and
 unknown keys fail validation. No custom levels or per-role raw model overrides. On Antigravity only effort
 `inherit` is permitted; any explicit effort value fails validation. The config template comments out every key.
-See the configuration material for role-key validation and dormant bundle entries.
+Antigravity model mappings accept only `flash`, `pro`, `inherit`. Claude Code and Codex retain opaque native
+model identifiers. Effort values are explicitly enumerated in the configuration material; unknown effort strings
+fail preflight. Model-specific restrictions apply only to documented exact Codex identifiers, never to
+provider-dependent Claude aliases. See the configuration material for role-key validation and dormant entries.
 Use bundle-qualified asset identities for role overrides. Validate effective settings before sync writes files.
 Preserve unrelated configuration, role prompts, tools, permissions, isolation and host selection.
 
@@ -158,13 +161,15 @@ Reconcile `CAP-DIST-agent-projections`, `CAP-DIST-sync-and-transactions`, the af
   Omission retains mapping fields while field-level `inherit` removes them; commented templates do not opt in.
 - **AC-5 — Invalid settings:** Given unknown levels, malformed mappings, ambiguous declarations or unsupported
   explicit settings, when validated, then stable codes and deterministic actions identify the problem before
-  projection or receipt writes. Define offline model validation limits without probing provider credentials.
+  projection or receipt writes. Include invalid Antigravity model tiers, unknown effort tokens, exact Codex
+  model/effort restrictions and provider-dependent Claude aliases. Do not probe provider credentials.
 - **AC-6 — Sync lifecycle:** Given mapping changes and repeated sync, when rendering completes, then output and
   receipt digests reflect effective settings and repeated sync is idempotent. Returning to inheritance removes
   stale fields while preserving foreign files and unrelated configuration.
 - **AC-7 — Asset forms:** Given common contracts, templated contracts and native variants, when level policy is
   applied or rejected, then common and templated contracts resolve identically; variants remain verbatim and
-  reject applicable role-specific overrides. Unsupported host blocks still produce no file. Level selection preserves role prompts
+  reject applicable role-specific overrides. Unsupported host blocks still produce no file. Level selection
+  preserves role prompts
   and permission settings, and remains independent of `activity-effort`.
 
 Scope excluded: runtime subagent launching, task-text model routing, automatic benchmarking, pricing or model

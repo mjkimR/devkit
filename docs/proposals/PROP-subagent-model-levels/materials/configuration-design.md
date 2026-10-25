@@ -47,14 +47,30 @@ Each host mapping accepts `model` and `effort`, both strings. No user-defined le
 A role override is global across selected hosts; mapping overrides supply host-specific tuning.
 No separate raw per-role model override is needed for this scope.
 
-Model must be a nonempty string without control characters; it is an opaque host-native identifier.
-The reserved string `inherit` resets that field to omission. Effort accepts host-supported values or `inherit`.
+Claude Code and Codex model values must be nonempty strings without control characters. They are opaque
+host-native identifiers; the reserved string `inherit` resets that field to omission. Antigravity model accepts
+only `flash`, `pro` or reset token `inherit`; arbitrary model strings and misspelled tiers fail offline.
 An absent field retains the built-in mapping field; TOML null and empty strings are invalid.
 The `inherit` level cannot have mappings and always clears both fields.
-For an overridden model, inherited built-in effort remains unless explicitly reset; document and test this.
-For known supported model families, validate known effort restrictions. Unknown model identifiers stay valid
-without network calls; their actual availability and effort compatibility belong to the host runtime.
-Reject host-unsupported explicit effort regardless of the model string.
+
+The accepted effort strings are case-sensitive and fixed by the following registry:
+
+| Host | Accepted configured effort values |
+| --- | --- |
+| `claude-code` | `low`, `medium`, `high`, `xhigh`, `max`, and reset token `inherit` |
+| `codex` | `none`, `low`, `medium`, `high`, `xhigh`, `max`, and reset token `inherit` |
+| `antigravity` | Reset token `inherit` only; otherwise omit the field |
+
+Reject all other effort strings, including `ultra`, `minimal`, misspellings and different case. Extending this
+registry requires documented host support, a contract update and tests; custom model IDs do not bypass it.
+For exact Codex identifiers `gpt-6-luna`, `gpt-6.1-sol`, `gpt-6-astra`, validate the documented capabilities:
+Luna accepts the non-reset Codex values above; Sol and Astra exclude `none`. Do not extrapolate this registry to
+prefix matches, version suffixes, provider-dependent Claude aliases or unknown custom model identifiers.
+Claude aliases have syntax validation only; actual effort capability depends on provider resolution and runtime.
+Unknown model identifiers remain valid for Claude Code and Codex without network calls. Account access and
+compatibility of unknown models belong to the host runtime. A model-only override retains built-in effort unless
+explicitly reset; document and test this behavior. Explicit model `inherit` with non-reset effort requests that
+effort on the runtime-resolved model and carries the same runtime compatibility limit.
 
 Selection order: role override > explicitly present project default > explicitly present contract level > omission.
 The commented config template does not create an active default_level, preserving contract opt-in behavior.

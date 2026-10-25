@@ -1,0 +1,29 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-25T07:36:19.850251Z'
+status: completed
+summary: Resolver fits distribution boundaries; tighten finite Antigravity tiers and deterministic effort validation before acceptance.
+findings:
+- issue: Antigravity mapping validation accepts arbitrary model identifiers despite its documented finite tier set.
+  evidence: materials/configuration-design.md:50-56 accepts opaque model strings; materials/host-mappings.md:50-52 documents inherit, flash and pro; proposal AC-5 requires unsupported settings rejected.
+  failure_condition: A project supplies a misspelled pro tier or gpt-6-astra as an Antigravity model and preflight accepts it.
+  suggested_action: Restrict Antigravity mapping model to flash, pro and reset token inherit; keep opaque identifiers only for other hosts and add AC-5 coverage.
+  resolution: open
+  severity: P2
+- issue: Effort validation lacks a deterministic token set and alias-validation boundary.
+  evidence: materials/configuration-design.md:51-57 refers to host-supported values and known families without enumerating them; host-mappings.md:25-28 establishes provider-dependent Claude aliases.
+  failure_condition: Implementers cannot consistently accept or reject ultra, none or effort on a Claude alias that resolves to an older model.
+  suggested_action: State exact per-host effort tokens and extension policy; limit model-specific checks to documented exact identifiers and preserve runtime limits for provider aliases and custom models.
+  resolution: open
+  severity: P2
+assumptions:
+- Named Codex role was emulated; reviewer used read-only commands and left status and HEAD unchanged.
+unverified_areas:
+- No native execution or provider entitlement checks; official-source evidence supplied by Scout.
+checks:
+  reviewed: PASS proposal PADR materials and current contracts
+diff_scope:
+  base: abd99da605557766a374efb862c034b055bd09d2
+  head: 63d6a708d807d970a5e4b9b2777deb7571abadad
