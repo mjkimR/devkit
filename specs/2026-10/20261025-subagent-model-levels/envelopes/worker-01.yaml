@@ -1,0 +1,23 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T09:56:49.240455Z'
+status: completed
+summary: Completed SPEC-subagent-model-levels through final report; three-host inherited model levels and project overrides implemented, independently reviewed and reconciled. Ready for Host integration; no merge or push performed.
+findings: []
+assumptions:
+- Codex worker and reviewers were emulated; explicit worktree paths, per-operation approvals and actual committed scope checks substitute for native path enforcement.
+- No runtime model/account capability probes; source role defaults inherit through host policy.
+unverified_areas:
+- Host native model/effort execution, installed client versions and account access remain untested.
+checks:
+  tests: PASS just test-affected --base main mode=partial paths=135; 2568 passed 1 skipped
+  build: PASS devkit-dist and devkit-spec sdist and wheel builds
+  lint: PASS dist/spec lint-check and Pyright; cumulative governance zero errors/warnings
+  review: PASS independent initial and follow-up review; P1 regression failed before fix and passes after
+  reconcile: PASS independent eight-target verification; resolved and spec completed
+diff_scope:
+  base: 5cf59bdf16e0dca18d466ef831ffd250fd6d8a2c
+  head: 687a326b365bb5444c507051817c707c4b97ff98
+activity_effort: medium
