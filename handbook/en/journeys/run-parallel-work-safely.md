@@ -1,9 +1,9 @@
 ---
 sources:
-  CAP-COLL-work-scope-registry: 4a799773044c69fbfec043d932ba53adab0180d9
-  CAP-DLV-project-policy: e0d624740a93778f903606a73f294d77bf917b8f
-  CAP-TRACE-code-entrypoints: 68e132ba3216e38947953ced0e7cb6fa27949a1d
-  CAP-WT-task-worktrees: 1caff7b5526cd3a14e246360ed52ab053c4b8fc2
+  CAP-COLL-work-scope-registry: e60ca6b5e8eccf19fac5b506233860376125ae9a
+  CAP-DLV-project-policy: f429313e6c4fb977e664bbac9072d19e15a1b2da
+  CAP-TRACE-code-entrypoints: 3b8cb1476d9102bf09e6ffc6a469c3e00e58da97
+  CAP-WT-task-worktrees: a885013edf5dd548ffad4e9140c4b32b01b16ce2
   UC-run-parallel-work-safely: eb22803d64e8af4f3479c6c935942508db14f5cf
 title: Run parallel work safely
 ---
@@ -11,7 +11,7 @@ title: Run parallel work safely
 # Run parallel work safely
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -69,6 +69,9 @@ contract [`CAP-COLL-work-scope-registry`](https://github.com/mjkimR/devkit/blob/
 - Each task declares its scope in its bundle: `target-docs.md` or `reconcile.md` targets, the `_Boundary` entries of
   `tasks.md`, and the `entrypoints` of the documents it targets. Entrypoints turn a document into code paths
   ([`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md)).
+  A `_Boundary` entry under `specs/` is skipped, except the exact path of another spec bundle's feedback file
+  (`specs/**/feedback/<name>.md`): it is collected as code, so two tasks that resolve the same feedback file overlap
+  on it.
 - The registry lives in the Git common directory, so every worktree of the repository shares it with no setup.
 
 ## Step by step

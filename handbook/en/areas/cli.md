@@ -2,7 +2,7 @@
 sources:
   ARCH-05-3-command-plugins: ec76f9e3d68a8d43196eb96180530ecaff83900a
   ARCH-08-1-agent-output: 30466db492161e034b6d5c1e076d0e9f5432f514
-  CAP-ADV-agent-advisory-protocol: 04087379fd666b5e7fda52a3c77416f78353fa3b
+  CAP-ADV-agent-advisory-protocol: bc9cd491e33c6cd4db4cdf12f714062d8487d98b
   CAP-CLI-agent-cli-toolkit: aaddc88dd7e643c5dbbf7f7d61ddfcb68bc1809f
 title: Agent-first CLI toolkit
 ---
@@ -10,7 +10,7 @@ title: Agent-first CLI toolkit
 # Agent-first CLI toolkit
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

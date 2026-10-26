@@ -1,7 +1,7 @@
 ---
 sources:
   ARCH-08-1-agent-output: 30466db492161e034b6d5c1e076d0e9f5432f514
-  CAP-ADV-agent-advisory-protocol: 04087379fd666b5e7fda52a3c77416f78353fa3b
+  CAP-ADV-agent-advisory-protocol: bc9cd491e33c6cd4db4cdf12f714062d8487d98b
   CAP-CMP-bounded-execution: 87e63739d2b77d61bffe3162d7f68e93b3051ad2
 title: Compact command output
 ---
@@ -9,7 +9,7 @@ title: Compact command output
 # Compact command output
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

@@ -25,5 +25,6 @@ Feedback resolution: 피드백 해결
 Commit gate: 커밋 게이트
 Compact output: 컴팩트 출력
 Agent advisory: 에이전트 어드바이저리
+Host: Host
 Host hook: 호스트 훅
-Integration MCP: Integration MCP
+Scoped CLI integration: 범위 지정 CLI 통합

@@ -1,9 +1,9 @@
 ---
 sources:
   CAP-COLL-shared-artifacts: d000f00d3b8d672ea0473d3c6f01dafafe3b8f70
-  CAP-HOST-lifecycle-observation: 58a95d98f0943da9012f23ce431f05ddce91c52f
-  CAP-INT-mcp-services: 32b1b30902acd480c47f21b73516fd52955705ec
-  CAP-MCP-runtime-registration: 34f0ea651325b145b98e44d39f0d27af837dd376
+  CAP-HOST-lifecycle-observation: bae2e546b3e578a9a4e3f3094cb304851174520b
+  CAP-INT-mcp-services: 41636553f0fe6331719d5d0cfaad2965deda6eb1
+  CAP-MCP-runtime-registration: 6dd9d3d5cf7a915a18d80f1adae375cf73823c1a
   UC-drive-development-to-integration: bc214c7d80b401cf5b2ba5027c9144673d104393
 title: MCP
 ---
@@ -11,7 +11,7 @@ title: MCP
 # MCP
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -68,7 +68,7 @@ worktree's `.venv` or an editable linked-worktree source. Then let sync register
 | You want to | Run |
 | --- | --- |
 | Check which runtime would be used | `devkit mcp status --descriptor --format json` |
-| Register the project entry | `devkit mcp setup [--host codex\|claude]` |
+| Register the project entry | `devkit mcp setup [--host codex\|claude\|antigravity]` |
 | See desired, recorded and project registration | `devkit mcp status --format json` |
 | Remove devkit's own entry | `devkit mcp remove` |
 

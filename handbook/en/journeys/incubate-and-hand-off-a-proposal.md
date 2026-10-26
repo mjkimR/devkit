@@ -1,16 +1,16 @@
 ---
 sources:
-  CAP-DLV-delivery-workflows: 9214b7acf5c49e41a824f1466ef5db167241eb82
-  CAP-DLV-proposal-incubation: 961cf0d8332f015d97ec2e7f96f4facb52b8ea85
+  CAP-DLV-delivery-workflows: e25a0313ce7d7a44041185ec4098d434de0f6357
+  CAP-DLV-proposal-incubation: 3248500db261e1f3fc5c96063b6b8445d734ed7e
   CAP-DLV-spec-bundles: 516cc932fee8af93baae90012e8dbe4c9b6f4725
-  UC-incubate-and-hand-off-a-proposal: 672aca028fbab742fbbadf7562638352cb439e8d
+  UC-incubate-and-hand-off-a-proposal: cad9b1da4379376d6512d16b06787ea1eed9a43e
 title: Incubate and hand off a proposal
 ---
 
 # Incubate and hand off a proposal
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -107,13 +107,15 @@ acceptance. The agent then integrates the Planning branch, and the workflow repo
 
 ## 5. Hand off
 
-With `proposal-handoff` authority, on `dev-<slug>`:
+With `proposal-handoff` authority, from the retained base checkout (under `ask`, only after you approve the effects
+and Development effort the Host presents; under `auto`, with the `dev_effort` hint):
 
 ```bash
 uv run devkit spec proposal handoff fast-engine --effort medium
 ```
 
-The handoff creates the spec bundle bound to `sdd-spec-<task_kind>`
+The command creates or validates `dev-<slug>` and its worktree, runs setup and sync, and hands off there. The
+handoff creates the spec bundle bound to `sdd-spec-<task_kind>`
 ([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/delivery/CAP-DLV-spec-bundles.md)),
 promotes the PADRs to accepted ADRs, moves materials and open feedback, carries the `plan-intent` and `plan-accept`
 records by name, rewrites references that pointed into the proposal, and removes it. Output lines name what moved:
@@ -153,7 +155,7 @@ in the same change and follows the spec workflow's next stage, as in
 | `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED` | The proposal says `accepted` without its recorded `plan-accept`. | Repair through a direct acceptance on the base, or decide on reverting the Planning merge. |
 | `SPEC_PROPOSAL_WRONG_WORKTREE` | Handoff ran outside `dev-<slug>`. | Start or continue `dev-<slug>`. |
 | `SPEC_PROPOSAL_HANDOFF_FAILED` | A write failed; everything was rolled back and the proposal kept. | Fix the cause and rerun. |
-| `SPEC_HANDOFF_STALE` | The base, proposal or configuration changed after you saw the handoff. | Review the current state and approve again. |
+| `SPEC_HANDOFF_STALE` | The base, accepted plan or policy changed since the check, before any effect (exit `2`); or the new worktree no longer holds the reviewed base commit and is kept with `status=needs_recovery` (exit `1`). | Review the current state and approve again; inspect a kept worktree. |
 
 A refused acceptance or handoff writes nothing. A bugfix proposal hands off to a bundle that holds only `spec.md`,
 bound to `sdd-spec-bugfix`. Area: [Delivery](../areas/delivery.md).

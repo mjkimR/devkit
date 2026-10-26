@@ -1,14 +1,14 @@
 ---
 sources:
   ARCH-08-1-agent-output: 30466db492161e034b6d5c1e076d0e9f5432f514
-  CAP-ADV-agent-advisory-protocol: 04087379fd666b5e7fda52a3c77416f78353fa3b
+  CAP-ADV-agent-advisory-protocol: bc9cd491e33c6cd4db4cdf12f714062d8487d98b
 title: Advisories
 ---
 
 # Advisories
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -59,11 +59,11 @@ workaround such as inventing `--force` or editing a rule until it passes. The pr
 ## Read an advisory
 
 ```text
-[ERROR]  (RULES_CONFIG_INVALID) .devkit/config.toml: [rules] phase override for RULE-x must be a string
+[ERROR]  (RULES_CONFIG_INVALID) config rules.phase_overrides.RULE-x: 'linter' is not 'hygiene'; set it to 'hygiene' or remove the entry to keep the rule's default phase
 [ACTION] INPUT_ERROR — Do not retry with identical input. Retrying unchanged will
          fail identically. Correct the flag, argument, or input file before rerunning.
 [TARGET] .devkit/config.toml
-[FIX]    Set [rules.phases] RULE-x = "linter"
+[FIX]    Correct the [rules] table in .devkit/config.toml
 ```
 
 - The headline carries the level and a stable `UPPER_SNAKE` code. Branch on the code, never on the message.

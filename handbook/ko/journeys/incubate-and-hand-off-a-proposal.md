@@ -5,13 +5,13 @@ sources:
   CAP-DLV-spec-bundles: null
   UC-incubate-and-hand-off-a-proposal: null
 title: 제안 숙성 후 넘기기
-translated_from: en/journeys/incubate-and-hand-off-a-proposal.md@eafcc825db1c5a97
+translated_from: en/journeys/incubate-and-hand-off-a-proposal.md@c1122e522326aade
 ---
 
 # 제안 숙성 후 넘기기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `3da97383dc87` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `b44f759024a5` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -107,12 +107,14 @@ uv run devkit spec proposal accept fast-engine --by user --note "<your decision>
 
 ## 5. 넘기기
 
-`proposal-handoff` 권한을 갖고 `dev-<slug>`에서 실행합니다.
+`proposal-handoff` 권한을 갖고 유지된 기본 체크아웃에서 실행합니다(`ask`에서는 Host가 제시한 효과와 Development 노력 수준을
+여러분이 승인한 뒤에만, `auto`에서는 `dev_effort` 힌트로 실행합니다).
 
 ```bash
 uv run devkit spec proposal handoff fast-engine --effort medium
 ```
 
+이 명령은 `dev-<slug>`와 그 워크트리를 만들거나 검증하고, 설정과 동기화를 실행한 뒤 그곳에서 핸드오프합니다.
 핸드오프는 `sdd-spec-<task_kind>`에 묶인 스펙 번들을 만들고
 ([`CAP-DLV-spec-bundles`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/delivery/CAP-DLV-spec-bundles.md) (영어 원문)),
 PADR을 수락된 ADR로 승격하며, 자료와 열린 피드백을 옮기고, `plan-intent`와 `plan-accept` 기록을 이름으로 이어받고,
@@ -153,7 +155,7 @@ PADR을 수락된 ADR로 승격하며, 자료와 열린 피드백을 옮기고, 
 | `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED` | 제안이 기록된 `plan-accept` 없이 `accepted`라고 표시합니다. | 기본 브랜치에서 직접 수락으로 바로잡거나, Planning 병합을 되돌릴지 결정하십시오. |
 | `SPEC_PROPOSAL_WRONG_WORKTREE` | 핸드오프가 `dev-<slug>` 바깥에서 실행되었습니다. | `dev-<slug>`를 시작하거나 이어 가십시오. |
 | `SPEC_PROPOSAL_HANDOFF_FAILED` | 쓰기가 실패했습니다. 모두 롤백되었고 제안은 유지됩니다. | 원인을 고치고 다시 실행하십시오. |
-| `SPEC_HANDOFF_STALE` | 핸드오프를 본 뒤 기본 브랜치, 제안, 설정이 바뀌었습니다. | 현재 상태를 검토하고 다시 승인하십시오. |
+| `SPEC_HANDOFF_STALE` | 검사 이후 어떤 효과도 생기기 전에 기본 브랜치, 수락된 계획, 정책이 바뀌었습니다(종료 코드 `2`). 또는 새 워크트리가 리뷰한 기본 커밋을 더 이상 담고 있지 않아 `status=needs_recovery`로 보존되었습니다(종료 코드 `1`). | 현재 상태를 검토하고 다시 승인하십시오. 보존된 워크트리를 점검하십시오. |
 
 거부된 수락이나 핸드오프는 아무것도 쓰지 않습니다. 버그 수정 제안은 `spec.md`만 담고 `sdd-spec-bugfix`에 묶인
 번들로 넘겨집니다. 영역: [Delivery](../areas/delivery.md).

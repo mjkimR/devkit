@@ -1,11 +1,11 @@
 ---
 sources:
-  CAP-DLV-delivery-workflows: 9214b7acf5c49e41a824f1466ef5db167241eb82
-  CAP-DLV-project-policy: e0d624740a93778f903606a73f294d77bf917b8f
+  CAP-DLV-delivery-workflows: e25a0313ce7d7a44041185ec4098d434de0f6357
+  CAP-DLV-project-policy: f429313e6c4fb977e664bbac9072d19e15a1b2da
   CAP-DLV-workflow-envelopes: ac166b8217314babc0f4e8ab346a6a9041f85fef
-  CAP-INT-mcp-services: 32b1b30902acd480c47f21b73516fd52955705ec
-  CAP-MCP-runtime-registration: 34f0ea651325b145b98e44d39f0d27af837dd376
-  CAP-WT-task-worktrees: 1caff7b5526cd3a14e246360ed52ab053c4b8fc2
+  CAP-INT-mcp-services: 41636553f0fe6331719d5d0cfaad2965deda6eb1
+  CAP-MCP-runtime-registration: 6dd9d3d5cf7a915a18d80f1adae375cf73823c1a
+  CAP-WT-task-worktrees: a885013edf5dd548ffad4e9140c4b32b01b16ce2
   UC-drive-development-to-integration: bc214c7d80b401cf5b2ba5027c9144673d104393
 title: Drive development to integration
 ---
@@ -13,7 +13,7 @@ title: Drive development to integration
 # Drive development to integration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

@@ -7,13 +7,13 @@ sources:
   CAP-WT-task-worktrees: null
   UC-drive-development-to-integration: null
 title: 통합
-translated_from: en/areas/integration.md@0c0496869a6a9123
+translated_from: en/areas/integration.md@274c413b33d1358a
 ---
 
 # 통합
 
 <!-- handbook:provenance -->
-> 소스 커밋 `3da97383dc87` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `b44f759024a5` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -102,7 +102,8 @@ devkit integration integrate <branch> --task-kind unit|session --task-id <id> [-
   자동으로 실행되는 일은 없으며, `[worktree] pull_request = "required"` 정책은 로컬 경로를 거부합니다.
 
 어느 경로도 호스트 도구 권한, 파일 시스템 권한, 신뢰, 게시 정책을 바꾸지 않습니다. 병합 커밋 구성과 경로 보호 장치는
-`ADR-local-and-pull-request-integration`에 설명되어 있습니다.
+`CAP-INT-mcp-services` 계약에 속합니다. `ADR-host-cli-lifecycle-authority`가
+`ADR-local-and-pull-request-integration`을 대체합니다.
 
 ## 문제가 생겼을 때
 
@@ -137,7 +138,7 @@ devkit integration integrate <branch> --task-kind unit|session --task-id <id> [-
 지정된 오류도 내보냅니다.
 
 이전 설계의 수명 주기 MCP 도구(`integration_prepare`, `integration_integrate`, ...)는 등록되지 않습니다. MCP 런타임은
-공유 아티팩트와 보고서 게시를 위해 남아 있습니다([MCP](mcp.md) 참고).
+공유 제안 리뷰 아티팩트를 위해 남아 있으며, 수락에는 이것이 필요하지 않습니다([MCP](mcp.md) 참고).
 
 ## 출처
 

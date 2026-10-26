@@ -1,9 +1,9 @@
 ---
 sources:
   CAP-GATE-commit-gates: 83c1bd822d3330dab5eed84e7b8f13a552e5f638
-  CAP-INT-mcp-services: 32b1b30902acd480c47f21b73516fd52955705ec
-  CAP-MCP-runtime-registration: 34f0ea651325b145b98e44d39f0d27af837dd376
-  CAP-WT-task-worktrees: 1caff7b5526cd3a14e246360ed52ab053c4b8fc2
+  CAP-INT-mcp-services: 41636553f0fe6331719d5d0cfaad2965deda6eb1
+  CAP-MCP-runtime-registration: 6dd9d3d5cf7a915a18d80f1adae375cf73823c1a
+  CAP-WT-task-worktrees: a885013edf5dd548ffad4e9140c4b32b01b16ce2
   UC-drive-development-to-integration: bc214c7d80b401cf5b2ba5027c9144673d104393
   UC-handle-delivery-problems-and-exceptions: 3bd25e04ea70fadeefdc4a324a9780da89013610
   UC-resolve-stale-activity-branches: b19fb4071f1680f2fa080aab2b6f4b7a7d22741c
@@ -15,7 +15,7 @@ title: Worktree
 # Worktree
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

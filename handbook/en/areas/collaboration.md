@@ -1,11 +1,11 @@
 ---
 sources:
   CAP-COLL-shared-artifacts: d000f00d3b8d672ea0473d3c6f01dafafe3b8f70
-  CAP-COLL-work-scope-registry: 4a799773044c69fbfec043d932ba53adab0180d9
-  CAP-DLV-project-policy: e0d624740a93778f903606a73f294d77bf917b8f
-  CAP-MCP-runtime-registration: 34f0ea651325b145b98e44d39f0d27af837dd376
-  CAP-TRACE-code-entrypoints: 68e132ba3216e38947953ced0e7cb6fa27949a1d
-  CAP-WT-task-worktrees: 1caff7b5526cd3a14e246360ed52ab053c4b8fc2
+  CAP-COLL-work-scope-registry: e60ca6b5e8eccf19fac5b506233860376125ae9a
+  CAP-DLV-project-policy: f429313e6c4fb977e664bbac9072d19e15a1b2da
+  CAP-MCP-runtime-registration: 6dd9d3d5cf7a915a18d80f1adae375cf73823c1a
+  CAP-TRACE-code-entrypoints: 3b8cb1476d9102bf09e6ffc6a469c3e00e58da97
+  CAP-WT-task-worktrees: a885013edf5dd548ffad4e9140c4b32b01b16ce2
   UC-run-parallel-work-safely: eb22803d64e8af4f3479c6c935942508db14f5cf
 title: Collaboration
 ---
@@ -13,7 +13,7 @@ title: Collaboration
 # Collaboration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -73,8 +73,8 @@ configuration. The end-to-end story is the journey [Run parallel work safely](..
 A task's scope is assembled from what its documents declare and what Git observes:
 
 - documents: the `targets` of a proposal's `target-docs.md`, or of a spec bundle's `reconcile.md`;
-- code: the `_Boundary` entries of `tasks.md`; while a bundle declares no code, the `entrypoints` of its target
-  capabilities and use cases stand in as candidates;
+- code: the `_Boundary` entries of `tasks.md`, including the exact path of another spec bundle's feedback file; while
+  a bundle declares no code, the `entrypoints` of its target capabilities and use cases stand in as candidates;
 - observed code: what the task's worktree changed since its fork point (committed, staged, unstaged, untracked).
 
 To see whether two or more planned pieces of work collide, compare their declarations. Nothing is written and no
@@ -166,8 +166,7 @@ What to expect:
 
 The same put, get and list operations are offered as the local MCP tools `shared_put`, `shared_get` and `shared_list`
 when the optional MCP runtime is installed (see [MCP](mcp.md) and `CAP-MCP-runtime-registration`); sweeping stays a
-CLI operation. A local-orchestrated caller that expects these tools and finds them missing asks you to repair the
-connection instead of silently falling back to the CLI.
+CLI operation.
 
 ### Plug in a remote adapter
 

@@ -1,21 +1,21 @@
 ---
 sources:
   CAP-DLV-cli-and-output: 0324155e16a2233cbc1ad5268d2f103f3f1477c1
-  CAP-DLV-delivery-workflows: 9214b7acf5c49e41a824f1466ef5db167241eb82
+  CAP-DLV-delivery-workflows: e25a0313ce7d7a44041185ec4098d434de0f6357
   CAP-DLV-drift-reconciliation: 25e499e1a6d18c0d65be1855cfe8bd3925f2d1c6
   CAP-DLV-human-interaction: bbe6a95de1da4aae4da340a8a8f0dfd8e8e6a035
-  CAP-DLV-project-policy: e0d624740a93778f903606a73f294d77bf917b8f
-  CAP-DLV-proposal-incubation: 961cf0d8332f015d97ec2e7f96f4facb52b8ea85
+  CAP-DLV-project-policy: f429313e6c4fb977e664bbac9072d19e15a1b2da
+  CAP-DLV-proposal-incubation: 3248500db261e1f3fc5c96063b6b8445d734ed7e
   CAP-DLV-release-handbook: 7fa53f1c5669584342764f579384066369eeafaa
   CAP-DLV-review-refactor: 4c9e10968504b3edfdd77c6698275db599416bfd
   CAP-DLV-spec-bundles: 516cc932fee8af93baae90012e8dbe4c9b6f4725
   CAP-DLV-weekly-report: 0499a11d003f2b19a0ead794315b96ab8a09c22f
   CAP-DLV-workflow-definitions: 370fe402a7a71118569b2cf67521cd9756a7d3b7
   CAP-DLV-workflow-envelopes: ac166b8217314babc0f4e8ab346a6a9041f85fef
-  CAP-DLV-workflow-orchestration: a1a7494b398d10ab12ad00d89a93f5d4aa0f344c
+  CAP-DLV-workflow-orchestration: ee2cc0dbbb5824610041b822e5cdb58c301d57a4
   UC-drive-development-to-integration: bc214c7d80b401cf5b2ba5027c9144673d104393
   UC-handle-delivery-problems-and-exceptions: 3bd25e04ea70fadeefdc4a324a9780da89013610
-  UC-incubate-and-hand-off-a-proposal: 672aca028fbab742fbbadf7562638352cb439e8d
+  UC-incubate-and-hand-off-a-proposal: cad9b1da4379376d6512d16b06787ea1eed9a43e
   UC-publish-a-weekly-report: 9e5de0abff784fa43c00851d8b03cf8b59d60129
   UC-reconcile-living-spec-drift: 972538db7ca3eccccada61d606ed7a176a4effe0
   UC-review-and-refactor-accumulated-slop: 99e3929f75bacf6df151e9a3cc803b8c46bc5867
@@ -26,7 +26,7 @@ title: Delivery
 # Delivery
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -172,7 +172,7 @@ Gates are where a person (or explicit policy) decides. There are four:
 | --- | --- | --- |
 | `plan-intent` | Goal, scope, verification, kind and depth of a task | `devkit workflow answer --unit <dir> --request gate:plan-intent --action accept --by user` |
 | `plan-accept` | A proposal's direction | `devkit spec proposal accept <slug> --by user` |
-| `proposal-handoff` | Starting Development from an accepted proposal | the Host presents effects, then runs `devkit spec proposal handoff` |
+| `proposal-handoff` | Starting Development from an accepted proposal | the Host presents effects, then runs `devkit spec proposal handoff <slug> --effort <level>` (or `accept --mode accept_and_handoff`); no workflow stage checks it |
 | `dev-integration` | Landing one integration unit (one pull request) | `--given dev-integration` on later `next` runs, or PR ready state |
 
 There is deliberately no gate inside Development: choices within the agreed intent are the executor's, and only a

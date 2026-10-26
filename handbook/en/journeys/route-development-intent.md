@@ -1,12 +1,12 @@
 ---
 sources:
   ADR-spec-intake-playbook-discovery: 16bc21ff4c9228e34f7634d89dd64da91c60b50a
-  CAP-DLV-delivery-workflows: 9214b7acf5c49e41a824f1466ef5db167241eb82
-  CAP-DLV-project-policy: e0d624740a93778f903606a73f294d77bf917b8f
+  CAP-DLV-delivery-workflows: e25a0313ce7d7a44041185ec4098d434de0f6357
+  CAP-DLV-project-policy: f429313e6c4fb977e664bbac9072d19e15a1b2da
   CAP-DLV-spec-bundles: 516cc932fee8af93baae90012e8dbe4c9b6f4725
-  CAP-HARN-agent-guidance: a0e4d007cbfba5cfde0f8210e0516150e6ee4496
-  CAP-WT-task-worktrees: 1caff7b5526cd3a14e246360ed52ab053c4b8fc2
-  UC-incubate-and-hand-off-a-proposal: 672aca028fbab742fbbadf7562638352cb439e8d
+  CAP-HARN-agent-guidance: dbab285c20602e97d78db8768dc21e0a5613b379
+  CAP-WT-task-worktrees: a885013edf5dd548ffad4e9140c4b32b01b16ce2
+  UC-incubate-and-hand-off-a-proposal: cad9b1da4379376d6512d16b06787ea1eed9a43e
   UC-route-development-intent: 50d6278b292da8b936bc1bd6587bde501f490ee6
 title: Route a development request
 ---
@@ -14,7 +14,7 @@ title: Route a development request
 # Route a development request
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
