@@ -1,0 +1,140 @@
+{
+  "url": "http://127.0.0.1:8791/",
+  "repo": "devkit-wt-plan-viewer-handbook-first-knowledge",
+  "runs": 3,
+  "chrome": "Chrome/155.0.8059.86",
+  "scenarios": {
+    "book": [
+      {
+        "loaded_ms": 1094,
+        "first_content_ms": 1094,
+        "main_thread_quiet_ms": 1094,
+        "api_requests": 924,
+        "blob_requests": 922,
+        "api_bytes": 7187782,
+        "chapters": 154,
+        "warm_index_cached": {
+          "first_content_ms": 472,
+          "blob_requests": 0,
+          "script_ms": 472,
+          "task_ms": 525
+        },
+        "script_ms_total_page": 524,
+        "task_ms_total_page": 880,
+        "dom_nodes": 124040,
+        "js_heap_mb": 17
+      },
+      {
+        "loaded_ms": 1073,
+        "first_content_ms": 1073,
+        "main_thread_quiet_ms": 1073,
+        "api_requests": 924,
+        "blob_requests": 922,
+        "api_bytes": 7187784,
+        "chapters": 154,
+        "warm_index_cached": {
+          "first_content_ms": 460,
+          "blob_requests": 0,
+          "script_ms": 460,
+          "task_ms": 508
+        },
+        "script_ms_total_page": 502,
+        "task_ms_total_page": 846,
+        "dom_nodes": 124042,
+        "js_heap_mb": 17
+      },
+      {
+        "loaded_ms": 1199,
+        "first_content_ms": 1199,
+        "main_thread_quiet_ms": 1199,
+        "api_requests": 924,
+        "blob_requests": 922,
+        "api_bytes": 7195916,
+        "chapters": 154,
+        "warm_index_cached": {
+          "first_content_ms": 470,
+          "blob_requests": 0,
+          "script_ms": 470,
+          "task_ms": 527
+        },
+        "script_ms_total_page": 522,
+        "task_ms_total_page": 920,
+        "dom_nodes": 125102,
+        "js_heap_mb": 17
+      }
+    ],
+    "proposals": [
+      {
+        "loaded_ms": 631,
+        "first_content_ms": 631,
+        "main_thread_quiet_ms": 631,
+        "api_requests": 924,
+        "blob_requests": 922,
+        "api_bytes": 7196911,
+        "chapters": 0,
+        "script_ms_total_page": 12,
+        "task_ms_total_page": 364,
+        "dom_nodes": 1915,
+        "js_heap_mb": 15
+      },
+      {
+        "loaded_ms": 612,
+        "first_content_ms": 612,
+        "main_thread_quiet_ms": 612,
+        "api_requests": 924,
+        "blob_requests": 922,
+        "api_bytes": 7196912,
+        "chapters": 0,
+        "script_ms_total_page": 10,
+        "task_ms_total_page": 350,
+        "dom_nodes": 1915,
+        "js_heap_mb": 21
+      },
+      {
+        "loaded_ms": 707,
+        "first_content_ms": 707,
+        "main_thread_quiet_ms": 707,
+        "api_requests": 924,
+        "blob_requests": 922,
+        "api_bytes": 7196912,
+        "chapters": 0,
+        "script_ms_total_page": 12,
+        "task_ms_total_page": 355,
+        "dom_nodes": 1915,
+        "js_heap_mb": 25
+      }
+    ],
+    "handbook": [
+      {
+        "manifest_ms": 7,
+        "page_ms": 2,
+        "page_bytes": 7759,
+        "tag": "v0.1.4",
+        "langs": [
+          "en",
+          "ko"
+        ]
+      },
+      {
+        "manifest_ms": 2,
+        "page_ms": 2,
+        "page_bytes": 7759,
+        "tag": "v0.1.4",
+        "langs": [
+          "en",
+          "ko"
+        ]
+      },
+      {
+        "manifest_ms": 5,
+        "page_ms": 1,
+        "page_bytes": 7759,
+        "tag": "v0.1.4",
+        "langs": [
+          "en",
+          "ko"
+        ]
+      }
+    ]
+  }
+}
