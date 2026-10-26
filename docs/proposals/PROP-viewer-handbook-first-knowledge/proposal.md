@@ -2,7 +2,7 @@
 id: PROP-viewer-handbook-first-knowledge
 title: Handbook-first knowledge view with on-demand book
 summary: Makes the repository viewer's knowledge tab open the release handbook when a repository has one and compute the Living Spec book only on request, so cold loads skip rendering every document.
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-26
 target_area: viewer/
 priority: medium                      # critical | high | medium | low
