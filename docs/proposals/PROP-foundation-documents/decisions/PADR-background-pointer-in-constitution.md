@@ -34,7 +34,8 @@ context.
 - **Overview**: `devkit get-context spec` lists each steering file's `title` and `summary` (its one-line scope) in
   every context (`PADR-bundle-context-lists-project-documents`); one constitution line names `docs/steering/` and
   tells the agent to read a body before a decision that concerns its scope; every spec role contract loads the context
-  through `devkit get-context spec`; `RULE-steering-documents` caps the number of files and each body's size.
+  through `devkit get-context spec`; `RULE-steering-documents` caps the number of files (default 10) and each body's size (default 24576 bytes), both
+  settings a project can raise.
 - **Pros**: every role knows what exists at the cost of a short list; bodies cost nothing until needed.
 - **Cons**: whether an agent applies the trigger is judgment.
 

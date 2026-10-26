@@ -63,6 +63,7 @@ files (driver 2), and "steering" collides with no existing term (driver 3). Pack
 
 ## 6. Confirmation
 
-`RULE-steering-documents` (shape, frontmatter, caps); tests under `packages/devkit-spec/tests/` that the Owner check
+`RULE-steering-documents` (shape, frontmatter, caps `max_files` 10 and `max_body_bytes` 24576);
+`RULE-document-reference` for IDs cited in steering files; tests under `packages/devkit-spec/tests/` that the Owner check
 and synonym expansion read `docs/steering/` and no longer `docs/glossary.md`; the handbook script tests in
 `tools/devkit-dev/tests/integration/test_handbook_script.py` for both layouts.

@@ -70,16 +70,13 @@ the always-loaded cost stays small. The glossary moves into the directory.
 Answered in `materials/spike-findings.md` (F1-F6, round 1) and `materials/steering-design.md` (round 2).
 
 - **Q1**: Name and layout. Settled by the `user`: `docs/steering/`, flat, one Markdown file per topic.
-- **Q2**: What the spec rules check in steering files: a new steering rule (shape, frontmatter, caps); cited IDs are
-  open (q5).
+- **Q2**: What the spec rules check in steering files: `RULE-steering-documents` (shape, frontmatter, caps) and the
+  cited-ID check of `RULE-document-reference` (`user`, answer-02).
 - **Q3**: How agents read the group. Settled by the `user`: progressive loading through `devkit get-context`
   (`PADR-background-pointer-in-constitution`).
 - **Q4**: What moves with the glossary: every consumer of spike F3.
 
 ## 3. Proposed Design & Impact
-
-Items marked **(open: qN)** follow the user's answer to that pending question; the text states the recommended
-option.
 
 - **Directory** (`PADR-steering-documents-directory`): `docs/steering/` (created under `docs/`) holds one Markdown
   file per topic (for example `glossary.md`, `product.md`, `style.md`) and the glossary's `glossary.yaml`; no
@@ -102,16 +99,18 @@ option.
   undeclared or absent), with absolute `path`, sorted by path. `CAP-DIST-workspace-ownership` is amended: seeded
   files are never receipt-verified context files, but a declared context directory may list project files, seeded
   ones included. One test per case, plus a test of the output size at the default caps.
-- **Bounds** (open: q7 for the values): a new spec rule `RULE-steering-documents` (under
+- **Bounds** (`user`, answer-03): a new spec rule `RULE-steering-documents` (under
   `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/`), error severity, reports in `docs/steering/` a
   subdirectory, a file other than `*.md` and `glossary.yaml`, an `id`, a missing `title`, a missing or non-English
   `summary` longer than its own `max_summary_length` (default 300), each Markdown file beyond `max_files` in sorted
   order (so a commit adding the overflowing file is refused at the gate), and a body (the text after the frontmatter)
-  over `max_body_bytes`. `README.md` is neither counted nor listed. Settings `max_files`, `max_body_bytes` and
-  `max_summary_length`; one test per case, including a staged commit for the count. Documented in
+  over `max_body_bytes`. `README.md` is neither counted nor listed. Settings `max_files` (default 10), `max_body_bytes` (default
+  24576, for every file, the glossary included) and `max_summary_length` (default 300); a project raises a setting
+  when it needs more; one test per case, including a staged commit for the count. Documented in
   `CAP-GOV-spec-rules`.
-- **Cited IDs** (open: q5): recommended, `RULE-document-reference` resolves backtick-quoted IDs in steering files the
-  way it resolves root glossary Owners (alias check, no autofix, no graph edges).
+- **Cited IDs** (`user`, answer-02): `RULE-document-reference` resolves backtick-quoted IDs in steering files the way
+  it resolves root glossary Owners: they must resolve, aliases are reported, no autofix and no graph edges; a test
+  covers an unresolved ID, an alias and a resolved ID. Documented in `CAP-GOV-spec-rules`.
 - **Glossary move** (`user`): `glossary.md` and `glossary.yaml` move to `docs/steering/`, the glossary gaining the
   steering frontmatter; the repository's own glossary moves in the same change; no migration and no notice for
   existing consumers (`AGENTS.md` Compatibility). Each literal path of spike F3 is one acceptance item with a test
@@ -142,10 +141,12 @@ option.
 
 ### Order with parallel proposals
 
-- `PROP-table-driven-document-kinds` lands first (`depends_on`). Steering is not a kind and adds no row; where this
+- `PROP-table-driven-document-kinds` lands first (`depends_on`); it is accepted and handed off, its spec now in
+  Development. At this proposal's handoff the dependency names that spec, whose ID this branch cannot resolve yet. Steering is not a kind and adds no row; where this
   proposal touches the rules, it builds on the table's definitions instead of adding constants beside them. That
   proposal excludes the viewer, so the viewer grouping is this proposal's alone.
-- `PROP-ux-documentation` (open: q6): recommended to follow this proposal, so its guidance names the glossary at
+- `PROP-ux-documentation` follows this proposal (`user`, answer-02; the Host adds this proposal to its `depends_on`),
+  so its guidance names the glossary at
   `docs/steering/glossary.md` and points to steering style documents instead of restating them; its option 6b (an
   object table in the glossary) would change the glossary table format, which this proposal excludes.
 
@@ -157,6 +158,8 @@ option.
   run time; a rule caps file count and body size so the glossary fits; the glossary moves; search unchanged.
 - `policy`: no namespace steering directory: no registered namespace exists here, package glossaries already have
   their place (`living-spec-writing`), and get-context lists one directory per bundle declaration.
+- `user` (answer-02, answer-03): cited IDs in steering files are checked like glossary Owners; UX follows this
+  proposal; caps `max_files` 10 and `max_body_bytes` 24576 for every file.
 - `policy` (challenger-02): every spec role loads the context through get-context; read and path-safety rules,
   output shape and the workspace-ownership amendment specified; rule scope defined; package glossaries keep a viewer
   group.
