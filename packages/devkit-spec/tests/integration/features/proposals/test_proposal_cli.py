@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 
 from click.testing import CliRunner, Result
@@ -160,6 +161,53 @@ def test_handoff_json(workspace: Path) -> None:
     assert [notice["code"] for notice in payload["notices"]] == ["SPEC_PROPOSAL_UNBOUND"]
     assert set(payload) >= {"decisions", "rewritten", "rewritten_files", "unresolved", "materials", "target_docs"}
     assert payload["dropped_records"] == [] and payload["carried_gates"] == []
+    assert payload["materials_merged"] is False and payload["dropped_duplicates"] == []
+
+
+def _merge_into_existing(workspace: Path, write: Write, slug: str) -> str:
+    """An accepted proposal whose dated materials directory already holds a file and a duplicate; returns it."""
+    _proposal(workspace, "new", slug)
+    _accept(workspace, slug)
+    today = date.today()
+    dest = f"docs/materials/{today:%Y-%m}/{today:%Y%m%d}-{slug}"
+    write(f"{dest}/bench.json", "{}\n")
+    write(f"{dest}/same.md", "# Same\n")
+    write(f"docs/proposals/PROP-{slug}/materials/design.md", "# Design\n")
+    write(f"docs/proposals/PROP-{slug}/materials/same.md", "# Same\n")
+    return dest
+
+
+def test_handoff_text_reports_a_merge(workspace: Path, write: Write) -> None:
+    dest = _merge_into_existing(workspace, write, "merged")
+    result = _proposal(workspace, "handoff", "merged")
+    assert result.exit_code == 0, result.output
+    lines = result.stdout.splitlines()
+    assert lines[1:3] == [f"[MATERIALS: {dest} merged=yes]", f"[DROPPED_DUPLICATE: {dest}/same.md]"]
+    assert "(SPEC_PROPOSAL_UNBOUND)" in result.stderr and result.stderr.count("(SPEC_") == 1  # no merge notice
+
+
+def test_handoff_json_reports_a_merge(workspace: Path, write: Write) -> None:
+    dest = _merge_into_existing(workspace, write, "merged-json")
+    result = _proposal(workspace, "handoff", "merged-json", "--format", "json")
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["materials"] == dest and payload["materials_merged"] is True
+    assert payload["dropped_duplicates"] == [f"{dest}/same.md"]
+    assert [notice["code"] for notice in payload["notices"]] == ["SPEC_PROPOSAL_UNBOUND"]
+
+
+def test_handoff_refuses_a_merge_conflict(workspace: Path, write: Write) -> None:
+    dest = _merge_into_existing(workspace, write, "conflict")
+    write("docs/proposals/PROP-conflict/materials/bench.json", "[]\n")
+    result = _proposal(workspace, "handoff", "conflict", "--format", "json")
+    assert result.exit_code == 2
+    error = json.loads(result.stdout)["error"]
+    assert error["code"] == "SPEC_PROPOSAL_TARGET_EXISTS"
+    assert error["advisory"]["fix"].startswith(
+        f"Reconcile docs/proposals/PROP-conflict/materials/bench.json with the existing {dest}/bench.json"
+        " (different-content):"
+    )
+    assert (workspace / "docs/proposals/PROP-conflict/proposal.md").is_file()
 
 
 def test_handoff_reports_dropped_records_and_carried_gates(workspace: Path) -> None:
