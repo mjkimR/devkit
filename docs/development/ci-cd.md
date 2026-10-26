@@ -141,3 +141,16 @@ its manifest names the tag being built (`ARCH-07-deployment` §1.2, `CAP-DLV-rel
 Synchronization also runs `uv run --no-active devkit sync` after locking to refresh deployed bundles and
 `.devkit/installation.json`. Commit the refreshed receipt with the release metadata. A sync failure stops release
 preparation without a success sentinel; resolve its advisory and rerun `just version-sync`.
+
+Root `VERSION` names the last released version between releases and moves to the next one only in the release
+commit; the next number is chosen then, because a breaking change to `devkit-advisory` or `devkit-cli` needs a minor
+bump. Prepare a release in this order:
+
+1. Finish every `docs/` change the release carries.
+2. Set `VERSION` to the release version and run `just version-sync`.
+3. When the release carries a handbook refresh, refresh and stamp its pages, then run `just handbook generate` and
+   `just handbook verify`; the manifest takes its tag from `VERSION` and its source commit from `HEAD`.
+4. Run `just version-check` and `just handbook release-check v<VERSION>`, commit, and tag that commit on `main`.
+
+Between generating the handbook and tagging, change nothing under `docs/`: the release check fails a tag whose
+handbook source commit no longer matches the tagged `docs/`.
