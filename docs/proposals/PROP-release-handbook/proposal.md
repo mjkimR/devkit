@@ -2,7 +2,7 @@
 id: PROP-release-handbook
 title: Release-bound Multilingual Handbook
 summary: "Adds a human-readable handbook under handbook/{lang}/, regenerated at each release as a snapshot derived from the Living Spec: English is synthesized from docs/, other languages are translated from English, and docs/ stays the single source of truth."
-status: draft
+status: reviewing
 created_at: 2026-10-22
 target_area: documents/
 priority: medium
