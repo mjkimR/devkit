@@ -1,0 +1,74 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T07:49:50.645497Z'
+status: completed
+review: challenger-01.yaml
+summary: 'challenger-01 findings 8 and 10 closed by answer-01 (q1 a, q2 a, q4 a): the provisional Non-goal and Roles lines were rewritten as user decisions in commit 64788f0e.'
+findings:
+- issue: Decomposer assigns each open parent feedback file to a child, conflicting with feedback retirement and with promotion only through feedback-hygiene
+  evidence: proposal.md:88; docs/capabilities/delivery/CAP-DLV-proposal-incubation.md:193-200; skills/spec/references/feedback-retirement.md:6; backlog.md.jinja:9
+  failure_condition: The Host moves a parent's open feedback into a child or names it in Source feedback, misplacing it or promoting it without a hygiene decision
+  suggested_action: Drop per-child assignment; leave open feedback to the retirement move; optionally flag relevance as hygiene input
+  resolution: resolved
+  severity: P1
+- issue: Resolve-before-write rule drops proposed child IDs and edges to them, which cannot resolve before the children exist
+  evidence: proposal.md:84-88,100-101; backlog.md.jinja Prerequisite disposition step 2
+  failure_condition: A rewired incoming depends_on to PROP-<child> is dropped and the dependent loses its prerequisite silently
+  suggested_action: Existing IDs must resolve; proposed child slugs must not; edges to children are written after creation in the same commit
+  resolution: resolved
+  severity: P2
+- issue: git status --short unchanged misses a write to an already-modified file; Backlog has no clean-tree requirement; scout matrix lacks disallowedTools
+  evidence: proposal.md:42-44,96,107-108; backlog.md.jinja:11; feedback-hygiene/SKILL.md:8; subagents/scout.md:10-14 vs challenger.md:13-16
+  failure_condition: On a dirty base checkout a role write to a modified proposal or feedback file passes the check
+  suggested_action: Require a clean tree or a porcelain plus diff-hash snapshot; use the challenger host matrix with disallowedTools [Write, Edit]
+  resolution: resolved
+  severity: P2
+- issue: No x-model-profile or effort preset chosen though test_role_contracts pins one per contract
+  evidence: tests/integration/bundles/spec/test_role_contracts.py:22-29,56-60; CAP-DLV-delivery-workflows.md:374-391
+  failure_condition: Development picks profiles ad hoc without plan-accept review, undercutting the second-view rationale or raising cost
+  suggested_action: 'Record a policy decision: triage light-medium/medium, decomposer general-high/high'
+  resolution: resolved
+  severity: P2
+- issue: Contracts restate feedback-hygiene and Backlog procedures instead of citing them, though the main session runs both
+  evidence: proposal.md:79-89; CAP-DLV-delivery-workflows.md:393-400; feedback-hygiene/SKILL.md Steps 1-2
+  failure_condition: When the playbook changes, the copied contract text drifts and the substitute route runs a divergent copy
+  suggested_action: Cite the owning procedures by managed path; keep inputs, return fields and write boundaries in the body; fallback is running the playbook inline
+  resolution: resolved
+  severity: P2
+- issue: 'Decomposer input not pinned to a state: no proposal check before delegation and no head in the return'
+  evidence: proposal.md:84,96-99; backlog.md.jinja:8,15-20; spec-delegate payload.md:12
+  failure_condition: Split reflects a stale draft (unmerged Planning return or concurrent edit) or stale dependents
+  suggested_action: Require a passing proposal check on the base, pass diff_scope.head, confirm no draft diff and re-run refs before applying
+  resolution: resolved
+  severity: P2
+- issue: Return does not say which child inherits which parent PADR, answer or material; the parent is deleted in the same commit
+  evidence: proposal.md:84-89; skills/spec/references/planning.md:8-11; backlog.md.jinja:10
+  failure_condition: Planning decisions and spike materials vanish from the live tree and child Planning re-asks or contradicts them
+  suggested_action: Return a per-child inherit list; Host carries them or the user drops them explicitly
+  resolution: resolved
+  severity: P2
+- issue: Non-goals and Roles text already settle the pending q1, q2 and q4
+  evidence: proposal.md:47-48,55,77,131-137
+  failure_condition: plan-accept on the current text binds the user to read-only and no record without asking
+  suggested_action: 'Decision needed: present q1 and q2 with the non-goal options and mark the matching lines provisional'
+  resolution: resolved
+  severity: P2
+- issue: Exit condition has no verification plan beyond textual role-set tests; decomposer path never exercised
+  evidence: MS-autonomous-backlog-and-orchestration Exit condition 1; proposal.md:119-120; materials/spike-findings.md F5
+  failure_condition: Completion review can cite only contract text and the first real decomposition finds the defect
+  suggested_action: 'Name a mechanical acceptance: a dogfood triage run with a before/after snapshot, and a fixture decomposition through the Host procedure'
+  resolution: resolved
+  severity: P2
+- issue: q2/q4 framing misses running the decomposer inside Planning before a needs_decompose return, and recording under a counted kind would feed stage exits
+  evidence: skills/spec/references/planning.md:8,13; CAP-DLV-workflow-envelopes.md:166-174; review-loop.md:40
+  failure_condition: The user decides without the Planning-side option, or a challenger-kind record blocks a child spike exit
+  suggested_action: 'Decision needed: add the Planning-side option to q4 and q2; a kept record uses the role''s own kind'
+  resolution: resolved
+  severity: P3
+checks: {}
+diff_scope:
+  base: 9b7b572705d48e137f05db78550f5ce62265336a
+  head: c694c9a0d2202141c2ae29ef6ddf660f921d8d7e
+activity_effort: medium
