@@ -14,10 +14,15 @@ boundaries:
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
     - packages/devkit-spec/tests/
     - packages/devkit-dist/src/devkit_dist/features/distribution/
+    - packages/devkit-dist/src/devkit_dist/bundles/devkit/bundle/
     - packages/devkit-dist/tests/
+    - packages/devkit-catalog/README.md
+    - packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/
+    - guides/install/
     - docs/capabilities/distribution/
     - docs/capabilities/delivery/
     - docs/capabilities/harness/
+    - docs/usecases/governance/
     - docs/architecture/
     - docs/decisions/
   excludes:
@@ -80,6 +85,61 @@ while task-specific candidates can change during the conversation.
   selected-body loading and consumers without the `spec` bundle.
 - Non-goals: search ranking changes, alias keyword indexing, scheduling, execution history, bulk context loading,
   and automatic execution beyond the user's authorized task.
+
+## 3a. Planning direction
+
+Evidence: [discovery evidence](materials/discovery-evidence.md). Open user decisions are listed as pending; the rest
+is the working direction this Planning turn settled.
+
+### Discovery trigger and skip cases (Q1, settled)
+
+`spec` runs discovery once at **new task intake**: a `/spec <intent>`, or a request within an ongoing conversation that
+falls outside the agreed scope of the current task. Task kind (`feature`, `bugfix`, `overall-refactor`) and
+planning depth never exempt a task. Discovery is skipped, with these representative cases:
+
+| Skip case | Example |
+| --- | --- |
+| Continuation of an existing proposal or Unit: `/spec-next`, a `planning-worker` or `development-worker` turn, a Host resuming a handoff or the stage `devkit workflow next` names | "Continue Planning for PROP-x"; a worker payload naming its unit |
+| A follow-up within the same task: answers, clarifications, review fixes, retries, corrections of the delivered change | "Use option b"; "fix the lint error"; "rerun the tests" |
+| The entry is already explicit: the user names a playbook ID (`devkit playbook get` directly), or a failing rule's remediation names one | "Run spec/adr-compaction" |
+| Execution inside a selected playbook | A step of `brownfield-adoption` asks for a change; no nested search |
+| An information-only question that requests no change and no operation | "What does `devkit sync` write?" |
+
+Not skipped: a new request after earlier work finished, even inside a Planning or Development conversation ("now clean
+up open feedback"), and a question that asks how to perform an operation ("how do I adopt devkit here?").
+
+### Bounded retrieval (Q4, settled)
+
+- One `devkit playbook search "<English query>" --limit 3` per intake; the default `--max-bytes` stays. The probe
+  measured 564 to 1810 bytes at `limit=5`, about 360 bytes per candidate, with every relevant playbook ranked first.
+- No automatic query refinement. A search runs again only at the next new task intake; unchanged bundle context is
+  not reloaded.
+- A candidate is selected only when its `description` names the requested operation. Scores never decide: `hybrid`
+  and `lexical` return candidates for unrelated tasks. When no description fits, `spec` continues the ordinary path
+  without mentioning the search.
+- Only a selected playbook's body is read (search path or `devkit playbook get`), after its bundle's context when
+  that is not already loaded.
+
+### Decisions pending the user
+
+- **Q2 ownership** between `spec` and `spec-playbook` (worker question `ownership`).
+- **Q3 the generated `devkit-playbook` skill** and consumers without `spec` (worker question `entry-skill`).
+- **Application authority** after a match, which decides how the playbooks' explicit-invocation prerequisites are
+  rewritten (worker question `apply-authority`).
+
+### Decision record
+
+Discovery from ordinary task intake reverses `ADR-external-playbook-execution` §4 ("Ordinary requests do not
+authorize discovery"). Development writes a new ADR that supersedes it and restates its retained decision: exact
+receipt-backed retrieval without execution authority, external scheduling and execution. A PADR records the
+direction once the pending decisions are answered.
+
+### Interaction with PROP-review-refactor
+
+`PROP-review-refactor` adds a `maintenance` playbook and owns `packages/devkit-catalog/src/devkit_catalog/maintenance/`
+and `docs/capabilities/delivery/`. This proposal edits the entry-condition wording of the existing maintenance
+playbooks there. The new playbook states its entry condition in the form settled here and a `description` that names
+its operation; whichever proposal lands second reconciles the other's wording.
 
 ## 4. Lifecycle & Retirement Criteria
 
