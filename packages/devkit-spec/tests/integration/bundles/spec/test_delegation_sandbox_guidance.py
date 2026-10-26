@@ -51,12 +51,16 @@ def test_a_before_after_outcome_names_a_baseline_a_worker_can_produce(environmen
 # AC-03
 def test_the_code_reviewer_may_run_probes_only_in_the_ignored_path() -> None:
     reviewer = text(REVIEWER)
-    assert "write throwaway probe tests through the shell only under the ignored probe path the payload names" in reviewer
+    assert (
+        "write throwaway probe tests through the shell only under the ignored probe path the payload names" in reviewer
+    )
     assert "run the package's test command on them" in reviewer
     assert "Delete every probe before you return, so `git status --short` stays unchanged" in reviewer
     assert "never one of the unit's tests" in reviewer
     assert "Modify, stage and commit nothing outside that probe path." in reviewer
-    assert "an ignored probe path inside the worktree for throwaway probe tests, preparing one if none exists" in text(PAYLOAD)
+    assert "an ignored probe path inside the worktree for throwaway probe tests, preparing one if none exists" in text(
+        PAYLOAD
+    )
 
 
 # AC-04
