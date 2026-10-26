@@ -1,0 +1,17 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T07:02:58.489550Z'
+status: completed
+summary: 'Ran Development from specify to the final change report. A characterization baseline came first. Then kinds.py (KindDefinition table) with consumers migrated, the review (3 P3: 2 fixed, 1 waived), the Living Spec reconcile (4 P3 fixed) and the feedback sweep (FB-local-render-stale-reads-as-maintenance). The fixture and repository outputs are byte-identical to 6a19ff5f. Integration is left to the Host.'
+findings: []
+checks:
+  tests: PASS just test-affected 1562 passed
+  lint: PASS just lint-check devkit-spec; rules check --ci --base 6a19ff5f errors=0
+  build: PASS just check devkit-spec 0 errors; sync --check matches
+  characterization: PASS diff -r empty
+diff_scope:
+  base: 6a19ff5ff648cc69904559b659faaa4c55dbf53b
+  head: 86f213b88a817fb39971aeb93c55e8ab9596228a
+activity_effort: medium
