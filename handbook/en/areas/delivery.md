@@ -1,11 +1,11 @@
 ---
 sources:
   CAP-DLV-cli-and-output: 0324155e16a2233cbc1ad5268d2f103f3f1477c1
-  CAP-DLV-delivery-workflows: e25a0313ce7d7a44041185ec4098d434de0f6357
+  CAP-DLV-delivery-workflows: e1366a8cbed7bace6c51651085abc7d50b588768
   CAP-DLV-drift-reconciliation: 25e499e1a6d18c0d65be1855cfe8bd3925f2d1c6
   CAP-DLV-human-interaction: bbe6a95de1da4aae4da340a8a8f0dfd8e8e6a035
-  CAP-DLV-project-policy: f429313e6c4fb977e664bbac9072d19e15a1b2da
-  CAP-DLV-proposal-incubation: 3248500db261e1f3fc5c96063b6b8445d734ed7e
+  CAP-DLV-project-policy: 7cec046a7324de8f46048c80dea6a4286bf809ef
+  CAP-DLV-proposal-incubation: baea280e677c5fb4d6a5cefd7024f0217df86ce1
   CAP-DLV-release-handbook: 7fa53f1c5669584342764f579384066369eeafaa
   CAP-DLV-review-refactor: 4c9e10968504b3edfdd77c6698275db599416bfd
   CAP-DLV-spec-bundles: 516cc932fee8af93baae90012e8dbe4c9b6f4725
@@ -26,7 +26,7 @@ title: Delivery
 # Delivery
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `c94b6a08710e`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -122,7 +122,10 @@ feedback and an optional `target-docs.md` blueprint of the intended Living Spec 
    checkout; run it with `--check` first to see every eligibility condition at once.
 4. **Handoff**: `uv run devkit spec proposal handoff <slug>` on the `dev-<slug>` branch creates the spec bundle,
    carries the body, promotes PADRs to ADRs, moves materials and open feedback, rewrites links and removes the
-   proposal. A failed write rolls back and keeps the proposal so you can rerun.
+   proposal. A failed write rolls back and keeps the proposal so you can rerun. This plain form is the Host-run step
+   after the `proposal-handoff` decision and reads no policy itself; from the base checkout,
+   `uv run devkit spec proposal handoff <slug> --effort <level>` reads the policy, prepares `dev-<slug>` and hands off
+   there.
 
 A rejected proposal only changes status; a later hygiene pass records a rejection ADR and deletes it. List active
 proposals with `uv run devkit spec list proposal`. The full journey is

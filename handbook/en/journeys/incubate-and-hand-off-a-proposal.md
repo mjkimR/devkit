@@ -1,7 +1,7 @@
 ---
 sources:
-  CAP-DLV-delivery-workflows: e25a0313ce7d7a44041185ec4098d434de0f6357
-  CAP-DLV-proposal-incubation: 3248500db261e1f3fc5c96063b6b8445d734ed7e
+  CAP-DLV-delivery-workflows: e1366a8cbed7bace6c51651085abc7d50b588768
+  CAP-DLV-proposal-incubation: baea280e677c5fb4d6a5cefd7024f0217df86ce1
   CAP-DLV-spec-bundles: 516cc932fee8af93baae90012e8dbe4c9b6f4725
   UC-incubate-and-hand-off-a-proposal: cad9b1da4379376d6512d16b06787ea1eed9a43e
 title: Incubate and hand off a proposal
@@ -10,7 +10,7 @@ title: Incubate and hand off a proposal
 # Incubate and hand off a proposal
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `c94b6a08710e`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

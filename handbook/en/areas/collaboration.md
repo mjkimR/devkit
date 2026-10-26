@@ -2,7 +2,7 @@
 sources:
   CAP-COLL-shared-artifacts: d000f00d3b8d672ea0473d3c6f01dafafe3b8f70
   CAP-COLL-work-scope-registry: e60ca6b5e8eccf19fac5b506233860376125ae9a
-  CAP-DLV-project-policy: f429313e6c4fb977e664bbac9072d19e15a1b2da
+  CAP-DLV-project-policy: 7cec046a7324de8f46048c80dea6a4286bf809ef
   CAP-MCP-runtime-registration: 6dd9d3d5cf7a915a18d80f1adae375cf73823c1a
   CAP-TRACE-code-entrypoints: 3b8cb1476d9102bf09e6ffc6a469c3e00e58da97
   CAP-WT-task-worktrees: a885013edf5dd548ffad4e9140c4b32b01b16ce2
@@ -13,7 +13,7 @@ title: Collaboration
 # Collaboration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `c94b6a08710e`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

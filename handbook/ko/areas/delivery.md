@@ -21,13 +21,13 @@ sources:
   UC-review-and-refactor-accumulated-slop: null
   UC-route-development-intent: null
 title: 전달
-translated_from: en/areas/delivery.md@8afc7203af77911d
+translated_from: en/areas/delivery.md@c50dd57fe84cc875
 ---
 
 # 전달
 
 <!-- handbook:provenance -->
-> 소스 커밋 `b44f759024a5` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `c94b6a08710e` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -125,7 +125,10 @@ Spec 변경의 선택적 청사진인 `target-docs.md`로 이루어집니다. �
    있습니다. 먼저 `--check`로 실행하면 모든 자격 조건을 한 번에 볼 수 있습니다.
 4. **인계(handoff)**: `dev-<slug>` 브랜치에서 `uv run devkit spec proposal handoff <slug>`를 실행하면 스펙 번들을 만들고,
    본문을 옮기고, PADR을 ADR로 승격하고, 자료와 열린 피드백을 옮기고, 링크를 다시 쓰고, 제안서를 제거합니다. 쓰기가
-   실패하면 롤백하고 제안서를 남겨 두므로 다시 실행할 수 있습니다.
+   실패하면 롤백하고 제안서를 남겨 두므로 다시 실행할 수 있습니다. 이 기본 형태는 `proposal-handoff` 결정 뒤 Host가
+   실행하는 단계이며 정책을 직접 읽지 않습니다. 기본 체크아웃에서
+   `uv run devkit spec proposal handoff <slug> --effort <level>`을 실행하면 정책을 읽고, `dev-<slug>`를 준비한 뒤
+   그곳에서 인계합니다.
 
 거절된 제안서는 상태만 바뀌고, 이후의 위생(hygiene) 점검이 거절 ADR을 기록하고 삭제합니다. 활성 제안서는
 `uv run devkit spec list proposal`로 나열합니다. 전체 여정은

@@ -12,7 +12,7 @@ translated_from: en/README.md@4ce38c78b6c2318e
 # devkit 핸드북
 
 <!-- handbook:provenance -->
-> 소스 커밋 `b44f759024a5` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `c94b6a08710e` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 devkit은 AI 코딩 에이전트(Codex, Claude Code, Antigravity)가 많은 작업을 맡는 저장소를 위한 개발자 도구 모음입니다.

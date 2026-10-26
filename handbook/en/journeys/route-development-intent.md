@@ -1,8 +1,8 @@
 ---
 sources:
   ADR-spec-intake-playbook-discovery: 16bc21ff4c9228e34f7634d89dd64da91c60b50a
-  CAP-DLV-delivery-workflows: e25a0313ce7d7a44041185ec4098d434de0f6357
-  CAP-DLV-project-policy: f429313e6c4fb977e664bbac9072d19e15a1b2da
+  CAP-DLV-delivery-workflows: e1366a8cbed7bace6c51651085abc7d50b588768
+  CAP-DLV-project-policy: 7cec046a7324de8f46048c80dea6a4286bf809ef
   CAP-DLV-spec-bundles: 516cc932fee8af93baae90012e8dbe4c9b6f4725
   CAP-HARN-agent-guidance: dbab285c20602e97d78db8768dc21e0a5613b379
   CAP-WT-task-worktrees: a885013edf5dd548ffad4e9140c4b32b01b16ce2
@@ -14,7 +14,7 @@ title: Route a development request
 # Route a development request
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `c94b6a08710e`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

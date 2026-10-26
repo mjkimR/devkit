@@ -2,7 +2,7 @@
 sources:
   CAP-DIST-content-packages: dcd5bdbf45e7fbe1e26f52118902c300bbf646e6
   CAP-DIST-context-and-playbooks: 34185acd0c3f1a6432909d7718d9b18f52eda6cf
-  CAP-DLV-delivery-workflows: e25a0313ce7d7a44041185ec4098d434de0f6357
+  CAP-DLV-delivery-workflows: e1366a8cbed7bace6c51651085abc7d50b588768
   CAP-DLV-drift-reconciliation: 25e499e1a6d18c0d65be1855cfe8bd3925f2d1c6
   CAP-DLV-review-refactor: 4c9e10968504b3edfdd77c6698275db599416bfd
   UC-review-and-refactor-accumulated-slop: 99e3929f75bacf6df151e9a3cc803b8c46bc5867
@@ -12,7 +12,7 @@ title: Review and refactor accumulated slop
 # Review and refactor accumulated slop
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `c94b6a08710e`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
