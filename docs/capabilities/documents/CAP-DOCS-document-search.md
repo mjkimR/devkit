@@ -46,7 +46,7 @@ expansion. Going from a known ID to its path stays `devkit spec resolve` (`CAP-D
 3. **Pinning**: a query equal to a document's ID, one of its declared `aliases`, its workspace-relative path or file
    name (compared case-insensitively after trimming) MUST put that document first, whatever the ranking, with
    `score=-` (`null` in JSON) and `pinned=yes`. A pinned document is not repeated among the ranked hits.
-4. **Glossary expansion**: the optional, project-owned `docs/glossary.yaml` expands the query through the shared `devkit_core.core.yaml` LibYAML safe parser. Terms and query are
+4. **Glossary expansion**: the optional, project-owned `docs/steering/glossary.yaml` expands the query through the shared `devkit_core.core.yaml` LibYAML safe parser. Terms and query are
    compared as the words of devkit's `tokenize` (casefolded, split on `-`, `_`, `.` and other non-word characters,
    Latin accents dropped), so `Work_Scope` matches the term `work-scope` and `cafe` the term `café`. When the query
    contains every word of a term of a cluster, consecutively and in order, the whole cluster (`primary` plus
@@ -105,7 +105,7 @@ plus `score` and `pinned`), `notices`.
 ### 4.4 Glossary File
 
 ```yaml
-# docs/glossary.yaml (optional, project-owned)
+# docs/steering/glossary.yaml (optional, project-owned)
 terms:
   - primary: reconciliation
     synonyms: [정합성, sync]
@@ -117,7 +117,7 @@ terms:
 
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
-| `SPEC_GLOSSARY_INVALID` | `ERROR` (`INPUT_ERROR`) | `GlossaryInvalidError` | `docs/glossary.yaml` cannot be read or is not `terms: [{primary, synonyms}]`. |
+| `SPEC_GLOSSARY_INVALID` | `ERROR` (`INPUT_ERROR`) | `GlossaryInvalidError` | `docs/steering/glossary.yaml` cannot be read or is not `terms: [{primary, synonyms}]`. |
 | `YAML_BINDING_UNAVAILABLE` | `ERROR` (execution failure) | `YamlBindingUnavailableError` | PyYAML has no usable LibYAML binding when a YAML read begins; exit `2`, before glossary validation. |
 
 devkit's `SEARCH_EXTRA_MISSING`, `SEARCH_MODEL_NOT_FOUND` and `SEARCH_MODEL_INVALID` pass through for explicit dense

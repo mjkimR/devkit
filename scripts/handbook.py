@@ -42,6 +42,8 @@ DEFAULT_LANGS = ("en", "ko")
 TERMS = "terms.yaml"
 # Pages the script writes whole in every language; they carry `generated: true` and are never translated.
 GENERATED_PAGES = ("decisions.md", "changes.md", "glossary.md")
+# The Living Spec glossary at a source commit: the steering directory, then the root path of commits before the move.
+GLOSSARY_PATHS = ("docs/steering/glossary.md", "docs/glossary.md")
 SOURCE_DIRECTORIES = ("docs", "specs")
 KINDS = {"UC": "usecase", "CAP": "capability", "ADR": "decision", "ARCH": "architecture", "SPEC": "spec"}
 
@@ -528,8 +530,7 @@ def collect_status(root: Path, directory: Path, documents: Documents, langs: lis
     for document in [*documents.of_kind("usecase"), *documents.of_kind("capability")]:
         if document.id not in cited and document.status != "deprecated":
             status.gaps.append(Finding("HANDBOOK_GAP", (("id", document.id), ("kind", document.kind))))
-    glossary = documents.paths and "docs/glossary.md" in documents.paths
-    terms = glossary_terms(git(root, "show", f"{documents.commit}:docs/glossary.md")) if glossary else []
+    terms = glossary_terms(glossary_source(root, documents))
     for lang in langs:
         if lang == PIVOT:
             continue
@@ -552,6 +553,22 @@ def collect_status(root: Path, directory: Path, documents: Documents, langs: lis
             if term not in rendered:
                 status.terms.append(Finding("HANDBOOK_TERM_MISSING", (("lang", lang), ("term", json.dumps(term)))))
     return status
+
+
+def glossary_source(root: Path, documents: Documents) -> str:
+    """The glossary at the source commit: ``docs/steering/glossary.md``, or ``docs/glossary.md`` for a commit before
+    the glossary moved into the steering directory; ``""`` when no commit is loaded."""
+    if not documents.paths:
+        return ""
+    for path in GLOSSARY_PATHS:
+        if path in documents.paths:
+            return git(root, "show", f"{documents.commit}:{path}")
+    raise HandbookError(
+        f"the source commit {documents.commit} has no glossary",
+        f"looked for {' and '.join(GLOSSARY_PATHS)}",
+        code="HANDBOOK_GLOSSARY_MISSING",
+        fix="Pin a source commit that has docs/steering/glossary.md, or restore the glossary and commit it",
+    )
 
 
 def read_terms(directory: Path, lang: str) -> dict[str, str]:
@@ -661,7 +678,7 @@ def render_changes(
 
 def render_glossary(root: Path, documents: Documents, directory: Path, lang: str) -> str:
     text = strings(lang)
-    source = git(root, "show", f"{documents.commit}:docs/glossary.md") if "docs/glossary.md" in documents.paths else ""
+    source = glossary_source(root, documents)
     rendered = read_terms(directory, lang) if lang != PIVOT else {}
     out = [text["glossary_intro"]]
     section = None

@@ -282,7 +282,8 @@ The `docs-skeleton` asset seeds `docs/`, each file written once where absent and
 
 ```text
 docs/
-├── README.md, glossary.md, glossary.yaml     # entry, terms, search synonyms
+├── README.md                                  # entry
+├── steering/glossary.md, glossary.yaml        # steering documents: terms, search synonyms
 ├── architecture/                              # README.md and arc42 chapters ARCH-01, 03, 05-1, 05-2, 06, 07, 08
 ├── capabilities/README.md, usecases/README.md, decisions/README.md, materials/README.md, proposals/README.md, roadmap/README.md
 └── development/setup.md, workflow.md, ci-cd.md
@@ -291,7 +292,7 @@ docs/
 The directory READMEs state each directory's naming and authoring conventions and point at `devkit spec list` for
 discovery instead of catalog tables.
 
-The seeded `glossary.md` table is `Term | Definition | Owner | Avoid | Code identifiers` (`ADR-writing-and-terminology-guidance`):
+The seeded `steering/glossary.md` (steering frontmatter `title` and `summary`) table is `Term | Definition | Owner | Avoid | Code identifiers` (`ADR-writing-and-terminology-guidance`):
 the definition also states what a term excludes, `Owner` is the defining document ID or owning component, `Avoid` lists
 rejected synonyms (also synonyms of the term's cluster in `glossary.yaml`) and `Code identifiers` the matching fields,
 types and paths. Its "Avoided Generic Nouns" section holds the project's additions to the `living-spec-writing` default

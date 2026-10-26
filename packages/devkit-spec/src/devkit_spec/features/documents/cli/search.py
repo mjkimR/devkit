@@ -81,7 +81,7 @@ def search_cmd(
 ) -> None:
     """Rank documents for QUERY (English works best: frontmatter is the main signal).
 
-    An exact ID, path or file name is pinned first. docs/glossary.yaml synonyms expand the query.
+    An exact ID, path or file name is pinned first. docs/steering/glossary.yaml synonyms expand the query.
     """
     if limit < 0:
         raise ArgumentError(

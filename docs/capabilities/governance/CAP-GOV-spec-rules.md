@@ -96,7 +96,7 @@ Every rule is phase `linter` and is deployed by the `core` preset; every rule is
 
 Documents reference each other by exact, resolvable full IDs. Checks every current document that is not a material.
 
-The root `docs/glossary.md` is an additional, ID-free input: in five-column tables headed
+The root glossary `docs/steering/glossary.md` is an additional, ID-free input: in five-column tables headed
 `Term | Definition | Owner | Avoid | Code identifiers` with a Markdown separator row, backticked or bracketed full
 IDs in the Owner column MUST resolve to exactly one indexed document. Missing and ambiguous owners produce errors
 at their source line; an Owner naming an alias is reported (not fixed) with the canonical ID. Empty cells and non-reference text are allowed. The header fixes the Owner column;

@@ -20,3 +20,5 @@ terms:
     synonyms: ["어드바이저리", "agent advisory", "advisory error", "경고", "오류"]
   - primary: compact
     synonyms: ["컴팩트", "devkit run", "bounded output", "실행 요약"]
+  - primary: steering document
+    synonyms: ["steering", "foundation document", "background document"]

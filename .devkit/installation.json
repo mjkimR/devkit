@@ -565,11 +565,11 @@
         "docs/development/ci-cd.md",
         "docs/development/setup.md",
         "docs/development/workflow.md",
-        "docs/glossary.md",
-        "docs/glossary.yaml",
         "docs/materials/README.md",
         "docs/proposals/README.md",
         "docs/roadmap/README.md",
+        "docs/steering/glossary.md",
+        "docs/steering/glossary.yaml",
         "docs/usecases/README.md"
       ]
     },
@@ -611,6 +611,16 @@
         ".devkit/managed/spec/rules/document_summary/guide.md",
         ".devkit/managed/spec/rules/document_summary/rule.py",
         ".devkit/managed/spec/rules/document_summary/tests/test_rule.py"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "id": "steering-documents",
+      "kind": "rule",
+      "paths": [
+        ".devkit/managed/spec/rules/steering_documents/guide.md",
+        ".devkit/managed/spec/rules/steering_documents/rule.py",
+        ".devkit/managed/spec/rules/steering_documents/tests/test_rule.py"
       ]
     },
     {
@@ -796,7 +806,7 @@
   "files": {
     ".agents/agents/challenger.md": {
       "mode": 420,
-      "sha256": "ab0af650f05368c8a714184c1c26a952b4c036b571f44b4e0b25de8f6e87db9d"
+      "sha256": "e7a8cda188518edd4213a54db0b4bce1c47c36d908bc87333ec4201780e593b6"
     },
     ".agents/agents/code-reviewer.md": {
       "mode": 420,
@@ -804,19 +814,19 @@
     },
     ".agents/agents/development-worker.md": {
       "mode": 420,
-      "sha256": "b962fefcc08474b80aab4a84c6f97085c852d86030d05bdc020115b9ee47686b"
+      "sha256": "7ed42b23abc0492dd1003d361cc428d519a7d4c7bc9a1b8dae0e6fde0ad4678f"
     },
     ".agents/agents/planning-worker.md": {
       "mode": 420,
-      "sha256": "c7b4777ab67000ee70665ebb5889c40cd22b522f15fd96c5ad70f435672dd75a"
+      "sha256": "970dc9fec6212cb7d97e18925b081f74d17eeb129bb052d8456a1722f3745a7b"
     },
     ".agents/agents/reconcile-reviewer.md": {
       "mode": 420,
-      "sha256": "a2bba40539df6ec0dd2c45b9353a059aa407cfbd65ef85635784306a332d1fac"
+      "sha256": "b4ae010b3d30f7b0fdf07b1dba6db8e07a85f91b32622a860dff364548379438"
     },
     ".agents/agents/scout.md": {
       "mode": 420,
-      "sha256": "8c394965d33c56a17b6f793deb0c3bea0db4c9728697c2475f8789379b7e0d41"
+      "sha256": "fad039ed3830c252aeadd4bae07136a910682a941bf45b6397769f32e55ea889"
     },
     ".agents/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
@@ -940,7 +950,7 @@
     },
     ".agents/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "0e438609785e30995c0b014540d150e4e807ba4c9ffe128f9f2d3db5a9e7bb77"
+      "sha256": "011201c75bb13d3fecc551a5506521265a2fcbc74437279a012b224390d25363"
     },
     ".agents/skills/spec-tasks/SKILL.md": {
       "mode": 420,
@@ -1016,7 +1026,7 @@
     },
     ".claude/agents/challenger.md": {
       "mode": 420,
-      "sha256": "fd03a40ae2dcbb3b5fcb68b37e70f2f58ff01913ad0ec5d61e1f05b594590655"
+      "sha256": "03cb4cd54bb1c7bed2c3ce91376544c3ac25477eef604a0ef8bfeff240158d07"
     },
     ".claude/agents/code-reviewer.md": {
       "mode": 420,
@@ -1024,19 +1034,19 @@
     },
     ".claude/agents/development-worker.md": {
       "mode": 420,
-      "sha256": "11c04a63a85e7b693edbe35017dac99b25152934f4fed7b5927dc455edf5b2df"
+      "sha256": "9359d0e2318cb7bd6b4eea8b64f7a6c6e65f6ebb81107be630c3de61eb0400b6"
     },
     ".claude/agents/planning-worker.md": {
       "mode": 420,
-      "sha256": "76530fe9a0d1020aa9d551f0d6844766202de58d34d23f02347d4d3aa4d409f2"
+      "sha256": "3a4ff30b37079d16a6d55ada0c02eab2f9cfa7cb9ffe1adb9fef3c8f6af97168"
     },
     ".claude/agents/reconcile-reviewer.md": {
       "mode": 420,
-      "sha256": "ab2be3755404934c9863f6ba6a943716b4c7e3c3d3ceb69ff91ab6f367fb4666"
+      "sha256": "db99438a444e88b723ed7cd218a6b24ff0ade7670f0396a34188253ef6384676"
     },
     ".claude/agents/scout.md": {
       "mode": 420,
-      "sha256": "6423b68196c6d439573e648c4bdf3af87f0803f2dbbbb00a9034d3072333b694"
+      "sha256": "dcedb170e2cbe75a2019c37bd7778b70b759a162c43f3764712e0d71865a06d9"
     },
     ".claude/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
@@ -1148,7 +1158,7 @@
     },
     ".claude/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "0e438609785e30995c0b014540d150e4e807ba4c9ffe128f9f2d3db5a9e7bb77"
+      "sha256": "011201c75bb13d3fecc551a5506521265a2fcbc74437279a012b224390d25363"
     },
     ".claude/skills/spec-tasks/SKILL.md": {
       "mode": 420,
@@ -1224,7 +1234,7 @@
     },
     ".codex/agents/challenger.toml": {
       "mode": 420,
-      "sha256": "ddc40faffe3acce3dc850d62bc701bc607c7d2bc9254ad3f53ade6666d039963"
+      "sha256": "d61fc8c7f3409dca56ac4e749b8c1599defe96661f087d3ae11b2d08ea6850c0"
     },
     ".codex/agents/code-reviewer.toml": {
       "mode": 420,
@@ -1232,19 +1242,19 @@
     },
     ".codex/agents/development-worker.toml": {
       "mode": 420,
-      "sha256": "793851e47aeb5f423f1760dae8da00d083308a7f2f0fc8b305e5c0d37fe85b71"
+      "sha256": "0fb15f541d1cb3c8f6c03e0ba4ee11e02f80c6305ff368365cd4f6656fb1d32d"
     },
     ".codex/agents/planning-worker.toml": {
       "mode": 420,
-      "sha256": "31b0cd3698762d40656b0fb15d003a277282d65cfea8bea0f9348e0c7effae37"
+      "sha256": "2eae784028f2c1f2759cf5b6367c9ee5e4717989b2c907ab0831267f19ab9dc6"
     },
     ".codex/agents/reconcile-reviewer.toml": {
       "mode": 420,
-      "sha256": "b398e6c538f2c09c26a47c395842248fbf86b5d58900858dbf804896ba4a39d9"
+      "sha256": "69dcdb38c70802c19219e7046184b9985a040f19a1ec53e7095253dcc1b4b37f"
     },
     ".codex/agents/scout.toml": {
       "mode": 420,
-      "sha256": "5d9bf44e8c63d166f5c8c46b9aff2bc5076b05ee6b53d6a3d31a13d6a1573605"
+      "sha256": "670e670ca7d1c0986be0aa9f4a9e8c66c5cacaeefdae78d69ae6903d51ea9e7b"
     },
     ".devkit/managed/_devkit/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
@@ -1436,11 +1446,11 @@
     },
     ".devkit/managed/spec/AGENTS.md": {
       "mode": 420,
-      "sha256": "b830f1a823e1354257ff745c047bfe81cd36695e2c432d1824584859967cc578"
+      "sha256": "2947e9d9c3300bd09fa28f88594c31d6be7e53b127d87bf8cec6151451f25c37"
     },
     ".devkit/managed/spec/bundle.toml": {
       "mode": 420,
-      "sha256": "7ef74cd2e74110a444dedb7ea8cd274c6b6db7a60fa5c4a63cfd8e13db1105d1"
+      "sha256": "cd0581c6121e6c3125e7f724454df305189d60e7534e1456d0ee369212da2440"
     },
     ".devkit/managed/spec/guidance/spec-pointer.md": {
       "mode": 420,
@@ -1448,7 +1458,7 @@
     },
     ".devkit/managed/spec/instructions/architecture-writing.md": {
       "mode": 420,
-      "sha256": "b801dcf73c88f031a9072e44ac6090fb1382cefae9fa7785bfcc1ac24acf902d"
+      "sha256": "86f6cfbec13b1413b7031a18137789f2d3dc6163c11af17e41cd27a1749eb023"
     },
     ".devkit/managed/spec/instructions/capability-writing.md": {
       "mode": 420,
@@ -1468,7 +1478,7 @@
     },
     ".devkit/managed/spec/instructions/living-spec-writing.md": {
       "mode": 420,
-      "sha256": "44d5920773917d0e9b18474dbc70a9eae75f6140e2d3b422fac98527e62a1952"
+      "sha256": "37c334ccabebb7967c461f811faf7dc2b231cfb367028ebe6f6577b97b513d88"
     },
     ".devkit/managed/spec/instructions/usecase-writing.md": {
       "mode": 420,
@@ -1476,7 +1486,7 @@
     },
     ".devkit/managed/spec/playbooks/adr-compaction/SKILL.md": {
       "mode": 420,
-      "sha256": "a1f514ef37f878c0553967c056a5670d8c50eb2b85d3ae4de6d9f2d8173a48e3"
+      "sha256": "3c535404392da8feb81b1d6c9133e6f87fee1913f2cad8411f1e66b14e77308c"
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md": {
       "mode": 420,
@@ -1484,7 +1494,7 @@
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/references/migration.md": {
       "mode": 420,
-      "sha256": "758be28da963431c532a250be221efe48310e9f64ef0a124784d2181433656cd"
+      "sha256": "2c1363bc092494dc775cde16f8c2847d4eb847281fd2af58f770c7cf4ba471f1"
     },
     ".devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md": {
       "mode": 420,
@@ -1504,7 +1514,7 @@
     },
     ".devkit/managed/spec/rules/document_reference/guide.md": {
       "mode": 420,
-      "sha256": "df263cfb4a57ec49c12849a408b68710e1302bea2c3a5be31c1c7c32a404dabf"
+      "sha256": "9df4f264b67dd0bac4d9a8542eb894ae4b7f5a46b496324ae6ebbf0ac20df3a2"
     },
     ".devkit/managed/spec/rules/document_reference/rule.py": {
       "mode": 420,
@@ -1512,7 +1522,7 @@
     },
     ".devkit/managed/spec/rules/document_reference/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "68841367f428e116bb0612e14adc318e836c18c380b6df5c232e00d3058d61fa"
+      "sha256": "c53fd1f7fe2a97b3457e1651d9a1601f8c73516720eaeb9ad5015609338485b6"
     },
     ".devkit/managed/spec/rules/document_summary/guide.md": {
       "mode": 420,
@@ -1528,7 +1538,7 @@
     },
     ".devkit/managed/spec/rules/id_convention/guide.md": {
       "mode": 420,
-      "sha256": "2941dc2e8b6879966f39a8d52c84386950124681e4ad555d71d2bccf0e941129"
+      "sha256": "1ed449e0698940db46ed1433c32f8854074f201a9923c3bc16b4ca3ed339e54f"
     },
     ".devkit/managed/spec/rules/id_convention/rule.py": {
       "mode": 420,
@@ -1540,7 +1550,7 @@
     },
     ".devkit/managed/spec/rules/proposal_boundaries/guide.md": {
       "mode": 420,
-      "sha256": "e45d2b0479b72d42f0f902321344af9b57bb873cd99f57e4c5af66e9191d3707"
+      "sha256": "081b32d298a6938d0f7dbd731b59110e409d252b65e4cae05c9c5bccfc4abfdb"
     },
     ".devkit/managed/spec/rules/proposal_boundaries/rule.py": {
       "mode": 420,
@@ -1548,7 +1558,7 @@
     },
     ".devkit/managed/spec/rules/proposal_boundaries/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "daf6f4ddc9458fdc30efef7cddcc0340a12a75bd1b4e985e9223ff5bc7876e15"
+      "sha256": "ca050fc0dcb71811f0f7e5e1652292def3ef5cbae41a9f26b9cdba26caca3f44"
     },
     ".devkit/managed/spec/rules/reconcile_contract/guide.md": {
       "mode": 420,
@@ -1597,6 +1607,18 @@
     ".devkit/managed/spec/rules/spec_progress/tests/test_rule.py": {
       "mode": 420,
       "sha256": "ac1e97c23b891d4dbc031f7b038cfee68e0ce982e961115e20a6ff892b728ebf"
+    },
+    ".devkit/managed/spec/rules/steering_documents/guide.md": {
+      "mode": 420,
+      "sha256": "f223db258e2dad30c25a2528da29a65f2b2e9338377a4e79d53516dd08cd9c5b"
+    },
+    ".devkit/managed/spec/rules/steering_documents/rule.py": {
+      "mode": 420,
+      "sha256": "e7c10ffe0530be81cfe9a5512f48401301e67a51ffce9f4f34a1669a1337d251"
+    },
+    ".devkit/managed/spec/rules/steering_documents/tests/test_rule.py": {
+      "mode": 420,
+      "sha256": "a9a8b85fda62e1fba93bf159476296536ecd76095dd141ab1790364c96b502e0"
     },
     ".devkit/managed/spec/rules/task_coverage/guide.md": {
       "mode": 420,
@@ -1720,7 +1742,7 @@
     },
     ".devkit/managed/spec/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "0e438609785e30995c0b014540d150e4e807ba4c9ffe128f9f2d3db5a9e7bb77"
+      "sha256": "011201c75bb13d3fecc551a5506521265a2fcbc74437279a012b224390d25363"
     },
     ".devkit/managed/spec/skills/spec-tasks/SKILL.md": {
       "mode": 420,
@@ -1796,7 +1818,7 @@
     },
     ".devkit/managed/spec/subagents/challenger.md": {
       "mode": 420,
-      "sha256": "e8958ec1628d95deaadc7d8d8a2770a2f3650050a3bd4339d1e39fa816e46cd0"
+      "sha256": "eb6651a5f343d104cacf1206af3a83bc9b6e4c0eb5ca679039de386f15e478b9"
     },
     ".devkit/managed/spec/subagents/code-reviewer.md": {
       "mode": 420,
@@ -1804,19 +1826,19 @@
     },
     ".devkit/managed/spec/subagents/development-worker.md": {
       "mode": 420,
-      "sha256": "c8273f0e5182e24d7b72d52fcb7cfaf2901c64d78b843e4fc1373df8b2e90131"
+      "sha256": "be253398d640ddb8506bfe15c41b0c36ab40f27f1a32791de2162ff974a189ff"
     },
     ".devkit/managed/spec/subagents/planning-worker.md": {
       "mode": 420,
-      "sha256": "268b1c5a8d798ac58df3d13d6b6e3ee623717d6e44110bae5a551fd2e5c8cd37"
+      "sha256": "2f74fa9ecbabe5ec56dd66f13f245462cafb7d21da407f75414f622538bc9e20"
     },
     ".devkit/managed/spec/subagents/reconcile-reviewer.md": {
       "mode": 420,
-      "sha256": "9c285f3fb56d2e538f51cef727996ad4f417c467b36511e6d9bab427bcda00e0"
+      "sha256": "b61fef24cea14918c8a2abe1f43e93fec8a1567196b7413adcff3ceade090627"
     },
     ".devkit/managed/spec/subagents/scout.md": {
       "mode": 420,
-      "sha256": "dc7355949e61b91871085d6ba9d65ac336b07c4be3150c3ee0830e738f5c1682"
+      "sha256": "bffa9fd8a13103df72b853906379122e3f618ab58a686bd00ba369f501a0a464"
     },
     ".devkit/managed/spec/templates/capability.md": {
       "mode": 420,
@@ -1983,16 +2005,6 @@
     {
       "bundle": "spec",
       "id": "docs-skeleton",
-      "path": "docs/glossary.md"
-    },
-    {
-      "bundle": "spec",
-      "id": "docs-skeleton",
-      "path": "docs/glossary.yaml"
-    },
-    {
-      "bundle": "spec",
-      "id": "docs-skeleton",
       "path": "docs/materials/README.md"
     },
     {
@@ -2004,6 +2016,16 @@
       "bundle": "spec",
       "id": "docs-skeleton",
       "path": "docs/roadmap/README.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/steering/glossary.md"
+    },
+    {
+      "bundle": "spec",
+      "id": "docs-skeleton",
+      "path": "docs/steering/glossary.yaml"
     },
     {
       "bundle": "spec",

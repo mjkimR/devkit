@@ -25,18 +25,20 @@ def test_the_glossary_section_carries_six_rules_and_the_code_boundary() -> None:
 
 def test_the_glossary_section_names_the_project_list_the_synonyms_and_the_fallback() -> None:
     section = flat(_glossary_section())
-    assert "Project additions and exceptions live in a section of `docs/glossary.md`" in section
-    assert "`docs/glossary.yaml` exists, also add each Avoid entry as a synonym of the term's cluster" in section
+    assert "Project additions and exceptions live in a section of `docs/steering/glossary.md`" in section
+    assert (
+        "`docs/steering/glossary.yaml` exists, also add each Avoid entry as a synonym of the term's cluster" in section
+    )
     assert "A glossary without the `Owner`, `Avoid` and `Code identifiers` columns" in section
 
 
 def test_the_seeded_glossary_has_five_columns_and_no_rename_mandate() -> None:
-    assert HEADER in raw("seed/docs/glossary.md").splitlines()
-    glossary = text("seed/docs/glossary.md")
+    assert HEADER in raw("seed/docs/steering/glossary.md").splitlines()
+    glossary = text("seed/docs/steering/glossary.md")
     assert "## Avoided Generic Nouns" in glossary and "`living-spec-writing` instruction" in glossary
     assert "Authoring Guidelines" not in glossary and "Code symbols (classes, DB tables, API fields)" not in glossary
 
 
 def test_spec_sync_asks_the_glossary_question_in_step_one() -> None:
     step_one = flat(raw("skills/spec-sync/SKILL.md").split("1. **Impact**", 1)[1].split("2. **Record**", 1)[0])
-    assert "introduce or rename a domain term" in step_one and "`docs/glossary.md`" in step_one
+    assert "introduce or rename a domain term" in step_one and "`docs/steering/glossary.md`" in step_one

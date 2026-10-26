@@ -31,7 +31,7 @@ Find what would make a proposal, spec or design fail or unnecessary before anyon
 
 ## Procedure
 
-Read `.devkit/managed/spec/AGENTS.md`. To find a referenced document ID, Grep `^id: <ID>$` under `docs/` and `specs/`. Attack `relevant_files` on:
+Run `uv run devkit get-context spec` once. To find a referenced document ID, Grep `^id: <ID>$` under `docs/` and `specs/`. Attack `relevant_files` on:
 
 1. **Necessity (YAGNI)**: which requirement forces this; what breaks today without it.
 2. **Simpler alternative**: an existing capability, rule or skill that covers it; a smaller change with the same acceptance.

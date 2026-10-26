@@ -1,3 +1,8 @@
+---
+title: Glossary
+summary: Read before naming a domain concept, choosing user-facing or interface terms, or registering a term; defines devkit's terms with their owners, rejected synonyms and code identifiers.
+---
+
 # Glossary
 
 The ubiquitous terms of devkit as its documents, commands and bundles use them. Each row gives the `Term`, its
@@ -25,6 +30,7 @@ The ubiquitous terms of devkit as its documents, commands and bundles use them. 
 | **Per-file rule facts** | Immutable rule-owned syntax extracted from one logical Python path; persistent reuse is keyed by cached source bytes, explicit extraction context and executing-source fingerprint. Excludes shared AST objects and cross-file judgments. | `CAP-GOV-rule-authoring` |  | `FileFactsDescriptor`, `WorkspaceCache.get_file_facts` |
 | **Rule phase** | Execution category of a rule: `syntax`, `hygiene`, `linter`, `contract`. | `CAP-GOV-rules-engine` |  |  |
 | **Snapshot run** | Rule execution against an exact Git snapshot: staged tree (`devkit rules check --staged`) or base commit comparison (`--ci --base <ref>`). | `CAP-GOV-rules-engine` |  |  |
+| **Steering document** | An ID-free Markdown file directly in `docs/steering/`, one per project-wide background topic (the glossary, product, style), with only `title` and `summary` frontmatter; `devkit get-context spec` lists every one in each agent context and an agent reads its body when a decision concerns its summary. Excludes contracts (capabilities, use cases, architecture, decisions) and evidence (materials). | `ADR-steering-documents-directory` | foundation, background | `docs/steering/`, `context_documents`, `RULE-steering-documents` |
 
 ## 3. Delivery Workflows and Tasks
 

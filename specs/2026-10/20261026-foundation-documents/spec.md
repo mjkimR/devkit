@@ -2,7 +2,7 @@
 id: SPEC-foundation-documents
 title: Steering documents for project-wide background
 summary: Adds a flat docs/steering/ directory of project-wide background documents such as the glossary, product vision and style guides, whose frontmatter devkit get-context lists in every agent context so agents read a body when a decision concerns it, and moves the glossary into it.
-status: planned
+status: in-progress
 created: 2026-10-26
 depends_on:
   - SPEC-table-driven-document-kinds

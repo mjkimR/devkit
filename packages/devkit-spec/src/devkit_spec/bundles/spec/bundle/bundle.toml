@@ -3,6 +3,8 @@ name = "spec"
 version = "0.1.4"
 default_preset = "core"
 auto_select = true
+# Steering documents: get-context lists each file's title and summary in every agent context.
+context_documents = "docs/steering"
 
 # Normative wording, measurable contracts, non-goals and examples (exceptions: the constitution).
 [[assets]]
@@ -179,7 +181,7 @@ id = "spec-entrypoints"
 kind = "skill"
 source = "skills/spec-entrypoints"
 
-# The docs/ skeleton (Living Spec directories, arc42 chapters, glossary, search synonyms): written once where absent,
+# The docs/ skeleton (Living Spec directories, arc42 chapters, steering glossary and synonyms): written once where absent,
 # then project-owned. Opt-in preset, so an existing docs/ tree never receives files it did not ask for.
 [[assets]]
 id = "docs-skeleton"
@@ -211,6 +213,12 @@ source = "rules/proposal_boundaries"
 id = "document-summary"
 kind = "rule"
 source = "rules/document_summary"
+
+# The steering directory stays flat, ID-free, summarized in English and within its count and size caps.
+[[assets]]
+id = "steering-documents"
+kind = "rule"
+source = "rules/steering_documents"
 
 # Starting points for new documents, read by path (.devkit/managed/spec/templates/<kind>.md).
 [[assets]]
@@ -317,6 +325,7 @@ assets = [
     "spec-progress",
     "reconcile-contract",
     "document-summary",
+    "steering-documents",
     "code-entrypoints",
     "proposal-boundaries",
     "templates",

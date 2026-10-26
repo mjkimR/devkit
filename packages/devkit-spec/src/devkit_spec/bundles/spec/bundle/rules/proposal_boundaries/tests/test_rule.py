@@ -11,7 +11,7 @@ RULE = load_rule(__file__)
 CONFIG = ".devkit/config.toml"
 EXISTING = {
     "packages/a/x.py": "",
-    "docs/glossary.md": "# Glossary\n",
+    "docs/steering/glossary.md": "# Glossary\n",
     "docs/capabilities/delivery/CAP-DLV-a.md": "---\nid: CAP-DLV-a\n---\n",
     "docs/usecases/delivery/UC-a.md": "---\nid: UC-a\n---\n",
     "docs/packages/api/capabilities/core/CAP-CORE-a.md": "---\nid: CAP-CORE-a\n---\n",
@@ -30,7 +30,7 @@ def _found(violations: list[Violation]) -> list[tuple[str, int, str]]:
 
 # AC-08
 def test_entries_that_resolve_pass(tmp_path: Path) -> None:
-    owns = "\n    - packages/a/\n    - capabilities/delivery/\n    - usecases/delivery\n    - delivery/\n    - docs/glossary.md\n    - ./packages/a/x.py"
+    owns = "\n    - packages/a/\n    - capabilities/delivery/\n    - usecases/delivery\n    - delivery/\n    - docs/steering/glossary.md\n    - ./packages/a/x.py"
     files = {
         **EXISTING,
         "docs/proposals/PROP-x/proposal.md": _proposal("reviewing", "delivery/", owns),
@@ -44,7 +44,7 @@ def test_entries_that_resolve_pass(tmp_path: Path) -> None:
 
 # AC-09
 def test_missing_placeholder_invalid_and_malformed_entries_are_warnings(tmp_path: Path) -> None:
-    owns = "\n    - core/\n    - /abs\n    - src/*\n    - docs/glossary.md/\n    - 42\n    - delivery/"
+    owns = "\n    - core/\n    - /abs\n    - src/*\n    - docs/steering/glossary.md/\n    - 42\n    - delivery/"
     anchor = "docs/proposals/PROP-x/proposal.md"
     other = "docs/proposals/PROP-w/proposal.md"
     files = {
@@ -69,7 +69,7 @@ def test_missing_placeholder_invalid_and_malformed_entries_are_warnings(tmp_path
         (
             anchor,
             11,
-            "boundaries.owns entry 'docs/glossary.md/' names no existing directory (repository path, docs-root path"
+            "boundaries.owns entry 'docs/steering/glossary.md/' names no existing directory (repository path, docs-root path"
             " or capability area)",
         ),
         (anchor, 12, "boundaries.owns must contain only path strings"),

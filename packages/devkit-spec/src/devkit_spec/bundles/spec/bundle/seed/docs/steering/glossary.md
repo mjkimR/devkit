@@ -1,3 +1,8 @@
+---
+title: Glossary
+summary: Read before naming a domain concept, writing user-facing terms or registering a term; defines the project's terms, their owners and rejected synonyms.
+---
+
 # Domain Glossary
 
 A ubiquitous language ledger ensuring clear, unambiguous communication across team members and AI agents.

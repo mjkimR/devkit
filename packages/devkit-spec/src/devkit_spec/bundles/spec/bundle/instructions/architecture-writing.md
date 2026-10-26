@@ -11,7 +11,7 @@ number the documents (`ARCH-<section>-<slug>`); C4 levels scope the diagrams.
 ## Placement
 
 - Put content in its arc42 section. Link decisions (section 9) as ADR IDs instead of restating them; the glossary
-  (section 12) is `docs/glossary.md`.
+  (section 12) is `docs/steering/glossary.md`.
 - Draw one diagram per C4 level the reader needs, showing only the elements its text discusses.
 
 ## Constraints
