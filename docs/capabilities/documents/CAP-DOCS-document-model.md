@@ -276,13 +276,15 @@ index.alias_collisions()  # [(alias, [every document involved]), ...]
 index.outgoing(document)  # {canonical target ID: [Reference, ...]}
 index.incoming(document.id)  # {source ID: [Reference, ...]}, alias-written references included
 index.is_historical(document)  # a completed bundle's file outside its feedback/, or a done/dropped milestone
-index.is_terminal(document)  # its status is in TERMINAL_STATUSES for its kind (rule 8)
+index.is_terminal(document)  # its status is one of its kind's terminal_statuses in the kind table (rule 8)
 index.is_browsing_historical(document)  # what list and search hide unless asked: either of the above
 ```
 
 `definitions()` returns the kind table in kind order and `definition(kind)` one row (`KindDefinition`);
-`relation_prefixes()` maps each relation field to the prefix it takes, and `KindTableError` reports an inconsistent
-table or a missing fact. `PREFIXES` and `TERMINAL_STATUSES` are derived from the rows.
+`relation_prefixes()` maps each relation field to the prefix it takes, `by_prefix(value)` returns the row whose
+prefix opens `value` as `<PREFIX>-...`, and `KindTableError` reports an inconsistent table or a missing fact. A row's
+`summary` is a `Summary` (`always`, `anchor`, `never`) and its `format_scope` a `FormatScope` (`none`, `global`,
+`every-root`). `PREFIXES` and `TERMINAL_STATUSES` are copies of the rows taken at import.
 
 `parse_document(path, text)` reads one document (`None` without a well-formed ID); `visible_lines` is the prose
 scanner behind reference extraction; `SOURCE_DIRECTORIES`, `is_document_file` and `in_source_directory` expose the

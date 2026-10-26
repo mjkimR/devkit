@@ -85,8 +85,9 @@ Every rule is phase `linter` and is deployed by the `core` preset; every rule is
    requirement, entrypoint-bearing flag, `RULE-spec-format` scope, fix-time default status, heading-token prefix and
    relation-field prefixes from the kind definition table (`CAP-DOCS-document-model` section 3.2) when they run; rule
    codes, messages and remediations do not depend on where a fact is kept. A Living Spec kind without a path grammar
-   in `RULE-id-convention`, or an identifier target without a path remediation, fails the run (`KindTableError`)
-   instead of being checked under another kind's rule.
+   in `RULE-id-convention`, an area-scoped kind whose grammar sets no area, or an identifier target without a path
+   remediation MUST fail the run as a rule execution error (`RULES_RUN_FAILED`, raised from `KindTableError`) instead
+   of being checked under another kind's rule.
 9. **Tuning**: a project tunes phases, severities, exclusions and settings in `[rules]` of `.devkit/config.toml`
    (devkit's), for example `[rules.phase_overrides]` to move `RULE-document-summary` to `hygiene` while summaries are
    written, and `[rules.settings.RULE-document-summary] max_length`.

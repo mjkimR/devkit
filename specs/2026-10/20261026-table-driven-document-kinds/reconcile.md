@@ -21,11 +21,13 @@ targets:
   `KindDefinition` and `KindTableError`, and that `PREFIXES` and `TERMINAL_STATUSES` derive from the rows.
 - `CAP-GOV-spec-rules` section 3.2: a new shared-behavior item, "Kind facts", says the rules read their per-kind
   facts from the table when they run, that no rule code, message or remediation changed, and that a Living Spec kind
-  without a grammar or an identifier target without a remediation fails the run. "Tuning" becomes item 9; nothing
+  without a grammar, an area-scoped kind whose grammar sets no area, or an identifier target without a remediation
+  fails the run as a rule execution error. "Tuning" becomes item 9; nothing
   cites the item numbers.
 - `ARCH-05-2-components`: one sentence says the documents feature owns the kind definitions every other feature reads.
 - The rule guides under the `spec` bundle name no constant this change removed (`_LIVING_SPEC`, `_LIVING_DIRECTORIES`,
-  `REQUIRED`, `ANCHORS`, `_KINDS`, `EXPECTED_PREFIX`, `SCOPE`, `NAMESPACE_SCOPE`), so the bundle and
+  `REQUIRED`, `ANCHORS`, `_KINDS`, `EXPECTED_PREFIX`, `SCOPE`, `NAMESPACE_SCOPE`, `USECASES_DIRECTORY`,
+  `CAPABILITIES_DIRECTORY`, `_ID_TOKEN`, `_HEADING_TOKEN`, `_LABELLED_HEADING_TOKEN`, `_ANY_ID_TOKEN`), so the bundle and
   `.devkit/installation.json` are unchanged. No viewer document changes.
 
 ## Entrypoints
