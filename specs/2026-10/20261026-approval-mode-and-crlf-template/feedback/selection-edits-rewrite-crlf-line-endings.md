@@ -28,6 +28,17 @@ created_at: 2026-10-26
   keeps the existing line endings, and convert the added entry's LF to CRLF in a file whose every line ending is CRLF,
   with a regression test.
 
+## Diagnostic Details
+
+- **Reproduction**: write `schema = 1\r\n\r\n[presets]\r\nspec = "core"\r\n` to `.devkit/config.toml`, call
+  `update_config(<root>, agents=["claude"])` (the edit `devkit add` and the other selection commands run), then read
+  the bytes.
+- **Expected / Actual**: original lines end in `\r\n` / every line ends in `\n`.
+- **Versions**: `dev-approval-mode-and-crlf-template`.
+- **Conditions**: a CRLF config file and any selection edit.
+- **Workarounds Attempted**: not attempted.
+- **Related Assets**: `CAP-DIST-sync-and-transactions`, `FB-config-template-rewrites-crlf-line-endings`.
+
 ## Evidence
 
 ```text
