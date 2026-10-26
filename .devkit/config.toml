@@ -5,7 +5,7 @@ advisory = "python"
 spec = ["core", "docs-skeleton"]
 authoring = "skill-authoring"
 response-style = "all"
-devkit-dev = "structure"
+devkit-dev = ["structure", "handbook"]
 
 [workflow.approvals] 
 dev-integration = "auto"
@@ -19,8 +19,9 @@ provider = "spec"
 
 [rules.settings.RULE-cli-contract]
 # Records of rejected, past or planned commands: decisions weigh alternatives, proposals and specs describe commands
-# not built yet, materials are free-form.
-exclude = ["docs/decisions/**", "docs/proposals/**", "docs/materials/**", "specs/**"]
+# not built yet, materials are free-form. The handbook is a release snapshot, stale by design between refreshes; its
+# own verification checks its citations at refresh (CAP-DLV-release-handbook).
+exclude = ["docs/decisions/**", "docs/proposals/**", "docs/materials/**", "specs/**", "handbook/**"]
 
 # Capabilities carry full contracts, interfaces and code tables; they are long by nature (RULE-file-length guide §5).
 [[rules.settings.RULE-file-length.overrides]]

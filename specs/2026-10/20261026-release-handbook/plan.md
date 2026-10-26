@@ -22,9 +22,9 @@ spec: SPEC-release-handbook
 | `scripts/handbook.py` (new) | `status`, `stamp`, `generate [--preview]`, `verify`, `release-check <tag>`; standard library plus PyYAML, with lazy imports of `devkit_dist.cli` and the rules testing entry point for the command and link checks |
 | `justfile` | `handbook *args` recipe running the script in the workspace environment |
 | `scripts/release.sh` | runs `release-check "$tag"` after the tag and `VERSION` checks, before any wheel build |
-| `scripts/affected_tests.py` | maps `scripts/handbook.py` and `scripts/release.sh` to the new tests |
+| `scripts/affected_tests.py` | maps `scripts/handbook.py`, `scripts/release.sh` and `.devkit/config.toml` to the new tests; `handbook/` selects no test |
 | `tools/devkit-dev` bundle | `playbooks/handbook.md`, asset `handbook` in preset `handbook`; README note |
-| `tools/devkit-dev/tests/integration/` | `test_handbook_script.py`, `test_release_handbook_check.py`; `test_resources.py` lists the new asset |
+| `tools/devkit-dev/tests/integration/` | `test_handbook_script.py` (script, release check and rule exclusion in one module, so its fixture needs no shared helper); `test_resources.py` lists the new asset |
 | `.devkit/config.toml` | `handbook/**` in the `RULE-cli-contract` exclude; `devkit-dev = ["structure", "handbook"]` |
 | `AGENTS.md`, `README.md` | language exception; a pointer for people |
 | Living Spec | new capability CAP-DLV-release-handbook; `ARCH-07-deployment` and `ARCH-05-1-containers` updated |
@@ -81,7 +81,7 @@ python scripts/handbook.py release-check <tag>
 | Scenario | Test |
 | --- | --- |
 | AC-01, AC-02, AC-03, AC-04, AC-05, AC-06, AC-07 | `tools/devkit-dev/tests/integration/test_handbook_script.py` on a git fixture repository |
-| AC-08 | `tools/devkit-dev/tests/integration/test_release_handbook_check.py` (`release-check` outcomes, no writes on skip, `release.sh` order) |
+| AC-08 | `test_handbook_script.py` (`release-check` outcomes, no writes on skip, `release.sh` order) |
 | AC-09 | `test_handbook_script.py`: `RULE-cli-contract` with the settings of `.devkit/config.toml` on a fixture page, inside and outside `handbook/` |
 | AC-10 | `tools/devkit-dev/tests/integration/test_resources.py` and a playbook content test |
 | AC-11 | reconcile review of the documents; `just rules-check` |

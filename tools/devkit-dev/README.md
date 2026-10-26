@@ -21,6 +21,11 @@ Every feature declares its permitted feature dependencies, including dependencie
 across packages; public API access does not grant permission to reverse direction.
 Run its bundled tests with `uv run pytest tools/devkit-dev -q`.
 
+The `handbook` preset ships the `handbook` playbook: the on-request refresh of the release handbook under
+`handbook/` during release preparation (`CAP-DLV-release-handbook`). Its script is the repository's
+`scripts/handbook.py` (`just handbook ...`); `tests/integration/test_handbook_script.py` covers the script and the
+release-build check.
+
 `RULE-usecase-boundaries` enforces typed `BaseUseCase.execute` at CLI/MCP
 execution boundaries. Internal helper functions remain valid. The AST check follows
 explicit aliases, facade exports and retained instances; constructors wire dependencies
