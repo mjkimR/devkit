@@ -179,9 +179,12 @@ separately. Check: `tests/integration/features/browse/test_handbook.py`.
 - **Detection**: WHEN the tab opens without a book request, the viewer MUST read `handbook/manifest.json` through
   `blob` and treat a rejection matching `/^HTTP 404(?:\b|:)/` (§6) as no handbook. Check:
   `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
-- **Read budget**: WHILE the book is not requested, the tab MUST read at most the manifest, `VERSION` and one page
-  where a manifest exists, and the manifest alone where none does, and MUST NOT list or read anything under `docs/`
-  or `specs/`. Check: `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+- **Read budget**: WHEN the tab opens without a book request, it MUST read at most the manifest, `VERSION` and one
+  page where a manifest exists, and the manifest alone where none does. Check:
+  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+- **No index before the request**: WHILE the book is not requested, the tab MUST NOT list or read anything under
+  `docs/` or `specs/`; following handbook links and switching languages read only `handbook/` pages. Check:
+  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
 - **Absence**: IF the manifest is absent, THEN the tab MUST show that the repository has no `handbook/manifest.json`
   and a `Living Spec book` control. Check: `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
 - **Manifest failure**: IF the manifest read fails otherwise, is not JSON, or lacks a string `tag` or an `en` entry in
@@ -196,7 +199,8 @@ separately. Check: `tests/integration/features/browse/test_handbook.py`.
 - **Request lifetime**: The book request MUST last for the life of `SddViewer` across rail switches and host prop
   changes, and MUST hold only for the data source and branch it was made for, so a change of either returns the tab to
   the handbook without indexing the new one. A `Handbook` control in the book returns the tab to the handbook and keeps
-  the index. Check: `frontend/src/lib/SddViewer.test.ts`.
+  the index. Check: `frontend/src/lib/SddViewer.test.ts` and
+  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
 - **Host deep links**: WHERE a host passes `initialView` `book` with an `initialPath` naming a file under `docs/`, the
   viewer MUST treat it as the book request and open that document; an `initialPath` of
   `handbook/<lang>/<page>` MUST open that page. Check: `frontend/src/lib/SddViewer.test.ts`.
@@ -251,7 +255,7 @@ The local source supports recursive metadata requests to avoid one HTTP call per
 
 A host passes its own `RepositoryDataSource` (`info`, `tree(path, ref)`, `blob(path, ref)`, optional `refs`, `treeRecursive(path, ref)`, `dashboardList(section, ref, signal)`, `planningProposals(signal)`, `planningTree(source, path, signal)` and `planningBlob(source, path, signal)`), keeping
 authentication and renewal on its side. Its `blob` MUST signal an absent file by rejecting with an error whose
-message starts with `HTTP 404`, as `httpDataSource` does; the reading tab treats any other rejection as a failure
+message starts with `HTTP 404`, as `httpDataSource` does; the reading tab treats any other rejection of `handbook/manifest.json` as a failure
 (§4.3). A standalone `KnowledgeViews` takes an optional bindable `bookRequested` prop; a host binds it to keep the
 book request across mounts. autohub's Git browser and run and decision panels are not part of the
 library.

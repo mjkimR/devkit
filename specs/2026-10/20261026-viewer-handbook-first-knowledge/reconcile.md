@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-viewer-handbook-first-knowledge
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md
     resolution: modified
@@ -12,7 +12,7 @@ targets:
     resolution: modified
   - file: packages/devkit-viewer/frontend/README.md
     resolution: waived
-    rationale: "Outside this run's write scope. Every statement it carries stays true: the exports, the data-source methods and the initialView=\"book\" example are unchanged, and it names CAP-VIEW-repository-viewer as its contract, where §6 now states the absent-file signal and the optional bookRequested prop. The Host decides whether the consumer README mirrors them."
+    rationale: "Outside this run's write scope, so the Host owns a follow-up mirroring the HTTP 404 absent-file signal, the optional bookRequested prop and the handbook-first book view there. Every statement it carries stays true: the exports, the data-source methods and the initialView=\"book\" example are unchanged, and it names CAP-VIEW-repository-viewer as its contract, where §6 now states the absent-file signal and the optional bookRequested prop. The Host decides whether the consumer README mirrors them."
 ---
 # Reconcile the handbook-first reading tab
 
@@ -54,8 +54,10 @@ by one Out-of-Scope line and does not own the viewer, and `tests/integration/fea
 
 ## Source feedback
 
-- `FB-viewer-book-rendering`: kept `open` by the user's decision. This change removes the book's cold-load cost but
-  not the rendering it describes, which still runs after the request (about 0.47 s per return to the tab).
+- `FB-viewer-book-rendering`: kept `open` by the user's decision, rescoped to the rendering after the request (about
+  0.47 s per return to the tab). This change removes the book's cold-load cost but not that rendering. The rescope is
+  recorded in `ADR-handbook-first-book-on-request` §5; the feedback text is left unchanged because the user kept it
+  open and outside this run's edits, so a later intake reads its scope from that ADR.
 - `FB-viewer-knowledge-anchor-loading`: kept `open`. Proposals and Specs still index all of `docs/` and `specs/`
   (927 reads in the after-change probe); this change does not alter that index.
 

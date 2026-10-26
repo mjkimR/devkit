@@ -1,0 +1,45 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T05:41:04.066474Z'
+status: completed
+summary: 'reconcile-reviewer: 4 modified targets match the implementation and every Check path tests its rule; frontend README waiver holds; one P2 wording fix (read budget scope) and four P3 improvements'
+findings:
+- issue: The §4.3 Read budget rule applies while the book is unrequested, but in-language links and language switches read further pages.
+  evidence: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md §4.3 Read budget; HandbookView.svelte page effect
+  failure_condition: A person follows a handbook link before requesting the book
+  suggested_action: Scope the budget to opening the tab; keep the docs/specs prohibition as a WHILE rule
+  resolution: open
+  severity: P2
+- issue: Request lifetime Check omits HandbookMode.test.ts, which tests the Handbook control clause.
+  evidence: CAP-VIEW-repository-viewer.md §4.3 Request lifetime
+  failure_condition: A reader following the Check path finds no test for the clause
+  suggested_action: Add HandbookMode.test.ts to the Check
+  resolution: open
+  severity: P3
+- issue: §6 says any other rejection is a failure; only the manifest is treated so (VERSION failure counts as absent).
+  evidence: CAP-VIEW-repository-viewer.md §6; api/handbook.ts loadVersion
+  failure_condition: A VERSION blob rejecting with HTTP 500 shows no failure
+  suggested_action: Say any other rejection of handbook/manifest.json
+  resolution: open
+  severity: P3
+- issue: frontend/README.md waiver rationale leans on write scope; the consumer README lacks the 404 signal and bookRequested.
+  evidence: packages/devkit-viewer/frontend/README.md; reconcile.md targets[4]
+  failure_condition: A host implements blob rejecting absent files differently
+  suggested_action: Keep the waiver and have the Host record a follow-up to mirror them
+  resolution: open
+  severity: P3
+- issue: FB-viewer-book-rendering rescope is stated in the ADR and spec but not in reconcile.md; the FB text is unchanged.
+  evidence: specs/2026-10/20261024-viewer-dashboard-loading/feedback/viewer-book-rendering.md; reconcile.md Source feedback
+  failure_condition: A later intake targets the cold load this change removed
+  suggested_action: State in reconcile.md that the rescope lives in the ADR and the FB text is left unchanged by decision
+  resolution: open
+  severity: P3
+checks:
+  targets: PASS 4 modified, 1 waived
+  check_paths: PASS all exist
+diff_scope:
+  base: 3b2197243fbd185221362abd62516133121efa06
+  head: e12ca1d7f181df578b600674de7a5c1c8f5f94bd
+activity_effort: medium
