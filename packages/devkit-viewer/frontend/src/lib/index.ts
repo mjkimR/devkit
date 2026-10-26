@@ -12,6 +12,8 @@ export {
 	type RepositoryDataSource,
 	type RepositoryInfo,
 	type RepositoryRefs,
+	type PlanningProposals,
+	type PlanningSource,
 	type SharedArtifactMetadata,
 	type SharedArtifactDetail,
 	type SharedArtifactsResponse,

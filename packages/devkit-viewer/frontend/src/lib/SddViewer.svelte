@@ -121,6 +121,12 @@
 		currentPath = initialPath;
 	});
 
+	// The document the knowledge tabs open: the host's request, or a Dashboard card's.
+	let knowledgeRequest = $state({ path: '', anchor: '' });
+	$effect(() => {
+		knowledgeRequest = { path: initialPath, anchor: initialAnchor };
+	});
+
 	// Only the current request may publish state or events.
 	$effect(() => {
 		const path = currentPath;
@@ -283,6 +289,8 @@
 						{repoId}
 						onNavigate={(targetView, targetPath) => {
 							if (targetPath) currentPath = targetPath;
+							if (targetPath && targetView !== 'files')
+								knowledgeRequest = { path: targetPath, anchor: '' };
 							view = targetView;
 						}}
 					/>
@@ -314,8 +322,8 @@
 						{source}
 						{branch}
 						theme={themeState.current}
-						requestedPath={initialPath}
-						requestedAnchor={initialAnchor}
+						requestedPath={knowledgeRequest.path}
+						requestedAnchor={knowledgeRequest.anchor}
 						diagrams={diagramRenderer}
 						onOpen={(path) => {
 							currentPath = path;

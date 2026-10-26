@@ -240,3 +240,117 @@ describe('DashboardView', () => {
 		expect(source.blob).toHaveBeenCalledTimes(calls + 6);
 	});
 });
+
+describe('DashboardView Planning overlay', () => {
+	afterEach(() => cleanup());
+	const checkout = ['a', 'b', 'c'].map((slug) => ({
+		path: `docs/proposals/PROP-${slug}/proposal.md`,
+		encoding: 'utf-8',
+		content: `---\nid: PROP-${slug}\ntitle: Checkout ${slug}\nstatus: draft\n---\n`
+	}));
+	const planned = (slug: string, status: string) => ({
+		source: `branch:plan-${slug}`,
+		path: `docs/proposals/PROP-${slug}/proposal.md`,
+		encoding: 'utf-8',
+		content: `---\nid: PROP-${slug}\ntitle: Planned ${slug}\nstatus: ${status}\nsummary: From ${slug}\n---\n`
+	});
+	const answer = () => ({
+		sources: ['c', 'new'].map((slug) => ({
+			id: `branch:plan-${slug}`,
+			kind: 'branch' as const,
+			label: `plan-${slug}`,
+			slug
+		})),
+		items: [planned('c', 'review'), planned('new', 'draft')],
+		errors: []
+	});
+	function overlaySource(planning: () => Promise<ReturnType<typeof answer>>) {
+		const source: RepositoryDataSource = {
+			info: async () => ({ default_branch: 'main' }),
+			tree: vi.fn(async () => ({ items: [] })),
+			dashboardList: vi.fn(async (section: string) => ({
+				items: section === 'proposals' ? checkout : [],
+				errors: []
+			})),
+			blob: vi.fn(async (path: string) => checkout.find((e) => e.path === path)!),
+			planningProposals: vi.fn(planning)
+		};
+		return source;
+	}
+	const titles = () =>
+		[...document.querySelectorAll('h3.card-heading')]
+			.map((h) => h.textContent)
+			.filter((t) => t !== 'Active Worktree Session');
+
+	it('renders checkout cards first and updates them in place without reordering', async () => {
+		let release!: () => void;
+		const pending = new Promise<void>((resolve) => (release = resolve));
+		const source = overlaySource(async () => {
+			await pending;
+			return answer();
+		});
+		render(DashboardView, { props: { source, branch: 'main' } });
+		await waitFor(() => expect(titles()).toEqual(['Checkout a', 'Checkout b', 'Checkout c']));
+		expect(screen.getByText('Checking Planning sources…')).toBeTruthy();
+		expect(screen.getByText(/3 active\/draft out of 3 total/)).toBeTruthy();
+		release();
+		await waitFor(() =>
+			expect(titles()).toEqual(['Checkout a', 'Checkout b', 'Planned c', 'Planned new'])
+		);
+		expect(screen.getByText('plan-c')).toBeTruthy();
+		expect(screen.getByText('plan-new')).toBeTruthy();
+		expect(screen.getByText(/4 active\/draft out of 4 total/)).toBeTruthy();
+		expect(screen.queryByText('Checking Planning sources…')).toBeNull();
+		expect(source.blob).toHaveBeenCalledTimes(3);
+
+		await fireEvent.click(screen.getByText('Refresh'));
+		await waitFor(() => expect(source.planningProposals).toHaveBeenCalledTimes(2));
+		await waitFor(() =>
+			expect(titles()).toEqual(['Planned c', 'Checkout a', 'Checkout b', 'Planned new'])
+		);
+		expect(source.blob).toHaveBeenCalledTimes(5);
+	});
+
+	it('keeps the checkout view when the overlay fails', async () => {
+		const source = overlaySource(async () => {
+			throw new Error('HTTP 500: boom');
+		});
+		render(DashboardView, { props: { source, branch: 'main' } });
+		await waitFor(() =>
+			expect(screen.getByText(/Planning overlay unavailable: HTTP 500: boom/)).toBeTruthy()
+		);
+		await waitFor(() => expect(titles()).toEqual(['Checkout a', 'Checkout b', 'Checkout c']));
+		expect(screen.queryAllByRole('alert')).toHaveLength(0);
+		expect(screen.getByText(/3 active\/draft out of 3 total/)).toBeTruthy();
+	});
+
+	it('appends Planning-only cards only after the last checkout page', async () => {
+		const many = Array.from({ length: 10 }, (_, i) => ({
+			path: `docs/proposals/PROP-${String(i).padStart(2, '0')}/proposal.md`,
+			encoding: 'utf-8',
+			content: `---\nid: PROP-${String(i).padStart(2, '0')}\ntitle: Checkout ${i}\nstatus: draft\n---\n`
+		}));
+		let release!: () => void;
+		const pending = new Promise<void>((resolve) => (release = resolve));
+		const source = overlaySource(async () => {
+			await pending;
+			return answer();
+		});
+		source.dashboardList = vi.fn(async (section: string) => ({
+			items: section === 'proposals' ? many : [],
+			errors: []
+		}));
+		source.blob = vi.fn(async (path: string) => many.find((e) => e.path === path)!);
+		render(DashboardView, { props: { source, branch: 'main' } });
+		await waitFor(() => expect(titles()).toHaveLength(9));
+		release();
+		await waitFor(() => expect(screen.queryByText('Checking Planning sources…')).toBeNull());
+		expect(titles()).toHaveLength(9);
+		expect(screen.queryByText('Planned new')).toBeNull();
+		await waitFor(() => expect(screen.getByText(/12 active\/draft out of 12 total/)).toBeTruthy());
+		await fireEvent.click(screen.getByRole('button', { name: 'Load more' }));
+		await waitFor(() =>
+			expect(titles().slice(-3)).toEqual(['Checkout 9', 'Planned c', 'Planned new'])
+		);
+	});
+});

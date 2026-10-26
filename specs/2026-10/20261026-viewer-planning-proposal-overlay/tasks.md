@@ -16,20 +16,20 @@ plan: PLAN-viewer-planning-proposal-overlay
 
 ## Phase 2: Page and library
 
-- [ ] **Task 2.1**: Optional data-source methods, overlay loading, cache and seed, with unit tests
+- [x] **Task 2.1**: Optional data-source methods, overlay loading, cache and seed, with unit tests
   - **_Boundary**: `packages/devkit-viewer/frontend/src/lib/api/`, `packages/devkit-viewer/frontend/src/lib/index.ts`
   - _Requirements: AC-08, AC-10_
   - **Verification**: `just viewer test`
-- [ ] **Task 2.2**: Dashboard in-place overlay, badge, note and seeded list build, with component tests
+- [x] **Task 2.2**: Dashboard in-place overlay, badge, note and seeded list build, with component tests
   - **_Boundary**: `packages/devkit-viewer/frontend/src/lib/features/dashboard/`
   - _Requirements: AC-06, AC-07, AC-08, AC-10_
   - **Verification**: `just viewer test`
-- [ ] **Task 2.3**: Proposals tab overlay, source-scoped bundle, badge and Dashboard card selection, with component tests
+- [x] **Task 2.3**: Proposals tab overlay, source-scoped bundle, badge and Dashboard card selection, with component tests
   - **_Boundary**: `packages/devkit-viewer/frontend/src/lib/features/knowledge/`,
     `packages/devkit-viewer/frontend/src/lib/SddViewer.svelte`, `packages/devkit-viewer/frontend/src/lib/*.test.ts`
   - _Requirements: AC-09, AC-10_
   - **Verification**: `just viewer test`
-- [ ] **Task 2.4**: Rebuild the committed page
+- [x] **Task 2.4**: Rebuild the committed page
   - **_Boundary**: `packages/devkit-viewer/src/devkit_viewer/static/`
   - _Requirements: AC-06, AC-09_
   - **Verification**: `just viewer lint`, `just viewer check`, `just viewer build`,

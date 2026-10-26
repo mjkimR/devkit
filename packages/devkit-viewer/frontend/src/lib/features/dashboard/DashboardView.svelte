@@ -9,8 +9,9 @@
 		type SectionSnapshot,
 		type DashboardSection
 	} from './loading';
-	import type { RepositoryDataSource } from '../../api/repository';
-	import { extractDashboardData, type DashboardData } from './dashboard';
+	import type { PlanningSource, RepositoryDataSource } from '../../api/repository';
+	import { cachedOverlay, loadPlanningOverlay, type PlanningOverlay } from '../../api/planning';
+	import { extractDashboardData, type DashboardData, type ProposalItemData } from './dashboard';
 
 	let {
 		source = null,
@@ -40,6 +41,10 @@
 		feedback: emptySection()
 	});
 	let refreshGeneration = $state(0);
+	// The Planning overlay loads beside the sections and never delays or fails them.
+	let overlay = $state.raw<PlanningOverlay | undefined>();
+	let overlayLoading = $state(false);
+	let overlayError = $state('');
 	const loading = $derived(dashboardSections.some((section) => sections[section].loading));
 	let controller: AbortController | undefined;
 	async function loadMore(section: DashboardSection) {
@@ -77,6 +82,22 @@
 		refreshGeneration;
 		const active = new AbortController();
 		controller = active;
+		const known = repository ? cachedOverlay(repository, ref) : undefined;
+		overlay = known;
+		overlayError = '';
+		overlayLoading = Boolean(repository?.planningProposals) && !known;
+		if (repository?.planningProposals && !known)
+			void loadPlanningOverlay(repository, ref, active.signal)
+				.then((result) => {
+					if (active.signal.aborted) return;
+					overlay = result;
+					overlayLoading = false;
+				})
+				.catch((error: unknown) => {
+					if (active.signal.aborted) return;
+					overlayError = error instanceof Error ? error.message : String(error);
+					overlayLoading = false;
+				});
 		for (const section of dashboardSections) {
 			const cached = repository ? cachedDashboardPage(repository, ref, section) : undefined;
 			sections[section] = cached
@@ -107,9 +128,42 @@
 	const displayedMilestones = $derived(
 		extractDashboardData(sectionData('milestones')).milestones.open
 	);
+	type ProposalCard = ProposalItemData & { source?: PlanningSource };
+	const proposalData = (entry: { document: RepositoryDocument; source: PlanningSource }) => ({
+		...extractDashboardData([entry.document]).proposals.all[0],
+		source: entry.source
+	});
+	// Cards keep the list's order; the overlay replaces their content in place.
+	const listedProposals = $derived.by((): ProposalCard[] => {
+		const seed = sections.proposals.snapshot?.overlay ?? {};
+		const live = overlay?.entries ?? {};
+		return extractDashboardData(sectionData('proposals')).proposals.active.map((item) => {
+			const entry = live[item.path] ?? seed[item.path];
+			return entry ? proposalData(entry) : item;
+		});
+	});
+	// Planning-only proposals the list does not hold join after its last page.
+	const planningOnly = $derived.by((): ProposalCard[] => {
+		const snapshot = sections.proposals.snapshot;
+		if (!snapshot || !overlay) return [];
+		const listed = new Set(snapshot.metadata.map((doc) => doc.path));
+		const entries = Object.values(overlay.entries).filter(
+			(entry) => !listed.has(entry.document.path)
+		);
+		const active = new Set(
+			extractDashboardData(entries.map((entry) => entry.document)).proposals.active.map(
+				(item) => item.path
+			)
+		);
+		return entries
+			.filter((entry) => active.has(entry.document.path))
+			.map(proposalData)
+			.sort((a, b) => a.id.localeCompare(b.id) || a.path.localeCompare(b.path));
+	});
 	const displayedProposals = $derived(
-		extractDashboardData(sectionData('proposals')).proposals.active
+		hasMore('proposals') ? listedProposals : [...listedProposals, ...planningOnly]
 	);
+	const proposalCount = $derived(data.proposals.activeCount + planningOnly.length);
 	const displayedFeedback = $derived(extractDashboardData(sectionData('feedback')).feedback.open);
 
 	function handleItemClick(
@@ -145,8 +199,8 @@
 								.milestones.openCount} open out of {data.milestones.totalCount} total{/if}
 					</li>
 					<li>
-						Proposals: {#if sections.proposals.loading}Loading…{:else if sections.proposals.errors.length}Incomplete{:else}{data
-								.proposals.activeCount} active/draft out of {data.proposals.totalCount} total{/if}
+						Proposals: {#if sections.proposals.loading}Loading…{:else if sections.proposals.errors.length}Incomplete{:else}{proposalCount}
+							active/draft out of {data.proposals.totalCount + planningOnly.length} total{/if}
 					</li>
 					<li>
 						Feedback: {#if sections.feedback.loading}Loading…{:else if sections.feedback.errors.length}Incomplete{:else}{data
@@ -213,7 +267,7 @@
 						<span class="stat-value"
 							>{sections.proposals.loading || sections.proposals.errors.length
 								? '—'
-								: data.proposals.activeCount}</span
+								: proposalCount}</span
 						>
 						<span class="stat-label">Active Proposals</span>
 					</div>
@@ -358,10 +412,18 @@
 					<span class="count-badge"
 						>{sections.proposals.loading || sections.proposals.errors.length
 							? '—'
-							: data.proposals.activeCount}</span
+							: proposalCount}</span
 					>
 				</div>
 				<div class="section-actions">
+					{#if overlayLoading}
+						<span class="section-meta">Checking Planning sources…</span>
+					{:else if overlayError || overlay?.errors.length}
+						<span class="section-meta overlay-note"
+							>Planning overlay {overlayError ? 'unavailable' : 'incomplete'}: {overlayError ||
+								overlay?.errors.join('; ')}</span
+						>
+					{/if}
 					{#if hasMore('proposals')}
 						<button
 							class="toggle-btn"
@@ -400,7 +462,14 @@
 					>
 						<div class="card-top">
 							<span class="card-id">{proposal.id}</span>
-							<span class="badge badge-status-{proposal.status}">{proposal.status}</span>
+							<span class="badge-group">
+								{#if proposal.source}
+									<span class="badge badge-source" title="Planning source"
+										>{proposal.source.label}</span
+									>
+								{/if}
+								<span class="badge badge-status-{proposal.status}">{proposal.status}</span>
+							</span>
 						</div>
 						<h3 class="card-heading">{proposal.title}</h3>
 						<p class="card-desc line-clamp-2">{proposal.summary || 'No summary provided.'}</p>
@@ -413,7 +482,8 @@
 						<div class="sr-only">
 							Full Proposal Details: ID {proposal.id}, Title: {proposal.title}, Status: {proposal.status},
 							Slug: {proposal.slug}, Task kind: {proposal.taskKind}, Planning effort: {proposal.planningEffort},
-							Dev effort: {proposal.devEffort}, Path: {proposal.path}. Full summary: {proposal.summary}.
+							Dev effort: {proposal.devEffort}, Path: {proposal.path}, Source: {proposal.source
+								?.label ?? 'checkout'}. Full summary: {proposal.summary}.
 						</div>
 					</div>
 				{:else}
@@ -885,6 +955,20 @@
 	.badge-review {
 		background: #7c3aed;
 		color: #ffffff;
+	}
+
+	.badge-source {
+		background: var(--bg-btn);
+		color: var(--text-primary);
+		text-transform: none;
+		font-family: ui-monospace, SFMono-Regular, monospace;
+	}
+
+	.overlay-note {
+		max-width: 360px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.badge-highlight {
