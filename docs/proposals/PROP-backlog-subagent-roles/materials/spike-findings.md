@@ -67,3 +67,36 @@ does (`bundle/subagents/code-reviewer.md:33`), and adds a guidance test that eve
 Its `_Boundary:` covers the whole spec bundle and `packages/devkit-spec/tests/`. New contracts written with
 `get-context` from the start pass that test whichever change lands first; the shared role tests are a textual overlap
 only.
+
+## F7. Placing the XL size gate (second turn, scout at head `9b7b5727`)
+
+- `decisions/NN-gate-plan-intent.yaml` is written only by the generic `devkit workflow answer --request
+  gate:plan-intent` (devkit-agt), which refuses a request that is not open with `REQUEST_UNKNOWN` and reads no proposal
+  frontmatter (`packages/devkit/src/devkit_agt/features/workflow/usecases/answers.py:111-133`;
+  `packages/devkit-spec/src/devkit_spec/features/proposals/usecases/accept.py:16`).
+- A gate request opens only when the stage's exit checks are met, under `ask` and `auto` alike
+  (`packages/devkit/src/devkit_agt/features/workflow/usecases/evaluate.py:368-382`). Only `exit` is evaluated at run
+  time; `entry` is validated and shown, never evaluated (`evaluate.py:358-394`).
+- The `frontmatter` primitive matches one value or several joined by `|`; a missing field reads as `""`, so
+  `frontmatter(proposal.md size S|M|L|)` means "absent or S, M or L". Verified on scratch units: `XL` unsatisfied
+  (detail `size=XL`), no size satisfied, `L` satisfied (`services/evaluation/primitives.py:55-64`,
+  `repositories/unit/frontmatter.py:36-40`). Only `sdd-proposal` has the `intent-proposal` stage, so the shared-stage
+  rule cannot clash.
+- An unmet exit prints `[UNMET: ...]` and `[CHECK: ... detail="size=XL"]` at exit 0, with no code or `[ACTION]`
+  (`cli/render.py:66-89`, `tests/integration/features/workflow/test_exit_codes.py:52-54`). No `devkit.workflow.*`
+  entry-point group exists; the workflow engine discovers no extension (`packages/devkit-spec/pyproject.toml`;
+  `packages/devkit/src/devkit_agt/features/worktree/services/extensions.py:44-46`).
+- Precedent: `needs_decompose: true` is refused in devkit-spec commands only: `accept --direct`
+  (`accept.py:149-150`), handoff (`handoff.py:342-344`, `SPEC_PROPOSAL_NEEDS_DECOMPOSE` in `base/errors.py:145-155`),
+  the `plan-` attach (`features/delivery/usecases/attach.py:88-92`), integration readiness and native plan-accept.
+- `size` has no enum or validation in code. Its wording lives in the proposal template (`:9`), `scaffold.py:385`,
+  `CAP-DLV-proposal-incubation` (`:218`, `:246`), the seed `docs/proposals/README.md:30`, `spec-next`
+  `next-work.md:15`, `CAP-HARN-agent-guidance` (`:153`, `:320`) and `UC-route-development-intent` (`:58`, `:139`); the
+  viewer filters on the unchanged `S`, `M`, `L`, `XL` values. No live proposal is `XL` today (2 `L`, 2 `M`).
+
+| Option | Cost | Blocks gate, `next`, acceptance | Coded decompose directive |
+| --- | --- | --- | --- |
+| A. `frontmatter(proposal.md size S\|M\|L\|)` on the `intent-proposal` exit | One workflow line, docs, tests; devkit-spec only | All three, under `ask` and `auto` | No: generic `UNMET` (exit 0), `REQUEST_UNKNOWN`, `SPEC_PROPOSAL_GATE_NOT_OPEN` |
+| B. devkit-spec command refusals (`accept --direct`, `plan-` attach) | Small; follows `needs_decompose` | Acceptance and Planning attach only | Yes, where devkit-spec owns the command |
+| C. An ERROR rule on non-draft XL proposals | Medium | Planning's first commit and hand edits only | Rule remediation, not shown at `next` |
+| D. A new devkit-agt hook consulted by `next` and `answer`, or a check that carries a code and fix | Medium; new cross-package contract | All three | Yes, everywhere |

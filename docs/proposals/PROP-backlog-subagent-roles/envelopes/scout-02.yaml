@@ -1,0 +1,44 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T07:37:34.403059Z'
+status: completed
+summary: 'XL gate placement: a devkit-spec-only exit condition frontmatter(proposal.md size S|M|L|) on intent-proposal blocks the gate, next and plan-intent recording but only generically; coded decompose directives fit devkit-spec command refusals (accept --direct, plan- attach); a coded error from workflow next and answer needs a new devkit-agt hook.'
+findings:
+- issue: plan-intent is recorded only by devkit-agt workflow answer, which reads no frontmatter; no devkit.workflow extension group exists
+  evidence: packages/devkit/src/devkit_agt/features/workflow/usecases/answers.py:111-133; packages/devkit-spec/src/devkit_spec/features/proposals/usecases/accept.py:16; packages/devkit-spec/pyproject.toml entry points
+  suggested_action: Gate through the workflow definition, or add a devkit-agt hook
+  resolution: open
+- issue: An unmet intent-proposal exit keeps gate:plan-intent from opening under ask and auto; entry conditions are never evaluated
+  evidence: packages/devkit/src/devkit_agt/features/workflow/usecases/evaluate.py:358-394
+  suggested_action: Put the condition on the intent-proposal exit
+  resolution: open
+- issue: frontmatter(proposal.md size S|M|L|) accepts S, M, L and a missing size and refuses XL (verified)
+  evidence: services/evaluation/primitives.py:55-64; repositories/unit/frontmatter.py:36-40
+  suggested_action: Use that condition
+  resolution: open
+- issue: An unmet exit prints UNMET and CHECK detail at exit 0 with no code or ACTION
+  evidence: packages/devkit/src/devkit_agt/features/workflow/cli/render.py:66-89; tests/integration/features/workflow/test_exit_codes.py:52-54
+  failure_condition: The user's error-with-directive at next is not met by the condition alone
+  suggested_action: Skill text reads the detail as a decompose directive, or add a devkit-agt coded check
+  resolution: open
+- issue: needs_decompose is refused only in devkit-spec commands with SPEC_PROPOSAL_NEEDS_DECOMPOSE
+  evidence: accept.py:149-150; handoff.py:342-344; base/errors.py:145-155; features/delivery/usecases/attach.py:88-92
+  suggested_action: Add XL refusals to accept --direct and the plan- attach on that pattern
+  resolution: open
+- issue: size has no code validation; its wording lives in the template, scaffold, CAP-DLV-proposal-incubation, seed README, spec-next, CAP-HARN-agent-guidance and UC-route-development-intent
+  evidence: templates/proposal.md:9; features/proposals/usecases/scaffold.py:385; CAP-DLV-proposal-incubation.md:218,246; seed/docs/proposals/README.md:30; next-work.md:15
+  suggested_action: Redefine XL in those places; values stay unchanged
+  resolution: open
+assumptions:
+- 'Route: Claude Code native scout; read-only, scratch units outside the repository; git status unchanged.'
+- plan-intent acceptance means devkit workflow answer --request gate:plan-intent
+unverified_areas:
+- End-to-end workflow answer output for an XL unit
+- Whether a rule can target decisions/*.yaml and read proposal.md from the commit snapshot
+- Whether CAP-DLV-delivery-workflows lists sdd-proposal exits verbatim
+checks: {}
+diff_scope:
+  base: e6531c93ab9bbcc41f2f5c63302e26cda52e0edc
+  head: 9b7b572705d48e137f05db78550f5ce62265336a
