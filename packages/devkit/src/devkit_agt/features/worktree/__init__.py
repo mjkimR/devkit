@@ -1,4 +1,4 @@
-"""devkit_agt.features.worktree: activity branches and their task worktrees (``devkit worktree start|finish|status|stale``).
+"""devkit_agt.features.worktree: activity branches and their task worktrees (``devkit worktree start|finish|status``, stale branches with ``status --stale``).
 
 A task runs on an activity branch ``plan-<slug>`` or ``dev-<slug>``, in ``<parent of base>/<base name>-wt-<branch>``
 or (``start_branch``) in the current checkout; ``attach`` continues an existing branch, ``finish`` integrates it into

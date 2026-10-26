@@ -283,7 +283,7 @@ writes into the proposal's `materials/`; `scout` and `challenger` returns are re
 | --- | --- | --- |
 | `plan-intent` | `intent`, `intent-session`, `intent-proposal` | task intent: `ask` or `auto` |
 | `plan-accept` | `direction-handoff` | `ask` or `auto` |
-| `proposal-handoff` | native Development start | `ask` or `auto` |
+| `proposal-handoff` | none: `devkit spec proposal accept --mode accept_and_handoff` and `devkit spec proposal handoff --effort` read it | `ask` or `auto` |
 | `dev-integration` | `integration-approval`, `approval-session` | `dev-integration` (`ask` or `auto`) |
 
 - A gate waiting for the user: `devkit workflow next` prints `[WAITING: human gate:<gate>]` with a
@@ -298,10 +298,11 @@ writes into the proposal's `materials/`; `scout` and `challenger` returns are re
   `[GATE_PASSED: dev-integration stage=integration-approval policy=auto source=policy]` (JSON `passed_gates`), the basis
   every report cites.
 - `--given <gate>` asserts a gate for one run (a runner's binding).
-- The workflow definitions fix the policies each gate accepts (`gates.<gate>.policies`): `plan-intent` and
-  `plan-accept`, `proposal-handoff` and `dev-integration` take `ask` or `auto`. A configured policy outside them stops every
-  devkit command that evaluates the unit with `WORKFLOW_GATE_POLICY`, and `devkit spec policy` reports the same rule
-  (`CAP-DLV-project-policy`).
+- The workflow definitions fix the policies each stage gate accepts (`gates.<gate>.policies`): `plan-intent`,
+  `plan-accept` and `dev-integration` take `ask` or `auto`. A configured policy outside them stops every devkit workflow
+  command that evaluates the unit with `WORKFLOW_GATE_POLICY`. `proposal-handoff` is declared by no stage, so workflow
+  commands never check it. `devkit spec policy` and the spec commands that read an approval policy refuse any of the
+  four outside `ask` or `auto` with `SPEC_CONFIG_INVALID` (`CAP-DLV-project-policy`).
 - `plan-accept` is asked only for a proposal in review, or for a draft once a direct acceptance wrote
   `status: accepted`: the `direction-handoff` exit is `frontmatter(proposal.md status reviewing|accepted)`, so a draft
   otherwise, or a rejected proposal, gets no request. A `plan-accept` acceptance is recorded with
@@ -429,7 +430,7 @@ It never reverts, closes, raises the depth or narrows the scope. The `developmen
 each answer decides, what each option leads to) rather than relaying the worker's wording. The Host validates the cumulative committed range from the
 unit's last accepted head; a range it rejects is a problem in the Host's own `worker` envelope, which blocks the unit
 from review and integration without discarding anything until a resolution names it
-(`ADR-orchestration-workers`, `ADR-orchestration-workers`). Host statuses: Claude Code
+(`ADR-orchestration-workers`). Host statuses: Claude Code
 `native`, Codex `emulated` with `sandbox_mode: workspace-write`, Antigravity `unverified`
 (`ADR-orchestration-workers`). Native Codex spawning does not enforce the worker's role/path boundary;
 Git administration remains shared. Workers inherit model and reasoning effort and set no approval-policy override.

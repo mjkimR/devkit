@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-proposal-incubation
 title: Proposal Incubation and Handoff
-summary: "Proposal incubation and handoff preserve approved scope, decisions, materials and feedback. They validate direct prerequisites, publish source-bound Planning reviews before acceptance, relocate live references, and compose acceptance and handoff through Host-authorized CLI operations."
+summary: "Proposal incubation and handoff preserve approved scope, decisions, materials and feedback. They validate direct prerequisites, review the committed Planning source before acceptance, relocate live references, and compose acceptance and handoff through Host-authorized CLI operations."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -163,7 +163,9 @@ removes it.
     skipped by policy; when the gate does not open it restores `proposal.md` byte-for-byte and reports the unmet
     checks and hold reasons (`SPEC_PROPOSAL_GATE_NOT_OPEN`). `--check` runs every check and writes nothing; there a
     missing `gate:plan-intent` is `pending`, not blocking, because one request may ask both gates. `accept` never
-    records `plan-intent`, commits, merges or hands off; Backlog commits a direct acceptance on the base.
+    records `plan-intent`. Without `--mode` it never commits, merges or hands off, and Backlog commits a direct
+    acceptance on the base; with `--mode` it composes the commit, the Planning merge and an optional handoff
+    (Host-authorized proposal lifecycle CLI, below).
 
 15. **Planning review before acceptance**: when a bound proposal in Planning reaches `plan-accept`, the agent reviews the proposal, PADRs and envelopes directly for the final committed `plan-<slug>` source before presenting acceptance. Acceptance operates on the committed proposal directly and does not require a shared artifact report. `devkit spec proposal report <slug> [--source-sha <sha>]` can be run to inspect a summary briefing. Acceptance records `status: accepted` and `gate:plan-accept` on the committed proposal.
 
@@ -561,6 +563,7 @@ directory whose namespace applies when `namespace` is omitted);
 | `SPEC_PROPOSAL_SLUG_CONFLICT` | `ERROR` (`INTERACTION`) | `ProposalSlugConflictError` | `SPEC-<slug>` exists (`[TARGET]`); the user picks another slug or drops the duplicate. |
 | `SPEC_PROPOSAL_NOT_FOUND` | `ERROR` (`INPUT_ERROR`) | `ProposalNotFoundError` | No bundle or single-file proposal has the slug (`padr`: no bundle); `new`: `--supersedes` names a proposal that does not exist. |
 | `SPEC_HANDOFF_NOT_READY` | `ERROR` (`BLOCKED`) | `HandoffNotReadyError` | The composed `proposal handoff` CLI finds an unaccepted proposal, incomplete Planning workflow, or unmet base prerequisite; resolve the named prerequisite and rerun with a current report URI. |
+| `SPEC_HANDOFF_STALE` | `ERROR` (`MAINTENANCE`) | `HandoffStaleError` | The composed `proposal handoff --effort` CLI found the base, accepted plan or policy changed since its check, before any effect (exit `2`); or it created the Development worktree, which no longer holds the reviewed base commit or whose files setup changed: the result is `status=needs_recovery` with this error listed, the worktree is kept for inspection and the command exits `1`. |
 | `SPEC_HANDOFF_REPLY_INVALID` | `ERROR` (`INPUT_ERROR`) | `HandoffReplyError` | The composed `proposal handoff` CLI needs `--effort low`, `--effort medium` or `--effort high`. |
 | `SPEC_PROPOSAL_REJECTED_PENDING` | `WARNING` | `ProposalRejectedPendingWarning` | `rules check -p hygiene` (whole workspace): a rejected proposal is still in the base; `[FIX]` finds the rejection commit, writes the rejection ADR and deletes the proposal in one commit (rule 9). |
 | `SPEC_PROPOSAL_IN_PLANNING` | `ERROR` (`INPUT_ERROR`) | `ProposalInPlanningError` | `check`: Backlog may not change the proposal, because its `plan-<slug>` exists (locally or fetched; rule 13) or it is no longer `draft`. `padr`: `plan-<slug>` exists and the checkout is not on it. |

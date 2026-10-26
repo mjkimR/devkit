@@ -8,7 +8,7 @@ target: packages/devkit-dist/src/devkit_dist/features/distribution/cli/output.py
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -37,3 +37,11 @@ cli/output.py:26-28  WORKSPACE = workspace_option("Project root (default: the ne
 adapters/cli.py:81   WORKSPACE_HELP = "Workspace root directory [default: the devkit project containing the current directory]"
 project.py:125-138   toplevel = git_toplevel(origin); if toplevel is not None: ... return toplevel; else walk parents for .devkit/
 ```
+
+## Disposition
+
+Resolved by `SPEC-living-spec-consistency-sweep`: `WORKSPACE` in
+`packages/devkit-dist/src/devkit_dist/features/distribution/cli/output.py` now uses the shared default
+`WORKSPACE_HELP` of `devkit_dist.adapters.cli`, so every distribution command describes `-w/--workspace-root` as
+"Workspace root directory [default: the devkit project containing the current directory]", one text for the option.
+Verified with `devkit sync --help` and `devkit playbook search --help`.

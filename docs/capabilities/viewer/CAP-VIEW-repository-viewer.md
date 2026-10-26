@@ -14,7 +14,7 @@ created_at: 2026-10-19
 # [CAP-VIEW-repository-viewer] Local Repository Viewer
 
 The `devkit-viewer` distribution gives people a screen for what agents read through `devkit spec`: the Living Spec,
-proposals, specs and milestones (`ADR-roadmap-and-milestones`, `ADR-roadmap-and-milestones`). It mounts
+proposals, specs and milestones (`ADR-roadmap-and-milestones`). It mounts
 `devkit viewer` under the `devkit` command line (`CAP-HARN-command-mount`). devkit owns the viewer's source; autohub
 consumes its component library as a vendored tarball (`ADR-viewer`). The server's
 choices are `ADR-viewer` as superseded by `ADR-viewer-working-tree`, and `ADR-viewer-planning-proposal-overlay` for
@@ -103,7 +103,7 @@ Every other endpoint ignores `source`, as all ignore `ref`.
   header.
 - `GET` only: every other method is `405 VIEWER_METHOD_NOT_ALLOWED`. No endpoint writes, commits or fetches.
 - **Approvals stay out**: the viewer records no gate decision, handoff choice or question answer
-  (`CAP-DLV-human-interaction`) and has no connection to the integration MCP tools (`CAP-INT-mcp-services`). Every
+  (`CAP-DLV-human-interaction`) and runs no integration operation (`CAP-INT-mcp-services`). Every
   approval keeps its existing path.
 
 Any other path serves a file the bundled app lists, looked up by its decoded path (`/` is `index.html`); anything

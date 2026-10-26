@@ -8,7 +8,7 @@ target: packages/devkit-spec (spec skill references/classification.md)
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -38,3 +38,11 @@ created_at: 2026-10-26
 spec skill references/classification.md: overall-refactor = structural change across the project, no new behavior, direction settles during the work.
 ADR-apply-behavior-preserving-batches-as-direct-mode-refactors §4: refines the applicability of ADR-overall-refactor-workflow for review-refactor runs.
 ```
+
+## Disposition
+
+Resolved by `SPEC-living-spec-consistency-sweep`: the `spec` skill's `references/classification.md` §1 states that a
+behavior-preserving work item agreed in a maintenance playbook's decision round (review-refactor) is
+`overall-refactor` when the source files its changes edit span more than one feature or module, and `feature` at its
+own depth otherwise, as `ADR-apply-behavior-preserving-batches-as-direct-mode-refactors` decides. Synchronized with
+`devkit sync`.

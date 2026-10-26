@@ -48,6 +48,7 @@ The ubiquitous terms of devkit as its documents, commands and bundles use them. 
 
 | Term | Definition | Owner | Avoid | Code identifiers |
 | :--- | :--- | :--- | :--- | :--- |
+| **Host** | The main agent of the user's local session: it drives Backlog, inline Planning, worktree preparation, worker delegation and local integration, and carries the user's conversational decisions to Host-authorized CLI operations. Excludes delegated workers and subagent roles, and the agent host product (Codex, Claude Code, Antigravity) that `--host` and host hooks name. | `ARCH-04-1-ecosystem-boundaries` | main session |  |
 | **Commit gate** | Git hook wrapper installed by `devkit gate install` enforcing policy prior to commit. | `CAP-GATE-commit-gates` |  |  |
 | **Compact output** | Bounded command execution for AI agents (`devkit run`), capturing full logs to disk while streaming bounded summaries to stdout. | `CAP-CMP-bounded-execution` |  |  |
 | **Agent advisory** | Structured error, warning, or notice adhering to the Agent Advisory Protocol (`[ERROR]`, `[WARN]`, `[NOTICE]`) with machine-actionable directives. | `CAP-ADV-agent-advisory-protocol` |  |  |

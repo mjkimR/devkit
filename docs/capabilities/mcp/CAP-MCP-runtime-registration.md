@@ -81,6 +81,8 @@ plan without writes, installation or host launches. Locked sync validates withou
 changed existing local configuration to ordinary sync. An absent fresh-checkout registration does not block
 locked asset restoration. After restoration, worktree setup invokes dist-owned `sync --registrations-only`,
 which discovers the optional provider and reconciles local entries without touching assets or the receipt.
+`devkit sync --registrations-only [-w DIR] [--format text|json]` accepts no other sync mode or selection flag
+(`ARGUMENT_INVALID`) and prints `[MCP_REGISTRATION: changes=<n>]` (JSON `{"actions": [...], "notices": [...]}`).
 Without an installed provider and ownership state this mode does nothing. The trusted lifecycle guard runs
 again before that initialization; copied opt-out and cloud configuration remain effective. Opt-out, uninstall and selected-agent removal retire only exact
 owned entries. An unloadable installed provider is an error, not an uninstall signal.
@@ -116,7 +118,7 @@ copy and host-owned display limits are specified in `CAP-INT-mcp-services` and `
 
 ## Shared artifact services
 
-`devkit_dist.features.shared.mcp` supplies fixed `bounded_write` put/apply-sweep tools and `read_only` get/list/sweep-plan tools.
+`devkit_dist.features.shared.mcp` supplies the fixed `bounded_write` tool `shared_put` and the `read_only` tools `shared_get` and `shared_list`.
 Bounded writes invoke a validated domain API without a business approval form; this classification grants neither
 host permission nor arbitrary filesystem authority. Cloud discovery omits them and invocation rejects forged calls.
 Unknown execution classifications fail closed. Both reads and writes bind configuration to the owning workspace,
