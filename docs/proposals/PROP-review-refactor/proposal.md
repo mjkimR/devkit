@@ -91,19 +91,20 @@ This draft carries the scope its own milestone held before the maintenance miles
   guidance, CLI) and the roots at intake, and missing scope is clarified first. The run splits into batches of one
   surface each, with one decision round per batch. A cross-surface finding cites both sides and belongs to the batch
   of the surface where its change lands. A cross-surface finding whose landing surface is outside the selected scope
-  is recorded as deferred with a follow-up and is never applied in the run.
-- Subagents (`user`): within a surface batch the playbook uses spawned subagents when useful and the host supports
-  them, for example parallel review per root or module, or independent verification of a
-  consolidation or removal; otherwise the same steps run in the playbook's agent. The playbook's agent keeps
-  coordination, the decision round and integration. A subagent's result is an evidence-backed opinion that the
-  playbook's agent validates against the code or the diff at the cited location before it enters the decision round
-  or a change record; an unconfirmed claim is dropped or recorded as a coverage gap. A verification or
-  negative-reachability claim enters a change record only with its commands and results, and the playbook's agent
-  re-runs those commands before recording. A root counts as covered only when the subagent's result lists what it
-  read; otherwise it is a coverage gap. Subagents never ask the user, approve a change or write the run's records.
-  Their write scope stays inside the batch: playbook-spawned subagents do review and verification only, read-only.
-  The routed development workflow owns the applying step; a subagent applies an agreed change only as a worker that
-  workflow assigns, under that workflow's write boundaries and sequencing.
+  is recorded as deferred with a follow-up and is not applied, unless the user adds that surface to the run's scope,
+  which adds its own batch and decision round and is recorded in the run report. The edits that follow an agreed
+  change (its tests, the references and documentation naming the changed code, the Living Spec statement of the
+  result) belong to that change and its batch on any surface; they are not cross-surface findings.
+- Subagent review (`user`; `PADR-apply-behavior-preserving-batches-as-direct-mode-refactors`): within a surface
+  batch the playbook uses spawned subagents when useful and the host supports them, for example parallel review per
+  root or module, or independent verification of a consolidation or removal; otherwise the same steps run in the
+  playbook's agent. The playbook's agent keeps coordination, the decision round and integration. A subagent's result
+  is an evidence-backed opinion that the playbook's agent validates against the code or the diff at the cited
+  location before it enters the decision round or a change record; an unconfirmed claim is dropped or recorded as a
+  coverage gap. A verification or negative-reachability claim enters a change record only with its commands and
+  results, and the playbook's agent re-runs those commands before recording. A root counts as covered only when the
+  subagent's result lists what it read; otherwise it is a coverage gap. Subagents never ask the user, approve a
+  change or write the run's records.
 - Findings and implemented changes are separate records. Each change carries its behavior-preservation evidence and
   resulting commit. Deferred work links to existing or new follow-ups without duplication.
 - Dispositions per finding: consolidate, reduce or remove with behavior preserved; contract change; defer; keep
@@ -111,18 +112,56 @@ This draft carries the scope its own milestone held before the maintenance miles
 - Invocation, including an external runner naming the exact ID, authorizes no change (`ADR-external-playbook-execution`):
   only the user's decision round does, and an unattended run stops there with nothing applied.
 - The user's decision-round approval is the recorded `user` intent for the routed work: it supplies the routed
-  workflow's intent approval and never its integration approval. The agreed behavior-preserving changes of one batch
-  form one work item with one commit per change; each contract change is its own work item.
-- Contract removals (O3, `user`; `PADR-apply-approved-contract-removals-as-separate-work-items`): the decision round
-  may approve removing a command, option, public interface or compatibility path, unless the declared
-  compatibility-policy exception applies (then it is a behavior-preserving removal that still names the inputs no
-  longer accepted). The removal becomes its own work item through the repository's development workflow, with the
-  contract and documentation updated, kept apart from the batch's behavior-preserving work item.
-- Each work item is applied through the repository's development workflow and classified by that repository's own
-  classification criteria; the playbook does not restate them.
+  workflow's intent agreement (goal, scope and non-goals of the work item) and never its integration approval. The
+  agreed behavior-preserving changes of one batch form one work item with one commit per change; each contract
+  change is its own work item.
 - A contract mismatch against agreed documentation is recorded as a deferred finding whose follow-up destination
   names drift reconciliation. The playbook never invokes another playbook; the user may name `drift-reconciliation`
   as a separate invocation. This playbook targets maintenance cost in code that is consistent with its contract.
+
+### Applying agreed changes (`user`)
+
+The work the playbook applies is refactoring, not feature development
+(`PADR-apply-behavior-preserving-batches-as-direct-mode-refactors`).
+
+- Route: the batch's behavior-preserving work item follows the target repository's workflow for a behavior-preserving
+  refactor across several areas (with the `spec` bundle, `sdd-overall-refactor`), not its feature development
+  workflow, unless the work item is a single-module refactor.
+- Single-module test: the work item is a single-module refactor when every path its agreed changes edit, apart from
+  the edits that follow a change, lies inside one feature or module as the target repository's declared layout
+  defines it. In devkit that is one `features/<feature>/` directory or one package-level module of one package; on the
+  guidance surface, one skill, playbook or instruction; on the CLI surface, one command group's module. A
+  single-module work item follows the repository's feature workflow at the depth that repository's own
+  classification gives it (in devkit, `session` when the change touches no contract and no Living Spec text). The
+  playbook's agent applies the test once per work item, states the route and the edited paths in the decision round,
+  and never splits or merges a work item to change its route. Where the repository declares no layout, the decision
+  round names the route with the edited paths and the user's approval settles it. Where the repository has no
+  refactor workflow, the direct-mode steps below apply as stated.
+- Direct mode: the playbook's agent works with the user in the conversation, with no planning or development worker
+  and no Unit. It splits the work item into edit tasks and, when useful and the host supports them, uses general
+  subagents for parallel edits across many files, drafting and research; otherwise it performs the same steps itself.
+- Subagent edits: a subagent applies only agreed edits, inside an explicit write scope the playbook's agent assigns:
+  the paths of its agreed change, within the batch's write scope and disjoint from every other subagent working at
+  the same time. The playbook's agent checks each result against the diff before relying on it: the diff stays inside
+  the assigned paths and matches the agreed change. An edit outside the scope or beyond the agreed change is not
+  committed; the change is redone or returned to the decision round. Subagents never commit, ask the user, approve a
+  change or write the run's records.
+- Commits: the playbook's agent records each change's preservation evidence and commits the change as a checkpoint,
+  one commit per change.
+- Verification: each change's relevant verification passes before and after it (preservation evidence below), and the
+  work item's final head passes the repository's full verification (in devkit: the full test suite, lint, type
+  checks and the rules check).
+- Review: the playbook's agent starts an independent code reviewer as a subagent at the run's activity effort (at
+  `high`, in the repository's bounded review rounds) and fixes its findings before integration.
+- Report and integration: the work item's report (what changed and why, the verification results, anything left for
+  follow-up) goes into the final response and the commit body, and the work item integrates through the repository's
+  integration path with task kind `overall-refactor` (a single-module work item: its feature workflow's path).
+- Contract removals (O3, `user`; `PADR-apply-approved-contract-removals-as-separate-work-items`): the decision round
+  may approve removing a command, option, public interface or compatibility path, unless the declared
+  compatibility-policy exception applies (then it is a behavior-preserving removal that still names the inputs no
+  longer accepted). The removal is not behavior-preserving: it becomes its own work item through the repository's
+  normal development workflow, classified by that repository's own criteria, with the contract and documentation
+  updated, kept apart from the batch's behavior-preserving work item and never routed as a refactor.
 
 ### Review criteria
 
@@ -185,10 +224,13 @@ This draft carries the scope its own milestone held before the maintenance miles
     `drift-reconciliation` and `refactoring` deploying `review-refactor` alone), lexical search and exact retrieval.
     The README preset table and the install recommendation name both presets.
   - A spec-review checklist maps each consolidation and reduction kind, each reduction ground, intake (surface and
-    root selection, missing scope clarified first), the per-surface batching and cross-surface assignment
-    (including an unselected landing surface), the subagent rules (validation and re-run of verification claims,
-    no decision authority, read-only scope, the fallback on a host without subagents), the contract-removal work item, each preservation-evidence part and the helper placement order to a
-    playbook section.
+    root selection, missing scope clarified first), the per-surface batching and cross-surface assignment (an
+    unselected landing surface, the user's scope addition, the edits that follow a change), the subagent review
+    rules (validation and re-run of verification claims, no decision authority, the fallback on a host without
+    subagents), the applying rules (route, single-module test, direct mode, subagent write scopes and the diff
+    check, one commit per change, full verification, independent review, report and integration), the
+    contract-removal work item, each preservation-evidence part and the helper placement order to a playbook
+    section.
   - Manual evidence, following the `drift-reconciliation` precedent, is named as manual evidence and never reported as
     test coverage. It has two parts.
     - A real, bounded, read-only sweep of this repository records findings, coverage and gaps. It stops at its
@@ -197,11 +239,13 @@ This draft carries the scope its own milestone held before the maintenance miles
       refactor.
     - The fixture is a disposable Git repository in an ignored scratch path inside the worktree (for example
       `scratch/`), never committed to the worktree, with its own minimal test command. Its own `git init` and
-      commits are fixture operations, and routing to the development workflow means direct fixture commits plus
-      the fixture test command; no real development workflow is opened. With simulated decisions, it exercises
-      one consolidation, one helper fold and one removal, applied only inside the fixture, with separate change
-      records and the preservation evidence above (reachability, before-and-after verification, and the helper's
-      placement). The patches, commit IDs and before-and-after
+      commits are fixture operations. The simulated decision round states the route and the single-module test
+      result, and direct mode runs inside the fixture: the playbook's agent applies the changes, at least one
+      through a subagent edit with its diff check when the host supports subagents, commits each change in the
+      fixture and runs the fixture test command as its full verification; no real workflow, review or integration
+      is opened. With simulated decisions, it exercises one consolidation, one helper fold and one removal, applied
+      only inside the fixture, with separate change records and the preservation evidence above (reachability,
+      before-and-after verification, and the helper's placement). The patches, commit IDs and before-and-after
       command output are kept in the Unit's materials because the fixture is discarded. The playbook's exercise rule
       reads: decisions are simulated and change only the fixture.
   - Every playbook file passes the repository's skill document size rule. A directory-form playbook with
@@ -216,10 +260,18 @@ This draft carries the scope its own milestone held before the maintenance miles
   use cases and install guides, which Development edits.
 - User answers (all recommended options, `user`): bounding by surface batch with batch-scoped subagents (O2-A),
   contract removals as their own work items (O3-A), reachability-based preservation evidence (O4-A), lowest common
-  owner placement (O5-A), and `upkeep` plus a solo `refactoring` preset (O6-A). O2 and the subagent rules are
-  recorded in `PADR-bound-review-refactor-runs-by-surface-batch`, O3 in
+  owner placement (O5-A), and `upkeep` plus a solo `refactoring` preset (O6-A). O2 is recorded in
+  `PADR-bound-review-refactor-runs-by-surface-batch`, O3 in
   `PADR-apply-approved-contract-removals-as-separate-work-items`, O4 and O5 in
   `PADR-require-reachability-evidence-and-layered-placement`. O6 is packaging and needs no PADR.
+- Execution model (`user`, `answer-02`): the playbook applies refactoring, so a batch's behavior-preserving work
+  item follows the overall-refactor workflow in direct mode, and playbook-spawned subagents may apply agreed edits
+  within the batch's write scope. This replaces the earlier read-only subagent rule under which the routed
+  development workflow applied every change. The single-module test follows the overall-refactor workflow's own
+  boundary (a refactor inside one feature or module follows the feature workflows), so it needs no user question.
+  The deferral of findings that land on an unselected surface still holds, because the selected surfaces are the
+  run's agreed scope; the user may add a surface, and the edits that follow a change stay with it. The execution
+  model and the subagent rules are recorded in `PADR-apply-behavior-preserving-batches-as-direct-mode-refactors`.
 - `dev_effort` stays `medium`: the work has no effect that cannot be undone locally and no unresolved P1.
 
 ### Interactions

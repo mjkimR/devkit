@@ -40,9 +40,11 @@ external consumers. Deferring every such removal leaves reductions as unworked f
 
 - The decision round may approve removing a command, option, public interface or compatibility path, because the
   reduction direction requires applied removals.
-- The approved removal becomes its own work item through the repository's development workflow, with the contract
-  and documentation updated, kept apart from the batch's behavior-preserving work item, because the contract change
-  then stays visible and reviewable on its own.
+- The approved removal becomes its own work item through the repository's normal development workflow, classified
+  by that repository's own criteria, with the contract and documentation updated, kept apart from the batch's
+  behavior-preserving work item and never routed as a refactor
+  (`PADR-apply-behavior-preserving-batches-as-direct-mode-refactors`), because the contract change then stays
+  visible and reviewable on its own.
 - A compatibility-path removal under the declared compatibility-policy exception (the target repository states that
   no external consumer exists for that package) is a behavior-preserving removal instead; its change record still
   names the inputs or callers no longer accepted.
