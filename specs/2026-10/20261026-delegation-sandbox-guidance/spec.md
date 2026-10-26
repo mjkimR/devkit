@@ -2,7 +2,7 @@
 id: SPEC-delegation-sandbox-guidance
 title: Delegation scope and sandbox guidance fixes
 summary: Resolves five open feedback items on delegated write scope, worker-producible baselines, reviewer probe tests and sandbox-safe worktree and Git metadata access in the spec bundle's guidance and role contracts.
-status: in-progress
+status: completed
 created: 2026-10-26
 related_capabilities: [CAP-DLV-delivery-workflows]
 related_usecases: []
