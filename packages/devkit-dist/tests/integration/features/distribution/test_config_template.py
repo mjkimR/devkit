@@ -431,3 +431,48 @@ def test_cli_reports_every_commented_part_it_writes_and_nothing_after(
     assert again.exit_code == 0, again.output
     assert (json.loads(again.stdout)["state"], json.loads(again.stdout)["added"]) == ("unchanged", [])
     assert (project / CONFIG_PATH).read_bytes() == after
+
+
+def _lines_kept(before: bytes, after: bytes) -> bool:
+    """Every line of ``before`` appears in ``after`` in order, with its own line ending."""
+    position = 0
+    for line in before.splitlines(keepends=True):
+        position = after.find(line, position)
+        if position < 0:
+            return False
+        position += len(line)
+    return True
+
+
+def test_a_crlf_file_keeps_its_line_endings_and_gets_crlf_lines(project: Path, tools: list[SimpleNamespace]) -> None:
+    before = b'schema = 1\r\n\r\n[presets]\r\nspec = "core"\r\n'
+    path = project / CONFIG_PATH
+    path.write_bytes(before)
+    runner = CliRunner()
+    printed = json.loads(runner.invoke(cli, ["config", "template", "--print", "--workspace-root", str(project)]).stdout)
+    result = runner.invoke(cli, ["config", "template", "--workspace-root", str(project)])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["state"] == "updated"
+    after = path.read_bytes()
+    assert _lines_kept(before, after)
+    assert after.count(b"\n") == after.count(b"\r\n")  # no line ends in a bare LF
+    assert printed["text"].encode() == after
+    again = json.loads(runner.invoke(cli, ["config", "template", "--workspace-root", str(project)]).stdout)
+    assert (again["state"], again["added"]) == ("unchanged", [])
+    assert path.read_bytes() == after
+
+
+@pytest.mark.parametrize(
+    "before",
+    [b'schema = 1\n\n[presets]\nspec = "core"\n', b'schema = 1\n\r\n[presets]\r\nspec = "core"\n'],
+    ids=["lf", "mixed"],
+)
+def test_an_lf_or_mixed_file_keeps_its_bytes_and_gets_lf_lines(
+    project: Path, tools: list[SimpleNamespace], before: bytes
+) -> None:
+    path = project / CONFIG_PATH
+    path.write_bytes(before)
+    assert refresh_config_template(project).state == "updated"
+    after = path.read_bytes()
+    assert _lines_kept(before, after)
+    assert after.count(b"\r\n") == before.count(b"\r\n")  # the added lines end in LF
