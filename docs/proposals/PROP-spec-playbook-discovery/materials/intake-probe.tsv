@@ -1,0 +1,211 @@
+spec	mode	bytes	candidates (id:score, limit 3)	query (spec title)
+20261013-boundary-continuation-lines	auto	103	-	Boundary continuation lines
+20261013-boundary-continuation-lines	lexical	104	-	Boundary continuation lines
+20261013-feedback-list-filters	auto	684	feedback-hygiene:0.0328	Feedback list filters
+20261013-feedback-list-filters	lexical	685	feedback-hygiene:1.6	Feedback list filters
+20261013-open-feedback-and-progress	auto	1822	feedback-hygiene:0.0328,brownfield-adoption:0.0323,skill-authoring:0.0159	Open feedback outside history and in-progress specs
+20261013-open-feedback-and-progress	lexical	1823	feedback-hygiene:4.49,brownfield-adoption:1.78,skill-authoring:0.39	Open feedback outside history and in-progress specs
+20261014-feedback-config	auto	1317	feedback-hygiene:0.0328,brownfield-adoption:0.0323	Repository-first feedback configuration
+20261014-feedback-config	lexical	1318	feedback-hygiene:1.6,brownfield-adoption:1.06	Repository-first feedback configuration
+20261014-namespace-default-and-handoff-branch	auto	1818	brownfield-adoption:0.0164,feedback-hygiene:0.0161,adr-compaction:0.0159	Namespace default from the current directory and the handoff branch guard
+20261014-namespace-default-and-handoff-branch	lexical	1819	brownfield-adoption:1.02,feedback-hygiene:0.882,adr-compaction:0.574	Namespace default from the current directory and the handoff branch guard
+20261014-subagent-procedure-in-contract	auto	1315	feedback-hygiene:0.0164,brownfield-adoption:0.0161	Subagent procedures in role contracts
+20261014-subagent-procedure-in-contract	lexical	1316	feedback-hygiene:0.625,brownfield-adoption:0.611	Subagent procedures in role contracts
+20261015-commit-gate-rules-default	auto	1788	brownfield-adoption:0.0325,feedback-hygiene:0.0325,adr-compaction:0.0159	Commit gate runs the spec rules by default
+20261015-commit-gate-rules-default	lexical	1789	feedback-hygiene:3.17,brownfield-adoption:2.15,adr-compaction:0.574	Commit gate runs the spec rules by default
+20261015-git-policy-levels	auto	1810	feedback-hygiene:0.0164,brownfield-adoption:0.0161,skill-authoring:0.0159	Worktree and pull request policy levels
+20261015-git-policy-levels	lexical	1811	feedback-hygiene:0.56,brownfield-adoption:0.553,skill-authoring:0.39	Worktree and pull request policy levels
+20261015-handoff-unit-records	auto	1807	brownfield-adoption:0.0164,feedback-hygiene:0.0161,adr-compaction:0.0159	Proposal handoff and the workflow records of the proposal unit
+20261015-handoff-unit-records	lexical	1808	brownfield-adoption:1.02,feedback-hygiene:0.882,adr-compaction:0.574	Proposal handoff and the workflow records of the proposal unit
+20261015-list-unknown-status	auto	1820	brownfield-adoption:0.0328,feedback-hygiene:0.0161,skill-authoring:0.0159	Flag an unknown status filter in devkit spec list
+20261015-list-unknown-status	lexical	1820	brownfield-adoption:3.36,feedback-hygiene:2.33,skill-authoring:0.758	Flag an unknown status filter in devkit spec list
+20261015-orchestration-mode	auto	123	-	Orchestration mode for delegated implementation
+20261015-orchestration-mode	lexical	124	-	Orchestration mode for delegated implementation
+20261015-search-blank-query	auto	598	skill-authoring:0.0164	Reject a blank search query
+20261015-search-blank-query	lexical	599	skill-authoring:1.83	Reject a blank search query
+20261015-worker-committed-result	auto	125	-	Workers deliver committed, self-contained results
+20261015-worker-committed-result	lexical	126	-	Workers deliver committed, self-contained results
+20261016-planning-effort-safeguards	auto	102	-	Planning effort safeguards
+20261016-planning-effort-safeguards	lexical	103	-	Planning effort safeguards
+20261016-planning-feedback-capture	auto	1306	feedback-hygiene:0.0328,brownfield-adoption:0.0161	Feedback capture in Planning
+20261016-planning-feedback-capture	lexical	1307	feedback-hygiene:2.22,brownfield-adoption:0.611	Feedback capture in Planning
+20261016-proposal-effort-hints	auto	1830	brownfield-adoption:0.0164,feedback-hygiene:0.0161,skill-authoring:0.0159	Separate Planning and Development effort hints on proposals
+20261016-proposal-effort-hints	lexical	1831	brownfield-adoption:1.62,feedback-hygiene:0.56,skill-authoring:0.39	Separate Planning and Development effort hints on proposals
+20261016-review-role-policy	auto	1827	feedback-hygiene:0.0164,brownfield-adoption:0.0161,skill-authoring:0.0159	Separate review roles and bound medium review repetition
+20261016-review-role-policy	lexical	1828	feedback-hygiene:0.56,brownfield-adoption:0.553,skill-authoring:0.39	Separate review roles and bound medium review repetition
+20261017-hook-driven-integration-cleanup	auto	1819	brownfield-adoption:0.0328,feedback-hygiene:0.0161,skill-authoring:0.0159	Approval-driven integration and worktree cleanup
+20261017-hook-driven-integration-cleanup	lexical	1820	brownfield-adoption:1.62,feedback-hygiene:0.56,skill-authoring:0.39	Approval-driven integration and worktree cleanup
+20261017-hygiene-reliability	auto	1821	feedback-hygiene:0.0325,skill-authoring:0.0164,brownfield-adoption:0.0159	Repair hygiene reliability and rule reference size
+20261017-hygiene-reliability	lexical	1821	skill-authoring:2.46,feedback-hygiene:2.16,brownfield-adoption:1.16	Repair hygiene reliability and rule reference size
+20261017-mcp-onboarding	auto	1818	feedback-hygiene:0.0164,brownfield-adoption:0.0161,skill-authoring:0.0159	Explicit MCP onboarding and registration status
+20261017-mcp-onboarding	lexical	1818	feedback-hygiene:1.65,brownfield-adoption:0.553,skill-authoring:0.39	Explicit MCP onboarding and registration status
+20261017-post-merge-hygiene	auto	702	feedback-hygiene:0.0164	Repair post-integration package hygiene
+20261017-post-merge-hygiene	lexical	703	feedback-hygiene:1.6	Repair post-integration package hygiene
+20261018-backlog-roadmap-and-issues	auto	1824	brownfield-adoption:0.0164,feedback-hygiene:0.0161,skill-authoring:0.0159	'Backlog: repository roadmap and next-work selection'
+20261018-backlog-roadmap-and-issues	lexical	1825	brownfield-adoption:2.23,feedback-hygiene:1.19,skill-authoring:0.39	'Backlog: repository roadmap and next-work selection'
+20261018-bundle-templates	auto	105	-	Configurable bundle templates
+20261018-bundle-templates	lexical	106	-	Configurable bundle templates
+20261018-compact-integration-approval	auto	111	-	Compact native integration approval
+20261018-compact-integration-approval	lexical	112	-	Compact native integration approval
+20261018-remove-github-milestones	auto	108	-	Remove GitHub milestone guidance
+20261018-remove-github-milestones	lexical	109	-	Remove GitHub milestone guidance
+20261019-advisory-unique-code	auto	1215	brownfield-adoption:0.0164,skill-authoring:0.0161	Advisory code uniqueness rule
+20261019-advisory-unique-code	lexical	1215	brownfield-adoption:1.67,skill-authoring:0.758	Advisory code uniqueness rule
+20261019-affected-frontend	auto	1321	feedback-hygiene:0.0164,brownfield-adoption:0.0161	Frontend changes in affected test selection
+20261019-affected-frontend	lexical	1322	feedback-hygiene:0.625,brownfield-adoption:0.611	Frontend changes in affected test selection
+20261019-claude-terminal-mcp-approval	auto	743	brownfield-adoption:0.0328	Claude Code terminal MCP integration approval path
+20261019-claude-terminal-mcp-approval	lexical	744	brownfield-adoption:1.06	Claude Code terminal MCP integration approval path
+20261019-codex-native-workers	auto	1206	skill-authoring:0.0164,feedback-hygiene:0.0161	Codex native workers with command-scoped approvals
+20261019-codex-native-workers	lexical	1206	skill-authoring:0.758,feedback-hygiene:0.625	Codex native workers with command-scoped approvals
+20261019-devkit-dist-package-separation	auto	1225	brownfield-adoption:0.0328,adr-compaction:0.0161	Separate asset distribution into independent devkit-dist package
+20261019-devkit-dist-package-separation	lexical	1226	brownfield-adoption:1.67,adr-compaction:0.823	Separate asset distribution into independent devkit-dist package
+20261019-direct-planning-procedure	auto	1718	skill-authoring:0.0325,brownfield-adoption:0.0323,adr-compaction:0.0161	Planning procedure reachable from the spec skill for any executor
+20261019-direct-planning-procedure	lexical	1719	skill-authoring:2.11,adr-compaction:2,brownfield-adoption:1.54	Planning procedure reachable from the spec skill for any executor
+20261019-feedback-resolution	auto	1322	feedback-hygiene:0.0164,brownfield-adoption:0.0161	Resolve feedback through delivery completion
+20261019-feedback-resolution	lexical	1323	feedback-hygiene:1.6,brownfield-adoption:1.06	Resolve feedback through delivery completion
+20261019-high-effort-review-loop	auto	112	-	Bounded high-effort review procedure
+20261019-high-effort-review-loop	lexical	113	-	Bounded high-effort review procedure
+20261019-mcp-delivery-decisions	auto	685	feedback-hygiene:0.0164	MCP delivery decisions
+20261019-mcp-delivery-decisions	lexical	686	feedback-hygiene:1.09	MCP delivery decisions
+20261019-nightly-ci-verification	auto	1826	feedback-hygiene:0.0164,brownfield-adoption:0.0161,skill-authoring:0.0159	Affected tests before merge and changed-head nightly CI
+20261019-nightly-ci-verification	lexical	1827	feedback-hygiene:0.56,brownfield-adoption:0.553,skill-authoring:0.39	Affected tests before merge and changed-head nightly CI
+20261019-repository-viewer	auto	1327	brownfield-adoption:0.0328,feedback-hygiene:0.0161	Local multi-repository SDD viewer owned by devkit
+20261019-repository-viewer	lexical	1328	brownfield-adoption:2.12,feedback-hygiene:1.6	Local multi-repository SDD viewer owned by devkit
+20261019-response-style-skill	auto	612	skill-authoring:0.0328	Templated response-style skill deployment
+20261019-response-style-skill	lexical	613	skill-authoring:2.11	Templated response-style skill deployment
+20261019-role-reasoning-effort-presets	auto	109	-	Per-role reasoning effort presets
+20261019-role-reasoning-effort-presets	lexical	110	-	Per-role reasoning effort presets
+20261019-summary-length-guard	auto	622	skill-authoring:0.0164	Reject oversized document summaries before creation
+20261019-summary-length-guard	lexical	623	skill-authoring:1.32	Reject oversized document summaries before creation
+20261019-targeted-tests	auto	1802	feedback-hygiene:0.0164,brownfield-adoption:0.0161,skill-authoring:0.0159	Targeted and affected test runs
+20261019-targeted-tests	lexical	1803	feedback-hygiene:0.56,brownfield-adoption:0.553,skill-authoring:0.39	Targeted and affected test runs
+20261019-terminology-authoring-guidance	auto	1832	skill-authoring:0.0164,brownfield-adoption:0.0161,feedback-hygiene:0.0159	Terminology authoring guidance and a glossary that agents read
+20261019-terminology-authoring-guidance	lexical	1831	skill-authoring:3.93,brownfield-adoption:0.868,feedback-hygiene:0.56	Terminology authoring guidance and a glossary that agents read
+20261020-affected-test-granularity	auto	1818	feedback-hygiene:0.0164,brownfield-adoption:0.0161,skill-authoring:0.0159	Finer affected-test groups and dependency nodes
+20261020-affected-test-granularity	lexical	1819	feedback-hygiene:0.56,brownfield-adoption:0.553,skill-authoring:0.39	Finer affected-test groups and dependency nodes
+20261020-autonomy-between-approval-gates	auto	1677	skill-authoring:0.0164,adr-compaction:0.0161,feedback-hygiene:0.0159	Agent autonomy between explicit human decision points
+20261020-autonomy-between-approval-gates	lexical	1678	skill-authoring:1.32,adr-compaction:0.823,feedback-hygiene:0.625	Agent autonomy between explicit human decision points
+20261020-draft-direct-acceptance	auto	1703	adr-compaction:0.0164,skill-authoring:0.0161,brownfield-adoption:0.0159	Direct acceptance of drafts that need no Planning
+20261020-draft-direct-acceptance	lexical	1704	adr-compaction:0.424,skill-authoring:0.39,brownfield-adoption:0.315	Direct acceptance of drafts that need no Planning
+20261020-embed-local-wheel	auto	93	-	embed-local-wheel
+20261020-embed-local-wheel	lexical	94	-	embed-local-wheel
+20261020-envelope-record-gaps	auto	1380	feedback-hygiene:0.0164,brownfield-adoption:0.0161	'Close gaps in Planning records: folded challenger findings, settled assumptions, proposal boundaries'
+20261020-envelope-record-gaps	lexical	1381	feedback-hygiene:0.625,brownfield-adoption:0.611	'Close gaps in Planning records: folded challenger findings, settled assumptions, proposal boundaries'
+20261020-feedback-handoff-references	auto	1837	feedback-hygiene:0.0164,brownfield-adoption:0.0161,skill-authoring:0.0159	Preserve generic and historical references during proposal handoff
+20261020-feedback-handoff-references	lexical	1838	feedback-hygiene:0.56,brownfield-adoption:0.553,skill-authoring:0.39	Preserve generic and historical references during proposal handoff
+20261020-feedback-planning-and-glossary	auto	1839	feedback-hygiene:0.0164,brownfield-adoption:0.0161,skill-authoring:0.0159	Clarify proposal decomposition recovery and validate glossary owners
+20261020-feedback-planning-and-glossary	lexical	1840	feedback-hygiene:0.56,brownfield-adoption:0.553,skill-authoring:0.39	Clarify proposal decomposition recovery and validate glossary owners
+20261020-feedback-planning-parser	auto	1839	feedback-hygiene:0.0164,brownfield-adoption:0.0161,skill-authoring:0.0159	Clarify Planning execution context and expose reconciliation parsing
+20261020-feedback-planning-parser	lexical	1840	feedback-hygiene:0.56,brownfield-adoption:0.553,skill-authoring:0.39	Clarify Planning execution context and expose reconciliation parsing
+20261020-feedback-review-auto-proposal	auto	724	feedback-hygiene:0.0164	Clarify recurring findings versus defects introduced by fixes
+20261020-feedback-review-auto-proposal	lexical	725	feedback-hygiene:1.6	Clarify recurring findings versus defects introduced by fixes
+20261020-feedback-terminal-status	auto	1812	feedback-hygiene:0.0328,adr-compaction:0.0161,brownfield-adoption:0.0159	Treat feedback promotion and direct resolution as terminal outcomes
+20261020-feedback-terminal-status	lexical	1812	feedback-hygiene:2.16,adr-compaction:1.43,brownfield-adoption:0.553	Treat feedback promotion and direct resolution as terminal outcomes
+20261020-handoff-fixture-initialization	auto	118	-	Reuse isolated handoff test initialization
+20261020-handoff-fixture-initialization	lexical	119	-	Reuse isolated handoff test initialization
+20261020-integration-follow-ups	auto	1840	brownfield-adoption:0.0328,feedback-hygiene:0.0161,adr-compaction:0.0159	'Integration base advances: merge commits, effective policy digest and readiness on the result'
+20261020-integration-follow-ups	lexical	1841	brownfield-adoption:1.02,feedback-hygiene:0.882,adr-compaction:0.574	'Integration base advances: merge commits, effective policy digest and readiness on the result'
+20261020-integration-pull-request-cleanup	auto	1833	brownfield-adoption:0.0164,feedback-hygiene:0.0161,skill-authoring:0.0159	Integration through pull requests with no-ff merge and cleanup
+20261020-integration-pull-request-cleanup	lexical	1834	brownfield-adoption:1.62,feedback-hygiene:1.19,skill-authoring:1.15	Integration through pull requests with no-ff merge and cleanup
+20261020-language-setting-coverage	auto	1326	brownfield-adoption:0.0325,feedback-hygiene:0.0164	Extend language settings to MCP approval content
+20261020-language-setting-coverage	lexical	1327	feedback-hygiene:1.09,brownfield-adoption:1.06	Extend language settings to MCP approval content
+20261020-local-config-execution-environment	auto	1817	feedback-hygiene:0.0164,brownfield-adoption:0.0161,skill-authoring:0.0159	Local configuration and execution environments
+20261020-local-config-execution-environment	lexical	1818	feedback-hygiene:0.56,brownfield-adoption:0.553,skill-authoring:0.39	Local configuration and execution environments
+20261020-response-style-survey	auto	1779	adr-compaction:0.0164,brownfield-adoption:0.0161,feedback-hygiene:0.0159	Apply the accepted response style
+20261020-response-style-survey	lexical	1780	adr-compaction:0.574,brownfield-adoption:0.465,feedback-hygiene:0.321	Apply the accepted response style
+20261020-scope-registry-sandbox-access	auto	1322	feedback-hygiene:0.0164,brownfield-adoption:0.0161	Side-effect-free work scope registry queries
+20261020-scope-registry-sandbox-access	lexical	1323	feedback-hygiene:0.625,brownfield-adoption:0.611	Side-effect-free work scope registry queries
+20261020-shared-checkout-session-isolation	auto	1834	skill-authoring:0.0164,feedback-hygiene:0.0161,brownfield-adoption:0.0159	Non-blocking guidance for session branches in a shared checkout
+20261020-shared-checkout-session-isolation	lexical	1834	skill-authoring:1.83,feedback-hygiene:1.71,brownfield-adoption:0.611	Non-blocking guidance for session branches in a shared checkout
+20261020-standalone-devkit-mcp	auto	1834	brownfield-adoption:0.0328,feedback-hygiene:0.0161,skill-authoring:0.0159	Independent devkit-mcp runtime and default approval integration
+20261020-standalone-devkit-mcp	lexical	1835	brownfield-adoption:1.62,feedback-hygiene:0.56,skill-authoring:0.39	Independent devkit-mcp runtime and default approval integration
+20261020-worker-guidance-and-fixtures	auto	1824	feedback-hygiene:0.0164,brownfield-adoption:0.0161,skill-authoring:0.0159	Clarify worker handoffs and isolate Git test fixtures
+20261020-worker-guidance-and-fixtures	lexical	1825	feedback-hygiene:0.56,brownfield-adoption:0.553,skill-authoring:0.39	Clarify worker handoffs and isolate Git test fixtures
+20261020-worker-range-validation	auto	1215	skill-authoring:0.0164,feedback-hygiene:0.0161	One-command worker result inspection for orchestrated units
+20261020-worker-range-validation	lexical	1215	skill-authoring:0.758,feedback-hygiene:0.625	One-command worker result inspection for orchestrated units
+20261021-cloud-agent-rendering	auto	1085	adr-compaction:0.0164,skill-authoring:0.0161	Render cloud agent assets without MCP guidance
+20261021-cloud-agent-rendering	lexical	1085	adr-compaction:1.43,skill-authoring:1.32	Render cloud agent assets without MCP guidance
+20261021-deterministic-milestone-completion	auto	748	brownfield-adoption:0.0328	Simple milestone completion from direct proposal checks
+20261021-deterministic-milestone-completion	lexical	749	brownfield-adoption:1.06	Simple milestone completion from direct proposal checks
+20261021-exact-playbook-get	auto	616	skill-authoring:0.0164	Exact playbook retrieval for external runners
+20261021-exact-playbook-get	lexical	617	skill-authoring:1.32	Exact playbook retrieval for external runners
+20261021-fixture-optimization	auto	123	-	Optimize slowest test fixtures via seed caching
+20261021-fixture-optimization	lexical	124	-	Optimize slowest test fixtures via seed caching
+20261021-integration-rewritten-merge	auto	1224	brownfield-adoption:0.0164,adr-compaction:0.0161	Preserve integration cleanup after metadata-only merge rewrites
+20261021-integration-rewritten-merge	lexical	140	-	Preserve integration cleanup after metadata-only merge rewrites
+20261021-periodic-drift-reconciliation	auto	1822	brownfield-adoption:0.0328,feedback-hygiene:0.032,skill-authoring:0.0161	Spec-code drift reconciliation maintenance playbook
+20261021-periodic-drift-reconciliation	lexical	1822	brownfield-adoption:2.14,skill-authoring:1.32,feedback-hygiene:0.625	Spec-code drift reconciliation maintenance playbook
+20261021-policy-authorized-integration	auto	750	brownfield-adoption:0.0328	Authorize automatic integration through repository policy
+20261021-policy-authorized-integration	lexical	751	brownfield-adoption:2.12	Authorize automatic integration through repository policy
+20261021-proposal-review-and-approval	auto	1831	feedback-hygiene:0.0328,brownfield-adoption:0.0161,skill-authoring:0.0159	Proposal review reports and unified plan-accept MCP approval
+20261021-proposal-review-and-approval	lexical	1832	feedback-hygiene:0.56,brownfield-adoption:0.553,skill-authoring:0.39	Proposal review reports and unified plan-accept MCP approval
+20261021-unit-dependencies-and-milestone-scope	auto	1819	feedback-hygiene:0.0164,brownfield-adoption:0.0161,skill-authoring:0.0159	Unit-level depends_on and coarse milestone scope
+20261021-unit-dependencies-and-milestone-scope	lexical	1820	feedback-hygiene:0.56,brownfield-adoption:0.553,skill-authoring:0.39	Unit-level depends_on and coarse milestone scope
+20261021-weekly-report	auto	119	-	Evidence-based weekly maintenance reporting
+20261021-weekly-report	lexical	120	-	Evidence-based weekly maintenance reporting
+20261021-worker-shared-state-mcp	auto	1831	feedback-hygiene:0.0164,brownfield-adoption:0.0161,skill-authoring:0.0159	Shared state and workspace across worktrees and cloud agents
+20261021-worker-shared-state-mcp	lexical	1832	feedback-hygiene:0.56,brownfield-adoption:0.553,skill-authoring:0.39	Shared state and workspace across worktrees and cloud agents
+20261022-cli-tool-layout-rules	auto	1814	skill-authoring:0.0323,feedback-hygiene:0.0164,brownfield-adoption:0.0161	Feature layout and layer rules for cli-tool
+20261022-cli-tool-layout-rules	lexical	1814	feedback-hygiene:1.19,brownfield-adoption:1.16,skill-authoring:0.39	Feature layout and layer rules for cli-tool
+20261022-cli-toolkit	auto	1821	skill-authoring:0.0164,feedback-hygiene:0.0161,brownfield-adoption:0.0159	Agent-first CLI toolkit package and catalog bundle
+20261022-cli-toolkit	lexical	1822	skill-authoring:1.71,feedback-hygiene:0.56,brownfield-adoption:0.553	Agent-first CLI toolkit package and catalog bundle
+20261022-contract-alignment	auto	1678	adr-compaction:0.0328,feedback-hygiene:0.0161,skill-authoring:0.0159	Align ADRs and alias wording with the shipped contracts
+20261022-contract-alignment	lexical	1679	adr-compaction:2.51,feedback-hygiene:1.51,skill-authoring:1.15	Align ADRs and alias wording with the shipped contracts
+20261022-document-id-aliases-and-compaction	auto	1655	adr-compaction:0.0325,skill-authoring:0.0164,feedback-hygiene:0.0159	Document and Playbook ID Aliases
+20261022-document-id-aliases-and-compaction	lexical	1654	skill-authoring:3.02,adr-compaction:1.43,feedback-hygiene:0.56	Document and Playbook ID Aliases
+20261022-document-index-cache	auto	1664	feedback-hygiene:0.032,skill-authoring:0.0164,adr-compaction:0.0161	Reuse the document index between commands
+20261022-document-index-cache	lexical	1695	skill-authoring:1.32,adr-compaction:0.574,brownfield-adoption:0.465	Reuse the document index between commands
+20261022-entrypoints-directory-apply	auto	725	brownfield-adoption:0.0164	Apply directory code entrypoints
+20261022-entrypoints-directory-apply	lexical	726	brownfield-adoption:1.06	Apply directory code entrypoints
+20261022-feedback-guidance-fixes	auto	686	feedback-hygiene:0.0328	Feedback Guidance Fixes
+20261022-feedback-guidance-fixes	lexical	687	feedback-hygiene:1.6	Feedback Guidance Fixes
+20261022-feedback-quick-fixes	auto	683	feedback-hygiene:0.0328	Feedback Quick Fixes
+20261022-feedback-quick-fixes	lexical	684	feedback-hygiene:1.6	Feedback Quick Fixes
+20261022-frontmatter-libyaml	auto	1206	skill-authoring:0.0164,feedback-hygiene:0.0161	Accelerate strict frontmatter parsing with libyaml
+20261022-frontmatter-libyaml	lexical	1206	skill-authoring:0.758,feedback-hygiene:0.625	Accelerate strict frontmatter parsing with libyaml
+20261022-guidance-followups	auto	1837	brownfield-adoption:0.0325,feedback-hygiene:0.0164,skill-authoring:0.0159	Align milestone tone, role shell notes and traceability follow-ups
+20261022-guidance-followups	lexical	1838	feedback-hygiene:0.56,brownfield-adoption:0.553,skill-authoring:0.39	Align milestone tone, role shell notes and traceability follow-ups
+20261022-lint-clean-target-scoped-rules	auto	1801	feedback-hygiene:0.0164,brownfield-adoption:0.0161,adr-compaction:0.0159	Scope target runs to the rules their targets can affect
+20261022-lint-clean-target-scoped-rules	lexical	1802	feedback-hygiene:4.2,brownfield-adoption:1.08,adr-compaction:0.574	Scope target runs to the rules their targets can affect
+20261022-merge-not-ff-auto	auto	120	-	Auto advisory mode for WORKTREE_MERGE_NOT_FF
+20261022-merge-not-ff-auto	lexical	121	-	Auto advisory mode for WORKTREE_MERGE_NOT_FF
+20261022-milestone-guidance-tone	auto	1827	feedback-hygiene:0.0164,brownfield-adoption:0.0161,skill-authoring:0.0159	Recommend coarse milestones and allow merging small ones
+20261022-milestone-guidance-tone	lexical	1828	feedback-hygiene:0.56,brownfield-adoption:0.553,skill-authoring:0.39	Recommend coarse milestones and allow merging small ones
+20261022-persistent-python-facts-cache	auto	1226	skill-authoring:0.0328,brownfield-adoption:0.0161	Persist per-file rule facts between runs
+20261022-persistent-python-facts-cache	lexical	1226	skill-authoring:0.758,brownfield-adoption:0.611	Persist per-file rule facts between runs
+20261022-retained-runtime-receipt	auto	1713	skill-authoring:0.0164,brownfield-adoption:0.0161,adr-compaction:0.0159	Diagnose a retained MCP runtime older than the code it reads
+20261022-retained-runtime-receipt	lexical	1714	skill-authoring:3.15,brownfield-adoption:1.53,adr-compaction:0.574	Diagnose a retained MCP runtime older than the code it reads
+20261022-rule-shared-python-ast	auto	1319	feedback-hygiene:0.0164,brownfield-adoption:0.0161	Parse each Python file once per rules run
+20261022-rule-shared-python-ast	lexical	1320	feedback-hygiene:0.625,brownfield-adoption:0.611	Parse each Python file once per rules run
+20261022-scope-boundary-candidates	auto	1836	brownfield-adoption:0.0328,skill-authoring:0.0161,feedback-hygiene:0.0159	Drop entrypoint candidates once a spec declares its code boundary
+20261022-scope-boundary-candidates	lexical	1837	brownfield-adoption:3.2,skill-authoring:1.83,feedback-hygiene:0.625	Drop entrypoint candidates once a spec declares its code boundary
+20261022-shared-python-node-index	auto	1318	feedback-hygiene:0.0164,brownfield-adoption:0.0161	Walk each Python tree once per rules run
+20261022-shared-python-node-index	lexical	1319	feedback-hygiene:0.625,brownfield-adoption:0.611	Walk each Python tree once per rules run
+20261022-single-release-version	auto	1185	skill-authoring:0.0164,feedback-hygiene:0.0161	One workspace release version
+20261022-single-release-version	lexical	1185	skill-authoring:0.758,feedback-hygiene:0.625	One workspace release version
+20261022-snapshot-scoped-rules	auto	1326	feedback-hygiene:0.0164,brownfield-adoption:0.0161	Scope snapshot rules runs to their changed paths
+20261022-snapshot-scoped-rules	lexical	1327	feedback-hygiene:2.8,brownfield-adoption:0.611	Scope snapshot rules runs to their changed paths
+20261022-spec-rules-shared-document-index	auto	1814	feedback-hygiene:0.0325,skill-authoring:0.0164,brownfield-adoption:0.0159	Share one document index across a rules run
+20261022-spec-rules-shared-document-index	lexical	1815	skill-authoring:3.9,feedback-hygiene:1.25,brownfield-adoption:0.611	Share one document index across a rules run
+20261022-superseded-reference-cleanup	auto	1849	feedback-hygiene:0.0164,skill-authoring:0.0161,brownfield-adoption:0.0159	Align leftover references with the current ownership and integration recoveries
+20261022-superseded-reference-cleanup	lexical	1850	feedback-hygiene:1.51,skill-authoring:1.15,brownfield-adoption:1.02	Align leftover references with the current ownership and integration recoveries
+20261022-writing-guidance-layers	auto	1826	skill-authoring:0.0328,brownfield-adoption:0.0161,feedback-hygiene:0.0159	Layered writing guidance for documents and agent assets
+20261022-writing-guidance-layers	lexical	1827	skill-authoring:1.71,brownfield-adoption:1.62,feedback-hygiene:0.56	Layered writing guidance for documents and agent assets
+20261022-writing-guidance-rollout	auto	1816	brownfield-adoption:0.0164,skill-authoring:0.0161,feedback-hygiene:0.0159	Roll out agent-asset-writing to bundle assets
+20261022-writing-guidance-rollout	lexical	1817	brownfield-adoption:2.12,skill-authoring:1.32,feedback-hygiene:1.09	Roll out agent-asset-writing to bundle assets
+20261022-writing-style-rules	auto	1821	skill-authoring:0.0323,feedback-hygiene:0.0164,brownfield-adoption:0.0161	Writing style rules and layout-free guidance tests
+20261022-writing-style-rules	lexical	1821	feedback-hygiene:1.19,brownfield-adoption:1.16,skill-authoring:0.39	Writing style rules and layout-free guidance tests
+20261023-cli-host-lifecycle	auto	119	-	CLI execution for Host lifecycle operations
+20261023-cli-host-lifecycle	lexical	120	-	CLI execution for Host lifecycle operations
+20261024-canonical-libyaml-only	auto	119	-	Require libyaml for consistent YAML parsing
+20261024-canonical-libyaml-only	lexical	120	-	Require libyaml for consistent YAML parsing
+20261024-proposal-review-auto-write	auto	704	feedback-hygiene:0.0164	Publish proposal review before acceptance
+20261024-proposal-review-auto-write	lexical	118	-	Publish proposal review before acceptance
+20261024-simplify-proposal-report	auto	703	feedback-hygiene:0.0164	Simplify proposal review report template
+20261024-simplify-proposal-report	lexical	117	-	Simplify proposal review report template
+20261024-viewer-dashboard-loading	auto	105	-	Incremental dashboard loading
+20261024-viewer-dashboard-loading	lexical	106	-	Incremental dashboard loading
+20261024-viewer-dashboard-pagination	auto	1815	feedback-hygiene:0.0164,brownfield-adoption:0.0161,skill-authoring:0.0159	Dashboard cached lists and incremental pages
+20261024-viewer-dashboard-pagination	lexical	1816	feedback-hygiene:0.56,brownfield-adoption:0.553,skill-authoring:0.39	Dashboard cached lists and incremental pages
+20261024-viewer-working-tree	auto	1790	adr-compaction:0.0164,brownfield-adoption:0.0161,feedback-hygiene:0.0159	Show the working tree for the current branch
+20261024-viewer-working-tree	lexical	1791	adr-compaction:0.574,brownfield-adoption:0.465,feedback-hygiene:0.321	Show the working tree for the current branch

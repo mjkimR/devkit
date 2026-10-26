@@ -1,7 +1,7 @@
 ---
 id: PROP-spec-playbook-discovery
 title: Task-aware playbook discovery through spec
-summary: "Moves the agent playbook entry point toward spec-playbook and lets spec discover procedures for new tasks, with explicit skip cases for established Planning and Development work."
+summary: "Lets spec run one bounded playbook search at new task intake and offer a matching playbook in one line that the user confirms, with explicit skip cases; the generated devkit-playbook skill stays the generic explicit entry."
 status: reviewing                      # draft | reviewing | accepted | rejected
 created_at: 2026-10-23
 target_area: delivery/
@@ -66,8 +66,8 @@ while task-specific candidates can change during the conversation.
 
 ## 3. Proposed Design & Impact
 
-- Prefer `spec-playbook` as the agent-facing skill name. Reduce reliance on the generated `devkit-playbook`
-  entry point. Settle skill ownership and whether a separate skill remains during Planning.
+- `spec` owns discovery at intake; no separate `spec-playbook` skill is created (§3a Q2). The generated
+  `devkit-playbook` skill stays the spec-neutral explicit entry (§3a Q3).
 - Let `spec` initiate discovery for new tasks by default, subject to explicit skip examples. Do not require an
   explicit playbook invocation or a pre-search judgment that a reusable procedure exists.
 - Representative proposed skip cases are continuing an established proposal's Planning run, executing an agreed
@@ -91,14 +91,16 @@ while task-specific candidates can change during the conversation.
 
 ## 3a. Planning direction
 
-Evidence: [discovery evidence](materials/discovery-evidence.md) and the challenger round `envelopes/challenger-01.yaml`.
-Decisions pending the user are listed as such; the rest is the working direction this Planning turn settled.
+Evidence: [discovery evidence](materials/discovery-evidence.md), [intake frequency](materials/intake-frequency.md), the
+challenger round `envelopes/challenger-01.yaml` and the user's answers `envelopes/answer-01.yaml`. Decision:
+`PADR-spec-intake-playbook-discovery`.
 
 ### Discovery trigger and skip cases (Q1, settled)
 
 `spec` runs discovery once at **new task intake**: a `/spec <intent>`, or a request within an ongoing conversation that
-falls outside the agreed scope of the current task. Discovery runs as the first step of intake, **before
-classification and before any Unit is created**, so a selected playbook's stated depth and scope inform the
+falls outside the agreed scope of the current task. Only a user's own message is intake: no message from another agent
+(Host payload, worker turn, nested role), no hook and no stage `devkit workflow next` names. Discovery runs as the
+first step of intake, **before classification and before any Unit is created**, so a selected playbook's stated depth and scope inform the
 classification (`adr-compaction` runs at `session` depth, and a `spec` Unit or a proposal under review can never be
 lowered). Task kind (`feature`, `bugfix`, `overall-refactor`) and planning depth never exempt a task. Discovery is
 skipped in these representative cases:
@@ -110,6 +112,9 @@ skipped in these representative cases:
 | The entry is already explicit: the user names a playbook ID (`devkit playbook get` directly), or a failing rule's remediation names one | "Run spec/adr-compaction" |
 | Execution inside a selected playbook | A step of `brownfield-adoption` asks for a change; no nested search |
 | An information-only question that requests no change and no operation | "What does `devkit sync` write?" |
+
+Two conversation-level stops also skip discovery: the user said not to use playbooks in this conversation, and a
+candidate the user declined is never offered again in the same conversation, even for a reworded request.
 
 Not skipped: a new request after earlier work finished, even inside a Planning or Development conversation ("now clean
 up open feedback"), and a question that asks how to perform an operation ("how do I adopt devkit here?").
@@ -131,9 +136,15 @@ up open feedback"), and a question that asks how to perform an operation ("how d
   "clean up old decisions" omits `adr-compaction`, while "tidy up old ADRs" ranks it first in `hybrid` and `lexical`.
   No automatic refinement follows; a search runs again only at the next new task intake, and unchanged bundle context
   is not reloaded.
-- A candidate is selected only when its `description` names the requested operation **and** its scope does not exceed
-  the requested scope ("refactor the sync module" never selects a repository-wide review playbook). Scores never
-  decide: `hybrid` and `lexical` return candidates for unrelated tasks.
+- **Selection rule** (tightened for offer frequency, [intake frequency](materials/intake-frequency.md) §5). Scores never
+  decide: `hybrid` and `lexical` return candidates for unrelated tasks. A candidate is offered only when all hold:
+  - **operation, not topic**: its `description` names the operation the request asks the agent to perform on the
+    artifact; a request to build, fix or change the tool, code or documents about that artifact is a topic match and
+    is never offered ("Feedback Quick Fixes" never offers `feedback-hygiene`);
+  - **primary operation**: it covers the request's main operation, not one step of a larger change;
+  - **scope fits**: its scope does not exceed the requested scope ("refactor the sync module" never offers a
+    repository-wide review playbook);
+  - **one line**: at most one offer line per intake.
 - **No match** continues the ordinary path silently. The offer to draft a reusable playbook stays with explicit
   discovery only; `CAP-DIST-context-and-playbooks` §3 and `ARCH-08-2-resource-taxonomy` are reconciled to say so.
 - **Search errors** at intake (`NOT_SYNCHRONIZED`, `CONFIG_LOCAL_RENDER_STALE`, `ARGUMENT_INVALID`,
@@ -142,35 +153,52 @@ up open feedback"), and a question that asks how to perform an operation ("how d
 - Only a selected playbook's body is read (search path or `devkit playbook get`), after its bundle's context when that
   is not already loaded.
 
-### Decisions pending the user
+### Ownership, entry skill and authority (Q2, Q3, settled by the user)
 
-- **Q2 ownership and invocation** of the post-selection procedure (worker question `ownership`).
-- **Q3 the generated `devkit-playbook` skill** and consumers without `spec`, with every option spec-neutral in
-  `devkit-dist` (worker question `entry-skill`).
-- **Application authority** after a match, given the playbooks' own grants of moves, deletions and status updates
-  (worker question `apply-authority`).
-- **The `adr-compaction` invocation statement** of `ADR-immutable-decisions-editable-records` (worker question
-  `compaction-adr`).
+- **Ownership (Q2)**: `spec` owns the trigger, the skip table and the single search. The post-selection procedure (load
+  the bundle's context, read the body, check prerequisites, follow it) is a `spec` reference file (for example
+  `references/playbooks.md`) read only on a match. No `spec-playbook` skill exists: a model-invocable one would fire
+  outside intake and bypass the skip table, and a user-only one cannot be routed from `spec`.
+- **Generic entry (Q3)**: the generated `devkit-playbook` skill stays the explicit entry for every consumer, `spec` or
+  not. Its body, the root guidance line and the `devkit playbook` CLI help are reworded spec-neutrally: the clause
+  that references from other skills do not authorize discovery is dropped, and the draft offer stays with explicit
+  discovery. `devkit-dist` gains no dependency on `spec` semantics; `spec` adds its intake step on top.
+- **Confirm first**: every discovered candidate is named in one line together with the classification statement of
+  intake step 1, and nothing of it runs before the user confirms. The confirmation is the explicit invocation, so each
+  playbook's "the user asked for it" prerequisite reads "the user invoked or confirmed it". No match asks nothing.
+- **`adr-compaction`**: confirming a discovered `adr-compaction` candidate is its explicit invocation and authorizes its
+  deletions, at `session` depth.
+
+### Offer frequency (user concern)
+
+[Intake frequency](materials/intake-frequency.md) measures it over the 105 spec titles in `specs/`: the search returns
+a candidate for 84% of them, the selection rule offers one for 1 of 105 (a true positive), and 16 topical matches it
+must reject form the false-positive sample. A false positive costs one line and a "no", never an action.
+
+- **Acceptance criterion**: in Development's recorded manual run, the 16 ordinary intents of intake-frequency §6
+  produce 0 offers, each positive control produces exactly its named offer, each skip and no-skip scenario behaves as
+  its row states, and no intake produces more than one offer line.
 
 ### Decision record
 
-Discovery from ordinary task intake reverses one statement of `ADR-external-playbook-execution` §4 ("Ordinary requests
-do not authorize discovery"). Development writes a new ADR that replaces only that statement, as
-`ADR-immutable-decisions-editable-records` §4 allows for a partial change: the new ADR names the ADR and the part in
-its outcome, and the affected statement gets a one-line pointer. Exact receipt-backed retrieval without execution
-authority and external scheduling and execution stay in force. Depending on `compaction-adr`, the same ADR also
-partially replaces the compaction-invocation statement of `ADR-immutable-decisions-editable-records`.
-`ADR-playbook-aliases-as-identifiers` is unaffected: discovery searches name and description only and never aliases.
-A PADR records the direction once the pending decisions are answered.
+`PADR-spec-intake-playbook-discovery` records the direction; handoff promotes it to the new ADR. It partially replaces
+two accepted ADRs, as `ADR-immutable-decisions-editable-records` §4 allows: the §4 statement "Ordinary requests do not
+authorize discovery" and the matching §5 consequence of `ADR-external-playbook-execution`, and the compaction-invocation
+statement of `ADR-immutable-decisions-editable-records` §4 (a confirmed discovered candidate is explicit invocation).
+Each affected statement gets a one-line pointer. Exact receipt-backed retrieval without execution authority and
+external scheduling and execution stay in force. `ADR-playbook-aliases-as-identifiers` is unaffected: discovery
+searches name and description only and never aliases.
 
 ### Verification split
 
 - Mechanical: `devkit-spec` text-contract tests for the intake step (trigger, order before classification, skip
-  table, `--limit 3 --max-bytes 4096`, canonical-noun query, silent no-match, error-as-no-match, recorded selection);
-  `devkit-dist` tests for the generated entry skill, guidance line and CLI help as `entry-skill` settles them.
+  table and conversation-level stops, `--limit 3 --max-bytes 4096`, canonical-noun query, the four selection
+  conditions, confirm-first wording, silent no-match, error-as-no-match, recorded selection); `devkit-dist` tests for
+  the reworded generated entry skill, guidance line and CLI help, which name no `spec` bundle asset.
 - Manual evidence: one recorded scenario run per skip case and per no-skip case, kept in the Unit's materials and
-  named as manual evidence, never reported as test coverage. The run includes the paraphrase probe with the
-  `maintenance` catalog selected, which this Planning worktree could not synchronize.
+  named as manual evidence, never reported as test coverage. The run includes the offer-frequency sample of the
+  acceptance criterion and the paraphrase probe, with the `maintenance` catalog selected, which this Planning worktree
+  could not synchronize.
 
 ### Interactions
 
@@ -183,7 +211,7 @@ A PADR records the direction once the pending decisions are answered.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Keep this proposal in draft until Planning is requested. Planning settles the discovery boundary, skip examples,
-skill ownership and the division of responsibility between `spec` and `spec-playbook`. Development starts only
+Planning settles the discovery boundary, skip examples, selection rule, offer-frequency bound, skill ownership and
+application authority. Development starts only
 through the proposal handoff after direction acceptance. Existing runtime and invocation contracts remain in force
 until implementation is delivered.
