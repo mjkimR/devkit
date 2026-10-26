@@ -7,9 +7,9 @@ runtime cannot load. ``check_rule_runtime`` names that case before the provider 
 it parses each rule module and resolves its module-level absolute imports against the running interpreter only.
 
 An import is missing when its top-level package resolves here but the module does not, or when ``from M import name``
-names neither a submodule nor an attribute of ``M``. Anything else (a top-level package nothing provides, a file that
-cannot be read or parsed, relative and ``__future__`` imports, imports inside functions or blocks) is left to the
-provider's own ``RULES_LOAD_FAILED``.
+names neither a submodule nor an attribute of ``M``. Anything else (a top-level package nothing provides, an installed
+package whose own import fails, a file that cannot be read or parsed, relative and ``__future__`` imports, imports
+inside functions or blocks) is left to the provider's own ``RULES_LOAD_FAILED``.
 """
 
 from __future__ import annotations
@@ -93,14 +93,30 @@ def _imports(data: bytes) -> Iterator[tuple[str, tuple[str, ...]]]:
             yield node.module, tuple(alias.name for alias in node.names if alias.name != "*")
 
 
+def _absent(exc: ModuleNotFoundError, name: str) -> bool:
+    """Whether ``exc`` reports ``name`` itself (or a package containing it) as absent, not a dependency of its code."""
+    return exc.name is not None and (name == exc.name or name.startswith(f"{exc.name}."))
+
+
 def _resolves(name: str) -> bool | None:
-    """Whether ``name`` resolves in this runtime; ``None`` when that cannot be decided."""
+    """Whether ``name`` resolves in this runtime; ``None`` when that cannot be decided.
+
+    Importing a parent package can fail on its own code (a missing dependency, any other exception); that is not this
+    runtime lacking ``name`` and is left undecided.
+    """
     try:
         return importlib.util.find_spec(name) is not None
-    except ModuleNotFoundError:
-        return False
-    except (ImportError, ValueError):
+    except ModuleNotFoundError as exc:
+        return False if _absent(exc, name) else None
+    except Exception:
         return None
+
+
+def _has(module: object, name: str) -> bool:
+    try:
+        return hasattr(module, name)
+    except Exception:
+        return True
 
 
 def _missing(module: str, names: tuple[str, ...]) -> list[str]:
@@ -114,13 +130,11 @@ def _missing(module: str, names: tuple[str, ...]) -> list[str]:
         return []
     try:
         loaded = importlib.import_module(module)
-    except ImportError:
-        return [module]
+    except ModuleNotFoundError as exc:
+        return [module] if _absent(exc, module) else []
     except Exception:
         return []
-    return [
-        f"{module}.{name}" for name in names if not hasattr(loaded, name) and _resolves(f"{module}.{name}") is False
-    ]
+    return [f"{module}.{name}" for name in names if not _has(loaded, name) and _resolves(f"{module}.{name}") is False]
 
 
 def check_rule_runtime(root: Path, commit: str, sources: Sequence[Path]) -> None:

@@ -1,7 +1,7 @@
 ---
 id: SPEC-integration-readiness-branch-code
-title: Integration readiness loads branch rules with branch code
-summary: Integration readiness and the CI rules snapshot load a branch's new bundled rule with the base checkout's installed code, so a branch adding a rule whose implementation lives in package code is refused; evaluate it with the code being landed.
+title: Integration names a branch rule that needs the branch's code
+summary: A branch whose new synchronized rule needs package code the base runtime lacks was refused as not ready; integration now names it with INTEGRATION_RULE_RUNTIME_MISMATCH before readiness and directs a run from a runtime built from the source.
 status: in-progress
 created: 2026-10-26
 related_capabilities:
@@ -12,7 +12,7 @@ related_usecases:
 workflow: sdd-spec-bugfix
 ---
 
-# [SPEC-integration-readiness-branch-code] Integration readiness loads branch rules with branch code
+# [SPEC-integration-readiness-branch-code] Integration names a branch rule that needs the branch's code
 
 ## 1. Problem Statement & Motivation
 

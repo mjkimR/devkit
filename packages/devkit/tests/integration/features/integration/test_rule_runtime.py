@@ -103,6 +103,30 @@ def test_rules_the_check_cannot_attribute_reach_the_provider(repo, ready_provide
     assert len(ready_provider.calls) == 1
 
 
+@pytest.mark.parametrize(
+    "source",
+    [
+        "import rr_fixture_pkg.broken.mod\n",
+        "from rr_fixture_pkg.broken import Name\n",
+        "import rr_fixture_pkg.needs_dependency.mod\n",
+        "from rr_fixture_pkg.needs_dependency import Name\n",
+    ],
+    ids=["raising-parent", "raising-module", "missing-dependency-parent", "missing-dependency-module"],
+)
+def test_installed_package_failing_on_its_own_code_is_left_to_the_provider(
+    repo, ready_provider, tmp_path, monkeypatch, source
+):
+    installed = tmp_path / "site"
+    write(installed, "rr_fixture_pkg/__init__.py", "")
+    write(installed, "rr_fixture_pkg/broken/__init__.py", "raise RuntimeError('import-time failure')\n")
+    write(installed, "rr_fixture_pkg/needs_dependency/__init__.py", "import thirdparty_not_installed_xyz\n")
+    monkeypatch.syspath_prepend(str(installed))
+    base, worktree = repo
+    _commit_rule(worktree, source)
+    IntegrationService(base).prepare("dev-demo", TASK)
+    assert len(ready_provider.calls) == 1
+
+
 def test_rule_tests_are_not_checked(repo, ready_provider):
     base, worktree = repo
     _commit_rule(worktree, "import json\n", extra={RULE_TEST: f"import {MISSING}\n"})

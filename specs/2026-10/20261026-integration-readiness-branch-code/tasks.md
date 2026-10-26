@@ -4,7 +4,7 @@ spec: SPEC-integration-readiness-branch-code
 plan: PLAN-integration-readiness-branch-code
 ---
 
-# Task Breakdown: `SPEC-integration-readiness-branch-code` Integration readiness loads branch rules with branch code
+# Task Breakdown: `SPEC-integration-readiness-branch-code` Integration names a branch rule that needs the branch's code
 
 ## Phase 1: Reproduce
 
