@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-crlf-selection-and-viewer-probes
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md
     resolution: modified

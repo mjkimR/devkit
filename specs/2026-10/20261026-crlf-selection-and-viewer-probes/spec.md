@@ -2,7 +2,7 @@
 id: SPEC-crlf-selection-and-viewer-probes
 title: CRLF-preserving selection edits and viewer probe test runs
 summary: 'Resolves two feedback items: selection edits to .devkit/config.toml keep a file''s existing line endings, and the viewer tooling runs a reviewer''s frontend probes outside src/.'
-status: in-progress
+status: completed
 created: 2026-10-26
 related_capabilities:
   - CAP-DIST-sync-and-transactions
