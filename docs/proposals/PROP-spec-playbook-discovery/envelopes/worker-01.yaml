@@ -1,0 +1,78 @@
+kind: worker
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-25T23:10:09.591855Z'
+status: needs_input
+summary: 'Planning turn 1: set reviewing, settled Q1 skip cases and Q4 bounded retrieval with search probes, ran one challenger pass (12 findings, 8 folded, 4 left as decisions), widened boundaries to every explicit-only source; four direction questions wait for the user.'
+findings: []
+assumptions:
+- PROP-review-refactor's dependency on this entry wording is recorded by the Host in that proposal; this worker did not edit it.
+unverified_areas:
+- Search behavior with the maintenance catalog synchronized (not selectable without sync in this worktree); deferred to Development's manual evidence.
+checks:
+  rules_check: PASS proposal.md
+  challenger: PASS challenger-01 folded by reverify-01
+  feedback: PASS feedback-01
+diff_scope:
+  base: 3137814fb6c91ddf71a2e03b4987f8cf12c66790
+  head: 7dd2669927b196394478437ce0110ec037c54a6d
+questions:
+- id: ownership
+  title: Who owns the post-selection procedure
+  prompt: Where does the procedure live that runs after spec's intake search selects a playbook (load the bundle context, read the body, check prerequisites, follow it)?
+  context: Settles proposal Q2. spec keeps the trigger, the skip table and the single search line in any case. A separate skill must be invocation auto for spec to route to it, which also makes it model-invocable outside intake (worker turns, same-task follow-ups), bypassing the skip table; a user-only skill cannot be routed from spec. This decides which files Development creates and whether a spec-playbook skill exists at all.
+  options:
+  - id: a
+    description: spec owns trigger and search; the post-selection procedure is a spec reference file (e.g. references/playbooks.md) read only on a match. No separate skill; the explicit entry is whatever entry-skill decides.
+    recommended: true
+  - id: b
+    description: A separate model-invocable (invocation auto) spec-playbook skill owns the post-selection procedure and explicit discovery; spec routes to it on a match. Accepts that its description can trigger it outside intake.
+    recommended: false
+  - id: c
+    description: A separate user-only spec-playbook skill (/spec-playbook) for explicit discovery, plus the reference file of option a for spec's intake match.
+    recommended: false
+  allow_note: true
+- id: entry-skill
+  title: Fate of generated devkit-playbook skill
+  prompt: What happens to the devkit-playbook skill that devkit sync generates for every consumer with playbooks?
+  context: 'Settles proposal Q3. devkit-dist must stay spec-neutral: it cannot generate, suppress or reword the skill depending on whether the spec bundle is installed. Today the skill and the root guidance line say discovery is explicit-only and that references from other skills do not authorize it, which contradicts spec-initiated discovery. Consumers without spec (dist with the maintenance catalog or authoring bundles, or a repository before brownfield adoption) have only this entry. No external consumers exist, so removal or renaming is allowed in place.'
+  options:
+  - id: a
+    description: Keep it as the generic explicit entry (/devkit-playbook), rewording its body, the guidance line and the CLI help spec-neutrally (drop the 'other skills do not authorize' clause, keep the draft offer for explicit discovery). spec adds its own intake step on top.
+    recommended: true
+  - id: b
+    description: Add a generic manifest declaration that lets a bundle skill replace the generated entry; spec declares a spec-playbook skill that replaces it when spec is installed, and other consumers keep the generated one.
+    recommended: false
+  - id: c
+    description: Remove the generated skill; consumers without spec use devkit playbook search/get named in the guidance line only, and lose the skill-level discovery and draft procedure.
+    recommended: false
+  allow_note: true
+- id: apply-authority
+  title: Authority to apply a discovered playbook
+  prompt: When spec's intake search selects a playbook the user did not name, may the agent follow it directly?
+  context: brownfield-adoption, adr-compaction and feedback-hygiene grant file moves, ADR deletions or feedback status updates because the user asked for them; weekly-report and drift-reconciliation are read-only or run their own decision round. An ambiguous request ('clean up old decisions') selects feedback-hygiene, whose description passes the selection rule. The answer decides how every playbook's 'run only on explicit invocation' prerequisite is rewritten and what the new ADR says about authority.
+  options:
+  - id: a
+    description: 'Confirm first for every discovered playbook: spec names the candidate in one line together with its classification statement in intake step 1, and the user''s confirmation is the explicit invocation. No match asks nothing.'
+    recommended: true
+  - id: b
+    description: Apply directly within the task's authority, except that a playbook clause granting moves, deletions or status changes still needs the user to name the playbook or confirm the candidate.
+    recommended: false
+  - id: c
+    description: Apply directly for every discovered playbook; its prerequisites are rewritten from 'the user asked' to 'the task requests this operation'.
+    recommended: false
+  allow_note: true
+- id: compaction-adr
+  title: adr-compaction invocation in its ADR
+  prompt: ADR-immutable-decisions-editable-records says a compaction runs when the user explicitly invokes the adr-compaction playbook, which authorizes its deletions. How does this proposal treat that statement?
+  context: An accepted ADR the original direction missed. The new ADR already replaces one statement of ADR-external-playbook-execution §4 partially (one-line pointer, as the immutability ADR allows). If apply-authority is a, a confirmed candidate is explicit invocation and the statement can be widened to say so; if it is b or c, adr-compaction needs option b below to stay consistent.
+  options:
+  - id: a
+    description: 'Partially replace that statement in the same new ADR: the user''s confirmation of a discovered adr-compaction candidate counts as explicit invocation and authorizes its deletions; the old statement gets a one-line pointer.'
+    recommended: true
+  - id: b
+    description: 'Keep the statement unchanged: adr-compaction stays explicit-only (named ID or /devkit-playbook); intake may mention it as a candidate but never treats a confirmation as its invocation.'
+    recommended: false
+  allow_note: true
+activity_effort: medium
