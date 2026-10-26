@@ -2,7 +2,7 @@
 id: PROP-release-handbook
 title: Release-bound Multilingual Handbook
 summary: "Adds a tracked handbook for people under handbook/{lang}/ (en, ko), refreshed only on the user's request during release preparation as a snapshot derived from the Living Spec: English is synthesized from docs/, Korean is translated from English, and docs/ stays the single source of truth."
-status: reviewing
+status: accepted
 created_at: 2026-10-22
 target_area: documents/
 priority: medium
