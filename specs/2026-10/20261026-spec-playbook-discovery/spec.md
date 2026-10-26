@@ -1,42 +1,23 @@
 ---
-id: PROP-spec-playbook-discovery
+id: SPEC-spec-playbook-discovery
 title: Task-aware playbook discovery through spec
-summary: "Lets spec run one bounded playbook search at new task intake and offer a matching playbook in one line that the user confirms, with explicit skip cases; the generated devkit-playbook skill stays the generic explicit entry."
-status: accepted                      # draft | reviewing | accepted | rejected
-created_at: 2026-10-23
-target_area: delivery/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
-    - packages/devkit-spec/tests/
-    - packages/devkit-dist/src/devkit_dist/features/distribution/
-    - packages/devkit-dist/src/devkit_dist/bundles/devkit/bundle/
-    - packages/devkit-dist/tests/
-    - packages/devkit-catalog/README.md
-    - packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/
-    - guides/install/
-    - docs/capabilities/distribution/
-    - docs/capabilities/delivery/
-    - docs/capabilities/harness/
-    - docs/usecases/governance/
-    - docs/architecture/
-    - docs/decisions/
-    - AGENTS.md
-    - .devkit/
-  excludes:
-    - Search ranking algorithm changes
-    - Scheduling and execution history
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Lets spec run one bounded playbook search at new task intake and offer a matching playbook in one line that the user confirms, with explicit skip cases; the generated devkit-playbook skill stays the generic explicit entry.
+status: planned
+created: 2026-10-26
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-spec-playbook-discovery] Task-aware playbook discovery through spec
+# [SPEC-spec-playbook-discovery] Task-aware playbook discovery through spec
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-spec-playbook-discovery on 2026-10-26.
+- **Preserved Materials**: `docs/materials/2026-10/20261026-spec-playbook-discovery`
+
+### 1. Background & Hypothesis
 
 The explicit `devkit-playbook` entry point is rarely used in practice. Procedures remain undiscovered unless
 users already know to request a playbook or a failing rule names one. `spec` is the normal work entry point and
@@ -52,7 +33,26 @@ Candidate metadata stays bounded; only a selected procedure body is loaded. Addi
 alone does not solve repeated discovery across tasks, because bundle context is loaded once per agent context
 while task-specific candidates can change during the conversation.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Task-aware playbook discovery through spec so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: Which concrete examples distinguish new task intake from continuation, clarification, review fixes or
   retries? Define representative skip cases for clearly established Planning and Development work without using
@@ -64,7 +64,7 @@ while task-specific candidates can change during the conversation.
 - **Q4**: What candidate count, output byte budget and repeat-search conditions provide useful discovery at a
   bounded cost? Compare missed candidates and unnecessary searches using representative task requests.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - `spec` owns discovery at intake; no separate `spec-playbook` skill is created (§3a Q2). The generated
   `devkit-playbook` skill stays the spec-neutral explicit entry (§3a Q3).
@@ -89,13 +89,13 @@ while task-specific candidates can change during the conversation.
 - Non-goals: search ranking changes, alias keyword indexing, scheduling, execution history, bulk context loading,
   and automatic execution beyond the user's authorized task.
 
-## 3a. Planning direction
+### 3a. Planning direction
 
-Evidence: [discovery evidence](materials/discovery-evidence.md), [intake frequency](materials/intake-frequency.md), the
-challenger round `envelopes/challenger-01.yaml` and the user's answers `envelopes/answer-01.yaml`. Decision:
-`PADR-spec-intake-playbook-discovery`.
+Evidence: [discovery evidence](../../../docs/materials/2026-10/20261026-spec-playbook-discovery/discovery-evidence.md), [intake frequency](../../../docs/materials/2026-10/20261026-spec-playbook-discovery/intake-frequency.md), the
+challenger round historical Git `a3b0318924be4a9ee081cf3ae99bae1b8aa17058:docs/proposals/PROP-spec-playbook-discovery/envelopes/challenger-01.yaml` and the user's answers historical Git `a3b0318924be4a9ee081cf3ae99bae1b8aa17058:docs/proposals/PROP-spec-playbook-discovery/envelopes/answer-01.yaml`. Decision:
+`ADR-spec-intake-playbook-discovery`.
 
-### Discovery trigger and skip cases (Q1, settled)
+#### Discovery trigger and skip cases (Q1, settled)
 
 `spec` runs discovery once at **new task intake**: a `/spec <intent>`, or a request within an ongoing conversation that
 falls outside the agreed scope of the current task. Only a user's own message is intake: no message from another agent
@@ -125,7 +125,7 @@ up open feedback"), and a question that asks how to perform an operation ("how d
 - **Compaction**: one clause in the `spec` guidance fragment of the root guidance block states that a new task intake
   runs the `spec` intake step, so the rule survives a lost skill body.
 
-### Bounded retrieval (Q4, settled)
+#### Bounded retrieval (Q4, settled)
 
 - One `devkit playbook search "<English query>" --limit 3 --max-bytes 4096` per intake. Intake overrides the project's
   `[playbooks] limit` and `max_bytes` on purpose; explicit discovery keeps the configured values. A header may reach
@@ -136,7 +136,7 @@ up open feedback"), and a question that asks how to perform an operation ("how d
   "clean up old decisions" omits `adr-compaction`, while "tidy up old ADRs" ranks it first in `hybrid` and `lexical`.
   No automatic refinement follows; a search runs again only at the next new task intake, and unchanged bundle context
   is not reloaded.
-- **Selection rule** (tightened for offer frequency, [intake frequency](materials/intake-frequency.md) §5). Scores never
+- **Selection rule** (tightened for offer frequency, [intake frequency](../../../docs/materials/2026-10/20261026-spec-playbook-discovery/intake-frequency.md) §5). Scores never
   decide: `hybrid` and `lexical` return candidates for unrelated tasks. A candidate is offered only when all hold:
   - **operation, not topic**: its `description` names the operation the request asks the agent to perform on the
     artifact; a request to build, fix or change the tool, code or documents about that artifact is a topic match and
@@ -153,7 +153,7 @@ up open feedback"), and a question that asks how to perform an operation ("how d
 - Only a selected playbook's body is read (search path or `devkit playbook get`), after its bundle's context when that
   is not already loaded.
 
-### Ownership, entry skill and authority (Q2, Q3, settled by the user)
+#### Ownership, entry skill and authority (Q2, Q3, settled by the user)
 
 - **Ownership (Q2)**: `spec` owns the trigger, the skip table and the single search. The post-selection procedure (load
   the bundle's context, read the body, check prerequisites, follow it) is a `spec` reference file (for example
@@ -169,9 +169,9 @@ up open feedback"), and a question that asks how to perform an operation ("how d
 - **`adr-compaction`**: confirming a discovered `adr-compaction` candidate is its explicit invocation and authorizes its
   deletions, at `session` depth.
 
-### Offer frequency (user concern)
+#### Offer frequency (user concern)
 
-[Intake frequency](materials/intake-frequency.md) measures it over the 105 spec titles in `specs/`: the search returns
+[Intake frequency](../../../docs/materials/2026-10/20261026-spec-playbook-discovery/intake-frequency.md) measures it over the 105 spec titles in `specs/`: the search returns
 a candidate for 84% of them, the selection rule offers one for 1 of 105 (a true positive), and 16 topical matches it
 must reject form the false-positive sample. A false positive costs one line and a "no", never an action.
 
@@ -179,9 +179,9 @@ must reject form the false-positive sample. A false positive costs one line and 
   produce 0 offers, each positive control produces exactly its named offer, each skip and no-skip scenario behaves as
   its row states, and no intake produces more than one offer line.
 
-### Decision record
+#### Decision record
 
-`PADR-spec-intake-playbook-discovery` records the direction; handoff promotes it to the new ADR. It partially replaces
+`ADR-spec-intake-playbook-discovery` records the direction; handoff promotes it to the new ADR. It partially replaces
 two accepted ADRs, as `ADR-immutable-decisions-editable-records` §4 allows: the §4 statement "Ordinary requests do not
 authorize discovery" and the matching §5 consequence of `ADR-external-playbook-execution`, and the compaction-invocation
 statement of `ADR-immutable-decisions-editable-records` §4 (a confirmed discovered candidate is explicit invocation).
@@ -189,7 +189,7 @@ Each affected statement gets a one-line pointer. Exact receipt-backed retrieval 
 external scheduling and execution stay in force. `ADR-playbook-aliases-as-identifiers` is unaffected: discovery
 searches name and description only and never aliases.
 
-### Verification split
+#### Verification split
 
 - Mechanical: `devkit-spec` text-contract tests for the intake step (trigger, order before classification, skip
   table and conversation-level stops, `--limit 3 --max-bytes 4096`, canonical-noun query, the four selection
@@ -200,7 +200,7 @@ searches name and description only and never aliases.
   acceptance criterion and the paraphrase probe, with the `maintenance` catalog selected, which this Planning worktree
   could not synchronize.
 
-### Interactions
+#### Interactions
 
 - `PROP-review-refactor` adds a `maintenance` playbook and owns `packages/devkit-catalog/src/devkit_catalog/maintenance/`
   and `docs/capabilities/delivery/`. This proposal edits the entry-condition wording of the existing maintenance
@@ -209,9 +209,10 @@ searches name and description only and never aliases.
   pointer back yet: the Host records the dependency there.
 - `PROP-release-handbook` (draft) adds another explicitly invoked playbook and needs the same entry wording.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Planning settles the discovery boundary, skip examples, selection rule, offer-frequency bound, skill ownership and
 application authority. Development starts only
 through the proposal handoff after direction acceptance. Existing runtime and invocation contracts remain in force
 until implementation is delivered.
+

@@ -1,6 +1,6 @@
 # Intake frequency: when discovery runs and how often it speaks
 
-Planning evidence for `PROP-spec-playbook-discovery`, answering the concern that discovery at intake must not fire
+Planning evidence for `SPEC-spec-playbook-discovery`, answering the concern that discovery at intake must not fire
 too often. Probe data: [intake-probe.tsv](intake-probe.tsv) (every row below is reproducible from it); earlier probes:
 [discovery evidence](discovery-evidence.md) §1.
 

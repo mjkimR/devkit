@@ -1,15 +1,15 @@
 ---
-id: PADR-spec-intake-playbook-discovery
+id: ADR-spec-intake-playbook-discovery
 title: Discover playbooks at spec intake with confirm-first invocation
 summary: For procedures nobody invokes explicitly, we let spec run one bounded playbook search at new task intake and offer a matching playbook in one line that the user's confirmation invokes, to surface procedures without granting authority, accepting one search per intake.
-proposal: PROP-spec-playbook-discovery
-status: draft
+proposal: SPEC-spec-playbook-discovery
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-spec-intake-playbook-discovery] Discover playbooks at spec intake with confirm-first invocation
+# [ADR-spec-intake-playbook-discovery] Discover playbooks at spec intake with confirm-first invocation
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---
@@ -49,7 +49,7 @@ Chosen: discovery at `spec` intake with confirm-first invocation, because it sur
 authority with the user and the offer rare.
 
 - **Trigger**: `spec` runs one `devkit playbook search` at new task intake, before classification, under the skip
-  cases and the selection rule of `PROP-spec-playbook-discovery` §3a. No match and search errors stay silent.
+  cases and the selection rule of `SPEC-spec-playbook-discovery` §3a. No match and search errors stay silent.
 - **Invocation**: a candidate is named in one line with the classification statement of intake step 1. The user's
   confirmation is the explicit invocation of that playbook; without it nothing of the playbook runs. A declined
   candidate is not offered again in the conversation.
