@@ -1,0 +1,16 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T05:42:31.796702Z'
+status: completed
+summary: Read tab opens the handbook (3 reads, 3.1k DOM nodes, ~50 ms vs 922 reads, 124k nodes, ~1.1 s) and computes the Living Spec book only on request; book order unchanged; contracts updated in CAP-VIEW-repository-viewer §4.3/§6 and CAP-DLV-release-handbook §2.
+findings: []
+checks:
+  tests: PASS just viewer test 93/93; just test-affected 141 passed (partial); test_handbook.py 6 passed
+  build: PASS just viewer build committed; devkit generated check viewer-assets current; just viewer pack
+  lint: PASS just viewer lint; just viewer check 0/0; just lint-check devkit-viewer; just check devkit-viewer; devkit rules check --ci --base 3b219724 0 errors
+diff_scope:
+  base: 3b2197243fbd185221362abd62516133121efa06
+  head: 6afa51733d2a16cff6a69bb57984562792b0f1e3
+activity_effort: medium
