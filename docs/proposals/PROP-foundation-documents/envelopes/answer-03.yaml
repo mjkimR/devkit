@@ -1,0 +1,14 @@
+kind: answer
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T06:34:14.107952Z'
+status: completed
+summary: q7 decided
+findings: []
+checks: {}
+answers_to: worker-02.yaml
+answers:
+- question: q7
+  choice: a
+  decision: RULE-steering-documents defaults to max_files 10 and max_body_bytes 24576 for every steering file, the glossary included; a project raises the setting when it needs more.
