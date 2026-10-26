@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T08:29:33.703133Z'
+status: completed
+summary: 'Implementer self-verification of reconcile-check-01 finding 1: CAP-INT states that INTEGRATION_RULE_RUNTIME_MISMATCH follows INTEGRATION_RUNTIME_IN_WORKTREE and INTEGRATION_RECEIPT_READER_CHANGED, matching service.py:192-196 and providers.py check_reader-then-check_rule_runtime; UC 7h says after 7f and 7g; reconcile.md resolved, spec completed'
+findings: []
+checks:
+  rules: PASS devkit rules check --ci --base 68e74182
+diff_scope:
+  base: 68e74182f06c849737e47de64eb91c1412968b2f
+  head: e3050bab73a83886998d5bc521f562a6ddce6e55
