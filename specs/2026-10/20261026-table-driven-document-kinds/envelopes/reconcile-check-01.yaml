@@ -1,0 +1,44 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T07:00:20.785949Z'
+status: completed
+summary: 'reconcile-reviewer (medium, first check): all three targets reflect the change, match kinds.py, the ADR and the target-docs blueprint, and state current behavior; reconcile.md claims hold; 4 P3 findings'
+findings:
+- issue: CAP-DOCS 4.4 says index.is_terminal checks TERMINAL_STATUSES, but it reads the kind table; TERMINAL_STATUSES is an import-time copy
+  evidence: docs/capabilities/documents/CAP-DOCS-document-model.md:279; packages/devkit-spec/src/devkit_spec/features/documents/repositories/index.py:157-160,247
+  failure_condition: With an injected table, TERMINAL_STATUSES and is_terminal disagree
+  suggested_action: Name the kind table's terminal_statuses in the comment
+  resolution: open
+  severity: P3
+- issue: CAP-DOCS 4.4 does not name by_prefix, Summary and FormatScope
+  evidence: packages/devkit-spec/src/devkit_spec/features/documents/__init__.py:9-18; docs/capabilities/documents/CAP-DOCS-document-model.md:283-285
+  failure_condition: A library reader does not learn about by_prefix or the row enums
+  suggested_action: Add one clause naming them
+  resolution: open
+  severity: P3
+- issue: reconcile.md's removed-constant list omits USECASES_DIRECTORY, CAPABILITIES_DIRECTORY and the _ID_TOKEN pattern family
+  evidence: specs/2026-10/20261026-table-driven-document-kinds/reconcile.md Living Spec changes, last bullet
+  failure_condition: A later reader trusting the list would not know these were checked
+  suggested_action: Add the six names
+  resolution: open
+  severity: P3
+- issue: CAP-GOV-spec-rules 3.2 item 8 omits the area-scoped failure and names only KindTableError while the run reports a rule execution error (RULES_RUN_FAILED)
+  evidence: docs/capabilities/governance/CAP-GOV-spec-rules.md:84-89; id_convention.py _living_spec
+  failure_condition: A reader expects a KindTableError code and misses the area-scoped case
+  suggested_action: Add the area-scoped case and say it fails as a rule execution error raised from KindTableError
+  resolution: open
+  severity: P3
+unverified_areas:
+- The reviewer did not re-run the characterization or the suites
+checks:
+  head_matches_diff_scope: PASS eccd15f8
+  removed_constants_in_rule_guides: PASS
+  bundle_and_installation_unchanged: PASS
+  entrypoints_cover_changed_files: PASS
+  source_feedback: PASS
+diff_scope:
+  base: 6a19ff5ff648cc69904559b659faaa4c55dbf53b
+  head: eccd15f80b7a9b52f666fffeb3198142170b7c36
+activity_effort: medium
