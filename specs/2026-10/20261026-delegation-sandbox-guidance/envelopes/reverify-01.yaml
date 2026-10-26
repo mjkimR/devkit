@@ -1,0 +1,26 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:41:44.176843Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified both P3 fixes: payload code-reviewer row now prepares the probe path; code-reviewer step 4 writes probes through the shell; pinned in test_delegation_sandbox_guidance.py'
+findings:
+- issue: Nothing tells the Host to check that the code-reviewer's probe path exists and is gitignored, unlike the Planning bullet ('preparing one if none exists').
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/payload.md:18 vs :33; subagents/code-reviewer.md:36
+  failure_condition: In a project where the named path is not ignored, a live probe shows in git status --short and a mid-run diff check reverts it as an out-of-boundary write.
+  suggested_action: Add 'preparing one if none exists' to the code-reviewer payload row.
+  resolution: resolved
+  severity: P3
+- issue: The code-reviewer contract allows probe tests but its Claude Code projection disallows Write and Edit; the contract does not say probes are written through the shell.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/code-reviewer.md:15-16 and :36
+  failure_condition: A native Claude Code reviewer sees no Write tool and falls back to reasoning alone.
+  suggested_action: Add 'write probes through the shell' to step 4.
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS just test devkit-spec packages/devkit-spec/tests/integration/bundles/spec (379 passed)
+diff_scope:
+  base: ''
+  head: e3f0c72dd2f259d0271d6f43d03222db1d1da1ea
