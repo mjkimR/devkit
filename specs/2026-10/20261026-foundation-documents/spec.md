@@ -6,11 +6,19 @@ status: planned
 created: 2026-10-26
 depends_on:
   - SPEC-table-driven-document-kinds
-related_capabilities: []
+related_capabilities:
+  - CAP-DIST-context-and-playbooks
+  - CAP-DIST-manifest-spec
+  - CAP-DIST-workspace-ownership
+  - CAP-DOCS-document-model
+  - CAP-DOCS-document-search
+  - CAP-GOV-spec-rules
+  - CAP-HARN-agent-guidance
+  - CAP-DLV-release-handbook
+  - CAP-DLV-delivery-workflows
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-foundation-documents] Steering documents for project-wide background
 
@@ -18,6 +26,9 @@ workflow: sdd-spec-feature
 
 Handed off from proposal PROP-foundation-documents on 2026-10-26.
 - **Preserved Materials**: `docs/materials/2026-10/20261026-foundation-documents`
+  (`spike-findings.md` F1-F6, `steering-design.md` D1-D4)
+- **Decisions**: `ADR-steering-documents-directory`, `ADR-background-pointer-in-constitution`,
+  `ADR-bundle-context-lists-project-documents`
 
 ### 1. Background & Hypothesis
 
@@ -40,128 +51,167 @@ the always-loaded cost stays small. The glossary moves into the directory.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Steering documents for project-wide background so that system capabilities are extended.
+- **US-1**: As an agent in any role, I want every context to list the project's steering documents with their scope
+  so that I read the one a wording, naming, interface or content decision depends on.
+- **US-2**: As a project maintainer, I want one flat directory for project-wide background, the glossary included,
+  so that background has a known place outside the contract kinds and materials.
+- **US-3**: As a project maintainer, I want a rule to bound the steering directory and check the IDs it cites so
+  that the always-loaded cost stays small and background does not drift from the documents it names.
+- **US-4**: As a bundle author, I want a bundle to declare a workspace directory whose Markdown frontmatter
+  `devkit get-context` lists, so that `devkit-dist` needs no knowledge of any one bundle's documents.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: no new ID-bearing document kind and no row in the kind table; no relation fields to or from
+   steering documents; steering files stay outside the document index and search.
+2. **Scope Excluded**: no change to the glossary table columns, to the Owner check's semantics, to document search
+   or to the ranker.
+3. **Scope Excluded**: no namespace copy of the steering directory (`docs/packages/<name>/steering/`); package
+   glossaries stay at `docs/packages/<name>/glossary.md`.
+4. **Scope Excluded**: no product, brand or style content of any particular project, and no
+   `docs/steering/ux-objects.md` (that is `PROP-ux-documentation`).
+5. **Scope Excluded**: no migration, notice or legacy reader for a consumer's existing `docs/glossary.md`
+   (`AGENTS.md` Compatibility); only the release handbook script, which reads historical commits, falls back to the
+   old path.
+6. **Scope Excluded**: the handbook pages under `handbook/` are not regenerated or stamped (frozen for 0.1.4).
+7. **Scope Excluded**: no Codex or Antigravity host verification of the projected role contracts (`user`).
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] A bundle manifest declares a context document directory
 
-## 5. Carried Proposal Notes
+- **Given** a `bundle.toml` with a top-level `context_documents` key
+- **When** the bundle is loaded (`load_bundle`)
+- **Then** a value that passes the seeded `target` grammar (`docs/steering`) is accepted and exposed as
+  `Bundle.context_documents`, a missing key is `None`, and a non-string, empty, absolute, `..`, backslash,
+  `.devkit/...`, `.git` or `AGENTS.md` value raises `BundleError` (`BUNDLE_INVALID`) naming `context_documents`.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] get-context lists the declared directory's documents
 
-### 2. Technical Spike Questions
+- **Given** a synchronized bundle whose managed `bundle.toml` declares `context_documents = "docs/steering"` and a
+  workspace `docs/steering/` holding `b.md`, `a.md` (both with `title` and `summary`), `README.md`, `glossary.yaml`
+  and a subdirectory `sub/` with `c.md`
+- **When** `devkit get-context <bundle> --format json` runs
+- **Then** it exits `0` and its result has a `documents` list of exactly two objects, `a.md` then `b.md`, each with
+  the absolute `path`, the `title` and the `summary`; `README.md`, the YAML file and `sub/c.md` are not listed.
 
-Answered in `docs/materials/2026-10/20261026-foundation-documents/spike-findings.md` (F1-F6, round 1) and `docs/materials/2026-10/20261026-foundation-documents/steering-design.md` (round 2).
+### [AC-03] get-context never fails on a project document
 
-- **Q1**: Name and layout. Settled by the `user`: `docs/steering/`, flat, one Markdown file per topic.
-- **Q2**: What the spec rules check in steering files: `RULE-steering-documents` (shape, frontmatter, caps) and the
-  cited-ID check of `RULE-document-reference` (`user`, answer-02).
-- **Q3**: How agents read the group. Settled by the `user`: progressive loading through `devkit get-context`
-  (`ADR-background-pointer-in-constitution`).
-- **Q4**: What moves with the glossary: every consumer of spike F3.
+- **Given** the declaration of AC-02
+- **When** the directory is absent, is a symlink, or holds a symlinked `*.md`, a non-regular entry, a non-UTF-8
+  file, a file without frontmatter or with malformed YAML frontmatter, a file whose `title` or `summary` is not a
+  string, or a file whose frontmatter does not close within its first 4096 bytes; or the bundle declares nothing
+- **Then** get-context exits `0`; an undeclared or absent or symlinked directory gives `documents: []`; symlinked and
+  non-regular entries are not listed; each other file is listed with `null` for every value it cannot read; a file
+  larger than 4096 bytes whose frontmatter closes within that prefix is listed with its values.
 
-### 3. Proposed Design & Impact
+### [AC-04] The always-loaded list stays bounded at the default caps
 
-- **Directory** (`ADR-steering-documents-directory`): `docs/steering/` (created under `docs/`) holds one Markdown
-  file per topic (for example `glossary.md`, `product.md`, `style.md`) and the glossary's `glossary.yaml`; no
-  subdirectories and no namespace copy. Files carry frontmatter `title` and `summary` (the one-line English scope) and
-  no `id`, so they stay outside the document index (`CAP-DOCS-document-model` rule 3.2). Documented in
-  `CAP-DOCS-document-model`; the glossary gains the row **Steering document** (Avoid: foundation, background).
-- **Loading** (`ADR-background-pointer-in-constitution`): every steering file's `title` and `summary` are always
-  loaded; bodies are read only when a decision concerns that scope. One constitution line names `docs/steering/` and
-  states that trigger. The `scout`, `challenger` and `reconcile-reviewer` contracts (`bundle/subagents/`) run
-  `devkit get-context spec` instead of reading the managed `AGENTS.md`, as `code-reviewer` already does, and a guidance
-  test asserts that every role contract loads the spec context.
-- **Bundle context** (`ADR-bundle-context-lists-project-documents`): the `spec` bundle's manifest declares
-  `docs/steering` as a context document directory, and `devkit get-context <bundle>` adds `documents` (`path`,
-  `title`, `summary` per Markdown file, read from the workspace at run time, not rendered by sync) to its result.
-  `devkit-dist` reads only the directory the manifest names and knows nothing of steering
-  (`CAP-DIST-context-and-playbooks`, `CAP-DIST-manifest-spec`). The field follows the seeded `target` grammar; the
-  declaration is read from the receipt-verified managed `bundle.toml`; only regular, non-symlink `*.md` files other
-  than `README.md` directly inside a non-symlinked directory are listed, from a header prefix of at most 4096 bytes;
-  unreadable, non-UTF-8 or non-string values become `null`, never an error. `documents` is always present (`[]` when
-  undeclared or absent), with absolute `path`, sorted by path. `CAP-DIST-workspace-ownership` is amended: seeded
-  files are never receipt-verified context files, but a declared context directory may list project files, seeded
-  ones included. One test per case, plus a test of the output size at the default caps.
-- **Bounds** (`user`, answer-03): a new spec rule `RULE-steering-documents` (under
-  `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/`), error severity, reports in `docs/steering/` a
-  subdirectory, a file other than `*.md` and `glossary.yaml`, an `id`, a missing `title`, a missing or non-English
-  `summary` longer than its own `max_summary_length` (default 300), each Markdown file beyond `max_files` in sorted
-  order (so a commit adding the overflowing file is refused at the gate), and a body (the text after the frontmatter)
-  over `max_body_bytes`. `README.md` is neither counted nor listed. Settings `max_files` (default 10), `max_body_bytes` (default
-  24576, for every file, the glossary included) and `max_summary_length` (default 300); a project raises a setting
-  when it needs more; one test per case, including a staged commit for the count. Documented in
-  `CAP-GOV-spec-rules`.
-- **Cited IDs** (`user`, answer-02): `RULE-document-reference` resolves backtick-quoted IDs in steering files the way
-  it resolves root glossary Owners: they must resolve, aliases are reported, no autofix and no graph edges; a test
-  covers an unresolved ID, an alias and a resolved ID. Documented in `CAP-GOV-spec-rules`.
-- **Glossary move** (`user`): `glossary.md` and `glossary.yaml` move to `docs/steering/`, the glossary gaining the
-  steering frontmatter; the repository's own glossary moves in the same change; no migration and no notice for
-  existing consumers (`AGENTS.md` Compatibility). Each literal path of spike F3 is one acceptance item with a test
-  that the old path is no longer read: the `RULE-document-reference` Owner check, search `GLOSSARY_PATH` and
-  `SPEC_GLOSSARY_INVALID` (`base/errors.py`), the `docs-skeleton` seed and its README tables, `living-spec-writing`,
-  `architecture-writing`, `spec-sync`, `adr-compaction`, the brownfield `migration.md`, rule guides, viewer
-  `bookGroup` (see Viewer), `docs/README.md`,
-  `docs/architecture/README.md` and the capabilities naming the path (`CAP-DOCS-document-model`,
-  `CAP-DOCS-document-search`, `CAP-GOV-spec-rules`, `CAP-HARN-agent-guidance`, `CAP-DLV-release-handbook`,
-  `CAP-DLV-delivery-workflows`). Package glossaries stay at `docs/packages/<name>/glossary.md`, read together with
-  the root glossary. The receipt `.devkit/installation.json` follows `devkit sync`. The handoff ADR declares that it
-  amends the glossary paths that `ADR-spec-package-on-devkit` and `ADR-writing-and-terminology-guidance` fix.
-- **Release handbook**: `scripts/handbook.py` reads the glossary at the pinned commit from `docs/steering/`, falls
-  back to `docs/glossary.md` for a commit before the move, and fails with a code when neither exists; its tests cover
-  both layouts. The handbook pages are not refreshed.
-- **Viewer** (`policy`, Host addition): `bookGroup` in `packages/devkit-viewer/frontend/src/lib/api/documents.ts`
-  replaces its literal `docs/glossary.md` with one `Steering` book group for every file under `docs/steering/`, in
-  place of the `Glossary` group in `bookGroups`, defined as a viewer literal because steering is not a kind; a
-  package glossary `docs/packages/<name>/glossary.md` also lands in `Steering`; a front-end test next to it asserts
-  that `docs/steering/glossary.md`, another steering file and a package glossary land in `Steering` and that
-  `docs/glossary.md` is no longer special. The committed build
-  under `packages/devkit-viewer/src/devkit_viewer/static/` is rebuilt (`just viewer build`). This proposal owns the
-  fix because `SPEC-table-driven-document-kinds` excludes the viewer.
-- **Search** (`user`): unchanged. Steering files are not search candidates; glossary synonym expansion reads the
-  moved `glossary.yaml`.
-- Non-goals: no new ID-bearing kind, no relation fields to or from steering documents, no change to the glossary
-  table columns, the Owner check's semantics, document search or the ranker, and no namespace steering directory.
+- **Given** ten steering files (the default `max_files`), each with a 300-character summary (the default
+  `max_summary_length`) and a 60-character title
+- **When** get-context lists them
+- **Then** the JSON of `documents`, without the bytes of the ten `path` values, is at most 4096 bytes.
 
-#### Order with parallel proposals
+### [AC-05] Every spec context names the steering list and its trigger
 
-- `SPEC-table-driven-document-kinds` lands first (`depends_on`); it is accepted and handed off, its spec now in
-  Development. At this proposal's handoff the dependency names that spec, whose ID this branch cannot resolve yet. Steering is not a kind and adds no row; where this
-  proposal touches the rules, it builds on the table's definitions instead of adding constants beside them. That
-  proposal excludes the viewer, so the viewer grouping is this proposal's alone.
-- `PROP-ux-documentation` follows this proposal (`user`, answer-02; the Host adds this proposal to its `depends_on`),
-  so its guidance names the glossary at
-  `docs/steering/glossary.md` and points to steering style documents instead of restating them; its option 6b (an
-  object table in the glossary) would change the glossary table format, which this proposal excludes.
+- **Given** the `spec` bundle
+- **When** its manifest, constitution and role contracts are read
+- **Then** `bundle.toml` declares `context_documents = "docs/steering"`; the constitution has one line naming
+  `docs/steering/` and the `documents` list of `devkit get-context spec`, telling the agent to read a body before a
+  decision its summary covers; and every role contract under `subagents/` runs `devkit get-context spec` (none reads
+  `.devkit/managed/spec/AGENTS.md` instead).
 
-#### Planning decisions
+### [AC-06] RULE-steering-documents checks the directory's shape and frontmatter
 
-- `policy`: search citation corrected to `CAP-DOCS-document-search`; owns extended to every path spike F3 names;
-  `depends_on` on `SPEC-table-driven-document-kinds` per the user's ordering decision.
-- `user` (answer-01): name `steering`; one flat directory; progressive loading through `devkit get-context spec` at
-  run time; a rule caps file count and body size so the glossary fits; the glossary moves; search unchanged.
-- `policy`: no namespace steering directory: no registered namespace exists here, package glossaries already have
-  their place (`living-spec-writing`), and get-context lists one directory per bundle declaration.
-- `user` (answer-02, answer-03): cited IDs in steering files are checked like glossary Owners; UX follows this
-  proposal; caps `max_files` 10 and `max_body_bytes` 24576 for every file.
-- `policy` (challenger-02): every spec role loads the context through get-context; read and path-safety rules,
-  output shape and the workspace-ownership amendment specified; rule scope defined; package glossaries keep a viewer
-  group.
-- `policy`: the get-context change is a manifest-declared directory, not a steering path in `devkit-dist`, because the
-  base harness stays SDD-agnostic (`ARCH-05-1-containers` section 2.4).
+- **Given** `RULE-steering-documents` (error severity) and files under `docs/steering/`
+- **When** `devkit rules check` runs
+- **Then** it reports, one violation each: a file inside a subdirectory; a file that is neither `*.md` nor
+  `glossary.yaml`; an `id` key; a missing or empty `title`; a missing or empty `summary`; a summary with a letter
+  outside the Latin script; a summary longer than `max_summary_length` characters (default 300); and reports nothing
+  for `README.md`, for a well-formed file, or when no file under `docs/steering/` is targeted.
 
-### 4. Lifecycle & Retirement Criteria
+### [AC-07] RULE-steering-documents bounds the file count and body size
 
-- On acceptance: recorded with `devkit spec proposal accept`, then handed off to a spec bundle on
-  `dev-foundation-documents`; the proposal is deleted there and its decisions become ADRs.
-- On rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
-  the rejection ADR and deletes the proposal.
+- **Given** the default settings `max_files = 10` and `max_body_bytes = 24576`
+- **When** the directory holds eleven Markdown files other than `README.md`, or a file whose body (the text after
+  the frontmatter) is 24577 bytes
+- **Then** the rule reports the eleventh file in sorted order and the oversized body, each once; a staged commit
+  that adds the eleventh file is reported by a `--staged` run; raising either setting clears the finding, and a
+  non-positive setting is a settings error.
 
+### [AC-08] IDs cited in steering files resolve
+
+- **Given** a steering file citing an unresolved ID, an alias of another document's ID and a resolved ID, each in
+  backticks, in its body
+- **When** `RULE-document-reference` checks it, with and without `--fix`
+- **Then** it reports `no document has the ID <ID>` for the first and `<alias> is an alias of <ID>; name <ID>` for
+  the second, nothing for the resolved ID, rewrites nothing under `--fix`, adds the file to no reference graph, and
+  reports an Owner cell of `docs/steering/glossary.md` once.
+
+### [AC-09] The glossary Owner check reads the moved glossary
+
+- **Given** an unresolved Owner in a five-column table
+- **When** it is in `docs/steering/glossary.md`, and when it is in `docs/glossary.md`
+- **Then** `RULE-document-reference` reports the first and no longer reads the second.
+
+### [AC-10] Search expands synonyms from the moved glossary
+
+- **Given** synonym clusters in `docs/steering/glossary.yaml`
+- **When** `devkit spec search` expands a query
+- **Then** it expands through that file, a `docs/glossary.yaml` alone expands nothing, and `SPEC_GLOSSARY_INVALID`
+  names `docs/steering/glossary.yaml` in its message, target and fix.
+
+### [AC-11] The docs skeleton seeds the steering glossary
+
+- **Given** the `spec` bundle's `docs-skeleton` seed
+- **When** it is listed or synchronized into an empty project
+- **Then** it holds `steering/glossary.md` (with `title` and English `summary` frontmatter and the five-column
+  table) and `steering/glossary.yaml`, no root `glossary.md` or `glossary.yaml`, and its `README.md` and
+  `architecture/README.md` point to `steering/glossary.md`.
+
+### [AC-12] No bundle guidance names the old glossary path
+
+- **Given** the `spec` bundle sources (instructions, skills, playbooks, rule guides, seed)
+- **When** they are searched for `docs/glossary.md`, `docs/glossary.yaml` or `../glossary.md`
+- **Then** none is found, and `living-spec-writing`, `architecture-writing`, `spec-sync`, the `adr-compaction`
+  playbook, the brownfield `migration.md` and the `RULE-document-reference`, `RULE-id-convention` and
+  `RULE-proposal-boundaries` guides name `docs/steering/glossary.md` where they named the glossary.
+
+### [AC-13] The repository moves its own glossary and Living Spec
+
+- **Given** this repository after the change
+- **When** `devkit rules check` and `devkit sync --check` run
+- **Then** `docs/steering/glossary.md` and `docs/steering/glossary.yaml` exist with no root copy; the glossary has
+  the steering frontmatter and the row **Steering document** (Avoid: foundation, background); `docs/README.md`,
+  `docs/architecture/README.md` and the capabilities that name the glossary path name `docs/steering/`; both
+  commands exit `0`.
+
+### [AC-14] The release handbook reads either glossary layout
+
+- **Given** `scripts/handbook.py` and a pinned source commit
+- **When** the commit has `docs/steering/glossary.md`, only `docs/glossary.md`, or neither
+- **Then** it reads the steering glossary, falls back to the old path, and fails with `HANDBOOK_GLOSSARY_MISSING`
+  (exit `2`) when neither exists; the glossary page and `HANDBOOK_TERM_MISSING` follow the file it read.
+
+### [AC-15] The viewer groups steering documents
+
+- **Given** the viewer's `bookGroup`
+- **When** it classifies `docs/steering/glossary.md`, `docs/steering/product.md`,
+  `docs/packages/example/glossary.md` and `docs/glossary.md`
+- **Then** the first three are `Steering`, `docs/glossary.md` is `Overview`, `bookGroups` holds `Steering` in place
+  of `Glossary`, and the committed build under `devkit_viewer/static/` is rebuilt from that source.
+
+## 5. Assumptions
+
+- The handed-off premises hold on base `26f7eb33`: every glossary consumer of spike F3 is still at the path it
+  names, and `SPEC-table-driven-document-kinds` landed the kind table this change adds no row to.
+- The manifest key is a top-level `context_documents` string (one directory per bundle), because the ADR names one
+  declared directory and the top level is where bundle-wide fields such as `auto_select` live.
+- `RULE-steering-documents` checks only the root `docs/steering/` (no namespace copy, Non-Goal 3), reuses the
+  English-letter test of `RULE-document-summary`, and reports the count overflow whenever any steering file is
+  targeted, so a commit adding a file that sorts before others is refused too.
+- `README.md` is matched by exact name, the way the document index skips it.
+- The handbook failure code is `HANDBOOK_GLOSSARY_MISSING`, in the script's existing `HANDBOOK_*` family, raised as
+  its other run failures are (exit `2`); the released snapshot's `source_commit` 5e71d74c has `docs/glossary.md`, so
+  the fallback keeps it readable.
+- This repository's `docs/steering/` gets no `README.md`: `docs/README.md` describes the directory.
