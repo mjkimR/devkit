@@ -21,6 +21,7 @@
 	import KnowledgeSidebar from './KnowledgeSidebar.svelte';
 	import BundleHeader from './BundleHeader.svelte';
 	import ChapterSection from './ChapterSection.svelte';
+	import HandbookView from './HandbookView.svelte';
 
 	let {
 		view,
@@ -31,7 +32,8 @@
 		requestedAnchor,
 		onOpen,
 		onLocation,
-		diagrams
+		diagrams,
+		bookRequested = $bindable(false)
 	}: {
 		view: 'book' | 'proposals' | 'specs';
 		theme: string;
@@ -42,6 +44,8 @@
 		onOpen: (path: string) => void;
 		onLocation: (path: string, anchor: string, view: string, meta: Record<string, any>) => void;
 		diagrams: (node: HTMLElement) => { destroy: () => void };
+		/** The Living Spec book is computed only once requested; bind it to keep the request across mounts. */
+		bookRequested?: boolean;
 	} = $props();
 
 	let documents = $state<RepositoryDocument[]>([]);
@@ -60,8 +64,21 @@
 	let root: HTMLElement;
 	let resolvedRequest = '';
 
+	// The reading tab shows the handbook until the book is requested; Proposals and Specs always index.
+	const handbookMode = $derived(view === 'book' && !bookRequested);
+	// Index latch: set by the first indexing view or the book request for this source and branch, never reset by a
+	// view change, so Book, Proposals and Book again start one scan.
+	let latched = $state.raw<{ source: RepositoryDataSource; branch: string } | null>(null);
 	$effect(() => {
-		const repository = source,
+		if (!handbookMode && source && (latched?.source !== source || latched.branch !== branch))
+			latched = { source, branch };
+	});
+	const indexed = $derived(
+		Boolean(source) && latched?.source === source && latched?.branch === branch
+	);
+
+	$effect(() => {
+		const repository = indexed ? source : null,
 			ref = branch;
 		const controller = new AbortController();
 		documents = [];
@@ -225,7 +242,9 @@
 			: []
 	);
 	const detail = $derived(bundle.find((d) => d.path === detailPath) ?? selected);
-	const visibleDocs = $derived(view === 'book' ? book : detail ? [detail] : []);
+	const visibleDocs = $derived(
+		view === 'book' ? (bookRequested ? book : []) : detail ? [detail] : []
+	);
 	const rendered = $derived(
 		new Map(visibleDocs.map((doc) => [doc.path, renderDocument(doc, merged)]))
 	);
@@ -245,7 +264,7 @@
 			anchor = requestedAnchor,
 			currentView = view,
 			available = merged;
-		if (loading || !available.length) return;
+		if (loading || !available.length || handbookMode) return;
 		untrack(() => {
 			const key = `${currentView}\n${path}\n${anchor}`;
 			if (resolvedRequest === key) return;
@@ -367,81 +386,99 @@
 </script>
 
 <div class="knowledge" bind:this={root}>
-	{#if shownErrors.length}
-		<details class="index-errors">
-			<summary>{shownErrors.length} documents failed to load</summary>
-			{#each shownErrors as error}
-				<p>{error}</p>
-			{/each}
-		</details>
-	{/if}
-	{#if loading}
-		<p role="status">Loading documents…</p>
-	{:else if !source}
-		<p>Connect a repository to browse documents.</p>
+	{#if source && handbookMode}
+		<HandbookView
+			{source}
+			{branch}
+			{theme}
+			{requestedPath}
+			{requestedAnchor}
+			{diagrams}
+			onRequestBook={() => {
+				bookRequested = true;
+			}}
+			onLocation={(path, anchor, meta) => onLocation(path, anchor, view, meta)}
+		/>
 	{:else}
-		<div class="reading-layout">
-			<KnowledgeSidebar
-				{view}
-				bind:namespace
-				{namespaces}
-				bind:query
-				bind:status
-				{statuses}
-				bind:priority
-				bind:size
-				bind:area
-				{areas}
-				bind:includeCompleted
-				{book}
-				{entries}
-				sources={sourceLabels}
-				{selected}
-				{currentAnchor}
-				{rendered}
-				onJump={(path, anchor) => jump(path, anchor)}
-				onSelect={select}
-			/>
-			<main class="reading-content" use:linkNavigation>
-				{#if view !== 'book' && selected}
-					<BundleHeader
-						{selected}
-						{bundle}
-						{detail}
-						{taskChecks}
-						{relations}
-						{ids}
-						{rendered}
-						{view}
-						sourceLabel={selectedEntry?.source.label}
-						{onOpen}
-						onLocation={(path, anchor, meta) => onLocation(path, anchor, view, meta)}
-						onJump={(path, headingId) => jump(path, headingId)}
-						onSelectDetail={(path) => {
-							detailPath = path;
-							currentAnchor = '';
-						}}
-					/>
-				{/if}
-				{#each visibleDocs as doc (doc.path)}
-					<ChapterSection
-						{doc}
-						html={rendered.get(doc.path)?.html ?? ''}
-						{branch}
-						{theme}
-						{lazyDiagrams}
-						{trackHeading}
-						sourceLabel={view === 'book' ? undefined : selectedEntry?.source.label}
-						{onOpen}
-					/>
+		{#if shownErrors.length}
+			<details class="index-errors">
+				<summary>{shownErrors.length} documents failed to load</summary>
+				{#each shownErrors as error}
+					<p>{error}</p>
 				{/each}
-				{#if !visibleDocs.length}
-					<p class="empty">
-						{view === 'book' ? 'No documents to display.' : 'Select an item from the list.'}
-					</p>
-				{/if}
-			</main>
-		</div>
+			</details>
+		{/if}
+		{#if loading}
+			<p role="status">Loading documents…</p>
+		{:else if !source}
+			<p>Connect a repository to browse documents.</p>
+		{:else}
+			<div class="reading-layout">
+				<KnowledgeSidebar
+					{view}
+					bind:namespace
+					{namespaces}
+					bind:query
+					bind:status
+					{statuses}
+					bind:priority
+					bind:size
+					bind:area
+					{areas}
+					bind:includeCompleted
+					{book}
+					{entries}
+					sources={sourceLabels}
+					{selected}
+					{currentAnchor}
+					{rendered}
+					onJump={(path, anchor) => jump(path, anchor)}
+					onSelect={select}
+					onHandbook={() => {
+						bookRequested = false;
+					}}
+				/>
+				<main class="reading-content" use:linkNavigation>
+					{#if view !== 'book' && selected}
+						<BundleHeader
+							{selected}
+							{bundle}
+							{detail}
+							{taskChecks}
+							{relations}
+							{ids}
+							{rendered}
+							{view}
+							sourceLabel={selectedEntry?.source.label}
+							{onOpen}
+							onLocation={(path, anchor, meta) => onLocation(path, anchor, view, meta)}
+							onJump={(path, headingId) => jump(path, headingId)}
+							onSelectDetail={(path) => {
+								detailPath = path;
+								currentAnchor = '';
+							}}
+						/>
+					{/if}
+					{#each visibleDocs as doc (doc.path)}
+						<ChapterSection
+							{doc}
+							html={rendered.get(doc.path)?.html ?? ''}
+							{branch}
+							{theme}
+							{lazyDiagrams}
+							{trackHeading}
+							sourceLabel={view === 'book' ? undefined : selectedEntry?.source.label}
+							{onOpen}
+						/>
+					{/each}
+					{#if !visibleDocs.length}
+						<p class="empty">
+							{view === 'book' ? 'No documents to display.' : 'Select an item from the list.'}
+						</p>
+					{/if}
+				</main>
+			</div>
+		{/if}
 	{/if}
 </div>
 

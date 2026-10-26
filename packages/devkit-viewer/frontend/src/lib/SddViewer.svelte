@@ -129,6 +129,14 @@
 	$effect(() => {
 		knowledgeRequest = { path: initialPath, anchor: initialAnchor };
 	});
+	// The Living Spec book is computed only on request; the request lives as long as this viewer, survives rail
+	// switches and resets with the repository or branch. A host deep link to a file under docs/ is the request.
+	let bookRequested = $state(false);
+	$effect(() => {
+		source;
+		branch;
+		bookRequested = initialView === 'book' && /^docs\/.*[^/]$/.test(initialPath);
+	});
 	const requestFor = (current: string) =>
 		!knowledgeRequest.view || knowledgeRequest.view === current
 			? knowledgeRequest
@@ -326,6 +334,7 @@
 				<div class="knowledge-host">
 					<KnowledgeViews
 						{view}
+						bind:bookRequested
 						{source}
 						{branch}
 						theme={themeState.current}

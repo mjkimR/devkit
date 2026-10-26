@@ -2,7 +2,7 @@
 id: SPEC-viewer-handbook-first-knowledge
 title: Handbook-first knowledge view with on-demand book
 summary: Makes the repository viewer's knowledge tab open the release handbook when a repository has one and compute the Living Spec book only on request, so cold loads skip rendering every document.
-status: planned
+status: in-progress
 created: 2026-10-26
 related_capabilities: [CAP-VIEW-repository-viewer, CAP-DLV-release-handbook]
 related_usecases: []

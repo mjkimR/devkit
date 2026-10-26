@@ -9,7 +9,7 @@
 
 	const tabs = [
 		{ id: 'dashboard', label: 'Dashboard', icon: '📊', title: 'Status Dashboard' },
-		{ id: 'book', label: 'Book', icon: '📖', title: 'Living Spec (Book)' },
+		{ id: 'book', label: 'Read', icon: '📖', title: 'Handbook and Living Spec book' },
 		{ id: 'proposals', label: 'Proposals', icon: '💡', title: 'Proposals' },
 		{ id: 'specs', label: 'Specs', icon: '📋', title: 'Feature Specs' },
 		{ id: 'roadmap', label: 'Roadmap', icon: '🗺️', title: 'Roadmap' },
