@@ -2,7 +2,7 @@
 id: PROP-foundation-documents
 title: Foundation documents for project-wide background
 summary: "Adds a foundation group under docs/ (and per namespace) for project-wide background documents such as the glossary, product vision and style guides, which agents read when a work unit starts and search covers, and moves the glossary into it."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-26
 target_area: documents/
 priority: high                        # critical | high | medium | low
