@@ -53,8 +53,9 @@ reminder only references the skill. Documentation and code-comment language stil
 ## Maintenance
 
 `devkit add maintenance` deploys both independent playbooks; `maintenance:upkeep` selects
-`drift-reconciliation` and `maintenance:reporting` selects `weekly-report`. Invoke explicitly through
-`devkit-playbook` or exact `devkit playbook get maintenance/weekly-report`; selection never executes them.
+`drift-reconciliation` and `maintenance:reporting` selects `weekly-report`. Invoke them explicitly through
+`devkit-playbook` or exact `devkit playbook get maintenance/weekly-report`, or confirm the one-line offer that
+`spec` intake makes when a request names their operation; selection never executes them.
 Drift reports record evidence, user decisions and coverage gaps. Weekly reports preserve revision-bound evidence,
 health limitations and prioritized actions in immutable local artifacts; publication needs separate explicit
 authority and records its outcome independently. Missing tools remain gaps. No runtime, scheduler, detector,

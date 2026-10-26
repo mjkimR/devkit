@@ -37,7 +37,7 @@ This project manages its documentation based on **Spec-Driven Development (SDD)*
    - Interactive collaboration and multi-step governance workflows are orchestrated via the skill layer.
 2. **On-Demand Guidance Loading**:
    - Project-wide coding standards, domain constraints, and architectural guidelines are instructions, listed with their read conditions by `devkit get-context <bundle>` (the spec bundle's own by `devkit get-context spec`).
-   - Deterministic checks are rules (`devkit rules check`), occasional procedures are playbooks (the `devkit-playbook` skill).
+   - Deterministic checks are rules (`devkit rules check`), occasional procedures are playbooks (the `devkit-playbook` skill, or a one-line offer at `/spec` intake that the user confirms).
 3. **Living Spec Reconciliation (`MUST`)**:
    - `docs/` is the durable source of truth. Temporary sprint checklists and PR task lists belong in `specs/`.
    - Upon task completion, all changes to contracts, capabilities, and system behaviors must be reconciled into `docs/` via the `spec-sync` skill.

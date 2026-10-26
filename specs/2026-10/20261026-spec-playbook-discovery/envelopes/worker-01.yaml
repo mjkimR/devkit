@@ -1,0 +1,16 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:25:16.027345Z'
+status: completed
+summary: 'Development from specify through the final change report: spec intake discovery step (skip table, conversation stops, one --limit 3 --max-bytes 4096 search, operation-first canonical-noun query, four-condition selection, one-line confirm-first offer that waits for the answer, silent no-match and errors) and references/playbooks.md; spec-neutral devkit-playbook skill, guidance line, CLI help and devkit constitution; invoked-or-confirmed entry in five playbooks; Living Spec and ADR pointers reconciled; manual run 0/16 ordinary offers, 4/4 positive controls, 3/3 out-of-sample authoring requests, 0/11 skip rows searched. Two use cases outside the write scope deferred as FB-route-intent-intake-discovery and FB-adoption-usecase-confirmed-offer for the Host to fold in at integration.'
+findings: []
+checks:
+  tests: PASS just test-affected 2577 passed 1 skipped; just test-dist 1042 passed
+  lint: PASS just lint devkit-spec devkit-dist; just rules-check errors=0
+  types: PASS just check devkit-spec devkit-dist 0 errors
+diff_scope:
+  base: ''
+  head: 9f5ac1a76efc614d9fea373e792bb4fdcccb399b
+activity_effort: medium

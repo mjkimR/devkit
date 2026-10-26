@@ -234,6 +234,8 @@ def carried_findings(envelopes: Envelopes, source: str, unit_dir: Path) -> tuple
 
     ``latest`` takes the deciding review state (the latest review round, or the
     last reverify closing it); a path names a review, challenger or reverify file.
+    A named review or challenger round carries its closing state, the last
+    reverify of ``envelopes`` naming it, so earlier resolutions and waivers persist.
     """
     if source == FROM_LATEST:
         env = envelopes.review_state()
@@ -264,8 +266,11 @@ def carried_findings(envelopes: Envelopes, source: str, unit_dir: Path) -> tuple
             f"--from must name a review, challenger or reverify envelope, not {env.kind}",
             fix="Use --from latest for the review round, or --from envelopes/challenger-NN.yaml for a challenger round",
         )
-    review = env.review if env.kind == "reverify" else Path(env.file).name
-    return env.findings, review
+    if env.kind == "reverify":
+        return env.findings, env.review
+    review = Path(env.file).name
+    closing = envelopes.closing_state(review)
+    return (closing or env).findings, review
 
 
 def _finding_number(flag: str, n: int, count: int) -> int:
