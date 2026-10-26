@@ -68,7 +68,8 @@ removes it.
 4. **Validate everything before writing**: handoff checks the slug, the proposal file and its frontmatter, the
    approval, `namespace` (`global` or registered, else `SPEC_PROPOSAL_INVALID`), `summary` (a string, else
    `SPEC_PROPOSAL_INVALID`), `planning_effort` and `dev_effort` (`low` | `medium` | `high` when present, else `SPEC_PROPOSAL_INVALID`), the slug conflict, the workflow binding and every path it would create before its first
-   write. A path that already exists, two PADRs that would become the same ADR, a graduating `ADR-<slug>` or
+   write. A path that already exists (except the dated materials directory, which is merged into: 4.5, step 5), a
+   merge conflict with that directory, two PADRs that would become the same ADR, a graduating `ADR-<slug>` or
    `SPEC-<slug>` or a translated alias (4.5, steps 1 and 4) that equals an existing document ID or alias or another
    ID or translated alias graduating in the same handoff, a carried bundle file whose path under the materials directory a file or symbolic link of `materials/`
    takes too (or lies below; a `materials/` that is itself a symbolic link takes every such path), or a path it would
@@ -78,7 +79,9 @@ removes it.
    `SPEC_PROPOSAL_SLUG_INVALID`.
 5. **Roll back a failed write**: any failure while writing the spec bundle, the blueprint, the ADRs or moving the
    materials and carried files removes what was written, moves them back and keeps the proposal, so the handoff can
-   be rerun. The roll-back MUST NOT remove a directory that still holds something it could not move back. An advisory
+   be rerun. The roll-back MUST NOT remove a directory that still holds something it could not move back, and MUST
+   NOT move, remove or record a path that existed before the handoff: no pre-existing file or directory of a merged
+   materials directory is recorded as written or moved, on one file system or across file systems. An advisory
    error (such as `FRONTMATTER_INVALID` binding `spec.md`) is reported with its own code after a complete roll-back,
    any other failure, and any incomplete roll-back, as `SPEC_PROPOSAL_HANDOFF_FAILED`. Across file systems the materials and carried files are copied
    and their sources removed only after every write succeeded, so a partial copy is removed like any other written
@@ -320,12 +323,36 @@ With `<YYYY-MM>` and `<YYYYMMDD>` today's date:
    symbolic link there or below a `materials/` that is itself a symbolic link, and a destination (the spec bundle,
    an ADR, the materials directory, a carried file) whose directory resolves outside the workspace are refused
    before writing (`SPEC_PROPOSAL_TARGET_EXISTS`).
+
+   **Merging into an existing materials directory** (`ADR-merge-proposal-materials-per-leaf-at-handoff`): when the
+   dated directory already exists, the handoff merges into it per leaf, planned in one preflight pass over the
+   `materials/` leaves and the carried files:
+
+   - The directory and every existing directory on the way to a planned path MUST be a real directory by `lstat`; a
+     symbolic link or a file there is a conflict.
+   - A real directory present on both sides is descended into; an absent path is moved, a directory as a whole when
+     it holds material (one holding only junk or nothing stays with the proposal); the destination's other files are
+     left alone. Non-symlink junk of the proposal is dropped; junk of the destination is ignored.
+   - A path that is a regular file on both sides by `lstat` with identical bytes is a duplicate: the destination file
+     stays as it is and the proposal copy is deleted with the proposal.
+   - Differing bytes (`different-content`), a file against a directory (`file-directory`), a symbolic link on either
+     side, equal link text included (`symbolic-link`), and any other non-regular file (`non-regular`) are conflicts.
+     The handoff refuses every conflict before its first write with `SPEC_PROPOSAL_TARGET_EXISTS`: `[TARGET]` lists
+     the destination paths, `[DETAIL]` one `<source> -> <destination>: <kind>` line per conflict, and the fix names
+     the first conflict's source path, destination path and kind and the way to reconcile that path, never removal
+     of the directory. When the dated path itself is not a real directory, the fix says to rename it aside with its
+     content kept, or to replace it with a real directory holding that content. A same-path pair of regular files
+     that cannot be read for the comparison is `SPEC_PROPOSAL_INVALID`, both paths in `[TARGET]`.
+   - Every move writes only a path that was absent in preflight. The handoff gives no concurrent-change guarantee: a
+     file written at a planned path between preflight and its move may be replaced, the same window the ADR writes
+     have.
 6. **Rewriting** of what pointed into the proposal (4.7).
 7. **Removal** of the proposal, with its workflow records.
 8. **Gates**: the proposal's `plan-intent` and `plan-accept` records carried to the spec (rule 12).
 
 A failure in steps 1 to 5 rolls back: what was moved goes back, what was written is removed (a directory created
-inside the moved `materials/` is followed back and removed when empty), and the proposal is kept. A directory that
+inside the moved `materials/` is followed back and removed when empty), and the proposal is kept. Every pre-existing
+path of a merged materials directory stays byte-identical, since none of them was recorded as written or moved. A directory that
 still holds something the roll-back could not move back is kept, never removed; `SPEC_PROPOSAL_HANDOFF_FAILED` then
 lists what could not be undone in its details.
 
@@ -369,7 +396,10 @@ proposal as it was; their `feedback/` is scanned, since feedback stays current.
   alone; a `#fragment`, a `?query` and a trailing `/` are kept. Files written for the bundle's location (the carried `spec.md`, the
   copied blueprint, the promoted ADRs, the moved materials and carried files) have their links resolved from where
   they were written, so a link outside
-  the bundle keeps its target and one that still resolves to the same file keeps its spelling.
+  the bundle keeps its target and one that still resolves to the same file keeps its spelling. In a merged
+  materials directory this holds per moved file and per subtree moved whole; a pre-existing file resolves its links
+  from where it is, so only its links into the proposal change. A link to a dropped duplicate points at the kept
+  destination file.
 - **Document ID references** (frontmatter reference fields, `` `ID` `` and `[ID]` in prose, and the `proposal`
   provenance field) are rewritten from the IDs of the documents actually written: `PROP-<slug>` to `SPEC-<slug>`,
   each `PADR-<slug>` to its `ADR-<slug>`, and `PROP-<slug>-target` to itself (a `[ID]` becomes `` `ID` ``). A
@@ -487,12 +517,15 @@ uv run devkit spec proposal check fast-engine                        # before an
   `form`, `status` (the current one under `--check`), `checked`, `eligible`, `decision` (`null` under `--check`),
   `pending`.
 - `handoff`: `[HANDOFF: ...]` (`workflow=-`: unbound; `dev_effort=<effort>` when the proposal declared `dev_effort`), `[TARGET_DOCS: ...]` and `[MATERIALS: ...]` when the bundle had
-  them, one `[PROMOTED_ADR: ...]` per PADR, one `[DROPPED_RECORD: <path>]` per workflow record of the proposal
+  them (`[MATERIALS: <dir> merged=yes]` when merged into an existing directory), one
+  `[DROPPED_DUPLICATE: <path>]` per kept destination file whose identical proposal copy was dropped, one
+  `[PROMOTED_ADR: ...]` per PADR, one `[DROPPED_RECORD: <path>]` per workflow record of the proposal
   unit, one `[CARRIED_GATE: <request> decision=<path>]` per approval carried by name (rule 12),
   one `[REWRITTEN: <path>:<line> kind=link|id|path from= to=]` per rewrite, one
   `[UNRESOLVED_LINK: <path>:<line> kind= target= reason=]` per link or reference left as it was, `[SCOPE: ...]` when
   it registered the bundle, and `[NEXT_CMD: ...]` when `spec.md` is bound. JSON: `proposal`, `spec`, `dir`,
-  `workflow`, `dev_effort` (`null` when absent), `target_docs`, `materials`, `decisions` (`id`, `path`, `padr`), `dropped_records` (paths),
+  `workflow`, `dev_effort` (`null` when absent), `target_docs`, `materials`, `materials_merged` (boolean),
+  `dropped_duplicates` (workspace-relative destination paths), `decisions` (`id`, `path`, `padr`), `dropped_records` (paths),
   `carried_gates` (`request`, `decision`), `rewritten_files`, `rewritten`
   (`path`, `line`, `kind`, `from`, `to`), `unresolved` (`path`, `line`, `kind`, `target`, `reason`), `next_command`,
   `notices`, `scope` (`record`, `token`, `namespace`, `shared_path`, or `null`).
@@ -531,7 +564,7 @@ directory whose namespace applies when `namespace` is omitted);
 | `SPEC_HANDOFF_REPLY_INVALID` | `ERROR` (`INPUT_ERROR`) | `HandoffReplyError` | The composed `proposal handoff` CLI needs `--effort low`, `--effort medium` or `--effort high`. |
 | `SPEC_PROPOSAL_REJECTED_PENDING` | `WARNING` | `ProposalRejectedPendingWarning` | `rules check -p hygiene` (whole workspace): a rejected proposal is still in the base; `[FIX]` finds the rejection commit, writes the rejection ADR and deletes the proposal in one commit (rule 9). |
 | `SPEC_PROPOSAL_IN_PLANNING` | `ERROR` (`INPUT_ERROR`) | `ProposalInPlanningError` | `check`: Backlog may not change the proposal, because its `plan-<slug>` exists (locally or fetched; rule 13) or it is no longer `draft`. `padr`: `plan-<slug>` exists and the checkout is not on it. |
-| `SPEC_PROPOSAL_INVALID` | `ERROR` (`MAINTENANCE`) | `ProposalInvalidError` | The proposal, its blueprint or a PADR cannot be read or its frontmatter does not parse; or, at handoff, `namespace` is not a string naming `global` or a registered namespace, `summary` is not a string, `task_kind` is not `feature` or `bugfix`, or `planning_effort`/`dev_effort` is present and not `low`, `medium` or `high`. |
+| `SPEC_PROPOSAL_INVALID` | `ERROR` (`MAINTENANCE`) | `ProposalInvalidError` | The proposal, its blueprint or a PADR cannot be read or its frontmatter does not parse; or, at handoff, `namespace` is not a string naming `global` or a registered namespace, `summary` is not a string, `task_kind` is not `feature` or `bugfix`, or `planning_effort`/`dev_effort` is present and not `low`, `medium` or `high`; or a same-path pair of regular files of a materials merge cannot be read for the byte comparison. |
 | `SPEC_PROPOSAL_NOT_APPROVED` | `ERROR` (`INTERACTION`) | `ProposalNotApprovedError` | `handoff`: status is not `accepted`, `plan-accept` was not given; `[FIX]` records it with `devkit spec proposal accept` after the user's acceptance. `new`: the proposal `--supersedes` names is not `accepted`; a supersede replaces an accepted proposal only. |
 | `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED` | `ERROR` (`INTERACTION`) | `ProposalAcceptanceUnrecordedError` | `handoff`: a bundle bound to `sdd-proposal` says `accepted` without an effective accepted `gate:plan-accept` (rule 2); nothing written. |
 | `SPEC_PROPOSAL_ACCEPT_REFUSED` | `ERROR` (`INPUT_ERROR`) | `ProposalAcceptRefusedError` | `accept`: the status does not allow the form (a draft without `--direct`, a proposal in review with it, an accepted proposal whose record exists, a rejected one), or the proposal is single-file or unbound (rule 14). |
@@ -540,7 +573,7 @@ directory whose namespace applies when `namespace` is omitted);
 | `SPEC_PROPOSAL_NEEDS_DECOMPOSE` | `ERROR` (`INTERACTION`) | `ProposalNeedsDecomposeError` | The proposal carries `needs_decompose: true`; Backlog splits it into new drafts. |
 | `SPEC_PROPOSAL_WRONG_WORKTREE` | `ERROR` (`INPUT_ERROR`) | `ProposalWrongWorktreeError` | `handoff` in a checkout, linked or base, on another branch than `dev-<slug>`, at either `[tool.spec] worktree` level (rule 11); `[FIX]` starts or continues `dev-<slug>` and reruns the handoff there. `accept` without `--direct` on another branch than `plan-<slug>`. |
 | `SPEC_PROPOSAL_WORKFLOW_INVALID` | `ERROR` (`MAINTENANCE`) | `ProposalWorkflowError` | `task_kind: bugfix` and `sdd-spec-bugfix` does not resolve or validate; `[DETAIL]` carries devkit's code. |
-| `SPEC_PROPOSAL_TARGET_EXISTS` | `ERROR` (`BLOCKED`) | `ProposalTargetExistsError` | The spec bundle, an ADR file or the materials directory exists, two PADRs map to one ADR, another document declares a promoted ADR's ID, the spec ID or a translated alias as its ID or an alias, two graduating IDs or translated aliases coincide, a carried bundle file clashes with a file or symbolic link of `materials/` (or `materials/` is itself a symbolic link), or the directory of the spec bundle, an ADR, the materials directory or a carried file resolves outside the workspace. |
+| `SPEC_PROPOSAL_TARGET_EXISTS` | `ERROR` (`BLOCKED`) | `ProposalTargetExistsError` | The spec bundle or an ADR file exists, a proposal path conflicts with the existing materials directory it would merge into (`different-content`, `file-directory`, `symbolic-link`, `non-regular`; the fix names the first conflict's source, destination and kind), two PADRs map to one ADR, another document declares a promoted ADR's ID, the spec ID or a translated alias as its ID or an alias, two graduating IDs or translated aliases coincide, a carried bundle file clashes with a file or symbolic link of `materials/` (or `materials/` is itself a symbolic link), or the directory of the spec bundle, an ADR, the materials directory or a carried file resolves outside the workspace. |
 | `SPEC_PROPOSAL_HANDOFF_FAILED` | `ERROR` (`MAINTENANCE`) | `ProposalHandoffError` | A write failed; what was written is removed, the materials and carried files moved back, the proposal kept. When the roll-back was incomplete, `[DETAIL]` lists what could not be moved back or removed (kept, never deleted). |
 | `SPEC_PROPOSAL_CLEANUP_FAILED` | `WARNING` | `ProposalCleanupWarning` | The handoff completed but the proposal could not be removed, or the post-finish prune of the slug's empty proposal directories failed (`CAP-COLL-work-scope-registry`). |
 | `SPEC_PROPOSAL_LINK_UNRESOLVED` | `WARNING` | `ProposalLinkUnresolvedWarning` | Links or references into the proposal were left as they were; the `[UNRESOLVED_LINK]` lines list them. |

@@ -77,7 +77,10 @@ class RelocationPlan:
     """Absolute paths: the removed ``proposal`` (bundle directory or single file), the new target of a link to the
     bundle directory itself, old file to new file (``exact``), old directory to new directory (``prefixes``), new
     directory to the old one its files were written for (``moved``) and new file to the old file it was written as
-    (``moved_files``), so their relative links resolve as written."""
+    (``moved_files``), so their relative links resolve as written. ``material_files`` are the files of ``materials/``
+    merged one by one into an existing materials directory, new file to old file: they resolve their links like
+    ``moved_files`` but, like the files under a moved directory, are not documents written from the proposal's prose
+    (``rewrite_paths``)."""
 
     proposal: str
     dir_target: str | None = None
@@ -85,6 +88,7 @@ class RelocationPlan:
     prefixes: dict[str, str] = field(default_factory=dict)
     moved: dict[str, str] = field(default_factory=dict)
     moved_files: dict[str, str] = field(default_factory=dict)
+    material_files: dict[str, str] = field(default_factory=dict)
 
     def contains(self, path: str) -> bool:
         return path == self.proposal or path.startswith(self.proposal + os.sep)
@@ -99,7 +103,7 @@ class RelocationPlan:
             files=files,
             directories=self.prefixes,
             removed=(self.proposal,),
-            file_origins=self.moved_files,
+            file_origins={**self.material_files, **self.moved_files},
             directory_origins=self.moved,
         )
 

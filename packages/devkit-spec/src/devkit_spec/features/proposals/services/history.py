@@ -27,6 +27,8 @@ from devkit_spec.features.proposals.services.rewrite import (
 def _origin(file: str, plan: RelocationPlan) -> str:
     if file in plan.moved_files:
         return plan.moved_files[file]
+    if file in plan.material_files:
+        return plan.material_files[file]
     for destination, source in sorted(plan.moved.items(), key=lambda item: len(item[0]), reverse=True):
         if file.startswith(destination + os.sep):
             return source + file[len(destination) :]
