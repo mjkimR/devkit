@@ -130,6 +130,14 @@ supplied `relative` diagnostic path. It does not normalize paths or change the r
 3. **`--code <path>`** (repeatable) keeps only candidates equal to or under a path: the review's selection.
    A `--code` path ending with `/` requires an existing workspace directory; candidate pairs under that directory
    are folded into a single directory pair, which `--apply` records with a trailing `/`.
+   - A `--code` path that equals a folded candidate of a document unfolds it, so `--apply` can write it.
+   - A `--code` path that contains no candidate of a document but lies under one becomes a candidate of that
+     document: a doorway file under a directory `_Boundary`. It takes the `spec` and `task` (or `count` and
+     `specs`) of the nearest such candidate; its `state` and `exists` follow rule 5 of section 3.4.
+   - When a `--code` path then equals, contains and lies under no candidate (of the `--target` documents with
+     `--apply`), the run is refused with `SPEC_ENTRYPOINTS_CODE_UNMATCHED` before anything is written, listing every
+     such value. It is a refusal, not a notice, as `--target` and a trailing-`/` code are: a notice would exit `0`
+     and let `--apply` write the other selections of a run with one mistyped path.
 4. **`--exclude <path>`** (repeatable) drops candidates equal to or under a path (hub files every bundle touches) and
    reports each as `reason=excluded` (`kind=boundary`).
 5. `--code` and `--exclude` values follow the path contract (`SPEC_ENTRYPOINTS_PATH_INVALID`).
@@ -211,7 +219,7 @@ could not be indexed are `SPEC_DOCUMENT_INVALID` warnings under `notices`.
 
 ### 4.4 Exit Codes
 
-`0` success (pairs or none); `2` an error (input, target, path, apply or argument). Warnings exit `0` (`1` under
+`0` success (pairs or none); `2` an error (input, target, path, unmatched code, apply or argument). Warnings exit `0` (`1` under
 `--strict`).
 
 ### 4.5 Error Codes
@@ -222,6 +230,7 @@ could not be indexed are `SPEC_DOCUMENT_INVALID` warnings under `notices`.
 | `SPEC_ENTRYPOINTS_INPUT_INVALID` | `ERROR` (`MAINTENANCE`) | `EntrypointsInputInvalidError` | `--spec`: `tasks.md` or `reconcile.md` cannot be read, or `reconcile.md` has no frontmatter or malformed `targets`. |
 | `SPEC_ENTRYPOINTS_PATH_INVALID` | `ERROR` (`INPUT_ERROR`) | `EntrypointsPathError` | A `--code` or `--exclude` path, or a `devkit spec list --file` path, breaks the path contract. |
 | `SPEC_ENTRYPOINTS_TARGET_UNKNOWN` | `ERROR` (`INPUT_ERROR`) | `EntrypointsTargetError` | A `--target` ID or alias names no document, or the document or path is not among the derived documents. |
+| `SPEC_ENTRYPOINTS_CODE_UNMATCHED` | `ERROR` (`INPUT_ERROR`) | `EntrypointsCodeUnmatchedError` | A `--code` path equals, contains and lies under no candidate of the derived documents (of the `--target` documents with `--apply`); `[TARGET]` lists them and nothing is written. |
 | `SPEC_ENTRYPOINTS_APPLY_FAILED` | `ERROR` (`MAINTENANCE`) | `EntrypointsApplyError` | `--apply` could not read or write some documents, or their `entrypoints` is not a list of strings; `[TARGET]` lists them, the documents listed as applied were written. |
 | `SPEC_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | A `--target` ID is declared by several documents, or no document has it as its ID and several declare it as an alias. |
 | `SPEC_DOCUMENT_INVALID` | `WARNING` | `DocumentInvalidWarning` | A file could not be indexed; a malformed `spec.md` leaves its bundle out of `--all`. |
@@ -232,7 +241,8 @@ could not be indexed are `SPEC_DOCUMENT_INVALID` warnings under `notices`.
 `devkit_spec.features.entrypoints`: `normalize`, `covers`, `overlaps`, `exists`, `entrypoint_bearing` (the path contract;
 it maps every `docs/packages/<name>/` through `devkit_spec.features.documents.services.namespaces.living_path`, registered or not, so it needs no
 configuration); `load_bundle`, `parse_boundaries` (inputs); `derive`, `aggregate`, `select`, `exclude`,
-`classify_boundary`, `declared_entrypoints`, `fold_by_directory_selectors` (pairs); `feedback_file` (whether a path
+`classify_boundary`, `declared_entrypoints`, `fold_by_directory_selectors`, `adopt_nested_selectors`,
+`unmatched_selectors` (pairs); `feedback_file` (whether a path
 names a spec bundle's feedback file, `specs/**/feedback/<name>.md`: derivation skips it as `excluded-tree`, and only
 scope collection takes one of another bundle, `CAP-COLL-work-scope-registry`); `apply`, `collapse`, `set_entrypoints` (writing). Libraries never
 print; the command renders the results.

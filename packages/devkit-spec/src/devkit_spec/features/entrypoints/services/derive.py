@@ -276,6 +276,63 @@ def fold_by_directory_selectors(
     return sort_pairs(out)
 
 
+def adopt_nested_selectors(
+    root: Path,
+    pairs: Sequence[Pair],
+    codes: Sequence[str],
+    documents: Mapping[str, Document],
+) -> list[Pair]:
+    """Make each ``--code`` path that lies inside a candidate of a document a candidate pair of that document.
+
+    Per normalized code and document: a pair equal to the code that is folded is unfolded, so the selection can be
+    applied; a code that equals or contains a pair of the document is left to ``select``; otherwise, when a pair
+    of the document is a directory containing the code, a pair for the code is synthesized from the nearest such
+    pair (its spec and task, or count and specs), with ``state`` from the document's declared entrypoints and
+    ``exists`` from the working tree. Raises ``EntrypointsPathError`` for an invalid path.
+    """
+    wanted = list(dict.fromkeys(_normalize_all(codes)))
+    if not wanted:
+        return list(pairs)
+    by_doc: dict[str, dict[str, Pair]] = {}
+    for pair in pairs:
+        by_doc.setdefault(pair.doc_path, {})[pair.code] = pair
+    for doc_path, doc_pairs in by_doc.items():
+        document = documents.get(doc_path)
+        declared = declared_entrypoints(document) if document else ()
+        for code in wanted:
+            exact = doc_pairs.get(code)
+            if exact is not None:
+                if exact.folded_into is not None:
+                    doc_pairs[code] = replace(exact, folded_into=None)
+                continue
+            if any(covers(code, other) for other in doc_pairs):
+                continue
+            ancestors = [pair for other, pair in doc_pairs.items() if covers(other, code)]
+            if not ancestors:
+                continue
+            nearest = max(ancestors, key=lambda pair: len(pair.code))
+            doc_pairs[code] = replace(
+                nearest,
+                code=code,
+                state=state_for(declared, code),
+                exists=exists(root, code),
+                folded_into=None,
+            )
+    return sort_pairs(pair for doc_pairs in by_doc.values() for pair in doc_pairs.values())
+
+
+def unmatched_selectors(pairs: Sequence[Pair], codes: Sequence[str], only: set[str] | None = None) -> list[str]:
+    """The ``--code`` values (as given, once each) that equal or contain no pair code, counting only the pairs of
+    the ``only`` document paths when given. Raises ``EntrypointsPathError`` for an invalid path."""
+    scoped = [pair.code for pair in pairs if only is None or pair.doc_path in only]
+    unmatched: list[str] = []
+    for code in dict.fromkeys(codes):
+        path = normalize(code)
+        if not any(covers(path, other) for other in scoped):
+            unmatched.append(code)
+    return unmatched
+
+
 def exclude(pairs: Sequence[Pair], excludes: Sequence[str]) -> tuple[list[Pair], list[Skipped]]:
     """Drop the pairs whose code path equals or lies under one of ``excludes``, each reported as skipped.
 

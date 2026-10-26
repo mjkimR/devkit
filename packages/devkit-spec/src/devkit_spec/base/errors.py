@@ -413,6 +413,19 @@ class EntrypointsTargetError(SpecError):
     fix = "Pass the ID or path of a document that appears in the derive output without --apply"
 
 
+class EntrypointsCodeUnmatchedError(SpecError):
+    """``devkit spec entrypoints derive --code``: a path equals, contains and lies under no candidate of the derived
+    documents (of the ``--target`` documents with ``--apply``) (``INPUT_ERROR``); [TARGET] lists every such value and
+    nothing was written."""
+
+    code = "SPEC_ENTRYPOINTS_CODE_UNMATCHED"
+    input_error = True
+    fix = (
+        "Run the same derive without --code to list the candidates, then pass only --code paths equal to, containing "
+        "or under a candidate of the targeted documents, or drop the --code values in [TARGET]"
+    )
+
+
 class EntrypointsApplyError(SpecError):
     """``devkit spec entrypoints derive --apply``: some documents could not be written (``MAINTENANCE``); the
     documents in [TARGET] are unchanged, the others listed as applied were written."""

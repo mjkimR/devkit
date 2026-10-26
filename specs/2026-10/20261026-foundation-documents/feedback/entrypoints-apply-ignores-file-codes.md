@@ -8,7 +8,7 @@ target: devkit spec entrypoints derive --apply
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -29,3 +29,13 @@ Category: a CLI result that hides a refused input.
   hand and checked them with `devkit rules check` (`RULE-code-entrypoints`).
 - **Suggestion**: Accept a `--code` file that lies under a candidate path, or report each unmatched `--code` with a
   stable code and an `[ACTION]`, so the result never reads as a success that applied nothing.
+
+## Resolution
+
+Directly resolved by `SPEC-entrypoints-apply-file-codes`: a `--code` path under a candidate directory of a document
+becomes a candidate of that document and `--apply` writes it, a selected folded candidate is unfolded, and a `--code`
+that still matches no candidate refuses the run with `SPEC_ENTRYPOINTS_CODE_UNMATCHED` (exit `2`) before anything is
+written (`CAP-TRACE-code-entrypoints` section 3.5).
+
+Verification: `test_file_code_under_a_directory_candidate_is_applied`, `test_selected_folded_candidate_is_applied`
+and `test_unmatched_code_is_refused_before_writing` in the entrypoints CLI tests.
