@@ -1,7 +1,7 @@
 ---
 id: PROP-foundation-documents
 title: Foundation documents for project-wide background
-summary: "Adds a foundation group under docs/ (and per namespace) for project-wide background documents such as the glossary, product vision and style guides, which agents read when a work unit starts and search covers, and moves the glossary into it."
+summary: "Adds a foundation group under docs/ (and per namespace) for project-wide background documents such as the glossary, product vision and style guides, which a spec constitution pointer sends agents to when a decision depends on them, and moves the glossary into it."
 status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-26
 target_area: documents/
@@ -12,21 +12,32 @@ dev_effort: medium                    # low | medium | high (hint for Developmen
 boundaries:
   owns:
     - packages/devkit-spec/src/devkit_spec/features/
+    - packages/devkit-spec/src/devkit_spec/base/
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
     - packages/devkit-spec/tests/
+    - packages/devkit-viewer/frontend/src/lib/
+    - packages/devkit-viewer/src/devkit_viewer/static/
+    - scripts/handbook.py
+    - tools/devkit-dev/tests/integration/
+    - docs/
     - docs/capabilities/documents/
     - docs/capabilities/governance/
-    - docs/capabilities/search/
+    - docs/capabilities/harness/
+    - docs/capabilities/delivery/
+    - docs/architecture/
     - docs/glossary.md
     - docs/glossary.yaml
     - docs/README.md
+    - .devkit/installation.json
     - guides/
   excludes:
     - A new ID-bearing document kind
     - Product, brand or style content of any particular project
     - Changes to the glossary table format
+    - Changes to the search ranker (CAP-SRCH-document-search)
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
 workflow: sdd-proposal
+depends_on: [PROP-table-driven-document-kinds]
 ---
 
 # [PROP-foundation-documents] Foundation documents for project-wide background
@@ -64,14 +75,54 @@ English summary.
 
 ## 3. Proposed Design & Impact
 
-- A foundation group at `docs/foundation/` and `docs/packages/<name>/foundation/`, documented in
-  `CAP-DOCS-document-model` and `CAP-DOCS-namespaces`; the documents carry an English `summary` and no ID.
-- The glossary (`glossary.md` and `glossary.yaml`) moves into the group; every consumer named in Q4 reads the new
-  path. The repository's own glossary moves in the same change.
-- The `spec` bundle's guidance tells agents when to read the group, and the `docs-skeleton` preset seeds it.
-- Document search indexes the group (`CAP-SRCH-document-search`).
+Spike evidence: `materials/spike-findings.md` (F1-F6). Review: `envelopes/challenger-01.yaml`. Items marked
+**(open: qN)** follow the user's answer to that question of this round; the text states the recommended option.
+
+- **Group** (open: q1, q2): a fixed directory `docs/foundation/` and `docs/packages/<name>/foundation/` (created under
+  `docs/`), documented in `CAP-DOCS-document-model` and `CAP-DOCS-namespaces`. Files are ID-free, free-named Markdown,
+  outside the document index as today (`CAP-DOCS-document-model` rule 3.2); ID-free files in both locations pass the
+  current rules (F2). "Foundation" gets a glossary row whose Avoid column separates it from the code layer of
+  `devkit-core` (F4).
+- **Reading** (`PADR-background-pointer-in-constitution`): one conditional line in the spec constitution names the
+  group and its trigger; each file opens with a one-line scope; a guidance test asserts both.
+- **Search** (open: q4): no search coverage; the group is read by path, so no English `summary` is required in its
+  files. Search and glossary expansion stay in `CAP-DOCS-document-search` (not `CAP-SRCH-document-search`, the
+  ranker).
+- **Rules** (open: q5): `RULE-document-reference` resolves backtick-quoted IDs in foundation files the way it resolves
+  root glossary Owners, with the same alias check, no autofix and no graph edges; legacy-reference checks already
+  apply (F2).
+- **Glossary move** (open: q3): `glossary.md` and `glossary.yaml` move into the root group, and the repository's own
+  glossary moves in the same change. Every literal path of F3 is one acceptance item with a test that the old path is
+  no longer read: `RULE-document-reference` Owner check, search `GLOSSARY_PATH` and `SPEC_GLOSSARY_INVALID`
+  (`base/errors.py`), the `docs-skeleton` seed and its README tables, `living-spec-writing` (including the package
+  glossary rule), `architecture-writing`, `spec-sync`, `adr-compaction`, the brownfield `migration.md`, rule guides,
+  viewer `bookGroup` (front end and committed build), `docs/README.md`, `docs/architecture/README.md` and the
+  capabilities naming the path (`CAP-DOCS-document-model`, `CAP-DOCS-document-search`, `CAP-GOV-spec-rules`,
+  `CAP-HARN-agent-guidance`, `CAP-DLV-release-handbook`, `CAP-DLV-delivery-workflows`). The receipt
+  `.devkit/installation.json` follows `devkit sync`. The handoff ADR declares that it amends the
+  glossary paths that `ADR-spec-package-on-devkit` and `ADR-writing-and-terminology-guidance` fix.
+- **Release handbook**: `scripts/handbook.py` reads the glossary at the pinned commit from the new path, falls back to
+  `docs/glossary.md` for a commit before the move, and fails with a code when neither exists; its tests cover both
+  layouts. This reads Git history, not a current format, so it is no legacy reader under the Compatibility section of
+  `AGENTS.md`. The handbook pages themselves are not refreshed.
+- **Existing consumers**: no migration and no notice (Compatibility): a consumer that selects `docs-skeleton` gets the
+  seed at the new path on its next sync and moves its own glossary.
 - Non-goals: no new ID-bearing kind, no relation fields to or from foundation documents, no change to the glossary
-  table columns or the owner check itself.
+  table columns, the Owner check's semantics or the search ranker.
+
+### Order with parallel proposals
+
+- `PROP-table-driven-document-kinds` lands first (`depends_on`); a directory this proposal adds to the viewer or the
+  rules is read from its kind and directory definitions, never added as a constant beside them.
+- `PROP-ux-documentation` follows this proposal (open: q6), so its guidance names the glossary at its new path and
+  points to foundation style documents instead of restating them; its option 6b (an object table in the glossary)
+  would change the glossary table format, which this proposal excludes.
+
+### Planning decisions
+
+- Planning (`policy`): search capability citation corrected to `CAP-DOCS-document-search`; `docs/capabilities/search/`
+  removed from owns; the owns list extended to every path F3 names; `depends_on` on
+  `PROP-table-driven-document-kinds` per the user's ordering decision.
 
 ## 4. Lifecycle & Retirement Criteria
 
