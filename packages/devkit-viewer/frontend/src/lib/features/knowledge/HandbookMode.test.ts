@@ -334,6 +334,12 @@ describe('book groups: steering documents', () => {
 		expect(bookGroups).not.toContain('Glossary');
 	});
 
+	it('groups UX documents after use cases', () => {
+		expect(group('docs/ux/account/UX-login.md')).toBe('UX');
+		expect(group('docs/packages/example/ux/account/UX-pick.md')).toBe('UX');
+		expect(bookGroups.indexOf('UX')).toBe(bookGroups.indexOf('Use Cases') + 1);
+	});
+
 	it('no longer treats docs/glossary.md specially', () => {
 		expect(group('docs/glossary.md')).toBe('Overview');
 	});

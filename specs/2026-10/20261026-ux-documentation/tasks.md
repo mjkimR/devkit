@@ -24,7 +24,7 @@ plan: PLAN-ux-documentation
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/, packages/devkit-spec/src/devkit_spec/features/proposals/, packages/devkit-spec/tests/, .devkit/installation.json, AGENTS.md
   - _Requirements: AC-13, AC-14_
   - **Verification**: `just test devkit-spec tests/integration/bundles/spec tests/integration/features/proposals` and `uv run devkit sync --check`
-- [ ] **Task 1.5**: Viewer UX book group and reference pattern, test and rebuilt static page
+- [x] **Task 1.5**: Viewer UX book group and reference pattern, test and rebuilt static page
   - **_Boundary**: packages/devkit-viewer/frontend/src/lib/, packages/devkit-viewer/src/devkit_viewer/static/
   - _Requirements: AC-03_
   - **Verification**: `just viewer test`, `just viewer check`, `just viewer lint`, `just viewer build`
