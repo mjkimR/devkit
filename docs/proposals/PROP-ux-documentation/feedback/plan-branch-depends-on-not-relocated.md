@@ -8,7 +8,7 @@ target: devkit spec proposal handoff
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -42,3 +42,11 @@ created_at: 2026-10-26
 proposal.md frontmatter: depends_on: [PROP-table-driven-document-kinds, PROP-foundation-documents]
 envelopes/challenger-04.yaml finding 1: the foundation handoff from main cannot rewrite this branch's edge.
 ```
+
+## Disposition
+
+Resolved by existing behavior. `RULE-document-reference` already reports a `depends_on` entry whose proposal was
+handed off as fixable (`` <ID> was handed off; reference `SPEC-<slug>` ``), and `devkit rules fix` rewrites it. After
+merging `main` into this branch, `devkit rules fix` rewrote the table-driven edge to
+`SPEC-table-driven-document-kinds`; the `PROP-foundation-documents` edge is repaired the same way after its handoff
+lands on `main`. The Host procedure is: merge `main`, run `devkit rules fix` on the proposal.

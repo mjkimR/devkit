@@ -8,7 +8,7 @@ target: RULE-proposal-boundaries
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -46,3 +46,10 @@ created_at: 2026-10-26
 existing directory (repository path, docs-root path or capability area)" remediation="... name its nearest existing
 parent directory and the new path in the proposal text"]
 ```
+
+## Disposition
+
+Resolved as the documented procedure in `RULE-proposal-boundaries` (guide) and `CAP-DLV-proposal-incubation`: while
+a `depends_on` prerequisite that creates or moves a path has not landed, the proposal keeps the current path and
+names the expected one in its text; Development writes the expected path into its `_Boundary:` entries after the
+prerequisite lands. No rule change.
