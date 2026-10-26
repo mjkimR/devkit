@@ -4,48 +4,20 @@ An ID starts with one of the prefixes below, a dash, then a letter or digit
 followed by letters, digits, ``_`` and ``-``. Path and naming conventions per
 kind (``CAP-<AREA>-<slug>`` under ``docs/capabilities/<area>/``, dated
 partitions for decisions and specs) are checked by the rules, not here: the
-index accepts any well-formed ID wherever it is declared.
+index accepts any well-formed ID wherever it is declared. ``Kind`` and the facts of each
+kind live in ``kinds``.
 """
 
 from __future__ import annotations
 
 import re
-from enum import StrEnum
 
+from devkit_spec.features.documents.models.kinds import Kind, definitions
 
-class Kind(StrEnum):
-    """What a document is, derived from its ID prefix."""
+__all__ = ["ID_PATTERN", "ID_SOURCE", "PREFIXES", "Kind", "is_id", "is_legacy_id", "kind_of", "legacy_references"]
 
-    CAPABILITY = "capability"
-    USECASE = "usecase"
-    ARCHITECTURE = "architecture"
-    DECISION = "decision"
-    PROPOSAL = "proposal"
-    PROPOSAL_DECISION = "proposal-decision"
-    SPEC = "spec"
-    PLAN = "plan"
-    TASKS = "tasks"
-    RECONCILE = "reconcile"
-    FEEDBACK = "feedback"
-    MATERIAL = "material"
-    MILESTONE = "milestone"
-
-
-PREFIXES: dict[str, Kind] = {
-    "CAP": Kind.CAPABILITY,
-    "UC": Kind.USECASE,
-    "ARCH": Kind.ARCHITECTURE,
-    "ADR": Kind.DECISION,
-    "PROP": Kind.PROPOSAL,
-    "PADR": Kind.PROPOSAL_DECISION,
-    "SPEC": Kind.SPEC,
-    "PLAN": Kind.PLAN,
-    "TASKS": Kind.TASKS,
-    "REC": Kind.RECONCILE,
-    "FB": Kind.FEEDBACK,
-    "MAT": Kind.MATERIAL,
-    "MS": Kind.MILESTONE,
-}
+# Built from the kind table at import (``ADR-kind-definition-table-keyed-on-the-declared-kind-enum``), in its order.
+PREFIXES: dict[str, Kind] = {row.prefix: row.kind for row in definitions()}
 
 ID_SOURCE = rf"(?:{'|'.join(PREFIXES)})-[A-Za-z0-9][A-Za-z0-9_-]*"
 ID_PATTERN = re.compile(rf"^{ID_SOURCE}$")

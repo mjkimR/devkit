@@ -30,7 +30,7 @@ from collections.abc import Callable
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
 from devkit_agt.features.rules.services.builtins import BaseRule
 
-from devkit_spec.features.documents import Document, DocumentIndex, Reference, is_id
+from devkit_spec.features.documents import Document, DocumentIndex, Reference, is_id, relation_prefixes
 from devkit_spec.features.documents.models.ids import ID_SOURCE, Kind
 from devkit_spec.features.documents.models.markdown import visible_lines
 from devkit_spec.features.documents.models.model import is_unit_anchor
@@ -40,16 +40,6 @@ from devkit_spec.features.governance import FIX_COMMAND, document_index, is_mate
 
 RULE_ID = "RULE-document-reference"
 type Add = Callable[..., None]
-EXPECTED_PREFIX = {
-    "usecases": "UC-",
-    "related_usecases": "UC-",
-    "capabilities": "CAP-",
-    "related_capabilities": "CAP-",
-    "spec": "SPEC-",
-    "plan": "PLAN-",
-    "milestone": "MS-",
-    "depends_on": "MS-",
-}
 
 
 def _handed_off(index: DocumentIndex, target: str) -> str | None:
@@ -251,7 +241,7 @@ class DocumentReferenceRule(BaseRule):
             else:
                 self._alias(index, document, ref, historical, add)
             return
-        prefix = EXPECTED_PREFIX.get(ref.field)
+        prefix = relation_prefixes().get(ref.field)
         if prefix and not ref.target.startswith(prefix):
             add(
                 document,
