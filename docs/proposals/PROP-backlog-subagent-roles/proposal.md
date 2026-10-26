@@ -85,7 +85,7 @@ decompositions and the drafts to come, not in today's queue.
 
 Two contracts in the spec bundle `subagents/`, registered in `bundle.toml` (an asset entry and `presets.core`) beside
 the existing roles. Both have `x-execution: isolated`, `x-invocation: optional` and `x-git-actions: [read]`, start by
-running `uv run devkit get-context spec` (the `code-reviewer` pattern that `PROP-foundation-documents` extends to every
+running `uv run devkit get-context spec` (the `code-reviewer` pattern that `SPEC-foundation-documents` extends to every
 role), decide nothing and write nothing (`user`, answer-01 q1).
 
 Each contract cites the procedure it applies by managed path instead of restating it (challenger-01 finding 5;
@@ -241,7 +241,7 @@ The `challenger` matrix, since neither role writes even `materials/` (challenger
 
 ### Order with parallel work
 
-`PROP-foundation-documents` (accepted and handed off to a spec on `dev-foundation-documents`, not yet on `main`)
+`SPEC-foundation-documents` (accepted and handed off to a spec on `dev-foundation-documents`, not yet on `main`)
 rewrites the other role contracts and adds a test that every role contract loads the spec context. The new contracts
 load it from the start, so whichever lands first the other passes; the shared role tests are a textual overlap the
 later branch resolves. No `depends_on` is set, because nothing here needs that spec's behavior; the Host starts this
@@ -277,7 +277,7 @@ Development after that spec integrates, as the user directed.
   specs or a different `task_kind`, with one example of each side in the template and `CAP-DLV-proposal-incubation`.
 - `policy`: by that definition this proposal is `M`, not `XL`: one spec of `task_kind: feature`, two agent contracts and
   small command checks serving one Backlog decomposition theme.
-- `policy`: host matrix and fallback (Q5); no `depends_on` on `PROP-foundation-documents`; sequencing is the Host's.
+- `policy`: host matrix and fallback (Q5); no `depends_on` on `SPEC-foundation-documents`; sequencing is the Host's.
 
 ## 4. Lifecycle & Retirement Criteria
 <!--
