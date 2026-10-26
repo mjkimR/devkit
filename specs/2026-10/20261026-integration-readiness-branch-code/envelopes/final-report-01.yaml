@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T08:31:03.733662Z'
+status: completed
+summary: Integration now refuses a source (or build result) whose synchronized rule imports a module or name the running runtime lacks with INTEGRATION_RULE_RUNTIME_MISMATCH (actor user) before readiness, directing a separately authorized run from a runtime built from the source; other rule failures keep RULES_LOAD_FAILED and the runtime-in-worktree and receipt-reader refusals are unchanged
+findings: []
+checks:
+  tests: PASS just test-affected 2038 passed (partial selection, base main)
+  build: PASS just check devkit and devkit-spec 0 errors (pyright)
+  lint: PASS just lint-check devkit and devkit-spec; devkit rules check --ci --base 68e74182 no violation
+diff_scope:
+  base: 68e74182f06c849737e47de64eb91c1412968b2f
+  head: 861800c52d0d4fdf027d5f7f9f2dccdf3da90c6a
