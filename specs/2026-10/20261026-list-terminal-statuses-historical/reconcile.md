@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-list-terminal-statuses-historical
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-model.md
     resolution: modified
