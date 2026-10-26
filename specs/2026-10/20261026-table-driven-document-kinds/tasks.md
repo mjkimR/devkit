@@ -16,7 +16,7 @@ plan: PLAN-table-driven-document-kinds
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/features/governance/, packages/devkit-spec/src/devkit_spec/features/entrypoints/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/, packages/devkit-spec/tests/
   - _Requirements: AC-03, AC-04_
   - **Verification**: `just test-affected`
-- [ ] **Task 1.3**: Characterization comparison at the final head
+- [x] **Task 1.3**: Characterization comparison at the final head
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/features/, .devkit/installation.json
   - _Requirements: AC-05_
-  - **Verification**: `scratch/char/capture.sh after && diff -r -x ws scratch/char/before scratch/char/after`
+  - **Verification**: `scratch/char/capture.sh after scratch/char/snapshot && diff -r -x ws scratch/char/before scratch/char/after` (the snapshot is the base tree, see `MAT-kind-facts-inventory` section 6)

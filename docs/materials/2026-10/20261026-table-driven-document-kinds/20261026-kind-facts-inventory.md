@@ -92,3 +92,24 @@ Run twice at `96df5d86` in the Planning worktree (outputs in the ignored `.probe
   text (kind choice order).
 - A development worker can take the baseline in its own worktree: its starting head is the base, so it captures the
   three outputs before its first code change and compares them after.
+
+## 6. Development characterization (Q4)
+
+Captured by the development worker in its worktree (outputs in the ignored `scratch/char/`):
+
+- Fixture: a fresh Git workspace synced with the `spec` bundle, a registered `pkg` namespace and 53 Markdown
+  documents with one violation per rule branch per kind (path, stem, month, frontmatter, `id`/`reconcile_id`, area,
+  heading token, same-kind heading, duplicate and retired-reference branches of `RULE-id-convention`; the format,
+  effort, namespace and milestone branches of `RULE-spec-format`; summary, entrypoint, relation-field and
+  traceability cases; terminal documents). It yields 137 violations across eight rules, and the fix applies 51
+  fixes.
+- `before`: run at the starting head `6a19ff5f` before the first code change; `before2`, a second run, was
+  byte-identical. Captured: the fixture's `devkit rules check --format json`, `devkit rules fix` output and Git
+  diff, `devkit spec list` (all namespaces, per kind, text) and `devkit spec show`; on the repository,
+  `devkit spec list --all-namespaces -n 0 --format json`, `devkit spec search "document kind" --format json` and
+  `devkit rules check --format json`; the `--help` text of `devkit spec list`, `devkit spec search`, `devkit rules`
+  and `devkit rules check`.
+- `after`: run at the final head. The repository captures read a snapshot of the starting head's tree
+  (`git archive 6a19ff5f`, synced, with the `plan-ux-documentation` branch the planning state reads), so the unit's
+  own document edits do not enter the comparison. `diff -r` of `before` and `after`, excluding the fixture
+  workspaces, is empty.
