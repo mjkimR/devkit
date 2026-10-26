@@ -334,8 +334,9 @@ def strip_blocks(body: str) -> list[str]:
 
 
 def narrative_hash(body: str) -> str:
-    """The hash of a page's narrative: the body without provenance and generated blocks, trimmed."""
-    text = "\n".join(strip_blocks(body)).strip()
+    """The hash of a page's narrative: the body without provenance and generated blocks, with runs of blank lines
+    collapsed, so inserting or removing a block never changes it."""
+    text = re.sub(r"\n{3,}", "\n\n", "\n".join(strip_blocks(body))).strip()  # blocks leave blank lines
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
 
@@ -350,6 +351,37 @@ def set_provenance(body: str, sentence: str) -> str:
         heading = next((i for i, line in enumerate(lines) if line.startswith("# ")), -1)
         lines[heading + 1 : heading + 1] = ["", *block.splitlines()]
     return "\n".join(lines).rstrip("\n") + "\n"
+
+
+def unclosed_block(body: str) -> int | None:
+    """The body line (from 1) of a provenance or generated block that has no end marker, else ``None``."""
+    opened: tuple[int, str] | None = None
+    for number, line in enumerate(body.splitlines(), start=1):
+        stripped = line.strip()
+        if opened is None:
+            if stripped == PROVENANCE_START:
+                opened = (number, PROVENANCE_END)
+            elif GENERATED_START.match(stripped):
+                opened = (number, GENERATED_END)
+        elif stripped == opened[1]:
+            opened = None
+    return opened[0] if opened else None
+
+
+def require_closed_blocks(directory: Path, langs: Iterable[str]) -> None:
+    """Refuse to generate over a page whose block has no end marker: its narrative would be replaced."""
+    for lang in langs:
+        for name in page_names(directory, lang):
+            page = read_page(directory, f"{lang}/{name}")
+            if (line := unclosed_block(page.body)) is not None:
+                at = line + body_offset(page, directory)
+                raise HandbookError(
+                    f"{lang}/{name}:{at} opens a handbook block without its end marker",
+                    code="HANDBOOK_BLOCK_UNCLOSED",
+                    fix="Close the block with its end marker (<!-- /handbook:generated --> or"
+                    " <!-- /handbook:provenance -->), then rerun",
+                    target_files=[f"{HANDBOOK}/{lang}/{name}"],
+                )
 
 
 def fill_blocks(body: str, render: dict[str, str]) -> str:
@@ -676,6 +708,7 @@ def repository_name(root: Path, manifest: dict[str, Any] | None) -> str:
 def generate(root: Path, *, preview: bool, date: str) -> tuple[Path, Snapshot, int]:
     tracked = root / HANDBOOK
     manifest = read_manifest(tracked)
+    require_closed_blocks(tracked, langs_of(manifest))
     commit = git(root, "rev-parse", "HEAD").strip()
     if preview:
         directory = root / PREVIEW
@@ -792,7 +825,11 @@ def verify(root: Path, directory: Path) -> tuple[list[Invalid], dict[str, Any], 
     commit = str(manifest["source_commit"])
     require_source(root, commit)
     documents = load_documents(root, commit)
-    expected_ref = manifest.get("tag") or commit
+    if manifest.get("tag"):
+        expected_refs = {str(manifest["tag"])}
+    else:  # a preview: generated links name the commit, written links the upcoming tag
+        version = root / "VERSION"
+        expected_refs = {commit, *(["v" + version.read_text(encoding="utf-8").strip()] if version.exists() else [])}
     repository = manifest.get("repository")
     found: list[Invalid] = []
     pages = [
@@ -802,6 +839,8 @@ def verify(root: Path, directory: Path) -> tuple[list[Invalid], dict[str, Any], 
         offset = body_offset(page, directory)
         if "id" in page.meta:
             found.append(Invalid(page.rel, 1, "HANDBOOK_FRONTMATTER_ID", "pages carry no id frontmatter"))
+        if (line := unclosed_block(page.body)) is not None:
+            found.append(Invalid(page.rel, line + offset, "HANDBOOK_BLOCK_UNCLOSED", "a block has no end marker"))
         sources = page.meta.get("sources") or {}
         for identifier in sources if isinstance(sources, dict) else []:
             if documents.get(str(identifier)) is None:
@@ -814,9 +853,10 @@ def verify(root: Path, directory: Path) -> tuple[list[Invalid], dict[str, Any], 
             for match in SOURCE_LINK.finditer(line):
                 if repository and match.group(1) != repository:
                     continue
-                if match.group(2) != expected_ref:
+                if match.group(2) not in expected_refs:
+                    pinned = " or ".join(sorted(expected_refs))
                     found.append(
-                        Invalid(page.rel, at, "HANDBOOK_LINK_REF", f"{match.group(0)} is not pinned to {expected_ref}")
+                        Invalid(page.rel, at, "HANDBOOK_LINK_REF", f"{match.group(0)} is not pinned to {pinned}")
                     )
                 if match.group(3) not in documents.paths and not has_object(root, f"{commit}:{match.group(3)}"):
                     found.append(

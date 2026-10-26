@@ -93,6 +93,9 @@ that cannot complete writes an `[ERROR]` block with a code and an `[ACTION]` lin
 - **When** `just handbook status` runs
 - **Then** stdout has one `[HANDBOOK_GAP: id=<ID> kind=<usecase|capability>]` line per such document
 
+A use case or capability with status `deprecated` is not a gap: the handbook describes current behavior (requirement
+discovered in review round 1).
+
 ### [AC-04] Language parity is checked against the manifest
 
 - **Given** `manifest.json` lists `langs` `en` and `ko`
@@ -108,7 +111,7 @@ that cannot complete writes an `[ERROR]` block with a code and an `[ACTION]` lin
 - **When** `just handbook verify` runs
 - **Then** it exits `1` with one `[HANDBOOK_INVALID: page=<page> line=<n> code=<CODE>]` line per finding, using
   `HANDBOOK_ID_UNRESOLVED`, `HANDBOOK_COMMAND_UNKNOWN`, `HANDBOOK_SOURCE_MISSING`, `HANDBOOK_NORMATIVE_KEYWORD` and
-  `HANDBOOK_LINK_BROKEN` respectively; a handbook without findings prints
+  `HANDBOOK_LINK_BROKEN` respectively (in a preview, a link may name the commit or the upcoming tag `v<VERSION>`); a handbook without findings prints
   `[HANDBOOK_VERIFIED: tag=<tag> commit=<sha> pages=<n>]` and exits `0`
 
 ### [AC-06] Generation writes deterministic sections and provenance only
@@ -119,6 +122,10 @@ that cannot complete writes an `[ERROR]` block with a code and an `[ACTION]` lin
   header names that tag, commit and date, every generated section and fully generated page (`decisions.md`,
   `glossary.md`, `changes.md`) is rewritten, and no narrative text outside generated sections changes; with
   uncommitted changes under `docs/` it exits `2` with `HANDBOOK_DOCS_DIRTY` and writes nothing
+
+A page with a provenance or generated block that has no end marker stops generation with exit `2` and
+`HANDBOOK_BLOCK_UNCLOSED` before any file is written, and `verify` reports it, because filling the block would replace
+the narrative after it (requirement discovered in review round 1).
 
 ### [AC-07] A preview never touches the tracked handbook
 

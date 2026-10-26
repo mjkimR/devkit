@@ -276,6 +276,31 @@ def test_normative_keywords_inside_code_are_allowed(script, handbook):
     assert result.exit_code == 0, result.stdout
 
 
+def test_a_preview_accepts_links_pinned_to_the_upcoming_tag(script, handbook):
+    link = f"[Glossary](https://github.com/{REPOSITORY}/blob/v0.2.0/docs/glossary.md)"
+    write(handbook, {"handbook/en/concepts.md": f"# Concepts\n\n{link}\n", "handbook/ko/concepts.md": "# 개념\n"})
+    run(script, handbook, "stamp", "ko/concepts.md")
+    assert run(script, handbook, "generate", "--preview", "--date", DATE).exit_code == 0
+    result = run(script, handbook, "verify", "--preview")
+    assert result.exit_code == 0, result.stdout
+
+
+def test_an_unclosed_block_stops_generation_before_any_write(script, handbook):
+    page = handbook / "handbook/en/README.md"
+    text = page.read_text().replace(
+        "<!-- handbook:generated usecases -->\n", "<!-- handbook:generated usecases -->\nKept.\n"
+    )
+    text = text.rsplit("<!-- /handbook:generated -->", 1)[0] + "More narrative.\n"
+    page.write_text(text)
+    before = _files(handbook)
+    result = CliRunner().invoke(script.main, ["-w", str(handbook), "generate", "--date", "2027-01-01"])
+    assert result.exit_code == 2
+    assert "HANDBOOK_BLOCK_UNCLOSED" in result.stderr
+    assert _files(handbook) == before
+    verified = run(script, handbook, "verify")
+    assert any("code=HANDBOOK_BLOCK_UNCLOSED" in line for line in lines(verified))
+
+
 def test_verification_without_a_manifest_cannot_run(script, repo):
     result = CliRunner().invoke(script.main, ["-w", str(repo), "verify"])
     assert result.exit_code == 2
