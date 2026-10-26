@@ -1,0 +1,80 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T05:09:05.586396Z'
+status: completed
+summary: Direction sound (no backend change; on-demand book removes the cold cost). VERSION staleness premise is wrong (P1, decision); book gating, session state, deep-link framing, absence-default contradiction, handbook navigation and the FB-viewer-book-rendering closure need fixing (P2); detection, fragments, unreleased tag links and a mechanical AC (P3).
+findings:
+- issue: 'Decision needed: the staleness reference question rests on a false premise. VERSION trails the manifest tag in release preparation exactly like the latest Git tag, so the recommended VERSION comparison shows a wrong note on the only repository that has a handbook.'
+  evidence: VERSION:1 = 0.1.3; handbook/manifest.json:2 tag v0.1.4; CAP-DLV-release-handbook.md:76-77; tools/devkit-dev/src/devkit_dev/bundle/playbooks/handbook.md:15; PADR-handbook-staleness-from-version §4-5
+  failure_condition: Any checkout between a handbook refresh commit and its version-sync commit compares v0.1.4 with v0.1.3 and shows a staleness note on a snapshot for the upcoming release.
+  suggested_action: 'Re-pose the question with corrected evidence; compare by version order: ahead = upcoming-release snapshot, equal = no note, behind = staleness note. Correct the example text.'
+  resolution: open
+  severity: P1
+- issue: Gating the book inside the shared KnowledgeViews instance is not specified, and the PADR's confirmation test cannot catch a pre-control render.
+  evidence: SddViewer.svelte:325-351; KnowledgeViews.svelte:63-82,146-148,228-231; documents.ts:149; cache.ts:3; PADR-handbook-first-book-on-request §6
+  failure_condition: Proposals then Book renders all 154 chapters without the control while the read-only test passes; gating the index on view re-runs it on every Book-Proposals switch.
+  suggested_action: 'Two gates: render only when view===''book'' && bookRequested; a latched needsIndex that never resets on view change. Tests: Proposals then Book shows no section.chapter; Book->Proposals->Book issues no second scan.'
+  resolution: open
+  severity: P2
+- issue: Component lifecycles defeat 'the choice stays for the page session per repository and branch'; where the state lives and its key are unspecified.
+  evidence: SddViewer.svelte:291-351; app/App.svelte {#key repoId@branch}; app/api.ts; cache.ts:6; KnowledgeViews.svelte:25-45; lib/index.ts:3
+  failure_condition: State in KnowledgeViews is lost on every Dashboard visit; repository A->B->A loses the choice and caches; a standalone KnowledgeViews host cannot keep it.
+  suggested_action: State in SddViewer for its lifetime, passed down as a bindable KnowledgeViews prop; resets on repository or branch switch.
+  resolution: open
+  severity: P2
+- issue: The deep-links question is framed on triggers that do not exist in the page, and the recommended rule fires on the default path.
+  evidence: SddViewer.svelte:33,130,132-135; app/App.svelte:61; DashboardView.svelte:26,183; KnowledgeViews.svelte:321-334
+  failure_condition: A library host opening initialView 'book' without a path sends 'docs/' and computes the full book on every load.
+  suggested_action: Scope the question to library hosts; the rule names a file path under docs/ other than the default 'docs/'; drop the in-page jump trigger.
+  resolution: open
+  severity: P2
+- issue: The proposal contradicts itself on the default for a repository without a handbook, and the read counts disagree across documents.
+  evidence: proposal.md:69 vs proposal.md:107-108 and PADR-handbook-first §4-5; MAT 'What this decides'; PADR-handbook-staleness §4
+  failure_condition: Development and acceptance pick different behavior for every repository without a handbook; read-count assertions disagree.
+  suggested_action: 'Rewrite §3 to the absence note plus control; state one read budget: manifest + VERSION + page with a handbook, manifest alone without.'
+  resolution: open
+  severity: P2
+- issue: 'Decision needed: closing FB-viewer-book-rendering as absorbed conflicts with the source-feedback rules and leaves its problem in place.'
+  evidence: specs/2026-10/20261024-viewer-dashboard-loading/feedback/viewer-book-rendering.md (Restart and Acceptance); .devkit/managed/spec/skills/spec/references/source-feedback.md; proposal.md boundaries; MAT warm run 470 ms
+  failure_condition: After the request the book still costs about 1.1 s and 124k nodes and each return re-renders; a resolved FB would assert a fix that did not happen.
+  suggested_action: 'Resolve, dismiss, or keep open rescoped to post-request rendering (smallest: keep open). If resolved, add a Source feedback section and the FB path to owns.'
+  resolution: open
+  severity: P2
+- issue: Navigation inside the handbook is unspecified; the manifest carries no page list and several pages have no way back to README.
+  evidence: handbook/manifest.json; KnowledgeSidebar.svelte:100-126; handbook/en decisions.md, changes.md, glossary.md, areas/generated.md, areas/traceability.md, areas/search.md lack a README link; app/App.svelte replaceState only
+  failure_condition: A reader on glossary.md or changes.md cannot return to the handbook home; Back leaves the viewer; the sidebar in handbook mode is undefined.
+  suggested_action: 'Specify the sidebar: a Handbook home entry plus the current page''s headings (zero reads), or one tree read for a page list.'
+  resolution: open
+  severity: P2
+- issue: Detecting the handbook by 404 VIEWER_PATH_NOT_FOUND is not observable on the client and is undefined for library hosts.
+  evidence: repository.ts:102,73; documents.ts:117-122; CAP-VIEW-repository-viewer.md:62
+  failure_condition: A host whose missing-file error is not HTTP 404-prefixed shows an error instead of the absence note.
+  suggested_action: Use the existing /^HTTP 404/ convention and state it in CAP-VIEW §6.
+  resolution: open
+  severity: P3
+- issue: Cross-page fragment links are not covered by the link rules or tests.
+  evidence: handbook/{en,ko}/concepts.md:290; ko/README.md:76; documents.ts:215-219
+  failure_condition: README.md#journeys opens README without scrolling; in ko only the raw id matches.
+  suggested_action: 'Rule and test: a fragment resolves to an element whose id equals it, else the prefixed heading slug.'
+  resolution: open
+  severity: P3
+- issue: The source-links question misses that the pinned tag does not exist yet.
+  evidence: 'git tag: newest v0.1.3; handbook/en/README.md links blob/v0.1.4; CAP-DLV-release-handbook.md:52-54'
+  failure_condition: In release preparation every tag-pinned source link returns 404.
+  suggested_action: Add the trade-off to the source-links question.
+  resolution: open
+  severity: P3
+- issue: The cold-load acceptance has no mechanical check, and the probe breaks under the proposed relabel.
+  evidence: proposal.md:87; coldload-probe.mjs:78,114; cold-load-measurement.md Reproducing; SddViewer.test.ts:112-114
+  failure_condition: With the Read label the probe times out; millisecond comparison across machines is invalid.
+  suggested_action: AC as a frontend test (read budget, none under docs/ or specs/, no section.chapter before the control); parametrize the probe's tab label and readiness selector.
+  resolution: open
+  severity: P3
+assumptions:
+- Questions were challenged for framing only, not answered.
+unverified_areas:
+- autohub's use of initialView, initialPath, standalone KnowledgeViews, sdd:path-change and blob error shapes.
+- DOMPurify handling of target, rel and raw id attributes.
+checks: {}

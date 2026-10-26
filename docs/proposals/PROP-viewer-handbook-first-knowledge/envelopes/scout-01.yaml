@@ -1,0 +1,31 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T05:01:31.729533Z'
+status: completed
+summary: 'Two draft proposals (PROP-table-driven-document-kinds, PROP-ux-documentation) share the viewer frontend via bookGroup; sequence this one first. Book-tab dependents: one frontend test, the book id, initialView allow-list, sdd:path-change. CAP-DLV-release-handbook''s viewer Out-of-Scope reason is stale; CAP-VIEW §2 forbids Git in ordinary reads; rules check clean.'
+findings:
+- issue: Only draft proposals PROP-table-driven-document-kinds and PROP-ux-documentation (depends on the first) also own packages/devkit-viewer/frontend/src/lib/; no active spec owns it. Their overlap is the bookGroup/bookGroups directory list, not the rail or the Book default.
+  evidence: docs/proposals/PROP-table-driven-document-kinds/proposal.md:5,18-20,47,57; docs/proposals/PROP-ux-documentation/proposal.md:5,13,19-21,81-82; packages/devkit-viewer/frontend/src/lib/api/documents.ts:268-296
+  suggested_action: Develop this proposal first, then PROP-table-driven-document-kinds, then PROP-ux-documentation.
+  resolution: open
+- issue: 'Book-tab dependents Development must keep or change: NavigationRail label ''Book'' and id ''book'', SddViewer.test.ts finding the button by name ''Book'', the initialView allow-list, and sdd:path-change carrying view ''book'' to hosts. CAP-VIEW §4 names the tab differently from the code.'
+  evidence: frontend/src/lib/components/shared/NavigationRail.svelte:12,25; frontend/src/lib/SddViewer.test.ts:112-114; frontend/src/lib/SddViewer.svelte:65,72,340-346; docs/capabilities/viewer/CAP-VIEW-repository-viewer.md:117
+  failure_condition: Renaming the id or the event's view value breaks hosts that deep-link with initialView='book' or read sdd:path-change.
+  suggested_action: Keep the book id and event shape; change only the label and update the test.
+  resolution: open
+- issue: CAP-DLV-release-handbook §2 lists showing the handbook in the viewer as out of scope because the viewer 'reads local branches only', a reason ADR-viewer-working-tree made stale; no other document forbids reading handbook/. CAP-VIEW §2 forbids Git in ordinary reads, so a latest-tag staleness check is a new exception while VERSION is an ordinary blob.
+  evidence: docs/capabilities/delivery/CAP-DLV-release-handbook.md:29,32; docs/capabilities/viewer/CAP-VIEW-repository-viewer.md:46; docs/decisions/2026-10/20261024-viewer-working-tree.md:29,37
+  failure_condition: Leaving CAP-DLV-release-handbook unchanged contradicts the new viewer contract; it was outside the proposal's owns.
+  suggested_action: Add CAP-DLV-release-handbook.md to owns for that line; prefer VERSION for staleness.
+  resolution: open
+- issue: devkit rules check on the proposal reports no violation.
+  evidence: 'uv run devkit rules check docs/proposals/PROP-viewer-handbook-first-knowledge/proposal.md: errors=0 warnings=0'
+  resolution: open
+assumptions:
+- Active spec means a spec.md not completed; none exist in this worktree.
+unverified_areas:
+- autohub's use of view 'book' in sdd:path-change or initialView='book' (outside the worktree).
+- Proposals or specs on other plan-* or dev-* branches.
+checks: {}
