@@ -82,10 +82,17 @@ just viewer install   # npm ci in packages/devkit-viewer/frontend
 just viewer lint      # prettier --check
 just viewer check     # svelte-check
 just viewer test      # vitest
+just viewer probe <abs-dir> [vitest args]   # vitest on the *.test.ts files of a directory outside src/ (review probes)
 just viewer build     # rebuild the committed app under src/devkit_viewer/static/
 just viewer pack      # the library tarball autohub vendors, checked for its exports
 uv run devkit generated check viewer-assets   # the committed build matches the sources
 ```
+
+`just viewer probe` collects only the test files under the given absolute directory, for example a reviewer's
+`<worktree>/scratch/review-NN/`, with the package's Vite config and every dependency the package declares resolved from
+the package, so a probe imports `vitest`, `@testing-library/svelte` or a component by relative path like a test under
+`src/`. It writes a temporary `.viewer-probe.vitest.config.mts` into that directory and removes it on exit. A failing
+probe exits `1`; a relative or missing directory exits `2`.
 
 
 The exact local report page is `/review/<registered-id>/<generation-id>`; it displays escaped Markdown with source/language/expiry and never regenerates reports. See `CAP-VIEW-repository-viewer`.

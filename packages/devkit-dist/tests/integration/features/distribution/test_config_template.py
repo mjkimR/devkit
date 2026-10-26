@@ -476,3 +476,33 @@ def test_an_lf_or_mixed_file_keeps_its_bytes_and_gets_lf_lines(
     after = path.read_bytes()
     assert _lines_kept(before, after)
     assert after.count(b"\r\n") == before.count(b"\r\n")  # the added lines end in LF
+
+
+def test_a_selection_edit_keeps_crlf_line_endings_and_adds_crlf_lines(project: Path) -> None:
+    # Regression for FB-selection-edits-rewrite-crlf-line-endings: the edit rewrote every line ending to LF.
+    before = b'schema = 1\r\n\r\n[presets]\r\nspec = "core"\r\n'
+    path = project / CONFIG_PATH
+    path.write_bytes(before)
+    update_config(project, agents=["codex"], presets={"team": ["all"]}, opt_out=["devkit"])
+    after = path.read_bytes()
+    assert _lines_kept(before, after)
+    assert after.count(b"\n") == after.count(b"\r\n")  # no line ends in a bare LF
+    assert tomllib.loads(after.decode())["presets"] == {"spec": "core", "team": "all", "devkit": False}
+    assert b'agents = ["codex"]\r\n' in after
+
+
+@pytest.mark.parametrize(
+    "before",
+    [b'schema = 1\n\n[presets]\nspec = "core"\n', b'schema = 1\n\r\n[presets]\r\nspec = "core"\n'],
+    ids=["lf", "mixed"],
+)
+def test_a_selection_edit_of_an_lf_or_mixed_file_keeps_its_bytes_and_adds_lf_lines(
+    project: Path, before: bytes
+) -> None:
+    path = project / CONFIG_PATH
+    path.write_bytes(before)
+    update_config(project, agents=["codex"], presets={"team": ["all"]})
+    after = path.read_bytes()
+    assert _lines_kept(before, after)
+    assert after.count(b"\r\n") == before.count(b"\r\n")  # the added lines end in LF
+    assert tomllib.loads(after.decode())["presets"] == {"spec": "core", "team": "all"}

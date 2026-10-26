@@ -1,0 +1,19 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T06:02:11.568729Z'
+status: completed
+summary: 'Ran Development from specify to the final change report. Item 1 (defect): Red regression tests for CRLF and mixed selection edits, then _document parses untranslated text and prepare_config_update applies _match_line_endings, shared with config template. Item 2: scripts/viewer.sh probe <abs dir> runs vitest on a directory outside src/ with the package''s resolution; viewer reference and code-reviewer contract name it. Both feedback items resolved; next is integrate (Host).'
+findings: []
+assumptions:
+- The probe action writes a temporary .viewer-probe.vitest.config.mts into the probe directory and removes it on exit, since vitest 5 has no include flag; no tracked frontend config changed.
+- 'No before/after measurement applies: the spec names no performance baseline.'
+checks:
+  tests: PASS just test-affected 2570 passed 1 skipped; just test-dist 1049 passed; just viewer test 93 passed; just viewer probe on scratch/probe-check-01 (exit 1) and probe-check-02 (exit 0)
+  lint: PASS just lint-check devkit-dist; just check devkit-dist; devkit rules check --ci --base f076ddbc
+  sync: PASS uv run devkit sync --check
+diff_scope:
+  base: f076ddbc46bacc6b380c99f78f8f475883def577
+  head: abf4beddc51d54d90c3967d1334ee9d3c1150e30
+activity_effort: low
