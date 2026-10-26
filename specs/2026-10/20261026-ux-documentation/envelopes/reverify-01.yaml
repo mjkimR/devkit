@@ -1,0 +1,43 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T08:35:07.668285Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified all five review-01 fixes (medium): ADR restored in the viewer pattern with an [ADR-e] test and rebuilt page; column-0 main steps and same-step resume with parser tests; unresolved use case skipped with a rule test; starred Step cell and extension exit cases tested. just test-affected 5313 passed; viewer 98 passed.'
+findings:
+- issue: The viewer's bracket-ID pattern lost the ADR prefix while gaining UX, so prose [ADR-<slug>] references no longer link in the viewer.
+  evidence: packages/devkit-viewer/frontend/src/lib/api/documents.ts:246; probe scratch/review-01/viewer/adr-link.test.ts
+  failure_condition: Any viewer page whose prose holds a bracketed ADR reference renders it as plain text.
+  suggested_action: Restore ADR in the pattern, add [ADR-x] to the every-prefix test and rebuild the static page.
+  resolution: resolved
+  severity: P1
+- issue: The step parser opens a new main step for any numbered line indented 0 to 3 spaces, so a nested ordered list under a step becomes extra steps with duplicate keys.
+  evidence: packages/devkit-spec/src/devkit_spec/features/governance/services/ux.py:45; probe test_nested_ordered_list_is_not_a_step
+  failure_condition: A main-scenario step holding an indented numbered sub-list.
+  suggested_action: Match main steps only at column 0 and add a parser test with a nested ordered list.
+  resolution: resolved
+  severity: P2
+- issue: A Step cell naming an unresolved use case is reported as 'which usecases does not list', duplicating RULE-document-reference against the docstring and guide.
+  evidence: packages/devkit-spec/src/devkit_spec/features/governance/usecases/ux_links.py:131-140
+  failure_condition: A Step cell names a UC ID no document declares.
+  suggested_action: Skip the unlisted check when the use case does not resolve and add a rule test.
+  resolution: resolved
+  severity: P3
+- issue: '''resumes at the same step'', used by a current use case, is read as ending the use case.'
+  evidence: ux.py:47 (_RESUMES); docs/usecases/collaboration/UC-run-parallel-work-safely.md:57-59
+  failure_condition: An extension resuming at the same step that cites a screen without an exit gets no report.
+  suggested_action: Treat 'resumes at the same step' as resuming at the extension's own step (terminal for *a), or document it.
+  resolution: resolved
+  severity: P3
+- issue: No rule test for a starred key in a Step cell or for the extension-ends exit exemption and its counter-case.
+  evidence: rules/ux_links/tests/test_rule.py
+  failure_condition: A regression in key normalisation or UseCase.terminal for extensions passes the tests.
+  suggested_action: Add the two probe scenarios as rule tests.
+  resolution: resolved
+  severity: P3
+checks: {}
+diff_scope:
+  base: ''
+  head: ce07732c6c8ec05b4d01a2214c883db6279b9f4a
