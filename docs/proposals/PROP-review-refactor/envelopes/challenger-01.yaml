@@ -1,0 +1,106 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-25T23:14:36.786745Z'
+status: completed
+summary: round 1; direction holds and is needed; one P1 (manual-run AC forces a live refactor), six P2 and three P3 design defects, five Decision needed findings (O2-O6).
+findings:
+- issue: AC requires a recorded manual run on this repository with at least one real consolidation or removal; that forces a live source change outside boundaries.owns, nested in this Development, possibly manufactured.
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:135-136,13-21,130-131,89-91; .devkit/managed/spec/workflows/sdd-overall-refactor.md:107-109; specs/2026-10/20261021-periodic-drift-reconciliation/spec.md:185-189
+  failure_condition: No evidenced candidate exists (AC only met by manufacturing one) or the candidate is cross-area overall-refactor that cannot run in a delegated development-worker and edits paths outside owns.
+  suggested_action: 'Use the drift precedent: real bounded read-only sweep plus an isolated seeded fixture with simulated decisions exercising one consolidation, one helper fold and one removal; real agreed changes become separate follow-ups.'
+  resolution: open
+  severity: P1
+- issue: Contract mismatches route to drift-reconciliation, but review-refactor may be selected without it.
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:67,92-93; packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/bundle.toml:11-20
+  failure_condition: Solo selection; `devkit playbook get maintenance/drift-reconciliation` returns SELECTION_INVALID and the mismatch is lost.
+  suggested_action: Record a mismatch as a deferred finding with a drift-reconciliation follow-up destination; invoke drift-reconciliation only when selected.
+  resolution: open
+  severity: P2
+- issue: Proposal restates devkit-spec classification incompletely (overall-refactor vs feature).
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:89-91; .devkit/managed/spec/skills/spec/references/classification.md:8,10
+  failure_condition: A settled cross-package consolidation batch is routed to overall-refactor, contradicting classification.md.
+  suggested_action: Classify each agreed change by the repository's own classification criteria; drop the restatement.
+  resolution: open
+  severity: P2
+- issue: Work-item grouping of agreed changes and whether the decision round supplies plan-intent are unspecified.
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:83-84,87-91; docs/proposals/PROP-review-refactor/envelopes/scout-01.yaml:41
+  failure_condition: A dozen approved changes become a dozen runs, or one mixed change carries a contract change; plan-intent asked again or missing.
+  suggested_action: Decision-round approval is the user intent for routed work (plan-intent, never dev-integration); one work item per batch of behavior-preserving changes with one commit per change; each contract change its own item.
+  resolution: open
+  severity: P2
+- issue: Receipt-owned managed and projected guidance files are not excluded as edit targets.
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:102-104,119-121; docs/proposals/PROP-review-refactor/materials/q1-review-criteria-research.md:96
+  failure_condition: A run edits a projected copy; the next devkit sync reverts it or reports an integrity conflict.
+  suggested_action: Managed and projected files are read-only evidence; findings go upstream to the source bundle or to devkit override.
+  resolution: open
+  severity: P2
+- issue: Removing speculative compatibility paths is treated as behavior-preserving.
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:85-86,100-101; docs/proposals/PROP-review-refactor/materials/q1-review-criteria-research.md:82
+  failure_condition: A shim with external consumers (or in devkit-advisory/devkit-cli) is removed as a refactor and old inputs break.
+  suggested_action: Compatibility-path removal is a contract change unless the repository's declared compatibility policy states no consumer can exist; in-repo reachability never proves absence of external consumers.
+  resolution: open
+  severity: P2
+- issue: Reduction ground (d) has no defined minimum record, especially for guidance.
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:119-121,134; docs/proposals/PROP-review-refactor/materials/design-options.md:35
+  failure_condition: An agent records 'behaviorally unnecessary' without any run and the removal is accepted.
+  suggested_action: 'Define ground (d) records: code = verification command and result plus reachability; guidance = recorded representative-task run with and without the text; otherwise ground (d) is unavailable.'
+  resolution: open
+  severity: P2
+- issue: owns claims all of packages/devkit-catalog/; sequencing omits PROP-spec-playbook-discovery.
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:15,141-144; docs/proposals/PROP-spec-playbook-discovery/proposal.md:18-19,75-78
+  failure_condition: Development edits unrelated catalog bundles, or conflicts with discovery on CAP-DIST-content-packages invocation wording.
+  suggested_action: Narrow owns to maintenance/, tests/integration/bundles/ and README.md; name PROP-spec-playbook-discovery in sequencing.
+  resolution: open
+  severity: P3
+- issue: '''Forward-compatible run fields'' claim is unverifiable against a draft proposal.'
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:74-75; docs/proposals/PROP-maintenance-history/proposal.md:45-49
+  failure_condition: History lands with different required fields; the playbook needs editing anyway.
+  suggested_action: Drop 'forward-compatible'; record what existing maintenance playbooks record.
+  resolution: open
+  severity: P3
+- issue: AC 'text covers each kind and the four grounds' names no check.
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:134
+  failure_condition: Spec review cannot pass or fail it mechanically.
+  suggested_action: Name a spec-review checklist mapping each kind and ground to a playbook section.
+  resolution: open
+  severity: P3
+- issue: O2 run bounding pending; O2-A does not assign cross-surface findings to a batch.
+  evidence: docs/proposals/PROP-review-refactor/materials/design-options.md:12,19
+  failure_condition: Intake and batching cannot be specified; a cross-surface finding lands in two batches or none.
+  suggested_action: 'Decision needed: O2 bounding (A recommended); a cross-surface finding belongs to the batch of the surface where its change lands.'
+  resolution: open
+  severity: P2
+- issue: O3 contract removals pending.
+  evidence: docs/proposals/PROP-review-refactor/materials/design-options.md:23-29
+  failure_condition: Contract-change disposition undefined; O3-B reproduces unworked follow-up accumulation.
+  suggested_action: 'Decision needed: O3 (A recommended).'
+  resolution: open
+  severity: P2
+- issue: O4 preservation evidence pending.
+  evidence: docs/proposals/PROP-review-refactor/materials/design-options.md:31-37
+  failure_condition: Change records have no acceptance bar.
+  suggested_action: 'Decision needed: O4 (A recommended, with the ground (d) record).'
+  resolution: open
+  severity: P2
+- issue: O5 helper placement pending.
+  evidence: docs/proposals/PROP-review-refactor/materials/design-options.md:39-45
+  failure_condition: Placement left to judgment; O5-B breaks layer direction.
+  suggested_action: 'Decision needed: O5 (A recommended).'
+  resolution: open
+  severity: P3
+- issue: O6 preset placement pending.
+  evidence: docs/proposals/PROP-review-refactor/materials/design-options.md:47-53; packages/devkit-catalog/tests/integration/bundles/test_bundles.py:88-128
+  failure_condition: Preset AC cannot be written; O6-B deploys no solo selection.
+  suggested_action: 'Decision needed: O6 (A recommended).'
+  resolution: open
+  severity: P3
+assumptions:
+- Round 1 reviews the whole proposal at 5bd1f324
+unverified_areas:
+- Whether a 24-criterion playbook fits RULE-skill-document-size as one file
+checks: {}
+diff_scope:
+  base: 3a82060914d9cafb52028425d9bf4a8b9a0ea937
+  head: 5bd1f32479b92251514364d644ac5ff9a3c1036b
