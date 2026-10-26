@@ -13,6 +13,8 @@ roadmap and file tabs), `KnowledgeViews`, `RoadmapView`, `buildRoadmap`, `httpDa
 <SddViewer dataSource={source} branch="main" initialView="book" />
 ```
 
+`initialView="book"` opens the "Read" tab: the repository's release handbook when `handbook/manifest.json` exists, otherwise an absence note, with the Living Spec book computed only after its control (or an `initialPath` under `docs/`) requests it. `KnowledgeViews` takes an optional bindable `bookRequested`. A host's `blob` rejects an absent file with an error whose message starts with `HTTP 404`, as `httpDataSource` does; the handbook treats that as "no handbook". `sdd:path-change` carries `view: "book"` and the handbook page path while a handbook page is open.
+
 Keep the same data-source object across tab visits to reuse the 30-second parsed-result cache. An optional `treeRecursive` returns all descendant metadata in the same shape as `tree`; hosts without it use bounded directory discovery. `httpDataSource` implements it for the local server. Dashboard sections load separately; Dashboard Refresh invalidates source caches.
 
 It is not published to a registry. A host vendors the tarball built from a pinned devkit commit:

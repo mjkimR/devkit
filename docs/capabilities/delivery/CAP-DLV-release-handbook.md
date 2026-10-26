@@ -29,7 +29,6 @@ it describes.
 - **Out-of-Scope**:
   - Being a source of truth or a reconcile target: `docs/` prevails, and `spec-sync` has no handbook obligation.
   - Translating Living Spec sources; they stay English and are linked, not copied.
-  - Showing the handbook in the repository viewer (`CAP-VIEW-repository-viewer` reads local branches only).
   - The document index, search and `get-context`: they scan `docs/` and `specs/` only, so they ignore `handbook/`.
   - The release notes (`ARCH-07-deployment`): `changes.md` is not fed into them.
   - Any cadence or automatic refresh.

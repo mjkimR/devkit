@@ -21,7 +21,8 @@
 		currentAnchor = '',
 		rendered,
 		onJump,
-		onSelect
+		onSelect,
+		onHandbook = undefined
 	}: {
 		view: 'book' | 'proposals' | 'specs';
 		namespace?: string;
@@ -43,11 +44,16 @@
 		rendered: Map<string, RenderedDocument>;
 		onJump: (path: string, anchor?: string) => void;
 		onSelect: (doc: RepositoryDocument) => void;
+		/** Returns the reading tab to the handbook; the book's index stays loaded. */
+		onHandbook?: () => void;
 	} = $props();
 </script>
 
 <aside class="outline" aria-label={view === 'book' ? 'Table of contents' : 'Bundle list'}>
 	<div class="filters">
+		{#if view === 'book' && onHandbook}
+			<button class="handbook-control" onclick={onHandbook}>Handbook</button>
+		{/if}
 		<label>
 			Scope
 			<select aria-label="Scope" bind:value={namespace}>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
-	import type { Snippet } from 'svelte';
+	import { untrack, type Snippet } from 'svelte';
 
 	import KnowledgeViews from './KnowledgeViews.svelte';
 	import RoadmapView from './RoadmapView.svelte';
@@ -128,6 +128,23 @@
 	});
 	$effect(() => {
 		knowledgeRequest = { path: initialPath, anchor: initialAnchor };
+	});
+	// The Living Spec book is computed only on request; the request lives as long as this viewer, survives rail
+	// switches and holds only for the source and branch it was made for, so a switch drops it in the same update,
+	// before any view could index the new ref. A host deep link to a file under docs/ is the request.
+	let bookRequest = $state.raw<{ source: RepositoryDataSource | null; branch: string } | null>(
+		null
+	);
+	const bookRequested = $derived(bookRequest?.source === source && bookRequest?.branch === branch);
+	const setBookRequested = (requested: boolean) => {
+		bookRequest = requested ? { source, branch } : null;
+	};
+	// A deep link sets the request, also again for a new source or branch; a later non-book prop never clears it.
+	$effect(() => {
+		source;
+		branch;
+		if (initialView === 'book' && /^docs\/.*[^/]$/.test(initialPath))
+			untrack(() => setBookRequested(true));
 	});
 	const requestFor = (current: string) =>
 		!knowledgeRequest.view || knowledgeRequest.view === current
@@ -326,6 +343,7 @@
 				<div class="knowledge-host">
 					<KnowledgeViews
 						{view}
+						bind:bookRequested={() => bookRequested, setBookRequested}
 						{source}
 						{branch}
 						theme={themeState.current}

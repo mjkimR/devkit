@@ -59,6 +59,13 @@ error                                       {"error": {"code", "message"}}
 
 The dashboard loads each section independently: candidate frontmatter supplies sorted lists and counts; only visible pages fetch full bodies (6 milestones, 9 proposals, 6 feedback per page). Load more appends one page in the existing order. Cached lists and displayed pages remain reusable for 30 seconds from list completion; use Dashboard Refresh to reload saved changes and reset to the first page. Recursive tree reads list metadata only and omit symlinks and `.git`.
 
+The **Read** tab (view id `book`) opens `handbook/<lang>/README.md` where `handbook/manifest.json` exists, through the
+ordinary `blob` read: the manifest, `VERSION` and one page, nothing under `docs/` or `specs/`. Without a manifest it
+says so after that one read. The header orders the manifest tag against `v<VERSION>` and notes a snapshot behind the
+repository. The Living Spec book is computed only after `Living Spec book` is selected, and the request lasts until
+the repository or branch changes. A host's `initialView="book"` with an `initialPath` file under `docs/` counts as
+the request. Contract: `CAP-VIEW-repository-viewer` §4.3.
+
 Proposals under Planning overlay the checkout's: a separate `planning-proposals` request reads
 `docs/proposals/PROP-<slug>/proposal.md` from each `plan-<slug>` worktree (saved files), else the local branch, else
 the first remote-tracking `<remote>/plan-<slug>` as of the last fetch (refs merged into the checkout are skipped), through one `git worktree list`, one
