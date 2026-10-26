@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-backlog-subagent-roles
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
     resolution: modified
