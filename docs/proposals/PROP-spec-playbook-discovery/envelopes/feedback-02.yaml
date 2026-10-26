@@ -1,0 +1,16 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-25T23:51:26.004394Z'
+status: completed
+summary: 'Swept Planning turn 2 (answers, fold, PADR, intake probe, reverify-02): one observation on the Planning reverify instruction, left for the Host to record because specs/ feedback is outside this worker''s write boundary; no duplicate in open feedback.'
+findings:
+- issue: Planning's reverify instruction (--from envelopes/challenger-NN.yaml) reopens findings an earlier reverify of the same round resolved when a second fold closes the rest.
+  evidence: planning.md step 3 and review-loop.md Fixing row name --from challenger-NN.yaml; reverify --from challenger-01.yaml after reverify-01 printed open_findings=8; --from envelopes/reverify-01.yaml gave open_findings=0
+  failure_condition: A worker following the text records a reverify that marks folded findings open again and holds plan-accept.
+  suggested_action: Say --from the latest reverify of the round when one exists (or --from latest), in planning.md and review-loop.md.
+  resolution: open
+  severity: P3
+checks:
+  swept: PASS recorded=0 duplicates=0
