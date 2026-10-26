@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-table-driven-document-kinds: User asked to draft this proposal'
+by: user
+at: '2026-10-26T06:26:29.165187Z'

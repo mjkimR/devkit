@@ -18,7 +18,7 @@ targets:
 # [Blueprint] PROP-ux-documentation: Target Living Spec Structure for UX documents, authoring guidance and use-case-driven review
 
 This blueprint follows the user's answers recorded in `answer-01.yaml`.
-It assumes `PROP-table-driven-document-kinds` and `PROP-foundation-documents` have landed: the kind definition table
+It assumes `SPEC-table-driven-document-kinds` and `PROP-foundation-documents` have landed: the kind definition table
 is where the UX row goes, and the glossary is at `docs/steering/glossary.md` (listed below at its current path).
 
 ---

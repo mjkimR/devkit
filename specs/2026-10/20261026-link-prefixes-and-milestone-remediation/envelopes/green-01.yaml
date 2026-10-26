@@ -1,0 +1,14 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T06:29:32.519133Z'
+status: completed
+summary: Both defects resolved under the reproduction conditions; existing link handling and every other kind's remediation preserved
+findings: []
+checks:
+  resolved: PASS just viewer test 95/95 including both renderDocument ID reference cases; pytest test_misplaced_path_remediation_names_each_kinds_location passes with the docs/roadmap/MS-{slug}.md remediation
+  preserved: PASS id_convention rule tests 33/33 (ADR, feedback and capability remediations byte-identical in the new test); just test-affected mode=full 5046 passed 14 skipped; just viewer lint, check, pack, build pass
+diff_scope:
+  base: b38cf17befaca823f5b9752a9e6d400b5b90164d
+  head: a5036fb55c5123e6e0656868507db42a653aca20

@@ -8,7 +8,7 @@ target: packages/devkit-dist/src/devkit_dist/features/distribution/services/inst
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -46,3 +46,7 @@ before: b'schema = 1\r\n\r\n[presets]\r\nspec = "core"\r\n'
 update_config(root, agents=["claude"])
 after:  b'schema = 1\nagents = ["claude"]\n\n[presets]\nspec = "core"\n'
 ```
+
+## Disposition
+
+Resolved by `SPEC-crlf-selection-and-viewer-probes` (AC-01, AC-02): `_document` parses the untranslated text, and `prepare_config_update` applies `_match_line_endings`, the rule `devkit config template` uses, so a selection edit keeps every existing line ending and adds CRLF lines only to a file whose every line ending is CRLF. `CAP-DIST-sync-and-transactions` (Selection edits) states the rule. Verified by the CRLF, LF and mixed regression tests in `packages/devkit-dist/tests/integration/features/distribution/test_config_template.py`, which failed before the fix.

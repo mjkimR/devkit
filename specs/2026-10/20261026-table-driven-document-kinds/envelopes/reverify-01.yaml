@@ -1,0 +1,34 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T06:56:46.468158Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified: finding 1 fixed (_living_spec raises KindTableError for an area-scoped row whose grammar sets no area, tested), finding 2 fixed (unit test pins _PATH_REMEDIATIONS to DECISION, SPEC, FEEDBACK, MILESTONE), finding 3 waived'
+findings:
+- issue: area_scoped=True on a Living Spec row whose grammar never sets expected_area is silently ignored (no area check, no KindTableError)
+  evidence: packages/devkit-spec/src/devkit_spec/features/governance/usecases/id_convention.py:316-321; probe scratch/review-01/test_probe_area_scoped.py
+  failure_condition: A Living Spec row has area_scoped=True and its _LIVING_GRAMMARS function does not pass expected_area
+  suggested_action: Raise KindTableError when an area_scoped row's grammar returns a valid target without expected_area
+  resolution: resolved
+  severity: P3
+- issue: No static check ties the identifier target kinds _targets builds to _PATH_REMEDIATIONS; the missing-remediation test uses Kind.MATERIAL only
+  evidence: packages/devkit-spec/tests/integration/features/governance/test_kind_table.py:116-119; id_convention.py:91-101, :334-391
+  failure_condition: A later change adds a target kind to _targets and no fixture creates a path_issue for it
+  suggested_action: Assert _PATH_REMEDIATIONS keys equal the non-Living-Spec target kinds (DECISION, SPEC, FEEDBACK, MILESTONE)
+  resolution: resolved
+  severity: P3
+- issue: Exported TERMINAL_STATUSES now iterates in table order (decision, proposal, feedback) instead of feedback, decision, proposal
+  evidence: packages/devkit-spec/src/devkit_spec/features/documents/repositories/index.py:159-161; probe scratch/review-01/test_probe_equivalence.py::test_terminal_statuses_order
+  failure_condition: A library caller iterates or prints TERMINAL_STATUSES and depends on its order
+  suggested_action: Waive as order-insensitive under AC-02, or keep the old order and assert it
+  resolution: waived
+  waiver: TERMINAL_STATUSES keeps the same keys and values; dict equality is AC-02's contract, nothing in the repository iterates it, and the CLI output is identical by the characterization
+  severity: P3
+checks:
+  tests: PASS just test-affected 1562 passed
+  characterization: PASS diff -r empty at 240c1e19
+diff_scope:
+  base: 6a19ff5ff648cc69904559b659faaa4c55dbf53b
+  head: 240c1e1940f0a972b09cae39102e89c1ef3afd71

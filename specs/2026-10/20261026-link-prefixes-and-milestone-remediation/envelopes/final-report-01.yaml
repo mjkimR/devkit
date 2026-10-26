@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T06:31:26.834062Z'
+status: completed
+summary: Viewer prose ID links follow PREFIXES (UC, FB, MS linked; US no longer); a misplaced milestone's remediation names docs/roadmap/MS-{slug}.md; other remediations byte-identical; no Living Spec impact
+findings: []
+checks:
+  tests: PASS just test-affected mode=full 5046 passed 14 skipped on a5036fb5 (later commits touch only the unit directory); just viewer test 95/95
+  build: PASS just viewer build (committed page rebuilt), just viewer pack
+  lint: PASS devkit rules check --ci --base b38cf17b; just lint-check devkit-spec; just check devkit-spec 0 errors; just viewer lint; just viewer check 0 errors 0 warnings
+diff_scope:
+  base: b38cf17befaca823f5b9752a9e6d400b5b90164d
+  head: 9d9ebc8f7cd24c456674ab99e950b48b50be93ec

@@ -122,7 +122,8 @@ Proposal handoff and optional scope registration are coordinated by the delivery
 The proposal CLI group calls the delivery acceptance and handoff use cases;
 proposal state operations remain in the proposals feature. Shared branch conventions and
 Git branch queries belong to the policy feature, keeping documents and proposal state
-independent of delivery orchestration.
+independent of delivery orchestration. The documents feature owns the document kind definitions
+that every other feature reads.
 
 Repository structure rules check folder conventions, layer direction and explicit per-feature
 dependencies, including actual feature cycles. Package tests cover package ownership;

@@ -45,7 +45,7 @@ Decided by the user (`ux-document-set` and `ux-objects`):
 
 - One kind `ux`, prefix `UX`, at `docs/ux/<area>/UX-<slug>.md` and `docs/packages/<name>/ux/<area>/UX-<slug>.md`,
   statuses `draft`, `active` and `deprecated` (no terminal status, so `ADR-terminal-statuses-are-historical` needs no
-  new entry). It is registered as a row of the kind definition table of `PROP-table-driven-document-kinds` (accepted).
+  new entry). It is registered as a row of the kind definition table of `SPEC-table-driven-document-kinds` (accepted).
   Visual style is not restated in UX documents; a screen refers to the project's steering style files.
 - Frontmatter `element` is `screen`, `modal` or `panel`, a small value inside one schema that only the UX link rule
   (`RULE-ux-links` of `PADR-ux-step-links-and-coverage`) reads and validates; relation fields `usecases` (UC IDs) and `capabilities` (CAP IDs).

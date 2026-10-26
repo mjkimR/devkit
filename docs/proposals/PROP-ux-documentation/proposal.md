@@ -10,7 +10,7 @@ size: L                               # S | M | L | XL
 planning_effort: high                 # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
 milestone: MS-ux-documentation
-depends_on: [PROP-table-driven-document-kinds, PROP-foundation-documents]
+depends_on: [SPEC-table-driven-document-kinds, PROP-foundation-documents]
 boundaries:
   owns:
     - packages/devkit-spec/src/devkit_spec/features/
@@ -89,7 +89,7 @@ The design as the user decided it (§5, `answer-01`); `target-docs.md` is the bl
 
 - **Kind** (`PADR-ux-screen-documents`): one kind `ux`, prefix `UX`, at `docs/ux/<area>/UX-<slug>.md` and per
   namespace `docs/packages/<name>/ux/<area>/`, added as one row of the kind definition table of
-  `PROP-table-driven-document-kinds` (accepted; in Development as SPEC-table-driven-document-kinds), with a template, `docs-skeleton` seed, browsing, search and a viewer book
+  `SPEC-table-driven-document-kinds` (accepted; in Development as SPEC-table-driven-document-kinds), with a template, `docs-skeleton` seed, browsing, search and a viewer book
   group. Each document is one interface element (`element: screen | modal | panel`) with Purpose, Content (prose
   region rules and a content tree), States, Interactions (`Trigger | Step | From | To | Target | Capability |
   Feedback`) and an optional Evidence section for the project's own wireframe medium. The use case carries the task
@@ -170,7 +170,7 @@ to `challenger-03` are folded below.
 
 The user decided that UX Development follows both prerequisites (`depends_on`).
 
-- `PROP-table-driven-document-kinds` is accepted and handed off (SPEC-table-driven-document-kinds, in Development, as
+- `SPEC-table-driven-document-kinds` is accepted and handed off (SPEC-table-driven-document-kinds, in Development, as
   the Host reports). This branch predates that handoff; the Host merges `main` into `plan-ux-documentation` before
   acceptance, and `depends_on` then names the spec as the handoff relocates it. Assumed of its table, re-checked
   against the merged spec before `plan-accept`: it carries the prefix, kind, location, Living Spec membership and

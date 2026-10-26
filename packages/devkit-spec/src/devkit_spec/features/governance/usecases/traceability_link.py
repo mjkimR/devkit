@@ -31,15 +31,14 @@ from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import load_header, locate
 from devkit_core.core.yaml import safe_compose
 
-from devkit_spec.features.documents import Document, DocumentIndex, Reference
+from devkit_spec.features.documents import Document, DocumentIndex, Kind, Reference, definition
 from devkit_spec.features.documents.services.namespaces import living_path
 from devkit_spec.features.governance import FIX_COMMAND, document_index, is_material, namespaces, reportable
 from devkit_spec.features.policy.services.config import Namespace
 
 RULE_ID = "RULE-traceability-link"
-USECASES_DIRECTORY = "docs/usecases/"
-CAPABILITIES_DIRECTORY = "docs/capabilities/"
-# The field of each side that holds the IDs of the other side.
+# The pair of kinds this rule links (their directories come from the kind table), and the field of each side that
+# holds the IDs of the other side.
 USECASE_FIELD = "capabilities"
 CAPABILITY_FIELD = "usecases"
 
@@ -71,8 +70,10 @@ def _lists(index: DocumentIndex, document: Document, field: str, document_id: st
 def _gaps(index: DocumentIndex, registered: tuple[Namespace, ...]) -> list[_Gap]:
     """Every one-sided link, use cases before capabilities, each reported once per target document."""
     current = [(d, living_path(d.path, namespaces=registered)) for d in index.documents if not is_material(d)]
-    usecases = [d for d, path in current if path.startswith(USECASES_DIRECTORY)]
-    capabilities = [d for d, path in current if path.startswith(CAPABILITIES_DIRECTORY)]
+    usecases_directory = f"docs/{definition(Kind.USECASE).directory}/"
+    capabilities_directory = f"docs/{definition(Kind.CAPABILITY).directory}/"
+    usecases = [d for d, path in current if path.startswith(usecases_directory)]
+    capabilities = [d for d, path in current if path.startswith(capabilities_directory)]
     gaps: list[_Gap] = []
     seen: set[tuple[str, str]] = set()
     for sources, targets, field, back, label in (

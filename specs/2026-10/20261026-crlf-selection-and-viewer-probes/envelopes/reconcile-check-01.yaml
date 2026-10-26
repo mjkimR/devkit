@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T06:00:58.175140Z'
+status: completed
+summary: 'Self-checked reconcile at activity-effort low: CAP-DIST-sync-and-transactions (Selection edits) states the line-ending rule prepare_config_update and its tests implement; the viewer reference names just viewer probe with the behavior and exit codes scripts/viewer.sh shows; the code-reviewer probe sentence is bundle guidance; distribution reference, setup guide, use cases, architecture, ADRs and glossary need no change; both source feedback files resolved with Dispositions. Not cross-component in contract terms beyond the guidance mirror, so no reconcile-reviewer at low.'
+findings: []
+checks:
+  lint: PASS devkit rules check --ci --base f076ddbc
+diff_scope:
+  base: f076ddbc46bacc6b380c99f78f8f475883def577
+  head: 738bbf788da43d554146c387467345d341b74ada

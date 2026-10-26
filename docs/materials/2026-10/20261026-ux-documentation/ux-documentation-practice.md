@@ -159,7 +159,7 @@ milestone's non-goals).
   decides how the orphan rule parses use cases.
 - **Reviewer**: `code-reviewer` is an isolated, read-only subagent bound to the `spec-review` skill; a UX reviewer can
   follow the same pattern with its own skill.
-- **Kinds**: the UX kind depends on `PROP-table-driven-document-kinds`.
+- **Kinds**: the UX kind depends on `SPEC-table-driven-document-kinds`.
 
 ## 7. Research recommendation and unverified areas
 

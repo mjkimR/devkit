@@ -1,0 +1,34 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T06:55:42.524359Z'
+status: completed
+summary: 'AC-01..AC-06 met at 697dedf4 (code-reviewer, medium initial pass): test_kinds.py covers AC-01/02/06, test_kind_table.py AC-03/04; characterization diff empty, reviewer recapture review-01-after also identical; layer rule holds'
+findings:
+- issue: area_scoped=True on a Living Spec row whose grammar never sets expected_area is silently ignored (no area check, no KindTableError)
+  evidence: packages/devkit-spec/src/devkit_spec/features/governance/usecases/id_convention.py:316-321; probe scratch/review-01/test_probe_area_scoped.py
+  failure_condition: A Living Spec row has area_scoped=True and its _LIVING_GRAMMARS function does not pass expected_area
+  suggested_action: Raise KindTableError when an area_scoped row's grammar returns a valid target without expected_area
+  resolution: open
+  severity: P3
+- issue: No static check ties the identifier target kinds _targets builds to _PATH_REMEDIATIONS; the missing-remediation test uses Kind.MATERIAL only
+  evidence: packages/devkit-spec/tests/integration/features/governance/test_kind_table.py:116-119; id_convention.py:91-101, :334-391
+  failure_condition: A later change adds a target kind to _targets and no fixture creates a path_issue for it
+  suggested_action: Assert _PATH_REMEDIATIONS keys equal the non-Living-Spec target kinds (DECISION, SPEC, FEEDBACK, MILESTONE)
+  resolution: open
+  severity: P3
+- issue: Exported TERMINAL_STATUSES now iterates in table order (decision, proposal, feedback) instead of feedback, decision, proposal
+  evidence: packages/devkit-spec/src/devkit_spec/features/documents/repositories/index.py:159-161; probe scratch/review-01/test_probe_equivalence.py::test_terminal_statuses_order
+  failure_condition: A library caller iterates or prints TERMINAL_STATUSES and depends on its order
+  suggested_action: Waive as order-insensitive under AC-02, or keep the old order and assert it
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS test_kinds.py, test_kind_table.py and spec bundle rule tests (240 passed); just test-affected 1560 passed
+  lint: PASS devkit rules check --ci --base 6a19ff5f
+  sync: PASS devkit sync --check
+  characterization: PASS diff -r -x ws scratch/char/before scratch/char/after empty
+diff_scope:
+  base: 6a19ff5ff648cc69904559b659faaa4c55dbf53b
+  head: 697dedf41d3ec739875cb064caf754340fca29a5
