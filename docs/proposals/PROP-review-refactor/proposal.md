@@ -90,15 +90,20 @@ This draft carries the scope its own milestone held before the maintenance miles
 - Bounding (O2, `user`; `PADR-bound-review-refactor-runs-by-surface-batch`): the user selects the surfaces (code,
   guidance, CLI) and the roots at intake, and missing scope is clarified first. The run splits into batches of one
   surface each, with one decision round per batch. A cross-surface finding cites both sides and belongs to the batch
-  of the surface where its change lands.
-- Subagents (`user`): within a surface batch the playbook uses spawned subagents when they shorten the pass and the
-  host supports them, for example parallel review per root or module, or independent verification of a
+  of the surface where its change lands. A cross-surface finding whose landing surface is outside the selected scope
+  is recorded as deferred with a follow-up and is never applied in the run.
+- Subagents (`user`): within a surface batch the playbook uses spawned subagents when useful and the host supports
+  them, for example parallel review per root or module, or independent verification of a
   consolidation or removal; otherwise the same steps run in the playbook's agent. The playbook's agent keeps
   coordination, the decision round and integration. A subagent's result is an evidence-backed opinion that the
   playbook's agent validates against the code or the diff at the cited location before it enters the decision round
-  or a change record; an unconfirmed claim is dropped or recorded as a coverage gap. Subagents never ask the user,
-  approve a change or write the run's records. Their write scope stays inside the batch: review and verification
-  subagents change nothing, and one that applies an agreed change writes only the paths of that batch's work item.
+  or a change record; an unconfirmed claim is dropped or recorded as a coverage gap. A verification or
+  negative-reachability claim enters a change record only with its commands and results, and the playbook's agent
+  re-runs those commands before recording. A root counts as covered only when the subagent's result lists what it
+  read; otherwise it is a coverage gap. Subagents never ask the user, approve a change or write the run's records.
+  Their write scope stays inside the batch: playbook-spawned subagents do review and verification only, read-only.
+  The routed development workflow owns the applying step; a subagent applies an agreed change only as a worker that
+  workflow assigns, under that workflow's write boundaries and sequencing.
 - Findings and implemented changes are separate records. Each change carries its behavior-preservation evidence and
   resulting commit. Deferred work links to existing or new follow-ups without duplication.
 - Dispositions per finding: consolidate, reduce or remove with behavior preserved; contract change; defer; keep
@@ -108,8 +113,10 @@ This draft carries the scope its own milestone held before the maintenance miles
 - The user's decision-round approval is the recorded `user` intent for the routed work: it supplies the routed
   workflow's intent approval and never its integration approval. The agreed behavior-preserving changes of one batch
   form one work item with one commit per change; each contract change is its own work item.
-- Contract removals (O3, `user`): the decision round may approve removing a command, option, public interface or
-  compatibility path. The removal becomes its own work item through the repository's development workflow, with the
+- Contract removals (O3, `user`; `PADR-apply-approved-contract-removals-as-separate-work-items`): the decision round
+  may approve removing a command, option, public interface or compatibility path, unless the declared
+  compatibility-policy exception applies (then it is a behavior-preserving removal that still names the inputs no
+  longer accepted). The removal becomes its own work item through the repository's development workflow, with the
   contract and documentation updated, kept apart from the batch's behavior-preserving work item.
 - Each work item is applied through the repository's development workflow and classified by that repository's own
   classification criteria; the playbook does not restate them.
@@ -160,8 +167,9 @@ This draft carries the scope its own milestone held before the maintenance miles
 - Preservation evidence (O4, `user`; `PADR-require-reachability-evidence-and-layered-placement`): every
   consolidation or removal records reachability evidence covering static references and the repository's dynamic
   reach (entry points, plugin registries, configuration, documentation, string dispatch), and the relevant
-  verification passing before and after. A characterization test is added only when no existing test exercises every
-  merged caller. A guidance change records a retained-constraint map (each constraint of the removed or merged text
+  verification passing before and after. The reachability record names each search (command, registry or
+  configuration read) and its result. A characterization test is added only when some merged caller is exercised by
+  no existing test. A guidance change records a retained-constraint map (each constraint of the removed or merged text
   and where it remains), plus the recorded representative-task run when the removal relies on a behavioral check.
 - Contract-changing removals, renames or consolidations of commands, options or public interfaces are never
   presented as behavior-preserving refactoring; they follow the contract-removal work item above.
@@ -176,9 +184,10 @@ This draft carries the scope its own milestone held before the maintenance miles
   - Bundle tests cover the new asset in the `all`, `upkeep` and `refactoring` presets (with `upkeep` keeping
     `drift-reconciliation` and `refactoring` deploying `review-refactor` alone), lexical search and exact retrieval.
     The README preset table and the install recommendation name both presets.
-  - A spec-review checklist maps each consolidation and reduction kind, each reduction ground, the per-surface
-    batching and cross-surface assignment, the subagent rules (validation, no decision authority, batch write
-    scope), the contract-removal work item, each preservation-evidence part and the helper placement order to a
+  - A spec-review checklist maps each consolidation and reduction kind, each reduction ground, intake (surface and
+    root selection, missing scope clarified first), the per-surface batching and cross-surface assignment
+    (including an unselected landing surface), the subagent rules (validation and re-run of verification claims,
+    no decision authority, read-only scope, the fallback on a host without subagents), the contract-removal work item, each preservation-evidence part and the helper placement order to a
     playbook section.
   - Manual evidence, following the `drift-reconciliation` precedent, is named as manual evidence and never reported as
     test coverage. It has two parts.
@@ -207,8 +216,9 @@ This draft carries the scope its own milestone held before the maintenance miles
   use cases and install guides, which Development edits.
 - User answers (all recommended options, `user`): bounding by surface batch with batch-scoped subagents (O2-A),
   contract removals as their own work items (O3-A), reachability-based preservation evidence (O4-A), lowest common
-  owner placement (O5-A), and `upkeep` plus a solo `refactoring` preset (O6-A). O2, O3 and the subagent rules are
-  recorded in `PADR-bound-review-refactor-runs-by-surface-batch`; O4 and O5 in
+  owner placement (O5-A), and `upkeep` plus a solo `refactoring` preset (O6-A). O2 and the subagent rules are
+  recorded in `PADR-bound-review-refactor-runs-by-surface-batch`, O3 in
+  `PADR-apply-approved-contract-removals-as-separate-work-items`, O4 and O5 in
   `PADR-require-reachability-evidence-and-layered-placement`. O6 is packaging and needs no PADR.
 - `dev_effort` stays `medium`: the work has no effect that cannot be undone locally and no unresolved P1.
 

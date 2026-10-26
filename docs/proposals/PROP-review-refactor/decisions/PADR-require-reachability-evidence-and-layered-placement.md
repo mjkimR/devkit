@@ -44,9 +44,10 @@ application packages.
 ## 4. Decision Outcome
 
 - Every consolidation or removal records reachability evidence covering static references and the repository's
-  dynamic reach: entry points, plugin registries, configuration, documentation and string dispatch.
+  dynamic reach: entry points, plugin registries, configuration, documentation and string dispatch. The record names
+  each search (command, registry or configuration read) and its result, so a later miss is traceable.
 - The repository's relevant verification passes before and after the change, with both results recorded.
-- A characterization test is added only when no existing test exercises every merged caller, so tests are added
+- A characterization test is added only when some merged caller is exercised by no existing test, so tests are added
   only where coverage is missing.
 - A guidance change records a retained-constraint map: each constraint of the removed or merged text and where it
   remains. When the removal relies on a behavioral check, it also records a representative-task run with and without
