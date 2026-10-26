@@ -17,7 +17,7 @@ plan: PLAN-ux-documentation
   - _Requirements: AC-04, AC-05, AC-06, AC-07, AC-08, AC-09, AC-10_
   - **Verification**: `uv run devkit rules test packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/ux_links` and the same for `ux_coverage`
 - [x] **Task 1.3**: Template, seed, `ux-writing` and `usecase-writing` guidance, with guidance tests
-  - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/, packages/devkit-spec/tests/
+  - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/, packages/devkit-spec/tests/, docs/ux/README.md (the seed `devkit sync` deploys; admitted by the Host on 2026-10-26)
   - _Requirements: AC-11, AC-12_
   - **Verification**: `just test devkit-spec tests/integration/bundles/spec`
 - [x] **Task 1.4**: The `ux-reviewer` role, the `spec-ux-review` skill and the workflow guidance (specify, sync, effort, proposal acceptance, blueprint), with role-contract and guidance tests
@@ -29,6 +29,6 @@ plan: PLAN-ux-documentation
   - _Requirements: AC-03_
   - **Verification**: `just viewer test`, `just viewer check`, `just viewer lint`, `just viewer build`
 - [x] **Task 1.6**: Living Spec capabilities and the glossary terms
-  - **_Boundary**: docs/capabilities/documents/, docs/capabilities/governance/, docs/capabilities/delivery/, docs/capabilities/viewer/, docs/steering/glossary.md
+  - **_Boundary**: docs/capabilities/documents/, docs/capabilities/governance/, docs/capabilities/delivery/, docs/capabilities/viewer/, docs/steering/glossary.md, docs/capabilities/harness/CAP-HARN-agent-guidance.md, docs/README.md (the last two admitted by the Host on 2026-10-26)
   - _Requirements: AC-15_
   - **Verification**: `uv run devkit rules check` and `uv run devkit sync --check`

@@ -1,0 +1,10 @@
+kind: resolution
+stage: '-'
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T08:43:10.961851Z'
+status: completed
+summary: With the Host admitting docs/ux/README.md, CAP-HARN-agent-guidance and docs/README.md to the write scope, the seed is committed and devkit sync --check exits 0, so AC-15 holds and reconcile.md is resolved.
+findings: []
+checks: {}
+resolves: worker-01.yaml

@@ -8,7 +8,7 @@ target: CAP-HARN-agent-guidance
 origin: agent
 severity: workaround
 recurring: true
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -40,3 +40,10 @@ CAP-HARN-agent-guidance 4.1, subagent row: challenger, reconcile-reviewer, code-
   development-worker (no ux-reviewer)
 docs/README.md directory map: capabilities/, usecases/, ... (no ux/)
 ```
+
+## Disposition
+
+Resolved in `SPEC-ux-documentation` after the Host admitted `CAP-HARN-agent-guidance` and `docs/README.md` to the write
+scope: section 4.1 lists the new instruction, rules (with `steering-documents`), skill count and subagent, sections 4.3
+and 4.4 gain the `ux-writing` and `spec-ux-review` rows, and the docs map has a `ux/` row. Verified by
+`devkit rules check` and `reconcile-check-03`. The suggestion to replace hand-kept asset lists is not taken here.

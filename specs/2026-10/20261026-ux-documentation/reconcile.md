@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-ux-documentation
 spec: SPEC-ux-documentation
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-model.md
     resolution: modified
@@ -16,6 +16,10 @@ targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md
     resolution: modified
   - file: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md
+    resolution: modified
+  - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
+    resolution: modified
+  - file: docs/README.md
     resolution: modified
   - file: docs/steering/glossary.md
     resolution: modified
@@ -67,13 +71,13 @@ changes.
 
 None: the proposal's two feedback records are resolved.
 
+- `CAP-HARN-agent-guidance` section 4.1: the instruction, rule (`steering-documents` included), skill count and
+  subagent rows name the new assets; section 4.3 gains the `ux-writing` row and section 4.4 the `spec-ux-review` row
+  (`reconcile-check-01` finding 3, `FB-agent-guidance-asset-list-drifts`).
+- `docs/README.md`: the directory map's `ux/` row (`reconcile-check-01` finding 4).
+- `docs/ux/README.md`: the `docs-skeleton` seed `devkit sync` deploys here, committed so `devkit sync --check` exits
+  `0` (AC-15, `reconcile-check-01` finding 2). The Host admitted these three paths to the write scope.
+
 ## Deferred work
 
-- `docs/README.md` (the repository's directory map) has no `ux/` row, and the subagent, rule, instruction and skill
-  lists of `CAP-HARN-agent-guidance` section 4.1 do not name the new assets (they already omitted
-  `RULE-steering-documents`). Both paths are outside this unit's write scope; `FB-agent-guidance-asset-list-drifts`
-  records them for the Host.
-- Not deferred but open: `devkit sync` seeds `docs/ux/README.md` into this repository (the `docs-skeleton` preset is
-  selected), a path outside the write scope, so the seed is pending (not written) and `devkit sync --check` exits `1`,
-  failing AC-15 (`reconcile-check-01` finding 2). It is the problem of this run's `worker` envelope; this record stays
-  `pending` until the Host admits the path or amends AC-15.
+None.
