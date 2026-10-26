@@ -14,7 +14,7 @@ plan: PLAN-handoff-modes-and-template-report
   - **Verification**: `just test devkit-spec packages/devkit-spec/tests/integration/features/delivery/test_handoff_error_modes.py`; `rg -n "report URI" docs/capabilities/delivery/CAP-DLV-proposal-incubation.md packages/devkit-spec/src` prints nothing
 
 - [x] **Task 2**: Code-reviewer probes in a per-round subdirectory, left for worktree removal
-  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/code-reviewer.md`, `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/payload.md`, `packages/devkit-spec/tests/integration/bundles/spec/test_delegation_sandbox_guidance.py`, `docs/capabilities/delivery/CAP-DLV-delivery-workflows.md`, the tracked outputs `devkit sync --check` lists, `specs/2026-10/20261026-feedback-guidance-and-scope/feedback/code-reviewer-probe-deletion.md`
+  - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/code-reviewer.md`, `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/payload.md`, `packages/devkit-spec/tests/integration/bundles/spec/test_delegation_sandbox_guidance.py`, `docs/capabilities/delivery/CAP-DLV-delivery-workflows.md`, `.devkit/installation.json` (the tracked `devkit sync` output), `specs/2026-10/20261026-feedback-guidance-and-scope/feedback/code-reviewer-probe-deletion.md`
   - _Requirements: AC-06_
   - **Verification**: `just test devkit-spec packages/devkit-spec/tests/integration/bundles/spec/test_delegation_sandbox_guidance.py`; `uv run devkit sync --check`
 
