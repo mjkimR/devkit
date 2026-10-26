@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T07:43:55.049422Z'
+status: completed
+summary: 'Steering documents: context_documents manifest field and get-context documents list, RULE-steering-documents, steering cited-ID check, glossary moved to docs/steering/ with every consumer, handbook fallback, viewer Steering group; review-01 and reconcile-check-01 findings fixed and reverified'
+findings: []
+assumptions:
+- The handbook pages are not regenerated (frozen for 0.1.4); the fallback keeps source_commit 5e71d74c readable
+checks:
+  tests: PASS just test-affected mode=full 5252 passed 14 skipped at cea75791 (later commits change docs and records only); just test-dist 1073 passed; just viewer test 97 passed
+  build: PASS just viewer build, just viewer pack, just smoke
+  lint: PASS just lint-check, just check, devkit rules check --ci --base main, devkit sync --check
+diff_scope:
+  base: f12ab876ed9984365373fc83a9fee10e962bc836
+  head: 87ff781fda66c3f1b4e3ce7856721e9cf9c11a16

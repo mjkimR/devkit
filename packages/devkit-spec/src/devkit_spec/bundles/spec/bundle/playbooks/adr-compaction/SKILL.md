@@ -38,7 +38,7 @@ Write `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, dated today, from `.devki
 ## Step 3: Apply and verify
 
 1. `git rm` the member files, then run `uv run devkit rules fix` to rewrite alias references in current documents.
-2. Replace a retired ID in a `docs/glossary.md` Owner by hand; `devkit rules fix` does not rewrite Owners.
+2. Replace a retired ID in a `docs/steering/glossary.md` Owner by hand; `devkit rules fix` does not rewrite Owners.
 3. Correct every path, test and rule ID in a replacement's Confirmation section that no longer exists; write "Review
    only" when no check exists.
 4. Fidelity review: compare each replacement with its members (`git show <base>:<path>`) and their incoming references

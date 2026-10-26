@@ -51,12 +51,13 @@ class SpecConfigError(SpecError, ConfigError):
 
 
 class GlossaryInvalidError(SpecError):
-    """``docs/glossary.yaml`` cannot be read or does not hold ``terms: [{primary, synonyms}]`` (``INPUT_ERROR``)."""
+    """``docs/steering/glossary.yaml`` cannot be read or does not hold ``terms: [{primary, synonyms}]``
+    (``INPUT_ERROR``)."""
 
     code = "SPEC_GLOSSARY_INVALID"
     input_error = True
-    target_files = ("docs/glossary.yaml",)
-    fix = "Correct docs/glossary.yaml: terms is a list of {primary: <term>, synonyms: [<term>, ...]}"
+    target_files = ("docs/steering/glossary.yaml",)
+    fix = "Correct docs/steering/glossary.yaml: terms is a list of {primary: <term>, synonyms: [<term>, ...]}"
 
 
 class ProposalSlugError(SpecError):

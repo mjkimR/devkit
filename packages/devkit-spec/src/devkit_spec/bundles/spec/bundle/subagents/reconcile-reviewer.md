@@ -31,7 +31,7 @@ Verify the Living Spec reflection the implementer wrote for a spec unit's Develo
 
 ## Procedure
 
-1. Read `.devkit/managed/spec/AGENTS.md` and `.devkit/managed/spec/skills/spec-sync/SKILL.md`, or its override under `.devkit/overrides/`.
+1. Run `uv run devkit get-context spec` once, then read `.devkit/managed/spec/skills/spec-sync/SKILL.md`, or its override under `.devkit/overrides/`.
 2. Run `git diff <base> <head>` for `diff_scope` and compare it with the docs changes and `reconcile.md`. Each of these is a finding: a missing target, a reflected change that contradicts the implementation or the contract, a waiver of a required contract mismatch, a stated no-impact the diff contradicts.
 3. At `high`, follow `.devkit/managed/spec/skills/spec/references/review-loop.md` for the round's scope and `recurs:` marking.
 

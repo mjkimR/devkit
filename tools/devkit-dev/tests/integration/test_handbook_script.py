@@ -234,6 +234,36 @@ def test_a_glossary_term_without_a_rendering_is_reported(script, handbook):
     assert '[HANDBOOK_TERM_MISSING: lang=ko term="Bundle"]' in lines(result)
 
 
+STEERING_GLOSSARY = "---\ntitle: Glossary\nsummary: Read before naming a concept.\n---\n\n" + GLOSSARY.replace(
+    "**Bundle** | A unit of agent assets.", "**Steering document** | Background read on demand."
+)
+
+
+def test_the_steering_glossary_is_read_before_the_old_path(script, handbook):
+    """SPEC-foundation-documents AC-14: a commit after the move reads docs/steering/glossary.md."""
+    write(handbook, {"docs/steering/glossary.md": STEERING_GLOSSARY})
+    commit(handbook)
+    assert run(script, handbook, "generate", "--date", DATE).exit_code == 0
+    assert '[HANDBOOK_TERM_MISSING: lang=ko term="Steering document"]' in lines(run(script, handbook, "status"))
+    page = (handbook / "handbook/en/glossary.md").read_text()
+    assert "**Steering document**" in page and "**Bundle**" not in page
+
+
+def test_a_commit_before_the_move_falls_back_to_the_old_path(script, handbook):
+    """The fixture commit has only docs/glossary.md, as the released snapshots do."""
+    assert "**Bundle**" in (handbook / "handbook/en/glossary.md").read_text()
+    assert run(script, handbook, "status").exit_code == 0
+
+
+def test_a_commit_without_a_glossary_cannot_run(script, repo):
+    git(repo, "rm", "-q", "docs/glossary.md")
+    commit(repo)
+    write(repo, HANDBOOK)
+    result = CliRunner().invoke(script.main, ["-w", str(repo), "generate", "--date", DATE])
+    assert result.exit_code == 2
+    assert "HANDBOOK_GLOSSARY_MISSING" in result.stderr
+
+
 # --- verify (AC-05) --------------------------------------------------------------------------------------------------
 
 

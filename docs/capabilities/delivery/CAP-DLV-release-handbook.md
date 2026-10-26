@@ -44,7 +44,7 @@ it describes.
    (`ADR-localized-handbook-language-exception`); identifiers (commands, error codes, document IDs, paths) are never
    translated. Checked in review.
 3. **Generated pages**: `decisions.md` (each accepted ADR's summary and source link), `changes.md` (accepted ADRs and
-   completed specs new since the previous snapshot) and `glossary.md` (the `docs/glossary.md` terms, with each
+   completed specs new since the previous snapshot) and `glossary.md` (the glossary terms at the source commit, with each
    language's rendering from `handbook/<lang>/terms.yaml`) MUST be written whole by the script in every language and
    carry `generated: true`.
 4. **No index entry**: Handbook pages MUST NOT carry `id:` frontmatter (`HANDBOOK_FRONTMATTER_ID`).
@@ -123,6 +123,7 @@ findings, `2` could not run (an `[ERROR]` block on stderr).
 | `HANDBOOK_DOCS_DIRTY` | `docs/` has uncommitted changes at a release run of `generate` | 2 |
 | `HANDBOOK_MANIFEST_INVALID` | no readable manifest naming `source_commit` and `langs` with `en` | 2 |
 | `HANDBOOK_SOURCE_UNAVAILABLE` | the manifest source commit is not in the repository | 2 |
+| `HANDBOOK_GLOSSARY_MISSING` | the source commit has neither `docs/steering/glossary.md` nor `docs/glossary.md` | 2 |
 | `HANDBOOK_PAGE_UNKNOWN` | `stamp` names no page, or a translation without its English page | 2 |
 | `HANDBOOK_REPOSITORY_UNKNOWN` | no `GITHUB_REPOSITORY` and no github.com `origin` for source links | 2 |
 | `HANDBOOK_GIT_FAILED` | a Git command failed | 2 |
@@ -147,5 +148,8 @@ findings, `2` could not run (an `[ERROR]` block on stderr).
 - **Page frontmatter**: `sources` (English), `translated_from` (translations), `generated` (generated pages).
 - **Generated blocks**: `<!-- handbook:generated <name> -->` ... `<!-- /handbook:generated -->` with `toc`,
   `usecases` or `capabilities`, rewritten on every run.
-- **`handbook/<lang>/terms.yaml`**: a mapping of every `docs/glossary.md` term to its rendering. `docs/glossary.yaml`
+- **`handbook/<lang>/terms.yaml`**: a mapping of every glossary term to its rendering. `docs/steering/glossary.yaml`
   stays a search synonym list.
+- **Glossary source**: the script reads `docs/steering/glossary.md` at the source commit and, for a commit before
+  the glossary moved into the steering directory, `docs/glossary.md`; with neither it exits `2` with
+  `HANDBOOK_GLOSSARY_MISSING`.

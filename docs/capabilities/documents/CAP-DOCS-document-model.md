@@ -23,8 +23,8 @@ each other. `devkit_spec.features.documents` implements it as a workspace index 
 reusing a file's parse result, also between processes, only while its path and text are unchanged. The
 lookup commands (`CAP-DOCS-document-lookup`), document search (`CAP-DOCS-document-search`), namespaces
 (`CAP-DOCS-namespaces`) and spec rules (`CAP-GOV-spec-rules`) resolve document identities through this index.
-`RULE-document-reference` also reads root glossary Owner cells through the rules workspace cache; the glossary
-stays ID-free and unindexed, and its Owner references do not become graph edges.
+`RULE-document-reference` also reads root glossary Owner cells and the IDs cited in steering files through the rules
+workspace cache; these files stay ID-free and unindexed, and their references do not become graph edges.
 
 ## 2. Scope & Boundary
 
@@ -87,6 +87,14 @@ stays ID-free and unindexed, and its Owner references do not become graph edges.
    `forwarded`, decision `superseded`, proposal `rejected` (`ADR-terminal-statuses-are-historical`). Browsing and
    search MUST hide it unless `--history` is passed (or `list --status` names its status, `CAP-DOCS-document-lookup`);
    its ID stays resolvable and its references queryable. Unlike rule 7, the rules keep checking it on every run.
+
+9. **Steering documents**: `docs/steering/` holds project-wide background that is neither a contract nor evidence
+   (`ADR-steering-documents-directory`): one Markdown file per topic directly in the directory, with only `title` and
+   `summary` frontmatter and no `id`, so by rule 3 none is a document, and none is a search candidate. The glossary
+   (`glossary.md`, with the search synonyms `glossary.yaml`) is its first member. There is no namespace copy; a
+   package glossary stays at `docs/packages/<name>/glossary.md`. `devkit get-context spec` lists every steering file's
+   `title` and `summary` (`CAP-DIST-context-and-playbooks`), `RULE-steering-documents` bounds the directory and
+   `RULE-document-reference` resolves the IDs it cites (`CAP-GOV-spec-rules`).
 
 Proposal-local feedback also stays current while a rejected proposal awaits cleanup. Handoff carries open feedback
 into the spec; Host deletion without handoff preserves it in the month-level backlog

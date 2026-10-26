@@ -59,7 +59,7 @@ def test_feedback_of_a_completed_bundle_is_found_without_history(docs: Path, wri
 
 
 def test_glossary_expands_the_query(docs: Path, write: Write) -> None:
-    write("docs/glossary.yaml", "terms:\n  - primary: cache\n    synonyms: [캐시, derived data]\n")
+    write("docs/steering/glossary.yaml", "terms:\n  - primary: cache\n    synonyms: [캐시, derived data]\n")
     glossary = load_glossary(docs)
     assert expand_query("캐시 정책", glossary) == "캐시 정책 cache derived data"
     assert expand_query("derived  DATA", glossary) == "derived  DATA cache 캐시"
@@ -68,7 +68,7 @@ def test_glossary_expands_the_query(docs: Path, write: Write) -> None:
 
 
 def test_glossary_terms_match_as_tokenized_words(docs: Path, write: Write) -> None:
-    write("docs/glossary.yaml", "terms:\n  - primary: work-scope\n    synonyms: [café, scope_registry]\n")
+    write("docs/steering/glossary.yaml", "terms:\n  - primary: work-scope\n    synonyms: [café, scope_registry]\n")
     glossary = load_glossary(docs)
     assert expand_query("Work Scope overlap", glossary) == "Work Scope overlap café scope_registry"
     assert expand_query("cafe", glossary) == "cafe work-scope scope_registry"
@@ -78,7 +78,7 @@ def test_glossary_terms_match_as_tokenized_words(docs: Path, write: Write) -> No
 
 def test_glossary_terms_with_the_same_words_merge_their_clusters(docs: Path, write: Write) -> None:
     write(
-        "docs/glossary.yaml",
+        "docs/steering/glossary.yaml",
         "terms:\n  - primary: C++\n    synonyms: [cpp]\n  - primary: C#\n    synonyms: [csharp, cpp]\n",
     )
     glossary = load_glossary(docs)
@@ -93,9 +93,20 @@ def test_glossary_terms_with_the_same_words_merge_their_clusters(docs: Path, wri
     "text", ["terms: x\n", "terms:\n  - synonyms: [a]\n", "terms:\n  - primary: a\n    synonyms: b\n", ": :\n"]
 )
 def test_malformed_glossary(docs: Path, write: Write, text: str) -> None:
-    write("docs/glossary.yaml", text)
+    write("docs/steering/glossary.yaml", text)
     with pytest.raises(GlossaryInvalidError):
         load_glossary(docs)
+
+
+def test_the_glossary_is_read_from_the_steering_directory_only(docs: Path, write: Write) -> None:
+    write("docs/glossary.yaml", "terms:\n  - primary: cache\n    synonyms: [derived data]\n")
+    assert load_glossary(docs) == {}
+    write("docs/steering/glossary.yaml", "terms: x\n")
+    with pytest.raises(GlossaryInvalidError) as raised:
+        load_glossary(docs)
+    error = raised.value
+    assert "docs/steering/glossary.yaml" in str(error) and "docs/steering/glossary.yaml" in (error.fix or "")
+    assert tuple(error.target_files) == ("docs/steering/glossary.yaml",)
 
 
 def _search(root: Path, *args: str) -> Result:

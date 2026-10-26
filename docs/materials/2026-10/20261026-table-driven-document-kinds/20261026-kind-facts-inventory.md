@@ -66,7 +66,7 @@ viewer has no dependency on `devkit-spec`, no payload carries a kind, and autohu
 The link regex at `documents.ts:246` lists `CAP US ARCH ADR PROP SPEC PLAN TASKS REC MAT PADR`: `US` is the
 retired use case prefix, and `UC`, `FB` and `MS` references are not linked today.
 
-`bookGroup` also hard-codes `docs/glossary.md`, which `PROP-foundation-documents` moves; that proposal does not own
+`bookGroup` also hard-codes `docs/glossary.md`, which `SPEC-foundation-documents` moves; that proposal does not own
 the viewer front end.
 
 ## 4. Typing constraint (Q2)

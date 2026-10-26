@@ -1,0 +1,49 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T06:37:03.321443Z'
+status: completed
+review: challenger-03.yaml
+summary: 'Folded challenger-03 and the Host''s ordering update at c7b098e9: system steps cite the screen of their response with the silencing as a known limit, target-docs drafts carried into spec.md, placement and rule 15 in target-docs, §3 hand-check wording, bugfix placement in characterize, assumptions updated and the duplicate feedback withdrawn; PROP-foundation-documents added to depends_on with docs/steering/. Round 4 (cap) follows.'
+findings:
+- issue: The off-screen exemption treats every step citing no screen as off-screen; since system responses alternate with actor steps, exit and reachability errors vanish across any system step; extension entry and next step are undefined.
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-step-links-and-coverage.md:56-61; .devkit/managed/spec/instructions/usecase-writing.md:25,32-35
+  failure_condition: 'Check out: step 2 submits on UX-cart, step 3 the system charges (no screen), step 4 shows UX-order-confirmation; UX-cart''s Submit row has no Target and RULE-ux-links passes.'
+  suggested_action: Have ux-writing and usecase-writing cite in a system step the screen its response appears on; record the silencing as a known limit; define an extension's entry as the screens its bullet cites and its next step as its resume step; add a rule test.
+  resolution: resolved
+  severity: P2
+- issue: 'recurs: challenger-02.yaml #6; Screens drafted in target-docs.md are copied into the bundle but no Development procedure reads that file, and the Confirmation overstates reconcile coverage at low and on a medium skip.'
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-drafts-before-code.md:45-49,59-62; .devkit/managed/spec/skills/spec-sync/SKILL.md:19; .devkit/managed/spec/skills/spec-delegate/references/payload.md:19; .devkit/managed/spec/skills/spec/references/effort.md:29
+  failure_condition: A proposal drafts UX-checkout in target-docs.md, spec.md has no Screens section, spec-sync writes no docs/ux file and every check passes.
+  suggested_action: spec-specify carries the target-docs.md Screens drafts into spec.md's Screens section on a handed-off bundle; reword the Confirmation to the reconcile verification at its effort.
+  resolution: resolved
+  severity: P2
+- issue: 'recurs: challenger-02.yaml #7; target-docs §1 still says ''after specify at spec depth'', §4 gives spec-specify no hook before spec-plan, and rule 15 of CAP-DLV-delivery-workflows (the acceptance request) is not listed.'
+  evidence: docs/proposals/PROP-ux-documentation/target-docs.md:37-39,61-66; .devkit/managed/spec/skills/spec-specify/SKILL.md:60; docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:197-200
+  failure_condition: Development writes the old placement into the capability and the review runs after plan.md and tasks.md or not at all.
+  suggested_action: Fix target-docs §1 and §4 (spec-specify Completion offers the optional review before spec-plan) and add rule 15.
+  resolution: resolved
+  severity: P3
+- issue: 'recurs: challenger-02.yaml #2; proposal §3 still says the link rules'' results are reported as facts, and ''screens already in docs/ux that the drafts link'' includes screens the drafts change.'
+  evidence: docs/proposals/PROP-ux-documentation/proposal.md:106-109; docs/proposals/PROP-ux-documentation/decisions/PADR-ux-review-before-code.md:55-58
+  failure_condition: A draft removes the only exit of an existing screen and the reviewer passes on the clean rule result for the old version.
+  suggested_action: Align §3; restrict rule results to linked screens the drafts leave unchanged.
+  resolution: resolved
+  severity: P3
+- issue: The spec-depth placement inside specify assumes sdd-spec-feature; sdd-spec-bugfix has no specify stage although spec-specify gains the Screens section.
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-review-before-code.md:64-68; .devkit/managed/spec/workflows/sdd-spec-bugfix.md:32-59
+  failure_condition: A bugfix drafting a screen state records the review at a stage it never has, or skips it.
+  suggested_action: Name the bugfix placement (inside characterize, before plan-tasks) or limit the spec-depth review to sdd-spec-feature.
+  resolution: resolved
+  severity: P3
+- issue: 'PROP-table-driven-document-kinds is already accepted on main (cfc82a4c) after this branch''s base: its accepted design carries spec_format scope, leaves the viewer out of scope and files FB-viewer-link-prefixes-drift for the same defect, so the proposal''s assumptions and FB-viewer-bracket-id-prefixes-stale are stale.'
+  evidence: docs/proposals/PROP-ux-documentation/proposal.md:163-172,177-178; docs/proposals/PROP-ux-documentation/feedback/viewer-bracket-id-prefixes-stale.md; main:docs/proposals/PROP-table-driven-document-kinds/proposal.md; main:docs/proposals/PROP-table-driven-document-kinds/feedback/viewer-link-prefixes-drift.md
+  failure_condition: The acceptance request shows assumptions contradicting the accepted design, and two open feedback records name one defect.
+  suggested_action: Merge main and re-check now; correct the assumptions; retire FB-viewer-bracket-id-prefixes-stale as a duplicate.
+  resolution: resolved
+  severity: P3
+checks: {}
+diff_scope:
+  base: a9fb56f6b7c19fba2abe7225f93d86ae66b24fae
+  head: c7b098e9e24368cecea3e7a861c18b600a44b6d0

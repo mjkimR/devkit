@@ -11,6 +11,7 @@ from devkit_dist.base.errors import ReceiptError
 from devkit_dist.features.distribution.models.errors import BundleError, SelectionError
 from devkit_dist.features.distribution.models.results import ContextResult, Instruction
 from devkit_dist.features.distribution.services.bundles.common import SLUG
+from devkit_dist.features.distribution.services.bundles.context_documents import declared_directory, list_documents
 from devkit_dist.features.distribution.services.bundles.instructions import read_instruction_header
 from devkit_dist.features.distribution.services.installation.overrides import override_rel
 from devkit_dist.features.distribution.services.installation.reading import (
@@ -26,7 +27,8 @@ class GetContext(BaseUseCase):
     """Execute the get context application operation."""
 
     def execute(self, start: Path, bundle: str) -> ContextResult:
-        """Read the synchronized constitution and instruction headers of the project containing ``start``.
+        """Read the synchronized constitution and instruction headers of the project containing ``start``, and the
+        titles and summaries of the context documents the bundle's manifest declares.
 
         Bodies are never returned.
         """
@@ -61,4 +63,6 @@ class GetContext(BaseUseCase):
                     raise ReceiptError(f"{RECEIPT_PATH}: instruction outside bundle {bundle}: {name}")
                 header = read_instruction_header(read_owned(root, receipt, name), name)
                 instructions.append(Instruction(str(root / name), header))
-            return ContextResult(bundle, constitution, instructions)
+            manifest_path = prefix + "bundle.toml"
+            directory = declared_directory(read_owned(root, receipt, manifest_path), manifest_path)
+            return ContextResult(bundle, constitution, instructions, list_documents(root, directory))

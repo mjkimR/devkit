@@ -1,0 +1,37 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T06:00:10.757002Z'
+status: completed
+summary: Use case steps are regular across all 13 UCs ('N.' items, '- **Na.**' extensions), so a step segmenter is cheap but new; every link rule reads frontmatter only. Recommends screen IDs cited in step prose plus screen interactions naming their step key; the glossary Owner check breaks silently on added columns.
+findings:
+- issue: All 13 use cases write each main-scenario step as one '^N. ' list item (continuation indented 3 spaces) and extensions as '- **Na.**' or '- **\*a.**'; 12 of 13 cite a CAP in every step; UC-resolve-stale-activity-branches step 5 is an actor-only step with no CAP. A step segmenter is cheap but none exists.
+  evidence: .devkit/managed/spec/instructions/usecase-writing.md:16-28; .devkit/managed/spec/templates/usecase.md:28-40; docs/usecases/delivery/UC-resolve-stale-activity-branches.md:46
+  resolution: open
+- issue: 'Parser deviations to tolerate: intro paragraph before step 1 (2 UCs), prose inside Extensions, the escaped ''\*a'' key (4 UCs), free-form Covers lines.'
+  evidence: docs/usecases/delivery/UC-route-development-intent.md:35; docs/usecases/delivery/UC-drive-development-to-integration.md:44-45,73-74; docs/usecases/collaboration/UC-run-parallel-work-safely.md:57
+  resolution: open
+- issue: RULE-traceability-link compares only frontmatter (UC capabilities <-> CAP usecases) in both directions; body references carry line and column but are never mapped to a section or step; ID_SOURCE accepts only known PREFIXES.
+  evidence: packages/devkit-spec/src/devkit_spec/features/governance/usecases/traceability_link.py:42-44,63-92,164-185; packages/devkit-spec/src/devkit_spec/features/documents/models/parse.py:183-206; ids.py:34-50
+  resolution: open
+- issue: RULE-document-reference checks relation-field shape and kind (EXPECTED_PREFIX) and body-ID resolution, with no step check; a new list field needs LIST_FIELDS and EXPECTED_PREFIX entries, a dict-valued step map needs new parse code.
+  evidence: packages/devkit-spec/src/devkit_spec/features/governance/usecases/document_reference.py:1-23,43-52; packages/devkit-spec/src/devkit_spec/features/documents/models/model.py:11-18
+  resolution: open
+- issue: The glossary Owner check activates only on the exact five-column header; an added column silently disables the check for that table, while a second table under another header is ignored safely. Search reads glossary.yaml only.
+  evidence: document_reference.py:312-358; packages/devkit-spec/src/devkit_spec/features/documents/usecases/search.py:39,62-65; bundles/spec/bundle/seed/docs/glossary.md:10
+  failure_condition: Adding columns to the glossary table leaves every Owner in it unchecked without a warning.
+  suggested_action: Keep UX objects out of the glossary columns; a separate table or a UX-owned register needs its own check.
+  resolution: open
+- issue: PROP-foundation-documents moves glossary.md/.yaml to docs/foundation/ with its consumers and excludes table-format and owner-check changes; option 6b touches the same files and check, so whichever lands second rebases onto the other.
+  evidence: docs/proposals/PROP-foundation-documents/proposal.md:20-27,61-63,69-74
+  resolution: open
+- issue: 'Step-to-screen link options compared: (a) screen ID cited in step prose (low cost, reuses body refs and alias rewriting), (b) trailing marker (new micro-syntax), (c) frontmatter step map (dict parsing, keys drift on renumbering), (d) screen side only with UC#step keys (UC stays UI-free, needs reverse index and a fragment reference form). Recommends (a) plus screen interactions naming the step key they serve.'
+  evidence: parse.py:183-206; model.py:11-12; traceability_link.py:171-173
+  suggested_action: Choose (a) with the reverse coverage on the screen side, unless use cases must stay entirely free of screen IDs, in which case (d).
+  resolution: open
+assumptions:
+- Counted from docs/usecases only; namespace use case roots not scanned.
+unverified_areas:
+- Search tokenization of body tables; viewer parsing of use case bodies; page 2 of CAP-GOV-spec-rules inbound refs.
+checks: {}

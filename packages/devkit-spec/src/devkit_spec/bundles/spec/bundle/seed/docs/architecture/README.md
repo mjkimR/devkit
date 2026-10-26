@@ -21,7 +21,7 @@ System blueprint directory rendering C4 Model diagrams via Mermaid on top of arc
 | 09 | Architecture Decisions | Managed by `../decisions/` (No ARCH file) |
 | 10 | Quality Requirements | (As needed) |
 | 11 | Risks and Technical Debts | (As needed) |
-| 12 | Glossary | Managed by `../glossary.md` (No ARCH file) |
+| 12 | Glossary | Managed by `../steering/glossary.md` (No ARCH file) |
 
 ## 2. Frontmatter Schema
 

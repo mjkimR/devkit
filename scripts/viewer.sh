@@ -16,6 +16,10 @@ set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../packages/devkit-viewer/frontend"
 
 action=${1:?Expected an action: install, lint, check, test, probe, build or pack}
+if [[ $action != install && ! -d node_modules ]]; then
+    echo "error: viewer frontend dependencies are not installed (no packages/devkit-viewer/frontend/node_modules); run \`just viewer install\` first" >&2
+    exit 2
+fi
 case "$action" in
     install) npm ci --no-audit --no-fund ;;
     lint) npm run --silent lint ;;

@@ -265,6 +265,10 @@ export function renderDocument(
 	return { html: wrapper.innerHTML, headings };
 }
 
+// Steering documents are ID-free project background, not a document kind, so the group is a viewer literal: every
+// file under docs/steering/ and a package glossary (docs/packages/<name>/glossary.md).
+const STEERING = 'Steering';
+
 export function bookGroup(doc: RepositoryDocument) {
 	const path = doc.path.replace(/^docs\/packages\/[^/]+\//, 'docs/');
 	if (
@@ -273,7 +277,8 @@ export function bookGroup(doc: RepositoryDocument) {
 		/\/README\.md$/i.test(path)
 	)
 		return null;
-	if (path === 'docs/glossary.md') return 'Glossary';
+	if (path.startsWith('docs/steering/') || /^docs\/packages\/[^/]+\/glossary\.md$/.test(doc.path))
+		return STEERING;
 	for (const [directory, title] of [
 		['architecture', 'Architecture'],
 		['capabilities', 'Capabilities'],
@@ -290,7 +295,7 @@ export const bookGroups = [
 	'Architecture',
 	'Capabilities',
 	'Use Cases',
-	'Glossary',
+	STEERING,
 	'Decisions',
 	'Development'
 ];

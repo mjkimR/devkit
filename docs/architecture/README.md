@@ -15,7 +15,7 @@ The architecture of devkit in arc42 chapters, with C4 diagrams in Mermaid. Each 
 | 07 | Deployment View | `ARCH-07-deployment` | Wheel distribution, Git dependency sources, projected agent directory layout |
 | 08 | Cross-cutting Concepts | `ARCH-08-cross-cutting` | Agent Advisory Protocol, agent-first output sentinels, resource taxonomy, command plugins |
 | 09 | Architecture Decisions | `docs/decisions/` | ADRs |
-| 12 | Glossary | [glossary.md](../glossary.md) | Ubiquitous vocabulary |
+| 12 | Glossary | [glossary.md](../steering/glossary.md) | Ubiquitous vocabulary |
 
 ## 2. Conventions
 
