@@ -1,6 +1,6 @@
 schema = 1
 name = "spec"
-version = "0.1.3"
+version = "0.1.4"
 default_preset = "core"
 auto_select = true
 

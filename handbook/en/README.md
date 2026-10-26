@@ -4,14 +4,14 @@ sources:
   ARCH-03-context: da101a47ee997b3705720a96951abc661301ea62
   ARCH-05-1-containers: b0628213670ab9fb128a861e5fb816d60dfbefe9
   CAP-DIST-content-packages: dcd5bdbf45e7fbe1e26f52118902c300bbf646e6
-  CAP-DLV-release-handbook: 7fa53f1c5669584342764f579384066369eeafaa
+  CAP-DLV-release-handbook: 98941d4b7793e2ac6a7fc50b92c337ede376e3ce
 title: devkit handbook
 ---
 
 # devkit handbook
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `ae01161143be`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `5e71d74c8e5a`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 devkit is a developer toolkit for repositories where AI coding agents (Codex, Claude Code, Antigravity) do much of
