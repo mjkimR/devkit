@@ -97,6 +97,17 @@ A content tree with conditions written next to its nodes also keeps the screen s
 they affect. Proportions, breakpoints and component names belong to the project (option 1b in
 `MAT-ux-documentation-practice`).
 
+OOUX practice points the same way. Prater advises "super low-fidelity" first wireframes that translate each object's
+map columns into cards, details and lists, with CTAs placed but their interaction not yet designed, and: "don't
+concern yourself with layout early on! Get the mobile 'non-layout' version of your system approved before expanding
+into the world of desktop layouts", staying in a one-column layout as long as possible even for desktop-only systems
+("Call them 'hierarchy diagrams' if that helps!";
+[Prater, Undercover OOUX, case study from 2016](https://web.archive.org/web/2023/https://sophiavux.medium.com/undercover-ooux-seven-tricks-to-sneak-in-object-oriented-ux-fb15ff86f02)).
+A content tree is that one-column hierarchy written as text. It is a tip from one case study, not a named technique,
+and her sketches were visual: static, colour-coded, created in about two hours and reviewed over two or three rounds,
+followed by desktop layouts and visual design, which she warns can undo the object work if the visual designer does
+not know its reasons. It supports deferring layout, not skipping layout design.
+
 ## 4. Wireframes and coded prototypes
 
 The research argued that, when agents code screens quickly, traditional wireframes can be skipped in favor of
@@ -170,7 +181,14 @@ use case step point at it. Region proportions and narrow-viewport behavior stay 
 
 ## 6. Review questions
 
-The research proposed four questions for the UX reviewer. They fit the walkthrough and rubric options of
+Prater's confirmation questions for a first, non-layout wireframe review (same source as section 3) are structural:
+are the objects right; are they connected in a way that makes sense to the business, users and developers, with no
+missing relationships or contextual navigation; are the CTAs the interaction triggers each object needs; and do the
+attributes give users all the information they need, prioritized correctly. They check the content tree against the
+glossary's UX objects before any screen state is reviewed. She leaves interaction behind CTAs, and so screen states,
+to later rounds; the state question below is this material's addition, not hers.
+
+The research proposed four further questions for the UX reviewer. They fit the walkthrough and rubric options of
 `MAT-ux-documentation-practice` section 3 as follows:
 
 | Question | Mechanical or judged | Note |
@@ -180,7 +198,7 @@ The research proposed four questions for the UX reviewer. They fit the walkthrou
 | Is every operable element traced to the use case step and capability it serves? | Mechanical once links exist (2a) | Not necessarily 1:1: navigation may cite no capability and one control may cite several |
 | Does one screen have more than one competing primary region? | Judged | Information dumping |
 
-## 7. Out of scope: interfaces of agentic products
+## 7. Out of scope: agentic product interfaces and pattern archives
 
 The research also surveyed intent-based agentic UX, generative UI (runtime interfaces an agent composes for end
 users, for example over [A2UI](https://github.com/google/A2UI) with a client-side catalog of trusted components or
@@ -188,6 +206,16 @@ users, for example over [A2UI](https://github.com/google/A2UI) with a client-sid
 assignments. These concern products whose users interact with an agent, or team organization, not the specification
 of screens an agent builds. A project with such a product can describe them in its own UX documents; they add no
 requirement to the devkit kind.
+
+External UX pattern archives were reviewed and deferred. Flow archives (Mobbin, Page Flows), component
+directories ([Component Gallery](https://component.gallery/about)), pattern libraries (UI-Patterns) and NN/g guidance
+can inform a specification when their logic, not their visuals, is transcribed: examples cause design fixation
+(Jansson and Smith, *Design Studies*, 1991), the same anchoring seen with character-cell sketches in section 3, while
+no references at all leaves output at the generic centre (section 4). Which archives a project uses, and their
+subscriptions and connections, differ per project; Mobbin's official MCP server ([mobbin.com/mcp](https://mobbin.com/mcp))
+requires a paid plan and returns screenshots to the agent, and its free plan excludes flows and search
+([pricing](https://mobbin.com/pricing.md)). A writing-instruction paragraph on handling references was judged too weak
+to be worth adding on its own, so the milestone does not cover references; a later proposal can take them up.
 
 ## 8. Options for Planning
 
@@ -209,7 +237,12 @@ keeping lifecycles in capabilities (citing, not restating).
 
 - Dropped as unsupported: star ratings and grades comparing methods, "90%/10%" splits of screens needing wireframes,
   claims of hallucination-free or "near 100%" accurate generation, task-flow design producing "spaghetti code", and
-  "complete" protection against architecture drift.
+  "complete" protection against architecture drift. From the follow-up on non-layout wireframes: "UX State Outline"
+  and "one-dimensional data stack" as Prater's terms (she uses neither), states as one of her four questions, review
+  times of "about 30 minutes" or agent renderings "in 1-2 minutes" (her first wireframes took about two hours), and a
+  pipeline that goes from an outline straight to finished code with only micro-interactions left to check.
+- Opinion, no source: rendering unstyled semantic HTML as the structural review medium. It is plausible and web-only,
+  so it is a project-owned medium (5a) and review evidence when present (5b).
 - Corrected: spec-driven development is presented as an emerging practice; the spec-first, spec-anchored and
   spec-as-source levels come from [Böckeler, martinfowler.com, 2025](https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html),
   which is openly skeptical of the tools. "State-driven design" is not an established method name; statecharts are.
