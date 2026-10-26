@@ -8,7 +8,7 @@ target: devkit spec scope update
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-24
 ---
 
@@ -37,3 +37,7 @@ created_at: 2026-10-24
 [SCOPE_ACK: status=applied revision=10 added=2 removed=0 overlaps=0 unresolved=1]
 {"value":"specs/2026-10/20261022-frontmatter-libyaml/feedback/canonical-c-yaml-contract.md","reason":"excluded-tree","source":"declared-code"}
 ```
+
+## Disposition
+
+Resolved by `SPEC-feedback-guidance-and-scope` (decision 3): an exact `_Boundary` path naming another spec bundle's feedback file (`specs/**/feedback/<name>.md`, not a directory) is collected as `declared-code` scope, so two units resolving the same feedback overlap; it does not replace entrypoint candidates. Other `specs/` paths, globs, directories and the unit's own feedback stay excluded, and entrypoint derivation still skips feedback files. Contract in `CAP-COLL-work-scope-registry` 4.1. Verified by the scope input tests in `test_inputs.py` and `test_derive_skips_a_declared_feedback_file`.
