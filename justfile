@@ -95,6 +95,10 @@ version-sync:
 version-check:
     python3 scripts/version.py --check
 
+# Refresh tooling of the release handbook: status, stamp PAGE..., generate [--preview], verify [--preview], release-check TAG
+handbook *args:
+    uv run --no-active python scripts/handbook.py "$@"
+
 # Build the release wheels, SHA256SUMS and notes for a vX.Y.Z tag into dist/
 release-build tag:
     bash scripts/release.sh "$1"

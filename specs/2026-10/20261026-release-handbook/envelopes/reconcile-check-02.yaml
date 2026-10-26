@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:03:18.157813Z'
+status: completed
+summary: 'Implementer verified the reconcile fixes of reconcile-check-01: ARCH-05-2-components names the handbook playbook and is a target, spec related_capabilities lists CAP-DLV-release-handbook; the docs/development/ci-cd.md sentence is outside the write scope and is handed to the Host in reconcile.md Deferred work (ARCH-07-deployment, the canonical contract, is reflected)'
+findings: []
+assumptions:
+- docs/development/ci-cd.md section 3 stays without the handbook sentence until the Host adds it at integration; it is a secondary description, not the contract
+checks:
+  reconcile: PASS self-verification of findings 2 and 3; finding 1 deferred to the Host
+  lint: PASS devkit rules check on the unit and ARCH-05-2
+diff_scope:
+  base: dffb87d8a9b67d6c2d55913c5ac4f53d60e16ea4
+  head: f4d51ec887f2bc539670b99a5cac41e84894b398

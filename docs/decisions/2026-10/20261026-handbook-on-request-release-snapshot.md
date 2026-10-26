@@ -1,15 +1,15 @@
 ---
-id: PADR-handbook-on-request-release-snapshot
+id: ADR-handbook-on-request-release-snapshot
 title: Handbook as an on-request release snapshot
 summary: For a human entry point to devkit, we keep a tracked handbook/ derived from docs/, refreshed only when the user runs its playbook during release preparation and verified at release only then, to add no reconcile duty, accepting a handbook that may trail several releases.
-proposal: PROP-release-handbook
-status: draft
+proposal: SPEC-release-handbook
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-handbook-on-request-release-snapshot] Handbook as an on-request release snapshot
+# [ADR-handbook-on-request-release-snapshot] Handbook as an on-request release snapshot
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---

@@ -1,0 +1,31 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:02:51.464837Z'
+status: completed
+summary: 'reconcile-reviewer: CAP-DLV-release-handbook, ARCH-07-deployment 1.2 and ARCH-05-1-containers match the implementation and ADRs; gaps in docs/development/ci-cd.md, ARCH-05-2-components and spec related_capabilities'
+findings:
+- issue: docs/development/ci-cd.md section 3 (release automation) does not name the handbook release check or the optional refresh step, and reconcile.md does not cover it
+  evidence: docs/development/ci-cd.md:131-141; scripts/release.sh:26-28
+  failure_condition: A maintainer preparing or debugging a release from ci-cd.md does not learn that a refreshing release fails on HANDBOOK_DOCS_MISMATCH or a verification finding
+  suggested_action: Add one sentence to ci-cd.md section 3 pointing to ARCH-07-deployment 1.2 and CAP-DLV-release-handbook; list it in reconcile.md
+  resolution: open
+  severity: P2
+- issue: ARCH-05-2-components describes tools/devkit-dev as owning only structure and layering rules
+  evidence: docs/architecture/ARCH-05-2-components.md:76-77
+  failure_condition: A reader of the components view sees an incomplete list of what devkit-dev owns
+  suggested_action: Name the handbook playbook there and list the file as a target
+  resolution: open
+  severity: P3
+- issue: spec.md related_capabilities stays empty although the unit creates CAP-DLV-release-handbook
+  evidence: specs/2026-10/20261026-release-handbook/spec.md:7
+  failure_condition: Traceability from the capability to the spec that delivered it is missing
+  suggested_action: 'Set related_capabilities: [CAP-DLV-release-handbook]'
+  resolution: open
+  severity: P3
+checks:
+  reconcile: PASS targets agree with scripts/handbook.py, release.sh, config and bundle
+diff_scope:
+  base: dffb87d8a9b67d6c2d55913c5ac4f53d60e16ea4
+  head: 53fa99b9e8faaad417aff2b127899668f0232760

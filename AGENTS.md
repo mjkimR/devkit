@@ -16,7 +16,9 @@ Personal developer tools monorepo.
 - `devkit-dist` never imports `devkit_agt` or the MCP SDK. `devkit-agt` mounts its commands through `devkit.commands` entry points; `devkit-dist` owns the `devkit` executable. The `devkit-dist` tests also run without `devkit-agt` installed (`just test-dist`).
 - `guides/` holds the agent-facing installation guides a consumer's agent follows from a GitHub link; keep their commands, codes and bundle recommendations in step with `docs/` and the packages.
 - `docs/capabilities/<area>/` is canonical for each module's behavior, and `docs/architecture/` defines system structure; `docs/development/reference/<module>.md` and package READMEs stay quick references that point to those contracts, and the bundled guide instructions are consumer-facing mirrors kept in step.
-- Write all documentation, architecture specifications, and guide materials in English.
+- Write all documentation, architecture specifications, and guide materials in English. The one exception is the
+  release handbook: non-English text belongs only under `handbook/<lang>/` for a language other than `en`
+  (`ADR-localized-handbook-language-exception`); `handbook/en/` and `handbook/manifest.json` stay English.
 - Do not commit `.env` or log secrets/PII.
 
 ## Agent-First Design

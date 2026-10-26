@@ -74,7 +74,8 @@ A package may explicitly declare shared transport adapters: dist owns `adapters/
 its common CLI boundary. These adapters remain above application layers. Application-owned bundles live under
 `bundles/<name>/bundle/`, including a package with only one bundle. Content-only packages
 may retain their existing bundle-only layouts. `tools/devkit-dev` owns the repository's
-structure and layering rules in a development bundle; its initial layout is bundle-only.
+structure and layering rules and the release handbook playbook (`CAP-DLV-release-handbook`) in a development bundle;
+its initial layout is bundle-only.
 
 Package initializers own package management: explicit exports, import control, lazy loading and
 dynamic discovery are allowed in `__init__.py`. Business operations, domain validation and command

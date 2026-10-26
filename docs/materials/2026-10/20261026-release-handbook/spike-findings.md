@@ -1,6 +1,6 @@
 # Spike findings: PROP-release-handbook
 
-Evidence for the Technical Spike Questions, from `envelopes/scout-01.yaml` and `envelopes/challenger-01.yaml` at
+Evidence for the Technical Spike Questions, from historical Git `27bb56262d58d381f5b6a740a0771944f388ab34:docs/proposals/PROP-release-handbook/envelopes/scout-01.yaml` and historical Git `27bb56262d58d381f5b6a740a0771944f388ab34:docs/proposals/PROP-release-handbook/envelopes/challenger-01.yaml` at
 the Planning base 3137814f. Paths are worktree-relative; line numbers hold at that base.
 
 ## Q1 Generation split
