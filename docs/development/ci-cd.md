@@ -135,6 +135,8 @@ workspace distribution. `just version-sync` updates static versions, versioned i
 runs the reusable CI workflow on that commit, then calls `just release-build <tag>` to build every workspace
 package wheel and generate `SHA256SUMS` and installation notes. It publishes those artifacts in a GitHub Release.
 The separately released embedding-model wheel is referenced by URL and is not rebuilt.
+Before any wheel build, `just release-build` runs the handbook release check, which verifies the handbook only when
+its manifest names the tag being built (`ARCH-07-deployment` §1.2, `CAP-DLV-release-handbook`).
 
 Synchronization also runs `uv run --no-active devkit sync` after locking to refresh deployed bundles and
 `.devkit/installation.json`. Commit the refreshed receipt with the release metadata. A sync failure stops release

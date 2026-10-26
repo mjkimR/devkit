@@ -1,0 +1,21 @@
+kind: answer
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-25T23:55:32.024224Z'
+status: completed
+summary: 'bounding corrected by user; corrects answer-01.yaml: adds the refactor execution model and subagent apply authority to the bounding constraints'
+findings: []
+checks: {}
+answers_to: worker-01.yaml
+answers:
+- question: bounding
+  choice: a
+  decision: The user selects surfaces (code, guidance, CLI) and roots at intake; the run splits into one batch per surface with one decision round per batch, and a cross-surface finding cites both sides and belongs to the batch of the surface where its change lands.
+  constraints:
+  - The work the playbook applies is refactoring, not feature development; applying the agreed behavior-preserving consolidations and reductions primarily follows the overall-refactor workflow (sdd-overall-refactor), not the feature development workflow for every item.
+  - Direct mode applies the batch's behavior-preserving work item - the playbook's agent works with the user, splits the work, uses general subagents for parallel edits across many files, drafting and research, checks each result against the diff, talks with the user and commits at checkpoints; no planning-worker, no development-worker and no Unit.
+  - Verification and review follow that workflow (full test suite, lint, type checks, rules check; code-reviewer started by the playbook's agent at the activity effort), and report and integration follow it with task_kind overall-refactor.
+  - Playbook-spawned subagents may apply agreed edits within the batch's write scope under the playbook's agent's coordination and validation; they never ask the user, approve a change or write the run's records.
+  - Contract removals (commands, options, public interfaces, compatibility paths) stay separate work items through the repository's normal development workflow.
+  - The playbook states the rule that decides when a batch's change is a single-module refactor, which follows the feature workflows.

@@ -169,6 +169,10 @@ The release workflow runs the full CI, refuses a commit outside `main`, and vali
 metadata and lock before building every workspace wheel and publishing the GitHub Release. See
 `ARCH-07-deployment` and `ADR-single-release-version`.
 
+To refresh the handbook for this release, run the `devkit-dev/handbook` playbook after editing `VERSION` and before
+the metadata commit; only a release whose tag equals `handbook/manifest.json`'s tag checks the handbook
+before it builds, through the script behind `just handbook release-check <tag>`.
+
 Synchronization also runs `uv run --no-active devkit sync` after locking to refresh deployed bundles and
 `.devkit/installation.json`. Commit the refreshed receipt with the release metadata. A sync failure stops release
 preparation without a success sentinel; resolve its advisory and rerun `just version-sync`.
@@ -186,4 +190,7 @@ requirement on it, run `just model-build` (fetches and verifies the files, build
 - [devkit-dist](packages/devkit-dist/README.md) and [devkit-agt](packages/devkit/README.md): module tables with links to each module's reference.
 - [devkit-catalog](packages/devkit-catalog/README.md): opt-in content bundles and how to add one.
 - [devkit-viewer](packages/devkit-viewer/README.md): the local repository viewer and its frontend commands (`just viewer ...`).
+- Handbook for people: a release snapshot of the Living Spec in English and Korean under `handbook/en/` and
+  `handbook/ko/`, written when a release preparation refreshes it on request; each page names the release it
+  describes, and `docs/` prevails on any conflict (`CAP-DLV-release-handbook`).
 - Examples: [devkit-starter](packages/devkit-starter/README.md), [delivery-workflow bundle](examples/bundles/delivery-workflow/README.md).

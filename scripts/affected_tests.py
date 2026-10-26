@@ -49,6 +49,8 @@ FULL_PREFIXES = (
 FULL_FILES = frozenset({f"{DIST_SRC}/cli.py", f"{DIST_SRC}/__main__.py", f"{DIST_SRC}/__init__.py", "uv.lock"})
 FULL_NAMES = frozenset({"pyproject.toml", "conftest.py"})
 
+# The handbook script tests also read release.sh (and .devkit/config.toml, which selects no test: nightly CI covers it).
+HANDBOOK_TESTS = "tools/devkit-dev/tests/integration/test_handbook_script.py"
 # Repository files that tests read directly, which imports do not show: prefix -> test paths.
 DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
     (
@@ -83,6 +85,8 @@ DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("scripts/check_test_environment.py", (f"{DEVKIT}/tests/integration/package/test_test_environment.py",)),
     ("scripts/fetch_model.py", (f"{DIST}/tests/integration/features/search/test_packaging.py",)),
     ("scripts/affected_tests.py", (f"{DEVKIT}/tests/e2e/package/test_affected_tests.py",)),
+    ("scripts/handbook.py", (HANDBOOK_TESTS,)),
+    ("scripts/release.sh", (HANDBOOK_TESTS,)),
 )
 # Tests over devkit's whole source tree (layering, documented codes, CLI wiring, stdout kinds), run for any source
 # change in either devkit distribution.
@@ -103,7 +107,7 @@ FRONTEND_CHECK = (
     " && just viewer build"
 )
 
-# Paths no test reads: planning records, agent projections, guides, CI and release scripts.
+# Paths no test reads: planning records, agent projections, guides, the handbook snapshot, CI and smoke scripts.
 UNTESTED_PREFIXES = (
     "specs/",
     "guides/",
@@ -114,7 +118,7 @@ UNTESTED_PREFIXES = (
     ".github/",
     "scripts/smoke.sh",
     "scripts/smoke_integration.py",
-    "scripts/release.sh",
+    "handbook/",
 )
 UNTESTED_FILES = frozenset({".gitignore", ".python-version"})
 # Markdown at the repository root or a package root (README, AGENTS).

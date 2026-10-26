@@ -131,6 +131,17 @@
       ]
     },
     {
+      "bundle": "devkit-dev",
+      "entrypoints": [
+        ".devkit/managed/devkit-dev/playbooks/handbook.md"
+      ],
+      "id": "handbook",
+      "kind": "playbook",
+      "paths": [
+        ".devkit/managed/devkit-dev/playbooks/handbook.md"
+      ]
+    },
+    {
       "bundle": "harness",
       "id": "harness-consumption",
       "kind": "instruction",
@@ -1325,7 +1336,7 @@
     },
     ".devkit/managed/devkit-dev/bundle.toml": {
       "mode": 420,
-      "sha256": "73f30b32960b32eb814e5ae52089c1530cd69937eb44fea747143776c658afef"
+      "sha256": "2f6e4b927807f4a187350daa319bab0d3df58417d3ea2832388026f69fb0b3c1"
     },
     ".devkit/managed/devkit-dev/instructions/project-structure.md": {
       "mode": 420,
@@ -1334,6 +1345,10 @@
     ".devkit/managed/devkit-dev/instructions/testing.md": {
       "mode": 420,
       "sha256": "22725f622e248d6f05edeaf8edb8e52bbf3819edc0d0a9091022317ad14a17a4"
+    },
+    ".devkit/managed/devkit-dev/playbooks/handbook.md": {
+      "mode": 420,
+      "sha256": "4c04f1ac71e3fa45f86e857d2c2d97c08279af60f80b229dd099ddd572aac16b"
     },
     ".devkit/managed/devkit-dev/rules/architecture/facts.py": {
       "mode": 420,
@@ -2013,6 +2028,7 @@
         "core"
       ],
       "devkit-dev": [
+        "handbook",
         "structure"
       ],
       "harness": [

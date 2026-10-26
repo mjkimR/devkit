@@ -1,7 +1,7 @@
 ---
 id: CAP-VIEW-repository-viewer
 title: "Local Repository Viewer"
-summary: "A read-only local page, served by devkit viewer serve, that shows saved working-tree files and the checked-out branch for several devkit repositories, loads dashboard sections as cached ordered lists with incremental body pages, and supplies the Svelte viewer library autohub vendors."
+summary: "A read-only local page, served by devkit viewer serve, that shows saved working-tree files and the checked-out branch of several devkit repositories, overlays proposals under Planning from local plan-* worktrees and refs, pages cached dashboard lists, and supplies autohub's viewer library."
 area: viewer
 status: active
 entrypoints:
@@ -17,7 +17,8 @@ The `devkit-viewer` distribution gives people a screen for what agents read thro
 proposals, specs and milestones (`ADR-roadmap-and-milestones`, `ADR-roadmap-and-milestones`). It mounts
 `devkit viewer` under the `devkit` command line (`CAP-HARN-command-mount`). devkit owns the viewer's source; autohub
 consumes its component library as a vendored tarball (`ADR-viewer`). The server's
-choices are `ADR-viewer` as superseded by `ADR-viewer-working-tree`. Command quick reference:
+choices are `ADR-viewer` as superseded by `ADR-viewer-working-tree`, and `ADR-viewer-planning-proposal-overlay` for
+proposals under Planning. Command quick reference:
 [reference](../../development/reference/viewer.md).
 
 ## 1. Serving
@@ -42,7 +43,7 @@ Nothing else is written to stdout. Request logs are `[INFO]` lines on stderr und
 
 ## 2. Reading the working tree
 
-Ordinary tree and blob endpoints read saved files below the registered repository root. They include uncommitted and untracked files. A request path is repository-relative; absolute paths, `.git` segments, `.` segments, `..` segments, empty segments and backslashes are invalid. Symlinks and `.git` directories are omitted from listings and cannot be read. No ordinary content request starts Git or selects another branch.
+Ordinary tree and blob endpoints read saved files below the registered repository root. They include uncommitted and untracked files. A request path is repository-relative; absolute paths, `.git` segments, `.` segments, `..` segments, empty segments and backslashes are invalid. Symlinks and `.git` directories are omitted from listings and cannot be read. No ordinary content request starts Git or selects another branch; only the Planning reads of §2.1 do.
 
 | Endpoint (`GET`) | Answer |
 | --- | --- |
@@ -51,12 +52,48 @@ Ordinary tree and blob endpoints read saved files below the registered repositor
 | `/api/repos/<id>/tree?path=` | `{"items": [{"name", "path", "type": "tree"\|"blob", "size"?}]}`: one directory, directories first |
 | `/api/repos/<id>/dashboard-list?path=<section>` | `{"items": [{"path", "content", "encoding": "utf-8"}], "errors": ["path: error"]}`: frontmatter only for `milestones`, `proposals` or `feedback` |
 | `/api/repos/<id>/blob?path=` | `{"path", "encoding": "base64", "content", "size"}` |
+| `/api/repos/<id>/planning-proposals` | `{"sources": [{"id", "kind", "label", "slug"}], "items": [{"source", "path", "content", "encoding": "utf-8"}], "errors": ["..."]}` (§2.1) |
+| `/api/repos/<id>/tree?path=&source=`, `/api/repos/<id>/blob?path=&source=` | The same shapes, read from one Planning source (§2.1) |
 
 `tree?path=<dir>&recursive=true` returns the same metadata fields for all descendants in one response. It reads no file bodies and applies the same path, symlink and `.git` exclusions as a shallow listing. The default listing remains one directory.
 
 The dashboard listing reads candidate frontmatter through the closing YAML delimiter, without decoding document bodies. An absent optional root is empty; discovery/read failures are listed in `errors`. Invalid section names return `400 VIEWER_PATH_INVALID`. The browser parses YAML and reports malformed entries. File paths and symlinks obey the same working-tree guards.
 
 `default_branch` is the branch checked out in the registered work tree (`HEAD` when detached). An empty `path` is the root. A legacy `ref` query parameter is ignored and cannot select another branch. Errors are `{"error": {"code", "message"}}`: `VIEWER_REPO_UNKNOWN`, `VIEWER_PATH_NOT_FOUND` (absent or a symlink), `VIEWER_NOT_FOUND` (no such endpoint or file) with `404`; `VIEWER_PATH_INVALID` (a leading `/`, a `.git` segment, a backslash, an empty, `.` or `..` segment) with `400`.
+
+### 2.1 Planning sources
+
+A proposal under Planning is edited on its `plan-<slug>` branch. The server reads that proposal's directory from local
+sources only (`ADR-viewer-planning-proposal-overlay`). A source has the ID `worktree:plan-<slug>`, `branch:plan-<slug>`
+or `remote:<remote>/plan-<slug>`, the label `worktree plan-<slug>`, `plan-<slug>` or `<remote>/plan-<slug>`, and its
+kind; `<slug>` matches `[A-Za-z0-9][A-Za-z0-9._-]*` without `..`.
+
+- **Precedence**: For each slug, the server MUST use, in order, another existing worktree whose branch is
+  `plan-<slug>` (its saved files, uncommitted and untracked included), the local branch `plan-<slug>`, or the
+  remote-tracking `<remote>/plan-<slug>` whose remote name sorts first, as of the last fetch. Check:
+  `tests/integration/features/browse/test_planning.py`.
+- **Merged refs**: IF a local branch or remote-tracking ref is already merged into the checkout's `HEAD`, THEN the
+  server MUST NOT use it as a source; a worktree stays a source. Check:
+  `tests/integration/features/browse/test_planning.py`.
+- **Own branch**: WHILE the registered checkout is on `plan-<slug>`, the server MUST report no source for that slug.
+  Check: `tests/integration/features/browse/test_planning.py`.
+- **Scope**: A source MUST contribute only `docs/proposals/PROP-<slug>/` of its own slug; a source without
+  `proposal.md` there contributes no item. Check: `tests/integration/features/browse/test_planning.py`.
+- **Batched, read-only scan**: WHEN `planning-proposals` is requested, the server MUST start at most one
+  `git worktree list`, one `git for-each-ref` and one `git cat-file --batch`, and MUST NOT fetch, call `gh` or write.
+  Per-source failures are listed in `errors` with a `200` answer. A source-scoped `tree` or `blob` enumerates the
+  sources again and then reads with one more Git process for a branch source, or from a worktree's files. Check:
+  `tests/integration/features/browse/test_planning.py`.
+- **Unknown source**: IF `tree` or `blob` names a `source` that is not a source enumerated for that request, THEN the
+  server MUST answer `404 VIEWER_SOURCE_UNKNOWN`; no ref name or revision expression reaches Git. Check:
+  `tests/integration/features/browse/test_planning.py`.
+- **Source scope**: IF a valid path with a known `source` is outside that source's `docs/proposals/PROP-<slug>/`, THEN
+  the server MUST answer `400 VIEWER_SOURCE_PATH_REFUSED`. Path errors keep precedence, and a source-scoped path
+  holding a line break is also `400 VIEWER_PATH_INVALID`, so each Git batch request stays one line. A worktree source
+  keeps the symlink and `.git` guards, and a committed symlink or submodule is `404 VIEWER_PATH_NOT_FOUND`. Check:
+  `tests/integration/features/browse/test_planning.py`.
+
+Every other endpoint ignores `source`, as all ignore `ref`.
 
 ## 3. Local and read-only
 
@@ -74,7 +111,7 @@ else is `404`, so no encoded `..` or absolute path reaches a file outside the bu
 
 ## 4. The page
 
-The page is the viewer moved from autohub, with a repository picker and a label for the checked-out branch. Its tabs read only the registered working tree:
+The page is the viewer moved from autohub, with a repository picker and a label for the checked-out branch. Its tabs read the registered working tree; the Dashboard proposal section and the Proposals tab add the Planning overlay (§4.2):
 
 - **Dashboard**: milestones, proposal anchors and feedback load independently (§4.1).
 - **문서 읽기**: the Living Spec under `docs/`, grouped by chapter, with in-page links between documents by ID.
@@ -99,6 +136,37 @@ shown. Rendered Markdown and SVG pass through DOMPurify.
 - **Freshness**: WHEN the dashboard Refresh button is selected, the viewer MUST invalidate that source's result caches and reload the sections. Expired entries reload on the next access. Browser reload clears memory; there is no background filesystem subscription. Check: `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
 - **Disposal**: WHEN the repository or branch changes or a view is disposed, pending work MUST NOT publish to the replacement view or populate a refreshed cache generation. Check: `frontend/src/lib/features/dashboard/DashboardView.test.ts` and `frontend/src/lib/features/dashboard/loading.test.ts`.
 
+### 4.2 Planning overlay
+
+The overlay covers proposals only: specs, feedback, milestones, the Living Spec, the Files tab and the roadmap read the
+registered working tree.
+
+- **Checkout first**: WHEN the proposals section opens through a source with `planningProposals`, the dashboard MUST
+  request the overlay separately and MUST display the checkout's cards without waiting for it. Check:
+  `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
+- **In place**: WHEN the overlay arrives, the dashboard MUST show the Planning title, status, summary and source badge
+  on the matching cards in their positions. Planning-only active proposals are appended after the last checkout card
+  once no page remains, and the active count includes them. Check:
+  `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
+- **Overlay failure**: IF the overlay fails, THEN the dashboard MUST keep the checkout cards and count and show a
+  non-alert note. Check: `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
+- **Ordering seed**: WHEN a proposals list is built, it MUST merge the overlay last loaded for that source and branch
+  into its order and membership, and take a seeded proposal's body from that overlay. Membership and order then stay
+  fixed until the next build. Check: `frontend/src/lib/features/dashboard/loading.test.ts`.
+- **Withdrawn source**: WHEN a fresh overlay no longer reports a seeded proposal's source, the dashboard MUST show that
+  card with the checkout's header in place, or drop it when the checkout lacks it, and count accordingly. Check:
+  `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
+- **Overlay cache**: An overlay answered with an empty `errors` list MUST be reused for 30 seconds and discarded by
+  Refresh; an overlay with errors is applied and seeds the next list build but is not cached, so the next visit asks
+  again. Aborted or superseded work MUST NOT publish or populate a refreshed cache generation. Check:
+  `frontend/src/lib/api/planning.test.ts`.
+- **Proposals tab**: WHEN the Proposals tab lists proposals, an overlaid proposal MUST replace its checkout entry with
+  a source badge and a Planning-only one joins in path order. WHEN an overlaid proposal is selected, its bundle MUST be
+  read through `planningTree` and `planningBlob` with its source, and no "View raw" button opens the checkout copy.
+  Check: `frontend/src/lib/features/knowledge/KnowledgeViews.test.ts`.
+- **Card selection**: WHEN a Dashboard proposal card is selected, the page MUST open that proposal in the Proposals
+  tab, and the request MUST NOT apply in another tab. Check: `frontend/src/lib/SddViewer.test.ts`.
+
 The local source supports recursive metadata requests to avoid one HTTP call per directory. Library hosts without `dashboardList` retain selective full-document discovery to determine ordering and counts; their cold load may read all matching bodies, while the UI still pages cards. Other library hosts use a queue of at most six concurrent requests per scan; a completed request immediately frees its worker for queued work.
 
 ## 5. Roadmap
@@ -107,7 +175,8 @@ The local source supports recursive metadata requests to avoid one HTTP call per
   ID.
 - **Readiness**: a milestone is ready when every milestone in its `depends_on` is `done` or `dropped`. A `depends_on`
   naming no milestone is shown as unknown and never counts as satisfied.
-- **Source**: milestones and members come from the registered working tree. Other branches are not enumerated.
+- **Source**: milestones and members come from the registered working tree. Other branches are not enumerated and the
+  Planning overlay does not apply. Check: `frontend/src/lib/RoadmapView.test.ts`.
 - **Members**: direct PROP anchors whose `milestone` names the milestone in the registered working tree. Rejected proposals are not members.
   SPEC milestone metadata is ignored, including historical metadata; SPECs never replace proposals by slug.
   The roadmap loader reads milestone and proposal anchors only. Direct proposals do not certify completion.
@@ -123,10 +192,11 @@ The local source supports recursive metadata requests to avoid one HTTP call per
   Git therefore needs no Node; only changing the frontend does.
 - the component library `devkit-viewer` (`svelte-package`), whose `npm pack` tarball autohub commits under its
   `vendor/` and depends on with `file:`. Its root entry exports `SddViewer`, `KnowledgeViews`, `RoadmapView`,
-  `httpDataSource`, `normalizeTree`, `buildRoadmap` and the `RepositoryDataSource` type; `svelte` is a peer
+  `httpDataSource`, `normalizeTree`, `buildRoadmap` and the `RepositoryDataSource`, `PlanningSource` and
+  `PlanningProposals` types; `svelte` is a peer
   dependency; the tarball holds no file of the page or the server. Nothing is published to a registry.
 
-A host passes its own `RepositoryDataSource` (`info`, `tree(path, ref)`, `blob(path, ref)`, optional `refs`, `treeRecursive(path, ref)` and `dashboardList(section, ref, signal)`), keeping
+A host passes its own `RepositoryDataSource` (`info`, `tree(path, ref)`, `blob(path, ref)`, optional `refs`, `treeRecursive(path, ref)`, `dashboardList(section, ref, signal)`, `planningProposals(signal)`, `planningTree(source, path, signal)` and `planningBlob(source, path, signal)`), keeping
 authentication and renewal on its side. autohub's Git browser and run and decision panels are not part of the
 library.
 

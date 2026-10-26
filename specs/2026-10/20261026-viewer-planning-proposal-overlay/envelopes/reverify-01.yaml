@@ -1,0 +1,42 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T23:50:38.818043Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified the fixes in c8818678 (medium effort, no expanded scope): merged plan refs are skipped with for-each-ref --no-merged=HEAD (test_refs_merged_into_the_checkout_are_not_sources); a seeded card falls back to the checkout header or leaves once the fresh scan omits its source (DashboardView vanished-source test); a card request applies only to its tab and a pending jump is cancelled by a tab switch (SddViewer test fails without the fix); spec §6 and the ADR state the detail-read Git cost.'
+findings:
+- issue: Planning ref sources already merged into the checkout still overlay its newer proposal with an authoritative-looking badge.
+  evidence: packages/devkit-viewer/src/devkit_viewer/features/browse/repositories/planning.py:107-126
+  failure_condition: A merged plan-<slug> local branch or unpruned remote-tracking ref is an ancestor of HEAD and main later changes PROP-<slug>/proposal.md.
+  suggested_action: Exclude ref sources merged into HEAD with for-each-ref --no-merged=HEAD in the same process; keep worktree sources; record and test.
+  resolution: resolved
+  severity: P2
+- issue: A vanished Planning source keeps its seeded Dashboard content and badge after Refresh because live ?? seed prefers the pre-Refresh seed.
+  evidence: packages/devkit-viewer/frontend/src/lib/features/dashboard/DashboardView.svelte:137-143; packages/devkit-viewer/frontend/src/lib/features/dashboard/loading.ts:145-154
+  failure_condition: Overlay applied with source X; plan-x deleted; Refresh; the fresh scan without X completes but the card still shows X.
+  suggested_action: Once a live overlay arrived, fall back to the checkout header for seeded paths it no longer reports, keeping checkout metadata in the snapshot; test a vanishing source across Refresh.
+  resolution: resolved
+  severity: P2
+- issue: A Dashboard card's knowledge request is not scoped to the Proposals view; switching to Book re-resolves it and opens the checkout copy in Files.
+  evidence: packages/devkit-viewer/frontend/src/lib/SddViewer.svelte:290-294; packages/devkit-viewer/frontend/src/lib/features/knowledge/KnowledgeViews.svelte:243-270
+  failure_condition: 'Click a proposal card on the Dashboard, then the Book tab: the view jumps to Files with the checkout proposal.md.'
+  suggested_action: Carry the target view in the request and apply it only there; add an SddViewer test card -> Book stays on Book.
+  resolution: resolved
+  severity: P2
+- issue: 'Spec and ADR misstate the Git cost of detail reads: each source-scoped request re-enumerates sources (worktree list + for-each-ref) before its read.'
+  evidence: packages/devkit-viewer/src/devkit_viewer/features/browse/repositories/planning.py:218-228; specs/2026-10/20261026-viewer-planning-proposal-overlay/spec.md:122-123; docs/decisions/2026-10/20261026-viewer-planning-proposal-overlay.md:84
+  failure_condition: Opening an overlaid bundle of N files starts about 3*(N+1) Git processes, not N+1 as documented.
+  suggested_action: Correct the spec assumption, the ADR consequence and the CAP figure.
+  resolution: resolved
+  severity: P3
+assumptions:
+- 'Finding 1 is decided inside the agreed scope: an ancestor of the checkout holds no newer proposal, so excluding it keeps the overlay''s purpose; recorded as a spec §6 assumption and in the ADR'
+checks:
+  tests: PASS just test-affected 134 passed; just viewer test 61 passed
+  lint: PASS just lint/check devkit-viewer; just viewer lint/check; devkit rules check
+diff_scope:
+  base: 4dc99db3bffbe6bb0c38b8fc63bdf37a786c3269
+  head: c8818678cfd512b03242cb95304b99093149bb7b
+activity_effort: medium

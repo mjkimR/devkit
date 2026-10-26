@@ -47,6 +47,7 @@ The registered repository root remains the boundary for file reads. The local we
 ## 4. Decision Outcome
 
 We read tree and blob content directly from the registered current working directory and display the checked-out branch as a label. Ordinary content requests ignore any `ref` query parameter. Directory listings omit symlinks and `.git` directories; requests for symlinks fail as missing paths and `.git` paths are invalid. A resolved path outside the registered root is never served. The UI and roadmap read only the current checkout.
+For proposals under Planning, `ADR-viewer-planning-proposal-overlay` replaces this statement.
 
 The exact-generation proposal-review route remains unchanged. The server continues to bind to loopback, refuse foreign Host headers, answer GET only, and write nothing.
 

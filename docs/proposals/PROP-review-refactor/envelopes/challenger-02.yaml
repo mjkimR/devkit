@@ -1,0 +1,45 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-25T23:21:30.747191Z'
+status: completed
+summary: round 2; folds 1-10 resolve their round-1 failure conditions; the fold introduced two P2 defects (nested drift invocation, unsatisfiable fixture evidence) and three P3 gaps.
+findings:
+- issue: 'Fold of challenger-01 #2 lets review-refactor continue in drift-reconciliation when merely selected (deployed), a playbook selection the user never named.'
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:99-102; docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md:208-214; packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/drift-reconciliation.md:8; docs/decisions/2026-10/20261021-external-playbook-execution.md:40-43
+  failure_condition: Under the default all preset, a run finds a mismatch and the agent enters drift-reconciliation unnamed, violating CAP-DIST §5 and drift's own entry condition.
+  suggested_action: Record the mismatch as a deferred finding with a drift-reconciliation destination; the playbook never invokes another playbook; the user may name drift-reconciliation separately.
+  resolution: open
+  severity: P2
+- issue: Fixture AC requires change records and preservation evidence that a paper fixture with 'change nothing' exercise wording cannot produce.
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:78-80,88-89,133-136,152-155; specs/2026-10/20261021-periodic-drift-reconciliation/materials/fixture-exercise.md:3-6,25-28; packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/drift-reconciliation.md:46
+  failure_condition: No commit or command result exists for the exercised changes, or the records hold paper comparisons and the AC passes vacuously.
+  suggested_action: Fixture is a disposable Git repository outside the worktree with its own minimal test command; simulated-approved changes apply only there; patches, SHAs and before/after output kept in the Unit's materials; exercise rule 'decisions are simulated and change only the fixture'.
+  resolution: open
+  severity: P2
+- issue: Interactions entry for PROP-spec-playbook-discovery omits shared README, guides/install/ and docs/usecases/governance/.
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:14-21,169-176; packages/devkit-catalog/README.md:56-57; guides/install/bundle-recommendations.md:33
+  failure_condition: Both Developments edit the README maintenance paragraph and recommendation row; the reconciliation sentence does not cover them.
+  suggested_action: Add those paths to the overlap under the same land-second-reconciles rule.
+  resolution: open
+  severity: P3
+- issue: Compatibility-path exception 'no consumer can exist' is ambiguous against this repository's 'No external consumers exist yet' policy.
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:127-129,139-140; AGENTS.md:36,38
+  failure_condition: A legacy branch in devkit-dist is classified differently between runs.
+  suggested_action: 'Reword: unless the declared compatibility policy states that no external consumer exists for that package; the change record still names the inputs no longer accepted.'
+  resolution: open
+  severity: P3
+- issue: AC does not say whether Development runs a real decision round for the sweep or what a follow-up work item is.
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:92-96,152-156; .devkit/managed/spec/skills/spec/references/classification.md:14
+  failure_condition: A development-worker stalls on needs_input or invents agreement, or opens work items inside a delivery that makes no live refactor.
+  suggested_action: The real sweep stops at its decision round with nothing applied and its findings are recorded as feedback follow-ups; a real decision round is a separate invocation after delivery.
+  resolution: open
+  severity: P3
+unverified_areas:
+- Whether the expanded playbook fits the 12288-byte skill size budget
+- Discovery proposal's pending apply-authority wording
+checks: {}
+diff_scope:
+  base: 3b98174f1822065abaed8d0f75accc4d8e58ee93
+  head: 594cd43b5fb3147b7b51ba7dcd0ca0347d091bcd

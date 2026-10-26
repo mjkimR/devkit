@@ -67,6 +67,18 @@ Synchronization also runs `uv run --no-active devkit sync` after locking to refr
 `.devkit/installation.json`. Commit the refreshed receipt with the release metadata. A sync failure stops release
 preparation without a success sentinel; resolve its advisory and rerun `just version-sync`.
 
+### 1.2 Optional Handbook Refresh
+
+When the user requests it, release preparation refreshes the handbook (`CAP-DLV-release-handbook`) after `VERSION`
+names the upcoming release and before the `just version-sync` metadata commit: the `devkit-dev/handbook` playbook
+regenerates and verifies `handbook/` and commits it, writing `v<VERSION>` as the manifest tag. There is no cadence; a
+release without a refresh keeps the previous handbook (`ADR-handbook-on-request-release-snapshot`).
+
+`scripts/release.sh` runs the handbook check after the tag, metadata and lock checks and before any wheel build. A
+release is refreshing exactly when `handbook/manifest.json` names the tag being built: its build fails on a
+verification finding or when `docs/` at the tagged commit differs from `docs/` at the manifest source commit. Every
+other release prints `[HANDBOOK_SKIPPED: ...]` and runs no handbook command that writes files.
+
 ---
 
 ## 2. Consumer Workspace Layout

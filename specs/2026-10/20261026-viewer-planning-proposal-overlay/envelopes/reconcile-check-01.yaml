@@ -1,0 +1,26 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T23:53:24.870209Z'
+status: completed
+summary: Reconcile-reviewer verified all six targets (CAP-VIEW-repository-viewer §2/§2.1/§4/§4.2/§5/§6, the new ADR, the ADR-viewer-working-tree pointer, reference, both READMEs) against the diff; ARCH no-impact holds; two P3 documentation gaps.
+findings:
+- issue: CAP §4.2 Overlay cache does not say that an overlay answered with errors is applied as the seed but never cached.
+  evidence: packages/devkit-viewer/frontend/src/lib/api/planning.ts:56; docs/capabilities/viewer/CAP-VIEW-repository-viewer.md:158
+  failure_condition: A reader expects an overlay with a non-empty errors list to be reused for 30 seconds; it is requested again on every visit.
+  suggested_action: Define a successful load as one with empty errors and state that an overlay with errors still seeds but is not cached.
+  resolution: open
+  severity: P3
+- issue: Source-scoped reads refuse paths containing a line break with VIEWER_PATH_INVALID, which CAP §2/§2.1 do not list.
+  evidence: packages/devkit-viewer/src/devkit_viewer/features/browse/repositories/planning.py:228-229; docs/capabilities/viewer/CAP-VIEW-repository-viewer.md:62
+  failure_condition: A source-scoped request whose path contains a line break gets 400 VIEWER_PATH_INVALID, not predicted by the documented invalid-path list.
+  suggested_action: Add the line-break refusal for source-scoped reads to §2.1 Source scope.
+  resolution: open
+  severity: P3
+assumptions:
+- Native nested reconcile-reviewer subagent; implementer checks reused
+checks: {}
+diff_scope:
+  base: 4dc99db3bffbe6bb0c38b8fc63bdf37a786c3269
+  head: f83c9f3b89d7148194d0b12f68d3c59eb32e7239

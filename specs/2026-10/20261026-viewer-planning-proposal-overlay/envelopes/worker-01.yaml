@@ -1,0 +1,16 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T23:55:32.029056Z'
+status: completed
+summary: 'Development turn complete up to the final change report: specified, implemented and verified the Planning proposal overlay (server sources and scoped reads, Dashboard/Proposals overlay), fixed review-01''s four findings, reconciled CAP-VIEW-repository-viewer, the new ADR, reference and READMEs, swept feedback (FB-reviewer-probe-tests). Next: dev-integration by the Host.'
+findings: []
+checks:
+  tests: PASS just test-affected 135 passed; just viewer test 61 passed
+  build: PASS just viewer build/pack; viewer-assets current
+  lint: PASS just lint/check devkit-viewer; just viewer lint/check; just rules-check
+diff_scope:
+  base: ''
+  head: 6118a672ecb76a335dbb9c2a1d583432495020af
+activity_effort: medium

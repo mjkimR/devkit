@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:04:34.466572Z'
+status: completed
+summary: Delivered scripts/handbook.py (status, stamp, generate [--preview], verify, release-check) with the just handbook recipe, the devkit-dev handbook playbook and preset, the release.sh check for refreshing releases, the RULE-cli-contract exclusion, the AGENTS.md language exception, README pointers and CAP-DLV-release-handbook with ARCH-07/05-1/05-2 updates; no handbook snapshot committed (Non-Goal 1)
+findings: []
+assumptions:
+- Host runs uv run devkit sync at integration to deploy the devkit-dev handbook playbook (.devkit/managed and installation.json outside the write scope)
+- Host adds the handbook release-check sentence to docs/development/ci-cd.md section 3 (outside the write scope)
+checks:
+  tests: PASS just test-affected --base dffb87d8 (217)
+  build: PASS uv build --package devkit-dev (wheel ships playbooks/handbook.md)
+  lint: PASS just lint devkit-dev, just check devkit-dev, just rules-check, devkit rules check --ci --base dffb87d8
+diff_scope:
+  base: dffb87d8a9b67d6c2d55913c5ac4f53d60e16ea4
+  head: 8124bcc98753b9d18e188e8f85fcc35e6826b020
