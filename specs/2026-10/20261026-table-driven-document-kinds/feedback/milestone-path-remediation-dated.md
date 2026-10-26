@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/features/governance/usecases/id_con
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -43,3 +43,10 @@ created_at: 2026-10-26
 id_convention.py:298-301  path_issue="Milestone must be stored at docs/roadmap/MS-{slug}.md"
 id_convention.py:476-485  non-Living-Spec remediation: "Move the file to {YYYY-MM}/{YYYYMMDD}-{slug} with the decision or start date"
 ```
+
+## Disposition
+
+Resolved by `SPEC-link-prefixes-and-milestone-remediation` (q3=a of this proposal's Planning): `_target` in
+`id_convention.py` gives a misplaced milestone its own remediation naming `docs/roadmap/MS-{slug}.md`; the other kinds'
+remediations are byte-identical, pinned by `test_misplaced_path_remediation_names_each_kinds_location`. This
+refactor's characterization baseline is captured after that fix.

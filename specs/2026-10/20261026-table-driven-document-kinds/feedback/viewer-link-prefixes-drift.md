@@ -8,7 +8,7 @@ target: packages/devkit-viewer/frontend/src/lib/api/documents.ts
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -44,3 +44,10 @@ grammar of `CAP-DOCS-document-model` section 3.2.
 documents.ts:246  /\[((?:CAP|US|ARCH|ADR|PROP|SPEC|PLAN|TASKS|REC|MAT|PADR)-[A-Za-z0-9][A-Za-z0-9-]*)\]/g
 ids.py:34-48      PREFIXES = CAP, UC, ARCH, ADR, PROP, PADR, SPEC, PLAN, TASKS, REC, FB, MAT, MS
 ```
+
+## Disposition
+
+Resolved by `SPEC-link-prefixes-and-milestone-remediation` (q2=a of this proposal's Planning kept the viewer out of the
+table): the prose reference pattern in `frontend/src/lib/api/documents.ts` now lists
+`CAP|UC|ARCH|ADR|PROP|PADR|SPEC|PLAN|TASKS|REC|FB|MAT|MS`, matching `PREFIXES`; `documents.test.ts` covers `[UC-…]`,
+`[FB-…]`, `[MS-…]` and the retired `[US-…]`, and the committed page is rebuilt.
