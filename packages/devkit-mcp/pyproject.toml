@@ -1,12 +1,12 @@
 [project]
 name = "devkit-mcp"
-version = "0.1.3"
+version = "0.1.4"
 description = "Optional FastMCP transport and native confirmation runtime for devkit services"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "devkit-core==0.1.3",
-    "devkit-dist==0.1.3",
+    "devkit-core==0.1.4",
+    "devkit-dist==0.1.4",
     "fastmcp>=4.0.3,<5",
     "jsonschema>=4.23,<5",
     "mcp-types>=2,<3",

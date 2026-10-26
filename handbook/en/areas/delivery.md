@@ -6,7 +6,7 @@ sources:
   CAP-DLV-human-interaction: bbe6a95de1da4aae4da340a8a8f0dfd8e8e6a035
   CAP-DLV-project-policy: 7cec046a7324de8f46048c80dea6a4286bf809ef
   CAP-DLV-proposal-incubation: 9f9d06e5a526179f9d39e52890ee4e66277d95c6
-  CAP-DLV-release-handbook: 7fa53f1c5669584342764f579384066369eeafaa
+  CAP-DLV-release-handbook: 98941d4b7793e2ac6a7fc50b92c337ede376e3ce
   CAP-DLV-review-refactor: 4c9e10968504b3edfdd77c6698275db599416bfd
   CAP-DLV-spec-bundles: 516cc932fee8af93baae90012e8dbe4c9b6f4725
   CAP-DLV-weekly-report: 0499a11d003f2b19a0ead794315b96ab8a09c22f
@@ -26,7 +26,7 @@ title: Delivery
 # Delivery
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `ae01161143be`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `5e71d74c8e5a`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

@@ -1,17 +1,19 @@
 ---
 sources:
+  ADR-handbook-first-book-on-request: 07e5e9b99ca797eb88d8b1c822e867787b467d60
+  ADR-handbook-staleness-from-version: 131d31e3a445b2b224f4e69911e5578b564f6fef
   ADR-viewer-planning-proposal-overlay: 9846db226f8b490434bf16f96ec8214b3771f855
   ADR-viewer-working-tree: a30f877468912cf550d6214ce4d1e219b2192950
   CAP-COLL-shared-artifacts: d000f00d3b8d672ea0473d3c6f01dafafe3b8f70
   CAP-GEN-tracked-artifacts: a934a5865acf8170b874bff2de6ddc36f5c401f4
-  CAP-VIEW-repository-viewer: ebb7d1ff04b45243e31a394f5179e86eac80f12a
+  CAP-VIEW-repository-viewer: 72250394d5598dd6e28792b3312f0accad466f13
 title: Viewer
 ---
 
 # Viewer
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `ae01161143be`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `5e71d74c8e5a`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -80,7 +82,11 @@ The page has a repository picker, a label for the checked-out branch and these t
 
 - **Dashboard**: milestones, proposals and feedback, each section loading on its own and paging with
   Load more.
-- **문서 읽기**: the Living Spec under `docs/`, grouped by chapter, with links between documents by ID.
+- **Read**: the repository's release handbook when `handbook/manifest.json` exists, in the language you pick
+  (remembered in the browser), with its tag and a note when the checkout's `VERSION` has moved past it; otherwise a
+  short absence note. The **Living Spec book** control computes the book of `docs/`, grouped by chapter with links
+  between documents by ID, only when you ask for it (`ADR-handbook-first-book-on-request`,
+  `ADR-handbook-staleness-from-version`).
 - **Proposals** and **Specs**: `docs/proposals/PROP-*/proposal.md` and the bundles under `specs/`, with their files,
   filters and task progress.
 - **로드맵**: the milestones under `docs/roadmap/`, ordered active then planned, with readiness from `depends_on`
@@ -145,4 +151,6 @@ The frontend under `packages/devkit-viewer/frontend/` is one Svelte source with 
   serving, endpoints, Planning sources, page behaviour, roadmap, library and the review page.
 - [Viewer quick reference](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/viewer.md).
 - [ADR-viewer-working-tree](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261024-viewer-working-tree.md),
-  [ADR-viewer-planning-proposal-overlay](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261026-viewer-planning-proposal-overlay.md).
+  [ADR-viewer-planning-proposal-overlay](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261026-viewer-planning-proposal-overlay.md),
+  [ADR-handbook-first-book-on-request](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261026-handbook-first-book-on-request.md),
+  [ADR-handbook-staleness-from-version](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261026-handbook-staleness-from-version.md).

@@ -1,18 +1,20 @@
 ---
 sources:
+  ADR-handbook-first-book-on-request: null
+  ADR-handbook-staleness-from-version: null
   ADR-viewer-planning-proposal-overlay: null
   ADR-viewer-working-tree: null
   CAP-COLL-shared-artifacts: null
   CAP-GEN-tracked-artifacts: null
   CAP-VIEW-repository-viewer: null
 title: 뷰어
-translated_from: en/areas/viewer.md@619b64f9c2a1c06b
+translated_from: en/areas/viewer.md@11dd5242784c0fe2
 ---
 
 # 뷰어
 
 <!-- handbook:provenance -->
-> 소스 커밋 `ae01161143be` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `5e71d74c8e5a` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -79,7 +81,10 @@ uv run devkit viewer serve --port 0                 # 사용 가능한 임의의
 웹 페이지에는 저장소 선택 메뉴, 현재 체크아웃된 브랜치 표시 레이블, 그리고 다음 탭들이 제공됩니다(탭 레이블은 UI에 표시되는 실제 명칭입니다).
 
 - **Dashboard**: 마일스톤, 제안서, 피드백을 보여 줍니다. 각 섹션은 독립적으로 로드되며 Load more 버튼으로 페이징됩니다.
-- **문서 읽기**: `docs/` 하위의 Living Spec을 장(chapter)별로 분류하여 보여 주며, 문서 간 링크를 ID 기반으로 연결합니다.
+- **Read**: `handbook/manifest.json`이 있으면 저장소의 릴리스 핸드북을 선택한 언어(브라우저에 기억됨)로 보여 주고,
+  태그와 함께 체크아웃의 `VERSION`이 핸드북보다 앞서면 안내를 표시합니다. 핸드북이 없으면 짧은 안내만 보여 줍니다.
+  **Living Spec book** 버튼을 누를 때만 `docs/`의 book을 계산하며, book은 장(chapter)별로 분류되고 문서 간 링크를
+  ID 기반으로 연결합니다(`ADR-handbook-first-book-on-request`, `ADR-handbook-staleness-from-version`).
 - **Proposals** 및 **Specs**: `docs/proposals/PROP-*/proposal.md` 파일과 `specs/` 하위의 스펙 번들 목록을 파일 구성, 필터링 옵션,
   작업 진행 상황과 함께 제공합니다.
 - **로드맵**: `docs/roadmap/` 하위의 마일스톤을 active, planned 순서로 정렬하여 표시하며, `depends_on`을 바탕으로 준비 상태를 보여
@@ -145,4 +150,6 @@ Dashboard의 제안 섹션과 Proposals 탭은 로컬 저장소 소스만을 참
   서비스, 엔드포인트, Planning 출처, 페이지 동작, 로드맵, 라이브러리와 리뷰 페이지.
 - [Viewer quick reference](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/development/reference/viewer.md).
 - [ADR-viewer-working-tree](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261024-viewer-working-tree.md),
-  [ADR-viewer-planning-proposal-overlay](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261026-viewer-planning-proposal-overlay.md).
+  [ADR-viewer-planning-proposal-overlay](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261026-viewer-planning-proposal-overlay.md),
+  [ADR-handbook-first-book-on-request](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261026-handbook-first-book-on-request.md),
+  [ADR-handbook-staleness-from-version](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/decisions/2026-10/20261026-handbook-staleness-from-version.md).
