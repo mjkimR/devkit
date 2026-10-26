@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T08:55:05.092642Z'
+status: completed
+summary: 'Self-verified reconcile at low effort: CAP-TRACE-code-entrypoints sections 3.5, 4.4, 4.5 and 4.6 match the diff (adopt, unfold, SPEC_ENTRYPOINTS_CODE_UNMATCHED refusal); skill, use cases and handbook have no impact; source feedback resolved'
+findings: []
+checks:
+  reconcile: PASS self-check of reconcile.md targets against the diff; test_documented_codes passes
+  lint: PASS devkit rules check
+diff_scope:
+  base: ead1175b2a127c45bc12fcc0abc7fd018242c95b
+  head: 47109d3272241cc6565bdd1f727877619735cb5e
