@@ -141,9 +141,10 @@ lockstep from one tag, pinning workspace runtime dependencies to that exact vers
 
 ### Repository development bundle
 
-`tools/devkit-dev` owns repository-specific project structure and layering checks. It starts as a
+`tools/devkit-dev` owns repository-specific project structure and layering checks and the release handbook
+playbook (`handbook` preset; `CAP-DLV-release-handbook`), whose script lives in root `scripts/handbook.py`. It is a
 bundle-only development package; optional `base`, `utils` or feature layers may be added when it
-acquires Python behavior. Its rules are separate from the reusable harness rules shipped to consumers.
+acquires Python behavior. Its rules and playbook are separate from the reusable assets shipped to consumers.
 
 ### Optional MCP runtime
 
