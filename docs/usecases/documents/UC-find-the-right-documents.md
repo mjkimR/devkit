@@ -70,7 +70,9 @@ created_at: 2026-10-13
 ## 4. Postconditions
 
 - **Success guarantee**: the agent holds the exact IDs and workspace-relative paths of the governing documents and of
-  the documents linked to them; completed spec bundles stayed out of the results unless the agent asked for history.
+  the documents linked to them; historical documents (completed spec bundles, done or dropped milestones and
+  terminal-status feedback, decisions and proposals) stayed out of the results unless the agent asked for history or
+  named their status, and `list` reported how many it left out (`hidden=` with a `[HISTORY_CMD: ...]` line).
 - **Minimal guarantee**: every lookup reads only and changes no file; a file the index cannot read is left out with a
   `SPEC_DOCUMENT_INVALID` warning while every other document stays usable; an unresolved or duplicated ID is reported
   by code, never guessed.

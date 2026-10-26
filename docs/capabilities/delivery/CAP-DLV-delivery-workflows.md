@@ -384,7 +384,7 @@ the session's effort. An emulated named-role projection still applies its declar
 | --- | --- | --- | --- | --- | --- |
 | `challenger` | none: the procedure is in the contract | `high-reasoning` | `high` | nothing | `challenger` |
 | `reconcile-reviewer` | `spec-sync` | `light-medium` | `medium` | nothing: verifies the implementer's reconcile at `medium`/`high`, subject to rule 15 | `reconcile-check` |
-| `code-reviewer` | `spec-review` | `general-high` | `high` | nothing: verifies implementation against requirements and checks | `review`, `reverify`, or a message for a session |
+| `code-reviewer` | `spec-review` | `general-high` | `high` | nothing but throwaway probe tests under the ignored probe path the payload names, deleted before it returns and never the unit's tests: verifies implementation against requirements and checks | `review`, `reverify`, or a message for a session |
 | `scout` | none: the procedure is in the contract | `light-medium` | `medium` | nothing, or the proposal's `materials/` on request | `scout` |
 | `planning-worker` | none: the procedure is in `spec/references/planning.md`, which the contract cites | `general-high` | session | the proposal directory in its `plan-` worktree, committed | `worker` (its own) |
 | `development-worker` | none: the procedure is in the contract | `general-high` | session | the unit's write scope in its `dev-` worktree, committed at every stage boundary | `worker` (its own) and the stage envelopes |
@@ -406,6 +406,11 @@ instruction paths (a nested role's read from another checkout is a reported boun
 scratch files in an ignored path inside its worktree, writes its own records, commits at every stage boundary and,
 when it stops on questions or a problem, makes an emergency commit of the unfinished work with its `worker` envelope
 when record/commit access is permitted.
+A delegated change to a bundle source the project selects carries the tracked files `devkit sync --check` lists (for
+example `.devkit/installation.json`) in the worker's write scope; the worker runs `devkit sync` and commits them, and
+never edits `.devkit/managed/`. A before/after acceptance outcome names a baseline the worker can produce in its
+worktree (the head with the change disabled, or a Planning measurement on the same machine), or the Host takes the
+base measurement, because the worker never checks out another commit (`SPEC-delegation-sandbox-guidance`).
 Planning resolves operational instructions and CLI execution in the assigned worktree. When a turn needs newer
 base document IDs or CLI features, the Host incorporates the base and synchronizes that worktree's installed
 instructions under existing Git and permission policy before resuming. A worker discovering that dependency returns
@@ -444,6 +449,10 @@ access. Unavailable or denied approval stops that operation and preserves its ac
 refusal through another tool, path, process or broader request. Retry another-cause failure only after cause/input
 changes and authorization permits it. Failed record/emergency commit operations use only still-permitted scoped
 access. Emergency `--no-verify` is limited to ordinary commit-gate refusal, never sandbox or approval denial.
+A task worktree is always `<parent of base>/<base name>-wt-<branch>` (`--workspace-root` only names a directory
+inside the checkout), and a linked worktree's commits write the base's shared Git directory. When either lies outside
+the session's writable roots, the same per-operation approval applies, or the user grants the path; the agent never
+relocates the worktree or changes a host setting (the `spec` skill's `references/worktree.md`).
 
 When the worker record or emergency commit also cannot run, return `failed` with cause, commands tried, recovery,
 actual last SHA, dirty paths and absent/uncommitted records or commit; never invent a clean committed result or final

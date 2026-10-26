@@ -8,7 +8,7 @@ target: development-worker role contract and spec-delegate write scope
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -37,3 +37,13 @@ devkit sync --check: [CHANGE: update .devkit/managed/<bundle>/bundle.toml] [CHAN
 devkit playbook get <bundle>/handbook: SELECTION_INVALID (playbook is not synchronized)
 reconcile-check-01 finding 1 (P2): docs/development/ci-cd.md section 3 not updated for the release-script check
 ```
+
+## Disposition
+
+Resolved by `SPEC-delegation-sandbox-guidance`: `spec-delegate`'s `references/payload.md` tells the Host to add the
+tracked files `devkit sync --check` lists for a selected-bundle change (for example `.devkit/installation.json` and the
+managed `AGENTS.md` block) to the worker's write scope; `.devkit/managed/` is ignored and never a write path. The
+`development-worker` contract runs `devkit sync` after such an edit, commits those files and raises a tracked output
+the scope omits as a problem. The second suggestion was already covered: the worker's write scope includes the Living
+Spec paths the reconcile record targets. Verified by
+`packages/devkit-spec/tests/integration/bundles/spec/test_delegation_sandbox_guidance.py`.

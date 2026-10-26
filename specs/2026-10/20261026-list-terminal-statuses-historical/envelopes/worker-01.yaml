@@ -1,0 +1,16 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:44:59.622210Z'
+status: completed
+summary: 'Development from specify to the final change report: terminal statuses historical in list/search via DocumentIndex.is_browsing_historical (rules unchanged), --status override, hidden= on list PAGE and JSON, [HISTORY_CMD] hint; ADR-terminal-statuses-are-historical; contracts in docs/capabilities/documents; --history at adr-compaction, milestone-completion, spec-next step 3; code review PASS (4 P3: 3 fixed, 1 waived), reconcile check 5 findings fixed or waived as Host follow-ups (UC-find-the-right-documents, CAP-HARN-command-mount outside write scope). Ready for dev-integration.'
+findings: []
+checks:
+  tests: PASS just test-affected 1540 passed
+  build: PASS just check devkit-spec
+  lint: PASS just lint-check devkit-spec; rules check --ci --base 6f3dd3aa errors=0
+diff_scope:
+  base: ''
+  head: e98e5cc9f8662c96c12175990e30ffdaf88d9232
+activity_effort: medium

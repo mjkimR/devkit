@@ -2,8 +2,9 @@
 
 The policy on top of the generic ranking:
 
-- **Candidates** are the indexed documents (``documents.DocumentIndex``), current ones only unless ``history``,
-  optionally narrowed to some kinds.
+- **Candidates** are the indexed documents (``documents.DocumentIndex``), without the historical ones
+  (``DocumentIndex.is_browsing_historical``: completed bundles, done or dropped milestones, terminal statuses) unless
+  ``history``, optionally narrowed to some kinds.
 - **Fields**: a document's ID and its English ``summary`` are its metadata, ranked lexically and densely (the ID
   alone when it has no summary); the title, the area and the body after the frontmatter are ranked lexically only,
   in whatever language they are written. Measured on benchmark documents (Korean titles and bodies, English paraphrase
@@ -156,7 +157,7 @@ def search_documents(
         document
         for document in index.documents
         if (not kinds or document.kind in kinds)
-        and (history or not index.is_historical(document))
+        and (history or not index.is_browsing_historical(document))
         and (accept is None or accept(document))
     ]
     expanded = expand_query(query, load_glossary(index.root))

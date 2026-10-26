@@ -11,6 +11,7 @@ from devkit_spec.features.documents.models.model import Document, Issue, Referen
 from devkit_spec.features.documents.models.parse import parse_document
 from devkit_spec.features.documents.repositories.index import (
     SOURCE_DIRECTORIES,
+    TERMINAL_STATUSES,
     DocumentIndex,
     in_feedback,
     in_source_directory,
@@ -22,6 +23,7 @@ __all__ = [
     "ID_PATTERN",
     "PREFIXES",
     "SOURCE_DIRECTORIES",
+    "TERMINAL_STATUSES",
     "Document",
     "DocumentIndex",
     "Issue",
