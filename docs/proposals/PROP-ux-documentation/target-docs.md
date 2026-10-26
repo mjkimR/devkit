@@ -17,7 +17,7 @@ targets:
 
 # [Blueprint] PROP-ux-documentation: Target Living Spec Structure for UX documents, authoring guidance and use-case-driven review
 
-This blueprint follows the Planning recommendations; the user's answers recorded for `worker-01.yaml` may change it.
+This blueprint follows the user's answers recorded in `answer-01.yaml`.
 It assumes `PROP-table-driven-document-kinds` and `PROP-foundation-documents` have landed: the kind definition table
 is where the UX row goes, and the glossary is at `docs/steering/glossary.md` (listed below at its current path).
 
@@ -61,7 +61,8 @@ decision. The `usecase` template and the `usecase-writing` instruction allow a U
 - `spec` bundle: a `ux` template, a `ux-writing` instruction (contrasting candidates in Planning, no character-cell
   layouts, steering style files cited rather than restated, medium left to the project, system steps citing the
   screen of their response), the `ux-reviewer` subagent and `spec-ux-review` skill, the two UX rules with their
-  guides, a `docs/ux/` seed and a `docs/steering/ux-objects.md` seed in `docs-skeleton`, a Screens draft section in
+  guides, a `docs/ux/` seed in `docs-skeleton` (the `docs/steering/ux-objects.md` register is created by `ux-writing` with
+  the first UX document, never seeded), a Screens draft section in
   the target-docs blueprint and in `spec-specify` (which carries `target-docs.md` drafts into `spec.md` and offers the
   optional UX review before `spec-plan` in its Completion), the matching step in `characterize` for bugfixes, and
   the move of drafts into `docs/ux/` in `spec-sync`, with new IDs in drafts written as plain text.

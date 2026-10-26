@@ -41,7 +41,7 @@ switched on by content is excluded by `CAP-DLV-delivery-workflows` under `ADR-de
 
 ## 4. Decision Outcome
 
-Pending the user's answers to `review-method` and `review-placement` (Planning recommendation):
+Decided by the user (`review-method` and `review-placement`):
 
 - A `ux-reviewer` subagent (isolated, read-only) bound to a new `spec-ux-review` skill walks each linked use case's
   main scenario and extensions through its screens, answering per step: will the actor try the right thing, notice
@@ -51,7 +51,7 @@ Pending the user's answers to `review-method` and `review-placement` (Planning r
   primary regions, no information dumping); **R3 states** (every state offers a next action or says why none
   exists); **R4 feedback** (every interaction gives feedback; irreversible ones confirm or can be undone); **R5
   terms** (labels use the use case's and glossary's terms); **R6 objects** (representations and calls to action match
-  the steering object register for the role; recorded as not applicable when the project has none).
+  the steering object register for the role; recorded as not applicable while the register is absent or empty).
 - Before code the screens are drafts the rules do not read (`PADR-ux-drafts-before-code`), so the reviewer checks
   the link-rule items (link agreement, uncovered steps, targets, exits, reachability, modal close) on the drafts by
   hand, labels them as its own judgment and keeps them out of the rubric; the rules confirm them at

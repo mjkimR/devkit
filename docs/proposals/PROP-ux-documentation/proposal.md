@@ -85,7 +85,7 @@ Options and their evidence are in `MAT-ux-documentation-practice` (sections 1-5)
 
 ## 3. Proposed Design & Impact
 
-The Planning recommendation, pending the user's answers (§5); `target-docs.md` is the blueprint.
+The design as the user decided it (§5, `answer-01`); `target-docs.md` is the blueprint.
 
 - **Kind** (`PADR-ux-screen-documents`): one kind `ux`, prefix `UX`, at `docs/ux/<area>/UX-<slug>.md` and per
   namespace `docs/packages/<name>/ux/<area>/`, added as one row of the kind definition table of
@@ -102,7 +102,8 @@ The Planning recommendation, pending the user's answers (§5); `target-docs.md` 
 - **Authoring guidance**: a `ux-writing` instruction in the `spec` bundle: two or three contrasting candidates for
   the user in Planning where a screen's arrangement is open (Development takes the recommended one and records the
   others as an assumption), no character-cell layouts, objects named by glossary terms and registered with their
-  representations and calls to action in a seeded steering file `docs/steering/ux-objects.md`, visual style left to
+  representations and calls to action in the steering file `docs/steering/ux-objects.md`, which ux-writing creates
+  with the project's first UX document (not seeded), visual style left to
   the project's steering style files (cited, never restated), and the medium left to the project.
 - **Review** (`PADR-ux-review-before-code`): an isolated, read-only `ux-reviewer` subagent with a `spec-ux-review`
   skill: a cognitive walkthrough of each linked use case plus a six-item 0/1/2 rubric with evidence, the link-rule
@@ -119,9 +120,8 @@ The Planning recommendation, pending the user's answers (§5); `target-docs.md` 
 
 ## 4. Lifecycle & Retirement Criteria
 
-- Acceptance requires the user's answers to the Planning questions folded into the PADRs, an accepted
-  `PROP-foundation-documents` (`PROP-table-driven-document-kinds` is accepted) and the assumptions of §5 re-checked
-  after the Host merges `main`; the handoff waits until both prerequisites' Development is integrated (§5).
+- Acceptance requires the user's answers folded into the PADRs (done), both prerequisites accepted (done) and the
+  assumptions of §5 re-checked after the Host merges `main`; the handoff waits until both prerequisites' Development is integrated (§5).
 - Development shows: a UX document in a fixture repository indexed, listed, searched and grouped in the viewer; each
   report of both UX rules by a rule test, including the element and Interactions-table cases, off-screen re-entry,
   a system step between two screens and the step-format deviations; the role and skill contracts by the
@@ -142,14 +142,15 @@ to `challenger-03` are folded below.
 - **Q1**: a kind is known only by its prefix; one prefix costs one table row and one stem rule, two prefixes double
   kinds, directories and relation fields. The use case already holds a task's step order and extensions, so the
   interactions' targets give the transitions without a flow document. Glossary columns would silently disable the
-  Owner check, and the steering glossary has a 24576-byte body cap, so the recommended UX object register is its own
-  seeded steering file (`ux-objects`), not glossary content.
+  Owner check, and the steering glossary has a 24576-byte body cap, so the UX object register is its own steering file
+  (`ux-objects`), created with the first UX document, not glossary content (decided: `ux-objects`).
 - **Q2**: all 13 current use cases number steps and extensions regularly; no rule maps a body reference to a step.
   Citing UX IDs in step prose reuses reference resolution and alias rewriting; one step segmenter is new. Whether use
-  cases carry UX IDs at all is a user question (`step-screen-link`).
+  cases carry UX IDs was decided: they do (`step-screen-link`).
 - **Q3**: with targets in the interactions table, the flow graph checks cost little beyond orphans once each
   element's meaning is defined (panels exempt, end-of-task screens, `close`, `back` and `end` targets). Not every step
-  happens on a screen, so the strictness of "step without a screen" is a user question (`coverage-strictness`).
+  happens on a screen, so "step without a screen" is a warning while contradictions are errors (decided: `coverage-strictness`; the flow
+  graph checks ship: `ux-checks`).
 - **Q4**: a new subagent is a valid role without engine code; a stage switched on by content is excluded by
   `ADR-delivery-classification`; the `review` kind would share the code-review round state. Severity is bundle
   procedure, so a separate `ux-review` kind keeps the no-severity non-goal, with its own closing record.
@@ -157,9 +158,10 @@ to `challenger-03` are folded below.
   screenshot when one exists. Contrasting candidates are a Planning activity, because Development asks the user no
   direction question (`CAP-DLV-delivery-workflows` rule 7).
 - **Q6**: one proposal hands off to exactly one spec; the reviewer depends on the template and step keys, so the
-  recommendation keeps one proposal with ordered tasks (a user question).
+  proposal stays one, delivered as one spec with ordered tasks (decided: `decomposition`).
 - **Timing**: `spec-sync` writes `docs/` after code review, and a UX document written early links use case changes
-  that do not exist yet; drafts before code with the Living Spec at sync is recommended (a user question).
+  that do not exist yet; screens are drafted before code and the Living Spec follows at sync (decided:
+  `ux-document-timing`).
 
 ### Dependencies and order
 
@@ -174,14 +176,13 @@ The user decided that UX Development follows both prerequisites (`depends_on`).
   pair logic of `RULE-traceability-link`, per-kind stem rules and messages if the table does not carry them,
   templates and seeds, and the viewer's book group and bracket-ID pattern (the table change leaves the viewer out of
   scope; its own feedback record covers the stale viewer prefixes, and this proposal adds `UX` either way).
-- `PROP-foundation-documents` is in Planning; its direction as the Host reports it: a flat `docs/steering/`
+- `PROP-foundation-documents` is accepted; it hands off after the table-driven spec is integrated. Its direction: a flat `docs/steering/`
   directory, one file per topic with `title` and `summary` frontmatter and no ID, every file's frontmatter listed by
   `devkit get-context` and bodies read on demand, at most 10 files and 24576 body bytes per file, and the glossary
-  (`glossary.md`, `glossary.yaml`) moved into it. This proposal therefore names `docs/steering/glossary.md`, seeds
-  its object register as one steering file, refers to steering style files instead of restating style content, and
+  (`glossary.md`, `glossary.yaml`) moved into it. This proposal therefore names `docs/steering/glossary.md`, keeps
+  its object register as one steering file created on first use, refers to steering style files instead of restating style content, and
   budgets glossary growth against the cap (devkit's own glossary gains two terms, about 500 bytes on a body of about
-  7.6 KB). The `plan-accept` request waits for its acceptance, so a return to `spike` stays available if its design
-  changes these assumptions; the handoff waits for its Development to be integrated.
+  7.6 KB). The handoff waits for its Development to be integrated.
 - After each merge of `main` into this branch, the Host rewrites every `depends_on` entry whose proposal was handed
   off to its SPEC ID before requesting `plan-accept`, for both prerequisites; this proposal does not rely on handoff
   relocation, which cannot reach an edge that exists only on this branch.
@@ -206,6 +207,5 @@ The user decided that UX Development follows both prerequisites (`depends_on`).
   `.devkit/installation.json` and `AGENTS.md` for the `devkit sync` the new bundle assets imply.
 - The feedback record on stale viewer bracket-ID prefixes, recorded earlier in this run, is withdrawn: the accepted table change already
   records the same viewer defect (`challenger-03` finding 6).
-- `challenger-04` finding 2 (a seeded register burdens projects without an interface) is put to the user in
-  `ux-objects`; the Planning recommendation there creates `docs/steering/ux-objects.md` with the project's first UX
-  document instead of seeding it, and the PADR and blueprint follow the answer.
+- `challenger-04` finding 2 (a seeded register burdens projects without an interface) was settled by the user in
+  `ux-objects`: `docs/steering/ux-objects.md` is created with the project's first UX document, never seeded.

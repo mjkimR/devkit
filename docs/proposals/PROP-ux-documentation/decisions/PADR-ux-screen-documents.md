@@ -41,7 +41,7 @@ interactions, exits) from flows (a screen inventory with a transition table) (`M
 
 ## 4. Decision Outcome
 
-Pending the user's answer to `ux-document-set` (Planning recommendation):
+Decided by the user (`ux-document-set` and `ux-objects`):
 
 - One kind `ux`, prefix `UX`, at `docs/ux/<area>/UX-<slug>.md` and `docs/packages/<name>/ux/<area>/UX-<slug>.md`,
   statuses `draft`, `active` and `deprecated` (no terminal status, so `ADR-terminal-statuses-are-historical` needs no
@@ -52,11 +52,11 @@ Pending the user's answer to `ux-document-set` (Planning recommendation):
 - Sections: Purpose, Content (prose region rules and a content tree with conditions next to its nodes; no
   character-cell layouts), States, Interactions (`Trigger | Step | From | To | Target | Capability | Feedback`) and an
   optional Evidence section naming the project's own wireframe, mock-up or screenshot.
-- Objects are named by glossary terms. Their representations and calls to action per role live in a seeded steering
-  file `docs/steering/ux-objects.md` (one topic, under the steering caps of `PROP-foundation-documents`), scoped to
+- Objects are named by glossary terms. Their representations and calls to action per role live in the steering file
+  `docs/steering/ux-objects.md` (one topic, under the steering caps of `PROP-foundation-documents`), scoped to
   the objects the use cases touch; the glossary's term table, its Owner check and its 24576-byte budget stay
-  untouched, and devkit's own glossary gains only the new terms. The `ux-writing` instruction tells a project with an
-  existing steering directory to add the file, because seeds are written only once.
+  untouched, and devkit's own glossary gains only the new terms. The `ux-writing` instruction creates the file with the
+  project's first UX document; `docs-skeleton` seeds nothing, so projects without an interface never carry it.
 - The register meets the steering caps: its rows hold only the object, role, representation names and call-to-action
   names; at the 24576-byte body cap it keeps only the objects of use cases with UX documents; when no steering slot
   is free, the review records R6 as not applicable with the reason.
@@ -70,7 +70,7 @@ Pending the user's answer to `ux-document-set` (Planning recommendation):
 - Negative: no written overview of navigation across use cases.
 - Follow-up: a derived navigation listing (from the targets) if projects report that screens alone are hard to
   navigate.
-- Negative: the object register takes one of the ten steering files.
+- Negative: a project with an interface spends one of its ten steering files on the register.
 
 ## 6. Confirmation
 

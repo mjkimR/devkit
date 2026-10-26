@@ -42,7 +42,7 @@ navigation, help).
 
 ## 4. Decision Outcome
 
-Pending the user's answers to `step-screen-link`, `ux-checks` and `coverage-strictness` (Planning recommendation):
+Decided by the user (`step-screen-link`, `ux-checks` and `coverage-strictness`):
 
 - A use case step cites the UX ID of the screen it happens on in backticks, next to its capability citations; the use
   case gains no frontmatter field.

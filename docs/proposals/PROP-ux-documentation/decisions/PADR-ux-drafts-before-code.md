@@ -40,7 +40,7 @@ use case and capability changes it links; otherwise the rules refuse the commit 
 
 ## 4. Decision Outcome
 
-Pending the user's answer to `ux-document-timing` (Planning recommendation): drafts before code, Living Spec at sync.
+Decided by the user (`ux-document-timing`): drafts before code, Living Spec at sync.
 
 - `spec-specify` and the target-docs blueprint gain a Screens draft section in the UX template's shape. On a bundle
   handed off from a proposal, `spec-specify` carries the Screens drafts of `target-docs.md` into `spec.md`, so
