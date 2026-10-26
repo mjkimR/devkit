@@ -2,7 +2,7 @@
 id: SPEC-entrypoints-apply-file-codes
 title: Entrypoints apply accepts or refuses file codes
 summary: devkit spec entrypoints derive --apply --code <file> applies nothing and exits 0 when the file lies under a directory candidate; accept such a file or refuse each unmatched --code with a stable code.
-status: in-progress
+status: completed
 created: 2026-10-26
 related_capabilities: [CAP-TRACE-code-entrypoints]
 related_usecases: []
