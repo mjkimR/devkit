@@ -800,7 +800,7 @@
     },
     ".agents/agents/code-reviewer.md": {
       "mode": 420,
-      "sha256": "fb7b478267c0b90f07f2d4e801d9e6e48710793754853e4e0c3b81e5664fe64c"
+      "sha256": "f48cfe049b7de843f60a528594dd40e504d1f2f6fdb204fd512e1f27591dae76"
     },
     ".agents/agents/development-worker.md": {
       "mode": 420,
@@ -1020,7 +1020,7 @@
     },
     ".claude/agents/code-reviewer.md": {
       "mode": 420,
-      "sha256": "507c1d0d99359fe094565dc01994196c4d576b0665a1d636a478979823437df1"
+      "sha256": "e9cf63a7a9c85339987ced8bcd37834f53db44c24ec0cb3626ad07b6b44d581b"
     },
     ".claude/agents/development-worker.md": {
       "mode": 420,
@@ -1228,7 +1228,7 @@
     },
     ".codex/agents/code-reviewer.toml": {
       "mode": 420,
-      "sha256": "3116cd5e5b28cfdf0af6f2ed9d0a18492d46cbe8deafe1040d7d13fe5720b2bd"
+      "sha256": "ef5e58619d3b3b6497a2ff17b5570edeafe68110762db9be7f76fecd6cc41688"
     },
     ".codex/agents/development-worker.toml": {
       "mode": 420,
@@ -1536,7 +1536,7 @@
     },
     ".devkit/managed/spec/rules/id_convention/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "a09f854d29f097410108ae301502cedaddc73d7f165532c6182fcb492e171de1"
+      "sha256": "e698409f180e1f885806219773edb18c12434af2951a4544e06aed75e88673f3"
     },
     ".devkit/managed/spec/rules/proposal_boundaries/guide.md": {
       "mode": 420,
@@ -1800,7 +1800,7 @@
     },
     ".devkit/managed/spec/subagents/code-reviewer.md": {
       "mode": 420,
-      "sha256": "bfe966110b67074dbe2cbf1add3393ea3489644531175057e91a15bb386ff0cb"
+      "sha256": "44f14958a592e33df9ae06f345833f5da476b78ebb3f51d88d0fee0b08926064"
     },
     ".devkit/managed/spec/subagents/development-worker.md": {
       "mode": 420,

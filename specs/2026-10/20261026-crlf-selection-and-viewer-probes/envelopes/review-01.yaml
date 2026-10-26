@@ -1,0 +1,15 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T05:59:39.509539Z'
+status: completed
+summary: 'Author self-review at activity-effort low: AC-01 and AC-02 by the CRLF, LF and mixed selection-edit tests in test_config_template.py (Red before the fix, Green after); AC-03 and AC-04 by just viewer probe on scratch/probe-check-01 (exit 1, one failing probe) and scratch/probe-check-02 (exit 0), a relative and a missing path (exit 2), no generated config left; AC-05 by the pinned wording in test_delegation_sandbox_guidance.py and the viewer reference. No findings.'
+findings: []
+checks:
+  tests: PASS just test-affected (2570 passed, 1 skipped); just test-dist (1049 passed); frontend check lint, check, test (93 passed), pack, build with no tracked change
+  lint: PASS just lint-check devkit-dist; just check devkit-dist (0 errors); devkit rules check --ci --base f076ddbc
+  sync: PASS uv run devkit sync --check
+diff_scope:
+  base: f076ddbc46bacc6b380c99f78f8f475883def577
+  head: d71a31aee0761ccaee78b536497a0744f9d862c4
