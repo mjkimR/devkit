@@ -82,6 +82,8 @@ export interface SectionSnapshot {
 	fallback?: RepositoryDocument[];
 	/** The Planning overlay merged into this list: its documents replace checkout bodies. */
 	overlay?: Record<string, OverlayEntry>;
+	/** The checkout header each seeded path replaced; `null` for a Planning-only proposal. */
+	checkout?: Record<string, RepositoryDocument | null>;
 }
 export const cachedDashboardPage = (
 	source: RepositoryDataSource,
@@ -144,10 +146,12 @@ export async function openDashboardPage(
 	// Order and membership use the last applied Planning overlay; a later overlay never reorders this list.
 	const seed = section === 'proposals' ? appliedOverlay(source, ref)?.entries : undefined;
 	const overlay = seed && Object.keys(seed).length ? seed : undefined;
+	const checkout: Record<string, RepositoryDocument | null> = {};
 	if (overlay) {
 		const positions = new Map(metadata.map((doc, index) => [doc.path, index]));
 		for (const [path, entry] of Object.entries(overlay)) {
 			const index = positions.get(path);
+			checkout[path] = index === undefined ? null : metadata[index];
 			if (index === undefined) metadata.push(entry.document);
 			else metadata[index] = entry.document;
 		}
@@ -165,7 +169,8 @@ export async function openDashboardPage(
 			expires: Date.now() + CACHE_TTL_MS,
 			generation,
 			fallback,
-			overlay
+			overlay,
+			checkout: overlay ? checkout : undefined
 		},
 		signal
 	);

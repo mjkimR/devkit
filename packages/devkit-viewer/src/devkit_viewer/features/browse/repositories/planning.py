@@ -91,6 +91,8 @@ def planning_sources(root: Path) -> tuple[dict[str, PlanningSource], list[str]]:
     """The winning source of each slug by ID, and the enumeration failures.
 
     The checkout's own ``plan-<slug>``, known from the worktree list, has no source: the checkout already shows it.
+    A branch or remote-tracking ref merged into the checkout's ``HEAD`` holds nothing newer and is skipped; a worktree
+    stays a source, because it can hold saved, uncommitted edits.
     """
     root = root.resolve()
     errors: list[str] = []
@@ -106,7 +108,12 @@ def planning_sources(root: Path) -> tuple[dict[str, PlanningSource], list[str]]:
         errors.append(f"git worktree list: {exc}")
     try:
         output = run_git(
-            root, "for-each-ref", "--format=%(refname)%00%(objectname)", "refs/heads/plan-*", "refs/remotes/*/plan-*"
+            root,
+            "for-each-ref",
+            "--no-merged=HEAD",
+            "--format=%(refname)%00%(objectname)",
+            "refs/heads/plan-*",
+            "refs/remotes/*/plan-*",
         ).decode("utf-8", errors="surrogateescape")
     except GitError as exc:
         errors.append(f"git for-each-ref: {exc}")

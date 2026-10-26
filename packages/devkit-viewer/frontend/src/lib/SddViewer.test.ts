@@ -94,4 +94,24 @@ describe('SddViewer', () => {
 		);
 		expect(source.planningProposals).toHaveBeenCalledTimes(1);
 	});
+
+	it('keeps a Dashboard card request in the Proposals tab', async () => {
+		const source = repository();
+		render(SddViewer, {
+			dataSource: source,
+			repoId: 'repo',
+			branch: 'main',
+			initialView: 'dashboard'
+		});
+		await waitFor(() => expect(screen.getByText('Checkout B')).toBeTruthy());
+		await fireEvent.click(screen.getByText('Checkout B'));
+		await waitFor(() =>
+			expect(document.querySelector('.bundle-header h1')?.textContent).toBe('Checkout B')
+		);
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		await fireEvent.click(screen.getByRole('button', { name: 'Book' }));
+		await new Promise((resolve) => setTimeout(resolve, 50));
+		expect(screen.getByRole('button', { name: 'Book' }).getAttribute('aria-pressed')).toBe('true');
+		expect(document.querySelector('.viewer-layout.hidden')).not.toBeNull();
+	});
 });

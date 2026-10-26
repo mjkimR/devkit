@@ -229,3 +229,16 @@ def test_http_planning_endpoints(served: ViewerServer) -> None:
         200,
         {"repo_id": "repo", "default_branch": "main"},
     )
+
+
+def test_refs_merged_into_the_checkout_are_not_sources(repo: Path) -> None:
+    git(repo, "switch", "-q", "-c", "plan-done")
+    commit_files(repo, {"docs/proposals/PROP-done/proposal.md": proposal("done", "planned done")})
+    git(repo, "update-ref", "refs/remotes/origin/plan-done", "HEAD")
+    git(repo, "switch", "-q", "main")
+    git(repo, "merge", "-q", "--no-ff", "-m", "integrate", "plan-done")
+    commit_files(repo, {"docs/proposals/PROP-done/proposal.md": proposal("done", "completed on main")})
+    sources, errors = planning_sources(repo)
+    assert errors == []
+    assert not any(source.slug == "done" for source in sources.values())
+    assert "worktree:plan-a" in sources

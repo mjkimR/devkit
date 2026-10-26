@@ -64,8 +64,8 @@ We overlay Planning proposals from local sources. This replaces, for proposals o
 roadmap included, stays.
 
 - **Sources**: a worktree on `plan-<slug>` (read from its files), else the local branch `plan-<slug>`, else a
-  remote-tracking `<remote>/plan-<slug>` as of the last fetch. Each source contributes only
-  `docs/proposals/PROP-<slug>/`.
+  remote-tracking `<remote>/plan-<slug>` as of the last fetch. A ref already merged into the checkout is no source.
+  Each source contributes only `docs/proposals/PROP-<slug>/`.
 - **Loading**: the checkout's proposal list renders first; one independent request enumerates the sources with one
   `git worktree list` and one `git for-each-ref` and reads every branch source through one `git cat-file --batch`.
   Cards update in place, without reordering, until the next list build.
@@ -81,8 +81,9 @@ The selected option meets every driver; the remote staleness is visible through 
 
 - **Positive**: The Dashboard and Proposals tab show the proposal being planned, with its materials, without a branch
   switch. The checkout view is unchanged when no Planning source exists or the scan fails.
-- **Negative / Risks**: Each Dashboard or Proposals load starts up to three Git processes. A remote-tracking source can
-  be stale. Two views of one proposal exist, separated only by the badge.
+- **Negative / Risks**: Each Planning scan starts up to three Git processes, and each source-scoped `tree` or `blob`
+  read of an overlaid bundle up to three more. A remote-tracking source can be stale. Two views of one proposal exist,
+  separated only by the badge.
 - **Follow-ups**: Extend the overlay to specs under Development only if dev worktrees show the same staleness.
 
 ## 6. Confirmation

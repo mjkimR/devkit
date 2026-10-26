@@ -119,7 +119,11 @@ nothing.
 - When the registered checkout itself is on `plan-<slug>`, that slug has no Planning source: the checkout already shows
   it.
 - Of several remote-tracking refs for one slug, the one whose remote name sorts first wins.
-- A branch source's content is its commit as enumerated for the request. A detail `tree` or `blob` request starts one
-  Git process per request; only the Planning scan is batched.
-- The Dashboard keeps the last applied overlay per source and branch in memory as the seed of the next list build;
-  a displayed card keeps its seeded content until Refresh when a later scan no longer reports its source.
+- A local branch or remote-tracking ref already merged into the checkout's `HEAD` is not a source: it holds nothing the
+  checkout lacks. A worktree stays a source, because it can hold saved, uncommitted edits.
+- A branch source's content is its commit as enumerated for the request. A detail `tree` or `blob` request enumerates
+  the sources again (`git worktree list`, `git for-each-ref`) and then reads with one more Git process for a branch
+  source or from the files of a worktree; only the Planning scan is batched.
+- The Dashboard keeps the last applied overlay per source and branch in memory as the seed of the next list build.
+  Once the fresh scan of that build answers, a seeded card whose source it no longer reports shows the checkout's
+  header again, and a seeded Planning-only card leaves the list, without reordering the others.

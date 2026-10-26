@@ -133,14 +133,25 @@
 		...extractDashboardData([entry.document]).proposals.all[0],
 		source: entry.source
 	});
-	// Cards keep the list's order; the overlay replaces their content in place.
-	const listedProposals = $derived.by((): ProposalCard[] => {
-		const seed = sections.proposals.snapshot?.overlay ?? {};
-		const live = overlay?.entries ?? {};
+	// Cards keep the list's order; the overlay replaces their content in place. Once a scan has answered, a seeded
+	// proposal its source no longer reports falls back to the checkout header, or leaves if it was Planning-only.
+	const listedProposals = $derived.by((): (ProposalCard | null)[] => {
+		const snapshot = sections.proposals.snapshot;
+		const seed = snapshot?.overlay ?? {};
+		const live = overlay?.entries;
 		return extractDashboardData(sectionData('proposals')).proposals.active.map((item) => {
-			const entry = live[item.path] ?? seed[item.path];
-			return entry ? proposalData(entry) : item;
+			const entry = live ? live[item.path] : seed[item.path];
+			if (entry) return proposalData(entry);
+			if (!live || !seed[item.path]) return item;
+			const header = snapshot?.checkout?.[item.path];
+			return header ? extractDashboardData([header]).proposals.all[0] : null;
 		});
+	});
+	const withdrawn = $derived.by(() => {
+		const snapshot = sections.proposals.snapshot;
+		const live = overlay?.entries;
+		if (!snapshot?.checkout || !live) return 0;
+		return snapshot.paths.filter((path) => snapshot.checkout![path] === null && !live[path]).length;
 	});
 	// Planning-only proposals the list does not hold join after its last page.
 	const planningOnly = $derived.by((): ProposalCard[] => {
@@ -161,9 +172,11 @@
 			.sort((a, b) => a.id.localeCompare(b.id) || a.path.localeCompare(b.path));
 	});
 	const displayedProposals = $derived(
-		hasMore('proposals') ? listedProposals : [...listedProposals, ...planningOnly]
+		(hasMore('proposals') ? listedProposals : [...listedProposals, ...planningOnly]).filter(
+			(card): card is ProposalCard => card !== null
+		)
 	);
-	const proposalCount = $derived(data.proposals.activeCount + planningOnly.length);
+	const proposalCount = $derived(data.proposals.activeCount + planningOnly.length - withdrawn);
 	const displayedFeedback = $derived(extractDashboardData(sectionData('feedback')).feedback.open);
 
 	function handleItemClick(
@@ -200,7 +213,7 @@
 					</li>
 					<li>
 						Proposals: {#if sections.proposals.loading}Loading…{:else if sections.proposals.errors.length}Incomplete{:else}{proposalCount}
-							active/draft out of {data.proposals.totalCount + planningOnly.length} total{/if}
+							active/draft out of {data.proposals.totalCount + planningOnly.length - withdrawn} total{/if}
 					</li>
 					<li>
 						Feedback: {#if sections.feedback.loading}Loading…{:else if sections.feedback.errors.length}Incomplete{:else}{data

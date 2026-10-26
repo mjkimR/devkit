@@ -354,3 +354,74 @@ describe('DashboardView Planning overlay', () => {
 		);
 	});
 });
+
+describe('DashboardView vanished Planning source', () => {
+	afterEach(() => cleanup());
+	it('falls back to the checkout once a fresh scan no longer reports a seeded source', async () => {
+		const checkout = ['a', 'b'].map((slug) => ({
+			path: `docs/proposals/PROP-${slug}/proposal.md`,
+			encoding: 'utf-8',
+			content: `---\nid: PROP-${slug}\ntitle: Checkout ${slug}\nstatus: draft\n---\n`
+		}));
+		const planned = (slug: string) => ({
+			source: `branch:plan-${slug}`,
+			path: `docs/proposals/PROP-${slug}/proposal.md`,
+			encoding: 'utf-8',
+			content: `---\nid: PROP-${slug}\ntitle: Planned ${slug}\nstatus: review\n---\n`
+		});
+		const scan = (slugs: string[]) => ({
+			sources: slugs.map((slug) => ({
+				id: `branch:plan-${slug}`,
+				kind: 'branch' as const,
+				label: `plan-${slug}`,
+				slug
+			})),
+			items: slugs.map(planned),
+			errors: []
+		});
+		let answer = scan(['b', 'gone']);
+		let release = () => {};
+		let pending: Promise<void> = Promise.resolve();
+		const source: RepositoryDataSource = {
+			info: async () => ({ default_branch: 'main' }),
+			tree: vi.fn(async () => ({ items: [] })),
+			dashboardList: vi.fn(async (section: string) => ({
+				items: section === 'proposals' ? checkout : [],
+				errors: []
+			})),
+			blob: vi.fn(async (path: string) => checkout.find((e) => e.path === path)!),
+			planningProposals: vi.fn(async () => {
+				await pending;
+				return answer;
+			})
+		};
+		const titles = () =>
+			[...document.querySelectorAll('h3.card-heading')].map((h) => h.textContent);
+		render(DashboardView, { props: { source, branch: 'main' } });
+		await waitFor(() =>
+			expect(titles()).toEqual([
+				'Active Worktree Session',
+				'Checkout a',
+				'Planned b',
+				'Planned gone'
+			])
+		);
+		answer = scan([]);
+		pending = new Promise<void>((resolve) => (release = resolve));
+		await fireEvent.click(screen.getByText('Refresh'));
+		await waitFor(() =>
+			expect(titles()).toEqual([
+				'Active Worktree Session',
+				'Planned b',
+				'Planned gone',
+				'Checkout a'
+			])
+		);
+		release();
+		await waitFor(() =>
+			expect(titles()).toEqual(['Active Worktree Session', 'Checkout b', 'Checkout a'])
+		);
+		expect(screen.queryByText('plan-b')).toBeNull();
+		expect(screen.getByText(/2 active\/draft out of 2 total/)).toBeTruthy();
+	});
+});

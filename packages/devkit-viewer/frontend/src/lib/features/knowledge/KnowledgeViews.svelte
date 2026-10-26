@@ -267,7 +267,10 @@
 				selectedPath = entry.path;
 				detailPath = path;
 			}
-			void tick().then(() => jump(path, anchor || documentAnchor(path)));
+			// A tab switch before the next tick cancels the jump, so it never resolves in another view.
+			void tick().then(() => {
+				if (view === currentView) void jump(path, anchor || documentAnchor(path));
+			});
 		});
 	});
 
