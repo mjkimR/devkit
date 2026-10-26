@@ -2,7 +2,7 @@
 sources:
   ADR-host-cli-lifecycle-authority: b827428c1717216975fb8b6119b1bc3dc128f8f2
   ADR-local-and-pull-request-integration: 8bfbc80942deeb24ba0d91d151c015528f18794e
-  CAP-DLV-project-policy: f429313e6c4fb977e664bbac9072d19e15a1b2da
+  CAP-DLV-project-policy: 7cec046a7324de8f46048c80dea6a4286bf809ef
   CAP-INT-mcp-services: 41636553f0fe6331719d5d0cfaad2965deda6eb1
   CAP-WT-task-worktrees: a885013edf5dd548ffad4e9140c4b32b01b16ce2
   UC-drive-development-to-integration: bc214c7d80b401cf5b2ba5027c9144673d104393
@@ -12,7 +12,7 @@ title: Integration
 # Integration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `c94b6a08710e`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
