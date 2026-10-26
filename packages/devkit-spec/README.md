@@ -12,8 +12,10 @@ and `CAP-HARN-agent-guidance`; repository documentation starts at [docs/README.m
 
 ## Use in a project
 
-Install from this monorepo's package subdirectory. uv resolves devkit-agt (the harness it builds on), devkit-mcp
-(the native handoff runtime), devkit-dist and devkit-advisory from the same commit:
+Install from this monorepo's package subdirectory. uv resolves devkit-agt (the harness it builds on), devkit-dist,
+devkit-core, devkit-cli and devkit-advisory from the same commit. devkit-spec does not depend on devkit-mcp: proposal
+acceptance and handoff run through the `devkit spec proposal` CLI, and only the optional MCP report service needs
+`devkit-agt[mcp]` (see [MCP runtime](../../guides/install/mcp.md)):
 
 ```bash
 uv add --dev "devkit-spec @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-spec"
@@ -23,7 +25,8 @@ uv run devkit spec --version         # [VERSION: devkit-spec <version>]
 ```
 
 For release wheels, install the extension and its base dependencies explicitly because they are not hosted on a
-package index. Include the matching `devkit-mcp` wheel; see [Releasing](../../README.md#releasing).
+package index; add the matching `devkit-mcp` wheel only for the optional MCP services. See
+[Releasing](../../README.md#releasing).
 
 A project opts out of the bundle with `[presets] spec = false` in `.devkit/config.toml`. `uv run devkit config
 template` writes the supported keys as commented defaults, including this extension's `[tool.spec]` tables.
@@ -74,8 +77,8 @@ are present. `cli.py` composes the command group. `base/errors.py` owns shared a
 CLI and MCP execution entrypoints implement `devkit_core.base.usecase.BaseUseCase` with a typed
 `execute` method. Internal parsing, rendering and composition helpers remain functions. Constructors wire
 dependencies and runtime state; approval and effect checks stay in the existing execution paths.
-Delivery owns cross-feature orchestration: its proposal CLI group
-and native handoff/acceptance tools combine proposal operations, worktrees and scope registration. The shared
+Delivery owns cross-feature orchestration: its Host-authorized proposal CLI group (acceptance and handoff)
+combines proposal operations, worktrees and scope registration. The shared
 handoff operation merges registration notices and permits a cancellation guard between the handoff and registry
 mutation. Proposal mutation remains in the proposals feature. Scope repositories own Git observations and token
 persistence; scope models retain the deadline and value contracts. Policy models hold storage-independent scope

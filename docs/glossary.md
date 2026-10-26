@@ -53,4 +53,4 @@ The ubiquitous terms of devkit as its documents, commands and bundles use them. 
 | **Compact output** | Bounded command execution for AI agents (`devkit run`), capturing full logs to disk while streaming bounded summaries to stdout. | `CAP-CMP-bounded-execution` |  |  |
 | **Agent advisory** | Structured error, warning, or notice adhering to the Agent Advisory Protocol (`[ERROR]`, `[WARN]`, `[NOTICE]`) with machine-actionable directives. | `CAP-ADV-agent-advisory-protocol` |  |  |
 | **Host hook** | Mechanized execution resource registering an installed service at a native host event (`kind = "hook"`). | `CAP-HOST-lifecycle-observation` |  | `kind = "hook"` |
-| **Integration MCP** | Scoped Model Context Protocol server exposing devkit integration services to coding agents. | `CAP-INT-mcp-services` |  |  |
+| **Scoped CLI integration** | The Host-authorized `devkit integration prepare` and `integrate` commands that land committed work through the local or pull-request route after revalidating policy, readiness, source identity and cleanup scope; no MCP tool performs integration. | `CAP-INT-mcp-services` | Integration MCP | `devkit integration` |

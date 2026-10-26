@@ -94,7 +94,7 @@ flowchart BT
 | **Proposal Planning** | Host | Planning Worker | Cloud Agent |
 | **Development** | Host | Development Worker | Cloud Agent |
 | **Delegated Roles** (`code-reviewer`, etc.) | Host (as subagent) | Worker (as nested subagent) | Cloud Agent (as nested subagent) |
-| **Verification & Integration** | Host | Host | autohub + Human / Local Host via MCP |
+| **Verification & Integration** | Host | Host | autohub + Human / Local Host via the `devkit integration` CLI |
 
 ---
 

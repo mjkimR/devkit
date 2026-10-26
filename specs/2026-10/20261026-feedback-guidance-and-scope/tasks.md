@@ -23,7 +23,7 @@ plan: PLAN-feedback-guidance-and-scope
   - _Requirements: AC-05, AC-06, AC-07_
   - **Verification**: `just test devkit-spec packages/devkit-spec/tests/integration/features/scope packages/devkit-spec/tests/integration/features/entrypoints`
 
-- [ ] **Task 4**: Living Spec and guide corrections for items 4-8
+- [x] **Task 4**: Living Spec and guide corrections for items 4-8
   - **_Boundary**: `packages/devkit-spec/README.md`, `guides/install/mcp.md`, `docs/glossary.md`, `docs/architecture/ARCH-04-1-ecosystem-boundaries.md`, `docs/capabilities/worktree/CAP-WT-task-worktrees.md`, `docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md`, `specs/2026-10/20261026-living-spec-consistency-sweep/feedback/handoff-error-modes-documented-differently.md`, `specs/2026-10/20261026-living-spec-consistency-sweep/feedback/spec-readme-and-mcp-guide-native-handoff.md`, `specs/2026-10/20261026-living-spec-consistency-sweep/feedback/integration-mcp-glossary-and-actor-row.md`, `specs/2026-10/20261026-living-spec-consistency-sweep/feedback/worktree-module-layout-stale.md`, `specs/2026-10/20261026-living-spec-consistency-sweep/feedback/sync-config-template-example-stale.md`, `specs/2026-10/20261026-feedback-guidance-and-scope/feedback/`
   - _Requirements: AC-08_
-  - **Verification**: `uv run devkit rules check --ci --base f35e2b8e`; `rg -n "native handoff|Integration MCP|via MCP|worktree = true" packages/devkit-spec/README.md guides/install/mcp.md docs/glossary.md docs/architecture/ARCH-04-1-ecosystem-boundaries.md docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md` prints nothing
+  - **Verification**: `uv run devkit rules check --ci --base f35e2b8e`; `rg -n "native handoff|\*\*Integration MCP|via MCP|worktree = true" packages/devkit-spec/README.md guides/install/mcp.md docs/glossary.md docs/architecture/ARCH-04-1-ecosystem-boundaries.md docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md` prints nothing

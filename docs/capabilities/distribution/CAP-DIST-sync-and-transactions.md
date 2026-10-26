@@ -193,7 +193,7 @@ spec = "core"
 
 ## [tool.spec]: the settings of devkit-spec; devkit passes [tool.*] tables through unread.
 # [tool.spec]
-#   worktree = true  # boolean; route 2 and above (formal specs, proposals) run in a task worktree
+#   worktree = "auto"  # "auto" | "required"; direct mode only: whether a spec or proposal activity branch runs in a separate worktree; ...
 
 ## The work-scope registry of `devkit spec scope`.
 # [tool.spec.scope]
