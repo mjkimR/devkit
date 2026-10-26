@@ -12,6 +12,8 @@ targets:
     resolution: modified
   - file: docs/usecases/delivery/UC-route-development-intent.md
     resolution: modified
+  - file: docs/usecases/delivery/UC-incubate-and-hand-off-a-proposal.md
+    resolution: modified
 ---
 
 # Reconcile: SPEC-backlog-subagent-roles
@@ -28,8 +30,12 @@ targets:
 - `CAP-HARN-agent-guidance`: the subagent asset list, the `spec-delegate` and `feedback-hygiene` rows, the Backlog
   paragraph (decomposer, `XL` gate, judging size at plan-intent, Host verification, reclassification) and the
   spec-next Backlog actions.
-- `ARCH-04-1-ecosystem-boundaries`: the Subagent Roles row.
+- `ARCH-04-1-ecosystem-boundaries`: the Subagent Roles row (also the missing `ux-reviewer`).
 - `UC-route-development-intent`: extensions 1a, 1c and 3c.
+- `UC-incubate-and-hand-off-a-proposal`: extension 1a (an `XL` draft gets no `plan-intent` and is decomposed),
+  the size blocker in 2b and Scenario 6.
+
+Entrypoints: no candidate applied; the new files sit under doorways the documents already declare (reconcile-check-01).
 
 No glossary term changes: `triage` and `decomposer` are role IDs, like the other roles.
 

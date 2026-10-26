@@ -5,7 +5,7 @@ summary: Adds isolated triage and decomposer support roles so Backlog feedback t
 status: in-progress
 created: 2026-10-26
 related_capabilities: [CAP-DLV-delivery-workflows, CAP-DLV-proposal-incubation, CAP-HARN-agent-guidance]
-related_usecases: [UC-route-development-intent]
+related_usecases: [UC-route-development-intent, UC-incubate-and-hand-off-a-proposal]
 workflow: sdd-spec-feature
 ---
 
