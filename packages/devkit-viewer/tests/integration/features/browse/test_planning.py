@@ -166,6 +166,7 @@ def test_source_reads_return_worktree_and_committed_content(repo: Path) -> None:
         ("branch:plan-b^", "docs/proposals/PROP-b/proposal.md", "VIEWER_SOURCE_UNKNOWN"),
         ("branch:plan-b", "docs/proposals/PROP-b/../PROP-a/proposal.md", "VIEWER_PATH_INVALID"),
         ("branch:plan-b", "docs/proposals/PROP-b/.git/config", "VIEWER_PATH_INVALID"),
+        ("branch:plan-b", "docs/proposals/PROP-b/a\nb.md", "VIEWER_PATH_INVALID"),
         ("branch:plan-new", "docs/proposals/PROP-new/link.md", "VIEWER_PATH_NOT_FOUND"),
         ("branch:plan-new", "docs/proposals/PROP-new/missing.md", "VIEWER_PATH_NOT_FOUND"),
     ],

@@ -88,8 +88,9 @@ kind; `<slug>` matches `[A-Za-z0-9][A-Za-z0-9._-]*` without `..`.
   server MUST answer `404 VIEWER_SOURCE_UNKNOWN`; no ref name or revision expression reaches Git. Check:
   `tests/integration/features/browse/test_planning.py`.
 - **Source scope**: IF a valid path with a known `source` is outside that source's `docs/proposals/PROP-<slug>/`, THEN
-  the server MUST answer `400 VIEWER_SOURCE_PATH_REFUSED`. Path errors keep precedence, a worktree source keeps the
-  symlink and `.git` guards, and a committed symlink or submodule is `404 VIEWER_PATH_NOT_FOUND`. Check:
+  the server MUST answer `400 VIEWER_SOURCE_PATH_REFUSED`. Path errors keep precedence, and a source-scoped path
+  holding a line break is also `400 VIEWER_PATH_INVALID`, so each Git batch request stays one line. A worktree source
+  keeps the symlink and `.git` guards, and a committed symlink or submodule is `404 VIEWER_PATH_NOT_FOUND`. Check:
   `tests/integration/features/browse/test_planning.py`.
 
 Every other endpoint ignores `source`, as all ignore `ref`.
@@ -155,8 +156,9 @@ registered working tree.
 - **Withdrawn source**: WHEN a fresh overlay no longer reports a seeded proposal's source, the dashboard MUST show that
   card with the checkout's header in place, or drop it when the checkout lacks it, and count accordingly. Check:
   `frontend/src/lib/features/dashboard/DashboardView.test.ts`.
-- **Overlay cache**: The overlay result MUST be reused for 30 seconds after a successful load and discarded by Refresh;
-  aborted or superseded work MUST NOT publish or populate a refreshed cache generation. Check:
+- **Overlay cache**: An overlay answered with an empty `errors` list MUST be reused for 30 seconds and discarded by
+  Refresh; an overlay with errors is applied and seeds the next list build but is not cached, so the next visit asks
+  again. Aborted or superseded work MUST NOT publish or populate a refreshed cache generation. Check:
   `frontend/src/lib/api/planning.test.ts`.
 - **Proposals tab**: WHEN the Proposals tab lists proposals, an overlaid proposal MUST replace its checkout entry with
   a source badge and a Planning-only one joins in path order. WHEN an overlaid proposal is selected, its bundle MUST be

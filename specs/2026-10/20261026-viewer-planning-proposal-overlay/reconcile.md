@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-viewer-planning-proposal-overlay
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md
     resolution: modified

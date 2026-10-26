@@ -2,7 +2,7 @@
 id: SPEC-viewer-planning-proposal-overlay
 title: Viewer overlay of Planning proposals
 summary: The viewer shows each PROP-<slug> from its plan-<slug> worktree, local branch or remote-tracking ref over the checkout's proposal cards, loaded after the checkout without fetching.
-status: in-progress
+status: completed
 created: 2026-10-26
 related_capabilities: [CAP-VIEW-repository-viewer]
 related_usecases: []
