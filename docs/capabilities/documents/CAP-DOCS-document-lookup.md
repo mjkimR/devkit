@@ -164,7 +164,7 @@ string when the value holds spaces, quotes or brackets.
 | --- | --- |
 | `resolve` | `documents` (document records: `id`, `kind`, `path`, `status`, `title`, `area`, `summary`, plus `alias`: the alias argument, `null` for a declared ID), `errors` (advisory objects), `notices` |
 | `refs` | `id`, `direction`, `total`, `offset`, `limit`, `items` (`id`, `path`, `status`, `references`: `target`, `source`, `path`, `field`, `line`, `column`, `bracket`), `notices`; `path` and `status` are `null` for an ID no single document declares |
-| `list` | `total`, `hidden` (the page line's `hidden`), `offset`, `limit`, `namespace` (the selection, `null` for every namespace), `documents` (document records plus `namespace`, `historical`, `tasks`; proposal records also `task_kind`, `planning_effort`, `dev_effort`, `null` when absent; feedback records also `severity`, `scope`, `target`, `null` when absent; a draft proposal whose `plan-<slug>` exists, locally or fetched, is shown with `status: reviewing` and its `planning_branch`, `CAP-DLV-proposal-incubation` rule 10), `notices` |
+| `list` | `total`, `hidden` (the page line's `hidden`), `offset`, `limit`, `namespace` (the selection, `null` for every namespace), `documents` (document records plus `namespace`, `historical` (`true` for a document historical by rule 7 or 8 of `CAP-DOCS-document-model`), `tasks`; proposal records also `task_kind`, `planning_effort`, `dev_effort`, `null` when absent; feedback records also `severity`, `scope`, `target`, `null` when absent; a draft proposal whose `plan-<slug>` exists, locally or fetched, is shown with `status: reviewing` and its `planning_branch`, `CAP-DLV-proposal-incubation` rule 10), `notices` |
 
 ### 4.4 Exit Codes
 

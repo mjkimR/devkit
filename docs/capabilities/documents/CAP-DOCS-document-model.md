@@ -80,7 +80,8 @@ stays ID-free and unindexed, and its Owner references do not become graph edges.
    `status: completed` are historical: work history kept in place. Browsing and search MUST hide them unless
    `--history` is passed; the rules check them only when they are named as explicit targets. The bundle's
    `feedback/` directory is the exception: observations may remain open after the bundle completes,
-   so feedback of every status MUST stay current whatever the bundle's status (`SPEC-open-feedback-and-progress`). Milestones whose status is done or dropped are also historical: hidden from browsing/search by default, resolvable and available with `--history`; rules check them only when explicitly targeted. A user-decided merge into a broader theme milestone MAY delete one; its ID then resolves as an alias of the theme (`ADR-milestone-merging`).
+   so its feedback MUST NOT become historical through the bundle's status (`SPEC-open-feedback-and-progress`); open
+   feedback stays current, and feedback of a terminal status is historical by rule 8. Milestones whose status is done or dropped are also historical: hidden from browsing/search by default, resolvable and available with `--history`; rules check them only when explicitly targeted. A user-decided merge into a broader theme milestone MAY delete one; its ID then resolves as an alias of the theme (`ADR-milestone-merging`).
 8. **Terminal statuses**: a document whose own status is terminal for its kind, compared case-insensitively, is
    historical for browsing and search whatever bundle holds it: feedback `resolved`, `promoted`, `dismissed` and
    `forwarded`, decision `superseded`, proposal `rejected` (`ADR-terminal-statuses-are-historical`). Browsing and

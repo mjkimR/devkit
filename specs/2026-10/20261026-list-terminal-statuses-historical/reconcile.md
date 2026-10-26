@@ -12,27 +12,34 @@ targets:
     resolution: modified
   - file: docs/usecases/documents/UC-find-the-right-documents.md
     resolution: waived
-    rationale: "Its success guarantee (line 73) says completed spec bundles stay out of results unless history is asked; that still holds, and CAP-DOCS-document-model rule 8 owns the added terminal-status rule. docs/usecases/ is outside this run's write scope, so naming terminal statuses there is left to the Host at integration."
+    rationale: "Incomplete: its success guarantee (line 73) names only completed spec bundles as staying out of results, not done or dropped milestones, terminal statuses or the hidden= / [HISTORY_CMD] trace. docs/usecases/ is outside this run's write scope; the Host updates the use case at integration."
+  - file: docs/capabilities/harness/CAP-HARN-command-mount.md
+    resolution: waived
+    rationale: "Its section 4.5 paging example shows the list page line without hidden= and no [HISTORY_CMD] line. docs/capabilities/harness/ is outside this run's write scope; the Host adds hidden= on list pages, the [HISTORY_CMD] line and a pointer to CAP-DOCS-document-lookup paging rules 2 and 4 at integration."
 ---
 # Reconcile terminal statuses as historical
 
 `CAP-DOCS-document-model` gains rule 8: feedback `resolved`, `promoted`, `dismissed` and `forwarded`, decision
 `superseded` and proposal `rejected` are historical for browsing and search whatever bundle holds them, while the
 rules keep checking them; its status field row and library snippet name `is_terminal` and `is_browsing_historical`.
-Rule 7 and `DocumentIndex.historical` are unchanged, so no governance capability changes.
+Rule 7's feedback exception now says a bundle's feedback never becomes historical through the bundle's status, so
+open feedback stays current and terminal-status feedback follows rule 8. `DocumentIndex.historical` is unchanged, so
+no governance capability changes.
 
 `CAP-DOCS-document-lookup` drops the "Feedback defaults" scope note, extends `--history` to terminal statuses,
 states that a given `--status` replaces the default hiding, and adds `hidden=` to the `list` page line, the
-`[HISTORY_CMD: ...]` line (paging rule 4), the JSON `hidden` key and the usage and output examples.
-`CAP-DOCS-document-search` rule 1 names the same historical set for candidates. `CAP-SRCH-document-search` states no
-history rule and is unchanged.
+`[HISTORY_CMD: ...]` line (paging rule 4), the JSON `hidden` key, the meaning of the JSON `historical` field (rule 7
+or 8) and the usage and output examples. `CAP-DOCS-document-search` rule 1 names the same historical set for
+candidates. `CAP-SRCH-document-search` states no history rule and is unchanged.
 
 `ADR-terminal-statuses-are-historical` records the reversal of Non-Goal 1 of `SPEC-feedback-list-filters`; that
 completed spec stays as history.
 
-Call sites: `adr-compaction` and `milestone-completion` pass `--history`, the scout role names terminal statuses, and
-the catalog `weekly-report` playbook (which already passed `--history`) names what it now brings back. Call sites
-that want current items (`spec-next`, `next-work`, `spec-plan`, completion, the feedback sweep, `feedback-hygiene`,
-`envelope.md`) keep their commands; `--status open` stays explicit and correct. No architecture document, glossary
-term or entrypoint changes: the touched code lies under the existing entrypoints of the three capabilities. No work
-is deferred and the spec carries no source feedback.
+Call sites: `adr-compaction`, `milestone-completion` and `spec-next` step 3 (rejected proposals awaiting cleanup)
+pass `--history`, the scout role names terminal statuses, and the catalog `weekly-report` playbook (which already
+passed `--history`) names what it now brings back. Call sites that want current items (`spec-next` steps 2 and 4,
+`next-work`, `spec-plan`, completion, the feedback sweep, `feedback-hygiene`, `envelope.md`) keep their commands;
+`--status open` stays explicit and correct. Two documents outside this run's write scope need the Host at
+integration: `UC-find-the-right-documents` and `CAP-HARN-command-mount` (waived targets above). No architecture
+document, glossary term or entrypoint changes: the touched code lies under the existing entrypoints of the three
+capabilities. No work is deferred and the spec carries no source feedback.
