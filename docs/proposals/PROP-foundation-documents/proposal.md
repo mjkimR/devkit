@@ -41,7 +41,7 @@ boundaries:
     - A namespace copy of the steering directory
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
 workflow: sdd-proposal
-depends_on: [PROP-table-driven-document-kinds]
+depends_on: [SPEC-table-driven-document-kinds]
 ---
 
 # [PROP-foundation-documents] Steering documents for project-wide background
@@ -133,7 +133,7 @@ Answered in `materials/spike-findings.md` (F1-F6, round 1) and `materials/steeri
   that `docs/steering/glossary.md`, another steering file and a package glossary land in `Steering` and that
   `docs/glossary.md` is no longer special. The committed build
   under `packages/devkit-viewer/src/devkit_viewer/static/` is rebuilt (`just viewer build`). This proposal owns the
-  fix because `PROP-table-driven-document-kinds` excludes the viewer.
+  fix because `SPEC-table-driven-document-kinds` excludes the viewer.
 - **Search** (`user`): unchanged. Steering files are not search candidates; glossary synonym expansion reads the
   moved `glossary.yaml`.
 - Non-goals: no new ID-bearing kind, no relation fields to or from steering documents, no change to the glossary
@@ -141,7 +141,7 @@ Answered in `materials/spike-findings.md` (F1-F6, round 1) and `materials/steeri
 
 ### Order with parallel proposals
 
-- `PROP-table-driven-document-kinds` lands first (`depends_on`); it is accepted and handed off, its spec now in
+- `SPEC-table-driven-document-kinds` lands first (`depends_on`); it is accepted and handed off, its spec now in
   Development. At this proposal's handoff the dependency names that spec, whose ID this branch cannot resolve yet. Steering is not a kind and adds no row; where this
   proposal touches the rules, it builds on the table's definitions instead of adding constants beside them. That
   proposal excludes the viewer, so the viewer grouping is this proposal's alone.
@@ -153,7 +153,7 @@ Answered in `materials/spike-findings.md` (F1-F6, round 1) and `materials/steeri
 ### Planning decisions
 
 - `policy`: search citation corrected to `CAP-DOCS-document-search`; owns extended to every path spike F3 names;
-  `depends_on` on `PROP-table-driven-document-kinds` per the user's ordering decision.
+  `depends_on` on `SPEC-table-driven-document-kinds` per the user's ordering decision.
 - `user` (answer-01): name `steering`; one flat directory; progressive loading through `devkit get-context spec` at
   run time; a rule caps file count and body size so the glossary fits; the glossary moves; search unchanged.
 - `policy`: no namespace steering directory: no registered namespace exists here, package glossaries already have
