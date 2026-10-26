@@ -52,8 +52,8 @@
 | Sequential changes on the previous checkpoint | A §3 second item |
 | Diff check against assigned paths and agreed change | A §3 third item |
 | Hunk-by-hunk revert; never reset another scope; redo or return to the round | A §3 fourth item |
-| One commit per change on a tree holding only committed work plus the change | A §4 steps 1 and 3 |
-| Verification before and after per change | A §4 step 2 |
+| One commit per change on a tree holding only committed work plus the change | A §4 steps 2 and 3 |
+| Verification before and after per change | A §4 step 1 |
 | Full verification on a clean tree at the final head | A §4 step 4 |
 | Independent review by a fresh reviewer, or a recorded self-review; repository review effort | A §5 |
 | Report with breaking changes in the final response and commit body | A §6 |

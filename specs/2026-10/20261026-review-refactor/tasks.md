@@ -30,7 +30,7 @@ plan: PLAN-review-refactor
   - **_Boundary**: `specs/2026-10/20261026-review-refactor/materials/sweep.md`, `specs/2026-10/20261026-review-refactor/feedback/`
   - _Requirements: AC-07_
   - **Verification**: the record names intake, coverage, findings, gaps and a pending decision round; `git status` shows no source change
-- [ ] **Task 3.2**: Disposable fixture exercise of direct-mode application
+- [x] **Task 3.2**: Disposable fixture exercise of direct-mode application
   - **_Boundary**: `scratch/` (ignored, removed afterwards), `specs/2026-10/20261026-review-refactor/materials/`
   - _Requirements: AC-08_
   - **Verification**: the record holds three change records with patches, fixture commits and before-and-after output

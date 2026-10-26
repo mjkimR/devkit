@@ -48,9 +48,10 @@ Where the repository has no refactor workflow, the steps below are the procedure
 
 ## 4. Commits and verification
 
-1. Before each change, confirm the working tree holds only the committed work plus that change.
-2. Run the change's relevant verification before and after it, with only that change applied on the previous
+1. Run the change's relevant verification before and after it, with only that change applied on the previous
    checkpoint; record both results and the reachability evidence from `criteria.md` §4.
+2. Before each commit, confirm the working tree holds only the committed work plus the current change; revert
+   anything else, such as files a verification run wrote.
 3. Commit the change as a checkpoint: one commit per change, the change record in the commit body.
 4. At the work item's final head, run the repository's full verification on a clean tree (for example the full test
    suite, lint, type checks and governance rules).
