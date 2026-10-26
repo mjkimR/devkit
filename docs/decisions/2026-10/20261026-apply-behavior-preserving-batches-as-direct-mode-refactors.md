@@ -1,15 +1,15 @@
 ---
-id: PADR-apply-behavior-preserving-batches-as-direct-mode-refactors
+id: ADR-apply-behavior-preserving-batches-as-direct-mode-refactors
 title: Apply behavior-preserving batches as direct-mode refactors
 summary: For applying a batch's agreed behavior-preserving changes, we route it as a direct-mode refactor whose subagents edit within the batch scope under the playbook agent's validation, to apply consolidations at refactor cost, accepting checks the agent re-runs per edit.
-proposal: PROP-review-refactor
-status: draft
+proposal: SPEC-review-refactor
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-apply-behavior-preserving-batches-as-direct-mode-refactors] Apply behavior-preserving batches as direct-mode refactors
+# [ADR-apply-behavior-preserving-batches-as-direct-mode-refactors] Apply behavior-preserving batches as direct-mode refactors
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---
@@ -83,7 +83,7 @@ into each other's verification.
   the `spec` bundle, task kind `overall-refactor`), because these are the overall-refactor workflow's verification,
   review, report and integration steps. The decision round never supplies the integration approval.
 - Contract removals stay outside this route
-  (`PADR-apply-approved-contract-removals-as-separate-work-items`).
+  (`ADR-apply-approved-contract-removals-as-separate-work-items`).
 
 ## 5. Consequences
 

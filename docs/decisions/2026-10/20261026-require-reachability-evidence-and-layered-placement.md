@@ -1,15 +1,15 @@
 ---
-id: PADR-require-reachability-evidence-and-layered-placement
+id: ADR-require-reachability-evidence-and-layered-placement
 title: Require reachability evidence and layered placement for consolidations
 summary: For review-refactor consolidations and removals, we require static and dynamic reachability evidence, verification before and after, and placement at the lowest common owner under declared layering, to keep behavior and layers intact, accepting extra evidence per change.
-proposal: PROP-review-refactor
-status: draft
+proposal: SPEC-review-refactor
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-require-reachability-evidence-and-layered-placement] Require reachability evidence and layered placement for consolidations
+# [ADR-require-reachability-evidence-and-layered-placement] Require reachability evidence and layered placement for consolidations
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---

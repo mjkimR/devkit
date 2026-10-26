@@ -1,33 +1,23 @@
 ---
-id: PROP-review-refactor
+id: SPEC-review-refactor
 title: Maintenance review and refactoring playbook
-summary: "Adds a review-refactor playbook to the maintenance bundle that reviews code, agent guidance and CLI commands for accumulated AI slop and consolidates, reduces and removes it with evidence, preserving agreed behavior or routing contract changes separately."
-status: accepted                       # draft | reviewing | accepted | rejected
-created_at: 2026-10-22
-target_area: delivery/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: high                 # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-milestone: MS-maintenance-operations
-boundaries:
-  owns:
-    - packages/devkit-catalog/src/devkit_catalog/maintenance/
-    - packages/devkit-catalog/tests/integration/bundles/
-    - packages/devkit-catalog/README.md
-    - docs/capabilities/delivery/
-    - docs/capabilities/distribution/
-    - docs/usecases/governance/
-    - guides/install/
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Adds a review-refactor playbook to the maintenance bundle that reviews code, agent guidance and CLI commands for accumulated AI slop and consolidates, reduces and removes it with evidence, preserving agreed behavior or routing contract changes separately.
+status: planned
+created: 2026-10-26
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-review-refactor] Maintenance review and refactoring playbook
+# [SPEC-review-refactor] Maintenance review and refactoring playbook
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-review-refactor on 2026-10-26.
+- **Preserved Materials**: `docs/materials/2026-10/20261026-review-refactor`
+
+### 1. Background & Hypothesis
 
 AI coding agents tend to add code and text rather than remove it (`user`). Accumulated AI slop in code and agent
 guidance (duplicated behavior, repeated technical helpers, unnecessary abstractions, speculative compatibility
@@ -44,28 +34,47 @@ separately. It is the third playbook of the opt-in `maintenance` bundle in `devk
 This draft carries the scope its own milestone held before the maintenance milestones merged into
 `MS-maintenance-operations`.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Maintenance review and refactoring playbook so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: Which cited findings on AI slop patterns, causes and refactoring techniques yield repository-applicable
   review criteria, and where do automated detection limits lie?
   - Answer: 24 candidate criteria across code, guidance and CLI, each tagged with its source, evidence basis and
-    detection class (`materials/q1-review-criteria-research.md` §2). Evidence on AI-assisted code quality is mixed
+    detection class (`docs/materials/2026-10/20261026-review-refactor/q1-review-criteria-research.md` §2). Evidence on AI-assisted code quality is mixed
     (§1.1), so AI origin and line count are never findings by themselves. Clone and dead-code tools give textual
     candidates only and miss dynamic dispatch (§3). Shortening guidance can remove constraints that change agent
     behavior (§4).
 - **Q2**: How does the playbook bound a review pass (intake, scope, candidate prioritization) so one run stays
   reviewable?
   - Answer: reuse the shared maintenance pattern of intake, explicit batches, coverage, one decision round and
-    batch-only completion (`materials/q2-internal-integration.md`). The bounding unit is a user question
-    (`materials/design-options.md` O2), settled as one batch per user-selected surface
-    (`PADR-bound-review-refactor-runs-by-surface-batch`).
+    batch-only completion (`docs/materials/2026-10/20261026-review-refactor/q2-internal-integration.md`). The bounding unit is a user question
+    (`docs/materials/2026-10/20261026-review-refactor/design-options.md` O2), settled as one batch per user-selected surface
+    (`ADR-bound-review-refactor-runs-by-surface-batch`).
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Asset and packaging
+#### Asset and packaging
 
 - `review-refactor` is one playbook asset of `maintenance` covering code, guidance and CLI in batches
-  (`materials/design-options.md` O1). It joins the implicit `all` preset, is added to `upkeep` beside
+  (`docs/materials/2026-10/20261026-review-refactor/design-options.md` O1). It joins the implicit `all` preset, is added to `upkeep` beside
   `drift-reconciliation`, and gets a solo preset `refactoring` (O6, `user`). Projects that already select
   `maintenance:upkeep` receive it on their next sync. Package validation (`devkit-catalog` bundle tests), the package
   README and the bundle recommendation guide are updated. Selecting or invoking it does not require the other
@@ -83,11 +92,11 @@ This draft carries the scope its own milestone held before the maintenance miles
 - The playbook body is self-contained: it states its criteria, the reduction rule and the rule-growth criterion
   itself instead of citing this repository's document IDs.
 
-### Run procedure
+#### Run procedure
 
 - The playbook defines intake, review scope, candidate prioritization, agreed changes, verification and completion
   evidence, reusing the `drift-reconciliation` bounding pattern.
-- Bounding (O2, `user`; `PADR-bound-review-refactor-runs-by-surface-batch`): the user selects the surfaces (code,
+- Bounding (O2, `user`; `ADR-bound-review-refactor-runs-by-surface-batch`): the user selects the surfaces (code,
   guidance, CLI) and the roots at intake, and missing scope is clarified first. The run splits into batches of one
   surface each, with one decision round per batch. A cross-surface finding cites both sides and belongs to the batch
   of the surface where its change lands. A cross-surface finding whose landing surface is outside the selected scope
@@ -98,7 +107,7 @@ This draft carries the scope its own milestone held before the maintenance miles
   (documentation, guidance, the Living Spec statement of the result); call sites, imports and re-exports are source
   edits of the change itself. Following edits never touch receipt-owned files: they edit the source bundle the
   receipt projects, or record an upstream follow-up or a `devkit override`.
-- Subagent review (`user`; `PADR-apply-behavior-preserving-batches-as-direct-mode-refactors`): within a surface
+- Subagent review (`user`; `ADR-apply-behavior-preserving-batches-as-direct-mode-refactors`): within a surface
   batch the playbook uses spawned subagents when useful and the host supports them, for example parallel review per
   root or module, or independent verification of a consolidation or removal; otherwise the same steps run in the
   playbook's agent. The playbook's agent keeps coordination, the decision round and integration. A subagent's result
@@ -122,10 +131,10 @@ This draft carries the scope its own milestone held before the maintenance miles
   names drift reconciliation. The playbook never invokes another playbook; the user may name `drift-reconciliation`
   as a separate invocation. This playbook targets maintenance cost in code that is consistent with its contract.
 
-### Applying agreed changes (`user`)
+#### Applying agreed changes (`user`)
 
 The work the playbook applies is refactoring, not feature development
-(`PADR-apply-behavior-preserving-batches-as-direct-mode-refactors`, which refines the applicability of
+(`ADR-apply-behavior-preserving-batches-as-direct-mode-refactors`, which refines the applicability of
 `ADR-overall-refactor-workflow` for these runs).
 
 - Route: the batch's behavior-preserving work item follows the target repository's workflow for a behavior-preserving
@@ -173,18 +182,18 @@ The work the playbook applies is refactoring, not feature development
   report, through the repository's integration path and its own integration approval (without a repository policy,
   the user's explicit approval); the decision round never supplies it. With the `spec` bundle the path is the session
   integration path with task kind `overall-refactor`, and a single-module work item uses its feature workflow's path.
-- Contract removals (O3, `user`; `PADR-apply-approved-contract-removals-as-separate-work-items`): the decision round
+- Contract removals (O3, `user`; `ADR-apply-approved-contract-removals-as-separate-work-items`): the decision round
   may approve removing a command, option, public interface or compatibility path, unless the declared
   compatibility-policy exception applies (then it is a behavior-preserving removal that still names the inputs no
   longer accepted). The removal is not behavior-preserving: it becomes its own work item through the repository's
   normal development workflow, classified by that repository's own criteria, with the contract and documentation
   updated, kept apart from the batch's behavior-preserving work item and never routed as a refactor.
 
-### Review criteria
+#### Review criteria
 
 - Review criteria come from cited research and distinguish evidenced problems from stylistic preference. A finding
   cites a location and its maintenance cost; a finding without a named cost is dropped, since the reviewing agent
-  itself over-reports (`materials/q1-review-criteria-research.md` §3 item 6).
+  itself over-reports (`docs/materials/2026-10/20261026-review-refactor/q1-review-criteria-research.md` §3 item 6).
 - Code review covers duplicated behavior, repeated technical helpers, unnecessary abstractions, speculative
   compatibility paths, unused code, unused parameters and flags, and boilerplate without a demonstrated purpose.
 - Guidance review covers skills, playbooks, AGENTS.md and instructions for derivable content, duplication, conflicts,
@@ -198,7 +207,7 @@ The work the playbook applies is refactoring, not feature development
 - Tool output (clone detectors, dead-code finders, unselected lint rules) is a candidate list; the playbook installs
   nothing without asking.
 
-### Consolidation and reduction (`user`)
+#### Consolidation and reduction (`user`)
 
 - The playbook treats consolidation and reduction as primary outcomes, not only detection and repair. At minimum it
   covers merging duplicated logic into a shared module, folding repeated technical helpers into a utility, and
@@ -209,7 +218,7 @@ The work the playbook applies is refactoring, not feature development
   absence of external consumers.
 - Shared implementations are introduced only for demonstrated repeated behavior: at least two current callers with
   the same behavior, where a change to one must be repeated in the others.
-- Helper placement (O5, `user`; `PADR-require-reachability-evidence-and-layered-placement`): a consolidated helper
+- Helper placement (O5, `user`; `ADR-require-reachability-evidence-and-layered-placement`): a consolidated helper
   lives at the lowest common owner every caller may already depend on under the target repository's declared
   layering. A new cross-package or foundation module, or a repository without declared layering, becomes a decision
   in the round. The playbook states the devkit order as its example: feature-local first, then package-level
@@ -220,7 +229,7 @@ The work the playbook applies is refactoring, not feature development
   for code is the verification command and its result plus reachability evidence; for guidance it is a recorded
   representative-task run with and without the text. Without that record the fourth ground is unavailable. Line or
   token reduction is reported but is never the justification.
-- Preservation evidence (O4, `user`; `PADR-require-reachability-evidence-and-layered-placement`): every
+- Preservation evidence (O4, `user`; `ADR-require-reachability-evidence-and-layered-placement`): every
   consolidation or removal records reachability evidence covering static references and the repository's dynamic
   reach (entry points, plugin registries, configuration, documentation, string dispatch), and the relevant
   verification passing before and after. The reachability record names each search (command, registry or
@@ -232,7 +241,7 @@ The work the playbook applies is refactoring, not feature development
 - Recurrence prevention first considers deleting, consolidating or correcting existing code and guidance. A new rule
   needs an evidenced recurring failure and a stated benefit, and follows `CAP-GOV-rule-authoring`.
 
-### Non-goals and acceptance direction
+#### Non-goals and acceptance direction
 
 - Non-goals: scheduler or trigger design, cosmetic churn without an evidenced problem, speculative commonization,
   behavior-changing feature work presented as refactoring, mandatory rule growth and automatic rule adoption.
@@ -271,7 +280,7 @@ The work the playbook applies is refactoring, not feature development
     `references/` is allowed, and the bundle tests then follow its form. The criteria are condensed into review
     questions rather than copied from the research tables.
 
-### Planning decisions
+#### Planning decisions
 
 - One playbook rather than one per surface (O1); the Q2 bounding pattern reused from the existing maintenance
   playbooks.
@@ -280,9 +289,9 @@ The work the playbook applies is refactoring, not feature development
 - User answers (all recommended options, `user`): bounding by surface batch with batch-scoped subagents (O2-A),
   contract removals as their own work items (O3-A), reachability-based preservation evidence (O4-A), lowest common
   owner placement (O5-A), and `upkeep` plus a solo `refactoring` preset (O6-A). O2 is recorded in
-  `PADR-bound-review-refactor-runs-by-surface-batch`, O3 in
-  `PADR-apply-approved-contract-removals-as-separate-work-items`, O4 and O5 in
-  `PADR-require-reachability-evidence-and-layered-placement`. O6 is packaging and needs no PADR.
+  `ADR-bound-review-refactor-runs-by-surface-batch`, O3 in
+  `ADR-apply-approved-contract-removals-as-separate-work-items`, O4 and O5 in
+  `ADR-require-reachability-evidence-and-layered-placement`. O6 is packaging and needs no PADR.
 - Execution model (`user`, `answer-02`): the playbook applies refactoring, so a batch's behavior-preserving work
   item follows the overall-refactor workflow in direct mode, and playbook-spawned subagents may apply agreed edits
   within the batch's write scope. This replaces the earlier read-only subagent rule under which the routed
@@ -290,14 +299,14 @@ The work the playbook applies is refactoring, not feature development
   boundary (a refactor inside one feature or module follows the feature workflows), so it needs no user question.
   The deferral of findings that land on an unselected surface still holds, because the selected surfaces are the
   run's agreed scope; the user may add a surface, and the following edits of a change stay with it. The execution
-  model and the subagent rules are recorded in `PADR-apply-behavior-preserving-batches-as-direct-mode-refactors`,
+  model and the subagent rules are recorded in `ADR-apply-behavior-preserving-batches-as-direct-mode-refactors`,
   which refines the applicability of `ADR-overall-refactor-workflow` when promoted. Follow-up for the Host: the
   `spec` bundle's classification criteria (`overall-refactor` only for a change whose direction settles during the
   work) name no maintenance-playbook case; aligning them is outside this proposal's boundaries
   (`packages/devkit-spec/`), so the Host records it as feedback.
 - `dev_effort` stays `medium`: the work has no effect that cannot be undone locally and no unresolved P1.
 
-### Interactions
+#### Interactions
 
 - `PROP-spec-playbook-discovery` also owns
   `packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/`, `packages/devkit-catalog/README.md`,
@@ -309,10 +318,12 @@ The work the playbook applies is refactoring, not feature development
   `bundle.toml`, bundle tests, README and maintenance entry of `CAP-DIST-content-packages`. The Host sequences the two
   Developments.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
+
 <!--
 - Preliminary decisions: devkit spec proposal padr review-refactor "<title>" --summary "<Y-statement>" records a PADR in decisions/.
 - On acceptance (plan-accept): devkit spec proposal accept review-refactor --by user, then the Planning branch is merged.
   Development starts with devkit spec proposal handoff review-refactor.
 - On rejection: change only status: rejected, with the user's reason in the commit message.
 -->
+

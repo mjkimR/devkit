@@ -1,15 +1,15 @@
 ---
-id: PADR-bound-review-refactor-runs-by-surface-batch
+id: ADR-bound-review-refactor-runs-by-surface-batch
 title: Bound review-refactor runs by surface batch
 summary: For a reviewable review-refactor run, we split the user-selected surfaces into one batch each with its own decision round and defer findings landing on an unselected surface, to keep each round comparable and inside the agreed scope, accepting more rounds per run.
-proposal: PROP-review-refactor
-status: draft
+proposal: SPEC-review-refactor
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-bound-review-refactor-runs-by-surface-batch] Bound review-refactor runs by surface batch
+# [ADR-bound-review-refactor-runs-by-surface-batch] Bound review-refactor runs by surface batch
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---

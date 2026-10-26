@@ -1,6 +1,6 @@
 # Q1: Review criteria for AI slop, from cited research, and the limits of automated detection
 
-Spike Q1 of `PROP-review-refactor`: which cited findings on AI slop patterns, causes and refactoring techniques give
+Spike Q1 of `SPEC-review-refactor`: which cited findings on AI slop patterns, causes and refactoring techniques give
 review criteria this repository can apply, and where automated detection stops working.
 
 Research date: 2026-10-26. Sources were fetched on that date. When an arXiv preprint has several versions, the

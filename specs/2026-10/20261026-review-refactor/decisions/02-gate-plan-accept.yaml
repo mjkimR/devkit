@@ -1,7 +1,8 @@
 request: gate:plan-accept
 kind: approve
 action: accept
-workflow: sdd-proposal
+workflow: sdd-spec-feature
 stage: direction-handoff
+note: PROP-review-refactor
 by: user
-at: '2026-10-26T00:12:50.647944Z'
+at: '2026-10-26T00:13:05.405786Z'
