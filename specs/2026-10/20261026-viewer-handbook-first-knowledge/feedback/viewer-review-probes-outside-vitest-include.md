@@ -8,7 +8,7 @@ target: .devkit/managed/spec/subagents/code-reviewer.md
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -44,3 +44,7 @@ created_at: 2026-10-26
 vite.config.ts: test: { environment: 'jsdom', include: ['src/**/*.test.ts'] }
 reviewer probe: npx vitest run --config ../../../scratch/review-01/vitest.config.mts (3 probes run)
 ```
+
+## Disposition
+
+Resolved by `SPEC-crlf-selection-and-viewer-probes` (AC-03 to AC-05): `just viewer probe <absolute dir>` (`scripts/viewer.sh probe`) runs vitest on the directory's `*.test.ts` files with the package's Vite config and its dependencies resolved from the package, through a temporary config it removes on exit. The `code-reviewer` contract's probe sentence and `docs/development/reference/viewer.md` name it. Verified on throwaway probes under `scratch/probe-check-01/` (exit 1) and `scratch/probe-check-02/` (exit 0).

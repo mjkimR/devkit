@@ -55,6 +55,8 @@ def test_the_code_reviewer_may_run_probes_only_in_the_ignored_path() -> None:
         "write throwaway probe tests through the shell only under the ignored probe path the payload names" in reviewer
     )
     assert "run the package's test command on them" in reviewer
+    # SPEC-crlf-selection-and-viewer-probes AC-04: the viewer's test command for a probe outside src/
+    assert "for a viewer frontend change that command is `just viewer probe <absolute round directory>`" in reviewer
     assert (
         "in this round's own subdirectory (the one the payload names, for example `<worktree>/scratch/review-NN/`)"
         in (reviewer)
