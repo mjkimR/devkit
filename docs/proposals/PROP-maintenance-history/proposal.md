@@ -9,7 +9,7 @@ priority: high                        # critical | high | medium | low
 size: M                               # S | M | L | XL
 planning_effort: high                 # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
-milestone: MS-maintenance-operations
+milestone: MS-maintenance-run-history
 boundaries:
   owns:
     - packages/devkit-catalog/src/devkit_catalog/maintenance/
@@ -28,8 +28,8 @@ Maintenance playbooks (`weekly-report`, `drift-reconciliation`, `review-refactor
 that later runs and reports need, but nothing keeps them beyond the run. Recording each run on a dedicated GitHub
 orphan branch through `gh api` keeps durable, revision-linked history apart from code history, without switching
 branches, staging files, creating local commits or pushing. Manual playbook delivery does not depend on it. This
-draft carries the scope its own milestone held before the
-maintenance milestones merged into `MS-maintenance-operations`.
+draft is the direct member of `MS-maintenance-run-history`, which took this scope over from
+`MS-maintenance-operations`.
 
 ## 2. Technical Spike Questions
 
