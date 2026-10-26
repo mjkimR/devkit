@@ -1,7 +1,7 @@
 ---
 id: PROP-foundation-documents
-title: Foundation documents for project-wide background
-summary: "Adds a foundation group under docs/ (and per namespace) for project-wide background documents such as the glossary, product vision and style guides, which a spec constitution pointer sends agents to when a decision depends on them, and moves the glossary into it."
+title: Steering documents for project-wide background
+summary: "Adds a flat docs/steering/ directory of project-wide background documents such as the glossary, product vision and style guides, whose frontmatter devkit get-context lists in every agent context so agents read a body when a decision concerns it, and moves the glossary into it."
 status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-26
 target_area: documents/
@@ -15,11 +15,14 @@ boundaries:
     - packages/devkit-spec/src/devkit_spec/base/
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
     - packages/devkit-spec/tests/
+    - packages/devkit-dist/src/devkit_dist/features/distribution/
+    - packages/devkit-dist/tests/
     - packages/devkit-viewer/frontend/src/lib/
     - packages/devkit-viewer/src/devkit_viewer/static/
     - scripts/handbook.py
     - tools/devkit-dev/tests/integration/
     - docs/
+    - docs/capabilities/distribution/
     - docs/capabilities/documents/
     - docs/capabilities/governance/
     - docs/capabilities/harness/
@@ -34,13 +37,14 @@ boundaries:
     - A new ID-bearing document kind
     - Product, brand or style content of any particular project
     - Changes to the glossary table format
-    - Changes to the search ranker (CAP-SRCH-document-search)
+    - Changes to document search or the search ranker
+    - A namespace copy of the steering directory
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
 workflow: sdd-proposal
 depends_on: [PROP-table-driven-document-kinds]
 ---
 
-# [PROP-foundation-documents] Foundation documents for project-wide background
+# [PROP-foundation-documents] Steering documents for project-wide background
 
 ## 1. Background & Hypothesis
 
@@ -55,74 +59,85 @@ entrypoints and reconciliation that do not apply, or into materials, where it lo
 binding. Either way agents do not know to read it, so work that depends on it (wording, naming, interface and
 content decisions) drifts from it.
 
-Hypothesis: a fixed foundation group under `docs/` (and under each namespace's docs root), holding ID-free documents
-that apply as a whole rather than through per-document relations, fixes both problems. The glossary moves into it.
-The `spec` bundle points agents to the group when a work unit starts, and search indexes it through each document's
-English summary.
+Hypothesis: one flat `docs/steering/` directory of ID-free steering documents, one file per topic, fixes both
+problems when every agent context sees what each file covers. `devkit get-context spec` prints each steering file's
+frontmatter (title and a one-line scope) at run time, so the list is always current and always loaded, and an agent
+reads a body only when its decision concerns that scope. A rule bounds the number of files and each body's size, so
+the always-loaded cost stays small. The glossary moves into the directory.
 
 ## 2. Technical Spike Questions
 
-- **Q1**: Name and layout: `docs/foundation/` with free file names, or a small set of named documents (for example
-  glossary, product, style)? Is "foundation" the clearest name next to existing terms such as bundle context?
-- **Q2**: Do foundation documents stay ID-free like the glossary today, and what do the spec rules then check in
-  them (summary, references to ID-bearing documents, nothing)? Confirm that ID-free documents under a namespace docs
-  root pass the current rules.
-- **Q3**: How do agents read the group without loading all of it into every context: a pointer in the managed
-  guidance, a step in the `spec` skill at work-unit start, or search only? What bounds its size?
-- **Q4**: What moves with the glossary: the owner-resolution input of `RULE-document-reference`, the synonym file
-  read by document search, the seeded `docs-skeleton` files, writing instructions, the `spec-sync` skill, the
-  brownfield adoption playbook and the namespace glossary rule in the living-spec writing instruction.
+Answered in `materials/spike-findings.md` (F1-F6, round 1) and `materials/steering-design.md` (round 2).
+
+- **Q1**: Name and layout. Settled by the `user`: `docs/steering/`, flat, one Markdown file per topic.
+- **Q2**: What the spec rules check in steering files: a new steering rule (shape, frontmatter, caps); cited IDs are
+  open (q5).
+- **Q3**: How agents read the group. Settled by the `user`: progressive loading through `devkit get-context`
+  (`PADR-background-pointer-in-constitution`).
+- **Q4**: What moves with the glossary: every consumer of spike F3.
 
 ## 3. Proposed Design & Impact
 
-Spike evidence: `materials/spike-findings.md` (F1-F6). Review: `envelopes/challenger-01.yaml`. Items marked
-**(open: qN)** follow the user's answer to that question of this round; the text states the recommended option.
+Items marked **(open: qN)** follow the user's answer to that pending question; the text states the recommended
+option.
 
-- **Group** (open: q1, q2): a fixed directory `docs/foundation/` and `docs/packages/<name>/foundation/` (created under
-  `docs/`), documented in `CAP-DOCS-document-model` and `CAP-DOCS-namespaces`. Files are ID-free, free-named Markdown,
-  outside the document index as today (`CAP-DOCS-document-model` rule 3.2); ID-free files in both locations pass the
-  current rules (F2). "Foundation" gets a glossary row whose Avoid column separates it from the code layer of
-  `devkit-core` (F4).
-- **Reading** (`PADR-background-pointer-in-constitution`): one conditional line in the spec constitution names the
-  group and its trigger; each file opens with a one-line scope; a guidance test asserts both.
-- **Search** (open: q4): no search coverage; the group is read by path, so no English `summary` is required in its
-  files. Search and glossary expansion stay in `CAP-DOCS-document-search` (not `CAP-SRCH-document-search`, the
-  ranker).
-- **Rules** (open: q5): `RULE-document-reference` resolves backtick-quoted IDs in foundation files the way it resolves
-  root glossary Owners, with the same alias check, no autofix and no graph edges; legacy-reference checks already
-  apply (F2).
-- **Glossary move** (open: q3): `glossary.md` and `glossary.yaml` move into the root group, and the repository's own
-  glossary moves in the same change. Every literal path of F3 is one acceptance item with a test that the old path is
-  no longer read: `RULE-document-reference` Owner check, search `GLOSSARY_PATH` and `SPEC_GLOSSARY_INVALID`
-  (`base/errors.py`), the `docs-skeleton` seed and its README tables, `living-spec-writing` (including the package
-  glossary rule), `architecture-writing`, `spec-sync`, `adr-compaction`, the brownfield `migration.md`, rule guides,
-  viewer `bookGroup` (front end and committed build), `docs/README.md`, `docs/architecture/README.md` and the
-  capabilities naming the path (`CAP-DOCS-document-model`, `CAP-DOCS-document-search`, `CAP-GOV-spec-rules`,
-  `CAP-HARN-agent-guidance`, `CAP-DLV-release-handbook`, `CAP-DLV-delivery-workflows`). The receipt
-  `.devkit/installation.json` follows `devkit sync`. The handoff ADR declares that it amends the
-  glossary paths that `ADR-spec-package-on-devkit` and `ADR-writing-and-terminology-guidance` fix.
-- **Release handbook**: `scripts/handbook.py` reads the glossary at the pinned commit from the new path, falls back to
-  `docs/glossary.md` for a commit before the move, and fails with a code when neither exists; its tests cover both
-  layouts. This reads Git history, not a current format, so it is no legacy reader under the Compatibility section of
-  `AGENTS.md`. The handbook pages themselves are not refreshed.
-- **Existing consumers**: no migration and no notice (Compatibility): a consumer that selects `docs-skeleton` gets the
-  seed at the new path on its next sync and moves its own glossary.
-- Non-goals: no new ID-bearing kind, no relation fields to or from foundation documents, no change to the glossary
-  table columns, the Owner check's semantics or the search ranker.
+- **Directory** (`PADR-steering-documents-directory`): `docs/steering/` (created under `docs/`) holds one Markdown
+  file per topic (for example `glossary.md`, `product.md`, `style.md`) and the glossary's `glossary.yaml`; no
+  subdirectories and no namespace copy. Files carry frontmatter `title` and `summary` (the one-line English scope) and
+  no `id`, so they stay outside the document index (`CAP-DOCS-document-model` rule 3.2). Documented in
+  `CAP-DOCS-document-model`; the glossary gains the row **Steering document** (Avoid: foundation, background).
+- **Loading** (`PADR-background-pointer-in-constitution`): every steering file's `title` and `summary` are always
+  loaded; bodies are read only when a decision concerns that scope. One constitution line states that trigger.
+- **Bundle context** (`PADR-bundle-context-lists-project-documents`): the `spec` bundle's manifest declares
+  `docs/steering` as a context document directory, and `devkit get-context <bundle>` adds `documents` (`path`,
+  `title`, `summary` per Markdown file, read from the workspace at run time, not rendered by sync) to its result.
+  `devkit-dist` reads only the directory the manifest names and knows nothing of steering
+  (`CAP-DIST-context-and-playbooks`, `CAP-DIST-manifest-spec`).
+- **Bounds** (open: q7): a new spec rule `RULE-steering-documents` (under
+  `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/`) reports a subdirectory, an `id`, a missing or
+  non-English `summary` (the `RULE-document-summary` length cap), more than `max_files` Markdown files and a body
+  over `max_body_bytes`; both caps are rule settings. Documented in `CAP-GOV-spec-rules`.
+- **Cited IDs** (open: q5): recommended, `RULE-document-reference` resolves backtick-quoted IDs in steering files the
+  way it resolves root glossary Owners (alias check, no autofix, no graph edges).
+- **Glossary move** (`user`): `glossary.md` and `glossary.yaml` move to `docs/steering/`, the glossary gaining the
+  steering frontmatter; the repository's own glossary moves in the same change; no migration and no notice for
+  existing consumers (`AGENTS.md` Compatibility). Each literal path of spike F3 is one acceptance item with a test
+  that the old path is no longer read: the `RULE-document-reference` Owner check, search `GLOSSARY_PATH` and
+  `SPEC_GLOSSARY_INVALID` (`base/errors.py`), the `docs-skeleton` seed and its README tables, `living-spec-writing`,
+  `architecture-writing`, `spec-sync`, `adr-compaction`, the brownfield `migration.md`, rule guides, viewer
+  `bookGroup` (the group becomes `Steering`, front end and committed build), `docs/README.md`,
+  `docs/architecture/README.md` and the capabilities naming the path (`CAP-DOCS-document-model`,
+  `CAP-DOCS-document-search`, `CAP-GOV-spec-rules`, `CAP-HARN-agent-guidance`, `CAP-DLV-release-handbook`,
+  `CAP-DLV-delivery-workflows`). Package glossaries stay at `docs/packages/<name>/glossary.md`, read together with
+  the root glossary. The receipt `.devkit/installation.json` follows `devkit sync`. The handoff ADR declares that it
+  amends the glossary paths that `ADR-spec-package-on-devkit` and `ADR-writing-and-terminology-guidance` fix.
+- **Release handbook**: `scripts/handbook.py` reads the glossary at the pinned commit from `docs/steering/`, falls
+  back to `docs/glossary.md` for a commit before the move, and fails with a code when neither exists; its tests cover
+  both layouts. The handbook pages are not refreshed.
+- **Search** (`user`): unchanged. Steering files are not search candidates; glossary synonym expansion reads the
+  moved `glossary.yaml`.
+- Non-goals: no new ID-bearing kind, no relation fields to or from steering documents, no change to the glossary
+  table columns, the Owner check's semantics, document search or the ranker, and no namespace steering directory.
 
 ### Order with parallel proposals
 
-- `PROP-table-driven-document-kinds` lands first (`depends_on`); a directory this proposal adds to the viewer or the
-  rules is read from its kind and directory definitions, never added as a constant beside them.
-- `PROP-ux-documentation` follows this proposal (open: q6), so its guidance names the glossary at its new path and
-  points to foundation style documents instead of restating them; its option 6b (an object table in the glossary)
-  would change the glossary table format, which this proposal excludes.
+- `PROP-table-driven-document-kinds` lands first (`depends_on`). Steering is not a kind and adds no row; where this
+  proposal touches the viewer grouping or the rules, it builds on the table's definitions instead of adding constants
+  beside them.
+- `PROP-ux-documentation` (open: q6): recommended to follow this proposal, so its guidance names the glossary at
+  `docs/steering/glossary.md` and points to steering style documents instead of restating them; its option 6b (an
+  object table in the glossary) would change the glossary table format, which this proposal excludes.
 
 ### Planning decisions
 
-- Planning (`policy`): search capability citation corrected to `CAP-DOCS-document-search`; `docs/capabilities/search/`
-  removed from owns; the owns list extended to every path F3 names; `depends_on` on
-  `PROP-table-driven-document-kinds` per the user's ordering decision.
+- `policy`: search citation corrected to `CAP-DOCS-document-search`; owns extended to every path spike F3 names;
+  `depends_on` on `PROP-table-driven-document-kinds` per the user's ordering decision.
+- `user` (answer-01): name `steering`; one flat directory; progressive loading through `devkit get-context spec` at
+  run time; a rule caps file count and body size so the glossary fits; the glossary moves; search unchanged.
+- `policy`: no namespace steering directory: no registered namespace exists here, package glossaries already have
+  their place (`living-spec-writing`), and get-context lists one directory per bundle declaration.
+- `policy`: the get-context change is a manifest-declared directory, not a steering path in `devkit-dist`, because the
+  base harness stays SDD-agnostic (`ARCH-05-1-containers` section 2.4).
 
 ## 4. Lifecycle & Retirement Criteria
 
