@@ -48,12 +48,17 @@ Pending the user's answers to `step-screen-link`, `ux-checks` and `coverage-stri
   case gains no frontmatter field.
 - A UX document lists the use cases it serves in `usecases`; each interaction's Step cell is the use case ID as a code
   span followed by the step key (`` `UC-<slug>` 2a ``), so the ID is an ordinary reference.
-- A new error-severity rule (working name `RULE-ux-links`) reports contradictions: an invalid `element`; a Step key
-  that names no step of that use case or a step that does not cite the screen; a `usecases` entry with no Step key
-  naming it; a target that is not a UX ID, `close`, `back` or `end`; a modal without a `close` or `back` row; a
-  screen without an exit unless it is cited by the last main-scenario step or by an extension that ends the use case;
-  a screen not reachable, within one listed use case, from the first step that cites a screen. Panels are exempt
-  from exit and reachability and are reached from the screens whose content tree names them.
+- A new error-severity rule (working name `RULE-ux-links`) reports contradictions: a missing or invalid `element`; a
+  missing Interactions section or a table without the seven columns; a Step key that names no step of that use case
+  or a step that does not cite the screen; a `usecases` entry with no Step key naming it; a target that is not a UX
+  ID, `close`, `back` or `end`; a modal without a `close` or `back` row; a screen without an exit; a screen not
+  reachable from an entry.
+- The graph is computed per listed use case. Its edges are every interaction of the screens that use case's steps
+  cite. Its entries are the screens cited by the first step, by a step whose preceding step cites no screen, and by
+  the first step of an extension. A screen needs no exit when it is cited by the last main-scenario step, by an
+  extension that ends the use case, or by a step whose next step cites no screen (the task continues off-screen, for
+  example a link sent by mail). Panels are exempt from exit and reachability and are reached from the screens whose
+  content tree names them.
 - A separate warning-severity rule (working name `RULE-ux-coverage`, the `RULE-spec-progress` precedent) reports, for
   every use case a UX document lists, a step or extension that cites no UX ID, and an interaction whose Step cell is
   empty.
@@ -63,8 +68,8 @@ Pending the user's answers to `step-screen-link`, `ux-checks` and `coverage-stri
 
 ## 5. Consequences
 
-- Positive: contradictions are mechanical; the reviewer receives them as facts; screen-less steps stay visible
-  without blocking commits.
+- Positive: contradictions are mechanical once screens are in `docs/ux/`; screen-less steps stay visible without
+  blocking commits.
 - Negative: a use case step parser to maintain (tolerating an intro paragraph, prose in Extensions, the escaped `\*a`
   key and free-form `Covers` lines).
 - Known limit: inserting a step before two consecutive steps on the same screen shifts their keys without a report,

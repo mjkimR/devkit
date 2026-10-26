@@ -45,16 +45,17 @@ Pending the user's answer to `ux-document-set` (Planning recommendation):
 
 - One kind `ux`, prefix `UX`, at `docs/ux/<area>/UX-<slug>.md` and `docs/packages/<name>/ux/<area>/UX-<slug>.md`,
   statuses `draft`, `active` and `deprecated` (no terminal status, so `ADR-terminal-statuses-are-historical` needs no
-  new entry). It is registered as a row of the kind definition table of `PROP-table-driven-document-kinds`; if that
-  proposal does not land, this decision returns to Planning.
-- Frontmatter `element` is `screen`, `modal` or `panel`, a small value inside one schema that only the UX coverage
-  rule reads and validates; relation fields `usecases` (UC IDs) and `capabilities` (CAP IDs).
+  new entry). It is registered as a row of the kind definition table of `PROP-table-driven-document-kinds`, which is accepted
+  before this proposal's `plan-accept` is requested.
+- Frontmatter `element` is `screen`, `modal` or `panel`, a small value inside one schema that only the UX link rule
+  (`RULE-ux-links` of `PADR-ux-step-links-and-coverage`) reads and validates; relation fields `usecases` (UC IDs) and `capabilities` (CAP IDs).
 - Sections: Purpose, Content (prose region rules and a content tree with conditions next to its nodes; no
   character-cell layouts), States, Interactions (`Trigger | Step | From | To | Target | Capability | Feedback`) and an
   optional Evidence section naming the project's own wireframe, mock-up or screenshot.
 - Objects are named by glossary terms. The seeded glossary and the `ux-writing` instruction define a separate UX
   object table (representations and calls to action per role) under its own header, leaving the five-column term
-  table and its Owner check unchanged; devkit's own glossary gains only the new terms.
+  table and its Owner check unchanged; devkit's own glossary gains only the new terms. The instruction tells a
+  project with an existing glossary to add the table, because seeds are written only once.
 - The `ux-writing` instruction asks for two or three contrasting candidates where a screen's arrangement is open, in
   Planning only (proposal Planning, or inline Planning before `plan-intent` at spec depth); in Development the
   recommended candidate is taken and the others are recorded as an assumption in `spec.md`.
@@ -70,5 +71,5 @@ Pending the user's answer to `ux-document-set` (Planning recommendation):
 
 ## 6. Confirmation
 
-`RULE-id-convention` for the location, `RULE-document-reference` for the field kinds, the UX coverage rule of
-`PADR-ux-step-links-and-coverage` for `element` and the table shape, and the template's skeleton check.
+`RULE-id-convention` for the location, `RULE-document-reference` for the field kinds, `RULE-ux-links` of
+`PADR-ux-step-links-and-coverage` for `element` and the Interactions table shape, and the template's skeleton check.

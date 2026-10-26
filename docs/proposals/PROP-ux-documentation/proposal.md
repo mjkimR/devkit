@@ -108,18 +108,20 @@ The Planning recommendation, pending the user's answers (§5); `target-docs.md` 
   results reported as facts, no severity, `ux-review-NN` envelopes, at most two rounds and a closing envelope, run as
   an optional delegation before code (`CAP-DLV-delivery-workflows`).
 - **Timing** (`PADR-ux-drafts-before-code`): screens and the step citations they need are drafted before code in
-  `target-docs.md` or a Screens section of `spec.md`; `spec-sync` writes `docs/ux/` and the use case changes, and the
-  link rules check them at `living-spec-draft`.
+  `target-docs.md` or a Screens section of `spec.md`, with IDs the change creates in plain text; `spec-sync` writes
+  `docs/ux/` and the use case changes, and the link rules check them at `living-spec-draft`. The review runs on the
+  drafts (in Planning, or inside `specify` before `spec-plan`).
 - Non-goals: wireframe rendering, design tool integrations, visual styling, engine- or framework-specific
   verification, usability testing with real users, severity ranking of findings by the reviewer, a stage switched on
   by content, and workflow engine changes.
 
 ## 4. Lifecycle & Retirement Criteria
 
-- Acceptance requires the user's answers to the Planning questions folded into the PADRs, and the handoff waits for
-  `PROP-table-driven-document-kinds` to be integrated (§5).
+- Acceptance requires the user's answers to the Planning questions folded into the PADRs and an accepted
+  `PROP-table-driven-document-kinds`; the handoff waits for its Development to be integrated (§5).
 - Development shows: a UX document in a fixture repository indexed, listed, searched and grouped in the viewer; each
-  report of both UX rules by a rule test, including the element cases and the step-format deviations; the role and
+  report of both UX rules by a rule test, including the element and Interactions-table cases, off-screen re-entry
+  and the step-format deviations; the role and
   skill contracts by the role-contract tests; and the viewer frontend checks with the committed page rebuilt.
 - On acceptance: recorded with `devkit spec proposal accept`, then handed off to a spec bundle on
   `dev-ux-documentation`; the proposal is deleted there and its decisions become ADRs.
@@ -158,10 +160,11 @@ Evidence: `MAT-ux-documentation-planning-spike` (spike over devkit's code and co
 
 ### Dependencies and order
 
-- `PROP-table-driven-document-kinds` (`depends_on`) is developed first, by the user's decision. The handoff of this
-  proposal waits until that proposal is integrated, and the Host re-checks the assumptions below against its accepted
-  design at this proposal's `plan-accept` (or at handoff if it is accepted later). If it is rejected or decomposed,
-  this proposal returns to Planning for the kind registration.
+- `PROP-table-driven-document-kinds` (`depends_on`) is developed first, by the user's decision. This proposal's
+  `plan-accept` request waits until that proposal is accepted, so a return to `spike` stays available, and the Host
+  re-checks the assumptions below against its accepted design then. The handoff waits until its Development is
+  integrated; if it is decomposed, until every child that carries the kind table is integrated. If it is rejected,
+  this proposal returns to `spike` for the kind registration.
 - Assumed of its table: it carries the prefix, kind, location, Living Spec membership and directory, namespace scope,
   accepted relation fields with their target kinds, summary requirement and entrypoint participation, and it removes
   the binary kind fallbacks. Assumed not carried, so owned here: the bidirectional pair logic of
@@ -181,6 +184,9 @@ Evidence: `MAT-ux-documentation-planning-spike` (spike over devkit's code and co
   the contract-slice alternative stays an option of `ux-document-timing`.
 - `dev_effort` is `medium`: the change creates a document kind and spans packages, and has no irreversible effect or
   external consumer (`effort` reference); the Host may raise it at handoff.
-- Boundaries add `docs/glossary.md` for the new terms (moved by `PROP-foundation-documents` if it lands first),
-  `docs/capabilities/viewer/`, the committed viewer build `packages/devkit-viewer/src/devkit_viewer/static/`, and
+- Boundaries add `docs/glossary.md` for the new terms. `RULE-proposal-boundaries` admits no path that does not
+  exist yet, and naming the parent `docs/` would own the whole Living Spec, so the Host replaces the entry with the
+  moved glossary path before requesting `plan-accept` if `PROP-foundation-documents` has moved it by then, and
+  otherwise records the moved path as a scope extension of the spec's `_Boundary:` after handoff. Boundaries also
+  add `docs/capabilities/viewer/`, the committed viewer build `packages/devkit-viewer/src/devkit_viewer/static/`, and
   `.devkit/installation.json` and `AGENTS.md` for the `devkit sync` the new bundle assets imply.

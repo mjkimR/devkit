@@ -41,15 +41,22 @@ use case and capability changes it links; otherwise the rules refuse the commit 
 ## 4. Decision Outcome
 
 Pending the user's answer to `ux-document-timing` (Planning recommendation): drafts before code, Living Spec at sync.
-`spec-specify` and the target-docs blueprint gain the Screens draft shape, and `spec-sync` moves it into
-`docs/ux/`.
+
+- `spec-specify` and the target-docs blueprint gain a Screens draft section in the UX template's shape.
+- In a draft, an ID the change creates (a new UX, UC or CAP ID) is plain text, never a code span or brackets, so
+  `RULE-document-reference` does not resolve it before the document exists; existing IDs stay code spans.
+- `spec-sync` writes each drafted screen to `docs/ux/` and the step citations to the use cases, turning the new IDs
+  into code spans, and lists each in `reconcile.md`.
 
 ## 5. Consequences
 
 - Positive: no exception to current-state writing; the review still runs before build.
-- Negative: no mechanical check before code; link defects surface at `living-spec-draft` and are fixed there.
+- Negative: no mechanical check before code. A link defect found at `living-spec-draft` that the code shares (for
+  example a missing exit) returns the unit to `build-verify`, which repeats code review; one only in the documents is
+  fixed at sync.
 - Follow-up: a contract slice at specify if projects report link defects found only at sync.
 
 ## 6. Confirmation
 
-Review only (the skills' text); `RULE-reconcile-contract` lists the UX targets at `living-spec-draft`.
+The reconcile verification (`reconcile-reviewer` at `medium` and `high`) checks that every drafted screen has a
+`docs/ux/` target in `reconcile.md`; `RULE-ux-links` checks the written screens. The skills' text is Review only.

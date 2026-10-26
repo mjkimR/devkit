@@ -62,7 +62,8 @@ decision. The `usecase` template and the `usecase-writing` instruction allow a U
   layouts, medium left to the project), the `ux-reviewer` subagent and `spec-ux-review` skill, the two UX rules with
   their guides, a `docs/ux/` seed and a UX object table header in the seeded glossary of `docs-skeleton`, a Screens
   draft section in the target-docs blueprint and in `spec-specify`, and the move of drafts into `docs/ux/` in
-  `spec-sync`.
+  `spec-sync`, with new IDs in drafts written as plain text.
+- `sdd-proposal` and the planning reference: the acceptance request lists `ux-review` rounds and their open findings.
 - `docs/glossary.md`: the terms "UX document" and "UX object table" only.
 
 ---
