@@ -41,7 +41,11 @@ from devkit_spec.utils.output import fields_line, sentinel
     help="Only this kind (repeatable)",
 )
 @click.option(
-    "--history", is_flag=True, help="Include the files of completed spec bundles (their feedback is always included)"
+    "--history",
+    is_flag=True,
+    help="Include historical documents: completed spec bundles (their open feedback is always included), done or "
+    "dropped milestones, and terminal statuses (feedback resolved, promoted, dismissed, forwarded; decision "
+    "superseded; proposal rejected)",
 )
 @NAMESPACE
 @ALL_NAMESPACES

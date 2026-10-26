@@ -2,7 +2,7 @@
 id: SPEC-list-terminal-statuses-historical
 title: Terminal statuses are historical in document browsing
 summary: Treats terminal statuses of feedback, decisions and proposals as historical, so devkit spec list and search hide them unless --history is passed, and list reports how many it hid.
-status: planned
+status: in-progress
 created: 2026-10-26
 related_capabilities:
   - CAP-DOCS-document-lookup

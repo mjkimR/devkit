@@ -5,7 +5,7 @@ Read this for a requested Backlog close review, or to propose one after the mile
 ## Prepare one candidate
 
 1. Read the goal, exit condition and non-goals, and judge whether the intended scope is fully decomposed into proposals; empty membership proves nothing.
-2. List the direct members: `devkit spec refs MS-<slug> --direction in -n 0` (frontmatter membership, not prose references), with `devkit spec list proposal --all-namespaces -n 0`.
+2. List the direct members: `devkit spec refs MS-<slug> --direction in -n 0` (frontmatter membership, not prose references), with `devkit spec list proposal --history --all-namespaces -n 0` (rejected members included).
 3. Inspect the local base and known `plan-`/`dev-` activity without switching another task's checkout, and report the base commit used. Use focused Git inspection for a proposal that left through handoff; persist no descendant graph.
 4. Prepare one candidate: each member delivered, explicitly excluded or moved, and the exit condition met for the agreed scope. Update the goal or exit condition when the scope shrank.
    - An unresolved in-scope proposal (draft, reviewing or accepted) or unfinished handed-off work blocks the close.

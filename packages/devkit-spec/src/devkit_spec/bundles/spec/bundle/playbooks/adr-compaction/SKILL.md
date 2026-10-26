@@ -14,7 +14,7 @@ run.
 
 ## Step 1: Group
 
-Read every ADR in scope (`uv run devkit spec list decision -n 0`).
+Read every ADR in scope, superseded ones included (`uv run devkit spec list decision --history -n 0`).
 
 - A group holds the supersession closure of its members (`supersedes`, `superseded_by` in frontmatter; these are not
   in the reference graph) plus ADRs on the same topic. It has two or more members.

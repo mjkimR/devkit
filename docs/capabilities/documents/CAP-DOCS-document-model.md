@@ -81,6 +81,11 @@ stays ID-free and unindexed, and its Owner references do not become graph edges.
    `--history` is passed; the rules check them only when they are named as explicit targets. The bundle's
    `feedback/` directory is the exception: observations may remain open after the bundle completes,
    so feedback of every status MUST stay current whatever the bundle's status (`SPEC-open-feedback-and-progress`). Milestones whose status is done or dropped are also historical: hidden from browsing/search by default, resolvable and available with `--history`; rules check them only when explicitly targeted. A user-decided merge into a broader theme milestone MAY delete one; its ID then resolves as an alias of the theme (`ADR-milestone-merging`).
+8. **Terminal statuses**: a document whose own status is terminal for its kind, compared case-insensitively, is
+   historical for browsing and search whatever bundle holds it: feedback `resolved`, `promoted`, `dismissed` and
+   `forwarded`, decision `superseded`, proposal `rejected` (`ADR-terminal-statuses-are-historical`). Browsing and
+   search MUST hide it unless `--history` is passed (or `list --status` names its status, `CAP-DOCS-document-lookup`);
+   its ID stays resolvable and its references queryable. Unlike rule 7, the rules keep checking it on every run.
 
 Proposal-local feedback also stays current while a rejected proposal awaits cleanup. Handoff carries open feedback
 into the spec; Host deletion without handoff preserves it in the month-level backlog
@@ -221,7 +226,7 @@ The table order is the kind order: `devkit spec list` sorts by it. Living Spec d
 | --- | --- | --- |
 | `id` | string | The document ID. |
 | `reconcile_id` | string | The ID of a reconcile record (used when `id` is absent). |
-| `status` | string | Lifecycle status; `completed` on a `spec.md` makes its bundle historical, its feedback aside. |
+| `status` | string | Lifecycle status; `completed` on a `spec.md` makes its bundle historical, its feedback aside; a terminal status makes the document historical for browsing (rule 8). |
 | `title` | string | Display title (any language). |
 | `summary` | string | One or two English sentences; embedded by search. |
 | `area` | string | Area of a capability or use case (its directory). |
@@ -260,7 +265,9 @@ index.canonical_id("CAP-CORE-old")  # the canonical ID, else the written value
 index.alias_collisions()  # [(alias, [every document involved]), ...]
 index.outgoing(document)  # {canonical target ID: [Reference, ...]}
 index.incoming(document.id)  # {source ID: [Reference, ...]}, alias-written references included
-index.is_historical(document)  # a file of a completed spec bundle outside its feedback/
+index.is_historical(document)  # a completed bundle's file outside its feedback/, or a done/dropped milestone
+index.is_terminal(document)  # its status is in TERMINAL_STATUSES for its kind (rule 8)
+index.is_browsing_historical(document)  # what list and search hide unless asked: either of the above
 ```
 
 `parse_document(path, text)` reads one document (`None` without a well-formed ID); `visible_lines` is the prose
