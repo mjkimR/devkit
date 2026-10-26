@@ -918,7 +918,7 @@
     },
     ".agents/skills/spec-review-proposal/SKILL.md": {
       "mode": 420,
-      "sha256": "c5ff9a4d92c865faabaaa6e915f795dba32a5903ebdbf06321f8f3e21e6a4c8e"
+      "sha256": "95c95c7d71a6bb3ab3034849b5d6834a1bc657086106a9e010bbc08266a1f0e0"
     },
     ".agents/skills/spec-review/SKILL.md": {
       "mode": 420,
@@ -1126,7 +1126,7 @@
     },
     ".claude/skills/spec-review-proposal/SKILL.md": {
       "mode": 420,
-      "sha256": "c5ff9a4d92c865faabaaa6e915f795dba32a5903ebdbf06321f8f3e21e6a4c8e"
+      "sha256": "95c95c7d71a6bb3ab3034849b5d6834a1bc657086106a9e010bbc08266a1f0e0"
     },
     ".claude/skills/spec-review/SKILL.md": {
       "mode": 420,
@@ -1710,7 +1710,7 @@
     },
     ".devkit/managed/spec/skills/spec-review-proposal/SKILL.md": {
       "mode": 420,
-      "sha256": "c5ff9a4d92c865faabaaa6e915f795dba32a5903ebdbf06321f8f3e21e6a4c8e"
+      "sha256": "95c95c7d71a6bb3ab3034849b5d6834a1bc657086106a9e010bbc08266a1f0e0"
     },
     ".devkit/managed/spec/skills/spec-review/SKILL.md": {
       "mode": 420,

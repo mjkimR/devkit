@@ -643,12 +643,15 @@ Partial progress returns completed steps, source/acceptance/landed SHAs, integra
 a next action. No authority survives a return or restart. Fresh reviews and Host decisions cover only remaining
 effects: accepted Planning commits are never replayed, and strictly matched clean pinned worktrees can retry
 setup/handoff. Dirty or mismatched partial state requires inspection; it is never rolled back or treated as completed
-merely because a branch exists. See `ADR-proposal-acceptance` and `ADR-host-cli-lifecycle-authority`.
+merely because a branch exists. The one exception is the acceptance commit itself: when the commit gate refuses
+it, nothing has landed, so the service withdraws its own two acceptance writes (the status change and the gate
+record), leaves the Planning worktree as it was and reports `PROPOSAL_APPROVAL_NOT_READY` with the gate's output as
+details. See `ADR-proposal-acceptance` and `ADR-host-cli-lifecycle-authority`.
 
 | Code | Mode | Meaning | Action |
 | --- | --- | --- | --- |
 | `PROPOSAL_REVIEW_INVALID` | `INPUT_ERROR` | Proposal structure, branch or source is invalid. | Inspect `proposal.md` and ensure it is committed on the expected branch. |
-| `PROPOSAL_APPROVAL_NOT_READY` | `BLOCKED` | Planning or worktree prerequisites do not hold. | The user or Host resolves the named prerequisite and reruns the CLI operation. |
+| `PROPOSAL_APPROVAL_NOT_READY` | `BLOCKED` | Planning or worktree prerequisites do not hold, including a commit gate that refuses the acceptance commit. | The user or Host resolves the named prerequisite and reruns the CLI operation. |
 | `PROPOSAL_APPROVAL_REPLY_INVALID` | `INPUT_ERROR` | The requested or confirmed mode is not `accept_only` or `accept_and_handoff`, `accept_and_handoff` has no `low`, `medium` or `high` effort, or a reply widens `accept_only`. | The caller corrects the mode or effort and reruns. |
 | `PROPOSAL_APPROVAL_STALE` | `MAINTENANCE` | Reviewed scope or exact acceptance delta changed. | Inspect preserved effects, refresh evidence and obtain Host authority for remaining scope. |
 
