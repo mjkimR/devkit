@@ -32,8 +32,9 @@ context.
 
 ### Option 1: Progressive loading: frontmatter always, bodies on demand (Selected)
 - **Overview**: `devkit get-context spec` lists each steering file's `title` and `summary` (its one-line scope) in
-  every context (`PADR-bundle-context-lists-project-documents`); one constitution line tells the agent to read a body
-  before a decision that concerns its scope; `RULE-steering-documents` caps the number of files and each body's size.
+  every context (`PADR-bundle-context-lists-project-documents`); one constitution line names `docs/steering/` and
+  tells the agent to read a body before a decision that concerns its scope; every spec role contract loads the context
+  through `devkit get-context spec`; `RULE-steering-documents` caps the number of files and each body's size.
 - **Pros**: every role knows what exists at the cost of a short list; bodies cost nothing until needed.
 - **Cons**: whether an agent applies the trigger is judgment.
 
@@ -66,6 +67,7 @@ size is bounded by the caps and the summary length (driver 2), and a guidance te
 
 ## 6. Confirmation
 
-A guidance test under `packages/devkit-spec/tests/integration/bundles/spec/` asserts the constitution line and its
-trigger; `RULE-steering-documents` checks the caps and frontmatter; `test_bundle_budgets.py` keeps the bundle within
-its size budgets.
+A guidance test under `packages/devkit-spec/tests/integration/bundles/spec/` asserts the constitution line, its
+trigger and that every role contract under `subagents/` loads the spec context; `RULE-steering-documents` checks the
+caps and frontmatter; a test under `packages/devkit-dist/tests/` asserts the size of the `documents` output at the
+default caps and the maximum summary length.

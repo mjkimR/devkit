@@ -62,8 +62,15 @@ declares `docs/steering`.
   itself enforces no cap.
 - **Follow-ups**: none.
 
+Read rules: the field follows the seeded `target` grammar; get-context reads the declaration from the
+receipt-verified managed `bundle.toml`; it lists only regular, non-symlink `*.md` files other than `README.md` directly
+inside a non-symlinked directory, reading at most a 4096-byte header prefix; `documents` is always present (`[]` when
+undeclared or absent), with absolute `path`, sorted. `CAP-DIST-workspace-ownership` is amended so a declared context
+directory may list seeded files.
+
 ## 6. Confirmation
 
 Tests under `packages/devkit-dist/tests/` for the manifest field's validation and for `documents` in the
-`get-context` result (present, absent directory, malformed frontmatter); `CAP-DIST-manifest-spec` and
+`get-context` result (present, undeclared, absent directory, symlinked directory or file, non-regular entry,
+non-UTF-8, oversized file, malformed frontmatter, non-string values, order); `CAP-DIST-manifest-spec` and
 `CAP-DIST-context-and-playbooks` document both.

@@ -6,7 +6,7 @@ status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-26
 target_area: documents/
 priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
+size: L                               # S | M | L | XL
 planning_effort: medium               # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
 boundaries:
@@ -87,16 +87,29 @@ option.
   no `id`, so they stay outside the document index (`CAP-DOCS-document-model` rule 3.2). Documented in
   `CAP-DOCS-document-model`; the glossary gains the row **Steering document** (Avoid: foundation, background).
 - **Loading** (`PADR-background-pointer-in-constitution`): every steering file's `title` and `summary` are always
-  loaded; bodies are read only when a decision concerns that scope. One constitution line states that trigger.
+  loaded; bodies are read only when a decision concerns that scope. One constitution line names `docs/steering/` and
+  states that trigger. The `scout`, `challenger` and `reconcile-reviewer` contracts (`bundle/subagents/`) run
+  `devkit get-context spec` instead of reading the managed `AGENTS.md`, as `code-reviewer` already does, and a guidance
+  test asserts that every role contract loads the spec context.
 - **Bundle context** (`PADR-bundle-context-lists-project-documents`): the `spec` bundle's manifest declares
   `docs/steering` as a context document directory, and `devkit get-context <bundle>` adds `documents` (`path`,
   `title`, `summary` per Markdown file, read from the workspace at run time, not rendered by sync) to its result.
   `devkit-dist` reads only the directory the manifest names and knows nothing of steering
-  (`CAP-DIST-context-and-playbooks`, `CAP-DIST-manifest-spec`).
-- **Bounds** (open: q7): a new spec rule `RULE-steering-documents` (under
-  `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/`) reports a subdirectory, an `id`, a missing or
-  non-English `summary` (the `RULE-document-summary` length cap), more than `max_files` Markdown files and a body
-  over `max_body_bytes`; both caps are rule settings. Documented in `CAP-GOV-spec-rules`.
+  (`CAP-DIST-context-and-playbooks`, `CAP-DIST-manifest-spec`). The field follows the seeded `target` grammar; the
+  declaration is read from the receipt-verified managed `bundle.toml`; only regular, non-symlink `*.md` files other
+  than `README.md` directly inside a non-symlinked directory are listed, from a header prefix of at most 4096 bytes;
+  unreadable, non-UTF-8 or non-string values become `null`, never an error. `documents` is always present (`[]` when
+  undeclared or absent), with absolute `path`, sorted by path. `CAP-DIST-workspace-ownership` is amended: seeded
+  files are never receipt-verified context files, but a declared context directory may list project files, seeded
+  ones included. One test per case, plus a test of the output size at the default caps.
+- **Bounds** (open: q7 for the values): a new spec rule `RULE-steering-documents` (under
+  `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/`), error severity, reports in `docs/steering/` a
+  subdirectory, a file other than `*.md` and `glossary.yaml`, an `id`, a missing `title`, a missing or non-English
+  `summary` longer than its own `max_summary_length` (default 300), each Markdown file beyond `max_files` in sorted
+  order (so a commit adding the overflowing file is refused at the gate), and a body (the text after the frontmatter)
+  over `max_body_bytes`. `README.md` is neither counted nor listed. Settings `max_files`, `max_body_bytes` and
+  `max_summary_length`; one test per case, including a staged commit for the count. Documented in
+  `CAP-GOV-spec-rules`.
 - **Cited IDs** (open: q5): recommended, `RULE-document-reference` resolves backtick-quoted IDs in steering files the
   way it resolves root glossary Owners (alias check, no autofix, no graph edges).
 - **Glossary move** (`user`): `glossary.md` and `glossary.yaml` move to `docs/steering/`, the glossary gaining the
@@ -116,8 +129,10 @@ option.
   both layouts. The handbook pages are not refreshed.
 - **Viewer** (`policy`, Host addition): `bookGroup` in `packages/devkit-viewer/frontend/src/lib/api/documents.ts`
   replaces its literal `docs/glossary.md` with one `Steering` book group for every file under `docs/steering/`, in
-  place of the `Glossary` group in `bookGroups`; a front-end test next to it asserts that `docs/steering/glossary.md`
-  and another steering file land in `Steering` and that `docs/glossary.md` is no longer special. The committed build
+  place of the `Glossary` group in `bookGroups`, defined as a viewer literal because steering is not a kind; a
+  package glossary `docs/packages/<name>/glossary.md` also lands in `Steering`; a front-end test next to it asserts
+  that `docs/steering/glossary.md`, another steering file and a package glossary land in `Steering` and that
+  `docs/glossary.md` is no longer special. The committed build
   under `packages/devkit-viewer/src/devkit_viewer/static/` is rebuilt (`just viewer build`). This proposal owns the
   fix because `PROP-table-driven-document-kinds` excludes the viewer.
 - **Search** (`user`): unchanged. Steering files are not search candidates; glossary synonym expansion reads the
@@ -142,6 +157,9 @@ option.
   run time; a rule caps file count and body size so the glossary fits; the glossary moves; search unchanged.
 - `policy`: no namespace steering directory: no registered namespace exists here, package glossaries already have
   their place (`living-spec-writing`), and get-context lists one directory per bundle declaration.
+- `policy` (challenger-02): every spec role loads the context through get-context; read and path-safety rules,
+  output shape and the workspace-ownership amendment specified; rule scope defined; package glossaries keep a viewer
+  group.
 - `policy`: the get-context change is a manifest-declared directory, not a steering path in `devkit-dist`, because the
   base harness stays SDD-agnostic (`ARCH-05-1-containers` section 2.4).
 
