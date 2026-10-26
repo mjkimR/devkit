@@ -2,7 +2,7 @@
 id: SPEC-spec-playbook-discovery
 title: Task-aware playbook discovery through spec
 summary: Lets spec run one bounded playbook search at new task intake and offer a matching playbook in one line that the user confirms, with explicit skip cases; the generated devkit-playbook skill stays the generic explicit entry.
-status: in-progress
+status: completed
 created: 2026-10-26
 related_capabilities:
   - CAP-HARN-agent-guidance

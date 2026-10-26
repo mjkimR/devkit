@@ -149,7 +149,7 @@ Living Spec and `specs/` holds feature specs.
 
 | Skill | Purpose | devkit-spec commands it runs |
 | --- | --- | --- |
-| `spec` | Entry router: classify the work, run Backlog (direct acceptance and session reclassification of a draft included) and inline Planning, raise the depth and close, drive the workflow; first runs intake playbook discovery (principle 7). | `playbook search`, `policy`, `new`, `proposal new`, `proposal check`, `proposal accept`, `proposal handoff` |
+| `spec` | Entry router: classify the work, run Backlog (direct acceptance and session reclassification of a draft included) and inline Planning, raise the depth and close, drive the workflow; first runs intake playbook discovery with devkit's `devkit playbook search` (principle 7). | `policy`, `new`, `proposal new`, `proposal check`, `proposal accept`, `proposal handoff` |
 | `spec-next` | Orientation: diagnose work under way; when idle, filter queued drafts by direct prerequisites on one local base snapshot, then rank by repository milestone, priority and size, offering Planning, a direct acceptance or a session reclassification. | `policy`, `list spec\|proposal\|feedback`, `proposal padr`, `proposal accept --check`, `proposal handoff` |
 | `spec-specify` | Write `spec.md` (feature or bugfix reference); creates the bundle with `devkit spec new`. | `new`, `list`, `refs`, `search`, `policy` |
 | `spec-plan` | Write `plan.md`: design, interfaces, verification plan. | `list`, `refs`, `search` |

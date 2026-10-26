@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-spec-playbook-discovery
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
     resolution: modified
@@ -57,9 +57,17 @@ No other Living Spec document changes:
   ID, which did not change. `guides/install/` names only the generated skill paths, which did not change.
 - Dated materials, completed specs and roadmap milestones that name the old entry rule are history.
 
-Deferred work: `UC-route-development-intent` (`docs/usecases/delivery/`, outside this run's write scope) still goes
-from entering the `spec` skill to classification without the intake step; tracked as
-`FB-route-intent-intake-discovery`.
+Deferred work, each outside this Development run's strict write scope (`docs/usecases/governance/` was the only use
+case directory granted), so the run could not reflect it; the Host can widen the scope and fold both in at
+integration, which closes the feedback:
+
+- `UC-route-development-intent` (`docs/usecases/delivery/`) still goes from entering the `spec` skill to
+  classification without the intake step: `FB-route-intent-intake-discovery`.
+- `UC-adopt-in-an-existing-repository` (`docs/usecases/harness/`) step 5 names only the developer's request for
+  `brownfield-adoption`, not a confirmed intake offer: `FB-adoption-usecase-confirmed-offer`.
+
+Both are wording omissions of an entry path, not contradictions: neither use case states that playbooks cannot be
+offered, and the delivered behavior holds without them.
 
 Entrypoints: no new capability or use case; the touched capabilities' `entrypoints` already name the changed files'
 doorways (`packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/` for `CAP-HARN-agent-guidance`, the playbook

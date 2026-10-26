@@ -98,7 +98,7 @@ The **bundle context** is the whole `get-context <bundle>` response: the constit
 
 #### 4. `package-playbook`
 - **Role**: Procedures for occasional tasks, retrieved for reuse and extended through experience. Explicit, recurring execution flows belong to workflows; frequency alone does not turn a policy or judgment criterion into a playbook.
-- **Consumption**: Only through these entry conditions, never through implicit scanning during ordinary tasks (which adds latency, prompt bloat and hallucinated runbooks):
+- **Consumption**: Only through these entry conditions, never through unbounded or implicit scanning during ordinary tasks (which adds latency, prompt bloat and hallucinated runbooks); an entry skill's bounded intake search (condition 4) is the one search an ordinary task intake runs:
   1. **Explicit user invocation** of the shared `devkit-playbook` skill (`"use devkit-playbook to recover the replica"`).
   2. **Rule-triggered remediation**: a `governance-rule`, evaluated out-of-band by `devkit_agt.features.rules` (`just rules-check`, CI, the `rules-check` commit gate) at zero token cost, reports a violation whose `Violation.remediation` points to the playbook (a search query or path) instead of embedding the procedure in the rule.
 
