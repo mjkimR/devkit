@@ -668,6 +668,20 @@ def test_handoff_cli_creates_or_preserves_the_development_worktree(accepted_hand
         assert payload["worktree"]["created"] is True
 
 
+# SPEC-handoff-modes-and-template-report AC-04
+def test_handoff_cli_refuses_an_unmet_prerequisite_as_blocked(accepted_handoff_base):
+    from devkit_spec.features.delivery.cli.proposals import proposal_group
+
+    repo = accepted_handoff_base
+    (repo / "untracked.txt").write_text("not committed\n")
+    result = CliRunner().invoke(proposal_group, ["handoff", "idea", "--effort", "medium", "-w", str(repo)])
+    assert result.exit_code == 2, result.output
+    assert "SPEC_HANDOFF_NOT_READY" in result.stderr
+    assert "[ACTION] BLOCKED" in result.stderr
+    assert "MAINTENANCE" not in result.stderr
+    assert not git(repo, "branch", "--list", "dev-idea")
+
+
 def test_handoff_initialization_keeps_template_isolated(
     accepted_handoff_base: Path, handoff_repository_template: Path
 ) -> None:

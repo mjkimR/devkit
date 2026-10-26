@@ -800,7 +800,7 @@
     },
     ".agents/agents/code-reviewer.md": {
       "mode": 420,
-      "sha256": "9582bc4b5fa5f69e2bbd3497cdfb5fd3627eed6fa9670f9a669709b7b074f7cf"
+      "sha256": "fb7b478267c0b90f07f2d4e801d9e6e48710793754853e4e0c3b81e5664fe64c"
     },
     ".agents/agents/development-worker.md": {
       "mode": 420,
@@ -848,7 +848,7 @@
     },
     ".agents/skills/spec-delegate/references/payload.md": {
       "mode": 420,
-      "sha256": "e8f837ddbf36f2c2c58434b526dc5ce75988c7c7ce934b1b618fdb1e966a881a"
+      "sha256": "3bc66a6c88355125e2612a11ca4b2cc62e93a074efb3a2fe10e75c431260ac88"
     },
     ".agents/skills/spec-delegate/references/worker.md": {
       "mode": 420,
@@ -1020,7 +1020,7 @@
     },
     ".claude/agents/code-reviewer.md": {
       "mode": 420,
-      "sha256": "f8e455fc53cbde57ec5def7d7cf2ecff2423bed870e96e21a162c75035a1d882"
+      "sha256": "507c1d0d99359fe094565dc01994196c4d576b0665a1d636a478979823437df1"
     },
     ".claude/agents/development-worker.md": {
       "mode": 420,
@@ -1060,7 +1060,7 @@
     },
     ".claude/skills/spec-delegate/references/payload.md": {
       "mode": 420,
-      "sha256": "e8f837ddbf36f2c2c58434b526dc5ce75988c7c7ce934b1b618fdb1e966a881a"
+      "sha256": "3bc66a6c88355125e2612a11ca4b2cc62e93a074efb3a2fe10e75c431260ac88"
     },
     ".claude/skills/spec-delegate/references/worker.md": {
       "mode": 420,
@@ -1228,7 +1228,7 @@
     },
     ".codex/agents/code-reviewer.toml": {
       "mode": 420,
-      "sha256": "1fc7b064f22d40536a87c91fda388eea8f4a5175ea58377fdcc0e5842cbf987b"
+      "sha256": "3116cd5e5b28cfdf0af6f2ed9d0a18492d46cbe8deafe1040d7d13fe5720b2bd"
     },
     ".codex/agents/development-worker.toml": {
       "mode": 420,
@@ -1632,7 +1632,7 @@
     },
     ".devkit/managed/spec/skills/spec-delegate/references/payload.md": {
       "mode": 420,
-      "sha256": "e8f837ddbf36f2c2c58434b526dc5ce75988c7c7ce934b1b618fdb1e966a881a"
+      "sha256": "3bc66a6c88355125e2612a11ca4b2cc62e93a074efb3a2fe10e75c431260ac88"
     },
     ".devkit/managed/spec/skills/spec-delegate/references/worker.md": {
       "mode": 420,
@@ -1800,7 +1800,7 @@
     },
     ".devkit/managed/spec/subagents/code-reviewer.md": {
       "mode": 420,
-      "sha256": "3d160b543a1863bfcf01762d83839f4635b591e3dfd4f4c4f467634fb39c0878"
+      "sha256": "bfe966110b67074dbe2cbf1add3393ea3489644531175057e91a15bb386ff0cb"
     },
     ".devkit/managed/spec/subagents/development-worker.md": {
       "mode": 420,

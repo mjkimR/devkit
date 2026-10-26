@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/base/errors.py (HandoffNotReadyErro
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -57,3 +57,7 @@ native_handoff.py: HandoffReplyError("choose low, medium or high Development eff
 `HandoffNotReadyError.fix` and the `SPEC_HANDOFF_NOT_READY` row of `CAP-DLV-proposal-incubation` still say to rerun
 "with the current report URI", although acceptance and handoff no longer take or need a published report. Fix the
 text together with the mode change.
+
+## Disposition
+
+Resolved by `SPEC-handoff-modes-and-template-report` (decision 1): `HandoffNotReadyError` sets `guardrail = True` and renders `BLOCKED`, `HandoffReplyError` sets `input_error = True` and renders `INPUT_ERROR`, and `HandoffStaleError` stays `MAINTENANCE`, as its `CAP-DLV-proposal-incubation` row documents. The fixes of `SPEC_HANDOFF_NOT_READY`, `SPEC_HANDOFF_STALE`, `PROPOSAL_APPROVAL_STALE` and `PROPOSAL_APPROVAL_NOT_READY` and the `SPEC_HANDOFF_NOT_READY` row no longer ask for a report. Verified by `test_handoff_error_modes.py` (red on the base) and a composed CLI test that renders `[ACTION] BLOCKED` for an untracked base file.

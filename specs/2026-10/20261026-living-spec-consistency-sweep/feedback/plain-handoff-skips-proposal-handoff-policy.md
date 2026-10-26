@@ -8,7 +8,7 @@ target: devkit spec proposal handoff
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -45,3 +45,7 @@ created_at: 2026-10-26
 proposals.py handoff_cmd: if effort is not None: HandoffUseCase(root).execute(slug, effort) ... else HandoffProposalUseCase().execute(root, slug)
 native_handoff.py:121 authority = approval_policy(self.root, "proposal-handoff")
 ```
+
+## Disposition
+
+Answered by `SPEC-handoff-modes-and-template-report` (decision 3, no code change): `CAP-DLV-proposal-incubation` and `CAP-DLV-project-policy` rule 4 state that the plain `devkit spec proposal handoff <slug>` in a `dev-<slug>` checkout is the Host-run step after the `proposal-handoff` decision and reads no policy itself, while `handoff --effort` and `accept --mode accept_and_handoff` read the policy. A policy check with a new approval flag was rejected: the CLI does not authenticate the conversational decision, and the composed handoff would check twice.

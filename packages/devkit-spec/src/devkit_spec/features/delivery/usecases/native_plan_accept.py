@@ -41,12 +41,14 @@ from devkit_spec.features.proposals.usecases.scaffold import require_slug
 
 class ProposalApprovalStaleError(SpecError):
     code = "PROPOSAL_APPROVAL_STALE"
-    fix = "Inspect completed effects, publish a current report and obtain Host authority for the remaining CLI effects"
+    fix = (
+        "Inspect completed effects, refresh the review evidence and obtain Host authority for the remaining CLI effects"
+    )
 
 
 class ProposalApprovalNotReadyError(SpecError):
     code = "PROPOSAL_APPROVAL_NOT_READY"
-    fix = "Resolve the reported Planning prerequisite and publish a fresh report before invoking the CLI operation"
+    fix = "Resolve the Planning prerequisite the message names, then rerun the CLI operation"
 
 
 def _proposal_error(error: AdvisoryError) -> AdvisoryError:

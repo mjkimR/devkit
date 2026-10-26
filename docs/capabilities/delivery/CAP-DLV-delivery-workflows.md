@@ -385,7 +385,7 @@ the session's effort. An emulated named-role projection still applies its declar
 | --- | --- | --- | --- | --- | --- |
 | `challenger` | none: the procedure is in the contract | `high-reasoning` | `high` | nothing | `challenger` |
 | `reconcile-reviewer` | `spec-sync` | `light-medium` | `medium` | nothing: verifies the implementer's reconcile at `medium`/`high`, subject to rule 15 | `reconcile-check` |
-| `code-reviewer` | `spec-review` | `general-high` | `high` | nothing but throwaway probe tests under the ignored probe path the payload names, deleted before it returns and never the unit's tests: verifies implementation against requirements and checks | `review`, `reverify`, or a message for a session |
+| `code-reviewer` | `spec-review` | `general-high` | `high` | nothing but throwaway probe tests in its round's own subdirectory of the ignored probe path the payload names, read by no other round, left for worktree removal and never the unit's tests: verifies implementation against requirements and checks | `review`, `reverify`, or a message for a session |
 | `scout` | none: the procedure is in the contract | `light-medium` | `medium` | nothing, or the proposal's `materials/` on request | `scout` |
 | `planning-worker` | none: the procedure is in `spec/references/planning.md`, which the contract cites | `general-high` | session | the proposal directory in its `plan-` worktree, committed | `worker` (its own) |
 | `development-worker` | none: the procedure is in the contract | `general-high` | session | the unit's write scope in its `dev-` worktree, committed at every stage boundary | `worker` (its own) and the stage envelopes |
