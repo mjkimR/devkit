@@ -21,6 +21,37 @@ describe('parseBlob', () => {
 	});
 });
 
+describe('renderDocument ID references', () => {
+	const doc = (path: string, id: string, body = '') =>
+		parseBlob(path, `---\nid: ${id}\n---\n# ${id}\n\n${body}\n`, 'utf-8');
+
+	it('links prose references with every current ID prefix', () => {
+		const targets = [
+			doc('docs/usecases/a/UC-a.md', 'UC-a'),
+			doc('specs/feedback/b.md', 'FB-b'),
+			doc('docs/roadmap/MS-c.md', 'MS-c')
+		];
+		const page = doc('docs/page.md', 'CAP-P-page', 'See [UC-a], [FB-b] and [MS-c].');
+		const wrapper = document.createElement('div');
+		wrapper.innerHTML = renderDocument(page, [page, ...targets]).html;
+		const anchors = [...wrapper.querySelectorAll('a')];
+		expect(anchors.map((a) => [a.textContent, a.dataset.docPath])).toEqual([
+			['[UC-a]', 'docs/usecases/a/UC-a.md'],
+			['[FB-b]', 'specs/feedback/b.md'],
+			['[MS-c]', 'docs/roadmap/MS-c.md']
+		]);
+	});
+
+	it('leaves retired and unresolved references as text', () => {
+		const retired = doc('docs/old/US-a.md', 'US-a');
+		const page = doc('docs/page.md', 'CAP-P-page', 'See [US-a] and [UC-missing].');
+		const wrapper = document.createElement('div');
+		wrapper.innerHTML = renderDocument(page, [page, retired]).html;
+		expect(wrapper.querySelectorAll('a')).toHaveLength(0);
+		expect(wrapper.textContent).toContain('See [US-a] and [UC-missing].');
+	});
+});
+
 describe('indexDocuments', () => {
 	it('indexes every readable document and lists the unreadable ones', async () => {
 		const files: Record<string, string> = {
