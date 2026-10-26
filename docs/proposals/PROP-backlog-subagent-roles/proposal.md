@@ -9,7 +9,7 @@ priority: high                        # critical | high | medium | low
 size: M                               # S | M | L | XL
 planning_effort: medium               # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
-milestone: MS-autonomous-backlog-and-orchestration
+milestone: MS-backlog-subagent-roles
 boundaries:
   owns:
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml
@@ -40,7 +40,7 @@ workflow: sdd-proposal
 Backlog work runs in the main session today. Feedback triage follows the `feedback-hygiene` playbook, and splitting a
 broad draft (`decomposed_from`, `needs_decompose`) is done by the Host by hand. Both read many files and fill the
 coordinating context, and the Host judges its own grouping without a second view. `ADR-roadmap-and-milestones`
-leaves the `triage` and `decomposer` roles as follow-ups, and `MS-autonomous-backlog-and-orchestration` names them
+leaves the `triage` and `decomposer` roles as follow-ups, and `MS-backlog-subagent-roles` names them
 in its first exit condition.
 
 Hypothesis: two support roles with explicit contracts can take these reads out of the main session. They return

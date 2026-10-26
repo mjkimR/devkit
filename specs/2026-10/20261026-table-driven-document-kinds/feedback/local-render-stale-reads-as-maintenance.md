@@ -8,7 +8,7 @@ target: packages/devkit-dist/src/devkit_dist/features/distribution/services/inst
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -46,3 +46,9 @@ created_at: 2026-10-26
 "action": "MAINTENANCE — A codebase defect or tool failure occurred. Report it and stop; ...",
 "fix": "Run `devkit sync` in this workspace to refresh personal rendering evidence"
 ```
+
+## Disposition
+
+Resolved in the `local-render-stale-directive` session. `LocalRenderStaleError` and `LocalChangedError` now set
+`actor = Actor.TOOL`, so both render the AUTO directive (run the fix and retry) beside their `devkit sync` fix, as
+`CAP-DIST-context-and-playbooks` states. `test_local_config.py` asserts the mode of both errors.
