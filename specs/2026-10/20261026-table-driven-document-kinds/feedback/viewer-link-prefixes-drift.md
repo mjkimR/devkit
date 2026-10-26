@@ -21,7 +21,7 @@ grammar of `CAP-DOCS-document-model` section 3.2.
 
 - **Current Procedure**: `documents.ts` links `[CAP|US|ARCH|ADR|PROP|SPEC|PLAN|TASKS|REC|MAT|PADR-...]` references.
   `US` is the retired use case prefix; `UC`, `FB` and `MS` references in brackets render as plain text.
-- **Proposed Procedure**: Fix the list in a separate viewer bugfix; `PROP-table-driven-document-kinds` leaves the
+- **Proposed Procedure**: Fix the list in a separate viewer bugfix; `SPEC-table-driven-document-kinds` leaves the
   viewer out of scope (its Planning decision).
 - **Expected Benefit**: Use case, feedback and milestone references become navigable like the others, and the list
   cannot drift again.
@@ -36,7 +36,7 @@ grammar of `CAP-DOCS-document-model` section 3.2.
 - **Conditions**: Any repository whose documents cite use cases, feedback or milestones in `[ID]` form.
 - **Workarounds Attempted**: Not attempted.
 - **Related Assets**: `packages/devkit-spec/src/devkit_spec/features/documents/models/ids.py:34-48`,
-  `CAP-VIEW-repository-viewer`, `envelopes/scout-01.yaml` finding 1.
+  `CAP-VIEW-repository-viewer`, historical Git `cfc82a4cb3d651c38c61b6a4da880be9ebfbe2fd:docs/proposals/PROP-table-driven-document-kinds/envelopes/scout-01.yaml` finding 1.
 
 ## Evidence
 

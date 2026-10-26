@@ -1,15 +1,15 @@
 ---
-id: PADR-kind-definition-table-keyed-on-the-declared-kind-enum
+id: ADR-kind-definition-table-keyed-on-the-declared-kind-enum
 title: Kind definition table keyed on the declared Kind enum
 summary: For document kind facts scattered across devkit-spec, we keep Kind a declared enum and add one definition row per member in the documents models, read by the index and spec rules, to remove silent fallbacks while static checks see every kind, accepting that a new kind adds a member and a row.
-proposal: PROP-table-driven-document-kinds
-status: draft
+proposal: SPEC-table-driven-document-kinds
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-kind-definition-table-keyed-on-the-declared-kind-enum] Kind definition table keyed on the declared Kind enum
+# [ADR-kind-definition-table-keyed-on-the-declared-kind-enum] Kind definition table keyed on the declared Kind enum
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---

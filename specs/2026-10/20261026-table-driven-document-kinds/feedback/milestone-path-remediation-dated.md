@@ -23,7 +23,7 @@ created_at: 2026-10-26
   "Move the file to {YYYY-MM}/{YYYYMMDD}-{slug} with the decision or start date, then run ...", milestones included,
   although the milestone path issue itself says "Milestone must be stored at docs/roadmap/MS-{slug}.md".
 - **Proposed Procedure**: Give milestones a remediation that names `docs/roadmap/MS-{slug}.md`, in a bugfix after
-  `PROP-table-driven-document-kinds`, which keeps the current text byte-for-byte (its Planning decision).
+  `SPEC-table-driven-document-kinds`, which keeps the current text byte-for-byte (its Planning decision).
 - **Expected Benefit**: An agent following the remediation no longer moves a milestone into a dated directory.
 - **Cost & Risk**: One rule message changes; tests asserting it need updating.
 - **Attempted**: Hypothesis; read in source, not reproduced with a misplaced milestone.
@@ -35,7 +35,7 @@ created_at: 2026-10-26
 - **Versions**: base `96df5d86`.
 - **Conditions**: A milestone file outside `docs/roadmap/` or with an invalid stem.
 - **Workarounds Attempted**: Not attempted.
-- **Related Assets**: `RULE-id-convention`, `envelopes/challenger-01.yaml` finding 7.
+- **Related Assets**: `RULE-id-convention`, historical Git `cfc82a4cb3d651c38c61b6a4da880be9ebfbe2fd:docs/proposals/PROP-table-driven-document-kinds/envelopes/challenger-01.yaml` finding 7.
 
 ## Evidence
 

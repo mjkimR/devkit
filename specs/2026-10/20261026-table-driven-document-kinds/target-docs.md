@@ -3,7 +3,7 @@ id: PROP-table-driven-document-kinds-target
 title: Table-driven document kind Living Spec targets
 summary: "Maps the kind definition table to the Living Spec documents Development reconciles, leaving every documented ID, path, rule code and message unchanged."
 status: draft
-proposal: PROP-table-driven-document-kinds
+proposal: SPEC-table-driven-document-kinds
 created_at: 2026-10-26
 ---
 
@@ -19,6 +19,6 @@ created_at: 2026-10-26
   sentence that the documents feature owns the kind definitions every other feature reads; no new ARCH document.
 - No viewer document changes: the viewer is out of scope.
 
-Promote `PADR-kind-definition-table-keyed-on-the-declared-kind-enum` through normal handoff; it supersedes no ADR.
+Promote `ADR-kind-definition-table-keyed-on-the-declared-kind-enum` through normal handoff; it supersedes no ADR.
 No current Living Spec is edited during Planning. `PROP-ux-documentation` and `PROP-foundation-documents` edit
 `CAP-DOCS-document-model` too; the change that lands later rebases its edits on the earlier one.
