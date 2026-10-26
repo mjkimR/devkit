@@ -1,0 +1,29 @@
+devkit bundle: devkit 번들
+Preset: 프리셋
+Managed files: 관리 파일
+Projections: 프로젝션
+Receipt: 설치 기록
+Project override: 프로젝트 오버라이드
+Alias: 별칭
+Governance rule: 거버넌스 규칙
+Per-file rule facts: 파일별 규칙 팩트
+Rule phase: 규칙 페이즈
+Snapshot run: 스냅샷 실행
+Workflow: 워크플로
+Unit: 유닛
+Stage: 단계
+Segment: 세그먼트
+Gate: 게이트
+Envelope: 엔벨로프
+Shared artifact: 공유 아티팩트
+Task worktree: 작업 워크트리
+Source feedback: 출처 피드백
+Direct acceptance: 직접 수락
+Session reclassification: 세션 재분류
+Feedback promotion: 피드백 승격
+Feedback resolution: 피드백 해결
+Commit gate: 커밋 게이트
+Compact output: 컴팩트 출력
+Agent advisory: 에이전트 어드바이저리
+Host hook: 호스트 훅
+Integration MCP: Integration MCP
