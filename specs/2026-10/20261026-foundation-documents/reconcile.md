@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-foundation-documents
 spec: SPEC-foundation-documents
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/distribution/CAP-DIST-context-and-playbooks.md
     resolution: modified
