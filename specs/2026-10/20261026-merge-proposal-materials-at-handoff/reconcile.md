@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-merge-proposal-materials-at-handoff
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md
     resolution: modified
