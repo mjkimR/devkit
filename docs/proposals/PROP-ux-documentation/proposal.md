@@ -10,7 +10,7 @@ size: L                               # S | M | L | XL
 planning_effort: high                 # low | medium | high (hint for Planning)
 dev_effort: high                      # low | medium | high (hint for Development)
 milestone: MS-ux-documentation
-depends_on: [PROP-table-driven-document-kinds]
+depends_on: [SPEC-table-driven-document-kinds]
 boundaries:
   owns:
     - packages/devkit-spec/src/devkit_spec/features/
@@ -78,7 +78,7 @@ Options and their evidence are in `MAT-ux-documentation-practice` (sections 1-5)
 
 ## 3. Proposed Design & Impact
 
-- A UX kind added through the kind definition table of `PROP-table-driven-document-kinds`, with its templates, an
+- A UX kind added through the kind definition table of `SPEC-table-driven-document-kinds`, with its templates, an
   entry in `CAP-DOCS-document-model`, browsing, search and the viewer.
 - Link fields and the coverage rules chosen in Q2 and Q3, documented in `CAP-GOV-spec-rules`.
 - A UX writing instruction in the `spec` bundle, alongside the existing per-kind writing instructions.

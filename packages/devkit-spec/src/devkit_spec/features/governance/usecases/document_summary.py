@@ -20,14 +20,12 @@ from dataclasses import dataclass
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
 from devkit_agt.features.rules.services.builtins import BaseRule
 
-from devkit_spec.features.documents import Document, Kind
+from devkit_spec.features.documents import Document, Summary, definition
 from devkit_spec.features.governance import document_index, is_material, reportable
 from devkit_spec.utils.text import foreign_letters as foreign_letters
 
 RULE_ID = "RULE-document-summary"
 SKELETON_MARKER = "<!-- devkit:skeleton -->"
-REQUIRED = {Kind.CAPABILITY, Kind.USECASE, Kind.DECISION, Kind.ARCHITECTURE, Kind.MILESTONE}
-ANCHORS = {Kind.PROPOSAL: "proposal.md", Kind.SPEC: "spec.md"}
 REMEDIATION = (
     "Write `summary:` in the frontmatter: one or two English sentences saying what the document defines"
     " (the title and body may stay in any language)"
@@ -40,11 +38,12 @@ class DocumentSummarySettings:
 
 
 def required(document: Document) -> bool:
-    """Whether ``document``'s kind needs a summary (a proposal or spec only for its anchor file)."""
-    if document.kind in REQUIRED:
-        return True
-    anchor = ANCHORS.get(document.kind)
-    return anchor is not None and document.path.rsplit("/", 1)[-1] == anchor
+    """Whether ``document``'s kind needs a summary (its ``summary`` in the kind table; a proposal or spec only for its
+    anchor file)."""
+    row = definition(document.kind)
+    if row.summary is Summary.ANCHOR:
+        return document.path.rsplit("/", 1)[-1] == row.anchor
+    return row.summary is Summary.ALWAYS
 
 
 def _line(text: str, key: str) -> int:

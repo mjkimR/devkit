@@ -1,37 +1,25 @@
 ---
-id: PROP-table-driven-document-kinds
+id: SPEC-table-driven-document-kinds
 title: Table-driven document kind definitions
-summary: "Moves each document kind's prefix, Living Spec membership, directory, relation fields and other per-kind facts into one definition table that the index, the spec rules and browsing read, so a missing fact for a new kind fails instead of falling back, without changing current behavior."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-10-26
-target_area: documents/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-milestone: MS-ux-documentation
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/features/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/
-    - packages/devkit-spec/tests/
-    - docs/capabilities/documents/
-    - docs/capabilities/governance/
-    - docs/architecture/
-    - .devkit/managed/spec/
-    - .devkit/installation.json
-  excludes:
-    - New document kinds
-    - A plug-in or configuration extension point for document kinds
-    - Changes to document IDs, paths, rule codes or messages
-    - The viewer (link-prefix drift is FB-viewer-link-prefixes-drift; UX viewer support is PROP-ux-documentation)
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Moves each document kind's prefix, Living Spec membership, directory, relation fields and other per-kind facts into one definition table that the index, the spec rules and browsing read, so a missing fact for a new kind fails instead of falling back, without changing current behavior.
+status: completed
+created: 2026-10-26
+related_capabilities:
+  - CAP-DOCS-document-model
+  - CAP-GOV-spec-rules
+related_usecases: []
+workflow: sdd-spec-feature
 ---
 
-# [PROP-table-driven-document-kinds] Table-driven document kind definitions
+# [SPEC-table-driven-document-kinds] Table-driven document kind definitions
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-table-driven-document-kinds on 2026-10-26.
+- **Preserved Materials**: `docs/materials/2026-10/20261026-table-driven-document-kinds`
+- Target Docs Blueprint: `PROP-table-driven-document-kinds-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 A document's kind follows from its ID prefix (`CAP-DOCS-document-model` section 3.2). The facts that make up a kind
 are not kept together:
@@ -58,7 +46,99 @@ back to another kind's rule. Path grammars and the lifecycle behavior that reall
 lifecycle, proposal handoff, feedback lifecycle, milestone hygiene) stay in code. The change is a refactor: every
 current output stays identical.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As an agent adding a document kind, I want every per-kind fact in one definition row so that a fact I
+  forget fails a check instead of silently borrowing another kind's directory, rule or message.
+- **US-2**: As a maintainer, I want the index, the spec rules, entrypoints and browsing to read the same row so that
+  the facts cannot drift apart.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: no new kind (the UX kind is `PROP-ux-documentation`), no change to the closed set of kinds,
+   no plug-in or configuration extension point, no location grammar as row data, and no change to any ID, path,
+   rule code, message, remediation or CLI output.
+2. **Scope Excluded**: no viewer change; the front-end link-prefix drift is `FB-viewer-link-prefixes-drift`
+   (resolved by a separate bugfix).
+3. **Scope Excluded**: kind-specific lifecycle behavior stays code: path and stem grammars, spec bundle files, unit
+   anchors and their relation rules, and the spec, proposal, feedback and milestone lifecycles, including the
+   milestone status vocabulary and `created_at` check of `RULE-spec-format`.
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] One definition row per kind
+
+- **Given** the documents models
+- **When** the kind table is loaded or validated
+- **Then** it holds exactly one row per `Kind` member in enum order, each prefix and each relation field appears in
+  exactly one row, and a table with a missing, extra, reordered or duplicate row, a duplicated prefix or relation
+  field, or an anchor-only summary without an anchor file raises `KindTableError` naming the defect.
+
+### [AC-02] Derived ID grammar unchanged
+
+- **Given** the table
+- **When** `PREFIXES`, `ID_SOURCE`, `ID_PATTERN`, `TERMINAL_STATUSES`, `kind_of` and `is_id` are read
+- **Then** they keep their names and signatures and equal today's values: the same prefix-to-kind map in the same
+  order, the same pattern source and the same terminal statuses.
+
+### [AC-03] Consumers follow the table at check time
+
+- **Given** a table injected through the accessor that changes one fact (a summary requirement, an
+  entrypoint-bearing kind, a relation-field prefix, a default status or a terminal status)
+- **When** `RULE-document-summary`, `RULE-code-entrypoints`, `RULE-document-reference`, `RULE-spec-format` or the
+  index evaluates a workspace
+- **Then** the result changes as the injected row says, without re-importing any module.
+
+### [AC-04] A missing fact fails instead of falling back
+
+- **Given** a table whose Living Spec row has no path-grammar branch in `RULE-id-convention`, or an identifier
+  target kind with no path remediation
+- **When** `RULE-id-convention` checks a document of that kind
+- **Then** it raises `KindTableError` naming the kind, instead of checking the document under the architecture
+  grammar or giving it the dated-partition remediation.
+
+### [AC-05] Characterization outputs are identical
+
+- **Given** the characterization fixture workspace (one violation per rule branch per kind, a registered namespace,
+  terminal documents) and this repository
+- **When** `devkit rules check --format json` and `devkit rules fix` run on the fixture, and
+  `devkit spec list --all-namespaces -n 0 --format json`, `devkit spec search "document kind" --format json` and the
+  `--help` text of `devkit spec list`, `devkit spec search`, `devkit rules` and `devkit rules check` run, before the
+  first code change and at the final head
+- **Then** every captured output and the fix diff are byte-identical (`diff -r` empty), and the existing test suites
+  pass with no existing assertion changed.
+
+### [AC-06] The parse memo follows the table
+
+- **Given** the document index parse memo
+- **When** the kind table module changes
+- **Then** the parser fingerprint changes with it, because the module lies in `features/documents/models/`, which the
+  fingerprint covers.
+
+## 5. Assumptions
+
+- The handed-off premises hold on the current base: the fallbacks the proposal names are at
+  `id_convention.py:200-222` (grammar), `:476-490` (path remediation; the milestone remediation fix of
+  `SPEC-link-prefixes-and-milestone-remediation` already landed and is kept byte-for-byte), `:514` (area
+  directory) and `spec_format.py:316-322` (default status); the entrypoint-bearing path copy is
+  `entrypoints/services/paths.py:25`.
+- The table error is a `ValueError` subclass in the documents models (`KindTableError`): a defect in the code's own
+  declarations, raised to the developer, never a user-facing advisory, so it adds no advisory code.
+- The heading-token kinds keep today's set (`SPEC PLAN TASKS REC ADR FB CAP UC ARCH MS`); the regular-expression
+  alternation follows the enum order instead, which matches the same tokens because no prefix followed by `-` is a
+  prefix of another.
+
+## 6. Source feedback
+
+- `FB-milestone-path-remediation-dated` (resolved before this unit; its remediation text is kept).
+- `FB-viewer-link-prefixes-drift` (out of scope; resolved by a separate bugfix).
+
+## 7. Carried Proposal Notes
+
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: Which per-kind facts are data that belongs in the table, and which are behavior that stays kind-specific
   code? List every current kind test (`Kind.` and `kind_of` uses across devkit-spec) and classify each.
@@ -69,9 +149,9 @@ current output stays identical.
 - **Q4**: How is "no behavior change" shown: the existing test suites unchanged, plus identical `devkit rules check`,
   `devkit spec list` and search output on this repository before and after?
 
-### Spike findings
+#### Spike findings
 
-Evidence is in `MAT-kind-facts-inventory` and `envelopes/scout-01.yaml`.
+Evidence is in `MAT-kind-facts-inventory` and historical Git `cfc82a4cb3d651c38c61b6a4da880be9ebfbe2fd:docs/proposals/PROP-table-driven-document-kinds/envelopes/scout-01.yaml`.
 
 - **Q1**: table data is the prefix and order, Living Spec membership and directory, area scoping,
   `RULE-spec-format` scope, heading-token kinds, the summary requirement, entrypoint-bearing kinds, terminal
@@ -79,10 +159,10 @@ Evidence is in `MAT-kind-facts-inventory` and `envelopes/scout-01.yaml`.
   their relation rules, and the spec, proposal, feedback and milestone lifecycles stay code. Fallbacks between
   kinds sit at `id_convention.py:200-222`, `:476-485` and `:509` and `spec_format.py:316-322`, and the
   entrypoint-bearing set has a second, path-keyed copy in `entrypoints/services/paths.py:25`
-  (`envelopes/challenger-01.yaml` findings 1 and 2).
+  (historical Git `cfc82a4cb3d651c38c61b6a4da880be9ebfbe2fd:docs/proposals/PROP-table-driven-document-kinds/envelopes/challenger-01.yaml` findings 1 and 2).
 - **Q2**: the table lives in `features/documents/models/` beside `ids.py`. `Kind` stays a declared enum, because 51
   static `Kind.<MEMBER>` references would lose their type under a generated enum
-  (`PADR-kind-definition-table-keyed-on-the-declared-kind-enum`).
+  (`ADR-kind-definition-table-keyed-on-the-declared-kind-enum`).
 - **Q3**: the viewer's kind knowledge is front-end constants, and it neither depends on devkit-spec nor receives a
   kind in any payload; autohub hosts supply their own data source, so only a definition inside the front-end
   bundle reaches every host. The front-end link pattern has already drifted (`US` instead of `UC`, no `FB` or
@@ -91,11 +171,11 @@ Evidence is in `MAT-kind-facts-inventory` and `envelopes/scout-01.yaml`.
   but this repository has no rule violations and many rule tests match message fragments, so message parity needs a
   characterization fixture workspace captured before the first code change.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - A kind definition table in `features/documents/models/`, one frozen row per declared `Kind` member, replaces the
   scattered constants; `PREFIXES`, `ID_SOURCE`, `kind_of` and `is_id` derive from it and keep their signatures
-  (`PADR-kind-definition-table-keyed-on-the-declared-kind-enum`).
+  (`ADR-kind-definition-table-keyed-on-the-declared-kind-enum`).
 - The index, `RULE-id-convention`, `RULE-spec-format`, `RULE-document-summary`, `RULE-code-entrypoints`,
   `RULE-document-reference`, `RULE-traceability-link`, the entrypoint paths, browse and search read their per-kind
   facts through one check-time accessor; the fallbacks at `id_convention.py:200-222`, `:476-485`, `:509` and
@@ -119,7 +199,7 @@ Evidence is in `MAT-kind-facts-inventory` and `envelopes/scout-01.yaml`.
   change to the closed set of kinds, no change to IDs, paths, rule codes or messages, no location grammar as row
   data, and no viewer change.
 
-### Relation to parallel proposals
+#### Relation to parallel proposals
 
 - `PROP-ux-documentation` depends on this proposal and is developed after it (user decision). Both own the
   devkit-spec features and `CAP-DOCS-document-model`; it adds its kind as a member, a row, a path-grammar branch
@@ -131,15 +211,15 @@ Evidence is in `MAT-kind-facts-inventory` and `envelopes/scout-01.yaml`.
   second rebases. The viewer's `bookGroup` hard-codes `docs/glossary.md`; this proposal keeps that rule unchanged,
   and the glossary move should carry its viewer update (that proposal's Planning owns it, not this one).
 
-### Planning decisions
+#### Planning decisions
 
-- The table keys on the declared `Kind` enum (`PADR-kind-definition-table-keyed-on-the-declared-kind-enum`).
+- The table keys on the declared `Kind` enum (`ADR-kind-definition-table-keyed-on-the-declared-kind-enum`).
 - The table has no template field: no code reads templates, which stay bundle files.
 - The proposal's "synthetic kind row" test becomes an injected-table test, because a declared enum admits no extra
   member at test time.
 - Rows follow the enum order with no position field; each relation field maps to one prefix, `depends_on` stays on
   the milestone row with its unit case in code, and the traceability pair is one explicit declaration
-  (`envelopes/challenger-01.yaml` findings 8 and 10).
+  (historical Git `cfc82a4cb3d651c38c61b6a4da880be9ebfbe2fd:docs/proposals/PROP-table-driven-document-kinds/envelopes/challenger-01.yaml` findings 8 and 10).
 - Path grammars stay code; a new kind needs a member, a row, a grammar branch and a template, and the
   exhaustiveness check replaces the silent architecture fall-through; the hypothesis is reworded to match (user,
   q1; challenger finding 6).
@@ -148,9 +228,10 @@ Evidence is in `MAT-kind-facts-inventory` and `envelopes/scout-01.yaml`.
 - The wrong milestone path remediation is kept byte-for-byte and fixed by a separate bugfix from
   `FB-milestone-path-remediation-dated` (user, q3; challenger finding 7).
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - On acceptance: recorded with `devkit spec proposal accept`, then handed off to a spec bundle on
   `dev-table-driven-document-kinds`; the proposal is deleted there and its decisions become ADRs.
 - On rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
   the rejection ADR and deletes the proposal.
+

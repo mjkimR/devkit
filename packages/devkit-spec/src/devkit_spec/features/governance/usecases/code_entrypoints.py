@@ -28,7 +28,7 @@ from devkit_core.core.frontmatter import locate
 from devkit_core.core.yaml import safe_compose
 
 from devkit_spec.base.errors import EntrypointsPathError
-from devkit_spec.features.documents import Document, DocumentIndex, Kind
+from devkit_spec.features.documents import Document, DocumentIndex, definition
 from devkit_spec.features.entrypoints import entrypoint_bearing, exists, normalize
 from devkit_spec.features.entrypoints.services.paths import covers
 from devkit_spec.features.governance import document_index, reportable
@@ -39,7 +39,6 @@ REMEDIATION = (
     "Update entrypoints to existing workspace-relative files or directories, or restore the missing paths; "
     "remove obsolete declarations"
 )
-_KINDS = (Kind.CAPABILITY, Kind.USECASE)
 
 
 class CodeEntrypointsRule(BaseRule):
@@ -57,7 +56,7 @@ class CodeEntrypointsRule(BaseRule):
         index = document_index(ctx)
         found: list[Violation] = []
         for document in index.documents:
-            if FIELD not in document.frontmatter or document.kind not in _KINDS:
+            if FIELD not in document.frontmatter or not definition(document.kind).entrypoints:
                 continue
             if not entrypoint_bearing(document.path):
                 continue

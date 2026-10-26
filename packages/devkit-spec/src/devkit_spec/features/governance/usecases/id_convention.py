@@ -39,6 +39,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
 
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
@@ -46,7 +47,16 @@ from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import FrontmatterBlock, locate
 
-from devkit_spec.features.documents import DocumentIndex, Kind, VisibleLine, in_feedback, visible_lines
+from devkit_spec.features.documents import (
+    DocumentIndex,
+    Kind,
+    KindTableError,
+    VisibleLine,
+    definition,
+    definitions,
+    in_feedback,
+    visible_lines,
+)
 from devkit_spec.features.documents.models.ids import legacy_references
 from devkit_spec.features.documents.repositories.index import is_document_file
 from devkit_spec.features.documents.services.namespaces import docs_roots, living_path
@@ -62,12 +72,6 @@ _MONTH_NAME = re.compile(r"^(\d{4})-(\d{2})$", re.ASCII)
 _CAP_STEM = re.compile(r"^CAP-([A-Z0-9]+)-([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
 _USECASE_STEM = re.compile(r"^UC-([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
 _ARCH_STEM = re.compile(r"^ARCH-(?:(\d{2})(?:-([1-9]))?-)?([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
-# The document's own ID token opens its first H1 (``# [ID] Title`` or ``# `ID` Title``); in a spec bundle file it may
-# follow a leading label (``# Technical Plan: `SPEC-<slug>` Title``). An ID later in the heading is a reference.
-_ID_TOKEN = r"(?P<token>(?:\[|`)(?P<id>(?:SPEC|PLAN|TASKS|REC|ADR|FB|CAP|UC|ARCH|MS)-[^\]`]+)(?:\]|`))"
-_HEADING_TOKEN = re.compile(rf"^#[ \t]+{_ID_TOKEN}")
-_LABELLED_HEADING_TOKEN = re.compile(rf"^#[ \t]+(?:[^`\[\]:\r\n]+:[ \t]+)?{_ID_TOKEN}")
-_ANY_ID_TOKEN = re.compile(_ID_TOKEN)
 _HAS_LETTER = re.compile(r"[a-z]")
 # Header lines, read as written; the value excludes surrounding blanks and a CR line ending.
 _ID_LINE = re.compile(r"^(id|reconcile_id):[ \t]*(.*?)[ \t]*(?=\r?$)", re.MULTILINE)
@@ -77,12 +81,69 @@ _ANY_ID_LINE = re.compile(r"^id:.*?(?=\r?$)", re.MULTILINE)
 _SPEC_FILES = {"spec.md": "SPEC", "plan.md": "PLAN", "tasks.md": "TASKS", "reconcile.md": "REC"}
 # arc42 chapters that may hold a numbered ARCH document; 09 (decisions) and 12 (glossary) live elsewhere.
 _ARCH_CHAPTERS = frozenset({"01", "02", "03", "04", "05", "06", "07", "08", "10", "11"})
-_LIVING_SPEC = (Kind.CAPABILITY, Kind.USECASE, Kind.ARCHITECTURE)
-_LIVING_DIRECTORIES = {"capabilities": Kind.CAPABILITY, "usecases": Kind.USECASE, "architecture": Kind.ARCHITECTURE}
 _REFERENCE_REMEDIATION = (
     "Reference documents by slug identifier (ADR-{slug}, SPEC-{slug}, CAP-{AREA}-{slug}, UC-{slug}, ARCH-{NN}-{slug}),"
     " written `FULL-ID` in prose"
 )
+_DATED_REMEDIATION = (
+    f"Move the file to {{YYYY-MM}}/{{YYYYMMDD}}-{{slug}} with the decision or start date, then run `{FIX_COMMAND}`"
+)
+# The path remediation of each identifier target kind outside the Living Spec, whose targets this rule builds itself
+# (``_targets``); a Living Spec kind takes ``_LIVING_REMEDIATION``. A kind with neither raises.
+_PATH_REMEDIATIONS = {
+    Kind.DECISION: _DATED_REMEDIATION,
+    Kind.SPEC: _DATED_REMEDIATION,
+    Kind.FEEDBACK: _DATED_REMEDIATION,
+    Kind.MILESTONE: (
+        f"Rename or move the file to docs/roadmap/MS-{{slug}}.md (the ID is the file stem), then run `{FIX_COMMAND}`"
+    ),
+}
+_LIVING_REMEDIATION = (
+    f"Rename or move the file to the required path (the ID is the file stem), then run `{FIX_COMMAND}`"
+)
+
+
+@dataclass(frozen=True, slots=True)
+class _Tokens:
+    """The heading ID token patterns over the prefixes of the kinds whose first H1 carries one (``heading_token``).
+
+    The document's own ID token opens its first H1 (``# [ID] Title`` or ``# `ID` Title``); in a spec bundle file it
+    may follow a leading label (``# Technical Plan: `SPEC-<slug>` Title``). An ID later in the heading is a
+    reference."""
+
+    heading: re.Pattern[str]
+    labelled: re.Pattern[str]
+    any: re.Pattern[str]
+
+
+@cache
+def _token_patterns(prefixes: tuple[str, ...]) -> _Tokens:
+    token = rf"(?P<token>(?:\[|`)(?P<id>(?:{'|'.join(prefixes)})-[^\]`]+)(?:\]|`))"
+    return _Tokens(
+        heading=re.compile(rf"^#[ \t]+{token}"),
+        labelled=re.compile(rf"^#[ \t]+(?:[^`\[\]:\r\n]+:[ \t]+)?{token}"),
+        any=re.compile(token),
+    )
+
+
+def _tokens() -> _Tokens:
+    """The heading token patterns of the current kind table."""
+    return _token_patterns(tuple(row.prefix for row in definitions() if row.heading_token))
+
+
+def _living_kinds() -> tuple[Kind, ...]:
+    """The Living Spec kinds, in table order."""
+    return tuple(row.kind for row in definitions() if row.living_spec)
+
+
+def _path_remediation(kind: Kind) -> str:
+    """The remediation of a target of ``kind`` off its path convention; ``KindTableError`` for a kind without one."""
+    if definition(kind).living_spec:
+        return _LIVING_REMEDIATION
+    remediation = _PATH_REMEDIATIONS.get(kind)
+    if remediation is None:
+        raise KindTableError(f"kind {kind} has no path remediation in {RULE_ID}")
+    return remediation
 
 
 @dataclass(frozen=True, slots=True)
@@ -189,35 +250,35 @@ def _feedback(path: str) -> _Target:
     return _Target(path, Kind.FEEDBACK, slug=slug, expected_id=expected, path_issue=issue)
 
 
-def _living_spec(path: str, kind: Kind, docs_root: str, registered: tuple[Namespace, ...]) -> _Target:
-    """The target of a Living Spec document under ``docs_root``, checked by the path it mirrors under ``docs/``."""
-    parts = living_path(path, namespaces=registered).split("/")
-    stem = _stem(path)
+type _Grammar = Callable[[Callable[..., _Target], list[str], str, str], _Target]
 
-    def target(**fields: str) -> _Target:
-        return _Target(path, kind, docs_root=docs_root, **fields)
 
-    if kind is Kind.CAPABILITY:
-        if len(parts) != 4:
-            return target(
-                path_issue=f"Capability must be stored at {docs_root}/capabilities/{{area}}/CAP-{{AREA}}-{{slug}}.md"
-            )
-        match = _CAP_STEM.match(stem)
-        if match is None or not _has_letter(match.group(2)):
-            issue = (
-                "file name must be CAP-{AREA}-{slug} with an upper-case area and a kebab-case slug"
-                f" that is not a sequence number: {stem}"
-            )
-            return target(path_issue=issue)
-        return target(slug=match.group(2), expected_id=stem, expected_area=parts[2])
-    if kind is Kind.USECASE:
-        if len(parts) != 4:
-            return target(path_issue=f"Use case must be stored at {docs_root}/usecases/{{area}}/UC-{{slug}}.md")
-        match = _USECASE_STEM.match(stem)
-        if match is None or not _has_letter(match.group(1)):
-            issue = f"file name must be UC-{{slug}} with a kebab-case slug that is not a sequence number: {stem}"
-            return target(path_issue=issue)
-        return target(slug=match.group(1), expected_id=stem, expected_area=parts[2])
+def _capability(target: Callable[..., _Target], parts: list[str], stem: str, docs_root: str) -> _Target:
+    if len(parts) != 4:
+        return target(
+            path_issue=f"Capability must be stored at {docs_root}/capabilities/{{area}}/CAP-{{AREA}}-{{slug}}.md"
+        )
+    match = _CAP_STEM.match(stem)
+    if match is None or not _has_letter(match.group(2)):
+        issue = (
+            "file name must be CAP-{AREA}-{slug} with an upper-case area and a kebab-case slug"
+            f" that is not a sequence number: {stem}"
+        )
+        return target(path_issue=issue)
+    return target(slug=match.group(2), expected_id=stem, expected_area=parts[2])
+
+
+def _usecase(target: Callable[..., _Target], parts: list[str], stem: str, docs_root: str) -> _Target:
+    if len(parts) != 4:
+        return target(path_issue=f"Use case must be stored at {docs_root}/usecases/{{area}}/UC-{{slug}}.md")
+    match = _USECASE_STEM.match(stem)
+    if match is None or not _has_letter(match.group(1)):
+        issue = f"file name must be UC-{{slug}} with a kebab-case slug that is not a sequence number: {stem}"
+        return target(path_issue=issue)
+    return target(slug=match.group(1), expected_id=stem, expected_area=parts[2])
+
+
+def _architecture(target: Callable[..., _Target], parts: list[str], stem: str, docs_root: str) -> _Target:
     if len(parts) != 3:
         return target(path_issue=f"Architecture document must be stored at {docs_root}/architecture/ARCH-{{slug}}.md")
     match = _ARCH_STEM.match(stem)
@@ -235,6 +296,34 @@ def _living_spec(path: str, kind: Kind, docs_root: str, registered: tuple[Namesp
         )
         return target(path_issue=issue)
     return target(slug=match.group(3), expected_id=stem)
+
+
+# The path and stem grammar of each Living Spec kind: every Living Spec row of the kind table needs one.
+_LIVING_GRAMMARS: dict[Kind, _Grammar] = {
+    Kind.CAPABILITY: _capability,
+    Kind.USECASE: _usecase,
+    Kind.ARCHITECTURE: _architecture,
+}
+
+
+def _living_spec(path: str, kind: Kind, docs_root: str, registered: tuple[Namespace, ...]) -> _Target:
+    """The target of a Living Spec document under ``docs_root``, checked by the path it mirrors under ``docs/``;
+    ``KindTableError`` when ``kind`` has no grammar, so no kind is checked under another kind's grammar."""
+    grammar = _LIVING_GRAMMARS.get(kind)
+    if grammar is None:
+        raise KindTableError(f"Living Spec kind {kind} has no path grammar in {RULE_ID}")
+    parts = living_path(path, namespaces=registered).split("/")
+    area_scoped = definition(kind).area_scoped
+
+    def target(**fields: str) -> _Target:
+        if not area_scoped:  # the table decides whether the area segment is checked against ``area:``
+            fields.pop("expected_area", None)
+        return _Target(path, kind, docs_root=docs_root, **fields)
+
+    found = grammar(target, parts, _stem(path), docs_root)
+    if area_scoped and not found.path_issue and not found.expected_area:
+        raise KindTableError(f"area-scoped kind {kind} has a path grammar in {RULE_ID} that sets no area")
+    return found
 
 
 def _markdown(ctx: RuleContext, directory: str) -> list[str]:
@@ -288,10 +377,12 @@ def _targets(ctx: RuleContext) -> list[_Target]:
                 )
             )
     for docs_root in docs_roots(registered):
-        for directory, kind in _LIVING_DIRECTORIES.items():
-            for path in _markdown(ctx, f"{docs_root}/{directory}"):
+        for row in definitions():
+            if not row.living_spec:
+                continue
+            for path in _markdown(ctx, f"{docs_root}/{row.directory}"):
                 if not path.endswith("/README.md"):
-                    targets.append(_living_spec(path, kind, docs_root, registered))
+                    targets.append(_living_spec(path, row.kind, docs_root, registered))
     covered = {target.path for target in targets}
     for document in document_index(ctx).documents:
         if document.kind is Kind.MILESTONE and document.path not in covered:
@@ -358,7 +449,8 @@ def _heading_token(heading: VisibleLine | None, kind: Kind) -> re.Match[str] | N
     ID; groups ``token`` (with its delimiters) and ``id``."""
     if heading is None:
         return None
-    pattern = _LABELLED_HEADING_TOKEN if kind is Kind.SPEC else _HEADING_TOKEN
+    tokens = _tokens()
+    pattern = tokens.labelled if kind is Kind.SPEC else tokens.heading
     return pattern.match(heading.text)
 
 
@@ -370,7 +462,7 @@ def _same_kind_token(heading: VisibleLine, target: _Target) -> str | None:
         return None
     prefix = target.expected_id.split("-", 1)[0] + "-"
     return next(
-        (match.group("id") for match in _ANY_ID_TOKEN.finditer(heading.text) if match.group("id").startswith(prefix)),
+        (match.group("id") for match in _tokens().any.finditer(heading.text) if match.group("id").startswith(prefix)),
         None,
     )
 
@@ -449,10 +541,9 @@ class IdConventionRule(BaseRule):
 
         targets = _targets(ctx)
         owners: dict[str, list[str]] = {}
+        unique = (Kind.DECISION, *_living_kinds())
         for target in targets:
-            if target.expected_id and (
-                target.kind in (Kind.DECISION, *_LIVING_SPEC) or target.expected_id.startswith("SPEC-")
-            ):
+            if target.expected_id and (target.kind in unique or target.expected_id.startswith("SPEC-")):
                 owners.setdefault(target.expected_id, []).append(target.path)
         for target in targets:
             if reportable(target.path):
@@ -474,21 +565,7 @@ class IdConventionRule(BaseRule):
     def _target(self, ctx: RuleContext, target: _Target, owners: dict[str, list[str]], add: Add) -> None:
         path = target.path
         if target.path_issue:
-            if target.kind is Kind.MILESTONE:
-                remediation = (
-                    "Rename or move the file to docs/roadmap/MS-{slug}.md (the ID is the file stem),"
-                    f" then run `{FIX_COMMAND}`"
-                )
-            elif target.kind in _LIVING_SPEC:
-                remediation = (
-                    f"Rename or move the file to the required path (the ID is the file stem), then run `{FIX_COMMAND}`"
-                )
-            else:
-                remediation = (
-                    "Move the file to {YYYY-MM}/{YYYYMMDD}-{slug} with the decision or start date,"
-                    f" then run `{FIX_COMMAND}`"
-                )
-            add(path, 1, f"Invalid partition path: {target.path_issue}", remediation)
+            add(path, 1, f"Invalid partition path: {target.path_issue}", _path_remediation(target.kind))
             return
         text = ctx.cache.read_text(path)
         block = _block(text)
@@ -511,7 +588,7 @@ class IdConventionRule(BaseRule):
                 )
             area = _field(block.header, "area")
             if target.expected_area and area != target.expected_area:
-                directory = "usecases" if target.kind is Kind.USECASE else "capabilities"
+                directory = definition(target.kind).directory
                 add(
                     path,
                     1,

@@ -7,9 +7,9 @@ created_at: 2026-10-26
 
 # [MAT-kind-facts-inventory] Document kind facts inventory
 
-Evidence for spike questions Q1 to Q4 of `PROP-table-driven-document-kinds`, read at base `96df5d86`. Paths are
+Evidence for spike questions Q1 to Q4 of `SPEC-table-driven-document-kinds`, read at base `96df5d86`. Paths are
 relative to `packages/devkit-spec/src/devkit_spec/features/` unless they start with `packages/` or `docs/`. The
-viewer findings come from this proposal's `envelopes/scout-01.yaml`.
+viewer findings come from this proposal's historical Git `cfc82a4cb3d651c38c61b6a4da880be9ebfbe2fd:docs/proposals/PROP-table-driven-document-kinds/envelopes/scout-01.yaml`.
 
 ## 1. Facts that are table data (Q1)
 
@@ -46,7 +46,7 @@ Relation facts that are not per-row: `depends_on` takes `MS-` on milestones and 
 (`documents/services/dependencies.py:12`, handled before `EXPECTED_PREFIX`), and the traceability pair
 (`traceability_link.py:43-44,91-94`) is one relation between two kinds with its labels.
 
-The first search covered `Kind.` and `kind_of` uses only; `envelopes/challenger-01.yaml` findings 1 and 2 added the
+The first search covered `Kind.` and `kind_of` uses only; historical Git `cfc82a4cb3d651c38c61b6a4da880be9ebfbe2fd:docs/proposals/PROP-table-driven-document-kinds/envelopes/challenger-01.yaml` findings 1 and 2 added the
 path- and prefix-keyed facts above. Development repeats the search for directory literals and prefix strings
 before it starts.
 
@@ -54,7 +54,7 @@ before it starts.
 
 ## 3. Viewer (Q3)
 
-From `envelopes/scout-01.yaml`. The viewer parses documents in the browser and never runs a repository's devkit
+From historical Git `cfc82a4cb3d651c38c61b6a4da880be9ebfbe2fd:docs/proposals/PROP-table-driven-document-kinds/envelopes/scout-01.yaml`. The viewer parses documents in the browser and never runs a repository's devkit
 (`CAP-VIEW-repository-viewer` section 4). Its kind knowledge is front-end constants:
 `frontend/src/lib/api/documents.ts:246` (cross-reference link prefixes), `:268-296` (`bookGroup`, `bookGroups`),
 `features/knowledge/KnowledgeViews.svelte:169-170,229-236,255`, `api/roadmap.ts:37,63,97-98`,
@@ -92,3 +92,24 @@ Run twice at `96df5d86` in the Planning worktree (outputs in the ignored `.probe
   text (kind choice order).
 - A development worker can take the baseline in its own worktree: its starting head is the base, so it captures the
   three outputs before its first code change and compares them after.
+
+## 6. Development characterization (Q4)
+
+Captured by the development worker in its worktree (outputs in the ignored `scratch/char/`):
+
+- Fixture: a fresh Git workspace synced with the `spec` bundle, a registered `pkg` namespace and 53 Markdown
+  documents with one violation per rule branch per kind (path, stem, month, frontmatter, `id`/`reconcile_id`, area,
+  heading token, same-kind heading, duplicate and retired-reference branches of `RULE-id-convention`; the format,
+  effort, namespace and milestone branches of `RULE-spec-format`; summary, entrypoint, relation-field and
+  traceability cases; terminal documents). It yields 137 violations across eight rules, and the fix applies 51
+  fixes.
+- `before`: run at the starting head `6a19ff5f` before the first code change; `before2`, a second run, was
+  byte-identical. Captured: the fixture's `devkit rules check --format json`, `devkit rules fix` output and Git
+  diff, `devkit spec list` (all namespaces, per kind, text) and `devkit spec show`; on the repository,
+  `devkit spec list --all-namespaces -n 0 --format json`, `devkit spec search "document kind" --format json` and
+  `devkit rules check --format json`; the `--help` text of `devkit spec list`, `devkit spec search`, `devkit rules`
+  and `devkit rules check`.
+- `after`: run at the final head. The repository captures read a snapshot of the starting head's tree
+  (`git archive 6a19ff5f`, synced, with the `plan-ux-documentation` branch the planning state reads), so the unit's
+  own document edits do not enter the comparison. `diff -r` of `before` and `after`, excluding the fixture
+  workspaces, is empty.

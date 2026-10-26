@@ -31,7 +31,7 @@ from pathlib import Path
 from devkit_core.core import FrontmatterError, require_libyaml
 
 from devkit_spec.base.errors import DocumentInvalidWarning, DuplicateIdError, UnresolvedIdError
-from devkit_spec.features.documents.models.ids import Kind
+from devkit_spec.features.documents.models.kinds import Kind, definition, definitions
 from devkit_spec.features.documents.models.model import Document, Reference
 from devkit_spec.features.documents.models.parse import parse_document
 from devkit_spec.features.documents.repositories.memo import (
@@ -154,10 +154,10 @@ def _files(root: Path) -> Iterable[tuple[Path, str]]:
 
 # The statuses that settle a document of each kind (``ADR-terminal-statuses-are-historical``), lower-cased: such a
 # document is historical for browsing and search, whatever bundle holds it, but the rules keep checking it.
+# ``TERMINAL_STATUSES`` is the kind table's ``terminal_statuses`` at import, for library callers; ``is_terminal``
+# reads the table when it runs.
 TERMINAL_STATUSES: dict[Kind, frozenset[str]] = {
-    Kind.FEEDBACK: frozenset({"resolved", "promoted", "dismissed", "forwarded"}),
-    Kind.DECISION: frozenset({"superseded"}),
-    Kind.PROPOSAL: frozenset({"rejected"}),
+    row.kind: row.terminal_statuses for row in definitions() if row.terminal_statuses
 }
 
 
@@ -244,7 +244,7 @@ class DocumentIndex:
     @staticmethod
     def is_terminal(document: Document) -> bool:
         """Whether the document's own status settles it (``TERMINAL_STATUSES``, case-insensitive)."""
-        return document.status.lower() in TERMINAL_STATUSES.get(document.kind, frozenset())
+        return document.status.lower() in definition(document.kind).terminal_statuses
 
     def is_browsing_historical(self, document: Document) -> bool:
         """What browsing and search hide unless asked: historical or of a terminal status."""
