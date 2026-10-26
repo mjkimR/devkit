@@ -2,7 +2,7 @@
 id: SPEC-table-driven-document-kinds
 title: Table-driven document kind definitions
 summary: Moves each document kind's prefix, Living Spec membership, directory, relation fields and other per-kind facts into one definition table that the index, the spec rules and browsing read, so a missing fact for a new kind fails instead of falling back, without changing current behavior.
-status: in-progress
+status: completed
 created: 2026-10-26
 related_capabilities:
   - CAP-DOCS-document-model

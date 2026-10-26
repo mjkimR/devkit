@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-table-driven-document-kinds
 spec: SPEC-table-driven-document-kinds
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-model.md
     resolution: modified
