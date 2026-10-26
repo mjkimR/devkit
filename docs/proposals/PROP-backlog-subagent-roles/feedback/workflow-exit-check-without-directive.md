@@ -8,7 +8,7 @@ target: packages/devkit/src/devkit_agt/features/workflow/cli/render.py
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-26
 ---
 
@@ -44,3 +44,10 @@ packages/devkit/src/devkit_agt/features/workflow/cli/render.py:66-89 renders UNM
 packages/devkit/src/devkit_agt/features/workflow/usecases/answers.py:113-119 refuses a closed request as REQUEST_UNKNOWN.
 packages/devkit/src/devkit_agt/features/workflow/models/definition.py:234-254: declared checks are runner or human only.
 ```
+
+## Disposition
+
+Dismissed on the user's decision (2026-10-26). The user chose q5 option a for the XL size gate: the gate stays
+devkit-spec only, and the skill text reads an unmet size check as "decompose first". A workflow exit check that
+carries its own directive (option b) is not needed for it. Reopen it if an agent is observed editing `size` to pass
+the gate.
