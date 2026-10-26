@@ -59,11 +59,27 @@ before handoff; this draft tracks the tool improvement separately.
 - Reconcile the delivery handoff contract and affected governance references. Inspect tests under the nearest
   existing package test parent and add only required tiers.
 
+Planning refinements (challenger-01 findings 1, 2, 4 and 6):
+
+- **Per-leaf merge plan**: preflight builds one set of planned leaves from the `materials/` leaves and the carried
+  extras, checked against the destination in one pass. An absent subtree is moved whole; an existing real directory
+  is descended into; a file is a leaf move. Non-symlink `JUNK_FILES` are dropped on the source side and ignored on
+  the destination side. The internal clash rule between extras and `materials/` paths stays unchanged.
+- **Pre-existing paths are never handoff writes**: no pre-existing file or directory enters the roll-back's written
+  or moved records, on the same file system or across file systems (`EXDEV`); `make_dirs` records only directories it
+  created. A failure injected after some leaves moved leaves every pre-existing path byte-identical.
+- **Per-file link origins**: in merge mode the relocation plan registers a file origin for each moved leaf and a
+  directory origin only for a subtree the handoff created whole, so a pre-existing destination Markdown file keeps
+  its bytes except links that pointed into the proposal.
+- **Containment by `lstat` in preflight**: the destination and every existing directory on the way to a planned leaf
+  must be a real directory; a symbolic link at or above a planned path is a collision refused before any write. The
+  runtime re-check after writes started remains a guard, not the first detection.
+
 Scope excluded: overwrite flags, automatic content conflict resolution, cross-filesystem transaction infrastructure,
 changes to the facts-cache feature, and relaxation of ADR/ID or snapshot/receipt collision protections.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Keep this proposal draft until picked up for Planning. Acceptance requires an explicit merge/collision policy,
+Acceptance requires an explicit merge/collision policy,
 concurrency/recovery behavior and verifiable refusal criteria. Development completes when both handoff transports
 use the same guarded merge plan and the success/refusal tests and Living Spec reflection pass.
