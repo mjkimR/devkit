@@ -28,8 +28,10 @@ representation (Prater's own posts).
 What it offers a text specification:
 
 - **Fixed object names.** One name per concept across use cases, screens and code reduces the drift where the same
-  thing is a "post", a "card" and an `Article`. devkit already keeps a glossary (`docs/glossary.md`, a candidate for
-  the foundation group of `PROP-foundation-documents`); an object list would reuse it rather than start another.
+  thing is a "post", a "card" and an `Article`. devkit's glossary already has this shape: each row of
+  `docs/glossary.md` gives the `Term`, its `Definition`, the `Owner` capability, the rejected synonyms to `Avoid`
+  and the `Code identifiers`. That is the naming half of an OOUX object list, so a UX object list can extend the
+  glossary instead of starting a separate register (section 8, option 6b).
 - **Representations instead of per-screen content.** An object is defined once with a small set of representations
   (for example a compact card, a row and a full detail view) and their attribute priority; screens then reference a
   representation instead of re-listing fields. This keeps several screens consistent, and it is the part of OOUX that
@@ -122,41 +124,49 @@ the anchoring of one coded build. Running the build is engine-specific verificat
 
 ## 5. An illustrative screen specification
 
-The research drafted a screen document; corrected to devkit's ID and status conventions it looks as follows. All IDs,
-fields and the `SCR` prefix are hypothetical; Q1 and Q2 decide the real shape.
+The research drafted an editable proposal review screen with a feedback form. devkit's own interface is the viewer,
+which is read-only (`CAP-VIEW-repository-viewer`: it answers `GET` only and writes nothing), so the example below
+re-expresses an existing viewer screen instead: the Dashboard's proposals section. Its states and behavior come from
+that capability; the document shape, the `SCR` prefix and the use case ID are hypothetical (no use case cites the
+viewer yet), and Q1 and Q2 decide the real shape.
 
 ```yaml
-id: SCR-proposal-review          # hypothetical prefix
-title: Proposal review
+id: SCR-dashboard-proposals          # hypothetical prefix
+title: Dashboard proposals section
 kind: screen
 status: draft
 presents:
   object: Proposal
-  states: [draft, reviewing]
+  representation: card
 usecases:
-  - UC-example-review-proposal   # steps 3-5, extension 4a
+  - UC-example-review-repository-status   # hypothetical
 capabilities:
-  - CAP-DLV-proposal-incubation
+  - CAP-VIEW-repository-viewer
 ```
 
 ```markdown
 ## Content
-- Header (always visible): proposal ID, status, milestone link
-- Primary region: Proposal [detail]; linked capabilities as Capability [row]
-- Secondary region: Feedback [row] list, newest first; feedback form
-  - empty: "No feedback yet" with the form focused
-  - form only while status is `reviewing`; otherwise hidden
+- Section header: active proposal count
+- Proposal [card] list, ordered reviewing, draft, then accepted, each group by ID; first page of 9
+  - card: title, status, summary; a source badge when the Planning overlay supplied it
+  - loading: loading state with an unknown count, never an empty list
+  - failed: error state with an unknown count, never an empty list
+  - overlay failed: checkout cards and count kept, a non-alert note added
+- "Load more" while pages remain
 
 ## Interactions
 | Trigger | From state | To state | Capability | Feedback to the user |
 | --- | --- | --- | --- | --- |
-| Submit feedback | form valid | submitting | CAP-DLV-proposal-incubation | control busy, inputs locked |
-| Submit succeeds | submitting | feedback appended | CAP-DLV-proposal-incubation | form cleared, new row at the top |
-| Submit conflicts | submitting | conflict | (none) | inline notice to reload, input kept |
+| Section opens | (none) | loading | CAP-VIEW-repository-viewer | loading state, count unknown |
+| List loads | loading | populated | CAP-VIEW-repository-viewer | checkout cards shown without waiting for the overlay |
+| Overlay arrives | populated | populated | CAP-VIEW-repository-viewer | matching cards updated in place; Planning-only proposals appended after the last page |
+| Load more | populated | populated | CAP-VIEW-repository-viewer | at most one page appended, order unchanged |
+| Repository or branch changes | any | loading | CAP-VIEW-repository-viewer | pending results discarded |
 ```
 
-Narrow-viewport behavior (for example the secondary region becoming a separate tab) and region proportions stay with
-the project.
+The example shows what the text contract adds over the capability: the capability already states each behavior as a
+requirement with its test, while the screen document gathers them per screen, names the representation and lets a
+use case step point at it. Region proportions and narrow-viewport behavior stay with the project.
 
 ## 6. Review questions
 
@@ -165,7 +175,7 @@ The research proposed four questions for the UX reviewer. They fit the walkthrou
 
 | Question | Mechanical or judged | Note |
 | --- | --- | --- |
-| Do screen labels and regions use the use case's and glossary's terms? | Judged, partly checkable against the object list | Mental model drift |
+| Do screen labels and regions use the use case's and glossary's terms? | Judged, partly checkable against the glossary's UX objects | Mental model drift |
 | Does every state, including empty, loading and failure, offer a next action? | Judged per screen; exits are checkable (2b) | Dead ends |
 | Is every operable element traced to the use case step and capability it serves? | Mechanical once links exist (2a) | Not necessarily 1:1: navigation may cite no capability and one control may cite several |
 | Does one screen have more than one competing primary region? | Judged | Information dumping |
@@ -186,13 +196,14 @@ These add to the options in `MAT-ux-documentation-practice` section 7; they are 
 | Option | Content | Cost |
 | --- | --- | --- |
 | 6a | Screens name the object and representation they present in prose only | Lowest; no new structure |
-| 6b | An object list per project (objects, representations, CTAs per role), cited by screens and aligned with the glossary | Moderate; a second document type or a section of the flow document; gives the reviewer a term list |
-| 6c | 6b plus object lifecycle transition tables in the UX documents | Duplicates lifecycles that capabilities may already own; cite instead where they do |
+| 6b | The glossary marks which terms are UX objects and gives each its representations and CTAs per role (extra columns, or a UX object table in `docs/glossary.md`); screens cite the term | Moderate; one register for names, synonyms to avoid and code identifiers. It changes the glossary table format, which `PROP-foundation-documents` excludes and this proposal's boundaries do not yet own, so Planning settles the owner |
+| 6c | 6b or 6d plus object lifecycle transition tables in the UX documents | Duplicates lifecycles that capabilities may already own; cite instead where they do |
+| 6d | A separate object list document per project, cited by screens | Moderate; a second document type that repeats the glossary's names and has to be kept in step with it |
 | 7a | Layout as prose region rules and a content tree, with conditions next to nodes; the writing instruction rules out character-cell layouts | Medium-independent; matches 1a |
 | 7b | 7a plus component trees | Stack-specific; project-owned, so outside the devkit template |
 
-The research favors 6b scoped to the objects the use cases touch, 7a, and keeping lifecycles in capabilities (citing,
-not restating).
+The research favors 6b (the glossary as the object register) scoped to the objects the use cases touch, 7a, and
+keeping lifecycles in capabilities (citing, not restating).
 
 ## 9. Not verified or dropped
 
