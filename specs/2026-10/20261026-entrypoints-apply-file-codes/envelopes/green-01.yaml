@@ -1,0 +1,14 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T08:54:03.764537Z'
+status: completed
+summary: File and folded --code selections are applied; unmatched --code refuses with SPEC_ENTRYPOINTS_CODE_UNMATCHED before writing
+findings: []
+checks:
+  resolved: PASS the three reproduction tests in test_cli.py pass under the same fixtures (82/82 entrypoints tests)
+  preserved: PASS just test-affected 1772 passed (existing selector, apply and documented-code tests); just lint spec and just check spec clean
+diff_scope:
+  base: ead1175b2a127c45bc12fcc0abc7fd018242c95b
+  head: 74154c9a34d7acf887b364837973a99bb17d41e3

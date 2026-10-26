@@ -10,6 +10,7 @@ from spec_support.types import Write
 from devkit_spec.base.errors import EntrypointsInputInvalidError, EntrypointsInputMissingError, EntrypointsPathError
 from devkit_spec.features.entrypoints import (
     Target,
+    adopt_nested_selectors,
     aggregate,
     classify_boundary,
     covers,
@@ -23,6 +24,7 @@ from devkit_spec.features.entrypoints import (
     overlaps,
     parse_boundaries,
     select,
+    unmatched_selectors,
 )
 from devkit_spec.features.entrypoints.models.derive import Pair, State
 
@@ -300,3 +302,48 @@ def test_fold_by_directory_selectors(workspace: Path, write: Write) -> None:
     # Regular file with trailing slash raises EntrypointsPathError
     with pytest.raises(EntrypointsPathError):
         fold_by_directory_selectors(workspace, pairs, ["src/pkg/a.go/"], {})
+
+
+def test_adopt_nested_selectors(workspace: Path, write: Write) -> None:
+    write("src/pkg/a.go", "package a\n")
+    pairs = [
+        _pair("src/pkg", "SPEC-1", task=1),
+        _pair("src/pkg/sub/c.go", "SPEC-1", task=2, folded_into="src/pkg"),
+        _pair("other", "SPEC-1", task=3),
+    ]
+    assert adopt_nested_selectors(workspace, pairs, [], {}) == pairs
+
+    adopted = adopt_nested_selectors(workspace, pairs, ["src/pkg/a.go", "src/pkg/gone.go", "./src/pkg/sub/c.go"], {})
+    by_code = {pair.code: pair for pair in adopted}
+    assert by_code["src/pkg/a.go"] == replace(pairs[0], code="src/pkg/a.go")
+    assert by_code["src/pkg/gone.go"].exists is False and by_code["src/pkg/gone.go"].task == 1
+    assert by_code["src/pkg/sub/c.go"].folded_into is None
+    assert len(adopted) == 5
+
+    # A code containing pairs, or under no candidate, adds nothing.
+    assert adopt_nested_selectors(workspace, pairs, ["src", "elsewhere/x.go"], {}) == sorted(
+        pairs, key=lambda pair: pair.code
+    )
+
+    # The nearest ancestor supplies the provenance, and declared entrypoints decide the state.
+    aggregated = [
+        _pair("src", "S", count=1, specs=("SPEC-1",)),
+        _pair("src/pkg", "S", count=2, specs=("SPEC-1", "SPEC-2")),
+    ]
+    write(CAP, "---\nid: CAP-X-one\nstatus: active\nentrypoints:\n  - src/pkg/\n---\n")
+    nested = adopt_nested_selectors(
+        workspace, aggregated, ["src/pkg/a.go"], {"docs/capabilities/x/D.md": documents(workspace)[CAP]}
+    )
+    adopted_pair = next(pair for pair in nested if pair.code == "src/pkg/a.go")
+    assert (adopted_pair.count, adopted_pair.specs, adopted_pair.state) == (2, ("SPEC-1", "SPEC-2"), State.DECLARED)
+    with pytest.raises(EntrypointsPathError):
+        adopt_nested_selectors(workspace, pairs, ["src/*"], {})
+
+
+def test_unmatched_selectors() -> None:
+    pairs = [_pair("src/pkg/a.go", "S"), _pair("other", "S", doc_path="docs/usecases/x/U.md")]
+    assert unmatched_selectors(pairs, []) == []
+    assert unmatched_selectors(pairs, ["src", "src/pkg/a.go", "other/", "nowhere", "nowhere"]) == ["nowhere"]
+    assert unmatched_selectors(pairs, ["other"], {"docs/capabilities/x/D.md"}) == ["other"]
+    with pytest.raises(EntrypointsPathError):
+        unmatched_selectors(pairs, ["../x"])

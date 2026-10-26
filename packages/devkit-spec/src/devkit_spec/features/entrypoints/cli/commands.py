@@ -13,7 +13,8 @@ Text output (paths are workspace-relative):
 - ``[SUMMARY: pairs= new= declared= skipped= applied=]`` last.
 
 Nothing is written without ``--apply``. Files that could not be indexed are ``SPEC_DOCUMENT_INVALID`` warnings; a
-document ``--apply`` could not write is a ``SPEC_ENTRYPOINTS_APPLY_FAILED`` error after the result.
+document ``--apply`` could not write is a ``SPEC_ENTRYPOINTS_APPLY_FAILED`` error after the result. A ``--code`` that
+matches no candidate refuses the run with ``SPEC_ENTRYPOINTS_CODE_UNMATCHED`` before anything is written.
 """
 
 from __future__ import annotations
@@ -55,7 +56,12 @@ def entrypoints_group() -> None:
 )
 @click.option("--apply", "write", is_flag=True, help="Write new, existing candidate paths into the documents")
 @click.option("--target", "targets", multiple=True, help="With --apply: write only this document ID or path (repeat)")
-@click.option("--code", "codes", multiple=True, help="Keep only candidates equal to or under this path (repeat)")
+@click.option(
+    "--code",
+    "codes",
+    multiple=True,
+    help="Keep only candidates at or under this path, or this path inside one (repeat)",
+)
 @click.option("--exclude", "excludes", multiple=True, help="Drop candidates equal to or under this path (repeat)")
 @workspace_option()
 @FORMAT_OPTION

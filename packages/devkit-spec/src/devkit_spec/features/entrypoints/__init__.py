@@ -15,6 +15,7 @@ from devkit_spec.features.entrypoints.repositories.bundle import (
     parse_boundaries,
 )
 from devkit_spec.features.entrypoints.services.derive import (
+    adopt_nested_selectors,
     aggregate,
     classify_boundary,
     declared_entrypoints,
@@ -23,6 +24,7 @@ from devkit_spec.features.entrypoints.services.derive import (
     feedback_file,
     fold_by_directory_selectors,
     select,
+    unmatched_selectors,
 )
 from devkit_spec.features.entrypoints.services.paths import covers, entrypoint_bearing, exists, normalize, overlaps
 from devkit_spec.features.entrypoints.usecases.apply import Applied, ApplyResult, apply, collapse, set_entrypoints
@@ -38,6 +40,7 @@ __all__ = [
     "State",
     "Target",
     "TaskBoundary",
+    "adopt_nested_selectors",
     "aggregate",
     "apply",
     "classify_boundary",
@@ -56,4 +59,5 @@ __all__ = [
     "parse_boundaries",
     "select",
     "set_entrypoints",
+    "unmatched_selectors",
 ]

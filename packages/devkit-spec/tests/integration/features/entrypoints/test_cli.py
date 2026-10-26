@@ -129,11 +129,72 @@ def test_code_and_exclude_filters(bundles: Path) -> None:
     assert _code(_derive(bundles, "--all", "--code", "../x", "--format", "json")) == "SPEC_ENTRYPOINTS_PATH_INVALID"
 
 
-def test_target_without_selected_candidates_applies_nothing(bundles: Path) -> None:
-    result = _derive(bundles, "--all", "--apply", "--target", "CAP-X-one", "--code", "src/nowhere")
-    assert result.exit_code == 0
-    assert result.stdout.splitlines()[-1] == "[SUMMARY: pairs=0 new=0 declared=0 skipped=2 applied=0]"
-    assert "[APPLIED:" not in result.stdout and "entrypoints" not in (bundles / CAP).read_text()
+def test_unmatched_code_is_refused_before_writing(bundles: Path) -> None:
+    result = _derive(
+        bundles,
+        "--all",
+        "--apply",
+        "--target",
+        "CAP-X-one",
+        "--code",
+        "src/nowhere",
+        "--code",
+        "src/pkg",
+        "--format",
+        "json",
+    )
+    assert result.exit_code == 2
+    error = json.loads(result.stdout)["error"]
+    assert error["code"] == "SPEC_ENTRYPOINTS_CODE_UNMATCHED"
+    assert error["advisory"]["target_files"] == ["src/nowhere"]
+    assert "entrypoints" not in (bundles / CAP).read_text()
+    text = _derive(bundles, "--all", "--code", "src/nowhere")
+    assert text.exit_code == 2 and text.stdout == ""
+    assert "(SPEC_ENTRYPOINTS_CODE_UNMATCHED)" in text.stderr and "[TARGET] src/nowhere" in text.stderr
+    assert _code(
+        _derive(bundles, "--spec", "specs/2026-10/20261001-one", "--code", "src/other", "--format", "json")
+    ) == ("SPEC_ENTRYPOINTS_CODE_UNMATCHED")
+    # A code that only another document's candidates match is unmatched for the targeted document.
+    both = ("--all", "--status", "completed,draft", "--apply", "--format", "json")
+    assert _code(_derive(bundles, *both, "--target", "UC-two", "--code", "src/pkg/b.go")) == (
+        "SPEC_ENTRYPOINTS_CODE_UNMATCHED"
+    )
+    assert "entrypoints" not in (bundles / USECASE).read_text()
+
+
+def test_file_code_under_a_directory_candidate_is_applied(bundles: Path) -> None:
+    args = ("--spec", "specs/2026-10/20261001-one", "--apply", "--target", "CAP-X-one", "--code", "src/pkg/b.go")
+    result = _derive(bundles, *args)
+    assert result.exit_code == 0, result.output
+    assert result.stdout.splitlines() == [
+        "[CANDIDATES: CAP-X-one path=docs/capabilities/x/CAP-X-one.md new=src/pkg/b.go missing=- folded=- declared=-]",
+        "[SKIPPED: N/A kind=boundary spec=SPEC-one task=1 reason=not-a-path]",
+        f"[APPLIED: CAP-X-one path={CAP} added=src/pkg/b.go]",
+        "[SUMMARY: pairs=1 new=1 declared=0 skipped=1 applied=1]",
+    ]
+    assert (bundles / CAP).read_text() == "---\nid: CAP-X-one\nstatus: active\nentrypoints:\n  - src/pkg/b.go\n---\n"
+    rerun = _derive(bundles, *args)
+    assert rerun.stdout.splitlines()[-1] == "[SUMMARY: pairs=1 new=0 declared=1 skipped=1 applied=0]"
+    aggregated = _derive(bundles, "--all", "--code", "src/pkg/b.go", "--code", "src/other/c.go")
+    assert "new=src/other/c.go(1) missing=- folded=- declared=src/pkg/b.go(2)]" in aggregated.stdout
+
+
+def test_selected_folded_candidate_is_applied(bundles: Path, write: Write) -> None:
+    write("specs/2026-10/20261011-nested/spec.md", "---\nid: SPEC-nested\nstatus: completed\n---\n")
+    write(
+        "specs/2026-10/20261011-nested/tasks.md",
+        "- [x] **Task 1**: pkg\n  - **_Boundary**: src/pkg/, src/pkg/b.go\n  - _Requirements: AC-01_\n",
+    )
+    write(
+        "specs/2026-10/20261011-nested/reconcile.md",
+        f"---\nreconcile_id: REC-nested\nstatus: resolved\ntargets:\n  - file: {CAP}\n    resolution: modified\n---\n",
+    )
+    result = _derive(
+        bundles, "--spec", "specs/2026-10/20261011-nested", "--apply", "--target", "CAP-X-one", "--code", "src/pkg/b.go"
+    )
+    assert result.exit_code == 0, result.output
+    assert f"[APPLIED: CAP-X-one path={CAP} added=src/pkg/b.go]" in result.stdout.splitlines()
+    assert "reason=folded" not in result.stdout
 
 
 def test_apply_failure_is_reported_after_the_result(bundles: Path, write: Write) -> None:

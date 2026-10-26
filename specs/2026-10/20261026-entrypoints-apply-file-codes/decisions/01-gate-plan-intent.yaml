@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-bugfix
+stage: intent
+note: User asked to fix the open feedback FB-entrypoints-apply-ignores-file-codes
+  (2026-10-26)
+by: user
+at: '2026-10-26T08:47:41.644743Z'
