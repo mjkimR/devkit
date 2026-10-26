@@ -1,0 +1,101 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T06:08:32.823155Z'
+status: needs_input
+summary: Spike F1-F6 recorded in materials/spike-findings.md (probe under .probe/repo); one challenger round (12 findings, 5 folded); PADR-background-pointer-in-constitution drafted; owns, depends_on and design folded. Six design questions await the user before plan-accept.
+findings: []
+assumptions:
+- PROP-table-driven-document-kinds lands first (user ordering decision); recorded as depends_on.
+unverified_areas:
+- Whether other workbench repositories select spec:docs-skeleton and would receive a second seeded glossary.
+- Whether emulated hosts (Codex) load the spec constitution in every nested role context.
+checks:
+  rules: PASS docs/proposals/PROP-foundation-documents
+diff_scope:
+  base: ''
+  head: ae04609a88bfab54fd0398552967a984f50cc3d3
+questions:
+- id: q1
+  title: Fixed directory or docs root
+  prompt: Where do project-wide background documents live?
+  context: Decides whether Development adds a directory with namespace, seed and viewer handling or only a guidance pointer. ID-free files at the docs root already pass the rules and stay out of the index (spike F2), so a directory adds grouping, one pointer target and a viewer group, at the cost of findings 3-7 of challenger-01.
+  options:
+  - id: a
+    description: A fixed docs/<group>/ and docs/packages/<name>/<group>/ directory; the pointer names one place per docs root and the viewer can show it as one group.
+    recommended: true
+  - id: b
+    description: ID-free files at the existing docs roots, listed by the pointer; no new directory, but the pointer must name each file and docs/README.md mixes with background.
+    recommended: false
+  allow_note: true
+- id: q2
+  title: Name of the group
+  prompt: What is the group called?
+  context: '''Foundation'' already names devkit''s lowest code layer (devkit-core, ARCH-05-1-containers, AGENTS.md) and the seeded example milestone MS-foundation; it is not a glossary term. The name becomes a directory, a glossary row and guidance wording.'
+  options:
+  - id: a
+    description: foundation, with a glossary row whose Avoid column separates it from the code layer; keeps the proposal's term.
+    recommended: true
+  - id: b
+    description: background (the proposal's own description), free of collisions but weaker as a sign that the content is binding.
+    recommended: false
+  - id: c
+    description: Another name you give in the note (avoid 'context', taken by get-context, and 'guides', a top-level directory here).
+    recommended: false
+  allow_note: true
+- id: q3
+  title: Move the glossary
+  prompt: Does the glossary (glossary.md and glossary.yaml) move into the group?
+  context: Moving touches about 20 literal paths (spike F3), several of which fail silently if missed (Owner check, synonym expansion, handbook glossary, viewer group); each becomes an acceptance item with a test. Existing consumers of the docs-skeleton seed get a blank glossary at the new path on their next sync. Keeping it makes the group exclude its only current member.
+  options:
+  - id: a
+    description: Move it; no migration or notice for existing consumers (AGENTS.md Compatibility); the handbook reads the new path with a history fallback.
+    recommended: true
+  - id: b
+    description: Move it and emit one NOTICE while docs/glossary.md exists beside the unmodified seed at the new path.
+    recommended: false
+  - id: c
+    description: Keep docs/glossary.md and docs/glossary.yaml in place and have the pointer name the glossary as part of the background; most F3 edits and the owns additions drop out.
+    recommended: false
+  allow_note: true
+- id: q4
+  title: Search coverage
+  prompt: Does devkit spec search cover foundation documents?
+  context: Search candidates are indexed, ID-bearing documents and every hit carries id, kind and status (spike F1); ID-free files cannot be found, not even by exact path. The draft's 'search indexes the group through each summary' needs one of the options below (challenger-01 finding 1, P1).
+  options:
+  - id: a
+    description: 'No search coverage: agents read the group by path through the constitution pointer; no summary is required in foundation files.'
+    recommended: true
+  - id: b
+    description: 'A second candidate source in spec search: hits use the path as id and kind=foundation, an English summary becomes required in foundation files; amends CAP-DOCS-document-model and CAP-DOCS-document-search.'
+    recommended: false
+  - id: c
+    description: Give foundation documents IDs as a new kind (a row in the kind table of PROP-table-driven-document-kinds); reverses this proposal's exclusion and makes them resolvable and referenceable.
+    recommended: false
+  allow_note: true
+- id: q5
+  title: Check IDs cited in foundation files
+  prompt: Do the spec rules check the document IDs a foundation file cites?
+  context: Today only legacy reference forms are checked in ID-free files (spike F2); a foundation file citing a renamed or retired CAP or ADR goes stale silently, and devkit spec refs does not list it.
+  options:
+  - id: a
+    description: Resolve backtick-quoted IDs in foundation files with the glossary Owner check (resolution and alias check, no autofix, no graph edges).
+    recommended: true
+  - id: b
+    description: No check; living-spec-writing states that foundation files cite no document IDs.
+    recommended: false
+  allow_note: true
+- id: q6
+  title: Order of PROP-ux-documentation
+  prompt: Does PROP-ux-documentation wait for this proposal?
+  context: Both edit the same spec features, CAP-DOCS-document-model and the viewer grouping after PROP-table-driven-document-kinds. UX guidance cites glossary terms and could point to foundation style documents; if UX lands first it names docs/glossary.md and a later move breaks it. Recording the answer in PROP-ux-documentation is the Host's step.
+  options:
+  - id: a
+    description: UX develops after this proposal (add PROP-foundation-documents to its depends_on); UX guidance names the glossary at its new path and refers to foundation style documents.
+    recommended: true
+  - id: b
+    description: UX proceeds independently and names the glossary by whatever path is current when it lands; whichever lands second updates the other's references.
+    recommended: false
+  allow_note: true
+activity_effort: medium
