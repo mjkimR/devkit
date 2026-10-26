@@ -75,8 +75,11 @@ the proposal bundle's materials directory and "carried extras" are the other bun
 - **When** the handoff runs
 - **Then** it raises `SPEC_PROPOSAL_TARGET_EXISTS` (exit `2` on the CLI), its `[TARGET]` lists the destination paths
   and its fix names the first conflict's source path, destination path and collision kind
-  (`different-content`, `file-directory`, `symbolic-link` or `non-regular`) and never directs removal of `<dest>`;
-  the source and destination trees are unchanged, and no spec bundle, ADR or material was written.
+  (`different-content`, `file-directory`, `symbolic-link` or `non-regular`) and never directs removal of `<dest>`
+  (when `<dest>` itself is not a real directory, the fix says to rename it aside with its content kept, or replace
+  it with a real directory holding that content); the source and destination trees are unchanged, and no spec
+  bundle, ADR or material was written. A same-path pair that cannot be read for the byte comparison is refused with
+  `SPEC_PROPOSAL_INVALID`, both paths in `[TARGET]`, before any write.
 
 ### [AC-04] Junk is ignored on both sides
 

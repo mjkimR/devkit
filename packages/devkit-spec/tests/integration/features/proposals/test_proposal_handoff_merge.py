@@ -12,7 +12,7 @@ import pytest
 from spec_support.proposals import MONTH, STAMP, TODAY, accept
 from spec_support.types import Write
 
-from devkit_spec.base.errors import ProposalHandoffError, ProposalTargetExistsError
+from devkit_spec.base.errors import ProposalHandoffError, ProposalInvalidError, ProposalTargetExistsError
 from devkit_spec.features.proposals import create_padr, create_proposal, handoff_proposal
 from devkit_spec.features.proposals.usecases import handoff as handoff_module
 
@@ -232,11 +232,35 @@ def test_refuses_a_conflict_before_writing_anything(
     assert error.code == "SPEC_PROPOSAL_TARGET_EXISTS"
     assert error.target_files == (destination_rel,)
     assert f"{source_rel} -> {destination_rel}: {kind}" in error.details
-    assert error.fix is not None
-    assert error.fix.startswith(f"Reconcile {source_rel} with the existing {destination_rel} ({kind}):")
-    assert f"keeping {_dest('clash')} and its other files" in error.fix and "remove the path" not in error.fix
+    assert error.fix is not None and "remove" not in error.fix
+    if destination:
+        assert error.fix.startswith(f"Reconcile {source_rel} with the existing {destination_rel} ({kind}):")
+        assert f"keeping {_dest('clash')} and its other files" in error.fix
+    else:  # the dated path itself is no directory: the fix renames it aside, keeping its content
+        assert error.fix.startswith(f"Rename {destination_rel} aside ({kind}: it is not a real directory)")
     assert [_snapshot(tree) for tree in trees] == before
     assert not (workspace / "specs").exists() and not (workspace / "docs/decisions").exists()
+
+
+def test_an_unreadable_file_is_refused_before_writing(
+    workspace: Path, write: Write, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    bundle = _new(workspace, "unreadable")
+    write(f"{_dest('unreadable')}/a.md", "same\n")
+    write("docs/proposals/PROP-unreadable/materials/a.md", "same\n")
+
+    def cmp(*_: object, **__: object) -> bool:
+        raise PermissionError(13, "Permission denied")
+
+    monkeypatch.setattr(handoff_module.filecmp, "cmp", cmp)
+    with pytest.raises(ProposalInvalidError) as raised:
+        handoff_proposal(workspace, "unreadable", today=TODAY)
+    assert raised.value.target_files == (
+        "docs/proposals/PROP-unreadable/materials/a.md",
+        f"{_dest('unreadable')}/a.md",
+    )
+    assert raised.value.fix == "Make both files in [TARGET] readable, then rerun the handoff"
+    assert (bundle / "materials/a.md").is_file() and not (workspace / "specs").exists()
 
 
 def test_reports_every_conflict_and_names_the_first_in_the_fix(workspace: Path, write: Write) -> None:

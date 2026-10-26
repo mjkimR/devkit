@@ -340,7 +340,9 @@ With `<YYYY-MM>` and `<YYYYMMDD>` today's date:
      The handoff refuses every conflict before its first write with `SPEC_PROPOSAL_TARGET_EXISTS`: `[TARGET]` lists
      the destination paths, `[DETAIL]` one `<source> -> <destination>: <kind>` line per conflict, and the fix names
      the first conflict's source path, destination path and kind and the way to reconcile that path, never removal
-     of the directory.
+     of the directory. When the dated path itself is not a real directory, the fix says to rename it aside with its
+     content kept, or to replace it with a real directory holding that content. A same-path pair of regular files
+     that cannot be read for the comparison is `SPEC_PROPOSAL_INVALID`, both paths in `[TARGET]`.
    - Every move writes only a path that was absent in preflight. The handoff gives no concurrent-change guarantee: a
      file written at a planned path between preflight and its move may be replaced, the same window the ADR writes
      have.
@@ -562,7 +564,7 @@ directory whose namespace applies when `namespace` is omitted);
 | `SPEC_HANDOFF_REPLY_INVALID` | `ERROR` (`INPUT_ERROR`) | `HandoffReplyError` | The composed `proposal handoff` CLI needs `--effort low`, `--effort medium` or `--effort high`. |
 | `SPEC_PROPOSAL_REJECTED_PENDING` | `WARNING` | `ProposalRejectedPendingWarning` | `rules check -p hygiene` (whole workspace): a rejected proposal is still in the base; `[FIX]` finds the rejection commit, writes the rejection ADR and deletes the proposal in one commit (rule 9). |
 | `SPEC_PROPOSAL_IN_PLANNING` | `ERROR` (`INPUT_ERROR`) | `ProposalInPlanningError` | `check`: Backlog may not change the proposal, because its `plan-<slug>` exists (locally or fetched; rule 13) or it is no longer `draft`. `padr`: `plan-<slug>` exists and the checkout is not on it. |
-| `SPEC_PROPOSAL_INVALID` | `ERROR` (`MAINTENANCE`) | `ProposalInvalidError` | The proposal, its blueprint or a PADR cannot be read or its frontmatter does not parse; or, at handoff, `namespace` is not a string naming `global` or a registered namespace, `summary` is not a string, `task_kind` is not `feature` or `bugfix`, or `planning_effort`/`dev_effort` is present and not `low`, `medium` or `high`. |
+| `SPEC_PROPOSAL_INVALID` | `ERROR` (`MAINTENANCE`) | `ProposalInvalidError` | The proposal, its blueprint or a PADR cannot be read or its frontmatter does not parse; or, at handoff, `namespace` is not a string naming `global` or a registered namespace, `summary` is not a string, `task_kind` is not `feature` or `bugfix`, or `planning_effort`/`dev_effort` is present and not `low`, `medium` or `high`; or a same-path pair of regular files of a materials merge cannot be read for the byte comparison. |
 | `SPEC_PROPOSAL_NOT_APPROVED` | `ERROR` (`INTERACTION`) | `ProposalNotApprovedError` | `handoff`: status is not `accepted`, `plan-accept` was not given; `[FIX]` records it with `devkit spec proposal accept` after the user's acceptance. `new`: the proposal `--supersedes` names is not `accepted`; a supersede replaces an accepted proposal only. |
 | `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED` | `ERROR` (`INTERACTION`) | `ProposalAcceptanceUnrecordedError` | `handoff`: a bundle bound to `sdd-proposal` says `accepted` without an effective accepted `gate:plan-accept` (rule 2); nothing written. |
 | `SPEC_PROPOSAL_ACCEPT_REFUSED` | `ERROR` (`INPUT_ERROR`) | `ProposalAcceptRefusedError` | `accept`: the status does not allow the form (a draft without `--direct`, a proposal in review with it, an accepted proposal whose record exists, a rejected one), or the proposal is single-file or unbound (rule 14). |

@@ -888,8 +888,12 @@ def _collision(root: Path, source: Path, destination: Path, here: os.stat_result
     try:
         same = filecmp.cmp(source, destination, shallow=False)
     except OSError as exc:
-        rel = destination.relative_to(root).as_posix()
-        raise ProposalInvalidError(f"{rel} cannot be compared: {exc}", target_files=[rel]) from exc
+        rels = [source.relative_to(root).as_posix(), destination.relative_to(root).as_posix()]
+        raise ProposalInvalidError(
+            f"{rels[0]} and {rels[1]} cannot be compared: {exc}",
+            target_files=rels,
+            fix="Make both files in [TARGET] readable, then rerun the handoff",
+        ) from exc
     return None if same else DIFFERENT_CONTENT
 
 
@@ -991,12 +995,21 @@ def _refuse_merge(root: Path, preserved: Path, conflicts: list[_Conflict]) -> No
     lines = [f"{rel(item.source)} -> {rel(item.destination)}: {item.kind}" for item in ordered]
     first = ordered[0]
     others = "; reconcile each other conflict in [DETAIL] the same way" if len(ordered) > 1 else ""
+    fix = (
+        f"Reconcile {rel(first.source)} with the existing {rel(first.destination)} ({first.kind}):"
+        f" {_RECONCILE[first.kind]}, keeping {rel(preserved)} and its other files{others}, then rerun the handoff"
+    )
+    if first.destination == preserved:
+        # The dated path holds no materials directory: only renaming it aside, its content kept, lets the handoff run.
+        fix = (
+            f"Rename {rel(preserved)} aside ({first.kind}: it is not a real directory), keeping its content, or"
+            " replace it with a real directory holding that content, then rerun the handoff"
+        )
     raise ProposalTargetExistsError(
         f"the handoff cannot merge the proposal's materials into {rel(preserved)}: {len(ordered)} conflict(s)",
         *lines,
         target_files=list(dict.fromkeys(rel(item.destination) for item in ordered)),
-        fix=f"Reconcile {rel(first.source)} with the existing {rel(first.destination)} ({first.kind}):"
-        f" {_RECONCILE[first.kind]}, keeping {rel(preserved)} and its other files{others}, then rerun the handoff",
+        fix=fix,
     )
 
 
