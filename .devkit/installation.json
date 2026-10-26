@@ -1550,7 +1550,7 @@
     },
     ".devkit/managed/spec/rules/proposal_boundaries/guide.md": {
       "mode": 420,
-      "sha256": "081b32d298a6938d0f7dbd731b59110e409d252b65e4cae05c9c5bccfc4abfdb"
+      "sha256": "2d4bc5a3f04345b0bcfb932a518a63d9fbd0c9fc50cacb97ef1310e78aebfcee"
     },
     ".devkit/managed/spec/rules/proposal_boundaries/rule.py": {
       "mode": 420,

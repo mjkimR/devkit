@@ -23,6 +23,10 @@ exists. The Planning executor clears its reports before the `plan-accept` reques
   names the repository's `src/`, never a capability area of that name.
 - **Paths the Development will create**: name the nearest existing parent directory (for a new rule folder,
   `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/`) and name the new path itself in the proposal text.
+- **Paths a prerequisite creates or moves**: while a `depends_on` prerequisite that creates or moves a path has not
+  landed, keep the path as it exists now (or its nearest existing parent) and name the expected path in the proposal
+  text. The handoff runs after the prerequisite lands, and Development writes the expected path in its `_Boundary:`
+  entries; the accepted proposal is not edited for it.
 - **Targeting**: reported for the targeted anchors and in a whole-workspace run. There is no rescan for deleted
   paths, and a run targeting `.devkit/config.toml` does not recheck proposals. Snapshot runs (`--staged`, `--ci`)
   resolve paths in the snapshot's tree, where an empty directory does not exist.

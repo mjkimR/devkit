@@ -88,6 +88,9 @@ just viewer pack      # the library tarball autohub vendors, checked for its exp
 uv run devkit generated check viewer-assets   # the committed build matches the sources
 ```
 
+Every recipe but `install` exits 2 with an error naming `just viewer install` when `node_modules` is missing,
+as in a newly created task worktree, which does not share the base checkout's dependencies.
+
 `just viewer probe` collects only the test files under the given absolute directory, for example a reviewer's
 `<worktree>/scratch/review-NN/`, with the package's Vite config and every dependency the package declares resolved from
 the package, so a probe imports `vitest`, `@testing-library/svelte` or a component by relative path like a test under
