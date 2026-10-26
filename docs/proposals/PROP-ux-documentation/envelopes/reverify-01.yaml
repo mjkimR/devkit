@@ -1,0 +1,85 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T06:16:39.784509Z'
+status: completed
+review: challenger-01.yaml
+summary: 'Folded challenger-01 at fca7592e: timing PADR withdrawn for PADR-ux-drafts-before-code; candidates scoped to Planning; step-key form, element semantics, review closure, rubric, ADR-delivery-classification reason, table precondition, boundaries and seeded object table fixed. Findings 3 and 11 stay open as user decisions; batch changes decisions, so round 2 follows.'
+findings:
+- issue: 'PADR-ux-documents-written-at-specify fails as designed: UX documents written at specify link use case steps and new UC or CAP IDs that are only written at spec-sync, so before living-spec-draft their links point at steps and IDs that do not exist.'
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-documents-written-at-specify.md:39-47; .devkit/managed/spec/skills/spec-sync/SKILL.md:19-25; docs/capabilities/gate/CAP-GATE-commit-gates.md:49; docs/proposals/PROP-ux-documentation/decisions/PADR-ux-step-links-and-coverage.md:47-51
+  failure_condition: 'A feature that adds a use case step, use case or capability with its screen: the specify commit is refused by RULE-document-reference or the coverage rule, or, if it passes, the ux-reviewer walks the base use case without the new steps.'
+  suggested_action: 'Revise before asking: either extend the exception to everything the UX documents link (step citations, new steps, new UC or CAP documents), or keep specify-time screens as a bundle draft moved at spec-sync with a bundle-scoped rule run; put both to the user.'
+  resolution: resolved
+  severity: P1
+- issue: The ux-writing guidance asks for contrasting candidates for the user to choose from, but Development writes screens at specify and may not ask the user about direction.
+  evidence: docs/proposals/PROP-ux-documentation/proposal.md:99-101,106-107; docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:92-94; .devkit/managed/spec/skills/spec-specify/SKILL.md:49-51
+  failure_condition: 'A spec-depth unit or a screen changed in Development reaches an open arrangement at specify: the worker asks (breaking rule 7) or silently picks one.'
+  suggested_action: Scope candidates to Planning (proposal Planning or inline Planning before plan-intent); in Development take the recommended candidate and record the others as an assumption in spec.md.
+  resolution: resolved
+  severity: P1
+- issue: 'Decision needed: how strict ''step without a screen'' is and the coverage rule''s severity; the rule as drafted reports system steps, off-screen actor steps, *a extensions and global navigation interactions, with no stated severity.'
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-step-links-and-coverage.md:43-51,60; docs/capabilities/governance/CAP-GOV-spec-rules.md:44-45,232-233
+  failure_condition: A listed use case with a system step or a screen with global navigation makes every commit touching those files fail, pushing UI into intent steps or deleting real interactions.
+  suggested_action: 'Decision needed: (a) strict error; (b, smallest) link agreement and graph defects at error, uncovered steps and unserved interactions in a separate warning rule (RULE-spec-progress precedent); (c) per-step opt-out marker; (d) check only steps that cite a UX ID.'
+  resolution: open
+  severity: P2
+- issue: The step key form `UC-<slug> 2a` in one code span is not a reference, so it is not resolved, alias-rewritten or found by refs; consecutive-step renumbering drifts silently; the reporting side when only one document is targeted is unstated.
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-step-links-and-coverage.md:27-29,47-49,59; docs/capabilities/documents/CAP-DOCS-document-model.md:147; docs/capabilities/governance/CAP-GOV-spec-rules.md:68-71
+  failure_condition: A renamed use case leaves stale keys; a step inserted before two steps on the same screen shifts keys without a report; a commit renumbering only the use case never reports the untargeted UX document.
+  suggested_action: Write the cell as `UC-<slug>` 2a; state the reporting side as RULE-traceability-link does; list consecutive-step drift as a known limit.
+  resolution: resolved
+  severity: P2
+- issue: Flow-graph checks are undefined for panels, end-of-task screens, back navigation and off-screen first steps; nothing validates element; the option-C rejection contradicts branching on element.
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-step-links-and-coverage.md:52-53; docs/proposals/PROP-ux-documentation/decisions/PADR-ux-screen-documents.md:38-39,48-49
+  failure_condition: 'A persistent panel is reported unreachable and without exit; a confirmation screen is reported without exit; Back has no legal target; an off-screen step 1 gives no root; element: dialog silently disables the modal check.'
+  suggested_action: Define the checks per element (panels exempt, last-step screen needs no exit, reachability from the first step citing a screen), decide a back target, name who reports an invalid element, reword the option-C rejection.
+  resolution: resolved
+  severity: P2
+- issue: The two-round cap of the UX review has no closing mechanism or disposition of findings open after round 2, and in Planning the coverage rule's results do not exist for target-docs drafts.
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-review-before-code.md:48-52; docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md:54,144
+  failure_condition: Findings stay open in envelope check for the life of the unit; in Planning the reviewer re-judges coverage or skips it.
+  suggested_action: 'State in spec-ux-review: the implementer records a closing ux-review envelope with resolved or waived per finding; Planning findings go to plan-accept; in Planning coverage is the reviewer''s labelled judgment.'
+  resolution: resolved
+  severity: P2
+- issue: The rubric items and which items the coverage rule decides are not stated, leaving a content decision to Development.
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-review-before-code.md:45-48; docs/roadmap/MS-ux-documentation.md:33-35
+  failure_condition: Development invents the rubric; neither the skill review nor the milestone exit has a reference.
+  suggested_action: List the rubric items in the PADR or ask the user under review-method.
+  resolution: resolved
+  severity: P2
+- issue: The follow-up 'a conditional stage when projects report skipped UX reviews' plans what CAP-DLV-delivery-workflows excludes ('never a stage switched on by content') under ADR-delivery-classification.
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-review-before-code.md:38,59-60; docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:48-50; docs/decisions/2026-10/20261022-delivery-classification.md:54
+  failure_condition: The promoted ADR plans a content-switched stage without superseding the accepted decision.
+  suggested_action: Cite the non-goal and ADR as the rejection reason; reword the follow-up as needing a superseding decision, or drop it.
+  resolution: resolved
+  severity: P2
+- issue: The design rests on the unaccepted PROP-table-driven-document-kinds table; depends_on is informational, so the re-check before handoff has no mechanism.
+  evidence: docs/proposals/PROP-ux-documentation/proposal.md:145-150; docs/proposals/PROP-ux-documentation/target-docs.md:19-22,28-30; docs/proposals/PROP-table-driven-document-kinds/proposal.md:5,53-57,65-66; docs/capabilities/harness/CAP-HARN-agent-guidance.md:335
+  failure_condition: 'This proposal passes plan-accept first and the table proposal is rejected or settles other columns: the accepted PADR and target text are false.'
+  suggested_action: Make the table proposal's acceptance a stated precondition of plan-accept or handoff checked by the Host, or give a fallback design; record the assumed columns as worker assumptions.
+  resolution: resolved
+  severity: P2
+- issue: boundaries.owns omits the committed viewer build, the glossary's foundation path and possibly the viewer capability.
+  evidence: packages/devkit-viewer/frontend/vite.config.ts; AGENTS.md:77; docs/proposals/PROP-ux-documentation/proposal.md:14-30,151-154; docs/capabilities/viewer/CAP-VIEW-repository-viewer.md:119
+  failure_condition: The UX book group needs a rebuilt packages/devkit-viewer/src/devkit_viewer/static/ outside the copied boundary; after the foundation move docs/glossary.md no longer exists.
+  suggested_action: Add packages/devkit-viewer/src/devkit_viewer/static/ and docs/capabilities/viewer/; name the glossary path current at handoff.
+  resolution: resolved
+  severity: P2
+- issue: 'Decision needed: whether use cases carry UX IDs at all; citing screens in steps causes churn for multi-interface products and redesigns, against the research''s ''without changing use case prose rules''.'
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-step-links-and-coverage.md:26,33-40,45-46; docs/materials/2026-10/20261026-ux-documentation/ux-documentation-practice.md:155-156,170; .devkit/managed/spec/instructions/usecase-writing.md:25-28
+  failure_condition: A product with web and mobile screens cites every platform's screen in every step; a screen split rewrites use cases whose intent did not change.
+  suggested_action: 'Decision needed: (a) step prose citations, accepting the churn, or (d) screen-side step keys only with a reverse index; put the failure condition in the question.'
+  resolution: open
+  severity: P2
+- issue: The blueprint puts the UX object table itself into devkit's own glossary, where it would be empty; its shape belongs in the seeded glossary and ux-writing.
+  evidence: docs/proposals/PROP-ux-documentation/target-docs.md:61; docs/proposals/PROP-ux-documentation/proposal.md:37; docs/decisions/2026-10/20261022-roadmap-and-milestones.md:59
+  failure_condition: An empty table adds a glossary edit overlapping the foundation move.
+  suggested_action: Seed the table header in bundles/spec/bundle/seed/docs/glossary.md and ux-writing; add only the terms to devkit's glossary.
+  resolution: resolved
+  severity: P3
+checks: {}
+diff_scope:
+  base: 8c4f88230aae1f310e7a2343de80b91a4d18d15e
+  head: fca7592e827c95d2ae0d245e1deb266c0c130b46
