@@ -1,15 +1,15 @@
 ---
-id: PADR-handbook-staleness-from-version
+id: ADR-handbook-staleness-from-version
 title: Handbook staleness from the VERSION file
 summary: For the handbook's staleness note in the viewer, we compare the manifest tag with v<VERSION> by version order, read as an ordinary file, to keep viewer reads free of Git and right during release preparation, accepting that a repository without VERSION shows only the tag and date.
-proposal: PROP-viewer-handbook-first-knowledge
-status: draft
+proposal: SPEC-viewer-handbook-first-knowledge
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-handbook-staleness-from-version] Handbook staleness from the VERSION file
+# [ADR-handbook-staleness-from-version] Handbook staleness from the VERSION file
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---

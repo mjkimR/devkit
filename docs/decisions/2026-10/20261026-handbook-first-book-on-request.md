@@ -1,15 +1,15 @@
 ---
-id: PADR-handbook-first-book-on-request
+id: ADR-handbook-first-book-on-request
 title: Handbook first, Living Spec book on request
 summary: For the viewer's reading tab, we open the release handbook where a manifest exists and compute the Living Spec book only on an explicit request, through the existing tree and blob reads, to remove the book's cold-load cost, accepting one more selection to reach current contracts.
-proposal: PROP-viewer-handbook-first-knowledge
-status: draft
+proposal: SPEC-viewer-handbook-first-knowledge
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-handbook-first-book-on-request] Handbook first, Living Spec book on request
+# [ADR-handbook-first-book-on-request] Handbook first, Living Spec book on request
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---
@@ -90,7 +90,7 @@ Chosen: handbook first, book on request, in one tab.
   and no Dashboard card targets `book`): a host request with `initialView` `book` and an `initialPath` naming a file
   under `docs/`, not the default `docs/`, counts as the book request; a path under `handbook/` opens that page.
   `sdd:path-change` keeps `view: "book"` and carries the handbook page path in handbook mode.
-- **Staleness**: `PADR-handbook-staleness-from-version`.
+- **Staleness**: `ADR-handbook-staleness-from-version`.
 - **Contracts**: `CAP-VIEW-repository-viewer` §4 states the tab's default, the handbook source and the on-demand
   book, and §6 the absent-file signal; `CAP-DLV-release-handbook` §2 drops the viewer from Out-of-Scope.
 
