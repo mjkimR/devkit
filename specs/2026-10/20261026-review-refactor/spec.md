@@ -82,7 +82,7 @@ Sections of the proposal that did not map to a spec section. Trim or promote the
 - Development adds a delivery capability with the playbook as its entrypoint, a governance use case, and the
   maintenance entry of `CAP-DIST-content-packages`.
 - The playbook's invocation prerequisite (its entry condition) follows the authority wording that
-  `PROP-spec-playbook-discovery` settles for every maintenance playbook. Until that proposal lands, the playbook runs
+  `SPEC-spec-playbook-discovery` settles for every maintenance playbook. Until that proposal lands, the playbook runs
   only when invoked for the current task, by name or by exact `devkit playbook get maintenance/review-refactor`, and
   the capability points to `CAP-DIST-context-and-playbooks` for invocation instead of naming an entry skill. Its
   `description` names its operation and scope so search can find it.
@@ -308,7 +308,7 @@ The work the playbook applies is refactoring, not feature development
 
 #### Interactions
 
-- `PROP-spec-playbook-discovery` also owns
+- `SPEC-spec-playbook-discovery` also owns
   `packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/`, `packages/devkit-catalog/README.md`,
   `guides/install/`, `docs/usecases/governance/`, `docs/capabilities/delivery/` and
   `docs/capabilities/distribution/`, to reword every playbook's explicit-invocation prerequisite and to let `spec`
