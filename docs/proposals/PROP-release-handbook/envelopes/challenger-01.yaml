@@ -1,0 +1,75 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-25T23:04:05.877760Z'
+status: completed
+summary: Viable as a derived snapshot; one P1 (RULE-cli-contract on stale pages), eight P2 incl. three decisions for the user, one P3.
+findings:
+- issue: Intentionally stale handbook pages break RULE-cli-contract on main, and through it CI and the commit gate
+  evidence: packages/devkit/src/devkit_agt/features/rules/services/builtins/cli_contract/rule.py:1-2,50,69; .devkit/config.toml:23; .github/workflows/ci.yml:49
+  failure_condition: A command or option a handbook page cites is renamed after the release; rules-check fails on handbook/ until it is edited, making it a reconcile target.
+  suggested_action: Exclude handbook/** from RULE-cli-contract; validate commands in the playbook at the source commit; add .devkit/config.toml to owns.
+  resolution: open
+  severity: P1
+- issue: Tag-pinned link verification runs before the tag exists, and the source commit is not the tagged commit
+  evidence: proposal.md section 3.3; .github/workflows/release.yml:14; docs/architecture/ARCH-07-deployment.md:53-56,66-68
+  failure_condition: At verification the tag does not exist, so the check fails or checks nothing; a later commit before the tag may change docs/.
+  suggested_action: Verify link targets as paths at the source commit; check in scripts/release.sh that docs/ at the tagged commit equals docs/ at the manifest source commit.
+  resolution: open
+  severity: P2
+- issue: translated_from pins the whole English blob, so every translation is stale after every run
+  evidence: proposal.md sections 3.2 and 3.3
+  failure_condition: Regenerated headers and deterministic sections change every English blob, marking every translation stale.
+  suggested_action: Hash only the narrative body for sources and translated_from; fixture test for header-only change.
+  resolution: open
+  severity: P2
+- issue: Frequent releases and heavy docs churn make most releases a near-full rewrite and translation
+  evidence: tags v0.1.0..v0.1.3 within 11 days; docs/ v0.1.1..v0.1.2 changed 239 files
+  failure_condition: Each release every 2 to 8 days needs an agent rewrite, a translation and a human review of most pages.
+  suggested_action: 'Decision needed: which releases refresh the handbook and whether a release may carry an older handbook.'
+  resolution: open
+  severity: P2
+- issue: Audience and delivery form (tracked, release asset, on-demand) are assumed rather than decided
+  evidence: AGENTS.md Compatibility; docs/capabilities/delivery/CAP-DLV-weekly-report.md:60-66
+  failure_condition: A tracked two-language tree goes stale for no current reader when a release asset or on-demand artifact would serve.
+  suggested_action: 'Decision needed: the delivery form.'
+  resolution: open
+  severity: P2
+- issue: boundaries.owns leaves out paths the design must change
+  evidence: proposal.md frontmatter against section 3.4; packages/devkit-spec/src/devkit_spec/features/proposals/usecases/specs.py:175-197
+  failure_condition: The Development task boundary excludes handbook/, docs/ and .devkit/config.toml.
+  suggested_action: Add docs/ and .devkit/config.toml to owns; name handbook/ as a new root directory.
+  resolution: open
+  severity: P2
+- issue: glossary.yaml holds search synonym clusters, not a translation guide
+  evidence: docs/glossary.yaml:1-11; docs/decisions/2026-10/20261022-writing-and-terminology-guidance.md:116-117
+  failure_condition: A translator renders sync as a term another concept owns.
+  suggested_action: Use the localized renderings in glossary.md, or an explicit preferred term per language.
+  resolution: open
+  severity: P2
+- issue: The verification acceptance criterion refers to itself, and contradiction detection is unspecified
+  evidence: proposal.md section 4 Verification; section 2 Q4
+  failure_condition: The criterion passes whenever the playbook's own checks pass, so it never fails on accuracy.
+  suggested_action: List the mechanical checks as criteria; make human review against a per-page claim checklist a recorded outcome.
+  resolution: open
+  severity: P2
+- issue: The preview run against main writes into the tracked handbook/
+  evidence: proposal.md section 3.3; docs/capabilities/delivery/CAP-DLV-weekly-report.md:63
+  failure_condition: Unreleased pages land on main and contradict the snapshot-per-tag manifest.
+  suggested_action: Write previews to an untracked location; only the release run writes handbook/.
+  resolution: open
+  severity: P2
+- issue: The text presents policy choices as settled
+  evidence: proposal.md sections 1 (docs/ restructuring no longer has to serve readability), 3.1 (langs), 3.4 (English-only exception), 3.3 (release gating), section 2 Q7
+  failure_condition: Acceptance would quietly accept a docs/ writing-policy change and a release-gating change.
+  suggested_action: 'Decision needed: docs/ readability policy, initial languages, exception scope, whether verification blocks tagging.'
+  resolution: open
+  severity: P2
+- issue: Use cases are too thin a backbone and the inventory figures are stale
+  evidence: docs/usecases/ holds 12 UC-* files with no distribution journey; proposal.md section 1 says 9 stories
+  failure_condition: A use-case-only coverage report misses the distribution workflow.
+  suggested_action: 'Optional: base coverage on capability areas plus use cases; update the inventory.'
+  resolution: open
+  severity: P3
+checks: {}
