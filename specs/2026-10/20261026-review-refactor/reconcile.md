@@ -12,6 +12,8 @@ targets:
     resolution: modified
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
     resolution: modified
+  - file: docs/architecture/ARCH-04-delivery-strategy.md
+    resolution: modified
 ---
 
 # Reconciliation: Maintenance review and refactoring playbook
@@ -42,10 +44,10 @@ Consumer mirrors (not Living Spec targets): `packages/devkit-catalog/README.md` 
 No impact: `docs/glossary.md` (no new domain term); `docs/architecture/` for resources (the resource taxonomy
 already covers directory-form package playbooks; no new resource kind). The playbook adds no delivery stage.
 
-Not reflected, outside the write scope: `ARCH-04-delivery-strategy` defines `overall-refactor` as a structural change
-across the project and cites only `ADR-overall-refactor-workflow`; the refinement for review-refactor work items is
-stated in `CAP-DLV-delivery-workflows` rule 1 and `CAP-DLV-review-refactor` §4.5. Aligning that architecture text belongs to the
-Host with `FB-classification-maintenance-playbook-case`.
+Reflected at integration, outside the Development run's write scope: `ARCH-04-delivery-strategy` now states that a
+`review-refactor` run applies its multi-module behavior-preserving work items in `direct` mode
+(`ADR-apply-behavior-preserving-batches-as-direct-mode-refactors`). The spec bundle's classification criteria stay
+open as `FB-classification-maintenance-playbook-case`.
 
 ## Entrypoints
 
