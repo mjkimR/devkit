@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T06:30:35.162446Z'
+status: completed
+summary: 'Self-verified at low effort: no Living Spec target; CAP-VIEW-repository-viewer, CAP-GOV-spec-rules and CAP-DOCS-document-model state neither the viewer prefix list nor the path remediation text, and the fixes match what they require'
+findings: []
+checks:
+  reconcile: PASS reconcile.md resolved with no targets; rg over docs/capabilities found no prefix list or remediation sentence
+  lint: PASS devkit rules check on the unit
+diff_scope:
+  base: b38cf17befaca823f5b9752a9e6d400b5b90164d
+  head: fa1fe315f21d475f8f553837820bd6d6918d9664
