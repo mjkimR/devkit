@@ -1,0 +1,42 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-25T23:04:36.044888Z'
+status: completed
+summary: 'Internal scout: reuse the maintenance bounding pattern (intake, batches, coverage, one decision round); review-refactor differs by changing code, separate finding/change ledgers and contract-changing follow-ups. Boundary too narrow; overlaps PROP-maintenance-history; neutral wording needed for playbook discovery and history proposals.'
+findings:
+- issue: Existing maintenance playbooks share a bounding pattern (intake with HEAD/dirty/scope/roots/destination, explicit batches, coverage and gaps, one decision round, batch-only completion) that review-refactor can reuse.
+  evidence: packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/drift-reconciliation.md:12-62; docs/capabilities/delivery/CAP-DLV-drift-reconciliation.md:31-61
+  suggested_action: Reuse the pattern; see materials/q2-internal-integration.md option C.
+  resolution: open
+- issue: review-refactor changes source by design, needs separate finding and change ledgers and its own dispositions; drift's 'track structural cleanup separately' cannot be copied; the playbook body may not cite authoring-repo IDs such as CAP-GOV-rule-authoring.
+  evidence: drift-reconciliation.md:52-53; .devkit/managed/spec/AGENTS.md:11; .devkit/managed/authoring/instructions/agent-asset-writing.md:49-53
+  suggested_action: State dispositions and the rule-growth criterion in the playbook itself.
+  resolution: open
+- issue: '`all` is implicit; adding review-refactor to `upkeep` deploys it to every project already selecting maintenance:upkeep, and no preset deploys it alone.'
+  evidence: bundle.toml:4,11-12; docs/capabilities/distribution/CAP-DIST-manifest-spec.md:143-148; CAP-DIST-content-packages.md:193-195
+  suggested_action: Decide preset placement (user question).
+  resolution: open
+- issue: Development touches files outside boundaries.owns (catalog tests, README, guides/install, docs/usecases/governance, CAP-DIST-content-packages); PROP-maintenance-history owns the same paths.
+  evidence: packages/devkit-catalog/tests/integration/bundles/test_bundles.py:88-128; packages/devkit-catalog/README.md:10,53-61; guides/install/bundle-recommendations.md:33; docs/proposals/PROP-maintenance-history/proposal.md:13-18
+  suggested_action: Widen owns; note sequencing with PROP-maintenance-history.
+  resolution: open
+- issue: No existing asset runs a repository-wide review-and-refactor pass; sdd-overall-refactor executes, code-reviewer reviews one diff, agent-asset-writing supplies guidance criteria, drift-reconciliation owns contract mismatches.
+  evidence: .devkit/managed/spec/workflows/sdd-overall-refactor.md:99-119; .devkit/managed/authoring/instructions/agent-asset-writing.md:8-9,46-47
+  suggested_action: Route contract mismatches to drift; route changes via the repository's development workflow by classification.
+  resolution: open
+- issue: Wording naming devkit-playbook/explicit-only or 'no history backend' goes stale under PROP-spec-playbook-discovery and PROP-maintenance-history.
+  evidence: docs/proposals/PROP-spec-playbook-discovery/proposal.md:62-78; docs/proposals/PROP-maintenance-history/proposal.md:45-52
+  suggested_action: Use neutral invocation wording and record forward-compatible run fields.
+  resolution: open
+- issue: 'ADR-external-playbook-execution: external invocation grants no gated approval, so an externally launched run stops at the decision round.'
+  evidence: docs/decisions/2026-10/20261021-external-playbook-execution.md:39-43,52-56
+  suggested_action: State that invocation authorizes no change.
+  resolution: open
+assumptions:
+- Inbound refs taken from materials/inbound-refs.txt
+unverified_areas:
+- harness bundle instructions not read for overlap
+- whether per-change decision round supplies session/overall-refactor intent is a policy question
+checks: {}
