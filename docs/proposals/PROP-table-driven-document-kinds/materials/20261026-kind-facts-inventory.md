@@ -16,7 +16,7 @@ viewer findings come from this proposal's `envelopes/scout-01.yaml`.
 | Fact | Current places | Notes |
 | --- | --- | --- |
 | Prefix to kind, kind order | `documents/models/ids.py:16-48` (`Kind`, `PREFIXES`, `ID_SOURCE`); `documents/usecases/browse.py:22` (`_KIND_ORDER = enumerate(Kind)`); `documents/cli/commands.py:184`, `documents/cli/search.py:40` (`click.Choice` over `Kind`) | Row order must stay the enum order: `devkit spec list` sorts by it and the CLI choice order is printed in help. |
-| Living Spec membership and directory | `governance/usecases/id_convention.py:80-81` (`_LIVING_SPEC`, `_LIVING_DIRECTORIES`), `:454`, `:477`; `governance/usecases/traceability_link.py:40-41` (`docs/usecases/`, `docs/capabilities/`) | `id_convention.py:509` is the binary fallback: `"usecases" if kind is USECASE else "capabilities"`. |
+| Living Spec membership and directory | `governance/usecases/id_convention.py:80-81` (`_LIVING_SPEC`, `_LIVING_DIRECTORIES`), `:454`, `:477`; `governance/usecases/traceability_link.py:40-41` (`docs/usecases/`, `docs/capabilities/`) | Fallbacks: `id_convention.py:509` (`"usecases" if kind is USECASE else "capabilities"`), `:200-222` (any kind other than capability and use case gets the architecture grammar and message), `:476-485` (any target outside `_LIVING_SPEC` gets the dated-partition remediation, milestones included). |
 | Area-scoped directory (`<dir>/<area>/`, `area:` field) | `id_convention.py:200-221` (capability and use case branches set `expected_area`), `:507-509` | Only capability and use case. |
 | Frontmatter-format scope | `governance/usecases/spec_format.py:59-60` (`SCOPE`, `NAMESPACE_SCOPE`) | `capabilities`, `usecases`, `proposals`, `roadmap`; namespaces only `capabilities`, `usecases`. |
 | Heading-token kinds | `id_convention.py:66` (`_ID_TOKEN` lists `SPEC PLAN TASKS REC ADR FB CAP UC ARCH MS`) | `PROP`, `PADR`, `MAT` are absent by design. |
@@ -25,6 +25,9 @@ viewer findings come from this proposal's `envelopes/scout-01.yaml`.
 | Terminal statuses | `documents/repositories/index.py:157-161` (`TERMINAL_STATUSES`) | Feedback, decision, proposal (`ADR-terminal-statuses-are-historical`). |
 | Relation field to accepted prefix | `governance/usecases/document_reference.py:43-52` (`EXPECTED_PREFIX`); `documents/models/model.py:11-14` (field lists) | Keyed by field, not by kind. `depends_on` is dual: `MS-` on milestones, `PROP-`/`SPEC-` anchors on units (`documents/services/dependencies.py:13-19`), which is behavior. |
 | Bidirectional pair | `traceability_link.py:43-44,80-81` | `capabilities` on a use case and `usecases` on a capability. |
+| Entrypoint-bearing paths | `entrypoints/services/paths.py:25-34` (`_LIVING_DIRECTORIES = ("docs/capabilities/", "docs/usecases/")`), read by `code_entrypoints.py:60-63`, `entrypoints/services/derive.py:92`, `scope/usecases/inputs.py:153` | A second copy of the entrypoint-bearing set, keyed by path; must derive from the rows or a new kind passes `_KINDS` and is skipped by path. |
+| Default status at fix time | `spec_format.py:316-322` (`planned` for `MS-`, `open` for `FB-`, else `draft`) | Per-kind default; the `else` is a fallback. |
+| Milestone status vocabulary and `created_at` requirement | `spec_format.py:158-170` | Per-kind format facts of `RULE-spec-format`. |
 | Retired ID forms and remediation text | `ids.py:54-56` (`_LEGACY_REF`); `id_convention.py:82-85` (`_REFERENCE_REMEDIATION`) | Text is a rule message; it must stay byte-identical. |
 
 ## 2. Facts that stay kind-specific behavior (Q1)
@@ -38,6 +41,14 @@ viewer findings come from this proposal's `envelopes/scout-01.yaml`.
 | Proposal planning state and fields, feedback fields and severity order | `documents/usecases/browse.py:104-145` |
 | Milestone hygiene, roadmap membership, dependency cycles | `governance/usecases/hygiene.py:60-80`; `proposals/usecases/roadmap.py:10-30`; `document_reference.py:158-190`; `documents/repositories/index.py:223` |
 | Index cache record validation | `documents/repositories/memo.py:205,279` (reads `kind_of`, unaffected by where the table lives) |
+
+Relation facts that are not per-row: `depends_on` takes `MS-` on milestones and `PROP-`/`SPEC-` anchors on units
+(`documents/services/dependencies.py:12`, handled before `EXPECTED_PREFIX`), and the traceability pair
+(`traceability_link.py:43-44,91-94`) is one relation between two kinds with its labels.
+
+The first search covered `Kind.` and `kind_of` uses only; `envelopes/challenger-01.yaml` findings 1 and 2 added the
+path- and prefix-keyed facts above. Development repeats the search for directory literals and prefix strings
+before it starts.
 
 `scope/usecases/inputs.py:62` defines an unrelated `kind_of` (path granularity), not a document kind.
 
@@ -73,8 +84,11 @@ Run twice at `96df5d86` in the Planning worktree (outputs in the ignored `.probe
   `devkit spec search "document kind" --format json` were byte-identical between runs, so a before/after diff is
   usable.
 - `devkit rules check` reports no violation on this repository, so the repository comparison proves nothing about
-  rule messages on bad input. Message parity rests on the existing rule tests under
-  `bundles/spec/bundle/rules/*/tests/` and `packages/devkit-spec/tests/`, which assert exact messages and must pass
-  unchanged.
+  rule messages on bad input. Many existing rule tests match message fragments
+  (`bundles/spec/bundle/rules/id_convention/tests/test_rule.py:24-25`), and none asserts the milestone path
+  remediation, so they do not prove byte parity either. Parity needs a characterization fixture workspace with one
+  violation per rule branch per kind, whose `devkit rules check --format json` output and `devkit rules fix` diff
+  are captured before the first code change, plus the `devkit spec list --help` and `devkit spec search --help`
+  text (kind choice order).
 - A development worker can take the baseline in its own worktree: its starting head is the base, so it captures the
   three outputs before its first code change and compares them after.

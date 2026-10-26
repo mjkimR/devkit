@@ -17,10 +17,14 @@ boundaries:
     - packages/devkit-spec/tests/
     - packages/devkit-viewer/src/devkit_viewer/features/browse/
     - packages/devkit-viewer/frontend/src/lib/
+    - packages/devkit-viewer/src/devkit_viewer/static/
     - packages/devkit-viewer/tests/
     - docs/capabilities/documents/
     - docs/capabilities/governance/
+    - docs/capabilities/viewer/
     - docs/architecture/
+    - .devkit/managed/spec/
+    - .devkit/installation.json
   excludes:
     - New document kinds
     - A plug-in or configuration extension point for document kinds
@@ -74,8 +78,10 @@ Evidence is in `MAT-kind-facts-inventory` and `envelopes/scout-01.yaml`.
 - **Q1**: table data is the prefix and order, Living Spec membership and directory, area scoping,
   `RULE-spec-format` scope, heading-token kinds, the summary requirement, entrypoint-bearing kinds, terminal
   statuses and the relation fields each kind accepts. Path and stem grammars, spec bundle files, unit anchors and
-  their relation rules, and the spec, proposal, feedback and milestone lifecycles stay code. The only binary
-  fallback is `id_convention.py:509`; other sets are explicit but repeated.
+  their relation rules, and the spec, proposal, feedback and milestone lifecycles stay code. Fallbacks between
+  kinds sit at `id_convention.py:200-222`, `:476-485` and `:509` and `spec_format.py:316-322`, and the
+  entrypoint-bearing set has a second, path-keyed copy in `entrypoints/services/paths.py:25`
+  (`envelopes/challenger-01.yaml` findings 1 and 2).
 - **Q2**: the table lives in `features/documents/models/` beside `ids.py`. `Kind` stays a declared enum, because 51
   static `Kind.<MEMBER>` references would lose their type under a generated enum
   (`PADR-kind-definition-table-keyed-on-the-declared-kind-enum`).
@@ -84,8 +90,8 @@ Evidence is in `MAT-kind-facts-inventory` and `envelopes/scout-01.yaml`.
   bundle reaches every host. The front-end link pattern has already drifted (`US` instead of `UC`, no `FB` or
   `MS`). The source of the viewer's copy is a user question.
 - **Q4**: `devkit spec list`, `devkit spec search` and `devkit rules check` JSON output is byte-stable between runs,
-  but this repository has no rule violations, so message parity rests on the existing rule tests, which assert exact
-  messages and must pass unchanged.
+  but this repository has no rule violations and many rule tests match message fragments, so message parity needs a
+  characterization fixture workspace captured before the first code change.
 
 ## 3. Proposed Design & Impact
 
@@ -93,15 +99,22 @@ Evidence is in `MAT-kind-facts-inventory` and `envelopes/scout-01.yaml`.
   scattered constants; `PREFIXES`, `ID_SOURCE`, `kind_of` and `is_id` derive from it and keep their signatures
   (`PADR-kind-definition-table-keyed-on-the-declared-kind-enum`).
 - The index, `RULE-id-convention`, `RULE-spec-format`, `RULE-document-summary`, `RULE-code-entrypoints`,
-  `RULE-document-reference`, `RULE-traceability-link`, browse and search read their per-kind facts from the table;
-  binary fallbacks between kinds are removed, and a missing fact fails instead of borrowing another kind's.
-- Unit tests check one row per member in enum order and inject a changed table to show the rules follow it.
+  `RULE-document-reference`, `RULE-traceability-link`, the entrypoint paths, browse and search read their per-kind
+  facts through one check-time accessor; the fallbacks at `id_convention.py:200-222`, `:476-485`, `:509` and
+  `spec_format.py:316-322` become explicit lookups that return today's values, and a missing fact fails instead
+  of borrowing another kind's.
+- Unit tests check one row per member in enum order, one prefix per relation field, and a patched accessor to show
+  the rules follow the table.
 - `CAP-DOCS-document-model` section 3.2 states that the table is the single definition of kinds; its table of
   prefixes and locations stays as the documented contract (`target-docs.md`).
 - The viewer's prefix and Living Spec directory knowledge follows the choice of Planning question q2.
-- Baseline: the development worker captures `devkit spec list --all-namespaces -n 0 --format json`,
-  `devkit spec search "document kind" --format json` and `devkit rules check --format json` at its starting head
-  before the first code change and shows them identical after; the existing suites pass unchanged.
+- Baseline: before the first code change, the development worker adds a characterization fixture workspace with
+  one violation per rule branch per kind and captures, at its starting head, its `devkit rules check --format json`
+  output and `devkit rules fix` diff, plus `devkit spec list --all-namespaces -n 0 --format json`,
+  `devkit spec search "document kind" --format json` and the `--help` text of both on this repository. All are
+  identical after the change, and the existing suites pass unchanged.
+- Size: `M` and `dev_effort: medium` hold unless q2 chooses a generated viewer copy, which adds a generator, an
+  artifact entry, an affected-tests mapping and `CAP-GEN-tracked-artifacts` reconciliation and makes it `L`.
 - Non-goals: no new kind (the UX kind is `PROP-ux-documentation`), no plug-in or configuration extension point, no
   change to the closed set of kinds, no change to IDs, paths, rule codes or messages.
 
@@ -111,10 +124,11 @@ Evidence is in `MAT-kind-facts-inventory` and `envelopes/scout-01.yaml`.
   devkit-spec features, the viewer front end and `CAP-DOCS-document-model`; it adds its kind as a member and a row
   of this table, so this change must land first and it rebases on it.
 - `PROP-foundation-documents` adds an ID-free group, not a kind, so it adds no row. It overlaps on
-  `RULE-id-convention`, the `docs/glossary.md` owner input of `RULE-document-reference` and
-  `CAP-DOCS-document-model` section 3; neither needs the other, and the one that lands second rebases. The viewer's
-  `bookGroup` hard-codes `docs/glossary.md`; that proposal does not own the viewer front end, and this one does not
-  move the glossary rule.
+  `RULE-id-convention`, `RULE-document-summary` (keyed by kind, while foundation documents carry a summary without
+  an ID), `RULE-spec-format` (path-based scope, its Q2), the `docs/glossary.md` owner input of
+  `RULE-document-reference` and `CAP-DOCS-document-model` section 3. Neither needs the other, and the one that lands
+  second rebases. The viewer's `bookGroup` hard-codes `docs/glossary.md`; this proposal keeps that rule unchanged,
+  and the glossary move should carry its viewer update (that proposal's Planning owns it, not this one).
 
 ### Planning decisions
 
@@ -122,8 +136,12 @@ Evidence is in `MAT-kind-facts-inventory` and `envelopes/scout-01.yaml`.
 - The table has no template field: no code reads templates, which stay bundle files.
 - The proposal's "synthetic kind row" test becomes an injected-table test, because a declared enum admits no extra
   member at test time.
-- Open for the user: the path check of a new Living Spec kind (q1), the source of the viewer's copy (q2) and
-  whether the drifted viewer link pattern is fixed here (q3).
+- Rows follow the enum order with no position field; each relation field maps to one prefix, `depends_on` stays on
+  the milestone row with its unit case in code, and the traceability pair is one explicit declaration
+  (`envelopes/challenger-01.yaml` findings 8 and 10).
+- Open for the user: the path check of a new Living Spec kind and so the scope of the hypothesis (q1, challenger
+  finding 6), the source of the viewer's copy (q2), whether the drifted viewer link pattern is fixed here (q3) and
+  whether the wrong milestone path remediation is kept (q4, challenger finding 7).
 
 ## 4. Lifecycle & Retirement Criteria
 
