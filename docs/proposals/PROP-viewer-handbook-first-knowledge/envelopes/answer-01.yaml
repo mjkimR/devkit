@@ -1,0 +1,26 @@
+kind: answer
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T05:15:17.838766Z'
+status: completed
+summary: tab-shape, book-deep-links, source-links, staleness-reference, book-rendering-feedback decided
+findings: []
+checks: {}
+answers_to: worker-01.yaml
+answers:
+- question: tab-shape
+  choice: a
+  decision: One rail tab keeps the id 'book' with the label 'Read'; it opens the handbook or the absence note, with the Living Spec book control inside.
+- question: book-deep-links
+  choice: a
+  decision: A library host request with initialView 'book' and an initialPath naming a file under docs/ counts as the book request and computes the full book.
+- question: source-links
+  choice: a
+  decision: Handbook source links stay external, tag-pinned GitHub links opened in a new browsing context.
+- question: staleness-reference
+  choice: a
+  decision: 'Staleness compares the manifest tag with v<VERSION>, read as a file, by version order: ahead, equal, behind and absent VERSION as in PADR-handbook-staleness-from-version; no Git.'
+- question: book-rendering-feedback
+  choice: a
+  decision: FB-viewer-book-rendering stays open, rescoped to book rendering after the request.
