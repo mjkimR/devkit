@@ -63,7 +63,7 @@ class ProposalApprovalReplyError(SpecError):
 
     code = "PROPOSAL_APPROVAL_REPLY_INVALID"
     input_error = True
-    fix = "Rerun with --mode accept_only, or --mode accept_and_handoff with --effort low, medium or high"
+    fix = "Choose accept_only, or accept_and_handoff with a low, medium or high Development effort, then rerun"
 
 
 def _proposal_error(error: AdvisoryError) -> AdvisoryError:

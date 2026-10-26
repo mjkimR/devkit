@@ -16,8 +16,9 @@ template fix makes the code meet it. No `MUST` of `docs/architecture/` changes, 
 
 - **Approval errors** (`packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_plan_accept.py`):
   `ProposalApprovalNotReadyError` gets `guardrail = True` (`BLOCKED`). A new `ProposalApprovalReplyError`
-  (`PROPOSAL_APPROVAL_REPLY_INVALID`, `input_error = True`, `INPUT_ERROR`) with the fix "Rerun with --mode
-  accept_only, or --mode accept_and_handoff with --effort low, medium or high" replaces `ProposalApprovalNotReadyError`
+  (`PROPOSAL_APPROVAL_REPLY_INVALID`, `input_error = True`, `INPUT_ERROR`) with the fix "Choose accept_only,
+  or accept_and_handoff with a low, medium or high Development effort, then rerun" (worded for both the CLI flags and
+  the native confirmation reply) replaces `ProposalApprovalNotReadyError`
   at the six raises that refuse a mode or effort: `_Acceptance.select` (two), `PlanAcceptUseCase.execute` (two),
   `PlanAcceptUseCase._remaining` and `PlanAcceptUseCase.execute_native` (spec assumption 1).
   `ProposalApprovalStaleError` keeps `MAINTENANCE`. Docstrings name the modes (AC-01 to AC-03).
