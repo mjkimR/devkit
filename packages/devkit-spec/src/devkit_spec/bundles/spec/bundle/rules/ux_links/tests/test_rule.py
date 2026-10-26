@@ -255,3 +255,53 @@ def test_the_step_parser_tolerates_the_formats_in_use(tmp_path: Path) -> None:
         ("*a", True, None, ()),
         ("2b", True, "1a", ()),
     ]
+
+
+def test_a_nested_numbered_list_continues_its_step_and_same_step_resumes(tmp_path: Path) -> None:
+    text = (
+        "---\nid: UC-sign-in\ntitle: T\narea: account\nstatus: active\n---\n# [UC-sign-in] T\n\n"
+        "## 2. Main Success Scenario\n\n1. Fills the form:\n   1. types the name\n   2. types `UX-form`\n2. Done.\n\n"
+        "## 3. Extensions\n\n- **2a.** Fails; resumes at the same step.\n- **\\*a.** Cancels; resumes at the same step.\n"
+    )
+    (tmp_path / UC).parent.mkdir(parents=True)
+    (tmp_path / UC).write_text(text, encoding="utf-8")
+    index = DocumentIndex.load(tmp_path)
+    parsed = use_case(index, index.resolve("UC-sign-in"), text)
+    assert [(s.key, s.resumes, s.screens) for s in parsed.steps] == [
+        ("1", None, ("UX-form",)),
+        ("2", None, ()),
+        ("2a", "2", ()),
+        ("*a", None, ()),
+    ]
+
+
+def test_a_starred_key_in_a_step_cell(tmp_path: Path) -> None:
+    for cell in ("`UC-sign-in` *a", "`UC-sign-in` \\*a"):
+        files = {
+            UC: usecase(["Opens `UX-login`.", "Done."], ("**\\*a.** Cancels in `UX-login`; the use case ends.",)),
+            path("login"): ux("login", [("`UC-sign-in` 1", "end"), (cell, "close")]),
+        }
+        assert check(RULE, tmp_path, files) == [], cell
+
+
+def test_an_extension_that_ends_needs_no_exit_but_one_resuming_on_a_screen_does(tmp_path: Path) -> None:
+    files = {
+        UC: usecase(
+            ["Opens `UX-login`.", "Signs in at `UX-done`."],
+            ("**1a.** Locked: the system shows `UX-locked`; the use case ends.",),
+        ),
+        path("login"): ux("login", [("`UC-sign-in` 1", "`UX-done`")]),
+        path("done"): ux("done", [("`UC-sign-in` 2", "")]),
+        path("locked"): ux("locked", [("`UC-sign-in` 1a", "")]),
+    }
+    assert check(RULE, tmp_path, files) == []
+    files[UC] = usecase(
+        ["Opens `UX-login`.", "Signs in at `UX-done`."],
+        ("**1a.** Locked: the system shows `UX-locked`; resumes at step 2.",),
+    )
+    assert found(check(RULE, tmp_path, files)) == [(path("locked"), "screen has no exit in UC-sign-in")]
+
+
+def test_a_step_cell_naming_an_unresolved_use_case_is_left_to_document_reference(tmp_path: Path) -> None:
+    files = {**two_screens(), path("login"): ux("login", [("`UC-sign-in` 1", "`UX-done`"), ("`UC-gone` 1", "")])}
+    assert check(RULE, tmp_path, files) == []

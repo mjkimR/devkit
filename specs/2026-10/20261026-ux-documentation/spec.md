@@ -238,8 +238,9 @@ project, so the text contract stays devkit-owned and checkable.
 - A Step cell holds one or more `` `UC-<slug>` <key> `` pairs separated by commas; an empty cell, `-` or `—` is
   empty. A Target cell is empty (the interaction stays on the screen), a UX ID with or without backticks, `close`,
   `back` or `end`; a target naming the screen itself is not an exit.
-- An extension's next step is the step named by `resumes at [step] <key>`; `the use case ends`, or no resume phrase,
-  makes the extension end the use case.
+- An extension's next step is the step named by `resumes at [step] <key>`, or for `resumes at the same step` the step
+  it branches from; `the use case ends`, no resume phrase, or a `*a` resuming at the same step ends the use case.
+- Main steps are `N.` items at column 0, so a nested numbered list continues its step (`review-01` finding 2).
 - The use case sections are found by the H2 headings containing `Main Success Scenario` and `Extensions`; steps are
   `N.` list items and extensions `- **<key>.**` bullets; a citation is a body reference of the index whose canonical
   target is a UX document, so aliases and the bracket form count.

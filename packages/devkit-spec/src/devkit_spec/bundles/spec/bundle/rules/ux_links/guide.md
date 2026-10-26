@@ -29,8 +29,9 @@ The document's own shape:
 The links, both directions:
 
 - `Step names <UC>, which usecases does not list`.
-- `Step names <UC> <key>, which is not a step of <UC>`: steps are the `N.` items under `Main Success Scenario` and
-  the `- **<key>.**` bullets under `Extensions`; renumbering steps changes their keys.
+- `Step names <UC> <key>, which is not a step of <UC>`: steps are the `N.` items at column 0 under `Main Success
+  Scenario` (a nested numbered list continues its step) and the `- **<key>.**` bullets under `Extensions`;
+  renumbering steps changes their keys.
 - `Step names <UC> <key>, which does not cite <UX>`.
 - `usecases lists <UC>, but no Step cell names it`.
 - `<UC> step <key> cites <UX>, whose usecases does not list <UC>`.
@@ -39,7 +40,8 @@ The flow, per listed use case whose steps cite the document (a `panel` is exempt
 
 - `screen has no exit in <UC>`: no row targets another UX document, `close`, `back` or `end`, and no citing step is
   terminal (the last main step, an extension that ends the use case, or a step whose next step cites no screen; an
-  extension's next step is the one it `resumes at`).
+  extension's next step is the one it `resumes at`; `resumes at the same step` is the step it branches from, and
+  an extension with no resume phrase, or a `*a` resuming at the same step, ends the use case).
 - `<UX> is not reachable from an entry of <UC>`: entries are the screens cited by the first step, by a step whose
   preceding step cites no screen and by every extension; edges are the targets of the screens the use case cites
   and of the panels their Content section cites.

@@ -30,9 +30,14 @@ describe('renderDocument ID references', () => {
 			doc('docs/usecases/a/UC-a.md', 'UC-a'),
 			doc('specs/feedback/b.md', 'FB-b'),
 			doc('docs/roadmap/MS-c.md', 'MS-c'),
-			doc('docs/ux/a/UX-d.md', 'UX-d')
+			doc('docs/ux/a/UX-d.md', 'UX-d'),
+			doc('docs/decisions/2026-10/20261001-e.md', 'ADR-e')
 		];
-		const page = doc('docs/page.md', 'CAP-P-page', 'See [UC-a], [FB-b], [MS-c] and [UX-d].');
+		const page = doc(
+			'docs/page.md',
+			'CAP-P-page',
+			'See [UC-a], [FB-b], [MS-c], [UX-d] and [ADR-e].'
+		);
 		const wrapper = document.createElement('div');
 		wrapper.innerHTML = renderDocument(page, [page, ...targets]).html;
 		const anchors = [...wrapper.querySelectorAll('a')];
@@ -40,7 +45,8 @@ describe('renderDocument ID references', () => {
 			['[UC-a]', 'docs/usecases/a/UC-a.md'],
 			['[FB-b]', 'specs/feedback/b.md'],
 			['[MS-c]', 'docs/roadmap/MS-c.md'],
-			['[UX-d]', 'docs/ux/a/UX-d.md']
+			['[UX-d]', 'docs/ux/a/UX-d.md'],
+			['[ADR-e]', 'docs/decisions/2026-10/20261001-e.md']
 		]);
 	});
 

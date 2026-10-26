@@ -6,8 +6,9 @@ under its ``Extensions`` H2 (``2a``, ``*a``, written ``\\*a`` too). A line inden
 current item; a non-indented line that opens no item ends it, so an intro paragraph, free prose inside Extensions and
 the acceptance scenarios' ``Covers`` lines belong to no step. A step cites a screen when one of its lines holds a body
 reference (``CAP-DOCS-document-model`` section 3.3) whose canonical target is a ``UX`` ID, so aliases and the
-bracket form count and code blocks never do. An extension resumes at the step named by ``resumes at [step] <key>``;
-without that phrase it ends the use case.
+bracket form count and code blocks never do. Main steps open at column 0, so a nested numbered list continues its
+step. An extension resumes at the step named by ``resumes at [step] <key>`` (``resumes at the same step`` names the
+step it branches from); without that phrase, or for ``*a`` at the same step, it ends the use case.
 
 A UX document's ``element`` is ``screen``, ``modal`` or ``panel``; its ``Interactions`` H2 holds a table whose header
 is ``Trigger | Step | From | To | Target | Capability | Feedback``. A Step cell is empty (``-`` and dashes count as
@@ -42,9 +43,11 @@ EMPTY_CELLS = frozenset({"", "-", chr(0x2013), chr(0x2014)})  # empty, a hyphen,
 
 _H2 = re.compile(r"^##[ \t]+(.+?)[ \t#]*$")
 _NUMBERED = re.compile(r"^(?:\d+(?:\.\d+)*\.?[ \t]+)?")
-_STEP = re.compile(r"^ {0,3}(\d+)\.[ \t]")
+_STEP = re.compile(r"^(\d+)\.[ \t]")
 _EXTENSION = re.compile(r"^ {0,3}[-*+][ \t]+\*\*(\\?\*|\d+)([a-z]+)\.\*\*")
-_RESUMES = re.compile(r"\bresumes?[ \t]+at[ \t]+(?:step[ \t]+)?(\\?\*[a-z]+|\d+[a-z]*)", re.IGNORECASE)
+_RESUMES = re.compile(
+    r"\bresumes?[ \t]+at[ \t]+(?:step[ \t]+)?(\\?\*[a-z]+|\d+[a-z]*|the[ \t]+same[ \t]+step)", re.IGNORECASE
+)
 _STEP_PAIR = re.compile(r"`(UC-[A-Za-z0-9][A-Za-z0-9_-]*)`[ \t]+(\\?\*[a-z]+|\d+[a-z]*)")
 _SEPARATORS = re.compile(r"[\s,;]*")
 
@@ -278,6 +281,10 @@ def use_case(index: DocumentIndex, document: Document, text: str) -> UseCase:
         if found.extension:
             match = _RESUMES.search(" ".join(line.strip() for line in found.raw))
             resumes = _key(match.group(1)) if match else None
+            if resumes is not None and resumes.lower().startswith("the"):
+                # "resumes at the same step": the step the extension branches from; ``*a`` has none, so it ends.
+                stem = found.key.rstrip("abcdefghijklmnopqrstuvwxyz")
+                resumes = stem if stem.isdigit() else None
         screens = tuple(_ux_targets(index, document, found.first, found.last))
         steps.append(Step(found.key, found.first, found.last, found.extension, resumes, screens))
     return UseCase(document, tuple(steps))

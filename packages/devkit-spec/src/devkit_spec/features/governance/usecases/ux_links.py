@@ -129,16 +129,16 @@ def _links(flows: Model, screen: UxDocument, add: Add) -> None:
         for ref in row.steps:
             named.add(ref.usecase)
             usecase = flows.usecases.get(ref.usecase)
+            if usecase is None:
+                continue  # an unresolved use case is RULE-document-reference's
             if not screen.lists(ref.usecase):
                 add(
                     screen,
                     row.line,
                     f"Step names {ref.usecase}, which usecases does not list",
                     f"Add {ref.usecase} to usecases, or name a listed use case",
-                    usecase=usecase.document if usecase else None,
+                    usecase=usecase.document,
                 )
-                continue
-            if usecase is None:
                 continue
             step = usecase.step(ref.key)
             if step is None:

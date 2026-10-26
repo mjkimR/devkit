@@ -323,11 +323,12 @@ small and each entry readable. Only the root `docs/steering/` is checked, and on
 
 A UX document and the use cases it serves do not contradict each other (`ADR-ux-step-links-and-coverage`). Checks
 every current UX document outside materials against every current use case. A use case's steps are the `N.` items
-under its `Main Success Scenario` H2 and the `- **<key>.**` bullets under its `Extensions` H2 (`2a`, `*a`, also
+at column 0 under its `Main Success Scenario` H2 (a nested numbered list continues its step) and the `- **<key>.**` bullets under its `Extensions` H2 (`2a`, `*a`, also
 written `\*a`); a line indented by a space continues the item, and any other line ends it, so intro paragraphs,
 free prose and `Covers` lines belong to no step. A step cites a screen through a body reference whose canonical
 target is a UX document (aliases and the bracket form count). An extension resumes at the step its
-`resumes at [step] <key>` names, and ends the use case otherwise.
+`resumes at [step] <key>` names (`resumes at the same step`: the step it branches from), and ends the use case
+otherwise.
 
 - MUST report on the UX document: a missing `element` or one other than `screen`, `modal` or `panel`; no
   `Interactions` H2, or one whose first table header is not `Trigger | Step | From | To | Target | Capability |
