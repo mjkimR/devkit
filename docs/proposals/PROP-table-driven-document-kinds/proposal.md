@@ -2,7 +2,7 @@
 id: PROP-table-driven-document-kinds
 title: Table-driven document kind definitions
 summary: "Moves each document kind's prefix, Living Spec membership, directory, relation fields and other per-kind facts into one definition table that the index, the spec rules and browsing read, so a missing fact for a new kind fails instead of falling back, without changing current behavior."
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-26
 target_area: documents/
 priority: high                        # critical | high | medium | low
