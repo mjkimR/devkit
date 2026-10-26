@@ -2,7 +2,7 @@
 id: PROP-review-refactor
 title: Maintenance review and refactoring playbook
 summary: "Adds a review-refactor playbook to the maintenance bundle that reviews code, agent guidance and CLI commands for accumulated AI slop and refactors with evidence while preserving agreed behavior."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                       # draft | reviewing | accepted | rejected
 created_at: 2026-10-22
 target_area: delivery/
 priority: high                        # critical | high | medium | low
