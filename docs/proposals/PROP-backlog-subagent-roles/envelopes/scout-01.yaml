@@ -1,0 +1,55 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T07:11:38.514617Z'
+status: completed
+summary: Adding triage and decomposer needs no devkit-dist or devkit-agt code change (projection, role vocabulary and envelope kinds are data-driven); the draft boundaries miss bundle.toml, payload.md, CAP-HARN-agent-guidance and ARCH-04-1 and wrongly own devkit_spec/features/ and docs/capabilities/collaboration/; SPEC-foundation-documents (unmerged dev branch) overlaps subagents/ and the role tests.
+findings:
+- issue: 'Registering a role is two bundle.toml edits: a kind=subagent [[assets]] entry and the id in presets.core'
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml:253-283, :343-348
+  suggested_action: Own bundle.toml
+  resolution: open
+- issue: 'devkit-dist subagent projection is generic: role == asset id, x-* keys verbatim, every host block required'
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/subagents.py:23,41,44,61,83-90,105-129
+  suggested_action: Exclude packages/devkit-dist/
+  resolution: open
+- issue: Workflow role vocabulary comes from the receipt's subagent assets; only BUILTIN_ROLES is hard-coded
+  evidence: packages/devkit/src/devkit_agt/features/workflow/repositories/project/roles.py:34,52-68
+  suggested_action: Exclude packages/devkit/
+  resolution: open
+- issue: Role-set hard-coded in spec tests; test_role_contracts.py requires a payload.md row per role and an effort preset per role
+  evidence: packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py:14-15,22-29,60,232-233; test_workflows.py:27,62-66; skills/spec-delegate/references/payload.md:16-21
+  suggested_action: Own packages/devkit-spec/tests/ and the spec-delegate skill
+  resolution: open
+- issue: Envelope kind is any identifier; envelope new requires --unit with a workflow anchor; Backlog has no unit and the decomposition parent is deleted in the same commit
+  evidence: packages/devkit/src/devkit_agt/features/workflow/models/ids.py:8-14; cli/app.py:21-23; usecases/workspace.py:393; skills/spec/references/backlog.md.jinja:10
+  suggested_action: Settle Q3 without a new record location or decide one explicitly
+  resolution: open
+- issue: Only sdd-proposal spike names a support role in a stage; challenger is invoked from skills, precedent for skill/playbook invocation of Backlog roles
+  evidence: bundle/workflows/sdd-proposal.md:36-37; docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:275-276,471-472
+  suggested_action: Invoke from feedback-hygiene, backlog.md and spec-next; add no workflow
+  resolution: open
+- issue: 'Living Spec owners: CAP-DLV-delivery-workflows section 4.6 role table, CAP-DLV-proposal-incubation decomposition, CAP-HARN-agent-guidance subagent list, ARCH-04-1 Subagent Roles row, UC-route-development-intent triage path; docs/capabilities/collaboration/ owns only shared artifacts and the scope registry'
+  evidence: CAP-DLV-delivery-workflows.md:365,384-391; CAP-DLV-proposal-incubation.md:143-156,253-254; CAP-HARN-agent-guidance.md:111,270,316-346; ARCH-04-1-ecosystem-boundaries.md:86; UC-route-development-intent.md:151-154; CAP-COLL-shared-artifacts.md:1-12; CAP-COLL-work-scope-registry.md:1-12
+  suggested_action: Own harness agent-guidance and ARCH-04-1; drop collaboration
+  resolution: open
+- issue: guides/, the devkit-spec README and docs/development/reference/ name no role; handbook/ does but is a release snapshot, not a reconcile target
+  evidence: handbook/en/areas/harness.md:115; docs/capabilities/delivery/CAP-DLV-release-handbook.md:20,30
+  suggested_action: Exclude handbook/
+  resolution: open
+- issue: SPEC-foundation-documents (dev-foundation-documents, f12ab876, not merged into main) moves scout/challenger/reconcile-reviewer to get-context spec and adds a test that every role contract loads it; its boundary covers the whole bundle and the spec tests
+  evidence: f12ab876:specs/2026-10/20261026-foundation-documents/spec.md:79-82, tasks.md:12; bundle/subagents/code-reviewer.md:33
+  suggested_action: Write the new contracts with uv run devkit get-context spec; sequence Development after that spec integrates
+  resolution: open
+assumptions:
+- 'Route: Claude Code native scout subagent; read-only, git status unchanged after the run.'
+unverified_areas:
+- Full bodies of test_role_contracts.py beyond the cited lines
+- Text-asserting tests over spec-next, spec-feedback sweep.md and backlog.md.jinja
+- Role enumeration in CAP-DIST-agent-projections
+- ARCH-01 section 5 TODO for triage/decomposer cited by ADR-roadmap-and-milestones (no hit under docs/architecture)
+checks: {}
+diff_scope:
+  base: 3302ff9d36d4e59566eb8de0ba8adf37f09412dd
+  head: d4a2240995e64731bbbe881fd27a8c2af00f5d99
