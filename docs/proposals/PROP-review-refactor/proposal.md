@@ -97,9 +97,8 @@ This draft carries the scope its own milestone held before the maintenance miles
 - Each work item is applied through the repository's development workflow and classified by that repository's own
   classification criteria; the playbook does not restate them.
 - A contract mismatch against agreed documentation is recorded as a deferred finding whose follow-up destination
-  names drift reconciliation. The playbook may continue in `drift-reconciliation` only when that playbook is
-  selected, and never depends on it. This playbook targets maintenance cost in code that is consistent with its
-  contract.
+  names drift reconciliation. The playbook never invokes another playbook; the user may name `drift-reconciliation`
+  as a separate invocation. This playbook targets maintenance cost in code that is consistent with its contract.
 
 ### Review criteria
 
@@ -125,8 +124,9 @@ This draft carries the scope its own milestone held before the maintenance miles
   covers merging duplicated logic into a shared module, folding repeated technical helpers into a utility, and
   removing unneeded code, guidance, options and commands.
 - Removing a compatibility path (shim, legacy reader, version branch) is a contract change, unless the target
-  repository's declared compatibility policy states that no consumer can exist. In-repository reachability never
-  proves the absence of external consumers.
+  repository's declared compatibility policy states that no external consumer exists for that package. Either way,
+  the change record names the inputs or callers no longer accepted. In-repository reachability never proves the
+  absence of external consumers.
 - Shared implementations are introduced only for demonstrated repeated behavior: at least two current callers with
   the same behavior, where a change to one must be repeated in the others. A consolidated helper lives at the place
   the target repository's layering allows (placement per O5).
@@ -150,10 +150,18 @@ This draft carries the scope its own milestone held before the maintenance miles
   - A spec-review checklist maps each consolidation and reduction kind and each reduction ground to a playbook
     section.
   - Manual evidence, following the `drift-reconciliation` precedent, is named as manual evidence and never reported as
-    test coverage. It has two parts. A real, bounded, read-only sweep of this repository records findings, coverage
-    and gaps. An isolated seeded fixture with simulated decisions exercises one consolidation, one helper fold and one
-    removal, with separate change records and preservation evidence.
-  - Real changes agreed from the sweep become separate follow-up work items. This delivery makes no live refactor.
+    test coverage. It has two parts.
+    - A real, bounded, read-only sweep of this repository records findings, coverage and gaps. It stops at its
+      decision round with nothing applied, as an unattended run does. Its findings are recorded as feedback
+      follow-ups, and a real decision round is a separate invocation after delivery. This delivery makes no live
+      refactor.
+    - The fixture is a disposable Git repository outside the worktree with its own minimal test command. With
+      simulated decisions, it exercises one consolidation, one helper fold and one removal, applied only inside the
+      fixture, with separate change records and preservation evidence. The patches, commit IDs and before-and-after
+      command output are kept in the Unit's materials because the fixture is discarded. The playbook's exercise rule
+      reads: decisions are simulated and change only the fixture.
+  - The playbook passes the repository's skill document size rule as one `playbooks/<name>.md` file; the criteria
+    are condensed into review questions rather than copied from the research tables.
 
 ### Planning decisions
 
@@ -167,7 +175,8 @@ This draft carries the scope its own milestone held before the maintenance miles
 ### Interactions
 
 - `PROP-spec-playbook-discovery` also owns
-  `packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/`, `docs/capabilities/delivery/` and
+  `packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/`, `packages/devkit-catalog/README.md`,
+  `guides/install/`, `docs/usecases/governance/`, `docs/capabilities/delivery/` and
   `docs/capabilities/distribution/`, to reword every playbook's explicit-invocation prerequisite and to let `spec`
   discover playbooks at task intake. The new playbook's invocation prerequisite follows the authority wording that
   proposal settles. Whichever proposal lands second reconciles the other's wording.
