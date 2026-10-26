@@ -1,0 +1,32 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T02:18:19.553262Z'
+status: completed
+summary: 'code-reviewer (medium, initial pass): AC-01..AC-07 confirmed by diff and tests; AC-08 met as worded but the README and MCP guide still name an unregistered spec_proposal_report service'
+findings:
+- issue: The corrected README and MCP install guide still say devkit-spec ships an MCP report service (spec_proposal_report) that needs devkit-agt[mcp]; no such service is registered.
+  evidence: 'guides/install/mcp.md:3-4, guides/install/mcp.md:23, packages/devkit-spec/README.md:17; entry_points(group=''devkit.host.services'') lists only devkit_dist shared tools; CAP-DLV-proposal-incubation: proposal reports are not stored as shared artifacts'
+  failure_condition: An agent following the guide installs devkit-mcp expecting a spec_proposal_report tool that tool discovery never lists.
+  suggested_action: 'Rewrite both to the shipped state: devkit-mcp serves devkit-dist''s shared artifact tools and devkit-spec registers no MCP service.'
+  resolution: open
+  severity: P2
+- issue: AC-06's derivation half is tested only at the classify_boundary level; no derive() run asserts the feedback file is skipped as excluded-tree.
+  evidence: packages/devkit-spec/tests/integration/features/entrypoints/test_derive.py:135
+  failure_condition: A later derive() change reusing the scope exception would turn a feedback file into an entrypoint pair without a failing test.
+  suggested_action: Add a derive() case with a specs/<other>/feedback/<name>.md boundary entry asserting excluded-tree and no pair.
+  resolution: open
+  severity: P3
+- issue: test_scratch_cleanup_guidance.py and .devkit/installation.json are outside every task _Boundary without an explanation.
+  evidence: specs/2026-10/20261026-feedback-guidance-and-scope/tasks.md Task 1 _Boundary
+  failure_condition: Scope registration does not cover the actual test path and the boundary extension is unexplained.
+  suggested_action: Add both paths to Task 1's _Boundary.
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test-affected partial 1514 passed; reviewer reran changed tests 159 passed
+  lint: PASS devkit rules check --ci --base f35e2b8e
+diff_scope:
+  base: f35e2b8ef1c3c82bea8c6b93655cc847981768ca
+  head: 6d9987cc12f7fb57f79d6eb71609b6b17dbcedf0

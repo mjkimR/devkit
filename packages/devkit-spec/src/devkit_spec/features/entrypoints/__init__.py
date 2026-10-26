@@ -20,6 +20,7 @@ from devkit_spec.features.entrypoints.services.derive import (
     declared_entrypoints,
     derive,
     exclude,
+    feedback_file,
     fold_by_directory_selectors,
     select,
 )
@@ -47,6 +48,7 @@ __all__ = [
     "entrypoint_bearing",
     "exclude",
     "exists",
+    "feedback_file",
     "fold_by_directory_selectors",
     "load_bundle",
     "normalize",

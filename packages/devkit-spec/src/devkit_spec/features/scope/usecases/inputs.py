@@ -6,8 +6,11 @@
   ``reconcile.md``, ``target-docs.md`` (``prop`` stage); ``tasks.md`` ``_Boundary`` entries are declared code. Once at
   least one entry is a declared code path, it replaces the targets' ``entrypoints`` candidates; until then (no
   ``tasks.md``, the handoff skeleton, or only entries that are no code path) the candidates stand in for it. A target
-  without ``entrypoints`` is ``no-entrypoints`` either way. When both target lists exist, the paths only one names
-  are reported as ``Diff`` and not merged.
+  without ``entrypoints`` is ``no-entrypoints`` either way. An entry under ``specs/`` is ``excluded-tree`` except the
+  exact path of another bundle's feedback file (``specs/**/feedback/<name>.md``, not a directory): it is declared
+  code of granularity ``file`` (or ``unknown`` while planned), so two units resolving the same feedback overlap, and
+  it does not replace the candidates. When both target lists exist, the paths only one names are reported as
+  ``Diff`` and not merged.
 - Observed (``build`` stage): the paths changed on the task's side of its base branch (from the fork point
   ``git merge-base <base ref> HEAD`` to ``HEAD``, never wider than the record's fixed base revision to ``HEAD``; see
   ``observe_git``), staged, unstaged and untracked, relative to the workspace root.
@@ -30,7 +33,15 @@ from devkit_spec.base.errors import (
     ScopeInputInvalidError,
     ScopeSpecNotFoundError,
 )
-from devkit_spec.features.entrypoints import classify_boundary, entrypoint_bearing, normalize, parse_boundaries
+from devkit_spec.features.entrypoints import (
+    Reason,
+    classify_boundary,
+    covers,
+    entrypoint_bearing,
+    feedback_file,
+    normalize,
+    parse_boundaries,
+)
 from devkit_spec.features.proposals.usecases.scaffold import PROPOSAL_FILE, PROPOSALS, TARGET_DOCS, clean_slug
 from devkit_spec.features.proposals.usecases.specs import SKELETON_MARKER
 from devkit_spec.features.scope.models.deadline import Deadline
@@ -203,10 +214,23 @@ def from_proposal(root: Path, slug: str) -> ScopeSet:
     return scope
 
 
+def _external_feedback(root: Path, spec_dir: str, raw: str) -> str | None:
+    """The normalized ``raw`` when it names a feedback file of a spec bundle other than ``spec_dir`` and is no
+    directory of the working tree, else ``None``."""
+    try:
+        path, unit = normalize(raw.strip()), normalize(spec_dir)
+    except EntrypointsPathError:
+        return None
+    if not feedback_file(path) or covers(unit, path) or kind_of(root, path) is Granularity.DIR:
+        return None
+    return path
+
+
 def from_spec(root: Path, spec_dir: str) -> ScopeSet:
     """The ``spec``-stage scope of the bundle at the workspace-relative ``spec_dir`` (declarations only).
 
     Declared code paths of ``tasks.md`` replace the targets' entrypoint candidates; without any, the candidates stay.
+    A declared feedback file of another bundle is declared code too, but never replaces the candidates.
 
     Raises ``ScopeSpecNotFoundError`` when it is not a directory and ``ScopeInputInvalidError`` when an input
     cannot be read.
@@ -215,6 +239,7 @@ def from_spec(root: Path, spec_dir: str) -> ScopeSet:
     if not base.is_dir():
         raise ScopeSpecNotFoundError(f"spec bundle not found: {spec_dir}", target_files=[spec_dir])
     scope = ScopeSet(id=_declared_id(base / SPEC) or base.name)
+    declares_code = False
     tasks_path = base / TASKS
     if not tasks_path.is_file():
         scope.unresolved.append(Unresolved(TASKS, "missing-tasks", Source.DECLARED_CODE))
@@ -234,12 +259,16 @@ def from_spec(root: Path, spec_dir: str) -> ScopeSet:
                         scope.unresolved.append(Unresolved(raw, "not-a-path", Source.DECLARED_CODE))
                         continue
                     code, reason = classify_boundary(raw)
+                    if code is None and reason is Reason.EXCLUDED_TREE:
+                        code = _external_feedback(root, spec_dir, raw)
+                    elif code is not None:
+                        declares_code = True
                     if code is None:
                         scope.unresolved.append(Unresolved(raw, str(reason), Source.DECLARED_CODE))
                     elif code not in seen:
                         seen.add(code)
                         scope.code.append(ScopePath(code, kind_of(root, code), Source.DECLARED_CODE, Stage.SPEC))
-    candidates = not scope.code  # only declared code is collected so far: it replaces the entrypoint candidates
+    candidates = not declares_code  # declared code paths replace the entrypoint candidates; feedback files do not
     reconcile = _targets(base / RECONCILE, f"{spec_dir}/{RECONCILE}")
     blueprint = _targets(base / TARGET_DOCS, f"{spec_dir}/{TARGET_DOCS}")
     if reconcile is not None:

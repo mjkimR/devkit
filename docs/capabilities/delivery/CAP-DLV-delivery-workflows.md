@@ -404,7 +404,7 @@ paths, an explicit absolute worktree cwd on every command and `git -C <worktree>
 base checkout, runs its role subagents nested (Host → worker → role; Claude Code tool `Agent`, Codex
 `collaboration.spawn_agent`) with absolute read/contract scopes that name the worktree's startup skill and
 instruction paths (a nested role's read from another checkout is a reported boundary exception) and never ends its turn while one is still running, keeps
-scratch files in an ignored path inside its worktree, writes its own records, commits at every stage boundary and,
+scratch files in an ignored path inside its worktree for removing the worktree to clean, writes its own records, commits at every stage boundary and,
 when it stops on questions or a problem, makes an emergency commit of the unfinished work with its `worker` envelope
 when record/commit access is permitted.
 A delegated change to a bundle source the project selects carries the tracked files `devkit sync --check` lists (for
@@ -419,8 +419,10 @@ a problem for Host recovery; it never merges, resolves references from another b
 or fabricates unsupported records. Base advancement alone does not require a refresh.
 
 The Planning payload names an ignored probe path inside the proposal directory and allowed write scope; the Host
-verifies or prepares it before delegation. The worker removes temporary files and throwaway repositories, including
-their linked worktrees, before its last commit and retains evidence in `materials/`. A probe that needs an outside
+verifies or prepares it before delegation. The worker leaves temporary files and throwaway repositories, including
+their linked worktrees, in that ignored path and retains evidence in `materials/`; removing the Planning worktree
+cleans them. A payload never asks a worker, Planning or Development, to delete a scratch file or fixture it created
+(`SPEC-feedback-guidance-and-scope`). A probe that needs an outside
 path is a boundary-expansion problem for the Host. Ignored status grants no sandbox or activity-repository Git
 permissions; a temporary path under `/tmp` may not exercise repository-local sandbox conditions.
 

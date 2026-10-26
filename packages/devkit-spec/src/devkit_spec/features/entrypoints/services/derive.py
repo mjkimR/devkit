@@ -23,6 +23,7 @@ from devkit_spec.features.entrypoints.services.paths import ROOT, covers, entryp
 
 NOT_APPLICABLE = ("n/a", "none")
 EXCLUDED_TREES = ("docs", "specs")
+FEEDBACK = "feedback"
 
 
 @dataclass(frozen=True)
@@ -59,6 +60,16 @@ def classify_boundary(raw: str) -> tuple[str | None, Reason | None]:
     if code == ROOT or code in EXCLUDED_TREES or code.startswith(tuple(f"{tree}/" for tree in EXCLUDED_TREES)):
         return None, Reason.EXCLUDED_TREE
     return code, None
+
+
+def feedback_file(code: str) -> bool:
+    """Whether the normalized ``code`` names a spec bundle's feedback file, ``specs/**/feedback/<name>.md``.
+
+    Such a path stays ``excluded-tree`` here, because a feedback file is never a code entrypoint; scope collection
+    alone takes an exactly declared one of another bundle as a file scope (``CAP-COLL-work-scope-registry``).
+    """
+    parts = code.split("/")
+    return len(parts) >= 4 and parts[0] == "specs" and parts[-2] == FEEDBACK and parts[-1].endswith(".md")
 
 
 def derive(root: Path, bundle: Bundle, documents: Mapping[str, Document]) -> tuple[list[Pair], list[Skipped]]:

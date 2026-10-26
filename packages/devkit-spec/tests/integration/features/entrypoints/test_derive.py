@@ -16,6 +16,7 @@ from devkit_spec.features.entrypoints import (
     derive,
     entrypoint_bearing,
     exclude,
+    feedback_file,
     fold_by_directory_selectors,
     load_bundle,
     normalize,
@@ -131,10 +132,41 @@ def test_a_boundary_ends_at_a_list_item_blank_line_fence_or_shallower_line() -> 
         ("None", "not-a-path"),
         (".", "excluded-tree"),
         ("docs", "excluded-tree"),
+        ("specs/2026-10/20261001-x/feedback/y.md", "excluded-tree"),  # never an entrypoint, only a scope path
     ],
 )
 def test_classify_boundary_skips(raw: str, reason: str) -> None:
     assert classify_boundary(raw) == (None, reason)
+
+
+@pytest.mark.parametrize(
+    ("code", "expected"),
+    [
+        ("specs/2026-10/20261001-x/feedback/y.md", True),
+        ("specs/x/feedback/nested.md", True),
+        ("specs/2026-10/20261001-x/feedback", False),
+        ("specs/2026-10/20261001-x/feedback/y.txt", False),
+        ("specs/2026-10/20261001-x/spec.md", False),
+        ("specs/feedback/y.md", False),
+        ("docs/x/feedback/y.md", False),
+        ("src/specs/x/feedback/y.md", False),
+    ],
+)
+def test_feedback_file(code: str, expected: bool) -> None:
+    assert feedback_file(code) is expected
+
+
+# SPEC-feedback-guidance-and-scope AC-06: scope collects another bundle's feedback file; derivation never pairs it.
+def test_derive_skips_a_declared_feedback_file(workspace: Path, write: Write) -> None:
+    fixture(write)
+    feedback = "specs/2026-09/20260901-other/feedback/observation.md"
+    write(feedback, "---\nid: FB-observation\nstatus: open\n---\n")
+    tasks = workspace / BUNDLE / "tasks.md"
+    text = tasks.read_text(encoding="utf-8").replace("src/missing.go", f"src/missing.go, {feedback}", 1)
+    tasks.write_text(text, encoding="utf-8")
+    pairs, skipped = derive(workspace, load_bundle(workspace, BUNDLE), documents(workspace))
+    assert all(pair.code != feedback for pair in pairs)
+    assert {item.value: str(item.reason) for item in skipped}[feedback] == "excluded-tree"
 
 
 def test_derive_states_folding_and_skips(workspace: Path, write: Write) -> None:

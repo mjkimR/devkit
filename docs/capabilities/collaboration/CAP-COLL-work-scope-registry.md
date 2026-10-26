@@ -89,16 +89,23 @@ path, no `..`, case-sensitive, `./` and a trailing `/` normalized), with its gra
 | Proposal: `targets` of `docs/proposals/PROP-<slug>/target-docs.md` | document | `declared-doc` | `prop` |
 | Spec bundle: `targets` of `reconcile.md` (not `waived`); without `reconcile.md`, those of `target-docs.md` | document | `declared-doc` | `spec` (`prop` for `target-docs.md`) |
 | `entrypoints` of each capability or use case target (also under `docs/packages/<name>/`), while the bundle declares no code (below) | code | `candidate` | as its target |
-| `tasks.md` `_Boundary` entries | code | `declared-code` | `spec` |
+| `tasks.md` `_Boundary` entries, including the exact path of another spec bundle's feedback file (below) | code | `declared-code` | `spec` |
 | Git in the registering worktree: the committed range (below), staged, unstaged, untracked | code | `observed` | `build` |
 
 Candidates estimate a task's code before it declares any. When at least one `_Boundary` entry of a spec bundle's
 `tasks.md` is a code path (`declared-code`), the bundle's code side is its declared code and it contributes no
 `candidate` path, however broad its targets' `entrypoints` are. A proposal, and a spec bundle whose `tasks.md` is
 missing, still the handoff skeleton, or names no code path (only `N/A`, placeholders, invalid paths, or paths under
-`docs/` or `specs/`), keeps its targets' `entrypoints` as candidates. A capability or use case target without `entrypoints` is
-unresolved (`no-entrypoints`) in both cases. A stored record changes from one rule to the other at the `register` or
-`update` that recollects its scope.
+`docs/` or `specs/`), keeps its targets' `entrypoints` as candidates. A capability or use case target without
+`entrypoints` is unresolved (`no-entrypoints`) in both cases. A stored record changes from one rule to the other at
+the `register` or `update` that recollects its scope.
+
+A `_Boundary` entry under `specs/` is `excluded-tree`, except the exact path of a feedback file of another spec bundle
+(`specs/**/feedback/<name>.md`, outside the declaring bundle's directory and not a directory of the working tree): it
+is collected as `declared-code` of granularity `file` (`unknown` while planned), so two units that resolve the same
+feedback file overlap on it. Such a path does not count as declared code for the rule above: it never replaces the
+candidates. Globs stay `invalid-path`, and directories, other files of another bundle and the declaring bundle's own
+feedback stay `excluded-tree`. Entrypoint derivation still skips every `specs/` path (`CAP-TRACE-code-entrypoints`).
 
 `targets` is the same list in both files: `- file: <workspace-relative path>` with an optional `resolution`
 (`devkit spec proposal new --with-target-docs` scaffolds `targets: []`). Document IDs are not accepted. Observed paths
@@ -132,7 +139,7 @@ shallow clone whose history does not reach the fork point stays unresolved until
 | --- | --- |
 | `planned-doc` | A document target that does not exist yet (it still counts as a document, so two tasks planning the same file overlap). |
 | `no-entrypoints` | A capability or use case target without `entrypoints`. |
-| `not-a-path`, `invalid-path`, `excluded-tree` | A `_Boundary` entry that is `N/A`/`none`, not a literal path, or under `docs/` or `specs/`. |
+| `not-a-path`, `invalid-path`, `excluded-tree` | A `_Boundary` entry that is `N/A`/`none`, not a literal path, or under `docs/` or `specs/` (except another bundle's feedback file, 4.1). |
 | `invalid-path` | A document target that is not a literal path. |
 | `waived` | A `reconcile.md` target with `resolution: waived`. |
 | `no-targets` | A `target-docs.md` without a `targets` key. |

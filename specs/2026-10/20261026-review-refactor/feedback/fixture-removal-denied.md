@@ -8,7 +8,7 @@ target: development-worker role contract (scratch fixture cleanup) and the host 
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -35,3 +35,7 @@ Nature: a permission boundary between the Host's payload and the host's permissi
 rm -rf <worktree>/scratch/rr-fixture && rmdir <worktree>/scratch  -> Permission ... has been denied.
 git check-ignore -v scratch/x -> .gitignore:47:/scratch/
 ```
+
+## Disposition
+
+Resolved by `SPEC-feedback-guidance-and-scope` (decision 1): the development-worker contract (rule 8) keeps authored scratch files in an ignored path inside the worktree and tells the worker never to delete them, because removing the worktree cleans them; the `spec-delegate` payload reference says a payload never asks a worker to delete a scratch file or fixture it created; the planning-worker contract and `CAP-DLV-delivery-workflows` mirror it. Host permissions were not widened. Verified by `test_scratch_cleanup_guidance.py` and a probe showing `git worktree remove` succeeds with ignored files present.

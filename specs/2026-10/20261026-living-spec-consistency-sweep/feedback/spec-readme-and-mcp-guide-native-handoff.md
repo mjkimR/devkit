@@ -8,7 +8,7 @@ target: packages/devkit-spec/README.md, guides/install/mcp.md
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -45,3 +45,7 @@ packages/devkit-spec/README.md:13-14 devkit-mcp (the native handoff runtime); :7
 guides/install/mcp.md:3 Installing devkit-spec includes devkit-mcp for source-bound proposal report publication
 packages/devkit-spec/pyproject.toml dependencies: devkit-core, click, devkit-agt
 ```
+
+## Disposition
+
+Resolved by `SPEC-feedback-guidance-and-scope` (item 5): `packages/devkit-spec/README.md` and `guides/install/mcp.md` no longer claim a native handoff runtime, a `devkit-mcp` dependency of devkit-spec or a devkit-spec MCP service; acceptance and handoff run through the `devkit spec proposal` CLI and `devkit-mcp` (via `devkit-agt[mcp]`) serves devkit-dist's shared artifact tools. Verified by the code review (`review-01`, `reverify-01`) against `pyproject.toml` and the registered `devkit.host.services` entry points.

@@ -228,9 +228,10 @@ class ProposalWorkflowError(SpecError):
 
 
 class ProposalTargetExistsError(SpecError):
-    """A file or directory the handoff would create already exists, or a proposal path conflicts with a path of the
-    existing materials directory it would merge into (``BLOCKED``); nothing was written. A merge conflict carries its
-    own fix naming the source path, the destination path and the collision kind, never removal of the directory."""
+    """A file or directory the handoff would create already exists (``BLOCKED``), or a proposal path conflicts with a
+    path of the existing materials directory it would merge into; nothing was written. A merge conflict is raised
+    without the guardrail and with the user as actor (``INTERACTION``: ask the user before reconciling), with its own
+    fix naming the source path, the destination path and the collision kind, never removal of the directory."""
 
     code = "SPEC_PROPOSAL_TARGET_EXISTS"
     guardrail = True

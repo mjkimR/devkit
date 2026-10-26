@@ -8,7 +8,7 @@ target: CAP-WT-task-worktrees (section 7 Module Layout)
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -40,3 +40,7 @@ created_at: 2026-10-26
 ```text
 features/worktree/: cli.py models/ repositories/ services/ usecases/ (no top-level stale.py, merging.py, config.py, errors.py)
 ```
+
+## Disposition
+
+Resolved by `SPEC-feedback-guidance-and-scope` (item 7): `CAP-WT-task-worktrees` section 7 lists the layered `models/`, `repositories/`, `services/` and `usecases/` modules with their public names. Verified by the code review against `packages/devkit/src/devkit_agt/features/worktree/`.

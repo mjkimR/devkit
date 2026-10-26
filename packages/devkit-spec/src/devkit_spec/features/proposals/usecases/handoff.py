@@ -49,7 +49,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any, NoReturn
 
-from devkit.advisory import AdvisoryError
+from devkit.advisory import Actor, AdvisoryError
 from devkit_agt.features.workflow import (
     Binding,
     Decision,
@@ -986,7 +986,10 @@ def _merge_extra(
 
 def _refuse_merge(root: Path, preserved: Path, conflicts: list[_Conflict]) -> NoReturn:
     """Raise the merge refusal: every conflict in the message and details, the first (in destination order) named in
-    the fix with its kind's reconciliation; the materials directory is never to be removed."""
+    the fix with its kind's reconciliation; the materials directory is never to be removed.
+
+    The conflict is a data collision the user resolves, not a rule: it is raised without the guardrail and with the
+    user as actor, so its directive is ``INTERACTION`` and ``[FIX]`` is the reconciliation once they agree."""
 
     def rel(path: Path) -> str:
         return path.relative_to(root).as_posix()
@@ -1010,6 +1013,8 @@ def _refuse_merge(root: Path, preserved: Path, conflicts: list[_Conflict]) -> No
         *lines,
         target_files=list(dict.fromkeys(rel(item.destination) for item in ordered)),
         fix=fix,
+        guardrail=False,
+        actor=Actor.USER,
     )
 
 

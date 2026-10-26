@@ -230,6 +230,10 @@ def test_refuses_a_conflict_before_writing_anything(
     source_rel = f"docs/proposals/PROP-clash/{source}"
     destination_rel = (dest / destination).relative_to(workspace).as_posix() if destination else _dest("clash")
     assert error.code == "SPEC_PROPOSAL_TARGET_EXISTS"
+    # A merge conflict is a data collision the user resolves: INTERACTION, not the BLOCKED guardrail.
+    advisory = error.to_dict()["advisory"]
+    assert (advisory["mode"], advisory["guardrail"], advisory["actor"]) == ("INTERACTION", False, "USER")
+    assert advisory["action"].startswith("INTERACTION — Stop and ask the user.")
     assert error.target_files == (destination_rel,)
     assert f"{source_rel} -> {destination_rel}: {kind}" in error.details
     assert error.fix is not None and "remove" not in error.fix

@@ -232,5 +232,7 @@ could not be indexed are `SPEC_DOCUMENT_INVALID` warnings under `notices`.
 `devkit_spec.features.entrypoints`: `normalize`, `covers`, `overlaps`, `exists`, `entrypoint_bearing` (the path contract;
 it maps every `docs/packages/<name>/` through `devkit_spec.features.documents.services.namespaces.living_path`, registered or not, so it needs no
 configuration); `load_bundle`, `parse_boundaries` (inputs); `derive`, `aggregate`, `select`, `exclude`,
-`classify_boundary`, `declared_entrypoints` (pairs); `apply`, `collapse`, `set_entrypoints` (writing). Libraries never
+`classify_boundary`, `declared_entrypoints`, `fold_by_directory_selectors` (pairs); `feedback_file` (whether a path
+names a spec bundle's feedback file, `specs/**/feedback/<name>.md`: derivation skips it as `excluded-tree`, and only
+scope collection takes one of another bundle, `CAP-COLL-work-scope-registry`); `apply`, `collapse`, `set_entrypoints` (writing). Libraries never
 print; the command renders the results.

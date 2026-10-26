@@ -8,7 +8,7 @@ target: CAP-DLV-proposal-incubation (4.12 Codes), packages/devkit-spec/src/devki
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -42,3 +42,7 @@ created_at: 2026-10-26
 base/errors.py:602-620 HandoffNotReadyError, HandoffReplyError, HandoffStaleError(SpecError) set only code
 CAP-DLV-proposal-incubation 4.12: SPEC_HANDOFF_NOT_READY ERROR (BLOCKED); SPEC_HANDOFF_REPLY_INVALID ERROR (INPUT_ERROR)
 ```
+
+## Disposition
+
+Resolved by `SPEC-feedback-guidance-and-scope` (item 4): the shipped `MAINTENANCE` of `HandoffNotReadyError` and `HandoffReplyError` is a defect, because both refuse on prerequisites and input the caller controls, so the `CAP-DLV-proposal-incubation` 4.12 rows keep the documented `BLOCKED` and `INPUT_ERROR` and the code change is tracked as `FB-handoff-refusals-emit-maintenance`; the `SPEC_HANDOFF_STALE` row already documents its shipped mode. Verified by reproducing the three modes.

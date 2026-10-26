@@ -8,7 +8,7 @@ target: docs/glossary.md (Integration MCP), ARCH-04-1-ecosystem-boundaries
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -43,3 +43,7 @@ created_at: 2026-10-26
 docs/glossary.md: | **Integration MCP** | Scoped Model Context Protocol server exposing devkit integration services to coding agents. |
 CAP-INT-mcp-services: The lifecycle tools integration_prepare, integration_integrate, integration_status and integration_resume are not registered.
 ```
+
+## Disposition
+
+Resolved by `SPEC-feedback-guidance-and-scope` (item 6): the glossary term is now **Scoped CLI integration** (owner `CAP-INT-mcp-services`, `Integration MCP` under Avoid) and the `ARCH-04-1-ecosystem-boundaries` actor row names the `devkit integration` CLI. Verified by the code review and `devkit rules check`.

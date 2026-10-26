@@ -31,8 +31,9 @@ it. Native integration confirmation and execution are described in `CAP-INT-mcp-
 
 ## MCP services
 
-Install `devkit-mcp`, or `devkit-agt[mcp]` for integration, in a retained base/tool runtime. The optional wheel
-mounts `devkit mcp`; domain tools remain in agt/spec. See `CAP-MCP-runtime-registration` and `CAP-INT-mcp-services`.
+Install `devkit-mcp`, or `devkit-agt[mcp]`, in a retained base/tool runtime for devkit-dist's shared artifact tools;
+integration, proposal acceptance and handoff are CLI commands, never MCP tools. The optional wheel mounts
+`devkit mcp`; domain tools remain in agt/spec. See `CAP-MCP-runtime-registration` and `CAP-INT-mcp-services`.
 
 | Command | Result |
 | --- | --- |
