@@ -87,7 +87,8 @@ approval or recovery journal survives the invocation.
 - A changed target requires the source to incorporate that target, fresh readiness and a fresh Host decision under
   `ask`.
 
-The optional `devkit-mcp` runtime remains available for shared artifacts. The
+The optional `devkit-mcp` runtime remains available for shared proposal-review artifacts (`CAP-COLL-shared-artifacts`),
+which acceptance does not require. The
 lifecycle tools `integration_prepare`, `integration_integrate`, `integration_status` and `integration_resume` are not
 registered.
 

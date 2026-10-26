@@ -95,9 +95,10 @@ capabilities:
 - **7a.** The Host starts Development from the retained base checkout: under `proposal-handoff=ask` it presents the
   accepted plan, the setup and worktree effects and the Development effort defaulting to the `dev_effort` hint, and
   only after the user's conversational approval runs `devkit spec proposal handoff <slug> --effort <level>`; under
-  `auto` the command uses `dev_effort`. A prerequisite that does not hold refuses with `SPEC_HANDOFF_NOT_READY`, and
-  a new worktree that no longer contains the reviewed base commit with `SPEC_HANDOFF_STALE`
-  (`CAP-DLV-proposal-incubation`); resumes at step 8.
+  `auto` it runs the same command with `--effort` equal to `dev_effort`. A prerequisite that does not hold refuses
+  with `SPEC_HANDOFF_NOT_READY` before any effect (exit `2`). When the new worktree no longer holds the reviewed base
+  commit or setup changed its files, the command keeps the worktree and reports `status=needs_recovery` with
+  `SPEC_HANDOFF_STALE` (exit `1`) for inspection (`CAP-DLV-proposal-incubation`); resumes at step 8.
 - **7b.** The proposal is not `accepted`: the system refuses with `SPEC_PROPOSAL_NOT_APPROVED` and writes nothing
   (`CAP-DLV-proposal-incubation`); the agent asks the user; resumes at step 5.
 - **7c.** The proposal says `accepted` without its recorded `plan-accept`: the system refuses with

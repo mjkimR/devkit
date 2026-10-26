@@ -323,8 +323,9 @@ Spec-next treats a slug with a plan-/dev- branch, a reviewing/accepted proposal 
 Proposal acceptance and handoff run through Host-authorized CLI operations (`ADR-host-cli-lifecycle-authority`).
 The Host reviews the proposal, every PADR and the envelopes at the final committed `plan-<slug>` source, presents
 the findings and effects, and invokes `devkit spec proposal accept` only after the user's decision under `ask`.
-`devkit spec proposal report` renders an optional briefing that is not stored as a shared artifact
-(`CAP-DLV-proposal-incubation`). A report never carries approval or permissions. Refinement requires exclusive
+`devkit spec proposal report` renders an optional briefing; acceptance requires no published report, while shared
+proposal-review artifacts remain available for publication (`CAP-DLV-proposal-incubation`,
+`CAP-COLL-shared-artifacts`). A report never carries approval or permissions. Refinement requires exclusive
 Planning ownership, committed changes and a fresh review of the committed source; accepted plans use follow-up
 workflows.
 

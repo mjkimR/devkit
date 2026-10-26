@@ -56,7 +56,7 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
    main decision boundaries, followed in policy output by `plan-intent` and configured custom gates. Each boundary
    and task intent permits `ask` or `auto`, default `ask`; `off` is `SPEC_CONFIG_INVALID`. `proposal-handoff` is
    declared by no workflow stage: `devkit spec proposal accept --mode accept_and_handoff` and
-   `devkit spec proposal handoff` read it (`CAP-DLV-proposal-incubation`).
+   `devkit spec proposal handoff --effort` read it (`CAP-DLV-proposal-incubation`).
    `plan-intent` records an already instructed task without another confirmation. An uninstructed Backlog item does
    not become authorized merely because an agent discovers it. Main boundaries are independent: direction acceptance
    may wait in Backlog before Development starts. The Host may carry one conversational decision across acceptance and handoff when the exact effects are presented together.

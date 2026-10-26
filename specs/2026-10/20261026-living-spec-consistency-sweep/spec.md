@@ -142,6 +142,13 @@ final head, and for help-text items by running the CLI.
   duplicate is dropped; only `ADR-viewer` has a distinct second ID to restore.
 - Item 5: the same stale name in `CAP-WT-task-worktrees` §7 is fixed with item 5, as the same finding in a second
   capability.
+- Item 3: the same native-MCP acceptance and handoff claim in `CAP-HARN-agent-guidance`, `ARCH-05-1-containers`
+  (devkit-spec's dependencies, which have no `devkit-mcp`) and `ARCH-05-2-components` is fixed with item 3, because
+  it contradicts the same Host-authorized CLI contract.
+- Item 19: two more duplicate citations of the same origin (`CAP-HARN-agent-guidance`, `CAP-DLV-delivery-workflows`)
+  are dropped with item 19.
+- Item 12: the package docstring of `devkit_agt.features.worktree` (`__init__.py`) carries the same `stale`
+  subcommand as `cli.py` and is fixed with it.
 
 ## 6. Source feedback
 

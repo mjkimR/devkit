@@ -283,7 +283,7 @@ writes into the proposal's `materials/`; `scout` and `challenger` returns are re
 | --- | --- | --- |
 | `plan-intent` | `intent`, `intent-session`, `intent-proposal` | task intent: `ask` or `auto` |
 | `plan-accept` | `direction-handoff` | `ask` or `auto` |
-| `proposal-handoff` | none: `devkit spec proposal accept --mode accept_and_handoff` and `devkit spec proposal handoff` read it | `ask` or `auto` |
+| `proposal-handoff` | none: `devkit spec proposal accept --mode accept_and_handoff` and `devkit spec proposal handoff --effort` read it | `ask` or `auto` |
 | `dev-integration` | `integration-approval`, `approval-session` | `dev-integration` (`ask` or `auto`) |
 
 - A gate waiting for the user: `devkit workflow next` prints `[WAITING: human gate:<gate>]` with a

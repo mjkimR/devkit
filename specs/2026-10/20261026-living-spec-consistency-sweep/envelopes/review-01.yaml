@@ -1,0 +1,56 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T01:42:32.473780Z'
+status: completed
+summary: 'code-reviewer (medium, initial pass): REVISE; 22 items addressed, AC-03 docstring gap and UC 7a error behavior wrong, five P3 clarifications'
+findings:
+- issue: AC-03 says the stale-branch report is devkit worktree status --stale everywhere, but the package docstring still lists a stale subcommand.
+  evidence: packages/devkit/src/devkit_agt/features/worktree/__init__.py:1
+  failure_condition: A reader of the package docstring is told about a devkit worktree stale command that does not exist.
+  suggested_action: Use start|finish|status with status --stale, as in cli.py; note the boundary extension.
+  resolution: open
+  severity: P2
+- issue: UC extension 7a calls SPEC_HANDOFF_STALE for a new worktree without the reviewed base a refusal; the code returns needs_recovery (exit 1) with the worktree kept. The capability's code table lacks SPEC_HANDOFF_STALE, and under auto --effort must still equal dev_effort.
+  evidence: docs/usecases/delivery/UC-incubate-and-hand-off-a-proposal.md:95-100; packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py:124-125,155-156,206-223
+  failure_condition: The agent expects a refusal that wrote nothing and gets exit 1 with a created worktree; under auto, omitting --effort runs the plain handoff.
+  suggested_action: Reword 7a and add SPEC_HANDOFF_STALE to CAP-DLV-proposal-incubation 4.12 or drop the citation.
+  resolution: open
+  severity: P2
+- issue: The new text says devkit spec proposal handoff reads proposal-handoff; only handoff --effort does.
+  evidence: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:286; docs/capabilities/delivery/CAP-DLV-project-policy.md:57-59; packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py:347-349
+  failure_condition: With proposal-handoff=ask an agent relies on the plain handoff to enforce the boundary.
+  suggested_action: Name handoff --effort; record whether the plain handoff should check the policy as feedback.
+  resolution: open
+  severity: P3
+- issue: 'Dropping ''proposal report publication'' from CAP-INT and CAP-HARN removes a true claim: shared_put accepts kind proposal-review.'
+  evidence: docs/capabilities/integration/CAP-INT-mcp-services.md:90; packages/devkit-dist/src/devkit_dist/features/shared/models/api.py:55-64
+  failure_condition: A reader concludes the optional runtime has no proposal-review publication, contradicting the accepted ADR and shared_put.
+  suggested_action: State that shared proposal-review artifacts remain available and acceptance does not require them.
+  resolution: open
+  severity: P3
+- issue: The glossary Integration MCP entry and ARCH-04-1 'Local Host via MCP' integration row describe unregistered lifecycle tools, outside the 22 items, with no feedback recorded.
+  evidence: docs/glossary.md:56; docs/architecture/ARCH-04-1-ecosystem-boundaries.md:97
+  failure_condition: An agent looks up Integration MCP and expects integration tools that are not registered.
+  suggested_action: Record feedback in this Unit or extend item 11 with a stated reason.
+  resolution: open
+  severity: P3
+- issue: CAP-DLV-workflow-orchestration section 1 presents an incomplete list as sdd-spec-feature's stages.
+  evidence: docs/capabilities/delivery/CAP-DLV-workflow-orchestration.md:17
+  failure_condition: A reader treats the list as complete and misses integration-approval.
+  suggested_action: List all non-exception stages or say 'stages such as'.
+  resolution: open
+  severity: P3
+- issue: Edits outside the tasks.md boundaries (CAP-HARN, ARCH-05-1 dependencies, ARCH-05-2, the CAP-DLV-delivery-workflows duplicate) have no recorded reason in the Unit.
+  evidence: specs/2026-10/20261026-living-spec-consistency-sweep/tasks.md
+  failure_condition: The reconcile reviewer or final report sees unexplained out-of-boundary edits.
+  suggested_action: Record the extensions and reasons in spec.md section 5.
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test-affected 2649 passed 1 skipped
+  lint: PASS devkit rules check --ci --base 46229c7b errors=0
+diff_scope:
+  base: 46229c7b86111ceed75bef72eb49912e7e1b819e
+  head: 1cb872f458046e5d33ea5c1495de6819d9319322
