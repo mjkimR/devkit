@@ -1,0 +1,37 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:21:12.781366Z'
+status: completed
+summary: 'reconcile-reviewer: 11 targets match code and ADR; ADR pointers additive only; two use cases unreflected (one deferred, one missed) and two wording issues'
+findings:
+- issue: UC-route-development-intent still routes from entering the spec skill to classification without the intake discovery step; reconcile.md defers it to FB-route-intent-intake-discovery.
+  evidence: docs/usecases/delivery/UC-route-development-intent.md:37-41; reconcile.md:60-62
+  failure_condition: After completion the canonical /spec routing use case describes a classification-first flow.
+  suggested_action: Host widens the write scope to the UC and it is reflected, or the deferral reason is recorded in reconcile.md.
+  resolution: open
+  severity: P2
+- issue: UC-adopt-in-an-existing-repository says only that the developer asks for brownfield-adoption, while the playbook now accepts a confirmed intake offer; not listed as target nor reasoned.
+  evidence: docs/usecases/harness/UC-adopt-in-an-existing-repository.md:44, :99
+  failure_condition: The adoption use case omits the confirmed-offer entry the maintenance use cases now state.
+  suggested_action: Reflect it, or state the deferral reason in reconcile.md.
+  resolution: open
+  severity: P2
+- issue: ARCH-08-2 package-playbook Consumption still opens with 'never through implicit scanning during ordinary tasks'.
+  evidence: docs/architecture/ARCH-08-2-resource-taxonomy.md:101, :107
+  failure_condition: A reader cites the clause against the bounded intake search.
+  suggested_action: Qualify the clause with the condition 4 exception.
+  resolution: open
+  severity: P3
+- issue: CAP-HARN §4.4 lists `playbook search` in the devkit-spec commands column, but it is devkit-dist's command.
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md:150, :152
+  failure_condition: A reader looks for a nonexistent devkit spec playbook search.
+  suggested_action: Move it to the purpose text or name it devkit playbook search.
+  resolution: open
+  severity: P3
+checks:
+  rules: PASS devkit rules check docs
+diff_scope:
+  base: fd44af663e7dc273d3017a33ed4d86600f5b8b19
+  head: 790b917901b4eb19d566599175f90adbbd8d0633

@@ -1,0 +1,32 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:14:36.299201Z'
+status: completed
+summary: 'code-reviewer initial review: AC-01..AC-08 pinned by passing text tests, AC-09 by labeled manual evidence; spec intake matches intake-frequency 2-5 with no widening; three P3 findings'
+findings:
+- issue: The generated devkit-playbook skill dropped 'only' from its description and first body sentence, so its own text no longer restricts it to explicit use.
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/playbook_skill.py:10, :64
+  failure_condition: An antigravity-only projection has no invocation policy key; a model may pick devkit-playbook for an ordinary request, discovery outside spec intake (Non-Goal 4).
+  suggested_action: Restore 'only when the user explicitly invokes ... or confirms a playbook another installed entry skill offered' in body and description; assert 'only when' in the test.
+  resolution: open
+  severity: P3
+- issue: The skill does not say whether the agent waits for the answer after naming a candidate.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/SKILL.md.jinja:37; references/playbooks.md:9-10
+  failure_condition: Continuing lets a later confirmation arrive after a Unit or branch was created for the ordinary path, which the reference's reclassification does not cover.
+  suggested_action: State one behavior, e.g. wait for the answer before creating a Unit or editing.
+  resolution: open
+  severity: P3
+- issue: The operation-first query example is acceptance positive control P04 itself, so the P04 result is circular evidence for the rule.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/SKILL.md.jinja:31; spec.md:72, :158; materials/manual-run-probe.tsv
+  failure_condition: 'A request keeping a distinguishing qualifier may push skill-authoring past --limit 3 in hybrid: a silent miss with untested rule.'
+  suggested_action: Swap the example for one outside the acceptance sample and probe the rule on a request outside the sample; state the AC-01 refinement in the final report.
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS pytest test_playbook_discovery_guidance.py test_playbooks.py test_playbook_get.py 90 passed (reviewer rerun); just test-affected 2577 passed 1 skipped
+  lint: PASS devkit rules check --ci --base fd44af663e7d
+diff_scope:
+  base: fd44af663e7dc273d3017a33ed4d86600f5b8b19
+  head: 33bf53d1ab9e5ea5bc7f86e566eba5b1adb71e60

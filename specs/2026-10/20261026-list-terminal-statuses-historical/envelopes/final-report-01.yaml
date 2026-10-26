@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:44:43.139466Z'
+status: completed
+summary: 'Terminal statuses (feedback resolved/promoted/dismissed/forwarded, decision superseded, proposal rejected) are historical in devkit spec list and search; --status shows named statuses whatever their history; list prints hidden=<n> on [PAGE] and in JSON and [HISTORY_CMD: ...] when n>0. ADR-terminal-statuses-are-historical reverses SPEC-feedback-list-filters Non-Goal 1. Repository: list feedback 170 -> 10 (hidden=160), list decision 53 -> 47 incl. the new ADR (hidden=7).'
+findings: []
+assumptions:
+- Governance rules keep checking terminal-status documents; only browsing and search hide them
+- just rules-check reports 2 pre-existing RULE-document-reference errors in docs/proposals/PROP-spec-playbook-discovery (unchanged since base, outside scope)
+- 'Host follow-up at integration: UC-find-the-right-documents line 73 and CAP-HARN-command-mount 4.5 paging example (waived reconcile targets outside the write scope)'
+checks:
+  tests: PASS just test-affected 1540 passed (mode=partial)
+  build: PASS just check devkit-spec (pyright 0 errors)
+  lint: PASS just lint-check devkit-spec; devkit rules check --ci --base 6f3dd3aa errors=0
+diff_scope:
+  base: 6f3dd3aa4d42e76a258e9f14853d1e3ff9124cc2
+  head: 76bca9f690b193c95d8fa8e3b390c9bfae5389f9

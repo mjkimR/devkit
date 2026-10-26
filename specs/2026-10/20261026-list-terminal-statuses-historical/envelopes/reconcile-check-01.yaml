@@ -1,0 +1,44 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:42:07.592745Z'
+status: completed
+summary: 'reconcile-reviewer at 251cc7d2: model rule 8, lookup, search rule 1 and the ADR match the code; rule 7 wording, command-mount example, spec-next call site, UC waiver and JSON historical meaning open'
+findings:
+- issue: CAP-DOCS-document-model rule 7 says feedback of every status stays current, contradicting rule 8.
+  evidence: docs/capabilities/documents/CAP-DOCS-document-model.md:83
+  failure_condition: Rules 7 and 8 disagree on whether terminal-status feedback is current for browsing.
+  suggested_action: 'Reword rule 7''s feedback exception: open feedback stays current through the bundle''s status; terminal-status feedback follows rule 8.'
+  resolution: open
+  severity: P1
+- issue: CAP-HARN-command-mount paging example shows the list page line without hidden=; reconcile.md does not name it.
+  evidence: docs/capabilities/harness/CAP-HARN-command-mount.md:108-119
+  failure_condition: A Living Spec document describes list output the implementation no longer produces.
+  suggested_action: Name the file in reconcile.md; outside the write scope, the Host applies it at integration.
+  resolution: open
+  severity: P1
+- issue: spec-next step 3 lists proposals without --history, so rejected proposals awaiting cleanup are hidden while its table acts on them.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-next/SKILL.md:19
+  failure_condition: Orientation no longer surfaces a rejected proposal awaiting cleanup.
+  suggested_action: Pass --history on that line.
+  resolution: open
+  severity: P2
+- issue: The UC-find-the-right-documents waiver says the guarantee still holds; it is incomplete.
+  evidence: docs/usecases/documents/UC-find-the-right-documents.md:73
+  failure_condition: The use case states an incomplete set of hidden documents and omits the hidden-count trace.
+  suggested_action: 'Reword the waiver: incomplete, Host updates at integration.'
+  resolution: open
+  severity: P2
+- issue: The JSON historical field now covers terminal statuses without a contract statement.
+  evidence: docs/capabilities/documents/CAP-DOCS-document-lookup.md §4.3
+  failure_condition: A JSON consumer cannot tell historical=true covers rule 8.
+  suggested_action: State historical means rule 7 or rule 8 in the list row.
+  resolution: open
+  severity: P2
+checks:
+  tests: PASS test_terminal_history.py and test_cli_documents.py 47 passed
+  lint: PASS devkit rules check --ci --base 6f3dd3aa
+diff_scope:
+  base: 6f3dd3aa4d42e76a258e9f14853d1e3ff9124cc2
+  head: 251cc7d2c3a1fa75a20029b4ba4acd94ed42b20b

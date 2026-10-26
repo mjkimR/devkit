@@ -1,0 +1,38 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:38:24.602131Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified fixes at e449dc95: plan names rule 8, weekly-report names terminal statuses, prose rewrapped; just test-affected 1540 passed'
+findings:
+- issue: UC-find-the-right-documents success guarantee mentions only completed spec bundles staying out of results; terminal statuses are not named. docs/usecases/ is outside the write scope.
+  evidence: docs/usecases/documents/UC-find-the-right-documents.md:73
+  failure_condition: An agent reading the postcondition expects resolved feedback, superseded ADRs and rejected proposals in default results.
+  suggested_action: 'Host: reflect terminal-status hiding in the use case at integration.'
+  resolution: waived
+  waiver: docs/usecases/ is outside this run's write scope; the statement stays true and CAP-DOCS-document-model rule 8 owns the rule; handed to the Host for integration-time use case reflection
+  severity: P3
+- issue: plan.md says CAP-DOCS-document-model rule 7 is extended; the change added rule 8.
+  evidence: specs/2026-10/20261026-list-terminal-statuses-historical/plan.md:13
+  failure_condition: A reader looks for the change in rule 7.
+  suggested_action: Name rule 8 in plan.md.
+  resolution: resolved
+  severity: P3
+- issue: weekly-report playbook describes --history as covering only completed specs.
+  evidence: packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/weekly-report.md:30
+  failure_condition: An agent drops --history believing it only adds completed specs and misses superseded ADRs and resolved feedback.
+  suggested_action: Reword to name terminal statuses.
+  resolution: resolved
+  severity: P3
+- issue: New prose lines exceed the surrounding wrap width.
+  evidence: docs/capabilities/documents/CAP-DOCS-document-lookup.md:80; packages/devkit-spec/src/devkit_spec/features/documents/cli/commands.py:21
+  failure_condition: Cosmetic; no check fails.
+  suggested_action: Rewrap.
+  resolution: resolved
+  severity: P3
+checks: {}
+diff_scope:
+  base: ''
+  head: e449dc9534171027f33e08e2791558652d0706ef

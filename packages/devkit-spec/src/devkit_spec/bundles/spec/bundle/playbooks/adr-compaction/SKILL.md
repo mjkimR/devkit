@@ -5,8 +5,8 @@ description: Consolidate related approved ADRs into replacement ADRs that keep t
 
 # ADR compaction
 
-Run this playbook only when the user asks for it, for the whole ledger or named ADRs; the request authorizes the
-run's ADR deletions. It runs at `session` depth from a clean working tree; record the base commit
+Run this playbook only when the user invoked or confirmed it, for the whole ledger or named ADRs; that invocation
+authorizes the run's ADR deletions. It runs at `session` depth from a clean working tree; record the base commit
 (`git rev-parse HEAD`).
 
 A compaction never changes a decision. A decision that must change needs a new ADR with `supersedes`, outside this
@@ -14,7 +14,7 @@ run.
 
 ## Step 1: Group
 
-Read every ADR in scope (`uv run devkit spec list decision -n 0`).
+Read every ADR in scope, superseded ones included (`uv run devkit spec list decision --history -n 0`).
 
 - A group holds the supersession closure of its members (`supersedes`, `superseded_by` in frontmatter; these are not
   in the reference graph) plus ADRs on the same topic. It has two or more members.
@@ -38,7 +38,7 @@ Write `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, dated today, from `.devki
 ## Step 3: Apply and verify
 
 1. `git rm` the member files, then run `uv run devkit rules fix` to rewrite alias references in current documents.
-2. Replace a retired ID in a `docs/glossary.md` Owner by hand; `devkit rules fix` does not rewrite Owners.
+2. Replace a retired ID in a `docs/steering/glossary.md` Owner by hand; `devkit rules fix` does not rewrite Owners.
 3. Correct every path, test and rule ID in a replacement's Confirmation section that no longer exists; write "Review
    only" when no check exists.
 4. Fidelity review: compare each replacement with its members (`git show <base>:<path>`) and their incoming references

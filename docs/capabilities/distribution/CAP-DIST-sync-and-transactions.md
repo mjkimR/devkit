@@ -15,10 +15,6 @@ created_at: 2026-10-17
 
 ## 1. The Installation Receipt (`.devkit/installation.json`)
 
-Selected lifecycle hooks also record an optional `host_hooks` array, each entry containing `host`, qualified
-`asset`, `event`, `handler`, `command`, `matcher` and integer `timeout`. These records own exact groups in shared host
-configuration; the shared file is never claimed by `files`. See `CAP-HOST-lifecycle-observation`.
-
 The receipt is the single record of the installed state, committed to Git, `schema = 1`:
 
 ```json
@@ -97,6 +93,10 @@ The receipt is the single record of the installed state, committed to Git, `sche
   lives in `uv.lock`. Each bundle's `packages` record names the wheel that ships it.
 
 - `execution_environment`: optional, strictly `local` or `cloud`, records the actual canonical render mode; every writing sync supplies it. Absence is explicitly unrecorded, never inferred from configuration. Ordinary sync retains ownership/conflict evidence and refreshes the field; status/check report missing evidence, and locked sync refuses the required receipt update. This is one current schema, with no version dispatch or migration reader. The field never authorizes runtime operations.
+
+Selected lifecycle hooks also record an optional `host_hooks` array, each entry containing `host`, qualified
+`asset`, `event`, `handler`, `command`, `matcher` and integer `timeout`. These records own exact groups in shared host
+configuration; the shared file is never claimed by `files`. See `CAP-HOST-lifecycle-observation`.
 
 The receipt format (`devkit_dist.features.project.repositories.receipt`) and its writer belong to `devkit-dist`, as does the
 `.devkit/config.toml` schema below.
@@ -248,7 +248,7 @@ spec = "core"
 
 ## [tool.spec]: the settings of devkit-spec; devkit passes [tool.*] tables through unread.
 # [tool.spec]
-#   worktree = true  # boolean; route 2 and above (formal specs, proposals) run in a task worktree
+#   worktree = "auto"  # "auto" | "required"; direct mode only: whether a spec or proposal activity branch runs in a separate worktree; ...
 
 ## The work-scope registry of `devkit spec scope`.
 # [tool.spec.scope]
@@ -282,14 +282,19 @@ spec = "core"
   the file in entry-point name order, after one intro line per tool naming its package.
 - **Append-only**: a key whose name the file mentions (set, or in any comment) and a table whose header the file
   mentions (commented or not) or defines (dotted keys included) are left out, so no line is changed or removed and
-  an uncommented line stays where the developer put it. A part deleted from the file is added again by the next
+  an uncommented line stays where the developer put it. Existing lines keep their bytes, line endings included; the
+  added lines end in CRLF when every line ending of the file is CRLF, and in LF otherwise. A part deleted from the file is added again by the next
   `devkit config template`. A file that cannot be read or does not validate (`CONFIG_INVALID`) is never written.
 - **Selection edits**: a new `agents` or `[presets]` entry goes right after the last key-value entry of its table,
   not after the comments that follow it, so a commented tool table never takes the entry as its own once
-  uncommented.
+  uncommented. The edit follows the line-ending rule of **Append-only**: existing lines keep their bytes, line endings
+  included, and the added lines end in CRLF when every line ending of the file is CRLF, and in LF otherwise.
 - **Failures**: an extension that fails to load, raises, is not named like a `[tool.<name>]` table
   (`devkit.config_template`) or a reserved table (`devkit.config_tables`), or returns anything but valid tables is
   left out with a `CONFIG_TEMPLATE_EXTENSION_FAILED` warning, and the command succeeds; when a selection command created the file, the warning joins the sync result's `notices`.
+- **Result**: `devkit config template` prints `path`, `state` and `added`. `state` is `unchanged` exactly when the
+  file's bytes stay the same, and otherwise `created` or `updated`; `added` names every key and table written, in
+  file order, the commented ones included. A second run after a write reports `unchanged` with `added: []`.
 - **Preview**: `devkit config template --print` writes nothing (no file, no `.devkit/`, no lock file) and adds
   `text`, the whole file a write would produce, to the output; `state` and `added` are those the write would report,
   and an invalid file is `CONFIG_INVALID` as for a write.
@@ -424,9 +429,6 @@ The result fields and every notice code are listed in the
 
 ### Locked Synchronization
 
-An unchanged receipt may also restore an absent whole host hook file from its `host_hooks` registrations. Existing
-shared host files require a plain sync for any change; see `CAP-HOST-lifecycle-observation`.
-
 The receipt, the root `AGENTS.md` block and seeded files are Git-tracked state that every clone shares; the managed
 copies under `.devkit/managed/` (and native projections a repository ignores) are rebuilt per clone. `devkit sync
 --locked` rebuilds only the latter: it plans a plain sync, and commits it only when the receipt it would write is the
@@ -441,6 +443,9 @@ receipt) writes nothing and raises `ReceiptStaleError` (`RECEIPT_STALE`): an `IN
 since updating committed files is the user's decision and an agent must not retry it away with a plain sync. Its
 `[TARGET]` names the committed paths that would change and its `[DETAIL]` lines the planned writes.
 
+An unchanged receipt may also restore an absent whole host hook file from its `host_hooks` registrations. Existing
+shared host files require a plain sync for any change; see `CAP-HOST-lifecycle-observation`.
+
 Ignored local environment and render-evidence edits are also permitted under the eligibility rules below; they do
 not alter the committed receipt.
 
@@ -448,7 +453,8 @@ A fresh clone (`just init`), `devkit worktree start` and CI run it; whoever chan
 the selection runs a plain `devkit sync` and commits what it changes. In CI, `devkit sync --locked` after the
 environment is installed both restores the managed copies the later steps read and fails when a bundle source or
 an upgraded package no longer matches the committed receipt. `sync --check` stays the read-only check for a
-workspace that is already synchronized.
+workspace that is already synchronized. `devkit sync --registrations-only`, which reconciles only optional local MCP
+registrations after locked restoration, is specified by `CAP-MCP-runtime-registration`.
 
 ### Bundle template inputs
 

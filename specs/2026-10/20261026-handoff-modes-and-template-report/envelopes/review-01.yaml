@@ -1,0 +1,20 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T03:27:09.799827Z'
+status: completed
+summary: 'code-reviewer (medium, round 1): AC-01..AC-09 confirmed by test_handoff_error_modes.py, the AC-04 CLI test, the guidance tests, the AC-08 CLI regression test and the CAP/reference text; assumption 3 confirmed; one P3 finding (CRLF line endings rewritten)'
+findings:
+- issue: devkit config template rewrites every existing line of a CRLF .devkit/config.toml to LF whenever it adds anything, and reports only the template parts in added; this breaks 'no line is changed'.
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/config.py:570 (read_text translates CRLF) and :445 (writes LF); probe scratch/review-01/crlf
+  failure_condition: A .devkit/config.toml with CRLF or lone CR line endings that lacks at least one template part
+  suggested_action: Do not expand this unit; record as follow-up feedback or waive
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test-affected 1613 passed; just test-dist 1043 passed; reviewer rerun 18+31 passed
+  lint: PASS just lint-check/check devkit-spec devkit-dist; devkit rules check --ci --base 2bbd8251 errors=0
+diff_scope:
+  base: 2bbd8251c16af4d6185acf94f5d8cc7f3b146624
+  head: 3a4c3c7f4b2d0ac39ac9a9d2968d3347de8c680f

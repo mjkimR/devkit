@@ -1,8 +1,8 @@
 ---
 id: MS-maintenance-operations
 title: Repository maintenance operations
-summary: "Makes recurring repository maintenance (drift reconciliation, weekly reporting, review and refactoring) runnable as opt-in playbooks, manually or from an external scheduler, with durable execution history kept apart from code history."
-status: active
+summary: "Makes recurring repository maintenance (drift reconciliation, weekly reporting, review and refactoring) runnable as opt-in playbooks, manually or from an external scheduler; durable run history moved to MS-maintenance-run-history."
+status: done
 created_at: 2026-10-22
 depends_on: []
 aliases:
@@ -28,8 +28,7 @@ scheduler.
 - Spec-code drift reconciliation, weekly reporting and a broad review and refactoring pass are independently
   invocable `maintenance` playbooks, each ending in explicit decisions or follow-ups backed by repository evidence.
 - An external runner retrieves a selected playbook by its exact ID and follows it; scheduling stays outside devkit.
-- Each maintenance run leaves a durable, revision-linked execution record kept apart from code history, which an
-  agent can list and read without changing the local checkout.
+- Durable, revision-linked execution records of maintenance runs moved to `MS-maintenance-run-history`.
 
 ## Non-goals
 
@@ -38,8 +37,8 @@ scheduler.
 
 ## Completion review
 
-Decomposition: pending
-Direct proposal work: pending
+Decomposition: confirmed
+Direct proposal work: confirmed
 
 Confirm both with the current Backlog close candidate; record confirmed and status done together after the user's
 confirmation. Missing assertions mean unconfirmed. Actual semantic scope changes reset both to pending; normal handoff does not.

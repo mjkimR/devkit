@@ -16,13 +16,12 @@ from pathlib import Path
 
 from devkit_core.core import UnsafePathError, resolve_within
 
+from devkit_spec.features.documents import definitions
 from devkit_spec.features.documents.services.namespaces import living_path
 from devkit_spec.utils.paths import ROOT
 from devkit_spec.utils.paths import covers as covers
 from devkit_spec.utils.paths import normalize as normalize
 from devkit_spec.utils.paths import overlaps as overlaps
-
-_LIVING_DIRECTORIES = ("docs/capabilities/", "docs/usecases/")
 
 
 def entrypoint_bearing(path: str) -> bool:
@@ -31,7 +30,8 @@ def entrypoint_bearing(path: str) -> bool:
     Every ``docs/packages/<name>/`` counts, registered as a namespace or not, so callers need no configuration.
     """
     living = living_path(path, namespaces=None)
-    return living.startswith(_LIVING_DIRECTORIES) and living.endswith(".md")
+    directories = tuple(f"docs/{row.directory}/" for row in definitions() if row.entrypoints)
+    return living.startswith(directories) and living.endswith(".md")
 
 
 def exists(root: Path, path: str, *, directory: bool = False) -> bool:

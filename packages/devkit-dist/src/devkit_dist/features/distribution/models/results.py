@@ -154,18 +154,33 @@ class Instruction:
 
 
 @dataclass(frozen=True)
+class ContextDocument:
+    """A project document of a bundle's declared context directory: its absolute path and frontmatter ``title`` and
+    ``summary``, each ``None`` when it cannot be read as a string."""
+
+    path: str
+    title: str | None
+    summary: str | None
+
+    def to_dict(self) -> dict[str, str | None]:
+        return {"path": self.path, "title": self.title, "summary": self.summary}
+
+
+@dataclass(frozen=True)
 class ContextResult:
-    """``devkit get-context``: a bundle's constitution and instruction catalog."""
+    """``devkit get-context``: a bundle's constitution, instruction catalog and context documents."""
 
     bundle: str
     constitution: str | None
     instructions: list[Instruction]
+    documents: list[ContextDocument] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "bundle": self.bundle,
             "constitution": self.constitution,
             "instructions": [item.to_dict() for item in self.instructions],
+            "documents": [item.to_dict() for item in self.documents],
         }
 
 

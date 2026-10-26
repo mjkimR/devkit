@@ -1,6 +1,6 @@
 schema = 1
 name = "devkit-dev"
-version = "0.1.3"
+version = "0.1.4"
 default_preset = "structure"
 
 [[assets]]
@@ -25,3 +25,11 @@ source = "rules/usecase-boundaries"
 
 [presets.structure]
 assets = ["project-structure", "testing", "architecture", "usecase-boundaries"]
+
+[[assets]]
+id = "handbook"
+kind = "playbook"
+source = "playbooks/handbook.md"
+
+[presets.handbook]
+assets = ["handbook"]

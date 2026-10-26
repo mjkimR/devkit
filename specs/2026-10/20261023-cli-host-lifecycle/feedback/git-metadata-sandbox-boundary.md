@@ -8,7 +8,7 @@ target: workspace sandbox permissions for `git commit` in linked worktrees
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-23
 ---
 
@@ -36,3 +36,12 @@ Observed: git commit in the Development worktree required sandbox escalation to 
 - **Conditions**: Managed workspace-write sandbox, linked Git worktree.
 - **Workarounds Attempted**: Authorized `require_escalated` Git commit; passed.
 - **Related Assets**: `git commit`; linked-worktree Git metadata.
+
+## Disposition
+
+Resolved by `SPEC-delegation-sandbox-guidance`: the `spec` skill's `references/worktree.md` ("Sandboxed sessions")
+states that a linked worktree's commits write the base's shared Git directory (`git rev-parse --git-common-dir`) and
+that, when it is outside the writable roots, the agent requests the host's approval per operation or continues once
+the user has added the path; devkit changes no host setting. Making Git metadata writable is the host's sandbox
+configuration and stays out of devkit's scope. Verified by
+`packages/devkit-spec/tests/integration/bundles/spec/test_delegation_sandbox_guidance.py`.

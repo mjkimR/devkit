@@ -8,7 +8,6 @@ an operation's outcome.
 from __future__ import annotations
 
 import contextlib
-import logging
 import posixpath
 import re
 from collections.abc import Sequence
@@ -17,6 +16,7 @@ from pathlib import Path
 
 from devkit.advisory import Actor, AdvisoryError, Level, Retry
 from devkit_core.base.usecase import BaseUseCase
+from devkit_core.core.logs import get_logger
 
 from devkit_spec.base.errors import (
     ScopeAckFailedError,
@@ -247,9 +247,12 @@ def auto_register(root: Path, spec_dir: str, *, source: str) -> tuple[Registered
         return None, []
 
 
+_log = get_logger(__name__)
+
+
 def _automatic_diagnostic(code: str) -> None:
     with contextlib.suppress(Exception):
-        logging.getLogger(__name__).info("SPEC_SCOPE_AUTO_REGISTER_DIAGNOSTIC cause=%s", code)
+        _log.info("SPEC_SCOPE_AUTO_REGISTER_DIAGNOSTIC cause=%s", code)
 
 
 # --- own record ---------------------------------------------------------------------------------------------------

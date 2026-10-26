@@ -1,0 +1,17 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T03:27:22.887387Z'
+status: completed
+review: review-01.yaml
+summary: ''
+findings:
+- issue: devkit config template rewrites every existing line of a CRLF .devkit/config.toml to LF whenever it adds anything, and reports only the template parts in added; this breaks 'no line is changed'.
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/config.py:570 (read_text translates CRLF) and :445 (writes LF); probe scratch/review-01/crlf
+  failure_condition: A .devkit/config.toml with CRLF or lone CR line endings that lacks at least one template part
+  suggested_action: Do not expand this unit; record as follow-up feedback or waive
+  resolution: waived
+  waiver: Outside the agreed scope (pre-existing CRLF handling, not the reported mismatch); recorded as FB-config-template-rewrites-crlf-line-endings for a later unit
+  severity: P3
+checks: {}

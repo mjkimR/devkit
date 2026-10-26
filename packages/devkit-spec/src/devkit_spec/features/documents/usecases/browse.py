@@ -272,8 +272,28 @@ class ReferenceDocumentsUseCase(BaseUseCase):
         return document, keys, items, index.problems
 
 
+@dataclass(frozen=True)
+class ListResult:
+    """``selected`` every matching document in list order, ``shown`` its page, ``hidden`` the documents that match
+    every other filter but were left out as historical (``0`` with ``--history`` or ``--status``)."""
+
+    selected: list[Document]
+    shown: list[Document]
+    hidden: int
+    tasks: dict[str, str | None]
+    notices: list[AdvisoryError]
+    scope: NamespaceScope
+    planning: dict[str, str]
+    where: Where
+    historical: dict[str, bool]
+
+
 class ListDocumentsUseCase(BaseUseCase):
-    """ListDocuments execution boundary."""
+    """ListDocuments execution boundary.
+
+    Historical documents (``DocumentIndex.is_browsing_historical``) are hidden unless ``history``; a ``status``
+    filter replaces that default, so a named status shows its documents whatever their history.
+    """
 
     def execute(
         self,
@@ -289,16 +309,7 @@ class ListDocumentsUseCase(BaseUseCase):
         where_items: tuple[str, ...],
         offset: int,
         limit: int,
-    ) -> tuple[
-        list[Document],
-        list[Document],
-        dict[str, str | None],
-        list[AdvisoryError],
-        NamespaceScope,
-        dict[str, str],
-        Where,
-        dict[str, bool],
-    ]:
+    ) -> ListResult:
         _check_page(limit, offset)
         where = parse_filter_options(where_items, file)
         index = DocumentIndex.load(root)
@@ -309,11 +320,10 @@ class ListDocumentsUseCase(BaseUseCase):
         statuses = set(requested)
         wanted = {Kind(kind) for kind in kinds}
         planning = _planning(index)
-        selected = [
+        matching = [
             document
             for document in index.documents
             if (not wanted or document.kind in wanted)
-            and (history or not index.is_historical(document))
             and (not statuses or _shown_status(document, planning).lower() in statuses)
             and (not area or area.lower() in document.area.lower())
             and (not query or query.lower() in document.id.lower() or query.lower() in document.title.lower())
@@ -321,11 +331,15 @@ class ListDocumentsUseCase(BaseUseCase):
             and scope.accepts(document)
             and (file is None or _overlaps(document, file))
         ]
+        everything = history or bool(statuses)
+        selected = [document for document in matching if everything or not index.is_browsing_historical(document)]
         selected.sort(
             key=lambda document: (_KIND_ORDER[document.kind], _severity_rank(document), document.id, document.path)
         )
         shown = page(selected, offset, limit)
         tasks = {document.path: _tasks(index.root, document) for document in shown}
         notices = [*index.problems, *_unknown_statuses(index, wanted, requested)]
-        historical = {document.path: index.is_historical(document) for document in shown}
-        return selected, shown, tasks, notices, scope, planning, where, historical
+        historical = {document.path: index.is_browsing_historical(document) for document in shown}
+        return ListResult(
+            selected, shown, len(matching) - len(selected), tasks, notices, scope, planning, where, historical
+        )

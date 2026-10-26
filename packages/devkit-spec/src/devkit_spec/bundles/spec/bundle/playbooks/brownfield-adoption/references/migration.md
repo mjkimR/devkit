@@ -12,7 +12,8 @@ legacy content up front.
 | Context, containers, components, runtime, deployment, cross-cutting concepts | arc42 chapter `docs/architecture/ARCH-<NN>-<slug>.md` |
 | A decision with its rationale | `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, dated by the original decision |
 | Setup, build, release and contribution guides | `docs/development/` |
-| Terms | `docs/glossary.md` |
+| Terms | `docs/steering/glossary.md` |
+| Project-wide background (product purpose, tone or style guide, domain overview) | A steering document `docs/steering/<topic>.md` with `title` and `summary` frontmatter |
 | Agent working rules | `AGENTS.md` outside the markers when every task needs it; otherwise an instruction, playbook or rule (`spec-rule` skill) in the in-repository bundle |
 | An in-progress feature spec (for example spec-kit `specs/NNN-*/`) | A new spec through the `spec` skill when that work resumes |
 | Research, meeting notes, superseded plans, completed specs | Stay in `_legacy/` |

@@ -1,0 +1,31 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:56:07.347956Z'
+status: completed
+summary: 'reconcile-reviewer (native nested, medium) at 5508c1f8: four targets verified against manifest and playbook; two P2 and one P3 findings'
+findings:
+- issue: no-impact reasoning for docs/architecture and CAP-DLV-delivery-workflows omits the overall-refactor applicability refinement for review-refactor work items
+  evidence: specs/2026-10/20261026-review-refactor/reconcile.md:38-40; docs/architecture/ARCH-04-delivery-strategy.md:107-108; docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:65-66
+  failure_condition: an agent classifying a two-module review-refactor work item from ARCH-04 or CAP-DLV-delivery-workflows rule 1 routes it to spec-depth feature work
+  suggested_action: state the refinement in CAP-DLV-delivery-workflows rule 1 (and ARCH-04) or extend the no-impact rationale
+  resolution: open
+  severity: P2
+- issue: CAP-DLV-review-refactor §4.6 requires direct mode without a Unit unconditionally, while §4.5 sends single-module work items to the feature workflow at its own depth
+  evidence: docs/capabilities/delivery/CAP-DLV-review-refactor.md:75-82; references/applying.md:3-5
+  failure_condition: a single-module work item at spec depth violates §4.6
+  suggested_action: scope §4.6 to the refactor route
+  resolution: open
+  severity: P2
+- issue: UC step 7 has no extension for a host without subagents (self-review recorded as such)
+  evidence: docs/usecases/governance/UC-review-and-refactor-accumulated-slop.md:47-48,57
+  failure_condition: a use-case reader sees no review path without subagents
+  suggested_action: add extension 7a
+  resolution: open
+  severity: P3
+checks:
+  rules_check_ci: PASS errors=0 warnings=0 base 08f91ca7
+diff_scope:
+  base: 08f91ca79396d564bb6d821a7fa0a841b9df729a
+  head: 5508c1f86feddefd5da65dccf6905492309547b9

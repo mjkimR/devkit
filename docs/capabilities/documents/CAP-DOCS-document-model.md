@@ -23,8 +23,8 @@ each other. `devkit_spec.features.documents` implements it as a workspace index 
 reusing a file's parse result, also between processes, only while its path and text are unchanged. The
 lookup commands (`CAP-DOCS-document-lookup`), document search (`CAP-DOCS-document-search`), namespaces
 (`CAP-DOCS-namespaces`) and spec rules (`CAP-GOV-spec-rules`) resolve document identities through this index.
-`RULE-document-reference` also reads root glossary Owner cells through the rules workspace cache; the glossary
-stays ID-free and unindexed, and its Owner references do not become graph edges.
+`RULE-document-reference` also reads root glossary Owner cells and the IDs cited in steering files through the rules
+workspace cache; these files stay ID-free and unindexed, and their references do not become graph edges.
 
 ## 2. Scope & Boundary
 
@@ -80,7 +80,21 @@ stays ID-free and unindexed, and its Owner references do not become graph edges.
    `status: completed` are historical: work history kept in place. Browsing and search MUST hide them unless
    `--history` is passed; the rules check them only when they are named as explicit targets. The bundle's
    `feedback/` directory is the exception: observations may remain open after the bundle completes,
-   so feedback of every status MUST stay current whatever the bundle's status (`SPEC-open-feedback-and-progress`). Milestones whose status is done or dropped are also historical: hidden from browsing/search by default, resolvable and available with `--history`; rules check them only when explicitly targeted. A user-decided merge into a broader theme milestone MAY delete one; its ID then resolves as an alias of the theme (`ADR-milestone-merging`).
+   so its feedback MUST NOT become historical through the bundle's status (`SPEC-open-feedback-and-progress`); open
+   feedback stays current, and feedback of a terminal status is historical by rule 8. Milestones whose status is done or dropped are also historical: hidden from browsing/search by default, resolvable and available with `--history`; rules check them only when explicitly targeted. A user-decided merge into a broader theme milestone MAY delete one; its ID then resolves as an alias of the theme (`ADR-milestone-merging`).
+8. **Terminal statuses**: a document whose own status is terminal for its kind, compared case-insensitively, is
+   historical for browsing and search whatever bundle holds it: feedback `resolved`, `promoted`, `dismissed` and
+   `forwarded`, decision `superseded`, proposal `rejected` (`ADR-terminal-statuses-are-historical`). Browsing and
+   search MUST hide it unless `--history` is passed (or `list --status` names its status, `CAP-DOCS-document-lookup`);
+   its ID stays resolvable and its references queryable. Unlike rule 7, the rules keep checking it on every run.
+
+9. **Steering documents**: `docs/steering/` holds project-wide background that is neither a contract nor evidence
+   (`ADR-steering-documents-directory`): one Markdown file per topic directly in the directory, with only `title` and
+   `summary` frontmatter and no `id`, so by rule 3 none is a document, and none is a search candidate. The glossary
+   (`glossary.md`, with the search synonyms `glossary.yaml`) is its first member. There is no namespace copy; a
+   package glossary stays at `docs/packages/<name>/glossary.md`. `devkit get-context spec` lists every steering file's
+   `title` and `summary` (`CAP-DIST-context-and-playbooks`), `RULE-steering-documents` bounds the directory and
+   `RULE-document-reference` resolves the IDs it cites (`CAP-GOV-spec-rules`).
 
 Proposal-local feedback also stays current while a rejected proposal awaits cleanup. Handoff carries open feedback
 into the spec; Host deletion without handoff preserves it in the month-level backlog
@@ -131,6 +145,15 @@ live; the index itself does not check it.
 
 The table order is the kind order: `devkit spec list` sorts by it. Living Spec documents of a namespace live under
 `docs/packages/<name>/` with the same layout (`CAP-DOCS-namespaces`).
+
+The kind definition table in the documents models is the single definition of kinds
+(`ADR-kind-definition-table-keyed-on-the-declared-kind-enum`): one row per `Kind` member, in the order above, holds
+the prefix and the per-kind facts the index and the rules read (its directory, Living Spec membership, area scoping,
+the `RULE-spec-format` scope, whether a first H1 carries an ID token, the summary requirement, whether it bears
+`entrypoints`, its terminal statuses, its fix-time default status and the relation fields that take its IDs). The
+ID pattern and prefix map derive from the rows. A table with a missing, extra or reordered row, a prefix or relation
+field in two rows, or an inconsistent row MUST fail with `KindTableError`; a consumer that lacks a fact a kind needs
+MUST fail the same way instead of applying another kind's. Path grammars and lifecycles stay kind-specific code.
 
 ### 3.3 References
 
@@ -221,7 +244,7 @@ The table order is the kind order: `devkit spec list` sorts by it. Living Spec d
 | --- | --- | --- |
 | `id` | string | The document ID. |
 | `reconcile_id` | string | The ID of a reconcile record (used when `id` is absent). |
-| `status` | string | Lifecycle status; `completed` on a `spec.md` makes its bundle historical, its feedback aside. |
+| `status` | string | Lifecycle status; `completed` on a `spec.md` makes its bundle historical, its feedback aside; a terminal status makes the document historical for browsing (rule 8). |
 | `title` | string | Display title (any language). |
 | `summary` | string | One or two English sentences; embedded by search. |
 | `area` | string | Area of a capability or use case (its directory). |
@@ -260,8 +283,16 @@ index.canonical_id("CAP-CORE-old")  # the canonical ID, else the written value
 index.alias_collisions()  # [(alias, [every document involved]), ...]
 index.outgoing(document)  # {canonical target ID: [Reference, ...]}
 index.incoming(document.id)  # {source ID: [Reference, ...]}, alias-written references included
-index.is_historical(document)  # a file of a completed spec bundle outside its feedback/
+index.is_historical(document)  # a completed bundle's file outside its feedback/, or a done/dropped milestone
+index.is_terminal(document)  # its status is one of its kind's terminal_statuses in the kind table (rule 8)
+index.is_browsing_historical(document)  # what list and search hide unless asked: either of the above
 ```
+
+`definitions()` returns the kind table in kind order and `definition(kind)` one row (`KindDefinition`);
+`relation_prefixes()` maps each relation field to the prefix it takes, `by_prefix(value)` returns the row whose
+prefix opens `value` as `<PREFIX>-...`, and `KindTableError` reports an inconsistent table or a missing fact. A row's
+`summary` is a `Summary` (`always`, `anchor`, `never`) and its `format_scope` a `FormatScope` (`none`, `global`,
+`every-root`). `PREFIXES` and `TERMINAL_STATUSES` are copies of the rows taken at import.
 
 `parse_document(path, text)` reads one document (`None` without a well-formed ID); `visible_lines` is the prose
 scanner behind reference extraction; `SOURCE_DIRECTORIES`, `is_document_file` and `in_source_directory` expose the

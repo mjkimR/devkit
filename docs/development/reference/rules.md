@@ -24,6 +24,9 @@ devkit rules explain RULE-ID [-w DIR] [--rules-dir DIR] [--format text|json]
 devkit rules test [RULE-ID]... [-w DIR] [--rules-dir DIR] [--format text|json] [-- PYTEST-ARGS...]
 ```
 
+`phases` and `test` are authoring commands: callable with their own `--help`, hidden from `devkit rules --help`
+(`CAP-GOV-rules-engine`).
+
 In another project: `uv add "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"`,
 then `uv run devkit rules check`. In this monorepo, `just rules-check`,
 `just rules-fix`, `just rules-phases`, `just rules-explain` and `just rules-test`

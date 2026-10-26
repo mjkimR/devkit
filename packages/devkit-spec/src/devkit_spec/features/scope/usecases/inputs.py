@@ -21,6 +21,10 @@ def from_proposal(root: Path, slug: str) -> ScopeSet:
     return declared_proposal(root, clean_slug(slug))
 
 
+def from_spec(root: Path, spec_dir: str) -> ScopeSet:
+    return declared_spec(root, spec_dir)
+
+
 def _fork_point(root: Path, base_ref: str, deadline: Deadline) -> str:
     """``git merge-base <base_ref> HEAD``; ``""`` when the ref does not resolve or shares no history with HEAD."""
     try:
@@ -104,7 +108,3 @@ def observe_git(
     add(git_lines(root, "ls-files", "-z", "--others", "--exclude-standard", deadline=deadline))
     observed.sort(key=lambda path: path.path)
     return observed, unresolved
-
-
-def from_spec(root: Path, spec_dir: str) -> ScopeSet:
-    return declared_spec(root, spec_dir)

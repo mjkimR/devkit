@@ -48,3 +48,8 @@ export function cacheResult<T>(
 export function clearRepositoryCache(source: RepositoryDataSource) {
 	caches.delete(source);
 }
+/** Whether work that started in `generation` may still publish to this source's caches. */
+export const isCurrentGeneration = (
+	source: RepositoryDataSource,
+	generation: ReturnType<typeof cacheGeneration>
+) => caches.get(source) === generation;

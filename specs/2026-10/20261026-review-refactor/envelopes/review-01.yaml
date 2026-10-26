@@ -1,0 +1,44 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:52:03.484910Z'
+status: completed
+summary: 'code-reviewer (native nested subagent, medium): AC-01..AC-08 hold; tests and rules pass at 59e934f8; one P2 (commit-check revert scope) and four P3 doc/record findings'
+findings:
+- issue: applying.md §4 step 2 says to revert anything else in the working tree, beyond the agreed rule; it can discard the user's unrelated uncommitted work recorded at intake
+  evidence: packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/review-refactor/references/applying.md:53-54; SKILL.md:20,85-86
+  failure_condition: intake records unrelated dirty paths or the user edits during the run; before the first commit the agent reverts them and the user's work is lost
+  suggested_action: limit the revert to files the run wrote; for pre-existing or foreign dirty paths, stop and have the user commit, stash or exclude them before the branch is created
+  resolution: open
+  severity: P2
+- issue: fixture-exercise.md says the fixture was removed after the record; it remains under the ignored scratch/rr-fixture because the deletion was denied
+  evidence: specs/2026-10/20261026-review-refactor/materials/fixture-exercise.md:4-5; tasks.md Task 3.2 _Boundary_
+  failure_condition: a reader of the manual evidence believes the fixture is gone
+  suggested_action: state that the fixture remains (ignored, never committed) because its removal was denied, or have the Host delete it
+  resolution: open
+  severity: P3
+- issue: 'read conditions conflict: the decision round needs applying.md §1 (route, write scope) but SKILL.md §5 and applying.md:3 say to read applying.md only after approval'
+  evidence: SKILL.md:67-68,85; references/applying.md:3
+  failure_condition: an agent following the read conditions holds the round without the route or write scope
+  suggested_action: read applying.md §1 before the round when changes are proposed; the rest after approval
+  resolution: open
+  severity: P3
+- issue: AC-05 checklist lacks rows for one batch = one behavior-preserving work item (contract changes separate) and evidenced problem versus stylistic preference
+  evidence: specs/2026-10/20261026-review-refactor/materials/checklist.md:37-61
+  failure_condition: a reviewer cannot confirm these two agreed rules from the checklist
+  suggested_action: add both rows
+  resolution: open
+  severity: P3
+- issue: UC scenario 5 says an unattended run ends with no file changes, but the run report is always written
+  evidence: docs/usecases/governance/UC-review-and-refactor-accumulated-slop.md:120; SKILL.md:90
+  failure_condition: the report file reads as a breach of the minimal guarantee
+  suggested_action: 'reword: nothing is applied and no file other than the run report changes'
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS pytest test_bundles.py -k 'maintenance or review_refactor' 9 passed; just test devkit-catalog 71 passed
+  lint: PASS devkit rules check --ci --base 08f91ca7
+diff_scope:
+  base: 08f91ca79396d564bb6d821a7fa0a841b9df729a
+  head: 59e934f888e747437c2ad368930b479c6d3fc4ec

@@ -1,7 +1,7 @@
 ---
 id: CAP-GOV-spec-rules
 title: Spec Governance Rules
-summary: "Defines the eleven spec governance rules, their snapshot targeting and fixes, including separate milestone/unit dependency graphs and proposal-only milestone hygiene."
+summary: "Defines the twelve spec governance rules, their snapshot targeting and fixes, including separate milestone/unit dependency graphs and proposal-only milestone hygiene."
 area: governance
 status: active
 usecases:
@@ -18,7 +18,7 @@ created_at: 2026-10-13
 
 ## 1. Summary
 
-The `spec` bundle ships eleven deterministic rules that keep the Living Spec and the feature specs consistent. `devkit
+The `spec` bundle ships twelve deterministic rules that keep the Living Spec and the feature specs consistent. `devkit
 sync` deploys them with the bundle's `core` preset, and devkit's rule engine runs them beside its own rules:
 `devkit rules check` (whole workspace or named targets), `check --staged` (the commit gate), `check --ci --base <ref>`
 and `devkit rules fix`. This capability is the catalog and the contract summary of each rule; the full guide of a rule
@@ -47,7 +47,7 @@ Every rule is phase `linter` and is deployed by the `core` preset; every rule is
 
 | Rule | Checks | Fix |
 | --- | --- | --- |
-| `RULE-document-reference` | Relation fields hold full IDs of the right kind; every reference resolves to exactly one document; prose uses the code-span form; current documents use canonical IDs, not aliases; no relative links to ID-bearing documents; no duplicate IDs; well-formed, non-colliding aliases; no proposal sharing its slug with a spec. | Bracket form to code-span form; a handed-off `PROP-<slug>` to its canonical spec ID; an alias reference to the canonical ID. |
+| `RULE-document-reference` | Relation fields hold full IDs of the right kind; every reference resolves to exactly one document; prose uses the code-span form; current documents use canonical IDs, not aliases; no relative links to ID-bearing documents; no duplicate IDs; well-formed, non-colliding aliases; no proposal sharing its slug with a spec; IDs cited in steering files and glossary Owners resolve. | Bracket form to code-span form; a handed-off `PROP-<slug>` to its canonical spec ID; an alias reference to the canonical ID. |
 | `RULE-id-convention` | Dated partitions and path-derived IDs; Living Spec stems; `area` matching the directory; the first H1's ID token; duplicate path-derived IDs; no date- or number-based references. | `id`, `reconcile_id`, `area` and the H1 token aligned to the path. |
 | `RULE-spec-format` | Capabilities, use cases and proposals have a frontmatter block with string `id`, `title`, `status`; a proposal's `planning_effort` and `dev_effort` are `low`, `medium` or `high`; a proposal's or spec's `namespace` is `global` or registered. | Adds a missing block or missing fields. |
 | `RULE-traceability-link` | A use case's `capabilities` and a capability's `usecases` link both ways. | Appends the missing reverse ID. |
@@ -58,6 +58,7 @@ Every rule is phase `linter` and is deployed by the `core` preset; every rule is
 | `RULE-code-entrypoints` | Every `entrypoints` path of a capability or use case is a valid, existing workspace path. | none |
 | `RULE-proposal-boundaries` | A current proposal's `target_area` and `boundaries.owns` entries name existing paths. | none |
 | `RULE-document-summary` | Searchable documents carry a short English `summary`. | none |
+| `RULE-steering-documents` | `docs/steering/` is flat and holds ID-free files with a `title` and a short English `summary`, within the file-count and body-size caps. | none |
 
 ### 3.2 Shared Behavior
 
@@ -81,7 +82,14 @@ Every rule is phase `linter` and is deployed by the `core` preset; every rule is
    the rules cannot tell which documents follow which conventions.
 7. **Fixes**: fixes are deterministic, idempotent, honor `devkit rules fix --dry-run`, write only targeted current
    files, and change only the bytes they own.
-8. **Tuning**: a project tunes phases, severities, exclusions and settings in `[rules]` of `.devkit/config.toml`
+8. **Kind facts**: the rules read each kind's Living Spec membership and directory, area scoping, summary
+   requirement, entrypoint-bearing flag, `RULE-spec-format` scope, fix-time default status, heading-token prefix and
+   relation-field prefixes from the kind definition table (`CAP-DOCS-document-model` section 3.2) when they run; rule
+   codes, messages and remediations do not depend on where a fact is kept. A Living Spec kind without a path grammar
+   in `RULE-id-convention`, an area-scoped kind whose grammar sets no area, or an identifier target without a path
+   remediation MUST fail the run as a rule execution error (`RULES_RUN_FAILED`, raised from `KindTableError`) instead
+   of being checked under another kind's rule.
+9. **Tuning**: a project tunes phases, severities, exclusions and settings in `[rules]` of `.devkit/config.toml`
    (devkit's), for example `[rules.phase_overrides]` to move `RULE-document-summary` to `hygiene` while summaries are
    written, and `[rules.settings.RULE-document-summary] max_length`.
 
@@ -89,14 +97,19 @@ Every rule is phase `linter` and is deployed by the `core` preset; every rule is
 
 Documents reference each other by exact, resolvable full IDs. Checks every current document that is not a material.
 
-The root `docs/glossary.md` is an additional, ID-free input: in five-column tables headed
+The root glossary `docs/steering/glossary.md` is an additional, ID-free input: in five-column tables headed
 `Term | Definition | Owner | Avoid | Code identifiers` with a Markdown separator row, backticked or bracketed full
 IDs in the Owner column MUST resolve to exactly one indexed document. Missing and ambiguous owners produce errors
 at their source line; an Owner naming an alias is reported (not fixed) with the canonical ID. Empty cells and non-reference text are allowed. The header fixes the Owner column;
 rows may omit trailing cells or have surplus cells without moving that column. This extension only validates resolution:
 no autofix, mandatory owners, glossary indexing or graph edges. Other columns, surrounding prose, legacy tables,
-package glossaries and other ID-free files are outside its scope. Existing prose masking, file targeting,
+package glossaries and other ID-free files are outside the Owner check. Existing prose masking, file targeting,
 exclusions and snapshot cache rules apply.
+
+The steering files (the Markdown files directly in `docs/steering/` other than `README.md`, the glossary included)
+are a second ID-free input: every backticked full ID in their visible text MUST resolve to exactly one indexed
+document, and one naming an alias is reported (not fixed) as `` <alias> is an alias of <ID>; name `<ID>` ``. An ID
+the Owner check already examined on the same line is not reported again. No autofix, indexing or graph edges.
 
 - MUST report: a relation field of the wrong shape, a value that is not a full ID, or an ID of the wrong kind
   (`usecases`, `related_usecases` take `UC`; `capabilities`, `related_capabilities` take `CAP`; `spec` takes `SPEC`;
@@ -286,6 +299,21 @@ A proposal's boundary is copied into its spec at handoff, so it names real paths
 - Setting: `max_length` (default `300`, a positive integer). Materials are exempt. Not fixable: a summary is written,
   never generated.
 
+### 3.14 `RULE-steering-documents`
+
+Steering documents are listed in every agent context (`ADR-background-pointer-in-constitution`), so the directory stays
+small and each entry readable. Only the root `docs/steering/` is checked, and only when the run targets a file in it.
+
+- MUST report: a file in a subdirectory of `docs/steering/`; a file that is neither `*.md` nor `glossary.yaml`;
+  a file that is not UTF-8; frontmatter that does not parse or that closes after the first 4096 bytes (what
+  `devkit get-context` reads); an `id` key; a missing or empty `title`; a missing or empty `summary`, a letter
+  outside the Latin script in it, or one longer than `max_summary_length` characters; a body (the text after the
+  frontmatter) larger than `max_body_bytes` UTF-8 bytes; each Markdown file beyond `max_files` in sorted order,
+  whenever any steering file is targeted, so a commit adding a file is refused even when the new file sorts first.
+- `README.md` is neither checked nor counted.
+- Settings: `max_files` (default `10`), `max_body_bytes` (default `24576`) and `max_summary_length` (default `300`),
+  each a positive integer. Not fixable.
+
 ## 4. Interfaces & Data Contracts
 
 ### 4.1 Commands (devkit's)
@@ -317,8 +345,8 @@ Each rule is a class in `devkit_spec.features.governance.<name>` (`ADR-spec-pack
 `rules/<name>/rule.py`, a thin subclass (devkit instantiates only classes a rule file defines), and the guide
 `rules/<name>/guide.md`, to `.devkit/managed/spec/rules/<name>/`. Keeping the logic in the package means one tested
 implementation and a deployed file that never changes when the rule does. A rule whose judgment lives in a bundle
-instruction names it in `related` (`spec:living-spec-writing` for the reference, traceability, summary, identifier and
-lifecycle rules, `spec:contract-authoring` for `RULE-task-coverage`), and `devkit rules explain` prints its deployed
+instruction names it in `related` (`spec:living-spec-writing` for the reference, traceability, summary, steering,
+identifier and lifecycle rules, `spec:contract-authoring` for `RULE-task-coverage`), and `devkit rules explain` prints its deployed
 path. `devkit_spec.features.governance` exposes `document_index(ctx)`, `namespaces(ctx)` and the targeting helpers the rules share.
 
 A rule's tests live in its folder, `rules/<name>/tests/test_rule.py`, and deploy with it. They load the rule with

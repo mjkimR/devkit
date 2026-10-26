@@ -14,7 +14,7 @@ exists. The Planning executor clears its reports before the `plan-accept` reques
   `boundaries.excludes` is not checked.
 - **Resolution**: an entry is a literal repository-relative path and resolves when it names an existing path, tried
   in this order:
-  1. relative to the repository root (`packages/devkit-spec/src/devkit_spec/`, `docs/glossary.md`);
+  1. relative to the repository root (`packages/devkit-spec/src/devkit_spec/`, `docs/steering/glossary.md`);
   2. relative to the proposal's namespace docs root (`docs/packages/<name>/`, when `namespace` names a registered
      namespace), then to `docs/` (`capabilities/delivery/`, `usecases/delivery/`);
   3. as a capability area under the namespace's `capabilities/`, then `docs/capabilities/` (`delivery/`).
@@ -23,6 +23,10 @@ exists. The Planning executor clears its reports before the `plan-accept` reques
   names the repository's `src/`, never a capability area of that name.
 - **Paths the Development will create**: name the nearest existing parent directory (for a new rule folder,
   `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/`) and name the new path itself in the proposal text.
+- **Paths a prerequisite creates or moves**: while a `depends_on` prerequisite that creates or moves a path has not
+  landed, keep the path as it exists now (or its nearest existing parent) and name the expected path in the proposal
+  text. The handoff runs after the prerequisite lands, and Development writes the expected path in its `_Boundary:`
+  entries; the accepted proposal is not edited for it.
 - **Targeting**: reported for the targeted anchors and in a whole-workspace run. There is no rescan for deleted
   paths, and a run targeting `.devkit/config.toml` does not recheck proposals. Snapshot runs (`--staged`, `--ci`)
   resolve paths in the snapshot's tree, where an empty directory does not exist.

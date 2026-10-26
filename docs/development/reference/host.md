@@ -31,13 +31,14 @@ it. Native integration confirmation and execution are described in `CAP-INT-mcp-
 
 ## MCP services
 
-Install `devkit-mcp`, or `devkit-agt[mcp]` for integration, in a retained base/tool runtime. The optional wheel
-mounts `devkit mcp`; domain tools remain in agt/spec. See `CAP-MCP-runtime-registration` and `CAP-INT-mcp-services`.
+Install `devkit-mcp`, or `devkit-agt[mcp]`, in a retained base/tool runtime for devkit-dist's shared artifact tools;
+integration, proposal acceptance and handoff are CLI commands, never MCP tools. The optional wheel mounts
+`devkit mcp`; domain tools remain in agt/spec. See `CAP-MCP-runtime-registration` and `CAP-INT-mcp-services`.
 
 | Command | Result |
 | --- | --- |
 | `devkit mcp status --descriptor [-w WORKSPACE] [--executable PATH] --format json` | Verified retained descriptor; no writes |
-| `devkit mcp setup [-w WORKSPACE] [--host codex|claude] [--executable PATH]` | Exact eligible project reconciliation |
+| `devkit mcp setup [-w WORKSPACE] [--host codex|claude|antigravity] [--executable PATH]` | Exact eligible project reconciliation |
 | `devkit mcp remove [-w WORKSPACE]` | Exact owned entry removal; local exclusions retained |
 | `devkit sync --registrations-only [-w WORKSPACE]` | Reconcile optional registrations after locked asset restoration; no asset changes |
 | `devkit mcp status [-w WORKSPACE] --format json` | Desired/recorded/project facts, runtime and unknown host state |

@@ -45,7 +45,15 @@ from devkit_core.core.frontmatter import BOM, load_header, locate
 from devkit_core.core.yaml import safe_load
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
-from devkit_spec.features.documents import Document, DocumentIndex, in_source_directory, is_document_file
+from devkit_spec.features.documents import (
+    Document,
+    DocumentIndex,
+    FormatScope,
+    by_prefix,
+    definitions,
+    in_source_directory,
+    is_document_file,
+)
 from devkit_spec.features.governance import FIX_COMMAND, document_index, explicitly_targeted, namespaces, reportable
 from devkit_spec.features.policy.services.config import GLOBAL, Namespace
 
@@ -55,8 +63,6 @@ PROPOSALS = "docs/proposals"
 # ``devkit_spec.features.proposals``, which imports the rules.
 PROPOSAL_FILE = "proposal.md"
 TARGET_DOCS = "target-docs.md"
-SCOPE = ("docs/capabilities", "docs/usecases", PROPOSALS, "docs/roadmap")
-NAMESPACE_SCOPE = ("capabilities", "usecases")
 NAMESPACE_FIELD = "namespace"
 EFFORT_FIELDS = ("planning_effort", "dev_effort")
 EFFORTS = ("low", "medium", "high")
@@ -171,8 +177,14 @@ def _problems(ctx: RuleContext, path: str) -> list[_Problem]:
 
 
 def _directories(registered: tuple[Namespace, ...]) -> list[str]:
-    """``SCOPE``, then the ``NAMESPACE_SCOPE`` directories of each namespace docs root."""
-    return [*SCOPE, *(f"{namespace.docs}/{name}" for namespace in registered for name in NAMESPACE_SCOPE)]
+    """The ``docs/<directory>`` of every kind the rule checks (its ``format_scope`` in the kind table), then the
+    directories of the kinds checked in every docs root under each namespace docs root, in table order."""
+    rows = [row for row in definitions() if row.format_scope is not FormatScope.NONE]
+    every_root = [row.directory for row in rows if row.format_scope is FormatScope.EVERY_ROOT]
+    return [
+        *(f"docs/{row.directory}" for row in rows),
+        *(f"{namespace.docs}/{name}" for namespace in registered for name in every_root),
+    ]
 
 
 def _scope(ctx: RuleContext) -> list[str]:
@@ -315,13 +327,8 @@ def _field_line(text: str, name: str) -> int:
 def _fixed(text: str, stem: str, document_id: str | None, today: str) -> str | None:
     """``text`` with its missing required fields filled in (``id`` only when ``document_id`` is set, ``title``
     defaulting to ``stem``); ``None`` when its frontmatter cannot be fixed."""
-    default_status = (
-        "planned"
-        if document_id and document_id.startswith("MS-")
-        else "open"
-        if document_id and document_id.startswith("FB-")
-        else DEFAULT_STATUS
-    )
+    row = by_prefix(document_id) if document_id else None
+    default_status = row.default_status if row is not None else DEFAULT_STATUS
     try:
         block = locate(text)
     except FrontmatterError:

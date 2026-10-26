@@ -265,7 +265,7 @@ def test_creation_failure_and_logging_failure_are_silent(
     monkeypatch.setattr(flow, "register", broken)
     assert auto_register(linked, UNIT, source="spec-new") == (None, [])
     with monkeypatch.context() as local:
-        local.setattr(flow.logging, "getLogger", broken)
+        local.setattr(flow._log, "info", broken)
         result = auto_register(linked, UNIT, source="handoff")
     assert result == (None, [])
 

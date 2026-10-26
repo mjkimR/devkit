@@ -292,7 +292,8 @@ def envelope_review_cmd(**options: Any) -> None:
 @boundary
 def envelope_reverify_cmd(**options: Any) -> None:
     """Write the next reverify-NN.yaml: carry the findings of the round it closes (--from latest, or a
-    challenger-NN.yaml of Planning) and close them.
+    challenger-NN.yaml of Planning) and close them. A named round starts from its last reverify, so earlier
+    resolutions and waivers persist.
 
     --findings-file adds findings found while reverifying.
     """

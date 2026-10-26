@@ -1,0 +1,16 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:04:59.202350Z'
+status: completed
+summary: 'Development from specify to the final change report: spec/plan/tasks written; scripts/handbook.py, just handbook recipe, release.sh check, devkit-dev handbook playbook/preset, RULE-cli-contract exclusion, AGENTS.md exception, README pointers; CAP-DLV-release-handbook, ARCH-07-deployment 1.2, ARCH-05-1/05-2 updated. Code review round 1 (1 P2, 3 P3) closed; reconcile-check 01 (1 P2, 2 P3) fixed or handed to the Host; no handbook snapshot committed (Non-Goal 1). Host actions at integration: uv run devkit sync (deploy the playbook) and one sentence in docs/development/ci-cd.md section 3, both outside the write scope.'
+findings: []
+checks:
+  tests: PASS just test-affected --base dffb87d8 (217)
+  build: PASS uv build --package devkit-dev
+  lint: PASS just lint devkit-dev, just check devkit-dev, just rules-check
+diff_scope:
+  base: ''
+  head: 72a166bf8deadc82692636df771216a529c88b46
+activity_effort: medium

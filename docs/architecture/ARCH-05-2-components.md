@@ -74,7 +74,8 @@ A package may explicitly declare shared transport adapters: dist owns `adapters/
 its common CLI boundary. These adapters remain above application layers. Application-owned bundles live under
 `bundles/<name>/bundle/`, including a package with only one bundle. Content-only packages
 may retain their existing bundle-only layouts. `tools/devkit-dev` owns the repository's
-structure and layering rules in a development bundle; its initial layout is bundle-only.
+structure and layering rules and the release handbook playbook (`CAP-DLV-release-handbook`) in a development bundle;
+its initial layout is bundle-only.
 
 Package initializers own package management: explicit exports, import control, lazy loading and
 dynamic discovery are allowed in `__init__.py`. Business operations, domain validation and command
@@ -118,10 +119,11 @@ required `BaseRepository`, Command registry or Unit of Work. CLI commands remain
   bundle modules do not become a shortcut around application layer boundaries.
 
 Proposal handoff and optional scope registration are coordinated by the delivery feature.
-The proposal CLI group and native handoff/acceptance MCP adapters call delivery use cases;
+The proposal CLI group calls the delivery acceptance and handoff use cases;
 proposal state operations remain in the proposals feature. Shared branch conventions and
 Git branch queries belong to the policy feature, keeping documents and proposal state
-independent of delivery orchestration.
+independent of delivery orchestration. The documents feature owns the document kind definitions
+that every other feature reads.
 
 Repository structure rules check folder conventions, layer direction and explicit per-feature
 dependencies, including actual feature cycles. Package tests cover package ownership;

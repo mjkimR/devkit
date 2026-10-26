@@ -125,6 +125,8 @@ def test_native_handoff_suppresses_registration_diagnostics(
     assert result["status"] == "handed_off", result
     assert result["errors"] == []
     assert result["handoff"] == completed.handoff.to_dict()
+    # The native transport carries the same merge fields as the CLI's JSON.
+    assert result["handoff"]["materials_merged"] is False and result["handoff"]["dropped_duplicates"] == []
     assert result["notices"] == [notice.to_dict() for notice in completed.notices]
     assert [notice["code"] for notice in result["handoff"]["notices"]] == ["SPEC_PROPOSAL_UNBOUND"]
     assert [notice["code"] for notice in result["notices"]] == [

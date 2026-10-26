@@ -6,6 +6,7 @@ The axes and workflows are in the spec constitution (`devkit get-context spec`).
 
 - `bugfix` only for a defect against an agreed contract.
 - `overall-refactor` only for a change that adds no behavior and restructures several areas at once (package boundaries, conventions, document systems, ledgers), whose direction settles during the work; follow `.devkit/managed/spec/workflows/sdd-overall-refactor.md`. A refactor inside one feature or module is `feature`.
+- A behavior-preserving work item agreed in a maintenance playbook's decision round (review-refactor) is `overall-refactor` when the source files its changes edit span more than one feature or module, and `feature` at its own depth otherwise; the playbook states the route.
 - `task-kind` stays provisional until `plan-accept` or the spec Unit's creation.
 - Large but clear work is `spec`; small work whose direction is open is `proposal`.
 - Backlog and inline Planning have no `activity-effort`; choose it per later activity ([effort](effort.md)), preserving explicit user choices and required review.

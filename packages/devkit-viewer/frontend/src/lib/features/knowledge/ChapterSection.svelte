@@ -9,6 +9,7 @@
 		theme,
 		lazyDiagrams,
 		trackHeading,
+		sourceLabel = undefined,
 		onOpen
 	}: {
 		doc: RepositoryDocument;
@@ -17,6 +18,8 @@
 		theme: string;
 		lazyDiagrams: (node: HTMLElement) => { destroy: () => void };
 		trackHeading: (node: HTMLElement) => { destroy: () => void };
+		/** The Planning source a document was read from; the Files tab would show the checkout copy instead. */
+		sourceLabel?: string;
 		onOpen: (path: string) => void;
 	} = $props();
 
@@ -38,7 +41,11 @@
 			<h2>{doc.title}</h2>
 			<small>{doc.meta.id ? doc.meta.id + ' · ' : ''}{doc.path}</small>
 		</div>
-		<button onclick={() => onOpen(doc.path)}>View raw</button>
+		{#if sourceLabel}
+			<span class="source-badge" title="Planning source">{sourceLabel}</span>
+		{:else}
+			<button onclick={() => onOpen(doc.path)}>View raw</button>
+		{/if}
 	</header>
 	{#key `${doc.path}-${branch}-${theme}-${doc.raw}`}
 		<article class="markdown-body" use:lazyDiagrams use:trackHeading>
@@ -76,6 +83,16 @@
 
 	.chapter-group {
 		font-size: 12px;
+	}
+
+	.source-badge {
+		flex-shrink: 0;
+		font-size: 12px;
+		font-family: ui-monospace, SFMono-Regular, monospace;
+		padding: 4px 8px;
+		border-radius: 6px;
+		border: 1px solid var(--border-panel);
+		color: var(--text-secondary);
 	}
 
 	button {

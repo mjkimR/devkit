@@ -8,9 +8,12 @@ entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/playbook_get.py
   - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/reading.py
   - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/status.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/context.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/context_documents.py
 created_at: 2026-10-17
 usecases:
   - UC-reconcile-living-spec-drift
+  - UC-review-and-refactor-accumulated-slop
 ---
 
 # [CAP-DIST-context-and-playbooks] Context Loading and Playbook Discovery
@@ -21,15 +24,17 @@ Guidance in startup files costs tokens on every turn and dilutes rarely needed p
 it in stages:
 
 - The root `AGENTS.md` guidance block holds only orientation (`CAP-DIST-workspace-ownership`).
-- `devkit get-context <bundle>` returns a bundle's constitution and instruction headers; the agent reads bodies on
-  demand.
+- `devkit get-context <bundle>` returns a bundle's constitution, instruction headers and the titles and summaries of
+  its declared context documents; the agent reads bodies on demand.
 - Playbooks stay on disk under `.devkit/managed/<bundle>/` and are searched only when the user invokes
-  `devkit-playbook` for the task or a failing rule's remediation names one.
+  `devkit-playbook` for the task, a failing rule's remediation names one, or an installed entry skill runs its own
+  bounded intake search (the `spec` skill's, `CAP-HARN-agent-guidance`); a candidate found that way runs only after
+  the user confirms it.
 
 ## 2. Bundle Context (`devkit get-context`)
 
-`devkit get-context <bundle>` returns the bundle's **context**: its constitution and the header catalog of its
-synchronized instructions, so an instruction-only bundle still has one. It runs from the project or a
+`devkit get-context <bundle>` returns the bundle's **context**: its constitution, the header catalog of its
+synchronized instructions and the list of its context documents, so an instruction-only bundle still has one. It runs from the project or a
 subdirectory (or with `-w`) and takes the shared project lock, waiting up to ten seconds while a sync writes; where
 the file system is read-only for it, it reads without the lock (`CAP-DIST-sync-and-transactions`).
 
@@ -42,6 +47,18 @@ the file system is read-only for it, it reads without the lock (`CAP-DIST-sync-a
   the override tree must match its canonical receipt hash or validated personal render evidence. Missing or stale
   personal evidence is `CONFIG_LOCAL_RENDER_STALE`; other unsynchronized files are `NOT_SYNCHRONIZED`. Both direct
   the caller to sync. Bodies are never returned; see `CAP-DIST-sync-and-transactions`.
+- `documents`: always present, `[]` when the bundle declares no context document directory
+  (`context_documents` in `bundle.toml`, `CAP-DIST-manifest-spec`) or the directory is absent
+  (`ADR-bundle-context-lists-project-documents`). The declaration is read from the receipt-verified managed
+  `bundle.toml`; the directory's files are project-owned and read from the workspace at run time, under the same lock,
+  without a hash check. Each entry has the absolute `path`, `title` and `summary` of one Markdown file, sorted by
+  path. Only regular, non-symlink `*.md` files other than `README.md` directly inside the directory are listed, and
+  only when no component of the directory path is a symlink. At most the first 4096 bytes of a file are read, and only
+  the frontmatter block in them is decoded; a value that cannot be read (an unreadable file, a non-UTF-8 block, no
+  frontmatter or frontmatter that does not close within those bytes, malformed YAML, a non-string value) is `null`,
+  never an error. `devkit-dist` caps nothing
+  itself; the bundle's own rules bound the directory (the `spec` bundle's `RULE-steering-documents`,
+  `CAP-GOV-spec-rules`).
 
 ```markdown
 ---
@@ -75,7 +92,9 @@ agents through the instructions in the skill body.
 
 The skill runs the search, reads the chosen body from the returned path (loading its bundle's context first when
 needed), and when nothing matches, completes the task and asks whether to save a reusable draft into an authoring
-source; drafts need explicit approval and never touch installed or generated files.
+source; drafts need explicit approval and never touch installed or generated files. The draft offer belongs to this
+explicitly requested discovery only. The skill names no other bundle's asset: it states generically that a user's
+confirmation of a playbook another installed entry skill offered is the explicit invocation of that playbook.
 
 ### Playbook Header
 
@@ -210,8 +229,10 @@ Unknown and unselected identities share a code because the deployed receipt cann
 A user naming the exact playbook for the current task, or explicitly configuring an external
 schedule naming that exact ID, authorizes retrieval and interpretation within that task's scope. A request or
 schedule naming a declared alias is explicit invocation of the canonical playbook `get` reports.
-Retrieval cannot verify authorization and grants none. Ordinary task wording never authorizes
-catalog discovery or playbook selection. Explicit discovery and rule remediation remain supported.
+Retrieval cannot verify authorization and grants none. Ordinary task wording alone never selects or
+runs a playbook: an entry skill may run one bounded search at its intake and offer a candidate, and the user's
+confirmation of that offer is the explicit invocation (`ADR-spec-intake-playbook-discovery`). Explicit discovery and
+rule remediation remain supported.
 Each run starts fresh procedure progress, checks prerequisites and obeys project workflow gates,
 permissions and user constraints. Schedules do not provide future gated approvals, and unavailable
 approval UI is not approval. External systems own cadence, launch, retries, overlap control and

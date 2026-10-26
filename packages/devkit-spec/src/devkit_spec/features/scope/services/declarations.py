@@ -13,7 +13,15 @@ from devkit_spec.base.errors import (
     ScopeInputInvalidError,
     ScopeSpecNotFoundError,
 )
-from devkit_spec.features.entrypoints import classify_boundary, entrypoint_bearing, normalize, parse_boundaries
+from devkit_spec.features.entrypoints import (
+    Reason,
+    classify_boundary,
+    covers,
+    entrypoint_bearing,
+    feedback_file,
+    normalize,
+    parse_boundaries,
+)
 from devkit_spec.features.scope.models.model import Diff, Granularity, ScopePath, ScopeSet, Source, Stage, Unresolved
 from devkit_spec.features.scope.models.source import InputPath
 
@@ -187,10 +195,23 @@ def from_proposal(root: InputPath, slug: str) -> ScopeSet:
     return scope
 
 
+def _external_feedback(root: InputPath, spec_dir: str, raw: str) -> str | None:
+    """The normalized ``raw`` when it names a feedback file of a spec bundle other than ``spec_dir`` and is no
+    directory of the working tree, else ``None``."""
+    try:
+        path, unit = normalize(raw.strip()), normalize(spec_dir)
+    except EntrypointsPathError:
+        return None
+    if not feedback_file(path) or covers(unit, path) or kind_of(root, path) is Granularity.DIR:
+        return None
+    return path
+
+
 def from_spec(root: InputPath, spec_dir: str) -> ScopeSet:
     """The ``spec``-stage scope of the bundle at the workspace-relative ``spec_dir`` (declarations only).
 
     Declared code paths of ``tasks.md`` replace the targets' entrypoint candidates; without any, the candidates stay.
+    A declared feedback file of another bundle is declared code too, but never replaces the candidates.
 
     Raises ``ScopeSpecNotFoundError`` when it is not a directory and ``ScopeInputInvalidError`` when an input
     cannot be read.
@@ -199,6 +220,7 @@ def from_spec(root: InputPath, spec_dir: str) -> ScopeSet:
     if not base.is_dir():
         raise ScopeSpecNotFoundError(f"spec bundle not found: {spec_dir}", target_files=[spec_dir])
     scope = ScopeSet(id=_declared_id(base / SPEC) or base.name)
+    declares_code = False
     tasks_path = base / TASKS
     if not tasks_path.is_file():
         scope.unresolved.append(Unresolved(TASKS, "missing-tasks", Source.DECLARED_CODE))
@@ -218,12 +240,16 @@ def from_spec(root: InputPath, spec_dir: str) -> ScopeSet:
                         scope.unresolved.append(Unresolved(raw, "not-a-path", Source.DECLARED_CODE))
                         continue
                     code, reason = classify_boundary(raw)
+                    if code is None and reason is Reason.EXCLUDED_TREE:
+                        code = _external_feedback(root, spec_dir, raw)
+                    elif code is not None:
+                        declares_code = True
                     if code is None:
                         scope.unresolved.append(Unresolved(raw, str(reason), Source.DECLARED_CODE))
                     elif code not in seen:
                         seen.add(code)
                         scope.code.append(ScopePath(code, kind_of(root, code), Source.DECLARED_CODE, Stage.SPEC))
-    candidates = not scope.code  # only declared code is collected so far: it replaces the entrypoint candidates
+    candidates = not declares_code  # declared code paths replace the entrypoint candidates; feedback files do not
     reconcile = _targets(base / RECONCILE, f"{spec_dir}/{RECONCILE}")
     blueprint = _targets(base / TARGET_DOCS, f"{spec_dir}/{TARGET_DOCS}")
     if reconcile is not None:

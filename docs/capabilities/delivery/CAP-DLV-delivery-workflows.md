@@ -63,7 +63,10 @@ sequence.
    `sdd-session-feature` or `sdd-session-bugfix`, `spec` uses `sdd-spec-feature` or `sdd-spec-bugfix`, `proposal` uses
    `sdd-proposal` until handoff and then `sdd-spec-<task_kind>`. A team review is `proposal` depth plus PR policy, not
    a workflow. The task kind `overall-refactor` has no depth and one workflow, `sdd-overall-refactor`, run in `direct`
-   mode only, without a Unit, proposal or spec bundle (`ADR-overall-refactor-workflow`). The axes are not stored as
+   mode only, without a Unit, proposal or spec bundle (`ADR-overall-refactor-workflow`). A behavior-preserving work
+   item agreed in a review-refactor decision round whose edited source files span more than one feature or module is
+   `overall-refactor` work, and a single-module one follows the feature workflows
+   (`ADR-apply-behavior-preserving-batches-as-direct-mode-refactors`, `CAP-DLV-review-refactor`). The axes are not stored as
    fields: the Unit's kind and the bound workflow show them.
 2. **Definitions are authoritative**: an executor MUST take stage order, checks, gates and returns from
    `devkit workflow show <id>` / `devkit workflow show --unit <dir>` and `devkit workflow next --unit <dir>`. The
@@ -106,7 +109,7 @@ sequence.
    Docs reflection and conflict resolution within the approved intent need no re-approval.
 9. **Living Spec before `dev-integration`**: the Living Spec reflection, a resolved `reconcile.md` and
    `status: completed` of the anchor MUST be complete before the gate; an optional review feedback breakpoint between
-   `review-refine` and `living-spec-draft` adds no stage, check or approval file. The reflection includes `docs/glossary.md`,
+   `review-refine` and `living-spec-draft` adds no stage, check or approval file. The reflection includes `docs/steering/glossary.md`,
    where it exists, when the change introduces or renames a domain term (`spec-sync`, first step).
    Per-feature `spec-sync` reflects the core contract delta. The separately invoked maintenance playbook in
    `CAP-DLV-drift-reconciliation` reviews accumulated drift in a bounded batch; it adds no delivery stage or
@@ -280,7 +283,7 @@ writes into the proposal's `materials/`; `scout` and `challenger` returns are re
 | --- | --- | --- |
 | `plan-intent` | `intent`, `intent-session`, `intent-proposal` | task intent: `ask` or `auto` |
 | `plan-accept` | `direction-handoff` | `ask` or `auto` |
-| `proposal-handoff` | native Development start | `ask` or `auto` |
+| `proposal-handoff` | none: `devkit spec proposal accept --mode accept_and_handoff` and `devkit spec proposal handoff --effort` read it | `ask` or `auto` |
 | `dev-integration` | `integration-approval`, `approval-session` | `dev-integration` (`ask` or `auto`) |
 
 - A gate waiting for the user: `devkit workflow next` prints `[WAITING: human gate:<gate>]` with a
@@ -295,10 +298,11 @@ writes into the proposal's `materials/`; `scout` and `challenger` returns are re
   `[GATE_PASSED: dev-integration stage=integration-approval policy=auto source=policy]` (JSON `passed_gates`), the basis
   every report cites.
 - `--given <gate>` asserts a gate for one run (a runner's binding).
-- The workflow definitions fix the policies each gate accepts (`gates.<gate>.policies`): `plan-intent` and
-  `plan-accept`, `proposal-handoff` and `dev-integration` take `ask` or `auto`. A configured policy outside them stops every
-  devkit command that evaluates the unit with `WORKFLOW_GATE_POLICY`, and `devkit spec policy` reports the same rule
-  (`CAP-DLV-project-policy`).
+- The workflow definitions fix the policies each stage gate accepts (`gates.<gate>.policies`): `plan-intent`,
+  `plan-accept` and `dev-integration` take `ask` or `auto`. A configured policy outside them stops every devkit workflow
+  command that evaluates the unit with `WORKFLOW_GATE_POLICY`. `proposal-handoff` is declared by no stage, so workflow
+  commands never check it. `devkit spec policy` and the spec commands that read an approval policy refuse any of the
+  four outside `ask` or `auto` with `SPEC_CONFIG_INVALID` (`CAP-DLV-project-policy`).
 - `plan-accept` is asked only for a proposal in review, or for a draft once a direct acceptance wrote
   `status: accepted`: the `direction-handoff` exit is `frontmatter(proposal.md status reviewing|accepted)`, so a draft
   otherwise, or a rejected proposal, gets no request. A `plan-accept` acceptance is recorded with
@@ -375,12 +379,12 @@ exception and five presets. No model level changes `activity-effort`, write scop
 
 | Role | Skill | Default model level / effort | Writes | Envelope kind |
 | --- | --- | --- | --- | --- |
-| `challenger` | none: procedure in contract | inherit | nothing | `challenger` |
-| `reconcile-reviewer` | `spec-sync` | inherit | nothing: verifies implementer's reconcile at medium/high | `reconcile-check` |
-| `code-reviewer` | `spec-review` | inherit | nothing: verifies implementation against requirements | `review`, `reverify`, or session message |
-| `scout` | none: procedure in contract | compact / inherited | nothing, or proposal materials on request | `scout` |
-| `planning-worker` | planning reference cited by contract | inherit | proposal directory in plan worktree, committed | `worker` |
-| `development-worker` | none: procedure in contract | inherit | unit write scope in dev worktree, committed | `worker` and stage envelopes |
+| `challenger` | none: the procedure is in the contract | inherit | nothing | `challenger` |
+| `reconcile-reviewer` | `spec-sync` | inherit | nothing: verifies the implementer's reconcile at `medium`/`high`, subject to rule 15 | `reconcile-check` |
+| `code-reviewer` | `spec-review` | inherit | nothing but throwaway probe tests in its round's own subdirectory of the ignored probe path the payload names, read by no other round, left for worktree removal and never the unit's tests: verifies implementation against requirements and checks | `review`, `reverify`, or a message for a session |
+| `scout` | none: the procedure is in the contract | compact / inherited | nothing, or the proposal's `materials/` on request | `scout` |
+| `planning-worker` | none: the procedure is in `spec/references/planning.md`, which the contract cites | inherit | the proposal directory in its `plan-` worktree, committed | `worker` (its own) |
+| `development-worker` | none: the procedure is in the contract | inherit | the unit's write scope in its `dev-` worktree, committed at every stage boundary | `worker` (its own) and the stage envelopes |
 
 The contract body is the role's prompt and holds only what the role needs: purpose, input fields, return fields,
 write boundaries, failure handling and, for a role whose procedure no main session runs (`challenger`, `scout`, the
@@ -396,9 +400,14 @@ paths, an explicit absolute worktree cwd on every command and `git -C <worktree>
 base checkout, runs its role subagents nested (Host → worker → role; Claude Code tool `Agent`, Codex
 `collaboration.spawn_agent`) with absolute read/contract scopes that name the worktree's startup skill and
 instruction paths (a nested role's read from another checkout is a reported boundary exception) and never ends its turn while one is still running, keeps
-scratch files in an ignored path inside its worktree, writes its own records, commits at every stage boundary and,
+scratch files in an ignored path inside its worktree for removing the worktree to clean, writes its own records, commits at every stage boundary and,
 when it stops on questions or a problem, makes an emergency commit of the unfinished work with its `worker` envelope
 when record/commit access is permitted.
+A delegated change to a bundle source the project selects carries the tracked files `devkit sync --check` lists (for
+example `.devkit/installation.json`) in the worker's write scope; the worker runs `devkit sync` and commits them, and
+never edits `.devkit/managed/`. A before/after acceptance outcome names a baseline the worker can produce in its
+worktree (the head with the change disabled, or a Planning measurement on the same machine), or the Host takes the
+base measurement, because the worker never checks out another commit (`SPEC-delegation-sandbox-guidance`).
 Planning resolves operational instructions and CLI execution in the assigned worktree. When a turn needs newer
 base document IDs or CLI features, the Host incorporates the base and synchronizes that worktree's installed
 instructions under existing Git and permission policy before resuming. A worker discovering that dependency returns
@@ -406,8 +415,10 @@ a problem for Host recovery; it never merges, resolves references from another b
 or fabricates unsupported records. Base advancement alone does not require a refresh.
 
 The Planning payload names an ignored probe path inside the proposal directory and allowed write scope; the Host
-verifies or prepares it before delegation. The worker removes temporary files and throwaway repositories, including
-their linked worktrees, before its last commit and retains evidence in `materials/`. A probe that needs an outside
+verifies or prepares it before delegation. The worker leaves temporary files and throwaway repositories, including
+their linked worktrees, in that ignored path and retains evidence in `materials/`; removing the Planning worktree
+cleans them. A payload never asks a worker, Planning or Development, to delete a scratch file or fixture it created
+(`SPEC-feedback-guidance-and-scope`). A probe that needs an outside
 path is a boundary-expansion problem for the Host. Ignored status grants no sandbox or activity-repository Git
 permissions; a temporary path under `/tmp` may not exercise repository-local sandbox conditions.
 
@@ -417,7 +428,7 @@ It never reverts, closes, raises the depth or narrows the scope. The `developmen
 each answer decides, what each option leads to) rather than relaying the worker's wording. The Host validates the cumulative committed range from the
 unit's last accepted head; a range it rejects is a problem in the Host's own `worker` envelope, which blocks the unit
 from review and integration without discarding anything until a resolution names it
-(`ADR-orchestration-workers`, `ADR-orchestration-workers`). Host statuses: Claude Code
+(`ADR-orchestration-workers`). Host statuses: Claude Code
 `native`, Codex `emulated` with `sandbox_mode: workspace-write`, Antigravity `unverified`
 (`ADR-orchestration-workers`). Native Codex spawning does not enforce the worker's role/path boundary;
 Git administration remains shared. Workers declare no model, reasoning effort or approval-policy override; project model levels follow distribution policy.
@@ -437,6 +448,10 @@ access. Unavailable or denied approval stops that operation and preserves its ac
 refusal through another tool, path, process or broader request. Retry another-cause failure only after cause/input
 changes and authorization permits it. Failed record/emergency commit operations use only still-permitted scoped
 access. Emergency `--no-verify` is limited to ordinary commit-gate refusal, never sandbox or approval denial.
+A task worktree is always `<parent of base>/<base name>-wt-<branch>` (`--workspace-root` only names a directory
+inside the checkout), and a linked worktree's commits write the base's shared Git directory. When either lies outside
+the session's writable roots, the same per-operation approval applies, or the user grants the path; the agent never
+relocates the worktree or changes a host setting (the `spec` skill's `references/worktree.md`).
 
 When the worker record or emergency commit also cannot run, return `failed` with cause, commands tried, recovery,
 actual last SHA, dirty paths and absent/uncommitted records or commit; never invent a clean committed result or final

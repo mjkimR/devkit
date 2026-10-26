@@ -1,0 +1,31 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T06:54:12.370014Z'
+status: completed
+review: challenger-05.yaml
+summary: 'Closes the answer-fold round by minor-fix self-verification (review-loop section 2) at 31af1b42: each finding''s concrete suggested_action applied as written, only in the named locations (PADR-ux-screen-documents §4, PADR-ux-drafts-before-code §4, PADR-ux-review-before-code R6, target-docs §4, planning-spike §8, proposal §4 and §5); the user''s decisions are unchanged, rules check clean.'
+findings:
+- issue: 'The register''s creation point is undefined under drafts-before-code: a UX document reaches docs/ only at spec-sync, and neither the Screens draft nor spec-sync''s duties include register rows or the file.'
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-screen-documents.md:58-59; docs/proposals/PROP-ux-documentation/decisions/PADR-ux-drafts-before-code.md:32-35,45-51; docs/proposals/PROP-ux-documentation/decisions/PADR-ux-review-before-code.md:54,65-69; docs/proposals/PROP-ux-documentation/target-docs.md:64-68
+  failure_condition: A project's first UX unit always scores R6 not applicable and spec-sync may never create the register; or ux-writing writes the steering file while drafting, a partial Living Spec ahead of its behavior.
+  suggested_action: Register rows the change adds are drafted with the Screens drafts; R6 scores against the existing register plus the drafted rows; spec-sync creates or updates docs/steering/ux-objects.md with docs/ux/ and lists it in reconcile.md; R6 is not applicable only when neither the file nor drafted rows exist. Apply in PADR-ux-screen-documents §4, PADR-ux-drafts-before-code §4, PADR-ux-review-before-code R6 and target-docs §4.
+  resolution: resolved
+  severity: P2
+- issue: 'Pre-answer text survives outside the diff: planning-spike §8 says the register becomes a seeded steering file, and proposal §5 says the contract slice stays an option of ux-document-timing.'
+  evidence: docs/proposals/PROP-ux-documentation/materials/planning-spike.md:166-168; docs/proposals/PROP-ux-documentation/proposal.md:196-198
+  failure_condition: Development reading the cited material seeds the register; §5 presents a decided question as open.
+  suggested_action: 'planning-spike §8: ''its own steering file created by ux-writing with the first UX document (decided: ux-objects), never seeded''; proposal: ''the contract slice remains a follow-up of PADR-ux-drafts-before-code (ux-document-timing decided: drafts before code)''.'
+  resolution: resolved
+  severity: P3
+- issue: The §4 list of remaining plan-accept blockers omits the depends_on rewrite and the glossary boundary swap, marks prerequisite acceptance done although this branch cannot show it, and the fold dropped 'as the Host reports it' from the foundation direction.
+  evidence: docs/proposals/PROP-ux-documentation/proposal.md:123-124,179,186-188,201-205; envelopes/worker-01.yaml assumptions 2-3
+  failure_condition: A Host acting from §4 requests plan-accept with a PROP anchor that no longer exists after the merge, and the handoff refuses.
+  suggested_action: 'List the blockers in §4: merge main; re-check the table columns and steering direction against the accepted texts; rewrite handed-off depends_on entries to SPEC IDs; replace the glossary boundary path if the move has landed. Keep ''as the Host reports'' until the re-check.'
+  resolution: resolved
+  severity: P3
+checks: {}
+diff_scope:
+  base: d697b7e9199a62408aad472b61b04acd72531c88
+  head: 31af1b425f17ceea7c36b40f8360737b42716d7e

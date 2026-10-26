@@ -67,7 +67,8 @@ standards are in the `ARCH-08-2-resource-taxonomy`.
   `seeded = true` and a `target`, a **seeded** asset: written once to the workspace-relative `target` (a directory
   source to `target/<relative path>`, executable bits preserved) when that path does not exist, then project-owned;
   this is how a bundle scaffolds a docs tree, a glossary or a policy file. Seeded files are never catalogued by
-  `get-context`, playbook search or projections. Runtime behavior:
+  playbook search or projections, nor as receipt-verified context files; a bundle's declared `context_documents`
+  directory may still list the project files in it, seeded ones included (`CAP-DIST-context-and-playbooks`). Runtime behavior:
   `CAP-DIST-workspace-ownership`.
 - `guidance`: a fragment of the root `AGENTS.md` guidance block, for a pointer every agent session must see (for
   example "read the commit conventions before writing a commit message"). The source is one Markdown file of list
@@ -84,6 +85,7 @@ schema = 1
 name = "starter-workflow"
 version = "0.1.0"
 default_preset = "daily"
+context_documents = "docs/steering"       # optional: get-context lists this directory's Markdown titles
 
 [[assets]]
 id = "review"
@@ -208,6 +210,9 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
 - **Guidance fragments**: a single `source` file (no `variants`, never `seeded`) meeting the fragment rules above.
   Each `{path:<asset-id>}` names an asset of the bundle with exactly one file `source` that is neither `guidance` nor
   seeded, and every preset that selects the fragment selects the named assets too.
+- **Context documents**: `context_documents` (optional top-level string) names one workspace directory whose
+  Markdown files `devkit get-context` lists by `title` and `summary` (`CAP-DIST-context-and-playbooks`). It follows
+  the seeded `target` grammar below; another type or an unsafe path is `BUNDLE_INVALID`.
 - **Seeded assets**: `seeded` (boolean, default `false`) is allowed only on a `document` with a single `source`, and
   requires `target`; `target` is rejected otherwise. `target` is a normalized relative POSIX path (no `..`, leading
   `/`, backslash or `.` segment) whose first segment is not `.devkit`, `.agents`, `.claude` or `.codex`, which has

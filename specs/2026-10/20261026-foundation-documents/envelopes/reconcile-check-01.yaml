@@ -1,0 +1,32 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T07:42:38.371866Z'
+status: completed
+summary: 'reconcile-reviewer: no missing target; 1 P2 (seeded files never catalogued by get-context in CAP-DIST-manifest-spec and ARCH-08-2), 2 P3 (CAP-GOV-spec-rules scope sentence, viewer no-impact reasoning)'
+findings:
+- issue: Two sentences still say seeded files are never catalogued by get-context, without the context_documents exception
+  evidence: docs/capabilities/distribution/CAP-DIST-manifest-spec.md:69-70; docs/architecture/ARCH-08-2-resource-taxonomy.md:120
+  failure_condition: get-context spec lists the seeded docs/steering/glossary.md while these documents say it never appears
+  suggested_action: Amend both as CAP-DIST-workspace-ownership rule 7 was amended
+  resolution: open
+  severity: P2
+- issue: CAP-GOV-spec-rules 3.3 says other ID-free files are outside its scope right before adding steering files as an ID-free input
+  evidence: docs/capabilities/governance/CAP-GOV-spec-rules.md:105-113
+  failure_condition: A reader does not expect the steering cited-ID check
+  suggested_action: Limit the sentence to the Owner check
+  resolution: open
+  severity: P3
+- issue: reconcile.md records no reasoning for the viewer regrouping (AC-15)
+  evidence: packages/devkit-viewer/frontend/src/lib/api/documents.ts; docs/capabilities/viewer/CAP-VIEW-repository-viewer.md:119,193-195
+  failure_condition: A later drift review cannot tell whether CAP-VIEW-repository-viewer was checked
+  suggested_action: Add a no-impact line for CAP-VIEW-repository-viewer
+  resolution: open
+  severity: P3
+checks:
+  rules: PASS devkit rules check --ci --base f12ab876
+diff_scope:
+  base: f12ab876ed9984365373fc83a9fee10e962bc836
+  head: 8d042b43a457ca347fafd37459f7ae2c9fc4c604
+activity_effort: medium

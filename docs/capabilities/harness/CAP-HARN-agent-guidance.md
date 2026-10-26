@@ -46,7 +46,10 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
 1. **Context first**: an agent MUST read the constitution (`devkit get-context spec`) once per agent context before
    development work, including work started without a skill, and read each relevant instruction body before the
    action it governs. An instruction never overrides a mandatory check; a conflict is reported, not resolved by
-   picking one.
+   picking one. Every role contract under `subagents/` runs `devkit get-context spec` itself, so nested roles load
+   the same context. The constitution names `docs/steering/` and the `documents` list of the response (the bundle
+   declares `context_documents = "docs/steering"`) and directs the agent to read a steering file's body before a
+   wording, naming, interface or content decision its summary covers (`ADR-background-pointer-in-constitution`).
 2. **One pointer in `AGENTS.md`**: the bundle adds exactly one line to the root `AGENTS.md` guidance block (the
    `spec-pointer` fragment); everything else is reached through `devkit get-context spec` and the skills.
 3. **Managed files are read-only**: files under `.devkit/managed/` and projected agent files are never edited;
@@ -70,9 +73,18 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
    names the moment to read it ("Read this before ...").
 6. **No session hijacking**: agents MUST NOT unilaterally terminate the user's session or stop active work without
    user direction.
-7. **Playbooks on request only**: playbooks are occasional procedures found through `devkit playbook search` only
-   when the user invokes `devkit-playbook` or a failing rule's remediation names one; they are not part of routine
-   delivery, and no skill routes to them.
+7. **Playbooks offered at intake, run on confirmation**: playbooks are occasional procedures, not part of routine
+   delivery. The `spec` skill runs one `devkit playbook search "<English query>" --limit 3 --max-bytes 4096` as the
+   first step of a new task intake, before classification (`ADR-spec-intake-playbook-discovery`). Intake is a
+   `/spec <intent>` or a user's own message outside the agreed scope of the current task; continuations, same-task
+   follow-ups, explicit entries, steps inside a selected playbook and information-only questions skip it, and so does
+   every later intake once the user declines playbooks for the conversation; a declined candidate is not offered
+   again. A candidate is offered, in at most one line with the classification statement, only when its description
+   names the operation the request asks for (never a topic match), covers the main operation and fits the requested
+   scope; scores never decide. Nothing of it runs before the user confirms, and the confirmation is its explicit
+   invocation; the intake reply ends with the offer and waits for the answer before a Unit, branch or edit is created. No match and search errors stay silent. The post-selection procedure is the `spec` reference
+   `references/playbooks.md`, read only on a match; no `spec-playbook` skill exists. Explicit invocation through
+   `devkit-playbook` and failing-rule remediation stay available.
 8. **Templates by path**: new documents start from `.devkit/managed/spec/templates/<kind>.md`; seeded files are
    written once where absent and are project-owned afterwards.
 9. **Skill names**: every skill of the bundle is named `spec` or `spec-<procedure>`. Rationale:
@@ -105,13 +117,15 @@ A project opts out of the bundle with `[presets] spec = false` in `.devkit/confi
 
 ### 4.2 Constitution
 
-`devkit get-context spec` returns `{"bundle": "spec", "constitution": <text>, "instructions": [{"path", "header"}]}`.
+`devkit get-context spec` returns `{"bundle": "spec", "constitution": <text>, "instructions": [{"path", "header"}],
+"documents": [{"path", "title", "summary"}]}`, the documents being the steering files of `docs/steering/`.
 The constitution's sections:
 
 1. **Context**: read it once per agent context and each relevant instruction before the action it governs; a
    mandatory check wins over an instruction.
 2. **Living Spec and Scope**: `docs/` holds the current contract; feature specs are `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/`;
-   namespaces under `docs/packages/<name>/`; references by full ID; Non-Goals and `_Boundary:` are the expected scope.
+   steering documents under `docs/steering/`, read on demand from the `documents` list; namespaces under
+   `docs/packages/<name>/`; references by full ID; Non-Goals and `_Boundary:` are the expected scope.
 3. **Classification and Authority**: the three axes, the `sdd-<planning-depth>[-<task-kind>]` workflow names, raising
    and lowering the depth, the approval boundaries `plan-accept`, `proposal-handoff` and `dev-integration` with
    `ask|auto`, `plan-intent` supplied by an explicit instruction, and policy read through `devkit spec policy`.
@@ -132,14 +146,15 @@ The constitution's sections:
 | `architecture-writing` | Writing `docs/architecture/`: arc42 placement, C4 diagram scope, constraints with their enforcing check (fitness function) or "review only", quality-attribute scenarios. |
 
 The `spec-pointer` line in the root `AGENTS.md` block: run `uv run devkit get-context spec` once per agent context
-before development work; start work with `/spec <intent>`, orient with `/spec-next`; `docs/` is the current-state
+before development work; start work with `/spec <intent>`, each new task intake running its intake step first (so
+the rule survives a lost skill body), orient with `/spec-next`; `docs/` is the current-state
 Living Spec and `specs/` holds feature specs.
 
 ### 4.4 Skills
 
 | Skill | Purpose | devkit-spec commands it runs |
 | --- | --- | --- |
-| `spec` | Entry router: classify the work, run Backlog (direct acceptance and session reclassification of a draft included) and inline Planning, raise the depth and close, drive the workflow; never routes to playbooks. | `policy`, `new`, `proposal new`, `proposal check`, `proposal accept`, `proposal handoff` |
+| `spec` | Entry router: classify the work, run Backlog (direct acceptance and session reclassification of a draft included) and inline Planning, raise the depth and close, drive the workflow; first runs intake playbook discovery with devkit's `devkit playbook search` (principle 7). | `policy`, `new`, `proposal new`, `proposal check`, `proposal accept`, `proposal handoff` |
 | `spec-next` | Orientation: diagnose work under way; when idle, filter queued drafts by direct prerequisites on one local base snapshot, then rank by repository milestone, priority and size, offering Planning, a direct acceptance or a session reclassification. | `policy`, `list spec\|proposal\|feedback`, `proposal padr`, `proposal accept --check`, `proposal handoff` |
 | `spec-specify` | Write `spec.md` (feature or bugfix reference); creates the bundle with `devkit spec new`. | `new`, `list`, `refs`, `search`, `policy` |
 | `spec-plan` | Write `plan.md`: design, interfaces, verification plan. | `list`, `refs`, `search` |
@@ -157,7 +172,8 @@ Living Spec and `specs/` holds feature specs.
 Skill references, each read at the moment it names: `spec/references/completion.md` (completion classification,
 policy, Host conversational approval and CLI execution, reconciliation evidence),
 `spec/references/depth-and-close.md` (raising the depth and closing without a merge),
-`spec/references/source-feedback.md` (tasks that address named feedback), `spec/references/envelope.md` (return
+`spec/references/source-feedback.md` (tasks that address named feedback), `spec/references/playbooks.md` (offer, records and
+use of a playbook intake discovery found, read only on a match), `spec/references/envelope.md` (return
 envelope, final change report, integration result), `spec/references/git-policy.md` (worktree, pull request and branch cleanup levels), `spec/references/worktree.md` (task worktree start, work, Host-approved CLI integration and observed-state recovery, leftovers),
 `spec-next/references/post-handoff.md` (follow-up of `[REWRITTEN]` and `[UNRESOLVED_LINK]` lines),
 `spec-next/references/workflow-signals.md` (`devkit workflow next` lines and advisories),
@@ -284,7 +300,8 @@ The `docs-skeleton` asset seeds `docs/`, each file written once where absent and
 
 ```text
 docs/
-├── README.md, glossary.md, glossary.yaml     # entry, terms, search synonyms
+├── README.md                                  # entry
+├── steering/glossary.md, glossary.yaml        # steering documents: terms, search synonyms
 ├── architecture/                              # README.md and arc42 chapters ARCH-01, 03, 05-1, 05-2, 06, 07, 08
 ├── capabilities/README.md, usecases/README.md, decisions/README.md, materials/README.md, proposals/README.md, roadmap/README.md
 └── development/setup.md, workflow.md, ci-cd.md
@@ -293,7 +310,7 @@ docs/
 The directory READMEs state each directory's naming and authoring conventions and point at `devkit spec list` for
 discovery instead of catalog tables.
 
-The seeded `glossary.md` table is `Term | Definition | Owner | Avoid | Code identifiers` (`ADR-writing-and-terminology-guidance`):
+The seeded `steering/glossary.md` (steering frontmatter `title` and `summary`) table is `Term | Definition | Owner | Avoid | Code identifiers` (`ADR-writing-and-terminology-guidance`):
 the definition also states what a term excludes, `Owner` is the defining document ID or owning component, `Avoid` lists
 rejected synonyms (also synonyms of the term's cluster in `glossary.yaml`) and `Code identifiers` the matching fields,
 types and paths. Its "Avoided Generic Nouns" section holds the project's additions to the `living-spec-writing` default
@@ -315,18 +332,21 @@ the observed state. Approval is never inferred from a successful prepare or a pr
 
 ### Repository Backlog and next work
 
-The spec classification reference routes Backlog to its repository-only procedure (`ADR-roadmap-and-milestones`). Immediate session/spec requests use inline Planning; every request not starting now and every decomposition result is a draft proposal. Decomposed_from and supersedes preserve request origin through handoff. Backlog reviews feedback, places drafts in milestones and prepares explicit user decisions for milestone activation, closing and dropping. On the user's explicit `plan-accept`, Backlog may accept an eligible draft directly on the base checkout, after `devkit spec proposal accept --direct --check`, the Host's judgment that the direction leaves nothing to compare and its sweep of the acceptance session, with no Planning branch, run, effort or worker envelope (`ADR-proposal-acceptance`, `ADR-proposal-acceptance`); this ends the interim rule of `ADR-roadmap-and-milestones` that small drafts run Planning at `low`. On the user's explicit decision at pickup, a queued draft without PADRs whose work is `session` depth may be deleted in one base commit that preserves its open feedback and done as a session under a new slug (`ADR-delivery-classification`). No issue field, tracker intake/closing or autohub dependency applies.
+The spec classification reference routes Backlog to its repository-only procedure (`ADR-roadmap-and-milestones`). Immediate session/spec requests use inline Planning; every request not starting now and every decomposition result is a draft proposal. Decomposed_from and supersedes preserve request origin through handoff. Backlog reviews feedback, places drafts in milestones and prepares explicit user decisions for milestone activation, closing and dropping. On the user's explicit `plan-accept`, Backlog may accept an eligible draft directly on the base checkout, after `devkit spec proposal accept --direct --check`, the Host's judgment that the direction leaves nothing to compare and its sweep of the acceptance session, with no Planning branch, run, effort or worker envelope (`ADR-proposal-acceptance`); this ends the interim rule of `ADR-roadmap-and-milestones` that small drafts run Planning at `low`. On the user's explicit decision at pickup, a queued draft without PADRs whose work is `session` depth may be deleted in one base commit that preserves its open feedback and done as a session under a new slug (`ADR-delivery-classification`). No issue field, tracker intake/closing or autohub dependency applies.
 
 Milestones are global MS documents with goal, exit condition and non-goals, never copied work lists. User and agent jointly review the theme and decompose it into direct PROP members. Only proposal anchors declare membership; handoff omits milestone metadata and historical SPEC metadata is ignored. Milestones are loosely managed themes: prefer a multi-unit phase, release or architectural theme advancing `ARCH-01-introduction-and-goals`, with observable phase-level outcomes and capability boundaries, over a milestone that only sequences one proposal; a theme may begin with one proposal while broader intended scope is not authored. CLI flags, branch names, file layouts and scenario tests belong in proposals/specs. Activation shows unmet dependencies but permits an explicit out-of-order decision. Close planned/active milestones through one current Backlog candidate: sufficient decomposition, direct proposal work delivered or explicitly excluded/moved, and the exit condition met for the resulting agreed scope. Inspect all direct PROP members across namespaces, the selected local base (report its commit without claiming remote freshness) and relevant known Planning/Development activity; focused code/Git inspection resolves missing proposals without reconstructing delivery lineage. Handoff, deletion, rejection, reassignment and empty membership alone never prove delivery. Outstanding in-scope work, an unmet exit condition or inconclusive required evidence keeps the milestone open with the remaining check named; missing confirmation is a separate gap. The user confirms both plain body assertions and status done together in one Backlog commit, without a third approval. Recheck scope, membership and relevant evidence immediately before writing; unchanged authorization survives interruption or compaction, while material changes or an unestablishable approved candidate/evidence require reconfirmation. Actual semantic scope changes (new required work, exclusion or moving scope elsewhere) reset both assertions to pending in the authorized scope edit. Normal handoff/mechanical identity relocation does not change scope/decomposition and requires no milestone review, reset or reconfirmation. No pre-handoff or integration hook is added; relevant completion evidence is checked at close. Pure wording/format corrections preserving meaning do not invalidate. Extending done scope requires user-owned reopen to active with pending assertions or another milestone. Unchanged done writes nothing, dropped is not a close candidate, and existing done records are not migrated. Drop prepares member reassignment/clearing/rejection and shows successor dependencies. Done/dropped records remain hidden history (`ADR-roadmap-and-milestones`) unless merged: on the user's Backlog decision, small milestones of any status MAY merge into a broader theme milestone that lists their IDs in `aliases` with both assertions pending, in one commit that deletes the merged files, runs `devkit rules fix` and removes `depends_on` edges between them; remaining scope moves to draft proposals in the theme, which stays planned or active while scope remains and closes only through both confirmations. A merge is not an in-place extension (`ADR-milestone-merging`).
 
 Spec-next treats a slug with a plan-/dev- branch, a reviewing/accepted proposal or an incomplete spec as in progress; queued drafts do not suppress idle recommendations. After the unit prerequisite filter below, eligible draft order is critical first, milestone rank (active, ready planned, no milestone), milestone created_at/ID, priority, size, draft created_at/ID. Unready/finished milestone and needs_decompose drafts are Backlog actions; unit-ready critical drafts still rank first; milestone exceptions never bypass unit prerequisites. The skill supplies deterministic ties/defaults; the CLI adds no sorting. It recommends intent confirmation when absent, offers Planning, a direct acceptance or a session reclassification for the draft, and mentions open feedback hygiene.
 
 
-Local-orchestrated proposal acceptance requires connected owning report, shared-get and native approval tools.
-Missing tools pause dependent operations and request connection; no silent CLI fallback occurs. The Host compares
-all PADRs and support coverage to the report before native acceptance. Cloud retains explicit authorized CLI
-acceptance and report publication. A report never carries approval or permissions. Refinement requires exclusive
-Planning ownership, committed changes and a refreshed exact-source report; accepted plans use follow-up workflows.
+Proposal acceptance and handoff run through Host-authorized CLI operations (`ADR-host-cli-lifecycle-authority`).
+The Host reviews the proposal, every PADR and the envelopes at the final committed `plan-<slug>` source, presents
+the findings and effects, and invokes `devkit spec proposal accept` only after the user's decision under `ask`.
+`devkit spec proposal report` renders an optional briefing; acceptance requires no published report, while shared
+proposal-review artifacts remain available for publication (`CAP-DLV-proposal-incubation`,
+`CAP-COLL-shared-artifacts`). A report never carries approval or permissions. Refinement requires exclusive
+Planning ownership, committed changes and a fresh review of the committed source; accepted plans use follow-up
+workflows.
 
 
 ### Direct unit prerequisites and lifecycle decisions

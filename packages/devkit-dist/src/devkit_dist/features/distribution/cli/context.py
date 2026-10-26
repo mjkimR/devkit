@@ -17,5 +17,5 @@ from .output import WORKSPACE, _json_command
 @WORKSPACE
 @_json_command
 def context(bundle_name: str, workspace_root: str | None) -> object:
-    """Return the full constitution and instruction headers for a synced bundle."""
+    """Return the full constitution, instruction headers and context documents for a synced bundle."""
     return GetContext().execute(resolve_root(workspace_root), bundle_name)

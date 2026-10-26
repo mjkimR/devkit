@@ -5,8 +5,8 @@ description: Manually generate a revision-bound weekly repository progress repor
 
 # Weekly report
 
-Run only on explicit invocation (`devkit-playbook` or `devkit playbook get maintenance/weekly-report`); load the
-returned bundle context once. Use existing tools and authorized connectors only. Generation runs no maintenance
+Run only when the user invoked or confirmed this playbook (`devkit-playbook`, `devkit playbook get
+maintenance/weekly-report` or a confirmed intake offer); load the returned bundle context once. Use existing tools and authorized connectors only. Generation runs no maintenance
 sweep, full test suite, automatic fix, feedback or proposal creation, and changes no source.
 
 ## 1. Capture identity and interval
@@ -27,9 +27,9 @@ sweep, full test suite, automatic fix, feedback or proposal creation, and change
 ## 2. Gather evidence
 
 Read committed content at the captured SHA (`git show <sha>:<path>`). Where document lookup is installed, include
-completed specs (`--history`), all namespaces and every page, and check command help for actual options. Treat
-checkout-only lookup output as a working-tree observation until reconciled with the SHA; include uncommitted
-content only when selected, labeled separately.
+historical documents (`--history`: completed specs, superseded ADRs, settled feedback), all namespaces and every
+page, and check command help for actual options. Treat checkout-only lookup output as a working-tree observation
+until reconciled with the SHA; include uncommitted content only when selected, labeled separately.
 
 - Inventory each source with revision, scope, observed time, result and citation. Cite each claim by commit and
   path or ID; label assessments.

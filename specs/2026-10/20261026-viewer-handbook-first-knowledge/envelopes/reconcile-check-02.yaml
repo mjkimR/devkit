@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T05:41:39.249195Z'
+status: completed
+summary: 'Implementer self-verification of reconcile-check-01 fixes: the read budget applies on opening and the docs/specs prohibition stays a WHILE rule; the Request lifetime Check names HandbookMode.test.ts; §6 limits the failure rule to the manifest; reconcile.md names the Host follow-up for the consumer README and records the FB-viewer-book-rendering rescope via the ADR. No further reviewer call: wording-only fixes inside reviewed targets.'
+findings: []
+checks:
+  rules: PASS devkit rules check on CAP-VIEW and the unit
+diff_scope:
+  base: 3b2197243fbd185221362abd62516133121efa06
+  head: acfc262123bb6ecbeb04a29240ee02e34a3d5a39
+activity_effort: medium

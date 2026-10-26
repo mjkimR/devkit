@@ -432,12 +432,12 @@ wheels = [
 
 [[package]]
 name = "devkit-advisory"
-version = "0.1.3"
+version = "0.1.4"
 source = { editable = "packages/devkit-advisory" }
 
 [[package]]
 name = "devkit-agt"
-version = "0.1.3"
+version = "0.1.4"
 source = { editable = "packages/devkit" }
 dependencies = [
     { name = "click" },
@@ -479,7 +479,7 @@ dev = [{ name = "pytest", specifier = ">=8.0.0" }]
 
 [[package]]
 name = "devkit-catalog"
-version = "0.1.3"
+version = "0.1.4"
 source = { editable = "packages/devkit-catalog" }
 
 [package.dev-dependencies]
@@ -498,7 +498,7 @@ dev = [
 
 [[package]]
 name = "devkit-cli"
-version = "0.1.3"
+version = "0.1.4"
 source = { editable = "packages/devkit-cli" }
 dependencies = [
     { name = "click" },
@@ -513,7 +513,7 @@ requires-dist = [
 
 [[package]]
 name = "devkit-core"
-version = "0.1.3"
+version = "0.1.4"
 source = { editable = "packages/devkit-core" }
 dependencies = [
     { name = "devkit-advisory" },
@@ -528,7 +528,7 @@ requires-dist = [
 
 [[package]]
 name = "devkit-dev"
-version = "0.1.3"
+version = "0.1.4"
 source = { editable = "tools/devkit-dev" }
 
 [package.dev-dependencies]
@@ -543,7 +543,7 @@ dev = [{ name = "devkit-agt", editable = "packages/devkit" }]
 
 [[package]]
 name = "devkit-dist"
-version = "0.1.3"
+version = "0.1.4"
 source = { editable = "packages/devkit-dist" }
 dependencies = [
     { name = "click" },
@@ -599,7 +599,7 @@ wheels = [
 
 [[package]]
 name = "devkit-mcp"
-version = "0.1.3"
+version = "0.1.4"
 source = { editable = "packages/devkit-mcp" }
 dependencies = [
     { name = "devkit-core" },
@@ -620,7 +620,7 @@ requires-dist = [
 
 [[package]]
 name = "devkit-spec"
-version = "0.1.3"
+version = "0.1.4"
 source = { editable = "packages/devkit-spec" }
 dependencies = [
     { name = "click" },
@@ -660,7 +660,7 @@ dev = [
 
 [[package]]
 name = "devkit-starter"
-version = "0.1.3"
+version = "0.1.4"
 source = { editable = "packages/devkit-starter" }
 
 [package.dev-dependencies]
@@ -675,7 +675,7 @@ dev = [{ name = "devkit-dist", editable = "packages/devkit-dist" }]
 
 [[package]]
 name = "devkit-viewer"
-version = "0.1.3"
+version = "0.1.4"
 source = { editable = "packages/devkit-viewer" }
 dependencies = [
     { name = "click" },

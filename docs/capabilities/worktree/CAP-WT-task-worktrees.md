@@ -43,8 +43,8 @@ The module is SDD-agnostic: it does not decide which tasks use a worktree, and i
    After successful locked restoration, `devkit sync --registrations-only` initializes eligible local MCP entries
    using the same interpreter. Dist discovers the optional provider; no runtime import is added to worktree.
    Without the provider this is a no-op. Existing registration conflicts still refuse locked sync; absent fresh
-   entries are initialized only in this separate step. Native handoff rechecks its environment before this step.
-   Registration advisories are returned with the result and a failure keeps the created worktree. Trusted native
+   entries are initialized only in this separate step. `devkit spec proposal handoff --effort` rechecks its environment before this step.
+   Registration advisories are returned with the result and a failure keeps the created worktree. Trusted
    handoff children carry a refusal-only identity constraint for the original owning workspace; sync checks it
    after locks and before each transaction write. No approval or terminal-cleanup authority crosses the process
    boundary. The parent rechecks the constraint after child completion.
@@ -163,15 +163,28 @@ An activity branch nobody moves stays in progress: nothing expires it. `devkit w
 
 `devkit_agt.features.worktree` uses `devkit_core`, distribution project support and `devkit.advisory`; Git runs through `devkit_core.core.git.run_git`.
 
-- `extensions.py`: the `devkit.post_finish` extension point (`run_post_finish`), on `devkit_core.core.extensions`, and the fail-closed check groups `devkit.finish_guard` (`run_finish_guards`) and `devkit.attach_check` (`run_attach_checks`).
-- `lifecycle.py`: `locate`, `check_branch`, `path_for`, `start`, `start_branch`, `attach`, `find`, `finish`, `status` and their results.
-- `stale.py`: `stale_branches` and the `devkit.hygiene` extension `hygiene`; `gh` runs through `run_gh`, which callers and tests can replace. `start` runs `devkit sync --locked` as a subprocess (`python -m devkit_dist sync --locked`), so the module still imports no other area.
-- `merging.py`: the result commit (`build_result`, `merge_message`, `merge_method`, `check_identity`), `fast_forward` and the integration lock (`integration_lock`); with `advance=True` (the integration service only) it merges an advanced target with `git merge-tree --write-tree` (Git 2.38 or later, `WORKTREE_GIT_UNSUPPORTED`; a conflict is `WORKTREE_MERGE_CONFLICT`).
-- `config.py`: `WorktreeConfig`, `read_worktree_config`.
-- `errors.py`: one class per code ([reference](../../development/reference/worktree.md#error-codes)).
-- `cli.py`: `devkit worktree start|finish|status|stale`.
+The package is laid out by layer under `features/worktree/`:
 
-The lifecycle was ported from specrig's `worktree` package. the scope registry, its journal and the proposal-directory cleanup are methodology and live in devkit-spec, attached through the `devkit.post_finish` extension point; its `git.worktree` policy (which tasks run in a worktree) is methodology and stays there too.
+- `models/`: `config.py` (`WorktreeConfig` and the duration grammar), `errors.py` (one class per code,
+  [reference](../../development/reference/worktree.md#error-codes)), `lifecycle.py` (`Position` and the start,
+  finish and status results), `planning.py` (`FinishPlan`) and `pull_request.py` (the bound GitHub `Repository`).
+- `repositories/`: `config.py` (`read_worktree_config` of the `[worktree]` table) and `pull_request.py` (bounded,
+  injectable `gh` operations).
+- `services/`: `extensions.py`, the `devkit.post_finish` extension point (`run_post_finish`) on
+  `devkit_core.core.extensions` and the fail-closed check groups `devkit.finish_guard` (`run_finish_guards`) and
+  `devkit.attach_check` (`run_attach_checks`); `merging.py`, the result commit (`build_result`, `merge_message`,
+  `merge_method`, `check_identity`), `fast_forward` and the integration lock (`integration_lock`): with
+  `advance=True` (the integration service only) it merges an advanced target with `git merge-tree --write-tree` (Git
+  2.38 or later, `WORKTREE_GIT_UNSUPPORTED`; a conflict is `WORKTREE_MERGE_CONFLICT`).
+- `usecases/`: `lifecycle.py` (`locate`, `check_branch`, `path_for`, `start`, `StartBranch`, `attach`, `find`,
+  `finish`, `discard` and `WorktreeStatusQuery`), `configured.py` (project policy and extension guards applied to
+  them), `planning.py` (`plan_finish`, `validate_finish`) and `stale.py` (`stale_branches` and the `devkit.hygiene`
+  extension `hygiene`; `gh` runs through `run_gh`, which callers and tests can replace). `start` runs
+  `devkit sync --locked` as a subprocess (`python -m devkit_dist sync --locked`), so the package still imports no
+  other area.
+- `cli.py`: `devkit worktree start|finish|status`, with the stale-branch report as `status --stale`.
+
+The lifecycle is generic. The scope registry, its journal and the proposal-directory cleanup are methodology and live in devkit-spec, attached through the `devkit.post_finish` extension point; its `git.worktree` policy (which tasks run in a worktree) is methodology and stays there too.
 
 
 The library's `start(position, branch, ..., revision=COMMIT)` optionally pins the source commit. It resolves the

@@ -1,0 +1,19 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T07:44:05.579372Z'
+status: completed
+summary: 'Development of SPEC-foundation-documents from specify to the final change report: steering documents (context_documents + get-context documents, RULE-steering-documents, steering cited-ID check), glossary moved to docs/steering/ with search, seed, guidance, handbook fallback and viewer Steering group; code-reviewer review-01 (4 findings) fixed and reverified, reconcile-reviewer reconcile-check-01 (3 findings) fixed and self-verified in reconcile-check-02; next stage integrate is the Host''s'
+findings: []
+checks:
+  tests: PASS just test-affected mode=full 5252 passed 14 skipped
+  dist: PASS just test-dist 1073
+  viewer: PASS just viewer lint/check/test/pack/build
+  lint: PASS just lint-check, just check, devkit rules check --ci --base main
+  sync: PASS devkit sync --check
+  smoke: PASS just smoke
+diff_scope:
+  base: ''
+  head: 60cfd2275c4429bfd92c95ed51b7d7e0e7316f6e
+activity_effort: medium

@@ -16,13 +16,16 @@ Text output (paths are relative to the workspace root):
   is one of the values.
 
 ``refs`` and ``list`` end with ``[PAGE: total= offset= limit= count= next=]`` and, when more items follow,
-``[NEXT_CMD: ...]`` for the next page. Files that could not be indexed are ``SPEC_DOCUMENT_INVALID`` warnings;
-``list --status`` adds a ``SPEC_LIST_STATUS_UNKNOWN`` notice naming the values no document of the selected kinds
-carries.
+``[NEXT_CMD: ...]`` for the next page. ``list`` hides historical documents (``DocumentIndex.is_browsing_historical``)
+unless ``--history`` or ``--status`` is given, adds ``hidden=`` (how many it hid) to its page line and, when that is
+above zero, ``[HISTORY_CMD: ...]`` repeating the command with ``--history``. Files that could not be indexed are
+``SPEC_DOCUMENT_INVALID`` warnings; ``list --status`` adds a ``SPEC_LIST_STATUS_UNKNOWN`` notice naming the values no
+document of the selected kinds carries.
 """
 
 from __future__ import annotations
 
+import shlex
 from collections.abc import Sequence
 
 import click
@@ -49,10 +52,13 @@ from devkit_spec.features.documents.usecases.browse import (
     _proposal_fields,
     _shown_status,
 )
-from devkit_spec.utils.output import echo_page, sentinel
+from devkit_spec.utils.output import COMMAND, echo_page, fields_line, sentinel
 
 WORKSPACE = workspace_option()
-LIMIT = click.option("--limit", "-n", type=int, default=20, show_default=True, help="Items per page; 0 for all")
+DEFAULT_LIMIT = 20
+LIMIT = click.option(
+    "--limit", "-n", type=int, default=DEFAULT_LIMIT, show_default=True, help="Items per page; 0 for all"
+)
 OFFSET = click.option("--offset", type=int, default=0, show_default=True, help="Items to skip")
 # Feedback ``severity`` values from the most to the least urgent; any other value, or none, ranks after them.
 # The proposal frontmatter fields ``list`` prints on proposal lines and records.
@@ -67,6 +73,23 @@ ALL_NAMESPACES = click.option("--all-namespaces", is_flag=True, help="Show every
 
 def _paging_args(workspace_root: str | None, limit: int) -> list[str]:
     return [*(["-w", workspace_root] if workspace_root is not None else []), "--limit", str(limit)]
+
+
+def _echo_list_page(
+    total: int, offset: int, limit: int, count: int, hidden: int, args: list[str], workspace_root: str | None
+) -> None:
+    """``list``'s ``[PAGE: ... hidden=]``, then ``[NEXT_CMD: ...]`` when more items follow and ``[HISTORY_CMD: ...]``
+    when historical documents were hidden (``--limit`` repeated only when not the default)."""
+    following = offset + count if limit and offset + count < total else None
+    click.echo(fields_line("PAGE", total=total, offset=offset, limit=limit, count=count, next=following, hidden=hidden))
+    if following is not None:
+        click.echo(
+            f"[NEXT_CMD: {COMMAND} {shlex.join([*args, *_paging_args(workspace_root, limit), '--offset', str(following)])}]"
+        )
+    if hidden:
+        workspace = ["-w", workspace_root] if workspace_root is not None else []
+        paging = ["--limit", str(limit)] if limit != DEFAULT_LIMIT else []
+        click.echo(f"[HISTORY_CMD: {COMMAND} {shlex.join([*args, '--history', *workspace, *paging])}]")
 
 
 def _finish(notices: Sequence[AdvisoryError]) -> None:
@@ -163,7 +186,11 @@ def refs_cmd(
 @click.option("--area", "-a", default=None, help="Keep documents whose frontmatter area contains this text")
 @click.option("--query", "query", default=None, help="Keep documents whose ID or title contains this text")
 @click.option(
-    "--history", is_flag=True, help="Include the files of completed spec bundles (their feedback is always included)"
+    "--history",
+    is_flag=True,
+    help="Include historical documents: completed spec bundles (their open feedback is always included), done or "
+    "dropped milestones, and terminal statuses (feedback resolved, promoted, dismissed, forwarded; decision "
+    "superseded; proposal rejected). --status shows the statuses it names without it",
 )
 @click.option(
     "--where",
@@ -206,10 +233,10 @@ def list_cmd(
     --file finds the documents that own a code path through their ``entrypoints``; --where filters by any
     frontmatter field, such as a feedback document's severity or scope. Feedback is ordered by severity. KIND is one
     of: capability, usecase, architecture, decision, proposal, proposal-decision, spec, plan, tasks, reconcile,
-    feedback, material. In a workspace with namespaces, the namespace of the current directory (plus the
+    feedback, material, milestone. In a workspace with namespaces, the namespace of the current directory (plus the
     global documents) is shown unless --namespace or --all-namespaces says otherwise.
     """
-    selected, shown, tasks, notices, scope, planning, where, historical = ListDocumentsUseCase().execute(
+    result = ListDocumentsUseCase().execute(
         resolve_root(workspace_root),
         kinds,
         status,
@@ -223,10 +250,13 @@ def list_cmd(
         offset,
         limit,
     )
+    selected, shown, tasks, notices = result.selected, result.shown, result.tasks, result.notices
+    scope, planning, where, historical = result.scope, result.planning, result.where, result.historical
     if is_json(output_format):
         echo_json(
             {
                 "total": len(selected),
+                "hidden": result.hidden,
                 "offset": offset,
                 "limit": limit,
                 "namespace": scope.selection.name,
@@ -270,5 +300,5 @@ def list_cmd(
         for item in where:
             args += ["--where", item.given]
         args += scope.args(namespace, all_namespaces)
-        echo_page(len(selected), offset, limit, len(shown), [*args, *_paging_args(workspace_root, limit)])
+        _echo_list_page(len(selected), offset, limit, len(shown), result.hidden, args, workspace_root)
     _finish(notices)

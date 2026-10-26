@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T07:02:47.827265Z'
+status: completed
+summary: Kind definition table in documents/models/kinds.py; ID grammar, index terminal statuses, six spec rules and entrypoint paths read it at check time; cross-kind fallbacks raise KindTableError. AC-01..AC-06 met; characterization fixture and repository outputs byte-identical to the starting head
+findings: []
+assumptions:
+- Repository captures after the change read a git-archive snapshot of 6a19ff5f so the unit's own document edits do not enter the comparison
+checks:
+  tests: PASS just test-affected 1562 passed (partial selection)
+  build: PASS just check devkit-spec 0 errors; devkit sync --check matches
+  lint: PASS just lint-check devkit-spec; devkit rules check --ci --base 6a19ff5f errors=0
+  characterization: PASS diff -r -x ws scratch/char/before scratch/char/after empty
+diff_scope:
+  base: 6a19ff5ff648cc69904559b659faaa4c55dbf53b
+  head: 8aa58bf6b70baa7ec93d6ccc3d980e1c49c5b5ca
+activity_effort: medium

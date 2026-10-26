@@ -41,7 +41,11 @@ from devkit_spec.utils.output import fields_line, sentinel
     help="Only this kind (repeatable)",
 )
 @click.option(
-    "--history", is_flag=True, help="Include the files of completed spec bundles (their feedback is always included)"
+    "--history",
+    is_flag=True,
+    help="Include historical documents: completed spec bundles (their open feedback is always included), done or "
+    "dropped milestones, and terminal statuses (feedback resolved, promoted, dismissed, forwarded; decision "
+    "superseded; proposal rejected)",
 )
 @NAMESPACE
 @ALL_NAMESPACES
@@ -77,7 +81,7 @@ def search_cmd(
 ) -> None:
     """Rank documents for QUERY (English works best: frontmatter is the main signal).
 
-    An exact ID, path or file name is pinned first. docs/glossary.yaml synonyms expand the query.
+    An exact ID, path or file name is pinned first. docs/steering/glossary.yaml synonyms expand the query.
     """
     if limit < 0:
         raise ArgumentError(

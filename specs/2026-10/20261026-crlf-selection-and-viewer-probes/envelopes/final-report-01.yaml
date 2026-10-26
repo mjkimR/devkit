@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T06:01:59.308765Z'
+status: completed
+summary: Selection edits keep a CRLF file's line endings through the shared _match_line_endings rule (Red then Green regression tests); just viewer probe runs a probe directory's vitest files with the package's resolution; CAP-DIST-sync-and-transactions, the viewer reference and the code-reviewer contract name the behavior; both source feedback items resolved.
+findings: []
+assumptions:
+- Item 1 is a defect handled inside this sdd-spec-feature unit with a Red-then-Green regression test; no separate red/green envelopes, since the bound workflow names none.
+checks:
+  tests: PASS just test-affected 2570 passed 1 skipped; just test-dist 1049 passed; just viewer test 93 passed; just viewer probe exit 0 passing, 1 failing, 2 invalid dir
+  build: PASS just viewer pack and just viewer build with no tracked change; uv run devkit sync --check matches
+  lint: PASS just lint-check devkit-dist; just check devkit-dist 0 errors; just viewer lint and check; devkit rules check --ci --base f076ddbc
+diff_scope:
+  base: f076ddbc46bacc6b380c99f78f8f475883def577
+  head: 731ee2a20f8c9592a3d51f43e1f471b7d0fafbc6

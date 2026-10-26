@@ -1,0 +1,24 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T03:30:30.948305Z'
+status: completed
+summary: 'reconcile-reviewer (medium): four targets, reference page and five feedback files verified against code and decisions; two P2 findings'
+findings:
+- issue: reconcile.md targets leave out docs/development/reference/distribution.md, which the diff changes
+  evidence: git diff 2bbd8251 6d520abc --stat; spec-sync step 2
+  failure_condition: A consumer of reconcile targets does not see the changed reference page
+  suggested_action: Add the file as a modified target and rerun devkit spec scope update
+  resolution: open
+  severity: P2
+- issue: CAP-DLV-proposal-incubation Host-authorized lifecycle section still says the Host presents the exact immutable report and the CLI revalidates report identity
+  evidence: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md:593-596; materials/decisions.md item 1
+  failure_condition: An agent believes the accept or handoff CLI checks a published report
+  suggested_action: Drop report from the presented items and report identity from the revalidation list; name it in reconcile.md
+  resolution: open
+  severity: P2
+checks: {}
+diff_scope:
+  base: 2bbd8251c16af4d6185acf94f5d8cc7f3b146624
+  head: 6d520abcb20be87a20e105e156d2e221c75652ff

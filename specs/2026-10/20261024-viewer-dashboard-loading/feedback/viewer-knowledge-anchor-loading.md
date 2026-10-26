@@ -8,7 +8,7 @@ target: packages/devkit-viewer/frontend/src/lib/features/knowledge/KnowledgeView
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-24
 ---
 
@@ -40,3 +40,11 @@ The knowledge tabs call indexDocuments before listing proposals or specs. One me
 ## Restart and Acceptance
 
 Revisit when profiling identifies this path as the remaining user-visible delay. Compare cold first-list latency and blob counts against full indexing; preserve filters, bundle navigation and cross-document links.
+
+## Disposition
+
+Dismissed on the user's decision (2026-10-26). The Read tab, the cold path that mattered, now shows the handbook
+first (`SPEC-viewer-handbook-first-knowledge`: 3 reads instead of 922). The Proposals and Specs tabs still index the
+whole tree on first open, about one second locally with a 30-second cache, and anchor-first loading would first need
+a design for which parse failures are known before selection. Re-raise it with fresh profiling if those tabs become
+the user-visible delay.

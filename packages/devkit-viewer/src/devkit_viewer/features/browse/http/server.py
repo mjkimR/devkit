@@ -8,10 +8,13 @@ content through the browser by DNS rebinding; no response carries a CORS header.
 - ``/api/repos/<id>/info``: ``{"repo_id", "default_branch"}``;
 - ``/api/repos/<id>/tree?path=``: ``{"items": [{"name", "path", "type", "size"?}]}`` from the working tree;
 - ``/api/repos/<id>/blob?path=``: ``{"path", "encoding": "base64", "content", "size}`` from the working tree;
+- ``/api/repos/<id>/dashboard-list?path=<section>``: ``{"items": [{"path", "content", "encoding"}], "errors"}``;
+- ``/api/repos/<id>/planning-proposals``: ``{"sources", "items": [{"source", "path", "content", "encoding"}], "errors"}``;
 - ``/api/repos/<id>/shared?generation=&kind=&slug=``: ``{"artifacts": [...]}`` or ``{"metadata", "content", "artifact_uri"}``.
 
 ``default_branch`` reports the checked-out branch or ``HEAD`` when detached. A legacy ``ref`` parameter is ignored.
-Errors are
+``tree`` and ``blob`` accept ``source=<Planning source ID>`` for paths in that source's proposal directory; every other
+endpoint ignores it. Errors are
 ``{"error": {"code", "message"}}`` with the status of the ``ReadError``. Any other path serves a file the bundled
 ``static/`` directory lists, looked up by its decoded path (``/`` is ``index.html``).
 """
@@ -171,7 +174,11 @@ class Handler(BaseHTTPRequestHandler):
                 slug=query.get("slug", [""])[0] or None,
             )
         return read_repository(
-            repo, parts[2], query.get("path", [""])[0], recursive=query.get("recursive", [""])[0] == "true"
+            repo,
+            parts[2],
+            query.get("path", [""])[0],
+            recursive=query.get("recursive", [""])[0] == "true",
+            source=query.get("source", [""])[0],
         )
 
     def _review(self, path: str) -> None:

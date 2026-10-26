@@ -51,12 +51,13 @@ class SpecConfigError(SpecError, ConfigError):
 
 
 class GlossaryInvalidError(SpecError):
-    """``docs/glossary.yaml`` cannot be read or does not hold ``terms: [{primary, synonyms}]`` (``INPUT_ERROR``)."""
+    """``docs/steering/glossary.yaml`` cannot be read or does not hold ``terms: [{primary, synonyms}]``
+    (``INPUT_ERROR``)."""
 
     code = "SPEC_GLOSSARY_INVALID"
     input_error = True
-    target_files = ("docs/glossary.yaml",)
-    fix = "Correct docs/glossary.yaml: terms is a list of {primary: <term>, synonyms: [<term>, ...]}"
+    target_files = ("docs/steering/glossary.yaml",)
+    fix = "Correct docs/steering/glossary.yaml: terms is a list of {primary: <term>, synonyms: [<term>, ...]}"
 
 
 class ProposalSlugError(SpecError):
@@ -228,7 +229,10 @@ class ProposalWorkflowError(SpecError):
 
 
 class ProposalTargetExistsError(SpecError):
-    """A file or directory the handoff would create already exists (``BLOCKED``); nothing was written."""
+    """A file or directory the handoff would create already exists (``BLOCKED``), or a proposal path conflicts with a
+    path of the existing materials directory it would merge into; nothing was written. A merge conflict is raised
+    without the guardrail and with the user as actor (``INTERACTION``: ask the user before reconciling), with its own
+    fix naming the source path, the destination path and the collision kind, never removal of the directory."""
 
     code = "SPEC_PROPOSAL_TARGET_EXISTS"
     guardrail = True
@@ -613,21 +617,24 @@ class ScopeRegisterFailedWarning(ScopeError):
 
 
 class HandoffNotReadyError(SpecError):
-    """The CLI handoff lacks a clean base or accepted, completed proposal."""
+    """The CLI handoff lacks a clean base or accepted, completed proposal (``BLOCKED``): a prerequisite the user or
+    Host resolves, never a tool defect."""
 
     code = "SPEC_HANDOFF_NOT_READY"
-    fix = "Resolve the reported prerequisite in the base checkout, then rerun devkit spec proposal handoff with the current report URI"
+    guardrail = True
+    fix = "Resolve the prerequisite the message names, then rerun devkit spec proposal handoff from the retained base checkout"
 
 
 class HandoffReplyError(SpecError):
-    """The CLI handoff has no valid activity effort."""
+    """The CLI handoff has no valid activity effort (``INPUT_ERROR``)."""
 
     code = "SPEC_HANDOFF_REPLY_INVALID"
+    input_error = True
     fix = "Rerun devkit spec proposal handoff with --effort low, --effort medium or --effort high"
 
 
 class HandoffStaleError(SpecError):
-    """The approved proposal, base commit or policy changed before handoff."""
+    """The approved proposal, base commit or policy changed before handoff (``MAINTENANCE``)."""
 
     code = "SPEC_HANDOFF_STALE"
-    fix = "Inspect the changed base or worktree, publish a current report and rerun devkit spec proposal handoff"
+    fix = "Inspect the changed base or worktree, then rerun devkit spec proposal handoff for the remaining effects"

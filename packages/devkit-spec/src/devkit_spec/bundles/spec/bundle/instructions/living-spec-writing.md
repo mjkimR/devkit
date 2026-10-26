@@ -1,6 +1,6 @@
 ---
 name: living-spec-writing
-description: Read before authoring, editing or reviewing docs/ or specs/ documents. Defines current-state writing, decision placement, history placement, completed specs, use case and capability traceability, summaries, ID references, terminology and the glossary.
+description: Read before authoring, editing or reviewing docs/ or specs/ documents. Defines current-state writing, decision placement, history placement, completed specs, use case and capability traceability, summaries, ID references, steering documents, terminology and the glossary.
 ---
 
 # Living Spec Writing
@@ -45,18 +45,28 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
   (for a spec bundle, on `spec.md`, `plan.md`, `tasks.md` and `reconcile.md`); an approved ADR is renamed only by
   compaction. Then run `devkit rules fix` to move current references to the new ID.
 
+## Steering documents
+
+- `docs/steering/` holds project-wide background that is neither a contract nor evidence: the glossary, the
+  product's purpose, a tone or style guide, a domain overview. One Markdown file per topic, directly in the
+  directory, with only `title` and a one-sentence English `summary` saying when an agent reads it; no `id`, so it
+  stays outside the document index and search. Cite documents in it by full ID in backticks; they must resolve.
+- `devkit get-context spec` lists every steering file's `title` and `summary`; keep each body short enough to read
+  whole (`RULE-steering-documents` caps the count and size). Put behavior in capabilities and evidence in materials,
+  never in a steering document.
+
 ## Glossary
 
-- Terms are defined in `docs/glossary.md`. A package's documents (`docs/packages/<name>/`) may keep
+- Terms are defined in `docs/steering/glossary.md`. A package's documents (`docs/packages/<name>/`) may keep
   `docs/packages/<name>/glossary.md`, read together with the root glossary. A package redefinition applies to that
   package's documents only.
 - Check the glossary while naming a domain concept or registering a term. No check enforces the rules below.
 
 1. Do not name a new domain concept with a bare generic noun (target, resource, scope, context, state, status,
    revision, data, item); add a qualifier that shows what it applies to, who owns it or where it ends. Project
-   additions and exceptions live in a section of `docs/glossary.md`.
+   additions and exceptions live in a section of `docs/steering/glossary.md`.
 2. Use the full registered term in titles, headings, table cells and sentences meant to stand alone.
-3. One concept, one term. Record rejected synonyms in the Avoid column; where `docs/glossary.yaml` exists, also add
+3. One concept, one term. Record rejected synonyms in the Avoid column; where `docs/steering/glossary.yaml` exists, also add
    each Avoid entry as a synonym of the term's cluster.
 4. Register the same spelling with a different owner or meaning separately, with its owner; never bulk-replace a word
    across contexts.

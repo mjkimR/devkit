@@ -1,0 +1,14 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'Spec depth, feature. Viewer overlays Planning proposals: checkout cards render
+  first; a separate request scans plan-* worktrees, local refs/heads/plan-* and remote-tracking
+  refs/remotes/*/plan-* (precedence in that order; no fetch, no gh, no PR); plan-<slug>
+  contributes only PROP-<slug>; batched Git reads; source badge; detail reads use
+  the same source, allowed only under docs/proposals/PROP-*; in-place update without
+  reordering until Refresh; roadmap stays on the checkout; ADR partially superseding
+  ADR-viewer-working-tree.'
+by: user
+at: '2026-10-25T23:16:27.864177Z'

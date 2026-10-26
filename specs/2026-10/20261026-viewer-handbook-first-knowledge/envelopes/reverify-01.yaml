@@ -1,0 +1,28 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T05:37:58.837473Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified both fixes: SddViewer derives bookRequested from a request bound to its source and branch, and a deep link only sets it. The reviewer''s three probes now pass, and the three new SddViewer tests fail on the old code and pass on the fix.'
+findings:
+- issue: After a book request, a branch or dataSource change starts a full index scan of the new branch or source before SddViewer's reset effect clears the request.
+  evidence: 'packages/devkit-viewer/frontend/src/lib/SddViewer.svelte:134-139; packages/devkit-viewer/frontend/src/lib/features/knowledge/KnowledgeViews.svelte:71-78; probe scratch/review-01/reset.probe.test.ts: dev scans [docs, specs]'
+  failure_condition: SddViewer in the reading tab with the book requested, then the host changes branch or dataSource
+  suggested_action: Bind the request to the source and branch it was made for so the reset applies in the same update; test no scan of the new ref and the dataSource case
+  resolution: resolved
+  severity: P2
+- issue: bookRequested is recomputed when initialView or initialPath changes, so a host that writes sdd:path-change back into its props drops the request across a rail switch.
+  evidence: 'packages/devkit-viewer/frontend/src/lib/SddViewer.svelte:135-139; probe scratch/review-01/reset.probe.test.ts: chapters after return 0'
+  failure_condition: A host re-renders SddViewer with initialView proposals after the book was requested, then the person selects Read
+  suggested_action: Reset only on source or branch change; let a docs/ deep link set the request without a later non-book initialView clearing it
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS just viewer test (93 tests); scratch/review-01 probes 3/3
+  lint: PASS just viewer lint; just viewer check 0 errors
+diff_scope:
+  base: 3b2197243fbd185221362abd62516133121efa06
+  head: bdacf5205742aacc14f4e77cfbe9ec9b184f2f97
+activity_effort: medium

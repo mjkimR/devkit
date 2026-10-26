@@ -1,0 +1,32 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T23:34:50.660188Z'
+status: completed
+summary: 'REVISE: AC-01 to AC-08 confirmed by test_proposal_handoff_merge.py, test_proposal_cli.py and test_handoff.py; preflight, roll-back records, lstat containment, junk, link origins and non-merge parity verified; three P3 findings'
+findings:
+- issue: When the dated materials directory itself is a regular or non-regular file, the fix tells the agent to fix the proposal side, which cannot resolve the conflict.
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py:916-921
+  failure_condition: docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug> is a file; renaming materials/ makes its files carried extras under the same path and the rerun is refused again.
+  suggested_action: Give a conflict at the dated directory itself its own directive (move the non-directory path aside).
+  resolution: open
+  severity: P3
+- issue: A preflight byte comparison that cannot read a file raises SPEC_PROPOSAL_INVALID with the default fix; neither the spec nor the CAP error table names this case.
+  evidence: packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py:889-892
+  failure_condition: Opening one of two same-path regular files fails (permission error) during preflight.
+  suggested_action: Raise with a fix naming the unreadable path and state the case in the CAP error table.
+  resolution: open
+  severity: P3
+- issue: 'AC-07 asks for the composed --effort handoff to report materials_merged: true; its only test asserts the no-merge values.'
+  evidence: packages/devkit-spec/tests/integration/features/delivery/test_handoff.py:130
+  failure_condition: If the composed handoff stops serializing HandoffResult.to_dict() in full, the merge fields are lost there and no test fails.
+  suggested_action: Add a composed merge case, or accept the shared to_dict() as coverage and say so.
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test devkit-spec merge and CLI tests (34 passed, reviewer); just test-affected 1463 passed
+  lint: PASS just lint devkit-spec, just check devkit-spec, just rules-check
+diff_scope:
+  base: 25137beb115391de2be93be93a21a2d38c145ba5
+  head: 891ed1befd953d5396e713125a115f7aee7224ac

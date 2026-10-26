@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:44:01.675074Z'
+status: completed
+summary: Spec bundle guidance now carries selected-bundle sync outputs in the worker write scope, worker-producible before/after baselines, code-reviewer probe tests in an ignored path and the sandbox-safe worktree and shared-Git route; five source feedback items resolved; CAP-DLV-delivery-workflows reconciled
+findings: []
+assumptions:
+- FB-worktree-sandbox-location's --workspace-root route does not relocate worktrees (path_for, CAP-WT-task-worktrees); the guidance documents the fixed path and the per-operation approval route instead
+- just rules-check reports 2 RULE-document-reference errors in docs/proposals/PROP-review-refactor/proposal.md that exist on the base and lie outside this unit's write scope
+checks:
+  tests: PASS just test-affected (mode=partial, 1487 passed)
+  build: PASS just check devkit-spec (pyright 0 errors); uv run devkit sync --check no change
+  lint: PASS just lint-check devkit-spec; devkit rules check --ci --base ab7935404261 (errors=0)
+diff_scope:
+  base: ab7935404261cf0bcf7754ef361ef83772423231
+  head: 915fb8b31049e4294af4ce8ad0e052129d0ae4d2

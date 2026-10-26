@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T07:00:48.754270Z'
+status: completed
+summary: 'Implementer self-verification of reconcile-check-01''s four P3 findings, all wording: CAP-DOCS 4.4 names the table''s terminal_statuses, by_prefix, Summary and FormatScope and calls PREFIXES/TERMINAL_STATUSES import-time copies; CAP-GOV-spec-rules 3.2 item 8 adds the area-scoped case and the RULES_RUN_FAILED failure; reconcile.md lists the six omitted constants. No scope expansion, so no second reviewer call'
+findings: []
+checks:
+  rules: PASS devkit rules check --staged
+  findings: PASS 4/4 of reconcile-check-01 fixed, verified by the implementer against id_convention.py, index.py and documents/__init__.py
+diff_scope:
+  base: 6a19ff5ff648cc69904559b659faaa4c55dbf53b
+  head: 2902afa84108baa8c61514ffd8d6e3ada16bfd82
+activity_effort: medium

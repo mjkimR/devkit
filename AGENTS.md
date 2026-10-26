@@ -16,7 +16,9 @@ Personal developer tools monorepo.
 - `devkit-dist` never imports `devkit_agt` or the MCP SDK. `devkit-agt` mounts its commands through `devkit.commands` entry points; `devkit-dist` owns the `devkit` executable. The `devkit-dist` tests also run without `devkit-agt` installed (`just test-dist`).
 - `guides/` holds the agent-facing installation guides a consumer's agent follows from a GitHub link; keep their commands, codes and bundle recommendations in step with `docs/` and the packages.
 - `docs/capabilities/<area>/` is canonical for each module's behavior, and `docs/architecture/` defines system structure; `docs/development/reference/<module>.md` and package READMEs stay quick references that point to those contracts, and the bundled guide instructions are consumer-facing mirrors kept in step.
-- Write all documentation, architecture specifications, and guide materials in English.
+- Write all documentation, architecture specifications, and guide materials in English. The one exception is the
+  release handbook: non-English text belongs only under `handbook/<lang>/` for a language other than `en`
+  (`ADR-localized-handbook-language-exception`); `handbook/en/` and `handbook/manifest.json` stay English.
 - Do not commit `.env` or log secrets/PII.
 
 ## Agent-First Design
@@ -81,11 +83,11 @@ This repository installs agent assets with `devkit`. `.devkit/config.toml` selec
 bundles; `.devkit/installation.json` records what is deployed.
 
 - Before work that touches a bundle's assets, run `uv run devkit get-context <bundle>` once per bundle in the current agent context. Installed bundles: `advisory`, `authoring`, `devkit`, `devkit-dev`, `harness`, `response-style`, `spec`.
-- Entry skill `devkit-playbook`: find and run an operational playbook (explicit user invocation only).
+- Entry skill `devkit-playbook`: find and run an operational playbook the user invokes or confirms.
 - Entry skill `devkit-workflow`: diagnose and follow the delivery workflow stage of a work unit.
 - Never edit `.devkit/managed/` or projected agent files; change the source bundle or use `devkit override`.
 - Before replying, read and apply the `response-style` skill. Put the conclusion in the first sentence. Use `→ **Core sentence.** Explanation` for ordinary points; preserve required facts and formats, and make unfinished work and necessary user decisions clear.
-- Before any development work, run `uv run devkit get-context spec` once per agent context and follow it. Start work with `/spec <intent>`; `/spec-next` orients. `docs/` is the current-state Living Spec, `specs/` holds feature specs.
+- Before any development work, run `uv run devkit get-context spec` once per agent context and follow it. Start work with `/spec <intent>`; each new task intake runs its intake step first; `/spec-next` orients. `docs/` is the current-state Living Spec, `specs/` holds feature specs.
 
 This block is managed by `devkit sync`; edit outside the markers only.
 <!-- DEVKIT:END -->

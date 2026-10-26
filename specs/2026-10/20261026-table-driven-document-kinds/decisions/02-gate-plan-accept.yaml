@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-table-driven-document-kinds
+by: user
+at: '2026-10-26T06:26:29.166796Z'

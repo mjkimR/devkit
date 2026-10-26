@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T07:43:35.953809Z'
+status: completed
+summary: 'Swept this Development run (specify, build, review, reconcile): recorded FB-entrypoints-apply-ignores-file-codes; no duplicates among open feedback'
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0

@@ -590,6 +590,30 @@ def test_global_milestone_path_and_word_led_slug(tmp_path: Path) -> None:
     assert any(v.file.endswith("MS-2026-q4.md") and "Milestone" in v.message for v in violations)
 
 
+def test_misplaced_path_remediation_names_each_kinds_location(tmp_path: Path) -> None:
+    files = {
+        "docs/misplaced.md": "---\nid: MS-misplaced\n---\n# [MS-misplaced] Invalid\n",
+        "docs/roadmap/MS-2026-q4.md": "---\nid: MS-2026-q4\n---\n# [MS-2026-q4] Invalid\n",
+        "docs/decisions/ADR-0001-legacy.md": "---\nid: ADR-legacy\n---\n# [ADR-legacy] Legacy\n",
+        "specs/feedback/loose.md": "---\nid: FB-loose\n---\n# [FB-loose] Loose\n",
+        "docs/capabilities/CAP-AUTH-flat.md": "---\nid: CAP-AUTH-flat\n---\n# [CAP-AUTH-flat] Flat\n",
+    }
+    violations = check(RULE, tmp_path, files)
+    remediations = {v.file: v.remediation for v in violations if v.message.startswith("Invalid partition path")}
+    milestone = (
+        "Rename or move the file to docs/roadmap/MS-{slug}.md (the ID is the file stem), then run `devkit rules fix`"
+    )
+    dated = "Move the file to {YYYY-MM}/{YYYYMMDD}-{slug} with the decision or start date, then run `devkit rules fix`"
+    living = "Rename or move the file to the required path (the ID is the file stem), then run `devkit rules fix`"
+    assert remediations == {
+        "docs/misplaced.md": milestone,
+        "docs/roadmap/MS-2026-q4.md": milestone,
+        "docs/decisions/ADR-0001-legacy.md": dated,
+        "specs/feedback/loose.md": dated,
+        "docs/capabilities/CAP-AUTH-flat.md": living,
+    }
+
+
 def test_historical_milestone_ids_require_explicit_target(tmp_path: Path) -> None:
     path = "docs/roadmap/MS-old.md"
     assert check(RULE, tmp_path, {path: "---\nid: MS-wrong\nstatus: done\n---\n# [MS-wrong] Old\n"}) == []

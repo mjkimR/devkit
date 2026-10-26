@@ -16,6 +16,9 @@ user instructions take precedence. Never end the user's session on your own.
 
 - `docs/` is the Living Spec, the current contract: capabilities, use cases, architecture and decisions. A feature spec
   is `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` (`spec.md`, `plan.md`, `tasks.md`) and stays as history once completed.
+- `docs/steering/` holds project-wide background (glossary, product, style); `devkit get-context spec` lists each
+  file's title and summary under `documents`. Read a file's body before a wording, naming, interface or content
+  decision its summary covers.
 - Read current contracts and active specs (`devkit spec list spec`) before drafting new work. In a package namespace
   (`docs/packages/<name>/`), `list` and `search` cover that namespace plus global documents; pass `--all-namespaces`
   for cross-package impact.

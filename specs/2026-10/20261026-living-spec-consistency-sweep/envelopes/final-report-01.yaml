@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T01:54:42.408393Z'
+status: completed
+summary: 22 findings resolved in docs/ (23 files), CLI help and docstring text (worktree, spec list, distribution -w) and the spec classification guidance; both source FBs resolved; 7 out-of-scope observations recorded as feedback
+findings: []
+assumptions:
+- Item 18 keeps devkit rules phases and test hidden and documents the hiding, following the documented workflow authoring precedent
+checks:
+  tests: PASS just test-affected 2649 passed 1 skipped
+  build: PASS just check devkit, devkit-spec, devkit-dist 0 errors; devkit sync --check OK
+  lint: PASS devkit rules check --ci --base 46229c7b errors=0; just lint-check devkit, devkit-spec, devkit-dist
+diff_scope:
+  base: 46229c7b86111ceed75bef72eb49912e7e1b819e
+  head: 078cc2814971f78aefca99fea454cc817f3fd1d2

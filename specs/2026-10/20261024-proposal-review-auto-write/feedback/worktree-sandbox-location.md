@@ -8,7 +8,7 @@ target: .agents/skills/spec/references/worktree.md
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-24
 ---
 
@@ -36,3 +36,12 @@ Observed: devkit worktree start created the required worktree beside the checkou
 - **Conditions**: Workspace-write sandbox; linked worktree created outside the writable checkout.
 - **Workarounds Attempted**: Escalated write succeeded; setting `--workspace-root` inside the checkout was identified as a future alternative but not tested in this run.
 - **Related Assets**: `devkit worktree start --workspace-root`; `.agents/skills/spec/references/worktree.md`.
+
+## Disposition
+
+Resolved by `SPEC-delegation-sandbox-guidance`, with a correction: `--workspace-root` does not place a worktree. It
+only names a directory inside the checkout; the task worktree is always `<parent of base>/<base name>-wt-<branch>`
+(`CAP-WT-task-worktrees`). The `spec` skill's `references/worktree.md` now states this under "Sandboxed sessions"
+and names the permitted route when the path is outside the writable roots: the host's per-operation approval, or
+writable roots the user grants; never moving or re-creating the worktree or changing a host setting. Verified by
+`packages/devkit-spec/tests/integration/bundles/spec/test_delegation_sandbox_guidance.py`.

@@ -40,13 +40,30 @@ from devkit_spec.features.proposals.usecases.scaffold import require_slug
 
 
 class ProposalApprovalStaleError(SpecError):
+    """The reviewed source, base, environment or exact acceptance delta changed (``MAINTENANCE``): completed effects
+    need inspection before any further effect."""
+
     code = "PROPOSAL_APPROVAL_STALE"
-    fix = "Inspect completed effects, publish a current report and obtain Host authority for the remaining CLI effects"
+    fix = (
+        "Inspect completed effects, refresh the review evidence and obtain Host authority for the remaining CLI effects"
+    )
 
 
 class ProposalApprovalNotReadyError(SpecError):
+    """A Planning or worktree prerequisite of the acceptance does not hold (``BLOCKED``): the user or Host resolves
+    it, never a tool defect."""
+
     code = "PROPOSAL_APPROVAL_NOT_READY"
-    fix = "Resolve the reported Planning prerequisite and publish a fresh report before invoking the CLI operation"
+    guardrail = True
+    fix = "Resolve the Planning prerequisite the message names, then rerun the CLI operation"
+
+
+class ProposalApprovalReplyError(SpecError):
+    """The requested or confirmed acceptance mode or Development effort is invalid (``INPUT_ERROR``)."""
+
+    code = "PROPOSAL_APPROVAL_REPLY_INVALID"
+    input_error = True
+    fix = "Choose accept_only, or accept_and_handoff with a low, medium or high Development effort, then rerun"
 
 
 def _proposal_error(error: AdvisoryError) -> AdvisoryError:
@@ -206,11 +223,11 @@ class _Acceptance:
     def select(self, content: dict) -> None:
         mode, effort = content.get("mode"), content.get("activity_effort")
         if self.requested_mode == "accept_only" and mode != "accept_only":
-            raise ProposalApprovalNotReadyError("accept_only does not authorize Development handoff")
+            raise ProposalApprovalReplyError("accept_only does not authorize Development handoff")
         if mode not in {"accept_only", "accept_and_handoff"} or (
             mode == "accept_and_handoff" and effort not in EFFORTS
         ):
-            raise ProposalApprovalNotReadyError("choose accept_only or accept_and_handoff and low|medium|high effort")
+            raise ProposalApprovalReplyError("choose accept_only or accept_and_handoff and low|medium|high effort")
         self.mode = mode
         if mode == "accept_and_handoff":
             self.effort = str(effort)
@@ -241,7 +258,19 @@ class _Acceptance:
         if changed != set(paths):
             raise ProposalApprovalStaleError("index contains changes outside the exact acceptance delta")
         guard_execution()
-        _git(self.source, "commit", "-m", f"spec: accept proposal {self.slug}")
+        try:
+            _git(self.source, "commit", "-m", f"spec: accept proposal {self.slug}")
+        except GitError as exc:
+            # Nothing landed: withdraw this service's own two writes so the worktree is clean for the rerun.
+            _git(self.source, "reset", "-q", "--", *paths)
+            anchor.write_text(original)
+            (self.source / accepted.decision).unlink()
+            self.completed.remove("acceptance_record")
+            raise ProposalApprovalNotReadyError(
+                "the commit gate refused the acceptance commit; `devkit rules check --staged` in the Planning "
+                "worktree reproduces it",
+                *[line for line in exc.stderr.splitlines() if line.strip()][-20:],
+            ) from exc
         head = _git(self.source, "rev-parse", "HEAD")
         self.acceptance_sha = head
         self.completed.append("acceptance_commit")
@@ -270,9 +299,9 @@ class PlanAcceptUseCase(BaseUseCase):
         self.root = self.root.resolve()
         slug = require_slug(slug)
         if mode not in {"accept_only", "accept_and_handoff"}:
-            raise ProposalApprovalNotReadyError("choose accept_only or accept_and_handoff")
+            raise ProposalApprovalReplyError("choose accept_only or accept_and_handoff")
         if mode == "accept_and_handoff" and effort not in EFFORTS:
-            raise ProposalApprovalNotReadyError("choose low, medium or high Development effort")
+            raise ProposalApprovalReplyError("choose low, medium or high Development effort")
         guard_execution()
         position = locate(self.root)
         if position.linked or not position.branch or position.branch.startswith(("dev-", "plan-")):
@@ -399,7 +428,7 @@ class PlanAcceptUseCase(BaseUseCase):
         if selected_mode not in {"accept_only", "accept_and_handoff"} or (
             selected_mode == "accept_and_handoff" and effort not in EFFORTS
         ):
-            raise ProposalApprovalNotReadyError("choose a valid mode and Development effort")
+            raise ProposalApprovalReplyError("choose a valid mode and Development effort")
         if _configuration(self.root) != snapshot or prepare(self.root, slug) != preview:
             raise ProposalApprovalStaleError("accepted base, policy or environment changed")
         if selected_mode == "accept_only":
@@ -419,7 +448,7 @@ class PlanAcceptUseCase(BaseUseCase):
         self.root = self.root.resolve()
         slug = require_slug(slug)
         if mode not in {"accept_only", "accept_and_handoff"}:
-            raise ProposalApprovalNotReadyError("choose accept_only or accept_and_handoff")
+            raise ProposalApprovalReplyError("choose accept_only or accept_and_handoff")
         guard_execution()
         async with self._lock:
             position = locate(self.root)

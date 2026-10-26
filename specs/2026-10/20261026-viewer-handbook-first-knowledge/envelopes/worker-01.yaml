@@ -1,0 +1,16 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T05:42:42.672938Z'
+status: completed
+summary: 'Development from specify to the final change report: handbook-first Read tab with on-demand Living Spec book, index latch and book gate, request bound to source and branch, staleness from VERSION, handbook serving test, after-change cold-load probe (3 vs 922 blob reads, 3.1k vs 124k DOM nodes, ~50 ms vs ~1.1 s), contracts in CAP-VIEW-repository-viewer and CAP-DLV-release-handbook. Review round 1 (P2, P3) fixed and reverified; reconcile-check-01 findings fixed and self-verified. Host follow-up: mirror the HTTP 404 absent-file signal and the bookRequested prop in packages/devkit-viewer/frontend/README.md (outside this write scope); autohub source not read (outside the worktree).'
+findings: []
+checks:
+  tests: PASS just viewer test 93/93; just test-affected 141 passed
+  build: PASS just viewer build; generated check viewer-assets current; just viewer pack
+  lint: PASS just viewer lint/check; just lint-check/check devkit-viewer; rules check --ci --base 3b219724
+diff_scope:
+  base: ''
+  head: 42b331d87f579fdecf2ef4d7470ad9d7a9517ef0
+activity_effort: medium

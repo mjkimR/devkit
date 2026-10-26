@@ -1,0 +1,41 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T07:39:42.036385Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified all 4 review-01 findings fixed at cea75791: receipt refreshed (sync --check OK), get-context decodes only the frontmatter block, the rule reports non-UTF-8 files and frontmatter past 4096 bytes (AC-16, reviewer probes pass), AC-02 wording and help text corrected'
+findings:
+- issue: The committed receipt at cfd1c45d is stale for two managed rule test files, so `uv run devkit sync --check` exits 1 (AC-13 requires exit 0).
+  evidence: '.devkit/installation.json:1619-1621 vs packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/steering_documents/tests/test_rule.py lines 44-48; `uv run devkit sync --check` at cfd1c45d: update=4, exit 1'
+  failure_condition: Any `devkit sync --check` or consumer-pin verification on cfd1c45d
+  suggested_action: Run `uv run devkit sync` after the final lint and commit .devkit/installation.json
+  resolution: resolved
+  severity: P2
+- issue: get-context strictly decodes the whole 4096-byte prefix, so a non-UTF-8 byte in the body nulls readable frontmatter; RULE-steering-documents reads with read_text and reports nothing for it.
+  evidence: context_documents.py:78-82; steering_documents.py:125; probe scratch/review-01/test_probe_null_entries.py::test_latin1_byte_in_body
+  failure_condition: A steering file with valid frontmatter and a non-UTF-8 byte within its first 4096 bytes
+  suggested_action: Decode only up to the frontmatter closer in get-context; report a non-UTF-8 steering file in the rule; test both
+  resolution: resolved
+  severity: P2
+- issue: A steering file whose frontmatter closes after byte 4096 passes RULE-steering-documents but get-context lists it with null title and summary.
+  evidence: steering_documents.py:124-160; context_documents.py HEADER_LIMIT=4096; probe scratch/review-01/test_probe_null_entries.py::test_frontmatter_past_the_prefix
+  failure_condition: Frontmatter with a long extra key pushing the closer past byte 4096
+  suggested_action: Report frontmatter that does not close within 4096 bytes; add a test
+  resolution: resolved
+  severity: P3
+- issue: AC-02 names `devkit get-context <bundle> --format json`, but get-context has no --format option, and its help text does not mention the documents list.
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/cli/context.py:15-20; spec.md AC-02
+  failure_condition: Running AC-02's command as written, or reading `devkit get-context --help`
+  suggested_action: Correct AC-02 and update the help text
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS just test-affected mode=full 5252 passed 14 skipped
+  sync: PASS devkit sync --check
+  probes: PASS scratch/review-01 2/2
+diff_scope:
+  base: f12ab876ed9984365373fc83a9fee10e962bc836
+  head: cea757916d8c00ed309a2fa0e53cf07e45c5248d
+activity_effort: medium
