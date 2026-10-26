@@ -110,12 +110,14 @@ The listing commands `list` and `refs` take `--limit/-n` (default `20`, `0` for 
 After the items they print:
 
 ```text
-[PAGE: total=57 offset=0 limit=20 count=20 next=20]
+[PAGE: total=57 offset=0 limit=20 count=20 next=20 hidden=0]
 [NEXT_CMD: devkit spec list capability --limit 20 --offset 20]
 ```
 
 `next` is the offset of the following page, `-` on the last page; `[NEXT_CMD: ...]` repeats the command's own
-arguments with `--offset <next>` and is printed only when more items follow. A negative `--limit` or `--offset` is
+arguments with `--offset <next>` and is printed only when more items follow. On `list`, `hidden` counts the
+historical documents the selection left out, and a last `[HISTORY_CMD: ...]` line repeating the command with
+`--history` follows when it is above `0` (`CAP-DOCS-document-lookup`); `refs` prints no `hidden`. A negative `--limit` or `--offset` is
 `ARGUMENT_INVALID`. `[NEXT_CMD: devkit workflow next --unit <dir>]` is also the line `devkit spec new`,
 `proposal new` and `proposal handoff` print when the unit they created is bound to a workflow.
 

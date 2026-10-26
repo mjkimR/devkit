@@ -15,6 +15,12 @@ Read this before work that runs in a task worktree: every `spec` and `proposal` 
 - `session` depth bound for a PR: `dev-<slug>`, in a worktree only when the `GIT_POLICY` levels call for one, else `--no-worktree`; no bundle.
 - On `WORKTREE_BRANCH_EXISTS`, continue the branch ([branches](branches.md) §3) or choose another slug.
 
+### Sandboxed sessions
+
+- The task worktree is always `<parent of base>/<base name>-wt-<branch>`, beside the base checkout. `--workspace-root` only names a directory inside the checkout to start from; it does not move the worktree.
+- A linked worktree's commits write the base's shared Git directory (`git -C <worktree> rev-parse --git-common-dir`): its index, refs and objects live outside the worktree.
+- If either path is outside the session's writable roots, request the host's approval for each operation that needs it, naming the operation and target, or continue once the user has added the path to the writable roots. Never move or re-create the worktree elsewhere, copy the repository, or change a host setting yourself.
+
 ## 2. Work (in the worktree)
 
 Run the workflow's stages, checking each boundary with `devkit workflow next --unit <dir>`, and commit on `<branch>` at every stage boundary. Push nothing and merge nothing into the base before `dev-integration`.

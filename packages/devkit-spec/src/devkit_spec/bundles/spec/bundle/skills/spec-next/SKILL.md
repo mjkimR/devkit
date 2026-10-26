@@ -25,8 +25,8 @@ below; start nothing else until the user approves.
 
 ## Recommendation
 
-- If critical open feedback exists, recommend a feedback hygiene pass first (the user invokes `/devkit-playbook` when
-  the project has one); the stage recommendation comes second. Give other open feedback one line.
+- If critical open feedback exists, recommend a feedback hygiene pass first (the user invokes `/devkit-playbook` or names
+  `spec/feedback-hygiene` when the project has one); the stage recommendation comes second. Give other open feedback one line.
 - In progress means a plan-/dev- branch, a reviewing/accepted proposal or an incomplete spec; queued drafts are not.
 
 | State | Recommend |

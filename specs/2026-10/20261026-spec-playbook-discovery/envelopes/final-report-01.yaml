@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:25:03.985119Z'
+status: completed
+summary: spec intake runs one bounded playbook search with skip table, conversation stops and operation-not-topic selection, confirm-first one-line offer; generic devkit-playbook stays spec-neutral; manual run 0/16 ordinary offers, 4/4 positive controls
+findings: []
+checks:
+  tests: PASS just test-affected 2577 passed 1 skipped; just test-dist 1042 passed
+  build: PASS uv run devkit sync --check matches selection; just check devkit-spec devkit-dist 0 errors
+  lint: PASS just lint devkit-spec devkit-dist; just rules-check errors=0
+diff_scope:
+  base: fd44af663e7dc273d3017a33ed4d86600f5b8b19
+  head: 8f6df6fbff1df0387a2ff6e79b77b054689bf4cf

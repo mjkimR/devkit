@@ -15,7 +15,7 @@ Read this when building a payload (`spec-delegate` step 2).
 | --- | --- | --- |
 | `scout` | Starting points | The `materials/` path when an artifact is wanted |
 | `challenger` | Proposal or spec, AC, non-goals, ADRs and capabilities as paths; at `high` the `scout` list | `activity-effort` |
-| `code-reviewer` | `spec.md`, `plan.md`, `tasks.md`, touched capabilities and ADRs | Your check results; `activity-effort` |
+| `code-reviewer` | `spec.md`, `plan.md`, `tasks.md`, touched capabilities and ADRs | Your check results; `activity-effort`; an ignored probe path inside the worktree for throwaway probe tests, preparing one if none exists |
 | `reconcile-reviewer` | `spec.md`, `reconcile.md`, the deciding review envelope, the docs `devkit spec refs <ID> --direction in` lists | `activity-effort` |
 | `development-worker` | `spec.md`, `plan.md`, `tasks.md` and the code starting points | Absolute worktree path; write scope (unit directory, `_Boundary:` paths, reconcile targets); checks to run; `activity-effort`; a recovery request for an open problem |
 | `planning-worker` | The proposal bundle and starting points | Absolute worktree path; the proposal directory as write scope; `activity-effort`; the user's rewritten answers |
@@ -26,6 +26,7 @@ For a later reviewer round at `high`, also pass the earlier rounds' envelope fil
 
 - Set the `diff_scope` base to the unit's [last accepted head](worker.md#the-last-accepted-head), and record the base checkout's `git status --short` and HEAD before spawning.
 - Name absolute paths for nested-role reads: the worktree's own startup skills and instructions and the effective role contract, because a host skill catalog can list another checkout's copies. A generic native call also gets the absolute effective contract path and the emulation assumption.
+- If a `_Boundary:` includes a bundle source the project selects, add the tracked files `devkit sync --check` lists for that change (for example `.devkit/installation.json` and the managed `AGENTS.md` block) to the write scope, because the worker runs the sync the change implies. `.devkit/managed/` is ignored and never a write path.
 - Add linked open source feedback to the write scope, by its actual path, only when the worker fixes it directly; otherwise update it yourself at completion.
 - Before delegating a move or deletion, add each document that links to the target as an exact link-repair-only write path.
 - Name the official documentation reads the work needs as read authority, separate from any mutation authority; if the worker cannot read them, supply the verified content.

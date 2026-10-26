@@ -5,8 +5,8 @@ description: Manually review a bounded Living Spec, code and guidance scope for 
 
 # Drift reconciliation
 
-Run only on explicit invocation through `devkit-playbook`. Review one bounded batch. The user, not code or
-documentation, decides each mismatch. Changed paths, age, entrypoints and passing checks locate evidence but prove
+Run only when the user invoked or confirmed this playbook (`devkit-playbook`, its exact ID or a confirmed intake
+offer). Review one bounded batch. The user, not code or documentation, decides each mismatch. Changed paths, age, entrypoints and passing checks locate evidence but prove
 neither drift nor consistency; a failing check proves only its own condition.
 
 ## 1. Bound the review

@@ -8,7 +8,7 @@ target: devkit workflow envelope reverify
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -44,3 +44,13 @@ created_at: 2026-10-26
 [ENVELOPE: .../envelopes/reverify-02.yaml kind=reverify seq=02 status=completed open_findings=8]
 reverify-02.yaml: findings 1, 2, 3, 6, 7, 8, 9, 11 resolution: open (resolved in reverify-01.yaml)
 ```
+
+## Disposition
+
+Resolved by `SPEC-reverify-carry-latest-state`: a reverify whose `--from` names a review or challenger file now
+carries the findings of the last reverify in the current segment that closes that round, so earlier resolutions and
+waivers persist and `--resolve`/`--waive` number the carried list. The `spec` skill's `references/planning.md` step 3
+states that a later reverify of the same round starts from its last reverify. Verified by
+`test_a_second_closure_of_a_challenger_round_keeps_earlier_resolutions` and the other AC tests in
+`packages/devkit/tests/integration/features/workflow/test_envelope_record_gaps.py` (`just test-affected`, 1999
+passed).

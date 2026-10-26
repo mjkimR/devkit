@@ -35,7 +35,8 @@ capabilities:
 The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 
 1. The agent loads the spec constitution once in its agent context and enters the `spec` skill with the user's
-   intent (`CAP-HARN-agent-guidance`).
+   intent. At this new task intake it runs one bounded `devkit playbook search`; no candidate names the requested
+   operation, so it continues without a question (`CAP-HARN-agent-guidance`, `ADR-spec-intake-playbook-discovery`).
 2. The agent reads the effective project policy (`CAP-DLV-project-policy`).
 3. The agent classifies the request on `task-kind`, then `planning-depth` by what must be settled before
    implementation, then the mode and `activity-effort`, and states the classification to the user
@@ -57,6 +58,14 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
   priority and size, recommends one with Planning, a direct acceptance or a session reclassification, and reports
   decomposition and milestone cleanup as Backlog actions (`CAP-HARN-agent-guidance`); intent approval and milestone
   transitions stay with the user; the use case ends.
+- **1b.** The message is not a new task intake (a continuation, a same-task follow-up, an explicit ID or rule
+  remediation, a step inside a running playbook, an information-only question, a message from another agent, or the
+  user said not to use playbooks in this conversation): the agent runs no search (`CAP-HARN-agent-guidance`); resumes
+  at step 2.
+- **1c.** A candidate's description names the requested operation and its scope fits: the agent names it in one line
+  with the classification statement and waits; on the user's confirmation, which is the explicit invocation, it
+  follows the playbook and the use case ends; on a decline it never offers that candidate again in the conversation
+  (`CAP-HARN-agent-guidance`, `CAP-DIST-context-and-playbooks`); resumes at step 2.
 - **2a.** The effective policy is invalid (a `[tool.spec]` key outside the table, or a `plan-intent` or main
   boundary policy other than `ask` or `auto`): the system refuses with `SPEC_CONFIG_INVALID`
   (`CAP-DLV-project-policy`); the agent stops policy-dependent work; the use case ends.
@@ -130,6 +139,20 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 - **Then**: it recommends an eligible draft in the milestone, priority and size order of `CAP-HARN-agent-guidance`,
   reports decomposition or milestone cleanup as Backlog actions, and leaves intent approval and milestone transitions
   to the user
+
+### Scenario 2a: A continuation runs no playbook search
+- **Covers**: 1b
+- **Given**: a Unit is in progress and the user asks to continue it
+- **When**: the agent enters the `spec` skill
+- **Then**: it runs no `devkit playbook search` and offers no playbook
+
+### Scenario 2b: A matching playbook is offered in one line
+- **Covers**: 1c
+- **Given**: the user asks to triage the open feedback files, and the synchronized `feedback-hygiene` playbook's
+  description names that operation
+- **When**: the agent takes in the request
+- **Then**: it names `feedback-hygiene` in one line with its classification statement, runs nothing before the user
+  confirms, and offers no candidate the user declined earlier in the conversation
 
 ### Scenario 3: An invalid intent policy stops routing
 - **Covers**: 2a

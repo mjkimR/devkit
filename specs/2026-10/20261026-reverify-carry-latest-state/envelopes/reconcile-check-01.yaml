@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:25:40.713208Z'
+status: completed
+summary: 'round 1; low-effort self-verification: CAP-DLV-workflow-envelopes --from row matches carried_findings/closing_state; section 3 deciding state unchanged (round_state result identical); planning.md step 3 matches; no use case, architecture or glossary impact; entrypoints candidates rejected (existing doorways cover authoring.py and cli/envelope.py); FB-reverify-reopens-earlier-resolutions resolved with test evidence'
+findings: []
+checks:
+  rules: PASS devkit rules check --staged
+diff_scope:
+  base: 9cf9ca767b72e8b0165e9caadf85f2bad625d4e6
+  head: 793cbede4258ecaf0e037a717c57b81ca468b6bc

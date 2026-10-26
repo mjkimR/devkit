@@ -207,9 +207,13 @@ class Envelopes:
         latest = self.latest(kind)
         if latest is None:
             return None
-        decider = latest
+        return self.closing_state(latest.name) or latest
+
+    def closing_state(self, name: str) -> Envelope | None:
+        """The last reverify whose ``review`` names the round file ``name`` (``challenger-01.yaml``), or ``None``."""
+        decider = None
         for rv in self.by_kind.get("reverify", []):
-            if rv.review == latest.name:
+            if rv.review == name:
                 decider = rv
         return decider
 

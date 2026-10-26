@@ -11,11 +11,9 @@ targets:
   - file: docs/decisions/2026-10/20261026-terminal-statuses-are-historical.md
     resolution: modified
   - file: docs/usecases/documents/UC-find-the-right-documents.md
-    resolution: waived
-    rationale: "Incomplete: its success guarantee (line 73) names only completed spec bundles as staying out of results, not done or dropped milestones, terminal statuses or the hidden= / [HISTORY_CMD] trace. docs/usecases/ is outside this run's write scope; the Host updates the use case at integration."
+    resolution: modified
   - file: docs/capabilities/harness/CAP-HARN-command-mount.md
-    resolution: waived
-    rationale: "Its section 4.5 paging example shows the list page line without hidden= and no [HISTORY_CMD] line. docs/capabilities/harness/ is outside this run's write scope; the Host adds hidden= on list pages, the [HISTORY_CMD] line and a pointer to CAP-DOCS-document-lookup paging rules 2 and 4 at integration."
+    resolution: modified
 ---
 # Reconcile terminal statuses as historical
 
@@ -39,7 +37,8 @@ Call sites: `adr-compaction`, `milestone-completion` and `spec-next` step 3 (rej
 pass `--history`, the scout role names terminal statuses, and the catalog `weekly-report` playbook (which already
 passed `--history`) names what it now brings back. Call sites that want current items (`spec-next` steps 2 and 4,
 `next-work`, `spec-plan`, completion, the feedback sweep, `feedback-hygiene`, `envelope.md`) keep their commands;
-`--status open` stays explicit and correct. Two documents outside this run's write scope need the Host at
-integration: `UC-find-the-right-documents` and `CAP-HARN-command-mount` (waived targets above). No architecture
+`--status open` stays explicit and correct. Two documents outside the Development run's write scope were
+reflected at integration: `UC-find-the-right-documents` names the full historical set and the `hidden=` trace in its
+success guarantee, and `CAP-HARN-command-mount` §4.5 shows `hidden=` and the `[HISTORY_CMD: ...]` line. No architecture
 document, glossary term or entrypoint changes: the touched code lies under the existing entrypoints of the three
 capabilities. No work is deferred and the spec carries no source feedback.

@@ -133,6 +133,82 @@ def test_a_reverify_names_a_review_or_challenger_round(root: Path) -> None:
     assert "[ENVELOPE: envelopes/reverify-02.yaml kind=reverify" in result.stdout
 
 
+# -- a reverify of a named round carries its closing state (SPEC-reverify-carry-latest-state) -------------------------
+
+THREE = [*FINDINGS, {"issue": "Rollback unstated", "evidence": "proposal.md:55", "severity": "P2"}]
+
+
+def _resolutions(root: Path, name: str) -> list[object]:
+    findings = _read(root, name)["findings"]
+    assert isinstance(findings, list)
+    return [f["resolution"] for f in findings]
+
+
+# SPEC-reverify-carry-latest-state AC-01
+def test_a_second_closure_of_a_challenger_round_keeps_earlier_resolutions(root: Path) -> None:
+    _put(root, "challenger-01.yaml", {"kind": "challenger", "stage": "s", "status": "completed", "findings": THREE})
+    first = _envelope(
+        root, "reverify", "--summary", "turn 1", "--from", "envelopes/challenger-01.yaml", "--resolve", "1",
+        "--waive", "2=kept",
+    )  # fmt: skip
+    assert first.exit_code == 0, first.output
+    second = _envelope(
+        root, "reverify", "--summary", "turn 2", "--from", "envelopes/challenger-01.yaml", "--resolve", "3"
+    )
+    assert second.exit_code == 0, second.output
+    assert "open_findings=0" in second.stdout
+    data = _read(root, "reverify-02.yaml")
+    assert data["review"] == "challenger-01.yaml"
+    assert _resolutions(root, "reverify-02.yaml") == ["resolved", "waived", "resolved"]
+    findings = data["findings"]
+    assert isinstance(findings, list) and findings[1]["waiver"] == "kept"
+
+
+# SPEC-reverify-carry-latest-state AC-02
+def test_naming_a_review_round_carries_its_latest_closing_reverify(root: Path) -> None:
+    _put(root, "review-01.yaml", {"kind": "review", "stage": "s", "status": "completed", "findings": FINDINGS})
+    first = _envelope(root, "reverify", "--summary", "x", "--from", "envelopes/review-01.yaml", "--resolve", "1")
+    assert first.exit_code == 0, first.output
+    second = _envelope(root, "reverify", "--summary", "y", "--from", "envelopes/review-01.yaml")
+    assert second.exit_code == 0, second.output
+    assert "open_findings=1" in second.stdout
+    assert _read(root, "reverify-02.yaml")["review"] == "review-01.yaml"
+    assert _resolutions(root, "reverify-02.yaml") == ["resolved", "open"]
+
+
+# SPEC-reverify-carry-latest-state AC-03
+@pytest.mark.parametrize(
+    "other",
+    [
+        None,
+        {"kind": "reverify", "status": "completed", "review": "challenger-02.yaml"},
+        {"kind": "reverify", "status": "completed", "review": "challenger-01.yaml", "workflow": "other-flow"},
+    ],
+)
+def test_without_a_closing_reverify_the_round_file_is_carried(root: Path, other: dict[str, object] | None) -> None:
+    _challenger(root)
+    if other is not None:
+        resolved = [{**f, "resolution": "resolved"} for f in FINDINGS]
+        _put(root, "reverify-01.yaml", {**other, "findings": resolved})
+    result = _envelope(root, "reverify", "--summary", "x", "--from", "envelopes/challenger-01.yaml", "--resolve", "1")
+    assert result.exit_code == 0, result.output
+    assert "open_findings=1" in result.stdout
+    written = "reverify-02.yaml" if other is not None else "reverify-01.yaml"
+    assert _resolutions(root, written) == ["resolved", "open"]
+
+
+# SPEC-reverify-carry-latest-state AC-04
+def test_numbering_stays_over_the_carried_list(root: Path) -> None:
+    _put(root, "challenger-01.yaml", {"kind": "challenger", "stage": "s", "status": "completed", "findings": THREE})
+    first = _envelope(root, "reverify", "--summary", "x", "--from", "envelopes/challenger-01.yaml", "--resolve", "1")
+    assert first.exit_code == 0, first.output
+    before = _names(root)
+    result = _envelope(root, "reverify", "--summary", "y", "--from", "envelopes/challenger-01.yaml", "--resolve", "4")
+    assert result.exit_code == 2
+    assert "ENVELOPE_FLAG_INVALID" in result.stderr and "finding numbers are 1..3" in result.stderr
+    assert _names(root) == before
+
+
 # -- an answer settles worker assumptions -------------------------------------------------------------------------------
 
 

@@ -282,7 +282,7 @@ id = "planning-worker"
 kind = "subagent"
 source = "subagents/planning-worker.md.jinja"
 
-# Occasional procedures, found through `devkit playbook search` on explicit request.
+# Occasional procedures, found through `devkit playbook search` on explicit request or offered at `spec` intake.
 [[assets]]
 id = "brownfield-adoption"
 kind = "playbook"

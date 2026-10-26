@@ -8,9 +8,10 @@ MANAGED_ROOT = f".devkit/managed/_devkit/skills/{NAME}"
 BODY = """# Playbook discovery and use
 
 Use this skill only when the user explicitly invokes devkit-playbook for the
-current task. Ordinary task requests and references from other skills or
-instructions do not authorize playbook discovery. This invocation does not
-activate playbook search for future tasks in the conversation.
+current task, or confirms a playbook another installed entry skill offered. The invocation applies to that task only and does not activate
+playbook search for future tasks in the conversation. When another installed
+entry skill offers a playbook and the user confirms it, that confirmation is
+the explicit invocation of the named playbook: retrieve it as below.
 
 For an exact playbook named by the user for this task, or an explicitly
 configured external schedule naming that exact ID, skip discovery and run
@@ -45,8 +46,8 @@ For explicitly requested discovery:
    and follow the procedure through its completion conditions. Read any linked
    resources only when required. Existing permissions and user constraints still
    apply. On each new execution, start fresh procedure progress.
-5. If no suitable playbook was found, after successfully completing the task
-   ask whether the user wants to add the reusable procedure as a playbook.
+5. Only in this explicitly requested discovery: if no suitable playbook was
+   found, after successfully completing the task ask whether the user wants to add the reusable procedure as a playbook.
    Present a draft and proposed authoring bundle/source path with that question.
    Use English frontmatter: required name and description, optional aliases
    listing previous asset IDs of the playbook (never search keywords); include
@@ -60,7 +61,7 @@ For explicitly requested discovery:
 def skill_files(agent: str | None = None) -> dict[str, bytes]:
     frontmatter = (
         "---\nname: devkit-playbook\n"
-        "description: Search and reuse occasional task procedures only when the user explicitly invokes devkit-playbook.\n"
+        "description: Search and reuse occasional task procedures only when the user explicitly invokes devkit-playbook or confirms an offered playbook.\n"
     )
     if agent == "claude-code":
         frontmatter += f"{CLAUDE_KEY}: true\n"

@@ -5,8 +5,8 @@ description: Manually generate a revision-bound weekly repository progress repor
 
 # Weekly report
 
-Run only on explicit invocation (`devkit-playbook` or `devkit playbook get maintenance/weekly-report`); load the
-returned bundle context once. Use existing tools and authorized connectors only. Generation runs no maintenance
+Run only when the user invoked or confirmed this playbook (`devkit-playbook`, `devkit playbook get
+maintenance/weekly-report` or a confirmed intake offer); load the returned bundle context once. Use existing tools and authorized connectors only. Generation runs no maintenance
 sweep, full test suite, automatic fix, feedback or proposal creation, and changes no source.
 
 ## 1. Capture identity and interval

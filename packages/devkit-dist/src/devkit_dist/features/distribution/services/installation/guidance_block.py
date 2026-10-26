@@ -24,7 +24,7 @@ END = GUIDANCE_END
 
 # One line per generated entry skill, keyed by the asset kind that triggers it.
 ENTRY_SKILLS = {
-    "playbook": "`devkit-playbook`: find and run an operational playbook (explicit user invocation only)",
+    "playbook": "`devkit-playbook`: find and run an operational playbook the user invokes or confirms",
     "workflow": "`devkit-workflow`: diagnose and follow the delivery workflow stage of a work unit",
 }
 
