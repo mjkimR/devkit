@@ -34,6 +34,8 @@ created_at: 2026-10-26
 ```text
 CAP-HARN-agent-guidance 4.1, rule row: document-reference ... document-summary, code-entrypoints, proposal-boundaries
   (no steering-documents, ux-links, ux-coverage)
+CAP-HARN-agent-guidance 4.1, instruction row: no ux-writing; skill row "the 13 skills of 4.4": no spec-ux-review;
+  instruction-trigger table: no ux-writing row
 CAP-HARN-agent-guidance 4.1, subagent row: challenger, reconcile-reviewer, code-reviewer, scout, planning-worker,
   development-worker (no ux-reviewer)
 docs/README.md directory map: capabilities/, usecases/, ... (no ux/)

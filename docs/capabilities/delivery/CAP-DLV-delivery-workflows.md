@@ -110,7 +110,9 @@ sequence.
 9. **Living Spec before `dev-integration`**: the Living Spec reflection, a resolved `reconcile.md` and
    `status: completed` of the anchor MUST be complete before the gate; an optional review feedback breakpoint between
    `review-refine` and `living-spec-draft` adds no stage, check or approval file. The reflection includes `docs/steering/glossary.md`,
-   where it exists, when the change introduces or renames a domain term (`spec-sync`, first step).
+   where it exists, when the change introduces or renames a domain term (`spec-sync`, first step), and, when `spec.md`
+   has a Screens section, each drafted screen written to `docs/ux/`, its step citations in the use cases and its
+   register rows in `docs/steering/ux-objects.md`, each a `reconcile.md` target (`ADR-ux-drafts-before-code`).
    Per-feature `spec-sync` reflects the core contract delta. The separately invoked maintenance playbook in
    `CAP-DLV-drift-reconciliation` reviews accumulated drift in a bounded batch; it adds no delivery stage or
    scheduler. Each mismatch needs the user's explicit disposition before corrections enter this workflow.

@@ -13,6 +13,8 @@ targets:
     resolution: modified
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
     resolution: modified
+  - file: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md
+    resolution: modified
   - file: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md
     resolution: modified
   - file: docs/steering/glossary.md
@@ -41,6 +43,10 @@ targets:
   severity, at most two rounds, the closing envelope, the effort recommendation and the `ux-review` rounds in the
   `plan-accept` request; section 4.5 the `ux-review` envelope kind; section 4.6 the `ux-reviewer` row and its
   delegation without a stage.
+- `CAP-DLV-delivery-workflows` rule 9: the reflection writes drafted screens, step citations and register rows, each a
+  target (`reconcile-check-01` finding 5).
+- `CAP-DLV-proposal-incubation` section 4.4: the blueprint's `Screens (docs/ux/)` drafts subsection
+  (`reconcile-check-01` finding 1).
 - `CAP-VIEW-repository-viewer` section 4.3: the book's chapter groups in order, UX included, and ID links for every
   indexed ID, UX included.
 - `docs/steering/glossary.md`: the rows **UX document** and **UX object register** (body 9351 bytes, under the 24576
@@ -67,6 +73,7 @@ None: the proposal's two feedback records are resolved.
   lists of `CAP-HARN-agent-guidance` section 4.1 do not name the new assets (they already omitted
   `RULE-steering-documents`). Both paths are outside this unit's write scope; `FB-agent-guidance-asset-list-drifts`
   records them for the Host.
-- `docs/ux/README.md` is seeded into this repository by `devkit sync` (the `docs-skeleton` preset is selected) and is
-  outside the write scope; it is left uncommitted and named as the problem of this run's `worker` envelope, because
-  `devkit sync --check` exits `1` until it is committed.
+- Not deferred but open: `devkit sync` seeds `docs/ux/README.md` into this repository (the `docs-skeleton` preset is
+  selected), a path outside the write scope, so the seed is pending (not written) and `devkit sync --check` exits `1`,
+  failing AC-15 (`reconcile-check-01` finding 2). It is the problem of this run's `worker` envelope; this record stays
+  `pending` until the Host admits the path or amends AC-15.
