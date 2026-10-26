@@ -18,6 +18,10 @@ uv run devkit spec list feedback --status open --all-namespaces -n 0
 
 - If the listing is empty, report an empty backlog and stop. Narrow with `--where scope=<scope>` or
   `--where severity=<a>,<b>` only when the user names one.
+- When the listing has more than 5 items and the host runs the `triage` role natively, delegate the rest of this step
+  and the Step 2 recommendation to it through `spec-delegate`, from a clean checkout (`git status --porcelain`
+  empty); verify and present its return as the `spec` skill's `references/backlog.md` (Backlog roles) says.
+  Otherwise run this step inline; on a dirty checkout, delegate from a clean task worktree or run it inline.
 - Confirm each item's ownership (`repo`, `upstream`, `unknown`) from its target and evidence; do not ask the user.
 - Group items by `target`; a group shares one decision.
 - Order by `critical`, then `recurring: true`, then `blocked`, `workaround`, `noise`.
@@ -64,4 +68,5 @@ Append a disposition line to each item, linking every destination for a cross-to
 
 - Every dispositioned item has a terminal status and a disposition line; items left `open` are reported.
 - Every rejected proposal listed is cleaned up or reported as left.
-- `uv run devkit rules check` exits `0`, and the changes are proposed as one commit.
+- `uv run devkit rules check` exits `0`, and the changes are proposed as one commit; its body names the `triage` role
+  when one was used.

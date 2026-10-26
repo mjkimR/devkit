@@ -1,6 +1,6 @@
 # Spike findings: Backlog triage and decomposer roles
 
-Evidence gathered in the first Planning turn (scout `envelopes/scout-01.yaml`, head `d4a22409`, base `main` at
+Evidence gathered in the first Planning turn (scout historical Git `ead1175b2a127c45bc12fcc0abc7fd018242c95b:docs/proposals/PROP-backlog-subagent-roles/envelopes/scout-01.yaml`, head `d4a22409`, base `main` at
 `3302ff9d`). Paths are relative to the repository root.
 
 ## F1. Registering a role needs no engine code

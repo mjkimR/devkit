@@ -1,8 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: User asked to draft this proposal for the Backlog roles half of MS-autonomous-backlog-and-orchestration
-by: user
-at: '2026-10-26T07:05:41Z'

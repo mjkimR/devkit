@@ -52,7 +52,13 @@ from devkit_spec.features.policy.repositories.branches import (
     planning_branches,
 )
 from devkit_spec.features.policy.usecases.approvals import approval_policy
-from devkit_spec.features.proposals.models.axes import DEFAULT_TASK_KIND, TASK_KINDS
+from devkit_spec.features.proposals.models.axes import (
+    ALLOWED_SIZES,
+    DECOMPOSE_EXITS,
+    DEFAULT_TASK_KIND,
+    TASK_KINDS,
+    size_blocker,
+)
 from devkit_spec.features.proposals.services.status import accepted_text
 from devkit_spec.features.proposals.usecases.handoff import (
     ACCEPT_GATE,
@@ -148,6 +154,8 @@ def _direct_conditions(
     failed: list[str] = []
     if meta.get(NEEDS_DECOMPOSE) is True:
         failed.append(f"{NEEDS_DECOMPOSE}: true (Backlog splits it first)")
+    if (size := size_blocker(meta)) is not None:
+        failed.append(f"{size} (decompose first: {DECOMPOSE_EXITS}; {ALLOWED_SIZES})")
     if meta.get(SUPERSEDES):
         failed.append(
             f"{SUPERSEDES}: {text_value(meta.get(SUPERSEDES))} (a supersede decides its direction in Planning)"

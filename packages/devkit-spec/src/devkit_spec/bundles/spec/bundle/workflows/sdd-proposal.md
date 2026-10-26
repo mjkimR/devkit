@@ -20,7 +20,8 @@ stages:
     name: Plan intent
     human_gate: plan-intent
     entry: []
-    exit: [anchor-exists]
+    # The size gate: `size` absent or exactly S, M or L; an XL draft is decomposed before plan-intent.
+    exit: [anchor-exists, frontmatter(proposal.md size S|M|L|)]
     artifacts: [docs/proposals/PROP-<slug>/proposal.md]
     skills: [spec]
     role: developer
@@ -101,7 +102,7 @@ The frontmatter is the only stage definition (`devkit workflow show --unit <dir>
 | `accepted` | `plan-accept` passed | `devkit spec proposal accept` after the user's acceptance (Host locally, autohub in `cloud-pr`); from `draft` at a direct acceptance in Backlog |
 | `rejected` | Planning ends | the Host or autohub that received the rejection, status only |
 
-- **Planning starts** only from a draft with `plan-intent` recorded and without `needs_decompose: true`, on its own branch `plan-<slug>`. A draft found to need splitting during Planning goes back to Backlog: set `status: draft` and `needs_decompose: true`, keep what the review learned in `materials/`, close every question still open with an `answer` envelope (`choice: null`, the return to Backlog as the decision), and merge the Planning branch.
+- **Planning starts** only from a draft with `plan-intent` recorded and without `needs_decompose: true`, on its own branch `plan-<slug>`. An `XL` draft cannot get `plan-intent`: the `intent-proposal` exit `frontmatter(proposal.md size S|M|L|)` stays unmet (`detail="size=XL"`), with no request to answer. Read it as "decompose first" (the `spec` skill's `references/backlog.md`, The XL size gate); never edit the size to pass. A draft found to need splitting during Planning goes back to Backlog: set `status: draft` and `needs_decompose: true`, keep what the review learned in `materials/`, close every question still open with an `answer` envelope (`choice: null`, the return to Backlog as the decision), and merge the Planning branch.
 - **Spike** never becomes the current stage on its own: run it whenever the Planning `activity-effort` requires a `challenger` or `scout` (the `spec` skill's `references/effort.md`: at `low` questions only, at `medium` one `challenger` pass and a `scout` when the direction needs evidence, at `high` both required, in the bounded rounds of its `references/review-loop.md`). The Planning effort (`planning_effort` hint in `proposal.md`) is proposed with `plan-intent`. Its materials go under the proposal's `materials/` and move to `docs/materials/` at handoff. Zero findings is a valid spike result.
 - **Handoff** has no exit check: once `plan-accept` holds, `next` reports the unit complete (`[STAGE: - complete=true]`). Merge the Planning branch (a direct acceptance has none), then run `devkit spec proposal handoff <slug>` as Development's first step on `dev-<slug>` (the `spec` skill's `references/worktree.md` §1).
 

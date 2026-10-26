@@ -245,7 +245,8 @@ expects them and `devkit workflow list` finds both. `schema_version` is `1` in e
   `collect-feedback`, `final-change-report`, `integration-approval` (`dev-integration`), `integrate`, `merge`.
 - **`sdd-spec-bugfix`**: `intent` (`plan-intent`), `characterize`, `plan-tasks`, `reproduce`, `fix-verify`, then the
   stages of `sdd-spec-feature` from `review-refine` on.
-- **`sdd-proposal`**: `intent-proposal` (`plan-intent`), `spike` (optional in the schema and never current on
+- **`sdd-proposal`**: `intent-proposal` (`plan-intent`; its exit also requires `size` absent or exactly `S`, `M` or
+  `L`, `frontmatter(proposal.md size S|M|L|)`, so an `XL` draft shows it unmet and opens no request), `spike` (optional in the schema and never current on
   its own, but run whenever the Planning effort requires a `challenger`, rule 15, or the direction needs evidence;
   having no exit check, it may show under `[DONE]` before any review ran, which is not Planning evidence: the
   support-role envelopes recorded at `spike` are),
@@ -384,7 +385,7 @@ Extension keys devkit does not interpret: `x-execution` (`isolated`), `x-invocat
 (`light-medium`, `general-high`, `high-reasoning`; never a host model name) and `x-git-actions` (`[read]` for every
 role but the two workers, `[read, commit]`).
 
-The five read-only roles preset a reasoning effort in their host blocks, with no model name
+The seven read-only roles preset a reasoning effort in their host blocks, with no model name
 (`ADR-orchestration-workers`): `medium` for the `light-medium` profile, `high` for `general-high` and `high-reasoning`,
 as `effort` under `claude-code` and `model_reasoning_effort` under a `codex` block that is not `unsupported`, at
 `low`, `medium` or `high` only. Antigravity has no such key. The two workers set none, whatever their profile, so
@@ -401,16 +402,20 @@ the session's effort. An emulated named-role projection still applies its declar
 | `code-reviewer` | `spec-review` | `general-high` | `high` | nothing but throwaway probe tests in its round's own subdirectory of the ignored probe path the payload names, read by no other round, left for worktree removal and never the unit's tests: verifies implementation against requirements and checks | `review`, `reverify`, or a message for a session |
 | `scout` | none: the procedure is in the contract | `light-medium` | `medium` | nothing, or the proposal's `materials/` on request | `scout` |
 | `ux-reviewer` | `spec-ux-review` | `general-high` | `high` | nothing: walks the use cases through the drafted screens and scores the rubric, before code, as an optional delegation | `ux-review` |
+| `triage` | none: the contract cites `feedback-hygiene` Steps 1 and 2 | `light-medium` | `medium` | nothing: groups open feedback and recommends a destination per group, in Backlog | none: a message |
+| `decomposer` | none: the contract cites the `spec` skill's `references/backlog.md` | `general-high` | `high` | nothing: proposes a split of one draft into children with provenance, edges and an exit, in Backlog | none: a message |
 | `planning-worker` | none: the procedure is in `spec/references/planning.md`, which the contract cites | `general-high` | session | the proposal directory in its `plan-` worktree, committed | `worker` (its own) |
 | `development-worker` | none: the procedure is in the contract | `general-high` | session | the unit's write scope in its `dev-` worktree, committed at every stage boundary | `worker` (its own) and the stage envelopes |
 
 The contract body is the role's prompt and holds only what the role needs: purpose, input fields, return fields,
 write boundaries, failure handling and, for a role whose procedure no main session runs (`challenger`, `scout`, the
-`development-worker`), the procedure itself. Planning runs in a main session in `direct` mode, so its ordered steps
+`development-worker`), the procedure itself; `triage` and `decomposer` cite by managed path the procedure a main
+session also runs (`feedback-hygiene`, the Backlog reference). Planning runs in a main session in `direct` mode, so its ordered steps
 live in the `spec` skill's `references/planning.md`, which the `planning-worker` contract cites; the contract keeps
 only the worker's own obligations (worktree, nested roles, return, write boundaries, problems)
 (`ADR-orchestration-workers`). Caller guidance (per-role payload, host guarantees, the
-post-run diff comparison, envelope recording, range validation) lives in `spec-delegate` (`SPEC-subagent-procedure-in-contract`).
+post-run comparison of two snapshots of the working tree, each a tree written from a temporary index, so a write
+to an already-modified file shows too, envelope recording, range validation) lives in `spec-delegate` (`SPEC-subagent-procedure-in-contract`).
 
 The workers exist for `local-orchestrated` mode (`spec-orchestrate`, user-invoked per activity) and never for
 `session` depth. Each is one-shot: it runs one turn of one activity in that activity's devkit worktree, using absolute
@@ -485,7 +490,10 @@ enforcement; no persistent-grant or native confinement guarantee follows.
 Stages delegate to `code-reviewer` (`review-refine`), `reconcile-reviewer` (`living-spec-draft`, as verifier) and `scout`
 (`spike`); `challenger` has no stage of its own (its return is recorded at `spike`) and is delegated as the Planning effort asks
 (at `medium` and `high`, rule 15); `ux-reviewer` has no stage either and is delegated before code when screens are
-drafted (rule 15). Implementation stages keep
+drafted (rule 15). `triage` and `decomposer` have no stage: Backlog delegates them from a clean checkout, `triage`
+above 5 open feedback items on a host that runs it natively, `decomposer` for a merged `needs_decompose` return, the
+user's request to split or an `XL` draft; the Host verifies the return, applies only what the user decides and names
+the role in the Backlog commit body, with no envelope. Implementation stages keep
 `role: developer`; the orchestration mode hands their turn to a worker. `[DELEGATE: role=<role> isolation=...]` in
 `next` names the role; `spec-delegate` decides between a host subagent and a main-session substitute and records the
 choice. A projected role receives only the per-call payload, since the host loads the contract body as its system
@@ -505,7 +513,7 @@ prompt.
 | `devkit workflow list` | List units of every layout. |
 | `devkit workflow envelope worker\|answer\|resolution --unit <dir> ...` | A run's record (`--stage` and `--effort` always; `--questions-file`, `--problem`, `--tried`, `--recovery`), its answers (`--answers-to`, `--answers-file`, `--settle`) or a fix (`--resolves`). |
 | `devkit workflow envelope check --unit <dir> [--format json]` | Malformed envelopes and the hold: `[BLOCKED]`, `[PENDING_QUESTION]`; `blocked`, `problems`, `pending_questions` in JSON. |
-| `devkit worktree start <branch> [--no-worktree \| --existing-branch <branch> --unit <dir>]` | Start `plan-<slug>` or `dev-<slug>` in a worktree or the current checkout, or continue an existing branch after devkit-spec's attach check. |
+| `devkit worktree start <branch> [--no-worktree \| --existing-branch <branch> --unit <dir>]` | Start `plan-<slug>` or `dev-<slug>` in a worktree or the current checkout, or continue an existing branch after devkit-spec's attach check (a `plan-` attach refuses a rejected or `needs_decompose` proposal and one not `accepted` whose `size` is not absent or `S`, `M` or `L`). |
 | `devkit worktree finish <branch> [--merge [--local-only]]` | Land the branch on the base as a merge commit, or a fast-forward under `[worktree] merge = "ff-only"` (skipping `fetch`/`push` when `--local-only`), remove the worktree, delete the branch when `delete_branch=yes`, and run the post-finish extension. |
 | `devkit worktree status --stale` | Activity branches idle beyond `[worktree] stale_after`; also warned by `devkit rules check -p hygiene`. |
 

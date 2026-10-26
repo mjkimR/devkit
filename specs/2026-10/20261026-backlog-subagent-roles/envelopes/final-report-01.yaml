@@ -1,0 +1,17 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T09:13:45.718760Z'
+status: completed
+summary: Adds the read-only triage and decomposer roles (contracts, registration, payload rows, Backlog delegation and Host verification), the XL size gate in devkit-spec (sdd-proposal exit check, accept --direct blocker, plan- attach reason, Planning return, guidance and XL definition) and the support-role working-tree snapshot that resolves FB-support-role-diff-check-on-dirty-tree. AC-13 dogfood triage run recorded in reconcile.md.
+findings: []
+assumptions:
+- The triage dogfood run used an emulated generic native call because the new projection was not in the running session's agent catalog.
+checks:
+  tests: PASS just test-affected 1816 passed (mode=partial); e2e 57 passed; test-dist 1076 passed; smoke passed
+  build: PASS devkit sync --check clean; workflow validate ok
+  lint: PASS just lint-check devkit-spec; pyright 0 errors; devkit rules check --ci --base ead1175b 0 errors
+diff_scope:
+  base: ead1175b2a127c45bc12fcc0abc7fd018242c95b
+  head: 06755287ed4cee5251ba516bdfdabc45ee75a971

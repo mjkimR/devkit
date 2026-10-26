@@ -6,7 +6,10 @@ status: draft                         # draft | reviewing | accepted | rejected
 created_at: YYYY-MM-DD
 target_area: capabilities/<area>/      # Target capability area on graduation: an existing area, docs-root or repository path (e.g., governance/)
 priority: high                        # critical | high | medium | low (estimated priority)
-size: M                               # S | M | L | XL (estimated scope: S=single fix, M=1-2 sessions, L=complex module, XL=major overhaul)
+size: M                               # S | M | L | XL (S=single fix, M=1-2 sessions, L=complex module, XL=would need two or more specs or task kinds; decompose before Planning)
+# XL: a new CLI command with a viewer redesign it does not need (two specs), or a parser bugfix with a new search
+#     feature (bugfix and feature). Not XL: two agent contracts and the command checks that route work to them, in one
+#     feature spec.
 # milestone: MS-<slug>                # direct PROP membership only; never carried to spec.md
 # depends_on: [PROP-foundation, SPEC-parser] # exact prerequisite anchors; omit when empty
 boundaries:                           # declared scope impact (owns) and excluded scope (excludes), carried to the spec

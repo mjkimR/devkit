@@ -68,11 +68,17 @@ capabilities:
 
 ## 3. Extensions
 
+- **1a.** The draft's `size` is not absent or exactly `S`, `M` or `L` (an `XL` draft, whose work would need two or
+  more specs or a different `task_kind`): the workflow shows the `intent-proposal` size check unmet
+  (`detail="size=XL"`) and opens no `plan-intent` request, and recording it is refused with `REQUEST_UNKNOWN`
+  (`CAP-DLV-proposal-incubation`); the agent decomposes the draft in Backlog, splitting it with `--decomposed-from` or
+  promoting it to a milestone on the user's decision, optionally through the read-only `decomposer` role
+  (`CAP-DLV-delivery-workflows`), and never edits the size to pass; the use case ends for the parent.
 - **2a.** The draft's direction is settled and nothing needs Planning: on the user's explicit acceptance the agent
   checks eligibility read-only on the base checkout, sweeps the acceptance session and records a direct acceptance,
   with no Planning branch, run, effort or `worker` envelope (`CAP-DLV-proposal-incubation`); resumes at step 7.
-- **2b.** A direct acceptance fails a condition (no `plan-intent`, `needs_decompose`, `supersedes`, a Planning
-  branch, an envelope hold, a checkout other than the base): the system refuses with `SPEC_PROPOSAL_NOT_ELIGIBLE`,
+- **2b.** A direct acceptance fails a condition (no `plan-intent`, `needs_decompose`, a `size` such as `XL`, `supersedes`, a
+  Planning branch, an envelope hold, a checkout other than the base): the system refuses with `SPEC_PROPOSAL_NOT_ELIGIBLE`,
   listing every failed condition, and writes nothing (`CAP-DLV-proposal-incubation`); resumes at step 2 or the use
   case ends.
 - **2c.** At pickup the user decides that a queued draft without PADRs is `session` work: the agent deletes the
@@ -173,7 +179,7 @@ capabilities:
 
 ### Scenario 6: An ineligible draft is not accepted directly
 - **Covers**: 2b
-- **Given**: a draft that carries `needs_decompose: true`
+- **Given**: a draft that carries `needs_decompose: true` or `size: XL`
 - **When**: the agent runs `devkit spec proposal accept <slug> --by user --direct --note "<reason>"`
 - **Then**: the command exits `2` with `SPEC_PROPOSAL_NOT_ELIGIBLE` listing each failed condition as a `blocking:` or
   `pending:` detail, and writes nothing

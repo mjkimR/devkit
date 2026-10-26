@@ -140,6 +140,19 @@ removes it.
     draft directly (rule 14), the one status change it makes, and, on the user's explicit decision at pickup, delete a
     draft without PADRs to do it as a `session` task (`ADR-delivery-classification`), preserving
     its open feedback (3.1); both commit only on the base checkout.
+    A rough `size: XL` draft stays valid in Backlog, but it is decomposed before Planning. One predicate decides:
+    `size` absent or exactly `S`, `M` or `L` passes; any other value (`XL`, `xl`, a typo) fails, and every refusal
+    names the allowed values. The `sdd-proposal` `intent-proposal` exit `frontmatter(proposal.md size S|M|L|)` stays
+    unmet (`detail="size=XL"`, exit `0`), so `plan-intent` opens no request under `ask` or `auto` and `devkit
+    workflow answer --request gate:plan-intent` is `REQUEST_UNKNOWN`; `accept --direct` blocks (rule 14); a
+    `plan-` attach of a proposal not `accepted` is refused (`WORKTREE_ATTACH_REFUSED`), never a `dev-` attach or the
+    readiness of an accepted proposal; a Planning run returns a failing proposal as for decomposition. Agents read
+    the unmet check as "decompose first" and never edit the size to pass it. The exits, applied on the user's
+    decision: split (`new --decomposed-from`, keeping the parent's `milestone`) or promote (a new milestone holding
+    the children, for three or more children or a long-running theme). Backlog MAY delegate a decomposition to the
+    read-only `decomposer` role (`CAP-DLV-delivery-workflows` 4.6), only for a merged `needs_decompose` return, the
+    user's request or an `XL` draft; the Host verifies its return and applies the split with these commands, and
+    the parent's open feedback still takes the retirement move (3.1), never a child.
     For decomposition discovered in Planning, its executor commits `draft` plus `needs_decompose: true`, retained
     materials and answers closing pending questions. The Host integrates that return and removes local and fetched
     Planning branch blockers under existing merge, cleanup and network authority, then reruns the Backlog check on
@@ -153,7 +166,7 @@ removes it.
     unbound proposal included, is `SPEC_PROPOSAL_ACCEPT_REFUSED`. A direct acceptance and a repair MUST hold every
     condition of `ADR-proposal-acceptance` the tool checks, all reported at once
     (`SPEC_PROPOSAL_NOT_ELIGIBLE`, one `blocking:` or `pending:` detail each): an accepted `gate:plan-intent`, no
-    `needs_decompose: true`, no `supersedes`, no local or fetched `plan-<slug>`, `task_kind` `feature` or `bugfix`
+    `needs_decompose: true`, a `size` absent or `S`, `M` or `L` (else `size: <value> (decompose first: ...)`), no `supersedes`, no local or fetched `plan-<slug>`, `task_kind` `feature` or `bugfix`
     (absent: `feature`), no envelope hold, and the base checkout: the main worktree on a branch that is not `plan-*`
     or `dev-*` and, when `origin/HEAD` resolves, is its target (outside Git not checked). A repair also refuses a
     proposal with a `worker` envelope (Planning ran). `--note` (required with `--direct`) is the eligibility reason;
@@ -215,7 +228,7 @@ docs/proposals/PROP-<slug>/
 
 A single-file proposal `docs/proposals/PROP-<slug>.md` can be handed off too; it has no PADRs, materials or
 blueprint, and its body is not carried (the spec gets the plain skeleton). `target-docs.md` is recommended for
-`size: M`, `L` or `XL` or when Living Spec structural changes are expected: `proposal.md` says why, `target-docs.md`
+`size: M` or `L` or when Living Spec structural changes are expected: `proposal.md` says why, `target-docs.md`
 what `docs/` will look like.
 
 Markdown under `materials/` follows the material convention (file `<YYYYMMDD>-<slug>.md`, `id: MAT-<slug>`,
@@ -243,7 +256,7 @@ legacy proposal or PADR whose slug starts that way, before writing anything, wit
 | `target_area` | `--target-area` (default `capabilities/<area>/`, a trailing `/` added): the capability area on graduation. It and every `boundaries.owns` entry name an existing repository path, docs-root path or capability area, a path the Development will create by its nearest existing parent directory, and a path a `depends_on` prerequisite will create or move by its current path until that prerequisite lands, the expected path then going into Development's `_Boundary:` entries; `RULE-proposal-boundaries` warns on the rest and on the placeholder, and the Planning executor clears its reports before the `plan-accept` request (`ADR-proposal-acceptance`). |
 | `namespace` | Optional (`--namespace`): `global` or a registered namespace (`CAP-DOCS-namespaces`); carried to `spec.md`. Every file of the bundle belongs to it. |
 | `priority` | `critical`, `high` (scaffolded), `medium`, `low`. |
-| `size` | `S` (single fix), `M` (scaffolded; 1-2 sessions), `L` (complex module), `XL` (major overhaul). |
+| `size` | `S` (single fix), `M` (scaffolded; 1-2 sessions), `L` (complex module), `XL`: the work would produce two or more specs, or bundles deliverables of a different nature (work that would need separate specs or a different `task_kind`). `XL`: a new CLI command with a viewer redesign it does not need (two specs), or a parser bugfix with a new search feature (`bugfix` and `feature`); not `XL`: two agent contracts and the command checks that route work to them, in one `feature` spec. An `XL` draft is decomposed before Planning (rule 13). |
 | `milestone` | Optional (`--milestone`): one existing global MS ID under docs/roadmap/, or one of its aliases (the canonical ID is written); validated before writing and never carried to `spec.md`. |
 | `boundaries` | `owns` (scaffolded: the target area) and `excludes` (scaffolded: `docs/decisions/`); carried to `plan.md` and `tasks.md`. |
 | `task_kind` | `feature` (scaffolded default) or `bugfix` (`--task-kind`): the provisional `task-kind`, confirmed at `plan-accept`; the spec follows `sdd-spec-<task_kind>`. |

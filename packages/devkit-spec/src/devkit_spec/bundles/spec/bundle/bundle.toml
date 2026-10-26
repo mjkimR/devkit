@@ -309,6 +309,17 @@ id = "ux-reviewer"
 kind = "subagent"
 source = "subagents/ux-reviewer.md"
 
+# Backlog roles: read-only recommendations the Host applies on the user's decision; a return is a message.
+[[assets]]
+id = "triage"
+kind = "subagent"
+source = "subagents/triage.md"
+
+[[assets]]
+id = "decomposer"
+kind = "subagent"
+source = "subagents/decomposer.md"
+
 [[assets]]
 id = "development-worker"
 kind = "subagent"
@@ -387,6 +398,8 @@ assets = [
     "code-reviewer",
     "scout",
     "ux-reviewer",
+    "triage",
+    "decomposer",
     "development-worker",
     "planning-worker",
     "brownfield-adoption",

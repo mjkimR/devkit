@@ -5,7 +5,7 @@ Read this to run one Planning turn of a proposal on its `plan-<slug>` branch, fr
 ## Steps
 
 1. On the first turn set `status: reviewing` in `proposal.md` and commit it.
-   - If the proposal must be split (or carries `needs_decompose: true`), return it: set `status: draft` and `needs_decompose: true`, keep what you learned in `materials/`, close open questions with an `answer` envelope (`choice: null`, "Planning ended: returned to Backlog for decomposition"), commit and end. The Host continues with the [Backlog return procedure](backlog.md#return-from-planning-for-decomposition).
+   - If the proposal must be split (or carries `needs_decompose: true`, or a `size` other than absent or exactly `S`, `M` or `L`), return it: set `status: draft` and `needs_decompose: true`, keep what you learned in `materials/`, close open questions with an `answer` envelope (`choice: null`, "Planning ended: returned to Backlog for decomposition"), commit and end. The Host continues with the [Backlog return procedure](backlog.md#return-from-planning-for-decomposition).
 2. If answers to earlier questions arrived, record them first as a commit of their own (`devkit workflow envelope answer --unit <proposal dir> --answers-to <worker-NN.yaml> --answers-file -`, [worker records](worker-records.md) §2), then fold the decisions into `proposal.md` and the PADRs in a separate commit.
    - Create a PADR with `devkit spec proposal padr <slug> "<title>" --summary "<Y-statement>"` and read the scaffold before writing its body.
    - Withdraw a PADR the answers dropped by deleting its file in the fold commit, because handoff promotes every PADR left in `decisions/`. Name it and the reason in the proposal's Planning decisions and remove references to it.
