@@ -232,7 +232,8 @@ spec = "core"
   `devkit config template`. A file that cannot be read or does not validate (`CONFIG_INVALID`) is never written.
 - **Selection edits**: a new `agents` or `[presets]` entry goes right after the last key-value entry of its table,
   not after the comments that follow it, so a commented tool table never takes the entry as its own once
-  uncommented.
+  uncommented. The edit follows the line-ending rule of **Append-only**: existing lines keep their bytes, line endings
+  included, and the added lines end in CRLF when every line ending of the file is CRLF, and in LF otherwise.
 - **Failures**: an extension that fails to load, raises, is not named like a `[tool.<name>]` table
   (`devkit.config_template`) or a reserved table (`devkit.config_tables`), or returns anything but valid tables is
   left out with a `CONFIG_TEMPLATE_EXTENSION_FAILED` warning, and the command succeeds; when a selection command created the file, the warning joins the sync result's `notices`.

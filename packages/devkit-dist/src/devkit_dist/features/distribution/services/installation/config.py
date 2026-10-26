@@ -64,7 +64,7 @@ from devkit_dist.features.project.services.config_template import TemplateKey, T
 from devkit_dist.features.search import SearchMode
 
 SCHEMA = 1
-# A line ending the commented template adds: a LF that no CR precedes.
+# A line ending an edit adds (the commented template, a selection entry): a LF that no CR precedes.
 _BARE_LF = re.compile(r"(?<!\r)\n")
 # Reserved for the engines of devkit-agt and passed through unread, so a configuration reads the same with or
 # without them: ``rules`` (``devkit_agt.features.rules``: phase overrides), ``workflow`` (``devkit_agt.features.workflow``: layout, approvals),
@@ -419,6 +419,21 @@ def resolve_selection(installed: list[InstalledBundle], requested: dict[str, lis
     return result
 
 
+def _read_untranslated(path: Path) -> str:
+    """The file's text without newline translation, so an edit keeps every existing line ending."""
+    return path.read_bytes().decode("utf-8")
+
+
+def _match_line_endings(before: str | None, text: str) -> str:
+    """``text`` with its bare-LF line endings turned into CRLF when every line ending of ``before`` is CRLF.
+
+    Lines an edit adds end in a bare LF; an LF, mixed, single-line or missing file keeps them so.
+    """
+    if before is not None and "\n" in before and before.count("\r\n") == before.count("\n"):
+        return _BARE_LF.sub("\r\n", text)
+    return text
+
+
 def _document(root: Path) -> tomlkit.TOMLDocument:
     path = _config_path(root)
     if not path.exists():
@@ -426,7 +441,7 @@ def _document(root: Path) -> tomlkit.TOMLDocument:
         doc["schema"] = SCHEMA
         return doc
     try:
-        return tomlkit.parse(path.read_text("utf-8"))
+        return tomlkit.parse(_read_untranslated(path))
     except (OSError, UnicodeError, TOMLKitError) as exc:
         raise ConfigError(f"invalid config: {exc}") from exc
 
@@ -484,8 +499,10 @@ def prepare_config_update(
 
     ``deselect`` deletes a bundle's entry; ``opt_out`` records ``<bundle> = false``
     so a built-in bundle stays unselected. Selecting a bundle replaces either.
-    Unrelated tables, comments and formatting are preserved; a new key goes after
-    the last entry of its table, never below a commented template table. A file
+    Unrelated tables, comments, formatting and line endings are preserved; a new
+    key goes after the last entry of its table, never below a commented template
+    table, and its line ends in CRLF only when every line ending of the file is
+    CRLF (``_match_line_endings``, the rule of ``config template``). A file
     the edit creates gets the commented template too, and the update carries the
     warnings of the template extensions that failed. Nothing to change yields an
     update whose ``apply`` does nothing.
@@ -513,7 +530,7 @@ def prepare_config_update(
     before = Content(path.read_bytes(), path.stat().st_mode & 0o777) if path.exists() else None
     text = tomlkit.dumps(doc)
     if before is not None:
-        return ConfigUpdate(root, text, before)
+        return ConfigUpdate(root, _match_line_endings(before.data.decode("utf-8"), text), before)
     tools, reserved, notices = _templates()
     text, _ = add_template(text, TEMPLATE_HEADER, TEMPLATE_SECTIONS, tools, reserved=reserved)
     return ConfigUpdate(root, text, None, tuple(notices))
@@ -569,12 +586,12 @@ class ConfigTemplateResult:
 def _template(root: Path) -> tuple[str | None, str, list[str], list[AdvisoryError]]:
     """The file before (``None`` when missing), the file with the template added, the added parts and notices.
 
-    The file is read without newline translation, so the rendered text keeps every existing byte and only the added
-    lines end in a bare LF; in a file whose every line ending is CRLF they get CRLF too.
+    The file is read without newline translation, so the rendered text keeps every existing byte; the added lines
+    follow ``_match_line_endings``.
     """
     read_config(root)
     path = _config_path(root)
-    before = path.read_bytes().decode("utf-8") if path.exists() else None
+    before = _read_untranslated(path) if path.exists() else None
     tools, reserved, notices = _templates()
     text, added = add_template(
         before if before is not None else f"schema = {SCHEMA}\n",
@@ -583,9 +600,7 @@ def _template(root: Path) -> tuple[str | None, str, list[str], list[AdvisoryErro
         tools,
         reserved=reserved,
     )
-    if before is not None and "\n" in before and before.count("\r\n") == before.count("\n"):
-        text = _BARE_LF.sub("\r\n", text)
-    return before, text, added, notices
+    return before, _match_line_endings(before, text), added, notices
 
 
 def _templates() -> tuple[list[ToolTemplate], list[ToolTemplate], list[AdvisoryError]]:
