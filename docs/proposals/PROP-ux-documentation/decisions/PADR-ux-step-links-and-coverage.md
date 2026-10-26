@@ -53,12 +53,13 @@ Pending the user's answers to `step-screen-link`, `ux-checks` and `coverage-stri
   or a step that does not cite the screen; a `usecases` entry with no Step key naming it; a target that is not a UX
   ID, `close`, `back` or `end`; a modal without a `close` or `back` row; a screen without an exit; a screen not
   reachable from an entry.
+- A system step cites the screen its response appears on, so only a step that truly happens off-screen (a mail
+  sent, a background job) cites none; `ux-writing` and `usecase-writing` say so.
 - The graph is computed per listed use case. Its edges are every interaction of the screens that use case's steps
   cite. Its entries are the screens cited by the first step, by a step whose preceding step cites no screen, and by
-  the first step of an extension. A screen needs no exit when it is cited by the last main-scenario step, by an
-  extension that ends the use case, or by a step whose next step cites no screen (the task continues off-screen, for
-  example a link sent by mail). Panels are exempt from exit and reachability and are reached from the screens whose
-  content tree names them.
+  an extension bullet. A screen needs no exit when it is cited by the last main-scenario step, by an extension that
+  ends the use case, or by a step whose next step cites no screen; an extension's next step is the step it resumes
+  at. Panels are exempt from exit and reachability and are reached from the screens whose content tree names them.
 - A separate warning-severity rule (working name `RULE-ux-coverage`, the `RULE-spec-progress` precedent) reports, for
   every use case a UX document lists, a step or extension that cites no UX ID, and an interaction whose Step cell is
   empty.
@@ -74,6 +75,8 @@ Pending the user's answers to `step-screen-link`, `ux-checks` and `coverage-stri
   key and free-form `Covers` lines).
 - Known limit: inserting a step before two consecutive steps on the same screen shifts their keys without a report,
   because the shifted step still cites the screen.
+- Known limit: a system step that wrongly cites no screen exempts the screen before it from the exit check and makes
+  the screen after it an entry; only the coverage warning on that step remains.
 - Follow-up: extension-to-state coverage when projects report missing error states.
 
 ## 6. Confirmation

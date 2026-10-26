@@ -42,7 +42,9 @@ use case and capability changes it links; otherwise the rules refuse the commit 
 
 Pending the user's answer to `ux-document-timing` (Planning recommendation): drafts before code, Living Spec at sync.
 
-- `spec-specify` and the target-docs blueprint gain a Screens draft section in the UX template's shape.
+- `spec-specify` and the target-docs blueprint gain a Screens draft section in the UX template's shape. On a bundle
+  handed off from a proposal, `spec-specify` carries the Screens drafts of `target-docs.md` into `spec.md`, so
+  `spec-sync` and the reconcile verification read one place.
 - In a draft, an ID the change creates (a new UX, UC or CAP ID) is plain text, never a code span or brackets, so
   `RULE-document-reference` does not resolve it before the document exists; existing IDs stay code spans.
 - `spec-sync` writes each drafted screen to `docs/ux/` and the step citations to the use cases, turning the new IDs
@@ -58,5 +60,6 @@ Pending the user's answer to `ux-document-timing` (Planning recommendation): dra
 
 ## 6. Confirmation
 
-The reconcile verification (`reconcile-reviewer` at `medium` and `high`) checks that every drafted screen has a
-`docs/ux/` target in `reconcile.md`; `RULE-ux-links` checks the written screens. The skills' text is Review only.
+The reconcile verification at its effort (the `reconcile-reviewer`, or the implementer's self-check at `low` and on a
+permitted `medium` skip) checks that every drafted screen in `spec.md` has a `docs/ux/` target in `reconcile.md`;
+`RULE-ux-links` checks the written screens. The skills' text is Review only.

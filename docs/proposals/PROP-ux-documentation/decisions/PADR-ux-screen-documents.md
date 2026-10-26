@@ -45,17 +45,18 @@ Pending the user's answer to `ux-document-set` (Planning recommendation):
 
 - One kind `ux`, prefix `UX`, at `docs/ux/<area>/UX-<slug>.md` and `docs/packages/<name>/ux/<area>/UX-<slug>.md`,
   statuses `draft`, `active` and `deprecated` (no terminal status, so `ADR-terminal-statuses-are-historical` needs no
-  new entry). It is registered as a row of the kind definition table of `PROP-table-driven-document-kinds`, which is accepted
-  before this proposal's `plan-accept` is requested.
+  new entry). It is registered as a row of the kind definition table of `PROP-table-driven-document-kinds` (accepted).
+  Visual style is not restated in UX documents; a screen refers to the project's steering style files.
 - Frontmatter `element` is `screen`, `modal` or `panel`, a small value inside one schema that only the UX link rule
   (`RULE-ux-links` of `PADR-ux-step-links-and-coverage`) reads and validates; relation fields `usecases` (UC IDs) and `capabilities` (CAP IDs).
 - Sections: Purpose, Content (prose region rules and a content tree with conditions next to its nodes; no
   character-cell layouts), States, Interactions (`Trigger | Step | From | To | Target | Capability | Feedback`) and an
   optional Evidence section naming the project's own wireframe, mock-up or screenshot.
-- Objects are named by glossary terms. The seeded glossary and the `ux-writing` instruction define a separate UX
-  object table (representations and calls to action per role) under its own header, leaving the five-column term
-  table and its Owner check unchanged; devkit's own glossary gains only the new terms. The instruction tells a
-  project with an existing glossary to add the table, because seeds are written only once.
+- Objects are named by glossary terms. Their representations and calls to action per role live in a seeded steering
+  file `docs/steering/ux-objects.md` (one topic, under the steering caps of `PROP-foundation-documents`), scoped to
+  the objects the use cases touch; the glossary's term table, its Owner check and its 24576-byte budget stay
+  untouched, and devkit's own glossary gains only the new terms. The `ux-writing` instruction tells a project with an
+  existing steering directory to add the file, because seeds are written only once.
 - The `ux-writing` instruction asks for two or three contrasting candidates where a screen's arrangement is open, in
   Planning only (proposal Planning, or inline Planning before `plan-intent` at spec depth); in Development the
   recommended candidate is taken and the others are recorded as an assumption in `spec.md`.
@@ -66,8 +67,7 @@ Pending the user's answer to `ux-document-set` (Planning recommendation):
 - Negative: no written overview of navigation across use cases.
 - Follow-up: a derived navigation listing (from the targets) if projects report that screens alone are hard to
   navigate.
-- Follow-up: the seeded UX object table lands on the glossary path that is current at Development
-  (`PROP-foundation-documents` moves the glossary).
+- Negative: the object register takes one of the ten steering files.
 
 ## 6. Confirmation
 

@@ -18,9 +18,8 @@ targets:
 # [Blueprint] PROP-ux-documentation: Target Living Spec Structure for UX documents, authoring guidance and use-case-driven review
 
 This blueprint follows the Planning recommendations; the user's answers recorded for `worker-01.yaml` may change it.
-It assumes `PROP-table-driven-document-kinds` has landed (its kind definition table is where the UX row goes) and
-names the glossary at `docs/glossary.md`, which becomes `docs/foundation/glossary.md` if `PROP-foundation-documents`
-lands first.
+It assumes `PROP-table-driven-document-kinds` and `PROP-foundation-documents` have landed: the kind definition table
+is where the UX row goes, and the glossary is at `docs/steering/glossary.md` (listed below at its current path).
 
 ---
 
@@ -35,8 +34,9 @@ lands first.
   interactions without a step), with their codes, and the UX rows of `RULE-id-convention` and
   `RULE-document-reference`.
 - `CAP-DLV-delivery-workflows`: the `ux-reviewer` role contract and the `spec-ux-review` skill, the `ux-review`
-  envelope kind outside the P1-P3 loop with its closing record, its placement (Planning, after `specify` at spec
-  depth), its round cap and its line in the effort table.
+  envelope kind outside the P1-P3 loop with its closing record, its placement (Planning; at spec depth inside
+  `specify` before `spec-plan`, or `characterize` before `plan-tasks` for a bugfix, recorded at that stage), its round
+  cap, its line in the effort table, and the `ux-review` rounds in the rule 15 acceptance request.
 - `CAP-VIEW-repository-viewer`: UX documents form their own book group and their IDs link in rendered pages.
 
 ## 2. Use Cases Plan (docs/usecases/)
@@ -59,12 +59,16 @@ decision. The `usecase` template and the `usecase-writing` instruction allow a U
 ## 4. Development Conventions & Governance (docs/development/ & .devkit/)
 
 - `spec` bundle: a `ux` template, a `ux-writing` instruction (contrasting candidates in Planning, no character-cell
-  layouts, medium left to the project), the `ux-reviewer` subagent and `spec-ux-review` skill, the two UX rules with
-  their guides, a `docs/ux/` seed and a UX object table header in the seeded glossary of `docs-skeleton`, a Screens
-  draft section in the target-docs blueprint and in `spec-specify`, and the move of drafts into `docs/ux/` in
-  `spec-sync`, with new IDs in drafts written as plain text.
+  layouts, steering style files cited rather than restated, medium left to the project, system steps citing the
+  screen of their response), the `ux-reviewer` subagent and `spec-ux-review` skill, the two UX rules with their
+  guides, a `docs/ux/` seed and a `docs/steering/ux-objects.md` seed in `docs-skeleton`, a Screens draft section in
+  the target-docs blueprint and in `spec-specify` (which carries `target-docs.md` drafts into `spec.md` and offers the
+  optional UX review before `spec-plan` in its Completion), the matching step in `characterize` for bugfixes, and
+  the move of drafts into `docs/ux/` in `spec-sync`, with new IDs in drafts written as plain text.
+- `usecase-writing`: a step may cite the screen it happens on, and a system step cites the screen of its response.
 - `sdd-proposal` and the planning reference: the acceptance request lists `ux-review` rounds and their open findings.
-- `docs/glossary.md`: the terms "UX document" and "UX object table" only.
+- `docs/steering/glossary.md` (today `docs/glossary.md`): the terms "UX document" and "UX object register" only,
+  within the steering body cap.
 
 ---
 

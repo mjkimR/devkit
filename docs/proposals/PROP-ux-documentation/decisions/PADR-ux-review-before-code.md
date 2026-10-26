@@ -51,19 +51,22 @@ Pending the user's answers to `review-method` and `review-placement` (Planning r
   primary regions, no information dumping); **R3 states** (every state offers a next action or says why none
   exists); **R4 feedback** (every interaction gives feedback; irreversible ones confirm or can be undone); **R5
   terms** (labels use the use case's and glossary's terms); **R6 objects** (representations and calls to action match
-  the UX object table for the role; recorded as not applicable when the project has no UX object table).
+  the steering object register for the role; recorded as not applicable when the project has none).
 - Before code the screens are drafts the rules do not read (`PADR-ux-drafts-before-code`), so the reviewer checks
   the link-rule items (link agreement, uncovered steps, targets, exits, reachability, modal close) on the drafts by
   hand, labels them as its own judgment and keeps them out of the rubric; the rules confirm them at
-  `living-spec-draft`. Rule results are inputs only for screens already in `docs/ux/` that the drafts link.
+  `living-spec-draft`. Rule results are inputs only for screens already in `docs/ux/` that the drafts link and leave
+  unchanged.
 - Findings carry no severity and are recorded as `ux-review-NN` envelopes, separate from `review`; at most two rounds
   per unit. In Development the implementer closes the last round by a further `ux-review` envelope marking each
   finding `resolved` or `waived` with a reason; in Planning open findings go to the user at `plan-accept`, listed in
   the acceptance request next to the `challenger` and `scout` envelopes (`sdd-proposal` and the planning reference
   change accordingly).
-- It runs as an optional delegation before code: in Planning on the drafted screens, and at spec depth inside
-  `specify`, after the Screens section of `spec.md` is written and before `spec-plan`, recorded at stage `specify`
-  so that its fixes precede `plan.md` and `tasks.md`; the effort table recommends it at `medium` and `high` when
+- It runs as an optional delegation before code: in Planning on the drafted screens, and at spec depth after the
+  Screens section of `spec.md` is written and before the plan: inside `specify` before `spec-plan` for
+  `sdd-spec-feature`, inside `characterize` before `plan-tasks` for `sdd-spec-bugfix`, recorded at that stage so that
+  its fixes precede `plan.md` and `tasks.md`. The reviewed `spec.md` is not yet committed there, so the envelope
+  names the last commit and states the uncommitted draft in its assumptions; the effort table recommends it at `medium` and `high` when
   screens change. A `session` task applies the
   `ux-writing` instruction and runs no review.
 

@@ -79,8 +79,8 @@ Objects (6a, 6b, 6d): a screen names objects by glossary terms. Adding glossary 
 glossary Owner check, which matches only the exact five-column header (`features/governance/usecases/document_reference.py:312-358`);
 a second table under its own header is ignored by that check and by search, which reads only `glossary.yaml`
 (`features/documents/usecases/search.py:39,62-65`). `PROP-foundation-documents` moves the glossary to
-`docs/foundation/` and excludes table-format changes, so a UX object table belongs to this proposal and lands on the
-moved path.
+`docs/steering/` with a 24576-byte body cap per file and excludes table-format changes, so the object register is
+owned here; as its own steering file it leaves the glossary's table, check and budget untouched.
 
 ## 3. Links (Q2)
 
@@ -159,10 +159,12 @@ reviewer its own proposal after the kind lands.
 
 ## 8. Overlaps and order
 
-- `PROP-table-driven-document-kinds` must be developed first: the UX row is added to its table, and Development of
-  this proposal starts from the table as merged. Section 1 lists what this proposal assumes the table carries.
-- `PROP-foundation-documents` moves the glossary (and `bookGroup`'s `docs/glossary.md` group) to
-  `docs/foundation/`; a UX object table and the UX document glossary terms land on whichever path is current at
-  Development.
-- All three proposals own `packages/devkit-spec/src/devkit_spec/features/`, `packages/devkit-spec/tests/` and
-  `docs/capabilities/documents/`; the table and UX proposals also own the viewer frontend.
+- `PROP-table-driven-document-kinds` is accepted and in Development; the UX row is added to its table, and UX
+  Development starts from the table as merged. Section 1 lists what this proposal assumes the table carries;
+  `challenger-03` reports from `main` that the accepted design also carries `spec_format` scope and leaves the viewer
+  out of scope.
+- `PROP-foundation-documents` (a prerequisite by the user's decision) moves the glossary to `docs/steering/`, a flat
+  directory of ID-free topic files capped at 10 files and 24576 body bytes each. The UX object register becomes a
+  seeded steering file rather than glossary content, and style content stays in steering style files.
+- All three changes own `packages/devkit-spec/src/devkit_spec/features/`, `packages/devkit-spec/tests/` and
+  `docs/capabilities/documents/`; the table and UX changes also own the viewer frontend.

@@ -10,7 +10,7 @@ size: L                               # S | M | L | XL
 planning_effort: high                 # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
 milestone: MS-ux-documentation
-depends_on: [PROP-table-driven-document-kinds]
+depends_on: [PROP-table-driven-document-kinds, PROP-foundation-documents]
 boundaries:
   owns:
     - packages/devkit-spec/src/devkit_spec/features/
@@ -89,7 +89,7 @@ The Planning recommendation, pending the user's answers (§5); `target-docs.md` 
 
 - **Kind** (`PADR-ux-screen-documents`): one kind `ux`, prefix `UX`, at `docs/ux/<area>/UX-<slug>.md` and per
   namespace `docs/packages/<name>/ux/<area>/`, added as one row of the kind definition table of
-  `PROP-table-driven-document-kinds`, with a template, `docs-skeleton` seed, browsing, search and a viewer book
+  `PROP-table-driven-document-kinds` (accepted; in Development as SPEC-table-driven-document-kinds), with a template, `docs-skeleton` seed, browsing, search and a viewer book
   group. Each document is one interface element (`element: screen | modal | panel`) with Purpose, Content (prose
   region rules and a content tree), States, Interactions (`Trigger | Step | From | To | Target | Capability |
   Feedback`) and an optional Evidence section for the project's own wireframe medium. The use case carries the task
@@ -101,28 +101,31 @@ The Planning recommendation, pending the user's answers (§5); `target-docs.md` 
   steps without a screen and interactions without a step. Both are documented in `CAP-GOV-spec-rules`.
 - **Authoring guidance**: a `ux-writing` instruction in the `spec` bundle: two or three contrasting candidates for
   the user in Planning where a screen's arrangement is open (Development takes the recommended one and records the
-  others as an assumption), no character-cell layouts, objects named by glossary terms with a seeded UX object table,
-  and the medium left to the project.
+  others as an assumption), no character-cell layouts, objects named by glossary terms and registered with their
+  representations and calls to action in a seeded steering file `docs/steering/ux-objects.md`, visual style left to
+  the project's steering style files (cited, never restated), and the medium left to the project.
 - **Review** (`PADR-ux-review-before-code`): an isolated, read-only `ux-reviewer` subagent with a `spec-ux-review`
-  skill: a cognitive walkthrough of each linked use case plus a six-item 0/1/2 rubric with evidence, the link rules'
-  results reported as facts, no severity, `ux-review-NN` envelopes, at most two rounds and a closing envelope, run as
-  an optional delegation before code (`CAP-DLV-delivery-workflows`).
+  skill: a cognitive walkthrough of each linked use case plus a six-item 0/1/2 rubric with evidence, the link-rule
+  items hand-checked on the drafts and labelled as the reviewer's judgment, no severity, `ux-review-NN` envelopes, at
+  most two rounds and a closing envelope, run as an optional delegation before code (`CAP-DLV-delivery-workflows`).
 - **Timing** (`PADR-ux-drafts-before-code`): screens and the step citations they need are drafted before code in
-  `target-docs.md` or a Screens section of `spec.md`, with IDs the change creates in plain text; `spec-sync` writes
-  `docs/ux/` and the use case changes, and the link rules check them at `living-spec-draft`. The review runs on the
-  drafts (in Planning, or inside `specify` before `spec-plan`).
+  `target-docs.md` or a Screens section of `spec.md`, with IDs the change creates in plain text; on a handed-off
+  bundle `spec-specify` carries the `target-docs.md` drafts into `spec.md`; `spec-sync` writes `docs/ux/` and the use
+  case changes, and the link rules check them at `living-spec-draft`. The review runs on the drafts (in Planning, or
+  at spec depth inside `specify`, or `characterize` for a bugfix, before the plan).
 - Non-goals: wireframe rendering, design tool integrations, visual styling, engine- or framework-specific
   verification, usability testing with real users, severity ranking of findings by the reviewer, a stage switched on
   by content, and workflow engine changes.
 
 ## 4. Lifecycle & Retirement Criteria
 
-- Acceptance requires the user's answers to the Planning questions folded into the PADRs and an accepted
-  `PROP-table-driven-document-kinds`; the handoff waits for its Development to be integrated (§5).
+- Acceptance requires the user's answers to the Planning questions folded into the PADRs, an accepted
+  `PROP-foundation-documents` (`PROP-table-driven-document-kinds` is accepted) and the assumptions of §5 re-checked
+  after the Host merges `main`; the handoff waits until both prerequisites' Development is integrated (§5).
 - Development shows: a UX document in a fixture repository indexed, listed, searched and grouped in the viewer; each
-  report of both UX rules by a rule test, including the element and Interactions-table cases, off-screen re-entry
-  and the step-format deviations; the role and
-  skill contracts by the role-contract tests; and the viewer frontend checks with the committed page rebuilt.
+  report of both UX rules by a rule test, including the element and Interactions-table cases, off-screen re-entry,
+  a system step between two screens and the step-format deviations; the role and skill contracts by the
+  role-contract tests; and the viewer frontend checks with the committed page rebuilt.
 - On acceptance: recorded with `devkit spec proposal accept`, then handed off to a spec bundle on
   `dev-ux-documentation`; the proposal is deleted there and its decisions become ADRs.
 - On decomposition: Planning returns the draft with `needs_decompose: true`, and Backlog creates the children with
@@ -134,13 +137,13 @@ The Planning recommendation, pending the user's answers (§5); `target-docs.md` 
 
 Evidence: `MAT-ux-documentation-planning-spike` (spike over devkit's code and contracts, from `scout-01` to
 `scout-03`), `MAT-ux-documentation-practice` and `MAT-ux-object-modeling` (the user's research); `challenger-01`
-(12 findings) is folded below.
+to `challenger-03` are folded below.
 
 - **Q1**: a kind is known only by its prefix; one prefix costs one table row and one stem rule, two prefixes double
   kinds, directories and relation fields. The use case already holds a task's step order and extensions, so the
   interactions' targets give the transitions without a flow document. Glossary columns would silently disable the
-  Owner check; a separate table under its own header does not, so the UX object table is seeded, not added to
-  devkit's own glossary.
+  Owner check, and the steering glossary has a 24576-byte body cap, so the recommended UX object register is its own
+  seeded steering file (`ux-objects`), not glossary content.
 - **Q2**: all 13 current use cases number steps and extensions regularly; no rule maps a body reference to a step.
   Citing UX IDs in step prose reuses reference resolution and alias rewriting; one step segmenter is new. Whether use
   cases carry UX IDs at all is a user question (`step-screen-link`).
@@ -160,22 +163,29 @@ Evidence: `MAT-ux-documentation-planning-spike` (spike over devkit's code and co
 
 ### Dependencies and order
 
-- `PROP-table-driven-document-kinds` (`depends_on`) is developed first, by the user's decision. This proposal's
-  `plan-accept` request waits until that proposal is accepted, so a return to `spike` stays available, and the Host
-  re-checks the assumptions below against its accepted design then. The handoff waits until its Development is
-  integrated; if it is decomposed, until every child that carries the kind table is integrated. If it is rejected,
-  this proposal returns to `spike` for the kind registration.
-- Assumed of its table: it carries the prefix, kind, location, Living Spec membership and directory, namespace scope,
-  accepted relation fields with their target kinds, summary requirement and entrypoint participation, and it removes
-  the binary kind fallbacks. Assumed not carried, so owned here: the bidirectional pair logic of
-  `RULE-traceability-link`, per-kind stem rules and messages, `spec_format` scope, templates and seeds, the viewer's
-  book group and bracket-ID pattern. Where the accepted table differs, this proposal's Development adapts.
-- `PROP-foundation-documents` is not a prerequisite. It moves `docs/glossary.md`, the seeded glossary and the
-  viewer's glossary group to `docs/foundation/`; the seeded UX object table and devkit's new terms go to whichever
-  path is current at Development. Both proposals also own `packages/devkit-spec/src/devkit_spec/features/`, the
-  `spec` bundle and `docs/capabilities/documents/`; Development rebases on whichever lands first.
-- `FB-viewer-bracket-id-prefixes-stale` records that the viewer's bracket-ID pattern lists the removed `US` prefix and
-  omits `UC`, `MS` and `FB`; the table proposal's viewer step can absorb it, and this proposal adds `UX` either way.
+The user decided that UX Development follows both prerequisites (`depends_on`).
+
+- `PROP-table-driven-document-kinds` is accepted and handed off (SPEC-table-driven-document-kinds, in Development, as
+  the Host reports). This branch predates that handoff; the Host merges `main` into `plan-ux-documentation` before
+  acceptance, and `depends_on` then names the spec as the handoff relocates it. Assumed of its table, re-checked
+  against the merged spec before `plan-accept`: it carries the prefix, kind, location, Living Spec membership and
+  directory, namespace scope, `spec_format` scope, accepted relation fields with their target kinds, summary
+  requirement and entrypoint participation, and it removes the binary kind fallbacks. Owned here: the bidirectional
+  pair logic of `RULE-traceability-link`, per-kind stem rules and messages if the table does not carry them,
+  templates and seeds, and the viewer's book group and bracket-ID pattern (the table change leaves the viewer out of
+  scope; its own feedback record covers the stale viewer prefixes, and this proposal adds `UX` either way).
+- `PROP-foundation-documents` is in Planning; its direction as the Host reports it: a flat `docs/steering/`
+  directory, one file per topic with `title` and `summary` frontmatter and no ID, every file's frontmatter listed by
+  `devkit get-context` and bodies read on demand, at most 10 files and 24576 body bytes per file, and the glossary
+  (`glossary.md`, `glossary.yaml`) moved into it. This proposal therefore names `docs/steering/glossary.md`, seeds
+  its object register as one steering file, refers to steering style files instead of restating style content, and
+  budgets glossary growth against the cap (devkit's own glossary gains two terms, about 500 bytes on a body of about
+  7.6 KB). The `plan-accept` request waits for its acceptance, so a return to `spike` stays available if its design
+  changes these assumptions; the handoff waits for its Development to be integrated.
+- If either prerequisite is rejected or decomposed, this proposal returns to `spike` before `plan-accept`; after a
+  decomposition the handoff waits for every child that carries the kind table or the steering directory.
+- All three changes own `packages/devkit-spec/src/devkit_spec/features/`, the `spec` bundle and
+  `docs/capabilities/documents/`; UX Development starts after both, so it rebases once.
 
 ### Planning decisions
 
@@ -185,8 +195,11 @@ Evidence: `MAT-ux-documentation-planning-spike` (spike over devkit's code and co
 - `dev_effort` is `medium`: the change creates a document kind and spans packages, and has no irreversible effect or
   external consumer (`effort` reference); the Host may raise it at handoff.
 - Boundaries add `docs/glossary.md` for the new terms. `RULE-proposal-boundaries` admits no path that does not
-  exist yet, and naming the parent `docs/` would own the whole Living Spec, so the Host replaces the entry with the
-  moved glossary path before requesting `plan-accept` if `PROP-foundation-documents` has moved it by then, and
-  otherwise records the moved path as a scope extension of the spec's `_Boundary:` after handoff. Boundaries also
+  exist yet, and naming the parent `docs/` would own the whole Living Spec, so the entry stays on the current path;
+  because the handoff follows the steering move, the Host replaces it with `docs/steering/glossary.md` before
+  requesting `plan-accept` if the move has landed by then, and otherwise records it as a scope extension of the
+  spec's `_Boundary:` at handoff. Boundaries also
   add `docs/capabilities/viewer/`, the committed viewer build `packages/devkit-viewer/src/devkit_viewer/static/`, and
   `.devkit/installation.json` and `AGENTS.md` for the `devkit sync` the new bundle assets imply.
+- The feedback record on stale viewer bracket-ID prefixes, recorded earlier in this run, is withdrawn: the accepted table change already
+  records the same viewer defect (`challenger-03` finding 6).
