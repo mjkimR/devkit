@@ -121,7 +121,7 @@ The integration executor's coded refusals this section does not name, and their 
   obtains any required conversational decision (`CAP-INT-mcp-services`); resumes at step 7.
 - **7h.** A synchronized rule of the source, or of the result at a build, imports a module or name the running runtime
   does not provide, such as the implementation module of a rule the branch adds: the system refuses with
-  `INTEGRATION_RULE_RUNTIME_MISMATCH` before readiness and changes nothing; the source needs no change, and the agent,
+  `INTEGRATION_RULE_RUNTIME_MISMATCH` before readiness (after 7f and 7g) and changes nothing; the source needs no change, and the agent,
   with separately granted authority, runs integration from the base checkout with a runtime built from the source's
   code outside the worktree (`CAP-INT-mcp-services`); resumes at step 7.
 - **8a.** The base moved after the result was built: the system refuses with `INTEGRATION_TARGET_MOVED`, or with

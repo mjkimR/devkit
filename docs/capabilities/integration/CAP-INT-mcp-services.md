@@ -70,10 +70,11 @@ source's synchronized rules are the source's (`CAP-GOV-evaluation-lifecycle`). B
 synchronized rule module listed in the source's committed receipt, or the result's at a build, imports at module level
 a module or name of an installed top-level package that the running runtime does not provide, the integration MUST
 refuse with `INTEGRATION_RULE_RUNTIME_MISMATCH`, naming each rule file and missing import, and change nothing. The
-check parses the rule modules and resolves their imports against the running runtime; it executes no source code. A
-rule that fails for another reason, such as an import nothing installed provides or a syntax error, is left to the
-provider's own refusal. Integration never builds or selects a runtime from the source by itself: the source would
-then be judged by its own rule engine and provider. Covered by
+refusal comes after `INTEGRATION_RUNTIME_IN_WORKTREE` and `INTEGRATION_RECEIPT_READER_CHANGED`, so a source meeting
+several of these cases receives the earlier code. The check parses the rule modules and resolves their imports against
+the running runtime; it executes no source code. A rule that fails for another reason, such as an import nothing
+installed provides or a syntax error, is left to the provider's own refusal. Integration never builds or selects a
+runtime from the source by itself: the source would then be judged by its own rule engine and provider. Covered by
 `packages/devkit/tests/integration/features/integration/test_rule_runtime.py` and
 `packages/devkit-spec/tests/e2e/features/delivery/test_integration_rule_runtime.py`.
 

@@ -2,7 +2,7 @@
 id: SPEC-integration-readiness-branch-code
 title: Integration names a branch rule that needs the branch's code
 summary: A branch whose new synchronized rule needs package code the base runtime lacks was refused as not ready; integration now names it with INTEGRATION_RULE_RUNTIME_MISMATCH before readiness and directs a run from a runtime built from the source.
-status: in-progress
+status: completed
 created: 2026-10-26
 related_capabilities:
   - CAP-INT-mcp-services

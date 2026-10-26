@@ -1,7 +1,7 @@
 ---
 reconcile_id: REC-integration-readiness-branch-code
 spec: SPEC-integration-readiness-branch-code
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/integration/CAP-INT-mcp-services.md
     resolution: modified
@@ -22,11 +22,12 @@ targets:
   importing a module or name of an installed top-level package the runtime lacks refuses with
   `INTEGRATION_RULE_RUNTIME_MISMATCH` before the provider, that the check parses and resolves without executing
   source code, which failures stay with the provider, and that integration never builds or selects a source runtime
-  itself; the stable code table gains the code and its directive.
+  itself, and that it follows `INTEGRATION_RUNTIME_IN_WORKTREE` and `INTEGRATION_RECEIPT_READER_CHANGED`; the stable
+  code table gains the code and its directive.
 - `CAP-GOV-evaluation-lifecycle` section 6 (managed rule copies in snapshots): the receipt pins rule files, not the
   package code they import; a snapshot's rules import the evaluating process's code, so a missing implementation module
   is `RULES_LOAD_FAILED`, and integration names the case first with its own code.
-- `UC-drive-development-to-integration`: extension 7h and Scenario 21 for the refusal and the separately authorized
+- `UC-drive-development-to-integration`: extension 7h (after 7f and 7g) and Scenario 21 for the refusal and the separately authorized
   source-built runtime recovery.
 - `docs/development/reference/integration.md`: the code table row.
 
