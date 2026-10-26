@@ -24,6 +24,10 @@ targets:
     resolution: modified
   - file: docs/decisions/2026-10/20261022-immutable-decisions-editable-records.md
     resolution: modified
+  - file: docs/usecases/delivery/UC-route-development-intent.md
+    resolution: modified
+  - file: docs/usecases/harness/UC-adopt-in-an-existing-repository.md
+    resolution: modified
 ---
 
 # Reconciliation: Task-aware playbook discovery through spec
@@ -57,17 +61,13 @@ No other Living Spec document changes:
   ID, which did not change. `guides/install/` names only the generated skill paths, which did not change.
 - Dated materials, completed specs and roadmap milestones that name the old entry rule are history.
 
-Deferred work, each outside this Development run's strict write scope (`docs/usecases/governance/` was the only use
-case directory granted), so the run could not reflect it; the Host can widen the scope and fold both in at
-integration, which closes the feedback:
+Reflected at integration, outside the Development run's write scope (`docs/usecases/governance/` was the only use
+case directory granted to it):
 
-- `UC-route-development-intent` (`docs/usecases/delivery/`) still goes from entering the `spec` skill to
-  classification without the intake step: `FB-route-intent-intake-discovery`.
-- `UC-adopt-in-an-existing-repository` (`docs/usecases/harness/`) step 5 names only the developer's request for
-  `brownfield-adoption`, not a confirmed intake offer: `FB-adoption-usecase-confirmed-offer`.
-
-Both are wording omissions of an entry path, not contradictions: neither use case states that playbooks cannot be
-offered, and the delivered behavior holds without them.
+- `UC-route-development-intent`: step 1 names the intake search, extensions 1b and 1c cover a skipped intake and a
+  one-line confirm-first offer, and scenarios 2a and 2b test them; resolves `FB-route-intent-intake-discovery`.
+- `UC-adopt-in-an-existing-repository`: step 5 and scenario 4 name the confirmed intake offer; resolves
+  `FB-adoption-usecase-confirmed-offer`.
 
 Entrypoints: no new capability or use case; the touched capabilities' `entrypoints` already name the changed files'
 doorways (`packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/` for `CAP-HARN-agent-guidance`, the playbook
