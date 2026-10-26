@@ -31,7 +31,7 @@ plan: PLAN-backlog-subagent-roles
   - **_Boundary**: `packages/devkit-spec/tests/integration/features/proposals/test_decomposition_fixture.py`
   - _Requirements: AC-12_
   - **Verification**: `just test devkit-spec tests/integration/features/proposals/test_decomposition_fixture.py`
-- [ ] **Task 2.4**: A dogfood `triage` run over the open feedback, recorded in the final change report
+- [x] **Task 2.4**: A dogfood `triage` run over the open feedback, recorded in the final change report
   - **_Boundary**: `specs/2026-10/20261026-backlog-subagent-roles/`
   - _Requirements: AC-13_
   - **Verification**: `git status --porcelain` empty before and after the run
