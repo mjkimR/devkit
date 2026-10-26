@@ -54,7 +54,7 @@ Agent assets distributed by `devkit` fall into a three-tier taxonomy:
 1. **Guidance & Context Layer (Natural Language)**:
    - `host-guidance-block`: Managed block in `AGENTS.md`.
    - `package-instruction`: Markdown guidelines with read conditions.
-   - `package-playbook`: Occasional operational procedures explicitly discovered via `devkit playbook search` or retrieved by exact ID via `devkit playbook get`.
+   - `package-playbook`: Occasional operational procedures explicitly discovered via `devkit playbook search`, offered at `spec` intake for the user to confirm, or retrieved by exact ID via `devkit playbook get`.
    - `package-workflow`: Delivery workflow definitions.
 2. **Mechanized Execution Layer**:
    - `governance-rule`: Deterministic invariant verified by `devkit rules check`.

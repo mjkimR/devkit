@@ -1,9 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: Queue a draft for task-aware playbook discovery and the spec-playbook entry
-  point; compare explicit skip cases for established Planning and Development work.
-by: user
-at: '2026-10-23T06:37:05.496311Z'

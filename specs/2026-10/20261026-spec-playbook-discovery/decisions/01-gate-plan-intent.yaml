@@ -1,0 +1,10 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-spec-playbook-discovery: Queue a draft for task-aware playbook discovery
+  and the spec-playbook entry point; compare explicit skip cases for established Planning
+  and Development work.'
+by: user
+at: '2026-10-25T23:56:03.136493Z'

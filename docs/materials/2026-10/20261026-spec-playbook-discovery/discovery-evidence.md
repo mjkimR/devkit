@@ -1,6 +1,6 @@
 # Discovery evidence
 
-Planning evidence for `PROP-spec-playbook-discovery`, collected in the Planning worktree at base `3137814f`.
+Planning evidence for `SPEC-spec-playbook-discovery`, collected in the Planning worktree at base `3137814f`.
 
 ## 1. Search probe (Q4)
 

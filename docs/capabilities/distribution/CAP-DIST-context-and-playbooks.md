@@ -24,7 +24,9 @@ it in stages:
 - `devkit get-context <bundle>` returns a bundle's constitution and instruction headers; the agent reads bodies on
   demand.
 - Playbooks stay on disk under `.devkit/managed/<bundle>/` and are searched only when the user invokes
-  `devkit-playbook` for the task or a failing rule's remediation names one.
+  `devkit-playbook` for the task, a failing rule's remediation names one, or an installed entry skill runs its own
+  bounded intake search (the `spec` skill's, `CAP-HARN-agent-guidance`); a candidate found that way runs only after
+  the user confirms it.
 
 ## 2. Bundle Context (`devkit get-context`)
 
@@ -75,7 +77,9 @@ agents through the instructions in the skill body.
 
 The skill runs the search, reads the chosen body from the returned path (loading its bundle's context first when
 needed), and when nothing matches, completes the task and asks whether to save a reusable draft into an authoring
-source; drafts need explicit approval and never touch installed or generated files.
+source; drafts need explicit approval and never touch installed or generated files. The draft offer belongs to this
+explicitly requested discovery only. The skill names no other bundle's asset: it states generically that a user's
+confirmation of a playbook another installed entry skill offered is the explicit invocation of that playbook.
 
 ### Playbook Header
 
@@ -210,8 +214,10 @@ Unknown and unselected identities share a code because the deployed receipt cann
 A user naming the exact playbook for the current task, or explicitly configuring an external
 schedule naming that exact ID, authorizes retrieval and interpretation within that task's scope. A request or
 schedule naming a declared alias is explicit invocation of the canonical playbook `get` reports.
-Retrieval cannot verify authorization and grants none. Ordinary task wording never authorizes
-catalog discovery or playbook selection. Explicit discovery and rule remediation remain supported.
+Retrieval cannot verify authorization and grants none. Ordinary task wording alone never selects or
+runs a playbook: an entry skill may run one bounded search at its intake and offer a candidate, and the user's
+confirmation of that offer is the explicit invocation (`ADR-spec-intake-playbook-discovery`). Explicit discovery and
+rule remediation remain supported.
 Each run starts fresh procedure progress, checks prerequisites and obeys project workflow gates,
 permissions and user constraints. Schedules do not provide future gated approvals, and unavailable
 approval UI is not approval. External systems own cadence, launch, retries, overlap control and

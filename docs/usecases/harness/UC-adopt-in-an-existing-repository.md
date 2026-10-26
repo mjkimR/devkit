@@ -41,7 +41,8 @@ capabilities:
    installed devkit-spec version (`CAP-HARN-command-mount`).
 4. The developer runs the rules; the spec rules check the Markdown already under `docs/` and `specs/` and report
    violations in the legacy files (`CAP-GOV-spec-rules`).
-5. The developer asks the agent for the `brownfield-adoption` playbook (`CAP-HARN-agent-guidance`).
+5. The developer asks the agent for the `brownfield-adoption` playbook, or confirms the one-line offer `spec` intake
+   makes for a request to adopt devkit here (`CAP-HARN-agent-guidance`).
 6. The agent moves the legacy Markdown under `docs/materials/_legacy/`, which the spec rules leave free-form, without
    editing any rule (`CAP-HARN-agent-guidance`, `CAP-GOV-spec-rules`).
 7. The agent reruns the rules; the check passes (`CAP-GOV-spec-rules`).
@@ -96,8 +97,8 @@ capabilities:
 
 ### Scenario 4: Contains legacy documents without rewriting them
 - **Covers**: main success scenario (steps 4 to 7)
-- **Given**: the developer asked for the `brownfield-adoption` playbook, and `devkit rules check` reports violations
-  in legacy Markdown under `docs/`
+- **Given**: the developer asked for the `brownfield-adoption` playbook or confirmed its intake offer, and
+  `devkit rules check` reports violations in legacy Markdown under `docs/`
 - **When**: the agent follows the playbook
 - **Then**: the legacy files move under `docs/materials/_legacy/`, no rule is edited, and `devkit rules check` passes
 

@@ -27,7 +27,7 @@ from .output import WORKSPACE, _json_command
 
 @click.group()
 def playbook() -> None:
-    """Discover occasional procedures after explicit devkit-playbook invocation."""
+    """Search and retrieve occasional procedures; retrieval grants no execution authority."""
 
 
 @playbook.command(name="get")

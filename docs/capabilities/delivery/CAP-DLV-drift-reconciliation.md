@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-drift-reconciliation
 title: Manual Drift Reconciliation
-summary: "An explicitly invoked maintenance playbook reviews a bounded batch of Living Spec, code and guidance, records evidence and coverage gaps, and routes user-decided corrections or deferrals through existing workflows."
+summary: "An explicitly invoked or confirmed maintenance playbook reviews a bounded batch of Living Spec, code and guidance, records evidence and coverage gaps, and routes user-decided corrections or deferrals through existing workflows."
 area: delivery
 status: active
 usecases:
@@ -15,8 +15,8 @@ entrypoints:
 ## 1. Summary
 
 The opt-in `maintenance` catalog bundle supplies the independent `drift-reconciliation` playbook
-(`CAP-DIST-content-packages`). Explicit manual invocation through `devkit-playbook` loads its procedure on demand
-(`CAP-DIST-context-and-playbooks`). It complements per-feature `spec-sync` with accumulated drift review under
+(`CAP-DIST-content-packages`). Explicit manual invocation through `devkit-playbook`, its exact ID or the user's confirmation
+of a `spec` intake offer loads its procedure on demand (`CAP-DIST-context-and-playbooks`). It complements per-feature `spec-sync` with accumulated drift review under
 `ADR-dual-source-of-truth-and-periodic-reconciliation`; neither ledger automatically decides intended behavior.
 
 ## 2. Scope & Boundary

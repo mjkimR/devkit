@@ -15,7 +15,8 @@ from devkit_dist.features.distribution.models.errors import (
 from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.bundles.playbooks import read_playbook_header
 from devkit_dist.features.distribution.services.installation.config import update_config
-from devkit_dist.features.distribution.services.installation.playbook_skill import MANAGED_ROOT
+from devkit_dist.features.distribution.services.installation.guidance_block import ENTRY_SKILLS
+from devkit_dist.features.distribution.services.installation.playbook_skill import MANAGED_ROOT, skill_files
 from devkit_dist.features.distribution.services.installation.workspace import JOURNAL
 from devkit_dist.features.distribution.usecases.context import GetContext
 from devkit_dist.features.distribution.usecases.playbook_search import SearchPlaybooks
@@ -109,6 +110,36 @@ def test_generated_skill_policies_and_sync_lifecycle(tmp_path: Path, target: Pat
     assert not (claude / "SKILL.md").exists()
     sync_project(target, [], deselect=["team", "ops"])
     assert not (target / MANAGED_ROOT / "SKILL.md").exists()
+
+
+# SPEC-spec-playbook-discovery AC-06: the generic entry stays spec-neutral and keeps its explicit invocation.
+SPEC_ASSET_TERMS = ("spec-playbook", "/spec", "references/playbooks.md", "devkit-spec")
+REMOVED_PHRASES = ("do not authorize playbook discovery", "references from other skills", "invocation only")
+
+
+@pytest.mark.parametrize("agent", [None, "codex", "claude-code"])
+def test_generated_skill_is_spec_neutral(agent: str | None) -> None:
+    files = skill_files(agent)
+    body = " ".join(files["SKILL.md"].decode().split())
+    for term in (*SPEC_ASSET_TERMS, *REMOVED_PHRASES):
+        assert term not in body, term
+    assert "only when the user explicitly invokes devkit-playbook for the current task" in body
+    assert "only when the user explicitly invokes devkit-playbook or confirms an offered playbook" in body
+    assert "When another installed entry skill offers a playbook and the user confirms it" in body
+    assert "that confirmation is the explicit invocation of the named playbook" in body
+    assert "Only in this explicitly requested discovery: if no suitable playbook was found" in body
+    assert "Retrieval grants no execution authority" in body
+
+
+def test_guidance_line_and_cli_help_are_spec_neutral() -> None:
+    line = ENTRY_SKILLS["playbook"]
+    assert line == "`devkit-playbook`: find and run an operational playbook the user invokes or confirms"
+    result = CliRunner().invoke(cli, ["playbook", "--help"])
+    assert result.exit_code == 0
+    assert "after explicit devkit-playbook invocation" not in result.output
+    assert "retrieval grants no execution authority" in " ".join(result.output.split())
+    for term in SPEC_ASSET_TERMS:
+        assert term not in line and term not in result.output, term
 
 
 def test_generated_skill_collision_and_user_edits_are_protected(tmp_path: Path, target: Path) -> None:
