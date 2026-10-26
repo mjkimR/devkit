@@ -1,8 +1,8 @@
 # MCP runtime and shared services
 
-Neither `devkit-agt` nor `devkit-spec` installs `devkit-mcp`. For the MCP services, including devkit-spec's
-source-bound proposal report publication (`spec_proposal_report`), add `devkit-agt[mcp]` or install `devkit-mcp`
-directly in the retained base environment. Release-wheel installs name the matching `devkit-dist`, `devkit-core`,
+Neither `devkit-agt` nor `devkit-spec` installs `devkit-mcp`. For the MCP services (devkit-dist's shared artifact
+tools `shared_put`, `shared_get` and `shared_list`; devkit-spec registers none), add `devkit-agt[mcp]` or install
+`devkit-mcp` directly in the retained base environment. Release-wheel installs name the matching `devkit-dist`, `devkit-core`,
 `devkit-cli`, `devkit-advisory` and `devkit-mcp` wheels; see the release notes. Runtime installation alone can
 discover an empty service set, because the services come from the installed packages; domain services use SDK-free
 contracts. Proposal acceptance, handoff and integration are CLI commands, never MCP tools.
@@ -20,7 +20,7 @@ entries; exclusions remain until manually reviewed across every linked worktree.
 
 Reconnect the terminal host and inspect `devkit mcp status --format json`. Registration, connection, discovery,
 trust and execution permissions are separate facts. Complete the host's own trust flow and verify tool discovery.
-MCP retains shared artifact services and `spec_proposal_report`; lifecycle acceptance, handoff and integration run
+MCP retains only the shared artifact services; lifecycle acceptance, handoff and integration run
 through CLI commands after Host-carried conversational approval. Protocol tests do not establish actual terminal UI
 support. Desktop/VS Code adapters are outside this scope.
 

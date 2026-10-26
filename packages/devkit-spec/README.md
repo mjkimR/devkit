@@ -13,9 +13,9 @@ and `CAP-HARN-agent-guidance`; repository documentation starts at [docs/README.m
 ## Use in a project
 
 Install from this monorepo's package subdirectory. uv resolves devkit-agt (the harness it builds on), devkit-dist,
-devkit-core, devkit-cli and devkit-advisory from the same commit. devkit-spec does not depend on devkit-mcp: proposal
-acceptance and handoff run through the `devkit spec proposal` CLI, and only the optional MCP report service needs
-`devkit-agt[mcp]` (see [MCP runtime](../../guides/install/mcp.md)):
+devkit-core, devkit-cli and devkit-advisory from the same commit. devkit-spec does not depend on devkit-mcp and
+registers no MCP service: proposal acceptance and handoff run through the `devkit spec proposal` CLI (the optional
+shared artifact tools are in [MCP runtime](../../guides/install/mcp.md)):
 
 ```bash
 uv add --dev "devkit-spec @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-spec"
@@ -25,7 +25,7 @@ uv run devkit spec --version         # [VERSION: devkit-spec <version>]
 ```
 
 For release wheels, install the extension and its base dependencies explicitly because they are not hosted on a
-package index; add the matching `devkit-mcp` wheel only for the optional MCP services. See
+package index; add the matching `devkit-mcp` wheel only for the optional shared artifact MCP tools. See
 [Releasing](../../README.md#releasing).
 
 A project opts out of the bundle with `[presets] spec = false` in `.devkit/config.toml`. `uv run devkit config
