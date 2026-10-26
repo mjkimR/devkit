@@ -1,0 +1,14 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T06:29:57.282872Z'
+status: completed
+summary: 'Self-review at low effort: AC-01..AC-04 covered by the two vitest cases and the new rule test, all passing; diff stays inside the task boundaries plus the sync output .devkit/installation.json; no non-goal implemented'
+findings: []
+checks:
+  tests: PASS just test-affected mode=full 5046 passed 14 skipped; just viewer test 95/95
+  lint: PASS devkit rules check --ci --base b38cf17b; just lint-check devkit-spec; just check devkit-spec; just viewer lint and check
+diff_scope:
+  base: b38cf17befaca823f5b9752a9e6d400b5b90164d
+  head: d187f1522353abb6464753e3556c7cc60a599709
