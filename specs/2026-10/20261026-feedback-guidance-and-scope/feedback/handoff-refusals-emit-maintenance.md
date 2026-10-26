@@ -51,3 +51,9 @@ SPEC_HANDOFF_STALE MAINTENANCE
 native_handoff.py: HandoffNotReadyError("the base checkout has uncommitted changes; commit or resolve them before review")
 native_handoff.py: HandoffReplyError("choose low, medium or high Development effort")
 ```
+
+## Related stale fix text
+
+`HandoffNotReadyError.fix` and the `SPEC_HANDOFF_NOT_READY` row of `CAP-DLV-proposal-incubation` still say to rerun
+"with the current report URI", although acceptance and handoff no longer take or need a published report. Fix the
+text together with the mode change.
