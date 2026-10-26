@@ -2,7 +2,7 @@
 id: PROP-spec-playbook-discovery
 title: Task-aware playbook discovery through spec
 summary: "Lets spec run one bounded playbook search at new task intake and offer a matching playbook in one line that the user confirms, with explicit skip cases; the generated devkit-playbook skill stays the generic explicit entry."
-status: reviewing                      # draft | reviewing | accepted | rejected
+status: accepted                      # draft | reviewing | accepted | rejected
 created_at: 2026-10-23
 target_area: delivery/
 priority: high                        # critical | high | medium | low
