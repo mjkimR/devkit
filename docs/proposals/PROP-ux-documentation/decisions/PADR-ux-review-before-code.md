@@ -20,14 +20,14 @@ Agents grade their own interface work leniently and layouts converge to generic 
 graded criteria and a round cap is the documented mitigation (`MAT-ux-documentation-practice` §3-§4). An LLM reviewer
 is credible for a step-by-step walkthrough over declared links and for single-screen content, not for severity or
 real-user validation. devkit has an isolated read-only reviewer pattern (`code-reviewer` with `spec-review`), but its
-`review` envelope and the review loop require P1-P3 severity, and no workflow check can run a stage only for units
-that touch UX documents (`MAT-ux-documentation-planning-spike` §5).
+`review` envelope and the review loop require P1-P3 severity (`MAT-ux-documentation-planning-spike` §5). A stage
+switched on by content is excluded by `CAP-DLV-delivery-workflows` under `ADR-delivery-classification`.
 
 ## 2. Decision Drivers
 
 - Independence from the author: a fresh, read-only context.
 - Fit to evidence: walkthrough plus graded criteria with cited evidence; no severity.
-- No change to the workflow engine (`devkit-agt`) or to the code-review round state.
+- No change to the workflow engine (`devkit-agt`), to the code-review round state or to `ADR-delivery-classification`.
 - Deterministic results are reported, not re-judged.
 
 ## 3. Considered Options
@@ -35,7 +35,8 @@ that touch UX documents (`MAT-ux-documentation-planning-spike` §5).
 - **Walkthrough only**: lowest cost; misses single-screen content problems.
 - **Walkthrough plus a 0/1/2 rubric with evidence**: covers both; one run per round.
 - **Merged independent runs**: offsets run-to-run inconsistency at several times the cost.
-- **Placement as a conditional workflow stage**: enforced, but needs a new check primitive in `devkit-agt`.
+- **Placement as a conditional workflow stage**: rejected: a stage switched on by content is a non-goal of
+  `CAP-DLV-delivery-workflows` (`ADR-delivery-classification`), and it would need a new check primitive.
 - **Placement as an optional delegation before code**: no engine change; not enforced.
 
 ## 4. Decision Outcome
@@ -43,21 +44,30 @@ that touch UX documents (`MAT-ux-documentation-planning-spike` §5).
 Pending the user's answers to `review-method` and `review-placement` (Planning recommendation):
 
 - A `ux-reviewer` subagent (isolated, read-only) bound to a new `spec-ux-review` skill walks each linked use case's
-  main scenario and extensions through its screens, answering the four walkthrough questions per step, then scores
-  each screen on a 0/1/2 rubric with evidence for every score below 2.
-- Results of the UX coverage rule are inputs reported as facts; the rubric excludes what that rule decides.
-- Findings carry no severity and are recorded as `ux-review-NN` envelopes, separate from `review`; at most two
-  rounds per unit, stated in the skill.
-- It runs as an optional delegation before code: in Planning on the proposal's target UX documents, and after
-  `specify` on the unit's UX documents; the effort table recommends it at `medium` and `high` when UX documents
-  change.
+  main scenario and extensions through its screens, answering per step: will the actor try the right thing, notice
+  the control, connect it to the goal and see progress.
+- It then scores each screen 0, 1 or 2 with evidence for every score below 2 on: **R1 task fit** (the primary task
+  and the facts to commit to it are present; secondary items have a place); **R2 one primary region** (no competing
+  primary regions, no information dumping); **R3 states** (every state offers a next action or says why none
+  exists); **R4 feedback** (every interaction gives feedback; irreversible ones confirm or can be undone); **R5
+  terms** (labels use the use case's and glossary's terms); **R6 objects** (representations and calls to action match
+  the UX object table for the role).
+- What the UX link rules decide (link agreement, uncovered steps, targets, exits, reachability, modal close) is input
+  reported as facts and excluded from scoring. Where no rule ran (Planning drafts), the reviewer checks those by hand
+  and labels them as its own judgment.
+- Findings carry no severity and are recorded as `ux-review-NN` envelopes, separate from `review`; at most two rounds
+  per unit. In Development the implementer closes the last round by a further `ux-review` envelope marking each
+  finding `resolved` or `waived` with a reason; in Planning open findings go to the user at `plan-accept`.
+- It runs as an optional delegation before code: in Planning on the drafted screens, and after `specify` at spec
+  depth; the effort table recommends it at `medium` and `high` when screens change. A `session` task applies the
+  `ux-writing` instruction and runs no review.
 
 ## 5. Consequences
 
 - Positive: an independent check before build without engine changes.
-- Negative: nothing blocks a unit that skips it; `CAP-DLV-delivery-workflows` gains a seventh role.
-- Follow-up: a conditional stage when projects report skipped UX reviews; it needs a check primitive that inspects
-  the unit's links.
+- Negative: nothing blocks a unit that skips it; `CAP-DLV-delivery-workflows` gains a seventh role, and the effort
+  table and its review rule name the UX review.
+- Follow-up: enforcing the review needs a decision superseding `ADR-delivery-classification`.
 - Follow-up: merged independent runs if rubric scores prove inconsistent across runs.
 
 ## 6. Confirmation

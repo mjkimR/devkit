@@ -18,10 +18,12 @@ boundaries:
     - packages/devkit-spec/tests/
     - packages/devkit-viewer/src/devkit_viewer/features/browse/
     - packages/devkit-viewer/frontend/src/lib/
+    - packages/devkit-viewer/src/devkit_viewer/static/
     - packages/devkit-viewer/tests/
     - docs/capabilities/documents/
     - docs/capabilities/governance/
     - docs/capabilities/delivery/
+    - docs/capabilities/viewer/
     - docs/usecases/
     - docs/architecture/
     - docs/glossary.md
@@ -93,24 +95,32 @@ The Planning recommendation, pending the user's answers (§5); `target-docs.md` 
   Feedback`) and an optional Evidence section for the project's own wireframe medium. The use case carries the task
   flow; there is no flow document. Statuses `draft`, `active`, `deprecated` (no terminal status).
 - **Links and checks** (`PADR-ux-step-links-and-coverage`): a use case step cites its screen's UX ID in prose; a UX
-  document lists `usecases` and `capabilities`, and each interaction names the served step key. A new UX coverage
-  rule in `CAP-GOV-spec-rules` reports uncovered steps, interactions serving no step, link disagreement and the flow
-  graph defects (unknown targets, screens without an exit, a modal without `close`, unreachable screens).
+  document lists `usecases` and `capabilities`, and each interaction's Step cell names the served step
+  (`` `UC-<slug>` 2a ``). An error rule reports contradictions (invalid element, unknown or non-citing step keys,
+  link disagreement, unknown targets, missing exits and modal close, unreachable screens); a warning rule reports
+  steps without a screen and interactions without a step. Both are documented in `CAP-GOV-spec-rules`.
 - **Authoring guidance**: a `ux-writing` instruction in the `spec` bundle: two or three contrasting candidates for
-  the user to choose from where a screen's arrangement is open, no character-cell layouts, objects named by glossary
-  terms with a separate UX object table, and the medium left to the project.
+  the user in Planning where a screen's arrangement is open (Development takes the recommended one and records the
+  others as an assumption), no character-cell layouts, objects named by glossary terms with a seeded UX object table,
+  and the medium left to the project.
 - **Review** (`PADR-ux-review-before-code`): an isolated, read-only `ux-reviewer` subagent with a `spec-ux-review`
-  skill: a cognitive walkthrough of each linked use case plus a 0/1/2 rubric with evidence, the coverage rule's
-  results reported as facts, no severity, `ux-review-NN` envelopes and at most two rounds, run as an optional
-  delegation before code (`CAP-DLV-delivery-workflows`).
-- **Timing** (`PADR-ux-documents-written-at-specify`): Planning drafts screens in `target-docs.md`; Development
-  writes them to `docs/ux/` at `specify`, before code, and `reconcile.md` confirms them.
+  skill: a cognitive walkthrough of each linked use case plus a six-item 0/1/2 rubric with evidence, the link rules'
+  results reported as facts, no severity, `ux-review-NN` envelopes, at most two rounds and a closing envelope, run as
+  an optional delegation before code (`CAP-DLV-delivery-workflows`).
+- **Timing** (`PADR-ux-drafts-before-code`): screens and the step citations they need are drafted before code in
+  `target-docs.md` or a Screens section of `spec.md`; `spec-sync` writes `docs/ux/` and the use case changes, and the
+  link rules check them at `living-spec-draft`.
 - Non-goals: wireframe rendering, design tool integrations, visual styling, engine- or framework-specific
-  verification, usability testing with real users, severity ranking of findings by the reviewer, and workflow engine
-  changes.
+  verification, usability testing with real users, severity ranking of findings by the reviewer, a stage switched on
+  by content, and workflow engine changes.
 
 ## 4. Lifecycle & Retirement Criteria
 
+- Acceptance requires the user's answers to the Planning questions folded into the PADRs, and the handoff waits for
+  `PROP-table-driven-document-kinds` to be integrated (§5).
+- Development shows: a UX document in a fixture repository indexed, listed, searched and grouped in the viewer; each
+  report of both UX rules by a rule test, including the element cases and the step-format deviations; the role and
+  skill contracts by the role-contract tests; and the viewer frontend checks with the committed page rebuilt.
 - On acceptance: recorded with `devkit spec proposal accept`, then handed off to a spec bundle on
   `dev-ux-documentation`; the proposal is deleted there and its decisions become ADRs.
 - On decomposition: Planning returns the draft with `needs_decompose: true`, and Backlog creates the children with
@@ -121,46 +131,56 @@ The Planning recommendation, pending the user's answers (§5); `target-docs.md` 
 ## 5. Planning Findings
 
 Evidence: `MAT-ux-documentation-planning-spike` (spike over devkit's code and contracts, from `scout-01` to
-`scout-03`), `MAT-ux-documentation-practice` and `MAT-ux-object-modeling` (the user's research).
+`scout-03`), `MAT-ux-documentation-practice` and `MAT-ux-object-modeling` (the user's research); `challenger-01`
+(12 findings) is folded below.
 
 - **Q1**: a kind is known only by its prefix; one prefix costs one table row and one stem rule, two prefixes double
-  rows, directories and relation fields. The use case already holds a task's step order and extensions, so the
+  kinds, directories and relation fields. The use case already holds a task's step order and extensions, so the
   interactions' targets give the transitions without a flow document. Glossary columns would silently disable the
-  Owner check; a separate table under its own header does not.
+  Owner check; a separate table under its own header does not, so the UX object table is seeded, not added to
+  devkit's own glossary.
 - **Q2**: all 13 current use cases number steps and extensions regularly; no rule maps a body reference to a step.
-  Citing UX IDs in step prose reuses reference resolution and alias rewriting; one step segmenter is new.
-- **Q3**: with targets in the interactions table, the flow graph checks cost little beyond orphans; not every step
-  happens on a screen, so the strictness of "step without a screen" is a user decision.
-- **Q4**: a new subagent is a valid role without engine code, but a conditional stage needs a new check primitive in
-  `devkit-agt`, and the `review` kind would share the code-review round state. Severity is bundle procedure, so a
-  separate `ux-review` kind keeps the no-severity non-goal.
+  Citing UX IDs in step prose reuses reference resolution and alias rewriting; one step segmenter is new. Whether use
+  cases carry UX IDs at all is a user question (`step-screen-link`).
+- **Q3**: with targets in the interactions table, the flow graph checks cost little beyond orphans once each
+  element's meaning is defined (panels exempt, end-of-task screens, `close`, `back` and `end` targets). Not every step
+  happens on a screen, so the strictness of "step without a screen" is a user question (`coverage-strictness`).
+- **Q4**: a new subagent is a valid role without engine code; a stage switched on by content is excluded by
+  `ADR-delivery-classification`; the `review` kind would share the code-review round state. Severity is bundle
+  procedure, so a separate `ux-review` kind keeps the no-severity non-goal, with its own closing record.
 - **Q5**: the medium stays with the project; an optional Evidence section lets the reviewer read a wireframe or
-  screenshot when one exists.
+  screenshot when one exists. Contrasting candidates are a Planning activity, because Development asks the user no
+  direction question (`CAP-DLV-delivery-workflows` rule 7).
 - **Q6**: one proposal hands off to exactly one spec; the reviewer depends on the template and step keys, so the
   recommendation keeps one proposal with ordered tasks (a user question).
-- **Timing**: `spec-sync` writes `docs/` after code review, too late for a screen contract; a user question.
+- **Timing**: `spec-sync` writes `docs/` after code review, and a UX document written early links use case changes
+  that do not exist yet; drafts before code with the Living Spec at sync is recommended (a user question).
 
 ### Dependencies and order
 
-- `PROP-table-driven-document-kinds` (`depends_on`) is developed first. Assumed of its table, to re-check before
-  handoff against its accepted design: it carries the prefix, kind, location, Living Spec membership and directory,
-  namespace scope, accepted relation fields with their target kinds, summary requirement and entrypoint
-  participation; it removes the binary kind fallbacks. Assumed not carried, so owned here: the bidirectional pair
-  logic of `RULE-traceability-link`, per-kind stem rules and messages, `spec_format` scope, templates and seeds, the
-  viewer's book group and bracket-ID pattern. Where the accepted table differs, this proposal's Development adapts.
-- `PROP-foundation-documents` is not a prerequisite. It moves `docs/glossary.md` (and the viewer's glossary group)
-  to `docs/foundation/`; the UX object table and the new terms go to whichever path is current at Development, and
-  its excluded table-format change is owned here. Both proposals also own `packages/devkit-spec/src/devkit_spec/features/`,
-  the `spec` bundle and `docs/capabilities/documents/`; Development rebases on whichever lands first.
-- The viewer's bracket-ID pattern still lists the removed `US` prefix and omits `UC`, `MS` and `FB`
-  (`packages/devkit-viewer/frontend/src/lib/api/documents.ts:246`); recorded as feedback for the table proposal's
-  viewer step.
+- `PROP-table-driven-document-kinds` (`depends_on`) is developed first, by the user's decision. The handoff of this
+  proposal waits until that proposal is integrated, and the Host re-checks the assumptions below against its accepted
+  design at this proposal's `plan-accept` (or at handoff if it is accepted later). If it is rejected or decomposed,
+  this proposal returns to Planning for the kind registration.
+- Assumed of its table: it carries the prefix, kind, location, Living Spec membership and directory, namespace scope,
+  accepted relation fields with their target kinds, summary requirement and entrypoint participation, and it removes
+  the binary kind fallbacks. Assumed not carried, so owned here: the bidirectional pair logic of
+  `RULE-traceability-link`, per-kind stem rules and messages, `spec_format` scope, templates and seeds, the viewer's
+  book group and bracket-ID pattern. Where the accepted table differs, this proposal's Development adapts.
+- `PROP-foundation-documents` is not a prerequisite. It moves `docs/glossary.md`, the seeded glossary and the
+  viewer's glossary group to `docs/foundation/`; the seeded UX object table and devkit's new terms go to whichever
+  path is current at Development. Both proposals also own `packages/devkit-spec/src/devkit_spec/features/`, the
+  `spec` bundle and `docs/capabilities/documents/`; Development rebases on whichever lands first.
+- `FB-viewer-bracket-id-prefixes-stale` records that the viewer's bracket-ID pattern lists the removed `US` prefix and
+  omits `UC`, `MS` and `FB`; the table proposal's viewer step can absorb it, and this proposal adds `UX` either way.
 
 ### Planning decisions
 
+- The PADR "UX documents written at specify" is withdrawn: written alone, UX documents in `docs/` link use case steps and
+  IDs that `spec-sync` writes only later (`challenger-01` finding 1). `PADR-ux-drafts-before-code` replaces it, and
+  the contract-slice alternative stays an option of `ux-document-timing`.
 - `dev_effort` is `medium`: the change creates a document kind and spans packages, and has no irreversible effect or
   external consumer (`effort` reference); the Host may raise it at handoff.
-- Boundaries add `docs/glossary.md` (moved by `PROP-foundation-documents` if it lands first), and
-  `.devkit/installation.json` and `AGENTS.md` for the `devkit sync` the new bundle assets imply. Workflow engine
-  changes are excluded.
-
+- Boundaries add `docs/glossary.md` for the new terms (moved by `PROP-foundation-documents` if it lands first),
+  `docs/capabilities/viewer/`, the committed viewer build `packages/devkit-viewer/src/devkit_viewer/static/`, and
+  `.devkit/installation.json` and `AGENTS.md` for the `devkit sync` the new bundle assets imply.

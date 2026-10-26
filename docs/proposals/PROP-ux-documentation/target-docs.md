@@ -11,6 +11,7 @@ targets:
   - file: docs/capabilities/documents/CAP-DOCS-namespaces.md
   - file: docs/capabilities/governance/CAP-GOV-spec-rules.md
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
+  - file: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md
   - file: docs/glossary.md
 ---
 
@@ -29,15 +30,19 @@ lands first.
   §3.3 rule 2 gains `usecases` and `capabilities` on UX documents and the `element` value; the UX row is stated as a
   row of the kind definition table.
 - `CAP-DOCS-namespaces`: the namespace layout lists `ux/` next to `capabilities/` and `usecases/`.
-- `CAP-GOV-spec-rules`: a new section for the UX coverage rule (step citations, interaction step keys, `usecases`
-  agreement, flow graph checks) with its codes, and the UX rows of `RULE-id-convention` and
+- `CAP-GOV-spec-rules`: sections for the error-severity UX link rule (element, step keys, `usecases` agreement,
+  targets, exits, modal close, reachability) and the warning-severity UX coverage rule (steps without a screen,
+  interactions without a step), with their codes, and the UX rows of `RULE-id-convention` and
   `RULE-document-reference`.
 - `CAP-DLV-delivery-workflows`: the `ux-reviewer` role contract and the `spec-ux-review` skill, the `ux-review`
-  envelope kind outside the P1-P3 loop, its placement (Planning spike, after `specify`) and its round cap.
+  envelope kind outside the P1-P3 loop with its closing record, its placement (Planning, after `specify` at spec
+  depth), its round cap and its line in the effort table.
+- `CAP-VIEW-repository-viewer`: UX documents form their own book group and their IDs link in rendered pages.
 
 ## 2. Use Cases Plan (docs/usecases/)
 
-No use case of this repository changes: devkit's own interface (the viewer) gains UX documents only by a later
+Screens of a proposal are drafted here in the UX template's shape, with the use case step citations they need, before
+Development (`PADR-ux-drafts-before-code`). This proposal drafts none: no use case of this repository changes: devkit's own interface (the viewer) gains UX documents only by a later
 decision. The `usecase` template and the `usecase-writing` instruction allow a UX ID in a step.
 
 ---
@@ -45,7 +50,7 @@ decision. The `usecase` template and the `usecase-writing` instruction allow a U
 ## 3. Architecture & Decision Impact (docs/architecture/ & docs/decisions/)
 
 - ADRs promoted from `PADR-ux-screen-documents`, `PADR-ux-step-links-and-coverage`, `PADR-ux-review-before-code` and
-  `PADR-ux-documents-written-at-specify`.
+  `PADR-ux-drafts-before-code`.
 - `docs/architecture/`: only if the building-block view lists document kinds or roles by count; checked at
   Development.
 
@@ -53,12 +58,12 @@ decision. The `usecase` template and the `usecase-writing` instruction allow a U
 
 ## 4. Development Conventions & Governance (docs/development/ & .devkit/)
 
-- `spec` bundle: a `ux` template, a `ux-writing` instruction (contrasting candidates, no character-cell layouts,
-  medium left to the project), the `ux-reviewer` subagent and `spec-ux-review` skill, the UX coverage rule with its
-  guide, a `docs/ux/` seed in `docs-skeleton`, a UX section in the target-docs blueprint, and the exception for UX
-  documents in `living-spec-writing`, `spec-specify` and `spec-sync`.
-- Viewer: UX documents appear as their own book group and their IDs link in rendered pages.
-- `docs/glossary.md`: the terms "UX document" and "UX object table", and the UX object table itself.
+- `spec` bundle: a `ux` template, a `ux-writing` instruction (contrasting candidates in Planning, no character-cell
+  layouts, medium left to the project), the `ux-reviewer` subagent and `spec-ux-review` skill, the two UX rules with
+  their guides, a `docs/ux/` seed and a UX object table header in the seeded glossary of `docs-skeleton`, a Screens
+  draft section in the target-docs blueprint and in `spec-specify`, and the move of drafts into `docs/ux/` in
+  `spec-sync`.
+- `docs/glossary.md`: the terms "UX document" and "UX object table" only.
 
 ---
 

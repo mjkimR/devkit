@@ -54,7 +54,7 @@ and `ADR-usecases-replace-stories` (the precedent for adding a kind with a names
 | --- | --- | --- | --- |
 | A | One `UX` kind; each document is one interface element (`element: screen`, `modal` or `panel`) with purpose, content tree, states and an interactions table whose rows carry the served step and the target; the use case's numbered scenario is the task flow and the targets form the navigation map | One row; one template | No single picture of the whole flow; a reader follows exits |
 | B | Two kinds, `SCR` screens and `FLOW` flows (screen list, persistent panels, transition table) | Two rows, two templates, two relation fields | The transition table repeats the screens' exits; two places to keep in step |
-| C | One `UX` kind with two document shapes told apart by frontmatter | One row; the rules branch on a frontmatter value the index does not model | A kind with two schemas |
+| C | One `UX` kind with two document shapes told apart by frontmatter | One row; each shape has its own sections and rules | A template and every reader carry two schemas |
 
 The use case already holds what a flow document would hold for one task: its steps in order and its extensions
 (`usecase-writing` instruction). A per-screen interactions table with a target column gives the transitions, so
@@ -144,6 +144,11 @@ Not every step happens on a screen (actor decisions off-screen, background syste
 only at integration, so the base never holds a screen without its code; the rules and the review run on them), or
 draft them in `spec.md` or `target-docs.md` and move them at `spec-sync` (no rule checks them before code), or
 review only after `spec-sync` (the review cannot shape the build).
+
+A UX document written into `docs/` alone at `specify` links use case steps and possibly new use cases or
+capabilities that `spec-sync` writes only later, so the rules refuse the commit or the review walks the old use case
+(`challenger-01` finding 1). The early option therefore has to move the whole linked slice (screens, use case step
+citations, new use cases and capabilities) or nothing.
 
 ## 7. Decomposition (Q6)
 
