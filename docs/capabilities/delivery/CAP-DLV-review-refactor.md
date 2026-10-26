@@ -76,8 +76,8 @@ mismatch belongs to `CAP-DLV-drift-reconciliation`.
    (`sdd-overall-refactor` with `spec`) unless every edited source file lies in one feature or module, which follows
    the feature workflow at its own depth; the route and edited paths MUST be stated in the decision round
    (`ADR-apply-behavior-preserving-batches-as-direct-mode-refactors`, refining `ADR-overall-refactor-workflow`).
-6. **Direct mode**: the playbook's agent MUST apply the work item on its own branch, without a Unit or workers,
-   within the batch's write scope; editing subagents MUST work in disjoint assigned scopes, never commit, and have
+6. **Direct mode**: WHERE the work item follows the cross-area refactor route, the playbook's agent MUST apply it on
+   its own branch, without a Unit or workers, within the batch's write scope; editing subagents MUST work in disjoint assigned scopes, never commit, and have
    each diff checked, a rejected edit reverted hunk by hunk.
    IF the working tree holds changes that do not belong to the run, THEN the playbook's agent MUST stop for the user
    to commit, stash or exclude them and MUST NOT discard them.

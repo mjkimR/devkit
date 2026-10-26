@@ -73,6 +73,8 @@ created_at: 2026-10-26
   and redoes the change or returns it to the decision round; resumes at step 6.
 - **6c.** The run is a seeded exercise: decisions are labeled simulated and change only the fixture; resumes at
   step 8.
+- **7a.** The host has no subagents: the agent reviews the work item's diff itself and records the review as a
+  self-review; resumes at step 7 with the fixes.
 
 ---
 

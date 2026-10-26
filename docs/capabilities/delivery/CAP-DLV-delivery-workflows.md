@@ -63,7 +63,10 @@ sequence.
    `sdd-session-feature` or `sdd-session-bugfix`, `spec` uses `sdd-spec-feature` or `sdd-spec-bugfix`, `proposal` uses
    `sdd-proposal` until handoff and then `sdd-spec-<task_kind>`. A team review is `proposal` depth plus PR policy, not
    a workflow. The task kind `overall-refactor` has no depth and one workflow, `sdd-overall-refactor`, run in `direct`
-   mode only, without a Unit, proposal or spec bundle (`ADR-overall-refactor-workflow`). The axes are not stored as
+   mode only, without a Unit, proposal or spec bundle (`ADR-overall-refactor-workflow`). A behavior-preserving work
+   item agreed in a review-refactor decision round whose edited source files span more than one feature or module is
+   `overall-refactor` work, and a single-module one follows the feature workflows
+   (`ADR-apply-behavior-preserving-batches-as-direct-mode-refactors`, `CAP-DLV-review-refactor`). The axes are not stored as
    fields: the Unit's kind and the bound workflow show them.
 2. **Definitions are authoritative**: an executor MUST take stage order, checks, gates and returns from
    `devkit workflow show <id>` / `devkit workflow show --unit <dir>` and `devkit workflow next --unit <dir>`. The
