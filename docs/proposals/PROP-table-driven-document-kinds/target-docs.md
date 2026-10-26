@@ -17,8 +17,7 @@ created_at: 2026-10-26
   prefixes from the table; rule codes, messages and remediations do not change.
 - `ARCH-05-2-components`: the devkit-spec paragraph beside the proposal and policy feature ownership gains one
   sentence that the documents feature owns the kind definitions every other feature reads; no new ARCH document.
-- `CAP-VIEW-repository-viewer`: only if Planning question q2 changes viewer behavior or adds a generated
-  artifact; otherwise no viewer document changes.
+- No viewer document changes: the viewer is out of scope.
 
 Promote `PADR-kind-definition-table-keyed-on-the-declared-kind-enum` through normal handoff; it supersedes no ADR.
 No current Living Spec is edited during Planning. `PROP-ux-documentation` and `PROP-foundation-documents` edit

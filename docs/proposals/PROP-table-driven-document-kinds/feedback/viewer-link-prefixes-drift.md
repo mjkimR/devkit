@@ -21,9 +21,8 @@ grammar of `CAP-DOCS-document-model` section 3.2.
 
 - **Current Procedure**: `documents.ts` links `[CAP|US|ARCH|ADR|PROP|SPEC|PLAN|TASKS|REC|MAT|PADR-...]` references.
   `US` is the retired use case prefix; `UC`, `FB` and `MS` references in brackets render as plain text.
-- **Proposed Procedure**: Build the link prefixes from the same kind definitions devkit-spec uses (planning
-  question q2 of `PROP-table-driven-document-kinds`), or, if that proposal keeps viewer behavior unchanged, fix the
-  list in a separate bugfix.
+- **Proposed Procedure**: Fix the list in a separate viewer bugfix; `PROP-table-driven-document-kinds` leaves the
+  viewer out of scope (its Planning decision).
 - **Expected Benefit**: Use case, feedback and milestone references become navigable like the others, and the list
   cannot drift again.
 - **Cost & Risk**: Rendered pages gain links; a `[UC-x]` that resolves to no document stays plain text as today.

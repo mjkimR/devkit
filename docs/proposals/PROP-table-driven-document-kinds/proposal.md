@@ -1,7 +1,7 @@
 ---
 id: PROP-table-driven-document-kinds
 title: Table-driven document kind definitions
-summary: "Moves each document kind's prefix, location, Living Spec membership and relation fields into one definition table that the index, the spec rules and browsing read, so a new kind is added in one place without changing current behavior."
+summary: "Moves each document kind's prefix, Living Spec membership, directory, relation fields and other per-kind facts into one definition table that the index, the spec rules and browsing read, so a missing fact for a new kind fails instead of falling back, without changing current behavior."
 status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-26
 target_area: documents/
@@ -15,13 +15,8 @@ boundaries:
     - packages/devkit-spec/src/devkit_spec/features/
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/
     - packages/devkit-spec/tests/
-    - packages/devkit-viewer/src/devkit_viewer/features/browse/
-    - packages/devkit-viewer/frontend/src/lib/
-    - packages/devkit-viewer/src/devkit_viewer/static/
-    - packages/devkit-viewer/tests/
     - docs/capabilities/documents/
     - docs/capabilities/governance/
-    - docs/capabilities/viewer/
     - docs/architecture/
     - .devkit/managed/spec/
     - .devkit/installation.json
@@ -29,6 +24,7 @@ boundaries:
     - New document kinds
     - A plug-in or configuration extension point for document kinds
     - Changes to document IDs, paths, rule codes or messages
+    - The viewer (link-prefix drift is FB-viewer-link-prefixes-drift; UX viewer support is PROP-ux-documentation)
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
 workflow: sdd-proposal
 ---
@@ -48,17 +44,19 @@ are not kept together:
   otherwise.
 - The relation fields and the kind each accepts (`usecases` takes `UC`, `capabilities` takes `CAP`, `milestone`
   takes `MS`) live in the reference rule; summary, entrypoint, scope, hygiene, roadmap and browsing code test kinds
-  in further places, and the viewer front end keeps its own knowledge of the Living Spec directories.
+  in further places.
 
 Adding a kind therefore means finding every such place by search. A missed branch does not fail: a fallback such as
 "not a use case, so a capability" silently gives the new kind the wrong directory or rule. The UX document kind of
 `MS-ux-documentation` is the first kind this would affect, and it would not be the last.
 
-Hypothesis: one definition table per kind (prefix, kind name, location pattern, Living Spec directory, Living Spec
-membership, the relation fields it declares and accepts, summary requirement, template) can be read by the index,
-the spec rules, browsing and the viewer. Adding a kind then means adding a row and its template, while the
-lifecycle behavior that really is kind-specific (spec lifecycle, proposal handoff, feedback lifecycle, milestone
-hygiene) stays in code. The change is a refactor: every current output stays identical.
+Hypothesis: one definition row per kind (prefix, kind name, Living Spec directory and membership, the relation
+fields it accepts, summary requirement and the other per-kind facts of `MAT-kind-facts-inventory`) can be read by
+the index, the spec rules and browsing. Adding a kind then means a `Kind` member, its row, its path-grammar branch
+and its template, and an exhaustiveness check fails when any of them is missing instead of letting the kind fall
+back to another kind's rule. Path grammars and the lifecycle behavior that really is kind-specific (spec
+lifecycle, proposal handoff, feedback lifecycle, milestone hygiene) stay in code. The change is a refactor: every
+current output stays identical.
 
 ## 2. Technical Spike Questions
 
@@ -88,7 +86,7 @@ Evidence is in `MAT-kind-facts-inventory` and `envelopes/scout-01.yaml`.
 - **Q3**: the viewer's kind knowledge is front-end constants, and it neither depends on devkit-spec nor receives a
   kind in any payload; autohub hosts supply their own data source, so only a definition inside the front-end
   bundle reaches every host. The front-end link pattern has already drifted (`US` instead of `UC`, no `FB` or
-  `MS`). The source of the viewer's copy is a user question.
+  `MS`). The viewer stays out of this proposal (Planning decisions).
 - **Q4**: `devkit spec list`, `devkit spec search` and `devkit rules check` JSON output is byte-stable between runs,
   but this repository has no rule violations and many rule tests match message fragments, so message parity needs a
   characterization fixture workspace captured before the first code change.
@@ -105,24 +103,27 @@ Evidence is in `MAT-kind-facts-inventory` and `envelopes/scout-01.yaml`.
   of borrowing another kind's.
 - Unit tests check one row per member in enum order, one prefix per relation field, and a patched accessor to show
   the rules follow the table.
+- Every Living Spec row must have a path-grammar branch in `RULE-id-convention`; a row without one raises, so an
+  unknown Living Spec kind is no longer checked as an architecture document.
 - `CAP-DOCS-document-model` section 3.2 states that the table is the single definition of kinds; its table of
   prefixes and locations stays as the documented contract (`target-docs.md`).
-- The viewer's prefix and Living Spec directory knowledge follows the choice of Planning question q2.
+- The milestone path remediation keeps its current text, which wrongly names a dated partition; it is fixed in a
+  separate bugfix (`FB-milestone-path-remediation-dated`).
 - Baseline: before the first code change, the development worker adds a characterization fixture workspace with
   one violation per rule branch per kind and captures, at its starting head, its `devkit rules check --format json`
   output and `devkit rules fix` diff, plus `devkit spec list --all-namespaces -n 0 --format json`,
   `devkit spec search "document kind" --format json` and the `--help` text of both on this repository. All are
   identical after the change, and the existing suites pass unchanged.
-- Size: `M` and `dev_effort: medium` hold unless q2 chooses a generated viewer copy, which adds a generator, an
-  artifact entry, an affected-tests mapping and `CAP-GEN-tracked-artifacts` reconciliation and makes it `L`.
+- Size: `M` and `dev_effort: medium`: the change stays inside devkit-spec and its Living Spec.
 - Non-goals: no new kind (the UX kind is `PROP-ux-documentation`), no plug-in or configuration extension point, no
-  change to the closed set of kinds, no change to IDs, paths, rule codes or messages.
+  change to the closed set of kinds, no change to IDs, paths, rule codes or messages, no location grammar as row
+  data, and no viewer change.
 
 ### Relation to parallel proposals
 
 - `PROP-ux-documentation` depends on this proposal and is developed after it (user decision). Both own the
-  devkit-spec features, the viewer front end and `CAP-DOCS-document-model`; it adds its kind as a member and a row
-  of this table, so this change must land first and it rebases on it.
+  devkit-spec features and `CAP-DOCS-document-model`; it adds its kind as a member, a row, a path-grammar branch
+  and templates, and adds its own viewer support, so this change must land first and it rebases on it.
 - `PROP-foundation-documents` adds an ID-free group, not a kind, so it adds no row. It overlaps on
   `RULE-id-convention`, `RULE-document-summary` (keyed by kind, while foundation documents carry a summary without
   an ID), `RULE-spec-format` (path-based scope, its Q2), the `docs/glossary.md` owner input of
@@ -139,9 +140,13 @@ Evidence is in `MAT-kind-facts-inventory` and `envelopes/scout-01.yaml`.
 - Rows follow the enum order with no position field; each relation field maps to one prefix, `depends_on` stays on
   the milestone row with its unit case in code, and the traceability pair is one explicit declaration
   (`envelopes/challenger-01.yaml` findings 8 and 10).
-- Open for the user: the path check of a new Living Spec kind and so the scope of the hypothesis (q1, challenger
-  finding 6), whether and how the viewer follows the table, including the drifted link pattern (q2), and whether
-  the wrong milestone path remediation is kept (q3, challenger finding 7).
+- Path grammars stay code; a new kind needs a member, a row, a grammar branch and a template, and the
+  exhaustiveness check replaces the silent architecture fall-through; the hypothesis is reworded to match (user,
+  q1; challenger finding 6).
+- The viewer is out of scope: the link-prefix drift is fixed by a separate bugfix from
+  `FB-viewer-link-prefixes-drift`, and `PROP-ux-documentation` adds its own viewer support (user, q2).
+- The wrong milestone path remediation is kept byte-for-byte and fixed by a separate bugfix from
+  `FB-milestone-path-remediation-dated` (user, q3; challenger finding 7).
 
 ## 4. Lifecycle & Retirement Criteria
 

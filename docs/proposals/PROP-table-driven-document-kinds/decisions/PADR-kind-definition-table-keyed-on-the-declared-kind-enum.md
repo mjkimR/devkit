@@ -65,14 +65,16 @@ driver) while giving one place per fact and a failing check (first two drivers).
   value. The values the lookups return reproduce today's messages byte for byte.
 - Kind-specific behavior stays code: path and stem grammars per kind, spec bundle files, unit anchors and their
   relation rules (`depends_on`, `milestone`, provenance), spec, proposal, feedback and milestone lifecycles
-  (`MAT-kind-facts-inventory` section 2). How a new Living Spec kind gets its path check is decided with the user
-  (proposal Planning decisions).
+  (`MAT-kind-facts-inventory` section 2). Each Living Spec row needs a path-grammar branch in `RULE-id-convention`,
+  and a row without one raises, so no kind is checked under another kind's grammar.
 - Templates stay bundle files with no table field, because no code reads them.
 
 ## 5. Consequences
 
-- Positive: adding a kind is a member and a row plus its kind-specific behavior, and a forgotten fact fails the
-  exhaustiveness check.
+- Positive: adding a kind is a member, a row, a path-grammar branch and a template plus any kind-specific
+  behavior, and a forgotten fact or branch fails the exhaustiveness check.
+- Negative: a rule message that is wrong today stays wrong through this change (the milestone path remediation);
+  its fix is a separate bugfix.
 - Negative: the enum and the table are two declarations of the same set; the check keeps them equal.
 - Risk: a fact whose current consumers disagree (for example the heading-token set excludes `PROP`, `PADR` and
   `MAT` while other sets include them) must be encoded per consumer, not unified, or a message changes.
@@ -87,7 +89,8 @@ driver) while giving one place per fact and a failing check (first two drivers).
   `RULE-document-reference` follow the table with no other code change. A synthetic new kind is not possible with a
   declared enum; this test shows the consumers read the table rather than constants. It asserts which files are
   checked and as which kind, not message text, because the path messages keep their literal directory names.
-- A unit test asserts that each relation field maps to exactly one prefix.
+- A unit test asserts that each relation field maps to exactly one prefix, and that every Living Spec row has a
+  path-grammar branch.
 - The existing devkit-spec suites and the rule tests under `bundles/spec/bundle/rules/*/tests/` pass unchanged; a
   characterization fixture workspace added before the first code change gives identical `devkit rules check` JSON
   and `devkit rules fix` diffs, and `devkit spec list`, `devkit spec search` JSON and their `--help` text are
