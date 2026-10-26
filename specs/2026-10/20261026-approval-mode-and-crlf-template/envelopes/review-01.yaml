@@ -1,0 +1,14 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T04:46:15.873711Z'
+status: completed
+summary: 'Author self-review at activity-effort low: AC-01 to AC-04 by test_approval_error_modes.py (red on the base: MAINTENANCE, no REPLY_INVALID class), AC-05 by test_proposal_review_report_guidance.py and devkit sync --check, AC-06 and AC-07 by the CRLF, LF and mixed config template tests (red on the base for CRLF and mixed). The approval reply fix was reworded during review to fit both CLI flags and native confirmation replies. No open findings.'
+findings: []
+checks:
+  tests: 'PASS just test-affected: 2567 passed, 1 skipped; just test-dist: 1046 passed'
+  lint: PASS just lint-check and just check for devkit-spec and devkit-dist; devkit rules check --ci --base 8190b1d3
+diff_scope:
+  base: 8190b1d33bf7659b239502b16250580a17d13659
+  head: 34200fbc581d292c27ffe564f0537e7f056b6a7a
