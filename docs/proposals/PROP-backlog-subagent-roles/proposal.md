@@ -72,17 +72,14 @@ decompositions and the drafts to come, not in today's queue.
 - **Q4 (invocation)**: Settled by the `user` (answer-01 q3, q4): `triage` is delegated above 5 open items on a native
   host; the `decomposer` runs from Backlog only, now also for an `XL` draft (answer-01 q4 constraints).
 - **Q5 (hosts)**: Settled by policy below.
-- **Q6 (XL gate placement)**: Where can a deterministic check refuse an `XL` draft at the plan-intent gate,
-  `devkit workflow next` and plan-intent recording, with a decompose directive? Spike F7: a workflow exit condition
-  blocks all three but only generically; devkit-spec owns no coded error at `next`, `answer` or the attach
-  (challenger-02 finding 1); a directive in that output needs a devkit-agt change. Pending: user question `q5`.
-- **Q7 (XL definition)**: Can "deliverables of different nature" be judged the same way by two Hosts? Pending: user
-  question `q6`.
+- **Q6 (XL gate placement)**: Settled by the `user` (answer-02 q5): devkit-spec only. Spike F7: a workflow exit
+  condition blocks the gate, `devkit workflow next` and plan-intent recording, and devkit-spec's own commands carry the
+  decompose text; `next` and `answer` print no directive of their own, which `FB-workflow-exit-check-without-directive`
+  keeps open as a separate suggestion.
+- **Q7 (XL definition)**: Settled by the `user` (answer-02 q6): "different nature" means work that would need separate
+  specs or a different `task_kind`.
 
 ## 3. Proposed Design & Impact
-
-Lines marked *(provisional: q5)* or *(provisional: q6)* follow the recommended answer of that question and are
-rewritten if the user chooses another option.
 
 ### Roles
 
@@ -133,11 +130,14 @@ goes wrong if the recommendation is applied blindly.
 ### XL size gate
 
 - **Definition** (`user`): `size: XL` means the work would produce two or more specs, or bundles deliverables of
-  different nature. *(provisional: q6)* "Different nature" reads as "would need separate specs or a different
-  `task_kind`", and the template and `CAP-DLV-proposal-incubation` give one example of each side. The values stay `S`,
-  `M`, `L`, `XL`; the wording changes in the proposal template, the scaffold comment, `CAP-DLV-proposal-incubation`
-  (the field table and the `target-docs.md` recommendation), the seed `docs/proposals/README.md`,
-  `CAP-HARN-agent-guidance` and `UC-route-development-intent` where they describe sizes. Rough `XL` drafts stay valid
+  different nature, that is, work that would need separate specs or a different `task_kind` (`user`, answer-02 q6).
+  The proposal template and `CAP-DLV-proposal-incubation` give one example of each side:
+  - `XL`: a new CLI command together with a viewer redesign it does not need (two specs), or a parser bugfix bundled
+    with a new search feature (`bugfix` and `feature`);
+  - not `XL`: two agent contracts and the command checks that route work to them, delivered by one `feature` spec.
+- **Values**: `S`, `M`, `L` and `XL` stay; the wording changes in the proposal template, the scaffold comment,
+  `CAP-DLV-proposal-incubation` (the field table and the `target-docs.md` recommendation), the seed
+  `docs/proposals/README.md`, `CAP-HARN-agent-guidance` and `UC-route-development-intent` where they describe sizes. Rough `XL` drafts stay valid
   in Backlog: no rule refuses `size: XL` on a draft.
 - **Judging**: the `spec` skill's plan-intent step has the Host judge `size` against the definition and show it in the
   plan-intent request, as it shows `planning_effort`, because the scaffold writes `size: M` for every draft
@@ -145,7 +145,7 @@ goes wrong if the recommendation is applied blindly.
 - **One predicate** (challenger-02 finding 4): a proposal passes when `size` is absent or exactly `S`, `M` or `L`;
   any other value (`XL`, `xl`, a typo) is refused, and the refusal names the allowed values. Every check below uses it.
 - **Gate** (`user`: an error, not a warning): an `XL` draft cannot pass plan-intent and cannot start Planning.
-  *(provisional: q5)* Placement, devkit-spec only (spike F7 options A and B, corrected by challenger-02 finding 1):
+  Placement, devkit-spec only (`user`, answer-02 q5; spike F7 options A and B, corrected by challenger-02 finding 1):
   - `sdd-proposal.md`: the `intent-proposal` exit adds `frontmatter(proposal.md size S|M|L|)`. The gate request stays
     closed under `ask` and `auto`, so `devkit workflow next` shows the stage unmet with `detail="size=XL"` at exit 0,
     and `devkit workflow answer --request gate:plan-intent` refuses with `REQUEST_UNKNOWN`.
@@ -236,8 +236,8 @@ The `challenger` matrix, since neither role writes even `materials/` (challenger
   reference's decomposition and reclassification paragraphs, the `spec` skill's plan-intent step, `planning.md`
   step 1, `spec-next`'s Backlog actions, `sdd-proposal.md`, the proposal template and the seed README.
 - Code: the `devkit spec proposal accept --direct` conditions, the `plan-` attach check, the scaffold comment and their
-  tests. No change to `devkit-agt` or `devkit-dist` *(provisional: q5)*; the viewer's size
-  filter keeps the same values; `handbook/` is a release snapshot outside this work.
+  tests. No change to `devkit-agt` or `devkit-dist` (answer-02 q5); the viewer's size filter
+  keeps the same values; `handbook/` is a release snapshot outside this work.
 
 ### Order with parallel work
 
@@ -272,9 +272,11 @@ Development after that spec integrates, as the user directed.
 - `policy` (challenger-02 findings 1, 3-5, 7-11): restated command refusals (a blocking line and an attach reason, no
   new error class), the `planning.md` return, one size predicate, size judged at plan-intent, the mis-sized exit, the
   promote milestone relation, the reclassification condition, `plan-`-only attach and the conditional precondition.
-- `policy`: this proposal's own size is `M` under the recommended reading of `q6`: one spec, `task_kind: feature`,
-  agent assets and small command checks serving one Backlog decomposition theme. Under the literal clause 2 the role
-  contracts and the gate code could read as different natures; `q6` settles it.
+- `user` (answer-02): q5 the gate stays devkit-spec only, `size: M` and `dev_effort: medium` hold, and
+  `FB-workflow-exit-check-without-directive` stays open as a separate suggestion; q6 "different nature" means separate
+  specs or a different `task_kind`, with one example of each side in the template and `CAP-DLV-proposal-incubation`.
+- `policy`: by that definition this proposal is `M`, not `XL`: one spec of `task_kind: feature`, two agent contracts and
+  small command checks serving one Backlog decomposition theme.
 - `policy`: host matrix and fallback (Q5); no `depends_on` on `PROP-foundation-documents`; sequencing is the Host's.
 
 ## 4. Lifecycle & Retirement Criteria
