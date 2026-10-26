@@ -2,9 +2,10 @@
 id: SPEC-release-handbook
 title: Release-bound Multilingual Handbook
 summary: 'Adds a tracked handbook for people under handbook/{lang}/ (en, ko), refreshed only on the user''s request during release preparation as a snapshot derived from the Living Spec: English is synthesized from docs/, Korean is translated from English, and docs/ stays the single source of truth.'
-status: in-progress
+status: completed
 created: 2026-10-26
-related_capabilities: []
+related_capabilities:
+  - CAP-DLV-release-handbook
 related_usecases: []
 workflow: sdd-spec-feature
 ---

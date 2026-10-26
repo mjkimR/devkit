@@ -1,12 +1,14 @@
 ---
 reconcile_id: REC-release-handbook
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-release-handbook.md
     resolution: modified
   - file: docs/architecture/ARCH-07-deployment.md
     resolution: modified
   - file: docs/architecture/ARCH-05-1-containers.md
+    resolution: modified
+  - file: docs/architecture/ARCH-05-2-components.md
     resolution: modified
 ---
 
@@ -18,6 +20,7 @@ targets:
 - **`ARCH-07-deployment`**: section 1.2 adds the optional handbook refresh to release preparation and the
   release-script check (refreshing release detected from the committed manifest tag; every other release skips).
 - **`ARCH-05-1-containers`**: the `devkit-dev` definition names the handbook playbook and its root script.
+- **`ARCH-05-2-components`**: the `tools/devkit-dev` sentence names the handbook playbook next to its rules.
 
 ## No impact
 
@@ -38,6 +41,12 @@ targets:
 - **Deployment of the playbook into this repository**: `devkit sync` writes `.devkit/managed/devkit-dev/` and
   `.devkit/installation.json`, outside this unit's write scope; the Host runs it with the integration
   (`uv run devkit sync`), after which `devkit playbook get devkit-dev/handbook` resolves.
+
+- **`docs/development/ci-cd.md` section 3 (Release Automation)**: should gain one sentence naming the handbook
+  release check, which runs only for a refreshing release, with pointers to `ARCH-07-deployment` section 1.2 and
+  `CAP-DLV-release-handbook`. The file is outside this unit's write scope; the canonical contract (`ARCH-07-deployment`)
+  is reflected, so the secondary description is incomplete, not contradictory. The Host adds the sentence at
+  integration or widens the scope for it.
 
 ## Feedback in this unit
 
