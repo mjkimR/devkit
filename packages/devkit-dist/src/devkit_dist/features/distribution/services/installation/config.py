@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import math
 import os
+import re
 from contextlib import nullcontext
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -63,6 +64,8 @@ from devkit_dist.features.project.services.config_template import TemplateKey, T
 from devkit_dist.features.search import SearchMode
 
 SCHEMA = 1
+# A line ending the commented template adds: a LF that no CR precedes.
+_BARE_LF = re.compile(r"(?<!\r)\n")
 # Reserved for the engines of devkit-agt and passed through unread, so a configuration reads the same with or
 # without them: ``rules`` (``devkit_agt.features.rules``: phase overrides), ``workflow`` (``devkit_agt.features.workflow``: layout, approvals),
 # ``gates`` (``devkit_agt.features.gate``: gate settings), ``worktree`` (``devkit_agt.features.worktree``) and ``integration``
@@ -564,10 +567,14 @@ class ConfigTemplateResult:
 
 
 def _template(root: Path) -> tuple[str | None, str, list[str], list[AdvisoryError]]:
-    """The file before (``None`` when missing), the file with the template added, the added parts and notices."""
+    """The file before (``None`` when missing), the file with the template added, the added parts and notices.
+
+    The file is read without newline translation, so the rendered text keeps every existing byte and only the added
+    lines end in a bare LF; in a file whose every line ending is CRLF they get CRLF too.
+    """
     read_config(root)
     path = _config_path(root)
-    before = path.read_text("utf-8") if path.exists() else None
+    before = path.read_bytes().decode("utf-8") if path.exists() else None
     tools, reserved, notices = _templates()
     text, added = add_template(
         before if before is not None else f"schema = {SCHEMA}\n",
@@ -576,6 +583,8 @@ def _template(root: Path) -> tuple[str | None, str, list[str], list[AdvisoryErro
         tools,
         reserved=reserved,
     )
+    if before is not None and "\n" in before and before.count("\r\n") == before.count("\n"):
+        text = _BARE_LF.sub("\r\n", text)
     return before, text, added, notices
 
 

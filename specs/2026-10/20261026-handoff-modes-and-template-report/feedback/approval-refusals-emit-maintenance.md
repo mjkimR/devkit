@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_p
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -35,3 +35,7 @@ created_at: 2026-10-26
 - **Conditions**: every refusal of `devkit spec proposal accept` on an unmet prerequisite.
 - **Workarounds Attempted**: not applicable.
 - **Related Assets**: `CAP-DLV-proposal-incubation`, `FB-handoff-refusals-emit-maintenance`.
+
+## Disposition
+
+Resolved by `SPEC-approval-mode-and-crlf-template`: `ProposalApprovalNotReadyError` sets `guardrail = True` and renders `BLOCKED`; the invalid mode and effort refusals move to the new `ProposalApprovalReplyError` (`PROPOSAL_APPROVAL_REPLY_INVALID`, `input_error = True`, `INPUT_ERROR`); `ProposalApprovalStaleError` stays `MAINTENANCE`, as `SPEC_HANDOFF_STALE` does. The `PROPOSAL_APPROVAL_*` rows of `CAP-DLV-proposal-incubation` name these modes. Verified by `test_approval_error_modes.py` (red on the base: `MAINTENANCE` and no reply error), including `PlanAcceptUseCase.execute` refusing an invalid mode and a missing effort as `INPUT_ERROR`.

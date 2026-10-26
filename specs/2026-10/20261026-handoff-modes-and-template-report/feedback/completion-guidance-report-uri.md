@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/ref
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -33,3 +33,7 @@ created_at: 2026-10-26
 - **Conditions**: a stale proposal acceptance or handoff recovery.
 - **Workarounds Attempted**: not applicable.
 - **Related Assets**: `CAP-DLV-proposal-incubation`, `FB-handoff-refusals-emit-maintenance`.
+
+## Disposition
+
+Resolved by `SPEC-approval-mode-and-crlf-template`: the stale-recovery line of `completion.md.jinja` reads "A stale source invalidates the old request: ... preserving the source SHA, authority and recovery state."; `devkit sync` refreshed the projections and `.devkit/installation.json`. Verified by `test_stale_recovery_guidance_preserves_no_report` and `devkit sync --check`.

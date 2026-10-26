@@ -1,0 +1,13 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T04:47:49.114355Z'
+status: completed
+summary: 'Self-checked reconcile at activity-effort low: CAP-DLV-proposal-incubation table rows match the emitted modes (NOT_READY BLOCKED, REPLY_INVALID INPUT_ERROR, STALE MAINTENANCE, REVIEW_INVALID INPUT_ERROR per its class); CAP-DIST-sync-and-transactions and the distribution reference state the line-ending rule the config template code and tests implement; no use case, architecture, ADR or glossary impact; three source feedback files resolved with Dispositions; the out-of-scope selection-edit CRLF defect is recorded as open feedback.'
+findings: []
+checks:
+  lint: PASS devkit rules check --ci --base 8190b1d3
+diff_scope:
+  base: 8190b1d33bf7659b239502b16250580a17d13659
+  head: b59149f7110a5a043b34b745c729f8b109ecb78a

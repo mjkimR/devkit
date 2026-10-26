@@ -10,7 +10,7 @@ The constitution defines the boundaries and their `ask|auto` values. Run `devkit
 
 - An `ask` boundary needs authority for its exact effects; reuse an explicit decision already given instead of asking again.
 - `auto` delegates the boundary to the Host after readiness checks; report the policy as the authority, never as a human approval or review.
-- A stale source or report invalidates the old request: inspect the partial state and authorize only the remaining effects, preserving the source SHA, report URI, authority and recovery state.
+- A stale source invalidates the old request: inspect the partial state and authorize only the remaining effects, preserving the source SHA, authority and recovery state.
 - Planning integration is part of `plan-accept`; `dev-integration` governs only the final Development result.
 - Neither value bypasses readiness, host restrictions or publication policy, or grants commit or publication authority. After a host refusal, do not switch execution routes to evade it.
 - The Host gives approval after validating worker boundaries, committed scope and required checks; workers return that evidence and never ask for business approval.

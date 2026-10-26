@@ -227,7 +227,8 @@ spec = "core"
   the file in entry-point name order, after one intro line per tool naming its package.
 - **Append-only**: a key whose name the file mentions (set, or in any comment) and a table whose header the file
   mentions (commented or not) or defines (dotted keys included) are left out, so no line is changed or removed and
-  an uncommented line stays where the developer put it. A part deleted from the file is added again by the next
+  an uncommented line stays where the developer put it. Existing lines keep their bytes, line endings included; the
+  added lines end in CRLF when every line ending of the file is CRLF, and in LF otherwise. A part deleted from the file is added again by the next
   `devkit config template`. A file that cannot be read or does not validate (`CONFIG_INVALID`) is never written.
 - **Selection edits**: a new `agents` or `[presets]` entry goes right after the last key-value entry of its table,
   not after the comments that follow it, so a commented tool table never takes the entry as its own once
