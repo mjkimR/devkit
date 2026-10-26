@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-25T23:05:44.026686Z'
+status: completed
+summary: 'Planning turn 1 swept (status change, scout and challenger rounds, fold, reverify): no new devkit observation; open feedback list checked, no duplicate.'
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0

@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-merge-proposal-materials-at-handoff
+by: user
+at: '2026-10-25T23:16:56.431627Z'
