@@ -20,7 +20,9 @@ Text output (paths are relative to the workspace root):
   ``SPEC_PROPOSAL_IN_PLANNING`` while its ``plan-<slug>`` exists or once it left ``draft``.
 - ``handoff``: ``[HANDOFF: <proposal id> spec= dir= workflow=]`` (with ``dev_effort=`` when the proposal declared it),
   then ``[TARGET_DOCS: <path>]``,
-  ``[MATERIALS: <dir>]``, one ``[PROMOTED_ADR: <id> path= padr=]`` per promoted decision, one
+  ``[MATERIALS: <dir>]`` (``merged=yes`` when the materials were merged into an existing directory), one
+  ``[DROPPED_DUPLICATE: <path>]`` per kept file whose byte-identical proposal copy was dropped, one
+  ``[PROMOTED_ADR: <id> path= padr=]`` per promoted decision, one
   ``[DROPPED_RECORD: <path>]`` per workflow record of the proposal unit removed with it, one
   ``[CARRIED_GATE: <request> decision=<path>]`` per approval of the proposal (``gate:plan-intent``,
   ``gate:plan-accept``) recorded in the spec under its name, one
@@ -388,7 +390,10 @@ def handoff_cmd(slug: str, effort: str | None, workspace_root: str | None, outpu
         if result.target_docs:
             click.echo(sentinel("TARGET_DOCS", result.target_docs))
         if result.materials:
-            click.echo(sentinel("MATERIALS", result.materials))
+            merged = {"merged": "yes"} if result.materials_merged else {}
+            click.echo(sentinel("MATERIALS", result.materials, **merged))
+        for path in result.dropped_duplicates:
+            click.echo(sentinel("DROPPED_DUPLICATE", path))
         for decision in result.decisions:
             click.echo(sentinel("PROMOTED_ADR", decision.id, path=decision.path, padr=decision.padr))
         for path in result.dropped_records:

@@ -2,7 +2,7 @@
 id: SPEC-merge-proposal-materials-at-handoff
 title: Merge existing proposal materials during handoff
 summary: Allows proposal handoff to merge materials per leaf into an existing destination after a complete lstat-based collision preflight, preserving existing files and refusing conflicting content or symbolic links.
-status: planned
+status: in-progress
 created: 2026-10-26
 related_capabilities:
   - CAP-DLV-proposal-incubation
