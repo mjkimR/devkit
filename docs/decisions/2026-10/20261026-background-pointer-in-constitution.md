@@ -1,15 +1,15 @@
 ---
-id: PADR-background-pointer-in-constitution
+id: ADR-background-pointer-in-constitution
 title: Load steering frontmatter always and bodies on demand
 summary: "For steering documents that every role needs only when a decision concerns them, we list each file's title and one-line scope in every context and read bodies on demand, capping file count and body size, to keep background visible at a bounded cost, accepting that reading stays the agent's judgment."
-proposal: PROP-foundation-documents
-status: draft
+proposal: SPEC-foundation-documents
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-background-pointer-in-constitution] Load steering frontmatter always and bodies on demand
+# [ADR-background-pointer-in-constitution] Load steering frontmatter always and bodies on demand
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---
@@ -32,7 +32,7 @@ context.
 
 ### Option 1: Progressive loading: frontmatter always, bodies on demand (Selected)
 - **Overview**: `devkit get-context spec` lists each steering file's `title` and `summary` (its one-line scope) in
-  every context (`PADR-bundle-context-lists-project-documents`); one constitution line names `docs/steering/` and
+  every context (`ADR-bundle-context-lists-project-documents`); one constitution line names `docs/steering/` and
   tells the agent to read a body before a decision that concerns its scope; every spec role contract loads the context
   through `devkit get-context spec`; `RULE-steering-documents` caps the number of files (default 10) and each body's size (default 24576 bytes), both
   settings a project can raise.
@@ -59,7 +59,7 @@ size is bounded by the caps and the summary length (driver 2), and a guidance te
 
 ## 5. Consequences
 
-- **Positive**: steering is visible everywhere at a cost of about 400 bytes per file (`materials/steering-design.md`
+- **Positive**: steering is visible everywhere at a cost of about 400 bytes per file (`docs/materials/2026-10/20261026-foundation-documents/steering-design.md`
   D2).
 - **Negative / Risks**: an agent may skip a relevant body; the scope summary makes the relevance visible but does not
   prove it was read.

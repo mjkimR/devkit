@@ -1,15 +1,15 @@
 ---
-id: PADR-bundle-context-lists-project-documents
+id: ADR-bundle-context-lists-project-documents
 title: List project context documents in bundle context
 summary: For a bundle whose agents need project documents listed in every context, we let its manifest declare a workspace directory whose Markdown titles and summaries devkit get-context returns at run time, to keep devkit-dist SDD-agnostic and the list current, accepting a new manifest field.
-proposal: PROP-foundation-documents
-status: draft
+proposal: SPEC-foundation-documents
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-bundle-context-lists-project-documents] List project context documents in bundle context
+# [ADR-bundle-context-lists-project-documents] List project context documents in bundle context
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---
@@ -19,7 +19,7 @@ created_at: 2026-10-26
 Steering documents must be listed in every agent context, current at run time (`user`). `devkit get-context
 <bundle>` already runs once per agent context and returns the constitution and instruction headers, but it is part of
 `devkit-dist`, which stays SDD-agnostic (`ARCH-05-1-containers` section 2.4). Options and costs are compared in
-`materials/steering-design.md` D1.
+`docs/materials/2026-10/20261026-foundation-documents/steering-design.md` D1.
 
 ## 2. Decision Drivers
 

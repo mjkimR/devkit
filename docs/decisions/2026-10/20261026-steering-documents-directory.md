@@ -1,15 +1,15 @@
 ---
-id: PADR-steering-documents-directory
+id: ADR-steering-documents-directory
 title: Keep project background in one flat steering directory
 summary: For project-wide background without a place in the Living Spec, we keep ID-free steering documents in one flat docs/steering/ directory, one file per topic, and move the glossary into it, to give background one known place, accepting about twenty path edits and a new seed path.
-proposal: PROP-foundation-documents
-status: draft
+proposal: SPEC-foundation-documents
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-steering-documents-directory] Keep project background in one flat steering directory
+# [ADR-steering-documents-directory] Keep project background in one flat steering directory
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---
@@ -33,7 +33,7 @@ already names devkit's lowest code layer (`devkit-core`, `ARCH-05-1-containers`)
 - **Overview**: one Markdown file per topic, ID-free, with `title` and `summary` frontmatter; `glossary.md` and
   `glossary.yaml` move in; no subdirectories and no namespace copy.
 - **Pros**: one place; the glossary is its first member; nothing enters the document index.
-- **Cons**: about twenty literal glossary paths change (`materials/spike-findings.md` F3); existing consumers of the
+- **Cons**: about twenty literal glossary paths change (`docs/materials/2026-10/20261026-foundation-documents/spike-findings.md` F3); existing consumers of the
   seed receive a new glossary path.
 
 ### Option 2: ID-free background files at the existing docs root

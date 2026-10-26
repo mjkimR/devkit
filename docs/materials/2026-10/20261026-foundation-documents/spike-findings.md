@@ -1,6 +1,6 @@
 # Spike findings (Planning round 1)
 
-Evidence for the spike questions of `PROP-foundation-documents`, read at base `96df5d86` in the
+Evidence for the spike questions of `SPEC-foundation-documents`, read at base `96df5d86` in the
 `plan-foundation-documents` worktree. Probe: a copy of `.devkit/` and `docs/` (without `proposals/`) under the ignored
 `.probe/repo/`, with a namespace `alpha` registered and ID-free files added, checked with `devkit rules check` and
 `devkit spec search` from this worktree's environment.

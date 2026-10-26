@@ -1,52 +1,25 @@
 ---
-id: PROP-foundation-documents
+id: SPEC-foundation-documents
 title: Steering documents for project-wide background
-summary: "Adds a flat docs/steering/ directory of project-wide background documents such as the glossary, product vision and style guides, whose frontmatter devkit get-context lists in every agent context so agents read a body when a decision concerns it, and moves the glossary into it."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-10-26
-target_area: documents/
-priority: high                        # critical | high | medium | low
-size: L                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/features/
-    - packages/devkit-spec/src/devkit_spec/base/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
-    - packages/devkit-spec/tests/
-    - packages/devkit-dist/src/devkit_dist/features/distribution/
-    - packages/devkit-dist/tests/
-    - packages/devkit-viewer/frontend/src/lib/
-    - packages/devkit-viewer/src/devkit_viewer/static/
-    - scripts/handbook.py
-    - tools/devkit-dev/tests/integration/
-    - docs/
-    - docs/capabilities/distribution/
-    - docs/capabilities/documents/
-    - docs/capabilities/governance/
-    - docs/capabilities/harness/
-    - docs/capabilities/delivery/
-    - docs/architecture/
-    - docs/glossary.md
-    - docs/glossary.yaml
-    - docs/README.md
-    - .devkit/installation.json
-    - guides/
-  excludes:
-    - A new ID-bearing document kind
-    - Product, brand or style content of any particular project
-    - Changes to the glossary table format
-    - Changes to document search or the search ranker
-    - A namespace copy of the steering directory
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
-depends_on: [SPEC-table-driven-document-kinds]
+summary: Adds a flat docs/steering/ directory of project-wide background documents such as the glossary, product vision and style guides, whose frontmatter devkit get-context lists in every agent context so agents read a body when a decision concerns it, and moves the glossary into it.
+status: planned
+created: 2026-10-26
+depends_on:
+  - SPEC-table-driven-document-kinds
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-foundation-documents] Steering documents for project-wide background
+# [SPEC-foundation-documents] Steering documents for project-wide background
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-foundation-documents on 2026-10-26.
+- **Preserved Materials**: `docs/materials/2026-10/20261026-foundation-documents`
+
+### 1. Background & Hypothesis
 
 The Living Spec has kinds for behavior and structure (capabilities, use cases, architecture, decisions) and a free
 form for evidence (materials). It has no place for project-wide background that applies to every piece of work but
@@ -65,30 +38,49 @@ frontmatter (title and a one-line scope) at run time, so the list is always curr
 reads a body only when its decision concerns that scope. A rule bounds the number of files and each body's size, so
 the always-loaded cost stays small. The glossary moves into the directory.
 
-## 2. Technical Spike Questions
+## 2. User Stories
 
-Answered in `materials/spike-findings.md` (F1-F6, round 1) and `materials/steering-design.md` (round 2).
+- **US-1**: As a developer/agent, I want to implement Steering documents for project-wide background so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
+
+Answered in `docs/materials/2026-10/20261026-foundation-documents/spike-findings.md` (F1-F6, round 1) and `docs/materials/2026-10/20261026-foundation-documents/steering-design.md` (round 2).
 
 - **Q1**: Name and layout. Settled by the `user`: `docs/steering/`, flat, one Markdown file per topic.
 - **Q2**: What the spec rules check in steering files: `RULE-steering-documents` (shape, frontmatter, caps) and the
   cited-ID check of `RULE-document-reference` (`user`, answer-02).
 - **Q3**: How agents read the group. Settled by the `user`: progressive loading through `devkit get-context`
-  (`PADR-background-pointer-in-constitution`).
+  (`ADR-background-pointer-in-constitution`).
 - **Q4**: What moves with the glossary: every consumer of spike F3.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-- **Directory** (`PADR-steering-documents-directory`): `docs/steering/` (created under `docs/`) holds one Markdown
+- **Directory** (`ADR-steering-documents-directory`): `docs/steering/` (created under `docs/`) holds one Markdown
   file per topic (for example `glossary.md`, `product.md`, `style.md`) and the glossary's `glossary.yaml`; no
   subdirectories and no namespace copy. Files carry frontmatter `title` and `summary` (the one-line English scope) and
   no `id`, so they stay outside the document index (`CAP-DOCS-document-model` rule 3.2). Documented in
   `CAP-DOCS-document-model`; the glossary gains the row **Steering document** (Avoid: foundation, background).
-- **Loading** (`PADR-background-pointer-in-constitution`): every steering file's `title` and `summary` are always
+- **Loading** (`ADR-background-pointer-in-constitution`): every steering file's `title` and `summary` are always
   loaded; bodies are read only when a decision concerns that scope. One constitution line names `docs/steering/` and
   states that trigger. The `scout`, `challenger` and `reconcile-reviewer` contracts (`bundle/subagents/`) run
   `devkit get-context spec` instead of reading the managed `AGENTS.md`, as `code-reviewer` already does, and a guidance
   test asserts that every role contract loads the spec context.
-- **Bundle context** (`PADR-bundle-context-lists-project-documents`): the `spec` bundle's manifest declares
+- **Bundle context** (`ADR-bundle-context-lists-project-documents`): the `spec` bundle's manifest declares
   `docs/steering` as a context document directory, and `devkit get-context <bundle>` adds `documents` (`path`,
   `title`, `summary` per Markdown file, read from the workspace at run time, not rendered by sync) to its result.
   `devkit-dist` reads only the directory the manifest names and knows nothing of steering
@@ -139,7 +131,7 @@ Answered in `materials/spike-findings.md` (F1-F6, round 1) and `materials/steeri
 - Non-goals: no new ID-bearing kind, no relation fields to or from steering documents, no change to the glossary
   table columns, the Owner check's semantics, document search or the ranker, and no namespace steering directory.
 
-### Order with parallel proposals
+#### Order with parallel proposals
 
 - `SPEC-table-driven-document-kinds` lands first (`depends_on`); it is accepted and handed off, its spec now in
   Development. At this proposal's handoff the dependency names that spec, whose ID this branch cannot resolve yet. Steering is not a kind and adds no row; where this
@@ -150,7 +142,7 @@ Answered in `materials/spike-findings.md` (F1-F6, round 1) and `materials/steeri
   `docs/steering/glossary.md` and points to steering style documents instead of restating them; its option 6b (an
   object table in the glossary) would change the glossary table format, which this proposal excludes.
 
-### Planning decisions
+#### Planning decisions
 
 - `policy`: search citation corrected to `CAP-DOCS-document-search`; owns extended to every path spike F3 names;
   `depends_on` on `SPEC-table-driven-document-kinds` per the user's ordering decision.
@@ -166,9 +158,10 @@ Answered in `materials/spike-findings.md` (F1-F6, round 1) and `materials/steeri
 - `policy`: the get-context change is a manifest-declared directory, not a steering path in `devkit-dist`, because the
   base harness stays SDD-agnostic (`ARCH-05-1-containers` section 2.4).
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - On acceptance: recorded with `devkit spec proposal accept`, then handed off to a spec bundle on
   `dev-foundation-documents`; the proposal is deleted there and its decisions become ADRs.
 - On rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
   the rejection ADR and deletes the proposal.
+

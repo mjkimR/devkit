@@ -1,6 +1,6 @@
 # Steering design (Planning round 2)
 
-Input: the `user` direction recorded in `envelopes/answer-01.yaml` (name `steering`, one flat directory, progressive
+Input: the `user` direction recorded in historical Git `26f7eb33b9ddc087f5f5c7e4044106c45c1ad2d5:docs/proposals/PROP-foundation-documents/envelopes/answer-01.yaml` (name `steering`, one flat directory, progressive
 loading through `devkit get-context spec`, a cap rule, the glossary moves, search unchanged). Read at base
 `96df5d86`.
 
