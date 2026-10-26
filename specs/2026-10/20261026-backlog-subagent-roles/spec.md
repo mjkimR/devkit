@@ -1,47 +1,23 @@
 ---
-id: PROP-backlog-subagent-roles
+id: SPEC-backlog-subagent-roles
 title: Backlog triage and decomposer subagent roles
 summary: Adds isolated triage and decomposer support roles so Backlog feedback triage and draft decomposition can be delegated with verified write boundaries and preserved provenance, and gates XL drafts to decomposition before Planning.
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-10-26
-target_area: delivery/
-priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-milestone: MS-backlog-subagent-roles
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-next/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/feedback-hygiene/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/sdd-proposal.md
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/templates/proposal.md
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/seed/docs/proposals/README.md
-    - packages/devkit-spec/src/devkit_spec/features/proposals/
-    - packages/devkit-spec/src/devkit_spec/features/delivery/
-    - packages/devkit-spec/tests/
-    - .devkit/installation.json
-    - docs/capabilities/delivery/
-    - docs/capabilities/harness/CAP-HARN-agent-guidance.md
-    - docs/architecture/ARCH-04-1-ecosystem-boundaries.md
-    - docs/usecases/delivery/
-  excludes:
-    - docs/decisions/
-    - packages/devkit/
-    - packages/devkit-dist/
-    - packages/devkit-viewer/
-    - handbook/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-10-26
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-backlog-subagent-roles] Backlog triage and decomposer subagent roles
+# [SPEC-backlog-subagent-roles] Backlog triage and decomposer subagent roles
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-backlog-subagent-roles on 2026-10-26.
+- **Preserved Materials**: `docs/materials/2026-10/20261026-backlog-subagent-roles`
+
+### 1. Background & Hypothesis
 
 Backlog work runs in the main session today. Feedback triage follows the `feedback-hygiene` playbook, and splitting a
 broad draft (`decomposed_from`, `needs_decompose`) is done by the Host by hand. Both read many files and fill the
@@ -58,11 +34,30 @@ recommendations for the user's decision without writing Backlog state themselves
 dispositions, and the Host can verify each result like a Scout or Challenger return. A judgeable `XL` and a
 deterministic gate before Planning send every XL draft to the `decomposer` first.
 
-Present workload (`materials/spike-findings.md` F5): 3 open feedback items, 86 dispositioned ones in the tree, no live
+Present workload (`docs/materials/2026-10/20261026-backlog-subagent-roles/spike-findings.md` F5): 3 open feedback items, 86 dispositioned ones in the tree, no live
 document carrying `decomposed_from` and no live `XL` proposal. The value is in larger hygiene batches, the first real
 decompositions and the drafts to come, not in today's queue.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Backlog triage and decomposer subagent roles so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1 (read and return)**: Settled by the `user` (answer-01 q1): both roles are read-only.
 - **Q2 (provenance)**: Settled below (Host application): the Host writes every link with existing commands, after an
@@ -79,9 +74,9 @@ decompositions and the drafts to come, not in today's queue.
 - **Q7 (XL definition)**: Settled by the `user` (answer-02 q6): "different nature" means work that would need separate
   specs or a different `task_kind`.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-### Roles
+#### Roles
 
 Two contracts in the spec bundle `subagents/`, registered in `bundle.toml` (an asset entry and `presets.core`) beside
 the existing roles. Both have `x-execution: isolated`, `x-invocation: optional` and `x-git-actions: [read]`, start by
@@ -117,7 +112,7 @@ goes wrong if the recommendation is applied blindly.
 | `triage` | `light-medium` | `medium` | Classification by the playbook's fixed table, like `scout` |
 | `decomposer` | `general-high` | `high` | A design split whose second view is the point of the role |
 
-### Invocation (`user`, answer-01 q3, q4)
+#### Invocation (`user`, answer-01 q3, q4)
 
 - **`triage`**: in `feedback-hygiene` Step 1, the Host delegates when the open-feedback listing has more than 5 items
   and the host runs the role natively; otherwise it runs Step 1 inline.
@@ -127,7 +122,7 @@ goes wrong if the recommendation is applied blindly.
   return, which leads to (1).
 - `spec-next` names the decomposer in its Backlog actions for `needs_decompose` and `XL` drafts.
 
-### XL size gate
+#### XL size gate
 
 - **Definition** (`user`): `size: XL` means the work would produce two or more specs, or bundles deliverables of
   different nature, that is, work that would need separate specs or a different `task_kind` (`user`, answer-02 q6).
@@ -177,7 +172,7 @@ goes wrong if the recommendation is applied blindly.
 - A proposal already past plan-intent whose size is edited to `XL` shows `intent-proposal` unmet again; its Planning
   run returns it with `needs_decompose: true` (step 1 above), as for a mis-sized draft.
 
-### Host application and verification
+#### Host application and verification
 
 - **Before delegating**: the checkout is clean (`git status --porcelain` empty), so the post-run comparison sees any
   write; on a dirty checkout the Host delegates from a clean task worktree or stays inline. For the decomposer,
@@ -199,14 +194,14 @@ goes wrong if the recommendation is applied blindly.
 - User-owned gates (`plan-intent`, `plan-accept`) and milestone transitions stay with the user; neither role changes a
   milestone status.
 
-### Hosts (`policy`)
+#### Hosts (`policy`)
 
 The `challenger` matrix, since neither role writes even `materials/` (challenger-01 finding 3): Claude Code `native`
 (`Read`, `Grep`, `Glob`, `Bash`, with `disallowedTools: [Write, Edit]`; `Bash` runs the `devkit spec` queries), Codex
 `emulated` (`sandbox_mode: read-only`), Antigravity `native` (sandboxed commands). Where a host cannot isolate a role,
 `spec-delegate`'s substitute route applies, which here means running the cited playbook or Backlog procedure inline.
 
-### Acceptance (`policy`)
+#### Acceptance (`policy`)
 
 - Tests pin both contracts like the others (`test_role_contracts.py`: role, profile, preset, host matrix with
   `disallowedTools`, payload row, the cited procedure path, `get-context`).
@@ -222,7 +217,7 @@ The `challenger` matrix, since neither role writes even `materials/` (challenger
 - A dogfood `triage` run over the open feedback at Development time, with its return and the before and after
   `git status --porcelain`, is recorded in the final change report.
 
-### Living Spec impact
+#### Living Spec impact
 
 - `CAP-DLV-delivery-workflows` section 4.6: two role rows (skill: the cited procedure; profile and effort above; writes
   nothing; envelope kind: none, a message); the `sdd-proposal` intent-proposal exit where the capability lists it,
@@ -239,7 +234,7 @@ The `challenger` matrix, since neither role writes even `materials/` (challenger
   tests. No change to `devkit-agt` or `devkit-dist` (answer-02 q5); the viewer's size filter
   keeps the same values; `handbook/` is a release snapshot outside this work.
 
-### Order with parallel work
+#### Order with parallel work
 
 `SPEC-foundation-documents` (accepted and handed off to a spec on `dev-foundation-documents`, not yet on `main`)
 rewrites the other role contracts and adds a test that every role contract loads the spec context. The new contracts
@@ -247,7 +242,7 @@ load it from the start, so whichever lands first the other passes; the shared ro
 later branch resolves. No `depends_on` is set, because nothing here needs that spec's behavior; the Host starts this
 Development after that spec integrates, as the user directed.
 
-### Non-goals
+#### Non-goals
 
 - Multi-unit orchestration hardening across `local-orchestrated` and `cloud-pr`: dropped from the roadmap by the
   `user`, with no follow-up proposal.
@@ -257,7 +252,7 @@ Development after that spec integrates, as the user directed.
 - Automatic milestone placement or milestone status changes; replacing any user-owned gate.
 - External tracker intake or synchronization (`ADR-roadmap-and-milestones`).
 
-### Planning decisions
+#### Planning decisions
 
 - `policy` (scout-01): boundaries fixed from spike F1 and F4; `devkit_spec/features/` (then not needed) and
   `docs/capabilities/collaboration/` dropped; `packages/devkit/`, `packages/devkit-dist/` and `handbook/` excluded.
@@ -279,7 +274,8 @@ Development after that spec integrates, as the user directed.
   small command checks serving one Backlog decomposition theme.
 - `policy`: host matrix and fallback (Q5); no `depends_on` on `SPEC-foundation-documents`; sequencing is the Host's.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
+
 <!--
 - Preliminary decisions: devkit spec proposal padr backlog-subagent-roles "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
 - Research: collect benchmarks and references in materials/.
@@ -289,3 +285,4 @@ Development after that spec integrates, as the user directed.
 - On rejection: change only status: rejected, with the user's reason in the commit message; a later hygiene pass
   writes the rejection ADR and deletes the proposal directory.
 -->
+
