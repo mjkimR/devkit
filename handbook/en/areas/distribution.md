@@ -6,7 +6,7 @@ sources:
   CAP-DIST-context-and-playbooks: 34185acd0c3f1a6432909d7718d9b18f52eda6cf
   CAP-DIST-in-repo-bundles: 54b713a2bf73ff8a6684acb70990956e401585c5
   CAP-DIST-manifest-spec: acb611b3fdd8b91fb5b8ce47265deba7f9cea53e
-  CAP-DIST-sync-and-transactions: 79f35c1e7910770da66c9fba7ab49df74328f31d
+  CAP-DIST-sync-and-transactions: d1d1ac401be230f3b198a8ee39267d84831b7353
   CAP-DIST-workspace-ownership: 23c12ca362aeccf9d70b51b59a23b5e383c1b6b8
   UC-reconcile-living-spec-drift: 972538db7ca3eccccada61d606ed7a176a4effe0
   UC-route-development-intent: 50d6278b292da8b936bc1bd6587bde501f490ee6
@@ -16,7 +16,7 @@ title: Distribution
 # Distribution
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `c94b6a08710e`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `ae01161143be`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
