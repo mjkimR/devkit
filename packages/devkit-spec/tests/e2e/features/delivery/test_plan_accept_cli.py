@@ -139,3 +139,28 @@ def test_accept_cli_uses_plan_accept_auto_when_development_remains_ask(pending):
     payload = json.loads(result.output)
     assert payload["status"] == "accepted"
     assert payload["acceptance_authority"] == "policy"
+
+
+def test_accept_cli_withdraws_its_writes_when_the_commit_gate_refuses(pending, tmp_path):
+    repo, planning = pending
+    hooks = tmp_path / "hooks"
+    hooks.mkdir()
+    (hooks / "pre-commit").write_text("#!/bin/sh\necho 'RULE-example refused the staged tree' >&2\nexit 1\n")
+    (hooks / "pre-commit").chmod(0o755)
+    git(repo, "config", "core.hooksPath", str(hooks))
+    before = git(repo, "show-ref")
+
+    result = CliRunner().invoke(
+        proposal_group,
+        ["accept", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo), "--format", "json"],
+    )
+
+    assert result.exit_code == 2, result.output
+    payload = json.loads(result.output)
+    assert payload["status"] == "blocked" and payload["completed_steps"] == []
+    [error] = payload["errors"]
+    assert error["code"] == "PROPOSAL_APPROVAL_NOT_READY" and error["advisory"]["mode"] == "BLOCKED"
+    assert error["advisory"]["details"] == ["RULE-example refused the staged tree"]
+    assert git(planning, "status", "--porcelain") == ""
+    assert "status: reviewing" in (planning / "docs/proposals/PROP-idea/proposal.md").read_text()
+    assert git(repo, "show-ref") == before

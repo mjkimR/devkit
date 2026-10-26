@@ -258,7 +258,19 @@ class _Acceptance:
         if changed != set(paths):
             raise ProposalApprovalStaleError("index contains changes outside the exact acceptance delta")
         guard_execution()
-        _git(self.source, "commit", "-m", f"spec: accept proposal {self.slug}")
+        try:
+            _git(self.source, "commit", "-m", f"spec: accept proposal {self.slug}")
+        except GitError as exc:
+            # Nothing landed: withdraw this service's own two writes so the worktree is clean for the rerun.
+            _git(self.source, "reset", "-q", "--", *paths)
+            anchor.write_text(original)
+            (self.source / accepted.decision).unlink()
+            self.completed.remove("acceptance_record")
+            raise ProposalApprovalNotReadyError(
+                "the commit gate refused the acceptance commit; `devkit rules check --staged` in the Planning "
+                "worktree reproduces it",
+                *[line for line in exc.stderr.splitlines() if line.strip()][-20:],
+            ) from exc
         head = _git(self.source, "rev-parse", "HEAD")
         self.acceptance_sha = head
         self.completed.append("acceptance_commit")
