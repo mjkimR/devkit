@@ -14,7 +14,7 @@ exists. The Planning executor clears its reports before the `plan-accept` reques
   `boundaries.excludes` is not checked.
 - **Resolution**: an entry is a literal repository-relative path and resolves when it names an existing path, tried
   in this order:
-  1. relative to the repository root (`packages/devkit-spec/src/devkit_spec/`, `docs/glossary.md`);
+  1. relative to the repository root (`packages/devkit-spec/src/devkit_spec/`, `docs/steering/glossary.md`);
   2. relative to the proposal's namespace docs root (`docs/packages/<name>/`, when `namespace` names a registered
      namespace), then to `docs/` (`capabilities/delivery/`, `usecases/delivery/`);
   3. as a capability area under the namespace's `capabilities/`, then `docs/capabilities/` (`delivery/`).

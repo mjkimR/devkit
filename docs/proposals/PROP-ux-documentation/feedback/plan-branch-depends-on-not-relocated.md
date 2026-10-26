@@ -16,7 +16,7 @@ created_at: 2026-10-26
 
 ## 1. Friction / Question (friction, question)
 
-- **Context**: Planning `PROP-ux-documentation` added `PROP-foundation-documents` to its `depends_on` on its own
+- **Context**: Planning `PROP-ux-documentation` added `SPEC-foundation-documents` to its `depends_on` on its own
   Planning branch while that prerequisite was still in Planning.
 - **Expectation**: When the prerequisite is handed off, the dependent's edge follows the PROP-to-SPEC relocation.
 - **Actual**: Handoff rewrites incoming references on the branch it runs on; an edge that exists only on another
@@ -48,5 +48,5 @@ envelopes/challenger-04.yaml finding 1: the foundation handoff from main cannot 
 Resolved by existing behavior. `RULE-document-reference` already reports a `depends_on` entry whose proposal was
 handed off as fixable (`` <ID> was handed off; reference `SPEC-<slug>` ``), and `devkit rules fix` rewrites it. After
 merging `main` into this branch, `devkit rules fix` rewrote the table-driven edge to
-`SPEC-table-driven-document-kinds`; the `PROP-foundation-documents` edge is repaired the same way after its handoff
+`SPEC-table-driven-document-kinds`; the `SPEC-foundation-documents` edge is repaired the same way after its handoff
 lands on `main`. The Host procedure is: merge `main`, run `devkit rules fix` on the proposal.

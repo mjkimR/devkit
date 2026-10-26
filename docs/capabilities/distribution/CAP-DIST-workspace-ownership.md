@@ -117,7 +117,9 @@ See `CAP-HOST-lifecycle-observation`.
      still selected is seeded again by the next plain sync (until then `sync --check` exits `1`); `sync --locked`
      never writes it and does not fail for it.
    - The receipt records which asset seeded which path under `seeded`, never under `files`; the record is
-     informational. Seeded files are not bundle context.
+     informational. Seeded files are never receipt-verified context files; a bundle's declared context document
+     directory (`context_documents`, `CAP-DIST-context-and-playbooks`) may still list the project files in it,
+     seeded ones included, read from the workspace without a hash check.
 8. **Git policy**: commit `.devkit/config.toml`, `.devkit/generated.toml`, `.devkit/overrides/`,
    `.devkit/installation.json`, `.devkit/.gitignore`, the root `AGENTS.md` and seeded files.
    - `.devkit/managed/` and `.devkit/transient/` are ignored by `.devkit/.gitignore`. A writing sync seeds it when

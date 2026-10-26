@@ -1,0 +1,44 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T07:36:02.086536Z'
+status: completed
+summary: 'REVISE: 4 open findings (2 P2, 2 P3): stale receipt, get-context nulls versus rule passes for non-UTF-8 body bytes and late-closing frontmatter, AC-02 --format wording'
+findings:
+- issue: The committed receipt at cfd1c45d is stale for two managed rule test files, so `uv run devkit sync --check` exits 1 (AC-13 requires exit 0).
+  evidence: '.devkit/installation.json:1619-1621 vs packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/steering_documents/tests/test_rule.py lines 44-48; `uv run devkit sync --check` at cfd1c45d: update=4, exit 1'
+  failure_condition: Any `devkit sync --check` or consumer-pin verification on cfd1c45d
+  suggested_action: Run `uv run devkit sync` after the final lint and commit .devkit/installation.json
+  resolution: open
+  severity: P2
+- issue: get-context strictly decodes the whole 4096-byte prefix, so a non-UTF-8 byte in the body nulls readable frontmatter; RULE-steering-documents reads with read_text and reports nothing for it.
+  evidence: context_documents.py:78-82; steering_documents.py:125; probe scratch/review-01/test_probe_null_entries.py::test_latin1_byte_in_body
+  failure_condition: A steering file with valid frontmatter and a non-UTF-8 byte within its first 4096 bytes
+  suggested_action: Decode only up to the frontmatter closer in get-context; report a non-UTF-8 steering file in the rule; test both
+  resolution: open
+  severity: P2
+- issue: A steering file whose frontmatter closes after byte 4096 passes RULE-steering-documents but get-context lists it with null title and summary.
+  evidence: steering_documents.py:124-160; context_documents.py HEADER_LIMIT=4096; probe scratch/review-01/test_probe_null_entries.py::test_frontmatter_past_the_prefix
+  failure_condition: Frontmatter with a long extra key pushing the closer past byte 4096
+  suggested_action: Report frontmatter that does not close within 4096 bytes; add a test
+  resolution: open
+  severity: P3
+- issue: AC-02 names `devkit get-context <bundle> --format json`, but get-context has no --format option, and its help text does not mention the documents list.
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/cli/context.py:15-20; spec.md AC-02
+  failure_condition: Running AC-02's command as written, or reading `devkit get-context --help`
+  suggested_action: Correct AC-02 and update the help text
+  resolution: open
+  severity: P3
+assumptions:
+- Uncommitted Living Spec drafts outside diff_scope were not reviewed
+unverified_areas:
+- 'Git-ignored steering files: find_files skips them, get-context lists them'
+checks:
+  rules: PASS devkit rules check --ci --base f12ab876
+  tests: PASS 254 targeted
+  sync: FAIL sync --check exit 1
+diff_scope:
+  base: f12ab876ed9984365373fc83a9fee10e962bc836
+  head: cfd1c45dc1a3f80db940ab1368e47e9bd0e3ef5b
+activity_effort: medium

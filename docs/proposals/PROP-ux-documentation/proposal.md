@@ -10,7 +10,7 @@ size: L                               # S | M | L | XL
 planning_effort: high                 # low | medium | high (hint for Planning)
 dev_effort: medium                    # low | medium | high (hint for Development)
 milestone: MS-ux-documentation
-depends_on: [SPEC-table-driven-document-kinds, PROP-foundation-documents]
+depends_on: [SPEC-table-driven-document-kinds, SPEC-foundation-documents]
 boundaries:
   owns:
     - packages/devkit-spec/src/devkit_spec/features/
@@ -179,7 +179,7 @@ The user decided that UX Development follows both prerequisites (`depends_on`).
   pair logic of `RULE-traceability-link`, per-kind stem rules and messages if the table does not carry them,
   templates and seeds, and the viewer's book group and bracket-ID pattern (the table change leaves the viewer out of
   scope; its own feedback record covers the stale viewer prefixes, and this proposal adds `UX` either way).
-- `PROP-foundation-documents` is accepted; it hands off after the table-driven spec is integrated. Its direction, as
+- `SPEC-foundation-documents` is accepted; it hands off after the table-driven spec is integrated. Its direction, as
   the Host reports it: a flat `docs/steering/`
   directory, one file per topic with `title` and `summary` frontmatter and no ID, every file's frontmatter listed by
   `devkit get-context` and bodies read on demand, at most 10 files and 24576 body bytes per file, and the glossary

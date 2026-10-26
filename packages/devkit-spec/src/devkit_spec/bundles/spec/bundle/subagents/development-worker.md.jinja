@@ -30,7 +30,7 @@ Run one turn of one spec unit's Development in the worktree the caller names, fr
 ## Procedure
 
 1. Work only in the worktree: absolute paths under it, every command's cwd set to it (`cd <worktree> && <command>` when the tool has no cwd field; the default cwd may be the base checkout) and `git -C <worktree>` for Git.
-2. Run `devkit workflow next --unit <unit>` and follow the stages and skills it names until the final change report holds. For a spec handed off from a proposal, first check the proposal's premises against the current base: a difference inside the agreed scope is an assumption, one that breaks the agreement is a problem.
+2. Run `uv run devkit get-context spec` once, then `devkit workflow next --unit <unit>`, and follow the stages and skills it names until the final change report holds. For a spec handed off from a proposal, first check the proposal's premises against the current base: a difference inside the agreed scope is an assumption, one that breaks the agreement is a problem.
 3. Decide implementation choices inside the agreed goal, scope and contract and record the reason; never stop only because there is a choice.
 4. Review and reconcile at your `activity-effort` by `.devkit/managed/spec/skills/spec/references/effort.md`, and at `high` by `review-loop.md` in the same directory.
    - Run `code-reviewer` and `reconcile-reviewer` as nested subagents with absolute read scopes and contract paths in this worktree; pass on any read they report outside it.

@@ -16,7 +16,7 @@ created_at: 2026-10-26
 
 ## 1. Friction / Question (friction, question)
 
-- **Context**: Planning `PROP-ux-documentation`, whose Development follows `PROP-foundation-documents`, which moves
+- **Context**: Planning `PROP-ux-documentation`, whose Development follows `SPEC-foundation-documents`, which moves
   the glossary from `docs/glossary.md` to `docs/steering/glossary.md`.
 - **Expectation**: `boundaries.owns` names the paths Development will change, so the carried `_Boundary:` lets a
   worker write the moved glossary.
@@ -37,7 +37,7 @@ created_at: 2026-10-26
 - **Versions**: plan branch based on `main` at `96df5d86`.
 - **Conditions**: A proposal whose prerequisite moves or creates a file it must change.
 - **Workarounds Attempted**: The Host-swap note above; naming `docs/` was rejected as too broad.
-- **Related Assets**: `RULE-proposal-boundaries`, `CAP-DLV-proposal-incubation`, `PROP-foundation-documents`.
+- **Related Assets**: `RULE-proposal-boundaries`, `CAP-DLV-proposal-incubation`, `SPEC-foundation-documents`.
 
 ## Evidence
 

@@ -1,0 +1,24 @@
+# Synonyms for document and playbook search: queries containing any word of a cluster expand with the cluster.
+terms:
+  - primary: bundle
+    synonyms: ["에셋 번들", "asset bundle", "content package", "패키지"]
+  - primary: sync
+    synonyms: ["동기화", "synchronize", "deploy", "배포"]
+  - primary: projection
+    synonyms: ["프로젝션", "skill projection", "subagent projection"]
+  - primary: rule
+    synonyms: ["규칙", "거버넌스", "linter", "governance rule"]
+  - primary: workflow
+    synonyms: ["워크플로", "워크플로우", "delivery workflow", "delivery stage"]
+  - primary: envelope
+    synonyms: ["엔벨로프", "stage envelope", "finding", "question", "resolution"]
+  - primary: worktree
+    synonyms: ["워크트리", "task worktree", "activity branch", "작업 브랜치"]
+  - primary: gate
+    synonyms: ["게이트", "approval gate", "commit gate", "승인"]
+  - primary: advisory
+    synonyms: ["어드바이저리", "agent advisory", "advisory error", "경고", "오류"]
+  - primary: compact
+    synonyms: ["컴팩트", "devkit run", "bounded output", "실행 요약"]
+  - primary: steering document
+    synonyms: ["steering", "foundation document", "background document"]

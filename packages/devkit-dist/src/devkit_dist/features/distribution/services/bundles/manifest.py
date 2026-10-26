@@ -89,6 +89,8 @@ class Bundle:
     # ``<bundle> = false`` in ``.devkit/config.toml`` opts out.
     auto_select: bool = False
     variables: dict[str, Variable] = field(default_factory=dict)
+    # A workspace directory whose Markdown titles and summaries ``devkit get-context`` lists (seeded-target grammar).
+    context_documents: str | None = None
 
     @property
     def preset_names(self) -> list[str]:
@@ -422,7 +424,17 @@ def _load(root: Path) -> Bundle:
     try:
         data = _mapping(
             tomllib.loads(manifest.read_text("utf-8")),
-            {"schema", "name", "version", "assets", "presets", "default_preset", "auto_select", "variables"},
+            {
+                "schema",
+                "name",
+                "version",
+                "assets",
+                "presets",
+                "default_preset",
+                "auto_select",
+                "variables",
+                "context_documents",
+            },
             "bundle",
         )
     except (OSError, UnicodeError, RecursionError, tomllib.TOMLDecodeError) as exc:
@@ -466,6 +478,9 @@ def _load(root: Path) -> Bundle:
         raise BundleError("auto_select must be a boolean")
     if auto_select and default_preset is None:
         raise BundleError("auto_select requires default_preset")
+    context_documents = data.get("context_documents")
+    if "context_documents" in data:
+        context_documents = seed_target(context_documents, "context_documents")
     bundle = Bundle(
         root,
         name,
@@ -475,6 +490,7 @@ def _load(root: Path) -> Bundle:
         default_preset,
         auto_select,
         declarations(data.get("variables", {})),
+        context_documents,
     )
     destinations: dict[str, str] = {"bundle.toml": "bundle.toml"}
     if bundle.constitution is not None:

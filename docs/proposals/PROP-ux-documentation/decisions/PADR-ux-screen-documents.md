@@ -53,7 +53,7 @@ Decided by the user (`ux-document-set` and `ux-objects`):
   character-cell layouts), States, Interactions (`Trigger | Step | From | To | Target | Capability | Feedback`) and an
   optional Evidence section naming the project's own wireframe, mock-up or screenshot.
 - Objects are named by glossary terms. Their representations and calls to action per role live in the steering file
-  `docs/steering/ux-objects.md` (one topic, under the steering caps of `PROP-foundation-documents`), scoped to
+  `docs/steering/ux-objects.md` (one topic, under the steering caps of `SPEC-foundation-documents`), scoped to
   the objects the use cases touch; the glossary's term table, its Owner check and its 24576-byte budget stay
   untouched, and devkit's own glossary gains only the new terms. The `ux-writing` instruction creates the file with the
   project's first UX document; `docs-skeleton` seeds nothing, so projects without an interface never carry it. The

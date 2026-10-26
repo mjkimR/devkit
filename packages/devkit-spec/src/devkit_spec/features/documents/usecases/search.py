@@ -12,7 +12,7 @@ The policy on top of the generic ranking:
   embedding whole bodies did worse than the ID alone.
 - **Pinning**: a query equal to a document's ID, workspace-relative path or file name (case-insensitive) puts that
   document first, whatever the ranking.
-- **Glossary expansion**: ``docs/glossary.yaml`` (optional; ``terms: [{primary, synonyms: [...]}]``) adds a term's
+- **Glossary expansion**: ``docs/steering/glossary.yaml`` (optional; ``terms: [{primary, synonyms: [...]}]``) adds a term's
   whole synonym cluster to the query when the query contains any of its terms, compared as ``tokenize`` words.
   Terms of different clusters with the same words (``C++`` and ``C#`` both tokenize to ``c``) expand to both
   clusters merged, so no cluster is lost.
@@ -36,7 +36,7 @@ from devkit_spec.base.errors import GlossaryInvalidError
 from devkit_spec.features.documents import Document, DocumentIndex, Kind
 from devkit_spec.features.documents.usecases.browse import NamespaceScope
 
-GLOSSARY_PATH = "docs/glossary.yaml"
+GLOSSARY_PATH = "docs/steering/glossary.yaml"
 DEFAULT_LIMIT = 10
 # The similarity floor of devkit's playbook search: keeps the hybrid gain, drops the long tail.
 DEFAULT_MIN_SIMILARITY = 0.35
@@ -61,7 +61,7 @@ class SpecSearchResult:
 
 def load_glossary(root: Path) -> dict[tuple[str, ...], list[str]]:
     """Each glossary term's words (devkit's ``tokenize``) mapped to its whole cluster; empty without
-    ``docs/glossary.yaml``. Words that terms of several clusters share map to the union of those clusters, in
+    ``docs/steering/glossary.yaml``. Words that terms of several clusters share map to the union of those clusters, in
     glossary order."""
     path = root / GLOSSARY_PATH
     if not path.is_file():

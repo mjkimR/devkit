@@ -224,7 +224,7 @@ These add to the options in `MAT-ux-documentation-practice` section 7; they are 
 | Option | Content | Cost |
 | --- | --- | --- |
 | 6a | Screens name the object and representation they present in prose only | Lowest; no new structure |
-| 6b | The glossary marks which terms are UX objects and gives each its representations and CTAs per role (extra columns, or a UX object table in `docs/glossary.md`); screens cite the term | Moderate; one register for names, synonyms to avoid and code identifiers. It changes the glossary table format, which `PROP-foundation-documents` excludes and this proposal's boundaries do not yet own, so Planning settles the owner |
+| 6b | The glossary marks which terms are UX objects and gives each its representations and CTAs per role (extra columns, or a UX object table in `docs/glossary.md`); screens cite the term | Moderate; one register for names, synonyms to avoid and code identifiers. It changes the glossary table format, which `SPEC-foundation-documents` excludes and this proposal's boundaries do not yet own, so Planning settles the owner |
 | 6c | 6b or 6d plus object lifecycle transition tables in the UX documents | Duplicates lifecycles that capabilities may already own; cite instead where they do |
 | 6d | A separate object list document per project, cited by screens | Moderate; a second document type that repeats the glossary's names and has to be kept in step with it |
 | 7a | Layout as prose region rules and a content tree, with conditions next to nodes; the writing instruction rules out character-cell layouts | Medium-independent; matches 1a |

@@ -8,7 +8,7 @@ const doc = (id: string, title: string) =>
 	`---\nid: ${id}\ntitle: ${title}\nstatus: active\n---\n# ${title}\n`;
 const living: Record<string, string> = {
 	'docs/README.md': '# Docs\n',
-	'docs/glossary.md': doc('GLOSSARY', 'Glossary'),
+	'docs/steering/glossary.md': '---\ntitle: Glossary\nsummary: Terms.\n---\n# Glossary\n',
 	'docs/development/dev.md': '# Dev notes\n',
 	'docs/decisions/2026-10/ADR-a.md': doc('ADR-a', 'Decision A'),
 	'docs/usecases/UC-a.md': doc('UC-a', 'Use case A'),
@@ -320,5 +320,21 @@ describe('reading tab: handbook navigation', () => {
 		vi.stubGlobal('navigator', { languages: ['ko-KR'], language: 'ko-KR' });
 		render(KnowledgeViews, props(repository(handbook)));
 		await waitFor(() => expect(pageTitle()).toBe('devkit 핸드북'));
+	});
+});
+
+describe('book groups: steering documents', () => {
+	const group = (path: string) => bookGroup(parseBlob(path, '# Page\n', 'utf-8'));
+
+	it('groups every steering file and a package glossary under Steering', () => {
+		expect(group('docs/steering/glossary.md')).toBe('Steering');
+		expect(group('docs/steering/product.md')).toBe('Steering');
+		expect(group('docs/packages/example/glossary.md')).toBe('Steering');
+		expect(bookGroups).toContain('Steering');
+		expect(bookGroups).not.toContain('Glossary');
+	});
+
+	it('no longer treats docs/glossary.md specially', () => {
+		expect(group('docs/glossary.md')).toBe('Overview');
 	});
 });

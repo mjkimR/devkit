@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-foundation-documents: User asked to draft this proposal'
+by: user
+at: '2026-10-26T07:04:46.349093Z'

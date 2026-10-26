@@ -15,7 +15,7 @@ This project manages its documentation based on **Spec-Driven Development (SDD)*
 | **`materials/`** | Reference & Spikes | Technical spikes, benchmarks, external libraries, competitor analysis reports |
 | **`proposals/`** | Proposals | Pre-spec proposals incubating uncertain work (`PROP-<slug>`) |
 | **`development/`** | Development & Collaboration | Local environment setup, Git workflow, commit/PR conventions, CI/CD pipelines, and CLI/API quick references in `development/reference/` |
-| **`glossary.md`** | Ubiquitous Glossary | Core domain business and technical ubiquitous terminology definitions |
+| **`steering/`** | Steering Documents | Project-wide background read on demand, one ID-free file per topic with `title` and `summary` frontmatter: `glossary.md` (ubiquitous terminology) and `glossary.yaml` (search synonyms); `devkit get-context spec` lists them in every agent context |
 
 ---
 

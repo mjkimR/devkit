@@ -127,8 +127,11 @@ def test_the_docs_skeleton_is_opt_in_and_passes_the_rules(tmp_path: Path) -> Non
     added = _devkit("add", "spec:docs-skeleton", "-w", str(tmp_path))
     assert added.returncode == 0, added.stderr
     assert (tmp_path / "docs/architecture/ARCH-01-introduction-and-goals.md").is_file()
-    assert (tmp_path / "docs/glossary.yaml").is_file()
-    assert "| Term | Definition | Owner | Avoid | Code identifiers |" in (tmp_path / "docs/glossary.md").read_text()
+    assert (tmp_path / "docs/steering/glossary.yaml").is_file()
+    assert (
+        "| Term | Definition | Owner | Avoid | Code identifiers |"
+        in (tmp_path / "docs/steering/glossary.md").read_text()
+    )
     index = DocumentIndex.load(tmp_path)
     assert not index.problems, index.problems
     for source in (BUNDLE / "seed/docs/architecture").glob("ARCH-*.md"):

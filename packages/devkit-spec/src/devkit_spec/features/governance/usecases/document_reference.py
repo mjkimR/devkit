@@ -14,7 +14,10 @@ Checks every current document that is not a material (``rules.is_material``):
 - an ID declared by several documents, and a ``PROP-<slug>`` beside a ``SPEC-<slug>`` or a ``SPEC-<slug>`` alias
   (handoff removes the proposal, so the pair is an unfinished handoff or a reused slug);
 - identity checks over every targeted document, materials and completed specs included: a malformed ``aliases``
-  field, and an alias that another document declares as its ID or that several documents declare.
+  field, and an alias that another document declares as its ID or that several documents declare;
+- in the ID-free steering files (the Markdown files directly in ``docs/steering/`` other than ``README.md``), every
+  backtick-quoted ID must resolve and must not be an alias, and the Owner cells of the five-column tables of
+  ``docs/steering/glossary.md`` likewise; neither is fixed or added to the reference graph.
 
 References resolve through ``DocumentIndex.canonical``: a declared ID always wins, an alias only when exactly one
 document declares it. The fix converts ``[ID]`` to `` `ID` ``, rewrites handed-off proposal references to the
@@ -39,6 +42,9 @@ from devkit_spec.features.documents.services.rewrite import rewrite
 from devkit_spec.features.governance import FIX_COMMAND, document_index, is_material, reportable
 
 RULE_ID = "RULE-document-reference"
+STEERING = "docs/steering"
+GLOSSARY = f"{STEERING}/glossary.md"
+_CITED = re.compile(rf"(?<!`)`({ID_SOURCE})`(?!`)")
 type Add = Callable[..., None]
 
 
@@ -178,7 +184,9 @@ class DocumentReferenceRule(BaseRule):
                     f"unit dependency cycle includes {document.id}",
                     "Remove a depends_on edge to break the cycle",
                 )
-        found.extend(self._glossary(ctx, index))
+        owners, examined = self._glossary(ctx, index)
+        found.extend(owners)
+        found.extend(self._steering(ctx, index, examined))
         return found
 
     def _identity(self, ctx: RuleContext, index: DocumentIndex, add: Add) -> None:
@@ -299,18 +307,20 @@ class DocumentReferenceRule(BaseRule):
                     column=link.start + 1,
                 )
 
-    def _glossary(self, ctx: RuleContext, index: DocumentIndex) -> list[Violation]:
-        """Resolve only Owner references in the ID-free root glossary's five-column tables."""
-        path = "docs/glossary.md"
+    def _glossary(self, ctx: RuleContext, index: DocumentIndex) -> tuple[list[Violation], set[tuple[int, str]]]:
+        """Resolve only Owner references in the ID-free root glossary's five-column tables; also return the
+        ``(line, ID)`` pairs examined, which the steering pass does not report again."""
+        path = GLOSSARY
         if not ctx.is_file_targeted(path):
-            return []
+            return [], set()
         # find_files honors snapshot contents, exclusions and symlink policy; never read the live tree directly.
-        if ctx.workspace_root / path not in ctx.cache.find_files(ctx.workspace_root / "docs", extensions=(".md",)):
-            return []
+        if ctx.workspace_root / path not in ctx.cache.find_files(ctx.workspace_root / STEERING, extensions=(".md",)):
+            return [], set()
         text = ctx.cache.read_text_strict(path)
         if text is None:
-            return []
+            return [], set()
         found: list[Violation] = []
+        examined: set[tuple[int, str]] = set()
         state, previous = "", 0
         for line in visible_lines(text):
             if line.number != previous + 1:
@@ -331,6 +341,7 @@ class DocumentReferenceRule(BaseRule):
             owner = cells[2] if len(cells) > 2 else ""
             for match in re.finditer(rf"`({ID_SOURCE})`|\[({ID_SOURCE})\]", owner):
                 target = match.group(1) or match.group(2)
+                examined.add((line.number, target))
                 problem = _resolve_problem(index, target)
                 if problem is None and (canonical := index.canonical_id(target)) != target:
                     problem = f"Owner {target} is an alias of {canonical}; name `{canonical}`"
@@ -344,6 +355,39 @@ class DocumentReferenceRule(BaseRule):
                             remediation="Correct the glossary Owner ID or give its intended document a unique ID",
                         )
                     )
+        return found, examined
+
+    def _steering(self, ctx: RuleContext, index: DocumentIndex, examined: set[tuple[int, str]]) -> list[Violation]:
+        """Resolve the backtick-quoted IDs of the ID-free steering files, without fixes or graph edges."""
+        found: list[Violation] = []
+        for file in ctx.cache.find_files(ctx.workspace_root / STEERING, extensions=(".md",)):
+            path = ctx.relative_path(file)
+            if path is None or path.rsplit("/", 1)[0] != STEERING or path.endswith("/README.md"):
+                continue
+            if not ctx.is_file_targeted(path):
+                continue
+            text = ctx.cache.read_text_strict(path)
+            if text is None:
+                continue
+            for line in visible_lines(text):
+                for match in _CITED.finditer(line.text):
+                    target = match.group(1)
+                    if (line.number, target) in examined:
+                        continue
+                    problem = _resolve_problem(index, target)
+                    if problem is None and (canonical := index.canonical_id(target)) != target:
+                        problem = f"{target} is an alias of {canonical}; name `{canonical}`"
+                    if problem:
+                        found.append(
+                            Violation(
+                                rule_id=self.id,
+                                file=path,
+                                line=line.number,
+                                column=match.start() + 1,
+                                message=problem,
+                                remediation="Correct the cited ID or give its intended document a unique ID",
+                            )
+                        )
         return found
 
     def fix(self, ctx: RuleContext) -> list[str]:

@@ -33,6 +33,7 @@ from devkit_dist.features.distribution.models.errors import (
     UnsafeWorkspaceError,
 )
 from devkit_dist.features.distribution.models.results import (
+    ContextDocument,
     ContextResult,
     OverrideChange,
     OverrideDiff,
@@ -72,6 +73,7 @@ __all__ = [
     "BundleError",
     "BundlePlan",
     "ConflictError",
+    "ContextDocument",
     "ContextResult",
     "DistributionError",
     "GetContext",

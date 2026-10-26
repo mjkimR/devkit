@@ -46,7 +46,10 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
 1. **Context first**: an agent MUST read the constitution (`devkit get-context spec`) once per agent context before
    development work, including work started without a skill, and read each relevant instruction body before the
    action it governs. An instruction never overrides a mandatory check; a conflict is reported, not resolved by
-   picking one.
+   picking one. Every role contract under `subagents/` runs `devkit get-context spec` itself, so nested roles load
+   the same context. The constitution names `docs/steering/` and the `documents` list of the response (the bundle
+   declares `context_documents = "docs/steering"`) and directs the agent to read a steering file's body before a
+   wording, naming, interface or content decision its summary covers (`ADR-background-pointer-in-constitution`).
 2. **One pointer in `AGENTS.md`**: the bundle adds exactly one line to the root `AGENTS.md` guidance block (the
    `spec-pointer` fragment); everything else is reached through `devkit get-context spec` and the skills.
 3. **Managed files are read-only**: files under `.devkit/managed/` and projected agent files are never edited;
@@ -114,13 +117,15 @@ A project opts out of the bundle with `[presets] spec = false` in `.devkit/confi
 
 ### 4.2 Constitution
 
-`devkit get-context spec` returns `{"bundle": "spec", "constitution": <text>, "instructions": [{"path", "header"}]}`.
+`devkit get-context spec` returns `{"bundle": "spec", "constitution": <text>, "instructions": [{"path", "header"}],
+"documents": [{"path", "title", "summary"}]}`, the documents being the steering files of `docs/steering/`.
 The constitution's sections:
 
 1. **Context**: read it once per agent context and each relevant instruction before the action it governs; a
    mandatory check wins over an instruction.
 2. **Living Spec and Scope**: `docs/` holds the current contract; feature specs are `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/`;
-   namespaces under `docs/packages/<name>/`; references by full ID; Non-Goals and `_Boundary:` are the expected scope.
+   steering documents under `docs/steering/`, read on demand from the `documents` list; namespaces under
+   `docs/packages/<name>/`; references by full ID; Non-Goals and `_Boundary:` are the expected scope.
 3. **Classification and Authority**: the three axes, the `sdd-<planning-depth>[-<task-kind>]` workflow names, raising
    and lowering the depth, the approval boundaries `plan-accept`, `proposal-handoff` and `dev-integration` with
    `ask|auto`, `plan-intent` supplied by an explicit instruction, and policy read through `devkit spec policy`.
@@ -282,7 +287,8 @@ The `docs-skeleton` asset seeds `docs/`, each file written once where absent and
 
 ```text
 docs/
-├── README.md, glossary.md, glossary.yaml     # entry, terms, search synonyms
+├── README.md                                  # entry
+├── steering/glossary.md, glossary.yaml        # steering documents: terms, search synonyms
 ├── architecture/                              # README.md and arc42 chapters ARCH-01, 03, 05-1, 05-2, 06, 07, 08
 ├── capabilities/README.md, usecases/README.md, decisions/README.md, materials/README.md, proposals/README.md, roadmap/README.md
 └── development/setup.md, workflow.md, ci-cd.md
@@ -291,7 +297,7 @@ docs/
 The directory READMEs state each directory's naming and authoring conventions and point at `devkit spec list` for
 discovery instead of catalog tables.
 
-The seeded `glossary.md` table is `Term | Definition | Owner | Avoid | Code identifiers` (`ADR-writing-and-terminology-guidance`):
+The seeded `steering/glossary.md` (steering frontmatter `title` and `summary`) table is `Term | Definition | Owner | Avoid | Code identifiers` (`ADR-writing-and-terminology-guidance`):
 the definition also states what a term excludes, `Owner` is the defining document ID or owning component, `Avoid` lists
 rejected synonyms (also synonyms of the term's cluster in `glossary.yaml`) and `Code identifiers` the matching fields,
 types and paths. Its "Avoided Generic Nouns" section holds the project's additions to the `living-spec-writing` default

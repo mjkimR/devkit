@@ -130,6 +130,11 @@ def test_self_cycle_and_wrong_provenance_shape(tmp_path: Path) -> None:
 _GLOSSARY_HEADER = "| Term | Definition | Owner | Avoid | Code identifiers |\n| :--- | :--- | :--- | :--- | :--- |\n"
 
 
+def _owners(violations: list[Violation]) -> list[tuple[str, int, str]]:
+    """The findings of the glossary Owner pass alone (the steering pass also reads other cited IDs)."""
+    return _found([v for v in violations if "glossary Owner" in v.remediation])
+
+
 def test_glossary_owner_resolution_without_indexing_or_autofix(tmp_path: Path) -> None:
     from devkit_spec.features.documents import DocumentIndex
 
@@ -139,22 +144,22 @@ def test_glossary_owner_resolution_without_indexing_or_autofix(tmp_path: Path) -
         "| three | definition | | | |\n"
     )
     files = {
-        "docs/glossary.md": glossary,
+        "docs/steering/glossary.md": glossary,
         "docs/a.md": _doc("CAP-A-valid"),
         "docs/b.md": _doc("UC-duplicate"),
         "docs/c.md": _doc("UC-duplicate"),
     }
-    found = check(RULE, tmp_path, files, targets=["docs/glossary.md"])
+    found = check(RULE, tmp_path, files, targets=["docs/steering/glossary.md"])
     assert _found(found) == [
-        ("docs/glossary.md", 3, "no document has the ID ADR-missing"),
-        ("docs/glossary.md", 4, "UC-duplicate is declared by 2 documents: docs/b.md, docs/c.md"),
+        ("docs/steering/glossary.md", 3, "no document has the ID ADR-missing"),
+        ("docs/steering/glossary.md", 4, "UC-duplicate is declared by 2 documents: docs/b.md, docs/c.md"),
     ]
     assert all(not v.fixable for v in found)
-    assert all(d.path != "docs/glossary.md" for d in DocumentIndex.load(tmp_path).documents)
-    assert _found(check(RULE, tmp_path, targets=["docs/glossary.md"], fix=True)) == _found(found)
-    assert (tmp_path / "docs/glossary.md").read_text() == glossary
+    assert all(d.path != "docs/steering/glossary.md" for d in DocumentIndex.load(tmp_path).documents)
+    assert _found(check(RULE, tmp_path, targets=["docs/steering/glossary.md"], fix=True)) == _found(found)
+    assert (tmp_path / "docs/steering/glossary.md").read_text() == glossary
     assert check(RULE, tmp_path, targets=["docs/a.md"]) == []
-    assert check(RULE, tmp_path, targets=["docs/glossary.md"], exclude=["docs/glossary.md"]) == []
+    assert check(RULE, tmp_path, targets=["docs/steering/glossary.md"], exclude=["docs/steering/glossary.md"]) == []
 
 
 def test_glossary_only_visible_owner_cells_in_recognized_tables(tmp_path: Path) -> None:
@@ -178,27 +183,32 @@ def test_glossary_only_visible_owner_cells_in_recognized_tables(tmp_path: Path) 
         + _GLOSSARY_HEADER
         + "| last | definition | [CAP-A-valid] | | |\n"
     )
-    assert (
-        check(
-            RULE,
-            tmp_path,
-            {
-                "docs/glossary.md": text,
-                "docs/a.md": _doc("CAP-A-valid"),
-                "docs/other.md": _GLOSSARY_HEADER + ignored_row,
-                "docs/packages/example/glossary.md": _GLOSSARY_HEADER + ignored_row,
-            },
-        )
-        == []
+    found = check(
+        RULE,
+        tmp_path,
+        {
+            "docs/steering/glossary.md": text,
+            "docs/a.md": _doc("CAP-A-valid"),
+            "docs/other.md": _GLOSSARY_HEADER + ignored_row,
+            "docs/packages/example/glossary.md": _GLOSSARY_HEADER + ignored_row,
+        },
     )
+    assert _owners(found) == []
+    # Outside Owner cells, the steering pass reports each visible backticked ID once, in the steering glossary only.
+    assert {(file, line) for file, line, _ in _found(found)} == {
+        ("docs/steering/glossary.md", 3),
+        ("docs/steering/glossary.md", 19),
+        ("docs/steering/glossary.md", 26),
+        ("docs/steering/glossary.md", 29),
+    }
 
 
 def test_glossary_table_state_ends_at_blank_or_fence(tmp_path: Path) -> None:
     row = "| term | definition | `ADR-missing` | | |\n"
     text = _GLOSSARY_HEADER + "\n" + row + "\n" + _GLOSSARY_HEADER + "```\nexample\n```\n" + row
-    assert check(RULE, tmp_path, {"docs/glossary.md": text}) == []
-    assert _found(check(RULE, tmp_path, {"docs/glossary.md": text + "\n" + _GLOSSARY_HEADER + row})) == [
-        ("docs/glossary.md", 15, "no document has the ID ADR-missing")
+    assert _owners(check(RULE, tmp_path, {"docs/steering/glossary.md": text})) == []
+    assert _owners(check(RULE, tmp_path, {"docs/steering/glossary.md": text + "\n" + _GLOSSARY_HEADER + row})) == [
+        ("docs/steering/glossary.md", 15, "no document has the ID ADR-missing")
     ]
 
 
@@ -215,17 +225,17 @@ def test_glossary_uses_staged_snapshot_contents(tmp_path: Path) -> None:
 
     git("init", "-q")
     git("-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "--allow-empty", "-qm", "init")
-    (root / "docs").mkdir()
-    glossary = root / "docs/glossary.md"
+    (root / "docs/steering").mkdir(parents=True)
+    glossary = root / "docs/steering/glossary.md"
     glossary.write_text(_GLOSSARY_HEADER + "| term | definition | `ADR-missing` | | |\n")
-    git("add", "docs/glossary.md")
+    git("add", "docs/steering/glossary.md")
     glossary.write_text(_GLOSSARY_HEADER + "| term | definition | | | |\n")
     snapshot = git_snapshot(root, staged=True)
     materialized = tmp_path / "snapshot"
     materialize_snapshot(snapshot, materialized)
     assert check(RULE, root) == []
     assert _found(check(RULE, materialized, targets=list(snapshot.changed))) == [
-        ("docs/glossary.md", 3, "no document has the ID ADR-missing")
+        ("docs/steering/glossary.md", 3, "no document has the ID ADR-missing")
     ]
 
 
@@ -238,11 +248,11 @@ def test_glossary_compact_empty_cells_keep_owner_and_following_rows(tmp_path: Pa
         + "| term | definition |\n"
         + "| term | definition | `ADR-extra` | | | ignored surplus |\n"
     )
-    assert _found(check(RULE, tmp_path, {"docs/glossary.md": text})) == [
-        ("docs/glossary.md", 3, "no document has the ID ADR-missing"),
-        ("docs/glossary.md", 4, "no document has the ID ADR-next"),
-        ("docs/glossary.md", 5, "no document has the ID ADR-no-border"),
-        ("docs/glossary.md", 7, "no document has the ID ADR-extra"),
+    assert _found(check(RULE, tmp_path, {"docs/steering/glossary.md": text})) == [
+        ("docs/steering/glossary.md", 3, "no document has the ID ADR-missing"),
+        ("docs/steering/glossary.md", 4, "no document has the ID ADR-next"),
+        ("docs/steering/glossary.md", 5, "no document has the ID ADR-no-border"),
+        ("docs/steering/glossary.md", 7, "no document has the ID ADR-extra"),
     ]
 
 
@@ -343,12 +353,14 @@ def test_reference_to_a_material_alias_is_fixed(tmp_path: Path) -> None:
 
 def test_glossary_owner_naming_an_alias_is_reported_not_fixed(tmp_path: Path) -> None:
     glossary = _GLOSSARY_HEADER + "| one | definition | `CAP-A-old` | | |\n"
-    files = {"docs/glossary.md": glossary, "docs/a.md": _aliased("CAP-A-new", "CAP-A-old")}
-    found = check(RULE, tmp_path, files, targets=["docs/glossary.md"])
-    assert _found(found) == [("docs/glossary.md", 3, "Owner CAP-A-old is an alias of CAP-A-new; name `CAP-A-new`")]
+    files = {"docs/steering/glossary.md": glossary, "docs/a.md": _aliased("CAP-A-new", "CAP-A-old")}
+    found = check(RULE, tmp_path, files, targets=["docs/steering/glossary.md"])
+    assert _found(found) == [
+        ("docs/steering/glossary.md", 3, "Owner CAP-A-old is an alias of CAP-A-new; name `CAP-A-new`")
+    ]
     assert not found[0].fixable
-    check(RULE, tmp_path, targets=["docs/glossary.md"], fix=True)
-    assert (tmp_path / "docs/glossary.md").read_text() == glossary
+    check(RULE, tmp_path, targets=["docs/steering/glossary.md"], fix=True)
+    assert (tmp_path / "docs/steering/glossary.md").read_text() == glossary
 
 
 def test_cycles_through_aliases(tmp_path: Path) -> None:
@@ -382,3 +394,38 @@ def test_proposal_beside_a_spec_alias_shares_its_slug(tmp_path: Path) -> None:
     }
     messages = [m for _, _, m in _found(check(RULE, tmp_path, files))]
     assert any(m.startswith("PROP-old shares its slug with SPEC-old") for m in messages)
+
+
+def test_the_old_glossary_path_is_no_longer_read(tmp_path: Path) -> None:
+    files = {"docs/glossary.md": _GLOSSARY_HEADER + "| term | definition | `ADR-missing` | | |\n"}
+    assert check(RULE, tmp_path, files) == []
+
+
+def test_ids_cited_in_steering_files_resolve_without_fixes_or_edges(tmp_path: Path) -> None:
+    from devkit_spec.features.documents import DocumentIndex
+
+    product = (
+        "---\ntitle: Product\nsummary: Read before naming a feature.\n---\n"
+        "See `CAP-A-missing`, `CAP-A-old` and `CAP-A-new`.\n\n```\n`CAP-A-fenced`\n```\n"
+    )
+    glossary = _GLOSSARY_HEADER + "| one | definition | `CAP-A-gone` | | |\n\nProse `CAP-A-gone`.\n"
+    files = {
+        "docs/steering/product.md": product,
+        "docs/steering/glossary.md": glossary,
+        "docs/steering/README.md": "`CAP-A-readme`\n",
+        "docs/steering/sub/a.md": "`CAP-A-nested`\n",
+        "docs/a.md": _aliased("CAP-A-new", "CAP-A-old"),
+    }
+    found = check(RULE, tmp_path, files)
+    assert sorted(_found(found)) == [
+        ("docs/steering/glossary.md", 3, "no document has the ID CAP-A-gone"),
+        ("docs/steering/glossary.md", 5, "no document has the ID CAP-A-gone"),
+        ("docs/steering/product.md", 5, "CAP-A-old is an alias of CAP-A-new; name `CAP-A-new`"),
+        ("docs/steering/product.md", 5, "no document has the ID CAP-A-missing"),
+    ]
+    assert all(not v.fixable for v in found)
+    check(RULE, tmp_path, fix=True)
+    assert (tmp_path / "docs/steering/product.md").read_text() == product
+    index = DocumentIndex.load(tmp_path)
+    assert all(not d.path.startswith("docs/steering/") for d in index.documents)
+    assert check(RULE, tmp_path, targets=["docs/a.md"]) == []
