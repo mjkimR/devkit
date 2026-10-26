@@ -7,18 +7,25 @@ created: 2026-10-26
 depends_on:
   - SPEC-table-driven-document-kinds
   - SPEC-foundation-documents
-related_capabilities: []
+related_capabilities:
+  - CAP-DOCS-document-model
+  - CAP-DOCS-namespaces
+  - CAP-GOV-spec-rules
+  - CAP-DLV-delivery-workflows
+  - CAP-VIEW-repository-viewer
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-ux-documentation] UX documents, authoring guidance and use-case-driven review
 
 ## 1. Problem Statement & Motivation
 
 Handed off from proposal PROP-ux-documentation on 2026-10-26.
-- **Preserved Materials**: `docs/materials/2026-10/20261026-ux-documentation`
+- **Preserved Materials**: `docs/materials/2026-10/20261026-ux-documentation` (`MAT-ux-documentation-planning-spike`,
+  `MAT-ux-documentation-practice`, `MAT-ux-object-modeling`)
+- **Decisions**: `ADR-ux-screen-documents`, `ADR-ux-step-links-and-coverage`, `ADR-ux-review-before-code`,
+  `ADR-ux-drafts-before-code`
 - Target Docs Blueprint: `PROP-ux-documentation-target` (Living Spec targets for this plan and reconcile.md)
 
 ### 1. Background & Hypothesis
@@ -38,177 +45,212 @@ lets the spec rules check coverage mechanically and lets an isolated reviewer ru
 case through its screens. Authoring guidance asks for contrasting candidates and leaves the wireframe medium to the
 project, so the text contract stays devkit-owned and checkable.
 
+### 2. Design as decided
+
+- **Kind** (`ADR-ux-screen-documents`): one kind `ux`, prefix `UX`, at `docs/ux/<area>/UX-<slug>.md` and
+  `docs/packages/<name>/ux/<area>/UX-<slug>.md`, one row of the kind definition table. Each document is one interface
+  element (`element: screen | modal | panel`) with Purpose, Content, States, Interactions
+  (`Trigger | Step | From | To | Target | Capability | Feedback`) and an optional Evidence section. Statuses `draft`,
+  `active`, `deprecated`.
+- **Links and checks** (`ADR-ux-step-links-and-coverage`): a use case step cites its screen's UX ID in prose; a UX
+  document lists `usecases` and `capabilities`, and each interaction's Step cell names the served step. The
+  error-severity `RULE-ux-links` reports contradictions; the warning-severity `RULE-ux-coverage` reports steps without
+  a screen and interactions without a step.
+- **Authoring guidance**: a `ux-writing` instruction; the register `docs/steering/ux-objects.md` is created with a
+  project's first UX document and never seeded.
+- **Review** (`ADR-ux-review-before-code`): a read-only `ux-reviewer` with the `spec-ux-review` skill, `ux-review-NN`
+  envelopes, at most two rounds and a closing envelope, as an optional delegation before code.
+- **Timing** (`ADR-ux-drafts-before-code`): screens are drafted before code (Screens sections of `target-docs.md` or
+  `spec.md`) and written to `docs/ux/` at `spec-sync`.
+
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement UX documents, authoring guidance and use-case-driven review so that system capabilities are extended.
+- **US-1**: As a project maintainer with a user interface, I want one document kind for screens, modals and panels so
+  that the Living Spec holds what a person sees and operates, linked to the use case steps and capabilities it serves.
+- **US-2**: As an agent implementing a screen, I want the spec rules to report contradictions between screens and use
+  cases and warn about steps without a screen so that the screen contract and the task flow stay in step.
+- **US-3**: As an agent drafting screens, I want an authoring instruction and drafts before code so that the screen
+  contract exists, with contrasting candidates in Planning, before the code that implements it.
+- **US-4**: As the Host, I want an isolated read-only reviewer that walks each use case through the drafted screens and
+  scores a rubric with evidence so that the author's lenient self-review is not the only check.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: wireframe or mock-up rendering and design tool integrations; the medium stays the project's.
+2. **Scope Excluded**: visual styling, theming and design tokens; screens cite the project's steering style files.
+3. **Scope Excluded**: engine- or framework-specific UI verification, and usability testing with real users.
+4. **Scope Excluded**: workflow engine changes in `packages/devkit/` (check primitives, closable envelope kinds) and a
+   stage switched on by content; the UX review is an optional delegation (`ADR-delivery-classification`).
+5. **Scope Excluded**: severity ranking of UX review findings.
+6. **Scope Excluded**: extension-to-state coverage, a flow document and a derived navigation listing.
+7. **Scope Excluded**: use cases or UX documents for devkit's own viewer, and a seeded `docs/steering/ux-objects.md`.
+8. **Scope Excluded**: `entrypoints` on UX documents (`CAP-TRACE-code-entrypoints` keeps capabilities and use cases).
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+### [AC-01] The kind table holds the UX row
 
-## 5. Carried Proposal Notes
+- **Given** the kind definition table
+- **When** it is read through `definitions()` and the ID grammar
+- **Then** it holds a `ux` row after `usecase` with prefix `UX`, directory `ux`, Living Spec membership, area scoping,
+  `every-root` format scope, a heading token, an always-required summary, no `entrypoints`, no terminal status,
+  default status `draft` and no relation field; `kind_of("UX-login")` is `ux` and `ID_SOURCE` lists `UX` after `UC`.
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] RULE-id-convention checks the UX location
 
-### 2. Technical Spike Questions
+- **Given** UX documents at `docs/ux/account/UX-login.md` (with `area: account`), at
+  `docs/packages/example/ux/account/UX-pick.md` in a registered namespace, at `docs/ux/UX-flat.md` and at
+  `docs/ux/account/screen-login.md`
+- **When** `RULE-id-convention` checks them
+- **Then** the first two pass; the third is reported `Invalid partition path: UX document must be stored at
+  docs/ux/{area}/UX-{slug}.md` and the fourth `Invalid partition path: file name must be UX-{slug} ...`; an
+  `area` that differs from the directory is reported and fixable.
 
-Options and their evidence are in `MAT-ux-documentation-practice` (sections 1-5) and `MAT-ux-object-modeling`
-(options 6a-7b).
+### [AC-03] A UX document is indexed, listed, searched and grouped
 
-- **Q1 (documents)**: Which documents make up the kind: per-screen specifications and a flow document (option 1c), or
-  screens only? Which sections are required (purpose, content priority, states, interactions with their effect,
-  exits), and what is the ID, path and template of each? Do screens cite glossary terms that carry their
-  representations and CTAs per role (6b), and how is content written without a drawing (prose regions and a content
-  tree, 7a)?
-- **Q2 (links)**: How does a use case step name its screen: in step prose like capability citations today, or through
-  a structured field? How does a screen name the capabilities whose state it presents, and must the links be
-  bidirectional like `RULE-traceability-link`?
-- **Q3 (checks)**: Which mechanical checks ship: orphans only (2a), the flow graph checks (2b) or also extension-to-state
-  coverage (2c)? Each needs a fixed table schema in the flow document and parsing of use case steps.
-- **Q4 (review)**: Which review: a walkthrough-only reviewer (3a), a walkthrough plus a 0/1/2 heuristic rubric with
-  cited evidence (3b), or merged independent runs (3c)? Which rubric, how are deterministic results excluded from
-  judgment, and where does the review sit in the delivery workflows (a stage, an optional delegation, or both)?
-- **Q5 (authoring and medium)**: Does the authoring guidance require contrasting candidates and a round cap (4b, 4c)?
-  Is the wireframe medium only referenced (5a), or does a screen declare an evidence slot the reviewer reads (5b)?
-- **Q6 (decomposition)**: Can the kind with its checks, the authoring guidance and the review be delivered and verified
-  as one spec, or should Planning return this draft for decomposition into separate proposals?
+- **Given** a fixture repository with `docs/ux/account/UX-login.md` (`title`, English `summary`, `area`, `element`,
+  `status`)
+- **When** `devkit spec resolve UX-login`, `devkit spec list ux` and `devkit spec search "login screen"` run, and the
+  viewer's `bookGroup` and reference linking read the document
+- **Then** resolve prints `[DOCUMENT: UX-login kind=ux ...]`, list prints its `[DOCUMENT: UX-login ...]` line, search
+  returns it as a hit, `bookGroup` returns `UX`, `bookGroups` holds `UX` after `Use Cases`, and a `[UX-login]`
+  reference in another page links to it; `RULE-spec-format` and `RULE-document-summary` report a UX document without
+  `status` or `summary`.
 
-### 3. Proposed Design & Impact
+### [AC-04] RULE-ux-links checks a UX document's own shape
 
-The design as the user decided it (§5, `answer-01`); `target-docs.md` is the blueprint.
+- **Given** `RULE-ux-links` (error severity)
+- **When** a UX document has no `element`, an `element` other than `screen`, `modal` or `panel`, no Interactions
+  section, an Interactions section without a table whose header is exactly `Trigger | Step | From | To | Target |
+  Capability | Feedback`, a Step cell that is neither empty nor `` `UC-<slug>` <key> ``, or a Target cell that is
+  neither empty, a UX ID of a UX document, `close`, `back` nor `end`
+- **Then** each case is one violation on the UX document, and a well-formed document gives none.
 
-- **Kind** (`ADR-ux-screen-documents`): one kind `ux`, prefix `UX`, at `docs/ux/<area>/UX-<slug>.md` and per
-  namespace `docs/packages/<name>/ux/<area>/`, added as one row of the kind definition table of
-  `SPEC-table-driven-document-kinds` (accepted; in Development as SPEC-table-driven-document-kinds), with a template, `docs-skeleton` seed, browsing, search and a viewer book
-  group. Each document is one interface element (`element: screen | modal | panel`) with Purpose, Content (prose
-  region rules and a content tree), States, Interactions (`Trigger | Step | From | To | Target | Capability |
-  Feedback`) and an optional Evidence section for the project's own wireframe medium. The use case carries the task
-  flow; there is no flow document. Statuses `draft`, `active`, `deprecated` (no terminal status).
-- **Links and checks** (`ADR-ux-step-links-and-coverage`): a use case step cites its screen's UX ID in prose; a UX
-  document lists `usecases` and `capabilities`, and each interaction's Step cell names the served step
-  (`` `UC-<slug>` 2a ``). An error rule reports contradictions (invalid element, unknown or non-citing step keys,
-  link disagreement, unknown targets, missing exits and modal close, unreachable screens); a warning rule reports
-  steps without a screen and interactions without a step. Both are documented in `CAP-GOV-spec-rules`.
-- **Authoring guidance**: a `ux-writing` instruction in the `spec` bundle: two or three contrasting candidates for
-  the user in Planning where a screen's arrangement is open (Development takes the recommended one and records the
-  others as an assumption), no character-cell layouts, objects named by glossary terms and registered with their
-  representations and calls to action in the steering file `docs/steering/ux-objects.md`, which ux-writing creates
-  with the project's first UX document (not seeded), visual style left to
-  the project's steering style files (cited, never restated), and the medium left to the project.
-- **Review** (`ADR-ux-review-before-code`): an isolated, read-only `ux-reviewer` subagent with a `spec-ux-review`
-  skill: a cognitive walkthrough of each linked use case plus a six-item 0/1/2 rubric with evidence, the link-rule
-  items hand-checked on the drafts and labelled as the reviewer's judgment, no severity, `ux-review-NN` envelopes, at
-  most two rounds and a closing envelope, run as an optional delegation before code (`CAP-DLV-delivery-workflows`).
-- **Timing** (`ADR-ux-drafts-before-code`): screens and the step citations they need are drafted before code in
-  `target-docs.md` or a Screens section of `spec.md`, with IDs the change creates in plain text; on a handed-off
-  bundle `spec-specify` carries the `target-docs.md` drafts into `spec.md`; `spec-sync` writes `docs/ux/` and the use
-  case changes, and the link rules check them at `living-spec-draft`. The review runs on the drafts (in Planning, or
-  at spec depth inside `specify`, or `characterize` for a bugfix, before the plan).
-- Non-goals: wireframe rendering, design tool integrations, visual styling, engine- or framework-specific
-  verification, usability testing with real users, severity ranking of findings by the reviewer, a stage switched on
-  by content, and workflow engine changes.
+### [AC-05] RULE-ux-links checks the links between a screen and its use cases
 
-### 4. Lifecycle & Retirement Criteria
+- **Given** a use case whose step 2 cites `UX-login` and a UX document `UX-login` listing it in `usecases`
+- **When** an interaction's Step cell names a step key the use case does not have, names a step that does not cite
+  `UX-login`, or names a use case `usecases` does not list; a `usecases` entry has no Step cell naming it; or a use
+  case step cites `UX-login` whose `usecases` does not list that use case
+- **Then** each case is one violation, and the consistent pair gives none.
 
-- Acceptance requires the user's answers folded into the PADRs (done) and both prerequisites accepted (reported by
-  the Host; this branch still shows them as drafts). Remaining before the `plan-accept` request: merge `main`;
-  re-check the table columns and the steering direction against the accepted texts; rewrite handed-off `depends_on`
-  entries to their SPEC IDs; replace the glossary boundary path if the move has landed. The handoff waits until
-  both prerequisites' Development is integrated (§5).
-- Development shows: a UX document in a fixture repository indexed, listed, searched and grouped in the viewer; each
-  report of both UX rules by a rule test, including the element and Interactions-table cases, off-screen re-entry,
-  a system step between two screens and the step-format deviations; the role and skill contracts by the
-  role-contract tests; and the viewer frontend checks with the committed page rebuilt.
-- On acceptance: recorded with `devkit spec proposal accept`, then handed off to a spec bundle on
-  `dev-ux-documentation`; the proposal is deleted there and its decisions become ADRs.
-- On decomposition: Planning returns the draft with `needs_decompose: true`, and Backlog creates the children with
-  `--decomposed-from PROP-ux-documentation`, keeping the milestone.
-- On rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
-  the rejection ADR and deletes the proposal.
+### [AC-06] RULE-ux-links checks exits and modal close
 
-### 5. Planning Findings
+- **Given** screens cited by a use case's steps
+- **When** a `screen` has no interaction whose target leaves it (another UX ID, `close`, `back` or `end`) and is cited
+  by no step that is the last main-scenario step, an extension that ends the use case or a step whose next step
+  cites no screen; or a `modal` has no `close` or `back` row
+- **Then** the screen is reported `screen has no exit` and the modal `modal has no close or back interaction`; a
+  `panel` is never reported for an exit; a screen cited by the last step needs none.
 
-Evidence: `MAT-ux-documentation-planning-spike` (spike over devkit's code and contracts, from `scout-01` to
-`scout-03`), `MAT-ux-documentation-practice` and `MAT-ux-object-modeling` (the user's research); `challenger-01`
-to `challenger-03` are folded below.
+### [AC-07] RULE-ux-links checks reachability per use case
 
-- **Q1**: a kind is known only by its prefix; one prefix costs one table row and one stem rule, two prefixes double
-  kinds, directories and relation fields. The use case already holds a task's step order and extensions, so the
-  interactions' targets give the transitions without a flow document. Glossary columns would silently disable the
-  Owner check, and the steering glossary has a 24576-byte body cap, so the UX object register is its own steering file
-  (`ux-objects`), created with the first UX document, not glossary content (decided: `ux-objects`).
-- **Q2**: all 13 current use cases number steps and extensions regularly; no rule maps a body reference to a step.
-  Citing UX IDs in step prose reuses reference resolution and alias rewriting; one step segmenter is new. Whether use
-  cases carry UX IDs was decided: they do (`step-screen-link`).
-- **Q3**: with targets in the interactions table, the flow graph checks cost little beyond orphans once each
-  element's meaning is defined (panels exempt, end-of-task screens, `close`, `back` and `end` targets). Not every step
-  happens on a screen, so "step without a screen" is a warning while contradictions are errors (decided: `coverage-strictness`; the flow
-  graph checks ship: `ux-checks`).
-- **Q4**: a new subagent is a valid role without engine code; a stage switched on by content is excluded by
-  `ADR-delivery-classification`; the `review` kind would share the code-review round state. Severity is bundle
-  procedure, so a separate `ux-review` kind keeps the no-severity non-goal, with its own closing record.
-- **Q5**: the medium stays with the project; an optional Evidence section lets the reviewer read a wireframe or
-  screenshot when one exists. Contrasting candidates are a Planning activity, because Development asks the user no
-  direction question (`CAP-DLV-delivery-workflows` rule 7).
-- **Q6**: one proposal hands off to exactly one spec; the reviewer depends on the template and step keys, so the
-  proposal stays one, delivered as one spec with ordered tasks (decided: `decomposition`).
-- **Timing**: `spec-sync` writes `docs/` after code review, and a UX document written early links use case changes
-  that do not exist yet; screens are drafted before code and the Living Spec follows at sync (decided:
-  `ux-document-timing`).
+- **Given** a use case whose step 1 cites `UX-a`, step 2 cites `UX-b`, step 3 cites no screen and step 4 cites `UX-c`,
+  and whose extension 2a cites `UX-d`
+- **When** `UX-a` has no interaction targeting `UX-b`
+- **Then** `UX-b` is reported `not reachable from an entry of <UC>`; `UX-c` (after a step that cites no screen,
+  off-screen re-entry) and `UX-d` (cited by an extension) are entries and not reported; `UX-b` is not reported for an
+  exit (its next step cites no screen); with `UX-a` targeting `UX-b`, nothing is reported; a system step between two
+  screens that cites the screen of its response makes that screen reachable only through an interaction; a panel
+  named in a reached screen's Content contributes its interactions as edges and is never reported unreachable.
 
-#### Dependencies and order
+### [AC-08] The step parser tolerates the use case formats in use
 
-The user decided that UX Development follows both prerequisites (`depends_on`).
+- **Given** a use case with an intro paragraph before step 1, a non-indented prose paragraph inside Extensions, the
+  escaped `**\*a.**` key, indented continuation lines and `Covers` lines in its acceptance scenarios
+- **When** `RULE-ux-links` and `RULE-ux-coverage` parse its steps
+- **Then** the steps and extension keys are `1`..`N`, `2a` and `*a` (a Step cell may write `*a` or `\*a`), the
+  intro and the free prose belong to no step, a citation on a continuation line belongs to its step, and the
+  `Covers` lines are not steps; every current use case of this repository parses without error.
 
-- `SPEC-table-driven-document-kinds` is accepted and handed off (SPEC-table-driven-document-kinds, in Development, as
-  the Host reports). This branch predates that handoff; the Host merges `main` into `plan-ux-documentation` before
-  acceptance, and `depends_on` then names the spec as the handoff relocates it. Assumed of its table, re-checked
-  against the merged spec before `plan-accept`: it carries the prefix, kind, location, Living Spec membership and
-  directory, namespace scope, `spec_format` scope, accepted relation fields with their target kinds, summary
-  requirement and entrypoint participation, and it removes the binary kind fallbacks. Owned here: the bidirectional
-  pair logic of `RULE-traceability-link`, per-kind stem rules and messages if the table does not carry them,
-  templates and seeds, and the viewer's book group and bracket-ID pattern (the table change leaves the viewer out of
-  scope; its own feedback record covers the stale viewer prefixes, and this proposal adds `UX` either way).
-- `SPEC-foundation-documents` is accepted; it hands off after the table-driven spec is integrated. Its direction, as
-  the Host reports it: a flat `docs/steering/`
-  directory, one file per topic with `title` and `summary` frontmatter and no ID, every file's frontmatter listed by
-  `devkit get-context` and bodies read on demand, at most 10 files and 24576 body bytes per file, and the glossary
-  (`glossary.md`, `glossary.yaml`) moved into it. This proposal therefore names `docs/steering/glossary.md`, keeps
-  its object register as one steering file created on first use, refers to steering style files instead of restating style content, and
-  budgets glossary growth against the cap (devkit's own glossary gains two terms, about 500 bytes on a body of about
-  7.6 KB). The handoff waits for its Development to be integrated.
-- After each merge of `main` into this branch, the Host rewrites every `depends_on` entry whose proposal was handed
-  off to its SPEC ID before requesting `plan-accept`, for both prerequisites; this proposal does not rely on handoff
-  relocation, which cannot reach an edge that exists only on this branch.
-- If either prerequisite is rejected or decomposed, this proposal returns to `spike` before `plan-accept`; after a
-  decomposition the handoff waits for every child that carries the kind table or the steering directory.
-- All three changes own `packages/devkit-spec/src/devkit_spec/features/`, the `spec` bundle and
-  `docs/capabilities/documents/`; UX Development starts after both, so it rebases once.
+### [AC-09] A two-document report lands where the run looks
 
-#### Planning decisions
+- **Given** a step-key contradiction between `UX-login` and its use case
+- **When** the run targets the UX document, only the use case, or neither
+- **Then** the violation is on the UX document, on the use case (at the step's line), or absent; findings about the
+  UX document alone (element, table, target, modal close) are reported only on the UX document.
 
-- The PADR "UX documents written at specify" is withdrawn: written alone, UX documents in `docs/` link use case steps and
-  IDs that `spec-sync` writes only later (`challenger-01` finding 1). `ADR-ux-drafts-before-code` replaces it, and
-  the contract slice remains a follow-up of `ADR-ux-drafts-before-code` (`ux-document-timing` decided: drafts before
-  code).
-- `dev_effort` is `medium`: the change creates a document kind and spans packages, and has no irreversible effect or
-  external consumer (`effort` reference); the Host may raise it at handoff.
-- Boundaries add `docs/glossary.md` for the new terms. `RULE-proposal-boundaries` admits no path that does not
-  exist yet, and naming the parent `docs/` would own the whole Living Spec, so the entry stays on the current path;
-  because the handoff follows the steering move, the Host replaces it with `docs/steering/glossary.md` before
-  requesting `plan-accept` if the move has landed by then, and otherwise records it as a scope extension of the
-  spec's `_Boundary:` at handoff. Boundaries also
-  add `docs/capabilities/viewer/`, the committed viewer build `packages/devkit-viewer/src/devkit_viewer/static/`, and
-  `.devkit/installation.json` and `AGENTS.md` for the `devkit sync` the new bundle assets imply.
-- The feedback record on stale viewer bracket-ID prefixes, recorded earlier in this run, is withdrawn: the accepted table change already
-  records the same viewer defect (`challenger-03` finding 6).
-- `challenger-04` finding 2 (a seeded register burdens projects without an interface) was settled by the user in
-  `ux-objects`: `docs/steering/ux-objects.md` is created with the project's first UX document, never seeded.
+### [AC-10] RULE-ux-coverage warns about uncovered steps and stepless interactions
 
+- **Given** `RULE-ux-coverage` (warning severity) and a UX document listing a use case
+- **When** a main-scenario step or an extension of that use case cites no UX ID, or an interaction's Step cell is
+  empty
+- **Then** the step is reported once (on the first listing UX document the run targets, else on the use case) and the
+  interaction on its UX document's row line, each as a warning; a use case no UX document lists is never reported.
+
+### [AC-11] The template and the seed carry the kind
+
+- **Given** the `spec` bundle
+- **When** its `templates/ux.md`, its `docs-skeleton` seed and `AGENTS.md.jinja` are read
+- **Then** the template has `element`, `usecases`, `capabilities`, the status values `draft | active | deprecated`
+  and the Purpose, Content, States, Interactions (the seven-column header) and Evidence sections; the seed holds
+  `docs/ux/README.md` and lists `ux/` in `docs/README.md`, and seeds no `steering/ux-objects.md`; the constitution's
+  template list names `ux`.
+
+### [AC-12] Authoring guidance covers screens and step citations
+
+- **Given** the `ux-writing` and `usecase-writing` instructions and the bundle manifest
+- **When** they are read
+- **Then** `ux-writing` is an instruction asset in the `core` preset that asks for two or three contrasting
+  candidates in Planning only (Development takes the recommended one and records the others as an assumption), rules
+  out character-cell layouts, names objects by glossary terms and creates `docs/steering/ux-objects.md` with the
+  first UX document, cites steering style files without restating them, leaves the medium to the project, and says a
+  system step cites the screen of its response; `usecase-writing` says a step may cite the screen it happens on.
+
+### [AC-13] The ux-reviewer role and its skill
+
+- **Given** the `spec` bundle's role contracts
+- **When** `subagents/ux-reviewer.md` and `skills/spec-ux-review/SKILL.md` are read
+- **Then** the contract binds `skill: spec-ux-review`, is isolated, optional and read-only (`x-git-actions: [read]`,
+  `disallowedTools: [Write, Edit]`, Codex `read-only`) with the `general-high` profile and `high` effort; the skill
+  defines the per-step walkthrough questions, the rubric items R1-R6 scored 0, 1 or 2 with evidence below 2, the
+  link-rule items as the reviewer's own judgment outside the rubric, no severity, `ux-review-NN` envelopes, at most
+  two rounds and the closing envelope marking each finding `resolved` or `waived`.
+
+### [AC-14] The workflows place the drafts and the review before code
+
+- **Given** `spec-specify` (with its feature and bugfix references), `spec-sync`, the effort reference, `sdd-proposal`,
+  the planning reference and the target-docs blueprint `devkit spec proposal new` writes
+- **When** they are read
+- **Then** `spec-specify` defines a Screens section of `spec.md` in the UX template's shape with new IDs in plain
+  text, carries a handed-off `target-docs.md` Screens draft into it and offers the optional UX review before
+  `spec-plan` (feature) or `plan-tasks` (bugfix); `spec-sync` writes each drafted screen to `docs/ux/`, the step
+  citations to the use cases and the drafted register rows to `docs/steering/ux-objects.md`, and lists each in
+  `reconcile.md`; the effort table names the UX review at `medium` and `high` when screens change; the acceptance
+  request lists the `ux-review` rounds and their open findings; the blueprint has a Screens drafts section.
+
+### [AC-15] The Living Spec describes the delivered contract
+
+- **Given** this repository after the change
+- **When** `devkit rules check` and `devkit sync --check` run
+- **Then** `CAP-DOCS-document-model`, `CAP-DOCS-namespaces`, `CAP-GOV-spec-rules`, `CAP-DLV-delivery-workflows` and
+  `CAP-VIEW-repository-viewer` describe the kind, the two rules, the role, its envelope and placement, and the book
+  group; `docs/steering/glossary.md` defines **UX document** and **UX object register** within the steering body cap;
+  both commands exit `0`.
+
+## 5. Assumptions
+
+- The handed-off premises hold on base `02615579`: the kind definition table of `SPEC-table-driven-document-kinds`
+  and the flat `docs/steering/` of `SPEC-foundation-documents` are on `main`, and `docs/glossary.md` moved to
+  `docs/steering/glossary.md`, which replaces the proposal's boundary path (the agreed boundary, not an extension).
+- The rule IDs are the ADR's working names, `RULE-ux-links` and `RULE-ux-coverage`, with assets `ux-links` and
+  `ux-coverage` in the `core` preset.
+- A Step cell holds one or more `` `UC-<slug>` <key> `` pairs separated by commas; an empty cell, `-` or `—` is
+  empty. A Target cell is empty (the interaction stays on the screen), a UX ID with or without backticks, `close`,
+  `back` or `end`; a target naming the screen itself is not an exit.
+- An extension's next step is the step named by `resumes at [step] <key>`; `the use case ends`, or no resume phrase,
+  makes the extension end the use case.
+- The use case sections are found by the H2 headings containing `Main Success Scenario` and `Extensions`; steps are
+  `N.` list items and extensions `- **<key>.**` bullets; a citation is a body reference of the index whose canonical
+  target is a UX document, so aliases and the bracket form count.
+- A panel is "named" by a screen when the screen's Content section cites the panel's UX ID.
+- The `ux-reviewer` presets `general-high` and `high`, like `code-reviewer`, because it judges content rather than
+  verifying a record.
+- The viewer book group is titled `UX`; the bracket-ID pattern gains `UX` only (the other stale prefixes stay with
+  their own feedback record).
+- No use case of this repository changes and no screens are drafted here, so this spec has no Screens section.
+
+## 6. Source feedback
+
+None carried: the two proposal feedback records (`FB-boundaries-cannot-name-prerequisite-paths`,
+`FB-plan-branch-depends-on-not-relocated`) are resolved.

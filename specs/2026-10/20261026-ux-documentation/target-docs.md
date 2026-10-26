@@ -12,14 +12,14 @@ targets:
   - file: docs/capabilities/governance/CAP-GOV-spec-rules.md
   - file: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
   - file: docs/capabilities/viewer/CAP-VIEW-repository-viewer.md
-  - file: docs/glossary.md
+  - file: docs/steering/glossary.md
 ---
 
 # [Blueprint] PROP-ux-documentation: Target Living Spec Structure for UX documents, authoring guidance and use-case-driven review
 
 This blueprint follows the user's answers recorded in `answer-01.yaml`.
 It assumes `SPEC-table-driven-document-kinds` and `SPEC-foundation-documents` have landed: the kind definition table
-is where the UX row goes, and the glossary is at `docs/steering/glossary.md` (listed below at its current path).
+is where the UX row goes, and the glossary is at `docs/steering/glossary.md`.
 
 ---
 
@@ -70,7 +70,7 @@ decision. The `usecase` template and the `usecase-writing` instruction allow a U
   it in `reconcile.md`.
 - `usecase-writing`: a step may cite the screen it happens on, and a system step cites the screen of its response.
 - `sdd-proposal` and the planning reference: the acceptance request lists `ux-review` rounds and their open findings.
-- `docs/steering/glossary.md` (today `docs/glossary.md`): the terms "UX document" and "UX object register" only,
+- `docs/steering/glossary.md`: the terms "UX document" and "UX object register" only,
   within the steering body cap.
 
 ---
