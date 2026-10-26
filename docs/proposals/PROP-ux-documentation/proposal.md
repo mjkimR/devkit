@@ -55,11 +55,14 @@ project, so the text contract stays devkit-owned and checkable.
 
 ## 2. Technical Spike Questions
 
-Options and their evidence are in `MAT-ux-documentation-practice` (sections 1-5).
+Options and their evidence are in `MAT-ux-documentation-practice` (sections 1-5) and `MAT-ux-object-modeling`
+(options 6a-7b).
 
 - **Q1 (documents)**: Which documents make up the kind: per-screen specifications and a flow document (option 1c), or
   screens only? Which sections are required (purpose, content priority, states, interactions with their effect,
-  exits), and what is the ID, path and template of each?
+  exits), and what is the ID, path and template of each? Do screens cite glossary terms that carry their
+  representations and CTAs per role (6b), and how is content written without a drawing (prose regions and a content
+  tree, 7a)?
 - **Q2 (links)**: How does a use case step name its screen: in step prose like capability citations today, or through
   a structured field? How does a screen name the capabilities whose state it presents, and must the links be
   bidirectional like `RULE-traceability-link`?
