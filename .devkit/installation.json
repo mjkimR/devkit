@@ -992,7 +992,7 @@
     },
     ".agents/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "b234d2f745be9125fd17a4a98a97e45f21bf80f798c3dc7915bff718f0d01ca1"
+      "sha256": "e0ca2723162e82f6b1f883f625d02982ffb743b96bac57cf0acd5557cb705244"
     },
     ".agents/skills/spec/references/playbooks.md": {
       "mode": 420,
@@ -1200,7 +1200,7 @@
     },
     ".claude/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "b234d2f745be9125fd17a4a98a97e45f21bf80f798c3dc7915bff718f0d01ca1"
+      "sha256": "e0ca2723162e82f6b1f883f625d02982ffb743b96bac57cf0acd5557cb705244"
     },
     ".claude/skills/spec/references/playbooks.md": {
       "mode": 420,
@@ -1772,7 +1772,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/planning.md": {
       "mode": 420,
-      "sha256": "b234d2f745be9125fd17a4a98a97e45f21bf80f798c3dc7915bff718f0d01ca1"
+      "sha256": "e0ca2723162e82f6b1f883f625d02982ffb743b96bac57cf0acd5557cb705244"
     },
     ".devkit/managed/spec/skills/spec/references/playbooks.md": {
       "mode": 420,
