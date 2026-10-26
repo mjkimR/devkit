@@ -8,11 +8,11 @@ plan: PLAN-ux-documentation
 
 ## Phase 1: Implementation
 
-- [ ] **Task 1.1**: The UX kind row and its `RULE-id-convention` grammar, with the kind, index, list and search tests
+- [x] **Task 1.1**: The UX kind row and its `RULE-id-convention` grammar, with the kind, index, list and search tests
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/features/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/id_convention/, packages/devkit-spec/tests/
   - _Requirements: AC-01, AC-02, AC-03_
   - **Verification**: `just test devkit-spec tests/unit/features/documents tests/integration/features/documents` and `uv run devkit rules test packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/id_convention`
-- [ ] **Task 1.2**: `RULE-ux-links` and `RULE-ux-coverage` with the shared UX model service, guides, manifest assets and rule tests
+- [x] **Task 1.2**: `RULE-ux-links` and `RULE-ux-coverage` with the shared UX model service, guides, manifest assets and rule tests
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/features/governance/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/ux_links/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/ux_coverage/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml, packages/devkit-spec/tests/
   - _Requirements: AC-04, AC-05, AC-06, AC-07, AC-08, AC-09, AC-10_
   - **Verification**: `uv run devkit rules test packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/ux_links` and the same for `ux_coverage`

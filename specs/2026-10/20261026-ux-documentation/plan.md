@@ -62,7 +62,7 @@ spec: SPEC-ux-documentation
   `RULE-document-summary` and namespace roots follow from the row.
 - **`RULE-id-convention`** (`features/governance/usecases/id_convention.py`): `_UX_STEM` and a `_ux` grammar in
   `_LIVING_GRAMMARS` (`UX document must be stored at {root}/ux/{area}/UX-{slug}.md`, `file name must be UX-{slug} with
-  a kebab-case slug that is not a sequence number`); the reference remediation names `UX-{slug}`.
+  a kebab-case slug that is not a sequence number`).
 - **UX model service** (new `features/governance/services/ux.py`): the use case step segmenter, the UX document
   reader (element, Interactions table rows with their lines, Content citations) and the per-use-case flow graph,
   shared by both rules.

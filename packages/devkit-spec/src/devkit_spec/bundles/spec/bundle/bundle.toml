@@ -220,6 +220,18 @@ id = "steering-documents"
 kind = "rule"
 source = "rules/steering_documents"
 
+# A UX document and the use case steps that cite it do not contradict each other.
+[[assets]]
+id = "ux-links"
+kind = "rule"
+source = "rules/ux_links"
+
+# Steps of a use case a UX document serves cite a screen, and interactions name their step (warning).
+[[assets]]
+id = "ux-coverage"
+kind = "rule"
+source = "rules/ux_coverage"
+
 # Starting points for new documents, read by path (.devkit/managed/spec/templates/<kind>.md).
 [[assets]]
 id = "templates"
@@ -326,6 +338,8 @@ assets = [
     "reconcile-contract",
     "document-summary",
     "steering-documents",
+    "ux-links",
+    "ux-coverage",
     "code-entrypoints",
     "proposal-boundaries",
     "templates",

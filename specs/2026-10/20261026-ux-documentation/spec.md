@@ -2,7 +2,7 @@
 id: SPEC-ux-documentation
 title: UX documents, authoring guidance and use-case-driven review
 summary: Adds a UX document kind for screens and interaction flows linked from use case steps to capabilities, with authoring guidance that leaves the wireframe medium to the project and an isolated reviewer that walks use cases through the screens.
-status: planned
+status: in-progress
 created: 2026-10-26
 depends_on:
   - SPEC-table-driven-document-kinds
@@ -113,7 +113,7 @@ project, so the text contract stays devkit-owned and checkable.
 - **When** `devkit spec resolve UX-login`, `devkit spec list ux` and `devkit spec search "login screen"` run, and the
   viewer's `bookGroup` and reference linking read the document
 - **Then** resolve prints `[DOCUMENT: UX-login kind=ux ...]`, list prints its `[DOCUMENT: UX-login ...]` line, search
-  returns it as a hit, `bookGroup` returns `UX`, `bookGroups` holds `UX` after `Use Cases`, and a `[UX-login]`
+  returns it as a hit, `bookGroup` returns `UX`, `bookGroups` holds `UX` after `Use Cases`, and a bracketed UX-login
   reference in another page links to it; `RULE-spec-format` and `RULE-document-summary` report a UX document without
   `status` or `summary`.
 
@@ -128,10 +128,10 @@ project, so the text contract stays devkit-owned and checkable.
 
 ### [AC-05] RULE-ux-links checks the links between a screen and its use cases
 
-- **Given** a use case whose step 2 cites `UX-login` and a UX document `UX-login` listing it in `usecases`
+- **Given** a use case whose step 2 cites UX-login and a UX document UX-login listing it in `usecases`
 - **When** an interaction's Step cell names a step key the use case does not have, names a step that does not cite
-  `UX-login`, or names a use case `usecases` does not list; a `usecases` entry has no Step cell naming it; or a use
-  case step cites `UX-login` whose `usecases` does not list that use case
+  UX-login, or names a use case `usecases` does not list; a `usecases` entry has no Step cell naming it; or a use
+  case step cites UX-login whose `usecases` does not list that use case
 - **Then** each case is one violation, and the consistent pair gives none.
 
 ### [AC-06] RULE-ux-links checks exits and modal close
@@ -145,12 +145,12 @@ project, so the text contract stays devkit-owned and checkable.
 
 ### [AC-07] RULE-ux-links checks reachability per use case
 
-- **Given** a use case whose step 1 cites `UX-a`, step 2 cites `UX-b`, step 3 cites no screen and step 4 cites `UX-c`,
-  and whose extension 2a cites `UX-d`
-- **When** `UX-a` has no interaction targeting `UX-b`
-- **Then** `UX-b` is reported `not reachable from an entry of <UC>`; `UX-c` (after a step that cites no screen,
-  off-screen re-entry) and `UX-d` (cited by an extension) are entries and not reported; `UX-b` is not reported for an
-  exit (its next step cites no screen); with `UX-a` targeting `UX-b`, nothing is reported; a system step between two
+- **Given** a use case whose step 1 cites UX-a, step 2 cites UX-b, step 3 cites no screen and step 4 cites UX-c,
+  and whose extension 2a cites UX-d
+- **When** UX-a has no interaction targeting UX-b
+- **Then** UX-b is reported `not reachable from an entry of <UC>`; UX-c (after a step that cites no screen,
+  off-screen re-entry) and UX-d (cited by an extension) are entries and not reported; UX-b is not reported for an
+  exit (its next step cites no screen); with UX-a targeting UX-b, nothing is reported; a system step between two
   screens that cites the screen of its response makes that screen reachable only through an interaction; a panel
   named in a reached screen's Content contributes its interactions as edges and is never reported unreachable.
 
@@ -165,7 +165,7 @@ project, so the text contract stays devkit-owned and checkable.
 
 ### [AC-09] A two-document report lands where the run looks
 
-- **Given** a step-key contradiction between `UX-login` and its use case
+- **Given** a step-key contradiction between UX-login and its use case
 - **When** the run targets the UX document, only the use case, or neither
 - **Then** the violation is on the UX document, on the use case (at the step's line), or absent; findings about the
   UX document alone (element, table, target, modal close) are reported only on the UX document.
