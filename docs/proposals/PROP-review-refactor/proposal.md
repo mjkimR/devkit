@@ -57,17 +57,19 @@ This draft carries the scope its own milestone held before the maintenance miles
   reviewable?
   - Answer: reuse the shared maintenance pattern of intake, explicit batches, coverage, one decision round and
     batch-only completion (`materials/q2-internal-integration.md`). The bounding unit is a user question
-    (`materials/design-options.md` O2).
+    (`materials/design-options.md` O2), settled as one batch per user-selected surface
+    (`PADR-bound-review-refactor-runs-by-surface-batch`).
 
 ## 3. Proposed Design & Impact
 
 ### Asset and packaging
 
 - `review-refactor` is one playbook asset of `maintenance` covering code, guidance and CLI in batches
-  (`materials/design-options.md` O1). It joins the implicit `all` preset; its explicit preset placement is a user
-  question (O6). Package validation (`devkit-catalog` bundle tests), the package README and the bundle recommendation
-  guide are updated. Selecting or invoking it does not require the other maintenance playbooks. No version change is
-  needed: the bundle version follows the shared release version.
+  (`materials/design-options.md` O1). It joins the implicit `all` preset, is added to `upkeep` beside
+  `drift-reconciliation`, and gets a solo preset `refactoring` (O6, `user`). Projects that already select
+  `maintenance:upkeep` receive it on their next sync. Package validation (`devkit-catalog` bundle tests), the package
+  README and the bundle recommendation guide are updated. Selecting or invoking it does not require the other
+  maintenance playbooks. No version change is needed: the bundle version follows the shared release version.
 - Development adds a delivery capability with the playbook as its entrypoint, a governance use case, and the
   maintenance entry of `CAP-DIST-content-packages`.
 - The playbook's invocation prerequisite (its entry condition) follows the authority wording that
@@ -85,15 +87,30 @@ This draft carries the scope its own milestone held before the maintenance miles
 
 - The playbook defines intake, review scope, candidate prioritization, agreed changes, verification and completion
   evidence, reusing the `drift-reconciliation` bounding pattern.
+- Bounding (O2, `user`; `PADR-bound-review-refactor-runs-by-surface-batch`): the user selects the surfaces (code,
+  guidance, CLI) and the roots at intake, and missing scope is clarified first. The run splits into batches of one
+  surface each, with one decision round per batch. A cross-surface finding cites both sides and belongs to the batch
+  of the surface where its change lands.
+- Subagents (`user`): within a surface batch the playbook uses spawned subagents when they shorten the pass and the
+  host supports them, for example parallel review per root or module, or independent verification of a
+  consolidation or removal; otherwise the same steps run in the playbook's agent. The playbook's agent keeps
+  coordination, the decision round and integration. A subagent's result is an evidence-backed opinion that the
+  playbook's agent validates against the code or the diff at the cited location before it enters the decision round
+  or a change record; an unconfirmed claim is dropped or recorded as a coverage gap. Subagents never ask the user,
+  approve a change or write the run's records. Their write scope stays inside the batch: review and verification
+  subagents change nothing, and one that applies an agreed change writes only the paths of that batch's work item.
 - Findings and implemented changes are separate records. Each change carries its behavior-preservation evidence and
   resulting commit. Deferred work links to existing or new follow-ups without duplication.
-- Dispositions per finding: consolidate, reduce or remove with behavior preserved; contract change (handling per
-  O3); defer; keep with a reason. Coverage counts the candidates dropped for lacking a named cost.
+- Dispositions per finding: consolidate, reduce or remove with behavior preserved; contract change; defer; keep
+  with a reason. Coverage counts the candidates dropped for lacking a named cost.
 - Invocation, including an external runner naming the exact ID, authorizes no change (`ADR-external-playbook-execution`):
   only the user's decision round does, and an unattended run stops there with nothing applied.
 - The user's decision-round approval is the recorded `user` intent for the routed work: it supplies the routed
   workflow's intent approval and never its integration approval. The agreed behavior-preserving changes of one batch
   form one work item with one commit per change; each contract change is its own work item.
+- Contract removals (O3, `user`): the decision round may approve removing a command, option, public interface or
+  compatibility path. The removal becomes its own work item through the repository's development workflow, with the
+  contract and documentation updated, kept apart from the batch's behavior-preserving work item.
 - Each work item is applied through the repository's development workflow and classified by that repository's own
   classification criteria; the playbook does not restate them.
 - A contract mismatch against agreed documentation is recorded as a deferred finding whose follow-up destination
@@ -128,16 +145,26 @@ This draft carries the scope its own milestone held before the maintenance miles
   the change record names the inputs or callers no longer accepted. In-repository reachability never proves the
   absence of external consumers.
 - Shared implementations are introduced only for demonstrated repeated behavior: at least two current callers with
-  the same behavior, where a change to one must be repeated in the others. A consolidated helper lives at the place
-  the target repository's layering allows (placement per O5).
+  the same behavior, where a change to one must be repeated in the others.
+- Helper placement (O5, `user`; `PADR-require-reachability-evidence-and-layered-placement`): a consolidated helper
+  lives at the lowest common owner every caller may already depend on under the target repository's declared
+  layering. A new cross-package or foundation module, or a repository without declared layering, becomes a decision
+  in the round. The playbook states the devkit order as its example: feature-local first, then package-level
+  `utils` (technical helpers) or `base` (contracts), then `devkit_core` only for generic primitives with no
+  application dependency.
 - A reduction is accepted only when the removed content is derivable from the repository, duplicated with a named
   canonical copy kept, enforced mechanically elsewhere, or shown unnecessary by a recorded check. The recorded check
   for code is the verification command and its result plus reachability evidence; for guidance it is a recorded
   representative-task run with and without the text. Without that record the fourth ground is unavailable. Line or
-  token reduction is reported but is never the justification. The further evidence a removal or consolidation needs
-  is set per O4.
+  token reduction is reported but is never the justification.
+- Preservation evidence (O4, `user`; `PADR-require-reachability-evidence-and-layered-placement`): every
+  consolidation or removal records reachability evidence covering static references and the repository's dynamic
+  reach (entry points, plugin registries, configuration, documentation, string dispatch), and the relevant
+  verification passing before and after. A characterization test is added only when no existing test exercises every
+  merged caller. A guidance change records a retained-constraint map (each constraint of the removed or merged text
+  and where it remains), plus the recorded representative-task run when the removal relies on a behavioral check.
 - Contract-changing removals, renames or consolidations of commands, options or public interfaces are never
-  presented as behavior-preserving refactoring (handling per O3).
+  presented as behavior-preserving refactoring; they follow the contract-removal work item above.
 - Recurrence prevention first considers deleting, consolidating or correcting existing code and guidance. A new rule
   needs an evidenced recurring failure and a stated benefit, and follows `CAP-GOV-rule-authoring`.
 
@@ -146,9 +173,13 @@ This draft carries the scope its own milestone held before the maintenance miles
 - Non-goals: scheduler or trigger design, cosmetic churn without an evidenced problem, speculative commonization,
   behavior-changing feature work presented as refactoring, mandatory rule growth and automatic rule adoption.
 - Acceptance direction:
-  - Bundle tests cover the new asset in its presets, lexical search and exact retrieval.
-  - A spec-review checklist maps each consolidation and reduction kind and each reduction ground to a playbook
-    section.
+  - Bundle tests cover the new asset in the `all`, `upkeep` and `refactoring` presets (with `upkeep` keeping
+    `drift-reconciliation` and `refactoring` deploying `review-refactor` alone), lexical search and exact retrieval.
+    The README preset table and the install recommendation name both presets.
+  - A spec-review checklist maps each consolidation and reduction kind, each reduction ground, the per-surface
+    batching and cross-surface assignment, the subagent rules (validation, no decision authority, batch write
+    scope), the contract-removal work item, each preservation-evidence part and the helper placement order to a
+    playbook section.
   - Manual evidence, following the `drift-reconciliation` precedent, is named as manual evidence and never reported as
     test coverage. It has two parts.
     - A real, bounded, read-only sweep of this repository records findings, coverage and gaps. It stops at its
@@ -160,7 +191,8 @@ This draft carries the scope its own milestone held before the maintenance miles
       commits are fixture operations, and routing to the development workflow means direct fixture commits plus
       the fixture test command; no real development workflow is opened. With simulated decisions, it exercises
       one consolidation, one helper fold and one removal, applied only inside the fixture, with separate change
-      records and preservation evidence. The patches, commit IDs and before-and-after
+      records and the preservation evidence above (reachability, before-and-after verification, and the helper's
+      placement). The patches, commit IDs and before-and-after
       command output are kept in the Unit's materials because the fixture is discarded. The playbook's exercise rule
       reads: decisions are simulated and change only the fixture.
   - Every playbook file passes the repository's skill document size rule. A directory-form playbook with
@@ -173,8 +205,12 @@ This draft carries the scope its own milestone held before the maintenance miles
   playbooks.
 - Ownership covers the maintenance bundle, the catalog bundle tests and README, distribution capabilities, governance
   use cases and install guides, which Development edits.
-- Pending user answers: bounding (O2), contract removals (O3), preservation evidence (O4), helper placement (O5) and
-  presets (O6).
+- User answers (all recommended options, `user`): bounding by surface batch with batch-scoped subagents (O2-A),
+  contract removals as their own work items (O3-A), reachability-based preservation evidence (O4-A), lowest common
+  owner placement (O5-A), and `upkeep` plus a solo `refactoring` preset (O6-A). O2, O3 and the subagent rules are
+  recorded in `PADR-bound-review-refactor-runs-by-surface-batch`; O4 and O5 in
+  `PADR-require-reachability-evidence-and-layered-placement`. O6 is packaging and needs no PADR.
+- `dev_effort` stays `medium`: the work has no effect that cannot be undone locally and no unresolved P1.
 
 ### Interactions
 
@@ -184,9 +220,9 @@ This draft carries the scope its own milestone held before the maintenance miles
   `docs/capabilities/distribution/`, to reword every playbook's explicit-invocation prerequisite and to let `spec`
   discover playbooks at task intake. The new playbook's invocation prerequisite follows the authority wording that
   proposal settles. Whichever proposal lands second reconciles the other's wording.
-- `PROP-maintenance-history` declares the same maintenance bundle and delivery capability paths. The two Developments
-  need sequencing on `bundle.toml`, the bundle tests, the README and the maintenance entry of
-  `CAP-DIST-content-packages`.
+- `PROP-maintenance-history` declares the same maintenance bundle and delivery capability paths and edits the same
+  `bundle.toml`, bundle tests, README and maintenance entry of `CAP-DIST-content-packages`. The Host sequences the two
+  Developments.
 
 ## 4. Lifecycle & Retirement Criteria
 <!--
