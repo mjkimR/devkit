@@ -18,7 +18,7 @@ plan: PLAN-feedback-guidance-and-scope
   - _Requirements: AC-03, AC-04_
   - **Verification**: `just test devkit-spec packages/devkit-spec/tests/integration/features/proposals`
 
-- [ ] **Task 3**: Declared feedback files of other spec bundles enter the scope, with tests
+- [x] **Task 3**: Declared feedback files of other spec bundles enter the scope, with tests
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/features/entrypoints/services/derive.py`, `packages/devkit-spec/src/devkit_spec/features/entrypoints/__init__.py`, `packages/devkit-spec/src/devkit_spec/features/scope/usecases/inputs.py`, `packages/devkit-spec/tests/integration/features/scope/test_inputs.py`, `packages/devkit-spec/tests/integration/features/entrypoints/test_derive.py`, `docs/capabilities/collaboration/CAP-COLL-work-scope-registry.md`, `docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md`, `specs/2026-10/20261024-canonical-libyaml-only/feedback/scope-external-feedback-target.md`
   - _Requirements: AC-05, AC-06, AC-07_
   - **Verification**: `just test devkit-spec packages/devkit-spec/tests/integration/features/scope packages/devkit-spec/tests/integration/features/entrypoints`

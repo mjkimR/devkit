@@ -89,6 +89,81 @@ def test_from_spec(repo: Path) -> None:
         from_spec(repo, "specs/2026-10/20261002-n")
 
 
+OTHER = "specs/2026-09/20260901-other"
+FEEDBACK_FILE = f"{OTHER}/feedback/observation.md"
+
+
+def _tasks(repo: Path, spec_dir: str, *entries: str) -> None:
+    write(repo, f"{spec_dir}/spec.md", f"---\nid: SPEC-{spec_dir.rsplit('-', 1)[-1]}\n---\n")
+    boundary = ", ".join(f"`{entry}`" for entry in entries)
+    write(
+        repo, f"{spec_dir}/tasks.md", f"- [ ] **Task 1**: t\n  - **_Boundary**: {boundary}\n  - _Requirements: AC-01_\n"
+    )
+
+
+# SPEC-feedback-guidance-and-scope AC-05, AC-06
+def test_a_declared_feedback_file_of_another_bundle_is_a_file_scope(repo: Path) -> None:
+    write(repo, FEEDBACK_FILE, "---\nid: FB-observation\nstatus: open\n---\n")
+    write(repo, f"{OTHER}/spec.md", "---\nid: SPEC-other\n---\n")
+    planned = f"{OTHER}/feedback/planned.md"
+    _tasks(
+        repo,
+        SPEC,
+        "src/a/",
+        FEEDBACK_FILE,
+        planned,
+        f"{OTHER}/spec.md",
+        f"{OTHER}/feedback/",
+        f"{OTHER}/feedback/*.md",
+        f"{SPEC}/feedback/own.md",
+        "docs/capabilities/x/feedback/x.md",
+    )
+    scope = from_spec(repo, SPEC)
+    assert {(item.path, item.kind, item.source) for item in scope.code} == {
+        ("src/a", Granularity.DIR, Source.DECLARED_CODE),
+        (FEEDBACK_FILE, Granularity.FILE, Source.DECLARED_CODE),
+        (planned, Granularity.UNKNOWN, Source.DECLARED_CODE),
+    }
+    assert {key: value for key, value in _reasons(scope).items() if value != "waived"} == {
+        f"{OTHER}/spec.md": "excluded-tree",
+        f"{OTHER}/feedback/": "excluded-tree",
+        f"{OTHER}/feedback/*.md": "invalid-path",
+        f"{SPEC}/feedback/own.md": "excluded-tree",
+        "docs/capabilities/x/feedback/x.md": "excluded-tree",
+    }
+
+
+def test_a_feedback_path_that_is_a_directory_stays_excluded(repo: Path) -> None:
+    write(repo, f"{OTHER}/feedback/odd.md/inner.md", "x\n")
+    _tasks(repo, SPEC, f"{OTHER}/feedback/odd.md")
+    scope = from_spec(repo, SPEC)
+    assert _reasons(scope)[f"{OTHER}/feedback/odd.md"] == "excluded-tree"
+
+
+# SPEC-feedback-guidance-and-scope AC-07
+def test_feedback_files_do_not_replace_the_entrypoint_candidates(repo: Path) -> None:
+    write(repo, FEEDBACK_FILE, "---\nid: FB-observation\nstatus: open\n---\n")
+    _tasks(repo, SPEC, FEEDBACK_FILE, "N/A")
+    scope = from_spec(repo, SPEC)
+    assert {item.path: item.source for item in scope.code} == {
+        FEEDBACK_FILE: Source.DECLARED_CODE,
+        "src/a": Source.CANDIDATE,
+        "src/shared.py": Source.CANDIDATE,
+    }
+
+
+# SPEC-feedback-guidance-and-scope AC-05
+def test_two_units_resolving_the_same_feedback_overlap(repo: Path) -> None:
+    write(repo, FEEDBACK_FILE, "---\nid: FB-observation\nstatus: open\n---\n")
+    second = "specs/2026-10/20261002-t"
+    _tasks(repo, SPEC, "src/a/", FEEDBACK_FILE)
+    _tasks(repo, second, "src/b/", FEEDBACK_FILE)
+    pair = compare(from_spec(repo, SPEC), from_spec(repo, second))
+    assert [(item.path, item.other, item.granularity) for item in pair.code] == [
+        (FEEDBACK_FILE, FEEDBACK_FILE, Granularity.FILE)
+    ]
+
+
 def test_observe_git(repo: Path) -> None:
     base = git(repo, "rev-parse", "HEAD")
     write(repo, "src/committed.py", "c = 1\n")

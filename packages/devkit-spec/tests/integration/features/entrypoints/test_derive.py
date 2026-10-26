@@ -16,6 +16,7 @@ from devkit_spec.features.entrypoints import (
     derive,
     entrypoint_bearing,
     exclude,
+    feedback_file,
     fold_by_directory_selectors,
     load_bundle,
     normalize,
@@ -131,10 +132,28 @@ def test_a_boundary_ends_at_a_list_item_blank_line_fence_or_shallower_line() -> 
         ("None", "not-a-path"),
         (".", "excluded-tree"),
         ("docs", "excluded-tree"),
+        ("specs/2026-10/20261001-x/feedback/y.md", "excluded-tree"),  # never an entrypoint, only a scope path
     ],
 )
 def test_classify_boundary_skips(raw: str, reason: str) -> None:
     assert classify_boundary(raw) == (None, reason)
+
+
+@pytest.mark.parametrize(
+    ("code", "expected"),
+    [
+        ("specs/2026-10/20261001-x/feedback/y.md", True),
+        ("specs/x/feedback/nested.md", True),
+        ("specs/2026-10/20261001-x/feedback", False),
+        ("specs/2026-10/20261001-x/feedback/y.txt", False),
+        ("specs/2026-10/20261001-x/spec.md", False),
+        ("specs/feedback/y.md", False),
+        ("docs/x/feedback/y.md", False),
+        ("src/specs/x/feedback/y.md", False),
+    ],
+)
+def test_feedback_file(code: str, expected: bool) -> None:
+    assert feedback_file(code) is expected
 
 
 def test_derive_states_folding_and_skips(workspace: Path, write: Write) -> None:
