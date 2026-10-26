@@ -7,8 +7,8 @@ MANAGED_ROOT = f".devkit/managed/_devkit/skills/{NAME}"
 
 BODY = """# Playbook discovery and use
 
-Use this skill when the user explicitly invokes devkit-playbook for the
-current task. The invocation applies to that task only and does not activate
+Use this skill only when the user explicitly invokes devkit-playbook for the
+current task, or confirms a playbook another installed entry skill offered. The invocation applies to that task only and does not activate
 playbook search for future tasks in the conversation. When another installed
 entry skill offers a playbook and the user confirms it, that confirmation is
 the explicit invocation of the named playbook: retrieve it as below.
@@ -61,7 +61,7 @@ For explicitly requested discovery:
 def skill_files(agent: str | None = None) -> dict[str, bytes]:
     frontmatter = (
         "---\nname: devkit-playbook\n"
-        "description: Search and reuse occasional task procedures when the user explicitly invokes devkit-playbook.\n"
+        "description: Search and reuse occasional task procedures only when the user explicitly invokes devkit-playbook or confirms an offered playbook.\n"
     )
     if agent == "claude-code":
         frontmatter += f"{CLAUDE_KEY}: true\n"

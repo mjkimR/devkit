@@ -123,7 +123,8 @@ def test_generated_skill_is_spec_neutral(agent: str | None) -> None:
     body = " ".join(files["SKILL.md"].decode().split())
     for term in (*SPEC_ASSET_TERMS, *REMOVED_PHRASES):
         assert term not in body, term
-    assert "when the user explicitly invokes devkit-playbook for the current task" in body
+    assert "only when the user explicitly invokes devkit-playbook for the current task" in body
+    assert "only when the user explicitly invokes devkit-playbook or confirms an offered playbook" in body
     assert "When another installed entry skill offers a playbook and the user confirms it" in body
     assert "that confirmation is the explicit invocation of the named playbook" in body
     assert "Only in this explicitly requested discovery: if no suitable playbook was found" in body

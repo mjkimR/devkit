@@ -94,7 +94,8 @@ that only an explicit request starts a playbook. `ADR-spec-intake-playbook-disco
 - **Given** the rendered `<skill>` and `<ref>`
 - **When** a test reads the offer and fallback wording
 - **Then** a candidate is named in at most one line together with the classification statement and nothing of it
-  runs before the user confirms; the confirmation is the explicit invocation; no match and the search errors
+  runs before the user confirms; the intake reply ends with the offer and waits for the answer before a Unit, a
+  branch or an edit is created; the confirmation is the explicit invocation; no match and the search errors
   `NOT_SYNCHRONIZED`, `CONFIG_LOCAL_RENDER_STALE`, `ARGUMENT_INVALID`, `SEARCH_EXTRA_MISSING` and a lock timeout
   continue the ordinary path without a question and without running the error's remediation; a selected playbook ID
   is recorded in the `plan-intent` note; the draft offer is absent from intake.
@@ -159,6 +160,11 @@ that only an explicit request starts a playbook. `ADR-spec-intake-playbook-disco
   synchronized, the literal positive control "write a maintenance playbook for spec-code drift reconciliation" ranks
   `drift-reconciliation`, `brownfield-adoption` and `feedback-hygiene` in `hybrid` at `--limit 3` and cuts
   `skill-authoring`; "write a playbook for drift reconciliation" keeps it second in both modes
-  (`materials/manual-run.md`). This refines how the canonical-noun query is written; limit, budget and ranking stay.
+  (`materials/manual-run.md`). Three authoring requests outside the acceptance sample keep `skill-authoring` in the
+  first three in both modes (manual run §4). This refines how the canonical-noun query is written; limit, budget,
+  ranking and the no-refinement rule stay.
+- After an offer the agent waits for the answer before creating a Unit, branch or edit, so a later confirmation
+  never meets work already started on the ordinary path; a false positive costs one declined line in the answer the
+  classification statement asks for anyway.
 - The skip table and selection rule stay in the `spec` skill body, not in the reference, so they hold on every intake
   without an extra read; the reference holds only what runs after a match.

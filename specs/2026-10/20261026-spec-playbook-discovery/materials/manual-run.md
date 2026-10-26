@@ -58,7 +58,7 @@ nothing (a silent miss, never a wrong offer). The step therefore writes the quer
 artifact without subject-only qualifiers ("write a playbook for drift reconciliation"), which keeps
 `skill-authoring` second in both modes. Result: **each positive control produces exactly its named offer, one line**.
 
-## 4. Paraphrase probe and maintenance intents
+## 4. Paraphrase probe, maintenance intents and out-of-sample authoring requests
 
 | Request | Query | hybrid | lexical | Offer |
 | --- | --- | --- | --- | --- |
@@ -68,6 +68,19 @@ artifact without subject-only qualifiers ("write a playbook for drift reconcilia
 | reconcile Living Spec drift with code | "reconcile Living Spec drift with code" | drift-reconciliation, brownfield-adoption, feedback-hygiene | drift-reconciliation, brownfield-adoption, feedback-hygiene | `drift-reconciliation` |
 | write a weekly repository progress report | "write a weekly repository progress report" | weekly-report, skill-authoring, feedback-hygiene | weekly-report, skill-authoring, brownfield-adoption | `weekly-report` |
 | refactor the sync module | "refactor the sync module" | weekly-report, adr-compaction, brownfield-adoption | adr-compaction, brownfield-adoption, feedback-hygiene | none: no description names refactoring a module, and a repository-wide procedure exceeds the scope |
+
+Operation-first rule outside the acceptance sample (finding 3 of `review-01`):
+
+| Request | Query | hybrid | lexical | Offer |
+| --- | --- | --- | --- | --- |
+| write a release playbook for changelog checks | "write a release playbook for changelog checks" | skill-authoring, brownfield-adoption, weekly-report | skill-authoring, drift-reconciliation, brownfield-adoption | `skill-authoring` (the other candidates are topic) |
+| write a release playbook for changelog checks | "write a playbook for changelog checks" | skill-authoring, drift-reconciliation, feedback-hygiene | skill-authoring, drift-reconciliation, brownfield-adoption | `skill-authoring` (the other candidates are topic) |
+| create a weekly maintenance report playbook for repository health | "create a weekly maintenance report playbook for repository health" | weekly-report, brownfield-adoption, skill-authoring | weekly-report, skill-authoring, drift-reconciliation | `skill-authoring` (the other candidates are topic) |
+| create a weekly maintenance report playbook for repository health | "create a playbook for repository health reports" | weekly-report, brownfield-adoption, skill-authoring | skill-authoring, weekly-report, drift-reconciliation | `skill-authoring` (the other candidates are topic) |
+| write a skill for ADR review | "write a skill for ADR review" | skill-authoring, drift-reconciliation, adr-compaction | drift-reconciliation, skill-authoring, adr-compaction | `skill-authoring` (the other candidates are topic) |
+
+Each keeps `skill-authoring` in the first three in both query forms and both modes, so the rule is not only tuned
+on P04; the skill's example is this sample's first row, not an acceptance control.
 
 ## 5. Skip and no-skip scenarios
 
@@ -94,12 +107,13 @@ artifact without subject-only qualifiers ("write a playbook for drift reconcilia
 | --- | --- |
 | Offers on the 16 ordinary intents | 0 of 16 (title and operation-first queries, `hybrid` and `lexical`) |
 | Positive controls with exactly the named offer | 4 of 4 (operation-first query for the playbook-authoring control) |
+| Out-of-sample authoring requests with the `skill-authoring` offer | 3 of 3 (literal and operation-first) |
 | Offer lines per intake | at most 1 in every row |
 | Skip and conversation-stop rows that searched | 0 of 11 |
 | Declined-candidate row | searched once, offered nothing |
 | No-skip rows that searched once | 2 of 2 |
-| Search output bytes at `--limit 3` | 572 to 1873 (budget 4096; never truncated) |
-| Search time | 0.12 to 0.27 s per call |
+| Search output bytes at `--limit 3` | 572 to 1877 (budget 4096; never truncated) |
+| Search time | 0.12 to 0.28 s per call |
 | Search errors | 0 |
 
 Without the selection rule 16 of 16 ordinary intents would surface a candidate; with it none does.

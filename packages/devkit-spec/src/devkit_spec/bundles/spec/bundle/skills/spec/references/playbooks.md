@@ -7,7 +7,8 @@ skill.
 ## 1. Offer and confirmation
 
 - Name the candidate as `<bundle>/<playbook>` with what it does, in one line next to the classification statement:
-  "Playbook `spec/adr-compaction` consolidates ADRs; confirm to use it, or I continue as ordinary work."
+  "Playbook `spec/adr-compaction` consolidates ADRs; confirm to use it, or decline to continue as ordinary work."
+  End the reply there and wait for the answer before creating a Unit, a branch or an edit.
 - Nothing of the playbook runs before the user confirms: no file move, deletion, status update or other step. The
   confirmation is the playbook's explicit invocation, so a prerequisite that reads "the user invoked or confirmed it"
   holds. A confirmation grants what an explicit invocation grants, no more: workflow gates, permissions and user

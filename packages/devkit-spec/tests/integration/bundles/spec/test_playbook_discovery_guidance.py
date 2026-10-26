@@ -79,6 +79,8 @@ def test_confirm_first_offer_silent_no_match_and_recorded_selection() -> None:
     step = _intake_step("local")
     reference = text(REFERENCE)
     assert "nothing of it runs before the user confirms, and the confirmation is its explicit invocation" in step
+    assert "wait for the answer before creating a Unit, a branch or an edit" in step
+    assert "wait for the answer before creating a Unit, a branch or an edit" in reference
     assert "No match continues the ordinary path silently, with no question and no draft offer" in step
     for code in ("NOT_SYNCHRONIZED", "CONFIG_LOCAL_RENDER_STALE", "ARGUMENT_INVALID", "SEARCH_EXTRA_MISSING"):
         assert code in step, code
