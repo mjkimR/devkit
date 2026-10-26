@@ -2,7 +2,7 @@
 sources:
   CAP-GOV-evaluation-lifecycle: 09513061ab84de0d59808868b0c34cee64b0e455
   CAP-GOV-rule-authoring: 805b524341f417ee35acab61081ad1f258be963f
-  CAP-GOV-rules-engine: 327e9b8adb448b47d033040a29d744f6119edce6
+  CAP-GOV-rules-engine: 7c7e1207e724f8087577b43b9dfbd3667db948d7
   CAP-GOV-spec-rules: d995eca73f4dea46ac7a5836f25cdfa4bf158b6e
   UC-adopt-in-an-existing-repository: bc34f546639b3305ac410f895f7ab66b72c41a0b
   UC-keep-the-living-spec-consistent: 7ebdf1e2f7ae6581fa9140d1898d755de57b5667
@@ -13,7 +13,7 @@ title: Governance rules
 # Governance rules
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

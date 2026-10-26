@@ -2,11 +2,11 @@
 sources:
   ADR-package-split-and-namespaces: 858722265ff275b83cba162821b28508bf70814b
   CAP-DIST-agent-projections: 86b06a016382213334f269e8b93606e46dfda28c
-  CAP-DIST-content-packages: b58d78c95e23ff83679d28196e6794001414dfde
+  CAP-DIST-content-packages: dcd5bdbf45e7fbe1e26f52118902c300bbf646e6
   CAP-DIST-context-and-playbooks: 34185acd0c3f1a6432909d7718d9b18f52eda6cf
   CAP-DIST-in-repo-bundles: 54b713a2bf73ff8a6684acb70990956e401585c5
   CAP-DIST-manifest-spec: acb611b3fdd8b91fb5b8ce47265deba7f9cea53e
-  CAP-DIST-sync-and-transactions: 3d649f4fe73a83d740680e7b07a40966a90dabf8
+  CAP-DIST-sync-and-transactions: 9a5cce93c63315ce600dec3dbb019a8aab0c4831
   CAP-DIST-workspace-ownership: 23c12ca362aeccf9d70b51b59a23b5e383c1b6b8
   UC-reconcile-living-spec-drift: 972538db7ca3eccccada61d606ed7a176a4effe0
   UC-route-development-intent: 50d6278b292da8b936bc1bd6587bde501f490ee6
@@ -16,7 +16,7 @@ title: Distribution
 # Distribution
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

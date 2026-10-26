@@ -3,15 +3,15 @@ sources:
   ADR-viewer-planning-proposal-overlay: 9846db226f8b490434bf16f96ec8214b3771f855
   ADR-viewer-working-tree: a30f877468912cf550d6214ce4d1e219b2192950
   CAP-COLL-shared-artifacts: d000f00d3b8d672ea0473d3c6f01dafafe3b8f70
-  CAP-GEN-tracked-artifacts: f62da86cdec8fffc20ce2f2d33a6dc78aa340b83
-  CAP-VIEW-repository-viewer: 59cbf66a4a392a1b64fa501726eac9261dba7417
+  CAP-GEN-tracked-artifacts: a934a5865acf8170b874bff2de6ddc36f5c401f4
+  CAP-VIEW-repository-viewer: ebb7d1ff04b45243e31a394f5179e86eac80f12a
 title: Viewer
 ---
 
 # Viewer
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

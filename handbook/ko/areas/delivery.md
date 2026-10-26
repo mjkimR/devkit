@@ -21,13 +21,13 @@ sources:
   UC-review-and-refactor-accumulated-slop: null
   UC-route-development-intent: null
 title: 전달
-translated_from: en/areas/delivery.md@a5a5fc2820ffe640
+translated_from: en/areas/delivery.md@8afc7203af77911d
 ---
 
 # 전달
 
 <!-- handbook:provenance -->
-> 소스 커밋 `3da97383dc87` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `b44f759024a5` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -175,7 +175,7 @@ uv run devkit spec new crash-on-save --workflow sdd-spec-bugfix   # spec.md only
 | --- | --- | --- |
 | `plan-intent` | 작업의 목표, 범위, 검증, 종류와 깊이 | `devkit workflow answer --unit <dir> --request gate:plan-intent --action accept --by user` |
 | `plan-accept` | 제안서의 방향 | `devkit spec proposal accept <slug> --by user` |
-| `proposal-handoff` | 수락된 제안서에서 Development 시작 | Host가 효과를 제시한 뒤 `devkit spec proposal handoff` 실행 |
+| `proposal-handoff` | 수락된 제안서에서 Development 시작 | Host가 효과를 제시한 뒤 `devkit spec proposal handoff <slug> --effort <level>`(또는 `accept --mode accept_and_handoff`) 실행. 어떤 워크플로 단계도 이를 검사하지 않음 |
 | `dev-integration` | 통합 단위 하나(풀 리퀘스트 하나)의 반영 | 이후 `next` 실행에서 `--given dev-integration`, 또는 PR ready 상태 |
 
 Development 안에는 의도적으로 게이트가 없습니다. 합의된 의도 안의 선택은 실행자의 몫이며, 합의된 목표, 범위 또는 계약을

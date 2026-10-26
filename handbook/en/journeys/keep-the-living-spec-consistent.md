@@ -3,7 +3,7 @@ sources:
   CAP-DOCS-document-model: 65a68b9b0c43ddbcd7817e14d278f31c640a221a
   CAP-GATE-commit-gates: 83c1bd822d3330dab5eed84e7b8f13a552e5f638
   CAP-GOV-spec-rules: d995eca73f4dea46ac7a5836f25cdfa4bf158b6e
-  CAP-TRACE-code-entrypoints: 68e132ba3216e38947953ced0e7cb6fa27949a1d
+  CAP-TRACE-code-entrypoints: 3b8cb1476d9102bf09e6ffc6a469c3e00e58da97
   UC-keep-the-living-spec-consistent: 7ebdf1e2f7ae6581fa9140d1898d755de57b5667
 title: Keep the Living Spec consistent
 ---
@@ -11,7 +11,7 @@ title: Keep the Living Spec consistent
 # Keep the Living Spec consistent
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

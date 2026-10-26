@@ -2,9 +2,9 @@
 sources:
   ADR-host-cli-lifecycle-authority: b827428c1717216975fb8b6119b1bc3dc128f8f2
   ADR-local-and-pull-request-integration: 8bfbc80942deeb24ba0d91d151c015528f18794e
-  CAP-DLV-project-policy: e0d624740a93778f903606a73f294d77bf917b8f
-  CAP-INT-mcp-services: 32b1b30902acd480c47f21b73516fd52955705ec
-  CAP-WT-task-worktrees: 1caff7b5526cd3a14e246360ed52ab053c4b8fc2
+  CAP-DLV-project-policy: f429313e6c4fb977e664bbac9072d19e15a1b2da
+  CAP-INT-mcp-services: 41636553f0fe6331719d5d0cfaad2965deda6eb1
+  CAP-WT-task-worktrees: a885013edf5dd548ffad4e9140c4b32b01b16ce2
   UC-drive-development-to-integration: bc214c7d80b401cf5b2ba5027c9144673d104393
 title: Integration
 ---
@@ -12,7 +12,7 @@ title: Integration
 # Integration
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -105,7 +105,8 @@ Exit codes follow the usual agent contract: `0` success, `1` a negative or parti
   `[worktree] pull_request = "required"` refuses the local route.
 
 Neither route changes host tool permissions, filesystem permissions, trust or publication policy. Merge construction
-and route guards are described in `ADR-local-and-pull-request-integration`.
+and route guards are part of the `CAP-INT-mcp-services` contract; `ADR-host-cli-lifecycle-authority` supersedes
+`ADR-local-and-pull-request-integration`.
 
 ## When something goes wrong
 
@@ -143,7 +144,7 @@ directories, see [Collaboration](collaboration.md)). The public API also exports
 `IntegrationRequest`, `IntegrationResult` and the typed errors.
 
 The lifecycle MCP tools of earlier designs (`integration_prepare`, `integration_integrate`, ...) are not registered;
-the MCP runtime remains for shared artifacts and report publication (see [MCP](mcp.md)).
+the MCP runtime remains for shared proposal-review artifacts, which acceptance does not require (see [MCP](mcp.md)).
 
 ## Sources
 

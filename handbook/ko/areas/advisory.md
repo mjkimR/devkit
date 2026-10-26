@@ -3,13 +3,13 @@ sources:
   ARCH-08-1-agent-output: null
   CAP-ADV-agent-advisory-protocol: null
 title: 어드바이저리
-translated_from: en/areas/advisory.md@bf6f81319d7030ba
+translated_from: en/areas/advisory.md@b95845425935fb12
 ---
 
 # 어드바이저리
 
 <!-- handbook:provenance -->
-> 소스 커밋 `3da97383dc87` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `b44f759024a5` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -60,11 +60,11 @@ translated_from: en/areas/advisory.md@bf6f81319d7030ba
 ## 어드바이저리 읽기
 
 ```text
-[ERROR]  (RULES_CONFIG_INVALID) .devkit/config.toml: [rules] phase override for RULE-x must be a string
+[ERROR]  (RULES_CONFIG_INVALID) config rules.phase_overrides.RULE-x: 'linter' is not 'hygiene'; set it to 'hygiene' or remove the entry to keep the rule's default phase
 [ACTION] INPUT_ERROR — Do not retry with identical input. Retrying unchanged will
          fail identically. Correct the flag, argument, or input file before rerunning.
 [TARGET] .devkit/config.toml
-[FIX]    Set [rules.phases] RULE-x = "linter"
+[FIX]    Correct the [rules] table in .devkit/config.toml
 ```
 
 - 헤드라인에는 레벨과 안정적인 `UPPER_SNAKE` 코드가 담깁니다. 메시지가 아니라 코드로 분기하세요.

@@ -6,13 +6,13 @@ sources:
   CAP-WT-task-worktrees: null
   UC-run-parallel-work-safely: null
 title: 병렬 작업 안전하게 실행하기
-translated_from: en/journeys/run-parallel-work-safely.md@b7027e681c2e354f
+translated_from: en/journeys/run-parallel-work-safely.md@b0a22cdb968a4ff9
 ---
 
 # 병렬 작업 안전하게 실행하기
 
 <!-- handbook:provenance -->
-> 소스 커밋 `3da97383dc87` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `b44f759024a5` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -70,6 +70,9 @@ translated_from: en/journeys/run-parallel-work-safely.md@b7027e681c2e354f
 - 각 작업은 자기 번들에 범위를 선언합니다. `target-docs.md` 또는 `reconcile.md`의 대상, `tasks.md`의 `_Boundary`
   항목, 그리고 대상 문서의 `entrypoints`입니다. 진입점(entrypoint)은 문서를 코드 경로로 바꿔 줍니다
   ([`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)).
+  `specs/` 아래의 `_Boundary` 항목은 제외되지만, 다른 스펙 번들의 피드백 파일을 정확히 가리키는 경로
+  (`specs/**/feedback/<name>.md`)는 예외입니다. 이 경로는 코드로 수집되므로, 같은 피드백 파일을 해결하는 두 작업은
+  그 파일에서 겹칩니다.
 - 레지스트리는 Git 공통 디렉터리에 있으므로, 저장소의 모든 워크트리가 별도 설정 없이 이를 공유합니다.
 
 ## 단계별 진행

@@ -4,33 +4,33 @@ sources:
   ARCH-08-1-agent-output: 30466db492161e034b6d5c1e076d0e9f5432f514
   ARCH-08-2-resource-taxonomy: cf90b013cb834ca42d6e0dd21e4fad277763dc89
   ARCH-08-cross-cutting: 3bf334671a435d6d6956b2a8be623aafadd34924
-  CAP-ADV-agent-advisory-protocol: 04087379fd666b5e7fda52a3c77416f78353fa3b
-  CAP-COLL-work-scope-registry: 4a799773044c69fbfec043d932ba53adab0180d9
+  CAP-ADV-agent-advisory-protocol: bc9cd491e33c6cd4db4cdf12f714062d8487d98b
+  CAP-COLL-work-scope-registry: e60ca6b5e8eccf19fac5b506233860376125ae9a
   CAP-DIST-agent-projections: 86b06a016382213334f269e8b93606e46dfda28c
   CAP-DIST-context-and-playbooks: 34185acd0c3f1a6432909d7718d9b18f52eda6cf
   CAP-DIST-manifest-spec: acb611b3fdd8b91fb5b8ce47265deba7f9cea53e
-  CAP-DIST-sync-and-transactions: 3d649f4fe73a83d740680e7b07a40966a90dabf8
+  CAP-DIST-sync-and-transactions: 9a5cce93c63315ce600dec3dbb019a8aab0c4831
   CAP-DIST-workspace-ownership: 23c12ca362aeccf9d70b51b59a23b5e383c1b6b8
-  CAP-DLV-delivery-workflows: 9214b7acf5c49e41a824f1466ef5db167241eb82
+  CAP-DLV-delivery-workflows: e25a0313ce7d7a44041185ec4098d434de0f6357
   CAP-DLV-human-interaction: bbe6a95de1da4aae4da340a8a8f0dfd8e8e6a035
-  CAP-DLV-project-policy: e0d624740a93778f903606a73f294d77bf917b8f
-  CAP-DLV-proposal-incubation: 961cf0d8332f015d97ec2e7f96f4facb52b8ea85
+  CAP-DLV-project-policy: f429313e6c4fb977e664bbac9072d19e15a1b2da
+  CAP-DLV-proposal-incubation: 3248500db261e1f3fc5c96063b6b8445d734ed7e
   CAP-DLV-spec-bundles: 516cc932fee8af93baae90012e8dbe4c9b6f4725
   CAP-DLV-workflow-envelopes: ac166b8217314babc0f4e8ab346a6a9041f85fef
-  CAP-DLV-workflow-orchestration: a1a7494b398d10ab12ad00d89a93f5d4aa0f344c
+  CAP-DLV-workflow-orchestration: ee2cc0dbbb5824610041b822e5cdb58c301d57a4
   CAP-DOCS-document-model: 65a68b9b0c43ddbcd7817e14d278f31c640a221a
   CAP-GATE-commit-gates: 83c1bd822d3330dab5eed84e7b8f13a552e5f638
-  CAP-GOV-rules-engine: 327e9b8adb448b47d033040a29d744f6119edce6
-  CAP-HARN-agent-guidance: a0e4d007cbfba5cfde0f8210e0516150e6ee4496
-  CAP-INT-mcp-services: 32b1b30902acd480c47f21b73516fd52955705ec
-  CAP-WT-task-worktrees: 1caff7b5526cd3a14e246360ed52ab053c4b8fc2
+  CAP-GOV-rules-engine: 7c7e1207e724f8087577b43b9dfbd3667db948d7
+  CAP-HARN-agent-guidance: dbab285c20602e97d78db8768dc21e0a5613b379
+  CAP-INT-mcp-services: 41636553f0fe6331719d5d0cfaad2965deda6eb1
+  CAP-WT-task-worktrees: a885013edf5dd548ffad4e9140c4b32b01b16ce2
 title: Concepts
 ---
 
 # Concepts
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->

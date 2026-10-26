@@ -4,7 +4,7 @@ generated: true
 # Glossary
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated page -->
@@ -53,9 +53,10 @@ The terms of devkit as its documents use them, from the Living Spec glossary.
 
 | Term | Definition | Owner |
 | :--- | :--- | :--- |
+| **Host** | The main agent of the user's local session: it drives Backlog, inline Planning, worktree preparation, worker delegation and local integration, and carries the user's conversational decisions to Host-authorized CLI operations. Excludes delegated workers and subagent roles, and the agent host product (Codex, Claude Code, Antigravity) that `--host` and host hooks name. | `ARCH-04-1-ecosystem-boundaries` |
 | **Commit gate** | Git hook wrapper installed by `devkit gate install` enforcing policy prior to commit. | `CAP-GATE-commit-gates` |
 | **Compact output** | Bounded command execution for AI agents (`devkit run`), capturing full logs to disk while streaming bounded summaries to stdout. | `CAP-CMP-bounded-execution` |
 | **Agent advisory** | Structured error, warning, or notice adhering to the Agent Advisory Protocol (`[ERROR]`, `[WARN]`, `[NOTICE]`) with machine-actionable directives. | `CAP-ADV-agent-advisory-protocol` |
 | **Host hook** | Mechanized execution resource registering an installed service at a native host event (`kind = "hook"`). | `CAP-HOST-lifecycle-observation` |
-| **Integration MCP** | Scoped Model Context Protocol server exposing devkit integration services to coding agents. | `CAP-INT-mcp-services` |
+| **Scoped CLI integration** | The Host-authorized `devkit integration prepare` and `integrate` commands that land committed work through the local or pull-request route after revalidating policy, readiness, source identity and cleanup scope; no MCP tool performs integration. | `CAP-INT-mcp-services` |
 <!-- /handbook:generated -->

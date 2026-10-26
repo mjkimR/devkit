@@ -8,13 +8,13 @@ sources:
   CAP-WT-task-worktrees: null
   UC-run-parallel-work-safely: null
 title: 협업
-translated_from: en/areas/collaboration.md@44abadac005cb5c7
+translated_from: en/areas/collaboration.md@13c3ea83bffe4d1b
 ---
 
 # 협업
 
 <!-- handbook:provenance -->
-> 소스 커밋 `3da97383dc87` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `b44f759024a5` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -73,8 +73,8 @@ translated_from: en/areas/collaboration.md@44abadac005cb5c7
 작업의 범위는 문서가 선언한 것과 Git이 관찰한 것으로 구성됩니다.
 
 - 문서: 제안의 `target-docs.md` 또는 스펙 번들의 `reconcile.md`에 있는 `targets`
-- 코드: `tasks.md`의 `_Boundary` 항목. 번들이 코드를 선언하지 않은 동안에는 대상 capability와 use case의
-  `entrypoints`가 후보로 대신 쓰입니다.
+- 코드: 다른 스펙 번들의 피드백 파일을 정확한 경로로 적은 것을 포함한 `tasks.md`의 `_Boundary` 항목.
+  번들이 코드를 선언하지 않은 동안에는 대상 capability와 use case의 `entrypoints`가 후보로 대신 쓰입니다.
 - 관찰된 코드: 작업의 워크트리가 분기 지점 이후 바꾼 것(커밋, 스테이징, 미스테이징, 미추적)
 
 계획 중인 둘 이상의 작업이 충돌하는지 보려면 그 선언을 비교합니다. 아무것도 쓰지 않으며 레지스트리나 Git도 관여하지
@@ -165,8 +165,6 @@ devkit shared list --kind proposal-review --slug example --format json
 
 선택형 MCP 런타임이 설치되어 있으면 같은 put, get, list 작업이 로컬 MCP 도구 `shared_put`, `shared_get`,
 `shared_list`로 제공됩니다([MCP](mcp.md)와 `CAP-MCP-runtime-registration` 참고). 정리(sweep)는 CLI 작업으로 남습니다.
-이 도구들을 기대한 local-orchestrated 호출자가 도구를 찾지 못하면, 조용히 CLI로 대체하지 않고 연결을 복구해 달라고
-여러분에게 요청합니다.
 
 ### 원격 어댑터 연결하기
 

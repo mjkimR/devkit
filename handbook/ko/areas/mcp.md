@@ -6,13 +6,13 @@ sources:
   CAP-MCP-runtime-registration: null
   UC-drive-development-to-integration: null
 title: MCP
-translated_from: en/areas/mcp.md@c219778a793807d2
+translated_from: en/areas/mcp.md@19690e342d2cced5
 ---
 
 # MCP
 
 <!-- handbook:provenance -->
-> 소스 커밋 `3da97383dc87` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `b44f759024a5` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
@@ -70,7 +70,7 @@ translated_from: en/areas/mcp.md@c219778a793807d2
 | 하려는 일 | 실행 |
 | --- | --- |
 | 어떤 런타임이 쓰일지 확인 | `devkit mcp status --descriptor --format json` |
-| 프로젝트 항목 등록 | `devkit mcp setup [--host codex\|claude]` |
+| 프로젝트 항목 등록 | `devkit mcp setup [--host codex\|claude\|antigravity]` |
 | 원하는 등록, 기록된 등록, 프로젝트 등록 확인 | `devkit mcp status --format json` |
 | devkit 자신의 항목 제거 | `devkit mcp remove` |
 

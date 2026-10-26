@@ -4,7 +4,7 @@ generated: true
 # 용어집
 
 <!-- handbook:provenance -->
-> 소스 커밋 `3da97383dc87` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `b44f759024a5` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated page -->
@@ -53,9 +53,10 @@ devkit 문서가 쓰는 용어이며 Living Spec 용어집에서 생성됩니다
 
 | 용어 | 번역어 | 정의 | 출처 |
 | :--- | :--- | :--- | :--- |
+| **Host** | Host | The main agent of the user's local session: it drives Backlog, inline Planning, worktree preparation, worker delegation and local integration, and carries the user's conversational decisions to Host-authorized CLI operations. Excludes delegated workers and subagent roles, and the agent host product (Codex, Claude Code, Antigravity) that `--host` and host hooks name. | `ARCH-04-1-ecosystem-boundaries` |
 | **Commit gate** | 커밋 게이트 | Git hook wrapper installed by `devkit gate install` enforcing policy prior to commit. | `CAP-GATE-commit-gates` |
 | **Compact output** | 컴팩트 출력 | Bounded command execution for AI agents (`devkit run`), capturing full logs to disk while streaming bounded summaries to stdout. | `CAP-CMP-bounded-execution` |
 | **Agent advisory** | 에이전트 어드바이저리 | Structured error, warning, or notice adhering to the Agent Advisory Protocol (`[ERROR]`, `[WARN]`, `[NOTICE]`) with machine-actionable directives. | `CAP-ADV-agent-advisory-protocol` |
 | **Host hook** | 호스트 훅 | Mechanized execution resource registering an installed service at a native host event (`kind = "hook"`). | `CAP-HOST-lifecycle-observation` |
-| **Integration MCP** | Integration MCP | Scoped Model Context Protocol server exposing devkit integration services to coding agents. | `CAP-INT-mcp-services` |
+| **Scoped CLI integration** | 범위 지정 CLI 통합 | The Host-authorized `devkit integration prepare` and `integrate` commands that land committed work through the local or pull-request route after revalidating policy, readiness, source identity and cleanup scope; no MCP tool performs integration. | `CAP-INT-mcp-services` |
 <!-- /handbook:generated -->

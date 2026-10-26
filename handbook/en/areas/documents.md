@@ -2,7 +2,7 @@
 sources:
   ADR-document-id-aliases: 3e599afa8857afa9256843680e8ed264f56faa6b
   ADR-terminal-statuses-are-historical: 5883cd244a53a90dc71cc9dc9c6520ef7cc97093
-  CAP-DOCS-document-lookup: 57f3e2dc43d8e72732ab3f5073c5c744b97e3f2d
+  CAP-DOCS-document-lookup: d908536d3cc6b3c3676c21f0858e5fd4d416cca6
   CAP-DOCS-document-model: 65a68b9b0c43ddbcd7817e14d278f31c640a221a
   CAP-DOCS-document-search: b1fd38fddef38d5c97d094208acf6b5077e6f3f4
   CAP-DOCS-namespaces: dc29338809464bb54d620053a83f59245fc8cbef
@@ -14,7 +14,7 @@ title: Documents
 # Documents
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `3da97383dc87`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `b44f759024a5`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
