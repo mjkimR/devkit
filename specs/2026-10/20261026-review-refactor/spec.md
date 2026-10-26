@@ -2,7 +2,7 @@
 id: SPEC-review-refactor
 title: Maintenance review and refactoring playbook
 summary: Adds a review-refactor playbook to the maintenance bundle that reviews code, agent guidance and CLI commands for accumulated AI slop and consolidates, reduces and removes it with evidence, preserving agreed behavior or routing contract changes separately.
-status: planned
+status: in-progress
 created: 2026-10-26
 related_capabilities:
   - CAP-DIST-content-packages

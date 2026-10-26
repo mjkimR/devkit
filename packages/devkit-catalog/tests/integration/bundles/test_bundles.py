@@ -85,10 +85,28 @@ def test_response_style_has_one_bounded_guidance_pointer() -> None:
     assert len(pointer) <= 300
 
 
-@pytest.mark.parametrize("preset", ["all", "upkeep", "reporting"])
-def test_maintenance_selection_and_independent_lookup(tmp_path: Path, preset: str) -> None:
+MAINTENANCE_PRESETS = {
+    "all": {"drift-reconciliation", "weekly-report", "review-refactor"},
+    "upkeep": {"drift-reconciliation", "review-refactor"},
+    "reporting": {"weekly-report"},
+    "refactoring": {"review-refactor"},
+}
+REVIEW_REFACTOR = ("SKILL.md", "references/applying.md", "references/criteria.md")
+
+
+def _maintenance_files(name: str) -> set[str]:
+    if name == "review-refactor":
+        return {f"playbooks/review-refactor/{part}" for part in REVIEW_REFACTOR}
+    return {f"playbooks/{name}.md"}
+
+
+@pytest.mark.parametrize("preset", sorted(MAINTENANCE_PRESETS))
+def test_maintenance_selection_and_independent_lookup(
+    tmp_path: Path, preset: str
+) -> None:  # SPEC-review-refactor AC-02
     from devkit_dist.features.distribution.services.installation.config import update_config
     from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
+    from devkit_dist.features.distribution.usecases.playbook_get import GetPlaybook
     from devkit_dist.features.distribution.usecases.playbook_search import SearchPlaybooks
     from devkit_dist.features.distribution.usecases.sync import sync_project
 
@@ -100,16 +118,10 @@ def test_maintenance_selection_and_independent_lookup(tmp_path: Path, preset: st
     update_config(tmp_path, agents=["codex"], presets={"maintenance": [preset]})
     sync_project(tmp_path, installed)
     root = tmp_path / ".devkit/managed/maintenance"
-    from devkit_dist.features.distribution.usecases.playbook_get import GetPlaybook
-
-    selected = {
-        "all": {"drift-reconciliation", "weekly-report"},
-        "upkeep": {"drift-reconciliation"},
-        "reporting": {"weekly-report"},
-    }[preset]
+    selected = MAINTENANCE_PRESETS[preset]
     assert {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()} == {
         "bundle.toml",
-        *(f"playbooks/{name}.md" for name in selected),
+        *(file for name in selected for file in _maintenance_files(name)),
     }
     for name in selected:
         result = SearchPlaybooks().execute(tmp_path, name.replace("-", " "), mode="lexical")
@@ -121,11 +133,50 @@ def test_maintenance_selection_and_independent_lookup(tmp_path: Path, preset: st
     assert not (root / "skills").exists()
 
 
-def test_maintenance_uses_default_all_and_valid_upkeep() -> None:
+def test_maintenance_uses_default_all_and_valid_presets() -> None:  # SPEC-review-refactor AC-01
     bundle = load_bundle(_bundle_root(ENTRY_POINTS["maintenance"]))
     assert bundle.default_preset == "all"
-    assert set(bundle.presets) == {"upkeep", "reporting"}
-    assert {asset.id for asset in bundle.assets} == {"drift-reconciliation", "weekly-report"}
+    assert {name: set(assets) for name, assets in bundle.presets.items()} == {
+        name: assets for name, assets in MAINTENANCE_PRESETS.items() if name != "all"
+    }
+    assert {asset.id for asset in bundle.assets} == MAINTENANCE_PRESETS["all"]
+    asset = next(asset for asset in bundle.assets if asset.id == "review-refactor")
+    assert (asset.kind, asset.sources) == ("playbook", (("common", "playbooks/review-refactor"),))
+
+
+def _review_refactor_root() -> Path:
+    return _bundle_root(ENTRY_POINTS["maintenance"]) / "playbooks/review-refactor"
+
+
+def _collapsed(text: str) -> str:
+    return " ".join(text.split())
+
+
+def test_review_refactor_entry_condition_and_description() -> None:  # SPEC-review-refactor AC-03
+    text = (_review_refactor_root() / "SKILL.md").read_text()
+    header, body = text.split("\n---\n", 1)
+    description = _collapsed(header.split("description:", 1)[1])
+    assert "review and refactoring pass over user-selected code, agent guidance or CLI command roots" in description
+    assert "consolidates duplicated logic and removes unneeded code" in description
+    body = _collapsed(body)
+    assert "Run only when the user invoked or confirmed this playbook" in body
+    assert "`devkit playbook get maintenance/review-refactor`" in body
+    assert "authorize no change" in body
+    assert "an unattended run stops at the decision round with nothing applied" in body
+
+
+def test_review_refactor_is_self_contained_and_within_budget() -> None:  # SPEC-review-refactor AC-04
+    import re
+
+    root = _review_refactor_root()
+    files = {path.relative_to(root).as_posix(): path for path in root.rglob("*.md")}
+    assert set(files) == set(REVIEW_REFACTOR)
+    for name, path in files.items():
+        data = path.read_bytes()
+        assert len(data) <= 12288, name
+        assert not re.search(rb"\b(ADR|CAP|UC|US|ARCH|SPEC|MS|PROP|FB)-[a-z]", data), name
+    linked = set(re.findall(r"`(references/[a-z-]+\.md)`", files["SKILL.md"].read_text()))
+    assert linked == {name for name in files if name.startswith("references/")}
 
 
 def test_cli_tool_deploys_its_guide_and_rules_only_when_selected(tmp_path: Path) -> None:  # SPEC-cli-toolkit AC-12

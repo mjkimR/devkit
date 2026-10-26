@@ -8,18 +8,18 @@ plan: PLAN-review-refactor
 
 ## Phase 1: Playbook and packaging
 
-- [ ] **Task 1.1**: Playbook asset, manifest presets and bundle tests
+- [x] **Task 1.1**: Playbook asset, manifest presets and bundle tests
   - **_Boundary**: `packages/devkit-catalog/src/devkit_catalog/maintenance/`, `packages/devkit-catalog/tests/integration/bundles/`
   - _Requirements: AC-01, AC-02, AC-03, AC-04_
   - **Verification**: `just test devkit-catalog`; `uv run devkit rules check --phase hygiene packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/review-refactor`
-- [ ] **Task 1.2**: Spec-review checklist mapping the agreed design to playbook sections
+- [x] **Task 1.2**: Spec-review checklist mapping the agreed design to playbook sections
   - **_Boundary**: `specs/2026-10/20261026-review-refactor/materials/checklist.md`
   - _Requirements: AC-05_
   - **Verification**: every row names a file and section that exists in the playbook
 
 ## Phase 2: Documentation
 
-- [ ] **Task 2.1**: Capability, use case, content-packages entry, README and install recommendation
+- [x] **Task 2.1**: Capability, use case, content-packages entry, README and install recommendation
   - **_Boundary**: `docs/capabilities/delivery/`, `docs/capabilities/distribution/`, `docs/usecases/governance/`, `packages/devkit-catalog/README.md`, `guides/install/`
   - _Requirements: AC-06_
   - **Verification**: `uv run devkit rules check`
