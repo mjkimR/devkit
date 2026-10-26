@@ -16,7 +16,7 @@ created_at: 2026-10-26
 
 ## 1. Friction / Question (friction, question)
 
-- **Context**: Planning `PROP-ux-documentation`, whose Development follows `SPEC-foundation-documents`, which moves
+- **Context**: Planning `SPEC-ux-documentation`, whose Development follows `SPEC-foundation-documents`, which moves
   the glossary from `docs/glossary.md` to `docs/steering/glossary.md`.
 - **Expectation**: `boundaries.owns` names the paths Development will change, so the carried `_Boundary:` lets a
   worker write the moved glossary.

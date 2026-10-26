@@ -1,15 +1,15 @@
 ---
-id: PADR-ux-step-links-and-coverage
+id: ADR-ux-step-links-and-coverage
 title: Step citations and UX coverage rule
 summary: For tracing use case steps to screens, we cite UX IDs in step prose and name the served step key in each screen interaction, checked by a coverage rule with flow graph checks, to reuse body references and keep both directions checkable, accepting a new use case step parser.
-proposal: PROP-ux-documentation
-status: draft
+proposal: SPEC-ux-documentation
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-ux-step-links-and-coverage] Step citations and UX coverage rule
+# [ADR-ux-step-links-and-coverage] Step citations and UX coverage rule
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---

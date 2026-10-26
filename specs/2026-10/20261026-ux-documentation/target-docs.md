@@ -2,7 +2,7 @@
 id: PROP-ux-documentation-target
 title: Target Living Spec Structure for PROP-ux-documentation
 status: draft
-proposal: PROP-ux-documentation
+proposal: SPEC-ux-documentation
 created_at: 2026-10-26
 # The Living Spec files this proposal changes, one "- file: <workspace-relative path>" each;
 # devkit spec scope compare reads them to find overlaps with other work.
@@ -42,15 +42,15 @@ is where the UX row goes, and the glossary is at `docs/steering/glossary.md` (li
 ## 2. Use Cases Plan (docs/usecases/)
 
 Screens of a proposal are drafted here in the UX template's shape, with the use case step citations they need, before
-Development (`PADR-ux-drafts-before-code`). This proposal drafts none: no use case of this repository changes: devkit's own interface (the viewer) gains UX documents only by a later
+Development (`ADR-ux-drafts-before-code`). This proposal drafts none: no use case of this repository changes: devkit's own interface (the viewer) gains UX documents only by a later
 decision. The `usecase` template and the `usecase-writing` instruction allow a UX ID in a step.
 
 ---
 
 ## 3. Architecture & Decision Impact (docs/architecture/ & docs/decisions/)
 
-- ADRs promoted from `PADR-ux-screen-documents`, `PADR-ux-step-links-and-coverage`, `PADR-ux-review-before-code` and
-  `PADR-ux-drafts-before-code`.
+- ADRs promoted from `ADR-ux-screen-documents`, `ADR-ux-step-links-and-coverage`, `ADR-ux-review-before-code` and
+  `ADR-ux-drafts-before-code`.
 - `docs/architecture/`: only if the building-block view lists document kinds or roles by count; checked at
   Development.
 

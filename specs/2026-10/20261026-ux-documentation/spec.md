@@ -1,49 +1,27 @@
 ---
-id: PROP-ux-documentation
+id: SPEC-ux-documentation
 title: UX documents, authoring guidance and use-case-driven review
-summary: "Adds a UX document kind for screens and interaction flows linked from use case steps to capabilities, with authoring guidance that leaves the wireframe medium to the project and an isolated reviewer that walks use cases through the screens."
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-10-26
-target_area: documents/
-priority: high                        # critical | high | medium | low
-size: L                               # S | M | L | XL
-planning_effort: high                 # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-milestone: MS-ux-documentation
-depends_on: [SPEC-table-driven-document-kinds, SPEC-foundation-documents]
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/features/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/
-    - packages/devkit-spec/tests/
-    - packages/devkit-viewer/src/devkit_viewer/features/browse/
-    - packages/devkit-viewer/frontend/src/lib/
-    - packages/devkit-viewer/src/devkit_viewer/static/
-    - packages/devkit-viewer/tests/
-    - docs/capabilities/documents/
-    - docs/capabilities/governance/
-    - docs/capabilities/delivery/
-    - docs/capabilities/viewer/
-    - docs/usecases/
-    - docs/architecture/
-    - docs/glossary.md
-    - guides/
-    - .devkit/installation.json
-    - AGENTS.md
-  excludes:
-    - Wireframe or mock-up rendering and design tool integrations
-    - Visual styling, theming and design tokens
-    - Engine- or framework-specific UI verification
-    - Usability testing with real users
-    - Workflow engine changes in packages/devkit/ (check primitives, closable envelope kinds)
-    - Use cases or UX documents for devkit's own viewer
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Adds a UX document kind for screens and interaction flows linked from use case steps to capabilities, with authoring guidance that leaves the wireframe medium to the project and an isolated reviewer that walks use cases through the screens.
+status: planned
+created: 2026-10-26
+depends_on:
+  - SPEC-table-driven-document-kinds
+  - SPEC-foundation-documents
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-ux-documentation] UX documents, authoring guidance and use-case-driven review
+# [SPEC-ux-documentation] UX documents, authoring guidance and use-case-driven review
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-ux-documentation on 2026-10-26.
+- **Preserved Materials**: `docs/materials/2026-10/20261026-ux-documentation`
+- Target Docs Blueprint: `PROP-ux-documentation-target` (Living Spec targets for this plan and reconcile.md)
+
+### 1. Background & Hypothesis
 
 Use cases describe what an actor intends at each step and stay free of interface detail (`usecase-writing`
 instruction); capabilities own the behavior contracts. Nothing in the Living Spec describes what a person sees and
@@ -60,7 +38,26 @@ lets the spec rules check coverage mechanically and lets an isolated reviewer ru
 case through its screens. Authoring guidance asks for contrasting candidates and leaves the wireframe medium to the
 project, so the text contract stays devkit-owned and checkable.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement UX documents, authoring guidance and use-case-driven review so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 Options and their evidence are in `MAT-ux-documentation-practice` (sections 1-5) and `MAT-ux-object-modeling`
 (options 6a-7b).
@@ -83,18 +80,18 @@ Options and their evidence are in `MAT-ux-documentation-practice` (sections 1-5)
 - **Q6 (decomposition)**: Can the kind with its checks, the authoring guidance and the review be delivered and verified
   as one spec, or should Planning return this draft for decomposition into separate proposals?
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 The design as the user decided it (§5, `answer-01`); `target-docs.md` is the blueprint.
 
-- **Kind** (`PADR-ux-screen-documents`): one kind `ux`, prefix `UX`, at `docs/ux/<area>/UX-<slug>.md` and per
+- **Kind** (`ADR-ux-screen-documents`): one kind `ux`, prefix `UX`, at `docs/ux/<area>/UX-<slug>.md` and per
   namespace `docs/packages/<name>/ux/<area>/`, added as one row of the kind definition table of
   `SPEC-table-driven-document-kinds` (accepted; in Development as SPEC-table-driven-document-kinds), with a template, `docs-skeleton` seed, browsing, search and a viewer book
   group. Each document is one interface element (`element: screen | modal | panel`) with Purpose, Content (prose
   region rules and a content tree), States, Interactions (`Trigger | Step | From | To | Target | Capability |
   Feedback`) and an optional Evidence section for the project's own wireframe medium. The use case carries the task
   flow; there is no flow document. Statuses `draft`, `active`, `deprecated` (no terminal status).
-- **Links and checks** (`PADR-ux-step-links-and-coverage`): a use case step cites its screen's UX ID in prose; a UX
+- **Links and checks** (`ADR-ux-step-links-and-coverage`): a use case step cites its screen's UX ID in prose; a UX
   document lists `usecases` and `capabilities`, and each interaction's Step cell names the served step
   (`` `UC-<slug>` 2a ``). An error rule reports contradictions (invalid element, unknown or non-citing step keys,
   link disagreement, unknown targets, missing exits and modal close, unreachable screens); a warning rule reports
@@ -105,11 +102,11 @@ The design as the user decided it (§5, `answer-01`); `target-docs.md` is the bl
   representations and calls to action in the steering file `docs/steering/ux-objects.md`, which ux-writing creates
   with the project's first UX document (not seeded), visual style left to
   the project's steering style files (cited, never restated), and the medium left to the project.
-- **Review** (`PADR-ux-review-before-code`): an isolated, read-only `ux-reviewer` subagent with a `spec-ux-review`
+- **Review** (`ADR-ux-review-before-code`): an isolated, read-only `ux-reviewer` subagent with a `spec-ux-review`
   skill: a cognitive walkthrough of each linked use case plus a six-item 0/1/2 rubric with evidence, the link-rule
   items hand-checked on the drafts and labelled as the reviewer's judgment, no severity, `ux-review-NN` envelopes, at
   most two rounds and a closing envelope, run as an optional delegation before code (`CAP-DLV-delivery-workflows`).
-- **Timing** (`PADR-ux-drafts-before-code`): screens and the step citations they need are drafted before code in
+- **Timing** (`ADR-ux-drafts-before-code`): screens and the step citations they need are drafted before code in
   `target-docs.md` or a Screens section of `spec.md`, with IDs the change creates in plain text; on a handed-off
   bundle `spec-specify` carries the `target-docs.md` drafts into `spec.md`; `spec-sync` writes `docs/ux/` and the use
   case changes, and the link rules check them at `living-spec-draft`. The review runs on the drafts (in Planning, or
@@ -118,7 +115,7 @@ The design as the user decided it (§5, `answer-01`); `target-docs.md` is the bl
   verification, usability testing with real users, severity ranking of findings by the reviewer, a stage switched on
   by content, and workflow engine changes.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 - Acceptance requires the user's answers folded into the PADRs (done) and both prerequisites accepted (reported by
   the Host; this branch still shows them as drafts). Remaining before the `plan-accept` request: merge `main`;
@@ -136,7 +133,7 @@ The design as the user decided it (§5, `answer-01`); `target-docs.md` is the bl
 - On rejection: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
   the rejection ADR and deletes the proposal.
 
-## 5. Planning Findings
+### 5. Planning Findings
 
 Evidence: `MAT-ux-documentation-planning-spike` (spike over devkit's code and contracts, from `scout-01` to
 `scout-03`), `MAT-ux-documentation-practice` and `MAT-ux-object-modeling` (the user's research); `challenger-01`
@@ -166,7 +163,7 @@ to `challenger-03` are folded below.
   that do not exist yet; screens are drafted before code and the Living Spec follows at sync (decided:
   `ux-document-timing`).
 
-### Dependencies and order
+#### Dependencies and order
 
 The user decided that UX Development follows both prerequisites (`depends_on`).
 
@@ -195,11 +192,11 @@ The user decided that UX Development follows both prerequisites (`depends_on`).
 - All three changes own `packages/devkit-spec/src/devkit_spec/features/`, the `spec` bundle and
   `docs/capabilities/documents/`; UX Development starts after both, so it rebases once.
 
-### Planning decisions
+#### Planning decisions
 
 - The PADR "UX documents written at specify" is withdrawn: written alone, UX documents in `docs/` link use case steps and
-  IDs that `spec-sync` writes only later (`challenger-01` finding 1). `PADR-ux-drafts-before-code` replaces it, and
-  the contract slice remains a follow-up of `PADR-ux-drafts-before-code` (`ux-document-timing` decided: drafts before
+  IDs that `spec-sync` writes only later (`challenger-01` finding 1). `ADR-ux-drafts-before-code` replaces it, and
+  the contract slice remains a follow-up of `ADR-ux-drafts-before-code` (`ux-document-timing` decided: drafts before
   code).
 - `dev_effort` is `medium`: the change creates a document kind and spans packages, and has no irreversible effect or
   external consumer (`effort` reference); the Host may raise it at handoff.
@@ -214,3 +211,4 @@ The user decided that UX Development follows both prerequisites (`depends_on`).
   records the same viewer defect (`challenger-03` finding 6).
 - `challenger-04` finding 2 (a seeded register burdens projects without an interface) was settled by the user in
   `ux-objects`: `docs/steering/ux-objects.md` is created with the project's first UX document, never seeded.
+

@@ -7,8 +7,8 @@ created_at: 2026-10-26
 
 # [MAT-ux-documentation-planning-spike] Planning spike for UX documents, links, checks and review
 
-Evidence for the Planning of `PROP-ux-documentation`, gathered on the head of `main` at `96df5d86` by three `scout`
-runs (`envelopes/scout-01.yaml` kind machinery, `scout-02.yaml` links and glossary, `scout-03.yaml` review and
+Evidence for the Planning of `SPEC-ux-documentation`, gathered on the head of `main` at `96df5d86` by three `scout`
+runs (historical Git `026155794cf657d4a9bda1089123b63dfe01f33c:docs/proposals/PROP-ux-documentation/envelopes/scout-01.yaml` kind machinery, `scout-02.yaml` links and glossary, `scout-03.yaml` review and
 workflows). External evidence stays in `MAT-ux-documentation-practice` and `MAT-ux-object-modeling`; this material
 adds only what devkit's own code and contracts decide. Paths are relative to
 `packages/devkit-spec/src/devkit_spec/` unless they start with a package or `docs/`.

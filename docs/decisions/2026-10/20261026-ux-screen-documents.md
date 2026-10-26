@@ -1,15 +1,15 @@
 ---
-id: PADR-ux-screen-documents
+id: ADR-ux-screen-documents
 title: One UX kind of screen documents
 summary: For specifying what a person sees and operates, we add one UX kind whose documents each describe a screen, modal or panel by purpose, content tree, states and interactions, and let use cases carry the flow, to keep one prefix and a text contract, accepting no separate flow document.
-proposal: PROP-ux-documentation
-status: draft
+proposal: SPEC-ux-documentation
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-ux-screen-documents] One UX kind of screen documents
+# [ADR-ux-screen-documents] One UX kind of screen documents
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---
@@ -48,7 +48,7 @@ Decided by the user (`ux-document-set` and `ux-objects`):
   new entry). It is registered as a row of the kind definition table of `SPEC-table-driven-document-kinds` (accepted).
   Visual style is not restated in UX documents; a screen refers to the project's steering style files.
 - Frontmatter `element` is `screen`, `modal` or `panel`, a small value inside one schema that only the UX link rule
-  (`RULE-ux-links` of `PADR-ux-step-links-and-coverage`) reads and validates; relation fields `usecases` (UC IDs) and `capabilities` (CAP IDs).
+  (`RULE-ux-links` of `ADR-ux-step-links-and-coverage`) reads and validates; relation fields `usecases` (UC IDs) and `capabilities` (CAP IDs).
 - Sections: Purpose, Content (prose region rules and a content tree with conditions next to its nodes; no
   character-cell layouts), States, Interactions (`Trigger | Step | From | To | Target | Capability | Feedback`) and an
   optional Evidence section naming the project's own wireframe, mock-up or screenshot.
@@ -77,4 +77,4 @@ Decided by the user (`ux-document-set` and `ux-objects`):
 ## 6. Confirmation
 
 `RULE-id-convention` for the location, `RULE-document-reference` for the field kinds, `RULE-ux-links` of
-`PADR-ux-step-links-and-coverage` for `element` and the Interactions table shape, and the template's skeleton check.
+`ADR-ux-step-links-and-coverage` for `element` and the Interactions table shape, and the template's skeleton check.

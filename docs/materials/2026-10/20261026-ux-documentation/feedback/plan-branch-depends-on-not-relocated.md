@@ -16,7 +16,7 @@ created_at: 2026-10-26
 
 ## 1. Friction / Question (friction, question)
 
-- **Context**: Planning `PROP-ux-documentation` added `SPEC-foundation-documents` to its `depends_on` on its own
+- **Context**: Planning `SPEC-ux-documentation` added `SPEC-foundation-documents` to its `depends_on` on its own
   Planning branch while that prerequisite was still in Planning.
 - **Expectation**: When the prerequisite is handed off, the dependent's edge follows the PROP-to-SPEC relocation.
 - **Actual**: Handoff rewrites incoming references on the branch it runs on; an edge that exists only on another

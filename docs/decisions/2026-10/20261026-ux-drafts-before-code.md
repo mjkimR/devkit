@@ -1,15 +1,15 @@
 ---
-id: PADR-ux-drafts-before-code
+id: ADR-ux-drafts-before-code
 title: UX drafts reviewed before code
 summary: For giving implementation a reviewed screen contract, we draft screens and their use case step citations in target-docs.md or spec.md before code and write docs/ux/ at spec-sync, to keep current-state timing, accepting that the coverage rule first checks them at living-spec-draft.
-proposal: PROP-ux-documentation
-status: draft
+proposal: SPEC-ux-documentation
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-ux-drafts-before-code] UX drafts reviewed before code
+# [ADR-ux-drafts-before-code] UX drafts reviewed before code
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---

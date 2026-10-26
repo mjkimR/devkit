@@ -1,15 +1,15 @@
 ---
-id: PADR-ux-review-before-code
+id: ADR-ux-review-before-code
 title: Isolated UX walkthrough review before code
 summary: For reviewing screens independently of their author, we add a read-only ux-reviewer that walks each linked use case through the screens and scores a 0/1/2 rubric with evidence under its own envelope kind before code, to counter lenient self-review, accepting an optional delegation without severity.
-proposal: PROP-ux-documentation
-status: draft
+proposal: SPEC-ux-documentation
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-ux-review-before-code] Isolated UX walkthrough review before code
+# [ADR-ux-review-before-code] Isolated UX walkthrough review before code
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---
@@ -53,7 +53,7 @@ Decided by the user (`review-method` and `review-placement`):
   terms** (labels use the use case's and glossary's terms); **R6 objects** (representations and calls to action match
   the existing steering object register plus the drafted register rows for the role; recorded as not applicable only
   when neither the file nor drafted rows exist).
-- Before code the screens are drafts the rules do not read (`PADR-ux-drafts-before-code`), so the reviewer checks
+- Before code the screens are drafts the rules do not read (`ADR-ux-drafts-before-code`), so the reviewer checks
   the link-rule items (link agreement, uncovered steps, targets, exits, reachability, modal close) on the drafts by
   hand, labels them as its own judgment and keeps them out of the rubric; the rules confirm them at
   `living-spec-draft`. Rule results are inputs only for screens already in `docs/ux/` that the drafts link and leave
