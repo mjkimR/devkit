@@ -1,0 +1,15 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T09:13:56.228709Z'
+status: completed
+summary: 'Development from specify through final-change-report: triage and decomposer roles, XL size gate, support-role snapshot (FB-support-role-diff-check-on-dirty-tree resolved), Living Spec reconciled, review-01 closed by reverify-01, reconcile-check-01 folded and self-verified in reconcile-check-02; ready for the Host''s integration.'
+findings: []
+checks:
+  tests: PASS test-affected 1816 passed; e2e 57; test-dist 1076; smoke
+  lint: PASS lint-check, pyright 0, rules --ci 0
+diff_scope:
+  base: ''
+  head: 3ba5e378b911feab02607e236d0e45a5c18e62a2
+activity_effort: medium
