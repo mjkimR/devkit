@@ -105,7 +105,7 @@ option.
   that the old path is no longer read: the `RULE-document-reference` Owner check, search `GLOSSARY_PATH` and
   `SPEC_GLOSSARY_INVALID` (`base/errors.py`), the `docs-skeleton` seed and its README tables, `living-spec-writing`,
   `architecture-writing`, `spec-sync`, `adr-compaction`, the brownfield `migration.md`, rule guides, viewer
-  `bookGroup` (the group becomes `Steering`, front end and committed build), `docs/README.md`,
+  `bookGroup` (see Viewer), `docs/README.md`,
   `docs/architecture/README.md` and the capabilities naming the path (`CAP-DOCS-document-model`,
   `CAP-DOCS-document-search`, `CAP-GOV-spec-rules`, `CAP-HARN-agent-guidance`, `CAP-DLV-release-handbook`,
   `CAP-DLV-delivery-workflows`). Package glossaries stay at `docs/packages/<name>/glossary.md`, read together with
@@ -114,6 +114,12 @@ option.
 - **Release handbook**: `scripts/handbook.py` reads the glossary at the pinned commit from `docs/steering/`, falls
   back to `docs/glossary.md` for a commit before the move, and fails with a code when neither exists; its tests cover
   both layouts. The handbook pages are not refreshed.
+- **Viewer** (`policy`, Host addition): `bookGroup` in `packages/devkit-viewer/frontend/src/lib/api/documents.ts`
+  replaces its literal `docs/glossary.md` with one `Steering` book group for every file under `docs/steering/`, in
+  place of the `Glossary` group in `bookGroups`; a front-end test next to it asserts that `docs/steering/glossary.md`
+  and another steering file land in `Steering` and that `docs/glossary.md` is no longer special. The committed build
+  under `packages/devkit-viewer/src/devkit_viewer/static/` is rebuilt (`just viewer build`). This proposal owns the
+  fix because `PROP-table-driven-document-kinds` excludes the viewer.
 - **Search** (`user`): unchanged. Steering files are not search candidates; glossary synonym expansion reads the
   moved `glossary.yaml`.
 - Non-goals: no new ID-bearing kind, no relation fields to or from steering documents, no change to the glossary
@@ -122,8 +128,8 @@ option.
 ### Order with parallel proposals
 
 - `PROP-table-driven-document-kinds` lands first (`depends_on`). Steering is not a kind and adds no row; where this
-  proposal touches the viewer grouping or the rules, it builds on the table's definitions instead of adding constants
-  beside them.
+  proposal touches the rules, it builds on the table's definitions instead of adding constants beside them. That
+  proposal excludes the viewer, so the viewer grouping is this proposal's alone.
 - `PROP-ux-documentation` (open: q6): recommended to follow this proposal, so its guidance names the glossary at
   `docs/steering/glossary.md` and points to steering style documents instead of restating them; its option 6b (an
   object table in the glossary) would change the glossary table format, which this proposal excludes.
