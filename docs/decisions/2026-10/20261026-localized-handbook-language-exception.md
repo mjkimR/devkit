@@ -1,15 +1,15 @@
 ---
-id: PADR-localized-handbook-language-exception
+id: ADR-localized-handbook-language-exception
 title: Localized handbook exception to English-only documentation
 summary: For a handbook people read in their own language, we allow non-English text only under handbook/<lang>/ for languages other than en, starting with ko, to keep every other document English, accepting translations that must track the English pages.
-proposal: PROP-release-handbook
-status: draft
+proposal: SPEC-release-handbook
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-localized-handbook-language-exception] Localized handbook exception to English-only documentation
+# [ADR-localized-handbook-language-exception] Localized handbook exception to English-only documentation
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---
