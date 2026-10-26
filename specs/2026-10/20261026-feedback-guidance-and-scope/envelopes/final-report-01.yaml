@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T02:25:36.654389Z'
+status: completed
+summary: 'Eight decided feedback items resolved: worker scratch files left to worktree removal; materials merge conflict raises SPEC_PROPOSAL_TARGET_EXISTS as INTERACTION (existing targets stay BLOCKED); declared feedback files of other spec bundles enter the scope as declared-code; README, MCP guide, host reference, glossary, ARCH-04-1, CAP-WT, CAP-DIST and CAP-TRACE aligned; handoff mode defect deferred to FB-handoff-refusals-emit-maintenance'
+findings: []
+assumptions:
+- Only the _refuse_merge refusal changes mode; the in-proposal carried-file clash and outside-workspace refusals stay BLOCKED
+- 'Item 4: NotReady/ReplyInvalid MAINTENANCE is a defect, so the 4.12 rows keep BLOCKED/INPUT_ERROR and FB-handoff-refusals-emit-maintenance carries the code change'
+checks:
+  tests: PASS just test-affected partial 1515 passed
+  build: PASS just check devkit-spec 0 errors; just lint-check devkit-spec; devkit sync --check
+  lint: PASS devkit rules check --ci --base f35e2b8e
+diff_scope:
+  base: f35e2b8ef1c3c82bea8c6b93655cc847981768ca
+  head: 7a0d945023c0fd96744603c6348a4a9154c0b869
