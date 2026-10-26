@@ -1,15 +1,15 @@
 ---
-id: PADR-merge-proposal-materials-per-leaf-at-handoff
+id: ADR-merge-proposal-materials-per-leaf-at-handoff
 title: Merge proposal materials per leaf at handoff
 summary: For a handoff whose dated materials directory already exists, we merge proposal materials per leaf after a full lstat-based preflight and refuse any differing file, type or symbolic-link collision, to keep pre-existing files intact, accepting an undetected same-path write window.
-proposal: PROP-merge-proposal-materials-at-handoff
-status: draft
+proposal: SPEC-merge-proposal-materials-at-handoff
+status: accepted
 created_at: 2026-10-26
 ---
 
-# [PADR-merge-proposal-materials-per-leaf-at-handoff] Merge proposal materials per leaf at handoff
+# [ADR-merge-proposal-materials-per-leaf-at-handoff] Merge proposal materials per leaf at handoff
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-26
 
 ---

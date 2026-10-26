@@ -1,31 +1,22 @@
 ---
-id: PROP-merge-proposal-materials-at-handoff
+id: SPEC-merge-proposal-materials-at-handoff
 title: Merge existing proposal materials during handoff
-summary: "Allows proposal handoff to merge materials per leaf into an existing destination after a complete lstat-based collision preflight, preserving existing files and refusing conflicting content or symbolic links."
-status: accepted                       # draft | reviewing | accepted | rejected
-created_at: 2026-10-22
-target_area: delivery/
-priority: medium
-size: M                               # S | M | L | XL
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: medium                    # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/features/proposals/
-    - packages/devkit-spec/src/devkit_spec/features/delivery/
-    - packages/devkit-spec/src/devkit_spec/base/
-    - packages/devkit-spec/tests/
-    - docs/capabilities/delivery/
-    - docs/capabilities/governance/
-  excludes:
-    - docs/decisions/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+summary: Allows proposal handoff to merge materials per leaf into an existing destination after a complete lstat-based collision preflight, preserving existing files and refusing conflicting content or symbolic links.
+status: planned
+created: 2026-10-26
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-merge-proposal-materials-at-handoff] Merge existing proposal materials during handoff
+# [SPEC-merge-proposal-materials-at-handoff] Merge existing proposal materials during handoff
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-merge-proposal-materials-at-handoff on 2026-10-26.
+
+### 1. Background & Hypothesis
 
 The Development handoff of PROP-persistent-python-facts-cache created its worktree but refused to graduate the
 proposal with `SPEC_PROPOSAL_TARGET_EXISTS`. Pre-existing measurements already occupied the destination directory
@@ -36,7 +27,26 @@ Hypothesis: a recursive material merge plan can preserve the overwrite guard whi
 whose files do not conflict with proposal materials. The immediate recovery moves the measurements into the proposal
 before handoff; this draft tracks the tool improvement separately.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Merge existing proposal materials during handoff so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 - **Q1**: How should the merge plan represent directories, distinct files and byte-identical duplicate files while
   preserving target containment, non-symlink paths and existing document/ADR collision checks?
@@ -45,7 +55,7 @@ before handoff; this draft tracks the tool improvement separately.
 - **Q3**: How should failure recovery preserve already-existing files without promising filesystem transactions
   for unrelated runtime I/O failures? Confirm the behavior in CLI and native handoff paths.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 - Extend material-destination preflight and relocation in the proposal handoff use case, shared by CLI and MCP.
 - Permit existing directories and merge disjoint relative file paths recursively.
@@ -102,9 +112,10 @@ Scope excluded: overwrite flags, automatic content conflict resolution, no-clobb
 target changes, searching same-slug material directories of other dates, cross-filesystem transaction infrastructure,
 changes to the facts-cache feature, and relaxation of ADR/ID or snapshot/receipt collision protections.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 Acceptance requires an explicit merge/collision policy,
 recovery behavior that never removes or moves a pre-existing path, a documented residual window for same-path
 writes during the handoff, and verifiable refusal criteria. Development completes when both handoff transports
 use the same guarded merge plan and the success/refusal tests and Living Spec reflection pass.
+
