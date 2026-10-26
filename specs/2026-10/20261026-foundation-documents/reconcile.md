@@ -75,6 +75,12 @@ targets:
   forms `foundation document` and `background document`, because the single words would expand every query about the
   `devkit-core` foundation layer.
 
+- No change: `CAP-VIEW-repository-viewer` specifies `docs/` grouped by chapter without naming the chapters, so the
+  viewer's `Steering` group in place of `Glossary` (AC-15) needs no contract text.
+- `reconcile-check-01` findings: `CAP-DIST-manifest-spec` and `ARCH-08-2-resource-taxonomy` now state the
+  `context_documents` exception to "seeded files are never catalogued"; `CAP-GOV-spec-rules` section 3.3 limits
+  "outside its scope" to the Owner check.
+
 ## Entrypoints
 
 `CAP-DIST-context-and-playbooks` gains `usecases/context.py` and `services/bundles/context_documents.py`, the code

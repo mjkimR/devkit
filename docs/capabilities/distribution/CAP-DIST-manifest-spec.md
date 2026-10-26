@@ -67,7 +67,8 @@ standards are in the `ARCH-08-2-resource-taxonomy`.
   `seeded = true` and a `target`, a **seeded** asset: written once to the workspace-relative `target` (a directory
   source to `target/<relative path>`, executable bits preserved) when that path does not exist, then project-owned;
   this is how a bundle scaffolds a docs tree, a glossary or a policy file. Seeded files are never catalogued by
-  `get-context`, playbook search or projections. Runtime behavior:
+  playbook search or projections, nor as receipt-verified context files; a bundle's declared `context_documents`
+  directory may still list the project files in it, seeded ones included (`CAP-DIST-context-and-playbooks`). Runtime behavior:
   `CAP-DIST-workspace-ownership`.
 - `guidance`: a fragment of the root `AGENTS.md` guidance block, for a pointer every agent session must see (for
   example "read the commit conventions before writing a commit message"). The source is one Markdown file of list

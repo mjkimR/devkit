@@ -103,7 +103,7 @@ IDs in the Owner column MUST resolve to exactly one indexed document. Missing an
 at their source line; an Owner naming an alias is reported (not fixed) with the canonical ID. Empty cells and non-reference text are allowed. The header fixes the Owner column;
 rows may omit trailing cells or have surplus cells without moving that column. This extension only validates resolution:
 no autofix, mandatory owners, glossary indexing or graph edges. Other columns, surrounding prose, legacy tables,
-package glossaries and other ID-free files are outside its scope. Existing prose masking, file targeting,
+package glossaries and other ID-free files are outside the Owner check. Existing prose masking, file targeting,
 exclusions and snapshot cache rules apply.
 
 The steering files (the Markdown files directly in `docs/steering/` other than `README.md`, the glossary included)

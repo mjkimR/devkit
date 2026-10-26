@@ -117,7 +117,7 @@ The **bundle context** is the whole `get-context <bundle>` response: the constit
 
 #### 6. `package-document`
 - **Role**: Plain files with no engine semantics. Unseeded, a document is reference material (a template, a glossary, a schema) that agents and tools read by path. With `seeded = true` and a workspace `target`, it is project scaffolding (a documentation tree, a policy file the project will edit): `devkit sync` writes it once, when the target is absent, and never touches it again. Scaffolding is not a resource kind of its own, and seeded files are the only bundle output the project owns from the first sync on; everything else stays devkit-owned and hash-guarded (see `CAP-DIST-workspace-ownership`).
-- **Consumption**: Read by path when another asset or instruction points to it; never catalogued by `get-context`, playbook search or projections.
+- **Consumption**: Read by path when another asset or instruction points to it; never catalogued by playbook search or projections, nor by `get-context` as a bundle file. A bundle's declared `context_documents` directory is listed by `get-context` from the workspace, so a seeded file inside it appears there as a project file.
 - **Target Location**: `.devkit/managed/<bundle>/<source path>` (unseeded) or the declared `target` (seeded).
 
 #### Instruction and playbook consumption boundaries
