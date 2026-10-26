@@ -10,6 +10,7 @@
 		ids,
 		rendered,
 		view = '',
+		sourceLabel = undefined,
 		onOpen,
 		onLocation,
 		onJump,
@@ -23,6 +24,8 @@
 		ids: Map<string, RepositoryDocument>;
 		rendered: Map<string, RenderedDocument>;
 		view?: string;
+		/** The Planning source of an overlaid proposal's bundle. */
+		sourceLabel?: string;
 		onOpen: (path: string) => void;
 		onLocation: (path: string, anchor: string, meta: Record<string, any>) => void;
 		onJump: (path: string, headingId: string) => void;
@@ -42,7 +45,10 @@
 
 <div class="bundle-header">
 	<h1>{selected.title}</h1>
-	<p>{selected.meta.id} · {selected.meta.status ?? 'unknown'}</p>
+	<p>
+		{selected.meta.id} · {selected.meta.status ?? 'unknown'}{#if sourceLabel}
+			· <span class="source-badge" title="Planning source">{sourceLabel}</span>{/if}
+	</p>
 	{#if taskChecks.total}
 		<p>
 			Task checks: {taskChecks.checked}/{taskChecks.total} — see records for verification and integration
@@ -117,6 +123,10 @@
 	button:focus-visible {
 		outline: 2px solid var(--tree-selected-text);
 		outline-offset: 2px;
+	}
+
+	.source-badge {
+		font-family: ui-monospace, SFMono-Regular, monospace;
 	}
 
 	.detail-toc button {

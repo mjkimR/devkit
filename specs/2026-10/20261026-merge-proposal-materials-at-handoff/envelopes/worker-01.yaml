@@ -1,0 +1,16 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T23:39:43.826803Z'
+status: completed
+summary: 'Development from specify through the final change report: spec/plan/tasks written; per-leaf materials merge, guarded moves, link origins and result fields implemented with tests; code review (3 P3: 2 fixed, 1 waived) and reconcile check (PASS) recorded; CAP-DLV-proposal-incubation reconciled; FB-merge-conflict-guardrail-action recorded. Integration not run (Host).'
+findings: []
+checks:
+  tests: PASS just test-affected 1464 passed (mode=partial)
+  build: PASS just check devkit-spec 0 errors
+  lint: PASS just lint devkit-spec; just rules-check
+diff_scope:
+  base: ''
+  head: 30e15ebebb05514f5dd53f18a771fc3b866dfc8d
+activity_effort: medium

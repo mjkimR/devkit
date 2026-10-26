@@ -69,3 +69,13 @@ def path_not_found(path: str, kind: str) -> ReadError:
 
 def path_invalid(path: str) -> ReadError:
     return ReadError(400, "VIEWER_PATH_INVALID", f"{path!r} is not a repository-relative path")
+
+
+def source_unknown(source: str) -> ReadError:
+    return ReadError(404, "VIEWER_SOURCE_UNKNOWN", f"no Planning source {source!r} in this repository")
+
+
+def source_path_refused(path: str, source: str) -> ReadError:
+    return ReadError(
+        400, "VIEWER_SOURCE_PATH_REFUSED", f"{path!r} is outside the proposal directory of the source {source!r}"
+    )

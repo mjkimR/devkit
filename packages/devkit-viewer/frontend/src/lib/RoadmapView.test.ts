@@ -43,6 +43,7 @@ function source(withRefs: boolean, reads: string[]): RepositoryDataSource {
 			if (content === undefined) throw new Error('HTTP 404');
 			return { path, content, encoding: 'utf-8' };
 		},
+		planningProposals: vi.fn(async () => ({ sources: [], items: [], errors: [] })),
 		...(withRefs
 			? {
 					refs: vi.fn(async () => ({
@@ -65,6 +66,7 @@ describe('RoadmapView', () => {
 		await screen.findByText('Stale copy');
 		expect(new Set(reads)).toEqual(new Set(['plan-x']));
 		expect(repository.refs).not.toHaveBeenCalled();
+		expect(repository.planningProposals).not.toHaveBeenCalled();
 		expect(screen.queryByText('Done on main')).toBeNull();
 		expect(screen.getByText('In planning')).toBeTruthy();
 		await fireEvent.click(screen.getByRole('button', { name: 'In planning' }));

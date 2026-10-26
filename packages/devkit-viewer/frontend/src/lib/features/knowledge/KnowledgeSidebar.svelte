@@ -16,6 +16,7 @@
 		includeCompleted = $bindable(false),
 		book = [],
 		entries = [],
+		sources = {},
 		selected = null,
 		currentAnchor = '',
 		rendered,
@@ -35,6 +36,8 @@
 		includeCompleted?: boolean;
 		book?: RepositoryDocument[];
 		entries?: RepositoryDocument[];
+		/** Planning source label by overlaid proposal path. */
+		sources?: Record<string, string>;
 		selected?: RepositoryDocument | null;
 		currentAnchor?: string;
 		rendered: Map<string, RenderedDocument>;
@@ -131,6 +134,9 @@
 			>
 				<strong>{doc.title}</strong>
 				<span>{doc.meta.id}</span>
+				{#if sources[doc.path]}
+					<span class="source" title="Planning source">{sources[doc.path]}</span>
+				{/if}
 				<span>
 					{[
 						doc.meta.status,
@@ -269,5 +275,10 @@
 	.count {
 		font-size: 12px;
 		color: var(--text-muted);
+	}
+
+	.entry .source {
+		font-family: ui-monospace, SFMono-Regular, monospace;
+		color: var(--text-secondary);
 	}
 </style>

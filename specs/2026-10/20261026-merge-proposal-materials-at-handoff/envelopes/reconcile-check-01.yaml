@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T23:38:15.913400Z'
+status: completed
+summary: 'reconcile-reviewer PASS, no findings: CAP-DLV-proposal-incubation rules 4-5, 4.5 step 5, 4.7, 4.10 and the error table match handoff.py, the CLI and ADR-merge-proposal-materials-per-leaf-at-handoff; no-impact claims for the use case, governance and architecture confirmed'
+findings: []
+checks:
+  rules: PASS devkit rules check --ci --base 25137beb
+  contract: PASS contract vs code and ADR
+diff_scope:
+  base: 25137beb115391de2be93be93a21a2d38c145ba5
+  head: 7240771f8c9da48624239dbcc3f4d064e758ca8c

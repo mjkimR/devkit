@@ -15,8 +15,10 @@ path it would create), then:
    Moves ``materials/`` to ``docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug>/`` when it holds a file other than
    operating-system junk (``JUNK_FILES``), together with every other file of the bundle that steps 1 to 3 do not
    carry (``notes.md``, a non-PADR file in ``decisions/``; junk aside), at its path relative to the bundle. Symbolic
-   links are moved as links, never followed. The proposal unit's devkit workflow records (decision records and
-   envelopes, as devkit's loaders find them) are not carried: they are dropped with the proposal;
+   links are moved as links, never followed. When that directory already exists, the materials are merged into it
+   per leaf (``_plan_materials``): every conflict is refused before the first write and no pre-existing path is ever
+   moved, written or removed. The proposal unit's devkit workflow records (decision records and envelopes, as
+   devkit's loaders find them) are not carried: they are dropped with the proposal;
 5. rewrites links and ID references that pointed into the proposal (``rewrite``);
 6. removes the proposal;
 7. carries the proposal's ``gate:plan-intent`` and ``gate:plan-accept`` records to the spec under the same names
@@ -37,13 +39,15 @@ blueprint.
 
 from __future__ import annotations
 
+import filecmp
 import os
 import re
 import shutil
+import stat
 from dataclasses import dataclass, field, replace
 from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Any, NoReturn
 
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow import (
@@ -150,6 +154,18 @@ RETURN_PREFIX = "return:"
 # Files an operating system leaves behind; never carried, they are deleted with the proposal.
 JUNK_FILES = frozenset({".DS_Store", "Thumbs.db", "desktop.ini"})
 
+# The collision kinds of a materials merge (``_plan_materials``), named in the refusal's fix.
+DIFFERENT_CONTENT = "different-content"
+FILE_DIRECTORY = "file-directory"
+SYMBOLIC_LINK = "symbolic-link"
+NON_REGULAR = "non-regular"
+_RECONCILE = {
+    DIFFERENT_CONTENT: "make the two files identical, or rename or move the proposal's copy",
+    FILE_DIRECTORY: "rename or move the proposal's path",
+    SYMBOLIC_LINK: "replace the symbolic link with a regular file or directory, or rename or move the proposal's path",
+    NON_REGULAR: "replace the non-regular file with a regular file, or rename or move the proposal's path",
+}
+
 _PADR = re.compile(r"\bPADR-[a-z0-9]+(?:-[a-z0-9]+)*")
 # A frontmatter ``status: draft`` (or ``proposed``, plain or quoted); a trailing comment ("#" after whitespace) stays.
 _DRAFT_STATUS = re.compile(
@@ -190,7 +206,8 @@ class HandoffResult:
     ``workflow`` is the workflow ``spec.md`` is bound to (``None``: unbound), ``dev_effort`` the proposal's
     non-authoritative Development effort hint (``None`` when the proposal omitted it; never written to ``spec.md``),
     ``rewritten_files`` the files whose links or references changed, ``unresolved`` what pointed into the proposal and
-    could not be mapped.
+    could not be mapped. ``materials_merged`` says whether the materials went into a ``materials`` directory that
+    already existed, ``dropped_duplicates`` the files kept there whose byte-identical proposal copy was dropped.
     ``dropped_records`` are the proposal unit's workflow records removed with it, ``carried_gates`` the proposal's own
     approvals recorded in the spec under their names. ``notices`` are the warnings and notices the caller reports
     with the result.
@@ -203,6 +220,8 @@ class HandoffResult:
     dev_effort: str | None = None
     target_docs: str | None = None
     materials: str | None = None
+    materials_merged: bool = False
+    dropped_duplicates: list[str] = field(default_factory=list)
     decisions: list[PromotedDecision] = field(default_factory=list)
     dropped_records: list[str] = field(default_factory=list)
     carried_gates: list[CarriedGate] = field(default_factory=list)
@@ -224,6 +243,8 @@ class HandoffResult:
             "dev_effort": self.dev_effort,
             "target_docs": self.target_docs,
             "materials": self.materials,
+            "materials_merged": self.materials_merged,
+            "dropped_duplicates": self.dropped_duplicates,
             "decisions": [decision.to_dict() for decision in self.decisions],
             "dropped_records": self.dropped_records,
             "carried_gates": [gate.to_dict() for gate in self.carried_gates],
@@ -243,6 +264,32 @@ class _Decision:
     adr_id: str
     text: str
     aliases: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class _Conflict:
+    """A proposal path that cannot be merged onto ``destination``, and why (one of ``_RECONCILE``)."""
+
+    source: Path
+    destination: Path
+    kind: str
+
+
+@dataclass
+class _MaterialsPlan:
+    """How ``materials/`` and the carried extras reach the materials directory.
+
+    ``moves`` are the ``materials/`` paths moved, ``(source, destination)``: ``materials/`` itself when the directory
+    is new, else each absent subtree (``subtrees``, the destinations moved as directories) and each absent leaf.
+    ``extras`` are the carried files moved, ``duplicates`` the ``(source, destination)`` pairs of byte-identical
+    regular files left at the destination, the proposal copy dropped. Every destination was absent in preflight.
+    """
+
+    merged: bool = False
+    moves: list[tuple[Path, Path]] = field(default_factory=list)
+    subtrees: set[Path] = field(default_factory=set)
+    extras: list[tuple[Path, Path]] = field(default_factory=list)
+    duplicates: list[tuple[Path, Path]] = field(default_factory=list)
 
 
 def _read(path: Path, root: Path) -> str:
@@ -348,7 +395,8 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
         )
         if move_materials or extras:
             materials_target = preserved
-            targets.append(materials_target)
+            if not os.path.lexists(preserved):
+                targets.append(materials_target)  # an existing one is merged into (_plan_materials)
     spec_aliases = tuple(f"SPEC-{alias.removeprefix('PROP-')}" for alias in source.aliases)
     legacy = [alias for alias in spec_aliases if is_legacy_id(alias)]
     if legacy:
@@ -359,6 +407,12 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
             " handoff",
         )
     _check_targets(root, index, targets, decisions, [f"SPEC-{slug}", *spec_aliases])
+    # Merge conflicts first: a symbolic link inside an existing materials directory is a conflict, not a path outside.
+    materials = (
+        _plan_materials(root, materials_dir, materials_target, move_materials, extras)
+        if materials_target is not None
+        else _MaterialsPlan()
+    )
     for destination in [*targets, *(destination for _, destination in extras + feedback)]:
         _require_inside(root, destination)
 
@@ -413,10 +467,11 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
             written.append(decision.target)
             decision.target.write_text(decision.text, encoding="utf-8")
             promoted[str(decision.padr)] = str(decision.target)
-        if materials_target is not None and move_materials:
-            make_dirs(materials_target.parent, written)
-            move_path(materials_dir, materials_target, written, moved, leftovers)
-        for source, destination in feedback + extras:
+        # Every destination was absent in preflight: no pre-existing path enters written or moved.
+        for source, destination in materials.moves:
+            make_dirs(destination.parent, written)
+            move_path(source, destination, written, moved, leftovers)
+        for source, destination in feedback + materials.extras:
             _require_inside(root, destination)  # the moved materials/ may hold a symbolic link
             make_dirs(destination.parent, written)
             move_path(source, destination, written, moved, leftovers)
@@ -445,10 +500,17 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
         plan.moved_files.update({str(d.target): str(d.padr) for d in decisions})
         if materials_target is not None and move_materials:
             plan.prefixes[str(materials_dir)] = str(materials_target)
-            plan.moved[str(materials_target)] = str(materials_dir)
-        for source, destination in feedback + extras:
+        # Moved files resolve their links from where they were written; a pre-existing file from where it is.
+        for source, destination in materials.moves:
+            if destination in materials.subtrees:
+                plan.moved[str(destination)] = str(source)
+            else:
+                plan.material_files[str(destination)] = str(source)
+        for source, destination in feedback + materials.extras:
             plan.exact[str(source)] = str(destination)
             plan.moved_files[str(destination)] = str(source)
+        for source, destination in materials.duplicates:
+            plan.exact.setdefault(str(source), str(destination))  # links to a dropped copy reach the kept one
     else:
         plan.exact[str(single)] = str(target_dir / SPEC_FILE)
     index = DocumentIndex.load(root)
@@ -474,6 +536,8 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
         root, slug, target_dir, binding, unbound, target_docs_text, materials_target, decisions, report, notices
     )
     result.dev_effort = dev_effort
+    result.materials_merged = materials.merged
+    result.dropped_duplicates = sorted(path.relative_to(root).as_posix() for _, path in materials.duplicates)
     result.dropped_records = [path.relative_to(root).as_posix() for path in records]
     result.carried_gates = carried
     return result
@@ -795,6 +859,158 @@ def _plan_extras(
             fix="Rename or move the path in [TARGET] (or its counterpart in materials/), then rerun the handoff",
         )
     return extras
+
+
+def _lstat(path: Path) -> os.stat_result | None:
+    """``path``'s own status (a symbolic link is not followed), ``None`` when nothing is there."""
+    try:
+        return path.lstat()
+    except (FileNotFoundError, NotADirectoryError):
+        return None
+
+
+def _collision(root: Path, source: Path, destination: Path, here: os.stat_result, there: os.stat_result) -> str | None:
+    """The collision kind of ``source`` (status ``here``) against the existing ``destination`` (``there``), both
+    taken by ``lstat``; ``None`` for regular files with identical bytes. A symbolic link on either side always
+    collides, equal link text included; links are never followed."""
+    if stat.S_ISLNK(here.st_mode) or stat.S_ISLNK(there.st_mode):
+        return SYMBOLIC_LINK
+    kinds = (
+        stat.S_ISREG(here.st_mode),
+        stat.S_ISDIR(here.st_mode),
+        stat.S_ISREG(there.st_mode),
+        stat.S_ISDIR(there.st_mode),
+    )
+    if not (kinds[0] or kinds[1]) or not (kinds[2] or kinds[3]):
+        return NON_REGULAR
+    if kinds[1] or kinds[3]:
+        return FILE_DIRECTORY  # both directories are descended into by the caller
+    try:
+        same = filecmp.cmp(source, destination, shallow=False)
+    except OSError as exc:
+        rels = [source.relative_to(root).as_posix(), destination.relative_to(root).as_posix()]
+        raise ProposalInvalidError(
+            f"{rels[0]} and {rels[1]} cannot be compared: {exc}",
+            target_files=rels,
+            fix="Make both files in [TARGET] readable, then rerun the handoff",
+        ) from exc
+    return None if same else DIFFERENT_CONTENT
+
+
+def _plan_materials(
+    root: Path, materials_dir: Path, preserved: Path, move_materials: bool, extras: list[tuple[Path, Path]]
+) -> _MaterialsPlan:
+    """The moves into the materials directory ``preserved``: today's whole move when it does not exist, else a per-leaf
+    merge into it.
+
+    The merge descends into every real directory present on both sides, moves each absent path that holds material
+    (a subtree whole), drops non-symlink ``JUNK_FILES`` of the proposal, ignores the destination's other files and
+    keeps a byte-identical regular file at the destination (a duplicate). ``preserved`` and every existing directory
+    on the way to a planned path must be real directories by ``lstat``. Raises ``ProposalTargetExistsError`` listing
+    every conflict before anything is written; a file written at a planned path after this check may be replaced
+    (no concurrent-change guarantee, ``ADR-merge-proposal-materials-per-leaf-at-handoff``).
+    """
+    there = _lstat(preserved)
+    if there is None:
+        moves = [(materials_dir, preserved)] if move_materials else []
+        return _MaterialsPlan(moves=moves, subtrees={preserved} if moves else set(), extras=list(extras))
+    _require_inside(root, preserved)
+    plan = _MaterialsPlan(merged=True)
+    conflicts: list[_Conflict] = []
+    origin = materials_dir if move_materials else extras[0][0]  # the proposal path that needs the directory
+    if stat.S_ISLNK(there.st_mode):
+        _refuse_merge(root, preserved, [_Conflict(origin, preserved, SYMBOLIC_LINK)])
+    if not stat.S_ISDIR(there.st_mode):
+        kind = FILE_DIRECTORY if stat.S_ISREG(there.st_mode) else NON_REGULAR
+        _refuse_merge(root, preserved, [_Conflict(origin, preserved, kind)])
+
+    def merge(source_dir: Path, destination_dir: Path) -> None:
+        for source in sorted(source_dir.iterdir()):
+            destination = destination_dir / source.name
+            here = source.lstat()
+            if source.name in JUNK_FILES and not stat.S_ISLNK(here.st_mode) and not stat.S_ISDIR(here.st_mode):
+                continue
+            existing = _lstat(destination)
+            if existing is None:
+                if stat.S_ISDIR(here.st_mode):
+                    if not _has_material(source):
+                        continue  # junk and empty directories are deleted with the proposal
+                    plan.subtrees.add(destination)
+                plan.moves.append((source, destination))
+            elif stat.S_ISDIR(here.st_mode) and stat.S_ISDIR(existing.st_mode):
+                merge(source, destination)
+            elif (kind := _collision(root, source, destination, here, existing)) is None:
+                plan.duplicates.append((source, destination))
+            else:
+                conflicts.append(_Conflict(source, destination, kind))
+
+    if move_materials:
+        here = materials_dir.lstat()
+        if stat.S_ISLNK(here.st_mode):
+            conflicts.append(_Conflict(materials_dir, preserved, SYMBOLIC_LINK))
+        else:
+            merge(materials_dir, preserved)
+    for source, destination in extras:
+        conflict = _merge_extra(root, source, destination, preserved, plan)
+        if conflict is not None:
+            conflicts.append(conflict)
+    if conflicts:
+        _refuse_merge(root, preserved, conflicts)
+    return plan
+
+
+def _merge_extra(
+    root: Path, source: Path, destination: Path, preserved: Path, plan: _MaterialsPlan
+) -> _Conflict | None:
+    """Plan the carried file ``source`` into the existing ``preserved``: a move, a duplicate, or the conflict."""
+    for parent in reversed(destination.relative_to(preserved).parents[:-1]):
+        on_the_way = _lstat(preserved / parent)
+        if on_the_way is None:
+            break  # created by make_dirs, or by a subtree moved whole before the extras
+        if stat.S_ISLNK(on_the_way.st_mode):
+            return _Conflict(source, preserved / parent, SYMBOLIC_LINK)
+        if not stat.S_ISDIR(on_the_way.st_mode):
+            kind = FILE_DIRECTORY if stat.S_ISREG(on_the_way.st_mode) else NON_REGULAR
+            return _Conflict(source, preserved / parent, kind)
+    else:
+        existing = _lstat(destination)
+        if existing is not None:
+            kind = _collision(root, source, destination, source.lstat(), existing)
+            if kind is not None:
+                return _Conflict(source, destination, kind)
+            plan.duplicates.append((source, destination))
+            return None
+    plan.extras.append((source, destination))
+    return None
+
+
+def _refuse_merge(root: Path, preserved: Path, conflicts: list[_Conflict]) -> NoReturn:
+    """Raise the merge refusal: every conflict in the message and details, the first (in destination order) named in
+    the fix with its kind's reconciliation; the materials directory is never to be removed."""
+
+    def rel(path: Path) -> str:
+        return path.relative_to(root).as_posix()
+
+    ordered = sorted(conflicts, key=lambda item: (rel(item.destination), rel(item.source)))
+    lines = [f"{rel(item.source)} -> {rel(item.destination)}: {item.kind}" for item in ordered]
+    first = ordered[0]
+    others = "; reconcile each other conflict in [DETAIL] the same way" if len(ordered) > 1 else ""
+    fix = (
+        f"Reconcile {rel(first.source)} with the existing {rel(first.destination)} ({first.kind}):"
+        f" {_RECONCILE[first.kind]}, keeping {rel(preserved)} and its other files{others}, then rerun the handoff"
+    )
+    if first.destination == preserved:
+        # The dated path holds no materials directory: only renaming it aside, its content kept, lets the handoff run.
+        fix = (
+            f"Rename {rel(preserved)} aside ({first.kind}: it is not a real directory), keeping its content, or"
+            " replace it with a real directory holding that content, then rerun the handoff"
+        )
+    raise ProposalTargetExistsError(
+        f"the handoff cannot merge the proposal's materials into {rel(preserved)}: {len(ordered)} conflict(s)",
+        *lines,
+        target_files=list(dict.fromkeys(rel(item.destination) for item in ordered)),
+        fix=fix,
+    )
 
 
 def _require_inside(root: Path, destination: Path) -> None:

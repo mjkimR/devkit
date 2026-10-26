@@ -1,0 +1,16 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T23:53:59.311109Z'
+status: completed
+summary: 'Implementer re-verified after reconcile-check-01: both P3 gaps fixed in a264a447 (CAP §4.2 Overlay cache defines caching on an empty errors list and states the uncached seed; CAP §2.1 Source scope documents the line-break VIEWER_PATH_INVALID refusal, now tested). All six targets reflected; reconcile.md resolved.'
+findings: []
+assumptions:
+- Self-verification of two documentation-only P3 fixes at medium effort; the reconcile-reviewer's verification of the other targets on f83c9f3b stands
+checks:
+  tests: PASS test_planning.py 19 passed
+  lint: PASS devkit rules check docs/capabilities/viewer and the unit
+diff_scope:
+  base: 4dc99db3bffbe6bb0c38b8fc63bdf37a786c3269
+  head: a264a44791184aa935819bbbde0631acb0af5ccc

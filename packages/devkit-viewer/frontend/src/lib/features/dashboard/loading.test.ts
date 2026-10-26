@@ -8,6 +8,7 @@ import {
 import { indexDocuments, scanDocuments } from '../../api/documents';
 import { cachedResult, cacheGeneration, cacheResult, clearRepositoryCache } from '../../api/cache';
 import type { RepositoryDataSource } from '../../api/repository';
+import { loadPlanningOverlay } from '../../api/planning';
 const signal = () => new AbortController().signal;
 function fixture(files: Record<string, string>): RepositoryDataSource {
 	return {
@@ -302,5 +303,59 @@ describe('page worker ordering', () => {
 		});
 		await openDashboardPage(source, 'main', 'proposals', controller.signal);
 		expect(cachedDashboardPage(source, 'main', 'proposals')).toBeUndefined();
+	});
+});
+
+describe('Planning overlay seed', () => {
+	it('orders a rebuilt proposal list with the last applied overlay and skips seeded bodies', async () => {
+		const entries = ['a', 'b', 'c'].map((slug) => ({
+			path: `docs/proposals/PROP-${slug}/proposal.md`,
+			encoding: 'utf-8',
+			content: `---\nid: PROP-${slug}\nstatus: draft\n---\n`
+		}));
+		const planned = (slug: string, status: string) => ({
+			source: `branch:plan-${slug}`,
+			path: `docs/proposals/PROP-${slug}/proposal.md`,
+			encoding: 'utf-8',
+			content: `---\nid: PROP-${slug}\ntitle: planned ${slug}\nstatus: ${status}\n---\n`
+		});
+		const source: RepositoryDataSource = {
+			info: async () => ({}),
+			tree: async () => [],
+			dashboardList: vi.fn(async () => ({ items: entries, errors: [] })),
+			blob: vi.fn(async (path) => entries.find((e) => e.path === path)!),
+			planningProposals: vi.fn(async () => ({
+				sources: ['c', 'n'].map((slug) => ({
+					id: `branch:plan-${slug}`,
+					kind: 'branch' as const,
+					label: `plan-${slug}`,
+					slug
+				})),
+				items: [planned('c', 'review'), planned('n', 'draft')],
+				errors: []
+			}))
+		};
+		const first = await openDashboardPage(source, 'main', 'proposals', signal());
+		expect(first.paths.map((p) => p.split('/')[2])).toEqual(['PROP-a', 'PROP-b', 'PROP-c']);
+		expect(first.overlay).toBeUndefined();
+		await loadPlanningOverlay(source, 'main', signal());
+		clearRepositoryCache(source);
+		const rebuilt = await openDashboardPage(source, 'main', 'proposals', signal());
+		expect(rebuilt.paths.map((p) => p.split('/')[2])).toEqual([
+			'PROP-c',
+			'PROP-a',
+			'PROP-b',
+			'PROP-n'
+		]);
+		expect(rebuilt.documents.find((d) => d.path.includes('PROP-c'))!.title).toBe('planned c');
+		expect(vi.mocked(source.blob).mock.calls.map((c) => c[0].split('/')[2])).toEqual([
+			'PROP-a',
+			'PROP-b',
+			'PROP-c',
+			'PROP-a',
+			'PROP-b'
+		]);
+		const milestones = await openDashboardPage(source, 'main', 'milestones', signal());
+		expect(milestones.overlay).toBeUndefined();
 	});
 });

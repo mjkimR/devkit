@@ -2,7 +2,8 @@
 # Build the release assets for a version tag:
 #   release.sh vX.Y.Z
 # Checks that the tag is vX.Y.Z and matches VERSION and every workspace
-# package and versioned internal dependency, builds a wheel of every
+# package and versioned internal dependency, checks the handbook when this
+# release refreshed it, builds a wheel of every
 # workspace package into dist/release/, writes SHA256SUMS there and the release
 # notes (install commands for this tag) to dist/release-notes.md. The
 # devkit-embed model wheel is copied from the committed wheel in models/devkit-embed/wheels/.
@@ -22,6 +23,9 @@ if [ "${tag#v}" != "$version" ]; then
     exit 1
 fi
 uv lock --check
+# A release the handbook was refreshed for (handbook/manifest.json names this tag) must match its docs/ and pass
+# verification; every other release skips the handbook (CAP-DLV-release-handbook).
+uv run --no-active python scripts/handbook.py release-check "$tag"
 
 out=dist/release
 rm -rf "$out"
