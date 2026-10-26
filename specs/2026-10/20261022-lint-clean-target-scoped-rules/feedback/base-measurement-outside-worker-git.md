@@ -8,7 +8,7 @@ target: spec skill references/planning.md (acceptance outcomes), development-wor
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-22
 ---
 
@@ -45,3 +45,12 @@ created_at: 2026-10-22
 development-worker.md: "Git: commit only; never push, merge, rebase, reset, amend, stash or check out."
 review-01.yaml finding 3: "AC-10's baseline was measured on the head with scope_rules patched, not on the integration base 3015be11."
 ```
+
+## Disposition
+
+Resolved by `SPEC-delegation-sandbox-guidance`: the `spec` skill's `references/planning.md` step 5 has Planning name a
+baseline a development worker can produce for a before/after outcome (the head with the change disabled, or a
+Planning measurement on the same machine recorded in `materials/`), or state that the Host takes the base
+measurement. The `development-worker` contract measures against the named baseline, never checks out the base, and
+reports a missing base measurement for the Host in its `worker` envelope. Verified by
+`packages/devkit-spec/tests/integration/bundles/spec/test_delegation_sandbox_guidance.py`.
