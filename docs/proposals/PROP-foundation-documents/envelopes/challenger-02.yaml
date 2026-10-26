@@ -1,0 +1,63 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T06:27:13.666228Z'
+status: completed
+summary: 'Round 2 on the steering realization: three roles never load get-context; path safety, output shape and the seeded-context contract are unspecified; cap values were never asked and the glossary outgrows a tight cap; rule scope undefined. 6 P2, 2 P3.'
+findings:
+- issue: scout, challenger and reconcile-reviewer read .devkit/managed/spec/AGENTS.md instead of running get-context, so they never see the steering list
+  evidence: bundle/subagents/scout.md:32, challenger.md:34, reconcile-reviewer.md:34; code-reviewer.md:33; development-worker.md.jinja and planning-worker.md.jinja; PADR-background-pointer-in-constitution sections 1, 2, 6
+  failure_condition: A reviewer or scout judges wording or naming without knowing a steering file exists
+  suggested_action: Have those roles run get-context spec; name docs/steering/ in the constitution line; test that every role contract loads the spec context
+  resolution: open
+  severity: P2
+- issue: Path grammar of the declared directory and get-context read rules (symlinks, non-regular entries, encoding, size, manifest source) are unspecified; checked_path would fail every context load
+  evidence: services/installation/workspace.py:78-83; usecases/context.py:36-63; CAP-DIST-workspace-ownership 7; CAP-DIST-manifest-spec section 4; PADR-bundle-context-lists-project-documents driver 3
+  failure_condition: A symlinked steering file fails every get-context, or an absolute symlink leaks an outside file's frontmatter; a huge file is read whole on every load
+  suggested_action: Seeded target grammar for the field; declaration from the receipt-verified managed bundle.toml; list only regular non-symlink *.md directly in a non-symlinked directory; read a bounded header prefix; null for invalid values; one test per case
+  resolution: open
+  severity: P2
+- issue: Listing the seeded glossary as bundle context contradicts CAP-DIST-workspace-ownership ('Seeded files are not bundle context')
+  evidence: CAP-DIST-workspace-ownership.md:119-120; spec bundle.toml docs-skeleton
+  failure_condition: Two capabilities disagree after handoff
+  suggested_action: Amend CAP-DIST-workspace-ownership and add it as an acceptance item
+  resolution: open
+  severity: P2
+- issue: Cap values were never asked and the glossary will outgrow a fit-the-glossary cap under the commit gate
+  evidence: 'proposal.md Bounds (open: q7) with no q7 recorded; glossary 4385 to 7808 bytes between 2026-10-19 and 2026-10-26; CAP-GATE rules-check refuses error-severity violations; single-path Owner check'
+  failure_condition: A coming glossary edit is refused at commit with no decided way through
+  suggested_action: 'Decision needed: cap values with headroom, body defined as text after frontmatter, and what happens when the glossary reaches the cap'
+  resolution: open
+  severity: P2
+- issue: RULE-steering-documents leaves the commit-time count check, allowed non-Markdown files, its summary length setting and README.md undefined
+  evidence: CAP-GATE rules-check evaluates changed files; governance/services/documents.py:72-76; document_summary.py:22-25, 69-71
+  failure_condition: A commit adding the eleventh file passes the gate; style assets are reported or ignored arbitrarily
+  suggested_action: Report overflow on every file beyond the cap in sorted order; allow *.md plus glossary.yaml; own max_summary_length default 300; state README.md handling; tests per case including a staged commit
+  resolution: open
+  severity: P2
+- issue: The get-context budget claim has no mechanical check; test_bundle_budgets.py covers only skills and playbooks
+  evidence: test_bundle_budgets.py:1,17,39; PADR-background-pointer-in-constitution sections 2 and 6; steering-design.md D2
+  failure_condition: An unbounded documents list enters every context and no test fails
+  suggested_action: Correct the Confirmation and test the get-context output size at the caps
+  resolution: open
+  severity: P2
+- issue: Output shape of documents is unspecified for empty and absent cases, path form and order
+  evidence: models/results.py:146-169; PADR-bundle-context-lists-project-documents section 6
+  failure_condition: Hosts and tests key on different shapes; a missing key reads as an error
+  suggested_action: documents always present, [] when undeclared or absent, absolute path, sorted by path
+  resolution: open
+  severity: P3
+- issue: Package glossaries lose their viewer group when the literal becomes docs/steering/, and the Steering group's definition place is undefined
+  evidence: viewer documents.ts:268-287; PROP-table-driven-document-kinds proposal
+  failure_condition: A namespace glossary appears under Overview while the root glossary appears under Steering
+  suggested_action: Acceptance item for docs/packages/<name>/glossary.md; name where the Steering group is defined
+  resolution: open
+  severity: P3
+assumptions:
+- answer-01 user decisions are fixed; q5 and q6 stay open.
+unverified_areas:
+- Whether Codex or Antigravity nested roles inherit the root AGENTS.md pointer to get-context.
+- Whether the rules engine lets one rule read another rule's settings.
+checks: {}
+activity_effort: medium
