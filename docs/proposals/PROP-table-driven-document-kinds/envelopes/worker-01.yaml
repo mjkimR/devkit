@@ -1,0 +1,60 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T06:12:02.112311Z'
+status: needs_input
+summary: 'Planning turn 1: status reviewing; spike Q1-Q4 answered in MAT-kind-facts-inventory; PADR-kind-definition-table-keyed-on-the-declared-kind-enum drafted; target-docs.md written; scout-01 and challenger-01 recorded, findings 1-5 and 8-11 folded (reverify-01), 6 and 7 open as q1 and q3; feedback swept (FB-viewer-link-prefixes-drift). Waiting for answers to q1-q3.'
+findings: []
+assumptions:
+- PROP-ux-documentation is developed after this proposal (user decision relayed by the Host).
+unverified_areas:
+- Whether the viewer build environment can import devkit-spec (matters only for q2=b).
+- Whether the scope registry compares observed changes against boundaries.owns.
+- Whether the index memo cache needs invalidation when the table changes.
+checks:
+  rules: PASS proposal bundle errors=0
+diff_scope:
+  base: ''
+  head: 555a9dc96bfbd617532ef636217fa1a55562dcd6
+questions:
+- id: q1
+  title: Path check of a new Living Spec kind
+  prompt: Does this proposal make the location grammar of Living Spec kinds (directory, stem pattern, area scoping, path message) row data, or does each kind keep its path check in code?
+  context: It decides what 'adding a kind' costs PROP-ux-documentation and whether the hypothesis 'add a row and its template' is literally true. Today CAP, UC and ARCH each have a hand-written grammar branch with its own messages, and an unknown Living Spec kind falls through to the architecture check (challenger finding 6).
+  options:
+  - id: a
+    description: 'Keep path grammars in code. A new kind adds a Kind member, a row, its grammar branch and a template; the exhaustiveness check makes a missing branch fail instead of falling through to ARCH. The hypothesis in section 1 is restated to that. Trade-off: keeps messages byte-identical and size M; the UX kind still writes one grammar branch, whose shape is open in PROP-ux-documentation Q1 anyway.'
+    recommended: true
+  - id: b
+    description: 'Make the Living Spec location grammar row data (directory, stem regex, area flag, message template) read by one generic validator for CAP, UC and ARCH; dated kinds (ADR, spec bundle, feedback, milestone) stay code. Trade-off: a Living Spec kind is then truly one row, but the ARCH chapter rule and every path message must be reproduced through templates, raising message-drift risk and the size toward L.'
+    recommended: false
+  allow_note: true
+- id: q2
+  title: Viewer and the kind table
+  prompt: How does the viewer front end follow the kind definitions, and is its stale link prefix list (US instead of UC, no FB or MS) fixed in this change?
+  context: The viewer parses documents in the browser, does not depend on devkit-spec, and autohub supplies its own data source, so a server-served table would not reach autohub (scout-01). Its link pattern has already drifted (FB-viewer-link-prefixes-drift). Any choice that changes the viewer is a visible behavior change, an exception to the proposal's 'no output change'.
+  options:
+  - id: a
+    description: 'Leave the viewer out of this proposal: its constants stay as they are, and the link drift is fixed by a separate bugfix from FB-viewer-link-prefixes-drift; PROP-ux-documentation adds its own viewer support. Trade-off: keeps this a pure devkit-spec refactor at size M; the viewer remains a second hand-kept copy of prefixes and directories.'
+    recommended: true
+  - id: b
+    description: 'Generate a TypeScript definitions file from the Python table as a tracked artifact ordered before viewer-assets, and fix the link pattern here. Trade-off: one source that ships in the autohub tarball and is CI-checked; adds a generator, an artifact entry, affected-tests mapping and CAP-GEN/CAP-VIEW reconciliation (size L), and whether the viewer build environment can import devkit-spec is unverified.'
+    recommended: false
+  - id: c
+    description: 'Keep a checked JSON copy in the viewer front end with a devkit-viewer test comparing it to the Python table, and fix the link pattern here. Trade-off: simpler than generation; two edits per kind, and the parity test is not selected by affected tests for a front-end-only or devkit-spec-only edit, so drift is caught only by the full run.'
+    recommended: false
+  allow_note: true
+- id: q3
+  title: Wrong milestone path remediation
+  prompt: A misplaced milestone is told to move to a dated {YYYY-MM}/{YYYYMMDD}-{slug} path, which is wrong for milestones. Keep it byte-for-byte here or fix it in this change?
+  context: The fallback at id_convention.py:476-485 gives every non-Living-Spec target the dated-partition remediation, milestones included (challenger finding 7). Making that lookup explicit either encodes the wrong text as a table value or changes a rule message, which the proposal's excludes forbid.
+  options:
+  - id: a
+    description: 'Keep it byte-for-byte as an explicit value and fix it in a separate bugfix (recorded as feedback). Trade-off: the refactor stays provably output-identical; the wrong text survives a little longer.'
+    recommended: true
+  - id: b
+    description: 'Fix it here as the one declared exception to ''no change to rule messages'', with a test asserting the new remediation. Trade-off: no follow-up unit; the characterization baseline then has one expected difference.'
+    recommended: false
+  allow_note: true
+activity_effort: medium
