@@ -1,0 +1,38 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:37:16.525904Z'
+status: completed
+summary: 'code-reviewer PASS at b78028af: AC-01..AC-07 covered by test_terminal_history.py and updated list tests, AC-08 by inspection; four P3 documentation-drift findings'
+findings:
+- issue: UC-find-the-right-documents success guarantee mentions only completed spec bundles staying out of results; terminal statuses are not named. docs/usecases/ is outside the write scope.
+  evidence: docs/usecases/documents/UC-find-the-right-documents.md:73
+  failure_condition: An agent reading the postcondition expects resolved feedback, superseded ADRs and rejected proposals in default results.
+  suggested_action: 'Host: reflect terminal-status hiding in the use case at integration.'
+  resolution: open
+  severity: P3
+- issue: plan.md says CAP-DOCS-document-model rule 7 is extended; the change added rule 8.
+  evidence: specs/2026-10/20261026-list-terminal-statuses-historical/plan.md:13
+  failure_condition: A reader looks for the change in rule 7.
+  suggested_action: Name rule 8 in plan.md.
+  resolution: open
+  severity: P3
+- issue: weekly-report playbook describes --history as covering only completed specs.
+  evidence: packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/weekly-report.md:30
+  failure_condition: An agent drops --history believing it only adds completed specs and misses superseded ADRs and resolved feedback.
+  suggested_action: Reword to name terminal statuses.
+  resolution: open
+  severity: P3
+- issue: New prose lines exceed the surrounding wrap width.
+  evidence: docs/capabilities/documents/CAP-DOCS-document-lookup.md:80; packages/devkit-spec/src/devkit_spec/features/documents/cli/commands.py:21
+  failure_condition: Cosmetic; no check fails.
+  suggested_action: Rewrap.
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test devkit-spec tests/integration/features/documents (157 passed); just test-affected 1472 passed
+  lint: PASS devkit rules check --ci --base 6f3dd3aa
+diff_scope:
+  base: 6f3dd3aa4d42e76a258e9f14853d1e3ff9124cc2
+  head: b78028af120cd0821bc1a0555dd9784ee700ef36

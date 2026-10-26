@@ -27,9 +27,9 @@ sweep, full test suite, automatic fix, feedback or proposal creation, and change
 ## 2. Gather evidence
 
 Read committed content at the captured SHA (`git show <sha>:<path>`). Where document lookup is installed, include
-completed specs (`--history`), all namespaces and every page, and check command help for actual options. Treat
-checkout-only lookup output as a working-tree observation until reconciled with the SHA; include uncommitted
-content only when selected, labeled separately.
+historical documents (`--history`: completed specs, superseded ADRs, settled feedback), all namespaces and every
+page, and check command help for actual options. Treat checkout-only lookup output as a working-tree observation
+until reconciled with the SHA; include uncommitted content only when selected, labeled separately.
 
 - Inventory each source with revision, scope, observed time, result and citation. Cite each claim by commit and
   path or ID; label assessments.

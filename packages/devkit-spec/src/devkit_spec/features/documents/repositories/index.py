@@ -152,6 +152,15 @@ def _files(root: Path) -> Iterable[tuple[Path, str]]:
             yield from sorted(files, key=lambda f: f[1])
 
 
+# The statuses that settle a document of each kind (``ADR-terminal-statuses-are-historical``), lower-cased: such a
+# document is historical for browsing and search, whatever bundle holds it, but the rules keep checking it.
+TERMINAL_STATUSES: dict[Kind, frozenset[str]] = {
+    Kind.FEEDBACK: frozenset({"resolved", "promoted", "dismissed", "forwarded"}),
+    Kind.DECISION: frozenset({"superseded"}),
+    Kind.PROPOSAL: frozenset({"rejected"}),
+}
+
+
 def in_feedback(path: str) -> bool:
     """Whether the workspace-relative ``path`` is in a spec bundle's ``feedback/`` directory
     (``specs/<YYYY-MM>/<bundle>/feedback/...``): feedback stays current when its bundle completes."""
@@ -228,7 +237,18 @@ class DocumentIndex:
             self.by_alias.setdefault(alias, []).append(document)
 
     def is_historical(self, document: Document) -> bool:
+        """Work history: a file of a completed spec bundle outside its ``feedback/``, or a done or dropped
+        milestone. The rules check these only when they are named as explicit targets."""
         return document.path in self.historical
+
+    @staticmethod
+    def is_terminal(document: Document) -> bool:
+        """Whether the document's own status settles it (``TERMINAL_STATUSES``, case-insensitive)."""
+        return document.status.lower() in TERMINAL_STATUSES.get(document.kind, frozenset())
+
+    def is_browsing_historical(self, document: Document) -> bool:
+        """What browsing and search hide unless asked: historical or of a terminal status."""
+        return self.is_historical(document) or self.is_terminal(document)
 
     def canonical(self, written: str) -> tuple[Document, str | None] | None:
         """The one document ``written`` names and the alias used (``None`` for a declared ID); ``None`` when no

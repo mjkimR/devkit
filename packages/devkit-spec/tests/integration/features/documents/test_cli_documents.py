@@ -92,7 +92,8 @@ def test_list_hides_history_and_counts_tasks(docs: Path) -> None:
     result = _spec("list", "spec", workspace=docs)
     assert result.stdout.splitlines() == [
         "[DOCUMENT: SPEC-open kind=spec status=draft path=specs/2026-10/20261002-open/spec.md tasks=1/2 title=Open]",
-        "[PAGE: total=1 offset=0 limit=20 count=1 next=-]",
+        "[PAGE: total=1 offset=0 limit=20 count=1 next=- hidden=1]",
+        f"[HISTORY_CMD: devkit spec list spec --history -w {docs}]",
     ]
     assert "SPEC-done" in _spec("list", "spec", "--history", workspace=docs).stdout
 
@@ -129,7 +130,7 @@ def test_list_names_an_unknown_status(statuses: Path) -> None:
     # AC-01: the page and the exit code stay as they were; one notice names the value and the known statuses.
     result = _spec("list", "spec", "--status", "bogus", workspace=statuses)
     assert result.exit_code == 0
-    assert result.stdout.splitlines() == ["[PAGE: total=0 offset=0 limit=20 count=0 next=-]"]
+    assert result.stdout.splitlines() == ["[PAGE: total=0 offset=0 limit=20 count=0 next=- hidden=0]"]
     assert result.stderr.count(UNKNOWN_STATUS) == 1
     notice = next(line for line in result.stderr.splitlines() if UNKNOWN_STATUS in line)
     assert notice.startswith("[NOTICE]") and "bogus" in notice
@@ -157,9 +158,10 @@ def test_list_names_only_the_unknown_statuses(statuses: Path) -> None:
 
 
 def test_list_counts_hidden_statuses_as_known(statuses: Path, write: Write) -> None:
-    # AC-04: a status on a historical spec, or on a spec of another namespace, is known.
+    # AC-04: a status on a historical spec, or on a spec of another namespace, is known; a named status shows its
+    # historical documents (SPEC-list-terminal-statuses-historical AC-03).
     hidden = _spec("list", "spec", "--status", "completed", workspace=statuses)
-    assert hidden.exit_code == 0 and "total=0 " in hidden.stdout
+    assert hidden.exit_code == 0 and "total=1 " in hidden.stdout
     assert UNKNOWN_STATUS not in hidden.stderr
     write("specs/2026-10/20261004-web/spec.md", _doc("SPEC-web", status="blocked", namespace="web"))
     write(

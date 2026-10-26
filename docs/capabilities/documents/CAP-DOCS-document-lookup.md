@@ -34,9 +34,6 @@ changes an argument, output, code or exit status.
     option. Scope Excluded: `list` filters by the generic fields and `--where` below; proposal priority and size,
     feedback severity, scope and kind are `--where` fields. When to Reconsider: when agents repeatedly combine
     `refs` and `list` by hand for one of these questions.
-  - Feedback defaults (`SPEC-feedback-list-filters`): `list` never applies a status or severity filter of its own to
-    one kind; every selection is an explicit filter, so `list feedback` and `list feedback spec` select alike and no
-    item is hidden without a trace.
   - Comparison operators, substring or pattern matching in `--where`: it matches whole values.
   - Validating references: `RULE-document-reference` (`CAP-GOV-spec-rules`).
 
@@ -79,11 +76,12 @@ changes an argument, output, code or exit status.
 1. **Kinds**: `KIND...` restricts to `capability`, `usecase`, `architecture`, `decision`, `proposal`,
    `proposal-decision`, `spec`, `plan`, `tasks`, `reconcile`, `feedback`, `material` (default: all).
 2. **Filters** (all combine with AND):
-   - `--status/-s a,b`: comma-separated statuses, compared case-insensitively. Status vocabularies come from the
-     templates, which a project may override, so a value is never rejected: one that no indexed document of the
-     selected kinds (every kind without `KIND`) carries, historical or in another namespace included, adds one
-     `SPEC_LIST_STATUS_UNKNOWN` notice naming those values, with the statuses that do occur in its `[FIX]`
-     (`SPEC-list-unknown-status`). The filter still applies as given, so a valid status no document carries yet
+   - `--status/-s a,b`: comma-separated statuses, compared case-insensitively. A given `--status` replaces the default
+     history hiding: the documents whose status it names are listed whatever their history. Status vocabularies
+     come from the templates, which a project may override, so a value is never rejected: one that no indexed
+     document of the selected kinds (every kind without `KIND`) carries, historical or in another namespace
+     included, adds one `SPEC_LIST_STATUS_UNKNOWN` notice naming those values, with the statuses that do occur in
+     its `[FIX]` (`SPEC-list-unknown-status`). The filter still applies as given, so a valid status no document carries yet
      gives an empty page plus the notice.
    - `--area/-a TEXT`: case-insensitive substring of the frontmatter `area`.
    - `--query TEXT`: case-insensitive substring of the ID or the title.
@@ -92,7 +90,12 @@ changes an argument, output, code or exit status.
      a scalar's text, `true`/`false` for a boolean, the ISO 8601 form of a date or timestamp, any scalar element of a
      list. A missing field, `null` or a mapping never matches. Each `--where` must match. An item without `=`, field
      or value MUST fail with `ARGUMENT_INVALID` (exit `2`, nothing on stdout).
-   - `--history`: include historical documents (files of completed spec bundles, their feedback aside, and done/dropped milestones); hidden by default. Historical IDs remain resolvable and their incoming membership remains queryable.
+   - `--history`: include historical documents: files of completed spec bundles, their feedback aside, done or
+     dropped milestones, and documents of a terminal status (feedback `resolved`, `promoted`, `dismissed`,
+     `forwarded`; decision `superseded`; proposal `rejected`; `CAP-DOCS-document-model` rules 7 and 8). Hidden by
+     default whatever kinds are selected, so `list feedback` and `list feedback spec` select alike
+     (`ADR-terminal-statuses-are-historical`). Historical IDs remain resolvable and their incoming membership
+     remains queryable.
    - `--file PATH`: documents whose frontmatter `entrypoints` overlap the workspace-relative path: an entry equal to
      it, under it, or a directory containing it (whole path segments, case-sensitive; `CAP-TRACE-code-entrypoints`).
      The path need not exist, so a deleted file still finds its documents; a path that breaks the entrypoint path
@@ -112,9 +115,12 @@ changes an argument, output, code or exit status.
 1. `--limit/-n` (default `20`, `0` for all) and `--offset` (default `0`). A negative value MUST fail with devkit's
    `ARGUMENT_INVALID`.
 2. The output ends with `[PAGE: total= offset= limit= count= next=]`; `next` is the offset of the next page, `-` on
-   the last one.
+   the last one. `list` adds `hidden=<n>` last: the documents that match every other filter but were left out as
+   historical (`0` with `--history` or `--status`).
 3. When more items follow, `[NEXT_CMD: devkit spec ...]` repeats the command with every given filter, `-w` when it
    was given, `--limit` and the next `--offset`; each `--where` is repeated as given, in order.
+4. When `hidden` is above zero, `list` prints `[HISTORY_CMD: devkit spec list ... --history]` last: the command with
+   every given filter, `--history`, `-w` when it was given and `--limit` when it is not the default.
 
 ## 4. Interfaces & Data Contracts
 
@@ -128,7 +134,8 @@ devkit spec list usecase --status active --area core  # browse
 devkit spec list capability --file src/engine/        # documents owning a code path
 devkit spec list spec --history --all-namespaces      # completed bundles too, every package
 devkit spec list milestone --history                 # include done/dropped milestones
-devkit spec list feedback --status open --where severity=critical -n 0   # open critical feedback
+devkit spec list feedback --where severity=critical -n 0   # open critical feedback (settled ones are historical)
+devkit spec list feedback --status resolved            # resolved feedback, without --history
 ```
 
 ### 4.2 Text Output
@@ -140,8 +147,9 @@ devkit spec list feedback --status open --where severity=critical -n 0   # open 
 [DOCUMENT: SPEC-search kind=spec status=draft path=specs/2026-10/20261002-search/spec.md tasks=1/2 title="Search"]
 [DOCUMENT: PROP-search kind=proposal status=draft path=docs/proposals/PROP-search/proposal.md tasks=- task_kind=feature planning_effort=medium dev_effort=medium title="Search"]
 [DOCUMENT: FB-slow-sync kind=feedback status=open path=specs/2026-10/feedback/20261013-slow-sync.md tasks=- severity=critical scope=upstream target="devkit sync" title="Sync blocks"]
-[PAGE: total=42 offset=0 limit=20 count=20 next=20]
+[PAGE: total=42 offset=0 limit=20 count=20 next=20 hidden=3]
 [NEXT_CMD: devkit spec list spec --limit 20 --offset 20]
+[HISTORY_CMD: devkit spec list spec --history]
 ```
 
 `resolve` prints `[DOCUMENT: <id> kind= status= path=]`, with `alias=<alias>` appended when the argument was an
@@ -156,7 +164,7 @@ string when the value holds spaces, quotes or brackets.
 | --- | --- |
 | `resolve` | `documents` (document records: `id`, `kind`, `path`, `status`, `title`, `area`, `summary`, plus `alias`: the alias argument, `null` for a declared ID), `errors` (advisory objects), `notices` |
 | `refs` | `id`, `direction`, `total`, `offset`, `limit`, `items` (`id`, `path`, `status`, `references`: `target`, `source`, `path`, `field`, `line`, `column`, `bracket`), `notices`; `path` and `status` are `null` for an ID no single document declares |
-| `list` | `total`, `offset`, `limit`, `namespace` (the selection, `null` for every namespace), `documents` (document records plus `namespace`, `historical`, `tasks`; proposal records also `task_kind`, `planning_effort`, `dev_effort`, `null` when absent; feedback records also `severity`, `scope`, `target`, `null` when absent; a draft proposal whose `plan-<slug>` exists, locally or fetched, is shown with `status: reviewing` and its `planning_branch`, `CAP-DLV-proposal-incubation` rule 10), `notices` |
+| `list` | `total`, `hidden` (the page line's `hidden`), `offset`, `limit`, `namespace` (the selection, `null` for every namespace), `documents` (document records plus `namespace`, `historical` (`true` for a document historical by rule 7 or 8 of `CAP-DOCS-document-model`), `tasks`; proposal records also `task_kind`, `planning_effort`, `dev_effort`, `null` when absent; feedback records also `severity`, `scope`, `target`, `null` when absent; a draft proposal whose `plan-<slug>` exists, locally or fetched, is shown with `status: reviewing` and its `planning_branch`, `CAP-DLV-proposal-incubation` rule 10), `notices` |
 
 ### 4.4 Exit Codes
 

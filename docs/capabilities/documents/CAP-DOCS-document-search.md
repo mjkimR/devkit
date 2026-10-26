@@ -36,7 +36,8 @@ expansion. Going from a known ID to its path stays `devkit spec resolve` (`CAP-D
 
 ## 3. Business Rules & Policies
 
-1. **Candidates**: the indexed documents (`CAP-DOCS-document-model`), current ones unless `--history`, narrowed by
+1. **Candidates**: the indexed documents (`CAP-DOCS-document-model`), without historical ones (rules 7 and 8 there:
+   completed bundles, done or dropped milestones, terminal statuses) unless `--history`, narrowed by
    `--kind` (repeatable) and by the namespace selection (`--namespace NAME`, `--all-namespaces`, default: the current
    directory's namespace plus the global documents; `CAP-DOCS-namespaces`).
 2. **Fields**: a document's ID and its English `summary` are its metadata, ranked lexically and densely (the ID alone
