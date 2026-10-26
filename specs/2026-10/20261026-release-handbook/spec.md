@@ -8,214 +8,236 @@ related_capabilities: []
 related_usecases: []
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-release-handbook] Release-bound Multilingual Handbook
 
 ## 1. Problem Statement & Motivation
 
 Handed off from proposal PROP-release-handbook on 2026-10-26.
-- **Preserved Materials**: `docs/materials/2026-10/20261026-release-handbook`
 
-### 1. Background & Hypothesis
+- **Preserved Materials**: `docs/materials/2026-10/20261026-release-handbook` (spike evidence for the design below).
+- **Decisions**: `ADR-handbook-on-request-release-snapshot` (a tracked derived view excluded from reconcile, refreshed
+  on request, gated only on refreshing releases) and `ADR-localized-handbook-language-exception` (non-English text
+  only under `handbook/<lang>/` for languages other than `en`).
 
 `docs/` is organized for agents: contracts are split by capability area and addressed by ID, so search and
-`devkit get-context` load only what a task needs. At the Planning base 3137814f it holds 42 capabilities, 14
-architecture documents, 16 module references, 12 use cases and 49 ADRs (42 accepted). The agent-first
-restructuring under way fragments it further, which is the intended shape for agents.
+`devkit get-context` load only what a task needs. A person who wants to know what devkit is and how to use it day to
+day has no single entry point: `README.md` describes the repository structure, `guides/` are installation guides for
+agents, and the repository viewer (`CAP-VIEW-repository-viewer`) shows the Living Spec documents as they are.
+Building an overall picture means joining `ARCH-01-introduction-and-goals`, `ARCH-03-context`,
+`ARCH-05-1-containers`, several capabilities and ADR supersession chains by hand.
 
-A person who wants to know what devkit is and how to use it day to day has no single entry point. `README.md`
-describes the repository structure, `guides/` are installation guides for agents, and the repository viewer
-(`CAP-VIEW-repository-viewer`) shows the Living Spec documents as they are. Building an overall picture means joining
-`ARCH-01-introduction-and-goals`, `ARCH-03-context` and `ARCH-05-1-containers`, several capabilities and ADR supersession chains by hand.
+A handbook that is a derived view, not a second source of truth, gives people that entry point without adding Living
+Spec maintenance. It is a snapshot bound to a release tag and intentionally stale between refreshes; it reorganizes
+the Living Spec by user journey and concept and links to the source documents at the release tag instead of
+rewriting them. `CAP-DLV-weekly-report` already establishes the pattern: an explicitly invoked playbook produces an
+artifact bound to a source revision and verifies it before completing.
 
-**Hypothesis.** A handbook that is a derived view, not a second source of truth, gives people that entry point
-without adding Living Spec maintenance:
-
-- It is a snapshot bound to a release tag. Between releases it is intentionally stale and says so; it is never a
-  reconcile target, so `spec-sync` gains no obligation.
-- It reorganizes rather than summarizes: the Living Spec is organized by contract and ID, the handbook by user
-  journey and concept. Use cases (`UC-*`) and capability areas form its backbone together, because the use cases
-  cover delivery and governance but no distribution journey.
-- Detail is not rewritten. Handbook pages link to the source documents at the release tag, untranslated.
-
-`CAP-DLV-weekly-report` already establishes the pattern this reuses: an explicitly invoked playbook produces an
-artifact bound to a source revision and verifies its links before completing.
+This unit delivers the tooling, the playbook, the contract and the release-script check. The first snapshot is
+generated when the user first requests a refresh during a release preparation
+(`ADR-handbook-on-request-release-snapshot`), not in this unit.
 
 ## 2. User Stories
 
-- **US-1**: As a developer/agent, I want to implement Release-bound Multilingual Handbook so that system capabilities are extended.
+- **US-1**: As a maintainer preparing a release, I want a playbook and a script that tell me which handbook pages are
+  stale, regenerate the deterministic parts and verify the result, so that a refreshed handbook matches the release's
+  `docs/` without manual cross-checking.
+- **US-2**: As a reader of the handbook in English or Korean, I want every page to state which release and source
+  commit it describes and to link to the Living Spec sources at that tag, so that I know how old it is and where the
+  authoritative contract lives.
+- **US-3**: As a maintainer releasing without a refresh, I want the release build to ignore the handbook, so that the
+  handbook never blocks a release I did not refresh it for.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: generating or committing a first handbook snapshot (`handbook/en/`, `handbook/ko/`,
+   `handbook/manifest.json`) in this unit. **Rationale**: a refresh runs only on the user's explicit request during
+   release preparation (`ADR-handbook-on-request-release-snapshot`); the first such request produces the first
+   snapshot through the delivered playbook.
+2. **Scope Excluded**: making the handbook a source of truth or a reconcile target; `spec-sync` gains no obligation.
+3. **Scope Excluded**: translating Living Spec source documents (L2).
+4. **Scope Excluded**: showing the handbook or tags in the repository viewer. **When to Reconsider**: a later
+   proposal adds tag reads and a handbook mode to the viewer.
+5. **Scope Excluded**: moving or slimming `docs/development/reference/`, package READMEs or `README.md` content into
+   the handbook. **When to Reconsider**: after the first release handbook exists.
+6. **Scope Excluded**: changing document search, the document index or how `docs/` is written.
+7. **Scope Excluded**: feeding `changes.md` into the GitHub release notes.
+8. **Scope Excluded**: promoting the handbook to a `devkit-spec` feature for other Living Spec repositories.
+9. **Scope Excluded**: a refresh cadence or any automatic refresh.
+10. **Scope Excluded**: a command or rule that checks document language; the language exception is checked in review.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+The script is `scripts/handbook.py`, run as `just handbook <command>`. Its stdout carries one-line sentinels; a run
+that cannot complete writes an `[ERROR]` block with a code and an `[ACTION]` line to stderr and exits `2`.
 
-## 5. Carried Proposal Notes
+### [AC-01] A changed source document marks its English page stale
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+- **Given** a handbook whose English page `en/journeys/a.md` declares `sources` with the git blob SHA of a cited
+  document at an earlier commit
+- **When** that document changes in a later commit and `just handbook status` runs
+- **Then** stdout has one `[HANDBOOK_STALE: page=en/journeys/a.md sources=<ID>]` line, the summary line reports
+  `stale=1` and the command exits `1`; with no finding of any kind it exits `0`
 
-### 2. Technical Spike Questions
+### [AC-02] Translation staleness follows only the English narrative body
 
-Answered in Planning; evidence in `docs/materials/2026-10/20261026-release-handbook/spike-findings.md`.
+- **Given** a Korean page whose `translated_from` names `en/<path>@<hash>` of the current English narrative body
+- **When** only the provenance header or a generated section of the English page changes
+- **Then** `just handbook status` reports no `[HANDBOOK_TRANSLATION_STALE]` line for that page; **and when** a
+  narrative line of the English page changes, it reports one
+  `[HANDBOOK_TRANSLATION_STALE: page=ko/<path> source=en/<path>]` line
 
-- **Q1 (generation split)**: Deterministic: table of contents, UC and capability lists, source links and
-  provenance from the document index (`devkit spec list/resolve/refs --format json`); the glossary, command and
-  error-code tables need small readers of their own in the handbook script. The agent writes the narrative only.
-  `devkit generated` is not used, because its check reports the handbook stale between releases.
-- **Q2 (staleness detection)**: `sources: {<ID>: <SHA>}` per English page works when the SHA comes from git
-  (`git rev-parse <commit>:<path>` after resolving the ID). Coverage gap: every use case and capability not cited by
-  any English page. Translation staleness hashes only the English narrative body (section 3.2).
-- **Q3 (exclusion)**: The document index scans only `docs/` and `specs/`, so search, `get-context` and the spec
-  document rules ignore `handbook/` unchanged. Repo-wide Markdown rules check it; `RULE-cli-contract` would fail on
-  pages that are stale by design, so `handbook/**` joins that rule's `exclude` in `.devkit/config.toml`.
-  `RULE-markdown-link` keeps checking relative links between pages.
-- **Q4 (accuracy checks)**: Scripted checks are listed in section 3.3 step 3. Contradiction with the Living Spec is
-  semantic and stays in the recorded human review.
-- **Q5 (release ordering)**: When the user requests a refresh, generate, verify and commit in release preparation,
-  then tag (section 3.3). Release notes stay as they are; `changes.md` is not fed into them.
-- **Q6 (decision digest scope)**: `SPEC-document-id-aliases-and-compaction` is completed and excludes ADR compaction;
-  `ADR-immutable-decisions-editable-records` keeps the ledger compact. The digest lists the accepted ADRs' summaries
-  only and folds no chains (q7).
-- **Q7 (ownership)**: The playbook ships in the repository-only `devkit-dev` bundle; the script and `justfile` recipe
-  live in root `scripts/`; the contract is a capability in `capabilities/delivery/`.
+### [AC-03] Uncited use cases and capabilities are coverage gaps
 
-### 3. Proposed Design & Impact
+- **Given** a use case or capability that no English page lists in its `sources`
+- **When** `just handbook status` runs
+- **Then** stdout has one `[HANDBOOK_GAP: id=<ID> kind=<usecase|capability>]` line per such document
 
-#### 3.1 Layout
+### [AC-04] Language parity is checked against the manifest
+
+- **Given** `manifest.json` lists `langs` `en` and `ko`
+- **When** `ko/` lacks a page that `en/` has, or has a page that `en/` lacks
+- **Then** `just handbook status` reports `[HANDBOOK_PARITY: page=ko/<path> problem=missing]` or `problem=extra`, and
+  `just handbook verify` exits `1` with a `code=HANDBOOK_PARITY` line
+
+### [AC-05] Verification rejects inaccurate pages
+
+- **Given** a handbook page that cites an unresolved document ID, a `devkit` command or option the CLI does not have,
+  a tag-pinned source link whose path does not exist at the manifest source commit, a capitalized normative keyword
+  (`MUST`, `SHALL`, `SHOULD`, `MAY`) outside code, or a broken relative link
+- **When** `just handbook verify` runs
+- **Then** it exits `1` with one `[HANDBOOK_INVALID: page=<page> line=<n> code=<CODE>]` line per finding, using
+  `HANDBOOK_ID_UNRESOLVED`, `HANDBOOK_COMMAND_UNKNOWN`, `HANDBOOK_SOURCE_MISSING`, `HANDBOOK_NORMATIVE_KEYWORD` and
+  `HANDBOOK_LINK_BROKEN` respectively; a handbook without findings prints
+  `[HANDBOOK_VERIFIED: tag=<tag> commit=<sha> pages=<n>]` and exits `0`
+
+### [AC-06] Generation writes deterministic sections and provenance only
+
+- **Given** a clean `docs/` and `VERSION` naming the upcoming release
+- **When** `just handbook generate` runs
+- **Then** `handbook/manifest.json` names tag `v<VERSION>` and the source commit `HEAD`, every page's provenance
+  header names that tag, commit and date, every generated section and fully generated page (`decisions.md`,
+  `glossary.md`, `changes.md`) is rewritten, and no narrative text outside generated sections changes; with
+  uncommitted changes under `docs/` it exits `2` with `HANDBOOK_DOCS_DIRTY` and writes nothing
+
+### [AC-07] A preview never touches the tracked handbook
+
+- **Given** a repository with or without `handbook/`
+- **When** `just handbook generate --preview` runs
+- **Then** it writes to `dist/handbook-preview/`, the provenance header names the commit as unreleased, and no file
+  under `handbook/` changes
+
+### [AC-08] The release build checks only a refreshing release
+
+- **Given** a committed `handbook/manifest.json`
+- **When** `scripts/release.sh <tag>` runs for a tag equal to the manifest tag, and `docs/` at `HEAD` differs from
+  `docs/` at the manifest source commit or a verification check fails
+- **Then** the build stops before building any wheel with a non-zero exit and a `code=HANDBOOK_DOCS_MISMATCH` or other
+  `[HANDBOOK_INVALID: ...]` line; **and when** the manifest tag differs from the built tag or no manifest exists, the
+  handbook check prints `[HANDBOOK_SKIPPED: tag=<tag> manifest_tag=<tag|none>]`, runs no verification and writes no
+  file
+
+### [AC-09] Stale handbook pages never fail the repository rules
+
+- **Given** `.devkit/config.toml` excludes `handbook/**` from `RULE-cli-contract`
+- **When** a handbook page cites a `devkit` command that a later commit renamed
+- **Then** `RULE-cli-contract` reports no violation for the page, while the same citation outside `handbook/` is
+  still reported; `RULE-markdown-link` keeps checking relative links under `handbook/`
+
+### [AC-10] The playbook ships in the repository development bundle
+
+- **Given** the `devkit-dev` bundle
+- **When** its manifest is loaded
+- **Then** it declares a `handbook` playbook asset in a `handbook` preset that this repository selects, and the
+  playbook names the script commands, the release-preparation ordering and the recorded human review
+
+### [AC-11] The contract and the language exception are documented
+
+- **Given** the delivered change
+- **When** the Living Spec and the root guides are read
+- **Then** a capability in `docs/capabilities/delivery/` states the handbook contract, `ARCH-07-deployment` names the
+  optional release-preparation step and the release-script check, `ARCH-05-1-containers` names the playbook in the
+  `devkit-dev` definition, `AGENTS.md` states the exception for non-English `handbook/<lang>/`, and `README.md`
+  points people to the handbook
+
+## 5. Design
+
+### 5.1 Layout
 
 ```text
 handbook/
-├── manifest.json      # language-neutral: target release tag, source commit, langs
+├── manifest.json      # language-neutral: tag, source commit, repository, langs, generation date
 ├── en/                # pivot language, synthesized from docs/
 │   ├── README.md      # L0: what devkit is, the overall model, where to start
 │   ├── concepts.md    # bundle, sync, projection; Living Spec and specs; workflow stages; advisories
-│   ├── journeys/      # L1: one page per use case (UC-*), how-to oriented
+│   ├── journeys/      # L1: one page per use case, how-to oriented
 │   ├── areas/         # L1: capability area summaries linking to the L2 sources
-│   ├── decisions.md   # generated list of the accepted ADRs: summary and tag-pinned link
-│   ├── changes.md     # previous handbook tag to this one: completed specs and new ADRs
+│   ├── decisions.md   # generated: each accepted ADR's summary and tag-pinned link
+│   ├── changes.md     # generated: previous handbook snapshot to this one, completed specs and new ADRs
 │   └── glossary.md    # generated from docs/glossary.md
-└── ko/                # same file set as en/, translated from en/, plus terms.yaml
+└── ko/                # the en/ file set, translated from en/, plus terms.yaml
 ```
 
-- **Tiers**: L0 (one-page overview) and L1 (journey and area pages) are generated. L2 is the Living Spec source
-  document at the release tag, linked by tag-pinned URL (`blob/<tag>/docs/...`), never `main`, and never translated.
-  Translated pages mark these links as English sources.
-- **Languages**: `en` and `ko` (`ADR-localized-handbook-language-exception`), with identical relative paths in
-  every language. Adding a language adds a directory and a `langs` entry. Identifiers (`devkit sync`, error codes,
-  document IDs) are never translated.
-- **Delivery form**: a tracked `handbook/` on `main` (`ADR-handbook-on-request-release-snapshot`).
-- **Decision digest**: `decisions.md` is generated from the document index: each accepted ADR's summary and its
-  tag-pinned link, with no folding or rewriting.
-- **Pages carry no `id:` frontmatter**, so they never enter the document index.
+- **Tiers**: L0 and L1 pages are written by the agent around generated sections; L2 is the Living Spec source at the
+  release tag, linked by tag-pinned URL (`blob/<tag>/<path>`), never `main`, never translated, and marked as an
+  English source on translated pages.
+- **Languages**: `en` and `ko`, with identical relative paths. Adding a language adds a directory, its `terms.yaml`
+  and a `langs` entry. Identifiers (commands, error codes, document IDs) are never translated.
+- **Pages carry no `id:` frontmatter**, so they never enter the document index; `handbook/` is outside the index's
+  source directories, so search, `get-context` and the docs-scoped rules ignore it unchanged.
 
-#### 3.2 Provenance and staleness
+### 5.2 Provenance and staleness
 
-- Every page states the snapshot tag, source commit and generation date, and that the Living Spec prevails on any
-  conflict. The handbook uses no normative keywords.
-- English pages declare `sources: {<ID>: <SHA>}` with git blob SHAs of the cited documents at the source commit.
-  Translated pages declare `translated_from: en/<path>@<hash>`, where the hash covers only the English narrative body,
-  without the provenance header or the generated sections. Staleness propagates `docs/ -> en -> {lang}`, so only
-  English pages are checked against the Living Spec and translations against English only; a header-only change leaves
-  translations fresh.
+- Every page has a generated provenance header: snapshot tag, source commit, generation date and that the Living Spec
+  prevails on any conflict. The handbook uses no normative keywords.
+- English pages declare `sources: {<ID>: <blob SHA>}` for the cited documents at the source commit. Translated pages
+  declare `translated_from: en/<path>@<hash>`, the hash covering only the English narrative body (without frontmatter,
+  provenance header or generated sections). Staleness propagates `docs/ -> en -> {lang}`.
+- `just handbook stamp <page>...` records a page as refreshed: current SHAs for an English page, the current English
+  narrative hash for a translation. Generation never stamps, so a page stays stale until it is rewritten or reviewed.
 - Each non-English language keeps `handbook/<lang>/terms.yaml`, mapping every `docs/glossary.md` term to its
-  preferred rendering. Translated pages use it and give the English term on first use. `docs/glossary.yaml` stays a
-  search synonym list, because its clusters include terms other concepts own.
+  preferred rendering; its generated glossary adds that rendering. `docs/glossary.yaml` stays a search synonym list.
 
-#### 3.3 Refresh procedure
+### 5.3 Refresh procedure
 
-An explicitly invoked playbook, run only when the user requests a refresh, during release preparation before
-`just version-sync`'s metadata commit (`ARCH-07-deployment` section 1 gains this optional step). There is no cadence:
-a release without a refresh keeps the previous handbook, whose provenance names its older tag. The playbook writes
-the upcoming tag (from `VERSION`) into `manifest.json` as the release it targets.
+Run only when the user requests a refresh, during release preparation after `VERSION` names the upcoming release and
+before the `just version-sync` metadata commit. A release without a refresh keeps the previous handbook.
 
-1. A script reports stale pages, coverage gaps (uncited use cases and capabilities) and language parity mismatches.
-2. An agent rewrites only the stale English pages, then their translations; deterministic sections are regenerated
-   every run.
-3. Verification by the script, at the source commit:
-   - every cited ID resolves;
-   - every cited `devkit` command and option exists;
-   - every L2 link target path exists (`git cat-file -e <source commit>:<path>`); the URL is rendered with the tag,
-     which does not exist yet;
-   - no normative keyword (`MUST`, `SHALL`, `SHOULD`, `MAY` in capitals);
-   - every language has the file set of `manifest.json` and a current `translated_from` for each page;
-   - `RULE-markdown-link` passes on `handbook/`.
-4. A person reviews each refreshed page against its cited sources; the playbook records the review outcome in its
-   completion report. The handbook is committed before the release tag.
-5. `scripts/release.sh` reads the committed `manifest.json`: the release refreshed the handbook exactly when its
-   target tag equals the tag being built. Detection runs no generation or refresh. For a refreshing release it reruns
-   the step 3 script checks and compares the `docs/` tree at the tagged commit with the one at the manifest source
-   commit, and fails the build on either failure. Every other release skips the handbook checks.
+1. `just handbook status` reports stale pages, coverage gaps, parity mismatches and missing terms.
+2. The agent rewrites the stale English pages, then their translations, and stamps each; `just handbook generate`
+   regenerates the deterministic parts.
+3. `just handbook verify` checks, at the source commit: cited IDs resolve; cited `devkit` commands and options exist;
+   tag-pinned link paths exist (`git cat-file -e <source commit>:<path>`); no normative keyword; parity and current
+   translations; complete term lists; no stale English page; relative links pass `RULE-markdown-link`.
+4. A person reviews each refreshed page against its cited sources; the playbook records the outcome in its completion
+   report. The handbook is committed before the release tag.
+5. `scripts/release.sh` runs the script's `release-check <tag>` before building: a refreshing release (manifest tag
+   equals the built tag) reruns step 3 and compares `docs/` at `HEAD` with `docs/` at the manifest source commit;
+   every other release skips the handbook.
 
-A preview run against `main` writes to an untracked directory (`dist/handbook-preview/`) and its provenance header
-names the commit as unreleased. Only a release run writes `handbook/`.
+### 5.4 Impact
 
-#### 3.4 Impact
+- **New**: the playbook in the `devkit-dev` bundle, `scripts/handbook.py`, the `handbook` recipe in `justfile`, the
+  script tests under `tools/devkit-dev/tests/`, and a capability for the handbook contract in
+  `docs/capabilities/delivery/`.
+- **Changed**: `.devkit/config.toml` (`handbook/**` in `[rules.settings.RULE-cli-contract].exclude`, the `handbook`
+  preset selected), `scripts/release.sh`, `scripts/affected_tests.py` (test mapping), `AGENTS.md`, `README.md`,
+  `ARCH-07-deployment` and `ARCH-05-1-containers`.
 
-- **New**: `handbook/` at the repository root (a new root directory), the playbook in the `devkit-dev` bundle under
-  `tools/devkit-dev/`, its script in `scripts/`, a `justfile` recipe, and a capability recording the handbook contract
-  in `capabilities/delivery/`.
-- **`.devkit/config.toml`**: `handbook/**` in `[rules.settings.RULE-cli-contract].exclude`.
-- **`AGENTS.md`**: an explicit exception to "Write all documentation, architecture specifications, and guide materials
-  in English" for `handbook/<lang>/` with languages other than `en` only
-  (`ADR-localized-handbook-language-exception`).
-- **`scripts/release.sh`**: the refreshing-release detection and checks of section 3.3 step 5.
-- **`README.md`**: links to the handbook for people.
-- **Living Spec**: the handbook capability in `capabilities/delivery/`, the optional release-preparation step and the
-  release-script check in `ARCH-07-deployment`, and `ARCH-05-1-containers`, whose `devkit-dev` definition gains the
-  playbook. No Living Spec writing instruction changes.
+## 6. Assumptions
 
-#### 3.5 Non-Goals
-
-- Making the handbook a source of truth or a reconcile target.
-- Translating Living Spec source documents (L2).
-- Showing the handbook or tags in the repository viewer. The viewer reads local branches only and refuses a tag with
-  `VIEWER_REF_UNKNOWN`; tag reads and a handbook mode are a later proposal.
-- Moving or slimming `docs/development/reference/`, package READMEs or `README.md` content into the handbook; that
-  is decided after the first release handbook exists.
-- Changing document search or the document index.
-- Feeding `changes.md` into the GitHub release notes.
-- Promoting the handbook to a `devkit-spec` feature for other Living Spec repositories.
-- Changing how `docs/` is written; the writing instructions stay as they are.
-- A refresh cadence or any automatic refresh.
-
-### 4. Lifecycle & Retirement Criteria
-
-- **PADRs**: `ADR-handbook-on-request-release-snapshot` (tracked derived view excluded from reconcile, refreshed on
-  request, gated only on refreshing releases) and `ADR-localized-handbook-language-exception` (non-English text only
-  under `handbook/<lang>/` for languages other than `en`).
-- **Verification**:
-  - script tests on fixtures: a changed source SHA marks its English page stale; a header-only English change leaves
-    translations fresh; an uncited use case or capability is reported as a gap; a missing or extra translated file is
-    a parity mismatch; an unresolved ID, a missing command, a missing L2 path and a normative keyword each fail
-    verification;
-  - release-script tests: with the manifest tag equal to the built tag, a `docs/` tree differing from the manifest
-    source commit or a failing step 3 check fails the build; with a different manifest tag the handbook checks are
-    skipped and no handbook file is written;
-  - a first generated `handbook/en/` and `handbook/ko/` for the first refreshing release passing every step 3 check,
-    with the recorded human review;
-  - `just rules-check` clean with `handbook/` present, and still clean after a fixture renames a cited command.
-- **On Acceptance**: recorded with `devkit spec proposal accept`, handed off to a spec bundle on `dev-<slug>`; the
-  proposal is deleted there and its decisions become ADRs.
-- **On Rejection**: `status: rejected` only, with the user's reason in the commit message; a later hygiene pass writes
-  the rejection ADR and deletes the proposal.
-
-### 5. Planning decisions
-
-- Planning effort `medium`: one `scout` (spike evidence) and one `challenger` pass
-  (historical Git `27bb56262d58d381f5b6a740a0771944f388ab34:docs/proposals/PROP-release-handbook/envelopes/scout-01.yaml`, historical Git `27bb56262d58d381f5b6a740a0771944f388ab34:docs/proposals/PROP-release-handbook/envelopes/challenger-01.yaml`).
-- Folded challenger findings: 1 (cli-contract exclusion), 2 (verify paths at the source commit, release-script tree
-  check), 3 (narrative-body hash), 6 (boundaries), 7 (per-language term list), 8 (listed checks and recorded review),
-  9 (untracked preview), 11 (backbone and inventory).
-- User decisions (historical Git `27bb56262d58d381f5b6a740a0771944f388ab34:docs/proposals/PROP-release-handbook/envelopes/answer-01.yaml`), closing findings 4, 5 and 10: tracked `handbook/` on `main` (q1); refresh
-  only on the user's explicit request, no cadence (q2); only a refreshing release fails on handbook checks, detected
-  from the committed manifest tag (q3); `en` and `ko` with the exception limited to non-en `handbook/<lang>/` (q4);
-  no `docs/` policy change and no ADR on it, since the writing instructions are already agent-first (q5); playbook in
-  `devkit-dev`, contract in `capabilities/delivery/` (q6); `decisions.md` as a generated list (q7).
-
+1. No first snapshot is committed in this unit (Non-Goal 1): `ADR-handbook-on-request-release-snapshot` binds every
+   refresh to the user's explicit request during release preparation, and the Planning verification item for a first
+   generated handbook names "the first refreshing release". `README.md` therefore names the handbook path without a
+   relative link, which would fail `RULE-markdown-link` while `handbook/` is absent.
+2. The script reads document identity (`id`, `aliases`, `title`, `summary`, `status`) from the frontmatter under
+   `docs/` and `specs/`, the same directories the document index scans, instead of calling `devkit spec` per ID, so it
+   runs on fixtures without an installed project.
+3. Command and relative-link checks reuse `RULE-cli-contract` and `RULE-markdown-link` through the rules testing
+   entry point (`check`) on a scratch copy of the pages, so the handbook check and the repository rules cannot
+   disagree.
+4. The playbook gets its own `handbook` preset in `devkit-dev` so the `structure` preset keeps its meaning (structure
+   checks); this repository selects both. Deploying the playbook into `.devkit/managed/` is a `devkit sync` outside
+   this unit's write scope.
+5. The release-script test covers the handbook check through `release-check` and asserts that `scripts/release.sh`
+   runs it before any wheel build; a full wheel build is not part of the test.
