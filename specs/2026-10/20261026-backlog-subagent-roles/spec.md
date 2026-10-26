@@ -4,11 +4,10 @@ title: Backlog triage and decomposer subagent roles
 summary: Adds isolated triage and decomposer support roles so Backlog feedback triage and draft decomposition can be delegated with verified write boundaries and preserved provenance, and gates XL drafts to decomposition before Planning.
 status: planned
 created: 2026-10-26
-related_capabilities: []
-related_usecases: []
+related_capabilities: [CAP-DLV-delivery-workflows, CAP-DLV-proposal-incubation, CAP-HARN-agent-guidance]
+related_usecases: [UC-route-development-intent]
 workflow: sdd-spec-feature
 ---
-<!-- devkit:skeleton -->
 
 # [SPEC-backlog-subagent-roles] Backlog triage and decomposer subagent roles
 
@@ -17,272 +16,165 @@ workflow: sdd-spec-feature
 Handed off from proposal PROP-backlog-subagent-roles on 2026-10-26.
 - **Preserved Materials**: `docs/materials/2026-10/20261026-backlog-subagent-roles`
 
-### 1. Background & Hypothesis
-
 Backlog work runs in the main session today. Feedback triage follows the `feedback-hygiene` playbook, and splitting a
 broad draft (`decomposed_from`, `needs_decompose`) is done by the Host by hand. Both read many files and fill the
 coordinating context, and the Host judges its own grouping without a second view. `ADR-roadmap-and-milestones`
 leaves the `triage` and `decomposer` roles as follow-ups, and `MS-backlog-subagent-roles` names them in its exit
 condition.
 
-Proposals are the main intake, and a rough draft stays allowed in Backlog. Nothing today keeps a rough `size: XL`
-draft from entering Planning as one unit: `XL` reads "major overhaul", which nobody can check, and only a Planning run
-that notices the breadth returns `needs_decompose`.
+Nothing keeps a rough `size: XL` draft from entering Planning as one unit: `XL` reads "major overhaul", which nobody
+can check, and only a Planning run that notices the breadth returns `needs_decompose`.
 
-Hypothesis: two support roles with explicit contracts can take these reads out of the main session. They return
-recommendations for the user's decision without writing Backlog state themselves. That keeps user ownership of
-dispositions, and the Host can verify each result like a Scout or Challenger return. A judgeable `XL` and a
-deterministic gate before Planning send every XL draft to the `decomposer` first.
+Two read-only support roles return recommendations; the Host verifies them like a Scout or Challenger return and
+applies only what the user decides. A judgeable `XL` and a deterministic gate before Planning send every `XL` draft to
+decomposition first. The support-role diff check of `spec-delegate` also misses a role writing to an already-modified
+file, which these Backlog delegations would inherit; the check moves to a content snapshot.
 
-Present workload (`docs/materials/2026-10/20261026-backlog-subagent-roles/spike-findings.md` F5): 3 open feedback items, 86 dispositioned ones in the tree, no live
-document carrying `decomposed_from` and no live `XL` proposal. The value is in larger hygiene batches, the first real
-decompositions and the drafts to come, not in today's queue.
+Present workload (`docs/materials/2026-10/20261026-backlog-subagent-roles/spike-findings.md` F5): few open feedback
+items and no live decomposition; the value is in larger hygiene batches and the first real decompositions.
 
-## 2. User Stories
+## 2. Use Cases and User Stories
 
-- **US-1**: As a developer/agent, I want to implement Backlog triage and decomposer subagent roles so that system capabilities are extended.
+- **US-1**: As the Host in a hygiene session with more than 5 open feedback items, I want a `triage` role to group and
+  route them from a fresh context, so that my context stays free and the user decides on a second view.
+- **US-2**: As the Host splitting a draft in Backlog, I want a `decomposer` role to propose independently deliverable
+  children with their provenance, so that the split and its edges are judged before I apply them.
+- **US-3**: As the user, I want an `XL` draft stopped before Planning with a directive to decompose, so that no
+  multi-spec draft is planned as one unit.
+- **US-4**: As the Host delegating any support role, I want the post-run check to detect every write, also to a file
+  that was already modified, so that a role's boundary holds on a dirty checkout.
+
+`UC-route-development-intent` changes: its feedback-triage route gains the optional `triage` delegation, and its
+orientation reports an `XL` draft as a decomposition action.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: <what this change will not do>
+1. **Scope Excluded**: a role that writes anything, sets a feedback status, deletes a proposal or creates or changes a
+   milestone.
+2. **Scope Excluded**: a workflow, stage or unit for Backlog work, and a Backlog envelope location; a role's return is
+   a message, recorded in no envelope.
+3. **Scope Excluded**: a rule that refuses `size: XL` on a draft, or any size check other than the one predicate below.
+4. **Scope Excluded**: a change to `devkit-agt` or `devkit-dist`, including a coded directive on an unmet workflow
+   exit check (`FB-workflow-exit-check-without-directive`, dismissed in Planning).
+5. **Scope Excluded**: automatic milestone placement or status changes; replacing any user-owned gate; external
+   tracker intake or synchronization; multi-unit orchestration hardening.
 
 ## 4. Acceptance Criteria & Behavioral Contracts
 
-### [AC-01] <scenario>
-- **Given** <precondition>
-- **When** <action>
-- **Then** <expected result>
+The size predicate: a proposal passes when `size` is absent or exactly `S`, `M` or `L`; any other value (`XL`, `xl`, a
+typo) fails, and every refusal devkit-spec prints names the allowed values.
 
-## 5. Carried Proposal Notes
+### [AC-01] The triage contract is an isolated read-only role that cites the playbook
+- **Given** the spec bundle source
+- **When** `subagents/triage.md` is read
+- **Then** its frontmatter has `role: triage`, `x-execution: isolated`, `x-invocation: optional`, `x-git-actions:
+  [read]`, `x-model-profile: light-medium`, `claude-code` `native` with tools `[Read, Grep, Glob, Bash]`,
+  `disallowedTools: [Write, Edit]` and `effort: medium`, `codex` `emulated` with `sandbox_mode: read-only` and
+  `model_reasoning_effort: medium`, and `antigravity` `native` with `commandExecutionPolicy: sandbox`; its body runs
+  `uv run devkit get-context spec`, cites `.devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md` Steps 1 and 2,
+  returns groups (FB IDs, ownership, destination with reason, duplicates, dismissal candidates) and proposes no
+  status change
 
-Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+### [AC-02] The decomposer contract is an isolated read-only role that cites the Backlog reference
+- **Given** the spec bundle source
+- **When** `subagents/decomposer.md` is read
+- **Then** its frontmatter matches AC-01's host matrix with `x-model-profile: general-high` and effort `high`; its body
+  runs `uv run devkit get-context spec`, cites `.devkit/managed/spec/skills/spec/references/backlog.md`, returns per
+  child a slug, title, summary, scope, a size below `XL`, effort hints, boundaries, edges and the inherited PADRs,
+  answers and materials, the disposition of each incoming `depends_on` edge and the recommended exit (split or
+  promote), assigns no open feedback to a child, and returns `needs_input` when the draft does not divide
 
-### 2. Technical Spike Questions
+### [AC-03] Both roles are registered, projected and validated
+- **Given** a fresh repository after `devkit sync`
+- **When** `devkit workflow validate --format json` runs
+- **Then** it exits `0` with `ok: true` and `roles_checked: true`; `.devkit/managed/spec/subagents/triage.md` and
+  `decomposer.md` exist, each role is projected to `.claude/agents/<role>.md`, `.codex/agents/<role>.toml` and
+  `.agents/agents/<role>.md`, and `bundle.toml` lists both as assets and in `presets.core`
 
-- **Q1 (read and return)**: Settled by the `user` (answer-01 q1): both roles are read-only.
-- **Q2 (provenance)**: Settled below (Host application): the Host writes every link with existing commands, after an
-  ID check that distinguishes existing IDs from proposed child slugs; open feedback of a decomposed parent keeps the
-  retirement move.
-- **Q3 (record)**: Settled by the `user` (answer-01 q2): no envelope; the Backlog commit body names the role used.
-- **Q4 (invocation)**: Settled by the `user` (answer-01 q3, q4): `triage` is delegated above 5 open items on a native
-  host; the `decomposer` runs from Backlog only, now also for an `XL` draft (answer-01 q4 constraints).
-- **Q5 (hosts)**: Settled by policy below.
-- **Q6 (XL gate placement)**: Settled by the `user` (answer-02 q5): devkit-spec only. Spike F7: a workflow exit
-  condition blocks the gate, `devkit workflow next` and plan-intent recording, and devkit-spec's own commands carry the
-  decompose text; `next` and `answer` print no directive of their own, which `FB-workflow-exit-check-without-directive`
-  keeps open as a separate suggestion.
-- **Q7 (XL definition)**: Settled by the `user` (answer-02 q6): "different nature" means work that would need separate
-  specs or a different `task_kind`.
+### [AC-04] Delegation guidance names the invocation points
+- **Given** the bundle text
+- **When** the caller guidance is read
+- **Then** `spec-delegate`'s payload table has a `triage` and a `decomposer` row; `feedback-hygiene` Step 1 delegates
+  `triage` when the listing has more than 5 items and the host runs it natively, and otherwise runs Step 1 inline; the
+  Backlog reference delegates the `decomposer` only from Backlog, for a merged `needs_decompose` return, the user's
+  request to split or an `XL` draft, requires a clean checkout before and after a Backlog role run, resolves every
+  cited existing ID, requires every proposed slug to be unused and names the role in the Backlog commit body;
+  `spec-next` names the decomposer in its Backlog actions for `needs_decompose` and `XL` drafts
 
-### 3. Proposed Design & Impact
+### [AC-05] The support-role diff check sees a write to an already-modified file
+- **Given** a checkout where `f` is already modified and `new.txt` untracked
+- **When** a support role appends to `f` and `new.txt`, leaving `git status --short` unchanged
+- **Then** the `spec-delegate` snapshot (`git read-tree HEAD`, `git add -A` and `git write-tree` under a temporary
+  `GIT_INDEX_FILE`) differs before and after, `git diff --name-only <before> <after>` lists exactly `f` and `new.txt`,
+  and taking the snapshot leaves the real index and `git status --short` unchanged
 
-#### Roles
+### [AC-06] An XL draft leaves plan-intent unmet at next
+- **Given** a draft proposal bound to `sdd-proposal` with `size: XL`, or `size: xl`, under `plan-intent` `ask` and
+  under `auto`
+- **When** `devkit workflow next --unit docs/proposals/PROP-<slug>` runs
+- **Then** it exits `0`, shows stage `intent-proposal` with the size check under `[UNMET: ...]` and `detail="size=XL"`
+  (`size=xl`), and prints no `[GATE: plan-intent ...]` request; a draft without `size` and one with `size: L` show
+  the request open
 
-Two contracts in the spec bundle `subagents/`, registered in `bundle.toml` (an asset entry and `presets.core`) beside
-the existing roles. Both have `x-execution: isolated`, `x-invocation: optional` and `x-git-actions: [read]`, start by
-running `uv run devkit get-context spec` (the `code-reviewer` pattern that `SPEC-foundation-documents` extends to every
-role), decide nothing and write nothing (`user`, answer-01 q1).
+### [AC-07] plan-intent cannot be recorded for an XL draft
+- **Given** the `XL` draft of AC-06
+- **When** `devkit workflow answer --unit <dir> --request gate:plan-intent --action accept --by user` runs
+- **Then** it is refused with `REQUEST_UNKNOWN` and writes no decision record
 
-Each contract cites the procedure it applies by managed path instead of restating it (challenger-01 finding 5;
-`CAP-DLV-delivery-workflows` section 4.6: a main session runs both procedures), and keeps only its inputs, return
-fields, write boundaries and failure handling.
+### [AC-08] A direct acceptance check names the size blocker
+- **Given** an `XL` draft otherwise eligible for direct acceptance
+- **When** `devkit spec proposal accept <slug> --by user --direct --check --note "x"` runs
+- **Then** it fails with `SPEC_PROPOSAL_NOT_ELIGIBLE` and a `blocking:` detail starting `size: XL (decompose first:
+  split with --decomposed-from or promote to a milestone` that names the allowed values; a `size: L` draft has no size
+  detail
 
-- **`triage`** applies `feedback-hygiene` Steps 1 and 2 (`.devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md`)
-  to the open feedback the Host names (by default `devkit spec list feedback --status open --all-namespaces -n 0`),
-  reading each item's target and evidence. It returns, per group: the FB IDs, the confirmed ownership, a recommended
-  destination from the Step 2 table with its reason, possible duplicates of another open item and dismissal
-  candidates. It never proposes a status change itself; Step 3 stays with the Host after the user's decision.
-- **`decomposer`** applies the Backlog reference's decomposition and prerequisite disposition
-  (`.devkit/managed/spec/skills/spec/references/backlog.md`) to one draft the Host names, reading its PADRs, answer
-  envelopes, materials and the live units that depend on it (`devkit spec refs PROP-<slug> --direction in -n 0`). It
-  returns a split into independently deliverable children: per child a proposed slug, title, summary, scope, a size
-  below `XL`, effort hints chosen afresh, boundaries by nearest existing parent, and edges among the children; the
-  proposed disposition of each incoming `depends_on` edge; per child the parent PADRs, answers and materials it
-  inherits, or none; and the exit it recommends (below). It does not assign the parent's open feedback to a child:
-  those files take the retirement move (`feedback-retirement.md`, `CAP-DLV-proposal-incubation` section 3.1); it may
-  name a child an open item is relevant to, as input for a later hygiene pass. It returns `needs_input` when the draft
-  does not divide into independently deliverable parts.
+### [AC-09] Only a Planning attach is refused for size
+- **Given** a draft proposal with `size: XL` bound to `sdd-proposal`, and an accepted proposal with `size: XL`
+- **When** `attach_check` runs for `plan-<slug>` on the draft and for `dev-<slug>` on the accepted proposal
+- **Then** the `plan-` attach returns a reason naming the size, the allowed values and both exits (split, promote), and
+  the `dev-` attach returns no reason
 
-Each return carries the support-role envelope fields (`status`, `summary`, `findings` with `evidence`, `assumptions`,
-`unverified_areas`, and `diff_scope.head`, the base HEAD the role read); a finding's `failure_condition` states what
-goes wrong if the recommendation is applied blindly.
+### [AC-10] Guidance covers the Planning return, judging, reclassification and the directive
+- **Given** the bundle text
+- **When** the guidance is read
+- **Then** `planning.md` step 1 returns a proposal whose size fails the predicate as for decomposition
+  (`status: draft`, `needs_decompose: true`); the `spec` skill has the Host judge `size` against the definition and
+  show it in the plan-intent request; the session reclassification conditions include no `size: XL`; the `spec`
+  skill, `spec-next` and `sdd-proposal.md` read the unmet size check as "decompose first, never edit the size to pass"
 
-| Role | Model profile | Reasoning effort | Reason (`policy`) |
-| --- | --- | --- | --- |
-| `triage` | `light-medium` | `medium` | Classification by the playbook's fixed table, like `scout` |
-| `decomposer` | `general-high` | `high` | A design split whose second view is the point of the role |
+### [AC-11] XL has a judgeable definition with an example of each side
+- **Given** the proposal template, the scaffold comment, the seed `docs/proposals/README.md` and
+  `CAP-DLV-proposal-incubation`
+- **When** each describes `size`
+- **Then** `XL` is defined as work that would produce two or more specs or bundle deliverables of a different
+  `task_kind`; the template and the capability give one `XL` example (a new CLI command with a viewer redesign it does
+  not need, or a parser bugfix with a new search feature) and one non-`XL` example (two agent contracts and their
+  command checks in one `feature` spec); "major overhaul" appears in none of them
 
-#### Invocation (`user`, answer-01 q3, q4)
+### [AC-12] A fixture decomposition preserves provenance and feedback
+- **Given** a temporary repository with a draft parent that has an open feedback file and an incoming `depends_on`
+  edge from another draft, and an existing proposal whose slug a proposed child reuses
+- **When** the Host procedure runs: `devkit spec proposal new <child> --decomposed-from PROP-<parent>` per child, the
+  edge rewired to a created child, the feedback retirement move and the parent's deletion
+- **Then** each child carries `decomposed_from: PROP-<parent>`, the dependent's `depends_on` names a created child,
+  the open feedback file sits under `specs/<YYYY-MM>/feedback/` with its ID and status and in no child, and
+  `proposal new` on the colliding slug exits `2` with `SPEC_PROPOSAL_EXISTS` and writes nothing
 
-- **`triage`**: in `feedback-hygiene` Step 1, the Host delegates when the open-feedback listing has more than 5 items
-  and the host runs the role natively; otherwise it runs Step 1 inline.
-- **`decomposer`**: from Backlog only, never self-initiated, for (1) a `needs_decompose` draft once its Planning return
-  is merged, (2) the user's request to split a draft, and (3) an `XL` draft that the size gate below stopped. A
-  mis-sized draft (declared `M` or `L`, actually broad) is still caught by Planning's existing `needs_decompose`
-  return, which leads to (1).
-- `spec-next` names the decomposer in its Backlog actions for `needs_decompose` and `XL` drafts.
+### [AC-13] A dogfood triage run is recorded
+- **Given** the open feedback at Development time and a clean checkout
+- **When** the `triage` role runs on it
+- **Then** the final change report records its return and the before and after `git status --porcelain`, both empty
 
-#### XL size gate
+## 5. Source feedback
 
-- **Definition** (`user`): `size: XL` means the work would produce two or more specs, or bundles deliverables of
-  different nature, that is, work that would need separate specs or a different `task_kind` (`user`, answer-02 q6).
-  The proposal template and `CAP-DLV-proposal-incubation` give one example of each side:
-  - `XL`: a new CLI command together with a viewer redesign it does not need (two specs), or a parser bugfix bundled
-    with a new search feature (`bugfix` and `feature`);
-  - not `XL`: two agent contracts and the command checks that route work to them, delivered by one `feature` spec.
-- **Values**: `S`, `M`, `L` and `XL` stay; the wording changes in the proposal template, the scaffold comment,
-  `CAP-DLV-proposal-incubation` (the field table and the `target-docs.md` recommendation), the seed
-  `docs/proposals/README.md`, `CAP-HARN-agent-guidance` and `UC-route-development-intent` where they describe sizes. Rough `XL` drafts stay valid
-  in Backlog: no rule refuses `size: XL` on a draft.
-- **Judging**: the `spec` skill's plan-intent step has the Host judge `size` against the definition and show it in the
-  plan-intent request, as it shows `planning_effort`, because the scaffold writes `size: M` for every draft
-  (challenger-02 finding 5).
-- **One predicate** (challenger-02 finding 4): a proposal passes when `size` is absent or exactly `S`, `M` or `L`;
-  any other value (`XL`, `xl`, a typo) is refused, and the refusal names the allowed values. Every check below uses it.
-- **Gate** (`user`: an error, not a warning): an `XL` draft cannot pass plan-intent and cannot start Planning.
-  Placement, devkit-spec only (`user`, answer-02 q5; spike F7 options A and B, corrected by challenger-02 finding 1):
-  - `sdd-proposal.md`: the `intent-proposal` exit adds `frontmatter(proposal.md size S|M|L|)`. The gate request stays
-    closed under `ask` and `auto`, so `devkit workflow next` shows the stage unmet with `detail="size=XL"` at exit 0,
-    and `devkit workflow answer --request gate:plan-intent` refuses with `REQUEST_UNKNOWN`.
-  - `devkit spec proposal accept --direct` adds the blocking line "size: XL (decompose first: split with
-    --decomposed-from or promote to a milestone)" under `SPEC_PROPOSAL_NOT_ELIGIBLE`, beside the `needs_decompose`
-    line; no new error class.
-  - The `plan-` attach check (`devkit worktree start --existing-branch`) adds a reason naming both exits under
-    `WORKTREE_ATTACH_REFUSED`, only for `plan-` branches, so a `dev-` attach or the unit integration readiness of an
-    accepted proposal is never refused for size (challenger-02 finding 10).
-  - `planning.md` step 1: a Planning run on a proposal whose size fails the predicate returns it as for decomposition
-    (`status: draft`, `needs_decompose: true`), which covers a new `plan-` branch that no attach check sees
-    (challenger-02 finding 3).
-  - The `spec` skill's plan-intent step, `spec-next` and the `sdd-proposal` notes read the unmet size check as the
-    directive "decompose first, never edit the size to pass", so an agent acts on it although `next` carries no code.
-  - The Backlog reference's session reclassification adds "no `size: XL`" to its conditions (challenger-02 finding 9).
-- **Two exits**, both through the `decomposer`, applied by the Host on the user's decision:
-  - (a) **split**: `devkit spec proposal new <child> --decomposed-from PROP-<parent>` for each child, keeping the
-    parent's `milestone`;
-  - (b) **promote**: create `docs/roadmap/MS-<slug>.md` from the milestone template and place the children in it, when
-    there are three or more children or the theme is long-running. The decomposer's return names the parent's
-    milestone, if any, and a proposed relation to the new one (the parent milestone `depends_on` it, or its scope
-    narrowed); the Host applies it on the user's decision, with the reset of that milestone's completion review the
-    template requires for a scope change (challenger-02 finding 8). Creating a milestone is the user's decision on a
-    concrete candidate; its status changes stay user-owned.
-  The decomposer recommends (a) or (b) by that criterion; the user chooses.
-- **No split possible**: a decomposer `needs_input` return on an `XL` draft means the draft was mis-sized; the Host
-  shows the user a size correction with the decomposer's reason, and only the user's decision changes the size
-  (challenger-02 finding 7).
-- A proposal already past plan-intent whose size is edited to `XL` shows `intent-proposal` unmet again; its Planning
-  run returns it with `needs_decompose: true` (step 1 above), as for a mis-sized draft.
+- `FB-support-role-diff-check-on-dirty-tree` (`specs/2026-10/20261026-backlog-subagent-roles/feedback/`): resolved
+  directly by AC-05; the `user` added it to the scope at Development start.
 
-#### Host application and verification
+## 6. Assumptions
 
-- **Before delegating**: the checkout is clean (`git status --porcelain` empty), so the post-run comparison sees any
-  write; on a dirty checkout the Host delegates from a clean task worktree or stays inline. For the decomposer,
-  `devkit spec proposal check <slug>` passes on the base, and a Planning return for decomposition is merged first
-  (Backlog reference, Return from Planning) when the draft has a Planning return; the payload's `diff_scope.head` is
-  the base HEAD.
-- **After the return**: `git status --porcelain` is still empty (spec-delegate step 4). Before applying a split, the
-  Host confirms `git diff <head> -- docs/proposals/PROP-<slug>` is empty and re-runs `devkit spec refs PROP-<slug>
-  --direction in -n 0`; a change in either sends the draft back to the role or to inline work.
-- **IDs**: every existing ID a return cites (FB, the parent PROP, dependents, MS) resolves with `devkit spec resolve`,
-  or it is dropped and reported. A proposed child slug or milestone slug must not resolve; `devkit spec proposal new`
-  refuses a collision. Edges to children are written after the children exist, in the same Backlog commit.
-- **Application**: the Host presents the groups or the split, and applies only what the user decides, with the existing
-  procedures: `feedback-hygiene` Steps 2 and 3; `devkit spec proposal new <child> --decomposed-from PROP-<parent>`
-  (with `--milestone` for the kept or promoted milestone), `devkit spec proposal padr` and a materials copy for each
-  inherited item the user keeps, the prerequisite disposition and the feedback retirement of the Backlog reference.
-- **Record** (`user`, answer-01 q2): no envelope; the role returns a message, and the Backlog commit body names the role
-  that was used.
-- User-owned gates (`plan-intent`, `plan-accept`) and milestone transitions stay with the user; neither role changes a
-  milestone status.
-
-#### Hosts (`policy`)
-
-The `challenger` matrix, since neither role writes even `materials/` (challenger-01 finding 3): Claude Code `native`
-(`Read`, `Grep`, `Glob`, `Bash`, with `disallowedTools: [Write, Edit]`; `Bash` runs the `devkit spec` queries), Codex
-`emulated` (`sandbox_mode: read-only`), Antigravity `native` (sandboxed commands). Where a host cannot isolate a role,
-`spec-delegate`'s substitute route applies, which here means running the cited playbook or Backlog procedure inline.
-
-#### Acceptance (`policy`)
-
-- Tests pin both contracts like the others (`test_role_contracts.py`: role, profile, preset, host matrix with
-  `disallowedTools`, payload row, the cited procedure path, `get-context`).
-- A fixture decomposition test drives the Host procedure on a temporary repository: children carry `decomposed_from`,
-  a rewired incoming edge points at a created child, the parent's open feedback is moved by retirement and not copied
-  into a child, and a proposed slug that collides is refused.
-- Size gate tests: an `XL` and an `xl` draft leave `intent-proposal` unmet at `next` (`detail="size=XL"`) under `ask`
-  and `auto`; `workflow answer --request gate:plan-intent` is refused; `accept --direct --check` lists the size
-  blocking line under `SPEC_PROPOSAL_NOT_ELIGIBLE`; a `plan-` attach is refused with the decompose reason and a `dev-`
-  attach of an accepted `XL` proposal is not; a draft without `size` and an `L` draft still pass; guidance tests cover
-  the `planning.md` step 1 return and the reclassification condition; `devkit workflow validate` accepts the
-  definition.
-- A dogfood `triage` run over the open feedback at Development time, with its return and the before and after
-  `git status --porcelain`, is recorded in the final change report.
-
-#### Living Spec impact
-
-- `CAP-DLV-delivery-workflows` section 4.6: two role rows (skill: the cited procedure; profile and effort above; writes
-  nothing; envelope kind: none, a message); the `sdd-proposal` intent-proposal exit where the capability lists it,
-  and the `plan-` attach reason in integration readiness.
-- `CAP-DLV-proposal-incubation`: the `XL` definition, the size gate and its two exits, and decomposition that may
-  delegate the split to `decomposer`; feedback retirement unchanged.
-- `CAP-HARN-agent-guidance`: the subagent asset list, the size wording and the feedback-hygiene and Backlog guidance.
-- `ARCH-04-1-ecosystem-boundaries`: the Subagent Roles row.
-- `UC-route-development-intent`: the optional `triage` delegation and the size wording.
-- Bundle text: both contracts, `bundle.toml`, the `spec-delegate` payload table, `feedback-hygiene` Step 1, the Backlog
-  reference's decomposition and reclassification paragraphs, the `spec` skill's plan-intent step, `planning.md`
-  step 1, `spec-next`'s Backlog actions, `sdd-proposal.md`, the proposal template and the seed README.
-- Code: the `devkit spec proposal accept --direct` conditions, the `plan-` attach check, the scaffold comment and their
-  tests. No change to `devkit-agt` or `devkit-dist` (answer-02 q5); the viewer's size filter
-  keeps the same values; `handbook/` is a release snapshot outside this work.
-
-#### Order with parallel work
-
-`SPEC-foundation-documents` (accepted and handed off to a spec on `dev-foundation-documents`, not yet on `main`)
-rewrites the other role contracts and adds a test that every role contract loads the spec context. The new contracts
-load it from the start, so whichever lands first the other passes; the shared role tests are a textual overlap the
-later branch resolves. No `depends_on` is set, because nothing here needs that spec's behavior; the Host starts this
-Development after that spec integrates, as the user directed.
-
-#### Non-goals
-
-- Multi-unit orchestration hardening across `local-orchestrated` and `cloud-pr`: dropped from the roadmap by the
-  `user`, with no follow-up proposal.
-- A role that writes anything, sets a feedback status, deletes a proposal or creates or changes a milestone.
-- A workflow, stage or unit for Backlog work, and a Backlog envelope location.
-- A rule that refuses `size: XL` on a draft, or any size check other than `XL`.
-- Automatic milestone placement or milestone status changes; replacing any user-owned gate.
-- External tracker intake or synchronization (`ADR-roadmap-and-milestones`).
-
-#### Planning decisions
-
-- `policy` (scout-01): boundaries fixed from spike F1 and F4; `devkit_spec/features/` (then not needed) and
-  `docs/capabilities/collaboration/` dropped; `packages/devkit/`, `packages/devkit-dist/` and `handbook/` excluded.
-- `policy` (challenger-01 findings 1-7, 9): no per-child feedback assignment; split ID check; clean-tree delegation and
-  the `challenger` host matrix; model profiles; cited procedures; pinned decomposer input; inherited PADRs, answers and
-  materials; the acceptance tests.
-- `user` (answer-01): q1 read-only roles; q2 no envelope; q3 `triage` above 5 open items; q4 the decomposer from Backlog
-  only. Added scope: the judgeable `XL`, the size gate as an error before Planning and its two exits; multi-unit
-  orchestration hardening is a non-goal with no follow-up.
-- `policy` (scout-02): boundaries add `sdd-proposal.md`, the template, the seed README, `features/proposals/` and
-  `features/delivery/`; the viewer is excluded because the size values do not change.
-- `policy` (challenger-02 findings 1, 3-5, 7-11): restated command refusals (a blocking line and an attach reason, no
-  new error class), the `planning.md` return, one size predicate, size judged at plan-intent, the mis-sized exit, the
-  promote milestone relation, the reclassification condition, `plan-`-only attach and the conditional precondition.
-- `user` (answer-02): q5 the gate stays devkit-spec only, `size: M` and `dev_effort: medium` hold, and
-  `FB-workflow-exit-check-without-directive` stays open as a separate suggestion; q6 "different nature" means separate
-  specs or a different `task_kind`, with one example of each side in the template and `CAP-DLV-proposal-incubation`.
-- `policy`: by that definition this proposal is `M`, not `XL`: one spec of `task_kind: feature`, two agent contracts and
-  small command checks serving one Backlog decomposition theme.
-- `policy`: host matrix and fallback (Q5); no `depends_on` on `SPEC-foundation-documents`; sequencing is the Host's.
-
-### 4. Lifecycle & Retirement Criteria
-
-<!--
-- Preliminary decisions: devkit spec proposal padr backlog-subagent-roles "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
-- Research: collect benchmarks and references in materials/.
-- On acceptance (plan-accept): devkit spec proposal accept backlog-subagent-roles --by user records gate:plan-accept and status:
-  accepted, then the Planning branch is merged; an eligible draft may instead be accepted with --direct on the base,
-  without Planning. Development starts with devkit spec proposal handoff backlog-subagent-roles.
-- On rejection: change only status: rejected, with the user's reason in the commit message; a later hygiene pass
-  writes the rejection ADR and deletes the proposal directory.
--->
-
+- The snapshot replaces the status-code comparison for every support role, not only the Backlog ones: one uniform
+  check covers a clean and a dirty tree and forces no clean worktree on a caller that delegates mid-edit (the
+  feedback's cost note). The Backlog roles still require a clean checkout, as the proposal agreed, because the Host
+  applies their result in the same checkout.
+- `xl` shows its own spelling in `detail`, since the engine prints the value it read.
+- The fixture decomposition test drives the existing commands and the file moves directly; no command is added.
