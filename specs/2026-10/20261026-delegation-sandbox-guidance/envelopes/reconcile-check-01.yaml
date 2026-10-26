@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:42:43.330064Z'
+status: completed
+summary: 'Self-verification at medium (reviewer call skipped): one package (devkit-spec bundle guidance) and one capability (CAP-DLV-delivery-workflows) are affected; each of AC-01..AC-04 has a matching CAP-DLV sentence and nothing is cross-component'
+findings: []
+assumptions:
+- 'Skip conditions of effort.md hold: affected contracts identified (CAP-DLV role table, worker and approval paragraphs; ARCH-04-1 and CAP-WT checked as no impact), agreement shown in reconcile.md, no cross-component change'
+checks:
+  lint: PASS devkit rules check --ci --base ab7935404261 (errors=0)
+diff_scope:
+  base: ab7935404261cf0bcf7754ef361ef83772423231
+  head: 15e5cfc4beffd9b800e5021c65f150be165fd27c

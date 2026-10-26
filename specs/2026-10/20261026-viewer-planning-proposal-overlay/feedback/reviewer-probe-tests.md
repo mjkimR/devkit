@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/code-
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -45,3 +45,11 @@ created_at: 2026-10-26
 review-01 unverified_areas: "Findings 2 and 3 come from reading the code; no probe test was run, because copying the
 frontend into the scratchpad to run vitest was denied and the worktree is read-only."
 ```
+
+## Disposition
+
+Resolved by `SPEC-delegation-sandbox-guidance`: the `code-reviewer` contract allows throwaway probe tests only under the
+ignored probe path the payload names inside the worktree, run with the package's test command and deleted before it
+returns, so `git status --short` stays unchanged; a probe is evidence for a finding, never one of the unit's tests.
+The `code-reviewer` payload row in `spec-delegate`'s `references/payload.md` names that path. Verified by
+`packages/devkit-spec/tests/integration/bundles/spec/test_delegation_sandbox_guidance.py`.
