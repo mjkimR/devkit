@@ -320,7 +320,10 @@ def _living_spec(path: str, kind: Kind, docs_root: str, registered: tuple[Namesp
             fields.pop("expected_area", None)
         return _Target(path, kind, docs_root=docs_root, **fields)
 
-    return grammar(target, parts, _stem(path), docs_root)
+    found = grammar(target, parts, _stem(path), docs_root)
+    if area_scoped and not found.path_issue and not found.expected_area:
+        raise KindTableError(f"area-scoped kind {kind} has a path grammar in {RULE_ID} that sets no area")
+    return found
 
 
 def _markdown(ctx: RuleContext, directory: str) -> list[str]:

@@ -114,6 +114,20 @@ def test_a_living_spec_kind_without_a_grammar_fails(tmp_path: Path, monkeypatch:
         id_convention._living_spec("docs/padrs/PADR-x.md", Kind.PROPOSAL_DECISION, "docs", ())
 
 
+def test_an_area_scoped_kind_whose_grammar_sets_no_area_fails(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    files = {
+        "docs/architecture/ARCH-sample.md": "---\nid: ARCH-sample\ntitle: A\nstatus: active\n---\n# [ARCH-sample] A\n"
+    }
+    assert _messages(IdConventionRule(), tmp_path, files) == []
+    _inject(monkeypatch, ARCHITECTURE={"area_scoped": True})
+    with pytest.raises(RulesRunError, match="area-scoped kind architecture has a path grammar"):
+        check(IdConventionRule(), tmp_path)
+
+
+def test_every_identifier_target_kind_outside_the_living_spec_has_a_path_remediation() -> None:
+    assert set(id_convention._PATH_REMEDIATIONS) == {Kind.DECISION, Kind.SPEC, Kind.FEEDBACK, Kind.MILESTONE}
+
+
 def test_a_target_kind_without_a_path_remediation_fails() -> None:
     assert id_convention._path_remediation(Kind.MILESTONE).startswith("Rename or move the file to docs/roadmap/")
     with pytest.raises(KindTableError, match="kind material has no path remediation"):
