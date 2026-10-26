@@ -24,7 +24,7 @@ plan: PLAN-viewer-handbook-first-knowledge
   - **_Boundary**: packages/devkit-viewer/tests/integration/features/browse/test_handbook.py
   - _Requirements: AC-11_
   - **Verification**: `just test devkit-viewer tests/integration/features/browse/test_handbook.py`
-- [ ] **Task 1.5**: Cold-load measurement after the change
+- [x] **Task 1.5**: Cold-load measurement after the change
   - **_Boundary**: docs/materials/2026-10/20261026-viewer-handbook-first-knowledge/
   - _Requirements: AC-12_
   - **Verification**: `node coldload-probe.mjs <url> <repo-id> 3 cold-load-after.json Read .handbook-page`
