@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-25T23:26:17.252403Z'
+status: completed
+summary: 'Planning run sweep: scouts, three challenger rounds, folds and the question round reviewed; no unrecorded repository or upstream observation; overlaps with PROP-spec-playbook-discovery and PROP-maintenance-history are recorded in the proposal''s Interactions.'
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0

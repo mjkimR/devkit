@@ -1,0 +1,66 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-25T23:43:38.219016Z'
+status: completed
+summary: 'round 4; answer fold fd4c98c2 (round named by answer-01.yaml) matches O2-A to O6-A and the user''s subagent constraints; three P2 (applying subagent vs routed workflow, unverifiable subagent claims, unselected landing surface) and five P3; no P1, no Decision needed. Optional: restore ''when useful''.'
+findings:
+- issue: The fold lets a playbook subagent apply an agreed change while every work item is applied through the repository's development workflow; who applies a work item has two conflicting answers, and parallel applying subagents in one tree are not ruled out.
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:100-101,108-110,114-115; PADR-bound-review-refactor-runs-by-surface-batch.md:66-67; .devkit/managed/spec/subagents/development-worker.md:4,9-11,36; .devkit/managed/spec/AGENTS.md:38
+  failure_condition: An applying subagent either runs the sdd workflow (third nesting level, Unit records outside the batch paths) or commits directly and bypasses the workflow, reviews and gates; two applying subagents mix edits into each other's one commit per change.
+  suggested_action: 'Make the routed development workflow own the applying step: a subagent applies an agreed change only as a worker that workflow assigns, under its write boundaries and sequencing; playbook-spawned subagents do review and verification only, read-only.'
+  resolution: open
+  severity: P2
+- issue: The validation rule checks subagent claims against the code or diff at the cited location; a verification pass, a negative reachability claim and a coverage claim have no location to check.
+  evidence: proposal.md:95-99,160-163; PADR-bound-review-refactor-runs-by-surface-batch.md:62-65; PADR-require-reachability-evidence-and-layered-placement.md:46-48
+  failure_condition: A verification subagent reports tests pass and no entry-point reference; the playbook's agent finds the diff consistent and records them; a still-reached path is removed with recorded evidence, or a partly reviewed root counts as covered.
+  suggested_action: A verification or negative-reachability claim enters a change record only with its commands and results, and the playbook's agent re-runs those commands before recording; a root counts as covered only when the subagent's result lists what it read, otherwise it is a coverage gap.
+  resolution: open
+  severity: P2
+- issue: The cross-surface rule sends a finding to the batch of its landing surface without saying what happens when the user did not select that surface.
+  evidence: proposal.md:90-93; PADR-bound-review-refactor-runs-by-surface-batch.md:49-53
+  failure_condition: With only CLI selected, a finding landing in guidance is never decided, or the run adds an unselected guidance batch and expands scope without authority.
+  suggested_action: A cross-surface finding whose landing surface is outside the selected scope is recorded as deferred with a follow-up and is never applied in the run.
+  resolution: open
+  severity: P2
+- issue: The contract-removal work item lists compatibility path without the declared compatibility-policy exception stated elsewhere, giving two routings for the same removal.
+  evidence: proposal.md:111-113,143-146; PADR-bound-review-refactor-runs-by-surface-batch.md:54-57; AGENTS.md Compatibility section
+  failure_condition: A legacy reader removal in devkit-dist is routed inconsistently between runs and the checklist cannot pass or fail the text.
+  suggested_action: 'Qualify the O3 list: compatibility path, unless the declared compatibility-policy exception applies (then it is a behavior-preserving removal that still names the inputs no longer accepted).'
+  resolution: open
+  severity: P3
+- issue: '''A characterization test is added only when no existing test exercises every merged caller'' has an ambiguous quantifier that, read literally, requires a test nearly every time.'
+  evidence: proposal.md:163-164; PADR-require-reachability-evidence-and-layered-placement.md:29,49-50; materials/design-options.md O4-A
+  failure_condition: Every helper fold adds a characterization test even when each caller has its own test, reproducing the unchosen O4-B.
+  suggested_action: 'Reword in the proposal and the PADR: added only when some merged caller is exercised by no existing test.'
+  resolution: open
+  severity: P3
+- issue: The evidence PADR's risk mitigation relies on the record naming what was searched, which neither the outcome nor the proposal requires.
+  evidence: PADR-require-reachability-evidence-and-layered-placement.md:46-47,65-66; proposal.md:160-163
+  failure_condition: A record says no references without listing searches; a later breakage cannot be traced to a missed search.
+  suggested_action: 'Add to the outcome and the proposal: the reachability record names each search (command, registry or configuration read) and its result.'
+  resolution: open
+  severity: P3
+- issue: The spec-review checklist omits intake (surface and root selection, scope clarified first) and the fallback on a host without subagents.
+  evidence: proposal.md:179-182,90-91,96; PADR-bound-review-refactor-runs-by-surface-batch.md:49-50,60-61,81-83
+  failure_condition: The playbook omits the fallback or the scope clarification and still passes the checklist.
+  suggested_action: Add intake and the fallback on a host without subagents to the checklist items of the acceptance direction.
+  resolution: open
+  severity: P3
+- issue: PADR-bound-review-refactor-runs-by-surface-batch records bounding, contract removals and subagent use under a title naming only bounding, and its subagent outcome items give no driver-tied reason.
+  evidence: PADR-bound-review-refactor-runs-by-surface-batch.md:2-4,36-45,54-67; .devkit/managed/spec/instructions/decision-writing.md
+  failure_condition: After promotion, a search by ADR title for contract-removal policy misses it, and a later change must supersede the whole bounding ADR.
+  suggested_action: Move the contract-removal part into its own PADR or the evidence PADR, or retitle so the title names all three parts; add because clauses tied to the parallel-review driver for the subagent items.
+  resolution: open
+  severity: P3
+assumptions:
+- answer-01.yaml is the complete record of the user's decisions
+- devkit's sdd workflow is the reference development workflow for the applying-subagent conflict
+unverified_areas:
+- Whether codex and antigravity can spawn subagents natively from a playbook
+- PROP-spec-playbook-discovery and PROP-maintenance-history wording not re-read
+checks: {}
+diff_scope:
+  base: 424770648af4e7d9abfef1153122def584d5978e
+  head: 54c9efc3a504288fdc2f327b57a2f4320d9a4503

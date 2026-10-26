@@ -1,0 +1,27 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-25T23:25:37.880174Z'
+status: completed
+summary: round 3; four of five round-2 folds hold; the fixture location fold adds a P2 (outside-worktree writes) and the size AC a P3 (single-file restriction).
+findings:
+- issue: Fixture in a disposable Git repository outside the worktree breaks the development-worker write and Git boundaries.
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:158-162; .devkit/managed/spec/subagents/development-worker.md (Write boundaries); specs/2026-10/20261021-periodic-drift-reconciliation/materials/fixture-exercise.md:3-6; .gitignore
+  failure_condition: The delegated worker writes outside its worktree and its result is rejected, or it stops with a problem; the fixture AC cannot be met.
+  suggested_action: Use an ignored scratch path inside the worktree (for example scratch/), never committed; the fixture's own git init and commits are fixture operations; keep the rest of the fold.
+  resolution: open
+  severity: P2
+- issue: Size-budget AC requires a single playbooks/<name>.md file, ruling out the rule's own references/ split remedy.
+  evidence: docs/proposals/PROP-review-refactor/proposal.md:163-164; packages/devkit/src/devkit_agt/bundles/authoring/bundle/rules/skill_document_size/guide.md §3
+  failure_condition: After the O2-O6 answers the playbook exceeds the budget and can only pass by cutting constraints or an override.
+  suggested_action: Drop 'as one playbooks/<name>.md file'; allow a directory-form playbook with references/, each file passing the rule.
+  resolution: open
+  severity: P3
+unverified_areas:
+- Final playbook byte size depends on the O2-O6 answers
+- Apply-authority wording pending in PROP-spec-playbook-discovery
+checks: {}
+diff_scope:
+  base: bf0a9475bb18359cd8545d040272837bc447c6f5
+  head: 1666cbe1330f2bceb7ef071deeaccee566df825b

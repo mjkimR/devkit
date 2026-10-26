@@ -1,0 +1,97 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-25T23:26:35.498619Z'
+status: needs_input
+summary: 'Planning turn 1 at high: status reviewing; two scouts (internal integration, external Q1 research) answered Q1/Q2; the user direction (consolidation and reduction) and the PROP-spec-playbook-discovery dependency are folded; three challenger rounds closed (rounds 1-2 folded, round 3 self-verified), five Decision needed items (O2-O6) asked as one question round; dev_effort stays medium; rules check clean.'
+findings: []
+assumptions:
+- Owns narrowed to the maintenance bundle, catalog bundle tests and README, distribution and delivery capabilities, governance use cases and install guides
+unverified_areas:
+- Final playbook byte size depends on the answers
+- Apply-authority wording pending in PROP-spec-playbook-discovery
+checks:
+  rules: PASS RULE-proposal-boundaries clean
+  challenger: PASS rounds=3 open=Decision-needed-only
+  feedback: PASS feedback-01
+diff_scope:
+  base: 3a82060914d9cafb52028425d9bf4a8b9a0ea937
+  head: fd8f7111f23c5418e7b3c0e57bc3065bfda8ba57
+questions:
+- id: bounding
+  title: How one review-refactor run is bounded
+  prompt: How should one review-refactor run be bounded so it stays reviewable?
+  context: Sets the playbook's intake and batching steps and the size of each decision round and work item. Spike Q2 and materials/design-options.md O2.
+  options:
+  - id: a
+    description: The user selects surfaces (code, guidance, CLI) and roots at intake; missing scope is clarified first. The run splits into batches of one surface each, with one decision round per batch. A cross-surface finding cites both sides and belongs to the batch of the surface where its change lands.
+    recommended: true
+  - id: b
+    description: All three surfaces in one pass, with a top-N candidate cap ranked by evidenced maintenance cost; the rest is recorded as excluded or deferred.
+    recommended: false
+  - id: c
+    description: 'Diff-driven: only what changed since a named ref or the last run. Without a named ref this needs PROP-maintenance-history, and it misses accumulated debt in unchanged code.'
+    recommended: false
+  allow_note: true
+- id: contract-removals
+  title: Removing commands, options, interfaces
+  prompt: When the review finds an unneeded command, option, public interface or compatibility path, how is its removal handled?
+  context: Your direction requires removal of unneeded options and commands. Such a removal changes a contract, so it can never count as behavior-preserving refactoring. This decides whether it can still happen within the run or always waits as a follow-up. materials/design-options.md O3.
+  options:
+  - id: a
+    description: The decision round may approve a contract removal. It becomes its own work item through the repository's development workflow, with the contract and documentation updated, and is kept apart from the behavior-preserving batch.
+    recommended: true
+  - id: b
+    description: A contract removal is always recorded as a deferred follow-up (feedback or draft proposal) and is never applied from the run.
+    recommended: false
+  - id: c
+    description: A removal counts as an in-run refactor when no consumer is found by search. Dynamic or external consumers the search misses would break.
+    recommended: false
+  allow_note: true
+- id: preservation-evidence
+  title: Evidence that a change keeps behavior
+  prompt: What evidence must each consolidation or removal record to show it preserves agreed behavior?
+  context: Sets the acceptance bar of every change record. Dead-code and clone tools miss dynamic dispatch (entry points, plugin registries), and a passing test suite proves nothing for paths it does not exercise. materials/design-options.md O4 and q1 research §3-4.
+  options:
+  - id: a
+    description: 'Reachability evidence covering static references and the repository''s dynamic reach (entry points, plugin registries, configuration, documentation, string dispatch); relevant verification passes before and after; a characterization test is added only when no existing test exercises every merged caller. For guidance: a retained-constraint map, plus a recorded representative-task run when the removal relies on a behavioral check.'
+    recommended: true
+  - id: b
+    description: A characterization test is written before every removal or merge, regardless of existing coverage.
+    recommended: false
+  - id: c
+    description: Passing the repository's relevant existing verification is enough.
+    recommended: false
+  allow_note: true
+- id: helper-placement
+  title: Where consolidated helpers live
+  prompt: Where does the playbook place a shared module or utility created by consolidation?
+  context: 'Your direction requires merging duplicated logic into shared modules and folding repeated helpers into utilities. Placement must respect the target repository''s layering. In devkit: package-level utils and base are created only when needed, and devkit_core never imports application packages. materials/design-options.md O5.'
+  options:
+  - id: a
+    description: 'At the lowest common owner every caller may already depend on under the target repository''s declared layering. A new cross-package or foundation module, or a repository with no declared layering, becomes a decision in the round. In devkit: feature-local first, then package-level utils (technical) or base (contracts), then devkit_core only for generic primitives with no application dependency.'
+    recommended: true
+  - id: b
+    description: Always a common utils module in the nearest shared package. This can break layer direction and grows a catch-all module.
+    recommended: false
+  - id: c
+    description: Merge only into existing shared modules; creating a new shared module is always a follow-up.
+    recommended: false
+  allow_note: true
+- id: presets
+  title: Preset placement of review-refactor
+  prompt: Which maintenance presets deploy review-refactor? It joins the implicit all preset in every option.
+  context: Sets bundle.toml, the bundle tests, the README table and the install recommendation. Projects that already select maintenance:upkeep receive anything added to upkeep on their next sync. The proposal requires selection without the other playbooks. materials/design-options.md O6.
+  options:
+  - id: a
+    description: Add it to upkeep and add a solo preset refactoring.
+    recommended: true
+  - id: b
+    description: upkeep only (the earlier accepted grouping); no preset deploys it alone.
+    recommended: false
+  - id: c
+    description: Solo preset refactoring only; upkeep stays drift-reconciliation alone.
+    recommended: false
+  allow_note: true
+activity_effort: high

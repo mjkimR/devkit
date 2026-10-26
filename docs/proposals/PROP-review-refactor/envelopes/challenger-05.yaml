@@ -1,0 +1,66 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T00:04:54.511500Z'
+status: completed
+summary: 'round 5; Host-directed recovery round named by answer-02.yaml, outside the cap; fold matches the user''s correction and leaves no read-only text; contract-removal routing, intent-not-integration and the unselected-surface rule hold. One P1 (route vs ADR-overall-refactor-workflow, recurs challenger-01 #3), four P2, three P3, no Decision needed. Optional: clarify roots of a surface the user adds as at intake.'
+findings:
+- issue: 'recurs: challenger-01.yaml #3; the route sends settled-direction, multi-module behavior-preserving work items to overall-refactor, giving the opposite of the accepted ADR''s applicability criterion as its reason (''because the decision round has settled its direction''); nothing records that ADR-overall-refactor-workflow or classification.md is refined.'
+  evidence: docs/proposals/PROP-review-refactor/decisions/PADR-apply-behavior-preserving-batches-as-direct-mode-refactors.md:46-48; proposal.md:127-129,267-271,22-23; docs/decisions/2026-10/20261022-overall-refactor-workflow.md:23-24,30,55-56; .devkit/managed/spec/skills/spec/references/classification.md:8,10
+  failure_condition: A batch folding one helper used by two features is routed to overall-refactor while the ADR and classification.md make it feature work at spec depth; routing differs between runs and spec-review finds a playbook contradicting an accepted ADR that Development cannot edit (docs/decisions/ excluded).
+  suggested_action: 'Keep the user''s route and record it against ADR-overall-refactor-workflow in the PADR context and outcome: overall-refactor also applies to a behavior-preserving work item spanning more than one module whose direction a maintenance playbook''s decision round settled; remove the ''direction settled'' reason; record the matching classification.md section 1 edit as a named follow-up, since packages/devkit-spec is outside owns.'
+  resolution: open
+  severity: P1
+- issue: The single-module test leaves out 'the edits that follow a change', which include 'the references naming the changed code' and so also describe call sites and imports; the test reads two ways.
+  evidence: proposal.md:95-97,130-133; PADR-bound-review-refactor-runs-by-surface-batch.md:50-52; PADR-apply-behavior-preserving-batches-as-direct-mode-refactors.md:50-51
+  failure_condition: A helper fold from callers in two packages into a shared module counts only the new module's path under one reading (single-module, session feature) and the callers under another (overall-refactor); the broadest consolidations can become session work.
+  suggested_action: Define following edits as the tests of the changed code and non-code text naming it (documentation, guidance, Living Spec); every edited source file, including call sites, imports and re-exports, counts toward the single-module test.
+  resolution: open
+  severity: P2
+- issue: Parallel subagent edits across several changes in one working tree conflict with one commit per change and verification before and after each change.
+  evidence: proposal.md:140-153,206-209; PADR-apply-behavior-preserving-batches-as-direct-mode-refactors.md:55-61,67-68
+  failure_condition: Changes A and B are applied concurrently; A's after-verification runs on a tree holding B, A is committed alone, so no verification ran on commit A's tree and a broken intermediate commit carries passing evidence.
+  suggested_action: Allow parallel subagent edits within one change; verify and commit changes in sequence, each change's after-verification with only that change applied on the previous checkpoint; concurrent changes need separate worktrees.
+  resolution: open
+  severity: P2
+- issue: An edit that fails the diff check is 'not committed', but nothing removes it from the shared working tree, and discarding it by path can destroy another subagent's work.
+  evidence: proposal.md:143-148,151-153; PADR-apply-behavior-preserving-batches-as-direct-mode-refactors.md:58-61
+  failure_condition: An out-of-scope edit in another subagent's file is left in place (committed with the owner's change or skewing the full verification) or reverted by path, discarding the owner's legitimate edits.
+  suggested_action: Revert a rejected edit hunk by hunk and never reset a path another scope owns; before each commit the tree holds only committed work plus the current change; the full verification runs on a clean tree at the final head.
+  resolution: open
+  severity: P2
+- issue: The playbook must be self-contained, yet without a refactor workflow the direct-mode steps 'apply as stated' while they have no branch rule and depend on spec-bundle concepts (task kind overall-refactor, activity effort, bounded rounds, a reviewer subagent with no fallback).
+  evidence: proposal.md:83-84,137-139,149-158,114-116; .devkit/managed/spec/workflows/sdd-overall-refactor.md:111-112,120
+  failure_condition: Without the spec bundle the agent commits each change on the base branch before review and integration approval, so the decision round effectively supplies integration; on a host without subagents the review step cannot run.
+  suggested_action: 'State the playbook''s own rules: apply on a separate branch (with the spec bundle, as the overall-refactor Git policy allows); integrate only after the report and a separate integration approval; fresh subagent review when supported, otherwise a self-review recorded as such; name the task kind and bounded rounds only where the repository''s workflow defines them.'
+  resolution: open
+  severity: P2
+- issue: The work item's report list omits 'every breaking change' that sdd-overall-refactor and ADR-overall-refactor-workflow require, while a compatibility-policy-exception removal inside the work item still rejects inputs.
+  evidence: proposal.md:156-162; .devkit/managed/spec/workflows/sdd-overall-refactor.md:118-119; docs/decisions/2026-10/20261022-overall-refactor-workflow.md:60-62
+  failure_condition: A legacy reader removed under the exception is named only in its change record; the user approves integration without seeing the breaking change.
+  suggested_action: 'Add to the report list: every breaking change, including each compatibility-policy-exception removal and the inputs it no longer accepts.'
+  resolution: open
+  severity: P3
+- issue: 'recurs: challenger-01.yaml #5; the new rule assigns following edits to a change ''on any surface'', but the receipt-owned exclusion is stated only under guidance review.'
+  evidence: proposal.md:95-97,174-177; PADR-bound-review-refactor-runs-by-surface-batch.md:50-52
+  failure_condition: A code change edits a .devkit/managed/ file or projected agent file naming the moved module; the next devkit sync reverts it or reports an integrity conflict.
+  suggested_action: State that following edits never touch receipt-owned files; they edit the source bundle, or record an upstream follow-up or a devkit override.
+  resolution: open
+  severity: P3
+- issue: The diff check bounds subagent edits by 'the batch's write scope', which no section defines; following edits may lie outside the roots selected at intake.
+  evidence: proposal.md:136,143-146; PADR-apply-behavior-preserving-batches-as-direct-mode-refactors.md:32,58-59
+  failure_condition: A needed test or documentation update outside the selected roots is rejected in one run and an unrelated edit accepted in another.
+  suggested_action: Define the batch's write scope as the edited paths the decision round states for the batch's agreed changes, including their following edits; a subagent's assigned paths are a subset of it.
+  resolution: open
+  severity: P3
+assumptions:
+- answer-02.yaml is the complete record of the user's correction
+unverified_areas:
+- Whether codex and antigravity general subagents share the parent's working tree
+- Whether PADR promotion can carry a refinement of an accepted ADR while docs/decisions/ is excluded
+checks: {}
+diff_scope:
+  base: d88805f33c19d86addd0c21777c1d06a36d370bb
+  head: b609dd04bf6377a406774ad2d41b2b2aea73cd90
+activity_effort: high
