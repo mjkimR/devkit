@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit.advisory import Level
+from devkit.advisory import ActionMode, Level
 from devkit_dist.features.distribution.models.errors import ConflictError, ReceiptStaleError
 from devkit_dist.features.distribution.services.installation import transaction
 from devkit_dist.features.distribution.services.installation.config import update_config
@@ -87,8 +87,9 @@ def test_personal_render_locked_restore_stale_and_removal(fixture) -> None:
     sync.sync_project(root, [item], locked=True)
     assert "Language: ko" in output.read_text()
     local(root, '[bundles.style.variables]\nlanguage="ja"\n')
-    with pytest.raises(LocalRenderStaleError):
+    with pytest.raises(LocalRenderStaleError) as stale:
         GetContext().execute(root, "style")
+    assert stale.value.mode is ActionMode.AUTO
     with pytest.raises(LocalRenderStaleError):
         get_project_status(root, [item])
     sync.sync_project(root, [item])
@@ -199,8 +200,9 @@ def test_input_race_aborts_before_writes(fixture, monkeypatch: pytest.MonkeyPatc
         return result
 
     monkeypatch.setattr(sync, "_build_receipt", race)
-    with pytest.raises(LocalChangedError):
+    with pytest.raises(LocalChangedError) as changed:
         sync.sync_project(root, [item], environment="local")
+    assert changed.value.mode is ActionMode.AUTO
     assert tracked_state(root) == before
     assert resolve_execution_environment(root).environment == "cloud"
 

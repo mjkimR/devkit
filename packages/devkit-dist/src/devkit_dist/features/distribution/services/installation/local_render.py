@@ -8,7 +8,7 @@ from dataclasses import replace
 from pathlib import Path
 
 import tomlkit
-from devkit.advisory import ExitCode
+from devkit.advisory import Actor, ExitCode
 from devkit_core.base.errors import GitError
 from devkit_core.core.git import run_git
 
@@ -41,6 +41,7 @@ class LocalRenderForbiddenError(ConfigError):
 class LocalRenderStaleError(ConfigError):
     code = "CONFIG_LOCAL_RENDER_STALE"
     input_error = False
+    actor = Actor.TOOL
     exit_code = ExitCode.FINDINGS
     fix = "Run `devkit sync` in this workspace to refresh personal rendering evidence"
 
@@ -48,6 +49,7 @@ class LocalRenderStaleError(ConfigError):
 class LocalChangedError(ConfigError):
     code = "CONFIG_LOCAL_CHANGED"
     input_error = False
+    actor = Actor.TOOL
     exit_code = ExitCode.FINDINGS
     fix = "Rerun `devkit sync` after configuration edits finish"
 
