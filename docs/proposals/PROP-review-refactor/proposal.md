@@ -155,13 +155,17 @@ This draft carries the scope its own milestone held before the maintenance miles
       decision round with nothing applied, as an unattended run does. Its findings are recorded as feedback
       follow-ups, and a real decision round is a separate invocation after delivery. This delivery makes no live
       refactor.
-    - The fixture is a disposable Git repository outside the worktree with its own minimal test command. With
-      simulated decisions, it exercises one consolidation, one helper fold and one removal, applied only inside the
-      fixture, with separate change records and preservation evidence. The patches, commit IDs and before-and-after
+    - The fixture is a disposable Git repository in an ignored scratch path inside the worktree (for example
+      `scratch/`), never committed to the worktree, with its own minimal test command. Its own `git init` and
+      commits are fixture operations, and routing to the development workflow means direct fixture commits plus
+      the fixture test command; no real development workflow is opened. With simulated decisions, it exercises
+      one consolidation, one helper fold and one removal, applied only inside the fixture, with separate change
+      records and preservation evidence. The patches, commit IDs and before-and-after
       command output are kept in the Unit's materials because the fixture is discarded. The playbook's exercise rule
       reads: decisions are simulated and change only the fixture.
-  - The playbook passes the repository's skill document size rule as one `playbooks/<name>.md` file; the criteria
-    are condensed into review questions rather than copied from the research tables.
+  - Every playbook file passes the repository's skill document size rule. A directory-form playbook with
+    `references/` is allowed, and the bundle tests then follow its form. The criteria are condensed into review
+    questions rather than copied from the research tables.
 
 ### Planning decisions
 
