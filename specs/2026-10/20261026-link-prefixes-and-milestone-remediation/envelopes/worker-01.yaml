@@ -1,0 +1,19 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T06:31:46.575588Z'
+status: completed
+summary: 'Ran characterize through final-change-report: both defects reproduced red, fixed green, self-reviewed and reconciled with no Living Spec impact; next is integration by the Host'
+findings: []
+assumptions:
+- The viewer prefix list is a literal in PREFIXES order, not generated from Python
+- The red-test commit d2265fe0 was made with --no-verify by mistake, not as an emergency commit; the commit gate still rewrote it and every later commit passed the gate
+checks:
+  tests: PASS just test-affected mode=full 5046 passed 14 skipped; just viewer test 95/95
+  build: PASS just viewer build and pack
+  lint: PASS devkit rules check --ci --base b38cf17b; just lint-check/check devkit-spec; just viewer lint/check
+diff_scope:
+  base: b38cf17befaca823f5b9752a9e6d400b5b90164d
+  head: 016419ed18e7d6c782809b776919665949420b44
+activity_effort: low

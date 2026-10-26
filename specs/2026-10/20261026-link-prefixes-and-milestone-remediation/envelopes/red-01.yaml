@@ -1,0 +1,13 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T06:26:12.634287Z'
+status: completed
+summary: 'Both defects reproduced as characterized: the viewer links no UC, FB or MS prose reference and still links US; a misplaced milestone gets the dated-partition remediation'
+findings: []
+checks:
+  reproduced: PASS just viewer test fails 2 new renderDocument ID reference cases (no anchors for [UC-a] [FB-b] [MS-c]; 1 anchor for [US-a]); pytest test_misplaced_path_remediation_names_each_kinds_location fails with the {YYYY-MM}/{YYYYMMDD}-{slug} remediation for docs/misplaced.md and docs/roadmap/MS-2026-q4.md while ADR, feedback and capability remediations already match
+diff_scope:
+  base: b38cf17befaca823f5b9752a9e6d400b5b90164d
+  head: d2265fe0c1605d9359065aad42c07e71dfb3f0f7
