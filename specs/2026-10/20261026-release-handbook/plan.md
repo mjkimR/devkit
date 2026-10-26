@@ -22,7 +22,7 @@ spec: SPEC-release-handbook
 | `scripts/handbook.py` (new) | `status`, `stamp`, `generate [--preview]`, `verify`, `release-check <tag>`; standard library plus PyYAML, with lazy imports of `devkit_dist.cli` and the rules testing entry point for the command and link checks |
 | `justfile` | `handbook *args` recipe running the script in the workspace environment |
 | `scripts/release.sh` | runs `release-check "$tag"` after the tag and `VERSION` checks, before any wheel build |
-| `scripts/affected_tests.py` | maps `scripts/handbook.py`, `scripts/release.sh` and `.devkit/config.toml` to the new tests; `handbook/` selects no test |
+| `scripts/affected_tests.py` | maps `scripts/handbook.py` and `scripts/release.sh` to the new tests; `handbook/` selects no test, and `.devkit/config.toml` keeps selecting none (an existing selector contract) |
 | `tools/devkit-dev` bundle | `playbooks/handbook.md`, asset `handbook` in preset `handbook`; README note |
 | `tools/devkit-dev/tests/integration/` | `test_handbook_script.py` (script, release check and rule exclusion in one module, so its fixture needs no shared helper); `test_resources.py` lists the new asset |
 | `.devkit/config.toml` | `handbook/**` in the `RULE-cli-contract` exclude; `devkit-dev = ["structure", "handbook"]` |

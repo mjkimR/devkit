@@ -49,7 +49,7 @@ FULL_PREFIXES = (
 FULL_FILES = frozenset({f"{DIST_SRC}/cli.py", f"{DIST_SRC}/__main__.py", f"{DIST_SRC}/__init__.py", "uv.lock"})
 FULL_NAMES = frozenset({"pyproject.toml", "conftest.py"})
 
-# The handbook script tests also read release.sh and the RULE-cli-contract settings of .devkit/config.toml.
+# The handbook script tests also read release.sh (and .devkit/config.toml, which selects no test: nightly CI covers it).
 HANDBOOK_TESTS = "tools/devkit-dev/tests/integration/test_handbook_script.py"
 # Repository files that tests read directly, which imports do not show: prefix -> test paths.
 DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
@@ -87,7 +87,6 @@ DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("scripts/affected_tests.py", (f"{DEVKIT}/tests/e2e/package/test_affected_tests.py",)),
     ("scripts/handbook.py", (HANDBOOK_TESTS,)),
     ("scripts/release.sh", (HANDBOOK_TESTS,)),
-    (".devkit/config.toml", (HANDBOOK_TESTS,)),
 )
 # Tests over devkit's whole source tree (layering, documented codes, CLI wiring, stdout kinds), run for any source
 # change in either devkit distribution.
