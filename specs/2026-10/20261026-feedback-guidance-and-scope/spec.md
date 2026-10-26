@@ -2,7 +2,7 @@
 id: SPEC-feedback-guidance-and-scope
 title: Scratch cleanup guidance, merge-conflict interaction and declared feedback scope
 summary: 'Resolves three decided feedback items: workers leave ignored scratch files to worktree removal, a handoff materials merge conflict asks the user instead of blocking, and scope registration accepts explicitly declared feedback files of other spec bundles.'
-status: in-progress
+status: completed
 created: 2026-10-26
 related_capabilities:
   - CAP-DLV-proposal-incubation

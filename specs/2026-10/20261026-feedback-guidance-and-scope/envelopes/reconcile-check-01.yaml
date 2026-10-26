@@ -1,0 +1,24 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T02:24:23.041358Z'
+status: completed
+summary: 'reconcile-reviewer (medium): PASS; all seven targets, the README/guide mirrors and the eight Dispositions match the diff; two P3 gaps outside the targets'
+findings:
+- issue: The newly exported feedback_file (and the existing fold_by_directory_selectors) are missing from CAP-TRACE-code-entrypoints 4.6 Library, while reconcile.md states CAP-TRACE has no impact.
+  evidence: packages/devkit-spec/src/devkit_spec/features/entrypoints/__init__.py; docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md:232-236
+  failure_condition: An agent using the documented library surface does not know the feedback-path predicate exists.
+  suggested_action: List both names in 4.6 and add CAP-TRACE-code-entrypoints as a modified target.
+  resolution: open
+  severity: P3
+- issue: docs/development/reference/host.md still ties the devkit-mcp install to integration, contradicting the corrected glossary and guide.
+  evidence: docs/development/reference/host.md:34; docs/glossary.md:56; guides/install/mcp.md:3-5
+  failure_condition: An agent installs the MCP extra expecting integration tools that are never listed.
+  suggested_action: Reword host.md:34 to the shipped state.
+  resolution: open
+  severity: P3
+checks: {}
+diff_scope:
+  base: f35e2b8ef1c3c82bea8c6b93655cc847981768ca
+  head: e6d40acb83a2b118091825809b11754587dac52e

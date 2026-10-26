@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-feedback-guidance-and-scope
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md
     resolution: modified
@@ -15,6 +15,8 @@ targets:
   - file: docs/architecture/ARCH-04-1-ecosystem-boundaries.md
     resolution: modified
   - file: docs/glossary.md
+    resolution: modified
+  - file: docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md
     resolution: modified
 ---
 
@@ -31,10 +33,13 @@ targets:
 - `CAP-WT-task-worktrees` section 7, the `CAP-DIST-sync-and-transactions` template example, the
   `ARCH-04-1-ecosystem-boundaries` actor row and the glossary term match the shipped package (AC-08).
 
-No other Living Spec impact: `CAP-TRACE-code-entrypoints` already lists every `specs/...` path as `excluded-tree`
-for derivation, which is unchanged. `UC-incubate-and-hand-off-a-proposal` and `UC-run-parallel-work-safely` describe
-neither the merge conflict directive nor the `_Boundary` exclusions, so their steps hold. The package README and
-`guides/install/mcp.md` are mirrors corrected in this unit (item 5).
+- `CAP-TRACE-code-entrypoints` 4.6 lists the new `feedback_file` predicate (and the existing
+  `fold_by_directory_selectors`); derivation still skips every `specs/...` path as `excluded-tree`.
+
+No other Living Spec impact. `UC-incubate-and-hand-off-a-proposal` and `UC-run-parallel-work-safely` describe
+neither the merge conflict directive nor the `_Boundary` exclusions, so their steps hold. The package README,
+`guides/install/mcp.md` and the `docs/development/reference/host.md` quick reference are mirrors corrected in this
+unit (item 5).
 
 ## Entrypoints
 
