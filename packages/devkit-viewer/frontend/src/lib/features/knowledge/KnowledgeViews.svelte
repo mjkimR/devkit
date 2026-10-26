@@ -12,6 +12,12 @@
 		idIndex,
 		type RepositoryDocument
 	} from '../../api/documents';
+	import {
+		cachedOverlay,
+		loadPlanningBundle,
+		loadPlanningOverlay,
+		type PlanningOverlay
+	} from '../../api/planning';
 	import KnowledgeSidebar from './KnowledgeSidebar.svelte';
 	import BundleHeader from './BundleHeader.svelte';
 	import ChapterSection from './ChapterSection.svelte';
@@ -52,6 +58,7 @@
 	let detailPath = $state('');
 	let currentAnchor = $state('');
 	let root: HTMLElement;
+	let resolvedRequest = '';
 
 	$effect(() => {
 		const repository = source,
@@ -59,6 +66,7 @@
 		const controller = new AbortController();
 		documents = [];
 		errors = [];
+		resolvedRequest = '';
 		loading = Boolean(repository);
 		selectedPath = '';
 		detailPath = '';
@@ -72,6 +80,49 @@
 			});
 		return () => controller.abort();
 	});
+
+	// The Proposals tab overlays Planning proposals; the checkout index above never waits for them.
+	let overlay = $state.raw<PlanningOverlay | undefined>();
+	let overlayErrors = $state.raw<string[]>([]);
+	$effect(() => {
+		const repository = source,
+			ref = branch,
+			wanted = view === 'proposals';
+		overlay = undefined;
+		overlayErrors = [];
+		if (!repository?.planningProposals || !wanted) return;
+		const controller = new AbortController();
+		const known = cachedOverlay(repository, ref);
+		overlay = known;
+		if (!known)
+			void loadPlanningOverlay(repository, ref, controller.signal)
+				.then((result) => {
+					if (controller.signal.aborted) return;
+					overlay = result;
+					overlayErrors = result?.errors ?? [];
+				})
+				.catch((error: unknown) => {
+					if (!controller.signal.aborted)
+						overlayErrors = [
+							`Planning overlay: ${error instanceof Error ? error.message : String(error)}`
+						];
+				});
+		return () => controller.abort();
+	});
+	const overlayEntries = $derived(overlay?.entries ?? {});
+	// Overlaid proposals replace their checkout copies in place; Planning-only ones join in path order.
+	const merged = $derived.by(() => {
+		const entries = Object.values(overlayEntries);
+		if (!entries.length) return documents;
+		const known = new Set(documents.map((d) => d.path));
+		return [
+			...documents.map((d) => overlayEntries[d.path]?.document ?? d),
+			...entries.filter((e) => !known.has(e.document.path)).map((e) => e.document)
+		].sort((a, b) => a.path.localeCompare(b.path, undefined, { numeric: true }));
+	});
+	const sourceLabels = $derived(
+		Object.fromEntries(Object.entries(overlayEntries).map(([path, e]) => [path, e.source.label]))
+	);
 
 	$effect(() => {
 		view;
@@ -87,11 +138,11 @@
 
 	const namespaces = $derived([...new Set(documents.map(namespaceOf))].sort());
 	const scoped = $derived(
-		documents.filter(
+		merged.filter(
 			(d) => namespace === 'all' || namespaceOf(d) === namespace || namespaceOf(d) === 'global'
 		)
 	);
-	const ids = $derived(idIndex(documents));
+	const ids = $derived(idIndex(merged));
 	const book = $derived(
 		bookGroups.flatMap((group) => scoped.filter((d) => bookGroup(d) === group))
 	);
@@ -123,9 +174,36 @@
 		)
 	);
 	const selected = $derived(entries.find((d) => d.path === selectedPath));
+	const selectedEntry = $derived(selected ? overlayEntries[selected.path] : undefined);
+	// An overlaid proposal's bundle is read from its own Planning source, never from the checkout.
+	let planningBundle = $state.raw<{
+		key: string;
+		documents: RepositoryDocument[];
+		errors: string[];
+	}>();
+	const bundleKey = $derived(selectedEntry ? `${selectedEntry.source.id}\n${selected!.path}` : '');
+	$effect(() => {
+		const key = bundleKey,
+			repository = source;
+		planningBundle = undefined;
+		const entry = untrack(() => selectedEntry);
+		if (!key || !repository || !entry) return;
+		const controller = new AbortController();
+		void loadPlanningBundle(repository, entry, controller.signal).then((result) => {
+			if (!controller.signal.aborted) planningBundle = { key, ...result };
+		});
+		return () => controller.abort();
+	});
+	const bundleSource = $derived(
+		selectedEntry
+			? planningBundle?.key === bundleKey && planningBundle.documents.length
+				? planningBundle.documents
+				: [selectedEntry.document]
+			: documents
+	);
 	const bundle = $derived(
 		selected
-			? documents
+			? bundleSource
 					.filter((d) =>
 						d.path.startsWith(selected.path.slice(0, selected.path.lastIndexOf('/') + 1))
 					)
@@ -149,7 +227,7 @@
 	const detail = $derived(bundle.find((d) => d.path === detailPath) ?? selected);
 	const visibleDocs = $derived(view === 'book' ? book : detail ? [detail] : []);
 	const rendered = $derived(
-		new Map(visibleDocs.map((doc) => [doc.path, renderDocument(doc, documents)]))
+		new Map(visibleDocs.map((doc) => [doc.path, renderDocument(doc, merged)]))
 	);
 	const taskDoc = $derived(bundle.find((d) => d.path.endsWith('/tasks.md')));
 	const taskChecks = $derived(taskProgress(taskDoc?.body ?? ''));
@@ -161,14 +239,19 @@
 			: []
 	);
 
+	// A request resolves once; a later overlay retries only a request no document matched yet.
 	$effect(() => {
 		const path = requestedPath,
 			anchor = requestedAnchor,
-			currentView = view;
-		if (loading || !documents.length) return;
+			currentView = view,
+			available = merged;
+		if (loading || !available.length) return;
 		untrack(() => {
-			const doc = documents.find((d) => d.path === path);
+			const key = `${currentView}\n${path}\n${anchor}`;
+			if (resolvedRequest === key) return;
+			const doc = available.find((d) => d.path === path);
 			if (!doc) return;
+			resolvedRequest = key;
 			if (currentView !== 'book') {
 				const entry = candidates.find((d) =>
 					path.startsWith(d.path.slice(0, d.path.lastIndexOf('/') + 1))
@@ -184,7 +267,10 @@
 				selectedPath = entry.path;
 				detailPath = path;
 			}
-			void tick().then(() => jump(path, anchor || documentAnchor(path)));
+			// A tab switch before the next tick cancels the jump, so it never resolves in another view.
+			void tick().then(() => {
+				if (view === currentView) void jump(path, anchor || documentAnchor(path));
+			});
 		});
 	});
 
@@ -224,9 +310,17 @@
 		};
 	}
 
+	const shownErrors = $derived([
+		...errors,
+		...overlayErrors,
+		...(planningBundle && planningBundle.key === bundleKey ? planningBundle.errors : [])
+	]);
+	const findDocument = (path: string) =>
+		bundle.find((d) => d.path === path) ?? merged.find((d) => d.path === path);
+
 	async function jump(path: string, anchor = documentAnchor(path)) {
 		if (!visibleDocs.some((d) => d.path === path)) {
-			const target = documents.find((d) => d.path === path);
+			const target = findDocument(path);
 			if (!target) return;
 			if (view === 'book' && bookGroup(target)) namespace = 'all';
 			else if (
@@ -245,7 +339,7 @@
 		if (!destination) return;
 		destination.scrollIntoView({ block: 'start', behavior: 'instant' });
 		currentAnchor = anchor;
-		onLocation(path, anchor, view, documents.find((d) => d.path === path)?.meta ?? {});
+		onLocation(path, anchor, view, findDocument(path)?.meta ?? {});
 	}
 
 	function linkNavigation(node: HTMLElement) {
@@ -273,10 +367,10 @@
 </script>
 
 <div class="knowledge" bind:this={root}>
-	{#if errors.length}
+	{#if shownErrors.length}
 		<details class="index-errors">
-			<summary>{errors.length} documents failed to load</summary>
-			{#each errors as error}
+			<summary>{shownErrors.length} documents failed to load</summary>
+			{#each shownErrors as error}
 				<p>{error}</p>
 			{/each}
 		</details>
@@ -301,6 +395,7 @@
 				bind:includeCompleted
 				{book}
 				{entries}
+				sources={sourceLabels}
 				{selected}
 				{currentAnchor}
 				{rendered}
@@ -318,6 +413,7 @@
 						{ids}
 						{rendered}
 						{view}
+						sourceLabel={selectedEntry?.source.label}
 						{onOpen}
 						onLocation={(path, anchor, meta) => onLocation(path, anchor, view, meta)}
 						onJump={(path, headingId) => jump(path, headingId)}
@@ -335,6 +431,7 @@
 						{theme}
 						{lazyDiagrams}
 						{trackHeading}
+						sourceLabel={view === 'book' ? undefined : selectedEntry?.source.label}
 						{onOpen}
 					/>
 				{/each}

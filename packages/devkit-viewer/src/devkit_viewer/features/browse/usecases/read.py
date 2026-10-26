@@ -1,4 +1,4 @@
-"""Read the selected repository's metadata and saved documents."""
+"""Read the selected repository's metadata, saved documents and Planning proposals."""
 
 import base64
 from collections.abc import Iterable
@@ -6,6 +6,7 @@ from http import HTTPStatus
 
 from devkit_viewer.features.browse.models.errors import ReadError
 from devkit_viewer.features.browse.models.repository import Repository
+from devkit_viewer.features.browse.repositories.planning import planning_proposals, source_blob, source_tree
 from devkit_viewer.features.browse.repositories.worktree import WorkingTreeReader
 
 
@@ -15,15 +16,25 @@ def list_repositories(repositories: Iterable[Repository]) -> dict[str, object]:
     }
 
 
-def read_repository(repo: Repository, endpoint: str, target: str, *, recursive: bool = False) -> dict[str, object]:
+def read_repository(
+    repo: Repository, endpoint: str, target: str, *, recursive: bool = False, source: str = ""
+) -> dict[str, object]:
+    """Answer one read endpoint; ``source`` selects a Planning source for ``tree`` and ``blob`` only."""
     reader = WorkingTreeReader(repo.root)
     if endpoint == "info":
         return {"repo_id": repo.id, "default_branch": reader.branch()}
     if endpoint == "dashboard-list":
         return reader.dashboard_headers(target)
+    if endpoint == "planning-proposals":
+        return planning_proposals(repo.root)
     if endpoint not in ("tree", "blob"):
         raise ReadError(HTTPStatus.NOT_FOUND, "VIEWER_NOT_FOUND", f"no API endpoint '/api/repos/{repo.id}/{endpoint}'")
     if endpoint == "tree":
-        return {"items": [item.as_json() for item in reader.tree(target, recursive=recursive)]}
-    data = reader.blob(target)
+        items = (
+            source_tree(repo.root, source, target, recursive=recursive)
+            if source
+            else reader.tree(target, recursive=recursive)
+        )
+        return {"items": [item.as_json() for item in items]}
+    data = source_blob(repo.root, source, target) if source else reader.blob(target)
     return {"path": target, "encoding": "base64", "content": base64.b64encode(data).decode(), "size": len(data)}

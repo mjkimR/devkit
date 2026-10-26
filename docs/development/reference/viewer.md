@@ -43,17 +43,30 @@ GET /api/repos/<id>/tree?path=<dir>         {"items": [{"name", "path", "type": 
 GET /api/repos/<id>/tree?path=<dir>&recursive=true  {"items": [...descendant metadata...] }
 GET /api/repos/<id>/dashboard-list?path=<section>  {"items": [{"path", "content", "encoding": "utf-8"}], "errors": []}
 GET /api/repos/<id>/blob?path=<file>        {"path", "encoding": "base64", "content", "size"}
+GET /api/repos/<id>/planning-proposals      {"sources": [{"id", "kind", "label", "slug"}], "items": [{"source", "path", "content", "encoding"}], "errors": []}
+GET /api/repos/<id>/tree?path=<dir>&recursive=true&source=<source id>   the source's proposal directory
+GET /api/repos/<id>/blob?path=<file>&source=<source id>                 one file of it
 error                                       {"error": {"code", "message"}}
 ```
 
 | Code | Status |
 | --- | --- |
 | `VIEWER_REPO_UNKNOWN`, `VIEWER_PATH_NOT_FOUND`, `VIEWER_NOT_FOUND` | 404 |
-| `VIEWER_PATH_INVALID` | 400 |
+| `VIEWER_PATH_INVALID`, `VIEWER_SOURCE_PATH_REFUSED` | 400 |
+| `VIEWER_SOURCE_UNKNOWN` | 404 |
 | `VIEWER_HOST_REFUSED` | 403 |
 | `VIEWER_METHOD_NOT_ALLOWED` | 405 |
 
 The dashboard loads each section independently: candidate frontmatter supplies sorted lists and counts; only visible pages fetch full bodies (6 milestones, 9 proposals, 6 feedback per page). Load more appends one page in the existing order. Cached lists and displayed pages remain reusable for 30 seconds from list completion; use Dashboard Refresh to reload saved changes and reset to the first page. Recursive tree reads list metadata only and omit symlinks and `.git`.
+
+Proposals under Planning overlay the checkout's: a separate `planning-proposals` request reads
+`docs/proposals/PROP-<slug>/proposal.md` from each `plan-<slug>` worktree (saved files), else the local branch, else
+the first remote-tracking `<remote>/plan-<slug>` as of the last fetch (refs merged into the checkout are skipped), through one `git worktree list`, one
+`git for-each-ref` and one `git cat-file --batch`. Cards update in place with a source badge (`worktree plan-x`,
+`plan-x`, `origin/plan-x`); the next list build orders with the overlay. Source IDs are `worktree:plan-<slug>`,
+`branch:plan-<slug>` and `remote:<remote>/plan-<slug>`; `source` is accepted only by `tree` and `blob` for paths in
+that source's proposal directory. Nothing fetches, calls `gh` or writes; the roadmap and every other tab read the
+checkout.
 
 ## Frontend
 

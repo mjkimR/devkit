@@ -24,6 +24,20 @@ export interface RepositoryRefs {
 	branches: string[];
 }
 
+/** A Planning source: a `plan-<slug>` worktree, local branch or remote-tracking ref. */
+export interface PlanningSource {
+	id: string;
+	kind: 'worktree' | 'branch' | 'remote';
+	label: string;
+	slug: string;
+}
+/** Each source's `docs/proposals/PROP-<slug>/proposal.md`, read after the checkout. */
+export interface PlanningProposals {
+	sources: PlanningSource[];
+	items: (RepositoryBlob & { source: string })[];
+	errors: string[];
+}
+
 export interface SharedArtifactMetadata {
 	generation_id: string;
 	kind: string;
@@ -66,6 +80,12 @@ export interface RepositoryDataSource {
 		items: RepositoryBlob[];
 		errors: string[];
 	}>;
+	/** Optional Planning overlay of proposals; hosts without it show the checkout only. */
+	planningProposals?(signal: AbortSignal): Promise<PlanningProposals>;
+	/** Recursive metadata listing inside a Planning source's proposal directory. */
+	planningTree?(source: string, path: string, signal: AbortSignal): Promise<any>;
+	/** One file of a Planning source's proposal directory. */
+	planningBlob?(source: string, path: string, signal: AbortSignal): Promise<any>;
 	/** Optional branch metadata for hosts that expose it. */
 	refs?(signal: AbortSignal): Promise<RepositoryRefs>;
 	/** Optional: shared space artifacts (e.g. proposal reviews) */
@@ -89,6 +109,11 @@ export function httpDataSource(base: string): RepositoryDataSource {
 		tree: (path, _ref, signal) => get(`tree?${query(path)}`, signal),
 		treeRecursive: (path, _ref, signal) => get(`tree?${query(path)}&recursive=true`, signal),
 		blob: (path, _ref, signal) => get(`blob?${query(path)}`, signal),
+		planningProposals: (signal) => get('planning-proposals', signal),
+		planningTree: (source, path, signal) =>
+			get(`tree?${new URLSearchParams({ path, recursive: 'true', source })}`, signal),
+		planningBlob: (source, path, signal) =>
+			get(`blob?${new URLSearchParams({ path, source })}`, signal),
 		sharedList: (signal, options) => {
 			const params = new URLSearchParams();
 			if (options?.kind) params.set('kind', options.kind);
