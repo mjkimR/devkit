@@ -106,12 +106,12 @@ A project opts out of the bundle with `[presets] spec = false` in `.devkit/confi
 
 | Asset kind | Assets |
 | --- | --- |
-| `instruction` | `contract-authoring`, `living-spec-writing`, `document-writing`, `decision-writing`, `capability-writing`, `usecase-writing`, `architecture-writing` (`ADR-writing-and-terminology-guidance`, `ADR-usecases-replace-stories`) |
+| `instruction` | `contract-authoring`, `living-spec-writing`, `document-writing`, `decision-writing`, `capability-writing`, `usecase-writing`, `ux-writing`, `architecture-writing` (`ADR-writing-and-terminology-guidance`, `ADR-usecases-replace-stories`, `ADR-ux-screen-documents`) |
 | `guidance` | `spec-pointer` |
-| `rule` | `document-reference`, `id-convention`, `spec-format`, `traceability-link`, `task-coverage`, `spec-lifecycle`, `spec-progress`, `reconcile-contract`, `document-summary`, `code-entrypoints`, `proposal-boundaries` (`CAP-GOV-spec-rules`) |
-| `skill` | the 13 skills of 4.4 |
+| `rule` | `document-reference`, `id-convention`, `spec-format`, `traceability-link`, `task-coverage`, `spec-lifecycle`, `spec-progress`, `reconcile-contract`, `document-summary`, `steering-documents`, `ux-links`, `ux-coverage`, `code-entrypoints`, `proposal-boundaries` (`CAP-GOV-spec-rules`) |
+| `skill` | the 15 skills of 4.4 |
 | `workflow` | `sdd-session-feature`, `sdd-session-bugfix`, `sdd-overall-refactor`, `sdd-spec-feature`, `sdd-spec-bugfix`, `sdd-proposal` |
-| `subagent` | `challenger`, `reconcile-reviewer`, `code-reviewer`, `scout`, `planning-worker`, `development-worker` |
+| `subagent` | `challenger`, `reconcile-reviewer`, `code-reviewer`, `ux-reviewer`, `scout`, `planning-worker`, `development-worker` |
 | `playbook` | `brownfield-adoption`, `feedback-hygiene`, `adr-compaction` |
 | `document` | `templates`; `docs-skeleton` (`seeded = true`, `target = "docs"`) |
 
@@ -143,6 +143,7 @@ The constitution's sections:
 | `decision-writing` | Writing an ADR or PADR: Y-statement `summary`, context, drivers, options, outcome, consequences and the `Confirmation` section naming the check, test or review. |
 | `capability-writing` | Writing a capability: EARS business rules (`WHEN`, `WHILE`, `IF ... THEN`, `WHERE`) with RFC 2119 keywords and their enforcing rule or test, scope owners, exact interfaces. |
 | `usecase-writing` | Writing a use case: goal, main success scenario, extensions keyed to its steps, postconditions, Example Mapping to Given/When/Then scenarios. |
+| `ux-writing` | Writing a UX document (`docs/ux/`) or a Screens draft: one screen, modal or panel per document, purpose, content tree without character-cell layouts, states, interactions naming the served step, contrasting candidates in Planning only, the `docs/steering/ux-objects.md` register created with the first UX document, style and medium left to the project (`ADR-ux-screen-documents`). |
 | `architecture-writing` | Writing `docs/architecture/`: arc42 placement, C4 diagram scope, constraints with their enforcing check (fitness function) or "review only", quality-attribute scenarios. |
 
 The `spec-pointer` line in the root `AGENTS.md` block: run `uv run devkit get-context spec` once per agent context
@@ -160,6 +161,7 @@ Living Spec and `specs/` holds feature specs.
 | `spec-plan` | Write `plan.md`: design, interfaces, verification plan. | `list`, `refs`, `search` |
 | `spec-tasks` | Write `tasks.md` with `_Boundary:` and `_Requirements:`. | `list spec`, `scope update` |
 | `spec-review` | Verify the change against the spec, the diff and the checks before completion. | |
+| `spec-ux-review` | Run by the `ux-reviewer`: walk each linked use case through drafted screens and score each screen on six rubric items with evidence, before code, without severity, at most two rounds (`ADR-ux-review-before-code`). | |
 | `spec-sync` | Reconcile the change into the Living Spec and resolve `reconcile.md`. | `list`, `refs`, `search`, `proposal new`, `scope update` |
 | `spec-integrate` | Prepare integration: conflicts, re-verification, reconcile confirmation and cumulative check; obtain Host conversational approval, then run `devkit integration integrate` and recover from observed Git or PR state; clean up. | `policy`, `scope sweep`, `proposal prune` |
 | `spec-delegate` | Delegate to a role contract as the `activity-effort` asks, record its envelope, validate a worker's committed range and handle its questions and problems. | |

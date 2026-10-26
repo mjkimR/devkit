@@ -8,7 +8,7 @@ Checks the identifier targets:
 - feedback at ``specs/<YYYY-MM>/<YYYYMMDD>-<slug>/feedback/<slug>.md`` or
   ``specs/<YYYY-MM>/feedback/<YYYYMMDD>-<slug>.md`` (``FB-<slug>``);
 - Living Spec documents, whose ID is the file stem: ``docs/capabilities/<area>/CAP-<AREA>-<slug>.md``,
-  ``docs/usecases/<area>/UC-<slug>.md`` (both with ``area: <area>``) and
+  ``docs/usecases/<area>/UC-<slug>.md``, ``docs/ux/<area>/UX-<slug>.md`` (each with ``area: <area>``) and
   ``docs/architecture/ARCH-[<NN>[-<n>]-]<slug>.md`` (``NN`` an arc42 chapter other than 09 and 12).
 
 A target is reported for a path off the convention (and then nothing else), a missing frontmatter, an ``id`` /
@@ -71,6 +71,7 @@ _SLUG_NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$", re.ASCII)
 _MONTH_NAME = re.compile(r"^(\d{4})-(\d{2})$", re.ASCII)
 _CAP_STEM = re.compile(r"^CAP-([A-Z0-9]+)-([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
 _USECASE_STEM = re.compile(r"^UC-([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
+_UX_STEM = re.compile(r"^UX-([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
 _ARCH_STEM = re.compile(r"^ARCH-(?:(\d{2})(?:-([1-9]))?-)?([a-z0-9]+(?:-[a-z0-9]+)*)$", re.ASCII)
 _HAS_LETTER = re.compile(r"[a-z]")
 # Header lines, read as written; the value excludes surrounding blanks and a CR line ending.
@@ -278,6 +279,16 @@ def _usecase(target: Callable[..., _Target], parts: list[str], stem: str, docs_r
     return target(slug=match.group(1), expected_id=stem, expected_area=parts[2])
 
 
+def _ux(target: Callable[..., _Target], parts: list[str], stem: str, docs_root: str) -> _Target:
+    if len(parts) != 4:
+        return target(path_issue=f"UX document must be stored at {docs_root}/ux/{{area}}/UX-{{slug}}.md")
+    match = _UX_STEM.match(stem)
+    if match is None or not _has_letter(match.group(1)):
+        issue = f"file name must be UX-{{slug}} with a kebab-case slug that is not a sequence number: {stem}"
+        return target(path_issue=issue)
+    return target(slug=match.group(1), expected_id=stem, expected_area=parts[2])
+
+
 def _architecture(target: Callable[..., _Target], parts: list[str], stem: str, docs_root: str) -> _Target:
     if len(parts) != 3:
         return target(path_issue=f"Architecture document must be stored at {docs_root}/architecture/ARCH-{{slug}}.md")
@@ -302,6 +313,7 @@ def _architecture(target: Callable[..., _Target], parts: list[str], stem: str, d
 _LIVING_GRAMMARS: dict[Kind, _Grammar] = {
     Kind.CAPABILITY: _capability,
     Kind.USECASE: _usecase,
+    Kind.UX: _ux,
     Kind.ARCHITECTURE: _architecture,
 }
 

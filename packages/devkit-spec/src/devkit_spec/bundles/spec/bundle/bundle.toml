@@ -42,6 +42,12 @@ id = "usecase-writing"
 kind = "instruction"
 source = "instructions/usecase-writing.md"
 
+# UX writing: one element per document, content tree, states, interactions with step keys and the object register.
+[[assets]]
+id = "ux-writing"
+kind = "instruction"
+source = "instructions/ux-writing.md"
+
 # Architecture writing: arc42 placement, constraints with enforcing checks, quality scenarios.
 [[assets]]
 id = "architecture-writing"
@@ -132,6 +138,12 @@ id = "spec-review"
 kind = "skill"
 source = "skills/spec-review"
 
+# Walk each linked use case through drafted screens and score them on a rubric, before code.
+[[assets]]
+id = "spec-ux-review"
+kind = "skill"
+source = "skills/spec-ux-review"
+
 # Review proposal decisions and refine Planning against an exact report.
 [[assets]]
 id = "spec-review-proposal"
@@ -220,6 +232,18 @@ id = "steering-documents"
 kind = "rule"
 source = "rules/steering_documents"
 
+# A UX document and the use case steps that cite it do not contradict each other.
+[[assets]]
+id = "ux-links"
+kind = "rule"
+source = "rules/ux_links"
+
+# Steps of a use case a UX document serves cite a screen, and interactions name their step (warning).
+[[assets]]
+id = "ux-coverage"
+kind = "rule"
+source = "rules/ux_coverage"
+
 # Starting points for new documents, read by path (.devkit/managed/spec/templates/<kind>.md).
 [[assets]]
 id = "templates"
@@ -281,6 +305,11 @@ kind = "subagent"
 source = "subagents/scout.md"
 
 [[assets]]
+id = "ux-reviewer"
+kind = "subagent"
+source = "subagents/ux-reviewer.md"
+
+[[assets]]
 id = "development-worker"
 kind = "subagent"
 source = "subagents/development-worker.md.jinja"
@@ -314,6 +343,7 @@ assets = [
     "decision-writing",
     "capability-writing",
     "usecase-writing",
+    "ux-writing",
     "architecture-writing",
     "spec-pointer",
     "document-reference",
@@ -326,6 +356,8 @@ assets = [
     "reconcile-contract",
     "document-summary",
     "steering-documents",
+    "ux-links",
+    "ux-coverage",
     "code-entrypoints",
     "proposal-boundaries",
     "templates",
@@ -335,6 +367,7 @@ assets = [
     "spec-plan",
     "spec-tasks",
     "spec-review",
+    "spec-ux-review",
     "spec-review-proposal",
     "spec-sync",
     "spec-integrate",
@@ -353,6 +386,7 @@ assets = [
     "reconcile-reviewer",
     "code-reviewer",
     "scout",
+    "ux-reviewer",
     "development-worker",
     "planning-worker",
     "brownfield-adoption",

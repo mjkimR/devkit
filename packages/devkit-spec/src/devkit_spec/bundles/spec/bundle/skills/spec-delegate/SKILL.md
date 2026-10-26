@@ -5,7 +5,7 @@ description: Delegate to Scout, Challenger, Code Reviewer, Reconcile Reviewer or
 
 # spec-delegate: Support Role Invocation
 
-Use this skill to hand one isolated task to a support role (`scout`, `challenger`, `code-reviewer`, `reconcile-reviewer`) or, in `local-orchestrated` mode, to a worker (`planning-worker`, `development-worker`). Treat a role's result as an opinion with evidence; completion rests on the agreed AC, checks, the final diff and reconciliation.
+Use this skill to hand one isolated task to a support role (`scout`, `challenger`, `code-reviewer`, `reconcile-reviewer`, `ux-reviewer`) or, in `local-orchestrated` mode, to a worker (`planning-worker`, `development-worker`). Treat a role's result as an opinion with evidence; completion rests on the agreed AC, checks, the final diff and reconciliation.
 
 ## Constraints
 

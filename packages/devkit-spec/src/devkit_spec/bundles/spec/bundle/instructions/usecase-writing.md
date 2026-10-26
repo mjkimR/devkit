@@ -26,6 +26,10 @@ rely on. Start from the `usecase` template.
   next stage", not the command line or its flags.
 - Cite the capability that owns a step's contract by ID. Command syntax, exit codes, output formats and field lists
   stay in the capability; restate none of them here.
+- When the project has UX documents, a step may cite the UX ID of the screen it happens on, next to its capability
+  citations; a system step cites the screen its response appears on. Only a step that truly happens off screen (a
+  mail sent, a background job) cites none. The screen holds the interface detail; the step stays an intent
+  (`ux-writing`).
 
 ## Extensions
 

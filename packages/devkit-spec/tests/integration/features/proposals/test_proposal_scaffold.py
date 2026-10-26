@@ -86,6 +86,8 @@ def test_create_proposal_bundle(workspace: Path) -> None:
     assert "id: PROP-fast-engine-target\n" in target
     assert "proposal: PROP-fast-engine\n" in target
     assert "## 5. System Before & After Comparison (Before & After)" in target
+    # ADR-ux-drafts-before-code: screens are drafted in the blueprint, in the ux template's shape.
+    assert "### Screens (docs/ux/)" in target and "ux template's shape" in target
 
 
 def test_create_proposal_writes_the_task_kind_effort_and_close_fields_when_given(workspace: Path) -> None:

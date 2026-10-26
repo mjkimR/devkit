@@ -47,9 +47,20 @@ Read one:
 - **Source feedback**: keep the full FB IDs and scope from Planning or the carried proposal in a `Source feedback`
   section.
 - Drop an optional section that does not apply instead of writing "N/A".
+- **Screens**: when the change adds or changes what a person sees and operates, add a `Screens` section to `spec.md`
+  with one draft per screen, modal or panel in the `ux` template's shape (`ux-writing`), with the use case step
+  citations and the `docs/steering/ux-objects.md` rows the drafts need. Write an ID the change creates (a new UX, UC or
+  CAP ID) as plain text and existing IDs as code spans. On a bundle handed off from a proposal, carry the Screens
+  drafts of `target-docs.md` into this section, so `spec-sync` and the reconcile verification read one place
+  (`ADR-ux-drafts-before-code`). Where a screen's arrangement is still open, take the recommended candidate and record
+  the others as an assumption.
 
 ## 5. Completion
 
 - [ ] `spec.md` keeps the `id` and `workflow` frontmatter and an English `summary`, and the
   `<!-- devkit:skeleton -->` line is removed.
+- [ ] When `spec.md` has a Screens section, offer the optional UX review before the plan: delegate the `ux-reviewer`
+  (`spec-ux-review`) on the drafts and fold its findings into `spec.md` before `spec-plan` (feature) or `plan-tasks`
+  (bugfix), recording its `ux-review` envelope at this stage. The effort reference recommends it at `medium` and
+  `high`.
 - [ ] `devkit rules check <dir>` reports no violation other than task coverage not yet written; next is `spec-plan`. Do not commit yet: the `specify` stage boundary is reached and committed only after `plan.md` and `tasks.md` are also written, satisfying `RULE-task-coverage`.

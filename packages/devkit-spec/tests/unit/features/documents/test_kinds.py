@@ -21,6 +21,7 @@ def test_the_id_grammar_keeps_its_values() -> None:
     assert list(ids.PREFIXES.items()) == [
         ("CAP", Kind.CAPABILITY),
         ("UC", Kind.USECASE),
+        ("UX", Kind.UX),
         ("ARCH", Kind.ARCHITECTURE),
         ("ADR", Kind.DECISION),
         ("PROP", Kind.PROPOSAL),
@@ -33,7 +34,8 @@ def test_the_id_grammar_keeps_its_values() -> None:
         ("MAT", Kind.MATERIAL),
         ("MS", Kind.MILESTONE),
     ]
-    assert ids.ID_SOURCE == r"(?:CAP|UC|ARCH|ADR|PROP|PADR|SPEC|PLAN|TASKS|REC|FB|MAT|MS)-[A-Za-z0-9][A-Za-z0-9_-]*"
+    assert ids.ID_SOURCE == r"(?:CAP|UC|UX|ARCH|ADR|PROP|PADR|SPEC|PLAN|TASKS|REC|FB|MAT|MS)-[A-Za-z0-9][A-Za-z0-9_-]*"
+    assert kind_of("UX-login") is Kind.UX
     assert kind_of("MS-roadmap") is Kind.MILESTONE and kind_of("XX-a") is None and kind_of("MS-") is None
     assert {
         Kind.FEEDBACK: frozenset({"resolved", "promoted", "dismissed", "forwarded"}),
@@ -46,14 +48,14 @@ def test_the_rows_keep_each_kind_fact() -> None:
     def kinds_where(predicate) -> set[Kind]:
         return {row.kind for row in definitions() if predicate(row)}
 
-    assert kinds_where(lambda row: row.living_spec) == {Kind.CAPABILITY, Kind.USECASE, Kind.ARCHITECTURE}
-    assert kinds_where(lambda row: row.area_scoped) == {Kind.CAPABILITY, Kind.USECASE}
+    assert kinds_where(lambda row: row.living_spec) == {Kind.CAPABILITY, Kind.USECASE, Kind.UX, Kind.ARCHITECTURE}
+    assert kinds_where(lambda row: row.area_scoped) == {Kind.CAPABILITY, Kind.USECASE, Kind.UX}
     assert kinds_where(lambda row: row.entrypoints) == {Kind.CAPABILITY, Kind.USECASE}
     assert {row.prefix for row in definitions() if row.heading_token} == {
-        "SPEC", "PLAN", "TASKS", "REC", "ADR", "FB", "CAP", "UC", "ARCH", "MS",
+        "SPEC", "PLAN", "TASKS", "REC", "ADR", "FB", "CAP", "UC", "UX", "ARCH", "MS",
     }  # fmt: skip
     assert kinds_where(lambda row: row.summary is Summary.ALWAYS) == {
-        Kind.CAPABILITY, Kind.USECASE, Kind.DECISION, Kind.ARCHITECTURE, Kind.MILESTONE,
+        Kind.CAPABILITY, Kind.USECASE, Kind.UX, Kind.DECISION, Kind.ARCHITECTURE, Kind.MILESTONE,
     }  # fmt: skip
     assert {row.kind: row.anchor for row in definitions() if row.summary is Summary.ANCHOR} == {
         Kind.PROPOSAL: "proposal.md",

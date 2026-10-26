@@ -1,0 +1,44 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T08:38:59.090547Z'
+status: completed
+summary: 'reconcile-reviewer (medium, initial): seven targets verified against the code and ADRs; missing target CAP-DLV-proposal-incubation (P1); AC-15 sync --check exits 1 on the out-of-scope seed docs/ux/README.md (P1); out-of-scope stale docs (P2, P3); rule 9 wording (P2).'
+findings:
+- issue: 'Missing target: CAP-DLV-proposal-incubation 4.4 does not list the new Screens drafts subsection of target-docs.md.'
+  evidence: scaffold.py:450-454; docs/capabilities/delivery/CAP-DLV-proposal-incubation.md:271-274
+  failure_condition: A reader of the capability does not know where proposal-stage screens are drafted.
+  suggested_action: Add the Screens subsection to 4.4 and list the file in reconcile.md.
+  resolution: open
+  severity: P1
+- issue: AC-15 requires devkit sync --check to exit 0, but it exits 1 because the seed docs/ux/README.md (outside the write scope) is pending; recording it as deferred work waives an acceptance criterion.
+  evidence: uv run devkit sync --check -> seed=1 docs/ux/README.md, exit 1; spec.md AC-15; reconcile.md Deferred work
+  failure_condition: The unit reaches dev-integration with an acceptance criterion it cannot meet within its scope.
+  suggested_action: Return it to the Host as a scope decision; keep reconcile.md pending and name the problem in the worker envelope.
+  resolution: open
+  severity: P1
+- issue: CAP-HARN-agent-guidance 4.1 asset lists and the instruction-trigger table lack the new assets; outside the write scope.
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md:109, :111, :140-145
+  failure_condition: An agent using CAP-HARN-agent-guidance finds no UX authoring instruction.
+  suggested_action: Host routes FB-agent-guidance-asset-list-drifts; the record names the instruction and skill rows too.
+  resolution: open
+  severity: P2
+- issue: docs/README.md directory map has no ux/ row; outside the write scope.
+  evidence: docs/README.md:14
+  failure_condition: A reader of the docs map does not find docs/ux/.
+  suggested_action: Host adds the row through the feedback record or a scope extension.
+  resolution: open
+  severity: P3
+- issue: CAP-DLV-delivery-workflows rule 9 does not name the Screens part of the spec-sync reflection.
+  evidence: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:110-113
+  failure_condition: A reader of the capability alone misses the docs/ux/ and ux-objects targets.
+  suggested_action: Add one sentence to rule 9.
+  resolution: open
+  severity: P2
+checks:
+  rules: PASS uv run devkit rules check --ci --base 02615579
+  sync: FAIL uv run devkit sync --check (seed docs/ux/README.md)
+diff_scope:
+  base: 026155794cf657d4a9bda1089123b63dfe01f33c
+  head: 0fe59f4712b711b44eff5ed0742115dfb0299193

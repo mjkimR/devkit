@@ -15,6 +15,7 @@ INSTRUCTIONS = {
     "decision-writing",
     "capability-writing",
     "usecase-writing",
+    "ux-writing",
     "architecture-writing",
 }
 
