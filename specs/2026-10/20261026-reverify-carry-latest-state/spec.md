@@ -2,7 +2,7 @@
 id: SPEC-reverify-carry-latest-state
 title: Reverify carries the latest closing state
 summary: A reverify that names a challenger or review round carries the findings from that round's latest closing reverify, so a second closure never reopens findings an earlier reverify resolved.
-status: in-progress
+status: completed
 created: 2026-10-26
 related_capabilities: [CAP-DLV-workflow-envelopes]
 related_usecases: []
