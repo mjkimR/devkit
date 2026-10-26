@@ -65,7 +65,9 @@ decision. The `usecase` template and the `usecase-writing` instruction allow a U
   the first UX document, never seeded), a Screens draft section in
   the target-docs blueprint and in `spec-specify` (which carries `target-docs.md` drafts into `spec.md` and offers the
   optional UX review before `spec-plan` in its Completion), the matching step in `characterize` for bugfixes, and
-  the move of drafts into `docs/ux/` in `spec-sync`, with new IDs in drafts written as plain text.
+  the move of drafts into `docs/ux/` in `spec-sync`, with new IDs in drafts written as plain text; register rows are
+  drafted with the screens, and `spec-sync` creates or updates `docs/steering/ux-objects.md` with `docs/ux/` and lists
+  it in `reconcile.md`.
 - `usecase-writing`: a step may cite the screen it happens on, and a system step cites the screen of its response.
 - `sdd-proposal` and the planning reference: the acceptance request lists `ux-review` rounds and their open findings.
 - `docs/steering/glossary.md` (today `docs/glossary.md`): the terms "UX document" and "UX object register" only,

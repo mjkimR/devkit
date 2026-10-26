@@ -47,7 +47,9 @@ Decided by the user (`ux-document-timing`): drafts before code, Living Spec at s
   `spec-sync` and the reconcile verification read one place.
 - In a draft, an ID the change creates (a new UX, UC or CAP ID) is plain text, never a code span or brackets, so
   `RULE-document-reference` does not resolve it before the document exists; existing IDs stay code spans.
-- `spec-sync` writes each drafted screen to `docs/ux/` and the step citations to the use cases, turning the new IDs
+- Register rows the change adds are drafted with the Screens drafts.
+- `spec-sync` creates or updates `docs/steering/ux-objects.md` with the drafted rows, lists it in `reconcile.md`,
+  and writes each drafted screen to `docs/ux/` and the step citations to the use cases, turning the new IDs
   into code spans, and lists each in `reconcile.md`.
 
 ## 5. Consequences

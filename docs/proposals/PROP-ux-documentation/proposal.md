@@ -120,8 +120,11 @@ The design as the user decided it (§5, `answer-01`); `target-docs.md` is the bl
 
 ## 4. Lifecycle & Retirement Criteria
 
-- Acceptance requires the user's answers folded into the PADRs (done), both prerequisites accepted (done) and the
-  assumptions of §5 re-checked after the Host merges `main`; the handoff waits until both prerequisites' Development is integrated (§5).
+- Acceptance requires the user's answers folded into the PADRs (done) and both prerequisites accepted (reported by
+  the Host; this branch still shows them as drafts). Remaining before the `plan-accept` request: merge `main`;
+  re-check the table columns and the steering direction against the accepted texts; rewrite handed-off `depends_on`
+  entries to their SPEC IDs; replace the glossary boundary path if the move has landed. The handoff waits until
+  both prerequisites' Development is integrated (§5).
 - Development shows: a UX document in a fixture repository indexed, listed, searched and grouped in the viewer; each
   report of both UX rules by a rule test, including the element and Interactions-table cases, off-screen re-entry,
   a system step between two screens and the step-format deviations; the role and skill contracts by the
@@ -176,7 +179,8 @@ The user decided that UX Development follows both prerequisites (`depends_on`).
   pair logic of `RULE-traceability-link`, per-kind stem rules and messages if the table does not carry them,
   templates and seeds, and the viewer's book group and bracket-ID pattern (the table change leaves the viewer out of
   scope; its own feedback record covers the stale viewer prefixes, and this proposal adds `UX` either way).
-- `PROP-foundation-documents` is accepted; it hands off after the table-driven spec is integrated. Its direction: a flat `docs/steering/`
+- `PROP-foundation-documents` is accepted; it hands off after the table-driven spec is integrated. Its direction, as
+  the Host reports it: a flat `docs/steering/`
   directory, one file per topic with `title` and `summary` frontmatter and no ID, every file's frontmatter listed by
   `devkit get-context` and bodies read on demand, at most 10 files and 24576 body bytes per file, and the glossary
   (`glossary.md`, `glossary.yaml`) moved into it. This proposal therefore names `docs/steering/glossary.md`, keeps
@@ -195,7 +199,8 @@ The user decided that UX Development follows both prerequisites (`depends_on`).
 
 - The PADR "UX documents written at specify" is withdrawn: written alone, UX documents in `docs/` link use case steps and
   IDs that `spec-sync` writes only later (`challenger-01` finding 1). `PADR-ux-drafts-before-code` replaces it, and
-  the contract-slice alternative stays an option of `ux-document-timing`.
+  the contract slice remains a follow-up of `PADR-ux-drafts-before-code` (`ux-document-timing` decided: drafts before
+  code).
 - `dev_effort` is `medium`: the change creates a document kind and spans packages, and has no irreversible effect or
   external consumer (`effort` reference); the Host may raise it at handoff.
 - Boundaries add `docs/glossary.md` for the new terms. `RULE-proposal-boundaries` admits no path that does not

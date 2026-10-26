@@ -164,7 +164,8 @@ reviewer its own proposal after the kind lands.
   `challenger-03` reports from `main` that the accepted design also carries `spec_format` scope and leaves the viewer
   out of scope.
 - `PROP-foundation-documents` (a prerequisite by the user's decision) moves the glossary to `docs/steering/`, a flat
-  directory of ID-free topic files capped at 10 files and 24576 body bytes each. The UX object register becomes a
-  seeded steering file rather than glossary content, and style content stays in steering style files.
+  directory of ID-free topic files capped at 10 files and 24576 body bytes each. The UX object register becomes its
+  own steering file created by ux-writing with the first UX document (decided: ux-objects), never seeded, rather than
+  glossary content, and style content stays in steering style files.
 - All three changes own `packages/devkit-spec/src/devkit_spec/features/`, `packages/devkit-spec/tests/` and
   `docs/capabilities/documents/`; the table and UX changes also own the viewer frontend.

@@ -56,7 +56,9 @@ Decided by the user (`ux-document-set` and `ux-objects`):
   `docs/steering/ux-objects.md` (one topic, under the steering caps of `PROP-foundation-documents`), scoped to
   the objects the use cases touch; the glossary's term table, its Owner check and its 24576-byte budget stay
   untouched, and devkit's own glossary gains only the new terms. The `ux-writing` instruction creates the file with the
-  project's first UX document; `docs-skeleton` seeds nothing, so projects without an interface never carry it.
+  project's first UX document; `docs-skeleton` seeds nothing, so projects without an interface never carry it. The
+  register rows a change adds are drafted with its Screens drafts, and `spec-sync` creates or updates
+  `docs/steering/ux-objects.md` together with `docs/ux/` and lists it in `reconcile.md`.
 - The register meets the steering caps: its rows hold only the object, role, representation names and call-to-action
   names; at the 24576-byte body cap it keeps only the objects of use cases with UX documents; when no steering slot
   is free, the review records R6 as not applicable with the reason.
