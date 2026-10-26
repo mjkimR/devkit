@@ -1,0 +1,38 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T08:22:37.426678Z'
+status: completed
+summary: 'code-reviewer (initial medium pass): AC-01..AC-05 confirmed by test_rule_runtime.py and the e2e regression test; no false positive on real synchronized rules at HEAD, 68e74182, 6e5bb3ec, 893d3892; Non-Goal respected; four P3 findings'
+findings:
+- issue: A non-ImportError exception raised while a parent package imports during find_spec (or from hasattr) escapes check_rule_runtime uncoded
+  evidence: packages/devkit/src/devkit_agt/features/integration/repositories/rule_runtime.py:96-103,122
+  failure_condition: an installed subpackage raises e.g. RuntimeError on import and a rule imports from it
+  suggested_action: return None for any other Exception in _resolves and guard hasattr; add a test
+  resolution: open
+  severity: P3
+- issue: A ModuleNotFoundError for a dependency of an existing runtime package is classified as a runtime mismatch
+  evidence: packages/devkit/src/devkit_agt/features/integration/repositories/rule_runtime.py:100-101,117-118
+  failure_condition: an installed subpackage fails to import because its own dependency is missing
+  suggested_action: treat ModuleNotFoundError as missing only when exc.name is the resolved module or its dotted prefix; else undecided; add a test
+  resolution: open
+  severity: P3
+- issue: The spec summary still says readiness evaluates with the landed code, which Non-Goal 1 excludes
+  evidence: specs/2026-10/20261026-integration-readiness-branch-code/spec.md:4
+  failure_condition: a reader of spec list takes the summary as automatic source-code evaluation
+  suggested_action: reword the summary to the delivered diagnosis
+  resolution: open
+  severity: P3
+- issue: The plan-intent decision note carries a paraphrase and a date
+  evidence: specs/2026-10/20261026-integration-readiness-branch-code/decisions/01-gate-plan-intent.yaml:6
+  failure_condition: the note is read as authority for evaluating rules with branch code
+  suggested_action: Host decides whether to correct the record
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS just test-affected 2034 passed; rerun test_rule_runtime.py+test_receipt_reader.py 15 passed, e2e 2 passed
+  lint: PASS uv run devkit rules check --ci --base 68e74182
+diff_scope:
+  base: 68e74182f06c849737e47de64eb91c1412968b2f
+  head: 82cbe53859ede8cec1c8604afb3074d9df9bc042
