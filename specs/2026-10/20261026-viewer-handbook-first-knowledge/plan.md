@@ -54,8 +54,10 @@ meta)` keeps its signature; in handbook mode `path` is `handbook/<lang>/<page>` 
   and stays loaded while that pair is unchanged, so view changes never rescan or drop it.
 - **Book gate**: `visibleDocs` is the book only when `view === 'book' && bookRequested`; handbook mode renders no
   `ChapterSection`.
-- **Deep link**: `bookRequested` starts `initialView === 'book' && /^docs\/.*[^/]$/.test(initialPath)`, recomputed
-  when `source`, `branch`, `initialView` or `initialPath` changes. A `handbook/<lang>/<page>` request is passed to
+- **Deep link**: `SddViewer` stores the request with the `source` and `branch` it was made for and derives
+  `bookRequested` from a match, so a switch drops it in the same update before any view indexes the new ref.
+  `initialView === 'book' && /^docs\/.*[^/]$/.test(initialPath)` sets the request (again after a switch); a later
+  non-book prop never clears it. A `handbook/<lang>/<page>` request is passed to
   `HandbookView`.
 - **Links**: after DOMPurify, `https?:` links get `target="_blank" rel="noopener noreferrer"`; a relative `.md` link
   resolving inside `handbook/<lang>/` gets `data-handbook-page` and `data-fragment`; a fragment-only link stays on the

@@ -168,9 +168,42 @@ describe('SddViewer reading tab', () => {
 		await waitFor(() => expect(chapters()).toBe(2));
 		expect(screen.queryByRole('button', { name: 'Living Spec book' })).toBeNull();
 
+		const scanned = source.treeRecursive.mock.calls.length + source.tree.mock.calls.length;
 		await view.rerender({ dataSource: source, repoId: 'repo', initialView: 'book', branch: 'dev' });
 		await screen.findByText(/This repository has no/);
+		await new Promise((resolve) => setTimeout(resolve, 20));
 		expect(chapters()).toBe(0);
+		expect(source.treeRecursive.mock.calls.length + source.tree.mock.calls.length).toBe(scanned);
+	});
+
+	it('drops the book request without scanning when the data source changes', async () => {
+		const first = reading(false);
+		const view = render(SddViewer, { dataSource: first, repoId: 'repo', initialView: 'book' });
+		await fireEvent.click(await screen.findByRole('button', { name: 'Living Spec book' }));
+		await waitFor(() => expect(chapters()).toBe(2));
+		const second = reading(false);
+		await view.rerender({ dataSource: second, repoId: 'repo', initialView: 'book' });
+		await screen.findByText(/This repository has no/);
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		expect(chapters()).toBe(0);
+		expect(second.tree).not.toHaveBeenCalled();
+		expect(second.treeRecursive).not.toHaveBeenCalled();
+		expect(second.blob.mock.calls.map(([path]) => path)).toEqual(['handbook/manifest.json']);
+	});
+
+	it('keeps the book request when a host later changes initialView', async () => {
+		const source = reading(false);
+		const view = render(SddViewer, { dataSource: source, repoId: 'repo', initialView: 'book' });
+		await fireEvent.click(await screen.findByRole('button', { name: 'Living Spec book' }));
+		await waitFor(() => expect(chapters()).toBe(2));
+		await view.rerender({ dataSource: source, repoId: 'repo', initialView: 'proposals' });
+		await waitFor(() =>
+			expect(screen.getByRole('button', { name: 'Proposals' }).getAttribute('aria-pressed')).toBe(
+				'true'
+			)
+		);
+		await fireEvent.click(screen.getByRole('button', { name: 'Read' }));
+		await waitFor(() => expect(chapters()).toBe(2));
 	});
 
 	it('treats a deep link to a docs/ file as the book request', async () => {
