@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-living-spec-consistency-sweep
-status: pending
+status: resolved
 targets:
   - file: docs/architecture/ARCH-01-introduction-and-goals.md
     resolution: modified
