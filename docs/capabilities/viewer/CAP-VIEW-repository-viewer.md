@@ -1,7 +1,7 @@
 ---
 id: CAP-VIEW-repository-viewer
 title: "Local Repository Viewer"
-summary: "A read-only local page, served by devkit viewer serve, that shows saved working-tree files and the checked-out branch of several devkit repositories, overlays proposals under Planning from local plan-* worktrees and refs, pages cached dashboard lists, and supplies autohub's viewer library."
+summary: "A read-only local page, served by devkit viewer serve, that shows the working trees of several repositories, overlays Planning proposals from local plan-* worktrees and refs, pages dashboard lists, opens the release handbook before an on-demand Living Spec book and supplies autohub's viewer library."
 area: viewer
 status: active
 entrypoints:
@@ -17,8 +17,9 @@ The `devkit-viewer` distribution gives people a screen for what agents read thro
 proposals, specs and milestones (`ADR-roadmap-and-milestones`). It mounts
 `devkit viewer` under the `devkit` command line (`CAP-HARN-command-mount`). devkit owns the viewer's source; autohub
 consumes its component library as a vendored tarball (`ADR-viewer`). The server's
-choices are `ADR-viewer` as superseded by `ADR-viewer-working-tree`, and `ADR-viewer-planning-proposal-overlay` for
-proposals under Planning. Command quick reference:
+choices are `ADR-viewer` as superseded by `ADR-viewer-working-tree`, `ADR-viewer-planning-proposal-overlay` for
+proposals under Planning, and `ADR-handbook-first-book-on-request` with `ADR-handbook-staleness-from-version` for the
+reading tab. Command quick reference:
 [reference](../../development/reference/viewer.md).
 
 ## 1. Serving
@@ -114,7 +115,8 @@ else is `404`, so no encoded `..` or absolute path reaches a file outside the bu
 The page is the viewer moved from autohub, with a repository picker and a label for the checked-out branch. Its tabs read the registered working tree; the Dashboard proposal section and the Proposals tab add the Planning overlay (§4.2):
 
 - **Dashboard**: milestones, proposal anchors and feedback load independently (§4.1).
-- **문서 읽기**: the Living Spec under `docs/`, grouped by chapter, with in-page links between documents by ID.
+- **Read** (view id `book`): the release handbook where `handbook/manifest.json` exists, and on request the Living
+  Spec book: `docs/` grouped by chapter, with in-page links between documents by ID (§4.3).
 - **Proposals** and **Specs**: `docs/proposals/PROP-*/proposal.md` and `specs/<YYYY-MM>/<bundle>/spec.md`, with their
   bundle files, filters and task progress.
 - **로드맵**: the milestones under `docs/roadmap/` in the registered working tree (§5).
@@ -167,6 +169,57 @@ registered working tree.
 - **Card selection**: WHEN a Dashboard proposal card is selected, the page MUST open that proposal in the Proposals
   tab, and the request MUST NOT apply in another tab. Check: `frontend/src/lib/SddViewer.test.ts`.
 
+### 4.3 Reading tab
+
+The **Read** tab (view id `book`, titled "Handbook and Living Spec book") opens the release handbook of
+`CAP-DLV-release-handbook` and computes the Living Spec book only when a person asks for it. The handbook is read
+through the ordinary `tree` and `blob` reads of §2, with their path, symlink and `.git` guards; no endpoint serves it
+separately. Check: `tests/integration/features/browse/test_handbook.py`.
+
+- **Detection**: WHEN the tab opens without a book request, the viewer MUST read `handbook/manifest.json` through
+  `blob` and treat a rejection matching `/^HTTP 404(?:\b|:)/` (§6) as no handbook. Check:
+  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+- **Read budget**: WHILE the book is not requested, the tab MUST read at most the manifest, `VERSION` and one page
+  where a manifest exists, and the manifest alone where none does, and MUST NOT list or read anything under `docs/`
+  or `specs/`. Check: `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+- **Absence**: IF the manifest is absent, THEN the tab MUST show that the repository has no `handbook/manifest.json`
+  and a `Living Spec book` control. Check: `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+- **Manifest failure**: IF the manifest read fails otherwise, is not JSON, or lacks a string `tag` or an `en` entry in
+  `langs`, THEN the tab MUST show that error and the `Living Spec book` control. Check:
+  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+- **Book on request**: The viewer MUST render book chapters only while the tab is shown and the book is requested,
+  also after Proposals or Specs loaded the document index. Once computed, the book keeps the chapter groups and order
+  of §4. Check: `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+- **One index**: For a data source and branch, the document index MUST start with the first Proposals or Specs view or
+  the book request, and a view change MUST NOT start another scan. Check:
+  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+- **Request lifetime**: The book request MUST last for the life of `SddViewer` across rail switches and host prop
+  changes, and MUST hold only for the data source and branch it was made for, so a change of either returns the tab to
+  the handbook without indexing the new one. A `Handbook` control in the book returns the tab to the handbook and keeps
+  the index. Check: `frontend/src/lib/SddViewer.test.ts`.
+- **Host deep links**: WHERE a host passes `initialView` `book` with an `initialPath` naming a file under `docs/`, the
+  viewer MUST treat it as the book request and open that document; an `initialPath` of
+  `handbook/<lang>/<page>` MUST open that page. Check: `frontend/src/lib/SddViewer.test.ts`.
+- **Pages**: A handbook page MUST render through the Markdown and DOMPurify path without the document index. Check:
+  `frontend/src/lib/api/handbook.test.ts`.
+- **Links**: After sanitizing, a relative `.md` link inside the page's `handbook/<lang>/` MUST open that page in the
+  tab; any other relative link MUST be shown as unavailable and read nothing; an `http` or `https` link MUST open a
+  new browsing context with `rel="noopener noreferrer"`. Check: `frontend/src/lib/api/handbook.test.ts` and
+  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+- **Fragments**: A fragment MUST scroll to the element whose `id` equals it, else to the matching heading, so heading
+  slugs and raw `<a id>` anchors both resolve. A missing page shows its error and a `Handbook home` entry. Check:
+  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+- **Language**: The language switch MUST list the manifest's `langs` and keep the page path; the choice is remembered
+  in browser storage for all repositories, and without one the tab starts with the browser language when listed,
+  else `en`. Check: `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+- **Staleness**: The header MUST order the manifest tag against `v<VERSION>` read as a file
+  (`ADR-handbook-staleness-from-version`): ahead names the snapshot as prepared for the upcoming release, equal shows
+  the tag and generation date, behind adds a non-alert note naming both versions and pointing to the book, and an
+  absent or unparsable `VERSION` shows the tag and date only. Check:
+  `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+- **Location**: WHILE the tab shows the handbook, `sdd:path-change` MUST carry `view: "book"` and the
+  `handbook/<lang>/<page>` path. Check: `frontend/src/lib/SddViewer.test.ts`.
+
 The local source supports recursive metadata requests to avoid one HTTP call per directory. Library hosts without `dashboardList` retain selective full-document discovery to determine ordering and counts; their cold load may read all matching bodies, while the UI still pages cards. Other library hosts use a queue of at most six concurrent requests per scan; a completed request immediately frees its worker for queued work.
 
 ## 5. Roadmap
@@ -197,7 +250,10 @@ The local source supports recursive metadata requests to avoid one HTTP call per
   dependency; the tarball holds no file of the page or the server. Nothing is published to a registry.
 
 A host passes its own `RepositoryDataSource` (`info`, `tree(path, ref)`, `blob(path, ref)`, optional `refs`, `treeRecursive(path, ref)`, `dashboardList(section, ref, signal)`, `planningProposals(signal)`, `planningTree(source, path, signal)` and `planningBlob(source, path, signal)`), keeping
-authentication and renewal on its side. autohub's Git browser and run and decision panels are not part of the
+authentication and renewal on its side. Its `blob` MUST signal an absent file by rejecting with an error whose
+message starts with `HTTP 404`, as `httpDataSource` does; the reading tab treats any other rejection as a failure
+(§4.3). A standalone `KnowledgeViews` takes an optional bindable `bookRequested` prop; a host binds it to keep the
+book request across mounts. autohub's Git browser and run and decision panels are not part of the
 library.
 
 
