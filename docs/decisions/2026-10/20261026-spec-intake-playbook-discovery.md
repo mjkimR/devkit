@@ -72,7 +72,7 @@ authority with the user and the offer rare.
 - **Negative / Risks**: one search per new intake (about 0.3 s, at most 4096 bytes); the selection rule is agent
   judgment, so a topical false positive costs one declined line; each new playbook's `description` must name one
   operation and its scope.
-- **Follow-ups**: `PROP-review-refactor` and `SPEC-release-handbook` state their entry conditions in this form when
+- **Follow-ups**: `SPEC-review-refactor` and `SPEC-release-handbook` state their entry conditions in this form when
   they land; a recorded offer rate above the acceptance bound triggers a review of the selection rule.
 
 ## 6. Confirmation

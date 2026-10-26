@@ -9,7 +9,7 @@ kind = "playbook"
 source = "playbooks/drift-reconciliation.md"
 
 [presets.upkeep]
-assets = ["drift-reconciliation"]
+assets = ["drift-reconciliation", "review-refactor"]
 
 [[assets]]
 id = "weekly-report"
@@ -18,3 +18,11 @@ source = "playbooks/weekly-report.md"
 
 [presets.reporting]
 assets = ["weekly-report"]
+
+[[assets]]
+id = "review-refactor"
+kind = "playbook"
+source = "playbooks/review-refactor"
+
+[presets.refactoring]
+assets = ["review-refactor"]

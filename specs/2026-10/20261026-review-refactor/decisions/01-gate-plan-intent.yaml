@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: PROP-review-refactor
+by: user
+at: '2026-10-26T00:13:05.404181Z'

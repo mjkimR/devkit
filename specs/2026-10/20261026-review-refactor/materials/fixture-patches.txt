@@ -1,0 +1,155 @@
+From 70bb98b85a840e611afdcc1b36c472e2cc2c23f3 Mon Sep 17 00:00:00 2001
+From: fixture <fixture@example.invalid>
+Date: Mon, 26 Oct 2026 09:45:25 +0900
+Subject: [PATCH 1/3] refactor(orders): consolidate the line-sum loop into
+ order_total
+
+Finding RR-F1 (duplicated behavior). Route: overall refactor (work item spans orders, invoices, utils, legacy).
+Reachability: rg order_total|order_total_with_tax -> orders/service.py:10,17,25 and tests/test_app.py:4,9,12;
+no dynamic reach (rg getattr|importlib|__import__|entry_points|eval -> none; no pyproject/setup.cfg).
+Verification: unittest 5 OK before and after. Placement: feature-local (no new helper).
+---
+ .../__pycache__/service.cpython-312.pyc       | Bin 1438 -> 1381 bytes
+ app/features/orders/service.py                |   4 +---
+ 2 files changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/app/features/orders/__pycache__/service.cpython-312.pyc b/app/features/orders/__pycache__/service.cpython-312.pyc
+index 14ea7a2f5f556cf97cbfdd40a43148e2313ac06d..ed8d4e4078458df11e3e9f3b7e1c58f7ef5c8eab 100644
+GIT binary patch
+delta 195
+zcmbQo{gjLMG%qg~0}w1&bT2D<Bd;KH0yB^Y!k_hk#B_!dMj!<SH4Lkv>{_N85M-=k
+zWnf5QtYTtdr~;}8X3%8vE8+yQG#QJ;K@@Y5Ado7O01+ZUq8McE<oV1Rf{H*!1H&C2
+z@foa_dE^>gZ%qEcypU0B@+6i+>P(FK3s@F}t}x!fyuxB({6z)R4-7!D1HoYGMDS-2
+L?*rH5YF1?c1;HxA
+
+delta 217
+zcmaFLHIJM3G%qg~0}$jdx|h|rkyntpo(0Hb2I9{SKw>&W3S%u(4TB3qEH48?3=;!G
+zEpshP4O0zs4NDa(149*1w3exdpM?P^##F-y5=&vK0;;P5>JDbmWcDip3NaLMf(T(C
+zp~+e#2x3cs2oVq=3L?aSL@`JulY+wJI%W+<%gL9Rv?lLlp3f*TIg;g&It!!z0+t1#
+jD~vZVudrAce^J5o0|QX(Krom(5&Rj%`@lEZiB%Z@!w4;|
+
+diff --git a/app/features/orders/service.py b/app/features/orders/service.py
+index 11d7c36..b6200e5 100644
+--- a/app/features/orders/service.py
++++ b/app/features/orders/service.py
+@@ -15,9 +15,7 @@ def order_total(items: list[tuple[int, int]]) -> int:
+ 
+ 
+ def order_total_with_tax(items: list[tuple[int, int]], rate_percent: int) -> int:
+-    total = 0
+-    for price, quantity in items:
+-        total += price * quantity
++    total = order_total(items)
+     return total + total * rate_percent // 100
+ 
+ 
+-- 
+2.49.0
+
+
+From 77b9cb97e463c4235e7ec5593ccd9f42d137c7fe Mon Sep 17 00:00:00 2001
+From: fixture <fixture@example.invalid>
+Date: Mon, 26 Oct 2026 09:46:30 +0900
+Subject: [PATCH 2/3] refactor(utils): fold format_money into
+ app/utils/money.py
+
+Finding RR-F2 (repeated technical helper). Applied by an editing subagent with write scope
+app/utils/{__init__,money}.py, app/features/{orders,invoices}/service.py; diff check: .py hunks inside scope and
+match the agreed change; two tracked .pyc files rewritten by the test run were outside scope and reverted path by
+path (git restore), untracked app/utils/__pycache__ removed.
+Reachability: rg format_money -> orders/service.py:4,23, invoices/service.py:4,11; no dynamic reach.
+Placement: package-level utils (features never import each other; lowest common owner).
+Verification: unittest 5 OK before and after.
+---
+ app/features/invoices/service.py | 6 +-----
+ app/features/orders/service.py   | 6 +-----
+ app/utils/__init__.py            | 0
+ app/utils/money.py               | 4 ++++
+ 4 files changed, 6 insertions(+), 10 deletions(-)
+ create mode 100644 app/utils/__init__.py
+ create mode 100644 app/utils/money.py
+
+diff --git a/app/features/invoices/service.py b/app/features/invoices/service.py
+index c03c636..aa63da6 100644
+--- a/app/features/invoices/service.py
++++ b/app/features/invoices/service.py
+@@ -1,10 +1,6 @@
+ """Invoice lines."""
+ 
+-
+-def format_money(cents: int) -> str:
+-    sign = "-" if cents < 0 else ""
+-    cents = abs(cents)
+-    return f"{sign}${cents // 100}.{cents % 100:02d}"
++from app.utils.money import format_money
+ 
+ 
+ def invoice_line(label: str, cents: int) -> str:
+diff --git a/app/features/orders/service.py b/app/features/orders/service.py
+index b6200e5..28ca82a 100644
+--- a/app/features/orders/service.py
++++ b/app/features/orders/service.py
+@@ -1,10 +1,6 @@
+ """Order totals."""
+ 
+-
+-def format_money(cents: int) -> str:
+-    sign = "-" if cents < 0 else ""
+-    cents = abs(cents)
+-    return f"{sign}${cents // 100}.{cents % 100:02d}"
++from app.utils.money import format_money
+ 
+ 
+ def order_total(items: list[tuple[int, int]]) -> int:
+diff --git a/app/utils/__init__.py b/app/utils/__init__.py
+new file mode 100644
+index 0000000..e69de29
+diff --git a/app/utils/money.py b/app/utils/money.py
+new file mode 100644
+index 0000000..2342a38
+--- /dev/null
++++ b/app/utils/money.py
+@@ -0,0 +1,4 @@
++def format_money(cents: int) -> str:
++    sign = "-" if cents < 0 else ""
++    cents = abs(cents)
++    return f"{sign}${cents // 100}.{cents % 100:02d}"
+-- 
+2.49.0
+
+
+From 4d5f673f2c67f98346dad91154719fa8258b1319 Mon Sep 17 00:00:00 2001
+From: fixture <fixture@example.invalid>
+Date: Mon, 26 Oct 2026 09:46:36 +0900
+Subject: [PATCH 3/3] refactor: remove the unreached v1 configuration reader
+
+Finding RR-F3 (speculative compatibility path). Behavior-preserving removal under the declared compatibility policy
+(README: no external consumers). Inputs no longer accepted: v1 'key = value' configuration text via
+app.legacy.read_v1_config.
+Reachability: rg read_v1_config|legacy -> only app/legacy.py:4 and the README policy line; rg v1 -> app/legacy.py:1;
+rg getattr|importlib|__import__|entry_points|eval -> none; no pyproject/setup.cfg entry points.
+Verification: unittest 5 OK before and after.
+---
+ app/legacy.py | 10 ----------
+ 1 file changed, 10 deletions(-)
+ delete mode 100644 app/legacy.py
+
+diff --git a/app/legacy.py b/app/legacy.py
+deleted file mode 100644
+index c8d242b..0000000
+--- a/app/legacy.py
++++ /dev/null
+@@ -1,10 +0,0 @@
+-"""Reader for the retired v1 configuration format."""
+-
+-
+-def read_v1_config(text: str) -> dict[str, str]:
+-    result: dict[str, str] = {}
+-    for line in text.splitlines():
+-        if "=" in line:
+-            key, value = line.split("=", 1)
+-            result[key.strip()] = value.strip()
+-    return result
+-- 
+2.49.0
+
