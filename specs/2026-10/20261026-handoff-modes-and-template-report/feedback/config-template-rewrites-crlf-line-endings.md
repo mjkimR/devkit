@@ -8,7 +8,7 @@ target: packages/devkit-dist/src/devkit_dist/features/distribution/services/inst
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -36,3 +36,7 @@ created_at: 2026-10-26
 - **Conditions**: a CRLF or CR config file missing at least one template part.
 - **Workarounds Attempted**: not applicable.
 - **Related Assets**: `CAP-DIST-sync-and-transactions`, `FB-config-template-reports-unchanged-after-writing`.
+
+## Disposition
+
+Resolved by `SPEC-approval-mode-and-crlf-template`: `_template` reads the file without newline translation, so the rendered text keeps every existing byte, and converts the added lines to CRLF when every line ending of the file is CRLF; a mixed or LF file gets LF lines. `CAP-DIST-sync-and-transactions` (Commented Template) states the line-ending rule. Verified by the CRLF, LF and mixed regression tests in `test_config_template.py` (CRLF and mixed red on the base). The selection edits keep the same defect, recorded as `FB-selection-edits-rewrite-crlf-line-endings`.

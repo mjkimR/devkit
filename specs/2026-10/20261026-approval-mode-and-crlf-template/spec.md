@@ -2,7 +2,7 @@
 id: SPEC-approval-mode-and-crlf-template
 title: Approval refusal mode, completion report wording and CRLF-preserving config template
 summary: 'Resolves three feedback items: proposal approval refusals render BLOCKED, the completion guidance drops report-URI wording, and devkit config template keeps a file''s existing line endings.'
-status: in-progress
+status: completed
 created: 2026-10-26
 related_capabilities:
   - CAP-DLV-proposal-incubation
