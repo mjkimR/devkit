@@ -7,7 +7,6 @@ status: draft
 created_at: 2026-10-26
 ---
 
-
 # [PADR-apply-approved-contract-removals-as-separate-work-items] Apply approved contract removals as separate work items
 
 - **Status**: Draft
