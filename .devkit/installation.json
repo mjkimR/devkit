@@ -964,7 +964,7 @@
     },
     ".agents/skills/spec/references/completion.md": {
       "mode": 420,
-      "sha256": "6740d38d4d4a87498bf45feb0762570cb6621eb1c9c53b69d85c3934b20e1b41"
+      "sha256": "d5ef6f8597186b5bbe8394600f65b5ba18378a1641aa60036f5a143f21bcd88a"
     },
     ".agents/skills/spec/references/depth-and-close.md": {
       "mode": 420,
@@ -1172,7 +1172,7 @@
     },
     ".claude/skills/spec/references/completion.md": {
       "mode": 420,
-      "sha256": "6740d38d4d4a87498bf45feb0762570cb6621eb1c9c53b69d85c3934b20e1b41"
+      "sha256": "d5ef6f8597186b5bbe8394600f65b5ba18378a1641aa60036f5a143f21bcd88a"
     },
     ".claude/skills/spec/references/depth-and-close.md": {
       "mode": 420,
@@ -1744,7 +1744,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/completion.md": {
       "mode": 420,
-      "sha256": "6740d38d4d4a87498bf45feb0762570cb6621eb1c9c53b69d85c3934b20e1b41"
+      "sha256": "d5ef6f8597186b5bbe8394600f65b5ba18378a1641aa60036f5a143f21bcd88a"
     },
     ".devkit/managed/spec/skills/spec/references/depth-and-close.md": {
       "mode": 420,
