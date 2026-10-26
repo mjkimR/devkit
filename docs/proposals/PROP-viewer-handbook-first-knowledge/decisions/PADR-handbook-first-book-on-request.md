@@ -28,8 +28,6 @@ of scope with a reason that no longer holds: the viewer reads the working tree (
 Only this repository has a handbook (the playbook is in the repository-only `devkit-dev` bundle), the viewer serves
 several repositories, and the handbook trails the current `docs/` between refreshes, so the book must stay reachable.
 
-Parts marked "pending" follow the recommended answer of this Planning run's questions and change with the answer.
-
 ## 2. Decision Drivers
 
 - The first read of the tab is the person-oriented one where it exists.
@@ -55,7 +53,7 @@ Parts marked "pending" follow the recommended answer of this Planning run's ques
 
 Chosen: handbook first, book on request, in one tab.
 
-- **Tab** (pending `tab-shape`): the rail entry keeps the `book` id; its label becomes "Read" and its title
+- **Tab** (decided by the user): the rail entry keeps the `book` id; its label becomes "Read" and its title
   "Handbook and Living Spec book".
 - **Detection**: the tab reads `handbook/manifest.json` through the existing `blob` read. A rejection whose message
   matches the existing absent-path convention `/^HTTP 404(?:\b|:)/` (`scanDocuments` in `api/documents.ts`) means no
@@ -72,7 +70,7 @@ Chosen: handbook first, book on request, in one tab.
 - **Navigation**: in handbook mode the sidebar shows a "Handbook home" entry (`README.md`), the language switch, the
   book control and the current page's headings; it needs no extra read. Every page's generated table of contents
   provides the page list.
-- **Source links** (pending `source-links`): `https://github.com/<repository>/blob/<tag>/<path>` links stay external
+- **Source links** (decided by the user): `https://github.com/<repository>/blob/<tag>/<path>` links stay external
   and open in a new browsing context.
 - **Language**: the switch lists the manifest's `langs`; the viewer remembers the choice in browser storage for all
   repositories and otherwise starts with the browser language if listed, else `en`. Switching keeps the page's
@@ -88,7 +86,7 @@ Chosen: handbook first, book on request, in one tab.
   bindable prop, so it survives rail switches and resets with a repository or branch switch, which the page already
   remounts. A standalone `KnowledgeViews` host binds the prop to keep it. The data follows the existing 30-second
   caches.
-- **Deep links** (pending `book-deep-links`; library hosts only, since the standalone page opens on the Dashboard
+- **Deep links** (decided by the user; library hosts only, since the standalone page opens on the Dashboard
   and no Dashboard card targets `book`): a host request with `initialView` `book` and an `initialPath` naming a file
   under `docs/`, not the default `docs/`, counts as the book request; a path under `handbook/` opens that page.
   `sdd:path-change` keeps `view: "book"` and carries the handbook page path in handbook mode.
@@ -104,7 +102,8 @@ Chosen: handbook first, book on request, in one tab.
   citations are not in-page links to the book; tag-pinned source links fail until the tag is pushed.
 - Risk: after the request the book costs what it costs today, and returning to the tab re-renders it (about 0.47 s);
   Proposals and Specs keep the 0.6 s index (`FB-viewer-knowledge-anchor-loading` stays open).
-- Follow-up: the disposition of `FB-viewer-book-rendering` follows the user's answer to `book-rendering-feedback`.
+- Follow-up: `FB-viewer-book-rendering` stays open, rescoped to rendering after the request; revisit it when that
+  rendering is reported as slow.
 
 ## 6. Confirmation
 

@@ -27,8 +27,6 @@ A refresh runs in release preparation before the `just version-sync` metadata co
 and the latest Git tag trail the manifest. This repository at Planning time: manifest `v0.1.4`, `VERSION` `0.1.3`,
 latest tag `v0.1.3`. An equality test against either one reports a fresh snapshot as stale.
 
-Pending the user's answer to question `staleness-reference` of this Planning run.
-
 ## 2. Decision Drivers
 
 - No Git process or new endpoint for an ordinary read.
@@ -51,7 +49,7 @@ Pending the user's answer to question `staleness-reference` of this Planning run
 
 ## 4. Decision Outcome
 
-Recommended: `VERSION` by version order (numeric `major.minor.patch`; a value that does not parse counts as absent).
+Chosen by the user: `VERSION` by version order (numeric `major.minor.patch`; a value that does not parse counts as absent).
 
 - WHEN the manifest tag is ahead of `v<VERSION>`, the header names the snapshot as prepared for the upcoming release
   `<tag>`, without a staleness note.
