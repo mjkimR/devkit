@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T08:55:24.104752Z'
+status: completed
+summary: 'Swept this Development turn and its diff: no new observation; FB-entrypoints-apply-ignores-file-codes is resolved by this spec'
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0
