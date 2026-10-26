@@ -1,11 +1,11 @@
 // Cold-load probe: headless Chrome over CDP against a running `devkit viewer serve`.
-// Usage: node coldload.mjs <viewer-url> <repo-id> <runs> <out.json>
+// Usage: node coldload-probe.mjs <viewer-url> <repo-id> <runs> <out.json> [<tab label>] [<readiness selector>]
 import { spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const [url, repo, runsArg, out] = process.argv.slice(2);
+const [url, repo, runsArg, out, tabArg, readyArg] = process.argv.slice(2);
 const runs = Number(runsArg || 3);
 const here = dirname(fileURLToPath(import.meta.url));
 const chrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -111,7 +111,12 @@ const handbook = `(async () => {
 
 const results = { url, repo, runs, chrome: version?.Browser, scenarios: {} };
 const cases = {
-	book: ['Book', "document.querySelectorAll('.reading-content section.chapter').length > 0"],
+	book: [
+		tabArg || 'Book',
+		readyArg
+			? `document.querySelector(${JSON.stringify(readyArg)})`
+			: "document.querySelectorAll('.reading-content section.chapter').length > 0"
+	],
 	proposals: ['Proposals', "document.querySelector('.reading-layout')"]
 };
 for (const [name, [tab, ready]] of Object.entries(cases)) {

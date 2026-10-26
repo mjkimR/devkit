@@ -57,45 +57,66 @@ Chosen: handbook first, book on request, in one tab.
 
 - **Tab** (pending `tab-shape`): the rail entry keeps the `book` id; its label becomes "Read" and its title
   "Handbook and Living Spec book".
-- **Detection and reads**: the tab reads `handbook/manifest.json` through the existing `blob` read; `404
-  VIEWER_PATH_NOT_FOUND` means no handbook. A readable manifest with `en` in `langs` opens the handbook; any other
-  read or parse failure shows the error and the book control. Pages are read one at a time through `blob`; no new
-  endpoint, Git process or data-source method.
-- **Pages**: a page renders through the existing Markdown, frontmatter and DOMPurify path, without the Living Spec
-  index. A relative link to another `.md` page under the same `handbook/<lang>/` opens that page in the tab; a link
-  that leaves `handbook/<lang>/` or names a missing page is shown as unavailable, never read outside it.
+- **Detection**: the tab reads `handbook/manifest.json` through the existing `blob` read. A rejection whose message
+  matches the existing absent-path convention `/^HTTP 404(?:\b|:)/` (`scanDocuments` in `api/documents.ts`) means no
+  handbook; `CAP-VIEW-repository-viewer` §6 states that a host's `blob` signals an absent file that way. A readable
+  manifest with `en` in `langs` opens the handbook; any other failure shows the error and the book control.
+- **Read budget before the control**: with a handbook, the manifest, `VERSION` and one page; without one, the manifest
+  alone. No `tree` or `blob` under `docs/` or `specs/`. No new endpoint, Git process or data-source method.
+- **Pages**: a page renders through the existing Markdown and DOMPurify path, without the Living Spec index.
+  - A relative link to another `.md` page under the same `handbook/<lang>/` opens that page in the tab; a link that
+    leaves `handbook/<lang>/` is shown as unavailable and reads nothing. A missing page shows an error with the home
+    entry.
+  - A fragment resolves to an element whose `id` equals it, else to the prefixed heading slug, so the English
+    heading slugs and the Korean raw anchors (`<a id="journeys">`) both scroll.
+- **Navigation**: in handbook mode the sidebar shows a "Handbook home" entry (`README.md`), the language switch, the
+  book control and the current page's headings; it needs no extra read. Every page's generated table of contents
+  provides the page list.
 - **Source links** (pending `source-links`): `https://github.com/<repository>/blob/<tag>/<path>` links stay external
   and open in a new browsing context.
-- **Language**: a switch lists the manifest's `langs`; the viewer remembers the choice in browser storage for all
+- **Language**: the switch lists the manifest's `langs`; the viewer remembers the choice in browser storage for all
   repositories and otherwise starts with the browser language if listed, else `en`. Switching keeps the page's
   relative path, which `CAP-DLV-release-handbook` §3.1 rule 1 guarantees in every language.
-- **No handbook**: the tab shows that the repository has no `handbook/manifest.json` and the book control.
-- **Book on request**: no `indexDocuments` call and no `renderDocument` call happens in the tab before the control is
-  selected. After it, the book is computed as today, with the same content and order. The choice of the book stays
-  for the page session per repository and branch; its data follows the existing 30-second caches.
-- **Deep links** (pending `book-deep-links`): a host request (`initialView` `book` with an `initialPath` under
-  `docs/`) or an in-page jump into a Living Spec document counts as the request and computes the book; a path under
-  `handbook/` opens that handbook page. `sdd:path-change` keeps `view: "book"` and carries the handbook page path in
-  handbook mode.
+- **No handbook**: the tab shows that the repository has no `handbook/manifest.json` and the book control; Proposals
+  and Specs are separate rail tabs and unchanged.
+- **Two gates in the shared component**: one `KnowledgeViews` instance serves Book, Proposals and Specs.
+  - Book rendering runs only while `view === 'book'` and the book was requested; an index loaded by Proposals or
+    Specs never renders the book on its own.
+  - The index runs from a latch set by the first Proposals or Specs view or by the book request; it never resets on a
+    view change, so switching between the three views starts no second scan.
+- **Request state**: the book request lives in `SddViewer` for its lifetime and is passed to `KnowledgeViews` as a
+  bindable prop, so it survives rail switches and resets with a repository or branch switch, which the page already
+  remounts. A standalone `KnowledgeViews` host binds the prop to keep it. The data follows the existing 30-second
+  caches.
+- **Deep links** (pending `book-deep-links`; library hosts only, since the standalone page opens on the Dashboard
+  and no Dashboard card targets `book`): a host request with `initialView` `book` and an `initialPath` naming a file
+  under `docs/`, not the default `docs/`, counts as the book request; a path under `handbook/` opens that page.
+  `sdd:path-change` keeps `view: "book"` and carries the handbook page path in handbook mode.
 - **Staleness**: `PADR-handbook-staleness-from-version`.
 - **Contracts**: `CAP-VIEW-repository-viewer` §4 states the tab's default, the handbook source and the on-demand
-  book; `CAP-DLV-release-handbook` §2 drops the viewer from Out-of-Scope.
+  book, and §6 the absent-file signal; `CAP-DLV-release-handbook` §2 drops the viewer from Out-of-Scope.
 
 ## 5. Consequences
 
-- Positive: the tab's cold load drops from about 1.1 s and 922 reads to two reads with a handbook, or one without;
-  autohub gets the handbook through its existing data source.
-- Negative: a reader who wants the current contracts selects the control once per session; the handbook's ID
-  citations are not in-page links to the book.
-- Risk: a deep link into a book chapter still costs the full book; Proposals and Specs keep the 0.6 s index
-  (`FB-viewer-knowledge-anchor-loading` stays open).
-- Follow-up: when book rendering after the request is reported as slow, revisit viewport rendering.
+- Positive: the tab's cold load drops from about 1.1 s and 922 reads to three small reads with a handbook, or one
+  without; autohub gets the handbook through its existing data source.
+- Negative: a reader who wants the current contracts selects the control once per viewer session; the handbook's ID
+  citations are not in-page links to the book; tag-pinned source links fail until the tag is pushed.
+- Risk: after the request the book costs what it costs today, and returning to the tab re-renders it (about 0.47 s);
+  Proposals and Specs keep the 0.6 s index (`FB-viewer-knowledge-anchor-loading` stays open).
+- Follow-up: the disposition of `FB-viewer-book-rendering` follows the user's answer to `book-rendering-feedback`.
 
 ## 6. Confirmation
 
-- Frontend tests in Development (`frontend/src/lib/features/knowledge/`): a manifest opens the handbook; its
-  absence shows the note; no `tree` or `blob` call under `docs/` or `specs/` happens before the control; the computed
-  book equals today's chapter list; a handbook link leaving `handbook/<lang>/` reads nothing.
+- Frontend tests in Development (`frontend/src/lib/features/knowledge/`, `frontend/src/lib/SddViewer.test.ts`):
+  - a manifest opens the handbook within the read budget; its absence shows the note and the control;
+  - no `tree` or `blob` under `docs/` or `specs/` and no `section.chapter` element before the control, also after
+    Proposals loaded the index;
+  - Book, Proposals and Book again start one index scan;
+  - the request survives a Dashboard visit;
+  - the computed book equals today's chapter list;
+  - a handbook link leaving `handbook/<lang>/` reads nothing; a cross-page fragment scrolls in `en` and `ko`.
 - Integration test (`tests/integration/features/browse/`): `handbook/` pages and the manifest read through `blob`
   keep the symlink and `..` refusals.
-- The cold-load probe of `MAT-viewer-handbook-cold-load` rerun against the change.
+- The cold-load probe of `MAT-viewer-handbook-cold-load` rerun against the change, with the tab label and readiness
+  selector as arguments.

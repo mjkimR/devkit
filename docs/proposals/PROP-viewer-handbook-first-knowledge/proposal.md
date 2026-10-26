@@ -66,27 +66,40 @@ intentionally stale between refreshes while the book shows the current `docs/`.
 
 - A repository with `handbook/manifest.json` opens the knowledge tab on the handbook, in the selected language, with
   its release tag and a staleness note.
-- A repository without one opens on the existing non-book knowledge views. In any repository, the book is computed
-  only after the viewer selects a "Living Spec book" control.
+- A repository without one opens the same tab on a note that it has no `handbook/manifest.json`. In any repository,
+  the book is computed only after the viewer selects a "Living Spec book" control; Proposals and Specs are unchanged.
 - The book keeps its current content and order once computed; only when it is computed changes.
 - Backend: no new endpoint. The existing `tree` and `blob` reads already serve `handbook/` with the working-tree
   path, symlink and `.git` guards; Development adds integration tests for them and no write path.
 - Contracts: `CAP-VIEW-repository-viewer` states the knowledge tab's default view, the handbook source and the
   on-demand book; `CAP-DLV-release-handbook` §2 drops "showing the handbook in the repository viewer" from its
   Out-of-Scope list; the viewer reference and README follow.
-- Interaction: `PROP-ux-documentation` also owns viewer frontend paths; sequence Development against it.
+- Interaction: `PROP-ux-documentation` and `PROP-table-driven-document-kinds` also own viewer frontend paths;
+  this proposal is developed first (§5).
 
 Scope excluded: generating or refreshing the handbook, changing its format, removing the book, and viewport-level
 virtualization unless Q6 shows on-demand computation is not enough.
+
+## Source feedback
+
+- `FB-viewer-book-rendering`: addressed for the cold load only; its rendering after the request stays in its own
+  scope (Planning decisions, §5).
+- `FB-viewer-knowledge-anchor-loading`: not addressed; Proposals and Specs keep their index.
 
 ## 4. Lifecycle & Retirement Criteria
 
 - Planning settles Q1-Q6 with a cold-load measurement and decides the fate of `FB-viewer-book-rendering` and
   `FB-viewer-knowledge-anchor-loading` (absorbed, kept or dismissed).
-- Acceptance requires: the handbook default only where a manifest exists; no book computation before the explicit
-  control; unchanged book content once computed; read-only handbook serving with path safety; a measured cold-load
-  improvement; the viewer frontend checks (`just viewer lint`, `check`, `test`, `build`) with the committed page
-  rebuilt.
+- Acceptance requires:
+  - the handbook default only where a manifest exists, and the absence note otherwise;
+  - before the explicit control, a frontend test shows at most the read budget (manifest, `VERSION` and one page
+    with a handbook; the manifest alone without), no `tree` or `blob` under `docs/` or `specs/` and no
+    `section.chapter` element, also after Proposals loaded the index;
+  - unchanged book content and order once computed;
+  - read-only handbook serving with path safety;
+  - the cold-load probe of `MAT-viewer-handbook-cold-load` rerun against the change, showing the reduction in blob
+    reads and DOM nodes;
+  - the viewer frontend checks (`just viewer lint`, `check`, `test`, `build`) with the committed page rebuilt.
 - Retire when the knowledge tab contract in `CAP-VIEW-repository-viewer` states the handbook-first default and the
   on-demand book.
 
@@ -96,28 +109,36 @@ Evidence: `MAT-viewer-handbook-cold-load` (cold-load baseline), `PADR-handbook-f
 `PADR-handbook-staleness-from-version`.
 
 - **Q1**: the Book rail tab (`view` id `book`) can detect a handbook by reading `handbook/manifest.json` through the
-  existing `blob` read (`404 VIEWER_PATH_NOT_FOUND` when absent) and read pages one at a time the same way. Path,
-  symlink and `.git` guards already apply; library hosts need no new `RepositoryDataSource` method.
-- **Q2**: pages render through the existing Markdown, frontmatter and DOMPurify path without the Living Spec index.
-  Relative links stay inside `handbook/<lang>/`; source links are tag-pinned GitHub links; the language switch lists
-  the manifest's `langs`, is remembered in browser storage and keeps the page path, which parity guarantees.
-- **Q3**: "on request" is a "Living Spec book" control; before it the tab calls neither `indexDocuments` nor
-  `renderDocument`. The choice stays for the page session per repository and branch, its data in the existing
-  30-second caches. Deep links are a user question.
+  existing `blob` read (a rejection matching the existing `/^HTTP 404/` absent-path convention when absent) and read
+  pages one at a time the same way. Path, symlink and `.git` guards already apply; library hosts need no new
+  `RepositoryDataSource` method.
+- **Q2**: pages render through the existing Markdown and DOMPurify path without the Living Spec index; the
+  `sources` and `translated_from` frontmatter maps are not displayed by the existing headers. Relative links and
+  fragments stay inside `handbook/<lang>/`; a "Handbook home" entry and the page headings form the sidebar; the
+  language switch lists the manifest's `langs`, is remembered in browser storage and keeps the page path, which
+  parity guarantees. Source links are tag-pinned GitHub links, which fail until the tag is pushed (a user question).
+- **Q3**: "on request" is a "Living Spec book" control. The shared `KnowledgeViews` instance gets two gates: book
+  rendering only while the Book view is shown and requested, and an index latch that never resets on a view change.
+  The request lives in `SddViewer` for its lifetime, as a bindable prop, so it survives rail switches; its data
+  follows the existing 30-second caches. Deep links concern library hosts only and are a user question.
 - **Q4**: without a manifest the tab shows the absence (no `handbook/manifest.json`) and the book control; Proposals
   and Specs are separate rail tabs and are unchanged.
-- **Q5**: compare the manifest tag with `v<VERSION>` read as a file; ordinary reads stay free of Git
-  (`CAP-VIEW-repository-viewer` §2). The latest Git tag would trail the manifest during release preparation
-  (`v0.1.4` manifest against `v0.1.3` at Planning time). A user question.
+- **Q5**: both `VERSION` and the latest Git tag trail the manifest between a refresh and its release (`v0.1.4`
+  manifest against `0.1.3` and `v0.1.3` at Planning time), so equality reports a fresh snapshot as stale. The
+  recommendation orders the manifest tag against `v<VERSION>`, read as a file without Git
+  (`CAP-VIEW-repository-viewer` §2): ahead is a snapshot for the upcoming release, behind shows the note. A user
+  question.
 - **Q6**: on this repository the Book tab cold takes about 1.1 s, 922 blob reads and 124k DOM nodes, of which about
-  0.47 s is rendering; the handbook's first read is two reads under 10 ms. On-demand computation removes all of it
+  0.47 s is rendering; the handbook's first read is three small reads (two measured under 10 ms). On-demand computation removes all of it
   from the cold load, so viewport rendering is not needed. The 0.6 s, 922-read index remains the cold cost of
   Proposals and Specs.
 
 ### Planning decisions
 
-- `FB-viewer-book-rendering`: absorbed. Its goal, less initial work on a cold knowledge load, is met by computing the
-  book on request; viewport rendering is not adopted. Development closes it with this proposal's spec.
+- `FB-viewer-book-rendering`: pending the user's answer to `book-rendering-feedback`; the recommendation keeps it
+  open, rescoped to rendering after the request (about 0.47 s per return to the tab), because on-demand computation
+  removes its cold-load cost but not the rendering it describes (`source-feedback` resolves only a fully addressed
+  source).
 - `FB-viewer-knowledge-anchor-loading`: kept open. Proposals and Specs still index all of `docs/` and `specs/`
   (about 0.6 s, 922 reads); this proposal does not change that.
 - Sequencing: develop this proposal before `PROP-table-driven-document-kinds` and `PROP-ux-documentation`, both

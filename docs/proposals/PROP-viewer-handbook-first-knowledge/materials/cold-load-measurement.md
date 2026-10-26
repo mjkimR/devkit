@@ -48,7 +48,7 @@ created_at: 2026-10-26
 ## Reproducing after the change
 
 A development worker serves its worktree the same way and runs
-`node coldload-probe.mjs http://127.0.0.1:<port>/ <repo-id> 3 <out.json>` from a copy in the proposal's ignored
-`.probe/`. The Book scenario's readiness selector waits for chapters, so the after-run selects the book control or
-replaces the selector with the handbook article. The table above is the base measurement; same-machine numbers are
+`node coldload-probe.mjs http://127.0.0.1:<port>/ <repo-id> 3 <out.json> [<tab label>] [<readiness selector>]` from a
+copy in the proposal's ignored `.probe/`. The defaults reproduce this baseline (`Book`, chapters present); the
+after-run passes the new tab label and a selector for the handbook article or the absence note. The table above is the base measurement; same-machine numbers are
 comparable, other machines compare blob counts and DOM nodes rather than milliseconds.
