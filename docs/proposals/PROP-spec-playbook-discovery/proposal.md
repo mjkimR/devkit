@@ -2,7 +2,7 @@
 id: PROP-spec-playbook-discovery
 title: Task-aware playbook discovery through spec
 summary: "Moves the agent playbook entry point toward spec-playbook and lets spec discover procedures for new tasks, with explicit skip cases for established Planning and Development work."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                      # draft | reviewing | accepted | rejected
 created_at: 2026-10-23
 target_area: delivery/
 priority: high                        # critical | high | medium | low
