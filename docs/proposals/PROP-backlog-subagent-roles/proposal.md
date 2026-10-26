@@ -2,7 +2,7 @@
 id: PROP-backlog-subagent-roles
 title: Backlog triage and decomposer subagent roles
 summary: Adds isolated triage and decomposer support roles so Backlog feedback triage and draft decomposition can be delegated with verified write boundaries and preserved provenance, and gates XL drafts to decomposition before Planning.
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-26
 target_area: delivery/
 priority: high                        # critical | high | medium | low
