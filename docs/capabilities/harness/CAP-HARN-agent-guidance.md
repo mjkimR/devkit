@@ -46,7 +46,10 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
 1. **Context first**: an agent MUST read the constitution (`devkit get-context spec`) once per agent context before
    development work, including work started without a skill, and read each relevant instruction body before the
    action it governs. An instruction never overrides a mandatory check; a conflict is reported, not resolved by
-   picking one.
+   picking one. Every role contract under `subagents/` runs `devkit get-context spec` itself, so nested roles load
+   the same context. The constitution names `docs/steering/` and the `documents` list of the response (the bundle
+   declares `context_documents = "docs/steering"`) and directs the agent to read a steering file's body before a
+   wording, naming, interface or content decision its summary covers (`ADR-background-pointer-in-constitution`).
 2. **One pointer in `AGENTS.md`**: the bundle adds exactly one line to the root `AGENTS.md` guidance block (the
    `spec-pointer` fragment); everything else is reached through `devkit get-context spec` and the skills.
 3. **Managed files are read-only**: files under `.devkit/managed/` and projected agent files are never edited;
@@ -114,13 +117,15 @@ A project opts out of the bundle with `[presets] spec = false` in `.devkit/confi
 
 ### 4.2 Constitution
 
-`devkit get-context spec` returns `{"bundle": "spec", "constitution": <text>, "instructions": [{"path", "header"}]}`.
+`devkit get-context spec` returns `{"bundle": "spec", "constitution": <text>, "instructions": [{"path", "header"}],
+"documents": [{"path", "title", "summary"}]}`, the documents being the steering files of `docs/steering/`.
 The constitution's sections:
 
 1. **Context**: read it once per agent context and each relevant instruction before the action it governs; a
    mandatory check wins over an instruction.
 2. **Living Spec and Scope**: `docs/` holds the current contract; feature specs are `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/`;
-   namespaces under `docs/packages/<name>/`; references by full ID; Non-Goals and `_Boundary:` are the expected scope.
+   steering documents under `docs/steering/`, read on demand from the `documents` list; namespaces under
+   `docs/packages/<name>/`; references by full ID; Non-Goals and `_Boundary:` are the expected scope.
 3. **Classification and Authority**: the three axes, the `sdd-<planning-depth>[-<task-kind>]` workflow names, raising
    and lowering the depth, the approval boundaries `plan-accept`, `proposal-handoff` and `dev-integration` with
    `ask|auto`, `plan-intent` supplied by an explicit instruction, and policy read through `devkit spec policy`.

@@ -56,6 +56,9 @@ files (driver 2), and "steering" collides with no existing term (driver 3). Pack
 
 - **Positive**: background has a place; the glossary gains the row **Steering document** (Avoid: foundation,
   background).
+- **Amends**: the root glossary paths `docs/glossary.md` and `docs/glossary.yaml` that `ADR-spec-package-on-devkit`
+  and `ADR-writing-and-terminology-guidance` name are now `docs/steering/glossary.md` and
+  `docs/steering/glossary.yaml`; their decisions otherwise stand.
 - **Negative / Risks**: a missed glossary path fails silently; each is an acceptance item with a test. Existing
   consumers move their glossary by hand (no migration, `AGENTS.md` Compatibility).
 - **Follow-ups**: a namespace copy when a registered namespace needs package background that its package glossary

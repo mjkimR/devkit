@@ -8,6 +8,8 @@ entrypoints:
   - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/playbook_get.py
   - packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/reading.py
   - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/status.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/usecases/context.py
+  - packages/devkit-dist/src/devkit_dist/features/distribution/services/bundles/context_documents.py
 created_at: 2026-10-17
 usecases:
   - UC-reconcile-living-spec-drift
@@ -22,8 +24,8 @@ Guidance in startup files costs tokens on every turn and dilutes rarely needed p
 it in stages:
 
 - The root `AGENTS.md` guidance block holds only orientation (`CAP-DIST-workspace-ownership`).
-- `devkit get-context <bundle>` returns a bundle's constitution and instruction headers; the agent reads bodies on
-  demand.
+- `devkit get-context <bundle>` returns a bundle's constitution, instruction headers and the titles and summaries of
+  its declared context documents; the agent reads bodies on demand.
 - Playbooks stay on disk under `.devkit/managed/<bundle>/` and are searched only when the user invokes
   `devkit-playbook` for the task, a failing rule's remediation names one, or an installed entry skill runs its own
   bounded intake search (the `spec` skill's, `CAP-HARN-agent-guidance`); a candidate found that way runs only after
@@ -31,8 +33,8 @@ it in stages:
 
 ## 2. Bundle Context (`devkit get-context`)
 
-`devkit get-context <bundle>` returns the bundle's **context**: its constitution and the header catalog of its
-synchronized instructions, so an instruction-only bundle still has one. It runs from the project or a
+`devkit get-context <bundle>` returns the bundle's **context**: its constitution, the header catalog of its
+synchronized instructions and the list of its context documents, so an instruction-only bundle still has one. It runs from the project or a
 subdirectory (or with `-w`) and takes the shared project lock, waiting up to ten seconds while a sync writes; where
 the file system is read-only for it, it reads without the lock (`CAP-DIST-sync-and-transactions`).
 
@@ -45,6 +47,18 @@ the file system is read-only for it, it reads without the lock (`CAP-DIST-sync-a
   the override tree must match its canonical receipt hash or validated personal render evidence. Missing or stale
   personal evidence is `CONFIG_LOCAL_RENDER_STALE`; other unsynchronized files are `NOT_SYNCHRONIZED`. Both direct
   the caller to sync. Bodies are never returned; see `CAP-DIST-sync-and-transactions`.
+- `documents`: always present, `[]` when the bundle declares no context document directory
+  (`context_documents` in `bundle.toml`, `CAP-DIST-manifest-spec`) or the directory is absent
+  (`ADR-bundle-context-lists-project-documents`). The declaration is read from the receipt-verified managed
+  `bundle.toml`; the directory's files are project-owned and read from the workspace at run time, under the same lock,
+  without a hash check. Each entry has the absolute `path`, `title` and `summary` of one Markdown file, sorted by
+  path. Only regular, non-symlink `*.md` files other than `README.md` directly inside the directory are listed, and
+  only when no component of the directory path is a symlink. At most the first 4096 bytes of a file are read, and only
+  the frontmatter block in them is decoded; a value that cannot be read (an unreadable file, a non-UTF-8 block, no
+  frontmatter or frontmatter that does not close within those bytes, malformed YAML, a non-string value) is `null`,
+  never an error. `devkit-dist` caps nothing
+  itself; the bundle's own rules bound the directory (the `spec` bundle's `RULE-steering-documents`,
+  `CAP-GOV-spec-rules`).
 
 ```markdown
 ---
