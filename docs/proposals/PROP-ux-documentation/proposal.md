@@ -206,3 +206,6 @@ The user decided that UX Development follows both prerequisites (`depends_on`).
   `.devkit/installation.json` and `AGENTS.md` for the `devkit sync` the new bundle assets imply.
 - The feedback record on stale viewer bracket-ID prefixes, recorded earlier in this run, is withdrawn: the accepted table change already
   records the same viewer defect (`challenger-03` finding 6).
+- `challenger-04` finding 2 (a seeded register burdens projects without an interface) is put to the user in
+  `ux-objects`; the Planning recommendation there creates `docs/steering/ux-objects.md` with the project's first UX
+  document instead of seeding it, and the PADR and blueprint follow the answer.
