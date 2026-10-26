@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:57:41.204929Z'
+status: completed
+summary: 'review-refactor playbook (directory form: SKILL.md, references/criteria.md, references/applying.md) added to maintenance with upkeep and solo refactoring presets; bundle tests cover AC-01..AC-04; CAP-DLV-review-refactor, UC-review-and-refactor-accumulated-slop, CAP-DIST-content-packages §6, CAP-DLV-delivery-workflows rule 1, README and install recommendations updated; manual evidence: read-only CLI sweep stopped at its decision round (1 pending finding as feedback) and a fixture exercise of three direct-mode changes'
+findings: []
+assumptions:
+- the fixture remains at the ignored scratch/rr-fixture because its removal was denied; the Host deletes it
+- ARCH-04-delivery-strategy and MS-maintenance-operations are outside the write scope and left for the Host
+checks:
+  tests: PASS just test-affected mode=partial 80 passed; just test devkit-catalog 71 passed
+  build: PASS just check devkit-catalog 0 errors
+  lint: PASS just lint-check devkit-catalog; devkit rules check --ci --base 08f91ca7 0 errors
+diff_scope:
+  base: 08f91ca79396d564bb6d821a7fa0a841b9df729a
+  head: aad3798cf89ed4666bfab9e0a4e8e19a45d79eb7

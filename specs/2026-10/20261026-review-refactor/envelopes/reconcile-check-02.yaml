@@ -1,0 +1,14 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:56:51.833335Z'
+status: completed
+summary: 'implementer self-verified the reconcile-check-01 fixes at fd3285e196698a4887c142786c5e4ce8ea674eb9: CAP-DLV-delivery-workflows rule 1 states the refinement (new target), CAP-DLV-review-refactor §4.6 scoped to the refactor route, UC extension 7a added; ARCH-04 alignment recorded as Host work (outside write scope); all three findings resolved'
+findings: []
+checks:
+  rules_check: PASS devkit rules check docs specs unit
+  tests: PASS just test-affected 80 passed
+diff_scope:
+  base: 08f91ca79396d564bb6d821a7fa0a841b9df729a
+  head: fd3285e196698a4887c142786c5e4ce8ea674eb9

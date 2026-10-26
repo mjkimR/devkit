@@ -11,6 +11,7 @@ entrypoints:
 created_at: 2026-10-17
 usecases:
   - UC-reconcile-living-spec-drift
+  - UC-review-and-refactor-accumulated-slop
 ---
 
 # [CAP-DIST-context-and-playbooks] Context Loading and Playbook Discovery
