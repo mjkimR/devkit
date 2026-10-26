@@ -8,7 +8,7 @@ target: devkit config template
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -44,3 +44,7 @@ created_at: 2026-10-26
 {"path": ".devkit/config.toml", "state": "unchanged", "added": [], "notices": []}
 git diff .devkit/config.toml: @@ -1,3 +1,17 @@ ... @@ -37,3 +51,23 @@ (commented header and tables added)
 ```
+
+## Disposition
+
+Resolved by `SPEC-handoff-modes-and-template-report` (decision 4): the mismatch does not reproduce in one invocation at base `2bbd8251`; the write and its report come from one comparison, and the repository's own `.devkit/config.toml` reports `updated` with seven added names, then `unchanged` with `added: []` on a second run, which matches the observation. A CLI regression test pins the contract (bytes changed with `updated` and every commented key and table named, then `unchanged` with the bytes kept, and `--print` agreeing with the write), and `CAP-DIST-sync-and-transactions` (Commented Template) and the distribution reference state that `state` is `unchanged` exactly when the bytes stay the same. No code change.

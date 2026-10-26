@@ -235,6 +235,9 @@ spec = "core"
 - **Failures**: an extension that fails to load, raises, is not named like a `[tool.<name>]` table
   (`devkit.config_template`) or a reserved table (`devkit.config_tables`), or returns anything but valid tables is
   left out with a `CONFIG_TEMPLATE_EXTENSION_FAILED` warning, and the command succeeds; when a selection command created the file, the warning joins the sync result's `notices`.
+- **Result**: `devkit config template` prints `path`, `state` and `added`. `state` is `unchanged` exactly when the
+  file's bytes stay the same, and otherwise `created` or `updated`; `added` names every key and table written, in
+  file order, the commented ones included. A second run after a write reports `unchanged` with `added: []`.
 - **Preview**: `devkit config template --print` writes nothing (no file, no `.devkit/`, no lock file) and adds
   `text`, the whole file a write would produce, to the output; `state` and `added` are those the write would report,
   and an invalid file is `CONFIG_INVALID` as for a write.

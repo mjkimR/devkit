@@ -1,0 +1,16 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T03:32:43.653837Z'
+status: completed
+summary: 'Development from specify to the final change report: HandoffNotReadyError BLOCKED and HandoffReplyError INPUT_ERROR (red then green), report-free fixes for the handoff and PROPOSAL_APPROVAL errors; code-reviewer probes in per-round subdirectories left for worktree removal; plain handoff stated as the Host-run step in CAP-DLV-proposal-incubation and CAP-DLV-project-policy; config template change report pinned by a CLI regression test and documented. Item 4 did not reproduce in one invocation at the base (no code change, spec assumption 3), so its regression test passes on the base. review-01 P3 (CRLF) waived to FB-config-template-rewrites-crlf-line-endings; reconcile-check-01 two P2 fixed, self-verified in reconcile-check-02. Next: dev-integration by the Host.'
+findings: []
+checks:
+  tests: PASS just test-affected 1613 passed; just test-dist 1043 passed
+  lint: PASS just lint-check/check devkit-spec devkit-dist; devkit rules check --ci --base 2bbd8251 errors=0
+  sync: PASS devkit sync --check
+diff_scope:
+  base: ''
+  head: 8164ceda7154c160e72aebacaf3a7dfac795291e
+activity_effort: medium

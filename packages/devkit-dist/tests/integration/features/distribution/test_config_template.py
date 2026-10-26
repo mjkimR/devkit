@@ -397,3 +397,37 @@ def test_cli_print_adds_the_text_and_leaves_the_file(project: Path, tools: list[
     assert not (project / ".devkit/transient").exists()
     plain = json.loads(CliRunner().invoke(cli, ["config", "template", "--workspace-root", str(project)]).stdout)
     assert "text" not in plain and _text(project) == payload["text"]
+
+
+# SPEC-handoff-modes-and-template-report AC-08: a byte change is always reported, a second run reports none.
+def test_cli_reports_every_commented_part_it_writes_and_nothing_after(
+    project: Path, tools: list[SimpleNamespace]
+) -> None:
+    tools.append(_entry("demo", lambda: DEMO))
+    before = (
+        "# project configuration\n\n"
+        '[presets]\nspec = ["core"]\n\n'
+        '[workflow.approvals]\ndev-integration = "auto"\n\n'
+        '[worktree]\npull_request = "auto"\n\n'
+        "[tool.demo]\nenabled = false  # ours\n"
+    )
+    _write(project, before)
+    runner = CliRunner()
+    preview = json.loads(runner.invoke(cli, ["config", "template", "--print", "--workspace-root", str(project)]).stdout)
+    result = runner.invoke(cli, ["config", "template", "--workspace-root", str(project)])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    after = (project / CONFIG_PATH).read_bytes()
+    assert after != before.encode()
+    expected = ["agents", "guidance_block", "override_drift", "shared", "workflow.stages", "tool.demo.limits"]
+    assert (payload["state"], payload["added"]) == ("updated", expected)
+    assert (preview["state"], preview["added"]) == (payload["state"], payload["added"])
+    text = after.decode()
+    for name in ("shared", "workflow.stages", "tool.demo.limits"):
+        assert f"# [{name}]" in text  # a commented table is named in added
+    for key in ("agents", "guidance_block", "override_drift"):
+        assert f"# {key} =" in text
+    again = runner.invoke(cli, ["config", "template", "--workspace-root", str(project)])
+    assert again.exit_code == 0, again.output
+    assert (json.loads(again.stdout)["state"], json.loads(again.stdout)["added"]) == ("unchanged", [])
+    assert (project / CONFIG_PATH).read_bytes() == after

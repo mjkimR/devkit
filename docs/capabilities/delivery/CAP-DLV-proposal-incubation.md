@@ -563,9 +563,9 @@ directory whose namespace applies when `namespace` is omitted);
 | `SPEC_PROPOSAL_EXISTS` | `ERROR` (`INPUT_ERROR`) | `ProposalExistsError` | `new`: the bundle or `PROP-<slug>.md` exists, or another document declares `PROP-<slug>` as an alias. `padr`: a document already declares the PADR ID; `[TARGET]` lists it. |
 | `SPEC_PROPOSAL_SLUG_CONFLICT` | `ERROR` (`INTERACTION`) | `ProposalSlugConflictError` | `SPEC-<slug>` exists (`[TARGET]`); the user picks another slug or drops the duplicate. |
 | `SPEC_PROPOSAL_NOT_FOUND` | `ERROR` (`INPUT_ERROR`) | `ProposalNotFoundError` | No bundle or single-file proposal has the slug (`padr`: no bundle); `new`: `--supersedes` names a proposal that does not exist. |
-| `SPEC_HANDOFF_NOT_READY` | `ERROR` (`BLOCKED`) | `HandoffNotReadyError` | The composed `proposal handoff` CLI finds an unaccepted proposal, incomplete Planning workflow, or unmet base prerequisite; resolve the named prerequisite and rerun with a current report URI. |
+| `SPEC_HANDOFF_NOT_READY` | `ERROR` (`BLOCKED`) | `HandoffNotReadyError` | The composed `proposal handoff` CLI finds an unaccepted proposal, incomplete Planning workflow, or unmet base prerequisite; the user or Host resolves the named prerequisite and reruns the handoff from the retained base checkout. |
 | `SPEC_HANDOFF_STALE` | `ERROR` (`MAINTENANCE`) | `HandoffStaleError` | The composed `proposal handoff --effort` CLI found the base, accepted plan or policy changed since its check, before any effect (exit `2`); or it created the Development worktree, which no longer holds the reviewed base commit or whose files setup changed: the result is `status=needs_recovery` with this error listed, the worktree is kept for inspection and the command exits `1`. |
-| `SPEC_HANDOFF_REPLY_INVALID` | `ERROR` (`INPUT_ERROR`) | `HandoffReplyError` | The composed `proposal handoff` CLI needs `--effort low`, `--effort medium` or `--effort high`. |
+| `SPEC_HANDOFF_REPLY_INVALID` | `ERROR` (`INPUT_ERROR`) | `HandoffReplyError` | The composed `proposal handoff` CLI needs `--effort low`, `--effort medium` or `--effort high` (an automatic handoff the proposal's `dev_effort`); the caller corrects the effort and reruns. |
 | `SPEC_PROPOSAL_REJECTED_PENDING` | `WARNING` | `ProposalRejectedPendingWarning` | `rules check -p hygiene` (whole workspace): a rejected proposal is still in the base; `[FIX]` finds the rejection commit, writes the rejection ADR and deletes the proposal in one commit (rule 9). |
 | `SPEC_PROPOSAL_IN_PLANNING` | `ERROR` (`INPUT_ERROR`) | `ProposalInPlanningError` | `check`: Backlog may not change the proposal, because its `plan-<slug>` exists (locally or fetched; rule 13) or it is no longer `draft`. `padr`: `plan-<slug>` exists and the checkout is not on it. |
 | `SPEC_PROPOSAL_INVALID` | `ERROR` (`MAINTENANCE`) | `ProposalInvalidError` | The proposal, its blueprint or a PADR cannot be read or its frontmatter does not parse; or, at handoff, `namespace` is not a string naming `global` or a registered namespace, `summary` is not a string, `task_kind` is not `feature` or `bugfix`, or `planning_effort`/`dev_effort` is present and not `low`, `medium` or `high`; or a same-path pair of regular files of a materials merge cannot be read for the byte comparison. |
@@ -590,9 +590,9 @@ directory whose namespace applies when `namespace` is omitted);
 
 ## Host-authorized proposal lifecycle CLI
 
-The Host presents the exact immutable report, source commit, target branch, worktree path and effects, receives the
+The Host presents the proposal's findings, source commit, target branch, worktree path and effects, receives the
 user's conversational decision under `ask`, then invokes the CLI. CLI invocation alone does not establish approval;
-the CLI does not accept a proof or token and cannot authenticate the conversation. It revalidates report identity,
+the CLI does not accept a proof, token or published report and cannot authenticate the conversation. It revalidates
 source, base policy, workflow readiness, worktree provenance and cleanup targets before each mutation. `auto`
 authority comes only from the retained base policy.
 
@@ -606,6 +606,10 @@ proposal on the retained base, creates or validates `dev-<slug>`, runs setup and
 and scope registration. An automatic handoff uses the proposal's declared `dev_effort`. The command reports the
 worktree, spec bundle, selected effort, notices and completed effects. Setup or handoff failures preserve the
 proposal and any created worktree for inspection; the command never rolls those effects back automatically.
+
+This composed handoff and `accept --mode accept_and_handoff` read the `proposal-handoff` policy. The plain
+`devkit spec proposal handoff <slug>` in a `dev-<slug>` checkout is the Host-run step after the `proposal-handoff`
+decision and reads no policy itself.
 
 These operations do not dispatch a worker, create a pull request or authorize final Development integration. A
 partial result requires Git/worktree inspection; after an already-landed operation, recovery runs only a guarded

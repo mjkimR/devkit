@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/code-
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -46,3 +46,7 @@ created_at: 2026-10-26
 code-reviewer.md rule 4: "... Delete every probe before you return, so `git status --short` stays unchanged."
 CAP-DLV-delivery-workflows: code-reviewer writes "nothing but throwaway probe tests under the ignored probe path the payload names, deleted before it returns"
 ```
+
+## Disposition
+
+Resolved by `SPEC-handoff-modes-and-template-report` (decision 2: unify with the workers): the code-reviewer contract writes each round's probes in its own subdirectory of the ignored probe path (for example `<probe path>/review-NN/`), never reads another round's probes and never deletes them, leaving them for worktree removal; the `spec-delegate` payload reference names the per-round subdirectory and `CAP-DLV-delivery-workflows` mirrors the role row. Verified by `test_delegation_sandbox_guidance.py`.
