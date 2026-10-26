@@ -1,6 +1,6 @@
 # Applying agreed changes
 
-Read when a decision round approved changes. The applied work is refactoring, not feature development: you work with
+Read §1 before a decision round that proposes changes, and the rest once the round approved them. The applied work is refactoring, not feature development: you work with
 the user in the conversation, with no planning or development worker and no work unit, unless the route below sends a
 work item to the feature workflow.
 
@@ -29,9 +29,11 @@ Where the repository has no refactor workflow, the steps below are the procedure
 
 ## 2. Branch and edit tasks
 
-1. Create the work item's own branch; never commit to the base branch. With the `spec` bundle, use the branch the
+1. If the working tree holds changes that do not belong to the run (dirty paths recorded at intake, or edits the
+   user made since), stop and have the user commit, stash or exclude them; never discard them yourself.
+2. Create the work item's own branch; never commit to the base branch. With the `spec` bundle, use the branch the
    overall-refactor workflow's Git policy allows.
-2. Split the work item into edit tasks. When useful and the host supports subagents, use general subagents for
+3. Split the work item into edit tasks. When useful and the host supports subagents, use general subagents for
    parallel edits across many files, drafting and research; otherwise do the same steps yourself.
 
 ## 3. Subagent edits
@@ -50,8 +52,9 @@ Where the repository has no refactor workflow, the steps below are the procedure
 
 1. Run the change's relevant verification before and after it, with only that change applied on the previous
    checkpoint; record both results and the reachability evidence from `criteria.md` §4.
-2. Before each commit, confirm the working tree holds only the committed work plus the current change; revert
-   anything else, such as files a verification run wrote.
+2. Before each commit, confirm the working tree holds only the committed work plus the current change. Revert only
+   what the run itself wrote outside the change, such as files a verification run wrote; for anything else, stop as
+   in §2 step 1.
 3. Commit the change as a checkpoint: one commit per change, the change record in the commit body.
 4. At the work item's final head, run the repository's full verification on a clean tree (for example the full test
    suite, lint, type checks and governance rules).

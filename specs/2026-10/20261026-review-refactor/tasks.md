@@ -31,6 +31,6 @@ plan: PLAN-review-refactor
   - _Requirements: AC-07_
   - **Verification**: the record names intake, coverage, findings, gaps and a pending decision round; `git status` shows no source change
 - [x] **Task 3.2**: Disposable fixture exercise of direct-mode application
-  - **_Boundary**: `scratch/` (ignored, removed afterwards), `specs/2026-10/20261026-review-refactor/materials/`
+  - **_Boundary**: `scratch/` (ignored; removal denied, left for the Host), `specs/2026-10/20261026-review-refactor/materials/`
   - _Requirements: AC-08_
   - **Verification**: the record holds three change records with patches, fixture commits and before-and-after output

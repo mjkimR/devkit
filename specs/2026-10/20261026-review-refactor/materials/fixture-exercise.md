@@ -2,7 +2,8 @@
 
 `SPEC-review-refactor` AC-08. Manual evidence, not test coverage. Decisions are simulated and change only the
 fixture: a disposable Git repository at `<worktree>/scratch/rr-fixture` (ignored by `.gitignore:47 /scratch/`,
-never committed to the worktree, removed after this record). Its `git init` and commits are fixture operations. No
+never committed to the worktree). The worker's removal of the fixture was denied by the host's permission system, so
+it remains at that ignored path for the Host to delete; nothing of it is tracked. Its `git init` and commits are fixture operations. No
 real workflow, review or integration was opened. Patches: `fixture-patches.txt` (`git format-patch main..HEAD`).
 
 ## 1. Fixture and intake

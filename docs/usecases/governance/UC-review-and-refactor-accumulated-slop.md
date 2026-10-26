@@ -117,7 +117,7 @@ created_at: 2026-10-26
 - **Covers**: 5a
 - **Given**: an external runner invokes the playbook with no developer present
 - **When**: the batch's findings are ready
-- **Then**: the report records them as pending with outcome `stopped at decision round`, and no file changes
+- **Then**: the report records them as pending with outcome `stopped at decision round`, nothing is applied, and no file other than the run report changes
 
 ### Scenario 6: Routes a contract removal separately
 - **Covers**: 5b

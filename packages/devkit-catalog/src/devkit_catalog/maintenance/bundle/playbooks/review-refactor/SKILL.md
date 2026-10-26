@@ -64,8 +64,9 @@ On a repeat run, recheck the earlier dispositions.
 
 ## 4. Decision round
 
-Present all findings of the batch together, each with its location, cost, proposed disposition and, for changes,
-the route, the edited paths and the write scope from `references/applying.md` §1. Record each decision with its
+When the batch proposes changes, read `references/applying.md` §1 first. Present all findings of the batch
+together, each with its location, cost, proposed disposition and, for changes, the route, the edited paths and the
+write scope that §1 defines. Record each decision with its
 reason and provenance.
 
 | Disposition | Record and next action |
@@ -82,7 +83,7 @@ reason and provenance.
 
 ## 5. Apply agreed changes
 
-When the round approved changes, read `references/applying.md` and follow it. If HEAD or a relevant dirty path moved
+When the round approved changes, read the rest of `references/applying.md` and follow it. If HEAD or a relevant dirty path moved
 since intake, revalidate the evidence first, and take a change whose intent shifts back to the decision round.
 
 ## 6. Report and completion

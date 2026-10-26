@@ -79,6 +79,8 @@ mismatch belongs to `CAP-DLV-drift-reconciliation`.
 6. **Direct mode**: the playbook's agent MUST apply the work item on its own branch, without a Unit or workers,
    within the batch's write scope; editing subagents MUST work in disjoint assigned scopes, never commit, and have
    each diff checked, a rejected edit reverted hunk by hunk.
+   IF the working tree holds changes that do not belong to the run, THEN the playbook's agent MUST stop for the user
+   to commit, stash or exclude them and MUST NOT discard them.
 7. **Commits and verification**: each change MUST be verified before and after on the previous checkpoint and
    committed alone; the final head MUST pass the repository's full verification on a clean tree.
 8. **Review, report and integration**: the work item's diff MUST be reviewed by a fresh reviewer or a recorded

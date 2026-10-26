@@ -38,16 +38,19 @@
 | Code review questions | C §1 Code |
 | Guidance review questions and preserved constraints | C §1 Guidance |
 | CLI review questions (inventory, overlap, unneeded, fragmented, grouping, help and docstrings) | C §1 CLI |
+| Evidenced problem versus stylistic preference; AI origin and line count never findings | C opening paragraph; S §3 last sentence of the first paragraph |
+| One batch's behavior-preserving changes form one work item; each contract change its own | A §1 step 1 |
 | Findings and changes as separate records; commit per change; follow-ups without duplication | S §3 last paragraph; S §6 |
 | Dispositions: consolidate/reduce/remove, contract change, defer, keep | S §4 table |
 | Decision-round approval is the routed intent, never integration approval | S §4 second bullet; A §7 |
 | Route: cross-area refactor workflow (`sdd-overall-refactor` with `spec`) | A §1 step 3 first sub-item |
 | Single-module test with following edits left out; examples per surface | A §1 step 2 |
 | Single-module route: feature workflow at the repository's own depth | A §1 step 3 second sub-item |
-| Route stated in the decision round; never split or merge to change it; undeclared layout settled by approval | A §1 steps 3-4; S §4 opening |
+| Route stated in the decision round; never split or merge to change it; undeclared layout settled by approval | A §1 steps 3-4; S §4 first sentence (read A §1 before the round) |
 | Batch write scope: edited paths stated in the round, following edits included | A §1 step 5 |
-| Direct mode: no workers and no Unit; edit tasks; general subagents or own steps; procedure without a refactor workflow | A opening paragraph; A §1 last line; A §2 step 2 |
-| Branch: own branch, never the base branch | A §2 step 1 |
+| Direct mode: no workers and no Unit; edit tasks; general subagents or own steps; procedure without a refactor workflow | A opening paragraph; A §1 last line; A §2 step 3 |
+| Branch: own branch, never the base branch | A §2 step 2 |
+| Unrelated dirty work is never discarded: the user commits, stashes or excludes it; only run-written files are reverted | A §2 step 1; A §4 step 2 |
 | Subagent write scopes: subset of the batch scope, disjoint from concurrent subagents | A §3 first item |
 | Sequential changes on the previous checkpoint | A §3 second item |
 | Diff check against assigned paths and agreed change | A §3 third item |
