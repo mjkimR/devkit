@@ -10,7 +10,7 @@ translated_from: en/areas/generated.md@eb9c20a6124c013e
 # 생성 파일
 
 <!-- handbook:provenance -->
-> 소스 커밋 `c94b6a08710e` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
+> 소스 커밋 `ae01161143be` 기준 devkit `v0.1.4` 스냅숏이며 2026-10-26에 생성되었습니다. 내용이 다르면 `docs/`의 Living Spec이 우선하며, 이 페이지는 다음 갱신 전까지 바뀌지 않습니다.
 <!-- /handbook:provenance -->
 
 어떤 파일은 명령이 만들어 내지만 Git이 추적합니다. `uv.lock`, devkit 자체의 설치 기록(receipt)

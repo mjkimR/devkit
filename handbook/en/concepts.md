@@ -9,12 +9,12 @@ sources:
   CAP-DIST-agent-projections: 86b06a016382213334f269e8b93606e46dfda28c
   CAP-DIST-context-and-playbooks: 34185acd0c3f1a6432909d7718d9b18f52eda6cf
   CAP-DIST-manifest-spec: acb611b3fdd8b91fb5b8ce47265deba7f9cea53e
-  CAP-DIST-sync-and-transactions: 79f35c1e7910770da66c9fba7ab49df74328f31d
+  CAP-DIST-sync-and-transactions: d1d1ac401be230f3b198a8ee39267d84831b7353
   CAP-DIST-workspace-ownership: 23c12ca362aeccf9d70b51b59a23b5e383c1b6b8
   CAP-DLV-delivery-workflows: e1366a8cbed7bace6c51651085abc7d50b588768
   CAP-DLV-human-interaction: bbe6a95de1da4aae4da340a8a8f0dfd8e8e6a035
   CAP-DLV-project-policy: 7cec046a7324de8f46048c80dea6a4286bf809ef
-  CAP-DLV-proposal-incubation: baea280e677c5fb4d6a5cefd7024f0217df86ce1
+  CAP-DLV-proposal-incubation: 9f9d06e5a526179f9d39e52890ee4e66277d95c6
   CAP-DLV-spec-bundles: 516cc932fee8af93baae90012e8dbe4c9b6f4725
   CAP-DLV-workflow-envelopes: ac166b8217314babc0f4e8ab346a6a9041f85fef
   CAP-DLV-workflow-orchestration: ee2cc0dbbb5824610041b822e5cdb58c301d57a4
@@ -30,7 +30,7 @@ title: Concepts
 # Concepts
 
 <!-- handbook:provenance -->
-> Snapshot of devkit `v0.1.4` at source commit `c94b6a08710e`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
+> Snapshot of devkit `v0.1.4` at source commit `ae01161143be`, generated 2026-10-26. The Living Spec under `docs/` prevails on any conflict; this page is not updated between refreshes.
 <!-- /handbook:provenance -->
 
 <!-- handbook:generated toc -->
