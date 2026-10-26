@@ -1,0 +1,14 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T08:54:30.368269Z'
+status: completed
+summary: 'Self-review at low effort: AC-01..AC-03 confirmed by the three CLI regression tests, AC-04 by the existing entrypoints suites; target resolution moved before selection keeps its error order; no findings'
+findings: []
+checks:
+  tests: PASS just test-affected 1772 passed
+  lint: PASS just lint spec, just check spec, devkit rules check
+diff_scope:
+  base: ead1175b2a127c45bc12fcc0abc7fd018242c95b
+  head: 7365405e873b6197de8b78a1314a8d57b410559e
