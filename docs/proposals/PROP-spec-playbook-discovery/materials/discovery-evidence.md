@@ -40,12 +40,31 @@ Findings:
 - The selection must therefore rest on whether a candidate's `description` names the requested operation, never on
   its score, and the no-match path must be the ordinary result. Ranking changes stay a non-goal.
 
+### Paraphrase probe (after the challenger round)
+
+`--limit 3`, `hybrid` and `lexical` agree on the first candidate in every row.
+
+| Query | First candidate (hybrid, lexical) | Note |
+| --- | --- | --- |
+| clean up old decisions | feedback-hygiene (0.033, 1.09) | user paraphrase: `adr-compaction` absent |
+| tidy up old ADRs | adr-compaction (0.033, 1.94) | canonical noun "ADR" restores the match |
+| consolidate ADR documents | adr-compaction (0.033, 2.86) | |
+| triage open feedback files | feedback-hygiene (0.033, 4.39) | |
+| adopt spec-driven development in an existing repository | brownfield-adoption (0.033, 7.61) | |
+
+Misses come from paraphrase, not ranking: writing the query with canonical artifact nouns closes them without a
+ranking change. Note that the `brownfield-adoption` positive arises through explicit discovery or exact retrieval, not
+`spec` intake, in a repository that does not yet have `devkit-spec`.
+
 ## 2. Current explicit-only contract (Q3 and reconciliation inventory)
 
 The explicit-only restriction is stated in these sources (base `3137814f`):
 
 - Accepted decision: `ADR-external-playbook-execution` §4 "Ordinary requests do not authorize discovery." Reversing
   it needs a new ADR that supersedes it and restates its retained exact-retrieval and external-execution decision.
+- Accepted decision: `ADR-immutable-decisions-editable-records` §4 "Compaction": a compaction runs when the user
+  explicitly invokes the `adr-compaction` playbook, which authorizes its deletions, at `session` depth.
+- Accepted decision: `ADR-playbook-aliases-as-identifiers`: aliases are never searched; unaffected by discovery.
 - Generated skill: `packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/playbook_skill.py`
   (`NAME = "devkit-playbook"`, `disable-model-invocation`, Codex `allow_implicit_invocation: false`), wired through
   `GENERATED_SKILLS` in `services/installation/inventory.py`, reserved in `services/bundles/manifest.py`

@@ -25,6 +25,8 @@ boundaries:
     - docs/usecases/governance/
     - docs/architecture/
     - docs/decisions/
+    - AGENTS.md
+    - .devkit/
   excludes:
     - Search ranking algorithm changes
     - Scheduling and execution history
@@ -82,20 +84,24 @@ while task-specific candidates can change during the conversation.
   `ADR-external-playbook-execution` where discovery entry conditions change; preserve exact retrieval and external
   execution boundaries.
 - Verify new task discovery, each agreed skip case, same-task continuation, bounded metadata, no-match fallback,
-  selected-body loading and consumers without the `spec` bundle.
+  selected-body loading and consumers without the `spec` bundle, split into mechanical tests and recorded manual
+  scenarios (§3a Verification split).
 - Non-goals: search ranking changes, alias keyword indexing, scheduling, execution history, bulk context loading,
   and automatic execution beyond the user's authorized task.
 
 ## 3a. Planning direction
 
-Evidence: [discovery evidence](materials/discovery-evidence.md). Open user decisions are listed as pending; the rest
-is the working direction this Planning turn settled.
+Evidence: [discovery evidence](materials/discovery-evidence.md) and the challenger round `envelopes/challenger-01.yaml`.
+Decisions pending the user are listed as such; the rest is the working direction this Planning turn settled.
 
 ### Discovery trigger and skip cases (Q1, settled)
 
 `spec` runs discovery once at **new task intake**: a `/spec <intent>`, or a request within an ongoing conversation that
-falls outside the agreed scope of the current task. Task kind (`feature`, `bugfix`, `overall-refactor`) and
-planning depth never exempt a task. Discovery is skipped, with these representative cases:
+falls outside the agreed scope of the current task. Discovery runs as the first step of intake, **before
+classification and before any Unit is created**, so a selected playbook's stated depth and scope inform the
+classification (`adr-compaction` runs at `session` depth, and a `spec` Unit or a proposal under review can never be
+lowered). Task kind (`feature`, `bugfix`, `overall-refactor`) and planning depth never exempt a task. Discovery is
+skipped in these representative cases:
 
 | Skip case | Example |
 | --- | --- |
@@ -108,38 +114,72 @@ planning depth never exempt a task. Discovery is skipped, with these representat
 Not skipped: a new request after earlier work finished, even inside a Planning or Development conversation ("now clean
 up open feedback"), and a question that asks how to perform an operation ("how do I adopt devkit here?").
 
+- **Selection survives isolation**: when a task with a selected playbook continues to a Unit or proposal, the
+  playbook ID is recorded in the `plan-intent` note (and the Unit's or proposal's records), so a worker that skips
+  discovery still follows it.
+- **Compaction**: one clause in the `spec` guidance fragment of the root guidance block states that a new task intake
+  runs the `spec` intake step, so the rule survives a lost skill body.
+
 ### Bounded retrieval (Q4, settled)
 
-- One `devkit playbook search "<English query>" --limit 3` per intake; the default `--max-bytes` stays. The probe
-  measured 564 to 1810 bytes at `limit=5`, about 360 bytes per candidate, with every relevant playbook ranked first.
-- No automatic query refinement. A search runs again only at the next new task intake; unchanged bundle context is
-  not reloaded.
-- A candidate is selected only when its `description` names the requested operation. Scores never decide: `hybrid`
-  and `lexical` return candidates for unrelated tasks. When no description fits, `spec` continues the ordinary path
-  without mentioning the search.
-- Only a selected playbook's body is read (search path or `devkit playbook get`), after its bundle's context when
-  that is not already loaded.
+- One `devkit playbook search "<English query>" --limit 3 --max-bytes 4096` per intake. Intake overrides the project's
+  `[playbooks] limit` and `max_bytes` on purpose; explicit discovery keeps the configured values. A header may reach
+  4096 bytes, so the byte budget, not the current description lengths, is the bound. The probe measured 564 to 1810
+  bytes at `limit=5`, about 0.2 to 0.3 s per search.
+- The query is written with the repository's canonical artifact nouns (ADR, feedback, Living Spec, proposal,
+  playbook, rule, release) in place of the user's paraphrase. The paraphrase probe shows this closes the misses:
+  "clean up old decisions" omits `adr-compaction`, while "tidy up old ADRs" ranks it first in `hybrid` and `lexical`.
+  No automatic refinement follows; a search runs again only at the next new task intake, and unchanged bundle context
+  is not reloaded.
+- A candidate is selected only when its `description` names the requested operation **and** its scope does not exceed
+  the requested scope ("refactor the sync module" never selects a repository-wide review playbook). Scores never
+  decide: `hybrid` and `lexical` return candidates for unrelated tasks.
+- **No match** continues the ordinary path silently. The offer to draft a reusable playbook stays with explicit
+  discovery only; `CAP-DIST-context-and-playbooks` §3 and `ARCH-08-2-resource-taxonomy` are reconciled to say so.
+- **Search errors** at intake (`NOT_SYNCHRONIZED`, `CONFIG_LOCAL_RENDER_STALE`, `ARGUMENT_INVALID`,
+  `SEARCH_EXTRA_MISSING`, a lock timeout) count as no match: intake never runs an error's remediation (such as
+  `devkit sync`) for discovery's sake, and reports the error in one line only when it also blocks the task.
+- Only a selected playbook's body is read (search path or `devkit playbook get`), after its bundle's context when that
+  is not already loaded.
 
 ### Decisions pending the user
 
-- **Q2 ownership** between `spec` and `spec-playbook` (worker question `ownership`).
-- **Q3 the generated `devkit-playbook` skill** and consumers without `spec` (worker question `entry-skill`).
-- **Application authority** after a match, which decides how the playbooks' explicit-invocation prerequisites are
-  rewritten (worker question `apply-authority`).
+- **Q2 ownership and invocation** of the post-selection procedure (worker question `ownership`).
+- **Q3 the generated `devkit-playbook` skill** and consumers without `spec`, with every option spec-neutral in
+  `devkit-dist` (worker question `entry-skill`).
+- **Application authority** after a match, given the playbooks' own grants of moves, deletions and status updates
+  (worker question `apply-authority`).
+- **The `adr-compaction` invocation statement** of `ADR-immutable-decisions-editable-records` (worker question
+  `compaction-adr`).
 
 ### Decision record
 
-Discovery from ordinary task intake reverses `ADR-external-playbook-execution` §4 ("Ordinary requests do not
-authorize discovery"). Development writes a new ADR that supersedes it and restates its retained decision: exact
-receipt-backed retrieval without execution authority, external scheduling and execution. A PADR records the
-direction once the pending decisions are answered.
+Discovery from ordinary task intake reverses one statement of `ADR-external-playbook-execution` §4 ("Ordinary requests
+do not authorize discovery"). Development writes a new ADR that replaces only that statement, as
+`ADR-immutable-decisions-editable-records` §4 allows for a partial change: the new ADR names the ADR and the part in
+its outcome, and the affected statement gets a one-line pointer. Exact receipt-backed retrieval without execution
+authority and external scheduling and execution stay in force. Depending on `compaction-adr`, the same ADR also
+partially replaces the compaction-invocation statement of `ADR-immutable-decisions-editable-records`.
+`ADR-playbook-aliases-as-identifiers` is unaffected: discovery searches name and description only and never aliases.
+A PADR records the direction once the pending decisions are answered.
 
-### Interaction with PROP-review-refactor
+### Verification split
 
-`PROP-review-refactor` adds a `maintenance` playbook and owns `packages/devkit-catalog/src/devkit_catalog/maintenance/`
-and `docs/capabilities/delivery/`. This proposal edits the entry-condition wording of the existing maintenance
-playbooks there. The new playbook states its entry condition in the form settled here and a `description` that names
-its operation; whichever proposal lands second reconciles the other's wording.
+- Mechanical: `devkit-spec` text-contract tests for the intake step (trigger, order before classification, skip
+  table, `--limit 3 --max-bytes 4096`, canonical-noun query, silent no-match, error-as-no-match, recorded selection);
+  `devkit-dist` tests for the generated entry skill, guidance line and CLI help as `entry-skill` settles them.
+- Manual evidence: one recorded scenario run per skip case and per no-skip case, kept in the Unit's materials and
+  named as manual evidence, never reported as test coverage. The run includes the paraphrase probe with the
+  `maintenance` catalog selected, which this Planning worktree could not synchronize.
+
+### Interactions
+
+- `PROP-review-refactor` adds a `maintenance` playbook and owns `packages/devkit-catalog/src/devkit_catalog/maintenance/`
+  and `docs/capabilities/delivery/`. This proposal edits the entry-condition wording of the existing maintenance
+  playbooks there. The new playbook states its entry condition in the form settled here and a `description` that
+  names its operation and scope; whichever proposal lands second reconciles the other's wording. Its proposal has no
+  pointer back yet: the Host records the dependency there.
+- `PROP-release-handbook` (draft) adds another explicitly invoked playbook and needs the same entry wording.
 
 ## 4. Lifecycle & Retirement Criteria
 
