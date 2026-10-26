@@ -8,7 +8,7 @@ plan: PLAN-viewer-planning-proposal-overlay
 
 ## Phase 1: Server
 
-- [ ] **Task 1.1**: Planning source enumeration, batched proposal scan, source-scoped `tree` and `blob`, the
+- [x] **Task 1.1**: Planning source enumeration, batched proposal scan, source-scoped `tree` and `blob`, the
   `planning-proposals` endpoint and their integration tests
   - **_Boundary**: `packages/devkit-viewer/src/devkit_viewer/features/browse/`, `packages/devkit-viewer/tests/`
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05_
