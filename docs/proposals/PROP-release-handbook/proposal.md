@@ -1,7 +1,7 @@
 ---
 id: PROP-release-handbook
 title: Release-bound Multilingual Handbook
-summary: "Adds a human-readable handbook under handbook/{lang}/, regenerated at release as a snapshot derived from the Living Spec: English is synthesized from docs/, other languages are translated from English, and docs/ stays the single source of truth."
+summary: "Adds a tracked handbook for people under handbook/{lang}/ (en, ko), refreshed only on the user's request during release preparation as a snapshot derived from the Living Spec: English is synthesized from docs/, Korean is translated from English, and docs/ stays the single source of truth."
 status: reviewing
 created_at: 2026-10-22
 target_area: documents/
@@ -50,8 +50,6 @@ without adding Living Spec maintenance:
   journey and concept. Use cases (`UC-*`) and capability areas form its backbone together, because the use cases
   cover delivery and governance but no distribution journey.
 - Detail is not rewritten. Handbook pages link to the source documents at the release tag, untranslated.
-- Whether the handbook changes how `docs/` is written is a separate decision (q5); this proposal does not change the
-  Living Spec writing instructions.
 
 `CAP-DLV-weekly-report` already establishes the pattern this reuses: an explicitly invoked playbook produces an
 artifact bound to a source revision and verifies its links before completing.
@@ -73,12 +71,13 @@ Answered in Planning; evidence in `materials/spike-findings.md`.
   `RULE-markdown-link` keeps checking relative links between pages.
 - **Q4 (accuracy checks)**: Scripted checks are listed in section 3.3 step 3. Contradiction with the Living Spec is
   semantic and stays in the recorded human review.
-- **Q5 (release ordering)**: Generate, verify and commit in release preparation, then tag (section 3.3). Release
-  notes stay as they are; `changes.md` is not fed into them.
+- **Q5 (release ordering)**: When the user requests a refresh, generate, verify and commit in release preparation,
+  then tag (section 3.3). Release notes stay as they are; `changes.md` is not fed into them.
 - **Q6 (decision digest scope)**: `SPEC-document-id-aliases-and-compaction` is completed and excludes ADR compaction;
   `ADR-immutable-decisions-editable-records` keeps the ledger compact. The digest lists the accepted ADRs' summaries
   only and folds no chains (q7).
-- **Q7 (ownership)**: Open; the user decides the bundle and contract area (q6).
+- **Q7 (ownership)**: The playbook ships in the repository-only `devkit-dev` bundle; the script and `justfile` recipe
+  live in root `scripts/`; the contract is a capability in `capabilities/delivery/`.
 
 ## 3. Proposed Design & Impact
 
@@ -86,24 +85,27 @@ Answered in Planning; evidence in `materials/spike-findings.md`.
 
 ```text
 handbook/
-├── manifest.json      # language-neutral: snapshot tag, source commit, langs
+├── manifest.json      # language-neutral: target release tag, source commit, langs
 ├── en/                # pivot language, synthesized from docs/
 │   ├── README.md      # L0: what devkit is, the overall model, where to start
 │   ├── concepts.md    # bundle, sync, projection; Living Spec and specs; workflow stages; advisories
 │   ├── journeys/      # L1: one page per use case (UC-*), how-to oriented
 │   ├── areas/         # L1: capability area summaries linking to the L2 sources
-│   ├── decisions.md   # list of the accepted ADRs with their summaries (q7)
+│   ├── decisions.md   # generated list of the accepted ADRs: summary and tag-pinned link
 │   ├── changes.md     # previous handbook tag to this one: completed specs and new ADRs
 │   └── glossary.md    # generated from docs/glossary.md
-└── <lang>/            # same file set as en/, translated from en/, plus terms.yaml (q4)
+└── ko/                # same file set as en/, translated from en/, plus terms.yaml
 ```
 
 - **Tiers**: L0 (one-page overview) and L1 (journey and area pages) are generated. L2 is the Living Spec source
   document at the release tag, linked by tag-pinned URL (`blob/<tag>/docs/...`), never `main`, and never translated.
   Translated pages mark these links as English sources.
-- **Languages**: `handbook/{lang}/` with identical relative paths in every language. Adding a language adds a
-  directory and a `langs` entry. Identifiers (`devkit sync`, error codes, document IDs) are never translated.
-- **Delivery form**: a tracked `handbook/` on `main`, pending q1.
+- **Languages**: `en` and `ko` (`PADR-localized-handbook-language-exception`), with identical relative paths in
+  every language. Adding a language adds a directory and a `langs` entry. Identifiers (`devkit sync`, error codes,
+  document IDs) are never translated.
+- **Delivery form**: a tracked `handbook/` on `main` (`PADR-handbook-on-request-release-snapshot`).
+- **Decision digest**: `decisions.md` is generated from the document index: each accepted ADR's summary and its
+  tag-pinned link, with no folding or rewriting.
 - **Pages carry no `id:` frontmatter**, so they never enter the document index.
 
 ### 3.2 Provenance and staleness
@@ -121,8 +123,10 @@ handbook/
 
 ### 3.3 Refresh procedure
 
-An explicitly invoked playbook, run during release preparation before `just version-sync`'s metadata commit
-(`ARCH-07-deployment` section 1 gains this step), for the releases q2 selects:
+An explicitly invoked playbook, run only when the user requests a refresh, during release preparation before
+`just version-sync`'s metadata commit (`ARCH-07-deployment` section 1 gains this optional step). There is no cadence:
+a release without a refresh keeps the previous handbook, whose provenance names its older tag. The playbook writes
+the upcoming tag (from `VERSION`) into `manifest.json` as the release it targets.
 
 1. A script reports stale pages, coverage gaps (uncited use cases and capabilities) and language parity mismatches.
 2. An agent rewrites only the stale English pages, then their translations; deterministic sections are regenerated
@@ -137,22 +141,28 @@ An explicitly invoked playbook, run during release preparation before `just vers
    - `RULE-markdown-link` passes on `handbook/`.
 4. A person reviews each refreshed page against its cited sources; the playbook records the review outcome in its
    completion report. The handbook is committed before the release tag.
-5. `scripts/release.sh` checks that the `docs/` tree at the tagged commit equals the `docs/` tree at the
-   `manifest.json` source commit for a release that refreshes the handbook, and fails the build otherwise (q3).
+5. `scripts/release.sh` reads the committed `manifest.json`: the release refreshed the handbook exactly when its
+   target tag equals the tag being built. Detection runs no generation or refresh. For a refreshing release it reruns
+   the step 3 script checks and compares the `docs/` tree at the tagged commit with the one at the manifest source
+   commit, and fails the build on either failure. Every other release skips the handbook checks.
 
 A preview run against `main` writes to an untracked directory (`dist/handbook-preview/`) and its provenance header
 names the commit as unreleased. Only a release run writes `handbook/`.
 
 ### 3.4 Impact
 
-- **New**: `handbook/` at the repository root (a new root directory), the playbook and its script (q6), a `justfile`
-  recipe, and a capability recording the handbook contract (q6).
+- **New**: `handbook/` at the repository root (a new root directory), the playbook in the `devkit-dev` bundle under
+  `tools/devkit-dev/`, its script in `scripts/`, a `justfile` recipe, and a capability recording the handbook contract
+  in `capabilities/delivery/`.
 - **`.devkit/config.toml`**: `handbook/**` in `[rules.settings.RULE-cli-contract].exclude`.
 - **`AGENTS.md`**: an explicit exception to "Write all documentation, architecture specifications, and guide materials
-  in English" for `handbook/{lang}/` translations, backed by an ADR (q4).
+  in English" for `handbook/<lang>/` with languages other than `en` only
+  (`PADR-localized-handbook-language-exception`).
+- **`scripts/release.sh`**: the refreshing-release detection and checks of section 3.3 step 5.
 - **`README.md`**: links to the handbook for people.
-- **Living Spec**: the handbook capability (q6), the release-preparation step in `ARCH-07-deployment`, and
-  `ARCH-05-1-containers` if the playbook joins `devkit-dev` (q6).
+- **Living Spec**: the handbook capability in `capabilities/delivery/`, the optional release-preparation step and the
+  release-script check in `ARCH-07-deployment`, and `ARCH-05-1-containers`, whose `devkit-dev` definition gains the
+  playbook. No Living Spec writing instruction changes.
 
 ### 3.5 Non-Goals
 
@@ -165,19 +175,24 @@ names the commit as unreleased. Only a release run writes `handbook/`.
 - Changing document search or the document index.
 - Feeding `changes.md` into the GitHub release notes.
 - Promoting the handbook to a `devkit-spec` feature for other Living Spec repositories.
+- Changing how `docs/` is written; the writing instructions stay as they are.
+- A refresh cadence or any automatic refresh.
 
 ## 4. Lifecycle & Retirement Criteria
 
-- **PADR candidates**: the handbook as a release-bound derived view excluded from reconcile, with its delivery form and
-  refresh cadence (q1, q2, q3); the localized documentation exception to the English-only rule (q4).
+- **PADRs**: `PADR-handbook-on-request-release-snapshot` (tracked derived view excluded from reconcile, refreshed on
+  request, gated only on refreshing releases) and `PADR-localized-handbook-language-exception` (non-English text only
+  under `handbook/<lang>/` for languages other than `en`).
 - **Verification**:
   - script tests on fixtures: a changed source SHA marks its English page stale; a header-only English change leaves
     translations fresh; an uncited use case or capability is reported as a gap; a missing or extra translated file is
     a parity mismatch; an unresolved ID, a missing command, a missing L2 path and a normative keyword each fail
     verification;
-  - a release-script test: a `docs/` tree differing from the manifest source commit fails the build;
-  - a first generated `handbook/en/` and translation for the next refreshing release passing every step 3 check, with
-    the recorded human review;
+  - release-script tests: with the manifest tag equal to the built tag, a `docs/` tree differing from the manifest
+    source commit or a failing step 3 check fails the build; with a different manifest tag the handbook checks are
+    skipped and no handbook file is written;
+  - a first generated `handbook/en/` and `handbook/ko/` for the first refreshing release passing every step 3 check,
+    with the recorded human review;
   - `just rules-check` clean with `handbook/` present, and still clean after a fixture renames a cited command.
 - **On Acceptance**: recorded with `devkit spec proposal accept`, handed off to a spec bundle on `dev-<slug>`; the
   proposal is deleted there and its decisions become ADRs.
@@ -191,4 +206,8 @@ names the commit as unreleased. Only a release run writes `handbook/`.
 - Folded challenger findings: 1 (cli-contract exclusion), 2 (verify paths at the source commit, release-script tree
   check), 3 (narrative-body hash), 6 (boundaries), 7 (per-language term list), 8 (listed checks and recorded review),
   9 (untracked preview), 11 (backbone and inventory).
-- Open for the user: findings 4, 5 and 10, asked as q1 to q7.
+- User decisions (`envelopes/answer-01.yaml`), closing findings 4, 5 and 10: tracked `handbook/` on `main` (q1); refresh
+  only on the user's explicit request, no cadence (q2); only a refreshing release fails on handbook checks, detected
+  from the committed manifest tag (q3); `en` and `ko` with the exception limited to non-en `handbook/<lang>/` (q4);
+  no `docs/` policy change and no ADR on it, since the writing instructions are already agent-first (q5); playbook in
+  `devkit-dev`, contract in `capabilities/delivery/` (q6); `decisions.md` as a generated list (q7).
