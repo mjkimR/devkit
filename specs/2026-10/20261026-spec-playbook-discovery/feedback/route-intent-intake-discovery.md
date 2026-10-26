@@ -8,7 +8,7 @@ target: UC-route-development-intent
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -38,3 +38,9 @@ created_at: 2026-10-26
 UC-route-development-intent §2: step 1 enters the spec skill, step 2 reads policy, step 3 classifies.
 spec skill (skills/spec/SKILL.md.jinja) "Route the intent": step 1 "Playbook discovery at intake", step 2 classifies.
 ```
+
+## Disposition
+
+Resolved at the integration of `SPEC-spec-playbook-discovery`: `UC-route-development-intent` step 1 names
+the intake search, extensions 1b (no new task intake, no search) and 1c (a one-line offer, confirm-first, a declined
+candidate never offered again) cover the skip and offer paths, and scenarios 2a and 2b test them.

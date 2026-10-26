@@ -8,7 +8,7 @@ target: UC-adopt-in-an-existing-repository
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -36,3 +36,8 @@ created_at: 2026-10-26
 UC-adopt-in-an-existing-repository step 5: "The developer asks the agent for the brownfield-adoption playbook".
 brownfield-adoption Prerequisites: "The user invoked or confirmed this playbook; that invocation authorizes the moves."
 ```
+
+## Disposition
+
+Resolved at the integration of `SPEC-spec-playbook-discovery`: `UC-adopt-in-an-existing-repository` step 5
+and scenario 4 name the confirmed one-line offer `spec` intake makes beside the explicit request.

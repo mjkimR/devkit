@@ -155,7 +155,7 @@ that only an explicit request starts a playbook. `ADR-spec-intake-playbook-disco
 - "Lock timeout" is the advisory a search reports when the shared project lock is not acquired in time; it is named in
   prose, as the search contract defines no separate code for it.
 - The playbook prerequisite wording in the `maintenance` catalog is changed here; `PROP-review-refactor` and
-  `PROP-release-handbook` adopt the same entry wording when they land (proposal §3a Interactions).
+  `SPEC-release-handbook` adopt the same entry wording when they land (proposal §3a Interactions).
 - The query is led by the requested operation and drops subject-only qualifiers. With the `maintenance` catalog
   synchronized, the literal positive control "write a maintenance playbook for spec-code drift reconciliation" ranks
   `drift-reconciliation`, `brownfield-adoption` and `feedback-hygiene` in `hybrid` at `--limit 3` and cuts
