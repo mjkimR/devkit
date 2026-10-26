@@ -10,8 +10,8 @@ spec: SPEC-list-terminal-statuses-historical
 - `CAP-DOCS-document-lookup` records "Feedback defaults" as out of scope, from Non-Goal 1 of
   `SPEC-feedback-list-filters`. Reversing it is a lasting policy change: `ADR-terminal-statuses-are-historical`
   records it.
-- `CAP-DOCS-document-model` rule 7 (historical documents) is extended: the existing historical set and the rules'
-  use of it stay as they are (`SPEC-list-terminal-statuses-historical` Non-Goal 1).
+- `CAP-DOCS-document-model` gains rule 8 (terminal statuses) beside rule 7 (historical documents), which stays as it
+  is with the rules' use of it (`SPEC-list-terminal-statuses-historical` Non-Goal 1).
 
 ## 2. Architecture Overview & Impact
 
@@ -28,7 +28,7 @@ spec: SPEC-list-terminal-statuses-historical
 - `usecases/search.py`, `cli/search.py`: candidates use `is_browsing_historical`; help text updated.
 - Bundle text: `adr-compaction` and `milestone-completion` pass `--history`; `scout.md` names terminal statuses.
   `--status open` call sites stay (spec assumption).
-- Living Spec: `CAP-DOCS-document-model` rule 7 and library snippet, `CAP-DOCS-document-lookup` (scope note
+- Living Spec: `CAP-DOCS-document-model` rule 8 (new), the status field row and the library snippet, `CAP-DOCS-document-lookup` (scope note
   removed, `--history`, `--status`, paging and JSON keys), `CAP-DOCS-document-search` rule 1.
 
 ## 3. Component & Interface Design

@@ -77,11 +77,11 @@ changes an argument, output, code or exit status.
    `proposal-decision`, `spec`, `plan`, `tasks`, `reconcile`, `feedback`, `material` (default: all).
 2. **Filters** (all combine with AND):
    - `--status/-s a,b`: comma-separated statuses, compared case-insensitively. A given `--status` replaces the default
-     history hiding: the documents whose status it names are listed whatever their history. Status vocabularies come from the
-     templates, which a project may override, so a value is never rejected: one that no indexed document of the
-     selected kinds (every kind without `KIND`) carries, historical or in another namespace included, adds one
-     `SPEC_LIST_STATUS_UNKNOWN` notice naming those values, with the statuses that do occur in its `[FIX]`
-     (`SPEC-list-unknown-status`). The filter still applies as given, so a valid status no document carries yet
+     history hiding: the documents whose status it names are listed whatever their history. Status vocabularies
+     come from the templates, which a project may override, so a value is never rejected: one that no indexed
+     document of the selected kinds (every kind without `KIND`) carries, historical or in another namespace
+     included, adds one `SPEC_LIST_STATUS_UNKNOWN` notice naming those values, with the statuses that do occur in
+     its `[FIX]` (`SPEC-list-unknown-status`). The filter still applies as given, so a valid status no document carries yet
      gives an empty page plus the notice.
    - `--area/-a TEXT`: case-insensitive substring of the frontmatter `area`.
    - `--query TEXT`: case-insensitive substring of the ID or the title.

@@ -18,9 +18,9 @@ Text output (paths are relative to the workspace root):
 ``refs`` and ``list`` end with ``[PAGE: total= offset= limit= count= next=]`` and, when more items follow,
 ``[NEXT_CMD: ...]`` for the next page. ``list`` hides historical documents (``DocumentIndex.is_browsing_historical``)
 unless ``--history`` or ``--status`` is given, adds ``hidden=`` (how many it hid) to its page line and, when that is
-above zero, ``[HISTORY_CMD: ...]`` repeating the command with ``--history``. Files that could not be indexed are ``SPEC_DOCUMENT_INVALID`` warnings;
-``list --status`` adds a ``SPEC_LIST_STATUS_UNKNOWN`` notice naming the values no document of the selected kinds
-carries.
+above zero, ``[HISTORY_CMD: ...]`` repeating the command with ``--history``. Files that could not be indexed are
+``SPEC_DOCUMENT_INVALID`` warnings; ``list --status`` adds a ``SPEC_LIST_STATUS_UNKNOWN`` notice naming the values no
+document of the selected kinds carries.
 """
 
 from __future__ import annotations
