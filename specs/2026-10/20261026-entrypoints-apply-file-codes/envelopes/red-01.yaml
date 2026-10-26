@@ -1,0 +1,13 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T08:52:00.572408Z'
+status: completed
+summary: File, folded and unmatched --code selectors apply nothing and exit 0 as characterized
+findings: []
+checks:
+  reproduced: 'PASS test_cli.py::test_file_code_under_a_directory_candidate_is_applied, test_selected_folded_candidate_is_applied and test_unmatched_code_is_refused_before_writing fail: exit 0 with applied=0 (folded reason for the folded file)'
+diff_scope:
+  base: ead1175b2a127c45bc12fcc0abc7fd018242c95b
+  head: e982b9bd3a8f8fc95be53848827d59509e82a21f

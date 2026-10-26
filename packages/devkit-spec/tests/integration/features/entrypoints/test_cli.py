@@ -131,7 +131,16 @@ def test_code_and_exclude_filters(bundles: Path) -> None:
 
 def test_unmatched_code_is_refused_before_writing(bundles: Path) -> None:
     result = _derive(
-        bundles, "--all", "--apply", "--target", "CAP-X-one", "--code", "src/nowhere", "--code", "src/pkg", "--format",
+        bundles,
+        "--all",
+        "--apply",
+        "--target",
+        "CAP-X-one",
+        "--code",
+        "src/nowhere",
+        "--code",
+        "src/pkg",
+        "--format",
         "json",
     )
     assert result.exit_code == 2
@@ -139,9 +148,12 @@ def test_unmatched_code_is_refused_before_writing(bundles: Path) -> None:
     assert error["code"] == "SPEC_ENTRYPOINTS_CODE_UNMATCHED"
     assert error["advisory"]["target_files"] == ["src/nowhere"]
     assert "entrypoints" not in (bundles / CAP).read_text()
-    assert _code(_derive(bundles, "--spec", "specs/2026-10/20261001-one", "--code", "src/other", "--format", "json")) == (
-        "SPEC_ENTRYPOINTS_CODE_UNMATCHED"
-    )
+    text = _derive(bundles, "--all", "--code", "src/nowhere")
+    assert text.exit_code == 2 and text.stdout == ""
+    assert "(SPEC_ENTRYPOINTS_CODE_UNMATCHED)" in text.stderr and "[TARGET] src/nowhere" in text.stderr
+    assert _code(
+        _derive(bundles, "--spec", "specs/2026-10/20261001-one", "--code", "src/other", "--format", "json")
+    ) == ("SPEC_ENTRYPOINTS_CODE_UNMATCHED")
     # A code that only another document's candidates match is unmatched for the targeted document.
     both = ("--all", "--status", "completed,draft", "--apply", "--format", "json")
     assert _code(_derive(bundles, *both, "--target", "UC-two", "--code", "src/pkg/b.go")) == (
@@ -164,7 +176,6 @@ def test_file_code_under_a_directory_candidate_is_applied(bundles: Path) -> None
     rerun = _derive(bundles, *args)
     assert rerun.stdout.splitlines()[-1] == "[SUMMARY: pairs=1 new=0 declared=1 skipped=1 applied=0]"
     aggregated = _derive(bundles, "--all", "--code", "src/pkg/b.go", "--code", "src/other/c.go")
-    assert "declared=src/other/c.go(1),src/pkg/b.go(2)]" not in aggregated.stdout
     assert "new=src/other/c.go(1) missing=- folded=- declared=src/pkg/b.go(2)]" in aggregated.stdout
 
 
