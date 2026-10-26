@@ -182,6 +182,9 @@ The user decided that UX Development follows both prerequisites (`depends_on`).
   budgets glossary growth against the cap (devkit's own glossary gains two terms, about 500 bytes on a body of about
   7.6 KB). The `plan-accept` request waits for its acceptance, so a return to `spike` stays available if its design
   changes these assumptions; the handoff waits for its Development to be integrated.
+- After each merge of `main` into this branch, the Host rewrites every `depends_on` entry whose proposal was handed
+  off to its SPEC ID before requesting `plan-accept`, for both prerequisites; this proposal does not rely on handoff
+  relocation, which cannot reach an edge that exists only on this branch.
 - If either prerequisite is rejected or decomposed, this proposal returns to `spike` before `plan-accept`; after a
   decomposition the handoff waits for every child that carries the kind table or the steering directory.
 - All three changes own `packages/devkit-spec/src/devkit_spec/features/`, the `spec` bundle and

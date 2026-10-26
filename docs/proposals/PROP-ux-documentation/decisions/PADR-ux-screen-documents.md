@@ -57,6 +57,9 @@ Pending the user's answer to `ux-document-set` (Planning recommendation):
   the objects the use cases touch; the glossary's term table, its Owner check and its 24576-byte budget stay
   untouched, and devkit's own glossary gains only the new terms. The `ux-writing` instruction tells a project with an
   existing steering directory to add the file, because seeds are written only once.
+- The register meets the steering caps: its rows hold only the object, role, representation names and call-to-action
+  names; at the 24576-byte body cap it keeps only the objects of use cases with UX documents; when no steering slot
+  is free, the review records R6 as not applicable with the reason.
 - The `ux-writing` instruction asks for two or three contrasting candidates where a screen's arrangement is open, in
   Planning only (proposal Planning, or inline Planning before `plan-intent` at spec depth); in Development the
   recommended candidate is taken and the others are recorded as an assumption in `spec.md`.
