@@ -45,24 +45,28 @@ carries edits on another (tests, references, documentation).
   decided exactly once.
 - A cross-surface finding whose landing surface is outside the selected scope is recorded as deferred with a
   follow-up and is not applied, because the selected surfaces are the run's agreed scope. The user may add that
-  surface to the run's scope, which adds its own batch and decision round and is recorded in the run report, because
-  that addition is the user's own new authority.
-- The edits that follow an agreed change (its tests, the references and documentation naming the changed code, the
-  Living Spec statement of the result) belong to that change and its batch on any surface, because a refactor
-  changes code, tests and documentation together and splitting them would leave the change inconsistent.
+  surface to the run's scope, which adds its own batch, with its roots clarified as at intake, and its own decision
+  round, and is recorded in the run report, because that addition is the user's own new authority.
+- The following edits of an agreed change belong to that change and its batch on any surface, because a refactor
+  changes code, tests and documentation together and splitting them would leave the change inconsistent. Following
+  edits are the tests of the changed code and non-code text naming it (documentation, guidance, the Living Spec
+  statement of the result); call sites, imports and re-exports are source edits of the change itself. Following
+  edits never touch receipt-owned files; they edit the source bundle, or record an upstream follow-up or a
+  `devkit override`, because a sync would revert them.
 
 ## 5. Consequences
 
 - Positive: each decision round and work item is small and single-surface.
 - Negative: a run over three surfaces needs three decision rounds; findings landing on an unselected surface wait
   for a later run unless the user adds that surface.
-- Risk: the following-edit rule is stretched to carry an unrelated change on another surface; the diff check of
-  each change against its agreed scope bounds it.
+- Risk: the following-edit rule is stretched to carry an unrelated change on another surface; the narrow definition
+  and the diff check of each change against the batch's write scope bound it.
 - Follow-up: when `PROP-maintenance-history` lands, a diff-driven scope may be offered as an intake option; that
   change needs its own decision.
 
 ## 6. Confirmation
 
 - Spec-review checklist of the Development maps intake, per-surface batching and cross-surface assignment (an
-  unselected landing surface, the user's scope addition, the edits that follow a change) to playbook sections.
+  unselected landing surface, the user's scope addition, following edits and their receipt-owned exclusion) to
+  playbook sections.
 - Fixture exercise records one batch's decision round and its separate change records (proposal section 3).

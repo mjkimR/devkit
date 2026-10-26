@@ -92,9 +92,12 @@ This draft carries the scope its own milestone held before the maintenance miles
   surface each, with one decision round per batch. A cross-surface finding cites both sides and belongs to the batch
   of the surface where its change lands. A cross-surface finding whose landing surface is outside the selected scope
   is recorded as deferred with a follow-up and is not applied, unless the user adds that surface to the run's scope,
-  which adds its own batch and decision round and is recorded in the run report. The edits that follow an agreed
-  change (its tests, the references and documentation naming the changed code, the Living Spec statement of the
-  result) belong to that change and its batch on any surface; they are not cross-surface findings.
+  which adds its own batch, with its roots clarified as at intake, and its own decision round, and is recorded in the
+  run report. The following edits of an agreed change belong to that change and its batch on any surface; they are
+  not cross-surface findings. Following edits are the tests of the changed code and non-code text naming it
+  (documentation, guidance, the Living Spec statement of the result); call sites, imports and re-exports are source
+  edits of the change itself. Following edits never touch receipt-owned files: they edit the source bundle the
+  receipt projects, or record an upstream follow-up or a `devkit override`.
 - Subagent review (`user`; `PADR-apply-behavior-preserving-batches-as-direct-mode-refactors`): within a surface
   batch the playbook uses spawned subagents when useful and the host supports them, for example parallel review per
   root or module, or independent verification of a consolidation or removal; otherwise the same steps run in the
@@ -122,40 +125,54 @@ This draft carries the scope its own milestone held before the maintenance miles
 ### Applying agreed changes (`user`)
 
 The work the playbook applies is refactoring, not feature development
-(`PADR-apply-behavior-preserving-batches-as-direct-mode-refactors`).
+(`PADR-apply-behavior-preserving-batches-as-direct-mode-refactors`, which refines the applicability of
+`ADR-overall-refactor-workflow` for these runs).
 
 - Route: the batch's behavior-preserving work item follows the target repository's workflow for a behavior-preserving
   refactor across several areas (with the `spec` bundle, `sdd-overall-refactor`), not its feature development
-  workflow, unless the work item is a single-module refactor.
-- Single-module test: the work item is a single-module refactor when every path its agreed changes edit, apart from
-  the edits that follow a change, lies inside one feature or module as the target repository's declared layout
-  defines it. In devkit that is one `features/<feature>/` directory or one package-level module of one package; on the
-  guidance surface, one skill, playbook or instruction; on the CLI surface, one command group's module. A
-  single-module work item follows the repository's feature workflow at the depth that repository's own
-  classification gives it (in devkit, `session` when the change touches no contract and no Living Spec text). The
-  playbook's agent applies the test once per work item, states the route and the edited paths in the decision round,
-  and never splits or merges a work item to change its route. Where the repository declares no layout, the decision
-  round names the route with the edited paths and the user's approval settles it. Where the repository has no
-  refactor workflow, the direct-mode steps below apply as stated.
+  workflow, unless the work item is a single-module refactor. A review-refactor run is a restructuring pass whose
+  direction settles batch by batch in the conversation with the user, so a multi-module work item of the run is
+  overall-refactor work even though its batch's decision round has agreed its changes.
+- Single-module test: the work item is a single-module refactor when every source file its agreed changes edit,
+  including call sites, imports and re-exports, lies inside one feature or module as the target repository's
+  declared layout defines it; only following edits are left out. In devkit that is one `features/<feature>/`
+  directory or one package-level module of one package; on the guidance surface, one skill, playbook or instruction;
+  on the CLI surface, one command group's module. A single-module work item follows the repository's feature
+  workflow at the depth that repository's own classification gives it (in devkit, `session` when the change touches
+  no contract and no Living Spec text). The playbook's agent applies the test once per work item, states the route
+  and the edited paths in the decision round, and never splits or merges a work item to change its route. Where the
+  repository declares no layout, the decision round names the route with the edited paths and the user's approval
+  settles it.
+- Write scope: the batch's write scope is the edited paths the decision round states for the batch's agreed changes,
+  including their following edits. Every edit stays inside it.
 - Direct mode: the playbook's agent works with the user in the conversation, with no planning or development worker
   and no Unit. It splits the work item into edit tasks and, when useful and the host supports them, uses general
   subagents for parallel edits across many files, drafting and research; otherwise it performs the same steps itself.
+  Where the repository has no refactor workflow, these steps and the ones below are the procedure as stated.
+- Branch: the work item is applied on its own branch, never committed directly to the base branch; with the `spec`
+  bundle, as the overall-refactor workflow's Git policy allows.
 - Subagent edits: a subagent applies only agreed edits, inside an explicit write scope the playbook's agent assigns:
-  the paths of its agreed change, within the batch's write scope and disjoint from every other subagent working at
-  the same time. The playbook's agent checks each result against the diff before relying on it: the diff stays inside
-  the assigned paths and matches the agreed change. An edit outside the scope or beyond the agreed change is not
-  committed; the change is redone or returned to the decision round. Subagents never commit, ask the user, approve a
-  change or write the run's records.
-- Commits: the playbook's agent records each change's preservation evidence and commits the change as a checkpoint,
-  one commit per change.
-- Verification: each change's relevant verification passes before and after it (preservation evidence below), and the
-  work item's final head passes the repository's full verification (in devkit: the full test suite, lint, type
-  checks and the rules check).
-- Review: the playbook's agent starts an independent code reviewer as a subagent at the run's activity effort (at
-  `high`, in the repository's bounded review rounds) and fixes its findings before integration.
-- Report and integration: the work item's report (what changed and why, the verification results, anything left for
-  follow-up) goes into the final response and the commit body, and the work item integrates through the repository's
-  integration path with task kind `overall-refactor` (a single-module work item: its feature workflow's path).
+  a subset of the batch's write scope, disjoint from every other subagent working at the same time. Parallel editing
+  subagents work on the same change; changes are applied, verified and committed one after another, each on the
+  previous checkpoint. The playbook's agent checks each result against the diff before relying on it: the diff stays
+  inside the assigned paths and matches the agreed change. The playbook's agent reverts a rejected edit hunk by hunk,
+  never resets a path another scope owns, and redoes the change or returns it to the decision round. Subagents never
+  commit, ask the user, approve a change or write the run's records.
+- Commits: before each commit the working tree holds only the committed work plus the current change. The playbook's
+  agent records the change's preservation evidence and commits the change as a checkpoint, one commit per change.
+- Verification: each change's relevant verification passes before and after it, with only that change applied on the
+  previous checkpoint (preservation evidence below), and the work item's final head passes the repository's full
+  verification on a clean tree (in devkit: the full test suite, lint, type checks and the rules check).
+- Review: an independent code review of the work item's diff runs before integration, by a fresh reviewer subagent
+  the playbook's agent starts when the host supports it, otherwise as a self-review recorded as such. Its findings are
+  fixed before integration. Where the repository's workflow defines review effort and bounded rounds (with the `spec`
+  bundle, the run's activity effort, at `high` in bounded rounds), the review follows them.
+- Report and integration: the work item's report (what changed and why, every breaking change including each
+  compatibility-policy-exception removal and the inputs it no longer accepts, the verification results, anything
+  left for follow-up) goes into the final response and the commit body. The work item integrates only after the
+  report, through the repository's integration path and its own integration approval (without a repository policy,
+  the user's explicit approval); the decision round never supplies it. With the `spec` bundle the path is the session
+  integration path with task kind `overall-refactor`, and a single-module work item uses its feature workflow's path.
 - Contract removals (O3, `user`; `PADR-apply-approved-contract-removals-as-separate-work-items`): the decision round
   may approve removing a command, option, public interface or compatibility path, unless the declared
   compatibility-policy exception applies (then it is a behavior-preserving removal that still names the inputs no
@@ -225,10 +242,12 @@ The work the playbook applies is refactoring, not feature development
     The README preset table and the install recommendation name both presets.
   - A spec-review checklist maps each consolidation and reduction kind, each reduction ground, intake (surface and
     root selection, missing scope clarified first), the per-surface batching and cross-surface assignment (an
-    unselected landing surface, the user's scope addition, the edits that follow a change), the subagent review
-    rules (validation and re-run of verification claims, no decision authority, the fallback on a host without
-    subagents), the applying rules (route, single-module test, direct mode, subagent write scopes and the diff
-    check, one commit per change, full verification, independent review, report and integration), the
+    unselected landing surface, the user's scope addition, following edits and their receipt-owned exclusion), the
+    subagent review rules (validation and re-run of verification claims, no decision authority, the fallback on a
+    host without subagents), the applying rules (route, single-module test, batch write scope, direct mode, branch,
+    subagent write scopes, sequential changes, the diff check and hunk revert, one commit per change on a clean
+    tree, full verification, independent review and its fallback, report with breaking changes, integration after
+    its own approval), the
     contract-removal work item, each preservation-evidence part and the helper placement order to a playbook
     section.
   - Manual evidence, following the `drift-reconciliation` precedent, is named as manual evidence and never reported as
@@ -270,8 +289,12 @@ The work the playbook applies is refactoring, not feature development
   development workflow applied every change. The single-module test follows the overall-refactor workflow's own
   boundary (a refactor inside one feature or module follows the feature workflows), so it needs no user question.
   The deferral of findings that land on an unselected surface still holds, because the selected surfaces are the
-  run's agreed scope; the user may add a surface, and the edits that follow a change stay with it. The execution
-  model and the subagent rules are recorded in `PADR-apply-behavior-preserving-batches-as-direct-mode-refactors`.
+  run's agreed scope; the user may add a surface, and the following edits of a change stay with it. The execution
+  model and the subagent rules are recorded in `PADR-apply-behavior-preserving-batches-as-direct-mode-refactors`,
+  which refines the applicability of `ADR-overall-refactor-workflow` when promoted. Follow-up for the Host: the
+  `spec` bundle's classification criteria (`overall-refactor` only for a change whose direction settles during the
+  work) name no maintenance-playbook case; aligning them is outside this proposal's boundaries
+  (`packages/devkit-spec/`), so the Host records it as feedback.
 - `dev_effort` stays `medium`: the work has no effect that cannot be undone locally and no unresolved P1.
 
 ### Interactions
