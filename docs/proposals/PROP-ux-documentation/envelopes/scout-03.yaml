@@ -1,0 +1,37 @@
+kind: scout
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T06:00:10.871347Z'
+status: completed
+summary: A ux-reviewer role and skill can ship as bundle files with a distinct ux-review envelope kind as an optional delegation before code; a conditional stage needs a new check primitive in devkit-agt, and reverify-closable UX rounds need CLOSABLE changes. Severity is bundle procedure, so the reviewer can stay outside the P-level loop.
+findings:
+- issue: code-reviewer is a bundle subagent asset (role, skill spec-review, x-execution isolated, x-invocation optional, read-only tools) projected by devkit sync; a new subagent asset becomes a valid stage role with no engine change.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/code-reviewer.md:1-43; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml:129-131,250-283; packages/devkit/src/devkit_agt/features/workflow/repositories/project/roles.py:1-16
+  resolution: open
+- issue: 'Envelope kinds are open: any [a-z][a-z0-9-]* kind is written with ''envelope new --kind''; only review and challenger are CLOSABLE and reverify references only review-NN or challenger-NN. A ux-review kind needs no code to record; closing its rounds with reverify needs CLOSABLE/REVIEW_REF changes in devkit-agt.'
+  evidence: packages/devkit/src/devkit_agt/features/workflow/models/envelope.py:14; packages/devkit/src/devkit_agt/features/workflow/services/envelope/model.py:37-43,109-112; docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md:25,54,134
+  failure_condition: Recording UX findings as kind review shares the code-review round state, so a UX round decides or masks the review-refine exit.
+  suggested_action: Use a distinct ux-review kind whose rounds close by a new ux-review-NN.
+  resolution: open
+- issue: 'A seventh role is more than new files: CAP-DLV-delivery-workflows states six role contracts and role-contract and workflow tests enumerate the roles.'
+  evidence: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:24,37; packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py:15,24; packages/devkit-spec/tests/integration/bundles/spec/test_workflows.py:27
+  suggested_action: Plan the bundle.toml asset, role and skill files, the capability text and the test tuples.
+  resolution: open
+- issue: 'No check primitive expresses ''run only when the unit touches UX documents'': exit checks see only the unit directory, an optional stage never becomes current (no DELEGATE), and a mandatory stage blocks every non-UI unit unless the project turns it off globally.'
+  evidence: packages/devkit/src/devkit_agt/features/workflow/services/evaluation/primitives.py:51-136; packages/devkit/src/devkit_agt/features/workflow/usecases/evaluate.py:358-384; docs/capabilities/delivery/CAP-DLV-workflow-definitions.md:100,110,114,175
+  failure_condition: A required ux-review stage blocks features without a UI.
+  resolution: open
+- issue: Severity is inert in the engine; the P1-P3 requirement and the review-loop recovery rules (recurring or contested P1) are bundle procedure for review, reconcile-check and challenger only. A UX reviewer inside spec-review would be forced to rank severity, contradicting the non-goal; outside the loop its cap must be stated in its own skill.
+  evidence: packages/devkit/src/devkit_agt/features/workflow/services/envelope/model.py:72-74; .devkit/managed/spec/skills/spec/references/review-loop.md:40-50; docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:183-184
+  suggested_action: Keep ux-review out of the P-level loop; carry the rubric score and walkthrough step in issue and evidence, with a round cap in its skill.
+  resolution: open
+- issue: 'The walkthrough''s inputs (use cases and screen documents) exist before code: Planning for proposal-depth units, after specify for spec-depth units. Reviewing the implementation would be engine-specific verification, which the proposal excludes.'
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/sdd-spec-feature.md:32-63; packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/sdd-proposal.md:29-40,105
+  suggested_action: 'Option (b): an optional isolated delegation before code under its own envelope kind; option (a) a conditional stage needs a new check primitive in devkit-agt.'
+  resolution: open
+assumptions:
+- UX documents live in docs/, outside the unit directory.
+unverified_areas:
+- Integration readiness provider; full text of ADR-review-and-reconcile-verification and ADR-orchestration-workers; spec-review-proposal and payload hooks.
+checks: {}

@@ -1,0 +1,76 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T06:25:57.330742Z'
+status: completed
+summary: 'round 2; fixes of 8c4f8823..fca7592e: #2, #4, #6, #7, #8 and #12 hold; 10 findings (P2/P3), three recurring (#1 draft references, #9 dependency fallback, #10 glossary boundary), plus reviewer facts without rules, off-screen re-entry, the split not reaching the screen PADR, review placement after plan, acceptance request, R6 applicability.'
+findings:
+- issue: 'recurs: challenger-01.yaml #1; Drafts in the UX template''s shape still put references to IDs only spec-sync creates (new UX IDs in step citations, new UC IDs in Step cells, the [UX-...] H1) into spec.md and target-docs.md, which RULE-document-reference checks.'
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-drafts-before-code.md:32-35; docs/proposals/PROP-ux-documentation/decisions/PADR-ux-step-links-and-coverage.md:47-50; docs/capabilities/governance/CAP-GOV-spec-rules.md:90,104; .devkit/managed/spec/skills/spec-specify/SKILL.md:43-44
+  failure_condition: 'A unit drafts the new screen UX-checkout and cites it in a drafted step: the specify lint-clean exit and the gate refuse the unresolved reference; target-docs.md is refused the same way.'
+  suggested_action: 'State the draft convention: IDs the change creates are plain text (or the draft is fenced); spec-sync turns them into code spans.'
+  resolution: open
+  severity: P2
+- issue: Under drafts-before-code no UX link rule runs before code at either placement, yet the reviewer receives 'the link rules' results as facts' and judges by hand only for Planning drafts.
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-review-before-code.md:31,55-57,61-62; docs/proposals/PROP-ux-documentation/decisions/PADR-ux-drafts-before-code.md:34-35,50
+  failure_condition: At spec depth the rules see no drafts, report clean, and the reviewer reports unchecked link items as rule facts.
+  suggested_action: Before code the reviewer always checks the link-rule items on drafts by hand, labelled as its judgment; the rules confirm them at living-spec-draft; keep 'facts' only for existing docs/ux documents.
+  resolution: open
+  severity: P2
+- issue: Reachability and exit checks assume a use case enters the screen graph once; a task that continues off-screen and re-enters elsewhere is refused; the edge set is unstated.
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-step-links-and-coverage.md:22-23,31,53-56
+  failure_condition: 'Reset password: step 1 on UX-forgot-password, step 2 emails a link off-screen, step 3 on UX-reset-form: the reset form is unreachable and the first screen lacks an exit, so the commit is refused.'
+  suggested_action: Make every screen cited by a step whose preceding step cites no screen an entry root; a screen whose next step cites no screen needs no exit; state which interactions are edges.
+  resolution: open
+  severity: P2
+- issue: PADR-ux-screen-documents still names the coverage (warning) rule as validating element and the table shape; RULE-ux-links has no report for a missing or malformed Interactions table.
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-screen-documents.md:50-51,73-74; docs/proposals/PROP-ux-documentation/decisions/PADR-ux-step-links-and-coverage.md:51-59
+  failure_condition: 'element: dialog only warns and disables the modal check; a renamed column makes the link rule parse zero interactions.'
+  suggested_action: Name RULE-ux-links in the screen PADR; add a missing Interactions section or a table without the seven columns to its reports and to the acceptance list.
+  resolution: open
+  severity: P2
+- issue: 'recurs: challenger-01.yaml #9; ''Returns to Planning'' if the table proposal is rejected does not exist after plan-accept, which this proposal will likely reach first; ''integrated'' is undefined for a decomposed dependency.'
+  evidence: docs/proposals/PROP-ux-documentation/proposal.md:119-120,161-164; .devkit/managed/spec/workflows/sdd-proposal.md:74-76; docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:105
+  failure_condition: 'This proposal is accepted, then the table proposal is rejected or settles different columns: the accepted PADRs are false and only a problem and close remain.'
+  suggested_action: Hold the plan-accept request until the table proposal is accepted, or replace the fallback with a problem and close; name what counts for a decomposed dependency.
+  resolution: open
+  severity: P2
+- issue: 'The timing PADR overstates living-spec-draft: a defect shared by the draft and the code returns to build-verify and repeats code review; RULE-reconcile-contract does not check that every drafted screen was written.'
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-drafts-before-code.md:50,55; .devkit/managed/spec/workflows/sdd-spec-feature.md:69-71; docs/capabilities/governance/CAP-GOV-spec-rules.md:242-253
+  failure_condition: A missing exit found at sync is documented away or forces a return; a forgotten drafted screen passes every check.
+  suggested_action: State the return cost in Consequences and the question; confirm by a reconcile-reviewer check that every drafted screen has a docs/ux target.
+  resolution: open
+  severity: P3
+- issue: The review 'after specify' runs after plan.md and tasks.md, so its findings change spec.md during build-verify or return to specify and void the ux-review envelopes.
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-review-before-code.md:58-62; .devkit/managed/spec/skills/spec-specify/SKILL.md:60; docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:85
+  failure_condition: 'Round 1 changes two screens: edits inside build-verify without a return, or a return that voids the rounds and closing record.'
+  suggested_action: Run the review inside specify, after the Screens section and before spec-plan, with stage specify.
+  resolution: open
+  severity: P3
+- issue: Open Planning ux-review findings 'go to the user at plan-accept', but sdd-proposal's acceptance request lists only challenger and scout envelopes.
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-review-before-code.md:59-60; .devkit/managed/spec/workflows/sdd-proposal.md:112; docs/proposals/PROP-ux-documentation/target-docs.md:61-65
+  failure_condition: The user accepts without seeing open UX findings.
+  suggested_action: Add ux-review rounds to the acceptance request and the planning reference; list it in target-docs §4.
+  resolution: open
+  severity: P3
+- issue: R6 scores against a UX object table that only newly seeded glossaries have; there is no not-applicable score.
+  evidence: docs/proposals/PROP-ux-documentation/decisions/PADR-ux-review-before-code.md:53-54; docs/capabilities/distribution/CAP-DIST-workspace-ownership.md:108-110
+  failure_condition: Every screen in an existing project scores R6 low or the reviewer invents representations.
+  suggested_action: Score R6 only when the table exists, otherwise not applicable; ux-writing tells existing projects to add it.
+  resolution: open
+  severity: P3
+- issue: 'recurs: challenger-01.yaml #10; owns names only docs/glossary.md although the terms move to docs/foundation/glossary.md if foundation lands first; carried boundaries are strict for workers.'
+  evidence: docs/proposals/PROP-ux-documentation/proposal.md:29,170-173,184; docs/capabilities/delivery/CAP-DLV-proposal-incubation.md:243,302
+  failure_condition: The foundation move lands first and a worker cannot write the moved glossary within its boundary.
+  suggested_action: Add docs/foundation/ to boundaries.owns.
+  resolution: open
+  severity: P3
+assumptions:
+- A registered UX prefix makes backticked UX IDs references that must resolve.
+unverified_areas:
+- No rules run on a sample draft; no role-to-envelope registry check in devkit-agt; viewer effects not re-examined.
+checks: {}
+diff_scope:
+  base: 8c4f88230aae1f310e7a2343de80b91a4d18d15e
+  head: fca7592e827c95d2ae0d245e1deb266c0c130b46
