@@ -23,7 +23,6 @@ boundaries:
     - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/seed/docs/proposals/README.md
     - packages/devkit-spec/src/devkit_spec/features/proposals/
     - packages/devkit-spec/src/devkit_spec/features/delivery/
-    - packages/devkit-spec/src/devkit_spec/base/errors.py
     - packages/devkit-spec/tests/
     - .devkit/installation.json
     - docs/capabilities/delivery/
@@ -75,12 +74,14 @@ decompositions and the drafts to come, not in today's queue.
 - **Q5 (hosts)**: Settled by policy below.
 - **Q6 (XL gate placement)**: Where can a deterministic check refuse an `XL` draft at the plan-intent gate,
   `devkit workflow next` and plan-intent recording, with a decompose directive? Spike F7: a workflow exit condition
-  blocks all three but only generically; a coded directive needs devkit-spec command refusals or a devkit-agt hook.
-  Pending: user question `q5`.
+  blocks all three but only generically; devkit-spec owns no coded error at `next`, `answer` or the attach
+  (challenger-02 finding 1); a directive in that output needs a devkit-agt change. Pending: user question `q5`.
+- **Q7 (XL definition)**: Can "deliverables of different nature" be judged the same way by two Hosts? Pending: user
+  question `q6`.
 
 ## 3. Proposed Design & Impact
 
-Lines marked *(provisional: q5)* follow the recommended answer of that question and are rewritten if the user chooses
+Lines marked *(provisional: q5)* or *(provisional: q6)* follow the recommended answer of that question and are rewritten if the user chooses
 another option.
 
 ### Roles
@@ -132,36 +133,57 @@ goes wrong if the recommendation is applied blindly.
 ### XL size gate
 
 - **Definition** (`user`): `size: XL` means the work would produce two or more specs, or bundles deliverables of
-  different nature. The values stay `S`, `M`, `L`, `XL`; the wording changes in the proposal template, the scaffold
-  comment, `CAP-DLV-proposal-incubation` (the field table and the `target-docs.md` recommendation), the seed
-  `docs/proposals/README.md`, `CAP-HARN-agent-guidance` and `UC-route-development-intent` where they describe sizes.
-  Rough `XL` drafts stay valid in Backlog: no rule refuses `size: XL` on a draft.
+  different nature. *(provisional: q6)* "Different nature" reads as "would need separate specs or a different
+  `task_kind`", and the template and `CAP-DLV-proposal-incubation` give one example of each side. The values stay `S`,
+  `M`, `L`, `XL`; the wording changes in the proposal template, the scaffold comment, `CAP-DLV-proposal-incubation`
+  (the field table and the `target-docs.md` recommendation), the seed `docs/proposals/README.md`,
+  `CAP-HARN-agent-guidance` and `UC-route-development-intent` where they describe sizes. Rough `XL` drafts stay valid
+  in Backlog: no rule refuses `size: XL` on a draft.
+- **Judging**: the `spec` skill's plan-intent step has the Host judge `size` against the definition and show it in the
+  plan-intent request, as it shows `planning_effort`, because the scaffold writes `size: M` for every draft
+  (challenger-02 finding 5).
+- **One predicate** (challenger-02 finding 4): a proposal passes when `size` is absent or exactly `S`, `M` or `L`;
+  any other value (`XL`, `xl`, a typo) is refused, and the refusal names the allowed values. Every check below uses it.
 - **Gate** (`user`: an error, not a warning): an `XL` draft cannot pass plan-intent and cannot start Planning.
-  *(provisional: q5)* Placement, devkit-spec only (spike F7 options A and B):
-  - The `intent-proposal` exit in `sdd-proposal.md` adds `frontmatter(proposal.md size S|M|L|)` (absent or below `XL`).
-    The gate request stays closed under `ask` and `auto`, so `devkit workflow next` shows the stage unmet with
-    `detail="size=XL"`, and `devkit workflow answer --request gate:plan-intent` refuses with `REQUEST_UNKNOWN`.
-  - `devkit spec proposal accept --direct` lists `size: XL` as a blocking condition, and the `plan-` attach
-    (`devkit worktree start --existing-branch`) refuses an `XL` proposal, both with a coded error on the
-    `SPEC_PROPOSAL_NEEDS_DECOMPOSE` pattern whose fix names the two exits.
+  *(provisional: q5)* Placement, devkit-spec only (spike F7 options A and B, corrected by challenger-02 finding 1):
+  - `sdd-proposal.md`: the `intent-proposal` exit adds `frontmatter(proposal.md size S|M|L|)`. The gate request stays
+    closed under `ask` and `auto`, so `devkit workflow next` shows the stage unmet with `detail="size=XL"` at exit 0,
+    and `devkit workflow answer --request gate:plan-intent` refuses with `REQUEST_UNKNOWN`.
+  - `devkit spec proposal accept --direct` adds the blocking line "size: XL (decompose first: split with
+    --decomposed-from or promote to a milestone)" under `SPEC_PROPOSAL_NOT_ELIGIBLE`, beside the `needs_decompose`
+    line; no new error class.
+  - The `plan-` attach check (`devkit worktree start --existing-branch`) adds a reason naming both exits under
+    `WORKTREE_ATTACH_REFUSED`, only for `plan-` branches, so a `dev-` attach or the unit integration readiness of an
+    accepted proposal is never refused for size (challenger-02 finding 10).
+  - `planning.md` step 1: a Planning run on a proposal whose size fails the predicate returns it as for decomposition
+    (`status: draft`, `needs_decompose: true`), which covers a new `plan-` branch that no attach check sees
+    (challenger-02 finding 3).
   - The `spec` skill's plan-intent step, `spec-next` and the `sdd-proposal` notes read the unmet size check as the
-    directive "decompose first", so an agent acts on it although `next` carries no code.
+    directive "decompose first, never edit the size to pass", so an agent acts on it although `next` carries no code.
+  - The Backlog reference's session reclassification adds "no `size: XL`" to its conditions (challenger-02 finding 9).
 - **Two exits**, both through the `decomposer`, applied by the Host on the user's decision:
   - (a) **split**: `devkit spec proposal new <child> --decomposed-from PROP-<parent>` for each child, keeping the
     parent's `milestone`;
   - (b) **promote**: create `docs/roadmap/MS-<slug>.md` from the milestone template and place the children in it, when
-    there are three or more children or the theme is long-running. Creating the milestone is the user's decision on a
+    there are three or more children or the theme is long-running. The decomposer's return names the parent's
+    milestone, if any, and a proposed relation to the new one (the parent milestone `depends_on` it, or its scope
+    narrowed); the Host applies it on the user's decision, with the reset of that milestone's completion review the
+    template requires for a scope change (challenger-02 finding 8). Creating a milestone is the user's decision on a
     concrete candidate; its status changes stay user-owned.
   The decomposer recommends (a) or (b) by that criterion; the user chooses.
+- **No split possible**: a decomposer `needs_input` return on an `XL` draft means the draft was mis-sized; the Host
+  shows the user a size correction with the decomposer's reason, and only the user's decision changes the size
+  (challenger-02 finding 7).
 - A proposal already past plan-intent whose size is edited to `XL` shows `intent-proposal` unmet again; its Planning
-  run returns it with `needs_decompose: true`, as for a mis-sized draft.
+  run returns it with `needs_decompose: true` (step 1 above), as for a mis-sized draft.
 
 ### Host application and verification
 
 - **Before delegating**: the checkout is clean (`git status --porcelain` empty), so the post-run comparison sees any
   write; on a dirty checkout the Host delegates from a clean task worktree or stays inline. For the decomposer,
-  `devkit spec proposal check <slug>` passes on the base and a Planning return for decomposition is merged first
-  (Backlog reference, Return from Planning); the payload's `diff_scope.head` is the base HEAD.
+  `devkit spec proposal check <slug>` passes on the base, and a Planning return for decomposition is merged first
+  (Backlog reference, Return from Planning) when the draft has a Planning return; the payload's `diff_scope.head` is
+  the base HEAD.
 - **After the return**: `git status --porcelain` is still empty (spec-delegate step 4). Before applying a split, the
   Host confirms `git diff <head> -- docs/proposals/PROP-<slug>` is empty and re-runs `devkit spec refs PROP-<slug>
   --direction in -n 0`; a change in either sends the draft back to the role or to inline work.
@@ -191,27 +213,30 @@ The `challenger` matrix, since neither role writes even `materials/` (challenger
 - A fixture decomposition test drives the Host procedure on a temporary repository: children carry `decomposed_from`,
   a rewired incoming edge points at a created child, the parent's open feedback is moved by retirement and not copied
   into a child, and a proposed slug that collides is refused.
-- Size gate tests: an `XL` draft leaves `intent-proposal` unmet at `next` (`detail="size=XL"`) under `ask` and `auto`;
-  `workflow answer --request gate:plan-intent` is refused; `accept --direct` lists the blocking line with its code; the
-  `plan-` attach refuses with its code; a draft without `size` and an `L` draft still pass; `devkit workflow validate`
-  accepts the definition.
+- Size gate tests: an `XL` and an `xl` draft leave `intent-proposal` unmet at `next` (`detail="size=XL"`) under `ask`
+  and `auto`; `workflow answer --request gate:plan-intent` is refused; `accept --direct --check` lists the size
+  blocking line under `SPEC_PROPOSAL_NOT_ELIGIBLE`; a `plan-` attach is refused with the decompose reason and a `dev-`
+  attach of an accepted `XL` proposal is not; a draft without `size` and an `L` draft still pass; guidance tests cover
+  the `planning.md` step 1 return and the reclassification condition; `devkit workflow validate` accepts the
+  definition.
 - A dogfood `triage` run over the open feedback at Development time, with its return and the before and after
   `git status --porcelain`, is recorded in the final change report.
 
 ### Living Spec impact
 
 - `CAP-DLV-delivery-workflows` section 4.6: two role rows (skill: the cited procedure; profile and effort above; writes
-  nothing; envelope kind: none, a message); the `sdd-proposal` intent-proposal exit where the capability lists it.
+  nothing; envelope kind: none, a message); the `sdd-proposal` intent-proposal exit where the capability lists it,
+  and the `plan-` attach reason in integration readiness.
 - `CAP-DLV-proposal-incubation`: the `XL` definition, the size gate and its two exits, and decomposition that may
   delegate the split to `decomposer`; feedback retirement unchanged.
 - `CAP-HARN-agent-guidance`: the subagent asset list, the size wording and the feedback-hygiene and Backlog guidance.
 - `ARCH-04-1-ecosystem-boundaries`: the Subagent Roles row.
 - `UC-route-development-intent`: the optional `triage` delegation and the size wording.
 - Bundle text: both contracts, `bundle.toml`, the `spec-delegate` payload table, `feedback-hygiene` Step 1, the Backlog
-  reference's decomposition paragraphs, the `spec` skill's plan-intent step, `spec-next`'s Backlog actions,
+  reference's decomposition and reclassification paragraphs, the `spec` skill's plan-intent step, `planning.md` step 1, `spec-next`'s Backlog actions,
   `sdd-proposal.md`, the proposal template and the seed README.
-- Code: `devkit spec proposal accept --direct` conditions, the `plan-` attach check, an error in `base/errors.py`, the
-  scaffold comment, and their tests. No change to `devkit-agt` or `devkit-dist` *(provisional: q5)*; the viewer's size
+- Code: the `devkit spec proposal accept --direct` conditions, the `plan-` attach check, the scaffold comment and their
+  tests. No change to `devkit-agt` or `devkit-dist` *(provisional: q5)*; the viewer's size
   filter keeps the same values; `handbook/` is a release snapshot outside this work.
 
 ### Order with parallel work
@@ -242,8 +267,14 @@ Development after that spec integrates, as the user directed.
 - `user` (answer-01): q1 read-only roles; q2 no envelope; q3 `triage` above 5 open items; q4 the decomposer from Backlog
   only. Added scope: the judgeable `XL`, the size gate as an error before Planning and its two exits; multi-unit
   orchestration hardening is a non-goal with no follow-up.
-- `policy` (scout-02): boundaries add `sdd-proposal.md`, the template, the seed README, `features/proposals/`,
-  `features/delivery/` and `base/errors.py`; the viewer is excluded because the size values do not change.
+- `policy` (scout-02): boundaries add `sdd-proposal.md`, the template, the seed README, `features/proposals/` and
+  `features/delivery/`; the viewer is excluded because the size values do not change.
+- `policy` (challenger-02 findings 1, 3-5, 7-11): restated command refusals (a blocking line and an attach reason, no
+  new error class), the `planning.md` return, one size predicate, size judged at plan-intent, the mis-sized exit, the
+  promote milestone relation, the reclassification condition, `plan-`-only attach and the conditional precondition.
+- `policy`: this proposal's own size is `M` under the recommended reading of `q6`: one spec, `task_kind: feature`,
+  agent assets and small command checks serving one Backlog decomposition theme. Under the literal clause 2 the role
+  contracts and the gate code could read as different natures; `q6` settles it.
 - `policy`: host matrix and fallback (Q5); no `depends_on` on `PROP-foundation-documents`; sequencing is the Host's.
 
 ## 4. Lifecycle & Retirement Criteria
