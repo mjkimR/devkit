@@ -243,7 +243,7 @@ export function renderDocument(
 		const exactCode = parent.tagName === 'CODE' && byId.has(value);
 		const pattern = exactCode
 			? /^(.*)$/g
-			: /\[((?:CAP|US|ARCH|ADR|PROP|SPEC|PLAN|TASKS|REC|MAT|PADR)-[A-Za-z0-9][A-Za-z0-9-]*)\]/g;
+			: /\[((?:CAP|UC|ARCH|ADR|PROP|PADR|SPEC|PLAN|TASKS|REC|FB|MAT|MS)-[A-Za-z0-9][A-Za-z0-9-]*)\]/g;
 		let match: RegExpExecArray | null;
 		let cursor = 0;
 		const replacement = document.createDocumentFragment();

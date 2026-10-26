@@ -600,7 +600,9 @@ def test_misplaced_path_remediation_names_each_kinds_location(tmp_path: Path) ->
     }
     violations = check(RULE, tmp_path, files)
     remediations = {v.file: v.remediation for v in violations if v.message.startswith("Invalid partition path")}
-    milestone = "Rename or move the file to docs/roadmap/MS-{slug}.md (the ID is the file stem), then run `devkit rules fix`"
+    milestone = (
+        "Rename or move the file to docs/roadmap/MS-{slug}.md (the ID is the file stem), then run `devkit rules fix`"
+    )
     dated = "Move the file to {YYYY-MM}/{YYYYMMDD}-{slug} with the decision or start date, then run `devkit rules fix`"
     living = "Rename or move the file to the required path (the ID is the file stem), then run `devkit rules fix`"
     assert remediations == {

@@ -2,7 +2,7 @@
 id: SPEC-link-prefixes-and-milestone-remediation
 title: Viewer ID link prefixes and milestone path remediation
 summary: Fixes the viewer's document ID link pattern, which lists US instead of UC and lacks FB and MS, and the misplaced-milestone remediation, which tells a milestone to move to a dated partition.
-status: planned
+status: in-progress
 created: 2026-10-26
 related_capabilities: [CAP-VIEW-repository-viewer, CAP-GOV-spec-rules]
 related_usecases: []

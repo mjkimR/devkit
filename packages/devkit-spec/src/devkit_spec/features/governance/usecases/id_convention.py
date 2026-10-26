@@ -474,7 +474,12 @@ class IdConventionRule(BaseRule):
     def _target(self, ctx: RuleContext, target: _Target, owners: dict[str, list[str]], add: Add) -> None:
         path = target.path
         if target.path_issue:
-            if target.kind in _LIVING_SPEC:
+            if target.kind is Kind.MILESTONE:
+                remediation = (
+                    "Rename or move the file to docs/roadmap/MS-{slug}.md (the ID is the file stem),"
+                    f" then run `{FIX_COMMAND}`"
+                )
+            elif target.kind in _LIVING_SPEC:
                 remediation = (
                     f"Rename or move the file to the required path (the ID is the file stem), then run `{FIX_COMMAND}`"
                 )
