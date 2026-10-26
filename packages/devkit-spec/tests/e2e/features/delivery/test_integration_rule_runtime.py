@@ -44,7 +44,10 @@ def _add_rule(worktree: Path, source: str) -> None:
 def test_rule_needing_source_code_is_named_before_readiness(tmp_path: Path, synced_template: Path) -> None:
     repo = _make_synced_repo(tmp_path, synced_template)
     worktree = _start_worktree(repo, "dev-newrule", tmp_path / "wt-newrule")
-    _add_rule(worktree, f"from {MISSING} import NeedsNewCodeRule as _Implementation\n\n\nclass Rule(_Implementation):\n    pass\n")
+    _add_rule(
+        worktree,
+        f"from {MISSING} import NeedsNewCodeRule as _Implementation\n\n\nclass Rule(_Implementation):\n    pass\n",
+    )
 
     with pytest.raises(AdvisoryError) as raised:
         IntegrationService(repo).prepare("dev-newrule", SESSION)
@@ -53,7 +56,7 @@ def test_rule_needing_source_code_is_named_before_readiness(tmp_path: Path, sync
     assert raised.value.actor is Actor.USER
     assert MISSING in raised.value.message
     assert raised.value.target_files == (RULE,)
-    assert "runtime built from the source" in (raised.value.fix or "")
+    assert "build a runtime from the source's code" in (raised.value.fix or "")
 
 
 def test_rule_importing_an_uninstalled_package_keeps_rules_load_failed(tmp_path: Path, synced_template: Path) -> None:

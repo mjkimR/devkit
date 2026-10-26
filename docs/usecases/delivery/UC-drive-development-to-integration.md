@@ -119,6 +119,11 @@ The integration executor's coded refusals this section does not name, and their 
 - **7g.** The CLI runtime is inside the worktree that integration would remove: the system refuses with
   `INTEGRATION_RUNTIME_IN_WORKTREE`; the agent uses a retained runtime outside that worktree, prepares the scope and
   obtains any required conversational decision (`CAP-INT-mcp-services`); resumes at step 7.
+- **7h.** A synchronized rule of the source, or of the result at a build, imports a module or name the running runtime
+  does not provide, such as the implementation module of a rule the branch adds: the system refuses with
+  `INTEGRATION_RULE_RUNTIME_MISMATCH` before readiness and changes nothing; the source needs no change, and the agent,
+  with separately granted authority, runs integration from the base checkout with a runtime built from the source's
+  code outside the worktree (`CAP-INT-mcp-services`); resumes at step 7.
 - **8a.** The base moved after the result was built: the system refuses with `INTEGRATION_TARGET_MOVED`, or with
   `INTEGRATION_REQUEST_STALE` for a later request, and changes nothing on the target (`CAP-INT-mcp-services`); resumes
   at step 6.
@@ -296,3 +301,12 @@ The integration executor's coded refusals this section does not name, and their 
 - **When**: the Host resolves the blocker, inspects the merged PR and remote ref, prepares the remaining scope and
   retries with the new digest
 - **Then**: remote deletion completes before local worktree and branch deletion, and the PR is not merged again
+
+### Scenario 21: A rule that needs the source's code is named before readiness
+- **Covers**: 7h
+- **Given**: a `dev-<slug>` branch whose committed receipt lists a synchronized rule importing a module the branch adds,
+  under a retained runtime built from the target
+- **When**: the Host runs `devkit integration prepare` or `integrate`
+- **Then**: it refuses with `INTEGRATION_RULE_RUNTIME_MISMATCH` naming the rule file and the missing import, the
+  readiness provider does not run, the target is unchanged, and the Host retries with a runtime built from the source's
+  code after separately granted authority

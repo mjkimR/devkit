@@ -2,7 +2,7 @@
 id: SPEC-integration-readiness-branch-code
 title: Integration readiness loads branch rules with branch code
 summary: Integration readiness and the CI rules snapshot load a branch's new bundled rule with the base checkout's installed code, so a branch adding a rule whose implementation lives in package code is refused; evaluate it with the code being landed.
-status: planned
+status: in-progress
 created: 2026-10-26
 related_capabilities:
   - CAP-INT-mcp-services

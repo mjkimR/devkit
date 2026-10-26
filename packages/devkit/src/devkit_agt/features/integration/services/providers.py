@@ -28,6 +28,7 @@ from devkit_agt.features.integration.models.errors import (
     ReadinessError,
 )
 from devkit_agt.features.integration.repositories.receipts import check_reader
+from devkit_agt.features.integration.repositories.rule_runtime import check_rule_runtime
 
 CONFIG_PATH = ".devkit/config.toml"
 DISCLOSURE_LIMIT = 200
@@ -144,9 +145,16 @@ def check(value: ReadinessProvider, context: IntegrationContext) -> Readiness:
     The result must bind the context's source, target and result commits, carry nonempty coded evidence, declare its
     target-bound codes and a one-line result-check disclosure of 1 to ``DISCLOSURE_LIMIT`` characters. A source that
     changes the receipt reader and carries a receipt only that reader accepts is refused first
-    (``INTEGRATION_RECEIPT_READER_CHANGED``).
+    (``INTEGRATION_RECEIPT_READER_CHANGED``), then a source or result whose synchronized rules import code this
+    runtime does not provide (``INTEGRATION_RULE_RUNTIME_MISMATCH``).
     """
-    check_reader(Path(context.finish.base), context.finish.source_sha, context.finish.target_sha)
+    base = Path(context.finish.base)
+    check_reader(base, context.finish.source_sha, context.finish.target_sha)
+    worktree = Path(context.finish.path)
+    sources = (worktree, base) if worktree.is_dir() else (base,)
+    for commit in (context.finish.source_sha, context.result_sha):
+        if commit is not None:
+            check_rule_runtime(base, commit, sources)
     try:
         result = value.check(context)
         if (

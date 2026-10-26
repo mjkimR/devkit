@@ -51,6 +51,18 @@ class RuntimeLocationError(IntegrationError):
     fix = "Run `devkit integration integrate` from the retained base checkout with an installed runtime outside the worktree being removed"
 
 
+class RuleRuntimeMismatchError(IntegrationError):
+    code = "INTEGRATION_RULE_RUNTIME_MISMATCH"
+    actor = Actor.USER
+    fix = (
+        "The source's synchronized rules import code this runtime does not provide, so readiness cannot evaluate them"
+        " here; the source needs no change. Obtain separately granted Host authority, build a runtime from the"
+        " source's code outside the worktree being removed (for example a `git archive` of the source installed into"
+        " a scratch environment), then run `devkit integration integrate <branch>` from the base checkout with that"
+        " runtime. Do not edit the rules, skip readiness or run the worktree's own runtime"
+    )
+
+
 class CleanupIncompleteWarning(IntegrationError):
     code = "INTEGRATION_CLEANUP_INCOMPLETE"
     level = Level.WARNING
