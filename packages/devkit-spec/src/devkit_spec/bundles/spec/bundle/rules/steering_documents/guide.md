@@ -19,7 +19,10 @@ Each finding is reported at the file, on the line of the key concerned or line 1
 
 - A file in a subdirectory: `steering documents live directly in docs/steering/, not in <dir>/`.
 - A file that is neither Markdown nor `glossary.yaml`: `docs/steering/ holds only Markdown files and glossary.yaml`.
+- A file that is not UTF-8: `steering document must be UTF-8`. `devkit get-context` would list it with null values.
 - Frontmatter that does not parse: `steering document frontmatter is invalid: <detail>`.
+- Frontmatter that closes after the first 4096 bytes, all `devkit get-context` reads of a file: `frontmatter ends at
+  byte <n>; get-context reads only the first 4096 bytes`.
 - An `id` key: `steering documents carry no id`. A document with an ID belongs to its kind's directory.
 - A missing or empty `title`: `steering document has no title`.
 - A missing or empty `summary`: `steering document has no summary`.

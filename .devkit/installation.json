@@ -1522,7 +1522,7 @@
     },
     ".devkit/managed/spec/rules/document_reference/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "c53fd1f7fe2a97b3457e1651d9a1601f8c73516720eaeb9ad5015609338485b6"
+      "sha256": "fa70c2fa57a7c9e70f5961de9492678ae066957a5b1bf5cdddf0ebbc9e2fc696"
     },
     ".devkit/managed/spec/rules/document_summary/guide.md": {
       "mode": 420,
@@ -1610,7 +1610,7 @@
     },
     ".devkit/managed/spec/rules/steering_documents/guide.md": {
       "mode": 420,
-      "sha256": "f223db258e2dad30c25a2528da29a65f2b2e9338377a4e79d53516dd08cd9c5b"
+      "sha256": "f52b6ac2b4f0974f6220c02ab96a8c087773e1692cce18b7fb23da6dfe2d468b"
     },
     ".devkit/managed/spec/rules/steering_documents/rule.py": {
       "mode": 420,
@@ -1618,7 +1618,7 @@
     },
     ".devkit/managed/spec/rules/steering_documents/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "a9a8b85fda62e1fba93bf159476296536ecd76095dd141ab1790364c96b502e0"
+      "sha256": "4ea376a217690f2892c8265046d827c6a96148f3f09f6a3d293bf7fcedf923b2"
     },
     ".devkit/managed/spec/rules/task_coverage/guide.md": {
       "mode": 420,

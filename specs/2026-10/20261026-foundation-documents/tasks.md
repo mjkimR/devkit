@@ -14,7 +14,7 @@ plan: PLAN-foundation-documents
   - **Verification**: `just test devkit-dist`
 - [x] **Task 1.2**: `RULE-steering-documents` with its guide, manifest asset and tests
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/features/governance/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/steering_documents/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml
-  - _Requirements: AC-06, AC-07_
+  - _Requirements: AC-06, AC-07, AC-16_
   - **Verification**: `uv run devkit rules test packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/steering_documents`
 - [x] **Task 1.3**: `RULE-document-reference` reads the moved glossary and resolves IDs cited in steering files; search reads the moved synonyms
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/features/, packages/devkit-spec/src/devkit_spec/base/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/, packages/devkit-spec/tests/

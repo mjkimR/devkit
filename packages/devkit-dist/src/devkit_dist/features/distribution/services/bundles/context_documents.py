@@ -72,18 +72,40 @@ def _prefix(path: Path) -> bytes | None:
         os.close(fd)
 
 
+def _block(data: bytes) -> bytes | None:
+    """The bytes from the start through the frontmatter closer line, ``None`` when no block closes within ``data``.
+
+    Only these bytes are decoded, so an invalid byte in the body never hides a readable header. A closer on the last,
+    unterminated line of a full prefix may be cut (``----``), so it does not count.
+    """
+    lines = data.split(b"\n")
+    if lines and lines[0].startswith(codecs.BOM_UTF8):
+        lines[0] = lines[0][len(codecs.BOM_UTF8) :]
+    if not lines or lines[0].rstrip() != b"---":
+        return None
+    for number, line in enumerate(lines[1:], 1):
+        if line.rstrip() in (b"---", b"..."):
+            if number == len(lines) - 1 and len(data) >= HEADER_LIMIT:
+                return None
+            return b"\n".join(lines[: number + 1]) + b"\n"
+    return None
+
+
 def _header(data: bytes) -> dict[str, Any] | None:
-    """The frontmatter mapping of a file's first bytes; ``None`` when it is not UTF-8 or has no closed, valid block."""
+    """The frontmatter mapping of a file's first bytes; ``None`` when the block is not UTF-8, does not close within
+    them or is not valid YAML."""
+    block = _block(data)
+    if block is None:
+        return None
     try:
-        # An incomplete multi-byte sequence cut by the read limit is dropped, not an error.
-        text = codecs.getincrementaldecoder("utf-8")().decode(data, final=False)
+        text = block.decode("utf-8")
     except UnicodeError:
         return None
     try:
-        block = frontmatter.locate(text)
-        if block is None:
+        located = frontmatter.locate(text)
+        if located is None:
             return None
-        return frontmatter.load_header(block.header)
+        return frontmatter.load_header(located.header)
     except FrontmatterError:
         return None
 

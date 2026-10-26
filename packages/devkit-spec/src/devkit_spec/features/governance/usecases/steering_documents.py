@@ -5,7 +5,8 @@
 that list short and readable:
 
 - the directory is flat and holds only ``*.md`` files and ``glossary.yaml``;
-- each Markdown file other than ``README.md`` has a non-empty ``title``, a non-empty English ``summary`` of at most
+- each Markdown file other than ``README.md`` is UTF-8, closes its frontmatter within the first 4096 bytes (all
+  ``devkit get-context`` reads), and has a non-empty ``title``, a non-empty English ``summary`` of at most
   ``max_summary_length`` characters (default 300), no ``id`` (steering files stay outside the document index) and a
   body (the text after the frontmatter) of at most ``max_body_bytes`` bytes (default 24576);
 - at most ``max_files`` Markdown files other than ``README.md`` (default 10): each one beyond the limit, in sorted
@@ -32,6 +33,8 @@ RULE_ID = "RULE-steering-documents"
 DIRECTORY = "docs/steering"
 SYNONYMS = "glossary.yaml"
 INDEX = "README.md"
+# The header prefix ``devkit get-context`` reads of each file (devkit-dist ``context_documents.HEADER_LIMIT``).
+HEADER_LIMIT = 4096
 type Add = Callable[[str, int, str, str], None]
 
 
@@ -122,12 +125,28 @@ class SteeringDocumentsRule(BaseRule):
         return found
 
     def _document(self, ctx: RuleContext, path: str, add: Add) -> None:
-        text = ctx.cache.read_text(path)
+        text = ctx.cache.read_text_strict(path)
+        if text is None:
+            add(
+                path,
+                1,
+                "steering document must be UTF-8",
+                "Save the file as UTF-8; get-context lists it with null values",
+            )
+            return
         try:
             parsed = frontmatter.parse(text)
+            block = frontmatter.locate(text)
         except FrontmatterError as exc:
             add(path, 1, f"steering document frontmatter is invalid: {exc}", "Write a closed YAML frontmatter block")
             return
+        if block is not None and (size := len(text[: block.end].encode("utf-8"))) > HEADER_LIMIT:
+            add(
+                path,
+                1,
+                f"frontmatter ends at byte {size}; get-context reads only the first {HEADER_LIMIT} bytes",
+                "Keep only `title` and `summary` in the frontmatter",
+            )
         header = parsed.data or {}
         settings = ctx.settings(self, path)
         if "id" in header:

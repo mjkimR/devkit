@@ -133,8 +133,23 @@ def test_symlinked_and_non_regular_entries_are_skipped(tmp_path: Path) -> None:
         (b"---\ntitle: T\n---\n", ("T", None)),
         (b"---\ntitle: T\nsummary: S\n---\n" + "é".encode() * HEADER_LIMIT, ("T", "S")),
         (b"---\ntitle: T\n" + b"x: y\n" * HEADER_LIMIT + b"---\n", (None, None)),
+        (b"---\ntitle: T\nsummary: S\n---\n# Caf\xe9\n", ("T", "S")),
+        (b"---\ntitle: \xe9\nsummary: S\n---\n", (None, None)),
+        (b"---\n" + b"x" * (HEADER_LIMIT - 8) + b"\n---", (None, None)),
     ],
-    ids=["non-utf8", "no-frontmatter", "malformed", "unclosed", "non-string", "missing", "oversized", "late-close"],
+    ids=[
+        "non-utf8",
+        "no-frontmatter",
+        "malformed",
+        "unclosed",
+        "non-string",
+        "missing",
+        "oversized",
+        "late-close",
+        "non-utf8-body",
+        "non-utf8-header",
+        "cut-closer",
+    ],
 )
 def test_an_unreadable_value_is_null(tmp_path: Path, content: bytes, expected: tuple[str | None, str | None]) -> None:
     target = _project(tmp_path)

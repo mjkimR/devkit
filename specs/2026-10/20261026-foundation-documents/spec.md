@@ -91,7 +91,7 @@ the always-loaded cost stays small. The glossary moves into the directory.
 - **Given** a synchronized bundle whose managed `bundle.toml` declares `context_documents = "docs/steering"` and a
   workspace `docs/steering/` holding `b.md`, `a.md` (both with `title` and `summary`), `README.md`, `glossary.yaml`
   and a subdirectory `sub/` with `c.md`
-- **When** `devkit get-context <bundle> --format json` runs
+- **When** `devkit get-context <bundle>` runs (its output is always one JSON object)
 - **Then** it exits `0` and its result has a `documents` list of exactly two objects, `a.md` then `b.md`, each with
   the absolute `path`, the `title` and the `summary`; `README.md`, the YAML file and `sub/c.md` are not listed.
 
@@ -200,6 +200,15 @@ the always-loaded cost stays small. The glossary moves into the directory.
   `docs/packages/example/glossary.md` and `docs/glossary.md`
 - **Then** the first three are `Steering`, `docs/glossary.md` is `Overview`, `bookGroups` holds `Steering` in place
   of `Glossary`, and the committed build under `devkit_viewer/static/` is rebuilt from that source.
+
+### [AC-16] What get-context cannot read is a steering finding
+
+- **Given** a steering file with valid frontmatter and a non-UTF-8 byte in its body, and one whose frontmatter closes
+  after byte 4096
+- **When** get-context lists them and `RULE-steering-documents` checks them
+- **Then** get-context lists the first with its `title` and `summary` (only the frontmatter block is decoded) and the
+  second with `null` values, and the rule reports `steering document must be UTF-8` for the first and `frontmatter
+  ends at byte <n>; get-context reads only the first 4096 bytes` for the second (`review-01` findings 2 and 3).
 
 ## 5. Assumptions
 

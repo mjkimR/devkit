@@ -142,3 +142,15 @@ def test_a_staged_commit_adding_the_eleventh_file_is_reported(tmp_path: Path) ->
 def test_a_non_positive_setting_is_a_settings_error(tmp_path: Path, name: str) -> None:
     with pytest.raises(RulesRunError, match=name):
         check(RULE, tmp_path, {"docs/steering/a.md": _doc()}, settings={name: 0})
+
+
+def test_a_file_get_context_cannot_read_is_reported(tmp_path: Path) -> None:
+    """What get-context lists with null values (a non-UTF-8 file, frontmatter closing after its 4096-byte read)."""
+    (tmp_path / "docs/steering").mkdir(parents=True)
+    (tmp_path / "docs/steering/a.md").write_bytes(_doc().encode() + b"# Caf\xe9\n")
+    late = "---\ntitle: T\nsummary: S\nnotes: |\n" + "  line\n" * 700 + "---\n"
+    (tmp_path / "docs/steering/b.md").write_text(late)
+    assert _found(check(RULE, tmp_path)) == [
+        ("docs/steering/a.md", 1, "steering document must be UTF-8"),
+        ("docs/steering/b.md", 1, f"frontmatter ends at byte {len(late)}; get-context reads only the first 4096 bytes"),
+    ]
