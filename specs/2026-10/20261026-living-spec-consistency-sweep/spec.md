@@ -2,7 +2,7 @@
 id: SPEC-living-spec-consistency-sweep
 title: Living Spec consistency sweep
 summary: Resolves contradictions, stale names and duplicate citations that the first handbook refresh found across capabilities, use cases, architecture and the glossary, aligning each with shipped behavior.
-status: planned
+status: in-progress
 created: 2026-10-26
 related_capabilities:
   - CAP-DLV-workflow-orchestration

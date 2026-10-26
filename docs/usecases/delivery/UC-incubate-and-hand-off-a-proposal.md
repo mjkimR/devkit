@@ -1,7 +1,7 @@
 ---
 id: UC-incubate-and-hand-off-a-proposal
 title: Incubate a Proposal and Hand It Off to a Spec
-summary: "An AI coding agent develops a proposal, publishes one source-bound review before acceptance under project policy, obtains Host approval against that report, then accepts or hands it off while preserving materials, approvals and references."
+summary: "An AI coding agent develops a proposal, reviews its committed Planning source before acceptance under project policy, obtains Host approval against those findings, then accepts or hands it off while preserving materials, approvals and references."
 area: delivery
 primary_actor: AI coding agent (Host)
 supporting_actors:
@@ -92,10 +92,12 @@ capabilities:
 - **5c.** The owning base and the prospective source both set `plan-accept` to `auto`: the agent records the
   acceptance by policy, reported as policy, never as the user's consent (`CAP-DLV-proposal-incubation`); resumes at
   step 6.
-- **7a.** Native MCP confirmation is available on the local base checkout: the agent requests the native handoff,
-  whose form shows the accepted plan and the Development effort defaulting to the `dev_effort` hint; only an
-  explicit approval creates `dev-<slug>`, its worktree and the handoff, and a changed base, proposal or configuration
-  refuses with `SPEC_HANDOFF_STALE` (`CAP-DLV-proposal-incubation`); resumes at step 8.
+- **7a.** The Host starts Development from the retained base checkout: under `proposal-handoff=ask` it presents the
+  accepted plan, the setup and worktree effects and the Development effort defaulting to the `dev_effort` hint, and
+  only after the user's conversational approval runs `devkit spec proposal handoff <slug> --effort <level>`; under
+  `auto` the command uses `dev_effort`. A prerequisite that does not hold refuses with `SPEC_HANDOFF_NOT_READY`, and
+  a new worktree that no longer contains the reviewed base commit with `SPEC_HANDOFF_STALE`
+  (`CAP-DLV-proposal-incubation`); resumes at step 8.
 - **7b.** The proposal is not `accepted`: the system refuses with `SPEC_PROPOSAL_NOT_APPROVED` and writes nothing
   (`CAP-DLV-proposal-incubation`); the agent asks the user; resumes at step 5.
 - **7c.** The proposal says `accepted` without its recorded `plan-accept`: the system refuses with
@@ -112,7 +114,7 @@ capabilities:
 
 ## 4. Postconditions
 
-- **Success guarantee**: A Planning proposal has one source-bound review published before its acceptance. One spec bundle `SPEC-<slug>` replaces the proposal and is bound to `sdd-spec-<task_kind>`.
+- **Success guarantee**: A Planning proposal is reviewed at its final committed source before its acceptance. One spec bundle `SPEC-<slug>` replaces the proposal and is bound to `sdd-spec-<task_kind>`.
   Its PADRs are accepted ADRs, its materials and settled feedback live under `docs/materials/`, its open feedback
   sits in the spec with unchanged IDs, statuses and observation dates, and its `plan-intent` and `plan-accept` records
   are carried by name. Live references name the spec and the ADRs. After a direct acceptance the same holds without a

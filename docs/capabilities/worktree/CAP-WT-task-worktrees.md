@@ -169,9 +169,9 @@ An activity branch nobody moves stays in progress: nothing expires it. `devkit w
 - `merging.py`: the result commit (`build_result`, `merge_message`, `merge_method`, `check_identity`), `fast_forward` and the integration lock (`integration_lock`); with `advance=True` (the integration service only) it merges an advanced target with `git merge-tree --write-tree` (Git 2.38 or later, `WORKTREE_GIT_UNSUPPORTED`; a conflict is `WORKTREE_MERGE_CONFLICT`).
 - `config.py`: `WorktreeConfig`, `read_worktree_config`.
 - `errors.py`: one class per code ([reference](../../development/reference/worktree.md#error-codes)).
-- `cli.py`: `devkit worktree start|finish|status|stale`.
+- `cli.py`: `devkit worktree start|finish|status`, with the stale-branch report as `status --stale`.
 
-The lifecycle was ported from specrig's `worktree` package. the scope registry, its journal and the proposal-directory cleanup are methodology and live in devkit-spec, attached through the `devkit.post_finish` extension point; its `git.worktree` policy (which tasks run in a worktree) is methodology and stays there too.
+The lifecycle is generic. The scope registry, its journal and the proposal-directory cleanup are methodology and live in devkit-spec, attached through the `devkit.post_finish` extension point; its `git.worktree` policy (which tasks run in a worktree) is methodology and stays there too.
 
 
 The library's `start(position, branch, ..., revision=COMMIT)` optionally pins the source commit. It resolves the

@@ -52,6 +52,7 @@ Library callers import the public API from `devkit_agt.features.rules`; built-in
 
 - **Content wheels**: bundles ship rules as `kind = "rule"` assets; `devkit sync` records each deployed file in `.devkit/installation.json`, and `devkit rules` loads them from the receipt without any flag (`CAP-GOV-rule-authoring`).
 - **Project policy**: a consumer changes a distributed rule's phase, severity or settings only through `[rules]` in `.devkit/config.toml`; managed rule files are hash-checked and never edited in place.
+- **Command help**: `devkit rules --help` lists the operating commands `check`, `fix` and `explain`. The authoring commands `phases` (`CAP-GOV-evaluation-lifecycle`) and `test` (`CAP-GOV-rule-authoring`) stay callable with their own `--help` but are hidden from the group help, as the workflow authoring commands are (`CAP-DLV-cli-and-output`).
 - **Pre-commit and CI**: the built-in `rules-check` commit gate evaluates what `devkit rules check --staged` evaluates on every commit, on by default once the hooks are installed (`CAP-GATE-commit-gates`); CI runs `devkit rules check --ci --base <ref>`. Both evaluate the exact Git tree, so the result cannot depend on unstaged or ignored files (`CAP-GOV-evaluation-lifecycle`).
 
 ## 4. Shared Foundation

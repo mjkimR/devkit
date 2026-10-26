@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-proposal-incubation
 title: Proposal Incubation and Handoff
-summary: "Proposal incubation and handoff preserve approved scope, decisions, materials and feedback. They validate direct prerequisites, publish source-bound Planning reviews before acceptance, relocate live references, and compose acceptance and handoff through Host-authorized CLI operations."
+summary: "Proposal incubation and handoff preserve approved scope, decisions, materials and feedback. They validate direct prerequisites, review the committed Planning source before acceptance, relocate live references, and compose acceptance and handoff through Host-authorized CLI operations."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -163,7 +163,9 @@ removes it.
     skipped by policy; when the gate does not open it restores `proposal.md` byte-for-byte and reports the unmet
     checks and hold reasons (`SPEC_PROPOSAL_GATE_NOT_OPEN`). `--check` runs every check and writes nothing; there a
     missing `gate:plan-intent` is `pending`, not blocking, because one request may ask both gates. `accept` never
-    records `plan-intent`, commits, merges or hands off; Backlog commits a direct acceptance on the base.
+    records `plan-intent`. Without `--mode` it never commits, merges or hands off, and Backlog commits a direct
+    acceptance on the base; with `--mode` it composes the commit, the Planning merge and an optional handoff
+    (Host-authorized proposal lifecycle CLI, below).
 
 15. **Planning review before acceptance**: when a bound proposal in Planning reaches `plan-accept`, the agent reviews the proposal, PADRs and envelopes directly for the final committed `plan-<slug>` source before presenting acceptance. Acceptance operates on the committed proposal directly and does not require a shared artifact report. `devkit spec proposal report <slug> [--source-sha <sha>]` can be run to inspect a summary briefing. Acceptance records `status: accepted` and `gate:plan-accept` on the committed proposal.
 

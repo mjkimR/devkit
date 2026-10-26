@@ -185,7 +185,7 @@ The single pointer inserted into `AGENTS.md` stays within `CAP-DIST-manifest-spe
 including LF. This is not a limit on the whole guide or skill body. Deployment checks verify rendered text and
 projections; the authored examples in `MAT-response-style-rewrite-draft` illustrate the accepted design and do
 not measure model adherence, reader comprehension, comparative quality or host compaction behavior
-(`ADR-response-style`, `ADR-response-style`).
+(`ADR-response-style`).
 
 ## 6. Opt-in Maintenance
 

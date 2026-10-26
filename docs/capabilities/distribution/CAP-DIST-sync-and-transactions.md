@@ -15,10 +15,6 @@ created_at: 2026-10-17
 
 ## 1. The Installation Receipt (`.devkit/installation.json`)
 
-Selected lifecycle hooks also record an optional `host_hooks` array, each entry containing `host`, qualified
-`asset`, `event`, `handler`, `command`, `matcher` and integer `timeout`. These records own exact groups in shared host
-configuration; the shared file is never claimed by `files`. See `CAP-HOST-lifecycle-observation`.
-
 The receipt is the single record of the installed state, committed to Git, `schema = 1`:
 
 ```json
@@ -97,6 +93,10 @@ The receipt is the single record of the installed state, committed to Git, `sche
   lives in `uv.lock`. Each bundle's `packages` record names the wheel that ships it.
 
 - `execution_environment`: optional, strictly `local` or `cloud`, records the actual canonical render mode; every writing sync supplies it. Absence is explicitly unrecorded, never inferred from configuration. Ordinary sync retains ownership/conflict evidence and refreshes the field; status/check report missing evidence, and locked sync refuses the required receipt update. This is one current schema, with no version dispatch or migration reader. The field never authorizes runtime operations.
+
+Selected lifecycle hooks also record an optional `host_hooks` array, each entry containing `host`, qualified
+`asset`, `event`, `handler`, `command`, `matcher` and integer `timeout`. These records own exact groups in shared host
+configuration; the shared file is never claimed by `files`. See `CAP-HOST-lifecycle-observation`.
 
 The receipt format (`devkit_dist.features.project.repositories.receipt`) and its writer belong to `devkit-dist`, as does the
 `.devkit/config.toml` schema below.
@@ -369,9 +369,6 @@ The result fields and every notice code are listed in the
 
 ### Locked Synchronization
 
-An unchanged receipt may also restore an absent whole host hook file from its `host_hooks` registrations. Existing
-shared host files require a plain sync for any change; see `CAP-HOST-lifecycle-observation`.
-
 The receipt, the root `AGENTS.md` block and seeded files are Git-tracked state that every clone shares; the managed
 copies under `.devkit/managed/` (and native projections a repository ignores) are rebuilt per clone. `devkit sync
 --locked` rebuilds only the latter: it plans a plain sync, and commits it only when the receipt it would write is the
@@ -386,6 +383,9 @@ receipt) writes nothing and raises `ReceiptStaleError` (`RECEIPT_STALE`): an `IN
 since updating committed files is the user's decision and an agent must not retry it away with a plain sync. Its
 `[TARGET]` names the committed paths that would change and its `[DETAIL]` lines the planned writes.
 
+An unchanged receipt may also restore an absent whole host hook file from its `host_hooks` registrations. Existing
+shared host files require a plain sync for any change; see `CAP-HOST-lifecycle-observation`.
+
 Ignored local environment and render-evidence edits are also permitted under the eligibility rules below; they do
 not alter the committed receipt.
 
@@ -393,7 +393,8 @@ A fresh clone (`just init`), `devkit worktree start` and CI run it; whoever chan
 the selection runs a plain `devkit sync` and commits what it changes. In CI, `devkit sync --locked` after the
 environment is installed both restores the managed copies the later steps read and fails when a bundle source or
 an upgraded package no longer matches the committed receipt. `sync --check` stays the read-only check for a
-workspace that is already synchronized.
+workspace that is already synchronized. `devkit sync --registrations-only`, which reconciles only optional local MCP
+registrations after locked restoration, is specified by `CAP-MCP-runtime-registration`.
 
 ### Bundle template inputs
 

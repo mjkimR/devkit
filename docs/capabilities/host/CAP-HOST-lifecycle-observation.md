@@ -1,7 +1,7 @@
 ---
 id: CAP-HOST-lifecycle-observation
 title: "Host Lifecycle Observation"
-summary: "Host lifecycle hook dispatch, exact project MCP registration for Codex and Claude Code, and read-only installation diagnostics; optional MCP transport lives in devkit-mcp."
+summary: "Host lifecycle hook dispatch, exact project MCP registration for Codex, Claude Code and Antigravity, and read-only installation diagnostics; optional MCP transport lives in devkit-mcp."
 area: host
 status: active
 entrypoints:
@@ -150,11 +150,11 @@ problems without loading service handlers. Neither status command establishes ef
 The observer handler remains available to hook definitions supplied by installed bundles. Business approvals, setup
 and trust prompts, and execution-permission prompts are separate observations.
 
-## 8. Project MCP registration
+## 6. Project MCP registration
 
 Dist owns the narrow `devkit.mcp.registrations` provider boundary and project-file reconciler described by
 `CAP-MCP-runtime-registration`. It does not own MCP transport or forms. Installing the optional runtime enables
-ordinary sync to reconcile exact local Codex and Claude entries; `[mcp] register = false` opts out. Uninstall,
+ordinary sync to reconcile exact local Codex, Claude Code and Antigravity entries; `[mcp] register = false` opts out. Uninstall,
 opt-out and selected-agent removal retire only exact owned entries. Host trust, permissions and global settings
 remain host-owned. Registration facts do not prove connectivity or native form UI support.
 

@@ -23,9 +23,7 @@ from devkit_dist.adapters.cli import (
 )
 from devkit_dist.features.distribution.models.results import OverrideChange, SyncResult
 
-WORKSPACE = workspace_option(
-    "Project root (default: the nearest directory with .devkit/, else the Git top level, else the current one)."
-)
+WORKSPACE = workspace_option()
 SOURCE = click.argument("source", type=click.Path(path_type=Path))
 
 

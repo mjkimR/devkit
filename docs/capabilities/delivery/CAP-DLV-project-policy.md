@@ -26,7 +26,7 @@ devkit already models stays in devkit's tables
 (`[workflow.approvals]`, `[workflow.stages]`, `[worktree]`, `[integration]`); devkit-spec adds only what is specific to spec-driven
 development, under the `[tool.spec]` extension table that devkit passes through unread. Agents read the effective
 policy with one command, `devkit spec policy`, before routing, gate and Git decisions. Rationale:
-`ADR-spec-package-on-devkit`; the Git policy levels: `ADR-worktrees-branches-and-scope`, refined by `ADR-worktrees-branches-and-scope`; integration readiness and scoped cleanup: `SPEC-hook-driven-integration-cleanup`.
+`ADR-spec-package-on-devkit`; the Git policy levels: `ADR-worktrees-branches-and-scope`; integration readiness and scoped cleanup: `SPEC-hook-driven-integration-cleanup`.
 
 ## 2. Scope & Boundary
 
@@ -54,7 +54,9 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
    `delete_branch = true`, `merge = "no-ff"`, no `setup`); `[integration] provider = "spec"` selects `devkit_spec.features.delivery.usecases.integration` for `IntegrationService`.
 4. **Decision boundaries and task intent**: `plan-accept`, `proposal-handoff`, and `dev-integration` are the three
    main decision boundaries, followed in policy output by `plan-intent` and configured custom gates. Each boundary
-   and task intent permits `ask` or `auto`, default `ask`; `off` is `SPEC_CONFIG_INVALID`.
+   and task intent permits `ask` or `auto`, default `ask`; `off` is `SPEC_CONFIG_INVALID`. `proposal-handoff` is
+   declared by no workflow stage: `devkit spec proposal accept --mode accept_and_handoff` and
+   `devkit spec proposal handoff` read it (`CAP-DLV-proposal-incubation`).
    `plan-intent` records an already instructed task without another confirmation. An uninstructed Backlog item does
    not become authorized merely because an agent discovers it. Main boundaries are independent: direction acceptance
    may wait in Backlog before Development starts. The Host may carry one conversational decision across acceptance and handoff when the exact effects are presented together.
@@ -114,8 +116,8 @@ uv run devkit spec policy [-w/--workspace-root DIR] [--format text|json] [-q] [-
 [FEEDBACK_POLICY: capture=observed coverage=repo detail=standard reminder=contextual]
 ```
 
-- `GATE_POLICY`: one line per gate; `policy` is `ask`, `auto` or `off`
-  (`CAP-DLV-workflow-orchestration`);
+- `GATE_POLICY`: one line per gate; `policy` is `ask` or `auto` for the three boundaries and `plan-intent` (rule 4),
+  and `ask`, `auto` or `off` for a configured custom gate (`CAP-DLV-workflow-orchestration`);
   `source` is `config` when `.devkit/config.toml` sets it, else
   `default`.
 - `STAGE_POLICY`: one line per stage the project switched off (`state=off`), sorted.

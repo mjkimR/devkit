@@ -17,7 +17,8 @@ pull-request route. The `devkit integration` CLI exposes the operation. Under `a
 source, target, report and cleanup effects, receives the user's conversational decision, then invokes the command.
 The CLI revalidates the operation but does not authenticate that conversation. Under `auto`, it derives authority
 from the retained base policy. `ADR-host-cli-lifecycle-authority` supersedes the former lifecycle MCP execution
-interface. `ADR-local-and-pull-request-integration` remains authoritative for merge construction and route guards.
+interface and `ADR-local-and-pull-request-integration`; the merge construction and route guards below are this
+capability's current contract.
 
 ## CLI contract
 
@@ -86,7 +87,7 @@ approval or recovery journal survives the invocation.
 - A changed target requires the source to incorporate that target, fresh readiness and a fresh Host decision under
   `ask`.
 
-The optional `devkit-mcp` runtime remains available for shared artifacts and proposal report publication. The
+The optional `devkit-mcp` runtime remains available for shared artifacts. The
 lifecycle tools `integration_prepare`, `integration_integrate`, `integration_status` and `integration_resume` are not
 registered.
 

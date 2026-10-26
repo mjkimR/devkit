@@ -77,11 +77,11 @@ Rules:
 An error:
 
 ```text
-[ERROR]  (RULES_CONFIG_INVALID) .devkit/config.toml: [rules] phase override for RULE-x must be a string
+[ERROR]  (RULES_CONFIG_INVALID) config rules.phase_overrides.RULE-x: 'linter' is not 'hygiene'; set it to 'hygiene' or remove the entry to keep the rule's default phase
 [ACTION] INPUT_ERROR — Do not retry with identical input. Retrying unchanged will
          fail identically. Correct the flag, argument, or input file before rerunning.
 [TARGET] .devkit/config.toml
-[FIX]    Set [rules.phases] RULE-x = "linter"
+[FIX]    Correct the [rules] table in .devkit/config.toml
 ```
 
 A warning:

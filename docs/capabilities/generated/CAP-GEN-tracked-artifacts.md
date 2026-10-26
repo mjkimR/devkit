@@ -66,6 +66,8 @@ after = ["uv-lock"]
 
 A project that tracks native projections (`.claude/skills/...`) adds them to the receipt's `updates`. Do not add them to its `paths`, which would seed project-owned skills in the same directories from one side.
 
+`devkit generated list` prints the registered artifacts, devkit's built-in ones and those of `.devkit/generated.toml`, in their effective order, one line each: `[GENERATED: <id> source=builtin|project seed=<side> paths=<globs> command="<command>"]`. `--format json` prints `{"artifacts": [...]}` with each artifact's registry fields plus `builtin`. It runs no command and changes nothing.
+
 ## 2. resolve
 
 `devkit generated resolve` runs while the index has unmerged paths: during a merge, rebase, cherry-pick, revert or `git am`, or after any command that leaves conflicts. It never commits.

@@ -5,10 +5,10 @@ Text output: ``start`` prints ``[WORKTREE_STARTED: <branch> path= base= created=
 and ``[NEXT_CMD: cd <path>]``, or with ``--no-worktree`` ``[BRANCH_STARTED: <branch> checkout= from=]``; ``finish``
 prints ``[WORKTREE_FINISHED: <branch> path= merged= push= removed= branch_deleted=]``, also before a refusal that
 stopped it after the merge; ``status`` prints one ``[WORKTREE: <path> ...]`` line per worktree, one ``[BRANCH:
-<name> head=]`` line per unmerged branch no worktree checks out, and ``[SUMMARY: ...]``; ``stale`` prints one
-``[STALE_BRANCH: <branch> ...]`` line per stale activity branch and ``[SUMMARY: checked= branches= stale=
+<name> head=]`` line per unmerged branch no worktree checks out, and ``[SUMMARY: ...]``; ``status --stale`` prints
+one ``[STALE_BRANCH: <branch> ...]`` line per stale activity branch and ``[SUMMARY: checked= branches= stale=
 stale_after=]``. ``--format json`` prints the result object (a refused ``finish`` that changed something adds
-``errors``). ``status`` and ``stale`` only report and exit ``0``.
+``errors``). ``status``, with or without ``--stale``, only reports and exits ``0``.
 """
 
 from __future__ import annotations
