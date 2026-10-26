@@ -53,98 +53,101 @@ translated_from: en/journeys/keep-the-living-spec-consistent.md@cac4759bde05e33d
 - [용어집](../glossary.md)
 <!-- /handbook:generated -->
 
-`docs/` 아래의 Living Spec은 이후의 에이전트가 모든 것을 다시 읽지 않고도 믿을 수 있을 때에만 쓸모가 있습니다.
-이 여정은 여러분(또는 에이전트)이 문서와 코드를 바꾸는 동안 devkit이 Living Spec의 구조적 건전성을 어떻게 지키는지
-보여 줍니다. 깨진 참조, 한쪽에만 있는 링크, 잘못된 위치의 파일, 오래된 스펙 상태, 반영되지 않은 변경, 존재하지 않는
-코드 진입점(entrypoint)은 각각 안정적인 규칙 ID와 함께 보고되며, 수정 방법이 명확한 경우에는 자동으로 고쳐집니다.
+`docs/` 디렉터리에 위치한 Living Spec은 향후 투입될 에이전트가 매번 저장소 전체를 재독하지 않고도 그 내용을 온전히 신뢰할 수
+있을 때에만 가치를 발휘합니다. 이 여정에서는 사용자나 에이전트가 문서와 코드를 수정하는 과정에서 devkit이 Living Spec의 구조적
+정합성을 어떻게 견고하게 유지하는지 살펴봅니다. 깨진 문서 참조, 단방향 누락 링크, 배치 표준에 어긋난 파일, 오래된 스펙 상태값,
+Living Spec에 미반영된 변경 내역, 유효하지 않은 코드 엔트리포인트 등은 모두 고유한 거버넌스 규칙 ID와 함께 감지되며, 수정 방법이
+명확하고 결정론적인 경우 명령어 하나로 안전하게 자동 수정됩니다.
 
-문서가 *올바른* 내용을 말하는지는 별개의 문제이며, [Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)에서
-다룹니다. 여기서 쓰는 용어(Living Spec, 규칙, 커밋 게이트(commit gate))는 [개념](../concepts.md)을 참고하십시오.
+문서에 기술된 내용 자체가 실제 코드 동작과 *의미론적으로 일치하는가*는 구조적 정합성과는 다른 차원의 문제이며, 이는
+[Living Spec 드리프트 조정하기](reconcile-living-spec-drift.md)에서 다룹니다. 본 문서에서 사용되는 핵심 개념(Living Spec,
+거버넌스 규칙, 커밋 게이트(commit gate) 등)은 [개념](../concepts.md)을 참고하십시오.
 
 출처: [`UC-keep-the-living-spec-consistent`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/usecases/governance/UC-keep-the-living-spec-consistent.md) (영어 원문).
 
 ## 시작하기 전에
 
-- 프로젝트가 `spec` 번들을 선택했고, `devkit sync`가 그 규칙을 배포했습니다(규칙은 `core` 프리셋(preset)에 포함됩니다).
-- 이 규칙들은 일반적인 devkit 규칙이므로 `.devkit/config.toml`의 `[rules]`에서 다루는 페이즈, 심각도, 조정에 관한
-  내용이 모두 그대로 적용됩니다. [거버넌스 영역](../areas/governance.md)을 참고하십시오.
+- 프로젝트가 `spec` 번들을 선택했고, `devkit sync`가 관련 규칙을 이미 배포한 상태여야 합니다(규칙은 `core` 프리셋에 포함되어 배포됩니다).
+- 이 규칙들은 일반적인 devkit 거버넌스 규칙이므로 `.devkit/config.toml`의 `[rules]` 섹션에서 설정하는 페이즈(phase), 심각도(severity),
+  예외 설정이 모두 동일하게 적용됩니다. 자세한 내용은 [거버넌스 규칙](../areas/governance.md) 영역 문서를 참고하십시오.
 
-## 단계별 진행
+## 단계별 점검 및 유지 절차
 
-1. **변경한 내용을 검사합니다.** 작업 공간 전체나 수정한 파일에 대해 스펙 규칙을 실행합니다.
+1. **변경 사항 검사:** 작업 공간 전체 또는 수정한 파일들에 대해 스펙 거버넌스 규칙을 실행합니다.
 
    ```sh
    uv run devkit rules check                      # whole workspace
    uv run devkit rules check docs/usecases/x.md   # only these targets
    ```
 
-   각 위반은 규칙(예: `RULE-traceability-link`), 그 위반이 `fixable`인지 `open`인지, 그리고 해야 할 조치를 알려
-   줍니다. 위반은 실행 대상 파일에서만 보고되며, 완료된 스펙 번들은 이력으로 취급되어 이름을 직접 지정할 때에만
-   검사됩니다.
+   각 위반 사항은 관련 규칙 ID(예: `RULE-traceability-link`), 자동 수정 가능 여부(`fixable` 또는 `open`), 그리고 권장 해결 조치를
+   함께 안내합니다. 위반 보고는 명령어 실행 대상 파일에 한해서만 출력되며, 완료된 스펙 번들은 과거 이력으로 취급되어 대상 경로를 직접
+   명시했을 때에만 검사됩니다.
 
-2. **결정론적 수정을 적용합니다.**
+2. **결정론적 자동 수정 적용:**
 
    ```sh
    uv run devkit rules fix --dry-run   # preview
    uv run devkit rules fix
    ```
 
-   수정은 대상이 된 현재 파일만, 그리고 그 수정이 소유한 바이트만 파일 고유의 스타일로 다시 씁니다. 파일을
-   옮기거나 이름을 바꾸지 않고, 빠진 ID를 추측하지 않으며, 완료된 번들을 다시 쓰지 않습니다.
+   자동 수정은 지정된 현재 파일 내에서 해당 규칙이 관할하는 바이트 영역만 파일 본래의 서식 스타일에 맞추어 안전하게 재작성합니다.
+   임의로 파일을 이동하거나 이름을 변경하지 않으며, 누락된 ID를 임의로 추측하지 않고, 이미 완료된 스펙 번들은 절대 건드리지 않습니다.
 
-3. **다시 검사합니다.** `devkit rules check`를 다시 실행하면 아무것도 보고되지 않아야 합니다.
+3. **재검사:** `devkit rules check`를 다시 실행하여 위반 사항이 완전히 해소되었는지 확인합니다.
 
-4. **커밋합니다.** 내장된 `rules-check` 게이트가 스테이징된 트리 그대로(`devkit rules check --staged`와 같은 방식)를
-   평가하고 커밋을 받아들입니다. 스테이징되지 않은 수정은 판정에 영향을 주지 못합니다.
+4. **커밋 생성:** 기본 내장된 `rules-check` 커밋 게이트가 Git 인덱스에 스테이징된 트리 상태(`devkit rules check --staged` 기준)를
+   엄밀히 평가하여 커밋을 승인합니다. 작업 트리에 남아 있는 미스테이징 변경 사항은 게이트 판정에 일절 영향을 주지 않습니다.
 
-5. **풀 리퀘스트를 엽니다.** CI는 `devkit rules check --ci --base <ref>`를 실행해 브랜치 전체를 머지 베이스와 같은
-   방식으로 비교해 판정합니다.
+5. **풀 리퀘스트 생성 및 원격 검증:** CI 파이프라인에서 `devkit rules check --ci --base <ref>` 명령을 실행하여, 머지 베이스(merge base)
+   대비 브랜치의 모든 변경 사항을 동일한 규칙으로 철저히 검증합니다.
 
-규칙이 무엇을 검사하고 직접 어떻게 고치는지 알고 싶다면 `uv run devkit rules explain <RULE-id>`를 실행하십시오.
+특정 규칙의 상세 검사 항목과 수동 수정 가이드를 확인하려면 `uv run devkit rules explain <RULE-id>`를 실행하십시오.
 
-## 규칙이 찾아내는 것
+## 주요 스펙 규칙과 검사 항목
 
-11개의 규칙은
+11가지 규칙 목록은
 [`CAP-GOV-spec-rules`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/governance/CAP-GOV-spec-rules.md) (영어 원문)에
-정리되어 있습니다. 가장 자주 만나는 규칙은 다음과 같습니다.
+정리되어 있습니다. 가장 자주 접하게 되는 규칙은 다음과 같습니다.
 
-| 규칙 | 보고되는 경우 | 수정 |
+| 규칙 | 감지되는 위반 상황 | 자동 수정 지원 |
 | --- | --- | --- |
-| `RULE-document-reference` | ID가 해석되지 않거나, 참조가 대괄호 형식 또는 별칭(alias)을 사용함 | 일부 자동 수정 |
-| `RULE-id-convention` | 파일 경로, `id`, `area`, 제목 토큰이 서로 맞지 않음 | 경로가 올바르면 자동 수정 |
-| `RULE-traceability-link` | 유스케이스가 나열한 capability가 그 유스케이스를 역으로 나열하지 않음 | 역방향 ID 추가 |
-| `RULE-spec-lifecycle` | `spec.md`, `tasks.md`, `reconcile.md`의 상태가 서로 다름 | `status: completed` 설정 |
-| `RULE-reconcile-contract` | `resolved` 기록이 diff에서 바뀌지 않은 `modified` 대상을 주장함 | 직접 수정 |
-| `RULE-code-entrypoints` | `entrypoints` 경로가 더 이상 존재하지 않음 | 직접 수정 |
+| `RULE-document-reference` | 문서 ID가 해석되지 않거나, 참조가 대괄호 형식 또는 별칭(alias)을 사용함 | 부분 자동 수정 지원 |
+| `RULE-id-convention` | 파일 경로, `id`, `area`, 제목 토큰이 서로 일치하지 않음 | 파일 경로가 올바르면 자동 수정 |
+| `RULE-traceability-link` | 유스케이스가 참조하는 capability에서 해당 유스케이스를 역방향으로 참조하지 않음 | 역방향 참조 ID 자동 추가 |
+| `RULE-spec-lifecycle` | `spec.md`, `tasks.md`, `reconcile.md`의 생명주기 상태가 서로 불일치함 | `status: completed`로 동기화 |
+| `RULE-reconcile-contract` | `resolved` 기록에 명시된 `modified` 대상 문서가 실제 Git diff에서 변경되지 않음 | 수동 수정 필요 |
+| `RULE-code-entrypoints` | `entrypoints`에 선언된 소스 코드 파일 경로가 존재하지 않음 | 수동 수정 필요 |
 
-문서가 ID를 얻는 방법과 참조가 해석되는 방식은 문서 모델인
-[`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/documents/CAP-DOCS-document-model.md) (영어 원문)이
-정의합니다([문서 영역](../areas/documents.md) 참고).
+문서가 ID를 부여받는 체계와 참조가 해석되는 원리는 문서 모델인
+[`CAP-DOCS-document-model`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/documents/CAP-DOCS-document-model.md) (영어 원문)에
+정의되어 있습니다([문서](../areas/documents.md) 영역 참고).
 
-## 문제가 생겼을 때
+## 문제 해결
 
-- **실행이 `SPEC_CONFIG_INVALID`(종료 코드 `2`)로 실패합니다.** `.devkit/config.toml`의 `[tool.spec]` 테이블이
-  잘못되었습니다. 예를 들어 알 수 없는 키가 있는 경우입니다. 이는 위반이 아닙니다. 어떤 문서가 어떤 규약을
-  따르는지 규칙이 알 수 없으므로 아무것도 판정하지 않습니다. 테이블을 고친 뒤 다시 실행하십시오.
-- **`fix` 이후에도 위반이 `open`으로 남습니다.** 결정론적인 수정 방법이 없는 경우입니다. 어떤 문서도 선언하지 않은
-  ID에 대한 참조, 존재하지 않는 진입점, 누락된 reconcile 증거 등이 그렇습니다. 수정은 의도적으로 이를 그대로
-  둡니다. 안내된 조치를 직접 수행한 뒤 다시 검사하십시오.
-- **건드리지 않은 capability 때문에 커밋이 거부됩니다.** 어떤 capability가 `entrypoints`에 선언한 코드를 삭제하거나
-  옮겼기 때문이며, `RULE-code-entrypoints`는 삭제된 경로를 선언한 모든 문서를 보고합니다. 코드를 복원하거나,
-  선언이 옮겨진 코드를 가리키도록 하거나, 선언을 제거한 뒤 다시 커밋하십시오. 경로 계약은
-  [`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)입니다
-  ([추적성 영역](../areas/traceability.md) 참고).
-- **`reconcile.md` 때문에 커밋이 거부됩니다.** 이 커밋이 바꾸지 않는 `modified` 대상을 둔 채 기록을 `resolved`로
-  표시했기 때문입니다. Living Spec 수정을 기록과 함께 스테이징하십시오.
-- **게이트가 `GATE_RULES_FAILED`로 거부합니다.** 각 `[DETAIL]` 줄이 규칙, 파일, 줄 번호를 알려 주며, 규칙에
-  수정 방법이 있으면 `fix:` 힌트도 함께 나옵니다. 반면 `RULES_RUN_FAILED`는 실행이 커밋을 전혀 판정하지 못했다는
-  뜻입니다(예: 새 워크트리에 관리 파일(managed files)인 규칙 파일이 없는 경우이며, `devkit sync`를 실행하면 됩니다).
-  게이트 동작은
-  [`CAP-GATE-commit-gates`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/gate/CAP-GATE-commit-gates.md)
-  ([게이트 영역](../areas/gate.md) 참고)에 정의되어 있습니다.
+- **`SPEC_CONFIG_INVALID` 에러로 명령어 실행 실패 (종료 코드 `2`):** `.devkit/config.toml`의 `[tool.spec]` 테이블 설정에 알 수 없는 키가
+  포함되는 등 구문 오류가 있는 경우입니다. 이는 개별 문서의 규칙 위반이 아니라 설정 오류입니다. 규칙 엔진이 문서별 적용 규약을 판별할 수
+  없으므로 아무런 검사도 진행되지 않습니다. 설정 테이블을 올바르게 수정한 후 다시 실행하십시오.
+- **자동 수정(`fix`) 실행 후에도 위반 사항이 `open` 상태로 남아 있는 경우:** 모호함 없이 기계적으로 수정할 수 없는 위반 사항입니다. 예를 들어
+  저장소 어디에도 선언되지 않은 미식별 ID 참조, 삭제된 코드 엔트리포인트, 필수 누락된 reconcile 증빙 등이 이에 해당합니다. 자동 수정 기능은
+  위험한 임의 수정을 방지하기 위해 이러한 항목을 변경하지 않고 보존합니다. 안내된 조치 가이드를 참고하여 수동으로 수정한 뒤 다시 검사하십시오.
+- **직접 수정하지 않은 capability 문서 때문에 커밋이 거부되는 경우:** 소스 코드 정리 중 특정 capability 문서의 `entrypoints`에 등록되어
+  있던 코드를 삭제하거나 다른 위치로 이동했기 때문입니다. `RULE-code-entrypoints`는 유효하지 않은 경로를 선언하고 있는 모든 문서를 즉시
+  감지합니다. 해당 코드를 복원하거나, 문서의 엔트리포인트 선언을 이동된 새 코드 경로로 갱신하거나, 불필요한 선언을 제거한 뒤 다시 커밋하십시오.
+  코드 경로 추적성 계약에 대한 자세한 내용은
+  [`CAP-TRACE-code-entrypoints`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/traceability/CAP-TRACE-code-entrypoints.md) (영어 원문)에
+  정의되어 있습니다([추적성](../areas/traceability.md) 영역 참고).
+- **`reconcile.md` 관련 오류로 커밋이 거부되는 경우:** 이번 커밋에서 실제로 수정하지 않은 문서를 `modified` 대상으로 지정한 채 reconcile
+  기록을 `resolved` 상태로 표시했기 때문입니다. Living Spec 문서의 실제 수정 내용을 해당 reconcile 기록과 반드시 함께 스테이징하여 커밋하십시오.
+- **커밋 게이트가 `GATE_RULES_FAILED` 에러로 커밋을 거부하는 경우:** `[DETAIL]` 라인마다 위반된 규칙, 파일 경로, 줄 번호가 상세히 출력되며,
+  자동 수정이 가능한 경우 `fix:` 힌트가 함께 제공됩니다. 만약 `RULES_RUN_FAILED`가 발생했다면 규칙 검사 엔진 자체가 정상 실행되지 못했음을
+  의미합니다 (예: 새로운 작업 워크트리 환경에 관리 파일인 규칙 파일들이 아직 배포되지 않은 상태이며, 이 경우 `devkit sync`를 먼저 실행해야 합니다).
+  커밋 게이트 메커니즘은
+  [`CAP-GATE-commit-gates`](https://github.com/mjkimR/devkit/blob/v0.1.4/docs/capabilities/gate/CAP-GATE-commit-gates.md) (영어 원문)
+  ([커밋 게이트](../areas/gate.md) 영역 참고)에 정의되어 있습니다.
 
-## 결과
+## 기대 효과 및 완료 상태
 
-대상 파일과 커밋된 트리가 모든 스펙 규칙을 통과하고, 링크와 상태는 각 파일 고유의 스타일로 작성되며, 완료된
-번들은 손대지 않은 상태로 남습니다. 거부된 커밋은 커밋을 만들지 않으므로, 절반만 검사된 내용이 반영되는 일은
-없습니다.
+지정된 대상 파일과 커밋된 트리 전체가 모든 스펙 거버넌스 규칙을 완벽히 통과하며, 문서 간 링크와 생명주기 상태는 각 파일 고유의 서식
+스타일에 맞추어 단정하게 정리됩니다. 이미 완료된 스펙 번들은 안전하게 보존됩니다. 규칙 검사에서 거부된 커밋은 Git 이력에 아예 생성되지
+않으므로, 불완전하게 검증된 변경 사항이 저장소에 섞여 들어갈 위험이 사전에 완벽히 차단됩니다.
