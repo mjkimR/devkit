@@ -84,9 +84,7 @@ def test_a_split_keeps_provenance_rewires_the_edge_and_retires_the_feedback(tmp_
 
     # Edges to children are written after the children exist, in the same Backlog change.
     later = root / "docs/proposals/PROP-later/proposal.md"
-    later.write_text(
-        later.read_text(encoding="utf-8").replace("[PROP-wide]", "[PROP-wide-core]", 1), encoding="utf-8"
-    )
+    later.write_text(later.read_text(encoding="utf-8").replace("[PROP-wide]", "[PROP-wide-core]", 1), encoding="utf-8")
     # Feedback retirement: the open file moves whole, once, with its ID and status; the parent is deleted.
     source = root / "docs/proposals/PROP-wide/feedback/wide-observation.md"
     target = root / "specs/2026-10/feedback/20261026-wide-observation.md"

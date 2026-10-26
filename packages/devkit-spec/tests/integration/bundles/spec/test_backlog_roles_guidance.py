@@ -22,7 +22,10 @@ def test_triage_is_delegated_above_five_open_items_on_a_native_host() -> None:
     hygiene = text("playbooks/feedback-hygiene/SKILL.md")
     assert "When the listing has more than 5 items and the host runs the `triage` role natively" in hygiene
     assert "from a clean checkout (`git status --porcelain` empty)" in hygiene
-    assert "Otherwise, or on a dirty checkout outside a task worktree, run this step inline" in hygiene
+    assert (
+        "Otherwise run this step inline; on a dirty checkout, delegate from a clean task worktree or run it inline"
+        in hygiene
+    )
     assert "its body names the `triage` role when one was used" in hygiene
 
 
@@ -45,6 +48,12 @@ def test_the_decomposer_runs_from_backlog_only_and_the_host_verifies_and_applies
     assert "`needs_decompose` and `XL` drafts (decompose first with the `decomposer`" in text(
         "skills/spec-next/references/next-work.md"
     )
+
+
+def test_the_backlog_commit_rule_stays_in_requests_and_decomposition() -> None:
+    backlog = raw(BACKLOG)
+    requests = backlog.split("## Requests and decomposition", 1)[1].split("\n## ", 1)[0]
+    assert "- Commit Backlog edits in the current checkout" in requests
 
 
 def test_spec_delegate_names_both_roles_and_their_payload() -> None:

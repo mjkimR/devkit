@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-del
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -46,3 +46,5 @@ spec-delegate SKILL.md step 4: "a support role leaves `git status --short` uncha
 challenger-01 finding 3 (PROP-backlog-subagent-roles envelopes): status-code comparison misses a role editing a file
 that is already modified; Backlog commits in the current checkout with no clean-tree requirement.
 ```
+
+- **Disposition**: SPEC-backlog-subagent-roles: resolved; `spec-delegate` steps 2 and 4 compare working-tree snapshots (a tree written from a temporary index) taken before and after a support role instead of `git status --short`, so a write to an already-modified or untracked file is detected; verified by `test_the_support_role_snapshot_sees_a_write_to_an_already_modified_file` (AC-05).

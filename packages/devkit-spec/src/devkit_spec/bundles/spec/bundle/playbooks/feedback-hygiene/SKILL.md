@@ -21,7 +21,7 @@ uv run devkit spec list feedback --status open --all-namespaces -n 0
 - When the listing has more than 5 items and the host runs the `triage` role natively, delegate the rest of this step
   and the Step 2 recommendation to it through `spec-delegate`, from a clean checkout (`git status --porcelain`
   empty); verify and present its return as the `spec` skill's `references/backlog.md` (Backlog roles) says.
-  Otherwise, or on a dirty checkout outside a task worktree, run this step inline.
+  Otherwise run this step inline; on a dirty checkout, delegate from a clean task worktree or run it inline.
 - Confirm each item's ownership (`repo`, `upstream`, `unknown`) from its target and evidence; do not ask the user.
 - Group items by `target`; a group shares one decision.
 - Order by `critical`, then `recurring: true`, then `blocked`, `workaround`, `noise`.

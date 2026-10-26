@@ -9,6 +9,7 @@ Backlog keeps queued requests as draft proposals, follow-ups as feedback and mil
 - Promote open feedback into drafts only through the `feedback-hygiene` playbook.
 - Decompose with `devkit spec proposal new <child> --decomposed-from PROP-<parent>`: keep the parent's `--milestone MS-<slug>`, choose each child's effort hints afresh, and delete the parent in the same commit after [feedback retirement](feedback-retirement.md).
 - Delegate the split to the `decomposer` (Backlog roles, below) only from Backlog and never on your own initiative: for a `needs_decompose` draft once its Planning return is merged, on the user's request to split a draft, and for an `XL` draft.
+- Commit Backlog edits in the current checkout, outside the worktree and PR policies, with only their agreed files. Commit a direct acceptance or a reclassification deletion only on the base checkout, once you know you can push to the base. Undo a stranded commit with `git revert`.
 
 ## The XL size gate
 
@@ -28,7 +29,6 @@ A decomposer `needs_input` on an `XL` draft means it was mis-sized: show the use
 3. **IDs**: every existing ID the return cites resolves with `devkit spec resolve`, or drop it and report it; a proposed child or milestone slug must not resolve. Write edges to children after the children exist, in the same commit.
 4. **Apply** with the existing procedures: `feedback-hygiene` Steps 2 and 3; `proposal new --decomposed-from` (with `--milestone`), `devkit spec proposal padr` and a materials copy for each inherited item the user keeps, the prerequisite disposition and the feedback retirement. Never assign the parent's open feedback to a child.
 5. **Record**: the Backlog commit body names the role used. Gates and milestone status changes stay with the user.
-- Commit Backlog edits in the current checkout, outside the worktree and PR policies, with only their agreed files. Commit a direct acceptance or a reclassification deletion only on the base checkout, once you know you can push to the base. Undo a stranded commit with `git revert`.
 
 ## Return from Planning for decomposition
 

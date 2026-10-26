@@ -83,7 +83,7 @@ flowchart BT
 | **Host** | Main agent in local session | Drives Backlog, inline Planning, worktree prep, worker delegation, local integration. | Inferring approvals, forging worker envelopes. |
 | **Planning Worker** | One-shot proposal planner | Drafts proposals, PADRs, records worker questions and answer envelopes. | Modifying files outside the proposal Unit, pushing/merging. |
 | **Development Worker**| One-shot unit developer | Authors specs, implements code, updates Living Spec and reconcile, runs review subagents. | Broadening scope outside the Unit, weakening tests. |
-| **Subagent Roles** | `scout`, `challenger`, `code-reviewer`, `reconcile-reviewer` | Read-only inspection, criticism, code and document verification; returns structured messages. | Writing envelope files to disk, modifying production code. |
+| **Subagent Roles** | `scout`, `challenger`, `code-reviewer`, `reconcile-reviewer`, `triage`, `decomposer` | Read-only inspection, criticism, code and document verification, Backlog feedback grouping and draft split proposals; returns structured messages. | Writing envelope files to disk, modifying production code. |
 | **Cloud Agent** | Remote runner agent | Mirrors worker execution inside cloud PR runs. | Handling local conversation prompts. |
 
 ### Role-to-Execution Actor Mapping

@@ -1051,7 +1051,7 @@
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "100bfe638a973545866ac794927ae4cb2598221feef3b2232b44ed1a4c4490c3"
+      "sha256": "65a40d692201dcbbbfecc74dfacfaa7fc18b6c8437f9276306da6cb8e31e8663"
     },
     ".agents/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1275,7 +1275,7 @@
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "100bfe638a973545866ac794927ae4cb2598221feef3b2232b44ed1a4c4490c3"
+      "sha256": "65a40d692201dcbbbfecc74dfacfaa7fc18b6c8437f9276306da6cb8e31e8663"
     },
     ".claude/skills/spec/references/branches.md": {
       "mode": 420,
@@ -1619,7 +1619,7 @@
     },
     ".devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md": {
       "mode": 420,
-      "sha256": "2f72280e74255af32706f8bbf1ba8a23cce496c7ec4b3e7f3ca9f3703dc295dd"
+      "sha256": "a469415794975cd329597257f7a487da1a58c23a7ab7bcf72d0aa40bbb58d26d"
     },
     ".devkit/managed/spec/rules/code_entrypoints/guide.md": {
       "mode": 420,
@@ -1903,7 +1903,7 @@
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
-      "sha256": "100bfe638a973545866ac794927ae4cb2598221feef3b2232b44ed1a4c4490c3"
+      "sha256": "65a40d692201dcbbbfecc74dfacfaa7fc18b6c8437f9276306da6cb8e31e8663"
     },
     ".devkit/managed/spec/skills/spec/references/branches.md": {
       "mode": 420,

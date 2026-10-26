@@ -56,7 +56,7 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 - **1a.** The user asks for orientation instead of stating an intent, and no Unit is in progress: the agent filters
   the queued drafts by their direct prerequisites on one local base snapshot, ranks the eligible ones by milestone,
   priority and size, recommends one with Planning, a direct acceptance or a session reclassification, and reports
-  decomposition and milestone cleanup as Backlog actions (`CAP-HARN-agent-guidance`); intent approval and milestone
+  decomposition (a `needs_decompose` or `XL` draft, through the `decomposer`) and milestone cleanup as Backlog actions (`CAP-HARN-agent-guidance`); intent approval and milestone
   transitions stay with the user; the use case ends.
 - **1b.** The message is not a new task intake (a continuation, a same-task follow-up, an explicit ID or rule
   remediation, a step inside a running playbook, an information-only question, a message from another agent, or the
@@ -64,7 +64,8 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
   at step 2.
 - **1c.** A candidate's description names the requested operation and its scope fits: the agent names it in one line
   with the classification statement and waits; on the user's confirmation, which is the explicit invocation, it
-  follows the playbook and the use case ends; on a decline it never offers that candidate again in the conversation
+  follows the playbook (`feedback-hygiene` delegates its grouping to the read-only `triage` role above 5 open items on
+  a host that runs it natively) and the use case ends; on a decline it never offers that candidate again in the conversation
   (`CAP-HARN-agent-guidance`, `CAP-DIST-context-and-playbooks`); resumes at step 2.
 - **2a.** The effective policy is invalid (a `[tool.spec]` key outside the table, or a `plan-intent` or main
   boundary policy other than `ask` or `auto`): the system refuses with `SPEC_CONFIG_INVALID`
@@ -75,8 +76,9 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 - **3b.** The direction must be decided first (`proposal` depth): the agent creates a draft proposal bound to
   `sdd-proposal` and records `plan-intent` as the user's confirmation of the draft in Backlog
   (`CAP-DLV-delivery-workflows`); the use case ends and `UC-incubate-and-hand-off-a-proposal` continues.
-- **3c.** The request will not start now, or must be decomposed: the agent keeps it as one or more draft proposals in
-  Backlog, optionally assigns an existing global milestone, and preserves the origin in `decomposed_from` or
+- **3c.** The request will not start now, or must be decomposed (it would need two or more specs or a different
+  `task_kind`, `size: XL`): the agent keeps it as one or more draft proposals in
+  Backlog, a rough `XL` draft only until it is decomposed before `plan-intent`, optionally assigns an existing global milestone, and preserves the origin in `decomposed_from` or
   `supersedes` through handoff, without an external tracker (`CAP-HARN-agent-guidance`); the use case ends.
 - **3d.** The change adds no behavior and restructures several areas at once (`overall-refactor`): the agent runs
   `sdd-overall-refactor` in `direct` mode with the user, without a Unit, proposal or spec bundle
