@@ -447,6 +447,12 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
 
 <Specify new or modified UC documents, their scenarios and updated acceptance criteria.>
 
+### Screens (docs/ux/)
+
+<Only when the proposal changes what a person sees: one draft per screen, modal or panel in the ux template's shape
+(ux-writing), with the use case step citations and docs/steering/ux-objects.md rows they need. Write IDs this proposal
+creates as plain text. Drop this subsection otherwise.>
+
 ---
 
 ## 3. Architecture & Decision Impact (docs/architecture/ & docs/decisions/)

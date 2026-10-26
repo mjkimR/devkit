@@ -16,11 +16,11 @@ plan: PLAN-ux-documentation
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/features/governance/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/ux_links/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/ux_coverage/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml, packages/devkit-spec/tests/
   - _Requirements: AC-04, AC-05, AC-06, AC-07, AC-08, AC-09, AC-10_
   - **Verification**: `uv run devkit rules test packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/ux_links` and the same for `ux_coverage`
-- [ ] **Task 1.3**: Template, seed, `ux-writing` and `usecase-writing` guidance, with guidance tests
+- [x] **Task 1.3**: Template, seed, `ux-writing` and `usecase-writing` guidance, with guidance tests
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/, packages/devkit-spec/tests/
   - _Requirements: AC-11, AC-12_
   - **Verification**: `just test devkit-spec tests/integration/bundles/spec`
-- [ ] **Task 1.4**: The `ux-reviewer` role, the `spec-ux-review` skill and the workflow guidance (specify, sync, effort, proposal acceptance, blueprint), with role-contract and guidance tests
+- [x] **Task 1.4**: The `ux-reviewer` role, the `spec-ux-review` skill and the workflow guidance (specify, sync, effort, proposal acceptance, blueprint), with role-contract and guidance tests
   - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/, packages/devkit-spec/src/devkit_spec/features/proposals/, packages/devkit-spec/tests/, .devkit/installation.json, AGENTS.md
   - _Requirements: AC-13, AC-14_
   - **Verification**: `just test devkit-spec tests/integration/bundles/spec tests/integration/features/proposals` and `uv run devkit sync --check`

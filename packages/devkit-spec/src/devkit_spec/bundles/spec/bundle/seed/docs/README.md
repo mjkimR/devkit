@@ -12,6 +12,7 @@ This project manages its documentation based on **Spec-Driven Development (SDD)*
 | **`decisions/`** | Architecture Decisions (ADR) | Context and rationale for critical technology selection and structural decisions |
 | **`capabilities/`** | System Capabilities (WBS) | Permanent functional capabilities and business rules partitioned by area |
 | **`usecases/`** | Use Cases | How each actor reaches a goal: main success scenario, extensions, postconditions, acceptance criteria (Given-When-Then) |
+| **`ux/`** | UX Documents | What a person sees and operates: one screen, modal or panel per document, linked from the use case steps it serves |
 | **`materials/`** | Reference & Spikes | Technical spikes, benchmarks, external libraries, competitor analysis reports |
 | **`development/`** | Development & Collaboration | Local environment setup, Git workflow, commit/PR conventions, CI/CD pipelines |
 | **`steering/`** | Steering Documents | Project-wide background read on demand: `glossary.md` (ubiquitous terminology), `glossary.yaml` (search synonyms) and one Markdown file per further topic (product, style) |

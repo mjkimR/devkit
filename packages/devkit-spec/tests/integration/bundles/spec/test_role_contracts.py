@@ -12,7 +12,7 @@ from devkit_dist.features.distribution.services.bundles.subagents import read_co
 from spec_support.bundle_text import BUNDLE, flat, raw, text
 
 WORKERS = ("development-worker", "planning-worker")
-ROLES = ("challenger", "reconcile-reviewer", "code-reviewer", "scout", *WORKERS)
+ROLES = ("challenger", "reconcile-reviewer", "code-reviewer", "ux-reviewer", "scout", *WORKERS)
 DELEGATE = BUNDLE / "skills/spec-delegate/SKILL.md"
 WORKER_RESULTS = BUNDLE / "skills/spec-delegate/references/worker.md"
 ORCHESTRATE = BUNDLE / "skills/spec-orchestrate/SKILL.md"
@@ -24,6 +24,7 @@ EFFORT_PRESETS: dict[str, tuple[str, str | None]] = {
     "scout": ("light-medium", "medium"),
     "reconcile-reviewer": ("light-medium", "medium"),
     "code-reviewer": ("general-high", "high"),
+    "ux-reviewer": ("general-high", "high"),
     "challenger": ("high-reasoning", "high"),
     "planning-worker": ("general-high", None),
     "development-worker": ("general-high", None),
@@ -107,6 +108,46 @@ def test_a_contract_body_holds_only_the_role_prompt(role: str) -> None:
 def test_reviewer_and_reconciler_keep_the_skills_the_main_session_shares() -> None:
     assert _contract("code-reviewer")[0]["skill"] == "spec-review"
     assert _contract("reconcile-reviewer")[0]["skill"] == "spec-sync"
+
+
+def test_the_ux_reviewer_is_an_isolated_read_only_role_bound_to_its_skill() -> None:
+    # ADR-ux-review-before-code: a fresh, read-only context; optional, never a stage; no severity.
+    metadata, body = _contract("ux-reviewer")
+    assert metadata["skill"] == "spec-ux-review"
+    assert (metadata["x-execution"], metadata["x-invocation"], metadata["x-git-actions"]) == (
+        "isolated",
+        "optional",
+        ["read"],
+    )
+    hosts = metadata["hosts"]
+    assert hosts["claude-code"]["disallowedTools"] == ["Write", "Edit"]
+    assert hosts["codex"]["sandbox_mode"] == "read-only"
+    assert hosts["antigravity"]["commandExecutionPolicy"] == "sandbox"
+    body = flat(body)
+    assert "Modify, stage and commit nothing" in body and "Give no finding a severity" in body
+    skill = text("skills/spec-ux-review/SKILL.md")
+    for phrase in (
+        "Will the actor try to do the right thing here?",
+        "Will the actor notice that the control for it is available?",
+        "Will the actor connect the control with the goal?",
+        "will the actor see progress toward the goal?",
+        "Score each screen 0, 1 or 2",
+        "**R1 task fit**",
+        "**R2 one primary region**",
+        "**R3 states**",
+        "**R4 feedback**",
+        "**R5 terms**",
+        "**R6 objects**",
+        "`link check (reviewer judgment)`",
+        "keep it out of the rubric",
+        "Findings carry no severity",
+        "--kind ux-review",
+        "At most two rounds per unit",
+        "`resolution: resolved`, or `resolution: waived` and a `waiver` reason",
+        "never a stage",
+    ):
+        assert phrase in skill, phrase
+    assert "severity:" not in skill
 
 
 def test_support_roles_shell_access() -> None:
