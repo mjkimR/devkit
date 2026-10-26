@@ -81,8 +81,8 @@ decompositions and the drafts to come, not in today's queue.
 
 ## 3. Proposed Design & Impact
 
-Lines marked *(provisional: q5)* or *(provisional: q6)* follow the recommended answer of that question and are rewritten if the user chooses
-another option.
+Lines marked *(provisional: q5)* or *(provisional: q6)* follow the recommended answer of that question and are
+rewritten if the user chooses another option.
 
 ### Roles
 
@@ -233,8 +233,8 @@ The `challenger` matrix, since neither role writes even `materials/` (challenger
 - `ARCH-04-1-ecosystem-boundaries`: the Subagent Roles row.
 - `UC-route-development-intent`: the optional `triage` delegation and the size wording.
 - Bundle text: both contracts, `bundle.toml`, the `spec-delegate` payload table, `feedback-hygiene` Step 1, the Backlog
-  reference's decomposition and reclassification paragraphs, the `spec` skill's plan-intent step, `planning.md` step 1, `spec-next`'s Backlog actions,
-  `sdd-proposal.md`, the proposal template and the seed README.
+  reference's decomposition and reclassification paragraphs, the `spec` skill's plan-intent step, `planning.md`
+  step 1, `spec-next`'s Backlog actions, `sdd-proposal.md`, the proposal template and the seed README.
 - Code: the `devkit spec proposal accept --direct` conditions, the `plan-` attach check, the scaffold comment and their
   tests. No change to `devkit-agt` or `devkit-dist` *(provisional: q5)*; the viewer's size
   filter keeps the same values; `handbook/` is a release snapshot outside this work.
