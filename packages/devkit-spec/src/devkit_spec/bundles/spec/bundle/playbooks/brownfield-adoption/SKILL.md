@@ -14,7 +14,7 @@ and record any other deferral as a `.devkit/config.toml` entry the user decided.
 
 ## Prerequisites
 
-- The user asked for this playbook; the request authorizes the moves.
+- The user invoked or confirmed this playbook; that invocation authorizes the moves.
 - The project uses `uv`, and the current state is committed as a rollback point.
 
 ## Step 1: Install and take the legacy set

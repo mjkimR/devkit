@@ -259,7 +259,9 @@ def test_generated_exact_invocation_guidance():
         "source.path",
         "unavailable approval UI is not approval",
         "External systems own",
-        "Ordinary task requests",
+        # ADR-spec-intake-playbook-discovery: a confirmed offer is explicit invocation; the scope stays the task.
+        "does not activate\nplaybook search for future tasks",
+        "that confirmation is\nthe explicit invocation",
     ]:
         assert phrase in BODY
 

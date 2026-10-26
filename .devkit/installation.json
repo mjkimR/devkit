@@ -323,6 +323,7 @@
         ".agents/skills/spec/references/git-policy.md",
         ".agents/skills/spec/references/milestone-completion.md",
         ".agents/skills/spec/references/planning.md",
+        ".agents/skills/spec/references/playbooks.md",
         ".agents/skills/spec/references/review-loop.md",
         ".agents/skills/spec/references/source-feedback.md",
         ".agents/skills/spec/references/worker-records.md",
@@ -339,6 +340,7 @@
         ".claude/skills/spec/references/git-policy.md",
         ".claude/skills/spec/references/milestone-completion.md",
         ".claude/skills/spec/references/planning.md",
+        ".claude/skills/spec/references/playbooks.md",
         ".claude/skills/spec/references/review-loop.md",
         ".claude/skills/spec/references/source-feedback.md",
         ".claude/skills/spec/references/worker-records.md",
@@ -355,6 +357,7 @@
         ".devkit/managed/spec/skills/spec/references/git-policy.md",
         ".devkit/managed/spec/skills/spec/references/milestone-completion.md",
         ".devkit/managed/spec/skills/spec/references/planning.md",
+        ".devkit/managed/spec/skills/spec/references/playbooks.md",
         ".devkit/managed/spec/skills/spec/references/review-loop.md",
         ".devkit/managed/spec/skills/spec/references/source-feedback.md",
         ".devkit/managed/spec/skills/spec/references/worker-records.md",
@@ -806,7 +809,7 @@
     },
     ".agents/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
-      "sha256": "c53c603465b7f6f261094dfdf20f343d5059be58b65327b7ffe8e4d2b5067230"
+      "sha256": "f1e7097a49a619dd92df070e1adee703a24968d6581946a1854f269a861b9422"
     },
     ".agents/skills/devkit-playbook/agents/openai.yaml": {
       "mode": 420,
@@ -866,7 +869,7 @@
     },
     ".agents/skills/spec-next/SKILL.md": {
       "mode": 420,
-      "sha256": "09af65d965acf4cedcaf867694f7b264f83dc1895ac0f819b658e7f371d46be6"
+      "sha256": "25fd107b414ba06579b07ae470b21c77d6e1db90ecdf7571fa9bab316b13be78"
     },
     ".agents/skills/spec-next/references/next-work.md": {
       "mode": 420,
@@ -934,7 +937,7 @@
     },
     ".agents/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "a6b84636e89a8c383f9daf102e15b853ba2f8cd1f892ec3c5dd117f363496d8e"
+      "sha256": "5cf36dfda3aec7c023d1a7bfaa5b6472114a5aea552e95bc47b9f8449f03b5de"
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -980,6 +983,10 @@
       "mode": 420,
       "sha256": "b234d2f745be9125fd17a4a98a97e45f21bf80f798c3dc7915bff718f0d01ca1"
     },
+    ".agents/skills/spec/references/playbooks.md": {
+      "mode": 420,
+      "sha256": "cb05e70ce5c6ddc22d88c2a8922b5f99c9693764564ab2ca6e1940a9b99dc04d"
+    },
     ".agents/skills/spec/references/review-loop.md": {
       "mode": 420,
       "sha256": "7b2f976a683640d23c6a62efe0299343587191849766241fc016d847e1e4bd0e"
@@ -1022,7 +1029,7 @@
     },
     ".claude/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
-      "sha256": "753188c41f76b385551bf7a4d577c3a09dd96dbb561fa819f23ec0a07fabb3e7"
+      "sha256": "1b36a8e18bbbdb322239c6cf8eb5e33755fd73d569f30fd5cae91419d48922c3"
     },
     ".claude/skills/devkit-workflow/SKILL.md": {
       "mode": 420,
@@ -1074,7 +1081,7 @@
     },
     ".claude/skills/spec-next/SKILL.md": {
       "mode": 420,
-      "sha256": "09af65d965acf4cedcaf867694f7b264f83dc1895ac0f819b658e7f371d46be6"
+      "sha256": "25fd107b414ba06579b07ae470b21c77d6e1db90ecdf7571fa9bab316b13be78"
     },
     ".claude/skills/spec-next/references/next-work.md": {
       "mode": 420,
@@ -1138,7 +1145,7 @@
     },
     ".claude/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "a6b84636e89a8c383f9daf102e15b853ba2f8cd1f892ec3c5dd117f363496d8e"
+      "sha256": "5cf36dfda3aec7c023d1a7bfaa5b6472114a5aea552e95bc47b9f8449f03b5de"
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -1184,6 +1191,10 @@
       "mode": 420,
       "sha256": "b234d2f745be9125fd17a4a98a97e45f21bf80f798c3dc7915bff718f0d01ca1"
     },
+    ".claude/skills/spec/references/playbooks.md": {
+      "mode": 420,
+      "sha256": "cb05e70ce5c6ddc22d88c2a8922b5f99c9693764564ab2ca6e1940a9b99dc04d"
+    },
     ".claude/skills/spec/references/review-loop.md": {
       "mode": 420,
       "sha256": "7b2f976a683640d23c6a62efe0299343587191849766241fc016d847e1e4bd0e"
@@ -1226,7 +1237,7 @@
     },
     ".devkit/managed/_devkit/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
-      "sha256": "c53c603465b7f6f261094dfdf20f343d5059be58b65327b7ffe8e4d2b5067230"
+      "sha256": "f1e7097a49a619dd92df070e1adee703a24968d6581946a1854f269a861b9422"
     },
     ".devkit/managed/_devkit/skills/devkit-playbook/agents/openai.yaml": {
       "mode": 420,
@@ -1358,7 +1369,7 @@
     },
     ".devkit/managed/devkit/AGENTS.md": {
       "mode": 420,
-      "sha256": "efddbb9f28f23a46ab901ebb13754a306983842a10869adc76446c85bcb82a16"
+      "sha256": "c9f8983ef04dd818e4c39320dbd10b8efadf50578dcc6c52c45829d93e34b259"
     },
     ".devkit/managed/devkit/bundle.toml": {
       "mode": 420,
@@ -1414,11 +1425,11 @@
     },
     ".devkit/managed/spec/bundle.toml": {
       "mode": 420,
-      "sha256": "120a0dab1c42ae159785e4a47259a43f391688d12879bd35ef2598392c997a2d"
+      "sha256": "98c1a69f94111b590aa4b42ec880bf46176335989a6a5878c9204ef6e5f96b00"
     },
     ".devkit/managed/spec/guidance/spec-pointer.md": {
       "mode": 420,
-      "sha256": "196ef5be773845c62a7e409666370746b8866d2ba5fae99811fb250361ec3d94"
+      "sha256": "0824c29dc1851de71c07e464634425fea16d1f56c61739f1dac716d16c55cb70"
     },
     ".devkit/managed/spec/instructions/architecture-writing.md": {
       "mode": 420,
@@ -1450,11 +1461,11 @@
     },
     ".devkit/managed/spec/playbooks/adr-compaction/SKILL.md": {
       "mode": 420,
-      "sha256": "47089229d856b81246afcb5e58c97a4cf2113e61afc52b1bde7cdf3ce5d29594"
+      "sha256": "93f550eb3c147fcf9091ef20ba21b63e26688a04b17a0cdbe9d18c655f65bde1"
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md": {
       "mode": 420,
-      "sha256": "573653794f01e50c221674cc8d893737c360e3fdebdfd73dfba62fcf4b0bca8a"
+      "sha256": "4eb49b35a4f440718c38875b415b05558798c7a8d1aa24b93c1478cfdfc9f859"
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/references/migration.md": {
       "mode": 420,
@@ -1462,7 +1473,7 @@
     },
     ".devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md": {
       "mode": 420,
-      "sha256": "d20839d292d5cabe6c8c1fd2d129933824ec42b78cb04f5991e723cd5027c702"
+      "sha256": "3558a0aec56c40fc53ee14419708e3d5e2257c56c851bf6ba69f49757f850dc1"
     },
     ".devkit/managed/spec/rules/code_entrypoints/guide.md": {
       "mode": 420,
@@ -1638,7 +1649,7 @@
     },
     ".devkit/managed/spec/skills/spec-next/SKILL.md": {
       "mode": 420,
-      "sha256": "09af65d965acf4cedcaf867694f7b264f83dc1895ac0f819b658e7f371d46be6"
+      "sha256": "25fd107b414ba06579b07ae470b21c77d6e1db90ecdf7571fa9bab316b13be78"
     },
     ".devkit/managed/spec/skills/spec-next/references/next-work.md": {
       "mode": 420,
@@ -1702,7 +1713,7 @@
     },
     ".devkit/managed/spec/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "a6b84636e89a8c383f9daf102e15b853ba2f8cd1f892ec3c5dd117f363496d8e"
+      "sha256": "5cf36dfda3aec7c023d1a7bfaa5b6472114a5aea552e95bc47b9f8449f03b5de"
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -1747,6 +1758,10 @@
     ".devkit/managed/spec/skills/spec/references/planning.md": {
       "mode": 420,
       "sha256": "b234d2f745be9125fd17a4a98a97e45f21bf80f798c3dc7915bff718f0d01ca1"
+    },
+    ".devkit/managed/spec/skills/spec/references/playbooks.md": {
+      "mode": 420,
+      "sha256": "cb05e70ce5c6ddc22d88c2a8922b5f99c9693764564ab2ca6e1940a9b99dc04d"
     },
     ".devkit/managed/spec/skills/spec/references/review-loop.md": {
       "mode": 420,
@@ -1833,7 +1848,7 @@
       "sha256": "35e3077b62c7c1a1ae36923e8109209b851ffa8dd558b51cda7d9305794869c5"
     }
   },
-  "guidance_block": "c9e64872c1574869d6c211b3ccdc442ab9b9967bec38fdcc5452fd66df30184d",
+  "guidance_block": "c2ea39af092e897996664d14350f22d7ffe2ae2812eda9ecf2ea2123f0d574e7",
   "packages": [
     {
       "bundle": "advisory",

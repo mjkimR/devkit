@@ -2,7 +2,7 @@
 id: SPEC-spec-playbook-discovery
 title: Task-aware playbook discovery through spec
 summary: Lets spec run one bounded playbook search at new task intake and offer a matching playbook in one line that the user confirms, with explicit skip cases; the generated devkit-playbook skill stays the generic explicit entry.
-status: planned
+status: in-progress
 created: 2026-10-26
 related_capabilities:
   - CAP-HARN-agent-guidance
@@ -69,8 +69,8 @@ that only an explicit request starts a playbook. `ADR-spec-intake-playbook-disco
   and before any Unit is created; it defines intake as `/spec <intent>` or a user's own message outside the agreed
   scope of the current task and excludes messages from another agent, hooks and stages `devkit workflow next` names;
   it runs exactly `devkit playbook search "<English query>" --limit 3 --max-bytes 4096` once per intake with the
-  query in canonical artifact nouns (ADR, feedback, Living Spec, proposal, playbook, rule, release) and no automatic
-  refinement, and the old sentence "Do not search or route to playbooks from `spec`" is absent.
+  query written as the requested operation on its artifact, in canonical artifact nouns (ADR, feedback, Living Spec,
+  proposal, playbook, rule, release), without qualifiers that only name the subject and with no automatic refinement, and the old sentence "Do not search or route to playbooks from `spec`" is absent.
 
 ### [AC-02] Skip cases and conversation-level stops
 
@@ -155,5 +155,10 @@ that only an explicit request starts a playbook. `ADR-spec-intake-playbook-disco
   prose, as the search contract defines no separate code for it.
 - The playbook prerequisite wording in the `maintenance` catalog is changed here; `PROP-review-refactor` and
   `PROP-release-handbook` adopt the same entry wording when they land (proposal §3a Interactions).
+- The query is led by the requested operation and drops subject-only qualifiers. With the `maintenance` catalog
+  synchronized, the literal positive control "write a maintenance playbook for spec-code drift reconciliation" ranks
+  `drift-reconciliation`, `brownfield-adoption` and `feedback-hygiene` in `hybrid` at `--limit 3` and cuts
+  `skill-authoring`; "write a playbook for drift reconciliation" keeps it second in both modes
+  (`materials/manual-run.md`). This refines how the canonical-noun query is written; limit, budget and ranking stay.
 - The skip table and selection rule stay in the `spec` skill body, not in the reference, so they hold on every intake
   without an extra read; the reference holds only what runs after a match.
