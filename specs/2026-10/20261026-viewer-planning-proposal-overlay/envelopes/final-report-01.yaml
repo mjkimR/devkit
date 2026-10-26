@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T23:55:23.558122Z'
+status: completed
+summary: 'Planning proposal overlay delivered: planning-proposals endpoint and source-scoped tree/blob (worktree > local branch > first remote-tracking, merged refs and the checkout''s own slug skipped, one worktree list + for-each-ref + cat-file --batch per scan, no fetch/gh/write); Dashboard and Proposals tab overlay in place with source badges after the checkout renders; ADR-viewer-planning-proposal-overlay partially replaces ADR-viewer-working-tree for proposals; CAP-VIEW-repository-viewer, reference and READMEs reconciled.'
+findings: []
+assumptions:
+- Merged plan refs are excluded as sources (decided inside the agreed scope after review-01; spec §6)
+- The Dashboard seeds each proposal list build with the last loaded overlay, then a fresh scan updates in place; a vanished source falls back to the checkout header
+- A Dashboard card now opens its proposal in the Proposals tab (SddViewer knowledge request scoped to its tab)
+checks:
+  tests: PASS just test-affected 135 passed; just viewer test 61 passed
+  build: PASS just viewer build and pack; devkit generated check viewer-assets current
+  lint: PASS just lint/check devkit-viewer; just viewer lint/check; just rules-check; devkit rules check --ci --base 4dc99db3
+diff_scope:
+  base: 4dc99db3bffbe6bb0c38b8fc63bdf37a786c3269
+  head: a48e207980884dbacc1265bfada38ff1a0ef5f08
