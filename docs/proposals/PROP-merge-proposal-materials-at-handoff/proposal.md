@@ -2,7 +2,7 @@
 id: PROP-merge-proposal-materials-at-handoff
 title: Merge existing proposal materials during handoff
 summary: "Allows proposal handoff to merge materials into an existing destination after a complete collision and path-safety preflight, preserving existing files and refusing conflicting content."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                       # draft | reviewing | accepted | rejected
 created_at: 2026-10-22
 target_area: delivery/
 priority: medium
