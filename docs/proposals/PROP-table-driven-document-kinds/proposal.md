@@ -140,8 +140,8 @@ Evidence is in `MAT-kind-facts-inventory` and `envelopes/scout-01.yaml`.
   the milestone row with its unit case in code, and the traceability pair is one explicit declaration
   (`envelopes/challenger-01.yaml` findings 8 and 10).
 - Open for the user: the path check of a new Living Spec kind and so the scope of the hypothesis (q1, challenger
-  finding 6), the source of the viewer's copy (q2), whether the drifted viewer link pattern is fixed here (q3) and
-  whether the wrong milestone path remediation is kept (q4, challenger finding 7).
+  finding 6), whether and how the viewer follows the table, including the drifted link pattern (q2), and whether
+  the wrong milestone path remediation is kept (q3, challenger finding 7).
 
 ## 4. Lifecycle & Retirement Criteria
 

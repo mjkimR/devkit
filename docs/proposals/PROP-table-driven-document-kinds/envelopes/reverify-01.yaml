@@ -1,0 +1,79 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T06:10:37.986864Z'
+status: completed
+review: challenger-01.yaml
+summary: Folded findings 1-5 and 8-11 into the material, PADR and proposal (fallback list, path-keyed facts, check-time accessor, characterization baseline, owns, field uniqueness, overlap, no position field, size tied to q2); findings 6 and 7 stay open as user questions q1 and q4.
+findings:
+- issue: The inventory names one binary fallback (id_convention.py:509); _living_spec also checks any kind other than CAP and UC with the ARCH grammar and message, _target gives the dated-partition remediation to any target outside _LIVING_SPEC, and spec_format _fixed falls back to the draft default status for kinds other than MS and FB.
+  evidence: governance/usecases/id_convention.py:200-222, :476-485, :291-294; governance/usecases/spec_format.py:316-322
+  failure_condition: A new Living Spec kind added to the derived directories is checked as an architecture document and reported with the architecture message.
+  suggested_action: List each fallback in the material and name it in the fallback-removal design bullet.
+  resolution: resolved
+  severity: P2
+- issue: 'The Q1 search covered Kind and kind_of uses only and missed per-kind facts written as paths or prefixes: entrypoint_bearing keeps its own capabilities/usecases path set used beside _KINDS, spec_format''s milestone status vocabulary and created_at requirement, per-kind default status, the path-based sides of traceability_link, depends_on accepting PROP-/SPEC-.'
+  evidence: features/entrypoints/services/paths.py:25-34; governance/usecases/code_entrypoints.py:42,60-63; entrypoints/services/derive.py:92; scope/usecases/inputs.py:153; spec_format.py:158-170,316-322; traceability_link.py:40-44; documents/services/dependencies.py:12
+  failure_condition: A row marking a new kind entrypoint-bearing passes _KINDS while entrypoint_bearing(path) is False, so rule, derive and scope skip it silently.
+  suggested_action: Add these facts to the material and derive paths.py:25 from the rows.
+  resolution: resolved
+  severity: P2
+- issue: 'The injected-table test has no seam: devkit rules instantiates rules without arguments, consumers bind constants and compile regexes at import time, and path-issue messages hard-code directory names.'
+  evidence: bundles/spec/bundle/rules/id_convention/rule.py:8-11; governance/usecases/document_reference.py:43-52; traceability_link.py:40-44; id_convention.py:66-68,80-81,203,215; documents/models/parse.py:39-40
+  failure_condition: Constants derived at import make monkeypatching the table change nothing; an injected directory yields targets from the new directory while messages still say usecases/.
+  suggested_action: Name one accessor read at check time that the test patches; limit injected facts to call-time facts; leave import-time ID regexes to the row and PREFIXES test.
+  resolution: resolved
+  severity: P2
+- issue: 'The no-behavior-change evidence overstates the rule tests: many match message fragments, the repository has zero violations, and the baseline captures neither rules fix results nor CLI help choice order.'
+  evidence: bundles/spec/bundle/rules/id_convention/tests/test_rule.py:24-25,407; no test asserts the milestone path remediation; MAT section 5
+  failure_condition: A changed remediation, fix-time default status or help choice order passes the suites and all three JSON diffs.
+  suggested_action: Add a characterization fixture workspace with one violation per rule branch per kind before the first code change; capture rules check JSON, the rules fix diff and spec list/search help before and after.
+  resolution: resolved
+  severity: P2
+- issue: 'boundaries.owns omits paths Development touches: docs/capabilities/viewer/ (named in target-docs), the committed viewer page static/** for any frontend change, .devkit/managed/spec/ and .devkit/installation.json after devkit sync of rule-bundle files, and for a generated viewer copy .devkit/generated.toml, scripts/affected_tests.py and docs/capabilities/generated/.'
+  evidence: target-docs.md; .devkit/generated.toml; .github/workflows/ci.yml:82; scripts/affected_tests.py:102-107; .devkit/managed/spec/rules/id_convention/
+  failure_condition: Declared scope is smaller than the real change, so overlap detection with the parallel proposals under-reports.
+  suggested_action: Add static/** and docs/capabilities/viewer/ now, the sync outputs if bundle files change, and the generation paths only if q2 chooses generation.
+  resolution: resolved
+  severity: P2
+- issue: 'Decision needed: whether location grammar becomes row data here. As scoped, a new kind still needs a member, a row, a path-grammar branch with messages, a template, and possibly pair-relation code and viewer labels; section 1 still lists location pattern and template as row data.'
+  evidence: id_convention.py:66,200-236; traceability_link.py:91-94; docs/proposals/PROP-ux-documentation/proposal.md Q1, Q2, section 3
+  failure_condition: PROP-ux-documentation plans against a near-zero cost of adding a kind that this proposal does not deliver.
+  suggested_action: Either make directory, stem pattern, area flag and message template row data, or restate the hypothesis as a member, a row, a grammar branch, a template and any relation rule.
+  resolution: open
+  severity: P2
+- issue: 'Decision needed: whether to keep the wrong milestone remediation byte-for-byte; a misplaced milestone is told to move to a dated {YYYY-MM}/{YYYYMMDD}-{slug} path.'
+  evidence: id_convention.py:298-301, :476-485
+  failure_condition: Development either keeps a wrong message behind an explicit table value or breaks the no-message-change exclusion.
+  suggested_action: Keep it here and fix it in a separate bugfix (recommended), or allow this one change explicitly.
+  resolution: open
+  severity: P3
+- issue: Relation fields are keyed by field, but the PADR row holds the fields that accept a kind; depends_on is dual (MS- on milestones, PROP-/SPEC- on units) and the traceability pair is a relation between two kinds.
+  evidence: document_reference.py:43-52,254-258; documents/services/dependencies.py:12; traceability_link.py:43-44,91-94
+  failure_condition: Listing depends_on on the PROP or SPEC row makes the inverted map ambiguous and changes the takes MS- IDs message.
+  suggested_action: Require one prefix per field with a uniqueness check (depends_on only on MS, the unit case in code); keep the pair as one explicit declaration.
+  resolution: resolved
+  severity: P3
+- issue: The overlap with PROP-foundation-documents misses RULE-document-summary (kind-keyed, while foundation documents carry a summary without an ID) and RULE-spec-format's path scope; nobody owns the viewer bookGroup glossary path after the move.
+  evidence: governance/usecases/document_summary.py:29-30,41-46; spec_format.py:58-59; frontend/src/lib/api/documents.ts:276
+  failure_condition: The second proposal to land meets unpredicted conflicts, and the moved glossary falls under Overview in the viewer.
+  suggested_action: Name both rule files in the relation section and give the bookGroup glossary update to PROP-foundation-documents.
+  resolution: resolved
+  severity: P3
+- issue: The PADR row's position field duplicates the enum order that consumers iterate.
+  evidence: documents/usecases/browse.py:22; documents/cli/commands.py:184; documents/cli/search.py:40
+  failure_condition: Two orders can disagree, and the unread one changes nothing.
+  suggested_action: Drop the field; the row test asserts enum order.
+  resolution: resolved
+  severity: P3
+- issue: Size M and dev_effort medium fit the Python part only; a generated viewer copy adds a generator, an artifact entry, an affected-tests mapping, a rebuild and CAP-VIEW/CAP-GEN reconciliation, closer to L.
+  evidence: scout-01 findings 4-5; .devkit/generated.toml; scripts/affected_tests.py:102-107
+  failure_condition: The estimate is wrong if q2 is answered generate.
+  suggested_action: Tie the size to q2, or move the viewer part into a separate unit.
+  resolution: resolved
+  severity: P3
+checks: {}
+diff_scope:
+  base: ''
+  head: f960a0bff2572e9a693278f8eaba3f795e193aee
