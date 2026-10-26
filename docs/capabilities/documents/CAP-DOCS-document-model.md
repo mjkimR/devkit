@@ -138,6 +138,15 @@ live; the index itself does not check it.
 The table order is the kind order: `devkit spec list` sorts by it. Living Spec documents of a namespace live under
 `docs/packages/<name>/` with the same layout (`CAP-DOCS-namespaces`).
 
+The kind definition table in the documents models is the single definition of kinds
+(`ADR-kind-definition-table-keyed-on-the-declared-kind-enum`): one row per `Kind` member, in the order above, holds
+the prefix and the per-kind facts the index and the rules read (its directory, Living Spec membership, area scoping,
+the `RULE-spec-format` scope, whether a first H1 carries an ID token, the summary requirement, whether it bears
+`entrypoints`, its terminal statuses, its fix-time default status and the relation fields that take its IDs). The
+ID pattern and prefix map derive from the rows. A table with a missing, extra or reordered row, a prefix or relation
+field in two rows, or an inconsistent row MUST fail with `KindTableError`; a consumer that lacks a fact a kind needs
+MUST fail the same way instead of applying another kind's. Path grammars and lifecycles stay kind-specific code.
+
 ### 3.3 References
 
 1. **Full IDs only**: A document MUST reference another by its full ID, never by a Markdown path.
@@ -270,6 +279,10 @@ index.is_historical(document)  # a completed bundle's file outside its feedback/
 index.is_terminal(document)  # its status is in TERMINAL_STATUSES for its kind (rule 8)
 index.is_browsing_historical(document)  # what list and search hide unless asked: either of the above
 ```
+
+`definitions()` returns the kind table in kind order and `definition(kind)` one row (`KindDefinition`);
+`relation_prefixes()` maps each relation field to the prefix it takes, and `KindTableError` reports an inconsistent
+table or a missing fact. `PREFIXES` and `TERMINAL_STATUSES` are derived from the rows.
 
 `parse_document(path, text)` reads one document (`None` without a well-formed ID); `visible_lines` is the prose
 scanner behind reference extraction; `SOURCE_DIRECTORIES`, `is_document_file` and `in_source_directory` expose the
