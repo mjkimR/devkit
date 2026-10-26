@@ -70,9 +70,18 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
    names the moment to read it ("Read this before ...").
 6. **No session hijacking**: agents MUST NOT unilaterally terminate the user's session or stop active work without
    user direction.
-7. **Playbooks on request only**: playbooks are occasional procedures found through `devkit playbook search` only
-   when the user invokes `devkit-playbook` or a failing rule's remediation names one; they are not part of routine
-   delivery, and no skill routes to them.
+7. **Playbooks offered at intake, run on confirmation**: playbooks are occasional procedures, not part of routine
+   delivery. The `spec` skill runs one `devkit playbook search "<English query>" --limit 3 --max-bytes 4096` as the
+   first step of a new task intake, before classification (`ADR-spec-intake-playbook-discovery`). Intake is a
+   `/spec <intent>` or a user's own message outside the agreed scope of the current task; continuations, same-task
+   follow-ups, explicit entries, steps inside a selected playbook and information-only questions skip it, and so does
+   every later intake once the user declines playbooks for the conversation; a declined candidate is not offered
+   again. A candidate is offered, in at most one line with the classification statement, only when its description
+   names the operation the request asks for (never a topic match), covers the main operation and fits the requested
+   scope; scores never decide. Nothing of it runs before the user confirms, and the confirmation is its explicit
+   invocation; the intake reply ends with the offer and waits for the answer before a Unit, branch or edit is created. No match and search errors stay silent. The post-selection procedure is the `spec` reference
+   `references/playbooks.md`, read only on a match; no `spec-playbook` skill exists. Explicit invocation through
+   `devkit-playbook` and failing-rule remediation stay available.
 8. **Templates by path**: new documents start from `.devkit/managed/spec/templates/<kind>.md`; seeded files are
    written once where absent and are project-owned afterwards.
 9. **Skill names**: every skill of the bundle is named `spec` or `spec-<procedure>`. Rationale:
@@ -132,14 +141,15 @@ The constitution's sections:
 | `architecture-writing` | Writing `docs/architecture/`: arc42 placement, C4 diagram scope, constraints with their enforcing check (fitness function) or "review only", quality-attribute scenarios. |
 
 The `spec-pointer` line in the root `AGENTS.md` block: run `uv run devkit get-context spec` once per agent context
-before development work; start work with `/spec <intent>`, orient with `/spec-next`; `docs/` is the current-state
+before development work; start work with `/spec <intent>`, each new task intake running its intake step first (so
+the rule survives a lost skill body), orient with `/spec-next`; `docs/` is the current-state
 Living Spec and `specs/` holds feature specs.
 
 ### 4.4 Skills
 
 | Skill | Purpose | devkit-spec commands it runs |
 | --- | --- | --- |
-| `spec` | Entry router: classify the work, run Backlog (direct acceptance and session reclassification of a draft included) and inline Planning, raise the depth and close, drive the workflow; never routes to playbooks. | `policy`, `new`, `proposal new`, `proposal check`, `proposal accept`, `proposal handoff` |
+| `spec` | Entry router: classify the work, run Backlog (direct acceptance and session reclassification of a draft included) and inline Planning, raise the depth and close, drive the workflow; first runs intake playbook discovery (principle 7). | `playbook search`, `policy`, `new`, `proposal new`, `proposal check`, `proposal accept`, `proposal handoff` |
 | `spec-next` | Orientation: diagnose work under way; when idle, filter queued drafts by direct prerequisites on one local base snapshot, then rank by repository milestone, priority and size, offering Planning, a direct acceptance or a session reclassification. | `policy`, `list spec\|proposal\|feedback`, `proposal padr`, `proposal accept --check`, `proposal handoff` |
 | `spec-specify` | Write `spec.md` (feature or bugfix reference); creates the bundle with `devkit spec new`. | `new`, `list`, `refs`, `search`, `policy` |
 | `spec-plan` | Write `plan.md`: design, interfaces, verification plan. | `list`, `refs`, `search` |
@@ -157,7 +167,8 @@ Living Spec and `specs/` holds feature specs.
 Skill references, each read at the moment it names: `spec/references/completion.md` (completion classification,
 policy, Host conversational approval and CLI execution, reconciliation evidence),
 `spec/references/depth-and-close.md` (raising the depth and closing without a merge),
-`spec/references/source-feedback.md` (tasks that address named feedback), `spec/references/envelope.md` (return
+`spec/references/source-feedback.md` (tasks that address named feedback), `spec/references/playbooks.md` (offer, records and
+use of a playbook intake discovery found, read only on a match), `spec/references/envelope.md` (return
 envelope, final change report, integration result), `spec/references/git-policy.md` (worktree, pull request and branch cleanup levels), `spec/references/worktree.md` (task worktree start, work, Host-approved CLI integration and observed-state recovery, leftovers),
 `spec-next/references/post-handoff.md` (follow-up of `[REWRITTEN]` and `[UNRESOLVED_LINK]` lines),
 `spec-next/references/workflow-signals.md` (`devkit workflow next` lines and advisories),
