@@ -26,7 +26,7 @@ plan: PLAN-review-refactor
 
 ## Phase 3: Manual evidence
 
-- [ ] **Task 3.1**: Real read-only sweep stopped at its decision round, with findings as feedback follow-ups
+- [x] **Task 3.1**: Real read-only sweep stopped at its decision round, with findings as feedback follow-ups
   - **_Boundary**: `specs/2026-10/20261026-review-refactor/materials/sweep.md`, `specs/2026-10/20261026-review-refactor/feedback/`
   - _Requirements: AC-07_
   - **Verification**: the record names intake, coverage, findings, gaps and a pending decision round; `git status` shows no source change
