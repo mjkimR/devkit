@@ -590,9 +590,9 @@ directory whose namespace applies when `namespace` is omitted);
 
 ## Host-authorized proposal lifecycle CLI
 
-The Host presents the exact immutable report, source commit, target branch, worktree path and effects, receives the
+The Host presents the proposal's findings, source commit, target branch, worktree path and effects, receives the
 user's conversational decision under `ask`, then invokes the CLI. CLI invocation alone does not establish approval;
-the CLI does not accept a proof or token and cannot authenticate the conversation. It revalidates report identity,
+the CLI does not accept a proof, token or published report and cannot authenticate the conversation. It revalidates
 source, base policy, workflow readiness, worktree provenance and cleanup targets before each mutation. `auto`
 authority comes only from the retained base policy.
 

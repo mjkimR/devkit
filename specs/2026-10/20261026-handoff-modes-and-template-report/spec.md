@@ -2,7 +2,7 @@
 id: SPEC-handoff-modes-and-template-report
 title: Handoff refusal modes, reviewer probes, plain handoff role and template change report
 summary: 'Resolves four feedback items: caller-fixable handoff refusals stop emitting MAINTENANCE, reviewers leave ignored probes to worktree removal, the plain handoff is the Host-run step after the decision, and config template reports its writes.'
-status: in-progress
+status: completed
 created: 2026-10-26
 related_capabilities:
   - CAP-DLV-proposal-incubation
