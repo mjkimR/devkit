@@ -1,0 +1,73 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T07:20:34.810161Z'
+status: needs_input
+summary: 'First Planning turn: status reviewing; scout-01 fixed the boundaries (no devkit-agt or devkit-dist code); challenger-01 folded (1 P1, 7 P2 resolved in reverify-01; findings 8 and 10 open as Decision needed); design drafted with provisional lines for q1-q4; FB-support-role-diff-check-on-dirty-tree recorded. Waiting for the user''s answers before plan-accept.'
+findings: []
+checks:
+  rules: PASS devkit rules check docs/proposals/PROP-backlog-subagent-roles/
+  diff: PASS git diff --check
+diff_scope:
+  base: ''
+  head: b2052149cc8ba545ffbebd2462ff138710bddb4e
+questions:
+- id: q1
+  title: Do the roles write anything?
+  prompt: Should triage and decomposer only return recommendations that the Host applies, or write candidate files that the Host reviews and commits?
+  context: This decides the roles' git actions, host tool matrix and how write boundaries are verified, and it marks the matching Non-goal lines as provisional. The milestone requires verified write boundaries; a read-only role makes the existing diff check sufficient.
+  options:
+  - id: a
+    description: 'Read-only. Both roles return recommendations, and the Host applies only what the user decides, using the existing commands. Pros: the clean-tree comparison is the whole verification, with no new write path, and the user keeps every disposition. Cons: the Host still writes the child drafts and disposition lines, which costs some main-session context.'
+    recommended: true
+  - id: b
+    description: 'Write candidates. The decomposer writes child draft files and triage writes proposed disposition lines in an agreed path, then the Host reviews the diff and commits. Pros: the Host reads less and writes less. Cons: this needs a write-scope contract, Write/Edit tools and range validation like a worker''s, and a candidate that is half applied can strand files in Backlog.'
+    recommended: false
+  allow_note: true
+- id: q2
+  title: Where is a role's return recorded?
+  prompt: Backlog work has no unit, so how should a triage or decomposer return be recorded?
+  context: devkit workflow envelope new needs a unit. Triage has none, and a decomposition deletes its parent in the same commit (spike F2). This choice decides whether devkit-agt code is in scope (it is excluded now) and what the CAP-DLV-delivery-workflows section 4.6 role table lists as the envelope kind.
+  options:
+  - id: a
+    description: 'No envelope, as for a session task. The role returns a message, the Host reports the result in the conversation, and the Backlog commit body names the role that was used. Pros: no code change and no new location. Cons: the role''s reasoning stays only in the conversation, not in Git.'
+    recommended: true
+  - id: b
+    description: 'Under the Planning unit when the decomposer runs inside Planning (q4 b), using the role''s own kind (decomposer-NN.yaml, never a counted kind like challenger), and a message otherwise. Pros: the split that Planning decided stays in the plan branch history. Cons: this applies only to Planning-time splits, and it works only if q4 b is chosen.'
+    recommended: false
+  - id: c
+    description: 'A new unit-less Backlog record location, such as specs/<YYYY-MM>/backlog/<kind>-NN.yaml. Pros: every return is durable. Cons: this needs envelope code in devkit-agt, a new location contract and retention rules, so it widens the boundaries and raises dev_effort.'
+    recommended: false
+  allow_note: true
+- id: q3
+  title: When does the Host delegate triage?
+  prompt: When should the Host hand feedback triage to the triage role instead of running feedback-hygiene Step 1 inline?
+  context: Delegation costs a subagent call but keeps the evidence reads out of the main session. Today 3 feedback items are open and 86 have been dispositioned (spike F5). The threshold applies only on a host with native isolation; anywhere else the substitute route runs the playbook inline.
+  options:
+  - id: a
+    description: 'Delegate when the open-feedback listing has more than 5 items, and stay inline otherwise. Pros: small batches cost nothing extra, and the rule is mechanical. Cons: the number is a judgment that is not measured yet, so the first hygiene passes would revisit it.'
+    recommended: true
+  - id: b
+    description: 'Always delegate on a native host. Pros: there is one path, and every hygiene pass gets a second view. Cons: you pay a subagent call even for one or two items.'
+    recommended: false
+  - id: c
+    description: 'Delegate only when the user asks. Pros: no automatic cost. Cons: the role is seldom used, and the milestone''s ''can be delegated'' is met only in principle.'
+    recommended: false
+  allow_note: true
+- id: q4
+  title: When is the decomposer invoked?
+  prompt: Which events start the decomposer?
+  context: The decomposer runs from Backlog after the draft is on the base. A Planning run that finds the draft must be split could also run it before it returns needs_decompose. That choice decides whether Planning guidance (planning.md) changes, and it pairs with q2 b.
+  options:
+  - id: a
+    description: 'Backlog only: run it for a needs_decompose draft once its Planning return is merged, or when the user asks to split a draft. It is never self-initiated. Pros: one place for the split, and its input is pinned to the base. Cons: a Planning worker''s knowledge of the split reaches the role only through the returned materials.'
+    recommended: true
+  - id: b
+    description: 'Also inside Planning: before returning needs_decompose, the Planning runner calls the decomposer and records the proposed split in materials/ (and under q2 b, as an envelope). Backlog then applies it after the merge. Pros: the split is proposed with the full Planning context. Cons: it adds a step to planning.md, and the Backlog side must still re-check the split against the base before applying it.'
+    recommended: false
+  - id: c
+    description: 'Only when the user asks to split a draft, not automatically for needs_decompose drafts. Pros: minimal. Cons: needs_decompose drafts keep the manual path, which is the main case the milestone names.'
+    recommended: false
+  allow_note: true
+activity_effort: medium
