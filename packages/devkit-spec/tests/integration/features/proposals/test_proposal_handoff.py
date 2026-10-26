@@ -408,6 +408,7 @@ def test_refuses_a_carried_file_that_clashes_with_materials(workspace: Path, wri
     with pytest.raises(ProposalTargetExistsError) as raised:
         handoff_proposal(workspace, "dup", today=TODAY)
     assert raised.value.target_files == ("docs/proposals/PROP-dup/notes.md",)
+    assert raised.value.to_dict()["advisory"]["mode"] == "BLOCKED"  # a clash inside the proposal, not a merge
     assert proposal.is_file() and not (workspace / "specs").exists()
 
 
@@ -616,9 +617,27 @@ def test_refuses_to_overwrite_and_writes_nothing(workspace: Path, write: Write) 
     with pytest.raises(ProposalTargetExistsError) as raised:
         handoff_proposal(workspace, "clash", today=TODAY)
     assert raised.value.target_files == (f"docs/decisions/{MONTH}/{STAMP}-taken.md",)
+    assert raised.value.to_dict()["advisory"]["mode"] == "BLOCKED"  # an existing target stays a guardrail
     assert existing.read_text(encoding="utf-8") == "keep\n"
     assert proposal.is_file() and (proposal.parent / "materials/a.md").is_file()
     assert not (workspace / "specs").exists()
+
+
+def test_an_existing_spec_bundle_stays_a_guardrail(workspace: Path) -> None:
+    proposal = _new(workspace, "taken")
+    accept(proposal)
+    existing = workspace / "specs" / MONTH / f"{STAMP}-taken"
+    existing.mkdir(parents=True)
+    with pytest.raises(ProposalTargetExistsError) as raised:
+        handoff_proposal(workspace, "taken", today=TODAY)
+    advisory = raised.value.to_dict()["advisory"]
+    assert (advisory["code"], advisory["mode"], advisory["guardrail"]) == (
+        "SPEC_PROPOSAL_TARGET_EXISTS",
+        "BLOCKED",
+        True,
+    )
+    assert raised.value.target_files == (existing.relative_to(workspace).as_posix(),)
+    assert proposal.is_file() and list(existing.iterdir()) == []
 
 
 def test_refuses_an_adr_id_another_document_declares(workspace: Path, write: Write) -> None:

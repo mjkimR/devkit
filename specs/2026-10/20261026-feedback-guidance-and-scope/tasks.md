@@ -8,12 +8,12 @@ plan: PLAN-feedback-guidance-and-scope
 
 ## Phase 1: Implementation
 
-- [ ] **Task 1**: Scratch cleanup guidance in the worker contracts and payload reference, with guidance tests
+- [x] **Task 1**: Scratch cleanup guidance in the worker contracts and payload reference, with guidance tests
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/development-worker.md.jinja`, `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/planning-worker.md.jinja`, `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/payload.md`, `packages/devkit-spec/tests/integration/bundles/spec/test_role_contracts.py`, `packages/devkit-spec/tests/integration/bundles/spec/test_delegation_sandbox_guidance.py`, `docs/capabilities/delivery/CAP-DLV-delivery-workflows.md`, `specs/2026-10/20261026-review-refactor/feedback/fixture-removal-denied.md`
   - _Requirements: AC-01, AC-02_
   - **Verification**: `just test devkit-spec packages/devkit-spec/tests/integration/bundles/spec`
 
-- [ ] **Task 2**: A materials merge conflict raises `SPEC_PROPOSAL_TARGET_EXISTS` as `INTERACTION`, with tests
+- [x] **Task 2**: A materials merge conflict raises `SPEC_PROPOSAL_TARGET_EXISTS` as `INTERACTION`, with tests
   - **_Boundary**: `packages/devkit-spec/src/devkit_spec/features/proposals/usecases/handoff.py`, `packages/devkit-spec/src/devkit_spec/base/errors.py`, `packages/devkit-spec/tests/integration/features/proposals/test_proposal_handoff_merge.py`, `packages/devkit-spec/tests/integration/features/proposals/test_proposal_handoff.py`, `docs/capabilities/delivery/CAP-DLV-proposal-incubation.md`, `specs/2026-10/20261026-merge-proposal-materials-at-handoff/feedback/merge-conflict-guardrail-action.md`
   - _Requirements: AC-03, AC-04_
   - **Verification**: `just test devkit-spec packages/devkit-spec/tests/integration/features/proposals`

@@ -77,7 +77,7 @@ and five documentation mismatches found by the Living Spec consistency sweep tra
   materials directory
 - **When** the proposal handoff runs
 - **Then** it writes nothing and raises `SPEC_PROPOSAL_TARGET_EXISTS` with mode `INTERACTION`, `guardrail` false and
-  actor `user`, and the fix still names the first conflict's source, destination, kind and reconciliation
+  actor `USER`, and the fix still names the first conflict's source, destination, kind and reconciliation
 
 ### [AC-04] An existing handoff target stays a guardrail
 - **Given** the spec bundle directory or an ADR file that the handoff would create already exists

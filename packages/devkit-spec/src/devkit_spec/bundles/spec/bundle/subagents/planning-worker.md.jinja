@@ -45,6 +45,6 @@ The fields of your committed `worker` envelope, with `final_head`: `git -C <work
 ## Write boundaries
 
 - Allowed: the proposal directory inside the worktree, and a new draft proposal for a follow-up.
-- Temporary probes: only the ignored path the payload names. Remove them before the last commit and keep evidence in `materials/`; a probe that needs another path is a problem for the Host.
+- Temporary probes: only the ignored path the payload names. Leave them there for removing the worktree to clean, never delete them yourself, and keep evidence in `materials/`; a probe that needs another path is a problem for the Host.
 - Denied: the proposal's `status: accepted` or `rejected`, the `plan-accept` gate records and handoff.
 - Git: commit only; never push, merge, rebase, reset, amend, stash or check out.
