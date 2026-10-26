@@ -8,7 +8,7 @@ target: scripts/viewer.sh
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -47,3 +47,10 @@ bash scripts/viewer.sh "$@"
 sh: vitest: command not found
 error: recipe `viewer` failed on line 74 with exit code 127
 ```
+
+## Disposition
+
+Resolved in the `viewer-install-preflight` session. `scripts/viewer.sh` checks for `node_modules` before every action
+but `install` and exits 2 with an error naming `just viewer install`, matching the plain `error:` convention of the
+repository's shell scripts. `test_viewer_script.py` covers `lint`, `check`, `test`, `build` and `pack`, and
+`docs/development/reference/viewer.md` states the behavior.
