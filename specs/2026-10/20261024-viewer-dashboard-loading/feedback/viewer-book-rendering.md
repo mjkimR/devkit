@@ -8,7 +8,7 @@ target: packages/devkit-viewer/frontend/src/lib/features/knowledge/KnowledgeView
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-24
 ---
 
@@ -40,3 +40,10 @@ The rendered derived value maps every visibleDocs document through renderDocumen
 ## Restart and Acceptance
 
 Revisit when profiling identifies this path as the remaining user-visible delay. Measure main-thread work and first-content latency with a large book while preserving ID links, anchors, DOMPurify and theme behavior.
+
+## Disposition
+
+Dismissed by the user (2026-10-26). `ADR-handbook-first-book-on-request` (delivered by
+`SPEC-viewer-handbook-first-knowledge`) computes the Living Spec book only after an explicit request, so the cold load
+no longer renders it (`MAT-viewer-handbook-cold-load`: 922 blob reads and 1094 ms before, 3 reads and 52 ms after).
+The remaining render cost of about 0.47 s after the request is accepted; viewport rendering is not pursued.
