@@ -72,3 +72,13 @@ Observations outside the 22 findings, recorded as feedback in this Unit:
 - `FB-integration-mcp-glossary-and-actor-row`: the glossary **Integration MCP** entry and the `ARCH-04-1-ecosystem-boundaries` actor row.
 - `FB-worktree-module-layout-stale`: `CAP-WT-task-worktrees` §7 module list.
 - `FB-sync-config-template-example-stale`: the commented template example in `CAP-DIST-sync-and-transactions`.
+- `FB-spec-readme-and-mcp-guide-native-handoff`: the devkit-spec README and `guides/install/mcp.md`, outside the
+  write scope.
+- `FB-handoff-error-modes-documented-differently`: the documented modes of `SPEC_HANDOFF_NOT_READY` and
+  `SPEC_HANDOFF_REPLY_INVALID`.
+
+## Entrypoints
+
+`devkit spec entrypoints derive` joined the `_Boundary` paths with every target into 83 candidates; none was applied,
+because every target was edited for wording only and the documents whose behavior gained text already own their
+command paths, except `CAP-GEN-tracked-artifacts`, whose `generated/cli.py` is not among the derived candidates.

@@ -43,8 +43,8 @@ The module is SDD-agnostic: it does not decide which tasks use a worktree, and i
    After successful locked restoration, `devkit sync --registrations-only` initializes eligible local MCP entries
    using the same interpreter. Dist discovers the optional provider; no runtime import is added to worktree.
    Without the provider this is a no-op. Existing registration conflicts still refuse locked sync; absent fresh
-   entries are initialized only in this separate step. Native handoff rechecks its environment before this step.
-   Registration advisories are returned with the result and a failure keeps the created worktree. Trusted native
+   entries are initialized only in this separate step. `devkit spec proposal handoff --effort` rechecks its environment before this step.
+   Registration advisories are returned with the result and a failure keeps the created worktree. Trusted
    handoff children carry a refusal-only identity constraint for the original owning workspace; sync checks it
    after locks and before each transaction write. No approval or terminal-cleanup authority crosses the process
    boundary. The parent rechecks the constraint after child completion.

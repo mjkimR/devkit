@@ -1,0 +1,43 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T01:51:22.842672Z'
+status: completed
+summary: 'reconcile-reviewer (medium): 23 targets complete, text matches code; two P2 (stale mirrors outside docs/, a native handoff sentence in CAP-WT) and three P3'
+findings:
+- issue: The devkit-spec README and guides/install/mcp.md still describe a native MCP handoff/acceptance runtime and say devkit-spec includes devkit-mcp.
+  evidence: packages/devkit-spec/README.md:13-14,78; guides/install/mcp.md:3,48; packages/devkit-spec/pyproject.toml:7-11
+  failure_condition: An agent following the install guide expects devkit-mcp with devkit-spec or looks for unregistered native handoff tools.
+  suggested_action: Correct the mirrors or record an FB and cite it under Deferred work.
+  resolution: open
+  severity: P2
+- issue: CAP-WT-task-worktrees still says 'Native handoff rechecks its environment before this step'.
+  evidence: docs/capabilities/worktree/CAP-WT-task-worktrees.md:45
+  failure_condition: A reader takes a native handoff route to exist next to the CLI handoff.
+  suggested_action: Name devkit spec proposal handoff --effort.
+  resolution: open
+  severity: P2
+- issue: The new SPEC_HANDOFF_STALE row gives the level without the mode; the emitted mode is MAINTENANCE, while the older NOT_READY and REPLY_INVALID rows document BLOCKED and INPUT_ERROR.
+  evidence: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md:564-566; packages/devkit-spec/src/devkit_spec/base/errors.py:602-620
+  failure_condition: An agent branches on a documented mode that differs from or omits the emitted one.
+  suggested_action: Fill in the mode; record the older mismatch as feedback.
+  resolution: open
+  severity: P3
+- issue: reconcile.md does not record the entrypoints decision; CAP-GEN-tracked-artifacts has no entrypoints although it now owns the generated list contract.
+  evidence: specs/2026-10/20261026-living-spec-consistency-sweep/reconcile.md; docs/capabilities/generated/CAP-GEN-tracked-artifacts.md:1-12
+  failure_condition: A later reader cannot tell whether entrypoints were considered.
+  suggested_action: Record the decision; optionally add generated/cli.py to CAP-GEN.
+  resolution: open
+  severity: P3
+- issue: The SPEC_HANDOFF_STALE row and UC 7a omit the pre-effect refusal when the base or plan changes between the two prepare calls.
+  evidence: packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py:155-156
+  failure_condition: The base changes between the checks and the refusal comes before any effect, which neither text mentions.
+  suggested_action: Add the pre-effect case.
+  resolution: open
+  severity: P3
+checks:
+  rules: PASS devkit rules check --ci --base 46229c7b errors=0
+diff_scope:
+  base: 46229c7b86111ceed75bef72eb49912e7e1b819e
+  head: ec5c6a5e82c9acabb2b925512f14a532d2e76eab
