@@ -12,7 +12,8 @@ from devkit_dist.features.distribution.services.bundles.subagents import read_co
 from spec_support.bundle_text import BUNDLE, flat, raw, text
 
 WORKERS = ("development-worker", "planning-worker")
-ROLES = ("challenger", "reconcile-reviewer", "code-reviewer", "ux-reviewer", "scout", *WORKERS)
+BACKLOG_ROLES = ("triage", "decomposer")
+ROLES = ("challenger", "reconcile-reviewer", "code-reviewer", "ux-reviewer", "scout", *BACKLOG_ROLES, *WORKERS)
 DELEGATE = BUNDLE / "skills/spec-delegate/SKILL.md"
 WORKER_RESULTS = BUNDLE / "skills/spec-delegate/references/worker.md"
 ORCHESTRATE = BUNDLE / "skills/spec-orchestrate/SKILL.md"
@@ -26,6 +27,8 @@ EFFORT_PRESETS: dict[str, tuple[str, str | None]] = {
     "code-reviewer": ("general-high", "high"),
     "ux-reviewer": ("general-high", "high"),
     "challenger": ("high-reasoning", "high"),
+    "triage": ("light-medium", "medium"),
+    "decomposer": ("general-high", "high"),
     "planning-worker": ("general-high", None),
     "development-worker": ("general-high", None),
 }
@@ -148,6 +151,71 @@ def test_the_ux_reviewer_is_an_isolated_read_only_role_bound_to_its_skill() -> N
     ):
         assert phrase in skill, phrase
     assert "severity:" not in skill
+
+
+# SPEC-backlog-subagent-roles: read-only, a message return, the challenger host matrix, the cited procedure.
+BACKLOG_PROCEDURES = {
+    "triage": ".devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md",
+    "decomposer": ".devkit/managed/spec/skills/spec/references/backlog.md",
+}
+
+
+@pytest.mark.parametrize("role", BACKLOG_ROLES)
+def test_a_backlog_role_is_isolated_read_only_and_cites_its_procedure(role: str) -> None:
+    metadata, body = _contract(role)
+    assert metadata["role"] == role and "skill" not in metadata
+    assert (metadata["x-execution"], metadata["x-invocation"], metadata["x-git-actions"]) == (
+        "isolated",
+        "optional",
+        ["read"],
+    )
+    hosts = metadata["hosts"]
+    assert hosts["claude-code"]["status"] == "native"
+    assert hosts["claude-code"]["tools"] == ["Read", "Grep", "Glob", "Bash"]
+    assert hosts["claude-code"]["disallowedTools"] == ["Write", "Edit"]
+    assert (hosts["codex"]["status"], hosts["codex"]["sandbox_mode"]) == ("emulated", "read-only")
+    assert hosts["antigravity"] == {
+        "status": "native",
+        "tools": ["view_file", "grep_search", "run_command"],
+        "commandExecutionPolicy": "sandbox",
+    }
+    body = flat(body)
+    assert "Run `uv run devkit get-context spec` once" in body
+    assert f"`{BACKLOG_PROCEDURES[role]}`" in body
+    assert "Modify, stage and commit nothing" in body
+    assert "`diff_scope.head`" in body and "`failure_condition`" in body
+    bundle = tomllib.loads(raw("bundle.toml"))
+    assert {"id": role, "kind": "subagent", "source": f"subagents/{role}.md"} in bundle["assets"]
+    assert role in bundle["presets"]["core"]["assets"]
+
+
+def test_triage_returns_groups_and_never_changes_a_status() -> None:
+    body = flat(_contract("triage")[1])
+    for phrase in (
+        "Apply its Step 1",
+        "Apply its Step 2 table to each group: one recommended destination with its reason",
+        "duplicate",
+        "dismissal candidate",
+        "never run Step 3",
+        "the group's FB IDs, its target and its confirmed ownership",
+    ):
+        assert phrase in body, phrase
+
+
+def test_the_decomposer_returns_children_edges_and_an_exit_without_feedback_assignment() -> None:
+    body = flat(_contract("decomposer")[1])
+    for phrase in (
+        "`uv run devkit spec refs PROP-<slug> --direction in -n 0`",
+        "return `needs_input` with the reason",
+        "every child is below `size: XL`",
+        "a proposed `slug` (one that `devkit spec resolve PROP-<slug>` does not find), `title`, English `summary`, `scope`",
+        "`planning_effort` and `dev_effort` chosen afresh, `boundaries` by nearest existing parent, `depends_on` edges",
+        "the parent PADRs, answers and materials it inherits, or none",
+        "`incoming_edges`",
+        "`exit`: `split` or `promote` with the reason",
+        "never assign or copy an item to a child",
+    ):
+        assert phrase in body, phrase
 
 
 def test_support_roles_shell_access() -> None:

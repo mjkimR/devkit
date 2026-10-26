@@ -2,7 +2,7 @@
 id: SPEC-backlog-subagent-roles
 title: Backlog triage and decomposer subagent roles
 summary: Adds isolated triage and decomposer support roles so Backlog feedback triage and draft decomposition can be delegated with verified write boundaries and preserved provenance, and gates XL drafts to decomposition before Planning.
-status: planned
+status: in-progress
 created: 2026-10-26
 related_capabilities: [CAP-DLV-delivery-workflows, CAP-DLV-proposal-incubation, CAP-HARN-agent-guidance]
 related_usecases: [UC-route-development-intent]

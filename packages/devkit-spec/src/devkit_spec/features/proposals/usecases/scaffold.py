@@ -382,7 +382,7 @@ status: draft                         # draft | reviewing | accepted | rejected
 created_at: {created}
 target_area: {yaml_scalar(area)}
 {namespace_line}priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
+size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
 {planning_effort_line}
 {dev_effort_line}
 {milestone_line}boundaries:

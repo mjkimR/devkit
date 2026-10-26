@@ -27,7 +27,10 @@ docs/proposals/PROP-{slug}/
   the proposal template (`.devkit/managed/spec/templates/proposal.md`).
   - **`planning_effort` / `dev_effort`**: Non-authoritative `activity-effort` hints (`low` | `medium` | `high`, default `medium`) for Planning and Development; `dev_effort` is refined during Planning before `plan-accept` and returned by `handoff`, while confirmed run effort is recorded on `worker-NN.yaml` envelopes (never copied to `spec.md`).
 - **`materials/` Markdown**: follow the material convention: file `{YYYYMMDD}-{slug}.md`, `id: MAT-<slug>`, `created_at`, H1 `# [MAT-<slug>] <title>`. `RULE-spec-format` skips `materials/` directories, so the frontmatter is recommended, not checked. Non-Markdown files need no metadata. After handoff the files move to `docs/materials/`.
-- **`target-docs.md` (Recommended)**: Focuses on "What docs/ changes will look like once accepted", while `proposal.md` focuses on "Why". Covers capability ledger, use cases, architecture & decisions, conventions & governance, and before/after comparisons. Recommended for `size: M/L/XL` or when Living Spec structural changes are expected.
+- **`target-docs.md` (Recommended)**: Focuses on "What docs/ changes will look like once accepted", while `proposal.md` focuses on "Why". Covers capability ledger, use cases, architecture & decisions, conventions & governance, and before/after comparisons. Recommended for `size: M/L` or when Living Spec structural changes are expected.
+- **`size: XL`**: the work would need two or more specs or a different `task_kind`. A rough `XL` draft may wait in
+  Backlog, but it is decomposed (split with `--decomposed-from` or promoted to a milestone) before `plan-intent` and
+  Planning.
 
 ---
 
