@@ -12,7 +12,9 @@ dev_effort: medium                    # low | medium | high (hint for Developmen
 milestone: MS-maintenance-operations
 boundaries:
   owns:
-    - packages/devkit-catalog/
+    - packages/devkit-catalog/src/devkit_catalog/maintenance/
+    - packages/devkit-catalog/tests/integration/bundles/
+    - packages/devkit-catalog/README.md
     - docs/capabilities/delivery/
     - docs/capabilities/distribution/
     - docs/usecases/governance/
@@ -68,29 +70,36 @@ This draft carries the scope its own milestone held before the maintenance miles
   needed: the bundle version follows the shared release version.
 - Development adds a delivery capability with the playbook as its entrypoint, a governance use case, and the
   maintenance entry of `CAP-DIST-content-packages`.
-- Wording stays neutral to the parallel `PROP-spec-playbook-discovery` and `PROP-maintenance-history`. The playbook
-  runs only when invoked for the current task, by name or by exact `devkit playbook get maintenance/review-refactor`,
-  and the capability points to `CAP-DIST-context-and-playbooks` for invocation instead of naming an entry skill. The
-  report is a local artifact; the playbook requires no history store and records forward-compatible run fields (run
-  ID, intake revision and dirty state, scope, outcome, and the resulting commit per change).
+- The playbook's invocation prerequisite (its entry condition) follows the authority wording that
+  `PROP-spec-playbook-discovery` settles for every maintenance playbook. Until that proposal lands, the playbook runs
+  only when invoked for the current task, by name or by exact `devkit playbook get maintenance/review-refactor`, and
+  the capability points to `CAP-DIST-context-and-playbooks` for invocation instead of naming an entry skill. Its
+  `description` names its operation and scope so search can find it.
+- The report is a local artifact; the playbook requires no history store. It records what the existing maintenance
+  playbooks record (run ID, repository identity, intake revision and dirty state, scope, outcome) plus the resulting
+  commit per change.
 - The playbook body is self-contained: it states its criteria, the reduction rule and the rule-growth criterion
   itself instead of citing this repository's document IDs.
 
 ### Run procedure
 
 - The playbook defines intake, review scope, candidate prioritization, agreed changes, verification and completion
-  evidence, reusing the `drift-reconciliation` bounding pattern; a manual run demonstrates the path.
+  evidence, reusing the `drift-reconciliation` bounding pattern.
 - Findings and implemented changes are separate records. Each change carries its behavior-preservation evidence and
   resulting commit. Deferred work links to existing or new follow-ups without duplication.
 - Dispositions per finding: consolidate, reduce or remove with behavior preserved; contract change (handling per
-  O3); defer; keep with a reason.
+  O3); defer; keep with a reason. Coverage counts the candidates dropped for lacking a named cost.
 - Invocation, including an external runner naming the exact ID, authorizes no change (`ADR-external-playbook-execution`):
   only the user's decision round does, and an unattended run stops there with nothing applied.
-- Agreed changes are applied through the repository's development workflow, classified by its own criteria (in a
-  devkit-spec repository: a cross-area structural change is `overall-refactor`; a change inside one feature or module
-  is `feature`).
-- Contract mismatches against agreed documentation route to `drift-reconciliation`; this playbook targets maintenance
-  cost in code that is consistent with its contract.
+- The user's decision-round approval is the recorded `user` intent for the routed work: it supplies the routed
+  workflow's intent approval and never its integration approval. The agreed behavior-preserving changes of one batch
+  form one work item with one commit per change; each contract change is its own work item.
+- Each work item is applied through the repository's development workflow and classified by that repository's own
+  classification criteria; the playbook does not restate them.
+- A contract mismatch against agreed documentation is recorded as a deferred finding whose follow-up destination
+  names drift reconciliation. The playbook may continue in `drift-reconciliation` only when that playbook is
+  selected, and never depends on it. This playbook targets maintenance cost in code that is consistent with its
+  contract.
 
 ### Review criteria
 
@@ -101,7 +110,9 @@ This draft carries the scope its own milestone held before the maintenance miles
   compatibility paths, unused code, unused parameters and flags, and boilerplate without a demonstrated purpose.
 - Guidance review covers skills, playbooks, AGENTS.md and instructions for derivable content, duplication, conflicts,
   obsolete exceptions and excessive always-loaded context. It preserves repository-specific operational constraints,
-  decision criteria and examples.
+  decision criteria and examples. Receipt-owned files (`.devkit/managed/` and agent projections) are read-only
+  evidence: a finding against them goes to the source bundle as an upstream follow-up or to `devkit override`, and
+  only repository-owned text is edited.
 - CLI review inventories commands and subcommands for overlapping purposes, unneeded commands and options,
   fragmented operations and inconsistent grouping. It reviews help and its source docstrings for accuracy and useful
   next steps.
@@ -113,12 +124,17 @@ This draft carries the scope its own milestone held before the maintenance miles
 - The playbook treats consolidation and reduction as primary outcomes, not only detection and repair. At minimum it
   covers merging duplicated logic into a shared module, folding repeated technical helpers into a utility, and
   removing unneeded code, guidance, options and commands.
+- Removing a compatibility path (shim, legacy reader, version branch) is a contract change, unless the target
+  repository's declared compatibility policy states that no consumer can exist. In-repository reachability never
+  proves the absence of external consumers.
 - Shared implementations are introduced only for demonstrated repeated behavior: at least two current callers with
   the same behavior, where a change to one must be repeated in the others. A consolidated helper lives at the place
   the target repository's layering allows (placement per O5).
 - A reduction is accepted only when the removed content is derivable from the repository, duplicated with a named
-  canonical copy kept, enforced mechanically elsewhere, or shown unnecessary by a behavioral or verification check.
-  Line or token reduction is reported but is never the justification. The evidence a removal or consolidation needs
+  canonical copy kept, enforced mechanically elsewhere, or shown unnecessary by a recorded check. The recorded check
+  for code is the verification command and its result plus reachability evidence; for guidance it is a recorded
+  representative-task run with and without the text. Without that record the fourth ground is unavailable. Line or
+  token reduction is reported but is never the justification. The further evidence a removal or consolidation needs
   is set per O4.
 - Contract-changing removals, renames or consolidations of commands, options or public interfaces are never
   presented as behavior-preserving refactoring (handling per O3).
@@ -131,19 +147,33 @@ This draft carries the scope its own milestone held before the maintenance miles
   behavior-changing feature work presented as refactoring, mandatory rule growth and automatic rule adoption.
 - Acceptance direction:
   - Bundle tests cover the new asset in its presets, lexical search and exact retrieval.
-  - The playbook text covers each consolidation and reduction kind and the four reduction grounds.
-  - A recorded manual run on this repository shows separate finding and change records, at least one consolidation
-    or removal with its preservation evidence, and coverage with its gaps.
+  - A spec-review checklist maps each consolidation and reduction kind and each reduction ground to a playbook
+    section.
+  - Manual evidence, following the `drift-reconciliation` precedent, is named as manual evidence and never reported as
+    test coverage. It has two parts. A real, bounded, read-only sweep of this repository records findings, coverage
+    and gaps. An isolated seeded fixture with simulated decisions exercises one consolidation, one helper fold and one
+    removal, with separate change records and preservation evidence.
+  - Real changes agreed from the sweep become separate follow-up work items. This delivery makes no live refactor.
 
 ### Planning decisions
 
 - One playbook rather than one per surface (O1); the Q2 bounding pattern reused from the existing maintenance
   playbooks.
-- Ownership widened to the catalog package, distribution capabilities, governance use cases and install guides,
-  which Development edits. `PROP-maintenance-history` declares overlapping paths in the same bundle, so the two
-  Developments need sequencing.
+- Ownership covers the maintenance bundle, the catalog bundle tests and README, distribution capabilities, governance
+  use cases and install guides, which Development edits.
 - Pending user answers: bounding (O2), contract removals (O3), preservation evidence (O4), helper placement (O5) and
   presets (O6).
+
+### Interactions
+
+- `PROP-spec-playbook-discovery` also owns
+  `packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/`, `docs/capabilities/delivery/` and
+  `docs/capabilities/distribution/`, to reword every playbook's explicit-invocation prerequisite and to let `spec`
+  discover playbooks at task intake. The new playbook's invocation prerequisite follows the authority wording that
+  proposal settles. Whichever proposal lands second reconciles the other's wording.
+- `PROP-maintenance-history` declares the same maintenance bundle and delivery capability paths. The two Developments
+  need sequencing on `bundle.toml`, the bundle tests, the README and the maintenance entry of
+  `CAP-DIST-content-packages`.
 
 ## 4. Lifecycle & Retirement Criteria
 <!--
