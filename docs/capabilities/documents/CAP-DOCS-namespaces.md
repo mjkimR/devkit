@@ -75,8 +75,9 @@ Every document belongs to exactly one namespace:
 ### 3.4 Rules
 
 The rules treat `docs/packages/<name>/` like `docs/`: `RULE-id-convention`, `RULE-spec-format`,
-`RULE-traceability-link`, `RULE-code-entrypoints` and `RULE-document-summary` check its `capabilities/`, `usecases/`
-and `architecture/` directories as they check those of `docs/`. `RULE-spec-format` also checks that a proposal's or
+`RULE-traceability-link`, `RULE-code-entrypoints` and `RULE-document-summary` check its `capabilities/`, `usecases/`,
+`ux/` and `architecture/` directories as they check those of `docs/`; `RULE-ux-links` and `RULE-ux-coverage` read its UX
+documents and use cases as the global ones. `RULE-spec-format` also checks that a proposal's or
 spec's `namespace` names `global` or a registered namespace, and rechecks every one of them when a run targets
 `.devkit/config.toml`. Entrypoint paths of a namespace's documents stay workspace-relative, never package-relative
 (`CAP-TRACE-code-entrypoints`).

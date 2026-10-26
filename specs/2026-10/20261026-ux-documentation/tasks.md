@@ -28,7 +28,7 @@ plan: PLAN-ux-documentation
   - **_Boundary**: packages/devkit-viewer/frontend/src/lib/, packages/devkit-viewer/src/devkit_viewer/static/
   - _Requirements: AC-03_
   - **Verification**: `just viewer test`, `just viewer check`, `just viewer lint`, `just viewer build`
-- [ ] **Task 1.6**: Living Spec capabilities and the glossary terms
+- [x] **Task 1.6**: Living Spec capabilities and the glossary terms
   - **_Boundary**: docs/capabilities/documents/, docs/capabilities/governance/, docs/capabilities/delivery/, docs/capabilities/viewer/, docs/steering/glossary.md
   - _Requirements: AC-15_
   - **Verification**: `uv run devkit rules check` and `uv run devkit sync --check`

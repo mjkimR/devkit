@@ -21,7 +21,7 @@ entrypoints:
 ## 1. Summary
 
 The `spec` bundle ships one devkit workflow definition per combination of `planning-depth` and `task-kind`
-(`kind = "workflow"` assets in `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/`), six host-neutral role contracts
+(`kind = "workflow"` assets in `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/`), seven host-neutral role contracts
 (`kind = "subagent"` assets in `packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/`), all in the `core` preset, and the
 `devkit_agt.features.integration.readiness` provider `spec` (`packages/devkit-spec/src/devkit_spec/features/delivery/usecases/integration.py`). devkit's workflow engine
 evaluates the definitions (`CAP-DLV-workflow-orchestration`);
@@ -34,7 +34,7 @@ sequence.
 
 - **In-Scope**: the five definitions (layout, anchor, stages, gates, entry and exit checks, returns, declared checks),
   the gate semantics of `plan-intent`, `plan-accept`, `dev-integration` and the `exception` stage, the envelope kinds
-  the stages require, the `activity-effort` rules of review and reconcile, the six role contracts, and the
+  the stages require, the `activity-effort` rules of review and reconcile, the optional UX review, the seven role contracts, and the
   `devkit_agt.features.integration.readiness` provider (`devkit_spec.features.delivery.usecases.integration.check`) for Unit and `session` tasks, and
   informational `devkit spec worker inspect` evidence for worker-result acceptance.
 - **Out-of-Scope**:
@@ -197,8 +197,18 @@ sequence.
     in `summary`). The effort is always proposed with a reason when the activity starts, and the `plan-accept`
     request shows each Planning run's effort, the refined `dev_effort` hint and the support-role envelopes present,
     naming a `challenger`, or a `scout` at `high`, that the effort required and no envelope shows, and each
-    `challenger` round with the `reverify` that closes it. Gates, exit checks
-    and `required` policies hold at every effort.
+    `challenger` round with the `reverify` that closes it, and each `ux-review` round with its open findings, which
+    the user decides there. Gates, exit checks and `required` policies hold at every effort.
+    The UX review (`ADR-ux-review-before-code`) is an optional delegation before code, never a stage or a gate: the
+    isolated, read-only `ux-reviewer` runs `spec-ux-review` on drafted screens (`ADR-ux-drafts-before-code`) in
+    Planning (recorded at `spike`) or, at spec depth, after the Screens section of `spec.md` is written and before the
+    plan (inside `specify` before `spec-plan`, or `characterize` before `plan-tasks` for a bugfix, recorded at that
+    stage). It walks each linked use case's main scenario and extensions through the screens and scores each screen
+    0, 1 or 2 on six rubric items with evidence for every score below 2; it checks the link-rule items on the drafts
+    by hand as its own judgment, outside the rubric. Its findings carry no severity and stay out of the review loop;
+    a unit has at most two rounds. In Development the implementer closes the last round with a further `ux-review`
+    envelope marking each finding `resolved` or `waived` with a reason. The effort table recommends one round at
+    `medium` and `high` when screens change; a `session` task applies the `ux-writing` instruction and runs none.
 16. **Only the workers write to Git**: a read-only role never stages or commits (`x-git-actions: [read]`). The two
     workers (`[read, commit]`) commit on their activity branch, write their own records and never push, merge, rebase,
     reset or amend (`ADR-orchestration-workers`).
@@ -345,6 +355,7 @@ Envelopes are devkit envelope files under a unit's `envelopes/`, written with
 | `feedback` | `envelopes/feedback-NN.yaml` (`checks.swept`), in the proposal or spec Unit | the executor; each Planning run supplies fresh coverage |
 | `final-report` | `envelopes/final-report-NN.yaml` (`checks.tests`, `build`, `lint`) | the implementer |
 | `challenger`, `scout` | role returns | the caller, from the role's fields; a `challenger` round is closed by a `reverify` |
+| `ux-review` | `envelopes/ux-review-NN.yaml`, the `ux-reviewer`'s round outside the review loop (no severity, at most two rounds), recorded at `spike`, `specify` or `characterize`; read by no check | the caller, from the role's fields; in Development the implementer closes the last round with a further `ux-review` marking each finding `resolved` or `waived` |
 | `reconcile-check` | the reconcile verification at `living-spec-draft`, read by its exit (`envelope-completed(reconcile-check)`) | the implementer: self-check at `low`, reconcile-reviewer's returned fields at `medium`/`high`, medium self-verification of the initial check or `high` self-verification of a minor-fix batch under rule 15; identify verifier, evidence, any initial omission reason and, at `high`, the `round <N>;` marker |
 | `worker` | one run's result, exactly one per run: the applied `activity-effort`, the run's `questions` (status `needs_input`) and its `problem` (`cause`, `attempts`, `recovery`; `failed` requires it) | the run itself: a worker, the Host in `direct`, or the Host for a range it blocks |
 | `answer` | the rewritten answers to a run's questions (`answers_to: worker-NN.yaml`), one decision per question, and the run's `assumptions` the user settled (`settles`, by 1-based position; an answer may hold settles alone) | the run that processes them, first, in a commit of its own |
@@ -371,7 +382,7 @@ Extension keys devkit does not interpret: `x-execution` (`isolated`), `x-invocat
 (`light-medium`, `general-high`, `high-reasoning`; never a host model name) and `x-git-actions` (`[read]` for every
 role but the two workers, `[read, commit]`).
 
-The four read-only roles preset a reasoning effort in their host blocks, with no model name
+The five read-only roles preset a reasoning effort in their host blocks, with no model name
 (`ADR-orchestration-workers`): `medium` for the `light-medium` profile, `high` for `general-high` and `high-reasoning`,
 as `effort` under `claude-code` and `model_reasoning_effort` under a `codex` block that is not `unsupported`, at
 `low`, `medium` or `high` only. Antigravity has no such key. The two workers set none, whatever their profile, so
@@ -387,6 +398,7 @@ the session's effort. An emulated named-role projection still applies its declar
 | `reconcile-reviewer` | `spec-sync` | `light-medium` | `medium` | nothing: verifies the implementer's reconcile at `medium`/`high`, subject to rule 15 | `reconcile-check` |
 | `code-reviewer` | `spec-review` | `general-high` | `high` | nothing but throwaway probe tests in its round's own subdirectory of the ignored probe path the payload names, read by no other round, left for worktree removal and never the unit's tests: verifies implementation against requirements and checks | `review`, `reverify`, or a message for a session |
 | `scout` | none: the procedure is in the contract | `light-medium` | `medium` | nothing, or the proposal's `materials/` on request | `scout` |
+| `ux-reviewer` | `spec-ux-review` | `general-high` | `high` | nothing: walks the use cases through the drafted screens and scores the rubric, before code, as an optional delegation | `ux-review` |
 | `planning-worker` | none: the procedure is in `spec/references/planning.md`, which the contract cites | `general-high` | session | the proposal directory in its `plan-` worktree, committed | `worker` (its own) |
 | `development-worker` | none: the procedure is in the contract | `general-high` | session | the unit's write scope in its `dev-` worktree, committed at every stage boundary | `worker` (its own) and the stage envelopes |
 
@@ -470,7 +482,8 @@ enforcement; no persistent-grant or native confinement guarantee follows.
 
 Stages delegate to `code-reviewer` (`review-refine`), `reconcile-reviewer` (`living-spec-draft`, as verifier) and `scout`
 (`spike`); `challenger` has no stage of its own (its return is recorded at `spike`) and is delegated as the Planning effort asks
-(at `medium` and `high`, rule 15). Implementation stages keep
+(at `medium` and `high`, rule 15); `ux-reviewer` has no stage either and is delegated before code when screens are
+drafted (rule 15). Implementation stages keep
 `role: developer`; the orchestration mode hands their turn to a worker. `[DELEGATE: role=<role> isolation=...]` in
 `next` names the role; `spec-delegate` decides between a host subagent and a main-session substitute and records the
 choice. A projected role receives only the per-call payload, since the host loads the contract body as its system

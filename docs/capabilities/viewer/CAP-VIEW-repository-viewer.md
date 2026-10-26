@@ -193,6 +193,11 @@ separately. Check: `tests/integration/features/browse/test_handbook.py`.
 - **Book on request**: The viewer MUST render book chapters only while the tab is shown and the book is requested,
   also after Proposals or Specs loaded the document index. Once computed, the book keeps the chapter groups and order
   of §4. Check: `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+- **Chapter groups**: The book MUST group `docs/` (and each `docs/packages/<name>/` as `docs/`) in the order Overview,
+  Architecture, Capabilities, Use Cases, UX, Steering, Decisions, Development; UX documents (`ux/`) form the UX group.
+  Check: `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
+- **ID links**: A `[ID]` prose reference or an inline code span holding exactly one ID of a document in the index,
+  UX IDs included, MUST link to that document. Check: `frontend/src/lib/documents.test.ts`.
 - **One index**: For a data source and branch, the document index MUST start with the first Proposals or Specs view or
   the book request, and a view change MUST NOT start another scan. Check:
   `frontend/src/lib/features/knowledge/HandbookMode.test.ts`.
