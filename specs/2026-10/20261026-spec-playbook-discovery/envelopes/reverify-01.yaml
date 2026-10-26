@@ -1,0 +1,33 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T00:16:52.140679Z'
+status: completed
+review: review-01.yaml
+summary: 'implementer verified: 1) playbook_skill.py body and description say only when explicitly invoked or confirming an offered playbook, asserted in test_playbooks.py; 2) skill step 1 and references/playbooks.md end the reply with the offer and wait before a Unit, branch or edit, asserted in the spec test, spec.md AC-04 and assumption; 3) query example swapped to an out-of-sample request and three out-of-sample authoring requests probed (manual-run §4), AC-01 refinement stated in spec.md §5'
+findings:
+- issue: The generated devkit-playbook skill dropped 'only' from its description and first body sentence, so its own text no longer restricts it to explicit use.
+  evidence: packages/devkit-dist/src/devkit_dist/features/distribution/services/installation/playbook_skill.py:10, :64
+  failure_condition: An antigravity-only projection has no invocation policy key; a model may pick devkit-playbook for an ordinary request, discovery outside spec intake (Non-Goal 4).
+  suggested_action: Restore 'only when the user explicitly invokes ... or confirms a playbook another installed entry skill offered' in body and description; assert 'only when' in the test.
+  resolution: resolved
+  severity: P3
+- issue: The skill does not say whether the agent waits for the answer after naming a candidate.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/SKILL.md.jinja:37; references/playbooks.md:9-10
+  failure_condition: Continuing lets a later confirmation arrive after a Unit or branch was created for the ordinary path, which the reference's reclassification does not cover.
+  suggested_action: State one behavior, e.g. wait for the answer before creating a Unit or editing.
+  resolution: resolved
+  severity: P3
+- issue: The operation-first query example is acceptance positive control P04 itself, so the P04 result is circular evidence for the rule.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/SKILL.md.jinja:31; spec.md:72, :158; materials/manual-run-probe.tsv
+  failure_condition: 'A request keeping a distinguishing qualifier may push skill-authoring past --limit 3 in hybrid: a silent miss with untested rule.'
+  suggested_action: Swap the example for one outside the acceptance sample and probe the rule on a request outside the sample; state the AC-01 refinement in the final report.
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS just test-affected 2577 passed 1 skipped; just test-dist 1042 passed
+  lint: PASS just lint devkit-spec devkit-dist
+diff_scope:
+  base: ''
+  head: 1c0bf6d148f5b7045a52dcec0ce7faf27fb2fcfb

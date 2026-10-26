@@ -22,7 +22,8 @@ created_at: 2026-10-22
   structural checks cannot show is corrected, deferred or waived on record instead of silently accumulating
 - **Scope**: the `drift-reconciliation` playbook of the opt-in `maintenance` catalog bundle, run by an AI coding agent
   with the repository's existing lookup, reference, entrypoint and governance tools and its development workflow
-- **Trigger**: the developer suspects drift that structure cannot show and explicitly invokes the playbook
+- **Trigger**: the developer suspects drift that structure cannot show and explicitly invokes the playbook, or confirms
+  it when `spec` intake offers it
 - **Preconditions**: the `maintenance` bundle is installed; structural consistency is kept separately under
   `UC-keep-the-living-spec-consistent`
 
@@ -30,8 +31,8 @@ created_at: 2026-10-22
 
 ## 2. Main Success Scenario
 
-1. The developer explicitly invokes the drift-reconciliation playbook through `devkit-playbook`, which loads its
-   procedure on demand (`CAP-DIST-context-and-playbooks`, `CAP-DLV-drift-reconciliation`).
+1. The developer explicitly invokes the drift-reconciliation playbook through `devkit-playbook`, or confirms the
+   one-line offer `spec` intake makes for a request to reconcile Living Spec drift, which loads its procedure on demand (`CAP-DIST-context-and-playbooks`, `CAP-DLV-drift-reconciliation`).
 2. The agent records the intake (repository identity, HEAD and dirty paths, the selected contract IDs or area, the
    permitted implementation and guidance roots, prior reports and the report destination) and lists the candidates
    of one bounded batch (`CAP-DLV-drift-reconciliation`).

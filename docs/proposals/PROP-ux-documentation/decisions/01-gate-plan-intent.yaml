@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: User asked to draft this proposal
+by: user
+at: '2026-10-26T00:25:54.400827Z'

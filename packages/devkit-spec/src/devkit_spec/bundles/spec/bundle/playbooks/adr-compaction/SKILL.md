@@ -5,8 +5,8 @@ description: Consolidate related approved ADRs into replacement ADRs that keep t
 
 # ADR compaction
 
-Run this playbook only when the user asks for it, for the whole ledger or named ADRs; the request authorizes the
-run's ADR deletions. It runs at `session` depth from a clean working tree; record the base commit
+Run this playbook only when the user invoked or confirmed it, for the whole ledger or named ADRs; that invocation
+authorizes the run's ADR deletions. It runs at `session` depth from a clean working tree; record the base commit
 (`git rev-parse HEAD`).
 
 A compaction never changes a decision. A decision that must change needs a new ADR with `supersedes`, outside this

@@ -40,7 +40,8 @@ Devkit provides `playbook get <bundle>/<playbook>` as a non-executing synchroniz
 External systems own scheduling and launching; the calling agent owns procedure execution, prerequisite checks
 and progress. An explicitly configured schedule naming the exact ID is task-specific explicit invocation, as is
 a user's direct request naming it. Neither grants extra permission or approval for gated operations. Ordinary
-requests do not authorize discovery. Existing explicit discovery and failing-rule remediation remain valid.
+requests do not authorize discovery. (Replaced by `ADR-spec-intake-playbook-discovery`: `spec` intake runs one
+bounded search, and a confirmed offer is explicit invocation.) Existing explicit discovery and failing-rule remediation remain valid.
 
 The service reads the receipt's deployed snapshot and effective bytes through existing shared-lock readers;
 it does not rediscover installed packages, synchronize implicitly, or offer fallback selection. It returns full
@@ -53,4 +54,4 @@ Callers can retrieve a known playbook without search dependencies. They must pro
 workspace, load required bundle context and preserve all project/host approval boundaries. Unavailable approval
 UI does not authorize execution. Schedule retries, concurrency, history and recovery stay outside devkit.
 The capability, resource taxonomy and consumption guidance must reflect explicit exact invocation consistently;
-the existing no-unsolicited-discovery rule remains. No live scheduler integration proves or gates this decision.
+the existing no-unsolicited-discovery rule remains (replaced by `ADR-spec-intake-playbook-discovery`). No live scheduler integration proves or gates this decision.

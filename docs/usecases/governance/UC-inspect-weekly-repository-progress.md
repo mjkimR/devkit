@@ -21,7 +21,7 @@ entrypoints:
   verified delivery from incomplete evidence, understand health limitations and choose useful next actions
 - **Scope**: the `weekly-report` playbook of the opt-in `maintenance` catalog bundle, run by an AI coding agent with
   the repository's existing tools; publishing the verified report is `UC-publish-a-weekly-report`
-- **Trigger**: the developer explicitly invokes the weekly-report playbook
+- **Trigger**: the developer explicitly invokes the weekly-report playbook, or confirms it when `spec` intake offers it
 - **Preconditions**: the `maintenance` bundle is installed; the developer supplies the scope and may supply the
   timezone or interval, the artifact location and a prior report; generation needs neither maintenance artifacts nor
   an external destination
@@ -30,7 +30,8 @@ entrypoints:
 
 ## 2. Main Success Scenario
 
-1. The developer explicitly invokes the weekly-report playbook with the report's scope (`CAP-DLV-weekly-report`).
+1. The developer explicitly invokes or confirms the weekly-report playbook with the report's scope
+   (`CAP-DLV-weekly-report`).
 2. The agent records the repository identity, the inspected and integration revisions, the generation time and the
    dirty state with local Git only, and resolves the interval: by default the previous complete Monday-to-Monday week
    in the developer's timezone, with inclusive start, exclusive end and each endpoint's UTC offset

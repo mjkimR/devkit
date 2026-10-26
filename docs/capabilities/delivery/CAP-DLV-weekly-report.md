@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-weekly-report
 title: Evidence-based Weekly Reporting
-summary: "An explicitly invoked maintenance playbook produces immutable revision-bound weekly reports with delivery evidence, health limitations and prioritized actions, keeping authorized publication outcomes separate."
+summary: "An explicitly invoked or confirmed maintenance playbook produces immutable revision-bound weekly reports with delivery evidence, health limitations and prioritized actions, keeping authorized publication outcomes separate."
 area: delivery
 status: active
 usecases:
@@ -16,7 +16,8 @@ entrypoints:
 ## 1. Scope and Invocation
 
 The opt-in maintenance bundle supplies weekly-report independently of drift/upkeep. Explicit invocation through
-`devkit-playbook` or exact `devkit playbook get maintenance/weekly-report` follows
+`devkit-playbook`, exact `devkit playbook get maintenance/weekly-report` or the user's confirmation of a `spec`
+intake offer follows
 `CAP-DIST-context-and-playbooks`; selection/retrieval never executes it. Generation reuses available tools and
 artifacts without automatically running checks, maintenance, fixes or creating follow-ups. No scheduler,
 detector, runtime publisher, history backend or standalone skill is included. Publication needs separate authority.
