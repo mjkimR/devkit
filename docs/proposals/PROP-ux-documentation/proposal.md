@@ -2,7 +2,7 @@
 id: PROP-ux-documentation
 title: UX documents, authoring guidance and use-case-driven review
 summary: "Adds a UX document kind for screens and interaction flows linked from use case steps to capabilities, with authoring guidance that leaves the wireframe medium to the project and an isolated reviewer that walks use cases through the screens."
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-26
 target_area: documents/
 priority: high                        # critical | high | medium | low
