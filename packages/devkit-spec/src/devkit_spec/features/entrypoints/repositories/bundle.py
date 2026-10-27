@@ -28,6 +28,7 @@ _CHECKLIST_ITEM = re.compile(r"^ *(?:- |\* |\+ )\[[ xX]\] (.*)$")
 _BOUNDARY_LINE = re.compile(r"^\s*(?:[-*+]\s+)?\**_Boundary\**\s*:\**\s*(.*)$")
 _LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s")
 _FENCES = ("```", "~~~")
+_FENCE = re.compile(r"^(`{3,}|~{3,})")
 _PAREN_NOTE = re.compile(r"\([^)]*\)")
 _BOLD = re.compile(r"^\*\*(.+)\*\*$")
 
@@ -66,7 +67,8 @@ def parse_boundaries(text: str) -> list[TaskBoundary]:
     tasks: list[TaskBoundary] = []
     current: TaskBoundary | None = None
     items = 0
-    fenced = False
+    # The open fence's marker: closed only by a run of the same character at least as long.
+    fence = ""
     # The open boundary value: its label line's indentation and the text so far, until a line ends it.
     open_indent: int | None = None
     value = ""
@@ -90,10 +92,15 @@ def parse_boundaries(text: str) -> list[TaskBoundary]:
                 value += " " + stripped
                 continue
             close()
-        if stripped.startswith(_FENCES):
-            fenced = not fenced
+        marker = _FENCE.match(stripped)
+        if marker:
+            run = marker.group(1)
+            if not fence:
+                fence = run
+            elif run[0] == fence[0] and len(run) >= len(fence) and not stripped[len(run) :].strip():
+                fence = ""
             continue
-        if fenced:
+        if fence:
             continue
         item = _CHECKLIST_ITEM.match(line)
         if item:
@@ -119,8 +126,8 @@ def _indent(line: str) -> int:
 def split_boundary(value: str) -> list[str]:
     """The entries of one ``_Boundary`` value."""
     entries = []
-    for part in value.split(","):
-        part = _PAREN_NOTE.sub("", part).replace("`", "").strip()
+    for part in _PAREN_NOTE.sub("", value).split(","):
+        part = part.replace("`", "").strip()
         part = _BOLD.sub(r"\1", part).strip()
         if part:
             entries.append(part)

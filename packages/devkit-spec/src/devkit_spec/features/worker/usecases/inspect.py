@@ -16,7 +16,14 @@ from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import FrontmatterError, run_git
 
 from devkit_spec.base.errors import SpecError
-from devkit_spec.features.worker.usecases.inputs import ScopeUnresolved, derive_scope, git, inputs, prefix, records
+from devkit_spec.features.worker.usecases.inputs import (
+    ScopeUnresolved,
+    derive_scope,
+    git,
+    inputs,
+    project_path,
+    records,
+)
 
 
 class CheckNotRun(SpecError):
@@ -91,7 +98,7 @@ class InspectWorkerUseCase(BaseUseCase):
         details: bool = True,
         runner: Callable[[Path, Sequence[str]], dict[str, Any]] = run_check,
     ) -> dict[str, Any]:
-        root, tip, chosen = inputs(root, unit, base, head, base_checkout)
+        root, tip, project, chosen = inputs(root, unit, base, head, base_checkout)
         unit = str(chosen["unit"]["value"])
         base, head = str(chosen["base"]["value"]), str(chosen["head"]["value"])
         checks: dict[str, Any] = {}
@@ -109,12 +116,12 @@ class InspectWorkerUseCase(BaseUseCase):
         ]
         result["changed_paths"] = changed
         if scope is not None:
-            scope = [prefix(p) for p in scope]
+            scope = [project_path(project, p) for p in scope]
         try:
             entries = (
-                [{"path": prefix(p), "source": "argument"} for p in scope]
+                [{"path": p, "source": "argument"} for p in scope]
                 if scope is not None
-                else derive_scope(root, tip, unit)
+                else derive_scope(root, tip, unit, project)
             )
             result["scope"] = entries
             outside = [
