@@ -218,19 +218,13 @@ def test_changed_source_bound_evidence_at_the_build_is_stale(repo, ready_provide
     assert worktree.exists()
 
 
-def test_confirmation_text_states_the_conditions_and_the_disclosure(repo):
+def test_prepared_scope_states_the_target_and_the_disclosure(repo):
     base, _ = repo
     request = IntegrationService(base).prepare("dev-demo", TASK).request
-    message = request.confirmation_message()
-    lines = message.splitlines()
-    assert lines[0] == 'Approve local integration of "dev-demo" into "main" with a merge commit?'
-    assert (
-        "only if the merge is clean, the integration policy is unchanged and readiness provider"
-        ' "fixture" passes again on the merged result; otherwise nothing changes on the target.'
-    ) in message.replace("\n", " ")
-    assert 'Result check: "fixture checks on the merged result only"' in lines
-    assert f'Target: "main" @ {request.context.finish.target_sha} (at confirmation)' in lines
-    assert request.to_dict()["merge_method"] == "no-ff"
+    scope = request.approval_scope()
+    assert scope["readiness"] == {"disclosure": "fixture checks on the merged result only"}
+    assert scope["target"] == {"branch": "main", "sha": request.context.finish.target_sha}
+    assert scope["merge_method"] == "no-ff" and scope["already_merged"] is False
 
 
 def test_already_merged_branch_is_a_cleanup_only_request(repo):
@@ -238,9 +232,7 @@ def test_already_merged_branch_is_a_cleanup_only_request(repo):
     git(base, "merge", "-q", "--no-ff", "-m", "chore(merge): integrate dev-demo into main", "dev-demo")
     head = git(base, "rev-parse", "HEAD")
     service = IntegrationService(base)
-    message = service.prepare("dev-demo", TASK).request.confirmation_message()
-    assert message.startswith('Approve cleanup of "dev-demo", already merged into "main"?')
-    assert "nothing is merged; only the cleanup below runs" in message
+    assert service.prepare("dev-demo", TASK).request.approval_scope()["already_merged"] is True
     result = integrate(service)
     assert result.status == "completed" and result.steps["merge"] == "skipped"
     assert result.request.approval_scope()["already_merged"] is True and result.build_target is None

@@ -91,7 +91,7 @@ Each label maps to one manifest `kind` (see the `CAP-DIST-manifest-spec`): `inst
 
 The **bundle context** is the whole `get-context <bundle>` response: the constitution (when present, read in full), the instruction header catalog (read selectively) and the titles and summaries of the project documents in the directory the bundle declares (`context_documents`), whose bodies are read on demand. The response, the skill body prerequisite that `devkit sync` injects and the once-per-bundle rule are specified in `CAP-DIST-context-and-playbooks` (section 2). In addition:
 
-- Authoring ZIP exports, like source files, never receive the prerequisite.
+- Bundle source files never receive the prerequisite.
 - Other package entry points may request the same context with the same command and the same once-per-bundle rule.
 - The command is stateless: context deduplication is the agent's responsibility; automatic injection and exactly-once runtime enforcement are not guaranteed.
 - Installation, listing, and skill discovery do not load the context. Instruction bodies remain on demand after `get-context` runs.

@@ -42,7 +42,7 @@ from devkit_dist.features.distribution.models.results import (
     SearchResult,
     SyncResult,
 )
-from devkit_dist.features.distribution.services.bundles import Asset, BuildResult, Bundle, build_bundle, load_bundle
+from devkit_dist.features.distribution.services.bundles import Asset, Bundle, load_bundle
 from devkit_dist.features.distribution.services.installation.config import ProjectConfig, read_config, update_config
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle, discover_bundles
 from devkit_dist.features.distribution.services.installation.plan import BundlePlan, plan_bundle
@@ -67,7 +67,6 @@ from devkit_dist.features.distribution.usecases.sync import RecoverProject, sync
 
 __all__ = [
     "Asset",
-    "BuildResult",
     "Bundle",
     "BundleConflictError",
     "BundleError",
@@ -105,7 +104,6 @@ __all__ = [
     "ToolVersionChangedNotice",
     "UnsafeWorkspaceError",
     "accept_override",
-    "build_bundle",
     "create_override",
     "diff_override",
     "discover_bundles",

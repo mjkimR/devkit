@@ -10,7 +10,7 @@ src/devkit_agt/features/workflow/
 │   ├── definition.py    # WorkflowDocument and pure parse_definition
 │   └── layout.py        # TemplateLayout path rendering and discovery_glob
 ├── repositories/        # configuration, workflow sources, Git and unit records
-│   ├── definitions.py   # load_definition, discover_definitions, resolve_definition
+│   ├── definitions.py   # load_definition, discover_definitions
 │   ├── layout.py        # discover_units: real filesystem discovery from a layout
 │   ├── project/         # workflow configuration and role vocabulary
 │   └── unit/            # bindings, frontmatter, immutable records and decisions
@@ -132,7 +132,7 @@ The main calls:
 | `list_units(ws, *, statuses=(), excluded=()) -> list[UnitInfo]` | `list`. |
 | `record_answer(ws, unit, request_id, action, values=(), *, note="", by="", lint=True) -> Decision` | `answer`. |
 | `return_to(ws, unit, stage, *, note="", by="", lint=True) -> Decision` | `return`. |
-| `plan_handoff(ws, unit, result, choice=None) -> HandoffPlan`, `apply_handoff(plan, *, when=None, by="", note="") -> HandoffOutcome` | `handoff`. |
+| `plan_handoff(ws, unit, result, choice=None) -> HandoffPlan`, `apply_handoff(plan, *, when=None, by="") -> HandoffOutcome` | `handoff`. |
 | `compose_envelope(...) -> Envelope`, `envelope_timestamp(unit_dir, workflow, segment_start)`, `render_envelope(envelope, created_at)`, `write_envelope(unit_dir, kind, body)` | The envelope authoring commands; pass `workflow=scope.workflow, segment=scope.binding.segment` (from `ws.unit_scope`) to scope the envelope, `load_envelopes(dir).scoped(workflow, segment)` as `envelopes`, `unit=scope.rel` so the refusals name runnable commands, and `envelope_timestamp(dir, workflow, scope.binding.segment_start)` as `created_at` so no earlier return voids it. |
 | `load_envelopes(dir).hold() -> Hold` | Unresolved problems and unanswered questions over every segment (`blocked`, `problems`, `questions`, `reasons()`); `UnitEvaluation.hold` carries the same. |
 | `evaluate_definition(doc, Options) -> UnitEvaluation` | Pure evaluation without policies or writes. |

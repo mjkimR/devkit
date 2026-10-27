@@ -43,10 +43,9 @@ from devkit_dist.adapters.cli import (
 
 from devkit_spec.features.entrypoints import Applied
 from devkit_spec.features.entrypoints.models.derive import Pair, Skipped, State
-from devkit_spec.features.entrypoints.usecases.derive import DeriveEntrypointsUseCase, _check_options
+from devkit_spec.features.entrypoints.usecases.derive import DEFAULT_STATUS, DeriveEntrypointsUseCase, _check_options
 from devkit_spec.utils.output import echo_page, fields_line, page, sentinel
 
-DEFAULT_STATUS = "completed,in-progress"
 DEFAULT_LIMIT = 20
 
 
@@ -123,7 +122,7 @@ def derive_cmd(
             }
         )
     else:
-        _echo_text(paged, skipped, applied, summary, list_skipped)
+        _echo_text(paged, skipped, applied, list_skipped)
         args = ["entrypoints", "derive", *(["--spec", spec_dir] if spec_dir else ["--all"])]
         for flag, given in (("--status", status), ("--min-count", min_count)):
             if given is not None:
@@ -167,7 +166,7 @@ def _skipped_counts(skipped: Sequence[Skipped]) -> list[dict[str, object]]:
 
 
 def _echo_text(
-    pairs: Sequence[Pair], skipped: Sequence[Skipped], applied: Sequence[Applied], summary: dict, list_skipped: bool
+    pairs: Sequence[Pair], skipped: Sequence[Skipped], applied: Sequence[Applied], list_skipped: bool
 ) -> None:
     for doc, doc_path, groups in _candidates(pairs):
         click.echo(

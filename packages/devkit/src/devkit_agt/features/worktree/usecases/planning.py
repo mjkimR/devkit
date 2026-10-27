@@ -17,13 +17,13 @@ from devkit_agt.features.worktree.models.errors import (
     from_base_error,
     pull_request_policy_fix,
 )
+from devkit_agt.features.worktree.models.lifecycle import Position
 from devkit_agt.features.worktree.models.planning import FinishPlan as FinishPlan
 from devkit_agt.features.worktree.services.merging import check_identity
 from devkit_agt.features.worktree.usecases.lifecycle import (
     BASE_KEY,
     MARKER,
     UNIT_KEY,
-    Position,
     _check_deletable,
     _clean,
     _config,

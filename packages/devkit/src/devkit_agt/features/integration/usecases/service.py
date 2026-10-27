@@ -306,7 +306,7 @@ class IntegrationService:
             result.authority = "host-conversation"
         record = self._record(request.id)
         record.approved = True
-        return self._run(request.id, LOCK_WAIT, True)
+        return self._run(request.id, LOCK_WAIT)
 
     def _compose_execute(
         self, request: IntegrationRequest, lifecycle: AcceptanceLifecycle, ui_action: str
@@ -455,7 +455,7 @@ class IntegrationService:
             if scope.extension not in (cleanup_done or set()):
                 extensions[scope.extension][1].integration_validate(context, scope.targets)
 
-    def _run(self, request_id: str, wait: float, approving: bool) -> IntegrationResult:
+    def _run(self, request_id: str, wait: float) -> IntegrationResult:
         guard_execution()
         record = self._record(request_id)
         if not record.approved:
@@ -466,14 +466,12 @@ class IntegrationService:
             if record.result.request.route == "pull-request":
                 from devkit_agt.features.integration.usecases.pull_request import execute
 
-                return execute(self, record, wait, approving)
+                return execute(self, record, wait)
             plan = record.result.request.context.finish
             try:
                 with integration_lock(Path(plan.common_dir), timeout=wait):
-                    return self._execute(record, approving)
+                    return self._execute(record, True)
             except LockHeldError as exc:
-                if not approving:
-                    raise
                 result = record.result
                 result.observed = self._observe(result.request)
                 exc.fix = (

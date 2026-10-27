@@ -146,7 +146,7 @@ class UnitInvalidError(WorktreeError):
 
     code = "WORKTREE_UNIT_INVALID"
     input_error = True
-    fix = "Pass --unit as the unit directory relative to the devkit project, as it exists on the branch"
+    fix = "Pass --unit as the unit directory relative to the repository root, as it exists on the branch"
 
 
 class AttachRefusedError(_Interaction):

@@ -1,12 +1,11 @@
 import hashlib
-import zipfile
 from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
 from devkit_core.base.errors import ArgumentError
 from devkit_dist.features.distribution.models.errors import BundleError, NotSynchronizedError, SelectionError
-from devkit_dist.features.distribution.services.bundles import build_bundle, load_bundle
+from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
 from devkit_dist.features.distribution.services.installation.plan import plan_bundle
@@ -122,14 +121,9 @@ def test_constitution_symlink_rejected(project, tmp_path: Path) -> None:
         load_bundle(source)
 
 
-def test_archive_preserves_sources_and_plan_matches_deployment(project, tmp_path: Path) -> None:
-    source, target, installed = project
+def test_plan_matches_deployment(project) -> None:
+    _, target, installed = project
     bundle = installed[0].bundle
-    archive_path = tmp_path / "bundle.zip"
-    build_bundle(bundle, archive_path)
-    with zipfile.ZipFile(archive_path) as archive:
-        assert archive.read("AGENTS.md") == (source / "AGENTS.md").read_bytes()
-        assert archive.read("review/SKILL.md") == (source / "review/SKILL.md").read_bytes()
     sync_project(target, installed)
     for item in plan_bundle(bundle).to_dict()["files"]:
         assert item["sha256"] == hashlib.sha256((target / item["destination"]).read_bytes()).hexdigest()

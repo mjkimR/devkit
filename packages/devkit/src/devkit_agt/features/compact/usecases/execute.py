@@ -35,7 +35,8 @@ from devkit_dist.base.errors import DevkitRootNestedError
 from devkit_dist.features.project.repositories.project import find_project_root, git_toplevel
 
 from devkit_agt.features.compact.models.errors import CommandNotStartedError, LogDirectoryError, SlowCommandNotice
-from devkit_agt.features.compact.services.scan import Scan, scan
+from devkit_agt.features.compact.models.scan import Scan
+from devkit_agt.features.compact.services.scan import scan
 
 KEEP_LOGS = 20
 STOP_GRACE = 5.0

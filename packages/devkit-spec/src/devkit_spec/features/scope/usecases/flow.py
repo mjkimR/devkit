@@ -48,7 +48,7 @@ from devkit_spec.features.scope.models.model import (
     Verdict,
 )
 from devkit_spec.features.scope.models.model import now as utc_now
-from devkit_spec.features.scope.models.registry import Journaler, Registry, new_request_id, token_hash
+from devkit_spec.features.scope.models.registry import Registry, new_request_id, token_hash
 from devkit_spec.features.scope.repositories.localfs import LocalRegistry
 from devkit_spec.features.scope.repositories.location import (
     Location,
@@ -125,16 +125,16 @@ def sweep_events(results: Sequence[SweepResult], source: str = "") -> list[Event
     ]
 
 
-def journal(registry: Registry, namespace: str, events: Sequence[Event]) -> list[AdvisoryError]:
-    """Append ``events`` when the adapter keeps a journal, under its own deadline; a failure is one warning."""
-    if not events or not isinstance(registry, Journaler):
+def journal(registry: LocalRegistry, namespace: str, events: Sequence[Event]) -> list[AdvisoryError]:
+    """Append ``events`` to the journal under its own deadline; a failure is one warning."""
+    if not events:
         return []
     stamp = utc_now()
     stamped = [event if event.at else _at(event, stamp) for event in events]
     try:
         registry.append(namespace, stamped, Deadline(JOURNAL_SECONDS))
     except (AdvisoryError, OSError) as exc:
-        target = str(registry.journal_path(namespace)) if isinstance(registry, LocalRegistry) else namespace
+        target = str(registry.journal_path(namespace))
         message = exc.message if isinstance(exc, AdvisoryError) else str(exc)
         return [ScopeJournalWarning(f"the event journal could not be written: {message}", target_files=[target])]
     return []
@@ -231,21 +231,22 @@ def _rollback(registry: Registry, stored: Record, token: str) -> list[str]:
     return []
 
 
-def auto_register(root: Path, spec_dir: str, *, source: str) -> tuple[Registered | None, list[AdvisoryError]]:
-    """Retain best-effort creation snapshots without giving workers maintenance duties."""
+def auto_register(root: Path, spec_dir: str, *, source: str) -> Registered | None:
+    """Retain best-effort creation snapshots without giving workers maintenance duties: every registration notice
+    and failure is only a verbose diagnostic."""
     try:
         session = open_session(root)
         if not session.location.linked:
-            return None, []
+            return None
         registered = register(session, spec_dir, source=source)
         for notice in registered.notices:
             _automatic_diagnostic(notice.code)
         registered.notices = []
-        return registered, []
+        return registered
     except Exception as exc:
         # Cancellation/termination are BaseException and intentionally remain outside this boundary.
         _automatic_diagnostic(getattr(exc, "code", "SPEC_SCOPE_AUTO_REGISTER_FAILED"))
-        return None, []
+        return None
 
 
 _log = get_logger(__name__)

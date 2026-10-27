@@ -73,15 +73,15 @@ def _open_directory(directory: Path) -> int:
 
 
 @contextmanager
-def locked(directory: Path, timeout: float | None = None) -> Iterator[None]:
+def locked(directory: Path) -> Iterator[None]:
     """Hold an exclusive ``flock`` on ``directory`` itself for the block.
 
-    The wait for another writer is bounded by ``timeout`` (default ``LOCK_TIMEOUT``) seconds, then
+    The wait for another writer is bounded by ``LOCK_TIMEOUT`` seconds, then
     ``LockHeldError`` (``LOCK_HELD``). Without ``fcntl``, or on a file system that cannot lock, it raises
     ``LockUnsupportedError`` (``LOCK_UNSUPPORTED``).
     """
     fcntl = _fcntl()
-    limit = Deadline(LOCK_TIMEOUT if timeout is None else timeout)
+    limit = Deadline(LOCK_TIMEOUT)
     fd = _open_directory(directory)
     try:
         while True:

@@ -202,8 +202,8 @@ def _shows_failure(item: RuleTestRun) -> bool:
     return item.failed and item.run is not None and not item.run.interrupted
 
 
-def rule_test_entry(item: RuleTestRun, workspace_root: Path, *, details: bool = True) -> dict[str, Any]:
-    """One rule's result as JSON; ``details`` adds the failure view (summaries, failed tests, excerpt)."""
+def rule_test_entry(item: RuleTestRun, workspace_root: Path) -> dict[str, Any]:
+    """One rule's result as JSON, with the failure view (summaries, failed tests, excerpt) of a failed run."""
     run = item.run
     entry: dict[str, Any] = {
         "rule_id": item.rule_id,
@@ -216,7 +216,7 @@ def rule_test_entry(item: RuleTestRun, workspace_root: Path, *, details: bool = 
         "output": None,
         "omitted": None,
     }
-    if details and run is not None and _shows_failure(item):
+    if run is not None and _shows_failure(item):
         found = run.scan
         entry["summaries"] = list(found.summaries)
         entry["failures"] = [{"test": f.test, "kind": f.kind, "message": f.message} for f in found.failures]

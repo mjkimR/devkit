@@ -38,13 +38,9 @@ from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_agt.features.worktree.models.config import WorktreeConfig
 from devkit_agt.features.worktree.models.errors import NestedError, RunFromBaseError, WorktreeError
+from devkit_agt.features.worktree.models.lifecycle import FinishResult, Position
 from devkit_agt.features.worktree.usecases.configured import FinishActivity, LocateProject, StartActivity
-from devkit_agt.features.worktree.usecases.lifecycle import (
-    FinishResult,
-    Position,
-    StartBranch,
-    WorktreeStatusQuery,
-)
+from devkit_agt.features.worktree.usecases.lifecycle import StartBranch, WorktreeStatusQuery
 from devkit_agt.features.worktree.usecases.stale import StaleBranches
 
 WORKSPACE = workspace_option("Any directory inside the checkout [default: the current directory]")
@@ -62,9 +58,9 @@ def _value(value: object) -> str:
     return text if _BARE.fullmatch(text) else json.dumps(text, ensure_ascii=False)
 
 
-def _position(workspace_root: str | None) -> tuple[Position, WorktreeConfig, Path | None]:
-    """The checkout containing ``--workspace-root`` (default: the current directory), its devkit project's
-    ``[worktree]`` settings, and that project's directory relative to the checkout (``None`` outside it)."""
+def _position(workspace_root: str | None) -> tuple[Position, WorktreeConfig]:
+    """The checkout containing ``--workspace-root`` (default: the current directory) and its ``[worktree]``
+    settings."""
     start = existing_directory(workspace_root) if workspace_root is not None else Path.cwd()
     return LocateProject().execute(start)
 
@@ -103,8 +99,7 @@ def _rerun_on_base(command: Callable[..., Any]) -> Callable[..., Any]:
             return command(*args, **kwargs)
         except (NestedError, RunFromBaseError) as error:
             if error.base is not None:
-                project = _position(kwargs.get("workspace_root"))[2]
-                error.fix = devkit_command(_same_command(error.base / project if project else error.base))
+                error.fix = devkit_command(_same_command(error.base))
             raise
 
     return wrapper
@@ -131,7 +126,7 @@ def cli() -> None:
     help="Attach a worktree to the existing BRANCH (local, or a fetched remote-tracking copy) instead of creating it",
 )
 @click.option(
-    "--unit", default=None, help="With --existing-branch: the unit directory on the branch (project-relative)"
+    "--unit", default=None, help="With --existing-branch: the unit directory on the branch (repository-relative)"
 )
 @FORMAT_OPTION
 @boundary
@@ -162,11 +157,11 @@ def start_cmd(
         raise ArgumentError(
             "--existing-branch and --unit go together",
             target_files=["--unit"] if unit is None else ["--existing-branch"],
-            fix="Add --unit with the unit directory the branch holds, relative to the devkit project"
+            fix="Add --unit with the unit directory the branch holds, relative to the repository root"
             if unit is None
             else f"Add --existing-branch {branch}",
         )
-    position, config, project = _position(workspace_root)
+    position, config = _position(workspace_root)
     if no_worktree:
         started = StartBranch().execute(position, branch)
         if is_json(output_format):
@@ -179,7 +174,7 @@ def start_cmd(
         echo_notices(started.notices)
         exit_on_warnings(started.notices)
         return
-    result = StartActivity().execute(position, config, project, branch, existing=existing, unit=unit)
+    result = StartActivity().execute(position, config, branch, existing=existing, unit=unit)
     if is_json(output_format):
         echo_json(result.to_dict())
     else:
@@ -237,7 +232,7 @@ def finish_cmd(
     """
     if merge and discard:
         raise ArgumentError("--merge and --discard exclude each other", target_files=["--discard"])
-    position, config, _ = _position(workspace_root)
+    position, config = _position(workspace_root)
     try:
         result = FinishActivity().execute(
             position, config, branch, merge=merge, discard_branch=discard, local_only=local_only
@@ -299,7 +294,7 @@ def _show_stale(workspace_root: str | None, output_format: str) -> None:
     Changes nothing. Each stale branch is also a WORKTREE_STALE_BRANCH warning whose fix names how to resume it and,
     once the user decides, how to discard it; without gh the check is skipped with a notice.
     """
-    position, config, _ = _position(workspace_root)
+    position, config = _position(workspace_root)
     result = StaleBranches().execute(position, config.stale_after)
     notices = [*result.notices, *(item.warning(position.base, config.stale_after) for item in result.stale)]
     if is_json(output_format):

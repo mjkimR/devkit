@@ -107,10 +107,10 @@ from devkit_agt.features.worktree import attach, finish, locate, read_worktree_c
 
 position = locate(Path.cwd())
 config = read_worktree_config(project_root)
-started = start(position, "dev-login", setup=config.setup, project=Path("."))  # StartResult(path, created, synced, notices, ...)
+started = start(position, "dev-login", setup=config.setup, sync=True)  # StartResult(path, created, synced, notices, ...)
 branch = start_branch(position, "dev-login")                          # BranchStartResult(checkout, started_from, ...)
 attached = attach(position, "dev-login", source="origin/dev-login", unit="docs/specs/login",
-                  setup=config.setup, project=Path("."), check=lambda root, branch, unit, tip: ...)
+                  setup=config.setup, sync=True, check=lambda root, branch, unit, tip: ...)
 done = finish(position, "dev-login", merge=False, pull_request=config.pull_request,
               delete_branch=config.delete_branch, before_remove=lambda result: ...,
               guard=lambda merge_base, tip: ...)                       # guard runs with merge=True only

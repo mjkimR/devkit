@@ -18,7 +18,7 @@ from devkit_dist.features.distribution.models.results import (
     OverrideStatus,
     SyncResult,
 )
-from devkit_dist.features.distribution.services.bundles import build_bundle, load_bundle
+from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.installation.config import (
     ConfigTemplateResult,
     effective_selection,
@@ -246,10 +246,6 @@ class PlanSource(BaseUseCase):
 
     def execute(self, source: Path, preset: str | None, agents: tuple[str, ...]) -> BundlePlan:
         return plan_bundle(load_bundle(source), preset, list(agents) or None, source=str(source))
-
-
-def build_source(source: Path, output: Path):
-    return build_bundle(load_bundle(source), output)
 
 
 class ShowConfiguration(BaseUseCase):

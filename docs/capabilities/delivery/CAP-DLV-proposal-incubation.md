@@ -555,11 +555,13 @@ uv run devkit spec proposal check fast-engine                        # before an
 ### 4.11 Library
 
 ```python
-from devkit_spec.features.proposals import accept_proposal, create_padr, create_proposal, handoff_proposal, prune_proposals
+from devkit_spec.features.proposals import accept_proposal, create_proposal, handoff_proposal, prune_proposals
+from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecisionUseCase
 
 created = create_proposal(root, "fast-engine", title="Fast Engine", with_target_docs=True)  # CreatedProposal
-create_padr(root, "fast-engine", "Use AST parser", summary="Parses rules with an AST.")  # CreatedDecision
-create_padr(root, "fast-engine", "2024 roadmap", padr_slug="roadmap-2024")  # PADR-roadmap-2024
+padr = CreateProposalDecisionUseCase()
+padr.execute(root, "fast-engine", "Use AST parser", summary="Parses rules with an AST.")  # CreatedDecision
+padr.execute(root, "fast-engine", "2024 roadmap", padr_slug="roadmap-2024")  # PADR-roadmap-2024
 accepted = accept_proposal(root, "small-fix", by="user", note="<reason>", direct=True)  # AcceptResult (check=True: read-only)
 result = handoff_proposal(root, "fast-engine")  # HandoffResult
 result.dir, result.workflow, result.dev_effort, result.decisions, result.rewritten, result.unresolved, result.notices

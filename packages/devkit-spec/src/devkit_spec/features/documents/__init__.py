@@ -5,10 +5,9 @@ IDs (``ids``), the kind definition table (``kinds``), documents and references (
 workspace index (``DocumentIndex``). Contract: ``CAP-DOCS-document-model`` (``docs/capabilities/documents/``).
 """
 
-from devkit_spec.features.documents.models.ids import ID_PATTERN, PREFIXES, Kind, is_id, kind_of
+from devkit_spec.features.documents.models.ids import PREFIXES, Kind, is_id, kind_of
 from devkit_spec.features.documents.models.kinds import (
     FormatScope,
-    KindDefinition,
     KindTableError,
     Summary,
     by_prefix,
@@ -30,7 +29,6 @@ from devkit_spec.features.documents.repositories.index import (
 from devkit_spec.features.documents.services.rewrite import rewrite
 
 __all__ = [
-    "ID_PATTERN",
     "PREFIXES",
     "SOURCE_DIRECTORIES",
     "TERMINAL_STATUSES",
@@ -39,7 +37,6 @@ __all__ = [
     "FormatScope",
     "Issue",
     "Kind",
-    "KindDefinition",
     "KindTableError",
     "Reference",
     "Summary",

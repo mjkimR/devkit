@@ -906,7 +906,7 @@ def test_handoff_reuses_only_clean_pinned_devkit_worktree(accepted_handoff_base)
     from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase, prepare
 
     repo = accepted_handoff_base
-    started = start(locate(repo), "dev-idea", project=Path("."), revision=git(repo, "rev-parse", "HEAD"))
+    started = start(locate(repo), "dev-idea", sync=True, revision=git(repo, "rev-parse", "HEAD"))
     assert prepare(repo, "idea").existing
     result = HandoffUseCase(repo).execute("idea", "medium")
     assert result["status"] == "handed_off", result

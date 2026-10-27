@@ -204,12 +204,6 @@ class IntegrationRequest:
             return self.pr_number
         return "create" if self.route == "pull-request" else None
 
-    def confirmation_message(self, language: str = "en") -> str:
-        """Render owned copy; preserve exact evidence and business scope."""
-        from devkit_agt.features.integration.models.language import confirmation_message
-
-        return confirmation_message(self, language)
-
     def to_dict(self) -> dict[str, Any]:
         return asdict(self) | {
             "repository": self.repository.public_scope() if self.repository else None,

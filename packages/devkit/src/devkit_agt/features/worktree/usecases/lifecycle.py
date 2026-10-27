@@ -72,14 +72,15 @@ from devkit_agt.features.worktree.models.errors import (
     from_base_error,
     pull_request_policy_fix,
 )
-from devkit_agt.features.worktree.models.lifecycle import BranchStartResult as BranchStartResult
-from devkit_agt.features.worktree.models.lifecycle import BranchStatus as BranchStatus
-from devkit_agt.features.worktree.models.lifecycle import FinishResult as FinishResult
-from devkit_agt.features.worktree.models.lifecycle import Position as Position
-from devkit_agt.features.worktree.models.lifecycle import StartResult as StartResult
-from devkit_agt.features.worktree.models.lifecycle import StatusResult as StatusResult
-from devkit_agt.features.worktree.models.lifecycle import WorktreeStatus as WorktreeStatus
-from devkit_agt.features.worktree.models.lifecycle import slug_of as slug_of
+from devkit_agt.features.worktree.models.lifecycle import (
+    BranchStartResult,
+    BranchStatus,
+    FinishResult,
+    Position,
+    StartResult,
+    StatusResult,
+    WorktreeStatus,
+)
 from devkit_agt.features.worktree.services.merging import build_result, check_identity, merge_message
 
 _log = get_logger(__name__)
@@ -228,28 +229,24 @@ def _clean(checkout: Path) -> bool:
     return not _git(checkout, "status", "--porcelain", "--untracked-files=normal")
 
 
-def _local_snapshot(base: Path, project: Path | None) -> tuple[Path, bytes, int] | None:
-    source_root = base / (project or Path("."))
-    read_local_config(source_root)
-    source = source_root / LOCAL_CONFIG_PATH
+def _local_snapshot(base: Path) -> tuple[Path, bytes, int] | None:
+    read_local_config(base)
+    source = base / LOCAL_CONFIG_PATH
     if not source.exists():
         return None
     return source, source.read_bytes(), source.stat().st_mode & 0o7777
 
 
-def _copy_local_snapshot(path: Path, project: Path | None, captured: tuple[Path, bytes, int] | None) -> None:
+def _copy_local_snapshot(path: Path, captured: tuple[Path, bytes, int] | None) -> None:
     if captured is None:
         return
     from devkit_agt.features.worktree.models.errors import LocalCopyError
 
     source, content, mode = captured
-    destination = path / (project or Path(".")) / LOCAL_CONFIG_PATH
+    destination = path / LOCAL_CONFIG_PATH
     try:
-        relative = destination.relative_to(path)
-        if ".." in relative.parts or (project is not None and project.is_absolute()):
-            raise OSError("destination escapes the created checkout")
         ancestor = path
-        for part in relative.parts[:-1]:
+        for part in Path(LOCAL_CONFIG_PATH).parts[:-1]:
             ancestor /= part
             if ancestor.is_symlink():
                 raise OSError(f"destination parent is a symlink: {ancestor}")
@@ -272,7 +269,7 @@ def start(
     branch: str,
     *,
     setup: str | None = None,
-    project: Path | None = None,
+    sync: bool = False,
     revision: str | None = None,
     before_step: Callable[[str], None] | None = None,
 ) -> StartResult:
@@ -291,7 +288,7 @@ def start(
 
     1. ``setup`` runs in the worktree through ``/bin/sh -c`` (without the caller's ``VIRTUAL_ENV``), for the
        environment the project needs (``uv sync``);
-    2. when ``project`` (a directory relative to the checkout's top level) is a synchronized devkit project,
+    2. with ``sync``, when the checkout is a synchronized devkit project (it has a receipt),
        ``devkit sync --locked`` runs there with the worktree's ``.venv`` interpreter when devkit is installed in
        it, else this one, and restores the managed copies under ``.devkit/managed/`` that the commit gates, rules
        and context commands read, never changing the committed receipt, ``AGENTS.md`` or seeded files.
@@ -332,27 +329,27 @@ def start(
     if path.exists() or path.is_symlink():
         raise ConflictError(f"{path} exists and is not a worktree of this repository")
     notices = _refuse_existing(position.base, branch)
-    captured_local = _local_snapshot(position.base, project)
+    captured_local = _local_snapshot(position.base)
     if before_step is not None:
         before_step("worktree_create")
     _add(position.base, path, branch, revision=revision)
     _log.info("created worktree %s on %s", path, branch)
     if before_step is not None:
         before_step("local_config_copy")
-    _copy_local_snapshot(path, project, captured_local)
-    setup_ran, synced = _prepare(path, setup, project, notices, before_step=before_step)
+    _copy_local_snapshot(path, captured_local)
+    setup_ran, synced = _prepare(path, setup, sync, notices, before_step=before_step)
     return StartResult(branch, path, position.base, True, setup_ran, synced, notices)
 
 
 def _prepare(
     path: Path,
     setup: str | None,
-    project: Path | None,
+    sync: bool,
     notices: list[AdvisoryError],
     *,
     before_step: Callable[[str], None] | None = None,
 ) -> tuple[str | None, bool | None]:
-    """Run ``setup`` and ``devkit sync --locked`` in a new worktree; their warnings go to ``notices``.
+    """Run ``setup`` and, with ``sync``, ``devkit sync --locked`` in a new worktree; their warnings go to ``notices``.
 
     Returns the setup command that ran and whether the sync restored the project (``None`` when it did not run).
     """
@@ -372,18 +369,17 @@ def _prepare(
                 )
             )
     synced = None
-    target = path / project if project is not None else None
-    if target is not None and (target / RECEIPT_PATH).is_file():
+    if sync and (path / RECEIPT_PATH).is_file():
         if before_step is not None:
             before_step("sync")
-        warning = _sync(_interpreter(path), target)
+        warning = _sync(_interpreter(path), path)
         synced = warning is None
         if warning is not None:
             notices.append(warning)
         else:
             if before_step is not None:
                 before_step("registrations")
-            warning = _sync(_interpreter(path), target, registrations_only=True, notices=notices)
+            warning = _sync(_interpreter(path), path, registrations_only=True, notices=notices)
             if warning is not None:
                 notices.append(warning)
     return setup, synced
@@ -507,7 +503,7 @@ def attach(
     source: str,
     unit: str,
     setup: str | None = None,
-    project: Path | None = None,
+    sync: bool = False,
     check: Callable[[Path, str, str, str], None] | None = None,
 ) -> StartResult:
     """Give the existing activity branch ``branch`` its worktree, to continue it at the stage its unit reached.
@@ -515,7 +511,7 @@ def attach(
     ``source`` is ``branch`` or ``<remote>/<branch>``. The branch must exist locally or as a fetched
     remote-tracking ref (nothing is fetched); a remote-only branch gets a local branch tracking it. A local branch
     that lacks commits of its remote-tracking branch is ``WORKTREE_BRANCH_OUT_OF_SYNC`` (never merged or reset); one
-    ahead of it is attached. ``unit`` (relative to ``project``, the devkit project directory in the checkout) must be
+    ahead of it is attached. ``unit`` (relative to the repository root) must be
     a directory of the branch's tree (``WORKTREE_UNIT_INVALID``); ``check(root, branch, unit, tip)`` then verifies
     that branch and unit belong together (the ``devkit.attach_check`` extensions in the CLI). Nothing in the branch
     is reset or rewritten.
@@ -537,7 +533,7 @@ def attach(
     base = position.base
     remotes = _git(base, "remote").splitlines()
     remote = _source_remote(source, branch, remotes)
-    unit_path = _unit_path(unit, project)
+    unit_path = _unit_path(unit)
     local = _query(base, "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}^{{commit}}")
     remote_ref, remote_tip = _remote_tracking(base, branch, remote, remotes, local is not None)
     if local is None and remote_tip is None:
@@ -579,7 +575,7 @@ def attach(
             )
     if not reuse and (path.exists() or path.is_symlink()):
         raise ConflictError(f"{path} exists and is not a worktree of this repository")
-    captured_local = _local_snapshot(base, project) if not reuse else None
+    captured_local = _local_snapshot(base) if not reuse else None
     if back is not None:
         run_git(base, "switch", "--quiet", back)
         _log.info("switched the base checkout from %s back to %s", branch, back)
@@ -592,8 +588,8 @@ def attach(
     if not reuse:
         _add(base, path, branch, existing=True)
         _log.info("attached worktree %s to the existing branch %s", path, branch)
-        _copy_local_snapshot(path, project, captured_local)
-        setup_ran, synced = _prepare(path, setup, project, notices)
+        _copy_local_snapshot(path, captured_local)
+        setup_ran, synced = _prepare(path, setup, sync, notices)
     run_git(base, "config", "--local", _marker(branch), str(path))
     run_git(base, "config", "--local", _marker(branch, UNIT_KEY), unit)
     return StartResult(branch, path, base, not reuse, setup_ran, synced, notices, existing=True, unit=unit)
@@ -614,14 +610,14 @@ def _source_remote(source: str, branch: str, remotes: list[str]) -> str | None:
     )
 
 
-def _unit_path(unit: str, project: Path | None) -> str:
-    """``unit`` (relative to the devkit project) as a path relative to the checkout's top level."""
+def _unit_path(unit: str) -> str:
+    """``unit``, validated as a directory path relative to the repository root."""
     relative = Path(unit)
     if not unit or relative.is_absolute() or ".." in relative.parts or relative == Path("."):
         raise UnitInvalidError(
-            f"--unit {unit!r} must be a directory relative to the devkit project, inside it", target_files=[unit]
+            f"--unit {unit!r} must be a directory relative to the repository root, inside it", target_files=[unit]
         )
-    return (project / relative if project is not None else relative).as_posix()
+    return relative.as_posix()
 
 
 def _remote_tracking(

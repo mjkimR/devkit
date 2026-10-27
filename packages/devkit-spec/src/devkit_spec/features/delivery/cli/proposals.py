@@ -33,8 +33,8 @@ Text output (paths are relative to the workspace root):
   it composes Development worktree creation and handoff, reporting status and authority.
 
 A handoff inside a linked worktree registers the new bundle in the work-scope registry (``devkit spec scope
-register``) at either ``[tool.spec] worktree`` level; a registration failure is a ``SPEC_SCOPE_REGISTER_FAILED``
-warning and leaves the handoff done.
+register``) at either ``[tool.spec] worktree`` level; a registration failure is only a verbose diagnostic and leaves
+the handoff done.
 
 A gate of the spec that could not be recorded is a ``SPEC_PROPOSAL_GATE_NOT_CARRIED`` warning, unresolved links a
 ``SPEC_PROPOSAL_LINK_UNRESOLVED`` warning, rewritten ID references a ``SPEC_PROPOSAL_REFS_REWRITTEN`` notice and an

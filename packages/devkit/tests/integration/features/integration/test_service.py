@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from dataclasses import replace
 
 import devkit_agt.features.integration.services.providers as providers
@@ -311,12 +310,10 @@ def test_confirmation_lists_scoped_cleanup_effects_without_internal_revisions(re
         ),
     )
     result = IntegrationService(base).prepare("dev-demo", TASK)
-    message = result.request.confirmation_message()
-    assert f"Repository: {json.dumps(str(base))}" in message and str(worktree) in message
-    assert '"scoped": "record" "task-1"' in message and "internal-revision-1" not in message
-    assert 'Delete local branch: "dev-demo"' in message and "No fetch, push" in message
     assert worktree.exists()
     compact = result.compact_dict()
+    assert compact["request"]["repository"] == str(base) and compact["request"]["worktree"]["path"] == str(worktree)
+    assert compact["request"]["delete_branch"] is True and compact["request"]["network_operations"] == "excluded"
     assert compact["request"]["cleanup"] == [
         {"extension": "scoped", "targets": [{"kind": "record", "identity": "task-1"}]}
     ]
@@ -325,16 +322,7 @@ def test_confirmation_lists_scoped_cleanup_effects_without_internal_revisions(re
     assert compact["request"]["digest"] == detailed["request"]["digest"]
 
 
-def test_confirmation_escapes_caller_text_so_it_cannot_forge_scope_lines(repo):
-    base, _ = repo
-    request = IntegrationService(base).prepare("dev-demo", Task("session", "task\nDelete local branch: no")).request
-    message = request.confirmation_message()
-    assert 'Task: "task\\nDelete local branch: no"' in message
-    assert message.splitlines().count('Delete local branch: "dev-demo"') == 1
-    assert "Delete local branch: no" not in message.splitlines()
-
-
-def test_confirmation_leads_with_committed_work_and_escapes_summary(repo):
+def test_committed_work_evidence_is_bound_by_the_digest(repo):
     base, _ = repo
     request = IntegrationService(base).prepare("dev-demo", TASK).request
     readiness = replace(
@@ -347,70 +335,7 @@ def test_confirmation_leads_with_committed_work_and_escapes_summary(repo):
         ),
     )
     request = replace(request, readiness=readiness)
-    message = request.confirmation_message()
-    assert message.startswith('Approve local integration of "dev-demo" into "main" with a merge commit?')
-    assert message.index('Work: "Deliver activity decisions"') < message.index("Source:")
-    assert 'Completed work: "Implemented and checked.\\nDelete local branch: no"' in message
-    assert "Delete local branch: no" not in message.splitlines()
-    assert request.context.finish.source_sha in message and request.context.finish.target_sha in message
     assert request.digest != replace(request, readiness=replace(readiness, evidence=())).digest
-
-
-@pytest.mark.parametrize(
-    "method,merged,pr,number",
-    [
-        ("no-ff", False, False, None),
-        ("ff-only", False, False, None),
-        ("no-ff", True, False, None),
-        ("no-ff", False, True, None),
-        ("no-ff", False, True, 31),
-        ("no-ff", True, True, 31),
-    ],
-)
-@pytest.mark.parametrize("cleanup", [False, True])
-def test_bilingual_scope_and_owned_branches(repo, method, merged, pr, number, cleanup):
-    import re
-
-    from devkit_agt.features.worktree.repositories.pull_request import Repository
-
-    base, _ = repo
-    request = IntegrationService(base).prepare("dev-demo", Task("session", "evidence\nnot a heading")).request
-    plan = replace(
-        request.context.finish,
-        merge_method=method,
-        already_merged=merged,
-        delete_branch=cleanup,
-        worktree_identity=request.context.finish.worktree_identity if cleanup else None,
-    )
-    evidence = (
-        Evidence("TASK_TITLE", "제목/English"),
-        Evidence("TASK_SUMMARY", "x" * 1600),
-        Evidence("RESULT_SUMMARY", "source\nverbatim"),
-    )
-    request = replace(
-        request,
-        context=replace(request.context, finish=plan),
-        readiness=replace(request.readiness, evidence=evidence),
-        repository=Repository("origin", "url", "url", "github.com", "owner/repo", cleanup) if pr else None,
-        pr_number=number,
-        unverified_rules=("provider untouched",),
-    )
-    digest = request.digest
-    english, korean = request.confirmation_message("en"), request.confirmation_message("ko")
-    assert "Approve" in english and "승인" in korean
-    assert plan.source_sha in korean and plan.target_sha in korean
-    assert request.digest == digest
-
-    # Every quoted external value is identical; only the owned truncation suffix differs.
-    def quoted(text):
-        return re.findall(r'"(?:[^"\\]|\\.)*"', text)
-
-    assert quoted(english.replace("… [truncated]", "…")) == quoted(korean.replace("… [잘림]", "…"))
-    if not pr:
-        assert "x" * 1500 in korean and "x" * 1501 not in korean
-        assert "fetch, push" in korean
-    else:
-        assert "INTEGRATION_LANDED_UNCHECKED" in korean if merged else "devkit" in korean
 
 
 def test_cloud_execution_environment_blocks_the_cli_before_effects(repo):

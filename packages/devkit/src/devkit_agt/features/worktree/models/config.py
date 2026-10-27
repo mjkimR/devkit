@@ -17,10 +17,6 @@ class WorktreeConfig:
     stale_after: str = "14d"
     merge: str = "no-ff"
 
-    @property
-    def stale_period(self) -> timedelta:
-        return parse_period(self.stale_after)
-
 
 def parse_period(text: str) -> timedelta:
     """``<N>d`` or ``<N>w`` (``N`` from 1 to 9999) as a ``timedelta``; ``ValueError`` otherwise."""

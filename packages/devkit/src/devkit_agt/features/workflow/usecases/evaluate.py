@@ -29,6 +29,7 @@ from devkit_agt.features.workflow.models.decision_records import (
     Decision,
     Decisions,
     Instant,
+    record_instant,
 )
 from devkit_agt.features.workflow.models.definition import HANDOFF_GATE, StageDefinition, WorkflowDocument
 from devkit_agt.features.workflow.models.envelope import Envelope, Envelopes, Hold
@@ -43,7 +44,7 @@ from devkit_agt.features.workflow.models.results import (
 )
 from devkit_agt.features.workflow.repositories.project.roles import is_builtin_role
 from devkit_agt.features.workflow.repositories.unit.binding import read_anchor
-from devkit_agt.features.workflow.repositories.unit.decisions import RETURN_PREFIX, load_decisions, record_instant
+from devkit_agt.features.workflow.repositories.unit.decisions import RETURN_PREFIX, load_decisions
 from devkit_agt.features.workflow.repositories.unit.records import is_temporary
 from devkit_agt.features.workflow.services.envelope import load_envelopes
 from devkit_agt.features.workflow.services.evaluation.primitives import (

@@ -277,11 +277,11 @@ def test_creation_failure_and_logging_failure_are_silent(
         raise OSError("injected")
 
     monkeypatch.setattr(flow, "register", broken)
-    assert auto_register(linked, UNIT, source="spec-new") == (None, [])
+    assert auto_register(linked, UNIT, source="spec-new") is None
     with monkeypatch.context() as local:
         local.setattr(flow._log, "info", broken)
         result = auto_register(linked, UNIT, source="handoff")
-    assert result == (None, [])
+    assert result is None
 
 
 def test_unreadable_live_declaration_falls_back_to_pinned_scope(repo: Path) -> None:

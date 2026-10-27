@@ -12,7 +12,8 @@ from devkit_agt.features.compact.models.errors import (
     LogDirectoryError,
     SlowCommandNotice,
 )
-from devkit_agt.features.compact.services.scan import Failure, Omitted, RelayedAdvisory, Scan, ToolWarning, scan
+from devkit_agt.features.compact.models.scan import Failure, Omitted, RelayedAdvisory, Scan, ToolWarning
+from devkit_agt.features.compact.services.scan import scan
 from devkit_agt.features.compact.usecases.execute import (
     CommandInterrupted,
     CommandRun,

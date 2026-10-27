@@ -31,16 +31,16 @@ def test_copy_before_setup_and_independent_snapshot(repo: Path, monkeypatch: pyt
         return setup, True
 
     monkeypatch.setattr(lifecycle, "_prepare", prepare)
-    created = start(locate(repo), "dev-copy", project=Path("."), setup="example")
+    created = start(locate(repo), "dev-copy", sync=True, setup="example")
     destination = created.path / LOCAL_CONFIG_PATH
     source.write_text('[execution]\nenvironment="local"\n')
     assert destination.read_bytes() == expected
     destination.unlink()
     assert source.exists()
-    attached = attach(locate(repo), "dev-copy", source="dev-copy", unit="specs/demo", project=Path("."))
+    attached = attach(locate(repo), "dev-copy", source="dev-copy", unit="specs/demo", sync=True)
     assert not (attached.path / LOCAL_CONFIG_PATH).exists()
     destination.write_bytes(expected)
-    attach(locate(repo), "dev-copy", source="dev-copy", unit="specs/demo", project=Path("."))
+    attach(locate(repo), "dev-copy", source="dev-copy", unit="specs/demo", sync=True)
     assert destination.read_bytes() == expected
     with pytest.raises(NestedError):
         start(locate(created.path), "dev-nested")
@@ -82,15 +82,6 @@ def test_copy_failure_retains_checkout_without_setup(repo: Path, monkeypatch: py
     assert "Deliberately copy" in (caught.value.fix or "")
 
 
-def test_nested_project_helper_uses_corresponding_path(tmp_path: Path) -> None:
-    base, target = tmp_path / "base", tmp_path / "target"
-    project = Path("nested/project")
-    source = write(base, str(project / LOCAL_CONFIG_PATH), "[mcp]\nregister=false\n")
-    captured = lifecycle._local_snapshot(base, project)
-    lifecycle._copy_local_snapshot(target, project, captured)
-    assert (target / project / LOCAL_CONFIG_PATH).read_bytes() == source.read_bytes()
-
-
 def test_copy_rejects_symlinked_destination_parent_before_setup(
     repo: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -109,11 +100,3 @@ def test_copy_rejects_symlinked_destination_parent_before_setup(
         start(locate(repo), "dev-symlink")
     assert not (outside / "config.local.toml").exists()
     assert (repo.parent / "repo-wt-dev-symlink").is_dir()
-
-
-def test_copy_rejects_escaping_project_path(tmp_path: Path) -> None:
-    root = tmp_path / "checkout"
-    root.mkdir()
-    with pytest.raises(LocalCopyError, match="escapes"):
-        lifecycle._copy_local_snapshot(root, Path("../outside"), (tmp_path / "source", b"", 0o600))
-    assert not (tmp_path / "outside").exists()

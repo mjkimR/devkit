@@ -12,8 +12,9 @@ from spec_support.proposals import CHARACTERIZE, GATED, INCUBATED, MONTH, STAMP,
 from spec_support.types import Write
 
 from devkit_spec.base.errors import ProposalAcceptanceUnrecordedError
-from devkit_spec.features.proposals import CarriedGate, create_padr, create_proposal, handoff_proposal
+from devkit_spec.features.proposals import CarriedGate, create_proposal, handoff_proposal
 from devkit_spec.features.proposals.usecases import handoff as handoff_module
+from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecisionUseCase
 
 UNIT = "docs/proposals/PROP-{slug}"
 
@@ -65,7 +66,7 @@ def test_drops_the_unit_records_and_carries_the_rest(workspace: Path, write: Wri
     write(f"{unit}/decisions/notes.yaml", "kept: true\n")
     write(f"{unit}/envelopes/scout-01.yaml", "kind: scout\n")
     write(f"{unit}/notes.md", "# Notes\n")
-    create_padr(workspace, "records", "Use records")
+    CreateProposalDecisionUseCase().execute(workspace, "records", "Use records")
     accept(proposal)
 
     result = handoff_proposal(workspace, "records", today=TODAY)
@@ -243,7 +244,7 @@ def test_historical_record_citations(workspace: Path, write: Write, history: str
     proposal = _proposal(workspace, "history")
     _answered(workspace, "history")
     accept(proposal)
-    create_padr(workspace, "history", "Record evidence")
+    CreateProposalDecisionUseCase().execute(workspace, "history", "Record evidence")
     record = write("docs/proposals/PROP-history/envelopes/answer-01.yaml", "kind: answer\n")
     padr = proposal.parent / "decisions/PADR-record-evidence.md"
     padr.write_text(

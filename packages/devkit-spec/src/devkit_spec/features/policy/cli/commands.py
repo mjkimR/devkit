@@ -23,9 +23,6 @@ from devkit_dist.adapters.cli import (
 from devkit_spec.features.policy.usecases.inspect import InspectPolicyUseCase
 from devkit_spec.utils.output import fields_line, sentinel
 
-# Keys that name no gate: ``exception`` is a shared stage a person always handles (03 §2).
-NOT_GATES = ("exception",)
-
 
 @click.command(name="policy")
 @workspace_option()

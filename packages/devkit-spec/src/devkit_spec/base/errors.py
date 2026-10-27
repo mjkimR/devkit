@@ -638,13 +638,6 @@ class ScopeSharedPathError(ScopeError):
     fix = "Fix the permissions of the directory in [TARGET], or set [tool.spec.scope] shared_path to a writable one"
 
 
-class ScopeUnsupportedError(ScopeError):
-    """An adapter operation reserved by the registry contract (``claim``) is not implemented (``MAINTENANCE``)."""
-
-    code = "SPEC_SCOPE_UNSUPPORTED"
-    fix = "Do not call the reserved operation: exclusive claims are not part of the local registry"
-
-
 class ScopeAckFailedError(ScopeError):
     """``devkit spec scope update`` did not apply for a cause without its own code (``MAINTENANCE``); the record is
     unchanged."""
@@ -686,18 +679,6 @@ class ScopeJournalLineWarning(ScopeError):
     code = "SPEC_SCOPE_JOURNAL_LINE_INVALID"
     level = Level.WARNING
     fix = "Remove or repair the lines named in [DETAIL] of journal.jsonl in [TARGET]"
-
-
-class ScopeRegisterFailedWarning(ScopeError):
-    """``devkit spec proposal handoff`` completed in the task worktree but registering its scope failed
-    (``WARNING``)."""
-
-    code = "SPEC_SCOPE_REGISTER_FAILED"
-    level = Level.WARNING
-    fix = (
-        f"Fix the cause in [DETAIL], then run {DEVKIT} spec scope register --spec with the handed-off spec bundle "
-        "directory in the worktree"
-    )
 
 
 class HandoffNotReadyError(SpecError):

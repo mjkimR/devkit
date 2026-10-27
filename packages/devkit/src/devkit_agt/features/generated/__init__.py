@@ -11,7 +11,6 @@ from devkit_agt.features.generated.models.errors import (
     CommandFailedError,
     ConflictsRemainWarning,
     GeneratedConfigError,
-    GeneratedError,
     InputsConflictedError,
     OutputUndeclaredError,
     StaleError,
@@ -31,7 +30,6 @@ from devkit_agt.features.generated.usecases.engine import (
     ResolveArtifacts,
     ResolveResult,
     RunResult,
-    open_checkout,
     operation,
     unmerged,
 )
@@ -43,7 +41,6 @@ __all__ = [
     "CommandFailedError",
     "ConflictsRemainWarning",
     "GeneratedConfigError",
-    "GeneratedError",
     "InputsConflictedError",
     "OutputUndeclaredError",
     "RegenerateArtifacts",
@@ -56,7 +53,6 @@ __all__ = [
     "builtin_artifacts",
     "load_registry",
     "matches",
-    "open_checkout",
     "operation",
     "unmerged",
 ]

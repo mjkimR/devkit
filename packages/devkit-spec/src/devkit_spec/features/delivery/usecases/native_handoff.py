@@ -205,7 +205,7 @@ class HandoffUseCase(BaseUseCase):
                 setup, synced = _prepare(
                     Path(preview.worktree),
                     preview.setup,
-                    Path("."),
+                    True,
                     notices,
                     before_step=lambda _step: guard_execution(),
                 )
@@ -224,7 +224,7 @@ class HandoffUseCase(BaseUseCase):
                     position,
                     f"dev-{preview.slug}",
                     setup=preview.setup,
-                    project=Path("."),
+                    sync=True,
                     revision=preview.head,
                     before_step=lambda _step: guard_execution(),
                 )

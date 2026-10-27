@@ -12,9 +12,7 @@ import yaml
 from devkit_core.base.errors import FrontmatterError
 
 import devkit_agt.features.workflow.repositories.unit.frontmatter as frontmatter
-from devkit_agt.features.workflow.models.binding import AnchorState as AnchorState
-from devkit_agt.features.workflow.models.binding import Binding as Binding
-from devkit_agt.features.workflow.models.binding import HistoryEntry as HistoryEntry
+from devkit_agt.features.workflow.models.binding import AnchorState, Binding, HistoryEntry
 from devkit_agt.features.workflow.models.errors import AnchorInvalidError
 from devkit_agt.features.workflow.repositories.unit.records import temporary_path
 

@@ -18,11 +18,9 @@ from devkit_agt.features.worktree.usecases.lifecycle import attach, discard, fin
 class LocateProject(BaseUseCase):
     """Resolve the checkout and its project's worktree policy."""
 
-    def execute(self, start: Path) -> tuple[Position, WorktreeConfig, Path | None]:
+    def execute(self, start: Path) -> tuple[Position, WorktreeConfig]:
         """Resolve the checkout and its project's worktree policy."""
-        position, project = locate(start), find_project_root(start)
-        relative = project.relative_to(position.root) if project.is_relative_to(position.root) else None
-        return position, read_worktree_config(project), relative
+        return locate(start), read_worktree_config(find_project_root(start))
 
 
 class StartActivity(BaseUseCase):
@@ -32,7 +30,6 @@ class StartActivity(BaseUseCase):
         self,
         position: Position,
         config: WorktreeConfig,
-        project: Path | None,
         branch: str,
         *,
         existing: str | None = None,
@@ -46,10 +43,10 @@ class StartActivity(BaseUseCase):
                 source=existing,
                 unit=unit,
                 setup=config.setup,
-                project=project,
+                sync=True,
                 check=run_attach_checks,
             )
-        return start(position, branch, setup=config.setup, project=project)
+        return start(position, branch, setup=config.setup, sync=True)
 
 
 class FinishActivity(BaseUseCase):

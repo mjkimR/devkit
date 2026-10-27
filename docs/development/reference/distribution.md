@@ -249,8 +249,8 @@ stderr: its `errors` and `notices` are in the result. `sync --check` remains the
 Every error the library raises is an `AdvisoryError`; the CLI renders it as it is. Foundation and project errors pass
 through: an unreadable or invalid `.devkit/installation.json` (including paths devkit never writes) is
 `ReceiptError` (`RECEIPT_INVALID`), an invalid `.devkit/config.toml` is `ConfigError` (`CONFIG_INVALID`), and
-a malformed selector, query, search bound (`--limit`, `--min-score`, `--max-bytes`), workspace root, archive
-`--output` or flag combination is `ArgumentError` (`ARGUMENT_INVALID`, `INPUT_ERROR`). Remediation is in each
+a malformed selector, query, search bound (`--limit`, `--min-score`, `--max-bytes`), workspace root
+or flag combination is `ArgumentError` (`ARGUMENT_INVALID`, `INPUT_ERROR`). Remediation is in each
 error's `fix`, never in its message. The others are `DistributionError` subclasses from `devkit_dist.features.distribution.models.errors`:
 
 | Class | Code | Mode | When |
@@ -317,7 +317,7 @@ failing engine import cannot make the bundle unusable):
 ## 5. Specifications
 
 - `ARCH-05-4-distribution-components`: principles, architecture units, module layout and library surface.
-- `CAP-DIST-manifest-spec`: `bundle.toml` schema 1, asset kinds, presets, validation and archive builds.
+- `CAP-DIST-manifest-spec`: `bundle.toml` schema 1, asset kinds, presets and validation.
 - `CAP-DIST-content-packages`: the content wheel contract, installation, upgrades and dependency boundaries.
 - `CAP-DIST-workspace-ownership`: workspace layout, ownership categories, the guidance block, seeded files and override drift.
 - `CAP-DIST-sync-and-transactions`: the receipt, the selection model, and the transaction engine (lock, journal, recovery, post-sync extensions).

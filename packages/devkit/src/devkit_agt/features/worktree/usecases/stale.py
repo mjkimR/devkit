@@ -34,8 +34,9 @@ from devkit_agt.features.worktree.models.errors import (
     StaleSkippedNotice,
     UnsupportedLayoutError,
 )
+from devkit_agt.features.worktree.models.lifecycle import Position
 from devkit_agt.features.worktree.repositories.config import parse_period, read_worktree_config
-from devkit_agt.features.worktree.usecases.lifecycle import BRANCH, BRANCH_LIMIT, UNIT_KEY, Position, locate
+from devkit_agt.features.worktree.usecases.lifecycle import BRANCH, BRANCH_LIMIT, UNIT_KEY, locate
 
 _log = get_logger(__name__)
 

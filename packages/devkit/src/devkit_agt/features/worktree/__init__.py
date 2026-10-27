@@ -52,6 +52,16 @@ from devkit_agt.features.worktree.models.errors import (
     WorktreeError,
     pull_request_policy_fix,
 )
+from devkit_agt.features.worktree.models.lifecycle import (
+    BranchStartResult,
+    BranchStatus,
+    FinishResult,
+    Position,
+    StartResult,
+    StatusResult,
+    WorktreeStatus,
+    slug_of,
+)
 from devkit_agt.features.worktree.repositories.config import WorktreeConfig, read_worktree_config
 from devkit_agt.features.worktree.services.extensions import run_finish_guards, run_post_finish
 from devkit_agt.features.worktree.services.merging import (
@@ -64,15 +74,7 @@ from devkit_agt.features.worktree.services.merging import (
     merge_method,
 )
 from devkit_agt.features.worktree.usecases.lifecycle import (
-    ACTIVITY_PREFIXES,
-    BranchStartResult,
-    BranchStatus,
-    FinishResult,
-    Position,
     StartBranch,
-    StartResult,
-    StatusResult,
-    WorktreeStatus,
     WorktreeStatusQuery,
     attach,
     check_branch,
@@ -81,14 +83,12 @@ from devkit_agt.features.worktree.usecases.lifecycle import (
     finish,
     locate,
     path_for,
-    slug_of,
     start,
 )
 from devkit_agt.features.worktree.usecases.planning import FinishPlan, plan_finish, validate_finish
 from devkit_agt.features.worktree.usecases.stale import StaleBranch, StaleResult, stale_branches
 
 __all__ = [
-    "ACTIVITY_PREFIXES",
     "AddFailedError",
     "AttachCheckFailedError",
     "AttachRefusedError",

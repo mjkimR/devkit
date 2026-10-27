@@ -37,11 +37,11 @@ from devkit_spec.base.errors import (
 from devkit_spec.features.proposals import (
     SKELETON_MARKER,
     HandoffResult,
-    create_padr,
     create_proposal,
     handoff_proposal,
 )
 from devkit_spec.features.proposals.usecases import specs as specs_module
+from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecisionUseCase
 
 SPEC = f"specs/{MONTH}/{STAMP}"
 
@@ -68,8 +68,8 @@ def test_lifecycle(workspace: Path) -> None:
         target_area="capabilities/governance/",
         with_target_docs=True,
     )
-    create_padr(workspace, "fast-engine", "Use Go AST Parser")
-    create_padr(workspace, "fast-engine", "Parallel File Worker Pool")
+    CreateProposalDecisionUseCase().execute(workspace, "fast-engine", "Use Go AST Parser")
+    CreateProposalDecisionUseCase().execute(workspace, "fast-engine", "Parallel File Worker Pool")
     with pytest.raises(ProposalNotApprovedError) as raised:
         handoff_proposal(workspace, "fast-engine", today=TODAY)
     assert raised.value.advisory.mode == "INTERACTION"
@@ -162,7 +162,7 @@ def test_unknown_proposal(workspace: Path) -> None:
 def test_rewrites_links_into_the_bundle(workspace: Path, write: Write) -> None:
     proposal = _new(workspace, "linked", title="Linked Proposal", with_target_docs=True)
     bundle = proposal.parent
-    create_padr(workspace, "linked", "Pick Engine")
+    CreateProposalDecisionUseCase().execute(workspace, "linked", "Pick Engine")
     write("docs/capabilities/lifecycle/CAP-X.md", "# cap\n")
     write(
         "docs/proposals/PROP-linked/materials/survey.md",
@@ -335,7 +335,7 @@ Nested detail.
 
 def test_rewrites_id_references_and_provenance(workspace: Path, write: Write) -> None:
     proposal = _new(workspace, "ref-test", title="Test", with_target_docs=True)
-    create_padr(workspace, "ref-test", "Choose parser")
+    CreateProposalDecisionUseCase().execute(workspace, "ref-test", "Choose parser")
     accept(proposal)
     with proposal.open("a", encoding="utf-8") as handle:
         handle.write("\n[PADR-choose-parser]\n")
@@ -414,7 +414,7 @@ def test_refuses_a_carried_file_that_clashes_with_materials(workspace: Path, wri
 
 def test_promotes_a_draft_status_with_a_comment(workspace: Path) -> None:
     proposal = _new(workspace, "commented")
-    create_padr(workspace, "commented", "Pick One")
+    CreateProposalDecisionUseCase().execute(workspace, "commented", "Pick One")
     padr = proposal.parent / "decisions/PADR-pick-one.md"
     text = padr.read_text(encoding="utf-8")
     assert "\nstatus: draft\n" in text
@@ -428,7 +428,7 @@ def test_promotes_a_draft_status_with_a_comment(workspace: Path) -> None:
 def test_promotes_only_the_frontmatter_and_the_first_prose_status(workspace: Path) -> None:
     # A fenced example in the body keeps its draft status; only the PADR's own status is accepted.
     proposal = _new(workspace, "examples")
-    create_padr(workspace, "examples", "Store format")
+    CreateProposalDecisionUseCase().execute(workspace, "examples", "Store format")
     padr = proposal.parent / "decisions/PADR-store-format.md"
     example = "```yaml\n---\nstatus: draft\n---\n- **Status**: Draft\n```\n"
     padr.write_text(padr.read_text(encoding="utf-8") + "\n## Example\n\n" + example, encoding="utf-8")
@@ -441,7 +441,7 @@ def test_promotes_only_the_frontmatter_and_the_first_prose_status(workspace: Pat
 
 def test_a_commented_out_status_line_is_not_the_prose_status(workspace: Path) -> None:
     proposal = _new(workspace, "commented")
-    create_padr(workspace, "commented", "Store format")
+    CreateProposalDecisionUseCase().execute(workspace, "commented", "Store format")
     padr = proposal.parent / "decisions/PADR-store-format.md"
     text = padr.read_text(encoding="utf-8")
     end = text.index("\n---\n", 4) + len("\n---\n")
@@ -455,7 +455,7 @@ def test_a_commented_out_status_line_is_not_the_prose_status(workspace: Path) ->
 
 def test_a_status_line_with_a_trailing_comment_is_accepted(workspace: Path) -> None:
     proposal = _new(workspace, "noted")
-    create_padr(workspace, "noted", "Store format")
+    CreateProposalDecisionUseCase().execute(workspace, "noted", "Store format")
     padr = proposal.parent / "decisions/PADR-store-format.md"
     padr.write_text(
         padr.read_text(encoding="utf-8").replace("- **Status**: Draft\n", "- **Status**: Draft <!-- todo -->\n", 1),
@@ -490,8 +490,8 @@ def test_a_proposal_without_its_id_names_the_missing_id(write: Write, workspace:
 
 def test_promoted_adrs_keep_working_links(workspace: Path, write: Write) -> None:
     proposal = _new(workspace, "adr-links")
-    create_padr(workspace, "adr-links", "Pick A")
-    create_padr(workspace, "adr-links", "Pick B")
+    CreateProposalDecisionUseCase().execute(workspace, "adr-links", "Pick A")
+    CreateProposalDecisionUseCase().execute(workspace, "adr-links", "Pick B")
     write("docs/capabilities/x/CAP-X.md", "# cap\n")
     padr = proposal.parent / "decisions/PADR-pick-a.md"
     padr.write_text(
@@ -512,7 +512,7 @@ def test_promoted_adrs_keep_working_links(workspace: Path, write: Write) -> None
 
 def test_rewrites_code_span_paths_into_the_bundle(workspace: Path) -> None:
     proposal = _new(workspace, "span-paths")
-    create_padr(workspace, "span-paths", "Pick A")
+    CreateProposalDecisionUseCase().execute(workspace, "span-paths", "Pick A")
     (proposal.parent / "materials/notes.md").write_text("# Notes\n", encoding="utf-8")
     proposal.write_text(
         proposal.read_text(encoding="utf-8").replace(
@@ -673,7 +673,7 @@ def test_refuses_a_slug_a_spec_already_uses(workspace: Path, write: Write) -> No
 
 def test_refuses_to_overwrite_and_writes_nothing(workspace: Path, write: Write) -> None:
     proposal = _new(workspace, "clash")
-    create_padr(workspace, "clash", "Taken")
+    CreateProposalDecisionUseCase().execute(workspace, "clash", "Taken")
     write("docs/proposals/PROP-clash/materials/a.md", "# a\n")
     accept(proposal)
     existing = write(f"docs/decisions/{MONTH}/{STAMP}-taken.md", "keep\n")
@@ -705,7 +705,7 @@ def test_an_existing_spec_bundle_stays_a_guardrail(workspace: Path) -> None:
 
 def test_refuses_an_adr_id_another_document_declares(workspace: Path, write: Write) -> None:
     proposal = _new(workspace, "twice")
-    create_padr(workspace, "twice", "Same")
+    CreateProposalDecisionUseCase().execute(workspace, "twice", "Same")
     accept(proposal)
     write("docs/decisions/2026-01/20260101-same.md", "---\nid: ADR-same\n---\n")
     with pytest.raises(ProposalTargetExistsError):
@@ -715,7 +715,7 @@ def test_refuses_an_adr_id_another_document_declares(workspace: Path, write: Wri
 
 def test_a_failed_write_is_rolled_back(workspace: Path, write: Write) -> None:
     proposal = _new(workspace, "fails")
-    create_padr(workspace, "fails", "Decision")
+    CreateProposalDecisionUseCase().execute(workspace, "fails", "Decision")
     write("docs/proposals/PROP-fails/materials/a.md", "# a\n")
     accept(proposal)
     write("docs/decisions", "not a directory\n")  # the ADR cannot be written
@@ -957,7 +957,7 @@ def test_refuses_a_spec_or_decision_whose_directory_resolves_outside_the_workspa
     outside = tmp_path_factory.mktemp("outside")
     proposal = _new(workspace, "away")
     if decision:
-        create_padr(workspace, "away", "Pick One")
+        CreateProposalDecisionUseCase().execute(workspace, "away", "Pick One")
     linked = workspace / (f"docs/decisions/{MONTH}" if decision else f"specs/{MONTH}")
     linked.parent.mkdir(parents=True, exist_ok=True)
     linked.symlink_to(outside, target_is_directory=True)
@@ -1101,7 +1101,7 @@ def test_links_into_an_unmoved_materials_directory_stay_unmapped(workspace: Path
 )
 def test_promotes_only_a_draft_status_value(workspace: Path, status: str, promoted: str) -> None:
     proposal = _new(workspace, "quoted")
-    create_padr(workspace, "quoted", "Pick One")
+    CreateProposalDecisionUseCase().execute(workspace, "quoted", "Pick One")
     padr = proposal.parent / "decisions/PADR-pick-one.md"
     padr.write_text(padr.read_text(encoding="utf-8").replace("\nstatus: draft\n", f"\nstatus: {status}\n", 1))
     accept(proposal)

@@ -299,7 +299,7 @@ def _validate(service: IntegrationService, result: IntegrationResult, *, merged:
             extensions[scope.extension][1].integration_validate(service._context(result), scope.targets)
 
 
-def execute(service: IntegrationService, record: _Record, wait: float, approving: bool) -> IntegrationResult:
+def execute(service: IntegrationService, record: _Record, wait: float) -> IntegrationResult:
     result, request, root = record.result, record.result.request, service.root
     if result.status == "completed":
         return result
@@ -384,9 +384,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                 _validate(service, result, merged=False)
                 if not is_ancestor(root, plan.target_sha, target):
                     raise _error("INTEGRATION_TARGET_MOVED", "Target rewrote the confirmation history")
-                if (result.build_target is not None and target != result.build_target) or (
-                    not approving and result.build_target is None and target != plan.target_sha
-                ):
+                if result.build_target is not None and target != result.build_target:
                     raise _error(
                         "INTEGRATION_TARGET_MOVED",
                         "Target moved while waiting",
@@ -545,7 +543,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                     nonlocal operation
                     operation = step
                     guard_execution(terminal=bool(progress.removed))
-                    if step == "worktree_remove" and approving:
+                    if step == "worktree_remove":
                         capture_terminal_removal(Path(plan.path))
                     if progress.removed:
                         result.steps["worktree_remove"] = "completed"
@@ -582,8 +580,6 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
             result.steps[operation] = "completed"
             result.status = "completed"
     except (AdvisoryError, OSError, ValueError, KeyError) as exc:
-        if getattr(exc, "code", "") == "LOCK_HELD" and not approving:
-            raise
         error = exc if isinstance(exc, AdvisoryError) else _error("INTEGRATION_STEP_UNKNOWN", str(exc))
         result.errors.append(error)
         result.failing_operation = operation

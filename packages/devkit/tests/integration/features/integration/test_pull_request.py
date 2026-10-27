@@ -121,10 +121,7 @@ def fresh(service):
 def run(service):
     """One Host-approved CLI invocation of the pull-request route after presenting the prepared scope."""
     request = service.prepare("dev-demo", TASK, "pull-request").request
-    message = request.confirmation_message()
-    assert "pull request" in message
-    assert "github.example/owner/repo" in message
-    assert "after the last check" in message or "not recorded" in message
+    assert request.approval_scope()["network_operations"] == "approved-pull-request"
     return service.execute_cli("dev-demo", TASK, "pull-request", expected_digest=request.digest)
 
 
@@ -396,9 +393,7 @@ def test_cleanup_only_confirmation_describes_only_remaining_operations(remote_se
     restarted = IntegrationService(base)
     restarted.github = fake
     request = restarted.prepare("dev-demo", TASK, "pull-request").request
-    message = request.confirmation_message()
+    scope = request.approval_scope()
     assert request.context.finish.already_merged
-    assert "Approve pull request cleanup" in message and "PR 12 is already merged" in message
-    assert "Fetch target; fast-forward local target" in message and "not-recorded" in message
-    assert "Push source" not in message and "Merge runs now" not in message
-    assert "devkit rules check" in message
+    assert scope["already_merged"] is True and scope["pull_request"] == 12
+    assert "devkit rules check" in request.readiness.landed_check

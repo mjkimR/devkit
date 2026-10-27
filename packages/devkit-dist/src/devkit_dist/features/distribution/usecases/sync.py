@@ -1097,7 +1097,7 @@ def commit_locked(
     effective = _plan_inventory(
         root, installed, selection, previous_overrides, effective=True, environment=selected_environment
     )
-    personal = local_render.personal_files(root, inventory, effective)
+    personal = local_render.personal_files(inventory, effective)
     if config.override_drift == "block":
         _refuse_override_drift(inventory.drift)
     old_files = dict(previous.file_records) if previous else {}

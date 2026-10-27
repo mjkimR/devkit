@@ -30,7 +30,7 @@ class StartResult:
     synced: bool | None = None  # whether `devkit sync --locked` restored the project; None when it did not run
     notices: list[AdvisoryError] = field(default_factory=list)
     existing: bool = False  # the branch existed before (`attach`)
-    unit: str | None = None  # the unit `attach` was given, relative to the devkit project
+    unit: str | None = None  # the unit `attach` was given, relative to the repository root
 
     @property
     def slug(self) -> str:

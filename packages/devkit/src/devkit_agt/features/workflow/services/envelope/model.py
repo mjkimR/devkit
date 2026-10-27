@@ -18,17 +18,17 @@ from typing import Any
 import yaml
 from devkit_core.core.yaml import safe_load
 
-from devkit_agt.features.workflow.models.envelope import CLOSABLE as CLOSABLE
-from devkit_agt.features.workflow.models.envelope import WORKER_REF as WORKER_REF
-from devkit_agt.features.workflow.models.envelope import Answer as Answer
-from devkit_agt.features.workflow.models.envelope import Envelope as Envelope
-from devkit_agt.features.workflow.models.envelope import Envelopes as Envelopes
-from devkit_agt.features.workflow.models.envelope import Finding as Finding
-from devkit_agt.features.workflow.models.envelope import Hold as Hold
-from devkit_agt.features.workflow.models.envelope import Option as Option
-from devkit_agt.features.workflow.models.envelope import Problem as Problem
-from devkit_agt.features.workflow.models.envelope import Question as Question
-from devkit_agt.features.workflow.models.envelope import Settle as Settle
+from devkit_agt.features.workflow.models.envelope import (
+    WORKER_REF,
+    Answer,
+    Envelope,
+    Envelopes,
+    Finding,
+    Option,
+    Problem,
+    Question,
+    Settle,
+)
 from devkit_agt.features.workflow.models.errors import EnvelopeFormatError, EnvelopeKindError
 from devkit_agt.features.workflow.models.ids import IDENT_HINT, IDENT_PATTERN, is_ident
 from devkit_agt.features.workflow.repositories.unit.records import as_text, is_temporary, write_numbered
@@ -249,13 +249,13 @@ def parse_settle(item: Any, where: str) -> Settle:
     return Settle(position, _required_text(item, "decision", where))
 
 
-def parse_problem(value: Any, where: str = "problem") -> Problem:
-    """A problem mapping; raises ``EnvelopeFormatError`` naming ``where``."""
-    item = _mapping(value, where, PROBLEM_KEYS)
+def parse_problem(value: Any) -> Problem:
+    """A problem mapping; raises ``EnvelopeFormatError`` naming ``problem``."""
+    item = _mapping(value, "problem", PROBLEM_KEYS)
     return Problem(
-        _required_text(item, "cause", where),
-        _required_text(item, "recovery", where),
-        _text_list(item.get("attempts"), f"{where}.attempts"),
+        _required_text(item, "cause", "problem"),
+        _required_text(item, "recovery", "problem"),
+        _text_list(item.get("attempts"), "problem.attempts"),
     )
 
 

@@ -1,8 +1,7 @@
 """The registry adapter contract, owner tokens and request IDs.
 
 Every adapter compares and writes atomically for one namespace and takes the caller's ``Deadline``. The local file
-adapter (``localfs``) is the only implementation; ``claim`` (an exclusive publish) stays reserved and raises
-``ScopeUnsupportedError``. Errors are the ``SPEC_SCOPE_*`` advisories of ``devkit_spec.base.errors``:
+adapter (``localfs``) is the only implementation and also keeps the per-namespace event journal. Errors are the ``SPEC_SCOPE_*`` advisories of ``devkit_spec.base.errors``:
 
 - ``register``: ``ScopeTaskExistsError`` when the namespace has the task ID;
 - ``update``: ``ScopeRecordMissingError``, ``ScopeTokenMismatchError``, ``ScopeStaleRevisionError`` (the revision read
@@ -21,10 +20,10 @@ import hashlib
 import secrets
 import uuid
 from collections.abc import Collection, Mapping
-from typing import Protocol, runtime_checkable
+from typing import Protocol
 
 from devkit_spec.features.scope.models.deadline import Deadline
-from devkit_spec.features.scope.models.model import Event, Problem, Record, SweepResult
+from devkit_spec.features.scope.models.model import Problem, Record, SweepResult
 
 
 def new_token() -> str:
@@ -80,16 +79,3 @@ class Registry(Protocol):
         """Classify every record (only the tasks in ``only`` when given); with ``apply``, remove the stale ones whose
         revision ``expected`` still matches."""
         ...
-
-    def claim(self, token: str, record: Record, deadline: Deadline) -> Record:
-        """Reserved: publish the record exclusively."""
-        ...
-
-
-@runtime_checkable
-class Journaler(Protocol):
-    """Implemented by adapters that keep an append-only event journal per namespace."""
-
-    def append(self, namespace: str, events: list[Event], deadline: Deadline) -> None: ...
-
-    def history(self, namespace: str, deadline: Deadline) -> tuple[list[Event], list[Problem]]: ...

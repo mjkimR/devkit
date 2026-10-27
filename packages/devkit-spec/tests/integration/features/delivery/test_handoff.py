@@ -61,7 +61,6 @@ def test_registration_failure_is_silent_after_a_successful_handoff(accepted_work
     assert not (root / "docs/proposals/PROP-handoff/proposal.md").exists()
     assert load_token(session.location.token_path) == "existing-token"
     codes = [notice.code for notice in completed.notices]
-    assert "SPEC_SCOPE_REGISTER_FAILED" not in codes
     assert "SPEC_PROPOSAL_UNBOUND" in codes
     assert all(not code.startswith("SPEC_SCOPE_") for code in codes)
 

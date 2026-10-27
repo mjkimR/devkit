@@ -43,11 +43,7 @@ from typing import TextIO
 
 from devkit.advisory import CONTINUATION, FIELDS, HEADLINE, Level
 
-from devkit_agt.features.compact.models.scan import Failure as Failure
-from devkit_agt.features.compact.models.scan import Omitted as Omitted
-from devkit_agt.features.compact.models.scan import RelayedAdvisory as RelayedAdvisory
-from devkit_agt.features.compact.models.scan import Scan as Scan
-from devkit_agt.features.compact.models.scan import ToolWarning as ToolWarning
+from devkit_agt.features.compact.models.scan import Failure, Omitted, RelayedAdvisory, Scan, ToolWarning
 
 # Escape sequences a terminal does not show: CSI (colour, cursor), OSC (hyperlinks, titles), charset selection.
 ANSI = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[()][0-9A-B]")

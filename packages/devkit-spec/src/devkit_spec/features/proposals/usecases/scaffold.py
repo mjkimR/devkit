@@ -487,19 +487,6 @@ class CreatedDecision:
         return {"id": self.id, "path": self.path, "proposal": self.proposal}
 
 
-def create_padr(
-    root: Path,
-    slug: str,
-    title: str,
-    *,
-    summary: str | None = None,
-    padr_slug: str | None = None,
-    today: date | None = None,
-) -> CreatedDecision:
-    """Compose the application entrypoint for internal callers."""
-    return CreateProposalDecisionUseCase().execute(root, slug, title, summary=summary, padr_slug=padr_slug, today=today)
-
-
 def _padr(padr_id: str, title: str, summary: str | None, slug: str, created: str) -> str:
     summary_line = (
         f"summary: {yaml_scalar(summary)}\n"

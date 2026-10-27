@@ -27,7 +27,6 @@ from devkit_agt.features.gate.models.errors import (
 )
 from devkit_agt.features.gate.repositories.config import GateEntry, GatesConfig, load_gates_config, resolve_settings
 from devkit_agt.features.gate.usecases.registry import (
-    DeployedGates,
     GateRegistry,
     default_gate_registry,
     deployed_gate_packages,
@@ -35,7 +34,6 @@ from devkit_agt.features.gate.usecases.registry import (
 )
 from devkit_agt.features.gate.usecases.runner import (
     GateProject,
-    GateRun,
     RunHookUseCase,
     StageReport,
     Validation,
@@ -46,7 +44,6 @@ from devkit_agt.features.gate.usecases.runner import (
 
 __all__ = [
     "BaseGate",
-    "DeployedGates",
     "ForeignHookError",
     "Gate",
     "GateConfigError",
@@ -63,7 +60,6 @@ __all__ = [
     "GateRegistry",
     "GateResult",
     "GateResultError",
-    "GateRun",
     "GateTemplateNotice",
     "GatesConfig",
     "HookBackupExistsError",

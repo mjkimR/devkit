@@ -7,7 +7,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
 
-from devkit_agt.features.workflow.models.decisions import ACTIONS as ACTIONS
 from devkit_agt.features.workflow.models.errors import DecisionRecordError
 
 CHECK_PREFIX = "check:"

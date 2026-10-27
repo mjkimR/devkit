@@ -223,7 +223,7 @@ def plan_handoff(ws: Workspace, unit: UnitRef, result: UnitEvaluation, choice: s
     return HandoffPlan(unit, doc, target, policy, decision, explicit)
 
 
-def apply_handoff(plan: HandoffPlan, *, when: date | None = None, by: str = "", note: str = "") -> HandoffOutcome:
+def apply_handoff(plan: HandoffPlan, *, when: date | None = None, by: str = "") -> HandoffOutcome:
     """Rebind the unit to the plan's target and record the finished segment in its history.
 
     An explicit choice is first recorded as an accepted ``handoff`` decision so
@@ -247,7 +247,6 @@ def apply_handoff(plan: HandoffPlan, *, when: date | None = None, by: str = "", 
                 "accept",
                 workflow=plan.source.id,
                 value=plan.target.id,
-                note=note,
                 by=by,
             )
             decision = written = write_decision(unit.dir, record)

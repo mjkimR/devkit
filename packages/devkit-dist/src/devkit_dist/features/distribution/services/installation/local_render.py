@@ -108,7 +108,7 @@ def require_ignored(root: Path, name: str, *, planned_ignore: bool = False) -> N
         )
 
 
-def personal_files(root: Path, canonical: Inventory, effective: Inventory) -> dict[str, Content]:
+def personal_files(canonical: Inventory, effective: Inventory) -> dict[str, Content]:
     if (
         any(
             getattr(canonical, attr) != getattr(effective, attr)
