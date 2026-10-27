@@ -1,0 +1,28 @@
+kind: reverify
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-26T23:48:56.659165Z'
+status: completed
+review: challenger-01.yaml
+summary: All three P2 folded into proposal.md and the PADR at 7b6d2797.
+findings:
+- issue: The receipt check cannot pass AGENTS.md or .devkit/installation.json; the receipt records AGENTS.md only as a guidance_block hash and does not list itself.
+  evidence: .devkit/installation.json keys; files paths only under ignored .devkit/.agents/.claude/.codex; guidance_block is a sha256
+  failure_condition: An unforeseen AGENTS.md or receipt change recorded as (sync output) fails a literal Host check or forces improvisation.
+  suggested_action: Pass a path under seeded or files, or .devkit/installation.json, or the managed guidance block file, with sync --check exit 0 on the returned head.
+  resolution: resolved
+  severity: P2
+- issue: Nothing checks or records that devkit sync --check exited 0 on the accepted head, which separates change outputs from drift.
+  evidence: development-worker.md.jinja step 5 runs sync only after editing; the Host checks only the returned head
+  failure_condition: Pre-existing drift is written, labelled (sync output) and passes the Host check.
+  suggested_action: Worker runs sync --check before the first edit and records it as a check (sync_start); nonzero is a problem; Validate requires it.
+  resolution: resolved
+  severity: P2
+- issue: worker inspect derives scope from _Boundary at the tip and strips notes, so its scope pass carries no information for (sync output) entries.
+  evidence: inputs.py derive_scope; bundle.py split_boundary; inspect.py scope check
+  failure_condition: An unrelated path labelled (sync output) passes inspect and is accepted without the receipt lookup.
+  suggested_action: Validate states inspect's pass is not evidence for these entries; check each (sync output) entry tasks.md gained since accepted against the receipt rule.
+  resolution: resolved
+  severity: P2
+checks: {}
