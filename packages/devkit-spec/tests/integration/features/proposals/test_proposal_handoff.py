@@ -439,6 +439,20 @@ def test_promotes_only_the_frontmatter_and_the_first_prose_status(workspace: Pat
     assert adr.endswith(example)
 
 
+def test_a_commented_out_status_line_is_not_the_prose_status(workspace: Path) -> None:
+    proposal = _new(workspace, "commented")
+    create_padr(workspace, "commented", "Store format")
+    padr = proposal.parent / "decisions/PADR-store-format.md"
+    text = padr.read_text(encoding="utf-8")
+    end = text.index("\n---\n", 4) + len("\n---\n")
+    comment = "<!--\n- **Status**: Draft\n-->\n"
+    padr.write_text(text[:end] + comment + text[end:], encoding="utf-8")
+    accept(proposal)
+    handoff_proposal(workspace, "commented", today=TODAY)
+    adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-store-format.md").read_text(encoding="utf-8")
+    assert comment in adr and "\n- **Status**: Accepted\n" in adr
+
+
 def test_promotes_a_padr_id_with_uppercase_and_underscore(workspace: Path) -> None:
     proposal = _new(workspace, "grammar")
     (proposal.parent / "decisions").mkdir(exist_ok=True)

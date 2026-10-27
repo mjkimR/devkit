@@ -205,6 +205,25 @@ describe('SharedArtifactsView', () => {
 		expect(container.querySelector('.detail-header')).toBeNull();
 	});
 
+	it('stops loading when the selection clears while its detail is still loading', async () => {
+		const pending = createMockSource([mockArtifacts[0]]);
+		pending.sharedBlob = (_generationId: string, signal: AbortSignal) =>
+			new Promise((_resolve, reject) =>
+				signal.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')))
+			);
+		const { rerender } = render(SharedArtifactsView, {
+			props: { source: pending, repoId: 'test-repo' }
+		});
+		await waitFor(() => expect(screen.getByText('Loading artifact content...')).toBeTruthy());
+
+		await rerender({ source: createMockSource([]), repoId: 'test-repo' });
+
+		await waitFor(() =>
+			expect(screen.getByText('No shared artifacts in repository.')).toBeTruthy()
+		);
+		expect(screen.queryByText('Loading artifact content...')).toBeNull();
+	});
+
 	it('encodes the repository and generation in the standalone review link', async () => {
 		const source = createMockSource([mockArtifacts[0]]);
 		const { container } = render(SharedArtifactsView, {

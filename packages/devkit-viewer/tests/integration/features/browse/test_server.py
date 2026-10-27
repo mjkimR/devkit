@@ -217,6 +217,26 @@ def test_port_is_reusable_after_close() -> None:
     ViewerServer([], port).server_close()
 
 
+def test_port_is_reusable_right_after_serving_a_request() -> None:
+    # The server closes each HTTP/1.0 connection first, leaving it in TIME_WAIT on the port.
+    first = ViewerServer([], 0)
+    port = first.port
+    thread = threading.Thread(target=first.serve_forever, daemon=True)
+    thread.start()
+    try:
+        connection = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+        connection.request("GET", "/api/repos")
+        response = connection.getresponse()
+        response.read()  # to the server's close
+        assert response.status == 200
+        connection.close()
+    finally:
+        first.shutdown()
+        first.server_close()
+        thread.join()
+    ViewerServer([], port).server_close()
+
+
 @pytest.fixture
 def review_artifact(server: ViewerServer, monkeypatch: pytest.MonkeyPatch):
     from devkit_dist.features.shared.models.api import PutRequest

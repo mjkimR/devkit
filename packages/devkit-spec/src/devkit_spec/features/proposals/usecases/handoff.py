@@ -680,13 +680,14 @@ def _plan_decisions(root: Path, decisions_dir: Path, month: str, stamp: str) -> 
 
 def _accept_status(text: str) -> str:
     """``text`` with its frontmatter ``status: draft`` and its first prose ``- **Status**: Draft`` line accepted; a
-    fenced or indented example in the body keeps its draft status."""
+    fenced or indented example or an HTML comment in the body keeps its draft status."""
     block = locate(text)
     end = block.end if block else 0
     text = _DRAFT_STATUS.sub("status: accepted", text[:end]) + text[end:]
     for line in visible_lines(text, start=end):
         span = text[line.offset : line.offset + len(line.text)]
-        if _DRAFT_BODY_STATUS.fullmatch(span):
+        # ``line.text`` is masked (comments blanked); the replacement keeps the source line's exact text.
+        if _DRAFT_BODY_STATUS.fullmatch(line.text) and _DRAFT_BODY_STATUS.fullmatch(span):
             return text[: line.offset] + "- **Status**: Accepted" + text[line.offset + len(span) :]
     return text
 

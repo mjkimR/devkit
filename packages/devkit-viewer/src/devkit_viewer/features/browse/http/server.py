@@ -24,6 +24,7 @@ from __future__ import annotations
 import errno
 import json
 import mimetypes
+import socket
 from collections.abc import Mapping, Sequence
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -80,12 +81,27 @@ def bundle_files() -> dict[str, Traversable]:
     return found
 
 
+def _accepts(port: int) -> bool:
+    """Whether something already accepts connections on ``HOST:port``."""
+    try:
+        with socket.create_connection((HOST, port), timeout=0.5):
+            return True
+    except OSError:
+        return False
+
+
 class ViewerServer(ThreadingHTTPServer):
     """A server for ``repositories`` on ``127.0.0.1:<port>`` (``0`` picks a free port)."""
 
     daemon_threads = True
-    # SO_REUSEADDR would let 127.0.0.1:<port> bind on macOS beside another process listening on 0.0.0.0:<port>.
-    allow_reuse_address = False
+
+    def server_bind(self) -> None:
+        # Address reuse lets a restart bind while the last run's connections sit in TIME_WAIT, but on macOS it also
+        # lets 127.0.0.1:<port> bind beside another process listening on 0.0.0.0:<port>: refuse a port that accepts.
+        port = int(self.server_address[1])
+        if port and _accepts(port):
+            raise OSError(errno.EADDRINUSE, f"port {port} accepts connections on {HOST}")
+        super().server_bind()
 
     def __init__(self, repositories: Sequence[Repository], port: int) -> None:
         self.repositories = {repo.id: repo for repo in repositories}

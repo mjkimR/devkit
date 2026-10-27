@@ -87,18 +87,22 @@ def upstream_digest(bundle: Bundle, asset: Asset) -> str:
     return asset_digest((rel, (bundle.root / rel).read_bytes()) for rel in asset_files(bundle, asset))
 
 
-def record_source(record: OverrideRecord) -> str:
-    """The bundle-relative source a record names: a skill's directory for its ``SKILL.md``, else the path itself.
+def record_source(record: OverrideRecord) -> str | None:
+    """The bundle-relative source a record names: a skill's directory for its ``SKILL.md``, else the path itself;
+    ``None`` when that is the bundle root, which holds every override of the bundle.
 
     It locates the override of an asset the installed bundle no longer has, whose upstream files are unknown.
     """
     path = PurePosixPath(record.relative_path)
-    return path.parent.as_posix() if path.name in ("SKILL.md", "SKILL.md.jinja") else record.relative_path
+    source = path.parent.as_posix() if path.name in ("SKILL.md", "SKILL.md.jinja") else record.relative_path
+    return None if source in ("", ".") else source
 
 
 def record_overridden(root: Path, bundle: str, record: OverrideRecord) -> bool:
-    """Whether any file remains under the override path of ``record`` (see ``record_source``)."""
-    path = root / override_rel(bundle, record_source(record))
+    """Whether any file remains under the override path of ``record`` (see ``record_source``); for a record at the
+    bundle root, under the bundle's override directory."""
+    source = record_source(record)
+    path = root / (override_rel(bundle, source) if source is not None else f"{OVERRIDES_PATH}/{bundle}")
     return path.is_file() or (path.is_dir() and any(p.is_file() for p in path.rglob("*")))
 
 

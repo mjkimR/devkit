@@ -11,6 +11,7 @@ from devkit_dist.features.distribution.models.errors import ConflictError, Overr
 from devkit_dist.features.distribution.services.installation import transaction
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
+from devkit_dist.features.distribution.services.installation.overrides import record_source
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt
 from devkit_dist.features.distribution.services.installation.workspace import JOURNAL
 from devkit_dist.features.distribution.usecases.override_commands import (
@@ -22,6 +23,7 @@ from devkit_dist.features.distribution.usecases.override_commands import (
 )
 from devkit_dist.features.distribution.usecases.playbook_search import SearchPlaybooks
 from devkit_dist.features.distribution.usecases.sync import sync_project
+from devkit_dist.features.project.models.receipt import OverrideRecord
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, OVERRIDES_PATH, RECEIPT_PATH
 from distsupport.distribution import instruction, reload, write_bundle
 
@@ -335,3 +337,12 @@ def test_remove_drops_the_override_of_a_removed_asset(item: InstalledBundle, tar
     assert [entry.asset for entry in list_overrides(target, [newer])] == ["guide"]
     with pytest.raises(SelectionError, match="asset not found"):
         remove_override(target, [newer], "team:review")
+
+
+@pytest.mark.parametrize(
+    ("relative_path", "expected"),
+    [("skills/review/SKILL.md", "skills/review"), ("instructions/a.md", "instructions/a.md"), ("SKILL.md", None)],
+)
+def test_record_source_never_names_the_bundle_root(relative_path: str, expected: str | None) -> None:
+    # A record at the bundle root would make override remove delete every override of the bundle.
+    assert record_source(OverrideRecord("skill", relative_path, "a" * 64, "b" * 64)) == expected

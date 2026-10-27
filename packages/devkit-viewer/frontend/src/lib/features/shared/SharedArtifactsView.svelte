@@ -189,6 +189,7 @@
 		if (!genId) {
 			selectedDetail = null;
 			detailError = null;
+			detailLoading = false;
 			return;
 		}
 		const controller = new AbortController();
