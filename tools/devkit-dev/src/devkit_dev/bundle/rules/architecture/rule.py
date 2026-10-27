@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import importlib.util
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -10,6 +9,17 @@ from typing import Any
 
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, WorkspaceCache
 from devkit_agt.features.rules.services.builtins.base import BaseRule
+from devkit_dev.source_index import (
+    CONFIG,
+    bind,
+    context_of,
+    feature_of,
+    iter_sources,
+    layer_of,
+    longest_module,
+    resolve_forward,
+    resolve_relative,
+)
 
 from .facts import ArchitectureFacts, Import, descriptor
 
@@ -41,35 +51,32 @@ class Module:
 
     @property
     def feature(self) -> str | None:
-        return self.parts[1] if len(self.parts) > 1 and self.parts[0] == "features" else None
+        return feature_of(self.parts)
 
     @property
     def layer(self) -> str | None:
-        if self.parts and self.parts[0] == "adapters":
-            return "adapters"
-        return self.parts[2] if len(self.parts) > 2 and self.feature else None
+        return layer_of(self.parts)
+
+    @property
+    def context(self) -> str:
+        return context_of(self.name, self.is_package)
 
 
-def _imports(module: Module, cache: WorkspaceCache | None = None) -> list[tuple[str, int]]:
+def _bindings(statements: tuple[Import, ...], context: str) -> dict[str, str]:
+    return bind(
+        (
+            (None if node.kind == "import" else node.module or "", node.level, [(a.name, a.asname) for a in node.names])
+            for node in statements
+        ),
+        context,
+    )
+
+
+def _imports(module: Module) -> list[tuple[str, int]]:
     """Resolve relative imports, including from-import submodules, without importing code."""
     result: list[tuple[str, int]] = []
-    package = module.name if module.is_package else module.name.rpartition(".")[0]
-    bindings: dict[str, str] = {}
-    for node in module.facts.imports:
-        if node.kind == "import":
-            for alias in node.names:
-                bindings[alias.asname or alias.name.split(".")[0]] = (
-                    alias.name if alias.asname else alias.name.split(".")[0]
-                )
-        else:
-            base = node.module or ""
-            if node.level:
-                try:
-                    base = importlib.util.resolve_name("." * node.level + base, package)
-                except ImportError:
-                    continue
-            for alias in node.names:
-                bindings[alias.asname or alias.name] = f"{base}.{alias.name}"
+    package = module.context
+    bindings = _bindings(module.facts.imports, package)
     for head, attributes, line in module.facts.attributes:
         if head in bindings:
             result.append((".".join((bindings[head], *attributes)), line))
@@ -79,19 +86,16 @@ def _imports(module: Module, cache: WorkspaceCache | None = None) -> list[tuple[
         elif isinstance(node, Import):
             name = node.module or ""
             if node.level:
-                try:
-                    name = importlib.util.resolve_name("." * node.level + name, package)
-                except ImportError:
+                resolved = resolve_relative("." * node.level + name, package)
+                if resolved is None:
                     result.append(("<invalid-relative-import>", node.lineno))
                     continue
+                name = resolved
             result.extend((name if alias.name == "*" else f"{name}.{alias.name}", node.lineno) for alias in node.names)
         else:
             name = node.name
             if node.kind == "dynamic" and name.startswith(".") and node.context is not None:
-                try:
-                    name = importlib.util.resolve_name(name, node.context)
-                except ImportError:
-                    name = "<invalid-relative-import>"
+                name = resolve_relative(name, node.context) or "<invalid-relative-import>"
             result.append((name, node.lineno))
     return list(dict.fromkeys(result))
 
@@ -144,9 +148,7 @@ def _layout(parts: tuple[str, ...], package: dict[str, Any]) -> str | None:
     return None
 
 
-def inspect_architecture(
-    root: Path, config_path: str = ".devkit/architecture.toml", *, cache: WorkspaceCache | None = None
-) -> list[tuple[str, int, str]]:
+def inspect_architecture(root: Path, *, cache: WorkspaceCache | None = None) -> list[tuple[str, int, str]]:
     """Return all graph violations; never execute inspected modules.
 
     Sources are parsed through ``cache`` (a fresh ``WorkspaceCache(root)`` when omitted), so a rules run shares one
@@ -154,9 +156,9 @@ def inspect_architecture(
     """
     cache = cache if cache is not None else WorkspaceCache(root)
     findings: list[tuple[str, int, str]] = []
-    configuration = root / config_path
+    configuration = root / CONFIG
     if not configuration.is_file():
-        return [(config_path, 1, "architecture declaration is missing")]
+        return [(CONFIG, 1, "architecture declaration is missing")]
     try:
         config = tomllib.loads(configuration.read_text())
         packages = config["packages"]
@@ -224,7 +226,7 @@ def inspect_architecture(
             if any("*" in entry[key] for key in ("source", "target")):
                 raise ValueError("import exceptions cannot use wildcards")
     except (KeyError, TypeError, ValueError, tomllib.TOMLDecodeError) as exc:
-        return [(config_path, 1, f"invalid architecture declaration: {exc}")]
+        return [(CONFIG, 1, f"invalid architecture declaration: {exc}")]
 
     declared_roots = [root / package["root"] for package in packages]
     for area in ("packages", "tools"):
@@ -263,51 +265,34 @@ def inspect_architecture(
     modules: dict[str, Module] = {}
     complete = True
     fact_paths: list[str] = []
-    for package in packages:
-        source = root / package["root"]
-        for path in sorted(source.rglob("*.py")):
-            if "__pycache__" in path.parts:
-                continue
-            relative_path = path.relative_to(source)
-            if "tests" in relative_path.parts:
-                if any(relative_path.is_relative_to(prefix) for prefix in package.get("embedded_test_roots", [])):
-                    continue
-                if relative_path.parts[0] not in package.get("data_roots", []):
-                    findings.append(
-                        (
-                            path.relative_to(root).as_posix(),
-                            1,
-                            "tests belong in package tests or a declared bundled rule",
-                        )
-                    )
-                    continue
-            relative = relative_path.with_suffix("").parts
-            rel = path.relative_to(root).as_posix()
-            if relative[0] in package.get("data_roots", []):
-                continue
-            issue = _layout(relative, package)
-            if issue:
-                findings.append((rel, 1, issue))
-            try:
-                facts = cache.get_file_facts(path, FACTS)
-                fact_paths.append(rel)
-            except (SyntaxError, ValueError) as exc:
-                complete = False
-                findings.append((rel, getattr(exc, "lineno", 1) or 1, f"cannot parse source: {exc}"))
-                continue
-            parts = relative[:-1] if relative[-1] == "__init__" else relative
-            name = ".".join((package["namespace"], *parts))
-            modules[name] = Module(name, rel, package["namespace"], parts, facts, relative[-1] == "__init__")
+    for source in iter_sources(root, packages):
+        if source.status == "misplaced-test":
+            findings.append((source.path, 1, "tests belong in package tests or a declared bundled rule"))
+        if source.status != "module":
+            continue
+        issue = _layout(source.relative, declarations[source.namespace])
+        if issue:
+            findings.append((source.path, 1, issue))
+        try:
+            facts = cache.get_file_facts(source.file, FACTS)
+            fact_paths.append(source.path)
+        except (SyntaxError, ValueError) as exc:
+            complete = False
+            findings.append((source.path, getattr(exc, "lineno", 1) or 1, f"cannot parse source: {exc}"))
+            continue
+        modules[source.name] = Module(
+            source.name, source.path, source.namespace, source.parts, facts, source.is_package
+        )
 
     for package in packages:
         for public in package.get("public_modules", []):
             if public not in modules or not public.startswith(package["namespace"] + ".features."):
-                findings.append((config_path, 1, f"public module is missing or outside its features: {public}"))
+                findings.append((CONFIG, 1, f"public module is missing or outside its features: {public}"))
 
     # Validate declared package dependencies independently of which optional module is imported today.
     def visit(namespace: str, trail: tuple[str, ...]) -> None:
         if namespace in trail:
-            findings.append((config_path, 1, f"package dependency cycle: {' -> '.join((*trail, namespace))}"))
+            findings.append((CONFIG, 1, f"package dependency cycle: {' -> '.join((*trail, namespace))}"))
             return
         for dependency in declarations[namespace].get("dependencies", []):
             visit(dependency, (*trail, namespace))
@@ -320,7 +305,7 @@ def inspect_architecture(
         for feature, dependencies in package.get("feature_dependencies", {}).items()
     }
     for cycle in _dependency_cycles(declared_features):
-        findings.append((config_path, 1, f"declared feature dependency cycle: {' -> '.join(cycle)}"))
+        findings.append((CONFIG, 1, f"declared feature dependency cycle: {' -> '.join(cycle)}"))
     # Entry-point groups keep their external names; their Python target modules must exist.
     for package in packages:
         manifest = (root / package["root"]).parent.parent / "pyproject.toml"
@@ -344,43 +329,13 @@ def inspect_architecture(
         except (ValueError, TypeError) as exc:
             findings.append((manifest.relative_to(root).as_posix(), 1, f"invalid entry-point declaration: {exc}"))
 
-    def resolve(imported: str, trail: frozenset[str] = frozenset()) -> Module | None:
-        """Follow explicit facade re-exports so a facade cannot conceal an upward dependency."""
-        if imported in trail:
-            return None
-        target = imported
-        while target not in modules and "." in target:
-            target = target.rpartition(".")[0]
-        destination = modules.get(target)
-        if destination and imported != target:
-            attribute, _, remainder = imported[len(target) + 1 :].partition(".")
-            for statement in destination.facts.facade:
-                if statement.kind == "import":
-                    for alias in statement.names:
-                        binding = alias.asname or alias.name.split(".")[0]
-                        if binding == attribute:
-                            forwarded = alias.name if alias.asname else binding
-                            if remainder:
-                                forwarded += f".{remainder}"
-                            resolved = resolve(forwarded, trail | {imported})
-                            if resolved:
-                                return resolved
-                if statement.kind != "from":
-                    continue
-                base = statement.module or ""
-                if statement.level:
-                    context = destination.name if destination.is_package else destination.name.rpartition(".")[0]
-                    try:
-                        base = importlib.util.resolve_name("." * statement.level + base, context)
-                    except ImportError:
-                        continue
-                for alias in statement.names:
-                    if (alias.asname or alias.name) == attribute:
-                        forwarded = f"{base}.{alias.name}" + (f".{remainder}" if remainder else "")
-                        resolved = resolve(forwarded, trail | {imported})
-                        if resolved:
-                            return resolved
-        return destination
+    facades: dict[str, dict[str, str]] = {}
+
+    def forwards(module: Module) -> dict[str, str]:
+        """The names a module's top-level imports bind, so a facade cannot conceal an upward dependency."""
+        if module.name not in facades:
+            facades[module.name] = _bindings(module.facts.facade, module.context)
+        return facades[module.name]
 
     feature_graph: dict[str, set[str]] = {feature: set() for feature in feature_ids}
     feature_edges: dict[tuple[str, str], tuple[str, int]] = {}
@@ -390,7 +345,7 @@ def inspect_architecture(
     for module in modules.values():
         package = declarations[module.package]
         seen: set[tuple[int, str]] = set()
-        for imported, line in _imports(module, cache):
+        for imported, line in _imports(module):
             target_namespace = next((ns for ns in namespaces if imported == ns or imported.startswith(ns + ".")), None)
             issue: str | None = None
             if imported == "<invalid-relative-import>":
@@ -405,11 +360,12 @@ def inspect_architecture(
                 and target_namespace not in package.get("dependencies", [])
             ):
                 issue = f"undeclared package dependency {module.package} -> {target_namespace}"
+            # Match the actual module, not an imported attribute added by from-import expansion.
+            target = longest_module(imported, modules)
             if issue is None and target_namespace:
-                target = imported
-                while target not in modules and "." in target:
-                    target = target.rpartition(".")[0]
-                destination = resolve(imported)
+                destination = modules.get(
+                    longest_module(resolve_forward(imported, modules, forwards, indexed_only=True), modules)
+                )
                 if destination:
                     if module.feature and destination.feature:
                         source_feature = f"{module.package}.features.{module.feature}"
@@ -448,10 +404,6 @@ def inspect_architecture(
                         if target != facade and target not in public:
                             issue = f"cross-feature import bypasses public API: {target}"
             if issue:
-                # Match the actual module, not an imported attribute added by from-import expansion.
-                target = imported
-                while target not in modules and "." in target:
-                    target = target.rpartition(".")[0]
                 key = (module.name, target if target in modules else imported)
                 if key in permitted:
                     used.add(key)
@@ -464,7 +416,7 @@ def inspect_architecture(
         path, line = feature_edges[(cycle[-2], cycle[-1])]
         findings.append((path, line, f"feature dependency cycle: {' -> '.join(cycle)}"))
     for source, target in sorted(permitted - used):
-        findings.append((config_path, 1, f"unused import exception: {source} -> {target}"))
+        findings.append((CONFIG, 1, f"unused import exception: {source} -> {target}"))
     if complete:
         cache.complete_file_facts(FACTS, fact_paths)
     return findings

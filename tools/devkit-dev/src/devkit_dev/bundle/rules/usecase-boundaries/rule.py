@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import importlib.util
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, WorkspaceCache
 from devkit_agt.features.rules.services.builtins.base import BaseRule
+from devkit_dev.source_index import CONFIG, bind, context_of, iter_sources, layer_of, longest_module, resolve_forward
 
 from .facts import Expression, Scope, descriptor
 
@@ -43,22 +43,9 @@ def _attribute(node: Expression) -> str | None:
 
 
 def _imports(module: Module, tree: Scope) -> dict[str, str]:
-    bindings: dict[str, str] = {}
-    for node in tree.imports:
-        if node.module is None:
-            for name, asname in node.names:
-                bindings[asname or name.split(".")[0]] = name if asname else name.split(".")[0]
-        else:
-            name = node.module
-            if node.level:
-                context = module.name if module.package else module.name.rpartition(".")[0]
-                try:
-                    name = importlib.util.resolve_name("." * node.level + name, context)
-                except ImportError:
-                    continue
-            for alias, asname in node.names:
-                bindings[asname or alias] = f"{name}.{alias}"
-    return bindings
+    return bind(
+        ((node.module, node.level, node.names) for node in tree.imports), context_of(module.name, module.package)
+    )
 
 
 class Index:
@@ -66,43 +53,36 @@ class Index:
         self.modules: dict[str, Module] = {}
         self.definitions: dict[str, Scope] = {}
         fact_paths: list[str] = []
-        for package in config["packages"]:
-            source = root / package["root"]
-            for path in sorted(source.rglob("*.py")):
-                relative = path.relative_to(source).with_suffix("").parts
-                if relative[0] in package.get("data_roots", []) or "tests" in relative:
-                    continue
-                parts = relative[:-1] if relative[-1] == "__init__" else relative
-                name = ".".join((package["namespace"], *parts))
-                layer = parts[2] if len(parts) > 2 and parts[0] == "features" else None
-                if parts and parts[0] == "adapters":
-                    layer = "adapters"
-                module = Module(
-                    name,
-                    path.relative_to(root).as_posix(),
-                    layer,
-                    cache.get_file_facts(path, FACTS),
-                    relative[-1] == "__init__",
-                    {},
-                )
-                module.bindings = _imports(module, module.tree)
-                fact_paths.append(module.path)
-                self.modules[name] = module
-                for statement in module.tree.declarations:
-                    if statement.kind in {"class", "function", "async"}:
-                        self.definitions[f"{name}.{statement.name}"] = statement
-                        if statement.kind == "class":
-                            for method in statement.declarations:
-                                if method.kind in {"function", "async"}:
-                                    self.definitions[f"{name}.{statement.name}.{method.name}"] = method
-                # Explicit aliases in public facades are resolved as well as import re-exports.
-                for statement in module.tree.aliases:
-                    if statement.value is not None and (value := _attribute(statement.value)):
-                        head, _, tail = value.partition(".")
-                        target = module.bindings.get(head, f"{name}.{head}") + (f".{tail}" if tail else "")
-                        for destination in statement.targets:
-                            if destination.kind == "name":
-                                module.bindings[destination.name] = target
+        for source in iter_sources(root, config["packages"]):
+            if source.status != "module":
+                continue
+            name = source.name
+            module = Module(
+                name,
+                source.path,
+                layer_of(source.parts),
+                cache.get_file_facts(source.file, FACTS),
+                source.is_package,
+                {},
+            )
+            module.bindings = _imports(module, module.tree)
+            fact_paths.append(module.path)
+            self.modules[name] = module
+            for statement in module.tree.declarations:
+                if statement.kind in {"class", "function", "async"}:
+                    self.definitions[f"{name}.{statement.name}"] = statement
+                    if statement.kind == "class":
+                        for method in statement.declarations:
+                            if method.kind in {"function", "async"}:
+                                self.definitions[f"{name}.{statement.name}.{method.name}"] = method
+            # Explicit aliases in public facades are resolved as well as import re-exports.
+            for statement in module.tree.aliases:
+                if statement.value is not None and (value := _attribute(statement.value)):
+                    head, _, tail = value.partition(".")
+                    target = module.bindings.get(head, f"{name}.{head}") + (f".{tail}" if tail else "")
+                    for destination in statement.targets:
+                        if destination.kind == "name":
+                            module.bindings[destination.name] = target
 
         # Resolve bound-method facade aliases only after every class is indexed.
         for module in self.modules.values():
@@ -116,23 +96,16 @@ class Index:
 
         cache.complete_file_facts(FACTS, fact_paths)
 
-    def resolve(self, symbol: str, trail: frozenset[str] = frozenset()) -> str:
-        if symbol in self.definitions or symbol == BASE or symbol in trail:
-            return symbol
-        name = symbol
-        while name not in self.modules and "." in name:
-            name = name.rpartition(".")[0]
-        if name in self.modules and name != symbol:
-            attribute, _, rest = symbol[len(name) + 1 :].partition(".")
-            forwarded = self.modules[name].bindings.get(attribute)
-            if forwarded:
-                return self.resolve(forwarded + (f".{rest}" if rest else ""), trail | {symbol})
-        return symbol
+    def resolve(self, symbol: str) -> str:
+        return resolve_forward(
+            symbol,
+            self.modules,
+            lambda module: module.bindings,
+            final=lambda name: name in self.definitions or name == BASE,
+        )
 
     def owner(self, symbol: str) -> Module | None:
-        while symbol not in self.modules and "." in symbol:
-            symbol = symbol.rpartition(".")[0]
-        return self.modules.get(symbol)
+        return self.modules.get(longest_module(symbol, self.modules))
 
     def usecase(self, symbol: str, trail: frozenset[str] = frozenset()) -> bool:
         symbol = self.resolve(symbol)
@@ -198,16 +171,14 @@ class Index:
         return Value(value.symbol, True) if value and definition and definition.kind == "class" else None
 
 
-def inspect_usecases(
-    root: Path, config_path: str = ".devkit/architecture.toml", *, cache: WorkspaceCache | None = None
-) -> list[tuple[str, int, str]]:
+def inspect_usecases(root: Path, *, cache: WorkspaceCache | None = None) -> list[tuple[str, int, str]]:
     """Check known static execution edges; computed dispatch remains a review responsibility.
 
     Sources are parsed through ``cache`` (a fresh ``WorkspaceCache(root)`` when omitted), so a rules run shares one
     parsed tree per file with its other Python-source rules.
     """
     try:
-        config = tomllib.loads((root / config_path).read_text())
+        config = tomllib.loads((root / CONFIG).read_text())
         index = Index(root, config, cache if cache is not None else WorkspaceCache(root))
         exceptions = config.get("usecase_exceptions", [])
         for entry in exceptions:
@@ -220,7 +191,7 @@ def inspect_usecases(
         if len(permitted) != len(exceptions):
             raise ValueError("duplicate usecase exception")
     except (OSError, KeyError, TypeError, ValueError, SyntaxError) as exc:
-        return [(config_path, 1, f"cannot inspect usecase boundaries: {exc}")]
+        return [(CONFIG, 1, f"cannot inspect usecase boundaries: {exc}")]
     findings: set[tuple[str, int, str]] = set()
     used: set[tuple[str, str]] = set()
 
@@ -398,7 +369,7 @@ def inspect_usecases(
                         target.symbol,
                     )
     for source, target in sorted(permitted - used):
-        findings.add((config_path, 1, f"unused usecase exception: {source} -> {target}"))
+        findings.add((CONFIG, 1, f"unused usecase exception: {source} -> {target}"))
     return sorted(findings)
 
 

@@ -39,7 +39,7 @@ from pathlib import Path, PurePosixPath
 from typing import IO
 
 from devkit_core.core import GitError, is_safe_relpath, run_git
-from devkit_core.core.git import DEFAULT_TIMEOUT, commit_index
+from devkit_core.core.git import DEFAULT_TIMEOUT
 from devkit_dist.features.project.repositories.project import require_git_toplevel
 
 from devkit_agt.features.rules.models.errors import SnapshotError
@@ -52,6 +52,29 @@ _CHUNK = 1 << 20
 # Upper bound on materializing one snapshot, however steadily Git streams it; the idle timeout
 # (``DEFAULT_TIMEOUT`` without progress reading Git's output) catches a stalled Git long before.
 SNAPSHOT_LIMIT = 30 * 60.0
+# The index of the commit being made, which the ``verify-commands`` gate passes to the commands it runs, and the
+# ``rules-check`` gate sets while it runs, after removing Git's own ``GIT_INDEX_FILE`` (see ``commit_index``).
+COMMIT_INDEX_VARIABLE = "DEVKIT_GIT_INDEX_FILE"
+
+
+def commit_index(root: Path) -> str | None:
+    """The index of the commit a hook is making when devkit runs from the ``verify-commands`` or ``rules-check`` gate.
+
+    Both gates remove Git's ``GIT_INDEX_FILE`` from the environment the check runs in (so Git run in another
+    repository, a test suite's or a materialized snapshot's, is not pointed at it) and pass it as
+    ``DEVKIT_GIT_INDEX_FILE`` instead. It applies only
+    while ``GIT_INDEX_FILE`` is unset and only to the repository whose Git directory holds that index, so
+    ``git commit -a`` and ``git commit <paths>``, which commit a temporary index, are evaluated as committed.
+    ``None`` otherwise: Git's own ``GIT_INDEX_FILE``, or the default index, applies.
+    """
+    value = os.environ.get(COMMIT_INDEX_VARIABLE)
+    if not value or "GIT_INDEX_FILE" in os.environ:
+        return None
+    index = Path(value)
+    if not index.is_absolute():
+        return None
+    git_dir = Path(os.fsdecode(run_git(root, "rev-parse", "--absolute-git-dir").rstrip(b"\n")))
+    return value if index.parent.resolve() == git_dir.resolve() else None
 
 
 def _git(root: Path, *args: str, stdin: bytes | None = None, index: str | None = None) -> bytes:

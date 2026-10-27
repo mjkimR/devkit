@@ -161,6 +161,7 @@ dependencies = ["devkit_dist", "devkit_core", "devkit.advisory"]
 namespace = "devkit_dev"
 root = "tools/devkit-dev/src/devkit_dev"
 kind = "content"
+root_modules = ["source_index"]
 data_roots = ["bundle"]
 
 [[packages]]

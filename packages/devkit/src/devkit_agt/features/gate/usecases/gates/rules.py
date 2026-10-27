@@ -34,13 +34,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from devkit.advisory import Actor
-from devkit_core.core.git import COMMIT_INDEX_VARIABLE
 from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_agt.features.gate.models.base import BaseGate
 from devkit_agt.features.gate.models.contracts import GateContext, GateResult, Stage
 from devkit_agt.features.gate.models.errors import GateFindingsError, RulesWarningsNotice
 from devkit_agt.features.gate.usecases.gates.commands import HOOK_GIT_VARIABLES
+from devkit_agt.features.rules import COMMIT_INDEX_VARIABLE
 
 if TYPE_CHECKING:
     from devkit_agt.features.rules import RuleProblem, RulesRunError, Violation

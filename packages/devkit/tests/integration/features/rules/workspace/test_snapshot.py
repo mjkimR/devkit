@@ -4,7 +4,13 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from devkit_agt.features.rules import SnapshotError, git_snapshot, materialize_snapshot
+from devkit_agt.features.rules import (
+    COMMIT_INDEX_VARIABLE,
+    SnapshotError,
+    commit_index,
+    git_snapshot,
+    materialize_snapshot,
+)
 
 
 def _git(root: Path, *args: str) -> str:
@@ -230,3 +236,23 @@ def test_the_blob_reader_timeout_counts_idle_time_and_the_limit_bounds_the_whole
     with pytest.raises(SnapshotError, match=r"timed out \(not finished after 0.0s\)"):
         bounded.finish()
     bounded.close()
+
+
+def test_commit_index_applies_only_to_its_own_repository(
+    repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("GIT_INDEX_FILE", raising=False)
+    monkeypatch.delenv(COMMIT_INDEX_VARIABLE, raising=False)
+    assert commit_index(repo) is None
+
+    index = str((repo / ".git/index.lock").resolve())
+    monkeypatch.setenv(COMMIT_INDEX_VARIABLE, index)
+    assert commit_index(repo) == index
+
+    other = tmp_path / "other"
+    other.mkdir()
+    subprocess.run(["git", "init", "-q", str(other)], check=True)
+    assert commit_index(other) is None  # a test suite's own repository keeps its default index
+
+    monkeypatch.setenv("GIT_INDEX_FILE", index)
+    assert commit_index(repo) is None  # Git's own variable already applies

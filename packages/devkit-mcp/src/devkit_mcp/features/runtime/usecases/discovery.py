@@ -7,12 +7,15 @@ import os
 import re
 from importlib import metadata
 from pathlib import Path
+from typing import get_args, get_type_hints
 
 from devkit_core.base.mcp import McpTool
 from devkit_dist.features.host.models.errors import HostMcpError
 
 SERVICE_GROUP = "devkit.host.services"
 NAME = re.compile(r"[a-zA-Z0-9_-]{1,64}\Z")
+# The execution classes ``McpTool.execution`` declares.
+EXECUTIONS = frozenset(get_args(get_type_hints(McpTool)["execution"]))
 
 
 def load_tools(root: Path) -> dict[str, McpTool]:
@@ -24,12 +27,7 @@ def load_tools(root: Path) -> dict[str, McpTool]:
             if not isinstance(declared, tuple) or not all(isinstance(tool, McpTool) for tool in declared):
                 raise TypeError("service must return a tuple of McpTool")
             for tool in declared:
-                if (
-                    not NAME.fullmatch(tool.name)
-                    or tool.name in tools
-                    or tool.execution
-                    not in {"read_only", "preflight", "interactive", "approved_resume", "bounded_write"}
-                ):
+                if not NAME.fullmatch(tool.name) or tool.name in tools or tool.execution not in EXECUTIONS:
                     raise TypeError("invalid or duplicate tool name")
                 tools[tool.name] = tool
         except Exception as exc:

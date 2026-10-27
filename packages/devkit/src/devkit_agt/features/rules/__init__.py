@@ -53,7 +53,12 @@ from devkit_agt.features.rules.repositories.workspace.relocation import (
     UnresolvedReason,
     relocate_links,
 )
-from devkit_agt.features.rules.repositories.workspace.snapshot import git_snapshot, materialize_snapshot
+from devkit_agt.features.rules.repositories.workspace.snapshot import (
+    COMMIT_INDEX_VARIABLE,
+    commit_index,
+    git_snapshot,
+    materialize_snapshot,
+)
 from devkit_agt.features.rules.services.evaluator import EvaluationResult, evaluate_rules
 from devkit_agt.features.rules.services.registry import RuleRegistry, default_rule_registry
 from devkit_agt.features.rules.usecases.project import (
@@ -67,6 +72,7 @@ from devkit_agt.features.rules.usecases.project import (
 from devkit_agt.features.rules.usecases.related import RelatedAsset, ResolveRelatedUseCase
 
 __all__ = [
+    "COMMIT_INDEX_VARIABLE",
     "Autofixable",
     "ChecklistItem",
     "Document",
@@ -118,6 +124,7 @@ __all__ = [
     "WorkspaceCache",
     "build_project_registry",
     "capture_facts_dependency",
+    "commit_index",
     "count_tasks",
     "default_rule_registry",
     "evaluate_rules",

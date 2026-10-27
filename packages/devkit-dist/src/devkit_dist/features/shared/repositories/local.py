@@ -346,22 +346,50 @@ class LocalAdapter:
         validate_page(cursor, limit)
         if cursor is not None:
             decode_cursor(cursor)
+        entries = self.list_live(
+            kind=kind, slug=slug, source_sha=source_sha, language=language, cursor=cursor, limit=limit + 1
+        )
+        if len(entries) > limit:
+            return Page(tuple(entries[:limit]), encode_cursor(entries[limit - 1].generation_id + ".md"))
+        return Page(tuple(entries))
+
+    def list_live(
+        self,
+        *,
+        kind: str | None = None,
+        slug: str | None = None,
+        source_sha: str | None = None,
+        language: str | None = None,
+        cursor: str | None = None,
+        limit: int | None = None,
+        skip_unreadable: bool = False,
+    ) -> list[ArtifactMetadata]:
+        """Live artifacts in generation order, matching every given field, stopping after ``limit`` matches.
+
+        Filters are compared, not validated (``list`` validates its own). With ``skip_unreadable`` an artifact
+        whose read fails (corrupt, vanished or refused) is left out instead of failing the whole listing.
+        """
         with self._operation() as budget:
-            entries = []
+            entries: list[ArtifactMetadata] = []
             now = self.clock()
             for path in self._paths(budget, cursor):
-                meta = self._read(path, budget).metadata
+                try:
+                    meta = self._read(path, budget).metadata
+                except (SharedError, OSError):
+                    if skip_unreadable:
+                        continue
+                    raise
                 if (
                     meta.live(now)
-                    and meta.kind == kind
-                    and meta.slug == slug
+                    and (kind is None or meta.kind == kind)
+                    and (slug is None or meta.slug == slug)
                     and (source_sha is None or meta.source_sha == source_sha)
                     and (language is None or meta.language == language)
                 ):
                     entries.append(meta)
-                    if len(entries) > limit:
-                        return Page(tuple(entries[:limit]), encode_cursor(entries[limit - 1].generation_id + ".md"))
-            return Page(tuple(entries))
+                    if limit is not None and len(entries) >= limit:
+                        break
+            return entries
 
     def sweep(self, *, apply: bool = False, cursor: str | None = None) -> SweepResult:
         validate_page(cursor, 100)
