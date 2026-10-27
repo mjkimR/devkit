@@ -1,0 +1,16 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-27T08:11:45.338885Z'
+status: completed
+summary: review-refactor playbook, CAP, UC and a superseding ADR now apply disjoint changes in parallel isolated checkouts and require differential evidence, divergence lists, removal sweeps, an adversarial reviewer brief and a post-integration outcome; guidance only, no code.
+findings: []
+checks:
+  tests: PASS just test-affected 81 passed
+  build: PASS guidance-only change; catalog bundle packaging tests pass (just test devkit-catalog 71 passed)
+  lint: 'PASS just rules-check and rules check --ci --base main: 0 errors'
+diff_scope:
+  base: ebe984d3e3d93dd5d0e566a1c17e1acc3de9f02c
+  head: 8e68c4d7f203fddfe5e8cbab972f94859d41988a
+activity_effort: medium
