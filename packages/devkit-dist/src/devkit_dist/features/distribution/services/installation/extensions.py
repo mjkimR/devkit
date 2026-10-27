@@ -24,6 +24,8 @@ from devkit_core.core.extensions import run_extensions
 from devkit_dist.features.distribution.models.errors import PostSyncExtensionFailedNotice, PostSyncNotice
 
 GROUP = "devkit.post_sync"
+# What each post-sync extension would change, for ``devkit sync --dry-run``; same signature, writes nothing.
+PREVIEW_GROUP = "devkit.post_sync_preview"
 
 Extension = Callable[[Path, dict[str, Any]], "list[str | AdvisoryError] | None"]
 
@@ -39,6 +41,16 @@ def run_post_sync(root: Path, result: dict[str, Any]) -> list[AdvisoryError]:
     """Call every registered extension; return the notices they produced, in entry-point name order."""
     return run_extensions(
         GROUP,
+        lambda extension: extension(root, result),
+        failed=_failed,
+        notice=lambda line, name: PostSyncNotice(line, f"extension: {name}"),
+    )
+
+
+def run_post_sync_preview(root: Path, result: dict[str, Any]) -> list[AdvisoryError]:
+    """Call every registered preview extension of a dry run; return the notices they produced, in name order."""
+    return run_extensions(
+        PREVIEW_GROUP,
         lambda extension: extension(root, result),
         failed=_failed,
         notice=lambda line, name: PostSyncNotice(line, f"extension: {name}"),

@@ -416,6 +416,10 @@ released, an extension may call devkit reads such as `get_context`. `devkit-agt`
 `gate-hooks`, which installs shared Git hook dispatchers and active gate entries and keeps the commented gate settings template current
 (`CAP-GATE-commit-gates`); a standalone `devkit-dist` installation installs no Git hooks.
 
+On `--dry-run`, `devkit sync` instead calls the callables of the `devkit.post_sync_preview` group with the same
+signature and the same notice handling; each reports what its post-sync extension would change and writes nothing.
+`devkit-agt` registers `gate-hooks` there too (`gate hooks would change: ...`).
+
 ### Engine Notice
 
 Rule, gate and workflow assets are deployed and recorded like any other kind, but only `devkit-agt` runs them.

@@ -110,7 +110,7 @@ required `BaseRepository`, Command registry or Unit of Work. CLI commands remain
   invocation state; services resolve configured presentation; use cases coordinate CLI/MCP invocation. Cross-package imports target the owner's independent namespace.
 - `devkit_dist` never imports `devkit_agt`, `devkit_mcp` or the MCP SDK, including dynamic module paths
   and entry-point targets. Its tests run with `devkit-agt` absent (`just test-dist`).
-- Entry-point groups preserve dependency inversion: `devkit.commands`, `devkit.post_sync`,
+- Entry-point groups preserve dependency inversion: `devkit.commands`, `devkit.post_sync`, `devkit.post_sync_preview`,
   `devkit.config_tables`, `devkit.host.services`, `devkit.mcp.registrations`, `devkit.hygiene` and
   `devkit.finish_guard` retain their public names. Their targets use the owning package namespace.
 - Domain MCP adapters consume `devkit_core.base.mcp` contracts. The optional MCP runtime adapts them

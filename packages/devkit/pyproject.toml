@@ -35,11 +35,15 @@ harness = "devkit_agt.bundles.harness"
 
 # Commented templates of the reserved harness tables in .devkit/config.toml, rendered by `devkit config template`.
 [project.entry-points."devkit.config_tables"]
+gates = "devkit_agt.features.gate.usecases.hooks.local_config:config_tables"
 workflow = "devkit_agt.features.workflow.repositories.project.config:config_tables"
 worktree = "devkit_agt.features.worktree.repositories.config:config_tables"
 
 [project.entry-points."devkit.post_sync"]
 gate-hooks = "devkit_agt.features.gate.usecases.hooks.local_config:post_sync"
+
+[project.entry-points."devkit.post_sync_preview"]
+gate-hooks = "devkit_agt.features.gate.usecases.hooks.local_config:post_sync_preview"
 
 [project.entry-points."devkit.hygiene"]
 worktree-stale = "devkit_agt.features.worktree.usecases.stale:hygiene"

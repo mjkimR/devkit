@@ -49,7 +49,7 @@ from devkit_dist.features.distribution.services.installation.discovery import (
     unusable_notices,
 )
 from devkit_dist.features.distribution.services.installation.engines import engine_notices
-from devkit_dist.features.distribution.services.installation.extensions import run_post_sync
+from devkit_dist.features.distribution.services.installation.extensions import run_post_sync, run_post_sync_preview
 from devkit_dist.features.distribution.services.installation.host_hooks import plan_host_hooks
 from devkit_dist.features.distribution.services.installation.inventory import (
     GENERATED_SKILLS,
@@ -1005,7 +1005,9 @@ def sync_project(
             registrations.apply(registration, locked=locked)
     if update is not None:
         result.notices.extend(update.notices)
-    if not dry_run:
+    if dry_run:
+        result.notices.extend(run_post_sync_preview(root, result.to_dict()))
+    else:
         result.notices.extend(run_post_sync(root, result.to_dict()))
     return result
 
