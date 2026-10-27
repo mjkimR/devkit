@@ -167,7 +167,7 @@ def locate(start: Path) -> Position:
     root = require_git_toplevel(start)
     git_dir = _resolve(_git(root, "rev-parse", "--path-format=absolute", "--git-dir"))
     common = _resolve(_git(root, "rev-parse", "--path-format=absolute", "--git-common-dir"))
-    branch = _query(root, "symbolic-ref", "--quiet", "--short", "HEAD")
+    branch = _short(_query(root, "symbolic-ref", "--quiet", "HEAD") or "")
     # The base checkout is the one whose Git directory is the common directory.
     if common.name != ".git" or not (common.parent / ".git").is_dir():
         raise UnsupportedLayoutError(f"{root}: the common Git directory {common} is not the .git of a work tree")
@@ -452,7 +452,7 @@ class StartBranch(BaseUseCase):
                 raise BranchExistsError(f"branch {branch} is checked out at {entry.path}", fix=_attach_fix(branch))
         notices = _refuse_existing(position.base, branch)
         try:
-            run_git(position.root, "switch", "--quiet", "-c", branch)
+            run_git(position.root, "switch", "--quiet", "--no-track", "-c", branch)
         except GitError as exc:
             if f"a branch named '{branch}' already exists" in exc.stderr:
                 raise BranchExistsError(
@@ -705,7 +705,7 @@ def _add(base: Path, path: Path, branch: str, *, existing: bool = False, revisio
     origin = revision or _head(base)
     step = f"git worktree add {path}"
     try:
-        add = ("add", str(path), branch) if existing else ("add", "-b", branch, str(path))
+        add = ("add", str(path), branch) if existing else ("add", "--no-track", "-b", branch, str(path))
         if revision is not None and not existing:
             add += (revision,)
         _git_session(base, "worktree", *add, timeout=CHECKOUT_TIMEOUT)
@@ -1096,7 +1096,7 @@ def finish(
     elif not _merged(base, ref, _head(base)):
         raise UnmergedError(f"{branch} is not merged into the base HEAD; nothing was changed")
     if delete_branch:
-        _check_deletable(base, branch)
+        _check_deletable(base, branch, position.branch)
     if merge:
         tip = _git(base, "rev-parse", "--verify", f"{ref}^{{commit}}")
         head = _head(base)
@@ -1259,14 +1259,20 @@ def _remove(base: Path, path: Path) -> None:
         raise RemoveFailedError(f"git worktree remove {path} failed: {exc.stderr or exc.message}") from exc
 
 
-def _check_deletable(base: Path, branch: str) -> None:
-    """Refuse before any change when ``git branch -d`` would refuse ``branch`` once it is merged into the base.
+def _check_deletable(base: Path, branch: str, into: str | None) -> None:
+    """Refuse before any change when ``git branch -d`` would refuse ``branch`` once it is merged into ``into``.
 
     A branch whose upstream exists is deleted only when that upstream contains it (Git checks HEAD otherwise, which
-    the merge or the merged check guarantees): a task branch pushed with ``-u`` and committed to since.
+    the merge or the merged check guarantees): a task branch pushed with ``-u`` and committed to since. An upstream
+    that is ``into`` itself (a local upstream, as ``branch.autoSetupMerge always`` records) contains the branch once
+    it is merged, so it never refuses.
     """
     upstream = _git(base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}")
-    if not upstream or not _succeeds(base, "rev-parse", "--verify", "--quiet", upstream):
+    if (
+        not upstream
+        or (into is not None and upstream == f"refs/heads/{into}")
+        or not _succeeds(base, "rev-parse", "--verify", "--quiet", upstream)
+    ):
         return
     if _succeeds(base, "merge-base", "--is-ancestor", f"refs/heads/{branch}", upstream):
         return
@@ -1377,7 +1383,7 @@ class WorktreeStatusQuery(BaseUseCase):
         """Every worktree with its merge and dirty state, and the unmerged branches no worktree checks out."""
         base = position.base
         entries = _entries(base)
-        base_branch = _query(base, "symbolic-ref", "--quiet", "--short", "HEAD")
+        base_branch = _short(_query(base, "symbolic-ref", "--quiet", "HEAD") or "") or None
         base_head = _head(base)
 
         def merged(rev: str | None) -> bool:
@@ -1405,9 +1411,10 @@ class WorktreeStatusQuery(BaseUseCase):
             )
         checked_out = {entry.branch for entry in entries if entry.branch}
         branches = []
-        refs = _git(base, "for-each-ref", "--format=%(refname:short) %(objectname)", "refs/heads/")
+        refs = _git(base, "for-each-ref", "--format=%(refname) %(objectname)", "refs/heads/")
         for line in refs.splitlines():
-            name, _, head = line.partition(" ")
+            ref, _, head = line.partition(" ")
+            name = _short(ref)
             if name and name not in checked_out and not merged(head):
                 branches.append(BranchStatus(name, head[:7]))
         branches.sort(key=lambda item: item.name)
