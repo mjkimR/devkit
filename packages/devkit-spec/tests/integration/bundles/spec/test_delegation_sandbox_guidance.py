@@ -1,5 +1,5 @@
 """Delegated write scope, worker-producible baselines, reviewer probes and the sandbox-safe worktree route
-(SPEC-delegation-sandbox-guidance).
+(SPEC-delegation-sandbox-guidance, SPEC-seeded-paths-in-boundaries).
 
 These tests pin the wording the Host, the workers and the reviewers apply; the documents are rendered for both
 execution environments because two of them are templates.
@@ -14,23 +14,47 @@ PAYLOAD = "skills/spec-delegate/references/payload.md"
 PLANNING = "skills/spec/references/planning.md"
 WORKTREE = "skills/spec/references/worktree.md"
 WORKER = "subagents/development-worker.md"
+WORKER_RESULTS = "skills/spec-delegate/references/worker.md"
 REVIEWER = "subagents/code-reviewer.md"
 ENVIRONMENTS = ["local", "cloud"]
 
 
-# AC-01
+# AC-01; SPEC-seeded-paths-in-boundaries AC-01, AC-02
 @pytest.mark.parametrize("environment", ENVIRONMENTS)
 def test_a_selected_bundle_change_carries_its_sync_outputs(environment: str) -> None:
     payload = text(PAYLOAD, environment)
     assert "If a `_Boundary:` includes a bundle source the project selects" in payload
-    assert "add the tracked files `devkit sync --check` lists for that change" in payload
+    assert "the write scope admits, as a class, every tracked path `devkit sync` writes in the worktree" in payload
+    assert "not only the files `devkit sync --check` lists before the change" in payload
     assert "`.devkit/installation.json` and the managed `AGENTS.md` block" in payload
     assert "`.devkit/managed/` is ignored and never a write path" in payload
+    assert "add the tracked files `devkit sync --check` lists for that change" not in payload
     worker = text(WORKER, environment)
+    assert "Before your first edit, run `devkit sync --check`" in worker
+    assert "record its exit as the `sync_start` check of your `worker` envelope" in worker
+    assert "a problem and never a `(sync output)`" in worker
     assert "After editing a bundle source the project selects, run `devkit sync`" in worker
-    assert "commit the tracked files it writes, which the payload names in the write scope" in worker
-    assert "never edit `.devkit/managed/` by hand" in worker
-    assert "A tracked sync output the write scope omits is a problem" in worker
+    assert "commit every tracked file it writes" in worker
+    assert (
+        "in the owning task's `_Boundary:` with the note `(sync output)` and in your `worker` envelope summary"
+        in worker
+    )
+    assert "Never edit `.devkit/managed/` by hand" in worker
+    assert "`.devkit/` (apart from those outputs)" in worker
+    assert "A tracked sync output the write scope omits is a problem" not in worker
+
+
+# SPEC-seeded-paths-in-boundaries AC-03
+@pytest.mark.parametrize("environment", ENVIRONMENTS)
+def test_the_host_checks_each_sync_output_against_the_receipt(environment: str) -> None:
+    validate = text(WORKER_RESULTS, environment)
+    assert "Each `(sync output)` entry `tasks.md` gained between `<accepted>` and `<returned>`" in validate
+    assert "its scope pass is no evidence for that entry" in validate
+    assert "the worker's `sync_start` check is `0`" in validate
+    assert "`devkit sync --check` exits `0` on `<returned>`" in validate
+    assert "is under `seeded` or `files` in the returned head's `.devkit/installation.json`" in validate
+    assert "is `.devkit/installation.json` itself" in validate
+    assert "the file that holds the managed guidance block (`AGENTS.md`" in validate
 
 
 # AC-02

@@ -422,9 +422,15 @@ instruction paths (a nested role's read from another checkout is a reported boun
 scratch files in an ignored path inside its worktree for removing the worktree to clean, writes its own records, commits at every stage boundary and,
 when it stops on questions or a problem, makes an emergency commit of the unfinished work with its `worker` envelope
 when record/commit access is permitted.
-A delegated change to a bundle source the project selects carries the tracked files `devkit sync --check` lists (for
-example `.devkit/installation.json`) in the worker's write scope; the worker runs `devkit sync` and commits them, and
-never edits `.devkit/managed/`. A before/after acceptance outcome names a baseline the worker can produce in its
+A delegated change to a bundle source the project selects admits, as a class in the worker's write scope, every
+tracked path `devkit sync` writes in the worktree after the change (seeded and projected files,
+`.devkit/installation.json`, the managed `AGENTS.md` block), not only the files `devkit sync --check` lists before it.
+The worker records its starting `devkit sync --check` exit as the `sync_start` check (a nonzero exit is a problem),
+runs `devkit sync`, commits every output, names each one the payload did not list in the owning task's `_Boundary:`
+as `(sync output)` and in its `worker` envelope summary, and never edits `.devkit/managed/`. The Host passes each new
+`(sync output)` entry only when `sync_start` is `0`, `devkit sync --check` exits `0` on the returned head and the path
+is under `seeded` or `files` in `.devkit/installation.json`, is the receipt itself or is `AGENTS.md`
+(`ADR-admit-change-sync-outputs`). A before/after acceptance outcome names a baseline the worker can produce in its
 worktree (the head with the change disabled, or a Planning measurement on the same machine), or the Host takes the
 base measurement, because the worker never checks out another commit (`SPEC-delegation-sandbox-guidance`).
 Planning resolves operational instructions and CLI execution in the assigned worktree. When a turn needs newer
