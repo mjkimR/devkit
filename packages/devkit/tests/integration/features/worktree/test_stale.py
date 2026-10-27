@@ -94,7 +94,7 @@ def test_stale_judges_commits_and_pull_requests_of_activity_branches_only(repo: 
     warning = gone.warning(repo, "14d")
     assert warning.code == "WORKTREE_STALE_BRANCH" and warning.mode is ActionMode.CONTINUE
     assert warning.fix == (
-        "To resume it, devkit worktree start dev-gone --existing-branch origin/dev-gone --unit <unit directory>;"
+        "To resume it, uv run devkit worktree start dev-gone --existing-branch origin/dev-gone --unit <unit directory>;"
         f" to discard it, only once the user decides: close its pull request, git -C {repo} push origin --delete"
         " dev-gone"
     )

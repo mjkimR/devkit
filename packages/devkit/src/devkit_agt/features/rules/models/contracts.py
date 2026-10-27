@@ -54,6 +54,12 @@ class Violation:
         }
 
 
+def _is_clean_relative(path: str) -> bool:
+    """Whether ``path`` is a relative POSIX path that lexical normalization leaves unchanged (no ``.``, ``..`` or
+    empty segment), so it names a file inside the workspace as it stands."""
+    return bool(path) and not path.startswith("/") and all(part not in ("", ".", "..") for part in path.split("/"))
+
+
 @dataclass(init=False)
 class RuleContext:
     """What a rule sees during one evaluation: the workspace, the targets, the cache and the project policy.
@@ -150,6 +156,10 @@ class RuleContext:
         that is outside lexically is retried after resolving symlinks, for roots
         reached through a symlinked prefix.
         """
+        if isinstance(path, str) and _is_clean_relative(path):
+            # Already the normalized form: rules ask once per discovered file, and the path arithmetic below
+            # dominated a whole-workspace check.
+            return path
         candidate = Path(path)
         absolute = candidate if candidate.is_absolute() else self.workspace_root / candidate
         option = Path(os.path.normpath(absolute))

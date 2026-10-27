@@ -6,7 +6,12 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from devkit_agt.features.rules.cli import cli
+from devkit_agt.features.rules.models.contracts import Phase
+from devkit_agt.features.rules.services.registry import default_rule_registry
 from testsupport.rules import digests, write_receipt
+
+# The built-in rules a linter run evaluates in a workspace without rule assets.
+BUILTIN_LINTER_RULES = sorted(r.id for r in default_rule_registry().get_all() if r.phase is Phase.LINTER)
 
 
 def test_cli_help() -> None:
@@ -20,9 +25,25 @@ def test_cli_rules_check_clean(tmp_path: Path) -> None:
     runner = CliRunner()
     result = runner.invoke(cli, ["check", "--workspace-root", str(tmp_path)])
     assert result.exit_code == 0
-    assert (
-        result.output == "[SUMMARY: errors=0 warnings=0 infos=0 fixed=0]\n[OK: no error-severity violation remains]\n"
+    assert result.output == (
+        f"[SUMMARY: errors=0 warnings=0 infos=0 fixed=0 rules={len(BUILTIN_LINTER_RULES)}]\n"
+        "[OK: no error-severity violation remains]\n"
     )
+
+
+def test_cli_rules_check_reports_a_run_without_active_rules(tmp_path: Path) -> None:
+    """A pass that evaluated no rule says so: rules=0 on the summary and a notice, not a bare OK."""
+    _write_config(
+        tmp_path, "[rules.phase_overrides]\n" + "".join(f'{rule} = "hygiene"\n' for rule in BUILTIN_LINTER_RULES)
+    )
+    result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path)])
+    assert result.exit_code == 0, result.output
+    assert result.stdout == (
+        "[SUMMARY: errors=0 warnings=0 infos=0 fixed=0 rules=0]\n[OK: no error-severity violation remains]\n"
+    )
+    assert "[NOTICE] (RULES_NONE_ACTIVE)" in result.stderr
+    as_json = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json"])
+    assert [n["code"] for n in json.loads(as_json.stdout)["notices"]] == ["RULES_NONE_ACTIVE"]
 
 
 def test_cli_rules_check_json_output(tmp_path: Path) -> None:
@@ -370,7 +391,8 @@ def test_cli_check_output_is_unchanged_when_a_rule_is_skipped(tmp_path: Path) ->
     args = ["check", "-w", str(tmp_path), "--rules-dir", str(rules), "docs/a.md"]
     text = runner.invoke(cli, args)
     assert text.exit_code == 0 and text.output == (
-        "[SUMMARY: errors=0 warnings=0 infos=0 fixed=0]\n[OK: no error-severity violation remains]\n"
+        f"[SUMMARY: errors=0 warnings=0 infos=0 fixed=0 rules={len(BUILTIN_LINTER_RULES) + 1}]\n"
+        "[OK: no error-severity violation remains]\n"
     )
     as_json = runner.invoke(cli, [*args, "--format", "json"])
     assert as_json.exit_code == 0 and set(json.loads(as_json.stdout)) == {"violations", "errors", "notices"}
@@ -675,7 +697,7 @@ def test_cli_summary_only_prints_counts_not_findings(tmp_path: Path) -> None:
     assert result.exit_code == 1
     assert "[RULE_COUNTS: RULE-markdown-link errors=3 warnings=0 infos=0 fixed=0]" in result.output
     assert "[RULE_COUNTS: RULE-file-length errors=0 warnings=1 infos=0 fixed=0]" in result.output
-    assert "[SUMMARY: errors=3 warnings=1 infos=0 fixed=0]" in result.output
+    assert "[SUMMARY: errors=3 warnings=1 infos=0 fixed=0 rules=" in result.output
     assert "[VIOLATION:" not in result.output and "docs/a.md" not in result.output
 
     _fixable_link_workspace(tmp_path / "other")
@@ -799,7 +821,7 @@ def test_cli_info_findings_are_counted(tmp_path: Path) -> None:
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path)])
     assert result.exit_code == 0
     assert "[VIOLATION: RULE-markdown-link severity=info" in result.output
-    assert "[SUMMARY: errors=0 warnings=0 infos=1 fixed=0]" in result.output
+    assert "[SUMMARY: errors=0 warnings=0 infos=1 fixed=0 rules=" in result.output
     summary = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--summary-only"])
     assert "[RULE_COUNTS: RULE-markdown-link errors=0 warnings=0 infos=1 fixed=0]" in summary.output
 

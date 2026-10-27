@@ -175,7 +175,7 @@ def test_lint_check_uses_callback_and_reports_errors(tmp_path: Path) -> None:
     res = evaluate_definition(doc, _opts(tmp_path, unit, skip_lint=False, lint=lambda root, files: many))
     assert res.unmet[0].detail == (
         "5 violation(s): work/a/task.md:1 RULE-x boom; work/a/task.md:2 RULE-x boom; work/a/task.md:3 RULE-x boom;"
-        " 2 more (devkit rules check work/a)"
+        " 2 more (uv run devkit rules check work/a)"
     )
 
     def failing(root: Path, files: list[str]) -> list[str]:
@@ -362,7 +362,7 @@ def test_the_lint_detail_names_a_unit_outside_the_root_as_given(tmp_path: Path) 
     assert res.lint_error.code == "PATH_UNSAFE"
     # Inside the root, the detail names the unit relative to it.
     res = evaluate_definition(doc, _opts(tmp_path, unit, lint=lint, skip_lint=False))
-    assert "2 more (devkit rules check outside/u)" in res.unmet[0].detail
+    assert "2 more (uv run devkit rules check outside/u)" in res.unmet[0].detail
 
 
 def test_lint_clean_skips_the_temporary_files_of_writes_in_progress(tmp_path: Path) -> None:

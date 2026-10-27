@@ -112,7 +112,7 @@ def _receipt_package(workspace: Path, managed: Path, folder: Path) -> PluginPack
     raise RuleLoadError(
         f"{folder} is not a rule asset the installation receipt {workspace / RECEIPT_PATH} lists",
         target_files=[str(folder)],
-        fix="Run `devkit sync`, or test the rule in its source folder",
+        fix="Run `uv run devkit sync`, or test the rule in its source folder",
     )
 
 

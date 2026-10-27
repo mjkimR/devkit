@@ -68,6 +68,7 @@ from devkit_agt.features.worktree.models.errors import (
     UnmergedError,
     UnsupportedLayoutError,
     WorktreeError,
+    run_from_base_fix,
 )
 from devkit_agt.features.worktree.models.lifecycle import BranchStartResult as BranchStartResult
 from devkit_agt.features.worktree.models.lifecycle import BranchStatus as BranchStatus
@@ -259,7 +260,7 @@ def _copy_local_snapshot(path: Path, project: Path | None, captured: tuple[Path,
         raise LocalCopyError(
             f"worktree created but local configuration copy failed: {source} -> {destination}: {exc}",
             target_files=[str(source), str(destination)],
-            fix=f"Deliberately copy {shlex.quote(str(source))} to {shlex.quote(str(destination))}, then rerun setup and devkit sync --locked in {shlex.quote(str(path))}",
+            fix=f"Deliberately copy {shlex.quote(str(source))} to {shlex.quote(str(destination))}, then rerun setup and uv run devkit sync --locked in {shlex.quote(str(path))}",
         ) from exc
 
 
@@ -373,7 +374,7 @@ def _prepare(
 
 def _attach_fix(branch: str, source: str | None = None) -> str:
     return (
-        f"To continue it, devkit worktree start {branch} --existing-branch {source or branch} --unit <unit directory>;"
+        f"To continue it, uv run devkit worktree start {branch} --existing-branch {source or branch} --unit <unit directory>;"
         " otherwise choose another slug"
     )
 
@@ -974,7 +975,7 @@ def _find(position: Position, branch: str) -> _Entry | None:
         raise ConflictError(
             f"{branch} is the base checkout's branch; finish integrates a task branch into the base and never"
             " removes it",
-            fix="Pass the branch of a linked worktree (`devkit worktree status` lists them)",
+            fix="Pass the branch of a linked worktree (`uv run devkit worktree status` lists them)",
         )
     if entry.branch != branch:
         raise ConflictError(
@@ -1048,7 +1049,9 @@ def finish(
     check_branch(branch)
     if position.linked:
         raise RunFromBaseError(
-            f"{position.root} is the worktree finish would remove", target_files=[str(position.base)]
+            f"{position.root} is the worktree finish would remove",
+            target_files=[str(position.base)],
+            fix=run_from_base_fix(position.base),
         )
     if merge and pull_request == "required":
         raise PullRequestPolicyError(
@@ -1207,7 +1210,9 @@ def discard(
     check_branch(branch)
     if position.linked:
         raise RunFromBaseError(
-            f"{position.root} is the worktree discard would remove", target_files=[str(position.base)]
+            f"{position.root} is the worktree discard would remove",
+            target_files=[str(position.base)],
+            fix=run_from_base_fix(position.base),
         )
     base, ref = position.base, f"refs/heads/{branch}"
     entry = _find(position, branch)

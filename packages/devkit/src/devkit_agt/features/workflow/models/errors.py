@@ -158,7 +158,7 @@ class WorkflowAssetMissingError(WorkflowError):
 
     code = "WORKFLOW_ASSET_MISSING"
     actor = Actor.TOOL
-    fix = "devkit sync"
+    fix = "uv run devkit sync"
 
 
 class CheckError(WorkflowError):
@@ -212,7 +212,7 @@ class UnitNotFoundError(WorkflowError):
 
     code = "UNIT_NOT_FOUND"
     input_error = True
-    fix = "Pass an existing unit directory (`devkit workflow list`) or create one with `devkit workflow new <slug>`"
+    fix = "Pass an existing unit directory (`uv run devkit workflow list`) or create one with `uv run devkit workflow new <slug>`"
 
 
 class UnitExistsError(WorkflowError):
@@ -376,7 +376,7 @@ class EnvelopeFormatError(_FileProblem):
     input_error = True
     exit_code = ExitCode.FINDINGS
     fix = (
-        "Fix or remove the file; write envelopes with `devkit workflow envelope new` or the kind's own command,"
+        "Fix or remove the file; write envelopes with `uv run devkit workflow envelope new` or the kind's own command,"
         f" which refuses one that breaks the contract (devkit's {ENVELOPE_CONTRACT})"
     )
     # What could still be read of the file, so a malformed worker envelope holds from its own stage.

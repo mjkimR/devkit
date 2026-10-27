@@ -257,7 +257,7 @@ def test_discover_merges_receipt_and_local_with_local_shadowing(workspace: Path)
             "synchronized workflow .devkit/managed/team/flows/missing.md is missing from the working tree",
             "WORKFLOW_ASSET_MISSING",
             (".devkit/managed/team/flows/missing.md",),
-            "devkit sync",
+            "uv run devkit sync",
             "AUTO",
         )
     ]

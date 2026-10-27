@@ -226,7 +226,7 @@ class Registry:
         """Validate against the registry and expand an alias to its primitive."""
         check = self.lookup(inv.name)
         if check is None:
-            raise CheckError(f"unregistered check {inv.name!r} (see `devkit workflow checks`)")
+            raise CheckError(f"unregistered check {inv.name!r} (see `uv run devkit workflow checks`)")
         if check.alias:
             if inv.args:
                 raise CheckError(f"check {inv.name!r} takes no arguments (it is an alias of {check.alias})")

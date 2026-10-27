@@ -94,7 +94,7 @@ class RecordAnswerUseCase(BaseUseCase):
         if not is_request_id(request_id):
             raise RequestUnknownError(
                 f"--request {request_id!r} is not a request id",
-                fix="Use an id printed by `devkit workflow next --view requests`, or feedback:<target>",
+                fix="Use an id printed by `uv run devkit workflow next --view requests`, or feedback:<target>",
             )
         stage = ""
         if request_id.startswith(FEEDBACK_PREFIX):
@@ -117,13 +117,13 @@ class RecordAnswerUseCase(BaseUseCase):
                 raise RequestUnknownError(
                     f"{request_id!r} is not an open request of {ref.rel}",
                     *([f"open: {rid}" for rid in open_requests] or ["open: none"]),
-                    fix="Run `devkit workflow next --view requests --unit <dir>` and answer one of the listed ids",
+                    fix="Run `uv run devkit workflow next --view requests --unit <dir>` and answer one of the listed ids",
                 )
             if request.answer == "envelope":
                 source, _, question = request.target.name.partition("#")
                 raise DecisionInvalidError(
                     f"{request_id} is a question; its answer is an answer envelope, not a decision record",
-                    fix=f"devkit workflow envelope answer --unit {ref.rel} --answers-to {source}"
+                    fix=f"uv run devkit workflow envelope answer --unit {ref.rel} --answers-to {source}"
                     f" --answers-file <file with `- question: {question}`, choice, decision>",
                 )
             value = validate_answer(request, action, values)

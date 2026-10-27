@@ -72,7 +72,9 @@ class ResolveRelatedUseCase(BaseUseCase):
             asset = assets.get((bundle, asset_id))
             if asset is None:
                 notices.append(
-                    RelatedUnresolvedNotice(f"{rule.id}: related {ref} is not deployed", fix=f"devkit add {bundle}")
+                    RelatedUnresolvedNotice(
+                        f"{rule.id}: related {ref} is not deployed", fix=f"uv run devkit add {bundle}"
+                    )
                 )
                 resolved.append(RelatedAsset(ref, None, None))
                 continue
@@ -86,7 +88,7 @@ class ResolveRelatedUseCase(BaseUseCase):
                 notices.append(
                     RelatedUnresolvedNotice(
                         f"{rule.id}: related {ref} is {_article(asset.kind)} {asset.kind} asset without a Markdown file",
-                        fix=f"Add the {asset.kind}'s Markdown file to {ref} in bundle {bundle}, then run `devkit sync`",
+                        fix=f"Add the {asset.kind}'s Markdown file to {ref} in bundle {bundle}, then run `uv run devkit sync`",
                     )
                 )
                 resolved.append(RelatedAsset(ref, asset.kind, None))

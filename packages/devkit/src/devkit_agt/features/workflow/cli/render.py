@@ -87,7 +87,7 @@ def render_evaluation(res: UnitEvaluation) -> str:
             )
         if res.waiting:
             lines.append(f"[WAITING: {res.waiting.class_.value} {' '.join(res.waiting.checks)}]")
-        void = quote(f"devkit workflow return --unit {res.unit} --to {stage.id}")
+        void = quote(f"uv run devkit workflow return --unit {res.unit} --to {stage.id}")
         for d in res.stale_approvals:
             lines.append(f"[STALE_APPROVAL: {d.file} request={d.request} stage={d.stage} counts=yes void_with={void}]")
     lines.extend(render_hold(res.hold).splitlines())

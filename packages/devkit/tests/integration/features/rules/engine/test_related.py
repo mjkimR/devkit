@@ -44,7 +44,7 @@ def test_unresolved_references_are_notices(tmp_path: Path) -> None:
     related, notices = ResolveRelatedUseCase().execute(tmp_path, _Rule("authoring:skill-authoring"))
     assert related == [RelatedAsset("authoring:skill-authoring", None, None)]
     assert [n.code for n in notices] == ["RULES_RELATED_UNRESOLVED"]
-    assert notices[0].fix == "devkit add authoring"
+    assert notices[0].fix == "uv run devkit add authoring"
     assert ResolveRelatedUseCase().execute(tmp_path, _Rule()) == ([], [])
 
 

@@ -116,6 +116,7 @@ def _execute(request: RunRequest) -> None:
             errors,
             run.guides,
             run.workspace_root,
+            rules=len(run.active_rules),
             summary_only=request.summary_only,
         )
         if run.ok:
@@ -265,7 +266,7 @@ def _unknown_rule(project: ProjectRules, rule_id: str) -> ArgumentError:
     return ArgumentError(
         f"unknown rule: {rule_id}; available: {available}",
         target_files=["RULE_ID"],
-        fix="Pass a rule ID listed by `devkit rules phases`",
+        fix="Pass a rule ID listed by `uv run devkit rules phases`",
     )
 
 

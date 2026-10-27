@@ -14,6 +14,7 @@ from devkit_agt.features.worktree.models.errors import (
     NotFoundError,
     PullRequestPolicyError,
     RunFromBaseError,
+    run_from_base_fix,
 )
 from devkit_agt.features.worktree.models.planning import FinishPlan as FinishPlan
 from devkit_agt.features.worktree.services.merging import check_identity
@@ -77,7 +78,11 @@ def plan_finish(
     """
     check_branch(branch)
     if position.linked:
-        raise RunFromBaseError("prepare integration from the retained base checkout")
+        raise RunFromBaseError(
+            "prepare integration from the retained base checkout",
+            target_files=[str(position.base)],
+            fix=run_from_base_fix(position.base),
+        )
     if pull_request == "required":
         raise PullRequestPolicyError("required PR policy prevents local integration")
     if position.branch is None:

@@ -23,8 +23,14 @@ from devkit.advisory import AdvisoryError
 from devkit_core.base.usecase import BaseUseCase
 
 from devkit_agt.features.rules.models.contracts import Phase, Rule, RuleContext, Violation
-from devkit_agt.features.rules.models.errors import RuleProblem, RulesDirError, RulesRunError
-from devkit_agt.features.rules.models.phases import PhaseEntry, promotion_notices, resolve_phases
+from devkit_agt.features.rules.models.errors import NoneActiveNotice, RuleProblem, RulesDirError, RulesRunError
+from devkit_agt.features.rules.models.phases import (
+    PhaseEntry,
+    effective_phase,
+    promotion_notices,
+    resolve_phases,
+    runs_in_phase,
+)
 from devkit_agt.features.rules.models.policy import validate_policy
 from devkit_agt.features.rules.models.settings import SettingsResolver
 from devkit_agt.features.rules.models.snapshot import Snapshot
@@ -145,6 +151,14 @@ class ProjectRun:
         return self.registry.get_all()
 
     @property
+    def active_rules(self) -> list[Rule]:
+        """The loaded rules active in the run's phase (after phase overrides), whether or not target scoping skipped
+        them; none while loading failed, since no rule is evaluated then."""
+        if self.load_errors:
+            return []
+        return [r for r in self.rules if runs_in_phase(effective_phase(r, self.config.phase_overrides), self.phase)]
+
+    @property
     def errors(self) -> list[RuleProblem]:
         """Load errors followed by evaluation errors; any of them means the run could not complete."""
         return [*self.load_errors, *self.result.errors]
@@ -173,12 +187,18 @@ class ProjectRun:
 
     @property
     def notices(self) -> list[AdvisoryError]:
-        """Notices of a completed whole-workspace run (``RULES_PROMOTION_READY``); see ``transitions``."""
+        """Notices of a completed run: ``RULES_NONE_ACTIVE`` when no rule is active in its phase, so its pass checked
+        nothing, and, for a whole-workspace run, ``RULES_PROMOTION_READY`` (see ``transitions``)."""
+        notices: list[AdvisoryError] = []
+        if not self.errors and not self.active_rules:
+            notices.append(
+                NoneActiveNotice(f"no rule is active in the {self.phase.value} phase; the run checked nothing")
+            )
         entries = self.transitions
-        if not entries:
-            return []
-        sources = {rule.id: path for rule in self.rules if (path := _source(rule, self.workspace_root))}
-        return promotion_notices(entries, self.phase, self.result.violations, sources)
+        if entries:
+            sources = {rule.id: path for rule in self.rules if (path := _source(rule, self.workspace_root))}
+            notices.extend(promotion_notices(entries, self.phase, self.result.violations, sources))
+        return notices
 
     @property
     def ok(self) -> bool:

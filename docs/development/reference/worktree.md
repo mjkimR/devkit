@@ -56,7 +56,7 @@ Every command takes `-w/--workspace-root` (any directory in the checkout; defaul
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
 | `WORKTREE_NESTED` | `ERROR` (`BLOCKED`) | `NestedError` | `start` inside a linked worktree. |
-| `WORKTREE_RUN_FROM_BASE` | `ERROR` (`BLOCKED`) | `RunFromBaseError` | `finish` inside a linked worktree. |
+| `WORKTREE_RUN_FROM_BASE` | `ERROR` (`INPUT_ERROR`) | `RunFromBaseError` | `finish`, `finish --discard` or the integration preflight inside a linked worktree; `[FIX]` names the base checkout to rerun the same command from. |
 | `WORKTREE_PR_POLICY` | `ERROR` (`BLOCKED`) | `PullRequestPolicyError` | `finish --merge` under `pull_request = "required"`. |
 | `WORKTREE_UNSUPPORTED_LAYOUT` | `ERROR` (`BLOCKED`) | `UnsupportedLayoutError` | A Git directory outside its work tree. |
 | `WORKTREE_BASE_ON_BRANCH` | `ERROR` (`AUTO`) | `BaseOnBranchError` | `finish` or `finish --discard` while the base checkout is on the `--no-worktree` branch it finishes; `[FIX]` switches it back to the recorded `devkitBase`, then rerun. Nothing changed. |
