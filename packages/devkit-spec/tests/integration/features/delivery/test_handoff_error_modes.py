@@ -60,3 +60,15 @@ def test_an_invalid_handoff_effort_is_an_input_error(message: str) -> None:
 def test_no_fix_asks_to_publish_a_report(error: type[SpecError]) -> None:
     fix = error("changed").to_dict()["advisory"].get("fix", "")
     assert "report" not in fix
+
+
+def test_fixes_name_no_placeholder_choices() -> None:
+    from devkit_spec.base.errors import acceptance_unrecorded_fix
+    from devkit_spec.features.delivery.usecases.native_handoff import _handoff_command
+
+    assert "<" not in acceptance_unrecorded_fix("idea")
+    assert "`uv run devkit spec proposal accept idea --by user --direct --note`" in acceptance_unrecorded_fix("idea")
+    assert (
+        _handoff_command("idea", None) == "`uv run devkit spec proposal handoff idea --effort` with low, medium or high"
+    )
+    assert _handoff_command("idea", "high") == "`uv run devkit spec proposal handoff idea --effort high`"

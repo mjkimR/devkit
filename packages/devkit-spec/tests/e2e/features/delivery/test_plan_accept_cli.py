@@ -169,3 +169,44 @@ def test_accept_cli_withdraws_its_writes_when_the_commit_gate_refuses(pending, t
     assert git(planning, "status", "--porcelain") == ""
     assert "status: reviewing" in (planning / "docs/proposals/PROP-idea/proposal.md").read_text()
     assert git(repo, "show-ref") == before
+
+
+def _accept_json(root: Path, *args: str) -> dict:
+    result = CliRunner().invoke(proposal_group, ["accept", "idea", *args, "-w", str(root), "--format", "json"])
+    assert result.exit_code == 2, result.output
+    return json.loads(result.output)["error"]
+
+
+def test_a_policy_acceptance_is_never_redirected_to_the_user(pending):
+    repo, planning = pending
+    # Under plan-accept=ask the policy refusal wins, even off the base checkout.
+    for root in (repo, planning):
+        error = _accept_json(root, "--by", "policy", "--mode", "accept_only")
+        assert error["code"] == "SPEC_PROPOSAL_POLICY_NOT_AUTO" and "--by user" not in json.dumps(error)
+    config = repo / ".devkit/config.toml"
+    config.write_text(config.read_text() + '\n[workflow.approvals]\nplan-accept = "auto"\n')
+    git(repo, "add", ".devkit/config.toml")
+    git(repo, "commit", "-m", "Delegate proposal acceptance to policy")
+    git(planning, "merge", "--no-edit", "main")
+    # Off the base checkout the fix keeps the caller's own --by policy command.
+    error = _accept_json(planning, "--by", "policy", "--mode", "accept_only")
+    assert error["code"] == "SPEC_PROPOSAL_WRONG_WORKTREE"
+    assert "uv run devkit spec proposal accept idea --by policy --mode accept_only" in error["advisory"]["fix"]
+    assert "--by user" not in json.dumps(error) and "<" not in error["advisory"]["fix"]
+
+
+def test_the_native_acceptance_off_the_base_names_no_user_authority(pending):
+    import asyncio
+
+    from devkit_spec.base.errors import ProposalWrongWorktreeError
+    from devkit_spec.features.delivery.usecases.native_plan_accept import PlanAcceptUseCase
+
+    _repo, planning = pending
+
+    async def confirm(message, schema):
+        pytest.fail("a refusal reaches no confirmation")
+
+    with pytest.raises(ProposalWrongWorktreeError) as caught:
+        asyncio.run(PlanAcceptUseCase(planning).execute_native("idea", confirm, mode="accept_and_handoff"))
+    rendered = json.dumps(caught.value.to_dict())
+    assert "--by user" not in rendered and "<low|medium|high>" not in rendered

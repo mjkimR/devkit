@@ -35,9 +35,8 @@ def unbound_guidance(root: Path, unit: str, default: str) -> tuple[str, tuple[st
             (),
         )
     return (
-        f"Bind it with `{DEVKIT} workflow bind --unit {unit} --workflow <id>`, <id> one of the workflows in [DETAIL] "
-        "that fits the unit",
-        (f"available workflows: {', '.join(ids)}",),
+        "Bind it to the workflow that fits the unit: run the matching command in [DETAIL]",
+        tuple(f"{DEVKIT} workflow bind --unit {unit} --workflow {workflow}" for workflow in ids),
     )
 
 

@@ -10,6 +10,7 @@ from typing import Any
 
 import pytest
 from click.testing import CliRunner
+from devkit.advisory import ExitCode
 from devkit_dist.cli import cli as devkit_cli
 
 from devkit_spec.base.errors import HandoffStaleError
@@ -124,3 +125,19 @@ def test_a_stopped_acceptance_reads_the_handoff_errors(tmp_path: Path, monkeypat
         '[NEXT_ACTION: "Inspect preserved handoff effects"]',
     ]
     assert "SPEC_HANDOFF_STALE" in result.stderr
+
+
+def test_a_refusal_renders_every_error_and_always_exits_2(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from devkit_spec.base.errors import ProposalInPlanningError
+
+    first = ProposalInPlanningError("first", exit_code=ExitCode.FINDINGS).to_dict()  # its own exit code is 1
+    second = _stale()
+    _accept(monkeypatch, {"status": "blocked", "completed_steps": [], "errors": [first, second]})
+    text = _run(tmp_path, "accept", "idea", "--by", "user", "--mode", "accept_only")
+    assert text.exit_code == 2 and text.stdout == ""
+    assert text.stderr.index("(SPEC_PROPOSAL_IN_PLANNING)") < text.stderr.index("(SPEC_HANDOFF_STALE)")
+    data = _run(tmp_path, "accept", "idea", "--by", "user", "--mode", "accept_only", "--format", "json")
+    assert data.exit_code == 2
+    document = json.loads(data.stdout)
+    assert document["error"]["code"] == "SPEC_HANDOFF_STALE"
+    assert [error["code"] for error in document["errors"]] == ["SPEC_PROPOSAL_IN_PLANNING"]

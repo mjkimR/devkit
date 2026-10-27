@@ -56,33 +56,48 @@ def _proposal_error(error: AdvisoryError) -> AdvisoryError:
     return error
 
 
-def _accept_command(slug: str, mode: str, effort: str | None) -> str:
-    tail = f" --effort {effort or '<low|medium|high>'}" if mode == "accept_and_handoff" else ""
-    return devkit_command(f"spec proposal accept {slug} --by user --mode {mode}{tail}")
+def _accept_command(slug: str, mode: str, effort: str | None, by: str) -> str:
+    """The caller's own composed command: its ``--by`` is kept, never replaced by ``user``."""
+    tail = f" --effort {effort}" if mode == "accept_and_handoff" and effort else ""
+    return devkit_command(f"spec proposal accept {slug} --by {by} --mode {mode}{tail}")
 
 
-def _base_checkout(root: Path, slug: str, command: str) -> None:
-    """Refuse a composed acceptance off the retained base checkout (``ProposalWrongWorktreeError``)."""
+def _base_checkout(root: Path, slug: str, command: str | None) -> None:
+    """Refuse a composed acceptance off the retained base checkout (``ProposalWrongWorktreeError``); ``command`` is the
+    caller's own CLI command, ``None`` for the native operation, which is rerun as it is."""
     position = locate(root)
     if position.linked or not position.branch or position.branch.startswith(("dev-", "plan-")):
+        rerun = f"Run `{command}`" if command else "Rerun the same operation"
         raise ProposalWrongWorktreeError(
             f"the composed acceptance of PROP-{slug} runs in the retained base checkout, not on "
             f"{position.branch or '- (detached HEAD)'}",
-            fix=f"Run `{command}` in the main worktree on its base branch; the Planning branch plan-{slug} is "
-            "integrated from there",
+            fix=f"{rerun} in the main worktree on its base branch; the Planning branch plan-{slug} is integrated "
+            "from there",
         )
 
 
-def _spec_refusal(error: AdvisoryError, slug: str) -> AdvisoryError:
-    """A base-level refusal of the integration preparation as the spec-level condition it means."""
+def _require_policy_authority(root: Path, slug: str, by: str) -> None:
+    """``--by policy`` needs the owning ``plan-accept=auto``; checked before anything else so the refusal is the policy
+    one (``SPEC_PROPOSAL_POLICY_NOT_AUTO``), never a fix that switches the authority to the user."""
+    if by == "policy" and approval_policy(root, "plan-accept") != "auto":
+        raise ProposalPolicyNotAutoError(
+            f"--by policy cannot accept PROP-{slug}: the retained base's plan-accept policy is not auto"
+        )
+
+
+def _spec_refusal(error: AdvisoryError, slug: str, by: str) -> AdvisoryError:
+    """A base-level refusal of the integration preparation as the spec-level condition it means; any command it
+    names keeps the caller's ``--by``."""
     if error.code == "WORKTREE_NOT_FOUND":
+        direct = devkit_command(f"spec proposal accept {slug} --by {by} --direct")
+        when = " after the user's explicit acceptance" if by == "user" else ""
         return ProposalApprovalNotReadyError(
             f"PROP-{slug} has no Planning branch plan-{slug} to accept and integrate",
             f"{error.code}: {error.message}",
             target_files=[f"plan-{slug}"],
             fix=f"Run Planning on plan-{slug} first (`{devkit_command(f'worktree start plan-{slug}')}` in the base "
-            f"checkout); a draft that skips Planning is accepted with `{devkit_command(f'spec proposal accept {slug}')}"
-            " --by user --direct` after the user's explicit acceptance, with --note carrying their reason",
+            f"checkout); a draft that skips Planning is accepted with `{direct}`{when}, adding --note with the "
+            "reason the draft is eligible",
         )
     if error.code == "INTEGRATION_CONFIG_INVALID":
         return SpecConfigError(
@@ -357,7 +372,8 @@ class PlanAcceptUseCase(BaseUseCase):
         if mode == "accept_and_handoff" and effort not in EFFORTS:
             raise ProposalApprovalReplyError("choose low, medium or high Development effort", target_files=["--effort"])
         guard_execution()
-        _base_checkout(self.root, slug, _accept_command(slug, mode, effort))
+        _require_policy_authority(self.root, slug, by)
+        _base_checkout(self.root, slug, _accept_command(slug, mode, effort, by))
         lifecycle = _Acceptance(self.root, slug, mode)
         integration = IntegrationService(self.root)
         try:
@@ -368,7 +384,7 @@ class PlanAcceptUseCase(BaseUseCase):
                 approval_gate=lifecycle.approval_gate,
             ).request
         except AdvisoryError as exc:
-            raise _spec_refusal(exc, slug) from exc
+            raise _spec_refusal(exc, slug, by) from exc
         lifecycle.validate(request)
         automatic = lifecycle.automatic(request)
         if automatic is not None:
@@ -508,7 +524,7 @@ class PlanAcceptUseCase(BaseUseCase):
             raise ProposalApprovalReplyError("choose accept_only or accept_and_handoff")
         guard_execution()
         async with self._lock:
-            _base_checkout(self.root, slug, _accept_command(slug, mode, None))
+            _base_checkout(self.root, slug, None)
             try:
                 _git(self.root, "show-ref", "--verify", f"refs/heads/plan-{slug}")
             except GitError as exc:

@@ -18,6 +18,7 @@ from devkit.advisory import Actor, AdvisoryError, Level, Retry
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core.logs import get_logger
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
+from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_spec.base.errors import (
     ScopeAckFailedError,
@@ -300,19 +301,30 @@ def own(session: Session, *, cleanup: bool = True) -> Own:
 
 
 def _register_guidance(root: Path) -> tuple[str, tuple[str, ...]]:
-    """The register step of a fix: the exact command for this branch's one spec bundle, else candidates as details."""
+    """The register step of a fix: the exact command for the one spec bundle of this ``dev-<slug>`` branch
+    (``specs/<YYYY-MM>/<YYYYMMDD>-<slug>``, the slug matched exactly), else where to find the bundle; with several
+    bundles of the slug they are the candidates in the details."""
     found = checkout(root)
     branch = found[1] if found is not None else ""
     slug = branch.removeprefix(DEVELOPMENT_PREFIX) if branch.startswith(DEVELOPMENT_PREFIX) else ""
-    bundles = sorted(path.relative_to(root).as_posix() for path in root.glob(f"specs/*/*-{slug}") if path.is_dir())
-    if slug and len(bundles) == 1:
+    exact = re.compile(rf"\d{{8}}-{re.escape(slug)}")
+    bundles = sorted(
+        path.relative_to(root).as_posix()
+        for path in root.glob("specs/*/*")
+        if slug and path.is_dir() and exact.fullmatch(path.name)
+    )
+    if len(bundles) == 1:
         return f"register with `{DEVKIT} spec scope register --spec {bundles[0]}`", ()
-    candidates = bundles or sorted(path.relative_to(root).as_posix() for path in root.glob("specs/*/*-*"))[:10]
-    if not candidates:
-        return f"register with `{DEVKIT} spec scope register --spec` and this worktree's spec bundle directory", ()
+    listing = devkit_command("spec list spec --history")
+    if bundles:
+        return (
+            f"register with `{DEVKIT} spec scope register --spec` and the bundle in [DETAIL] this worktree works on",
+            tuple(f"candidate: {path}" for path in bundles),
+        )
     return (
-        "register with the [DETAIL] command of this worktree's spec bundle",
-        tuple(f"candidate: {DEVKIT} spec scope register --spec {path}" for path in candidates),
+        f"register with `{DEVKIT} spec scope register --spec` and this worktree's spec bundle directory "
+        f"(`{listing}` lists the bundles)",
+        (),
     )
 
 

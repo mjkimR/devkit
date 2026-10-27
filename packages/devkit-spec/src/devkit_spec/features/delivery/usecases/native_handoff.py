@@ -66,7 +66,10 @@ def _existing(root: Path, slug: str, head: str) -> bool:
 
 
 def _handoff_command(slug: str, effort: str | None) -> str:
-    return devkit_command(f"spec proposal handoff {slug} --effort {effort or '<low|medium|high>'}")
+    """The composed handoff command; without a known effort, the instruction to add one (low, medium or high)."""
+    if effort:
+        return f"`{devkit_command(f'spec proposal handoff {slug} --effort {effort}')}`"
+    return f"`{devkit_command(f'spec proposal handoff {slug} --effort')}` with low, medium or high"
 
 
 def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
@@ -82,7 +85,7 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
         raise ProposalWrongWorktreeError(
             f"the composed handoff of PROP-{slug} runs in the retained base checkout, not on "
             f"{position.branch or '- (detached HEAD)'}",
-            fix=f"Run `{command}` in the main worktree on its base branch",
+            fix=f"Run {command} in the main worktree on its base branch",
         )
     dirty = run_git(position.base, "status", "--porcelain", "--untracked-files=normal").decode().splitlines()
     if any(line.strip() for line in dirty):
@@ -188,7 +191,7 @@ class HandoffUseCase(BaseUseCase):
         if authority == "auto" and effort != preview.effort:
             raise HandoffReplyError(
                 "automatic handoff must use the proposal's declared dev_effort",
-                fix=f"Rerun `{_handoff_command(slug, preview.effort)}`: proposal-handoff=auto uses dev_effort "
+                fix=f"Rerun {_handoff_command(slug, preview.effort)}: proposal-handoff=auto uses dev_effort "
                 f"{preview.effort}",
             )
         result = self._execute(preview, effort)

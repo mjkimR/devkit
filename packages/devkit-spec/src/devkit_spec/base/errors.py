@@ -256,10 +256,11 @@ class ProposalAcceptanceUnrecordedError(SpecError):
 
 def acceptance_unrecorded_fix(slug: str) -> str:
     """The ``ProposalAcceptanceUnrecordedError`` fix with the proposal's exact repair command."""
-    repair = f'{DEVKIT} spec proposal accept {slug} --by user --direct --note "<the user\'s reason>"'
+    repair = f"{DEVKIT} spec proposal accept {slug} --by user --direct --note"
     return (
         "Stop and ask the user; never record an acceptance unasked. Without a worker envelope, after the user's "
-        f"explicit acceptance repair it on the base checkout with `{repair}`, merge the base into dev-{slug} and rerun "
+        f"explicit acceptance repair it on the base checkout with `{repair}` and the user's reason as the note, merge "
+        f"the base into dev-{slug} and rerun "
         "the handoff. With one, report it: on the user's decision the whole Planning merge is reverted on the base "
         "and Planning runs again"
     )
@@ -873,11 +874,13 @@ class ReportSourceNotHeadError(SpecError):
 
 
 class ReportSourceDirtyError(SpecError):
-    """``proposal report``: the source checkout has uncommitted changes (``INPUT_ERROR``); the report reads committed
-    records only, [TARGET] lists the changed paths."""
+    """``proposal report``: the source checkout has uncommitted changes (``INTERACTION``); the report reads committed
+    records only, [TARGET] lists the changed paths. They may be the user's work, so the user decides what happens to
+    them."""
 
     code = "SPEC_REPORT_SOURCE_DIRTY"
-    input_error = True
+    actor = Actor.USER
+    what_to_report = "The uncommitted paths in [TARGET]; the report reads committed records only"
 
 
 class ReportWrongCheckoutError(SpecError):

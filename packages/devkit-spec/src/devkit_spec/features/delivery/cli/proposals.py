@@ -126,8 +126,9 @@ def _echo_composed(kind: str, slug: str, result: dict[str, Any], effects: bool, 
     """Print a composed acceptance or handoff and exit with its outcome (``ARCH-08-1-agent-output``).
 
     A completed outcome prints ``[<kind>: ...]``; one that stopped part-way prints ``[<kind>_STOPPED: ...]`` with the
-    completed effects, exits ``1`` and renders its errors last; one that did nothing is the error itself (exit
-    ``2``, ``{"error": ...}`` under ``--format json``). The next command, when there is one, follows as
+    completed effects, exits ``1`` and renders its errors last; one that did nothing is its errors, the last
+    one deciding (always exit ``2``; ``{"error": <last>, "errors": [<the others>], "notices": [...]}`` under
+    ``--format json``). The next command, when there is one, follows as
     ``[NEXT_CMD: ...]``, else the next action as ``[NEXT_ACTION: ...]``.
     """
     errors, notices = _result_advisories(result)
@@ -135,8 +136,17 @@ def _echo_composed(kind: str, slug: str, result: dict[str, Any], effects: bool, 
     if code == 2:
         if not errors:
             errors = [SpecError(f"PROP-{slug}: the composed operation stopped with status {result.get('status')}")]
-        echo_notices(notices)
-        raise errors[0]
+        if output_settings().json:
+            # One error document: the decisive (last) error, the earlier ones beside it, exit 2 whatever they carry.
+            document: dict[str, Any] = {"error": errors[-1].to_dict()}
+            if len(errors) > 1:
+                document["errors"] = [error.to_dict() for error in errors[:-1]]
+            echo_json(document | {"notices": [notice.to_dict() for notice in notices]})
+        else:
+            echo_notices(notices)
+            for error in errors:  # every error once; the last one ends the output
+                click.echo(error.render(), err=True)
+        raise click.exceptions.Exit(int(ExitCode.ERROR))
     if output_settings().json:
         echo_json(result)
     else:

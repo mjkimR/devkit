@@ -126,6 +126,8 @@ def test_report_refusals_have_their_own_codes_and_targets(repo):
     assert error("Not_A_Slug")["code"] == "SPEC_REPORT_ARGUMENT_INVALID"
     dirty = error("example")
     assert dirty["code"] == "SPEC_REPORT_SOURCE_DIRTY" and dirty["advisory"]["target_files"] == ["scratch.txt"]
+    # The changes may be the user's: the user decides, the fix never tells the agent to commit them.
+    assert dirty["advisory"]["mode"] == "INTERACTION" and "commit" not in dirty["advisory"]["fix"].lower()
     assert "uv run devkit spec proposal report example" in dirty["advisory"]["fix"]
     (root / "scratch.txt").unlink()
     git(root, "branch", "-m", "main")

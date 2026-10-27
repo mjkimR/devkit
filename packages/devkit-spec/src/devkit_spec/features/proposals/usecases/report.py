@@ -110,7 +110,8 @@ def source(root: Path, slug: str, sha: str) -> Source:
             raise ReportSourceDirtyError(
                 "the source checkout has uncommitted changes; the report reads committed records only",
                 target_files=[line[3:] for line in dirty if line.strip()][:20],
-                fix=f"Commit the changes in [TARGET] (or move them out of the checkout), then run `{_command(slug)}`",
+                fix=f"Once the user has decided what happens to the changes in [TARGET] and the checkout is clean, run "
+                f"`{_command(slug)}`",
             )
         files = {}
         for entry in filter(None, entries):
