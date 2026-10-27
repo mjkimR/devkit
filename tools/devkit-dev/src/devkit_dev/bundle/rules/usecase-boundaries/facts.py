@@ -188,6 +188,8 @@ def extract(source: FileFactsSource) -> Scope:
 
 
 def encode(scope: Scope) -> JsonValue:
+    # Expressions are one flat post-order record stream, so references always point backward and decoding is a
+    # single pass without per-record containers: kind, name, receiver, line, then a call's counted arguments.
     expressions: list[JsonValue] = []
     scopes: list[JsonValue] = []
     expr_ids: dict[int, int] = {}
@@ -197,17 +199,15 @@ def encode(scope: Scope) -> JsonValue:
         if e is None:
             return None
         if id(e) not in expr_ids:
-            index = len(expressions)
-            expr_ids[id(e)] = index
-            expressions.append(None)
-            expressions[index] = [
-                e.kind,
-                e.name,
-                expr(e.value),
-                [expr(a) for a in e.args],
-                [expr(k) for k in e.keywords],
-                e.lineno,
-            ]
+            receiver = expr(e.value)
+            args = [expr(a) for a in e.args]
+            keywords = [expr(k) for k in e.keywords]
+            expr_ids[id(e)] = len(expr_ids)
+            expressions.extend((e.kind, e.name, receiver, e.lineno))
+            if e.kind == "call":
+                expressions.extend((len(args), *args, len(keywords), *keywords))
+            elif args or keywords:
+                raise ValueError("only calls carry arguments")
         return expr_ids[id(e)]
 
     def assignment(a: Assignment) -> JsonValue:
@@ -259,46 +259,67 @@ def _int(value: Any) -> int:
     return value
 
 
+_EXPRESSION_KINDS = frozenset({"name", "attribute", "call", "await", "subscript", "unknown"})
+_RECEIVER_KINDS = frozenset({"attribute", "call", "await", "subscript"})
+
+
+def _expressions(records: list[Any]) -> list[Expression]:
+    """Decode the flat stream in one pass; a record names only earlier records, so no cycle is encodable."""
+    built: list[Expression] = []
+    position, end = 0, len(records)
+
+    def reference(value: Any) -> Expression:
+        if type(value) is not int or not 0 <= value < len(built):
+            raise ValueError("invalid expression reference")
+        return built[value]
+
+    def counted() -> tuple[Expression, ...]:
+        nonlocal position
+        if position >= end or position + 1 + _int(records[position]) > end:
+            raise ValueError("truncated execution expression")
+        start, position = position + 1, position + 1 + records[position]
+        return tuple([reference(item) for item in records[start:position]])
+
+    while position < end:
+        if position + 4 > end:
+            raise ValueError("truncated execution expression")
+        kind, name, receiver, line = records[position : position + 4]
+        position += 4
+        if kind not in _EXPRESSION_KINDS or not isinstance(name, str):
+            raise ValueError("invalid execution expression")
+        if kind in {"name", "attribute"}:
+            if not name.isidentifier():
+                raise ValueError("invalid expression binding")
+        elif name:
+            raise ValueError("unexpected expression name")
+        if type(line) is not int or line < 1:
+            raise ValueError("invalid expression location")
+        if receiver is None:
+            if kind in _RECEIVER_KINDS:
+                raise ValueError("missing expression receiver")
+            value = None
+        elif kind in {"name", "unknown"}:
+            raise ValueError("unexpected expression receiver")
+        else:
+            value = reference(receiver)
+        if kind == "call":
+            args = counted()
+            built.append(Expression(kind, name, value, args, counted(), line))
+        else:
+            built.append(Expression(kind, name, value, lineno=line))
+    return built
+
+
 def decode(value: JsonValue) -> Scope:
     expr_rows, scope_rows = _seq(value, 2)
-    expr_rows, scope_rows = _seq(expr_rows), _seq(scope_rows)
-    expressions: dict[int, Expression] = {}
+    expressions = _expressions(_seq(expr_rows))
+    scope_rows = _seq(scope_rows)
     scopes: dict[int, Scope] = {}
-    active_expr: set[int] = set()
     active_scope: set[int] = set()
 
     def expr(index: Any) -> Expression:
-        index = _int(index)
-        if index >= len(expr_rows) or index in active_expr:
+        if type(index) is not int or not 0 <= index < len(expressions):
             raise ValueError("invalid expression reference")
-        if index not in expressions:
-            active_expr.add(index)
-            kind, name, receiver, args, keywords, line = _seq(expr_rows[index], 6)
-            if kind not in {"name", "attribute", "call", "await", "subscript", "unknown"}:
-                raise ValueError("invalid execution expression")
-            if kind in {"attribute", "call", "await", "subscript"} and receiver is None:
-                raise ValueError("missing expression receiver")
-            expressions[index] = Expression(
-                kind,
-                _str(name),
-                expr(receiver) if receiver is not None else None,
-                tuple(expr(a) for a in _seq(args)),
-                tuple(expr(k) for k in _seq(keywords)),
-                _int(line),
-            )
-            result = expressions[index]
-            if result.kind in {"name", "attribute"}:
-                if not result.name.isidentifier():
-                    raise ValueError("invalid expression binding")
-            elif result.name:
-                raise ValueError("unexpected expression name")
-            if result.kind in {"name", "unknown"} and result.value is not None:
-                raise ValueError("unexpected expression receiver")
-            if result.kind != "call" and (result.args or result.keywords):
-                raise ValueError("unexpected call arguments")
-            if result.lineno < 1:
-                raise ValueError("invalid expression location")
-            active_expr.remove(index)
         return expressions[index]
 
     def param(value: Any) -> Parameter:
@@ -405,8 +426,6 @@ def decode(value: JsonValue) -> Scope:
     if result.kind != "module":
         raise ValueError("execution facts root must be a module")
     # Unreferenced rows must also obey the codec, even when judgment never visits them.
-    for index in range(len(expr_rows)):
-        expr(index)
     for index in range(len(scope_rows)):
         visit(index)
     return result
@@ -418,7 +437,7 @@ SOURCE = capture_facts_dependency("RULE-usecase-boundaries.facts", __file__, mod
 def descriptor(module_name: str, filename: str) -> FileFactsDescriptor[Scope]:
     return FileFactsDescriptor(
         "RULE-usecase-boundaries",
-        1,
+        2,
         (capture_facts_dependency("RULE-usecase-boundaries.rule", filename, module_name=module_name), SOURCE),
         extract,
         encode,
