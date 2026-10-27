@@ -114,6 +114,26 @@ def test_scans_skip_symlinks_resolving_outside(tmp_path: Path) -> None:
     assert git_cache.find_files(tmp_path / "repo" / ".." / "ws") == []
 
 
+def test_an_unlistable_symlink_elsewhere_never_breaks_a_scan(tmp_path: Path) -> None:
+    root = tmp_path / "ws"
+    write(root, "docs/a.md", "x\n")
+    (root / "other").mkdir()
+    (root / "other/loop.md").symlink_to("loop.md")
+    cache = WorkspaceCache(root, git_filter=False)
+    assert [p.name for p in cache.find_files(root / "docs")] == ["a.md"]
+    assert [p.name for p in cache.find_files(root)] == ["a.md"]
+
+
+def test_a_root_spelled_otherwise_than_on_disk_lists_under_its_own_spelling(tmp_path: Path) -> None:
+    root = tmp_path / "ws"
+    write(root, "docs/a.md", "x\n")
+    cache = WorkspaceCache(root, git_filter=False)
+    cache.find_files(root)
+    spelled = root / "DOCS"
+    expected = [spelled / "a.md"] if spelled.is_dir() else []  # case-insensitive file systems only
+    assert cache.find_files(spelled) == expected
+
+
 def test_scans_match_git_names_in_any_unicode_normalization(tmp_path: Path) -> None:
     root = init_repo(tmp_path / "repo")
     nfd = unicodedata.normalize("NFD", "café.md")

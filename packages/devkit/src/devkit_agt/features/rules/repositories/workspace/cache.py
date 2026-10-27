@@ -49,13 +49,12 @@ _T = TypeVar("_T", bound=ast.AST)
 
 
 class _WalkedFile(NamedTuple):
-    """A file of a directory walk: its NFC workspace-relative name, path, suffix and whether it is listable (a
-    regular file, or a symlink to one that resolves inside the workspace)."""
+    """A file of a directory walk: its workspace-relative name in NFC and as spelled on disk, path and suffix."""
 
     relative: str
+    raw: str
     path: Path
     suffix: str
-    regular: bool
 
 
 def _nfc(name: str) -> str:
@@ -110,6 +109,7 @@ class WorkspaceCache:
         self._files_cache: dict[tuple[Path, tuple[str, ...] | None], list[Path]] = {}
         # Every file below the workspace's unpruned directories, walked once.
         self._walked: list[_WalkedFile] | None = None
+        self._walked_dirs: set[str] = set()
         self._computed_cache: dict[str, Any] = {}
         self._file_facts = FileFactsCache(
             self,
@@ -394,7 +394,7 @@ class WorkspaceCache:
                         continue
                     if visible is not None and walked.relative not in visible and walked.relative not in self._explicit:
                         continue
-                    if walked.regular:
+                    if walked.path.is_file() and self._stays_inside(walked.path):
                         results.append(walked.path)
                         listed.add(walked.relative)
                 for relative in self._explicit:
@@ -422,14 +422,19 @@ class WorkspaceCache:
         if any(part in _IGNORED_DIRS for part in parts):
             return self._walk_below(root)
         if self._walked is None:
-            self._walked = self._walk_below(self.workspace_root)
+            self._walked_dirs = set()
+            self._walked = self._walk_below(self.workspace_root, self._walked_dirs)
         if not parts:
             return self._walked
-        prefix = f"{_nfc(relative)}/"
-        return [entry for entry in self._walked if entry[0].startswith(prefix)]
+        if relative not in self._walked_dirs:
+            # Spelled otherwise than on disk (case, normalization): listed under its own spelling, as walked alone.
+            return self._walk_below(root)
+        prefix = f"{relative}/"
+        return [entry for entry in self._walked if entry.raw.startswith(prefix)]
 
-    def _walk_below(self, root: Path) -> list[_WalkedFile]:
-        """The files ``os.walk(root)`` lists, pruning ignored and pinned directories, typed from the directory scan.
+    def _walk_below(self, root: Path, directories: set[str] | None = None) -> list[_WalkedFile]:
+        """The files ``os.walk(root)`` lists, pruning ignored and pinned directories; ``directories`` collects the
+        workspace-relative name of each directory entered.
 
         As in ``os.walk``, a symlink to a directory is a directory that is not entered, and an entry whose type
         cannot be read is a file.
@@ -442,6 +447,8 @@ class WorkspaceCache:
             # ``directory`` is ``root`` or below it, and ``root`` is the resolved workspace root or below it.
             folder = directory[base:].strip("/")
             prefix = f"{folder}/" if folder else ""
+            if directories is not None:
+                directories.add(folder)
             try:
                 entries = list(os.scandir(directory))
             except OSError:
@@ -452,13 +459,16 @@ class WorkspaceCache:
                 except OSError:
                     is_dir = False
                 if is_dir:
-                    name = prefix + entry.name
-                    if entry.name not in _IGNORED_DIRS and not self._pinned_name(name) and not entry.is_symlink():
+                    try:
+                        linked = entry.is_symlink()
+                    except OSError:
+                        linked = False
+                    if entry.name not in _IGNORED_DIRS and not self._pinned_name(prefix + entry.name) and not linked:
                         pending.append(entry.path)
                     continue
+                raw = prefix + entry.name
                 path = Path(entry.path)
-                regular = entry.is_file() and (not entry.is_symlink() or self._stays_inside(path))
-                found.append(_WalkedFile(_nfc(prefix + entry.name), path, path.suffix, regular))
+                found.append(_WalkedFile(_nfc(raw), raw, path, path.suffix))
         return found
 
     def relative_name(self, path: Path) -> str:

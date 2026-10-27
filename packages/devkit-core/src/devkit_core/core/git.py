@@ -91,10 +91,14 @@ def run_git(
     memo = _memo.get() if args in _FACTS and input is None and index is None and deadline is None else None
     key: tuple[object, ...] = ()
     if memo is not None:
-        where = str(cwd) if os.path.isabs(cwd) else (os.getcwd(), str(cwd))
-        key = (where, args, *(os.environ.get(name) for name in _ENVIRONMENT))
-        if key in memo:
-            return memo[key]
+        try:
+            where = str(cwd) if os.path.isabs(cwd) else (os.getcwd(), str(cwd))
+        except OSError:  # the process directory is gone: run Git unmemoized, as outside a scope
+            memo = None
+        else:
+            key = (where, args, *(os.environ.get(name) for name in _ENVIRONMENT))
+            if key in memo:
+                return memo[key]
     command = ("git", "-C", str(cwd), *args)
     label = f"git {args[0]}" if args else "git"
     if deadline is not None:
