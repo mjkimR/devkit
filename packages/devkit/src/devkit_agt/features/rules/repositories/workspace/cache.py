@@ -24,7 +24,7 @@ import os
 import unicodedata
 from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeVar, cast, overload
 
 from devkit_core.core import GitError, UnsafePathError, atomic_write_bytes, run_git
 from devkit_core.core.frontmatter import parse as parse_frontmatter
@@ -46,6 +46,16 @@ T = TypeVar("T")
 _PINNED_DIRS = (MANAGED_PATH, OVERRIDES_PATH)
 _IGNORED_DIRS = {".git", ".venv", ".pytest_cache", ".ruff_cache", "node_modules", "__pycache__"}
 _T = TypeVar("_T", bound=ast.AST)
+
+
+class _WalkedFile(NamedTuple):
+    """A file of a directory walk: its NFC workspace-relative name, path, suffix and whether it is listable (a
+    regular file, or a symlink to one that resolves inside the workspace)."""
+
+    relative: str
+    path: Path
+    suffix: str
+    regular: bool
 
 
 def _nfc(name: str) -> str:
@@ -97,6 +107,8 @@ class WorkspaceCache:
         self._resolved: dict[str | Path, Path] = {}
         self._catalog: DocumentCatalog | None = None
         self._files_cache: dict[tuple[Path, tuple[str, ...] | None], list[Path]] = {}
+        # Every file below the workspace's unpruned directories, walked once.
+        self._walked: list[_WalkedFile] | None = None
         self._computed_cache: dict[str, Any] = {}
         self._file_facts = FileFactsCache(
             self,
@@ -353,6 +365,11 @@ class WorkspaceCache:
     def _pinned(self, path: Path) -> bool:
         return any(path.is_relative_to(self.workspace_root / pinned) for pinned in _PINNED_DIRS)
 
+    @staticmethod
+    def _pinned_name(relative: str) -> bool:
+        """Whether a workspace-relative POSIX name lies under a pinned directory (``_pinned`` without ``Path``)."""
+        return any(relative == pinned or relative.startswith(f"{pinned}/") for pinned in _PINNED_DIRS)
+
     def find_files(self, root: Path, extensions: tuple[str, ...] | None = (".md",)) -> list[Path]:
         """Regular files under ``root`` (inside the workspace) with one of ``extensions``, sorted.
 
@@ -370,18 +387,15 @@ class WorkspaceCache:
             visible = self._visible_files()
             results: list[Path] = []
             if root.is_dir() and root.is_relative_to(self.workspace_root) and not self._pinned(root):
-                for directory, dirs, files in os.walk(root):
-                    here = Path(directory)
-                    dirs[:] = sorted(d for d in dirs if d not in _IGNORED_DIRS and not self._pinned(here / d))
-                    for name in files:
-                        path = here / name
-                        if extensions is not None and path.suffix not in extensions:
-                            continue
-                        if visible is not None and not self._visible(path, visible):
-                            continue
-                        if path.is_file() and self._stays_inside(path):
-                            results.append(path)
-                listed = {self._name(path) for path in results}
+                listed: set[str] = set()
+                for walked in self._walk(root):
+                    if extensions is not None and walked.suffix not in extensions:
+                        continue
+                    if visible is not None and walked.relative not in visible and walked.relative not in self._explicit:
+                        continue
+                    if walked.regular:
+                        results.append(walked.path)
+                        listed.add(walked.relative)
                 for relative in self._explicit:
                     path = self.workspace_root / relative
                     if (
@@ -396,17 +410,55 @@ class WorkspaceCache:
             self._files_cache[key] = sorted(results)
         return list(self._files_cache[key])
 
-    def _name(self, path: Path) -> str:
-        """``path`` relative to the workspace, POSIX and NFC: the form explicit targets are kept in."""
-        return _nfc(path.relative_to(self.workspace_root).as_posix())
+    def _walk(self, root: Path) -> Iterable[_WalkedFile]:
+        """Every file below ``root``, skipping ignored and pinned directories.
 
-    def _visible(self, path: Path, visible: set[str]) -> bool:
-        try:
-            relative = path.relative_to(self.workspace_root).as_posix()
-        except ValueError:
-            return False
-        relative = _nfc(relative)
-        return relative in visible or relative in self._explicit
+        Directories are pruned below ``root`` only, so a ``root`` inside an ignored directory (or below one) is walked
+        on its own; any other ``root`` filters the one walk of the workspace that every listing shares.
+        """
+        relative = root.relative_to(self.workspace_root).as_posix()
+        parts = () if relative == "." else tuple(relative.split("/"))
+        if any(part in _IGNORED_DIRS for part in parts):
+            return self._walk_below(root)
+        if self._walked is None:
+            self._walked = self._walk_below(self.workspace_root)
+        if not parts:
+            return self._walked
+        prefix = f"{_nfc(relative)}/"
+        return [entry for entry in self._walked if entry[0].startswith(prefix)]
+
+    def _walk_below(self, root: Path) -> list[_WalkedFile]:
+        """The files ``os.walk(root)`` lists, pruning ignored and pinned directories, typed from the directory scan.
+
+        As in ``os.walk``, a symlink to a directory is a directory that is not entered, and an entry whose type
+        cannot be read is a file.
+        """
+        found: list[_WalkedFile] = []
+        base = len(str(self.workspace_root))
+        pending = [str(root)]
+        while pending:
+            directory = pending.pop()
+            # ``directory`` is ``root`` or below it, and ``root`` is the resolved workspace root or below it.
+            folder = directory[base:].strip("/")
+            prefix = f"{folder}/" if folder else ""
+            try:
+                entries = list(os.scandir(directory))
+            except OSError:
+                continue
+            for entry in entries:
+                try:
+                    is_dir = entry.is_dir()
+                except OSError:
+                    is_dir = False
+                if is_dir:
+                    name = prefix + entry.name
+                    if entry.name not in _IGNORED_DIRS and not self._pinned_name(name) and not entry.is_symlink():
+                        pending.append(entry.path)
+                    continue
+                path = Path(entry.path)
+                regular = entry.is_file() and (not entry.is_symlink() or self._stays_inside(path))
+                found.append(_WalkedFile(_nfc(prefix + entry.name), path, path.suffix, regular))
+        return found
 
     def _stays_inside(self, path: Path) -> bool:
         """A symlink is listed only when it resolves inside the workspace, as a snapshot materializes it."""
@@ -426,6 +478,7 @@ class WorkspaceCache:
         self._catalog = None
         self._computed_cache.clear()
         self._files_cache.clear()
+        self._walked = None
         self._git_files_loaded = False
 
     def invalidate_many(self, paths: Iterable[str | Path]) -> None:
@@ -444,4 +497,5 @@ class WorkspaceCache:
         self._catalog = None
         self._computed_cache.clear()
         self._files_cache.clear()
+        self._walked = None
         self._git_files_loaded = False
