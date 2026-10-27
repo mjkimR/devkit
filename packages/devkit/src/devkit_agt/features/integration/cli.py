@@ -1,6 +1,9 @@
 """Prepare and execute scoped integration after Host-carried conversational approval."""
 
 import json
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
+from pathlib import Path
 
 import click
 from devkit_dist.adapters.cli import (
@@ -14,13 +17,26 @@ from devkit_dist.adapters.cli import (
     workspace_option,
 )
 
-from devkit_agt.features.integration.models.contracts import Task
+from devkit_agt.features.integration.models.contracts import Task, integrate_command, prepare_command
 from devkit_agt.features.integration.usecases.operations import IntegrateUseCase, PrepareIntegrationUseCase
 from devkit_agt.features.integration.usecases.service import IntegrationService
+from devkit_agt.features.worktree import RunFromBaseError
 
 
 def _yes(value: bool) -> str:
     return "yes" if value else "no"
+
+
+@contextmanager
+def _rerun_on_base(root: Path, command: Callable[[str], str]) -> Iterator[None]:
+    """Name the same command for the base checkout's devkit project when it ran in the worktree it would remove
+    (``WORKTREE_RUN_FROM_BASE``): ``command(workspace)`` is that command with ``-w workspace``."""
+    try:
+        yield
+    except RunFromBaseError as error:
+        if error.base is not None and error.checkout is not None and root.is_relative_to(error.checkout):
+            error.fix = command(str(error.base / root.relative_to(error.checkout)))
+        raise
 
 
 @click.group()
@@ -62,9 +78,9 @@ def prepare(
     output_format: str,
 ) -> None:
     """Validate committed BRANCH and show its exact integration scope without performing integration effects."""
-    result = PrepareIntegrationUseCase(IntegrationService(resolve_root(workspace_root))).execute(
-        branch, Task(task_kind, task_id, unit, claims), route
-    )
+    root, task = resolve_root(workspace_root), Task(task_kind, task_id, unit, claims)
+    with _rerun_on_base(root, lambda workspace: prepare_command(branch, task, route, workspace=workspace)):
+        result = PrepareIntegrationUseCase(IntegrationService(root)).execute(branch, task, route)
     if is_json(output_format):
         echo_json(result.compact_dict())
         return
@@ -122,9 +138,13 @@ def integrate(
     output_format: str,
 ) -> None:
     """Integrate committed BRANCH after Host-carried approval; auto policy is read from the retained base."""
-    result = IntegrateUseCase(IntegrationService(resolve_root(workspace_root))).execute(
-        branch, Task(task_kind, task_id, unit, claims), route, expected_digest=expected_digest
-    )
+    root, task = resolve_root(workspace_root), Task(task_kind, task_id, unit, claims)
+    with _rerun_on_base(
+        root, lambda workspace: integrate_command(branch, task, route, expected_digest, workspace=workspace)
+    ):
+        result = IntegrateUseCase(IntegrationService(root)).execute(
+            branch, task, route, expected_digest=expected_digest
+        )
     payload = result.compact_dict()
     if is_json(output_format):
         echo_json(payload)

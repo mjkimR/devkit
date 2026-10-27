@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shlex
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
@@ -102,7 +103,9 @@ class GateContext:
         if not self.args:
             raise ArgumentError(
                 "commit-msg: no commit message file given",
-                fix=f"Pass the message file: `{devkit_command('gate run commit-msg <file>')}`",
+                # The file Git writes the message to for the hook; ``devkit gate run`` takes it after the stage.
+                fix=devkit_command(f"gate run commit-msg {shlex.quote(str(self.git_dir / 'COMMIT_EDITMSG'))}"),
+                target_files=["FILE"],
             )
         path = Path(self.args[0])
         return path if path.is_absolute() else self.repo_root / path

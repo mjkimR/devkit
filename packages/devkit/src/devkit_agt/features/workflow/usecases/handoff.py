@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from datetime import date
 from typing import TYPE_CHECKING, Any
 
+from devkit_dist.features.project.models.invocation import devkit_command
+
 from devkit_agt.features.workflow.models.binding import Binding, HistoryEntry
 from devkit_agt.features.workflow.models.checks import CheckResult
 from devkit_agt.features.workflow.models.decision_records import HANDOFF_REQUEST, Decision
@@ -66,7 +68,9 @@ def evaluate_handoff(
             f"handoff choice {recorded.value!r} is not an eligible candidate of {doc.id}; ignored",
             *choices.details,
             file=recorded.file,
-            fix=choices.fix if unit else "Record an eligible choice with `devkit workflow answer --request handoff`",
+            fix=choices.fix
+            if unit
+            else f"Record an eligible choice with `{devkit_command('workflow answer --request handoff')}`",
         )
     chosen = next((c.workflow for c in results if c.eligible), None) if policy == "auto" else None
     return Handoff(policy, tuple(results), chosen), ignored

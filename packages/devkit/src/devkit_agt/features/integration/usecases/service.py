@@ -338,12 +338,12 @@ class IntegrationService:
         if expected_digest is not None and expected_digest != request.digest:
             raise StaleRequestError(
                 "the source, target, policy, readiness or cleanup scope differs from the prepared scope",
-                f"scope: {prepare_command(branch, task, route)}",
+                f"after the user approves the scope prepare shows: {integrate_command(branch, task, route, request.digest)}",
                 guardrail=False,
                 actor=Actor.USER,
-                fix=integrate_command(branch, task, route, request.digest),
+                fix=prepare_command(branch, task, route),
                 what_to_report="The integration scope changed after it was approved. Present the current scope "
-                "(the [DETAIL] prepare command shows it) and ask the user to approve it again",
+                "([FIX] shows it) and ask the user to approve it again",
             )
         if request.approval_policy == "auto":
             result.authority = "policy"
@@ -351,12 +351,13 @@ class IntegrationService:
             if expected_digest is None:
                 raise AuthorityError(
                     "ask integration requires the digest of the scope presented for conversational approval",
-                    f"scope: {prepare_command(branch, task, route)}",
+                    f"after the user approves the scope prepare shows: "
+                    f"{integrate_command(branch, task, route, request.digest)}",
                     guardrail=False,
                     actor=Actor.USER,
-                    fix=integrate_command(branch, task, route, request.digest),
+                    fix=prepare_command(branch, task, route),
                     what_to_report="Integration needs the user's approval of its exact scope. Present the scope "
-                    "(the [DETAIL] prepare command shows it) and ask whether to integrate",
+                    "([FIX] shows it) and ask whether to integrate",
                 )
             result.authority = "host-conversation"
         record = self._record(request.id)

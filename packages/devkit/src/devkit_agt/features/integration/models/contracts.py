@@ -43,14 +43,17 @@ def _task_arguments(branch: str, task: Task, route: str) -> str:
     return " ".join(shlex.quote(part) for part in parts)
 
 
-def prepare_command(branch: str, task: Task, route: str) -> str:
+def prepare_command(branch: str, task: Task, route: str, *, workspace: str | None = None) -> str:
     """The exact ``prepare`` command that shows the scope of ``branch`` for ``task`` on ``route``."""
-    return devkit_command(f"integration prepare {_task_arguments(branch, task, route)}")
+    where = f" -w {shlex.quote(workspace)}" if workspace is not None else ""
+    return devkit_command(f"integration prepare {_task_arguments(branch, task, route)}{where}")
 
 
-def integrate_command(branch: str, task: Task, route: str, digest: str) -> str:
-    """The exact ``integrate`` command for the prepared scope whose digest is ``digest``."""
-    return devkit_command(f"integration integrate {_task_arguments(branch, task, route)} --expected-digest {digest}")
+def integrate_command(branch: str, task: Task, route: str, digest: str | None, *, workspace: str | None = None) -> str:
+    """The exact ``integrate`` command for the prepared scope whose digest is ``digest`` (none under ``auto``)."""
+    pinned = f" --expected-digest {digest}" if digest else ""
+    where = f" -w {shlex.quote(workspace)}" if workspace is not None else ""
+    return devkit_command(f"integration integrate {_task_arguments(branch, task, route)}{pinned}{where}")
 
 
 @dataclass(frozen=True)

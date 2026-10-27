@@ -15,6 +15,7 @@ and unsets it). Before that,
 from __future__ import annotations
 
 import shlex
+from pathlib import Path
 from typing import Any
 
 from devkit.advisory import Actor, AdvisoryError, Level, Retry
@@ -48,10 +49,13 @@ class _Guardrail(WorktreeError):
 class NestedError(WorktreeError):
     """``start`` ran inside a linked worktree (``INPUT_ERROR``); task worktrees are created from the base checkout.
 
-    Where the command runs is the input to correct: ``[FIX]`` changes to the base checkout to rerun it there."""
+    Where the command runs is the input to correct: ``[FIX]`` reruns it on the base checkout; a ``[DETAIL]`` names
+    the alternative, to keep working in this worktree instead."""
 
     code = "WORKTREE_NESTED"
     input_error = True
+    base: Path | None = None  # the base checkout, and the linked worktree the command ran in
+    checkout: Path | None = None
     fix = "Rerun the command from the base checkout"
 
 
@@ -62,6 +66,8 @@ class RunFromBaseError(WorktreeError):
 
     code = "WORKTREE_RUN_FROM_BASE"
     input_error = True
+    base: Path | None = None  # the base checkout, and the linked worktree the command ran in
+    checkout: Path | None = None
     fix = "Rerun the same command from the base checkout"
 
 
@@ -75,8 +81,19 @@ def pull_request_policy_fix(branch: str) -> str:
 
 
 def run_from_base_fix(base: object) -> str:
-    """The ``[FIX]`` of ``RunFromBaseError`` and ``NestedError``: change to the base checkout ``base``, then rerun."""
-    return f"cd {shlex.quote(str(base))}"
+    """The library ``[FIX]`` of ``RunFromBaseError`` and ``NestedError``; a command line replaces it with the exact
+    command it ran, pointed at the devkit project in the base checkout (``-w``)."""
+    return f"Rerun the same command with -w {shlex.quote(str(base))}, the base checkout"
+
+
+def from_base_error(
+    cls: type[RunFromBaseError] | type[NestedError], message: str, base: Path, checkout: Path, *details: str
+) -> RunFromBaseError | NestedError:
+    """``cls`` raised in the linked worktree ``checkout`` of the base checkout ``base``, both kept on the error
+    (``base``, ``checkout``) so a command line can name the same command for the base."""
+    error = cls(message, *details, target_files=[str(base)], fix=run_from_base_fix(base))
+    error.base, error.checkout = Path(base), Path(checkout)
+    return error
 
 
 class PullRequestPolicyError(_Guardrail):

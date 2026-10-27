@@ -103,3 +103,14 @@ def test_status_writes_booleans_as_yes_or_no(repo: Path) -> None:
     assert "[HOOK: pre-commit state=managed python=" in lines[1] and " python_ok=yes scripts=20-devkit]" in lines[1]
     assert " enabled=yes source=builtin" in next(line for line in lines if line.startswith("[GATE: rules-check "))
     assert "true" not in "\n".join(lines) and "false" not in "\n".join(lines)
+
+
+def test_commit_msg_without_its_file_names_the_message_file_git_writes(repo: Path) -> None:
+    from devkit_core.base.errors import ArgumentError
+
+    try:
+        NonEmptyMessageGate().run(gate_ctx(repo, Stage.COMMIT_MSG))
+    except ArgumentError as error:
+        assert error.fix == f"uv run devkit gate run commit-msg {repo / '.git/COMMIT_EDITMSG'}"
+    else:
+        raise AssertionError("a commit-msg run without its file passed")

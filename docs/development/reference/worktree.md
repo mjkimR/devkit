@@ -57,8 +57,8 @@ A `finish` that a refusal stopped after it changed something prints its progress
 
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
-| `WORKTREE_NESTED` | `ERROR` (`INPUT_ERROR`) | `NestedError` | `start` inside a linked worktree; `[FIX]` is `cd <base checkout>`, to rerun it there. |
-| `WORKTREE_RUN_FROM_BASE` | `ERROR` (`INPUT_ERROR`) | `RunFromBaseError` | `finish`, `finish --discard` or the integration preflight inside a linked worktree; `[FIX]` is `cd <base checkout>`, to rerun the same command there. |
+| `WORKTREE_NESTED` | `ERROR` (`INPUT_ERROR`) | `NestedError` | `start` inside a linked worktree; `[FIX]` is the same command with `-w` naming the devkit project in the base checkout, and a `[DETAIL]` names the alternative, to keep working in this worktree. |
+| `WORKTREE_RUN_FROM_BASE` | `ERROR` (`INPUT_ERROR`) | `RunFromBaseError` | `finish`, `finish --discard` or the integration preflight inside a linked worktree; `[FIX]` is the same command with `-w` naming the devkit project in the base checkout (`integration prepare|integrate` included); a library caller gets that instruction without the command. |
 | `WORKTREE_PR_POLICY` | `ERROR` (`BLOCKED`) | `PullRequestPolicyError` | `finish --merge` under `pull_request = "required"`. |
 | `WORKTREE_UNSUPPORTED_LAYOUT` | `ERROR` (`BLOCKED`) | `UnsupportedLayoutError` | A Git directory outside its work tree. |
 | `WORKTREE_BASE_ON_BRANCH` | `ERROR` (`AUTO`) | `BaseOnBranchError` | `finish` or `finish --discard` while the base checkout is on the `--no-worktree` branch it finishes; `[FIX]` switches it back to the recorded `devkitBase`, then rerun. Nothing changed. |

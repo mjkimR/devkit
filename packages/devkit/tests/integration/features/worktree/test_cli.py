@@ -248,3 +248,15 @@ def test_an_attached_branch_exists_error_names_its_recorded_unit(repo: Path) -> 
     assert again["error"]["advisory"]["fix"] == (
         "uv run devkit worktree start dev-demo --existing-branch dev-demo --unit units/a"
     )
+
+
+def test_commands_run_inside_a_linked_worktree_fix_with_the_same_command_on_the_base(repo: Path) -> None:
+    assert invoke("start", "dev-demo", "-w", str(repo)).exit_code == 0
+    path = repo.parent / "repo-wt-dev-demo"
+    nested = json.loads(invoke("start", "dev-other", "-w", str(path), "--format", "json").stdout)["error"]
+    assert nested["code"] == "WORKTREE_NESTED"
+    assert nested["advisory"]["fix"] == f"uv run devkit worktree start dev-other --format json -w {repo}"
+    assert any(f"keep working in {path}" in line for line in nested["advisory"]["details"])
+    refused = invoke("finish", "dev-demo", "--merge", "-w", str(path))
+    assert refused.exit_code == 2 and "(WORKTREE_RUN_FROM_BASE)" in refused.stderr
+    assert f"[FIX]    uv run devkit worktree finish dev-demo --merge -w {repo}\n" in refused.stderr

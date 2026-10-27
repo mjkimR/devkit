@@ -262,10 +262,13 @@ def test_ask_without_digest_asks_the_user_with_the_exact_command(repo):
     assert result.exit_code == 2, result.output
     advisory = json.loads(result.output)["error"]["advisory"]
     assert advisory["code"] == "INTEGRATION_AUTHORITY_REQUIRED" and advisory["mode"] == "INTERACTION"
-    assert advisory["fix"] == (
-        f"uv run devkit integration integrate dev-demo --task-kind session --task-id fixture --expected-digest {digest}"
-    )
-    assert "<" not in advisory["fix"] and advisory["what_to_report"]
+    # [FIX] re-presents the scope; integrating it is only for after the user approved it, a detail.
+    assert advisory["fix"] == "uv run devkit integration prepare dev-demo --task-kind session --task-id fixture"
+    assert advisory["details"] == [
+        "after the user approves the scope prepare shows: uv run devkit integration integrate dev-demo"
+        f" --task-kind session --task-id fixture --expected-digest {digest}"
+    ]
+    assert advisory["what_to_report"]
 
 
 def test_a_stale_digest_asks_the_user_again_with_the_current_digest(repo):
@@ -275,7 +278,8 @@ def test_a_stale_digest_asks_the_user_again_with_the_current_digest(repo):
     assert result.exit_code == 2, result.output
     advisory = json.loads(result.output)["error"]["advisory"]
     assert advisory["code"] == "INTEGRATION_REQUEST_STALE" and advisory["mode"] == "INTERACTION"
-    assert advisory["fix"].endswith(f"--expected-digest {digest}") and "<" not in advisory["fix"]
+    assert advisory["fix"] == "uv run devkit integration prepare dev-demo --task-kind session --task-id fixture"
+    assert advisory["details"][0].endswith(f"--expected-digest {digest}")
 
 
 def test_automatic_policy_refusing_the_pull_request_route_stays_blocked(repo):
@@ -360,3 +364,15 @@ def test_partial_cleanup_warning_exits_zero_and_errors_print_last(repo, monkeypa
     assert result.exit_code == 2, result.output  # --strict never lowers 2 to 1
     stderr = result.stderr
     assert stderr.index("[WARN]") < stderr.index("[ERROR]")
+
+
+def test_prepare_inside_the_worktree_fixes_with_the_same_command_on_the_base(repo):
+    base, worktree = repo
+    result = CliRunner().invoke(
+        cli, ["prepare", "dev-demo", "--task-kind", "session", "--task-id", "fixture", "-w", str(worktree)]
+    )
+    assert result.exit_code == 2 and "(WORKTREE_RUN_FROM_BASE)" in result.output, result.output
+    assert (
+        f"[FIX]    uv run devkit integration prepare dev-demo --task-kind session --task-id fixture -w {base}\n"
+        in result.output
+    )

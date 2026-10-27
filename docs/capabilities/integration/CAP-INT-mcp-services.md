@@ -52,9 +52,11 @@ warning to `1`. `--strict` never lowers `2`.
 
 WHEN `ask` integration is invoked without a digest or with one that differs from the current scope, the refusal
 (`INTEGRATION_AUTHORITY_REQUIRED` or `INTEGRATION_REQUEST_STALE`) MUST be `INTERACTION`: `[REPORT]` asks the user to
-approve the scope, `[DETAIL]` names the exact `prepare` command that shows it, and `[FIX]` is the exact `integrate`
-command with the current digest, for once they approve. The automatic policy refusing the pull-request route stays
-`BLOCKED`.
+approve the scope, `[FIX]` is the exact `prepare` command that shows it (re-presenting the scope, never integrating
+it), and a `[DETAIL]` names the exact `integrate` command with the current digest, only for after the user approves
+the presented scope. The automatic policy refusing the pull-request route stays `BLOCKED`. Run inside the worktree
+it would remove, either command is `WORKTREE_RUN_FROM_BASE`, whose `[FIX]` is the same command with `-w` naming the
+devkit project in the base checkout.
 
 The `IntegrateUseCase` runs through the same request validator, provider, finish guards, integration lock and scoped
 cleanup engine as other trusted in-process callers. Local integration builds a merge commit outside the base
@@ -126,8 +128,8 @@ registered.
 | `INTEGRATION_NOT_READY` | `INPUT_ERROR`: resolve each reported condition (`[DETAIL]`) in the source worktree (`[TARGET]`), commit and prepare again. |
 | `INTEGRATION_PROVIDER_FAILED` | Repair the installed provider or its evidence contract. |
 | `INTEGRATION_RULE_RUNTIME_MISMATCH` | The source needs no change. With separately granted authority, build a runtime from the source's code outside the worktree being removed and run `devkit integration integrate <branch>` from the base checkout with it; never edit the rules, skip readiness or use the worktree's own runtime. |
-| `INTEGRATION_AUTHORITY_REQUIRED` | Under `ask` without a digest, `INTERACTION`: present the scope and run `[FIX]` once the user approves. Otherwise `BLOCKED`: inspect the retained base policy and selected route. |
-| `INTEGRATION_REQUEST_STALE` | For a digest that differs from the current scope, `INTERACTION`: present the current scope and run `[FIX]` once the user approves it. Otherwise inspect completed effects and revalidate the remaining scope before fresh Host authority. |
+| `INTEGRATION_AUTHORITY_REQUIRED` | Under `ask` without a digest, `INTERACTION`: run `[FIX]` to present the scope; the `[DETAIL]` integrate command is for after the user approves it. Otherwise `BLOCKED`: inspect the retained base policy and selected route. |
+| `INTEGRATION_REQUEST_STALE` | For a digest that differs from the current scope, `INTERACTION`: run `[FIX]` to present the current scope; the `[DETAIL]` integrate command is for after the user approves it. Otherwise inspect completed effects and revalidate the remaining scope before fresh Host authority. |
 | `INTEGRATION_TARGET_MOVED` | Merge the current base into the source, rerun required checks and obtain fresh Host authority or re-evaluate retained-base auto policy before `devkit integration integrate`. |
 | `INTEGRATION_CLEANUP_INCOMPLETE` | Inspect Git and worktree state; run guarded already-merged finish for a marked remaining worktree, or the owning extension command for a remaining scoped post-finish target. |
 | `INTEGRATION_LANDED_UNCHECKED` | Run the provider's landed-target check and do not report checked integration until it passes. |

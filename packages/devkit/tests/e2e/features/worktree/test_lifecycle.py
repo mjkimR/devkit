@@ -97,7 +97,10 @@ def test_start_guards(repo: Path) -> None:
     created = start(locate(repo), "dev-demo")
     with pytest.raises(NestedError) as nested:
         start(locate(created.path), "dev-other")
-    assert nested.value.mode is ActionMode.INPUT_ERROR and nested.value.fix == f"cd {repo}"
+    assert (
+        nested.value.mode is ActionMode.INPUT_ERROR
+        and nested.value.fix == f"Rerun the same command with -w {repo}, the base checkout"
+    )
     write(created.path, "wip.txt", "x\n")
     with pytest.raises(BranchExistsError, match="already has its worktree") as existing:
         start(locate(repo), "dev-demo")  # dirty or clean, an existing branch's worktree is never started again

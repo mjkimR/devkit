@@ -69,8 +69,8 @@ from devkit_agt.features.worktree.models.errors import (
     UnmergedError,
     UnsupportedLayoutError,
     WorktreeError,
+    from_base_error,
     pull_request_policy_fix,
-    run_from_base_fix,
 )
 from devkit_agt.features.worktree.models.lifecycle import BranchStartResult as BranchStartResult
 from devkit_agt.features.worktree.models.lifecycle import BranchStatus as BranchStatus
@@ -302,10 +302,12 @@ def start(
     """
     check_branch(branch)
     if position.linked:
-        raise NestedError(
+        raise from_base_error(
+            NestedError,
             f"{position.root} is a linked worktree; task worktrees are created from the base checkout",
-            target_files=[str(position.base)],
-            fix=run_from_base_fix(position.base),
+            position.base,
+            position.root,
+            f"to continue the current task instead, keep working in {position.root}",
         )
     if revision is not None:
         revision = _git(position.base, "rev-parse", "--verify", "--end-of-options", f"{revision}^{{commit}}")
@@ -465,10 +467,12 @@ class StartBranch(BaseUseCase):
         """
         check_branch(branch)
         if position.linked:
-            raise NestedError(
+            raise from_base_error(
+                NestedError,
                 f"{position.root} is a linked worktree; activity branches are started in the base checkout",
-                target_files=[str(position.base)],
-                fix=run_from_base_fix(position.base),
+                position.base,
+                position.root,
+                f"to continue the current task instead, keep working in {position.root}",
             )
         if position.branch is None:
             raise BaseDetachedError(
@@ -523,10 +527,12 @@ def attach(
     """
     check_branch(branch)
     if position.linked:
-        raise NestedError(
+        raise from_base_error(
+            NestedError,
             f"{position.root} is a linked worktree; task worktrees are created from the base checkout",
-            target_files=[str(position.base)],
-            fix=run_from_base_fix(position.base),
+            position.base,
+            position.root,
+            f"to continue the current task instead, keep working in {position.root}",
         )
     base = position.base
     remotes = _git(base, "remote").splitlines()
@@ -1083,8 +1089,9 @@ def finish(
     other checks and before the first change, with the commit ids of the branch's merge base with the base HEAD
     (empty when there is none) and of its tip; it refuses by raising (the ``devkit.finish_guard`` extensions in the
     CLI). The checks of the worktree's branch and lock, the base and the upstreams (including whether ``git branch
-    -d`` will accept the branch) run before the first change; uncommitted changes in the worktree surface when it is
-    removed (``WORKTREE_DIRTY``). ``before_remove`` runs once the merge is confirmed and before the worktree is
+    -d`` will accept the branch) run before the first change, and so does the check for uncommitted or untracked
+    changes in the worktree (``WORKTREE_DIRTY``; the removal still refuses a worktree that became dirty since).
+    ``before_remove`` runs once the merge is confirmed and before the worktree is
     removed (a caller's own cleanup; it runs again on a rerun). A refusal after that carries the partial result as
     ``error.result``, also an ``AdvisoryError`` that ``before_remove`` raises.
 
@@ -1100,10 +1107,11 @@ def finish(
         raise ArgumentError("network must be allow or forbid")
     check_branch(branch)
     if position.linked:
-        raise RunFromBaseError(
+        raise from_base_error(
+            RunFromBaseError,
             f"{position.root} is the worktree finish would remove",
-            target_files=[str(position.base)],
-            fix=run_from_base_fix(position.base),
+            position.base,
+            position.root,
         )
     if merge and pull_request == "required":
         raise PullRequestPolicyError(
@@ -1272,10 +1280,11 @@ def discard(
     """
     check_branch(branch)
     if position.linked:
-        raise RunFromBaseError(
+        raise from_base_error(
+            RunFromBaseError,
             f"{position.root} is the worktree discard would remove",
-            target_files=[str(position.base)],
-            fix=run_from_base_fix(position.base),
+            position.base,
+            position.root,
         )
     base, ref = position.base, f"refs/heads/{branch}"
     entry = _find(position, branch)
