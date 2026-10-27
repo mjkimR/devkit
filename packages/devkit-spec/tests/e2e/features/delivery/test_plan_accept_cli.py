@@ -193,20 +193,3 @@ def test_a_policy_acceptance_is_never_redirected_to_the_user(pending):
     assert error["code"] == "SPEC_PROPOSAL_WRONG_WORKTREE"
     assert "uv run devkit spec proposal accept idea --by policy --mode accept_only" in error["advisory"]["fix"]
     assert "--by user" not in json.dumps(error) and "<" not in error["advisory"]["fix"]
-
-
-def test_the_native_acceptance_off_the_base_names_no_user_authority(pending):
-    import asyncio
-
-    from devkit_spec.base.errors import ProposalWrongWorktreeError
-    from devkit_spec.features.delivery.usecases.native_plan_accept import PlanAcceptUseCase
-
-    _repo, planning = pending
-
-    async def confirm(message, schema):
-        pytest.fail("a refusal reaches no confirmation")
-
-    with pytest.raises(ProposalWrongWorktreeError) as caught:
-        asyncio.run(PlanAcceptUseCase(planning).execute_native("idea", confirm, mode="accept_and_handoff"))
-    rendered = json.dumps(caught.value.to_dict())
-    assert "--by user" not in rendered and "<low|medium|high>" not in rendered

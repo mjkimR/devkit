@@ -106,7 +106,7 @@ The library raises the same codes, one class per code. `WorkflowError` is the ba
 
 ## 3. `next` Text Output
 
-`next --format text` prints one tagged line per fact (`ARCH-08-1-agent-output` section 3). Agents read the tags; the order is stable. A value without spaces is bare, a boolean is `yes` or `no`, an empty value is `-`, and free text (details, titles, notes, `when` reasons, descriptions, error reasons, a `when` summary that contains a space) is written as a JSON string literal, so quotes and newlines are escaped and every fact stays on one line. Lists documented as space-separated (`[DONE]`, `[UNMET]`, `[HANDOFF]`'s `candidates`, `eligible`, `recommended`) and comma-separated (`[REQUEST]`'s `options`, `eligible`, `recommended`) hold ids only.
+`next --format text` prints one tagged line per fact (`ARCH-08-1-agent-output` section 3). Agents read the tags; the order is stable. A value without spaces is bare, a boolean is `yes` or `no`, an empty value is `-`, and free text (details, titles, notes, `when` reasons, descriptions, error reasons, a `when` summary that contains a space or `=`) is written as a JSON string literal, so quotes and newlines are escaped and every fact stays on one line. Lists documented as space-separated (`[DONE]`, `[UNMET]`, `[HANDOFF]`'s `candidates`, `eligible`, `recommended`) and comma-separated (`[REQUEST]`'s `options`, `eligible`, `recommended`) hold ids only.
 
 ```text
 [WORKFLOW: direct-delivery unit=.devkit/transient/work/login status=in-progress bound=yes]
@@ -155,7 +155,7 @@ When the workflow is complete and declares `next` candidates (and `approvals.han
 ```text
 [STAGE: - complete=yes]
 [HANDOFF: policy=ask candidates=spec-driven hotfix direct-delivery eligible=hotfix direct-delivery recommended=- chosen=-]
-[CANDIDATE: spec-driven eligible=no recommended=yes when=file-exists(spec.md)=no]
+[CANDIDATE: spec-driven eligible=no recommended=yes when="file-exists(spec.md)=no"]
 [CANDIDATE: hotfix eligible=yes recommended=no when="frontmatter(task.md kind hotfix)=yes"]
 [CANDIDATE: direct-delivery eligible=yes recommended=no when=-]
 [WAITING: human handoff]
@@ -165,7 +165,7 @@ When the workflow is complete and declares `next` candidates (and `approvals.han
 | Line | When and what |
 | --- | --- |
 | `[HANDOFF: policy=ask\|auto candidates=<ids> eligible=<ids>\|- recommended=<ids>\|- chosen=<id>\|- decision=<file>]` | The candidates of a complete unit. `recommended` lists only candidates that are both recommended and eligible. Under `policy=auto`, `chosen` names the first eligible candidate and no `[WAITING]` line appears; with no eligible candidate the engine falls back to waiting for a person. A recorded choice of the current segment (`decisions/NN-handoff.yaml`) sets `chosen` under either policy and adds `decision=<file>`; a recorded choice that is not an eligible candidate is ignored and reported as a `[DECISION_ERROR]`. |
-| `[CANDIDATE: <id> eligible=yes\|no recommended=yes\|no when=<check>=yes\|no ...\|-]` | One per candidate, with the result of each of its `when` checks (quoted when a check contains a space). |
+| `[CANDIDATE: <id> eligible=yes\|no recommended=yes\|no when=<check>=yes\|no ...\|-]` | One per candidate, with the result of each of its `when` checks; the value is always quoted, since every result carries `=` (`when=-` without checks). |
 
 No `[HANDOFF]` line after `[STAGE: - complete=yes]` means the unit is finished. `[HANDOFF]` is `next`'s report of the candidates only; the `handoff` command reports the rebinding it did as `[HANDED_OFF]` (section 4).
 
@@ -237,7 +237,7 @@ The other commands print, in text:
 | `[GATE: <gate> policy=<policy> answer=given policies=<a,b>]` | The stage is gated; `answer=given` and `policies` only when the definition sets them. |
 | `[ENTRY: <check>...\|-]`, `[EXIT: <check>...\|-]`, `[ARTIFACTS: <path>...\|-]`, `[SKILLS: <skill>...\|-]` | The stage's lists, space-separated. |
 | `[RETURNS: <to> when="..."; ...]` | The stage declares returns. |
-| `[NEXT: <workflow> recommended=yes\|no when=<checks>\|-]` | After the stages, one per handoff candidate (`when` quoted when it contains a space). |
+| `[NEXT: <workflow> recommended=yes\|no when=<checks>\|-]` | After the stages, one per handoff candidate (`when` quoted when it contains whitespace, `=`, `"`, `[`, `]` or a backslash). |
 
 The JSON forms:
 

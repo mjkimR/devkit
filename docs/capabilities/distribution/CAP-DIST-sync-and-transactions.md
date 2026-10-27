@@ -558,10 +558,10 @@ no execution authority. Core `resolve_language(root, effective=True)` uses only 
 resolution uses the same validated resolver with local input excluded. `read_effective_config(root, local=False)`
 is the canonical shared-only variant. Local file copying and independent worktree semantics remain unchanged.
 
-For response-style, `auto` follows the current user request. For native approval forms, `auto` deterministically
+For response-style, `auto` follows the current user request. For devkit-owned approval copy, `auto` deterministically
 uses English; `ko` and `en` select static domain-owned copy. Unsupported strings select English for both inherited
 consumers. Only bundle declarations opting into `default_from = "presentation.language"` inherit this preference.
-Templates still receive only `vars`. See `CAP-INT-mcp-services` and `CAP-DLV-proposal-incubation` for form boundaries.
+Templates still receive only `vars`. See `CAP-INT-mcp-services` and `CAP-DLV-proposal-incubation` for approval boundaries.
 
 ### Shared artifact adapter configuration
 

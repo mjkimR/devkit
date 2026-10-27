@@ -4,11 +4,11 @@ import json
 import subprocess
 
 import pytest
+from devkit_agt.features.worktree.models.pull_request import Repository
 from devkit_agt.features.worktree.repositories.pull_request import (
     CommandResult,
     GitHub,
     PullRequestError,
-    Repository,
     run_gh,
 )
 from testsupport.rules import git, init_repo

@@ -77,6 +77,3 @@ class RegisterRepositoriesUseCase(BaseUseCase):
                 )
             by_id[root.name] = root
         return tuple(Repository(id=repo_id, root=by_id[repo_id]) for repo_id in sorted(by_id))
-
-
-register = RegisterRepositoriesUseCase().execute

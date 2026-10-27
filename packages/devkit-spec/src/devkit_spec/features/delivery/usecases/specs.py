@@ -18,23 +18,6 @@ class InitializedSpec:
     notices: list[AdvisoryError]
 
 
-def create_and_register_spec(
-    root: Path,
-    slug: str,
-    *,
-    title: str | None = None,
-    workflow: str | None = None,
-    namespace: str | None = None,
-    summary: str | None = None,
-    day: date | None = None,
-    cwd: Path | None = None,
-) -> InitializedSpec:
-    """Compose the application entrypoint for internal callers."""
-    return CreateSpecUseCase().execute(
-        root, slug, title=title, workflow=workflow, namespace=namespace, summary=summary, day=day, cwd=cwd
-    )
-
-
 class CreateSpecUseCase(BaseUseCase):
     """Application entrypoint for create and register spec."""
 
@@ -50,9 +33,9 @@ class CreateSpecUseCase(BaseUseCase):
         day: date | None = None,
         cwd: Path | None = None,
     ) -> InitializedSpec:
-        """Register after successful creation; registration failures preserve the bundle for recovery."""
+        """Register after successful creation; a failed registration preserves the bundle."""
         spec = create_spec(
             root, slug, title=title, workflow=workflow, namespace=namespace, summary=summary, day=day, cwd=cwd
         )
-        registered, notices = auto_register(root, spec.dir, source="spec-new")
-        return InitializedSpec(spec, registered, [*spec.notices, *notices])
+        registered = auto_register(root, spec.dir, source="spec-new")
+        return InitializedSpec(spec, registered, list(spec.notices))

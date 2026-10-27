@@ -10,16 +10,16 @@ See ``ADR-merge-commit-outside-checkout``.
 
 from __future__ import annotations
 
-import os
 import re
-import tomllib
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
 from devkit_core.base.errors import GitError
-from devkit_core.core.git import run_git
+from devkit_core.core.git import is_ancestor, run_git, run_git_text
 from devkit_core.core.locks import file_lock
+from devkit_dist.base.errors import ConfigError
+from devkit_dist.features.project.repositories.project import commit_config
 
 from devkit_agt.features.worktree.models.errors import (
     CommitFailedError,
@@ -34,25 +34,7 @@ COMMIT_TIMEOUT = 30.0  # seconds for `git commit-tree`, a signing program includ
 MERGE_TREE_TIMEOUT = 120.0  # seconds for `git merge-tree --write-tree`
 MERGE_TREE_VERSION = (2, 38)  # the first Git with `merge-tree --write-tree`
 LOCK_NAME = "devkit-integration.lock"  # in the common Git directory; serializes devkit integration executors
-CONFIG_PATH = ".devkit/config.toml"
 _VERSION = re.compile(r"git version (\d+)\.(\d+)")
-
-
-def _git(base: Path, *args: str, timeout: float | None = None) -> str:
-    if timeout is None:
-        return os.fsdecode(run_git(base, *args)).strip()
-    return os.fsdecode(run_git(base, *args, timeout=timeout)).strip()
-
-
-def is_ancestor(base: Path, ancestor: str, descendant: str) -> bool:
-    """Whether commit ``ancestor`` is contained in ``descendant`` (a commit is its own ancestor)."""
-    try:
-        run_git(base, "merge-base", "--is-ancestor", ancestor, descendant)
-    except GitError as exc:
-        if exc.returncode == 1:
-            return False
-        raise
-    return True
 
 
 def merge_message(branch: str, target_branch: str) -> str:
@@ -70,12 +52,10 @@ def integration_lock(common_dir: Path, *, timeout: float = 0) -> Iterator[None]:
 def source_merge_method(base: Path, source: str) -> str | None:
     """The ``[worktree] merge`` value committed at ``source``, or ``None`` when it sets none or cannot be read."""
     try:
-        if not _git(base, "ls-tree", "--name-only", source, "--", CONFIG_PATH):
-            return None
-        data = tomllib.loads(os.fsdecode(run_git(base, "show", f"{source}:{CONFIG_PATH}")))
-    except (GitError, ValueError, UnicodeError):
+        data = commit_config(base, source)
+    except (GitError, ConfigError):
         return None
-    table = data.get("worktree")
+    table = data.get("worktree") if data is not None else None
     value = table.get("merge") if isinstance(table, dict) else None
     return value if value in MERGE_METHODS else None
 
@@ -98,7 +78,7 @@ def check_identity(base: Path) -> None:
 def _signs(base: Path) -> bool:
     """Whether ``commit.gpgSign`` asks for signed commits; ``git commit-tree`` does not read it on its own."""
     try:
-        return _git(base, "config", "--type=bool", "--get", "commit.gpgSign") == "true"
+        return run_git_text(base, "config", "--type=bool", "--get", "commit.gpgSign") == "true"
     except GitError as exc:
         if exc.returncode == 1:  # unset
             return False
@@ -107,7 +87,7 @@ def _signs(base: Path) -> bool:
 
 def git_version(base: Path) -> tuple[int, int]:
     """The running Git's major and minor version; ``(0, 0)`` when it cannot be read."""
-    match = _VERSION.match(_git(base, "version"))
+    match = _VERSION.match(run_git_text(base, "version"))
     return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
 
 
@@ -117,7 +97,9 @@ def _merge_tree(base: Path, target: str, source: str) -> str:
             "merging an advanced target needs git merge-tree --write-tree (Git 2.38 or later); nothing was changed"
         )
     try:
-        output = _git(base, "merge-tree", "--write-tree", "--no-messages", target, source, timeout=MERGE_TREE_TIMEOUT)
+        output = run_git_text(
+            base, "merge-tree", "--write-tree", "--no-messages", target, source, timeout=MERGE_TREE_TIMEOUT
+        )
     except GitError as exc:
         if exc.returncode == 1:
             raise MergeConflictError(
@@ -160,7 +142,7 @@ def build_result(
             )
         return source
     if contained:
-        tree = _git(base, "rev-parse", "--verify", f"{source}^{{tree}}")
+        tree = run_git_text(base, "rev-parse", "--verify", f"{source}^{{tree}}")
     elif advance:
         tree = _merge_tree(base, target, source)
     else:
@@ -168,7 +150,7 @@ def build_result(
             f"{branch} does not contain {target_branch} at {target[:12]}; nothing was changed"
         )
     try:
-        return _git(
+        return run_git_text(
             base,
             "commit-tree",
             *(["-S"] if _signs(base) else []),

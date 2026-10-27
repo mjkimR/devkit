@@ -11,8 +11,6 @@ and, when nothing is left to resolve, ``[NEXT_CMD: git <operation> --continue]``
 
 from __future__ import annotations
 
-import json
-import re
 import shlex
 
 import click
@@ -24,6 +22,7 @@ from devkit_dist.adapters.cli import (
     echo_json,
     echo_notices,
     exit_on_warnings,
+    field_value,
     is_json,
     resolve_root,
     workspace_option,
@@ -44,17 +43,6 @@ from devkit_agt.features.generated.usecases.engine import (
 logger = get_logger(__name__)
 WORKSPACE = workspace_option()
 IDS = click.argument("ids", nargs=-1)
-_BARE = re.compile(r'[^\s"\]=]+')
-
-
-def _value(value: object) -> str:
-    """``-`` when empty, ``yes``/``no`` for a boolean, bare without spaces, quotes or brackets, else a JSON string."""
-    if value is None or value == "":
-        return "-"
-    if isinstance(value, bool):
-        return "yes" if value else "no"
-    text = str(value)
-    return text if _BARE.fullmatch(text) else json.dumps(text, ensure_ascii=False)
 
 
 @click.group(name="generated")
@@ -75,7 +63,7 @@ def list_cmd(workspace_root: str | None, output_format: str) -> None:
     for item in artifacts:
         click.echo(
             f"[GENERATED: {item.id} source={'builtin' if item.builtin else 'project'} seed={item.seed}"
-            f" paths={_value(','.join(item.paths))} command={_value(item.command)}]"
+            f" paths={field_value(','.join(item.paths))} command={field_value(item.command)}]"
         )
 
 
@@ -169,8 +157,8 @@ def resolve_cmd(dry_run: bool, workspace_root: str | None, output_format: str) -
             else:
                 click.echo(f"[{kind}: {item.id} conflicts={len(item.conflicts)} changed={len(item.changed)}]")
         click.echo(
-            f"[SUMMARY: operation={_value(result.operation)} artifacts={len(result.artifacts)}"
-            f" remaining={len(result.remaining)} dry_run={_value(dry_run)}]"
+            f"[SUMMARY: operation={field_value(result.operation)} artifacts={len(result.artifacts)}"
+            f" remaining={len(result.remaining)} dry_run={field_value(dry_run)}]"
         )
         if result.next_command:
             click.echo(f"[NEXT_CMD: {result.next_command}]")

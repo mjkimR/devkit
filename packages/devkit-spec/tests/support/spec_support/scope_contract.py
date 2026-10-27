@@ -15,7 +15,6 @@ from devkit_spec.base.errors import (
     ScopeTaskExistsError,
     ScopeTimeoutError,
     ScopeTokenMismatchError,
-    ScopeUnsupportedError,
 )
 from devkit_spec.features.scope import Deadline, Granularity, Registry, ScopePath, Source, Stage, token_hash
 from spec_support.scope import record
@@ -95,12 +94,6 @@ def shared_worktree(registry: Registry) -> None:
     assert shared() == {"a": False}, "the record left alone no longer shares its worktree"
 
 
-def claim_reserved(registry: Registry) -> None:
-    token, stored = registry.register(record("a", "/wt/a"), _deadline())
-    with pytest.raises(ScopeUnsupportedError):
-        registry.claim(token, stored, _deadline())
-
-
 def deadline(registry: Registry) -> None:
     expired = Deadline(0)
     with pytest.raises(ScopeTimeoutError):
@@ -116,6 +109,5 @@ SCENARIOS: list[Callable[[Registry], None]] = [
     idempotent_request,
     release,
     shared_worktree,
-    claim_reserved,
     deadline,
 ]

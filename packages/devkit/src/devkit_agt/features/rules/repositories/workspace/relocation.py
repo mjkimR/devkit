@@ -23,7 +23,7 @@ from typing import Any
 from devkit_core.core import atomic_write_text
 from devkit_dist.features.project.repositories.receipt import MANAGED_PATH, OVERRIDES_PATH
 
-from devkit_agt.features.rules.repositories.workspace.markdown import encode_destination, extract_links, local_target
+from devkit_agt.features.rules.models.markdown import encode_destination, extract_links, local_target
 
 StrPath = str | os.PathLike[str]
 

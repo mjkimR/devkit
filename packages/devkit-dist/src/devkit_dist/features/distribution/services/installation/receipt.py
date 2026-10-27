@@ -23,7 +23,7 @@ from devkit_dist.features.distribution.models.results import (
     selection_json,
     tool_json,
 )
-from devkit_dist.features.distribution.services.bundles.common import AGENT_NAMES
+from devkit_dist.features.distribution.models.settings import AGENT_NAMES
 from devkit_dist.features.distribution.services.bundles.manifest import seed_target
 from devkit_dist.features.distribution.services.installation.config import parse_presets
 from devkit_dist.features.distribution.services.installation.workspace import (

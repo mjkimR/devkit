@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-import hashlib
 import json
-import os
-import zipfile
 from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit_core.base.errors import ArgumentError
 from devkit_dist.features.distribution.models.errors import BundleError, SelectionError
-from devkit_dist.features.distribution.services.bundles import build_bundle, load_bundle
+from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
 from devkit_dist.features.distribution.services.installation.plan import plan_bundle
@@ -44,25 +40,6 @@ codex = "native/reviewer.toml"
 assets = ["review"]
 """)
     return root
-
-
-def test_archive_is_reproducible_and_preserves_native_bytes(source: Path, tmp_path: Path) -> None:
-    bundle = load_bundle(source)
-    first = tmp_path / "first.zip"
-    second = tmp_path / "second.zip"
-    build_bundle(bundle, first)
-    os.utime(source / "native/reviewer.toml", (1000000000, 1000000000))
-    build_bundle(load_bundle(source), second)
-    assert first.read_bytes() == second.read_bytes()
-    with zipfile.ZipFile(first) as archive:
-        assert archive.namelist() == sorted(archive.namelist())
-        assert archive.read("native/reviewer.toml") == (source / "native/reviewer.toml").read_bytes()
-        inventory = json.loads(archive.read("inventory.json"))
-        script = "skills/review/scripts/check.sh"
-        assert inventory[script]["mode"] == 0o755
-        for name, metadata in inventory.items():
-            assert metadata["sha256"] == hashlib.sha256(archive.read(name)).hexdigest()
-            assert archive.getinfo(name).external_attr >> 16 & 0o777 == metadata["mode"]
 
 
 def test_plan_preset_is_read_only(source: Path) -> None:
@@ -134,19 +111,6 @@ def test_nested_symlink_rejected(source: Path, tmp_path: Path) -> None:
     (source / "skills/review/link").symlink_to(outside)
     with pytest.raises(BundleError, match="nonregular source"):
         load_bundle(source)
-
-
-def test_build_protects_output(source: Path, tmp_path: Path) -> None:
-    bundle = load_bundle(source)
-    with pytest.raises(ArgumentError, match="outside") as outside:
-        build_bundle(bundle, source / "output.zip")
-    assert outside.value.target_files == ("--output",)
-    output = tmp_path / "existing.zip"
-    output.write_bytes(b"keep")
-    with pytest.raises(ArgumentError, match="archive already exists") as exists:
-        build_bundle(bundle, output)
-    assert exists.value.code == "ARGUMENT_INVALID"
-    assert output.read_bytes() == b"keep"
 
 
 def test_cli_json_and_failure(source: Path) -> None:

@@ -11,7 +11,6 @@ for remaining effects. See ``ADR-target-advance-readiness``.
 
 from __future__ import annotations
 
-import asyncio
 import json
 import sys
 import threading
@@ -22,13 +21,11 @@ from uuid import uuid4
 
 from devkit.advisory import Actor, AdvisoryError, Level
 from devkit_core.base.errors import GitError
-from devkit_core.base.mcp import Confirmation
 from devkit_core.core import LockHeldError
-from devkit_core.core.git import run_git
+from devkit_core.core.git import run_git_text
 from devkit_core.core.paths import normalize_relpath
 from devkit_dist.features.project.repositories.invocation import capture_terminal_removal, guard_execution
 from devkit_dist.features.project.repositories.project import read_project_config
-from devkit_dist.features.project.services.presentation import approval_language
 
 import devkit_agt.features.integration.repositories.receipts as receipts
 import devkit_agt.features.integration.services.providers as providers
@@ -73,10 +70,6 @@ from devkit_agt.features.worktree import (
 LOCK_WAIT = 20.0  # seconds the approving call waits for another devkit integration
 
 
-def _git(root: Path, *args: str) -> str:
-    return run_git(root, *args).decode("utf-8", errors="surrogateescape").strip()
-
-
 def _prospective(root: Path, commit: str, other: str) -> tuple[str, dict[str, Any]]:
     """The effective policy digest and parsed configuration ``commit`` brings to the base.
 
@@ -99,7 +92,6 @@ class AcceptanceLifecycle(Protocol):
     approval_gate: str
 
     def preview(self, context: IntegrationContext) -> Readiness: ...
-    def confirmation(self, request: IntegrationRequest, language: str) -> tuple[str, dict[str, Any]]: ...
     def automatic(self, request: IntegrationRequest) -> dict[str, Any] | None: ...
     def select(self, content: dict[str, Any]) -> None: ...
     def validate(self, request: IntegrationRequest) -> None: ...
@@ -261,63 +253,11 @@ class IntegrationService:
         self._records[request.id] = _Record(result)
         return result
 
-    def inspect(self, request_id: str) -> IntegrationResult:
-        record = self._record(request_id)
-        record.result.observed = self._observe(record.result.request)
-        return record.result
-
     def _record(self, request_id: str) -> _Record:
         record = self._records.get(request_id)
         if record is None:
             raise AuthorityError("request is not retained in this process; inspect Git before preparing new scope")
         return record
-
-    async def integrate(
-        self, branch: str, task: Task, confirm: Confirmation, route: str = "local"
-    ) -> IntegrationResult:
-        guard_execution()
-        language = approval_language(self.root)
-        result = await asyncio.to_thread(self.prepare, branch, task, route)
-        request = result.request
-        if request.approval_policy == "auto":
-            guard_execution()
-            self._records[request.id].approved = True
-            result.authority = "policy"
-            return await asyncio.to_thread(self._run, request.id, LOCK_WAIT, True)
-        message = request.confirmation_message(language)
-        try:
-            reply = await confirm(
-                message,
-                {
-                    "type": "object",
-                    "properties": {
-                        "approve": {
-                            "type": "boolean",
-                            "title": "이 정확한 통합 작업 승인"
-                            if language == "ko"
-                            else "Approve this exact integration",
-                            "default": False,
-                        }
-                    },
-                    "required": ["approve"],
-                },
-            )
-        except AdvisoryError as exc:
-            result.status = "blocked"
-            result.errors.append(exc)
-            return result
-        result.ui_action = reply.action
-        if reply.action != "accept" or reply.content.get("approve") is not True:
-            result.status = (
-                reply.action
-                if reply.action in {"declined", "cancelled"}
-                else {"decline": "declined", "cancel": "cancelled"}.get(reply.action, "not_approved")
-            )
-            return result
-        guard_execution()
-        self._records[request.id].approved = True
-        result.authority = "mcp-elicitation"
-        return await asyncio.to_thread(self._run, request.id, LOCK_WAIT, True)
 
     def execute_cli(
         self, branch: str, task: Task, route: str = "local", *, expected_digest: str | None = None
@@ -362,42 +302,7 @@ class IntegrationService:
             result.authority = "host-conversation"
         record = self._record(request.id)
         record.approved = True
-        return self._run(request.id, LOCK_WAIT, True)
-
-    async def _compose(
-        self, branch: str, task: Task, lifecycle: AcceptanceLifecycle, confirm: Confirmation
-    ) -> IntegrationResult:
-        """One native decision for acceptance and exact local integration, with no reusable authority.
-
-        Only the acceptance source may change after confirmation. Target advancement is
-        refused even when it descends from the displayed target. Recovery needs a new form.
-        """
-        guard_execution()
-        result = await asyncio.to_thread(self._prepare, branch, task, lifecycle=lifecycle)
-        request = result.request
-        try:
-            lifecycle.validate(request)
-            selected = lifecycle.automatic(request)
-            if selected is not None:
-                if request.approval_policy != "auto":
-                    raise AuthorityError("automatic composition requires owning integration policy delegation")
-                lifecycle.select(selected)
-                return await asyncio.to_thread(self._compose_execute, request, lifecycle, "policy")
-            message, schema = lifecycle.confirmation(request, approval_language(self.root))
-            reply = await confirm(message, schema)
-            result.ui_action = reply.action
-            if reply.action != "accept" or reply.content.get("approve") is not True:
-                result.status = {"decline": "declined", "cancel": "cancelled"}.get(
-                    reply.action, reply.action if reply.action in {"declined", "cancelled"} else "not_approved"
-                )
-                return result
-            guard_execution()
-            lifecycle.select(dict(reply.content))
-            return await asyncio.to_thread(self._compose_execute, request, lifecycle, reply.action)
-        except AdvisoryError as exc:
-            result.status = "blocked"
-            result.errors.append(exc)
-            return result
+        return self._run(request.id, LOCK_WAIT)
 
     def _compose_execute(
         self, request: IntegrationRequest, lifecycle: AcceptanceLifecycle, ui_action: str
@@ -405,13 +310,13 @@ class IntegrationService:
         """Hold the operation lock across acceptance, readiness and exact-target execution."""
         before = request.context.finish
         with integration_lock(Path(before.common_dir), timeout=LOCK_WAIT):
-            # Bind the form to the original Git, policy, provider, guard and cleanup identities.
+            # Bind the acceptance to the prepared Git, policy, provider, guard and cleanup identities.
             self._validate(request, merged=before.already_merged, removed=False, finalized=False)
             lifecycle.validate(request)
             accepted = lifecycle.accept(request)
             if (
                 accepted != before.source_sha
-                and _git(self.root, "show", "-s", "--format=%P", accepted) != before.source_sha
+                and run_git_text(self.root, "show", "-s", "--format=%P", accepted) != before.source_sha
             ):
                 raise StaleRequestError("acceptance must produce the exact direct child of the displayed source")
             fresh = self._prepare(before.branch, request.context.task, approval_gate=request.approval_gate)
@@ -473,13 +378,13 @@ class IntegrationService:
             ("source_sha", f"refs/heads/{plan.branch}"),
         ):
             try:
-                observed[key] = _git(self.root, "rev-parse", "--verify", ref)
+                observed[key] = run_git_text(self.root, "rev-parse", "--verify", ref)
             except GitError as exc:
                 observed[key] = None
                 if exc.returncode is None:
                     observed["inspection_incomplete"] = True
         try:
-            entries = _git(self.root, "worktree", "list", "--porcelain", "-z").split("\0")
+            entries = run_git_text(self.root, "worktree", "list", "--porcelain", "-z").split("\0")
             observed["worktree_registered"] = f"worktree {plan.path}" in entries if plan.worktree_identity else None
         except GitError:
             observed["inspection_incomplete"] = True
@@ -546,10 +451,7 @@ class IntegrationService:
             if scope.extension not in (cleanup_done or set()):
                 extensions[scope.extension][1].integration_validate(context, scope.targets)
 
-    def resume(self, request_id: str) -> IntegrationResult:
-        return self._run(request_id, 0, False)
-
-    def _run(self, request_id: str, wait: float, approving: bool) -> IntegrationResult:
+    def _run(self, request_id: str, wait: float) -> IntegrationResult:
         guard_execution()
         record = self._record(request_id)
         if not record.approved:
@@ -560,14 +462,12 @@ class IntegrationService:
             if record.result.request.route == "pull-request":
                 from devkit_agt.features.integration.usecases.pull_request import execute
 
-                return execute(self, record, wait, approving)
+                return execute(self, record, wait)
             plan = record.result.request.context.finish
             try:
                 with integration_lock(Path(plan.common_dir), timeout=wait):
-                    return self._execute(record, approving)
+                    return self._execute(record, True)
             except LockHeldError as exc:
-                if not approving:
-                    raise
                 result = record.result
                 result.observed = self._observe(result.request)
                 exc.fix = (
@@ -584,8 +484,6 @@ class IntegrationService:
 
     def _execute(self, record: _Record, approving: bool) -> IntegrationResult:
         result, request = record.result, record.result.request
-        if result.status == "completed":
-            return result
         plan = request.context.finish
         result.errors.clear()
         result.notices[:] = [notice for notice in result.notices if notice.code != "INTEGRATION_CLEANUP_INCOMPLETE"]
@@ -598,30 +496,6 @@ class IntegrationService:
             if observed.get("inspection_incomplete"):
                 raise StaleRequestError("Git inspection is incomplete; inspect state before further mutations")
             head = observed.get("target_sha")
-            if result.steps["merge"] in {"unknown", "failed"} and result.build_target is not None:
-                if (
-                    result.result_sha is not None
-                    and head is not None
-                    and is_ancestor(self.root, result.result_sha, head)
-                ):
-                    merged = True
-                elif head != result.build_target:
-                    raise StaleRequestError("merge outcome is ambiguous; inspect Git before taking further action")
-            if result.steps["worktree_remove"] == "unknown" and not Path(plan.path).exists():
-                removed = True
-            if (
-                merged
-                and not observed.get("worktree_registered")
-                and not observed.get("worktree_exists")
-                and plan.delete_branch
-                and observed.get("source_sha") is None
-                and result.steps["branch_delete"] in {"failed", "unknown"}
-            ):
-                record.finalized = True
-                removed = True
-                result.steps["branch_delete"] = "completed"
-                if plan.worktree_identity:
-                    result.steps["worktree_remove"] = "completed"
             cleanup_done = {name for name, state in result.cleanup_steps.items() if state == "completed"}
             if not merged:
                 operation = "merge"
@@ -733,12 +607,7 @@ class IntegrationService:
         """Build the result commit on the current target, check it and fast-forward the base onto it."""
         request = result.request
         plan = request.context.finish
-        if result.build_target is not None:
-            if head != result.build_target:
-                raise StaleRequestError(
-                    "the target moved after this approval's build; a later target needs a new confirmation"
-                )
-        elif not approving:
+        if not approving:
             if head != plan.target_sha:
                 raise StaleRequestError(
                     "the target moved since the last invocation; inspect current Git state, rerun readiness and obtain"
@@ -760,7 +629,7 @@ class IntegrationService:
             advance=True,
         )
         context = self._context(result)
-        merge_base = _git(self.root, "merge-base", head, plan.source_sha)
+        merge_base = run_git_text(self.root, "merge-base", head, plan.source_sha)
         run_finish_guards(self.root, plan.branch, merge_base, plan.source_sha)
         _, provider = providers.provider(request.provider)
         ready = providers.check(provider, context)
@@ -770,7 +639,7 @@ class IntegrationService:
             if _prospective(self.root, result.result_sha, head)[0] != request.post_policy_digest:
                 raise StaleRequestError("the merged result changes the effective integration policy")
             receipts.check_merge(self.root, result.result_sha, (head, plan.source_sha))
-        if _git(self.root, "rev-parse", "--verify", f"refs/heads/{plan.target_branch}") != head:
+        if run_git_text(self.root, "rev-parse", "--verify", f"refs/heads/{plan.target_branch}") != head:
             raise TargetMovedError("the base branch moved after the build; nothing changed on the target")
         self._validate(request, merged=False, removed=removed, finalized=False, cleanup_done=cleanup_done, target=head)
         try:
@@ -782,11 +651,11 @@ class IntegrationService:
         # Git runs post-merge hooks before returning. A hook may amend commit metadata,
         # so bind cleanup to the observed commit only after proving checked content and
         # ordered provenance unchanged. Never substitute for the approved ff-only source.
-        landed = _git(self.root, "rev-parse", "--verify", f"refs/heads/{plan.target_branch}^{{commit}}")
+        landed = run_git_text(self.root, "rev-parse", "--verify", f"refs/heads/{plan.target_branch}^{{commit}}")
         if landed != result.result_sha:
-            if plan.merge_method != "no-ff" or _git(self.root, "show", "-s", "--format=%T %P", landed) != _git(
-                self.root, "show", "-s", "--format=%T %P", result.result_sha
-            ):
+            if plan.merge_method != "no-ff" or run_git_text(
+                self.root, "show", "-s", "--format=%T %P", landed
+            ) != run_git_text(self.root, "show", "-s", "--format=%T %P", result.result_sha):
                 raise StaleRequestError("the landed commit differs from the checked result tree or ordered parents")
             result.result_sha = landed
         result.steps["merge"] = "completed"

@@ -17,6 +17,7 @@ from devkit_core.core.yaml import safe_load
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.usecases.configuration import approval_language
 
+from devkit_spec.base.axes import DEFAULT_EFFORT, DEV_EFFORT, EFFORTS, PLANNING_EFFORT
 from devkit_spec.base.errors import (
     ProposalNotFoundError,
     ReportArgumentError,
@@ -25,6 +26,7 @@ from devkit_spec.base.errors import (
     ReportSourceNotHeadError,
     ReportWrongCheckoutError,
 )
+from devkit_spec.base.units import proposal_unit
 
 SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 SHA = re.compile(r"^[0-9a-f]{40}(?:[0-9a-f]{24})?\Z")
@@ -90,7 +92,7 @@ def _read(path: str, unit: str) -> bool:
 
 def source(root: Path, slug: str, sha: str) -> Source:
     check_arguments(slug, sha)
-    unit = f"docs/proposals/PROP-{slug}/"
+    unit = f"{proposal_unit(slug)}/"
     anchor = unit + "proposal.md"
     try:
         if run_git(root, "rev-parse", "HEAD").decode().strip() != sha:
@@ -155,8 +157,8 @@ def source(root: Path, slug: str, sha: str) -> Source:
                 effort = record.get("activity_effort", record.get("effort"))
                 if effort is not None:
                     coverage.append(str(effort))
-        effort, dev_effort = meta.get("planning_effort", "medium"), meta.get("dev_effort", "medium")
-        if effort not in {"low", "medium", "high"} or dev_effort not in {"low", "medium", "high"}:
+        effort, dev_effort = meta.get(PLANNING_EFFORT, DEFAULT_EFFORT), meta.get(DEV_EFFORT, DEFAULT_EFFORT)
+        if effort not in EFFORTS or dev_effort not in EFFORTS:
             raise _invalid(slug, anchor, "has a planning_effort or dev_effort other than low, medium or high")
         return Source(
             sha,

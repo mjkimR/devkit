@@ -26,7 +26,7 @@ native CLI boundary turns them into warning responses. See the overview for the 
 
 Malformed bundle sources are surfaced as `BUNDLE_INVALID` by bundle validation; unsafe deployment paths follow
 distribution's existing path advisory contract. A valid installation is not proof that Codex has enabled or trusted
-it. Native integration confirmation and execution are described in `CAP-INT-mcp-services`.
+it. Host-authorized integration preparation and execution are described in `CAP-INT-mcp-services`.
 
 
 ## MCP services
@@ -69,16 +69,16 @@ outside the top level of a Git checkout (`MCP_CHECKOUT_REQUIRED`), both targetin
 | `MCP_INTERACTIVE_UNAVAILABLE` | Use a local interactive Host or independently authorized CLI/PR route |
 | `HOST_MCP_FAILED` | Correct installed service entry points/runtime and reconnect |
 | `HOST_MCP_ARGUMENT_INVALID` | Supply only the advertised tool schema's arguments |
-| `HOST_CONFIRMATION_UNAVAILABLE` | Obtain conversational approval from the Host before invoking the lifecycle CLI; no authority was granted |
 
 `mcp serve` is a native-protocol exception to ordinary output/format flags; startup errors remain advisories on
 stderr. Other commands emit one JSON object or an MCP result sentinel and advisory notices. No output includes
-other servers' settings or environment values. Elicitation accept alone is insufficient: approve must be true.
+other servers' settings or environment values. The transport never requests a form; business approval belongs to
+the Host conversation and the CLI.
 
 For shared or personal approval/response defaults, set `[presentation] language = "ko"` (`auto`, `en`, `ko`)
 in shared config or ignored `.devkit/config.local.toml`. `devkit config show --effective` reports the requested and
 resolved language, source and fallback; another value falls back to `en`, which `devkit sync`, `devkit status`
 and `devkit config show` report as a `PRESENTATION_LANGUAGE_UNSUPPORTED` warning. Run sync for response-style
-assets; approval forms read per request.
+assets; approval copy reads it per request.
 Explicit response-style bundle variables win. See `CAP-DIST-sync-and-transactions` and `CAP-INT-mcp-services`;
 this does not localize host-owned controls or establish visible native Korean form support.

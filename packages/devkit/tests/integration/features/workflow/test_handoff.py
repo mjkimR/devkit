@@ -149,7 +149,7 @@ def test_handoff_ask_lists_candidates_and_waits(tmp_path: Path) -> None:
         "[HANDOFF: policy=ask candidates=spec-driven hotfix direct-delivery eligible=hotfix direct-delivery recommended=- chosen=-]"
         in text
     )
-    assert "[CANDIDATE: spec-driven eligible=no recommended=yes when=file-exists(spec.md)=no]" in text
+    assert '[CANDIDATE: spec-driven eligible=no recommended=yes when="file-exists(spec.md)=no"]' in text
     assert "[CANDIDATE: direct-delivery eligible=yes recommended=no when=-]" in text
     assert "[WAITING: human handoff]" in text
     assert res.to_dict()["handoff"]["eligible"] == ["hotfix", "direct-delivery"]

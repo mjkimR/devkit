@@ -31,7 +31,8 @@ from devkit_dist.features.distribution.models.results import (
     OverrideStatus,
     SyncResult,
 )
-from devkit_dist.features.distribution.services.bundles.common import ALL, SLUG
+from devkit_dist.features.distribution.models.settings import SLUG
+from devkit_dist.features.distribution.services.bundles.common import ALL
 from devkit_dist.features.distribution.services.bundles.manifest import Asset
 from devkit_dist.features.distribution.services.installation.config import effective_selection, read_config
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle, unusable_bundles
@@ -288,11 +289,13 @@ def _tracked(receipt: Receipt | None, bundle: str, asset: str, selector: str) ->
     return record
 
 
-def _still_drifting(installed: list[InstalledBundle], receipt: Receipt) -> list[str]:
-    """``bundle:asset`` of every deployed override whose upstream changed since its baseline in ``receipt``."""
-    deployed = {(asset.bundle, asset.id) for asset in receipt.asset_records}
+def deployed_drift(installed: list[InstalledBundle], receipt: Receipt | None) -> list[OverrideStatus]:
+    """Every override of a deployed asset whose upstream changed since its baseline in ``receipt``, as ``devkit sync``
+    reports it; records kept for assets that are not deployed (a deselected bundle, a narrowed preset) count again
+    once the asset is selected again."""
+    deployed = {(asset.bundle, asset.id) for asset in receipt.asset_records} if receipt is not None else set()
     return [
-        f"{item.bundle}:{item.asset}"
+        item
         for item in override_statuses(installed, receipt)
         if item.drift_detected and (item.bundle, item.asset) in deployed
     ]
@@ -334,7 +337,11 @@ def accept_override(root: Path, installed: list[InstalledBundle], selector: str)
             receipt,
             overrides=MappingProxyType({bundle: MappingProxyType(records) for bundle, records in overrides.items()}),
         )
-        remaining = _still_drifting(installed, updated) if read_config(root).override_drift == "block" else []
+        remaining = (
+            [f"{item.bundle}:{item.asset}" for item in deployed_drift(installed, updated)]
+            if read_config(root).override_drift == "block"
+            else []
+        )
         undo = _Undo(root)
         try:
             for rel in asset_files(item.bundle, asset):

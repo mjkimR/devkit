@@ -12,6 +12,7 @@ from devkit_spec.base.errors import ApprovalKeyIgnoredWarning
 from devkit_spec.features.policy.services.config import APPROVAL_GATES, INTENT_GATE, check_approvals, read_spec_config
 
 GATES = (*APPROVAL_GATES, INTENT_GATE)
+# Keys that name no gate: ``exception`` is a shared stage a person always handles (03 §2).
 NOT_GATES = ("exception",)
 
 

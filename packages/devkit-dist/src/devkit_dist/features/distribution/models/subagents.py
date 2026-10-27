@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 
 LEVELS = ("inherit", "minimal", "compact", "standard", "deep", "maximal")
-HOSTS = ("claude-code", "codex", "antigravity")
 
 
 @dataclass(frozen=True)

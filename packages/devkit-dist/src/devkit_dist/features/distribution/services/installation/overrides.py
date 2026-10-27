@@ -14,8 +14,11 @@ from __future__ import annotations
 from collections.abc import Iterable
 from pathlib import Path, PurePosixPath
 
+from devkit.advisory import ExitCode
+
 from devkit_dist.features.distribution.models.content import sha256
 from devkit_dist.features.distribution.models.drift import Drift
+from devkit_dist.features.distribution.models.errors import OverrideDriftError, override_drift
 from devkit_dist.features.distribution.services.bundles.manifest import Asset, Bundle, source_files
 from devkit_dist.features.distribution.services.bundles.templates import output_path
 from devkit_dist.features.distribution.services.installation.workspace import BASELINE, checked_path
@@ -25,6 +28,21 @@ from devkit_dist.features.project.repositories.receipt import MANAGED_PATH, OVER
 def override_rel(bundle: str, rel: str) -> str:
     """Workspace-relative override path of a file at ``rel`` in ``bundle``."""
     return f"{OVERRIDES_PATH}/{bundle}/{rel}"
+
+
+def drift_advisory(
+    drifted: Iterable[tuple[str, str, str]], *, blocked: bool, exit_code: ExitCode | None = None
+) -> OverrideDriftError:
+    """One ``OVERRIDE_DRIFT`` for every override whose upstream changed, given as ``(bundle, asset, path in the
+    bundle)``, as ``devkit sync`` and ``devkit status`` report it: the refusal under ``override_drift = "block"``,
+    else a warning."""
+    items = list(drifted)
+    return override_drift(
+        [f"{bundle}:{asset}" for bundle, asset, _ in items],
+        [override_rel(bundle, rel) for bundle, _, rel in items],
+        blocked=blocked,
+        exit_code=exit_code,
+    )
 
 
 def baseline_rel(bundle: str, rel: str) -> str:

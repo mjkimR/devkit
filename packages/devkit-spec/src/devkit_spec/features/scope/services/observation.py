@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -12,7 +11,9 @@ from devkit_core.core import GitError
 from devkit_core.core.frontmatter import parse
 
 from devkit_spec.base.errors import EntrypointsPathError
+from devkit_spec.base.units import PROPOSAL_FILE, PROPOSALS, is_spec_dir, proposal_unit
 from devkit_spec.features.entrypoints import normalize
+from devkit_spec.features.policy.repositories.branches import base_marker_key, unit_marker_key
 from devkit_spec.features.scope.models.deadline import Deadline
 from devkit_spec.features.scope.models.model import (
     Granularity,
@@ -41,7 +42,7 @@ def identify(
 ) -> tuple[str, dict[str, Any]]:
     unit = ""
     if candidate.branch and candidate.ref.startswith("refs/heads/"):
-        marker = optional(root, "config", "--get", f"branch.{candidate.branch}.devkitUnit", deadline=deadline)
+        marker = optional(root, "config", "--local", "--get", unit_marker_key(candidate.branch), deadline=deadline)
         if marker:
             # A stale marker cannot silently fall back to another unit.
             unit = normalize(marker)
@@ -53,7 +54,7 @@ def identify(
             raise ValueError("identity-ambiguous")
         slug = match[1]
         # Exact ``<date>-<slug>`` only: ``dev-cleanup`` never claims ``20261001-hook-cleanup``.
-        name = re.compile(rf"\d{{8}}-{re.escape(slug)}")
+        bundle = proposal_unit(slug)
         if isinstance(reader, TreeReader):
             paths = list(reader.entries)
         else:
@@ -64,33 +65,29 @@ def identify(
                 if directory.is_dir():
                     for path in directory.glob(f"*/*-{slug}/spec.md"):
                         deadline.check("scope unit discovery")
-                        if name.fullmatch(path.parent.name):
+                        if is_spec_dir(path.parent.name, slug):
                             paths.append(path.relative_to(reader.root).as_posix())
-            paths.append(f"docs/proposals/PROP-{slug}/proposal.md")
+            paths.append(f"{bundle}/{PROPOSAL_FILE}")
         specs = [
             p.rsplit("/", 1)[0]
             for p in paths
-            if p.endswith("/spec.md") and name.fullmatch(PurePosixPath(p).parent.name)
+            if p.endswith("/spec.md") and is_spec_dir(PurePosixPath(p).parent.name, slug)
         ]
-        proposals = (
-            [f"docs/proposals/PROP-{slug}"]
-            if reader.kind(f"docs/proposals/PROP-{slug}/proposal.md") is Granularity.FILE
-            else []
-        )
+        proposals = [bundle] if reader.kind(f"{bundle}/{PROPOSAL_FILE}") is Granularity.FILE else []
         units = sorted(set(specs or proposals))
         if len(units) != 1:
             raise ValueError("identity-ambiguous")
         unit = units[0]
-    anchor = f"{unit}/{'proposal.md' if unit.startswith('docs/proposals/') else 'spec.md'}"
+    anchor = f"{unit}/{PROPOSAL_FILE if unit.startswith(f'{PROPOSALS}/') else 'spec.md'}"
     meta = parse(reader.read(anchor)).data or {}
     identity = meta.get("id")
     if not isinstance(identity, str) or not identity or meta.get("status") not in ACTIVE | {"completed", "rejected"}:
         raise ValueError("identity-ambiguous")
     match = ACTIVITY.fullmatch(candidate.branch)
     if match:
-        proposal = unit.startswith("docs/proposals/")
+        proposal = unit.startswith(f"{PROPOSALS}/")
         expected = f"{'PROP' if proposal else 'SPEC'}-{match[1]}"
-        exact = re.fullmatch(rf"\d{{8}}-{re.escape(match[1])}", PurePosixPath(unit).name)
+        exact = is_spec_dir(PurePosixPath(unit).name, match[1])
         if identity != expected or (not proposal and not exact):
             raise ValueError("identity-ambiguous")
         if candidate.branch.startswith("plan-") and not proposal:
@@ -102,7 +99,7 @@ def identify(
 
 def declarations(reader: TreeReader | FilesystemReader, unit: str) -> ScopeSet:
     path = ReaderPath(reader)
-    if unit.startswith("docs/proposals/PROP-"):
+    if unit.startswith(proposal_unit("")):
         return from_proposal(path, unit.rsplit("PROP-", 1)[1])
     return from_spec(path, unit)
 
@@ -113,7 +110,7 @@ def select_base(
     if explicit:
         return explicit, "explicit"
     if candidate.ref.startswith("refs/heads/"):
-        marked = optional(root, "config", "--get", f"branch.{candidate.branch}.devkitBase", deadline=deadline)
+        marked = optional(root, "config", "--local", "--get", base_marker_key(candidate.branch), deadline=deadline)
         if marked:
             return marked, "branch.devkitBase"
     if record is not None and record.base_ref:

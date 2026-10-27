@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from devkit_core.core.git import run_git_text
+
 from devkit_agt.features.worktree.models.errors import (
     BaseDetachedError,
     BaseDirtyError,
@@ -17,21 +19,16 @@ from devkit_agt.features.worktree.models.errors import (
     from_base_error,
     pull_request_policy_fix,
 )
-from devkit_agt.features.worktree.models.planning import FinishPlan as FinishPlan
+from devkit_agt.features.worktree.models.lifecycle import Position
+from devkit_agt.features.worktree.models.planning import FinishPlan
+from devkit_agt.features.worktree.repositories.markers import BASE_KEY, MARKER, UNIT_KEY, branch_marker
 from devkit_agt.features.worktree.services.merging import check_identity
 from devkit_agt.features.worktree.usecases.lifecycle import (
-    BASE_KEY,
-    MARKER,
-    UNIT_KEY,
-    Position,
     _check_deletable,
     _clean,
-    _config,
     _created,
     _find,
-    _git,
     _marked_path,
-    _marker,
     _merged,
     _query,
     check_branch,
@@ -50,7 +47,7 @@ def _identity(path: Path) -> tuple[int, int]:
 
 
 def _markers(base: Path, branch: str) -> tuple[str, str, str]:
-    return tuple(_config(base, _marker(branch, key)) for key in (MARKER, BASE_KEY, UNIT_KEY))  # type: ignore[return-value]
+    return tuple(branch_marker(base, branch, key) for key in (MARKER, BASE_KEY, UNIT_KEY))  # type: ignore[return-value]
 
 
 def _deletable(base: Path, branch: str, into: str | None) -> None:
@@ -102,8 +99,8 @@ def plan_finish(
     path = entry.path if entry else _marked_path(position, branch)
     if entry and not _clean(path):
         raise DirtyError("the task worktree has uncommitted or untracked changes", target_files=[str(path)])
-    source = _git(position.base, "rev-parse", "--verify", f"refs/heads/{branch}^{{commit}}")
-    target = target_sha or _git(position.base, "rev-parse", "--verify", "HEAD^{commit}")
+    source = run_git_text(position.base, "rev-parse", "--verify", f"refs/heads/{branch}^{{commit}}")
+    target = target_sha or run_git_text(position.base, "rev-parse", "--verify", "HEAD^{commit}")
     already = _merged(position.base, source, target)
     if not already and not _merged(position.base, target, source):
         raise MergeNotFastForwardError(
@@ -124,7 +121,7 @@ def plan_finish(
         target,
         str(path),
         _identity(path) if entry else None,
-        _git(position.base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}"),
+        run_git_text(position.base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}"),
         markers,
         delete_branch,
         merge_method,
@@ -153,7 +150,7 @@ def validate_finish(
         raise ConflictError("repository identity changed; prepare a new integration request")
     if _identity(Path(plan.common_dir)) != plan.common_identity or position.branch != plan.target_branch:
         raise ConflictError("Git common directory or target branch changed; prepare a new request")
-    head = _git(base, "rev-parse", "--verify", "HEAD^{commit}")
+    head = run_git_text(base, "rev-parse", "--verify", "HEAD^{commit}")
     if merged:
         if not _merged(base, result or plan.source_sha, head):
             raise ConflictError(
@@ -176,11 +173,11 @@ def validate_finish(
         ):
             raise ConflictError("a finalized worktree target reappeared; preserve it and prepare a new request")
         return
-    if _git(base, "rev-parse", "--verify", f"refs/heads/{plan.branch}^{{commit}}") != plan.source_sha:
+    if run_git_text(base, "rev-parse", "--verify", f"refs/heads/{plan.branch}^{{commit}}") != plan.source_sha:
         raise ConflictError("source SHA changed; prepare a new request")
     if _markers(base, plan.branch) != plan.markers:
         raise ConflictError("task branch markers changed; prepare a new request")
-    if _git(base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{plan.branch}") != plan.source_upstream:
+    if run_git_text(base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{plan.branch}") != plan.source_upstream:
         raise ConflictError("source upstream changed; prepare a new request")
     entry = _find(position, plan.branch)
     if plan.worktree_identity is not None:

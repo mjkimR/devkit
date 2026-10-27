@@ -114,6 +114,19 @@ def test_non_prose_is_not_referenced(body: str) -> None:
     assert _refs(_doc(body)) == []
 
 
+@pytest.mark.parametrize(
+    "body",
+    [
+        "Type \\<!-- to open a comment.\n\nSee `UC-a` here.\n",
+        "Type <!-- to open a comment.\n\nSee `UC-a` here.\n",
+        "Type `<!--` to open a comment.\nSee `UC-a` here.\n",
+        "Type <!-- to open a comment.\n```\ncode\n```\nSee `UC-a` here.\n",
+    ],
+)
+def test_a_literal_comment_opener_hides_nothing_after_it(body: str) -> None:
+    assert [ref[0] for ref in _refs(_doc(body))] == ["UC-a"]
+
+
 def test_a_heading_does_not_reference_its_own_document() -> None:
     assert _refs(_doc("# `CAP-CORE-x` and `UC-a`\n## `CAP-CORE-x`\n")) == [
         ("UC-a", "body", 5, False),

@@ -18,8 +18,7 @@ from devkit_core.base.usecase import BaseUseCase
 
 from devkit_dist.base.errors import ReceiptError
 from devkit_dist.features.distribution.models.results import PlaybookCandidate, SearchResult
-from devkit_dist.features.distribution.services.bundles.playbooks import is_latin_text, read_playbook_header
-from devkit_dist.features.distribution.services.installation.config import (
+from devkit_dist.features.distribution.models.settings import (
     DEFAULT_PLAYBOOK_LIMIT,
     DEFAULT_PLAYBOOK_MAX_BYTES,
     DEFAULT_PLAYBOOK_MIN_SCORE,
@@ -29,8 +28,9 @@ from devkit_dist.features.distribution.services.installation.config import (
     PLAYBOOK_LIMIT_MIN,
     PLAYBOOK_MAX_BYTES_MAX,
     PLAYBOOK_MAX_BYTES_MIN,
-    read_playbook_config,
 )
+from devkit_dist.features.distribution.services.bundles.playbooks import is_latin_text, read_playbook_header
+from devkit_dist.features.distribution.services.installation.config import read_playbook_config
 from devkit_dist.features.distribution.services.installation.overrides import override_rel
 from devkit_dist.features.distribution.services.installation.reading import (
     read_owned,

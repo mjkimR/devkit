@@ -25,10 +25,11 @@ from typing import Any
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow import Binding, write_binding
 from devkit_core.core import remove_empty_tree
-from devkit_core.core.frontmatter import locate
+from devkit_core.core.frontmatter import locate, scalar
 from devkit_core.core.logs import get_logger
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
+from devkit_spec.base.axes import BUGFIX_WORKFLOW, DEFAULT_WORKFLOW
 from devkit_spec.base.errors import (
     SpecExistsError,
     SpecSlugError,
@@ -37,9 +38,9 @@ from devkit_spec.base.errors import (
     SpecWriteError,
     SpecWrongBranchError,
 )
+from devkit_spec.base.units import SKELETON_MARKER
 from devkit_spec.features.documents import DocumentIndex
 from devkit_spec.features.policy.repositories.branches import require_development_branch
-from devkit_spec.features.proposals.models.axes import BUGFIX_WORKFLOW, DEFAULT_WORKFLOW
 from devkit_spec.features.proposals.services.body import CarriedProposal, ensure_ac_ids
 from devkit_spec.features.proposals.usecases.binding import resolve_binding, unbound_guidance
 from devkit_spec.features.proposals.usecases.scaffold import (
@@ -48,11 +49,8 @@ from devkit_spec.features.proposals.usecases.scaffold import (
     new_slug,
     require_summary,
     single_file,
-    yaml_scalar,
 )
 
-# devkit's not-skeleton check: specify stays open until the spec, plan and tasks are written and the line removed.
-SKELETON_MARKER = "<!-- devkit:skeleton -->"
 SPEC_FILE = "spec.md"
 
 _log = get_logger(__name__)
@@ -141,19 +139,19 @@ def spec_files(
         if carried.notes
         else ""
     )
-    extra = f"\nnamespace: {yaml_scalar(namespace)}" if namespace else ""
+    extra = f"\nnamespace: {scalar(namespace)}" if namespace else ""
     dependencies = meta.get("depends_on")
     if dependencies:
-        extra += "\ndepends_on:" + "".join(f"\n  - {yaml_scalar(item)}" for item in dependencies)
+        extra += "\ndepends_on:" + "".join(f"\n  - {scalar(item)}" for item in dependencies)
     for name in ("decomposed_from", "supersedes"):
         value = text_value(meta.get(name))
-        extra += f"\n{name}: {yaml_scalar(value)}" if value else ""
+        extra += f"\n{name}: {scalar(value)}" if value else ""
     if aliases:
-        extra += "\naliases:" + "".join(f"\n  - {yaml_scalar(item)}" for item in aliases)
-    summary_line = f"\nsummary: {yaml_scalar(summary)}" if summary else ""
+        extra += "\naliases:" + "".join(f"\n  - {scalar(item)}" for item in aliases)
+    summary_line = f"\nsummary: {scalar(summary)}" if summary else ""
     spec = f"""---
 id: SPEC-{slug}
-title: {yaml_scalar(title)}{summary_line}
+title: {scalar(title)}{summary_line}
 status: planned
 created: {created}{extra}
 related_capabilities: []

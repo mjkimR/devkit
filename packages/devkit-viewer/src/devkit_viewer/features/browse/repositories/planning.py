@@ -168,14 +168,24 @@ def _tree_modes(data: bytes, hash_size: int) -> dict[bytes, bytes]:
     return modes
 
 
+def _blob_in_tree(
+    tree: tuple[str, bytes] | None, blob: tuple[str, bytes] | None, commit: str, name: bytes
+) -> tuple[bytes, bytes | None] | None:
+    """A batched ``(parent tree, blob)`` pair as ``(content, mode of name in the tree)``, or ``None`` when not both."""
+    if tree is None or blob is None or tree[0] != "tree" or blob[0] != "blob":
+        return None
+    return blob[1], _tree_modes(tree[1], len(commit) // 2).get(name)
+
+
 def _committed_blob(root: Path, commit: str, path: str) -> bytes | None:
     """A regular file at ``commit:path``, or ``None``; the parent tree in the same batch excludes symlinks."""
     parent, _, name = path.rpartition("/")
     tree, blob = _batch(root, [f"{commit}:{parent}", f"{commit}:{path}"])
-    if tree is None or blob is None or tree[0] != "tree" or blob[0] != "blob":
+    found = _blob_in_tree(tree, blob, commit, name.encode())
+    if found is None:
         return None
-    mode = _tree_modes(tree[1], len(commit) // 2).get(name.encode())
-    return blob[1] if mode is not None and mode not in _SKIPPED_MODES else None
+    content, mode = found
+    return content if mode is not None and mode not in _SKIPPED_MODES else None
 
 
 def planning_proposals(root: Path) -> dict[str, object]:
@@ -206,14 +216,14 @@ def planning_proposals(root: Path) -> dict[str, object]:
         errors.append(f"git cat-file: {exc}")
         objects = [None] * len(names)
     for index, source in enumerate(batched):
-        tree, blob = objects[2 * index], objects[2 * index + 1]
-        if tree is None or blob is None or tree[0] != "tree" or blob[0] != "blob":
+        found = _blob_in_tree(objects[2 * index], objects[2 * index + 1], source.commit, b"proposal.md")
+        if found is None:
             continue
-        mode = _tree_modes(tree[1], len(source.commit) // 2).get(b"proposal.md")
+        raw, mode = found
         try:
             if mode in _SKIPPED_MODES:
                 raise ValueError("not a regular file")
-            content = blob[1].decode("utf-8")
+            content = raw.decode("utf-8")
         except (ValueError, UnicodeDecodeError) as exc:
             errors.append(f"{source.label}: {source.proposal}: {exc}")
             continue

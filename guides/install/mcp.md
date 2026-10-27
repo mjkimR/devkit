@@ -47,15 +47,15 @@ business approval. Trust, tool and sandbox prompts may still appear.
 
 Cloud exposes only declared read-only tools and refuses interactive/preflight/resume execution even through stale
 registrations. Its transport connectivity is separately host-dependent. Missing runtime, disconnected server,
-unavailable forms or unsupported cloud transport requires intentional installation/connection or an independently
+or unsupported cloud transport requires intentional installation/connection or an independently
 authorized CLI/PR route. Missing UI never supplies authority; existing authorization applies only to its exact scope.
 
 ## Supplied approval language
 
 Set `[presentation] language = "ko"` in shared `.devkit/config.toml` or ignored `.devkit/config.local.toml` for Korean
-devkit-owned integration and handoff copy. `en` selects English; `auto` uses English in forms and follows the request
-in response-style. Unsupported strings fall back to English with provenance in `devkit config show --effective`.
-Run sync to update inherited response-style assets; explicit bundle variables continue to win. Native forms reread
+devkit-owned approval copy (the proposal review report). `en` selects English; `auto` uses English in approval copy and
+follows the request in response-style. Unsupported strings fall back to English with provenance in `devkit config show --effective`.
+Run sync to update inherited response-style assets; explicit bundle variables continue to win. Approval copy rereads
 the preference per request from the owning checkout. Host buttons, validation/trust/permission prompts and omitted
 metadata remain client-owned. Visible localized forms on both terminal hosts remain unverified; see
 `CAP-INT-mcp-services` and `MAT-language-development-evidence`.

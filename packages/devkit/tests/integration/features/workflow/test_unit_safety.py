@@ -26,7 +26,8 @@ from devkit_agt.features.workflow import (
     validate_template,
 )
 from devkit_agt.features.workflow.cli import cli
-from devkit_agt.features.workflow.repositories.unit.binding import Binding, write_binding
+from devkit_agt.features.workflow.models.binding import Binding
+from devkit_agt.features.workflow.repositories.unit.binding import write_binding
 from testsupport.workflow import (
     SIMPLE,
     SIMPLE_UNIT,

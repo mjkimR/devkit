@@ -23,10 +23,11 @@ from pathlib import Path
 
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
 from devkit_agt.features.rules.services.builtins import BaseRule
-from devkit_core.core import FrontmatterError, GitError, is_safe_relpath, normalize_relpath, run_git
+from devkit_core.core import FrontmatterError, GitError, is_safe_relpath, normalize_relpath, run_git, run_git_text
 from devkit_core.core.frontmatter import parse
 
 from devkit_spec.features.governance import explicitly_targeted
+from devkit_spec.features.policy.repositories.branches import recorded_base
 
 RULE_ID = "RULE-reconcile-contract"
 STATUSES = ("pending", "resolved")
@@ -108,7 +109,7 @@ def _evidence(ctx: RuleContext, relative: str, data: dict[str, object]) -> list[
 
 def _git(root: Path, *args: str) -> str | None:
     try:
-        return run_git(root, *args).decode("utf-8", errors="surrogateescape").strip()
+        return run_git_text(root, *args)
     except GitError:
         return None
 
@@ -120,7 +121,10 @@ def _integration_base(root: Path) -> str | None:
     branch = _git(root, "symbolic-ref", "--quiet", "--short", "HEAD")
     if not branch:
         return None
-    recorded = _git(root, "config", "--get", f"branch.{branch}.devkitBase")
+    try:
+        recorded = recorded_base(root, branch)
+    except GitError:
+        recorded = ""
     if recorded:
         return recorded
     listing = _git(root, "worktree", "list", "--porcelain") or ""

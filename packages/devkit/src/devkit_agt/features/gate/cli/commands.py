@@ -31,6 +31,7 @@ from devkit_dist.adapters.cli import (
     output_settings,
     report_exit_code,
     workspace_option,
+    yes_no,
 )
 from devkit_dist.features.project.usecases.workspace import require_git_toplevel
 
@@ -64,10 +65,6 @@ def _repo_root(workspace_root: str | None) -> Path:
 @click.group(name="gate")
 def cli() -> None:
     """Pluggable Git commit gates."""
-
-
-def _yes(value: object) -> str:
-    return "yes" if value else "no"
 
 
 def _action_rows(actions: list[str]) -> list[dict[str, str]]:
@@ -221,13 +218,13 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
     hooks_path = f" hooks_path={location.hooks_path} wrappers_run=no" if location.hooks_path else ""
     click.echo(f"[HOOKS: dir={display_path(location.directory, project.root)}{hooks_path}]")
     for row in hook_rows:
-        extra = f" python={row['python']} python_ok={_yes(row['python_ok'])}" if row["python"] else ""
+        extra = f" python={row['python']} python_ok={yes_no(row['python_ok'])}" if row["python"] else ""
         click.echo(f"[HOOK: {row['stage']} state={row['state']}{extra} scripts={','.join(row['scripts']) or '-'}]")
     for row in gate_rows:
         setup = f" setup={json.dumps(row['setup'], ensure_ascii=False)}" if row["setup"] else ""
         click.echo(
             f"[GATE: {row['id']} stage={row['stage']} order={row['order']} "
-            f"enabled={_yes(row['enabled'])} source={row['source']}{setup}]"
+            f"enabled={yes_no(row['enabled'])} source={row['source']}{setup}]"
         )
     click.echo(f"[CONFIG: sources={','.join(sources) or '-'}]")
     echo_notices(notices)  # before the problems, so errors are last

@@ -718,7 +718,7 @@ def test_start_restores_the_managed_files_a_fresh_checkout_lacks(repo: Path) -> 
     synchronized(repo)
     managed = Path(".devkit/managed/authoring/rules/skill_document_size/rule.py")
     assert (repo / managed).is_file() and git(repo, "check-ignore", str(managed))
-    result = start(locate(repo), "dev-demo", project=Path("."))
+    result = start(locate(repo), "dev-demo", sync=True)
     assert result.synced is True
     assert all(item.code in {"MCP_RUNTIME_UNAVAILABLE", "MCP_REGISTRATION_UNAVAILABLE"} for item in result.notices)
     assert (result.path / managed).is_file()
@@ -726,7 +726,7 @@ def test_start_restores_the_managed_files_a_fresh_checkout_lacks(repo: Path) -> 
 
 
 def test_sync_uses_the_worktree_environment_with_devkit_and_skips_without_a_receipt(repo: Path, tmp_path: Path) -> None:
-    assert start(locate(repo), "dev-plain", project=Path(".")).synced is None
+    assert start(locate(repo), "dev-plain", sync=True).synced is None
     write(repo, ".gitignore", ".venv/\n")  # as in any Python project
     synchronized(repo)
     marker = tmp_path / "used"
@@ -734,10 +734,10 @@ def test_sync_uses_the_worktree_environment_with_devkit_and_skips_without_a_rece
     script.write_text(f'#!/bin/sh\necho used > {marker}\nexec {sys.executable} "$@"\n')
     script.chmod(0o755)
     setup = f"mkdir -p .venv/bin && cp {script} .venv/bin/python"
-    without = start(locate(repo), "dev-without", setup=setup, project=Path("."))
+    without = start(locate(repo), "dev-without", setup=setup, sync=True)
     assert without.synced is True and not marker.exists()  # no devkit in that environment: this interpreter ran
     setup += " && mkdir -p .venv/lib/python3.12/site-packages/devkit_agt-0.0.0.dist-info"
-    result = start(locate(repo), "dev-demo", setup=setup, project=Path("."))
+    result = start(locate(repo), "dev-demo", setup=setup, sync=True)
     assert result.synced is True and marker.read_text() == "used\n"
 
 
@@ -745,7 +745,7 @@ def test_a_failed_sync_is_a_warning_and_keeps_the_worktree(repo: Path) -> None:
     write(repo, ".devkit/installation.json", "{")
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "broken receipt")
-    result = start(locate(repo), "dev-demo", project=Path("."))
+    result = start(locate(repo), "dev-demo", sync=True)
     [warning] = result.notices
     assert result.synced is False and result.path.is_dir()
     assert warning.code == "WORKTREE_SYNC_FAILED" and warning.mode is ActionMode.CONTINUE
@@ -759,7 +759,7 @@ def test_a_stale_receipt_names_the_committed_file_and_its_fix(repo: Path) -> Non
     (repo / "AGENTS.md").unlink()  # committed state the receipt no longer matches
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", "drop the guidance block")
-    result = start(locate(repo), "dev-demo", project=Path("."))
+    result = start(locate(repo), "dev-demo", sync=True)
     [warning] = result.notices
     assert result.synced is False
     assert warning.message.startswith(f"devkit sync --locked exited 1 in {result.path}: (RECEIPT_STALE) ")
@@ -808,7 +808,7 @@ def test_start_trusted_guard_stops_after_setup_before_sync(tmp_path, monkeypatch
     monkeypatch.setattr(lifecycle, "_sync", lambda *args: called.append("sync"))
     with invocation(ExecutionBinding(base, base)), pytest.raises(AdvisoryError) as exc:
         lifecycle.start(
-            locate(base), "dev-guard", setup="fixture", project=Path("."), before_step=lambda step: guard_execution()
+            locate(base), "dev-guard", setup="fixture", sync=True, before_step=lambda step: guard_execution()
         )
     assert exc.value.code == "MCP_INTERACTIVE_UNAVAILABLE"
     assert called == ["setup"]
@@ -845,7 +845,7 @@ def test_start_initializes_optional_registration_after_locked_assets(repo, monke
             "local",
         ),
     )
-    result = start(locate(repo), "dev-registration", setup=":", project=Path("."), before_step=guards.append)
+    result = start(locate(repo), "dev-registration", setup=":", sync=True, before_step=guards.append)
     assert result.synced is True
     assert modes == ["--locked", "--registrations-only"]
     assert guards[-3:] == ["setup", "sync", "registrations"]
@@ -873,5 +873,5 @@ def test_guard_stops_registration_after_sync_changes_environment(tmp_path, monke
 
     monkeypatch.setattr(lifecycle, "_sync", sync)
     with pytest.raises(McpInteractiveError):
-        lifecycle._prepare(tmp_path, None, Path("."), [], before_step=guard)
+        lifecycle._prepare(tmp_path, None, True, [], before_step=guard)
     assert calls == ["sync"]

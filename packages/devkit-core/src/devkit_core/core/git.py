@@ -1,9 +1,11 @@
 """The one subprocess runner for Git.
 
-Output is returned as bytes: Git paths are arbitrary bytes, so callers decode
-them themselves (``data.decode("utf-8", errors="surrogateescape")`` keeps every
-name round-trippable). Package-specific queries live in their packages and are
-built on ``run_git``.
+``run_git`` returns bytes: Git paths are arbitrary bytes, so they are decoded with
+``data.decode("utf-8", errors="surrogateescape")``, which keeps every name
+round-trippable. ``run_git_text`` applies that rule for callers that want text, and
+``is_ancestor`` is the shared ``merge-base --is-ancestor`` test. These generic
+primitives live here; queries that encode one package's policy live in that package
+and are built on them.
 """
 
 from __future__ import annotations
@@ -16,9 +18,6 @@ from devkit_core.base.errors import GitError
 from devkit_core.core.deadline import Deadline
 
 DEFAULT_TIMEOUT = 60.0  # seconds; the one Git timeout every devkit area uses
-# The index of the commit being made, which the ``verify-commands`` gate passes to the commands it runs, and the
-# ``rules-check`` gate sets while it runs, after removing Git's own ``GIT_INDEX_FILE`` (see ``commit_index``).
-COMMIT_INDEX_VARIABLE = "DEVKIT_GIT_INDEX_FILE"
 
 
 def run_git(
@@ -83,21 +82,35 @@ def run_git(
     return completed.stdout
 
 
-def commit_index(root: Path) -> str | None:
-    """The index of the commit a hook is making when devkit runs from the ``verify-commands`` or ``rules-check`` gate.
+def run_git_text(
+    cwd: Path,
+    *args: str,
+    input: bytes | None = None,
+    timeout: float | None = DEFAULT_TIMEOUT,
+    index: str | None = None,
+    deadline: Deadline | None = None,
+) -> str:
+    """``run_git`` with its output decoded as UTF-8 with ``surrogateescape`` and one trailing newline removed.
 
-    Both gates remove Git's ``GIT_INDEX_FILE`` from the environment the check runs in (so Git run in another
-    repository, a test suite's or a materialized snapshot's, is not pointed at it) and pass it as
-    ``DEVKIT_GIT_INDEX_FILE`` instead. It applies only
-    while ``GIT_INDEX_FILE`` is unset and only to the repository whose Git directory holds that index, so
-    ``git commit -a`` and ``git commit <paths>``, which commit a temporary index, are evaluated as committed.
-    ``None`` otherwise: Git's own ``GIT_INDEX_FILE``, or the default index, applies.
+    Only a single ``\\n`` is removed, so a one-line answer (a commit id, a path) comes back bare while leading and
+    other trailing whitespace, which a path may carry, is kept. A caller that needs the output byte for byte (a file's
+    content from ``git show``) uses ``run_git``. Raises as ``run_git`` does.
     """
-    value = os.environ.get(COMMIT_INDEX_VARIABLE)
-    if not value or "GIT_INDEX_FILE" in os.environ:
-        return None
-    index = Path(value)
-    if not index.is_absolute():
-        return None
-    git_dir = Path(os.fsdecode(run_git(root, "rev-parse", "--absolute-git-dir").rstrip(b"\n")))
-    return value if index.parent.resolve() == git_dir.resolve() else None
+    output = run_git(cwd, *args, input=input, timeout=timeout, index=index, deadline=deadline)
+    return output.decode("utf-8", errors="surrogateescape").removesuffix("\n")
+
+
+def is_ancestor(cwd: Path, ancestor: str, descendant: str) -> bool:
+    """Whether commit ``ancestor`` is contained in ``descendant`` (a commit is its own ancestor).
+
+    Git's exit status 1 is the answer no; any other failure (an unknown revision, as in a shallow clone, or not a
+    repository) raises ``GitError``. Both revisions are passed to Git as given; a caller taking them from input
+    validates them first.
+    """
+    try:
+        run_git(cwd, "merge-base", "--is-ancestor", ancestor, descendant)
+    except GitError as exc:
+        if exc.returncode == 1:
+            return False
+        raise
+    return True

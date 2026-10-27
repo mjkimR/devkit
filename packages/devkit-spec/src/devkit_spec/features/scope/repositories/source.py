@@ -55,7 +55,6 @@ class ReadBudget:
 class TreeReader:
     def __init__(self, root: Path, sha: str, deadline: Deadline, budget: ReadBudget) -> None:
         self.root, self.sha, self.deadline, self.budget = root, sha, deadline, budget
-        self.prefix = git(root, "rev-parse", "--show-prefix", deadline=deadline).decode().removesuffix("\n")
         self.entries: dict[str, str] = {"": "tree", ".": "tree"}
         for entry in git(root, "ls-tree", "-rz", "--full-tree", sha, deadline=deadline).split(b"\0"):
             deadline.check("scope tree inventory")
@@ -64,9 +63,6 @@ class TreeReader:
             meta, raw = entry.split(b"\t", 1)
             mode, kind, _ = meta.decode().split()
             path = raw.decode("utf-8", errors="surrogateescape")
-            if self.prefix and not path.startswith(self.prefix):
-                continue
-            path = path.removeprefix(self.prefix)
             self.entries[path] = "blob" if kind == "blob" and mode != "120000" else "unsupported"
             for parent in PurePosixPath(path).parents:
                 self.entries.setdefault(str(parent), "tree")
@@ -79,7 +75,7 @@ class TreeReader:
         self.deadline.check("scope tree read")
         if self.kind(path) is not Granularity.FILE:
             raise OSError("Declaration is absent or not a regular blob")
-        data = git(self.root, "show", f"{self.sha}:{self.prefix}{path}", deadline=self.deadline, limit=DOCUMENT_BYTES)
+        data = git(self.root, "show", f"{self.sha}:{path}", deadline=self.deadline, limit=DOCUMENT_BYTES)
         self.budget.consume(len(data))
         return data.decode("utf-8")
 

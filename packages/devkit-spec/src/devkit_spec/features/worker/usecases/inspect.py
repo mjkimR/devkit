@@ -13,14 +13,13 @@ from typing import Any
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow.repositories.git import is_ancestor
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core import FrontmatterError, run_git
+from devkit_core.core import FrontmatterError, run_git, run_git_text
 
 from devkit_spec.base.errors import WorkerCheckFailedError, WorkerCheckNotRunNotice, WorkerScopeUnresolvedError
 from devkit_spec.features.worker.usecases.inputs import (
     derive_scope,
-    git,
     inputs,
-    project_path,
+    prefix,
     records,
 )
 
@@ -148,7 +147,7 @@ class InspectWorkerUseCase(BaseUseCase):
         details: bool = True,
         runner: Callable[[Path, Sequence[str]], dict[str, Any]] = run_check,
     ) -> dict[str, Any]:
-        root, tip, project, chosen = inputs(root, unit, base, head, base_checkout)
+        root, tip, chosen = inputs(root, unit, base, head, base_checkout)
         unit = str(chosen["unit"]["value"])
         base, head = str(chosen["base"]["value"]), str(chosen["head"]["value"])
         checks: dict[str, Any] = {}
@@ -166,12 +165,12 @@ class InspectWorkerUseCase(BaseUseCase):
         ]
         result["changed_paths"] = changed
         if scope is not None:
-            scope = [project_path(project, p) for p in scope]
+            scope = [prefix(p) for p in scope]
         try:
             entries = (
                 [{"path": p, "source": "argument"} for p in scope]
                 if scope is not None
-                else derive_scope(root, tip, unit, project)
+                else derive_scope(root, tip, unit)
             )
             result["scope"] = entries
             outside = [
@@ -205,7 +204,10 @@ class InspectWorkerUseCase(BaseUseCase):
         checkout = chosen["base_checkout"]["value"]
         if checkout:
             path = Path(checkout)
-            result["base_checkout"] = {"head": git(path, "rev-parse", "HEAD"), "dirty_paths": dirty_paths(path)}
+            result["base_checkout"] = {
+                "head": run_git_text(path, "rev-parse", "HEAD"),
+                "dirty_paths": dirty_paths(path),
+            }
         for name, check in checks.items():
             if check["status"] == "not-run":
                 notices.append(

@@ -175,8 +175,8 @@ never the deployed state it kept, which is the same on every run:
 [CHANGE: update .devkit/installation.json]
 ```
 
-One `[CHANGE: <create|update|remove|seed> <path>]` line follows per write (a path with spaces, quotes or brackets
-is a JSON string), `.devkit/config.toml` included when a selection command creates or changes it (also under
+One `[CHANGE: <create|update|remove|seed> <path>]` line follows per write (a path with whitespace, quotes, brackets, `=`
+or a backslash is a JSON string), `.devkit/config.toml` included when a selection command creates or changes it (also under
 `--dry-run`, which renders the edit without writing it), and `[OK: the workspace matches the selection]` when there
 is nothing to write. A command named in a `[FIX]` or `[DETAIL]` line is written as the agent runs it, `uv run devkit
 ...` (`ADR-keep-uv-run-as-the-agent-facing-devkit-invocation`). The warnings
@@ -249,8 +249,8 @@ stderr: its `errors` and `notices` are in the result. `sync --check` remains the
 Every error the library raises is an `AdvisoryError`; the CLI renders it as it is. Foundation and project errors pass
 through: an unreadable or invalid `.devkit/installation.json` (including paths devkit never writes) is
 `ReceiptError` (`RECEIPT_INVALID`), an invalid `.devkit/config.toml` is `ConfigError` (`CONFIG_INVALID`), and
-a malformed selector, query, search bound (`--limit`, `--min-score`, `--max-bytes`), workspace root, archive
-`--output` or flag combination is `ArgumentError` (`ARGUMENT_INVALID`, `INPUT_ERROR`). Remediation is in each
+a malformed selector, query, search bound (`--limit`, `--min-score`, `--max-bytes`), workspace root
+or flag combination is `ArgumentError` (`ARGUMENT_INVALID`, `INPUT_ERROR`). Remediation is in each
 error's `fix`, never in its message. The others are `DistributionError` subclasses from `devkit_dist.features.distribution.models.errors`:
 
 | Class | Code | Mode | When |
@@ -317,7 +317,7 @@ failing engine import cannot make the bundle unusable):
 ## 5. Specifications
 
 - `ARCH-05-4-distribution-components`: principles, architecture units, module layout and library surface.
-- `CAP-DIST-manifest-spec`: `bundle.toml` schema 1, asset kinds, presets, validation and archive builds.
+- `CAP-DIST-manifest-spec`: `bundle.toml` schema 1, asset kinds, presets and validation.
 - `CAP-DIST-content-packages`: the content wheel contract, installation, upgrades and dependency boundaries.
 - `CAP-DIST-workspace-ownership`: workspace layout, ownership categories, the guidance block, seeded files and override drift.
 - `CAP-DIST-sync-and-transactions`: the receipt, the selection model, and the transaction engine (lock, journal, recovery, post-sync extensions).
@@ -359,6 +359,6 @@ For shared or personal approval/response defaults, set `[presentation] language 
 in shared config or ignored `.devkit/config.local.toml`. `devkit config show --effective` reports the requested and
 resolved language, source and fallback; another value falls back to `en`, which `devkit sync`, `devkit status`
 and `devkit config show` report as a `PRESENTATION_LANGUAGE_UNSUPPORTED` warning. Run sync for response-style
-assets; approval forms read per request.
+assets; approval copy reads it per request.
 Explicit response-style bundle variables win. See `CAP-DIST-sync-and-transactions` and `CAP-INT-mcp-services`;
 this does not localize host-owned controls or establish visible native Korean form support.

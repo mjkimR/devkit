@@ -22,9 +22,9 @@ from devkit_dist.adapters.cli import (
     workspace_option,
 )
 
+from devkit_spec.adapters.cli import sentinel
 from devkit_spec.features.delivery.usecases.specs import CreateSpecUseCase
 from devkit_spec.features.scope.cli.output import echo_registered, registered_dict
-from devkit_spec.utils.output import sentinel
 
 
 @click.command(name="new")

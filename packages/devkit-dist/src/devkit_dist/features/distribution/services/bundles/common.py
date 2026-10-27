@@ -1,4 +1,4 @@
-"""Names shared by every bundle module: grammars, the reserved preset, agents, and frontmatter reading."""
+"""Names shared by every bundle module: grammars, the reserved preset, shared-skill agents, and frontmatter reading."""
 
 from __future__ import annotations
 
@@ -10,15 +10,12 @@ from devkit_core.core import frontmatter
 from devkit_core.core.frontmatter import FrontmatterBlock
 
 from devkit_dist.features.distribution.models.errors import BundleError
-from devkit_dist.features.distribution.models.settings import AGENT_NAMES as AGENT_NAMES
-from devkit_dist.features.distribution.models.settings import SLUG as SLUG
 
 VERSION = re.compile(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\Z")
 # Frontmatter extension keys (``x-<name>``): kept for other tools, never interpreted by devkit.
 EXTENSION_KEY = re.compile(r"x-[a-z][a-z0-9-]*\Z")
 # Reserved preset available in every bundle; selects every declared asset.
 ALL = "all"
-# Agents devkit projects native assets for; also the only valid ``variants`` keys.
 # Agents reading one shared skill directory (``.agents/skills``): their skill variants must be identical.
 SHARED_SKILL_AGENTS = ("codex", "antigravity")
 

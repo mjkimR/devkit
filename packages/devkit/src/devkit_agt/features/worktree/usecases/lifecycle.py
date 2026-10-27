@@ -31,7 +31,7 @@ from typing import Any
 from devkit.advisory import AdvisoryError, Level
 from devkit_core.base.errors import ArgumentError, GitError
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core.git import run_git
+from devkit_core.core.git import is_ancestor, run_git, run_git_text
 from devkit_core.core.logs import get_logger
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.invocation import constraint_environment, guard_execution
@@ -72,14 +72,16 @@ from devkit_agt.features.worktree.models.errors import (
     from_base_error,
     pull_request_policy_fix,
 )
-from devkit_agt.features.worktree.models.lifecycle import BranchStartResult as BranchStartResult
-from devkit_agt.features.worktree.models.lifecycle import BranchStatus as BranchStatus
-from devkit_agt.features.worktree.models.lifecycle import FinishResult as FinishResult
-from devkit_agt.features.worktree.models.lifecycle import Position as Position
-from devkit_agt.features.worktree.models.lifecycle import StartResult as StartResult
-from devkit_agt.features.worktree.models.lifecycle import StatusResult as StatusResult
-from devkit_agt.features.worktree.models.lifecycle import WorktreeStatus as WorktreeStatus
-from devkit_agt.features.worktree.models.lifecycle import slug_of as slug_of
+from devkit_agt.features.worktree.models.lifecycle import (
+    BranchStartResult,
+    BranchStatus,
+    FinishResult,
+    Position,
+    StartResult,
+    StatusResult,
+    WorktreeStatus,
+)
+from devkit_agt.features.worktree.repositories.markers import BASE_KEY, UNIT_KEY, branch_marker, marker_key
 from devkit_agt.features.worktree.services.merging import build_result, check_identity, merge_message
 
 _log = get_logger(__name__)
@@ -87,11 +89,6 @@ _log = get_logger(__name__)
 ACTIVITY_PREFIXES = ("plan", "dev")  # Planning and Development activity branches: plan-<slug>, dev-<slug>
 BRANCH = re.compile(rf"(?:{'|'.join(ACTIVITY_PREFIXES)})-[a-z0-9][a-z0-9_-]*")
 BRANCH_LIMIT = 64  # characters of the whole branch name, prefix included
-# Recorded in the common configuration on every branch ``start`` creates or attaches; only a marked branch is deleted
-# without its worktree, so ``finish`` never deletes an ordinary branch that happens to share the name.
-MARKER = "devkitWorktree"
-BASE_KEY = "devkitBase"  # the branch ``start_branch`` started from, where the base checkout returns to
-UNIT_KEY = "devkitUnit"  # the unit directory ``attach`` was given, for the stale-branch report
 LS_REMOTE_TIMEOUT = 30.0  # seconds to ask one remote whether it has the branch
 PUSH_TIMEOUT = 120.0  # seconds; a slow or stuck push must not hold the cleanup
 FETCH_TIMEOUT = 120.0  # seconds for the upstream fetch before the merge
@@ -109,14 +106,10 @@ class _Entry:
     locked: bool = False
 
 
-def _git(cwd: Path, *args: str) -> str:
-    return os.fsdecode(run_git(cwd, *args)).strip()
-
-
 def _query(cwd: Path, *args: str) -> str | None:
     """The output of a Git query, or ``None`` when it answers no (exit 1); any other failure raises."""
     try:
-        return _git(cwd, *args)
+        return run_git_text(cwd, *args)
     except GitError as exc:
         if exc.returncode == 1:
             return None
@@ -140,7 +133,7 @@ def _merged(base: Path, rev: str | None, head: str | None) -> bool:
     if rev is None or head is None:
         return False
     try:
-        return _succeeds(base, "merge-base", "--is-ancestor", rev, head)
+        return is_ancestor(base, rev, head)
     except GitError:
         if _query(base, "rev-parse", "--verify", "--quiet", f"{rev}^{{commit}}") is None:
             return False
@@ -169,8 +162,8 @@ def check_branch(branch: str) -> str:
 def locate(start: Path) -> Position:
     """The checkout containing ``start``: its top level, the base checkout, the branch, whether it is linked."""
     root = require_git_toplevel(start)
-    git_dir = _resolve(_git(root, "rev-parse", "--path-format=absolute", "--git-dir"))
-    common = _resolve(_git(root, "rev-parse", "--path-format=absolute", "--git-common-dir"))
+    git_dir = _resolve(run_git_text(root, "rev-parse", "--path-format=absolute", "--git-dir"))
+    common = _resolve(run_git_text(root, "rev-parse", "--path-format=absolute", "--git-common-dir"))
     branch = _short(_query(root, "symbolic-ref", "--quiet", "HEAD") or "")
     # The base checkout is the one whose Git directory is the common directory.
     if common.name != ".git" or not (common.parent / ".git").is_dir():
@@ -205,51 +198,42 @@ def _entries(base: Path) -> list[_Entry]:
     return entries
 
 
-def _marker(branch: str, key: str = MARKER) -> str:
-    """The configuration key marking ``branch`` as created by ``start`` (or another of its ``devkit*`` keys)."""
-    return f"branch.{branch}.{key}"
-
-
 def _created(base: Path, branch: str) -> bool:
     """Whether ``start`` created ``branch`` (it carries the marker in the common configuration)."""
-    return _query(base, "config", "--local", "--get", _marker(branch)) is not None
+    return _query(base, "config", "--local", "--get", marker_key(branch)) is not None
 
 
 def _unmark(base: Path, branch: str) -> None:
     """Remove ``branch``'s marker; a branch without one (Git exits 5) is left as it is."""
     try:
-        run_git(base, "config", "--local", "--unset-all", _marker(branch))
+        run_git(base, "config", "--local", "--unset-all", marker_key(branch))
     except GitError as exc:
         if exc.returncode != 5:
             raise
 
 
 def _clean(checkout: Path) -> bool:
-    return not _git(checkout, "status", "--porcelain", "--untracked-files=normal")
+    return not run_git_text(checkout, "status", "--porcelain", "--untracked-files=normal")
 
 
-def _local_snapshot(base: Path, project: Path | None) -> tuple[Path, bytes, int] | None:
-    source_root = base / (project or Path("."))
-    read_local_config(source_root)
-    source = source_root / LOCAL_CONFIG_PATH
+def _local_snapshot(base: Path) -> tuple[Path, bytes, int] | None:
+    read_local_config(base)
+    source = base / LOCAL_CONFIG_PATH
     if not source.exists():
         return None
     return source, source.read_bytes(), source.stat().st_mode & 0o7777
 
 
-def _copy_local_snapshot(path: Path, project: Path | None, captured: tuple[Path, bytes, int] | None) -> None:
+def _copy_local_snapshot(path: Path, captured: tuple[Path, bytes, int] | None) -> None:
     if captured is None:
         return
     from devkit_agt.features.worktree.models.errors import LocalCopyError
 
     source, content, mode = captured
-    destination = path / (project or Path(".")) / LOCAL_CONFIG_PATH
+    destination = path / LOCAL_CONFIG_PATH
     try:
-        relative = destination.relative_to(path)
-        if ".." in relative.parts or (project is not None and project.is_absolute()):
-            raise OSError("destination escapes the created checkout")
         ancestor = path
-        for part in relative.parts[:-1]:
+        for part in Path(LOCAL_CONFIG_PATH).parts[:-1]:
             ancestor /= part
             if ancestor.is_symlink():
                 raise OSError(f"destination parent is a symlink: {ancestor}")
@@ -272,7 +256,7 @@ def start(
     branch: str,
     *,
     setup: str | None = None,
-    project: Path | None = None,
+    sync: bool = False,
     revision: str | None = None,
     before_step: Callable[[str], None] | None = None,
 ) -> StartResult:
@@ -291,7 +275,7 @@ def start(
 
     1. ``setup`` runs in the worktree through ``/bin/sh -c`` (without the caller's ``VIRTUAL_ENV``), for the
        environment the project needs (``uv sync``);
-    2. when ``project`` (a directory relative to the checkout's top level) is a synchronized devkit project,
+    2. with ``sync``, when the checkout is a synchronized devkit project (it has a receipt),
        ``devkit sync --locked`` runs there with the worktree's ``.venv`` interpreter when devkit is installed in
        it, else this one, and restores the managed copies under ``.devkit/managed/`` that the commit gates, rules
        and context commands read, never changing the committed receipt, ``AGENTS.md`` or seeded files.
@@ -310,7 +294,7 @@ def start(
             f"to continue the current task instead, keep working in {position.root}",
         )
     if revision is not None:
-        revision = _git(position.base, "rev-parse", "--verify", "--end-of-options", f"{revision}^{{commit}}")
+        revision = run_git_text(position.base, "rev-parse", "--verify", "--end-of-options", f"{revision}^{{commit}}")
     path = path_for(position, branch)
     for entry in _entries(position.base):
         if entry.path == path:
@@ -332,27 +316,27 @@ def start(
     if path.exists() or path.is_symlink():
         raise ConflictError(f"{path} exists and is not a worktree of this repository")
     notices = _refuse_existing(position.base, branch)
-    captured_local = _local_snapshot(position.base, project)
+    captured_local = _local_snapshot(position.base)
     if before_step is not None:
         before_step("worktree_create")
     _add(position.base, path, branch, revision=revision)
     _log.info("created worktree %s on %s", path, branch)
     if before_step is not None:
         before_step("local_config_copy")
-    _copy_local_snapshot(path, project, captured_local)
-    setup_ran, synced = _prepare(path, setup, project, notices, before_step=before_step)
+    _copy_local_snapshot(path, captured_local)
+    setup_ran, synced = _prepare(path, setup, sync, notices, before_step=before_step)
     return StartResult(branch, path, position.base, True, setup_ran, synced, notices)
 
 
 def _prepare(
     path: Path,
     setup: str | None,
-    project: Path | None,
+    sync: bool,
     notices: list[AdvisoryError],
     *,
     before_step: Callable[[str], None] | None = None,
 ) -> tuple[str | None, bool | None]:
-    """Run ``setup`` and ``devkit sync --locked`` in a new worktree; their warnings go to ``notices``.
+    """Run ``setup`` and, with ``sync``, ``devkit sync --locked`` in a new worktree; their warnings go to ``notices``.
 
     Returns the setup command that ran and whether the sync restored the project (``None`` when it did not run).
     """
@@ -372,18 +356,17 @@ def _prepare(
                 )
             )
     synced = None
-    target = path / project if project is not None else None
-    if target is not None and (target / RECEIPT_PATH).is_file():
+    if sync and (path / RECEIPT_PATH).is_file():
         if before_step is not None:
             before_step("sync")
-        warning = _sync(_interpreter(path), target)
+        warning = _sync(_interpreter(path), path)
         synced = warning is None
         if warning is not None:
             notices.append(warning)
         else:
             if before_step is not None:
                 before_step("registrations")
-            warning = _sync(_interpreter(path), target, registrations_only=True, notices=notices)
+            warning = _sync(_interpreter(path), path, registrations_only=True, notices=notices)
             if warning is not None:
                 notices.append(warning)
     return setup, synced
@@ -393,7 +376,7 @@ def _attach_fix(base: Path, branch: str, source: str | None = None) -> dict[str,
     """The ``fix`` and ``what_to_report`` of ``WORKTREE_BRANCH_EXISTS``: continuing ``branch`` or choosing another slug
     is the user's decision. ``[FIX]`` attaches it when its unit directory is recorded (``devkitUnit``); otherwise the
     unit is the user's answer too, so there is no ``[FIX]``."""
-    unit = _config(base, _marker(branch, UNIT_KEY))
+    unit = branch_marker(base, branch, UNIT_KEY)
     attach = devkit_command(f"worktree start {branch} --existing-branch {source or branch} --unit")
     if unit:
         return {
@@ -429,7 +412,7 @@ def _remote_holders(base: Path, branch: str) -> tuple[list[str], list[AdvisoryEr
     """
     holders: list[str] = []
     notices: list[AdvisoryError] = []
-    for remote in _git(base, "remote").splitlines():
+    for remote in run_git_text(base, "remote").splitlines():
         try:
             listed = os.fsdecode(
                 run_git(base, "ls-remote", "--heads", remote, f"refs/heads/{branch}", timeout=LS_REMOTE_TIMEOUT)
@@ -494,8 +477,8 @@ class StartBranch(BaseUseCase):
                     **_attach_fix(position.base, branch),
                 ) from exc
             raise
-        run_git(position.base, "config", "--local", _marker(branch), str(position.root))
-        run_git(position.base, "config", "--local", _marker(branch, BASE_KEY), position.branch)
+        run_git(position.base, "config", "--local", marker_key(branch), str(position.root))
+        run_git(position.base, "config", "--local", marker_key(branch, BASE_KEY), position.branch)
         _log.info("switched %s to the new branch %s from %s", position.root, branch, position.branch)
         return BranchStartResult(branch, position.root, position.branch, notices)
 
@@ -507,7 +490,7 @@ def attach(
     source: str,
     unit: str,
     setup: str | None = None,
-    project: Path | None = None,
+    sync: bool = False,
     check: Callable[[Path, str, str, str], None] | None = None,
 ) -> StartResult:
     """Give the existing activity branch ``branch`` its worktree, to continue it at the stage its unit reached.
@@ -515,7 +498,7 @@ def attach(
     ``source`` is ``branch`` or ``<remote>/<branch>``. The branch must exist locally or as a fetched
     remote-tracking ref (nothing is fetched); a remote-only branch gets a local branch tracking it. A local branch
     that lacks commits of its remote-tracking branch is ``WORKTREE_BRANCH_OUT_OF_SYNC`` (never merged or reset); one
-    ahead of it is attached. ``unit`` (relative to ``project``, the devkit project directory in the checkout) must be
+    ahead of it is attached. ``unit`` (relative to the repository root) must be
     a directory of the branch's tree (``WORKTREE_UNIT_INVALID``); ``check(root, branch, unit, tip)`` then verifies
     that branch and unit belong together (the ``devkit.attach_check`` extensions in the CLI). Nothing in the branch
     is reset or rewritten.
@@ -535,9 +518,9 @@ def attach(
             f"to continue the current task instead, keep working in {position.root}",
         )
     base = position.base
-    remotes = _git(base, "remote").splitlines()
+    remotes = run_git_text(base, "remote").splitlines()
     remote = _source_remote(source, branch, remotes)
-    unit_path = _unit_path(unit, project)
+    unit_path = _unit_path(unit)
     local = _query(base, "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}^{{commit}}")
     remote_ref, remote_tip = _remote_tracking(base, branch, remote, remotes, local is not None)
     if local is None and remote_tip is None:
@@ -579,7 +562,7 @@ def attach(
             )
     if not reuse and (path.exists() or path.is_symlink()):
         raise ConflictError(f"{path} exists and is not a worktree of this repository")
-    captured_local = _local_snapshot(base, project) if not reuse else None
+    captured_local = _local_snapshot(base) if not reuse else None
     if back is not None:
         run_git(base, "switch", "--quiet", back)
         _log.info("switched the base checkout from %s back to %s", branch, back)
@@ -592,10 +575,10 @@ def attach(
     if not reuse:
         _add(base, path, branch, existing=True)
         _log.info("attached worktree %s to the existing branch %s", path, branch)
-        _copy_local_snapshot(path, project, captured_local)
-        setup_ran, synced = _prepare(path, setup, project, notices)
-    run_git(base, "config", "--local", _marker(branch), str(path))
-    run_git(base, "config", "--local", _marker(branch, UNIT_KEY), unit)
+        _copy_local_snapshot(path, captured_local)
+        setup_ran, synced = _prepare(path, setup, sync, notices)
+    run_git(base, "config", "--local", marker_key(branch), str(path))
+    run_git(base, "config", "--local", marker_key(branch, UNIT_KEY), unit)
     return StartResult(branch, path, base, not reuse, setup_ran, synced, notices, existing=True, unit=unit)
 
 
@@ -614,14 +597,14 @@ def _source_remote(source: str, branch: str, remotes: list[str]) -> str | None:
     )
 
 
-def _unit_path(unit: str, project: Path | None) -> str:
-    """``unit`` (relative to the devkit project) as a path relative to the checkout's top level."""
+def _unit_path(unit: str) -> str:
+    """``unit``, validated as a directory path relative to the repository root."""
     relative = Path(unit)
     if not unit or relative.is_absolute() or ".." in relative.parts or relative == Path("."):
         raise UnitInvalidError(
-            f"--unit {unit!r} must be a directory relative to the devkit project, inside it", target_files=[unit]
+            f"--unit {unit!r} must be a directory relative to the repository root, inside it", target_files=[unit]
         )
-    return (project / relative if project is not None else relative).as_posix()
+    return relative.as_posix()
 
 
 def _remote_tracking(
@@ -637,7 +620,7 @@ def _remote_tracking(
     when several do).
     """
     if remote is None and local:
-        upstream = _git(base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}")
+        upstream = run_git_text(base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}")
         if upstream.startswith("refs/remotes/"):
             tip = _query(base, "rev-parse", "--verify", "--quiet", f"{upstream}^{{commit}}")
             if tip:
@@ -672,8 +655,8 @@ def _check_in_sync(position: Position, branch: str, local: str, remote_ref: str)
     """Refuse a local branch that lacks commits of ``remote_ref``; one ahead of it passes with a notice that the
     remote still lacks its commits, an equal one silently."""
     base = position.base
-    if _succeeds(base, "merge-base", "--is-ancestor", remote_ref, local):
-        if _git(base, "rev-parse", f"{remote_ref}^{{commit}}") == local:
+    if is_ancestor(base, remote_ref, local):
+        if run_git_text(base, "rev-parse", f"{remote_ref}^{{commit}}") == local:
             return None
         name = remote_ref.removeprefix("refs/remotes/")
         remote, _, _ = name.partition("/")
@@ -682,7 +665,7 @@ def _check_in_sync(position: Position, branch: str, local: str, remote_ref: str)
             " only by a push",
             fix=f"git -C {shlex.quote(str(base))} push {shlex.quote(remote)} {branch} when the work is to be shared",
         )
-    behind = _succeeds(base, "merge-base", "--is-ancestor", local, remote_ref)
+    behind = is_ancestor(base, local, remote_ref)
     name = remote_ref.removeprefix("refs/remotes/")
     holder = next((entry.path for entry in _entries(base) if entry.branch == branch), None)
     if behind and holder is None:
@@ -701,7 +684,7 @@ def _check_in_sync(position: Position, branch: str, local: str, remote_ref: str)
 def _object_type(base: Path, spec: str) -> str | None:
     """The type of the object ``spec`` (``<rev>:<path>``) names, ``None`` when it names none."""
     try:
-        return _git(base, "cat-file", "-t", spec)
+        return run_git_text(base, "cat-file", "-t", spec)
     except GitError as exc:
         if exc.returncode is None:
             raise
@@ -716,7 +699,7 @@ def _return_branch(base: Path, branch: str) -> str:
             f"the base checkout {base} is on {branch} with uncommitted changes; nothing was changed",
             fix=f"Commit the changes on {branch} (or stash them) in {base}, then rerun",
         )
-    back = _config(base, _marker(branch, BASE_KEY))
+    back = branch_marker(base, branch, BASE_KEY)
     if not back:
         raise ConflictError(
             f"the base checkout {base} is on {branch} and no branch to return to is recorded; nothing was changed",
@@ -746,8 +729,8 @@ def _add(base: Path, path: Path, branch: str, *, existing: bool = False, revisio
         if revision is not None and not existing:
             add += (revision,)
         _git_session(base, "worktree", *add, timeout=CHECKOUT_TIMEOUT)
-        step = f"git config {_marker(branch)}"
-        run_git(base, "config", "--local", _marker(branch), str(path))
+        step = f"git config {marker_key(branch)}"
+        run_git(base, "config", "--local", marker_key(branch), str(path))
     except GitError as exc:
         reason = exc.stderr or exc.message
         if _timed_out(exc):
@@ -1009,7 +992,7 @@ def _find(position: Position, branch: str) -> _Entry | None:
     if entry is None:
         return None
     if entry.path == base:
-        back = _config(base, _marker(branch, BASE_KEY))
+        back = branch_marker(base, branch, BASE_KEY)
         if back:
             raise BaseOnBranchError(
                 f"the base checkout is on {branch}; finish works on it from {back}, the branch it was started from;"
@@ -1138,7 +1121,7 @@ def finish(
             # included) would otherwise run ``before_remove``, merge and push for a task that never existed.
             raise NotFoundError(
                 f"no worktree at {path_for(position, branch)} or on branch {branch}; the branch {branch} is merged"
-                f" into the base HEAD but has no {_marker(branch)} marker, so devkit worktree start did not create"
+                f" into the base HEAD but has no {marker_key(branch)} marker, so devkit worktree start did not create"
                 " it, or a finish already completed for it (or start created it before devkit recorded the marker;"
                 " such branches are not resumed automatically); finish does not resume it; nothing was changed",
                 fix=f"git -C {shlex.quote(str(base))} branch -d {branch}" if delete_branch else None,
@@ -1149,7 +1132,7 @@ def finish(
             )
         _log.info("%s has no worktree; finishing the marked branch alone", branch)
         result = FinishResult(branch, _marked_path(position, branch), removed=_gone(position, branch))
-        back = _config(base, _marker(branch, BASE_KEY))
+        back = branch_marker(base, branch, BASE_KEY)
         if merge and back and position.branch != back:
             raise ConflictError(
                 f"{branch} was started from {back}, but the base checkout is on {position.branch or 'a detached HEAD'};"
@@ -1172,7 +1155,7 @@ def finish(
     if delete_branch:
         _check_deletable(base, branch, position.branch)
     if merge:
-        tip = _git(base, "rev-parse", "--verify", f"{ref}^{{commit}}")
+        tip = run_git_text(base, "rev-parse", "--verify", f"{ref}^{{commit}}")
         head = _head(base)
         if head is not None and not _merged(base, tip, head):
             if not _merged(base, head, tip):
@@ -1186,7 +1169,7 @@ def finish(
             guard((_query(base, "merge-base", head, tip) or "") if head else "", tip)
         if network == "allow":
             _check_upstream(position)
-        if _git(base, "rev-parse", "--verify", f"{ref}^{{commit}}") != tip:
+        if run_git_text(base, "rev-parse", "--verify", f"{ref}^{{commit}}") != tip:
             raise ConflictError(
                 f"{branch} moved while finish checked it (it was {tip[:7]}); only the checked commit is merged;"
                 " nothing was changed",
@@ -1257,14 +1240,14 @@ def finish(
 def _gone(position: Position, branch: str) -> bool | None:
     """For a branch without a worktree: ``True`` when its worktree was removed earlier (its marker names the worktree
     path), ``None`` when it never had one (``start_branch`` marks the checkout it switched; or no marker at all)."""
-    value = _config(position.base, _marker(branch))
+    value = branch_marker(position.base, branch)
     return True if value and Path(value) == path_for(position, branch) else None
 
 
 def _marked_path(position: Position, branch: str) -> Path:
     """The checkout a marked branch without a worktree belongs to: the path its marker records (``start_branch``
     records the checkout it switched), else the branch's worktree path."""
-    value = _config(position.base, _marker(branch))
+    value = branch_marker(position.base, branch)
     return Path(value) if value else path_for(position, branch)
 
 
@@ -1359,14 +1342,14 @@ def _check_deletable(base: Path, branch: str, into: str | None) -> None:
     that is ``into`` itself (a local upstream, as ``branch.autoSetupMerge always`` records) contains the branch once
     it is merged, so it never refuses.
     """
-    upstream = _git(base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}")
+    upstream = run_git_text(base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}")
     if (
         not upstream
         or (into is not None and upstream == f"refs/heads/{into}")
         or not _succeeds(base, "rev-parse", "--verify", "--quiet", upstream)
     ):
         return
-    if _succeeds(base, "merge-base", "--is-ancestor", f"refs/heads/{branch}", upstream):
+    if is_ancestor(base, f"refs/heads/{branch}", upstream):
         return
     remote = _config(base, f"branch.{branch}.remote")
     merge_ref = _config(base, f"branch.{branch}.merge")
@@ -1411,7 +1394,7 @@ def _check_upstream(position: Position) -> None:
         _log.info("could not fetch %s %s; the base is not checked against it: %s", remote, merge_ref, exc.message)
         return
     tip = _query(base, "rev-parse", "--verify", "--quiet", "FETCH_HEAD^{commit}")
-    if tip is None or _succeeds(base, "merge-base", "--is-ancestor", tip, "HEAD"):
+    if tip is None or is_ancestor(base, tip, "HEAD"):
         return
     raise BaseBehindError(
         f"{remote} {merge_ref} has commits the base branch {position.branch} lacks, so the push after the merge"
@@ -1503,7 +1486,7 @@ class WorktreeStatusQuery(BaseUseCase):
             )
         checked_out = {entry.branch for entry in entries if entry.branch}
         branches = []
-        refs = _git(base, "for-each-ref", "--format=%(refname) %(objectname)", "refs/heads/")
+        refs = run_git_text(base, "for-each-ref", "--format=%(refname) %(objectname)", "refs/heads/")
         for line in refs.splitlines():
             ref, _, head = line.partition(" ")
             name = _short(ref)

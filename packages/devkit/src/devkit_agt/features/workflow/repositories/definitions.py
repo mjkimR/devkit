@@ -136,20 +136,3 @@ def load_definition_file(path: Path, ref: str, fix: str | None = None) -> Workfl
     if not path.is_file():
         raise WorkflowNotFoundError(f"no definition file {ref}", fix=fix)
     return load_definition(path)
-
-
-def resolve_definition(definitions_dir: Path, ref: str, workspace_root: Path | None = None) -> WorkflowDocument:
-    """``ref`` is a workflow id, or a path to a definition file (relative to ``workspace_root`` when given).
-
-    Ids are looked up in ``definitions_dir`` plus, with ``workspace_root``, the
-    workflow assets of its installation receipt.
-    """
-    path = definition_path(ref, workspace_root)
-    if path is not None:
-        return load_definition_file(path, ref)
-    if workspace_root is not None:
-        docs, errors = discover_definitions(workspace_root, definitions_dir)
-    else:
-        docs, errors = load_definition_dir(definitions_dir)
-    where = definitions_dir.as_posix() + (" or the devkit installation receipt" if workspace_root else "")
-    return select_definition(docs, ref, errors, where)

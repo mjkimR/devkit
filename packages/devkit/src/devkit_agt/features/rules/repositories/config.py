@@ -14,7 +14,7 @@ from typing import Any
 from devkit_dist.features.project.repositories.project import config_table, read_project_config
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
-from devkit_agt.features.rules.models.config import RulesConfig as RulesConfig
+from devkit_agt.features.rules.models.config import RulesConfig
 from devkit_agt.features.rules.models.contracts import Phase, Severity
 from devkit_agt.features.rules.models.errors import RulesConfigError
 from devkit_agt.features.rules.models.settings import Override, RawSettings, validate_pattern

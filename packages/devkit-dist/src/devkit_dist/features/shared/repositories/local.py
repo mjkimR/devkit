@@ -20,7 +20,7 @@ from pathlib import Path
 
 from devkit_core.base.errors import GitError
 from devkit_core.core.deadline import Deadline
-from devkit_core.core.git import run_git
+from devkit_core.core.git import run_git_text
 
 from devkit_dist.features.project.repositories.invocation import guard_execution
 from devkit_dist.features.shared.models.api import (
@@ -58,10 +58,6 @@ def deadline() -> Deadline:
     return Deadline(10, error=lambda what, _: TimeoutError(f"ten-second deadline exceeded: {what}"))
 
 
-def _git(root: Path, budget: Deadline, *args: str) -> str:
-    return os.fsdecode(run_git(root, *args, deadline=budget)).strip()
-
-
 def _safe(path: Path, *, directory: bool) -> None:
     for part in (*reversed(path.parents), path):
         if part.is_symlink():
@@ -77,11 +73,13 @@ def discover(workspace: Path, budget: Deadline | None = None) -> RepositoryConte
     try:
         workspace = workspace.absolute()
         _safe(workspace, directory=True)
-        top = Path(_git(workspace, budget, "rev-parse", "--show-toplevel")).resolve()
+        top = Path(run_git_text(workspace, "rev-parse", "--show-toplevel", deadline=budget)).resolve()
         if top != workspace.resolve():
             raise WorkspaceError("workspace must be a Git checkout root")
-        common = Path(_git(top, budget, "rev-parse", "--path-format=absolute", "--git-common-dir")).resolve()
-        records = _git(top, budget, "worktree", "list", "--porcelain").split("\n\n")
+        common = Path(
+            run_git_text(top, "rev-parse", "--path-format=absolute", "--git-common-dir", deadline=budget)
+        ).resolve()
+        records = run_git_text(top, "worktree", "list", "--porcelain", deadline=budget).split("\n\n")
         first = records[0].splitlines()
         if not first or "bare" in first or not first[0].startswith("worktree "):
             raise WorkspaceError("a retained non-bare main checkout is required")
@@ -89,8 +87,11 @@ def discover(workspace: Path, budget: Deadline | None = None) -> RepositoryConte
         _safe(main, directory=True)
         if (
             not main.is_dir()
-            or Path(_git(main, budget, "rev-parse", "--path-format=absolute", "--git-common-dir")).resolve() != common
-            or Path(_git(main, budget, "rev-parse", "--show-toplevel")).resolve() != main.resolve()
+            or Path(
+                run_git_text(main, "rev-parse", "--path-format=absolute", "--git-common-dir", deadline=budget)
+            ).resolve()
+            != common
+            or Path(run_git_text(main, "rev-parse", "--show-toplevel", deadline=budget)).resolve() != main.resolve()
         ):
             raise WorkspaceError("retained main checkout identity does not match")
         return RepositoryContext(top, main, common, hashlib.sha256(os.fsencode(common)).hexdigest())
@@ -125,7 +126,7 @@ def _lock(path: Path, budget: Deadline, *, write: bool, create: bool = False) ->
 def _worktrees(context: RepositoryContext, budget: Deadline) -> list[Path]:
     return [
         Path(line[9:])
-        for line in _git(context.workspace, budget, "worktree", "list", "--porcelain").splitlines()
+        for line in run_git_text(context.workspace, "worktree", "list", "--porcelain", deadline=budget).splitlines()
         if line.startswith("worktree ")
     ]
 
@@ -152,9 +153,9 @@ def _eligible(context: RepositoryContext, budget: Deadline) -> None:
                 targets = ["/".join(components[:i]) for i in range(1, len(components) + 1)] if anchored else components
                 if any(fnmatch.fnmatchcase(value.casefold(), pattern.casefold()) for value in targets):
                     raise ExclusionError("an ancestor ignore rule can re-include shared storage")
-        if _git(root, budget, "ls-files", "--", RELATIVE):
+        if run_git_text(root, "ls-files", "--", RELATIVE, deadline=budget):
             raise ExclusionError("tracked shared storage cannot be hidden")
-        if _git(root, budget, "ls-files", "--others", "--exclude-standard", "--", RELATIVE):
+        if run_git_text(root, "ls-files", "--others", "--exclude-standard", "--", RELATIVE, deadline=budget):
             raise ExclusionError("exclusion would hide visible foreign content")
 
 
@@ -181,7 +182,7 @@ def _initialize(context: RepositoryContext, budget: Deadline) -> Path:
                 os.fsync(stream.fileno())
         for root in _worktrees(context, budget):
             try:
-                _git(root, budget, "check-ignore", "--", RELATIVE + "/")
+                run_git_text(root, "check-ignore", "--", RELATIVE + "/", deadline=budget)
             except GitError as exc:
                 raise ExclusionError("shared storage is not ignored in every registered worktree") from exc
         for part in (context.main / ".devkit", context.main / RELATIVE, context.main / RELATIVE / "artifacts"):
@@ -346,22 +347,50 @@ class LocalAdapter:
         validate_page(cursor, limit)
         if cursor is not None:
             decode_cursor(cursor)
+        entries = self.list_live(
+            kind=kind, slug=slug, source_sha=source_sha, language=language, cursor=cursor, limit=limit + 1
+        )
+        if len(entries) > limit:
+            return Page(tuple(entries[:limit]), encode_cursor(entries[limit - 1].generation_id + ".md"))
+        return Page(tuple(entries))
+
+    def list_live(
+        self,
+        *,
+        kind: str | None = None,
+        slug: str | None = None,
+        source_sha: str | None = None,
+        language: str | None = None,
+        cursor: str | None = None,
+        limit: int | None = None,
+        skip_unreadable: bool = False,
+    ) -> list[ArtifactMetadata]:
+        """Live artifacts in generation order, matching every given field, stopping after ``limit`` matches.
+
+        Filters are compared, not validated (``list`` validates its own). With ``skip_unreadable`` an artifact
+        whose read fails (corrupt, vanished or refused) is left out instead of failing the whole listing.
+        """
         with self._operation() as budget:
-            entries = []
+            entries: list[ArtifactMetadata] = []
             now = self.clock()
             for path in self._paths(budget, cursor):
-                meta = self._read(path, budget).metadata
+                try:
+                    meta = self._read(path, budget).metadata
+                except (SharedError, OSError):
+                    if skip_unreadable:
+                        continue
+                    raise
                 if (
                     meta.live(now)
-                    and meta.kind == kind
-                    and meta.slug == slug
+                    and (kind is None or meta.kind == kind)
+                    and (slug is None or meta.slug == slug)
                     and (source_sha is None or meta.source_sha == source_sha)
                     and (language is None or meta.language == language)
                 ):
                     entries.append(meta)
-                    if len(entries) > limit:
-                        return Page(tuple(entries[:limit]), encode_cursor(entries[limit - 1].generation_id + ".md"))
-            return Page(tuple(entries))
+                    if limit is not None and len(entries) >= limit:
+                        break
+            return entries
 
     def sweep(self, *, apply: bool = False, cursor: str | None = None) -> SweepResult:
         validate_page(cursor, 100)

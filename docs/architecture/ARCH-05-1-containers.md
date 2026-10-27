@@ -46,7 +46,7 @@ graph TD
     PkgDist -->|Same-version dependency| PkgCore
     PkgDist -->|Same-version dependency| PkgAdv
     PkgMcp -->|Same-version dependency| PkgDist
-    PkgMcp -.->|MCP transport and native forms| DevTools
+    PkgMcp -.->|MCP transport| DevTools
     PkgDevkit -.->|Optional mcp extra| PkgMcp
     PkgDevkit -->|Same-version dependency| PkgDist
     PkgDist -.->|Dev dependency (asset distribution only)| DevTools

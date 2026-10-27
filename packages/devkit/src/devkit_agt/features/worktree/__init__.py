@@ -9,6 +9,7 @@ and plugs in through ``before_remove`` and the ``devkit.post_finish``, ``devkit.
 ``devkit.attach_check`` extension points. See ``docs/capabilities/worktree/CAP-WT-task-worktrees.md``.
 """
 
+from devkit_agt.features.worktree.models.config import WorktreeConfig
 from devkit_agt.features.worktree.models.errors import (
     AddFailedError,
     AttachCheckFailedError,
@@ -52,7 +53,19 @@ from devkit_agt.features.worktree.models.errors import (
     WorktreeError,
     pull_request_policy_fix,
 )
-from devkit_agt.features.worktree.repositories.config import WorktreeConfig, read_worktree_config
+from devkit_agt.features.worktree.models.lifecycle import (
+    BranchStartResult,
+    BranchStatus,
+    FinishResult,
+    Position,
+    StartResult,
+    StatusResult,
+    WorktreeStatus,
+    slug_of,
+)
+from devkit_agt.features.worktree.models.planning import FinishPlan
+from devkit_agt.features.worktree.repositories.config import read_worktree_config
+from devkit_agt.features.worktree.repositories.markers import BASE_KEY, MARKER, UNIT_KEY, branch_marker, marker_key
 from devkit_agt.features.worktree.services.extensions import run_finish_guards, run_post_finish
 from devkit_agt.features.worktree.services.merging import (
     build_result,
@@ -64,15 +77,7 @@ from devkit_agt.features.worktree.services.merging import (
     merge_method,
 )
 from devkit_agt.features.worktree.usecases.lifecycle import (
-    ACTIVITY_PREFIXES,
-    BranchStartResult,
-    BranchStatus,
-    FinishResult,
-    Position,
     StartBranch,
-    StartResult,
-    StatusResult,
-    WorktreeStatus,
     WorktreeStatusQuery,
     attach,
     check_branch,
@@ -81,14 +86,15 @@ from devkit_agt.features.worktree.usecases.lifecycle import (
     finish,
     locate,
     path_for,
-    slug_of,
     start,
 )
-from devkit_agt.features.worktree.usecases.planning import FinishPlan, plan_finish, validate_finish
+from devkit_agt.features.worktree.usecases.planning import plan_finish, validate_finish
 from devkit_agt.features.worktree.usecases.stale import StaleBranch, StaleResult, stale_branches
 
 __all__ = [
-    "ACTIVITY_PREFIXES",
+    "BASE_KEY",
+    "MARKER",
+    "UNIT_KEY",
     "AddFailedError",
     "AttachCheckFailedError",
     "AttachRefusedError",
@@ -143,6 +149,7 @@ __all__ = [
     "WorktreeStatus",
     "WorktreeStatusQuery",
     "attach",
+    "branch_marker",
     "build_result",
     "check_branch",
     "check_identity",
@@ -153,6 +160,7 @@ __all__ = [
     "integration_lock",
     "is_ancestor",
     "locate",
+    "marker_key",
     "merge_message",
     "merge_method",
     "path_for",

@@ -7,11 +7,12 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from devkit_agt.features.workflow.services.envelope import Envelopes, collect_envelopes, is_envelope_name
-from devkit_agt.features.worktree.usecases.lifecycle import locate
+from devkit_agt.features.worktree import BASE_KEY, UNIT_KEY, branch_marker, locate
 from devkit_core.base.errors import ArgumentError
-from devkit_core.core import GitError, run_git
+from devkit_core.core import GitError, run_git, run_git_text
 from devkit_core.core.frontmatter import parse
 
+from devkit_spec.base.axes import PROPOSAL_WORKFLOW, SPEC_WORKFLOW_PREFIX
 from devkit_spec.base.errors import (
     SpecError,
     WorkerBaseUnresolvedError,
@@ -19,12 +20,9 @@ from devkit_spec.base.errors import (
     WorkerScopeUnresolvedError,
     WorkerUnitUnresolvedError,
 )
-from devkit_spec.features.delivery.usecases.attach import PROPOSAL_UNIT, SPEC_UNIT, attach_check
+from devkit_spec.base.units import PROPOSAL_FILE, PROPOSAL_UNIT, SPEC_UNIT
+from devkit_spec.features.delivery.usecases.attach import attach_check
 from devkit_spec.features.entrypoints.repositories.bundle import parse_boundaries, parse_targets
-
-
-def git(root: Path, *args: str) -> str:
-    return run_git(root, *args).decode("utf-8", errors="surrogateescape").strip()
 
 
 def files(root: Path, revision: str, prefix: str = "") -> list[str]:
@@ -41,15 +39,6 @@ def read(root: Path, revision: str, path: str) -> str:
     return run_git(root, "show", f"{revision}:{path}").decode("utf-8")
 
 
-def marker(root: Path, branch: str, key: str) -> str:
-    try:
-        return git(root, "config", "--get", f"branch.{branch}.{key}")
-    except GitError as exc:
-        if exc.returncode == 1:
-            return ""
-        raise
-
-
 def records(root: Path, revision: str, unit: str) -> Envelopes:
     prefix = f"{unit}/envelopes/"
     return collect_envelopes(
@@ -60,7 +49,7 @@ def records(root: Path, revision: str, unit: str) -> Envelopes:
 
 
 def added(root: Path, revision: str, path: str, error: type[SpecError]) -> str:
-    commits = git(root, "log", "--format=%H", "--diff-filter=A", revision, "--", path).splitlines()
+    commits = run_git_text(root, "log", "--format=%H", "--diff-filter=A", revision, "--", path).splitlines()
     if len(commits) != 1:
         raise error(f"{path} has {len(commits)} adding commits")
     return commits[0]
@@ -76,30 +65,6 @@ def prefix(value: str) -> str:
 NOT_APPLICABLE = ("n/a", "none")
 
 
-def project_prefix(start: Path, toplevel: Path) -> str:
-    """The devkit project's directory relative to the Git top level, ``""`` when the project is the top level.
-
-    The project is the nearest directory from ``start`` up to ``toplevel`` holding ``.devkit``; without one the
-    top level is the project.
-    """
-    start = start.resolve()
-    for directory in (start, *start.parents):
-        if not directory.is_relative_to(toplevel):
-            break
-        if (directory / ".devkit").is_dir():
-            relative = directory.relative_to(toplevel).as_posix()
-            return "" if relative == "." else relative
-    return ""
-
-
-def project_path(project: str, value: str) -> str:
-    """A project-relative scope entry as a repository-relative path."""
-    path = prefix(value)
-    if not project:
-        return path
-    return project if path == "." else f"{project}/{path}"
-
-
 def unit_path(root: Path, value: str) -> str:
     path = Path(value)
     if path.is_absolute():
@@ -112,13 +77,12 @@ def unit_path(root: Path, value: str) -> str:
     return PurePosixPath(value).as_posix()
 
 
-def derive_unit(root: Path, tip: str, branch: str | None, project: str = "") -> tuple[str, str]:
+def derive_unit(root: Path, tip: str, branch: str | None) -> tuple[str, str]:
     if not branch:
         raise WorkerUnitUnresolvedError("Detached HEAD has no activity unit")
-    marked = marker(root, branch, "devkitUnit")
+    marked = branch_marker(root, branch, UNIT_KEY)
     if marked:
-        # The marker names the unit relative to the devkit project (``devkit worktree attach --unit``).
-        unit = unit_path(root, marked if Path(marked).is_absolute() or not project else f"{project}/{marked}")
+        unit = unit_path(root, marked)
         if not files(root, tip, unit):
             raise WorkerUnitUnresolvedError(f"Marked unit {unit} is absent at HEAD")
         return unit, "branch.devkitUnit"
@@ -127,7 +91,7 @@ def derive_unit(root: Path, tip: str, branch: str | None, project: str = "") -> 
     candidates = []
     for path in files(root, tip):
         directory, _, name = path.rpartition("/")
-        if name not in ("spec.md", "proposal.md"):
+        if name not in ("spec.md", PROPOSAL_FILE):
             continue
         match = SPEC_UNIT.fullmatch(directory) or PROPOSAL_UNIT.fullmatch(directory)
         if match and match["slug"] == branch.split("-", 1)[1] and not attach_check(root, branch, directory, tip):
@@ -155,31 +119,30 @@ def derive_base(
                 raise WorkerBaseUnresolvedError("Unresolved problems have missing or conflicting range bases")
             return bases.pop(), "previous-blocked-range"
         return previous, "previous-worker-commit"
-    base_branch = marker(root, branch, "devkitBase") if branch else ""
+    base_branch = branch_marker(root, branch, BASE_KEY) if branch else ""
     if not base_branch and base_checkout:
-        base_branch = git(base_checkout, "symbolic-ref", "--quiet", "--short", "HEAD")
+        base_branch = run_git_text(base_checkout, "symbolic-ref", "--quiet", "--short", "HEAD")
     if not base_branch or base_branch == branch:
         raise WorkerBaseUnresolvedError("No distinct base branch is recorded")
-    bases = git(root, "merge-base", "--all", tip, base_branch).splitlines()
+    bases = run_git_text(root, "merge-base", "--all", tip, base_branch).splitlines()
     if len(bases) != 1:
         raise WorkerBaseUnresolvedError("The base branch has no single merge base")
     return bases[0], "branch-merge-base"
 
 
-def derive_scope(root: Path, tip: str, unit: str, project: str = "") -> list[dict[str, Any]]:
-    """The scope of ``unit``; ``_Boundary`` and reconcile entries are relative to the devkit ``project``."""
+def derive_scope(root: Path, tip: str, unit: str) -> list[dict[str, Any]]:
     paths = files(root, tip)
-    anchor = f"{unit}/spec.md" if f"{unit}/spec.md" in paths else f"{unit}/proposal.md"
+    anchor = f"{unit}/spec.md" if f"{unit}/spec.md" in paths else f"{unit}/{PROPOSAL_FILE}"
     text = read(root, tip, anchor)
     workflow = (parse(text).data or {}).get("workflow", "")
     entries: list[dict[str, Any]] = [{"path": unit, "source": "unit"}]
-    if workflow == "sdd-proposal":
+    if workflow == PROPOSAL_WORKFLOW:
         return entries
-    if not isinstance(workflow, str) or not workflow.startswith("sdd-spec-"):
+    if not isinstance(workflow, str) or not workflow.startswith(SPEC_WORKFLOW_PREFIX):
         raise WorkerScopeUnresolvedError(f"Unsupported workflow: {workflow}")
     for task in parse_boundaries(read(root, tip, f"{unit}/tasks.md")):
         entries.extend(
-            {"path": project_path(project, p), "source": "boundary", "task": task.index}
+            {"path": prefix(p), "source": "boundary", "task": task.index}
             for p in task.values
             if p.strip().lower() not in NOT_APPLICABLE
         )
@@ -187,7 +150,7 @@ def derive_scope(root: Path, tip: str, unit: str, project: str = "") -> list[dic
     entries.append({"path": str(PurePosixPath(*parts[:-3], "docs", "materials", *parts[-2:])), "source": "materials"})
     for target in parse_targets(read(root, tip, f"{unit}/reconcile.md"), f"{unit}/reconcile.md"):
         if target.file.strip():
-            entries.append({"path": project_path(project, target.file.strip()), "source": "reconcile"})
+            entries.append({"path": prefix(target.file.strip()), "source": "reconcile"})
     section = re.search(r"(?im)^## [^\n]*Source feedback[^\n]*\n(.*?)(?=^## |\Z)", text, re.DOTALL)
     for identifier in sorted(set(re.findall(r"\bFB-[a-z0-9-]+", section[1] if section else ""))):
         matches = []
@@ -208,15 +171,12 @@ def derive_scope(root: Path, tip: str, unit: str, project: str = "") -> list[dic
 
 def inputs(
     root: Path, unit: str | None, base: str | None, head: str | None, base_checkout: str | None
-) -> tuple[Path, str, str, dict[str, Any]]:
+) -> tuple[Path, str, dict[str, Any]]:
     position = locate(root)
-    project = project_prefix(root, position.root)
     root = position.root
-    tip = git(root, "rev-parse", "HEAD")
+    tip = run_git_text(root, "rev-parse", "HEAD")
     checkout = Path(base_checkout).resolve() if base_checkout else position.base if position.linked else None
-    chosen_unit, unit_source = (
-        (unit_path(root, unit), "argument") if unit else derive_unit(root, tip, position.branch, project)
-    )
+    chosen_unit, unit_source = (unit_path(root, unit), "argument") if unit else derive_unit(root, tip, position.branch)
     if not files(root, tip, chosen_unit):
         raise WorkerUnitUnresolvedError(f"{chosen_unit} does not exist in committed HEAD")
     workers = sorted(
@@ -243,7 +203,7 @@ def inputs(
     ):
         if name != "unit":
             try:
-                value = git(root, "rev-parse", "--verify", "--end-of-options", f"{value}^{{commit}}")
+                value = run_git_text(root, "rev-parse", "--verify", "--end-of-options", f"{value}^{{commit}}")
             except GitError as exc:
                 raise ArgumentError(
                     f"Unknown {name} commit: {value}", fix=f"Pass --{name} with a valid commit"
@@ -253,4 +213,4 @@ def inputs(
         "value": str(checkout) if checkout else None,
         "source": "argument" if base_checkout else "registered-worktree" if checkout else "base-checkout",
     }
-    return root, tip, project, resolved
+    return root, tip, resolved

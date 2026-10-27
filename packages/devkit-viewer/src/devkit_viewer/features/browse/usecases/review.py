@@ -2,19 +2,16 @@
 
 from __future__ import annotations
 
-import os
 from html import escape
 from http import HTTPStatus
 
-from devkit.advisory import AdvisoryError
 from devkit_core.base.usecase import BaseUseCase
-from devkit_dist.features.project.repositories.local_config import read_effective_config
 from devkit_dist.features.shared.models.api import GENERATION
 from devkit_dist.features.shared.models.errors import ExpiredError, MissingError
-from devkit_dist.features.shared.repositories.local import LocalAdapter, discover
 
 from devkit_viewer.features.browse.models.errors import ReadError
 from devkit_viewer.features.browse.models.repository import Repository
+from devkit_viewer.features.browse.repositories.shared_space import get_artifact
 
 UNAVAILABLE_CODES = {MissingError.code, ExpiredError.code}
 
@@ -24,23 +21,14 @@ class RenderReportPageUseCase(BaseUseCase):
         """Read only the requested generation; never discover plugins, enumerate or initialize storage."""
         if not GENERATION.fullmatch(generation_id):
             raise ReadError(HTTPStatus.BAD_REQUEST, "VIEWER_REVIEW_INVALID", "invalid report generation")
-        try:
-            configured = read_effective_config(repo.root).values["shared"]["adapter"]
-            if os.environ.get("DEVKIT_SHARED_ADAPTER", configured) != "local":
-                raise ReadError(
-                    HTTPStatus.NOT_FOUND, "VIEWER_REVIEW_UNAVAILABLE", "report viewing requires the local adapter"
-                )
-            selected = LocalAdapter(discover(repo.root))
-            # LocalAdapter.get validates namespace, kind, generation, digest, timestamps and expiry.
-            artifact = selected.get(f"shared://{selected.repository_namespace}/{generation_id}")
-        except MissingError as exc:
-            raise ReadError(HTTPStatus.NOT_FOUND, exc.code, "report not found") from exc
-        except ExpiredError as exc:
-            raise ReadError(HTTPStatus.GONE, exc.code, "report expired; request a fresh report") from exc
-        except AdvisoryError as exc:
-            raise ReadError(
-                HTTPStatus.BAD_REQUEST, exc.code, "report or local shared configuration is invalid"
-            ) from exc
+        artifact = get_artifact(
+            repo,
+            generation_id,
+            unavailable=("VIEWER_REVIEW_UNAVAILABLE", "report viewing requires the local adapter"),
+            not_found="report not found",
+            expired="report expired; request a fresh report",
+            invalid="report or local shared configuration is invalid",
+        )
         meta = artifact.metadata
         page = (
             '<!doctype html><html><head><meta charset="utf-8">'

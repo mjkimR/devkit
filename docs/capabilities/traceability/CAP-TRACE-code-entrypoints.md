@@ -90,9 +90,10 @@ A spec bundle already declares both sides of a link: `tasks.md` names the code e
 lines, and `reconcile.md` names the Living Spec documents the change reconciled. `devkit spec entrypoints derive`
 joins them.
 
-1. **Code side**: every `_Boundary` line of `tasks.md` outside fenced code blocks (a fence closes only on a line of its opening
-   character at least as long as the opener), attached to the checklist item
-   above it (task `0` before the first one; tasks are numbered by checklist position from `1`). The label MAY carry
+1. **Code side**: every `_Boundary` line of the `tasks.md` body outside frontmatter, fenced or indented code and HTML
+   comments (as the shared Markdown scanner `devkit_agt.features.rules.scan` reports them), attached to the checklist
+   item above it (task `0` before the first one; tasks are numbered by checklist position from `1`, the same items
+   `count_tasks` counts). The label MAY carry
    bold or italic markers and the line MAY be a list item. The value MAY continue on the following lines indented
    deeper than the label line; a blank line, a list item (bullet or ordered), another `_Boundary` line, a fence or a
    line indented no deeper ends it, and the lines are joined with a space (`SPEC-boundary-continuation-lines`). The

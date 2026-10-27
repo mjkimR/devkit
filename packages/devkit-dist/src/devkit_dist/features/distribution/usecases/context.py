@@ -11,7 +11,7 @@ from devkit_core.base.usecase import BaseUseCase
 from devkit_dist.base.errors import ReceiptError
 from devkit_dist.features.distribution.models.errors import BundleError, SelectionError
 from devkit_dist.features.distribution.models.results import ContextResult, Instruction
-from devkit_dist.features.distribution.services.bundles.common import SLUG
+from devkit_dist.features.distribution.models.settings import SLUG
 from devkit_dist.features.distribution.services.bundles.context_documents import declared_directory, list_documents
 from devkit_dist.features.distribution.services.bundles.instructions import read_instruction_header
 from devkit_dist.features.distribution.services.installation.discovery import discover_bundles

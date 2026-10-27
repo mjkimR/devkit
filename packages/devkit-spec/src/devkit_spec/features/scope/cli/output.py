@@ -2,9 +2,9 @@
 
 import click
 
+from devkit_spec.adapters.cli import sentinel
 from devkit_spec.features.scope.models.location import Location
 from devkit_spec.features.scope.models.model import Record
-from devkit_spec.utils.output import sentinel
 
 
 def echo_registered(location: Location, record: Record, token: str) -> None:

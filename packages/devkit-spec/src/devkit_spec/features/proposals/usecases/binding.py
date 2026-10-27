@@ -13,8 +13,8 @@ from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow import Binding, Workspace
 from devkit_core.core.logs import get_logger
 
+from devkit_spec.base.axes import DEFAULT_WORKFLOW
 from devkit_spec.base.errors import DEVKIT, ProposalWorkflowError, SpecError
-from devkit_spec.features.proposals.models.axes import DEFAULT_WORKFLOW
 
 _log = get_logger(__name__)
 

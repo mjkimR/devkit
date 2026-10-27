@@ -28,20 +28,22 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from devkit.advisory import AdvisoryError
+from devkit.advisory import AdvisoryError, Level
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core.logs import get_logger
 from devkit_dist.base.errors import DevkitRootNestedError
 from devkit_dist.features.project.repositories.project import find_project_root, git_toplevel
 
 from devkit_agt.features.compact.models.errors import CommandNotStartedError, LogDirectoryError, SlowCommandNotice
-from devkit_agt.features.compact.services.scan import Scan, scan
+from devkit_agt.features.compact.models.scan import Scan
+from devkit_agt.features.compact.services.scan import scan
 
 KEEP_LOGS = 20
 STOP_GRACE = 5.0
 _STOP_POLL = 0.05
 LOG_ROOT = "devkit-run"
 INTERRUPTS = (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)
+FAILURE_TAIL_LINES = 10  # last output lines a failed run's details show, beside its summaries
 
 _log = get_logger(__name__)
 
@@ -69,6 +71,22 @@ class CommandRun:
     @property
     def command(self) -> str:
         return shlex.join(self.argv)
+
+    def failure_details(self, prefix: str = "", *, failed_tests: bool = False) -> list[str]:
+        """The advisory details of a failed run: ``<prefix>exit=<code>  log=<path>``, its summaries, its failed
+        tests when ``failed_tests``, its last ``FAILURE_TAIL_LINES`` other output lines and its relayed errors."""
+        found = self.scan
+        lines = [f"{prefix}exit={self.exit_code}  log={self.log}"]
+        lines += [f"  summary: {summary}" for summary in found.summaries]
+        if failed_tests:
+            lines += [f"  failed: {failure.test}: {failure.message}" for failure in found.failures]
+        shown = set(found.summaries)
+        tail = [line for line in found.output.splitlines() if line.strip() and line not in shown]
+        lines += [f"  | {line}" for line in tail[-FAILURE_TAIL_LINES:]]
+        lines += [
+            f"  > {line}" for item in found.advisories if item.level is Level.ERROR for line in item.text.splitlines()
+        ]
+        return lines
 
 
 class CommandInterrupted(SystemExit):

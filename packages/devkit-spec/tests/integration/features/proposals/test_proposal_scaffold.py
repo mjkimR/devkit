@@ -17,7 +17,8 @@ from devkit_spec.base.errors import (
     ProposalSlugConflictError,
     ProposalSlugError,
 )
-from devkit_spec.features.proposals import clean_slug, create_padr, create_proposal, create_spec, yaml_scalar
+from devkit_spec.features.proposals import clean_slug, create_proposal, create_spec
+from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecisionUseCase
 
 
 @pytest.mark.parametrize(
@@ -31,20 +32,6 @@ from devkit_spec.features.proposals import clean_slug, create_padr, create_propo
 )
 def test_clean_slug(raw: str, slug: str) -> None:
     assert clean_slug(raw) == slug
-
-
-@pytest.mark.parametrize(
-    ("value", "scalar"),
-    [
-        ("plain title", "plain title"),
-        ("A: B subtitle", "'A: B subtitle'"),
-        ("has # hash", "'has # hash'"),
-        ('say "hi"', 'say "hi"'),
-        ("yes", "'yes'"),
-    ],
-)
-def test_yaml_scalar_quotes_only_when_needed(value: str, scalar: str) -> None:
-    assert yaml_scalar(value) == scalar
 
 
 def test_create_proposal_bundle(workspace: Path) -> None:
@@ -182,7 +169,7 @@ def test_new_documents_get_slugs_the_id_convention_accepts(workspace: Path) -> N
     assert create_proposal(workspace, "fast_engine", today=TODAY).id == "PROP-fast-engine"
     for call in (
         lambda: create_proposal(workspace, "2024-budget", today=TODAY),
-        lambda: create_padr(workspace, "fast-engine", "2024 Budget"),
+        lambda: CreateProposalDecisionUseCase().execute(workspace, "fast-engine", "2024 Budget"),
         lambda: create_spec(workspace, "SPEC-20261006-foo", day=TODAY),
     ):
         with pytest.raises(AdvisoryError) as raised:
@@ -209,7 +196,7 @@ def test_a_broken_spec_does_not_block_a_proposal(workspace: Path, write: Write) 
 
 def test_create_padr(workspace: Path) -> None:
     create_proposal(workspace, "fast-engine")
-    created = create_padr(workspace, "fast-engine", "Use Go AST Parser", today=TODAY)
+    created = CreateProposalDecisionUseCase().execute(workspace, "fast-engine", "Use Go AST Parser", today=TODAY)
     assert created.to_dict() == {
         "id": "PADR-use-go-ast-parser",
         "path": "docs/proposals/PROP-fast-engine/decisions/PADR-use-go-ast-parser.md",
@@ -228,44 +215,46 @@ def test_create_padr(workspace: Path) -> None:
     assert "- **Status**: Draft\n" in text
     assert text.endswith("## 5. Consequences\n\n## 6. Confirmation\n")
     with pytest.raises(ProposalDecisionExistsError):
-        create_padr(workspace, "fast-engine", "use go ast parser")
+        CreateProposalDecisionUseCase().execute(workspace, "fast-engine", "use go ast parser")
 
 
 def test_create_padr_with_an_explicit_slug(workspace: Path) -> None:
     create_proposal(workspace, "plans")
     with pytest.raises(ProposalSlugError) as raised:
-        create_padr(workspace, "plans", "2024 roadmap")
+        CreateProposalDecisionUseCase().execute(workspace, "plans", "2024 roadmap")
     assert raised.value.advisory.fix is not None and "--slug" in raised.value.advisory.fix
-    created = create_padr(workspace, "plans", "2024 roadmap", padr_slug="PADR-Roadmap 2024", today=TODAY)
+    created = CreateProposalDecisionUseCase().execute(
+        workspace, "plans", "2024 roadmap", padr_slug="PADR-Roadmap 2024", today=TODAY
+    )
     assert created.id == "PADR-roadmap-2024"
     assert created.path == "docs/proposals/PROP-plans/decisions/PADR-roadmap-2024.md"
     text = (workspace / created.path).read_text(encoding="utf-8")
     assert "title: 2024 roadmap\n" in text and "# [PADR-roadmap-2024] 2024 roadmap\n" in text
     with pytest.raises(ProposalSlugError):
-        create_padr(workspace, "plans", "Any", padr_slug="2024-roadmap")
+        CreateProposalDecisionUseCase().execute(workspace, "plans", "Any", padr_slug="2024-roadmap")
 
 
 def test_padr_ids_are_unique_across_proposals(workspace: Path) -> None:
     create_proposal(workspace, "first")
     create_proposal(workspace, "second")
-    create_padr(workspace, "first", "Same decision")
+    CreateProposalDecisionUseCase().execute(workspace, "first", "Same decision")
     with pytest.raises(ProposalDecisionExistsError) as raised:
-        create_padr(workspace, "second", "Same decision")
+        CreateProposalDecisionUseCase().execute(workspace, "second", "Same decision")
     assert raised.value.target_files == ("docs/proposals/PROP-first/decisions/PADR-same-decision.md",)
 
 
 def test_padr_needs_a_bundle_and_a_title(workspace: Path) -> None:
     with pytest.raises(ProposalNotFoundError):
-        create_padr(workspace, "absent", "Title")
+        CreateProposalDecisionUseCase().execute(workspace, "absent", "Title")
     create_proposal(workspace, "there")
     with pytest.raises(ProposalSlugError):
-        create_padr(workspace, "there", "?!")
+        CreateProposalDecisionUseCase().execute(workspace, "there", "?!")
 
 
 def test_create_padr_title_longer_than_proposal_slug_limit(workspace: Path) -> None:
     create_proposal(workspace, "long-titles")
     long_title = "Planning steps split between a spec reference and the worker contract"
     assert len(long_title) == 69
-    created = create_padr(workspace, "long-titles", long_title, today=TODAY)
+    created = CreateProposalDecisionUseCase().execute(workspace, "long-titles", long_title, today=TODAY)
     assert created.id == "PADR-planning-steps-split-between-a-spec-reference-and-the-worker-contract"
     assert (workspace / created.path).exists()

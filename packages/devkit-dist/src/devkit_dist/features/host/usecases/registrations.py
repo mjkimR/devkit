@@ -7,7 +7,6 @@ import contextlib
 import json
 import os
 import stat
-import tempfile
 import tomllib
 from dataclasses import dataclass, field
 from importlib import metadata
@@ -17,11 +16,13 @@ from typing import Any
 import tomlkit
 from devkit.advisory import Actor, AdvisoryError, Level
 from devkit_core.base.errors import ArgumentError
-from devkit_core.core.git import run_git
+from devkit_core.core import atomic_write_bytes
+from devkit_core.core.git import run_git_text
 from devkit_core.core.locks import file_lock
 
 from devkit_dist.features.host.models.errors import HostError
 from devkit_dist.features.project.models.invocation import devkit_command
+from devkit_dist.features.project.models.strict_json import strict_json_loads
 from devkit_dist.features.project.repositories.invocation import guard_execution
 from devkit_dist.features.project.repositories.local_config import read_effective_config
 
@@ -141,15 +142,11 @@ class LaunchDescriptor:
         return {"command": self.command, "args": list(self.args)}
 
 
-def _git(root: Path, *args: str) -> str:
-    return run_git(root, *args).decode("utf-8", errors="surrogateescape").strip()
-
-
 def common_dir(root: Path) -> Path | None:
     try:
-        if Path(_git(root, "rev-parse", "--show-toplevel")).resolve() != root.resolve():
+        if Path(run_git_text(root, "rev-parse", "--show-toplevel")).resolve() != root.resolve():
             return None
-        return Path(_git(root, "rev-parse", "--path-format=absolute", "--git-common-dir")).resolve()
+        return Path(run_git_text(root, "rev-parse", "--path-format=absolute", "--git-common-dir")).resolve()
     except AdvisoryError:
         return None
 
@@ -189,17 +186,18 @@ def _snapshot(path: Path, anchor: Path) -> tuple[bytes, int] | None:
     return (path.read_bytes(), stat.S_IMODE(path.stat().st_mode)) if path.exists() else None
 
 
-def _pairs(items: list[tuple[str, Any]]) -> dict:
-    result = {}
-    for key, value in items:
-        if key in result:
-            raise ValueError("duplicate JSON key")
-        result[key] = value
-    return result
+def _host(agent: str) -> str:
+    """The MCP host an agent name selects: ``claude-code`` registers as ``claude``."""
+    return "claude" if agent == "claude-code" else agent
+
+
+def _server_key(host: str) -> str:
+    """The key of a host configuration's server map."""
+    return "mcp_servers" if host == "codex" else "mcpServers"
 
 
 def _json(raw: bytes) -> dict:
-    value = json.loads(raw, object_pairs_hook=_pairs)
+    value = strict_json_loads(raw, reject_constants=False)
     if not isinstance(value, dict):
         raise ValueError("expected JSON object")
     return value
@@ -208,8 +206,7 @@ def _json(raw: bytes) -> dict:
 def _document(host: str, raw: bytes | None) -> dict:
     try:
         value = (tomllib.loads(raw.decode()) if host == "codex" else _json(raw)) if raw else {}
-        key = "mcp_servers" if host == "codex" else "mcpServers"
-        if not isinstance(value.get(key, {}), dict):
+        if not isinstance(value.get(_server_key(host), {}), dict):
             raise ValueError("server map must be an object")
         return value
     except (ValueError, UnicodeError) as exc:
@@ -217,11 +214,11 @@ def _document(host: str, raw: bytes | None) -> dict:
 
 
 def _entry(host: str, raw: bytes | None) -> Any:
-    return _document(host, raw).get("mcp_servers" if host == "codex" else "mcpServers", {}).get("devkit")
+    return _document(host, raw).get(_server_key(host), {}).get("devkit")
 
 
 def _render(host: str, raw: bytes | None, entry: dict | None) -> bytes:
-    key = "mcp_servers" if host == "codex" else "mcpServers"
+    key = _server_key(host)
     if host == "codex":
         value = tomlkit.parse(raw.decode()) if raw else tomlkit.document()
         if key not in value:
@@ -242,18 +239,18 @@ def _render(host: str, raw: bytes | None, entry: dict | None) -> bytes:
 
 
 def _tracked(root: Path, relative: str) -> bool:
-    return bool(_git(root, "ls-files", "--", relative))
+    return bool(run_git_text(root, "ls-files", "--", relative))
 
 
 def _ignored(root: Path, relative: str) -> bool:
     try:
-        return bool(_git(root, "check-ignore", "--", relative))
+        return bool(run_git_text(root, "check-ignore", "--", relative))
     except AdvisoryError:
         return False
 
 
 def _foreign_worktree(root: Path, relative: str) -> bool:
-    for part in _git(root, "worktree", "list", "--porcelain", "-z").split("\0"):
+    for part in run_git_text(root, "worktree", "list", "--porcelain", "-z").split("\0"):
         if part.startswith("worktree "):
             other = Path(part[9:])
             if (
@@ -330,8 +327,7 @@ def collisions(root: Path, host: str) -> list[str]:
             continue
         try:
             doc = _document(host, path.read_bytes())
-            key = "mcp_servers" if host == "codex" else "mcpServers"
-            present = "devkit" in doc.get(key, {})
+            present = "devkit" in doc.get(_server_key(host), {})
             if host == "claude":
                 projects = doc.get("projects", {})
                 present = present or (
@@ -414,9 +410,7 @@ def plan(
         except RuntimeUnavailable as exc:
             result.notices.append(exc.with_level(Level.WARNING))
             unavailable = True
-    desired_hosts = (
-        {"claude" if agent == "claude-code" else agent for agent in agents} if enabled and installed else set()
-    )
+    desired_hosts = {_host(agent) for agent in agents} if enabled and installed else set()
     entries = dict(ledger["entries"])
     excludes = list(ledger["excludes"])
     for host in sorted(desired_hosts | entries.keys()):
@@ -469,14 +463,6 @@ def plan(
             (desired is None and record is None) or (desired is not None and record is not None)
         ):
             result.states[host] = "matching" if desired else "absent"
-            continue
-        if _tracked(root, relative) or (before is not None and not _ignored(root, relative)):
-            result.notices.append(
-                RegistrationUnavailable(
-                    f"{relative}: tracked or visible foreign host file left unchanged", target_files=[relative]
-                ).with_level(Level.WARNING)
-            )
-            result.states[host] = "unavailable"
             continue
         if desired is not None and not _ignored(root, relative):
             if _foreign_worktree(root, relative):
@@ -541,7 +527,7 @@ def unregistered_hosts(root: Path, agents: list[str] | tuple[str, ...]) -> list[
         return []
     entries = _ledger(root)["entries"]
     hosts = []
-    for host in sorted({"claude" if agent == "claude-code" else agent for agent in agents} & DESTINATIONS.keys()):
+    for host in sorted({_host(agent) for agent in agents} & DESTINATIONS.keys()):
         relative = DESTINATIONS[host]
         snap = _snapshot(root / relative, root)
         if _tracked(root, relative) or (snap is not None and not _ignored(root, relative)):
@@ -558,17 +544,7 @@ def _write(path: Path, value: tuple[bytes, int] | None, anchor: Path) -> None:
     if value is None:
         path.unlink(missing_ok=True)
         return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, name = tempfile.mkstemp(prefix=".mcp-", dir=path.parent)
-    try:
-        with os.fdopen(fd, "wb") as stream:
-            stream.write(value[0])
-            stream.flush()
-            os.fsync(stream.fileno())
-        os.chmod(name, value[1])
-        os.replace(name, path)
-    finally:
-        Path(name).unlink(missing_ok=True)
+    atomic_write_bytes(path, value[0], mode=value[1])
 
 
 def _encoded(value: tuple[bytes, int] | None) -> list | None:
@@ -724,7 +700,7 @@ def inspect(root: Path, agents: list[str] | tuple[str, ...]) -> dict[str, Any]:
     except RegistrationError as exc:
         errors.append(exc)
     project = {}
-    for host in sorted({"claude" if agent == "claude-code" else agent for agent in agents} | ledger["entries"].keys()):
+    for host in sorted({_host(agent) for agent in agents} | ledger["entries"].keys()):
         if host not in DESTINATIONS:
             project[host] = {"state": "unsupported"}
             continue

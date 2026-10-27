@@ -7,9 +7,8 @@ from pathlib import Path
 
 import pytest
 import yaml
-from devkit_core.base.errors import ArgumentError
 from devkit_dist.features.distribution.models.errors import BundleError
-from devkit_dist.features.distribution.services.bundles import Bundle, build_bundle, load_bundle
+from devkit_dist.features.distribution.services.bundles import Bundle, load_bundle
 from devkit_dist.features.distribution.services.bundles.manifest import RESERVED_SKILL_IDS
 from devkit_dist.features.distribution.services.bundles.subagents import read_contract, render_projection
 from devkit_dist.features.distribution.services.installation import playbook_skill, workflow_skill
@@ -195,36 +194,6 @@ def test_projected_name_is_a_yaml_string(role: str) -> None:
         rendered = render_projection(agent, contract, "p")
         assert rendered is not None
         assert yaml.safe_load(rendered.decode().split("---\n")[1])["name"] == role
-
-
-@pytest.fixture
-def small(tmp_path: Path) -> Bundle:
-    return load(tmp_path / "src", '[[assets]]\nid = "doc"\nkind = "document"\nsource = "a.md"\n', {"a.md": "a\n"})
-
-
-def test_unusable_output_is_an_argument_error(small: Bundle, tmp_path: Path) -> None:
-    blocker = tmp_path / "file"
-    blocker.write_text("x")
-    for output in (blocker / "a.zip", blocker / "sub/a.zip"):
-        with pytest.raises(ArgumentError, match="cannot create the archive") as info:
-            build_bundle(small, output)
-        assert info.value.target_files == ("--output",)
-    existing = tmp_path / "out.zip"
-    existing.write_bytes(b"")
-    with pytest.raises(ArgumentError, match="archive already exists"):
-        build_bundle(small, existing)
-
-
-@pytest.mark.skipif(os.geteuid() == 0, reason="root writes into read-only directories")
-def test_unwritable_output_directory_is_an_argument_error(small: Bundle, tmp_path: Path) -> None:
-    locked = tmp_path / "locked"
-    locked.mkdir()
-    locked.chmod(0o500)
-    try:
-        with pytest.raises(ArgumentError, match="cannot create the archive"):
-            build_bundle(small, locked / "a.zip")
-    finally:
-        locked.chmod(0o700)
 
 
 @pytest.mark.parametrize("kind", ["rule", "gate"])

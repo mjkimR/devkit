@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
 
-from devkit_agt.features.rules import LinkRelocation, relocate_links
+from devkit_agt.features.rules import LineKind, LinkRelocation, relocate_links, scan
 from devkit_core.core import FrontmatterError, atomic_write_text
 from devkit_core.core.frontmatter import locate
 
@@ -40,7 +40,6 @@ UNWRITABLE = "unwritable"
 
 _CODE_SPAN_ID = re.compile(rf"`({ID_SOURCE})`")
 _CODE_SPAN_PATH = re.compile(r"`([A-Za-z0-9_.-]+/(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]*)`")
-_FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
 _BRACKET_ID = re.compile(rf"\[({ID_SOURCE})\]")
 
 
@@ -288,23 +287,13 @@ def rewrite_paths(root: Path, files: Iterable[str], plan: RelocationPlan, report
             continue
         changed: list[Rewritten] = []
         block = locate(text)
-        body_line = block.body_line if block is not None else 1
+        start, body_line = (block.end, block.body_line) if block is not None else (0, 1)
         lines = text.split("\n")
-        fence = ""
-        for number, line in enumerate(lines, start=1):
-            if number < body_line:
+        for scanned in scan(text, start=start, first_line=body_line):
+            if scanned.kind in (LineKind.FENCE, LineKind.CODE):
                 continue
-            run = _FENCE.match(line)
-            if fence:
-                marker = run.group(1) if run is not None else ""
-                if marker[:1] == fence[0] and len(marker) >= len(fence) and run and not line[run.end() :].strip():
-                    fence = ""
-                continue
-            if run:
-                fence = run.group(1)
-                continue
-            replace = partial(_span_path, root, plan, display=display, number=number, changed=changed)
-            lines[number - 1] = _CODE_SPAN_PATH.sub(replace, line)
+            replace = partial(_span_path, root, plan, display=display, number=scanned.number, changed=changed)
+            lines[scanned.number - 1] = _CODE_SPAN_PATH.sub(replace, scanned.line)
         if not changed:
             continue
         try:

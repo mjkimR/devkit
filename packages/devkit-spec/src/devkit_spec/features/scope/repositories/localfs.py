@@ -35,7 +35,6 @@ from devkit_spec.base.errors import (
     ScopeStaleRevisionError,
     ScopeTaskExistsError,
     ScopeTokenMismatchError,
-    ScopeUnsupportedError,
 )
 from devkit_spec.features.scope.models.deadline import Deadline
 from devkit_spec.features.scope.models.model import (
@@ -152,7 +151,7 @@ def _git_worktree_exists(path: str, deadline: Deadline) -> bool:
 
 
 class LocalRegistry:
-    """The file-based ``Registry`` and ``Journaler`` on the shared directory ``shared``."""
+    """The file-based ``Registry`` and event journal on the shared directory ``shared``."""
 
     def __init__(
         self,
@@ -445,10 +444,7 @@ class LocalRegistry:
                 results.append(result)
         return sorted(results, key=lambda result: result.task_id)
 
-    def claim(self, token: str, record: Record, deadline: Deadline) -> Record:
-        raise ScopeUnsupportedError("claim is reserved: the local file registry has no exclusive publish")
-
-    # --- the Journaler contract ---------------------------------------------------------------------------------
+    # --- the event journal ---------------------------------------------------------------------------------
 
     def append(self, namespace: str, events: list[Event], deadline: Deadline) -> None:
         if not events:

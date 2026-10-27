@@ -192,6 +192,22 @@ def read_project_config(root: Path) -> dict[str, Any]:
     return read_toml(root / CONFIG_PATH, CONFIG_PATH) or {}
 
 
+def commit_config(root: Path, sha: str) -> dict[str, Any] | None:
+    """Parse the ``.devkit/config.toml`` committed at ``sha`` in the repository at ``root``; ``None`` when that commit
+    does not track it.
+
+    Raises ``ConfigError`` (``CONFIG_INVALID``) when the committed file is not UTF-8 or not valid TOML, and
+    ``GitError`` when Git cannot read the commit. Like ``read_project_config``, the tables are returned unvalidated.
+    """
+    if not run_git(root, "ls-tree", "--name-only", sha, "--", CONFIG_PATH).strip():
+        return None
+    try:
+        return tomllib.loads(run_git(root, "show", f"{sha}:{CONFIG_PATH}").decode("utf-8"))
+    except (UnicodeError, tomllib.TOMLDecodeError) as exc:
+        name = f"{CONFIG_PATH} at commit {sha[:12]}"
+        raise ConfigError(f"invalid config {name}: {exc}", target_files=[CONFIG_PATH]) from exc
+
+
 def config_table[E: ConfigError](value: object, context: str, error: type[E]) -> dict[str, Any]:
     """``value`` when it is a TOML table; otherwise raise ``error`` naming ``context`` (``config <context>: ...``)."""
     if not isinstance(value, dict):

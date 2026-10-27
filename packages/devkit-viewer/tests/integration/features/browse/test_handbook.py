@@ -13,7 +13,7 @@ import pytest
 from viewer_fixtures import MakeRepo
 
 from devkit_viewer.features.browse.http.server import ViewerServer
-from devkit_viewer.features.browse.usecases.register import register
+from devkit_viewer.features.browse.usecases.register import RegisterRepositoriesUseCase
 
 MANIFEST = '{"tag": "v0.1.4", "langs": ["en", "ko"], "generated": "2026-10-26"}\n'
 
@@ -30,7 +30,7 @@ def server(make_repo: MakeRepo, tmp_path: Path) -> Iterator[ViewerServer]:
         },
     )
     (repo / "handbook/en/link.md").symlink_to(repo / "VERSION")
-    viewer = ViewerServer(register([repo], [], tmp_path), 0)
+    viewer = ViewerServer(RegisterRepositoriesUseCase().execute([repo], [], tmp_path), 0)
     thread = threading.Thread(target=viewer.serve_forever, daemon=True)
     thread.start()
     yield viewer

@@ -9,6 +9,7 @@ import time
 
 import pytest
 from devkit.advisory import AdvisoryError, Level
+from devkit_agt.features.compact.models.scan import Failure, Scan, ToolWarning
 from devkit_agt.features.compact.services.scan import (
     ADVISORY_BUDGET,
     FAILURE_BUDGET,
@@ -20,9 +21,6 @@ from devkit_agt.features.compact.services.scan import (
     TAIL,
     WARNING_BUDGET,
     WARNING_MESSAGE,
-    Failure,
-    Scan,
-    ToolWarning,
     scan,
 )
 

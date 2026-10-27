@@ -15,7 +15,7 @@ from viewer_fixtures import MakeRepo, commit_files, git
 
 from devkit_viewer.features.browse.http.server import ViewerServer, static_root
 from devkit_viewer.features.browse.models.errors import PortInUseError
-from devkit_viewer.features.browse.usecases.register import register
+from devkit_viewer.features.browse.usecases.register import RegisterRepositoriesUseCase
 
 
 @dataclass
@@ -36,7 +36,7 @@ def server(make_repo: MakeRepo, tmp_path: Path) -> Iterator[ViewerServer]:
     git(alpha, "switch", "-q", "main")
     git(alpha, "update-ref", "refs/remotes/origin/z", "HEAD")
     make_repo("beta")
-    viewer = ViewerServer(register([tmp_path / "beta", alpha], [], tmp_path), 0)
+    viewer = ViewerServer(RegisterRepositoriesUseCase().execute([tmp_path / "beta", alpha], [], tmp_path), 0)
     thread = threading.Thread(target=viewer.serve_forever, daemon=True)
     thread.start()
     yield viewer
@@ -309,10 +309,10 @@ def test_review_host_protection(server: ViewerServer) -> None:
 
 
 def test_review_refuses_remote_adapter(server: ViewerServer, monkeypatch: pytest.MonkeyPatch) -> None:
-    import devkit_viewer.features.browse.usecases.review as review
+    import devkit_viewer.features.browse.repositories.shared_space as shared_space
 
     monkeypatch.setenv("DEVKIT_SHARED_ADAPTER", "remote")
-    monkeypatch.setattr(review, "discover", lambda *_: pytest.fail("must refuse before discovering storage"))
+    monkeypatch.setattr(shared_space, "discover", lambda *_: pytest.fail("must refuse before discovering storage"))
     response = request(server, "/review/alpha/" + "a" * 32)
     assert response.status == 404
     assert response.json()["error"]["code"] == "VIEWER_REVIEW_UNAVAILABLE"

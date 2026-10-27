@@ -18,7 +18,6 @@ from __future__ import annotations
 import hashlib
 import json
 import tempfile
-import tomllib
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -28,26 +27,23 @@ from devkit_agt.features.rules import Phase, Snapshot, materialize_snapshot, run
 from devkit_agt.features.workflow import Workspace, is_ancestor, load_decisions, load_envelopes, load_workflow_config
 from devkit_core.core import FrontmatterError, is_safe_relpath, run_git
 from devkit_core.core.frontmatter import parse
+from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
+from devkit_dist.features.project.repositories.project import commit_config
 from devkit_dist.features.project.repositories.receipt import load_receipt
 
-from devkit_spec.features.delivery.usecases.attach import (
-    PROPOSAL_UNIT,
-    PROPOSAL_WORKFLOW,
-    SPEC_UNIT,
-    attach_check,
-)
+from devkit_spec.base.axes import EFFORTS, PROPOSAL_WORKFLOW, SPEC_WORKFLOWS, TASK_KINDS
+from devkit_spec.base.units import PROPOSAL_UNIT, SPEC_UNIT, is_spec_dir
+from devkit_spec.features.delivery.usecases.attach import attach_check
 from devkit_spec.features.policy.services.config import check_approvals, read_spec_config
 
 REGULAR_MODES = {"100644", "100755"}
 SYMLINK_MODE = "120000"
 GITLINK_MODE = "160000"
-SPEC_WORKFLOWS = frozenset({"sdd-spec-feature", "sdd-spec-bugfix"})
-SESSION_KINDS = frozenset({"feature", "bugfix", "overall-refactor"})
-SESSION_EFFORTS = frozenset({"low", "medium", "high"})
+SESSION_KINDS = frozenset({*TASK_KINDS, "overall-refactor"})
+SESSION_EFFORTS = frozenset(EFFORTS)
 TARGET_BOUND = ("TARGET_SHA", "RESULT_SHA")
 DISCLOSURE = "CI rules only on the merged result; tests and review ran on the source only"
-CONFIG_PATH = ".devkit/config.toml"
 
 
 def _decode(raw: bytes) -> str:
@@ -362,7 +358,7 @@ def _check_session_task(
     # Verify the branch does not carry a spec/proposal unit for this slug or leave a touched unit held/incomplete.
     for spec_dir in sorted((workspace / "specs").glob(f"*/*-{slug}")) if (workspace / "specs").is_dir() else ():
         rel = spec_dir.relative_to(workspace).as_posix()
-        if SPEC_UNIT.fullmatch(rel):
+        if SPEC_UNIT.fullmatch(rel) and is_spec_dir(spec_dir.name, slug):
             reasons.append(f"branch {branch} has spec unit {rel}; integrate it as a unit task, not a session task")
     for unit_rel in sorted(_touched_units(snapshot, workspace)):
         unit_dir = workspace / unit_rel
@@ -429,11 +425,11 @@ def _check_session_task(
 def _spec_policy(root: Path, commit: str) -> object:
     """The parsed ``[tool.spec]`` table committed at ``commit``; ``None`` without one, ``"invalid"`` when unreadable."""
     try:
-        if not run_git(root, "ls-tree", "--name-only", commit, "--", CONFIG_PATH).strip():
-            return None
-        data = tomllib.loads(run_git(root, "show", f"{commit}:{CONFIG_PATH}").decode("utf-8"))
-    except (ValueError, UnicodeError):
+        data = commit_config(root, commit)
+    except ConfigError:
         return "invalid"
+    if data is None:
+        return None
     tool = data.get("tool")
     return tool.get("spec") if isinstance(tool, dict) else None
 

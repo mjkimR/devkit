@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import re
-import tomllib
 from importlib import metadata
 from pathlib import Path
 from typing import Any, cast
 
 from devkit.advisory import AdvisoryError
-from devkit_core.core.git import run_git
+from devkit_dist.base.errors import ConfigError
+from devkit_dist.features.project.repositories.project import commit_config as committed_config
 from devkit_dist.features.project.repositories.project import read_project_config
 
 from devkit_agt.features.integration.models.contracts import (
@@ -85,11 +85,9 @@ def current_policy(root: Path) -> str:
 
 def commit_config(root: Path, sha: str) -> dict[str, Any] | None:
     """The parsed ``.devkit/config.toml`` committed at ``sha``; ``None`` when the commit has none."""
-    if not run_git(root, "ls-tree", "--name-only", sha, "--", CONFIG_PATH).strip():
-        return None
     try:
-        return tomllib.loads(run_git(root, "show", f"{sha}:{CONFIG_PATH}").decode("utf-8"))
-    except (ValueError, UnicodeError) as exc:
+        return committed_config(root, sha)
+    except ConfigError as exc:
         raise IntegrationConfigError(f"commit {sha[:12]} contains an invalid integration policy") from exc
 
 

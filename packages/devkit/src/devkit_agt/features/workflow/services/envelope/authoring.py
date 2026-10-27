@@ -12,7 +12,16 @@ from typing import Any
 import yaml
 from devkit_core.core.yaml import safe_load
 
-from devkit_agt.features.workflow.models.envelope import Answer, Envelope, Envelopes, Finding, Problem, Question, Settle
+from devkit_agt.features.workflow.models.envelope import (
+    CLOSABLE,
+    Answer,
+    Envelope,
+    Envelopes,
+    Finding,
+    Problem,
+    Question,
+    Settle,
+)
 from devkit_agt.features.workflow.models.errors import (
     EnvelopeFindingsError,
     EnvelopeFlagError,
@@ -28,7 +37,6 @@ from devkit_agt.features.workflow.repositories.unit.decisions import load_decisi
 from devkit_agt.features.workflow.services.envelope.model import (
     ANSWER,
     ANSWER_KEYS,
-    CLOSABLE,
     EFFORTS,
     FINDING_KEYS,
     QUESTION_KEYS,

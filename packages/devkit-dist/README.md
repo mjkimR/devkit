@@ -5,7 +5,7 @@ transactional sync and the installation receipt, context loading, playbooks and 
 name is `devkit-dist`; imports are under `devkit_dist`. It owns the sole `devkit` console script, the `.devkit/config.toml` schema and the receipt format.
 Requires Python 3.12 or later; runtime dependencies are `click`, `jinja2`, `pyyaml`, `tomlkit`, `devkit-core`, `devkit-cli` (the
 agent-first command-line boundary) and `devkit-advisory` (the `devkit.advisory` library), the devkit ones at the same version. The `search` extra (`devkit-dist[search]`) adds `numpy`, `tokenizers`
-and the embedding model package for dense and hybrid search. Optional `devkit-mcp` owns native stdio and forms;
+and the embedding model package for dense and hybrid search. Optional `devkit-mcp` owns the native stdio transport;
 dist owns exact project registration and does not import the SDK.
 
 `devkit-dist` alone deploys skills, subagents, instructions, playbooks, guidance, documents and host hooks; it runs

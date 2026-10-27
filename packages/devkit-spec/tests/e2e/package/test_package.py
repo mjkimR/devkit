@@ -13,7 +13,7 @@ from pathlib import Path
 from click.testing import CliRunner
 from devkit_dist.cli import COMMANDS
 from devkit_dist.cli import cli as devkit_cli
-from devkit_dist.features.distribution import load_bundle
+from devkit_dist.features.distribution.services.bundles import load_bundle
 from spec_support import bundle_text
 
 from devkit_spec.features.documents import DocumentIndex

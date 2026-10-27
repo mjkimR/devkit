@@ -21,6 +21,7 @@ from devkit_dist.adapters.cli import (
 )
 from devkit_dist.features.search import SearchMode
 
+from devkit_spec.adapters.cli import fields_line, sentinel
 from devkit_spec.features.documents import Kind
 from devkit_spec.features.documents.cli.commands import ALL_NAMESPACES, NAMESPACE
 from devkit_spec.features.documents.usecases.search import (
@@ -28,7 +29,6 @@ from devkit_spec.features.documents.usecases.search import (
     DEFAULT_MIN_SIMILARITY,
     SearchDocumentsUseCase,
 )
-from devkit_spec.utils.output import fields_line, sentinel
 
 
 @click.command(name="search")

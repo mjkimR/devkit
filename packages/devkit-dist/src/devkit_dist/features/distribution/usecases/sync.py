@@ -23,16 +23,15 @@ from devkit_dist.features.distribution.models.errors import (
     ConflictError,
     McpRegistrationPendingNotice,
     OrphanLeftNotice,
-    OverrideDriftError,
     ReceiptStaleError,
     StrayFilesNotice,
     ToolVersionChangedNotice,
     UnprojectedNotice,
     UnsafeWorkspaceError,
-    override_drift,
 )
 from devkit_dist.features.distribution.models.results import Action, SyncResult, Unselected
 from devkit_dist.features.distribution.models.subagents import SubagentPolicy
+from devkit_dist.features.distribution.services.bundles.subagents import SUBAGENT_DIRS
 from devkit_dist.features.distribution.services.installation import guidance_block, local_render
 from devkit_dist.features.distribution.services.installation.config import (
     ConfigUpdate,
@@ -59,8 +58,8 @@ from devkit_dist.features.distribution.services.installation.inventory import (
 )
 from devkit_dist.features.distribution.services.installation.overrides import (
     Drift,
+    drift_advisory,
     overridden_files,
-    override_rel,
     record_overridden,
 )
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt, receipt_content, receipt_json
@@ -242,19 +241,10 @@ def _resolve_selection(
     )
 
 
-def _override_drift(drift: list[Drift], *, blocked: bool) -> OverrideDriftError:
-    """One advisory for every override whose upstream changed: the refusal under ``block``, else a warning."""
-    return override_drift(
-        [f"{item.bundle}:{item.asset}" for item in drift],
-        [override_rel(item.bundle, item.path) for item in drift],
-        blocked=blocked,
-    )
-
-
 def _refuse_override_drift(drift: list[Drift]) -> None:
     """``override_drift = "block"``: refuse the sync while an override hides upstream changes."""
     if drift:
-        raise _override_drift(drift, blocked=True)
+        raise drift_advisory(((item.bundle, item.asset, item.path) for item in drift), blocked=True)
 
 
 @dataclass
@@ -443,7 +433,7 @@ def planned_subagent_changes(
         language=resolve_language(root).resolved,
         environment=read_effective_config(root).values["execution"]["environment"],
     )
-    prefixes = (".claude/agents/", ".codex/agents/", ".agents/agents/")
+    prefixes = tuple(f"{directory}/" for directory in SUBAGENT_DIRS.values())
     names = {name for name in inventory.files if name.startswith(prefixes)}
     names.update(name for name in previous.file_records if name.startswith(prefixes))
     changed = []
@@ -802,7 +792,7 @@ def _state_notices(drift: list[Drift], stray: list[str]) -> list[AdvisoryError]:
     """Warnings about the workspace the sync leaves: overrides behind upstream, unmanaged files in the managed root."""
     notices: list[AdvisoryError] = []
     if drift:
-        notices.append(_override_drift(drift, blocked=False))
+        notices.append(drift_advisory(((item.bundle, item.asset, item.path) for item in drift), blocked=False))
     if stray:
         notices.append(
             StrayFilesNotice(f"unmanaged files under .devkit/managed/: {', '.join(stray)}", target_files=stray)
@@ -1097,7 +1087,7 @@ def commit_locked(
     effective = _plan_inventory(
         root, installed, selection, previous_overrides, effective=True, environment=selected_environment
     )
-    personal = local_render.personal_files(root, inventory, effective)
+    personal = local_render.personal_files(inventory, effective)
     if config.override_drift == "block":
         _refuse_override_drift(inventory.drift)
     old_files = dict(previous.file_records) if previous else {}

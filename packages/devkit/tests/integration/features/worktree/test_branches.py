@@ -203,12 +203,6 @@ def test_attach_refusals_change_nothing(repo: Path) -> None:
     assert not (repo.parent / "repo-wt-dev-demo").exists() and config(repo, "dev-demo", "devkitUnit") == ""
 
 
-def test_attach_resolves_a_project_relative_unit(repo: Path) -> None:
-    local_branch(repo, "dev-demo", unit="app/docs/specs/demo")
-    result = attach(locate(repo), "dev-demo", source="dev-demo", unit="docs/specs/demo", project=Path("app"))
-    assert result.unit == "docs/specs/demo" and result.created
-
-
 def test_attach_tracks_a_remote_only_branch(repo: Path, tmp_path: Path) -> None:
     with_remote(repo, tmp_path)
     tip = remote_branch(repo, tmp_path, "dev-demo")

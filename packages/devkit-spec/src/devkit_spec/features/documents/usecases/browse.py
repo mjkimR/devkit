@@ -16,7 +16,7 @@ from devkit_spec.features.documents import Document, DocumentIndex, Kind, Refere
 from devkit_spec.features.documents.services.namespaces import Selection, namespace_resolver, select
 from devkit_spec.features.policy.repositories.branches import planning_branches
 from devkit_spec.features.policy.services.config import Namespace, read_spec_config
-from devkit_spec.utils.output import page
+from devkit_spec.utils.paging import page
 from devkit_spec.utils.paths import normalize, overlaps
 
 _KIND_ORDER = {kind: position for position, kind in enumerate(Kind)}

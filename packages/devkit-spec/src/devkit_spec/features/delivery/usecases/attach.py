@@ -20,18 +20,19 @@ The files are read at ``tip`` through Git, since no worktree may exist yet. Each
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
 from devkit_core.core import FrontmatterError, GitError, run_git
 from devkit_core.core.frontmatter import parse
 
-from devkit_spec.features.proposals.models.axes import ALLOWED_SIZES, DECOMPOSE_EXITS, size_blocker
-
-PROPOSAL_UNIT = re.compile(r"(?:.+/)?docs/proposals/PROP-(?P<slug>[^/]+)")
-SPEC_UNIT = re.compile(r"(?:.+/)?specs/\d{4}-\d{2}/\d{8}-(?P<slug>[^/]+)")
-PROPOSAL_WORKFLOW = "sdd-proposal"
-SPEC_WORKFLOW_PREFIX = "sdd-spec-"
+from devkit_spec.base.axes import (
+    ALLOWED_SIZES,
+    DECOMPOSE_EXITS,
+    PROPOSAL_WORKFLOW,
+    SPEC_WORKFLOW_PREFIX,
+    size_blocker,
+)
+from devkit_spec.base.units import PROPOSAL_UNIT, SPEC_UNIT
 
 
 def _anchor(root: Path, tip: str, unit: str, name: str) -> dict[str, object] | None:
@@ -75,7 +76,9 @@ def attach_check(root: Path, branch: str, unit: str, tip: str) -> list[str]:
             ]
         match = spec or proposal
         anchor = "spec.md" if spec else "proposal.md"
-        expected = f"bound to an {SPEC_WORKFLOW_PREFIX}* workflow" if spec else "accepted and bound to sdd-proposal"
+        expected = (
+            f"bound to an {SPEC_WORKFLOW_PREFIX}* workflow" if spec else f"accepted and bound to {PROPOSAL_WORKFLOW}"
+        )
     else:
         return [f"{branch} is not a plan- or dev- activity branch"]
     assert match is not None

@@ -87,7 +87,7 @@ def test_base_imports_do_not_initialize_implementations_or_yaml() -> None:
     script = """
 import sys
 from devkit_core.base.errors import GitError, DeadlineExceededError
-from devkit_core.base.mcp import McpTool, ConfirmationReply
+from devkit_core.base.mcp import McpTool
 assert GitError.__module__ == 'devkit_core.base.errors'
 assert McpTool.__module__ == 'devkit_core.base.mcp'
 assert not any(name == 'devkit_core.core' or name.startswith('devkit_core.core.') for name in sys.modules)

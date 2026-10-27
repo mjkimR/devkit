@@ -11,10 +11,10 @@ from devkit_agt.features.workflow import (
     DefinitionError,
     Registry,
     WorkflowNotFoundError,
+    Workspace,
     load_definition,
     parse_check,
     parse_definition,
-    resolve_definition,
     validate_definition,
 )
 from devkit_agt.features.workflow.repositories.definitions import discover_definitions, managed_definition_paths
@@ -192,15 +192,15 @@ next:
 
 def test_find_and_resolve(workspace: Path) -> None:
     defs = workspace / ".devkit" / "workflows"
-    assert resolve_definition(defs, "direct-delivery").id == "direct-delivery"
-    assert resolve_definition(defs, str(defs / "direct-delivery.md")).id == "direct-delivery"
+    assert Workspace(workspace).load_definition("direct-delivery").id == "direct-delivery"
+    assert Workspace(workspace).load_definition(str(defs / "direct-delivery.md")).id == "direct-delivery"
     with pytest.raises(WorkflowNotFoundError, match="no workflow with id"):
-        resolve_definition(defs, "missing")
+        Workspace(workspace).load_definition("missing")
     with pytest.raises(WorkflowNotFoundError, match="no definition file"):
-        resolve_definition(defs, "missing.md")
+        Workspace(workspace).load_definition("missing.md")
     (defs / "dup.md").write_text(WORKFLOW)
     with pytest.raises(DefinitionError, match="more than once") as dup:
-        resolve_definition(defs, "direct-delivery")
+        Workspace(workspace).load_definition("direct-delivery")
     assert dup.value.code == "WORKFLOW_DEFINITION_INVALID"
 
 
@@ -264,9 +264,9 @@ def test_discover_merges_receipt_and_local_with_local_shadowing(workspace: Path)
     by_id = {d.id: d for d in docs}
     assert set(by_id) == {"direct-delivery", "bugfix"}
     assert by_id["direct-delivery"].title == "Direct delivery"  # local shadows managed
-    assert resolve_definition(defs, "bugfix", workspace).path == managed / "bugfix.md"
+    assert Workspace(workspace).load_definition("bugfix").path == managed / "bugfix.md"
     with pytest.raises(WorkflowNotFoundError, match="installation receipt"):
-        resolve_definition(defs, "nope", workspace)
+        Workspace(workspace).load_definition("nope")
 
 
 # --- optional stages --------------------------------------------------------------------------

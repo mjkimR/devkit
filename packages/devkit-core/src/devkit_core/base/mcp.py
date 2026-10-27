@@ -2,19 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, Literal
 
-
-@dataclass(frozen=True)
-class ConfirmationReply:
-    action: str
-    content: Mapping[str, Any]
-
-
-Confirmation = Callable[[str, dict[str, Any]], Awaitable[ConfirmationReply]]
-Invocation = Callable[[dict[str, Any], Confirmation], Awaitable[dict[str, Any]]]
+Invocation = Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]
 
 
 @dataclass(frozen=True)

@@ -20,7 +20,6 @@ from devkit_dist.features.distribution.models.errors import (
     RecoveryError,
     UnsafeWorkspaceError,
 )
-from devkit_dist.features.distribution.services.bundles import build_bundle, load_bundle
 from devkit_dist.features.distribution.services.bundles.subagents import read_contract, render_projection
 from devkit_dist.features.distribution.services.installation import extensions, transaction
 from devkit_dist.features.distribution.services.installation.config import update_config
@@ -414,23 +413,6 @@ def test_editing_byproducts_are_not_bundle_content(tmp_path: Path) -> None:
     sync_project(target, [item])
     names = json.loads((target / RECEIPT_PATH).read_text())["files"]
     assert not any(".DS_Store" in name or "pycache" in name or name.endswith(".pyc") for name in names)
-    result = build_bundle(load_bundle(root), tmp_path / "out.zip").to_dict()
-    assert result["files"] == 4  # bundle.toml, guide.md, SKILL.md, inventory.json
-
-
-def test_failed_build_leaves_no_partial_archive(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    item = write_bundle(
-        tmp_path / "source", MANIFEST, {"guide.md": instruction("guide"), "skills/review/SKILL.md": "x"}
-    )
-    output = tmp_path / "out.zip"
-
-    def explode(*args: object, **kwargs: object) -> None:
-        raise OSError("disk full")
-
-    monkeypatch.setattr("zipfile.ZipFile.writestr", explode)
-    with pytest.raises(OSError, match="disk full"):
-        build_bundle(item.bundle, output)
-    assert not output.exists()
 
 
 @pytest.mark.parametrize(

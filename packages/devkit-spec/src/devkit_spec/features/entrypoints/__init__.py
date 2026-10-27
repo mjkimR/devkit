@@ -6,11 +6,10 @@ declarations, ``derive`` joins them into document-code pairs and ``apply`` write
 Libraries never print: ``devkit spec entrypoints derive`` renders the results. Contract: ``CAP-TRACE-code-entrypoints`` (``docs/capabilities/traceability/``).
 """
 
-from devkit_spec.features.entrypoints.models.derive import Pair, Reason, SkipKind, Skipped, State
+from devkit_spec.features.entrypoints.models.derive import Pair, Reason, Skipped, State
 from devkit_spec.features.entrypoints.repositories.bundle import (
     Bundle,
     Target,
-    TaskBoundary,
     load_bundle,
     parse_boundaries,
 )
@@ -18,7 +17,6 @@ from devkit_spec.features.entrypoints.services.derive import (
     adopt_nested_selectors,
     aggregate,
     classify_boundary,
-    declared_entrypoints,
     derive,
     exclude,
     feedback_file,
@@ -27,26 +25,22 @@ from devkit_spec.features.entrypoints.services.derive import (
     unmatched_selectors,
 )
 from devkit_spec.features.entrypoints.services.paths import covers, entrypoint_bearing, exists, normalize, overlaps
-from devkit_spec.features.entrypoints.usecases.apply import Applied, ApplyResult, apply, collapse, set_entrypoints
+from devkit_spec.features.entrypoints.usecases.apply import Applied, apply, collapse, set_entrypoints
 
 __all__ = [
     "Applied",
-    "ApplyResult",
     "Bundle",
     "Pair",
     "Reason",
-    "SkipKind",
     "Skipped",
     "State",
     "Target",
-    "TaskBoundary",
     "adopt_nested_selectors",
     "aggregate",
     "apply",
     "classify_boundary",
     "collapse",
     "covers",
-    "declared_entrypoints",
     "derive",
     "entrypoint_bearing",
     "exclude",

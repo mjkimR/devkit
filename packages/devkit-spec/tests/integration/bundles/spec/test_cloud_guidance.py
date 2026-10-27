@@ -6,7 +6,7 @@ import re
 from pathlib import Path, PurePosixPath
 
 import pytest
-from devkit_dist.features.distribution.services.bundles.common import AGENT_NAMES
+from devkit_dist.features.distribution.models.settings import AGENT_NAMES
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.discovery import discover_bundles
 from devkit_dist.features.distribution.services.installation.inventory import desired_inventory

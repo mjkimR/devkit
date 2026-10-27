@@ -26,8 +26,7 @@ from devkit_agt.features.workflow.models.errors import (
     HandoffUndecidedError,
     workflow_command,
 )
-from devkit_agt.features.workflow.models.handoff import CandidateResult as CandidateResult
-from devkit_agt.features.workflow.models.handoff import Handoff as Handoff
+from devkit_agt.features.workflow.models.handoff import CandidateResult, Handoff
 from devkit_agt.features.workflow.models.requests import candidate_summary
 from devkit_agt.features.workflow.repositories.unit.binding import render_binding, replace_text
 from devkit_agt.features.workflow.repositories.unit.decisions import load_decisions, new_decision, write_decision
@@ -223,7 +222,7 @@ def plan_handoff(ws: Workspace, unit: UnitRef, result: UnitEvaluation, choice: s
     return HandoffPlan(unit, doc, target, policy, decision, explicit)
 
 
-def apply_handoff(plan: HandoffPlan, *, when: date | None = None, by: str = "", note: str = "") -> HandoffOutcome:
+def apply_handoff(plan: HandoffPlan, *, when: date | None = None, by: str = "") -> HandoffOutcome:
     """Rebind the unit to the plan's target and record the finished segment in its history.
 
     An explicit choice is first recorded as an accepted ``handoff`` decision so
@@ -247,7 +246,6 @@ def apply_handoff(plan: HandoffPlan, *, when: date | None = None, by: str = "", 
                 "accept",
                 workflow=plan.source.id,
                 value=plan.target.id,
-                note=note,
                 by=by,
             )
             decision = written = write_decision(unit.dir, record)

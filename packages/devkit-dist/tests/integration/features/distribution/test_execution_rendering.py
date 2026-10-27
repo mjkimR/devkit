@@ -199,20 +199,16 @@ target="{target}"
     assert (root / "docs/guide.md").read_text() == "cloud\n"  # Seed ownership stays with the user.
 
 
-def test_archive_roundtrip_preserves_constitution_template(tmp_path: Path):
-    import zipfile
+def test_copied_source_preserves_constitution_template(tmp_path: Path):
+    import shutil
 
-    from devkit_dist.features.distribution.services.bundles import build_bundle
     from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
 
     _root, item = setup(tmp_path)
-    archive_path = tmp_path / "bundle.zip"
-    build_bundle(item.bundle, archive_path)
     unpacked = tmp_path / "unpacked"
-    with zipfile.ZipFile(archive_path) as archive:
-        assert "AGENTS.md.jinja" in archive.namelist()
-        assert "AGENTS.md" not in archive.namelist()
-        archive.extractall(unpacked)
+    shutil.copytree(item.bundle.root, unpacked)
+    assert (unpacked / "AGENTS.md.jinja").is_file()
+    assert not (unpacked / "AGENTS.md").exists()
     restored = InstalledBundle("content", "0.1.0", load_bundle(unpacked))
     for environment in ("local", "cloud"):
         inventory = desired_inventory([restored], {"execution": ["all"]}, [], environment=environment)

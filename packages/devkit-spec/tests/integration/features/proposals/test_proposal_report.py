@@ -75,8 +75,8 @@ def test_composed_handoff_advisories_are_emitted_once():
     from devkit_spec.features.delivery.cli.proposals import _result_advisories
 
     advisory = {
-        "code": "SPEC_SCOPE_REGISTER_FAILED",
-        "message": "scope registration failed",
+        "code": "SPEC_PROPOSAL_LINK_UNRESOLVED",
+        "message": "a link could not be rewritten",
         "level": "WARNING",
         "advisory": {"actor": "USER", "retry": "SAFE"},
     }

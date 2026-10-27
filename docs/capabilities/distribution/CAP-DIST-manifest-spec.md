@@ -1,7 +1,7 @@
 ---
 id: CAP-DIST-manifest-spec
 title: "Manifest Specification"
-summary: "Bundle schema, asset kinds, execution-aware Markdown templates with bounded presentation-language inheritance, validation and deterministic archive builds."
+summary: "Bundle schema, asset kinds, execution-aware Markdown templates with bounded presentation-language inheritance, and validation."
 area: distribution
 status: active
 entrypoints:
@@ -218,17 +218,6 @@ assets = ["development", "review-flow", "review", "direct-delivery"]
   `/`, backslash or `.` segment) whose first segment is not `.devkit`, `.agents`, `.claude` or `.codex`, which has
   no `.git` segment at any depth, and which is not `AGENTS.md`, all compared case-insensitively (macOS file systems
   usually are). Two selected bundles may not seed the same path.
-
-## 5. Deterministic Local Archive Build
-
-`build_source(source, output)` remains an application usecase for deterministic local ZIP export and
-verification. It has no public CLI command; projects receive bundles as installed wheels, not archives.
-
-- Entries are sorted by archive path, timestamps pinned to `1980-01-01 00:00:00 UTC`, modes normalized to `0644` or
-  `0755`.
-- Raw constitution templates retain their source-relative `AGENTS.md.jinja` name in archives, so reloaded sources still render for the selected environment.
-- An embedded `inventory.json` records the SHA-256 and mode of every archived file.
-- A failed build leaves no partial archive; an existing output file is never replaced.
 
 ## Markdown templates and bundle variables
 

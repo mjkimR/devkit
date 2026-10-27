@@ -14,7 +14,15 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from functools import cache
 
-from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, match_path, validate_pattern
+from devkit_agt.features.rules import (
+    Phase,
+    RuleContext,
+    Severity,
+    Violation,
+    match_path,
+    scan,
+    validate_pattern,
+)
 from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_dist.features.project.repositories.receipt import load_receipt
 
@@ -43,9 +51,8 @@ CATEGORIES = (
     ("time_relative", "Time-relative word", re.IGNORECASE, "Name the version, date or ID instead."),
 )
 
-FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
-# Spans that may wrap: code spans within a paragraph, HTML comments (an unclosed one runs to the end).
-WRAPPED = r"(?<!`)(`+)(?!`)(?:(?!\n[ \t]*\n).)+?(?<!`)\1(?!`)|<!--.*?(?:-->|\Z)"
+# Code spans, which may wrap within a paragraph; fences and HTML comments are the shared scanner's.
+WRAPPED = r"(?<!`)(`+)(?!`)(?:(?!\n[ \t]*\n).)+?(?<!`)\1(?!`)"
 # Jinja tags and comments, in templates only; a plain Markdown "{#anchor}" is prose.
 JINJA = r"|\{\{.*?\}\}|\{%.*?%\}|\{#.*?(?:#\}|\Z)"
 SPANS = re.compile(WRAPPED, re.DOTALL)
@@ -76,17 +83,12 @@ def _pattern(words: tuple[str, ...], flags: int) -> re.Pattern[str] | None:
 
 
 def prose_lines(text: str, *, template: bool = False) -> Iterator[tuple[int, str]]:
-    """Each line number with the line's prose: fenced code, comments, quotes, code spans and Jinja tags blanked."""
-    lines = text.splitlines()
-    fence = ""
-    for index, line in enumerate(lines):
-        if fence:
-            if re.fullmatch(rf"{re.escape(fence[0])}{{{len(fence)},}}", line.strip()):
-                fence = ""
-            lines[index] = ""
-        elif opened := FENCE.match(line):
-            fence = opened.group(1)
-            lines[index] = ""
+    """Each line number with the line's prose: fenced code and comments (``scan``), quotes, code spans and Jinja tags
+    blanked."""
+    source = text.splitlines()
+    scanned = list(scan("\n".join(source)))[: len(source)]
+    # ``text`` blanks fenced code and comments and keeps every other line, indented ones included.
+    lines = [line.text for line in scanned]
     prose = (TEMPLATE_SPANS if template else SPANS).sub(_blank, "\n".join(lines))
     for number, line in enumerate(prose.split("\n"), start=1):
         yield number, QUOTES.sub(" ", line)

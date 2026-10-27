@@ -14,7 +14,7 @@ from devkit_core.base.errors import (
 from devkit_core.core.deadline import Deadline
 from devkit_core.core.files import atomic_write_bytes, atomic_write_text, remove_empty_tree
 from devkit_core.core.frontmatter import Frontmatter, FrontmatterBlock
-from devkit_core.core.git import run_git
+from devkit_core.core.git import is_ancestor, run_git, run_git_text
 from devkit_core.core.locks import file_lock
 from devkit_core.core.paths import is_safe_relpath, normalize_relpath, resolve_within
 from devkit_core.core.plugins import (
@@ -47,6 +47,7 @@ __all__ = [
     "atomic_write_bytes",
     "atomic_write_text",
     "file_lock",
+    "is_ancestor",
     "is_safe_relpath",
     "iter_plugin_packages",
     "load_subclasses",
@@ -55,6 +56,7 @@ __all__ = [
     "require_libyaml",
     "resolve_within",
     "run_git",
+    "run_git_text",
     "safe_compose",
     "safe_load",
 ]

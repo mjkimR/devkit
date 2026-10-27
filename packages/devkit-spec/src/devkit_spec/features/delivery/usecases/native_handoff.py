@@ -2,23 +2,29 @@
 
 from __future__ import annotations
 
-import asyncio
 import hashlib
 from pathlib import Path
 from typing import Any
 
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow import Workspace
-from devkit_agt.features.worktree import StartResult, locate, path_for, read_worktree_config, start
+from devkit_agt.features.worktree import StartResult, branch_marker, locate, path_for, read_worktree_config, start
 from devkit_agt.features.worktree.usecases.lifecycle import _prepare
-from devkit_core.base.mcp import Confirmation
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core import run_git
+from devkit_core.core import run_git, run_git_text
 from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project.models.invocation import devkit_command
-from devkit_dist.features.project.usecases.configuration import approval_language
 from devkit_dist.features.project.usecases.invocation import guard_execution
 
+from devkit_spec.base.axes import (
+    DEFAULT_EFFORT,
+    DEFAULT_TASK_KIND,
+    DEV_EFFORT,
+    EFFORTS,
+    PLANNING_EFFORT,
+    PROPOSAL_WORKFLOW,
+    TASK_KINDS,
+)
 from devkit_spec.base.errors import (
     HandoffBaseDirtyError,
     HandoffNotReadyError,
@@ -29,10 +35,9 @@ from devkit_spec.base.errors import (
     ProposalWrongWorktreeError,
     SpecConfigError,
 )
+from devkit_spec.base.units import PROPOSAL_FILE, proposal_unit
 from devkit_spec.features.delivery.usecases.handoff import handoff_and_register
 from devkit_spec.features.policy.usecases.approvals import approval_policy
-from devkit_spec.features.proposals.models.approval import schema as approval_schema
-from devkit_spec.features.proposals.models.axes import EFFORTS, TASK_KINDS
 from devkit_spec.features.proposals.models.handoff import HandoffPreview
 
 
@@ -45,7 +50,7 @@ def _existing(root: Path, slug: str, head: str) -> bool:
     reason = None
     try:
         current = locate(path)
-        marker = run_git(position.base, "config", "--get", f"branch.dev-{slug}.devkitWorktree").decode().strip()
+        marker = branch_marker(position.base, f"dev-{slug}")
         if path.is_symlink() or not current.linked or current.root != path or current.base != position.base:
             reason = "it is not a linked worktree of this repository at the devkit worktree path"
         elif current.branch != f"dev-{slug}" or marker != str(path):
@@ -87,7 +92,7 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
             f"{position.branch or '- (detached HEAD)'}",
             fix=f"Run {command} in the main worktree on its base branch",
         )
-    dirty = run_git(position.base, "status", "--porcelain", "--untracked-files=normal").decode().splitlines()
+    dirty = run_git_text(position.base, "status", "--porcelain", "--untracked-files=normal").splitlines()
     if any(line.strip() for line in dirty):
         paths = [line[3:] for line in dirty if line.strip()]
         raise HandoffBaseDirtyError(
@@ -96,18 +101,16 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
             target_files=paths[:20],
         )
     head = run_git(position.base, "rev-parse", "HEAD").decode().strip()
-    relative = root.relative_to(position.base)
-    unit = f"docs/proposals/PROP-{slug}"
+    unit = proposal_unit(slug)
     rel = f"{unit}/proposal.md"
-    anchor = relative / rel
-    mode = run_git(position.base, "ls-tree", head, "--", anchor.as_posix()).decode().split()
+    mode = run_git_text(position.base, "ls-tree", head, "--", rel).split()
     if not mode or mode[0] not in {"100644", "100755"}:
         raise HandoffNotReadyError(
             f"PROP-{slug} has no committed proposal.md on the base",
             "the accepted proposal must be a committed regular proposal.md file",
             target_files=[rel],
         )
-    text = run_git(position.base, "show", f"{head}:{anchor.as_posix()}").decode()
+    text = run_git(position.base, "show", f"{head}:{rel}").decode()
     meta = parse(text).data or {}
     if meta.get("status") != "accepted":
         raise HandoffNotReadyError(
@@ -122,12 +125,12 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
             f"PROP-{slug} is marked needs_decompose: true", "Backlog splits it first", target_files=[rel]
         )
     invalid = []
-    if meta.get("task_kind", "feature") not in TASK_KINDS:
+    if meta.get("task_kind", DEFAULT_TASK_KIND) not in TASK_KINDS:
         invalid.append(f"task_kind {meta.get('task_kind')!r} is not one of {' | '.join(TASK_KINDS)}")
-    if meta.get("planning_effort", "medium") not in EFFORTS:
+    if meta.get(PLANNING_EFFORT, DEFAULT_EFFORT) not in EFFORTS:
         invalid.append(f"planning_effort {meta.get('planning_effort')!r} is not one of {' | '.join(EFFORTS)}")
     invalid += [f"{key} is not text" for key in ("title", "summary") if key in meta and not isinstance(meta[key], str)]
-    effort_hint = meta.get("dev_effort", "medium")
+    effort_hint = meta.get(DEV_EFFORT, DEFAULT_EFFORT)
     if effort_hint not in EFFORTS:
         invalid.append(f"dev_effort {effort_hint!r} is not one of {' | '.join(EFFORTS)}")
     if invalid:
@@ -142,13 +145,13 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
     evaluation = workspace.evaluate_unit(ref, lint=False)
     passed = {gate.name for _stage, gate in evaluation.passed_gates if gate.satisfied}
     missing = sorted({"plan-intent", "plan-accept"} - passed)
-    if ref.doc.id != "sdd-proposal" or not evaluation.complete or evaluation.errors or missing:
-        details = [f"workflow: {ref.doc.id}" if ref.doc.id != "sdd-proposal" else ""]
+    if ref.doc.id != PROPOSAL_WORKFLOW or not evaluation.complete or evaluation.errors or missing:
+        details = [f"workflow: {ref.doc.id}" if ref.doc.id != PROPOSAL_WORKFLOW else ""]
         details += [f"unmet: {check.name}" for check in evaluation.unmet]
         details += [f"problem ({error.code}): {error.message}" for error in evaluation.errors]
         details += [f"missing approval: {name}" for name in missing]
         raise HandoffNotReadyError(
-            f"PROP-{slug} has no completed sdd-proposal Planning with its own plan-intent and plan-accept",
+            f"PROP-{slug} has no completed {PROPOSAL_WORKFLOW} Planning with its own plan-intent and plan-accept",
             *(line for line in details if line),
             target_files=[rel],
         )
@@ -176,7 +179,6 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
 class HandoffUseCase(BaseUseCase):
     def __init__(self, root: Path) -> None:
         self.root = root
-        self._lock = asyncio.Lock()
 
     def execute(self, slug: str, effort: str) -> dict[str, Any]:
         """Start Development after Host-carried approval, rechecking the base."""
@@ -197,36 +199,12 @@ class HandoffUseCase(BaseUseCase):
         result = self._execute(preview, effort)
         return {**result, "authority": "policy" if authority == "auto" else "host-conversation"}
 
-    async def execute_native(self, slug: str, confirm: Confirmation) -> dict[str, Any]:
-        self.root = self.root.resolve()
-        guard_execution()
-        async with self._lock:
-            guard_execution()
-            language = approval_language(self.root)
-            preview = await asyncio.to_thread(prepare, self.root, slug)
-            guard_execution()
-            if approval_policy(self.root, "proposal-handoff") == "auto":
-                result = await asyncio.to_thread(self._execute, preview, preview.effort)
-                return {**result, "authority": "policy"}
-            reply = await confirm(
-                preview.message(language),
-                approval_schema(preview.effort, language),
-            )
-            if reply.action != "accept" or reply.content.get("approve") is not True:
-                return {"status": {"decline": "declined", "cancel": "cancelled"}.get(reply.action, "not_approved")}
-            guard_execution()
-            effort = reply.content.get("activity_effort")
-            if effort not in EFFORTS:
-                raise HandoffReplyError("Host approval must include a Development effort of low, medium or high")
-            result = await asyncio.to_thread(self._execute, preview, effort)
-            return {**result, "authority": "user"}
-
     def _execute(self, preview: HandoffPreview, effort: str) -> dict:
         guard_execution()
         if prepare(self.root, preview.slug) != preview:
             raise HandoffStaleError(
                 "the base, accepted plan or policy changed after review",
-                target_files=[f"docs/proposals/PROP-{preview.slug}/proposal.md"],
+                target_files=[f"{proposal_unit(preview.slug)}/{PROPOSAL_FILE}"],
             )
         position = locate(self.root)
         guard_execution()
@@ -236,7 +214,7 @@ class HandoffUseCase(BaseUseCase):
                 setup, synced = _prepare(
                     Path(preview.worktree),
                     preview.setup,
-                    self.root.relative_to(position.base),
+                    True,
                     notices,
                     before_step=lambda _step: guard_execution(),
                 )
@@ -255,7 +233,7 @@ class HandoffUseCase(BaseUseCase):
                     position,
                     f"dev-{preview.slug}",
                     setup=preview.setup,
-                    project=self.root.relative_to(position.base),
+                    sync=True,
                     revision=preview.head,
                     before_step=lambda _step: guard_execution(),
                 )
@@ -276,7 +254,7 @@ class HandoffUseCase(BaseUseCase):
         }
         if any(item.code in {"WORKTREE_SETUP_FAILED", "WORKTREE_SYNC_FAILED"} for item in started.notices):
             return result
-        root = started.path / self.root.relative_to(position.base)
+        root = started.path
         try:
             if run_git(root, "rev-parse", "HEAD").decode().strip() != preview.head:
                 raise HandoffStaleError("the new worktree no longer contains the reviewed base commit")

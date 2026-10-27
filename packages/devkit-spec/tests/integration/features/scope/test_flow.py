@@ -410,25 +410,23 @@ def test_journal_failure_is_one_warning(repo: Path) -> None:
 
 
 def test_auto_register_only_in_a_linked_worktree_at_either_level(repo: Path, tmp_path: Path) -> None:
-    assert auto_register(repo, SPEC, source="handoff") == (None, []), "the base checkout never registers"
+    assert auto_register(repo, SPEC, source="handoff") is None, "the base checkout never registers"
     linked = tmp_path / "repo-wt-s"
     git(repo, "worktree", "add", "-q", "-b", "s", str(linked))
-    registered, notices = auto_register(linked, SPEC, source="handoff")
-    assert registered is not None and notices == []
+    registered = auto_register(linked, SPEC, source="handoff")
+    assert registered is not None and registered.notices == []
     assert registered.record.worktree == str(linked)
     session = open_session(linked)
     assert _events(session)[-1]["source"] == "handoff"
-    again, notices = auto_register(linked, SPEC, source="handoff")
-    assert again is None and notices == [], "automatic registration failures are silent"
+    assert auto_register(linked, SPEC, source="handoff") is None, "automatic registration failures are silent"
 
     for level in ("required", "auto"):
         write(linked, ".devkit/config.toml", f'[tool.spec]\nworktree = "{level}"\n')
         release(session)
-        registered, notices = auto_register(linked, SPEC, source="handoff")
-        assert registered is not None and notices == [], level
+        assert auto_register(linked, SPEC, source="handoff") is not None, level
     plain = tmp_path / "plain"
     write(plain, ".devkit/config.toml", "")
-    assert auto_register(plain, "specs/x", source="handoff") == (None, [])
+    assert auto_register(plain, "specs/x", source="handoff") is None
 
 
 def test_slug_from_spec() -> None:

@@ -18,7 +18,8 @@ Grammar:
 
 ``locate`` returns the block's character offsets without parsing YAML, so a
 caller can rewrite the header and keep every other character of the text.
-``parse`` returns the mapping and the body.
+``parse`` returns the mapping and the body. ``scalar`` renders a string as a
+one-line YAML scalar for a ``key: value`` header line.
 """
 
 from __future__ import annotations
@@ -36,6 +37,8 @@ from devkit_core.core.yaml import require_libyaml, safe_load
 BOM = "﻿"
 OPENER = "---"
 CLOSERS = frozenset({"---", "..."})
+# Characters YAML reads as a line break; a value holding one is never written plain.
+_LINE_BREAKS = frozenset("\n\r\x85\u2028\u2029")
 
 
 @dataclass(frozen=True)
@@ -180,3 +183,27 @@ def parse(text: str) -> Frontmatter:
         return Frontmatter(None, text[1:] if text.startswith(BOM) else text, 1)
     header_line = text.count("\n", 0, block.header_start) + 1
     return Frontmatter(load_header(block.header, line_offset=header_line - 1), text[block.end :], block.body_line)
+
+
+def _reads_back(value: str) -> bool:
+    """Whether ``value`` written plain reads back as the same string, as a mapping value and as a list item."""
+    try:
+        mapping = safe_load(f"k: {value}", source="frontmatter scalar")
+        sequence = safe_load(f"- {value}", source="frontmatter scalar")
+    except (yaml.YAMLError, ValueError, RecursionError):  # ValueError: an impossible date such as 2024-02-30
+        return False
+    return mapping == {"k": value} and sequence == [value]
+
+
+def scalar(value: str) -> str:
+    """``value`` as a one-line YAML scalar for a ``key: value`` header line or a ``- value`` list item.
+
+    Plain when it reads back as the same string (``plain title``, ``PROP-x``); otherwise single-quoted
+    (``'A: B'``, ``'off'``, ``''``), or double-quoted with escapes when it holds a line break or a character a
+    single-quoted scalar cannot carry (``"a\\nb"``), so the result never spans lines.
+    """
+    if not _LINE_BREAKS.intersection(value) and _reads_back(value):
+        return value
+    style = '"' if _LINE_BREAKS.intersection(value) else "'"
+    dumped = yaml.safe_dump(value, default_style=style, allow_unicode=True, width=2**31)
+    return dumped.removesuffix("\n")

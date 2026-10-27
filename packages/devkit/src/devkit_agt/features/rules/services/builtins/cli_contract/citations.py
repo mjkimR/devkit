@@ -6,7 +6,7 @@ import shlex
 from collections.abc import Iterator
 from dataclasses import dataclass
 
-from devkit_agt.features.rules.repositories.workspace.markdown import code_spans, fenced_lines, prose_lines
+from devkit_agt.features.rules.models.markdown import code_spans, fenced_lines, prose_lines
 
 PROGRAM = "devkit"
 # Launchers written before the program name; ``uv run`` may carry its own options (``uv run --no-active devkit``).

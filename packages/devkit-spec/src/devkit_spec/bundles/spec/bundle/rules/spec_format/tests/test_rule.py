@@ -113,7 +113,7 @@ def test_fix_fills_blank_fields_and_quotes_titles(tmp_path: Path) -> None:
     assert (
         tmp_path / "docs/usecases/UC-x.md"
     ).read_bytes().decode() == "---\r\nid: UC-x\r\ntitle: UC-x\r\nstatus: draft\r\ncreated: 2026-01-01\r\n---\r\n"
-    assert (tmp_path / "docs/usecases/UC-y.md").read_text().startswith('---\nid: UC-y\ntitle: "Use case: the title"\n')
+    assert (tmp_path / "docs/usecases/UC-y.md").read_text().startswith("---\nid: UC-y\ntitle: 'Use case: the title'\n")
 
 
 def test_fix_leaves_accepted_and_malformed_files_alone(tmp_path: Path) -> None:

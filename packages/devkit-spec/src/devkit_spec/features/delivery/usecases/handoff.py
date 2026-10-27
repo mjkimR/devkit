@@ -47,11 +47,10 @@ class HandoffProposalUseCase(BaseUseCase):
 
         The caller may guard the second mutation after handoff has completed. A refused
         guard leaves the completed handoff intact and does not touch the registry.
-        Registration failures reported by ``auto_register`` remain successful handoffs
-        with recovery warnings; unexpected errors propagate to the caller's boundary.
+        A failed registration leaves a successful handoff without a scope record and only a verbose diagnostic.
         """
         handed = handoff_proposal(root, slug, today=today)
         if before_registration is not None:
             before_registration()
-        registered, notices = auto_register(root, handed.dir, source=SOURCE_HANDOFF)
-        return CompletedHandoff(handed, registered, handed.notices + notices)
+        registered = auto_register(root, handed.dir, source=SOURCE_HANDOFF)
+        return CompletedHandoff(handed, registered, handed.notices)

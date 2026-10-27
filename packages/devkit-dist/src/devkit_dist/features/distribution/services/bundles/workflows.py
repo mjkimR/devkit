@@ -11,7 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from devkit_dist.features.distribution.models.errors import BundleError
-from devkit_dist.features.distribution.services.bundles.common import SLUG, read_frontmatter
+from devkit_dist.features.distribution.models.settings import SLUG
+from devkit_dist.features.distribution.services.bundles.common import read_frontmatter
 
 
 @dataclass(frozen=True)

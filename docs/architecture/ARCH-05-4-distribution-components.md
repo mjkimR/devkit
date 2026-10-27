@@ -74,7 +74,9 @@ own dependencies through wheels.
 The distribution feature lives in `packages/devkit-dist/src/devkit_dist/features/distribution/`.
 It uses shared primitives from `devkit_core.core`, project configuration and receipts from
 `devkit_dist.features.project`, `devkit.advisory`, document search and native host contracts.
-The dist wheel never depends on `devkit-agt`. Feature imports use absolute paths.
+The dist wheel never depends on `devkit-agt`. Feature imports use absolute paths. The feature root
+`__init__.py` exports nothing, so importing one module never loads the whole feature; callers import each
+name from the module that defines it.
 
 - `cli/` adapts distribution commands to use cases and formats their results. The root executable
   discovers the commands lazily (`ARCH-05-3-command-plugins`).

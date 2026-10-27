@@ -32,8 +32,8 @@ from devkit_dist.features.project.repositories.receipt import MANAGED_PATH, OVER
 
 from devkit_agt.features.rules.models.errors import PinnedWriteError
 from devkit_agt.features.rules.models.file_facts import FileFactsDescriptor, JsonValue
+from devkit_agt.features.rules.models.markdown import MarkdownLink, extract_links
 from devkit_agt.features.rules.repositories.workspace.file_facts import FileFactsCache
-from devkit_agt.features.rules.repositories.workspace.markdown import MarkdownLink, extract_links
 
 if TYPE_CHECKING:
     from devkit_agt.features.rules.repositories.workspace.catalog import DocumentCatalog
@@ -299,7 +299,7 @@ class WorkspaceCache:
         return self._frontmatter_cache[key]
 
     def get_links(self, path: str | Path) -> list[MarkdownLink]:
-        """Inline Markdown links of a file in document order (see ``workspace.markdown.extract_links``)."""
+        """Inline Markdown links of a file in document order (see ``models.markdown.extract_links``)."""
         key = self._key(path)
         if key not in self._links_cache:
             try:

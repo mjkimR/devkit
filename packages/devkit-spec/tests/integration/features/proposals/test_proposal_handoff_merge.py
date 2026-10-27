@@ -13,8 +13,9 @@ from spec_support.proposals import MONTH, STAMP, TODAY, accept
 from spec_support.types import Write
 
 from devkit_spec.base.errors import ProposalHandoffError, ProposalInvalidError, ProposalTargetExistsError
-from devkit_spec.features.proposals import create_padr, create_proposal, handoff_proposal
+from devkit_spec.features.proposals import create_proposal, handoff_proposal
 from devkit_spec.features.proposals.usecases import handoff as handoff_module
+from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecisionUseCase
 
 Snapshot = dict[str, tuple[str, bytes, int]]
 
@@ -26,7 +27,7 @@ def _dest(slug: str) -> str:
 def _new(root: Path, slug: str) -> Path:
     """A scaffolded, accepted bundle with one PADR; returns its directory."""
     created = create_proposal(root, slug, today=TODAY)
-    create_padr(root, slug, f"Pick {slug}")
+    CreateProposalDecisionUseCase().execute(root, slug, f"Pick {slug}")
     accept(root / created.path)
     return (root / created.path).parent
 

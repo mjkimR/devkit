@@ -144,13 +144,13 @@ class LayoutSpec:
         )
 
 
-def parse_layout_spec(raw: object, where: str = "layout") -> LayoutSpec:
+def parse_layout_spec(raw: object) -> LayoutSpec:
     """Validate a ``layout`` mapping; every key is optional. Raises ``LayoutError`` naming the key."""
     if not isinstance(raw, dict):
-        raise LayoutError(f"{where}: expected a mapping with work_dir, unit_path, anchor")
+        raise LayoutError("layout: expected a mapping with work_dir, unit_path, anchor")
     unknown = set(raw) - set(LAYOUT_KEYS)
     if unknown:
-        raise LayoutError(f"{where}: unknown keys {sorted(unknown)}")
+        raise LayoutError(f"layout: unknown keys {sorted(unknown)}")
     values: dict[str, str | None] = dict.fromkeys(LAYOUT_KEYS)
     for key in LAYOUT_KEYS:
         if raw.get(key) is None:
@@ -158,7 +158,7 @@ def parse_layout_spec(raw: object, where: str = "layout") -> LayoutSpec:
         try:
             values[key] = validate_layout_key(key, raw[key])
         except LayoutError as exc:
-            raise LayoutError(f"{where}.{key}: {exc}") from exc
+            raise LayoutError(f"layout.{key}: {exc}") from exc
     return LayoutSpec(values["work_dir"], values["unit_path"], values["anchor"])
 
 

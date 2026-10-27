@@ -170,7 +170,7 @@ def test_worktree_config_defaults_and_validation(repo: Path) -> None:
     )
     configure(repo, 'pull_request = "required"\ndelete_branch = false\nsetup = "uv sync"\nstale_after = "2w"\n')
     config = read_worktree_config(repo)
-    assert config == WorktreeConfig("required", False, "uv sync", "2w") and config.stale_period.days == 14
+    assert config == WorktreeConfig("required", False, "uv sync", "2w")
     for table, message in [
         ("bogus = 1\n", "unknown fields"),
         ('pull_request = "no"\n', 'pull_request must be "auto" or "required"'),

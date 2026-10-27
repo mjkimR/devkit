@@ -37,7 +37,7 @@ from devkit_dist.features.project.repositories.receipt import load_receipt, veri
 from devkit_agt.features.gate.models.base import BaseGate
 from devkit_agt.features.gate.models.contracts import Gate, Stage
 from devkit_agt.features.gate.models.errors import GateDefinitionError, GateLoadError
-from devkit_agt.features.gate.models.paths import display_path as display_path
+from devkit_agt.features.gate.models.paths import display_path
 from devkit_agt.features.gate.usecases.gates import NonEmptyMessageGate, RulesCheckGate, VerifyCommandsGate
 
 GATE_KIND = "gate"

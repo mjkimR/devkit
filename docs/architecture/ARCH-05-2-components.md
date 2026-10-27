@@ -71,7 +71,7 @@ package-level `core/`, or a layer solely to forward a call. `base/` and
 `utils/` are optional. The foundation package is the explicit exception: `devkit_core.base` holds
 shared errors and SDK-free MCP contracts, and `devkit_core.core` holds generic implementations.
 A package may explicitly declare shared transport adapters: dist owns `adapters/cli.py` for
-its common CLI boundary. These adapters remain above application layers. Application-owned bundles live under
+its common CLI boundary, and spec owns `adapters/cli.py` for the sentinel output its commands share. These adapters remain above application layers. Application-owned bundles live under
 `bundles/<name>/bundle/`, including a package with only one bundle. Content-only packages
 may retain their existing bundle-only layouts. `tools/devkit-dev` owns the repository's
 structure and layering rules and the release handbook playbook (`CAP-DLV-release-handbook`) in a development bundle;
@@ -178,10 +178,10 @@ e2e combinations; individual packages need no duplicate installation suites.
 | **`devkit_agt.features.compact`** (agt) | Bounded command execution with persistent log capture. | `devkit run` |
 | **`devkit_dist.features.search`** (dist) | Lexical (BM25), dense (embeddings), and hybrid document retrieval. | Library API |
 | **`devkit_dist.features.host`** (dist) | Host environment discovery, lifecycle event hook dispatch, exact project MCP registrations. | `host status` |
-| **`devkit_agt.features.integration`** (agt) | Approval-bound integration and the MCP service tools it registers with the host. | `integration` |
+| **`devkit_agt.features.integration`** (agt) | Approval-bound integration through Host-authorized CLI operations. | `integration` |
 | **`devkit_agt.features.generated`** (agt) | Tracking and deterministic regeneration of machine-generated files. | `generated check`, `generated regen` |
 
-The optional `devkit_mcp` component mounts `mcp`, loads `devkit.host.services` and adapts native forms.
+The optional `devkit_mcp` component mounts `mcp`, loads `devkit.host.services` and adapts them to the stdio transport.
 `devkit_core.base.mcp` owns SDK-free service contracts and explicit execution classification; the core execution binding
 keeps owning configuration workspace, retained executor and same-clone identity distinct. Domain mutation guards
 consume the process-local binding without importing the transport. Dist discovers only the narrow

@@ -19,7 +19,8 @@ from devkit_spec.base.errors import (
     ProposalTargetExistsError,
     SpecExistsError,
 )
-from devkit_spec.features.proposals import create_padr, create_proposal, create_spec, handoff_proposal
+from devkit_spec.features.proposals import create_proposal, create_spec, handoff_proposal
+from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecisionUseCase
 
 RULE = load_rule(Path(devkit_spec.__file__).parent / "bundles/spec/bundle/rules/document_reference/rule.py")
 
@@ -31,7 +32,7 @@ def _proposal(root: Path, slug: str, aliases: str = "") -> Path:
 
 
 def _padr(root: Path, slug: str, title: str, aliases: str, body: str = "") -> Path:
-    path = root / create_padr(root, slug, title).path
+    path = root / CreateProposalDecisionUseCase().execute(root, slug, title).path
     text = path.read_text(encoding="utf-8")
     text = re.sub(r"(?m)^(id: .*)$", rf"\1\naliases: [{aliases}]", text, count=1)
     path.write_text(text + body, encoding="utf-8")
@@ -80,7 +81,7 @@ def test_handoff_refuses_a_translated_alias_that_is_taken(workspace: Path, write
 
 def test_handoff_refuses_a_graduating_adr_that_is_an_existing_alias(workspace: Path, write: Write) -> None:
     proposal = _proposal(workspace, "shadow")
-    create_padr(workspace, "shadow", "Same")
+    CreateProposalDecisionUseCase().execute(workspace, "shadow", "Same")
     write("docs/decisions/2026-01/20260101-kept.md", "---\nid: ADR-kept\nstatus: accepted\naliases: [ADR-same]\n---\n")
     with pytest.raises(ProposalTargetExistsError):
         handoff_proposal(workspace, "shadow", today=TODAY)
@@ -123,7 +124,7 @@ def test_scaffolding_treats_a_spec_alias_like_a_declared_spec(workspace: Path, w
         "---\nid: PADR-first\nstatus: draft\naliases: [PADR-taken]\n---\n",
     )
     with pytest.raises(ProposalDecisionExistsError):
-        create_padr(workspace, "fresh", "Taken")
+        CreateProposalDecisionUseCase().execute(workspace, "fresh", "Taken")
 
 
 def test_handoff_refuses_an_alias_that_would_become_a_dated_spec_id(workspace: Path) -> None:

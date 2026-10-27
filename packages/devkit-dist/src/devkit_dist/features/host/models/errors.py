@@ -44,9 +44,3 @@ class HostMcpInputError(HostError):
     code = "HOST_MCP_ARGUMENT_INVALID"
     input_error = True
     fix = "Read the MCP tool input schema and call it with the declared arguments"
-
-
-class HostConfirmationError(HostError):
-    code = "HOST_CONFIRMATION_UNAVAILABLE"
-    guardrail = True
-    fix = "Use an interactive Codex client with form elicitation enabled; repeat the confirmation call only after inspecting Git state"

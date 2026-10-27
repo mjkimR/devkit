@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import asdict
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
@@ -18,13 +18,15 @@ from devkit_dist.features.distribution.models.results import (
     OverrideStatus,
     SyncResult,
 )
-from devkit_dist.features.distribution.services.bundles import build_bundle, load_bundle
+from devkit_dist.features.distribution.services.bundles import load_bundle
 from devkit_dist.features.distribution.services.installation.config import (
     ConfigTemplateResult,
     effective_selection,
     merge_selection,
     prepare_config_update,
+    preview_config_template,
     read_config,
+    refresh_config_template,
     resolve_selection,
 )
 from devkit_dist.features.distribution.services.installation.discovery import (
@@ -35,14 +37,24 @@ from devkit_dist.features.distribution.services.installation.discovery import (
 from devkit_dist.features.distribution.services.installation.plan import BundlePlan, plan_bundle
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt
 from devkit_dist.features.distribution.services.installation.transaction import project_lock
+from devkit_dist.features.distribution.usecases.override_commands import (
+    accept_override,
+    create_override,
+    diff_override,
+    list_overrides,
+    remove_override,
+)
+from devkit_dist.features.distribution.usecases.status import (
+    ProjectListing,
+    ProjectStatus,
+    get_project_listing,
+    get_project_status,
+)
 from devkit_dist.features.distribution.usecases.sync import sync_project
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.local_config import read_effective_config
 from devkit_dist.features.project.repositories.receipt import OVERRIDES_PATH
 from devkit_dist.features.project.services.presentation import language_notices, resolve_language
-
-if TYPE_CHECKING:
-    from .status import ProjectListing, ProjectStatus
 
 ConfigEdit = Callable[[list[InstalledBundle], dict[str, list[str]]], dict[str, Any]]
 
@@ -161,8 +173,6 @@ class ListProject(BaseUseCase):
 
     def execute(self, root: Path) -> ProjectListing:
         """Discover installed content and read the project listing while resources are available."""
-        from .status import get_project_listing
-
         with discover_bundles() as installed:
             return get_project_listing(root, installed)
 
@@ -172,8 +182,6 @@ class InspectProject(BaseUseCase):
 
     def execute(self, root: Path) -> ProjectStatus:
         """Discover installed content and inspect the project while resources are available."""
-        from .status import get_project_status
-
         with discover_bundles() as installed:
             return get_project_status(root, installed)
 
@@ -183,8 +191,6 @@ class CreateProjectOverride(BaseUseCase):
 
     def execute(self, root: Path, selector: str, *, force: bool = False) -> OverrideChange:
         """Discover upstream content and create an override within its resource lifetime."""
-        from .override_commands import create_override
-
         with discover_bundles() as installed:
             return create_override(root, installed, selector, force=force)
 
@@ -194,8 +200,6 @@ class DiffProjectOverride(BaseUseCase):
 
     def execute(self, root: Path, selector: str) -> OverrideDiff:
         """Discover upstream content and compare the override before releasing it."""
-        from .override_commands import diff_override
-
         with discover_bundles() as installed:
             return diff_override(root, installed, selector)
 
@@ -205,8 +209,6 @@ class AcceptProjectOverride(BaseUseCase):
 
     def execute(self, root: Path, selector: str) -> OverrideChange:
         """Discover upstream content and accept its baseline before releasing it."""
-        from .override_commands import accept_override
-
         with discover_bundles() as installed:
             return accept_override(root, installed, selector)
 
@@ -216,8 +218,6 @@ class RemoveProjectOverride(BaseUseCase):
 
     def execute(self, root: Path, selector: str) -> OverrideChange:
         """Discover upstream content and restore it while removing the override."""
-        from .override_commands import remove_override
-
         with discover_bundles() as installed:
             return remove_override(root, installed, selector)
 
@@ -227,8 +227,6 @@ class ListProjectOverrides(BaseUseCase):
 
     def execute(self, root: Path) -> list[OverrideStatus]:
         """Discover upstream content and collect override drift before releasing it."""
-        from .override_commands import list_overrides
-
         with discover_bundles() as installed:
             return list_overrides(root, installed)
 
@@ -246,10 +244,6 @@ class PlanSource(BaseUseCase):
 
     def execute(self, source: Path, preset: str | None, agents: tuple[str, ...]) -> BundlePlan:
         return plan_bundle(load_bundle(source), preset, list(agents) or None, source=str(source))
-
-
-def build_source(source: Path, output: Path):
-    return build_bundle(load_bundle(source), output)
 
 
 class ShowConfiguration(BaseUseCase):
@@ -328,9 +322,7 @@ class PreviewConfigTemplate(BaseUseCase):
 
     def execute(self, root: Path) -> ConfigTemplateResult:
         """Preview the project configuration template without mutation."""
-        from devkit_dist.features.distribution.services.installation.config import preview_config_template as preview
-
-        return preview(root)
+        return preview_config_template(root)
 
 
 class RefreshConfigTemplate(BaseUseCase):
@@ -338,6 +330,4 @@ class RefreshConfigTemplate(BaseUseCase):
 
     def execute(self, root: Path) -> ConfigTemplateResult:
         """Apply missing configuration template keys under the project lock."""
-        from devkit_dist.features.distribution.services.installation.config import refresh_config_template as refresh
-
-        return refresh(root)
+        return refresh_config_template(root)

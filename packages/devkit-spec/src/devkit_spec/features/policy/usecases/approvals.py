@@ -14,8 +14,7 @@ def approval_policy(root: Path, gate: str) -> str:
     root = root.resolve()
     owner = root
     if checkout(root) is not None:
-        position = locate(root)
-        owner = position.base / root.relative_to(position.root)
+        owner = locate(root).base
     configured = load_workflow_config(owner)
     check_approvals(configured.approvals)
     policy = configured.policy(gate)

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import contextlib
 import posixpath
-import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -32,6 +31,7 @@ from devkit_spec.base.errors import (
     ScopeTokenExistsError,
     ScopeTokenMissingError,
 )
+from devkit_spec.base.units import SPEC_DIR, is_spec_dir
 from devkit_spec.features.policy.repositories.branches import DEVELOPMENT_PREFIX, checkout
 from devkit_spec.features.policy.services.config import read_spec_config
 from devkit_spec.features.scope.models.deadline import JOURNAL_SECONDS, ROLLBACK_SECONDS, Deadline
@@ -48,7 +48,7 @@ from devkit_spec.features.scope.models.model import (
     Verdict,
 )
 from devkit_spec.features.scope.models.model import now as utc_now
-from devkit_spec.features.scope.models.registry import Journaler, Registry, new_request_id, token_hash
+from devkit_spec.features.scope.models.registry import Registry, new_request_id, token_hash
 from devkit_spec.features.scope.repositories.localfs import LocalRegistry
 from devkit_spec.features.scope.repositories.location import (
     Location,
@@ -65,7 +65,6 @@ from devkit_spec.features.scope.services.compare import compare_with
 from devkit_spec.features.scope.usecases.inputs import from_spec, observe_git
 
 SOURCE_HANDOFF = "handoff"
-_SPEC_DIR = re.compile(r"^\d{8}-(.+)$")
 
 
 @dataclass(frozen=True)
@@ -90,8 +89,8 @@ def open_session(root: Path) -> Session:
 
 def slug_from_spec(spec: str) -> str:
     """The slug of a spec directory named ``YYYYMMDD-<slug>``; ``""`` for any other name."""
-    match = _SPEC_DIR.match(posixpath.basename(spec.rstrip("/")))
-    return match.group(1) if match else ""
+    match = SPEC_DIR.fullmatch(posixpath.basename(spec.rstrip("/")))
+    return match["slug"] if match else ""
 
 
 def record_event(kind: EventKind, record: Record, source: str = "") -> Event:
@@ -125,16 +124,16 @@ def sweep_events(results: Sequence[SweepResult], source: str = "") -> list[Event
     ]
 
 
-def journal(registry: Registry, namespace: str, events: Sequence[Event]) -> list[AdvisoryError]:
-    """Append ``events`` when the adapter keeps a journal, under its own deadline; a failure is one warning."""
-    if not events or not isinstance(registry, Journaler):
+def journal(registry: LocalRegistry, namespace: str, events: Sequence[Event]) -> list[AdvisoryError]:
+    """Append ``events`` to the journal under its own deadline; a failure is one warning."""
+    if not events:
         return []
     stamp = utc_now()
     stamped = [event if event.at else _at(event, stamp) for event in events]
     try:
         registry.append(namespace, stamped, Deadline(JOURNAL_SECONDS))
     except (AdvisoryError, OSError) as exc:
-        target = str(registry.journal_path(namespace)) if isinstance(registry, LocalRegistry) else namespace
+        target = str(registry.journal_path(namespace))
         message = exc.message if isinstance(exc, AdvisoryError) else str(exc)
         return [ScopeJournalWarning(f"the event journal could not be written: {message}", target_files=[target])]
     return []
@@ -231,21 +230,22 @@ def _rollback(registry: Registry, stored: Record, token: str) -> list[str]:
     return []
 
 
-def auto_register(root: Path, spec_dir: str, *, source: str) -> tuple[Registered | None, list[AdvisoryError]]:
-    """Retain best-effort creation snapshots without giving workers maintenance duties."""
+def auto_register(root: Path, spec_dir: str, *, source: str) -> Registered | None:
+    """Retain best-effort creation snapshots without giving workers maintenance duties: every registration notice
+    and failure is only a verbose diagnostic."""
     try:
         session = open_session(root)
         if not session.location.linked:
-            return None, []
+            return None
         registered = register(session, spec_dir, source=source)
         for notice in registered.notices:
             _automatic_diagnostic(notice.code)
         registered.notices = []
-        return registered, []
+        return registered
     except Exception as exc:
         # Cancellation/termination are BaseException and intentionally remain outside this boundary.
         _automatic_diagnostic(getattr(exc, "code", "SPEC_SCOPE_AUTO_REGISTER_FAILED"))
-        return None, []
+        return None
 
 
 _log = get_logger(__name__)
@@ -307,11 +307,10 @@ def _register_guidance(root: Path) -> tuple[str, tuple[str, ...]]:
     found = checkout(root)
     branch = found[1] if found is not None else ""
     slug = branch.removeprefix(DEVELOPMENT_PREFIX) if branch.startswith(DEVELOPMENT_PREFIX) else ""
-    exact = re.compile(rf"\d{{8}}-{re.escape(slug)}")
     bundles = sorted(
         path.relative_to(root).as_posix()
         for path in root.glob("specs/*/*")
-        if slug and path.is_dir() and exact.fullmatch(path.name)
+        if slug and path.is_dir() and is_spec_dir(path.name, slug)
     )
     if len(bundles) == 1:
         return f"register with `{DEVKIT} spec scope register --spec {bundles[0]}`", ()

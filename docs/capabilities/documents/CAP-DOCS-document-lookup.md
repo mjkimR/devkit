@@ -156,7 +156,7 @@ devkit spec list feedback --status resolved            # resolved feedback, with
 alias; `list` prints
 `[DOCUMENT: <id> kind= status= path= tasks= task_kind= planning_effort= dev_effort= severity= scope= target= namespace= title=]`, `tasks=` only on spec lines, `task_kind=`, `planning_effort=` and `dev_effort=` only on proposal lines, `severity=`, `scope=` and
 `target=` only on feedback lines, `namespace=` only with registered namespaces. Values follow devkit's sentinel conventions: `-` for empty, `yes`/`no` for booleans, a JSON
-string when the value holds spaces, quotes or brackets.
+string when the value holds whitespace, quotes, brackets, `=` or a backslash.
 
 ### 4.3 JSON Keys (`--format json`)
 

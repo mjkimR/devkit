@@ -218,7 +218,6 @@ sources of both sides, and the unresolved count of both sides. Ranking and weigh
     or no longer a Git work tree); `unverifiable` (`other-host`); `error` (`parse`, `permission`). With `--apply` a
     stale record is removed (`removed`, `worktree-missing`) only if its revision still equals the one read before,
     else `error` with `stale-revision`.
-  - `claim`: reserved for adapters that can publish exclusively; `SPEC_SCOPE_UNSUPPORTED`.
 - **Deadline**: each command runs under `[tool.spec.scope] timeout` (default 10 seconds), one devkit `Deadline` whose
   expiry raises `SPEC_SCOPE_TIMEOUT`: the shared/exclusive lock wait and every Git subprocess (`run_git`) take the time
   left, and a Git process that outlives it is killed. Running out is `SPEC_SCOPE_TIMEOUT`
@@ -344,7 +343,6 @@ A malformed table is `SPEC_CONFIG_INVALID` (`CAP-DLV-project-policy`).
 | `SPEC_SCOPE_LOCK_UNSUPPORTED` | `ERROR` (`BLOCKED`) | `ScopeLockUnsupportedError` | No `fcntl.flock` on this platform. |
 | `SPEC_SCOPE_NAMESPACE_INVALID` | `ERROR` (`INPUT_ERROR`) | `ScopeNamespaceError` | An adapter call names an empty, dotted or nested namespace. |
 | `SPEC_SCOPE_SHARED_PATH_UNAVAILABLE` | `ERROR` (`INTERACTION`) | `ScopeSharedPathError` | The registry directory (or the token file) cannot be created, read or written, or its `.lock` is not a regular file. |
-| `SPEC_SCOPE_UNSUPPORTED` | `ERROR` (`MAINTENANCE`) | `ScopeUnsupportedError` | The reserved `claim` operation was called. |
 | `SPEC_SCOPE_ACK_FAILED` | `ERROR` (`MAINTENANCE`) | `ScopeAckFailedError` | An update failed for a cause without its own code. |
 | `SPEC_SCOPE_RECORD_INVALID` | `WARNING` | `ScopeRecordInvalidWarning` | A record file cannot be read and was left out (`query` lists the other records, with a detail when this worktree's record may be among the unreadable files). An `ERROR` (`INTERACTION`, the token kept until the files are repaired or removed) only when the record a command needs may be unreadable: `update` and `release` without `--task-id` when this worktree's record is not readable and an unreadable file may hold its token's hash; `release --task-id <id>` when that task's own record file cannot be read. |
 | `SPEC_SCOPE_SHARED_WORKTREE` | `WARNING` | `ScopeSharedWorktreeWarning` | Another task registered the same worktree. |

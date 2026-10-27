@@ -15,16 +15,13 @@ from devkit_dist.adapters.cli import (
     is_json,
     resolve_root,
     workspace_option,
+    yes_no,
 )
 
 from devkit_agt.features.integration.models.contracts import Task, integrate_command, prepare_command
 from devkit_agt.features.integration.usecases.operations import IntegrateUseCase, PrepareIntegrationUseCase
 from devkit_agt.features.integration.usecases.service import IntegrationService
 from devkit_agt.features.worktree import RunFromBaseError
-
-
-def _yes(value: bool) -> str:
-    return "yes" if value else "no"
 
 
 @contextmanager
@@ -92,8 +89,8 @@ def prepare(
         f"digest={request.digest} route={route} network={request.context.network}]"
     )
     click.echo(
-        f"[INTEGRATION_SCOPE: worktree_remove={_yes(plan.worktree_identity is not None)} "
-        f"delete_branch={_yes(plan.delete_branch)} cleanup={cleanup} "
+        f"[INTEGRATION_SCOPE: worktree_remove={yes_no(plan.worktree_identity is not None)} "
+        f"delete_branch={yes_no(plan.delete_branch)} cleanup={cleanup} "
         f"disclosure={json.dumps(request.readiness.disclosure, ensure_ascii=False)}]"
     )
 

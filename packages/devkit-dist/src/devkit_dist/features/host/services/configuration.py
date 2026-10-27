@@ -10,6 +10,7 @@ from typing import Any
 from devkit_dist.features.host.models.errors import HookConflictError, HookDefinitionError, HostConfigError
 from devkit_dist.features.host.models.hooks import SUPPORTED_HOSTS, HookDefinition, parse_hook
 from devkit_dist.features.host.repositories.adapters.codex import CodexAdapter
+from devkit_dist.features.project.models.strict_json import strict_json_loads
 from devkit_dist.features.project.repositories.receipt import HostHookRecord
 
 
@@ -30,18 +31,9 @@ def read_hook(raw: bytes, target: str) -> HookDefinition:
     return hook
 
 
-def _unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
-    out: dict[str, Any] = {}
-    for key, value in pairs:
-        if key in out:
-            raise ValueError("duplicate JSON key")
-        out[key] = value
-    return out
-
-
 def parse_config(raw: bytes | None, target: str) -> dict[str, Any]:
     try:
-        data = json.loads(raw, object_pairs_hook=_unique, parse_constant=_invalid_constant) if raw is not None else {}
+        data = strict_json_loads(raw, reject_constants=True) if raw is not None else {}
         if not isinstance(data, dict):
             raise ValueError("expected an object")
         hooks = data.get("hooks", {})
@@ -55,10 +47,6 @@ def parse_config(raw: bytes | None, target: str) -> dict[str, Any]:
             "host hook configuration must be an unambiguous JSON object", target_files=[target]
         ) from exc
     return data
-
-
-def _invalid_constant(value: str) -> Any:
-    raise ValueError("non-JSON constant")
 
 
 def plan_config(

@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-from devkit_dist.features.distribution import GetPlaybook
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.workspace import JOURNAL
 from devkit_dist.features.distribution.usecases.override_commands import create_override
+from devkit_dist.features.distribution.usecases.playbook_get import GetPlaybook
 from devkit_dist.features.distribution.usecases.sync import sync_project
 from devkit_dist.features.project.repositories.receipt import RECEIPT_PATH
 from distsupport.distribution import cli, make_bundle

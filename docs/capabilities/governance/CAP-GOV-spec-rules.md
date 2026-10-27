@@ -220,8 +220,9 @@ unless explicitly targeted, is not checked.
   (`AC-` and two or more digits, compared as written); IDs MUST be unique and the spec MUST define at least one.
 - **Coverage**: a checklist task (`- [ ]`, `- [x]`, also `*` or `+`, nested tasks included) covers an ID written in
   its text as `[AC-NN]` or listed on a direct child line `- _Requirements: AC-01, AC-02_`. Tables, prose, blockquotes,
-  frontmatter, fenced code, HTML comments, a `_Requirements:_` line that is not a direct child of a task, and an item
-  indented four or more spaces that is not a task's direct child cover nothing.
+  frontmatter, fenced or indented code, HTML comments and a `_Requirements:_` line that is not a direct child of a task
+  cover nothing. A task is exactly a checklist item the shared Markdown scanner reports, the same item `count_tasks`
+  counts.
 - MUST report: a criterion heading without exactly one valid ID, a duplicate ID or no criteria; acceptance criteria
   without a task; tasks referencing undefined criteria; an invalid requirement ID; a missing or unreadable `spec.md`
   or unparsable spec frontmatter.

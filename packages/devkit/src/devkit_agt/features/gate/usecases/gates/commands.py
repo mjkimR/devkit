@@ -23,7 +23,7 @@ is not pointed at this commit's index. The index is passed as
 ``DEVKIT_GIT_INDEX_FILE`` instead, which devkit's own staged checks
 (``devkit rules check --staged``) use for this repository, so they evaluate
 exactly what is committed, ``git commit -a`` and ``git commit <paths>``
-included (``devkit_core.core.git.commit_index``).
+included (``devkit_agt.features.rules.commit_index``).
 """
 
 from __future__ import annotations
@@ -32,16 +32,15 @@ import os
 from dataclasses import dataclass, field
 
 from devkit.advisory import Actor, AdvisoryError, ExitCode, Level
-from devkit_core.core.git import COMMIT_INDEX_VARIABLE, run_git
+from devkit_core.core.git import run_git
 
-from devkit_agt.features.compact import CommandRun, run_command
+from devkit_agt.features.compact import CommandRun, run_command, status_records
 from devkit_agt.features.gate.models.base import BaseGate
 from devkit_agt.features.gate.models.contracts import GateContext, GateResult, Stage
 from devkit_agt.features.gate.models.errors import GateFindingsError, VerifyNotRunError, VerifyUnstagedNotice
+from devkit_agt.features.rules import COMMIT_INDEX_VARIABLE
 
 HOOK_GIT_VARIABLES = ("GIT_DIR", "GIT_INDEX_FILE", "GIT_WORK_TREE", "GIT_PREFIX")
-# Last output lines shown for a failed command, beside its summaries and failed tests.
-TAIL_LINES = 10
 
 
 @dataclass(frozen=True)
@@ -53,35 +52,10 @@ class VerifyCommandsSettings:
 
 
 def _unstaged(ctx: GateContext) -> list[str]:
-    """Tracked files with unstaged changes and untracked files, as Git reports them for this commit's index.
-
-    Each ``-z`` record is ``XY <path>``; a rename or copy (``R`` or ``C`` in
-    either column) is followed by one more field, its source path, which is
-    not a record of its own.
-    """
-    fields = iter(run_git(ctx.repo_root, "status", "--porcelain=v1", "-z", "--untracked-files=normal").split(b"\0"))
-    paths = []
-    for entry in fields:
-        status = entry[:2]
-        if b"R" in status or b"C" in status:
-            next(fields, None)
-        if len(entry) > 3 and status[1:2] != b" ":  # Y is the work tree's column; "??" is untracked
-            paths.append(os.fsdecode(entry[3:]))
-    return paths
-
-
-def _failure_details(command: str, run: CommandRun) -> list[str]:
-    found = run.scan
-    lines = [f"command: {command}  exit={run.exit_code}  log={run.log}"]
-    lines += [f"  summary: {summary}" for summary in found.summaries]
-    lines += [f"  failed: {failure.test}: {failure.message}" for failure in found.failures]
-    shown = set(found.summaries)
-    tail = [line for line in found.output.splitlines() if line.strip() and line not in shown][-TAIL_LINES:]
-    lines += [f"  | {line}" for line in tail]
-    lines += [
-        f"  > {line}" for item in found.advisories if item.level is Level.ERROR for line in item.text.splitlines()
-    ]
-    return lines
+    """Tracked files with unstaged changes and untracked files, as Git reports them for this commit's index."""
+    raw = run_git(ctx.repo_root, "status", "--porcelain=v1", "-z", "--untracked-files=normal")
+    # Y is the work tree's column; "??" is untracked.
+    return [os.fsdecode(path) for status, path in status_records(raw) if status[1:2] != b" "]
 
 
 def _not_run(run: CommandRun) -> bool:
@@ -143,7 +117,11 @@ class VerifyCommandsGate(BaseGate):
                 )
             )
         if failed:
-            details = [line for command, run in failed for line in _failure_details(command, run)]
+            details = [
+                line
+                for command, run in failed
+                for line in run.failure_details(f"command: {command}  ", failed_tests=True)
+            ]
             notes = [f"note: {notice.message}" for notice in notices if isinstance(notice, VerifyUnstagedNotice)]
             commands = ", ".join(command for command, _ in failed)
             not_run = [run for _, run in failed if _not_run(run)]

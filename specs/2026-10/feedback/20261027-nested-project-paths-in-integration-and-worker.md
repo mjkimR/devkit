@@ -8,7 +8,7 @@ target: devkit_agt IntegrationContext; devkit-spec delivery integration readines
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-27
 ---
 
@@ -53,3 +53,10 @@ IntegrationContext fields: finish, task, network, result_sha (no project root or
 integration.py: _check_unit_task(...) -> attach_check(base, branch, unit_rel, context.finish.source_sha)
 with unit_rel project-relative; git show <tip>:<unit_rel> resolves from the tree root.
 ```
+
+## Disposition
+
+- **Disposition**: dismissed by the user's decision: devkit's root contract (`find_project_root` /
+  `require_devkit_root`) makes the Git top level the devkit root and refuses a `.devkit/` below it with
+  `DEVKIT_ROOT_NESTED`, so nested projects are unsupported and the partial project-prefix handling in
+  `native_handoff`, composed plan-accept, scope, policy, `generated` and `worker inspect` was removed instead.

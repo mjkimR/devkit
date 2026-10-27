@@ -9,9 +9,11 @@ Every ``tasks.md`` under ``specs/`` is checked against the ``spec.md`` beside it
   ``- _Requirements: AC-01, AC-02_`` (every listed ID must be well-formed);
 - every defined ID is covered by a task, and every covered ID is defined.
 
-A missing or unreadable ``spec.md`` and malformed spec frontmatter are violations. Frontmatter, fenced code and HTML
-comments are not read. A checklist item indented four or more spaces counts only as the direct child of a task (two
-spaces deeper); otherwise it is indented code. Tables, prose, blockquotes and indirect descendants never cover an ID.
+A missing or unreadable ``spec.md`` and malformed spec frontmatter are violations. Frontmatter, fenced and indented
+code and HTML comments are not read (inline Markdown is left as written: ``[AC-01]: Title`` is a heading's ID, not a
+link label); the shared scanner (``devkit_agt.features.rules.scan``) decides what they are
+and which lines are checklist tasks, so ``count_tasks`` and this rule agree. Tables, prose, blockquotes and indirect
+descendants never cover an ID.
 
 Changing either file can break the pair, so a pair is checked when either file is targeted, and its violations are
 reported on the file they belong to unless ``[rules] exclude`` matches it. A completed spec's pair is work history,
@@ -24,10 +26,9 @@ import re
 from collections.abc import Callable
 from pathlib import PurePosixPath
 
-from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, match_path
+from devkit_agt.features.rules import LineKind, Phase, RuleContext, Severity, Violation, match_path, scan
 from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
-from devkit_core.core.frontmatter import locate
 
 from devkit_spec.features.governance import explicitly_targeted
 
@@ -38,7 +39,6 @@ type Add = Callable[[str, int, str, str], None]
 _HEADING = re.compile(r"^ {0,3}(#{1,6})[\t\f\r ]+(.+)$")
 _AC_TAG = re.compile(r"\[(AC-[0-9]{2,})\]")
 _AC_ID = re.compile(r"AC-[0-9]{2,}")
-_TASK = re.compile(r"^( *)(?:- |\* |\+ )\[[ xX]\] (.*)$")
 _REQUIREMENT = re.compile(r"^_Requirements:\s*(.*?)_$")
 
 
@@ -46,112 +46,13 @@ def _excluded(ctx: RuleContext, path: str) -> bool:
     return any(match_path(pattern, path) for pattern in ctx.exclude)
 
 
-def _fence_width(stripped: str, char: str) -> int:
-    width = 0
-    while width < len(stripped) and stripped[width] == char:
-        width += 1
-    return width
-
-
-def _code_span_end(line: str, start: int) -> int:
-    """The end of the inline code span whose opening backtick run starts at ``start``; ``-1`` when no run of the same
-    length closes it on this line (the run is then literal)."""
-    end = start
-    while end < len(line) and line[end] == "`":
-        end += 1
-    width, index = end - start, end
-    while index < len(line):
-        if line[index] != "`":
-            index += 1
-            continue
-        run = index
-        while index < len(line) and line[index] == "`":
-            index += 1
-        if index - run == width:
-            return index
-    return -1
-
-
-def _without_comments(line: str, comment: bool) -> tuple[str, bool]:
-    """``line`` with its inline HTML comment spans blanked, and whether a comment continues past it; ``comment``:
-    the line starts inside one. A ``<!--`` inside a code span is literal."""
-    out = list(line)
-    index = 0
-    while index < len(line):
-        if comment:
-            end = line.find("-->", index)
-            stop = len(line) if end < 0 else end + 3
-            out[index:stop] = " " * (stop - index)
-            if end < 0:
-                break
-            index, comment = stop, False
-            continue
-        if line[index] == "`":
-            end = _code_span_end(line, index)
-            index = end if end >= 0 else len(line) - len(line[index:].lstrip("`"))
-            continue
-        if line.startswith("<!--", index):
-            comment = True
-            continue
-        index += 1
-    return "".join(out), comment
-
-
-def _contract_lines(text: str) -> list[str]:
-    """The lines of ``text`` with frontmatter (as devkit's grammar locates it), fenced code and HTML comments blanked,
-    numbering kept: a line opening with ``<!--`` starts an HTML block, blanked through the line that closes it, and a
-    comment after other content is blanked as a span (outside code spans), up to its ``-->``.
-
-    Unlike ``devkit_spec.features.documents.visible_lines``, indented lines stay (nested tasks may be indented four or more
-    spaces) and inline Markdown is left as written (``[AC-01]: Title`` is a heading's ID, not a link label).
-    """
-    lines = text.replace("\r\n", "\n").split("\n")
-    try:
-        block = locate(text)
-        front = block.body_line - 1 if block is not None else 0
-    except FrontmatterError:  # never closed: every line belongs to the frontmatter
-        front = len(lines)
-    fence = ""
-    width = 0
-    block = False  # inside an HTML comment block, which ends with the line that closes it
-    comment = False  # inside an inline comment span continued from an earlier line
-    for number, line in enumerate(lines):
-        stripped = line.strip()
-        if number < front:
-            lines[number] = ""
-            continue
-        if block:
-            lines[number] = ""
-            block = "-->" not in line
-            continue
-        if comment:
-            lines[number], comment = _without_comments(line, comment)
-            continue
-        if fence:
-            lines[number] = ""
-            run = _fence_width(stripped, fence)
-            if run >= width and not stripped[run:].strip():
-                fence = ""
-            continue
-        if stripped.startswith(("```", "~~~")):
-            fence = stripped[0]
-            width = _fence_width(stripped, fence)
-            lines[number] = ""
-            continue
-        if line.lstrip(" ").startswith("<!--") and len(line) - len(line.lstrip(" ")) <= 3:
-            lines[number] = ""
-            block = "-->" not in line.split("<!--", 1)[1]
-        elif "<!--" in line:
-            lines[number], comment = _without_comments(line, comment)
-    return lines
-
-
 def _defined(spec_path: str, spec: str, add: Add) -> set[str]:
     """The acceptance criterion IDs ``spec`` defines, reporting malformed and duplicate headings."""
     defined: set[str] = set()
     in_criteria = False
-    for number, line in enumerate(_contract_lines(spec), start=1):
-        heading = _HEADING.match(line)
+    for scanned in scan(spec, frontmatter=True):
+        number = scanned.number
+        heading = _HEADING.match(scanned.text) if scanned.kind is LineKind.PROSE else None
         if heading is None:
             continue
         level, title = len(heading.group(1)), heading.group(2)
@@ -191,20 +92,17 @@ def _covered(tasks_path: str, tasks: str, add: Add) -> set[str]:
     """The acceptance criterion IDs the checklist tasks of ``tasks`` reference, reporting malformed requirements."""
     covered: set[str] = set()
     stack: list[int] = []  # indentation of the enclosing checklist tasks
-    for number, line in enumerate(_contract_lines(tasks), start=1):
+    for scanned in scan(tasks, frontmatter=True):
+        number, line = scanned.number, scanned.text
         stripped = line.strip()
-        if not stripped:
+        if scanned.kind is not LineKind.PROSE or not stripped:
             continue
         indent = len(line) - len(line.lstrip(" "))
         while stack and indent <= stack[-1]:
             stack.pop()
-        task = _TASK.match(line)
-        if task is not None:
-            # Four or more spaces before a top-level item make indented code, not a list.
-            if indent >= 4 and (not stack or indent != stack[-1] + 2):
-                continue
+        if scanned.task is not None:
             stack.append(indent)
-            covered.update(_AC_TAG.findall(task.group(2)))
+            covered.update(_AC_TAG.findall(scanned.task.title))
             continue
         if not stack or indent != stack[-1] + 2 or not stripped.startswith("- "):
             continue

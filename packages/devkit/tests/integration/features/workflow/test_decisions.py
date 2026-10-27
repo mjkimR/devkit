@@ -28,13 +28,11 @@ from devkit_agt.features.workflow import (
 )
 from devkit_agt.features.workflow.cli import cli
 from devkit_agt.features.workflow.cli.render import render_document, render_evaluation
+from devkit_agt.features.workflow.models.decision_records import Decision, Decisions, record_instant
 from devkit_agt.features.workflow.repositories.unit.decisions import (
-    Decision,
     DecisionRecordError,
-    Decisions,
     new_decision,
     parse_record,
-    record_instant,
     utc_timestamp,
     write_decision,
 )

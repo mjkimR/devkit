@@ -8,8 +8,9 @@ from pathlib import Path
 from devkit_core.base.usecase import BaseUseCase
 from devkit_dist.features.project.repositories.project import find_project_root
 
+from devkit_agt.features.worktree.models.config import WorktreeConfig
 from devkit_agt.features.worktree.models.lifecycle import FinishResult, Position, StartResult
-from devkit_agt.features.worktree.repositories.config import WorktreeConfig, read_worktree_config
+from devkit_agt.features.worktree.repositories.config import read_worktree_config
 from devkit_agt.features.worktree.services.extensions import run_attach_checks, run_finish_guards, run_post_finish
 from devkit_agt.features.worktree.services.merging import integration_lock, merge_method
 from devkit_agt.features.worktree.usecases.lifecycle import attach, discard, finish, locate, start
@@ -18,11 +19,9 @@ from devkit_agt.features.worktree.usecases.lifecycle import attach, discard, fin
 class LocateProject(BaseUseCase):
     """Resolve the checkout and its project's worktree policy."""
 
-    def execute(self, start: Path) -> tuple[Position, WorktreeConfig, Path | None]:
+    def execute(self, start: Path) -> tuple[Position, WorktreeConfig]:
         """Resolve the checkout and its project's worktree policy."""
-        position, project = locate(start), find_project_root(start)
-        relative = project.relative_to(position.root) if project.is_relative_to(position.root) else None
-        return position, read_worktree_config(project), relative
+        return locate(start), read_worktree_config(find_project_root(start))
 
 
 class StartActivity(BaseUseCase):
@@ -32,7 +31,6 @@ class StartActivity(BaseUseCase):
         self,
         position: Position,
         config: WorktreeConfig,
-        project: Path | None,
         branch: str,
         *,
         existing: str | None = None,
@@ -46,10 +44,10 @@ class StartActivity(BaseUseCase):
                 source=existing,
                 unit=unit,
                 setup=config.setup,
-                project=project,
+                sync=True,
                 check=run_attach_checks,
             )
-        return start(position, branch, setup=config.setup, project=project)
+        return start(position, branch, setup=config.setup, sync=True)
 
 
 class FinishActivity(BaseUseCase):

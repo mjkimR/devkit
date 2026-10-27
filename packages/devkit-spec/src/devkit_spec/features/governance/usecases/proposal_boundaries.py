@@ -30,11 +30,9 @@ from devkit_core.core.yaml import safe_compose
 from devkit_spec.base.errors import EntrypointsPathError
 from devkit_spec.features.documents import Document
 from devkit_spec.features.entrypoints import exists, normalize
-from devkit_spec.features.governance import document_index, namespaces
+from devkit_spec.features.governance import document_index, is_proposal_anchor, namespaces
 
 RULE_ID = "RULE-proposal-boundaries"
-PROPOSALS = "docs/proposals"
-PROPOSAL_FILE = "proposal.md"
 CHECKED_STATUSES = frozenset({"draft", "reviewing", "accepted"})
 TARGET_AREA = "target_area"
 BOUNDARIES = "boundaries"
@@ -116,17 +114,6 @@ class ProposalBoundariesRule(BaseRule):
 
     def _violation(self, document: Document, line: int, message: str, remediation: str = REMEDIATION) -> Violation:
         return Violation(rule_id=self.id, file=document.path, line=line, message=message, remediation=remediation)
-
-
-def is_proposal_anchor(path: str) -> bool:
-    """Whether ``path`` is a proposal anchor: ``docs/proposals/PROP-<slug>/proposal.md`` or a single-file proposal
-    ``docs/proposals/PROP-<slug>.md``."""
-    if not path.startswith(f"{PROPOSALS}/"):
-        return False
-    parts = path.removeprefix(f"{PROPOSALS}/").split("/")
-    if len(parts) == 1:
-        return parts[0].startswith("PROP-") and parts[0].endswith(".md")
-    return len(parts) == 2 and parts[0].startswith("PROP-") and parts[1] == PROPOSAL_FILE
 
 
 def _entry_problem(ctx: RuleContext, field: str, item: str, candidates: list[str]) -> tuple[str, str]:

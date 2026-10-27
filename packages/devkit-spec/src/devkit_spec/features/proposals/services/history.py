@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 
 from devkit_agt.features.rules import extract_links
-from devkit_agt.features.rules.repositories.workspace.markdown import local_target
+from devkit_agt.features.rules.models.markdown import local_target
 from devkit_core.core import FrontmatterError, GitError, atomic_write_text, run_git
 from devkit_core.core.frontmatter import locate
 

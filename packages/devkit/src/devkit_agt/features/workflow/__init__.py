@@ -73,6 +73,7 @@ from devkit_agt.features.workflow.models.errors import (
     WorkflowNotFoundError,
     WorkflowNotSelectedError,
 )
+from devkit_agt.features.workflow.models.handoff import CandidateResult, Handoff
 from devkit_agt.features.workflow.models.layout import LayoutSpec, TemplateLayout, parse_layout_spec, validate_template
 from devkit_agt.features.workflow.models.requests import Option, Request, Target
 from devkit_agt.features.workflow.models.results import (
@@ -86,7 +87,6 @@ from devkit_agt.features.workflow.repositories.definitions import (
     discover_definitions,
     load_definition,
     load_definition_dir,
-    resolve_definition,
 )
 from devkit_agt.features.workflow.repositories.git import is_ancestor
 from devkit_agt.features.workflow.repositories.project.config import WorkflowConfig, load_workflow_config
@@ -111,12 +111,9 @@ from devkit_agt.features.workflow.usecases.answers import (
     RecordAnswerUseCase,
     ReturnToStageUseCase,
     record_answer,
-    validate_answer,
 )
 from devkit_agt.features.workflow.usecases.evaluate import LintFunc, Options, evaluate_definition
 from devkit_agt.features.workflow.usecases.handoff import (
-    CandidateResult,
-    Handoff,
     HandoffOutcome,
     HandoffPlan,
     apply_handoff,
@@ -242,8 +239,6 @@ __all__ = [
     "read_binding",
     "record_answer",
     "render_envelope",
-    "resolve_definition",
-    "validate_answer",
     "validate_definition",
     "validate_definitions",
     "validate_template",

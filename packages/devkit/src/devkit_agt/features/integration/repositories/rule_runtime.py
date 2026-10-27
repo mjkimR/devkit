@@ -20,26 +20,20 @@ import importlib.util
 from collections.abc import Iterator, Sequence
 from pathlib import Path, PurePosixPath
 
-from devkit_core.core.git import run_git
 from devkit_core.core.plugins import plugin_module_name
 from devkit_dist.base.errors import ReceiptError
 from devkit_dist.features.project.models.receipt import AssetRecord, Receipt
 from devkit_dist.features.project.repositories.receipt import RECEIPT_PATH, parse_receipt
 
 from devkit_agt.features.integration.models.errors import RuleRuntimeMismatchError
+from devkit_agt.features.integration.repositories.receipts import tracked_blob
 
 RULE_KIND = "rule"
 _BUNDLE_ROOTS = (".devkit/managed", ".devkit/overrides")
 
 
-def _tracked(root: Path, commit: str, path: str) -> bytes | None:
-    if not run_git(root, "ls-tree", "--name-only", commit, "--", path).strip():
-        return None
-    return run_git(root, "cat-file", "blob", f"{commit}:{path}")
-
-
 def _receipt(root: Path, commit: str) -> Receipt | None:
-    raw = _tracked(root, commit, RECEIPT_PATH)
+    raw = tracked_blob(root, commit, RECEIPT_PATH)
     if raw is None:
         return None
     try:
@@ -60,7 +54,7 @@ def _is_module(asset: AssetRecord, path: str) -> bool:
 
 def _source(root: Path, commit: str, receipt: Receipt, path: str, sources: Sequence[Path]) -> bytes | None:
     """The bytes the rule gate would load: the commit's file, else a working copy matching the receipt's hash."""
-    data = _tracked(root, commit, path)
+    data = tracked_blob(root, commit, path)
     if data is not None:
         return data
     record = receipt.file(path)

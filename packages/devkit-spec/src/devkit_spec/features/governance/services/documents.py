@@ -29,11 +29,15 @@ namespace registry that cannot be read.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from devkit_agt.features.rules import RuleContext
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import locate
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
+from devkit_spec.base.units import PROPOSAL_FILE, PROPOSALS
 from devkit_spec.features.documents import SOURCE_DIRECTORIES, Document, DocumentIndex
 from devkit_spec.features.policy.services.config import Namespace, read_spec_config
 
@@ -60,6 +64,21 @@ def document_index(ctx: RuleContext) -> DocumentIndex:
     return ctx.cache.get_or_compute(CACHE_KEY, _load)
 
 
+def field_line(text: str, key: str) -> int:
+    """The 1-based line of the first top-level ``key:`` line of ``text``'s frontmatter (core grammar: byte order
+    mark, ``---`` or ``...`` closer); 1 when the text has no frontmatter, an unclosed one, or no such line."""
+    try:
+        block = locate(text)
+    except FrontmatterError:
+        return 1
+    if block is None:
+        return 1
+    match = re.search(rf"^{re.escape(key)}[ \t]*:", block.header, re.M)
+    if match is None:
+        return 1
+    return text.count("\n", 0, block.header_start + match.start()) + 1
+
+
 def namespaces(ctx: RuleContext) -> tuple[Namespace, ...]:
     """The document namespaces of the run's workspace; raises ``SpecConfigError`` for a malformed ``[tool.spec]``."""
     return read_spec_config(ctx.workspace_root).namespaces
@@ -75,6 +94,17 @@ def reportable(ctx: RuleContext, index: DocumentIndex, document: Document) -> bo
     if not ctx.is_file_targeted(document.path):
         return False
     return not index.is_historical(document) or explicitly_targeted(ctx, document.path)
+
+
+def is_proposal_anchor(path: str) -> bool:
+    """Whether ``path`` is a proposal anchor: ``docs/proposals/PROP-<slug>/proposal.md`` or a single-file proposal
+    ``docs/proposals/PROP-<slug>.md``."""
+    if not path.startswith(f"{PROPOSALS}/"):
+        return False
+    parts = path.removeprefix(f"{PROPOSALS}/").split("/")
+    if len(parts) == 1:
+        return parts[0].startswith("PROP-") and parts[0].endswith(".md")
+    return len(parts) == 2 and parts[0].startswith("PROP-") and parts[1] == PROPOSAL_FILE
 
 
 def is_material(document: Document) -> bool:

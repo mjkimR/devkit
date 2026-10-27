@@ -14,11 +14,10 @@ from devkit_core.core.plugins import PluginPackage, check_plugin_modules
 
 from devkit_dist.features.distribution.models.content import normal_mode
 from devkit_dist.features.distribution.models.errors import BundleError, SelectionError
+from devkit_dist.features.distribution.models.settings import AGENT_NAMES, SLUG
 from devkit_dist.features.distribution.services.bundles.common import (
-    AGENT_NAMES,
     ALL,
     SHARED_SKILL_AGENTS,
-    SLUG,
     VERSION,
     locate_frontmatter,
 )

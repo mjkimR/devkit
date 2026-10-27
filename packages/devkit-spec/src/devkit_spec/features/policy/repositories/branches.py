@@ -4,7 +4,8 @@
 Development unit (a spec bundle from ``devkit spec new`` or a proposal handoff) on any other branch, in a linked
 worktree and in the base checkout alike: the unit would land on another task's branch, or on the base itself.
 ``base_checkout_problem`` is the positive check of a direct acceptance, which is Backlog work on the base checkout.
-Outside Git nothing is checked.
+Outside Git nothing is checked. ``recorded_base``, ``base_marker_key`` and ``unit_marker_key`` name the
+``devkit worktree`` branch markers for features that do not depend on ``devkit_agt.features.worktree`` themselves.
 """
 
 from __future__ import annotations
@@ -12,13 +13,31 @@ from __future__ import annotations
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
-from devkit_core.core import GitError, run_git
+from devkit_agt.features.worktree import BASE_KEY, UNIT_KEY, branch_marker, marker_key
+from devkit_core.core import GitError, run_git, run_git_text
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
+
+from devkit_spec.base.units import is_spec_dir
 
 PLANNING_PREFIX = "plan-"
 DEVELOPMENT_PREFIX = "dev-"
 BRANCH_LIMIT = 64  # devkit worktree's limit on an activity branch name
 SLUG_LIMIT = BRANCH_LIMIT - len(PLANNING_PREFIX)  # so plan-<slug> and dev-<slug> both fit
+
+
+def base_marker_key(branch: str) -> str:
+    """The configuration key of the base ``devkit worktree start`` recorded for ``branch`` (``devkitBase``)."""
+    return marker_key(branch, BASE_KEY)
+
+
+def unit_marker_key(branch: str) -> str:
+    """The configuration key of the unit ``devkit worktree`` attached ``branch`` to (``devkitUnit``)."""
+    return marker_key(branch, UNIT_KEY)
+
+
+def recorded_base(root: Path, branch: str) -> str:
+    """The base ``devkit worktree start`` recorded for ``branch``; ``""`` when none is. Other Git failures raise."""
+    return branch_marker(root, branch, BASE_KEY)
 
 
 def checkout(root: Path) -> tuple[bool, str] | None:
@@ -27,12 +46,12 @@ def checkout(root: Path) -> tuple[bool, str] | None:
     A ``GitError`` without an exit status (Git missing, a timeout) propagates.
     """
     try:
-        dirs = run_git(root, "rev-parse", "--path-format=absolute", "--git-common-dir", "--git-dir").splitlines()
+        dirs = run_git_text(root, "rev-parse", "--path-format=absolute", "--git-common-dir", "--git-dir").splitlines()
     except GitError as exc:
         if exc.returncode is None:
             raise
         return None
-    common, git_dir = (Path(line.decode()).resolve() for line in dirs[:2])
+    common, git_dir = (Path(line).resolve() for line in dirs[:2])
     try:
         branch = run_git(root, "symbolic-ref", "--quiet", "--short", "HEAD").decode().strip()
     except GitError as exc:
@@ -69,23 +88,22 @@ def _branch_unit(root: Path, branch: str, slug: str) -> str | None:
     """The committed unit directory of ``slug`` on the local ``branch`` (a spec bundle, else the proposal), relative to
     ``root``; ``None`` when the branch or a unique unit does not exist."""
     try:
-        prefix = run_git(root, "rev-parse", "--show-prefix").decode().strip()
-        listed = run_git(root, "ls-tree", "-d", "--name-only", f"refs/heads/{branch}", f"{prefix}specs/").decode()
+        listed = run_git_text(root, "ls-tree", "-d", "--name-only", f"refs/heads/{branch}", "specs/")
         months = [line for line in listed.splitlines() if line]
         bundles = [
             line
             for month in months
-            for line in run_git(root, "ls-tree", "-d", "--name-only", f"refs/heads/{branch}", f"{month}/")
-            .decode()
-            .splitlines()
-            if line.endswith(f"-{slug}")
+            for line in run_git_text(
+                root, "ls-tree", "-d", "--name-only", f"refs/heads/{branch}", f"{month}/"
+            ).splitlines()
+            if is_spec_dir(line.rpartition("/")[2], slug)
         ]
     except GitError as exc:
         if exc.returncode is None:
             raise
         return None
     if len(bundles) == 1:
-        return bundles[0].removeprefix(prefix)
+        return bundles[0]
     return None
 
 

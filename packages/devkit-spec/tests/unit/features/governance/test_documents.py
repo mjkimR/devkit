@@ -3,10 +3,11 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from devkit_agt.features.rules import RuleContext, WorkspaceCache
 
 from devkit_spec.features.documents import DocumentIndex
-from devkit_spec.features.governance.services.documents import document_index
+from devkit_spec.features.governance.services.documents import document_index, field_line
 
 
 def test_document_index_is_cached_per_run(tmp_path: Path) -> None:
@@ -59,3 +60,19 @@ def test_document_index_invalidates_on_cache_write(tmp_path: Path) -> None:
     index2 = document_index(ctx)
     assert index2 is not index1
     assert index2.canonical("CAP-TEST-updated") is not None
+
+
+@pytest.mark.parametrize(
+    ("text", "line"),
+    [
+        ("---\nid: X\nsummary: s\n---\n", 3),
+        ("\ufeff---\nid: X\nsummary: s\n---\n", 3),
+        ("--- \r\nid: X\r\nsummary : s\r\n---\r\n", 3),
+        ("---\nid: X\n...\nsummary: body\n", 1),
+        ("---\nnested:\n  summary: s\n---\n", 1),
+        ("summary: no frontmatter\n", 1),
+        ("---\nsummary: unclosed\n", 1),
+    ],
+)
+def test_field_line_follows_the_core_grammar(text: str, line: int) -> None:
+    assert field_line(text, "summary") == line

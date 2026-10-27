@@ -8,6 +8,7 @@ from typing import Any
 from devkit_core.base.usecase import BaseUseCase
 
 from devkit_agt.features.workflow.models.decision_records import Decision
+from devkit_agt.features.workflow.models.decisions import ACTIONS
 from devkit_agt.features.workflow.models.errors import (
     DecisionInvalidError,
     RequestUnknownError,
@@ -16,7 +17,6 @@ from devkit_agt.features.workflow.models.errors import (
 )
 from devkit_agt.features.workflow.models.requests import Request
 from devkit_agt.features.workflow.repositories.unit.decisions import (
-    ACTIONS,
     FEEDBACK_PREFIX,
     RETURN_PREFIX,
     is_request_id,

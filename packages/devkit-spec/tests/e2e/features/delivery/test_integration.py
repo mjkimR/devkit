@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 import shutil
 import subprocess
@@ -14,7 +13,6 @@ from click.testing import CliRunner
 from devkit_agt.features.integration import IntegrationContext, IntegrationService, ReadinessError, Task
 from devkit_agt.features.integration.services import providers
 from devkit_agt.features.worktree import PullRequestPolicyError, locate, plan_finish
-from devkit_core.base.mcp import ConfirmationReply
 from devkit_core.core import git as core_git
 from devkit_dist.cli import cli as devkit_cli
 from spec_support.delivery import _cli, _make_synced_repo, _start_worktree
@@ -491,7 +489,7 @@ def test_session_readiness_verifies_claims_and_refuses_invalid_claims_or_plan_br
 
 
 @pytest.mark.parametrize("auto", [False, True])
-def test_integration_service_end_to_end_approval_cleanup_non_approval_and_no_network(
+def test_integration_service_end_to_end_approval_cleanup_and_no_network(
     tmp_path: Path, synced_template: Path, monkeypatch: pytest.MonkeyPatch, auto: bool
 ) -> None:
     repo = _make_synced_repo(
@@ -514,24 +512,15 @@ def test_integration_service_end_to_end_approval_cleanup_non_approval_and_no_net
     service = IntegrationService(repo)
     task = Task(kind="unit", id="SPEC-feat", unit=unit)
 
-    # 1. Declined / unapproved confirmation leaves worktree, branch, base, and scope record untouched.
-    async def _decline(_msg: str, _schema: dict) -> ConfirmationReply:
-        return ConfirmationReply(action="decline", content={"approve": False})
+    # 1. Preparing (the scope the Host presents) leaves worktree, branch, base, and scope record untouched.
+    digest = service.prepare("dev-feat", task).request.digest
+    assert wt.is_dir()
+    assert "SPEC-feat" in _cli(repo, "spec", "scope", "query")
 
-    if not auto:
-        declined = asyncio.run(service.integrate("dev-feat", task, _decline))
-        assert declined.status == "declined"
-        assert wt.is_dir()
-        assert "SPEC-feat" in _cli(repo, "spec", "scope", "query")
-
-    # 2. Affirmative confirmation fast-forwards base, removes worktree & branch, prunes proposal dir, sweeps scope record.
-    async def _accept(_msg: str, _schema: dict) -> ConfirmationReply:
-        assert not auto, "auto must not request native confirmation"
-        return ConfirmationReply(action="accept", content={"approve": True})
-
-    completed = asyncio.run(service.integrate("dev-feat", task, _accept))
+    # 2. The approved invocation merges into base, removes worktree & branch, prunes proposal dir, sweeps scope record.
+    completed = service.execute_cli("dev-feat", task, expected_digest=None if auto else digest)
     assert completed.status == "completed", completed.to_dict()
-    assert completed.authority == ("policy" if auto else "mcp-elicitation")
+    assert completed.authority == ("policy" if auto else "host-conversation")
     assert completed.steps["merge"] == "completed"
     assert completed.steps["worktree_remove"] == "completed"
     assert completed.steps["branch_delete"] == "completed"
@@ -555,10 +544,7 @@ def test_integration_service_respects_delete_branch_false_and_pull_request_requi
     service = IntegrationService(repo)
     task = Task(kind="unit", id="SPEC-feat", unit=unit)
 
-    async def _accept(_msg: str, _schema: dict) -> ConfirmationReply:
-        return ConfirmationReply(action="accept", content={"approve": True})
-
-    res = asyncio.run(service.integrate("dev-feat", task, _accept))
+    res = service.execute_cli("dev-feat", task, expected_digest=service.prepare("dev-feat", task).request.digest)
     assert res.status == "completed"
     assert res.steps["branch_delete"] == "skipped"
     assert res.steps["marker_clear"] == "completed"
@@ -576,7 +562,7 @@ def test_integration_service_respects_delete_branch_false_and_pull_request_requi
         IntegrationService(pr_repo).prepare("dev-feat", Task(kind="unit", id="SPEC-feat", unit=unit_pr))
 
 
-def test_integration_service_partial_post_finish_and_resume(tmp_path: Path, synced_template: Path) -> None:
+def test_integration_service_reports_partial_post_finish(tmp_path: Path, synced_template: Path) -> None:
     repo = _make_synced_repo(tmp_path, synced_template)
     locked = repo / "docs/proposals/PROP-feat/decisions/locked"
     locked.mkdir(parents=True)
@@ -587,12 +573,11 @@ def test_integration_service_partial_post_finish_and_resume(tmp_path: Path, sync
     service = IntegrationService(repo)
     task = Task(kind="unit", id="SPEC-feat", unit=unit)
 
-    async def _accept(_msg: str, _schema: dict) -> ConfirmationReply:
-        return ConfirmationReply(action="accept", content={"approve": True})
-
     locked.chmod(0)
     try:
-        partial = asyncio.run(service.integrate("dev-feat", task, _accept))
+        partial = service.execute_cli(
+            "dev-feat", task, expected_digest=service.prepare("dev-feat", task).request.digest
+        )
     finally:
         locked.chmod(0o755)
 
@@ -603,11 +588,7 @@ def test_integration_service_partial_post_finish_and_resume(tmp_path: Path, sync
     # Scope record was still swept even though proposal prune failed.
     assert "SPEC-feat" not in _cli(repo, "spec", "scope", "query")
 
-    resumed = service.resume(partial.request.id)
-    assert resumed.status == "completed"
-    assert resumed.steps["post_finish"] == "completed"
-    assert resumed.cleanup_steps == {"spec": "completed"}
-    assert not (repo / "docs/proposals/PROP-feat").exists()
+    assert (repo / "docs/proposals/PROP-feat").exists()
     assert providers.provider("spec")[1] is not None
 
 
@@ -715,44 +696,13 @@ def test_handoff_initialization_keeps_template_isolated(
     assert git(template, "status", "--porcelain") == ""
 
 
-@pytest.mark.parametrize(
-    "action,content,status",
-    [
-        ("accept", {"approve": False, "activity_effort": "high"}, "not_approved"),
-        ("decline", {}, "declined"),
-        ("cancel", {}, "cancelled"),
-    ],
-)
-def test_handoff_nonapproval_makes_no_git_changes(accepted_handoff_base, action, content, status):
-    from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase
-
-    repo = accepted_handoff_base
-    before = git(repo, "show-ref")
-
-    async def confirm(message, schema):
-        assert 'Goal: "Proposal summary."' in message
-        assert schema["properties"]["activity_effort"]["default"] == "high"
-        assert schema["properties"]["approve"]["default"] is False
-        assert git(repo, "show-ref") == before
-        return ConfirmationReply(action, content)
-
-    result = asyncio.run(HandoffUseCase(repo).execute_native("idea", confirm))
-    assert result["status"] == status
-    assert git(repo, "show-ref") == before
-    assert not (repo.parent / "repo-wt-dev-idea").exists()
-
-
 def test_handoff_approval_creates_development_and_returns_selected_effort(accepted_handoff_base):
     from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase
 
     repo = accepted_handoff_base
-
-    async def confirm(message, schema):
-        return ConfirmationReply("accept", {"approve": True, "activity_effort": "low"})
-
-    result = asyncio.run(HandoffUseCase(repo).execute_native("idea", confirm))
+    result = HandoffUseCase(repo).execute("idea", "low")
     assert result["status"] == "handed_off", json.dumps(result, indent=2)
-    assert result["activity_effort"] == "low"
+    assert result["activity_effort"] == "low" and result["authority"] == "host-conversation"
     worktree = Path(result["worktree"]["path"])
     assert git(worktree, "branch", "--show-current") == "dev-idea"
     assert (worktree / result["handoff"]["dir"] / "spec.md").is_file()
@@ -760,18 +710,24 @@ def test_handoff_approval_creates_development_and_returns_selected_effort(accept
     assert not (worktree / "docs/proposals/PROP-idea").exists()
 
 
-def test_handoff_changed_base_requires_fresh_review_before_creating_worktree(accepted_handoff_base):
+def test_handoff_changed_base_requires_fresh_review_before_creating_worktree(accepted_handoff_base, monkeypatch):
+    import devkit_spec.features.delivery.usecases.native_handoff as module
     from devkit_spec.base.errors import HandoffStaleError
-    from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase
 
     repo = accepted_handoff_base
+    original = module.prepare
+    calls = []
 
-    async def confirm(message, schema):
-        git(repo, "commit", "--allow-empty", "-q", "-m", "base advanced")
-        return ConfirmationReply("accept", {"approve": True, "activity_effort": "medium"})
+    def prepare(*args, **kwargs):
+        preview = original(*args, **kwargs)
+        if not calls:
+            git(repo, "commit", "--allow-empty", "-q", "-m", "base advanced")
+        calls.append(preview)
+        return preview
 
+    monkeypatch.setattr(module, "prepare", prepare)
     with pytest.raises(HandoffStaleError):
-        asyncio.run(HandoffUseCase(repo).execute_native("idea", confirm))
+        module.HandoffUseCase(repo).execute("idea", "medium")
     assert not (repo.parent / "repo-wt-dev-idea").exists()
 
 
@@ -800,11 +756,7 @@ def test_handoff_pins_reviewed_commit_before_setup_when_base_moves(accepted_hand
 
     monkeypatch.setattr(lifecycle, "_refuse_existing", move_during_remote_check)
     monkeypatch.setattr(lifecycle, "_prepare", capture_setup)
-
-    async def confirm(message, schema):
-        return ConfirmationReply("accept", {"approve": True, "activity_effort": "medium"})
-
-    result = asyncio.run(HandoffUseCase(repo).execute_native("idea", confirm))
+    result = HandoffUseCase(repo).execute("idea", "medium")
     assert result["status"] == "handed_off", result
     assert setup_heads == [reviewed]
     assert git(repo, "rev-parse", "HEAD") != reviewed
@@ -910,7 +862,7 @@ def test_spec_policy_evidence_changes_with_the_target_tool_spec(tmp_path: Path, 
     assert {item.code: item.value for item in after.evidence}["SPEC_POLICY"] != before
 
 
-def test_native_handoff_initializes_fresh_registration(accepted_handoff_base, monkeypatch):
+def test_handoff_initializes_fresh_registration(accepted_handoff_base, monkeypatch):
     from devkit_agt.features.worktree.usecases import lifecycle
     from devkit_dist.features.host.usecases import registrations
 
@@ -940,11 +892,7 @@ def test_native_handoff_initializes_fresh_registration(accepted_handoff_base, mo
             "local",
         ),
     )
-
-    async def confirm(message, schema):
-        return ConfirmationReply("accept", {"approve": True, "activity_effort": "medium"})
-
-    result = asyncio.run(HandoffUseCase(repo).execute_native("idea", confirm))
+    result = HandoffUseCase(repo).execute("idea", "medium")
     assert result["status"] == "handed_off", result
     assert modes == ["--locked", "--registrations-only"]
     worktree = Path(result["worktree"]["path"])
@@ -955,23 +903,19 @@ def test_native_handoff_initializes_fresh_registration(accepted_handoff_base, mo
 def test_handoff_reuses_only_clean_pinned_devkit_worktree(accepted_handoff_base):
     from devkit_agt.features.worktree import locate, start
 
-    from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase
+    from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase, prepare
 
     repo = accepted_handoff_base
-    started = start(locate(repo), "dev-idea", project=Path("."), revision=git(repo, "rev-parse", "HEAD"))
-
-    async def confirm(message, schema):
-        assert "Completed: worktree creation. Reuse worktree:" in message
-        return ConfirmationReply("accept", {"approve": True, "activity_effort": "medium"})
-
-    result = asyncio.run(HandoffUseCase(repo).execute_native("idea", confirm))
+    started = start(locate(repo), "dev-idea", sync=True, revision=git(repo, "rev-parse", "HEAD"))
+    assert prepare(repo, "idea").existing
+    result = HandoffUseCase(repo).execute("idea", "medium")
     assert result["status"] == "handed_off", result
     assert result["worktree"]["created"] is False
     assert Path(result["worktree"]["path"]) == started.path
 
 
 @pytest.mark.parametrize("mutation", ["dirty", "head", "marker"])
-def test_handoff_recovery_refuses_changed_provenance_before_form(accepted_handoff_base, mutation):
+def test_handoff_recovery_refuses_changed_provenance_before_effects(accepted_handoff_base, mutation):
     from devkit_agt.features.worktree import locate, start
 
     from devkit_spec.base.errors import HandoffWorktreeConflictError
@@ -986,11 +930,8 @@ def test_handoff_recovery_refuses_changed_provenance_before_form(accepted_handof
     else:
         git(repo, "config", "branch.dev-idea.devkitWorktree", "/wrong")
 
-    async def confirm(message, schema):
-        pytest.fail("mismatched recovery cannot reach approval")
-
     with pytest.raises(HandoffWorktreeConflictError) as caught:
-        asyncio.run(HandoffUseCase(repo).execute_native("idea", confirm))
+        HandoffUseCase(repo).execute("idea", "medium")
     assert caught.value.target_files == ("dev-idea",)
     assert started.path.exists()
 
@@ -1004,17 +945,10 @@ def test_handoff_boundary_follows_owning_policy(accepted_handoff_base, policy):
     config.write_text(config.read_text() + f'\n[workflow.approvals]\nproposal-handoff = "{policy}"\n')
     git(repo, "add", ".devkit/config.toml")
     git(repo, "commit", "-m", "Configure proposal handoff boundary")
-    calls = []
-
-    async def confirm(*_):
-        calls.append(1)
-        assert policy == "ask", "automatic handoff must not open a form"
-        return ConfirmationReply("accept", {"approve": True, "activity_effort": "low"})
-
-    result = asyncio.run(HandoffUseCase(repo).execute_native("idea", confirm))
+    # Automatic handoff must use the proposal's declared dev_effort (high); an asked handoff takes the user's choice.
+    result = HandoffUseCase(repo).execute("idea", "low" if policy == "ask" else "high")
     assert result["status"] == "handed_off", result
-    assert len(calls) == (1 if policy == "ask" else 0)
-    assert result["authority"] == ("user" if policy == "ask" else "policy")
+    assert result["authority"] == ("host-conversation" if policy == "ask" else "policy")
     assert result["activity_effort"] == ("low" if policy == "ask" else "high")
 
 
@@ -1036,11 +970,8 @@ def test_handoff_automatic_policy_revocation_preserves_git_state(accepted_handof
 
     monkeypatch.setattr(module, "approval_policy", revoke)
 
-    async def forbidden(*_):
-        raise AssertionError("revoked automatic authority must not fall back to a form")
-
     with pytest.raises(module.HandoffBaseDirtyError) as caught:
-        asyncio.run(module.HandoffUseCase(repo).execute_native("idea", forbidden))
+        module.HandoffUseCase(repo).execute("idea", "high")
     assert caught.value.code == "SPEC_HANDOFF_BASE_DIRTY"
     assert git(repo, "show-ref") == before
     assert not git(repo, "branch", "--list", "dev-idea")

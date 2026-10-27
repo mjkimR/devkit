@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from devkit.advisory import AdvisoryError, Level
-from devkit_core.core.git import run_git
+from devkit_core.core.git import run_git_text
 from devkit_dist.features.project.repositories.invocation import capture_terminal_removal, guard_execution
 from devkit_dist.features.project.repositories.project import read_project_config
 
@@ -40,10 +40,6 @@ from devkit_agt.features.worktree.repositories.pull_request import GitHub, PullR
 
 if TYPE_CHECKING:
     from devkit_agt.features.integration.usecases.service import IntegrationService, _Record
-
-
-def _git(root: Path, *args: str) -> str:
-    return run_git(root, *args).decode("utf-8", errors="surrogateescape").strip()
 
 
 def _error(
@@ -90,8 +86,8 @@ def prepare(service: IntegrationService, branch: str, task: Task) -> Integration
         raise _error("INTEGRATION_TARGET_UPSTREAM", "Target checkout is detached")
     target = position.branch
     try:
-        remote = _git(root, "config", "--get", f"branch.{target}.remote")
-        remote_ref = _git(root, "config", "--get", f"branch.{target}.merge")
+        remote = run_git_text(root, "config", "--get", f"branch.{target}.remote")
+        remote_ref = run_git_text(root, "config", "--get", f"branch.{target}.merge")
     except AdvisoryError as exc:
         raise _error(
             "INTEGRATION_TARGET_UPSTREAM",
@@ -107,7 +103,7 @@ def prepare(service: IntegrationService, branch: str, task: Task) -> Integration
     repository = port.resolve(remote)
     guard_execution()
     target_sha = port.fetch(repository, target)
-    local_target = _git(root, "rev-parse", "HEAD")
+    local_target = run_git_text(root, "rev-parse", "HEAD")
     if not is_ancestor(root, local_target, target_sha):
         raise _error(
             "INTEGRATION_TARGET_UPSTREAM",
@@ -116,7 +112,7 @@ def prepare(service: IntegrationService, branch: str, task: Task) -> Integration
         )
     target_config = _policy(root, target_sha)
     target_policy = providers.effective(target_config)
-    source = _git(root, "rev-parse", "--verify", f"refs/heads/{branch}^{{commit}}")
+    source = run_git_text(root, "rev-parse", "--verify", f"refs/heads/{branch}^{{commit}}")
     source_config = _policy(root, source)
     source_policy = providers.effective(source_config)
     if any(
@@ -244,14 +240,14 @@ def _confirmed(root: Path, pr: dict[str, Any], source: str) -> tuple[str, str, s
     merge = (pr.get("mergeCommit") or {}).get("oid")
     if pr.get("state") != "MERGED" or not merge:
         raise _error("INTEGRATION_MERGE_UNCONFIRMED", "PR has no confirmed merge commit")
-    parents = _git(root, "rev-list", "--parents", "-n", "1", merge).split()
+    parents = run_git_text(root, "rev-list", "--parents", "-n", "1", merge).split()
     if len(parents) != 3 or parents[2] != source:
         raise _error(
             "INTEGRATION_MERGE_UNCONFIRMED",
             "PR merge second parent differs from approved source",
             "Report the unconfirmed merge to the user and retain the branches; clean up outside this route",
         )
-    return merge, parents[1], _git(root, "rev-parse", f"{merge}^{{tree}}")
+    return merge, parents[1], run_git_text(root, "rev-parse", f"{merge}^{{tree}}")
 
 
 def _checks(port: GitHub, request: IntegrationRequest, pr: dict[str, Any]) -> list[str]:
@@ -299,10 +295,8 @@ def _validate(service: IntegrationService, result: IntegrationResult, *, merged:
             extensions[scope.extension][1].integration_validate(service._context(result), scope.targets)
 
 
-def execute(service: IntegrationService, record: _Record, wait: float, approving: bool) -> IntegrationResult:
+def execute(service: IntegrationService, record: _Record, wait: float) -> IntegrationResult:
     result, request, root = record.result, record.result.request, service.root
-    if result.status == "completed":
-        return result
     guard_execution()
     plan, repository, port = request.context.finish, request.repository, _port(service)
     assert repository is not None
@@ -322,12 +316,6 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
             if found:
                 _pr_identity(found[0], plan.branch, plan.target_branch)
             operation = "push"
-            prior_unknown = result.steps[operation] == "unknown"
-            if prior_unknown and port.ref(repository, f"refs/heads/{plan.branch}") != plan.source_sha:
-                raise _error(
-                    "INTEGRATION_STEP_UNKNOWN",
-                    "Prior push remains unconfirmed; inspect remote state before new authority",
-                )
             result.steps[operation] = "unknown"
             if port.ref(repository, f"refs/heads/{plan.branch}") != plan.source_sha:
                 guard_execution()
@@ -340,37 +328,19 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
             if request.pr_number:
                 pr = port.view(repository, request.pr_number)
             else:
-                if result.steps[operation] == "unknown":
-                    candidates = [p for p in port.find(repository, plan.branch) if p["state"] == "OPEN"]
-                    if len(candidates) != 1:
-                        raise _error("INTEGRATION_STEP_UNKNOWN", "PR creation outcome remains unknown")
-                    pr = candidates[0]
-                else:
-                    result.steps[operation] = "unknown"
-                    guard_execution()
-                    port.create(repository, plan.branch, plan.target_branch, request.context.task.id)
-                    candidates = [p for p in port.find(repository, plan.branch) if p["state"] == "OPEN"]
-                    if len(candidates) != 1:
-                        raise _error("INTEGRATION_STEP_UNKNOWN", "PR creation outcome is not confirmed")
-                    pr = candidates[0]
+                result.steps[operation] = "unknown"
+                guard_execution()
+                port.create(repository, plan.branch, plan.target_branch, request.context.task.id)
+                candidates = [p for p in port.find(repository, plan.branch) if p["state"] == "OPEN"]
+                if len(candidates) != 1:
+                    raise _error("INTEGRATION_STEP_UNKNOWN", "PR creation outcome is not confirmed")
+                pr = candidates[0]
             _pr_identity(pr, plan.branch, plan.target_branch)
             result.pull_request = pr
             result.steps[operation] = "completed"
         operation = "lock"
         with integration_lock(Path(plan.common_dir), timeout=wait):
             guard_execution()
-            if result.steps["worktree_remove"] == "unknown" and not Path(plan.path).exists():
-                entries = _git(root, "worktree", "list", "--porcelain", "-z").split("\0")
-                if f"worktree {plan.path}" not in entries:
-                    result.steps["worktree_remove"] = "completed"
-            if result.steps["branch_delete"] == "unknown" and result.steps["worktree_remove"] == "completed":
-                refs = _git(root, "for-each-ref", "--format=%(refname)", f"refs/heads/{plan.branch}")
-                if not refs:
-                    record.finalized = True
-                    result.steps["branch_delete"] = "completed"
-                    result.finish = FinishResult(
-                        plan.branch, Path(plan.path), merged=True, removed=True, branch_deleted=True
-                    )
             operation = "merge"
             pr = port.view(repository, result.pull_request["number"])
             _pr_identity(pr, plan.branch, plan.target_branch)
@@ -379,46 +349,35 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
             guard_execution()
             target = port.fetch(repository, plan.target_branch)
             if pr["state"] != "MERGED":
-                if result.steps["merge"] == "unknown":
-                    raise _error("INTEGRATION_STEP_UNKNOWN", "Prior merge remains unconfirmed; no destructive retry")
                 _validate(service, result, merged=False)
                 if not is_ancestor(root, plan.target_sha, target):
                     raise _error("INTEGRATION_TARGET_MOVED", "Target rewrote the confirmation history")
-                if (result.build_target is not None and target != result.build_target) or (
-                    not approving and result.build_target is None and target != plan.target_sha
-                ):
-                    raise _error(
-                        "INTEGRATION_TARGET_MOVED",
-                        "Target moved while waiting",
-                        "Merge the target into the source, re-verify and prepare again; report repeated target movement to the user",
-                    )
                 if providers.policy_digest(_policy(root, target)) != request.policy_digest:
                     raise StaleRequestError("Remote target effective policy changed")
-                if result.result_sha is None or not result.build_checked:
-                    result.build_checked = False
-                    result.build_target = target
-                    guard_execution()
-                    result.result_sha = build_result(
-                        root,
-                        branch=plan.branch,
-                        target_branch=plan.target_branch,
-                        target=target,
-                        source=plan.source_sha,
-                        method="no-ff",
-                        advance=True,
-                    )
-                    context = service._context(result)
-                    run_finish_guards(
-                        root, plan.branch, _git(root, "merge-base", target, plan.source_sha), plan.source_sha
-                    )
-                    ready = providers.check(providers.provider(request.provider)[1], context)
-                    if (
-                        ready.comparable() != request.readiness.comparable()
-                        or providers.policy_digest(_policy(root, result.result_sha)) != request.post_policy_digest
-                    ):
-                        raise StaleRequestError("Prospective merge changes approved policy or completion evidence")
-                    receipts.check_merge(root, result.result_sha, (target, plan.source_sha))
-                    result.build_checked = True
+                result.build_checked = False
+                result.build_target = target
+                guard_execution()
+                result.result_sha = build_result(
+                    root,
+                    branch=plan.branch,
+                    target_branch=plan.target_branch,
+                    target=target,
+                    source=plan.source_sha,
+                    method="no-ff",
+                    advance=True,
+                )
+                context = service._context(result)
+                run_finish_guards(
+                    root, plan.branch, run_git_text(root, "merge-base", target, plan.source_sha), plan.source_sha
+                )
+                ready = providers.check(providers.provider(request.provider)[1], context)
+                if (
+                    ready.comparable() != request.readiness.comparable()
+                    or providers.policy_digest(_policy(root, result.result_sha)) != request.post_policy_digest
+                ):
+                    raise StaleRequestError("Prospective merge changes approved policy or completion evidence")
+                receipts.check_merge(root, result.result_sha, (target, plan.source_sha))
+                result.build_checked = True
                 pending = _checks(port, request, pr)
                 if pending:
                     notice = _error(
@@ -455,7 +414,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
             merge_oid = (pr.get("mergeCommit") or {}).get("oid")
             if merge_oid:
                 try:
-                    _git(root, "cat-file", "-t", merge_oid)
+                    run_git_text(root, "cat-file", "-t", merge_oid)
                 except AdvisoryError:
                     guard_execution()
                     port.fetch_commit(repository, merge_oid)
@@ -478,7 +437,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                 reason = "rewritten-base"
             elif parent != result.build_target:
                 reason = "advanced"
-            elif tree != _git(root, "rev-parse", f"{result.result_sha}^{{tree}}"):
+            elif tree != run_git_text(root, "rev-parse", f"{result.result_sha}^{{tree}}"):
                 reason = "tree-mismatch"
             result.landing = {
                 "checked": reason is None,
@@ -497,15 +456,15 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                 result.notices.append(notice)
             operation = "local_fast_forward"
             if (
-                _git(root, "status", "--porcelain")
-                or _git(root, "symbolic-ref", "HEAD") != f"refs/heads/{plan.target_branch}"
+                run_git_text(root, "status", "--porcelain")
+                or run_git_text(root, "symbolic-ref", "HEAD") != f"refs/heads/{plan.target_branch}"
             ):
                 raise _error(
                     "INTEGRATION_LOCAL_TARGET_BLOCKED",
                     "Base checkout is dirty or on another branch",
                     f"Make the base checkout clean on the target branch, inspect the merged PR, then run `{prepare_command(plan.branch, request.context.task, 'pull-request')}` and, after Host approval, integrate with the digest it prints",
                 )
-            if not is_ancestor(root, _git(root, "rev-parse", "HEAD"), target):
+            if not is_ancestor(root, run_git_text(root, "rev-parse", "HEAD"), target):
                 raise _error(
                     "INTEGRATION_LOCAL_TARGET_BLOCKED",
                     "Local target cannot fast-forward",
@@ -513,7 +472,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                 )
             validate_finish(
                 plan,
-                target=_git(root, "rev-parse", "HEAD"),
+                target=run_git_text(root, "rev-parse", "HEAD"),
                 removed=result.steps["worktree_remove"] == "completed",
                 finalized=record.finalized,
                 check_upstream=False,
@@ -545,7 +504,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                     nonlocal operation
                     operation = step
                     guard_execution(terminal=bool(progress.removed))
-                    if step == "worktree_remove" and approving:
+                    if step == "worktree_remove":
                         capture_terminal_removal(Path(plan.path))
                     if progress.removed:
                         result.steps["worktree_remove"] = "completed"
@@ -582,8 +541,6 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
             result.steps[operation] = "completed"
             result.status = "completed"
     except (AdvisoryError, OSError, ValueError, KeyError) as exc:
-        if getattr(exc, "code", "") == "LOCK_HELD" and not approving:
-            raise
         error = exc if isinstance(exc, AdvisoryError) else _error("INTEGRATION_STEP_UNKNOWN", str(exc))
         result.errors.append(error)
         result.failing_operation = operation

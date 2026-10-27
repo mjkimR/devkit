@@ -9,7 +9,7 @@ from devkit_dist.cli import cli
 from spec_support.proposals import TODAY, write_workflow
 from spec_support.scope import git, make_repo
 
-from devkit_spec.features.delivery.usecases.specs import create_and_register_spec
+from devkit_spec.features.delivery.usecases.specs import CreateSpecUseCase
 from devkit_spec.features.scope import load_token, open_session
 
 
@@ -38,7 +38,7 @@ def test_registration_failure_keeps_created_spec_and_existing_owner_token(tmp_pa
     task = development_worktree(tmp_path)
     session = open_session(task)
     session.location.token_path.write_text("existing-token\n")
-    initialized = create_and_register_spec(task, "fresh", day=TODAY)
+    initialized = CreateSpecUseCase().execute(task, "fresh", day=TODAY)
     assert initialized.registered is None
     assert (task / initialized.spec.dir / "spec.md").is_file()
     assert load_token(session.location.token_path) == "existing-token"

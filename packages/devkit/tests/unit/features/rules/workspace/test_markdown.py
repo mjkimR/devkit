@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import pytest
-from devkit_agt.features.rules import count_tasks, extract_links
-from devkit_agt.features.rules.repositories.workspace.markdown import fenced_lines, prose_lines
+from devkit_agt.features.rules import ChecklistItem, count_tasks, extract_links, scan
+from devkit_agt.features.rules.models.markdown import fenced_lines, prose_lines
 
 
 def test_count_tasks_skips_frontmatter_and_fences() -> None:
@@ -67,3 +67,64 @@ def test_a_backtick_line_with_an_inline_span_does_not_hide_later_links() -> None
     text = "```js``` is inline\n[a](a.md)\n"
     assert [(link.line, link.target) for link in extract_links(text)] == [(2, "a.md")]
     assert [link.target for link in extract_links("```\n[a](a.md)\n```\n[b](b.md)\n")] == ["b.md"]
+
+
+def _kinds(text: str, **options: bool) -> list[str]:
+    return [line.kind.value for line in scan(text, **options)]
+
+
+@pytest.mark.parametrize(
+    ("text", "kinds"),
+    [
+        # A fence indented within a list item's content is a fence; four columns outside a list are indented code.
+        ("- item\n    ```\n    code\n    ```", ["prose", "fence", "code", "fence"]),
+        ("Intro\n\n    ```\n    code", ["prose", "prose", "indented", "indented"]),
+        ("Intro\n    ```\nmore", ["prose", "prose", "prose"]),  # a paragraph continues; no indented code
+        # A line opening with "<!--" is an HTML block through the line holding "-->"; a fence inside it is not one.
+        ("<!--\n```\n--> tail\n```", ["comment", "comment", "comment", "fence"]),
+        ("<!-- one line --> tail\nnext", ["comment", "prose"]),
+        # A "<!--" after content is an inline span up to its "-->"; one inside a code span is literal.
+        ("a <!-- b\nc\nd --> e\n```", ["prose", "comment", "prose", "fence"]),
+        ("a `<!--` b\n```", ["prose", "fence"]),
+        ("---\n- [ ] a\n---\nb", ["frontmatter", "frontmatter", "frontmatter", "prose"]),
+    ],
+)
+def test_scan_kinds(text: str, kinds: list[str]) -> None:
+    assert _kinds(text, frontmatter=True) == kinds
+
+
+def test_scan_blanks_comments_in_place_and_reports_tasks() -> None:
+    lines = list(scan("- [x] Done <!-- [AC-99] -->\r\n-  [ ] Spaced\n1. [ ] ordered\n       - [ ] continuation\n"))
+    assert lines[0].text == "- [x] Done                 "
+    assert lines[0].line.endswith("\r")
+    assert lines[0].task == ChecklistItem(checked=True, title="Done")
+    assert lines[1].task == ChecklistItem(checked=False, title="Spaced")
+    assert lines[1].offset == len(lines[0].line) + 1
+    assert lines[2].task is None  # an ordered item is no checklist task
+    assert lines[3].task is None  # four columns past its container: continuation text
+    assert count_tasks("- [ ] a\n  <!--\n  - [ ] b\n  -->\n  - [ ] nested\n") == (0, 2)
+
+
+def test_an_inline_comment_opener_without_a_closer_in_its_paragraph_is_literal() -> None:
+    marker = "- [x] 1. Remove the marker (it starts with <!-- and is one line).\n- [ ] 2. Not done\n"
+    assert count_tasks(marker) == (1, 2)
+    text = "Prose with <!-- an opener.\n\n```\n[x](missing.md)\n```\nLater\n"
+    assert [number for number, _ in fenced_lines(text)] == [4]
+    assert [number for number, _ in prose_lines(text)] == [1, 2, 6, 7]
+    assert extract_links(text) == []
+    # A closer on a later line of the same paragraph keeps the comment open; a list item ends the paragraph.
+    assert _kinds("a <!-- b\nc --> d\n- [ ] e") == ["prose", "prose", "prose"]
+    assert count_tasks("a <!-- b\n- [ ] c -->\n") == (0, 1)
+
+
+@pytest.mark.parametrize(
+    ("text", "masked"),
+    [
+        ("a \\<!-- b", "a \\<!-- b"),  # escaped
+        ("a `<!--` b", "a `<!--` b"),  # in a code span
+        ("a `x\ny <!-- z` w", "y <!-- z` w"),  # in a code span wrapping onto the next line
+        ("a <!-- b --> c", "a            c"),
+    ],
+)
+def test_literal_comment_openers(text: str, masked: str) -> None:
+    assert [line.text for line in scan(text)][-1] == masked
