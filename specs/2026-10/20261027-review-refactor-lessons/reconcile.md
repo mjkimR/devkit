@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-review-refactor-lessons
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/delivery/CAP-DLV-review-refactor.md
     resolution: modified
