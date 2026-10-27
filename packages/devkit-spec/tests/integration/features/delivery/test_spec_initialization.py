@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 from devkit_dist.cli import cli
 from spec_support.proposals import TODAY, write_workflow
@@ -41,7 +42,18 @@ def test_registration_failure_keeps_created_spec_and_existing_owner_token(tmp_pa
     assert initialized.registered is None
     assert (task / initialized.spec.dir / "spec.md").is_file()
     assert load_token(session.location.token_path) == "existing-token"
-    failures = [notice for notice in initialized.notices if notice.code == "SPEC_SCOPE_REGISTER_FAILED"]
-    assert len(failures) == 1
-    assert failures[0].fix is not None
-    assert "scope register --spec" in failures[0].fix
+    assert all(not notice.code.startswith("SPEC_SCOPE_") for notice in initialized.notices)
+
+
+@pytest.mark.parametrize("output", ["json", "text"])
+@pytest.mark.parametrize("strict", [False, True])
+def test_spec_creation_registration_failure_preserves_primary_output(tmp_path: Path, output: str, strict: bool) -> None:
+    task = development_worktree(tmp_path)
+    session = open_session(task)
+    session.location.token_path.write_text("already-owned\n")
+    args = ["spec", "new", "fresh", "-w", str(task), "--format", output]
+    if strict:
+        args.append("--strict")
+    result = CliRunner().invoke(cli, args)
+    assert result.exit_code == 0, result.output
+    assert "SPEC_SCOPE_" not in result.output and "SCOPE_ACK" not in result.output

@@ -418,8 +418,7 @@ def test_auto_register_only_in_a_linked_worktree_at_either_level(repo: Path, tmp
     session = open_session(linked)
     assert _events(session)[-1]["source"] == "handoff"
     again, notices = auto_register(linked, SPEC, source="handoff")
-    assert again is None and [notice.code for notice in notices] == ["SPEC_SCOPE_REGISTER_FAILED"]
-    assert "SPEC_SCOPE_TOKEN_EXISTS" in notices[0].details[0]
+    assert again is None and notices == [], "automatic registration failures are silent"
 
     for level in ("required", "auto"):
         write(linked, ".devkit/config.toml", f'[tool.spec]\nworktree = "{level}"\n')

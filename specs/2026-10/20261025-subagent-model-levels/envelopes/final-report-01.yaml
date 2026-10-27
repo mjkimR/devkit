@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T09:56:05.308430Z'
+status: completed
+summary: Implemented inherited subagent defaults, three-host model levels, shared overrides, offline validation and receipt/status lifecycle. Independent code and reconcile reviews pass; Host integration remains.
+findings: []
+assumptions:
+- Native variants remain verbatim; model/effort availability and host runtime overrides remain external to offline deployment.
+unverified_areas:
+- No native subagent execution, provider account or installed-host-version probes were run.
+checks:
+  tests: PASS just test-affected --base main mode=partial paths=135; 2568 passed 1 skipped
+  build: PASS dist and spec source distributions and wheels built successfully
+  lint: PASS dist/spec lint-check and Pyright; cumulative governance zero errors/warnings
+diff_scope:
+  base: 5cf59bdf16e0dca18d466ef831ffd250fd6d8a2c
+  head: f679479fa108d450053b993b30837513b9a9d31d

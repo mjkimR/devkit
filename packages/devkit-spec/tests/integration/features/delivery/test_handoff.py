@@ -44,12 +44,11 @@ def test_handoff_registers_after_writing_spec_and_preserves_notices(accepted_wor
     assert load_token(registered.location.token_path) == registered.token
     assert any(notice.code == "SPEC_PROPOSAL_UNBOUND" for notice in handed.notices)
     assert "SPEC_SCOPE_JOURNAL_UNAVAILABLE" not in [notice.code for notice in handed.notices]
-    assert [notice.code for notice in registered.notices] == ["SPEC_SCOPE_JOURNAL_UNAVAILABLE"]
-    assert completed.notices[-len(registered.notices) :] == registered.notices
-    assert [notice.code for notice in completed.notices].count("SPEC_SCOPE_JOURNAL_UNAVAILABLE") == 1
+    assert registered.notices == []
+    assert "SPEC_SCOPE_JOURNAL_UNAVAILABLE" not in [notice.code for notice in completed.notices]
 
 
-def test_registration_failure_is_one_warning_after_a_successful_handoff(accepted_worktree: Path) -> None:
+def test_registration_failure_is_silent_after_a_successful_handoff(accepted_worktree: Path) -> None:
     root = accepted_worktree
     session = open_session(root)
     session.location.token_path.write_text("existing-token\n")
@@ -62,9 +61,9 @@ def test_registration_failure_is_one_warning_after_a_successful_handoff(accepted
     assert not (root / "docs/proposals/PROP-handoff/proposal.md").exists()
     assert load_token(session.location.token_path) == "existing-token"
     codes = [notice.code for notice in completed.notices]
-    assert codes.count("SPEC_SCOPE_REGISTER_FAILED") == 1
+    assert "SPEC_SCOPE_REGISTER_FAILED" not in codes
     assert "SPEC_PROPOSAL_UNBOUND" in codes
-    assert "SPEC_SCOPE_TOKEN_EXISTS" in completed.notices[-1].details[0]
+    assert all(not code.startswith("SPEC_SCOPE_") for code in codes)
 
 
 def test_guard_refusal_keeps_handoff_without_starting_registration(accepted_worktree: Path) -> None:
@@ -84,7 +83,7 @@ def test_guard_refusal_keeps_handoff_without_starting_registration(accepted_work
     assert not (root / "docs/proposals/PROP-handoff/proposal.md").exists()
 
 
-def test_native_handoff_keeps_registration_notices_outside_nested_handoff(
+def test_native_handoff_suppresses_registration_diagnostics(
     accepted_worktree: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     from devkit_agt.features.worktree import locate
@@ -132,13 +131,12 @@ def test_native_handoff_keeps_registration_notices_outside_nested_handoff(
     assert [notice["code"] for notice in result["handoff"]["notices"]] == ["SPEC_PROPOSAL_UNBOUND"]
     assert [notice["code"] for notice in result["notices"]] == [
         "SPEC_PROPOSAL_UNBOUND",
-        "SPEC_SCOPE_JOURNAL_UNAVAILABLE",
     ]
     assert completed.registered is not None
     assert result["scope_token"] == completed.registered.token
 
 
-def test_cli_handoff_json_keeps_registration_notices_in_its_flat_result(accepted_worktree: Path) -> None:
+def test_cli_handoff_json_suppresses_registration_diagnostics(accepted_worktree: Path) -> None:
     import json
 
     from click.testing import CliRunner
@@ -152,7 +150,24 @@ def test_cli_handoff_json_keeps_registration_notices_in_its_flat_result(accepted
     payload = json.loads(result.stdout)
     assert [notice["code"] for notice in payload["notices"]] == [
         "SPEC_PROPOSAL_UNBOUND",
-        "SPEC_SCOPE_JOURNAL_UNAVAILABLE",
     ]
     assert payload["scope"]["token"] == load_token(session.location.token_path)
     assert payload["spec"] == "SPEC-handoff"
+
+
+@pytest.mark.parametrize("output", ["json", "text"])
+@pytest.mark.parametrize("strict", [False, True])
+def test_cli_handoff_registration_failure_preserves_primary_exit(
+    accepted_worktree: Path, output: str, strict: bool
+) -> None:
+    from click.testing import CliRunner
+    from devkit_dist.cli import cli
+
+    session = open_session(accepted_worktree)
+    session.location.token_path.write_text("already-owned\n")
+    args = ["spec", "proposal", "handoff", "handoff", "-w", str(accepted_worktree), "--format", output]
+    if strict:
+        args.append("--strict")
+    result = CliRunner().invoke(cli, args)
+    assert result.exit_code == 0, result.output
+    assert "SPEC_SCOPE_" not in result.output and "SCOPE_ACK" not in result.output

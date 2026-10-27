@@ -1,0 +1,89 @@
+{
+  "fixture": "/tmp/scope-scout-probe-j_2vtr1t",
+  "python": "3.12.3",
+  "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "git": "git version 2.43.0",
+  "pipeline": [
+    {
+      "refs": 8,
+      "seconds": [
+        0.23205609900469426,
+        0.19678885200119112,
+        0.20357091499317903
+      ],
+      "median_seconds": 0.20357091499317903,
+      "git_calls": [
+        56,
+        56,
+        56
+      ],
+      "calls_per_ref": 7
+    },
+    {
+      "refs": 80,
+      "seconds": [
+        1.784315893004532,
+        1.7497519020107575,
+        1.8992405169992708
+      ],
+      "median_seconds": 1.784315893004532,
+      "git_calls": [
+        560,
+        560,
+        560
+      ],
+      "calls_per_ref": 7
+    }
+  ],
+  "compare_all": [
+    {
+      "sets": 8,
+      "paths_per_set": 20,
+      "pairs": 28,
+      "path_pair_checks": 11200,
+      "seconds": [
+        0.0031351719953818247,
+        0.003284818012616597,
+        0.00273882900364697
+      ],
+      "median_seconds": 0.0031351719953818247
+    },
+    {
+      "sets": 80,
+      "paths_per_set": 100,
+      "pairs": 3160,
+      "path_pair_checks": 31600000,
+      "seconds": [
+        7.76632998000423,
+        7.717644033007673,
+        7.110999456999707
+      ],
+      "median_seconds": 7.717644033007673
+    }
+  ],
+  "assertions": {
+    "pinned_ref_ignores_dirty_host": true,
+    "merged_base_excludes_upstream": true,
+    "stacked_base_relative_diff_includes_parent": true
+  },
+  "merged_paths": [
+    "specs/2026-10/20261025-probe-00/reconcile.md",
+    "specs/2026-10/20261025-probe-00/spec.md",
+    "specs/2026-10/20261025-probe-00/tasks.md",
+    "src/task-00.py"
+  ],
+  "stacked_paths": [
+    "specs/2026-10/20261025-probe-00/reconcile.md",
+    "specs/2026-10/20261025-probe-00/spec.md",
+    "specs/2026-10/20261025-probe-00/tasks.md",
+    "src/child.py",
+    "src/task-00.py"
+  ],
+  "limits": [
+    "Synthetic local repository on /tmp; warm OS caches and tiny objects",
+    "Pipeline omits filesystem permissions, registry IO, network fetch, symlink traversal and large trees",
+    "No actual collector implementation or source-reader extraction exercised",
+    "Disjoint path benchmark exercises exhaustive existing comparison without overlap output allocation",
+    "No universal latency guarantee; bounded partial results and comparison budgeting still required"
+  ]
+}

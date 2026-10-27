@@ -5,7 +5,6 @@ description: Walks each linked use case through the drafted screens and scores e
 skill: spec-ux-review
 x-execution: isolated
 x-invocation: optional
-x-model-profile: general-high
 x-git-actions: [read]
 hosts:
   # Shell access runs `devkit spec resolve` and `devkit rules check`; disallowedTools prevents file writes.
@@ -13,12 +12,10 @@ hosts:
     status: native
     tools: [Read, Grep, Glob, Bash]
     disallowedTools: [Write, Edit]
-    effort: high
   # Expected diff after the run: none.
   codex:
     status: emulated
     sandbox_mode: read-only
-    model_reasoning_effort: high
   antigravity:
     status: native
     tools: [view_file, grep_search, run_command]

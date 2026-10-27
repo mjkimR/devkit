@@ -44,5 +44,5 @@ and the bundle rules, which cover every changed file; `entrypoints/services/path
 
 ## Deferred work
 
-None. `PROP-ux-documentation` adds its kind as a member, a row, a path grammar and templates on top of this table;
-`PROP-foundation-documents` adds no row.
+None. `SPEC-ux-documentation` adds its kind as a member, a row, a path grammar and templates on top of this table;
+`SPEC-foundation-documents` adds no row.

@@ -4,7 +4,6 @@ title: Triage (Backlog feedback grouping)
 description: Groups the open feedback the Host names by the feedback-hygiene playbook's Steps 1 and 2 and returns recommended destinations for the user's decision, without writing anything.
 x-execution: isolated
 x-invocation: optional
-x-model-profile: light-medium
 x-git-actions: [read]
 hosts:
   # Bash runs the `devkit spec` queries; disallowedTools prevents file writes.
@@ -12,12 +11,10 @@ hosts:
     status: native
     tools: [Read, Grep, Glob, Bash]
     disallowedTools: [Write, Edit]
-    effort: medium
   # Expected diff after the run: none.
   codex:
     status: emulated
     sandbox_mode: read-only
-    model_reasoning_effort: medium
   antigravity:
     status: native
     tools: [view_file, grep_search, run_command]

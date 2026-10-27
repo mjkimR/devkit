@@ -376,8 +376,9 @@ still holds something the roll-back could not move back is kept, never removed; 
 lists what could not be undone in its details.
 
 The new spec's workflow is then evaluated from its first stage, after the gates step 8 recorded. Inside a linked worktree, at either `[tool.spec] worktree` level, the CLI also
-registers the new bundle in the work-scope registry (`CAP-COLL-work-scope-registry`); a registration failure is a
-`SPEC_SCOPE_REGISTER_FAILED` warning and the handoff stays done.
+registers the new bundle in the work-scope registry (`CAP-COLL-work-scope-registry`). Automatic registration failures
+produce only verbose diagnostics and preserve the primary handoff output, exit code and `--strict` behavior. They
+create no worker registration/update/ACK duty. Primary handoff notices and errors retain their own semantics.
 
 ### 4.6 Carrying the Proposal Body
 
@@ -601,7 +602,6 @@ directory whose namespace applies when `namespace` is omitted);
 | `SPEC_PROPOSAL_UNBOUND` | `NOTICE` | `ProposalUnboundNotice` | `new`: `sdd-proposal` is not available, `proposal.md` is unbound. `handoff`: `task_kind` is `feature` (or absent) and `sdd-spec-feature` is not available, `spec.md` is unbound. The `[FIX]` is `devkit workflow bind --unit <dir> --workflow <id>`. |
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | devkit's `ArgumentError` | `accept`: `--direct` with a blank `--note`. `new`: `--namespace` is neither `global` nor registered, `--task-kind` is not `feature` or `bugfix`, `--planning-effort` or `--dev-effort` is not `low`, `medium` or `high`, `--supersedes` names no other proposal. `new`, `padr`: stripped `--summary` is empty, longer than 300 characters or not English. |
 | `SPEC_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `SpecConfigError` | `[tool.spec]` is malformed and it must be read: `new` without `--namespace global`, a proposal's `namespace` other than `global` at handoff, or a handoff in a linked worktree. |
-| `SPEC_SCOPE_REGISTER_FAILED` | `WARNING` | `ScopeRegisterFailedWarning` | A handoff in a task worktree could not register its bundle (`CAP-COLL-work-scope-registry`). |
 
 
 ## Host-authorized proposal lifecycle CLI

@@ -31,5 +31,4 @@ of `sdd-spec-bugfix`), keeping its frontmatter. A bugfix bundle has none yet: cr
 ## Completion
 
 - [ ] `devkit rules check <dir>` reports no `RULE-task-coverage` violation, and `<!-- devkit:skeleton -->` is gone.
-- [ ] In a registered task worktree, `devkit spec scope update --spec <dir>` ran.
 - [ ] `devkit workflow next --unit <dir>` shows the stage exit met.

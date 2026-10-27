@@ -7,6 +7,7 @@ an operation's outcome.
 
 from __future__ import annotations
 
+import contextlib
 import posixpath
 import re
 from collections.abc import Sequence
@@ -15,14 +16,13 @@ from pathlib import Path
 
 from devkit.advisory import Actor, AdvisoryError, Level, Retry
 from devkit_core.base.usecase import BaseUseCase
+from devkit_core.core.logs import get_logger
 
 from devkit_spec.base.errors import (
     ScopeAckFailedError,
     ScopeJournalWarning,
-    ScopeNotAWorktreeError,
     ScopeRecordInvalidWarning,
     ScopeRecordMissingError,
-    ScopeRegisterFailedWarning,
     ScopeSharedPathError,
     ScopeSharedWorktreeWarning,
     ScopeStaleRevisionError,
@@ -231,26 +231,28 @@ def _rollback(registry: Registry, stored: Record, token: str) -> list[str]:
 
 
 def auto_register(root: Path, spec_dir: str, *, source: str) -> tuple[Registered | None, list[AdvisoryError]]:
-    """Register ``spec_dir`` when ``root`` is a linked worktree, at either ``[tool.spec] worktree`` level.
-
-    Outside Git or in the base checkout nothing happens. A failure is a
-    ``SPEC_SCOPE_REGISTER_FAILED`` warning: the caller's own operation has already succeeded.
-    """
+    """Retain best-effort creation snapshots without giving workers maintenance duties."""
     try:
         session = open_session(root)
         if not session.location.linked:
             return None, []
         registered = register(session, spec_dir, source=source)
-    except ScopeNotAWorktreeError:
+        for notice in registered.notices:
+            _automatic_diagnostic(notice.code)
+        registered.notices = []
+        return registered, []
+    except Exception as exc:
+        # Cancellation/termination are BaseException and intentionally remain outside this boundary.
+        _automatic_diagnostic(getattr(exc, "code", "SPEC_SCOPE_AUTO_REGISTER_FAILED"))
         return None, []
-    except AdvisoryError as exc:
-        warning = ScopeRegisterFailedWarning(
-            f"the scope of {spec_dir} was not registered: {exc.message}",
-            f"{exc.code}: {exc.fix or exc.message}",
-            fix=f"Fix the cause in [DETAIL], then run devkit spec scope register --spec {spec_dir} in this worktree",
-        )
-        return None, [warning]
-    return registered, registered.notices
+
+
+_log = get_logger(__name__)
+
+
+def _automatic_diagnostic(code: str) -> None:
+    with contextlib.suppress(Exception):
+        _log.info("SPEC_SCOPE_AUTO_REGISTER_DIAGNOSTIC cause=%s", code)
 
 
 # --- own record ---------------------------------------------------------------------------------------------------

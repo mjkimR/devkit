@@ -55,7 +55,7 @@ current output stays identical.
 
 ## 3. Non-Goals
 
-1. **Scope Excluded**: no new kind (the UX kind is `PROP-ux-documentation`), no change to the closed set of kinds,
+1. **Scope Excluded**: no new kind (the UX kind is `SPEC-ux-documentation`), no change to the closed set of kinds,
    no plug-in or configuration extension point, no location grammar as row data, and no change to any ID, path,
    rule code, message, remediation or CLI output.
 2. **Scope Excluded**: no viewer change; the front-end link-prefix drift is `FB-viewer-link-prefixes-drift`
@@ -195,16 +195,16 @@ Evidence is in `MAT-kind-facts-inventory` and historical Git `cfc82a4cb3d651c38c
   `devkit spec search "document kind" --format json` and the `--help` text of both on this repository. All are
   identical after the change, and the existing suites pass unchanged.
 - Size: `M` and `dev_effort: medium`: the change stays inside devkit-spec and its Living Spec.
-- Non-goals: no new kind (the UX kind is `PROP-ux-documentation`), no plug-in or configuration extension point, no
+- Non-goals: no new kind (the UX kind is `SPEC-ux-documentation`), no plug-in or configuration extension point, no
   change to the closed set of kinds, no change to IDs, paths, rule codes or messages, no location grammar as row
   data, and no viewer change.
 
 #### Relation to parallel proposals
 
-- `PROP-ux-documentation` depends on this proposal and is developed after it (user decision). Both own the
+- `SPEC-ux-documentation` depends on this proposal and is developed after it (user decision). Both own the
   devkit-spec features and `CAP-DOCS-document-model`; it adds its kind as a member, a row, a path-grammar branch
   and templates, and adds its own viewer support, so this change must land first and it rebases on it.
-- `PROP-foundation-documents` adds an ID-free group, not a kind, so it adds no row. It overlaps on
+- `SPEC-foundation-documents` adds an ID-free group, not a kind, so it adds no row. It overlaps on
   `RULE-id-convention`, `RULE-document-summary` (keyed by kind, while foundation documents carry a summary without
   an ID), `RULE-spec-format` (path-based scope, its Q2), the `docs/glossary.md` owner input of
   `RULE-document-reference` and `CAP-DOCS-document-model` section 3. Neither needs the other, and the one that lands
@@ -224,7 +224,7 @@ Evidence is in `MAT-kind-facts-inventory` and historical Git `cfc82a4cb3d651c38c
   exhaustiveness check replaces the silent architecture fall-through; the hypothesis is reworded to match (user,
   q1; challenger finding 6).
 - The viewer is out of scope: the link-prefix drift is fixed by a separate bugfix from
-  `FB-viewer-link-prefixes-drift`, and `PROP-ux-documentation` adds its own viewer support (user, q2).
+  `FB-viewer-link-prefixes-drift`, and `SPEC-ux-documentation` adds its own viewer support (user, q2).
 - The wrong milestone path remediation is kept byte-for-byte and fixed by a separate bugfix from
   `FB-milestone-path-remediation-dated` (user, q3; challenger finding 7).
 

@@ -29,7 +29,7 @@ documents models (models import nothing above them), `Kind` stays a declared enu
 - `New document kinds`
 - `A plug-in or configuration extension point for document kinds`
 - `Changes to document IDs, paths, rule codes or messages`
-- `The viewer (link-prefix drift is FB-viewer-link-prefixes-drift; UX viewer support is PROP-ux-documentation)`
+- `The viewer (link-prefix drift is FB-viewer-link-prefixes-drift; UX viewer support is SPEC-ux-documentation)`
 - `.devkit/managed/` (written only by `devkit sync`, and ignored by Git)
 
 ### Components

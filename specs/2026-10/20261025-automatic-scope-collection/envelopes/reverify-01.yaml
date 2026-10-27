@@ -1,0 +1,45 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T03:14:06.880232Z'
+status: completed
+review: review-01.yaml
+summary: Host verified fixes for all five P2 findings with new regressions; no waivers
+findings:
+- issue: Custom registration task IDs are mistaken for canonical anchor identity.
+  evidence: services/collection.py:168-174,261-267 at 1b45f2ad; reviewer /tmp reproduction
+  failure_condition: Supported register --task-id custom splits one anchor into different task keys and loses registered cap for ref observation.
+  suggested_action: Separate registration alias from canonical anchor, reconcile unique namespace/unit, preserve cap, test custom registration.
+  resolution: resolved
+  severity: P2
+- issue: Whitespace stripping corrupts NUL-separated Git paths.
+  evidence: repositories/collection_git.py:75-76 at 1b45f2ad; leading.py reproduction
+  failure_condition: First changed/untracked path starts with whitespace and is rewritten, losing real overlap.
+  suggested_action: Preserve NUL path bytes and trim only scalar Git output; test leading spaces.
+  resolution: resolved
+  severity: P2
+- issue: Timed-out descendant survives after its parent exits.
+  evidence: repositories/collection_git.py:65-68 at 1b45f2ad; reviewer fake Git background sleep reproduction
+  failure_condition: A helper retains pipes after Git parent exits, timeout skips group cleanup.
+  suggested_action: Kill process group on error even after direct child exits, reap/close resources, test parent-exits-first.
+  resolution: resolved
+  severity: P2
+- issue: Encoded JSON report budget does not bound text output.
+  evidence: services/collection.py:78-85,513-515 and cli/collection_output.py:42-54 at 1b45f2ad; JSON 5171111 bytes versus text 22470935 bytes
+  failure_condition: Dense overlaps repeat long observation IDs per evidence line, exceeding approved 8 MiB output bound.
+  suggested_action: Use rendering-aware conservative retention bounds and real text-size regression, preserving complete entries and partial coverage.
+  resolution: resolved
+  severity: P2
+- issue: Current terminal evidence does not disable obsolete creation snapshot.
+  evidence: services/collection.py:329-342 at 1b45f2ad; registered completed clean task reproduction
+  failure_condition: Live terminal scopes are dropped before snapshot reconciliation, leaving stale snapshot eligible against active work.
+  suggested_action: Retain verified terminal lifecycle for reconciliation, disable matching snapshot unless contradictory dirty/ambiguous evidence, test beside active task.
+  resolution: resolved
+  severity: P2
+checks:
+  tests: PASS 34 collector cases; prior affected suite 1478
+  lint: PASS ruff and Pyright
+diff_scope:
+  base: 1b45f2ad92ceac861101ba80fe0b50546b6d05b1
+  head: c5c696c4b9736e5222b027409ff130194c6a7431

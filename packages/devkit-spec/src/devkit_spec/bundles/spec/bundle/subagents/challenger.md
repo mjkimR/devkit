@@ -4,21 +4,17 @@ title: Challenger (evidence-based critic)
 description: Attacks a proposal, spec or design before implementation; returns issues with evidence and failure conditions.
 x-execution: isolated
 x-invocation: optional
-x-model-profile: high-reasoning
 x-git-actions: [read]
 hosts:
-  # The reasoning effort is preset per role; the model is left to the runtime.
   # Shell access runs `git diff`; disallowedTools prevents file writes.
   claude-code:
     status: native
     tools: [Read, Grep, Glob, Bash]
     disallowedTools: [Write, Edit]
-    effort: high
   # Expected diff after the run: none.
   codex:
     status: emulated
     sandbox_mode: read-only
-    model_reasoning_effort: high
   antigravity:
     status: native
     tools: [view_file, grep_search, run_command]

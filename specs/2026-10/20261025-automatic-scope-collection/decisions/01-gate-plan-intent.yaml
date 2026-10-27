@@ -1,0 +1,10 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-automatic-scope-collection: Draft the three-trigger automatic scope collection
+  proposal, remove explicit update obligations, hide the maintenance command and record
+  an author self-review.'
+by: user
+at: '2026-10-25T02:46:57.652488Z'
