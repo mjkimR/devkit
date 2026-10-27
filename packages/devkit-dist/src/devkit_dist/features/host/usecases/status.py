@@ -13,6 +13,7 @@ from devkit_core.base.usecase import BaseUseCase
 from devkit_dist.features.host.models.errors import HookConflictError, HookDispatchError, HookMissingError
 from devkit_dist.features.host.services.configuration import adapter_for, parse_config
 from devkit_dist.features.host.services.observation import last_observation, safe_path
+from devkit_dist.features.host.usecases.registrations import require_project
 from devkit_dist.features.host.usecases.runner import load_definition, load_handler
 from devkit_dist.features.project.repositories.receipt import load_receipt
 
@@ -40,6 +41,8 @@ class InspectHost(BaseUseCase):
     """Execute the inspect host application operation."""
 
     def execute(self, root: Path, host: str = "codex", *, check_handlers: bool = True) -> HostStatus:
+        """Raises ``ArgumentError`` (``--workspace-root``) for a ``root`` that is not a devkit project."""
+        require_project(root)
         adapter = adapter_for(host)
         report = HostStatus(host)
         safe_path(root, ".devkit/installation.json")

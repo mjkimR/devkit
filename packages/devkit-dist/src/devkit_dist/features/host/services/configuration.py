@@ -8,13 +8,13 @@ from collections.abc import Sequence
 from typing import Any
 
 from devkit_dist.features.host.models.errors import HookConflictError, HookDefinitionError, HostConfigError
-from devkit_dist.features.host.models.hooks import HookDefinition, parse_hook
+from devkit_dist.features.host.models.hooks import SUPPORTED_HOSTS, HookDefinition, parse_hook
 from devkit_dist.features.host.repositories.adapters.codex import CodexAdapter
 from devkit_dist.features.project.repositories.receipt import HostHookRecord
 
 
 def adapter_for(host: str) -> CodexAdapter:
-    if host != "codex":
+    if host not in SUPPORTED_HOSTS:
         raise HookDefinitionError(f"unsupported host: {host}; supported: codex")
     return CodexAdapter()
 

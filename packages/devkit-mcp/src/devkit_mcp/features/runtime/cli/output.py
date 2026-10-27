@@ -9,8 +9,6 @@ import click
 from devkit.advisory import AdvisoryError
 from devkit_dist.adapters.cli import echo_json, echo_notices, exit_on_warnings, is_json, report_exit_code
 
-UNKNOWN_HOST_STATE = ("connection", "form", "trust", "permissions")
-
 
 def report(
     data: dict,
@@ -37,16 +35,26 @@ def report(
 
 
 def _lines(data: dict) -> Iterator[str]:
-    """One ``[MCP: ...]`` line, then one ``[MCP_HOST: ...]`` line per host the result names."""
+    """One ``[MCP: ...]`` line, then one ``[MCP_HOST: ...]`` line per host the result names; ``--descriptor`` prints
+    one ``[MCP_DESCRIPTOR: ...]`` line. Facts that are always ``unknown`` (connection, effective enablement, form,
+    trust, permissions) appear only in JSON."""
+    if "descriptor" in data:
+        launch = data["descriptor"]
+        if launch is None:
+            yield "[OK: no launch descriptor: the read-only profile exposes no tools]"
+        else:
+            yield (
+                f"[MCP_DESCRIPTOR: command={launch['command']} profile={launch['profile']}"
+                f" executor={launch['executor']} workspace={launch['workspace']}]"
+            )
+        return
     project = data.get("project")
     if project is None:
-        unknown = " ".join(f"{key}=unknown" for key in UNKNOWN_HOST_STATE)
-        yield f"[MCP: action={data['action']} {unknown}]"
+        yield f"[MCP: action={data['action']}]"
         for host, state in sorted(data.get("registrations", {}).items()):
             yield f"[MCP_HOST: {host} state={state}]"
         return
-    facts = " ".join(f"{key}={data[key]}" for key in ("package", "runtime", "effective", *UNKNOWN_HOST_STATE))
-    yield f"[MCP: action={data['action']} {facts}]"
+    yield f"[MCP: action={data['action']} package={data['package']} runtime={data['runtime']}]"
     for host, state in sorted(project.items()):
         line = f"{host} state={state['state']}"
         line += f" desired={'yes' if data['desired'].get(host) else 'no'}"

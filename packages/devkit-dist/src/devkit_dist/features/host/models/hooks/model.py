@@ -12,6 +12,7 @@ from typing import Any
 from devkit_dist.features.host.models.errors import HookDefinitionError
 
 NAME = re.compile(r"[a-z][a-z0-9-]*\Z")
+SUPPORTED_HOSTS = ("codex",)  # host adapters with a hook configuration writer
 
 
 @dataclass(frozen=True)

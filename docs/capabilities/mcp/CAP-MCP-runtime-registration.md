@@ -39,7 +39,8 @@ checkout and owning configuration workspace. The executor and workspace must sha
 Runtime selection checks the current and base virtualenv candidates, or an explicitly supplied executable, for
 matching runtime/service versions and retained import locations. It never installs packages or searches arbitrary
 interpreters. A linked-worktree interpreter or editable source is ineligible. No verified candidate produces
-MCP_RUNTIME_UNAVAILABLE and no new entry.
+MCP_RUNTIME_UNAVAILABLE (`INPUT_ERROR`, target `--executable`) and no new entry: an error that refuses `mcp setup`
+before any write, and a warning after ordinary sync.
 
 Every protected invocation resolves the owning checkout's effective execution environment. Cloud prevents forms,
 bounded writes, preflight and approved resume as well as interactive mutation; guards repeat after form/lock waits and before later
@@ -64,17 +65,28 @@ Tracked destinations are never changed, including tracked paths covered by ignor
 foreign untracked files remain unchanged. Absent paths require an existing ignore rule or a narrow clone-local
 Git info/exclude line. Before adding a line, inspect registered linked worktrees for visible foreign files the
 line would hide and refuse when any exist. Never modify tracked ignore files, ignore an entire host directory,
-or use index flags to conceal changes. Retain owned exclusions on removal and report manual cleanup after checking
-all worktrees. Non-Git and unsupported selected hosts receive explicit unavailable diagnostics.
+or use index flags to conceal changes. Retain owned exclusions on removal; the run that removes the last owned
+entry reports them once (`MCP_EXCLUSIONS_RETAINED` notice). A tracked, visible or foreign-hiding destination is a
+`MCP_REGISTRATION_UNAVAILABLE` warning naming the file, a selected host without an adapter `MCP_HOST_UNSUPPORTED`, a
+same-name user or managed layer `MCP_REGISTRATION_SHADOWED`. A non-Git workspace is `MCP_CHECKOUT_REQUIRED`
+(`INPUT_ERROR`, target `--workspace-root`): `mcp setup` and `mcp remove` check it, and that the workspace holds
+`.devkit/` (`ARGUMENT_INVALID`), before taking any lock; ordinary sync reports it as a warning.
+
+`mcp setup --host HOST` limits registration to the named hosts (repeatable; default: the configured agents). It
+reconciles the whole project state, so the owned entries of every host not named are removed; a later run without
+`--host` registers the configured agents again.
 
 Hold the common Git exclusion lock before the checkout project lock. Validate destinations before writes, reject
-symlinks/nonregular files, malformed/duplicate-key configuration and malformed ownership state. Only an exact
+symlinks/nonregular files, malformed/duplicate-key configuration and malformed ownership state
+(`MCP_REGISTRATION_CONFLICT`, `INTERACTION`: the user decides how to restore the file in `[TARGET]`). Only an exact
 previously owned entry can change or disappear; unowned identical entries are not adopted. An absent whole file
 can be recreated; a missing owned entry in an existing file is a conflict. Foreign settings remain semantically
 intact, and no-op preserves bytes/mode. Recheck tracked/ignored state and captured file bytes before writes.
 
 A recoverable registration journal binds destinations and ledger updates. An interrupted operation is recovered
-before another ordinary change; foreign edits or newly tracked/visible destinations during recovery refuse mutation.
+before another ordinary change (a plan that finds the journal is `MCP_REGISTRATION_INTERRUPTED`, `AUTO` with
+`uv run devkit sync`); a registration write while the ledger is not yet Git-ignored is `MCP_LEDGER_UNIGNORED`,
+`AUTO` with the same fix; foreign edits or newly tracked/visible destinations during recovery refuse mutation.
 Installed narrow exclusions survive rollback because another checkout may already depend on them; the local ledger
 retains their ownership and recovery itself is repeatable. Dry-run/check compute the same
 plan without writes, installation or host launches. Locked sync validates without host-file changes and directs
@@ -95,7 +107,9 @@ owned entries. An unloadable installed provider is an error, not an uninstall si
 Known user/ancestor/local/managed same-name declarations are inspected read-only and reported as collisions;
 unknown effective selection remains unknown. Resolve global entries through host-owned tools. Status distinguishes
 desired, recorded and project registration, runtime availability and unknown effective connection/form/trust/
-permission state, without returning environment values or other servers' settings.
+permission state, without returning environment values or other servers' settings. The always-unknown facts appear
+in JSON only; text prints `[MCP: action= package= runtime=]` and one `[MCP_HOST: ...]` line per host, and
+`--descriptor` prints `[MCP_DESCRIPTOR: command= profile= executor= workspace=]`.
 
 ## Host workflow
 

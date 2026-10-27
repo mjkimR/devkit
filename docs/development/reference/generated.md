@@ -27,13 +27,12 @@ Every command takes `-w/--workspace-root` (default: the devkit project containin
 [GENERATED_REGENERATED: uv-lock changed=1]
 [SUMMARY: regenerated=2 changed=1 skipped=0]
 [GENERATED_STALE: uv-lock changed=1]
-[GENERATED_CURRENT: devkit-receipt changed=0]
 [SUMMARY: commit=1a2b3c4d5e6f checked=2 stale=1 skipped=0]
 ```
 
 - `list`: one `[GENERATED: ...]` line per artifact, in run order. `source` is `builtin` for an artifact of `builtin.toml`, also when the project changes it.
-- `resolve`: `GENERATED_PLANNED` replaces `GENERATED_RESOLVED` under `--dry-run`. `conflicts` counts the owned conflicts settled and `changed` the files the command changed. `GENERATED_SKIPPED` marks an optional artifact with nothing tracked. `operation` is `merge`, `rebase`, `cherry-pick`, `revert`, `am` or `-`. `[NEXT_CMD: ...]` appears only when no conflict remains and the operation is known.
-- `regen` and `check`: `changed` counts the files the command changed. For `check`, these are the files that differ from the commit.
+- `resolve`: `GENERATED_PLANNED` replaces `GENERATED_RESOLVED` under `--dry-run`. `conflicts` counts the owned conflicts settled and `changed` the files the command changed. An optional artifact with nothing tracked is skipped and logged (`-v`), not printed. `operation` is `merge`, `rebase`, `cherry-pick`, `revert`, `am` or `-`. `[NEXT_CMD: ...]` appears only when no conflict remains and the operation is known.
+- `regen` and `check`: one line per artifact that changed (`regen`) or is stale (`check`); unchanged, current and skipped artifacts are `-v` log lines that the `[SUMMARY]` counts. `changed` counts the files the command changed. For `check`, these are the files that differ from the commit.
 
 JSON:
 - `list`: `artifacts` (`id`, `paths`, `command`, `inputs`, `updates`, `after`, `seed`, `optional`, `builtin`).
@@ -52,11 +51,11 @@ Exit codes: `0` success; `1` from `check` when an artifact is stale; `2` a refus
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
 | `GENERATED_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `GeneratedConfigError` | A malformed `.devkit/generated.toml`: an unknown key, a bad pattern, seed or id, a missing `paths` or `command`, an `after` naming an unknown artifact or forming a cycle, or a path two artifacts own. |
-| `GENERATED_INPUTS_CONFLICTED` | `ERROR` (`BLOCKED`) | `InputsConflictedError` | `resolve`: a conflict no artifact owns may be read by an artifact to regenerate. Nothing changed; the details list each path and its readers. |
-| `GENERATED_UNMERGED` | `ERROR` (`BLOCKED`) | `UnmergedError` | `regen` with unmerged paths in the index; nothing ran. |
-| `GENERATED_COMMAND_FAILED` | `ERROR` (`MAINTENANCE`) | `CommandFailedError` | An artifact's command failed. The details carry its exit code, log path and last output lines; nothing was staged. |
-| `GENERATED_OUTPUT_UNDECLARED` | `ERROR` (`MAINTENANCE`) | `OutputUndeclaredError` | A command changed files outside its `paths` and `updates`. The changes stay in the work tree; nothing was staged. |
-| `GENERATED_STALE` | `ERROR` (`MAINTENANCE`, exit `1`) | `StaleError` | `check`: artifacts differ from what their command produces at the commit; `[FIX]` is `devkit generated regen <ids>`, then commit. |
+| `GENERATED_INPUTS_CONFLICTED` | `ERROR` (`INPUT_ERROR`) | `InputsConflictedError` | `resolve`: a conflict no artifact owns may be read by an artifact to regenerate. Nothing changed; `[TARGET]` lists the conflicted paths, the details their readers, `[FIX]` the exact `git add -- ...` and `uv run devkit generated resolve`. |
+| `GENERATED_UNMERGED` | `ERROR` (`AUTO`) | `UnmergedError` | `regen` with unmerged paths in the index (`[TARGET]`); nothing ran. `[FIX]` is `uv run devkit generated resolve`. |
+| `GENERATED_COMMAND_FAILED` | `ERROR` (`INPUT_ERROR`) | `CommandFailedError` | An artifact's command failed. `[TARGET]` is `.devkit/generated.toml`; the details carry its exit code, log path and last output lines; nothing was staged. |
+| `GENERATED_OUTPUT_UNDECLARED` | `ERROR` (`INPUT_ERROR`) | `OutputUndeclaredError` | A command changed files outside its `paths` and `updates`. `[TARGET]` is `.devkit/generated.toml` and the undeclared files. The changes stay in the work tree; nothing was staged. |
+| `GENERATED_STALE` | `ERROR` (`INPUT_ERROR`, exit `1`) | `StaleError` | `check`: artifacts differ from what their command produces at the commit. `[TARGET]` lists the stale files; `[FIX]` is the exact `uv run devkit generated regen` command for the stale ids, then commit. |
 | `GENERATED_CONFLICTS_REMAIN` | `WARNING` | `ConflictsRemainWarning` | `resolve` settled the generated conflicts; conflicts no artifact owns remain (listed). |
 | `CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_dist.base.errors.ConfigError` | `.devkit/generated.toml` cannot be read or is not valid TOML. |
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_core.base.errors.ArgumentError` | An unknown or disabled artifact id (`check` names one registered only in the working tree as not committed at `--rev`), or a `--rev` that is not a commit. |

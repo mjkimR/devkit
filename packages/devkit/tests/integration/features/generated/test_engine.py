@@ -168,7 +168,7 @@ def test_a_command_writing_outside_its_files_is_refused(repo: Path) -> None:
     with pytest.raises(OutputUndeclaredError) as caught:
         ResolveArtifacts().execute(repo)
 
-    assert caught.value.details == ("stray.txt",)
+    assert caught.value.target_files == (".devkit/generated.toml", "stray.txt")
     assert set(unmerged(repo)) == {"gen/out.txt"}
 
 
@@ -248,7 +248,7 @@ def test_check_is_stale_only_when_owned_files_change(repo: Path) -> None:
     assert result.stale == [] and result.to_dict()["stale"] == []
     checked = invoke("check", "note", "-w", str(repo))
     assert checked.exit_code == 0, checked.output
-    assert "[GENERATED_CURRENT: note changed=1]" in checked.stdout
+    assert "GENERATED_CURRENT" not in checked.stdout  # a current artifact is a -v log line
 
     write(repo, ".devkit/generated.toml", CONFIG + note.replace("echo note >", "echo changed >"))
     commit_all(repo, "note changes")
@@ -327,3 +327,55 @@ def test_the_commands_print_sentinels_and_check_exits_1_when_stale(repo: Path) -
         "next_command": "git merge --continue",
         "notices": [],
     }
+
+
+def test_errors_name_runnable_fixes_targets_and_correctable_modes(repo: Path) -> None:
+    from devkit.advisory import ActionMode
+
+    write(repo, "src/c.txt", "c\n")
+    commit_all(repo, "stale")
+    stale = invoke("check", "gen", "-w", str(repo), "--format", "json")
+    error = json.loads(stale.stdout)["errors"][0]["advisory"]
+    assert error["mode"] == "INPUT_ERROR" and error["target_files"] == ["gen/out.txt", "gen/count.txt"]
+    assert error["fix"].startswith("uv run devkit generated regen gen count")
+    assert "details" not in error
+
+    diverge(repo, {"src/base.txt": "ours\n"}, {"src/base.txt": "theirs\n"})
+    with pytest.raises(UnmergedError) as unmerged_error:
+        RegenerateArtifacts().execute(repo)
+    assert unmerged_error.value.mode is ActionMode.AUTO
+    assert unmerged_error.value.fix == "uv run devkit generated resolve"
+    assert set(unmerged_error.value.target_files) == {"src/base.txt", "gen/out.txt", "gen/count.txt"} & set(
+        unmerged(repo)
+    )
+    with pytest.raises(InputsConflictedError) as conflicted:
+        ResolveArtifacts().execute(repo)
+    assert conflicted.value.mode is ActionMode.INPUT_ERROR
+    assert conflicted.value.target_files == ("src/base.txt",)
+    assert conflicted.value.fix is not None and "<" not in conflicted.value.fix
+    assert (
+        "git add -- src/base.txt" in conflicted.value.fix and "uv run devkit generated resolve" in conflicted.value.fix
+    )
+
+
+def test_failed_and_undeclared_commands_target_the_registry(repo: Path) -> None:
+    from devkit.advisory import ActionMode
+
+    diverge(repo, {"src/a.txt": "a\n"}, {"src/b.txt": "b\n"})
+    write(repo, ".devkit/generated.toml", CONFIG.replace("mkdir -p gen && cat", "exit 3; cat"))
+    with pytest.raises(CommandFailedError) as failed:
+        ResolveArtifacts().execute(repo)
+    assert failed.value.mode is ActionMode.INPUT_ERROR and failed.value.target_files[0] == ".devkit/generated.toml"
+    write(repo, ".devkit/generated.toml", CONFIG.replace("mkdir -p gen &&", "echo x > stray.txt && mkdir -p gen &&"))
+    with pytest.raises(OutputUndeclaredError) as undeclared:
+        ResolveArtifacts().execute(repo)
+    assert undeclared.value.mode is ActionMode.INPUT_ERROR
+    assert undeclared.value.target_files == (".devkit/generated.toml", "stray.txt")
+
+
+def test_text_output_lists_only_items_that_changed(repo: Path) -> None:
+    checked = invoke("check", "-w", str(repo))
+    assert checked.exit_code == 0
+    assert [line.split(":")[0] for line in checked.stdout.splitlines()] == ["[SUMMARY"]
+    regen = invoke("regen", "-w", str(repo))
+    assert [line.split(":")[0] for line in regen.stdout.splitlines()] == ["[SUMMARY"]

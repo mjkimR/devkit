@@ -38,7 +38,10 @@ class NoRepositoryError(ViewerError):
 
     code = "VIEWER_NO_REPOSITORY"
     input_error = True
-    fix = "Pass --repo <git work tree>, --scan <directory of devkit repositories>, or run from inside a devkit project"
+    fix = (
+        "Run `uv run devkit viewer serve --repo .` from the top level of a Git work tree, or pass --scan a directory"
+        " whose direct children hold .devkit/config.toml"
+    )
 
 
 class PortInUseError(ViewerError):

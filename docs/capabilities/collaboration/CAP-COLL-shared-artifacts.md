@@ -24,7 +24,7 @@ Content identity consists of repository namespace, kind, slug, source_sha, langu
 Metadata includes those fields, a server-generated UUID generation_id, text/markdown content type, byte_count,
 UTC created_at/expires_at and revision equal to the body digest. A logical shared URI selects the exact generation;
 there is no implicit latest selection. Returned content is data, never agent instructions. Local results additionally
-include local_path and file_uri; remote adapters must not fabricate these. A URI is not an access credential.
+include local_path; remote adapters must not fabricate it. A URI is not an access credential.
 
 Repeated live puts return the same original metadata without extending expiry. Different bodies coexist. At
 now >= created_at + seven days, get returns SHARED_ARTIFACT_EXPIRED and list omits the artifact without writes.

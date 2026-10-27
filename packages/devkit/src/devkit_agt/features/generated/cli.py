@@ -1,17 +1,18 @@
 """``devkit generated`` commands: list the registered artifacts, check, regenerate, and resolve their conflicts.
 
 Text output: ``list`` prints one ``[GENERATED: <id> source= seed= paths= command=]`` line per artifact; ``regen``
-one ``[GENERATED_REGENERATED: <id> changed=]`` line per artifact, ``check`` one ``[GENERATED_CURRENT: ...]`` or
-``[GENERATED_STALE: ...]`` line (``[GENERATED_SKIPPED: ...]`` for an optional artifact with nothing tracked), each
-followed by a ``[SUMMARY: ...]``; ``resolve`` one ``[GENERATED_RESOLVED: <id> conflicts=
-changed=]`` line per artifact (``GENERATED_PLANNED`` under ``--dry-run``), ``[SUMMARY: ...]`` and, when nothing
-is left to resolve, ``[NEXT_CMD: git <operation> --continue]``. ``--format json`` prints the result object.
+one ``[GENERATED_REGENERATED: <id> changed=]`` line per artifact that changed files, ``check`` one
+``[GENERATED_STALE: ...]`` line per stale artifact, each followed by a ``[SUMMARY: ...]`` that counts the rest
+(unchanged, current and skipped artifacts are ``-v`` log lines); ``resolve`` one ``[GENERATED_RESOLVED: <id>
+conflicts= changed=]`` line per artifact it ran (``GENERATED_PLANNED`` under ``--dry-run``), ``[SUMMARY: ...]``
+and, when nothing is left to resolve, ``[NEXT_CMD: git <operation> --continue]``. ``--format json`` prints the result object.
 ``check`` exits ``1`` when an artifact is stale (``GENERATED_STALE``).
 """
 
 from __future__ import annotations
 
 import json
+import logging
 import re
 import shlex
 
@@ -27,9 +28,11 @@ from devkit_dist.adapters.cli import (
     resolve_root,
     workspace_option,
 )
+from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_agt.features.generated.models.errors import StaleError
 from devkit_agt.features.generated.usecases.engine import (
+    LISTED,
     ArtifactRun,
     CheckArtifacts,
     ListArtifacts,
@@ -38,6 +41,7 @@ from devkit_agt.features.generated.usecases.engine import (
     RunResult,
 )
 
+logger = logging.getLogger(__name__)
 WORKSPACE = workspace_option()
 IDS = click.argument("ids", nargs=-1)
 _BARE = re.compile(r'[^\s"\]=]+')
@@ -76,16 +80,14 @@ def list_cmd(workspace_root: str | None, output_format: str) -> None:
 
 
 def _run_lines(runs: list[ArtifactRun], changed_kind: str, current_kind: str, *, owned: bool = False) -> None:
-    """One line per artifact; with ``owned``, only a change to a file the artifact owns selects ``changed_kind``."""
+    """One ``changed_kind`` line per artifact that changed; with ``owned``, only a change to a file the artifact owns
+    counts. Unchanged (``current_kind``) and skipped artifacts are log lines, counted by the summary."""
     for item in runs:
-        kind = (
-            "GENERATED_SKIPPED"
-            if item.skipped
-            else changed_kind
-            if (item.owned if owned else item.changed)
-            else current_kind
-        )
-        click.echo(f"[{kind}: {item.id} changed={len(item.changed)}]")
+        if not item.skipped and (item.owned if owned else item.changed):
+            click.echo(f"[{changed_kind}: {item.id} changed={len(item.changed)}]")
+        else:
+            kind = "GENERATED_SKIPPED" if item.skipped else current_kind
+            logger.info("%s: %s changed=%d", kind, item.id, len(item.changed))
 
 
 @cli.command(name="regen")
@@ -102,7 +104,7 @@ def regen_cmd(ids: tuple[str, ...], workspace_root: str | None, output_format: s
     if is_json(output_format):
         echo_json(result.to_dict())
         return
-    _run_lines(result.artifacts, "GENERATED_REGENERATED", "GENERATED_REGENERATED")
+    _run_lines(result.artifacts, "GENERATED_REGENERATED", "GENERATED_UNCHANGED")
     changed = sum(len(item.changed) for item in result.artifacts)
     skipped = sum(item.skipped for item in result.artifacts)
     click.echo(f"[SUMMARY: regenerated={len(result.artifacts) - skipped} changed={changed} skipped={skipped}]")
@@ -113,9 +115,9 @@ def _stale_error(result: RunResult) -> StaleError:
     paths = [path for item in result.stale for path in item.owned]
     return StaleError(
         f"{len(result.stale)} generated artifact(s) differ from what their command produces at {result.commit}",
-        *paths[:20],
-        *([f"... and {len(paths) - 20} more"] if len(paths) > 20 else []),
-        fix=f"Run `devkit generated regen {ids}` and commit the regenerated files",
+        *([f"... and {len(paths) - LISTED} more"] if len(paths) > LISTED else []),
+        target_files=paths[:LISTED],
+        fix=f"{devkit_command('generated regen ' + ids)}, then commit the regenerated files",
     )
 
 
@@ -163,7 +165,7 @@ def resolve_cmd(dry_run: bool, workspace_root: str | None, output_format: str) -
         kind = "GENERATED_PLANNED" if dry_run else "GENERATED_RESOLVED"
         for item in result.artifacts:
             if item.skipped:
-                click.echo(f"[GENERATED_SKIPPED: {item.id} changed=0]")
+                logger.info("GENERATED_SKIPPED: %s", item.id)
             else:
                 click.echo(f"[{kind}: {item.id} conflicts={len(item.conflicts)} changed={len(item.changed)}]")
         click.echo(
