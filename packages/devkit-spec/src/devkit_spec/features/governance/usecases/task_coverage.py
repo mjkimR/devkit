@@ -53,9 +53,54 @@ def _fence_width(stripped: str, char: str) -> int:
     return width
 
 
+def _code_span_end(line: str, start: int) -> int:
+    """The end of the inline code span whose opening backtick run starts at ``start``; ``-1`` when no run of the same
+    length closes it on this line (the run is then literal)."""
+    end = start
+    while end < len(line) and line[end] == "`":
+        end += 1
+    width, index = end - start, end
+    while index < len(line):
+        if line[index] != "`":
+            index += 1
+            continue
+        run = index
+        while index < len(line) and line[index] == "`":
+            index += 1
+        if index - run == width:
+            return index
+    return -1
+
+
+def _without_comments(line: str, comment: bool) -> tuple[str, bool]:
+    """``line`` with its inline HTML comment spans blanked, and whether a comment continues past it; ``comment``:
+    the line starts inside one. A ``<!--`` inside a code span is literal."""
+    out = list(line)
+    index = 0
+    while index < len(line):
+        if comment:
+            end = line.find("-->", index)
+            stop = len(line) if end < 0 else end + 3
+            out[index:stop] = " " * (stop - index)
+            if end < 0:
+                break
+            index, comment = stop, False
+            continue
+        if line[index] == "`":
+            end = _code_span_end(line, index)
+            index = end if end >= 0 else len(line) - len(line[index:].lstrip("`"))
+            continue
+        if line.startswith("<!--", index):
+            comment = True
+            continue
+        index += 1
+    return "".join(out), comment
+
+
 def _contract_lines(text: str) -> list[str]:
-    """The lines of ``text`` with frontmatter (as devkit's grammar locates it), fenced code and HTML comment lines
-    blanked, numbering kept.
+    """The lines of ``text`` with frontmatter (as devkit's grammar locates it), fenced code and HTML comments blanked,
+    numbering kept: a line opening with ``<!--`` starts an HTML block, blanked through the line that closes it, and a
+    comment after other content is blanked as a span (outside code spans), up to its ``-->``.
 
     Unlike ``devkit_spec.features.documents.visible_lines``, indented lines stay (nested tasks may be indented four or more
     spaces) and inline Markdown is left as written (``[AC-01]: Title`` is a heading's ID, not a link label).
@@ -68,16 +113,19 @@ def _contract_lines(text: str) -> list[str]:
         front = len(lines)
     fence = ""
     width = 0
-    comment = False
+    block = False  # inside an HTML comment block, which ends with the line that closes it
+    comment = False  # inside an inline comment span continued from an earlier line
     for number, line in enumerate(lines):
         stripped = line.strip()
         if number < front:
             lines[number] = ""
             continue
-        if comment:
+        if block:
             lines[number] = ""
-            if "-->" in line:
-                comment = False
+            block = "-->" not in line
+            continue
+        if comment:
+            lines[number], comment = _without_comments(line, comment)
             continue
         if fence:
             lines[number] = ""
@@ -90,9 +138,11 @@ def _contract_lines(text: str) -> list[str]:
             width = _fence_width(stripped, fence)
             lines[number] = ""
             continue
-        if "<!--" in line:
+        if line.lstrip(" ").startswith("<!--") and len(line) - len(line.lstrip(" ")) <= 3:
             lines[number] = ""
-            comment = "-->" not in line.split("<!--", 1)[1]
+            block = "-->" not in line.split("<!--", 1)[1]
+        elif "<!--" in line:
+            lines[number], comment = _without_comments(line, comment)
     return lines
 
 

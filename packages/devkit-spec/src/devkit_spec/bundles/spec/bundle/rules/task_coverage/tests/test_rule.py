@@ -49,6 +49,19 @@ def _messages(root: Path, spec: str, tasks: str) -> list[str]:
         pytest.param(SPEC_ONE + "## 5. Notes\n### Other [AC-99]", "- [ ] Task [AC-01]", id="other-sections"),
         pytest.param(SPEC_ONE.replace("\n", "\r\n"), "- [ ] Task\r\n  - _Requirements: AC-01_\r\n", id="crlf"),
         pytest.param(SPEC_TWO, TEMPLATE_TASKS, id="tasks-template"),
+        pytest.param(
+            SPEC_ONE.replace("First", "First <!-- reviewed -->") + "### Scenario 2 [AC-02]: Second\n",
+            "- [ ] Task [AC-01]\n- [ ] Task two [AC-02] <!-- note -->\n",
+            id="trailing-comments",
+        ),
+        pytest.param(
+            SPEC_ONE.replace("First", "Strip `<!--` markers") + "### Scenario 2 [AC-02]: Second\n",
+            "- [ ] Task [AC-01] [AC-02]\n",
+            id="code-span-opener",
+        ),
+        pytest.param(
+            SPEC_TWO, "<!-- a\nnote --> - [ ] Ignored [AC-03]\n- [ ] Task [AC-01] <!-- x --> [AC-02]\n", id="spans"
+        ),
     ],
 )
 def test_covered_pairs_pass(tmp_path: Path, spec: str, tasks: str) -> None:

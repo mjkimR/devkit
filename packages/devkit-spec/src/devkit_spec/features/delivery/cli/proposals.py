@@ -8,8 +8,8 @@ Text output (paths are relative to the workspace root):
   workflow, ``[NEXT_CMD: devkit workflow next --unit <dir>]``.
 - ``padr``: ``[PADR: <id> path= proposal=]``.
 - ``prune``: ``[PRUNED: <dir>]`` per empty proposal directory removed, else ``[OK: nothing to prune]``.
-- ``report``: ``[PROPOSAL_REVIEW: <uri> source_sha= language= expires_at=]`` after publication; with ``--template``
-  the report template Markdown itself (JSON: ``proposal``, ``source_sha``, ``template``) and nothing published.
+- ``report``: the report template Markdown of the source itself, read-only and nothing published (JSON: ``proposal``,
+  ``source_sha``, ``report``); ``source_sha`` defaults to the workspace ``HEAD``.
 - ``accept``: ``[ACCEPTED: ...]`` with basic Backlog acceptance or composed lifecycle mode, and
   ``[ACCEPT_CHECK: ...]`` with ``--check`` and nothing written. Composed acceptance reports status, authority and
   completed effects; refusals and partial effects carry stable advisory codes and exit status.
@@ -47,6 +47,7 @@ from pathlib import Path
 
 import click
 from devkit.advisory import Actor, AdvisoryError, Level, Retry
+from devkit_core.core import run_git
 from devkit_dist.adapters.cli import (
     FORMAT_OPTION,
     boundary,
@@ -461,25 +462,21 @@ def check_cmd(slug: str, workspace_root: str | None, output_format: str) -> None
 
 @proposal_group.command(name="report")
 @click.argument("slug")
-@click.option("--source-sha", default=None, help="Exact current committed Planning or accepted base SHA")
 @click.option(
-    "--template",
-    "show_template",
-    is_flag=True,
-    help="Print the report template for this source",
+    "--source-sha", default=None, help="Exact current committed Planning or accepted base SHA (default: HEAD)"
 )
 @WORKSPACE
 @FORMAT_OPTION
 @boundary
-def report_cmd(
-    slug: str, source_sha: str | None, show_template: bool, workspace_root: str | None, output_format: str
-) -> None:
-    """Print the proposal review report/briefing for SLUG."""
+def report_cmd(slug: str, source_sha: str | None, workspace_root: str | None, output_format: str) -> None:
+    """Print the proposal review report template for SLUG."""
     from devkit_spec.features.proposals.usecases.report import ReportTemplateUseCase
 
     root = resolve_root(workspace_root)
+    if source_sha is None:
+        source_sha = run_git(root, "rev-parse", "HEAD").decode().strip()
     text = ReportTemplateUseCase().execute(root, slug, source_sha)
     if is_json(output_format):
-        echo_json({"proposal": f"PROP-{slug}", "source_sha": source_sha or "", "report": text})
+        echo_json({"proposal": f"PROP-{slug}", "source_sha": source_sha, "report": text})
     else:
         click.echo(text, nl=False)
