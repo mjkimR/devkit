@@ -95,7 +95,7 @@ def test_an_error_is_one_json_document_on_stdout_and_nothing_on_stderr(item: Ins
     assert result.exit_code == int(ExitCode.ERROR)
     error = json.loads(result.stdout)["error"]
     assert (error["code"], error["exit_code"], error["advisory"]["mode"]) == ("NOT_SYNCHRONIZED", 2, "AUTO")
-    assert error["advisory"]["fix"] == "devkit sync"
+    assert error["advisory"]["fix"] == "uv run devkit sync"
     assert error["advisory"]["action"].startswith("AUTO — Run the [FIX] command once")
     assert result.stderr == ""  # one channel: the JSON document carries the directive
 
@@ -256,7 +256,7 @@ def test_sync_locked_restores_recorded_files_and_never_changes_committed_ones(
     fresh = _invoke("sync", "--locked", "-w", str(target))  # no receipt yet: nothing to restore from
     assert fresh.exit_code == int(ExitCode.FINDINGS) and fresh.stdout == ""  # a refusal: the error is the output
     assert fresh.stderr.startswith("[ERROR]  (RECEIPT_STALE) there is no committed receipt to restore from;")
-    assert "[ACTION] INTERACTION" in fresh.stderr and "[FIX]    devkit sync, then commit" in fresh.stderr
+    assert "[ACTION] INTERACTION" in fresh.stderr and "[FIX]    uv run devkit sync, then commit" in fresh.stderr
     assert "[DETAIL] would create .devkit/managed/team/guide.md" in fresh.stderr
     assert not (target / RECEIPT_PATH).exists() and not (target / ".devkit/managed").exists()
     assert _invoke("sync", "-w", str(target)).exit_code == 0

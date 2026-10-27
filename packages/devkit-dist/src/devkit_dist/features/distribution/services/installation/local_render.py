@@ -14,6 +14,7 @@ from devkit_core.core.git import run_git
 
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.distribution.models.content import Content, json_content, signature
+from devkit_dist.features.distribution.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.distribution.models.results import Action
 from devkit_dist.features.distribution.services.installation.inventory import Inventory
 from devkit_dist.features.distribution.services.installation.workspace import snapshot
@@ -43,7 +44,7 @@ class LocalRenderStaleError(ConfigError):
     input_error = False
     actor = Actor.TOOL
     exit_code = ExitCode.FINDINGS
-    fix = "Run `devkit sync` in this workspace to refresh personal rendering evidence"
+    fix = f"Run `{AGENT_INVOCATION} sync` in this workspace to refresh personal rendering evidence"
 
 
 class LocalChangedError(ConfigError):
@@ -51,7 +52,7 @@ class LocalChangedError(ConfigError):
     input_error = False
     actor = Actor.TOOL
     exit_code = ExitCode.FINDINGS
-    fix = "Rerun `devkit sync` after configuration edits finish"
+    fix = f"Rerun `{AGENT_INVOCATION} sync` after configuration edits finish"
 
 
 def inputs(root: Path) -> dict[str, bytes | None]:

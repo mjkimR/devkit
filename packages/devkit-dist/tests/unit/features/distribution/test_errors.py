@@ -52,8 +52,8 @@ def test_notices_are_coded_and_never_fail(cls: type[errors.SyncNotice], code: st
 
 
 def test_fixes_name_the_command_that_repairs_the_state() -> None:
-    assert errors.NotSynchronizedError("x").fix == "devkit sync"
-    assert errors.PendingTransactionError("x").fix == "devkit recover"
+    assert errors.NotSynchronizedError("x").fix == "uv run devkit sync"
+    assert errors.PendingTransactionError("x").fix == "uv run devkit recover"
     assert errors.LockHeldError("x").retry_after == errors.LOCK_RETRY_AFTER
 
 

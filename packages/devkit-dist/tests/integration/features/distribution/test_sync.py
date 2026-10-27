@@ -352,9 +352,9 @@ def test_unselected_bundles_are_not_deployed(installed: list[InstalledBundle], b
     assert (notice.code, notice.message, notice.fix) == (
         "BUNDLE_UNSELECTED",
         "installed bundles not selected yet: team",
-        "devkit add team",
+        "uv run devkit add team",
     )
-    assert notice.details == ("devkit add team  (package team-content; presets all, minimal; default -)",)
+    assert notice.details == ("uv run devkit add team  (package team-content; presets all, minimal; default -)",)
     # Reported once per clone: the bundle stays listed under ``unselected``, the notice does not repeat.
     again = sync_project(bare, installed)
     assert again.notices == [] and [item.bundle for item in again.unselected] == ["team"]
@@ -598,7 +598,7 @@ def test_cli_add_resolves_default_preset_and_remove(
     check = runner.invoke(cli, ["sync", "--dry-run", "--strict", "--workspace-root", str(target)])
     assert check.exit_code == 0, check.output  # a notice never fails, even under --strict
     assert "[NOTICE] (BUNDLE_UNSELECTED) installed bundles not selected yet: extra" in check.stderr
-    assert "[FIX]    devkit add extra" in check.stderr
+    assert "[FIX]    uv run devkit add extra" in check.stderr
     quiet = runner.invoke(cli, ["sync", "-q", "--workspace-root", str(target), "--format", "json"])
     assert quiet.exit_code == 0 and quiet.stderr == ""  # JSON carries the notice; stderr stays empty
     assert [n["code"] for n in json.loads(quiet.stdout)["notices"]] == ["BUNDLE_UNSELECTED"]

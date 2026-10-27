@@ -55,7 +55,7 @@ Shared-file ownership, codes and setup: [Host Integration Reference](host.md).
 | --- | --- |
 | `devkit sync [options]` | Synchronizes the selection: managed copies under `.devkit/managed/`, native projections, seeded files that do not exist yet and the root `AGENTS.md` guidance block, in one transaction (`CAP-DIST-sync-and-transactions`). |
 | `devkit add <bundle>[:<preset>]...` | Joins bundles or presets to the selection in `.devkit/config.toml` (default preset when none is named), then synchronizes. |
-| `devkit remove <bundle>...` | Deselects bundles in `.devkit/config.toml` (`false` for an auto-selected bundle), then synchronizes. |
+| `devkit remove <bundle>...` | Deselects bundles in `.devkit/config.toml` (`false` for an auto-selected bundle), then synchronizes; a removed bundle's override directory stays and is named in `OVERRIDE_RETAINED`. |
 | `devkit list` | Installed content packages, bundle metadata, available and default presets, selection state (`builtin`, `auto_select`, `opted_out`), synchronized asset paths and the `seeded` list. Like `devkit status` it does not check the recorded paths on disk, so a symlinked managed file never fails it (`devkit status` reports it). |
 | `devkit status` | Read-only report of the installed state against the receipt; see [below](#devkit-status). |
 | `devkit config template` | Writes the commented template into `.devkit/config.toml`: devkit's top-level keys, the tables installed engines register for the reserved names (`devkit.config_tables`: `[workflow.approvals]`, `[workflow.stages]` and `[worktree]` with `devkit-agt`), and the `[tool.<name>]` tables of the installed tools, at defaults or with marked examples when unset, only the parts the file lacks, keeping the bytes and line endings of existing lines (`CAP-DIST-sync-and-transactions`). Prints `path`, `state` (`created`, `updated`, or `unchanged` exactly when the file's bytes stay the same), `added` (every key and table name written, commented ones included) and `notices`; an invalid file is `CONFIG_INVALID` and is left alone. `--print` writes nothing and adds `text`, the whole file a write would produce. |
@@ -66,7 +66,7 @@ Shared-file ownership, codes and setup: [Host Integration Reference](host.md).
 | `devkit override list` | Tracked project overrides and their drift status. |
 | `devkit override create <bundle>:<asset> [--force]` | Copies every upstream file of a selected, non-seeded asset to `.devkit/overrides/` (plus a baseline copy), records the current upstream as its baseline and synchronizes; `--force` overwrites existing override files and the baseline. |
 | `devkit override diff <bundle>:<asset>` | Per file: what upstream changed since the baseline, and what the override changed. |
-| `devkit override accept <bundle>:<asset>` | Records the current upstream as the override's baseline after review. |
+| `devkit override accept <bundle>:<asset>` | Records the current upstream as the override's baseline after review, then synchronizes (as `create` does), returning the sync's notices. |
 | `devkit override remove <bundle>:<asset>` | Deletes the override files of the asset's upstream files and its baseline, then synchronizes the pristine upstream files; any other project file under the override stays (`ORPHAN_LEFT`). |
 | `devkit bundle validate <source>` | Verifies `bundle.toml`, the declared sources, the kind-specific headers (instructions, playbooks, workflows, role contracts) and every per-agent rule a sync applies (`CAP-DIST-manifest-spec`). `<source>` is the bundle directory. Prints `name`, `version` and `assets` (the number of declared assets). |
 | `devkit bundle plan <source> [--preset <name>] [--agent <name>]...` | Previews every destination a local bundle deploys (managed copies, native projections, generated entry skills, seeded files), computed by the same inventory as `sync`, without a consumer project. Defaults: the default preset (else `all`) and every supported agent. Prints `bundle`, `version`, `preset`, `agents`, `assets` (as in the sync result), `files` (`destination`, `sha256`, `mode`) and `seeded` (`destination`, `asset`, `sha256`). |
@@ -173,7 +173,10 @@ never the deployed state it kept, which is the same on every run:
 ```
 
 One `[CHANGE: <create|update|remove|seed> <path>]` line follows per write (a path with spaces, quotes or brackets
-is a JSON string), and `[OK: the workspace matches the selection]` when there is nothing to write. The warnings
+is a JSON string), `.devkit/config.toml` included when a selection command creates or changes it (also under
+`--dry-run`, which renders the edit without writing it), and `[OK: the workspace matches the selection]` when there
+is nothing to write. A command named in a `[FIX]` or `[DETAIL]` line is written as the agent runs it, `uv run devkit
+...` (`ADR-keep-uv-run-as-the-agent-facing-devkit-invocation`). The warnings
 and notices follow on stderr as `[WARN]` and `[NOTICE]` blocks
 (`CAP-ADV-agent-advisory-protocol`); `-q` hides the notices, never the warnings, and
 `--strict` exits `1` when there is a warning.
@@ -189,16 +192,18 @@ they run in their own `notices` list.
 | Code | Level | Class | When | Fields |
 | --- | --- | --- | --- | --- |
 | `ORPHAN_LEFT` | `WARNING` | `OrphanLeftNotice` | a hand-edited managed file is no longer desired, or a hand-edited guidance block under `guidance_block = false`: left in place, dropped from the receipt; or `override remove` left project files under the override that no upstream file of the asset has | `target_files`: the files; `what_to_report`: delete or move them |
-| `OVERRIDE_DRIFT` | `WARNING` | `OverrideDriftError.with_level` | an override hides upstream changes (`override_drift = "warn"`) | `target_files`: the overrides; `fix`: `devkit override diff <bundle>:<asset>` |
+| `OVERRIDE_DRIFT` | `WARNING` | `OverrideDriftError.with_level` | an override hides upstream changes (`override_drift = "warn"`); also in `devkit status` `notices` | `target_files`: the overrides; `fix`: `uv run devkit override diff <bundle>:<asset>` |
+| `OVERRIDE_RETAINED` | `NOTICE` | `OverrideRetainedNotice` | `devkit remove` deselected a bundle whose `.devkit/overrides/<bundle>/` directory stays (applied again, with drift, when the bundle is selected again) | `target_files`: the directories; `fix`: delete them, or `uv run devkit add <bundle>` |
+| `MCP_REGISTRATION_PENDING` | `NOTICE` | `McpRegistrationPendingNotice` | `sync --locked` left the desired local MCP registration of a selected host unwritten; also in `devkit status` `notices` while the checkout lacks it | message: the hosts; `fix`: `uv run devkit sync --registrations-only` |
 | `MANAGED_FILE_STRAY` | `WARNING` | `StrayFilesNotice` | files under `.devkit/managed/` that neither the receipt nor the inventory owns | `target_files`: the files; `what_to_report`: move project-owned files out of the managed root |
 | `GATE_HOOK_PRESERVED` | `WARNING` | `HookPreservedNotice` | an existing regular Git hook was preserved and chained during automatic installation | `details`: adapter path and unchanged executable mode; reported once when moved |
 | `GATE_HOOK_INSTALL_SKIPPED` | `WARNING` | `HookInstallSkippedNotice` | automatic hook installation could not safely run | `details`: reason code and paths; `fix`: remediation |
 | `POST_SYNC_EXTENSION_FAILED` | `WARNING` | `PostSyncExtensionFailedNotice` | a post-sync extension raised an exception other than an advisory, or returned something other than a list | `details`: the hook; `what_to_report`: the failure |
 | `PRESENTATION_LANGUAGE_UNSUPPORTED` | `WARNING` | `PresentationLanguageUnsupportedNotice` | a shared or local `[presentation] language` other than `auto`, `en` or `ko` fell back to `en`; also returned by `devkit status` and `devkit config show` | `target_files`: the configuration file; `fix`: the accepted values and the file |
 | `ASSET_UNPROJECTED` | `NOTICE` (brief) | `UnprojectedNotice` | a skill or subagent has no variant for a selected agent and was not projected | message: each `<bundle>:<asset> (<agent>)`; `target_files`: `.devkit/config.toml` (where the project narrows `agents`); `[DETAIL]`: the remedies |
-| `BUNDLE_UNSELECTED` | `NOTICE` | `BundleUnselectedNotice` | installed bundles the project neither selected nor opted out of, reported once per clone when they appear (recorded in `.devkit/transient/seen-bundles.json`) | `fix`: `devkit add <bundle>` for one bundle, else `devkit list`; one `[DETAIL]` per bundle with its exact `devkit add` command and presets |
+| `BUNDLE_UNSELECTED` | `NOTICE` | `BundleUnselectedNotice` | installed bundles the project neither selected nor opted out of, reported once per clone when they appear (recorded in `.devkit/transient/seen-bundles.json`); never by `sync --locked`, which restores a committed selection | `fix`: `uv run devkit add <bundle>` for one bundle, else `uv run devkit list`; one `[DETAIL]` per bundle with its exact `uv run devkit add` command and presets |
 | `HARNESS_ENGINE_MISSING` | `WARNING` | `HarnessEngineMissingNotice` | deployed `rule`, `gate` or `workflow` assets in an installation with no `devkit.commands` entry point named `rules`, `gate` or `workflow` (devkit-agt not installed); the assets are deployed as selected. Also in `devkit status` `notices` | message: each bundle with its kinds; `[DETAIL]`: one line per bundle; `fix`: the install directive that adds `devkit-agt` (shared with `HARNESS_COMMAND_UNAVAILABLE`, [core reference](core.md)) |
-| `BUNDLE_AUTO_SELECTED` | `NOTICE` | `BundleAutoSelectedNotice` | auto-selected bundles of packages other than the first-party `devkit-dist` and `devkit-agt` that the sync deploys with their default preset and the previous receipt does not record | `fix`: `devkit remove <bundle>` (opts out) for one bundle, else `devkit list`; one `[DETAIL]` per bundle with its package and preset; `what_to_report`: the bundles now deployed |
+| `BUNDLE_AUTO_SELECTED` | `NOTICE` | `BundleAutoSelectedNotice` | auto-selected bundles of packages other than the first-party `devkit-dist` and `devkit-agt` that the sync deploys with their default preset and the previous receipt does not record | `fix`: `uv run devkit remove <bundle>` (opts out) for one bundle, else `uv run devkit list`; one `[DETAIL]` per bundle with its package and preset; `what_to_report`: the bundles now deployed |
 | `TOOL_VERSION_CHANGED` | `NOTICE` (brief) | `ToolVersionChangedNotice` | the receipt now records a different running tool: `devkit-dist <recorded> -> <running>`, or with both packages when the package changed (`devkit-agt 0.1.1 -> devkit-dist 0.1.1`) | — |
 | `POST_SYNC_NOTICE` | `NOTICE` (brief) | `PostSyncNotice` | a line a post-sync extension returned | `details`: the extension |
 
@@ -208,10 +213,12 @@ Each class above derives from `SyncNotice` (`SYNC_NOTICE`), which is never repor
 ### `devkit status`
 
 `devkit status` never writes project files. It reports the selection, opted-out built-in bundles, managed file
-counts (`ok`, `missing`, `stale`, `modified`, `mode-mismatch`, `unsafe`) with the offending paths, override drift of deployed
-assets, the guidance block state (`ok`, `missing`, `modified`, `unowned`, `disabled`, `invalid`), seeded paths and whether each exists, a pending journal,
+counts (`ok`, `missing`, `stale`, `modified`, `mode-mismatch`, `unsafe`) with the offending paths (a state's path list
+appears only when it names a path), override drift of deployed assets, the guidance block state (`ok`, `missing`,
+`modified`, `unowned`, `disabled`, `invalid`), seeded paths as `{"counts": {"present", "missing"}, "missing": [...]}`
+(each missing entry with `bundle`, `id` and `path`; the list appears only when one is missing), a pending journal,
 and the recorded versus running tool version; without a receipt every entry describes an empty installation. What
-needs acting on is listed under `errors`, each an error object with exit code `1`: missing managed files and stale ones, as this clone's last sync left them behind a receipt that moved (`NOT_SYNCHRONIZED`, fix `devkit sync`), edited or mode-changed managed files
+needs acting on is listed under `errors`, each an error object with exit code `1`: missing managed files and stale ones, as this clone's last sync left them behind a receipt that moved (`NOT_SYNCHRONIZED`, fix `uv run devkit sync`), edited or mode-changed managed files
 (`SYNC_CONFLICT`), recorded paths that became symlinks or non-regular files (`WORKSPACE_UNSAFE`), a root
 `AGENTS.md` that is a symlink, malformed or not UTF-8 while the block is managed (`WORKSPACE_UNSAFE`,
 `GUIDANCE_BLOCK_INVALID`; state `invalid`), a guidance block edited by hand (state `modified`) or not recorded by
@@ -220,13 +227,17 @@ the receipt and different from the block a plain `devkit sync` would write (stat
 error, since the next sync adopts it without a write (nor is an `unowned` block while that sync cannot be planned:
 the sync stops on the planning error first), a selected bundle whose package cannot be used
 (`BUNDLE_PACKAGE_INVALID`) or is not installed (`SELECTION_INVALID`, as `devkit sync` raises it, for an entry of
-`config.toml` or a bundle the receipt keeps deployed), a pending journal (`TRANSACTION_PENDING`, fix `devkit recover`) and
-override drift (`OVERRIDE_DRIFT`, `INTERACTION`: review with `devkit override diff`, then `devkit override accept`). It exits `1`
+`config.toml` or a bundle the receipt keeps deployed), a pending journal (`TRANSACTION_PENDING`, fix `uv run devkit recover`) and,
+under `override_drift = "block"`, override drift (`OVERRIDE_DRIFT`, `INTERACTION`: review with `uv run devkit override
+diff`, then `uv run devkit override accept`). It exits `1`
 when `errors` is nonempty, whatever their own codes, and `2` only when it cannot run (for example an unreadable
 receipt or configuration). An installed package the project does not deploy that cannot be used is a
 `BUNDLE_PACKAGE_INVALID` warning under `notices` (also in `devkit list`), and deployed rule, gate or workflow assets
-that no installed engine runs are a `HARNESS_ENGINE_MISSING` warning there; neither changes the exit code except
-under `--strict`. `sync --check` remains the check that says whether a sync is needed.
+that no installed engine runs are a `HARNESS_ENGINE_MISSING` warning there, and override drift under the default
+`override_drift = "warn"` is the `OVERRIDE_DRIFT` warning `devkit sync` reports; none changes the exit code except
+under `--strict`. A selected host whose desired local MCP registration this checkout lacks (a fresh clone after
+`sync --locked`) is the `MCP_REGISTRATION_PENDING` notice. Like every JSON-only command, status renders nothing on
+stderr: its `errors` and `notices` are in the result. `sync --check` remains the check that says whether a sync is needed.
 
 ### Error codes
 

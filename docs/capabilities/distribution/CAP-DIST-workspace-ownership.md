@@ -178,11 +178,14 @@ skill's script is drift even when only its `SKILL.md` is overridden. On drift th
   `bundle:asset`, with the `devkit override diff` / `devkit override accept` commands as its `fix`. Choose it where
   an override shadows governance content (rules, gates, workflows); `warn` keeps prose upgrades flowing.
 
-`devkit status` reports drift under `errors` and exits `1` under either policy. Both report drift only for deployed
+`devkit status` follows the same policy: under `warn` drift is the `OVERRIDE_DRIFT` warning under `notices` (exit
+`0`, `1` under `--strict`), under `block` it is listed under `errors` and status exits `1`. Both report drift only for deployed
 assets: the record of an asset that is not deployed (its bundle deselected, its preset narrowed) is kept while its
 override files remain, and its drift is reported once it is selected again. For an asset its bundle no longer has,
 or whose bundle is no longer installed, that means files under the record's own override path (the skill directory
-for a skill), whatever other overrides the bundle has.
+for a skill), whatever other overrides the bundle has. `devkit remove <bundle>` leaves the bundle's override
+directory in place and names it in an `OVERRIDE_RETAINED` notice (the directory as `[TARGET]`; delete it to drop the
+overrides, or select the bundle again to apply them).
 
 Overrides resolve by bundle name and path. When an asset belongs to another bundle than the one an override names
 (an override of `devkit:devkit-run`, an asset of the `harness` bundle), the override does not apply: the asset
@@ -197,8 +200,11 @@ bundle and path but loses content keeps applying, with drift reported, until the
   upstream to the override: what the project changed). A diff is `null` when there is nothing to compare (no
   baseline copy, a file that is not overridden, a non-UTF-8 file). The result also carries `drift_detected` and both
   digests. An agent merges the upstream changes into the override files.
-- `devkit override accept <bundle>:<asset>` then records the current upstream digest as the baseline (through the
-  journal) and refreshes the baseline copies; it fails for an asset without a tracked override.
+- `devkit override accept <bundle>:<asset>` then records the current upstream digest as the baseline, refreshes the
+  baseline copies and synchronizes under the same lock, as `create` does, so the merged override files are deployed
+  and recorded and `sync --check` passes; the sync's notices are returned with the result. When that sync fails
+  before it commits, the baseline copies and the receipt are put back. It fails for an asset without a tracked
+  override.
 - `devkit override remove <bundle>:<asset>` deletes the override files of the asset's upstream files and the
   baseline files, prunes empty directories and synchronizes the upstream sources (rendered for templates), under one lock with the same
   rollback as `create`; the receipt entry disappears with that sync. Any other project file under the asset's override

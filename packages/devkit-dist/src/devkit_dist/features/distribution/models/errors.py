@@ -22,6 +22,7 @@ from devkit.advisory import Actor, AdvisoryError, ExitCode, Level, Retry
 from devkit_core.base.errors import LockHeldError as CoreLockHeldError
 
 from devkit_dist.base.errors import HARNESS_INSTALL_FIX
+from devkit_dist.features.distribution.models.invocation import devkit_command
 
 LOCK_RETRY_AFTER = "the running devkit command finishes"
 
@@ -66,7 +67,7 @@ class NotSynchronizedError(DistributionError):
 
     code = "NOT_SYNCHRONIZED"
     actor = Actor.TOOL
-    fix = "devkit sync"
+    fix = devkit_command("sync")
 
 
 class ReceiptStaleError(DistributionError):
@@ -82,7 +83,7 @@ class ReceiptStaleError(DistributionError):
     actor = Actor.USER
     retry = Retry.AFTER_FIX
     exit_code = ExitCode.FINDINGS
-    fix = "devkit sync, then commit the files it changes"
+    fix = f"{devkit_command('sync')}, then commit the files it changes"
 
 
 class ConflictError(DistributionError):
@@ -139,7 +140,7 @@ class PendingTransactionError(DistributionError):
 
     code = "TRANSACTION_PENDING"
     actor = Actor.TOOL
-    fix = "devkit recover"
+    fix = devkit_command("recover")
     target_files = (".devkit/transient/sync-journal.json",)
 
 
@@ -242,3 +243,19 @@ class HarnessEngineMissingNotice(SyncNotice):
     level = Level.WARNING
     fix = HARNESS_INSTALL_FIX
     what_to_report = "These assets are deployed, but nothing runs them until devkit-agt is installed"
+
+
+class OverrideRetainedNotice(SyncNotice):
+    """``devkit remove`` deselected a bundle whose project overrides stay under ``.devkit/overrides/<bundle>/``: they
+    apply again, with their drift reported, when the bundle is selected again; ``devkit override list`` keeps them."""
+
+    code = "OVERRIDE_RETAINED"
+    what_to_report = "Overrides of the removed bundles stay in place; delete the directories to drop them"
+
+
+class McpRegistrationPendingNotice(SyncNotice):
+    """Selected hosts whose local MCP registration ``[mcp] register`` asks for but this checkout does not hold:
+    ``devkit sync --locked`` restores assets only, so a fresh clone or worktree registers in a separate step."""
+
+    code = "MCP_REGISTRATION_PENDING"
+    fix = devkit_command("sync --registrations-only")

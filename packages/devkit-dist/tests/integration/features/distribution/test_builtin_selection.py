@@ -183,7 +183,7 @@ def test_external_auto_selected_bundle_is_deployed_and_announced_once(
     assert _selection(target) == {"ext": ["core"], "kit": ["core"]}
     notice = next(item for item in result["notices"] if item["code"] == "BUNDLE_AUTO_SELECTED")
     assert notice["message"] == "installed bundles deployed with their default preset: ext"  # not the built-in kit
-    assert notice["advisory"]["fix"] == "devkit remove ext"
+    assert notice["advisory"]["fix"] == "uv run devkit remove ext"
     assert not (target / CONFIG_PATH).exists()
 
     assert "BUNDLE_AUTO_SELECTED" not in _codes(sync_project(target, [*bundles, external]).to_dict())

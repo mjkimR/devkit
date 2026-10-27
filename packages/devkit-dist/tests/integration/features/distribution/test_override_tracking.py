@@ -136,6 +136,30 @@ def test_accept_requires_a_tracked_override(item: InstalledBundle, target: Path)
         accept_override(target, [item], "team:guide")
 
 
+def test_accept_synchronizes_the_merged_override(item: InstalledBundle, target: Path) -> None:
+    sync_project(target, [item])
+    create_override(target, [item], "team:guide")
+    (item.bundle.root / "guide.md").write_text(instruction("guide", "Upstream v2.\n"))
+    newer = reload(item)
+    # The agent merges the upstream change into the override, then accepts it.
+    (target / OVERRIDES_PATH / "team/guide.md").write_text(instruction("guide", "Upstream v2, ours.\n"))
+    change = accept_override(target, [newer], "team:guide")
+    assert change.status == "accepted" and change.accepted_upstream_sha256 is not None
+    assert sync_project(target, [newer], dry_run=True).actions == []  # nothing left for `sync --check`
+    assert [entry.drift_detected for entry in list_overrides(target, [newer])] == [False]
+
+
+def test_accept_of_an_undeployed_override_records_the_baseline(item: InstalledBundle, target: Path) -> None:
+    sync_project(target, [item])
+    create_override(target, [item], "team:guide")
+    update_config(target, deselect=["team"])
+    sync_project(target, [item])
+    (item.bundle.root / "guide.md").write_text(instruction("guide", "Upstream v2.\n"))
+    newer = reload(item)
+    accept_override(target, [newer], "team:guide")
+    assert [entry.drift_detected for entry in list_overrides(target, [newer])] == [False]
+
+
 def test_create_refuses_what_an_override_cannot_affect(item: InstalledBundle, target: Path) -> None:
     sync_project(target, [item])
     with pytest.raises(SelectionError, match="seeded asset"):

@@ -11,6 +11,7 @@ from devkit_core.base.usecase import BaseUseCase
 
 from devkit_dist.base.errors import ReceiptError
 from devkit_dist.features.distribution.models.errors import PlaybookAliasAmbiguousError, SelectionError
+from devkit_dist.features.distribution.models.invocation import AGENT_INVOCATION, devkit_command
 from devkit_dist.features.distribution.models.results import PlaybookResult
 from devkit_dist.features.distribution.services.bundles.common import SLUG, read_frontmatter
 from devkit_dist.features.distribution.services.bundles.playbooks import PlaybookHeader, read_playbook_header
@@ -59,7 +60,7 @@ class GetPlaybook(BaseUseCase):
                 raise
             prefix = f"{MANAGED_PATH}/{bundle}/"
             if receipt.file(prefix + "bundle.toml") is None:
-                raise SelectionError(f"bundle is not synchronized: {bundle}", fix="devkit list")
+                raise SelectionError(f"bundle is not synchronized: {bundle}", fix=devkit_command("list"))
             playbooks = [asset for asset in receipt.assets("playbook") if asset.bundle == bundle]
             matches = [asset for asset in playbooks if asset.id == asset_id]
             alias: str | None = None
@@ -74,13 +75,13 @@ class GetPlaybook(BaseUseCase):
                         f"playbook alias {selector} is declared by {len(declared)} playbooks: {names}",
                         target_files=[f"{bundle}/{asset.id}" for asset in declared],
                         fix="Name the playbook by its exact asset ID, or keep the alias on one playbook "
-                        "(edit the override or the bundle source, then devkit sync)",
+                        f"(edit the override or the bundle source, then `{AGENT_INVOCATION} sync`)",
                     )
                 if not declared:
                     raise SelectionError(
                         f"playbook is not synchronized: {selector}",
                         "Inspect explicit bundle and preset selection",
-                        fix="devkit list",
+                        fix=devkit_command("list"),
                     )
                 matches, alias = declared, asset_id
             if len(matches) != 1:

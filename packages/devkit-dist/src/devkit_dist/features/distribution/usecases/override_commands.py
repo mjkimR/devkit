@@ -3,7 +3,7 @@
 ``create`` and ``remove`` change files under ``.devkit/overrides/`` and then
 synchronize, under one project lock: when the synchronization fails before
 it commits, the override files are put back as they were. ``accept`` advances the recorded
-baseline through the journal.
+baseline and synchronizes the same way, so the merged override is deployed and ``sync --check`` passes.
 """
 
 from __future__ import annotations
@@ -18,6 +18,7 @@ from devkit_core.base.errors import ArgumentError
 
 from devkit_dist.features.distribution.models.content import Content, normal_mode
 from devkit_dist.features.distribution.models.errors import ConflictError, OrphanLeftNotice, SelectionError
+from devkit_dist.features.distribution.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.distribution.models.results import (
     OverrideChange,
     OverrideDiff,
@@ -43,7 +44,6 @@ from devkit_dist.features.distribution.services.installation.overrides import (
 )
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt, receipt_content
 from devkit_dist.features.distribution.services.installation.transaction import (
-    apply_changes,
     project_lock,
     prune_empty_parents,
     replace_file,
@@ -74,10 +74,14 @@ def _find(installed: list[InstalledBundle], bundle_name: str, asset_id: str) -> 
         unusable = unusable_bundles(installed)
         if bundle_name in unusable:
             raise unusable[bundle_name]
-        raise SelectionError(f"bundle is not installed: {bundle_name}", fix="List installed bundles with `devkit list`")
+        raise SelectionError(
+            f"bundle is not installed: {bundle_name}", fix=f"List installed bundles with `{AGENT_INVOCATION} list`"
+        )
     asset = item.bundle.asset(asset_id)
     if asset is None:
-        raise SelectionError(f"asset not found in {bundle_name}: {asset_id}", fix="List the assets with `devkit list`")
+        raise SelectionError(
+            f"asset not found in {bundle_name}: {asset_id}", fix=f"List the assets with `{AGENT_INVOCATION} list`"
+        )
     return item, asset
 
 
@@ -112,11 +116,13 @@ def _require_overridable(root: Path, installed: list[InstalledBundle], item: Ins
     name = item.bundle.name
     selection = effective_selection(installed, read_config(root))
     if name not in selection:
-        raise SelectionError(f"bundle is not selected: {name}", fix=f"Select it first with `devkit add {name}`")
+        raise SelectionError(
+            f"bundle is not selected: {name}", fix=f"Select it first with `{AGENT_INVOCATION} add {name}`"
+        )
     if asset.id not in item.bundle.select(selection[name]):
         raise SelectionError(
             f"asset {name}:{asset.id} is not part of the selected presets {selection[name]}",
-            fix=f"Select a preset that contains it with `devkit add {name}:<preset>`",
+            fix=f"Select a preset that contains it with `{AGENT_INVOCATION} add {name}:<preset>`",
         )
     if asset.seeded:
         raise SelectionError(
@@ -151,7 +157,7 @@ def create_override(
                     f"override already exists: {override_rel(bundle_name, existing[0])}",
                     target_files=[override_rel(bundle_name, rel) for rel in existing],
                     what_to_report="Whether to replace the existing override files with the upstream copy",
-                    fix=f"Replace them with `devkit override create {selector} --force`",
+                    fix=f"Replace them with `{AGENT_INVOCATION} override create {selector} --force`",
                 )
         undo = _Undo(root)
         try:
@@ -216,7 +222,9 @@ def remove_override(root: Path, installed: list[InstalledBundle], selector: str)
         under = sorted({name for source in sources for name in _files_under(root, override_rel(bundle_name, source))})
         overrides = [name for name in under if tracked is None or name in tracked]
         if not overrides:
-            raise SelectionError(f"no override found for {selector}", fix="List overrides with `devkit override list`")
+            raise SelectionError(
+                f"no override found for {selector}", fix=f"List overrides with `{AGENT_INVOCATION} override list`"
+            )
         extra = [name for name in under if tracked is not None and name not in tracked]
         baselines = sorted(
             {name for source in sources for name in _files_under(root, baseline_rel(bundle_name, source))}
@@ -250,13 +258,17 @@ def _tracked(receipt: Receipt | None, bundle: str, asset: str, selector: str) ->
     if record is None:
         raise SelectionError(
             f"{selector} has no tracked override",
-            fix=f"Create one with `devkit override create {selector}`, or run `devkit sync` if its files already exist",
+            fix=f"Create one with `{AGENT_INVOCATION} override create {selector}`, or run `{AGENT_INVOCATION} sync` if its files already exist",
         )
     return record
 
 
 def accept_override(root: Path, installed: list[InstalledBundle], selector: str) -> OverrideChange:
-    """Record the current upstream files as the override's baseline (after reviewing ``override diff``)."""
+    """Record the current upstream files as the override's baseline (after reviewing ``override diff``), then
+    synchronize, as ``create`` does, so the override files as merged are deployed and recorded.
+
+    When the synchronization fails before it commits, the baseline copies and the receipt are put back as they were.
+    """
     root = require_project_dir(root)
     bundle_name, asset_id = _parse_selector(selector)
     with project_lock(root):
@@ -277,11 +289,21 @@ def accept_override(root: Path, installed: list[InstalledBundle], selector: str)
             for rel in asset_files(item.bundle, asset):
                 path = item.bundle.root / rel
                 undo.write(baseline_rel(bundle_name, rel), Content(path.read_bytes(), normal_mode(path.stat().st_mode)))
-            apply_changes(root, {RECEIPT_PATH: receipt_content(updated)})
+            # The new baseline is in the receipt the sync starts from, so it holds for an asset that is not deployed.
+            undo.write(RECEIPT_PATH, receipt_content(updated))
+            finish = commit_locked(root, installed)
         except BaseException:
             undo.restore()
             raise
-    return OverrideChange(bundle_name, asset_id, "accepted", [], accepted_upstream_sha256=current)
+        result = finish()
+    return OverrideChange(
+        bundle_name,
+        asset_id,
+        "accepted",
+        [],
+        accepted_upstream_sha256=current,
+        notices=_after_sync(root, result),
+    )
 
 
 def _text(path: Path) -> list[str] | None:
@@ -308,7 +330,9 @@ def diff_override(root: Path, installed: list[InstalledBundle], selector: str) -
         require_no_journal(root)
         item, asset = _find(installed, bundle_name, asset_id)
         if not overridden_files(root, item.bundle, asset):
-            raise SelectionError(f"no override found for {selector}", fix="List overrides with `devkit override list`")
+            raise SelectionError(
+                f"no override found for {selector}", fix=f"List overrides with `{AGENT_INVOCATION} override list`"
+            )
         receipt = read_receipt(root)
         record = receipt.overrides.get(bundle_name, {}).get(asset_id) if receipt is not None else None
         current = upstream_digest(item.bundle, asset)
