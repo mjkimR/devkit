@@ -8,7 +8,8 @@ from typing import TYPE_CHECKING, Any
 
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.distribution.models.errors import PackageError
-from devkit_dist.features.distribution.models.subagents import HOSTS, LEVELS, ModelSettings, SubagentPolicy
+from devkit_dist.features.distribution.models.settings import AGENT_NAMES
+from devkit_dist.features.distribution.models.subagents import LEVELS, ModelSettings, SubagentPolicy
 
 if TYPE_CHECKING:
     from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
@@ -99,7 +100,7 @@ def parse_subagents(value: object) -> SubagentPolicy:
     levels = _table(table.get("levels", {}), "subagents.levels", LEVELS[1:])
     mappings = []
     for level, hosts in levels.items():
-        for host, fields in _table(hosts, f"subagents.levels.{level}", HOSTS).items():
+        for host, fields in _table(hosts, f"subagents.levels.{level}", AGENT_NAMES).items():
             mappings.append((level, host, _mapping(level, host, fields)))
     roles = table.get("roles", {})
     if not isinstance(roles, dict):

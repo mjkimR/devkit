@@ -12,7 +12,8 @@ from devkit_core.base.usecase import BaseUseCase
 from devkit_dist.base.errors import ReceiptError
 from devkit_dist.features.distribution.models.errors import PlaybookAliasAmbiguousError, SelectionError
 from devkit_dist.features.distribution.models.results import PlaybookResult
-from devkit_dist.features.distribution.services.bundles.common import SLUG, read_frontmatter
+from devkit_dist.features.distribution.models.settings import SLUG
+from devkit_dist.features.distribution.services.bundles.common import read_frontmatter
 from devkit_dist.features.distribution.services.bundles.playbooks import PlaybookHeader, read_playbook_header
 from devkit_dist.features.distribution.services.installation.local_render import LocalRenderStaleError
 from devkit_dist.features.distribution.services.installation.overrides import override_rel

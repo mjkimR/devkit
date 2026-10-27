@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import base64
 import errno
-import json
 import os
 from collections.abc import Iterable, Iterator
 from contextlib import ExitStack, contextmanager
@@ -34,6 +33,7 @@ from devkit_dist.features.distribution.services.installation.workspace import (
     snapshot,
 )
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION
+from devkit_dist.features.project.models.strict_json import DuplicateKeyError, strict_json_loads
 from devkit_dist.features.project.repositories.invocation import guard_execution
 
 logger = get_logger(__name__)
@@ -50,17 +50,10 @@ def read_json(root: Path, name: str) -> dict | None:
     content = snapshot(root, name)
     if content is None:
         return None
-
-    def unique(pairs: list[tuple[str, object]]) -> dict:
-        result = {}
-        for key, value in pairs:
-            if key in result:
-                raise RecoveryError(f"{name}: duplicate JSON key {key}", target_files=[name])
-            result[key] = value
-        return result
-
     try:
-        value = json.loads(content.data, object_pairs_hook=unique)
+        value = strict_json_loads(content.data, reject_constants=False)
+    except DuplicateKeyError as exc:
+        raise RecoveryError(f"{name}: duplicate JSON key {exc.key}", target_files=[name]) from exc
     except (ValueError, UnicodeError) as exc:
         raise RecoveryError(f"invalid {name}: {exc}", target_files=[name]) from exc
     if not isinstance(value, dict):

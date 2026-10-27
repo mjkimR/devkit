@@ -13,7 +13,8 @@ from pathlib import Path
 from typing import Any
 
 from devkit_dist.features.distribution.models.errors import BundleError
-from devkit_dist.features.distribution.services.bundles.common import EXTENSION_KEY, SLUG, read_frontmatter
+from devkit_dist.features.distribution.models.settings import SLUG
+from devkit_dist.features.distribution.services.bundles.common import EXTENSION_KEY, read_frontmatter
 
 FIELDS = {"name", "description", "aliases"}
 MAX_HEADER_BYTES = 4096

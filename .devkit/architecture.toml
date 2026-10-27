@@ -48,6 +48,7 @@ public_modules = [
     "devkit_dist.features.project.usecases.workspace",
     "devkit_dist.features.project.usecases.configuration",
     "devkit_dist.features.project.models.receipt",
+    "devkit_dist.features.project.models.strict_json",
     "devkit_dist.features.project.models.invocation",
     "devkit_dist.features.project.models.templates",
     "devkit_dist.features.project.repositories.project",

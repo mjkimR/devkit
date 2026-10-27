@@ -32,20 +32,16 @@ from tomlkit.exceptions import TOMLKitError
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.distribution.models.content import Content
 from devkit_dist.features.distribution.models.errors import SelectionError
-from devkit_dist.features.distribution.models.settings import DEFAULT_PLAYBOOK_LIMIT as DEFAULT_PLAYBOOK_LIMIT
-from devkit_dist.features.distribution.models.settings import DEFAULT_PLAYBOOK_MAX_BYTES as DEFAULT_PLAYBOOK_MAX_BYTES
-from devkit_dist.features.distribution.models.settings import DEFAULT_PLAYBOOK_MIN_SCORE as DEFAULT_PLAYBOOK_MIN_SCORE
 from devkit_dist.features.distribution.models.settings import (
-    DEFAULT_PLAYBOOK_MIN_SIMILARITY as DEFAULT_PLAYBOOK_MIN_SIMILARITY,
+    AGENT_NAMES,
+    DEFAULT_PRESET,
+    PLAYBOOK_LIMIT_MAX,
+    PLAYBOOK_LIMIT_MIN,
+    PLAYBOOK_MAX_BYTES_MAX,
+    PLAYBOOK_MAX_BYTES_MIN,
+    SLUG,
 )
-from devkit_dist.features.distribution.models.settings import DEFAULT_PLAYBOOK_MODE as DEFAULT_PLAYBOOK_MODE
-from devkit_dist.features.distribution.models.settings import DEFAULT_PRESET as DEFAULT_PRESET
-from devkit_dist.features.distribution.models.settings import PLAYBOOK_LIMIT_MAX as PLAYBOOK_LIMIT_MAX
-from devkit_dist.features.distribution.models.settings import PLAYBOOK_LIMIT_MIN as PLAYBOOK_LIMIT_MIN
-from devkit_dist.features.distribution.models.settings import PLAYBOOK_MAX_BYTES_MAX as PLAYBOOK_MAX_BYTES_MAX
-from devkit_dist.features.distribution.models.settings import PLAYBOOK_MAX_BYTES_MIN as PLAYBOOK_MAX_BYTES_MIN
 from devkit_dist.features.distribution.models.subagents import SubagentPolicy
-from devkit_dist.features.distribution.services.bundles.common import AGENT_NAMES, SLUG
 from devkit_dist.features.distribution.services.bundles.templates import NAME, Scalar
 from devkit_dist.features.distribution.services.installation.config_template import (
     TOOL_NAME,
@@ -95,10 +91,6 @@ FIELDS = frozenset(
     }
 )
 OVERRIDE_DRIFT = ("warn", "block")
-
-# ``devkit playbook search`` bounds: the ``[playbooks]`` table, the command's options and the library all check these.
-# Measured on English metadata: keeps most matches while dropping the long tail of weak cosine similarities.
-# A requested preset that stands for the bundle's ``default_preset`` (a bare ``bundle`` on the command line).
 
 
 def all_agents() -> list[str]:

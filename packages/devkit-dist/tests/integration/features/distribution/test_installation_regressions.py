@@ -21,9 +21,9 @@ from devkit_dist.features.distribution.models.errors import (
     SelectionError,
     UnsafeWorkspaceError,
 )
+from devkit_dist.features.distribution.models.settings import DEFAULT_PRESET
 from devkit_dist.features.distribution.services.installation import discovery, extensions, guidance_block
 from devkit_dist.features.distribution.services.installation.config import (
-    DEFAULT_PRESET,
     prepare_config_update,
     resolve_selection,
     update_config,

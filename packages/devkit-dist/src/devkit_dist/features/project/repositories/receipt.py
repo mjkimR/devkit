@@ -65,6 +65,7 @@ from devkit_dist.features.project.models.receipt import (
     Selection,
     ToolRecord,
 )
+from devkit_dist.features.project.models.strict_json import StrictJSONError, strict_json_loads
 
 # The guidance block ``devkit sync`` manages in the root ``AGENTS.md`` (its digest is ``guidance_block``).
 
@@ -243,24 +244,13 @@ def _seeded(value: Any) -> tuple[SeededRecord, ...]:
     return tuple(records)
 
 
-def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
-    result: dict[str, Any] = {}
-    for key, value in pairs:
-        if key in result:
-            raise ReceiptError(f"{RECEIPT_PATH}: duplicate JSON key {key!r}")
-        result[key] = value
-    return result
-
-
-def _reject_constant(name: str) -> Any:
-    raise ReceiptError(f"{RECEIPT_PATH}: {name} is not valid JSON")
-
-
 def parse_receipt(raw: bytes | str) -> Receipt:
     """Validate receipt content (the file's bytes or text) and return the typed receipt."""
     try:
         text = raw.decode("utf-8") if isinstance(raw, bytes) else raw
-        data = json.loads(text, object_pairs_hook=_unique_object, parse_constant=_reject_constant)
+        data = strict_json_loads(text, reject_constants=True)
+    except StrictJSONError as exc:
+        raise ReceiptError(f"{RECEIPT_PATH}: {exc}") from exc
     except UnicodeDecodeError as exc:
         raise ReceiptError(f"{RECEIPT_PATH}: not UTF-8: {exc}") from exc
     except json.JSONDecodeError as exc:

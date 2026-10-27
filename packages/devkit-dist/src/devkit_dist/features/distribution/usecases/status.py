@@ -21,10 +21,8 @@ from devkit_dist.features.distribution.models.errors import (
     NotSynchronizedError,
     PendingTransactionError,
     UnsafeWorkspaceError,
-    override_drift,
 )
 from devkit_dist.features.distribution.models.results import (
-    OverrideStatus,
     asset_json,
     overrides_json,
     seeded_json,
@@ -45,11 +43,11 @@ from devkit_dist.features.distribution.services.installation.discovery import (
 )
 from devkit_dist.features.distribution.services.installation.engines import engine_notices
 from devkit_dist.features.distribution.services.installation.local_render import runtime_receipt
-from devkit_dist.features.distribution.services.installation.overrides import override_rel
+from devkit_dist.features.distribution.services.installation.overrides import drift_advisory
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt
 from devkit_dist.features.distribution.services.installation.transaction import pending_journal, project_lock
 from devkit_dist.features.distribution.services.installation.workspace import AGENTS_FILE, occupied, snapshot
-from devkit_dist.features.distribution.usecases.override_commands import override_statuses
+from devkit_dist.features.distribution.usecases.override_commands import deployed_drift
 from devkit_dist.features.distribution.usecases.sync import (
     EDITED_FILES,
     block_conflict,
@@ -308,24 +306,13 @@ def _block_state(
     return _BlockState("ok" if conflict is None else "modified", conflict)
 
 
-def _drift_advisory(drift: list[OverrideStatus], *, blocked: bool) -> AdvisoryError:
-    """Override drift as ``devkit sync`` reports it under the ``override_drift`` policy: under ``block`` a problem
-    (exit ``1``) the user resolves, under ``warn`` the warning the sync reports."""
-    return override_drift(
-        [f"{item.bundle}:{item.asset}" for item in drift],
-        [override_rel(item.bundle, item.relative_path) for item in drift],
-        blocked=blocked,
-        exit_code=ExitCode.FINDINGS if blocked else None,
-    )
-
-
 def _problems(
     files: FilesStatus, journal: bool, block: _BlockState, assets: tuple[AssetRecord, ...]
 ) -> list[AdvisoryError]:
     """What ``devkit status`` exits 1 for: missing, stale, modified, mode-mismatched or unsafe files, a journal, a
     root ``AGENTS.md`` that cannot be read safely, and a guidance block in the ``SYNC_CONFLICT`` a sync raises for
     it, as for an edited managed file: ``modified``, or ``unowned`` and not the block the sync would adopt. Override
-    drift under ``override_drift = "block"`` is added by the caller (``_drift_advisory``)."""
+    drift under ``override_drift = "block"`` is added by the caller (``drift_advisory``)."""
     findings = ExitCode.FINDINGS
     problems: list[AdvisoryError] = []
     if files.missing:
@@ -386,14 +373,7 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
         config = read_config(root)
         effective_receipt = runtime_receipt(root, receipt) if receipt else None
         files = _files_status(root, dict(effective_receipt.file_records) if effective_receipt else {})
-        # Drift of deployed assets only, as ``devkit sync`` reports it; records kept for assets that are not
-        # deployed (a deselected bundle, a narrowed preset) are reported when the asset is selected again.
-        deployed = {(asset.bundle, asset.id) for asset in receipt.asset_records} if receipt else set()
-        drifted = [
-            item
-            for item in override_statuses(installed, receipt)
-            if item.drift_detected and (item.bundle, item.asset) in deployed
-        ]
+        drifted = deployed_drift(installed, receipt)
         drift = [(item.bundle, item.asset) for item in drifted]
         block = _block_state(root, installed, config, receipt)
         journal = pending_journal(root)
@@ -442,7 +422,13 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
         drift_warnings: list[AdvisoryError] = []
         if drift:
             blocked = config.override_drift == "block"
-            (drift_problems if blocked else drift_warnings).append(_drift_advisory(drifted, blocked=blocked))
+            # Under ``block`` a problem (exit ``1``) the user resolves, under ``warn`` the warning the sync reports.
+            advisory = drift_advisory(
+                ((item.bundle, item.asset, item.relative_path) for item in drifted),
+                blocked=blocked,
+                exit_code=ExitCode.FINDINGS if blocked else None,
+            )
+            (drift_problems if blocked else drift_warnings).append(advisory)
         return ProjectStatus(
             receipt=receipt is not None,
             schema=receipt.schema if receipt is not None else None,

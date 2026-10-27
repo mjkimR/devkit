@@ -17,8 +17,9 @@ from pathlib import Path
 from typing import Any
 
 from devkit_dist.features.distribution.models.errors import BundleError
+from devkit_dist.features.distribution.models.settings import SLUG
 from devkit_dist.features.distribution.models.subagents import LEVELS, ModelSettings, SubagentPolicy
-from devkit_dist.features.distribution.services.bundles.common import EXTENSION_KEY, SLUG, read_frontmatter
+from devkit_dist.features.distribution.services.bundles.common import EXTENSION_KEY, read_frontmatter
 from devkit_dist.features.distribution.services.subagents import resolve_settings
 
 STATUSES = ("native", "emulated", "unsupported", "unverified")
