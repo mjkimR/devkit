@@ -465,7 +465,8 @@ def _plan(item: HookStatus) -> _Plan:
     A pre-commit framework hook becomes an entry, where it finds no ``<hook>.legacy`` to run; another foreign hook is
     preserved beside the dispatcher. ``<hook>.legacy`` is devkit's dispatcher after ``pre-commit install`` (removed),
     a pre-commit hook an earlier devkit preserved (an entry), or a hook that the replaced hook ran (pre-commit's
-    migration mode) or an earlier devkit preserved (preserved). Anything else is left alone.
+    migration mode) or an earlier devkit preserved (preserved; also when the dispatcher was deleted while devkit's
+    adapter still chains it). Anything else is left alone.
     """
     moving = item.state in (HookState.FOREIGN, HookState.INERT)
     framework = moving and generated_by_pre_commit(item.path)
@@ -477,9 +478,15 @@ def _plan(item: HookStatus) -> _Plan:
             legacy = _Move.REMOVE
         elif generated_by_pre_commit(old):
             legacy = _Move.ENTRY if item.state in (HookState.MANAGED, HookState.MISSING) else None
-        elif item.state is HookState.MANAGED or framework:
+        elif item.state is HookState.MANAGED or framework or (item.state is HookState.MISSING and _adapted(item)):
             legacy = _Move.PRESERVE
     return _Plan(item, hook, legacy)
+
+
+def _adapted(item: HookStatus) -> bool:
+    """Whether a devkit adapter runs a preserved hook of the stage: an earlier one ran ``<hook>.legacy``, also after
+    the dispatcher itself was deleted by hand."""
+    return _owned(_entries(item.path) / LEGACY_ENTRY, LEGACY_MARKER)
 
 
 class InstallHooksUseCase(BaseUseCase):

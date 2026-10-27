@@ -221,6 +221,37 @@ def test_a_stale_adapter_is_rewritten_while_a_hook_is_preserved(repo: Path) -> N
     assert (hooks_dir / "pre-commit.d/00-legacy").read_text() == hooks.legacy_script(Stage.PRE_COMMIT)
 
 
+def test_a_stale_adapter_is_rewritten_when_nothing_moves(repo: Path) -> None:
+    hooks_dir = repo / ".git/hooks"
+    _executable(hooks_dir / "pre-commit", "#!/bin/sh\necho user >> user-ran\n")
+    _install(repo)  # the hook is preserved; the next install moves nothing
+    _executable(hooks_dir / "pre-commit.d/00-legacy", OLD_ADAPTER)
+    _install(repo)
+    assert (hooks_dir / "pre-commit.d/00-legacy").read_text() == hooks.legacy_script(Stage.PRE_COMMIT)
+
+
+def test_an_unneeded_adapter_is_removed(repo: Path) -> None:
+    hooks_dir = repo / ".git/hooks"
+    _install(repo)
+    _executable(hooks_dir / "pre-commit.d/00-legacy", OLD_ADAPTER)
+    _install(repo)
+    assert not (hooks_dir / "pre-commit.d/00-legacy").exists()
+
+
+def test_a_hook_an_earlier_devkit_preserved_keeps_running_after_its_dispatcher_was_deleted(repo: Path) -> None:
+    hooks_dir = repo / ".git/hooks"
+    _install(repo)
+    _executable(hooks_dir / "pre-commit.d/00-legacy", OLD_ADAPTER)
+    _executable(hooks_dir / "pre-commit.legacy", "#!/bin/sh\necho user >> user-ran\n")
+    (hooks_dir / "pre-commit").unlink()  # removed by hand
+    _install(repo)
+    assert not (hooks_dir / "pre-commit.legacy").exists()
+    assert "user-ran" in (hooks_dir / f"pre-commit{hooks.PRESERVED_SUFFIX}").read_text()
+    result = _commit(repo)
+    assert result.returncode == 0, result.stderr
+    assert _ran(repo, "user-ran") == ["user"]
+
+
 def test_uninstall_after_pre_commit_took_the_hook_path(repo: Path) -> None:
     hooks_dir = repo / ".git/hooks"
     _executable(hooks_dir / "pre-commit", "#!/bin/sh\necho user >> user-ran\n")

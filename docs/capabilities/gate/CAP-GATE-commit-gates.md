@@ -139,7 +139,8 @@ payloads such as `pre-push` requires a replay contract so every child receives t
     `devkit gate status` reports no missing entry for this layout. The next install or sync moves pre-commit's
     hook to `10-pre-commit`, removes the dispatcher at `<hook>.legacy` and writes the dispatcher at the hook path.
   - A `<hook>.legacy` an earlier devkit preserved is moved to `<hook>.devkit-preserved` (or, when it is a
-    pre-commit script, to `10-pre-commit`) by the next install or sync.
+    pre-commit script, to `10-pre-commit`) by the next install or sync, also when the dispatcher was deleted
+    by hand while devkit's `00-legacy` still chains it.
   - `00-legacy` exists exactly while a hook is preserved: install rewrites it to run `<hook>.devkit-preserved`
     (an earlier adapter ran `<hook>.legacy`, which pre-commit may later fill with the dispatcher, a loop) and
     removes it when no hook is preserved.
