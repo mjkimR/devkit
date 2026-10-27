@@ -4,14 +4,7 @@ from __future__ import annotations
 
 import click
 
-from devkit_dist.adapters.cli import (
-    FORMAT_OPTION,
-    boundary,
-    echo_json,
-    echo_notices,
-    exit_on_warnings,
-    resolve_root,
-)
+from devkit_dist.adapters.cli import echo_json, echo_notices, exit_on_warnings, resolve_root
 from devkit_dist.features.distribution.usecases.commands import (
     PreviewConfigTemplate,
     RefreshConfigTemplate,
@@ -29,9 +22,8 @@ def config() -> None:
 @config.command(name="show")
 @WORKSPACE
 @click.option("--effective", is_flag=True, required=True, help="Show effective configuration and source paths.")
-@FORMAT_OPTION
-@boundary
-def config_show(workspace_root: str | None, effective: bool, output_format: str) -> None:
+@_json_command
+def config_show(workspace_root: str | None, effective: bool) -> None:
     """Inspect effective checkout preferences without changing configuration.
 
     An unsupported [presentation] language resolves to en and is a warning under notices.

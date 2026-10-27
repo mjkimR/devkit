@@ -634,8 +634,9 @@ remaining cleanup. `ADR-host-cli-lifecycle-authority` defines Host authorization
 
 ## Proposal review briefings and combined acceptance
 
-`devkit spec proposal report <slug> [--source-sha <sha>] [--template]` generates a domain template or briefing
-for the proposal at that source. The source is a real full commit at clean current `plan-<slug>` HEAD (reviewing or accepted),
+`devkit spec proposal report <slug> [--source-sha <sha>]` prints the report template Markdown for the proposal at
+that source on stdout (JSON: `proposal`, `source_sha`, `report`), read-only; `--source-sha` defaults to the workspace
+`HEAD`, and JSON reports the resolved SHA. The source is a real full commit at clean current `plan-<slug>` HEAD (reviewing or accepted),
 or a clean accepted base HEAD for standalone handoff.
 Language is the owning workspace preference, normalized to ko/en. The briefing reports three sections for outcome,
 decisions and proposed approval effects (identifying the recommended Development effort), plus any boundary impacts,

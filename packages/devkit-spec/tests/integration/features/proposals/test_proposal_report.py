@@ -40,7 +40,7 @@ def _cli(*args: str, input: str | None = None):
 
 def test_cli_report_template_prints(repo):
     root, sha = repo
-    text = _cli("example", "--source-sha", sha, "--template", "--workspace-root", str(root))
+    text = _cli("example", "--source-sha", sha, "--workspace-root", str(root))
     assert text.exit_code == 0, text.output
     assert text.output == reports.template(root, "example", sha)
     for token in ("proposal: PROP-example", f"source_sha: {sha}", "### PADR-choice"):
@@ -48,9 +48,13 @@ def test_cli_report_template_prints(repo):
     assert "Proposed approval effects" in text.output
     assert "high" in text.output
 
-    data = _cli("example", "--source-sha", sha, "--template", "--workspace-root", str(root), "--format", "json")
+    data = _cli("example", "--source-sha", sha, "--workspace-root", str(root), "--format", "json")
     assert data.exit_code == 0, data.output
     assert json.loads(data.output) == {"proposal": "PROP-example", "source_sha": sha, "report": text.output}
+    head = _cli("example", "--workspace-root", str(root), "--format", "json")
+    assert head.exit_code == 0, head.output
+    assert json.loads(head.output) == {"proposal": "PROP-example", "source_sha": sha, "report": text.output}
+    assert _cli("example", "--template", "--workspace-root", str(root)).exit_code == 2
 
 
 def test_accepted_base_and_wrong_branch(repo):
@@ -77,3 +81,27 @@ def test_composed_handoff_advisories_are_emitted_once():
         "advisory": {"actor": "USER", "retry": "SAFE"},
     }
     assert len(_result_advisories({"notices": [advisory], "handoff": {"notices": [advisory]}})) == 1
+
+
+@pytest.mark.parametrize("name", ["diagram.png", "한글.md"])
+def test_source_skips_materials_it_does_not_read(repo, name):
+    # A binary material or a non-ASCII file name is committed unit content the report never decodes.
+    root, _sha = repo
+    materials = root / "docs/proposals/PROP-example/materials"
+    materials.mkdir()
+    (materials / name).write_bytes(b"\x89PNG\r\n\x1a\n\xff\xfe")
+    git(root, "add", ".")
+    git(root, "commit", "-m", "material")
+    sha = git(root, "rev-parse", "HEAD")
+    assert reports.source(root, "example", sha).padrs == ("PADR-choice",)
+
+
+def test_source_still_refuses_a_non_regular_material(repo):
+    root, _sha = repo
+    materials = root / "docs/proposals/PROP-example/materials"
+    materials.mkdir()
+    (materials / "한글-link.md").symlink_to("../proposal.md")
+    git(root, "add", ".")
+    git(root, "commit", "-m", "link")
+    with pytest.raises(reports.ReportInvalidError, match="regular files"):
+        reports.source(root, "example", git(root, "rev-parse", "HEAD"))

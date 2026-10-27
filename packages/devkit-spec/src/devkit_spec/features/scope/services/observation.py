@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -51,6 +52,8 @@ def identify(
         if not match:
             raise ValueError("identity-ambiguous")
         slug = match[1]
+        # Exact ``<date>-<slug>`` only: ``dev-cleanup`` never claims ``20261001-hook-cleanup``.
+        name = re.compile(rf"\d{{8}}-{re.escape(slug)}")
         if isinstance(reader, TreeReader):
             paths = list(reader.entries)
         else:
@@ -61,9 +64,14 @@ def identify(
                 if directory.is_dir():
                     for path in directory.glob(f"*/*-{slug}/spec.md"):
                         deadline.check("scope unit discovery")
-                        paths.append(path.relative_to(reader.root).as_posix())
+                        if name.fullmatch(path.parent.name):
+                            paths.append(path.relative_to(reader.root).as_posix())
             paths.append(f"docs/proposals/PROP-{slug}/proposal.md")
-        specs = [p.rsplit("/", 1)[0] for p in paths if p.endswith(f"-{slug}/spec.md")]
+        specs = [
+            p.rsplit("/", 1)[0]
+            for p in paths
+            if p.endswith("/spec.md") and name.fullmatch(PurePosixPath(p).parent.name)
+        ]
         proposals = (
             [f"docs/proposals/PROP-{slug}"]
             if reader.kind(f"docs/proposals/PROP-{slug}/proposal.md") is Granularity.FILE
@@ -82,7 +90,8 @@ def identify(
     if match:
         proposal = unit.startswith("docs/proposals/")
         expected = f"{'PROP' if proposal else 'SPEC'}-{match[1]}"
-        if identity != expected or (not proposal and not PurePosixPath(unit).name.endswith(f"-{match[1]}")):
+        exact = re.fullmatch(rf"\d{{8}}-{re.escape(match[1])}", PurePosixPath(unit).name)
+        if identity != expected or (not proposal and not exact):
             raise ValueError("identity-ambiguous")
         if candidate.branch.startswith("plan-") and not proposal:
             raise ValueError("identity-ambiguous")
@@ -171,7 +180,12 @@ def add_paths(scope: ScopeSet, paths: list[str], reader: TreeReader | Filesystem
             continue
         if path not in seen:
             seen.add(path)
-            scope.observed.append(ScopePath(path, reader.kind(path), Source.OBSERVED, Stage.BUILD))
+            try:
+                kind = reader.kind(path)
+            except OSError:
+                # A changed path that escapes the worktree or is not a regular file or directory is still observed.
+                kind = Granularity.UNKNOWN
+            scope.observed.append(ScopePath(path, kind, Source.OBSERVED, Stage.BUILD))
 
 
 def dirty(root: Path, deadline: Deadline) -> list[str]:

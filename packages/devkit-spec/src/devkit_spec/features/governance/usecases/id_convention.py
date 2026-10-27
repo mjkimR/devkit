@@ -22,10 +22,11 @@ fixed), and an ADR, spec or Living Spec ID that another target's path also deriv
 ``SPEC-20261006``, ``UC-010``, ``CAP-HARN-007``, ``ARCH-06``) in its frontmatter or prose; code, HTML comments and
 escapes are skipped, link labels and targets are not.
 
-Fields are read line by line as written (a top-level ``id:`` / ``area:`` line), so a header YAML rejects is still
-checked. The fix sets the ``id`` / ``reconcile_id`` and ``area`` lines (inserting a missing one) and the heading
-token, never moves a file, never renames a duplicate slug and never rewrites a reference; it skips completed spec
-bundles, their feedback aside (within the targets, when the run names any).
+Fields are read line by line as written (a top-level ``id:`` / ``area:`` line, without a trailing YAML comment), so a
+header YAML rejects is still checked. The fix sets the ``id`` / ``reconcile_id`` and ``area`` lines (inserting a
+missing one, keeping a trailing comment) and the heading token, never moves a file, never renames a duplicate slug
+and never rewrites a reference; it skips completed spec bundles, their feedback aside (within the targets, when the
+run names any).
 
 A namespace docs root (``docs/packages/<name>/``, registered in ``[[tool.spec.namespaces]]``) holds Living Spec
 documents under the same conventions: ``docs/packages/<name>/capabilities/<area>/CAP-<AREA>-<slug>.md`` is checked as
@@ -61,6 +62,7 @@ from devkit_spec.features.documents.models.ids import legacy_references
 from devkit_spec.features.documents.repositories.index import is_document_file
 from devkit_spec.features.documents.services.namespaces import docs_roots, living_path
 from devkit_spec.features.governance import FIX_COMMAND, document_index, explicitly_targeted, namespaces
+from devkit_spec.features.governance.usecases.spec_lifecycle import trailing_comment
 from devkit_spec.features.policy.services.config import Namespace
 
 RULE_ID = "RULE-id-convention"
@@ -435,14 +437,23 @@ def _block(text: str) -> FrontmatterBlock | None:
         return None
 
 
+def _value(raw: str) -> str:
+    """A header line's value without its trailing YAML comment (``area: core  # ...``), unquoted."""
+    comment = trailing_comment(raw, 0)
+    if comment:
+        raw = raw[: len(raw) - len(comment)]
+    return raw.strip(" \t").strip("\"'")
+
+
 def _field(header: str, name: str) -> str:
-    """The value of the first top-level ``name:`` line (``id``, ``reconcile_id`` or ``area``), unquoted."""
+    """The value of the first top-level ``name:`` line (``id``, ``reconcile_id`` or ``area``), unquoted and without
+    a trailing comment."""
     if name == "area":
         match = _AREA_LINE.search(header)
-        return match.group(1).strip("\"'") if match else ""
+        return _value(match.group(1)) if match else ""
     for match in _ID_LINE.finditer(header):
         if match.group(1) == name:
-            return match.group(2).strip("\"'")
+            return _value(match.group(2))
     return ""
 
 
@@ -496,18 +507,22 @@ def _convention_lines(text: str) -> Iterator[VisibleLine]:
 
 
 def _set_field(header: str, name: str, value: str, newline: str) -> str:
-    """``header`` with every top-level ``name:`` line set to ``value``; a missing ``id`` / ``reconcile_id`` becomes
-    the first line, a missing ``area`` follows the ``id`` line."""
+    """``header`` with every top-level ``name:`` line set to ``value``, keeping a trailing comment; a missing ``id`` /
+    ``reconcile_id`` becomes the first line, a missing ``area`` follows the ``id`` line."""
     line = f"{name}: {value}"
+
+    def replace(match: re.Match[str]) -> str:
+        return line + (trailing_comment(match.group(), len(name) + 1) or "")
+
     if name == "area":
         if _AREA_LINE.search(header):
-            return _AREA_LINE.sub(lambda _: line, header)
+            return _AREA_LINE.sub(replace, header)
         anchor = _ANY_ID_LINE.search(header)
         if anchor is not None:
             return f"{header[: anchor.end()]}{newline}{line}{header[anchor.end() :]}"
         return f"{line}{newline}{header}"
     if any(match.group(1) == name for match in _ID_LINE.finditer(header)):
-        return _ID_LINE.sub(lambda match: line if match.group(1) == name else match.group(0), header)
+        return _ID_LINE.sub(lambda match: replace(match) if match.group(1) == name else match.group(0), header)
     return f"{line}{newline}{header}"
 
 

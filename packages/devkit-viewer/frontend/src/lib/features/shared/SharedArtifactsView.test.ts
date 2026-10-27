@@ -146,4 +146,92 @@ describe('SharedArtifactsView', () => {
 			expect(screen.getByText('Identification')).toBeTruthy();
 		});
 	});
+
+	it('renders an artifact whose frontmatter is invalid YAML as plain Markdown', async () => {
+		const source = createMockSource([mockArtifacts[0]]);
+		source.sharedBlob = async () => ({
+			metadata: mockArtifacts[0],
+			content: '---\nkey: [unclosed\n---\n# Body after bad frontmatter',
+			artifact_uri: 'shared://x'
+		});
+		render(SharedArtifactsView, { props: { source, repoId: 'test-repo' } });
+
+		await waitFor(() => {
+			expect(screen.getByText('Body after bad frontmatter')).toBeTruthy();
+		});
+		expect(screen.queryByText('Loading artifact content...')).toBeNull();
+	});
+
+	it('shows the latest selection when an earlier detail request answers last', async () => {
+		const [alpha, beta] = mockArtifacts;
+		const source = createMockSource(mockArtifacts);
+		source.sharedBlob = (generationId: string) => {
+			const item = generationId === alpha.generation_id ? alpha : beta;
+			return new Promise((resolve) =>
+				setTimeout(
+					() =>
+						resolve({
+							metadata: item,
+							content: `# Review for ${item.slug}`,
+							artifact_uri: `shared://${item.generation_id}`
+						}),
+					item === alpha ? 120 : 10
+				)
+			);
+		};
+		const { container } = render(SharedArtifactsView, { props: { source, repoId: 'test-repo' } });
+		await waitFor(() => expect(container.querySelectorAll('.artifact-card').length).toBe(2));
+		await fireEvent.click(container.querySelectorAll('.artifact-card')[1]);
+
+		await new Promise((resolve) => setTimeout(resolve, 200));
+		expect(container.querySelector('.detail-header h1')?.textContent).toBe('beta-feature');
+	});
+
+	it('does not keep showing the previous artifact when the new selection fails', async () => {
+		const [alpha, beta] = mockArtifacts;
+		const source = createMockSource([alpha, beta]);
+		const load = source.sharedBlob!;
+		source.sharedBlob = async (generationId: string, signal: AbortSignal) => {
+			if (generationId === beta.generation_id) throw new Error('HTTP 500');
+			return load(generationId, signal);
+		};
+		const { container } = render(SharedArtifactsView, { props: { source, repoId: 'test-repo' } });
+		await waitFor(() =>
+			expect(container.querySelector('.detail-header h1')?.textContent).toBe('alpha-feature')
+		);
+		await fireEvent.click(container.querySelectorAll('.artifact-card')[1]);
+
+		await waitFor(() => expect(screen.getByText(/HTTP 500/)).toBeTruthy());
+		expect(container.querySelector('.detail-header')).toBeNull();
+	});
+
+	it('stops loading when the selection clears while its detail is still loading', async () => {
+		const pending = createMockSource([mockArtifacts[0]]);
+		pending.sharedBlob = (_generationId: string, signal: AbortSignal) =>
+			new Promise((_resolve, reject) =>
+				signal.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')))
+			);
+		const { rerender } = render(SharedArtifactsView, {
+			props: { source: pending, repoId: 'test-repo' }
+		});
+		await waitFor(() => expect(screen.getByText('Loading artifact content...')).toBeTruthy());
+
+		await rerender({ source: createMockSource([]), repoId: 'test-repo' });
+
+		await waitFor(() =>
+			expect(screen.getByText('No shared artifacts in repository.')).toBeTruthy()
+		);
+		expect(screen.queryByText('Loading artifact content...')).toBeNull();
+	});
+
+	it('encodes the repository and generation in the standalone review link', async () => {
+		const source = createMockSource([mockArtifacts[0]]);
+		const { container } = render(SharedArtifactsView, {
+			props: { source, repoId: 'repo #1/x' }
+		});
+		await waitFor(() => expect(container.querySelector('a.action-btn')).not.toBeNull());
+		expect(container.querySelector('a.action-btn')?.getAttribute('href')).toBe(
+			`/review/repo%20%231%2Fx/${mockArtifacts[0].generation_id}`
+		);
+	});
 });

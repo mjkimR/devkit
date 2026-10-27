@@ -660,3 +660,27 @@ def test_ux_documents_follow_the_living_spec_conventions(tmp_path: Path) -> None
     assert area.fixable and "move the file to docs/ux/account/" in area.remediation
     assert _found(check(RULE, tmp_path, targets=["docs/ux/billing/UX-pay.md"], fix=True)) == []
     assert "area: billing\n" in _read(tmp_path, "docs/ux/billing/UX-pay.md")
+
+
+def test_trailing_comments_are_not_part_of_header_values(tmp_path: Path) -> None:
+    path = "docs/capabilities/core/CAP-CORE-login.md"
+    text = (
+        "---\nid: CAP-CORE-login  # stable id\ntitle: Login\nstatus: draft\n"
+        "area: core              # Must match parent directory docs/capabilities/<area>/\n"
+        "summary: Login.\n---\n# [CAP-CORE-login] Login\n"
+    )
+    assert check(RULE, tmp_path, {path: text}) == []
+
+
+def test_fix_keeps_trailing_comments(tmp_path: Path) -> None:
+    path = "docs/capabilities/core/CAP-CORE-login.md"
+    text = (
+        "---\r\nid: CAP-CORE-old  # stable id\r\ntitle: Login\r\n"
+        "area: billing   # Must match parent directory\r\nsummary: '#1 # quoted'\r\n---\r\n# [CAP-CORE-login] Login\r\n"
+    )
+    check(RULE, tmp_path, {path: text}, fix=True)
+    assert _read(tmp_path, path) == (
+        "---\r\nid: CAP-CORE-login  # stable id\r\ntitle: Login\r\n"
+        "area: core   # Must match parent directory\r\nsummary: '#1 # quoted'\r\n---\r\n# [CAP-CORE-login] Login\r\n"
+    )
+    assert check(RULE, tmp_path) == []

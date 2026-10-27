@@ -27,6 +27,7 @@
 	let selectedDetail = $state<SharedArtifactDetail | null>(null);
 	let loading = $state(false);
 	let detailLoading = $state(false);
+	let detailError = $state<string | null>(null);
 	let error = $state<string | null>(null);
 	let searchQuery = $state('');
 	let kindFilter = $state('all');
@@ -50,11 +51,16 @@
 		})
 	);
 
-	let parsedDoc = $derived(
-		selectedDetail?.content
-			? parseFrontmatterAndMarkdown(selectedDetail.content)
-			: { frontmatter: null, content: '' }
-	);
+	let parsedDoc = $derived.by(() => {
+		const text = selectedDetail?.content ?? '';
+		if (!text) return { frontmatter: null, content: '' };
+		try {
+			return parseFrontmatterAndMarkdown(text);
+		} catch {
+			// Invalid frontmatter YAML: show the whole artifact as Markdown rather than failing the view.
+			return { frontmatter: null, content: text };
+		}
+	});
 
 	let renderedHtml = $derived(
 		parsedDoc.content
@@ -141,19 +147,23 @@
 		}
 	}
 
-	async function loadDetail(genId: string) {
+	// Only the request for the current selection may change the detail; a superseded one is aborted and ignored.
+	async function loadDetail(genId: string, signal: AbortSignal) {
 		if (!source?.sharedBlob) return;
+		selectedDetail = null;
+		detailError = null;
 		detailLoading = true;
-		const controller = new AbortController();
+		const current = () => !signal.aborted && genId === selectedId;
 		try {
-			const res = await source.sharedBlob(genId, controller.signal);
-			selectedDetail = res;
+			const res = await source.sharedBlob(genId, signal);
+			if (current()) selectedDetail = res;
 		} catch (e: any) {
-			if (e.name !== 'AbortError') {
+			if (current() && e.name !== 'AbortError') {
 				console.error('Failed to load shared artifact detail', e);
+				detailError = e.message || 'Failed to load the shared artifact.';
 			}
 		} finally {
-			detailLoading = false;
+			if (current()) detailLoading = false;
 		}
 	}
 
@@ -175,11 +185,16 @@
 	});
 
 	$effect(() => {
-		if (selectedId) {
-			loadDetail(selectedId);
-		} else {
+		const genId = selectedId;
+		if (!genId) {
 			selectedDetail = null;
+			detailError = null;
+			detailLoading = false;
+			return;
 		}
+		const controller = new AbortController();
+		loadDetail(genId, controller.signal);
+		return () => controller.abort();
 	});
 </script>
 
@@ -265,6 +280,8 @@
 			<div class="detail-empty">
 				{#if detailLoading}
 					<p>Loading artifact content...</p>
+				{:else if detailError}
+					<div class="error-state">{detailError}</div>
 				{:else}
 					<div class="guide-box">
 						<h3>Shared Space</h3>
@@ -296,7 +313,7 @@
 				<div class="detail-actions">
 					{#if repoId}
 						<a
-							href={`/review/${repoId}/${meta.generation_id}`}
+							href={`/review/${encodeURIComponent(repoId)}/${encodeURIComponent(meta.generation_id)}`}
 							target="_blank"
 							rel="noopener noreferrer"
 							class="action-btn"

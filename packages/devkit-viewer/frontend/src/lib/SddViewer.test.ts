@@ -115,6 +115,20 @@ describe('SddViewer', () => {
 		expect(document.querySelector('.viewer-layout.hidden')).not.toBeNull();
 	});
 
+	it('opens the Files tab for initialView files and the Dashboard by default', async () => {
+		const pressed = (name: string) =>
+			screen.getByRole('button', { name }).getAttribute('aria-pressed');
+		const view = render(SddViewer, {
+			dataSource: repository(),
+			repoId: 'repo',
+			initialView: 'files'
+		});
+		expect(pressed('Files')).toBe('true');
+		view.unmount();
+		render(SddViewer, { dataSource: repository(), repoId: 'repo' });
+		expect(pressed('Dashboard')).toBe('true');
+	});
+
 	it('labels the reading tab Read and keeps its book id', async () => {
 		render(SddViewer, { dataSource: repository(), repoId: 'repo', initialView: 'dashboard' });
 		const tab = screen.getByRole('button', { name: 'Read' });

@@ -47,6 +47,16 @@ def test_list_shows_a_draft_in_planning_as_reviewing_without_writing(tmp_path: P
     assert (
         "PROP-local" in text.stdout and "planning_branch=plan-local" in text.stdout and "PROP-idle" not in text.stdout
     )
+    assert "SPEC_LIST_STATUS_UNKNOWN" not in text.stderr  # the filter and the known statuses agree
+
+
+def test_a_status_only_stored_under_a_shown_one_is_unknown(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    for slug in ("remote", "idle", "taken"):
+        git(root, "branch", f"plan-{slug}")
+    git(root, "update-ref", "-d", "refs/remotes/origin/plan-remote")
+    text = CliRunner().invoke(devkit_cli, ["spec", "list", "proposal", "--status", "draft", "-w", str(root)])
+    assert text.exit_code == 0 and "total=0 " in text.stdout and "SPEC_LIST_STATUS_UNKNOWN" in text.stderr
 
 
 def test_backlog_changes_only_a_draft_without_a_planning_branch(tmp_path: Path) -> None:

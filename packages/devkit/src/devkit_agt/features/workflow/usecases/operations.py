@@ -71,10 +71,11 @@ class HandoffWorkflowUseCase(BaseUseCase):
         anchor: str | None = None,
         when: date | None = None,
         by: str = "",
+        given: Sequence[str] = (),
         lint: bool = True,
     ) -> HandoffOutcome:
         ref = self.workspace.resolve_unit(unit, anchor=anchor)
-        result = self.workspace.evaluate_unit(ref, lint=lint)
+        result = self.workspace.evaluate_unit(ref, given=given, lint=lint)
         return apply_handoff(plan_handoff(self.workspace, ref, result, workflow), when=when, by=by)
 
 

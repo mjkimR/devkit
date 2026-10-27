@@ -493,7 +493,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
             operation = "local_fast_forward"
             if (
                 _git(root, "status", "--porcelain")
-                or _git(root, "symbolic-ref", "--short", "HEAD") != plan.target_branch
+                or _git(root, "symbolic-ref", "HEAD") != f"refs/heads/{plan.target_branch}"
             ):
                 raise _error(
                     "INTEGRATION_LOCAL_TARGET_BLOCKED",

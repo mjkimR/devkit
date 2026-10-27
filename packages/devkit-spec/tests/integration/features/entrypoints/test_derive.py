@@ -126,6 +126,22 @@ def test_a_boundary_ends_at_a_list_item_blank_line_fence_or_shallower_line() -> 
     ]
 
 
+def test_a_fence_closes_only_on_its_own_marker_of_at_least_its_length() -> None:
+    text = (
+        "````\n```\n_Boundary: src/inside-a.py\n````\n"
+        "~~~\n```\n_Boundary: src/inside-b.py\n~~~\n"
+        "- [ ] one\n  - _Boundary: src/a.py\n"
+    )
+    assert [task.values for task in parse_boundaries(text)] == [["src/a.py"]]
+
+
+def test_notes_with_commas_are_removed_before_splitting() -> None:
+    assert parse_boundaries("- [ ] t\n  - _Boundary: src/a.py (new, tests), src/b.py\n")[0].values == [
+        "src/a.py",
+        "src/b.py",
+    ]
+
+
 @pytest.mark.parametrize(
     ("raw", "reason"),
     [

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import re
 from dataclasses import dataclass
 from typing import cast
 
@@ -12,6 +13,10 @@ from devkit_agt.features.rules import (
     JsonValue,
     capture_facts_dependency,
 )
+
+# An entry-point value names ``module:attribute`` and nothing else; message text is not a reference.
+_ENTRYPOINT = re.compile(r"[\w.]+:[\w.]+")
+_DOCUMENTED = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,6 +80,17 @@ def extract(source: FileFactsSource) -> ArchitectureFacts:
             value = value.value
         if isinstance(value, ast.Name):
             attributes.append((value.id, tuple(reversed(parts)), node.lineno))
+    # f-string fragments and docstrings are prose, never entry-point values.
+    prose = {
+        id(value)
+        for joined in source.get_python_nodes(ast.JoinedStr)
+        if isinstance(joined, ast.JoinedStr)
+        for value in joined.values
+    }
+    for owner in source.get_python_nodes(*_DOCUMENTED):
+        body = getattr(owner, "body", [])
+        if body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant):
+            prose.add(id(body[0].value))
     scan: list[Import | Reference] = []
     for node in source.get_python_nodes(ast.Import, ast.ImportFrom, ast.Call, ast.Constant):
         if isinstance(node, (ast.Import, ast.ImportFrom)):
@@ -96,7 +112,12 @@ def extract(source: FileFactsSource) -> ArchitectureFacts:
                         node.lineno,
                     )
                 )
-        elif isinstance(node, ast.Constant) and isinstance(node.value, str) and ":" in node.value:
+        elif (
+            isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+            and id(node) not in prose
+            and _ENTRYPOINT.fullmatch(node.value)
+        ):
             name = node.value.split(":", 1)[0]
             if all(part.isidentifier() for part in name.split(".")):
                 scan.append(Reference("entrypoint", name, None, node.lineno))

@@ -59,6 +59,15 @@ class Source:
     dev_effort: str
 
 
+def _read(path: str, unit: str) -> bool:
+    """Whether ``source`` reads ``path`` of the proposal ``unit``: its proposal, PADRs and envelopes, never materials."""
+    return (
+        path == unit + "proposal.md"
+        or (path.startswith(unit + "decisions/PADR-") and path.endswith(".md"))
+        or (path.startswith(unit + "envelopes/") and path.endswith((".yaml", ".yml")))
+    )
+
+
 def source(root: Path, slug: str, sha: str) -> Source:
     if not SLUG.fullmatch(slug) or len(slug) > 59 or not SHA.fullmatch(sha):
         raise ReportInvalidError("source: expected a proposal slug and full lowercase commit SHA")
@@ -71,13 +80,16 @@ def source(root: Path, slug: str, sha: str) -> Source:
         if run_git(root, "status", "--porcelain", "--untracked-files=normal").strip():
             raise ReportInvalidError("source: commit or resolve worktree changes before generating report")
         unit = f"docs/proposals/PROP-{slug}/"
-        entries = run_git(root, "ls-tree", "-r", sha, "--", unit).decode().splitlines()
+        entries = run_git(root, "ls-tree", "-r", "-z", sha, "--", unit).split(b"\0")
         files = {}
-        for entry in entries:
-            mode, _kind, _oid, path = entry.split(None, 3)
+        for entry in filter(None, entries):
+            header, _tab, raw_path = entry.partition(b"\t")
+            mode = header.split(None, 1)[0].decode()
             if mode not in {"100644", "100755"}:
                 raise ReportInvalidError("source: proposal records must be committed regular files")
-            files[path] = run_git(root, "show", f"{sha}:{path}").decode()
+            path = raw_path.decode("utf-8", "surrogateescape")
+            if _read(path, unit):
+                files[path] = run_git(root, "show", f"{sha}:{path}").decode()
         meta = parse(files.get(unit + "proposal.md", "")).data or {}
         if meta.get("id") != f"PROP-{slug}":
             raise ReportInvalidError("source: the commit does not contain the expected proposal")

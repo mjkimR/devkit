@@ -233,7 +233,8 @@ def carried_findings(envelopes: Envelopes, source: str, unit_dir: Path) -> tuple
     """Findings copied forward for a reverify, and the ``review-NN.yaml`` or ``challenger-NN.yaml`` round they belong to.
 
     ``latest`` takes the deciding review state (the latest review round, or the
-    last reverify closing it); a path names a review, challenger or reverify file.
+    last reverify closing it) of ``envelopes``, which the caller passes without
+    the rounds a later return re-opened; a path names a review, challenger or reverify file.
     A named review or challenger round carries its closing state, the last
     reverify of ``envelopes`` naming it, so earlier resolutions and waivers persist.
     """
@@ -241,7 +242,8 @@ def carried_findings(envelopes: Envelopes, source: str, unit_dir: Path) -> tuple
         env = envelopes.review_state()
         if env is None:
             raise EnvelopeFromError(
-                "no review envelope to carry forward",
+                "no review envelope to carry forward (a round a later `devkit workflow return` re-opened no longer"
+                " counts)",
                 fix="Write a review envelope first; close a challenger round with --from envelopes/challenger-NN.yaml",
             )
     else:

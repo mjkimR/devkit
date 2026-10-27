@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import unicodedata
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -133,6 +134,8 @@ class RuleContext:
                 normalized.append(relative)
         self.targets = tuple(named)
         self.changed_files = normalized
+        # Membership is compared in NFC: Git reports names in NFC while a file system (macOS) may list them in NFD.
+        self._targeted = frozenset(unicodedata.normalize("NFC", name) for name in normalized)
         if snapshot is None:
             # Targets named on the command line are listed by ``find_files`` even where discovery skips files
             # (Git-ignored, dependency and cache directories); a snapshot's changed files are not such
@@ -171,7 +174,7 @@ class RuleContext:
             return False
         if not self.has_targets:
             return True
-        return relative in self.changed_files
+        return unicodedata.normalize("NFC", relative) in self._targeted
 
     def settings(self, rule: Rule, path: str | Path | None = None) -> Any:
         """Effective settings of ``rule`` for a workspace-relative ``path``.

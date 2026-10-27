@@ -331,6 +331,25 @@ with patch("devkit_dist.features.host.usecases.runner.metadata.entry_points", re
     assert InspectHost().execute(project).hooks[0]["last_received"] is not None
 
 
+def test_hook_output_is_utf8_whatever_the_locale(project: Path, bundle: InstalledBundle) -> None:
+    deploy(project, bundle)
+    code = """
+from unittest.mock import patch
+from devkit_dist.cli import cli
+from devkit_dist.features.host import HookResponse
+with patch("devkit_dist.features.host.usecases.runner.load_handler", return_value=lambda _e: HookResponse("저장소 계약")):
+    cli()
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", code, "host", "hook", "--host", "codex", "--asset", KEY],
+        input=json.dumps(event(project)).encode(),
+        capture_output=True,
+        env={**os.environ, "PYTHONIOENCODING": "latin-1"},
+    )
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout.decode("utf-8"))["hookSpecificOutput"]["additionalContext"] == "저장소 계약"
+
+
 def test_changed_override_handler_requires_sync(project: Path, bundle: InstalledBundle) -> None:
     deploy(project, bundle)
     override = project / ".devkit/overrides/sample/hooks/trace.toml"

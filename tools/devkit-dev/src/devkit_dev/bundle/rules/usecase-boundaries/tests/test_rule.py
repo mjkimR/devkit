@@ -54,6 +54,19 @@ def test_aliased_function_through_facade_is_not_boundary(tmp_path: Path) -> None
     assert any("execution function" in message for message in found)
 
 
+def test_http_transport_is_a_checked_boundary(tmp_path: Path) -> None:
+    found = inspect(
+        tmp_path,
+        {
+            "src/sample/features/one/usecases.py": VALID + "def run(): pass\n",
+            "src/sample/features/one/http/server.py": "from ..usecases import Run, run\nRun().execute('a')\nrun()\n",
+        },
+    )
+    assert found == [
+        "transport calls execution function instead of BaseUseCase.execute: sample.features.one.usecases.run"
+    ]
+
+
 def test_class_name_is_not_proof_of_contract(tmp_path: Path) -> None:
     found = inspect(
         tmp_path,

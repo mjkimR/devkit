@@ -91,6 +91,33 @@ def prefix(value: str) -> str:
     return path.as_posix().rstrip("/")
 
 
+NOT_APPLICABLE = ("n/a", "none")
+
+
+def project_prefix(start: Path, toplevel: Path) -> str:
+    """The devkit project's directory relative to the Git top level, ``""`` when the project is the top level.
+
+    The project is the nearest directory from ``start`` up to ``toplevel`` holding ``.devkit``; without one the
+    top level is the project.
+    """
+    start = start.resolve()
+    for directory in (start, *start.parents):
+        if not directory.is_relative_to(toplevel):
+            break
+        if (directory / ".devkit").is_dir():
+            relative = directory.relative_to(toplevel).as_posix()
+            return "" if relative == "." else relative
+    return ""
+
+
+def project_path(project: str, value: str) -> str:
+    """A project-relative scope entry as a repository-relative path."""
+    path = prefix(value)
+    if not project:
+        return path
+    return project if path == "." else f"{project}/{path}"
+
+
 def unit_path(root: Path, value: str) -> str:
     path = Path(value)
     if path.is_absolute():
@@ -103,12 +130,13 @@ def unit_path(root: Path, value: str) -> str:
     return PurePosixPath(value).as_posix()
 
 
-def derive_unit(root: Path, tip: str, branch: str | None) -> tuple[str, str]:
+def derive_unit(root: Path, tip: str, branch: str | None, project: str = "") -> tuple[str, str]:
     if not branch:
         raise UnitUnresolved("Detached HEAD has no activity unit")
     marked = marker(root, branch, "devkitUnit")
     if marked:
-        unit = unit_path(root, marked)
+        # The marker names the unit relative to the devkit project (``devkit worktree attach --unit``).
+        unit = unit_path(root, marked if Path(marked).is_absolute() or not project else f"{project}/{marked}")
         if not files(root, tip, unit):
             raise UnitUnresolved(f"Marked unit {unit} is absent at HEAD")
         return unit, "branch.devkitUnit"
@@ -156,7 +184,8 @@ def derive_base(
     return bases[0], "branch-merge-base"
 
 
-def derive_scope(root: Path, tip: str, unit: str) -> list[dict[str, Any]]:
+def derive_scope(root: Path, tip: str, unit: str, project: str = "") -> list[dict[str, Any]]:
+    """The scope of ``unit``; ``_Boundary`` and reconcile entries are relative to the devkit ``project``."""
     paths = files(root, tip)
     anchor = f"{unit}/spec.md" if f"{unit}/spec.md" in paths else f"{unit}/proposal.md"
     text = read(root, tip, anchor)
@@ -167,11 +196,16 @@ def derive_scope(root: Path, tip: str, unit: str) -> list[dict[str, Any]]:
     if not isinstance(workflow, str) or not workflow.startswith("sdd-spec-"):
         raise ScopeUnresolved(f"Unsupported workflow: {workflow}")
     for task in parse_boundaries(read(root, tip, f"{unit}/tasks.md")):
-        entries.extend({"path": prefix(p), "source": "boundary", "task": task.index} for p in task.values)
+        entries.extend(
+            {"path": project_path(project, p), "source": "boundary", "task": task.index}
+            for p in task.values
+            if p.strip().lower() not in NOT_APPLICABLE
+        )
     parts = PurePosixPath(unit).parts
     entries.append({"path": str(PurePosixPath(*parts[:-3], "docs", "materials", *parts[-2:])), "source": "materials"})
     for target in parse_targets(read(root, tip, f"{unit}/reconcile.md"), f"{unit}/reconcile.md"):
-        entries.append({"path": prefix(target.file), "source": "reconcile"})
+        if target.file.strip():
+            entries.append({"path": project_path(project, target.file.strip()), "source": "reconcile"})
     section = re.search(r"(?im)^## [^\n]*Source feedback[^\n]*\n(.*?)(?=^## |\Z)", text, re.DOTALL)
     for identifier in sorted(set(re.findall(r"\bFB-[a-z0-9-]+", section[1] if section else ""))):
         matches = []
@@ -192,12 +226,15 @@ def derive_scope(root: Path, tip: str, unit: str) -> list[dict[str, Any]]:
 
 def inputs(
     root: Path, unit: str | None, base: str | None, head: str | None, base_checkout: str | None
-) -> tuple[Path, str, dict[str, Any]]:
+) -> tuple[Path, str, str, dict[str, Any]]:
     position = locate(root)
+    project = project_prefix(root, position.root)
     root = position.root
     tip = git(root, "rev-parse", "HEAD")
     checkout = Path(base_checkout).resolve() if base_checkout else position.base if position.linked else None
-    chosen_unit, unit_source = (unit_path(root, unit), "argument") if unit else derive_unit(root, tip, position.branch)
+    chosen_unit, unit_source = (
+        (unit_path(root, unit), "argument") if unit else derive_unit(root, tip, position.branch, project)
+    )
     if not files(root, tip, chosen_unit):
         raise UnitUnresolved(f"{chosen_unit} does not exist in committed HEAD")
     workers = sorted(
@@ -234,4 +271,4 @@ def inputs(
         "value": str(checkout) if checkout else None,
         "source": "argument" if base_checkout else "registered-worktree" if checkout else "base-checkout",
     }
-    return root, tip, resolved
+    return root, tip, project, resolved

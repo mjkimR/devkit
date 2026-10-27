@@ -24,6 +24,7 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
     copies that rules never read) raises ``TargetError``.
     """
     files: list[str] = []
+    seen: set[str] = set()
     pinned = [workspace_root / directory for directory in (MANAGED_PATH, OVERRIDES_PATH)]
     for target in targets:
         path = Path(target)
@@ -48,11 +49,13 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
         if absolute.is_dir():
             for found in cache.find_files(absolute, extensions=None):
                 rel = found.relative_to(workspace_root).as_posix()
-                if rel not in files:
+                if rel not in seen:
+                    seen.add(rel)
                     files.append(rel)
         elif absolute.is_file():
             relative = absolute.relative_to(workspace_root).as_posix()
-            if relative not in files:
+            if relative not in seen:
+                seen.add(relative)
                 files.append(relative)
         else:
             raise TargetError(

@@ -5,13 +5,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from devkit.advisory import AdvisoryError
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import GitError, run_git
 
 from devkit_agt.features.workflow.models.envelope import Envelopes
 from devkit_agt.features.workflow.models.errors import EnvelopeFlagError
 from devkit_agt.features.workflow.repositories.git import is_revision
+from devkit_agt.features.workflow.repositories.unit.decisions import load_decisions
 from devkit_agt.features.workflow.services.envelope import (
+    FROM_LATEST,
     compose_envelope,
     envelope_timestamp,
     load_envelopes,
@@ -19,7 +22,8 @@ from devkit_agt.features.workflow.services.envelope import (
     skeleton,
     write_envelope,
 )
-from devkit_agt.features.workflow.usecases.workspace import Workspace
+from devkit_agt.features.workflow.usecases.evaluate import current_envelopes
+from devkit_agt.features.workflow.usecases.workspace import UnitScope, Workspace
 
 
 def _resolve_scope(root: Path, base: str, head: str) -> tuple[str, str]:
@@ -50,6 +54,24 @@ def _resolve_scope(root: Path, base: str, head: str) -> tuple[str, str]:
             ) from exc
         resolved.append(sha.decode("ascii").strip())
     return resolved[0], resolved[1]
+
+
+def _carried_from(ws: Workspace, scope: UnitScope, loaded: Envelopes) -> Envelopes:
+    """The envelopes ``--from latest`` reads: the segment's, without those a later ``return`` re-opened.
+
+    Evaluation reads the same set (``current_envelopes``), so a reverify never closes a round that no longer counts.
+    The definition gives the stage order a return voids by; when it cannot be loaded, nothing is voided, as the
+    authoring commands do not need a valid definition.
+    """
+    scoped = loaded.scoped(scope.workflow, scope.binding.segment)
+    try:
+        doc = ws.load_definition(scope.binding.workflow or ws.config.default or "")
+    except AdvisoryError:
+        return scoped
+    if doc.id != scope.workflow:
+        return scoped
+    decisions = load_decisions(scope.dir).segment(scope.workflow, scope.binding.segment_start)
+    return current_envelopes(loaded, decisions, doc, scope.binding.segment)
 
 
 class WriteEnvelopeUseCase(BaseUseCase):
@@ -95,7 +117,9 @@ class WriteEnvelopeUseCase(BaseUseCase):
             loaded = load_envelopes(unit_dir)
             draft = compose_envelope(
                 unit_dir=unit_dir,
-                envelopes=loaded.scoped(workflow, segment),
+                envelopes=_carried_from(ws, scope, loaded)
+                if source == FROM_LATEST
+                else loaded.scoped(workflow, segment),
                 loaded=loaded,
                 kind=kind,
                 stage=stage,

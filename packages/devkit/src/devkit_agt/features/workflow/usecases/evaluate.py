@@ -53,7 +53,7 @@ from devkit_agt.features.workflow.services.evaluation.primitives import (
 )
 from devkit_agt.features.workflow.usecases.handoff import evaluate_handoff
 
-__all__ = ["LintFunc", "Options", "evaluate_definition"]
+__all__ = ["LintFunc", "Options", "current_envelopes", "evaluate_definition"]
 
 # Returns one description per blocking violation, or raises (an ``AdvisoryError``) when the rules cannot run.
 LintFunc = Callable[[Path, list[str]], list[str]]
@@ -93,11 +93,7 @@ class _Evaluator:
         self.hold: Hold = loaded.hold()
         self.held_from = _held_from(self.hold, doc)
         # Envelopes scoped to another workflow or segment do not count either; unscoped ones count everywhere.
-        self.envelopes: Envelopes = _after_returns(
-            loaded.scoped(doc.id, binding.segment),
-            [(record_instant(r.at), doc.stage_index(r.request[len(RETURN_PREFIX) :])) for r in returns],
-            doc,
-        )
+        self.envelopes: Envelopes = current_envelopes(loaded, self.decisions, doc, binding.segment)
         self.primitives = PrimitiveContext(opts.workspace_root, self.unit_dir, self.envelopes, opts.ancestor)
         self.given = set(opts.given)
         self.cache: dict[tuple[str, str], CheckResult] = {}
@@ -237,6 +233,21 @@ def _rel(path: Path, root: Path) -> str:
         return path.relative_to(root).as_posix()
     except ValueError:
         return path.as_posix()
+
+
+def current_envelopes(loaded: Envelopes, decisions: Decisions, doc: WorkflowDocument, segment: int) -> Envelopes:
+    """The envelopes that count for ``doc`` in ``segment``: scoped to it (``Envelopes.scoped``), then without those a
+    later accepted ``return`` among ``decisions`` (the segment's records) re-opened (``_after_returns``).
+
+    Evaluation and ``envelope reverify --from latest`` read the same set, so a reverify never closes a round that no
+    longer counts.
+    """
+    returns = [r for r in decisions.records if r.kind == "return" and r.action == "accept"]
+    return _after_returns(
+        loaded.scoped(doc.id, segment),
+        [(record_instant(r.at), doc.stage_index(r.request[len(RETURN_PREFIX) :])) for r in returns],
+        doc,
+    )
 
 
 def _after_returns(envelopes: Envelopes, returns: list[tuple[Instant | None, int]], doc: WorkflowDocument) -> Envelopes:

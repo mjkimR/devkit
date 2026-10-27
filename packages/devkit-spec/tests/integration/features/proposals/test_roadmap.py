@@ -65,6 +65,20 @@ def test_cli_and_handoff_preserve_provenance(workspace: Path) -> None:
     assert "No such option '--milestone'" in created.output
 
 
+@pytest.mark.parametrize("value", ["PROP-parent", " PROP-parent:", "PROP-Parent", "PROP-parent.md"])
+def test_decomposition_records_the_normalized_parent_id(workspace: Path, value: str) -> None:
+    create_proposal(workspace, "parent")
+    created = create_proposal(workspace, "child", decomposed_from=value)
+    data = parse((workspace / created.path).read_text()).data
+    assert data is not None and data["decomposed_from"] == "PROP-parent"
+
+
+@pytest.mark.parametrize("value", ["PROP-child:", "PROP-Child"])
+def test_decomposition_rejects_the_proposal_itself_in_any_spelling(workspace: Path, value: str) -> None:
+    with pytest.raises(ArgumentError):
+        create_proposal(workspace, "child", decomposed_from=value)
+
+
 def test_decomposition_rejects_noneditable_parent(workspace: Path) -> None:
     parent = workspace / create_proposal(workspace, "parent").path
     accept(parent)

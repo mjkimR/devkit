@@ -51,9 +51,9 @@ def _markers(base: Path, branch: str) -> tuple[str, str, str]:
     return tuple(_config(base, _marker(branch, key)) for key in (MARKER, BASE_KEY, UNIT_KEY))  # type: ignore[return-value]
 
 
-def _deletable(base: Path, branch: str) -> None:
+def _deletable(base: Path, branch: str, into: str | None) -> None:
     try:
-        _check_deletable(base, branch)
+        _check_deletable(base, branch, into)
     except BranchUnpushedError as exc:
         exc.fix = "Keep the branch by setting worktree.delete_branch = false and prepare a new request; resolve upstream synchronization separately under its own authority"
         raise
@@ -103,7 +103,7 @@ def plan_finish(
     if merge_method == "no-ff" and not already:
         check_identity(position.base)
     if delete_branch:
-        _deletable(position.base, branch)
+        _deletable(position.base, branch, position.branch)
     common = position.base / ".git"
     return FinishPlan(
         str(position.base),
@@ -187,4 +187,4 @@ def validate_finish(
     elif entry is not None:
         raise ConflictError("a worktree appeared outside the approved cleanup scope")
     if plan.delete_branch and check_upstream:
-        _deletable(base, plan.branch)
+        _deletable(base, plan.branch, plan.target_branch)

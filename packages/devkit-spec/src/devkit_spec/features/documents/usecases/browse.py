@@ -151,12 +151,19 @@ def _planning_fields(document: Document, planning: dict[str, str]) -> dict[str, 
     return {"status": shown, "planning_branch": planning[document.id.removeprefix("PROP-")]}
 
 
-def _unknown_statuses(index: DocumentIndex, wanted: set[Kind], requested: list[str]) -> list[AdvisoryError]:
+def _unknown_statuses(
+    index: DocumentIndex, wanted: set[Kind], requested: list[str], planning: dict[str, str]
+) -> list[AdvisoryError]:
     """``SPEC_LIST_STATUS_UNKNOWN`` for the requested statuses that no indexed document of the wanted kinds (every
-    kind when none is wanted) carries, whatever its history or namespace; empty when each one occurs."""
+    kind when none is wanted) shows (``_shown_status``), whatever its history or namespace; empty when each one
+    occurs."""
     if not requested:
         return []
-    known = {document.status.lower() for document in index.documents if not wanted or document.kind in wanted}
+    known = {
+        _shown_status(document, planning).lower()
+        for document in index.documents
+        if not wanted or document.kind in wanted
+    }
     known.discard("")
     unknown = [value for value in requested if value not in known]
     if not unknown:
@@ -338,7 +345,7 @@ class ListDocumentsUseCase(BaseUseCase):
         )
         shown = page(selected, offset, limit)
         tasks = {document.path: _tasks(index.root, document) for document in shown}
-        notices = [*index.problems, *_unknown_statuses(index, wanted, requested)]
+        notices = [*index.problems, *_unknown_statuses(index, wanted, requested, planning)]
         historical = {document.path: index.is_browsing_historical(document) for document in shown}
         return ListResult(
             selected, shown, len(matching) - len(selected), tasks, notices, scope, planning, where, historical

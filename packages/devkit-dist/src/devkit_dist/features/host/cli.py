@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import sys
 from pathlib import Path
@@ -25,6 +27,14 @@ from devkit_dist.features.host.usecases.status import InspectHost
 from devkit_dist.features.project.usecases.workspace import find_project_root
 
 MAX_EVENT_BYTES = 1024 * 1024
+
+
+def _utf8_output() -> None:
+    """Write UTF-8 with ``backslashreplace`` whatever the locale, as the boundary does for every other command."""
+    for stream in (sys.stdout, sys.stderr):
+        if isinstance(stream, io.TextIOWrapper):
+            with contextlib.suppress(OSError, ValueError):
+                stream.reconfigure(encoding="utf-8", errors="backslashreplace")
 
 
 @click.group()
@@ -61,6 +71,7 @@ def status(host: str, workspace_root: str | None, output_format: str) -> None:
 @workspace_option()
 def hook(host: str, asset: str, workspace_root: str | None) -> None:
     """Read one native event from stdin; emit native JSON only. Advisory failures leave the host operation running."""
+    _utf8_output()
     response: dict = {}
     try:
         raw = sys.stdin.buffer.read(MAX_EVENT_BYTES + 1)

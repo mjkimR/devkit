@@ -161,11 +161,13 @@ class _Masker:
 def _closes_later(following: Iterable[str], char: str, width: int) -> bool:
     """Whether a run of exactly ``width`` ``char`` appears on the following lines before the paragraph ends.
 
-    A blank line ends the paragraph, and so does a ``~~~`` line (also a backtick fence for strikethrough).
+    A blank line ends the paragraph, and so does a fence opener (a ``~~~`` or a backtick fence indented at most three
+    spaces), which interrupts a paragraph.
     """
     for line in following:
         stripped = line.strip()
-        if not stripped or stripped.startswith("~~~") or (char == "~" and stripped.startswith("```")):
+        indent = len(line) - len(line.lstrip(" "))
+        if not stripped or (indent <= 3 and stripped.startswith(("```", "~~~"))):
             return False
         if _closing_run(line, 0, char, width) >= 0:
             return True

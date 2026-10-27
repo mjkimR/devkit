@@ -15,7 +15,7 @@ from .facts import Expression, Scope, descriptor
 FACTS = descriptor(__name__, __file__)
 
 BASE = "devkit_core.base.usecase.BaseUseCase"
-TRANSPORTS = {"cli", "mcp", "adapters"}
+TRANSPORTS = {"cli", "mcp", "http", "adapters"}
 
 
 @dataclass

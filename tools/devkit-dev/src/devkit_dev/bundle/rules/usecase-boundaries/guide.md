@@ -7,8 +7,9 @@ that match none of them skips it; full runs, the commit gate and CI always run i
 
 Expose each transport execution entrypoint as a concrete `BaseUseCase` subclass
 from `devkit_core.base.usecase`. Give `execute` explicit input/result annotations;
-both sync and async methods are allowed. CLI/MCP adapters construct or receive
-the object and call `execute`. Keep internal helper functions behind this boundary.
+both sync and async methods are allowed. Transports (the `cli`, `mcp` and `http`
+layers of a feature and package-level `adapters`) construct or receive the object
+and call `execute`. Keep internal helper functions behind this boundary.
 Move filesystem, subprocess and business operations out of constructors; retain
 inputs and construct dependencies there instead.
 

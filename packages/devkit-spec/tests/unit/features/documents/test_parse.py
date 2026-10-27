@@ -131,6 +131,13 @@ def test_a_span_ends_with_its_paragraph() -> None:
     assert _refs(_doc("``open `UC-a`\n~~~\n")) == [("UC-a", "body", 5, False)]
 
 
+@pytest.mark.parametrize("fence", ["```", "~~~", "   ```"])
+def test_a_fence_interrupts_a_stray_span(fence: str) -> None:
+    # A stray backtick never swallows the fence opener: the block stays code and the text after it stays prose.
+    body = f"a stray ` here\n{fence}\n`UC-inside` and ` again\n{fence.strip()}\n\nafter `UC-a`\n"
+    assert _refs(_doc(body)) == [("UC-a", "body", 10, False)]
+
+
 def test_text_after_a_multiline_span_stays_visible() -> None:
     assert _refs(_doc("`a\nb` `UC-a`\n")) == [("UC-a", "body", 6, False)]
 

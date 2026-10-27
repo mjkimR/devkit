@@ -24,6 +24,7 @@ from __future__ import annotations
 import errno
 import json
 import mimetypes
+import socket
 from collections.abc import Mapping, Sequence
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -35,9 +36,13 @@ from devkit_core.core.logs import get_logger
 
 from devkit_viewer.features.browse.models.errors import PortInUseError, ReadError, repo_unknown
 from devkit_viewer.features.browse.models.repository import Repository
-from devkit_viewer.features.browse.usecases.read import list_repositories, read_repository
-from devkit_viewer.features.browse.usecases.review import UNAVAILABLE_CODES, report_page, unavailable_page
-from devkit_viewer.features.browse.usecases.shared import list_shared_artifacts, read_shared_artifact
+from devkit_viewer.features.browse.usecases.read import ListRepositoriesUseCase, ReadRepositoryUseCase
+from devkit_viewer.features.browse.usecases.review import (
+    UNAVAILABLE_CODES,
+    RenderReportPageUseCase,
+    RenderUnavailablePageUseCase,
+)
+from devkit_viewer.features.browse.usecases.shared import ListSharedArtifactsUseCase, ReadSharedArtifactUseCase
 
 HOST = "127.0.0.1"
 # Under the devkit logger hierarchy, so `-v` prints one line per request.
@@ -76,10 +81,27 @@ def bundle_files() -> dict[str, Traversable]:
     return found
 
 
+def _accepts(port: int) -> bool:
+    """Whether something already accepts connections on ``HOST:port``."""
+    try:
+        with socket.create_connection((HOST, port), timeout=0.5):
+            return True
+    except OSError:
+        return False
+
+
 class ViewerServer(ThreadingHTTPServer):
     """A server for ``repositories`` on ``127.0.0.1:<port>`` (``0`` picks a free port)."""
 
     daemon_threads = True
+
+    def server_bind(self) -> None:
+        # Address reuse lets a restart bind while the last run's connections sit in TIME_WAIT, but on macOS it also
+        # lets 127.0.0.1:<port> bind beside another process listening on 0.0.0.0:<port>: refuse a port that accepts.
+        port = int(self.server_address[1])
+        if port and _accepts(port):
+            raise OSError(errno.EADDRINUSE, f"port {port} accepts connections on {HOST}")
+        super().server_bind()
 
     def __init__(self, repositories: Sequence[Repository], port: int) -> None:
         self.repositories = {repo.id: repo for repo in repositories}
@@ -158,7 +180,7 @@ class Handler(BaseHTTPRequestHandler):
     def _api(self, path: str, query: Mapping[str, list[str]]) -> Mapping[str, object]:
         parts = [unquote(part) for part in path.split("/")[2:]]
         if parts == ["repos"]:
-            return list_repositories(self.server.repositories.values())
+            return ListRepositoriesUseCase().execute(self.server.repositories.values())
         if len(parts) != 3 or parts[0] != "repos":
             raise ReadError(HTTPStatus.NOT_FOUND, "VIEWER_NOT_FOUND", f"no API endpoint {path!r}")
         repo = self.server.repositories.get(parts[1])
@@ -167,13 +189,13 @@ class Handler(BaseHTTPRequestHandler):
         if parts[2] == "shared":
             generation = query.get("generation", [""])[0]
             if generation:
-                return read_shared_artifact(repo, generation)
-            return list_shared_artifacts(
+                return ReadSharedArtifactUseCase().execute(repo, generation)
+            return ListSharedArtifactsUseCase().execute(
                 repo,
                 kind=query.get("kind", [""])[0] or None,
                 slug=query.get("slug", [""])[0] or None,
             )
-        return read_repository(
+        return ReadRepositoryUseCase().execute(
             repo,
             parts[2],
             query.get("path", [""])[0],
@@ -189,11 +211,12 @@ class Handler(BaseHTTPRequestHandler):
         if repo is None:
             raise repo_unknown(parts[0])
         try:
-            page = report_page(repo, parts[1])
+            page = RenderReportPageUseCase().execute(repo, parts[1])
         except ReadError as error:
             if error.code not in UNAVAILABLE_CODES:
                 raise
-            self._send(error.status, unavailable_page(error), "text/html; charset=utf-8", report=True)
+            page = RenderUnavailablePageUseCase().execute(error)
+            self._send(error.status, page, "text/html; charset=utf-8", report=True)
             return
         self._send(HTTPStatus.OK, page, "text/html; charset=utf-8", report=True)
 

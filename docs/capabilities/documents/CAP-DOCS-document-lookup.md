@@ -79,8 +79,8 @@ changes an argument, output, code or exit status.
    - `--status/-s a,b`: comma-separated statuses, compared case-insensitively. A given `--status` replaces the default
      history hiding: the documents whose status it names are listed whatever their history. Status vocabularies
      come from the templates, which a project may override, so a value is never rejected: one that no indexed
-     document of the selected kinds (every kind without `KIND`) carries, historical or in another namespace
-     included, adds one `SPEC_LIST_STATUS_UNKNOWN` notice naming those values, with the statuses that do occur in
+     document of the selected kinds (every kind without `KIND`) carries as the status `list` shows (a draft
+     proposal in Planning shows `reviewing`), historical or in another namespace included, adds one `SPEC_LIST_STATUS_UNKNOWN` notice naming those values, with the statuses that do occur in
      its `[FIX]` (`SPEC-list-unknown-status`). The filter still applies as given, so a valid status no document carries yet
      gives an empty page plus the notice.
    - `--area/-a TEXT`: case-insensitive substring of the frontmatter `area`.
@@ -181,4 +181,4 @@ notices always exit `0`.
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_core.base.errors.ArgumentError` | A negative `--limit` or `--offset`; a `--where` item without `=`, field or value; an unknown `--namespace`, or `--namespace` combined with `--all-namespaces`. |
 | `SPEC_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_spec.base.errors.SpecConfigError` | `list`: a malformed `[tool.spec]` table, namespaces included (`CAP-DLV-project-policy`). |
 | `SPEC_ENTRYPOINTS_PATH_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_spec.base.errors.EntrypointsPathError` | `list --file`: the path breaks the entrypoint path contract (`CAP-TRACE-code-entrypoints`). |
-| `SPEC_LIST_STATUS_UNKNOWN` | `NOTICE` | `devkit_spec.base.errors.ListStatusUnknownNotice` | `list --status`: a value no indexed document of the selected kinds (every kind without `KIND`) carries, whatever its history or namespace; `[FIX]` lists the statuses that do occur. The filter still applies and the exit code is unchanged. |
+| `SPEC_LIST_STATUS_UNKNOWN` | `NOTICE` | `devkit_spec.base.errors.ListStatusUnknownNotice` | `list --status`: a value no indexed document of the selected kinds (every kind without `KIND`) carries as its shown status (a draft proposal in Planning shows `reviewing`), whatever its history or namespace; `[FIX]` lists the statuses that do occur. The filter still applies and the exit code is unchanged. |

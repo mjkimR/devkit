@@ -113,3 +113,16 @@ def test_symlinked_roots_outside_links_and_loops_map_as_before(tmp_path: Path) -
     # A symlink loop inside the workspace gets its lexical name instead of failing the rule.
     assert ctx.relative_path("loop") == "loop"
     assert ctx.relative_path("loop/x") == "loop/x"
+
+
+def test_targets_match_files_in_either_unicode_normalization(tmp_path: Path) -> None:
+    import unicodedata
+
+    nfc = unicodedata.normalize("NFC", "docs/café.md")
+    nfd = unicodedata.normalize("NFD", "docs/café.md")
+    # Git reports names in NFC; a macOS file system may list the same file in NFD.
+    staged = RuleContext(workspace_root=tmp_path, changed_files=[nfc])
+    assert staged.is_file_targeted(nfd) and staged.is_file_targeted(nfc)
+    typed = RuleContext(workspace_root=tmp_path, changed_files=[nfd])
+    assert typed.is_file_targeted(nfc)
+    assert typed.changed_files == [nfd]

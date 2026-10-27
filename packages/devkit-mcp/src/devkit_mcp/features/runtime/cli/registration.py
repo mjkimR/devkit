@@ -62,4 +62,5 @@ def status(workspace_root: str | None, descriptor_only: bool, executable: str | 
         raise ArgumentError("--executable requires --descriptor", target_files=["--executable", "--descriptor"])
     data = registration.InspectMcpUseCase().execute(root)
     notices = data.pop("notices")
-    report({"action": "status", **data}, output_format, notices)
+    errors = data.pop("errors")
+    report({"action": "status", **data}, output_format, notices, errors)

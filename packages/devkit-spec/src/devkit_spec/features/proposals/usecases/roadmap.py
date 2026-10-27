@@ -32,13 +32,13 @@ def decomposition_source(root: Path, value: str | None, slug: str) -> str | None
     if value is None:
         return None
     from devkit_spec.features.proposals.usecases.backlog import check_backlog_editable
+    from devkit_spec.features.proposals.usecases.scaffold import clean_slug
 
     value = value.strip()
-    if not value.startswith("PROP-") or value == f"PROP-{slug}":
+    if not value.startswith("PROP-") or clean_slug(value) == slug:
         raise ArgumentError(
             "--decomposed-from must name another draft proposal",
             target_files=["--decomposed-from"],
             fix="Pass PROP-<source-slug> of the draft being decomposed",
         )
-    check_backlog_editable(root, value, decomposition=True)
-    return value
+    return check_backlog_editable(root, value, decomposition=True).id

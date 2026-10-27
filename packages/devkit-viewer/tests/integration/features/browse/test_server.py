@@ -4,6 +4,7 @@ import base64
 import http.client
 import json
 import re
+import socket
 import threading
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -198,6 +199,42 @@ def test_port_in_use_is_refused(server: ViewerServer) -> None:
     with pytest.raises(PortInUseError) as caught:
         ViewerServer([], server.port)
     assert caught.value.code == "VIEWER_PORT_IN_USE"
+
+
+def test_port_held_on_the_wildcard_address_is_refused() -> None:
+    # Address reuse would let 127.0.0.1:<port> bind beside another process's 0.0.0.0:<port> listener on macOS.
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as holder:
+        holder.bind(("0.0.0.0", 0))
+        holder.listen()
+        with pytest.raises(PortInUseError):
+            ViewerServer([], holder.getsockname()[1]).server_close()
+
+
+def test_port_is_reusable_after_close() -> None:
+    first = ViewerServer([], 0)
+    port = first.port
+    first.server_close()
+    ViewerServer([], port).server_close()
+
+
+def test_port_is_reusable_right_after_serving_a_request() -> None:
+    # The server closes each HTTP/1.0 connection first, leaving it in TIME_WAIT on the port.
+    first = ViewerServer([], 0)
+    port = first.port
+    thread = threading.Thread(target=first.serve_forever, daemon=True)
+    thread.start()
+    try:
+        connection = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+        connection.request("GET", "/api/repos")
+        response = connection.getresponse()
+        response.read()  # to the server's close
+        assert response.status == 200
+        connection.close()
+    finally:
+        first.shutdown()
+        first.server_close()
+        thread.join()
+    ViewerServer([], port).server_close()
 
 
 @pytest.fixture
