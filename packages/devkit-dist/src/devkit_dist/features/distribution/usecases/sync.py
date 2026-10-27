@@ -936,6 +936,7 @@ def sync_project(
     save: Callable[[], ConfigUpdate] | None = None,
     environment: str | None = None,
     save_environment: bool = True,
+    preview: bool = True,
 ) -> SyncResult:
     """Deploy the bundles selected in ``config.toml`` and the built-in bundles it does not opt out of.
 
@@ -948,7 +949,9 @@ def sync_project(
     edit is rendered and listed, never written. ``locked`` keeps the committed state: the sync only
     restores the Git-ignored files to what the receipt records, or raises ``ReceiptStaleError``
     (``RECEIPT_STALE``) without writing anything. Post-sync extensions run after
-    the project lock is released, except on a dry run.
+    the project lock is released, except on a dry run, which runs the preview
+    extensions instead unless ``preview`` is off (``sync --check``, a read-only
+    gate whose answer must not depend on this checkout's hooks).
     """
     if environment is not None and environment not in ("local", "cloud"):
         raise ArgumentError("environment must be local or cloud")
@@ -1006,7 +1009,8 @@ def sync_project(
     if update is not None:
         result.notices.extend(update.notices)
     if dry_run:
-        result.notices.extend(run_post_sync_preview(root, result.to_dict()))
+        if preview:
+            result.notices.extend(run_post_sync_preview(root, result.to_dict()))
     else:
         result.notices.extend(run_post_sync(root, result.to_dict()))
     return result
@@ -1040,6 +1044,7 @@ def commit_locked(
     save_environment: bool = True,
     config_update: ConfigUpdate | None = None,
     captured_inputs: dict[str, bytes | None] | None = None,
+    refuse_drift: bool = True,
 ) -> Callable[[], SyncResult]:
     """Plan a sync and, unless ``dry_run``, commit it; the caller holds the project lock. Runs no post-sync extension.
 
@@ -1053,6 +1058,8 @@ def commit_locked(
     records them (``_restores_only``), without writing the receipt or a
     seeded file; otherwise it raises ``ReceiptStaleError`` before any write.
     A ``dry_run`` writes nothing, so the caller may hold the shared lock.
+    ``refuse_drift`` off keeps ``override_drift = "block"`` from refusing the sync; the drift is still reported as
+    the ``OVERRIDE_DRIFT`` warning (``devkit override accept``, which resolves drift one override at a time).
     """
     require_no_journal(root)
     captured = captured_inputs if captured_inputs is not None else local_render.inputs(root)
@@ -1072,7 +1079,7 @@ def commit_locked(
         root, installed, selection, previous_overrides, effective=True, environment=selected_environment
     )
     personal = local_render.personal_files(root, inventory, effective)
-    if config.override_drift == "block":
+    if config.override_drift == "block" and refuse_drift:
         _refuse_override_drift(inventory.drift)
     old_files = dict(previous.file_records) if previous else {}
     changes: Changes = {}

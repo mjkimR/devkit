@@ -291,7 +291,9 @@ def accept_override(root: Path, installed: list[InstalledBundle], selector: str)
                 undo.write(baseline_rel(bundle_name, rel), Content(path.read_bytes(), normal_mode(path.stat().st_mode)))
             # The new baseline is in the receipt the sync starts from, so it holds for an asset that is not deployed.
             undo.write(RECEIPT_PATH, receipt_content(updated))
-            finish = commit_locked(root, installed)
+            # Under ``override_drift = "block"`` other overrides may still drift; accepting this one resolves its own
+            # drift, so the sync reports theirs as a warning instead of refusing (each would block the other).
+            finish = commit_locked(root, installed, refuse_drift=False)
         except BaseException:
             undo.restore()
             raise

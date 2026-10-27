@@ -147,6 +147,7 @@ def sync(
         agents=active_agents,
         presets=requested,
         dry_run=dry_run or check,
+        check=check,
         locked=locked,
         environment="cloud" if cloud else "local" if local else None,
     )

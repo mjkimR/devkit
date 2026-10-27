@@ -203,8 +203,9 @@ bundle and path but loses content keeps applying, with drift reported, until the
 - `devkit override accept <bundle>:<asset>` then records the current upstream digest as the baseline, refreshes the
   baseline copies and synchronizes under the same lock, as `create` does, so the merged override files are deployed
   and recorded and `sync --check` passes; the sync's notices are returned with the result. When that sync fails
-  before it commits, the baseline copies and the receipt are put back. It fails for an asset without a tracked
-  override.
+  before it commits, the baseline copies and the receipt are put back. Under `override_drift = "block"` that sync
+  does not refuse on the drift of other overrides, which it still reports as the `OVERRIDE_DRIFT` warning, so drifted
+  overrides can be accepted one at a time. It fails for an asset without a tracked override.
 - `devkit override remove <bundle>:<asset>` deletes the override files of the asset's upstream files and the
   baseline files, prunes empty directories and synchronizes the upstream sources (rendered for templates), under one lock with the same
   rollback as `create`; the receipt entry disappears with that sync. Any other project file under the asset's override

@@ -185,3 +185,26 @@ def test_registrations_only_json_names_each_change_with_its_kind(installed: list
     actions = json.loads(result.stdout)["actions"]
     assert {"path": ".mcp.json", "action": "create"} in actions
     assert all(set(item) == {"path", "action"} for item in actions)
+
+
+def test_check_skips_the_post_sync_preview_that_dry_run_runs(
+    discovered: list[InstalledBundle], project: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from devkit.advisory import Level
+    from devkit_dist.features.distribution.models.errors import PostSyncNotice
+    from devkit_dist.features.distribution.usecases import sync as sync_module
+
+    update_config(project, presets={"team": ["all"], "extra": ["all"]})
+    sync_project(project, discovered)
+    previews: list[Path] = []
+
+    def preview(root: Path, result: dict) -> list:
+        previews.append(root)
+        return [PostSyncNotice("gate hooks would change").with_level(Level.WARNING)]
+
+    monkeypatch.setattr(sync_module, "run_post_sync_preview", preview)
+    check = CliRunner().invoke(cli, ["sync", "--check", "--strict", "-w", str(project)])
+    assert check.exit_code == 0, check.output
+    assert previews == [] and "gate hooks would change" not in check.stderr
+    dry = CliRunner().invoke(cli, ["sync", "--dry-run", "-w", str(project)])
+    assert dry.exit_code == 0 and len(previews) == 1 and "gate hooks would change" in dry.stderr

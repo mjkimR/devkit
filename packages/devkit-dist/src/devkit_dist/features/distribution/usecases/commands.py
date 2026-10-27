@@ -59,6 +59,7 @@ def _sync_and_save(
     locked: bool = False,
     environment: str | None = None,
     save_environment: bool = True,
+    preview: bool = True,
 ) -> SyncResult:
     """Synchronize; ``save`` builds a configuration edit that the sync renders and writes under the project lock.
 
@@ -83,6 +84,7 @@ def _sync_and_save(
                 dry_run=dry_run,
                 environment=environment,
                 save_environment=save_environment,
+                preview=preview,
                 save=lambda: prepare_config_update(root, **save(installed, selected())),
             )
         return sync_project(
@@ -95,6 +97,7 @@ def _sync_and_save(
             locked=locked,
             environment=environment,
             save_environment=save_environment,
+            preview=preview,
         )
 
 
@@ -111,8 +114,11 @@ class SyncSelection(BaseUseCase):
         dry_run: bool = False,
         locked: bool = False,
         environment: str | None = None,
+        check: bool = False,
     ) -> SyncResult:
         """Replace requested selections and synchronize, persisting them unless ``save`` is false.
+
+        ``check`` is ``sync --check``: a dry run without the post-sync preview.
 
         Unspecified selections retain their configured values. An empty agent list
         explicitly clears agents. Configuration and outputs commit together under
@@ -130,6 +136,7 @@ class SyncSelection(BaseUseCase):
             locked=locked,
             environment=environment,
             save_environment=save,
+            preview=not check,
         )
 
 

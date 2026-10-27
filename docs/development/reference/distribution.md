@@ -88,7 +88,7 @@ existing shared host files are never edited by locked sync. See `CAP-HOST-lifecy
   under the shared (reader) project lock.
 - `--format text|json` (also on `add` and `remove`): the `[SYNC]`/`[CHANGE]` lines (default) or the whole
   `SyncResult` object ([Sync output and notices](#sync-output-and-notices)).
-- `--check`: read-only, for CI, under the shared (reader) project lock. Exits `1` when the workspace needs a synchronization (a missing or stale guidance
+- `--check`: read-only, for CI, under the shared (reader) project lock, without the post-sync preview `--dry-run` runs. Exits `1` when the workspace needs a synchronization (a missing or stale guidance
   block, a seeded file not written yet and a missing `.devkit/.gitignore` included). Concurrent configuration
   changes also exit `1` (`CONFIG_LOCAL_CHANGED`); other failures use their advisory exit status, such as `2` for
   a hand-edited managed file (`SYNC_CONFLICT`). Existing seeded files are never compared. An orphan alone does not fail `--check`: it is no
