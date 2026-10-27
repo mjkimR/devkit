@@ -102,7 +102,7 @@ def test_success_prints_one_utf8_object(tmp_path: Path) -> None:
     assert result.exit_code == 0
     assert json.loads(result.stdout) == {"root": str(tmp_path.resolve()), "text": "ü"}
     # Text stays as written: an escaped "ü" costs the agent context and has to be decoded back.
-    assert '"text": "ü"' in result.stdout and "\\u00fc" not in result.stdout
+    assert '"text":"ü"' in result.stdout and "\\u00fc" not in result.stdout
 
 
 def test_surrogate_escaped_paths_print_deterministically(tmp_path: Path) -> None:
@@ -110,7 +110,7 @@ def test_surrogate_escaped_paths_print_deterministically(tmp_path: Path) -> None
     assert as_json.exit_code == 0, as_json.stderr
     # The lone surrogate becomes a \udcff escape, which is valid JSON; other text stays UTF-8.
     assert json.loads(as_json.stdout) == {"files": ["bad\udcffname.md", "ü"]}
-    assert as_json.stdout_bytes == '{\n  "files": [\n    "bad\\udcffname.md",\n    "ü"\n  ]\n}\n'.encode()
+    assert as_json.stdout_bytes == '{"files":["bad\\udcffname.md","ü"]}\n'.encode()  # compact: no indentation
     as_text = _invoke("-w", str(tmp_path), "--mode", "surrogate")
     assert as_text.exit_code == 0, as_text.stderr
     assert as_text.stdout_bytes == "[FILE: bad\\udcffname.md ü]\n".encode()
@@ -173,8 +173,8 @@ def test_a_closed_stdout_ends_the_command_quietly(mode: str) -> None:
         stderr=subprocess.PIPE,
     )
     assert process.stdout is not None and process.stderr is not None
-    process.stdout.readline()
-    process.stdout.close()  # the reader goes away, as `devkit ... | head -1` does
+    process.stdout.read(1)  # compact JSON is one long line, so read a byte rather than a line
+    process.stdout.close()  # the reader goes away, as `devkit ... | head -c 1` does
     stderr = process.stderr.read()
     assert process.wait(timeout=60) == int(ExitCode.ERROR)
     assert stderr == b""  # no advisory, no "Exception ignored" noise

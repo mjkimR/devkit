@@ -102,9 +102,10 @@ layers (`from pkg.features import scan`), and the direction of imports in `featu
 
   | Name | Contract |
   | --- | --- |
-  | `Boundary(name, *, env_prefix=None, log=None)` | Decorator, `@boundary` or `@boundary(json_only=True)`, placed below the click decorators; adds `-q/--quiet`, `-v/--verbose`, `--strict`. Attributes `name`, `quiet_env`, `verbose_env`, `strict_env`; methods `output_options(fn)`, `resolve_output(quiet, verbose, strict)`. `log` receives the unexpected-error traceback (default the `<name>.cli` logger). `ValueError` for an empty or padded name or an invalid prefix. |
+  | `Boundary(name, *, env_prefix=None, log=None)` | Decorator, `@boundary` or `@boundary(json_only=True)`, placed below the click decorators; adds `-q/--quiet`, `-v/--verbose`, `--strict`, and for `json_only` a `--format json` that is a no-op (a `json_only` command does not declare `FORMAT_OPTION` itself). Attributes `name`, `quiet_env`, `verbose_env`, `strict_env`; methods `output_options(fn)`, `resolve_output(quiet, verbose, strict)`. `log` receives the unexpected-error traceback (default the `<name>.cli` logger). `ValueError` for an empty or padded name or an invalid prefix. |
   | `FORMAT_OPTION`, `is_json(value)` | `--format text\|json`, parameter `output_format`, case-insensitive. |
-  | `echo_json(data)` | One JSON object on stdout, UTF-8, indented by 2. |
+  | `echo_json(data)` | One JSON object on stdout, UTF-8, compact (no indentation, no spaces after separators). |
+  | `render_json(data)` | The text `echo_json` prints, without the newline; for callers that budget output size. |
   | `echo_notices(notices)`, `exit_on_warnings(notices)` | Warnings, then notices, on stderr after the result (none under `-q` for notices; none in JSON mode); exit `1` under `--strict` when a warning was reported. |
   | `exit_on_problems(problems, *, report=False)`, `highest_exit_code`, `report_exit_code` | Render collected problems and exit with the highest `exit_code`, or `1` for a status or show command. |
   | `OutputSettings`, `output_settings()`, `Reported(error)` | The running command's `quiet`, `verbose`, `strict`, `json`; an error whose JSON result is already printed. |

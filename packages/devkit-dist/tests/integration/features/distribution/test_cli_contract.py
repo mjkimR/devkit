@@ -142,7 +142,10 @@ def test_config_show_is_json_only(item: InstalledBundle, target: Path) -> None:
     assert result.exit_code == int(ExitCode.ERROR), result.output
     assert "code" in json.loads(result.stdout)["error"]  # exactly one JSON document on stdout
     assert result.stderr == ""
-    assert _invoke("config", "show", "--effective", "--format", "json", "-w", str(target)).stdout == ""
+    # --format json is accepted as a no-op on a JSON-only command; any other format is a usage error
+    with_json = _invoke("config", "show", "--effective", "--format", "json", "-w", str(target))
+    assert with_json.exit_code == int(ExitCode.ERROR) and "code" in json.loads(with_json.stdout)["error"]
+    assert _invoke("config", "show", "--effective", "--format", "text", "-w", str(target)).stdout == ""
 
 
 def test_syntax_errors_stay_click_usage_errors(item: InstalledBundle) -> None:

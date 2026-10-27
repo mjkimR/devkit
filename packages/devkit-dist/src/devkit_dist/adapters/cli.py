@@ -34,6 +34,7 @@ from devkit_cli import (
     highest_exit_code,
     is_json,
     output_settings,
+    render_json,
     report_exit_code,
 )
 from devkit_core.base.errors import ArgumentError
@@ -61,6 +62,7 @@ __all__ = [
     "is_json",
     "output_options",
     "output_settings",
+    "render_json",
     "report_exit_code",
     "resolve_output",
     "resolve_root",

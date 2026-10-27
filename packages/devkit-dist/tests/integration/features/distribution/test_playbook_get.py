@@ -185,7 +185,7 @@ def test_corrupt_entrypoints(deployed, entries):
 
 @pytest.mark.parametrize(
     "args",
-    [[], ["team/recovery", "extra"], ["team/recovery", "--format", "json"], ["team/recovery", "--format", "text"]],
+    [[], ["team/recovery", "extra"], ["team/recovery", "--format", "text"]],
 )
 def test_usage_errors(args):
     result = CliRunner().invoke(cli, ["playbook", "get", *args])

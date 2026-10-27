@@ -232,3 +232,27 @@ def test_invalid_names_are_refused(name: str, prefix: str | None) -> None:
 def test_help_names_the_tool_variables() -> None:
     help_text = invoke(reporting, ["--help"]).stdout
     assert all(variable in help_text for variable in ("MYTOOL_QUIET=1", "MYTOOL_VERBOSE=1", "MYTOOL_STRICT=1"))
+
+
+def test_a_json_only_command_accepts_format_json_and_prints_compact_json() -> None:
+    import json
+
+    import click
+    from click.testing import CliRunner
+    from devkit_cli import Boundary
+
+    boundary = Boundary("probe")
+
+    @click.command()
+    @boundary(json_only=True)
+    def show() -> None:
+        from devkit_cli import echo_json
+
+        echo_json({"a": [1, 2], "b": "ü"})
+
+    runner = CliRunner()
+    for args in ([], ["--format", "json"], ["--format", "JSON"]):
+        result = runner.invoke(show, args)
+        assert result.exit_code == 0, result.output
+        assert result.stdout == '{"a":[1,2],"b":"ü"}\n' and json.loads(result.stdout) == {"a": [1, 2], "b": "ü"}
+    assert runner.invoke(show, ["--format", "text"]).exit_code == 2  # only json is accepted

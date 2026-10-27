@@ -41,6 +41,7 @@ from devkit_dist.adapters.cli import (
     exit_on_warnings,
     is_json,
     output_settings,
+    render_json,
 )
 
 from devkit_agt.features.compact.models.scan import Failure, Omitted, RelayedAdvisory
@@ -144,7 +145,7 @@ def _echo(run: CommandRun, output_format: str) -> int:
     if is_json(output_format):
         data = _json(run)
         echo_json(data)
-        return len(json.dumps(data, indent=2, ensure_ascii=False)) + 1  # as echo_json prints it
+        return len(render_json(data)) + 1  # as echo_json prints it
     text = _text(run)
     click.echo(text, nl=False)
     return len(text)
