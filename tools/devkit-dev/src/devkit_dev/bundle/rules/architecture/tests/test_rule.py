@@ -94,6 +94,25 @@ def test_constant_dynamic_imports_and_entrypoint_strings(tmp_path: Path) -> None
     assert any("legacy shared namespace" in message for message in found)
 
 
+@pytest.mark.parametrize(
+    "source",
+    [
+        'def f(e): raise ValueError(f"devkit: bad {e}")\n',
+        'MSG = "devkit: a message"\n',
+        'def f():\n    """devkit.core: a docstring."""\n',
+        'FMT = "sample.features.one.usecases: x"\n',
+        'def f(x): return f"{x}devkit.core:main"\n',
+        '"""devkit.core:main"""\n',
+        'class C:\n    """devkit.core:main"""\n',
+    ],
+)
+def test_message_text_is_not_an_entrypoint_reference(tmp_path: Path, source: str) -> None:
+    assert not _inspect(
+        tmp_path,
+        {"src/sample/features/one/models.py": source, "src/sample/features/one/usecases.py": "pass\n"},
+    )
+
+
 def test_explicit_public_module_and_narrow_exception(tmp_path: Path) -> None:
     files = {
         "src/sample/features/one/models.py": "from .services import helper\n",

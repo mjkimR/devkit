@@ -31,7 +31,7 @@
 		apiBase = '',
 		branch = 'main',
 		initialPath = 'docs/',
-		initialView = 'files',
+		initialView = 'dashboard',
 		initialAnchor = '',
 		theme = 'dark',
 		dataSource = undefined,
@@ -69,7 +69,9 @@
 	let selectedSharedSlug = $state('');
 
 	$effect(() => {
-		view = ['dashboard', 'book', 'proposals', 'specs', 'roadmap', 'shared'].includes(initialView)
+		view = ['dashboard', 'files', 'book', 'proposals', 'specs', 'roadmap', 'shared'].includes(
+			initialView
+		)
 			? (initialView as typeof view)
 			: 'dashboard';
 	});

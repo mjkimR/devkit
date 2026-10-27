@@ -82,7 +82,7 @@ dynamic discovery are allowed in `__init__.py`. Business operations, domain vali
 handlers belong in named modules. A CLI directory can split related command groups into separate
 modules and assemble its Click group in `app.py`; there is no one-command-per-file requirement.
 
-CLI/MCP-exposed application operations implement `devkit_core.base.usecase.BaseUseCase` with a
+CLI/MCP/HTTP-exposed application operations implement `devkit_core.base.usecase.BaseUseCase` with a
 fully typed `execute` method. Each operation keeps its existing arguments and result type; a request DTO
 is not mandatory. Constructors receive dependencies and retain shared engines without executing domain
 operations. Internal composition and helper functions remain functions. Synchronous and asynchronous
@@ -97,7 +97,7 @@ required `BaseRepository`, Command registry or Unit of Work. CLI commands remain
 
 ### 1.2 Layering Rules
 
-- CLI and MCP adapters invoke use cases. They own transport parsing and output shaping.
+- CLI, MCP and HTTP adapters invoke use cases. They own transport parsing and output shaping.
 - Use cases coordinate feature operations through services, repositories and models.
 - Services and repositories may use models, base contracts and technical helpers; they never import
   use cases or transport adapters. Models do not import services, repositories or higher layers and do not read files,
