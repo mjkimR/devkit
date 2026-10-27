@@ -2,7 +2,7 @@
 id: PROP-seeded-paths-in-boundaries
 title: Seeded and synced paths in proposal boundaries
 summary: Lets a proposal's write scope cover the tracked files devkit sync writes because of the agreed change, such as a new seed in a selected preset, so Development does not stop on a path Planning could not name.
-status: reviewing                     # draft | reviewing | accepted | rejected
+status: accepted                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-27
 target_area: delivery/
 priority: high                        # critical | high | medium | low
