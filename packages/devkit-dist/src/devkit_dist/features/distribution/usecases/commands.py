@@ -11,7 +11,6 @@ from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 
 from devkit_dist.features.distribution.models.errors import OverrideRetainedNotice, SelectionError
-from devkit_dist.features.distribution.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.distribution.models.results import (
     ConfigurationReport,
     OverrideChange,
@@ -37,6 +36,7 @@ from devkit_dist.features.distribution.services.installation.plan import BundleP
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt
 from devkit_dist.features.distribution.services.installation.transaction import project_lock
 from devkit_dist.features.distribution.usecases.sync import sync_project
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.project.repositories.local_config import read_effective_config
 from devkit_dist.features.project.repositories.receipt import OVERRIDES_PATH
 from devkit_dist.features.project.services.presentation import language_notices, resolve_language

@@ -32,7 +32,6 @@ from tomlkit.exceptions import TOMLKitError
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.distribution.models.content import Content
 from devkit_dist.features.distribution.models.errors import SelectionError
-from devkit_dist.features.distribution.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.distribution.models.settings import DEFAULT_PLAYBOOK_LIMIT as DEFAULT_PLAYBOOK_LIMIT
 from devkit_dist.features.distribution.models.settings import DEFAULT_PLAYBOOK_MAX_BYTES as DEFAULT_PLAYBOOK_MAX_BYTES
 from devkit_dist.features.distribution.models.settings import DEFAULT_PLAYBOOK_MIN_SCORE as DEFAULT_PLAYBOOK_MIN_SCORE
@@ -60,6 +59,7 @@ from devkit_dist.features.distribution.services.installation.config_template imp
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle, unusable_bundles
 from devkit_dist.features.distribution.services.installation.transaction import project_lock, replace_file
 from devkit_dist.features.distribution.services.subagents import parse_subagents
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.project.repositories.local_config import read_effective_config, validate_runtime_tables
 from devkit_dist.features.project.repositories.project import read_toml
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, RECEIPT_PATH, Receipt

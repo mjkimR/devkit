@@ -30,7 +30,6 @@ from devkit_dist.features.distribution.models.errors import (
     UnprojectedNotice,
     UnsafeWorkspaceError,
 )
-from devkit_dist.features.distribution.models.invocation import devkit_command
 from devkit_dist.features.distribution.models.results import Action, SyncResult, Unselected
 from devkit_dist.features.distribution.models.subagents import SubagentPolicy
 from devkit_dist.features.distribution.services.installation import guidance_block, local_render
@@ -82,6 +81,7 @@ from devkit_dist.features.distribution.services.installation.workspace import (
 )
 from devkit_dist.features.distribution.services.subagents import validate_role_overrides
 from devkit_dist.features.host.usecases import registrations
+from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.invocation import guard_execution
 from devkit_dist.features.project.repositories.local_config import LOCAL_CONFIG_PATH, read_effective_config
 from devkit_dist.features.project.repositories.project import git_toplevel, require_devkit_root

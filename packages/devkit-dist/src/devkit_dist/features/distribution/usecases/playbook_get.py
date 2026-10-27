@@ -11,7 +11,6 @@ from devkit_core.base.usecase import BaseUseCase
 
 from devkit_dist.base.errors import ReceiptError
 from devkit_dist.features.distribution.models.errors import PlaybookAliasAmbiguousError, SelectionError
-from devkit_dist.features.distribution.models.invocation import AGENT_INVOCATION, devkit_command
 from devkit_dist.features.distribution.models.results import PlaybookResult
 from devkit_dist.features.distribution.services.bundles.common import SLUG, read_frontmatter
 from devkit_dist.features.distribution.services.bundles.playbooks import PlaybookHeader, read_playbook_header
@@ -23,6 +22,7 @@ from devkit_dist.features.distribution.services.installation.reading import (
     synchronized_project_root,
 )
 from devkit_dist.features.distribution.services.installation.transaction import project_lock
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION, devkit_command
 from devkit_dist.features.project.models.receipt import AssetRecord, Receipt
 from devkit_dist.features.project.repositories.receipt import MANAGED_PATH, RECEIPT_PATH
 

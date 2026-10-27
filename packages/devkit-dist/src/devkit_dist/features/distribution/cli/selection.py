@@ -15,7 +15,6 @@ from devkit_dist.adapters.cli import (
     is_json,
     resolve_root,
 )
-from devkit_dist.features.distribution.models.invocation import devkit_command
 from devkit_dist.features.distribution.models.settings import (
     AGENT_NAMES,
     DEFAULT_PRESET,
@@ -29,6 +28,7 @@ from devkit_dist.features.distribution.usecases.commands import (
     SyncSelection,
 )
 from devkit_dist.features.distribution.usecases.sync import RecoverProject, SyncRegistrations
+from devkit_dist.features.project.models.invocation import devkit_command
 
 from .output import WORKSPACE, _json_command, _report
 

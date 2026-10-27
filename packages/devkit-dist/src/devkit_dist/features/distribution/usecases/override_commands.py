@@ -23,7 +23,6 @@ from devkit_dist.features.distribution.models.errors import (
     OverrideSyncDeferredNotice,
     SelectionError,
 )
-from devkit_dist.features.distribution.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.distribution.models.results import (
     OverrideChange,
     OverrideDiff,
@@ -57,6 +56,7 @@ from devkit_dist.features.distribution.services.installation.transaction import 
 )
 from devkit_dist.features.distribution.services.installation.workspace import checked_path
 from devkit_dist.features.distribution.usecases.sync import commit_locked, require_project_dir
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.project.repositories.receipt import OVERRIDES_PATH, RECEIPT_PATH, OverrideRecord, Receipt
 
 # Emptied directories are pruned up to here, ``.devkit/overrides/`` itself included.

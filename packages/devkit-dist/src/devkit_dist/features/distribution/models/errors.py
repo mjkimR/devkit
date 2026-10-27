@@ -22,7 +22,7 @@ from devkit.advisory import Actor, AdvisoryError, ExitCode, Level, Retry
 from devkit_core.base.errors import LockHeldError as CoreLockHeldError
 
 from devkit_dist.base.errors import HARNESS_INSTALL_FIX
-from devkit_dist.features.distribution.models.invocation import devkit_command
+from devkit_dist.features.project.models.invocation import devkit_command
 
 LOCK_RETRY_AFTER = "the running devkit command finishes"
 

@@ -23,7 +23,6 @@ from devkit_dist.features.distribution.models.errors import (
     PendingTransactionError,
     UnsafeWorkspaceError,
 )
-from devkit_dist.features.distribution.models.invocation import devkit_command
 from devkit_dist.features.distribution.models.results import (
     asset_json,
     overrides_json,
@@ -61,6 +60,7 @@ from devkit_dist.features.distribution.usecases.sync import (
     tool_identity,
 )
 from devkit_dist.features.host import HostError, InspectHost
+from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.local_config import read_effective_config
 from devkit_dist.features.project.repositories.receipt import (
     AssetRecord,
