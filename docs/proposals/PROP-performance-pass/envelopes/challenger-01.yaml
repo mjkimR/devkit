@@ -1,0 +1,65 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-27T08:21:05.636023Z'
+status: completed
+summary: 'Challenger round 1: one P1 (route of multi-module performance work items), seven P2, six P3; reuse mechanism, co-deployment, classification carve-outs and size budget found sound.'
+findings:
+- issue: 'A multi-module performance work item following review-refactor''s route becomes direct-mode overall-refactor, which CAP-DLV-delivery-workflows, ARCH-04-delivery-strategy and the spec classification grant only to review-refactor. Decision needed: refactor route or feature route for multi-module performance work items.'
+  evidence: CAP-DLV-delivery-workflows.md:66-69; ARCH-04-delivery-strategy.md:107-110; spec classification.md:8-9; proposal.md application section
+  resolution: open
+  severity: P1
+- issue: Retrieving and following review-refactor without the user naming it is not covered by CAP-DIST-context-and-playbooks §5 (only a named playbook is retrieved and interpreted); CAP-DIST-content-packages §6 says three independent playbooks.
+  evidence: CAP-DIST-context-and-playbooks.md:234-238; CAP-DIST-content-packages.md:198,211
+  resolution: open
+  severity: P2
+- issue: review-refactor criteria let the user approve a behavior difference inside the preserving work item; the classification PADR makes any observable difference a contract change; the cited procedure conflicts.
+  evidence: main review-refactor criteria.md (lessons merge dc3e07a2); PADR-classify §4
+  resolution: open
+  severity: P2
+- issue: The decision round needs route and write scope from review-refactor applying §1, but the router loads review-refactor only after the round.
+  evidence: proposal.md router table and candidates section; review-refactor SKILL.md decision round
+  resolution: open
+  severity: P2
+- issue: Per-change measurement collides with concurrent edit tasks and verification in isolated checkouts, which add load.
+  evidence: main review-refactor applying.md subagent edits; pass-evidence §3 noise
+  resolution: open
+  severity: P2
+- issue: The final measurement compares with the intake baseline, which the protocol itself forbids across sessions.
+  evidence: proposal.md measurement protocol vs report section
+  resolution: open
+  severity: P2
+- issue: Running the old revision from an extracted copy lacks .git, environment and equal paths; output digest checks fail or compare different work.
+  evidence: aabd01de body (source path differs); 2fd53e1e Git subprocess counts
+  resolution: open
+  severity: P2
+- issue: The noise floor is undefined and a min-max range over five runs is outlier-driven; cold-run and discard rules are ambiguous.
+  evidence: proposal.md candidates and protocol; 89bea535 40 ms saving
+  resolution: open
+  severity: P2
+- issue: 'Regression mode lacks evidence and conflicts with the no-switching rule (git bisect); no probe classification rule. Decision needed: keep or drop regression mode.'
+  evidence: design-options.md O1; proposal.md regression bullet
+  resolution: open
+  severity: P3
+- issue: Both playbooks have references/applying.md; the link test and the heading citation form are ambiguous.
+  evidence: test_bundles.py:178-179; PADR-reuse §6
+  resolution: open
+  severity: P3
+- issue: A partial override directory of review-refactor lacks reference files that are read from upstream; resolving relative to the override source.path misses them.
+  evidence: CAP-DIST-workspace-ownership.md:152
+  resolution: open
+  severity: P3
+- issue: The timing script option exceeds boundaries.owns (unit tests) and the manifest contract states executable bits for skills only.
+  evidence: design-options.md O4; proposal.md owns; CAP-DIST-manifest-spec.md:36-38
+  resolution: open
+  severity: P3
+- issue: The review-refactor lessons change already landed on main as dc3e07a2, which this worktree predates; the precondition text is stale.
+  evidence: git merge-base --is-ancestor dc3e07a2 HEAD is false
+  resolution: open
+  severity: P3
+- issue: Background figures (sync 1.25s to 1.14s, rules 3.0s to 1.7s, gate 0.92s to 0.38s) are not in the evidence; the commit says 1.25s to ~0.92s.
+  evidence: proposal.md §1 vs pass-evidence.md §1
+  resolution: open
+  severity: P3
+checks: {}
