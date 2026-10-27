@@ -11,28 +11,28 @@ class HostError(AdvisoryError):
 class HookDefinitionError(HostError):
     code = "HOST_HOOK_INVALID"
     input_error = True
-    fix = "Correct the hook definition in [TARGET], then run devkit sync"
+    fix = "Correct the hook definition in [TARGET], then run `uv run devkit sync`"
 
 
 class HostConfigError(HostError):
     code = "HOST_CONFIG_INVALID"
-    fix = "Correct the host configuration in [TARGET], then run devkit sync"
+    fix = "Correct the host configuration in [TARGET], then run `uv run devkit sync`"
 
 
 class HookConflictError(HostError):
     code = "HOST_HOOK_CONFLICT"
     guardrail = True
-    fix = "Restore the receipt-recorded hook entries in [TARGET], preserve other entries, then run devkit sync"
+    fix = "Restore the receipt-recorded hook entries in [TARGET], preserve other entries, then run `uv run devkit sync`"
 
 
 class HookDispatchError(HostError):
     code = "HOST_HOOK_DISPATCH_FAILED"
-    fix = "Run devkit host status --format json, correct the reported installation or handler problem, then retry"
+    fix = "Run `uv run devkit host status --format json`, correct the reported installation or handler problem, then retry"
 
 
 class HookMissingError(HostError):
     code = "HOST_HOOK_MISSING"
-    fix = "Run devkit sync to restore the missing host hook configuration"
+    fix = "Run `uv run devkit sync` to restore the missing host hook configuration"
 
 
 class HostMcpError(HostError):

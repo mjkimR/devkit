@@ -32,7 +32,7 @@ GROUP = "devkit.mcp.registrations"
 class RegistrationError(HostError):
     code = "MCP_REGISTRATION_CONFLICT"
     guardrail = True
-    fix = "Restore the exact recorded project entry after inspecting local edits, then run devkit sync; use an independently authorized CLI/PR route meanwhile"
+    fix = "Restore the exact recorded project entry after inspecting local edits, then run `uv run devkit sync`; use an independently authorized CLI/PR route meanwhile"
 
 
 class RegistrationUnavailable(RegistrationError):
@@ -42,7 +42,7 @@ class RegistrationUnavailable(RegistrationError):
 
 class RuntimeUnavailable(RegistrationError):
     code = "MCP_RUNTIME_UNAVAILABLE"
-    fix = "Install devkit-mcp with the same service packages in a retained base/tool runtime, then run devkit mcp setup --executable PATH; or use an independently authorized CLI/PR route"
+    fix = "Install devkit-mcp with the same service packages in a retained base/tool runtime, then run `uv run devkit mcp setup --executable PATH`; or use an independently authorized CLI/PR route"
 
 
 @dataclass(frozen=True)
@@ -256,6 +256,18 @@ class RegistrationPlan:
     def changes(self) -> list[str]:
         return [key for key in self.after if self.before[key] != self.after[key]]
 
+    @property
+    def actions(self) -> list[tuple[str, str]]:
+        """Each change as ``(path, kind)``: the path relative to the checkout, or absolute outside it (the Git
+        info/exclude of a linked worktree), and ``create``, ``update`` or ``remove`` from the captured bytes."""
+        result = []
+        for key in self.changes:
+            path = self.path(key)
+            shown = path.relative_to(self.root).as_posix() if path.is_relative_to(self.root) else str(path)
+            kind = "create" if self.before[key] is None else "remove" if self.after[key] is None else "update"
+            result.append((shown, kind))
+        return result
+
     def path(self, key: str) -> Path:
         if key == "exclude":
             assert self.common is not None
@@ -401,6 +413,33 @@ def plan(
             ).with_level(Level.NOTICE)
         )
     return result
+
+
+def unregistered_hosts(root: Path, agents: list[str] | tuple[str, ...]) -> list[str]:
+    """Selected hosts whose registration ordinary sync would create but this checkout does not hold, read-only.
+
+    A host counts when ``[mcp] register`` is in effect, a ``devkit.mcp.registrations`` provider is installed (its
+    entry point is never loaded, so neither devkit-mcp nor the MCP SDK is imported), the host has a supported
+    destination that is neither tracked nor a visible foreign file, and the ledger holds no owned entry matching the
+    destination's current one. A non-Git checkout yields ``[]``. Raises ``RegistrationError`` for a malformed ledger
+    or destination, as ``plan`` does.
+    """
+    root = root.resolve()
+    if not metadata.entry_points(group=GROUP) or common_dir(root) is None:
+        return []
+    if not read_effective_config(root).values["mcp"]["register"]:
+        return []
+    entries = _ledger(root)["entries"]
+    hosts = []
+    for host in sorted({"claude" if agent == "claude-code" else agent for agent in agents} & DESTINATIONS.keys()):
+        relative = DESTINATIONS[host]
+        snap = _snapshot(root / relative, root)
+        if _tracked(root, relative) or (snap is not None and not _ignored(root, relative)):
+            continue
+        record = entries.get(host)
+        if record is None or _entry(host, snap[0] if snap else None) != record["entry"]:
+            hosts.append(host)
+    return hosts
 
 
 def _write(path: Path, value: tuple[bytes, int] | None, anchor: Path) -> None:

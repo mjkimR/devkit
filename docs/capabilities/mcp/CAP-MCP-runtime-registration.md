@@ -83,6 +83,11 @@ locked asset restoration. After restoration, worktree setup invokes dist-owned `
 which discovers the optional provider and reconciles local entries without touching assets or the receipt.
 `devkit sync --registrations-only [-w DIR] [--format text|json]` accepts no other sync mode or selection flag
 (`ARGUMENT_INVALID`) and prints `[MCP_REGISTRATION: changes=<n>]` (JSON `{"actions": [...], "notices": [...]}`).
+Each planned change carries its path (relative to the checkout, or absolute for a linked worktree's common Git
+info/exclude) and the kind `create`, `update` or `remove` from the captured bytes. A read-only check answers which
+selected hosts ordinary sync would register but this checkout does not hold (register in effect, provider entry
+point installed but not loaded, eligible destination, no matching owned entry), so status can report a fresh
+checkout's missing registration without importing devkit-mcp or the MCP SDK.
 Without an installed provider and ownership state this mode does nothing. The trusted lifecycle guard runs
 again before that initialization; copied opt-out and cloud configuration remain effective. Opt-out, uninstall and selected-agent removal retire only exact
 owned entries. An unloadable installed provider is an error, not an uninstall signal.

@@ -269,3 +269,53 @@ def test_inspect_lists_a_refused_plan_under_errors_not_notices(repo):
     assert [error.code for error in result["errors"]] == ["MCP_REGISTRATION_CONFLICT"]
     assert result["notices"] == []
     assert r.inspect(repo.parent, [])["errors"] == []  # nothing to inspect is no problem
+
+
+def test_actions_name_each_path_and_create_for_a_new_file(repo):
+    planned = r.plan(repo, ["claude"])
+    assert planned.actions == [
+        (".git/info/exclude", "update"),
+        (".mcp.json", "create"),
+        (r.LEDGER, "create"),
+    ]
+    r.apply(planned)
+    (repo / ".devkit/config.local.toml").write_text("[mcp]\nregister=false\n")
+    assert dict(r.plan(repo, ["claude"]).actions)[".mcp.json"] == "update"
+
+
+def test_actions_name_a_linked_worktree_exclusion_by_its_absolute_path(repo, tmp_path):
+    other = tmp_path / "linked"
+    git(repo, "worktree", "add", "-b", "dev-actions", str(other))
+    paths = [path for path, _ in r.plan(other, ["claude"]).actions]
+    assert str((repo / ".git/info/exclude").resolve()) in paths
+
+
+def test_unregistered_hosts_reports_desired_registration_absent_from_the_checkout(repo, monkeypatch):
+    def refuse_load(**kw):
+        return [SimpleNamespace(load=lambda: pytest.fail("the provider must not be loaded"))]
+
+    monkeypatch.setattr(r.metadata, "entry_points", refuse_load)
+    assert r.unregistered_hosts(repo, ["claude-code", "codex", "cursor"]) == ["claude", "codex"]
+    launch = r.LaunchDescriptor("/retained/python", ("-m", "x"), str(repo), str(repo), "local")
+    monkeypatch.setattr(r.metadata, "entry_points", lambda **kw: [SimpleNamespace(load=lambda: lambda *a, **k: launch)])
+    r.apply(r.plan(repo, ["claude"]))
+    assert r.unregistered_hosts(repo, ["claude-code", "codex"]) == ["codex"]
+    (repo / ".devkit/config.local.toml").write_text("[mcp]\nregister=false\n")
+    assert r.unregistered_hosts(repo, ["codex"]) == []
+
+
+def test_unregistered_hosts_is_empty_without_a_provider_or_git(repo, monkeypatch, tmp_path):
+    monkeypatch.setattr(r.metadata, "entry_points", lambda **kw: [])
+    assert r.unregistered_hosts(repo, ["claude"]) == []
+    plain = tmp_path / "plain"
+    (plain / ".devkit").mkdir(parents=True)
+    (plain / ".devkit/config.toml").write_text("schema = 1\n")
+    monkeypatch.setattr(r.metadata, "entry_points", lambda **kw: [SimpleNamespace()])
+    assert r.unregistered_hosts(plain, ["claude"]) == []
+
+
+def test_unregistered_hosts_skips_a_tracked_destination(repo):
+    (repo / ".mcp.json").write_text("{}\n")
+    git(repo, "add", ".mcp.json")
+    git(repo, "commit", "-m", "host-owned")
+    assert r.unregistered_hosts(repo, ["claude"]) == []
