@@ -131,3 +131,29 @@ def test_frontmatter_does_not_decode_body(repo: Path) -> None:
     assert WorkingTreeReader(repo).frontmatter("docs/a.md") == "---\r\nid: MS-a\r\n---\r\n"
     target.write_bytes(b"# Title\n\xff\xfe")
     assert WorkingTreeReader(repo).frontmatter("docs/a.md") == ""
+
+
+@pytest.mark.parametrize(
+    ("raw", "envelope"),
+    [
+        (b"\xef\xbb\xbf---\nid: MS-a\n---\nbody\n", "---\nid: MS-a\n---\n"),
+        (b"--- \nid: MS-a\n--- \nbody\n", "---\nid: MS-a\n---\n"),
+        (b"---\nid: MS-a\n...\nbody\n", "---\nid: MS-a\n---\n"),
+        (b"---\n---\nbody\n", "---\n---\n"),
+        (b" ---\nid: MS-a\n---\n", ""),
+    ],
+)
+def test_frontmatter_follows_the_core_grammar(repo: Path, raw: bytes, envelope: str) -> None:
+    (repo / "docs/a.md").write_bytes(raw)
+    assert WorkingTreeReader(repo).frontmatter("docs/a.md") == envelope
+
+
+def test_dashboard_lists_a_milestone_core_accepts(repo: Path) -> None:
+    folder = repo / "docs/roadmap"
+    folder.mkdir()
+    (folder / "MS-bom.md").write_bytes(b"\xef\xbb\xbf--- \nid: MS-bom\n...\n")
+    result = WorkingTreeReader(repo).dashboard_headers("milestones")
+    assert result == {
+        "items": [{"path": "docs/roadmap/MS-bom.md", "content": "---\nid: MS-bom\n---\n", "encoding": "utf-8"}],
+        "errors": [],
+    }

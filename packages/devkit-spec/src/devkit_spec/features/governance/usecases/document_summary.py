@@ -22,7 +22,7 @@ from devkit_agt.features.rules.services.builtins import BaseRule
 
 from devkit_spec.base.units import SKELETON_MARKER
 from devkit_spec.features.documents import Document, Summary, definition
-from devkit_spec.features.governance import document_index, is_material, reportable
+from devkit_spec.features.governance import document_index, field_line, is_material, reportable
 from devkit_spec.utils.text import foreign_letters as foreign_letters
 
 RULE_ID = "RULE-document-summary"
@@ -44,15 +44,6 @@ def required(document: Document) -> bool:
     if row.summary is Summary.ANCHOR:
         return document.path.rsplit("/", 1)[-1] == row.anchor
     return row.summary is Summary.ALWAYS
-
-
-def _line(text: str, key: str) -> int:
-    for number, line in enumerate(text.split("\n"), 1):
-        if line.startswith(f"{key}:"):
-            return number
-        if number > 1 and line.strip() == "---":
-            break
-    return 1
 
 
 class DocumentSummaryRule(BaseRule):
@@ -81,7 +72,7 @@ class DocumentSummaryRule(BaseRule):
             problem = self._problem(ctx, document)
             if problem is not None:
                 text = ctx.cache.read_text(document.path)
-                line = _line(text, "summary") if "summary" in document.frontmatter else 1
+                line = field_line(text, "summary") if "summary" in document.frontmatter else 1
                 found.append(
                     Violation(
                         rule_id=self.id,

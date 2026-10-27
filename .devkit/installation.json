@@ -1703,7 +1703,7 @@
     },
     ".devkit/managed/spec/rules/spec_format/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "a585c849da5c34f018f596e4eae86c64ee4455d34cc41b33b075e97c97fdaf32"
+      "sha256": "bc918aafddbbff24cf9099cc6a6586bffe63b851e61d1ea4487ada8611b24133"
     },
     ".devkit/managed/spec/rules/spec_lifecycle/guide.md": {
       "mode": 420,

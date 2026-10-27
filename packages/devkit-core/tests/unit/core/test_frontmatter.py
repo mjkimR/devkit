@@ -200,3 +200,33 @@ def test_tabs_inside_quoted_scalars_remain_valid() -> None:
 @pytest.mark.parametrize("character", ["?", "#", "\ufeff"])
 def test_guarded_characters_inside_quoted_scalars_remain_valid(character: str) -> None:
     assert frontmatter.load_header(f'k: "a{character}b"\n') == {"k": f"a{character}b"}
+
+
+@pytest.mark.parametrize(
+    ("value", "rendered"),
+    [
+        ("plain title", "plain title"),
+        ("off", "'off'"),
+        ("null", "'null'"),
+        ("true", "'true'"),
+        ("yes", "'yes'"),
+        ("2024-01-01", "'2024-01-01'"),
+        ("PROP-x: y", "'PROP-x: y'"),
+        (" leading", "' leading'"),
+        ("trailing ", "'trailing '"),
+        ("has # hash", "'has # hash'"),
+        ("a#b", "a#b"),
+        ('say "hi"', 'say "hi"'),
+        ("it's", "it's"),
+        ("'quoted'", "'''quoted'''"),
+        ("- item", "'- item'"),
+        ("line\nbreak", '"line\\nbreak"'),
+        ("a\u2028b", '"a\\Lb"'),
+        ("한글 제목 é", "한글 제목 é"),
+        ("", "''"),
+    ],
+)
+def test_scalar_renders_one_line_that_reads_back(value: str, rendered: str) -> None:
+    assert frontmatter.scalar(value) == rendered
+    assert "\n" not in rendered
+    assert parse(f"---\nk: {rendered}\nl:\n  - {rendered}\n---\n").data == {"k": value, "l": [value]}

@@ -21,13 +21,12 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
-import yaml
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow import write_binding
 from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import FrontmatterError
-from devkit_core.core.frontmatter import parse
+from devkit_core.core.frontmatter import parse, scalar
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
 from devkit_spec.base.axes import (
@@ -119,12 +118,6 @@ def first_segment_has_letter(slug: str) -> bool:
     """Whether the first ``-`` segment of ``slug`` has a letter; ``RULE-id-convention`` reads ``2024-budget`` as the
     retired number-based ID ``2024``."""
     return _FIRST_SEGMENT_LETTER.match(slug) is not None
-
-
-def yaml_scalar(value: str) -> str:
-    """``value`` as a YAML scalar for a frontmatter line, quoted only when YAML needs it (``A: B`` titles)."""
-    dumped = yaml.safe_dump(value, allow_unicode=True, width=10**6)
-    return dumped.removesuffix("\n...\n").removesuffix("\n")
 
 
 def require_task_kind(value: str | None) -> str:
@@ -360,34 +353,34 @@ def _proposal(
     needs_decompose: bool = False,
 ) -> str:
     summary_line = (
-        f"summary: {yaml_scalar(summary)}"
+        f"summary: {scalar(summary)}"
         if summary
         else "# summary: <one or two English sentences: what this proposal changes and why>"
     )
-    namespace_line = f"namespace: {yaml_scalar(namespace)}\n" if namespace else ""
-    milestone_line = f"milestone: {yaml_scalar(milestone)}\n" if milestone else ""
+    namespace_line = f"namespace: {scalar(namespace)}\n" if namespace else ""
+    milestone_line = f"milestone: {scalar(milestone)}\n" if milestone else ""
     planning_effort_line = f"planning_effort: {planning_effort:<20} # low | medium | high (hint for Planning)"
     dev_effort_line = f"dev_effort: {dev_effort:<25} # low | medium | high (hint for Development)"
     task_kind_line = f"task_kind: {task_kind:<26} # feature | bugfix: the spec follows sdd-spec-<task_kind>"
-    supersedes_line = f"supersedes: {yaml_scalar(supersedes)}\n" if supersedes else ""
-    supersedes_line += f"decomposed_from: {yaml_scalar(decomposed_from)}\n" if decomposed_from else ""
+    supersedes_line = f"supersedes: {scalar(supersedes)}\n" if supersedes else ""
+    supersedes_line += f"decomposed_from: {scalar(decomposed_from)}\n" if decomposed_from else ""
     decompose_line = (
         "needs_decompose: true                 # split in Backlog before Planning starts\n" if needs_decompose else ""
     )
     return f"""---
 id: PROP-{slug}
-title: {yaml_scalar(title)}
+title: {scalar(title)}
 {summary_line}
 status: draft                         # draft | reviewing | accepted | rejected
 created_at: {created}
-target_area: {yaml_scalar(area)}
+target_area: {scalar(area)}
 {namespace_line}priority: high                        # critical | high | medium | low
 size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
 {planning_effort_line}
 {dev_effort_line}
 {milestone_line}boundaries:
   owns:
-    - {yaml_scalar(area)}
+    - {scalar(area)}
   excludes:
     - docs/decisions/
 {task_kind_line}
@@ -487,13 +480,13 @@ class CreatedDecision:
 
 def _padr(padr_id: str, title: str, summary: str | None, slug: str, created: str) -> str:
     summary_line = (
-        f"summary: {yaml_scalar(summary)}\n"
+        f"summary: {scalar(summary)}\n"
         if summary
         else "# summary: <English Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>\n"
     )
     return f"""---
 id: {padr_id}
-title: {yaml_scalar(title)}
+title: {scalar(title)}
 {summary_line}proposal: PROP-{slug}
 status: draft
 created_at: {created}

@@ -27,6 +27,7 @@ from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.base.errors import FrontmatterError
 from devkit_core.core import frontmatter
 
+from devkit_spec.features.governance import field_line
 from devkit_spec.utils.text import foreign_letters
 
 RULE_ID = "RULE-steering-documents"
@@ -43,15 +44,6 @@ class SteeringDocumentsSettings:
     max_files: int = 10
     max_body_bytes: int = 24576
     max_summary_length: int = 300
-
-
-def _line(text: str, key: str) -> int:
-    for number, line in enumerate(text.split("\n"), 1):
-        if line.startswith(f"{key}:"):
-            return number
-        if number > 1 and line.rstrip() in ("---", "..."):
-            break
-    return 1
 
 
 class SteeringDocumentsRule(BaseRule):
@@ -152,7 +144,7 @@ class SteeringDocumentsRule(BaseRule):
         if "id" in header:
             add(
                 path,
-                _line(text, "id"),
+                field_line(text, "id"),
                 "steering documents carry no id",
                 "Remove `id:`; a steering document is read by path, and a document with an ID belongs to its kind",
             )
@@ -160,7 +152,7 @@ class SteeringDocumentsRule(BaseRule):
         if not isinstance(title, str) or not title.strip():
             add(
                 path,
-                _line(text, "title") if "title" in header else 1,
+                field_line(text, "title") if "title" in header else 1,
                 "steering document has no title",
                 "Write `title:`",
             )
@@ -177,7 +169,7 @@ class SteeringDocumentsRule(BaseRule):
     @staticmethod
     def _summary(path: str, text: str, header: dict[str, object], limit: int, add: Add) -> None:
         value = header.get("summary")
-        line = _line(text, "summary") if "summary" in header else 1
+        line = field_line(text, "summary") if "summary" in header else 1
         remediation = (
             "Write `summary:`: one English sentence saying when an agent reads this file"
             " (it is listed in every agent context)"

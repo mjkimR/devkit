@@ -30,19 +30,16 @@ On a proposal anchor (``docs/proposals/PROP-<slug>/proposal.md`` or ``docs/propo
 
 from __future__ import annotations
 
-import json
 import re
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import Any
 
-import yaml
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, match_path
 from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
-from devkit_core.core.frontmatter import BOM, load_header, locate
-from devkit_core.core.yaml import safe_load
+from devkit_core.core.frontmatter import BOM, load_header, locate, scalar
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
 from devkit_spec.base.axes import DEV_EFFORT, EFFORTS, PLANNING_EFFORT
@@ -60,6 +57,7 @@ from devkit_spec.features.governance import (
     FIX_COMMAND,
     document_index,
     explicitly_targeted,
+    field_line,
     is_proposal_anchor,
     namespaces,
     reportable,
@@ -161,7 +159,7 @@ def _problems(ctx: RuleContext, path: str) -> list[_Problem]:
                 _Problem(
                     message,
                     f"Set {field} to one of {' | '.join(EFFORTS)}, or remove the field",
-                    line=_field_line(ctx.cache.read_text(path), field),
+                    line=field_line(ctx.cache.read_text(path), field),
                 )
             )
     if path.startswith("docs/roadmap/"):
@@ -259,7 +257,7 @@ class SpecFormatRule(BaseRule):
                 Violation(
                     rule_id=self.id,
                     file=document.path,
-                    line=_field_line(ctx.cache.read_text(document.path), NAMESPACE_FIELD),
+                    line=field_line(ctx.cache.read_text(document.path), NAMESPACE_FIELD),
                     message=message,
                     remediation=(
                         f"Set namespace to one of {', '.join(known)} (registered in [[tool.spec.namespaces]] of"
@@ -300,20 +298,6 @@ def _namespace_checked(ctx: RuleContext, index: DocumentIndex, document: Documen
     if not explicitly_targeted(ctx, CONFIG_PATH) or index.is_historical(document):
         return False
     return not any(match_path(pattern, document.path) for pattern in ctx.exclude)
-
-
-def _field_line(text: str, name: str) -> int:
-    """The 1-based line of the first top-level ``name:`` line of the frontmatter, else 1."""
-    try:
-        block = locate(text)
-    except FrontmatterError:
-        return 1
-    if block is None:
-        return 1
-    match = re.search(rf"^{re.escape(name)}[ \t]*:", block.header, re.M)
-    if match is None:
-        return 1
-    return text.count("\n", 0, block.header_start + match.start()) + 1
 
 
 def _fixed(text: str, stem: str, document_id: str | None, today: str) -> str | None:
@@ -362,7 +346,7 @@ def _fixed(text: str, stem: str, document_id: str | None, today: str) -> str | N
 
 def _line(name: str, value: str) -> str:
     """``name: value``; ``created_at`` is written as a plain YAML date, every other value as a string."""
-    return f"{name}: {value if name == 'created_at' else _scalar(value)}"
+    return f"{name}: {value if name == 'created_at' else scalar(value)}"
 
 
 def _h1_title(body: str) -> str:
@@ -375,13 +359,3 @@ def _h1_title(body: str) -> str:
                 title = title[title.index("]") + 1 :].strip()
             return title
     return ""
-
-
-def _scalar(value: str) -> str:
-    """``value`` as a YAML scalar that reads back as the same string: plain when it does, else double-quoted."""
-    try:
-        if safe_load(f"k: {value}", source="frontmatter scalar") == {"k": value}:
-            return value
-    except yaml.YAMLError:
-        pass
-    return json.dumps(value, ensure_ascii=False)

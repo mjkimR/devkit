@@ -58,7 +58,7 @@ Ordinary tree and blob endpoints read saved files below the registered repositor
 
 `tree?path=<dir>&recursive=true` returns the same metadata fields for all descendants in one response. It reads no file bodies and applies the same path, symlink and `.git` exclusions as a shallow listing. The default listing remains one directory.
 
-The dashboard listing reads candidate frontmatter through the closing YAML delimiter, without decoding document bodies. An absent optional root is empty; discovery/read failures are listed in `errors`. Invalid section names return `400 VIEWER_PATH_INVALID`. The browser parses YAML and reports malformed entries. File paths and symlinks obey the same working-tree guards.
+The dashboard listing reads candidate frontmatter through the closing YAML delimiter, without decoding document bodies. It follows the `devkit_core.core.frontmatter` grammar (a byte order mark, delimiters with trailing whitespace and a `...` closer are accepted) and returns each block normalized to `---` delimiters. An absent optional root is empty; discovery/read failures are listed in `errors`. Invalid section names return `400 VIEWER_PATH_INVALID`. The browser parses YAML and reports malformed entries. File paths and symlinks obey the same working-tree guards.
 
 `default_branch` is the branch checked out in the registered work tree (`HEAD` when detached). An empty `path` is the root. A legacy `ref` query parameter is ignored and cannot select another branch. Errors are `{"error": {"code", "message"}}`: `VIEWER_REPO_UNKNOWN`, `VIEWER_PATH_NOT_FOUND` (absent or a symlink), `VIEWER_NOT_FOUND` (no such endpoint or file) with `404`; `VIEWER_PATH_INVALID` (a leading `/`, a `.git` segment, a backslash, an empty, `.` or `..` segment) with `400`.
 

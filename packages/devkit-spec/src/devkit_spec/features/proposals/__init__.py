@@ -27,7 +27,6 @@ from devkit_spec.features.proposals.usecases.scaffold import (
     CreatedProposal,
     clean_slug,
     create_proposal,
-    yaml_scalar,
 )
 from devkit_spec.features.proposals.usecases.specs import (
     SKELETON_MARKER,
@@ -60,5 +59,4 @@ __all__ = [
     "mark_skeleton",
     "prune_proposals",
     "spec_files",
-    "yaml_scalar",
 ]

@@ -8,9 +8,16 @@ from os import scandir
 from pathlib import Path
 
 from devkit_core.base.errors import GitError
+from devkit_core.core.frontmatter import BOM, CLOSERS, OPENER, locate
 from devkit_core.core.git import run_git
 
 from devkit_viewer.features.browse.models.errors import ReadError, path_invalid, path_not_found
+
+_BOM = BOM.encode()
+_OPENER = OPENER.encode()
+_CLOSERS = frozenset(closer.encode() for closer in CLOSERS)
+# Bytes of the first line read to recognise an opener (a byte order mark, ``---`` and trailing whitespace).
+_OPENER_READ = 64
 
 
 @dataclass(frozen=True)
@@ -108,20 +115,29 @@ class WorkingTreeReader:
             raise path_not_found(path, "file") from exc
 
     def frontmatter(self, path: str) -> str:
-        """Read the YAML envelope only; leave document bodies unread."""
+        """Read the YAML envelope only; leave document bodies unread.
+
+        The block follows ``devkit_core.core.frontmatter``'s grammar (a byte order mark, ``--- `` with trailing
+        whitespace and a ``...`` closer are accepted) and is returned normalized as ``---`` + header + ``---``, so
+        the frontend reads every file core reads. ``""`` when the file has no frontmatter.
+        """
         target = self._resolve(path)
         if not target.is_file():
             raise path_not_found(path, "file")
         try:
             with target.open("rb") as stream:
-                first = stream.readline(5)
-                if first not in (b"---\n", b"---\r\n"):
+                first = stream.readline(_OPENER_READ)
+                if first.removeprefix(_BOM).rstrip() != _OPENER:
                     return ""
                 lines = [first]
                 for line in stream:
                     lines.append(line)
-                    if line.rstrip(b"\r\n") == b"---":
-                        return b"".join(lines).decode("utf-8")
+                    if line.rstrip() in _CLOSERS:
+                        block = locate(b"".join(lines).decode("utf-8"))
+                        if block is None:
+                            return ""
+                        newline = block.newline or "\n"
+                        return f"{OPENER}{newline}{block.header}{OPENER}{newline}"
             raise ValueError("unterminated YAML frontmatter")
         except OSError as exc:
             raise path_not_found(path, "file") from exc

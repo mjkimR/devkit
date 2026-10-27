@@ -17,7 +17,7 @@ from devkit_spec.base.errors import (
     ProposalSlugConflictError,
     ProposalSlugError,
 )
-from devkit_spec.features.proposals import clean_slug, create_proposal, create_spec, yaml_scalar
+from devkit_spec.features.proposals import clean_slug, create_proposal, create_spec
 from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecisionUseCase
 
 
@@ -32,20 +32,6 @@ from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecis
 )
 def test_clean_slug(raw: str, slug: str) -> None:
     assert clean_slug(raw) == slug
-
-
-@pytest.mark.parametrize(
-    ("value", "scalar"),
-    [
-        ("plain title", "plain title"),
-        ("A: B subtitle", "'A: B subtitle'"),
-        ("has # hash", "'has # hash'"),
-        ('say "hi"', 'say "hi"'),
-        ("yes", "'yes'"),
-    ],
-)
-def test_yaml_scalar_quotes_only_when_needed(value: str, scalar: str) -> None:
-    assert yaml_scalar(value) == scalar
 
 
 def test_create_proposal_bundle(workspace: Path) -> None:

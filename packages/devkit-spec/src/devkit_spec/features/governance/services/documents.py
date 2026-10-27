@@ -29,9 +29,12 @@ namespace registry that cannot be read.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from devkit_agt.features.rules import RuleContext
+from devkit_core.core import FrontmatterError
+from devkit_core.core.frontmatter import locate
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
 from devkit_spec.base.units import PROPOSAL_FILE, PROPOSALS
@@ -59,6 +62,21 @@ def document_index(ctx: RuleContext) -> DocumentIndex:
         return DocumentIndex.load(root, files=files, read=read)
 
     return ctx.cache.get_or_compute(CACHE_KEY, _load)
+
+
+def field_line(text: str, key: str) -> int:
+    """The 1-based line of the first top-level ``key:`` line of ``text``'s frontmatter (core grammar: byte order
+    mark, ``---`` or ``...`` closer); 1 when the text has no frontmatter, an unclosed one, or no such line."""
+    try:
+        block = locate(text)
+    except FrontmatterError:
+        return 1
+    if block is None:
+        return 1
+    match = re.search(rf"^{re.escape(key)}[ \t]*:", block.header, re.M)
+    if match is None:
+        return 1
+    return text.count("\n", 0, block.header_start + match.start()) + 1
 
 
 def namespaces(ctx: RuleContext) -> tuple[Namespace, ...]:

@@ -10,6 +10,7 @@ from typing import Any
 
 import yaml
 from devkit_core.base.errors import FrontmatterError
+from devkit_core.core.frontmatter import scalar
 
 import devkit_agt.features.workflow.repositories.unit.frontmatter as frontmatter
 from devkit_agt.features.workflow.models.binding import AnchorState, Binding, HistoryEntry
@@ -67,13 +68,6 @@ def read_binding(anchor_path: Path) -> Binding:
     return read_anchor(anchor_path).binding
 
 
-def _scalar(value: str) -> str:
-    """``value`` as a one-line YAML string scalar, quoted when YAML would read it otherwise (``off``, ``null``)."""
-    if not value:
-        return value
-    return yaml.safe_dump(value, allow_unicode=True, width=10**6).removesuffix("\n...\n").rstrip("\n")
-
-
 def render_binding(text: str, binding: Binding) -> str:
     """``text`` (an anchor) with the binding recorded, preserving every other byte.
 
@@ -82,7 +76,7 @@ def render_binding(text: str, binding: Binding) -> str:
     one top-level line per key. An empty history leaves an existing one untouched.
     An anchor without frontmatter gets a block holding the binding.
     """
-    updates = {WORKFLOW_KEY: _scalar(binding.workflow)}
+    updates = {WORKFLOW_KEY: scalar(binding.workflow) if binding.workflow else ""}
     if binding.history:
         flow = yaml.safe_dump(
             [h.to_dict() for h in binding.history], default_flow_style=True, sort_keys=False, width=10**6
