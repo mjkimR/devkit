@@ -345,7 +345,7 @@ def _markdown(ctx: RuleContext, directory: str) -> list[str]:
     base = ctx.workspace_root / directory
     if not base.is_dir():
         return []
-    return [path.relative_to(ctx.workspace_root).as_posix() for path in ctx.cache.find_files(base, extensions=(".md",))]
+    return [ctx.cache.relative_name(path) for path in ctx.cache.find_files(base, extensions=(".md",))]
 
 
 def _targets(ctx: RuleContext) -> list[_Target]:

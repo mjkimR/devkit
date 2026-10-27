@@ -114,7 +114,7 @@ def bundles(ctx: RuleContext) -> list[Bundle]:
     for path in ctx.cache.find_files(root / "specs", extensions=(".md",)):
         if path.name != "spec.md":
             continue
-        spec = path.relative_to(root).as_posix()
+        spec = ctx.cache.relative_name(path)
         base = spec.removesuffix("spec.md")
         reconcile, tasks = f"{base}reconcile.md", f"{base}tasks.md"
         has_reconcile = _read(ctx, reconcile) is not None

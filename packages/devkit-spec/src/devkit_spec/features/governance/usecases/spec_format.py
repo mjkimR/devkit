@@ -197,7 +197,7 @@ def _scope(ctx: RuleContext) -> list[str]:
         if not (root / directory).is_dir():
             continue
         for path in ctx.cache.find_files(root / directory, extensions=(".md",)):
-            relative = path.relative_to(root).as_posix()
+            relative = ctx.cache.relative_name(path)
             if (
                 is_document_file(path.name)
                 and in_source_directory(relative)

@@ -37,7 +37,7 @@ class FileLengthRule(BaseRule):
         violations: list[Violation] = []
         files = ctx.cache.find_files(ctx.workspace_root, extensions=None)
         for p in files:
-            rel = p.relative_to(ctx.workspace_root).as_posix()
+            rel = ctx.cache.relative_name(p)
             if not ctx.is_file_targeted(rel):
                 continue
             settings: FileLengthSettings = ctx.settings(self, rel)

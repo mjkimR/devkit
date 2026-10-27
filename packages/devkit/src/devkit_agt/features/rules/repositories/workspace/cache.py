@@ -85,6 +85,7 @@ class WorkspaceCache:
         facts_prune: bool = False,
     ) -> None:
         self.workspace_root = workspace_root.resolve() if workspace_root else Path.cwd().resolve()
+        self._root_prefix = str(self.workspace_root).rstrip("/") + "/"
         self._git_filter = git_filter
         self._git_files: set[str] | None = None
         self._git_files_loaded = False
@@ -459,6 +460,16 @@ class WorkspaceCache:
                 regular = entry.is_file() and (not entry.is_symlink() or self._stays_inside(path))
                 found.append(_WalkedFile(_nfc(prefix + entry.name), path, path.suffix, regular))
         return found
+
+    def relative_name(self, path: Path) -> str:
+        """``path.relative_to(self.workspace_root).as_posix()``, by string prefix for a path below the root.
+
+        Listing loops call it for every file; ``Path.relative_to`` costs about 15 µs a call.
+        """
+        text = str(path)
+        if os.sep == "/" and text.startswith(self._root_prefix) and len(text) > len(self._root_prefix):
+            return text[len(self._root_prefix) :]
+        return path.relative_to(self.workspace_root).as_posix()
 
     def _stays_inside(self, path: Path) -> bool:
         """A symlink is listed only when it resolves inside the workspace, as a snapshot materializes it."""
