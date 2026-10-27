@@ -5,7 +5,6 @@ description: Reviews the actual diff against the acceptance criteria and check r
 skill: spec-review
 x-execution: isolated
 x-invocation: optional
-x-model-profile: general-high
 x-git-actions: [read]
 hosts:
   # Bash runs tests and `git diff`; shell access means the path boundary rests on the caller's diff comparison.
@@ -13,11 +12,9 @@ hosts:
     status: native
     tools: [Read, Grep, Glob, Bash]
     disallowedTools: [Write, Edit]
-    effort: high
   # No sandbox override: tests need a writable cache, so the parent's sandbox is inherited.
   codex:
     status: emulated
-    model_reasoning_effort: high
   antigravity:
     status: native
     tools: [view_file, grep_search, run_command]

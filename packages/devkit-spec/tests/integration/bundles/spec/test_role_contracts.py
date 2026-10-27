@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import copy
 import tomllib
 from typing import Any
 
@@ -19,19 +18,6 @@ WORKER_RESULTS = BUNDLE / "skills/spec-delegate/references/worker.md"
 ORCHESTRATE = BUNDLE / "skills/spec-orchestrate/SKILL.md"
 TASKS = BUNDLE / "skills/spec-tasks/SKILL.md"
 PLANNING = BUNDLE / "skills/spec/references/planning.md"
-# ADR-role-effort-presets: role -> (x-model-profile, reasoning effort preset). The workers set none and run at the
-# session's effort; Antigravity has no effort key; no contract names a model.
-EFFORT_PRESETS: dict[str, tuple[str, str | None]] = {
-    "scout": ("light-medium", "medium"),
-    "reconcile-reviewer": ("light-medium", "medium"),
-    "code-reviewer": ("general-high", "high"),
-    "ux-reviewer": ("general-high", "high"),
-    "challenger": ("high-reasoning", "high"),
-    "triage": ("light-medium", "medium"),
-    "decomposer": ("general-high", "high"),
-    "planning-worker": ("general-high", None),
-    "development-worker": ("general-high", None),
-}
 
 
 def _contract(role: str) -> tuple[dict[str, Any], str]:
@@ -39,57 +25,22 @@ def _contract(role: str) -> tuple[dict[str, Any], str]:
     return yaml.safe_load(frontmatter), body
 
 
-def _preset_violations(role: str, metadata: dict[str, Any]) -> list[str]:
-    profile, preset = EFFORT_PRESETS[role]
-    hosts = metadata["hosts"]
-    violations = []
-    if metadata.get("x-model-profile") != profile:
-        violations.append(f"x-model-profile is {metadata.get('x-model-profile')!r}, expected {profile!r}")
-    if hosts["claude-code"].get("effort") != preset:
-        violations.append(f"claude-code effort is {hosts['claude-code'].get('effort')!r}, expected {preset!r}")
-    codex_preset = None if hosts["codex"]["status"] == "unsupported" else preset
-    if hosts["codex"].get("model_reasoning_effort") != codex_preset:
-        violations.append(
-            f"codex model_reasoning_effort is {hosts['codex'].get('model_reasoning_effort')!r}, expected {codex_preset!r}"
-        )
-    violations += [f"antigravity sets {key}" for key in hosts["antigravity"] if "effort" in key]
-    violations += [f"{host} names a model" for host, block in hosts.items() if "model" in block]
-    return violations
+@pytest.mark.parametrize("role", ROLES)
+def test_scout_is_compact_and_other_roles_inherit(role: str) -> None:
+    metadata, _ = _contract(role)
+    assert "x-model-profile" not in metadata
+    if role == "scout":
+        assert metadata["level"] == "compact"
+    else:
+        assert "level" not in metadata
+    for host in metadata["hosts"].values():
+        assert not {"model", "effort", "model_reasoning_effort", "reasoning_effort"} & host.keys()
 
 
-def test_every_role_contract_has_an_effort_preset_entry() -> None:
+def test_every_shipped_role_is_checked_for_inheritance() -> None:
     assert {
         path.name.removesuffix(".jinja").removesuffix(".md") for path in (BUNDLE / "subagents").glob("*.md*")
-    } == set(EFFORT_PRESETS)
-    assert set(ROLES) == set(EFFORT_PRESETS)
-
-
-@pytest.mark.parametrize("role", sorted(EFFORT_PRESETS))
-def test_a_role_presets_the_reasoning_effort_of_its_profile(role: str) -> None:
-    assert _preset_violations(role, _contract(role)[0]) == []
-
-
-@pytest.mark.parametrize(
-    ("role", "host", "key", "value"),
-    [
-        ("code-reviewer", None, "x-model-profile", "light-medium"),
-        ("code-reviewer", "claude-code", "effort", "medium"),
-        ("scout", "codex", "model_reasoning_effort", "high"),
-        ("development-worker", "claude-code", "effort", "high"),
-        ("challenger", "antigravity", "reasoning_effort", "high"),
-        ("reconcile-reviewer", "claude-code", "model", "some-model"),
-    ],
-)
-def test_a_drifted_preset_is_a_violation(role: str, host: str | None, key: str, value: str) -> None:
-    metadata = copy.deepcopy(_contract(role)[0])
-    (metadata if host is None else metadata["hosts"][host])[key] = value
-    assert _preset_violations(role, metadata)
-
-
-def test_the_challenger_leaves_the_model_to_the_runtime() -> None:
-    challenger = text("subagents/challenger.md")
-    assert "Choose a high-reasoning model at invocation time" not in challenger
-    assert "# The reasoning effort is preset per role; the model is left to the runtime." in challenger
+    } == set(ROLES)
 
 
 @pytest.mark.parametrize("role", ("scout", "challenger"))
@@ -509,3 +460,17 @@ def test_a_condition_free_spike_completion_is_not_planning_evidence() -> None:
     assert "only the recorded `scout`, `challenger` and `reverify` envelopes are Planning evidence" in planning
     assert "`[DONE: ... spike]` is not Planning evidence" in signals
     assert "`scout` and `challenger` envelopes and their `reverify` recorded at `spike`" in signals
+
+
+@pytest.mark.parametrize(
+    "host,expected_model", [("claude-code", "haiku"), ("codex", "gpt-6-luna"), ("antigravity", "flash")]
+)
+def test_scout_projection_selects_lightweight_family_and_omits_effort(host: str, expected_model: str) -> None:
+    contract = read_contract(raw("subagents/scout.md").encode(), "scout", "scout")
+    rendered = render_projection(host, contract, "contract.md")
+    assert rendered is not None
+    metadata = (
+        tomllib.loads(rendered.decode()) if host == "codex" else yaml.safe_load(rendered.decode().split("---\n")[1])
+    )
+    assert metadata["model"] == expected_model
+    assert not {"effort", "model_reasoning_effort", "level"} & metadata.keys()

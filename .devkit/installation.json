@@ -903,7 +903,7 @@
     },
     ".agents/agents/scout.md": {
       "mode": 420,
-      "sha256": "fad039ed3830c252aeadd4bae07136a910682a941bf45b6397769f32e55ea889"
+      "sha256": "1456e68ada3c58912e125df9ea8f26283afa9a0ce8fdc06452a828bcb1898a42"
     },
     ".agents/agents/triage.md": {
       "mode": 420,
@@ -947,7 +947,7 @@
     },
     ".agents/skills/spec-delegate/references/worker.md": {
       "mode": 420,
-      "sha256": "ebd3a75bf72407bd091291c78e4918c0e20dc46929bb574db9875dbba302cee1"
+      "sha256": "9841785629958099b1e26f55c712b3ecc6ebb15143f255b1eb0ffc904da37cf6"
     },
     ".agents/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
@@ -991,7 +991,7 @@
     },
     ".agents/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
-      "sha256": "796bd45e125b57a5a60ac56554e80290e06048c29c13f6bfb8f2a00fec35a473"
+      "sha256": "89cd11f92af83a9ec6c62d1153cbfb4cfafa2d4da95f8804e42a4a747d1dd7e1"
     },
     ".agents/skills/spec-orchestrate/agents/openai.yaml": {
       "mode": 420,
@@ -1035,11 +1035,11 @@
     },
     ".agents/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "4205c46ad6f835dc633f1f2d5cc44b41575f849c32b50fdcdca0f91058b28790"
+      "sha256": "1c7bdcf4908abce2d3029a2a326e0bd479bb7ac02a1e23f48c9d71a2f0ad5527"
     },
     ".agents/skills/spec-tasks/SKILL.md": {
       "mode": 420,
-      "sha256": "99f3c3d728c4fb9944891fb0334953a2260980460ce0b4ce6b4386a7a7e09d98"
+      "sha256": "663e061861054001a9216ceb699a679205166300182121d7178bd52dec7720b8"
     },
     ".agents/skills/spec-ux-review/SKILL.md": {
       "mode": 420,
@@ -1115,15 +1115,15 @@
     },
     ".claude/agents/challenger.md": {
       "mode": 420,
-      "sha256": "03cb4cd54bb1c7bed2c3ce91376544c3ac25477eef604a0ef8bfeff240158d07"
+      "sha256": "da0fefa7d72ee1e2fa47cd75b6fd8b1b49e7a0733ed5e2c96eb4389673458553"
     },
     ".claude/agents/code-reviewer.md": {
       "mode": 420,
-      "sha256": "e9cf63a7a9c85339987ced8bcd37834f53db44c24ec0cb3626ad07b6b44d581b"
+      "sha256": "5f0b96e92cc6eba8d5238b141c7e9098647560eb50a21196773b27790b61a52c"
     },
     ".claude/agents/decomposer.md": {
       "mode": 420,
-      "sha256": "713b513f8a18120ea4aa31184579355d65d568b0de96cdb6334f606047764b15"
+      "sha256": "5bbf087f28851a2aec1ffa732d5978a28091d96648ea366cb770ea4d773b5675"
     },
     ".claude/agents/development-worker.md": {
       "mode": 420,
@@ -1135,19 +1135,19 @@
     },
     ".claude/agents/reconcile-reviewer.md": {
       "mode": 420,
-      "sha256": "db99438a444e88b723ed7cd218a6b24ff0ade7670f0396a34188253ef6384676"
+      "sha256": "f291658799058d1e391a352b97f8fcc0271f6a3a4c1d6e17751a90f5cde650aa"
     },
     ".claude/agents/scout.md": {
       "mode": 420,
-      "sha256": "dcedb170e2cbe75a2019c37bd7778b70b759a162c43f3764712e0d71865a06d9"
+      "sha256": "488f4a42bca5982a36d42ffe464a4013920e430ce0bf4801d85dbfc72332f932"
     },
     ".claude/agents/triage.md": {
       "mode": 420,
-      "sha256": "35a955b13db860e8051f087b38aefc92775dcd1ad15473af1a605c115ab1e040"
+      "sha256": "a86a1a820b9f8aad1c4e3098866ebcec48375871ab97e350d48e19e62fa9c630"
     },
     ".claude/agents/ux-reviewer.md": {
       "mode": 420,
-      "sha256": "7e5aff4a6f612091e16e0774f268dc533a4254bb90d8e99cffa83e077ee2aa36"
+      "sha256": "7c986ecc0b8525b91824102bd6cd6e0625215d4e3a723ffbcfe1023630b3e322"
     },
     ".claude/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
@@ -1175,7 +1175,7 @@
     },
     ".claude/skills/spec-delegate/references/worker.md": {
       "mode": 420,
-      "sha256": "ebd3a75bf72407bd091291c78e4918c0e20dc46929bb574db9875dbba302cee1"
+      "sha256": "9841785629958099b1e26f55c712b3ecc6ebb15143f255b1eb0ffc904da37cf6"
     },
     ".claude/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
@@ -1219,7 +1219,7 @@
     },
     ".claude/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
-      "sha256": "5215a31efb2bf6c88b70b83eba9ec04a16d638a81bdbbd7faf9e0e186311ca4f"
+      "sha256": "8ab9b3bd845746faf0089a647350715357305537f676f7a65afaf95acf8fd197"
     },
     ".claude/skills/spec-plan/SKILL.md": {
       "mode": 420,
@@ -1259,11 +1259,11 @@
     },
     ".claude/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "4205c46ad6f835dc633f1f2d5cc44b41575f849c32b50fdcdca0f91058b28790"
+      "sha256": "1c7bdcf4908abce2d3029a2a326e0bd479bb7ac02a1e23f48c9d71a2f0ad5527"
     },
     ".claude/skills/spec-tasks/SKILL.md": {
       "mode": 420,
-      "sha256": "99f3c3d728c4fb9944891fb0334953a2260980460ce0b4ce6b4386a7a7e09d98"
+      "sha256": "663e061861054001a9216ceb699a679205166300182121d7178bd52dec7720b8"
     },
     ".claude/skills/spec-ux-review/SKILL.md": {
       "mode": 420,
@@ -1339,15 +1339,15 @@
     },
     ".codex/agents/challenger.toml": {
       "mode": 420,
-      "sha256": "d61fc8c7f3409dca56ac4e749b8c1599defe96661f087d3ae11b2d08ea6850c0"
+      "sha256": "a1544fc60097036d66bf08552d43ac23f5533965d215733bada75053a63e6d13"
     },
     ".codex/agents/code-reviewer.toml": {
       "mode": 420,
-      "sha256": "ef5e58619d3b3b6497a2ff17b5570edeafe68110762db9be7f76fecd6cc41688"
+      "sha256": "f8cc941e7ea1fa4c23a9badafedc3d878c0c8b4d70f01f7a1dde15e88828569b"
     },
     ".codex/agents/decomposer.toml": {
       "mode": 420,
-      "sha256": "04f0a293148cb16e6b63253ea4416c83fc70c2d0f7ff1d8a70486a591c1d567e"
+      "sha256": "4298817bab24f5d5edaa80be2dc8102ff5f19fbdbecee8f3b0c81fd97769ba59"
     },
     ".codex/agents/development-worker.toml": {
       "mode": 420,
@@ -1359,19 +1359,19 @@
     },
     ".codex/agents/reconcile-reviewer.toml": {
       "mode": 420,
-      "sha256": "69dcdb38c70802c19219e7046184b9985a040f19a1ec53e7095253dcc1b4b37f"
+      "sha256": "163c4ff66b3929d86225644f2e3f0588455d82cb55220a85d4bdadf64c53afa2"
     },
     ".codex/agents/scout.toml": {
       "mode": 420,
-      "sha256": "670e670ca7d1c0986be0aa9f4a9e8c66c5cacaeefdae78d69ae6903d51ea9e7b"
+      "sha256": "75287dba12943fe1ead285299d6cba07a8c1eaae2df2b551ad4c6f73f0bd50c0"
     },
     ".codex/agents/triage.toml": {
       "mode": 420,
-      "sha256": "09d3021e2e62fcd200534006d579107583e1002a91a05b1a1bf18d300a9de98f"
+      "sha256": "0e5f4374e6861061ce36f757ae0a5f3e6a205c9f9d1e2b67a83b92a70ef4e116"
     },
     ".codex/agents/ux-reviewer.toml": {
       "mode": 420,
-      "sha256": "d16144a89414b6e75f73c01e71d2d632f89ac9d9ca9679337c21532eb88d5787"
+      "sha256": "e9b94d955df0e96f0507eed84415baf1042e229e2f841e0362b89d71e1ef1265"
     },
     ".devkit/managed/_devkit/skills/devkit-playbook/SKILL.md": {
       "mode": 420,
@@ -1803,7 +1803,7 @@
     },
     ".devkit/managed/spec/skills/spec-delegate/references/worker.md": {
       "mode": 420,
-      "sha256": "ebd3a75bf72407bd091291c78e4918c0e20dc46929bb574db9875dbba302cee1"
+      "sha256": "9841785629958099b1e26f55c712b3ecc6ebb15143f255b1eb0ffc904da37cf6"
     },
     ".devkit/managed/spec/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
@@ -1847,7 +1847,7 @@
     },
     ".devkit/managed/spec/skills/spec-orchestrate/SKILL.md": {
       "mode": 420,
-      "sha256": "796bd45e125b57a5a60ac56554e80290e06048c29c13f6bfb8f2a00fec35a473"
+      "sha256": "89cd11f92af83a9ec6c62d1153cbfb4cfafa2d4da95f8804e42a4a747d1dd7e1"
     },
     ".devkit/managed/spec/skills/spec-plan/SKILL.md": {
       "mode": 420,
@@ -1887,11 +1887,11 @@
     },
     ".devkit/managed/spec/skills/spec-sync/SKILL.md": {
       "mode": 420,
-      "sha256": "4205c46ad6f835dc633f1f2d5cc44b41575f849c32b50fdcdca0f91058b28790"
+      "sha256": "1c7bdcf4908abce2d3029a2a326e0bd479bb7ac02a1e23f48c9d71a2f0ad5527"
     },
     ".devkit/managed/spec/skills/spec-tasks/SKILL.md": {
       "mode": 420,
-      "sha256": "99f3c3d728c4fb9944891fb0334953a2260980460ce0b4ce6b4386a7a7e09d98"
+      "sha256": "663e061861054001a9216ceb699a679205166300182121d7178bd52dec7720b8"
     },
     ".devkit/managed/spec/skills/spec-ux-review/SKILL.md": {
       "mode": 420,
@@ -1967,39 +1967,39 @@
     },
     ".devkit/managed/spec/subagents/challenger.md": {
       "mode": 420,
-      "sha256": "eb6651a5f343d104cacf1206af3a83bc9b6e4c0eb5ca679039de386f15e478b9"
+      "sha256": "467989d84134d79471fcae7a90eb6b5c758dcbea0cefe58ef28baf8fe2615bf5"
     },
     ".devkit/managed/spec/subagents/code-reviewer.md": {
       "mode": 420,
-      "sha256": "44f14958a592e33df9ae06f345833f5da476b78ebb3f51d88d0fee0b08926064"
+      "sha256": "0b3c01224a8954e141cd520ad47b67502d15e59a441ba042c744b17ff59df5c0"
     },
     ".devkit/managed/spec/subagents/decomposer.md": {
       "mode": 420,
-      "sha256": "7e98abf1e92f63952fe4126fc06143b55cdb54ba45ab995d58543f561e5304b4"
+      "sha256": "27114af95e46fa723d0e3d5d8cee6643819f3af1a6089a7fda84912d61e2e0ee"
     },
     ".devkit/managed/spec/subagents/development-worker.md": {
       "mode": 420,
-      "sha256": "be253398d640ddb8506bfe15c41b0c36ab40f27f1a32791de2162ff974a189ff"
+      "sha256": "b655bd17adfd9a90a801dea89ffb43b497f6521aa27bab9fd2a941be750a12db"
     },
     ".devkit/managed/spec/subagents/planning-worker.md": {
       "mode": 420,
-      "sha256": "2f74fa9ecbabe5ec56dd66f13f245462cafb7d21da407f75414f622538bc9e20"
+      "sha256": "e68305d70b4a227152559aa837a9ececd91cb398fcabf0984fe168eced416af1"
     },
     ".devkit/managed/spec/subagents/reconcile-reviewer.md": {
       "mode": 420,
-      "sha256": "b61fef24cea14918c8a2abe1f43e93fec8a1567196b7413adcff3ceade090627"
+      "sha256": "b59b417b4cb2a01c3f5659c5715d39b56eeee62c40e61bbe2f90a8d7b53771b3"
     },
     ".devkit/managed/spec/subagents/scout.md": {
       "mode": 420,
-      "sha256": "bffa9fd8a13103df72b853906379122e3f618ab58a686bd00ba369f501a0a464"
+      "sha256": "5ddf1752444083f536aa142005bb08fedb791ffa69892ab13adf11d66826fcd7"
     },
     ".devkit/managed/spec/subagents/triage.md": {
       "mode": 420,
-      "sha256": "a127aba934a5f600eb97512e9ef0e1d5567baf2d3b514fa74003e8ec2424e8c4"
+      "sha256": "a1e0fa17c5e4034f118d0ae761f75f186be9e5515147410fb40f927b3a0149cb"
     },
     ".devkit/managed/spec/subagents/ux-reviewer.md": {
       "mode": 420,
-      "sha256": "7ba6f36adb94b53c06e42b1fcad7f15628681b552c641e49e9c8df9e7b77d6c5"
+      "sha256": "a8a77137d74b72192dd97d6ac94e92fcf0489f43b94cdb003bc77155bfb0bd0e"
     },
     ".devkit/managed/spec/templates/capability.md": {
       "mode": 420,

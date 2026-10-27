@@ -44,6 +44,7 @@ from devkit_dist.features.distribution.models.settings import PLAYBOOK_LIMIT_MAX
 from devkit_dist.features.distribution.models.settings import PLAYBOOK_LIMIT_MIN as PLAYBOOK_LIMIT_MIN
 from devkit_dist.features.distribution.models.settings import PLAYBOOK_MAX_BYTES_MAX as PLAYBOOK_MAX_BYTES_MAX
 from devkit_dist.features.distribution.models.settings import PLAYBOOK_MAX_BYTES_MIN as PLAYBOOK_MAX_BYTES_MIN
+from devkit_dist.features.distribution.models.subagents import SubagentPolicy
 from devkit_dist.features.distribution.services.bundles.common import AGENT_NAMES, SLUG
 from devkit_dist.features.distribution.services.bundles.templates import NAME, Scalar
 from devkit_dist.features.distribution.services.installation.config_template import (
@@ -57,6 +58,7 @@ from devkit_dist.features.distribution.services.installation.config_template imp
 )
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle, unusable_bundles
 from devkit_dist.features.distribution.services.installation.transaction import project_lock, replace_file
+from devkit_dist.features.distribution.services.subagents import parse_subagents
 from devkit_dist.features.project.repositories.local_config import read_effective_config, validate_runtime_tables
 from devkit_dist.features.project.repositories.project import read_toml
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, RECEIPT_PATH, Receipt
@@ -88,6 +90,7 @@ FIELDS = frozenset(
         "override_drift",
         "tool",
         "bundles",
+        "subagents",
     }
 )
 OVERRIDE_DRIFT = ("warn", "block")
@@ -150,6 +153,7 @@ class ProjectConfig:
     # ``override_drift = "block"`` makes upstream drift behind an override abort the sync.
     override_drift: str = "warn"
     variables: dict[str, dict[str, Scalar]] = field(default_factory=dict)
+    subagents: SubagentPolicy = field(default_factory=SubagentPolicy)
 
 
 def _config_path(root: Path) -> Path:
@@ -389,6 +393,7 @@ def parse_config(data: dict[str, Any] | None) -> ProjectConfig:
         guidance_block=guidance_block,
         override_drift=override_drift,
         variables=bundle_variables(data.get("bundles", {})),
+        subagents=parse_subagents(data.get("subagents", {})),
     )
 
 
@@ -619,6 +624,36 @@ def _templates() -> tuple[list[ToolTemplate], list[ToolTemplate], list[AdvisoryE
                             "Installed immutable artifact adapter; DEVKIT_SHARED_ADAPTER overrides this key",
                         ),
                     )
+                ),
+            ),
+            "devkit-dist",
+        ),
+    )
+    reserved.insert(
+        1,
+        ToolTemplate(
+            "subagents",
+            (
+                TemplateTable(
+                    (
+                        TemplateKey(
+                            "default_level",
+                            None,
+                            "Unset: source level, then inheritance; explicit inherit resets common contracts; native variants stay verbatim",
+                            example="inherit",
+                        ),
+                        TemplateKey(
+                            "levels",
+                            tomlkit.inline_table(),
+                            "Partial level/host mappings; omitted fields retain built-ins, inherit clears a field",
+                        ),
+                        TemplateKey(
+                            "roles",
+                            tomlkit.inline_table(),
+                            'Bundle-qualified role overrides: {"spec:scout" = {level = "compact"}}; common contracts only',
+                        ),
+                    ),
+                    help="Shared-only subagent model policy; levels: inherit, minimal, compact, standard, deep, maximal. Antigravity supports model tiers but no effort.",
                 ),
             ),
             "devkit-dist",

@@ -29,6 +29,7 @@ from devkit_dist.features.distribution.models.errors import (
     UnsafeWorkspaceError,
 )
 from devkit_dist.features.distribution.models.results import Action, SyncResult, Unselected
+from devkit_dist.features.distribution.models.subagents import SubagentPolicy
 from devkit_dist.features.distribution.services.installation import guidance_block, local_render
 from devkit_dist.features.distribution.services.installation.config import (
     ConfigUpdate,
@@ -39,7 +40,11 @@ from devkit_dist.features.distribution.services.installation.config import (
     parse_config,
     read_config,
 )
-from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle, unusable_notices
+from devkit_dist.features.distribution.services.installation.discovery import (
+    InstalledBundle,
+    unusable_bundles,
+    unusable_notices,
+)
 from devkit_dist.features.distribution.services.installation.engines import engine_notices
 from devkit_dist.features.distribution.services.installation.extensions import run_post_sync
 from devkit_dist.features.distribution.services.installation.host_hooks import plan_host_hooks
@@ -72,6 +77,7 @@ from devkit_dist.features.distribution.services.installation.workspace import (
     owned_prefix,
     snapshot,
 )
+from devkit_dist.features.distribution.services.subagents import validate_role_overrides
 from devkit_dist.features.host.usecases import registrations
 from devkit_dist.features.project.repositories.invocation import guard_execution
 from devkit_dist.features.project.repositories.local_config import LOCAL_CONFIG_PATH, read_effective_config
@@ -333,6 +339,14 @@ def block_conflict(existing: str, recorded: str | None, desired: str | None) -> 
     return "unowned"
 
 
+def _subagent_policy(
+    root: Path, installed: list[InstalledBundle], selection: Selection, *, effective: bool
+) -> SubagentPolicy:
+    policy = read_config(root, effective=effective).subagents
+    validate_role_overrides(policy, installed, set(selection.presets), unusable=unusable_bundles(installed))
+    return policy
+
+
 def _plan_inventory(
     root: Path,
     installed: list[InstalledBundle],
@@ -350,6 +364,7 @@ def _plan_inventory(
         root=root,
         previous_overrides=previous_overrides,
         variables=read_config(root, effective=effective).variables,
+        subagents=_subagent_policy(root, installed, selection, effective=effective),
         language=resolve_language(root, effective=effective).resolved,
         environment=environment or read_effective_config(root).values["execution"]["environment"],
     )
@@ -371,6 +386,25 @@ def planned_guidance_block(
     selection = _resolve_selection(installed, config, previous, None, None, ())
     overrides = {bundle: dict(records) for bundle, records in previous.overrides.items()} if previous else {}
     return _render_block(selection, _plan_inventory(root, installed, selection, overrides))
+
+
+def planned_subagent_changes(
+    root: Path, installed: list[InstalledBundle], config: ProjectConfig, previous: Receipt
+) -> list[str]:
+    """Receipt-owned subagent projections changed by the desired shared model policy."""
+    selection = _resolve_selection(installed, config, previous, None, None, ())
+    overrides = {bundle: dict(records) for bundle, records in previous.overrides.items()}
+    inventory = _plan_inventory(root, installed, selection, overrides)
+    prefixes = (".claude/agents/", ".codex/agents/", ".agents/agents/")
+    names = {name for name in inventory.files if name.startswith(prefixes)}
+    names.update(name for name in previous.file_records if name.startswith(prefixes))
+    changed = []
+    for name in sorted(names):
+        desired = inventory.files.get(name)
+        recorded = previous.file_records.get(name)
+        if desired is None or recorded is None or signature(desired) != (recorded.sha256, recorded.mode):
+            changed.append(name)
+    return changed
 
 
 def _plan_guidance_block(

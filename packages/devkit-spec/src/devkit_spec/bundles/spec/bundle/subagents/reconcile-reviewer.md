@@ -5,7 +5,6 @@ description: Checks, at activity-effort medium or high, that the implementer's L
 skill: spec-sync
 x-execution: isolated
 x-invocation: optional
-x-model-profile: light-medium
 x-git-actions: [read]
 hosts:
   # Shell access runs `git diff` and confirms the head; disallowedTools prevents file writes.
@@ -13,12 +12,10 @@ hosts:
     status: native
     tools: [Read, Grep, Glob, Bash]
     disallowedTools: [Write, Edit]
-    effort: medium
   # Expected diff after the run: none.
   codex:
     status: emulated
     sandbox_mode: read-only
-    model_reasoning_effort: medium
   antigravity:
     status: native
     tools: [view_file, grep_search, run_command]

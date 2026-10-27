@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T14:22:53.414321Z'
+status: completed
+summary: Implemented five neutral presets, inherited default, compact-only SDD scout and whole-pair Antigravity inheritance fallback. Independent code and seven-target reconciliation reviews pass; Host deployment sync and integration remain.
+findings: []
+assumptions:
+- Source/tests unchanged since passing affected checks; later commits contain only review/reconciliation/feedback records and ADR metadata.
+unverified_areas:
+- Native subagent execution, provider/account access and Host deployment sync are outside this verified range.
+checks:
+  tests: PASS just test-affected --base main mode=partial 134 paths 2575 passed 1 skipped
+  build: PASS devkit-dist and devkit-spec sdist and wheel builds
+  lint: PASS dist/spec lint-check and Pyright zero errors; cumulative CI governance zero errors/warnings
+diff_scope:
+  base: def96068840ba9106b21a763fd0665a69d0cdda9
+  head: 556edbca5df2afdbe7a01b9c7b74c1d59fca583e

@@ -4,7 +4,6 @@ title: Decomposer (Backlog draft split)
 description: Proposes a split of one draft proposal into independently deliverable children with their provenance, edges and exit by the Backlog reference, for the user's decision, without writing anything.
 x-execution: isolated
 x-invocation: optional
-x-model-profile: general-high
 x-git-actions: [read]
 hosts:
   # Bash runs the `devkit spec` queries; disallowedTools prevents file writes.
@@ -12,12 +11,10 @@ hosts:
     status: native
     tools: [Read, Grep, Glob, Bash]
     disallowedTools: [Write, Edit]
-    effort: high
   # Expected diff after the run: none.
   codex:
     status: emulated
     sandbox_mode: read-only
-    model_reasoning_effort: high
   antigravity:
     status: native
     tools: [view_file, grep_search, run_command]

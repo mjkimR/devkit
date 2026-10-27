@@ -30,7 +30,7 @@ from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 from devkit_dist.features.project.services.config_template import TemplateKey, TemplateTable, uncomment
 from distsupport.distribution import cli, make_bundle
 
-COMMON_TABLES = ["shared", "workflow.approvals", "workflow.stages", "worktree"]
+COMMON_TABLES = ["shared", "subagents", "workflow.approvals", "workflow.stages", "worktree"]
 DEVKIT_PARTS = ["agents", "guidance_block", "override_drift", *COMMON_TABLES]
 
 # Stand-ins for the templates an engine package registers for reserved tables, in entry-point name order.
@@ -126,8 +126,12 @@ def test_creates_the_file_with_devkit_keys_at_their_defaults(tmp_path: Path, too
         },
         "worktree": {"pull_request": "auto", "setup": "uv sync"},
         "shared": {"adapter": "local"},
+        "subagents": {"default_level": "inherit", "levels": {}, "roles": {}},
     }
-    assert read_config(uncommented) == ProjectConfig()  # every commented value is the default
+    assert (
+        read_config(uncommented).subagents.default_level == "inherit"
+    )  # optional example explicitly resets source levels
+    assert read_config(tmp_path).subagents.default_level is None  # commented template never activates that reset
     assert not (tmp_path / ".devkit/transient").exists()  # no lock file in a project without .devkit/
 
 
@@ -168,7 +172,7 @@ def test_without_engine_templates_no_reserved_table_is_written(
 ) -> None:
     reserved.clear()  # a standalone devkit-dist installation: no package registers reserved tables
     result = refresh_config_template(project)
-    assert result.added == ["agents", "guidance_block", "override_drift", "shared"]
+    assert result.added == ["agents", "guidance_block", "override_drift", "shared", "subagents"]
     assert "[workflow" not in _text(project) and "[worktree" not in _text(project)
     _write(project, _text(project) + '\n[workflow.approvals]\nintegration = "auto"\n\n[worktree]\nsetup = "uv sync"\n')
     assert read_config(project) == ProjectConfig()  # reserved tables are passed through unread
@@ -218,7 +222,15 @@ def test_existing_common_tables_are_preserved(project: Path, tools: list[SimpleN
     before = "schema = 1\n" + existing
     _write(project, before)
     result = refresh_config_template(project)
-    assert result.added == ["agents", "guidance_block", "override_drift", "shared", "workflow.stages", "worktree"]
+    assert result.added == [
+        "agents",
+        "guidance_block",
+        "override_drift",
+        "shared",
+        "subagents",
+        "workflow.stages",
+        "worktree",
+    ]
     assert existing in _text(project)
     assert "# [workflow.approvals]" not in _text(project)
     assert tomllib.loads(_text(project)) == tomllib.loads(before)
@@ -419,11 +431,19 @@ def test_cli_reports_every_commented_part_it_writes_and_nothing_after(
     payload = json.loads(result.stdout)
     after = (project / CONFIG_PATH).read_bytes()
     assert after != before.encode()
-    expected = ["agents", "guidance_block", "override_drift", "shared", "workflow.stages", "tool.demo.limits"]
+    expected = [
+        "agents",
+        "guidance_block",
+        "override_drift",
+        "shared",
+        "subagents",
+        "workflow.stages",
+        "tool.demo.limits",
+    ]
     assert (payload["state"], payload["added"]) == ("updated", expected)
     assert (preview["state"], preview["added"]) == (payload["state"], payload["added"])
     text = after.decode()
-    for name in ("shared", "workflow.stages", "tool.demo.limits"):
+    for name in ("shared", "subagents", "workflow.stages", "tool.demo.limits"):
         assert f"# [{name}]" in text  # a commented table is named in added
     for key in ("agents", "guidance_block", "override_drift"):
         assert f"# {key} =" in text

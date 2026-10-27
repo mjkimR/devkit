@@ -438,6 +438,21 @@ class ScopeError(SpecError):
     """Base class of the work-scope registry errors (``devkit spec scope``)."""
 
 
+class ScopeCollectionPartialWarning(ScopeError):
+    """Some requested observation or comparison evidence is unavailable."""
+
+    code = "SPEC_SCOPE_COLLECTION_PARTIAL"
+    level = Level.WARNING
+    fix = "Inspect coverage reasons; repair inaccessible inputs or increase collection budgets, then collect again"
+
+
+class ScopeCollectionFailedError(ScopeError):
+    """No selected scope inventory source could be read."""
+
+    code = "SPEC_SCOPE_COLLECTION_FAILED"
+    fix = "Use an accessible Git repository and initialized readable registry, then rerun scope collect"
+
+
 class ScopeNotAWorktreeError(ScopeError):
     """The workspace is not inside a Git work tree, so it has no registry location or token (``INPUT_ERROR``)."""
 

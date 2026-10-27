@@ -1,0 +1,19 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T14:21:17.183454Z'
+status: completed
+summary: 'PASS closes reconcile-check-01: all seven targets agree; reciprocal ADR metadata resolves original P1 and preserves historical body.'
+findings: []
+assumptions:
+- Independent emulated reviewer reused unchanged mapping, role and config evidence; read-only commands and stable HEAD/status.
+unverified_areas:
+- Native runtime, account access and Host deployment sync/integration remain unverified.
+checks:
+  target_coverage: PASS seven modified targets without waivers
+  supersession: PASS old status superseded and reciprocal replacement link
+  original_p1: PASS independent narrow recheck confirms resolved
+diff_scope:
+  base: 47d228b19d9e5fb23994cacb668f5a0489cbac51
+  head: 1b26b40de84f240b43aab02c38a995295ab222e2

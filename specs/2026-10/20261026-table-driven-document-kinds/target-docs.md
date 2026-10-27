@@ -20,5 +20,5 @@ created_at: 2026-10-26
 - No viewer document changes: the viewer is out of scope.
 
 Promote `ADR-kind-definition-table-keyed-on-the-declared-kind-enum` through normal handoff; it supersedes no ADR.
-No current Living Spec is edited during Planning. `PROP-ux-documentation` and `PROP-foundation-documents` edit
+No current Living Spec is edited during Planning. `SPEC-ux-documentation` and `SPEC-foundation-documents` edit
 `CAP-DOCS-document-model` too; the change that lands later rebases its edits on the earlier one.

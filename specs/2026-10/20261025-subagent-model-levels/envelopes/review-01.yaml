@@ -1,0 +1,22 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T09:47:16.962083Z'
+status: completed
+summary: 'Initial code review found one P1: installed unusable unselected bundles incorrectly reject dormant role overrides.'
+findings:
+- issue: Installed but unusable unselected bundles are treated as uninstalled.
+  evidence: services/subagents.py validates only usable entries, while discovery.Discovered.unusable retains installed failures; contradicts AC-07.
+  failure_condition: An unselected or opted-out installed bundle fails to load and has a persisted role override; sync raises CONFIG_INVALID instead of retaining it dormant and reporting a package warning.
+  suggested_action: Include unusable installed names, preserve PackageError when selected and cover dormant override and deselection recovery.
+  resolution: open
+  severity: P1
+assumptions:
+- Emulated Codex reviewer used read-only explicit worktree access; pending docs edits excluded.
+checks:
+  tests: PASS reused 2567 passed 1 skipped mode=partial
+  lint: PASS lint types and cumulative governance
+diff_scope:
+  base: 5cf59bdf16e0dca18d466ef831ffd250fd6d8a2c
+  head: d66c3f7332cc2dade99511a1eb522d6fe44c609b

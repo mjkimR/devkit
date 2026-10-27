@@ -1,0 +1,24 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T14:19:29.228323Z'
+status: completed
+summary: Independent reconcile confirms mapping/roles/config agreement; P1 missing reciprocal ADR supersession metadata and seventh target.
+findings:
+- issue: The replaced ADR remains accepted without required reciprocal supersession metadata.
+  evidence: New ADR supersedes ADR-subagent-level-projection, while its old record remains accepted and is absent from reconcile targets; ADR-immutable-decisions-editable-records lines61-67 requires status superseded and superseded_by.
+  failure_condition: Consumers can retrieve the replaced three-preset/all-role-inheritance policy as accepted without a forward replacement link.
+  suggested_action: Preserve the old body, set status superseded and superseded_by ADR-five-subagent-levels, add the seventh reconcile target and reverify.
+  resolution: open
+  severity: P1
+assumptions:
+- Emulated read-only reviewer left HEAD and status unchanged; historical completed specs/materials unchanged.
+unverified_areas:
+- Native runtime, account access and Host sync/integration not verified.
+checks:
+  mapping_agreement: PASS all five host mappings and scout exception
+  target_coverage: FAIL old ADR supersession record missing
+diff_scope:
+  base: def96068840ba9106b21a763fd0665a69d0cdda9
+  head: 47d228b19d9e5fb23994cacb668f5a0489cbac51

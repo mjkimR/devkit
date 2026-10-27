@@ -1,0 +1,19 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T09:51:52.616003Z'
+status: completed
+summary: 'Independent follow-up PASS: unusable installed overrides stay dormant, selected entries preserve package error, and deselection recovery works. Initial review covers remaining implementation.'
+findings: []
+assumptions:
+- Emulated read-only reviewer; clean worktree and unchanged HEAD verified.
+unverified_areas:
+- Native execution, model availability and account entitlement were not tested.
+checks:
+  tests: PASS 2568 passed 1 skipped mode=partial paths=135
+  fix: PASS independent in-memory dormant/selected package probes and regression inspection
+  lint: PASS post-fix lint and Pyright
+diff_scope:
+  base: d66c3f7332cc2dade99511a1eb522d6fe44c609b
+  head: 7b3659256b7cd8b4d8aedaf4288e83fdba742243

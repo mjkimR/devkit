@@ -266,7 +266,7 @@ def _history(session: Session, task: str | None, limit: int, cursor: str | None,
 # --- update -----------------------------------------------------------------------------------------------------
 
 
-@scope_group.command(name="update")
+@scope_group.command(name="update", hidden=True)
 @click.option("--spec", "spec_dir", default=None, help="Spec bundle directory of this worktree's task")
 @click.option(
     "--request-id",
@@ -406,3 +406,42 @@ def sweep_cmd(apply: bool, expects: tuple[str, ...], workspace_root: str | None,
     if error is not None:
         raise Reported(error)
     exit_on_warnings(notices)
+
+
+@scope_group.command(name="collect")
+@click.option("--mode", default="worktrees", help="Observation inputs: snapshot, refs or worktrees (default)")
+@click.option("--base", default=None, help="Explicit integration-base ref")
+@click.option("--fetch", "remotes", multiple=True, help="Refresh one configured remote (repeatable)")
+@click.option("--timeout", default=30, type=int, help="Total observation budget in seconds (1..300)")
+@click.option("--source-timeout", default=5, type=int, help="Per-source budget in seconds (1..300)")
+@workspace_option()
+@FORMAT_OPTION
+@boundary
+def collect_cmd(
+    mode: str,
+    base: str | None,
+    remotes: tuple[str, ...],
+    timeout: int,
+    source_timeout: int,
+    workspace_root: str | None,
+    output_format: str,
+) -> None:
+    """Observe host-visible work without modifying worker registrations."""
+    from devkit_spec.features.scope.models.observation import CollectionOptions
+    from devkit_spec.features.scope.usecases.collection import CollectScopesUseCase
+
+    report = CollectScopesUseCase().execute(
+        resolve_root(workspace_root), CollectionOptions(mode, base, remotes, timeout, source_timeout)
+    )
+    if is_json(output_format):
+        echo_json(report.data)
+    else:
+        render_collection(report.data)
+    _finish(report.notices)
+
+
+def render_collection(data: dict[str, object]) -> None:
+    """Render the bounded report without exposing maintenance tokens or worker ACKs."""
+    from devkit_spec.features.scope.cli.collection_output import render
+
+    render(data)

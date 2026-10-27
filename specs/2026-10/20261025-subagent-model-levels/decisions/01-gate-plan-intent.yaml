@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-subagent-model-levels: Create the proposal and proceed with Planning for
+  inherited defaults and three-host level mappings with project overrides.'
+by: user
+at: '2026-10-25T09:31:56.425643Z'

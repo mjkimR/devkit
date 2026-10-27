@@ -3,6 +3,7 @@ id: ADR-worktrees-branches-and-scope
 title: Worktree Levels, Branch Guards and Work-Scope Registry Maintenance
 summary: "For task isolation and the shared work-scope registry, we use auto/required levels, guard units to dev-<slug> in every checkout, clean up through a post-finish extension and keep Git storage with side-effect-free reads, to keep parallel work safe, accepting skill-maintained records."
 status: accepted
+superseded_by: ADR-host-owned-scope-observation
 created_at: 2026-10-22
 aliases:
   - ADR-scope-maintenance-through-skills

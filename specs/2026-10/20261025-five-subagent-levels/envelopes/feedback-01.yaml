@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-25T14:21:52.476266Z'
+status: completed
+summary: Swept this Development run; recorded FB-approval-review-usage-limit for recovered upstream approval-review unavailability. No unresolved implementation friction or deferred scope.
+findings: []
+checks:
+  swept: PASS recorded=1 duplicates=0
