@@ -17,7 +17,7 @@ from devkit.advisory import Actor, AdvisoryError, Retry
 from devkit_core.base.errors import GitError
 from devkit_core.core.git import run_git
 
-from devkit_agt.features.worktree.models.pull_request import Repository as Repository
+from devkit_agt.features.worktree.models.pull_request import Repository
 
 NETWORK_TIMEOUT = 5.0
 NETWORK_BUDGET = 20.0

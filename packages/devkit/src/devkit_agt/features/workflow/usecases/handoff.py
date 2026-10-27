@@ -26,8 +26,7 @@ from devkit_agt.features.workflow.models.errors import (
     HandoffUndecidedError,
     workflow_command,
 )
-from devkit_agt.features.workflow.models.handoff import CandidateResult as CandidateResult
-from devkit_agt.features.workflow.models.handoff import Handoff as Handoff
+from devkit_agt.features.workflow.models.handoff import CandidateResult, Handoff
 from devkit_agt.features.workflow.models.requests import candidate_summary
 from devkit_agt.features.workflow.repositories.unit.binding import render_binding, replace_text
 from devkit_agt.features.workflow.repositories.unit.decisions import load_decisions, new_decision, write_decision

@@ -55,7 +55,7 @@ from devkit_agt.features.workflow.services.definition.validation import (
     validate_definitions,
 )
 from devkit_agt.features.workflow.services.evaluation.primitives import AncestorFunc
-from devkit_agt.features.workflow.usecases.evaluate import LintFunc, Options, evaluate_definition
+from devkit_agt.features.workflow.usecases.evaluate import LintFunc, Options, evaluate_definition, rel_path
 from devkit_agt.features.workflow.usecases.lint import lint_with_rules
 
 
@@ -149,10 +149,7 @@ class Workspace:
         return self.root / self.config.definitions_dir
 
     def rel(self, path: Path) -> str:
-        try:
-            return path.relative_to(self.root).as_posix()
-        except ValueError:
-            return path.as_posix()
+        return rel_path(path, self.root)
 
     def unit_path(self, unit: str | Path) -> Path:
         path = Path(unit)

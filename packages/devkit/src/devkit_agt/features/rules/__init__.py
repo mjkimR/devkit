@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from devkit_agt.features.rules.models.config import RulesConfig
 from devkit_agt.features.rules.models.contracts import (
     Autofixable,
     Phase,
@@ -40,7 +41,7 @@ from devkit_agt.features.rules.models.phases import PhaseEntry, resolve_phases
 from devkit_agt.features.rules.models.policy import validate_policy
 from devkit_agt.features.rules.models.settings import RawSettings, SettingsResolver, match_path, validate_pattern
 from devkit_agt.features.rules.models.snapshot import Snapshot
-from devkit_agt.features.rules.repositories.config import RulesConfig, load_rules_config
+from devkit_agt.features.rules.repositories.config import load_rules_config
 from devkit_agt.features.rules.repositories.discovery import ManagedRules, resolve_managed_rules
 from devkit_agt.features.rules.repositories.workspace.cache import WorkspaceCache
 from devkit_agt.features.rules.repositories.workspace.catalog import Document, DocumentCatalog
@@ -61,11 +62,11 @@ from devkit_agt.features.rules.repositories.workspace.snapshot import (
 )
 from devkit_agt.features.rules.services.evaluator import EvaluationResult, evaluate_rules
 from devkit_agt.features.rules.services.registry import RuleRegistry, default_rule_registry
+from devkit_agt.features.rules.services.targets import expand_targets
 from devkit_agt.features.rules.usecases.project import (
     ProjectRules,
     ProjectRun,
     build_project_registry,
-    expand_targets,
     load_project_rules,
     run_project_rules,
 )

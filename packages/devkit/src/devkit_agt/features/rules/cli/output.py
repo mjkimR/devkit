@@ -22,6 +22,7 @@ from devkit_dist.adapters.cli import field_value
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
 from devkit_agt.features.rules.models.contracts import Phase, Rule, Severity, Violation
+from devkit_agt.features.rules.models.paths import display_path
 from devkit_agt.features.rules.models.phases import (
     PhaseEntry,
     remaining_by_rule,
@@ -47,16 +48,6 @@ def _value(value: object) -> str:
 
 def echo_ok(text: str = OK_TEXT) -> None:
     click.echo(f"[OK: {text}]")
-
-
-def _display_path(path: Path | None, workspace_root: Path) -> str | None:
-    """``path`` relative to the workspace when it lies inside it, else absolute."""
-    if path is None:
-        return None
-    try:
-        return path.relative_to(workspace_root).as_posix()
-    except ValueError:
-        return str(path)
 
 
 def _transition_line(entry: PhaseEntry, remaining: dict[str, int]) -> str:
@@ -108,7 +99,7 @@ def _violation_line(v: Violation, guides: Mapping[str, Path], workspace_root: Pa
     )
     if v.remediation:
         line += f" remediation={_quote(v.remediation)}"
-    guide = _display_path(guides.get(v.rule_id), workspace_root)
+    guide = display_path(guides.get(v.rule_id), workspace_root)
     if guide:
         line += f" guide={field_value(guide)}"
     return line + "]"
@@ -118,7 +109,7 @@ def violation_json(v: Violation, guides: Mapping[str, Path], workspace_root: Pat
     """A finding under ``--format json``: ``Violation.to_dict()`` plus ``guide`` when the rule has one, as the
     ``[VIOLATION: ...]`` line carries it."""
     data = v.to_dict()
-    guide = _display_path(guides.get(v.rule_id), workspace_root)
+    guide = display_path(guides.get(v.rule_id), workspace_root)
     if guide:
         data["guide"] = guide
     return data
@@ -197,7 +188,7 @@ def rule_test_entry(item: RuleTestRun, workspace_root: Path) -> dict[str, Any]:
     run = item.run
     entry: dict[str, Any] = {
         "rule_id": item.rule_id,
-        "tests": _display_path(item.tests, workspace_root),
+        "tests": display_path(item.tests, workspace_root),
         "result": item.result.value,
         "exit_code": item.exit_code,
         "log": str(run.log) if run is not None else None,
@@ -226,7 +217,7 @@ def print_rule_tests(results: Sequence[RuleTestRun], workspace_root: Path, summa
     for item in results:
         run = item.run
         exit_code = "-" if item.exit_code is None else str(item.exit_code)
-        tests = _display_path(item.tests, workspace_root)
+        tests = display_path(item.tests, workspace_root)
         click.echo(
             f"[RULE_TEST: {item.rule_id} tests={field_value(tests)} result={item.result.value} exit={exit_code} "
             f"log={field_value(str(run.log) if run is not None else None)}]"

@@ -25,14 +25,14 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from devkit.advisory import AdvisoryError, Level
+from devkit.advisory import AdvisoryError
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import ArgumentError, GitError, run_git
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.project import require_git_toplevel
 
-from devkit_agt.features.compact import CommandRun, run_command
+from devkit_agt.features.compact import run_command, status_records
 from devkit_agt.features.generated.models.errors import (
     CommandFailedError,
     ConflictsRemainWarning,
@@ -51,7 +51,6 @@ CONTINUE = {
     "am": "git am --continue",
 }
 LISTED = 20  # paths listed in an advisory's details
-TAIL_LINES = 10  # last output lines shown for a failed command
 WORKTREE_TIMEOUT = 300.0  # seconds for checking out the temporary worktree of `check`
 
 
@@ -191,30 +190,11 @@ def snapshot(top: Path) -> dict[str, tuple[str, str]]:
 
     Comparing two snapshots names exactly the paths a command changed, also among files that were already dirty.
     """
-    fields = iter(run_git(top, "status", "--porcelain=v1", "-z", "--untracked-files=all").split(b"\0"))
     found: dict[str, tuple[str, str]] = {}
-    for entry in fields:
-        if len(entry) < 4:
-            continue
-        status = entry[:2]
-        if b"R" in status or b"C" in status:
-            next(fields, None)  # the rename's source path
-        path = _decode(entry[3:])
+    for status, raw in status_records(run_git(top, "status", "--porcelain=v1", "-z", "--untracked-files=all")):
+        path = _decode(raw)
         found[path] = (_decode(status), _digest(top / path))
     return found
-
-
-def _failure_details(run: CommandRun) -> list[str]:
-    found = run.scan
-    lines = [f"exit={run.exit_code}  log={run.log}"]
-    lines += [f"  summary: {summary}" for summary in found.summaries]
-    shown = set(found.summaries)
-    tail = [line for line in found.output.splitlines() if line.strip() and line not in shown][-TAIL_LINES:]
-    lines += [f"  | {line}" for line in tail]
-    lines += [
-        f"  > {line}" for item in found.advisories if item.level is Level.ERROR for line in item.text.splitlines()
-    ]
-    return lines
 
 
 def _regenerate(checkout: Path, artifact: Artifact) -> tuple[str, ...]:
@@ -224,7 +204,7 @@ def _regenerate(checkout: Path, artifact: Artifact) -> tuple[str, ...]:
     if not run.passed:
         raise CommandFailedError(
             f"{artifact.id}: {artifact.command} failed",
-            *_failure_details(run),
+            *run.failure_details(),
             target_files=[PROJECT_FILE],
             fix=f"Correct what the command reports (the log has the full output) or the command of "
             f"[artifacts.{artifact.id}] in {PROJECT_FILE}, then rerun",

@@ -20,19 +20,15 @@ from devkit_agt.features.worktree.models.errors import (
     pull_request_policy_fix,
 )
 from devkit_agt.features.worktree.models.lifecycle import Position
-from devkit_agt.features.worktree.models.planning import FinishPlan as FinishPlan
+from devkit_agt.features.worktree.models.planning import FinishPlan
+from devkit_agt.features.worktree.repositories.markers import BASE_KEY, MARKER, UNIT_KEY, branch_marker
 from devkit_agt.features.worktree.services.merging import check_identity
 from devkit_agt.features.worktree.usecases.lifecycle import (
-    BASE_KEY,
-    MARKER,
-    UNIT_KEY,
     _check_deletable,
     _clean,
-    _config,
     _created,
     _find,
     _marked_path,
-    _marker,
     _merged,
     _query,
     check_branch,
@@ -51,7 +47,7 @@ def _identity(path: Path) -> tuple[int, int]:
 
 
 def _markers(base: Path, branch: str) -> tuple[str, str, str]:
-    return tuple(_config(base, _marker(branch, key)) for key in (MARKER, BASE_KEY, UNIT_KEY))  # type: ignore[return-value]
+    return tuple(branch_marker(base, branch, key) for key in (MARKER, BASE_KEY, UNIT_KEY))  # type: ignore[return-value]
 
 
 def _deletable(base: Path, branch: str, into: str | None) -> None:

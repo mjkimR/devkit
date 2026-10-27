@@ -18,8 +18,7 @@ from pathlib import Path
 from devkit_dist.features.project.repositories.project import config_table, read_project_config
 from devkit_dist.features.project.services.config_template import TemplateKey, TemplateTable
 
-from devkit_agt.features.worktree.models.config import WorktreeConfig as WorktreeConfig
-from devkit_agt.features.worktree.models.config import parse_period as parse_period
+from devkit_agt.features.worktree.models.config import WorktreeConfig
 from devkit_agt.features.worktree.models.errors import WorktreeConfigError
 
 PULL_REQUEST_POLICIES = ("auto", "required")

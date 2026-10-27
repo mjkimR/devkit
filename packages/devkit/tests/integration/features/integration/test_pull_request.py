@@ -6,7 +6,8 @@ import pytest
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.integration import IntegrationService, Task
 from devkit_agt.features.worktree import MergeNotFastForwardError
-from devkit_agt.features.worktree.repositories.pull_request import CommandResult, GitHub, Repository
+from devkit_agt.features.worktree.models.pull_request import Repository
+from devkit_agt.features.worktree.repositories.pull_request import CommandResult, GitHub
 from testsupport.rules import git, write
 
 TASK = Task("session", "fixture-task")

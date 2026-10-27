@@ -4,7 +4,8 @@
 Development unit (a spec bundle from ``devkit spec new`` or a proposal handoff) on any other branch, in a linked
 worktree and in the base checkout alike: the unit would land on another task's branch, or on the base itself.
 ``base_checkout_problem`` is the positive check of a direct acceptance, which is Backlog work on the base checkout.
-Outside Git nothing is checked.
+Outside Git nothing is checked. ``recorded_base``, ``base_marker_key`` and ``unit_marker_key`` name the
+``devkit worktree`` branch markers for features that do not depend on ``devkit_agt.features.worktree`` themselves.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
+from devkit_agt.features.worktree import BASE_KEY, UNIT_KEY, branch_marker, marker_key
 from devkit_core.core import GitError, run_git, run_git_text
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
@@ -21,6 +23,21 @@ PLANNING_PREFIX = "plan-"
 DEVELOPMENT_PREFIX = "dev-"
 BRANCH_LIMIT = 64  # devkit worktree's limit on an activity branch name
 SLUG_LIMIT = BRANCH_LIMIT - len(PLANNING_PREFIX)  # so plan-<slug> and dev-<slug> both fit
+
+
+def base_marker_key(branch: str) -> str:
+    """The configuration key of the base ``devkit worktree start`` recorded for ``branch`` (``devkitBase``)."""
+    return marker_key(branch, BASE_KEY)
+
+
+def unit_marker_key(branch: str) -> str:
+    """The configuration key of the unit ``devkit worktree`` attached ``branch`` to (``devkitUnit``)."""
+    return marker_key(branch, UNIT_KEY)
+
+
+def recorded_base(root: Path, branch: str) -> str:
+    """The base ``devkit worktree start`` recorded for ``branch``; ``""`` when none is. Other Git failures raise."""
+    return branch_marker(root, branch, BASE_KEY)
 
 
 def checkout(root: Path) -> tuple[bool, str] | None:

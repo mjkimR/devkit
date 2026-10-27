@@ -8,7 +8,7 @@ from typing import Any
 
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow import Workspace
-from devkit_agt.features.worktree import StartResult, locate, path_for, read_worktree_config, start
+from devkit_agt.features.worktree import StartResult, branch_marker, locate, path_for, read_worktree_config, start
 from devkit_agt.features.worktree.usecases.lifecycle import _prepare
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import run_git, run_git_text
@@ -50,7 +50,7 @@ def _existing(root: Path, slug: str, head: str) -> bool:
     reason = None
     try:
         current = locate(path)
-        marker = run_git_text(position.base, "config", "--get", f"branch.dev-{slug}.devkitWorktree")
+        marker = branch_marker(position.base, f"dev-{slug}")
         if path.is_symlink() or not current.linked or current.root != path or current.base != position.base:
             reason = "it is not a linked worktree of this repository at the devkit worktree path"
         elif current.branch != f"dev-{slug}" or marker != str(path):

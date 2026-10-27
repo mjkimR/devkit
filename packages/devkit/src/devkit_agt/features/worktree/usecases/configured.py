@@ -8,8 +8,9 @@ from pathlib import Path
 from devkit_core.base.usecase import BaseUseCase
 from devkit_dist.features.project.repositories.project import find_project_root
 
+from devkit_agt.features.worktree.models.config import WorktreeConfig
 from devkit_agt.features.worktree.models.lifecycle import FinishResult, Position, StartResult
-from devkit_agt.features.worktree.repositories.config import WorktreeConfig, read_worktree_config
+from devkit_agt.features.worktree.repositories.config import read_worktree_config
 from devkit_agt.features.worktree.services.extensions import run_attach_checks, run_finish_guards, run_post_finish
 from devkit_agt.features.worktree.services.merging import integration_lock, merge_method
 from devkit_agt.features.worktree.usecases.lifecycle import attach, discard, finish, locate, start

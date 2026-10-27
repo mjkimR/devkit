@@ -215,7 +215,7 @@ class _Evaluator:
             shown = "; ".join(self.lint_violations[:LINT_DETAIL_SHOWN])
             more = len(self.lint_violations) - LINT_DETAIL_SHOWN
             if more > 0:
-                unit = _rel(self.unit_dir, self.opts.workspace_root)
+                unit = rel_path(self.unit_dir, self.opts.workspace_root)
                 shown += f"; {more} more (uv run devkit rules check {unit})"
             return True, False, f"{len(self.lint_violations)} violation(s): {shown}"
         return True, True, ""
@@ -226,11 +226,11 @@ def _unit_files(unit_dir: Path, root: Path) -> list[str]:
 
     A writer removes its temporary file at any moment, so linting one could fail on a file that no longer exists.
     """
-    return sorted(_rel(p, root) for p in unit_dir.rglob("*") if not is_temporary(p.name) and p.is_file())
+    return sorted(rel_path(p, root) for p in unit_dir.rglob("*") if not is_temporary(p.name) and p.is_file())
 
 
-def _rel(path: Path, root: Path) -> str:
-    """``path`` relative to ``root`` when inside it, else as given (``Workspace.rel``)."""
+def rel_path(path: Path, root: Path) -> str:
+    """``path`` relative to ``root`` when inside it, else as given; ``Workspace.rel`` uses it too."""
     try:
         return path.relative_to(root).as_posix()
     except ValueError:
@@ -356,7 +356,7 @@ def evaluate_definition(doc: WorkflowDocument, opts: Options) -> UnitEvaluation:
     Raises ``UnitNotFoundError`` when the anchor is missing and
     ``AnchorInvalidError`` when its frontmatter cannot be read.
     """
-    unit_rel = _rel(opts.unit_dir, opts.workspace_root)
+    unit_rel = rel_path(opts.unit_dir, opts.workspace_root)
     state = _read_anchor(opts, unit_rel)
     binding = state.binding
     registry = Registry.build(opts.anchor, doc.declared_checks)

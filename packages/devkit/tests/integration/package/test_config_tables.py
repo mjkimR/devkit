@@ -11,7 +11,8 @@ from importlib.metadata import entry_points
 from pathlib import Path
 
 from devkit_agt.features.workflow.repositories.project.config import WorkflowConfig, parse_workflow_config
-from devkit_agt.features.worktree.repositories.config import WorktreeConfig, read_worktree_config
+from devkit_agt.features.worktree.models.config import WorktreeConfig
+from devkit_agt.features.worktree.repositories.config import read_worktree_config
 from devkit_dist.features.distribution.services.installation.config import (
     RESERVED_TABLES,
     preview_config_template,

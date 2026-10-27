@@ -81,6 +81,7 @@ from devkit_agt.features.worktree.models.lifecycle import (
     StatusResult,
     WorktreeStatus,
 )
+from devkit_agt.features.worktree.repositories.markers import BASE_KEY, UNIT_KEY, branch_marker, marker_key
 from devkit_agt.features.worktree.services.merging import build_result, check_identity, merge_message
 
 _log = get_logger(__name__)
@@ -88,11 +89,6 @@ _log = get_logger(__name__)
 ACTIVITY_PREFIXES = ("plan", "dev")  # Planning and Development activity branches: plan-<slug>, dev-<slug>
 BRANCH = re.compile(rf"(?:{'|'.join(ACTIVITY_PREFIXES)})-[a-z0-9][a-z0-9_-]*")
 BRANCH_LIMIT = 64  # characters of the whole branch name, prefix included
-# Recorded in the common configuration on every branch ``start`` creates or attaches; only a marked branch is deleted
-# without its worktree, so ``finish`` never deletes an ordinary branch that happens to share the name.
-MARKER = "devkitWorktree"
-BASE_KEY = "devkitBase"  # the branch ``start_branch`` started from, where the base checkout returns to
-UNIT_KEY = "devkitUnit"  # the unit directory ``attach`` was given, for the stale-branch report
 LS_REMOTE_TIMEOUT = 30.0  # seconds to ask one remote whether it has the branch
 PUSH_TIMEOUT = 120.0  # seconds; a slow or stuck push must not hold the cleanup
 FETCH_TIMEOUT = 120.0  # seconds for the upstream fetch before the merge
@@ -202,20 +198,15 @@ def _entries(base: Path) -> list[_Entry]:
     return entries
 
 
-def _marker(branch: str, key: str = MARKER) -> str:
-    """The configuration key marking ``branch`` as created by ``start`` (or another of its ``devkit*`` keys)."""
-    return f"branch.{branch}.{key}"
-
-
 def _created(base: Path, branch: str) -> bool:
     """Whether ``start`` created ``branch`` (it carries the marker in the common configuration)."""
-    return _query(base, "config", "--local", "--get", _marker(branch)) is not None
+    return _query(base, "config", "--local", "--get", marker_key(branch)) is not None
 
 
 def _unmark(base: Path, branch: str) -> None:
     """Remove ``branch``'s marker; a branch without one (Git exits 5) is left as it is."""
     try:
-        run_git(base, "config", "--local", "--unset-all", _marker(branch))
+        run_git(base, "config", "--local", "--unset-all", marker_key(branch))
     except GitError as exc:
         if exc.returncode != 5:
             raise
@@ -385,7 +376,7 @@ def _attach_fix(base: Path, branch: str, source: str | None = None) -> dict[str,
     """The ``fix`` and ``what_to_report`` of ``WORKTREE_BRANCH_EXISTS``: continuing ``branch`` or choosing another slug
     is the user's decision. ``[FIX]`` attaches it when its unit directory is recorded (``devkitUnit``); otherwise the
     unit is the user's answer too, so there is no ``[FIX]``."""
-    unit = _config(base, _marker(branch, UNIT_KEY))
+    unit = branch_marker(base, branch, UNIT_KEY)
     attach = devkit_command(f"worktree start {branch} --existing-branch {source or branch} --unit")
     if unit:
         return {
@@ -486,8 +477,8 @@ class StartBranch(BaseUseCase):
                     **_attach_fix(position.base, branch),
                 ) from exc
             raise
-        run_git(position.base, "config", "--local", _marker(branch), str(position.root))
-        run_git(position.base, "config", "--local", _marker(branch, BASE_KEY), position.branch)
+        run_git(position.base, "config", "--local", marker_key(branch), str(position.root))
+        run_git(position.base, "config", "--local", marker_key(branch, BASE_KEY), position.branch)
         _log.info("switched %s to the new branch %s from %s", position.root, branch, position.branch)
         return BranchStartResult(branch, position.root, position.branch, notices)
 
@@ -586,8 +577,8 @@ def attach(
         _log.info("attached worktree %s to the existing branch %s", path, branch)
         _copy_local_snapshot(path, captured_local)
         setup_ran, synced = _prepare(path, setup, sync, notices)
-    run_git(base, "config", "--local", _marker(branch), str(path))
-    run_git(base, "config", "--local", _marker(branch, UNIT_KEY), unit)
+    run_git(base, "config", "--local", marker_key(branch), str(path))
+    run_git(base, "config", "--local", marker_key(branch, UNIT_KEY), unit)
     return StartResult(branch, path, base, not reuse, setup_ran, synced, notices, existing=True, unit=unit)
 
 
@@ -708,7 +699,7 @@ def _return_branch(base: Path, branch: str) -> str:
             f"the base checkout {base} is on {branch} with uncommitted changes; nothing was changed",
             fix=f"Commit the changes on {branch} (or stash them) in {base}, then rerun",
         )
-    back = _config(base, _marker(branch, BASE_KEY))
+    back = branch_marker(base, branch, BASE_KEY)
     if not back:
         raise ConflictError(
             f"the base checkout {base} is on {branch} and no branch to return to is recorded; nothing was changed",
@@ -738,8 +729,8 @@ def _add(base: Path, path: Path, branch: str, *, existing: bool = False, revisio
         if revision is not None and not existing:
             add += (revision,)
         _git_session(base, "worktree", *add, timeout=CHECKOUT_TIMEOUT)
-        step = f"git config {_marker(branch)}"
-        run_git(base, "config", "--local", _marker(branch), str(path))
+        step = f"git config {marker_key(branch)}"
+        run_git(base, "config", "--local", marker_key(branch), str(path))
     except GitError as exc:
         reason = exc.stderr or exc.message
         if _timed_out(exc):
@@ -1001,7 +992,7 @@ def _find(position: Position, branch: str) -> _Entry | None:
     if entry is None:
         return None
     if entry.path == base:
-        back = _config(base, _marker(branch, BASE_KEY))
+        back = branch_marker(base, branch, BASE_KEY)
         if back:
             raise BaseOnBranchError(
                 f"the base checkout is on {branch}; finish works on it from {back}, the branch it was started from;"
@@ -1130,7 +1121,7 @@ def finish(
             # included) would otherwise run ``before_remove``, merge and push for a task that never existed.
             raise NotFoundError(
                 f"no worktree at {path_for(position, branch)} or on branch {branch}; the branch {branch} is merged"
-                f" into the base HEAD but has no {_marker(branch)} marker, so devkit worktree start did not create"
+                f" into the base HEAD but has no {marker_key(branch)} marker, so devkit worktree start did not create"
                 " it, or a finish already completed for it (or start created it before devkit recorded the marker;"
                 " such branches are not resumed automatically); finish does not resume it; nothing was changed",
                 fix=f"git -C {shlex.quote(str(base))} branch -d {branch}" if delete_branch else None,
@@ -1141,7 +1132,7 @@ def finish(
             )
         _log.info("%s has no worktree; finishing the marked branch alone", branch)
         result = FinishResult(branch, _marked_path(position, branch), removed=_gone(position, branch))
-        back = _config(base, _marker(branch, BASE_KEY))
+        back = branch_marker(base, branch, BASE_KEY)
         if merge and back and position.branch != back:
             raise ConflictError(
                 f"{branch} was started from {back}, but the base checkout is on {position.branch or 'a detached HEAD'};"
@@ -1249,14 +1240,14 @@ def finish(
 def _gone(position: Position, branch: str) -> bool | None:
     """For a branch without a worktree: ``True`` when its worktree was removed earlier (its marker names the worktree
     path), ``None`` when it never had one (``start_branch`` marks the checkout it switched; or no marker at all)."""
-    value = _config(position.base, _marker(branch))
+    value = branch_marker(position.base, branch)
     return True if value and Path(value) == path_for(position, branch) else None
 
 
 def _marked_path(position: Position, branch: str) -> Path:
     """The checkout a marked branch without a worktree belongs to: the path its marker records (``start_branch``
     records the checkout it switched), else the branch's worktree path."""
-    value = _config(position.base, _marker(branch))
+    value = branch_marker(position.base, branch)
     return Path(value) if value else path_for(position, branch)
 
 

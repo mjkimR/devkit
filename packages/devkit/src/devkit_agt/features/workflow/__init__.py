@@ -73,6 +73,7 @@ from devkit_agt.features.workflow.models.errors import (
     WorkflowNotFoundError,
     WorkflowNotSelectedError,
 )
+from devkit_agt.features.workflow.models.handoff import CandidateResult, Handoff
 from devkit_agt.features.workflow.models.layout import LayoutSpec, TemplateLayout, parse_layout_spec, validate_template
 from devkit_agt.features.workflow.models.requests import Option, Request, Target
 from devkit_agt.features.workflow.models.results import (
@@ -113,8 +114,6 @@ from devkit_agt.features.workflow.usecases.answers import (
 )
 from devkit_agt.features.workflow.usecases.evaluate import LintFunc, Options, evaluate_definition
 from devkit_agt.features.workflow.usecases.handoff import (
-    CandidateResult,
-    Handoff,
     HandoffOutcome,
     HandoffPlan,
     apply_handoff,

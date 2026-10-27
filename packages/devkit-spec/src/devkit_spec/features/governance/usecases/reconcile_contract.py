@@ -27,6 +27,7 @@ from devkit_core.core import FrontmatterError, GitError, is_safe_relpath, normal
 from devkit_core.core.frontmatter import parse
 
 from devkit_spec.features.governance import explicitly_targeted
+from devkit_spec.features.policy.repositories.branches import recorded_base
 
 RULE_ID = "RULE-reconcile-contract"
 STATUSES = ("pending", "resolved")
@@ -120,7 +121,10 @@ def _integration_base(root: Path) -> str | None:
     branch = _git(root, "symbolic-ref", "--quiet", "--short", "HEAD")
     if not branch:
         return None
-    recorded = _git(root, "config", "--get", f"branch.{branch}.devkitBase")
+    try:
+        recorded = recorded_base(root, branch)
+    except GitError:
+        recorded = ""
     if recorded:
         return recorded
     listing = _git(root, "worktree", "list", "--porcelain") or ""

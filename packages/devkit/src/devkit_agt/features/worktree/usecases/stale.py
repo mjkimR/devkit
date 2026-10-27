@@ -14,8 +14,6 @@ from __future__ import annotations
 import json
 import os
 import shlex
-import subprocess
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -28,6 +26,7 @@ from devkit_core.core.git import run_git
 from devkit_core.core.logs import get_logger
 from devkit_dist.features.project.models.invocation import devkit_command
 
+from devkit_agt.features.worktree.models.config import parse_period
 from devkit_agt.features.worktree.models.errors import (
     StaleBranchWarning,
     StalePullRequestsUnknownNotice,
@@ -35,8 +34,10 @@ from devkit_agt.features.worktree.models.errors import (
     UnsupportedLayoutError,
 )
 from devkit_agt.features.worktree.models.lifecycle import Position
-from devkit_agt.features.worktree.repositories.config import parse_period, read_worktree_config
-from devkit_agt.features.worktree.usecases.lifecycle import BRANCH, BRANCH_LIMIT, UNIT_KEY, locate
+from devkit_agt.features.worktree.repositories.config import read_worktree_config
+from devkit_agt.features.worktree.repositories.markers import UNIT_KEY, branch_marker
+from devkit_agt.features.worktree.repositories.pull_request import CommandResult, Runner, run_gh
+from devkit_agt.features.worktree.usecases.lifecycle import BRANCH, BRANCH_LIMIT, locate
 
 _log = get_logger(__name__)
 
@@ -44,28 +45,13 @@ GH_TIMEOUT = 60.0  # seconds for one gh call
 PR_LIMIT = 1000  # pull requests read in one `gh pr list`
 PR_FIELDS = "headRefName,state,isDraft,mergeStateStatus,updatedAt,url"
 
-# ``gh`` run in a directory with arguments: its exit code and stdout (exit 127 when gh is missing, 124 on timeout).
-GhRunner = Callable[[Path, list[str]], tuple[int, str]]
+# ``gh`` run in a directory with arguments: the repositories ``Runner``, exit code ``127`` when gh is missing and
+# ``None`` on timeout. The default is the hardened ``run_gh`` bounded by ``GH_TIMEOUT``.
+GhRunner = Runner
 
 
-def run_gh(cwd: Path, args: list[str]) -> tuple[int, str]:
-    """Run ``gh`` with ``args`` in ``cwd`` without a prompt; its exit code and stdout."""
-    env = {**os.environ, "GH_PROMPT_DISABLED": "1", "NO_COLOR": "1"}
-    try:
-        completed = subprocess.run(
-            ["gh", *args],
-            cwd=cwd,
-            env=env,
-            stdin=subprocess.DEVNULL,
-            capture_output=True,
-            check=False,
-            timeout=GH_TIMEOUT,
-        )
-    except FileNotFoundError:
-        return 127, ""
-    except subprocess.TimeoutExpired:
-        return 124, ""
-    return completed.returncode, os.fsdecode(completed.stdout)
+def _default_gh(cwd: Path, args: list[str]) -> CommandResult:
+    return run_gh(cwd, args, timeout=GH_TIMEOUT)
 
 
 @dataclass(frozen=True)
@@ -169,11 +155,11 @@ def _github_remote(base: Path) -> bool:
 
 def _pull_requests(base: Path, gh: GhRunner) -> dict[str, dict[str, Any]] | None:
     """The latest pull request per head branch, ``None`` when ``gh pr list`` fails."""
-    code, out = gh(base, ["pr", "list", "--state", "all", "--limit", str(PR_LIMIT), "--json", PR_FIELDS])
-    if code != 0:
+    result = gh(base, ["pr", "list", "--state", "all", "--limit", str(PR_LIMIT), "--json", PR_FIELDS])
+    if result.returncode != 0:
         return None
     try:
-        items = json.loads(out)
+        items = json.loads(result.stdout)
     except ValueError:
         return None
     if not isinstance(items, list):
@@ -219,12 +205,12 @@ class StaleBranches(BaseUseCase):
     ) -> StaleResult:
         """The activity branches idle longer than ``stale_after`` (``<N>d`` or ``<N>w``), most idle first.
 
-        ``gh`` runs the GitHub CLI (``run_gh`` when ``None``, looked up at call time); ``now`` defaults to the clock.
+        ``gh`` runs the GitHub CLI (``run_gh`` bounded by ``GH_TIMEOUT`` when ``None``); ``now`` defaults to the clock.
         """
-        gh = gh or run_gh
+        gh = gh or _default_gh
         period = parse_period(stale_after)
         base = position.base
-        code, _ = gh(base, ["auth", "status"])
+        code = gh(base, ["auth", "status"]).returncode
         if code != 0:
             reason = "gh is not installed" if code == 127 else "gh auth status failed"
             return StaleResult(
@@ -274,7 +260,7 @@ def _unit(base: Path, branch: str, refs: list[str]) -> str | None:
     """The unit ``attach`` recorded for the branch, while the branch still holds it (a handoff replaces a proposal
     with its spec, so the recorded directory can be gone): ``None`` otherwise, for the caller to map the slug."""
     try:
-        value = os.fsdecode(run_git(base, "config", "--local", "--get", f"branch.{branch}.{UNIT_KEY}")).strip()
+        value = branch_marker(base, branch, UNIT_KEY)
     except GitError:
         return None
     if not value:

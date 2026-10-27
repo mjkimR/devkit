@@ -43,7 +43,7 @@ from devkit_core.core.git import DEFAULT_TIMEOUT
 from devkit_dist.features.project.repositories.project import require_git_toplevel
 
 from devkit_agt.features.rules.models.errors import SnapshotError
-from devkit_agt.features.rules.models.snapshot import Snapshot as Snapshot
+from devkit_agt.features.rules.models.snapshot import Snapshot
 
 REGULAR_MODES = {"100644", "100755"}
 SYMLINK_MODE = "120000"

@@ -7,7 +7,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from devkit_agt.features.workflow.services.envelope import Envelopes, collect_envelopes, is_envelope_name
-from devkit_agt.features.worktree.usecases.lifecycle import locate
+from devkit_agt.features.worktree import BASE_KEY, UNIT_KEY, branch_marker, locate
 from devkit_core.base.errors import ArgumentError
 from devkit_core.core import GitError, run_git, run_git_text
 from devkit_core.core.frontmatter import parse
@@ -37,15 +37,6 @@ def files(root: Path, revision: str, prefix: str = "") -> list[str]:
 
 def read(root: Path, revision: str, path: str) -> str:
     return run_git(root, "show", f"{revision}:{path}").decode("utf-8")
-
-
-def marker(root: Path, branch: str, key: str) -> str:
-    try:
-        return run_git_text(root, "config", "--get", f"branch.{branch}.{key}")
-    except GitError as exc:
-        if exc.returncode == 1:
-            return ""
-        raise
 
 
 def records(root: Path, revision: str, unit: str) -> Envelopes:
@@ -89,7 +80,7 @@ def unit_path(root: Path, value: str) -> str:
 def derive_unit(root: Path, tip: str, branch: str | None) -> tuple[str, str]:
     if not branch:
         raise WorkerUnitUnresolvedError("Detached HEAD has no activity unit")
-    marked = marker(root, branch, "devkitUnit")
+    marked = branch_marker(root, branch, UNIT_KEY)
     if marked:
         unit = unit_path(root, marked)
         if not files(root, tip, unit):
@@ -128,7 +119,7 @@ def derive_base(
                 raise WorkerBaseUnresolvedError("Unresolved problems have missing or conflicting range bases")
             return bases.pop(), "previous-blocked-range"
         return previous, "previous-worker-commit"
-    base_branch = marker(root, branch, "devkitBase") if branch else ""
+    base_branch = branch_marker(root, branch, BASE_KEY) if branch else ""
     if not base_branch and base_checkout:
         base_branch = run_git_text(base_checkout, "symbolic-ref", "--quiet", "--short", "HEAD")
     if not base_branch or base_branch == branch:

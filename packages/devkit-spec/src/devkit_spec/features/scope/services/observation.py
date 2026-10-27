@@ -13,6 +13,7 @@ from devkit_core.core.frontmatter import parse
 from devkit_spec.base.errors import EntrypointsPathError
 from devkit_spec.base.units import PROPOSAL_FILE, PROPOSALS, is_spec_dir, proposal_unit
 from devkit_spec.features.entrypoints import normalize
+from devkit_spec.features.policy.repositories.branches import base_marker_key, unit_marker_key
 from devkit_spec.features.scope.models.deadline import Deadline
 from devkit_spec.features.scope.models.model import (
     Granularity,
@@ -41,7 +42,7 @@ def identify(
 ) -> tuple[str, dict[str, Any]]:
     unit = ""
     if candidate.branch and candidate.ref.startswith("refs/heads/"):
-        marker = optional(root, "config", "--get", f"branch.{candidate.branch}.devkitUnit", deadline=deadline)
+        marker = optional(root, "config", "--local", "--get", unit_marker_key(candidate.branch), deadline=deadline)
         if marker:
             # A stale marker cannot silently fall back to another unit.
             unit = normalize(marker)
@@ -109,7 +110,7 @@ def select_base(
     if explicit:
         return explicit, "explicit"
     if candidate.ref.startswith("refs/heads/"):
-        marked = optional(root, "config", "--get", f"branch.{candidate.branch}.devkitBase", deadline=deadline)
+        marked = optional(root, "config", "--local", "--get", base_marker_key(candidate.branch), deadline=deadline)
         if marked:
             return marked, "branch.devkitBase"
     if record is not None and record.base_ref:

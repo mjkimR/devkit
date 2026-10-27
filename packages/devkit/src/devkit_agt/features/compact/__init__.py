@@ -13,8 +13,10 @@ from devkit_agt.features.compact.models.errors import (
     SlowCommandNotice,
 )
 from devkit_agt.features.compact.models.scan import Failure, Omitted, RelayedAdvisory, Scan, ToolWarning
+from devkit_agt.features.compact.services.porcelain import status_records
 from devkit_agt.features.compact.services.scan import scan
 from devkit_agt.features.compact.usecases.execute import (
+    FAILURE_TAIL_LINES,
     CommandInterrupted,
     CommandRun,
     default_log_dir,
@@ -23,6 +25,7 @@ from devkit_agt.features.compact.usecases.execute import (
 )
 
 __all__ = [
+    "FAILURE_TAIL_LINES",
     "CommandInterrupted",
     "CommandNotStartedError",
     "CommandRun",
@@ -38,4 +41,5 @@ __all__ = [
     "log_root",
     "run_command",
     "scan",
+    "status_records",
 ]

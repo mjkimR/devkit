@@ -168,8 +168,10 @@ The package is laid out by layer under `features/worktree/`:
 - `models/`: `config.py` (`WorktreeConfig` and the duration grammar), `errors.py` (one class per code,
   [reference](../../development/reference/worktree.md#error-codes)), `lifecycle.py` (`Position` and the start,
   finish and status results), `planning.py` (`FinishPlan`) and `pull_request.py` (the bound GitHub `Repository`).
-- `repositories/`: `config.py` (`read_worktree_config` of the `[worktree]` table) and `pull_request.py` (bounded,
-  injectable `gh` operations).
+- `repositories/`: `config.py` (`read_worktree_config` of the `[worktree]` table), `markers.py` (the marker keys
+  `MARKER`, `BASE_KEY`, `UNIT_KEY`, `marker_key` and `branch_marker`, which reads one with `git config --local`, the
+  public reader devkit-spec uses too) and `pull_request.py` (bounded, injectable `gh` operations: `run_gh`, with an
+  environment cleared of `GH_REPO` and `GIT_DIR`-style overrides and isolated from global Git configuration).
 - `services/`: `extensions.py`, the `devkit.post_finish` extension point (`run_post_finish`) on
   `devkit_core.core.extensions` and the fail-closed check groups `devkit.finish_guard` (`run_finish_guards`) and
   `devkit.attach_check` (`run_attach_checks`); `merging.py`, the result commit (`build_result`, `merge_message`,
@@ -179,7 +181,8 @@ The package is laid out by layer under `features/worktree/`:
 - `usecases/`: `lifecycle.py` (`locate`, `check_branch`, `path_for`, `start`, `StartBranch`, `attach`, `find`,
   `finish`, `discard` and `WorktreeStatusQuery`), `configured.py` (project policy and extension guards applied to
   them), `planning.py` (`plan_finish`, `validate_finish`) and `stale.py` (`stale_branches` and the `devkit.hygiene`
-  extension `hygiene`; `gh` runs through `run_gh`, which callers and tests can replace). `start` runs
+  extension `hygiene`; `gh` runs through the repositories' `run_gh` with a 60-second bound, and callers and tests
+  can pass another `Runner`). `start` runs
   `devkit sync --locked` as a subprocess (`python -m devkit_dist sync --locked`), so the package still imports no
   other area.
 - `cli.py`: `devkit worktree start|finish|status`, with the stale-branch report as `status --stale`.

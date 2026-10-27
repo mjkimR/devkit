@@ -14,6 +14,7 @@ import pytest
 from click.testing import CliRunner
 from devkit.advisory import ActionMode
 from devkit_agt.features.worktree import locate, stale_branches
+from devkit_agt.features.worktree.repositories.pull_request import CommandResult
 from testsupport.cli import cli
 from testsupport.rules import git, init_repo, write
 
@@ -39,14 +40,12 @@ def aged_branch(repo: Path, branch: str, days: int, start: str = "main", unit: s
     git(repo, "switch", "-q", start)
 
 
-def fake_gh(
-    pulls: list[dict] | None = None, *, auth: int = 0, pr_list: int = 0
-) -> Callable[[Path, list[str]], tuple[int, str]]:
-    def run(cwd: Path, args: list[str]) -> tuple[int, str]:
+def fake_gh(pulls: list[dict] | None = None, *, auth: int = 0, pr_list: int = 0) -> Callable[..., CommandResult]:
+    def run(cwd: Path, args: list[str], **_: object) -> CommandResult:
         if args[:2] == ["auth", "status"]:
-            return auth, ""
+            return CommandResult(auth)
         assert args[:2] == ["pr", "list"] and "--state" in args and "all" in args
-        return pr_list, json.dumps(pulls or [])
+        return CommandResult(pr_list, json.dumps(pulls or []))
 
     return run
 
@@ -140,7 +139,7 @@ def test_hygiene_runs_show_stale_branches_and_linter_runs_never_do(repo: Path, m
     aged_branch(repo, "dev-old", 30)
     calls: list[Path] = []
     gh = fake_gh()
-    monkeypatch.setattr(stale_module, "run_gh", lambda cwd, args: (calls.append(cwd), gh(cwd, args))[1])
+    monkeypatch.setattr(stale_module, "run_gh", lambda cwd, args, **_: (calls.append(cwd), gh(cwd, args))[1])
     hygiene = CliRunner().invoke(cli, ["rules", "check", "-p", "hygiene", "-w", str(repo)])
     assert hygiene.exit_code == 0, hygiene.output
     assert "(WORKTREE_STALE_BRANCH) activity branch dev-old" in hygiene.stderr
@@ -162,7 +161,7 @@ def test_a_recorded_unit_the_branch_no_longer_holds_is_not_reported(repo: Path) 
 
 
 def test_default_status_never_queries_github(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    def unexpected_gh(cwd: Path, args: list[str]) -> None:
+    def unexpected_gh(cwd: Path, args: list[str], **_: object) -> None:
         pytest.fail("default worktree status must not query GitHub")
 
     monkeypatch.setattr(stale_module, "run_gh", unexpected_gh)
