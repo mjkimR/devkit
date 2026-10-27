@@ -15,7 +15,6 @@ from dataclasses import dataclass, field
 from functools import cache
 
 from devkit_agt.features.rules import (
-    LineKind,
     Phase,
     RuleContext,
     Severity,
@@ -86,7 +85,10 @@ def _pattern(words: tuple[str, ...], flags: int) -> re.Pattern[str] | None:
 def prose_lines(text: str, *, template: bool = False) -> Iterator[tuple[int, str]]:
     """Each line number with the line's prose: fenced code and comments (``scan``), quotes, code spans and Jinja tags
     blanked."""
-    lines = [scanned.text if scanned.kind is not LineKind.INDENTED else "" for scanned in scan(text)]
+    source = text.splitlines()
+    scanned = list(scan("\n".join(source)))[: len(source)]
+    # ``text`` blanks fenced code and comments and keeps every other line, indented ones included.
+    lines = [line.text for line in scanned]
     prose = (TEMPLATE_SPANS if template else SPANS).sub(_blank, "\n".join(lines))
     for number, line in enumerate(prose.split("\n"), start=1):
         yield number, QUOTES.sub(" ", line)

@@ -78,6 +78,18 @@ def test_an_unmatched_backtick_masks_nothing_past_its_paragraph(tmp_path: Path) 
     assert _found(tmp_path, body) == [(3, 'Hedge "might"')]
 
 
+def test_an_unclosed_inline_comment_is_literal_and_indented_lines_stay_checked(tmp_path: Path) -> None:
+    body = "Start with <!-- and stop.\nIt might fail.\n\n    Indented, it might fail.\n"
+    assert _found(tmp_path, body) == [(2, 'Hedge "might"'), (4, 'Hedge "might"')]
+
+
+def test_line_numbers_follow_every_line_break(tmp_path: Path) -> None:
+    assert _found(tmp_path, "One.\rTwo.\x0bIt might fail.\r\nIt might fail.\n") == [
+        (3, 'Hedge "might"'),
+        (4, 'Hedge "might"'),
+    ]
+
+
 def test_jinja_tags_are_masked_in_templates_only(tmp_path: Path) -> None:
     template = "pkg/bundle/skills/demo/SKILL.md.jinja"
     body = "{{ maybe }} {% if x\n and ALWAYS %} {# recently #}\n{# a multi-line\nJinja comment that might wrap #}\n"

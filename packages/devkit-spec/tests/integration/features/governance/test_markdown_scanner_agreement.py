@@ -25,7 +25,11 @@ DOCUMENTS = [
     ),
     pytest.param("```js``` is inline\n- [ ] [AC-01] after the inline line\n", id="inline-backtick-line"),
     pytest.param("<!--\n- [ ] [AC-92] commented out\n-->\n- [ ] [AC-01] after the comment\n", id="comment-block"),
-    pytest.param("Text <!-- note\n- [ ] [AC-93] in a span\n-->\n- [ ] [AC-01] after the span\n", id="comment-span"),
+    pytest.param("Text <!-- note\n[AC-93] continued\n-->\n- [ ] [AC-01] after the span\n", id="comment-span"),
+    pytest.param(
+        "- [x] [AC-01] starts with <!-- and is one line\n- [ ] [AC-02] next\n```\n- [ ] [AC-97] fenced\n```\n",
+        id="unclosed-inline-opener",
+    ),
     pytest.param("-  [x] [AC-01] two spaces\n*\t[X] [AC-02] tab\n", id="marker-spacing"),
     pytest.param("Write `<!--` to open one\n- [ ] [AC-01] after a literal opener\n", id="opener-in-code-span"),
     pytest.param("---\nnote: |\n  - [ ] [AC-94] frontmatter\n---\n- [ ] [AC-01] body\n", id="frontmatter"),

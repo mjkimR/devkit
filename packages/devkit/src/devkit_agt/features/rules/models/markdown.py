@@ -18,10 +18,12 @@ it rather than tracking fences itself. It classifies each line as one of:
   reads indented lines may;
 - ``COMMENT``: a line inside an HTML comment. A line opening with ``<!--``
   (indented at most three) starts an HTML block that ends with the line
-  holding ``-->``; a ``<!--`` after other content is an inline span, blanked
-  up to its ``-->`` (on a later line if need be; an unclosed one runs to the
-  end). A ``<!--`` inside an inline code span (a backtick run closed by the
-  next run of the same length on its line) is literal;
+  holding ``-->`` (an unclosed one runs to the end); a ``<!--`` after other
+  content is an inline comment, blanked up to its ``-->``, which may come on a
+  later line of the same paragraph. An inline ``<!--`` that nothing in its
+  paragraph closes is literal text, and so is one after a backslash or inside
+  an inline code span (a backtick run closed by the next run of the same
+  length, on its line or a later line of its paragraph);
 - ``FRONTMATTER``: the leading YAML frontmatter (``devkit_core.core.frontmatter``
   grammar) when asked to skip it; a block never closed takes the whole text.
 
@@ -42,8 +44,9 @@ before it stays part of ``line`` and is left out of ``text``.
 
 from __future__ import annotations
 
+import itertools
 import re
-from collections.abc import Iterator
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from enum import StrEnum
 from urllib.parse import unquote
@@ -143,13 +146,66 @@ def _code_span_end(line: str, start: int) -> int:
     return -1
 
 
-def _mask_comments(line: str, comment: bool) -> tuple[str, bool]:
-    """``line`` with its inline HTML comment spans blanked, and whether a comment continues past it; ``comment``
-    tells whether the line starts inside one. A ``<!--`` inside a code span is literal."""
-    if not comment and "<!--" not in line:
-        return line, False
+_HEADING_START = re.compile(r"^ {0,3}#{1,6}(?:[ \t]|$)")
+
+
+def _continues_paragraph(line: str) -> bool:
+    """Whether ``line`` can continue the paragraph of the line before it.
+
+    A blank line ends a paragraph, and so does a line that starts another block: a fence, a list item, an ATX
+    heading or an HTML block (a line opening with ``<!--``).
+    """
+    content = line.removesuffix("\r")
+    stripped = content.strip()
+    if not stripped or _LIST_MARKER.match(content):
+        return False
+    return _indent(content) > 3 or not (
+        _fence_run(stripped) or stripped.startswith("<!--") or _HEADING_START.match(content)
+    )
+
+
+def _closes_later(following: Iterable[str], closer: Callable[[str], bool]) -> bool:
+    """Whether a following line of the same paragraph satisfies ``closer``."""
+    for line in following:
+        if not _continues_paragraph(line):
+            return False
+        if closer(line):
+            return True
+    return False
+
+
+def _closing_backticks(line: str, start: int, width: int) -> int:
+    """Index of the first backtick run of exactly ``width`` at or after ``start``, or ``-1``."""
+    index = start
+    while index < len(line):
+        if line[index] != "`":
+            index += 1
+            continue
+        run = index
+        while index < len(line) and line[index] == "`":
+            index += 1
+        if index - run == width:
+            return run
+    return -1
+
+
+def _mask_inline(line: str, comment: bool, span: int, following: Iterable[str]) -> tuple[str, bool, int]:
+    """``line`` with its inline HTML comments blanked, whether a comment continues past it, and the width of a code
+    span that does (``0`` when none); ``comment`` and ``span`` tell what the line starts inside.
+
+    A comment or a code span may wrap onto the following lines of its paragraph, so an opener whose closer comes
+    only on a later line of the paragraph opens one; an opener that nothing in the paragraph closes is literal. A
+    ``<!--`` inside a code span or after a backslash is literal.
+    """
+    if not comment and not span and "<!--" not in line:
+        return line, False, 0
     out = list(line)
     index = 0
+    if span:
+        close = _closing_backticks(line, 0, span)
+        if close < 0:
+            return line, False, span
+        index, span = close + span, 0
     while index < len(line):
         if comment:
             end = line.find("-->", index)
@@ -159,15 +215,28 @@ def _mask_comments(line: str, comment: bool) -> tuple[str, bool]:
                 break
             index, comment = stop, False
             continue
-        if line[index] == "`":
+        char = line[index]
+        if char == "\\":
+            index += 2
+            continue
+        if char == "`":
             end = _code_span_end(line, index)
-            index = end if end >= 0 else len(line) - len(line[index:].lstrip("`"))
+            if end >= 0:
+                index = end
+                continue
+            width = len(line[index:]) - len(line[index:].lstrip("`"))
+            if _closes_later(following, lambda later, width=width: _closing_backticks(later, 0, width) >= 0):
+                return "".join(out), False, width
+            index += width
             continue
         if line.startswith("<!--", index):
-            comment = True
+            if "-->" in line[index + 4 :] or _closes_later(following, lambda later: "-->" in later):
+                comment = True
+            else:
+                index += 4
             continue
         index += 1
-    return "".join(out), comment
+    return "".join(out), comment, 0
 
 
 def parse_checklist_item(line: str) -> ChecklistItem | None:
@@ -201,7 +270,8 @@ def scan(text: str, *, start: int = 0, first_line: int = 1, frontmatter: bool = 
             front = len(lines)
     fence = ""
     block_comment = False  # inside an HTML block opened by a line starting with "<!--"
-    comment = False  # inside an inline comment span continued from an earlier line
+    comment = False  # inside an inline comment continued from an earlier line of its paragraph
+    span = 0  # the backtick run width of a code span continued from an earlier line of its paragraph
     columns: list[int] = []  # content columns of the enclosing list items
     after_blank, in_indented = True, False
     offset = start
@@ -218,9 +288,10 @@ def scan(text: str, *, start: int = 0, first_line: int = 1, frontmatter: bool = 
         elif block_comment:
             kind, masked = LineKind.COMMENT, blank
             block_comment = "-->" not in content
-        elif comment:
-            masked, comment = _mask_comments(content, True)
-            if comment:
+        elif comment or span:
+            opened_in_comment = comment
+            masked, comment, span = _mask_inline(content, comment, span, itertools.islice(lines, position + 1, None))
+            if opened_in_comment and comment:
                 kind = LineKind.COMMENT
         elif fence:
             run = _fence_run(stripped) if indent - base <= 3 else ""
@@ -249,7 +320,8 @@ def scan(text: str, *, start: int = 0, first_line: int = 1, frontmatter: bool = 
                 kind, masked = LineKind.COMMENT, blank
                 block_comment = "-->" not in stripped[4:]
             else:
-                masked, comment = _mask_comments(content, False)
+                following = itertools.islice(lines, position + 1, None)
+                masked, comment, span = _mask_inline(content, False, 0, following)
                 if marker is not None:
                     task = parse_checklist_item(masked)
         if stripped and kind is not LineKind.FRONTMATTER:

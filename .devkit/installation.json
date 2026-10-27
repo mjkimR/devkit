@@ -1443,11 +1443,11 @@
     },
     ".devkit/managed/authoring/rules/agent_asset_wording/rule.py": {
       "mode": 420,
-      "sha256": "b7ea58d6801ff3395530ad8be8bda05a8c5a275eb9a7fdf6c750722a2ffe0b7d"
+      "sha256": "19523f173c5722115a67b47b988abc9617725a454a40f5df147349065c84515e"
     },
     ".devkit/managed/authoring/rules/agent_asset_wording/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "670f8a58a9e3296e2a386ebf5e001cb1b5c215c671ea5215cae29bd8d7118b30"
+      "sha256": "384c47b31f65d083deb1cf6a832a9c16f45c79ddf87d8286035379c23f7da115"
     },
     ".devkit/managed/authoring/rules/skill_document_size/guide.md": {
       "mode": 420,
