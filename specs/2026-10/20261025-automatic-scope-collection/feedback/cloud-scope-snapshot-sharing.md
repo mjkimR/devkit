@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/features/scope/models/registry.py
 origin: user
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-25
 ---
 
@@ -40,3 +40,9 @@ created_at: 2026-10-25
 `LocalRegistry` is the deployed registry adapter. The accepted ADR names cloud-backed initial snapshot sharing as
 future direction only. Future acceptance should use separate clones against one configured adapter to verify initial
 publication/read visibility, ownership and failure isolation, without claiming observation of private later changes.
+
+## Disposition
+
+Dismissed on the user's decision (2026-10-27). It records no observed failure, and the cloud sharing direction is
+already recorded in `ADR-host-owned-scope-observation` and `CAP-COLL-work-scope-registry`. Raise it as a proposal when
+cloud scope sharing is planned.

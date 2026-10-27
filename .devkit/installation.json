@@ -971,7 +971,7 @@
     },
     ".agents/skills/spec-integrate/SKILL.md": {
       "mode": 420,
-      "sha256": "e3b4bbe69259e26a3f24f8e9e72381080a816786fffebcf4555b736210470e2b"
+      "sha256": "24b67af7db4a1d49b0465b1572480df662104f140fa1f3bf349156b468d082bf"
     },
     ".agents/skills/spec-next/SKILL.md": {
       "mode": 420,
@@ -1007,7 +1007,7 @@
     },
     ".agents/skills/spec-review/SKILL.md": {
       "mode": 420,
-      "sha256": "967db888190dfbfd5644a1208c3902fb38a98ed92cb91c3dd43e824100552539"
+      "sha256": "32e44f9c339090e16d8f75b5444610e984d6585eb971626e830062d0616ec2a9"
     },
     ".agents/skills/spec-rule/SKILL.md": {
       "mode": 420,
@@ -1199,7 +1199,7 @@
     },
     ".claude/skills/spec-integrate/SKILL.md": {
       "mode": 420,
-      "sha256": "e3b4bbe69259e26a3f24f8e9e72381080a816786fffebcf4555b736210470e2b"
+      "sha256": "24b67af7db4a1d49b0465b1572480df662104f140fa1f3bf349156b468d082bf"
     },
     ".claude/skills/spec-next/SKILL.md": {
       "mode": 420,
@@ -1231,7 +1231,7 @@
     },
     ".claude/skills/spec-review/SKILL.md": {
       "mode": 420,
-      "sha256": "967db888190dfbfd5644a1208c3902fb38a98ed92cb91c3dd43e824100552539"
+      "sha256": "32e44f9c339090e16d8f75b5444610e984d6585eb971626e830062d0616ec2a9"
     },
     ".claude/skills/spec-rule/SKILL.md": {
       "mode": 420,
@@ -1827,7 +1827,7 @@
     },
     ".devkit/managed/spec/skills/spec-integrate/SKILL.md": {
       "mode": 420,
-      "sha256": "e3b4bbe69259e26a3f24f8e9e72381080a816786fffebcf4555b736210470e2b"
+      "sha256": "24b67af7db4a1d49b0465b1572480df662104f140fa1f3bf349156b468d082bf"
     },
     ".devkit/managed/spec/skills/spec-next/SKILL.md": {
       "mode": 420,
@@ -1859,7 +1859,7 @@
     },
     ".devkit/managed/spec/skills/spec-review/SKILL.md": {
       "mode": 420,
-      "sha256": "967db888190dfbfd5644a1208c3902fb38a98ed92cb91c3dd43e824100552539"
+      "sha256": "32e44f9c339090e16d8f75b5444610e984d6585eb971626e830062d0616ec2a9"
     },
     ".devkit/managed/spec/skills/spec-rule/SKILL.md": {
       "mode": 420,
