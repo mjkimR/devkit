@@ -221,11 +221,14 @@ def test_the_check_reports_a_pending_intent_and_writes_nothing(tmp_path: Path) -
 
     result = _accept(root, "small", "--direct", "--check", "--note", "settled")
 
-    assert result.exit_code == 0, result.output
+    # The real run refuses the pending intent, so the check's answer is negative (exit 1).
+    assert result.exit_code == 1, result.output
     assert result.stdout == (
-        "[ACCEPT_CHECK: PROP-small form=direct path=docs/proposals/PROP-small/proposal.md eligible=yes"
+        "[ACCEPT_CHECK: PROP-small form=direct path=docs/proposals/PROP-small/proposal.md eligible=no"
         " pending=gate:plan-intent]\n"
     )
+    checked = json.loads(_accept(root, "small", "--direct", "--check", "--note", "settled", "--format", "json").stdout)
+    assert (checked["eligible"], checked["pending"]) == (False, ["gate:plan-intent"])
     assert _snapshot(root, "small") == before
     _edit(proposal, "status: draft", "status: draft\nneeds_decompose: true")
     error = _error(_accept(root, "small", "--direct", "--check", "--note", "settled", "--format", "json"))
@@ -242,7 +245,9 @@ def test_an_eligible_check_without_pending_conditions(tmp_path: Path) -> None:
     _draft(root)
     checked = accept_proposal(root, "small", by="user", note="settled", direct=True, check=True)
     assert (checked.form, checked.checked, checked.pending, checked.status) == ("direct", True, (), "draft")
-    assert checked.to_dict()["decision"] is None
+    assert checked.to_dict()["decision"] is None and checked.to_dict()["eligible"] is True
+    result = _accept(root, "small", "--direct", "--check", "--note", "settled")
+    assert result.exit_code == 0 and "eligible=yes" in result.stdout
 
 
 def test_a_refusal_of_the_workflow_restores_the_status(tmp_path: Path) -> None:
@@ -253,6 +258,7 @@ def test_a_refusal_of_the_workflow_restores_the_status(tmp_path: Path) -> None:
     error = _error(_accept(root, "small", "--direct", "--note", "settled", "--format", "json"))
 
     assert error["code"] == "SPEC_PROPOSAL_GATE_NOT_OPEN"
+    assert error["mode"] == "INTERACTION" and error["target_files"] == ["docs/proposals/PROP-small/proposal.md"]
     assert any("envelope-check-pass(feedback swept)" in line for line in error["details"])
     assert proposal.read_bytes() == before and _plan_accepts(root, "small") == []
 
@@ -393,7 +399,7 @@ def test_arguments_are_refused_before_the_proposal_is_read(tmp_path: Path) -> No
         devkit_cli,
         ["spec", "proposal", "accept", "small", "--by", "policy", "--direct", "--note", "x", "-w", str(root)],
     )
-    assert policy.exit_code == 2 and "--by" in policy.output
+    assert policy.exit_code == 2 and "SPEC_PROPOSAL_POLICY_NOT_AUTO" in policy.stderr
     error = _error(_accept(root, "small", "--direct", "--note", "  ", "--format", "json"))
     assert error["code"] == "ARGUMENT_INVALID" and error["target_files"] == ["--note"]
     error = _error(_accept(root, "missing", "--direct", "--note", "  ", "--format", "json"))
@@ -426,6 +432,26 @@ def test_policy_cannot_accept_when_owning_policy_requires_user(tmp_path: Path) -
         ["spec", "proposal", "accept", "small", "--by", "policy", "--direct", "--note", "settled", "-w", str(root)],
     )
     assert result.exit_code == 2
-    assert "ARGUMENT_INVALID" in result.stderr
+    assert "SPEC_PROPOSAL_POLICY_NOT_AUTO" in result.stderr and "BLOCKED" in result.stderr
+    # The refusal never offers to record an acceptance the user did not give.
+    assert "--by user" not in result.stderr
+    error = _error(
+        CliRunner().invoke(
+            devkit_cli,
+            [
+                *("spec", "proposal", "accept", "small", "--by", "policy", "--direct", "--note", "x"),
+                "-w",
+                str(root),
+                "--format",
+                "json",
+            ],
+        )
+    )
+    assert (error["code"], error["mode"], error["target_files"]) == (
+        "SPEC_PROPOSAL_POLICY_NOT_AUTO",
+        "BLOCKED",
+        [".devkit/config.toml"],
+    )
+    assert "fix" not in error and "plan-accept" in error["what_to_report"]
     assert _snapshot(root, "small") == before
     assert not _plan_accepts(root, "small")

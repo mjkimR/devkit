@@ -43,6 +43,7 @@ from devkit_agt.features.integration import (
 from devkit_agt.features.worktree import FinishResult, slug_of
 from devkit_core.base.errors import GitError
 from devkit_core.core.git import run_git
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
 from devkit_spec.base.errors import PostFinishCleanupNotice, ProposalCleanupWarning, SpecError
 from devkit_spec.features.proposals.usecases.prune import prune_proposals
@@ -54,7 +55,7 @@ from devkit_spec.features.scope.usecases.flow import Session, journal, open_sess
 SOURCE = "post-finish"
 KIND_PROPOSAL = "proposal-prune"
 KIND_SCOPE = "scope-record"
-_SWEEP_FIX = "run devkit spec scope sweep --apply to remove the finished worktree's scope record"
+_SWEEP_FIX = f"run {DEVKIT} spec scope sweep --apply to remove the finished worktree's scope record"
 
 
 def _has_spec_bundle(base: Path) -> bool:
@@ -80,7 +81,7 @@ def _prune_step(base: Path, slug: str) -> tuple[bool, list[str | AdvisoryError]]
             ProposalCleanupWarning(
                 f"the empty proposal directories of {target} could not be pruned: {exc}",
                 target_files=[target],
-                fix=f"Fix the permissions of the directory in [TARGET], then run devkit spec proposal prune {slug}",
+                fix=f"Fix the permissions of the directory in [TARGET], then run {DEVKIT} spec proposal prune {slug}",
             )
         )
         return False, lines

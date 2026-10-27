@@ -145,7 +145,7 @@ def test_missing_scope_input_does_not_stop_other_checks(repo: Path) -> None:
     assert "outside_scope" not in result
     assert result["checks"]["rules"]["status"] == "pass"
     assert result["exit_code"] == 0
-    assert result["notices"][0]["code"] == "WORKER_CHECK_NOT_RUN"
+    assert result["notices"][0]["code"] == "SPEC_WORKER_CHECK_NOT_RUN"
 
 
 def test_head_mismatch_skips_rules(repo: Path) -> None:
@@ -396,7 +396,7 @@ def test_scope_file_unknown_ref_and_notice_cli(repo: Path, monkeypatch: pytest.M
     assert json.loads(result.stdout)["error"]["code"] == "ARGUMENT_INVALID"
     result = runner.invoke(cli, ["worker", "inspect", "--head", "main", "--format", "json"])
     assert result.exit_code == 1
-    assert json.loads(result.stdout)["notices"][0]["code"] == "WORKER_CHECK_NOT_RUN"
+    assert json.loads(result.stdout)["notices"][0]["code"] == "SPEC_WORKER_CHECK_NOT_RUN"
     assert json.loads(result.stdout)["checks"]["rules"]["status"] == "not-run"
 
 
@@ -473,7 +473,7 @@ def test_text_scope_unknown_omits_outside_and_history(repo: Path, monkeypatch: p
     assert "outside=" not in result.stdout
     assert "fixture" not in result.stdout
     assert "envelopes':" not in result.stdout
-    assert "WORKER_CHECK_NOT_RUN" in result.stderr
+    assert "SPEC_WORKER_CHECK_NOT_RUN" in result.stderr
 
 
 def test_structured_advisories_use_stderr_once(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -498,3 +498,35 @@ def test_structured_advisories_use_stderr_once(repo: Path, monkeypatch: pytest.M
     assert result.stderr.count("(ARGUMENT_INVALID)") == 1
     assert "[ACTION]" in result.stderr and "[FIX]" in result.stderr
     assert "Pass the valid input" in result.stderr
+
+
+def test_cli_failed_checks_carry_advisories_workspace_and_compact_success(
+    repo: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    previous = worker(repo, 1)
+    write(repo, "outside.py", "x = 1\n")
+    git(repo, "add", "outside.py")
+    worker(repo, 2)
+    module = importlib.import_module("devkit_spec.features.worker.cli.commands")
+    monkeypatch.setattr(
+        module,
+        "InspectWorkerUseCase",
+        lambda: SimpleNamespace(execute=lambda root, **kw: inspect(root, **kw, runner=passed)),
+    )
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    monkeypatch.chdir(elsewhere)  # -w names the worktree; the cwd is not used
+    runner = CliRunner()
+    result = runner.invoke(cli, ["worker", "inspect", "--base", previous, "-w", str(repo)])
+    assert result.exit_code == 1, result.output
+    assert result.stdout.startswith(f"[WORKER_INSPECTION: verdict=fail base={previous} head=")
+    assert "(SPEC_WORKER_SCOPE_OUTSIDE)" in result.stderr and "[TARGET] outside.py" in result.stderr
+    data = json.loads(
+        runner.invoke(cli, ["worker", "inspect", "--base", previous, "-w", str(repo), "--format", "json"]).stdout
+    )
+    assert [error["code"] for error in data["errors"]] == ["SPEC_WORKER_SCOPE_OUTSIDE"]
+    # A passed check is its status: its wrapped body is left out without --details.
+    assert "result" not in data["checks"]["envelopes"] and "result" not in data["checks"]["workflow"]
+    head = git(repo, "rev-parse", "HEAD")
+    clean = runner.invoke(cli, ["worker", "inspect", "--strict", "--base", head, "-w", str(repo), "--format", "json"])
+    assert clean.exit_code == 0, clean.output

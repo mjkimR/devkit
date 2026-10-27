@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from devkit_core.core import ArgumentError
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
 from devkit_spec.features.documents import DocumentIndex
 from devkit_spec.features.documents.models.ids import Kind
@@ -23,7 +24,7 @@ def milestone_id(root: Path, value: str | None) -> str | None:
         raise ArgumentError(
             f"--milestone {value!r} must name one existing global milestone",
             target_files=["--milestone"],
-            fix="Pass an MS- ID shown by devkit spec list milestone, or omit --milestone",
+            fix=f"Pass an MS- ID shown by {DEVKIT} spec list milestone, or omit --milestone",
         )
     return found[0].id
 

@@ -27,6 +27,7 @@ from devkit_agt.features.workflow import Binding, write_binding
 from devkit_core.core import remove_empty_tree
 from devkit_core.core.frontmatter import locate
 from devkit_core.core.logs import get_logger
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
 from devkit_spec.base.errors import (
     SpecExistsError,
@@ -343,7 +344,7 @@ class CreatedSpec:
 
     @property
     def next_command(self) -> str | None:
-        return f"devkit workflow next --unit {self.dir}" if self.workflow else None
+        return f"{DEVKIT} workflow next --unit {self.dir}" if self.workflow else None
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -398,7 +399,13 @@ def create_spec(
     ]
     if taken:
         taken = list(dict.fromkeys(taken))
-        raise SpecExistsError(f"slug {slug} is taken: {', '.join(taken)}", target_files=taken)
+        proposal = any("/proposals/" in path for path in taken)
+        raise SpecExistsError(
+            f"slug {slug} is taken: {', '.join(taken)}",
+            target_files=taken,
+            fix="Choose an unused slug"
+            + (f"; hand the proposal off with `{DEVKIT} spec proposal handoff {slug}` instead" if proposal else ""),
+        )
     binding, unbound = resolve_binding(root, workflow, "--workflow", field="--workflow", error=SpecWorkflowError)
 
     title = (title or "").strip() or slug
@@ -437,7 +444,7 @@ def create_spec(
             SpecUnboundNotice(
                 f"SPEC-{slug} is not bound to a workflow: {DEFAULT_WORKFLOW} is not available ({unbound.code})",
                 target_files=[f"{rel}/{SPEC_FILE}"],
-                fix=f"Bind it with devkit workflow bind --unit {rel} --workflow <id> once a workflow fits it",
+                fix=f"Bind it with {DEVKIT} workflow bind --unit {rel} --workflow <id> once a workflow fits it",
             )
         )
     return created

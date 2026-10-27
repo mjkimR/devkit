@@ -5,19 +5,19 @@ Text output (paths are relative to the workspace root):
 
 - ``new``: ``[PROPOSAL: <id> path= dir= target_docs= workflow= planning_effort= dev_effort=]``, with a trailing
   ``namespace=`` when the bundle reports one (``CreatedProposal.namespace``), and, when ``proposal.md`` is bound to a
-  workflow, ``[NEXT_CMD: devkit workflow next --unit <dir>]``.
+  workflow, ``[NEXT_CMD: uv run devkit workflow next --unit <dir>]``.
 - ``padr``: ``[PADR: <id> path= proposal=]``.
 - ``prune``: ``[PRUNED: <dir>]`` per empty proposal directory removed, else ``[OK: nothing to prune]``.
 - ``report``: the report template Markdown of the source itself, read-only and nothing published (JSON: ``proposal``,
   ``source_sha``, ``report``); ``source_sha`` defaults to the workspace ``HEAD``.
-- ``accept``: ``[ACCEPTED: ...]`` with basic Backlog acceptance or composed lifecycle mode, and
-  ``[ACCEPT_CHECK: ...]`` with ``--check`` and nothing written. Composed acceptance reports status, authority and
-  completed effects; refusals and partial effects carry stable advisory codes and exit status.
-  Refusals:
-  ``SPEC_PROPOSAL_ACCEPT_REFUSED``, ``SPEC_PROPOSAL_NOT_ELIGIBLE``, ``SPEC_PROPOSAL_WRONG_WORKTREE``,
-  ``SPEC_PROPOSAL_GATE_NOT_OPEN``.
+- ``accept``: ``[ACCEPTED: ...]`` with basic Backlog acceptance, and ``[ACCEPT_CHECK: ... eligible=yes|no]`` with
+  ``--check`` and nothing written (exit ``1`` when not eligible). Refusals: ``SPEC_PROPOSAL_ACCEPT_REFUSED``,
+  ``SPEC_PROPOSAL_NOT_ELIGIBLE``, ``SPEC_PROPOSAL_WRONG_WORKTREE``, ``SPEC_PROPOSAL_GATE_NOT_OPEN``,
+  ``SPEC_PROPOSAL_POLICY_NOT_AUTO``. The composed ``--mode`` form and ``handoff --effort`` print through
+  ``_echo_composed``: the success kind, ``<KIND>_STOPPED`` after partial effects (exit ``1``), or the refusal itself
+  (exit ``2``).
 - ``check``: ``[PROPOSAL: <id> path= status=draft editable=yes]`` when Backlog may edit, split or delete the proposal;
-  ``SPEC_PROPOSAL_IN_PLANNING`` while its ``plan-<slug>`` exists or once it left ``draft``.
+  ``SPEC_PROPOSAL_IN_PLANNING`` (exit ``1``) while its ``plan-<slug>`` exists or once it left ``draft``.
 - ``handoff``: ``[HANDOFF: <proposal id> spec= dir= workflow=]`` (with ``dev_effort=`` when the proposal declared it),
   then ``[TARGET_DOCS: <path>]``,
   ``[MATERIALS: <dir>]`` (``merged=yes`` when the materials were merged into an existing directory), one
@@ -29,7 +29,7 @@ Text output (paths are relative to the workspace root):
   ``[REWRITTEN: <path>:<line> kind=link|id|path from= to=]`` per rewritten link, reference or code-span path, one
   ``[UNRESOLVED_LINK: <path>:<line> kind= target= reason=]`` per link or reference left as it was,
   ``[SCOPE: <task> namespace= ... token=]`` when it registered the bundle's work scope, and
-  ``[NEXT_CMD: devkit workflow next --unit <dir>]`` when ``spec.md`` is bound to a workflow. With ``--effort``,
+  ``[NEXT_CMD: uv run devkit workflow next --unit <dir>]`` when ``spec.md`` is bound to a workflow. With ``--effort``,
   it composes Development worktree creation and handoff, reporting status and authority.
 
 A handoff inside a linked worktree registers the new bundle in the work-scope registry (``devkit spec scope
@@ -44,9 +44,10 @@ unbound proposal or spec a ``SPEC_PROPOSAL_UNBOUND`` notice, all on stderr.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import click
-from devkit.advisory import Actor, AdvisoryError, Level, Retry
+from devkit.advisory import Actor, AdvisoryError, ExitCode, Level, Retry
 from devkit_core.core import run_git
 from devkit_dist.adapters.cli import (
     FORMAT_OPTION,
@@ -55,10 +56,12 @@ from devkit_dist.adapters.cli import (
     echo_notices,
     exit_on_warnings,
     is_json,
+    output_settings,
     resolve_root,
     workspace_option,
 )
 
+from devkit_spec.base.errors import SpecError
 from devkit_spec.features.delivery.usecases.handoff import HandoffProposalUseCase
 from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase
 from devkit_spec.features.delivery.usecases.native_plan_accept import PlanAcceptUseCase
@@ -73,29 +76,86 @@ from devkit_spec.utils.output import sentinel
 WORKSPACE = workspace_option()
 
 
-def _result_advisories(result: dict) -> list[AdvisoryError]:
-    items = list(result.get("errors", [])) + list(result.get("notices", []))
-    if not items:
-        handoff = result.get("handoff", {})
-        items = list(handoff.get("errors", [])) + list(handoff.get("notices", []))
-    advisories = []
-    for item in items:
-        envelope = item.get("advisory", {})
-        advisories.append(
-            AdvisoryError(
-                item.get("message", "Lifecycle operation reported an advisory"),
-                code=item.get("code"),
-                level=Level(item.get("level", "ERROR")),
-                actor=Actor(envelope.get("actor", "NONE")),
-                retry=Retry(envelope.get("retry", "UNSAFE")),
-                guardrail=bool(envelope.get("guardrail", False)),
-                input_error=bool(envelope.get("input_error", False)),
-                fix=envelope.get("fix"),
-                what_to_report=envelope.get("what_to_report"),
-                target_files=envelope.get("target_files"),
-            )
-        )
-    return advisories
+SUCCESS = frozenset({"accepted", "handed_off"})
+
+
+def _advisory(item: dict[str, Any]) -> AdvisoryError:
+    """Rebuild a serialized advisory (``AdvisoryError.to_dict``) with every field it carried."""
+    envelope = item.get("advisory", {})
+    level = Level(item.get("level", "ERROR"))
+    return AdvisoryError(
+        item.get("message", "Lifecycle operation reported an advisory"),
+        *envelope.get("details", ()),
+        code=item.get("code"),
+        level=level,
+        actor=Actor(envelope.get("actor", "DEVELOPER")),
+        retry=Retry(envelope.get("retry", "AFTER_FIX")),
+        guardrail=bool(envelope.get("guardrail", False)),
+        input_error=bool(envelope.get("input_error", False)),
+        retry_after=envelope.get("retry_after"),
+        fix=envelope.get("fix"),
+        what_to_report=envelope.get("what_to_report"),
+        target_files=envelope.get("target_files"),
+        exit_code=ExitCode(item["exit_code"]) if level is Level.ERROR and item.get("exit_code") else None,
+    )
+
+
+def _result_advisories(result: dict[str, Any]) -> tuple[list[AdvisoryError], list[AdvisoryError]]:
+    """The errors and the warnings and notices of a composed result, its handoff's included, each once."""
+    handoff = result.get("handoff") or {}
+    seen: set[tuple[object, object]] = set()
+    errors: list[AdvisoryError] = []
+    notices: list[AdvisoryError] = []
+    for key, into in (("errors", errors), ("notices", notices)):
+        for item in [*result.get(key, []), *handoff.get(key, [])]:
+            identity = (item.get("code"), item.get("message"))
+            if identity not in seen:
+                seen.add(identity)
+                into.append(_advisory(item))
+    return errors, notices
+
+
+def _composed_exit(result: dict[str, Any], errors: list[AdvisoryError], effects: bool) -> int:
+    """``0`` for a completed outcome, ``2`` when nothing was done, ``1`` when effects stopped part-way."""
+    if result.get("status") in SUCCESS and not errors:
+        return 0
+    return 1 if effects else 2
+
+
+def _echo_composed(kind: str, slug: str, result: dict[str, Any], effects: bool, **fields: object) -> None:
+    """Print a composed acceptance or handoff and exit with its outcome (``ARCH-08-1-agent-output``).
+
+    A completed outcome prints ``[<kind>: ...]``; one that stopped part-way prints ``[<kind>_STOPPED: ...]`` with the
+    completed effects, exits ``1`` and renders its errors last; one that did nothing is the error itself (exit
+    ``2``, ``{"error": ...}`` under ``--format json``). The next command, when there is one, follows as
+    ``[NEXT_CMD: ...]``, else the next action as ``[NEXT_ACTION: ...]``.
+    """
+    errors, notices = _result_advisories(result)
+    code = _composed_exit(result, errors, effects)
+    if code == 2:
+        if not errors:
+            errors = [SpecError(f"PROP-{slug}: the composed operation stopped with status {result.get('status')}")]
+        echo_notices(notices)
+        raise errors[0]
+    if output_settings().json:
+        echo_json(result)
+    else:
+        name = kind if code == 0 else f"{kind}_STOPPED"
+        click.echo(sentinel(name, f"PROP-{slug}", status=result.get("status", "-"), **fields))
+        handoff = result.get("handoff") or {}
+        command = result.get("next_command") or handoff.get("next_command")
+        if command:
+            click.echo(f"[NEXT_CMD: {command}]")
+        elif code and result.get("next_action"):
+            click.echo(sentinel("NEXT_ACTION", result["next_action"]))
+    echo_notices(notices)
+    if code == 0:
+        exit_on_warnings(notices)
+        return
+    if not output_settings().json:
+        for error in errors:
+            click.echo(error.render(), err=True)
+    raise click.exceptions.Exit(code)
 
 
 @click.group(name="proposal")
@@ -285,25 +345,15 @@ def accept_cmd(
         if direct or check_only:
             raise click.UsageError("composed acceptance cannot use --direct or --check")
         result = PlanAcceptUseCase(resolve_root(workspace_root)).execute(slug, mode=mode, effort=effort, by=actor)
-        if is_json(output_format):
-            echo_json(result)
-        else:
-            click.echo(
-                sentinel(
-                    "ACCEPTED",
-                    f"PROP-{slug}",
-                    status=result.get("status", "blocked"),
-                    mode=mode,
-                    authority=result.get("acceptance_authority", "-"),
-                    completed=",".join(result.get("completed_steps", [])) or "-",
-                )
-            )
-            echo_notices(_result_advisories(result))
-        exit_on_warnings(_result_advisories(result))
-        if result.get("status") == "blocked" and not result.get("completed_steps"):
-            raise click.exceptions.Exit(2)
-        if result.get("status") == "needs_recovery" or result.get("errors"):
-            raise click.exceptions.Exit(1)
+        _echo_composed(
+            "ACCEPTED",
+            slug,
+            result,
+            bool(result.get("completed_steps")),
+            mode=mode,
+            authority=result.get("acceptance_authority", "-"),
+            completed=",".join(result.get("completed_steps", [])) or "-",
+        )
         return
     if effort is not None:
         raise click.UsageError("--effort requires --mode")
@@ -312,18 +362,21 @@ def accept_cmd(
     )
     if is_json(output_format):
         echo_json(result.to_dict())
-        return
-    if result.checked:
+    elif result.checked:
         click.echo(
             sentinel(
                 "ACCEPT_CHECK",
                 result.proposal,
                 form=result.form,
                 path=result.path,
-                eligible="yes",
+                eligible=result.eligible,
                 pending=",".join(result.pending) or "-",
             )
         )
+    if result.checked or is_json(output_format):
+        if not result.eligible:
+            # The real run refuses a pending condition (SPEC_PROPOSAL_NOT_ELIGIBLE): the check's answer is negative.
+            raise click.exceptions.Exit(int(ExitCode.FINDINGS))
         return
     click.echo(
         sentinel(
@@ -348,29 +401,19 @@ def handoff_cmd(slug: str, effort: str | None, workspace_root: str | None, outpu
     root = resolve_root(workspace_root)
     if effort is not None:
         result = HandoffUseCase(root).execute(slug, effort)
-        if is_json(output_format):
-            echo_json(result)
-        else:
-            handoff = result.get("handoff", {})
-            worktree = result.get("worktree", {})
-            click.echo(
-                sentinel(
-                    "HANDOFF",
-                    f"PROP-{slug}",
-                    status=result.get("status", "blocked"),
-                    spec=handoff.get("spec", "-"),
-                    dir=handoff.get("dir", "-"),
-                    worktree=worktree.get("path", "-"),
-                    effort=effort,
-                    authority=result.get("authority", "-"),
-                )
-            )
-            echo_notices(_result_advisories(result))
-        exit_on_warnings(_result_advisories(result))
-        if result.get("status") == "blocked" and not result.get("worktree", {}).get("created"):
-            raise click.exceptions.Exit(2)
-        if result.get("status") == "needs_recovery" or result.get("errors"):
-            raise click.exceptions.Exit(1)
+        handoff = result.get("handoff") or {}
+        worktree = result.get("worktree") or {}
+        _echo_composed(
+            "HANDOFF",
+            slug,
+            result,
+            bool(worktree.get("created")) or result.get("status") == "needs_recovery",
+            spec=handoff.get("spec", "-"),
+            dir=handoff.get("dir", "-"),
+            worktree=f"dev-{slug}" if worktree.get("path") else "-",
+            effort=effort,
+            authority=result.get("authority", "-"),
+        )
         return
     completed = HandoffProposalUseCase().execute(root, slug)
     result, registered = completed.handoff, completed.registered

@@ -8,8 +8,13 @@ renders the error as it is. devkit's own errors (``ARGUMENT_INVALID``,
 
 from __future__ import annotations
 
-from devkit.advisory import Actor, AdvisoryError, Level, Retry
+from devkit.advisory import Actor, AdvisoryError, ExitCode, Level, Retry
 from devkit_dist.base.errors import ConfigError
+
+DEVKIT = "uv run devkit"
+"""How every command an advisory or sentinel of devkit-spec names is run: devkit_dist's ``AGENT_INVOCATION``
+(``ADR-keep-uv-run-as-the-agent-facing-devkit-invocation``). The package base may not import a feature module of
+devkit_dist, so it is repeated here; a test keeps both equal."""
 
 
 class SpecError(AdvisoryError):
@@ -32,7 +37,7 @@ class UnresolvedIdError(SpecError):
 
     code = "SPEC_ID_UNRESOLVED"
     input_error = True
-    fix = "Pass the exact ID of an existing document (devkit spec list shows them)"
+    fix = f"Pass the exact ID of an existing document ({DEVKIT} spec list shows them)"
 
 
 class DuplicateIdError(SpecError):
@@ -47,7 +52,7 @@ class SpecConfigError(SpecError, ConfigError):
 
     code = "SPEC_CONFIG_INVALID"
     target_files = (".devkit/config.toml",)
-    fix = "Correct the [tool.spec] table in .devkit/config.toml (devkit spec policy shows the effective values)"
+    fix = f"Correct the [tool.spec] table in .devkit/config.toml ({DEVKIT} spec policy shows the effective values)"
 
 
 class GlossaryInvalidError(SpecError):
@@ -69,11 +74,19 @@ class ProposalSlugError(SpecError):
 
 
 class ProposalExistsError(SpecError):
-    """The proposal or PADR to create already exists (``INPUT_ERROR``)."""
+    """The proposal to create already exists (``INPUT_ERROR``)."""
 
     code = "SPEC_PROPOSAL_EXISTS"
     input_error = True
-    fix = "Choose another slug or PADR title, or edit the existing file named in [TARGET]"
+    fix = "Choose another slug, or edit the existing proposal named in [TARGET]"
+
+
+class ProposalDecisionExistsError(SpecError):
+    """The PADR to create already exists in the proposal's ``decisions/`` (``INPUT_ERROR``)."""
+
+    code = "SPEC_PADR_EXISTS"
+    input_error = True
+    fix = "Pass another title or --slug, or edit the existing PADR named in [TARGET]"
 
 
 class ProposalSlugConflictError(SpecError):
@@ -90,13 +103,15 @@ class ProposalNotFoundError(SpecError):
 
     code = "SPEC_PROPOSAL_NOT_FOUND"
     input_error = True
-    fix = "Pass the slug of an existing proposal (devkit spec list proposal shows them)"
+    fix = f"Pass the slug of an existing proposal ({DEVKIT} spec list proposal shows them)"
 
 
 class ProposalInvalidError(SpecError):
-    """A proposal file or PADR cannot be read, or its frontmatter does not parse (``MAINTENANCE``)."""
+    """A proposal file or PADR cannot be read, its frontmatter does not parse, or a field the command reads has no
+    valid value (``INPUT_ERROR``); [TARGET] names the file."""
 
     code = "SPEC_PROPOSAL_INVALID"
+    input_error = True
     fix = "Correct the file in [TARGET] (UTF-8 text, devkit's frontmatter grammar), then rerun the command"
 
 
@@ -124,10 +139,11 @@ class MilestoneDroppedUnsettledWarning(SpecError):
 
 class ProposalInPlanningError(SpecError):
     """``proposal check``: Backlog may not change the proposal: its ``plan-<slug>`` exists (Planning runs there), or
-    it is no longer a draft (``INPUT_ERROR``)."""
+    it is no longer a draft (``BLOCKED``): a workflow guardrail. ``proposal check`` raises it as its negative answer
+    (exit ``1``); a write it refuses (``padr``, ``new --decomposed-from``) exits ``2``."""
 
     code = "SPEC_PROPOSAL_IN_PLANNING"
-    input_error = True
+    guardrail = True
 
 
 class ProposalNotApprovedError(SpecError):
@@ -137,7 +153,7 @@ class ProposalNotApprovedError(SpecError):
     actor = Actor.USER
     what_to_report = "The proposal's status, and that its handoff needs the user's plan-accept of its direction"
     fix = (
-        "Ask the user for plan-accept; after the explicit acceptance record it with devkit spec proposal accept: "
+        f"Ask the user for plan-accept; after the explicit acceptance record it with {DEVKIT} spec proposal accept: "
         "--direct for an eligible draft on the base checkout (Backlog), or without it on plan-<slug> after Planning. "
         "Commit and merge that acceptance into this branch, then rerun the handoff"
     )
@@ -157,8 +173,10 @@ class ProposalNeedsDecomposeError(SpecError):
 
 
 class ProposalWrongWorktreeError(SpecError):
-    """A handoff runs in a checkout whose branch is not ``dev-<slug>``, or the Planning form of ``accept`` in one
-    whose branch is not ``plan-<slug>`` (``INPUT_ERROR``): the change would land on another task's branch."""
+    """A handoff runs in a checkout whose branch is not ``dev-<slug>``, the Planning form of ``accept`` in one whose
+    branch is not ``plan-<slug>``, or a composed ``accept --mode`` or ``handoff --effort`` off the retained base
+    checkout (``INPUT_ERROR``): the change would land on another task's branch. The fix names the checkout and the
+    exact command."""
 
     code = "SPEC_PROPOSAL_WRONG_WORKTREE"
     input_error = True
@@ -183,20 +201,35 @@ class ProposalNotEligibleError(SpecError):
         "Each condition in [DETAIL], and that the draft runs Planning instead unless the condition is resolved"
     )
     fix = (
-        "Report the conditions to the user; on the user's decision resolve them (record plan-intent with devkit "
-        "workflow answer, run it from the base checkout) and rerun, or start Planning on plan-<slug>. Never edit the "
-        "status or the gate records by hand"
+        "Report the conditions to the user; on the user's decision resolve them and rerun, or start Planning on the "
+        "proposal's plan- branch. Never edit the status or the gate records by hand"
     )
 
 
 class ProposalGateNotOpenError(SpecError):
-    """``proposal accept``: the workflow did not open ``gate:plan-accept`` (``MAINTENANCE``), such as a missing
+    """``proposal accept``: the workflow did not open ``gate:plan-accept`` (``INTERACTION``), such as a missing
     ``collect-feedback`` sweep or an envelope hold; the status was restored and nothing was recorded."""
 
     code = "SPEC_PROPOSAL_GATE_NOT_OPEN"
+    actor = Actor.USER
+    what_to_report = "The unmet checks and hold reasons in [DETAIL], and that the acceptance is not recorded yet"
     fix = (
-        "Resolve the unmet checks and hold reasons in [DETAIL] (for collect-feedback, sweep the session with the "
-        "spec-feedback skill and record its feedback envelope), then rerun the same accept command"
+        "Once the user agrees, resolve them (for collect-feedback, sweep the session with the spec-feedback skill and "
+        "record its feedback envelope; answer an open question with the user), then rerun the same accept command"
+    )
+
+
+class ProposalPolicyNotAutoError(SpecError):
+    """``proposal accept --by policy`` while the owning ``plan-accept`` policy is not ``auto`` (``BLOCKED``): only
+    the user accepts the proposal, so nothing was written. The tool never suggests recording an acceptance the user
+    did not give."""
+
+    code = "SPEC_PROPOSAL_POLICY_NOT_AUTO"
+    guardrail = True
+    target_files = (".devkit/config.toml",)
+    what_to_report = (
+        "That plan-accept policy is ask: the user accepts the proposal explicitly, or changes plan-accept to auto in "
+        "[workflow.approvals] of the retained base's .devkit/config.toml"
     )
 
 
@@ -211,9 +244,20 @@ class ProposalAcceptanceUnrecordedError(SpecError):
     )
     fix = (
         "Stop and ask the user; never record an acceptance unasked. Without a worker envelope, after the user's "
-        "explicit acceptance repair it on the base checkout with devkit spec proposal accept <slug> --by user "
-        "--direct --note <reason>, merge the base into dev-<slug> and rerun the handoff. With one, report it: on the "
-        "user's decision the whole Planning merge is reverted on the base and Planning runs again"
+        "explicit acceptance repair it on the base checkout with the direct form of proposal accept, merge the base "
+        "into the dev- branch and rerun the handoff. With one, report it: on the user's decision the whole Planning "
+        "merge is reverted on the base and Planning runs again"
+    )
+
+
+def acceptance_unrecorded_fix(slug: str) -> str:
+    """The ``ProposalAcceptanceUnrecordedError`` fix with the proposal's exact repair command."""
+    repair = f'{DEVKIT} spec proposal accept {slug} --by user --direct --note "<the user\'s reason>"'
+    return (
+        "Stop and ask the user; never record an acceptance unasked. Without a worker envelope, after the user's "
+        f"explicit acceptance repair it on the base checkout with `{repair}`, merge the base into dev-{slug} and rerun "
+        "the handoff. With one, report it: on the user's decision the whole Planning merge is reverted on the base "
+        "and Planning runs again"
     )
 
 
@@ -223,7 +267,7 @@ class ProposalWorkflowError(SpecError):
 
     code = "SPEC_PROPOSAL_WORKFLOW_INVALID"
     fix = (
-        "Make the workflow sdd-spec-<task_kind> available and valid (devkit sync, devkit workflow validate), or "
+        f"Make the workflow sdd-spec-<task_kind> available and valid ({DEVKIT} sync, {DEVKIT} workflow validate), or "
         "correct the proposal's task_kind, then rerun the handoff"
     )
 
@@ -261,7 +305,7 @@ class ProposalGateNotCarriedWarning(SpecError):
 
     code = "SPEC_PROPOSAL_GATE_NOT_CARRIED"
     level = Level.WARNING
-    fix = "Once the cause in [DETAIL] is resolved, ask the user again for each gate devkit workflow next reports as waiting"
+    fix = f"Once the cause in [DETAIL] is resolved, ask the user again for each gate {DEVKIT} workflow next reports as waiting"
 
 
 class ProposalLinkUnresolvedWarning(SpecError):
@@ -300,7 +344,7 @@ class ProposalUnboundNotice(SpecError):
 
     code = "SPEC_PROPOSAL_UNBOUND"
     level = Level.NOTICE
-    fix = "Bind the unit with devkit workflow bind --unit <dir> --workflow <id> once a workflow fits it"
+    fix = f"Bind the unit with {DEVKIT} workflow bind --unit <dir> --workflow <id> once a workflow fits it"
 
 
 class ListStatusUnknownNotice(SpecError):
@@ -309,7 +353,7 @@ class ListStatusUnknownNotice(SpecError):
 
     code = "SPEC_LIST_STATUS_UNKNOWN"
     level = Level.NOTICE
-    fix = "Pass a status the documents of the selected kinds carry (devkit spec list shows them)"
+    fix = f"Pass a status the documents of the selected kinds carry ({DEVKIT} spec list shows them)"
 
 
 class PostFinishCleanupNotice(SpecError):
@@ -343,7 +387,7 @@ class SpecExistsError(SpecError):
     code = "SPEC_EXISTS"
     input_error = True
     fix = (
-        "Choose an unused slug; for a proposal of the same slug, hand it off with devkit spec proposal handoff "
+        f"Choose an unused slug; for a proposal of the same slug, hand it off with {DEVKIT} spec proposal handoff "
         "<slug> instead"
     )
 
@@ -353,7 +397,7 @@ class SpecWorkflowError(SpecError):
 
     code = "SPEC_WORKFLOW_INVALID"
     input_error = True
-    fix = "Pass the id of a valid workflow (devkit workflow validate), or omit --workflow for sdd-spec-feature"
+    fix = f"Pass the id of a valid workflow ({DEVKIT} workflow validate), or omit --workflow for sdd-spec-feature"
 
 
 class SpecWriteError(SpecError):
@@ -369,7 +413,7 @@ class SpecUnboundNotice(SpecError):
 
     code = "SPEC_UNBOUND"
     level = Level.NOTICE
-    fix = "Bind the unit with devkit workflow bind --unit <dir> --workflow <id> once a workflow fits it"
+    fix = f"Bind the unit with {DEVKIT} workflow bind --unit <dir> --workflow <id> once a workflow fits it"
 
 
 class EntrypointsInputMissingError(SpecError):
@@ -386,9 +430,10 @@ class EntrypointsInputMissingError(SpecError):
 
 class EntrypointsInputInvalidError(SpecError):
     """``devkit spec entrypoints derive --spec``: ``tasks.md`` or ``reconcile.md`` cannot be read, or the
-    frontmatter of ``reconcile.md`` is not the shape ``RULE-reconcile-contract`` checks (``MAINTENANCE``)."""
+    frontmatter of ``reconcile.md`` is not the shape ``RULE-reconcile-contract`` checks (``INPUT_ERROR``)."""
 
     code = "SPEC_ENTRYPOINTS_INPUT_INVALID"
+    input_error = True
     fix = (
         "Repair the file in [TARGET] (UTF-8 text; reconcile.md frontmatter with targets: [{file, resolution}]), "
         "then rerun the derivation"
@@ -447,10 +492,15 @@ class ScopeCollectionPartialWarning(ScopeError):
 
 
 class ScopeCollectionFailedError(ScopeError):
-    """No selected scope inventory source could be read."""
+    """``scope collect``: no selected inventory source could be read (``INPUT_ERROR``); [TARGET] names the
+    unreadable sources."""
 
     code = "SPEC_SCOPE_COLLECTION_FAILED"
-    fix = "Use an accessible Git repository and initialized readable registry, then rerun scope collect"
+    input_error = True
+    fix = (
+        "Run it inside a Git work tree of the project (or pass it with -w) and select a readable source with --mode, "
+        "then rerun scope collect"
+    )
 
 
 class ScopeNotAWorktreeError(ScopeError):
@@ -471,9 +521,10 @@ class ScopeSpecNotFoundError(ScopeError):
 
 class ScopeInputInvalidError(ScopeError):
     """A scope input (``tasks.md``, ``reconcile.md``, ``target-docs.md``) cannot be read, or its ``targets``
-    frontmatter is not a list of mappings with a string ``file`` (``MAINTENANCE``)."""
+    frontmatter is not a list of mappings with a string ``file`` (``INPUT_ERROR``)."""
 
     code = "SPEC_SCOPE_INPUT_INVALID"
+    input_error = True
     fix = "Repair the file in [TARGET] (UTF-8 text; targets: [{file: <workspace-relative path>, ...}]), then rerun"
 
 
@@ -484,7 +535,7 @@ class ScopeTokenMissingError(ScopeError):
     input_error = True
     fix = (
         "A worktree that does not take part in the registry skips scope update; to take part, register first: "
-        "devkit spec scope register --spec <dir>"
+        f"{DEVKIT} spec scope register --spec <dir>"
     )
 
 
@@ -494,8 +545,8 @@ class ScopeTokenExistsError(ScopeError):
     code = "SPEC_SCOPE_TOKEN_EXISTS"
     input_error = True
     fix = (
-        "Keep the registration (devkit spec scope query shows it with own=yes) and run devkit spec scope update, "
-        "or run devkit spec scope release first"
+        f"Keep the registration ({DEVKIT} spec scope query shows it with own=yes) and run {DEVKIT} spec scope update, "
+        f"or run {DEVKIT} spec scope release first"
     )
 
 
@@ -512,7 +563,7 @@ class ScopeRecordMissingError(ScopeError):
 
     code = "SPEC_SCOPE_RECORD_MISSING"
     input_error = True
-    fix = "Run devkit spec scope release (it removes the orphaned token), then devkit spec scope register --spec <dir>"
+    fix = f"Run {DEVKIT} spec scope release (it removes the orphaned token), then {DEVKIT} spec scope register --spec <dir>"
 
 
 class ScopeTokenMismatchError(ScopeError):
@@ -551,7 +602,7 @@ class ScopeLockUnsupportedError(ScopeError):
 
     code = "SPEC_SCOPE_LOCK_UNSUPPORTED"
     guardrail = True
-    fix = "Run devkit spec scope on Linux or macOS"
+    fix = f"Run {DEVKIT} spec scope on Linux or macOS"
 
 
 class ScopeNamespaceError(ScopeError):
@@ -584,7 +635,7 @@ class ScopeAckFailedError(ScopeError):
     unchanged."""
 
     code = "SPEC_SCOPE_ACK_FAILED"
-    fix = "Fix the cause in [DETAIL], then rerun devkit spec scope update"
+    fix = f"Fix the cause in [DETAIL], then rerun {DEVKIT} spec scope update"
 
 
 class ScopeSharedWorktreeWarning(ScopeError):
@@ -601,7 +652,9 @@ class ScopeRecordInvalidWarning(ScopeError):
 
     code = "SPEC_SCOPE_RECORD_INVALID"
     level = Level.WARNING
-    fix = "Delete the record file in [TARGET] once its task is known to be finished (devkit spec scope sweep lists it)"
+    fix = (
+        f"Delete the record file in [TARGET] once its task is known to be finished ({DEVKIT} spec scope sweep lists it)"
+    )
 
 
 class ScopeJournalWarning(ScopeError):
@@ -626,16 +679,45 @@ class ScopeRegisterFailedWarning(ScopeError):
 
     code = "SPEC_SCOPE_REGISTER_FAILED"
     level = Level.WARNING
-    fix = "Fix the cause in [DETAIL], then run devkit spec scope register --spec <dir> in the worktree"
+    fix = f"Fix the cause in [DETAIL], then run {DEVKIT} spec scope register --spec <dir> in the worktree"
 
 
 class HandoffNotReadyError(SpecError):
-    """The CLI handoff lacks a clean base or accepted, completed proposal (``BLOCKED``): a prerequisite the user or
-    Host resolves, never a tool defect."""
+    """The composed handoff (``proposal handoff --effort``): the committed proposal on the base is not accepted,
+    needs decomposition, or its ``sdd-proposal`` workflow lacks a completed Planning with its own ``plan-intent`` and
+    ``plan-accept`` (``INTERACTION``); [DETAIL] names the condition, [TARGET] the proposal and nothing was written."""
 
     code = "SPEC_HANDOFF_NOT_READY"
-    guardrail = True
-    fix = "Resolve the prerequisite the message names, then rerun devkit spec proposal handoff from the retained base checkout"
+    actor = Actor.USER
+    what_to_report = (
+        "The proposal's state in [DETAIL], and that Development starts only from an accepted proposal whose Planning "
+        "completed"
+    )
+
+
+class HandoffBaseDirtyError(SpecError):
+    """The composed handoff: the retained base checkout has uncommitted changes (``INTERACTION``); [TARGET] lists
+    them and nothing was written."""
+
+    code = "SPEC_HANDOFF_BASE_DIRTY"
+    actor = Actor.USER
+    what_to_report = "The uncommitted paths in [TARGET] of the retained base checkout"
+    fix = (
+        "Once the user decides, commit or move those changes so the base checkout is clean, then rerun the same command"
+    )
+
+
+class HandoffWorktreeConflictError(SpecError):
+    """The composed handoff: a ``dev-<slug>`` worktree exists that devkit did not create for this accepted base, or it
+    holds changes or another commit (``INTERACTION``); it is never reused or removed."""
+
+    code = "SPEC_HANDOFF_WORKTREE_CONFLICT"
+    actor = Actor.USER
+    what_to_report = "The existing Development worktree in [TARGET] and why it cannot be reused ([DETAIL])"
+    fix = (
+        "Once the user decides what happens to its changes, preserve them and remove the worktree in [TARGET], then "
+        "rerun the same command"
+    )
 
 
 class HandoffReplyError(SpecError):
@@ -643,11 +725,156 @@ class HandoffReplyError(SpecError):
 
     code = "SPEC_HANDOFF_REPLY_INVALID"
     input_error = True
-    fix = "Rerun devkit spec proposal handoff with --effort low, --effort medium or --effort high"
+    target_files = ("--effort",)
+    fix = f"Rerun {DEVKIT} spec proposal handoff with --effort low, --effort medium or --effort high"
 
 
 class HandoffStaleError(SpecError):
-    """The approved proposal, base commit or policy changed before handoff (``MAINTENANCE``)."""
+    """The approved proposal, base commit, policy or new worktree changed between the check and an effect of the
+    composed handoff (``INTERACTION``); the effects completed before it are kept."""
 
     code = "SPEC_HANDOFF_STALE"
-    fix = "Inspect the changed base or worktree, then rerun devkit spec proposal handoff for the remaining effects"
+    actor = Actor.USER
+    what_to_report = "What changed ([DETAIL] and the message) and the effects the result reports as completed"
+    fix = "After the user has reviewed the change, rerun the same command for the remaining effects"
+
+
+class ProposalApprovalStaleError(SpecError):
+    """The composed acceptance: the reviewed source, base, environment or exact acceptance delta changed
+    (``INTERACTION``); completed effects are kept and the remaining ones need fresh approval."""
+
+    code = "SPEC_PROPOSAL_APPROVAL_STALE"
+    actor = Actor.USER
+    what_to_report = "What changed (the message and [DETAIL]) and the completed effects the result reports"
+    fix = "After the user has reviewed the change and approved again, rerun the same command for the remaining effects"
+
+
+class ProposalApprovalNotReadyError(SpecError):
+    """The composed acceptance (``proposal accept --mode``): the proposal on ``plan-<slug>`` is not ready for
+    ``plan-accept``: Planning has unmet checks, open questions or holds, it needs decomposition, or it is not in
+    review (``INTERACTION``); [DETAIL] lists the conditions and nothing was written."""
+
+    code = "SPEC_PROPOSAL_APPROVAL_NOT_READY"
+    actor = Actor.USER
+    what_to_report = "The Planning conditions in [DETAIL] that keep the proposal from plan-accept"
+
+
+class ProposalApprovalReplyError(SpecError):
+    """The requested or confirmed acceptance mode or Development effort is invalid (``INPUT_ERROR``)."""
+
+    code = "SPEC_PROPOSAL_APPROVAL_REPLY_INVALID"
+    input_error = True
+    target_files = ("--mode", "--effort")
+    fix = "Choose accept_only, or accept_and_handoff with a low, medium or high Development effort, then rerun"
+
+
+class ProposalAcceptCommitRefusedError(SpecError):
+    """The composed acceptance: devkit's commit gate refused the acceptance commit on ``plan-<slug>``
+    (``INPUT_ERROR``); the acceptance writes were withdrawn, [DETAIL] carries the gate's last output lines."""
+
+    code = "SPEC_PROPOSAL_ACCEPT_COMMIT_REFUSED"
+    input_error = True
+
+
+class WorkerUnitUnresolvedError(SpecError):
+    """``spec worker inspect``: the committed unit could not be derived from the branch (``INPUT_ERROR``)."""
+
+    code = "SPEC_WORKER_UNIT_UNRESOLVED"
+    input_error = True
+    target_files = ("--unit",)
+    fix = "Pass --unit with the committed unit directory"
+
+
+class WorkerHeadUnresolvedError(SpecError):
+    """``spec worker inspect``: no uniquely added latest worker envelope names the returned commit
+    (``INPUT_ERROR``)."""
+
+    code = "SPEC_WORKER_HEAD_UNRESOLVED"
+    input_error = True
+    target_files = ("--head",)
+    fix = "Pass --head with the returned commit"
+
+
+class WorkerBaseUnresolvedError(SpecError):
+    """``spec worker inspect``: the previous worker records or the base branch do not determine the base
+    (``INPUT_ERROR``)."""
+
+    code = "SPEC_WORKER_BASE_UNRESOLVED"
+    input_error = True
+    target_files = ("--base",)
+    fix = "Pass --base with the last accepted commit"
+
+
+class WorkerScopeUnresolvedError(SpecError):
+    """``spec worker inspect``: the unit's scope records are missing or invalid, or a given scope path is not
+    literal (``INPUT_ERROR``); the scope check is not run."""
+
+    code = "SPEC_WORKER_SCOPE_UNRESOLVED"
+    input_error = True
+    target_files = ("--scope", "--scope-file")
+    fix = "Pass --scope with each authorized path or --scope-file with the complete scope"
+
+
+class WorkerCheckNotRunNotice(SpecError):
+    """``spec worker inspect``: a check could not run (``NOTICE``); a not-run check alone does not fail the
+    inspection."""
+
+    code = "SPEC_WORKER_CHECK_NOT_RUN"
+    level = Level.NOTICE
+    fix = "Inspect the reported cause and run the named check after correcting it"
+
+
+class WorkerCheckFailedError(SpecError):
+    """``spec worker inspect``: a check of the returned worker result failed (``INTERACTION``, exit ``1``): the
+    inspection's negative answer, one advisory per failed check with its own code
+    (``SPEC_WORKER_<CHECK>_FAILED``, ``SPEC_WORKER_SCOPE_OUTSIDE``); [TARGET] names the paths or check it concerns.
+    The Host decides acceptance; the command never repairs."""
+
+    code = "SPEC_WORKER_CHECK_FAILED"
+    actor = Actor.USER
+    exit_code = ExitCode.FINDINGS
+    what_to_report = (
+        "The failed check, its cause and [TARGET]; the Host decides whether to return the result to the worker"
+    )
+
+
+class ReportArgumentError(SpecError):
+    """``proposal report``: the slug is not a proposal slug or ``--source-sha`` is not a full lowercase commit SHA
+    (``INPUT_ERROR``); checked before the checkout is read."""
+
+    code = "SPEC_REPORT_ARGUMENT_INVALID"
+    input_error = True
+
+
+class ReportSourceNotHeadError(SpecError):
+    """``proposal report``: ``--source-sha`` is neither the current commit of this checkout nor of the proposal's
+    ``plan-<slug>`` worktree (``INPUT_ERROR``)."""
+
+    code = "SPEC_REPORT_SOURCE_NOT_HEAD"
+    input_error = True
+    target_files = ("--source-sha",)
+
+
+class ReportSourceDirtyError(SpecError):
+    """``proposal report``: the source checkout has uncommitted changes (``INPUT_ERROR``); the report reads committed
+    records only, [TARGET] lists the changed paths."""
+
+    code = "SPEC_REPORT_SOURCE_DIRTY"
+    input_error = True
+
+
+class ReportWrongCheckoutError(SpecError):
+    """``proposal report``: the source is neither ``plan-<slug>`` with a proposal in review or accepted, nor the
+    retained base with an accepted proposal (``INPUT_ERROR``)."""
+
+    code = "SPEC_REPORT_WRONG_CHECKOUT"
+    input_error = True
+
+
+class ReportSourceInvalidError(SpecError):
+    """``proposal report``: a committed record of the proposal cannot be read: not a regular file, a PADR whose ID
+    differs from its file name, an envelope that is not a mapping, or an effort outside low, medium and high
+    (``INPUT_ERROR``); [TARGET] names the record."""
+
+    code = "SPEC_REPORT_SOURCE_INVALID"
+    input_error = True

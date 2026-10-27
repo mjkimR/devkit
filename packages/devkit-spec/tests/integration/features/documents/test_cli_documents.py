@@ -70,7 +70,7 @@ def test_refs_in_pages(docs: Path) -> None:
     lines = result.stdout.splitlines()
     assert lines[0].startswith("[REF: UC-b ")
     assert lines[1] == "[PAGE: total=2 offset=0 limit=1 count=1 next=1]"
-    assert lines[2] == f"[NEXT_CMD: devkit spec refs CAP-CORE-a --direction in -w {docs} --limit 1 --offset 1]"
+    assert lines[2] == f"[NEXT_CMD: uv run devkit spec refs CAP-CORE-a --direction in -w {docs} --limit 1 --offset 1]"
     second = _spec("refs", "CAP-CORE-a", "--direction", "in", "--limit", "1", "--offset", "1", workspace=docs)
     assert second.stdout.splitlines()[0].startswith("[REF: UC-c ")
 
@@ -93,7 +93,7 @@ def test_list_hides_history_and_counts_tasks(docs: Path) -> None:
     assert result.stdout.splitlines() == [
         "[DOCUMENT: SPEC-open kind=spec status=draft path=specs/2026-10/20261002-open/spec.md tasks=1/2 title=Open]",
         "[PAGE: total=1 offset=0 limit=20 count=1 next=- hidden=1]",
-        f"[HISTORY_CMD: devkit spec list spec --history -w {docs}]",
+        f"[HISTORY_CMD: uv run devkit spec list spec --history -w {docs}]",
     ]
     assert "SPEC-done" in _spec("list", "spec", "--history", workspace=docs).stdout
 
@@ -323,7 +323,7 @@ def test_next_page_command_repeats_every_where(feedback: Path) -> None:
         workspace=feedback,
     )
     assert result.stdout.splitlines()[-1] == (
-        "[NEXT_CMD: devkit spec list feedback --where severity=critical,blocked --where scope=repo "
+        "[NEXT_CMD: uv run devkit spec list feedback --where severity=critical,blocked --where scope=repo "
         f"-w {feedback} --limit 1 --offset 1]"
     )
 

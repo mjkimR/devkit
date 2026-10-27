@@ -503,10 +503,10 @@ uv run devkit spec proposal check fast-engine                        # before an
 
 ```text
 [PROPOSAL: PROP-fast-engine path=docs/proposals/PROP-fast-engine/proposal.md dir=docs/proposals/PROP-fast-engine target_docs=- workflow=sdd-proposal planning_effort=medium dev_effort=medium]
-[NEXT_CMD: devkit workflow next --unit docs/proposals/PROP-fast-engine]
+[NEXT_CMD: uv run devkit workflow next --unit docs/proposals/PROP-fast-engine]
 [PADR: PADR-use-ast-parser path=docs/proposals/PROP-fast-engine/decisions/PADR-use-ast-parser.md proposal=PROP-fast-engine]
 [PROPOSAL: PROP-fast-engine path=docs/proposals/PROP-fast-engine/proposal.md status=draft editable=yes]
-[ACCEPT_CHECK: PROP-small-fix form=direct path=docs/proposals/PROP-small-fix/proposal.md eligible=yes pending=gate:plan-intent]
+[ACCEPT_CHECK: PROP-small-fix form=direct path=docs/proposals/PROP-small-fix/proposal.md eligible=no pending=gate:plan-intent]
 [ACCEPTED: PROP-small-fix form=direct path=docs/proposals/PROP-small-fix/proposal.md status=accepted decision=docs/proposals/PROP-small-fix/decisions/02-gate-plan-accept.yaml]
 [HANDOFF: PROP-fast-engine spec=SPEC-fast-engine dir=specs/2026-10/20261013-fast-engine workflow=sdd-spec-feature dev_effort=medium]
 [TARGET_DOCS: specs/2026-10/20261013-fast-engine/target-docs.md]
@@ -520,7 +520,7 @@ uv run devkit spec proposal check fast-engine                        # before an
 [REWRITTEN: docs/usecases/core/UC-x.md:9 kind=link from=../../proposals/PROP-fast-engine/proposal.md to=../../../specs/2026-10/20261013-fast-engine/spec.md]
 [UNRESOLVED_LINK: docs/usecases/core/UC-x.md:9 kind=link target=../../proposals/PROP-fast-engine/decisions/ reason=unmapped]
 [SCOPE: SPEC-fast-engine namespace=3f2a... revision=1 scopes=6 unresolved=2 shared_path=/repo/.git/devkit-spec-scope token=...]
-[NEXT_CMD: devkit workflow next --unit specs/2026-10/20261013-fast-engine]
+[NEXT_CMD: uv run devkit workflow next --unit specs/2026-10/20261013-fast-engine]
 [PRUNED: docs/proposals/PROP-fast-engine]
 [OK: nothing to prune]
 ```
@@ -533,9 +533,10 @@ uv run devkit spec proposal check fast-engine                        # before an
 - `padr`: one `[PADR: ...]` line. JSON: `id`, `path`, `proposal`.
 - `check`: one `[PROPOSAL: ... status=draft editable=yes]` line. JSON: `id`, `path`, `status`, `editable`.
 - `accept`: `[ACCEPTED: <id> form=planning|direct|repair path= status=accepted decision=<record>]`; with `--check`
-  `[ACCEPT_CHECK: <id> form= path= eligible=yes pending=<requests>|-]` and nothing written. JSON: `proposal`, `path`,
+  `[ACCEPT_CHECK: <id> form= path= eligible=yes|no pending=<requests>|-]` and nothing written; a pending condition
+  (`gate:plan-intent`) the real run would refuse is `eligible=no` and exits `1`. JSON: `proposal`, `path`,
   `form`, `status` (the current one under `--check`), `checked`, `eligible`, `decision` (`null` under `--check`),
-  `pending`.
+  `pending`. The composed `--mode` form is described under the Host-authorized lifecycle CLI.
 - `handoff`: `[HANDOFF: ...]` (`workflow=-`: unbound; `dev_effort=<effort>` when the proposal declared `dev_effort`), `[TARGET_DOCS: ...]` and `[MATERIALS: ...]` when the bundle had
   them (`[MATERIALS: <dir> merged=yes]` when merged into an existing directory), one
   `[DROPPED_DUPLICATE: <path>]` per kept destination file whose identical proposal copy was dropped, one
@@ -572,27 +573,34 @@ directory whose namespace applies when `namespace` is omitted);
 
 ### 4.12 Codes
 
-`0` success; `2` refused or failed (nothing was handed off or accepted). Warnings exit `0` (`1` under `--strict`).
+`0` success; `1` a negative answer (`check`: `SPEC_PROPOSAL_IN_PLANNING`; `accept --check`: `eligible=no`) or a
+composed operation that stopped after some effects; `2` refused or failed (nothing was handed off or accepted).
+Warnings exit `0` (`1` under `--strict`, which never turns a `2` into a `1`). Every command an advisory or
+`[NEXT_CMD: ...]` names is written as the agent runs it, `uv run devkit ...`.
 
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
 | `SPEC_PROPOSAL_SLUG_INVALID` | `ERROR` (`INPUT_ERROR`) | `ProposalSlugError` | The slug, or a PADR title or `--slug`, keeps no letter or digit after normalization; a new proposal's or PADR's slug, or at handoff a legacy proposal's or PADR's, has no letter in its first segment (`[FIX]`: rename it, or pass `--slug` to `padr`). |
-| `SPEC_PROPOSAL_EXISTS` | `ERROR` (`INPUT_ERROR`) | `ProposalExistsError` | `new`: the bundle or `PROP-<slug>.md` exists, or another document declares `PROP-<slug>` as an alias. `padr`: a document already declares the PADR ID; `[TARGET]` lists it. |
+| `SPEC_PROPOSAL_EXISTS` | `ERROR` (`INPUT_ERROR`) | `ProposalExistsError` | `new`: the bundle or `PROP-<slug>.md` exists, or another document declares `PROP-<slug>` as an alias; `[TARGET]` lists it. |
+| `SPEC_PADR_EXISTS` | `ERROR` (`INPUT_ERROR`) | `ProposalDecisionExistsError` | `padr`: a document already declares the PADR ID; `[TARGET]` lists it. |
 | `SPEC_PROPOSAL_SLUG_CONFLICT` | `ERROR` (`INTERACTION`) | `ProposalSlugConflictError` | `SPEC-<slug>` exists (`[TARGET]`); the user picks another slug or drops the duplicate. |
 | `SPEC_PROPOSAL_NOT_FOUND` | `ERROR` (`INPUT_ERROR`) | `ProposalNotFoundError` | No bundle or single-file proposal has the slug (`padr`: no bundle); `new`: `--supersedes` names a proposal that does not exist. |
-| `SPEC_HANDOFF_NOT_READY` | `ERROR` (`BLOCKED`) | `HandoffNotReadyError` | The composed `proposal handoff` CLI finds an unaccepted proposal, incomplete Planning workflow, or unmet base prerequisite; the user or Host resolves the named prerequisite and reruns the handoff from the retained base checkout. |
-| `SPEC_HANDOFF_STALE` | `ERROR` (`MAINTENANCE`) | `HandoffStaleError` | The composed `proposal handoff --effort` CLI found the base, accepted plan or policy changed since its check, before any effect (exit `2`); or it created the Development worktree, which no longer holds the reviewed base commit or whose files setup changed: the result is `status=needs_recovery` with this error listed, the worktree is kept for inspection and the command exits `1`. |
+| `SPEC_HANDOFF_NOT_READY` | `ERROR` (`INTERACTION`) | `HandoffNotReadyError` | The composed `proposal handoff --effort` finds no committed `proposal.md`, a proposal that is not accepted or needs decomposition, or no completed `sdd-proposal` Planning with its own `plan-intent` and `plan-accept`; `[DETAIL]` names the condition, `[TARGET]` the proposal. |
+| `SPEC_HANDOFF_BASE_DIRTY` | `ERROR` (`INTERACTION`) | `HandoffBaseDirtyError` | The composed handoff: the retained base checkout has uncommitted changes, listed in `[TARGET]`. |
+| `SPEC_HANDOFF_WORKTREE_CONFLICT` | `ERROR` (`INTERACTION`) | `HandoffWorktreeConflictError` | The composed handoff: a `dev-<slug>` worktree (`[TARGET]`) exists that devkit did not create for this accepted base, or holds changes or another commit; `[DETAIL]` says which. It is never reused or removed. |
+| `SPEC_HANDOFF_STALE` | `ERROR` (`INTERACTION`) | `HandoffStaleError` | The composed `proposal handoff --effort` CLI found the base, accepted plan or policy changed since its check, before any effect (exit `2`); or it created the Development worktree, which no longer holds the reviewed base commit or whose files setup changed: the result is `status=needs_recovery` with this error listed, the worktree is kept for inspection and the command exits `1`. |
 | `SPEC_HANDOFF_REPLY_INVALID` | `ERROR` (`INPUT_ERROR`) | `HandoffReplyError` | The composed `proposal handoff` CLI needs `--effort low`, `--effort medium` or `--effort high` (an automatic handoff the proposal's `dev_effort`); the caller corrects the effort and reruns. |
 | `SPEC_PROPOSAL_REJECTED_PENDING` | `WARNING` | `ProposalRejectedPendingWarning` | `rules check -p hygiene` (whole workspace): a rejected proposal is still in the base; `[FIX]` finds the rejection commit, writes the rejection ADR and deletes the proposal in one commit (rule 9). |
-| `SPEC_PROPOSAL_IN_PLANNING` | `ERROR` (`INPUT_ERROR`) | `ProposalInPlanningError` | `check`: Backlog may not change the proposal, because its `plan-<slug>` exists (locally or fetched; rule 13) or it is no longer `draft`. `padr`: `plan-<slug>` exists and the checkout is not on it. |
-| `SPEC_PROPOSAL_INVALID` | `ERROR` (`MAINTENANCE`) | `ProposalInvalidError` | The proposal, its blueprint or a PADR cannot be read or its frontmatter does not parse; or, at handoff, `namespace` is not a string naming `global` or a registered namespace, `summary` is not a string, `task_kind` is not `feature` or `bugfix`, or `planning_effort`/`dev_effort` is present and not `low`, `medium` or `high`; or a same-path pair of regular files of a materials merge cannot be read for the byte comparison. |
+| `SPEC_PROPOSAL_IN_PLANNING` | `ERROR` (`BLOCKED`) | `ProposalInPlanningError` | `check` (exit `1`, its negative answer): Backlog may not change the proposal, because its `plan-<slug>` exists (locally or fetched; rule 13) or it is no longer `draft`. `padr` and `new --decomposed-from` (exit `2`): `plan-<slug>` exists and the checkout is not on it, or the parent left `draft`. |
+| `SPEC_PROPOSAL_INVALID` | `ERROR` (`INPUT_ERROR`) | `ProposalInvalidError` | `[TARGET]` names the file. The proposal, its blueprint or a PADR cannot be read or its frontmatter does not parse; the composed acceptance or handoff finds a `task_kind`, effort, `title` or `summary` it cannot use; or, at handoff, `namespace` is not a string naming `global` or a registered namespace, `summary` is not a string, `task_kind` is not `feature` or `bugfix`, or `planning_effort`/`dev_effort` is present and not `low`, `medium` or `high`; or a same-path pair of regular files of a materials merge cannot be read for the byte comparison. |
 | `SPEC_PROPOSAL_NOT_APPROVED` | `ERROR` (`INTERACTION`) | `ProposalNotApprovedError` | `handoff`: status is not `accepted`, `plan-accept` was not given; `[FIX]` records it with `devkit spec proposal accept` after the user's acceptance. `new`: the proposal `--supersedes` names is not `accepted`; a supersede replaces an accepted proposal only. |
-| `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED` | `ERROR` (`INTERACTION`) | `ProposalAcceptanceUnrecordedError` | `handoff`: a bundle bound to `sdd-proposal` says `accepted` without an effective accepted `gate:plan-accept` (rule 2); nothing written. |
+| `SPEC_PROPOSAL_ACCEPTANCE_UNRECORDED` | `ERROR` (`INTERACTION`) | `ProposalAcceptanceUnrecordedError` | `handoff`, or the composed `accept --mode` on `plan-<slug>`: a bundle bound to `sdd-proposal` says `accepted` without an effective accepted `gate:plan-accept` (rule 2); nothing written. `[FIX]` names the slug's exact repair command. |
+| `SPEC_PROPOSAL_POLICY_NOT_AUTO` | `ERROR` (`BLOCKED`) | `ProposalPolicyNotAutoError` | `accept --by policy` (with or without `--mode`) while the owning `plan-accept` policy is not `auto`; nothing written. `[REPORT]` says the user accepts explicitly or changes the policy; no fix suggests `--by user`. |
 | `SPEC_PROPOSAL_ACCEPT_REFUSED` | `ERROR` (`INPUT_ERROR`) | `ProposalAcceptRefusedError` | `accept`: the status does not allow the form (a draft without `--direct`, a proposal in review with it, an accepted proposal whose record exists, a rejected one), or the proposal is single-file or unbound (rule 14). |
-| `SPEC_PROPOSAL_NOT_ELIGIBLE` | `ERROR` (`INTERACTION`) | `ProposalNotEligibleError` | `accept --direct`: one or more direct-acceptance conditions fail, each a `blocking:` or `pending:` detail; nothing written. |
-| `SPEC_PROPOSAL_GATE_NOT_OPEN` | `ERROR` (`MAINTENANCE`) | `ProposalGateNotOpenError` | `accept`: the workflow did not open `gate:plan-accept` (a missing sweep, a hold); the status is restored and `[DETAIL]` lists the unmet checks and hold reasons. |
+| `SPEC_PROPOSAL_NOT_ELIGIBLE` | `ERROR` (`INTERACTION`) | `ProposalNotEligibleError` | `accept --direct`: one or more direct-acceptance conditions fail, each a `blocking:` or `pending:` detail; nothing written. `[FIX]` names the exact `workflow answer` and `plan-<slug>` commands. `accept --check` reports the same pending conditions as `eligible=no` and exits `1`. |
+| `SPEC_PROPOSAL_GATE_NOT_OPEN` | `ERROR` (`INTERACTION`) | `ProposalGateNotOpenError` | `accept`: the workflow did not open `gate:plan-accept` (a missing sweep, a hold); the status is restored, `[DETAIL]` lists the unmet checks and hold reasons and `[TARGET]` the proposal; the user resolves them with the agent before the same command reruns. |
 | `SPEC_PROPOSAL_NEEDS_DECOMPOSE` | `ERROR` (`INTERACTION`) | `ProposalNeedsDecomposeError` | The proposal carries `needs_decompose: true`; Backlog splits it into new drafts. |
-| `SPEC_PROPOSAL_WRONG_WORKTREE` | `ERROR` (`INPUT_ERROR`) | `ProposalWrongWorktreeError` | `handoff` in a checkout, linked or base, on another branch than `dev-<slug>`, at either `[tool.spec] worktree` level (rule 11); `[FIX]` starts or continues `dev-<slug>` and reruns the handoff there. `accept` without `--direct` on another branch than `plan-<slug>`. |
+| `SPEC_PROPOSAL_WRONG_WORKTREE` | `ERROR` (`INPUT_ERROR`) | `ProposalWrongWorktreeError` | `handoff` in a checkout, linked or base, on another branch than `dev-<slug>`, at either `[tool.spec] worktree` level (rule 11); `[TARGET]` is the branch to run on and `[FIX]` starts `dev-<slug>`, or continues an existing one with its committed unit directory. `accept` without `--direct` on another branch than `plan-<slug>`. The composed `accept --mode` and `handoff --effort` off the retained base checkout, with the exact command in `[FIX]`. |
 | `SPEC_PROPOSAL_WORKFLOW_INVALID` | `ERROR` (`MAINTENANCE`) | `ProposalWorkflowError` | `task_kind: bugfix` and `sdd-spec-bugfix` does not resolve or validate; `[DETAIL]` carries devkit's code. |
 | `SPEC_PROPOSAL_TARGET_EXISTS` | `ERROR` (`BLOCKED`; `INTERACTION` for a merge conflict) | `ProposalTargetExistsError` | The spec bundle or an ADR file exists, a proposal path conflicts with the existing materials directory it would merge into (`INTERACTION`: `different-content`, `file-directory`, `symbolic-link`, `non-regular`, or the dated path is not a real directory; the fix names the first conflict's source, destination and kind), two PADRs map to one ADR, another document declares a promoted ADR's ID, the spec ID or a translated alias as its ID or an alias, two graduating IDs or translated aliases coincide, a carried bundle file clashes with a file or symbolic link of `materials/` (or `materials/` is itself a symbolic link), or the directory of the spec bundle, an ADR, the materials directory or a carried file resolves outside the workspace. |
 | `SPEC_PROPOSAL_HANDOFF_FAILED` | `ERROR` (`MAINTENANCE`) | `ProposalHandoffError` | A write failed; what was written is removed, the materials and carried files moved back, the proposal kept. When the roll-back was incomplete, `[DETAIL]` lists what could not be moved back or removed (kept, never deleted). |
@@ -612,7 +620,8 @@ the CLI does not accept a proof, token or published report and cannot authentica
 source, base policy, workflow readiness, worktree provenance and cleanup targets before each mutation. `auto`
 authority comes only from the retained base policy.
 
-`devkit spec proposal accept <slug> --mode accept_only|accept_and_handoff --by user` validates
+`devkit spec proposal accept <slug> --mode accept_only|accept_and_handoff --by user` (`--effort` selects the
+Development effort of `accept_and_handoff`) validates
 the reviewed `plan-<slug>`, records `status: accepted` and `gate:plan-accept`, commits the exact acceptance delta,
 and executes the checked local Planning integration. `accept_only` stops after acceptance. The combined mode also
 starts Development using the selected `--effort low|medium|high`.
@@ -622,6 +631,15 @@ proposal on the retained base, creates or validates `dev-<slug>`, runs setup and
 and scope registration. An automatic handoff uses the proposal's declared `dev_effort`. The command reports the
 worktree, spec bundle, selected effort, notices and completed effects. Setup or handoff failures preserve the
 proposal and any created worktree for inspection; the command never rolls those effects back automatically.
+
+Both composed commands print one outcome (`ARCH-08-1-agent-output`). A completed one is `[ACCEPTED: PROP-<slug>
+status=accepted|handed_off mode= authority= completed=]` or `[HANDOFF: PROP-<slug> status=handed_off spec= dir=
+worktree=dev-<slug> effort= authority=]`, followed by `[NEXT_CMD: ...]` when a next command exists, and exits `0`
+(`1` under `--strict` with a warning). One that stopped after some effects prints `[ACCEPTED_STOPPED: ...]` or
+`[HANDOFF_STOPPED: ...]` with the same fields, then `[NEXT_CMD: ...]` or `[NEXT_ACTION: "..."]`, renders its errors
+(the handoff's included, each once, with every advisory field) after the warnings and notices, and exits `1`; JSON
+prints the whole result. One that did nothing is the refusal itself: the error on stderr, `{"error": ...}` under
+`--format json`, exit `2`. The status decides the exit code before `--strict` is applied.
 
 This composed handoff and `accept --mode accept_and_handoff` read the `proposal-handoff` policy. The plain
 `devkit spec proposal handoff <slug>` in a `dev-<slug>` checkout is the Host-run step after the `proposal-handoff`
@@ -662,15 +680,27 @@ effects: accepted Planning commits are never replayed, and strictly matched clea
 setup/handoff. Dirty or mismatched partial state requires inspection; it is never rolled back or treated as completed
 merely because a branch exists. The one exception is the acceptance commit itself: when the commit gate refuses
 it, nothing has landed, so the service withdraws its own two acceptance writes (the status change and the gate
-record), leaves the Planning worktree as it was and reports `PROPOSAL_APPROVAL_NOT_READY` with the gate's output as
-details. See `ADR-proposal-acceptance` and `ADR-host-cli-lifecycle-authority`.
+record), leaves the Planning worktree as it was and reports `SPEC_PROPOSAL_ACCEPT_COMMIT_REFUSED` with the gate's
+output as details. See `ADR-proposal-acceptance` and `ADR-host-cli-lifecycle-authority`.
 
 | Code | Mode | Meaning | Action |
 | --- | --- | --- | --- |
-| `PROPOSAL_REVIEW_INVALID` | `INPUT_ERROR` | Proposal structure, branch or source is invalid. | Inspect `proposal.md` and ensure it is committed on the expected branch. |
-| `PROPOSAL_APPROVAL_NOT_READY` | `BLOCKED` | Planning or worktree prerequisites do not hold, including a commit gate that refuses the acceptance commit. | The user or Host resolves the named prerequisite and reruns the CLI operation. |
-| `PROPOSAL_APPROVAL_REPLY_INVALID` | `INPUT_ERROR` | The requested or confirmed mode is not `accept_only` or `accept_and_handoff`, `accept_and_handoff` has no `low`, `medium` or `high` effort, or a reply widens `accept_only`. | The caller corrects the mode or effort and reruns. |
-| `PROPOSAL_APPROVAL_STALE` | `MAINTENANCE` | Reviewed scope or exact acceptance delta changed. | Inspect preserved effects, refresh evidence and obtain Host authority for remaining scope. |
+`proposal report` checks the slug and `--source-sha` before it reads the checkout, so a missing proposal is never
+reported as a dirty tree.
+
+| Code | Mode | Meaning | Action |
+| --- | --- | --- | --- |
+| `SPEC_REPORT_ARGUMENT_INVALID` | `INPUT_ERROR` | `report`: the slug is not a proposal slug or `--source-sha` is not a full lowercase commit SHA; `[TARGET]` is `SLUG` or `--source-sha`. | Correct the argument. |
+| `SPEC_REPORT_SOURCE_NOT_HEAD` | `INPUT_ERROR` | `report`: `--source-sha` is not the current commit of this checkout, nor of the proposal's `plan-<slug>` worktree (also when there is none). | Pass the current SHA or omit `--source-sha`. |
+| `SPEC_REPORT_SOURCE_DIRTY` | `INPUT_ERROR` | `report`: the source checkout has uncommitted changes, listed in `[TARGET]`. | Commit them, then rerun. |
+| `SPEC_REPORT_WRONG_CHECKOUT` | `INPUT_ERROR` | `report`: neither `plan-<slug>` with a proposal in review or accepted, nor the retained base with an accepted proposal. | Run it in the `plan-<slug>` worktree. |
+| `SPEC_REPORT_SOURCE_INVALID` | `INPUT_ERROR` | `report`: a committed record (`[TARGET]`) is not a regular file, a PADR's ID differs from its file name, an envelope is not a mapping, the proposal declares another ID, or an effort is not `low`, `medium` or `high`. | Correct and commit the record. |
+| `SPEC_PROPOSAL_NOT_FOUND` | `INPUT_ERROR` | `report`: the proposal is not in the source commit. | Pass the slug of a committed proposal. |
+| `SPEC_PROPOSAL_APPROVAL_NOT_READY` | `INTERACTION` | The composed acceptance: Planning on `plan-<slug>` has unmet checks, problems, open questions or holds, needs decomposition, is not in review at `direction-handoff`, or `plan-<slug>` does not exist; `[DETAIL]` lists each condition and `[TARGET]` the proposal or branch. | After the user agrees, finish Planning there and rerun. |
+| `SPEC_PROPOSAL_ACCEPT_COMMIT_REFUSED` | `INPUT_ERROR` | The composed acceptance: the commit gate refused the acceptance commit on `plan-<slug>` (`[TARGET]`); the writes were withdrawn and `[DETAIL]` carries the gate's output. | Run `uv run devkit rules check` there, fix and commit, then rerun. |
+| `SPEC_PROPOSAL_APPROVAL_REPLY_INVALID` | `INPUT_ERROR` | The requested or confirmed mode is not `accept_only` or `accept_and_handoff`, `accept_and_handoff` has no `low`, `medium` or `high` effort, or a reply widens `accept_only`; `[TARGET]` is `--mode` and `--effort`. | The caller corrects the mode or effort and reruns. |
+| `SPEC_PROPOSAL_APPROVAL_STALE` | `INTERACTION` | Reviewed scope or exact acceptance delta changed. | Report what changed and the completed effects; after the user approves again, rerun for the remaining scope. |
+| `SPEC_CONFIG_INVALID` | `INPUT_ERROR` | The composed acceptance: the retained base's integration policy cannot run it (`INTEGRATION_CONFIG_INVALID` in `[DETAIL]`). | Correct `.devkit/config.toml` of the base checkout. |
 
 ### Policy-aware decision boundaries
 

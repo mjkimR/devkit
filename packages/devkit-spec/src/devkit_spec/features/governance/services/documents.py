@@ -32,11 +32,12 @@ from __future__ import annotations
 from pathlib import Path
 
 from devkit_agt.features.rules import RuleContext
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
 from devkit_spec.features.documents import SOURCE_DIRECTORIES, Document, DocumentIndex
 from devkit_spec.features.policy.services.config import Namespace, read_spec_config
 
-FIX_COMMAND = "devkit rules fix"
+FIX_COMMAND = f"{DEVKIT} rules fix"
 CACHE_KEY = "devkit_spec.document_index"
 
 

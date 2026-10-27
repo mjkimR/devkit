@@ -13,6 +13,7 @@ from pathlib import Path
 
 from devkit.advisory import AdvisoryError
 from devkit_core.core import GitError, run_git
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
 PLANNING_PREFIX = "plan-"
 DEVELOPMENT_PREFIX = "dev-"
@@ -51,13 +52,41 @@ def require_development_branch(root: Path, slug: str, action: str, error: type[A
     if branch == expected:
         return
     where = "worktree" if linked else "checkout"
+    start = f"{DEVKIT} worktree start {expected}"
+    unit = _branch_unit(root, expected, slug)
+    if unit is not None:
+        how = f"`{start} --existing-branch {expected} --unit {unit}` in the base checkout continues the existing branch"
+    else:
+        how = f"in the base checkout `{start}` (cd to the path it prints) or `{start} --no-worktree`"
     raise error(
         f"{action} of {slug} in the {where} of branch {branch or '- (detached HEAD)'}; it runs on branch {expected}",
-        target_files=[str(root)],
-        fix=f"Run it on {expected}: in the base checkout `devkit worktree start {expected}` (cd to the path it prints)"
-        f" or `devkit worktree start {expected} --no-worktree`; an existing {expected} is continued with"
-        f" `devkit worktree start {expected} --existing-branch {expected} --unit <dir>`. Then rerun there",
+        target_files=[expected],
+        fix=f"Run it on {expected}: {how}. Then rerun there",
     )
+
+
+def _branch_unit(root: Path, branch: str, slug: str) -> str | None:
+    """The committed unit directory of ``slug`` on the local ``branch`` (a spec bundle, else the proposal), relative to
+    ``root``; ``None`` when the branch or a unique unit does not exist."""
+    try:
+        prefix = run_git(root, "rev-parse", "--show-prefix").decode().strip()
+        listed = run_git(root, "ls-tree", "-d", "--name-only", f"refs/heads/{branch}", f"{prefix}specs/").decode()
+        months = [line for line in listed.splitlines() if line]
+        bundles = [
+            line
+            for month in months
+            for line in run_git(root, "ls-tree", "-d", "--name-only", f"refs/heads/{branch}", f"{month}/")
+            .decode()
+            .splitlines()
+            if line.endswith(f"-{slug}")
+        ]
+    except GitError as exc:
+        if exc.returncode is None:
+            raise
+        return None
+    if len(bundles) == 1:
+        return bundles[0].removeprefix(prefix)
+    return None
 
 
 def base_checkout_problem(root: Path) -> str | None:

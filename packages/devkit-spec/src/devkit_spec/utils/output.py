@@ -9,8 +9,10 @@ from collections.abc import Sequence
 
 import click
 
+from devkit_spec.base.errors import DEVKIT
+
 _BARE = re.compile(r'[^\s"\]=]+')
-COMMAND = "devkit spec"
+COMMAND = f"{DEVKIT} spec"
 
 
 def value(item: object) -> str:

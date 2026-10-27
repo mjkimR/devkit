@@ -50,7 +50,11 @@ def test_a_handoff_in_another_tasks_worktree_is_refused_before_writing(repo: Pat
     result = CliRunner().invoke(
         devkit_cli, ["spec", "proposal", "handoff", SLUG, "--format", "json", "-w", str(linked)]
     )
-    assert json.loads(result.stdout)["error"]["code"] == "SPEC_PROPOSAL_WRONG_WORKTREE"
+    error = json.loads(result.stdout)["error"]
+    assert error["code"] == "SPEC_PROPOSAL_WRONG_WORKTREE"
+    # The target is the branch to run on, never an absolute checkout path; no placeholder in the fix.
+    assert error["advisory"]["target_files"] == [f"dev-{SLUG}"] and "<" not in error["advisory"]["fix"]
+    assert f"uv run devkit worktree start dev-{SLUG}" in error["advisory"]["fix"]
 
 
 def test_the_development_branch_of_the_slug_hands_off(repo: Path) -> None:
@@ -91,4 +95,4 @@ def test_the_library_raises_the_same_refusal(repo: Path) -> None:
     linked = _worktree(repo, "other", "-b", "other-task")
     with pytest.raises(ProposalWrongWorktreeError) as raised:
         handoff_proposal(linked, SLUG, today=TODAY)
-    assert raised.value.target_files == (str(linked),)
+    assert raised.value.target_files == (f"dev-{SLUG}",)

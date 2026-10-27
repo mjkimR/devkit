@@ -14,9 +14,17 @@ from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import run_git
 from devkit_core.core.frontmatter import parse
 from devkit_core.core.yaml import safe_load
+from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.usecases.configuration import approval_language
 
-from devkit_spec.base.errors import SpecError
+from devkit_spec.base.errors import (
+    ProposalNotFoundError,
+    ReportArgumentError,
+    ReportSourceDirtyError,
+    ReportSourceInvalidError,
+    ReportSourceNotHeadError,
+    ReportWrongCheckoutError,
+)
 
 SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 SHA = re.compile(r"^[0-9a-f]{40}(?:[0-9a-f]{24})?\Z")
@@ -39,13 +47,25 @@ DECISION_FIELDS = {
 }
 
 
-class ReportInvalidError(SpecError):
-    code = "PROPOSAL_REVIEW_INVALID"
-    input_error = True
-    fix = (
-        "Fill the report template of the current clean committed proposal: "
-        "`devkit spec proposal report <slug> [--source-sha <sha>]`"
-    )
+def _command(slug: str) -> str:
+    return devkit_command(f"spec proposal report {slug}")
+
+
+def check_arguments(slug: str, sha: str | None) -> None:
+    """Refuse a malformed slug or source SHA before any checkout is read (``ReportArgumentError``)."""
+    if not SLUG.fullmatch(slug) or len(slug) > 59:
+        raise ReportArgumentError(
+            f"{slug!r} is not a proposal slug",
+            target_files=["SLUG"],
+            fix="Pass the slug of an existing proposal: lowercase letters, digits and single hyphens, at most 59 "
+            f"characters ({devkit_command('spec list proposal')} shows them)",
+        )
+    if sha is not None and not SHA.fullmatch(sha):
+        raise ReportArgumentError(
+            f"--source-sha {sha!r} is not a full lowercase commit SHA",
+            target_files=["--source-sha"],
+            fix=f"Pass the full 40-character commit SHA, or omit --source-sha for HEAD: `{_command(slug)}`",
+        )
 
 
 @dataclass(frozen=True)
@@ -69,30 +89,41 @@ def _read(path: str, unit: str) -> bool:
 
 
 def source(root: Path, slug: str, sha: str) -> Source:
-    if not SLUG.fullmatch(slug) or len(slug) > 59 or not SHA.fullmatch(sha):
-        raise ReportInvalidError("source: expected a proposal slug and full lowercase commit SHA")
+    check_arguments(slug, sha)
+    unit = f"docs/proposals/PROP-{slug}/"
+    anchor = unit + "proposal.md"
     try:
-        if (
-            run_git(root, "rev-parse", "HEAD").decode().strip() != sha
-            or run_git(root, "cat-file", "-t", sha).strip() != b"commit"
-        ):
-            raise ReportInvalidError("source: source_sha must be the current full commit identity")
-        if run_git(root, "status", "--porcelain", "--untracked-files=normal").strip():
-            raise ReportInvalidError("source: commit or resolve worktree changes before generating report")
-        unit = f"docs/proposals/PROP-{slug}/"
+        if run_git(root, "rev-parse", "HEAD").decode().strip() != sha:
+            raise ReportSourceNotHeadError(
+                f"--source-sha {sha[:12]} is not the current commit of this checkout",
+                fix=f"Pass the current committed SHA, or omit --source-sha: `{_command(slug)}`",
+            )
         entries = run_git(root, "ls-tree", "-r", "-z", sha, "--", unit).split(b"\0")
+        if not any(entries):
+            raise ProposalNotFoundError(
+                f"proposal PROP-{slug} is not in commit {sha[:12]}",
+                target_files=[anchor],
+                fix=f"Pass the slug of a committed proposal ({devkit_command('spec list proposal')} shows them)",
+            )
+        dirty = run_git(root, "status", "--porcelain", "--untracked-files=normal").decode().splitlines()
+        if any(line.strip() for line in dirty):
+            raise ReportSourceDirtyError(
+                "the source checkout has uncommitted changes; the report reads committed records only",
+                target_files=[line[3:] for line in dirty if line.strip()][:20],
+                fix=f"Commit the changes in [TARGET] (or move them out of the checkout), then run `{_command(slug)}`",
+            )
         files = {}
         for entry in filter(None, entries):
             header, _tab, raw_path = entry.partition(b"\t")
             mode = header.split(None, 1)[0].decode()
-            if mode not in {"100644", "100755"}:
-                raise ReportInvalidError("source: proposal records must be committed regular files")
             path = raw_path.decode("utf-8", "surrogateescape")
+            if mode not in {"100644", "100755"}:
+                raise _invalid(slug, path, "is not a committed regular file")
             if _read(path, unit):
                 files[path] = run_git(root, "show", f"{sha}:{path}").decode()
-        meta = parse(files.get(unit + "proposal.md", "")).data or {}
+        meta = parse(files.get(anchor, "")).data or {}
         if meta.get("id") != f"PROP-{slug}":
-            raise ReportInvalidError("source: the commit does not contain the expected proposal")
+            raise _invalid(slug, anchor, f"does not declare id: PROP-{slug}")
         position = locate(root)
         planning = position.branch == f"plan-{slug}" and meta.get("status") in {"reviewing", "accepted"}
         accepted = (
@@ -102,25 +133,30 @@ def source(root: Path, slug: str, sha: str) -> Source:
             and meta.get("status") == "accepted"
         )
         if not (planning or accepted):
-            raise ReportInvalidError("source: must be the Planning branch or accepted retained base")
+            raise ReportWrongCheckoutError(
+                f"PROP-{slug} (status {meta.get('status') or '-'}) is reported from plan-{slug} or, once accepted, "
+                f"from the retained base, not from {position.branch or '- (detached HEAD)'}",
+                target_files=[f"plan-{slug}"],
+                fix=f"Run `{_command(slug)}` in the plan-{slug} worktree",
+            )
         padrs, coverage = [], []
         for path, text in files.items():
             if path.startswith(unit + "decisions/PADR-") and path.endswith(".md"):
                 identifier = (parse(text).data or {}).get("id")
                 if not isinstance(identifier, str) or identifier != Path(path).stem:
-                    raise ReportInvalidError("source: PADR identity must match its committed filename")
+                    raise _invalid(slug, path, f"declares id {identifier!r}, not its file name {Path(path).stem}")
                 padrs.append(identifier)
             if path.startswith(unit + "envelopes/") and path.endswith((".yaml", ".yml")):
                 record = safe_load(text, source=path)
                 if not isinstance(record, dict):
-                    raise ReportInvalidError("source: invalid committed envelope")
+                    raise _invalid(slug, path, "is not a YAML mapping")
                 coverage.append(Path(path).name)
                 effort = record.get("activity_effort", record.get("effort"))
                 if effort is not None:
                     coverage.append(str(effort))
         effort, dev_effort = meta.get("planning_effort", "medium"), meta.get("dev_effort", "medium")
         if effort not in {"low", "medium", "high"} or dev_effort not in {"low", "medium", "high"}:
-            raise ReportInvalidError("source: proposal effort must be low, medium or high")
+            raise _invalid(slug, anchor, "has a planning_effort or dev_effort other than low, medium or high")
         return Source(
             sha,
             approval_language(root),
@@ -130,12 +166,29 @@ def source(root: Path, slug: str, sha: str) -> Source:
             effort,
             dev_effort,
         )
-    except ReportInvalidError:
-        raise
-    except YamlBindingUnavailableError:
+    except (
+        ReportSourceNotHeadError,
+        ReportSourceDirtyError,
+        ReportSourceInvalidError,
+        ReportWrongCheckoutError,
+        ProposalNotFoundError,
+        YamlBindingUnavailableError,
+    ):
         raise
     except (AdvisoryError, ValueError, UnicodeError, yaml.YAMLError) as exc:
-        raise ReportInvalidError("source: cannot read the exact committed proposal records") from exc
+        raise ReportSourceInvalidError(
+            f"the committed records of PROP-{slug} cannot be read: {exc}",
+            target_files=[unit.rstrip("/")],
+            fix=f"Correct the record named in the message, commit it, then run `{_command(slug)}`",
+        ) from exc
+
+
+def _invalid(slug: str, path: str, reason: str) -> ReportSourceInvalidError:
+    return ReportSourceInvalidError(
+        f"{path} {reason}",
+        target_files=[path],
+        fix=f"Correct {path}, commit it, then run `{_command(slug)}`",
+    )
 
 
 def template(root: Path, slug: str, sha: str) -> str:
@@ -167,7 +220,17 @@ def _workspace_source(root: Path, slug: str, source_sha: str) -> Path:
     """The checkout holding ``source_sha``: ``root``, or the ``plan-<slug>`` worktree of a retained base."""
     position = locate(root)
     if not position.linked and run_git(root, "rev-parse", "HEAD").decode().strip() != source_sha:
-        return find(position, f"plan-{slug}")
+        try:
+            return find(position, f"plan-{slug}")
+        except AdvisoryError as exc:
+            if exc.code != "WORKTREE_NOT_FOUND":
+                raise
+            raise ReportSourceNotHeadError(
+                f"--source-sha {source_sha[:12]} is not the current commit, and PROP-{slug} has no plan-{slug} "
+                "worktree to read it from",
+                fix=f"Pass the current committed SHA of the base or of plan-{slug}, or omit --source-sha: "
+                f"`{_command(slug)}`",
+            ) from exc
     return root
 
 
@@ -176,6 +239,7 @@ class ReportTemplateUseCase(BaseUseCase):
 
     def execute(self, root: Path, slug: str, source_sha: str | None = None) -> str:
         """The template to complete for ``source_sha``, read from the matching Planning source."""
+        check_arguments(slug, source_sha)
         if source_sha is None:
             source_sha = run_git(root, "rev-parse", "HEAD").decode().strip()
         return template(_workspace_source(root, slug, source_sha), slug, source_sha)

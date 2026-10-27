@@ -245,7 +245,7 @@ sentinel per line, warnings follow on stderr, and JSON is one object with the sa
 | `devkit spec scope query [--spec <dir>]` | Lists the namespace's records and this worktree's overlaps with the others (every pair when this worktree registered nothing, or its record is gone or may be unreadable). `--spec` compares that bundle's declared scope with every record not owned here, for a task about to start. |
 | `devkit spec scope query --history [--task <id>] [--limit <1-100>] [--cursor <cursor>]` | Prints the most recent 50 matching events in journal order by default. `--task` keeps events whose task ID or slug matches before paging; `--cursor` continues to older events using `next_cursor`. |
 | `devkit spec scope update --spec <dir> [--request-id <id>]` | Recollects the declared and observed scope, writes it, prints the overlaps and the ACK. |
-| `devkit spec scope release [--task-id <id>]` | Removes this worktree's record and token. With `--task-id`, a token is required and must own that record. A token whose record is already gone is removed, unless an unreadable record file may hold that record. |
+| `devkit spec scope release [--task-id <id>]` | Removes this worktree's record and token. Without a token it succeeds and changes nothing, with or without `--task-id`; with `--task-id`, the token must own that record. A token whose record is already gone is removed, unless an unreadable record file may hold that record. |
 | `devkit spec scope sweep [--apply] [--expect <task>=<rev>]...` | Reports stale, unverifiable and unreadable records; `--apply` removes stale ones whose revision is unchanged (without `--expect`, the revisions this command read first). |
 
 History cursors are bound to the namespace, task filter and preceding journal content. New appended events do not shift older pages. Invalid or stale cursors fail with `ARGUMENT_INVALID`; restart without a cursor. `next_cursor` is null after the oldest page. Journal-line warnings remain visible for every page.
@@ -324,8 +324,8 @@ A malformed table is `SPEC_CONFIG_INVALID` (`CAP-DLV-project-policy`).
 | --- | --- | --- | --- |
 | `SPEC_SCOPE_NOT_A_WORKTREE` | `ERROR` (`INPUT_ERROR`) | `ScopeNotAWorktreeError` | The workspace is not inside a Git work tree. |
 | `SPEC_SCOPE_SPEC_NOT_FOUND` | `ERROR` (`INPUT_ERROR`) | `ScopeSpecNotFoundError` | `--spec` names no directory. |
-| `SPEC_SCOPE_INPUT_INVALID` | `ERROR` (`MAINTENANCE`) | `ScopeInputInvalidError` | `tasks.md`, `reconcile.md` or `target-docs.md` cannot be read, or its `targets` is not a list of mappings with a string `file`. |
-| `SPEC_SCOPE_TOKEN_MISSING` | `ERROR` (`INPUT_ERROR`) | `ScopeTokenMissingError` | This worktree registered nothing (update, release `--task-id`). |
+| `SPEC_SCOPE_INPUT_INVALID` | `ERROR` (`INPUT_ERROR`) | `ScopeInputInvalidError` | `tasks.md`, `reconcile.md` or `target-docs.md` cannot be read, or its `targets` is not a list of mappings with a string `file`. |
+| `SPEC_SCOPE_TOKEN_MISSING` | `ERROR` (`INPUT_ERROR`) | `ScopeTokenMissingError` | This worktree registered nothing (update). `release`, with or without `--task-id`, succeeds and changes nothing there. |
 | `SPEC_SCOPE_TOKEN_EXISTS` | `ERROR` (`INPUT_ERROR`) | `ScopeTokenExistsError` | This worktree already registered a task, or a concurrent registration in it saved its token first. |
 | `SPEC_SCOPE_TASK_EXISTS` | `ERROR` (`INPUT_ERROR`) | `ScopeTaskExistsError` | Another record has the task ID. |
 | `SPEC_SCOPE_RECORD_MISSING` | `ERROR` (`INPUT_ERROR`) | `ScopeRecordMissingError` | The token's record was released or swept, and no unreadable record file may hold it (`update`); `release` removes the orphaned token. |
@@ -342,7 +342,7 @@ A malformed table is `SPEC_CONFIG_INVALID` (`CAP-DLV-project-policy`).
 | `SPEC_SCOPE_JOURNAL_UNAVAILABLE` | `WARNING` | `ScopeJournalWarning` | The journal could not be written. |
 | `SPEC_SCOPE_JOURNAL_LINE_INVALID` | `WARNING` | `ScopeJournalLineWarning` | `query --history` skipped lines that are not JSON events. |
 | `SPEC_SCOPE_COLLECTION_PARTIAL` | `WARNING` | `ScopeCollectionPartialWarning` | Some requested source, input or comparison coverage is missing. |
-| `SPEC_SCOPE_COLLECTION_FAILED` | `ERROR` | `ScopeCollectionFailedError` | No selected inventory source can be read, or report metadata cannot fit the bounded result. |
+| `SPEC_SCOPE_COLLECTION_FAILED` | `ERROR` (`INPUT_ERROR`; `MAINTENANCE` for the report limit) | `ScopeCollectionFailedError` | No selected inventory source can be read (`[TARGET]` names the failed sources, `[DETAIL]` each reason), or report metadata cannot fit the bounded result. |
 | `SPEC_POST_FINISH_CLEANUP` | `NOTICE` | `PostFinishCleanupNotice` | `ScopedCleanup.integration_run` removed an empty proposal directory or a finished worktree's scope record during approval-bound local integration. |
 
 devkit's own errors pass through: `ARGUMENT_INVALID` (4.4), `GIT_FAILED`, `SPEC_PROPOSAL_NOT_FOUND` (compare),

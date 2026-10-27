@@ -12,33 +12,20 @@ from devkit_core.base.errors import ArgumentError
 from devkit_core.core import GitError, run_git
 from devkit_core.core.frontmatter import parse
 
-from devkit_spec.base.errors import SpecError
+from devkit_spec.base.errors import (
+    SpecError,
+    WorkerBaseUnresolvedError,
+    WorkerHeadUnresolvedError,
+    WorkerScopeUnresolvedError,
+    WorkerUnitUnresolvedError,
+)
 from devkit_spec.features.delivery.usecases.attach import PROPOSAL_UNIT, SPEC_UNIT, attach_check
 from devkit_spec.features.entrypoints.repositories.bundle import parse_boundaries, parse_targets
 
-
-class UnitUnresolved(SpecError):
-    code = "WORKER_UNIT_UNRESOLVED"
-    input_error = True
-    fix = "Pass --unit with the committed unit directory"
-
-
-class HeadUnresolved(SpecError):
-    code = "WORKER_HEAD_UNRESOLVED"
-    input_error = True
-    fix = "Pass --head with the returned commit"
-
-
-class BaseUnresolved(SpecError):
-    code = "WORKER_BASE_UNRESOLVED"
-    input_error = True
-    fix = "Pass --base with the last accepted commit"
-
-
-class ScopeUnresolved(SpecError):
-    code = "WORKER_SCOPE_UNRESOLVED"
-    input_error = True
-    fix = "Pass --scope with each authorized path or --scope-file with the complete scope"
+UnitUnresolved = WorkerUnitUnresolvedError
+HeadUnresolved = WorkerHeadUnresolvedError
+BaseUnresolved = WorkerBaseUnresolvedError
+ScopeUnresolved = WorkerScopeUnresolvedError
 
 
 def git(root: Path, *args: str) -> str:

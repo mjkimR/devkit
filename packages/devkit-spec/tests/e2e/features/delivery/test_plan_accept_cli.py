@@ -155,12 +155,17 @@ def test_accept_cli_withdraws_its_writes_when_the_commit_gate_refuses(pending, t
         ["accept", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo), "--format", "json"],
     )
 
+    # Nothing was done: the command fails outright with one error document (ARCH-08-1 section 4).
     assert result.exit_code == 2, result.output
-    payload = json.loads(result.output)
-    assert payload["status"] == "blocked" and payload["completed_steps"] == []
-    [error] = payload["errors"]
-    assert error["code"] == "PROPOSAL_APPROVAL_NOT_READY" and error["advisory"]["mode"] == "BLOCKED"
+    error = json.loads(result.output)["error"]
+    assert error["code"] == "SPEC_PROPOSAL_ACCEPT_COMMIT_REFUSED" and error["advisory"]["mode"] == "INPUT_ERROR"
     assert error["advisory"]["details"] == ["RULE-example refused the staged tree"]
+    assert error["advisory"]["target_files"] == ["plan-idea"]
+    text = CliRunner().invoke(
+        proposal_group, ["accept", "idea", "--by", "user", "--mode", "accept_only", "-w", str(repo)]
+    )
+    assert text.exit_code == 2 and text.stdout == ""
+    assert "SPEC_PROPOSAL_ACCEPT_COMMIT_REFUSED" in text.stderr
     assert git(planning, "status", "--porcelain") == ""
     assert "status: reviewing" in (planning / "docs/proposals/PROP-idea/proposal.md").read_text()
     assert git(repo, "show-ref") == before

@@ -117,7 +117,7 @@ changes an argument, output, code or exit status.
 2. The output ends with `[PAGE: total= offset= limit= count= next=]`; `next` is the offset of the next page, `-` on
    the last one. `list` adds `hidden=<n>` last: the documents that match every other filter but were left out as
    historical (`0` with `--history` or `--status`).
-3. When more items follow, `[NEXT_CMD: devkit spec ...]` repeats the command with every given filter, `-w` when it
+3. When more items follow, `[NEXT_CMD: uv run devkit spec ...]` repeats the command with every given filter, `-w` when it
    was given, `--limit` and the next `--offset`; each `--where` is repeated as given, in order.
 4. When `hidden` is above zero, `list` prints `[HISTORY_CMD: devkit spec list ... --history]` last: the command with
    every given filter, `--history`, `-w` when it was given and `--limit` when it is not the default.
@@ -148,7 +148,7 @@ devkit spec list feedback --status resolved            # resolved feedback, with
 [DOCUMENT: PROP-search kind=proposal status=draft path=docs/proposals/PROP-search/proposal.md tasks=- task_kind=feature planning_effort=medium dev_effort=medium title="Search"]
 [DOCUMENT: FB-slow-sync kind=feedback status=open path=specs/2026-10/feedback/20261013-slow-sync.md tasks=- severity=critical scope=upstream target="devkit sync" title="Sync blocks"]
 [PAGE: total=42 offset=0 limit=20 count=20 next=20 hidden=3]
-[NEXT_CMD: devkit spec list spec --limit 20 --offset 20]
+[NEXT_CMD: uv run devkit spec list spec --limit 20 --offset 20]
 [HISTORY_CMD: devkit spec list spec --history]
 ```
 

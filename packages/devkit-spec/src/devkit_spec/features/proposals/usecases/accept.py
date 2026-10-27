@@ -36,6 +36,7 @@ from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
 from devkit_spec.base.errors import (
     ProposalAcceptRefusedError,
@@ -43,6 +44,7 @@ from devkit_spec.base.errors import (
     ProposalInvalidError,
     ProposalNotEligibleError,
     ProposalNotFoundError,
+    ProposalPolicyNotAutoError,
     ProposalWrongWorktreeError,
 )
 from devkit_spec.features.policy.repositories.branches import (
@@ -97,6 +99,11 @@ class AcceptResult:
     decision: str | None = None
     pending: tuple[str, ...] = field(default_factory=tuple)
 
+    @property
+    def eligible(self) -> bool:
+        """Whether the acceptance would run now: a check with pending conditions would be refused by the real run."""
+        return not self.pending
+
     def to_dict(self) -> dict[str, object]:
         return {
             "proposal": self.proposal,
@@ -104,7 +111,7 @@ class AcceptResult:
             "form": self.form,
             "status": self.status,
             "checked": self.checked,
-            "eligible": True,
+            "eligible": self.eligible,
             "decision": self.decision,
             "pending": list(self.pending),
         }
@@ -175,6 +182,21 @@ def _direct_conditions(
     return failed
 
 
+def _not_eligible_fix(slug: str, unit: str, pending: list[str]) -> str:
+    """The ``ProposalNotEligibleError`` fix with this proposal's exact commands."""
+    intent = (
+        f" (record the user's plan-intent with `{DEVKIT} workflow answer --unit {unit} --request {INTENT_GATE} "
+        "--action accept --by user` on the base checkout)"
+        if pending
+        else ""
+    )
+    return (
+        f"Report the conditions to the user; on the user's decision resolve them{intent} and rerun, or start Planning "
+        f"on {PLANNING_PREFIX}{slug} (`{DEVKIT} worktree start {PLANNING_PREFIX}{slug}`). Never edit the status or the "
+        "gate records by hand"
+    )
+
+
 def _note(meta: dict[str, Any], form: str, reason: str) -> str:
     """The recorded note: the given one for the Planning form, the stated direct acceptance otherwise."""
     if form == PLANNING:
@@ -215,8 +237,9 @@ class AcceptProposalUseCase(BaseUseCase):
     ) -> AcceptResult:
         """Accept proposal ``slug`` under the workspace ``root`` for the recorded authority (see the module docstring).
 
-        Raises, before writing anything: ``ArgumentError`` (``by`` other than ``user`` or authorized ``policy``; ``direct`` without a non-blank
-        ``note``), ``ProposalSlugError``, ``ProposalNotFoundError``, ``ProposalInvalidError``,
+        Raises, before writing anything: ``ArgumentError`` (``by`` other than ``user`` or ``policy``; ``direct``
+        without a non-blank ``note``), ``ProposalPolicyNotAutoError`` (``policy`` while the owning ``plan-accept`` is
+        not ``auto``), ``ProposalSlugError``, ``ProposalNotFoundError``, ``ProposalInvalidError``,
         ``ProposalAcceptRefusedError`` (a form the status does not allow, a single-file or unbound proposal),
         ``ProposalWrongWorktreeError`` (the Planning form off ``plan-<slug>``) and ``ProposalNotEligibleError`` (every
         failed direct condition in its details). After writing the status: ``ProposalGateNotOpenError``, with the status
@@ -230,7 +253,10 @@ class AcceptProposalUseCase(BaseUseCase):
             )
         policy = approval_policy(root, "plan-accept")
         if by == "policy" and policy != "auto":
-            raise ArgumentError("--by policy requires owning plan-accept=auto")
+            raise ProposalPolicyNotAutoError(
+                f"--by policy cannot accept PROP-{slug.strip().removeprefix('PROP-')}: the owning plan-accept policy "
+                f"is {policy}, not auto"
+            )
         reason = note.strip()
         if direct and not reason:
             raise ArgumentError(
@@ -264,7 +290,7 @@ class AcceptProposalUseCase(BaseUseCase):
             raise ProposalAcceptRefusedError(
                 f"PROP-{slug} is not bound to a workflow, so it has no gate records",
                 target_files=[rel],
-                fix="Bind it with devkit workflow bind --unit <dir> --workflow sdd-proposal and rerun, or, after the "
+                fix=f"Bind it with {DEVKIT} workflow bind --unit {bundle.relative_to(root).as_posix()} --workflow sdd-proposal and rerun, or, after the "
                 "user's explicit acceptance, set status: accepted by hand (an unbound proposal's acceptance is its status)",
             )
         status = text_value(meta.get("status")).lower()
@@ -293,6 +319,7 @@ class AcceptProposalUseCase(BaseUseCase):
                     *(f"blocking: {item}" for item in blocking),
                     *(f"pending: {item} is not recorded (the user's explicit answer first)" for item in pending),
                     target_files=[rel],
+                    fix=_not_eligible_fix(slug, bundle.relative_to(root).as_posix(), pending),
                 )
         if check:
             return AcceptResult(f"PROP-{slug}", rel, form, status, True, pending=tuple(pending))

@@ -13,6 +13,7 @@ from spec_support.types import Write
 
 import devkit_spec
 from devkit_spec.base.errors import (
+    ProposalDecisionExistsError,
     ProposalExistsError,
     ProposalSlugConflictError,
     ProposalTargetExistsError,
@@ -121,7 +122,7 @@ def test_scaffolding_treats_a_spec_alias_like_a_declared_spec(workspace: Path, w
         "docs/proposals/PROP-fresh/decisions/PADR-first.md",
         "---\nid: PADR-first\nstatus: draft\naliases: [PADR-taken]\n---\n",
     )
-    with pytest.raises(ProposalExistsError):
+    with pytest.raises(ProposalDecisionExistsError):
         create_padr(workspace, "fresh", "Taken")
 
 

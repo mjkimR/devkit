@@ -168,7 +168,12 @@ class Collector:
         self.discovered_count = len(self.candidates)
         self.candidates = self.candidates[: inventory.MAX_SOURCES]
         if not self.successful_inventory:
-            raise ScopeCollectionFailedError("No selected inventory source could be read")
+            failed = [problem["source_id"] for problem in self.problems]
+            raise ScopeCollectionFailedError(
+                "No selected inventory source could be read",
+                *(f"{problem['source_id']}: {problem['reason']}" for problem in self.problems),
+                target_files=failed or ["--mode"],
+            )
 
     def snapshot(self, candidate: Candidate) -> Observation:
         assert candidate.record is not None
@@ -559,7 +564,11 @@ class Collector:
         )
         # All variable entries were charged with framing overhead; metadata uses the reserved space.
         if len(encoded(data)) > MAX_REPORT_BYTES:
-            raise ScopeCollectionFailedError("Report metadata exceeds collection result limit")
+            raise ScopeCollectionFailedError(
+                "Report metadata exceeds collection result limit",
+                input_error=False,
+                fix="Report the limit; a narrower --mode (snapshot) collects fewer sources",
+            )
         if self.deadline.expired():
             self.problem("finalization", "source-timeout")
             data["coverage"]["status"] = "partial"

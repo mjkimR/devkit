@@ -10,9 +10,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from devkit.advisory import ExitCode
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
 from devkit_spec.base.errors import ProposalInPlanningError, ProposalNotFoundError
 from devkit_spec.features.policy.repositories.branches import planning_branches
@@ -45,7 +47,10 @@ class CheckBacklogUseCase(BaseUseCase):
         anchor = bundle / "proposal.md" if bundle.is_dir() else single
         rel = anchor.relative_to(root).as_posix()
         if not anchor.is_file():
-            raise ProposalNotFoundError(f"PROP-{slug} has no proposal at {rel}", target_files=[rel])
+            missing = f"{bundle.relative_to(root).as_posix()}/proposal.md"
+            raise ProposalNotFoundError(
+                f"PROP-{slug} has no proposal: neither {missing} nor {rel} exists", target_files=[missing]
+            )
         try:
             status = str((parse(anchor.read_text("utf-8")).data or {}).get("status") or "")
         except (FrontmatterError, OSError, UnicodeError):
@@ -54,13 +59,16 @@ class CheckBacklogUseCase(BaseUseCase):
             "Have the Host arrange an authorized return to draft Backlog for decomposition; preserve Planning evidence,"
             " close open questions and commit needs_decompose: true; integrate the return under existing approval"
             " policy and remove local/fetched Planning branch blockers before running"
-            f" `devkit spec proposal check {slug}` and retrying --decomposed-from from Backlog"
+            f" `{DEVKIT} spec proposal check {slug}` and retrying --decomposed-from from Backlog"
         )
+        # The check's negative answer exits 1; refusing a decomposition write cannot do its job (2).
+        answer = ExitCode.ERROR if decomposition else ExitCode.FINDINGS
         branch = planning_branches(root).get(slug)
         if branch is not None:
             raise ProposalInPlanningError(
                 f"PROP-{slug} is in Planning on {branch}; Backlog does not edit, split or delete it",
                 target_files=[rel],
+                exit_code=answer,
                 fix=recovery
                 if decomposition
                 else f"Change it on {branch} as part of its Planning, or wait until that branch is merged and removed",
@@ -70,6 +78,7 @@ class CheckBacklogUseCase(BaseUseCase):
                 f"PROP-{slug} is {status or 'without a status'}, not draft; Backlog changes only a draft whose Planning has"
                 " not started",
                 target_files=[rel],
+                exit_code=answer,
                 fix=recovery
                 if decomposition
                 else "Leave it to its Planning, its Development or the hygiene cleanup of a rejected proposal",

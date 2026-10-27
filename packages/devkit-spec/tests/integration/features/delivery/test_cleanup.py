@@ -128,7 +128,7 @@ def test_a_failed_record_removal_keeps_the_prune_notices(tmp_path: Path) -> None
     assert lines is not None and lines[0] == "removed empty proposal directory docs/proposals/PROP-s"
     assert len(lines) == 2 and isinstance(lines[1], ScopeTimeoutError)
     assert str(lines[1].fix).endswith(
-        "then run devkit spec scope sweep --apply to remove the finished worktree's scope record"
+        "then run uv run devkit spec scope sweep --apply to remove the finished worktree's scope record"
     )
 
 
@@ -139,7 +139,7 @@ def test_a_malformed_config_is_reported_with_the_sweep_fix(tmp_path: Path) -> No
     lines = after_finish(repo, {"slug": "s", "path": str(tmp_path / "wt-s")})
     assert lines is not None and len(lines) == 1 and isinstance(lines[0], SpecConfigError)
     assert str(lines[0].fix).endswith(
-        "then run devkit spec scope sweep --apply to remove the finished worktree's scope record"
+        "then run uv run devkit spec scope sweep --apply to remove the finished worktree's scope record"
     )
 
 
@@ -161,7 +161,7 @@ def test_a_failed_prune_is_a_warning_and_the_sweep_still_runs(tmp_path: Path) ->
     warning, swept = lines
     assert isinstance(warning, ProposalCleanupWarning) and warning.level is Level.WARNING
     assert warning.target_files == ("docs/proposals/PROP-s",)
-    assert str(warning.fix).endswith("then run devkit spec proposal prune s")
+    assert str(warning.fix).endswith("then run uv run devkit spec proposal prune s")
     assert swept == "removed the scope record of SPEC-s"
     assert locked.is_dir(), "nothing was removed"
 

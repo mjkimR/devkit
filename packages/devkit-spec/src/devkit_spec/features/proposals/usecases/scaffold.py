@@ -28,8 +28,10 @@ from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
 from devkit_spec.base.errors import (
+    ProposalDecisionExistsError,
     ProposalExistsError,
     ProposalInPlanningError,
     ProposalNotApprovedError,
@@ -180,7 +182,7 @@ def _check_superseded(root: Path, proposal_id: str | None) -> None:
         raise ProposalNotFoundError(
             f"--supersedes {proposal_id}: no proposal at {rel}",
             target_files=["--supersedes"],
-            fix="Pass --supersedes PROP-<slug> of the accepted proposal this draft replaces (devkit spec list proposal"
+            fix=f"Pass --supersedes PROP-<slug> of the accepted proposal this draft replaces ({DEVKIT} spec list proposal"
             " shows them)",
         )
     try:
@@ -286,7 +288,7 @@ class CreatedProposal:
 
     @property
     def next_command(self) -> str | None:
-        return f"devkit workflow next --unit {self.dir}" if self.workflow else None
+        return f"{DEVKIT} workflow next --unit {self.dir}" if self.workflow else None
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -644,7 +646,7 @@ class CreateProposalUseCase(BaseUseCase):
                 ProposalUnboundNotice(
                     f"PROP-{slug} is not bound to a workflow: {PROPOSAL_WORKFLOW} is not available ({unbound.code})",
                     target_files=[result.path],
-                    fix=f"Bind it with devkit workflow bind --unit {result.dir} --workflow <id> once a workflow fits it",
+                    fix=f"Bind it with {DEVKIT} workflow bind --unit {result.dir} --workflow <id> once a workflow fits it",
                 )
             )
         return result
@@ -671,7 +673,7 @@ class CreateProposalDecisionUseCase(BaseUseCase):
         PADR slug whose first segment has no letter, ``ArgumentError`` for a ``summary`` that is empty, not English or
         longer than 300 stripped characters, ``ProposalNotFoundError`` when the bundle does not exist, ``ProposalInPlanningError`` when ``plan-<slug>`` exists
         and the checkout is not on it (a proposal in Planning is changed on that branch only, 01 §4.7),
-        ``ProposalExistsError`` when any document already declares the PADR ID.
+        ``ProposalDecisionExistsError`` when any document already declares the PADR ID.
         """
         root = root.resolve()
         slug = require_slug(slug)
@@ -693,7 +695,7 @@ class CreateProposalDecisionUseCase(BaseUseCase):
             raise ProposalNotFoundError(
                 f"proposal bundle {rel} does not exist",
                 target_files=[rel],
-                fix=f"Create the bundle first with devkit spec proposal new {slug}",
+                fix=f"Create the bundle first with {DEVKIT} spec proposal new {slug}",
             )
         branch = planning_branch_elsewhere(root, slug)
         if branch is not None:
@@ -701,7 +703,7 @@ class CreateProposalDecisionUseCase(BaseUseCase):
             raise ProposalInPlanningError(
                 f"PROP-{slug} is in Planning on {branch}; a PADR is written on that branch only",
                 target_files=[rel],
-                fix=f"Run it in the checkout of {branch} (devkit worktree start plan-{slug} --existing-branch {branch}"
+                fix=f"Run it in the checkout of {branch} ({DEVKIT} worktree start plan-{slug} --existing-branch {branch}"
                 f" --unit docs/proposals/PROP-{slug} attaches one), or wait until that branch is merged and removed",
             )
         path = bundle / DECISIONS / f"{padr_id}.md"
@@ -709,7 +711,9 @@ class CreateProposalDecisionUseCase(BaseUseCase):
         if path.exists() and path.relative_to(root).as_posix() not in existing:
             existing.append(path.relative_to(root).as_posix())
         if existing:
-            raise ProposalExistsError(f"PADR ID {padr_id} already exists: {', '.join(existing)}", target_files=existing)
+            raise ProposalDecisionExistsError(
+                f"PADR ID {padr_id} already exists: {', '.join(existing)}", target_files=existing
+            )
         created = (today or date.today()).isoformat()
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(_padr(padr_id, title, summary, slug, created), encoding="utf-8")

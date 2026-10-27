@@ -234,7 +234,7 @@ def test_a_recording_failure_is_a_warning(workspace: Path, monkeypatch: pytest.M
     assert notice.code == "SPEC_PROPOSAL_GATE_NOT_CARRIED"
     assert "gate:plan-accept" in notice.message and "disk full" in notice.details
     spec = f"specs/{MONTH}/{STAMP}-fails"
-    assert notice.fix is not None and f"devkit workflow next --unit {spec}" in notice.fix
+    assert notice.fix is not None and f"uv run devkit workflow next --unit {spec}" in notice.fix
     assert not (workspace / UNIT.format(slug="fails")).exists()
 
 

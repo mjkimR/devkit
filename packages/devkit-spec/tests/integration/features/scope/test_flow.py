@@ -343,8 +343,9 @@ def test_update_statuses_for_stale_timeout_and_orphaned_records(repo: Path, monk
 
 def test_release_of_a_named_task(repo: Path) -> None:
     session = open_session(repo)
-    with pytest.raises(ScopeTokenMissingError):
-        release(session, "SPEC-s")
+    # Without a token nothing of this worktree is registered: release succeeds and changes nothing (its --help).
+    nothing = release(session, "SPEC-s")
+    assert (nothing.registered, nothing.already) == (False, False)
     register(session, SPEC)
     session.registry.register(
         Record(namespace=session.location.namespace, task_id="SPEC-x", worktree="/wt/x"), Deadline(5)

@@ -62,6 +62,7 @@ from devkit_agt.features.workflow import (
 )
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import locate, parse
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
 from devkit_spec.base.errors import (
     ProposalAcceptanceUnrecordedError,
@@ -78,6 +79,7 @@ from devkit_spec.base.errors import (
     ProposalTargetExistsError,
     ProposalUnboundNotice,
     ProposalWrongWorktreeError,
+    acceptance_unrecorded_fix,
 )
 from devkit_spec.features.documents import DocumentIndex, parse_document
 from devkit_spec.features.documents.models.ids import is_legacy_id
@@ -234,7 +236,7 @@ class HandoffResult:
 
     @property
     def next_command(self) -> str | None:
-        return f"devkit workflow next --unit {self.dir}" if self.workflow else None
+        return f"{DEVKIT} workflow next --unit {self.dir}" if self.workflow else None
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -356,6 +358,7 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
             f"proposal PROP-{slug} is accepted but has no effective accepted {ACCEPT_GATE} record; the handoff needs"
             " the user's recorded acceptance",
             target_files=[proposal_rel],
+            fix=acceptance_unrecorded_fix(slug),
         )
     namespace = _namespace(root, meta, proposal_rel)
     summary = _summary(meta, proposal_rel)
@@ -809,8 +812,8 @@ def _record_gates(
                 f"{request} of SPEC-{slug} was not carried from {origin}",
                 detail,
                 target_files=[f"{rel}/{SPEC_FILE}"],
-                fix=f"Once the cause is resolved, ask the user again for each gate devkit workflow next --unit {rel} "
-                "reports as waiting and record the answer with devkit workflow answer",
+                fix=f"Once the cause is resolved, ask the user again for each gate {DEVKIT} workflow next --unit {rel} "
+                f"reports as waiting and record the answer with {DEVKIT} workflow answer",
             )
         )
     return carried
@@ -1117,7 +1120,7 @@ def _result(
             ProposalUnboundNotice(
                 f"SPEC-{slug} is not bound to a workflow: {DEFAULT_WORKFLOW} is not available ({unbound.code})",
                 target_files=[f"{spec_rel}/{SPEC_FILE}"],
-                fix=f"Bind it with devkit workflow bind --unit {spec_rel} --workflow <id> once a workflow fits it",
+                fix=f"Bind it with {DEVKIT} workflow bind --unit {spec_rel} --workflow <id> once a workflow fits it",
             )
         )
     if result.unresolved:

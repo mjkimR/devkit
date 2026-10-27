@@ -113,7 +113,7 @@ Text output, then `[NEXT_CMD: ...]` only when `spec.md` is bound:
 
 ```text
 [SPEC: SPEC-login-flow path=specs/2026-10/20261013-login-flow workflow=sdd-spec-feature]
-[NEXT_CMD: devkit workflow next --unit specs/2026-10/20261013-login-flow]
+[NEXT_CMD: uv run devkit workflow next --unit specs/2026-10/20261013-login-flow]
 ```
 
 `workflow=-` means unbound. The `[SPEC: ...]` line ends with `namespace=<name>` when the bundle reports a namespace:

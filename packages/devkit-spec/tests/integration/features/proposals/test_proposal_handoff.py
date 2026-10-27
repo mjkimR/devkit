@@ -600,7 +600,7 @@ def test_marks_skeletons(workspace: Path) -> None:
     assert _frontmatter_keys((target / "tasks.md").read_text(encoding="utf-8")) == ["id", "spec", "plan"]
     assert _frontmatter_keys((target / "plan.md").read_text(encoding="utf-8")) == ["id", "spec"]
     assert result.workflow == "sdd-spec-feature"
-    assert result.next_command == f"devkit workflow next --unit {SPEC}-marked"
+    assert result.next_command == f"uv run devkit workflow next --unit {SPEC}-marked"
 
 
 def test_binds_the_proposal_workflow(workspace: Path) -> None:

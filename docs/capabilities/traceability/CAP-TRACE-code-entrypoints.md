@@ -228,7 +228,7 @@ could not be indexed are `SPEC_DOCUMENT_INVALID` warnings under `notices`.
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
 | `SPEC_ENTRYPOINTS_INPUT_MISSING` | `ERROR` (`INPUT_ERROR`) | `EntrypointsInputMissingError` | `--spec`: the bundle has no `tasks.md` or `reconcile.md`. |
-| `SPEC_ENTRYPOINTS_INPUT_INVALID` | `ERROR` (`MAINTENANCE`) | `EntrypointsInputInvalidError` | `--spec`: `tasks.md` or `reconcile.md` cannot be read, or `reconcile.md` has no frontmatter or malformed `targets`. |
+| `SPEC_ENTRYPOINTS_INPUT_INVALID` | `ERROR` (`INPUT_ERROR`) | `EntrypointsInputInvalidError` | `--spec`: `tasks.md` or `reconcile.md` cannot be read, or `reconcile.md` has no frontmatter or malformed `targets`. |
 | `SPEC_ENTRYPOINTS_PATH_INVALID` | `ERROR` (`INPUT_ERROR`) | `EntrypointsPathError` | A `--code` or `--exclude` path, or a `devkit spec list --file` path, breaks the path contract. |
 | `SPEC_ENTRYPOINTS_TARGET_UNKNOWN` | `ERROR` (`INPUT_ERROR`) | `EntrypointsTargetError` | A `--target` ID or alias names no document, or the document or path is not among the derived documents. |
 | `SPEC_ENTRYPOINTS_CODE_UNMATCHED` | `ERROR` (`INPUT_ERROR`) | `EntrypointsCodeUnmatchedError` | A `--code` path equals, contains and lies under no candidate of the derived documents (of the `--target` documents with `--apply`); `[TARGET]` lists them and nothing is written. |
