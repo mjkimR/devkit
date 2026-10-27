@@ -96,7 +96,7 @@ PY
 status=0
 toolkit_out=$("$toolkit/bin/python" "$work/toolkit_tool.py" --format json 2>"$work/toolkit.err") || status=$?
 [ "$status" -eq 2 ] || { echo "error: the toolkit tool exited $status, expected 2" >&2; exit 1; }
-grep -q '"code": "SMOKE_FAILED"' <<<"$toolkit_out" || { echo "error: the toolkit tool printed no JSON error" >&2; exit 1; }
+grep -Eq '"code": ?"SMOKE_FAILED"' <<<"$toolkit_out" || { echo "error: the toolkit tool printed no JSON error" >&2; exit 1; }
 [ ! -s "$work/toolkit.err" ] || { echo "error: the toolkit tool wrote stderr in JSON mode" >&2; exit 1; }
 
 echo "==> distribution-only consumer: the devkit-dist wheel without devkit-agt"
@@ -143,7 +143,7 @@ assert [entry.name for entry in entry_points(group='devkit.commands')] == []
     out=$(uv run devkit rules check --format json 2>"$work/harness-json.err") || status=$?
     [ "$status" -eq 2 ] || { echo "error: devkit rules --format json exited $status, expected 2" >&2; exit 1; }
     [ ! -s "$work/harness-json.err" ] || { echo "error: devkit rules --format json wrote to stderr" >&2; exit 1; }
-    grep -q '"code": "HARNESS_COMMAND_UNAVAILABLE"' <<<"$out"
+    grep -Eq '"code": ?"HARNESS_COMMAND_UNAVAILABLE"' <<<"$out"
     status=0
     uv run devkit no-such-command >/dev/null 2>"$work/unknown.err" || status=$?
     [ "$status" -eq 2 ] || { echo "error: devkit no-such-command exited $status, expected 2" >&2; exit 1; }
@@ -172,7 +172,7 @@ assert {item["bundle"]: item["package"] for item in receipt["packages"]} == {"ad
     grep -q HARNESS_ENGINE_MISSING "$work/engine.err"
     test -f .devkit/managed/advisory/rules/unique_code/rule.py
     engine_status=$(uv run devkit status)
-    grep -q '"code": "HARNESS_ENGINE_MISSING"' <<<"$engine_status"
+    grep -Eq '"code": ?"HARNESS_ENGINE_MISSING"' <<<"$engine_status"
 )
 
 echo "==> tool installation: devkit-dist owns the executable, devkit-agt adds the harness"
@@ -322,7 +322,7 @@ PY
     # Output is captured before grep: `cmd | grep -q` closes the pipe at the first match, and devkit exits 2
     # without output when its stdout is closed (BrokenPipeError), which pipefail turns into a failure.
     gate_status=$(uv run devkit gate status --format json)
-    grep -q '"state": "managed"' <<<"$gate_status"
+    grep -Eq '"state": ?"managed"' <<<"$gate_status"
     git add -A
     git commit -q -m "chore: smoke commit through devkit gate"
     if git commit -q --allow-empty --allow-empty-message -m "" 2>/dev/null; then
