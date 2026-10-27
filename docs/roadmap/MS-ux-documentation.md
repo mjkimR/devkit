@@ -2,7 +2,7 @@
 id: MS-ux-documentation
 title: UX documentation and review in the Living Spec
 summary: "Makes screens and interaction flows first-class Living Spec documents linked to use cases and capabilities, with authoring guidance and an independent use-case-driven UX review, on document kinds defined in one place."
-status: planned
+status: done
 created_at: 2026-10-26
 depends_on: []
 ---
@@ -43,8 +43,8 @@ definition instead of kind-specific branches across the documents, governance an
 
 ## Completion review
 
-Decomposition: pending
-Direct proposal work: pending
+Decomposition: confirmed
+Direct proposal work: confirmed
 
 Confirm both with the current Backlog close candidate; record confirmed and status done together after the user's
 confirmation. Missing assertions mean unconfirmed. Actual semantic scope changes reset both to pending; normal handoff does not.
