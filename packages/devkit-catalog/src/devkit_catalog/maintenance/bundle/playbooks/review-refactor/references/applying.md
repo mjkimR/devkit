@@ -33,44 +33,69 @@ Where the repository has no refactor workflow, the steps below are the procedure
    user made since), stop and have the user commit, stash or exclude them; never discard them yourself.
 2. Create the work item's own branch; never commit to the base branch. With the `spec` bundle, use the branch the
    overall-refactor workflow's Git policy allows.
-3. Split the work item into edit tasks. When useful and the host supports subagents, use general subagents for
-   parallel edits across many files, drafting and research; otherwise do the same steps yourself.
+3. Split the work item into edit tasks, each with its agreed change and its write scope. If the host supports
+   subagents, run them by §3; otherwise apply, verify and commit them yourself one after another by §4.
 
 ## 3. Subagent edits
 
-- Give each editing subagent the agreed edits and an explicit write scope: a subset of the batch's write scope,
-  disjoint from every other subagent working at the same time.
-- Run parallel editing subagents on the same change only. Apply, verify and commit changes one after another, each on
-  the previous checkpoint.
-- Check each result against the diff before relying on it: the diff stays inside the assigned paths and matches the
-  agreed change.
+1. Give each editing subagent the agreed edits and an explicit write scope: a subset of the batch's write scope,
+   disjoint from every other subagent working at the same time.
+2. Run edit tasks with disjoint write scopes concurrently by default, each in its own isolated checkout (for example
+   a Git worktree) that you create at the work item branch's current commit.
+   - Before handing a checkout to its subagent, run the repository's documented setup there (its README or agent
+     guide; for example dependency installation and managed-asset synchronization), so verification and the
+     repository's checks run there as on the work item branch.
+   - Run edit tasks whose write scopes overlap, or a change that builds on another, one after another, each on the
+     previous checkpoint.
+3. Subagents leave their results uncommitted.
+4. Move each result onto the work item branch one at a time (for example as a patch applied with a three-way merge,
+   `git apply --3way`). If a result does not apply cleanly on the current checkpoint, discard the partial apply and
+   redo that task on the current checkpoint.
+5. Check each result against the diff before relying on it: the diff stays inside the assigned paths and matches the
+   agreed change.
+6. Verify the change there and commit it alone by §4, through the repository's commit checks; never bypass them.
+7. Remove the checkouts you created once their results are committed or rejected.
+
 - Revert a rejected edit hunk by hunk; never reset a path another scope owns. Then redo the change or return it to
   the decision round.
+- Neither you nor a subagent adds an exception, an ignore entry, a rule setting or a bypass of the repository's
+  checks (for example a layering exception, a lint ignore or `--no-verify`) to make a change pass. A subagent reports
+  the failure; you resolve the placement or return the change to the decision round.
 - Subagents never commit, ask the user, approve a change or write the run's records.
 
 ## 4. Commits and verification
 
 1. Run the change's relevant verification before and after it, with only that change applied on the previous
-   checkpoint; record both results and the reachability evidence from `criteria.md` §4.
-2. Before each commit, confirm the working tree holds only the committed work plus the current change. Revert only
+   checkpoint; record both results and the preservation evidence from `criteria.md` §4 (reachability and, where it
+   applies, the differential comparison).
+2. After an agreed removal, recheck the branches, parameters, types, errors and helpers that only the removed path
+   reached. Remove those that became unreachable within the agreed change and its write scope; record each one you
+   keep or defer, with the reason.
+3. Before each commit, confirm the working tree holds only the committed work plus the current change. Revert only
    what the run itself wrote outside the change, such as files a verification run wrote; for anything else, stop as
    in §2 step 1.
-3. Commit the change as a checkpoint: one commit per change, the change record in the commit body.
-4. At the work item's final head, run the repository's full verification on a clean tree (for example the full test
+4. Commit the change as a checkpoint: one commit per change, the change record in the commit body.
+5. At the work item's final head, run the repository's full verification on a clean tree (for example the full test
    suite, lint, type checks and governance rules).
 
 ## 5. Review
 
 Before integration, have the work item's diff reviewed by a fresh reviewer subagent when the host supports it,
-otherwise do a self-review and record it as such. Fix its findings before integration. Where the repository's
-workflow defines review effort and bounded rounds (with the `spec` bundle, the run's activity effort, at `high` in
-bounded rounds), follow them.
+otherwise do a self-review and record it as such.
+
+- Brief the reviewer with each change's preservation claim. Ask for the inputs or states under which behavior
+  differs, each with a reproduction, plus the list of what it checked and found sound.
+- Confirm each reported difference against the code, then fix it before integration or return it to the decision
+  round as a behavior change.
+
+Where the repository's workflow defines review effort and bounded rounds (with the `spec` bundle, the run's activity
+effort, at `high` in bounded rounds), follow them.
 
 ## 6. Report
 
-Put the work item's report in the final response and the commit body: what changed and why, every breaking change
-(each compatibility-policy removal with the inputs it no longer accepts), the verification results and anything left
-for follow-up.
+Put the work item's report in the final response and the commit body: what changed and why, the approved behavior
+changes, every breaking change (each compatibility-policy removal with the inputs it no longer accepts), the
+verification results and anything left for follow-up.
 
 ## 7. Integration
 
@@ -78,6 +103,8 @@ Integrate only after the report, through the repository's integration path and i
 a repository policy, the user's explicit approval. The decision round never supplies it. With the `spec` bundle, use
 the session integration path with task kind `overall-refactor`; a single-module work item uses its feature
 workflow's path.
+
+Once the work item integrates or stops, update the run report's outcome with its integration state.
 
 ## 8. Contract removals
 

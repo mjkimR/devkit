@@ -1,0 +1,13 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'Scope: review-refactor playbook, CAP-DLV-review-refactor, its use case and
+  handbook journeys, plus a new ADR: parallel disjoint-scope application by default;
+  differential old/new preservation evidence (no git stash); divergence inventory
+  and a behavior-changes report section; reachability sweep after removals; adversarial
+  reviewer brief; report outcome updated after integration. Non-goal: the separate
+  performance playbook (own proposal).'
+by: user
+at: '2026-10-27T08:01:17.502523Z'

@@ -66,7 +66,7 @@ sequence.
    mode only, without a Unit, proposal or spec bundle (`ADR-overall-refactor-workflow`). A behavior-preserving work
    item agreed in a review-refactor decision round whose edited source files span more than one feature or module is
    `overall-refactor` work, and a single-module one follows the feature workflows
-   (`ADR-apply-behavior-preserving-batches-as-direct-mode-refactors`, `CAP-DLV-review-refactor`). The axes are not stored as
+   (`ADR-apply-review-refactor-changes-in-parallel-checkouts`, `CAP-DLV-review-refactor`). The axes are not stored as
    fields: the Unit's kind and the bound workflow show them.
 2. **Definitions are authoritative**: an executor MUST take stage order, checks, gates and returns from
    `devkit workflow show <id>` / `devkit workflow show --unit <dir>` and `devkit workflow next --unit <dir>`. The

@@ -3,13 +3,14 @@ id: ADR-apply-behavior-preserving-batches-as-direct-mode-refactors
 title: Apply behavior-preserving batches as direct-mode refactors
 summary: For applying a batch's agreed behavior-preserving changes, we route it as a direct-mode refactor whose subagents edit within the batch scope under the playbook agent's validation, to apply consolidations at refactor cost, accepting checks the agent re-runs per edit.
 proposal: SPEC-review-refactor
-status: accepted
+status: superseded
 created_at: 2026-10-26
+superseded_by: ADR-apply-review-refactor-changes-in-parallel-checkouts
 ---
 
 # [ADR-apply-behavior-preserving-batches-as-direct-mode-refactors] Apply behavior-preserving batches as direct-mode refactors
 
-- **Status**: Accepted
+- **Status**: Superseded by `ADR-apply-review-refactor-changes-in-parallel-checkouts`
 - **Date**: 2026-10-26
 
 ---
