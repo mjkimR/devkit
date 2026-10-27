@@ -13,10 +13,32 @@ from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow import Binding, Workspace
 from devkit_core.core.logs import get_logger
 
-from devkit_spec.base.errors import ProposalWorkflowError, SpecError
+from devkit_spec.base.errors import DEVKIT, ProposalWorkflowError, SpecError
 from devkit_spec.features.proposals.models.axes import DEFAULT_WORKFLOW
 
 _log = get_logger(__name__)
+
+
+def unbound_guidance(root: Path, unit: str, default: str) -> tuple[str, tuple[str, ...]]:
+    """The fix and details of an unbound notice for ``unit``: the exact bind command when one workflow other than
+    ``default`` is available, else the available workflow ids as details to choose from."""
+    try:
+        ids = sorted({doc.id for doc in Workspace(root, lint=None, ancestor=None).definitions() if doc.id != default})
+    except AdvisoryError:
+        ids = []
+    if len(ids) == 1:
+        return f"Once it fits the unit, bind it with `{DEVKIT} workflow bind --unit {unit} --workflow {ids[0]}`", ()
+    if not ids:
+        return (
+            f"Make {default} available ({DEVKIT} sync with its bundle selected), then bind it with "
+            f"`{DEVKIT} workflow bind --unit {unit} --workflow {default}`",
+            (),
+        )
+    return (
+        f"Bind it with `{DEVKIT} workflow bind --unit {unit} --workflow <id>`, <id> one of the workflows in [DETAIL] "
+        "that fits the unit",
+        (f"available workflows: {', '.join(ids)}",),
+    )
 
 
 def resolve_binding(

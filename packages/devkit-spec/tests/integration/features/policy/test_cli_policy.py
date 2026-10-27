@@ -69,6 +69,8 @@ def test_main_approval_boundaries_cannot_be_skipped(workspace: Path, write: Writ
     write(".devkit/config.toml", f'[workflow.approvals]\n{gate} = "off"\n')
     result = _policy(workspace)
     assert result.exit_code == 2 and "SPEC_CONFIG_INVALID" in result.stderr
+    # The fix never cites a command that fails on the same malformed table.
+    assert "spec policy" not in result.stderr
 
 
 def test_a_key_for_no_gate_warns_and_is_not_listed(workspace: Path, write: Write) -> None:
@@ -78,6 +80,7 @@ def test_a_key_for_no_gate_warns_and_is_not_listed(workspace: Path, write: Write
     assert "(SPEC_APPROVAL_KEY_IGNORED)" in result.stderr
     data = json.loads(_policy(workspace, "--format", "json").stdout)
     assert "exception" not in data["approvals"] and data["notices"][0]["code"] == "SPEC_APPROVAL_KEY_IGNORED"
+    assert data["notices"][0]["advisory"]["target_files"] == [".devkit/config.toml"]
     assert _policy(workspace, "--strict").exit_code == 1
 
 

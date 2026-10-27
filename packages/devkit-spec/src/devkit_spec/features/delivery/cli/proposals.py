@@ -319,8 +319,19 @@ def padr_cmd(
     "no gate:plan-accept record and no worker envelope",
 )
 @click.option("--check", "check_only", is_flag=True, help="Run every check and write nothing")
-@click.option("--mode", type=click.Choice(["accept_only", "accept_and_handoff"]), default=None)
-@click.option("--effort", type=click.Choice(list(EFFORTS)), default=None)
+@click.option(
+    "--mode",
+    type=click.Choice(["accept_only", "accept_and_handoff"]),
+    default=None,
+    help="Compose the Host-authorized lifecycle from the retained base: accept and integrate plan-<slug> "
+    "(accept_only), or also start Development (accept_and_handoff) [default: the basic acceptance]",
+)
+@click.option(
+    "--effort",
+    type=click.Choice(list(EFFORTS)),
+    default=None,
+    help="With --mode accept_and_handoff: the Development activity-effort",
+)
 @WORKSPACE
 @FORMAT_OPTION
 @boundary
@@ -392,7 +403,13 @@ def accept_cmd(
 
 @proposal_group.command(name="handoff")
 @click.argument("slug")
-@click.option("--effort", type=click.Choice(list(EFFORTS)), default=None)
+@click.option(
+    "--effort",
+    type=click.Choice(list(EFFORTS)),
+    default=None,
+    help="Compose from the retained base: create dev-<slug>, run setup and hand off at this Development "
+    "activity-effort [default: the plain handoff in the dev-<slug> checkout]",
+)
 @WORKSPACE
 @FORMAT_OPTION
 @boundary

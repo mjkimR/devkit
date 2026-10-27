@@ -2,7 +2,7 @@
 
 Text output: ``[SPEC: SPEC-<slug> path=<bundle dir> workflow=<id|->]``, with a trailing ``namespace=<name>`` when the
 bundle reports one (``CreatedSpec.namespace``), and, when ``spec.md`` is bound to a workflow,
-``[NEXT_CMD: devkit workflow next --unit <dir>]``. An unbound spec is a ``SPEC_UNBOUND`` notice on stderr.
+``[NEXT_CMD: uv run devkit workflow next --unit <dir>]``. An unbound spec is a ``SPEC_UNBOUND`` notice on stderr.
 """
 
 from __future__ import annotations

@@ -30,7 +30,7 @@ def test_spec_new_registers_its_created_bundle_without_an_extra_command(tmp_path
     data = json.loads(result.stdout)
     assert (task / data["dir"] / "spec.md").is_file()
     assert data["workflow"] == "sdd-spec-feature"
-    assert data["scope"]["record"]["spec"] == data["dir"]
+    assert data["scope"]["spec"] == data["dir"]
     assert load_token(open_session(task).location.token_path) == data["scope"]["token"]
 
 

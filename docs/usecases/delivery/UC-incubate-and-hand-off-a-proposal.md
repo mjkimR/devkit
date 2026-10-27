@@ -102,8 +102,9 @@ capabilities:
   accepted plan, the setup and worktree effects and the Development effort defaulting to the `dev_effort` hint, and
   only after the user's conversational approval runs `devkit spec proposal handoff <slug> --effort <level>`; under
   `auto` it runs the same command with `--effort` equal to `dev_effort`. A prerequisite that does not hold refuses
-  with `SPEC_HANDOFF_NOT_READY`, and a base, plan or policy change since its check with `SPEC_HANDOFF_STALE`, before
-  any effect (exit `2`). When the new worktree no longer holds the reviewed base
+  with its own code before any effect (exit `2`): `SPEC_HANDOFF_NOT_READY` (not accepted, needs decomposition or
+  Planning incomplete), `SPEC_HANDOFF_BASE_DIRTY`, `SPEC_HANDOFF_WORKTREE_CONFLICT` or `SPEC_PROPOSAL_WRONG_WORKTREE`
+  (off the retained base checkout); a base, plan or policy change since its check is `SPEC_HANDOFF_STALE`. When the new worktree no longer holds the reviewed base
   commit or setup changed its files, the command keeps the worktree and reports `status=needs_recovery` with
   `SPEC_HANDOFF_STALE` (exit `1`) for inspection (`CAP-DLV-proposal-incubation`); resumes at step 8.
 - **7b.** The proposal is not `accepted`: the system refuses with `SPEC_PROPOSAL_NOT_APPROVED` and writes nothing
@@ -143,7 +144,7 @@ capabilities:
 - **Then**: `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` exists with `spec.md` bound to `sdd-spec-feature`, the PADR is an
   accepted ADR under `docs/decisions/<YYYY-MM>/`, the materials are under `docs/materials/<YYYY-MM>/<YYYYMMDD>-<slug>/`,
   the proposal directory is gone, and the output lists `[PROMOTED_ADR: ...]`, `[MATERIALS: ...]` and
-  `[NEXT_CMD: devkit workflow next --unit <dir>]`
+  `[NEXT_CMD: uv run devkit workflow next --unit <dir>]`
 
 ### Scenario 2: The proposal's approvals carry by name
 - **Covers**: main success scenario

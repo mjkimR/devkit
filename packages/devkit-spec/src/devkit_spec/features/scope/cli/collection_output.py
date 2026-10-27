@@ -1,10 +1,20 @@
 """Text rendering for explicit scope observation."""
 
+import json
 from typing import Any
 
 import click
 
-from devkit_spec.utils.output import fields_line
+from devkit_spec.utils.output import fields_line, sentinel
+
+
+def _task(key: str | None) -> str:
+    """The task identity of an observation's ``[namespace, identity, unit]`` key, ``-`` without one."""
+    return json.loads(key)[1] if key else "-"
+
+
+def _unit(key: str | None) -> str:
+    return json.loads(key)[2] if key else "-"
 
 
 def render(data: dict[str, Any]) -> None:
@@ -22,7 +32,8 @@ def render(data: dict[str, Any]) -> None:
             fields_line(
                 "SCOPE_OBSERVATION",
                 id=observation["observation_id"],
-                task=observation["task_key"] or "-",
+                task=_task(observation["task_key"]),
+                unit=_unit(observation["task_key"]),
                 source=observation["provenance"]["source"],
                 sha=observation["provenance"].get("sha", "-"),
                 missing=",".join(observation["missing_layers"]) or "-",
@@ -41,9 +52,9 @@ def render(data: dict[str, Any]) -> None:
         )
         for evidence in [*pair["docs"], *pair["code"]]:
             click.echo(
-                fields_line(
+                sentinel(
                     "EVIDENCE",
-                    path=evidence["path"],
+                    evidence["path"],
                     a=pair["a"],
                     b=pair["b"],
                     kind=evidence["kind"],

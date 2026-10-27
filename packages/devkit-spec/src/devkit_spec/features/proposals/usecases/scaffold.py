@@ -54,7 +54,7 @@ from devkit_spec.features.proposals.models.axes import (
     PROPOSAL_WORKFLOW,
     TASK_KINDS,
 )
-from devkit_spec.features.proposals.usecases.binding import resolve_binding
+from devkit_spec.features.proposals.usecases.binding import resolve_binding, unbound_guidance
 from devkit_spec.utils.text import foreign_letters
 
 PROPOSAL_FILE = "proposal.md"
@@ -642,11 +642,13 @@ class CreateProposalUseCase(BaseUseCase):
             dev_effort=dev,
         )
         if unbound is not None:
+            fix, choices = unbound_guidance(root, result.dir, PROPOSAL_WORKFLOW)
             result.notices.append(
                 ProposalUnboundNotice(
                     f"PROP-{slug} is not bound to a workflow: {PROPOSAL_WORKFLOW} is not available ({unbound.code})",
+                    *choices,
                     target_files=[result.path],
-                    fix=f"Bind it with {DEVKIT} workflow bind --unit {result.dir} --workflow <id> once a workflow fits it",
+                    fix=fix,
                 )
             )
         return result

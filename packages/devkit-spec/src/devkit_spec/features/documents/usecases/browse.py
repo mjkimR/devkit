@@ -271,7 +271,12 @@ class ReferenceDocumentsUseCase(BaseUseCase):
     ) -> tuple[Document, list[str], list[_RefGroup], Sequence[AdvisoryError]]:
         _check_page(limit, offset)
         index = DocumentIndex.load(root)
-        document = index.resolve(document_id)
+        try:
+            document = index.resolve(document_id)
+        except AdvisoryError as exc:
+            # The documents left out while indexing still reach the caller with the refusal (ARCH-08-1 section 4).
+            vars(exc)["notices"] = tuple(index.problems)
+            raise
         groups = index.outgoing(document) if direction == "out" else index.incoming(document.id)
         keys = list(groups)
         shown = page(keys, offset, limit)

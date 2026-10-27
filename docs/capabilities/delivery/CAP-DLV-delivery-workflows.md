@@ -584,7 +584,7 @@ Wrapped results retain their codes and actions.
 
 `--format json` emits one object containing `inputs` (value/source), `scope` entries, `base`, `head`, `changed_paths`,
 optional `outside_scope` and `base_checkout`, `checks`, `errors` (one advisory per failed check), `notices` and
-`exit_code`. Text output emits `[WORKER_INSPECTION: verdict=pass|fail base= head=]`, then input, scope,
+`exit_code`. Text output emits `[WORKER_INSPECTION: verdict=pass|fail base= head=]`, then `[INPUT: ...]`, `[SCOPE_ENTRY: <path> source= ...]`,
 changed-path and check sentinels; each failed check is an `[ERROR]` block on stderr after the notices. `-w` names
 the worktree to inspect instead of the current directory, and `--strict` exits `1` on a warning when no check
 failed. The compared commits and changed paths are reviewer payload

@@ -112,7 +112,7 @@ from devkit_spec.features.proposals.services.rewrite import (
     rewrite_links,
     rewrite_paths,
 )
-from devkit_spec.features.proposals.usecases.binding import resolve_binding
+from devkit_spec.features.proposals.usecases.binding import resolve_binding, unbound_guidance
 from devkit_spec.features.proposals.usecases.feedback import plan_open_feedback
 from devkit_spec.features.proposals.usecases.scaffold import (
     DECISIONS,
@@ -1116,11 +1116,13 @@ def _result(
         unresolved=sorted(report.unresolved, key=lambda u: (u.path, u.line, u.kind)),
     )
     if unbound is not None:
+        fix, choices = unbound_guidance(root, spec_rel, DEFAULT_WORKFLOW)
         notices.append(
             ProposalUnboundNotice(
                 f"SPEC-{slug} is not bound to a workflow: {DEFAULT_WORKFLOW} is not available ({unbound.code})",
+                *choices,
                 target_files=[f"{spec_rel}/{SPEC_FILE}"],
-                fix=f"Bind it with {DEVKIT} workflow bind --unit {spec_rel} --workflow <id> once a workflow fits it",
+                fix=fix,
             )
         )
     if result.unresolved:

@@ -71,6 +71,11 @@ def test_create_proposal_bundle(workspace: Path) -> None:
         "next_command": None,
     }
     assert [notice.code for notice in created.notices] == ["SPEC_PROPOSAL_UNBOUND"]
+    # No workflow is available at all: the fix names the exact command for the default, no <id> placeholder.
+    assert created.notices[0].fix == (
+        "Make sdd-proposal available (uv run devkit sync with its bundle selected), then bind it with "
+        "`uv run devkit workflow bind --unit docs/proposals/PROP-fast-engine --workflow sdd-proposal`"
+    )
     assert (bundle / "decisions").is_dir() and (bundle / "materials").is_dir()
     meta = parse((bundle / "proposal.md").read_text(encoding="utf-8")).data
     assert meta is not None

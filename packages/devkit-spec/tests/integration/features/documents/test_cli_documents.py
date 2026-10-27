@@ -288,7 +288,7 @@ def test_feedback_lines_and_records_carry_severity_scope_and_target(feedback: Pa
     # AC-06
     lines = _spec("list", "--where", "scope=upstream", "--where", "severity=critical", workspace=feedback).stdout
     assert lines.splitlines()[0] == (
-        "[DOCUMENT: FB-a kind=feedback status=open path=specs/2026-10/feedback/20261013-a.md tasks=- "
+        "[DOCUMENT: FB-a kind=feedback status=open path=specs/2026-10/feedback/20261013-a.md "
         'severity=critical scope=upstream target="devkit spec list" title=a]'
     )
     capability = _spec("list", "capability", workspace=feedback).stdout.splitlines()[0]
@@ -301,10 +301,11 @@ def test_feedback_lines_and_records_carry_severity_scope_and_target(feedback: Pa
         "upstream",
         "devkit spec list",
     )
-    assert (records["FB-f"]["severity"], records["FB-f"]["scope"], records["FB-f"]["target"]) == (None, None, None)
+    # A key without a value is left out of the JSON entry.
+    assert not {"severity", "scope", "target", "tasks"} & set(records["FB-f"])
     assert "severity" not in records["CAP-CORE-a"]
     assert (
-        "[DOCUMENT: FB-f kind=feedback status=open path=specs/2026-10/feedback/20261013-f.md tasks=- "
+        "[DOCUMENT: FB-f kind=feedback status=open path=specs/2026-10/feedback/20261013-f.md "
         "severity=- scope=- target=- title=f]"
     ) in _spec("list", "feedback", workspace=feedback).stdout.splitlines()
 
@@ -357,9 +358,9 @@ def test_proposal_lines_and_records_carry_task_kind_and_effort_hints(workspace: 
 
     lines = _spec("list", "proposal", workspace=workspace).stdout.splitlines()
     assert lines[:2] == [
-        "[DOCUMENT: PROP-a kind=proposal status=draft path=docs/proposals/PROP-a/proposal.md tasks=- "
+        "[DOCUMENT: PROP-a kind=proposal status=draft path=docs/proposals/PROP-a/proposal.md "
         "task_kind=feature planning_effort=low dev_effort=high title=Alpha]",
-        "[DOCUMENT: PROP-b kind=proposal status=accepted path=docs/proposals/PROP-b/proposal.md tasks=- "
+        "[DOCUMENT: PROP-b kind=proposal status=accepted path=docs/proposals/PROP-b/proposal.md "
         "task_kind=- planning_effort=- dev_effort=- title=Beta]",
     ]
     records = {
@@ -370,11 +371,7 @@ def test_proposal_lines_and_records_carry_task_kind_and_effort_hints(workspace: 
         records["PROP-a"]["planning_effort"],
         records["PROP-a"]["dev_effort"],
     ) == ("feature", "low", "high")
-    assert (
-        records["PROP-b"]["task_kind"],
-        records["PROP-b"]["planning_effort"],
-        records["PROP-b"]["dev_effort"],
-    ) == (None, None, None)
+    assert not {"task_kind", "planning_effort", "dev_effort", "tasks"} & set(records["PROP-b"])
     assert "planning_effort" not in records["CAP-CORE-a"] and "dev_effort" not in records["CAP-CORE-a"]
     assert _ids(workspace, "proposal", "--where", "planning_effort=low", "--where", "dev_effort=high") == ["PROP-a"]
 

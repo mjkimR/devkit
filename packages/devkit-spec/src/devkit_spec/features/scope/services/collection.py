@@ -72,6 +72,8 @@ class Collector:
         return Deadline(max(0.001, min(self.options.source_timeout, self.compute.remaining())))
 
     def problem(self, source: str, reason: str) -> None:
+        if dict(source_id=source[:512], reason=reason) in self.problems:
+            return  # one gap per source and reason, however many stages meet it
         self.problem_count += 1
         if len(self.problems) < 32:
             self.problems.append(dict(source_id=source[:512], reason=reason))
@@ -236,9 +238,14 @@ class Collector:
             if not candidate.worktree:
                 raise
             # Unknown shared/detached worktree changes remain separately attributable physical evidence.
-            clean_unbound = not dirty_paths and candidate.branch and not inventory.ACTIVITY.fullmatch(candidate.branch)
+            unbound = bool(candidate.branch) and not inventory.ACTIVITY.fullmatch(candidate.branch)
+            # The base checkout (the main worktree off any activity branch) is never a task, dirty or not.
+            base = unbound and text(
+                root, "rev-parse", "--path-format=absolute", "--git-dir", deadline=deadline
+            ) == text(root, "rev-parse", "--path-format=absolute", "--git-common-dir", deadline=deadline)
+            clean_unbound = base or (unbound and not dirty_paths)
             candidate.activity = "inactive" if clean_unbound else "unknown"
-            candidate.reason = "clean-unbound" if clean_unbound else "identity-ambiguous"
+            candidate.reason = "base-checkout" if base else "clean-unbound" if clean_unbound else "identity-ambiguous"
             scope = ScopeSet(candidate.source_id)
             add_paths(scope, dirty_paths, reader, deadline)
             if before != fingerprint(root, deadline) or (
@@ -533,6 +540,7 @@ class Collector:
                 ScopeCollectionPartialWarning(
                     f"Scope observation has {self.problem_count} coverage gap(s)",
                     *(f"{p['source_id']}: {p['reason']}" for p in self.problems),
+                    target_files=list(dict.fromkeys(p["source_id"] for p in self.problems)),
                 )
             )
         data: dict[str, Any] = dict(

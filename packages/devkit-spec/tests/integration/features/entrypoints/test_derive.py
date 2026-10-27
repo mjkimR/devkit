@@ -78,7 +78,8 @@ def test_load_bundle_parses_boundaries(workspace: Path, write: Write) -> None:
 def test_load_bundle_errors(workspace: Path, write: Write) -> None:
     with pytest.raises(EntrypointsInputMissingError) as missing:
         load_bundle(workspace, "specs/2026-10/missing")
-    assert missing.value.target_files == ("specs/2026-10/missing/tasks.md",)
+    # A bundle that does not exist names the argument, not a file to write.
+    assert missing.value.target_files == ("--spec",) and "Write the file" not in str(missing.value.fix)
     write("specs/2026-10/20261002-bad/tasks.md", "- [ ] t\n")
     with pytest.raises(EntrypointsInputMissingError):
         load_bundle(workspace, "specs/2026-10/20261002-bad")

@@ -188,10 +188,11 @@ Option conflicts fail with devkit's `ARGUMENT_INVALID`: `--spec` with `--all` or
 
 ```text
 [CANDIDATES: CAP-CORE-engine path=docs/capabilities/core/CAP-CORE-engine.md new=src/engine missing=- folded=src/engine/parse.py declared=-]
-[SKIPPED: N/A kind=boundary spec=SPEC-engine task=3 reason=not-a-path]
-[SKIPPED: docs/decisions/2026-10/20261001-x.md kind=target spec=SPEC-engine reason=not-entrypoint-bearing]
+[SKIPPED_COUNT: not-a-path kind=boundary count=1]
+[SKIPPED_COUNT: not-entrypoint-bearing kind=target count=1]
 [APPLIED: CAP-CORE-engine path=docs/capabilities/core/CAP-CORE-engine.md added=src/engine/]
-[SUMMARY: pairs=2 new=2 declared=0 skipped=2 applied=1]
+[PAGE: total=1 offset=0 limit=20 count=1 next=-]
+[SUMMARY: pairs=2 new=1 missing=0 folded=1 declared=0 skipped=2 applied=1]
 ```
 
 - `[CANDIDATES: <doc-id> path= new= missing= folded= declared=]` per document, in document path order: its
@@ -200,9 +201,17 @@ Option conflicts fail with devkit's `ARGUMENT_INVALID`: `--spec` with `--all` or
   covered by an existing entrypoint. With `--all` each path carries its spec count, `src/engine(2)`. One line per
   document keeps the review per document, as `--apply --target` applies it; `--format json` lists every pair with
   its `spec` and `task` (or `count` and `specs`) and `folded_into`.
-- `[SKIPPED: <value> kind= spec= task= reason=]` per input or candidate left out; `spec=` and `task=` only when known.
+- `[SKIPPED_COUNT: <reason> kind= count=]` per kind and reason of the inputs or candidates left out. With
+  `--skipped` instead one `[SKIPPED: <value> kind= spec= task= reason=]` per item; `spec=` and `task=` only when
+  known. JSON `skipped` holds `{kind, reason, count}` entries, or the items with `--skipped`. A skipped input is left
+  out of the derivation, unlike `scope`'s `[UNRESOLVED]`, which counts an input as an unknown overlap; both use the
+  same reason names (`not-a-path`).
 - `[APPLIED: <doc-id> path= added=]` per document written (`added` comma-separated).
-- `[SUMMARY: pairs= new= declared= skipped= applied=]` last.
+- `[PAGE: total= offset= limit= count= next=]` over the documents, then `[NEXT_CMD: uv run devkit spec entrypoints
+  derive ... --offset <next>]` when more follow; `--limit` (default `20`, `0` for all) and `--offset` page the
+  `[CANDIDATES]` lines and JSON `pairs` (JSON adds `page`). Paging never limits what `--apply` writes.
+- `[SUMMARY: pairs= new= missing= folded= declared= skipped= applied=]` last, over every pair: `new`, `missing` and
+  `folded` count the not-declared pairs as the `[CANDIDATES]` groups do.
 
 | `kind` | Reasons |
 | --- | --- |

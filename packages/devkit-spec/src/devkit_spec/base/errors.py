@@ -52,7 +52,7 @@ class SpecConfigError(SpecError, ConfigError):
 
     code = "SPEC_CONFIG_INVALID"
     target_files = (".devkit/config.toml",)
-    fix = f"Correct the [tool.spec] table in .devkit/config.toml ({DEVKIT} spec policy shows the effective values)"
+    fix = "Correct the value the message names in the [tool.spec] table of .devkit/config.toml, then rerun"
 
 
 class GlossaryInvalidError(SpecError):
@@ -484,11 +484,15 @@ class ScopeError(SpecError):
 
 
 class ScopeCollectionPartialWarning(ScopeError):
-    """Some requested observation or comparison evidence is unavailable."""
+    """``scope collect``: some requested observation or comparison evidence is unavailable (``WARNING``); [TARGET]
+    names each source with a gap, [DETAIL] each source and reason once. The base checkout is never a gap."""
 
     code = "SPEC_SCOPE_COLLECTION_PARTIAL"
     level = Level.WARNING
-    fix = "Inspect coverage reasons; repair inaccessible inputs or increase collection budgets, then collect again"
+    fix = (
+        f"For source-timeout or result-limit run `{DEVKIT} spec scope collect --timeout 120 --source-timeout 30`; "
+        "a source that is identity-ambiguous or has an unknown base needs its unit committed on its activity branch"
+    )
 
 
 class ScopeCollectionFailedError(ScopeError):

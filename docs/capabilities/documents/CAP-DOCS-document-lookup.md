@@ -119,7 +119,7 @@ changes an argument, output, code or exit status.
    historical (`0` with `--history` or `--status`).
 3. When more items follow, `[NEXT_CMD: uv run devkit spec ...]` repeats the command with every given filter, `-w` when it
    was given, `--limit` and the next `--offset`; each `--where` is repeated as given, in order.
-4. When `hidden` is above zero, `list` prints `[HISTORY_CMD: devkit spec list ... --history]` last: the command with
+4. When `hidden` is above zero, `list` prints `[HISTORY_CMD: uv run devkit spec list ... --history]` last: the command with
    every given filter, `--history`, `-w` when it was given and `--limit` when it is not the default.
 
 ## 4. Interfaces & Data Contracts
@@ -145,16 +145,16 @@ devkit spec list feedback --status resolved            # resolved feedback, with
 [REF: UC-find-docs path=docs/usecases/core/UC-find-docs.md status=active fields=body,usecases count=2]
 [REF: UC-removed path=- status=- fields=body count=1]
 [DOCUMENT: SPEC-search kind=spec status=draft path=specs/2026-10/20261002-search/spec.md tasks=1/2 title="Search"]
-[DOCUMENT: PROP-search kind=proposal status=draft path=docs/proposals/PROP-search/proposal.md tasks=- task_kind=feature planning_effort=medium dev_effort=medium title="Search"]
-[DOCUMENT: FB-slow-sync kind=feedback status=open path=specs/2026-10/feedback/20261013-slow-sync.md tasks=- severity=critical scope=upstream target="devkit sync" title="Sync blocks"]
+[DOCUMENT: PROP-search kind=proposal status=draft path=docs/proposals/PROP-search/proposal.md task_kind=feature planning_effort=medium dev_effort=medium title="Search"]
+[DOCUMENT: FB-slow-sync kind=feedback status=open path=specs/2026-10/feedback/20261013-slow-sync.md severity=critical scope=upstream target="devkit sync" title="Sync blocks"]
 [PAGE: total=42 offset=0 limit=20 count=20 next=20 hidden=3]
 [NEXT_CMD: uv run devkit spec list spec --limit 20 --offset 20]
-[HISTORY_CMD: devkit spec list spec --history]
+[HISTORY_CMD: uv run devkit spec list spec --history]
 ```
 
 `resolve` prints `[DOCUMENT: <id> kind= status= path=]`, with `alias=<alias>` appended when the argument was an
 alias; `list` prints
-`[DOCUMENT: <id> kind= status= path= tasks= task_kind= planning_effort= dev_effort= severity= scope= target= namespace= title=]`, `task_kind=`, `planning_effort=` and `dev_effort=` only on proposal lines, `severity=`, `scope=` and
+`[DOCUMENT: <id> kind= status= path= tasks= task_kind= planning_effort= dev_effort= severity= scope= target= namespace= title=]`, `tasks=` only on spec lines, `task_kind=`, `planning_effort=` and `dev_effort=` only on proposal lines, `severity=`, `scope=` and
 `target=` only on feedback lines, `namespace=` only with registered namespaces. Values follow devkit's sentinel conventions: `-` for empty, `yes`/`no` for booleans, a JSON
 string when the value holds spaces, quotes or brackets.
 
@@ -164,7 +164,7 @@ string when the value holds spaces, quotes or brackets.
 | --- | --- |
 | `resolve` | `documents` (document records: `id`, `kind`, `path`, `status`, `title`, `area`, `summary`, plus `alias`: the alias argument, `null` for a declared ID), `errors` (advisory objects), `notices` |
 | `refs` | `id`, `direction`, `total`, `offset`, `limit`, `items` (`id`, `path`, `status`, `references`: `target`, `source`, `path`, `field`, `line`, `column`, `bracket`), `notices`; `path` and `status` are `null` for an ID no single document declares |
-| `list` | `total`, `hidden` (the page line's `hidden`), `offset`, `limit`, `namespace` (the selection, `null` for every namespace), `documents` (document records plus `namespace`, `historical` (`true` for a document historical by rule 7 or 8 of `CAP-DOCS-document-model`), `tasks`; proposal records also `task_kind`, `planning_effort`, `dev_effort`, `null` when absent; feedback records also `severity`, `scope`, `target`, `null` when absent; a draft proposal whose `plan-<slug>` exists, locally or fetched, is shown with `status: reviewing` and its `planning_branch`, `CAP-DLV-proposal-incubation` rule 10), `notices` |
+| `list` | `total`, `hidden` (the page line's `hidden`), `offset`, `limit`, `namespace` (the selection, `null` for every namespace), `documents` (document records plus `namespace`, `historical` (`true` for a document historical by rule 7 or 8 of `CAP-DOCS-document-model`), `tasks` (spec records); proposal records also `task_kind`, `planning_effort`, `dev_effort`; feedback records also `severity`, `scope`, `target`; a key without a value is left out; a draft proposal whose `plan-<slug>` exists, locally or fetched, is shown with `status: reviewing` and its `planning_branch`, `CAP-DLV-proposal-incubation` rule 10), `notices` |
 
 ### 4.4 Exit Codes
 
@@ -177,7 +177,7 @@ notices always exit `0`.
 | --- | --- | --- | --- |
 | `SPEC_ID_UNRESOLVED` | `ERROR` (`INPUT_ERROR`) | `UnresolvedIdError` | No document declares the ID. |
 | `SPEC_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | More than one document declares the ID; `[TARGET]` lists them. |
-| `SPEC_DOCUMENT_INVALID` | `WARNING` | `DocumentInvalidWarning` | A file under `docs/` or `specs/` cannot be read or has malformed frontmatter; it is left out. |
+| `SPEC_DOCUMENT_INVALID` | `WARNING` | `DocumentInvalidWarning` | A file under `docs/` or `specs/` cannot be read or has malformed frontmatter; it is left out. A `refs` that then fails (`SPEC_ID_UNRESOLVED`) still reports these warnings, before the error in text and under `notices` of `{"error": ...}` in JSON. |
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_core.base.errors.ArgumentError` | A negative `--limit` or `--offset`; a `--where` item without `=`, field or value; an unknown `--namespace`, or `--namespace` combined with `--all-namespaces`. |
 | `SPEC_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_spec.base.errors.SpecConfigError` | `list`: a malformed `[tool.spec]` table, namespaces included (`CAP-DLV-project-policy`). |
 | `SPEC_ENTRYPOINTS_PATH_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_spec.base.errors.EntrypointsPathError` | `list --file`: the path breaks the entrypoint path contract (`CAP-TRACE-code-entrypoints`). |

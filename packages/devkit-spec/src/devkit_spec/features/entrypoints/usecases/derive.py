@@ -171,7 +171,9 @@ class DeriveEntrypointsUseCase(BaseUseCase):
                 )
         summary = {
             "pairs": len(pairs),
-            "new": sum(pair.state is State.NEW for pair in pairs),
+            "new": sum(pair.state is State.NEW and pair.exists and pair.folded_into is None for pair in pairs),
+            "missing": sum(pair.state is State.NEW and not pair.exists and pair.folded_into is None for pair in pairs),
+            "folded": sum(pair.state is State.NEW and pair.folded_into is not None for pair in pairs),
             "declared": sum(pair.state is State.DECLARED for pair in pairs),
             "skipped": len(skipped),
             "applied": len(applied),

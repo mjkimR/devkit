@@ -12,8 +12,8 @@ from types import SimpleNamespace
 import pytest
 from click.testing import CliRunner
 
+from devkit_spec.base.errors import WorkerBaseUnresolvedError, WorkerHeadUnresolvedError, WorkerUnitUnresolvedError
 from devkit_spec.cli import cli
-from devkit_spec.features.worker.usecases.inputs import BaseUnresolved, HeadUnresolved, UnitUnresolved
 from devkit_spec.features.worker.usecases.inspect import InspectWorkerUseCase
 
 UNIT = "specs/2026-10/20261020-example"
@@ -124,7 +124,7 @@ def test_conflicting_problem_bases(repo: Path) -> None:
     worker(repo, 1, problem_base=git(repo, "rev-parse", "main"))
     worker(repo, 2, problem_base=git(repo, "rev-parse", "HEAD"))
     worker(repo, 3)
-    with pytest.raises(BaseUnresolved):
+    with pytest.raises(WorkerBaseUnresolvedError):
         inspect(repo, runner=passed)
 
 
@@ -166,11 +166,11 @@ def test_head_mismatch_skips_rules(repo: Path) -> None:
 
 
 def test_required_inputs(repo: Path) -> None:
-    with pytest.raises(HeadUnresolved):
+    with pytest.raises(WorkerHeadUnresolvedError):
         inspect(repo, runner=passed)
     worker(repo, 1)
     git(repo, "checkout", "--detach", "-q")
-    with pytest.raises(UnitUnresolved):
+    with pytest.raises(WorkerUnitUnresolvedError):
         inspect(repo, runner=passed)
     assert inspect(repo, unit=UNIT, base="main", head="HEAD", runner=passed)["head"] == git(repo, "rev-parse", "HEAD")
 
@@ -338,14 +338,14 @@ def test_linked_worktree_observes_base_without_checking_it(repo: Path) -> None:
 def test_missing_problem_base_is_unresolved(repo: Path) -> None:
     worker(repo, 1, problem_base="")
     worker(repo, 2)
-    with pytest.raises(BaseUnresolved):
+    with pytest.raises(WorkerBaseUnresolvedError):
         inspect(repo, runner=passed)
 
 
 def test_ambiguous_unit_and_readded_worker(repo: Path) -> None:
     write(repo, "specs/2026-09/20260920-example/spec.md", "---\nworkflow: sdd-spec-feature\n---\n")
     worker(repo, 1)
-    with pytest.raises(UnitUnresolved):
+    with pytest.raises(WorkerUnitUnresolvedError):
         inspect(repo, runner=passed)
     path = repo / UNIT / "envelopes/worker-01.yaml"
     text = path.read_text()
@@ -353,7 +353,7 @@ def test_ambiguous_unit_and_readded_worker(repo: Path) -> None:
     commit(repo)
     path.write_text(text)
     commit(repo)
-    with pytest.raises(HeadUnresolved):
+    with pytest.raises(WorkerHeadUnresolvedError):
         inspect(repo, unit=UNIT, runner=passed)
 
 

@@ -62,7 +62,7 @@ def _record_warnings(
             f"{len(problems)} record file(s) of the namespace could not be read and were left out",
             *(f"{problem.file}: {problem.reason}" for problem in problems),
             *own,
-            target_files=[str(directory / problem.file) for problem in problems],
+            target_files=[location.shown(directory / problem.file) for problem in problems],
         )
     ]
 
@@ -96,8 +96,13 @@ class QueryScopesUseCase(BaseUseCase):
             mine = None
             others, problems = session.registry.query(location.namespace, session.deadline)
         if spec_dir is not None:
-            planned = from_spec(root, _spec_dir(root, spec_dir))
-            pairs = compare_with(planned, [record.to_set() for record in others])
+            relative = _spec_dir(root, spec_dir)
+            planned = from_spec(root, relative)
+            # A record of the same bundle is the planned task itself, never an overlap with it.
+            pairs = compare_with(
+                planned,
+                [record.to_set() for record in others if record.spec != relative and record.task_id != planned.id],
+            )
         elif mine is not None:
             pairs = compare_with(mine.to_set(), [record.to_set() for record in others])
         else:

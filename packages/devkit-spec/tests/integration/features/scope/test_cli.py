@@ -86,16 +86,20 @@ def test_two_worktrees_register_query_update_release_and_sweep(worktrees: tuple[
     )
     assert match, first.stdout
     namespace, shared, token = match.groups()
-    assert Path(shared) == repo / ".git/devkit-spec-scope"
+    # Named relative to the workspace, never absolute.
+    assert not Path(shared).is_absolute() and (a / shared).resolve() == (repo / ".git/devkit-spec-scope").resolve()
     second = _scope(b, "register", "--spec", SPEC_B, "--format", "json")
     assert second.exit_code == 0, second.output
-    assert _json(second)["namespace"] == namespace and "token_hash" not in _json(second)["record"]
+    registered = _json(second)
+    assert registered["namespace"] == namespace and registered["task"] and registered["token"]
+    # A compact registration: no record internals or timestamps.
+    assert not {"record", "token_hash", "updated_at"} & set(registered)
 
     query = _scope(a, "query")
     assert query.exit_code == 0, query.output
     assert token not in query.stdout, "the token is printed by register only"
     lines = query.stdout.splitlines()
-    assert lines[0].startswith(f"[RECORD: SPEC-s revision=1 worktree={a} ") and lines[0].endswith("own=yes]")
+    assert lines[0].startswith("[RECORD: SPEC-s revision=1 worktree=. ") and lines[0].endswith("own=yes]")
     assert lines[1].startswith("[RECORD: SPEC-b revision=1 ") and lines[1].endswith("own=no]")
     assert lines[2] == "[PAIR: a=SPEC-s b=SPEC-b docs=1 code=1 unresolved=4]"
     assert (
@@ -120,8 +124,8 @@ def test_two_worktrees_register_query_update_release_and_sweep(worktrees: tuple[
     assert data["ack"]["status"] == "applied" and data["ack"]["revision"] == 3 and data["pairs"][0]["b"] == "SPEC-s"
 
     released = _scope(a, "release")
-    assert released.stdout == "[SCOPE: SPEC-s released=yes registered=yes already=no revision=1]\n"
-    assert _scope(a, "release").stdout == "[SCOPE: - released=no registered=no already=no revision=-]\n"
+    assert released.stdout == "[SCOPE_RELEASE: SPEC-s released=yes registered=yes already=no revision=1]\n"
+    assert _scope(a, "release").stdout == "[SCOPE_RELEASE: - released=no registered=no already=no revision=-]\n"
 
     git(repo, "worktree", "remove", "--force", str(b))
     report = _scope(repo, "sweep")
@@ -179,6 +183,11 @@ def test_update_failure_prints_the_ack_then_the_error(repo: Path) -> None:
     assert "(SPEC_SCOPE_TOKEN_MISSING)" in result.stderr
     data = _json(_scope(repo, "update", "--spec", SPEC, "--format", "json"))
     assert data["ack"]["status"] == "failed" and data["errors"][0]["code"] == "SPEC_SCOPE_TOKEN_MISSING"
+    # Off an activity branch the fix lists the bundles to choose from instead of a bare placeholder.
+    assert f"candidate: {SPEC}" in data["errors"][0]["advisory"]["details"]
+    git(repo, "checkout", "-q", "-b", "dev-s")
+    exact = _json(_scope(repo, "update", "--spec", SPEC, "--format", "json"))["errors"][0]["advisory"]["fix"]
+    assert f"`uv run devkit spec scope register --spec {SPEC}`" in exact
 
 
 def test_register_errors(repo: Path) -> None:
@@ -227,7 +236,7 @@ def test_journal_unavailable_keeps_stdout_and_exit(repo: Path) -> None:
     journal.unlink()
     journal.mkdir()
     released = _scope(repo, "release")
-    assert released.exit_code == 0 and released.stdout.startswith("[SCOPE: SPEC-s released=yes")
+    assert released.exit_code == 0 and released.stdout.startswith("[SCOPE_RELEASE: SPEC-s released=yes")
     assert released.stderr.count("(SPEC_SCOPE_JOURNAL_UNAVAILABLE)") == 1
     assert register.exit_code == 0
 
@@ -378,3 +387,23 @@ def test_history_filter_precedes_pagination_and_cursor_is_bound_to_filter(repo: 
 @pytest.mark.parametrize("limit", ["0", "101"])
 def test_history_rejects_out_of_range_limit(repo: Path, limit: str) -> None:
     assert _scope(repo, "query", "--history", "--limit", limit).exit_code == 2
+
+
+def test_history_text_pages_like_list_and_names_the_next_command(repo: Path) -> None:
+    _scope(repo, "register", "--spec", SPEC)
+    journal = next((repo / ".git/devkit-spec-scope").glob("*/journal.jsonl"))
+    events = [{"event": "update", "task": "SPEC-s", "revision": i, "worktree": str(repo)} for i in range(1, 4)]
+    journal.write_text("".join(json.dumps(event) + "\n" for event in events))
+    lines = _scope(repo, "query", "--history", "--limit", "2").stdout.splitlines()
+    assert all(" worktree=. " in line or line.endswith("worktree=.]") for line in lines[:2])
+    cursor = _json(_scope(repo, "query", "--history", "--limit", "2", "--format", "json"))["pagination"]["next_cursor"]
+    assert lines[2] == f"[PAGE: total=3 limit=2 count=2 next={cursor}]"
+    assert lines[3] == f"[NEXT_CMD: uv run devkit spec scope query --history -w {repo} --limit 2 --cursor {cursor}]"
+
+
+def test_query_with_the_registered_bundle_is_no_self_pair(repo: Path) -> None:
+    _scope(repo, "register", "--spec", SPEC)
+    git(repo, "worktree", "add", "-q", str(repo.parent / "other"), "-b", "other")
+    result = _scope(repo.parent / "other", "query", "--spec", SPEC, "--format", "json")
+    assert result.exit_code == 0, result.output
+    assert [(pair["a"], pair["b"]) for pair in _json(result)["pairs"]] == []

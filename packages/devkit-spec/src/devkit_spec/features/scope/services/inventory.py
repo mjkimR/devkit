@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 
@@ -47,7 +48,8 @@ def worktrees(root: Path, deadline: Deadline) -> list[Candidate]:
         path, ref = str(Path(fields["worktree"]) / prefix), fields.get("branch", "")
         result.append(
             Candidate(
-                source_id=f"worktree:{path}",
+                # Named relative to the workspace (``.`` is this checkout): openable and free of absolute paths.
+                source_id=f"worktree:{os.path.relpath(path, root)}",
                 ref=ref,
                 sha=fields.get("HEAD", ""),
                 worktree=path,

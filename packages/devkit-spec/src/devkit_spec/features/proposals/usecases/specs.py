@@ -41,7 +41,7 @@ from devkit_spec.features.documents import DocumentIndex
 from devkit_spec.features.policy.repositories.branches import require_development_branch
 from devkit_spec.features.proposals.models.axes import BUGFIX_WORKFLOW, DEFAULT_WORKFLOW
 from devkit_spec.features.proposals.services.body import CarriedProposal, ensure_ac_ids
-from devkit_spec.features.proposals.usecases.binding import resolve_binding
+from devkit_spec.features.proposals.usecases.binding import resolve_binding, unbound_guidance
 from devkit_spec.features.proposals.usecases.scaffold import (
     bundle_dir,
     bundle_namespace,
@@ -440,11 +440,13 @@ def create_spec(
         id=f"SPEC-{slug}", dir=rel, workflow=binding.workflow if binding else None, namespace=reported
     )
     if unbound is not None:
+        fix, choices = unbound_guidance(root, rel, DEFAULT_WORKFLOW)
         created.notices.append(
             SpecUnboundNotice(
                 f"SPEC-{slug} is not bound to a workflow: {DEFAULT_WORKFLOW} is not available ({unbound.code})",
+                *choices,
                 target_files=[f"{rel}/{SPEC_FILE}"],
-                fix=f"Bind it with {DEVKIT} workflow bind --unit {rel} --workflow <id> once a workflow fits it",
+                fix=fix,
             )
         )
     return created

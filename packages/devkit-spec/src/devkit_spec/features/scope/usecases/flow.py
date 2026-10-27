@@ -31,6 +31,7 @@ from devkit_spec.base.errors import (
     ScopeTokenExistsError,
     ScopeTokenMissingError,
 )
+from devkit_spec.features.policy.repositories.branches import DEVELOPMENT_PREFIX, checkout
 from devkit_spec.features.policy.services.config import read_spec_config
 from devkit_spec.features.scope.models.deadline import JOURNAL_SECONDS, ROLLBACK_SECONDS, Deadline
 from devkit_spec.features.scope.models.model import (
@@ -175,9 +176,7 @@ class RegisterScopeUseCase(BaseUseCase):
         """
         location, registry, deadline = session.location, session.registry, session.deadline
         if location.token_path.exists():
-            raise ScopeTokenExistsError(
-                "this worktree already registered a task", target_files=[str(location.token_path)]
-            )
+            raise ScopeTokenExistsError("this worktree already registered a task")
         stamp = utc_now()
         base = head_revision(location.root, deadline)
         ref = base_ref(location, deadline)
@@ -277,7 +276,12 @@ def own(session: Session, *, cleanup: bool = True) -> Own:
     location = session.location
     token = load_token(location.token_path, cleanup=cleanup)
     if token is None:
-        raise ScopeTokenMissingError("this worktree holds no scope registry token")
+        fix, candidates = _register_guidance(location.root)
+        raise ScopeTokenMissingError(
+            "this worktree holds no scope registry token",
+            *candidates,
+            fix="A worktree that does not take part in the registry skips scope update; to take part, " + fix,
+        )
     records, problems = session.registry.query(location.namespace, session.deadline)
     digest = token_hash(token)
     mine = [record for record in records if record.token_hash == digest]
@@ -285,9 +289,30 @@ def own(session: Session, *, cleanup: bool = True) -> Own:
         suspects = _suspects(session, problems, digest)
         if suspects:
             raise _unreadable(location, suspects, _OWN_UNREADABLE)
-        raise ScopeRecordMissingError("the record of this worktree's token no longer exists (released or swept)")
+        fix, candidates = _register_guidance(location.root)
+        raise ScopeRecordMissingError(
+            "the record of this worktree's token no longer exists (released or swept)",
+            *candidates,
+            fix=f"Run `{DEVKIT} spec scope release` (it removes the orphaned token), then " + fix,
+        )
     others = [record for record in records if record.token_hash != digest]
     return Own(token, mine[0], others, problems)
+
+
+def _register_guidance(root: Path) -> tuple[str, tuple[str, ...]]:
+    """The register step of a fix: the exact command for this branch's one spec bundle, else candidates as details."""
+    found = checkout(root)
+    branch = found[1] if found is not None else ""
+    slug = branch.removeprefix(DEVELOPMENT_PREFIX) if branch.startswith(DEVELOPMENT_PREFIX) else ""
+    bundles = sorted(path.relative_to(root).as_posix() for path in root.glob(f"specs/*/*-{slug}") if path.is_dir())
+    if slug and len(bundles) == 1:
+        return f"register with `{DEVKIT} spec scope register --spec {bundles[0]}`", ()
+    candidates = bundles or sorted(path.relative_to(root).as_posix() for path in root.glob("specs/*/*-*"))[:10]
+    return (
+        f"register with `{DEVKIT} spec scope register --spec <dir>`, <dir> this worktree's spec bundle"
+        + (" (candidates in [DETAIL])" if candidates else ""),
+        tuple(f"candidate: {path}" for path in candidates),
+    )
 
 
 _OWN_UNREADABLE = (
@@ -320,7 +345,7 @@ def _unreadable(location: Location, problems: Sequence[Problem], message: str) -
             "Once the user decides, repair the record files in [TARGET] or delete those whose tasks are finished "
             f"({DEVKIT} spec scope sweep lists them with verdict=error), then rerun the same command"
         ),
-        target_files=[str(directory / problem.file) for problem in problems],
+        target_files=[location.shown(directory / problem.file) for problem in problems],
     )
 
 

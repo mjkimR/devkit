@@ -15,9 +15,8 @@ from devkit_agt.features.workflow.repositories.git import is_ancestor
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import FrontmatterError, run_git
 
-from devkit_spec.base.errors import WorkerCheckFailedError, WorkerCheckNotRunNotice
+from devkit_spec.base.errors import WorkerCheckFailedError, WorkerCheckNotRunNotice, WorkerScopeUnresolvedError
 from devkit_spec.features.worker.usecases.inputs import (
-    ScopeUnresolved,
     derive_scope,
     git,
     inputs,
@@ -25,7 +24,6 @@ from devkit_spec.features.worker.usecases.inputs import (
     records,
 )
 
-CheckNotRun = WorkerCheckNotRunNotice
 TARGET_LIMIT = 20
 
 
@@ -184,7 +182,7 @@ class InspectWorkerUseCase(BaseUseCase):
             result["outside_scope"] = outside
             checks["scope"] = {"status": "fail" if outside else "pass"}
         except (AdvisoryError, FrontmatterError, UnicodeError) as exc:
-            cause = exc.to_dict() if isinstance(exc, AdvisoryError) else ScopeUnresolved(str(exc)).to_dict()
+            cause = exc.to_dict() if isinstance(exc, AdvisoryError) else WorkerScopeUnresolvedError(str(exc)).to_dict()
             result["scope"] = []
             checks["scope"] = {"status": "not-run", "cause": cause}
         dirty = dirty_paths(root)
@@ -211,7 +209,9 @@ class InspectWorkerUseCase(BaseUseCase):
         for name, check in checks.items():
             if check["status"] == "not-run":
                 notices.append(
-                    CheckNotRun(f"{name}: {check.get('cause', check.get('stderr', 'check could not run'))}").to_dict()
+                    WorkerCheckNotRunNotice(
+                        f"{name}: {check.get('cause', check.get('stderr', 'check could not run'))}"
+                    ).to_dict()
                 )
         result["errors"] = [
             _failure(name, check, result).to_dict() for name, check in checks.items() if check["status"] == "fail"

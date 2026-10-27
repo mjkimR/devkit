@@ -9,10 +9,10 @@ Text output (paths are relative to the workspace root):
   (``--direction in``) document, in ID order; ``path=-`` is a reference to an ID no document declares. References
   written with an alias count as references to its document: ``--direction out`` groups them under the canonical
   ID and ``--direction in`` includes them.
-- ``list``: ``[DOCUMENT: <id> kind= status= path= tasks= title=]`` per document in kind, then ID order (feedback by
-  severity first); ``tasks`` is ``<checked>/<total>`` of a spec's ``tasks.md``. Proposal lines add ``task_kind=``,
-  ``planning_effort=`` and ``dev_effort=`` after ``tasks=``; feedback lines add ``severity=``,
-  ``scope=`` and ``target=`` after ``tasks=``. ``--where FIELD=A,B`` keeps documents whose frontmatter ``FIELD``
+- ``list``: ``[DOCUMENT: <id> kind= status= path= title=]`` per document in kind, then ID order (feedback by
+  severity first); a spec line adds ``tasks=<checked>/<total>`` of its ``tasks.md`` (``-`` without one) after
+  ``path=``. Proposal lines add ``task_kind=``, ``planning_effort=`` and ``dev_effort=``; feedback lines add
+  ``severity=``, ``scope=`` and ``target=``. JSON document entries leave out keys without a value. ``--where FIELD=A,B`` keeps documents whose frontmatter ``FIELD``
   is one of the values.
 
 ``refs`` and ``list`` end with ``[PAGE: total= offset= limit= count= next=]`` and, when more items follow,
@@ -148,9 +148,13 @@ def refs_cmd(
     document_id: str, direction: str, limit: int, offset: int, workspace_root: str | None, output_format: str
 ) -> None:
     """List the documents a document references, or the documents referencing it."""
-    document, keys, items, notices = ReferenceDocumentsUseCase().execute(
-        resolve_root(workspace_root), document_id, direction, limit, offset
-    )
+    try:
+        document, keys, items, notices = ReferenceDocumentsUseCase().execute(
+            resolve_root(workspace_root), document_id, direction, limit, offset
+        )
+    except AdvisoryError as exc:
+        echo_notices(getattr(exc, "notices", ()))
+        raise
     if is_json(output_format):
         echo_json(
             {
@@ -178,6 +182,11 @@ def refs_cmd(
         args = ["refs", document.id, "--direction", direction, *_paging_args(workspace_root, limit)]
         echo_page(len(keys), offset, limit, len(items), args)
     _finish(notices)
+
+
+def _present(entry: dict[str, object]) -> dict[str, object]:
+    """``entry`` without the keys that have no value: an absent key means none (context budget)."""
+    return {key: value for key, value in entry.items() if value is not None}
 
 
 @click.command(name="list")
@@ -232,7 +241,7 @@ def list_cmd(
 
     --file finds the documents that own a code path through their ``entrypoints``; --where filters by any
     frontmatter field, such as a feedback document's severity or scope. Feedback is ordered by severity. KIND is one
-    of: capability, usecase, architecture, decision, proposal, proposal-decision, spec, plan, tasks, reconcile,
+    of: capability, usecase, ux, architecture, decision, proposal, proposal-decision, spec, plan, tasks, reconcile,
     feedback, material, milestone. In a workspace with namespaces, the namespace of the current directory (plus the
     global documents) is shown unless --namespace or --all-namespaces says otherwise.
     """
@@ -261,15 +270,17 @@ def list_cmd(
                 "limit": limit,
                 "namespace": scope.selection.name,
                 "documents": [
-                    document.to_dict()
-                    | _planning_fields(document, planning)
-                    | {
-                        "namespace": scope.namespace_of(document),
-                        "historical": historical[document.path],
-                        "tasks": tasks[document.path],
-                    }
-                    | _proposal_fields(document)
-                    | _feedback_fields(document)
+                    _present(
+                        document.to_dict()
+                        | _planning_fields(document, planning)
+                        | {
+                            "namespace": scope.namespace_of(document),
+                            "historical": historical[document.path],
+                            "tasks": tasks[document.path],
+                        }
+                        | _proposal_fields(document)
+                        | _feedback_fields(document)
+                    )
                     for document in shown
                 ],
                 "notices": [notice.to_dict() for notice in notices],
@@ -285,7 +296,7 @@ def list_cmd(
                     status=_shown_status(document, planning),
                     path=document.path,
                     **{key: value for key, value in _planning_fields(document, planning).items() if key != "status"},
-                    tasks=tasks[document.path],
+                    **({"tasks": tasks[document.path]} if document.kind == "spec" else {}),
                     **_proposal_fields(document),
                     **_feedback_fields(document),
                     **scope.fields(document),

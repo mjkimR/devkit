@@ -263,19 +263,27 @@ Argument errors (`ARGUMENT_INVALID`): `register`/`update` without `--spec`, `com
 [DIFF: docs/capabilities/x/CAP-X-c.md set=SPEC-a in=target-docs]                        # compare
 [UNRESOLVED: docs/capabilities/x/CAP-X-new.md set=SPEC-a reason=planned-doc]            # compare
 [SUMMARY: sets=2 pairs=1 overlapping=1]                                                  # compare
-[SCOPE: SPEC-a namespace=3f2a... revision=1 scopes=6 unresolved=2 shared_path=/repo/.git/devkit-spec-scope token=...]  # register
-[RECORD: SPEC-b revision=3 worktree=/repo-wt-b host=h spec=specs/... scopes=7 unresolved=1 shared_worktree=no own=no]  # query
+[SCOPE: SPEC-a namespace=3f2a... revision=1 scopes=6 unresolved=2 shared_path=.git/devkit-spec-scope token=...]  # register
+[RECORD: SPEC-b revision=3 worktree=../repo-wt-b host=h spec=specs/... scopes=7 unresolved=1 shared_worktree=no own=no]  # query
 [SUMMARY: namespace=3f2a... records=2 pairs=1 overlapping=1 problems=0]                  # query
 [EVENT: update at=2026-10-13T08:00:00.000000Z task=SPEC-a slug=a revision=2 request_id=... status=applied added=1 removed=0 overlaps=1 unresolved=2 ...]
-[PAGE: limit=50 total=4 next_cursor=-]                                                # query --history
+[PAGE: total=4 limit=50 count=4 next=-]                                              # query --history
 [SUMMARY: namespace=3f2a... events=4 problems=0]
 [SCOPE_ACK: status=applied revision=2 added=1 removed=0 overlaps=1 unresolved=2 request_id=...]  # update
-[SCOPE: SPEC-a released=yes registered=yes already=no revision=2]                        # release
+[SCOPE_RELEASE: SPEC-a released=yes registered=yes already=no revision=2]                # release
 [SWEEP: SPEC-b verdict=stale reason=worktree-missing revision=3]                         # sweep
 [SUMMARY: namespace=3f2a... active=1 stale=1 unverifiable=0 error=0 removed=0]           # sweep
 ```
 
-- `[PAIR]` lines are followed by their `[EVIDENCE]` lines; `[DIFF]` carries `in=target-docs|reconcile`.
+- `[PAIR]` lines are followed by their `[EVIDENCE: <path> ...]` lines (the path positional everywhere, `collect`
+  too); `[DIFF]` carries `in=target-docs|reconcile`.
+- Paths are relative to the workspace root: `shared_path=`, `[RECORD]`/`[EVENT]` `worktree=` (`.` is this checkout)
+  and the `[TARGET]` of registry advisories.
+- `query --history` pages like `spec list`: `[PAGE: total= limit= count= next=<cursor>]`, then `[NEXT_CMD: ...]`
+  repeating the command with `--cursor <next>` when older events follow.
+- `query --spec` never pairs the bundle with a record of the same bundle or task.
+- `[SCOPE: <task> ...]` is only a registration; `release` prints `[SCOPE_RELEASE: ...]` and `spec worker inspect`
+  `[SCOPE_ENTRY: <path> ...]`.
 - Explicit `register` and successful creation registration may print the owner token once; collection and `query`
   never expose an owner token or its hash.
 - `overlaps` in the ACK is the number of other records this task overlaps. An update that does not apply prints its
@@ -285,7 +293,8 @@ Argument errors (`ARGUMENT_INVALID`): `register`/`update` without `--spec`, `com
 - `sweep` verdicts are `active`, `stale`, `unverifiable`, `error` and `removed`. `sweep --apply` that kept a record
   because its revision moved prints its verdicts, then `SPEC_SCOPE_STALE_REVISION`.
 
-JSON shapes: `compare` `{sets, pairs, summary}`; `register` `{record, token, namespace, shared_path, notices}`;
+JSON shapes: `compare` `{sets, pairs, summary}`; `register` `{task, namespace, revision, spec, scopes, unresolved,
+shared_path, token, notices}` (no record internals or timestamps; `query` shows the record);
 `query` `{own, records, pairs, summary, notices}`; `query --history` `{events, summary, pagination: {limit, total, next_cursor}, notices}`; `update`
 `{ack, pairs, notices[, errors]}`; `release` `{task, released, registered, already, revision, notices}`; `sweep`
 `{results, summary, notices[, errors]}`.
@@ -410,8 +419,12 @@ ambiguous identity, inaccessible/unstable sources and exhausted budgets produce 
 Usable results exit 0, warning-bearing results exit 1 only under `--strict`, and inability to read any inventory
 source raises `SPEC_SCOPE_COLLECTION_FAILED` with exit 2. Invalid arguments remain `ARGUMENT_INVALID`.
 
-Text renders `[SCOPE_CANDIDATE: ...]`, `[SCOPE_OBSERVATION: ...]`, `[PAIR: ...]`, `[EVIDENCE: ...]` and a `[SUMMARY: ...
-coverage=complete|partial comparisons_complete=yes|no]`. It emits no worker ACK. The CLI uses the existing advisory
+Text renders `[SCOPE_CANDIDATE: source= activity= reason=]`, `[SCOPE_OBSERVATION: id= task=<id>|- unit=<dir>|-
+source= sha= missing=]`, `[PAIR: ...]`, `[EVIDENCE: <path> ...]` and a `[SUMMARY: ...
+coverage=complete|partial comparisons_complete=yes|no]`. A worktree source is named `worktree:<path relative to the
+workspace>` (`worktree:.` is this checkout). The base checkout (the main worktree off any activity branch) is an
+inactive `base-checkout` candidate, never a coverage gap, dirty or not. `SPEC_SCOPE_COLLECTION_PARTIAL` lists each
+source and reason once in `[DETAIL]`, the sources in `[TARGET]`. It emits no worker ACK. The CLI uses the existing advisory
 boundary for errors, notices and strict behavior.
 
 Total `--timeout` defaults to 30 seconds and `--source-timeout` to 5 seconds, each an integer 1–300. A source receives

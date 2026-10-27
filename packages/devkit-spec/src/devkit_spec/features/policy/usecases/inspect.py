@@ -27,6 +27,7 @@ class InspectPolicyUseCase(BaseUseCase):
         notices: list[AdvisoryError] = [
             ApprovalKeyIgnoredWarning(
                 f"[workflow.approvals] {key} has no effect: {key} is a stage a person always handles, not a gate",
+                target_files=[".devkit/config.toml"],
                 fix=f"Remove {key} from [workflow.approvals] in .devkit/config.toml",
             )
             for key in sorted(set(workflow.approvals) & set(NOT_GATES))
