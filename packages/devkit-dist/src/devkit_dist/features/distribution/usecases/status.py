@@ -23,6 +23,7 @@ from devkit_dist.features.distribution.models.errors import (
     PendingTransactionError,
     UnsafeWorkspaceError,
 )
+from devkit_dist.features.distribution.models.invocation import devkit_command
 from devkit_dist.features.distribution.models.results import (
     asset_json,
     overrides_json,
@@ -55,6 +56,7 @@ from devkit_dist.features.distribution.usecases.sync import (
     planned_guidance_block,
     planned_subagent_changes,
     read_deployed,
+    registration_pending_notices,
     require_project_dir,
     tool_identity,
 )
@@ -92,21 +94,16 @@ class FilesStatus:
     stale: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "counts": {
-                "ok": self.ok,
-                "missing": len(self.missing),
-                "stale": len(self.stale),
-                "modified": len(self.modified),
-                "mode-mismatch": len(self.mode_mismatch),
-                "unsafe": len(self.unsafe),
-            },
-            "missing": list(self.missing),
-            "stale": list(self.stale),
-            "modified": list(self.modified),
-            "mode-mismatch": list(self.mode_mismatch),
-            "unsafe": list(self.unsafe),
+        """The counts, and the paths of each state other than ``ok`` that names any (an empty list is left out)."""
+        listed = {
+            "missing": self.missing,
+            "stale": self.stale,
+            "modified": self.modified,
+            "mode-mismatch": self.mode_mismatch,
+            "unsafe": self.unsafe,
         }
+        counts = {"ok": self.ok, **{state: len(paths) for state, paths in listed.items()}}
+        return {"counts": counts, **{state: list(paths) for state, paths in listed.items() if paths}}
 
 
 @dataclass(frozen=True)
@@ -115,7 +112,15 @@ class SeededStatus:
     present: bool
 
     def to_dict(self) -> dict[str, Any]:
-        return {"bundle": self.record.bundle, "id": self.record.id, "path": self.record.path, "present": self.present}
+        return {"bundle": self.record.bundle, "id": self.record.id, "path": self.record.path}
+
+
+def seeded_status_json(seeded: list[SeededStatus]) -> dict[str, Any]:
+    """Seeded paths as counts, listing only the missing ones: a present seeded file is project-owned and never
+    compared, so it needs no line of its own."""
+    missing = [item.to_dict() for item in seeded if not item.present]
+    counts = {"present": len(seeded) - len(missing), "missing": len(missing)}
+    return {"counts": counts, "missing": missing} if missing else {"counts": counts}
 
 
 @dataclass(frozen=True)
@@ -142,7 +147,8 @@ class ProjectStatus:
 
     ``notices``: warnings that change no exit code (an installed package the project does not deploy failed to load,
     an unsupported ``[presentation] language`` resolved to ``en``, deployed rule, gate or workflow assets that no
-    installed engine runs).
+    installed engine runs, override drift under ``override_drift = "warn"``), and the ``MCP_REGISTRATION_PENDING``
+    notice of a selected host whose desired local MCP registration this checkout does not hold.
     """
 
     # Whether a receipt exists; without one every other entry describes an empty installation.
@@ -176,7 +182,7 @@ class ProjectStatus:
             "files": self.files.to_dict(),
             "override_drift": [{"bundle": bundle, "asset": asset} for bundle, asset in self.override_drift],
             "guidance_block": self.guidance_block,
-            "seeded": [item.to_dict() for item in self.seeded],
+            "seeded": seeded_status_json(self.seeded),
             "pending_journal": self.pending_journal,
             "tool": self.tool.to_dict(),
             "host_hooks": self.host_hooks,
@@ -300,12 +306,27 @@ def _block_state(
     return _BlockState("ok" if conflict is None else "modified", conflict)
 
 
-def _problems(
-    files: FilesStatus, journal: bool, drift: list[tuple[str, str]], block: _BlockState
-) -> list[AdvisoryError]:
-    """What ``devkit status`` exits 1 for: missing, stale, modified, mode-mismatched or unsafe files, a journal, override
-    drift, a root ``AGENTS.md`` that cannot be read safely, and a guidance block in the ``SYNC_CONFLICT`` a sync raises
-    for it, as for an edited managed file: ``modified``, or ``unowned`` and not the block the sync would adopt."""
+def _drift_advisory(drift: list[tuple[str, str]], *, blocked: bool) -> AdvisoryError:
+    """Override drift as ``devkit sync`` treats it under the ``override_drift`` policy: under ``block`` a problem
+    (exit ``1``) the user resolves, under ``warn`` the warning the sync reports."""
+    listed = [f"{bundle}:{asset}" for bundle, asset in drift]
+    problem = OverrideDriftError(
+        f"upstream changed behind overrides: {', '.join(listed)}",
+        guardrail=False,
+        actor=Actor.USER,
+        what_to_report="Whether each override should take over the upstream change",
+        fix=f"Review with `{devkit_command('override diff ' + listed[0])}`, then record it with"
+        f" `{devkit_command('override accept ' + listed[0])}`",
+        exit_code=ExitCode.FINDINGS if blocked else None,
+    )
+    return problem if blocked else problem.with_level(Level.WARNING)
+
+
+def _problems(files: FilesStatus, journal: bool, block: _BlockState) -> list[AdvisoryError]:
+    """What ``devkit status`` exits 1 for: missing, stale, modified, mode-mismatched or unsafe files, a journal, a
+    root ``AGENTS.md`` that cannot be read safely, and a guidance block in the ``SYNC_CONFLICT`` a sync raises for
+    it, as for an edited managed file: ``modified``, or ``unowned`` and not the block the sync would adopt. Override
+    drift under ``override_drift = "block"`` is added by the caller (``_drift_advisory``)."""
     findings = ExitCode.FINDINGS
     problems: list[AdvisoryError] = []
     if files.missing:
@@ -354,19 +375,6 @@ def _problems(
         problems.append(guidance_block_error(block.conflict, exit_code=findings))
     if journal:
         problems.append(PendingTransactionError("an interrupted synchronization left its journal", exit_code=findings))
-    if drift:
-        listed = [f"{bundle}:{asset}" for bundle, asset in drift]
-        problems.append(
-            OverrideDriftError(
-                f"upstream changed behind overrides: {', '.join(listed)}",
-                guardrail=False,
-                actor=Actor.USER,
-                what_to_report="Whether each override should take over the upstream change",
-                fix=f"Review with `devkit override diff {listed[0]}`, then record it with"
-                f" `devkit override accept {listed[0]}`",
-                exit_code=findings,
-            )
-        )
     return problems
 
 
@@ -406,7 +414,7 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
                 if changed_roles:
                     packages.append(
                         NotSynchronizedError(
-                            "subagent projections differ from the desired model policy; run devkit sync",
+                            "subagent projections differ from the desired model policy",
                             target_files=changed_roles,
                             exit_code=ExitCode.FINDINGS,
                         )
@@ -422,6 +430,16 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
                 host_errors.extend(host_report.errors)
             except HostError as exc:
                 host_errors.append(exc)
+        try:
+            registration = registration_pending_notices(root, config.agents)
+        except HostError as exc:
+            host_errors.append(exc)
+            registration = []
+        drift_problems: list[AdvisoryError] = []
+        drift_warnings: list[AdvisoryError] = []
+        if drift:
+            blocked = config.override_drift == "block"
+            (drift_problems if blocked else drift_warnings).append(_drift_advisory(drift, blocked=blocked))
         return ProjectStatus(
             receipt=receipt is not None,
             schema=receipt.schema if receipt is not None else None,
@@ -434,8 +452,14 @@ def get_project_status(root: Path, installed: list[InstalledBundle]) -> ProjectS
             pending_journal=journal,
             tool=ToolStatus(tool_identity(), receipt.tool if receipt is not None else None),
             host_hooks=host_hooks,
-            errors=[*packages, *_problems(files, journal, drift, block), *host_errors],
-            notices=[*warnings, *language_notices(root), *engine_notices(receipt.asset_records if receipt else ())],
+            errors=[*packages, *_problems(files, journal, block), *drift_problems, *host_errors],
+            notices=[
+                *drift_warnings,
+                *warnings,
+                *language_notices(root),
+                *engine_notices(receipt.asset_records if receipt else ()),
+                *registration,
+            ],
         )
 
 

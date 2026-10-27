@@ -177,7 +177,7 @@ def parse_findings(text: str, kind: str) -> tuple[Finding, ...]:
         if kind in CLOSABLE and finding.resolution != "open":
             raise EnvelopeFlagError(
                 f"--findings-file: finding {i}: a {kind} records findings as found (open); close them in a reverify",
-                fix=f"Drop resolution; close the round with `devkit workflow envelope reverify --from envelopes/{kind}-NN.yaml`",
+                fix=f"Drop resolution; close the round with `uv run devkit workflow envelope reverify --from envelopes/{kind}-NN.yaml`",
             )
         out.append(finding)
     return tuple(out)
@@ -259,7 +259,7 @@ def carried_findings(envelopes: Envelopes, source: str, unit_dir: Path) -> tuple
     if env.kind == "reconcile-check":
         raise EnvelopeFromError(
             "--from must name a review, challenger or reverify envelope, not reconcile-check",
-            fix="Close a reconcile finding with a new reconcile-check envelope instead of a reverify: `devkit workflow"
+            fix="Close a reconcile finding with a new reconcile-check envelope instead of a reverify: `uv run devkit workflow"
             " envelope new --unit <dir> --kind reconcile-check --stage living-spec-draft --summary ...` after your"
             " own check, or call the reconcile-reviewer again and record its return the same way",
         )
@@ -280,7 +280,7 @@ def _finding_number(flag: str, n: int, count: int) -> int:
     if n < 1 or n > count:
         raise EnvelopeFlagError(
             f"{flag} {n}: finding numbers are 1..{count}",
-            fix="Use a number printed by `devkit workflow envelope check`",
+            fix="Use a number printed by `uv run devkit workflow envelope check`",
         )
     return n - 1
 
@@ -314,7 +314,7 @@ def _check_flag_combination(kind: str, source: str | None, closing: bool, head: 
     if kind == "review" and source is not None:
         raise EnvelopeFlagError(
             "a review records findings as found; a reverify carries findings forward with --from",
-            fix="Use `devkit workflow envelope reverify --from latest`",
+            fix="Use `uv run devkit workflow envelope reverify --from latest`",
         )
     if kind == "reverify" and source is None:
         raise EnvelopeFromError(
@@ -440,7 +440,7 @@ def _check_contract(draft: Envelope, loaded: Envelopes) -> None:
     if problem is not None:
         raise EnvelopeReferenceError(
             problem,
-            fix="Name an envelope `devkit workflow envelope check` lists: --answers-to a worker-NN.yaml with those"
+            fix="Name an envelope `uv run devkit workflow envelope check` lists: --answers-to a worker-NN.yaml with those"
             " questions, options and assumptions, --resolves a worker-NN.yaml with a problem",
         )
 

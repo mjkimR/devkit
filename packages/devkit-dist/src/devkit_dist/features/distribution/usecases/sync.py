@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import tomllib
 from collections.abc import Callable, Mapping
@@ -20,6 +21,7 @@ from devkit_dist.features.distribution.models.errors import (
     BundleAutoSelectedNotice,
     BundleUnselectedNotice,
     ConflictError,
+    McpRegistrationPendingNotice,
     OrphanLeftNotice,
     OverrideDriftError,
     ReceiptStaleError,
@@ -28,6 +30,7 @@ from devkit_dist.features.distribution.models.errors import (
     UnprojectedNotice,
     UnsafeWorkspaceError,
 )
+from devkit_dist.features.distribution.models.invocation import devkit_command
 from devkit_dist.features.distribution.models.results import Action, SyncResult, Unselected
 from devkit_dist.features.distribution.models.subagents import SubagentPolicy
 from devkit_dist.features.distribution.services.installation import guidance_block, local_render
@@ -46,7 +49,7 @@ from devkit_dist.features.distribution.services.installation.discovery import (
     unusable_notices,
 )
 from devkit_dist.features.distribution.services.installation.engines import engine_notices
-from devkit_dist.features.distribution.services.installation.extensions import run_post_sync
+from devkit_dist.features.distribution.services.installation.extensions import run_post_sync, run_post_sync_preview
 from devkit_dist.features.distribution.services.installation.host_hooks import plan_host_hooks
 from devkit_dist.features.distribution.services.installation.inventory import (
     GENERATED_SKILLS,
@@ -96,11 +99,12 @@ from devkit_dist.features.project.repositories.receipt import (
 from devkit_dist.features.project.services.presentation import language_notices, resolve_language
 
 TOOL_PACKAGE = "devkit-dist"
+SYNC_COMMAND = devkit_command("sync")
 EDITED_FILE_FIX = (
-    "Keep the edit: copy it aside, run `devkit override create <bundle>:<asset>` and reapply it there;"
-    " discard it: delete the file and run `devkit sync`"
+    f"Keep the edit: copy it aside, run `{devkit_command('override create <bundle>:<asset>')}` and reapply it there;"
+    f" discard it: delete the file and run `{SYNC_COMMAND}`"
 )
-UNOWNED_FILE_FIX = "Move each unowned file out of the way (or delete it), then run `devkit sync`"
+UNOWNED_FILE_FIX = f"Move each unowned file out of the way (or delete it), then run `{SYNC_COMMAND}`"
 
 Changes = dict[str, Content | None]
 
@@ -110,12 +114,12 @@ BLOCK_CONFLICTS: Mapping[str, tuple[str, str, str]] = MappingProxyType(
         "modified": (
             f"user-modified guidance block: {AGENTS_FILE}",
             f"Restore the block between the markers (for example `git checkout -- {AGENTS_FILE}`),"
-            " keep project text outside them, then run `devkit sync`",
+            f" keep project text outside them, then run `{SYNC_COMMAND}`",
             "Whether to discard the edit inside the devkit block markers",
         ),
         "unowned": (
             f"unowned guidance block already exists: {AGENTS_FILE}",
-            f"Remove the devkit block markers from {AGENTS_FILE}, then run `devkit sync`",
+            f"Remove the devkit block markers from {AGENTS_FILE}, then run `{SYNC_COMMAND}`",
             f"Whether to remove the devkit block markers that {AGENTS_FILE} already has, so sync can write its own",
         ),
     }
@@ -214,7 +218,8 @@ def _override_drift(drift: list[Drift], *, blocked: bool) -> OverrideDriftError:
     error = OverrideDriftError(
         f"upstream drift behind an override{policy}: {', '.join(listed)}",
         target_files=[item.path for item in drift],
-        fix=f"Review with `devkit override diff {listed[0]}` and accept with `devkit override accept {listed[0]}`",
+        fix=f"Review with `{devkit_command('override diff ' + listed[0])}` and accept with"
+        f" `{devkit_command('override accept ' + listed[0])}`",
         what_to_report=(
             "Upstream changed an asset this project overrides; review the diff, then accept it or keep the override"
         ),
@@ -390,10 +395,33 @@ def planned_guidance_block(
 def planned_subagent_changes(
     root: Path, installed: list[InstalledBundle], config: ProjectConfig, previous: Receipt
 ) -> list[str]:
-    """Receipt-owned subagent projections changed by the desired shared model policy."""
+    """Receipt-owned subagent projections changed by the desired shared model policy.
+
+    Only the subagent assets of the selected bundles are planned: a subagent projection depends on its own source,
+    the bundle's variables and the policy, never on the bundle's other assets, so the rest of a full sync plan would
+    not change the answer, only its cost.
+    """
     selection = _resolve_selection(installed, config, previous, None, None, ())
     overrides = {bundle: dict(records) for bundle, records in previous.overrides.items()}
-    inventory = _plan_inventory(root, installed, selection, overrides)
+    policy = _subagent_policy(root, installed, selection, effective=False)
+    with_subagents = []
+    for item in installed:
+        if item.bundle.name not in selection.presets:
+            continue
+        subagents = tuple(asset for asset in item.bundle.assets if asset.kind == "subagent")
+        if subagents:
+            with_subagents.append(dataclasses.replace(item, bundle=dataclasses.replace(item.bundle, assets=subagents)))
+    inventory = desired_inventory(
+        with_subagents,
+        {item.bundle.name: list(selection.presets[item.bundle.name]) for item in with_subagents},
+        list(selection.agents),
+        root=root,
+        previous_overrides=overrides,
+        variables=read_config(root).variables,
+        subagents=policy,
+        language=resolve_language(root).resolved,
+        environment=read_effective_config(root).values["execution"]["environment"],
+    )
     prefixes = (".claude/agents/", ".codex/agents/", ".agents/agents/")
     names = {name for name in inventory.files if name.startswith(prefixes)}
     names.update(name for name in previous.file_records if name.startswith(prefixes))
@@ -689,7 +717,7 @@ def _receipt_stale(
     )
     planned = [f"would {item.action} {item.path}" for item in ordered[:STALE_DETAILS]]
     if len(actions) > STALE_DETAILS:
-        planned.append(f"and {len(actions) - STALE_DETAILS} more (`devkit sync --dry-run` lists them all)")
+        planned.append(f"and {len(actions) - STALE_DETAILS} more (`{devkit_command('sync --dry-run')}` lists them all)")
     return ReceiptStaleError(
         f"{reason}; devkit sync --locked only restores what the receipt records, so it wrote nothing",
         *planned,
@@ -714,6 +742,7 @@ def _sync_result(
     seen: frozenset[str],
     auto_selected: list[InstalledBundle],
     dry_run: bool,
+    locked: bool = False,
 ) -> SyncResult:
     stray = stray_managed_files(root, owned)
     unselected = [
@@ -740,7 +769,10 @@ def _sync_result(
         notices=[
             *_state_notices(list(inventory.drift), stray),
             *notices,
-            *_selection_notices(inventory, [item for item in unselected if item.bundle not in seen], auto_selected),
+            # ``--locked`` restores a committed selection, so what it leaves unselected was decided: never announced.
+            *_selection_notices(
+                inventory, [] if locked else [item for item in unselected if item.bundle not in seen], auto_selected
+            ),
         ],
     )
 
@@ -801,10 +833,10 @@ def _selection_notices(
                 f"installed bundles deployed with their default preset: {', '.join(names)}",
                 *(
                     f"{item.bundle.name}  (package {item.package}; preset {item.bundle.default_preset}; "
-                    f"opt out: devkit remove {item.bundle.name})"
+                    f"opt out: {devkit_command('remove ' + item.bundle.name)})"
                     for item in auto_selected
                 ),
-                fix=f"devkit remove {names[0]}" if len(names) == 1 else "devkit list",
+                fix=devkit_command(f"remove {names[0]}" if len(names) == 1 else "list"),
             )
         )
     undecided = [item for item in new if not item.opted_out]
@@ -814,7 +846,7 @@ def _selection_notices(
             BundleUnselectedNotice(
                 f"installed bundles not selected yet: {', '.join(names)}",
                 *(_add_command(item) for item in undecided),
-                fix=f"devkit add {names[0]}" if len(names) == 1 else "devkit list",
+                fix=devkit_command(f"add {names[0]}" if len(names) == 1 else "list"),
             )
         )
     return notices
@@ -822,9 +854,7 @@ def _selection_notices(
 
 def _add_command(item: Unselected) -> str:
     presets = ", ".join(item.presets) or "-"
-    return (
-        f"devkit add {item.bundle}  (package {item.package}; presets {presets}; default {item.default_preset or '-'})"
-    )
+    return f"{devkit_command('add ' + item.bundle)}  (package {item.package}; presets {presets}; default {item.default_preset or '-'})"
 
 
 def _read_seen_bundles(root: Path) -> frozenset[str]:
@@ -906,6 +936,7 @@ def sync_project(
     save: Callable[[], ConfigUpdate] | None = None,
     environment: str | None = None,
     save_environment: bool = True,
+    preview: bool = True,
 ) -> SyncResult:
     """Deploy the bundles selected in ``config.toml`` and the built-in bundles it does not opt out of.
 
@@ -914,11 +945,13 @@ def sync_project(
     instead: it renders the configuration edit under the project lock, from the
     configuration as it is then, so concurrent selection commands never lose
     an edit; the rendered edit is planned in memory and journaled with outputs,
-    and post-sync extensions see the committed configuration. ``save`` is never
-    called on ``dry_run``. ``locked`` keeps the committed state: the sync only
+    and post-sync extensions see the committed configuration. On ``dry_run`` the
+    edit is rendered and listed, never written. ``locked`` keeps the committed state: the sync only
     restores the Git-ignored files to what the receipt records, or raises ``ReceiptStaleError``
     (``RECEIPT_STALE``) without writing anything. Post-sync extensions run after
-    the project lock is released, except on a dry run.
+    the project lock is released, except on a dry run, which runs the preview
+    extensions instead unless ``preview`` is off (``sync --check``, a read-only
+    gate whose answer must not depend on this checkout's hooks).
     """
     if environment is not None and environment not in ("local", "cloud"):
         raise ArgumentError("environment must be local or cloud")
@@ -932,7 +965,7 @@ def sync_project(
         if not dry_run and not locked:
             registrations.recover(root)
         captured = local_render.inputs(root)
-        update = save() if save is not None and not dry_run else None
+        update = save() if save is not None else None
         selected_config = (
             parse_config(tomllib.loads(update.text))
             if update is not None and update.text is not None
@@ -951,7 +984,10 @@ def sync_project(
                 )
             # A fresh checkout has no registration to validate. Asset restoration stays
             # locked; lifecycle initialization runs separately after this succeeds.
+            pending = sorted(host for host, state in registration.states.items() if state == "write")
             registration.after.clear()
+            if pending:
+                registration.notices.append(_registration_pending(pending))
         finish = commit_locked(
             root,
             installed,
@@ -967,14 +1003,31 @@ def sync_project(
         )
         result = finish()
         result.notices.extend(registration.notices)
-        result.actions.extend(Action(path, "update") for path in registration.changes)
+        result.actions.extend(Action(path, kind) for path, kind in registration.actions)
         if not dry_run:
             registrations.apply(registration, locked=locked)
     if update is not None:
         result.notices.extend(update.notices)
-    if not dry_run:
+    if dry_run:
+        if preview:
+            result.notices.extend(run_post_sync_preview(root, result.to_dict()))
+    else:
         result.notices.extend(run_post_sync(root, result.to_dict()))
     return result
+
+
+def _registration_pending(hosts: list[str]) -> McpRegistrationPendingNotice:
+    """The notice that the local MCP registration of ``hosts`` is desired but not in this checkout yet."""
+    return McpRegistrationPendingNotice(
+        f"local MCP registration is not set up in this checkout: {', '.join(hosts)}",
+        what_to_report="devkit's MCP server is not registered for these hosts until the fix runs",
+    )
+
+
+def registration_pending_notices(root: Path, agents: list[str] | tuple[str, ...]) -> list[AdvisoryError]:
+    """``MCP_REGISTRATION_PENDING`` when a selected host's desired registration is absent (read-only)."""
+    hosts = registrations.unregistered_hosts(root, agents)
+    return [_registration_pending(hosts)] if hosts else []
 
 
 def commit_locked(
@@ -1060,9 +1113,11 @@ def commit_locked(
     receipt = _build_receipt(selection, inventory, overrides, seeded, block_hash, selected_environment)
     notices.extend(engine_notices(receipt.asset_records))
     if config_update is not None and config_update.text is not None:
-        changes[CONFIG_PATH] = Content(
-            config_update.text.encode(), config_update.before.mode if config_update.before else 0o644
-        )
+        before = config_update.before
+        written = Content(config_update.text.encode(), before.mode if before else 0o644)
+        changes[CONFIG_PATH] = written
+        if before is None or before.data != written.data:
+            actions.append(Action(CONFIG_PATH, "update" if before else "create"))
     if save_environment:
         local_render.plan_environment(root, environment, changes, actions)
     if not locked:
@@ -1118,6 +1173,7 @@ def commit_locked(
             seen=seen,
             auto_selected=auto_selected,
             dry_run=dry_run,
+            locked=locked,
         )
 
         result.execution_environment = selected_environment

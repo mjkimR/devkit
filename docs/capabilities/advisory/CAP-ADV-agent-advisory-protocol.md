@@ -170,7 +170,9 @@ HALT — Unsafe to retry. Execution stopped to prevent state corruption.
 
 #### `BLOCKED`: deliberate guardrail or policy refusal
 
-- **Use for**: protected branches, out-of-scope edits, workflow or architecture rule refusals, a commit gate refusing a commit.
+- **Use for**: protected branches, out-of-scope edits, workflow or architecture rule refusals, a commit gate refusing a commit
+  on policy. A check of the agent's own content that the agent corrects and retries (failing tests or rule violations in
+  a commit, an empty commit message) is `INPUT_ERROR`, not `BLOCKED`.
 - **Set**: `guardrail = true`. `fix` may name the sanctioned exception mechanism, such as an ignore comment that requires a justification.
 
 ```text

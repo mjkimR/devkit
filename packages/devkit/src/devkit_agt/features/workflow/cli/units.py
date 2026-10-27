@@ -66,13 +66,13 @@ def show_cmd(
         raise ArgumentError(
             "pass exactly one of REF or --unit",
             target_files=["REF", "--unit"],
-            fix="Run `devkit workflow show <id|path>` or `devkit workflow show --unit <dir>`",
+            fix="Run `uv run devkit workflow show <id|path>` or `uv run devkit workflow show --unit <dir>`",
         )
     if anchor is not None and unit is None:
         raise ArgumentError(
             "--anchor applies only with --unit",
             target_files=["--anchor"],
-            fix="Drop --anchor, or run `devkit workflow show --unit <dir> --anchor <file>`",
+            fix="Drop --anchor, or run `uv run devkit workflow show --unit <dir> --anchor <file>`",
         )
     ws = workspace(workspace_root)
     description = DescribeWorkflowUseCase(ws).execute(ref, unit=unit, anchor=anchor)

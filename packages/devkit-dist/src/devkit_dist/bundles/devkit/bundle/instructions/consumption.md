@@ -52,9 +52,17 @@ uv run devkit override remove <bundle>:<asset>   # use upstream again
 ```
 
 - An override file replaces its upstream file everywhere agents read it; it
-  follows upstream changes only through `accept`.
-- For a `.md.jinja` asset, edit the template override and sync; agents read the
-  rendered managed `.md`.
+  follows upstream changes only when you merge them into it.
+- A plain-file override is copied into the agent projections; instructions
+  and playbooks read it in place from `.devkit/overrides/<bundle>/`, and
+  `get-context` cites that path. `.devkit/managed/` keeps the upstream copy:
+  read the path devkit cites, not the managed copy.
+- A `.md.jinja` override is rendered by sync into `.devkit/managed/<bundle>/`
+  and the agent projections; edit the template override, sync, and read the
+  rendered `.md`.
+- `override accept` only records the current upstream as the baseline; it
+  changes no override file. Before accepting, merge the upstream changes that
+  `override diff` shows into the override.
 - Override only assets of selected bundles. Edit seeded files in place, and the
   repository's own assets in their source bundle (`in-repo-bundle`).
 

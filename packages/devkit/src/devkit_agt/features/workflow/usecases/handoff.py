@@ -60,7 +60,7 @@ def evaluate_handoff(
         ignored = HandoffChoiceIgnoredError(
             f"handoff choice {recorded.value!r} is not an eligible candidate of {doc.id}; ignored",
             file=recorded.file,
-            fix="Record an eligible choice with `devkit workflow answer --request handoff --action accept --value <id>`",
+            fix="Record an eligible choice with `uv run devkit workflow answer --request handoff --action accept --value <id>`",
         )
     chosen = next((c.workflow for c in results if c.eligible), None) if policy == "auto" else None
     return Handoff(policy, tuple(results), chosen), ignored
@@ -116,8 +116,8 @@ def _policy_target(handoff: Handoff, policy: str, doc: WorkflowDocument, unit: U
         ),
         what_to_report="The eligible and recommended candidates",
         fix=(
-            f"Record the user's choice with `devkit workflow answer --unit {unit.rel} --request handoff "
-            f"--action accept --value <id>`, then run `devkit workflow handoff --unit {unit.rel}`"
+            f"Record the user's choice with `uv run devkit workflow answer --unit {unit.rel} --request handoff "
+            f"--action accept --value <id>`, then run `uv run devkit workflow handoff --unit {unit.rel}`"
         ),
     )
 
@@ -152,19 +152,19 @@ def plan_handoff(ws: Workspace, unit: UnitRef, result: UnitEvaluation, choice: s
         raise HandoffNotReadyError(
             f"unit {unit.rel} has not completed workflow {doc.id}: stage {result.stage.id} is current",
             *(f"unmet={u.name}" for u in result.unmet),
-            fix=f"Finish the current stage (`devkit workflow next --unit {unit.rel}`) before handing off",
+            fix=f"Finish the current stage (`uv run devkit workflow next --unit {unit.rel}`) before handing off",
         )
     if result.hold:
         raise HandoffHeldError(
             f"unit {unit.rel} is held by its envelopes; it is not handed off until they are cleared",
             *result.hold.reasons(),
             fix=f"Resolve each problem (resolution envelope), answer each question (answer envelope) and fix any"
-            f" malformed worker envelope, then rerun; `devkit workflow envelope check --unit {unit.rel}` lists them",
+            f" malformed worker envelope, then rerun; `uv run devkit workflow envelope check --unit {unit.rel}` lists them",
         )
     if not doc.next:
         raise HandoffNoneError(
             f"workflow {doc.id} declares no next candidates",
-            fix=f"Add a `next` list to {doc.id}, or start a new unit with `devkit workflow new`",
+            fix=f"Add a `next` list to {doc.id}, or start a new unit with `uv run devkit workflow new`",
         )
     policy = ws.config.policy(HANDOFF_GATE)
     handoff = result.handoff
@@ -182,7 +182,7 @@ def plan_handoff(ws: Workspace, unit: UnitRef, result: UnitEvaluation, choice: s
     if target_anchor != unit.anchor:
         raise HandoffLayoutMismatchError(
             f"workflow {target.id} declares anchor {target_anchor}; unit {unit.rel} is identified by {unit.anchor}",
-            fix=f"Relocate the unit into the layout of {target.id} (anchor {target_anchor}), then run `devkit workflow bind --unit <new dir> --workflow {target.id}`",
+            fix=f"Relocate the unit into the layout of {target.id} (anchor {target_anchor}), then run `uv run devkit workflow bind --unit <new dir> --workflow {target.id}`",
         )
     return HandoffPlan(unit, doc, target, policy, decision, explicit)
 

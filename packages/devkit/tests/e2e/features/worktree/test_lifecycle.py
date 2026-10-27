@@ -334,8 +334,11 @@ def test_status_treats_a_worktree_on_an_unborn_branch_as_unmerged(repo: Path) ->
 def test_finish_refuses_from_the_worktree_under_the_pr_policy_and_before_the_merge(repo: Path) -> None:
     created = start(locate(repo), "dev-demo")
     commit(created.path, "work.txt")
-    with pytest.raises(RunFromBaseError):
+    with pytest.raises(RunFromBaseError) as inside:
         finish(locate(created.path), "dev-demo")
+    # Where to run is a correctable input, not a refusal: the agent reruns from the base checkout it names.
+    assert inside.value.mode is ActionMode.INPUT_ERROR
+    assert str(repo) in (inside.value.fix or "")
     with pytest.raises(PullRequestPolicyError) as policy:
         finish(locate(repo), "dev-demo", merge=True, pull_request="required")
     assert policy.value.mode is ActionMode.BLOCKED
@@ -761,7 +764,7 @@ def test_a_stale_receipt_names_the_committed_file_and_its_fix(repo: Path) -> Non
     assert warning.target_files == (str(result.path / "AGENTS.md"),)
     # The committed change comes first, ahead of the managed copies --locked would have restored.
     assert warning.details[0] == "would create AGENTS.md" and warning.details[-1].startswith("and ")
-    assert warning.fix == f"In {result.path}: devkit sync, then commit the files it changes"
+    assert warning.fix == f"In {result.path}: uv run devkit sync, then commit the files it changes"
     assert not (result.path / "AGENTS.md").exists()  # --locked wrote nothing
 
 

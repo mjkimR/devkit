@@ -12,6 +12,7 @@ import devkit_agt.features.gate.usecases.hooks.hooks as hooks
 import devkit_agt.features.gate.usecases.hooks.local_config as local_config
 import pytest
 from click.testing import CliRunner
+from devkit.advisory import AdvisoryError
 from devkit_agt.features.gate import BaseGate, GateContext, GateResult, Stage, load_gate_project
 from devkit_agt.features.gate.cli import cli
 from testsupport.gate import deploy_gate, gate_source
@@ -21,6 +22,11 @@ def _install(repo: Path) -> str:
     result = CliRunner().invoke(cli, ["install", "-w", str(repo), "--python", sys.executable])
     assert result.exit_code == 0, result.output
     return result.output
+
+
+def _advisories(repo: Path) -> list[AdvisoryError]:
+    """The advisories ``post_sync`` returns, without its ``gate hooks: ...`` change line."""
+    return [item for item in local_config.post_sync(repo, {}) or [] if isinstance(item, AdvisoryError)]
 
 
 def _config(repo: Path) -> Path:
@@ -75,7 +81,9 @@ def test_post_sync_appends_only_new_gates(repo: Path) -> None:
 
 
 def test_post_sync_installs_hooks_and_skips_non_repositories(repo: Path, tmp_path: Path) -> None:
-    assert local_config.post_sync(repo, {}) is None
+    assert local_config.post_sync(repo, {}) == [
+        "gate hooks: pre-commit: installed; commit-msg: installed; post-commit: installed"
+    ]
     assert _config(repo).exists()
     assert (repo / ".git/hooks/pre-commit.d/20-devkit").is_file()
     assert (repo / ".git/hooks/post-commit.d").is_dir()
@@ -95,8 +103,8 @@ def test_a_symlinked_config_is_skipped_with_a_warning(repo: Path, tmp_path: Path
     assert "GATE_CONFIG_TEMPLATE_SKIPPED" in result.stderr
     assert target.read_text() == "# mine\n"
 
-    notices = local_config.post_sync(repo, {})
-    assert notices is not None and [notice.code for notice in notices] == ["GATE_CONFIG_TEMPLATE_SKIPPED"]
+    notices = _advisories(repo)
+    assert [notice.code for notice in notices] == ["GATE_CONFIG_TEMPLATE_SKIPPED"]
 
 
 @dataclass(frozen=True)
@@ -201,18 +209,18 @@ def test_post_sync_preserves_hooks_and_reports_the_move_once(repo: Path) -> None
     hook = repo / ".git/hooks/pre-commit"
     hook.write_text("#!/bin/sh\nexit 0\n")
     hook.chmod(0o755)
-    notices = local_config.post_sync(repo, {})
-    assert notices is not None and [notice.code for notice in notices] == ["GATE_HOOK_PRESERVED"]
+    notices = _advisories(repo)
+    assert [notice.code for notice in notices] == ["GATE_HOOK_PRESERVED"]
     assert local_config.post_sync(repo, {}) is None
-    assert (repo / ".git/hooks/pre-commit.legacy").read_text() == "#!/bin/sh\nexit 0\n"
+    assert (repo / ".git/hooks/pre-commit.devkit-preserved").read_text() == "#!/bin/sh\nexit 0\n"
 
 
 def test_post_sync_skips_custom_hooks_path_with_a_coded_warning(repo: Path) -> None:
     from testsupport.gate import git
 
     git(repo, "config", "core.hooksPath", ".husky")
-    notices = local_config.post_sync(repo, {})
-    assert notices is not None and [notice.code for notice in notices] == ["GATE_HOOK_INSTALL_SKIPPED"]
+    notices = _advisories(repo)
+    assert [notice.code for notice in notices] == ["GATE_HOOK_INSTALL_SKIPPED"]
     assert "GATE_HOOKS_PATH_SET" in notices[0].details[0]
     assert git(repo, "config", "core.hooksPath").stdout.strip() == ".husky"
     assert not (repo / ".git/hooks/pre-commit").exists()
@@ -221,15 +229,15 @@ def test_post_sync_skips_custom_hooks_path_with_a_coded_warning(repo: Path) -> N
 def test_post_sync_leaves_symbolic_hooks_and_reserved_entries_untouched(repo: Path) -> None:
     hook = repo / ".git/hooks/pre-commit"
     hook.symlink_to("missing-hook")
-    notices = local_config.post_sync(repo, {})
-    assert notices is not None and notices[0].code == "GATE_HOOK_INSTALL_SKIPPED"
+    notices = _advisories(repo)
+    assert notices and notices[0].code == "GATE_HOOK_INSTALL_SKIPPED"
     assert "GATE_FOREIGN_HOOK" in notices[0].details[0] and hook.is_symlink()
     hook.unlink()
     entry = repo / ".git/hooks/pre-commit.d/20-devkit"
     entry.parent.mkdir()
     entry.write_text("mine\n")
-    notices = local_config.post_sync(repo, {})
-    assert notices is not None and "GATE_HOOK_LAYOUT_INVALID" in notices[0].details[0]
+    notices = _advisories(repo)
+    assert notices and "GATE_HOOK_LAYOUT_INVALID" in notices[0].details[0]
     assert entry.read_text() == "mine\n" and not hook.exists()
 
 
@@ -257,8 +265,7 @@ def test_post_sync_reports_the_hook_move_beside_a_failed_template(repo: Path, mo
     hook.write_text("#!/bin/sh\nexit 0\n")
     hook.chmod(0o755)
     monkeypatch.setattr(local_config, "project_registry", lambda root: (_ for _ in ()).throw(RuntimeError("boom")))
-    notices = local_config.post_sync(repo, {})
-    assert notices is not None
+    notices = _advisories(repo)
     assert [notice.code for notice in notices] == ["GATE_HOOK_PRESERVED", "GATE_CONFIG_TEMPLATE_SKIPPED"]
     assert "refresh failed: UNEXPECTED_ERROR: RuntimeError: boom" in notices[1].message
 

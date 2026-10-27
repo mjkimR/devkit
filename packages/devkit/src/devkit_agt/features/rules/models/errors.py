@@ -7,8 +7,8 @@ instead of raising (``RuleProblem`` and its subclasses) are returned in
 ``RuleRegistry.errors``, ``ProjectRun.load_errors`` and
 ``EvaluationResult.errors``; each carries a code and, when it concerns one rule,
 that rule's ID in ``rule_id``. ``str(problem)`` is its message.
-``PromotionReadyNotice`` is a notice a completed run returns in
-``ProjectRun.notices``; it is never raised. ``HygieneNotice`` and
+``PromotionReadyNotice`` and ``NoneActiveNotice`` are notices a completed run returns in
+``ProjectRun.notices``; they are never raised. ``HygieneNotice`` and
 ``HygieneExtensionFailedNotice`` are what the ``devkit.hygiene`` extensions add
 to a whole-workspace ``check -p hygiene``; never raised either.
 """
@@ -22,7 +22,7 @@ from devkit.advisory import Actor, AdvisoryError, AdvisoryFields, Level, Retry
 from devkit_dist.base import errors as core_errors
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
-SYNC_FIX = "Run `devkit sync` and commit the receipt"
+SYNC_FIX = "Run `uv run devkit sync` and commit the receipt"
 
 
 class RulesError(AdvisoryError):
@@ -72,7 +72,7 @@ class PinnedWriteError(RulesError):
 
     code = "RULES_PINNED_WRITE_REFUSED"
     guardrail = True
-    fix = "Edit the project override with `devkit override create <bundle>:<asset>` instead of the pinned copy"
+    fix = "Edit the project override with `uv run devkit override create <bundle>:<asset>` instead of the pinned copy"
 
 
 class RuleProblem(RulesError):
@@ -143,6 +143,14 @@ class PromotionReadyNotice(RulesError):
 
     code = "RULES_PROMOTION_READY"
     level = Level.NOTICE
+
+
+class NoneActiveNotice(RulesError):
+    """No loaded rule is active in the run's phase, so its pass checked nothing (``NOTE``)."""
+
+    code = "RULES_NONE_ACTIVE"
+    level = Level.NOTICE
+    fix = "Select a bundle that ships rules, or move a rule back with [rules.phase_overrides] in .devkit/config.toml"
 
 
 class RelatedUnresolvedNotice(RulesError):

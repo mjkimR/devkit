@@ -10,10 +10,12 @@ Ask these in one message, with the defaults stated so the user can answer "defau
 1. **Agents**: which coding agents will work here? devkit projects skills and subagents for `codex`,
    `claude-code` and `antigravity`. Default: the agent you are, plus any others the user names.
 2. **Project kind**: what will the repository hold (language, a library or a service, documentation only)? This
-   decides whether the root `pyproject.toml` is only devkit's tooling manifest or the project's own.
+   decides whether the root `pyproject.toml` is only devkit's tooling manifest or the project's own. Default: a
+   tooling manifest only (`uv init --bare`); the project's own files come later.
 3. **Practices**: should commits follow Conventional Commits? Will the repository author agent skills or a large
-   `AGENTS.md`? The answers feed
-   [Bundle Recommendations](bundle-recommendations.md).
+   `AGENTS.md`? Will work follow spec-driven delivery (`devkit-spec`)? The answers feed
+   [Bundle Recommendations](bundle-recommendations.md). Default: no opt-in bundles and no `devkit-spec`; the
+   automatically deployed bundles only.
 
 Then present the plan (the steps below with the chosen values) and wait for approval.
 
@@ -72,8 +74,9 @@ playbooks do (playbooks bring the generated `devkit-playbook` skill), so do this
 ## 5. Continue
 
 1. Select bundles with [Bundle Recommendations](bundle-recommendations.md), using the user's answers to question 3.
-2. Optional: the commit gate already checks the rules (`rules-check`, on by default). When the project has fast
-   verification commands, offer to run them before every commit too:
+2. Optional: the `rules-check` commit gate (on by default) already runs `devkit-agt`'s built-in rules on every
+   commit (Markdown links, secrets, committed binaries and logs, `devkit` command citations); rules from selected bundles
+   join it. When the project has fast verification commands, offer to run them before every commit too:
 
    ```toml
    # .devkit/config.toml

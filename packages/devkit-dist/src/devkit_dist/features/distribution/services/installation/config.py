@@ -32,6 +32,7 @@ from tomlkit.exceptions import TOMLKitError
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.distribution.models.content import Content
 from devkit_dist.features.distribution.models.errors import SelectionError
+from devkit_dist.features.distribution.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.distribution.models.settings import DEFAULT_PLAYBOOK_LIMIT as DEFAULT_PLAYBOOK_LIMIT
 from devkit_dist.features.distribution.models.settings import DEFAULT_PLAYBOOK_MAX_BYTES as DEFAULT_PLAYBOOK_MAX_BYTES
 from devkit_dist.features.distribution.models.settings import DEFAULT_PLAYBOOK_MIN_SCORE as DEFAULT_PLAYBOOK_MIN_SCORE
@@ -269,7 +270,7 @@ def missing_selection_error(missing: list[str], deployed: list[str]) -> Selectio
     return SelectionError(
         f"selected bundle is not installed: {missing}"
         + (f" (deployed per {RECEIPT_PATH}: {deployed})" if deployed else ""),
-        fix="Install the package that ships it (`uv sync`), or deselect it with `devkit remove <bundle>`",
+        fix=f"Install the package that ships it (`uv sync`), or deselect it with `{AGENT_INVOCATION} remove <bundle>`",
     )
 
 
@@ -409,7 +410,7 @@ def resolve_selection(installed: list[InstalledBundle], requested: dict[str, lis
                 raise unusable[name]
             raise SelectionError(
                 f"bundle is not installed: {name}",
-                fix="Install the content package that ships it, or run `devkit list`",
+                fix=f"Install the content package that ships it, or run `{AGENT_INVOCATION} list`",
             )
         if not presets or DEFAULT_PRESET in presets:
             default = bundle.default_preset

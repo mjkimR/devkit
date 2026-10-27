@@ -67,6 +67,8 @@ COMMANDS: dict[str, str] = {
 # The command names devkit-agt mounts through devkit.commands. Names only, consulted last: an installed command of
 # the name always wins, and the list is never shown by ``--help``.
 HARNESS_COMMANDS: tuple[str, ...] = ("rules", "workflow", "gate", "worktree", "generated", "integration", "run")
+# The command names an optional extra mounts, by command name: the extra that provides it. Consulted the same way.
+EXTRA_COMMANDS: dict[str, str] = {"mcp": "mcp"}
 
 
 @functools.cache
@@ -140,6 +142,20 @@ def _load_plugin(name: str) -> click.Command | None:
     return command
 
 
+def _extra_unavailable(name: str) -> click.Command | None:
+    """The stand-in for an extra's command name no installed package provides; ``None`` for any other name."""
+    if name not in EXTRA_COMMANDS:
+        return None
+    from devkit_dist.base.errors import MCP_INSTALL_FIX, ExtraCommandUnavailableError, extra_install_fix
+
+    extra = EXTRA_COMMANDS[name]
+    error = ExtraCommandUnavailableError(
+        f"command {name}: not installed; devkit {name} comes with the {extra} extra",
+        fix=MCP_INSTALL_FIX if extra == "mcp" else extra_install_fix(extra),
+    )
+    return _unusable(name, error)
+
+
 def _harness_unavailable(name: str) -> click.Command | None:
     """The stand-in for a harness command name no installed package provides; ``None`` for any other name."""
     if name not in HARNESS_COMMANDS:
@@ -161,7 +177,7 @@ class _LazyGroup(LazyGroup):
     def resolve_lazy(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
         if cmd_name in COMMANDS:
             return super().resolve_lazy(ctx, cmd_name)
-        return _load_plugin(cmd_name) or _harness_unavailable(cmd_name)
+        return _load_plugin(cmd_name) or _harness_unavailable(cmd_name) or _extra_unavailable(cmd_name)
 
 
 def _print_version(ctx: click.Context, _param: click.Parameter, value: bool) -> None:

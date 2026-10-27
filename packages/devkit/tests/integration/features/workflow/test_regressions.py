@@ -140,7 +140,7 @@ def test_b1_return_loop_requires_the_gate_again(tmp_path: Path) -> None:
     assert back.exit_code == 0 and "[STAGE: build" in back.output
     assert (
         "[STALE_APPROVAL: decisions/01-gate-integration.yaml request=gate:integration stage=integrate counts=yes "
-        f'void_with="devkit workflow return --unit {UNIT} --to build"]' in back.output
+        f'void_with="uv run devkit workflow return --unit {UNIT} --to build"]' in back.output
     )
     as_json = json.loads(_next(root, "--format", "json").output)
     assert as_json["stale_approvals"] == ["decisions/01-gate-integration.yaml"]

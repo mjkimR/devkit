@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from devkit_agt.features.gate.models.base import BaseGate
 from devkit_agt.features.gate.models.contracts import GateContext, GateResult, Stage
-from devkit_agt.features.gate.models.errors import GateRefusedError
+from devkit_agt.features.gate.models.errors import GateFindingsError
 
 # ``git commit -v`` appends the diff below this line (after the comment string); Git strips it from the message.
 SCISSORS = "------------------------ >8 ------------------------"
@@ -46,6 +46,6 @@ class NonEmptyMessageGate(BaseGate):
         text = ctx.message_file.read_text("utf-8", errors="replace")
         if message_body(text).strip():
             return GateResult.passed()
-        raise GateRefusedError(
+        raise GateFindingsError(
             "commit message is empty", code="GATE_MESSAGE_EMPTY", fix="Write a subject line describing the change"
         )

@@ -401,7 +401,7 @@ def test_configured_gate_that_is_not_installed_fails_the_stage(tmp_path: Path) -
     config = GatesConfig({"timeline": GateEntry(True)})
     report = run_stage(gate_ctx(tmp_path), default_gate_registry(), config)
     assert not report.ok and "not installed: ['timeline']" in report.errors[0].message
-    assert report.errors[0].fix is not None and "`devkit sync`" in report.errors[0].fix
+    assert report.errors[0].fix is not None and "`uv run devkit sync`" in report.errors[0].fix
 
 
 @pytest.mark.parametrize(

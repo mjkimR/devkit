@@ -34,10 +34,17 @@ def target(tmp_path: Path) -> Path:
 
 def test_sync_installs_hooks_only_after_writing(target: Path, installed: list[InstalledBundle]) -> None:
     git(target, "init", "-q")
-    sync_project(target, installed, dry_run=True)
+    preview = sync_project(target, installed, dry_run=True)
     assert not (target / ".git/hooks/pre-commit").exists()
+    assert [item.message for item in preview.notices if item.code == "POST_SYNC_NOTICE"] == [
+        "gate hooks would change: pre-commit: installed; commit-msg: installed; post-commit: installed"
+    ]
     result = sync_project(target, installed)
-    assert all(item.code == "MCP_RUNTIME_UNAVAILABLE" for item in result.notices)
+    hooks_line = [item for item in result.notices if item.code == "POST_SYNC_NOTICE"]
+    assert [item.message for item in hooks_line] == [
+        "gate hooks: pre-commit: installed; commit-msg: installed; post-commit: installed"
+    ]
+    assert all(item.code == "MCP_RUNTIME_UNAVAILABLE" for item in result.notices if item not in hooks_line)
     entry = target / ".git/hooks/pre-commit.d/20-devkit"
     assert entry.is_file()
     assert (target / ".git/hooks/post-commit.d").is_dir()

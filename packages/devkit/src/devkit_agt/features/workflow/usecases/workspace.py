@@ -234,7 +234,7 @@ class Workspace:
                 f"workflow {doc.id} is invalid",
                 *problems,
                 target_files=[self.rel(doc.path)] if doc.path else (),
-                fix=f"Run `devkit workflow validate` and fix every problem in {doc.id}",
+                fix=f"Run `uv run devkit workflow validate` and fix every problem in {doc.id}",
             )
         return doc
 
@@ -385,7 +385,7 @@ class Workspace:
                 target_files=[self.rel(unit_dir / found)],
                 fix=(
                     f"Rename the anchor to {expected} (and move the unit into the workflow's layout), or rebind it "
-                    f"with `devkit workflow bind --unit {unit_rel} --workflow <id>` naming a workflow whose anchor is {found}"
+                    f"with `uv run devkit workflow bind --unit {unit_rel} --workflow <id>` naming a workflow whose anchor is {found}"
                 ),
             )
         return UnitRef(unit_dir, found, binding, doc, self.rel(unit_dir))
@@ -416,7 +416,7 @@ class Workspace:
             raise WorkflowNotSelectedError(
                 f"unit {self.rel(unit_dir)} is not bound and [workflow].default is unset",
                 fix=(
-                    f"Bind the unit with `devkit workflow bind --unit {self.rel(unit_dir)} --workflow <id>`, "
+                    f"Bind the unit with `uv run devkit workflow bind --unit {self.rel(unit_dir)} --workflow <id>`, "
                     "or set [workflow].default in .devkit/config.toml"
                 ),
             )
@@ -455,7 +455,7 @@ class Workspace:
             if name not in gates and (check is None or check.class_ not in DECLARABLE):
                 raise GivenInvalidError(
                     f"--given {name!r} is not a gate of {doc.id} nor a registered runner or human check",
-                    fix=f"Use a gate name ({', '.join(sorted(gates)) or 'none'}) or a runner/human check from `devkit workflow checks`",
+                    fix=f"Use a gate name ({', '.join(sorted(gates)) or 'none'}) or a runner/human check from `uv run devkit workflow checks`",
                 )
 
     def options(self, unit: UnitRef, *, given: Sequence[str] = (), lint: bool = True) -> Options:

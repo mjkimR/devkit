@@ -1,80 +1,96 @@
 # devkit: Agent Guide
 
-Personal developer tools monorepo.
+Personal developer tools monorepo: Python packages managed with `uv` workspaces and `just`.
 
 ## Architecture and Boundaries
 
-- Python monorepo managed with `uv` workspaces and `just`.
-- Python sources live in `packages/<package>/src/` or `tools/<tool>/src/` (`models/devkit-embed` is a data package outside the workspace, built by hand); tests belong in each package's `tests/{unit,integration,e2e}/`, mirroring source ownership beneath each tier, with shared helpers in `tests/support/`. Create only needed tiers. A rule's own tests travel with it in `<rule>/tests/` (`CAP-GOV-rule-authoring`). Repository-owned installed-wheel consumer checks remain under `scripts/` as cross-package e2e checks.
+`ARCH-05-2-components` is the contract for package layout, layering and test layout; the repository-owned
+`devkit-dev` rules (`RULE-usecase-boundaries` and the structure rules) enforce it. Read it before adding a
+package, feature, layer or test tier. The rules agents most often need:
+
+- Sources live in `packages/<package>/src/` or `tools/<tool>/src/`; tests in each package's
+  `tests/{unit,integration,e2e}/`, mirroring source ownership, with helpers in `tests/support/`. A rule's tests
+  live in `<rule>/tests/` (`CAP-GOV-rule-authoring`).
+- Each wheel owns its own regular package (`devkit-dist` → `devkit_dist`, `devkit-agt` → `devkit_agt`, others by
+  distribution name); `devkit-advisory` keeps the PEP 420 `devkit.advisory` namespace (no
+  `src/devkit/__init__.py`). No installed path belongs to two wheels.
+- Behavior lives under `features/<feature>/` with only the layers it needs (`cli`, `mcp`, `usecases`, `services`,
+  `repositories`, `models`); no package-level `core`. Business logic stays out of `__init__.py`.
+- CLI/MCP/HTTP-exposed operations implement `devkit_core.base.usecase.BaseUseCase` with a typed `execute`.
+  Adapters call use cases; services and repositories never import use cases or adapters.
+- `devkit_core.base` never imports `devkit_core.core`; `devkit-core` imports no application package.
+  `devkit-dist` never imports `devkit_agt` or the MCP SDK, and its tests pass without `devkit-agt` (`just test-dist`).
 - Keep `justfile` recipes thin; shared shell logic belongs in `scripts/`.
-- Each application wheel owns an independent regular Python package: `devkit-dist` owns `devkit_dist`, `devkit-agt` owns `devkit_agt`, and the other application packages use their distribution name with underscores. `devkit-advisory` preserves the public `devkit.advisory` API in its PEP 420 namespace; do not add `src/devkit/__init__.py` there. No installed path belongs to two wheels.
-- `devkit-core` owns the independent `devkit_core` package: generic filesystem/Git/parsing/plugin primitives, logging and extension dispatch under `core`, shared errors and SDK-free MCP contracts under `base`. `base` never imports `core`. It depends only on `devkit-advisory` and PyYAML; never import application packages from it.
-- Application packages organize behavior under `features/<feature>/`, with `cli`, `mcp`, `usecases`, `services`, `repositories` and `models` added when needed as modules or directories. Package-level `base` holds shared contracts and `utils` holds technical helpers; create neither until needed, and do not create package-level `core`. Shared transport adapters require an explicit package declaration; dist owns `adapters/cli.py`, devkit's configuration of the `devkit_cli` boundary. Application-owned content lives in `bundles/<name>/bundle/`, even with one bundle; content-only packages may keep their existing bundle-only layout. `devkit_core` is the foundation exception with `base/` and `core/`.
-- `__init__.py` owns package management: public exports, import control, lazy loading and dynamic discovery are allowed. Put business operations, domain validation and command handlers in named modules. Split CLI modules by related command group when needed; group assembly remains transport wiring.
-- CLI/MCP/HTTP-exposed application operations implement `devkit_core.base.usecase.BaseUseCase` and run through a fully typed `execute` method. Constructors receive dependencies; execution stays in `execute`. Internal composition and helper functions remain functions. The base is an identification and static-check contract, not authorization or execution middleware. Define feature-owned repository `Protocol` contracts when substitution is needed; do not mandate `BaseRepository`, a Command abstraction or Unit of Work without a concrete requirement.
-- CLI, MCP and HTTP adapters expose use cases. Use cases coordinate services and repositories; services and repositories never import use cases or adapters. Models and package base contracts never import higher layers. Feature dependencies must follow their declared direction; optional providers are discovered through the existing entry-point groups. The repository-owned `devkit-dev` bundle checks layout and layer boundaries; package tests cover their feature dependency graph.
-- `devkit-dist` never imports `devkit_agt` or the MCP SDK. `devkit-agt` mounts its commands through `devkit.commands` entry points; `devkit-dist` owns the `devkit` executable. The `devkit-dist` tests also run without `devkit-agt` installed (`just test-dist`).
-- `guides/` holds the agent-facing installation guides a consumer's agent follows from a GitHub link; keep their commands, codes and bundle recommendations in step with `docs/` and the packages.
-- `docs/capabilities/<area>/` is canonical for each module's behavior, and `docs/architecture/` defines system structure; `docs/development/reference/<module>.md` and package READMEs stay quick references that point to those contracts, and the bundled guide instructions are consumer-facing mirrors kept in step.
-- Write all documentation, architecture specifications, and guide materials in English. The one exception is the
-  release handbook: non-English text belongs only under `handbook/<lang>/` for a language other than `en`
-  (`ADR-localized-handbook-language-exception`); `handbook/en/` and `handbook/manifest.json` stay English.
+
+## Documentation
+
+- `docs/capabilities/<area>/` is canonical for behavior and `docs/architecture/` for structure;
+  `docs/development/reference/`, package READMEs and bundled guide instructions are quick references kept in
+  step with them. `guides/` holds the consumer agents' installation guides: keep their commands, codes and bundle
+  recommendations in step with `docs/` and the packages.
+- Write documentation in English. The one exception is the release handbook's `handbook/<lang>/` for a language
+  other than `en` (`ADR-localized-handbook-language-exception`).
 - Do not commit `.env` or log secrets/PII.
 
 ## Agent-First Design
 
-`devkit`'s primary consumer is an AI coding agent that runs it through a shell or tool call and acts on what comes back. People read the same output, but nothing is shaped for them at the agent's expense. Apply this to every command, library API and guide:
+`devkit`'s primary consumer is an AI coding agent. Every command, library API and guide follows
+`ARCH-08-1-agent-output`, `CAP-ADV-agent-advisory-protocol` and `CAP-CLI-agent-cli-toolkit`; in short:
 
-- **stdout is the result**: one-line `[KIND: ...]` sentinels, or exactly one JSON object under `--format json`. No colour, emoji, tables, progress output or anything that depends on the terminal.
-- **stderr is for advisories**: Agent Advisory Protocol blocks (`[ERROR]`, `[WARN]`, `[NOTICE]`), plus `[INFO]` log lines only under `-v`. Advisory sentinel names are never stdout kinds.
-- **Codes and directives**: everything an agent must act on has a stable `UPPER_SNAKE` code and a deterministic `[ACTION]` directive. Branch and test on codes, never on message text; never write hedged directives ("likely", "might").
-- **Levels**: a failure or refusal is raised as an `AdvisoryError`; something a successful operation must report is returned with its result under `notices` at `WARNING` or `NOTICE`, never raised and never logged. Warnings and notices do not change exit codes (`0` success, `1` negative result, `2` could not run), except under `--strict`.
-- **Context budget**: default output carries only what changes the agent's next step or must reach the user. Diagnostics are `logging` calls, visible under `-v`.
-- **Libraries never print**: commands write output only through `devkit_dist.adapters.cli` (`boundary`, `echo_json`, `echo_notices`, `exit_on_warnings`), devkit's configuration of `devkit_cli`.
-- Specifications: `ARCH-08-1-agent-output`, `CAP-ADV-agent-advisory-protocol` and `CAP-CLI-agent-cli-toolkit`.
+- stdout is the result: one-line `[KIND: ...]` sentinels, or exactly one JSON object under `--format json` or from
+  a JSON-only command (`ARCH-08-1`). Nothing terminal-dependent.
+- stderr carries Agent Advisory Protocol blocks, plus `[INFO]` lines only under `-v`.
+- Everything an agent must act on has a stable `UPPER_SNAKE` code and a deterministic `[ACTION]`; branch and test
+  on codes, never on message text.
+- Failures are raised as `AdvisoryError`; a successful operation returns warnings and notices under `notices`.
+  Exit codes: `0` success, `1` negative result, `2` could not run; warnings change them only under `--strict`.
+- Default output carries only what changes the agent's next step; diagnostics are `logging` calls.
+- Libraries never print: commands write through `devkit_dist.adapters.cli`.
 
 ## Compatibility
 
-- No external consumers exist yet. Breaking changes to schemas (`bundle.toml`, `.devkit/config.toml`, `.devkit/installation.json`), CLI commands, and APIs may be made in place: do not bump schema versions or add migration paths, deprecation shims, or legacy readers.
-- Once a real consumer exists, delete this section and treat these formats as versioned contracts that require migrations.
-- Exception: `devkit-advisory` (the `devkit.advisory` API) already has runtime consumers in other repositories, and `devkit-cli` (the `devkit_cli` API) exists for them. Treat both as semver contracts: within `0.x`, a breaking change needs a minor version bump, released in lockstep with `devkit-dist` and `devkit-agt`.
+- No external consumers exist yet: schemas (`bundle.toml`, `.devkit/config.toml`, `.devkit/installation.json`),
+  CLI commands and APIs change in place, without version bumps, migrations, shims or legacy readers. Delete this
+  rule once a real consumer exists.
+- Exception: `devkit-advisory` (`devkit.advisory`) and `devkit-cli` (`devkit_cli`) have runtime consumers in other
+  repositories and are semver contracts: within `0.x` a breaking change needs a minor bump, released in lockstep
+  with `devkit-dist` and `devkit-agt` (`ARCH-07-deployment`).
 
 ## Packages
 
-Keep package descriptions in this guide to a high-level summary of their purpose. Do not add package-specific configurations or detailed architectural explanations here; refer to the package README and `docs/capabilities/<area>/` when deeper details are needed:
+Each package's README describes its modules; `docs/capabilities/<area>/` holds the contracts.
 
-- `devkit-core`: Shared foundation without CLI or application dependencies. See [packages/devkit-core/README.md](packages/devkit-core/README.md).
-- `devkit-dist`: Agent asset distribution with the `devkit` CLI: bundles, agent projections, sync, context loading, playbooks and native hooks, using `devkit-core` and its own project configuration and receipt contracts. See [packages/devkit-dist/README.md](packages/devkit-dist/README.md) for its modules and layering.
-- `devkit-agt`: The developer harness mounted under `devkit`: repository rules, delivery workflows, commit gates, task worktrees, generated files, integration and compact command output; depends on `devkit-dist`. See [packages/devkit/README.md](packages/devkit/README.md) for its modules and layering.
-- `devkit-mcp`: Optional MCP transport, native forms and retained-runtime registration provider; domain services stay in their packages. See [packages/devkit-mcp/README.md](packages/devkit-mcp/README.md).
-- `devkit-cli`: The agent-first command-line boundary (`devkit_cli`) that `devkit` and other repositories' click tools build on; depends on `click` and `devkit-advisory` only. See [packages/devkit-cli/README.md](packages/devkit-cli/README.md).
-- `devkit-advisory`: The Agent Advisory Protocol library (`devkit.advisory`) on its own, for other repositories' runtime; `devkit-dist` and `devkit-agt` depend on the same version (released in lockstep with `devkit-core`, `devkit-cli` and `devkit-mcp`; see `ARCH-07-deployment`). See [packages/devkit-advisory/README.md](packages/devkit-advisory/README.md).
-- `devkit-spec`: Spec-driven delivery commands and agent assets on the shared devkit harness. See [packages/devkit-spec/README.md](packages/devkit-spec/README.md).
-- `devkit-starter`: Example external content package demonstrating bundle packaging and distribution. See [packages/devkit-starter/README.md](packages/devkit-starter/README.md).
-- `devkit-catalog`: Opt-in content bundles that are available once installed but deployed only when a project selects them. See [packages/devkit-catalog/README.md](packages/devkit-catalog/README.md).
-- `devkit-viewer`: A local, read-only page for the Living Spec, proposals, specs and roadmap of several devkit repositories (`devkit viewer serve`), and the Svelte viewer library autohub vendors. See [packages/devkit-viewer/README.md](packages/devkit-viewer/README.md).
+| Package | Purpose |
+| --- | --- |
+| `devkit-core` | Shared foundation without CLI or application dependencies |
+| `devkit-dist` | Agent asset distribution and the `devkit` executable |
+| `devkit-agt` (`packages/devkit`) | Developer harness: rules, workflows, commit gates, worktrees, integration |
+| `devkit-mcp` | Optional MCP transport and registration provider |
+| `devkit-cli` | Agent-first command-line boundary (`devkit_cli`) |
+| `devkit-advisory` | Agent Advisory Protocol library (`devkit.advisory`) |
+| `devkit-spec` | Spec-driven delivery commands and agent assets |
+| `devkit-starter` | Example external content package |
+| `devkit-catalog` | Opt-in content bundles |
+| `devkit-viewer` | Local read-only Living Spec viewer and its Svelte library |
 
 ## Verification
 
-Run lint, type checks, and relevant tests before completing code changes. Use `just test-affected` for development,
-review and the final integration content; no separate local full-suite run is required. Preserve its `mode=full`
-fallback. Incorporate a moved base and resolve conflicts before testing; merging unchanged verified content needs
-no additional test run. Full CI runs nightly at 04:17 Asia/Seoul when the default branch differs from its last
-successful nightly verification, and always at release or manual invocation. A viewer frontend change selects no
-pytest test: run the command its `[FRONTEND_CHECK: ...]` line names instead:
+Run lint, type checks and relevant tests before completing code changes. Use `just test-affected` for
+development, review and the final integration content (keep its `mode=full` fallback); no separate local
+full-suite run is required. Incorporate a moved base before testing; merging unchanged verified content needs no
+new run. Full CI runs nightly (04:17 Asia/Seoul, when the default branch changed), at release and on demand. A
+viewer frontend change selects no pytest test: run the command its `[FRONTEND_CHECK: ...]` line names.
 
 | Target | Command |
 | --- | --- |
-| Lint & format | `just lint [module]` |
-| Lint & format check (CI) | `just lint-check [module]` |
+| Lint & format / check (CI) | `just lint [module]` / `just lint-check [module]` |
 | Type check (Pyright) | `just check [module]` |
-| Tests during development | `just test-affected` (from the diff) or `just test <module> [area\|path...]` |
-| Full test suite (nightly, release, manual, or selector fallback) | `just test` |
-| devkit-dist without devkit-agt (dist-only check) | `just test-dist` |
-| Test Coverage | `just test-cov [module] [area\|path...]` |
-| Governance Rules | `just rules-check` or `just rules-fix` |
+| Tests | `just test-affected`, `just test <module> [area\|path...]`, full: `just test` |
+| devkit-dist without devkit-agt | `just test-dist` |
+| Coverage | `just test-cov [module] [area\|path...]` |
+| Governance rules | `just rules-check` / `just rules-fix` |
 | Consumer smoke (packaging, CLI wiring, hooks) | `just smoke` |
-| Viewer frontend (needs Node; rebuild the committed page after a change) | `just viewer lint`, `just viewer check`, `just viewer test`, `just viewer build` |
+| Viewer frontend (needs Node; rebuild the committed page after a change) | `just viewer lint\|check\|test\|build` |
 
 <!-- DEVKIT:START -->
 ## devkit

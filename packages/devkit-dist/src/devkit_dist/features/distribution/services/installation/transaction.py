@@ -24,6 +24,7 @@ from devkit_dist.features.distribution.models.errors import (
     RecoveryError,
     UnsafeWorkspaceError,
 )
+from devkit_dist.features.distribution.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.distribution.services.installation.workspace import (
     JOURNAL,
     LOCK,
@@ -302,10 +303,10 @@ def _swapped_directory(root: Path, name: str, directories: list[str]) -> bool:
 
 
 LEGACY_JOURNAL_FIX = (
-    f"Run `devkit recover` with the devkit version that wrote {JOURNAL}; without it, restore by hand: for each path"
+    f"Run `{AGENT_INVOCATION} recover` with the devkit version that wrote {JOURNAL}; without it, restore by hand: for each path"
     " under `changes` whose file equals its base64 `before` or `after` content, write back the `before` content"
     " (delete the file when `before` is null); a file that equals neither was edited after the sync, so decide"
-    f" which content to keep; then delete {JOURNAL} and run `devkit sync`"
+    f" which content to keep; then delete {JOURNAL} and run `{AGENT_INVOCATION} sync`"
 )
 
 

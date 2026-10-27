@@ -214,7 +214,7 @@ class _Evaluator:
             more = len(self.lint_violations) - LINT_DETAIL_SHOWN
             if more > 0:
                 unit = _rel(self.unit_dir, self.opts.workspace_root)
-                shown += f"; {more} more (devkit rules check {unit})"
+                shown += f"; {more} more (uv run devkit rules check {unit})"
             return True, False, f"{len(self.lint_violations)} violation(s): {shown}"
         return True, True, ""
 

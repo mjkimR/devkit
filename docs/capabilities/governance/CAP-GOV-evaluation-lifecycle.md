@@ -89,6 +89,7 @@ RULE-markdown-link = "hygiene"
 - At `remaining=0` the run also reports a `RULES_PROMOTION_READY` notice on stderr whose `fix` is to delete the entry, returning the rule to its default phase.
 - A `hygiene` run limited to explicit targets evaluates the rule unless target scoping skips it (section 3), and prints no count and no notice: violations in the selected files say nothing about the rest of the workspace.
 - Violations report the phase the rule ran in (`phase: "hygiene"`), not its declared default.
+- `check` and `fix` count the loaded rules active in the run's phase on their summary (`[SUMMARY: ... rules=N]`), before target scoping, so a skip leaves the output unchanged. A run with none active (every rule parked, say) checked nothing: it still passes, with `rules=0` and a `RULES_NONE_ACTIVE` notice, so that pass is never mistaken for a clean check.
 
 ### Rule Promotions (`promote_to`)
 

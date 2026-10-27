@@ -194,7 +194,7 @@ def envelope_new_cmd(kind: str, **options: Any) -> None:
     if kind in KIND_COMMANDS:
         raise EnvelopeFlagError(
             f"kind {kind} has its own command",
-            fix=f"Use `devkit workflow envelope {kind}` with the same options",
+            fix=f"Use `uv run devkit workflow envelope {kind}` with the same options",
         )
     _write(kind, **options)
 

@@ -124,5 +124,5 @@ def test_an_unsynchronized_bundle_names_a_runnable_fix_and_the_synchronized_bund
     with pytest.raises(SelectionError) as raised:
         GetContext().execute(target, "nope")
     # One exact command, never a guess such as `devkit add nope` for a name that may not exist.
-    assert raised.value.fix == "devkit list"
+    assert raised.value.fix == "uv run devkit list"
     assert raised.value.details == ("synchronized bundles: devkit",)

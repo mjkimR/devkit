@@ -2,7 +2,7 @@
 
 Text output is one ``[KIND: ...]`` sentinel line per fact, without colour:
 ``[VIOLATION: ...]`` per finding (``[RULE_COUNTS: ...]`` per rule with
-``--summary-only``), then ``[SUMMARY: errors=N warnings=N infos=N fixed=N]``
+``--summary-only``), then ``[SUMMARY: errors=N warnings=N infos=N fixed=N rules=N]``
 and ``[OK: ...]`` when the run passes; ``test`` prints ``[RULE_TEST: ...]`` per
 rule (with the failure view of a failed run) and ``[SUMMARY: rules=N ...]``. Free text (messages, remediations,
 descriptions) is written as a JSON string, so every fact stays on one line.
@@ -140,11 +140,13 @@ def print_violations(
     guides: Mapping[str, Path],
     workspace_root: Path,
     *,
+    rules: int,
     summary_only: bool = False,
 ) -> None:
     """Findings (or per-rule counts) and one summary line; a run with problems and no findings prints nothing.
 
-    ``guides`` maps rule IDs to guide documents (``ProjectRun.guides``).
+    ``guides`` maps rule IDs to guide documents (``ProjectRun.guides``); ``rules`` is the number of rules active in
+    the run's phase (``ProjectRun.active_rules``), so a pass that checked nothing reads ``rules=0``.
     """
     if errors and not violations:
         return
@@ -157,7 +159,7 @@ def print_violations(
     else:
         for v in violations:
             click.echo(_violation_line(v, guides, workspace_root))
-    click.echo(f"[SUMMARY: {_count_fields(_counts(violations))}]")
+    click.echo(f"[SUMMARY: {_count_fields(_counts(violations))} rules={rules}]")
 
 
 def print_phase_plan(entries: Sequence[PhaseEntry]) -> None:

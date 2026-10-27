@@ -15,6 +15,7 @@ from devkit_dist.adapters.cli import (
     is_json,
     resolve_root,
 )
+from devkit_dist.features.distribution.models.invocation import devkit_command
 from devkit_dist.features.distribution.models.settings import (
     AGENT_NAMES,
     DEFAULT_PRESET,
@@ -103,7 +104,8 @@ def sync(
             raise ArgumentError("--registrations-only cannot be combined with other sync modes or selections")
         registration = SyncRegistrations().execute(resolve_root(workspace_root))
         if is_json(output_format):
-            echo_json({"actions": registration.changes, "notices": [item.to_dict() for item in registration.notices]})
+            actions = [{"path": path, "action": kind} for path, kind in registration.actions]
+            echo_json({"actions": actions, "notices": [item.to_dict() for item in registration.notices]})
         else:
             click.echo(f"[MCP_REGISTRATION: changes={len(registration.changes)}]")
         echo_notices(registration.notices)
@@ -134,7 +136,8 @@ def sync(
             raise ArgumentError(
                 f"--locked cannot be combined with {', '.join(combined)}",
                 target_files=["--locked", *combined],
-                fix="Run `devkit sync --locked` alone; `devkit sync --check` previews without writing",
+                fix=f"Run `{devkit_command('sync --locked')}` alone; `{devkit_command('sync --check')}` previews"
+                " without writing",
             )
     requested = _parse_selections(presets, "--preset")
     active_agents = [] if no_agents else (list(agents) if agents else None)
@@ -144,6 +147,7 @@ def sync(
         agents=active_agents,
         presets=requested,
         dry_run=dry_run or check,
+        check=check,
         locked=locked,
         environment="cloud" if cloud else "local" if local else None,
     )
@@ -196,7 +200,8 @@ def remove(bundles: tuple[str, ...], workspace_root: str | None, dry_run: bool, 
 def list_resources(workspace_root: str | None) -> None:
     """List installed bundles, their selection state, and the project's synchronized asset paths.
 
-    An installed package the project does not deploy that fails to load is a warning on stderr.
+    An installed package the project does not deploy that fails to load is a
+    warning under notices in the JSON result.
     """
     listing = ListProject().execute(resolve_root(workspace_root))
     echo_json(listing.to_dict())
@@ -212,9 +217,12 @@ def status(workspace_root: str | None) -> None:
 
     Problems (a missing, stale, modified, mode-mismatched, symlinked or
     non-regular managed file, a symlinked or malformed root AGENTS.md, a selected bundle
-    whose package fails to load, a pending journal, override drift) are listed
-    under errors and rendered on stderr; any exits 1. A package the project
-    does not deploy that fails to load is a warning under notices.
+    whose package fails to load, a pending journal, override drift under
+    override_drift = "block") are listed under errors in the JSON result; any
+    exits 1. Warnings and notices (override drift under the default "warn", a
+    package the project does not deploy that fails to load, MCP registration
+    still to set up) are listed under notices. Output is JSON only: nothing is
+    repeated on stderr.
     """
     report = InspectProject().execute(resolve_root(workspace_root))
     echo_json(report.to_dict())

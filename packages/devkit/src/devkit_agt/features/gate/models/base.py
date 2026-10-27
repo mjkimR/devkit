@@ -24,6 +24,12 @@ class BaseGate(ABC):
     enabled_by_default: bool = True
     settings: Any = None
 
+    def setup(self, settings: Any) -> str | None:
+        """What ``devkit gate status`` shows about the gate's effective ``settings``, such as a gate that skips while
+        it is unconfigured; ``None`` (the default) shows nothing."""
+        del settings
+        return None
+
     @abstractmethod
     def run(self, ctx: GateContext) -> GateResult | None:
         """Return ``GateResult.passed``/``skipped`` (``None`` means passed) or raise ``GateRefusedError`` to refuse."""

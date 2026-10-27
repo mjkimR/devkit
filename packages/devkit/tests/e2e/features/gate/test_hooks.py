@@ -99,12 +99,12 @@ def test_foreign_hooks_are_preserved_automatically_and_restored(repo: Path) -> N
     foreign.chmod(0o755)
     code, output = _invoke("install", "-w", str(repo), "--python", sys.executable)
     assert code == 0 and "GATE_HOOK_PRESERVED" in output
-    assert "previous-hook-ran" in (repo / ".git/hooks/pre-commit.legacy").read_text()
+    assert "previous-hook-ran" in (repo / ".git/hooks/pre-commit.devkit-preserved").read_text()
     code, output = _commit(repo, "-m", "feat: chained")
     assert code == 0 and "previous-hook-ran" in output, output
 
     _invoke("uninstall", "-w", str(repo))
-    assert "previous-hook-ran" in foreign.read_text() and not (repo / ".git/hooks/pre-commit.legacy").exists()
+    assert "previous-hook-ran" in foreign.read_text() and not (repo / ".git/hooks/pre-commit.devkit-preserved").exists()
 
 
 def test_a_failing_moved_aside_hook_still_blocks_the_commit(repo: Path) -> None:
@@ -159,7 +159,7 @@ def test_core_hooks_path_is_refused_and_reported(repo: Path) -> None:
     assert notice["advisory"]["details"] == ["gates=rules-check,verify-commands,message-nonempty"]
     assert (
         notice["advisory"]["fix"]
-        == "Once the user agrees, run `git config --unset core.hooksPath`, then `devkit gate install`"
+        == "Once the user agrees, run `git config --unset core.hooksPath`, then `uv run devkit gate install`"
     )
     code, output = _invoke("status", "-w", str(repo))
     assert code == 0 and "core.hooksPath=.husky (wrappers do not run)" in output
@@ -206,7 +206,7 @@ def test_a_directory_moved_aside_does_not_break_commits(repo: Path) -> None:
     (repo / ".git/hooks/pre-commit").mkdir()
     assert hooks.status(repo)[0].state is hooks.HookState.FOREIGN
     _install(repo, "--force")
-    assert (repo / ".git/hooks/pre-commit.legacy").is_dir()
+    assert (repo / ".git/hooks/pre-commit.devkit-preserved").is_dir()
     code, output = _commit(repo, "-m", "feat: x")
     assert code == 0, output
     _invoke("uninstall", "-w", str(repo))
@@ -608,7 +608,7 @@ def test_install_is_idempotent_and_retains_custom_scripts(repo: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    "conflict", ["pre-commit.legacy", "commit-msg.d/20-devkit", "commit-msg.d/00-legacy", "commit-msg.d"]
+    "conflict", ["pre-commit.devkit-preserved", "commit-msg.d/20-devkit", "commit-msg.d/00-legacy", "commit-msg.d"]
 )
 def test_conflicting_paths_are_not_overwritten_and_preflight_all_stages(repo: Path, conflict: str) -> None:
     original = repo / ".git/hooks/pre-commit"
@@ -647,15 +647,15 @@ def test_failed_dispatcher_write_restores_the_existing_hook(repo: Path, monkeypa
     original = hook.read_bytes()
     write = hooks._write
 
-    def fail_dispatcher(path: Path, text: str) -> None:
+    def fail_dispatcher(path: Path, text: str, *, dry_run: bool = False) -> bool:
         if path == hook:
             raise OSError("write failed")
-        write(path, text)
+        return write(path, text, dry_run=dry_run)
 
     monkeypatch.setattr(hooks, "_write", fail_dispatcher)
     with pytest.raises(OSError, match="write failed"):
         hooks.install(repo, sys.executable)
-    assert hook.read_bytes() == original and not (repo / ".git/hooks/pre-commit.legacy").exists()
+    assert hook.read_bytes() == original and not (repo / ".git/hooks/pre-commit.devkit-preserved").exists()
 
 
 def test_symlinked_script_directory_is_not_written_through(repo: Path, tmp_path: Path) -> None:

@@ -89,7 +89,7 @@ class StaleBranch:
     def warning(self, base: Path, stale_after: str) -> StaleBranchWarning:
         quoted = shlex.quote(str(base))
         remotes = [ref for ref in self.refs if ref != "local"]
-        discard = [f"devkit worktree finish {self.branch} --discard -w {quoted}"] if "local" in self.refs else []
+        discard = [f"uv run devkit worktree finish {self.branch} --discard -w {quoted}"] if "local" in self.refs else []
         discard += [f"git -C {quoted} push {shlex.quote(remote)} --delete {self.branch}" for remote in remotes]
         pr = " close its pull request," if self.pr in {"draft", "open", "blocked"} else ""
         return StaleBranchWarning(
@@ -98,7 +98,7 @@ class StaleBranch:
             f"unit: {self.unit or '-'}",
             f"refs: {', '.join(self.refs)}",
             *([f"pull request: {self.pr_url}"] if self.pr_url else []),
-            fix=f"To resume it, devkit worktree start {self.branch} --existing-branch {self.source()} --unit"
+            fix=f"To resume it, uv run devkit worktree start {self.branch} --existing-branch {self.source()} --unit"
             f" {self.unit or '<unit directory>'}; to discard it, only once the user decides:{pr} "
             + " && ".join(discard),
         )

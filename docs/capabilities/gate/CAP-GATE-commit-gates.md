@@ -53,7 +53,7 @@ report.ok, report.problems, report.exit_code         # exit_code: the highest ex
 `rules-check` runs the rule engine on what is committed, in the hook's own process, so every project that installs the hooks checks its rules at commit time without configuring a command:
 
 - It takes the snapshot `devkit rules check --staged` takes (`CAP-GOV-evaluation-lifecycle`): the index of the commit being made (`git commit -a` and `git commit <paths>` included), with its `.devkit/config.toml`, receipt and tracked rules, and evaluates the linter phase on the files the commit changes. When the working tree holds exactly what is staged (the usual case: everything changed is committed) it evaluates in place, so its cost follows the commit, not the repository; partial staging or an untracked file under `.devkit/` materializes the tree first. Unstaged edits and per-clone configuration cannot change the result; untracked files outside `.devkit/` are visible in place. A commit that stages nothing is skipped.
-- Unfixed error-severity violations refuse the commit with `GATE_RULES_FAILED` (`BLOCKED`, exit `1`): per violation a `[DETAIL]` `<RULE-id> <file>:<line>: <message>` and, when the rule gives one, `  fix: <remediation>`, the first 20 listed and the rest counted. Warning-severity violations pass with one `GATE_RULES_WARNINGS` warning listing them the same way.
+- Unfixed error-severity violations refuse the commit with `GATE_RULES_FAILED` (`INPUT_ERROR`, exit `1`: correct the staged change and commit again): per violation a `[DETAIL]` `<RULE-id> <file>:<line>: <message>` and, when the rule gives one, `  fix: <remediation>`, the first 20 listed and the rest counted. Warning-severity violations pass with one `GATE_RULES_WARNINGS` warning listing them the same way.
 - A run that could not complete (rules that cannot load, an invalid `[rules]` policy, a rule that raised) did not judge the commit: it is `RULES_RUN_FAILED` (exit `2`) with each problem as a detail, `AUTO` with their fix when every problem is `AUTO` with the same one (managed rule files missing in a fresh worktree or clone: `devkit sync`), else `MAINTENANCE`. An invalid `[rules]` table is `RULES_CONFIG_INVALID`.
 - While the rules run, the hook's `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and `GIT_PREFIX` are removed from the process environment and the index is passed as `DEVKIT_GIT_INDEX_FILE`, as `verify-commands` does for its commands; the environment is restored afterwards.
 - Tune the rules, not the gate: severities, phases (a rule parked in `hygiene` is not evaluated at commit time), settings and `exclude` in `[rules]`. A repository that keeps rules out of its commits sets `enabled = false` in `[gates.settings.rules-check]`, or a clone does so in `devkit.config`.
@@ -69,20 +69,23 @@ commands = ["just lint-check", "just check"]
 Hooks run with Git's environment, where the project's `.venv/bin` is usually not on `PATH`: call project tools through `uv run` or a recipe runner (`just`), never as bare `devkit`, `pytest` or `ruff`.
 
 - Each command line runs with `sh -c` from the top level of the work tree, in order, through `devkit_agt.features.compact.run_command`: the full output goes to a log file and the refusal carries only the compact view. Every command runs, so one attempt reports every failure.
-- A failure is `GATE_VERIFY_FAILED` (`BLOCKED`, exit `1`) naming the failed commands, with per command a `[DETAIL]` `command: <line>  exit=<n>  log=<path>`, then its recognized summaries, its failed tests, its last 10 output lines (summaries left out) and the error blocks of nested `devkit` commands (`  > ` lines). `RUN_SLOW_COMMAND` notices of the runs are returned as they are.
-- A nested `devkit` command that could not do its job (exit `2` with an error block of its own: rules that cannot load, a worktree or checkout that needs `devkit sync`) did not judge the commit, so the gate raises `GATE_VERIFY_NOT_RUN` (exit `2`) with the same details instead of the `BLOCKED` refusal. It is `AUTO` with the relayed fix when every relayed error is `AUTO` with the same one (managed files missing: `devkit sync`, then commit again), else `MAINTENANCE`.
+- A failure is `GATE_VERIFY_FAILED` (`INPUT_ERROR`, exit `1`: fix what failed and commit again) naming the failed commands, with per command a `[DETAIL]` `command: <line>  exit=<n>  log=<path>`, then its recognized summaries, its failed tests, its last 10 output lines (summaries left out) and the error blocks of nested `devkit` commands (`  > ` lines). `RUN_SLOW_COMMAND` notices of the runs are returned as they are.
+- A nested `devkit` command that could not do its job (exit `2` with an error block of its own: rules that cannot load, a worktree or checkout that needs `devkit sync`) did not judge the commit, so the gate raises `GATE_VERIFY_NOT_RUN` (exit `2`) with the same details instead of the `GATE_VERIFY_FAILED` refusal. It is `AUTO` with the relayed fix when every relayed error is `AUTO` with the same one (managed files missing: `devkit sync`, then commit again), else `MAINTENANCE`.
 - The commands see the working tree, not the index. When tracked files have unstaged changes or untracked files exist, the gate adds a `GATE_VERIFY_UNSTAGED` notice (in a refusal, a final `note:` detail) listing up to 10 of them, and does not refuse for it. A check that must match the commit exactly evaluates the index itself, as `rules-check` and `devkit rules check --staged` do: it reads `.devkit/config.toml`, the receipt and the synchronized rules from the staged tree (in place when the working tree holds exactly that tree, else from a materialized copy), and so cannot depend on unstaged edits or per-clone configuration (`CAP-GOV-evaluation-lifecycle`).
 - The hook's `GIT_DIR`, `GIT_INDEX_FILE`, `GIT_WORK_TREE` and `GIT_PREFIX` are removed from the commands' environment, so a test suite that runs Git in its own repositories is not pointed at this commit's index. The index is passed as `DEVKIT_GIT_INDEX_FILE` instead; devkit's staged snapshot uses it for this repository only (`devkit_core.core.git.commit_index`), so `devkit rules check --staged` evaluates exactly what `git commit -a` or `git commit <paths>` commits, a temporary index.
+- `devkit gate status` shows the gate's setup: `commands=<n>`, or `commands=0 (skipped: no commands configured)` while
+  the list is empty (`setup` in its JSON gate row).
 - Keep the list to what is quick enough for every commit; slower suites belong in CI. Interrupting a command (Ctrl-C, `SIGTERM`, `SIGHUP`) stops it, skips the remaining commands and gates, and aborts the commit: `devkit gate run` exits `128 + N` (`130` for Ctrl-C), as `devkit run` does.
 
-`message-nonempty` sees the message before Git's cleanup. Whether Git strips comment lines depends on how the commit was made (`git commit -m "#123 fix"` keeps the `#` line; the editor template strips it; `core.commentChar` changes the character), so the gate refuses only a message that is blank above the scissors line. A message that is empty only once comments are stripped is left to Git, which aborts such a commit itself unless `--allow-empty-message` is given.
+`message-nonempty` sees the message before Git's cleanup. Whether Git strips comment lines depends on how the commit was made (`git commit -m "#123 fix"` keeps the `#` line; the editor template strips it; `core.commentChar` changes the character), so the gate refuses only a message that is blank above the scissors line, with `GATE_MESSAGE_EMPTY` (`INPUT_ERROR`, exit `1`: write a subject line and commit again). A message that is empty only once comments are stripped is left to Git, which aborts such a commit itself unless `--allow-empty-message` is given.
 
 ## 3. Hook Wrappers
 
 `devkit sync` and `devkit gate install` prepare `pre-commit`, `commit-msg` and `post-commit` dispatchers in
 `<common-git-dir>/hooks`, shared by every worktree. `install`, `status` and `uninstall` resolve this directory.
 Each dispatcher runs executable regular files (including links to regular files) directly under `<hook>.d/`
-in bytewise filename order. Hidden files, non-executable files and directories are ignored; no recursion or
+in bytewise filename order. It finds that directory beside itself by its stage's name, not by its own filename, so a
+dispatcher another tool renamed still runs its entries. Hidden files, non-executable files and directories are ignored; no recursion or
 shell sourcing occurs. Scripts may use any interpreter through their shebang. Git's arguments, working directory,
 environment and stdin are inherited. Only these three commit stages are supported; adding stages with stdin
 payloads such as `pre-push` requires a replay contract so every child receives the full input.
@@ -90,10 +93,11 @@ payloads such as `pre-push` requires a replay contract so every child receives t
 ```text
 <common-git-dir>/hooks/
 ├── pre-commit                  # managed POSIX dispatcher
-├── pre-commit.legacy           # preserved existing hook, when present
+├── pre-commit.devkit-preserved # preserved existing hook, when present
 └── pre-commit.d/
-    ├── 00-legacy               # managed adapter invoking ../pre-commit.legacy
-    ├── 10-custom-check         # optional user script before devkit
+    ├── 00-legacy               # managed adapter invoking ../pre-commit.devkit-preserved
+    ├── 10-pre-commit           # the pre-commit framework's hook, when one was installed
+    ├── 15-custom-check         # optional user script before devkit
     ├── 20-devkit               # managed gate entry, when the stage has enabled gates
     └── 30-custom-check         # optional user script after devkit
 ```
@@ -117,20 +121,40 @@ payloads such as `pre-push` requires a replay contract so every child receives t
   `GATE_INTERPRETER_UNAVAILABLE` with `[DETAIL] python=<path>` and the reason, never a traceback, and exits
   `2` in a blocking stage (an `[ERROR]`: the gates could not run, not a refusal) and `0` in `post-commit`
   (a `[WARN]`).
-- **Existing hooks**: regular files are automatically renamed to `<hook>.legacy`, retaining their executable
-  mode, and chained through `00-legacy`. `GATE_HOOK_PRESERVED` is returned as a warning only when a hook moves.
-  Keeping the backup beside the original reduces directory-relative breakage, but scripts depending on their
-  original filename still need review. Non-executable hooks stay inactive. Symlinks and non-regular hooks
+- **Existing hooks**: regular files are automatically renamed to `<hook>.devkit-preserved`, retaining their
+  executable mode, and chained through `00-legacy`. `GATE_HOOK_PRESERVED` is returned as a warning only when a hook
+  moves. Keeping the preserved hook beside the original reduces directory-relative breakage, but scripts depending on
+  their original filename still need review. Non-executable hooks stay inactive. Symlinks and non-regular hooks
   require explicit `install --force` (`GATE_FOREIGN_HOOK`); automatic sync skips installation instead.
-  Existing backups are never overwritten (`GATE_BACKUP_EXISTS`). `00-legacy` and `20-devkit` are reserved;
+  An existing preserved hook is never overwritten (`GATE_BACKUP_EXISTS`). `00-legacy` and `20-devkit` are reserved;
   foreign files there, or symlinked script directories, are refused (`GATE_HOOK_LAYOUT_INVALID`).
+- **The pre-commit framework**: devkit never preserves a hook as `<hook>.legacy`, the name `pre-commit install`
+  moves a foreign hook to and its hook runs first (with `PRE_COMMIT_RUNNING_LEGACY=1`, refusing to run inside it).
+  Either install order works:
+  - devkit after pre-commit: a hook containing `# File generated by pre-commit` becomes the `10-pre-commit` entry,
+    where it finds no `<hook>.legacy` of its own; a hook it was chaining from `<hook>.legacy` becomes the preserved
+    hook. A `10-pre-commit` that is not a pre-commit script is refused (`GATE_HOOK_LAYOUT_INVALID`).
+  - pre-commit after devkit: pre-commit moves the dispatcher to `<hook>.legacy` and runs it first; the dispatcher
+    still runs its entries and, run that way, skips entries written by pre-commit, which then runs its hooks once.
+    `devkit gate status` reports no missing entry for this layout. The next install or sync moves pre-commit's
+    hook to `10-pre-commit`, removes the dispatcher at `<hook>.legacy` and writes the dispatcher at the hook path.
+  - A `<hook>.legacy` an earlier devkit preserved is moved to `<hook>.devkit-preserved` (or, when it is a
+    pre-commit script, to `10-pre-commit`) by the next install or sync, also when the dispatcher was deleted
+    by hand while devkit's `00-legacy` still chains it.
+  - `00-legacy` exists exactly while a hook is preserved: install rewrites it to run `<hook>.devkit-preserved`
+    (an earlier adapter ran `<hook>.legacy`, which pre-commit may later fill with the dispatcher, a loop) and
+    removes it when no hook is preserved.
 - **Writing**: mutations, and the settings template refresh in `devkit.config`, are serialized by a clone-wide
   `devkit-hooks.lock` (an exclusive `devkit_core.core.locks.file_lock`, waited for without a bound). Scripts are LF-only
   executable files, replaced atomically without writing through symlinks. Identical scripts are left untouched.
   All stages are checked for conflicts before writing. If dispatcher replacement fails after a hook moves,
-  the original hook is restored.
+  the original hook is restored. A dry run (`post_sync_preview`) takes no lock and writes nothing, the lock file
+  included.
 - **Automatic installation**: the `devkit.post_sync` extension `gate-hooks` runs after writing syncs, including
-  `--locked`; it does not run on `--dry-run` or `--check`, or install outside a Git worktree. Unsafe layouts,
+  `--locked`; it does not run on `--dry-run` or `--check`, or install outside a Git worktree. When it changed the
+  hooks it returns one line, `gate hooks: <stage>: <change>; ...` (each move, then `<stage>: installed` per stage
+  whose files changed); hooks already in place report nothing. `post_sync_preview` reports the same changes as
+  `gate hooks would change: ...` without writing, or the `GATE_HOOK_INSTALL_SKIPPED` warning a sync would report. Unsafe layouts,
   custom `core.hooksPath` and installation failures produce `GATE_HOOK_INSTALL_SKIPPED` warnings with the
   reason code and remediation. Automatic sync retains each existing fallback that is executable and can import
   `devkit_agt.features.gate`, validated under the clone-wide lock, so a linked worktree does not replace a valid shared fallback
@@ -138,7 +162,12 @@ payloads such as `pre-push` requires a replay contract so every child receives t
   interpreter. Explicit `devkit gate install` replaces active fallbacks with `sys.executable` or its `--python`
   argument. The sync succeeds unless warnings trigger `--strict`.
 - **Removal**: uninstall removes owned `20-devkit` entries. If user entries remain, it keeps the dispatcher,
-  `00-legacy` and the preserved hook. Otherwise it removes the dispatcher and managed adapter and restores
+  `00-legacy` and the preserved hook. Otherwise it removes the dispatcher and managed adapter and restores the
+  hooks it chained: a `10-pre-commit` entry becomes the hook again, with the preserved hook as its `<hook>.legacy`
+  (pre-commit's migration mode); without one, `<hook>.devkit-preserved` becomes the hook. When that `<hook>.legacy`
+  already exists, the preserved hook stays where it is and uninstall prints that nothing runs it. When
+  `pre-commit install` moved the dispatcher to `<hook>.legacy`, uninstall works on that layout: pre-commit's hook
+  stays, the dispatcher (and an older pre-commit copy in `10-pre-commit`) is removed and the preserved hook becomes
   `<hook>.legacy`. It never deletes user entries, including non-executable files or directories.
 - **`core.hooksPath`**: a value pointing elsewhere is left unchanged. Explicit install refuses
   (`GATE_HOOKS_PATH_SET`), sync reports a skipped-install warning, and status reports the setting with a
@@ -162,7 +191,8 @@ class Gate(Protocol):
 ```
 
 - **Passing and skipping**: return `GateResult.passed(note)` or `GateResult.skipped(reason)`; `None` means passed. `GateResult.passed(note, notices=[...])` also returns warnings and notices (`AdvisoryError` at level `WARNING` or `NOTICE`; an `ERROR` is lowered to `WARNING`), which `devkit gate run` prints without blocking the commit, unless `DEVKIT_STRICT=1` and one is a warning. A notice that is not an `AdvisoryError` fails the gate with `GATE_RESULT_INVALID`. Each outcome is logged and shows as an `[INFO]` line under `-v`. A `GateResult` cannot carry `FAILED` (constructing one raises `GateResultError`, `GATE_RESULT_INVALID`, `MAINTENANCE`), and any other return value fails the gate with the same code.
-- **Refusing**: raise `GateRefusedError(message, *details, code=..., fix=..., target_files=...)`: message first, remediation in `fix`, and the gate's own code (default `GATE_FAILED`). It is `BLOCKED` and exits `1` (`FINDINGS`): the negative result of a check that ran. Any other `AdvisoryError` fails the gate as it is (most exit `2`: the check could not run); any other exception, and `SystemExit` from a gate that calls `sys.exit()`, is wrapped as `UNEXPECTED_ERROR` (exit `2`), and the stage's later gates still run. Every failed gate therefore reports an advisory. `KeyboardInterrupt` is not caught: it aborts the run, and a blocking stage exits nonzero. Neither is `devkit_agt.features.compact.CommandInterrupted`, though it is a `SystemExit`: a gate whose `run_command` is interrupted aborts the run the same way, exiting `128 + N` for signal `N`.
+- **Refusing**: raise `GateRefusedError(message, *details, code=..., fix=..., target_files=...)`: message first, remediation in `fix`, and the gate's own code (default `GATE_FAILED`). It is `BLOCKED` and exits `1` (`FINDINGS`): the negative result of a check that ran, a policy the committer must not work around. When correcting the commit is the remedy (a failed check of its content), raise its subclass `GateFindingsError` instead: `INPUT_ERROR`, also exit `1`, as the built-in gates do.
+- **Status**: `setup(settings)` returns what `devkit gate status` shows after the gate's row for its effective settings (default `None`: nothing), such as `verify-commands`' command count. Any other `AdvisoryError` fails the gate as it is (most exit `2`: the check could not run); any other exception, and `SystemExit` from a gate that calls `sys.exit()`, is wrapped as `UNEXPECTED_ERROR` (exit `2`), and the stage's later gates still run. Every failed gate therefore reports an advisory. `KeyboardInterrupt` is not caught: it aborts the run, and a blocking stage exits nonzero. Neither is `devkit_agt.features.compact.CommandInterrupted`, though it is a `SystemExit`: a gate whose `run_command` is interrupted aborts the run the same way, exiting `128 + N` for signal `N`.
 - **Context**: `ctx.repo_root` (top level of the work tree), `ctx.git_dir` (this worktree's git dir, for `MERGE_HEAD`, rebase state and the like), `ctx.common_git_dir` (shared by every worktree), `ctx.stage`, `ctx.args` (hook arguments), `ctx.settings` (the gate's effective settings) and `ctx.message_file` for `commit-msg`.
 - **Ordering**: gates in a stage run by `(order, id)`. Message transforms use `order < 100`, checks default to `100`, and the built-in `message-nonempty` runs at `900` so it sees the transformed message. A `post-commit` gate that rewrites `HEAD` must take a low order so later gates observe the final commit.
 - **No short-circuit**: a failing gate does not stop later gates, so one commit attempt reports every refusal.
@@ -232,6 +262,11 @@ enabled = false
 - A file that cannot be read or parsed is the core `ConfigError` (`CONFIG_INVALID`), passed through unchanged; a malformed `[gates]` table or invalid settings are `GateConfigError` (`GATE_CONFIG_INVALID`), a subclass of it.
 - An entry for a gate that is not installed fails blocking stages, so a typo or a forgotten `devkit sync` cannot silently disable policy.
 - `devkit` passes `[gates]` through untouched, as it does `[rules]` and `[workflow]`.
+
+The tracked `.devkit/config.toml` template (`devkit config template`) lists the built-in gates' commented
+`[gates.settings.<id>]` tables at their defaults, from `config_tables` in
+`devkit_agt.features.gate.usecases.hooks.local_config` (the `devkit.config_tables` entry point `gates`); bundle gates
+appear in the clone-local template below.
 
 ## 6a. Settings Template
 

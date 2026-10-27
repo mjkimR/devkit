@@ -109,7 +109,7 @@ parseable:
 ```text
 [SNAPSHOT: mode=staged tree=3f2a9c1d0b7e base=9e8d7c6b5a4f changed=2 deleted=0]
 [VIOLATION: RULE-markdown-link severity=error file=docs/a.md line=3 status=fixable message="Broken relative link: wrong/setup.md" remediation="..." guide=...]
-[SUMMARY: errors=1 warnings=0 infos=0 fixed=0]
+[SUMMARY: errors=1 warnings=0 infos=0 fixed=0 rules=4]
 ```
 
 - `check` and `fix`: a `[SNAPSHOT: ...]` line first in a snapshot gate; one
@@ -120,9 +120,11 @@ parseable:
   and a `RULES_PROMOTION_READY` notice on stderr when one has `remaining=0`;
   a whole-workspace `check --phase hygiene` adds the notices of the `devkit.hygiene`
   extensions (`CAP-GOV-evaluation-lifecycle`);
-  then `[SUMMARY: errors=N warnings=N infos=N fixed=N]` counting unfixed
-  findings per severity and the fixed ones; then `[OK: ...]` when the command
-  exits `0`. A run that could not evaluate and found nothing prints no summary.
+  then `[SUMMARY: errors=N warnings=N infos=N fixed=N rules=N]` counting unfixed
+  findings per severity and the fixed ones, and `rules` the loaded rules active
+  in the run's phase (target scoping does not change it); then `[OK: ...]` when the command
+  exits `0`. With `rules=0` the pass checked nothing, and a `RULES_NONE_ACTIVE`
+  notice on stderr says so. A run that could not evaluate and found nothing prints no summary.
 - `--summary-only` replaces the `[VIOLATION: ...]` lines with one
   `[RULE_COUNTS: RULE-id errors=N warnings=N infos=N fixed=N]` line per rule
   and keeps the other lines. Exit codes are unchanged; `--format json` ignores
@@ -299,7 +301,8 @@ Warnings and notices are returned, never raised, at level `WARNING` or
 | Code | Level | When |
 | --- | --- | --- |
 | `RULES_PROMOTION_READY` | `NOTICE` | a whole-workspace `hygiene` run finds a phase override or promotion with `remaining=0`; `target_files` names the files to edit (`.devkit/config.toml` for an override, the file declaring the rule for a promotion), `fix` the edit (drop the `[rules.phase_overrides]` entry, or switch the declared phase to its `promote_to`) |
-| `RULES_RELATED_UNRESOLVED` | `NOTICE` | `explain` of a rule whose `related` entry names an asset that is not deployed (`fix`: `devkit add <bundle>`), is neither an instruction nor a playbook, or is one without a Markdown file (`fix`: add it to the bundle, then `devkit sync`); the entry is printed with `path=-`. A receipt that cannot be read is one notice for all entries carrying the receipt's code (`RECEIPT_INVALID`), target and fix |
+| `RULES_NONE_ACTIVE` | `NOTICE` | `check` or `fix` (also `--format json`, under `notices`) completed with no loaded rule active in its phase, so it checked nothing (`[SUMMARY: ... rules=0]`); `fix` names selecting a bundle that ships rules or moving a rule back with `[rules.phase_overrides]` |
+| `RULES_RELATED_UNRESOLVED` | `NOTICE` | `explain` of a rule whose `related` entry names an asset that is not deployed (`fix`: `uv run devkit add <bundle>`), is neither an instruction nor a playbook, or is one without a Markdown file (`fix`: add it to the bundle, then `uv run devkit sync`); the entry is printed with `path=-`. A receipt that cannot be read is one notice for all entries carrying the receipt's code (`RECEIPT_INVALID`), target and fix |
 | `HYGIENE_NOTICE` | `NOTICE` | a line a `devkit.hygiene` extension returned in a whole-workspace `check --phase hygiene`; its package owns its meaning (an advisory it returns keeps its own code instead, such as `WORKTREE_STALE_BRANCH`) |
 | `HYGIENE_EXTENSION_FAILED` | `WARNING` | a `devkit.hygiene` extension raised or returned something other than a list; the run's own result stands |
 | any collected problem's code | `WARNING` | `explain` reports a loading or policy problem that does not concern the described rule, `test` any loading or policy problem (`with_level`; the code is unchanged) |

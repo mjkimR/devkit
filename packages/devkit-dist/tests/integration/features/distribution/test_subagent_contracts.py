@@ -521,3 +521,29 @@ def test_project_inherit_resets_source_compact_on_all_hosts(tmp_path: Path, role
         text = (target / relative).read_text()
         metadata = tomllib.loads(text) if is_toml else yaml.safe_load(text.split("---\n")[1])
         assert not {"model", "effort", "model_reasoning_effort"} & metadata.keys()
+
+
+def test_status_plans_only_subagents_and_still_finds_a_policy_change(tmp_path: Path) -> None:
+    from devkit_dist.features.distribution.usecases.status import get_project_status
+
+    item = make_bundle(tmp_path, "team")
+    (item.bundle.root / "guide.md").write_text("---\nname: guide\ndescription: A guide.\n---\nBody.\n")
+    manifest = item.bundle.root / "bundle.toml"
+    manifest.write_text(
+        manifest.read_text()
+        + '[[assets]]\nid = "guide"\nkind = "instruction"\nsource = "guide.md"\n'
+        + '[presets.guide]\nassets = ["guide"]\n'
+    )
+    item = InstalledBundle(item.package, item.package_version, load_bundle(item.bundle.root))
+    target = tmp_path / "consumer"
+    target.mkdir()
+    update_config(target, presets={"team": ["all"]}, agents=["codex"])
+    sync_project(target, [item])
+    assert get_project_status(target, [item]).errors == []
+    config = target / ".devkit/config.toml"
+    config.write_text(config.read_text() + '\n[subagents]\ndefault_level = "deep"\n')
+    (problem,) = get_project_status(target, [item]).errors
+    assert (problem.code, problem.target_files) == ("NOT_SYNCHRONIZED", (".codex/agents/reviewer.toml",))
+    update_config(target, presets={"team": ["guide"]})
+    sync_project(target, [item])
+    assert get_project_status(target, [item]).errors == []  # an unselected subagent is not planned

@@ -47,9 +47,9 @@ def override_diff(selector: str, workspace_root: str | None) -> object:
 @click.argument("selector")
 @WORKSPACE
 @_json_command
-def override_accept(selector: str, workspace_root: str | None) -> object:
-    """Record the current upstream as the override's baseline (bundle:asset)."""
-    return AcceptProjectOverride().execute(resolve_root(workspace_root), selector)
+def override_accept(selector: str, workspace_root: str | None) -> None:
+    """Record the current upstream as the override's baseline and synchronize (bundle:asset)."""
+    _report_change(AcceptProjectOverride().execute(resolve_root(workspace_root), selector))
 
 
 @override.command(name="remove")

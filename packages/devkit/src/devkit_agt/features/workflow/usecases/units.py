@@ -64,7 +64,7 @@ class CreateUnitUseCase(BaseUseCase):
         unit_dir = _unit_dir(ws, layout, rel)
         exists = UnitExistsError(
             f"unit already exists: {rel.as_posix()}",
-            fix="Choose another slug or continue the existing unit with `devkit workflow next --unit <dir>`",
+            fix="Choose another slug or continue the existing unit with `uv run devkit workflow next --unit <dir>`",
         )
         # An anchor a concurrent `new` creates after this check fails the exclusive write below: UNIT_EXISTS as well.
         entries = {entry.name for entry in unit_dir.iterdir()} if unit_dir.is_dir() else set()

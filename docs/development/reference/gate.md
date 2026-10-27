@@ -15,14 +15,14 @@ uv run devkit add <bundle>:<preset>   # a preset that includes the bundle's gate
 uv run devkit sync                    # deploys the gate packages and records their files in the receipt
 ```
 
-Writing syncs install dispatchers automatically. Existing regular hooks are moved to `<hook>.legacy` with a warning and run through `<hook>.d/00-legacy`; `<hook>.d/20-devkit` is added only for stages with enabled gates. Add executable scripts beside it in filename order. Symlinks and non-regular hooks need `install --force`; `git commit --no-verify` skips `pre-commit` and `commit-msg`. See `CAP-GATE-commit-gates`.
+Writing syncs install dispatchers automatically. Existing regular hooks are preserved as `<hook>.devkit-preserved` with a warning and run through `<hook>.d/00-legacy`; a pre-commit framework hook becomes the entry `<hook>.d/10-pre-commit`, and the dispatcher finds its entries by stage name, so either install order of `pre-commit install` and `devkit sync` runs both; `<hook>.d/20-devkit` is added only for stages with enabled gates. Add executable scripts beside it in filename order. Symlinks and non-regular hooks need `install --force`; `git commit --no-verify` skips `pre-commit` and `commit-msg`. See `CAP-GATE-commit-gates`.
 
 ## Commands
 
 | Command | Purpose |
 | --- | --- |
 | `devkit gate install [--force] [--python PATH]` | Prepare dispatchers and active `20-devkit` entries, and append the commented table of every gate `<common-git-dir>/devkit.config` does not mention yet (`CAP-GATE-commit-gates`). |
-| `devkit gate uninstall` | Remove owned devkit entries; keep dispatchers for user scripts, otherwise restore preserved hooks. |
+| `devkit gate uninstall` | Remove owned devkit entries; keep dispatchers for user scripts, otherwise restore preserved hooks and pre-commit's own layout, also after `pre-commit install` moved the dispatcher to `<hook>.legacy`. |
 | `devkit gate status [--format text\|json] [--strict]` | Hooks directory and `core.hooksPath`, hook states and script filenames, every gate with stage, order, effective enablement and source, configuration layers, and every problem that fails a commit (`load_gate_project`, the same `validate_gates` the stages run). Warns with `GATE_HOOK_ENTRY_MISSING` when a stage has enabled gates but no installed `20-devkit` entry, so they would not run; when `core.hooksPath` sends Git to another directory, no managed hook runs and `install` refuses, so one `GATE_HOOKS_PATH_SET` warning names every enabled gate instead, with the fix that clears the setting. Warnings leave the exit code `0`, except under `--strict`, which exits `1` on them. |
 | `devkit gate run [-q\|-v] [--strict] <stage> [hook args]` | Run one stage (`run_hook`); what the wrappers call, and how to test a stage by hand. Options go before `<stage>`; hooks set `DEVKIT_QUIET`, `DEVKIT_VERBOSE` or `DEVKIT_STRICT` instead, since Git passes no flags (`ARCH-08-1-agent-output`). |
 
@@ -47,17 +47,18 @@ Every gate error derives from `GateError` (`devkit_agt.features.gate.models.erro
 
 | Code | Class | Mode | Exit | Meaning |
 | --- | --- | --- | --- | --- |
-| `GATE_FAILED` | `GateRefusedError` | `BLOCKED` | `1` | default code of a gate refusal; gates pass their own (`GATE_MESSAGE_EMPTY`, `GATE_VERIFY_FAILED`, ...) |
+| `GATE_FAILED` | `GateRefusedError` | `BLOCKED` | `1` | default code of a policy refusal by a gate; a check of the commit's own content raises `GateFindingsError` instead |
+| `GATE_MESSAGE_EMPTY` | `GateFindingsError` | `INPUT_ERROR` | `1` | the commit message is blank above any scissors line |
 | `GATE_CONFIG_INVALID` | `GateConfigError` (also a `devkit_dist.base.errors.ConfigError`) | `INPUT_ERROR` | `2` | invalid `[gates]` table or settings, a configured gate that is not installed |
 | `GATE_LOAD_FAILED` | `GateLoadError` | `MAINTENANCE` | `2` | a deployed gate package fails to import or to instantiate its gates, or two gates share an id |
 | `GATE_DEFINITION_INVALID` | `GateDefinitionError` | `MAINTENANCE` | `2` | a gate declares an unusable `id`, `stage`, `order` (reported inside its file's load failure) or settings declaration, or uses `ctx.message_file` outside `commit-msg` |
 | `GATE_RESULT_INVALID` | `GateResultError` | `MAINTENANCE` | `2` | a gate built a `FAILED` `GateResult`, gave a `GateResult` a notice that is not an `AdvisoryError`, or returned something other than a `GateResult` or `None`; the stage's other gates still run |
 | `GATE_PYTHON_INVALID` | `GatePythonError` | `INPUT_ERROR` | `2` | `install --python` names an interpreter that cannot import `devkit_agt.features.gate` |
 | `GATE_INTERPRETER_UNAVAILABLE` | `GateInterpreterError` (printed by the `20-devkit` entry) | `MAINTENANCE`; `CONTINUE` (level `WARNING`) in `post-commit` | `2`; `0` in `post-commit` | at commit time the entry's interpreter is missing or cannot import `devkit_agt.features.gate`, so the stage's gates did not run; `[DETAIL] python=<path>` and the reason (`not an executable file`, or the import error's first line) |
-| `GATE_RULES_FAILED` | `GateRefusedError` | `BLOCKED` | `1` | `rules-check` found unfixed error-severity violations in the staged tree; one `<RULE-id> <file>:<line>: <message>` detail per violation (and `  fix: <remediation>`), the first 20 listed, then `... and <n> more` |
+| `GATE_RULES_FAILED` | `GateFindingsError` | `INPUT_ERROR` | `1` | `rules-check` found unfixed error-severity violations in the staged tree; one `<RULE-id> <file>:<line>: <message>` detail per violation (and `  fix: <remediation>`), the first 20 listed, then `... and <n> more` |
 | `GATE_RULES_WARNINGS` | `RulesWarningsNotice` | `CONTINUE` (level `WARNING`) | `0` | returned, never raised: `rules-check` found warning-severity violations in the staged tree, listed as in `GATE_RULES_FAILED` |
 | `RULES_RUN_FAILED` | `devkit_agt.features.rules.RulesRunError` | `MAINTENANCE`, or `AUTO` | `2` | `rules-check` could not complete the run (rules that cannot load, an invalid policy, a rule that raised); each problem is a detail; `AUTO` with their fix when every problem is `AUTO` with that one fix (`devkit sync` for missing managed rule files). `RULES_CONFIG_INVALID` and `RULES_SNAPSHOT_FAILED` pass through unchanged |
-| `GATE_VERIFY_FAILED` | `GateRefusedError` | `BLOCKED` | `1` | a `verify-commands` command exited nonzero; one `command: ... exit=... log=...` detail per failed command, then its summaries, failed tests or last lines and relayed `devkit` error blocks (`  > `) |
+| `GATE_VERIFY_FAILED` | `GateFindingsError` | `INPUT_ERROR` | `1` | a `verify-commands` command exited nonzero; one `command: ... exit=... log=...` detail per failed command, then its summaries, failed tests or last lines and relayed `devkit` error blocks (`  > `) |
 | `GATE_VERIFY_NOT_RUN` | `VerifyNotRunError` | `MAINTENANCE`, or `AUTO` | `2` | a nested `devkit` command could not run (exit `2` with its own error block, such as `RULES_LOAD_FAILED`); same details; `AUTO` with the relayed fix when every relayed error is `AUTO` with that one fix (`devkit sync` for missing managed files) |
 | `GATE_VERIFY_UNSTAGED` | `VerifyUnstagedNotice` | `NOTE` (level `NOTICE`) | `0` | returned, never raised: `verify-commands` ran on a working tree with unstaged or untracked files |
 | `GATE_CONFIG_TEMPLATE_SKIPPED` | `GateTemplateNotice` | `CONTINUE` (level `WARNING`) | `0` | returned, never raised: `devkit.config` is a symbolic link, not a regular file, not UTF-8 or cannot be written, the `[gates]` table of `.devkit/config.toml` cannot be read, or the refresh failed otherwise (the message names the error's code), so `install` or the post-sync refresh left it alone; the hook notices of the same run are still reported |

@@ -51,18 +51,26 @@ class NestedError(_Guardrail):
     fix = "Run the command from the base checkout, or keep working in this worktree"
 
 
-class RunFromBaseError(_Guardrail):
-    """``finish`` ran inside a linked worktree (``BLOCKED``): it would remove the checkout it runs in."""
+class RunFromBaseError(WorktreeError):
+    """``finish``, ``finish --discard`` or the integration preflight ran inside a linked worktree (``INPUT_ERROR``):
+    it would remove the checkout it runs in. Where the command runs is the input to correct, so ``[FIX]`` names the
+    base checkout to rerun the same command from; nothing changed."""
 
     code = "WORKTREE_RUN_FROM_BASE"
-    fix = "cd to the base checkout and rerun there"
+    input_error = True
+    fix = "Rerun the same command from the base checkout (or pass -w <the devkit project in it>)"
+
+
+def run_from_base_fix(base: object) -> str:
+    """The ``[FIX]`` of ``RunFromBaseError`` naming the base checkout ``base``."""
+    return f"Rerun the same command from the base checkout {base} (or pass -w <the devkit project in it>)"
 
 
 class PullRequestPolicyError(_Guardrail):
     """``finish --merge`` under ``[worktree] pull_request = "required"`` (``BLOCKED``): integration is a PR."""
 
     code = "WORKTREE_PR_POLICY"
-    fix = "Obtain Host authority, then run `devkit integration integrate <branch> --route pull-request`; or merge the PR under existing authority and run `devkit worktree finish <branch>`"
+    fix = "Obtain Host authority, then run `uv run devkit integration integrate <branch> --route pull-request`; or merge the PR under existing authority and run `uv run devkit worktree finish <branch>`"
 
 
 class UnsupportedLayoutError(_Guardrail):
@@ -158,7 +166,7 @@ class NotFoundError(_Interaction):
     """
 
     code = "WORKTREE_NOT_FOUND"
-    fix = "Check `devkit worktree status` or `git worktree list` for the branch"
+    fix = "Check `uv run devkit worktree status` or `git worktree list` for the branch"
 
 
 class LockedError(_Interaction):

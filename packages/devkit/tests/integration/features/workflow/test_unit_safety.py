@@ -206,7 +206,7 @@ def test_anchor_mismatch_fix_names_a_command_every_caller_has(ambiguous: Path) -
     ):
         result = _run(*command, "-w", str(ambiguous), "--unit", "specs/x", "--no-lint")
         assert result.exit_code == 2 and "(ANCHOR_MISMATCH)" in result.stderr
-        assert "`devkit workflow bind --unit specs/x --workflow <id>`" in result.stderr
+        assert "`uv run devkit workflow bind --unit specs/x --workflow <id>`" in result.stderr
     assert _run("bind", "-w", str(ambiguous), "--unit", "specs/x", "--workflow", "direct-delivery").exit_code == 0
 
 
@@ -316,7 +316,7 @@ def test_unbound_unit_without_default_names_bind(workspace: Path, command: tuple
     write_unit(workspace, ".devkit/transient/work/u")
     result = _run(command[0], "-w", str(workspace), "--unit", ".devkit/transient/work/u", *command[1:])
     assert result.exit_code == 2 and "(WORKFLOW_NOT_SELECTED)" in result.stderr
-    assert "`devkit workflow bind --unit .devkit/transient/work/u --workflow <id>`" in result.stderr
+    assert "`uv run devkit workflow bind --unit .devkit/transient/work/u --workflow <id>`" in result.stderr
     bound = _run("bind", "-w", str(workspace), "--unit", ".devkit/transient/work/u", "--workflow", "direct-delivery")
     assert bound.exit_code == 0
 

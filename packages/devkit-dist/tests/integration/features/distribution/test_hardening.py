@@ -211,7 +211,7 @@ def test_override_drift_block_aborts_before_writes(
     receipt = (target / RECEIPT_PATH).read_bytes()
     with pytest.raises(OverrideDriftError, match=r"override_drift = \"block\"\): team:guide$") as raised:
         sync_project(target, installed)
-    assert raised.value.fix is not None and "`devkit override diff team:guide`" in raised.value.fix
+    assert raised.value.fix is not None and "`uv run devkit override diff team:guide`" in raised.value.fix
     assert (target / RECEIPT_PATH).read_bytes() == receipt
     assert not (target / JOURNAL).exists()
 
@@ -345,7 +345,9 @@ def test_status_without_receipt(installed: list[InstalledBundle], target: Path) 
         "mode-mismatch": 0,
         "unsafe": 0,
     }
-    assert result["guidance_block"] == "missing" and result["seeded"] == [] and result["override_drift"] == []
+    assert set(result["files"]) == {"counts"}  # a path list appears only when it names a path
+    assert result["seeded"] == {"counts": {"present": 0, "missing": 0}}
+    assert result["guidance_block"] == "missing" and result["override_drift"] == []
     assert result["pending_journal"] is False and result["errors"] == []
     assert result["tool"] == {
         "running": {"package": "devkit-dist", "version": tool_identity().version},
@@ -371,7 +373,7 @@ def test_status_reports_every_dimension(
     }
     assert clean["files"]["counts"]["ok"] > 0
     assert clean["override_drift"] == [] and clean["guidance_block"] == "ok"
-    assert clean["seeded"] == [{"bundle": "team", "id": "scaffold", "path": "docs/scaffold.md", "present": True}]
+    assert clean["seeded"] == {"counts": {"present": 1, "missing": 0}}
     assert clean["pending_journal"] is False and clean["tool"]["match"] is True
     assert clean["errors"] == []
     monkeypatch.setattr(
@@ -394,7 +396,10 @@ def test_status_reports_every_dimension(
     assert dirty["files"]["missing"] == [".agents/skills/review/SKILL.md"]
     assert dirty["files"]["mode-mismatch"] == [".devkit/managed/team/bundle.toml"]
     assert dirty["guidance_block"] == "modified"
-    assert dirty["seeded"][0]["present"] is False
+    assert dirty["seeded"] == {
+        "counts": {"present": 0, "missing": 1},
+        "missing": [{"bundle": "team", "id": "scaffold", "path": "docs/scaffold.md"}],
+    }
     assert dirty["pending_journal"] is True
     assert dirty["tool"]["match"] is False and dirty["tool"]["running"]["version"] == "9.9.9"
     problems = [(error["code"], error["exit_code"], error["advisory"]["target_files"]) for error in dirty["errors"]]
@@ -408,7 +413,7 @@ def test_status_reports_every_dimension(
     result = CliRunner().invoke(cli, ["status", "-w", str(target)])
     assert result.exit_code == 1 and json.loads(result.stdout)["pending_journal"] is True
     fixes = {error["code"]: error["advisory"].get("fix") for error in json.loads(result.stdout)["errors"]}
-    assert fixes["TRANSACTION_PENDING"] == "devkit recover" and fixes["NOT_SYNCHRONIZED"] == "devkit sync"
+    assert fixes["TRANSACTION_PENDING"] == "uv run devkit recover" and fixes["NOT_SYNCHRONIZED"] == "uv run devkit sync"
     assert result.stderr == ""
 
 
@@ -477,11 +482,26 @@ def test_status_reports_override_drift_disabled_block_and_cli(
     monkeypatch.setattr(
         "devkit_dist.features.distribution.usecases.commands.discover_bundles", lambda: fake_discovery(installed)
     )
+    # Under the default ``override_drift = "warn"`` status reports drift as sync does: a warning, exit 0.
     result = CliRunner().invoke(cli, ["status", "--workspace-root", str(target)])
-    assert result.exit_code == 1, result.output  # override drift is a problem to act on
+    assert result.exit_code == 0, result.output
     report = json.loads(result.stdout)
-    assert report["guidance_block"] == "missing"
-    (drift,) = report["errors"]
-    assert (drift["code"], drift["exit_code"], drift["advisory"]["mode"]) == ("OVERRIDE_DRIFT", 1, "INTERACTION")
+    assert report["guidance_block"] == "missing" and report["errors"] == []
+    (drift,) = [notice for notice in report["notices"] if notice["code"] == "OVERRIDE_DRIFT"]
+    assert (drift["level"], drift["exit_code"], drift["advisory"]["mode"]) == ("WARNING", 0, "CONTINUE")
     assert drift["message"] == "upstream changed behind overrides: team:guide" and result.stderr == ""
+    assert CliRunner().invoke(cli, ["status", "--strict", "--workspace-root", str(target)]).exit_code == 1
+    # Under ``override_drift = "block"`` the sync refuses, so status lists the drift as a problem to act on.
+    write_config(target, extra='override_drift = "block"')
+    blocked = CliRunner().invoke(cli, ["status", "--workspace-root", str(target)])
+    assert blocked.exit_code == 1, blocked.output
+    (problem,) = json.loads(blocked.stdout)["errors"]
+    assert (problem["code"], problem["exit_code"], problem["advisory"]["mode"]) == ("OVERRIDE_DRIFT", 1, "INTERACTION")
+    assert problem["advisory"]["fix"].startswith("Review with `uv run devkit override diff team:guide`")
+    assert blocked.stderr == ""  # JSON-only: the advisories are in the result, never repeated on stderr
     assert not (target / AGENTS_FILE).exists()  # status never writes
+
+
+def test_status_help_says_problems_are_in_the_json_result() -> None:
+    text = CliRunner().invoke(cli, ["status", "--help"]).output
+    assert "rendered on stderr" not in text and "listed under errors in the JSON result" in text

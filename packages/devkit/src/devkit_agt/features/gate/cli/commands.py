@@ -65,7 +65,7 @@ def cli() -> None:
 @click.option(
     "--force",
     is_flag=True,
-    help=f"Also preserve symbolic links and non-regular hooks at <hook>{hooks.BACKUP_SUFFIX}",
+    help=f"Also preserve symbolic links and non-regular hooks at <hook>{hooks.PRESERVED_SUFFIX}",
 )
 @click.option(
     "--python",
@@ -101,6 +101,18 @@ def uninstall_cmd(workspace_root: str | None) -> None:
         click.echo(f"[HOOK: {action}]")
 
 
+def _setup(gate: object, settings: object) -> str | None:
+    """The gate's ``setup`` line for its effective ``settings``; ``None`` without settings or the method."""
+    describe = getattr(gate, "setup", None)
+    if settings is None or not callable(describe):
+        return None
+    try:
+        shown = describe(settings)
+    except Exception:  # a gate's report must not break status; its problems are reported by validation
+        return None
+    return shown if isinstance(shown, str) and shown else None
+
+
 @cli.command(name="status")
 @WORKSPACE
 @FORMAT_OPTION
@@ -133,6 +145,7 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
             "enabled": project.config.enabled(gate),
             "source": project.registry.sources[gate.id],
             "description": gate.description,
+            "setup": _setup(gate, project.validation.settings.get(gate.id)),
         }
         for gate in project.registry.get_all()
     ]
@@ -163,7 +176,9 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
     for row in gate_rows:
         click.echo(
             f"[GATE: {row['id']} stage={row['stage']} order={row['order']} "
-            f"enabled={str(row['enabled']).lower()} source={row['source']}]"
+            f"enabled={str(row['enabled']).lower()} source={row['source']}"
+            + (f" {row['setup']}" if row["setup"] else "")
+            + "]"
         )
     click.echo(f"[CONFIG: sources={','.join(sources) or 'none'}]")
     echo_notices(notices)  # before the problems, so errors are last

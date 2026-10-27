@@ -8,8 +8,10 @@ description: Read before running, configuring or troubleshooting rules, commit g
 - The engines own `[rules]`, `[gates]`, `[workflow]`, `[worktree]` and
   `[integration]` in `.devkit/config.toml`; `uv run devkit config template --print`
   shows the commented defaults the file lacks.
-- Follow the generated `devkit-workflow` entry skill instead of inferring a work
-  unit's stage yourself; it runs `devkit workflow next`.
+- If a selected bundle deploys workflows (for example `spec` from `devkit-spec`),
+  sync generates the `devkit-workflow` entry skill: follow it instead of
+  inferring a work unit's stage yourself; it runs `devkit workflow next`. Without
+  deployed workflows, that skill does not exist.
 - Run `uv run devkit rules check` for the working tree, `--staged` for exactly
   what a commit would contain, and `uv run devkit rules explain <RULE-id>` for a
   rule's guide.

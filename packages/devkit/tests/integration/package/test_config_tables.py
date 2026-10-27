@@ -55,8 +55,9 @@ def _agt_entries() -> dict[str, str]:
     }
 
 
-def test_devkit_agt_registers_the_workflow_and_worktree_templates() -> None:
+def test_devkit_agt_registers_the_gates_workflow_and_worktree_templates() -> None:
     assert _agt_entries() == {
+        "gates": "devkit_agt.features.gate.usecases.hooks.local_config:config_tables",
         "workflow": "devkit_agt.features.workflow.repositories.project.config:config_tables",
         "worktree": "devkit_agt.features.worktree.repositories.config:config_tables",
     }
@@ -68,6 +69,7 @@ def test_the_template_text_and_place_are_unchanged(tmp_path: Path) -> None:
     start = text.index("## Workflow approval gates")
     assert text[start : start + len(HARNESS_TABLES)] == HARNESS_TABLES
     assert text.index('# override_drift = "warn"') < start
+    assert text.index("# [gates.settings.verify-commands]") < start  # the gate engine's tables precede workflow
     tool = text.find("## [tool.")
     assert tool == -1 or tool == start + len(HARNESS_TABLES) + 1  # one blank line, then the tool tables
 

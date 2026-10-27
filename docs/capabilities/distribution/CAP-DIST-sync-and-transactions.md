@@ -339,7 +339,8 @@ Every `devkit sync` lists installed bundles that are not selected under `unselec
 presets, default preset, and `opted_out` when set to `false`). The `BUNDLE_UNSELECTED` notice announces only the
 bundles neither selected nor opted out of that this clone has not been told about: a writing sync (not `--dry-run`
 or `--check`) records the installed names in the Git-ignored `.devkit/transient/seen-bundles.json`, and a missing or
-unreadable record only repeats the announcement. An opted-out bundle is never announced.
+unreadable record only repeats the announcement. An opted-out bundle is never announced, and `sync --locked` never
+announces one: it restores a committed selection, so what that selection leaves out was decided.
 
 The `BUNDLE_AUTO_SELECTED` notice names the auto-selected bundles of packages other than the first-party
 `devkit-dist` and `devkit-agt` (whose bundles are built in, `harness` included) that a sync
@@ -363,7 +364,8 @@ Every mutating command follows these steps:
    block; checks ownership and collisions on disk before writing a byte
    (`CAP-DIST-workspace-ownership`). The result
    lists every planned write under `actions` (`create`, `update` or `remove` per path, `seed` for a seeded file,
-   `AGENTS.md` included).
+   `AGENTS.md` included, and `.devkit/config.toml` when a selection command creates or changes it; a dry run renders
+   that edit and lists it without writing it).
 2. **Project lock**: `fcntl.flock` on `.devkit/transient/lock` (`devkit_core.core.locks.file_lock`, POSIX only). Writers
    (`sync`, `add`, `remove`, `recover`, `override create|accept|remove`) take it exclusively and fail at once when it is held (`LOCK_HELD`,
    `DEFER`). Readers (`get-context`, `playbook search`, `playbook get`, `status`, `list`, `override list|diff`, and `sync`, `add`
@@ -414,6 +416,12 @@ released, an extension may call devkit reads such as `get_context`. `devkit-agt`
 `gate-hooks`, which installs shared Git hook dispatchers and active gate entries and keeps the commented gate settings template current
 (`CAP-GATE-commit-gates`); a standalone `devkit-dist` installation installs no Git hooks.
 
+On `--dry-run`, `devkit sync` instead calls the callables of the `devkit.post_sync_preview` group with the same
+signature and the same notice handling; each reports what its post-sync extension would change and writes nothing.
+`--check` runs no preview: it is the read-only CI gate, and its answer (and its exit code under `--strict`) must not
+depend on this checkout's Git hooks.
+`devkit-agt` registers `gate-hooks` there too (`gate hooks would change: ...`).
+
 ### Engine Notice
 
 Rule, gate and workflow assets are deployed and recorded like any other kind, but only `devkit-agt` runs them.
@@ -454,7 +462,9 @@ the selection runs a plain `devkit sync` and commits what it changes. In CI, `de
 environment is installed both restores the managed copies the later steps read and fails when a bundle source or
 an upgraded package no longer matches the committed receipt. `sync --check` stays the read-only check for a
 workspace that is already synchronized. `devkit sync --registrations-only`, which reconciles only optional local MCP
-registrations after locked restoration, is specified by `CAP-MCP-runtime-registration`.
+registrations after locked restoration, is specified by `CAP-MCP-runtime-registration`. When the locked sync leaves a
+desired registration of a selected host unwritten, it returns the `MCP_REGISTRATION_PENDING` notice with that command
+as its fix, and `devkit status` returns the same notice while the checkout lacks the registration.
 
 ### Bundle template inputs
 

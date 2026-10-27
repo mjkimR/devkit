@@ -47,8 +47,8 @@ The mode is derived, never set; the first matching rule wins:
 | Rule | Mode | Use for |
 | --- | --- | --- |
 | `level = WARNING` / `NOTICE` | `CONTINUE` / `NOTE` | succeeded; the user must know / worth knowing |
-| `input_error` | `INPUT_ERROR` | malformed flags, missing arguments, parse errors in user files |
-| `guardrail` | `BLOCKED` | protected branches, out-of-scope edits, rule and gate refusals |
+| `input_error` | `INPUT_ERROR` | malformed flags, missing arguments, parse errors in user files, content checks the agent fixes and retries (failing tests, rule violations or an empty message in a commit) |
+| `guardrail` | `BLOCKED` | protected branches, out-of-scope edits, policy refusals by rules and gates |
 | `actor = DEVELOPER` | `MAINTENANCE` | invariant violations, unexpected exceptions, tool defects |
 | `retry = UNSAFE` | `HALT` | half-applied mutations or state that further execution can damage |
 | `actor = TOOL` | `AUTO` | a safe, idempotent fix command exists; `fix` is required |

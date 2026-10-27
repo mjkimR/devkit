@@ -9,6 +9,7 @@ from devkit_core.base.usecase import BaseUseCase
 
 from devkit_dist.base.errors import ReceiptError
 from devkit_dist.features.distribution.models.errors import BundleError, SelectionError
+from devkit_dist.features.distribution.models.invocation import devkit_command
 from devkit_dist.features.distribution.models.results import ContextResult, Instruction
 from devkit_dist.features.distribution.services.bundles.common import SLUG
 from devkit_dist.features.distribution.services.bundles.context_documents import declared_directory, list_documents
@@ -45,7 +46,7 @@ class GetContext(BaseUseCase):
                 raise SelectionError(
                     f"bundle is not synchronized: {bundle}",
                     f"synchronized bundles: {', '.join(synchronized) or 'none'}",
-                    fix="devkit list",
+                    fix=devkit_command("list"),
                 )
             constitution_path = prefix + "AGENTS.md"
             constitution = None

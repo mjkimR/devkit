@@ -57,11 +57,12 @@ from devkit_core.core.logs import get_logger
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project.repositories.project import require_git_toplevel
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
+from devkit_dist.features.project.services.config_template import TemplateKey, TemplateTable
 
 import devkit_agt.features.gate.repositories.git as git
 import devkit_agt.features.gate.usecases.hooks.hooks as hooks
 from devkit_agt.features.gate.models.contracts import Gate
-from devkit_agt.features.gate.models.errors import GateTemplateNotice, HookInstallSkippedNotice
+from devkit_agt.features.gate.models.errors import DEVKIT, GateTemplateNotice, HookInstallSkippedNotice
 from devkit_agt.features.gate.repositories.config import (
     ENABLED_KEY,
     LOCAL_CONFIG,
@@ -69,7 +70,7 @@ from devkit_agt.features.gate.repositories.config import (
     GatesConfig,
     load_project_gates_config,
 )
-from devkit_agt.features.gate.usecases.registry import project_registry
+from devkit_agt.features.gate.usecases.registry import default_gate_registry, project_registry
 from devkit_agt.features.rules.models.settings import describe_setting_type
 
 HEADER = f"""\
@@ -83,7 +84,7 @@ HEADER = f"""\
 _MENTION = re.compile(r"^\s*#?\s*\[\s*gates\s*\.\s*settings\s*\.\s*\"?([^\]\"\s]+)\"?\s*\]", re.MULTILINE)
 # A value to show for a field whose default is ``None`` (TOML has no null), by the field's inner type.
 _PLACEHOLDERS: dict[str, Any] = {"integer": 0, "number": 0.0, "string": "", "boolean": False}
-_INSTALL_FIX = "then run `devkit gate install`"
+_INSTALL_FIX = f"then run `{DEVKIT} gate install`"
 
 _log = get_logger(__name__)
 
@@ -241,7 +242,7 @@ class RefreshGateTemplateUseCase(BaseUseCase):
             return _skipped(
                 common / LOCAL_CONFIG,
                 f"{CONFIG_PATH} cannot be read: {exc.message}",
-                fix=f"Correct {CONFIG_PATH} (`devkit gate status` reports the problem), {_INSTALL_FIX}",
+                fix=f"Correct {CONFIG_PATH} (`{DEVKIT} gate status` reports the problem), {_INSTALL_FIX}",
                 target=CONFIG_PATH,
             )
         try:
@@ -260,35 +261,98 @@ class RefreshGateTemplateUseCase(BaseUseCase):
 refresh_project_template = RefreshGateTemplateUseCase().execute
 
 
-def post_sync(root: Path, result: dict[str, Any]) -> list[AdvisoryError] | None:
-    """Install hook dispatchers and active devkit entries, then refresh the clone-local template."""
+def _skipped_install(exc: AdvisoryError | OSError) -> HookInstallSkippedNotice:
+    if isinstance(exc, AdvisoryError):
+        return HookInstallSkippedNotice(
+            "automatic Git hook installation skipped",
+            f"reason={exc.code}: {exc.message}",
+            *exc.details,
+            fix=exc.fix,
+            target_files=exc.target_files,
+        )
+    return HookInstallSkippedNotice(
+        "automatic Git hook installation skipped",
+        str(exc),
+        fix=f"Correct the hook directory permissions, then run `{DEVKIT} sync`",
+    )
+
+
+def post_sync(root: Path, result: dict[str, Any]) -> list[str | AdvisoryError] | None:
+    """Install hook dispatchers and active devkit entries, then refresh the clone-local template.
+
+    Reports one ``gate hooks: <change>; ...`` line when the hooks changed (the first sync, a moved hook, a repaired
+    entry), nothing when they are already in place.
+    """
     del result
     try:
         top = require_git_toplevel(root)
     except GitError:
         return None
-    notices: list[AdvisoryError] = []
+    notices: list[str | AdvisoryError] = []
     try:
         installed = hooks.install(top, sys.executable, preserve_python=True)
     except (AdvisoryError, OSError) as exc:
-        if isinstance(exc, AdvisoryError):
-            notice = HookInstallSkippedNotice(
-                "automatic Git hook installation skipped",
-                f"reason={exc.code}: {exc.message}",
-                *exc.details,
-                fix=exc.fix,
-                target_files=exc.target_files,
-            )
-        else:
-            notice = HookInstallSkippedNotice(
-                "automatic Git hook installation skipped",
-                str(exc),
-                fix="Correct the hook directory permissions, then run `devkit sync`",
-            )
-        notices.append(notice)
+        notices.append(_skipped_install(exc))
     else:
+        if installed.actions:
+            notices.append(f"gate hooks: {'; '.join(installed.actions)}")
         notices.extend(installed.notices)
     refreshed = refresh_project_template(top)
     if refreshed.notice is not None:
         notices.append(refreshed.notice)
     return notices or None
+
+
+def post_sync_preview(root: Path, result: dict[str, Any]) -> list[str | AdvisoryError] | None:
+    """What ``post_sync`` would change in the Git hooks, for ``devkit sync --dry-run``; writes nothing.
+
+    One ``gate hooks would change: <change>; ...`` line, or the ``GATE_HOOK_INSTALL_SKIPPED`` warning the sync would
+    report; ``None`` when the hooks are already in place or ``root`` is not in a Git work tree.
+    """
+    del result
+    try:
+        top = require_git_toplevel(root)
+    except GitError:
+        return None
+    try:
+        planned = hooks.install(top, sys.executable, preserve_python=True, dry_run=True)
+    except (AdvisoryError, OSError) as exc:
+        return [_skipped_install(exc)]
+    return [f"gate hooks would change: {'; '.join(planned.actions)}"] if planned.actions else None
+
+
+def _template_key(item: dataclasses.Field[Any], kind: str, value: Any) -> TemplateKey:
+    help_text = item.metadata.get("help")
+    note = " ".join(help_text.split()) if isinstance(help_text, str) else ""
+    if value is None:
+        inner = kind.removesuffix(" or null")
+        return TemplateKey(
+            item.name, None, f"unset by default; {note}".rstrip("; "), kind, _PLACEHOLDERS.get(inner, [])
+        )
+    return TemplateKey(item.name, value, note, kind)
+
+
+def config_tables() -> tuple[TemplateTable, ...]:
+    """The commented ``[gates.settings.<id>]`` tables of the built-in gates for ``devkit config template``.
+
+    For the ``devkit.config_tables`` entry point ``gates``: every project gets the same template, so it lists the
+    built-in gates only, at their defaults; bundle gates appear in the clone-local ``devkit.config``.
+    """
+    tables = []
+    for gate in default_gate_registry().get_all():
+        state = "on" if gate.enabled_by_default else "off"
+        keys = [TemplateKey(ENABLED_KEY, gate.enabled_by_default, "false turns the gate off")]
+        defaults = gate.settings
+        if defaults is not None and dataclasses.is_dataclass(defaults) and not isinstance(defaults, type):
+            hints = typing.get_type_hints(type(defaults))
+            for item in dataclasses.fields(defaults):
+                keys.append(_template_key(item, describe_setting_type(hints[item.name]), getattr(defaults, item.name)))
+        description = " ".join(str(gate.description).split())
+        tables.append(
+            TemplateTable(
+                tuple(keys),
+                ("settings", gate.id),
+                help=f"{gate.stage.value} gate, {state} by default: {description}",
+            )
+        )
+    return tuple(tables)

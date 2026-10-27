@@ -10,7 +10,8 @@ from typing import TYPE_CHECKING, Any
 from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 
-from devkit_dist.features.distribution.models.errors import SelectionError
+from devkit_dist.features.distribution.models.errors import OverrideRetainedNotice, SelectionError
+from devkit_dist.features.distribution.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.distribution.models.results import (
     ConfigurationReport,
     OverrideChange,
@@ -37,6 +38,7 @@ from devkit_dist.features.distribution.services.installation.receipt import read
 from devkit_dist.features.distribution.services.installation.transaction import project_lock
 from devkit_dist.features.distribution.usecases.sync import sync_project
 from devkit_dist.features.project.repositories.local_config import read_effective_config
+from devkit_dist.features.project.repositories.receipt import OVERRIDES_PATH
 from devkit_dist.features.project.services.presentation import language_notices, resolve_language
 
 if TYPE_CHECKING:
@@ -57,13 +59,14 @@ def _sync_and_save(
     locked: bool = False,
     environment: str | None = None,
     save_environment: bool = True,
+    preview: bool = True,
 ) -> SyncResult:
     """Synchronize; ``save`` builds a configuration edit that the sync renders and writes under the project lock.
 
     ``merge`` joins ``presets`` with what each bundle already deploys, read
     from the configuration when the edit is rendered, instead of replacing it.
-    Without ``save``, or on ``dry_run``, the selection applies to this run only.
-    ``deselect`` applies to the run in either case, so a bundle the edit cannot
+    Without ``save`` the selection applies to this run only; on ``dry_run`` the edit is
+    rendered and listed (``.devkit/config.toml``) but never written. ``deselect`` applies to the run in either case, so a bundle the edit cannot
     name (one the receipt keeps deployed without an installed package) leaves
     the receipt.
     """
@@ -73,28 +76,28 @@ def _sync_and_save(
         def selected() -> dict[str, list[str]]:
             return merge_selection(installed, read_config(root), requested) if merge else requested
 
-        if save is not None and not dry_run:
+        if save is not None:
             return sync_project(
                 root,
                 installed,
                 deselect=deselect,
+                dry_run=dry_run,
                 environment=environment,
                 save_environment=save_environment,
+                preview=preview,
                 save=lambda: prepare_config_update(root, **save(installed, selected())),
             )
-        selection = selected()
-        if save is not None:
-            save(installed, selection)  # a preview refuses what the command would refuse
         return sync_project(
             root,
             installed,
             agents=agents,
-            presets=selection,
+            presets=selected(),
             deselect=deselect,
             dry_run=dry_run,
             locked=locked,
             environment=environment,
             save_environment=save_environment,
+            preview=preview,
         )
 
 
@@ -111,8 +114,11 @@ class SyncSelection(BaseUseCase):
         dry_run: bool = False,
         locked: bool = False,
         environment: str | None = None,
+        check: bool = False,
     ) -> SyncResult:
         """Replace requested selections and synchronize, persisting them unless ``save`` is false.
+
+        ``check`` is ``sync --check``: a dry run without the post-sync preview.
 
         Unspecified selections retain their configured values. An empty agent list
         explicitly clears agents. Configuration and outputs commit together under
@@ -130,6 +136,7 @@ class SyncSelection(BaseUseCase):
             locked=locked,
             environment=environment,
             save_environment=save,
+            preview=not check,
         )
 
 
@@ -271,7 +278,7 @@ class RemoveSelection(BaseUseCase):
             missing = sorted(set(bundles) - set(selected))
             if missing:
                 raise SelectionError(
-                    f"bundle is not selected: {missing}", fix="List selected bundles with `devkit list`"
+                    f"bundle is not selected: {missing}", fix=f"List selected bundles with `{AGENT_INVOCATION} list`"
                 )
             # Deleting an entry would not deselect a bundle selected without one (auto-selected, or kept deployed
             # because its package no longer loads), so those are opted out. One kept deployed without an installed
@@ -286,7 +293,20 @@ class RemoveSelection(BaseUseCase):
                 "opt_out": [name for name in bundles if name in automatic],
             }
 
-        return _sync_and_save(root, save=save, deselect=bundles, dry_run=dry_run)
+        result = _sync_and_save(root, save=save, deselect=bundles, dry_run=dry_run)
+        retained = [
+            f"{OVERRIDES_PATH}/{name}/" for name in sorted(set(bundles)) if (root / OVERRIDES_PATH / name).is_dir()
+        ]
+        if retained:
+            result.notices.append(
+                OverrideRetainedNotice(
+                    f"overrides of removed bundles stay in place: {', '.join(retained)}",
+                    target_files=retained,
+                    fix=f"Delete {', '.join(retained)} to drop them, or `{AGENT_INVOCATION} add <bundle>` to apply them"
+                    " again",
+                )
+            )
+        return result
 
 
 class PreviewConfigTemplate(BaseUseCase):
