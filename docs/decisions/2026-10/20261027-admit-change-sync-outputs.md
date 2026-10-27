@@ -1,15 +1,15 @@
 ---
-id: PADR-admit-change-sync-outputs
+id: ADR-admit-change-sync-outputs
 title: Admit sync outputs of the change by procedure
 summary: For delegated bundle-source changes, we admit every tracked path devkit sync writes from the change as a standing write-scope class recorded in _Boundary, to stop no worker on an unnamed seeded path without new code, accepting a Host check against the installation receipt.
-proposal: PROP-seeded-paths-in-boundaries
-status: draft
+proposal: SPEC-seeded-paths-in-boundaries
+status: accepted
 created_at: 2026-10-27
 ---
 
-# [PADR-admit-change-sync-outputs] Admit sync outputs of the change by procedure
+# [ADR-admit-change-sync-outputs] Admit sync outputs of the change by procedure
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-27
 
 ---

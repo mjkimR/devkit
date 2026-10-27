@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-seeded-paths-in-boundaries: User asked to run Planning; go to the end
+  if simple (2026-10-27)'
+by: user
+at: '2026-10-26T23:50:57.015967Z'

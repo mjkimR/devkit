@@ -39,5 +39,5 @@ uv run devkit sync --check  -> seed=1 docs/ux/README.md, exit 1 (before the scop
 
 ## Disposition
 
-Promoted on the user's decision (2026-10-27) to the draft `PROP-seeded-paths-in-boundaries`, which records this ID
+Promoted on the user's decision (2026-10-27) to the draft `SPEC-seeded-paths-in-boundaries`, which records this ID
 under `Source feedback`.

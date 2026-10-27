@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-seeded-paths-in-boundaries
+by: user
+at: '2026-10-26T23:50:57.017809Z'

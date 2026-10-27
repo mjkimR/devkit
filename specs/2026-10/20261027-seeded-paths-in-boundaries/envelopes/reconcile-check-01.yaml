@@ -1,0 +1,15 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T23:55:49.513578Z'
+status: completed
+summary: 'Self-verified at low effort: the one changed Living Spec target CAP-DLV-delivery-workflows matches the payload, worker-contract and Validate wording in the diff; no use case, architecture or glossary impact.'
+findings: []
+checks:
+  reconcile: PASS self-verification against git diff c2dcd0b2..HEAD
+  rules: PASS devkit rules check
+diff_scope:
+  base: c2dcd0b21ef8985b6ed38fbbeb55c75aa7f01735
+  head: f910314a00993844407781f19607042a40cf05e0
+activity_effort: low
