@@ -12,8 +12,8 @@ import click
 from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, exit_on_problems, is_json
 
 from devkit_agt.features.workflow.cli.app import ANCHOR, UNIT, WORKSPACE, cli, workspace
-from devkit_agt.features.workflow.cli.render import quote, render_hold
-from devkit_agt.features.workflow.models.errors import EnvelopeFlagError
+from devkit_agt.features.workflow.cli.render import render_hold
+from devkit_agt.features.workflow.models.errors import EnvelopeFlagError, workflow_command
 from devkit_agt.features.workflow.usecases.envelopes import CheckEnvelopesUseCase, WriteEnvelopeUseCase
 
 # Kinds whose fields need options of their own; ``envelope new`` refuses them.
@@ -25,20 +25,16 @@ def envelope_group() -> None:
     """Envelope files under <unit>/envelopes/."""
 
 
-def _common(stage_required: bool = False) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-    """The options every authoring command takes; ``--stage`` is required where the contract needs it."""
-    options = (
-        WORKSPACE,
-        UNIT,
-        ANCHOR,
-        # click counts any default, None included, as a value and then never asks for a required option.
-        click.option("--stage", required=True, help="Stage the envelope belongs to")
-        if stage_required
-        else click.option("--stage", default="", help="Stage the envelope belongs to"),
+def _common(
+    stage_required: bool = False, verification: bool = True
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    """The options every authoring command takes; ``--stage`` is required where the contract needs it.
+
+    ``verification`` adds ``--status``, ``--check``, ``--base`` and ``--head``: an answer or a resolution records a
+    decision or a fix, is always ``completed`` and carries no verification of its own, so its command lacks them.
+    """
+    verifying = (
         click.option("--status", default=None, help="completed (default when authoring) | needs_input | failed"),
-        click.option("--summary", default=None, help="1-3 line judgment"),
-        click.option("--assume", "assumptions", multiple=True, help="An assumption the judgment rests on (repeatable)"),
-        click.option("--unverified", "unverified", multiple=True, help="An area that was not verified (repeatable)"),
         click.option("--check", "checks", multiple=True, help="Check result name=PASS|FAIL|SKIP[ detail] (repeatable)"),
         click.option(
             "--base", default="", help="diff_scope base revision (resolved to a full commit id in Git workspaces)"
@@ -48,6 +44,19 @@ def _common(stage_required: bool = False) -> Callable[[Callable[..., Any]], Call
             default="",
             help="diff_scope head commit id (hexadecimal; resolved and verified in Git workspaces)",
         ),
+    )
+    options = (
+        WORKSPACE,
+        UNIT,
+        ANCHOR,
+        # click counts any default, None included, as a value and then never asks for a required option.
+        click.option("--stage", required=True, help="Stage the envelope belongs to")
+        if stage_required
+        else click.option("--stage", default="", help="Stage the envelope belongs to"),
+        click.option("--summary", default=None, help="1-3 line judgment"),
+        click.option("--assume", "assumptions", multiple=True, help="An assumption the judgment rests on (repeatable)"),
+        click.option("--unverified", "unverified", multiple=True, help="An area that was not verified (repeatable)"),
+        *(verifying if verification else ()),
         click.option("--effort", default="", help="activity_effort the run applied: low | medium | high"),
     )
 
@@ -65,10 +74,18 @@ FINDINGS_FILE = click.option(
 
 
 def _read_items_file(flag: str, path: str | None, what: str) -> str | None:
+    """The YAML text ``flag`` names; an empty stdin is refused, as it would record nothing a run meant to record."""
     if path is None:
         return None
     if path == "-":
-        return sys.stdin.read()
+        text = sys.stdin.read()
+        if not text.strip():
+            raise EnvelopeFlagError(
+                f"{flag} -: stdin is empty",
+                target_files=[flag],
+                fix=f"Pipe the YAML list of {what} into stdin, or drop {flag}",
+            )
+        return text
     try:
         return Path(path).read_text("utf-8")
     except (OSError, UnicodeError) as exc:
@@ -86,15 +103,15 @@ def _write(
     unit: str,
     anchor: str | None,
     stage: str,
-    status: str | None,
     summary: str | None,
     assumptions: tuple[str, ...],
     unverified: tuple[str, ...],
-    checks: tuple[str, ...],
-    base: str,
-    head: str,
     effort: str,
     output_format: str,
+    status: str | None = None,
+    checks: tuple[str, ...] = (),
+    base: str = "",
+    head: str = "",
     findings_file: str | None = None,
     source: str | None = None,
     resolve: tuple[str, ...] = (),
@@ -124,10 +141,12 @@ def _write(
     authoring = any((status is not None, summary is not None, assumptions, unverified, checks, base, head)) or any(
         (*content, recovery, resolves, effort)
     )
-    if [findings_file, questions_file, answers_file].count("-") > 1:
+    stdin = [flag for flag, value in _stdin_flags(findings_file, questions_file, answers_file) if value == "-"]
+    if len(stdin) > 1:
         raise EnvelopeFlagError(
             "only one of --findings-file, --questions-file and --answers-file can read stdin",
-            fix="Pass the others as files",
+            target_files=stdin,
+            fix=f"Pass {' and '.join(stdin[1:])} as a file",
         )
     result = WriteEnvelopeUseCase().execute(
         kind,
@@ -160,9 +179,22 @@ def _write(
     if is_json(output_format):
         echo_json(result)
         return
-    click.echo(
-        f"[ENVELOPE: {result['file']} kind={kind} seq={result['seq']:02d} status={result['status']} open_findings={result['open_findings']}]"
-    )
+    tail = " skeleton=yes" if result["skeleton"] else _findings_field(kind, result["open_findings"])
+    click.echo(f"[ENVELOPE: {result['file']} kind={kind} seq={result['seq']:02d} status={result['status']}{tail}]")
+
+
+def _stdin_flags(
+    findings: str | None, questions: str | None, answers: str | None
+) -> tuple[tuple[str, str | None], ...]:
+    return (("--findings-file", findings), ("--questions-file", questions), ("--answers-file", answers))
+
+
+# Kinds that record decisions or runs rather than review findings: ``open_findings`` appears only when not zero.
+RECORD_KINDS = ("worker", "answer", "resolution")
+
+
+def _findings_field(kind: str, open_findings: int) -> str:
+    return "" if kind in RECORD_KINDS and not open_findings else f" open_findings={open_findings}"
 
 
 @envelope_group.command(name="new", hidden=True)
@@ -194,7 +226,8 @@ def envelope_new_cmd(kind: str, **options: Any) -> None:
     if kind in KIND_COMMANDS:
         raise EnvelopeFlagError(
             f"kind {kind} has its own command",
-            fix=f"Use `uv run devkit workflow envelope {kind}` with the same options",
+            target_files=["--kind"],
+            fix=f"Use `{workflow_command(f'envelope {kind}')}` with the same options",
         )
     _write(kind, **options)
 
@@ -227,7 +260,7 @@ def envelope_worker_cmd(**options: Any) -> None:
 
 
 @envelope_group.command(name="answer")
-@_common()
+@_common(verification=False)
 @click.option("--answers-to", default="", help="The worker-NN.yaml whose questions it answers")
 @click.option(
     "--answers-file",
@@ -253,7 +286,7 @@ def envelope_answer_cmd(**options: Any) -> None:
 
 
 @envelope_group.command(name="resolution")
-@_common()
+@_common(verification=False)
 @click.option("--resolves", default="", help="The worker-NN.yaml whose problem it resolves")
 @FORMAT_OPTION
 @boundary
@@ -311,6 +344,8 @@ def envelope_check_cmd(workspace_root: str | None, unit: str, details: bool, out
 
     Also reports what holds the unit's gates: unresolved problems ([BLOCKED]) and
     unanswered questions ([PENDING_QUESTION]); neither changes the exit code.
+    A malformed file is reported once, as an ENVELOPE_INVALID advisory on stderr
+    (in JSON, under "errors").
     """
     ws = workspace(workspace_root)
     envelopes = CheckEnvelopesUseCase().execute(ws, unit)
@@ -322,12 +357,11 @@ def envelope_check_cmd(workspace_root: str | None, unit: str, details: bool, out
     else:
         for e in loaded:
             click.echo(
-                f"[ENVELOPE: {e.file} kind={e.kind} seq={e.seq:02d} status={e.status} open_findings={e.open_findings()}"
+                f"[ENVELOPE: {e.file} kind={e.kind} seq={e.seq:02d} status={e.status}"
+                f"{_findings_field(e.kind, e.open_findings())}"
                 f"{' problem=yes' if e.problem else ''}{f' review={e.review}' if e.review else ''}]"
             )
         click.echo(render_hold(hold), nl=False)
-        for err in errors:
-            click.echo(f"[ENVELOPE_ERROR: {err.file} {quote(err.message)}]")
         if not errors:
             click.echo(f"[OK: {len(loaded)} envelopes]")
     exit_on_problems(errors)

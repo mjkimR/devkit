@@ -31,8 +31,22 @@ ANCHOR = click.option(
 NO_LINT = click.option("--no-lint", is_flag=True, help="Skip lint-class checks")
 
 
+# ``Context.meta`` key of the arguments the ``workflow`` group was invoked with (``_WorkflowGroup``).
+INVOCATION = "devkit_agt.workflow.invocation"
+
+
+class _WorkflowGroup(click.Group):
+    """Records the arguments after ``workflow``, so an error can name the exact command to rerun."""
+
+    def parse_args(self, ctx: click.Context, args: list[str]) -> list[str]:
+        ctx.meta[INVOCATION] = tuple(args)
+        return super().parse_args(ctx, args)
+
+
 def workspace(root: str | None) -> Workspace:
-    return Workspace(resolve_root(root))
+    ctx = click.get_current_context(silent=True)
+    invocation = ctx.meta.get(INVOCATION) if ctx is not None else None
+    return Workspace(resolve_root(root), invocation=invocation)
 
 
 def parse_date(value: str | None) -> date | None:
@@ -44,6 +58,6 @@ def parse_date(value: str | None) -> date | None:
         raise ArgumentError(f"--date: {exc}", target_files=["--date"], fix="Pass --date YYYY-MM-DD") from exc
 
 
-@click.group(name="workflow")
+@click.group(name="workflow", cls=_WorkflowGroup)
 def cli() -> None:
     """Data-driven delivery workflow engine for coding agents."""

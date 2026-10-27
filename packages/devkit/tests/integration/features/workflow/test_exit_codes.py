@@ -137,7 +137,7 @@ def test_every_json_command_prints_one_object(unit_ws: Path) -> None:
         result = _run(*args, "-w", str(unit_ws), "--format", "json")
         assert result.exit_code == ExitCode.OK, (args, result.output)
         assert isinstance(json.loads(result.stdout), dict), args
-    assert set(json.loads(_run("list", "-w", str(unit_ws), "--format", "json").stdout)) == {"units"}
+    assert set(json.loads(_run("list", "-w", str(unit_ws), "--format", "json").stdout)) == {"units", "errors"}
     assert set(json.loads(_run("checks", "-w", str(unit_ws), "--format", "json").stdout)) == {"checks"}
 
 

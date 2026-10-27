@@ -144,12 +144,12 @@ def test_handoff_ask_lists_candidates_and_waits(tmp_path: Path) -> None:
     assert h.eligible == ("hotfix", "direct-delivery") and h.recommended == ()
     assert res.waiting is not None and res.waiting.class_ == CheckClass.HUMAN and res.waiting.checks == ("handoff",)
     text = render_evaluation(res)
-    assert "[STAGE: - complete=true]" in text
+    assert "[STAGE: - complete=yes]" in text
     assert (
         "[HANDOFF: policy=ask candidates=spec-driven hotfix direct-delivery eligible=hotfix direct-delivery recommended=- chosen=-]"
         in text
     )
-    assert "[CANDIDATE: spec-driven eligible=no recommended=yes when=file-exists(spec.md)=false]" in text
+    assert "[CANDIDATE: spec-driven eligible=no recommended=yes when=file-exists(spec.md)=no]" in text
     assert "[CANDIDATE: direct-delivery eligible=yes recommended=no when=-]" in text
     assert "[WAITING: human handoff]" in text
     assert res.to_dict()["handoff"]["eligible"] == ["hotfix", "direct-delivery"]
@@ -212,7 +212,11 @@ def test_cli_handoff_ask_flow(tmp_path: Path) -> None:
     undecided = _run("handoff", "-w", str(root), "--unit", unit, "--no-lint")
     assert undecided.exit_code == 2 and "(HANDOFF_CHOICE_REQUIRED)" in undecided.stderr
     assert "[ACTION] INTERACTION" in undecided.stderr
-    assert "[DETAIL] spec-driven: eligible=false recommended=true" in undecided.stderr
+    assert (
+        "[DETAIL] uv run devkit workflow answer --unit .devkit/transient/work/login --request handoff --action accept --value direct-delivery"
+        in undecided.stderr
+    )
+    assert "spec-driven" not in "".join(line for line in undecided.stderr.splitlines() if line.startswith("[DETAIL]"))
 
     bad = _run("handoff", "-w", str(root), "--unit", unit, "--no-lint", "--workflow", "nope")
     assert bad.exit_code == 2 and "(HANDOFF_INVALID)" in bad.stderr
@@ -224,7 +228,7 @@ def test_cli_handoff_ask_flow(tmp_path: Path) -> None:
         "handoff", "-w", str(root), "--unit", unit, "--no-lint", "--workflow", "spec-driven", "--date", "2026-10-13"
     )
     assert done.exit_code == 0, done.output
-    assert done.output.startswith("[HANDOFF: from=triage to=spec-driven policy=")
+    assert done.output.startswith("[HANDED_OFF: from=triage to=spec-driven policy=")
     # An explicit choice is recorded as the handoff decision.
     assert "policy=ask decision=decisions/01-handoff.yaml]" in done.output
     assert "[HISTORY: triage]" in done.output
@@ -241,7 +245,7 @@ def test_cli_handoff_ask_flow(tmp_path: Path) -> None:
     # Completing spec-driven: no candidates, so no handoff and HANDOFF_NONE on request.
     (root / unit / "spec.md").write_text("---\nstatus: approved\n---\n")
     nxt = _run("next", "-w", str(root), "--unit", unit, "--no-lint")
-    assert "[STAGE: - complete=true]" in nxt.output and "[HANDOFF" not in nxt.output
+    assert "[STAGE: - complete=yes]" in nxt.output and "[HANDOFF" not in nxt.output
     none = _run("handoff", "-w", str(root), "--unit", unit, "--no-lint")
     assert none.exit_code == 2 and "(HANDOFF_NONE)" in none.stderr
 

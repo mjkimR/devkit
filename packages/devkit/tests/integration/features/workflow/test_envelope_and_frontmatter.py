@@ -315,7 +315,7 @@ def test_envelope_new_does_not_need_the_definition(tmp_path: Path, definition: s
         "--format", "json",
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    assert json.loads(result.stdout)["file"] == f"{SIMPLE_UNIT}/envelopes/review-01.yaml"
+    assert json.loads(result.stdout)["file"] == "envelopes/review-01.yaml"
     data = yaml.safe_load((root / SIMPLE_UNIT / "envelopes/review-01.yaml").read_text())
     assert (data["workflow"], data["segment"]) == ("w", 0)
 

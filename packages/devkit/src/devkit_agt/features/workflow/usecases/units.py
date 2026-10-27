@@ -18,6 +18,7 @@ from devkit_agt.features.workflow.models.errors import (
     LayoutError,
     UnitDirNotEmptyError,
     UnitExistsError,
+    workflow_command,
 )
 from devkit_agt.features.workflow.models.layout import TemplateLayout
 from devkit_agt.features.workflow.repositories.layout import discover_units
@@ -64,7 +65,8 @@ class CreateUnitUseCase(BaseUseCase):
         unit_dir = _unit_dir(ws, layout, rel)
         exists = UnitExistsError(
             f"unit already exists: {rel.as_posix()}",
-            fix="Choose another slug or continue the existing unit with `uv run devkit workflow next --unit <dir>`",
+            fix=f"Choose another slug, or continue the existing unit with"
+            f" `{workflow_command(f'next --unit {rel.as_posix()}')}`",
         )
         # An anchor a concurrent `new` creates after this check fails the exclusive write below: UNIT_EXISTS as well.
         entries = {entry.name for entry in unit_dir.iterdir()} if unit_dir.is_dir() else set()

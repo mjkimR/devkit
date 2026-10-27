@@ -121,7 +121,7 @@ def test_full_progression_to_complete(tmp_path: Path) -> None:
     res = evaluate_definition(DOC, _opts(tmp_path, unit, approvals=approvals, given=("ci-passed", "integration")))
     assert res.complete and res.stage is None
     assert res.done == ["intent", "build-verify", "review", "integrate"]
-    assert "[STAGE: - complete=true]" in render_evaluation(res)
+    assert "[STAGE: - complete=yes]" in render_evaluation(res)
 
 
 def test_runner_only_unmet_reports_runner_waiting(tmp_path: Path) -> None:
@@ -347,7 +347,7 @@ def test_lint_clean_on_a_unit_outside_the_root_is_a_reported_error(tmp_path: Pat
     # A unit reached through a symbolic link that leaves the root is the same unit.
     (root / "linked").symlink_to(outside, target_is_directory=True)
     text = run_cli("next", "-w", str(root), "--unit", "linked")
-    assert text.exit_code == 2 and "[LINT_ERROR: " in text.stdout and "(PATH_UNSAFE)" in text.stderr
+    assert text.exit_code == 2 and "lint failed: PATH_UNSAFE" in text.stdout and "(PATH_UNSAFE)" in text.stderr
 
 
 def test_the_lint_detail_names_a_unit_outside_the_root_as_given(tmp_path: Path) -> None:

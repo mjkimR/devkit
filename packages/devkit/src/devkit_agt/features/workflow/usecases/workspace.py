@@ -11,6 +11,7 @@ error such as ``RECEIPT_INVALID``.
 
 from __future__ import annotations
 
+import shlex
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -33,6 +34,7 @@ from devkit_agt.features.workflow.models.errors import (
     WorkflowNotBindableError,
     WorkflowNotFoundError,
     WorkflowNotSelectedError,
+    workflow_command,
 )
 from devkit_agt.features.workflow.models.layout import LayoutSpec, TemplateLayout
 from devkit_agt.features.workflow.models.results import UnitEvaluation
@@ -119,8 +121,12 @@ class Workspace:
         *,
         lint: LintFunc | None = lint_with_rules,
         ancestor: AncestorFunc | None = is_ancestor,
+        invocation: Sequence[str] | None = None,
     ) -> None:
+        """``invocation`` is the ``devkit workflow`` arguments of the running command, when there is one; an error
+        that must be answered by rerunning it with one more option (``ANCHOR_AMBIGUOUS``) gives that exact command."""
         self.root = (Path(root) if root is not None else find_project_root(Path.cwd())).resolve()
+        self.invocation = tuple(invocation) if invocation is not None else None
         self.config: WorkflowConfig = load_workflow_config(self.root)
         self.lint = lint
         self.ancestor = ancestor
@@ -212,9 +218,10 @@ class Workspace:
         or a missing file raises ``WorkflowNotFoundError``; an unreadable file
         or an id defined twice raises ``DefinitionError``.
         """
+        ids = ", ".join(sorted(self.known_ids())) or "none discovered"
         fix = (
-            f"Add a definition with id {ref!r} under {self.config.definitions_dir}, "
-            "sync a bundle that ships it, or pass --workflow <path>"
+            f"Use a discovered workflow id ({ids}), or add a definition with id {ref!r} under"
+            f" {self.config.definitions_dir} (or sync a bundle that ships it)"
         )
         path = definition_path(ref, self.root)
         if path is not None:
@@ -337,16 +344,29 @@ class Workspace:
             if anchor not in candidates:
                 raise UnitNotFoundError(
                     f"{anchor} is not the anchor of the project or of any workflow",
-                    fix=f"Pass --anchor with one of: {', '.join(candidates)}",
+                    target_files=["--anchor"],
+                    fix=f"Pass --anchor one of: {', '.join(candidates)}",
                 )
             if not (unit_dir / anchor).is_file():
-                raise UnitNotFoundError(f"{anchor} not found in {self.rel(unit_dir)}")
+                held = [a for a in candidates if (unit_dir / a).is_file()]
+                raise UnitNotFoundError(
+                    f"{anchor} not found in {self.rel(unit_dir)}",
+                    target_files=["--anchor"],
+                    fix=f"Pass --anchor an anchor file the unit holds: {', '.join(held)}"
+                    if held
+                    else UnitNotFoundError.fix,
+                )
             return anchor
         present = self.present_anchors(unit_dir)
         if len(present) > 1:
+            invocation = self.invocation
             raise AnchorAmbiguousError(
                 f"{self.rel(unit_dir)} contains several anchor files: {', '.join(present)}",
-                fix=f"Pass --anchor <file> with one of {', '.join(present)} to name the file that identifies the unit",
+                *(
+                    workflow_command(shlex.join([*invocation, "--anchor", a])) if invocation is not None else a
+                    for a in present
+                ),
+                target_files=["--anchor"],
             )
         return present[0]
 
@@ -368,6 +388,7 @@ class Workspace:
             if anchor is not None and anchor != expected:
                 raise AnchorMismatchError(
                     f"--anchor {anchor} names another file than workflow {doc.id}'s anchor {expected}",
+                    target_files=["--anchor"],
                     fix="Drop --anchor: --workflow selects the anchor",
                 )
             if not (unit_dir / expected).is_file():
@@ -380,12 +401,16 @@ class Workspace:
         expected = self.anchor_for(doc)
         if expected != found:
             unit_rel = self.rel(unit_dir)
+            rebind = self._bind_commands(unit_rel, found)
             raise AnchorMismatchError(
                 f"unit {unit_rel} is identified by {found} but workflow {doc.id} declares anchor {expected}",
+                *rebind,
                 target_files=[self.rel(unit_dir / found)],
-                fix=(
-                    f"Rename the anchor to {expected} (and move the unit into the workflow's layout), or rebind it "
-                    f"with `uv run devkit workflow bind --unit {unit_rel} --workflow <id>` naming a workflow whose anchor is {found}"
+                fix=f"Rename the anchor to {expected} (and move the unit into the workflow's layout)"
+                + (
+                    f", or rebind the unit to a workflow whose anchor is {found} with a [DETAIL] command"
+                    if rebind
+                    else ""
                 ),
             )
         return UnitRef(unit_dir, found, binding, doc, self.rel(unit_dir))
@@ -413,13 +438,23 @@ class Workspace:
     def _require_selection(self, unit_dir: Path, binding: Binding) -> None:
         """Raise ``WorkflowNotSelectedError`` for an unbound unit when ``[workflow].default`` is unset."""
         if not binding.workflow and not self.config.default:
+            bind = self._bind_commands(self.rel(unit_dir))
             raise WorkflowNotSelectedError(
                 f"unit {self.rel(unit_dir)} is not bound and [workflow].default is unset",
-                fix=(
-                    f"Bind the unit with `uv run devkit workflow bind --unit {self.rel(unit_dir)} --workflow <id>`, "
-                    "or set [workflow].default in .devkit/config.toml"
-                ),
+                *bind,
+                fix=bind[0]
+                if len(bind) == 1
+                else "Bind the unit with the [DETAIL] command of the workflow it follows, or set [workflow].default in"
+                " .devkit/config.toml",
             )
+
+    def _bind_commands(self, unit_rel: str, anchor: str | None = None) -> list[str]:
+        """One ``bind`` command per discovered workflow (whose anchor is ``anchor``, when given)."""
+        return [
+            workflow_command(f"bind --unit {unit_rel} --workflow {doc.id}")
+            for doc in sorted(self.definitions(), key=lambda d: d.id)
+            if anchor is None or self.anchor_for(doc) == anchor
+        ]
 
     def describe_unit(self, unit: str | Path, *, anchor: str | None = None) -> DefinitionDescription:
         """What ``show --unit`` reports: the definition the unit is bound to (else the default) with its binding.
@@ -455,6 +490,7 @@ class Workspace:
             if name not in gates and (check is None or check.class_ not in DECLARABLE):
                 raise GivenInvalidError(
                     f"--given {name!r} is not a gate of {doc.id} nor a registered runner or human check",
+                    target_files=["--given"],
                     fix=f"Use a gate name ({', '.join(sorted(gates)) or 'none'}) or a runner/human check from `uv run devkit workflow checks`",
                 )
 

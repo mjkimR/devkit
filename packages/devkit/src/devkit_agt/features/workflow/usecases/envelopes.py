@@ -10,7 +10,7 @@ from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import GitError, run_git
 
 from devkit_agt.features.workflow.models.envelope import Envelopes
-from devkit_agt.features.workflow.models.errors import EnvelopeFlagError
+from devkit_agt.features.workflow.models.errors import EnvelopeFlagError, locate_envelope_errors
 from devkit_agt.features.workflow.repositories.git import is_revision
 from devkit_agt.features.workflow.repositories.unit.decisions import load_decisions
 from devkit_agt.features.workflow.services.envelope import (
@@ -30,7 +30,9 @@ def _resolve_scope(root: Path, base: str, head: str) -> tuple[str, str]:
     """Resolve supplied scope revisions before writing; retain lexical-only authoring outside Git."""
     if head and not is_revision(head):
         raise EnvelopeFlagError(
-            f"--head {head!r} must be a hexadecimal commit id", fix="Pass --head $(git rev-parse HEAD)"
+            f"--head {head!r} must be a hexadecimal commit id",
+            target_files=["--head"],
+            fix="Pass --head $(git rev-parse HEAD)",
         )
     if not (base or head):
         return base, head
@@ -50,7 +52,9 @@ def _resolve_scope(root: Path, base: str, head: str) -> tuple[str, str]:
                 raise
             raise EnvelopeFlagError(
                 f"{flag} {revision!r} does not resolve to a commit",
-                fix=f"Pass {flag} an existing commit in this repository (inspect `git rev-parse --verify <rev>^{{commit}}`)",
+                target_files=[flag],
+                fix=f"Pass {flag} an existing commit of this repository (`git rev-parse --verify {revision}^{{commit}}`"
+                " shows why this one is not)",
             ) from exc
         resolved.append(sha.decode("ascii").strip())
     return resolved[0], resolved[1]
@@ -117,6 +121,7 @@ class WriteEnvelopeUseCase(BaseUseCase):
             loaded = load_envelopes(unit_dir)
             draft = compose_envelope(
                 unit_dir=unit_dir,
+                unit=scope.rel,
                 envelopes=_carried_from(ws, scope, loaded)
                 if source == FROM_LATEST
                 else loaded.scoped(workflow, segment),
@@ -152,8 +157,15 @@ class WriteEnvelopeUseCase(BaseUseCase):
             body = skeleton(kind, stage, created, workflow, segment)
             written_status, open_findings = "needs_input", 0
         path, seq = write_envelope(unit_dir, kind, body)
-        rel = ws.rel(path)
-        return {"file": rel, "kind": kind, "seq": seq, "status": written_status, "open_findings": open_findings}
+        return {
+            "unit": scope.rel,
+            "file": path.relative_to(unit_dir).as_posix(),
+            "kind": kind,
+            "seq": seq,
+            "status": written_status,
+            "skeleton": not authoring,
+            "open_findings": open_findings,
+        }
 
 
 class CheckEnvelopesUseCase(BaseUseCase):
@@ -164,7 +176,5 @@ class CheckEnvelopesUseCase(BaseUseCase):
         unit_dir = workspace.unit_path(unit)
         workspace.present_anchors(unit_dir)
         envelopes = load_envelopes(unit_dir)
-        unit_rel = workspace.rel(unit_dir)
-        for error in envelopes.errors:
-            error.target_files = (f"{unit_rel}/{error.file}",)
+        locate_envelope_errors(envelopes.errors, workspace.rel(unit_dir))
         return envelopes

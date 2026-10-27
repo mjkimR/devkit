@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterable, Mapping
 from dataclasses import replace
 from datetime import datetime
@@ -20,6 +21,7 @@ from devkit_agt.features.workflow.models.errors import (
     EnvelopeItemsError,
     EnvelopeReferenceError,
     EnvelopeStatusError,
+    workflow_command,
 )
 from devkit_agt.features.workflow.repositories.git import is_revision
 from devkit_agt.features.workflow.repositories.unit.decisions import load_decisions, utc_timestamp
@@ -43,6 +45,9 @@ from devkit_agt.features.workflow.services.envelope.model import (
 
 CHECK_VERDICTS = ("PASS", "FAIL", "SKIP")
 FROM_LATEST = "latest"
+CHECK_FIX = (
+    "Pass each --check as the check name, `=`, and PASS, FAIL or SKIP, optionally followed by a space and a detail"
+)
 
 
 def envelope_timestamp(unit_dir: Path, workflow: str, segment_start: int, now: datetime | None = None) -> str:
@@ -95,13 +100,15 @@ def parse_check_flag(text: str) -> tuple[str, str]:
     if not sep or not key or " " in key:
         raise EnvelopeFlagError(
             f"--check {text!r} must be name=PASS|FAIL|SKIP[ detail]",
-            fix='--check tests="PASS 14/14"',
+            target_files=["--check"],
+            fix=CHECK_FIX,
         )
     value = value.strip()
     if value.split(" ", 1)[0] not in CHECK_VERDICTS:
         raise EnvelopeFlagError(
             f"--check {text!r}: the value must start with {'|'.join(CHECK_VERDICTS)}",
-            fix='--check tests="PASS 14/14"',
+            target_files=["--check"],
+            fix=CHECK_FIX,
         )
     return key, value
 
@@ -113,7 +120,8 @@ def parse_waive_flag(text: str) -> tuple[int, str]:
     if not sep or not number.strip().isdigit() or not reason:
         raise EnvelopeFlagError(
             f"--waive {text!r} must be <finding-number>=<reason>",
-            fix='--waive "2=protocol-wide format kept"',
+            target_files=["--waive"],
+            fix="Pass each --waive as the carried finding's number, `=`, and why it is waived",
         )
     return int(number), reason
 
@@ -125,7 +133,9 @@ def parse_settle_flag(text: str) -> Settle:
     if not sep or not number.strip().isdigit() or int(number) < 1 or not decision:
         raise EnvelopeFlagError(
             f"--settle {text!r} must be <assumption-number>=<decision>",
-            fix='--settle "2=Keep the TOML layout"',
+            target_files=["--settle"],
+            fix="Pass each --settle as the 1-based number of an assumption of the --answers-to envelope, `=`, and the"
+            " user's decision",
         )
     return Settle(int(number), decision)
 
@@ -138,18 +148,24 @@ def parse_resolve_flag(text: str) -> int | None:
     if not value.isdigit() or int(value) < 1:
         raise EnvelopeFlagError(
             f"--resolve {text!r} must be a finding number or all",
-            fix="--resolve 1 --resolve 3, or --resolve all",
+            target_files=["--resolve"],
+            fix="Pass each --resolve as a carried finding's number (from 1), or pass --resolve all",
         )
     return int(value)
 
 
-def parse_findings(text: str, kind: str) -> tuple[Finding, ...]:
-    """A YAML list of findings; ``issue`` and ``evidence`` are required, ``resolution`` defaults to open."""
+def parse_findings(text: str, kind: str, unit: str = "") -> tuple[Finding, ...]:
+    """A YAML list of findings; ``issue`` and ``evidence`` are required, ``resolution`` defaults to open.
+
+    ``unit`` (workspace-relative) completes the commands the errors name.
+    """
+    target = ["--findings-file"]
     try:
         data = safe_load(text, source="--findings-file")
     except yaml.YAMLError as exc:
         raise EnvelopeFindingsError(
             f"--findings-file: yaml: {exc}",
+            target_files=target,
             fix="Fix the YAML at the reported line; quote a value that starts with [ { & * ! % @ or ` or contains ': '",
         ) from exc
     if data is None:
@@ -157,6 +173,7 @@ def parse_findings(text: str, kind: str) -> tuple[Finding, ...]:
     if not isinstance(data, list):
         raise EnvelopeFindingsError(
             "--findings-file: expected a YAML list of findings",
+            target_files=target,
             fix="Write one `- issue: ...` item per finding",
         )
     out: list[Finding] = []
@@ -166,21 +183,31 @@ def parse_findings(text: str, kind: str) -> tuple[Finding, ...]:
         except EnvelopeFormatError as exc:
             raise EnvelopeFindingsError(
                 f"--findings-file: {exc}",
+                target_files=target,
                 fix=f"Write a mapping with only {', '.join(FINDING_KEYS)} (waiver only on a waived finding)",
             ) from exc
         finding = replace(finding, issue=finding.issue.strip(), evidence=finding.evidence.strip())
         if not finding.issue or not finding.evidence:
             raise EnvelopeFindingsError(
                 f"--findings-file: finding {i} needs issue and evidence",
-                fix="Add the missing key",
+                target_files=target,
+                fix=f"Add issue and evidence to finding {i}",
             )
         if kind in CLOSABLE and finding.resolution != "open":
             raise EnvelopeFlagError(
                 f"--findings-file: finding {i}: a {kind} records findings as found (open); close them in a reverify",
-                fix=f"Drop resolution; close the round with `uv run devkit workflow envelope reverify --from envelopes/{kind}-NN.yaml`",
+                target_files=target,
+                fix=f"Drop resolution from finding {i}; {_close_round(kind, unit)}",
             )
         out.append(finding)
     return tuple(out)
+
+
+def _close_round(kind: str, unit: str) -> str:
+    """How the round of a ``review`` or ``challenger`` envelope is closed, as the rest of a fix."""
+    if kind == "review" and unit:
+        return f"close the round afterwards with `{workflow_command(f'envelope reverify --unit {unit} --from latest')}`"
+    return "close the round afterwards with `envelope reverify`, its --from naming the file this command writes"
 
 
 def _items(text: str, flag: str, keys: tuple[str, ...]) -> list[Any]:
@@ -190,11 +217,14 @@ def _items(text: str, flag: str, keys: tuple[str, ...]) -> list[Any]:
     except yaml.YAMLError as exc:
         raise EnvelopeItemsError(
             f"{flag}: yaml: {exc}",
+            target_files=[flag],
             fix="Fix the YAML at the reported line; quote a value that starts with [ { & * ! % @ or ` or contains ': '",
         ) from exc
     if not isinstance(data, list) or not data:
         raise EnvelopeItemsError(
-            f"{flag}: expected a non-empty YAML list", fix=f"Write one `- {keys[0]}: ...` item per entry"
+            f"{flag}: expected a non-empty YAML list",
+            target_files=[flag],
+            fix=f"Write one `- {keys[0]}: ...` item per entry",
         )
     return data
 
@@ -208,6 +238,7 @@ def parse_questions(text: str) -> tuple[Question, ...]:
         except EnvelopeFormatError as exc:
             raise EnvelopeItemsError(
                 f"--questions-file: {exc}",
+                target_files=["--questions-file"],
                 fix="Write a mapping with id, title (40 characters at most), prompt, and optionally context, options"
                 " ({id, description, recommended}) and allow_note",
             ) from exc
@@ -223,13 +254,21 @@ def parse_answers(text: str) -> tuple[Answer, ...]:
         except EnvelopeFormatError as exc:
             raise EnvelopeItemsError(
                 f"--answers-file: {exc}",
+                target_files=["--answers-file"],
                 fix="Write a mapping with question, choice (an option id or null), decision (one sentence) and"
                 " optionally constraints",
             ) from exc
     return tuple(out)
 
 
-def carried_findings(envelopes: Envelopes, source: str, unit_dir: Path) -> tuple[tuple[Finding, ...], str]:
+def _rounds(envelopes: Envelopes) -> tuple[str, ...]:
+    """``--from`` naming each file it may name: the review, challenger and reverify envelopes of ``envelopes``."""
+    return tuple(f"--from {e.file}" for e in envelopes.all() if e.kind in {*CLOSABLE, "reverify"})
+
+
+def carried_findings(
+    envelopes: Envelopes, source: str, unit_dir: Path, unit: str = ""
+) -> tuple[tuple[Finding, ...], str]:
     """Findings copied forward for a reverify, and the ``review-NN.yaml`` or ``challenger-NN.yaml`` round they belong to.
 
     ``latest`` takes the deciding review state (the latest review round, or the
@@ -237,14 +276,22 @@ def carried_findings(envelopes: Envelopes, source: str, unit_dir: Path) -> tuple
     the rounds a later return re-opened; a path names a review, challenger or reverify file.
     A named review or challenger round carries its closing state, the last
     reverify of ``envelopes`` naming it, so earlier resolutions and waivers persist.
+    ``unit`` (workspace-relative) completes the commands the errors name; the files ``--from`` may name are
+    their ``[DETAIL]`` lines.
     """
+    rounds = _rounds(envelopes)
+    named = "Use --from latest, or a --from in [DETAIL]" if rounds else "Use --from latest"
     if source == FROM_LATEST:
         env = envelopes.review_state()
         if env is None:
             raise EnvelopeFromError(
                 "no review envelope to carry forward (a round a later `devkit workflow return` re-opened no longer"
                 " counts)",
-                fix="Write a review envelope first; close a challenger round with --from envelopes/challenger-NN.yaml",
+                *rounds,
+                target_files=["--from"],
+                fix="Write a review envelope first, or pass a --from in [DETAIL]"
+                if rounds
+                else "Write a review envelope first",
             )
     else:
         path = Path(source)
@@ -253,20 +300,23 @@ def carried_findings(envelopes: Envelopes, source: str, unit_dir: Path) -> tuple
             env = read_envelope(path, path.name)
         except EnvelopeFormatError as exc:
             raise EnvelopeFromError(
-                f"--from {source}: {exc.message}",
-                fix="Use --from latest, or pass an existing, well-formed envelopes/<review|challenger|reverify>-NN.yaml",
+                f"--from {source}: {exc.message}", *rounds, target_files=["--from"], fix=named
             ) from exc
     if env.kind == "reconcile-check":
+        record = f"envelope new --kind reconcile-check --stage {env.stage}" + (f" --unit {unit}" if unit else "")
         raise EnvelopeFromError(
             "--from must name a review, challenger or reverify envelope, not reconcile-check",
-            fix="Close a reconcile finding with a new reconcile-check envelope instead of a reverify: `uv run devkit workflow"
-            " envelope new --unit <dir> --kind reconcile-check --stage living-spec-draft --summary ...` after your"
-            " own check, or call the reconcile-reviewer again and record its return the same way",
+            target_files=["--from"],
+            fix=f"Close a reconcile finding with a new reconcile-check envelope instead of a reverify:"
+            f" `{workflow_command(record)}` with --summary and --findings-file from your own check or another"
+            " reconcile-reviewer call",
         )
     if env.kind not in {*CLOSABLE, "reverify"}:
         raise EnvelopeFromError(
             f"--from must name a review, challenger or reverify envelope, not {env.kind}",
-            fix="Use --from latest for the review round, or --from envelopes/challenger-NN.yaml for a challenger round",
+            *rounds,
+            target_files=["--from"],
+            fix=named,
         )
     if env.kind == "reverify":
         return env.findings, env.review
@@ -275,12 +325,15 @@ def carried_findings(envelopes: Envelopes, source: str, unit_dir: Path) -> tuple
     return (closing or env).findings, review
 
 
-def _finding_number(flag: str, n: int, count: int) -> int:
-    """The 0-based index of finding ``n``; ``EnvelopeFlagError`` when it is outside ``1..count``."""
+def _finding_number(flag: str, n: int, findings: list[Finding]) -> int:
+    """The 0-based index of finding ``n``; ``EnvelopeFlagError`` when it is outside the carried ``findings``."""
+    count = len(findings)
     if n < 1 or n > count:
         raise EnvelopeFlagError(
-            f"{flag} {n}: finding numbers are 1..{count}",
-            fix="Use a number printed by `uv run devkit workflow envelope check`",
+            f"{flag} {n}: finding numbers are 1..{count}" if count else f"{flag} {n}: the round carries no findings",
+            *(f"{i}: {f.resolution} {json.dumps(f.issue, ensure_ascii=False)}" for i, f in enumerate(findings, 1)),
+            target_files=[flag],
+            fix=f"Pass {flag} the number of a carried finding in [DETAIL]" if count else f"Drop {flag}",
         )
     return n - 1
 
@@ -290,40 +343,47 @@ def apply_resolutions(
 ) -> tuple[Finding, ...]:
     """Mark copied findings resolved (by number, or every open one for ``None``) or waived with a reason.
 
-    A number outside the copied findings is ``EnvelopeFlagError`` (``ENVELOPE_FLAG_INVALID``).
+    A number outside the copied findings is ``EnvelopeFlagError`` (``ENVELOPE_FLAG_INVALID``), whose details number
+    the carried findings.
     """
     out = list(findings)
     for n in resolve:
         if n is None:
             out = [replace(f, resolution="resolved") if f.resolution == "open" else f for f in out]
             continue
-        index = _finding_number("--resolve", n, len(out))
+        index = _finding_number("--resolve", n, out)
         out[index] = replace(out[index], resolution="resolved")
     for n in sorted(waive):
-        index = _finding_number("--waive", n, len(out))
+        index = _finding_number("--waive", n, out)
         out[index] = replace(out[index], resolution="waived", waiver=waive[n])
     return tuple(out)
 
 
-def _check_flag_combination(kind: str, source: str | None, closing: bool, head: str) -> None:
+def _check_flag_combination(kind: str, source: str | None, closing: bool, head: str, unit: str = "") -> None:
     """Refuse flag combinations that cannot produce a valid envelope of ``kind``."""
     if source is None and closing:
         raise EnvelopeFromError(
-            "--resolve/--waive need --from", fix="Add --from latest to carry the findings being closed"
+            "--resolve/--waive need --from",
+            target_files=["--from"],
+            fix="Add --from latest to carry the findings being closed",
         )
     if kind == "review" and source is not None:
+        reverify = f"envelope reverify --unit {unit} --from latest" if unit else "envelope reverify --from latest"
         raise EnvelopeFlagError(
             "a review records findings as found; a reverify carries findings forward with --from",
-            fix="Use `uv run devkit workflow envelope reverify --from latest`",
+            target_files=["--from"],
+            fix=f"Drop --from; carry findings forward with `{workflow_command(reverify)}`",
         )
     if kind == "reverify" and source is None:
         raise EnvelopeFromError(
             "reverify needs --from latest (or a review, challenger or reverify file) to name the round it closes",
+            target_files=["--from"],
             fix="Add --from latest",
         )
     if head and not is_revision(head):
         raise EnvelopeFlagError(
             f"--head {head!r} must be a hexadecimal commit id",
+            target_files=["--head"],
             fix="Pass --head $(git rev-parse HEAD)",
         )
 
@@ -357,6 +417,7 @@ def compose_envelope(
     resolves: str = "",
     effort: str = "",
     loaded: Envelopes | None = None,
+    unit: str = "",
 ) -> Envelope:
     """Validate the authoring flags of an envelope command and build the envelope to write.
 
@@ -365,7 +426,8 @@ def compose_envelope(
     ``loaded`` are all the unit's envelopes, whatever their segment, which
     ``answers_to`` and ``resolves`` must name. The status defaults to
     ``needs_input`` with questions, ``failed`` with only a problem, else
-    ``completed``. The result satisfies the envelope contract of its kind.
+    ``completed``. The result satisfies the envelope contract of its kind. ``unit`` (the unit's workspace-relative
+    directory) completes the commands the errors name.
 
     Raises an ``AuthoringError`` subclass: ``EnvelopeStatusError``,
     ``EnvelopeFlagError``, ``EnvelopeFromError``, ``EnvelopeFindingsError``,
@@ -376,26 +438,33 @@ def compose_envelope(
     if status not in STATUSES:
         raise EnvelopeStatusError(
             f"--status {status!r} not in {'|'.join(STATUSES)}",
+            target_files=["--status"],
             fix=f"Use one of {'|'.join(STATUSES)}",
         )
     resolve_list = [parse_resolve_flag(r) for r in resolve]
     settle_list = tuple(parse_settle_flag(s) for s in settle)
     waive_map = dict(parse_waive_flag(w) for w in waive)
-    _check_flag_combination(kind, source, bool(resolve_list or waive_map), head)
+    _check_flag_combination(kind, source, bool(resolve_list or waive_map), head, unit)
     check_map = dict(parse_check_flag(c) for c in checks)
     findings: tuple[Finding, ...] = ()
     review = ""
     if source is not None:
-        findings, review = carried_findings(envelopes, source, unit_dir)
+        findings, review = carried_findings(envelopes, source, unit_dir, unit)
         findings = apply_resolutions(findings, resolve_list, waive_map)
     if findings_yaml is not None:
-        findings = findings + parse_findings(findings_yaml, kind)
+        findings = findings + parse_findings(findings_yaml, kind, unit)
     attempt_list = tuple(attempts)
     if (attempt_list or recovery) and not problem:
-        raise EnvelopeFlagError("--tried and --recovery describe a --problem", fix="Add --problem <cause>")
+        raise EnvelopeFlagError(
+            "--tried and --recovery describe a --problem",
+            target_files=["--problem"],
+            fix="Add --problem with the cause that --tried and --recovery describe, or drop --tried and --recovery",
+        )
     if effort and effort not in EFFORTS:
         raise EnvelopeFlagError(
-            f"--effort {effort!r} not in {'|'.join(EFFORTS)}", fix=f"Use one of {'|'.join(EFFORTS)}"
+            f"--effort {effort!r} not in {'|'.join(EFFORTS)}",
+            target_files=["--effort"],
+            fix=f"Use one of {'|'.join(EFFORTS)}",
         )
     draft = Envelope(
         kind=kind,
@@ -423,6 +492,14 @@ def compose_envelope(
     return draft
 
 
+# The flags an envelope contract violation of a kind comes from.
+_CONTRACT_FLAGS = {
+    ANSWER: ("--answers-to", "--answers-file", "--settle"),
+    RESOLUTION: ("--resolves", "--summary"),
+    WORKER: ("--status", "--problem", "--questions-file"),
+}
+
+
 def _check_contract(draft: Envelope, loaded: Envelopes) -> None:
     """Refuse a draft that its loader would report malformed: the fields and status its kind requires, a complete
     problem, and ``answers_to``/``resolves`` naming a fitting envelope of ``loaded``."""
@@ -430,29 +507,49 @@ def _check_contract(draft: Envelope, loaded: Envelopes) -> None:
     try:
         parse_envelope_text(name, name, render_envelope(draft, "-"))
     except EnvelopeFormatError as exc:
+        stage = "names the stage" in exc.message
         raise EnvelopeFlagError(
             f"the envelope would not satisfy the contract of kind {draft.kind}: {exc.message}",
-            fix="Pass --stage <the stage the run worked in>"
-            if "names the stage" in exc.message
-            else _contract_fix(draft.kind),
+            target_files=["--stage"] if stage else _CONTRACT_FLAGS.get(draft.kind, ("--status",)),
+            fix="Pass --stage with the stage the run worked in" if stage else _contract_fix(draft.kind),
         ) from exc
     problem = reference_error(draft, {e.name: e for e in loaded.all()})
     if problem is not None:
-        raise EnvelopeReferenceError(
-            problem,
-            fix="Name an envelope `uv run devkit workflow envelope check` lists: --answers-to a worker-NN.yaml with those"
-            " questions, options and assumptions, --resolves a worker-NN.yaml with a problem",
+        raise _reference_error(draft, problem, loaded)
+
+
+def _reference_error(draft: Envelope, problem: str, loaded: Envelopes) -> EnvelopeReferenceError:
+    """The refusal of an answer or resolution whose reference does not fit; the fitting worker envelopes are its
+    ``[DETAIL]`` lines."""
+    workers = loaded.by_kind.get(WORKER, [])
+    if draft.kind == RESOLUTION:
+        fits = [f"--resolves {e.name}" for e in workers if e.problem is not None]
+        flag, wanted = "--resolves", "a worker envelope with a problem"
+    else:
+        fits = [f"--answers-to {e.name}" for e in workers if e.questions or not draft.answers]
+        flag = "--settle" if problem.startswith("settles:") else "--answers-to"
+        wanted = (
+            "a worker envelope whose questions, options and assumptions the answer fits"
+            if flag == "--answers-to"
+            else "an assumption number the --answers-to envelope records"
         )
+    if flag == "--settle":
+        fix = "Pass --settle " + wanted
+    elif fits:
+        fix = f"Pass {flag} {wanted}: one in [DETAIL]"
+    else:
+        fix = f"Drop this envelope: the unit has no {wanted.removeprefix('a ')}"
+    return EnvelopeReferenceError(problem, *fits, target_files=[flag], fix=fix)
 
 
 def _contract_fix(kind: str) -> str:
     if kind == ANSWER:
         return (
-            "Pass --answers-to worker-NN.yaml and --answers-file or --settle (each assumption number once);"
-            " an answer envelope has status completed"
+            "Pass --answers-to the worker envelope it answers and --answers-file or --settle (each assumption number"
+            " once); an answer envelope has status completed"
         )
     if kind == RESOLUTION:
-        return "Pass --resolves worker-NN.yaml and --summary; a resolution has status completed"
+        return "Pass --resolves the worker envelope whose problem it resolves and --summary; a resolution has status completed"
     return (
         "Drop the fields this kind does not carry; only a worker envelope carries questions (status needs_input) and"
         " a problem (needs_input or failed), and a failed worker envelope needs --problem and --recovery"

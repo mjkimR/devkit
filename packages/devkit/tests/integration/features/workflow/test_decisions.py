@@ -499,7 +499,7 @@ def test_cli_requests_answer_and_next(tmp_path: Path) -> None:
     assert payload["done"] == ["intent"] and payload["requests"] == [] and payload["errors"] == []
     assert (
         _run("next", "--view", "requests", "-w", str(root), "--unit", unit, "--no-lint").output.strip()
-        == "[REQUESTS: none]"
+        == "[OK: no open requests]"
     )
 
     feedback = _run(

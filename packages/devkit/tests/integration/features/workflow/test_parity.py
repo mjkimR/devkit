@@ -161,7 +161,7 @@ def test_list_status_filters(workspace: Path) -> None:
     )["units"]
     assert [row["unit"] for row in several] == [".devkit/transient/work/a", ".devkit/transient/work/b"]
     none = _run("list", "-w", str(workspace), "--status", "nope")
-    assert none.exit_code == 0 and "[UNITS: none under" in none.output
+    assert none.exit_code == 0 and "[OK: no units dirs=" in none.output
 
 
 # --- shared stages --------------------------------------------------------------
