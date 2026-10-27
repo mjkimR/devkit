@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import click
 from devkit_core.base.errors import ArgumentError
+from devkit_core.core.git import repository_facts
 
 from devkit_dist.adapters.cli import (
     FORMAT_OPTION,
@@ -141,16 +142,18 @@ def sync(
             )
     requested = _parse_selections(presets, "--preset")
     active_agents = [] if no_agents else (list(agents) if agents else None)
-    result = SyncSelection().execute(
-        resolve_root(workspace_root),
-        save=not no_save,
-        agents=active_agents,
-        presets=requested,
-        dry_run=dry_run or check,
-        check=check,
-        locked=locked,
-        environment="cloud" if cloud else "local" if local else None,
-    )
+    # One scope from root resolution through the post-sync extensions; ``sync_project`` opens it otherwise.
+    with repository_facts():
+        result = SyncSelection().execute(
+            resolve_root(workspace_root),
+            save=not no_save,
+            agents=active_agents,
+            presets=requested,
+            dry_run=dry_run or check,
+            check=check,
+            locked=locked,
+            environment="cloud" if cloud else "local" if local else None,
+        )
     _report(result, output_format, check=check)
 
 

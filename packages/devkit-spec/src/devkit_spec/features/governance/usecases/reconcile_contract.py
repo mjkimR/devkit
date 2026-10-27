@@ -164,7 +164,7 @@ class ReconcileContractRule(BaseRule):
             return []
         found: list[Violation] = []
         for path in ctx.cache.find_files(root / "specs", extensions=(".md",)):
-            relative = path.relative_to(root).as_posix()
+            relative = ctx.cache.relative_name(path)
             parts = relative.split("/")
             if path.name != "reconcile.md" or len(parts) != 4 or not ctx.is_file_targeted(relative):
                 continue

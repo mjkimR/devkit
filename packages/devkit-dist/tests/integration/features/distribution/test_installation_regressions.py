@@ -35,7 +35,7 @@ from devkit_dist.features.distribution.services.installation.discovery import (
 )
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt
 from devkit_dist.features.distribution.services.installation.transaction import project_lock
-from devkit_dist.features.distribution.services.installation.workspace import AGENTS_FILE, DEPLOYED
+from devkit_dist.features.distribution.services.installation.workspace import AGENTS_FILE, DEPLOYED, checked_path
 from devkit_dist.features.distribution.usecases import sync as sync_module
 from devkit_dist.features.distribution.usecases.override_commands import create_override, diff_override, list_overrides
 from devkit_dist.features.distribution.usecases.status import get_project_listing, get_project_status
@@ -113,6 +113,20 @@ def test_symlinked_override_directory_is_refused_before_any_write(
         sync_project(target, [item])
     assert (target / RECEIPT_PATH).read_bytes() == receipt
     assert (target / ".claude/skills/review/SKILL.md").read_text().endswith("# Review\n")
+
+
+def test_checked_path_stops_at_a_missing_component_and_refuses_any_symlink(tmp_path: Path) -> None:
+    (tmp_path / "dir").mkdir()
+    (tmp_path / "dir/file").write_text("")
+    (tmp_path / "dir/dangling").symlink_to(tmp_path / "nowhere")
+    (tmp_path / "linked").symlink_to(tmp_path / "dir", target_is_directory=True)
+    assert checked_path(tmp_path, "dir/file") == tmp_path / "dir/file"
+    assert checked_path(tmp_path, "missing/deeper/file") == tmp_path / "missing/deeper/file"
+    assert checked_path(tmp_path, "dir/missing/file") == tmp_path / "dir/missing/file"
+    assert checked_path(tmp_path, "dir/file/below") == tmp_path / "dir/file/below"
+    for name in ("dir/dangling", "linked/file", "linked/missing"):
+        with pytest.raises(UnsafeWorkspaceError, match=f"deployment symlink: {name}"):
+            checked_path(tmp_path, name)
 
 
 def test_forced_create_takes_the_current_upstream_as_baseline(item: InstalledBundle, target: Path) -> None:

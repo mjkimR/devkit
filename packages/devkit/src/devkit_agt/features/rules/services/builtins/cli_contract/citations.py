@@ -6,7 +6,7 @@ import shlex
 from collections.abc import Iterator
 from dataclasses import dataclass
 
-from devkit_agt.features.rules.models.markdown import code_spans, fenced_lines, prose_lines
+from devkit_agt.features.rules.models.markdown import LineKind, code_spans, scan
 
 PROGRAM = "devkit"
 # Launchers written before the program name; ``uv run`` may carry its own options (``uv run --no-active devkit``).
@@ -33,13 +33,18 @@ def extract_citations(text: str) -> list[Citation]:
     launcher such as ``uv run``. Arguments stop at ``--``, at shell syntax and at a ``#`` comment.
     """
     found: list[Citation] = []
-    for number, line in prose_lines(text):
-        for column, content in code_spans(line):
-            if (args := _invocation(content)) is not None:
-                found.append(Citation(number, column, content, args))
+    fenced: list[tuple[int, str]] = []
+    # One scan serves both views: prose lines (``prose_lines``) and fenced code lines (``fenced_lines``).
+    for scanned in scan(text):
+        if scanned.kind is LineKind.CODE:
+            fenced.append((scanned.number, scanned.line))
+        elif scanned.kind is not LineKind.FENCE:
+            for column, content in code_spans(scanned.line):
+                if (args := _invocation(content)) is not None:
+                    found.append(Citation(scanned.number, column, content, args))
     pending: tuple[int, str] | None = None
     previous = 0
-    for number, line in fenced_lines(text):
+    for number, line in fenced:
         body = line.strip()
         if pending is not None and number != previous + 1:
             # A fence ended: its last line's continuation does not reach into the next block.

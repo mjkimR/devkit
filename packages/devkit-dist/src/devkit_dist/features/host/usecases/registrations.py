@@ -15,7 +15,7 @@ from typing import Any
 
 import tomlkit
 from devkit.advisory import Actor, AdvisoryError, Level
-from devkit_core.base.errors import ArgumentError
+from devkit_core.base.errors import ArgumentError, GitError
 from devkit_core.core import atomic_write_bytes
 from devkit_core.core.git import run_git_text
 from devkit_core.core.locks import file_lock
@@ -249,6 +249,42 @@ def _ignored(root: Path, relative: str) -> bool:
         return False
 
 
+class _Eligibility:
+    """``_tracked`` and ``_ignored`` of a plan's destinations, each answered by one Git call for all of them.
+
+    Only for planning, which writes nothing between the answers; a transaction asks Git again before writing.
+    """
+
+    def __init__(self, root: Path, relatives: list[str]) -> None:
+        self.root = root
+        self.relatives = relatives
+        self._tracked: set[str] | None = None
+        self._ignored: set[str] | None = None
+
+    def tracked(self, relative: str) -> bool:
+        if self._tracked is None:
+            # A pathspec without glob characters names the path itself or a directory holding tracked files.
+            names = run_git_text(self.root, "ls-files", "-z", "--", *self.relatives).split("\0")
+            self._tracked = {
+                item for item in self.relatives if any(n == item or n.startswith(item + "/") for n in names)
+            }
+        return relative in self._tracked
+
+    def ignored(self, relative: str) -> bool:
+        if self._ignored is None:
+            try:
+                paths = "".join(item + "\0" for item in self.relatives).encode()
+                output = run_git_text(self.root, "check-ignore", "--stdin", "-z", input=paths)
+                self._ignored = set(output.split("\0")) & set(self.relatives)
+            except AdvisoryError as exc:
+                # Exit status 1 means none is ignored; any other failure is answered path by path, as ``_ignored`` does.
+                if isinstance(exc, GitError) and exc.returncode == 1:
+                    self._ignored = set()
+                else:
+                    self._ignored = {item for item in self.relatives if _ignored(self.root, item)}
+        return relative in self._ignored
+
+
 def _foreign_worktree(root: Path, relative: str) -> bool:
     for part in run_git_text(root, "worktree", "list", "--porcelain", "-z").split("\0"):
         if part.startswith("worktree "):
@@ -413,7 +449,9 @@ def plan(
     desired_hosts = {_host(agent) for agent in agents} if enabled and installed else set()
     entries = dict(ledger["entries"])
     excludes = list(ledger["excludes"])
-    for host in sorted(desired_hosts | entries.keys()):
+    hosts = sorted(desired_hosts | entries.keys())
+    eligibility = _Eligibility(root, [DESTINATIONS[host] for host in hosts if host in DESTINATIONS])
+    for host in hosts:
         if host not in DESTINATIONS:
             result.notices.append(
                 HostUnsupported(f"selected host {host} has no supported MCP adapter").with_level(Level.WARNING)
@@ -425,7 +463,7 @@ def plan(
         record = entries.get(host)
         desired = launch.entry() if launch is not None and host in desired_hosts else None
         result.desired[host] = desired
-        if _tracked(root, relative) or (before is not None and not _ignored(root, relative)):
+        if eligibility.tracked(relative) or (before is not None and not eligibility.ignored(relative)):
             result.notices.append(
                 RegistrationUnavailable(
                     f"{relative}: tracked or visible foreign host file left unchanged", target_files=[relative]
@@ -464,7 +502,7 @@ def plan(
         ):
             result.states[host] = "matching" if desired else "absent"
             continue
-        if desired is not None and not _ignored(root, relative):
+        if desired is not None and not eligibility.ignored(relative):
             if _foreign_worktree(root, relative):
                 result.notices.append(
                     RegistrationUnavailable(

@@ -435,7 +435,7 @@ class Handler:
     }
 
 
-@pytest.mark.parametrize("corruption", ["calls", "all_calls", "root", "receiver"])
+@pytest.mark.parametrize("corruption", ["calls", "all_calls", "root", "receiver", "cycle"])
 def test_malformed_warm_execution_records_reextract(tmp_path: Path, corruption: str, monkeypatch) -> None:
     import json
 
@@ -457,14 +457,24 @@ def test_malformed_warm_execution_records_reextract(tmp_path: Path, corruption: 
     memo = tmp_path / ".devkit/transient/rules/facts/RULE-usecase-boundaries.json"
     value = json.loads(memo.read_text())
     exprs, scopes = value["entries"]["src/sample/features/one/cli.py"]["payload"]
+    # Expression records are flat: kind, name, receiver, line, then a call's counted arguments and keywords.
+    starts = [0]
+    while starts[-1] < len(exprs):
+        start = starts[-1] + 4
+        if exprs[starts[-1]] == "call":
+            start += 1 + exprs[start]
+            start += 1 + exprs[start]
+        starts.append(start)
     if corruption in {"calls", "all_calls"}:
         position = 11 if corruption == "calls" else 12
-        reference = scopes[0][position][0]
-        exprs[reference] = ["name", "run", None, [], [], 2]
+        # A call's receiver is a name record, which cannot stand in a call collection.
+        scopes[0][position][0] = exprs[starts[scopes[0][position][0]] + 2]
     elif corruption == "root":
         scopes[0][0], scopes[0][1] = "class", "ImpossibleRoot"
+    elif corruption == "receiver":
+        exprs[starts[scopes[0][11][0]] + 2] = None
     else:
-        exprs[scopes[0][11][0]][2] = None
+        exprs[starts[scopes[0][11][0]] + 2] = scopes[0][11][0]
     memo.write_text(json.dumps(value))
     fresh = WorkspaceCache(tmp_path)
     extracted = []

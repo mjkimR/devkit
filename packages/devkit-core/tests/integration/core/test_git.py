@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from devkit_core.base.errors import DevkitCoreError
 from devkit_core.core import GitError, is_ancestor, run_git, run_git_text
+from devkit_core.core.git import repository_facts
 
 
 def test_returns_stdout_bytes(repo: Path) -> None:
@@ -136,3 +137,39 @@ def test_is_ancestor_answers_and_raises_when_git_cannot(repo: Path, tmp_path: Pa
     assert info.value.returncode not in (None, 1)
     with pytest.raises(GitError):
         is_ancestor(tmp_path, first, second)
+
+
+def _count_git(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, ...]]:
+    calls: list[tuple[str, ...]] = []
+    real_run = subprocess.run
+
+    def spy(command: list[str], **kwargs: object) -> object:
+        calls.append(tuple(command[3:]))
+        return real_run(command, **kwargs)  # type: ignore[call-overload]
+
+    monkeypatch.setattr(subprocess, "run", spy)
+    return calls
+
+
+def test_repository_facts_are_asked_once_per_scope_and_directory(
+    repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = _count_git(monkeypatch)
+    toplevel = ("rev-parse", "--show-toplevel")
+    with repository_facts():
+        first = run_git(repo, *toplevel)
+        with repository_facts():  # a nested scope shares the outer memo
+            assert run_git(repo, *toplevel) == first
+        (repo / "sub").mkdir()
+        assert run_git(repo / "sub", *toplevel) == first  # another directory is asked
+        run_git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir")
+        run_git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir")
+        run_git(repo, "status")
+        run_git(repo, "status")  # only repository-location queries are memoized
+        with pytest.raises(GitError):
+            run_git(tmp_path, *toplevel)
+        run_git(tmp_path, "init", "-q")
+        assert run_git(tmp_path, *toplevel).strip() == str(tmp_path.resolve()).encode()  # a failure is not kept
+    run_git(repo, *toplevel)  # outside the scope Git is asked again
+    assert calls.count(toplevel) == 5
+    assert len(calls) == 9

@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import re
 import tomllib
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -108,7 +108,7 @@ class MarkdownLinkRule(BaseRule, Autofixable):
         root = ctx.workspace_root
         aliased: set[Path] = set()
         for path in ctx.cache.find_files(root, extensions=(".md",)):
-            rel = path.relative_to(root).as_posix()
+            rel = ctx.cache.relative_name(path)
             if not ctx.is_file_targeted(rel):
                 continue
             if path.is_symlink():
@@ -120,8 +120,10 @@ class MarkdownLinkRule(BaseRule, Autofixable):
             for link in ctx.cache.get_links(path):
                 yield path, rel, link
 
-    def _broken_links(self, ctx: RuleContext) -> Iterator[BrokenLink]:
-        """Broken relative links of every targeted Markdown file, in file and document order.
+    def _broken_links(
+        self, ctx: RuleContext, targeted: Iterable[tuple[Path, str, MarkdownLink]]
+    ) -> Iterator[BrokenLink]:
+        """Broken relative links among ``targeted`` (``_targeted_links``), in file and document order.
 
         A broken link is repairable when its destination stays inside the
         workspace and exactly one Markdown file in the workspace has the same
@@ -129,7 +131,7 @@ class MarkdownLinkRule(BaseRule, Autofixable):
         """
         root = ctx.workspace_root
         catalog = None
-        for path, rel, link in self._targeted_links(ctx):
+        for path, rel, link in targeted:
             target = local_target(link.target)
             if target is None:
                 continue
@@ -168,6 +170,7 @@ class MarkdownLinkRule(BaseRule, Autofixable):
         return target
 
     def check(self, ctx: RuleContext) -> list[Violation]:
+        targeted = list(self._targeted_links(ctx))
         machine_local = [
             Violation(
                 rule_id=self.id,
@@ -180,7 +183,7 @@ class MarkdownLinkRule(BaseRule, Autofixable):
                 severity=self.severity,
                 phase=self.phase,
             )
-            for _, rel, link in self._targeted_links(ctx)
+            for _, rel, link in targeted
             if _FILE_URL.match(link.target)
         ]
         return machine_local + [
@@ -199,7 +202,7 @@ class MarkdownLinkRule(BaseRule, Autofixable):
                 severity=self.severity,
                 phase=self.phase,
             )
-            for broken in self._broken_links(ctx)
+            for broken in self._broken_links(ctx, targeted)
         ]
 
     def fix(self, ctx: RuleContext) -> list[str]:
@@ -209,7 +212,7 @@ class MarkdownLinkRule(BaseRule, Autofixable):
         replace its undecodable bytes); its findings stay unfixed.
         """
         by_file: dict[Path, list[BrokenLink]] = {}
-        for broken in self._broken_links(ctx):
+        for broken in self._broken_links(ctx, self._targeted_links(ctx)):
             if broken.candidate is not None:
                 by_file.setdefault(broken.file, []).append(broken)
         modified: list[str] = []

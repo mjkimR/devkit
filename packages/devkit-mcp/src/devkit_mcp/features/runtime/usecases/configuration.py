@@ -37,6 +37,52 @@ def _linked_source(path: Path) -> bool:
     return any((parent / ".git").is_file() for parent in (path, *path.parents))
 
 
+def _any_linked_source(paths: list[Path]) -> bool:
+    """``any(_linked_source(path) for path in paths)``, checking each shared parent directory once."""
+    checked: set[Path] = set()
+    for path in paths:
+        for parent in (path, *path.parents):
+            # A checked directory was not linked, and neither were the ancestors its own walk went on to.
+            if parent in checked:
+                break
+            checked.add(parent)
+            if (parent / ".git").is_file():
+                return True
+    return False
+
+
+def _resolve(path: Path, parents: dict[Path, Path]) -> Path:
+    """``path.resolve()``, resolving each parent directory once.
+
+    ``Path.resolve`` resolves components left to right, so a last component that is no symbolic link (nor ``..``)
+    resolves to itself under the resolved parent; a parent that loops raises from its own ``resolve`` as before.
+    """
+    if path.name in ("", "..") or path.parent == path:
+        return path.resolve()
+    parent = parents.get(path.parent)
+    if parent is None:
+        parent = parents[path.parent] = path.parent.resolve()
+    candidate = parent / path.name
+    return path.resolve() if os.path.islink(candidate) else candidate
+
+
+def _inside_task(paths: list[Path], tasks: list[Path]) -> bool:
+    """Whether a path is in a task worktree, as given or resolved; each path is resolved once."""
+    # ``Path.is_relative_to`` on absolute POSIX paths, compared as strings: the path itself or one below it.
+    prefixes = [(str(task), str(task) if str(task).endswith("/") else f"{task}/") for task in tasks]
+    parents: dict[Path, Path] = {}
+    for path in paths:
+        given = str(path)
+        resolved = None
+        for exact, prefix in prefixes:
+            if given == exact or given.startswith(prefix):
+                return True
+            resolved = resolved or str(_resolve(path, parents))
+            if resolved == exact or resolved.startswith(prefix):
+                return True
+    return False
+
+
 class BuildLaunchDescriptorUseCase(BaseUseCase):
     def execute(
         self, root: Path, *, executable: str | None = None, environment: str | None = None
@@ -86,11 +132,7 @@ class BuildLaunchDescriptorUseCase(BaseUseCase):
                 ):
                     continue
                 paths = [Path(data["prefix"]).absolute(), *(Path(path).absolute() for path in data["paths"])]
-                if any(_linked_source(path) for path in paths):
-                    continue
-                if any(
-                    path.is_relative_to(task) or path.resolve().is_relative_to(task) for path in paths for task in tasks
-                ):
+                if _any_linked_source(paths) or _inside_task(paths, tasks):
                     continue
                 selected = candidate
                 break

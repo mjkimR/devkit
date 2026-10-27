@@ -146,7 +146,7 @@ class TaskCoverageRule(BaseRule):
         for path in ctx.cache.find_files(root / "specs", extensions=(".md",)):
             if path.name != "tasks.md":
                 continue
-            tasks_path = path.relative_to(root).as_posix()
+            tasks_path = ctx.cache.relative_name(path)
             spec_path = (PurePosixPath(tasks_path).parent / "spec.md").as_posix()
             if not (ctx.is_file_targeted(tasks_path) or ctx.is_file_targeted(spec_path)):
                 continue

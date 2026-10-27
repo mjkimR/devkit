@@ -530,8 +530,11 @@ def extract_links(text: str) -> list[MarkdownLink]:
     Reference-style links and autolinks are not extracted.
     """
     links: list[MarkdownLink] = []
+    # Every inline link has its closing bracket directly followed by "(" on one line.
+    if "](" not in text:
+        return links
     for line_number, line in prose_lines(text):
-        if "[" not in line:
+        if "](" not in line:
             continue
         spans = _code_spans(line)
         for index, char in enumerate(line):

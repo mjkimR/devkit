@@ -14,7 +14,7 @@ from types import MappingProxyType
 from devkit.advisory import AdvisoryError, ExitCode
 from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core.git import run_git
+from devkit_core.core.git import repository_facts, run_git
 
 from devkit_dist.features.distribution.models.content import Content, json_content, same_content, signature
 from devkit_dist.features.distribution.models.errors import (
@@ -32,6 +32,7 @@ from devkit_dist.features.distribution.models.errors import (
 from devkit_dist.features.distribution.models.results import Action, SyncResult, Unselected
 from devkit_dist.features.distribution.models.subagents import SubagentPolicy
 from devkit_dist.features.distribution.services.bundles.subagents import SUBAGENT_DIRS
+from devkit_dist.features.distribution.services.bundles.templates import Scalar
 from devkit_dist.features.distribution.services.installation import guidance_block, local_render
 from devkit_dist.features.distribution.services.installation.config import (
     ConfigUpdate,
@@ -362,6 +363,52 @@ def _subagent_policy(
     return policy
 
 
+@dataclass(frozen=True)
+class _InventoryInputs:
+    """What the configuration contributes to an inventory plan, canonical or with the local configuration."""
+
+    variables: dict[str, dict[str, Scalar]]
+    subagents: SubagentPolicy
+    language: str | None
+    environment: str
+
+
+def _inventory_inputs(
+    root: Path,
+    installed: list[InstalledBundle],
+    selection: Selection,
+    *,
+    effective: bool = False,
+    environment: str | None = None,
+) -> _InventoryInputs:
+    return _InventoryInputs(
+        read_config(root, effective=effective).variables,
+        _subagent_policy(root, installed, selection, effective=effective),
+        resolve_language(root, effective=effective).resolved,
+        environment or read_effective_config(root).values["execution"]["environment"],
+    )
+
+
+def _desired(
+    root: Path,
+    installed: list[InstalledBundle],
+    selection: Selection,
+    previous_overrides: dict[str, dict[str, OverrideRecord]],
+    inputs: _InventoryInputs,
+) -> Inventory:
+    return desired_inventory(
+        [item for item in installed if item.bundle.name in selection.presets],
+        {name: list(values) for name, values in selection.presets.items()},
+        list(selection.agents),
+        root=root,
+        previous_overrides=previous_overrides,
+        variables=inputs.variables,
+        subagents=inputs.subagents,
+        language=inputs.language,
+        environment=inputs.environment,
+    )
+
+
 def _plan_inventory(
     root: Path,
     installed: list[InstalledBundle],
@@ -372,17 +419,8 @@ def _plan_inventory(
     environment: str | None = None,
 ) -> Inventory:
     """What the selection deploys: the inventory of the selected bundles' assets."""
-    return desired_inventory(
-        [item for item in installed if item.bundle.name in selection.presets],
-        {name: list(values) for name, values in selection.presets.items()},
-        list(selection.agents),
-        root=root,
-        previous_overrides=previous_overrides,
-        variables=read_config(root, effective=effective).variables,
-        subagents=_subagent_policy(root, installed, selection, effective=effective),
-        language=resolve_language(root, effective=effective).resolved,
-        environment=environment or read_effective_config(root).values["execution"]["environment"],
-    )
+    inputs = _inventory_inputs(root, installed, selection, effective=effective, environment=environment)
+    return _desired(root, installed, selection, previous_overrides, inputs)
 
 
 def _render_block(selection: Selection, inventory: Inventory) -> str:
@@ -935,6 +973,8 @@ def _record_deployed(
         atomic_write(root, DEPLOYED, content)
 
 
+# A sync creates, moves or removes no repository, so where each one is holds for the whole run.
+@repository_facts()
 def sync_project(
     root: Path,
     installed: list[InstalledBundle],
@@ -1083,9 +1123,15 @@ def commit_locked(
     if rebaseline is not None:
         previous_overrides.get(rebaseline[0], {}).pop(rebaseline[1], None)
     selected_environment = environment or read_effective_config(root).values["execution"]["environment"]
-    inventory = _plan_inventory(root, installed, selection, previous_overrides, environment=selected_environment)
-    effective = _plan_inventory(
-        root, installed, selection, previous_overrides, effective=True, environment=selected_environment
+    canonical_inputs = _inventory_inputs(root, installed, selection, environment=selected_environment)
+    inventory = _desired(root, installed, selection, previous_overrides, canonical_inputs)
+    effective_inputs = _inventory_inputs(root, installed, selection, effective=True, environment=selected_environment)
+    # Planning is deterministic, so without local values that change an input the effective plan is the canonical one
+    # (both are only read from here on). ``repr`` also tells ``True`` from ``1``, which render differently.
+    effective = (
+        inventory
+        if repr(effective_inputs) == repr(canonical_inputs)
+        else _desired(root, installed, selection, previous_overrides, effective_inputs)
     )
     personal = local_render.personal_files(inventory, effective)
     if config.override_drift == "block":

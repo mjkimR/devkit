@@ -67,7 +67,7 @@ class CliContractRule(BaseRule):
         verifier = _Verifier(root)
         violations: list[Violation] = []
         for path in ctx.cache.find_files(ctx.workspace_root, extensions=(".md",)):
-            rel = path.relative_to(ctx.workspace_root).as_posix()
+            rel = ctx.cache.relative_name(path)
             if not ctx.is_file_targeted(rel):
                 continue
             settings: CliContractSettings = ctx.settings(self, rel)

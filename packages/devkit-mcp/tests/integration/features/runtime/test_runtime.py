@@ -98,6 +98,30 @@ def test_linked_interpreter_lexical_path_is_rejected(clones):
     assert configuration._linked_source(candidate)
 
 
+def test_dependency_path_checks_match_per_path_answers(clones, tmp_path):
+    base, task = clones
+    (base / "lib").mkdir()
+    (base / "lib/real.py").write_text("")
+    (base / "lib/alias.py").symlink_to(task / ".git")  # resolves into the task worktree
+    (base / "into-task").symlink_to(task)
+    (base / "loop").symlink_to("loop")
+    (task / "mod.py").write_text("")
+    groups = [
+        [base / "lib/real.py", base / "lib/missing.py", base / "lib/../lib/real.py", tmp_path],
+        [base / "lib/real.py", base / "lib/alias.py"],
+        [base / "into-task/mod.py"],
+        [base / "lib/real.py", task / "mod.py"],
+    ]
+    for paths in groups:
+        assert configuration._any_linked_source(paths) == any(configuration._linked_source(p) for p in paths)
+        assert configuration._inside_task(paths, [task]) == any(
+            p.is_relative_to(task) or p.resolve().is_relative_to(task) for p in paths
+        )
+    assert [configuration._inside_task(paths, [task]) for paths in groups] == [False, True, True, True]
+    with pytest.raises(RuntimeError):  # a symlink loop raises as ``Path.resolve`` does
+        configuration._inside_task([base / "loop/x.py"], [task])
+
+
 def test_service_classification_is_separate_from_annotations(monkeypatch, tmp_path):
     async def call(args):
         return {}

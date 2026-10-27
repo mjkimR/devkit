@@ -105,6 +105,26 @@ def test_personal_render_locked_restore_stale_and_removal(fixture) -> None:
     assert tracked_state(root) == canonical
 
 
+def test_effective_inventory_is_planned_again_only_for_changed_local_inputs(
+    fixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root, item = fixture
+    calls = []
+    real = sync.desired_inventory
+    monkeypatch.setattr(
+        sync, "desired_inventory", lambda *args, **kw: calls.append(kw["variables"]) or real(*args, **kw)
+    )
+    sync.sync_project(root, [item], dry_run=True)
+    assert len(calls) == 1  # without local values the effective plan is the canonical one
+    local(root, '[execution]\nenvironment="local"\n')
+    sync.sync_project(root, [item], dry_run=True)
+    assert len(calls) == 2
+    local(root)
+    result = sync.sync_project(root, [item], dry_run=True)
+    assert calls[2:] == [{}, {"style": {"language": "ko"}}]
+    assert [action.path for action in result.actions] == [".devkit/managed/style/style.md", LOCAL_RENDER]
+
+
 @pytest.mark.parametrize("case", ["tracked-local", "negated-local", "tracked-output", "unignored-output"])
 def test_ignore_and_index_refusal_preserve_state(fixture, case: str) -> None:
     root, item = fixture

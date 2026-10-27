@@ -228,11 +228,13 @@ def inspect_architecture(root: Path, *, cache: WorkspaceCache | None = None) -> 
     except (KeyError, TypeError, ValueError, tomllib.TOMLDecodeError) as exc:
         return [(CONFIG, 1, f"invalid architecture declaration: {exc}")]
 
-    declared_roots = [root / package["root"] for package in packages]
+    # Lexical part prefixes are what Path.is_relative_to compares, without its per-call path construction.
+    declared_roots = [(root / package["root"]).parts for package in packages]
     for area in ("packages", "tools"):
         for source in (root / area).glob("*/src"):
             for path in source.rglob("*.py"):
-                if "__pycache__" not in path.parts and not any(path.is_relative_to(owner) for owner in declared_roots):
+                parts = path.parts
+                if "__pycache__" not in parts and not any(parts[: len(owner)] == owner for owner in declared_roots):
                     findings.append((path.relative_to(root).as_posix(), 1, "source has no declared package owner"))
 
     for package in packages:
