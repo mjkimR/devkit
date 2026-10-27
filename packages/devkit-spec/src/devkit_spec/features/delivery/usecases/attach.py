@@ -7,7 +7,9 @@ checks only the branch name and that the directory exists at ``tip``; which unit
 spec-driven knowledge, so it is checked here (``CAP-DLV-delivery-workflows``):
 
 - ``plan-<slug>``: the proposal bundle ``docs/proposals/PROP-<slug>`` bound to ``sdd-proposal``, neither
-  ``rejected`` (a rejected proposal is never resumed) nor marked ``needs_decompose`` (Backlog splits it first);
+  ``rejected`` (a rejected proposal is never resumed) nor marked ``needs_decompose`` (Backlog splits it first),
+  and, unless already accepted, with a ``size`` that is absent or ``S``, ``M`` or ``L`` (an ``XL`` draft is decomposed
+  first; the readiness of an accepted proposal's ``plan-`` branch never sees it);
 - ``dev-<slug>``: the spec bundle ``specs/<YYYY-MM>/<YYYYMMDD>-<slug>`` bound to an ``sdd-spec-*`` workflow, or,
   before Development's first step handed it off, the accepted proposal bundle ``docs/proposals/PROP-<slug>``.
 
@@ -23,6 +25,8 @@ from pathlib import Path
 
 from devkit_core.core import FrontmatterError, GitError, run_git
 from devkit_core.core.frontmatter import parse
+
+from devkit_spec.features.proposals.models.axes import ALLOWED_SIZES, DECOMPOSE_EXITS, size_blocker
 
 PROPOSAL_UNIT = re.compile(r"(?:.+/)?docs/proposals/PROP-(?P<slug>[^/]+)")
 SPEC_UNIT = re.compile(r"(?:.+/)?specs/\d{4}-\d{2}/\d{8}-(?P<slug>[^/]+)")
@@ -90,6 +94,10 @@ def attach_check(root: Path, branch: str, unit: str, tip: str) -> list[str]:
             reasons.append(f"{unit} is rejected: a rejected proposal is never resumed; it waits for hygiene cleanup")
         if meta.get("needs_decompose") is True:
             reasons.append(f"{unit} is marked needs_decompose: Backlog splits it before Planning")
+        if meta.get("status") != "accepted" and (size := size_blocker(meta)) is not None:
+            reasons.append(
+                f"{unit} has {size}: Backlog decomposes it before Planning ({DECOMPOSE_EXITS}; {ALLOWED_SIZES})"
+            )
     if not fits:
         reasons.append(f"{unit}/{anchor} at {tip[:7]} is not {expected} (workflow: {workflow or '-'})")
     return reasons

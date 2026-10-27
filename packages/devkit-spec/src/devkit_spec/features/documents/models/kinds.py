@@ -27,6 +27,7 @@ class Kind(StrEnum):
 
     CAPABILITY = "capability"
     USECASE = "usecase"
+    UX = "ux"
     ARCHITECTURE = "architecture"
     DECISION = "decision"
     PROPOSAL = "proposal"
@@ -115,6 +116,21 @@ ROWS: tuple[KindDefinition, ...] = (
         terminal_statuses=_NONE,
         default_status="draft",
         relation_fields=("usecases", "related_usecases"),
+    ),
+    KindDefinition(
+        Kind.UX,
+        "UX",
+        "ux",
+        living_spec=True,
+        area_scoped=True,
+        format_scope=FormatScope.EVERY_ROOT,
+        heading_token=True,
+        summary=Summary.ALWAYS,
+        anchor="",
+        entrypoints=False,
+        terminal_statuses=_NONE,
+        default_status="draft",
+        relation_fields=(),
     ),
     KindDefinition(
         Kind.ARCHITECTURE,

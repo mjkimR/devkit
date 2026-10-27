@@ -74,7 +74,7 @@ workspace cache; these files stay ID-free and unindexed, and their references do
    The index keeps every declaration of an ID, so a duplicate is detectable (`SPEC_ID_DUPLICATE`). Aliases share
    this namespace (section 3.5).
 6. **Summary**: `summary` is one or two English sentences saying what the document defines. It is REQUIRED on
-   capabilities, use cases, decisions, architecture documents, milestones, `proposal.md` and `spec.md` (`RULE-document-summary`)
+   capabilities, use cases, UX documents, decisions, architecture documents, milestones, `proposal.md` and `spec.md` (`RULE-document-summary`)
    and is the main signal of document search (`CAP-DOCS-document-search`). Titles and bodies MAY use any language.
 7. **Historical documents**: The files of a spec bundle (`specs/<YYYY-MM>/<bundle>/...`) whose `spec.md` has
    `status: completed` are historical: work history kept in place. Browsing and search MUST hide them unless
@@ -134,6 +134,7 @@ live; the index itself does not check it.
 | --- | --- | --- |
 | `CAP` | `capability` | `docs/capabilities/<area>/CAP-<AREA>-<slug>.md` |
 | `UC` | `usecase` | `docs/usecases/<area>/UC-<slug>.md` |
+| `UX` | `ux` | `docs/ux/<area>/UX-<slug>.md` |
 | `ARCH` | `architecture` | `docs/architecture/ARCH-[<NN>[-<n>]-]<slug>.md` |
 | `ADR` | `decision` | `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md` |
 | `PROP` | `proposal` | `docs/proposals/...` |
@@ -155,11 +156,18 @@ ID pattern and prefix map derive from the rows. A table with a missing, extra or
 field in two rows, or an inconsistent row MUST fail with `KindTableError`; a consumer that lacks a fact a kind needs
 MUST fail the same way instead of applying another kind's. Path grammars and lifecycles stay kind-specific code.
 
+The `ux` row (`ADR-ux-screen-documents`) is a Living Spec, area-scoped kind with an always-required summary, a heading
+token, no `entrypoints`, no terminal status (statuses `draft`, `active`, `deprecated`) and no relation field that
+takes its IDs: a use case cites a UX ID in step prose, and `RULE-ux-links` and `RULE-ux-coverage` check those
+citations against the UX document's Interactions table (`CAP-GOV-spec-rules`).
+
 ### 3.3 References
 
 1. **Full IDs only**: A document MUST reference another by its full ID, never by a Markdown path.
 2. **Relation fields** (frontmatter): `usecases`, `capabilities`, `related_usecases`, `related_capabilities` hold a list
-   of IDs; `spec` and `plan` hold one ID. Proposal anchors may declare `milestone`, one MS ID; SPEC milestone metadata is ignored and yields no membership reference. Milestones may declare `depends_on`, a list of MS IDs; proposal/spec anchors may declare a list of exact PROP/SPEC anchor IDs. Omit an empty optional field; an explicit empty list is valid. Auxiliary documents cannot declare unit prerequisites. Completed SPEC targets remain resolvable and are terminal for unit cycle traversal; the MS and unit graphs stay separate. A field of the wrong shape (a scalar where a list is expected, a non-string
+   of IDs; `spec` and `plan` hold one ID. A UX document declares `usecases` (the use cases whose steps cite it) and
+   `capabilities` (the capabilities whose state or operations it presents), and a scalar `element` (`screen`, `modal`
+   or `panel`) that is not a reference. Proposal anchors may declare `milestone`, one MS ID; SPEC milestone metadata is ignored and yields no membership reference. Milestones may declare `depends_on`, a list of MS IDs; proposal/spec anchors may declare a list of exact PROP/SPEC anchor IDs. Omit an empty optional field; an explicit empty list is valid. Auxiliary documents cannot declare unit prerequisites. Completed SPEC targets remain resolvable and are terminal for unit cycle traversal; the MS and unit graphs stay separate. A field of the wrong shape (a scalar where a list is expected, a non-string
    item) is recorded as an issue and skipped; `RULE-document-reference` reports it.
 3. **Prose references**: a single-backtick code span holding exactly one ID (the canonical form) or the same ID in
    square brackets (the bracket form, which `devkit rules fix` converts to the canonical form).
@@ -212,7 +220,7 @@ MUST fail the same way instead of applying another kind's. Path grammars and lif
 
 ### 3.5 Aliases
 
-1. **Field**: any ID-bearing document (`CAP`, `UC`, `ARCH`, `ADR`, `MS`, `MAT`, `PROP`, `PADR`, `SPEC`, `PLAN`,
+1. **Field**: any ID-bearing document (`CAP`, `UC`, `UX`, `ARCH`, `ADR`, `MS`, `MAT`, `PROP`, `PADR`, `SPEC`, `PLAN`,
    `TASKS`, `REC`, `FB`; namespace documents included) MAY declare `aliases`, a list of previous or alternate IDs of
    itself. No kind refuses it.
 2. **Shape**: each item MUST be a full ID with the declaring document's own prefix, MUST NOT be its own ID, MUST NOT
@@ -226,7 +234,7 @@ MUST fail the same way instead of applying another kind's. Path grammars and lif
    its ID. Otherwise the alias collides: the collision is reported on every document involved, and the target
    resolves as it would without the alias, or stays ambiguous. Resolution, reference queries, the `depends_on` cycle
    graphs, milestone membership, traceability and every identity check use this mapping.
-5. **Renaming**: a document whose ID derives from its path (`CAP`, `UC`, `ARCH`, `SPEC`, `PLAN`, `TASKS`, `REC`,
+5. **Renaming**: a document whose ID derives from its path (`CAP`, `UC`, `UX`, `ARCH`, `SPEC`, `PLAN`, `TASKS`, `REC`,
    `FB`) is renamed by moving the file, setting the new ID and keeping the old ID in `aliases`; renaming a spec bundle
    keeps an alias on every file whose ID derives from the bundle slug (`spec.md`, `plan.md`, `tasks.md`,
    `reconcile.md`). An ADR gains aliases from its PADR at handoff (`CAP-DLV-proposal-incubation`) or, as a compaction
@@ -247,7 +255,8 @@ MUST fail the same way instead of applying another kind's. Path grammars and lif
 | `status` | string | Lifecycle status; `completed` on a `spec.md` makes its bundle historical, its feedback aside; a terminal status makes the document historical for browsing (rule 8). |
 | `title` | string | Display title (any language). |
 | `summary` | string | One or two English sentences; embedded by search. |
-| `area` | string | Area of a capability or use case (its directory). |
+| `area` | string | Area of a capability, use case or UX document (its directory). |
+| `element` | string | What a UX document describes: `screen`, `modal` or `panel` (read by `RULE-ux-links`). |
 | `usecases`, `capabilities`, `related_usecases`, `related_capabilities` | list of IDs | Relation fields. |
 | `spec`, `plan` | ID | Relation fields. |
 | `proposal` | ID | Provenance of a handed-off spec. |

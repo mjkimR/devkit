@@ -1,0 +1,38 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T08:39:45.806863Z'
+status: completed
+summary: 'Implementer self-verification (medium) of the reconcile-check-01 fixes: findings 1 and 5 fixed and verified by diff; 3 and 4 routed to the Host by feedback; finding 2 (AC-15, out-of-scope seed) stays open for the Host; reconcile.md stays pending.'
+findings:
+- issue: Missing target CAP-DLV-proposal-incubation (reconcile-check-01 finding 1).
+  evidence: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md 4.4; reconcile.md targets
+  resolution: resolved
+  severity: P1
+- issue: 'AC-15: devkit sync --check exits 1 on the pending seed docs/ux/README.md, outside the write scope (reconcile-check-01 finding 2).'
+  evidence: uv run devkit sync --check -> seed=1 docs/ux/README.md, exit 1
+  failure_condition: Integration-time sync --check fails until the path is admitted.
+  suggested_action: Host admits docs/ux/README.md to the write scope (commit the seed) or amends AC-15; reconcile.md stays pending.
+  resolution: open
+  severity: P1
+- issue: CAP-HARN-agent-guidance asset lists stale, outside the write scope (reconcile-check-01 finding 3).
+  evidence: feedback/agent-guidance-asset-list-drifts.md now names the instruction, skill and trigger rows
+  resolution: waived
+  waiver: Outside the write scope; routed to the Host as FB-agent-guidance-asset-list-drifts.
+  severity: P2
+- issue: docs/README.md has no ux/ row, outside the write scope (reconcile-check-01 finding 4).
+  evidence: FB-agent-guidance-asset-list-drifts
+  resolution: waived
+  waiver: Outside the write scope; routed to the Host as FB-agent-guidance-asset-list-drifts.
+  severity: P3
+- issue: CAP-DLV-delivery-workflows rule 9 lacked the Screens reflection (reconcile-check-01 finding 5).
+  evidence: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md rule 9
+  resolution: resolved
+  severity: P2
+checks:
+  rules: PASS uv run devkit rules check
+  sync: FAIL uv run devkit sync --check (seed docs/ux/README.md)
+diff_scope:
+  base: 026155794cf657d4a9bda1089123b63dfe01f33c
+  head: bb5980f9c847b498a750d685f0a31606f393913c

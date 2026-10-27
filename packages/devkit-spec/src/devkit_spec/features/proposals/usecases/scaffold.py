@@ -382,7 +382,7 @@ status: draft                         # draft | reviewing | accepted | rejected
 created_at: {created}
 target_area: {yaml_scalar(area)}
 {namespace_line}priority: high                        # critical | high | medium | low
-size: M                               # S | M | L | XL
+size: M                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
 {planning_effort_line}
 {dev_effort_line}
 {milestone_line}boundaries:
@@ -446,6 +446,12 @@ This document defines the target blueprint of how the docs/ backbone (Living Spe
 ## 2. Use Cases Plan (docs/usecases/)
 
 <Specify new or modified UC documents, their scenarios and updated acceptance criteria.>
+
+### Screens (docs/ux/)
+
+<Only when the proposal changes what a person sees: one draft per screen, modal or panel in the ux template's shape
+(ux-writing), with the use case step citations and docs/steering/ux-objects.md rows they need. Write IDs this proposal
+creates as plain text. Drop this subsection otherwise.>
 
 ---
 

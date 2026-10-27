@@ -12,6 +12,7 @@ from devkit_core.base.usecase import BaseUseCase
 
 from devkit_spec.base.errors import (
     EntrypointsApplyError,
+    EntrypointsCodeUnmatchedError,
     EntrypointsInputInvalidError,
     EntrypointsInputMissingError,
     EntrypointsTargetError,
@@ -20,6 +21,7 @@ from devkit_spec.base.errors import (
 from devkit_spec.features.documents import Document, DocumentIndex, Kind, is_id
 from devkit_spec.features.entrypoints import (
     Applied,
+    adopt_nested_selectors,
     aggregate,
     apply,
     derive,
@@ -27,6 +29,7 @@ from devkit_spec.features.entrypoints import (
     fold_by_directory_selectors,
     load_bundle,
     select,
+    unmatched_selectors,
 )
 from devkit_spec.features.entrypoints.models.derive import Pair, Reason, SkipKind, Skipped, State
 from devkit_spec.utils.paths import _bundle_dir
@@ -138,14 +141,23 @@ class DeriveEntrypointsUseCase(BaseUseCase):
             pairs = aggregate(per_bundle, 1 if min_count is None else min_count)
 
         pairs = fold_by_directory_selectors(root, pairs, codes, documents)
+        pairs = adopt_nested_selectors(root, pairs, codes, documents)
         derived = {pair.doc_path for pair in pairs}
+        only = _resolve_targets(index, targets, derived) if write else None
         pairs = select(pairs, codes)
+        unmatched = unmatched_selectors(pairs, codes, only)
+        if unmatched:
+            raise EntrypointsCodeUnmatchedError(
+                f"{len(unmatched)} --code path(s) match no candidate"
+                + (" of the --target documents" if only is not None else ""),
+                *(f"--code {code}" for code in unmatched),
+                target_files=unmatched,
+            )
         pairs, excluded = exclude(pairs, excludes)
         skipped += excluded
         applied: list[Applied] = []
         errors: list[AdvisoryError] = []
         if write:
-            only = _resolve_targets(index, targets, derived)
             result = apply(root, pairs, only)
             applied, skipped = result.applied, skipped + result.skipped
             if result.failures:

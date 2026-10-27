@@ -7,7 +7,8 @@ because its branch exists. Recommend; do not start, accept or activate anything.
    frontmatter for ordering fields the output omits. Keep each draft's namespace in the recommendation.
 2. Apply the [direct unit prerequisite procedure](#direct-unit-prerequisite-procedure) to every candidate, including
    critical drafts. Eligible: unit-ready, displayed status `draft`, no true `needs_decompose`. A milestone is ready
-   when every `depends_on` ID is done or dropped; resolve hidden ones with `--history`, never assume them.
+   when every `depends_on` ID is done or dropped; resolve hidden ones with `--history`, never assume them. A draft
+   whose `size` is not absent or exactly `S`, `M` or `L` is not eligible either.
 3. Rank eligible drafts by enum, not text:
    1. Critical drafts first, whatever their milestone, ordered by milestone state: active, ready planned, none,
       unready planned, done, dropped.
@@ -18,7 +19,8 @@ because its branch exists. Recommend; do not start, accept or activate anything.
    intent is unresolved), and offer Planning, a direct acceptance
    (`devkit spec proposal accept <slug> --by user --direct --check --note "<reason>"`) when its direction is settled,
    or a session reclassification for `session`-depth work (the `spec` skill's `references/backlog.md`). Report other
-   drafts in unready/done/dropped milestones, `needs_decompose` drafts and invalid dependencies as Backlog actions.
+   drafts in unready/done/dropped milestones, `needs_decompose` and `XL` drafts (decompose first with the `decomposer`;
+   never edit the size to pass) and invalid dependencies as Backlog actions.
 5. When a milestone's known work has finished, offer the
    [milestone completion review](../../spec/references/milestone-completion.md); never close one silently.
 

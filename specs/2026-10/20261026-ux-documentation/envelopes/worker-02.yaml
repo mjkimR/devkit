@@ -1,0 +1,16 @@
+kind: worker
+stage: integration-approval
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T08:44:27.687556Z'
+status: completed
+summary: 'Resumed after the Host admitted docs/ux/README.md, CAP-HARN-agent-guidance and docs/README.md: committed the seed (sync --check exit 0), updated the asset lists and docs map, resolved worker-01 (resolution-01), reconcile.md resolved and spec completed (reconcile-check-03), feedback swept (feedback-01), final report written. Ready for dev-integration.'
+findings: []
+checks:
+  tests: PASS just test-affected mode=full 5313 passed, 14 skipped
+  lint: PASS rules check --ci --base 02615579; lint; pyright; viewer lint/check
+  sync: PASS uv run devkit sync --check
+diff_scope:
+  base: ''
+  head: ed654f8d2f0951844ee00eabe8adeb71ccbcf309
+activity_effort: medium

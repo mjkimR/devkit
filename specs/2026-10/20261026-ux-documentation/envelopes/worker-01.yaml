@@ -1,0 +1,22 @@
+kind: worker
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T08:40:05.139532Z'
+status: failed
+summary: 'Specified, built and reviewed SPEC-ux-documentation: UX kind row and id-convention grammar, RULE-ux-links and RULE-ux-coverage, ux template, docs-skeleton ux/ seed, ux-writing, ux-reviewer and spec-ux-review, draft-before-code guidance, viewer UX group and links, Living Spec. review-01 (1 P1, 1 P2, 3 P3) fixed and reverified; reconcile-check-01 fixed except AC-15. Stopped at living-spec-draft with reconcile.md pending.'
+findings: []
+checks:
+  tests: PASS just test-affected mode=full 5313 passed, 14 skipped
+  lint: PASS just lint devkit-spec; just check devkit-spec; uv run devkit rules check
+  viewer: PASS just viewer lint, check, test (98), build, pack
+  sync: 'FAIL uv run devkit sync --check: seed docs/ux/README.md pending'
+diff_scope:
+  base: ''
+  head: 1a52a220872c76eccc9da3b7b61357447a6f90c1
+problem:
+  cause: devkit sync seeds docs/ux/README.md (the new docs-skeleton ux/ seed; this repository selects docs-skeleton), a tracked sync output outside the write scope; uncommitted, devkit sync --check exits 1 and AC-15 fails, so reconcile.md cannot be resolved.
+  attempts:
+  - Ran devkit sync; kept the seeded file out of git (a copy is at scratch/ux-README.md); confirmed sync --check exits 1 without it; recorded reconcile-check-01 finding 2 open in reconcile-check-02.
+  recovery: 'Host admits docs/ux/README.md to the write scope: run uv run devkit sync, commit docs/ux/README.md, confirm sync --check exits 0, set reconcile.md status resolved, run devkit rules fix on spec.md (completed), then collect-feedback and final-report; or amend AC-15.'
+activity_effort: medium

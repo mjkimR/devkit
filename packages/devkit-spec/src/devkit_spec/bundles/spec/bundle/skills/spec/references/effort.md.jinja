@@ -19,6 +19,7 @@ When an activity starts, choose the effort within the authorized scope, state it
 | --- | --- | --- | --- |
 | Planning (`proposal`) | questions only; no `scout` or `challenger` | one `challenger` pass always; `scout` when the direction needs evidence | two or more options compared, `scout` and `challenger` required, rounds in the [review loop](review-loop.md) |
 | Development (`session`) | the author's self-review | one mandatory initial `code-reviewer` pass; the implementer verifies fixes and decides repeat calls | `code-reviewer` rounds in the [review loop](review-loop.md) |
+| UX review (drafted screens, before code) | none; the author applies `ux-writing` | recommended when screens change: one `ux-reviewer` round, at most two | recommended when screens change: one `ux-reviewer` round, at most two |
 | Development (Unit path) | the author's self-review and self-checked reconcile | one mandatory initial `code-reviewer` pass; a separate `reconcile-reviewer` check unless the exception below applies | `code-reviewer` and `reconcile-reviewer`, each in the [review loop](review-loop.md) |
 
 ## Rules
@@ -28,5 +29,6 @@ When an activity starts, choose the effort within the authorized scope, state it
 - The implementer writes the Living Spec reflection and `reconcile.md` at every effort. Each verification is a `reconcile-check` envelope; fix findings in the reconcile and check again, not by reopening the code review.
 - At `medium`, the implementer MAY skip the first `reconcile-reviewer` call only when every affected contract and document is identified, its agreement with the diff is shown, and nothing is cross-component or open to interpretation. Cross-component means behavior or agent-facing text changes in more than one package or capability area, or in a package and the repository tooling; the change's own Living Spec reflection does not count. If any condition is uncertain, call the reviewer. When skipping, record the reason and evidence in the `reconcile-check` envelope as self-verification.
 - After the initial `medium` review, the implementer verifies fixes itself and calls the reviewer again only for expanded scope or uncertain correctness. Name who verified what in `reverify` or the new `reconcile-check`; a failed or stale initial call never counts as the first review.
+- The UX review is an optional delegation, not a stage or a gate (`spec-ux-review`): it runs in Planning on the Screens drafts, or at spec depth inside `specify` (or `characterize`) before the plan; its findings carry no severity and never enter the review loop. A `session` task runs none.
 - Effort never changes integration policy ([completion](completion.md#policy)).
 - A worker records the applied effort with `--effort` in its `worker` envelope, the only authoritative record; a `session` task reports it in its final response or PR body.

@@ -67,7 +67,7 @@ background". "Context" collides with bundle context (`devkit get-context`); `gui
 
 ## F6. Overlap with the parallel proposals (both on main at `96df5d86`)
 
-| Surface | `PROP-table-driven-document-kinds` | `PROP-ux-documentation` | This proposal |
+| Surface | `PROP-table-driven-document-kinds` | `SPEC-ux-documentation` | This proposal |
 | --- | --- | --- | --- |
 | Kind set (`models/ids.py`, `id_convention.py` `_LIVING_DIRECTORIES`) | replaces constants with one table; no new kind, no rule-code change | adds a UX kind as a table row | adds no kind (excludes); touches `_reference_files` scope only if foundation references are checked |
 | Index and search (`repositories/index.py`, `usecases/search.py`) | reads directories and membership from the table | adds the kind to browsing and search | moves `GLOSSARY_PATH`; may add ID-free candidates (F1) |
@@ -78,6 +78,6 @@ background". "Context" collides with bundle context (`devkit get-context`); `gui
 | Style content | none | excludes visual styling and theming | the group is where a style direction lives |
 
 Order: `PROP-table-driven-document-kinds` first (user decision recorded in the Host's handoff), then this proposal,
-then `PROP-ux-documentation`, so the UX guidance names the glossary at its new path and can point to foundation style
+then `SPEC-ux-documentation`, so the UX guidance names the glossary at its new path and can point to foundation style
 documents instead of restating them. If this proposal adds a kind or touches `bookGroup`, it must build on the table's
 definitions rather than add constants beside them.

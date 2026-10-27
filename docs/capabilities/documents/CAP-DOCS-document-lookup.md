@@ -73,7 +73,7 @@ changes an argument, output, code or exit status.
 
 ### 3.4 `devkit spec list [KIND]...`
 
-1. **Kinds**: `KIND...` restricts to `capability`, `usecase`, `architecture`, `decision`, `proposal`,
+1. **Kinds**: `KIND...` restricts to `capability`, `usecase`, `ux`, `architecture`, `decision`, `proposal`,
    `proposal-decision`, `spec`, `plan`, `tasks`, `reconcile`, `feedback`, `material`, `milestone` (default: all).
 2. **Filters** (all combine with AND):
    - `--status/-s a,b`: comma-separated statuses, compared case-insensitively. A given `--status` replaces the default

@@ -61,6 +61,29 @@ def test_a_plan_branch_refuses_a_rejected_or_undecomposed_proposal(tmp_path: Pat
     assert any("needs_decompose" in reason for reason in reasons)
 
 
+def test_only_a_plan_attach_of_an_unaccepted_proposal_is_refused_for_size(tmp_path: Path) -> None:
+    # SPEC-backlog-subagent-roles: an XL draft is decomposed before Planning; a dev- attach and the readiness of an
+    # accepted proposal never see the size.
+    root = _repo(tmp_path)
+    wide = _anchor("sdd-proposal").replace("status: draft\n", "status: draft\nsize: XL\n")
+    draft = _commit(root, "plan-wide", {"docs/proposals/PROP-wide/proposal.md": wide})
+    reasons = attach_check(root, "plan-wide", "docs/proposals/PROP-wide", draft)
+    assert reasons == [
+        "docs/proposals/PROP-wide has size: XL: Backlog decomposes it before Planning (split with --decomposed-from"
+        " or promote to a milestone; allowed: S, M, L or absent)"
+    ]
+    for size in ("L", "S"):
+        sized = _commit(root, f"plan-{size.lower()}", {
+            f"docs/proposals/PROP-{size.lower()}/proposal.md": wide.replace("size: XL", f"size: {size}")
+        })  # fmt: skip
+        assert attach_check(root, f"plan-{size.lower()}", f"docs/proposals/PROP-{size.lower()}", sized) == []
+    accepted = _anchor("sdd-proposal", "accepted").replace("status: accepted\n", "status: accepted\nsize: XL\n")
+    tip = _commit(root, "dev-big", {"docs/proposals/PROP-big/proposal.md": accepted})
+    assert attach_check(root, "dev-big", "docs/proposals/PROP-big", tip) == []
+    planned = _commit(root, "plan-big", {"docs/proposals/PROP-big/proposal.md": accepted})
+    assert attach_check(root, "plan-big", "docs/proposals/PROP-big", planned) == []
+
+
 def test_a_dev_branch_carries_its_spec_or_the_accepted_proposal_before_the_handoff(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     tip = _commit(

@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T08:43:55.876767Z'
+status: completed
+summary: 'Swept this run: recorded FB-new-seed-sync-output-outside-boundaries; FB-agent-guidance-asset-list-drifts resolved in this unit; no duplicates in the open backlog.'
+findings: []
+checks:
+  swept: PASS recorded=2 duplicates=0

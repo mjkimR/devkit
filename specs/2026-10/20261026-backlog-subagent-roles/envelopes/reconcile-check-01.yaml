@@ -1,0 +1,25 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T09:11:50.899688Z'
+status: completed
+summary: 'reconcile-reviewer at medium over ead1175b..d503f6f4: five targets match code and contract; one P1 missing target (UC-incubate-and-hand-off-a-proposal) and one P3 (ux-reviewer missing from ARCH-04-1 row); no entrypoint change accepted.'
+findings:
+- issue: UC-incubate-and-hand-off-a-proposal is not a reconcile target although the size gate changes step 1, step 2 and extension 2b (and Scenario 6's condition list).
+  evidence: docs/usecases/delivery/UC-incubate-and-hand-off-a-proposal.md:44-46, :74-77, :174-179; sdd-proposal.md:24; accept.py:157-158; attach.py:97-100
+  failure_condition: A reader of the use case expects plan-intent to be recordable for an XL draft and no size condition at direct acceptance, contradicting AC-06..AC-09.
+  suggested_action: Add a step-1 extension for an XL draft, the size blocker to 2b, and list the use case as a modified target.
+  resolution: open
+  severity: P1
+- issue: The ARCH-04-1 Subagent Roles row omits ux-reviewer while CAP-DLV-delivery-workflows counts seven read-only roles.
+  evidence: docs/architecture/ARCH-04-1-ecosystem-boundaries.md:86; CAP-DLV-delivery-workflows.md:388
+  failure_condition: A reader counting roles from the architecture row finds one fewer read-only role than the capability states.
+  suggested_action: Add ux-reviewer to the row.
+  resolution: open
+  severity: P3
+checks: {}
+diff_scope:
+  base: ead1175b2a127c45bc12fcc0abc7fd018242c95b
+  head: d503f6f4a8f36a582c4c9ebba61bb29b6c35364b
+activity_effort: medium

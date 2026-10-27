@@ -24,7 +24,7 @@ WORKFLOWS = (
     "sdd-proposal",
 )
 GATES = {"plan-intent", "plan-accept", "dev-integration", False}
-ROLES = ("challenger", "reconcile-reviewer", "code-reviewer", "scout")
+ROLES = ("challenger", "reconcile-reviewer", "code-reviewer", "scout", "triage", "decomposer")
 AGENT_FILES = (".claude/agents/{role}.md", ".codex/agents/{role}.toml", ".agents/agents/{role}.md")
 
 

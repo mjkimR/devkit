@@ -1,0 +1,33 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T09:09:29.537247Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified the three P3 fixes at 7a78175d: commit rule back in Requests and decomposition (new structure test), feedback-hygiene dirty-checkout wording aligned (test updated), triage return recorded in reconcile.md.'
+findings:
+- issue: The 'Commit Backlog edits in the current checkout' bullet moved out of 'Requests and decomposition' under the 'Backlog roles' heading.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/backlog.md.jinja:31
+  failure_condition: A Host or the decomposer reading 'Requests and decomposition' no longer finds the commit and base-checkout rule there.
+  suggested_action: Move the bullet back to the end of 'Requests and decomposition'.
+  resolution: resolved
+  severity: P3
+- issue: feedback-hygiene Step 1 says 'or on a dirty checkout outside a task worktree, run this step inline', which suggests a dirty task worktree may delegate.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/feedback-hygiene/SKILL.md:21-24; backlog.md.jinja:26
+  failure_condition: A Host in a dirty task worktree delegates triage without a clean checkout.
+  suggested_action: Phrase it as backlog.md does and update the guidance test.
+  resolution: resolved
+  severity: P3
+- issue: Task 2.4 is checked, but the triage return itself is stored nowhere the final change report can cite.
+  evidence: specs/2026-10/20261026-backlog-subagent-roles/tasks.md:34; git show -s 8768e73f
+  failure_condition: After context loss the final change report cannot reproduce the triage return, leaving AC-13 unmet.
+  suggested_action: Keep the triage return available for the final change report and state the emulated call.
+  resolution: resolved
+  severity: P3
+checks:
+  tests: PASS 1816 passed test-affected
+diff_scope:
+  base: 8768e73fd06977959e91ef0239af551b57b69a9c
+  head: 7a78175db6113e7c533dddd4f3e84f7b759bfbe3
+activity_effort: medium

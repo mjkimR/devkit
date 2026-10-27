@@ -1,7 +1,7 @@
 ---
 id: CAP-GOV-spec-rules
 title: Spec Governance Rules
-summary: "Defines the twelve spec governance rules, their snapshot targeting and fixes, including separate milestone/unit dependency graphs and proposal-only milestone hygiene."
+summary: "Defines the fourteen spec governance rules, their snapshot targeting and fixes, including separate milestone/unit dependency graphs and proposal-only milestone hygiene."
 area: governance
 status: active
 usecases:
@@ -18,7 +18,7 @@ created_at: 2026-10-13
 
 ## 1. Summary
 
-The `spec` bundle ships twelve deterministic rules that keep the Living Spec and the feature specs consistent. `devkit
+The `spec` bundle ships fourteen deterministic rules that keep the Living Spec and the feature specs consistent. `devkit
 sync` deploys them with the bundle's `core` preset, and devkit's rule engine runs them beside its own rules:
 `devkit rules check` (whole workspace or named targets), `check --staged` (the commit gate), `check --ci --base <ref>`
 and `devkit rules fix`. This capability is the catalog and the contract summary of each rule; the full guide of a rule
@@ -43,7 +43,8 @@ and `devkit rules fix`. This capability is the catalog and the contract summary 
 ### 3.1 Catalog
 
 Every rule is phase `linter` and is deployed by the `core` preset; every rule is severity `error` except
-`RULE-spec-progress` and `RULE-proposal-boundaries` (`warning`), hints that never block a commit.
+`RULE-spec-progress`, `RULE-proposal-boundaries` and `RULE-ux-coverage` (`warning`), hints that never block a
+commit.
 
 | Rule | Checks | Fix |
 | --- | --- | --- |
@@ -59,6 +60,8 @@ Every rule is phase `linter` and is deployed by the `core` preset; every rule is
 | `RULE-proposal-boundaries` | A current proposal's `target_area` and `boundaries.owns` entries name existing paths. | none |
 | `RULE-document-summary` | Searchable documents carry a short English `summary`. | none |
 | `RULE-steering-documents` | `docs/steering/` is flat and holds ID-free files with a `title` and a short English `summary`, within the file-count and body-size caps. | none |
+| `RULE-ux-links` | A UX document has a valid `element` and Interactions table; its Step cells, `usecases`, targets, exits and reachability agree with the use case steps that cite it. | none |
+| `RULE-ux-coverage` | The steps of a use case a UX document lists cite a UX document, and every interaction names its step. | none |
 
 ### 3.2 Shared Behavior
 
@@ -96,6 +99,8 @@ Every rule is phase `linter` and is deployed by the `core` preset; every rule is
 ### 3.3 `RULE-document-reference`
 
 Documents reference each other by exact, resolvable full IDs. Checks every current document that is not a material.
+A UX document's `usecases` take `UC` and its `capabilities` take `CAP` IDs, as on any document; the UX IDs a use case
+step or an Interactions Target cites in backticks are ordinary prose references.
 
 The root glossary `docs/steering/glossary.md` is an additional, ID-free input: in five-column tables headed
 `Term | Definition | Owner | Avoid | Code identifiers` with a Markdown separator row, backticked or bracketed full
@@ -152,7 +157,7 @@ sequence numbers are forbidden (they collide across parallel branches).
   match the date prefix.
 - **Living Spec stems** (the ID is the file stem): `docs/capabilities/<area>/CAP-<AREA>-<slug>.md` (`<AREA>`
   upper-case letters and digits, `area: <area>`); `docs/usecases/<area>/UC-<slug>.md` (`area: <area>`; only
-  `README.md` directly under `docs/usecases/`); `docs/architecture/ARCH-<slug>.md` or `ARCH-<NN>[-<n>]-<slug>.md` with
+  `README.md` directly under `docs/usecases/`); `docs/ux/<area>/UX-<slug>.md` (`area: <area>`); `docs/architecture/ARCH-<slug>.md` or `ARCH-<NN>[-<n>]-<slug>.md` with
   `<NN>` an arc42 chapter (`01`-`11` except `09`, decisions, and `12`, the glossary) and `<n>` a sub-document `1`-`9`
   (`05-1` containers, `05-2` components). The first slug segment MUST contain a letter. Namespace docs roots use the
   same layout.
@@ -172,11 +177,11 @@ sequence numbers are forbidden (they collide across parallel branches).
 
 ### 3.5 `RULE-spec-format`
 
-Every capability, use case, proposal and global milestone starts with a YAML frontmatter block that sets `id`, `title` and `status` as
+Every capability, use case, UX document, proposal and global milestone starts with a YAML frontmatter block that sets `id`, `title` and `status` as
 non-blank strings.
 
-- **Scope**: Markdown files under `docs/capabilities/`, `docs/usecases/`, `docs/proposals/`, `docs/roadmap/`, and `capabilities/`,
-  `usecases/` of each namespace docs root, except `README.md`, templates, directories starting with `.` and
+- **Scope**: Markdown files under `docs/capabilities/`, `docs/usecases/`, `docs/ux/`, `docs/proposals/`, `docs/roadmap/`,
+  and `capabilities/`, `usecases/`, `ux/` of each namespace docs root, except `README.md`, templates, directories starting with `.` and
   `materials/`. Unlike the index, a file is checked even when it declares no ID.
 - MUST report: no block (`---` on the first line, closed by `---`); a malformed block (unclosed, invalid YAML,
   duplicate keys, not a mapping; fixed by hand); a missing, blank or non-string `id`, `title` or `status`; a
@@ -292,7 +297,7 @@ A proposal's boundary is copied into its spec at handoff, so it names real paths
 
 `summary` is the main signal of `devkit spec search` (`CAP-DOCS-document-search`).
 
-- MUST report: a capability, use case, decision, architecture document, milestone, `proposal.md` or `spec.md` without `summary`
+- MUST report: a capability, use case, UX document, decision, architecture document, milestone, `proposal.md` or `spec.md` without `summary`
   (a file still carrying the skeleton marker `<!-- devkit:skeleton -->` is exempt until written); a `summary` that is
   not a non-empty string; a letter outside the Latin script in any `summary` (digits, punctuation and symbols are
   allowed); a `summary` longer than `max_length` characters.
@@ -313,6 +318,44 @@ small and each entry readable. Only the root `docs/steering/` is checked, and on
 - `README.md` is neither checked nor counted.
 - Settings: `max_files` (default `10`), `max_body_bytes` (default `24576`) and `max_summary_length` (default `300`),
   each a positive integer. Not fixable.
+
+### 3.15 `RULE-ux-links`
+
+A UX document and the use cases it serves do not contradict each other (`ADR-ux-step-links-and-coverage`). Checks
+every current UX document outside materials against every current use case. A use case's steps are the `N.` items
+at column 0 under its `Main Success Scenario` H2 (a nested numbered list continues its step) and the `- **<key>.**` bullets under its `Extensions` H2 (`2a`, `*a`, also
+written `\*a`); a line indented by a space continues the item, and any other line ends it, so intro paragraphs,
+free prose and `Covers` lines belong to no step. A step cites a screen through a body reference whose canonical
+target is a UX document (aliases and the bracket form count). An extension resumes at the step its
+`resumes at [step] <key>` names (`resumes at the same step`: the step it branches from), and ends the use case
+otherwise.
+
+- MUST report on the UX document: a missing `element` or one other than `screen`, `modal` or `panel`; no
+  `Interactions` H2, or one whose first table header is not `Trigger | Step | From | To | Target | Capability |
+  Feedback`; a Step cell that is neither empty (`-` counts) nor `` `UC-<slug>` <key> `` pairs separated by commas; a
+  Target cell that is neither empty, a UX document's ID, `close`, `back` nor `end`; a `modal` without a `close` or
+  `back` row.
+- MUST report, on the UX document or, when only the use case is targeted, on the use case at the step's line: a Step
+  pair naming a use case `usecases` does not list, a key the use case has no step for, or a step that does not cite
+  the document; a `usecases` entry no Step cell names; a use case step citing the document while its `usecases` does
+  not list the use case.
+- MUST report per listed use case whose steps cite the document (panels exempt): a `screen` with no row targeting
+  another UX document, `close`, `back` or `end` that no terminal step cites (the last main step, an extension that
+  ends the use case, or a step whose next step cites no screen); a `screen` or `modal` not reachable from the use
+  case's entries (the screens cited by the first step, by a step whose preceding step cites none and by every
+  extension) over its edges (the targets of the screens it cites and of the panels their `Content` H2 cites).
+- Unresolved IDs are `RULE-document-reference`'s and are skipped. Extension-to-state coverage is not checked. Not
+  fixable.
+
+### 3.16 `RULE-ux-coverage`
+
+The gaps `RULE-ux-links` does not refuse: not every step happens on a screen, and a screen may carry global controls.
+devkit gives each rule one severity, so the hint is a rule of its own, as `RULE-spec-progress` is.
+
+- SHOULD report (severity `warning`): for every use case a current UX document lists, each main-scenario step and
+  extension that cites no UX ID, once, on the first listing UX document the run targets (path order, at its
+  `usecases` entry), else on the use case at the step's line; each Interactions row whose Step cell is empty, on its
+  UX document. A use case no UX document lists is never reported. Not fixable.
 
 ## 4. Interfaces & Data Contracts
 
@@ -346,7 +389,8 @@ Each rule is a class in `devkit_spec.features.governance.<name>` (`ADR-spec-pack
 `rules/<name>/guide.md`, to `.devkit/managed/spec/rules/<name>/`. Keeping the logic in the package means one tested
 implementation and a deployed file that never changes when the rule does. A rule whose judgment lives in a bundle
 instruction names it in `related` (`spec:living-spec-writing` for the reference, traceability, summary, steering,
-identifier and lifecycle rules, `spec:contract-authoring` for `RULE-task-coverage`), and `devkit rules explain` prints its deployed
+identifier and lifecycle rules, `spec:contract-authoring` for `RULE-task-coverage`, `spec:ux-writing` and
+`spec:usecase-writing` for `RULE-ux-links` and `RULE-ux-coverage`), and `devkit rules explain` prints its deployed
 path. `devkit_spec.features.governance` exposes `document_index(ctx)`, `namespaces(ctx)` and the targeting helpers the rules share.
 
 A rule's tests live in its folder, `rules/<name>/tests/test_rule.py`, and deploy with it. They load the rule with

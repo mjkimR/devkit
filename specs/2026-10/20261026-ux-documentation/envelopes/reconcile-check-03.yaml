@@ -1,0 +1,26 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T08:43:12.324060Z'
+status: completed
+summary: 'Implementer self-verification (medium) after the Host''s scope admission: the three admitted paths are reflected and listed in reconcile.md; every reconcile-check-01 finding is resolved; reconcile.md resolved. Self-verified because the added edits are list rows and a seeded file with no contract interpretation.'
+findings:
+- issue: 'AC-15: devkit sync --check exits 1 on the pending seed docs/ux/README.md (reconcile-check-01 finding 2).'
+  evidence: docs/ux/README.md committed; uv run devkit sync --check exit 0
+  resolution: resolved
+  severity: P1
+- issue: CAP-HARN-agent-guidance asset lists stale (reconcile-check-01 finding 3).
+  evidence: docs/capabilities/harness/CAP-HARN-agent-guidance.md 4.1, 4.3, 4.4
+  resolution: resolved
+  severity: P2
+- issue: docs/README.md has no ux/ row (reconcile-check-01 finding 4).
+  evidence: docs/README.md directory map
+  resolution: resolved
+  severity: P3
+checks:
+  rules: PASS uv run devkit rules check
+  sync: PASS uv run devkit sync --check exit 0
+diff_scope:
+  base: 026155794cf657d4a9bda1089123b63dfe01f33c
+  head: 1ad01e696699fca8a6ef57607faafecc93ff6303

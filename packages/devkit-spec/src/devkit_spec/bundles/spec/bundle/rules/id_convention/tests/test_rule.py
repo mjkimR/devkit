@@ -627,3 +627,36 @@ def test_fix_preserves_historical_milestones_when_current_ids_need_repair(tmp_pa
     check(RULE, tmp_path, files, fix=True)
     assert (tmp_path / old).read_text() == original
     assert "id: MS-live" in (tmp_path / "docs/roadmap/MS-live.md").read_text()
+
+
+def test_ux_documents_follow_the_living_spec_conventions(tmp_path: Path) -> None:
+    root = "docs/packages/api"
+    files = {
+        ".devkit/config.toml": _namespaces("api"),
+        "docs/ux/account/UX-login.md": _living("UX-login", "account"),
+        f"{root}/ux/account/UX-pick.md": _living("UX-pick", "account"),
+        "docs/ux/UX-flat.md": _living("UX-flat"),
+        "docs/ux/account/screen-login.md": _living("UX-screen-login", "account"),
+        "docs/ux/account/UX-001.md": _living("UX-001", "account"),
+        "docs/ux/billing/UX-pay.md": _living("UX-pay", "account"),
+        "docs/ux/README.md": "# UX\n",
+    }
+    violations = check(RULE, tmp_path, files)
+    assert sorted((v.file, v.message) for v in violations if not v.fixed) == [
+        ("docs/ux/UX-flat.md", "Invalid partition path: UX document must be stored at docs/ux/{area}/UX-{slug}.md"),
+        (
+            "docs/ux/account/UX-001.md",
+            "Invalid partition path: file name must be UX-{slug} with a kebab-case slug that is not a sequence number:"
+            " UX-001",
+        ),
+        (
+            "docs/ux/account/screen-login.md",
+            "Invalid partition path: file name must be UX-{slug} with a kebab-case slug that is not a sequence number:"
+            " screen-login",
+        ),
+        ("docs/ux/billing/UX-pay.md", 'Frontmatter area is "account" but the directory requires "billing"'),
+    ]
+    area = next(v for v in violations if v.message.startswith("Frontmatter area"))
+    assert area.fixable and "move the file to docs/ux/account/" in area.remediation
+    assert _found(check(RULE, tmp_path, targets=["docs/ux/billing/UX-pay.md"], fix=True)) == []
+    assert "area: billing\n" in _read(tmp_path, "docs/ux/billing/UX-pay.md")

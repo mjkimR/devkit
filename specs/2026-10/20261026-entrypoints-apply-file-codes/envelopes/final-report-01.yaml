@@ -1,0 +1,18 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T08:56:03.534708Z'
+status: completed
+summary: derive --code adopts a path under a candidate and unfolds a selected folded candidate; an unmatched --code refuses with SPEC_ENTRYPOINTS_CODE_UNMATCHED (exit 2) before writing; CAP-TRACE-code-entrypoints updated; FB-entrypoints-apply-ignores-file-codes resolved
+findings: []
+assumptions:
+- Refusal chosen over a notice to match --target and trailing-slash selectors and to keep --apply from partial writes; test_target_without_selected_candidates_applies_nothing replaced because it asserted the defect
+- EntrypointsCodeUnmatchedError lives in packages/devkit-spec/src/devkit_spec/base/errors.py with the other entrypoints errors, outside the feature directory
+checks:
+  tests: PASS just test-affected 1772 passed
+  build: PASS just check spec 0 errors
+  lint: PASS just lint-check spec; devkit rules check --ci --base ead1175b
+diff_scope:
+  base: ead1175b2a127c45bc12fcc0abc7fd018242c95b
+  head: 5dc8932f368b5bc16418408f648cf6aa2079cc9d

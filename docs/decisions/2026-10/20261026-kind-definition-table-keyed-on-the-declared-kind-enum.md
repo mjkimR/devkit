@@ -78,7 +78,7 @@ driver) while giving one place per fact and a failing check (first two drivers).
 - Negative: the enum and the table are two declarations of the same set; the check keeps them equal.
 - Risk: a fact whose current consumers disagree (for example the heading-token set excludes `PROP`, `PADR` and
   `MAT` while other sets include them) must be encoded per consumer, not unified, or a message changes.
-- Follow-up: `PROP-ux-documentation` adds its kind through this table once this change lands.
+- Follow-up: `SPEC-ux-documentation` adds its kind through this table once this change lands.
 
 ## 6. Confirmation
 

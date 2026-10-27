@@ -15,6 +15,10 @@ verification by effort is in its `references/effort.md` and `references/review-l
    `devkit spec search "<topic>"`). Update or create capabilities, use cases (templates in
    `.devkit/managed/spec/templates/`) and `docs/architecture/`; if the change did introduce or rename a domain term,
    update `docs/steering/glossary.md` where it exists. Write no index tables in directory `README.md` files.
+   - Screens: write each draft of the spec's `Screens` section to `docs/ux/<area>/UX-<slug>.md` (template `ux`), the
+     step citations it needs to the use cases, and the drafted register rows to `docs/steering/ux-objects.md`,
+     creating the file with the project's first UX document; turn the drafts' plain-text new IDs into code spans
+     (`ADR-ux-drafts-before-code`). `RULE-ux-links` and `RULE-ux-coverage` check them from here on.
    - The spec's user stories state the request, not the contract; copy none into `docs/`. Fold the delivered behavior
      into the use cases it changes: new or changed steps, extensions with their codes, postconditions and scenarios
      (`usecase-writing`).
@@ -31,7 +35,8 @@ verification by effort is in its `references/effort.md` and `references/review-l
    ---
    ```
 
-   In a registered task worktree, then run `devkit spec scope update --spec <dir>`.
+   List every written UX document, changed use case and `docs/steering/ux-objects.md` as a target; every drafted screen
+   has a `docs/ux/` target. In a registered task worktree, then run `devkit spec scope update --spec <dir>`.
 3. **Deferred work and source feedback**: apply the Deferred Work Handoff of `completion.md` and
    [source feedback](../spec/references/source-feedback.md), and record destinations and resolutions in
    `reconcile.md`.

@@ -1,0 +1,33 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-26T09:07:55.084248Z'
+status: completed
+summary: 'Initial medium review of ead1175b..8768e73f against AC-01..AC-13: three P3 findings, no P1 or P2.'
+findings:
+- issue: The 'Commit Backlog edits in the current checkout' bullet moved out of 'Requests and decomposition' under the 'Backlog roles' heading.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec/references/backlog.md.jinja:31
+  failure_condition: A Host or the decomposer reading 'Requests and decomposition' no longer finds the commit and base-checkout rule there.
+  suggested_action: Move the bullet back to the end of 'Requests and decomposition'.
+  resolution: open
+  severity: P3
+- issue: feedback-hygiene Step 1 says 'or on a dirty checkout outside a task worktree, run this step inline', which suggests a dirty task worktree may delegate.
+  evidence: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/feedback-hygiene/SKILL.md:21-24; backlog.md.jinja:26
+  failure_condition: A Host in a dirty task worktree delegates triage without a clean checkout.
+  suggested_action: Phrase it as backlog.md does and update the guidance test.
+  resolution: open
+  severity: P3
+- issue: Task 2.4 is checked, but the triage return itself is stored nowhere the final change report can cite.
+  evidence: specs/2026-10/20261026-backlog-subagent-roles/tasks.md:34; git show -s 8768e73f
+  failure_condition: After context loss the final change report cannot reproduce the triage return, leaving AC-13 unmet.
+  suggested_action: Keep the triage return available for the final change report and state the emulated call.
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS 104 passed (reviewer rerun); 1815 passed test-affected
+  lint: PASS devkit rules check --ci --base ead1175b
+diff_scope:
+  base: ead1175b2a127c45bc12fcc0abc7fd018242c95b
+  head: 8768e73fd06977959e91ef0239af551b57b69a9c
+activity_effort: medium
