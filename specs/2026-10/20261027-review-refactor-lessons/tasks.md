@@ -10,15 +10,15 @@ Tasks 1.1 to 1.3 have disjoint boundaries and run in parallel.
 
 ## Phase 1: Implementation
 
-- [ ] **Task 1.1**: Playbook procedure
+- [x] **Task 1.1**: Playbook procedure
   - **_Boundary**: `packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/review-refactor/`
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05, AC-06, AC-07, AC-08_
   - **Verification**: `uv run devkit rules check packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/review-refactor`; `just test devkit-catalog`
-- [ ] **Task 1.2**: Decision record
+- [x] **Task 1.2**: Decision record
   - **_Boundary**: `docs/decisions/2026-10/`
   - _Requirements: AC-01, AC-02, AC-03_
   - **Verification**: `uv run devkit rules check docs/decisions/2026-10`
-- [ ] **Task 1.3**: Capability and use case
+- [x] **Task 1.3**: Capability and use case
   - **_Boundary**: `docs/capabilities/delivery/CAP-DLV-review-refactor.md`, `docs/usecases/governance/UC-review-and-refactor-accumulated-slop.md`
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05, AC-06, AC-07, AC-08_
   - **Verification**: `uv run devkit rules check docs/capabilities/delivery docs/usecases/governance`

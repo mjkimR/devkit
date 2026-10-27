@@ -49,6 +49,9 @@ gap adds abstraction and defensive code.
   code, guidance, options and commands.
 - Introduce a shared implementation only for demonstrated repeated behavior: at least two current callers with the
   same behavior, where a change to one must be repeated in the others.
+- If the implementations to consolidate do not behave identically, list each difference (accepted input, output,
+  error or side effect) with the behavior the consolidation keeps. The decision round presents the list and the
+  user's decision covers each difference; an approved difference is a behavior change of the report.
 - Treat removing a compatibility path (shim, legacy reader, version branch) as a contract change, unless the
   repository's declared compatibility policy states that no external consumer exists for that package. Either way,
   name the inputs or callers no longer accepted. In-repository reachability never proves the absence of external
@@ -77,6 +80,13 @@ Record per consolidation or removal:
   configuration, documentation, string dispatch). Name each search (command, registry or configuration read) and its
   result.
 - Verification: the relevant verification passing before and after the change, both results recorded.
+- Differential comparison: for a change that consolidates or replaces a parser, scanner, matcher, file listing,
+  serialized format or other function whose inputs can be enumerated or generated, run the old and new code on the
+  same inputs: the repository's own corpus plus edge cases of the input domain (for example empty, malformed or
+  unclosed input and symbolic link loops). Record the input count and the result. Fix each difference unless it is
+  an approved behavior change.
+  - Run the old code side by side from an extracted copy of the previous revision (for example `git archive`) or a
+    separate checkout. Never stash to run it, because the stash list is shared by every worktree of the repository.
 - Characterization test: add one only when some merged caller is exercised by no existing test.
 - Guidance: a retained-constraint map, listing each constraint of the removed or merged text and where it remains,
   plus the representative-task run when the removal relies on ground 4.

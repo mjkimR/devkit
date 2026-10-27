@@ -76,6 +76,8 @@ reason and provenance.
 | Defer | Reason, follow-up destination (existing or newly created) and restart condition. |
 | Keep | The reason the cost is accepted. |
 
+- Present a consolidation of implementations that do not behave identically with each difference and the behavior
+  it keeps (`references/criteria.md` §2); the user's decision covers each difference.
 - Leave an unanswered finding pending; nothing is applied for it.
 - The user's approval in the round is the recorded intent (goal, scope and non-goals) of the routed work item. It
   never supplies the work item's integration approval.
@@ -95,8 +97,11 @@ Recheck HEAD and dirty paths, then write the report:
   cost.
 - Findings and changes as separate records. Each change names its finding, preservation evidence, resulting commit,
   line or token delta (reported, never the justification) and any inputs or callers no longer accepted.
+- Behavior changes: the approved differences of consolidations, each with its change, recorded apart from the inputs
+  or callers no longer accepted.
 - Decisions with provenance, follow-ups, and counts: found, applied, contract work items, deferred, kept, pending.
 - Outcome: `stopped at decision round`, `applied` or `partially applied`, with the work items' integration state.
+  Update it once each work item integrates or stops.
 
 Claim a batch complete only with no pending decision and every agreed change committed or routed. A zero-finding
 batch still names its coverage and gaps. Never claim the whole repository reviewed from a batch.
