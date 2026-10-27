@@ -19,7 +19,7 @@ from devkit_dist.features.distribution.models import errors
         (errors.ConflictError, "SYNC_CONFLICT", ActionMode.INTERACTION),
         (errors.BundleConflictError, "BUNDLE_CONFLICT", ActionMode.INTERACTION),
         (errors.GuidanceBlockError, "GUIDANCE_BLOCK_INVALID", ActionMode.INPUT_ERROR),
-        (errors.OverrideDriftError, "OVERRIDE_DRIFT", ActionMode.BLOCKED),
+        (errors.OverrideDriftError, "OVERRIDE_DRIFT", ActionMode.INTERACTION),
         (errors.UnsafeWorkspaceError, "WORKSPACE_UNSAFE", ActionMode.BLOCKED),
         (errors.LockHeldError, "LOCK_HELD", ActionMode.DEFER),
         (errors.PendingTransactionError, "TRANSACTION_PENDING", ActionMode.AUTO),

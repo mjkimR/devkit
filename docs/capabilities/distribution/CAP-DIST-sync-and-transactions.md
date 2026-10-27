@@ -449,7 +449,8 @@ receipt is unchanged, each written file carries its canonical or validated perso
 sync seeds it again). Any other plan (a seed, the guidance block, `.devkit/.gitignore`, a new or changed
 receipt) writes nothing and raises `ReceiptStaleError` (`RECEIPT_STALE`): an `INTERACTION` error with exit code `1`,
 since updating committed files is the user's decision and an agent must not retry it away with a plain sync. Its
-`[TARGET]` names the committed paths that would change and its `[DETAIL]` lines the planned writes.
+`[TARGET]` names the committed paths that would change, its `[DETAIL]` lines the planned writes, its `[FIX]` is
+`uv run devkit sync` and its `[REPORT]` asks whether to run it and commit what it changes.
 
 An unchanged receipt may also restore an absent whole host hook file from its `host_hooks` registrations. Existing
 shared host files require a plain sync for any change; see `CAP-HOST-lifecycle-observation`.
@@ -461,10 +462,12 @@ A fresh clone (`just init`), `devkit worktree start` and CI run it; whoever chan
 the selection runs a plain `devkit sync` and commits what it changes. In CI, `devkit sync --locked` after the
 environment is installed both restores the managed copies the later steps read and fails when a bundle source or
 an upgraded package no longer matches the committed receipt. `sync --check` stays the read-only check for a
-workspace that is already synchronized. `devkit sync --registrations-only`, which reconciles only optional local MCP
+workspace that is already synchronized: when a sync is needed it exits `1` with a `NOT_SYNCHRONIZED` error (fix
+`uv run devkit sync`), the last stderr block in text and under `errors` in JSON. `devkit sync --registrations-only`, which reconciles only optional local MCP
 registrations after locked restoration, is specified by `CAP-MCP-runtime-registration`. When the locked sync leaves a
 desired registration of a selected host unwritten, it returns the `MCP_REGISTRATION_PENDING` notice with that command
-as its fix, and `devkit status` returns the same notice while the checkout lacks the registration.
+as its fix, and `devkit status` returns the same notice while a checkout with a receipt lacks the registration (one
+without a receipt needs a plain sync, which registers too).
 
 ### Bundle template inputs
 

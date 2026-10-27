@@ -76,7 +76,11 @@ def test_complete_body_identity_and_no_resource_reads(tmp_path: Path, directory:
         "aliases": [],
         "body": body,
         "source": {"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()},
-        "context": {"bundle": "team", "argv": ["devkit", "get-context", "team"], "policy": "once-per-agent-context"},
+        "context": {
+            "bundle": "team",
+            "argv": ["uv", "run", "devkit", "get-context", "team"],
+            "policy": "once-per-agent-context",
+        },
     }
     assert json.loads(invoke(root, "team/recovery").stdout) == result
     assert (root / RECEIPT_PATH).read_bytes() == receipt_before

@@ -154,7 +154,7 @@ def test_generated_skill_collision_and_user_edits_are_protected(tmp_path: Path, 
     skill.unlink()
     sync_project(target, installed, agents=["codex"])
     skill.write_text("user edit")
-    with pytest.raises(ConflictError, match="user-modified"):
+    with pytest.raises(ConflictError, match="managed files were edited"):
         sync_project(target, installed, agents=["codex"])
     # Deselecting leaves the edited generated file behind as an orphan instead of aborting.
     result = sync_project(target, [], deselect=["team"])

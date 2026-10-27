@@ -4,23 +4,24 @@ from __future__ import annotations
 
 import functools
 import json
-import sys
 from collections import Counter
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, Protocol
 
 import click
-from devkit.advisory import ExitCode
+from devkit.advisory import AdvisoryError, ExitCode
 
 from devkit_dist.adapters.cli import (
     boundary,
     echo_json,
     echo_notices,
+    exit_on_problems,
     exit_on_warnings,
     is_json,
     workspace_option,
 )
+from devkit_dist.features.distribution.models.errors import NotSynchronizedError
 from devkit_dist.features.distribution.models.results import OverrideChange, SyncResult
 
 WORKSPACE = workspace_option()
@@ -71,15 +72,25 @@ def _echo_sync_text(result: SyncResult) -> None:
 def _report(result: SyncResult, output_format: str, *, check: bool = False) -> None:
     """Print the result, then its warnings and notices on stderr.
 
-    Exits 1 when ``check`` finds a synchronization needed, or under ``--strict`` when there is a warning.
+    ``check`` (``sync --check``) that finds a synchronization needed reports it as ``NOT_SYNCHRONIZED`` (exit
+    ``1``): under ``errors`` in the JSON result, which ``--check`` always carries, or as the last stderr block in
+    text. Otherwise exits 1 under ``--strict`` when there is a warning.
     """
+    problems: list[AdvisoryError] = []
+    if check and result.actions:
+        problems.append(
+            NotSynchronizedError(
+                f"the workspace does not match the selection: {len(result.actions)} planned changes",
+                exit_code=ExitCode.FINDINGS,
+            )
+        )
     if is_json(output_format):
-        echo_json(result.to_dict())
+        data = result.to_dict()
+        echo_json({**data, "errors": [problem.to_dict() for problem in problems]} if check else data)
     else:
         _echo_sync_text(result)
     echo_notices(result.notices)
-    if check and result.actions:
-        sys.exit(int(ExitCode.FINDINGS))
+    exit_on_problems(problems)
     exit_on_warnings(result.notices)
 
 

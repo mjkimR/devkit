@@ -21,10 +21,12 @@ def config() -> None:
 
 @config.command(name="show")
 @WORKSPACE
-@click.option("--effective", is_flag=True, required=True, help="Show effective configuration and source paths.")
+@click.option(
+    "--effective", is_flag=True, help="Show effective configuration and source paths (the default; accepted as is)."
+)
 @_json_command
 def config_show(workspace_root: str | None, effective: bool) -> None:
-    """Inspect effective checkout preferences without changing configuration.
+    """Inspect effective checkout preferences and the file each value comes from, without changing configuration.
 
     An unsupported [presentation] language resolves to en and is a warning under notices.
     """

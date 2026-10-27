@@ -16,6 +16,7 @@ from devkit.advisory import AdvisoryError
 
 from devkit_dist.features.distribution.models.drift import Drift
 from devkit_dist.features.distribution.models.unprojected import Unprojected
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.project.models.receipt import (
     AssetRecord,
     OverrideRecord,
@@ -255,8 +256,6 @@ class OverrideStatus:
             "asset": self.asset,
             "kind": self.kind,
             "relative_path": self.relative_path,
-            "baseline_upstream_sha256": self.baseline_upstream_sha256,
-            "current_upstream_sha256": self.current_upstream_sha256,
             "drift_detected": self.drift_detected,
         }
 
@@ -291,8 +290,6 @@ class OverrideDiff:
             "asset": self.asset,
             "relative_path": self.relative_path,
             "drift_detected": self.drift_detected,
-            "baseline_upstream_sha256": self.baseline_upstream_sha256,
-            "current_upstream_sha256": self.current_upstream_sha256,
             "files": [item.to_dict() for item in self.files],
         }
 
@@ -378,7 +375,7 @@ class PlaybookResult:
             "source": {"path": self.path, "sha256": self.sha256},
             "context": {
                 "bundle": self.bundle,
-                "argv": ["devkit", "get-context", self.bundle],
+                "argv": [*AGENT_INVOCATION.split(), "get-context", self.bundle],
                 "policy": "once-per-agent-context",
             },
         }

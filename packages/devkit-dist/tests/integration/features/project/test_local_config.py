@@ -26,7 +26,7 @@ def test_effective_provenance_and_explicit_execution_root(tmp_path: Path) -> Non
     config = read_effective_config(base)
     assert config.values["execution"]["environment"] == "cloud"
     assert config.values["mcp"]["register"] is False
-    assert config.sources["execution.environment"] == str(base / LOCAL_CONFIG_PATH)
+    assert config.sources["execution.environment"] == LOCAL_CONFIG_PATH
     assert read_project_config(base)["execution"]["environment"] == "local"
     assert resolve_execution_environment(base).environment == "cloud"
     (base / LOCAL_CONFIG_PATH).unlink()
@@ -59,7 +59,7 @@ def test_validate_every_local_field(tmp_path: Path, text: str, code: str) -> Non
     with pytest.raises(ConfigError) as caught:
         resolve_execution_environment(root)
     assert caught.value.code == code
-    assert str(root / LOCAL_CONFIG_PATH) in caught.value.target_files
+    assert LOCAL_CONFIG_PATH in caught.value.target_files
 
 
 @pytest.mark.parametrize("kind", ["directory", "symlink"])

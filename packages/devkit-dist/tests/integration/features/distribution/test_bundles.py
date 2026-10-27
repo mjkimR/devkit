@@ -72,13 +72,13 @@ def test_plan_preset_is_read_only(source: Path) -> None:
     destinations = {file["destination"]: file["mode"] for file in result["files"]}
     # The plan is the sync inventory: managed copies plus every agent's native projection.
     assert destinations == {
-        ".devkit/managed/sample/bundle.toml": 0o644,
-        ".devkit/managed/sample/skills/review/SKILL.md": 0o644,
-        ".devkit/managed/sample/skills/review/scripts/check.sh": 0o755,
-        ".agents/skills/review/SKILL.md": 0o644,
-        ".agents/skills/review/scripts/check.sh": 0o755,
-        ".claude/skills/review/SKILL.md": 0o644,
-        ".claude/skills/review/scripts/check.sh": 0o755,
+        ".devkit/managed/sample/bundle.toml": "0644",
+        ".devkit/managed/sample/skills/review/SKILL.md": "0644",
+        ".devkit/managed/sample/skills/review/scripts/check.sh": "0755",
+        ".agents/skills/review/SKILL.md": "0644",
+        ".agents/skills/review/scripts/check.sh": "0755",
+        ".claude/skills/review/SKILL.md": "0644",
+        ".claude/skills/review/scripts/check.sh": "0755",
     }
     narrowed = plan_bundle(load_bundle(source), "all", ["codex"]).to_dict()
     assert {file["destination"] for file in narrowed["files"]} >= {".codex/agents/reviewer.toml"}
@@ -169,5 +169,5 @@ def test_plan_matches_what_sync_deploys(source: Path, tmp_path: Path) -> None:
     recorded = json.loads((target / ".devkit/installation.json").read_text())["files"]
     planned = plan_bundle(bundle, "all", ["codex", "claude-code"]).to_dict()["files"]
     assert {item["destination"]: (item["sha256"], item["mode"]) for item in planned} == {
-        name: (meta["sha256"], meta["mode"]) for name, meta in recorded.items()
+        name: (meta["sha256"], f"{meta['mode']:04o}") for name, meta in recorded.items()
     }

@@ -211,7 +211,9 @@ def test_override_drift_block_aborts_before_writes(
     receipt = (target / RECEIPT_PATH).read_bytes()
     with pytest.raises(OverrideDriftError, match=r"override_drift = \"block\"\): team:guide$") as raised:
         sync_project(target, installed)
-    assert raised.value.fix is not None and "`uv run devkit override diff team:guide`" in raised.value.fix
+    assert raised.value.fix == "uv run devkit override diff team:guide"
+    assert raised.value.details == ("uv run devkit override accept team:guide",)
+    assert raised.value.target_files == (".devkit/overrides/team/guide.md",)
     assert (target / RECEIPT_PATH).read_bytes() == receipt
     assert not (target / JOURNAL).exists()
 
@@ -254,7 +256,7 @@ source = "guide.md"
     assert all(a["path"] != ".agents/skills/review/SKILL.md" for a in result["actions"])
     # Still desired and modified: abort, as before.
     (target / ".devkit/managed/team/guide.md").write_text("edited")
-    with pytest.raises(ConflictError, match="user-modified deployment file"):
+    with pytest.raises(ConflictError, match="managed files were edited"):
         sync_project(target, newer)
 
 
@@ -489,7 +491,7 @@ def test_status_reports_override_drift_disabled_block_and_cli(
     assert report["guidance_block"] == "missing" and report["errors"] == []
     (drift,) = [notice for notice in report["notices"] if notice["code"] == "OVERRIDE_DRIFT"]
     assert (drift["level"], drift["exit_code"], drift["advisory"]["mode"]) == ("WARNING", 0, "CONTINUE")
-    assert drift["message"] == "upstream changed behind overrides: team:guide" and result.stderr == ""
+    assert drift["message"] == "upstream drift behind an override: team:guide" and result.stderr == ""
     assert CliRunner().invoke(cli, ["status", "--strict", "--workspace-root", str(target)]).exit_code == 1
     # Under ``override_drift = "block"`` the sync refuses, so status lists the drift as a problem to act on.
     write_config(target, extra='override_drift = "block"')
@@ -497,7 +499,7 @@ def test_status_reports_override_drift_disabled_block_and_cli(
     assert blocked.exit_code == 1, blocked.output
     (problem,) = json.loads(blocked.stdout)["errors"]
     assert (problem["code"], problem["exit_code"], problem["advisory"]["mode"]) == ("OVERRIDE_DRIFT", 1, "INTERACTION")
-    assert problem["advisory"]["fix"].startswith("Review with `uv run devkit override diff team:guide`")
+    assert problem["advisory"]["fix"] == "uv run devkit override diff team:guide"
     assert blocked.stderr == ""  # JSON-only: the advisories are in the result, never repeated on stderr
     assert not (target / AGENTS_FILE).exists()  # status never writes
 

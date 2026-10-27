@@ -171,7 +171,7 @@ def test_shared_writer_inspection_and_mutually_exclusive_flags(fixture) -> None:
     assert (root / LOCAL_CONFIG_PATH).read_bytes() == before
     result = CliRunner().invoke(cli, ["config", "show", "--effective", "-w", str(root)])
     assert result.exit_code == 0, result.output
-    assert json.loads(result.stdout)["sources"]["execution.environment"] == str(root / LOCAL_CONFIG_PATH)
+    assert json.loads(result.stdout)["sources"]["execution.environment"] == LOCAL_CONFIG_PATH
     assert CliRunner().invoke(cli, ["sync", "--cloud", "--local", "-w", str(root)]).exit_code == 2
 
 
@@ -437,9 +437,7 @@ def test_presentation_inheritance_and_canonical_receipt(fixture, override: str |
     synced = sync.sync_project(root, [item], locked=True)
     assert f"Language: {override if override is not None else 'en'}" in output.read_text()
     warned = [notice for notice in synced.notices if notice.code == "PRESENTATION_LANGUAGE_UNSUPPORTED"]
-    assert [(notice.level, notice.target_files) for notice in warned] == [
-        (Level.WARNING, (str(root / LOCAL_CONFIG_PATH),))
-    ]
+    assert [(notice.level, notice.target_files) for notice in warned] == [(Level.WARNING, (LOCAL_CONFIG_PATH,))]
     assert warned[0].fix is not None and "auto, en, ko" in warned[0].fix and LOCAL_CONFIG_PATH in warned[0].fix
     result = CliRunner().invoke(cli, ["config", "show", "--effective", "-w", str(root)])
     assert result.exit_code == 0, result.output
@@ -448,7 +446,7 @@ def test_presentation_inheritance_and_canonical_receipt(fixture, override: str |
         "requested": "unsupported",
         "resolved": "en",
         "fallback": True,
-        "source": str(root / LOCAL_CONFIG_PATH),
+        "source": LOCAL_CONFIG_PATH,
     }
     assert [notice["code"] for notice in shown["notices"]] == ["PRESENTATION_LANGUAGE_UNSUPPORTED"]
     strict = CliRunner().invoke(cli, ["config", "show", "--effective", "--strict", "-w", str(root)])

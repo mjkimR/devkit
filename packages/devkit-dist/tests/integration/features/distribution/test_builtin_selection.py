@@ -246,7 +246,7 @@ def test_uninstalled_deployed_bundle_is_kept_until_devkit_remove(
     deployed = sorted(path for path in (target / ".devkit/managed/ext").rglob("*") if path.is_file())
 
     # A partial environment (the package is not installed) never deletes the committed state.
-    with pytest.raises(SelectionError, match=r"not installed: \['ext'\] \(deployed per \.devkit/installation\.json"):
+    with pytest.raises(SelectionError, match=r"not installed: ext \(deployed per \.devkit/installation\.json\)"):
         sync_project(target, bundles)
     assert (target / RECEIPT_PATH).read_bytes() == receipt
     assert deployed and all(path.is_file() for path in deployed)
@@ -269,14 +269,13 @@ def test_status_reports_a_selected_bundle_whose_package_is_not_installed(
     status = get_project_status(target, bundles)  # the package left the environment: sync would refuse
     [error] = status.errors
     assert (error.code, error.exit_code) == ("SELECTION_INVALID", ExitCode.FINDINGS)
-    assert (
-        error.message == "selected bundle is not installed: ['ext'] (deployed per .devkit/installation.json: ['ext'])"
-    )
-    assert error.fix is not None and "devkit remove <bundle>" in error.fix
+    assert error.message == "selected bundle is not installed: ext (deployed per .devkit/installation.json)"
+    assert error.fix == "uv run devkit remove ext"
+    assert error.target_files == (".devkit/installation.json",)
 
     update_config(target, presets={"ext": ["core"]})  # selected by an entry: no receipt note
     [error] = get_project_status(target, bundles).errors
-    assert error.message == "selected bundle is not installed: ['ext']"
+    assert error.message == "selected bundle is not installed: ext"
     assert get_project_status(target, [*bundles, external]).errors == []
 
 

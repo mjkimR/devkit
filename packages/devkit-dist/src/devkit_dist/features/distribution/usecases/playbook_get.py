@@ -34,7 +34,7 @@ def validate_playbook_id(selector: str) -> tuple[str, str]:
         raise ArgumentError(
             f"playbook: expected <bundle>/<playbook> lowercase slugs, not {selector!r}",
             target_files=["PLAYBOOK_ID"],
-            fix="Use an exact <bundle>/<playbook> selector",
+            fix=devkit_command("list"),
         )
     return parts[0], parts[1]
 
@@ -60,7 +60,9 @@ class GetPlaybook(BaseUseCase):
                 raise
             prefix = f"{MANAGED_PATH}/{bundle}/"
             if receipt.file(prefix + "bundle.toml") is None:
-                raise SelectionError(f"bundle is not synchronized: {bundle}", fix=devkit_command("list"))
+                raise SelectionError(
+                    f"bundle is not synchronized: {bundle}", fix=devkit_command("list"), target_files=["PLAYBOOK_ID"]
+                )
             playbooks = [asset for asset in receipt.assets("playbook") if asset.bundle == bundle]
             matches = [asset for asset in playbooks if asset.id == asset_id]
             alias: str | None = None
@@ -82,6 +84,7 @@ class GetPlaybook(BaseUseCase):
                         f"playbook is not synchronized: {selector}",
                         "Inspect explicit bundle and preset selection",
                         fix=devkit_command("list"),
+                        target_files=["PLAYBOOK_ID"],
                     )
                 matches, alias = declared, asset_id
             if len(matches) != 1:

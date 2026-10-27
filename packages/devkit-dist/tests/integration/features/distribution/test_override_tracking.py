@@ -132,7 +132,7 @@ def test_drift_covers_every_upstream_file_of_an_overridden_skill(item: Installed
 
 def test_accept_requires_a_tracked_override(item: InstalledBundle, target: Path) -> None:
     sync_project(target, [item])
-    with pytest.raises(SelectionError, match="no tracked override"):
+    with pytest.raises(SelectionError, match="no override found for team:guide"):
         accept_override(target, [item], "team:guide")
 
 
@@ -176,7 +176,7 @@ def test_create_refuses_what_an_override_cannot_affect(item: InstalledBundle, ta
 def test_create_rolls_back_when_the_sync_fails(item: InstalledBundle, target: Path) -> None:
     sync_project(target, [item])
     (target / ".devkit/managed/team/rules/no_todo.py").write_text("edited by hand\n")
-    with pytest.raises(ConflictError, match="user-modified"):
+    with pytest.raises(ConflictError, match="managed files were edited"):
         create_override(target, [item], "team:guide")
     assert not (target / OVERRIDES_PATH).exists()
 
@@ -188,7 +188,7 @@ def test_create_force_restores_previous_override_on_failure(item: InstalledBundl
     override.write_text(instruction("guide", "Ours.\n"))
     sync_project(target, [item])
     (target / ".devkit/managed/team/rules/no_todo.py").write_text("edited by hand\n")
-    with pytest.raises(ConflictError, match="user-modified"):
+    with pytest.raises(ConflictError, match="managed files were edited"):
         create_override(target, [item], "team:guide", force=True)
     assert override.read_text() == instruction("guide", "Ours.\n")
 
@@ -197,7 +197,7 @@ def test_remove_rolls_back_when_the_sync_fails(item: InstalledBundle, target: Pa
     sync_project(target, [item])
     create_override(target, [item], "team:review")
     (target / ".devkit/managed/team/guide.md").write_text("edited by hand\n")
-    with pytest.raises(ConflictError, match="user-modified"):
+    with pytest.raises(ConflictError, match="managed files were edited"):
         remove_override(target, [item], "team:review")
     assert (target / OVERRIDES_PATH / "team/skills/review/SKILL.md").is_file()
     assert (target / OVERRIDES_PATH / ".baseline/team/skills/review/reference.md").is_file()
@@ -394,7 +394,8 @@ def test_accept_under_block_only_rebaselines_while_another_override_still_drifts
     receipt_before = (target / RECEIPT_PATH).read_bytes()
     first = accept_override(target, [newer], "team:guide")
     (deferred,) = [notice for notice in first.notices if notice.code == "OVERRIDE_SYNC_DEFERRED"]
-    assert deferred.fix is not None and "uv run devkit override accept team:review" in deferred.fix
+    assert deferred.fix == "uv run devkit override diff team:review"
+    assert deferred.details == ("uv run devkit override accept team:review",)
     assert "team:review" in deferred.message and "sync --check" in (deferred.what_to_report or "")
     # Nothing upstream of the still-drifted override was deployed beside its stale override files.
     assert not (target / ".devkit/managed/team/skills/review/new.md").exists()

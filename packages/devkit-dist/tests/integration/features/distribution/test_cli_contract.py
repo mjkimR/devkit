@@ -70,7 +70,7 @@ def test_sync_check_exit_codes(item: InstalledBundle, target: Path) -> None:
     needed = _invoke("sync", "--check", "-w", str(target))
     assert needed.exit_code == int(ExitCode.FINDINGS)  # synchronization needed: a result, not an error
     assert needed.stdout.startswith("[SYNC: create=") and "[CHANGE: create " in needed.stdout
-    assert not needed.stderr.startswith("[ERROR]")
+    assert needed.stderr.startswith("[ERROR]  (NOT_SYNCHRONIZED)")  # why it exits 1, after the result
     as_json = _invoke("sync", "--check", "--format", "json", "-w", str(target))
     assert as_json.exit_code == int(ExitCode.FINDINGS) and json.loads(as_json.stdout)["actions"]
     assert _invoke("sync", "-w", str(target)).exit_code == 0
@@ -81,7 +81,7 @@ def test_sync_check_exit_codes(item: InstalledBundle, target: Path) -> None:
     )
     (target / ".devkit/managed/team/guide.md").write_text("edited")
     failed = _invoke("sync", "--check", "-w", str(target))
-    assert failed.exit_code == 2 and "user-modified" in failed.output
+    assert failed.exit_code == 2 and "managed files were edited" in failed.output
 
 
 def test_errors_exit_2_on_every_command(item: InstalledBundle, target: Path) -> None:
@@ -259,7 +259,7 @@ def test_sync_locked_restores_recorded_files_and_never_changes_committed_ones(
     fresh = _invoke("sync", "--locked", "-w", str(target))  # no receipt yet: nothing to restore from
     assert fresh.exit_code == int(ExitCode.FINDINGS) and fresh.stdout == ""  # a refusal: the error is the output
     assert fresh.stderr.startswith("[ERROR]  (RECEIPT_STALE) there is no committed receipt to restore from;")
-    assert "[ACTION] INTERACTION" in fresh.stderr and "[FIX]    uv run devkit sync, then commit" in fresh.stderr
+    assert "[ACTION] INTERACTION" in fresh.stderr and "[FIX]    uv run devkit sync\n" in fresh.stderr
     assert "[DETAIL] would create .devkit/managed/team/guide.md" in fresh.stderr
     assert not (target / RECEIPT_PATH).exists() and not (target / ".devkit/managed").exists()
     assert _invoke("sync", "-w", str(target)).exit_code == 0

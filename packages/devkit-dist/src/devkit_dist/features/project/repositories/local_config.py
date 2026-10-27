@@ -34,11 +34,12 @@ class ExecutionEnvironment:
     source: str
 
 
-def _invalid(path: Path, message: str) -> ConfigError:
+def _invalid(path: Path | str, message: str) -> ConfigError:
+    """``CONFIG_INVALID`` for ``path``: a workspace-relative name (``CONFIG_PATH``, ``LOCAL_CONFIG_PATH``)."""
     return ConfigError(f"{path}: {message}", target_files=[str(path)])
 
 
-def validate_runtime_tables(data: dict[str, Any], path: Path) -> None:
+def validate_runtime_tables(data: dict[str, Any], path: Path | str) -> None:
     for table, key, default, expected in (
         ("execution", "environment", "local", str),
         ("mcp", "register", True, bool),
@@ -56,10 +57,11 @@ def validate_runtime_tables(data: dict[str, Any], path: Path) -> None:
 
 
 def read_local_config(root: Path) -> dict[str, Any]:
-    path = root / LOCAL_CONFIG_PATH
-    if path.is_symlink() or (path.exists() and not stat.S_ISREG(path.stat().st_mode)):
+    file = root / LOCAL_CONFIG_PATH
+    path = LOCAL_CONFIG_PATH
+    if file.is_symlink() or (file.exists() and not stat.S_ISREG(file.stat().st_mode)):
         raise _invalid(path, "config must be a regular file, not a symlink")
-    data = read_toml(path) or {}
+    data = read_toml(file, path) or {}
     unknown = set(data) - {"schema", "execution", "mcp", "presentation", "playbooks", "bundles", "shared"}
     if unknown:
         raise LocalKeyForbiddenError(f"{path}: forbidden keys: {sorted(unknown)}", target_files=[str(path)])
@@ -100,7 +102,7 @@ def read_local_config(root: Path) -> dict[str, Any]:
     return data
 
 
-def merge_config(shared: dict[str, Any], local: dict[str, Any], *, path: Path) -> dict[str, Any]:
+def merge_config(shared: dict[str, Any], local: dict[str, Any], *, path: Path | str) -> dict[str, Any]:
     """Recursive tables; whole scalar/array replacement; no coercion across types."""
     merged = copy.deepcopy(shared)
     for key, value in local.items():
@@ -116,16 +118,20 @@ def merge_config(shared: dict[str, Any], local: dict[str, Any], *, path: Path) -
 
 
 def read_effective_config(root: Path, *, local: bool = True) -> EffectiveConfig:
-    """Read only the explicit workspace; every present local input is validated."""
-    shared_path = root / CONFIG_PATH
-    if shared_path.is_symlink() or (shared_path.exists() and not shared_path.is_file()):
-        raise _invalid(shared_path, "config must be a regular file")
-    shared = read_toml(shared_path) or {}
+    """Read only the explicit workspace; every present local input is validated.
+
+    ``sources`` name each value's file workspace-relative (``.devkit/config.toml``, ``.devkit/config.local.toml``)
+    or ``default``, as errors about these files do.
+    """
+    shared_file = root / CONFIG_PATH
+    if shared_file.is_symlink() or (shared_file.exists() and not shared_file.is_file()):
+        raise _invalid(CONFIG_PATH, "config must be a regular file")
+    shared = read_toml(shared_file, CONFIG_PATH) or {}
     if "schema" in shared and (type(shared["schema"]) is not int or shared["schema"] != 1):
-        raise _invalid(shared_path, "unsupported config schema")
-    validate_runtime_tables(shared, shared_path)
+        raise _invalid(CONFIG_PATH, "unsupported config schema")
+    validate_runtime_tables(shared, CONFIG_PATH)
     overlay = read_local_config(root) if local else {}
-    values = merge_config(shared, overlay, path=root / LOCAL_CONFIG_PATH)
+    values = merge_config(shared, overlay, path=LOCAL_CONFIG_PATH)
     sources: dict[str, str] = {}
 
     def record(data: dict[str, Any], source: str, prefix: str = "") -> None:
@@ -136,8 +142,8 @@ def read_effective_config(root: Path, *, local: bool = True) -> EffectiveConfig:
             else:
                 sources[name] = source
 
-    record(shared, str(shared_path))
-    record(overlay, str(root / LOCAL_CONFIG_PATH))
+    record(shared, CONFIG_PATH)
+    record(overlay, LOCAL_CONFIG_PATH)
     for table, key, value in (
         ("execution", "environment", "local"),
         ("mcp", "register", True),

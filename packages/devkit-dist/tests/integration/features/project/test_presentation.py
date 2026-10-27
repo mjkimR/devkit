@@ -29,9 +29,9 @@ def test_shared_and_local_language(tmp_path: Path, requested: str, resolved: str
     local.write_text(f'[presentation]\nlanguage="{requested}"\n')
     result = resolve_language(root)
     assert (result.requested, result.resolved, result.fallback) == (requested, resolved, fallback)
-    assert result.source == str(local)
+    assert result.source == LOCAL_CONFIG_PATH
     assert resolve_language(root, effective=False).resolved == "en"
-    assert resolve_language(root, effective=False).source == str(shared)
+    assert resolve_language(root, effective=False).source == ".devkit/config.toml"
     assert result.approval_language == ("ko" if resolved == "ko" else "en")
 
 
@@ -54,7 +54,7 @@ def test_unsupported_language_is_a_visible_warning(
         if value is not None:
             (tmp_path / ".devkit" / name).write_text(f'[presentation]\nlanguage="{value}"\n')
     notices = language_notices(tmp_path)
-    assert [list(notice.target_files) for notice in notices] == [[str(tmp_path / ".devkit" / n)] for n in warned]
+    assert [list(notice.target_files) for notice in notices] == [[f".devkit/{n}"] for n in warned]
     for notice in notices:
         assert (notice.code, notice.level, notice.exit_code) == (
             "PRESENTATION_LANGUAGE_UNSUPPORTED",

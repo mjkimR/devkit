@@ -210,7 +210,7 @@ def test_every_conflicting_path_is_reported_at_once(item: InstalledBundle, targe
     error = raised.value
     assert error.code == "SYNC_CONFLICT"
     assert error.target_files == (*edited, ".devkit/managed/team/bundle.toml", AGENTS_FILE)
-    assert "user-modified deployment files" in error.message and "unowned destinations" in error.message
+    assert "managed files were edited" in error.message and "unowned destinations" in error.message
     assert error.fix is not None and "devkit override create" in error.fix and "Move each unowned file" in error.fix
 
 

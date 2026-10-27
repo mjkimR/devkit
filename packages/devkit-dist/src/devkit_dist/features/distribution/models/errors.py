@@ -13,7 +13,7 @@ A ``SyncNotice`` is never raised: a synchronization collects it in
 about although the sync succeeded, at level ``WARNING`` (the user must learn
 or decide something) or ``NOTICE`` (worth knowing). Override drift under
 ``override_drift = "warn"`` is an ``OverrideDriftError`` lowered to
-``WARNING``.
+``WARNING`` (``override_drift``).
 """
 
 from __future__ import annotations
@@ -83,7 +83,7 @@ class ReceiptStaleError(DistributionError):
     actor = Actor.USER
     retry = Retry.AFTER_FIX
     exit_code = ExitCode.FINDINGS
-    fix = f"{devkit_command('sync')}, then commit the files it changes"
+    fix = devkit_command("sync")
 
 
 class ConflictError(DistributionError):
@@ -98,7 +98,23 @@ class BundleConflictError(ConflictError):
     """Two selected bundles, or a seeded file and a managed file, claim the same destination."""
 
     code = "BUNDLE_CONFLICT"
-    what_to_report = "Which bundle to keep; deselect the other with `devkit remove <bundle>`"
+    what_to_report = "Which of the colliding assets to keep; devkit deploys one file per destination"
+
+    @classmethod
+    def between(cls, message: str, destination: str, bundles: list[str]) -> BundleConflictError:
+        """The collision of ``destination`` claimed by ``bundles``.
+
+        Two bundles: the question names both, and each ``[DETAIL]`` is the command that deselects one of them.
+        """
+        bundles = sorted(set(bundles))
+        if len(bundles) < 2:
+            return cls(message, target_files=[destination])
+        return cls(
+            message,
+            *(devkit_command(f"remove {name}") for name in bundles),
+            target_files=[destination],
+            what_to_report=f"Which bundle to keep: {' or '.join(bundles)}; the other is deselected",
+        )
 
 
 class GuidanceBlockError(DistributionError):
@@ -110,10 +126,46 @@ class GuidanceBlockError(DistributionError):
 
 
 class OverrideDriftError(DistributionError):
-    """``override_drift = "block"`` refused a sync while an override hides upstream changes."""
+    """An override hides upstream changes: under ``override_drift = "block"`` the sync refuses (``INTERACTION``:
+    whether the override takes over the change is the user's decision); under ``warn`` it is lowered to a
+    ``WARNING``. Built by ``override_drift`` for ``devkit sync`` and ``devkit status`` alike."""
 
     code = "OVERRIDE_DRIFT"
-    guardrail = True
+    actor = Actor.USER
+
+
+def review_commands(selectors: list[str]) -> tuple[str, list[str]]:
+    """The ``fix`` and ``[DETAIL]`` lines that review and accept the overrides ``selectors`` (``bundle:asset``).
+
+    One override: its ``override diff`` is the fix and its ``override accept`` the detail. Several: ``override list``
+    is the fix and each override's ``diff`` and ``accept`` are details.
+    """
+    if len(selectors) == 1:
+        return devkit_command(f"override diff {selectors[0]}"), [devkit_command(f"override accept {selectors[0]}")]
+    details = [devkit_command(f"override {verb} {item}") for item in selectors for verb in ("diff", "accept")]
+    return devkit_command("override list"), details
+
+
+def override_drift(
+    selectors: list[str], paths: list[str], *, blocked: bool, exit_code: ExitCode | None = None
+) -> OverrideDriftError:
+    """One ``OVERRIDE_DRIFT`` for every drifted override: ``selectors`` (``bundle:asset``) in the message, their
+    workspace-relative override ``paths`` as targets. ``blocked`` (``override_drift = "block"``) keeps the error;
+    otherwise it is lowered to ``WARNING``."""
+    policy = ' (override_drift = "block")' if blocked else ""
+    fix, details = review_commands(selectors)
+    error = OverrideDriftError(
+        f"upstream drift behind an override{policy}: {', '.join(selectors)}",
+        *details,
+        target_files=paths,
+        fix=fix,
+        what_to_report=(
+            "Upstream changed an asset this project overrides; whether to merge the change into the override"
+            " (review the diff, then accept it) or keep the override as it is"
+        ),
+        exit_code=exit_code,
+    )
+    return error if blocked else error.with_level(Level.WARNING)
 
 
 class UnsafeWorkspaceError(DistributionError):

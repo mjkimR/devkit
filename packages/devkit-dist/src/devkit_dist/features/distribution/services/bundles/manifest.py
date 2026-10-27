@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import tomllib
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -34,6 +35,8 @@ from devkit_dist.features.distribution.services.bundles.templates import (
 )
 from devkit_dist.features.distribution.services.bundles.workflows import read_workflow_header, workflow_entry
 from devkit_dist.features.host import HookDefinitionError, read_hook
+from devkit_dist.features.project.models.invocation import devkit_command
+from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
 KINDS = frozenset(
     {
@@ -107,21 +110,37 @@ class Bundle:
         ((variant, source),) = asset.sources
         return source if variant == "common" and (self.root / source).is_file() else None
 
+    def unknown_presets(self, presets: list[str] | tuple[str, ...]) -> list[str]:
+        """The names in ``presets`` the bundle does not declare (``all`` is always declared)."""
+        return [preset for preset in presets if preset != ALL and preset not in self.presets]
+
+    def preset_error(self, message: str, *, command: Callable[[str], str], fix: str, target: str) -> SelectionError:
+        """``SELECTION_INVALID`` for a preset the caller named: ``fix`` and one ``[DETAIL]`` per declared preset, each
+        the caller's own ``command`` for that preset, so following one never repeats the failure."""
+        return SelectionError(message, *(command(name) for name in self.preset_names), fix=fix, target_files=[target])
+
     def select(self, presets: list[str] | tuple[str, ...]) -> set[str]:
-        """Return the union of asset IDs selected by ``presets``."""
+        """Return the union of asset IDs selected by ``presets``.
+
+        An unknown preset here comes from the project selection (``.devkit/config.toml``): a command-line caller
+        checks ``unknown_presets`` first and raises its own ``preset_error``.
+        """
         if not presets:
             raise SelectionError(f"{self.name}: at least one preset is required")
+        unknown = self.unknown_presets(presets)
+        if unknown:
+            raise self.preset_error(
+                f"{self.name}: unknown preset {unknown[0]}; available: {', '.join(self.preset_names)}",
+                command=lambda name: devkit_command(f"sync --preset {self.name}:{name}"),
+                fix=devkit_command("list"),
+                target=CONFIG_PATH,
+            )
         selected: set[str] = set()
         for preset in presets:
             if preset == ALL:
                 selected.update(asset.id for asset in self.assets)
-            elif preset in self.presets:
-                selected.update(self.presets[preset])
             else:
-                raise SelectionError(
-                    f"{self.name}: unknown preset {preset}; available: {', '.join(self.preset_names)}",
-                    fix=f"Select one of: {', '.join(f'{self.name}:{name}' for name in self.preset_names)}",
-                )
+                selected.update(self.presets[preset])
         return selected
 
     @property
