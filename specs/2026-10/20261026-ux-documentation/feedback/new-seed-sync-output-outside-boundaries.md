@@ -8,7 +8,7 @@ target: RULE-proposal-boundaries
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-26
 ---
 
@@ -36,3 +36,8 @@ uv run devkit sync          -> [CHANGE: seed docs/ux/README.md]
 uv run devkit sync --check  -> seed=1 docs/ux/README.md, exit 1 (before the scope extension)
 .devkit/config.toml         -> [presets] spec = ["core", "docs-skeleton"]
 ```
+
+## Disposition
+
+Promoted on the user's decision (2026-10-27) to the draft `PROP-seeded-paths-in-boundaries`, which records this ID
+under `Source feedback`.
