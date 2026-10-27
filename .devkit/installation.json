@@ -1399,7 +1399,7 @@
     },
     ".devkit/managed/advisory/instructions/agent-advisory.md": {
       "mode": 420,
-      "sha256": "e7ac044dec0a502936c99a225c039dbb0698acf8d18fe5e24480c8d595383093"
+      "sha256": "d9918302c36abad56871d7bd426f33fa054204789407d60f4b89af379ae9ba18"
     },
     ".devkit/managed/advisory/rules/unique_code/facts.py": {
       "mode": 420,
