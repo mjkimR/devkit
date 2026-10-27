@@ -20,10 +20,10 @@ The default group help focuses on operating existing units. Authoring commands `
 devkit workflow new <slug> [--workflow ID] [--date YYYY-MM-DD] [--status S]   # create a unit from the layout template and bind it
 devkit workflow bind --unit DIR [--anchor FILE] [--workflow ID]  # record or change the workflow binding
 devkit workflow next --unit DIR [--anchor FILE] [--workflow ID] [--given NAME]... [--no-lint] [--format text|json]
-devkit workflow handoff --unit DIR [--anchor FILE] [--workflow ID] [--date YYYY-MM-DD] [--by NAME] [--no-lint] [--format text|json]
+devkit workflow handoff --unit DIR [--anchor FILE] [--workflow ID] [--date YYYY-MM-DD] [--by NAME] [--given NAME]... [--no-lint] [--format text|json]
 devkit workflow next --view requests --unit DIR [--anchor FILE] [--no-lint] [--format text|json]   # requests-only view, using the same evaluation and error status as next
-devkit workflow answer --unit DIR [--anchor FILE] --request ID --action accept|decline|cancel [--value V] [--note TEXT] [--by NAME] [--no-lint] [--format text|json]
-devkit workflow return --unit DIR [--anchor FILE] --to STAGE [--note TEXT] [--by NAME] [--no-lint] [--format text|json]  # go back; later approvals are asked again
+devkit workflow answer --unit DIR [--anchor FILE] --request ID --action accept|decline|cancel [--value V] [--note TEXT] [--by NAME] [--given NAME]... [--no-lint] [--format text|json]
+devkit workflow return --unit DIR [--anchor FILE] --to STAGE [--note TEXT] [--by NAME] [--given NAME]... [--no-lint] [--format text|json]  # go back; later approvals are asked again
 devkit workflow show <ID|PATH> [--format text|json]              # a definition's stages and next candidates
 devkit workflow show --unit DIR [--anchor FILE] [--format text|json]  # the unit's bound definition plus [BINDING: workflow=...]
 devkit workflow checks [--format text|json]                      # registered check names, classes and parameters (plugins included)

@@ -43,6 +43,8 @@ class Check:
     description: str
     params: tuple[str, ...] = ()
     alias: str | None = None
+    # The invocation an alias expands to, kept whole so an argument with spaces or parentheses survives.
+    expansion: Invocation | None = field(default=None, compare=False)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -127,43 +129,46 @@ PRIMITIVES: tuple[Check, ...] = (
 )
 
 
+def _alias(name: str, description: str, primitive: str, *args: str) -> Check:
+    """A check that expands to ``primitive(args)``; ``alias`` is its display form."""
+    expansion = Invocation(primitive, args)
+    return Check(name, CheckClass.DISK, description, alias=str(expansion), expansion=expansion)
+
+
 def anchor_aliases(anchor: str) -> tuple[Check, ...]:
     return (
-        Check(
-            "anchor-exists", CheckClass.DISK, f"{anchor} exists in the unit directory", alias=f"{FILE_EXISTS}({anchor})"
-        ),
-        Check(
+        _alias("anchor-exists", f"{anchor} exists in the unit directory", FILE_EXISTS, anchor),
+        _alias(
             "anchor-status-planned",
-            CheckClass.DISK,
             f"{anchor} frontmatter status is planned",
-            alias=f"{FRONTMATTER}({anchor} status planned)",
+            FRONTMATTER,
+            anchor,
+            "status",
+            "planned",
         ),
-        Check(
+        _alias(
             "anchor-status-in-progress",
-            CheckClass.DISK,
             f"{anchor} frontmatter status is in-progress",
-            alias=f"{FRONTMATTER}({anchor} status in-progress)",
+            FRONTMATTER,
+            anchor,
+            "status",
+            "in-progress",
         ),
-        Check(
+        _alias(
             "anchor-status-completed",
-            CheckClass.DISK,
             f"{anchor} frontmatter status is completed",
-            alias=f"{FRONTMATTER}({anchor} status completed)",
+            FRONTMATTER,
+            anchor,
+            "status",
+            "completed",
         ),
-        Check(
-            "tasks-exists", CheckClass.DISK, "tasks.md exists in the unit directory", alias=f"{FILE_EXISTS}(tasks.md)"
-        ),
-        Check(
-            "tasks-all-checked",
-            CheckClass.DISK,
-            "tasks.md has at least one task and no unchecked task",
-            alias=f"{TASKS_CHECKED}(tasks.md)",
-        ),
-        Check(
+        _alias("tasks-exists", "tasks.md exists in the unit directory", FILE_EXISTS, "tasks.md"),
+        _alias("tasks-all-checked", "tasks.md has at least one task and no unchecked task", TASKS_CHECKED, "tasks.md"),
+        _alias(
             "envelope-review-passed",
-            CheckClass.DISK,
             "the latest review round (or the reverify closing it) is completed with no open findings",
-            alias=f"{ENVELOPE_COMPLETED}(review)",
+            ENVELOPE_COMPLETED,
+            "review",
         ),
     )
 
@@ -225,7 +230,7 @@ class Registry:
         if check.alias:
             if inv.args:
                 raise CheckError(f"check {inv.name!r} takes no arguments (it is an alias of {check.alias})")
-            return self.resolve(parse_check(check.alias))
+            return self.resolve(check.expansion or parse_check(check.alias))
         if len(inv.args) != len(check.params):
             if not check.params:
                 raise CheckError(f"check {inv.name!r} takes no arguments")

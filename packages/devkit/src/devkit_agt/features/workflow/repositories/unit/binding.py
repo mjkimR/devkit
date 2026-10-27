@@ -69,14 +69,22 @@ def read_binding(anchor_path: Path) -> Binding:
     return read_anchor(anchor_path).binding
 
 
+def _scalar(value: str) -> str:
+    """``value`` as a one-line YAML string scalar, quoted when YAML would read it otherwise (``off``, ``null``)."""
+    if not value:
+        return value
+    return yaml.safe_dump(value, allow_unicode=True, width=10**6).removesuffix("\n...\n").rstrip("\n")
+
+
 def render_binding(text: str, binding: Binding) -> str:
     """``text`` (an anchor) with the binding recorded, preserving every other byte.
 
-    The history is written as a single flow-style YAML line so the anchor keeps
+    The workflow id is written as a YAML string scalar, quoted when needed, as
+    ``devkit workflow new`` writes it. The history is written as a single flow-style YAML line so the anchor keeps
     one top-level line per key. An empty history leaves an existing one untouched.
     An anchor without frontmatter gets a block holding the binding.
     """
-    updates = {WORKFLOW_KEY: binding.workflow}
+    updates = {WORKFLOW_KEY: _scalar(binding.workflow)}
     if binding.history:
         flow = yaml.safe_dump(
             [h.to_dict() for h in binding.history], default_flow_style=True, sort_keys=False, width=10**6

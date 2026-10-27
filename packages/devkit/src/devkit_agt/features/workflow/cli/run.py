@@ -77,6 +77,7 @@ def next_cmd(
 @click.option("--value", "values", multiple=True, help="Chosen option id (choose) or the text (feedback)")
 @click.option("--note", default="", help="Free-text note, recommended on decline")
 @click.option("--by", "by", default="", help="Who answered (person or host)")
+@click.option("--given", multiple=True, help="Gate, runner or human check the executor holds (repeatable)")
 @NO_LINT
 @FORMAT_OPTION
 @boundary
@@ -89,13 +90,22 @@ def answer_cmd(
     values: tuple[str, ...],
     note: str,
     by: str,
+    given: tuple[str, ...],
     no_lint: bool,
     output_format: str,
 ) -> None:
     """Record a decision for an open request as <unit>/decisions/NN-<request>.yaml."""
     ws = workspace(workspace_root)
     decision = RecordAnswerUseCase().execute(
-        ws, ws.resolve_unit(unit, anchor=anchor), request_id, action, values, note=note, by=by, lint=not no_lint
+        ws,
+        ws.resolve_unit(unit, anchor=anchor),
+        request_id,
+        action,
+        values,
+        note=note,
+        by=by,
+        given=given,
+        lint=not no_lint,
     )
     if is_json(output_format):
         echo_json(decision.to_dict())
@@ -110,6 +120,7 @@ def answer_cmd(
 @click.option("--to", "stage", required=True, help="Stage the unit goes back to (the current one or an earlier one)")
 @click.option("--note", default="", help="Why the unit goes back")
 @click.option("--by", "by", default="", help="Who decided (person or host)")
+@click.option("--given", multiple=True, help="Gate, runner or human check the executor holds (repeatable)")
 @NO_LINT
 @FORMAT_OPTION
 @boundary
@@ -120,13 +131,14 @@ def return_cmd(
     stage: str,
     note: str,
     by: str,
+    given: tuple[str, ...],
     no_lint: bool,
     output_format: str,
 ) -> None:
     """Take a unit back to a stage; approvals for it and later stages must be given again."""
     ws = workspace(workspace_root)
     decision = ReturnToStageUseCase().execute(
-        ws, ws.resolve_unit(unit, anchor=anchor), stage, note=note, by=by, lint=not no_lint
+        ws, ws.resolve_unit(unit, anchor=anchor), stage, note=note, by=by, given=given, lint=not no_lint
     )
     if is_json(output_format):
         echo_json(decision.to_dict())
@@ -148,6 +160,7 @@ def return_cmd(
     "--date", "when", default=None, help="Completion date recorded in the history, YYYY-MM-DD (default: today)"
 )
 @click.option("--by", "by", default="", help="Who chose the candidate given with --workflow")
+@click.option("--given", multiple=True, help="Gate, runner or human check the executor holds (repeatable)")
 @NO_LINT
 @FORMAT_OPTION
 @boundary
@@ -158,13 +171,16 @@ def handoff_cmd(
     workflow_ref: str | None,
     when: str | None,
     by: str,
+    given: tuple[str, ...],
     no_lint: bool,
     output_format: str,
 ) -> None:
     """Hand a completed unit to one of its workflow's next candidates and rebind it."""
     ws = workspace(workspace_root)
     day = parse_date(when)
-    outcome = HandoffWorkflowUseCase(ws).execute(unit, workflow_ref, anchor=anchor, when=day, by=by, lint=not no_lint)
+    outcome = HandoffWorkflowUseCase(ws).execute(
+        unit, workflow_ref, anchor=anchor, when=day, by=by, given=given, lint=not no_lint
+    )
     if is_json(output_format):
         echo_json(outcome.to_dict())
         return

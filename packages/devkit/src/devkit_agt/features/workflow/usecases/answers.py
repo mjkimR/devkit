@@ -79,12 +79,14 @@ class RecordAnswerUseCase(BaseUseCase):
         *,
         note: str = "",
         by: str = "",
+        given: Sequence[str] = (),
         lint: bool = True,
     ) -> Decision:
         """Validate an answer against the unit's open requests and write its decision record.
 
         ``feedback:<target>`` is accepted at any time with exactly one ``--value``
-        on accept. Every other id must be an open request of the unit. An
+        on accept. Every other id must be an open request of the unit, evaluated
+        with ``given`` as ``next --given`` does. An
         ``action`` outside ``ACTIONS`` raises ``DecisionInvalidError``
         (``DECISION_INVALID``) for every request.
         """
@@ -108,7 +110,7 @@ class RecordAnswerUseCase(BaseUseCase):
                 raise DecisionInvalidError("--value is only valid with --action accept", fix="Drop --value")
             value: Any = values[0] if values else None
         else:
-            result = ws.evaluate_unit(ref, lint=lint)
+            result = ws.evaluate_unit(ref, given=given, lint=lint)
             open_requests = {r.id: r for r in result.requests}
             request = open_requests.get(request_id)
             if request is None:
@@ -141,11 +143,20 @@ class ReturnToStageUseCase(BaseUseCase):
     """Execute the return to operation."""
 
     def execute(
-        self, ws: Workspace, unit: str | UnitRef, stage: str, *, note: str = "", by: str = "", lint: bool = True
+        self,
+        ws: Workspace,
+        unit: str | UnitRef,
+        stage: str,
+        *,
+        note: str = "",
+        by: str = "",
+        given: Sequence[str] = (),
+        lint: bool = True,
     ) -> Decision:
         """Take the unit back to ``stage``: approvals for it and every later stage must be given again.
 
-        ``stage`` must not come after the current stage (any stage once the workflow is complete).
+        ``stage`` must not come after the current stage (any stage once the workflow is complete), evaluated with
+        ``given`` as ``next --given`` does.
         """
         ref = unit if isinstance(unit, UnitRef) else ws.resolve_unit(unit)
         target = ref.doc.stage_index(stage)
@@ -154,7 +165,7 @@ class ReturnToStageUseCase(BaseUseCase):
                 f"{stage!r} is not a stage of {ref.doc.id}",
                 fix=f"Use one of: {', '.join(s.id for s in ref.doc.stages)}",
             )
-        result = ws.evaluate_unit(ref, lint=lint)
+        result = ws.evaluate_unit(ref, given=given, lint=lint)
         if result.stage is not None and target > ref.doc.stage_index(result.stage.id):
             raise ReturnInvalidError(
                 f"stage {stage!r} comes after the current stage {result.stage.id!r}",

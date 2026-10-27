@@ -158,7 +158,7 @@ A check reference is `name` or `name(arg1 arg2 ...)`. Arguments are whitespace-s
 
 ### Aliases
 
-Aliases resolve against the anchor name in force for the workflow (its own `layout.anchor`, else the configured one), in validation and at evaluation time.
+Aliases resolve against the anchor name in force for the workflow (its own `layout.anchor`, else the configured one), in validation and at evaluation time. The anchor name is passed whole as one argument, so a name with spaces or parentheses works.
 
 | Alias | Expands to |
 | --- | --- |
