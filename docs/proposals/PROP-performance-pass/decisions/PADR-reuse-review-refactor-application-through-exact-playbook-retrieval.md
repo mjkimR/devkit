@@ -39,24 +39,30 @@ playbook exists only when a selected preset deploys that playbook.
 
 ## 4. Decision Outcome
 
-- `performance-pass` tells the agent to run `devkit playbook get maintenance/review-refactor` and read
-  `references/applying.md` and `references/criteria.md` relative to the returned `source.path`, naming the sections
-  it applies by their headings, not by number.
-- It reads them as the application procedure; it does not run `review-refactor` (no intake, batches or decision round
-  of that playbook).
+- `performance-pass`'s `SKILL.md`, before the decision round, tells the agent to run `devkit playbook get
+  maintenance/review-refactor` and read `references/applying.md` and `references/criteria.md` next to the returned
+  `source.path`, falling back to the managed copy when an override directory lacks the file.
+- Citations name the file and the heading text without its number, in one form a test parses (for example
+  `review-refactor references/applying.md "Commits and verification"`).
+- Reading that text is reference reading, not an invocation: no intake, batch or decision round of `review-refactor`
+  starts. `CAP-DIST-context-and-playbooks` states this for co-deployed playbooks.
 - Every preset that deploys `performance-pass` also deploys `review-refactor`.
-- `performance-pass` states only what it adds: measurement per change, its preservation criteria, the reviewer brief
-  additions and its report fields.
+- Not followed: `review-refactor`'s "Work items and route" (the route is `performance-pass`'s own) and its
+  "approved behavior change" inside the behavior-preserving work item (every found difference is a contract change,
+  `PADR-classify-performance-changes-by-observable-behavior`).
+- `performance-pass` states only what it adds or overrides: measurement per change on a quiet machine, its
+  preservation criteria, the reviewer brief additions and its report fields.
 
 ## 5. Consequences
 
 - Positive: one procedure; improvements to `review-refactor` application apply to both.
 - Negative: a `performance` preset also deploys `review-refactor`; a heading rename in `review-refactor` needs a
   matching edit here.
-- Risk: a user override of `review-refactor` that drops a cited section leaves the reference without a target; the
-  playbook tells the agent to stop and report a missing section rather than improvise.
+- Risk: a user override of `review-refactor` that drops a cited heading leaves the reference without a target; the
+  playbook tells the agent to stop and report the missing section rather than improvise.
 
 ## 6. Confirmation
 
 A `devkit-catalog` bundle test asserts that every preset containing `performance-pass` contains `review-refactor` and
-that each heading `performance-pass` cites exists in the named `review-refactor` file.
+that each citation in `performance-pass` (parsed from the fixed form) names a heading, number removed, that exists
+in the named `review-refactor` file.

@@ -37,16 +37,23 @@ before/after numbers taken in different checkouts or sessions are not comparable
 ## 4. Decision Outcome
 
 - Time the real process from outside, with exact argument list, working directory and environment; check each run's
-  exit code and output, and drop failed runs.
-- Discard at least one warm-up run per variant, and every run after a code or cache-format change; label cold and warm
-  states and measure both when the operation keeps a persistent cache.
-- Run at least five repetitions per variant, interleaved; report median, minimum and range. A difference within the
-  larger range is reported as no measurable change.
-- Measure old and new on the same machine in the same session, the old revision from an extracted copy or a separate
-  checkout, never by stashing or switching the working checkout; record the load before and after.
+  exit code and its output digest against the other runs of the same variant (paths normalized between variants'
+  directories), and drop failed runs.
+- Run old and new against the same input and working directory: the old code by a runtime path override to an
+  extracted copy, or from a separate worktree prepared with the repository's documented setup; never stash or switch
+  the working checkout.
+- Warm state: discard at least one warm-up run per variant; the first run after a code or cache-format change is a
+  warm-up. Cold state: clear caches the documented way before every run. Measure both when the operation keeps a
+  persistent cache.
+- Run at least five repetitions per variant, interleaved; report median, minimum and range. The noise floor is the
+  larger of the two variants' ranges after dropping each variant's slowest run; a median difference below it is no
+  measurable change, and when one outlier decides, five more repetitions per variant run first.
+- Measure on the same machine in one session while no edit task, verification or other workload of the run is
+  active; record the load before and after.
 - Profile only to attribute cost; confirm a hotspot's share unprofiled before it becomes a candidate.
-- Record each baseline with revision, environment, command, state, count, median, minimum and range; a later run
-  re-measures the baseline rather than comparing with numbers from another session.
+- Record each baseline with revision, environment, command, state, count, median, minimum and range. Every
+  comparison, the final one at the work item's head included, re-runs the older revision in the same session;
+  recorded numbers from another session are context only.
 
 ## 5. Consequences
 

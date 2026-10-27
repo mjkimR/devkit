@@ -29,12 +29,16 @@ workflow: sdd-proposal
 
 ## 1. Background & Hypothesis
 
-A performance pass over this repository on 2026-10-27 (rules check 3.0s to 1.7s, a one-file commit-gate check 0.92s
-to 0.38s, `sync --dry-run` 1.25s to 1.14s) borrowed the `maintenance/review-refactor` procedure, but its goal is
-latency, not a smaller surface, and it needed steps that playbook does not have: a measured baseline, profiling
-without being misled by profiler inflation or child processes, per-component timing, and differential old/new
-comparisons as preservation evidence. A fresh review still found a regression (a symlink loop breaking every file
-listing) that tests missed (`materials/pass-evidence.md`).
+A performance pass over this repository on 2026-10-27 (per commit, warm and unprofiled: file listing in a full rules
+check 0.30 s to 0.05 s, a one-file rules check 0.44 s to 0.33 s, `sync --dry-run` 1.25 s to about 0.92 s with
+subprocesses 29 to 14; `materials/pass-evidence.md` §1) borrowed the `maintenance/review-refactor` procedure, but its
+goal is latency, not a smaller surface, and it needed steps that playbook does not have: a measured baseline,
+profiling without being misled by profiler inflation or child processes, per-component timing, and differential
+old/new comparisons as preservation evidence. A fresh review still found a regression (a symlink loop breaking every
+file listing) that tests missed (`materials/pass-evidence.md` §2). The session totals in the original draft (rules
+check 3.0 s to 1.7 s, a one-file commit-gate check 0.92 s to 0.38 s, `sync --dry-run` to 1.14 s) are session
+observations from another measuring session; that they differ from the per-commit figures is the cross-session
+noise the protocol below addresses.
 
 Hypothesis: a separate, router-structured maintenance playbook that turns a user-selected set of slow operations into
 measured, behavior-preserving changes with differential evidence makes such passes repeatable in any repository and
@@ -44,17 +48,17 @@ keeps `review-refactor` focused on maintenance cost.
 
 - **Q1**: Which entry modes does the router need (a measurement-only survey, a targeted pass on named commands or
   checks, a regression investigation), and what does each load?
-  - Answer: three modes (`materials/design-options.md` O1). `survey` loads measurement and profiling and stops at the
-    decision round with nothing applied; `targeted` loads every reference in phase order; `regression` loads
-    measurement (two-revision comparison and bisection) and profiling, then candidates and application only when a
-    fix is agreed. Mode table in §3.
+  - Answer: two modes (`materials/design-options.md` O1, revised after `challenger-01` finding 9). `survey` loads
+    measurement, profiling and candidates and stops at the decision round with nothing applied; `targeted` loads every
+    reference in phase order. A regression mode is left out: the pass gives no evidence for it, and bisection conflicts
+    with the rule never to switch the working checkout. It is added when a real regression run shows the need.
 - **Q2**: What measurement protocol is portable: warm-up, repetitions and the statistic reported, cold versus warm
   caches, machine noise and concurrent load, and how a baseline is recorded so a later run can compare?
-  - Answer: unprofiled real-process timing, variants interleaved in one session, at least one warm-up and five
-    repetitions, median, minimum and range, cold and warm labeled, the old revision run side by side from an
-    extracted copy (`PADR-measure-performance-unprofiled-and-interleaved-in-one-session`). A recorded baseline names
-    revision, environment, command, state and statistics; a later run re-measures it instead of comparing across
-    sessions. Evidence: `materials/pass-evidence.md` §3.
+  - Answer: unprofiled real-process timing, variants interleaved in one quiet session against the same input and
+    working directory, at least one warm-up and five repetitions, median, minimum and range, a defined noise floor,
+    cold and warm labeled (`PADR-measure-performance-unprofiled-and-interleaved-in-one-session`). A recorded baseline
+    names revision, environment, command, state and statistics; every comparison, the final one included, re-runs the
+    older revision in the same session instead of reusing recorded numbers. Evidence: `materials/pass-evidence.md` §3.
 - **Q3**: How does profiling guidance stay language-neutral while naming the known traps (deterministic profiler
   inflation, work in child processes, garbage collection and allocation, caches rebuilt on the first run)?
   - Answer: the reference states each trap as a property of a profiler class (deterministic or sampling, in-process
@@ -66,10 +70,12 @@ keeps `review-refactor` focused on maintenance cost.
     `PADR-classify-performance-changes-by-observable-behavior`.
 - **Q5**: Which parts are shared with `review-refactor` (parallel application in isolated checkouts, differential
   comparison, adversarial review, report) and how are they referenced rather than copied?
-  - Answer: application, verification, differential comparison, review, report and integration are read from
-    `review-refactor` through exact playbook retrieval and cited by heading, with co-deployment and a heading test
+  - Answer: branch and edit tasks, parallel subagent edits in isolated checkouts, commits and verification,
+    differential comparison, review, report, integration and contract removals are read from `review-refactor`
+    through exact playbook retrieval and cited by heading, with co-deployment, an override fallback and a heading test
     (`PADR-reuse-review-refactor-application-through-exact-playbook-retrieval`). Measurement, attribution, candidate
-    criteria, the reviewer brief additions and the report's performance fields stay in `performance-pass`.
+    criteria, the route, the stricter difference rule, the reviewer brief additions and the report's performance fields
+    stay in `performance-pass`.
 
 ## 3. Proposed Design & Impact
 
@@ -79,7 +85,8 @@ keeps `review-refactor` focused on maintenance cost.
   (`PADR-keep-performance-passes-in-a-separate-maintenance-playbook`), authored with the `skill-authoring` playbook.
 - Presets (`materials/design-options.md` O5): the implicit `all` includes it; a new preset `performance` deploys
   `performance-pass` and `review-refactor`; `upkeep` and `refactoring` are unchanged. Every preset that deploys
-  `performance-pass` deploys `review-refactor`.
+  `performance-pass` deploys `review-refactor`; selection is a union of presets with no per-asset selection, so a
+  preset-membership test suffices.
 - Its `description` names one operation (a performance pass that measures user-selected slow operations and applies
   behavior-preserving speedups with measured and differential evidence) and its scope, so intake discovery offers it
   only for a performance request.
@@ -94,14 +101,29 @@ keeps `review-refactor` focused on maintenance cost.
 
 | File | Holds | Read when |
 | --- | --- | --- |
-| `SKILL.md` | Header; entry condition; constraints for every run (no change without the decision round, behavior preservation, measurement honesty, receipt-owned files read-only, a correctness defect found on the way is a follow-up, never stash); intake; mode table; decision round dispositions; report fields; completion | Always |
-| `references/measurement.md` | Metrics; command form; run states; warm-up, repetitions and statistics; noise; old/new side by side; per-component timing; baseline record; regression comparison and bisection | Every mode, before the first timed run |
+| `SKILL.md` | Header; entry condition; constraints for every run (no change without the decision round, behavior preservation, measurement honesty, receipt-owned files read-only, a correctness defect found on the way is a follow-up, never stash); intake; mode table; resolving `review-refactor` (below); decision round dispositions and route; report fields; completion | Always |
+| `references/measurement.md` | Metrics; command form; run states; warm-up, repetitions, statistics and the noise floor; quiet-machine rule; old/new against the same input; per-component timing; baseline record | Every mode, before the first timed run |
 | `references/profiling.md` | Attribution by profiler class; the traps and the check for each; confirming a share unprofiled | When measurement does not already name the cost |
-| `references/candidates.md` | Candidate record; expected-saving estimate; noise floor; behavior-preserving versus contract-change criteria; decision round presentation; what is kept with a reason | Before the decision round |
-| `references/applying.md` | Which `review-refactor` sections apply and how to resolve them; per-change measurement; performance additions to differential evidence and the reviewer brief; final measurement | After the round approved changes |
+| `references/candidates.md` | Candidate record; expected-saving estimate; behavior-preserving versus contract-change criteria; decision round presentation; what is kept with a reason | Before the decision round |
+| `references/changes.md` | Which `review-refactor` sections apply and the overrides to them; per-change measurement; performance additions to differential evidence and the reviewer brief; final measurement | After the round approved changes |
 
-Each file stays below the 12288-byte budget, aiming at about 9.5 KB (`materials/design-options.md` O6). Every reference
-is linked from `SKILL.md` with its read condition.
+The application reference is named `changes.md`, not `applying.md`, so it is never confused with `review-refactor`'s
+`references/applying.md` (`challenger-01` finding 10). Each file stays below the 12288-byte budget, aiming at about
+9.5 KB (`materials/design-options.md` O6). Every reference is linked from `SKILL.md` with its read condition, and no
+reference sends the agent to another of its own references.
+
+### Resolving `review-refactor` (`SKILL.md`)
+
+`PADR-reuse-review-refactor-application-through-exact-playbook-retrieval`:
+
+- Before the decision round, run `devkit playbook get maintenance/review-refactor`. For each cited file, read
+  `references/<file>` next to the returned `source.path`; when that path is an override directory without the file,
+  read the managed copy, because files missing from an override directory are read from upstream.
+- Reading that text is reference reading, not an invocation: none of `review-refactor`'s intake, batches or decision
+  round starts.
+- Citations use one form the bundle test parses: the file and the heading text without its number, for example
+  `review-refactor references/applying.md "Commits and verification"`. A missing cited heading stops the run with a
+  report, never an improvised procedure.
 
 ### Intake and modes
 
@@ -117,10 +139,6 @@ is linked from `SKILL.md` with its read condition.
 | --- | --- | --- | --- |
 | `survey` | The user names candidate operations and wants a ranked list | `measurement.md`, `profiling.md`, `candidates.md` | Decision round; nothing applied in this mode. An approved change turns the run `targeted`, recorded in the report |
 | `targeted` | The user names operations to speed up | All references in phase order | Report with measured before/after per change |
-| `regression` | One operation got slower between two named revisions | `measurement.md` (two-revision comparison and bisection), `profiling.md`; `candidates.md` and `applying.md` only when a fix is agreed | Report naming the responsible change and the agreed disposition |
-
-A regression against a stated contract (a documented budget) is a defect: the round routes its fix through the
-repository's bugfix workflow as a contract repair, not as a refactor.
 
 ### Measurement protocol (`references/measurement.md`)
 
@@ -128,22 +146,25 @@ repository's bugfix workflow as a contract repair, not as a refactor.
 
 - Time the real process from outside; an in-process timer misses startup, shutdown and child processes.
 - Run each command from an argument list or a script file, never from an unquoted shell variable (zsh does not split
-  it); check each run's exit code and output digest against the expected and drop failed runs.
-- Label the state: warm (caches filled by an earlier run of the same revision) or cold (caches cleared the
-  documented way). Measure both when the operation keeps a persistent cache. Discard every run after a code or
-  cache-format change.
-- At least one discarded warm-up per variant, at least five repetitions, variants interleaved (old, new, old, new).
-  Report median, minimum and range; a difference within the larger range is "no measurable change".
-- Record the load before and after; repeat later when another workload runs or the range is wide.
-- Run old and new on the same machine in the same session; run the old revision from an extracted copy
-  (for example `git archive`) or a separate checkout, never by stashing or switching the working checkout. A
-  language runtime may load the old source by path (for example `PYTHONPATH`).
+  it). Check each run's exit code, and its output digest against the other runs of the same variant, normalizing
+  paths that differ between variants' directories; drop failed runs.
+- Run old and new against the same input and working directory: load the old code by a runtime path override (for
+  example `PYTHONPATH` pointing at an extracted copy of the previous revision), or from a separate worktree prepared
+  with the repository's documented setup. Never stash or switch the working checkout.
+- Label the state. Warm: caches filled by an earlier run of the same revision, after at least one discarded warm-up
+  run per variant. Cold: caches cleared the documented way before every run. Measure both when the operation keeps a
+  persistent cache; the first run after a code or cache-format change is a warm-up, never a sample.
+- At least five repetitions per variant, interleaved (old, new, old, new). Report median, minimum and range.
+- Noise floor: the larger of the two variants' ranges after dropping each variant's single slowest run. A median
+  difference below it is "no measurable change"; when one outlier decides, add five repetitions per variant before
+  concluding.
+- Measure on a quiet machine: no edit task, verification run or other workload of the run is active; record the load
+  before and after and repeat later when another workload ran.
 - For a composite operation, time its components unprofiled and check that their sum explains the total before
   ranking.
-- Baseline record: revision, environment, exact command, state, run count, median, minimum, range. A later run
-  re-measures the baseline instead of comparing with another session's numbers.
-- Regression: measure both revisions by the same protocol, then bisect between them on the same metric, recording
-  each probe's revision and statistics.
+- Baseline record: revision, environment, exact command, state, run count, median, minimum, range. Any comparison,
+  the final one included, re-runs the older revision in the same session; recorded numbers from another session are
+  context only.
 
 ### Attribution (`references/profiling.md`)
 
@@ -163,9 +184,10 @@ repository's bugfix workflow as a contract repair, not as a refactor.
 - Each candidate records: location; mechanism of the cost (repeated work, per-item system calls, subprocesses,
   allocation, a slower algorithm); measured share of the target metric, unprofiled; proposed change; expected saving
   as an estimate derived from the share; risk (which inputs or states could behave differently); classification
-  (below); planned differential inputs; route, edited paths and write scope as `review-refactor` requires.
-- A candidate whose expected saving is below the noise floor is dropped and counted in the coverage. A measured cost
-  no change can remove (for example a probe whose answer is not known in advance) is reported as kept, with the reason.
+  (below); planned differential inputs; route, edited paths and write scope (below).
+- A candidate whose expected saving is below the noise floor (`measurement.md`) is dropped and counted in the
+  coverage. A measured cost no change can remove (for example a probe whose answer is not known in advance) is
+  reported as kept, with the reason.
 - Prefer removing repeated work (one scan instead of many, a memo within one run, fewer processes) over
   micro-optimization.
 - Classification (`PADR-classify-performance-changes-by-observable-behavior`):
@@ -175,30 +197,38 @@ repository's bugfix workflow as a contract repair, not as a refactor.
     which never memoizes a failure.
   - Contract change: changed output (content, order, format); new state kept between runs; concurrency or
     parallelism; changed defaults, accuracy or error handling; a removed option.
-- Dispositions are `review-refactor`'s: apply with behavior preserved (joins the run's work item), contract change
-  (its own work item through the normal workflow), defer (destination and restart condition), keep (reason). All
-  candidates of the run are decided in one round; unanswered ones stay pending.
+- Dispositions follow `review-refactor`'s table: apply with behavior preserved (joins the run's work item), contract
+  change (its own work item through the normal workflow), defer (destination and restart condition), keep (reason).
+  All candidates of the run are decided in one round; unanswered ones stay pending.
+- Route and write scope (pending question `q1`; recommended option shown): the run's agreed behavior-preserving
+  changes form one work item that follows the repository's feature workflow at the depth its own classification gives
+  (with the `spec` bundle, `session` when no contract or specification text changes), whether it edits one module or
+  several. The decision round states the route and the edited paths, which are the write scope. `review-refactor`'s
+  "Work items and route" section is not followed: the direct-mode overall-refactor route for several modules is
+  granted to `review-refactor` runs only. If the user chooses the refactor route instead, the design adds a PADR
+  extending that grant and the Living Spec and classification targets in `materials/design-options.md` O7.
 
-### Application and evidence (`references/applying.md`)
+### Application and evidence (`references/changes.md`)
 
-`PADR-reuse-review-refactor-application-through-exact-playbook-retrieval`:
-
-- Resolve `devkit playbook get maintenance/review-refactor` and read `references/applying.md` and
-  `references/criteria.md` relative to its `source.path`. Follow the application sections by heading (work items and
-  route, branch and edit tasks, subagent edits, commits and verification, review, report, integration, contract
-  removals) and the preservation evidence section of `criteria.md`, including its differential comparison. If a cited
-  section is missing, stop and report it.
-- Additions for performance changes:
+- Follow the cited `review-refactor` sections: from `references/applying.md`, "Branch and edit tasks", "Subagent
+  edits", "Commits and verification", "Review", "Report", "Integration" and "Contract removals"; from
+  `references/criteria.md`, "Preservation evidence", including its differential comparison.
+- Overrides to the cited text for performance changes:
+  - Any difference the differential comparison or the review finds is a contract change: fix it, or return the change
+    to the decision round as its own contract-change work item. `review-refactor`'s "approved behavior change" inside
+    the behavior-preserving work item does not apply.
+  - Edit tasks may run in parallel in isolated checkouts, but every timing run waits until no edit task or
+    verification runs.
+- Additions:
   - Measure each change by the protocol, old and new on the previous checkpoint, and record the statistics in its
     commit body beside the preservation evidence.
   - Differential inputs include the input domain's error cases and unusual states (unreadable entries, symbolic link
     loops, differently spelled paths, a vanished working directory), not only the corpus.
   - The reviewer brief adds: each change's classification and its claim of equal behavior; error paths of replaced
     APIs; cache invalidation and memo keys.
-  - At the work item's final head, measure every target again against the intake baseline.
-- Development starts after the review-refactor lessons change on its development branch lands, because the cited
-  sections (parallel isolated checkouts, differential comparison without stash, reviewer brief) come from it; the Host
-  checks this before handoff.
+  - At the work item's final head, measure every target interleaved against the intake revision in one session.
+- Base: the cited sections (parallel isolated checkouts, differential comparison without stash, reviewer brief) are on
+  `main` from merge `dc3e07a2`, which this Planning branch predates. Development branches from a base containing it.
 
 ### Report and completion (`SKILL.md`)
 
@@ -206,7 +236,7 @@ repository's bugfix workflow as a contract repair, not as a refactor.
 - Coverage: operations measured, components attributed, candidates dropped below the noise floor, coverage gaps.
 - Candidates and changes as separate records; each change names its candidate, classification, differential inputs
   and count, verification, measured before/after and commit.
-- Decisions with provenance, follow-ups, counts, and the final measurement against the baseline.
+- Decisions with provenance, follow-ups, counts, and the final interleaved measurement against the intake revision.
 - Outcome (`stopped at decision round`, `applied`, `partially applied`) with the work items' integration state.
 - A run is complete with no pending decision, every agreed change committed or routed and the final measurement
   recorded. The report is an ordinary local file in the owning unit's materials or the repository's materials
@@ -216,11 +246,14 @@ repository's bugfix workflow as a contract repair, not as a refactor.
 
 - New capability under `docs/capabilities/delivery/` for the performance pass, with the playbook as entrypoint.
 - New use case under `docs/usecases/governance/`.
-- `CAP-DIST-content-packages` §6: the `performance` preset, the co-deployment constraint and that `performance-pass`
-  reads `review-refactor`'s application procedure without running it.
+- `CAP-DIST-context-and-playbooks` §5: a playbook may read a co-deployed playbook's body resources as reference text;
+  that is no invocation and starts none of its intake or decision rounds.
+- `CAP-DIST-content-packages` §6: the `performance` preset, the co-deployment constraint, the reference reading
+  without running, and the playbook count ("three independent playbooks").
 - `CAP-DLV-review-refactor`: its application and evidence section headings are cited by `performance-pass`.
 - `packages/devkit-catalog/README.md`, `guides/install/bundle-recommendations.md`, the bundle manifest and the
-  `devkit-catalog` bundle tests (presets, co-deployment, cited headings, self-containment and size).
+  `devkit-catalog` bundle tests (presets, co-deployment, cited headings in the citation form, self-containment, links
+  and size).
 - Handbook entries follow at the next release.
 
 ## 4. Lifecycle & Retirement Criteria
@@ -234,6 +267,9 @@ repository's bugfix workflow as a contract repair, not as a refactor.
 - Settled by `user` at intent: a separate maintenance playbook, router-structured, in the `maintenance` bundle beside
   `review-refactor`, reusing its parallel application and differential evidence by reference
   (`PADR-keep-performance-passes-in-a-separate-maintenance-playbook`).
-- Settled in Planning: three modes (O1); exact retrieval with co-deployment (O2); report in `SKILL.md` (O3); preset
-  `performance`, `upkeep` unchanged (O5); the measurement protocol and change classification PADRs.
-- Open for the user: the milestone (`MS-maintenance-operations` is `done`) and the timing helper script (O4).
+- Settled in Planning: two modes, no regression mode (O1); exact retrieval with co-deployment, override fallback and
+  a parseable citation form (O2); report in `SKILL.md` (O3); preset `performance`, `upkeep` unchanged (O5); the
+  measurement protocol and change classification PADRs; for performance changes every found difference is a contract
+  change.
+- Open for the user (`worker` envelope questions): `q1` the route of the behavior-preserving work item, `q2` the
+  milestone (`MS-maintenance-operations` is `done`), `q3` the timing helper script (O4).

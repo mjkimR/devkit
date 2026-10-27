@@ -49,6 +49,9 @@ changes as their own work items; performance changes need the same split with cr
   repository's normal development workflow, as in `review-refactor`.
 - Differential comparison runs old and new on the repository's corpus plus the input domain's edge and error cases
   (empty, malformed, unreadable, symbolic link loops, differently spelled paths, a vanished working directory).
+- Any difference the comparison or the review finds is fixed, or the change returns to the decision round as its own
+  contract-change work item; unlike `review-refactor`, no approved behavior change stays in the behavior-preserving
+  work item.
 
 ## 5. Consequences
 
