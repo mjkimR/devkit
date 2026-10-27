@@ -1479,7 +1479,7 @@
     },
     ".devkit/managed/devkit-dev/rules/architecture/facts.py": {
       "mode": 420,
-      "sha256": "4d04526f9d07035b09de3ad239188a8fd2403beafe5cfab1a453838bcfa30a4e"
+      "sha256": "faedcf52e7bf2386af74198dc8ecdb7bc1c83b3de9bf8ce7f242a5773aa7a575"
     },
     ".devkit/managed/devkit-dev/rules/architecture/guide.md": {
       "mode": 420,
@@ -1491,7 +1491,7 @@
     },
     ".devkit/managed/devkit-dev/rules/architecture/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "5c4cd570fc70f4103f8977473a46d83b241629b57f83375e6d4615ab972ddf2f"
+      "sha256": "ae25ba8fb7f2696b020fcb1b5541e8f462fafe3836e174669731d098c2d47518"
     },
     ".devkit/managed/devkit-dev/rules/usecase-boundaries/facts.py": {
       "mode": 420,
@@ -1499,15 +1499,15 @@
     },
     ".devkit/managed/devkit-dev/rules/usecase-boundaries/guide.md": {
       "mode": 420,
-      "sha256": "4cd145cd2d556124f99927e803e8f78e438d29c8724d7d8b3205455b32d6163d"
+      "sha256": "6712ac15d74b4868c21afd87b8c30ebc7fd364cdd14c43890db3b817e49534f0"
     },
     ".devkit/managed/devkit-dev/rules/usecase-boundaries/rule.py": {
       "mode": 420,
-      "sha256": "9ad74d4e278af9e6c3cc9b93f8c97f6152ffc3b52a0a2ea6cdda0629d2bfceb3"
+      "sha256": "800b0b72810fac7ef6781bb06391a5d92e7dd646719841a37046d18ff22b66e5"
     },
     ".devkit/managed/devkit-dev/rules/usecase-boundaries/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "0136ff0fd1cd91dcbb26691b88155978e7caafec23e5b43d51777014f581247e"
+      "sha256": "cd80cb6866806b27956e8116c2a68b0e60aaaecdf24ac8ba1d322a50a1088419"
     },
     ".devkit/managed/devkit/AGENTS.md": {
       "mode": 420,
@@ -1519,7 +1519,7 @@
     },
     ".devkit/managed/devkit/instructions/consumption.md": {
       "mode": 420,
-      "sha256": "b8b6904252fc4b73d406aad1184285c55b734930b5eb26ef3bb879a8505c8a12"
+      "sha256": "1e1647ec28bf3fc670d779d9429f9aa1faee01fad5e5c14318e93dff6f08cef7"
     },
     ".devkit/managed/devkit/instructions/in-repo-bundle.md": {
       "mode": 420,
@@ -1667,7 +1667,7 @@
     },
     ".devkit/managed/spec/rules/id_convention/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "e99f6a7ccde48d4da4fd33e9452dd61e6b6230df0a36cbeb5f39b10643ea3892"
+      "sha256": "d649860f4acfe0267d480c24385264c2aaa825d298244b9972617aae9f04efc2"
     },
     ".devkit/managed/spec/rules/proposal_boundaries/guide.md": {
       "mode": 420,
@@ -1751,7 +1751,7 @@
     },
     ".devkit/managed/spec/rules/task_coverage/tests/test_rule.py": {
       "mode": 420,
-      "sha256": "df7a16999a6351dc7d7b55fb97ed59d12ca42620c0faa954601ad9681dc3cffa"
+      "sha256": "df0181c97647abedbd6f5c561a83d9550c9a9db8aee48c1590ab99752005e1fd"
     },
     ".devkit/managed/spec/rules/traceability_link/guide.md": {
       "mode": 420,
