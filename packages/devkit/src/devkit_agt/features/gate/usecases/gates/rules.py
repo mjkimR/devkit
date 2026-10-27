@@ -35,10 +35,11 @@ from typing import TYPE_CHECKING
 
 from devkit.advisory import Actor
 from devkit_core.core.git import COMMIT_INDEX_VARIABLE
+from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_agt.features.gate.models.base import BaseGate
 from devkit_agt.features.gate.models.contracts import GateContext, GateResult, Stage
-from devkit_agt.features.gate.models.errors import DEVKIT, GateFindingsError, RulesWarningsNotice
+from devkit_agt.features.gate.models.errors import GateFindingsError, RulesWarningsNotice
 from devkit_agt.features.gate.usecases.gates.commands import HOOK_GIT_VARIABLES
 
 if TYPE_CHECKING:
@@ -106,9 +107,10 @@ class RulesCheckGate(BaseGate):
                 f"{len(blocking)} rule violation(s) in the staged tree",
                 *_listed(blocking),
                 code="GATE_RULES_FAILED",
+                target_files=list(dict.fromkeys(f"{v.file}:{v.line}" for v in blocking[:MAX_LISTED])),
                 fix=(
-                    f"Fix the violations (`{DEVKIT} rules fix` repairs the fixable ones), stage the fixes and commit "
-                    f"again; `{DEVKIT} rules check --staged` reproduces this check"
+                    f"Fix the violations (`{devkit_command('rules fix')}` repairs the fixable ones), stage the fixes and commit "
+                    f"again; `{devkit_command('rules check --staged')}` reproduces this check"
                 ),
             )
         warnings = [v for v in run.result.violations if v.severity is Severity.WARNING and not v.fixed]

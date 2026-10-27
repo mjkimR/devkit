@@ -36,7 +36,7 @@ def _config(repo: Path) -> Path:
 def test_install_writes_a_commented_table_per_gate(repo: Path) -> None:
     deploy_gate(repo, gate_source())
     output = _install(repo)
-    assert f"[CONFIG: template=created path={_config(repo)}]" in output
+    assert "[CONFIG: template=created path=.git/devkit.config]" in output
     text = _config(repo).read_text()
     assert tomllib.loads(text) == {}  # every line is a comment until the developer uncomments one
     assert local_config.mentioned_gates(text) == {"rules-check", "verify-commands", "message-nonempty", "team-block"}
@@ -255,7 +255,7 @@ def test_a_template_that_cannot_be_written_keeps_the_hook_notices(repo: Path, mo
     _fail_template_write(monkeypatch)
     result = CliRunner().invoke(cli, ["install", "-w", str(repo), "--python", sys.executable])
     assert result.exit_code == 0, result.output
-    assert f"[CONFIG: template=skipped path={_config(repo)}]" in result.stdout
+    assert "[CONFIG: template=skipped path=.git/devkit.config]" in result.stdout
     assert "(GATE_HOOK_PRESERVED)" in result.stderr and "(GATE_CONFIG_TEMPLATE_SKIPPED)" in result.stderr
     assert "cannot be written" in result.stderr and "UNEXPECTED_ERROR" not in result.output
 

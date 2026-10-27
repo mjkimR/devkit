@@ -391,7 +391,7 @@ def test_invalid_settings_of_a_disabled_gate_or_another_stage_are_reported(tmp_p
     )
     validation = validate_gates(registry, config)
     assert len(validation.errors) == 2
-    assert "unknown settings ['bogus']" in validation.errors[0].message  # verify-commands, disabled
+    assert "unknown settings bogus" in validation.errors[0].message  # verify-commands, disabled
     assert "gate has no settings" in validation.errors[1].message  # message-nonempty, another stage
     report = run_stage(gate_ctx(tmp_path), registry, config)
     assert not report.ok and [r.note for r in report.runs] == ["disabled", "disabled"]
@@ -400,7 +400,7 @@ def test_invalid_settings_of_a_disabled_gate_or_another_stage_are_reported(tmp_p
 def test_configured_gate_that_is_not_installed_fails_the_stage(tmp_path: Path) -> None:
     config = GatesConfig({"timeline": GateEntry(True)})
     report = run_stage(gate_ctx(tmp_path), default_gate_registry(), config)
-    assert not report.ok and "not installed: ['timeline']" in report.errors[0].message
+    assert not report.ok and "not installed: timeline" in report.errors[0].message
     assert report.errors[0].fix is not None and "`uv run devkit sync`" in report.errors[0].fix
 
 

@@ -37,7 +37,8 @@ def test_start_prints_the_worktree_and_the_cd_hint(repo: Path) -> None:
     ]
     again = json.loads(invoke("start", "dev-demo", "-w", str(repo), "--format", "json").stdout)
     assert again["error"]["code"] == "WORKTREE_BRANCH_EXISTS"  # an existing branch is continued only by attaching it
-    assert "--existing-branch dev-demo" in again["error"]["advisory"]["fix"]
+    assert "--existing-branch dev-demo --unit" in again["error"]["advisory"]["what_to_report"]
+    assert "fix" not in again["error"]["advisory"]  # its unit is not recorded: no runnable command to offer
 
 
 def test_start_runs_the_configured_setup_and_warns_when_it_fails(repo: Path) -> None:
@@ -50,7 +51,7 @@ def test_start_runs_the_configured_setup_and_warns_when_it_fails(repo: Path) -> 
     assert invoke("start", "dev-demo", "-w", str(repo), "--strict").exit_code == 2  # existing: refused, no setup
 
 
-def test_finish_reports_progress_before_a_refusal_and_resumes(repo: Path) -> None:
+def test_a_dirty_worktree_refuses_finish_before_any_change(repo: Path) -> None:
     configure(repo, 'pull_request = "auto"\n')
     git(repo, "add", ".")
     git(repo, "commit", "-q", "-m", "config")
@@ -60,21 +61,21 @@ def test_finish_reports_progress_before_a_refusal_and_resumes(repo: Path) -> Non
     git(path, "add", ".")
     git(path, "commit", "-q", "-m", "work")
     write(path, "wip.txt", "x\n")
+    head = git(repo, "rev-parse", "HEAD")
     refused = invoke("finish", "dev-demo", "--merge", "-w", str(repo))
-    assert refused.exit_code == 2
-    assert refused.stdout == (
-        f"[WORKTREE_FINISHED: dev-demo path={path} merged=yes push=no-upstream removed=no branch_deleted=no discarded=no]\n"
-    )
-    assert "(WORKTREE_DIRTY)" in refused.stderr
+    assert refused.exit_code == 2 and refused.stdout == ""  # no result sentinel for a refused run
+    assert "(WORKTREE_DIRTY)" in refused.stderr and f"[TARGET] {path}\n" in refused.stderr
+    assert "--force" not in refused.stderr  # git's own hint is not relayed
+    assert git(repo, "rev-parse", "HEAD") == head  # nothing was merged
     (path / "wip.txt").unlink()
-    done = invoke("finish", "dev-demo", "-w", str(repo), "--format", "json")
+    done = invoke("finish", "dev-demo", "--merge", "-w", str(repo), "--format", "json")
     assert done.exit_code == 0, done.output
     assert json.loads(done.stdout) == {
         "branch": "dev-demo",
         "slug": "demo",
         "path": str(path),
-        "merged": False,
-        "push": None,
+        "merged": True,
+        "push": "no-upstream",
         "removed": True,
         "branch_deleted": True,
         "discarded": False,
@@ -92,8 +93,8 @@ def test_a_refused_finish_in_json_carries_the_partial_result_and_the_error(repo:
     refused = invoke("finish", "dev-demo", "--merge", "-w", str(repo), "--format", "json")
     document = json.loads(refused.stdout)
     assert refused.exit_code == 2 and refused.stderr == ""
-    assert document["merged"] is True and document["removed"] is False
-    assert [error["code"] for error in document["errors"]] == ["WORKTREE_DIRTY"]
+    assert document["error"]["code"] == "WORKTREE_DIRTY"
+    assert document["error"]["advisory"]["target_files"] == [str(path)]
 
 
 def test_a_git_failure_after_the_merge_reports_progress_and_the_push_warning_then_resumes(
@@ -114,7 +115,8 @@ def test_a_git_failure_after_the_merge_reports_progress_and_the_push_warning_the
     refused = invoke("finish", "dev-demo", "--merge", "-w", str(repo))
     assert refused.exit_code == 2
     assert refused.stdout == (
-        f"[WORKTREE_FINISHED: dev-demo path={path} merged=yes push=failed removed=yes branch_deleted=no discarded=no]\n"
+        f"[WORKTREE_FINISH_PARTIAL: dev-demo path={path} merged=yes push=failed removed=yes branch_deleted=no"
+        " discarded=no]\n"
     )
     assert "(WORKTREE_PUSH_FAILED)" in refused.stderr and "(WORKTREE_BRANCH_DELETE_FAILED)" in refused.stderr
     hook.unlink()
@@ -222,7 +224,7 @@ def test_post_finish_extensions_run_after_a_successful_finish_only(repo: Path, m
     assert refused.exit_code == 2 and seen == []  # a refusal runs no extension
 
     (path / "wip.txt").unlink()
-    done = invoke("finish", "dev-demo", "-w", str(repo))
+    done = invoke("finish", "dev-demo", "--merge", "-w", str(repo))
     assert done.exit_code == 0, done.output
     assert [(base, result["slug"], result["branch"], result["removed"]) for base, result in seen] == [
         (repo, "demo", "dev-demo", True)
@@ -230,3 +232,19 @@ def test_post_finish_extensions_run_after_a_successful_finish_only(repo: Path, m
     assert "(POST_FINISH_NOTICE) cleaned demo" in done.stderr
     assert "(POST_FINISH_EXTENSION_FAILED) post-finish extension b-broken failed: boom" in done.stderr
     assert invoke("finish", "dev-demo", "-w", str(repo), "--format", "json").exit_code == 2  # nothing left to finish
+
+
+def test_a_mistyped_branch_is_an_input_error_listing_the_branches(repo: Path) -> None:
+    result = invoke("finish", "dev-nope", "-w", str(repo), "--format", "json")
+    advisory = json.loads(result.stdout)["error"]["advisory"]
+    assert (advisory["code"], advisory["mode"]) == ("WORKTREE_NOT_FOUND", "INPUT_ERROR")
+    assert advisory["fix"] == f"uv run devkit worktree status -w {repo}" and advisory["target_files"] == ["BRANCH"]
+
+
+def test_an_attached_branch_exists_error_names_its_recorded_unit(repo: Path) -> None:
+    git(repo, "branch", "dev-demo")
+    git(repo, "config", "branch.dev-demo.devkitUnit", "units/a")  # what an earlier --existing-branch attach records
+    again = json.loads(invoke("start", "dev-demo", "-w", str(repo), "--format", "json").stdout)
+    assert again["error"]["advisory"]["fix"] == (
+        "uv run devkit worktree start dev-demo --existing-branch dev-demo --unit units/a"
+    )

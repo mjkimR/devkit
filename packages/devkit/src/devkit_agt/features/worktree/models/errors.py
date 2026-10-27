@@ -14,6 +14,7 @@ and unsets it). Before that,
 
 from __future__ import annotations
 
+import shlex
 from typing import Any
 
 from devkit.advisory import Actor, AdvisoryError, Level, Retry
@@ -44,11 +45,14 @@ class _Guardrail(WorktreeError):
     guardrail = True
 
 
-class NestedError(_Guardrail):
-    """``start`` ran inside a linked worktree (``BLOCKED``); task worktrees are created from the base checkout."""
+class NestedError(WorktreeError):
+    """``start`` ran inside a linked worktree (``INPUT_ERROR``); task worktrees are created from the base checkout.
+
+    Where the command runs is the input to correct: ``[FIX]`` changes to the base checkout to rerun it there."""
 
     code = "WORKTREE_NESTED"
-    fix = "Run the command from the base checkout, or keep working in this worktree"
+    input_error = True
+    fix = "Rerun the command from the base checkout"
 
 
 class RunFromBaseError(WorktreeError):
@@ -58,12 +62,12 @@ class RunFromBaseError(WorktreeError):
 
     code = "WORKTREE_RUN_FROM_BASE"
     input_error = True
-    fix = "Rerun the same command from the base checkout (or pass -w <the devkit project in it>)"
+    fix = "Rerun the same command from the base checkout"
 
 
 def run_from_base_fix(base: object) -> str:
-    """The ``[FIX]`` of ``RunFromBaseError`` naming the base checkout ``base``."""
-    return f"Rerun the same command from the base checkout {base} (or pass -w <the devkit project in it>)"
+    """The ``[FIX]`` of ``RunFromBaseError`` and ``NestedError``: change to the base checkout ``base``, then rerun."""
+    return f"cd {shlex.quote(str(base))}"
 
 
 class PullRequestPolicyError(_Guardrail):
@@ -95,12 +99,11 @@ class ConflictError(_Interaction):
 class BranchExistsError(_Interaction):
     """The activity branch already exists locally or on a remote, or is checked out elsewhere (``INTERACTION``).
 
-    A new ``start`` never takes over an existing branch; the ``[FIX]`` names the ``--existing-branch`` path that
-    attaches it explicitly.
+    A new ``start`` never takes over an existing branch. ``[REPORT]`` asks whether to continue it or choose another
+    slug; ``[FIX]`` is the exact ``--existing-branch`` command that attaches it when its unit directory is recorded.
     """
 
     code = "WORKTREE_BRANCH_EXISTS"
-    fix = "Continue the existing branch with --existing-branch <branch> --unit <dir>, or choose another slug"
 
 
 class BranchOutOfSyncError(_Interaction):
@@ -158,7 +161,8 @@ class GuardFailedError(WorktreeError):
 
 
 class NotFoundError(_Interaction):
-    """No worktree has the branch or its path (``INTERACTION``).
+    """No worktree has the branch or its path (``INTERACTION``); a branch that exists nowhere is a mistyped name,
+    raised with ``input_error`` (``INPUT_ERROR``) and ``[FIX]`` listing the worktrees and branches.
 
     For ``finish``, also when the merged branch lacks the marker ``start`` records (or a finish already
     completed for it): nothing runs, merges, pushes or is deleted for that branch, and with ``delete_branch`` the
@@ -166,7 +170,6 @@ class NotFoundError(_Interaction):
     """
 
     code = "WORKTREE_NOT_FOUND"
-    fix = "Check `uv run devkit worktree status` or `git worktree list` for the branch"
 
 
 class LockedError(_Interaction):
@@ -384,6 +387,7 @@ class SetupFailedWarning(WorktreeError):
 
     code = "WORKTREE_SETUP_FAILED"
     level = Level.WARNING
+    what_to_report = "The worktree was created, but its [worktree] setup command failed; the details show its output"
 
 
 class SyncFailedWarning(WorktreeError):

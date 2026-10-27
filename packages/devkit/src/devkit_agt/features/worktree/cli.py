@@ -115,8 +115,10 @@ def start_cmd(
     if (existing is None) != (unit is None):
         raise ArgumentError(
             "--existing-branch and --unit go together",
-            target_files=["--existing-branch", "--unit"],
-            fix=f"Pass both: --existing-branch {branch} --unit <unit directory>",
+            target_files=["--unit"] if unit is None else ["--existing-branch"],
+            fix="Add --unit with the unit directory the branch holds, relative to the devkit project"
+            if unit is None
+            else f"Add --existing-branch {branch}",
         )
     position, config, project = _position(workspace_root)
     if no_worktree:
@@ -145,9 +147,10 @@ def start_cmd(
     exit_on_warnings(result.notices)
 
 
-def _finished(result: FinishResult) -> str:
+def _finished(result: FinishResult, kind: str = "WORKTREE_FINISHED") -> str:
+    """The finish result line; ``WORKTREE_FINISH_PARTIAL`` for the progress of a run a refusal stopped."""
     return (
-        f"[WORKTREE_FINISHED: {_value(result.branch)} path={_value(result.path)} merged={_value(result.merged)}"
+        f"[{kind}: {_value(result.branch)} path={_value(result.path)} merged={_value(result.merged)}"
         f" push={_value(result.push)} removed={_value(result.removed)}"
         f" branch_deleted={_value(result.branch_deleted)} discarded={_value(result.discarded)}]"
     )
@@ -199,7 +202,7 @@ def finish_cmd(
         if is_json(output_format):
             echo_json(partial.to_dict() | {"errors": [error.to_dict()]})
         else:
-            click.echo(_finished(partial))
+            click.echo(_finished(partial, "WORKTREE_FINISH_PARTIAL"))
         echo_notices(partial.notices)
         raise Reported(error) from error
     if is_json(output_format):

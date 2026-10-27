@@ -249,3 +249,114 @@ def test_integrate_cli_refuses_target_changed_after_preparation(repo):
     assert "INTEGRATION_REQUEST_STALE" in result.output
     assert git(base, "show-ref") == before
     assert worktree.exists()
+
+
+def _integrate_args(base, *extra):
+    return ["integrate", "dev-demo", "--task-kind", "session", "--task-id", "fixture", *extra, "-w", str(base)]
+
+
+def test_ask_without_digest_asks_the_user_with_the_exact_command(repo):
+    base, _ = repo
+    digest = IntegrationService(base).prepare("dev-demo", Task("session", "fixture")).request.digest
+    result = CliRunner().invoke(cli, [*_integrate_args(base), "--format", "json"])
+    assert result.exit_code == 2, result.output
+    advisory = json.loads(result.output)["error"]["advisory"]
+    assert advisory["code"] == "INTEGRATION_AUTHORITY_REQUIRED" and advisory["mode"] == "INTERACTION"
+    assert advisory["fix"] == (
+        f"uv run devkit integration integrate dev-demo --task-kind session --task-id fixture --expected-digest {digest}"
+    )
+    assert "<" not in advisory["fix"] and advisory["what_to_report"]
+
+
+def test_a_stale_digest_asks_the_user_again_with_the_current_digest(repo):
+    base, _ = repo
+    digest = IntegrationService(base).prepare("dev-demo", Task("session", "fixture")).request.digest
+    result = CliRunner().invoke(cli, [*_integrate_args(base, "--expected-digest", "0" * 64), "--format", "json"])
+    assert result.exit_code == 2, result.output
+    advisory = json.loads(result.output)["error"]["advisory"]
+    assert advisory["code"] == "INTEGRATION_REQUEST_STALE" and advisory["mode"] == "INTERACTION"
+    assert advisory["fix"].endswith(f"--expected-digest {digest}") and "<" not in advisory["fix"]
+
+
+def test_automatic_policy_refusing_the_pull_request_route_stays_blocked(repo):
+    base, _ = repo
+    config = base / ".devkit/config.toml"
+    config.write_text(config.read_text() + '\n[workflow.approvals]\ndev-integration = "auto"\n')
+    result = CliRunner().invoke(cli, [*_integrate_args(base, "--route", "pull-request"), "--format", "json"])
+    advisory = json.loads(result.output)["error"]["advisory"]
+    assert (advisory["code"], advisory["mode"]) == ("INTEGRATION_AUTHORITY_REQUIRED", "BLOCKED")
+
+
+def test_not_ready_is_an_input_error_keeping_the_reasons(repo, ready_provider):
+    base, worktree = repo
+    ready_provider.allowed = False
+    result = CliRunner().invoke(
+        cli,
+        ["prepare", "dev-demo", "--task-kind", "session", "--task-id", "fixture", "-w", str(base), "--format", "json"],
+    )
+    assert result.exit_code == 2, result.output
+    advisory = json.loads(result.output)["error"]["advisory"]
+    assert (advisory["code"], advisory["mode"]) == ("INTEGRATION_NOT_READY", "INPUT_ERROR")
+    assert advisory["details"] == ["finish the fixture checks"] and advisory["target_files"] == [str(worktree)]
+
+
+def test_task_argument_errors_target_the_flag(repo):
+    base, _ = repo
+    result = CliRunner().invoke(
+        cli,
+        ["prepare", "dev-demo", "--task-kind", "session", "--task-id", "fixture", "--claims", "[]", "-w", str(base)],
+    )
+    assert result.exit_code == 2 and "[TARGET] --claims" in result.output, result.output
+
+
+def test_prepare_shows_the_approval_scope(repo):
+    base, worktree = repo
+    args = ["prepare", "dev-demo", "--task-kind", "session", "--task-id", "fixture", "-w", str(base)]
+    payload = json.loads(CliRunner().invoke(cli, [*args, "--format", "json"]).output)
+    request = payload["request"]
+    assert request["pull_request"] is None and request["worktree"] == {"path": str(worktree), "remove": True}
+    assert request["readiness"] == {"disclosure": "fixture checks on the merged result only"}
+    assert "common_dir" not in json.dumps(payload) and "policy_digest" not in json.dumps(payload)
+    text = CliRunner().invoke(cli, args).output.splitlines()
+    assert text[0].startswith("[INTEGRATION_PREPARED: ")
+    assert text[1] == (
+        "[INTEGRATION_SCOPE: worktree_remove=yes delete_branch=yes cleanup=- "
+        'disclosure="fixture checks on the merged result only"]'
+    )
+
+
+def test_integrate_text_lists_effects_as_pairs(repo):
+    base, _ = repo
+    digest = IntegrationService(base).prepare("dev-demo", Task("session", "fixture")).request.digest
+    result = CliRunner().invoke(cli, _integrate_args(base, "--expected-digest", digest))
+    assert result.exit_code == 0, result.output
+    line = result.output.splitlines()[0]
+    assert line.endswith(
+        "effects=merge:completed,worktree_remove:completed,branch_delete:completed,marker_clear:skipped,"
+        "post_finish:completed]"
+    ), line
+
+
+def test_partial_cleanup_warning_exits_zero_and_errors_print_last(repo, monkeypatch):
+    from devkit.advisory import AdvisoryError, Level
+    from devkit_agt.features.integration.models.contracts import IntegrationResult
+
+    base, _ = repo
+    request = IntegrationService(base).prepare("dev-demo", Task("session", "fixture")).request
+    warning = AdvisoryError("cleanup remains", code="INTEGRATION_CLEANUP_INCOMPLETE", level=Level.WARNING)
+
+    def fake(status, errors=()):
+        result = IntegrationResult(request, status=status)
+        result.notices.append(warning)
+        result.errors.extend(errors)
+        monkeypatch.setattr("devkit_agt.features.integration.cli.IntegrateUseCase.execute", lambda *_a, **_k: result)
+
+    fake("partial")
+    assert CliRunner().invoke(cli, _integrate_args(base)).exit_code == 0
+    assert CliRunner().invoke(cli, _integrate_args(base, "--strict")).exit_code == 1
+
+    fake("blocked", [AdvisoryError("refused", code="INTEGRATION_TARGET_MOVED", guardrail=True)])
+    result = CliRunner().invoke(cli, _integrate_args(base, "--strict"))
+    assert result.exit_code == 2, result.output  # --strict never lowers 2 to 1
+    stderr = result.stderr
+    assert stderr.index("[WARN]") < stderr.index("[ERROR]")

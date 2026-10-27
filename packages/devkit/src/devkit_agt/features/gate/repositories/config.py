@@ -30,6 +30,7 @@ settings raise ``GateConfigError`` (``GATE_CONFIG_INVALID``).
 from __future__ import annotations
 
 import dataclasses
+import json
 import typing
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -80,7 +81,7 @@ def _table(value: object, context: str) -> dict[str, Any]:
 def parse_gates(table: dict[str, Any], sources: tuple[Path, ...] = ()) -> GatesConfig:
     unknown = set(table) - {SETTINGS_KEY}
     if unknown:
-        raise GateConfigError(f"config {GATES_TABLE}: unknown fields: {sorted(unknown)}")
+        raise GateConfigError(f"config {GATES_TABLE}: unknown fields: {', '.join(sorted(unknown))}")
     gates: dict[str, GateEntry] = {}
     settings = _table(table.get(SETTINGS_KEY, {}), f"{GATES_TABLE}.{SETTINGS_KEY}")
     for gate_id in sorted(settings):
@@ -88,7 +89,9 @@ def parse_gates(table: dict[str, Any], sources: tuple[Path, ...] = ()) -> GatesC
         values = dict(_table(settings[gate_id], context))
         enabled = values.pop(ENABLED_KEY, None)
         if enabled is not None and not isinstance(enabled, bool):
-            raise GateConfigError(f"config {context}.{ENABLED_KEY}: expected true or false, got {enabled!r}")
+            raise GateConfigError(
+                f"config {context}.{ENABLED_KEY}: expected true or false, got {json.dumps(enabled, default=str)}"
+            )
         gates[gate_id] = GateEntry(enabled, values)
     return GatesConfig(gates, sources)
 
@@ -120,7 +123,7 @@ def load_gates_config(repo_root: Path, common_git_dir: Path) -> GatesConfig:
     if local is not None:
         unknown = set(local) - {GATES_TABLE}
         if unknown:
-            raise GateConfigError(f"config {local_path}: unknown fields: {sorted(unknown)}")
+            raise GateConfigError(f"config {local_path}: unknown fields: {', '.join(sorted(unknown))}")
         if GATES_TABLE in local:
             merged = merge(merged, _table(local[GATES_TABLE], f"{local_path}: {GATES_TABLE}"))
             sources.append(local_path)
@@ -139,7 +142,7 @@ def resolve_settings(gate: Gate, values: dict[str, Any]) -> Any:
     context = f"{GATES_TABLE}.{SETTINGS_KEY}.{gate.id}"
     if defaults is None:
         if values:
-            raise GateConfigError(f"config {context}: gate has no settings, got {sorted(values)}")
+            raise GateConfigError(f"config {context}: gate has no settings, got {', '.join(sorted(values))}")
         return None
     if not dataclasses.is_dataclass(defaults) or isinstance(defaults, type):
         raise GateDefinitionError(f"gate {gate.id!r}: settings must be a dataclass instance or None")
@@ -152,7 +155,9 @@ def resolve_settings(gate: Gate, values: dict[str, Any]) -> Any:
     names = {f.name for f in dataclasses.fields(defaults)}
     unknown = set(values) - names
     if unknown:
-        raise GateConfigError(f"config {context}: unknown settings {sorted(unknown)} (known: {sorted(names)})")
+        raise GateConfigError(
+            f"config {context}: unknown settings {', '.join(sorted(unknown))} (known: {', '.join(sorted(names)) or '-'})"
+        )
     resolved: dict[str, Any] = {}
     for key, value in values.items():
         try:

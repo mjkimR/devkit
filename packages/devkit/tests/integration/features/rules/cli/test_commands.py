@@ -522,9 +522,9 @@ def test_cli_snapshot_flag_validation(tmp_path: Path) -> None:
     both = runner.invoke(cli, ["check", "-w", str(root), "--staged", "--ci"])
     assert both.exit_code == 2 and "mutually exclusive" in both.stderr
     with_file = runner.invoke(cli, ["check", "-w", str(root), "--staged", "README.md"])
-    assert with_file.exit_code == 2 and "without file arguments" in with_file.stderr
+    assert with_file.exit_code == 2 and "takes no file arguments" in with_file.stderr
     hygiene = runner.invoke(cli, ["check", "-w", str(root), "--staged", "--phase", "hygiene"])
-    assert hygiene.exit_code == 2 and "without file arguments" in hygiene.stderr
+    assert hygiene.exit_code == 2 and "runs the linter phase only" in hygiene.stderr
     outside = runner.invoke(cli, ["check", "-w", str(tmp_path), "--staged"])
     assert outside.exit_code == 2 and "not inside a Git work tree" in outside.output
     assert "Usage:" not in outside.output  # an evaluation failure, not a usage error
@@ -1029,3 +1029,20 @@ def test_violation_line_quotes_a_guide_path_with_spaces(tmp_path: Path) -> None:
         tmp_path,
     )
     assert line.endswith(' guide="my rules/guide.md"]')
+
+
+def test_cli_invalid_target_fix_names_the_argument(tmp_path: Path) -> None:
+    _two_broken_docs(tmp_path)
+    missing = CliRunner().invoke(cli, ["check", "-w", str(tmp_path), "--format", "json", "docs/nope.md"])
+    advisory = json.loads(missing.stdout)["error"]["advisory"]
+    assert advisory["target_files"] == ["docs/nope.md"] and "docs/nope.md" in advisory["fix"]
+
+
+def test_cli_staged_with_files_targets_the_files_not_the_phase(tmp_path: Path) -> None:
+    root = _repo(tmp_path)
+    result = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "--format", "json", "docs/a.md"])
+    advisory = json.loads(result.stdout)["error"]["advisory"]
+    assert advisory["target_files"] == ["docs/a.md"] and advisory["fix"]
+    phase = CliRunner().invoke(cli, ["check", "-w", str(root), "--staged", "-p", "hygiene", "--format", "json"])
+    advisory = json.loads(phase.stdout)["error"]["advisory"]
+    assert advisory["target_files"] == ["--phase"] and advisory["fix"]

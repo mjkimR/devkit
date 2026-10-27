@@ -49,6 +49,7 @@ def test_an_error_violation_refuses_the_commit(repo: Path) -> None:
         "  fix: Verify relative path 'missing.md' exists",
     ]
     assert error.fix is not None and "devkit rules check --staged" in error.fix
+    assert list(error.target_files) == ["a.md:1"]
 
 
 def test_a_long_refusal_lists_the_first_violations_and_counts_the_rest(repo: Path) -> None:
@@ -124,3 +125,38 @@ def test_the_installed_hook_refuses_a_commit_with_a_violation(repo: Path) -> Non
 
     (repo / ".git/devkit.config").write_text("[gates.settings.rules-check]\nenabled = false\n")
     assert git(repo, "commit", "-am", "docs: break a link", check=False).returncode == 0
+
+
+def test_strict_does_not_refuse_a_commit_for_warning_severity_rules(repo: Path) -> None:
+    (repo / ".devkit").mkdir()
+    _stage(repo, ".devkit/config.toml", '[rules.severity_overrides]\nRULE-markdown-link = "warning"\n')
+    _stage(repo, "a.md", "[bad](missing.md)\n")
+    result = CliRunner().invoke(cli, ["run", "-w", str(repo), "--strict", "pre-commit"])
+    assert result.exit_code == 0, result.output
+    assert "(GATE_RULES_WARNINGS)" in result.output and "[ERROR]" not in result.output
+
+
+WARNING_GATE = """from devkit.advisory import AdvisoryError, Level
+
+from devkit_agt.features.gate import BaseGate, GateContext, GateResult, Stage
+
+
+class WarnGate(BaseGate):
+    def __init__(self) -> None:
+        super().__init__(id="team-warn", description="test gate", stage=Stage.PRE_COMMIT)
+
+    def run(self, ctx: GateContext) -> GateResult:
+        return GateResult.passed(notices=[AdvisoryError("heads up", code="TEAM_WARNED", level=Level.WARNING)])
+"""
+
+
+def test_a_strict_abort_ends_with_an_error_block(repo: Path) -> None:
+    from testsupport.gate import deploy_gate
+
+    deploy_gate(repo, WARNING_GATE, ".devkit/managed/team/gates/warn/gate.py")
+    result = CliRunner().invoke(cli, ["run", "-w", str(repo), "pre-commit"])
+    assert result.exit_code == 0 and "(TEAM_WARNED)" in result.output, result.output
+    result = CliRunner().invoke(cli, ["run", "-w", str(repo), "--strict", "pre-commit"])
+    assert result.exit_code == 1, result.output
+    assert result.output.index("(TEAM_WARNED)") < result.output.index("[ERROR]  (GATE_STRICT_WARNINGS)")
+    assert "TEAM_WARNED" in result.output.split("[ERROR]")[1]  # the error names what made strict refuse

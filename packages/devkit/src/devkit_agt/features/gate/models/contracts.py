@@ -10,8 +10,9 @@ from typing import Any, Protocol
 
 from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import ArgumentError
+from devkit_dist.features.project.models.invocation import devkit_command
 
-from devkit_agt.features.gate.models.errors import DEVKIT, GateDefinitionError, GateResultError
+from devkit_agt.features.gate.models.errors import GateDefinitionError, GateResultError
 
 
 class Stage(StrEnum):
@@ -101,7 +102,7 @@ class GateContext:
         if not self.args:
             raise ArgumentError(
                 "commit-msg: no commit message file given",
-                fix=f"Pass the message file: `{DEVKIT} gate run commit-msg <file>`",
+                fix=f"Pass the message file: `{devkit_command('gate run commit-msg <file>')}`",
             )
         path = Path(self.args[0])
         return path if path.is_absolute() else self.repo_root / path

@@ -55,6 +55,7 @@ from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import UnsafePathError, atomic_write_text
 from devkit_core.core.logs import get_logger
 from devkit_dist.base.errors import ConfigError
+from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.project import require_git_toplevel
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 from devkit_dist.features.project.services.config_template import TemplateKey, TemplateTable
@@ -62,7 +63,7 @@ from devkit_dist.features.project.services.config_template import TemplateKey, T
 import devkit_agt.features.gate.repositories.git as git
 import devkit_agt.features.gate.usecases.hooks.hooks as hooks
 from devkit_agt.features.gate.models.contracts import Gate
-from devkit_agt.features.gate.models.errors import DEVKIT, GateTemplateNotice, HookInstallSkippedNotice
+from devkit_agt.features.gate.models.errors import GateTemplateNotice, HookInstallSkippedNotice
 from devkit_agt.features.gate.repositories.config import (
     ENABLED_KEY,
     LOCAL_CONFIG,
@@ -84,7 +85,7 @@ HEADER = f"""\
 _MENTION = re.compile(r"^\s*#?\s*\[\s*gates\s*\.\s*settings\s*\.\s*\"?([^\]\"\s]+)\"?\s*\]", re.MULTILINE)
 # A value to show for a field whose default is ``None`` (TOML has no null), by the field's inner type.
 _PLACEHOLDERS: dict[str, Any] = {"integer": 0, "number": 0.0, "string": "", "boolean": False}
-_INSTALL_FIX = f"then run `{DEVKIT} gate install`"
+_INSTALL_FIX = f"then run `{devkit_command('gate install')}`"
 
 _log = get_logger(__name__)
 
@@ -242,7 +243,7 @@ class RefreshGateTemplateUseCase(BaseUseCase):
             return _skipped(
                 common / LOCAL_CONFIG,
                 f"{CONFIG_PATH} cannot be read: {exc.message}",
-                fix=f"Correct {CONFIG_PATH} (`{DEVKIT} gate status` reports the problem), {_INSTALL_FIX}",
+                fix=f"Correct {CONFIG_PATH} (`{devkit_command('gate status')}` reports the problem), {_INSTALL_FIX}",
                 target=CONFIG_PATH,
             )
         try:
@@ -273,7 +274,7 @@ def _skipped_install(exc: AdvisoryError | OSError) -> HookInstallSkippedNotice:
     return HookInstallSkippedNotice(
         "automatic Git hook installation skipped",
         str(exc),
-        fix=f"Correct the hook directory permissions, then run `{DEVKIT} sync`",
+        fix=f"Correct the hook directory permissions, then run `{devkit_command('sync')}`",
     )
 
 

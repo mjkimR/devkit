@@ -21,6 +21,7 @@ from devkit_agt.features.integration.models.contracts import (
     IntegrationRequest,
     IntegrationResult,
     Task,
+    prepare_command,
 )
 from devkit_agt.features.integration.models.errors import IntegrationConfigError, StaleRequestError
 from devkit_agt.features.worktree import (
@@ -48,7 +49,7 @@ def _git(root: Path, *args: str) -> str:
 def _error(
     code: str,
     message: str,
-    fix: str = "Inspect Git and PR state, preserve completed steps, then rerun `devkit integration integrate --route pull-request` after Host approval",
+    fix: str = "Inspect Git and PR state, preserve completed steps, then prepare the pull-request route again and integrate it after Host approval",
 ) -> PullRequestError:
     return PullRequestError(code, message, fix)
 
@@ -79,7 +80,11 @@ def prepare(service: IntegrationService, branch: str, task: Task) -> Integration
     root, port = service.root, _port(service)
     port.begin_call()
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,255}", task.id):
-        raise IntegrationConfigError("PR task id must be an identifier, not free-form published text")
+        raise IntegrationConfigError(
+            "PR task id must be an identifier, not free-form published text",
+            target_files=["--task-id"],
+            fix="Pass --task-id an identifier such as the unit or session id",
+        )
     position = locate(root)
     if position.branch is None:
         raise _error("INTEGRATION_TARGET_UPSTREAM", "Target checkout is detached")
@@ -419,7 +424,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                     notice = _error(
                         "INTEGRATION_CHECKS_PENDING",
                         "Pending: " + ", ".join(pending),
-                        f"Wait with `gh pr checks {pr['number']} -R {repository.selector} --watch` using an agent bound, then inspect the PR and rerun `devkit integration integrate {plan.branch} --task-kind <kind> --task-id <id> --route pull-request` after Host approval; report checks that do not start",
+                        f"Wait with `gh pr checks {pr['number']} -R {repository.selector} --watch` using an agent bound, inspect the PR, then run `{prepare_command(plan.branch, request.context.task, 'pull-request')}` and, after Host approval, integrate with the digest it prints; report checks that do not start",
                     )
                     notice.level = Level.NOTICE
                     result.notices.append(notice)
@@ -498,13 +503,13 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                 raise _error(
                     "INTEGRATION_LOCAL_TARGET_BLOCKED",
                     "Base checkout is dirty or on another branch",
-                    "Make the base checkout clean on the target branch, inspect the merged PR and rerun `devkit integration integrate <branch> --task-kind <kind> --task-id <id> --route pull-request` after Host approval",
+                    f"Make the base checkout clean on the target branch, inspect the merged PR, then run `{prepare_command(plan.branch, request.context.task, 'pull-request')}` and, after Host approval, integrate with the digest it prints",
                 )
             if not is_ancestor(root, _git(root, "rev-parse", "HEAD"), target):
                 raise _error(
                     "INTEGRATION_LOCAL_TARGET_BLOCKED",
                     "Local target cannot fast-forward",
-                    "Make the base checkout clean and fast-forwardable, inspect the merged PR and rerun `devkit integration integrate <branch> --task-kind <kind> --task-id <id> --route pull-request` after Host approval",
+                    f"Make the base checkout clean and fast-forwardable, inspect the merged PR, then run `{prepare_command(plan.branch, request.context.task, 'pull-request')}` and, after Host approval, integrate with the digest it prints",
                 )
             validate_finish(
                 plan,
@@ -571,7 +576,7 @@ def execute(service: IntegrationService, record: _Record, wait: float, approving
                         raise _error(
                             "INTEGRATION_CLEANUP_INCOMPLETE",
                             "Scoped cleanup is incomplete",
-                            "Inspect Git, PR and cleanup state, then rerun `devkit integration integrate <branch> --task-kind <kind> --task-id <id> --route pull-request` after Host approval",
+                            f"Inspect Git, PR and cleanup state, then run `{prepare_command(plan.branch, request.context.task, 'pull-request')}` and, after Host approval, integrate with the digest it prints",
                         )
                     result.cleanup_steps[scope.extension] = "completed"
             result.steps[operation] = "completed"

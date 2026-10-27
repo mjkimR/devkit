@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any, Protocol
 from uuid import uuid4
 
-from devkit.advisory import AdvisoryError, Level
+from devkit.advisory import Actor, AdvisoryError, Level
 from devkit_core.base.errors import GitError
 from devkit_core.base.mcp import Confirmation
 from devkit_core.core import LockHeldError
@@ -39,6 +39,8 @@ from devkit_agt.features.integration.models.contracts import (
     IntegrationResult,
     Readiness,
     Task,
+    integrate_command,
+    prepare_command,
 )
 from devkit_agt.features.integration.models.errors import (
     AuthorityError,
@@ -141,9 +143,17 @@ class IntegrationService:
             or not task.id.strip()
             or len(task.id) > 256
         ):
-            raise IntegrationConfigError("task requires kind unit|session and a nonempty id of at most 256 characters")
+            raise IntegrationConfigError(
+                "task requires kind unit|session and a nonempty id of at most 256 characters",
+                target_files=["--task-kind", "--task-id"],
+                fix="Pass --task-kind unit or session and a --task-id of 1 to 256 characters",
+            )
         if (task.kind == "unit") != (task.unit is not None):
-            raise IntegrationConfigError("unit tasks require a unit path; session tasks must not invent one")
+            raise IntegrationConfigError(
+                "unit tasks require a unit path; session tasks must not invent one",
+                target_files=["--unit"],
+                fix="Pass --unit with --task-kind unit only",
+            )
         if task.unit is not None:
             normalize_relpath(task.unit, canonical=True)
         try:
@@ -151,7 +161,11 @@ class IntegrationService:
             if not isinstance(claims, dict) or len(task.claims_json.encode()) > 16384:
                 raise ValueError("invalid claims")
         except (ValueError, UnicodeError) as exc:
-            raise IntegrationConfigError("task claims must be a JSON object of at most 16 KiB") from exc
+            raise IntegrationConfigError(
+                "task claims must be a JSON object of at most 16 KiB",
+                target_files=["--claims"],
+                fix="Pass --claims a JSON object of at most 16 KiB, such as '{}'",
+            ) from exc
         if len(self._records) >= 128:
             retired = next(
                 (
@@ -320,8 +334,12 @@ class IntegrationService:
         if expected_digest is not None and expected_digest != request.digest:
             raise StaleRequestError(
                 "the source, target, policy, readiness or cleanup scope differs from the prepared scope",
-                fix="Run `devkit integration prepare` for the current scope, obtain fresh Host approval under ask, "
-                "then pass its digest to `devkit integration integrate --expected-digest <digest>`",
+                f"scope: {prepare_command(branch, task, route)}",
+                guardrail=False,
+                actor=Actor.USER,
+                fix=integrate_command(branch, task, route, request.digest),
+                what_to_report="The integration scope changed after it was approved. Present the current scope "
+                "(the [DETAIL] prepare command shows it) and ask the user to approve it again",
             )
         if request.approval_policy == "auto":
             result.authority = "policy"
@@ -329,8 +347,12 @@ class IntegrationService:
             if expected_digest is None:
                 raise AuthorityError(
                     "ask integration requires the digest of the scope presented for conversational approval",
-                    fix="Run `devkit integration prepare`, present its exact scope and obtain Host approval, "
-                    "then run `devkit integration integrate --expected-digest <digest>`",
+                    f"scope: {prepare_command(branch, task, route)}",
+                    guardrail=False,
+                    actor=Actor.USER,
+                    fix=integrate_command(branch, task, route, request.digest),
+                    what_to_report="Integration needs the user's approval of its exact scope. Present the scope "
+                    "(the [DETAIL] prepare command shows it) and ask whether to integrate",
                 )
             result.authority = "host-conversation"
         record = self._record(request.id)
@@ -544,9 +566,9 @@ class IntegrationService:
                 result = record.result
                 result.observed = self._observe(result.request)
                 exc.fix = (
-                    "Wait for the other devkit integration to finish, inspect Git state and rerun `devkit integration integrate` after Host approval"
+                    "Wait for the other devkit integration to finish, inspect Git state and rerun `uv run devkit integration integrate` after Host approval"
                     if result.observed.get("target_sha") == plan.target_sha
-                    else "Inspect the moved target and source, rerun readiness and obtain Host approval for a new `devkit integration integrate` invocation"
+                    else "Inspect the moved target and source, rerun readiness and obtain Host approval for a new `uv run devkit integration integrate` invocation"
                 )
                 result.errors[:] = [exc]
                 result.failing_operation = "lock"
@@ -715,7 +737,7 @@ class IntegrationService:
             if head != plan.target_sha:
                 raise StaleRequestError(
                     "the target moved since the last invocation; inspect current Git state, rerun readiness and obtain"
-                    " Host approval for a new `devkit integration integrate` invocation"
+                    " Host approval for a new `uv run devkit integration integrate` invocation"
                 )
         elif head is None or not is_ancestor(self.root, plan.target_sha, head):
             raise StaleRequestError("the target no longer descends from the confirmation target (reset or rewritten)")

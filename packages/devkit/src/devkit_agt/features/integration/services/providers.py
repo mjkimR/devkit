@@ -192,7 +192,11 @@ def check(value: ReadinessProvider, context: IntegrationContext) -> Readiness:
         ):
             raise TypeError("readiness reasons must be a tuple of strings")
         if result.reasons:
-            raise ReadinessError("the configured provider refused integration", *result.reasons)
+            raise ReadinessError(
+                "the configured provider refused integration",
+                *result.reasons,
+                target_files=[context.finish.path] if context.finish.path else None,
+            )
         return result
     except AdvisoryError:
         raise

@@ -14,6 +14,7 @@ any problem that would fail a commit and 2 only when it cannot run; its warnings
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -27,6 +28,7 @@ from devkit_dist.adapters.cli import (
     existing_directory,
     exit_on_warnings,
     is_json,
+    output_settings,
     report_exit_code,
     workspace_option,
 )
@@ -35,9 +37,13 @@ from devkit_dist.features.project.usecases.workspace import require_git_toplevel
 import devkit_agt.features.gate.usecases.hooks.hooks as hooks
 import devkit_agt.features.gate.usecases.hooks.local_config as local_config
 from devkit_agt.features.gate.models.contracts import Outcome, Stage
+from devkit_agt.features.gate.models.errors import RulesWarningsNotice, StrictWarningsError
 from devkit_agt.features.gate.models.paths import display_path
 from devkit_agt.features.gate.usecases.runner import RunHookUseCase, StageReport
 from devkit_agt.features.gate.usecases.status import GateStatusUseCase
+
+# Warning codes ``--strict`` never counts in ``gate run``.
+STRICT_EXEMPT = frozenset({RulesWarningsNotice.code})
 
 WORKSPACE = workspace_option(
     "Any directory inside the repository [default: the current directory]; "
@@ -60,6 +66,27 @@ def cli() -> None:
     """Pluggable Git commit gates."""
 
 
+def _yes(value: object) -> str:
+    return "yes" if value else "no"
+
+
+def _action_rows(actions: list[str]) -> list[dict[str, str]]:
+    """``<stage>: <verb> <detail>`` action lines as ``{"stage", "action", "detail"}`` rows."""
+    rows = []
+    for line in actions:
+        stage, _, rest = line.partition(": ")
+        verb, _, detail = rest.partition(" ")
+        rows.append({"stage": stage, "action": verb, "detail": detail})
+    return rows
+
+
+def _echo_actions(rows: list[dict[str, str]], hooks_dir: Path | None, root: Path) -> None:
+    for row in rows:
+        path = display_path(hooks_dir / row["stage"], root) if hooks_dir is not None else "-"
+        detail = f" detail={json.dumps(row['detail'], ensure_ascii=False)}" if row["detail"] else ""
+        click.echo(f"[HOOK: {row['stage']} action={row['action']} path={path}{detail}]")
+
+
 @cli.command(name="install")
 @WORKSPACE
 @click.option(
@@ -73,32 +100,54 @@ def cli() -> None:
     default=None,
     help="Fallback interpreter the wrappers exec when the work tree's .venv has no devkit (default: this one)",
 )
+@FORMAT_OPTION
 @boundary
-def install_cmd(workspace_root: str | None, force: bool, python: str | None) -> None:
+def install_cmd(workspace_root: str | None, force: bool, python: str | None, output_format: str) -> None:
     """Install the pre-commit, commit-msg and post-commit wrappers, and the commented settings template.
 
     The template in <common-git-dir>/devkit.config gets a commented table for every installed gate it does not
-    mention yet; existing lines are never changed.
+    mention yet; existing lines are never changed. Prints one [HOOK: <stage> action=<verb> path=...] line per change
+    and one [CONFIG: ...] line; --format json prints {"hooks", "config", "notices"}.
     """
     root = _repo_root(workspace_root)
     installed = hooks.InstallHooksUseCase().execute(root, python or sys.executable, force=force)
-    for action in installed.actions:
-        click.echo(f"[HOOK: {action}]")
+    rows = _action_rows(installed.actions)
     template = local_config.RefreshGateTemplateUseCase().execute(root)
-    click.echo(f"[CONFIG: template={template.state} path={template.path}]")
     notices = installed.notices + ([template.notice] if template.notice is not None else [])
-    echo_notices(notices)
+    if is_json(output_format):
+        echo_json(
+            {
+                "hooks": rows,
+                "config": {"template": template.state.value, "path": display_path(template.path, root)},
+                "notices": [notice.to_dict() for notice in notices],
+            }
+        )
+    else:
+        _echo_actions(rows, installed.hooks_dir, root)
+        click.echo(f"[CONFIG: template={template.state} path={display_path(template.path, root)}]")
+        echo_notices(notices)
     exit_on_warnings(notices)
 
 
 @cli.command(name="uninstall")
 @WORKSPACE
+@FORMAT_OPTION
 @boundary
-def uninstall_cmd(workspace_root: str | None) -> None:
-    """Remove managed wrappers and restore hooks moved aside by install."""
-    actions = hooks.UninstallHooksUseCase().execute(_repo_root(workspace_root))
-    for action in actions or ["no managed hooks"]:
-        click.echo(f"[HOOK: {action}]")
+def uninstall_cmd(workspace_root: str | None, output_format: str) -> None:
+    """Remove managed wrappers and restore hooks moved aside by install.
+
+    Prints one [HOOK: <stage> action=<verb> path=...] line per change, or [OK: no managed hooks];
+    --format json prints {"hooks"}.
+    """
+    root = _repo_root(workspace_root)
+    removed = hooks.UninstallHooksUseCase().execute(root)
+    rows = _action_rows(removed.actions)
+    if is_json(output_format):
+        echo_json({"hooks": rows})
+    elif rows:
+        _echo_actions(rows, removed.hooks_dir, root)
+    else:
+        click.echo("[OK: no managed hooks]")
 
 
 def _setup(gate: object, settings: object) -> str | None:
@@ -168,19 +217,19 @@ def status_cmd(workspace_root: str | None, output_format: str) -> None:
             sys.exit(report_exit_code(errors))
         exit_on_warnings(notices)
         return
-    hooks_path = f" core.hooksPath={location.hooks_path} (wrappers do not run)" if location.hooks_path else ""
+    # core.hooksPath sends Git elsewhere: the managed wrappers do not run.
+    hooks_path = f" hooks_path={location.hooks_path} wrappers_run=no" if location.hooks_path else ""
     click.echo(f"[HOOKS: dir={display_path(location.directory, project.root)}{hooks_path}]")
     for row in hook_rows:
-        extra = f" python={row['python']} python_ok={str(row['python_ok']).lower()}" if row["python"] else ""
-        click.echo(f"[HOOK: {row['stage']} state={row['state']}{extra} scripts={','.join(row['scripts']) or 'none'}]")
+        extra = f" python={row['python']} python_ok={_yes(row['python_ok'])}" if row["python"] else ""
+        click.echo(f"[HOOK: {row['stage']} state={row['state']}{extra} scripts={','.join(row['scripts']) or '-'}]")
     for row in gate_rows:
+        setup = f" setup={json.dumps(row['setup'], ensure_ascii=False)}" if row["setup"] else ""
         click.echo(
             f"[GATE: {row['id']} stage={row['stage']} order={row['order']} "
-            f"enabled={str(row['enabled']).lower()} source={row['source']}"
-            + (f" {row['setup']}" if row["setup"] else "")
-            + "]"
+            f"enabled={_yes(row['enabled'])} source={row['source']}{setup}]"
         )
-    click.echo(f"[CONFIG: sources={','.join(sources) or 'none'}]")
+    click.echo(f"[CONFIG: sources={','.join(sources) or '-'}]")
     echo_notices(notices)  # before the problems, so errors are last
     for error in errors:
         click.echo(error.render(), err=True)
@@ -248,4 +297,23 @@ def run_cmd(workspace_root: str | None, stage: str, hook_args: tuple[str, ...]) 
     if current.blocking and not report.ok:
         sys.exit(int(report.exit_code))
     if current.blocking:
-        exit_on_warnings(report.notices)
+        _strict_abort(report)
+
+
+def _strict_abort(report: StageReport) -> None:
+    """Under ``--strict``, refuse a passed blocking stage that reported a warning, ending with an ``[ERROR]`` block.
+
+    Warning-severity rule violations (``GATE_RULES_WARNINGS``) do not count: their rule's severity governs them.
+    """
+    if not output_settings().strict:
+        return
+    warned = [notice for notice in report.notices if notice.level is Level.WARNING and notice.code not in STRICT_EXEMPT]
+    if not warned:
+        return
+    codes = sorted({notice.code for notice in warned})
+    error = StrictWarningsError(
+        f"--strict refused the commit for warnings: {', '.join(codes)}",
+        f"stage={report.stage}",
+    )
+    click.echo(error.render(), err=True)
+    sys.exit(int(error.exit_code))

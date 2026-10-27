@@ -93,11 +93,14 @@ def test_stale_judges_commits_and_pull_requests_of_activity_branches_only(repo: 
     assert old.last_activity.date() == (datetime.now(UTC) - timedelta(days=20)).date()  # the PR is later
     warning = gone.warning(repo, "14d")
     assert warning.code == "WORKTREE_STALE_BRANCH" and warning.mode is ActionMode.CONTINUE
-    assert warning.fix == (
-        "To resume it, uv run devkit worktree start dev-gone --existing-branch origin/dev-gone --unit <unit directory>;"
-        f" to discard it, only once the user decides: close its pull request, git -C {repo} push origin --delete"
-        " dev-gone"
-    )
+    assert warning.fix is None  # no recorded unit: no runnable resume command
+    assert list(warning.details)[-2:] == [
+        "to resume it: uv run devkit worktree start dev-gone --existing-branch origin/dev-gone --unit followed by its"
+        " unit directory",
+        f"to discard it, only once the user decides: close its pull request, git -C {repo} push origin --delete"
+        " dev-gone",
+    ]
+    assert warning.what_to_report == "Activity branch dev-gone is idle; ask whether to resume or discard it"
     assert stale_branches(locate(repo), "3w", gh=fake_gh(pulls)).stale == []
 
 
@@ -106,8 +109,10 @@ def test_a_failed_pull_request_lookup_judges_by_commits_alone(repo: Path) -> Non
     result = stale_branches(locate(repo), gh=fake_gh(pr_list=1))
     [item] = result.stale
     assert item.pr == "unknown"
-    [notice] = result.notices
-    assert notice.code == "WORKTREE_STALE_PR_UNKNOWN"
+    assert result.notices == []  # no GitHub remote: nothing to report on every run
+    git(repo, "remote", "add", "origin", "https://github.com/example/repo.git")
+    [notice] = stale_branches(locate(repo), gh=fake_gh(pr_list=1)).notices
+    assert notice.code == "WORKTREE_STALE_PR_UNKNOWN" and notice.fix is None
 
 
 def test_the_stale_command_lists_and_warns(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:

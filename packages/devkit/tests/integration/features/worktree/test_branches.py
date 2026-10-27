@@ -80,7 +80,9 @@ def test_start_refuses_a_branch_a_remote_has(repo: Path, tmp_path: Path) -> None
     for begin in (lambda: start(locate(repo), "dev-demo"), lambda: StartBranch().execute(locate(repo), "dev-demo")):
         with pytest.raises(BranchExistsError, match="already exists on origin") as raised:
             begin()
-        assert raised.value.fix is not None and "--existing-branch origin/dev-demo" in raised.value.fix
+        assert raised.value.fix is None  # no recorded unit: continuing it, and with which unit, is the user's answer
+        assert raised.value.what_to_report is not None
+        assert "--existing-branch origin/dev-demo --unit" in raised.value.what_to_report
     assert git(repo, "branch", "--list", "dev-demo") == "" and git(repo, "branch", "--show-current") == "main"
 
 

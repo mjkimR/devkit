@@ -122,7 +122,8 @@ def test_inert_hooks_are_moved_aside_without_force(repo: Path) -> None:
     inert.chmod(0o644)
     assert hooks.status(repo)[0].state is hooks.HookState.INERT
     output = _install(repo)
-    assert "moved inert (non-executable) hook" in output
+    assert "(GATE_HOOK_PRESERVED) inert (non-executable) pre-commit hook preserved at" in output
+    assert "action=moved" not in output  # reported once, by the warning
     code, _ = _commit(repo, "-m", "feat: inert hook is still ignored")
     assert code == 0
 
@@ -157,21 +158,22 @@ def test_core_hooks_path_is_refused_and_reported(repo: Path) -> None:
     notice = data["notices"][0]
     assert notice["message"].startswith("enabled gates do not run: core.hooksPath is set to '.husky'")
     assert notice["advisory"]["details"] == ["gates=rules-check,verify-commands,message-nonempty"]
-    assert (
-        notice["advisory"]["fix"]
-        == "Once the user agrees, run `git config --unset core.hooksPath`, then `uv run devkit gate install`"
-    )
+    assert notice["advisory"]["fix"] == "git config --unset core.hooksPath && uv run devkit gate install"
     code, output = _invoke("status", "-w", str(repo))
-    assert code == 0 and "core.hooksPath=.husky (wrappers do not run)" in output
+    assert code == 0 and "[HOOKS: dir=.git/hooks hooks_path=.husky wrappers_run=no]" in output
     assert "GATE_HOOK_ENTRY_MISSING" not in output
     assert _invoke("status", "-w", str(repo), "--strict")[0] == 1
     code, output = _invoke("uninstall", "-w", str(repo))
-    assert code == 0 and "pre-commit: removed" in output and not (repo / ".git/hooks/pre-commit").exists()
+    assert (
+        code == 0
+        and "[HOOK: pre-commit action=removed path=.git/hooks/pre-commit]" in output
+        and not (repo / ".git/hooks/pre-commit").exists()
+    )
 
 
 def _fix_command(output: str) -> list[str]:
     fix = next(line for line in output.splitlines() if line.startswith("[FIX] "))
-    return shlex.split(fix.split("`")[1])
+    return shlex.split(fix.removeprefix("[FIX]").split(" && ")[0])
 
 
 def test_hooks_path_fix_names_the_scope_that_sets_it(
@@ -429,7 +431,7 @@ def test_run_command_verbose_and_post_commit_never_blocks(repo: Path) -> None:
     assert _invoke("run", "-w", str(repo), "--strict", "post-commit")[0] == 0  # post-commit always exits 0
     code, output = _invoke("run", "-w", str(repo), "pre-commit")
     assert code == 2 and output.startswith("[ERROR]  (GATE_CONFIG_INVALID)")  # a configuration problem
-    assert "not installed: ['unknown']" in output
+    assert "not installed: unknown" in output
 
     (repo / ".git/devkit.config").write_text("[gates\n")
     code, output = _invoke("run", "-w", str(repo), "post-commit")
@@ -442,7 +444,7 @@ def test_status_reports_every_problem_that_fails_a_commit(repo: Path) -> None:
     (repo / ".git/devkit.config").write_text("[gates.settings.typo-gate]\nenabled = true\n")
     data = _status(repo, 1)  # a report listing problems exits 1
     assert [e["code"] for e in data["errors"]] == ["GATE_CONFIG_INVALID"]
-    assert "not installed: ['typo-gate']" in data["errors"][0]["message"]
+    assert "not installed: typo-gate" in data["errors"][0]["message"]
 
     (repo / ".git/devkit.config").write_text("[gates.settings.message-nonempty]\nenabled = false\nbogus = 1\n")
     assert "gate has no settings" in _status(repo, 1)["errors"][0]["message"]
@@ -690,8 +692,10 @@ def test_status_warns_when_an_enabled_gate_has_no_hook_entry(repo: Path) -> None
     data = _status(repo)  # a warning: the report still exits 0
     assert [g["enabled"] for g in data["gates"] if g["id"] == "after-commit"] == [True]
     assert [(n["code"], n["level"]) for n in data["notices"]] == [("GATE_HOOK_ENTRY_MISSING", "WARNING")]
-    assert "post-commit: enabled gates do not run" in data["notices"][0]["message"]
-    assert data["notices"][0]["advisory"]["details"] == ["gates=after-commit"]
+    assert "enabled gates do not run in post-commit" in data["notices"][0]["message"]
+    assert data["notices"][0]["advisory"]["details"] == [
+        "post-commit: post-commit.d/20-devkit is not installed; gates=after-commit"
+    ]
     result = CliRunner().invoke(cli, ["status", "-w", str(repo)])
     assert result.exit_code == 0 and "[WARN]   (GATE_HOOK_ENTRY_MISSING)" in result.stderr
     assert "devkit gate install" in result.stderr
@@ -703,8 +707,11 @@ def test_status_warns_when_an_enabled_gate_has_no_hook_entry(repo: Path) -> None
 
 def test_status_warns_for_every_stage_with_gates_before_install(repo: Path) -> None:
     notices = _status(repo)["notices"]
-    assert [n["code"] for n in notices] == ["GATE_HOOK_ENTRY_MISSING"] * 2
-    assert ["is not a devkit dispatcher (missing)" in n["message"] for n in notices] == [True, True]
+    [notice] = notices  # one warning naming every stage
+    assert notice["code"] == "GATE_HOOK_ENTRY_MISSING"
+    assert notice["message"] == "enabled gates do not run in pre-commit, commit-msg: the hook entry is missing"
+    assert [d.split(":")[0] for d in notice["advisory"]["details"]] == ["pre-commit", "commit-msg"]
+    assert all("is not a devkit dispatcher (missing)" in d for d in notice["advisory"]["details"])
 
 
 def test_status_with_core_hooks_path_warns_with_its_fix_instead_of_install(repo: Path) -> None:

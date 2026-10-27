@@ -25,6 +25,8 @@ from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import GitError
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core.git import run_git
+from devkit_core.core.logs import get_logger
+from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_agt.features.worktree.models.errors import (
     StaleBranchWarning,
@@ -34,6 +36,8 @@ from devkit_agt.features.worktree.models.errors import (
 )
 from devkit_agt.features.worktree.repositories.config import parse_period, read_worktree_config
 from devkit_agt.features.worktree.usecases.lifecycle import BRANCH, BRANCH_LIMIT, UNIT_KEY, Position, locate
+
+_log = get_logger(__name__)
 
 GH_TIMEOUT = 60.0  # seconds for one gh call
 PR_LIMIT = 1000  # pull requests read in one `gh pr list`
@@ -92,15 +96,18 @@ class StaleBranch:
         discard = [f"uv run devkit worktree finish {self.branch} --discard -w {quoted}"] if "local" in self.refs else []
         discard += [f"git -C {quoted} push {shlex.quote(remote)} --delete {self.branch}" for remote in remotes]
         pr = " close its pull request," if self.pr in {"draft", "open", "blocked"} else ""
+        resume = devkit_command(f"worktree start {self.branch} --existing-branch {self.source()} --unit")
         return StaleBranchWarning(
             f"activity branch {self.branch} has had no activity since {_iso(self.last_activity)}, longer than"
             f" [worktree] stale_after = {stale_after!r} (pull request: {self.pr})",
             f"unit: {self.unit or '-'}",
             f"refs: {', '.join(self.refs)}",
             *([f"pull request: {self.pr_url}"] if self.pr_url else []),
-            fix=f"To resume it, uv run devkit worktree start {self.branch} --existing-branch {self.source()} --unit"
-            f" {self.unit or '<unit directory>'}; to discard it, only once the user decides:{pr} "
-            + " && ".join(discard),
+            *([] if self.unit else [f"to resume it: {resume} followed by its unit directory"]),
+            f"to discard it, only once the user decides:{pr} " + " && ".join(discard),
+            # Resuming is the routine follow-up; discarding is the user's decision, so it stays a detail.
+            fix=f"{resume} {shlex.quote(self.unit)}" if self.unit else None,
+            what_to_report=f"Activity branch {self.branch} is idle; ask whether to resume or discard it",
         )
 
 
@@ -148,6 +155,15 @@ def _activity_branches(base: Path) -> dict[str, tuple[datetime, list[str]]]:
         latest, refs = found.get(name, (when, []))
         found[name] = (max(latest, when), [*refs, where])
     return found
+
+
+def _github_remote(base: Path) -> bool:
+    """Whether a remote of ``base`` points at a GitHub host, so ``gh pr list`` failing is worth a notice."""
+    try:
+        remotes = os.fsdecode(run_git(base, "remote", "-v"))
+    except GitError:
+        return False
+    return "github" in remotes.lower()
 
 
 def _pull_requests(base: Path, gh: GhRunner) -> dict[str, dict[str, Any]] | None:
@@ -224,13 +240,16 @@ class StaleBranches(BaseUseCase):
         branches = _activity_branches(base)
         pulls = _pull_requests(base, gh) if branches else {}
         notices: list[AdvisoryError] = []
-        if pulls is None:
+        if pulls is None and _github_remote(base):
             notices.append(
                 StalePullRequestsUnknownNotice(
                     "gh pr list failed, so activity branches were judged by their last commit alone",
-                    fix="Check gh pr list in this repository, then rerun",
+                    f"diagnose: cd {shlex.quote(str(base))} && gh pr list --state all --limit 1",
+                    brief=True,
                 )
             )
+        elif pulls is None:  # no GitHub remote: there are no pull requests to ask about, on every run
+            _log.info("no GitHub remote; activity branches are judged by their last commit alone")
         moment = now or datetime.now(UTC)
         stale: list[StaleBranch] = []
         for name, (committed, refs) in sorted(branches.items()):

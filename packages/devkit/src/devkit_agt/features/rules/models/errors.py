@@ -50,7 +50,7 @@ class TargetError(RulesError):
 
     code = "RULES_TARGET_INVALID"
     input_error = True
-    fix = "Pass existing files or directories inside the workspace"
+    fix = "Correct or drop the file arguments [TARGET] names"
 
 
 class RulesDirError(RulesError):
