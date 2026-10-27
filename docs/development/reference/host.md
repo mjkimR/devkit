@@ -56,6 +56,7 @@ outside the top level of a Git checkout (`MCP_CHECKOUT_REQUIRED`), both targetin
 | --- | --- | --- |
 | `MCP_REGISTRATION_CONFLICT` | `ERROR` `INTERACTION` | A host file in `[TARGET]`, the ledger or a destination differs from what devkit recorded (edited or unowned entry, symlink, malformed file); the user decides how to restore it |
 | `MCP_REGISTRATION_INTERRUPTED` | `ERROR` `AUTO` | An interrupted transaction awaits recovery; run `uv run devkit sync` |
+| `MCP_REGISTRATION_UNRECONCILED` | `ERROR` `AUTO` | `sync --locked` found local MCP registration that only ordinary sync reconciles; run `uv run devkit sync` |
 | `MCP_LEDGER_UNIGNORED` | `ERROR` `AUTO` | The ownership ledger is not Git-ignored yet; run `uv run devkit sync` |
 | `MCP_CHECKOUT_REQUIRED` | `ERROR` `INPUT_ERROR` (sync: `WARNING`) | The workspace is not the top level of a Git checkout; target `--workspace-root` |
 | `MCP_RUNTIME_UNAVAILABLE` | `ERROR` `INPUT_ERROR` (sync: `WARNING`) | No verified retained runtime with the same service packages; pass one to `--executable` |

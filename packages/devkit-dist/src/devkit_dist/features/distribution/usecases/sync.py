@@ -1000,8 +1000,9 @@ def sync_project(
                 registration.before.get(key) is not None
                 for key in (*registrations.DESTINATIONS.values(), registrations.LEDGER)
             ):
-                raise registrations.RegistrationError(
-                    "locked sync requires ordinary sync to reconcile local MCP registration"
+                raise registrations.RegistrationInterrupted(
+                    "locked sync requires ordinary sync to reconcile local MCP registration",
+                    code="MCP_REGISTRATION_UNRECONCILED",
                 )
             # A fresh checkout has no registration to validate. Asset restoration stays
             # locked; lifecycle initialization runs separately after this succeeds.

@@ -147,6 +147,7 @@ def test_a_slow_command_notice_follows_the_result_and_quiet_hides_it() -> None:
     code = "import time; time.sleep(0.2)"
     result = _python(code, "--slow-after", "0.1")
     assert result.exit_code == 0 and result.stderr.startswith("[NOTICE] (RUN_SLOW_COMMAND) ")
+    assert "[ACTION]" not in result.stderr  # a brief notice: nothing for the agent to do
     assert _python(code, "-q", "--slow-after", "0.1").stderr == ""
     assert _python(code, "--strict", "--slow-after", "0.1").exit_code == 0  # a notice never fails a run
 
