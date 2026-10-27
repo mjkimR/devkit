@@ -96,7 +96,7 @@ def test_relayed_errors_of_a_command_with_findings_stay_a_refusal(repo: Path, tm
     _commit_all(repo)
     with pytest.raises(GateRefusedError) as info:
         _run(repo, _block_command(tmp_path, 1))
-    assert info.value.code == "GATE_VERIFY_FAILED" and info.value.mode is ActionMode.BLOCKED
+    assert info.value.code == "GATE_VERIFY_FAILED" and info.value.mode is ActionMode.INPUT_ERROR
     assert any(line.startswith("  > [ERROR]  (RULES_LOAD_FAILED)") for line in info.value.details)
 
 

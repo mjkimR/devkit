@@ -16,7 +16,7 @@ runs Git in the materialized snapshot is not pointed at this repository; the
 environment is restored afterwards.
 
 A commit with nothing staged is skipped. Unfixed error-severity violations refuse
-the commit (``GATE_RULES_FAILED``); warning-severity ones are returned as one
+the commit (``GATE_RULES_FAILED``, ``INPUT_ERROR``: fix them and commit again); warning-severity ones are returned as one
 ``GATE_RULES_WARNINGS`` notice. A run that could not complete (rules that cannot
 load, an invalid ``[rules]`` table, a rule that raised) is ``RULES_RUN_FAILED``,
 not a refusal: ``AUTO`` with the shared fix when every problem is ``AUTO`` with the
@@ -38,7 +38,7 @@ from devkit_core.core.git import COMMIT_INDEX_VARIABLE
 
 from devkit_agt.features.gate.models.base import BaseGate
 from devkit_agt.features.gate.models.contracts import GateContext, GateResult, Stage
-from devkit_agt.features.gate.models.errors import GateRefusedError, RulesWarningsNotice
+from devkit_agt.features.gate.models.errors import DEVKIT, GateFindingsError, RulesWarningsNotice
 from devkit_agt.features.gate.usecases.gates.commands import HOOK_GIT_VARIABLES
 
 if TYPE_CHECKING:
@@ -102,13 +102,13 @@ class RulesCheckGate(BaseGate):
             raise _not_run(run.errors)
         blocking = run.blocking_violations
         if blocking:
-            raise GateRefusedError(
+            raise GateFindingsError(
                 f"{len(blocking)} rule violation(s) in the staged tree",
                 *_listed(blocking),
                 code="GATE_RULES_FAILED",
                 fix=(
-                    "Fix the violations (devkit rules fix repairs the fixable ones), stage the fixes and commit again; "
-                    "devkit rules check --staged reproduces this check"
+                    f"Fix the violations (`{DEVKIT} rules fix` repairs the fixable ones), stage the fixes and commit "
+                    f"again; `{DEVKIT} rules check --staged` reproduces this check"
                 ),
             )
         warnings = [v for v in run.result.violations if v.severity is Severity.WARNING and not v.fixed]

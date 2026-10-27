@@ -42,7 +42,7 @@ def test_an_error_violation_refuses_the_commit(repo: Path) -> None:
     with pytest.raises(GateRefusedError) as info:
         _run(repo)
     error = info.value
-    assert (error.code, error.mode, error.exit_code) == ("GATE_RULES_FAILED", ActionMode.BLOCKED, 1)
+    assert (error.code, error.mode, error.exit_code) == ("GATE_RULES_FAILED", ActionMode.INPUT_ERROR, 1)
     assert error.message == "1 rule violation(s) in the staged tree"
     assert list(error.details) == [
         "RULE-markdown-link a.md:1: Broken relative markdown link 'missing.md'",

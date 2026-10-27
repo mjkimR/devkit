@@ -9,7 +9,7 @@ every failure; an interrupted one (``CommandInterrupted``) aborts the stage. The
 details. When a failed command is a ``devkit`` command that could not run (exit
 ``2`` with an error block of its own: rules that cannot load, a project that needs
 ``devkit sync``) the gate raises ``GATE_VERIFY_NOT_RUN`` instead of the
-``GATE_VERIFY_FAILED`` refusal, since nothing judged the commit's content: ``AUTO``
+``GATE_VERIFY_FAILED`` refusal (``INPUT_ERROR``: fix what failed, commit again), since nothing judged the commit's content: ``AUTO``
 with their fix when every relayed error is ``AUTO`` with the same one (a missing
 ``devkit sync``), else ``MAINTENANCE``.
 
@@ -37,7 +37,7 @@ from devkit_core.core.git import COMMIT_INDEX_VARIABLE, run_git
 from devkit_agt.features.compact import CommandRun, run_command
 from devkit_agt.features.gate.models.base import BaseGate
 from devkit_agt.features.gate.models.contracts import GateContext, GateResult, Stage
-from devkit_agt.features.gate.models.errors import GateRefusedError, VerifyNotRunError, VerifyUnstagedNotice
+from devkit_agt.features.gate.models.errors import GateFindingsError, VerifyNotRunError, VerifyUnstagedNotice
 
 HOOK_GIT_VARIABLES = ("GIT_DIR", "GIT_INDEX_FILE", "GIT_WORK_TREE", "GIT_PREFIX")
 # Last output lines shown for a failed command, beside its summaries and failed tests.
@@ -114,6 +114,10 @@ class VerifyCommandsGate(BaseGate):
             settings=VerifyCommandsSettings(),
         )
 
+    def setup(self, settings: VerifyCommandsSettings) -> str:
+        count = len(settings.commands)
+        return f"commands={count}" if count else "commands=0 (skipped: no commands configured)"
+
     def run(self, ctx: GateContext) -> GateResult:
         settings: VerifyCommandsSettings = ctx.settings
         if not settings.commands:
@@ -148,7 +152,7 @@ class VerifyCommandsGate(BaseGate):
                 fix = _auto_fix(not_run)
                 auto = {"actor": Actor.TOOL, "fix": fix} if fix else {}
                 raise VerifyNotRunError(f"verification could not run: {commands}", *details, *notes, **auto)
-            raise GateRefusedError(
+            raise GateFindingsError(
                 f"verification failed: {commands}",
                 *details,
                 *notes,

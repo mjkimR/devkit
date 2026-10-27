@@ -48,7 +48,7 @@ def test_sync_repairs_invalid_fallback_per_stage(repo: Path, invalid: str) -> No
         Path(broken).write_text("#!/bin/sh\nexit 1\n")
     entry = repo / ".git/hooks/commit-msg.d/20-devkit"
     entry.write_text(hooks.wrapper_script(Stage.COMMIT_MSG, broken))
-    assert local_config.post_sync(repo, {}) is None
+    assert local_config.post_sync(repo, {}) == ["gate hooks: commit-msg: installed"]
     states = {s.stage: s for s in hooks.status(repo)}
     assert states[Stage.PRE_COMMIT].python == stable
     assert states[Stage.COMMIT_MSG].python == sys.executable
@@ -56,6 +56,7 @@ def test_sync_repairs_invalid_fallback_per_stage(repo: Path, invalid: str) -> No
 
 
 def test_sync_installs_missing_entries_and_explicit_install_replaces(repo: Path) -> None:
+    assert local_config.post_sync(repo, {}) is not None
     assert local_config.post_sync(repo, {}) is None
     replacement = _python(repo / "replacement-python")
     hooks.install(repo, replacement)

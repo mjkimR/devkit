@@ -16,9 +16,9 @@ from __future__ import annotations
 from devkit.advisory import Actor, AdvisoryError, ExitCode, Level, Retry
 from devkit_dist.base.errors import ConfigError
 
-PYTHON_FIX = (
-    "Pass `--python` the interpreter of an environment where devkit is installed: `devkit gate install --python <path>`"
-)
+# The agent-facing devkit invocation in a [FIX] (ADR-keep-uv-run-as-the-agent-facing-devkit-invocation).
+DEVKIT = "uv run devkit"
+PYTHON_FIX = f"Pass `--python` the interpreter of an environment where devkit is installed: `{DEVKIT} gate install --python <path>`"
 
 
 class GateError(AdvisoryError):
@@ -39,6 +39,19 @@ class GateRefusedError(GateError):
     code = "GATE_FAILED"
     guardrail = True
     exit_code = ExitCode.FINDINGS
+
+
+class GateFindingsError(GateRefusedError):
+    """A check of the commit's own content failed, and correcting the content is the remedy (``INPUT_ERROR``).
+
+    Raised by the built-in gates for what the committer fixes and commits again: rule violations in the staged tree
+    (``GATE_RULES_FAILED``), failed verification commands (``GATE_VERIFY_FAILED``), an empty message
+    (``GATE_MESSAGE_EMPTY``). Still a refusal, exiting ``FINDINGS`` (``1``); ``GateRefusedError`` itself stays the
+    ``BLOCKED`` policy refusal.
+    """
+
+    input_error = True
+    guardrail = False
 
 
 class GateConfigError(GateError, ConfigError):
@@ -75,7 +88,7 @@ class RulesWarningsNotice(GateError):
 
     code = "GATE_RULES_WARNINGS"
     level = Level.WARNING
-    fix = "Fix the listed violations when they are in scope; devkit rules check --staged lists them again"
+    fix = f"Fix the listed violations when they are in scope; `{DEVKIT} rules check --staged` lists them again"
 
 
 class GateTemplateNotice(GateError):
@@ -127,7 +140,7 @@ class GateInterpreterError(GateError):
 
     code = "GATE_INTERPRETER_UNAVAILABLE"
     fix = (
-        "Run `uv sync` in this repository so its .venv provides devkit, or rerun `devkit gate install` "
+        f"Run `uv sync` in this repository so its .venv provides devkit, or rerun `{DEVKIT} gate install` "
         "from an environment where devkit is installed"
     )
     what_to_report = "The devkit commit gates did not run: no interpreter can import devkit_agt.features.gate"
@@ -153,7 +166,7 @@ class ForeignHookError(GateError):
 
 
 class HookBackupExistsError(GateError):
-    """``install`` would overwrite a hook an earlier ``install --force`` moved aside (``INTERACTION``)."""
+    """``install`` would overwrite a hook preserved earlier at ``<hook>.devkit-preserved`` (``INTERACTION``)."""
 
     code = "GATE_BACKUP_EXISTS"
     actor = Actor.USER
@@ -164,7 +177,7 @@ class HookLayoutError(GateError):
     """A reserved script path cannot safely be replaced."""
 
     code = "GATE_HOOK_LAYOUT_INVALID"
-    fix = "Move the conflicting hook paths to another location, then run `devkit sync`"
+    fix = f"Move the conflicting hook paths to another location, then run `{DEVKIT} sync`"
 
 
 class HookPreservedNotice(GateError):
@@ -197,7 +210,9 @@ class HookEntryMissingNotice(GateError):
 
     code = "GATE_HOOK_ENTRY_MISSING"
     level = Level.WARNING
-    fix = "Run `devkit gate install` (or `devkit sync`) to install the hook entry of every stage with enabled gates"
+    fix = (
+        f"Run `{DEVKIT} gate install` (or `{DEVKIT} sync`) to install the hook entry of every stage with enabled gates"
+    )
     what_to_report = "Enabled commit gates do not run at commit time until their hook entry is installed"
 
 

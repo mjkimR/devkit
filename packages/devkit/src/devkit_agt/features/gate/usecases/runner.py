@@ -24,12 +24,14 @@ from devkit_dist.features.project.repositories.project import require_git_toplev
 import devkit_agt.features.gate.repositories.git as git
 from devkit_agt.features.compact import CommandInterrupted
 from devkit_agt.features.gate.models.contracts import Gate, GateContext, GateResult, Outcome, Stage, checked_notices
-from devkit_agt.features.gate.models.errors import GateConfigError, GateResultError
+from devkit_agt.features.gate.models.errors import DEVKIT, GateConfigError, GateResultError
 from devkit_agt.features.gate.repositories.config import GatesConfig, load_gates_config, resolve_settings
 from devkit_agt.features.gate.usecases.registry import GateRegistry, project_registry
 
 INVALID_SETTINGS_NOTE = "invalid settings"
-NOT_INSTALLED_FIX = "Select the bundle that ships them and run `devkit sync`, or remove their [gates.settings] entries"
+NOT_INSTALLED_FIX = (
+    f"Select the bundle that ships them and run `{DEVKIT} sync`, or remove their [gates.settings] entries"
+)
 
 _log = get_logger(__name__)
 
