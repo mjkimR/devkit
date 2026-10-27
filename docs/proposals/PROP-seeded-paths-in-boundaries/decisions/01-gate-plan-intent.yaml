@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: User asked to run Planning; go to the end if simple (2026-10-27)
+by: user
+at: '2026-10-26T23:41:55.971174Z'
