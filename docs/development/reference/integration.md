@@ -41,6 +41,7 @@ and `already_merged`), `plan_finish`, `validate_finish` (`result=`, `target=`), 
 | `INTEGRATION_TARGET_MOVED` | Merge nothing: merge the current base into the source and obtain fresh Host approval before integrating again |
 | `INTEGRATION_RECEIPT_CONFLICT` | Merge the target into the branch, re-sync, re-verify and integrate again |
 | `INTEGRATION_RECEIPT_READER_CHANGED` | The source changes the receipt reader and its receipt only that reader accepts; restarting the service does not help. With separately granted authority, run the CLI route (`devkit worktree finish <branch> --merge --local-only`) from the source's code |
+| `INTEGRATION_RULE_RUNTIME_MISMATCH` | A synchronized rule of the source (or result) imports a module or name this runtime lacks; the source needs no change. With separately granted authority, run `devkit integration integrate <branch>` from the base checkout with a runtime built from the source's code outside the worktree |
 | `INTEGRATION_AUTHORITY_REQUIRED` | Read the refusal: auto permits local execution only; resolve prospective policy revocation before retrying, never switch authority to bypass it. Under ask, present the exact scope and obtain a fresh Host decision before invoking integrate |
 | `INTEGRATION_CLEANUP_UNSCOPED` | Adapt the named legacy post-finish extension before approval |
 | `INTEGRATION_CLEANUP_INCOMPLETE` | Inspect Git/worktree state; after a verified local landing, run `devkit worktree finish <branch> --local-only` for the remaining guarded cleanup |

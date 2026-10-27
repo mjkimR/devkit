@@ -1,0 +1,38 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T08:24:50.200190Z'
+status: completed
+review: review-01.yaml
+summary: 'Implementer verified: _resolves and hasattr leave non-ImportError and dependency ModuleNotFoundError cases undecided (new parametrized test, 135 passed in tests/integration/features/integration); the characterized case is still named; spec title and summary describe the delivered diagnosis'
+findings:
+- issue: A non-ImportError exception raised while a parent package imports during find_spec (or from hasattr) escapes check_rule_runtime uncoded
+  evidence: packages/devkit/src/devkit_agt/features/integration/repositories/rule_runtime.py:96-103,122
+  failure_condition: an installed subpackage raises e.g. RuntimeError on import and a rule imports from it
+  suggested_action: return None for any other Exception in _resolves and guard hasattr; add a test
+  resolution: resolved
+  severity: P3
+- issue: A ModuleNotFoundError for a dependency of an existing runtime package is classified as a runtime mismatch
+  evidence: packages/devkit/src/devkit_agt/features/integration/repositories/rule_runtime.py:100-101,117-118
+  failure_condition: an installed subpackage fails to import because its own dependency is missing
+  suggested_action: treat ModuleNotFoundError as missing only when exc.name is the resolved module or its dotted prefix; else undecided; add a test
+  resolution: resolved
+  severity: P3
+- issue: The spec summary still says readiness evaluates with the landed code, which Non-Goal 1 excludes
+  evidence: specs/2026-10/20261026-integration-readiness-branch-code/spec.md:4
+  failure_condition: a reader of spec list takes the summary as automatic source-code evaluation
+  suggested_action: reword the summary to the delivered diagnosis
+  resolution: resolved
+  severity: P3
+- issue: The plan-intent decision note carries a paraphrase and a date
+  evidence: specs/2026-10/20261026-integration-readiness-branch-code/decisions/01-gate-plan-intent.yaml:6
+  failure_condition: the note is read as authority for evaluating rules with branch code
+  suggested_action: Host decides whether to correct the record
+  resolution: waived
+  waiver: The plan-intent decision record is the Host's gate record; a worker never edits recorded decisions, so the note stays for the Host to correct
+  severity: P3
+checks: {}
+diff_scope:
+  base: ''
+  head: 95a4d441337b831ea49faeca2c855959cae719c0

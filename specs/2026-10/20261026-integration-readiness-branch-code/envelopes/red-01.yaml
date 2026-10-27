@@ -1,0 +1,13 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T08:10:03.229166Z'
+status: completed
+summary: IntegrationService.prepare with the real spec provider refuses a source whose synchronized rule imports a devkit_spec module the runtime lacks with INTEGRATION_NOT_READY carrying the CI snapshot's RULES_LOAD_FAILED 'No module named ...not_in_this_runtime', as characterized
+findings: []
+checks:
+  reproduced: 'PASS test_rule_needing_source_code_is_named_before_readiness fails: code INTEGRATION_NOT_READY, details ''CI rule problem (RULES_LOAD_FAILED): Failed to load rule package <tmp>/devkit-rules-snapshot-*/.devkit/managed/spec/rules/needs_new_code: No module named devkit_spec.features.governance.usecases.not_in_this_runtime'''
+diff_scope:
+  base: 68e74182f06c849737e47de64eb91c1412968b2f
+  head: 765f1bd4207991108dcbe55285bda237b40e3099

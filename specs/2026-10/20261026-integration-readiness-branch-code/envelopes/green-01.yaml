@@ -1,0 +1,14 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T08:15:56.779087Z'
+status: completed
+summary: Readiness now refuses a source whose synchronized rule imports code the runtime lacks with INTEGRATION_RULE_RUNTIME_MISMATCH before the provider, on both routes and at a build; other rule failures, the reader and runtime-location refusals are unchanged
+findings: []
+checks:
+  resolved: PASS test_rule_needing_source_code_is_named_before_readiness passes with the real spec provider (code INTEGRATION_RULE_RUNTIME_MISMATCH, actor user); check_rule_runtime on the real branch head 6e5bb3ec with the steering_documents module hidden names .devkit/managed/spec/rules/steering_documents/rule.py imports devkit_spec.features.governance.usecases.steering_documents, and passes without hiding it
+  preserved: 'PASS just test-affected 2034 passed (test_receipt_reader, test_service runtime-in-worktree, test_integration e2e, test_rule_runtime skip cases: uninstalled top-level, syntax error, function-level import, rule tests, mismatched ignored copy); just lint devkit/devkit-spec and just check devkit/devkit-spec clean'
+diff_scope:
+  base: 68e74182f06c849737e47de64eb91c1412968b2f
+  head: 1aa5871048dff62687629cb0e43564ec1d3a1193

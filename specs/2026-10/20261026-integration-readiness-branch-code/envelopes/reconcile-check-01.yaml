@@ -1,0 +1,20 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-26T08:28:44.628826Z'
+status: completed
+summary: 'reconcile-reviewer (first check): the four targets match rule_runtime.py, providers.check and the error directive; no missing target or mirror; the feedback disposition re-verified on 6e5bb3ec; one P3 finding on refusal order'
+findings:
+- issue: The Living Spec does not state that INTEGRATION_RUNTIME_IN_WORKTREE and INTEGRATION_RECEIPT_READER_CHANGED precede INTEGRATION_RULE_RUNTIME_MISMATCH
+  evidence: docs/capabilities/integration/CAP-INT-mcp-services.md:68-78; providers.py:145-157; service.py:192-196
+  failure_condition: a source meeting several cases cannot tell which code it gets from the contract
+  suggested_action: state the order in the CAP-INT paragraph and UC 7h
+  resolution: open
+  severity: P3
+checks:
+  tests: PASS 21/21 focused tests
+  rules: PASS devkit rules check --ci --base 68e74182
+diff_scope:
+  base: 68e74182f06c849737e47de64eb91c1412968b2f
+  head: eac605fdfb83f74165c1db24e1226ac66d1e8c4e

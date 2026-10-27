@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-bugfix
+stage: intent
+note: User approved fixing integration readiness to use the branch's code (2026-10-26)
+by: user
+at: '2026-10-26T08:01:07.504420Z'

@@ -65,6 +65,19 @@ provider identity, finish guards and scoped cleanup targets. A changed source, t
 result or cleanup identity refuses before the affected mutation. The readiness provider may inspect the source and
 prospective merged result; the request's digest keeps provider evidence distinct from caller claims.
 
+Readiness runs with the installed code of the runtime that invokes it, which is built from the target, while the
+source's synchronized rules are the source's (`CAP-GOV-evaluation-lifecycle`). Before the provider runs, WHEN a
+synchronized rule module listed in the source's committed receipt, or the result's at a build, imports at module level
+a module or name of an installed top-level package that the running runtime does not provide, the integration MUST
+refuse with `INTEGRATION_RULE_RUNTIME_MISMATCH`, naming each rule file and missing import, and change nothing. The
+refusal comes after `INTEGRATION_RUNTIME_IN_WORKTREE` and `INTEGRATION_RECEIPT_READER_CHANGED`, so a source meeting
+several of these cases receives the earlier code. The check parses the rule modules and resolves their imports against
+the running runtime; it executes no source code. A rule that fails for another reason, such as an import nothing
+installed provides or a syntax error, is left to the provider's own refusal. Integration never builds or selects a
+runtime from the source by itself: the source would then be judged by its own rule engine and provider. Covered by
+`packages/devkit/tests/integration/features/integration/test_rule_runtime.py` and
+`packages/devkit-spec/tests/e2e/features/delivery/test_integration_rule_runtime.py`.
+
 ## Partial results and recovery
 
 Each result reports completed steps, the failing operation, stable error codes and observed Git state. No request ID,
@@ -99,6 +112,7 @@ registered.
 | `INTEGRATION_CONFIG_INVALID` | Configure or install the named readiness provider and use a supported route. |
 | `INTEGRATION_NOT_READY` | Resolve the reported completion condition and prepare the committed source again. |
 | `INTEGRATION_PROVIDER_FAILED` | Repair the installed provider or its evidence contract. |
+| `INTEGRATION_RULE_RUNTIME_MISMATCH` | The source needs no change. With separately granted authority, build a runtime from the source's code outside the worktree being removed and run `devkit integration integrate <branch>` from the base checkout with it; never edit the rules, skip readiness or use the worktree's own runtime. |
 | `INTEGRATION_AUTHORITY_REQUIRED` | Inspect the retained base policy and selected route; under `ask`, obtain Host conversational approval before invoking `devkit integration integrate`. |
 | `INTEGRATION_REQUEST_STALE` | Inspect completed effects and revalidate the remaining scope before fresh Host authority. |
 | `INTEGRATION_TARGET_MOVED` | Merge the current base into the source, rerun required checks and obtain fresh Host authority or re-evaluate retained-base auto policy before `devkit integration integrate`. |

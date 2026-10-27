@@ -8,7 +8,7 @@ target: devkit integration prepare/integrate (unit readiness, CI rules snapshot)
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -37,3 +37,5 @@ created_at: 2026-10-26
   'devkit_spec.features.governance.usecases.steering_documents'`.
 - **Versions**: base `893d3892`; branch head `6e5bb3ec`.
 - **Related Assets**: `CAP-GOV-evaluation-lifecycle` section on snapshot gates, `CAP-GOV-rule-authoring` rule loading.
+
+- **Disposition**: `SPEC-integration-readiness-branch-code`: integration names a synchronized rule of the source (or the result) that imports code the running runtime lacks with `INTEGRATION_RULE_RUNTIME_MISMATCH` before readiness, directing a run from a runtime built from the source after separately granted authority; automatic evaluation with the source's environment is a Non-Goal. Verified by `packages/devkit/tests/integration/features/integration/test_rule_runtime.py`, the Red/Green regression `packages/devkit-spec/tests/e2e/features/delivery/test_integration_rule_runtime.py`, and the guard on branch head `6e5bb3ec` naming `devkit_spec.features.governance.usecases.steering_documents` when that module is absent.
