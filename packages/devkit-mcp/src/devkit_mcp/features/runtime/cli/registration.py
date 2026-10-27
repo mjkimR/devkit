@@ -20,12 +20,25 @@ from devkit_mcp.features.runtime.usecases.configuration import BuildLaunchDescri
 
 @click.command()
 @workspace_option()
-@click.option("--executable", type=click.Path())
-@click.option("--host", multiple=True, type=click.Choice(["codex", "claude", "antigravity"]))
+@click.option(
+    "--executable",
+    type=click.Path(),
+    help="Python interpreter of the retained runtime to register (default: verify this one, then the base checkout's .venv)",
+)
+@click.option(
+    "--host",
+    multiple=True,
+    type=click.Choice(["codex", "claude", "antigravity"]),
+    help="Limit registration to these hosts (repeatable; default: the configured agents). Owned entries of every"
+    " other host are removed.",
+)
 @FORMAT_OPTION
 @boundary
 def setup(workspace_root: str | None, executable: str | None, host: tuple[str, ...], output_format: str) -> None:
-    """Reconcile exact owned project entries; never mutate user settings or adopt foreign entries."""
+    """Reconcile exact owned project entries; never mutate user settings or adopt foreign entries.
+
+    Fails (MCP_RUNTIME_UNAVAILABLE) when no verified runtime can be registered.
+    """
     planned = registration.SetupMcpUseCase().execute(resolve_root(workspace_root), host, executable=executable)
     report({"action": "setup", "registrations": planned.states}, output_format, planned.notices)
 

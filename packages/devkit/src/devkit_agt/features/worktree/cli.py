@@ -3,8 +3,8 @@ branch), finish it after the merge, report leftovers and stale branches.
 
 Text output: ``start`` prints ``[WORKTREE_STARTED: <branch> path= base= created= existing= unit= setup= synced=]``
 and ``[NEXT_CMD: cd <path>]``, or with ``--no-worktree`` ``[BRANCH_STARTED: <branch> checkout= from=]``; ``finish``
-prints ``[WORKTREE_FINISHED: <branch> path= merged= push= removed= branch_deleted=]``, also before a refusal that
-stopped it after the merge; ``status`` prints one ``[WORKTREE: <path> ...]`` line per worktree, one ``[BRANCH:
+prints ``[WORKTREE_FINISHED: <branch> path= merged= push= removed= branch_deleted=]``, or the same fields as
+``[WORKTREE_FINISH_PARTIAL: ...]`` before a refusal that stopped it after it changed something; ``status`` prints one ``[WORKTREE: <path> ...]`` line per worktree, one ``[BRANCH:
 <name> head=]`` line per unmerged branch no worktree checks out, and ``[SUMMARY: ...]``; ``status --stale`` prints
 one ``[STALE_BRANCH: <branch> ...]`` line per stale activity branch and ``[SUMMARY: checked= branches= stale=
 stale_after=]``. ``--format json`` prints the result object (a refused ``finish`` that changed something adds
@@ -13,10 +13,13 @@ stale_after=]``. ``--format json`` prints the result object (a refused ``finish`
 
 from __future__ import annotations
 
+import functools
 import json
 import re
 import shlex
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import click
 from devkit_core.base.errors import ArgumentError
@@ -31,9 +34,10 @@ from devkit_dist.adapters.cli import (
     is_json,
     workspace_option,
 )
+from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_agt.features.worktree.models.config import WorktreeConfig
-from devkit_agt.features.worktree.models.errors import WorktreeError
+from devkit_agt.features.worktree.models.errors import NestedError, RunFromBaseError, WorktreeError
 from devkit_agt.features.worktree.usecases.configured import FinishActivity, LocateProject, StartActivity
 from devkit_agt.features.worktree.usecases.lifecycle import (
     FinishResult,
@@ -65,6 +69,47 @@ def _position(workspace_root: str | None) -> tuple[Position, WorktreeConfig, Pat
     return LocateProject().execute(start)
 
 
+def _same_command(workspace: Path) -> str:
+    """The running command's arguments as given, with ``-w workspace`` in place of its ``--workspace-root``."""
+    ctx = click.get_current_context()
+    names: list[str] = []
+    current: click.Context | None = ctx
+    while current is not None and current.parent is not None:  # the root is the executable, not an argument
+        names.insert(0, current.info_name or "")
+        current = current.parent
+    arguments: list[str] = []
+    options: list[str] = []
+    for param in ctx.command.params:
+        value = ctx.params.get(param.name or "")
+        if param.name == "workspace_root" or value is None or value == () or value == param.default:
+            continue
+        if isinstance(param, click.Argument):
+            arguments += [str(item) for item in value] if isinstance(value, tuple) else [str(value)]
+        elif isinstance(param, click.Option) and param.is_flag:
+            if value:
+                options.append(param.opts[0])
+        elif isinstance(param, click.Option):
+            options += [param.opts[0], str(value)]
+    return shlex.join([*names, *arguments, *options, "-w", str(workspace)])
+
+
+def _rerun_on_base(command: Callable[..., Any]) -> Callable[..., Any]:
+    """Name the exact command to rerun on the base checkout's devkit project when ``command`` ran in a linked
+    worktree (``WORKTREE_NESTED``, ``WORKTREE_RUN_FROM_BASE``): a fresh shell keeps no ``cd``."""
+
+    @functools.wraps(command)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        try:
+            return command(*args, **kwargs)
+        except (NestedError, RunFromBaseError) as error:
+            if error.base is not None:
+                project = _position(kwargs.get("workspace_root"))[2]
+                error.fix = devkit_command(_same_command(error.base / project if project else error.base))
+            raise
+
+    return wrapper
+
+
 @click.group(name="worktree")
 def cli() -> None:
     """Task worktrees: one checkout per activity branch (plan-<slug>, dev-<slug>), integrated and removed by finish."""
@@ -90,6 +135,7 @@ def cli() -> None:
 )
 @FORMAT_OPTION
 @boundary
+@_rerun_on_base
 def start_cmd(
     branch: str,
     workspace_root: str | None,
@@ -115,8 +161,10 @@ def start_cmd(
     if (existing is None) != (unit is None):
         raise ArgumentError(
             "--existing-branch and --unit go together",
-            target_files=["--existing-branch", "--unit"],
-            fix=f"Pass both: --existing-branch {branch} --unit <unit directory>",
+            target_files=["--unit"] if unit is None else ["--existing-branch"],
+            fix="Add --unit with the unit directory the branch holds, relative to the devkit project"
+            if unit is None
+            else f"Add --existing-branch {branch}",
         )
     position, config, project = _position(workspace_root)
     if no_worktree:
@@ -145,9 +193,10 @@ def start_cmd(
     exit_on_warnings(result.notices)
 
 
-def _finished(result: FinishResult) -> str:
+def _finished(result: FinishResult, kind: str = "WORKTREE_FINISHED") -> str:
+    """The finish result line; ``WORKTREE_FINISH_PARTIAL`` for the progress of a run a refusal stopped."""
     return (
-        f"[WORKTREE_FINISHED: {_value(result.branch)} path={_value(result.path)} merged={_value(result.merged)}"
+        f"[{kind}: {_value(result.branch)} path={_value(result.path)} merged={_value(result.merged)}"
         f" push={_value(result.push)} removed={_value(result.removed)}"
         f" branch_deleted={_value(result.branch_deleted)} discarded={_value(result.discarded)}]"
     )
@@ -170,6 +219,7 @@ def _finished(result: FinishResult) -> str:
 )
 @FORMAT_OPTION
 @boundary
+@_rerun_on_base
 @click.option("--local-only", is_flag=True, help="Exclude fetch and push; keep all local merge and cleanup guards")
 def finish_cmd(
     branch: str, workspace_root: str | None, merge: bool, discard: bool, output_format: str, local_only: bool
@@ -199,7 +249,7 @@ def finish_cmd(
         if is_json(output_format):
             echo_json(partial.to_dict() | {"errors": [error.to_dict()]})
         else:
-            click.echo(_finished(partial))
+            click.echo(_finished(partial, "WORKTREE_FINISH_PARTIAL"))
         echo_notices(partial.notices)
         raise Reported(error) from error
     if is_json(output_format):

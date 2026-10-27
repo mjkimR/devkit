@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from devkit.advisory import Actor, AdvisoryError, ExitCode, Level, Retry
 from devkit_dist.base.errors import ConfigError
+from devkit_dist.features.project.models.invocation import devkit_command
 
 
 class GeneratedError(AdvisoryError):
@@ -30,43 +31,49 @@ class GeneratedConfigError(GeneratedError, ConfigError):
 
 
 class InputsConflictedError(GeneratedError):
-    """``resolve`` found a conflict no artifact owns that an artifact to regenerate may read (``BLOCKED``).
+    """``resolve`` found a conflict no artifact owns that an artifact to regenerate may read (``INPUT_ERROR``).
 
-    An artifact without ``inputs`` may read anything, so every such conflict blocks it. Nothing was changed.
+    An artifact without ``inputs`` may read anything, so every such conflict blocks it. Nothing was changed. The
+    conflicted files are the targets; the raiser names them in the fix.
     """
 
     code = "GENERATED_INPUTS_CONFLICTED"
-    guardrail = True
-    fix = "Resolve the listed conflicts by hand and stage them (git add <path>), then rerun `devkit generated resolve`"
+    input_error = True
 
 
 class UnmergedError(GeneratedError):
-    """``regen`` found unmerged paths: a command would read conflict markers (``BLOCKED``); nothing ran."""
+    """``regen`` found unmerged paths: a command would read conflict markers (``AUTO``); nothing ran.
+
+    ``resolve`` settles the generated conflicts and reports any other one it leaves.
+    """
 
     code = "GENERATED_UNMERGED"
-    guardrail = True
-    fix = "Run `devkit generated resolve` for the generated conflicts and resolve the others by hand, then rerun"
+    actor = Actor.TOOL
+    fix = devkit_command("generated resolve")
 
 
 class CommandFailedError(GeneratedError):
-    """An artifact's command failed (``MAINTENANCE``); the details carry its log and last output lines."""
+    """An artifact's command failed (``INPUT_ERROR``); the details carry its log and last output lines."""
 
     code = "GENERATED_COMMAND_FAILED"
+    input_error = True
 
 
 class OutputUndeclaredError(GeneratedError):
-    """An artifact's command changed files outside its ``paths`` and ``updates`` (``MAINTENANCE``).
+    """An artifact's command changed files outside its ``paths`` and ``updates`` (``INPUT_ERROR``).
 
     The changes are left in the work tree for review; nothing was staged.
     """
 
     code = "GENERATED_OUTPUT_UNDECLARED"
+    input_error = True
 
 
 class StaleError(GeneratedError):
-    """``check`` regenerated artifacts that differ from the checked commit (``MAINTENANCE``, exit ``1``)."""
+    """``check`` regenerated artifacts that differ from the checked commit (``INPUT_ERROR``, exit ``1``)."""
 
     code = "GENERATED_STALE"
+    input_error = True
     exit_code = ExitCode.FINDINGS
 
 

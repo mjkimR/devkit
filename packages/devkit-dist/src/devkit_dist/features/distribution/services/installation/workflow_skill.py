@@ -20,7 +20,7 @@ never derive it from files yourself.
    tagged lines. `[STAGE]` is the current stage, `[UNMET]` and `[CHECK]` say
    what still blocks it, `[NEXT_SKILL]` names the skill that performs it, and
    `[RETURNS]` lists the stages this one may return to and why. `[STAGE: -
-   complete=true]` means the unit is finished. Free-text values in tagged lines
+   complete=yes]` means the unit is finished. Free-text values in tagged lines
    (details, reasons, notes) are JSON-quoted strings. `[BOUND_ELSEWHERE]` means
    the unit was evaluated against a workflow other than its binding, so no
    drift check ran.
@@ -71,7 +71,7 @@ never derive it from files yourself.
    workflow; definition changes take effect without rebinding.
 6. After each stage, rerun `next` to confirm progress before reporting. Report
    the stage you reached and anything the output listed as unmet.
-7. Hand off when the workflow is complete. `[STAGE: - complete=true]` followed
+7. Hand off when the workflow is complete. `[STAGE: - complete=yes]` followed
    by `[HANDOFF: policy=ask ...]` lists the workflows this unit may continue
    with; `[CANDIDATE]` lines say which are eligible and recommended. Present
    them to the user (the `[REQUEST: id=handoff ...]` line is the question), and

@@ -15,7 +15,6 @@ from devkit_dist.adapters.cli import (
     is_json,
     resolve_root,
 )
-from devkit_dist.features.distribution.models.invocation import devkit_command
 from devkit_dist.features.distribution.models.settings import (
     AGENT_NAMES,
     DEFAULT_PRESET,
@@ -29,6 +28,7 @@ from devkit_dist.features.distribution.usecases.commands import (
     SyncSelection,
 )
 from devkit_dist.features.distribution.usecases.sync import RecoverProject, SyncRegistrations
+from devkit_dist.features.project.models.invocation import devkit_command
 
 from .output import WORKSPACE, _json_command, _report
 
@@ -45,7 +45,7 @@ def _parse_selections(values: tuple[str, ...], param_hint: str) -> dict[str, lis
             raise ArgumentError(
                 f"{param_hint}: expected bundle[:preset] slugs: {value}",
                 target_files=[param_hint],
-                fix="Pass lowercase bundle slugs, optionally with :<preset>",
+                fix="Pass lowercase bundle slugs, each optionally followed by a colon and a lowercase preset slug, such as starter:extra",
             )
         presets = selected.setdefault(name, [])
         entry = preset if separator else DEFAULT_PRESET

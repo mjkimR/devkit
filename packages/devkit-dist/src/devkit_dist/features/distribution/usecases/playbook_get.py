@@ -11,7 +11,6 @@ from devkit_core.base.usecase import BaseUseCase
 
 from devkit_dist.base.errors import ReceiptError
 from devkit_dist.features.distribution.models.errors import PlaybookAliasAmbiguousError, SelectionError
-from devkit_dist.features.distribution.models.invocation import AGENT_INVOCATION, devkit_command
 from devkit_dist.features.distribution.models.results import PlaybookResult
 from devkit_dist.features.distribution.services.bundles.common import SLUG, read_frontmatter
 from devkit_dist.features.distribution.services.bundles.playbooks import PlaybookHeader, read_playbook_header
@@ -23,6 +22,7 @@ from devkit_dist.features.distribution.services.installation.reading import (
     synchronized_project_root,
 )
 from devkit_dist.features.distribution.services.installation.transaction import project_lock
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION, devkit_command
 from devkit_dist.features.project.models.receipt import AssetRecord, Receipt
 from devkit_dist.features.project.repositories.receipt import MANAGED_PATH, RECEIPT_PATH
 
@@ -34,7 +34,7 @@ def validate_playbook_id(selector: str) -> tuple[str, str]:
         raise ArgumentError(
             f"playbook: expected <bundle>/<playbook> lowercase slugs, not {selector!r}",
             target_files=["PLAYBOOK_ID"],
-            fix="Use an exact <bundle>/<playbook> selector",
+            fix=devkit_command("list"),
         )
     return parts[0], parts[1]
 
@@ -60,7 +60,9 @@ class GetPlaybook(BaseUseCase):
                 raise
             prefix = f"{MANAGED_PATH}/{bundle}/"
             if receipt.file(prefix + "bundle.toml") is None:
-                raise SelectionError(f"bundle is not synchronized: {bundle}", fix=devkit_command("list"))
+                raise SelectionError(
+                    f"bundle is not synchronized: {bundle}", fix=devkit_command("list"), target_files=["PLAYBOOK_ID"]
+                )
             playbooks = [asset for asset in receipt.assets("playbook") if asset.bundle == bundle]
             matches = [asset for asset in playbooks if asset.id == asset_id]
             alias: str | None = None
@@ -82,6 +84,7 @@ class GetPlaybook(BaseUseCase):
                         f"playbook is not synchronized: {selector}",
                         "Inspect explicit bundle and preset selection",
                         fix=devkit_command("list"),
+                        target_files=["PLAYBOOK_ID"],
                     )
                 matches, alias = declared, asset_id
             if len(matches) != 1:

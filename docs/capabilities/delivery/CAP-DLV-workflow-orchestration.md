@@ -106,7 +106,7 @@ A stage, gated or not, can be switched off by the project by stage id:
 collect-feedback = "off"   # on (default) | off
 ```
 
-The stage policy is applied before any check or gate is evaluated, so `stages.<id>=off` wins over `approvals.<gate>`. `next` reports `[SKIPPED: <id> reason=stages.<id>=off]`, and a skipped stage never blocks completion or handoff. Stage ids match `[a-z][a-z0-9-]*` and are shared across definitions, so an id that no selected workflow uses is accepted. `show` marks the affected stages with `[SKIP: <id> reason=stages.<id>=off]` and lists them under `stages_off` in JSON.
+The stage policy is applied before any check or gate is evaluated, so `stages.<id>=off` wins over `approvals.<gate>`. `next` reports `[SKIPPED: <id> reason=stages.<id>=off]`, and a skipped stage never blocks completion or handoff. Stage ids match `[a-z][a-z0-9-]*` and are shared across definitions, so an id that no selected workflow uses is accepted. `show` marks the affected stages with `[SKIPPED: <id> reason=stages.<id>=off]` and lists them under `stages_off` in JSON.
 
 ### The `handoff` Gate
 

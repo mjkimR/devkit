@@ -20,8 +20,12 @@ from typing import Any, Unpack
 
 from devkit.advisory import Actor, Advisory, AdvisoryError, AdvisoryFields, ExitCode, Level, Retry
 from devkit_dist.base import errors as core_errors
+from devkit_dist.features.project.models.invocation import devkit_command
 
-ENVELOPE_CONTRACT = "docs/capabilities/delivery/CAP-DLV-workflow-envelopes.md"
+
+def workflow_command(arguments: str) -> str:
+    """``arguments`` as the ``devkit workflow`` command an agent runs: ``uv run devkit workflow <arguments>``."""
+    return devkit_command(f"workflow {arguments}")
 
 
 class WorkflowError(AdvisoryError):
@@ -158,7 +162,7 @@ class WorkflowAssetMissingError(WorkflowError):
 
     code = "WORKFLOW_ASSET_MISSING"
     actor = Actor.TOOL
-    fix = "uv run devkit sync"
+    fix = devkit_command("sync")
 
 
 class CheckError(WorkflowError):
@@ -187,7 +191,7 @@ class WorkflowNotSelectedError(WorkflowError):
 
     code = "WORKFLOW_NOT_SELECTED"
     input_error = True
-    fix = "Pass --workflow <id>, or set [workflow].default in .devkit/config.toml"
+    fix = "Pass --workflow with a workflow id `uv run devkit workflow validate` lists, or set [workflow].default in .devkit/config.toml"
 
 
 class WorkflowInvalidError(WorkflowError):
@@ -212,7 +216,7 @@ class UnitNotFoundError(WorkflowError):
 
     code = "UNIT_NOT_FOUND"
     input_error = True
-    fix = "Pass an existing unit directory (`uv run devkit workflow list`) or create one with `uv run devkit workflow new <slug>`"
+    fix = "Pass --unit an existing unit directory; `uv run devkit workflow list` lists them"
 
 
 class UnitExistsError(WorkflowError):
@@ -242,7 +246,7 @@ class AnchorAmbiguousError(WorkflowError):
 
     code = "ANCHOR_AMBIGUOUS"
     input_error = True
-    fix = "Pass --anchor <file> to name the anchor file that identifies the unit"
+    fix = "Rerun with --anchor naming the file that identifies the unit (each candidate is a [DETAIL] line)"
 
 
 class AnchorMismatchError(WorkflowError):
@@ -300,17 +304,20 @@ class ReturnInvalidError(WorkflowError):
 
 
 class HandoffNotReadyError(WorkflowError):
-    """The unit has not completed its workflow."""
+    """The unit has not completed its workflow: whether to finish it first is the user's call (``INTERACTION``)."""
 
     code = "HANDOFF_NOT_READY"
-    input_error = True
+    actor = Actor.USER
 
 
 class HandoffHeldError(WorkflowError):
-    """An unresolved problem, an unanswered question or a malformed worker envelope holds the handoff choice."""
+    """An unresolved problem, an unanswered question or a malformed worker envelope holds the handoff choice.
+
+    Answers and recovery decisions come from the user, so the agent stops and asks (``INTERACTION``), exit 1.
+    """
 
     code = "HANDOFF_HELD"
-    guardrail = True
+    actor = Actor.USER
     exit_code = ExitCode.FINDINGS
 
 
@@ -375,13 +382,20 @@ class EnvelopeFormatError(_FileProblem):
     code = "ENVELOPE_INVALID"
     input_error = True
     exit_code = ExitCode.FINDINGS
-    fix = (
-        "Fix or remove the file; write envelopes with `uv run devkit workflow envelope new` or the kind's own command,"
-        f" which refuses one that breaks the contract (devkit's {ENVELOPE_CONTRACT})"
-    )
+    fix = "Fix or remove the file in [TARGET] so it satisfies the envelope contract of its kind"
     # What could still be read of the file, so a malformed worker envelope holds from its own stage.
     stage: str = ""
     workflow: str = ""
+
+
+def locate_envelope_errors(errors: list[EnvelopeFormatError], unit: str) -> None:
+    """Point each malformed envelope of ``unit`` (workspace-relative) at its workspace-relative file, with the check
+    to rerun once it is fixed; ``file`` stays unit-relative."""
+    check = workflow_command(f"envelope check --unit {unit}")
+    for error in errors:
+        path = f"{unit}/{error.file}" if error.file else unit
+        error.target_files = (path,)
+        error.fix = f"Fix or remove {path} so it satisfies the envelope contract of its kind, then run `{check}`"
 
 
 class EnvelopeKindError(WorkflowError):

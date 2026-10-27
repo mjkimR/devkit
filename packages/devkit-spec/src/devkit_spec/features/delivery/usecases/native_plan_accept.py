@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 from devkit.advisory import AdvisoryError
-from devkit_agt.features.integration import AuthorityError
 from devkit_agt.features.integration.models.contracts import (
     Evidence,
     IntegrationContext,
@@ -24,6 +23,7 @@ from devkit_core.base.mcp import Confirmation
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import GitError, run_git
 from devkit_core.core.frontmatter import parse
+from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.usecases.configuration import (
     approval_language,
     read_effective_config,
@@ -31,7 +31,18 @@ from devkit_dist.features.project.usecases.configuration import (
 )
 from devkit_dist.features.project.usecases.invocation import guard_execution
 
-from devkit_spec.base.errors import SpecError
+from devkit_spec.base.errors import (
+    ProposalAcceptanceUnrecordedError,
+    ProposalAcceptCommitRefusedError,
+    ProposalApprovalNotReadyError,
+    ProposalApprovalReplyError,
+    ProposalApprovalStaleError,
+    ProposalInvalidError,
+    ProposalPolicyNotAutoError,
+    ProposalWrongWorktreeError,
+    SpecConfigError,
+    acceptance_unrecorded_fix,
+)
 from devkit_spec.features.policy.usecases.approvals import approval_policy
 from devkit_spec.features.proposals import accept_proposal
 from devkit_spec.features.proposals.models.axes import EFFORTS
@@ -39,36 +50,62 @@ from devkit_spec.features.proposals.services.status import accepted_text
 from devkit_spec.features.proposals.usecases.scaffold import require_slug
 
 
-class ProposalApprovalStaleError(SpecError):
-    """The reviewed source, base, environment or exact acceptance delta changed (``MAINTENANCE``): completed effects
-    need inspection before any further effect."""
-
-    code = "PROPOSAL_APPROVAL_STALE"
-    fix = (
-        "Inspect completed effects, refresh the review evidence and obtain Host authority for the remaining CLI effects"
-    )
-
-
-class ProposalApprovalNotReadyError(SpecError):
-    """A Planning or worktree prerequisite of the acceptance does not hold (``BLOCKED``): the user or Host resolves
-    it, never a tool defect."""
-
-    code = "PROPOSAL_APPROVAL_NOT_READY"
-    guardrail = True
-    fix = "Resolve the Planning prerequisite the message names, then rerun the CLI operation"
-
-
-class ProposalApprovalReplyError(SpecError):
-    """The requested or confirmed acceptance mode or Development effort is invalid (``INPUT_ERROR``)."""
-
-    code = "PROPOSAL_APPROVAL_REPLY_INVALID"
-    input_error = True
-    fix = "Choose accept_only, or accept_and_handoff with a low, medium or high Development effort, then rerun"
-
-
 def _proposal_error(error: AdvisoryError) -> AdvisoryError:
     if error.code in {"INTEGRATION_REQUEST_STALE", "INTEGRATION_TARGET_MOVED", "SPEC_HANDOFF_STALE"}:
         return ProposalApprovalStaleError(error.message, f"Underlying guard: {error.code}: {error.message}")
+    return error
+
+
+def _accept_command(slug: str, mode: str, effort: str | None, by: str) -> str:
+    """The caller's own composed command: its ``--by`` is kept, never replaced by ``user``."""
+    tail = f" --effort {effort}" if mode == "accept_and_handoff" and effort else ""
+    return devkit_command(f"spec proposal accept {slug} --by {by} --mode {mode}{tail}")
+
+
+def _base_checkout(root: Path, slug: str, command: str | None) -> None:
+    """Refuse a composed acceptance off the retained base checkout (``ProposalWrongWorktreeError``); ``command`` is the
+    caller's own CLI command, ``None`` for the native operation, which is rerun as it is."""
+    position = locate(root)
+    if position.linked or not position.branch or position.branch.startswith(("dev-", "plan-")):
+        rerun = f"Run `{command}`" if command else "Rerun the same operation"
+        raise ProposalWrongWorktreeError(
+            f"the composed acceptance of PROP-{slug} runs in the retained base checkout, not on "
+            f"{position.branch or '- (detached HEAD)'}",
+            fix=f"{rerun} in the main worktree on its base branch; the Planning branch plan-{slug} is integrated "
+            "from there",
+        )
+
+
+def _require_policy_authority(root: Path, slug: str, by: str) -> None:
+    """``--by policy`` needs the owning ``plan-accept=auto``; checked before anything else so the refusal is the policy
+    one (``SPEC_PROPOSAL_POLICY_NOT_AUTO``), never a fix that switches the authority to the user."""
+    if by == "policy" and approval_policy(root, "plan-accept") != "auto":
+        raise ProposalPolicyNotAutoError(
+            f"--by policy cannot accept PROP-{slug}: the retained base's plan-accept policy is not auto"
+        )
+
+
+def _spec_refusal(error: AdvisoryError, slug: str, by: str) -> AdvisoryError:
+    """A base-level refusal of the integration preparation as the spec-level condition it means; any command it
+    names keeps the caller's ``--by``."""
+    if error.code == "WORKTREE_NOT_FOUND":
+        direct = devkit_command(f"spec proposal accept {slug} --by {by} --direct")
+        when = " after the user's explicit acceptance" if by == "user" else ""
+        return ProposalApprovalNotReadyError(
+            f"PROP-{slug} has no Planning branch plan-{slug} to accept and integrate",
+            f"{error.code}: {error.message}",
+            target_files=[f"plan-{slug}"],
+            fix=f"Run Planning on plan-{slug} first (`{devkit_command(f'worktree start plan-{slug}')}` in the base "
+            f"checkout); a draft that skips Planning is accepted with `{direct}`{when}, adding --note with the "
+            "reason the draft is eligible",
+        )
+    if error.code == "INTEGRATION_CONFIG_INVALID":
+        return SpecConfigError(
+            f"the integration policy of the retained base cannot run the composed acceptance: {error.message}",
+            f"{error.code}: {error.message}",
+            fix="Correct [workflow.approvals] plan-accept and [worktree] in .devkit/config.toml of the base checkout "
+            "(ask or auto), then rerun the same command",
+        )
     return error
 
 
@@ -127,25 +164,49 @@ class _Acceptance:
         workspace = Workspace(self.source)
         ref = workspace.resolve_unit(self.unit)
         evaluation = workspace.evaluate_unit(ref, lint=False)
-        if (
-            ref.doc.id != "sdd-proposal"
-            or evaluation.errors
-            or evaluation.hold.reasons()
-            or any(item.name != "gate:plan-accept" for item in evaluation.unmet)
-            or meta.get("needs_decompose") is True
-        ):
-            raise ProposalApprovalNotReadyError("Planning has unmet checks, problems, questions or decomposition")
+        anchor = f"{self.unit}/proposal.md"
+        next_step = devkit_command(f"workflow next --unit {self.unit}")
+        conditions = [f"workflow: {ref.doc.id} (expected sdd-proposal)"] if ref.doc.id != "sdd-proposal" else []
+        conditions += [f"problem ({error.code}): {error.message}" for error in evaluation.errors]
+        conditions += [f"hold: {line}" for line in evaluation.hold.reasons()]
+        conditions += [f"unmet: {item.name}" for item in evaluation.unmet if item.name != "gate:plan-accept"]
+        if meta.get("needs_decompose") is True:
+            conditions.append("needs_decompose: true (Backlog splits it first)")
+        if conditions:
+            raise ProposalApprovalNotReadyError(
+                f"Planning of PROP-{self.slug} is not ready for plan-accept",
+                *conditions,
+                target_files=[anchor],
+                fix=f"Once the user agrees, resolve the conditions on plan-{self.slug} (`{next_step}` there names the "
+                "next step), commit them, then rerun the same command",
+            )
         if meta.get("status") == "accepted":
             if not evaluation.complete:
-                raise ProposalApprovalNotReadyError("accepted status lacks completed workflow approval")
+                raise ProposalAcceptanceUnrecordedError(
+                    f"PROP-{self.slug} says status: accepted on plan-{self.slug} without its completed plan-accept",
+                    target_files=[anchor],
+                    fix=acceptance_unrecorded_fix(self.slug),
+                )
             self.completed = ["acceptance_commit"]
         elif meta.get("status") != "reviewing" or (
             not evaluation.complete and (evaluation.stage is None or evaluation.stage.id != "direction-handoff")
         ):
-            raise ProposalApprovalNotReadyError("proposal is not ready for plan-accept")
+            stage = evaluation.stage.id if evaluation.stage is not None else "complete"
+            raise ProposalApprovalNotReadyError(
+                f"PROP-{self.slug} is not ready for plan-accept",
+                f"status: {meta.get('status') or '-'} (expected reviewing)",
+                f"stage: {stage} (expected direction-handoff)",
+                target_files=[anchor],
+                fix=f"Once the user agrees, finish Planning on plan-{self.slug} (`{next_step}` there names the next "
+                "step), commit it, then rerun the same command",
+            )
         self.effort = str(meta.get("dev_effort", "medium"))
         if self.effort not in EFFORTS:
-            raise ProposalApprovalNotReadyError("dev_effort must be low, medium or high")
+            raise ProposalInvalidError(
+                f"PROP-{self.slug} has dev_effort {self.effort!r}, not low, medium or high",
+                target_files=[anchor],
+                fix=f"Set dev_effort to low, medium or high in {anchor} on plan-{self.slug}, commit it, then rerun",
+            )
         self.meta = meta
         self.snapshot = self._snapshot()
         return Readiness(
@@ -243,7 +304,9 @@ class _Acceptance:
         try:
             expected_anchor = accepted_text(original).encode()
         except ValueError as exc:
-            raise ProposalApprovalNotReadyError("proposal status cannot be changed exactly") from exc
+            raise ProposalInvalidError(
+                f"{self.unit}/proposal.md has no status line to change", target_files=[f"{self.unit}/proposal.md"]
+            ) from exc
         accepted = accept_proposal(self.source, self.slug, by=self.actor)
         self.completed.append("acceptance_record")
         if accepted.decision is None:
@@ -269,10 +332,13 @@ class _Acceptance:
             anchor.write_text(original)
             (self.source / accepted.decision).unlink()
             self.completed.remove("acceptance_record")
-            raise ProposalApprovalNotReadyError(
-                "the commit gate refused the acceptance commit; `devkit rules check --staged` in the Planning "
-                "worktree reproduces it",
+            raise ProposalAcceptCommitRefusedError(
+                f"the commit gate refused the acceptance commit of PROP-{self.slug} on plan-{self.slug}; the "
+                "acceptance writes were withdrawn",
                 *[line for line in exc.stderr.splitlines() if line.strip()][-20:],
+                target_files=[f"plan-{self.slug}"],
+                fix=f"In the plan-{self.slug} worktree run `{devkit_command('rules check')}`, fix what it reports, "
+                "commit the fixes, then rerun the same command",
             ) from exc
         head = _git(self.source, "rev-parse", "HEAD")
         self.acceptance_sha = head
@@ -304,19 +370,21 @@ class PlanAcceptUseCase(BaseUseCase):
         if mode not in {"accept_only", "accept_and_handoff"}:
             raise ProposalApprovalReplyError("choose accept_only or accept_and_handoff")
         if mode == "accept_and_handoff" and effort not in EFFORTS:
-            raise ProposalApprovalReplyError("choose low, medium or high Development effort")
+            raise ProposalApprovalReplyError("choose low, medium or high Development effort", target_files=["--effort"])
         guard_execution()
-        position = locate(self.root)
-        if position.linked or not position.branch or position.branch.startswith(("dev-", "plan-")):
-            raise ProposalApprovalNotReadyError("run the service from the retained base checkout")
+        _require_policy_authority(self.root, slug, by)
+        _base_checkout(self.root, slug, _accept_command(slug, mode, effort, by))
         lifecycle = _Acceptance(self.root, slug, mode)
         integration = IntegrationService(self.root)
-        request = integration._prepare(
-            f"plan-{slug}",
-            Task("unit", f"PROP-{slug}", lifecycle.unit),
-            lifecycle=lifecycle,
-            approval_gate=lifecycle.approval_gate,
-        ).request
+        try:
+            request = integration._prepare(
+                f"plan-{slug}",
+                Task("unit", f"PROP-{slug}", lifecycle.unit),
+                lifecycle=lifecycle,
+                approval_gate=lifecycle.approval_gate,
+            ).request
+        except AdvisoryError as exc:
+            raise _spec_refusal(exc, slug, by) from exc
         lifecycle.validate(request)
         automatic = lifecycle.automatic(request)
         if automatic is not None:
@@ -324,7 +392,9 @@ class PlanAcceptUseCase(BaseUseCase):
             authority = "policy"
         else:
             if by == "policy":
-                raise AuthorityError("--by policy requires retained plan-accept=auto authority")
+                raise ProposalPolicyNotAutoError(
+                    f"--by policy cannot accept PROP-{slug}: the retained base's plan-accept policy is not auto"
+                )
             lifecycle.actor = "user"
             lifecycle.select({"mode": mode, "activity_effort": effort or lifecycle.effort})
             authority = "host-conversation"
@@ -454,9 +524,7 @@ class PlanAcceptUseCase(BaseUseCase):
             raise ProposalApprovalReplyError("choose accept_only or accept_and_handoff")
         guard_execution()
         async with self._lock:
-            position = locate(self.root)
-            if position.linked or not position.branch or position.branch.startswith(("dev-", "plan-")):
-                raise ProposalApprovalNotReadyError("run the service from the retained base checkout")
+            _base_checkout(self.root, slug, None)
             try:
                 _git(self.root, "show-ref", "--verify", f"refs/heads/plan-{slug}")
             except GitError as exc:

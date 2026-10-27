@@ -15,10 +15,9 @@ from __future__ import annotations
 
 from devkit.advisory import Actor, AdvisoryError, ExitCode, Level, Retry
 from devkit_dist.base.errors import ConfigError
+from devkit_dist.features.project.models.invocation import devkit_command
 
-# The agent-facing devkit invocation in a [FIX] (ADR-keep-uv-run-as-the-agent-facing-devkit-invocation).
-DEVKIT = "uv run devkit"
-PYTHON_FIX = f"Pass `--python` the interpreter of an environment where devkit is installed: `{DEVKIT} gate install --python <path>`"
+PYTHON_FIX = "Pass `--python` the path of an interpreter whose environment has devkit installed"
 
 
 class GateError(AdvisoryError):
@@ -63,7 +62,7 @@ class GateConfigError(GateError, ConfigError):
 
     code = "GATE_CONFIG_INVALID"
     target_files = ()
-    fix = "Correct the [gates] table in .devkit/config.toml or in the clone-local <common-git-dir>/devkit.config"
+    fix = "Correct the [gates] table in .devkit/config.toml or in the clone-local devkit.config of the common Git directory"
 
 
 class VerifyNotRunError(GateError):
@@ -84,11 +83,32 @@ class VerifyUnstagedNotice(GateError):
 
 
 class RulesWarningsNotice(GateError):
-    """``rules-check`` found warning-severity violations in the staged tree (``WARNING``); never raised."""
+    """``rules-check`` found warning-severity violations in the staged tree (``WARNING``); never raised.
+
+    ``--strict`` does not count it: a violation's severity, set in ``[rules]``, decides whether it refuses a commit.
+    """
 
     code = "GATE_RULES_WARNINGS"
     level = Level.WARNING
-    fix = f"Fix the listed violations when they are in scope; `{DEVKIT} rules check --staged` lists them again"
+    fix = (
+        f"Fix the listed violations when they are in scope; `{devkit_command('rules check --staged')}` lists them again"
+    )
+
+
+class StrictWarningsError(GateError):
+    """``--strict`` (``DEVKIT_STRICT=1``) refused a commit every gate passed, because a gate reported a warning.
+
+    Printed after the warnings, so a strict abort is never described only by their ``CONTINUE`` directives.
+    Warning-severity rule violations (``GATE_RULES_WARNINGS``) never count: a rule's severity governs them.
+    """
+
+    code = "GATE_STRICT_WARNINGS"
+    guardrail = True
+    exit_code = ExitCode.FINDINGS
+    what_to_report = (
+        "The commit was refused only because strict mode treats the warnings above as failures; resolve them, "
+        "or the user decides whether to commit without DEVKIT_STRICT"
+    )
 
 
 class GateTemplateNotice(GateError):
@@ -140,7 +160,7 @@ class GateInterpreterError(GateError):
 
     code = "GATE_INTERPRETER_UNAVAILABLE"
     fix = (
-        f"Run `uv sync` in this repository so its .venv provides devkit, or rerun `{DEVKIT} gate install` "
+        f"Run `uv sync` in this repository so its .venv provides devkit, or rerun `{devkit_command('gate install')}` "
         "from an environment where devkit is installed"
     )
     what_to_report = "The devkit commit gates did not run: no interpreter can import devkit_agt.features.gate"
@@ -177,7 +197,7 @@ class HookLayoutError(GateError):
     """A reserved script path cannot safely be replaced."""
 
     code = "GATE_HOOK_LAYOUT_INVALID"
-    fix = f"Move the conflicting hook paths to another location, then run `{DEVKIT} sync`"
+    fix = f"Move the conflicting hook paths to another location, then run `{devkit_command('sync')}`"
 
 
 class HookPreservedNotice(GateError):
@@ -204,15 +224,14 @@ class HookScriptFailedNotice(GateError):
 class HookEntryMissingNotice(GateError):
     """Enabled gates of a stage do not run: the stage has no managed dispatcher with a ``20-devkit`` entry.
 
+    One warning names every such stage, with one ``[DETAIL]`` per stage; ``devkit sync`` installs the entries too.
     Returned by ``devkit gate status`` (a warning, never raised), for example after a gate of a stage that had
     no enabled gate when the hooks were installed is enabled in the configuration.
     """
 
     code = "GATE_HOOK_ENTRY_MISSING"
     level = Level.WARNING
-    fix = (
-        f"Run `{DEVKIT} gate install` (or `{DEVKIT} sync`) to install the hook entry of every stage with enabled gates"
-    )
+    fix = devkit_command("gate install")
     what_to_report = "Enabled commit gates do not run at commit time until their hook entry is installed"
 
 

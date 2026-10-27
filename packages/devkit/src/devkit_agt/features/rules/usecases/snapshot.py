@@ -18,8 +18,17 @@ class CaptureRulesSnapshotUseCase(BaseUseCase):
     ) -> Snapshot:
         if staged and ci:
             raise ArgumentError("--staged and --ci are mutually exclusive", target_files=["--staged", "--ci"])
-        if targets or phase.lower() != Phase.LINTER.value:
+        mode = "--staged" if staged else "--ci"
+        if targets:
             raise ArgumentError(
-                "Git snapshot gates run the linter phase without file arguments", target_files=["--phase", "FILES"]
+                f"{mode} checks the files of the Git snapshot; it takes no file arguments",
+                target_files=list(targets),
+                fix=f"Drop the file arguments: {' '.join(targets)}",
+            )
+        if phase.lower() != Phase.LINTER.value:
+            raise ArgumentError(
+                f"{mode} runs the linter phase only, not {phase}",
+                target_files=["--phase"],
+                fix=f"Drop --phase {phase}",
             )
         return git_snapshot(root, staged=staged, base=base)

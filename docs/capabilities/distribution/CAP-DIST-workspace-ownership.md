@@ -164,18 +164,22 @@ The first sync that sees an override records it in the receipt under `overrides.
 On every sync the current upstream digest is compared with the baseline. Because it covers every file, a change to a
 skill's script is drift even when only its `SKILL.md` is overridden. On drift the override stays projected and:
 
-- under `override_drift = "warn"` (default), the sync reports an `OVERRIDE_DRIFT` warning:
+- under `override_drift = "warn"` (default), the sync reports one `OVERRIDE_DRIFT` warning for every drifted
+  override:
   ```text
-  [WARN]   (OVERRIDE_DRIFT) upstream drift behind the override of starter:development
+  [WARN]   (OVERRIDE_DRIFT) upstream drift behind an override: starter:development
   [ACTION] CONTINUE — The operation succeeded; this does not block it. Do not retry
            or undo it. Tell the user about it ([REPORT] when present); run [FIX]
            only when they ask for it.
   [TARGET] .devkit/overrides/starter/development.md
-  [FIX]    devkit override diff starter:development
-  [REPORT] Upstream changed an asset this project overrides; review the diff, then accept it or keep the override
+  [FIX]    uv run devkit override diff starter:development
+  [REPORT] Upstream changed an asset this project overrides; whether to merge the change into the override (review the diff, then accept it) or keep the override as it is
+  [DETAIL] uv run devkit override accept starter:development
   ```
-- under `override_drift = "block"`, the sync aborts before any write (`OVERRIDE_DRIFT`), naming every drifted
-  `bundle:asset`, with the `devkit override diff` / `devkit override accept` commands as its `fix`. Choose it where
+  `[TARGET]` names the workspace-relative override files. With several drifted overrides `[FIX]` is
+  `uv run devkit override list` and `[DETAIL]` gives each one's `override diff` and `override accept` command.
+- under `override_drift = "block"`, the sync aborts before any write with the same advisory as an error
+  (`INTERACTION`: whether an override takes over an upstream change is the user's decision). Choose it where
   an override shadows governance content (rules, gates, workflows); `warn` keeps prose upgrades flowing.
 
 `devkit status` follows the same policy: under `warn` drift is the `OVERRIDE_DRIFT` warning under `notices` (exit
@@ -184,8 +188,9 @@ assets: the record of an asset that is not deployed (its bundle deselected, its 
 override files remain, and its drift is reported once it is selected again. For an asset its bundle no longer has,
 or whose bundle is no longer installed, that means files under the record's own override path (the skill directory
 for a skill), whatever other overrides the bundle has. `devkit remove <bundle>` leaves the bundle's override
-directory in place and names it in an `OVERRIDE_RETAINED` notice (the directory as `[TARGET]`; delete it to drop the
-overrides, or select the bundle again to apply them).
+directory in place and names it in an `OVERRIDE_RETAINED` notice (the directory as `[TARGET]`; `[FIX]` selects the
+bundle again with the presets it deployed, `uv run devkit add <bundle>:<preset>`, which applies them; deleting the
+directory drops them, its `[DETAIL]`).
 
 Overrides resolve by bundle name and path. When an asset belongs to another bundle than the one an override names
 (an override of `devkit:devkit-run`, an asset of the `harness` bundle), the override does not apply: the asset
@@ -198,8 +203,8 @@ bundle and path but loses content keeps applying, with drift reported, until the
 - `devkit override diff <bundle>:<asset>` returns, for each overridden file and each upstream file changed since the
   baseline copy, `upstream_diff` (baseline copy to current upstream: what upstream changed) and `diff` (current
   upstream to the override: what the project changed). A diff is `null` when there is nothing to compare (no
-  baseline copy, a file that is not overridden, a non-UTF-8 file). The result also carries `drift_detected` and both
-  digests. An agent merges the upstream changes into the override files.
+  baseline copy, a file that is not overridden, a non-UTF-8 file). The result also carries `drift_detected`; the
+  digests stay in the receipt, as for `devkit override list`. An agent merges the upstream changes into the override files.
 - `devkit override accept <bundle>:<asset>` then records the current upstream digest as the baseline, refreshes the
   baseline copies and synchronizes under the same lock, as `create` does, so the merged override files are deployed
   and recorded and `sync --check` passes; the sync's notices are returned with the result. When that sync fails
@@ -207,7 +212,7 @@ bundle and path but loses content keeps applying, with drift reported, until the
   deployed overrides still drift, it only records the baseline (the baseline copies and the receipt record, rolled
   back together on failure) and deploys nothing, since a sync would place their upstream changes beside stale
   override files; it returns the `OVERRIDE_SYNC_DEFERRED` notice naming the remaining overrides, with their
-  `uv run devkit override accept <bundle>:<asset>` commands as its fix. Until then `sync --check` may report pending
+  `uv run devkit override diff` and `override accept` commands as its fix and details, as for `OVERRIDE_DRIFT`. Until then `sync --check` may report pending
   work. The accept that leaves no drift synchronizes. It fails for an asset without a tracked override.
 - `devkit override remove <bundle>:<asset>` deletes the override files of the asset's upstream files and the
   baseline files, prunes empty directories and synchronizes the upstream sources (rendered for templates), under one lock with the same

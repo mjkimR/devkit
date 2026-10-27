@@ -40,4 +40,4 @@ class ModelInvalidError(SearchError):
     """The model package is installed, but its files are missing or malformed (``MAINTENANCE``)."""
 
     code = "SEARCH_MODEL_INVALID"
-    fix = "Reinstall the model package (uv sync --reinstall-package <package>)"
+    fix = "Reinstall the package that registers the model named in the message (uv sync --reinstall reinstalls every package)"

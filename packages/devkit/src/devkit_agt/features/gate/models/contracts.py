@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shlex
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
@@ -10,8 +11,9 @@ from typing import Any, Protocol
 
 from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import ArgumentError
+from devkit_dist.features.project.models.invocation import devkit_command
 
-from devkit_agt.features.gate.models.errors import DEVKIT, GateDefinitionError, GateResultError
+from devkit_agt.features.gate.models.errors import GateDefinitionError, GateResultError
 
 
 class Stage(StrEnum):
@@ -101,7 +103,9 @@ class GateContext:
         if not self.args:
             raise ArgumentError(
                 "commit-msg: no commit message file given",
-                fix=f"Pass the message file: `{DEVKIT} gate run commit-msg <file>`",
+                # The file Git writes the message to for the hook; ``devkit gate run`` takes it after the stage.
+                fix=devkit_command(f"gate run commit-msg {shlex.quote(str(self.git_dir / 'COMMIT_EDITMSG'))}"),
+                target_files=["FILE"],
             )
         path = Path(self.args[0])
         return path if path.is_absolute() else self.repo_root / path

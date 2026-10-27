@@ -40,3 +40,4 @@ class SlowCommandNotice(CompactError):
 
     code = "RUN_SLOW_COMMAND"
     level = Level.NOTICE
+    brief = True  # informational: nothing to do, so no [ACTION] line

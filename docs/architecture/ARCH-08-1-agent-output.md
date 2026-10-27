@@ -59,7 +59,7 @@ Text-mode stdout is made of one-line sentinels:
 
 ## 4. stdout: JSON
 
-Under `--format json` (and for the distribution commands other than `sync`, `add` and `remove`, which are JSON-only), stdout is exactly one JSON object, never a bare array:
+Under `--format json` (and for the distribution commands other than `sync`, `add` and `remove`, which are JSON-only), stdout is exactly one JSON object, never a bare array. It is compact (no indentation and no spaces after separators), since every byte reaches the agent's context; the example below is indented for reading only. A JSON-only command also accepts `--format json` as a no-op, so an agent may pass it to every command; any other format is a usage error:
 
 ```json
 {

@@ -28,6 +28,7 @@ from devkit_agt.features.rules import Phase, Snapshot, materialize_snapshot, run
 from devkit_agt.features.workflow import Workspace, is_ancestor, load_decisions, load_envelopes, load_workflow_config
 from devkit_core.core import FrontmatterError, is_safe_relpath, run_git
 from devkit_core.core.frontmatter import parse
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 from devkit_dist.features.project.repositories.receipt import load_receipt
 
 from devkit_spec.features.delivery.usecases.attach import (
@@ -503,5 +504,5 @@ def check(context: IntegrationContext) -> Readiness:
         result_sha=context.result_sha,
         target_bound=TARGET_BOUND,
         disclosure=DISCLOSURE,
-        landed_check="devkit rules check",
+        landed_check=f"{DEVKIT} rules check",
     )

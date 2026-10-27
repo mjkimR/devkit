@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shlex
 from dataclasses import asdict, dataclass
 from typing import Any
 
@@ -11,6 +12,7 @@ from devkit_dist.features.distribution.services.bundles.common import ALL
 from devkit_dist.features.distribution.services.bundles.manifest import Bundle
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
 from devkit_dist.features.distribution.services.installation.inventory import AGENTS, desired_inventory
+from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.receipt import AssetRecord, HostHookRecord
 
 
@@ -21,7 +23,8 @@ class PlannedFile:
     mode: int
 
     def to_dict(self) -> dict[str, Any]:
-        return {"destination": self.destination, "sha256": self.sha256, "mode": self.mode}
+        # The permission bits as ``ls`` and ``chmod`` write them (``"0644"``), not the decimal integer.
+        return {"destination": self.destination, "sha256": self.sha256, "mode": f"{self.mode:04o}"}
 
 
 @dataclass(frozen=True)
@@ -60,12 +63,23 @@ class BundlePlan:
         }
 
 
-def plan_bundle(bundle: Bundle, preset: str | None = None, agents: list[str] | None = None) -> BundlePlan:
+def plan_bundle(
+    bundle: Bundle, preset: str | None = None, agents: list[str] | None = None, *, source: str | None = None
+) -> BundlePlan:
     """Every destination ``bundle`` deploys with ``preset`` (default preset, else ``all``) for ``agents``.
 
     The plan ignores project state: no overrides, no existing files, no root
-    ``AGENTS.md`` block. ``agents`` defaults to every supported agent.
+    ``AGENTS.md`` block. ``agents`` defaults to every supported agent. ``source`` is the source argument as the
+    caller passed it (default: the bundle root), named in the commands an unknown ``preset`` suggests.
     """
+    if preset is not None and bundle.unknown_presets([preset]):
+        plan = devkit_command(f"bundle plan {shlex.quote(source if source is not None else str(bundle.root))}")
+        raise bundle.preset_error(
+            f"{bundle.name}: unknown preset {preset}; available: {', '.join(bundle.preset_names)}",
+            command=lambda name: f"{plan} --preset {name}",
+            fix=plan,
+            target="--preset",
+        )
     preset = preset or bundle.default_preset or ALL
     targets = sorted(set(agents)) if agents is not None else sorted(AGENTS)
     item = InstalledBundle("(local source)", bundle.version, bundle)

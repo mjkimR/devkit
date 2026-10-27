@@ -1,5 +1,7 @@
 """Sentinel text lines for ``next`` and ``show``. JSON comes from each object's ``to_dict``.
 
+The error that stopped ``lint-clean`` is not a line here: the command reports it once, on stderr.
+
 Free text (titles, details, notes, descriptions) is written as a JSON string,
 so quotes, backslashes and newlines are escaped and every fact stays on one line.
 """
@@ -7,10 +9,13 @@ so quotes, backslashes and newlines are escaped and every fact stays on one line
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Mapping
 
+from devkit_agt.features.workflow.models.checks import GATE_PREFIX
 from devkit_agt.features.workflow.models.definition import GATE_POLICIES, WorkflowDocument
 from devkit_agt.features.workflow.models.envelope import Hold
+from devkit_agt.features.workflow.models.errors import workflow_command
 from devkit_agt.features.workflow.models.requests import Request, candidate_summary
 from devkit_agt.features.workflow.models.results import GateStatus, UnitEvaluation
 
@@ -18,6 +23,13 @@ from devkit_agt.features.workflow.models.results import GateStatus, UnitEvaluati
 def quote(value: str) -> str:
     """``value`` as a one-line JSON string literal."""
     return json.dumps(value, ensure_ascii=False)
+
+
+def value(text: str) -> str:
+    """``text`` bare when it is one token, else as a JSON string; ``-`` when empty."""
+    if not text:
+        return "-"
+    return text if re.fullmatch(r'[^\s"\]]+', text) else quote(text)
 
 
 def _dash(value: str | None) -> str:
@@ -48,7 +60,7 @@ def render_evaluation(res: UnitEvaluation) -> str:
         lines.append(f"[SKIPPED: {s.id} reason={s.reason}]")
     stage = res.stage
     if stage is None:
-        lines.append("[STAGE: - complete=true]")
+        lines.append("[STAGE: - complete=yes]")
         if res.handoff:
             h = res.handoff
             lines.append(
@@ -59,7 +71,7 @@ def render_evaluation(res: UnitEvaluation) -> str:
             for c in h.candidates:
                 lines.append(
                     f"[CANDIDATE: {c.workflow} eligible={_yn(c.eligible)} recommended={_yn(c.recommended)} "
-                    f"when={_dash(candidate_summary(c.checks))}]"
+                    f"when={value(candidate_summary(c.checks))}]"
                 )
             if res.waiting:
                 lines.append(f"[WAITING: {res.waiting.class_.value} {' '.join(res.waiting.checks)}]")
@@ -68,9 +80,13 @@ def render_evaluation(res: UnitEvaluation) -> str:
             f"[STAGE: {stage.id} human_gate={_dash(stage.gate)} role={_dash(stage.role)} isolation={_dash(stage.isolation)}]"
         )
         lines.append(f"[UNMET: {_dash(' '.join(u.name for u in res.unmet))}]")
+        # The [GATE] line reports the current gate's implicit check; a [CHECK] line would repeat it.
+        gate_check = f"{GATE_PREFIX}{res.gate.name}" if res.gate else None
         for u in res.unmet:
+            if u.name == gate_check:
+                continue
             lines.append(
-                f"[CHECK: {u.name} class={u.class_.value} evaluated={str(u.evaluated).lower()} detail={quote(u.detail)}]"
+                f"[CHECK: {u.name} class={u.class_.value} evaluated={_yn(u.evaluated)} detail={quote(u.detail)}]"
             )
         lines.append(f"[NEXT_SKILL: {_dash(res.next_skill)}]")
         if res.delegate:
@@ -87,7 +103,7 @@ def render_evaluation(res: UnitEvaluation) -> str:
             )
         if res.waiting:
             lines.append(f"[WAITING: {res.waiting.class_.value} {' '.join(res.waiting.checks)}]")
-        void = quote(f"uv run devkit workflow return --unit {res.unit} --to {stage.id}")
+        void = quote(workflow_command(f"return --unit {res.unit} --to {stage.id}"))
         for d in res.stale_approvals:
             lines.append(f"[STALE_APPROVAL: {d.file} request={d.request} stage={d.stage} counts=yes void_with={void}]")
     lines.extend(render_hold(res.hold).splitlines())
@@ -96,8 +112,6 @@ def render_evaluation(res: UnitEvaluation) -> str:
         lines.append(f"[ENVELOPE_ERROR: {e.file} {quote(e.message)}]")
     for d in res.decision_errors:
         lines.append(f"[DECISION_ERROR: {d.file} {quote(d.message)}]")
-    if res.lint_error is not None:
-        lines.append(f"[LINT_ERROR: {quote(res.lint_error.message)}]")
     return "\n".join(lines) + "\n"
 
 
@@ -161,7 +175,7 @@ def render_document(
             f"isolation={_dash(s.isolation)} optional={_yn(s.optional)} exception={_yn(s.exception)}]"
         )
         if stages.get(s.id) == "off":
-            lines.append(f"[SKIP: {s.id} reason=stages.{s.id}=off]")
+            lines.append(f"[SKIPPED: {s.id} reason=stages.{s.id}=off]")
         if s.gate:
             answer = doc.gate_answer(s.gate)
             lines.append(
@@ -175,5 +189,5 @@ def render_document(
         if s.returns:
             lines.append(f"[RETURNS: {'; '.join(f'{r.to} when={quote(r.when)}' for r in s.returns)}]")
     for c in doc.next:
-        lines.append(f"[NEXT: {c.workflow} recommended={_yn(c.recommended)} when={_dash(' '.join(c.when))}]")
+        lines.append(f"[NEXT: {c.workflow} recommended={_yn(c.recommended)} when={value(' '.join(c.when))}]")
     return "\n".join(lines) + "\n"

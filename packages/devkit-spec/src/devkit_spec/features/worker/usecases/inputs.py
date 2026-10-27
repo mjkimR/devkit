@@ -12,33 +12,15 @@ from devkit_core.base.errors import ArgumentError
 from devkit_core.core import GitError, run_git
 from devkit_core.core.frontmatter import parse
 
-from devkit_spec.base.errors import SpecError
+from devkit_spec.base.errors import (
+    SpecError,
+    WorkerBaseUnresolvedError,
+    WorkerHeadUnresolvedError,
+    WorkerScopeUnresolvedError,
+    WorkerUnitUnresolvedError,
+)
 from devkit_spec.features.delivery.usecases.attach import PROPOSAL_UNIT, SPEC_UNIT, attach_check
 from devkit_spec.features.entrypoints.repositories.bundle import parse_boundaries, parse_targets
-
-
-class UnitUnresolved(SpecError):
-    code = "WORKER_UNIT_UNRESOLVED"
-    input_error = True
-    fix = "Pass --unit with the committed unit directory"
-
-
-class HeadUnresolved(SpecError):
-    code = "WORKER_HEAD_UNRESOLVED"
-    input_error = True
-    fix = "Pass --head with the returned commit"
-
-
-class BaseUnresolved(SpecError):
-    code = "WORKER_BASE_UNRESOLVED"
-    input_error = True
-    fix = "Pass --base with the last accepted commit"
-
-
-class ScopeUnresolved(SpecError):
-    code = "WORKER_SCOPE_UNRESOLVED"
-    input_error = True
-    fix = "Pass --scope with each authorized path or --scope-file with the complete scope"
 
 
 def git(root: Path, *args: str) -> str:
@@ -87,7 +69,7 @@ def added(root: Path, revision: str, path: str, error: type[SpecError]) -> str:
 def prefix(value: str) -> str:
     path = PurePosixPath(value)
     if not value or path.is_absolute() or ".." in path.parts or any(c in value for c in "*?[]\\\x00"):
-        raise ScopeUnresolved(f"Scope entry is not a literal repository-relative path: {value!r}")
+        raise WorkerScopeUnresolvedError(f"Scope entry is not a literal repository-relative path: {value!r}")
     return path.as_posix().rstrip("/")
 
 
@@ -124,24 +106,24 @@ def unit_path(root: Path, value: str) -> str:
         try:
             value = path.relative_to(root).as_posix()
         except ValueError as exc:
-            raise UnitUnresolved("Unit is outside the worktree") from exc
+            raise WorkerUnitUnresolvedError("Unit is outside the worktree") from exc
     if ".." in PurePosixPath(value).parts or value in ("", "."):
-        raise UnitUnresolved("Unit must name a directory within the worktree")
+        raise WorkerUnitUnresolvedError("Unit must name a directory within the worktree")
     return PurePosixPath(value).as_posix()
 
 
 def derive_unit(root: Path, tip: str, branch: str | None, project: str = "") -> tuple[str, str]:
     if not branch:
-        raise UnitUnresolved("Detached HEAD has no activity unit")
+        raise WorkerUnitUnresolvedError("Detached HEAD has no activity unit")
     marked = marker(root, branch, "devkitUnit")
     if marked:
         # The marker names the unit relative to the devkit project (``devkit worktree attach --unit``).
         unit = unit_path(root, marked if Path(marked).is_absolute() or not project else f"{project}/{marked}")
         if not files(root, tip, unit):
-            raise UnitUnresolved(f"Marked unit {unit} is absent at HEAD")
+            raise WorkerUnitUnresolvedError(f"Marked unit {unit} is absent at HEAD")
         return unit, "branch.devkitUnit"
     if not branch.startswith(("dev-", "plan-")):
-        raise UnitUnresolved(f"{branch} is not an activity branch")
+        raise WorkerUnitUnresolvedError(f"{branch} is not an activity branch")
     candidates = []
     for path in files(root, tip):
         directory, _, name = path.rpartition("/")
@@ -154,7 +136,7 @@ def derive_unit(root: Path, tip: str, branch: str | None, project: str = "") -> 
     specs = [p for p in candidates if SPEC_UNIT.fullmatch(p)]
     candidates = specs or candidates
     if len(candidates) != 1:
-        raise UnitUnresolved(f"{branch} corresponds to {len(candidates)} committed units")
+        raise WorkerUnitUnresolvedError(f"{branch} corresponds to {len(candidates)} committed units")
     return candidates[0], "activity-branch"
 
 
@@ -162,25 +144,25 @@ def derive_base(
     root: Path, tip: str, unit: str, workers: list[str], branch: str | None, base_checkout: Path | None
 ) -> tuple[str, str]:
     if len(workers) > 1:
-        previous = added(root, tip, workers[-2], BaseUnresolved)
+        previous = added(root, tip, workers[-2], WorkerBaseUnresolvedError)
         loaded = records(root, previous, unit)
         if loaded.errors:
-            raise BaseUnresolved("Previous committed envelopes are malformed")
+            raise WorkerBaseUnresolvedError("Previous committed envelopes are malformed")
         problems = loaded.unresolved_problems()
         if problems:
             bases = {e.diff_base for e in problems}
             if "" in bases or len(bases) != 1:
-                raise BaseUnresolved("Unresolved problems have missing or conflicting range bases")
+                raise WorkerBaseUnresolvedError("Unresolved problems have missing or conflicting range bases")
             return bases.pop(), "previous-blocked-range"
         return previous, "previous-worker-commit"
     base_branch = marker(root, branch, "devkitBase") if branch else ""
     if not base_branch and base_checkout:
         base_branch = git(base_checkout, "symbolic-ref", "--quiet", "--short", "HEAD")
     if not base_branch or base_branch == branch:
-        raise BaseUnresolved("No distinct base branch is recorded")
+        raise WorkerBaseUnresolvedError("No distinct base branch is recorded")
     bases = git(root, "merge-base", "--all", tip, base_branch).splitlines()
     if len(bases) != 1:
-        raise BaseUnresolved("The base branch has no single merge base")
+        raise WorkerBaseUnresolvedError("The base branch has no single merge base")
     return bases[0], "branch-merge-base"
 
 
@@ -194,7 +176,7 @@ def derive_scope(root: Path, tip: str, unit: str, project: str = "") -> list[dic
     if workflow == "sdd-proposal":
         return entries
     if not isinstance(workflow, str) or not workflow.startswith("sdd-spec-"):
-        raise ScopeUnresolved(f"Unsupported workflow: {workflow}")
+        raise WorkerScopeUnresolvedError(f"Unsupported workflow: {workflow}")
     for task in parse_boundaries(read(root, tip, f"{unit}/tasks.md")):
         entries.extend(
             {"path": project_path(project, p), "source": "boundary", "task": task.index}
@@ -218,7 +200,7 @@ def derive_scope(root: Path, tip: str, unit: str, project: str = "") -> list[dic
             ):
                 matches.append(path)
         if len(matches) != 1:
-            raise ScopeUnresolved(f"{identifier} resolves to {len(matches)} feedback files")
+            raise WorkerScopeUnresolvedError(f"{identifier} resolves to {len(matches)} feedback files")
         if (parse(read(root, tip, matches[0])).data or {}).get("status") == "open":
             entries.append({"path": matches[0], "source": "source-feedback", "id": identifier})
     return entries
@@ -236,7 +218,7 @@ def inputs(
         (unit_path(root, unit), "argument") if unit else derive_unit(root, tip, position.branch, project)
     )
     if not files(root, tip, chosen_unit):
-        raise UnitUnresolved(f"{chosen_unit} does not exist in committed HEAD")
+        raise WorkerUnitUnresolvedError(f"{chosen_unit} does not exist in committed HEAD")
     workers = sorted(
         (p for p in files(root, tip, f"{chosen_unit}/envelopes/") if re.fullmatch(r"worker-\d+\.yaml", Path(p).name)),
         key=lambda p: int(Path(p).stem.split("-")[-1]),
@@ -244,15 +226,15 @@ def inputs(
     if head:
         chosen_head, head_source = head, "argument"
     elif workers:
-        chosen_head, head_source = added(root, tip, workers[-1], HeadUnresolved), "latest-worker-commit"
+        chosen_head, head_source = added(root, tip, workers[-1], WorkerHeadUnresolvedError), "latest-worker-commit"
     else:
-        raise HeadUnresolved("No committed worker envelope")
+        raise WorkerHeadUnresolvedError("No committed worker envelope")
     try:
         chosen_base, base_source = (
             (base, "argument") if base else derive_base(root, tip, chosen_unit, workers, position.branch, checkout)
         )
     except GitError as exc:
-        raise BaseUnresolved(exc.message) from exc
+        raise WorkerBaseUnresolvedError(exc.message) from exc
     resolved = {}
     for name, value, source in (
         ("unit", chosen_unit, unit_source),

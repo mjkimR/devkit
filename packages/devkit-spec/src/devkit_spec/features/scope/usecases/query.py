@@ -10,6 +10,7 @@ from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 
 from devkit_spec.base.errors import (
+    DEVKIT,
     ScopeRecordInvalidWarning,
     ScopeRecordMissingError,
     ScopeSpecNotFoundError,
@@ -36,7 +37,7 @@ def _spec_dir(root: Path, value: str | None) -> str:
         raise ArgumentError(
             "--spec <dir> is required",
             target_files=["--spec"],
-            fix="Pass the bundle directory: --spec specs/<YYYY-MM>/<YYYYMMDD>-<slug>",
+            fix=f"Pass --spec with a spec bundle directory ({DEVKIT} spec list spec --history lists them)",
         )
     relative = _bundle_dir(root, value)
     if not (root / relative).is_dir():
@@ -62,7 +63,7 @@ def _record_warnings(
             f"{len(problems)} record file(s) of the namespace could not be read and were left out",
             *(f"{problem.file}: {problem.reason}" for problem in problems),
             *own,
-            target_files=[str(directory / problem.file) for problem in problems],
+            target_files=[location.shown(directory / problem.file) for problem in problems],
         )
     ]
 
@@ -96,8 +97,13 @@ class QueryScopesUseCase(BaseUseCase):
             mine = None
             others, problems = session.registry.query(location.namespace, session.deadline)
         if spec_dir is not None:
-            planned = from_spec(root, _spec_dir(root, spec_dir))
-            pairs = compare_with(planned, [record.to_set() for record in others])
+            relative = _spec_dir(root, spec_dir)
+            planned = from_spec(root, relative)
+            # A record of the same bundle is the planned task itself, never an overlap with it.
+            pairs = compare_with(
+                planned,
+                [record.to_set() for record in others if record.spec != relative and record.task_id != planned.id],
+            )
         elif mine is not None:
             pairs = compare_with(mine.to_set(), [record.to_set() for record in others])
         else:

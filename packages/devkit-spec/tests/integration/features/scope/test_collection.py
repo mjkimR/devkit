@@ -171,12 +171,26 @@ def test_other_host_record_path_is_not_read(repo: Path, monkeypatch: pytest.Monk
 
 
 @pytest.mark.parametrize(
-    "args", [("--mode", "snapshot", "--fetch", "origin"), ("--timeout", "0"), ("--mode", "bad"), ("--fetch", "unknown")]
+    ("args", "targets"),
+    [
+        (("--mode", "snapshot", "--fetch", "origin"), ["--mode", "--fetch"]),
+        (("--timeout", "0"), ["--timeout"]),
+        (("--source-timeout", "301"), ["--source-timeout"]),
+        (("--fetch", "unknown"), None),
+    ],
 )
-def test_invalid_arguments_use_json_boundary(repo: Path, args: tuple[str, ...]) -> None:
+def test_invalid_arguments_use_json_boundary(repo: Path, args: tuple[str, ...], targets: list[str] | None) -> None:
     result = invoke(repo, *args, "--format", "json")
     assert result.exit_code == 2
-    assert json.loads(result.stdout)["error"]["code"] == "ARGUMENT_INVALID"
+    error = json.loads(result.stdout)["error"]
+    assert error["code"] == "ARGUMENT_INVALID"
+    if targets is not None:
+        assert error["advisory"]["target_files"] == targets
+
+
+def test_an_unknown_mode_is_a_usage_error(repo: Path) -> None:
+    result = invoke(repo, "--mode", "bad", "--format", "json")
+    assert result.exit_code == 2 and "snapshot" in result.output  # click lists the choices
 
 
 def test_unknown_base_partial_strict_and_text_contract(repo: Path) -> None:
@@ -496,3 +510,33 @@ def test_symlink_loop_is_partial_coverage_not_unexpected_failure(repo: Path) -> 
     data = collect(repo, base="main")
     assert data["coverage"]["status"] == "partial"
     assert data["observations"]
+
+
+def test_text_names_sources_relative_and_a_dirty_base_checkout_is_no_gap(tmp_path: Path) -> None:
+    root = base_repo(tmp_path / "repo")
+    git(root, "checkout", "-qb", "dev-a")
+    task(root)
+    git(root, "checkout", "-q", "main")
+    task(root, "b")  # the base holds a committed unit too
+    write(root, "src/shared.py", "dirty = 1\n")  # and uncommitted changes
+    linked = tmp_path / "wt-a"
+    git(root, "worktree", "add", "-q", str(linked), "dev-a")
+    result = invoke(root, "--format", "json")
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.stdout)
+    ids = [item["source_id"] for item in data["inventory"]]
+    assert "worktree:." in ids and "worktree:../wt-a" in ids
+    base = next(item for item in data["inventory"] if item["source_id"] == "worktree:.")
+    assert (base["activity"], base["reason"]) == ("inactive", "base-checkout")
+    assert "SPEC_SCOPE_COLLECTION_PARTIAL" not in [notice["code"] for notice in data["notices"]]
+    text = invoke(root).stdout
+    assert "/" + str(tmp_path).strip("/") not in text  # no absolute path
+    observation = next(line for line in text.splitlines() if line.startswith("[SCOPE_OBSERVATION:"))
+    assert " task=SPEC-a unit=specs/2026-10/20261025-a " in observation and "[" not in observation[1:]
+
+
+def test_partial_coverage_lists_each_gap_once_with_targets(repo: Path) -> None:
+    collector = Collector(repo, CollectionOptions(mode="worktrees"))
+    collector.problem("refs/heads/dev-a", "unknown-base")
+    collector.problem("refs/heads/dev-a", "unknown-base")
+    assert collector.problem_count == 1 and len(collector.problems) == 1

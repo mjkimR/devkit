@@ -676,9 +676,10 @@ def test_handoff_cli_refuses_an_unmet_prerequisite_as_blocked(accepted_handoff_b
     (repo / "untracked.txt").write_text("not committed\n")
     result = CliRunner().invoke(proposal_group, ["handoff", "idea", "--effort", "medium", "-w", str(repo)])
     assert result.exit_code == 2, result.output
-    assert "SPEC_HANDOFF_NOT_READY" in result.stderr
-    assert "[ACTION] BLOCKED" in result.stderr
-    assert "MAINTENANCE" not in result.stderr
+    assert "SPEC_HANDOFF_BASE_DIRTY" in result.stderr
+    assert "[ACTION] INTERACTION" in result.stderr
+    assert "[TARGET] untracked.txt" in result.stderr
+    assert result.stdout == ""  # a refusal prints no success sentinel
     assert not git(repo, "branch", "--list", "dev-idea")
 
 
@@ -973,7 +974,7 @@ def test_handoff_reuses_only_clean_pinned_devkit_worktree(accepted_handoff_base)
 def test_handoff_recovery_refuses_changed_provenance_before_form(accepted_handoff_base, mutation):
     from devkit_agt.features.worktree import locate, start
 
-    from devkit_spec.base.errors import HandoffNotReadyError
+    from devkit_spec.base.errors import HandoffWorktreeConflictError
     from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase
 
     repo = accepted_handoff_base
@@ -988,8 +989,9 @@ def test_handoff_recovery_refuses_changed_provenance_before_form(accepted_handof
     async def confirm(message, schema):
         pytest.fail("mismatched recovery cannot reach approval")
 
-    with pytest.raises(HandoffNotReadyError):
+    with pytest.raises(HandoffWorktreeConflictError) as caught:
         asyncio.run(HandoffUseCase(repo).execute_native("idea", confirm))
+    assert caught.value.target_files == ("dev-idea",)
     assert started.path.exists()
 
 
@@ -1037,8 +1039,8 @@ def test_handoff_automatic_policy_revocation_preserves_git_state(accepted_handof
     async def forbidden(*_):
         raise AssertionError("revoked automatic authority must not fall back to a form")
 
-    with pytest.raises(module.HandoffNotReadyError) as caught:
+    with pytest.raises(module.HandoffBaseDirtyError) as caught:
         asyncio.run(module.HandoffUseCase(repo).execute_native("idea", forbidden))
-    assert caught.value.code == "SPEC_HANDOFF_NOT_READY"
+    assert caught.value.code == "SPEC_HANDOFF_BASE_DIRTY"
     assert git(repo, "show-ref") == before
     assert not git(repo, "branch", "--list", "dev-idea")

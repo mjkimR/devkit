@@ -10,14 +10,13 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
-from devkit.advisory import AdvisoryError, Level
+from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow.repositories.git import is_ancestor
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import FrontmatterError, run_git
 
-from devkit_spec.base.errors import SpecError
+from devkit_spec.base.errors import WorkerCheckFailedError, WorkerCheckNotRunNotice, WorkerScopeUnresolvedError
 from devkit_spec.features.worker.usecases.inputs import (
-    ScopeUnresolved,
     derive_scope,
     git,
     inputs,
@@ -25,11 +24,62 @@ from devkit_spec.features.worker.usecases.inputs import (
     records,
 )
 
+TARGET_LIMIT = 20
 
-class CheckNotRun(SpecError):
-    code = "WORKER_CHECK_NOT_RUN"
-    level = Level.NOTICE
-    fix = "Inspect the reported cause and run the named check after correcting it"
+
+def _failure(name: str, check: dict[str, Any], result: dict[str, Any]) -> WorkerCheckFailedError:
+    """The advisory of one failed check: its own code, its cause and the paths or check it concerns."""
+
+    def paths(items: Sequence[str]) -> list[str]:
+        return list(items[:TARGET_LIMIT]) + (
+            [f"... {len(items) - TARGET_LIMIT} more"] if len(items) > TARGET_LIMIT else []
+        )
+
+    if name == "ancestry":
+        return WorkerCheckFailedError(
+            f"base {result['base'][:12]} is not an ancestor of head {result['head'][:12]}",
+            code="SPEC_WORKER_ANCESTRY_FAILED",
+            target_files=["--base", "--head"],
+        )
+    if name == "head":
+        return WorkerCheckFailedError(
+            f"the worktree HEAD {str(check.get('actual'))[:12]} is not the returned head {result['head'][:12]}",
+            code="SPEC_WORKER_HEAD_FAILED",
+            target_files=["--head"],
+        )
+    if name == "scope":
+        outside = result.get("outside_scope", [])
+        return WorkerCheckFailedError(
+            f"{len(outside)} changed paths lie outside the authorized scope",
+            code="SPEC_WORKER_SCOPE_OUTSIDE",
+            target_files=paths(outside),
+        )
+    if name == "worktree":
+        dirty = check.get("dirty_paths", [])
+        return WorkerCheckFailedError(
+            f"the worktree has {len(dirty)} uncommitted paths",
+            code="SPEC_WORKER_WORKTREE_DIRTY",
+            target_files=paths(dirty),
+        )
+    if name == "envelopes":
+        payload = check.get("result", {}) if isinstance(check.get("result"), dict) else {}
+        causes = [
+            *(f"invalid envelope ({item.get('code')}): {item.get('message')}" for item in payload.get("errors", [])),
+            *("unresolved problem" for _ in payload.get("problems", [])),
+            *("pending question" for _ in payload.get("pending_questions", [])),
+        ]
+        return WorkerCheckFailedError(
+            "the committed envelopes hold invalid records, unresolved problems or pending questions",
+            *causes[:TARGET_LIMIT],
+            code="SPEC_WORKER_ENVELOPES_FAILED",
+            target_files=[result["inputs"]["unit"]["value"] + "/envelopes"],
+        )
+    command = "rules check --ci" if name == "rules" else "workflow next"
+    return WorkerCheckFailedError(
+        f"the wrapped `{command}` check failed; checks.{name} carries its result",
+        code=f"SPEC_WORKER_{name.upper()}_FAILED",
+        target_files=[f"checks.{name}"],
+    )
 
 
 def run_check(root: Path, args: Sequence[str]) -> dict[str, Any]:
@@ -132,7 +182,7 @@ class InspectWorkerUseCase(BaseUseCase):
             result["outside_scope"] = outside
             checks["scope"] = {"status": "fail" if outside else "pass"}
         except (AdvisoryError, FrontmatterError, UnicodeError) as exc:
-            cause = exc.to_dict() if isinstance(exc, AdvisoryError) else ScopeUnresolved(str(exc)).to_dict()
+            cause = exc.to_dict() if isinstance(exc, AdvisoryError) else WorkerScopeUnresolvedError(str(exc)).to_dict()
             result["scope"] = []
             checks["scope"] = {"status": "not-run", "cause": cause}
         dirty = dirty_paths(root)
@@ -159,7 +209,12 @@ class InspectWorkerUseCase(BaseUseCase):
         for name, check in checks.items():
             if check["status"] == "not-run":
                 notices.append(
-                    CheckNotRun(f"{name}: {check.get('cause', check.get('stderr', 'check could not run'))}").to_dict()
+                    WorkerCheckNotRunNotice(
+                        f"{name}: {check.get('cause', check.get('stderr', 'check could not run'))}"
+                    ).to_dict()
                 )
-        result["exit_code"] = int(any(c["status"] == "fail" for c in checks.values()))
+        result["errors"] = [
+            _failure(name, check, result).to_dict() for name, check in checks.items() if check["status"] == "fail"
+        ]
+        result["exit_code"] = int(bool(result["errors"]))
         return result

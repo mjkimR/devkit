@@ -37,7 +37,15 @@ from typing import Any, NoReturn
 import click
 from devkit.advisory import AdvisoryError, ArgumentError, ExitCode, Level, as_advisory_error
 
-from devkit_cli.output import OutputSettings, Reported, _settings, _unprinted, echo_json, is_json
+from devkit_cli.output import (
+    JSON_ONLY_FORMAT_OPTION,
+    OutputSettings,
+    Reported,
+    _settings,
+    _unprinted,
+    echo_json,
+    is_json,
+)
 
 _CONTINUATION = " " * len("[INFO]   ")
 
@@ -177,10 +185,16 @@ class Boundary:
         """
 
         def decorate(func: Callable[..., Any]) -> Callable[..., Any]:
+            # A JSON-only command accepts ``--format json`` (and nothing else) as a no-op, so an agent may pass it to
+            # every command; it must not declare ``FORMAT_OPTION`` itself.
+            adds_format = json_only
+
             @functools.wraps(func)
             def wrapper(
                 *args: Any, quiet: bool = False, verbose: bool = False, strict: bool = False, **kwargs: Any
             ) -> Any:
+                if adds_format:
+                    kwargs.pop("output_format", None)
                 _utf8_output()
                 try:
                     return guarded(*args, quiet=quiet, verbose=verbose, strict=strict, **kwargs)
@@ -230,6 +244,7 @@ class Boundary:
                     if token is not None:
                         _settings.reset(token)
 
-            return self.output_options(wrapper)
+            decorated = self.output_options(wrapper)
+            return JSON_ONLY_FORMAT_OPTION(decorated) if adds_format else decorated
 
         return decorate if fn is None else decorate(fn)

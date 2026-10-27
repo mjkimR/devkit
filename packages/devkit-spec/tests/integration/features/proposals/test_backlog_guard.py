@@ -72,9 +72,12 @@ def test_backlog_changes_only_a_draft_without_a_planning_branch(tmp_path: Path) 
             devkit_cli, ["spec", "proposal", "check", slug, "-w", str(root), "--format", "json"]
         )
         error = json.loads(refused.stdout)["error"]
-        assert refused.exit_code == 2 and error["code"] == "SPEC_PROPOSAL_IN_PLANNING" and reason in error["message"]
+        # The check's negative answer: exit 1, a workflow guardrail (BLOCKED).
+        assert refused.exit_code == 1 and error["code"] == "SPEC_PROPOSAL_IN_PLANNING" and reason in error["message"]
+        assert error["advisory"]["mode"] == "BLOCKED"
     missing = CliRunner().invoke(devkit_cli, ["spec", "proposal", "check", "nothing", "-w", str(root)])
     assert missing.exit_code == 2 and "SPEC_PROPOSAL_NOT_FOUND" in missing.stderr
+    assert "[TARGET] docs/proposals/PROP-nothing/proposal.md" in missing.stderr
 
 
 def test_a_padr_of_a_proposal_in_planning_is_written_on_its_branch_only(tmp_path: Path) -> None:

@@ -31,7 +31,7 @@ def test_new_and_padr(workspace: Path) -> None:
     ]
     result = _proposal(workspace, "padr", "fast-engine", "Use AST parser", "--format", "json")
     assert result.exit_code == 2 and result.stderr == ""
-    assert json.loads(result.stdout)["error"]["code"] == "SPEC_PROPOSAL_EXISTS"
+    assert json.loads(result.stdout)["error"]["code"] == "SPEC_PADR_EXISTS"
 
 
 def test_padr_slug_option(workspace: Path) -> None:
@@ -79,7 +79,7 @@ def test_new_binds_the_proposal_and_workflow_next_runs(workspace: Path) -> None:
     assert result.stdout.splitlines() == [
         "[PROPOSAL: PROP-bound path=docs/proposals/PROP-bound/proposal.md dir=docs/proposals/PROP-bound "
         "target_docs=- workflow=sdd-proposal planning_effort=medium dev_effort=medium]",
-        "[NEXT_CMD: devkit workflow next --unit docs/proposals/PROP-bound]",
+        "[NEXT_CMD: uv run devkit workflow next --unit docs/proposals/PROP-bound]",
     ]
     assert result.stderr == ""
     result = CliRunner().invoke(
@@ -130,7 +130,7 @@ def test_handoff_text(workspace: Path, write: Write) -> None:
         "[UNRESOLVED_LINK: docs/usecases/UC-a.md:4 kind=link target=../proposals/PROP-shipit/decisions/ reason=unmapped]"
         in lines
     )
-    assert lines[-1] == f"[NEXT_CMD: devkit workflow next --unit {spec_dir}]"
+    assert lines[-1] == f"[NEXT_CMD: uv run devkit workflow next --unit {spec_dir}]"
     assert "(SPEC_PROPOSAL_LINK_UNRESOLVED)" in result.stderr
     assert "(SPEC_PROPOSAL_REFS_REWRITTEN)" in result.stderr
     assert not (workspace / "docs/proposals/PROP-shipit").exists()

@@ -112,7 +112,11 @@ class Inventory:
         """
         existing = self.projections.setdefault(unit, owner)
         if existing != owner:
-            raise BundleConflictError(f"destination collision: {unit} ({existing} and {owner})", target_files=[unit])
+            raise BundleConflictError.between(
+                f"destination collision: {unit} ({existing} and {owner})",
+                unit,
+                [label.split(":", 1)[0] for label in (existing, owner) if ":" in label],
+            )
 
     def put(self, destination: str, content: Content) -> None:
         # Agents sharing a directory (Codex and Antigravity) project the same bytes twice.
@@ -231,9 +235,10 @@ class _BundleInventory:
                 else f"{asset.target}/{output_path(path.relative_to(origin).as_posix())}"
             )
             if dest in seeds:
-                raise BundleConflictError(
+                raise BundleConflictError.between(
                     f"seeded target collision: {dest} ({seeds[dest].bundle} and {self.bundle.name})",
-                    target_files=[dest],
+                    dest,
+                    [seeds[dest].bundle, self.bundle.name],
                 )
             data = (
                 render_template(path.read_bytes(), self.variables, source, environment=self.environment)

@@ -343,8 +343,9 @@ def test_update_statuses_for_stale_timeout_and_orphaned_records(repo: Path, monk
 
 def test_release_of_a_named_task(repo: Path) -> None:
     session = open_session(repo)
-    with pytest.raises(ScopeTokenMissingError):
-        release(session, "SPEC-s")
+    # Without a token nothing of this worktree is registered: release succeeds and changes nothing (its --help).
+    nothing = release(session, "SPEC-s")
+    assert (nothing.registered, nothing.already) == (False, False)
     register(session, SPEC)
     session.registry.register(
         Record(namespace=session.location.namespace, task_id="SPEC-x", worktree="/wt/x"), Deadline(5)
@@ -369,7 +370,7 @@ def test_an_unreadable_own_record_keeps_the_token(repo: Path) -> None:
             Level.ERROR,
             ActionMode.INTERACTION,
         )
-        assert error.target_files == (str(path),) and error.details == ("SPEC-s.json: parse",)
+        assert error.target_files == (session.location.shown(path),) and error.details == ("SPEC-s.json: parse",)
         assert "token is kept" in error.message
     assert session.location.token_path.exists(), "the token of a record that cannot be read is kept"
     ack = update(session, SPEC)
@@ -384,7 +385,7 @@ def test_unrelated_unreadable_records_do_not_block_release(repo: Path) -> None:
     assert release(session, "SPEC-gone").already and session.location.token_path.exists()
     with pytest.raises(AdvisoryError) as raised:
         release(session, "SPEC-other")  # that task's own record file is the unreadable one
-    assert raised.value.target_files == (str(directory / "SPEC-other.json"),)
+    assert raised.value.target_files == (session.location.shown(directory / "SPEC-other.json"),)
     released = release(session, "SPEC-s")
     assert (released.task, released.already) == ("SPEC-s", False) and not session.location.token_path.exists()
 

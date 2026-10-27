@@ -91,8 +91,9 @@ highest `exit_code` among them (`2` for every such problem today). Argument
 checks beyond click's syntax (`--staged` with `--ci`, `--base` without `--ci`,
 file arguments or `--phase hygiene` with a snapshot, a `--rules-dir` or
 `--workspace-root` that is not an existing directory, an unknown rule ID) are
-`ARGUMENT_INVALID` (`INPUT_ERROR`); only click's own syntax errors print a
-`Usage:` block.
+`ARGUMENT_INVALID` (`INPUT_ERROR`); a snapshot's refusal targets the file
+arguments or `--phase`, whichever was passed, with a `[FIX]` that drops them.
+Only click's own syntax errors print a `Usage:` block.
 
 ### Output
 
@@ -276,7 +277,7 @@ are returned in `RuleRegistry.errors`, `ProjectRun.load_errors` and
 | Class | Code | Mode | When |
 | --- | --- | --- | --- |
 | `RulesConfigError` | `RULES_CONFIG_INVALID` | `INPUT_ERROR` | `[rules]` in `.devkit/config.toml` is malformed (raised; a subclass of the core `ConfigError`, which is raised unchanged as `CONFIG_INVALID` when the file itself cannot be read or parsed) |
-| `TargetError` | `RULES_TARGET_INVALID` | `INPUT_ERROR` | an explicit target is outside the workspace (directly or through a symlink), does not exist, or lies inside `.devkit/managed/` or `.devkit/overrides/` (raised) |
+| `TargetError` | `RULES_TARGET_INVALID` | `INPUT_ERROR` | an explicit target is outside the workspace (directly or through a symlink), does not exist, or lies inside `.devkit/managed/` or `.devkit/overrides/` (raised); `[TARGET]` is the argument and `[FIX]` names it to correct or drop |
 | `RulesDirError` | `RULES_DIR_INVALID` | `INPUT_ERROR` | a snapshot run cannot read `--rules-dir` from the snapshot: outside the repository or not in the snapshot (raised) |
 | `SnapshotError` | `RULES_SNAPSHOT_FAILED` | `INPUT_ERROR` (not a work tree top level, unknown `--base`) or `MAINTENANCE` (Git failure) | a Git snapshot cannot be taken or materialized (raised) |
 | `PinnedWriteError` | `RULES_PINNED_WRITE_REFUSED` | `BLOCKED` | a fixer tried to write a receipt-pinned copy under `.devkit/managed/` or `.devkit/overrides/` |

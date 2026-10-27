@@ -27,7 +27,7 @@ class HookConflictError(HostError):
 
 class HookDispatchError(HostError):
     code = "HOST_HOOK_DISPATCH_FAILED"
-    fix = "Run `uv run devkit host status --format json`, correct the reported installation or handler problem, then retry"
+    fix = "Run `uv run devkit host status --format json` and correct the installation or handler problem it reports"
 
 
 class HookMissingError(HostError):

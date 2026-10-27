@@ -99,7 +99,7 @@ def test_end_to_end_new_next_bind_envelope_list(workspace: Path) -> None:
     assert (
         env.exit_code == 0
         and env.output.strip()
-        == "[ENVELOPE: .devkit/transient/work/login/envelopes/review-01.yaml kind=review seq=01 status=needs_input open_findings=0]"
+        == "[ENVELOPE: envelopes/review-01.yaml kind=review seq=01 status=needs_input skeleton=yes]"
     )
     env = _run(
         "envelope",
@@ -266,7 +266,7 @@ def test_requests_reports_a_lint_error_like_next(tmp_path: Path, monkeypatch: py
     document = json.loads(result.stdout)
     assert document["requests"] == [] and [e["code"] for e in document["errors"]] == ["UNEXPECTED_ERROR"]
     text = _run("next", "--view", "requests", "-w", str(root), "--unit", SIMPLE_UNIT)
-    assert text.stdout.splitlines() == ["[REQUESTS: none]", '[LINT_ERROR: "RuntimeError: rule exploded"]']
+    assert text.stdout.splitlines() == ["[OK: no open requests]"]
     assert text.exit_code == 2 and "(UNEXPECTED_ERROR) RuntimeError: rule exploded" in text.stderr
 
     clean = json.loads(

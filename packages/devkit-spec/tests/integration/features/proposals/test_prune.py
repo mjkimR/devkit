@@ -35,5 +35,5 @@ def test_cli(workspace: Path) -> None:
     def run(*args: str) -> str:
         return CliRunner().invoke(devkit_cli, ["spec", "proposal", "prune", *args, "-w", str(workspace)]).stdout
 
-    assert run("--format", "json") == json.dumps({"pruned": ["docs/proposals/PROP-a"]}, indent=2) + "\n"
+    assert run("--format", "json") == json.dumps({"pruned": ["docs/proposals/PROP-a"]}, separators=(",", ":")) + "\n"
     assert run() == "[OK: nothing to prune]\n"

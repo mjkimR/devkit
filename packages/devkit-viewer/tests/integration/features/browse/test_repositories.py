@@ -62,6 +62,7 @@ def test_scan_without_eligible_child_is_refused(make_repo: MakeRepo, tmp_path: P
     with pytest.raises(NoRepositoryError) as caught:
         register([], [workspace], tmp_path)
     assert caught.value.code == "VIEWER_NO_REPOSITORY"
+    assert "<" not in (caught.value.fix or "") and "uv run devkit viewer serve --repo ." in (caught.value.fix or "")
 
 
 def test_outside_a_devkit_project_is_refused(make_repo: MakeRepo, tmp_path: Path) -> None:

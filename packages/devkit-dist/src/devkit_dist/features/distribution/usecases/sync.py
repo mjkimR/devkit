@@ -5,13 +5,13 @@ from __future__ import annotations
 import dataclasses
 import json
 import tomllib
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from importlib import metadata
 from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 
-from devkit.advisory import AdvisoryError, ExitCode, Level
+from devkit.advisory import AdvisoryError, ExitCode
 from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core.git import run_git
@@ -29,8 +29,8 @@ from devkit_dist.features.distribution.models.errors import (
     ToolVersionChangedNotice,
     UnprojectedNotice,
     UnsafeWorkspaceError,
+    override_drift,
 )
-from devkit_dist.features.distribution.models.invocation import devkit_command
 from devkit_dist.features.distribution.models.results import Action, SyncResult, Unselected
 from devkit_dist.features.distribution.models.subagents import SubagentPolicy
 from devkit_dist.features.distribution.services.installation import guidance_block, local_render
@@ -57,7 +57,12 @@ from devkit_dist.features.distribution.services.installation.inventory import (
     Seed,
     desired_inventory,
 )
-from devkit_dist.features.distribution.services.installation.overrides import Drift, overridden_files, record_overridden
+from devkit_dist.features.distribution.services.installation.overrides import (
+    Drift,
+    overridden_files,
+    override_rel,
+    record_overridden,
+)
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt, receipt_content, receipt_json
 from devkit_dist.features.distribution.services.installation.transaction import (
     apply_changes,
@@ -82,6 +87,7 @@ from devkit_dist.features.distribution.services.installation.workspace import (
 )
 from devkit_dist.features.distribution.services.subagents import validate_role_overrides
 from devkit_dist.features.host.usecases import registrations
+from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.invocation import guard_execution
 from devkit_dist.features.project.repositories.local_config import LOCAL_CONFIG_PATH, read_effective_config
 from devkit_dist.features.project.repositories.project import git_toplevel, require_devkit_root
@@ -89,6 +95,7 @@ from devkit_dist.features.project.repositories.receipt import (
     CONFIG_PATH,
     MANAGED_PATH,
     RECEIPT_PATH,
+    AssetRecord,
     FileRecord,
     OverrideRecord,
     Receipt,
@@ -100,10 +107,7 @@ from devkit_dist.features.project.services.presentation import language_notices,
 
 TOOL_PACKAGE = "devkit-dist"
 SYNC_COMMAND = devkit_command("sync")
-EDITED_FILE_FIX = (
-    f"Keep the edit: copy it aside, run `{devkit_command('override create <bundle>:<asset>')}` and reapply it there;"
-    f" discard it: delete the file and run `{SYNC_COMMAND}`"
-)
+EDITED_FILES = "managed files were edited"
 UNOWNED_FILE_FIX = f"Move each unowned file out of the way (or delete it), then run `{SYNC_COMMAND}`"
 
 Changes = dict[str, Content | None]
@@ -148,15 +152,42 @@ def require_project_dir(root: Path) -> Path:
     return require_devkit_root(root)
 
 
-def edited_files_error(message: str, names: list[str], *, exit_code: ExitCode | None = None) -> ConflictError:
-    """The conflict of managed files edited by hand (content or execute bit) that devkit will not overwrite."""
-    return ConflictError(
-        message,
-        target_files=names,
-        what_to_report=f"Whether to keep the edits to {', '.join(names)} (as project overrides) or discard them",
-        fix=EDITED_FILE_FIX,
-        exit_code=exit_code,
+def asset_selectors(names: list[str], assets: Iterable[AssetRecord]) -> list[str]:
+    """``bundle:asset`` of each overridable asset that deploys one of ``names`` (generated assets have none)."""
+    owners = {
+        path: f"{asset.bundle}:{asset.id}"
+        for asset in assets
+        if not asset.bundle.startswith("_")
+        for path in asset.paths
+    }
+    return sorted({owners[name] for name in names if name in owners})
+
+
+def edited_files_fix(names: list[str], selectors: list[str]) -> tuple[str, list[str], str]:
+    """The ``fix``, ``[DETAIL]`` lines and question of managed files edited by hand.
+
+    Keeping the edits means overriding the assets that deploy them (``selectors``): that is the fix, and discarding
+    them the detail. Files no overridable asset deploys can only be restored.
+    """
+    files = ", ".join(names)
+    discard = f"delete {files}, then run `{SYNC_COMMAND}`"
+    if not selectors:
+        return discard[0].upper() + discard[1:], [], f"Whether to discard the edits to {files}"
+    creates = "; ".join(f"`{devkit_command('override create ' + selector)}`" for selector in selectors)
+    return (
+        f"Move {files} out of the project, run {creates}, then copy the edits into the override files",
+        [f"To discard the edits instead: {discard}"],
+        f"Whether to keep the edits to {files} (as project overrides) or discard them",
     )
+
+
+def edited_files_error(
+    message: str, names: list[str], assets: Iterable[AssetRecord], *, exit_code: ExitCode | None = None
+) -> ConflictError:
+    """The conflict of managed files edited by hand (content or execute bit) that devkit will not overwrite;
+    ``assets`` are the records that deploy them."""
+    fix, details, report = edited_files_fix(names, asset_selectors(names, assets))
+    return ConflictError(message, *details, target_files=names, what_to_report=report, fix=fix, exit_code=exit_code)
 
 
 def guidance_block_error(state: str, *, exit_code: ExitCode | None = None) -> ConflictError:
@@ -213,18 +244,11 @@ def _resolve_selection(
 
 def _override_drift(drift: list[Drift], *, blocked: bool) -> OverrideDriftError:
     """One advisory for every override whose upstream changed: the refusal under ``block``, else a warning."""
-    listed = [f"{item.bundle}:{item.asset}" for item in drift]
-    policy = ' (override_drift = "block")' if blocked else ""
-    error = OverrideDriftError(
-        f"upstream drift behind an override{policy}: {', '.join(listed)}",
-        target_files=[item.path for item in drift],
-        fix=f"Review with `{devkit_command('override diff ' + listed[0])}` and accept with"
-        f" `{devkit_command('override accept ' + listed[0])}`",
-        what_to_report=(
-            "Upstream changed an asset this project overrides; review the diff, then accept it or keep the override"
-        ),
+    return override_drift(
+        [f"{item.bundle}:{item.asset}" for item in drift],
+        [override_rel(item.bundle, item.path) for item in drift],
+        blocked=blocked,
     )
-    return error if blocked else error.with_level(Level.WARNING)
 
 
 def _refuse_override_drift(drift: list[Drift]) -> None:
@@ -242,18 +266,14 @@ class _Conflicts:
     # ``"modified"`` or ``"unowned"`` when the root ``AGENTS.md`` block is in conflict.
     block: str | None = None
 
-    def check(self) -> None:
-        """Raise the ``ConflictError`` naming every conflicting path; nothing to do without one."""
+    def check(self, assets: Iterable[AssetRecord]) -> None:
+        """Raise the ``ConflictError`` naming every conflicting path; nothing to do without one. ``assets`` are the
+        records that deploy the edited files."""
         parts: list[tuple[str, str, str]] = []  # (message, fix, what to report)
+        details: list[str] = []
         if self.edited:
-            names = ", ".join(self.edited)
-            parts.append(
-                (
-                    f"user-modified deployment files: {names}",
-                    EDITED_FILE_FIX,
-                    f"Whether to keep the edits to {names} (as project overrides) or discard them",
-                )
-            )
+            fix, details, report = edited_files_fix(self.edited, asset_selectors(self.edited, assets))
+            parts.append((f"{EDITED_FILES}: {', '.join(self.edited)}", fix, report))
         if self.unowned:
             names = ", ".join(self.unowned)
             parts.append(
@@ -269,6 +289,7 @@ class _Conflicts:
         if parts:
             raise ConflictError(
                 "; ".join(message for message, _, _ in parts),
+                *details,
                 target_files=[*self.edited, *self.unowned, *([AGENTS_FILE] if self.block else [])],
                 fix="; ".join(fix for _, fix, _ in parts),
                 what_to_report="; ".join(report for _, _, report in parts),
@@ -723,7 +744,7 @@ def _receipt_stale(
         *planned,
         target_files=targets,
         what_to_report=(
-            f"Whether to run `devkit sync` and commit what it changes: {reason}"
+            f"Whether to run `{SYNC_COMMAND}` and commit what it changes: {reason}"
             " (a bundle source, the lock or the selection changed without the receipt it produces)"
         ),
     )
@@ -979,8 +1000,9 @@ def sync_project(
                 registration.before.get(key) is not None
                 for key in (*registrations.DESTINATIONS.values(), registrations.LEDGER)
             ):
-                raise registrations.RegistrationError(
-                    "locked sync requires ordinary sync to reconcile local MCP registration"
+                raise registrations.RegistrationInterrupted(
+                    "locked sync requires ordinary sync to reconcile local MCP registration",
+                    code="MCP_REGISTRATION_UNRECONCILED",
                 )
             # A fresh checkout has no registration to validate. Asset restoration stays
             # locked; lifecycle initialization runs separately after this succeeds.
@@ -1105,7 +1127,7 @@ def commit_locked(
         _render_block(selection, inventory),
         enabled=config.guidance_block,
     )
-    conflicts.check()
+    conflicts.check(effective.assets)
     # A file where a destination's directory must be stops the sync in planning, ``--dry-run`` included.
     require_writable(root, changes)
     notices.extend(block_notices)

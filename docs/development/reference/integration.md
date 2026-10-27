@@ -19,7 +19,7 @@ reports the prepared target, build target and result commit under `build`. After
 `devkit worktree status`, Git or PR state. If local merge completed before cleanup failed, rerun
 `devkit worktree finish BRANCH --local-only`; its already-merged guards perform only remaining cleanup.
 
-CLI text emits a concise sentinel and JSON emits one result object. Internal validation identities, policy hashes,
+CLI text emits concise sentinels (`prepare` adds `[INTEGRATION_SCOPE: ...]`; `integrate` lists `effects=<step>:<state>,...`) and JSON emits one result object (`prepare`: the approval scope). Internal validation identities, policy hashes,
 registrations, evidence and cleanup revisions remain bound to the in-memory invocation. Partial results retain steps,
 errors, failing operation, observed state and the latest build.
 
@@ -34,15 +34,15 @@ and `already_merged`), `plan_finish`, `validate_finish` (`result=`, `target=`), 
 
 | Code | Required next action |
 | --- | --- |
-| `INTEGRATION_CONFIG_INVALID` | Configure/install the provider and use the supported approval/PR policy |
-| `INTEGRATION_NOT_READY` | Resolve completion conditions and prepare final committed work |
+| `INTEGRATION_CONFIG_INVALID` | `INPUT_ERROR`: configure/install the provider and use the supported approval/PR policy (`[TARGET] .devkit/config.toml`), or correct the flag `[TARGET]` names (`--task-id`, `--unit`, `--claims`) |
+| `INTEGRATION_NOT_READY` | `INPUT_ERROR`: resolve the conditions (`[DETAIL]`) in the source worktree (`[TARGET]`) and prepare final committed work |
 | `INTEGRATION_PROVIDER_FAILED` | Repair the installed provider or its evidence contract |
-| `INTEGRATION_REQUEST_STALE` | Inspect completed progress and approve a new request for the remaining scope |
+| `INTEGRATION_REQUEST_STALE` | A digest that differs from the current scope: `INTERACTION`, `[FIX]` the exact `prepare` command that re-presents the scope, and a `[DETAIL]` with the exact `integrate` command and the current digest, for after the user approves it. Otherwise inspect completed progress and approve a new request for the remaining scope |
 | `INTEGRATION_TARGET_MOVED` | Merge nothing: merge the current base into the source and obtain fresh Host approval before integrating again |
 | `INTEGRATION_RECEIPT_CONFLICT` | Merge the target into the branch, re-sync, re-verify and integrate again |
 | `INTEGRATION_RECEIPT_READER_CHANGED` | The source changes the receipt reader and its receipt only that reader accepts; restarting the service does not help. With separately granted authority, run the CLI route (`devkit worktree finish <branch> --merge --local-only`) from the source's code |
 | `INTEGRATION_RULE_RUNTIME_MISMATCH` | A synchronized rule of the source (or result) imports a module or name this runtime lacks; the source needs no change. With separately granted authority, run `devkit integration integrate <branch>` from the base checkout with a runtime built from the source's code outside the worktree |
-| `INTEGRATION_AUTHORITY_REQUIRED` | Read the refusal: auto permits local execution only; resolve prospective policy revocation before retrying, never switch authority to bypass it. Under ask, present the exact scope and obtain a fresh Host decision before invoking integrate |
+| `INTEGRATION_AUTHORITY_REQUIRED` | Read the refusal: auto permits local execution only; resolve prospective policy revocation before retrying, never switch authority to bypass it. Under ask without a digest: `INTERACTION`, `[FIX]` the exact `prepare` command that presents the scope, and a `[DETAIL]` with the exact `integrate` command and its digest, for after the user approves it |
 | `INTEGRATION_CLEANUP_UNSCOPED` | Adapt the named legacy post-finish extension before approval |
 | `INTEGRATION_CLEANUP_INCOMPLETE` | Inspect Git/worktree state; after a verified local landing, run `devkit worktree finish <branch> --local-only` for the remaining guarded cleanup |
 | `INTEGRATION_RUNTIME_IN_WORKTREE` | Move the server runtime to the retained base/installed environment |

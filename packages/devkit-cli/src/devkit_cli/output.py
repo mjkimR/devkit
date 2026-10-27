@@ -31,6 +31,15 @@ FORMAT_OPTION = click.option(
     default="text",
     help="Output format",
 )
+# The ``--format`` a JSON-only command accepts so an agent may pass ``--format json`` to every command; the boundary
+# adds and consumes it (``boundary(json_only=True)``).
+JSON_ONLY_FORMAT_OPTION = click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["json"], case_sensitive=False),
+    default="json",
+    help="Output format; this command prints JSON only",
+)
 
 
 @dataclass(frozen=True)
@@ -69,7 +78,13 @@ def echo_json(data: Mapping[str, object]) -> None:
     on the locale and a ``surrogateescape``-decoded path (a lone surrogate) is written as its ``\\uXXXX`` escape,
     which is still valid JSON.
     """
-    click.echo(json.dumps(data, indent=2, ensure_ascii=False))
+    click.echo(render_json(data))
+
+
+def render_json(data: Mapping[str, object]) -> str:
+    """``data`` exactly as ``echo_json`` prints it, without the trailing newline: compact (no indentation or spaces
+    after separators), since every byte reaches the agent's context; for callers that budget output size."""
+    return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
 
 
 class Reported(Exception):

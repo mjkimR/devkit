@@ -228,7 +228,7 @@ def _new(root: Path, kind: str, *args: str, stdin: str | None = None) -> dict[st
 def test_authoring_question_answer_problem_and_resolution(root: Path) -> None:
     unit = root / SIMPLE_UNIT
     asked = _new(root, "worker", "--stage", "review", "--summary", "two questions", "--questions-file", "-", stdin=QUESTIONS)  # fmt: skip
-    assert asked["status"] == "needs_input" and asked["file"] == f"{SIMPLE_UNIT}/envelopes/worker-01.yaml"
+    assert asked["status"] == "needs_input" and asked["file"] == "envelopes/worker-01.yaml"
     data = yaml.safe_load((unit / "envelopes/worker-01.yaml").read_text())
     assert data["questions"][0]["options"][0] == {"id": "a", "description": "Keep TOML", "recommended": True}
     (root / "answers.yaml").write_text(
@@ -347,10 +347,7 @@ def test_envelope_check_reports_the_hold(root: Path) -> None:
     _write(unit, "worker-02.yaml", _question())
     text = run_cli("envelope", "check", "-w", str(root), "--unit", SIMPLE_UNIT)
     assert text.exit_code == 0
-    assert (
-        "[ENVELOPE: envelopes/worker-01.yaml kind=worker seq=01 status=failed open_findings=0 problem=yes]"
-        in text.stdout
-    )
+    assert "[ENVELOPE: envelopes/worker-01.yaml kind=worker seq=01 status=failed problem=yes]" in text.stdout
     assert "[BLOCKED: envelopes/worker-01.yaml" in text.stdout and "[PENDING_QUESTION: envelopes/worker-02.yaml id=q2" in text.stdout  # fmt: skip
     data = json.loads(run_cli("envelope", "check", "-w", str(root), "--unit", SIMPLE_UNIT, "--format", "json").stdout)
     assert data["blocked"] is True and [q["id"] for q in data["pending_questions"]] == ["q1", "q2"]

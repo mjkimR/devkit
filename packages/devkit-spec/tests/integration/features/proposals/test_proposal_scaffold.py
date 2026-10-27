@@ -10,6 +10,7 @@ from spec_support.proposals import INCUBATED, TODAY, accept, write_workflow
 from spec_support.types import Write
 
 from devkit_spec.base.errors import (
+    ProposalDecisionExistsError,
     ProposalExistsError,
     ProposalNotApprovedError,
     ProposalNotFoundError,
@@ -70,6 +71,11 @@ def test_create_proposal_bundle(workspace: Path) -> None:
         "next_command": None,
     }
     assert [notice.code for notice in created.notices] == ["SPEC_PROPOSAL_UNBOUND"]
+    # No workflow is available at all: the fix names the exact command for the default, no <id> placeholder.
+    assert created.notices[0].fix == (
+        "Make sdd-proposal available (uv run devkit sync with its bundle selected), then bind it with "
+        "`uv run devkit workflow bind --unit docs/proposals/PROP-fast-engine --workflow sdd-proposal`"
+    )
     assert (bundle / "decisions").is_dir() and (bundle / "materials").is_dir()
     meta = parse((bundle / "proposal.md").read_text(encoding="utf-8")).data
     assert meta is not None
@@ -146,7 +152,7 @@ def test_create_proposal_binds_sdd_proposal(workspace: Path) -> None:
     assert meta is not None and meta["workflow"] == "sdd-proposal"
     assert "workflow_hash" not in meta
     assert created.workflow == "sdd-proposal" and created.notices == []
-    assert created.next_command == "devkit workflow next --unit docs/proposals/PROP-bound"
+    assert created.next_command == "uv run devkit workflow next --unit docs/proposals/PROP-bound"
 
 
 def test_create_proposal_without_target_docs(workspace: Path) -> None:
@@ -221,7 +227,7 @@ def test_create_padr(workspace: Path) -> None:
     assert "# [PADR-use-go-ast-parser] Use Go AST Parser\n" in text
     assert "- **Status**: Draft\n" in text
     assert text.endswith("## 5. Consequences\n\n## 6. Confirmation\n")
-    with pytest.raises(ProposalExistsError):
+    with pytest.raises(ProposalDecisionExistsError):
         create_padr(workspace, "fast-engine", "use go ast parser")
 
 
@@ -243,7 +249,7 @@ def test_padr_ids_are_unique_across_proposals(workspace: Path) -> None:
     create_proposal(workspace, "first")
     create_proposal(workspace, "second")
     create_padr(workspace, "first", "Same decision")
-    with pytest.raises(ProposalExistsError) as raised:
+    with pytest.raises(ProposalDecisionExistsError) as raised:
         create_padr(workspace, "second", "Same decision")
     assert raised.value.target_files == ("docs/proposals/PROP-first/decisions/PADR-same-decision.md",)
 

@@ -32,7 +32,7 @@ from devkit_agt.features.workflow.models.decision_records import (
 )
 from devkit_agt.features.workflow.models.definition import HANDOFF_GATE, StageDefinition, WorkflowDocument
 from devkit_agt.features.workflow.models.envelope import Envelope, Envelopes, Hold
-from devkit_agt.features.workflow.models.errors import GatePolicyError, UnitNotFoundError
+from devkit_agt.features.workflow.models.errors import GatePolicyError, UnitNotFoundError, locate_envelope_errors
 from devkit_agt.features.workflow.models.requests import handoff_request, question_requests, stage_requests
 from devkit_agt.features.workflow.models.results import (
     Delegate,
@@ -200,7 +200,7 @@ class _Evaluator:
                         target_files=[self.unit_dir.as_posix()],
                         fix=(
                             "Pass a unit directory inside the workspace (replace a symbolic link that leads out of it), "
-                            "or run the command with -w <the unit's project root>"
+                            "or run the command with -w naming the project root that contains the unit"
                         ),
                     )
                 files = _unit_files(self.unit_dir, root)
@@ -208,7 +208,8 @@ class _Evaluator:
             except Exception as exc:
                 self.lint_error = as_advisory_error(exc)
         if self.lint_error is not None:
-            return True, False, f"lint failed: {self.lint_error.message}"
+            # The error itself is reported once, by the command (stderr, or "errors" in JSON); the detail names its code.
+            return True, False, f"lint failed: {self.lint_error.code}"
         if self.lint_violations:
             shown = "; ".join(self.lint_violations[:LINT_DETAIL_SHOWN])
             more = len(self.lint_violations) - LINT_DETAIL_SHOWN
@@ -363,6 +364,7 @@ def evaluate_definition(doc: WorkflowDocument, opts: Options) -> UnitEvaluation:
     _check_gate_policies(doc, opts)
     res = UnitEvaluation(workflow=doc.id, unit=unit_rel, status=state.status, binding=binding)
     res.envelope_errors = list(ev.envelopes.errors)
+    locate_envelope_errors(res.envelope_errors, unit_rel)
     if binding.bound and binding.workflow != doc.id:
         res.bound_elsewhere = binding.workflow
 
@@ -407,7 +409,7 @@ def evaluate_definition(doc: WorkflowDocument, opts: Options) -> UnitEvaluation:
     res.decision_errors = list(ev.all_decisions.errors)
     if res.stage is None:
         handoff, ignored = evaluate_handoff(
-            doc, ev.eval_ref, ev.accepted(HANDOFF_REQUEST), opts.approvals.get(HANDOFF_GATE, "ask")
+            doc, ev.eval_ref, ev.accepted(HANDOFF_REQUEST), opts.approvals.get(HANDOFF_GATE, "ask"), unit=unit_rel
         )
         res.handoff = handoff
         if ignored is not None:

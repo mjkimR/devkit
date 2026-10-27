@@ -33,6 +33,7 @@ from devkit_core.base.errors import ArgumentError, GitError
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core.git import run_git
 from devkit_core.core.logs import get_logger
+from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.invocation import constraint_environment, guard_execution
 from devkit_dist.features.project.repositories.local_config import LOCAL_CONFIG_PATH, read_local_config
 from devkit_dist.features.project.repositories.project import require_git_toplevel
@@ -68,7 +69,8 @@ from devkit_agt.features.worktree.models.errors import (
     UnmergedError,
     UnsupportedLayoutError,
     WorktreeError,
-    run_from_base_fix,
+    from_base_error,
+    pull_request_policy_fix,
 )
 from devkit_agt.features.worktree.models.lifecycle import BranchStartResult as BranchStartResult
 from devkit_agt.features.worktree.models.lifecycle import BranchStatus as BranchStatus
@@ -158,7 +160,8 @@ def check_branch(branch: str) -> str:
             f" {', '.join(ACTIVITY_PREFIXES)} and the slug lowercase letters, digits, '-' and '_' starting with a"
             f" letter or digit ({BRANCH_LIMIT} characters at most in all)",
             target_files=["BRANCH"],
-            fix="Pass plan-<slug> for a Planning activity or dev-<slug> for a Development activity",
+            fix="Pass BRANCH as plan- (a Planning activity) or dev- (a Development activity) followed by the slug,"
+            " such as dev-login-form",
         )
     return branch
 
@@ -299,9 +302,12 @@ def start(
     """
     check_branch(branch)
     if position.linked:
-        raise NestedError(
+        raise from_base_error(
+            NestedError,
             f"{position.root} is a linked worktree; task worktrees are created from the base checkout",
-            target_files=[str(position.base)],
+            position.base,
+            position.root,
+            f"to continue the current task instead, keep working in {position.root}",
         )
     if revision is not None:
         revision = _git(position.base, "rev-parse", "--verify", "--end-of-options", f"{revision}^{{commit}}")
@@ -317,10 +323,12 @@ def start(
                 raise ConflictError(f"{path} is a worktree on {entry.branch or 'a detached HEAD'}, not {branch}")
             raise BranchExistsError(
                 f"branch {branch} already has its worktree at {path}; a new start never continues an existing branch",
-                fix=_attach_fix(branch),
+                **_attach_fix(position.base, branch),
             )
         if entry.branch == branch:
-            raise BranchExistsError(f"branch {branch} is checked out at {entry.path}", fix=_attach_fix(branch))
+            raise BranchExistsError(
+                f"branch {branch} is checked out at {entry.path}", **_attach_fix(position.base, branch)
+            )
     if path.exists() or path.is_symlink():
         raise ConflictError(f"{path} exists and is not a worktree of this repository")
     notices = _refuse_existing(position.base, branch)
@@ -353,7 +361,16 @@ def _prepare(
             before_step("setup")
         failure = _run(["/bin/sh", "-c", setup], path, f"setup {setup!r}", SETUP_TIMEOUT)
         if failure is not None:
-            notices.append(SetupFailedWarning(failure, fix=f"cd {shlex.quote(str(path))} && {setup}"))
+            headline, *output = failure.splitlines()
+            notices.append(
+                SetupFailedWarning(
+                    headline.removesuffix(":"),
+                    *output,
+                    # A subshell: the setup's own `exit` or `cd` must not end or move the agent's shell.
+                    fix=f"cd {shlex.quote(str(path))} && sh -c {shlex.quote(setup)}",
+                    target_files=[str(path)],
+                )
+            )
     synced = None
     target = path / project if project is not None else None
     if target is not None and (target / RECEIPT_PATH).is_file():
@@ -372,22 +389,33 @@ def _prepare(
     return setup, synced
 
 
-def _attach_fix(branch: str, source: str | None = None) -> str:
-    return (
-        f"To continue it, uv run devkit worktree start {branch} --existing-branch {source or branch} --unit <unit directory>;"
-        " otherwise choose another slug"
-    )
+def _attach_fix(base: Path, branch: str, source: str | None = None) -> dict[str, Any]:
+    """The ``fix`` and ``what_to_report`` of ``WORKTREE_BRANCH_EXISTS``: continuing ``branch`` or choosing another slug
+    is the user's decision. ``[FIX]`` attaches it when its unit directory is recorded (``devkitUnit``); otherwise the
+    unit is the user's answer too, so there is no ``[FIX]``."""
+    unit = _config(base, _marker(branch, UNIT_KEY))
+    attach = devkit_command(f"worktree start {branch} --existing-branch {source or branch} --unit")
+    if unit:
+        return {
+            "fix": f"{attach} {shlex.quote(unit)}",
+            "what_to_report": f"Branch {branch} already exists. Ask whether to continue it or to choose another slug",
+        }
+    return {
+        "fix": None,
+        "what_to_report": f"Branch {branch} already exists. Ask whether to continue it (`{attach}` with its unit"
+        " directory) or to choose another slug",
+    }
 
 
 def _refuse_existing(base: Path, branch: str) -> list[AdvisoryError]:
     """Refuse a new ``branch`` that exists locally or on a remote; the warnings of remotes that could not be asked."""
     if _succeeds(base, "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}"):
-        raise BranchExistsError(f"branch {branch} already exists", fix=_attach_fix(branch))
+        raise BranchExistsError(f"branch {branch} already exists", **_attach_fix(base, branch))
     holders, notices = _remote_holders(base, branch)
     if holders:
         raise BranchExistsError(
             f"branch {branch} already exists on {', '.join(holders)}",
-            fix=_attach_fix(branch, f"{holders[0]}/{branch}"),
+            **_attach_fix(base, branch, f"{holders[0]}/{branch}"),
         )
     return notices
 
@@ -439,9 +467,12 @@ class StartBranch(BaseUseCase):
         """
         check_branch(branch)
         if position.linked:
-            raise NestedError(
+            raise from_base_error(
+                NestedError,
                 f"{position.root} is a linked worktree; activity branches are started in the base checkout",
-                target_files=[str(position.base)],
+                position.base,
+                position.root,
+                f"to continue the current task instead, keep working in {position.root}",
             )
         if position.branch is None:
             raise BaseDetachedError(
@@ -450,7 +481,9 @@ class StartBranch(BaseUseCase):
             )
         for entry in _entries(position.base):
             if entry.branch == branch:
-                raise BranchExistsError(f"branch {branch} is checked out at {entry.path}", fix=_attach_fix(branch))
+                raise BranchExistsError(
+                    f"branch {branch} is checked out at {entry.path}", **_attach_fix(position.base, branch)
+                )
         notices = _refuse_existing(position.base, branch)
         try:
             run_git(position.root, "switch", "--quiet", "--no-track", "-c", branch)
@@ -458,7 +491,7 @@ class StartBranch(BaseUseCase):
             if f"a branch named '{branch}' already exists" in exc.stderr:
                 raise BranchExistsError(
                     f"branch {branch} already exists: it was created while start ran; nothing was changed",
-                    fix=_attach_fix(branch),
+                    **_attach_fix(position.base, branch),
                 ) from exc
             raise
         run_git(position.base, "config", "--local", _marker(branch), str(position.root))
@@ -494,9 +527,12 @@ def attach(
     """
     check_branch(branch)
     if position.linked:
-        raise NestedError(
+        raise from_base_error(
+            NestedError,
             f"{position.root} is a linked worktree; task worktrees are created from the base checkout",
-            target_files=[str(position.base)],
+            position.base,
+            position.root,
+            f"to continue the current task instead, keep working in {position.root}",
         )
     base = position.base
     remotes = _git(base, "remote").splitlines()
@@ -508,8 +544,8 @@ def attach(
         raise NotFoundError(
             f"branch {branch} exists neither locally nor as a fetched remote-tracking ref"
             + (f" refs/remotes/{remote}/{branch}" if remote else ""),
-            fix=f"git -C {shlex.quote(str(base))} fetch {remote or '--all'}, then rerun; or start a new branch"
-            f" without --existing-branch",
+            f"to start a new branch instead: {devkit_command(f'worktree start {branch}')}",
+            fix=f"git -C {shlex.quote(str(base))} fetch {remote or '--all'}",
         )
     ahead = None
     if local is not None and remote_tip is not None and remote_ref is not None:
@@ -621,7 +657,7 @@ def _remote_tracking(
         raise ArgumentError(
             f"branch {branch} exists on several remotes ({', '.join(names)})",
             target_files=["--existing-branch"],
-            fix=f"Pass --existing-branch {names[0]} (or another <remote>/{branch})",
+            fix=f"Pass --existing-branch {names[0]}, or another of {', '.join(names)}",
         )
     if remote is not None and local and not found:
         raise NotFoundError(
@@ -718,7 +754,8 @@ def _add(base: Path, path: Path, branch: str, *, existing: bool = False, revisio
             reason = f"{exc.message}: {exc.stderr}" if exc.stderr else exc.message
         if not existing and f"a branch named '{branch}' already exists" in exc.stderr:
             raise BranchExistsError(
-                f"branch {branch} already exists: it was created while start ran; nothing was changed"
+                f"branch {branch} already exists: it was created while start ran; nothing was changed",
+                **_attach_fix(base, branch),
             ) from exc
         foreign = f"'{path}' already exists" in exc.stderr
         left = _undo_add(base, path, branch, origin, own_path=not foreign, own_branch=not existing)
@@ -841,9 +878,16 @@ def _sync(
         f"{label} exited {completed.returncode} in {target}: ({error.get('code')}) {error.get('message')}",
         *(str(detail) for detail in advisory.get("details") or []),
         target_files=[str(target / name) for name in targets if isinstance(name, str)],
-        fix=f"In {target}: {fix}" if isinstance(fix, str) and fix else rerun,
+        fix=_fix_in(target, fix) if isinstance(fix, str) and fix else rerun,
         what_to_report=advisory.get("what_to_report") if isinstance(advisory.get("what_to_report"), str) else None,
     )
+
+
+def _fix_in(target: Path, fix: str) -> str:
+    """A relayed ``[FIX]`` that applies in ``target``: runnable there when it is a devkit command."""
+    if fix.startswith(devkit_command("")):
+        return f"cd {shlex.quote(str(target))} && {fix}"
+    return f"In {target}: {fix}"
 
 
 def _error_object(stdout: bytes) -> dict[str, Any] | None:
@@ -999,8 +1043,22 @@ def find(position: Position, branch: str) -> Path:
     """
     entry = _find(position, branch)
     if entry is None:
-        raise NotFoundError(f"no worktree at {path_for(position, branch)} or on branch {branch}")
+        what = f"no worktree at {path_for(position, branch)} or on branch {branch}"
+        if not _succeeds(position.base, "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}"):
+            raise _no_such_branch(position, branch, what)
+        raise NotFoundError(what, fix=devkit_command(f"worktree status -w {shlex.quote(str(position.base))}"))
     return entry.path
+
+
+def _no_such_branch(position: Position, branch: str, what: str) -> NotFoundError:
+    """``WORKTREE_NOT_FOUND`` for a branch that exists nowhere: a mistyped name (``INPUT_ERROR``); ``[FIX]`` lists the
+    worktrees and branches there are."""
+    return NotFoundError(
+        what,
+        input_error=True,
+        target_files=["BRANCH"],
+        fix=devkit_command(f"worktree status -w {shlex.quote(str(position.base))}"),
+    )
 
 
 def finish(
@@ -1031,8 +1089,9 @@ def finish(
     other checks and before the first change, with the commit ids of the branch's merge base with the base HEAD
     (empty when there is none) and of its tip; it refuses by raising (the ``devkit.finish_guard`` extensions in the
     CLI). The checks of the worktree's branch and lock, the base and the upstreams (including whether ``git branch
-    -d`` will accept the branch) run before the first change; uncommitted changes in the worktree surface when it is
-    removed (``WORKTREE_DIRTY``). ``before_remove`` runs once the merge is confirmed and before the worktree is
+    -d`` will accept the branch) run before the first change, and so does the check for uncommitted or untracked
+    changes in the worktree (``WORKTREE_DIRTY``; the removal still refuses a worktree that became dirty since).
+    ``before_remove`` runs once the merge is confirmed and before the worktree is
     removed (a caller's own cleanup; it runs again on a rerun). A refusal after that carries the partial result as
     ``error.result``, also an ``AdvisoryError`` that ``before_remove`` raises.
 
@@ -1048,23 +1107,33 @@ def finish(
         raise ArgumentError("network must be allow or forbid")
     check_branch(branch)
     if position.linked:
-        raise RunFromBaseError(
+        raise from_base_error(
+            RunFromBaseError,
             f"{position.root} is the worktree finish would remove",
-            target_files=[str(position.base)],
-            fix=run_from_base_fix(position.base),
+            position.base,
+            position.root,
         )
     if merge and pull_request == "required":
         raise PullRequestPolicyError(
-            '[worktree] pull_request = "required" integrates through a pull request; --merge would merge locally'
+            '[worktree] pull_request = "required" integrates through a pull request; --merge would merge locally',
+            fix=pull_request_policy_fix(branch),
         )
     base, ref = position.base, f"refs/heads/{branch}"
     entry = _find(position, branch)
     if entry is None:
         exists = _succeeds(base, "rev-parse", "--verify", "--quiet", ref)
         if not exists or not _created(base, branch):
-            if not exists or not _merged(base, ref, _head(base)):
-                unmerged = f", and branch {branch} is not merged into the base HEAD" if exists else ""
-                raise NotFoundError(f"no worktree at {path_for(position, branch)} or on branch {branch}{unmerged}")
+            if not exists:
+                raise _no_such_branch(
+                    position, branch, f"no worktree at {path_for(position, branch)} or on branch {branch}"
+                )
+            if not _merged(base, ref, _head(base)):
+                raise NotFoundError(
+                    f"no worktree at {path_for(position, branch)} or on branch {branch}, and branch {branch} is not"
+                    " merged into the base HEAD; devkit worktree start did not create it, so finish does not touch it",
+                    what_to_report=f"Branch {branch} has no task worktree and is not merged. Ask the user how to"
+                    " integrate or remove it",
+                )
             # Only a marked branch resumes, whether or not it is deleted: any other merged branch (the base's own
             # included) would otherwise run ``before_remove``, merge and push for a task that never existed.
             raise NotFoundError(
@@ -1072,10 +1141,11 @@ def finish(
                 f" into the base HEAD but has no {_marker(branch)} marker, so devkit worktree start did not create"
                 " it, or a finish already completed for it (or start created it before devkit recorded the marker;"
                 " such branches are not resumed automatically); finish does not resume it; nothing was changed",
-                fix=f"Once the user agrees, git -C {shlex.quote(str(base))} branch -d {branch}"
+                fix=f"git -C {shlex.quote(str(base))} branch -d {branch}" if delete_branch else None,
+                what_to_report=f"Branch {branch} is merged and has no task worktree; ask whether to delete it"
                 if delete_branch
-                else f"Nothing is left to finish: {branch} has no worktree, and [worktree] delete_branch = false"
-                " keeps its branch",
+                else f"Nothing is left to finish: {branch} has no worktree, and [worktree] delete_branch = false keeps"
+                " its branch",
             )
         _log.info("%s has no worktree; finishing the marked branch alone", branch)
         result = FinishResult(branch, _marked_path(position, branch), removed=_gone(position, branch))
@@ -1088,6 +1158,7 @@ def finish(
             )
     else:
         result = FinishResult(branch, entry.path)
+        _require_clean(entry.path)  # before any change: a dirty worktree is never removed, so nothing would finish
     if merge:
         if position.branch is None:
             raise BaseDetachedError(
@@ -1209,22 +1280,26 @@ def discard(
     """
     check_branch(branch)
     if position.linked:
-        raise RunFromBaseError(
+        raise from_base_error(
+            RunFromBaseError,
             f"{position.root} is the worktree discard would remove",
-            target_files=[str(position.base)],
-            fix=run_from_base_fix(position.base),
+            position.base,
+            position.root,
         )
     base, ref = position.base, f"refs/heads/{branch}"
     entry = _find(position, branch)
     exists = _succeeds(base, "rev-parse", "--verify", "--quiet", ref)
     if entry is None:
         if not exists:
-            raise NotFoundError(f"no worktree at {path_for(position, branch)} or on branch {branch}")
+            raise _no_such_branch(
+                position, branch, f"no worktree at {path_for(position, branch)} or on branch {branch}"
+            )
         # An activity branch is dropped whether or not devkit started it (another checkout, made by hand): its name
         # says it is a task's, and the close that drops it is the caller's decision.
         result = FinishResult(branch, _marked_path(position, branch), removed=_gone(position, branch))
     else:
         result = FinishResult(branch, entry.path)
+        _require_clean(entry.path)
     try:
         if before_remove is not None:
             before_remove(result)
@@ -1248,6 +1323,18 @@ def discard(
     return result
 
 
+def _dirty(path: Path, stderr: str = "") -> DirtyError:
+    """``WORKTREE_DIRTY`` for ``path``; Git's own lines, without its ``--force`` hint, are the details."""
+    details = [line for line in stderr.splitlines() if line.strip() and "--force" not in line]
+    return DirtyError(f"{path} has uncommitted or untracked changes", *details, target_files=[str(path)])
+
+
+def _require_clean(path: Path) -> None:
+    """Refuse a worktree with uncommitted or untracked changes before any step changes something."""
+    if path.is_dir() and not _clean(path):
+        raise _dirty(path)
+
+
 def _remove(base: Path, path: Path) -> None:
     try:
         _git_session(base, "worktree", "remove", str(path), timeout=CHECKOUT_TIMEOUT)
@@ -1260,7 +1347,7 @@ def _remove(base: Path, path: Path) -> None:
                 f" {shlex.quote(str(path))}, then rerun the same command",
             ) from exc
         if "modified or untracked" in exc.stderr or "--force" in exc.stderr:
-            raise DirtyError(f"{path} has uncommitted changes: {exc.stderr}") from exc
+            raise _dirty(path, exc.stderr) from exc
         raise RemoveFailedError(f"git worktree remove {path} failed: {exc.stderr or exc.message}") from exc
 
 

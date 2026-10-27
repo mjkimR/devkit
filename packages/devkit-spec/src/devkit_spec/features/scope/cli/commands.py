@@ -8,13 +8,13 @@ Text output (paths are workspace-relative; ``<a>``/``<b>`` are spec, proposal or
   then ``[SUMMARY: sets= pairs= overlapping=]``;
 - ``register``: ``[SCOPE: <task> namespace= revision= scopes= unresolved= shared_path= token=]``, the only place
   the owner token is ever printed;
-- ``query``: ``[RECORD: <task> revision= worktree= host= spec= scopes= unresolved= shared_worktree= own=]``, the
-  pairs, then ``[SUMMARY: namespace= records= pairs= overlapping= problems=]``; with ``--history``,
-  ``[EVENT: <event> at= ...]`` per page event, ``[PAGE: limit= total= next_cursor=]`` and
-  ``[SUMMARY: namespace= events= problems=]``;
+- ``query``: ``[RECORD: <task> revision= worktree= host= spec= scopes= unresolved= shared_worktree= own=]`` (the
+  worktree relative to the workspace root), the pairs, then ``[SUMMARY: namespace= records= pairs= overlapping=
+  problems=]``; with ``--history``, ``[EVENT: <event> at= ...]`` per page event, ``[PAGE: total= limit= count=
+  next=<cursor>]``, ``[NEXT_CMD: ...]`` when older events follow, and ``[SUMMARY: namespace= events= problems=]``;
 - ``update``: the pairs of this task with the others, then
   ``[SCOPE_ACK: status=applied|failed|stale|timeout revision= added= removed= overlaps= unresolved= request_id=]``;
-- ``release``: ``[SCOPE: <task> released=yes|no registered= already= revision=]``;
+- ``release``: ``[SCOPE_RELEASE: <task> released=yes|no registered= already= revision=]``;
 - ``sweep``: ``[SWEEP: <task> verdict=active|stale|unverifiable|error|removed reason= revision=]`` and
   ``[SUMMARY: namespace= active= stale= unverifiable= error= removed=]``.
 
@@ -24,7 +24,10 @@ journal that cannot be written, a shared worktree) follow the result on stderr. 
 
 from __future__ import annotations
 
+import os
+import shlex
 from collections.abc import Sequence
+from pathlib import Path
 
 import click
 from devkit.advisory import AdvisoryError
@@ -58,7 +61,7 @@ from devkit_spec.features.scope.usecases.query import (
     _spec_dir,
 )
 from devkit_spec.features.scope.usecases.sweep import SweepScopesUseCase
-from devkit_spec.utils.output import fields_line, sentinel
+from devkit_spec.utils.output import COMMAND, fields_line, sentinel
 
 
 @click.group(name="scope")
@@ -122,7 +125,7 @@ def compare_cmd(
         raise ArgumentError(
             "compare needs at least two inputs",
             target_files=["--proposal", "--spec"],
-            fix="Pass two or more --proposal <slug> / --spec <dir> options",
+            fix="Pass two or more inputs in total: each --proposal with a proposal slug, each --spec with a spec bundle directory",
         )
     root = resolve_root(workspace_root)
     sets, pairs, summary = CompareScopesUseCase().execute(root, proposals, specs)
@@ -153,7 +156,7 @@ def register_cmd(spec_dir: str | None, task_id: str | None, workspace_root: str 
     """Register this worktree's task scope and print its owner token once.
 
     The record carries the bundle's declared scope and what Git observes in the worktree; the token is saved in
-    the worktree's Git directory and is what update and release use.
+    the worktree's Git directory and is what release uses.
     """
     root = resolve_root(workspace_root)
     relative = _spec_dir(root, spec_dir)
@@ -171,12 +174,17 @@ def register_cmd(spec_dir: str | None, task_id: str | None, workspace_root: str 
 # --- query ------------------------------------------------------------------------------------------------------
 
 
-def _record_line(record: Record, mine: bool) -> str:
+def _shown(root: Path, path: str) -> str:
+    """A worktree path as output names it: relative to the workspace root (``.`` is this checkout)."""
+    return os.path.relpath(path, root) if path and Path(path).is_absolute() else path
+
+
+def _record_line(root: Path, record: Record, mine: bool) -> str:
     return sentinel(
         "RECORD",
         record.task_id,
         revision=record.revision,
-        worktree=record.worktree,
+        worktree=_shown(root, record.worktree),
         host=record.hostname,
         spec=record.spec,
         scopes=len(record.scopes),
@@ -224,7 +232,7 @@ def query_cmd(
     root = resolve_root(workspace_root)
     session = open_session(root)
     if history:
-        _history(session, task, limit or 50, cursor, output_format)
+        _history(session, task, limit or 50, cursor, output_format, workspace_root)
         return
     mine, others, records, pairs, summary, notices = QueryScopesUseCase().execute(root, session, spec_dir)
     if is_json(output_format):
@@ -239,26 +247,55 @@ def query_cmd(
         )
     else:
         for record in records:
-            click.echo(_record_line(record, record is mine))
+            click.echo(_record_line(root, record, record is mine))
         _echo_pairs(pairs)
         click.echo(fields_line("SUMMARY", **summary))
     _finish(notices)
 
 
-def _event_line(event: Event) -> str:
+def _event_line(root: Path, event: Event) -> str:
     data = event.to_dict()
     del data["event"], data["at"]
+    if "worktree" in data:
+        data["worktree"] = _shown(root, str(data["worktree"]))
     return sentinel("EVENT", event.event, at=event.at, **data)
 
 
-def _history(session: Session, task: str | None, limit: int, cursor: str | None, output_format: str) -> None:
+def _history(
+    session: Session,
+    task: str | None,
+    limit: int,
+    cursor: str | None,
+    output_format: str,
+    workspace_root: str | None,
+) -> None:
     result = QueryScopeHistoryUseCase().execute(session, task=task, limit=limit, cursor=cursor)
     if is_json(output_format):
         echo_json(result.to_dict())
     else:
+        root = session.location.root
         for event in result.events:
-            click.echo(_event_line(event))
-        click.echo(fields_line("PAGE", **result.pagination))
+            click.echo(_event_line(root, event))
+        following = result.pagination["next_cursor"]
+        click.echo(
+            fields_line(
+                "PAGE",
+                total=result.pagination["total"],
+                limit=limit,
+                count=len(result.events),
+                next=following,
+            )
+        )
+        if following:
+            args = ["scope", "query", "--history", *(["--task", task] if task else [])]
+            args += [
+                *(["-w", workspace_root] if workspace_root else []),
+                "--limit",
+                str(limit),
+                "--cursor",
+                str(following),
+            ]
+            click.echo(f"[NEXT_CMD: {COMMAND} {shlex.join(args)}]")
         click.echo(fields_line("SUMMARY", **result.summary))
     _finish(result.notices)
 
@@ -341,7 +378,7 @@ def release_cmd(task_id: str | None, workspace_root: str | None, output_format: 
             {"task": released.task or None, **fields} | {"notices": [notice.to_dict() for notice in released.notices]}
         )
     else:
-        click.echo(sentinel("SCOPE", released.task, **fields))
+        click.echo(sentinel("SCOPE_RELEASE", released.task, **fields))
     _finish(released.notices)
 
 
@@ -409,7 +446,12 @@ def sweep_cmd(apply: bool, expects: tuple[str, ...], workspace_root: str | None,
 
 
 @scope_group.command(name="collect")
-@click.option("--mode", default="worktrees", help="Observation inputs: snapshot, refs or worktrees (default)")
+@click.option(
+    "--mode",
+    type=click.Choice(["snapshot", "refs", "worktrees"]),
+    default="worktrees",
+    help="Observation inputs [default: worktrees]",
+)
 @click.option("--base", default=None, help="Explicit integration-base ref")
 @click.option("--fetch", "remotes", multiple=True, help="Refresh one configured remote (repeatable)")
 @click.option("--timeout", default=30, type=int, help="Total observation budget in seconds (1..300)")

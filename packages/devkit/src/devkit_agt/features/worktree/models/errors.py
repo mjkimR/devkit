@@ -14,6 +14,8 @@ and unsets it). Before that,
 
 from __future__ import annotations
 
+import shlex
+from pathlib import Path
 from typing import Any
 
 from devkit.advisory import Actor, AdvisoryError, Level, Retry
@@ -44,11 +46,17 @@ class _Guardrail(WorktreeError):
     guardrail = True
 
 
-class NestedError(_Guardrail):
-    """``start`` ran inside a linked worktree (``BLOCKED``); task worktrees are created from the base checkout."""
+class NestedError(WorktreeError):
+    """``start`` ran inside a linked worktree (``INPUT_ERROR``); task worktrees are created from the base checkout.
+
+    Where the command runs is the input to correct: ``[FIX]`` reruns it on the base checkout; a ``[DETAIL]`` names
+    the alternative, to keep working in this worktree instead."""
 
     code = "WORKTREE_NESTED"
-    fix = "Run the command from the base checkout, or keep working in this worktree"
+    input_error = True
+    base: Path | None = None  # the base checkout, and the linked worktree the command ran in
+    checkout: Path | None = None
+    fix = "Rerun the command from the base checkout"
 
 
 class RunFromBaseError(WorktreeError):
@@ -58,19 +66,40 @@ class RunFromBaseError(WorktreeError):
 
     code = "WORKTREE_RUN_FROM_BASE"
     input_error = True
-    fix = "Rerun the same command from the base checkout (or pass -w <the devkit project in it>)"
+    base: Path | None = None  # the base checkout, and the linked worktree the command ran in
+    checkout: Path | None = None
+    fix = "Rerun the same command from the base checkout"
+
+
+def pull_request_policy_fix(branch: str) -> str:
+    """The ``[FIX]`` of ``PullRequestPolicyError`` for ``branch``: the pull-request route, or finishing a merged PR."""
+    quoted = shlex.quote(branch)
+    return (
+        f"Obtain Host authority, then run `uv run devkit integration integrate {quoted} --route pull-request`; or merge "
+        f"the PR under existing authority and run `uv run devkit worktree finish {quoted}`"
+    )
 
 
 def run_from_base_fix(base: object) -> str:
-    """The ``[FIX]`` of ``RunFromBaseError`` naming the base checkout ``base``."""
-    return f"Rerun the same command from the base checkout {base} (or pass -w <the devkit project in it>)"
+    """The library ``[FIX]`` of ``RunFromBaseError`` and ``NestedError``; a command line replaces it with the exact
+    command it ran, pointed at the devkit project in the base checkout (``-w``)."""
+    return f"Rerun the same command with -w {shlex.quote(str(base))}, the base checkout"
+
+
+def from_base_error(
+    cls: type[RunFromBaseError] | type[NestedError], message: str, base: Path, checkout: Path, *details: str
+) -> RunFromBaseError | NestedError:
+    """``cls`` raised in the linked worktree ``checkout`` of the base checkout ``base``, both kept on the error
+    (``base``, ``checkout``) so a command line can name the same command for the base."""
+    error = cls(message, *details, target_files=[str(base)], fix=run_from_base_fix(base))
+    error.base, error.checkout = Path(base), Path(checkout)
+    return error
 
 
 class PullRequestPolicyError(_Guardrail):
     """``finish --merge`` under ``[worktree] pull_request = "required"`` (``BLOCKED``): integration is a PR."""
 
     code = "WORKTREE_PR_POLICY"
-    fix = "Obtain Host authority, then run `uv run devkit integration integrate <branch> --route pull-request`; or merge the PR under existing authority and run `uv run devkit worktree finish <branch>`"
 
 
 class UnsupportedLayoutError(_Guardrail):
@@ -95,12 +124,11 @@ class ConflictError(_Interaction):
 class BranchExistsError(_Interaction):
     """The activity branch already exists locally or on a remote, or is checked out elsewhere (``INTERACTION``).
 
-    A new ``start`` never takes over an existing branch; the ``[FIX]`` names the ``--existing-branch`` path that
-    attaches it explicitly.
+    A new ``start`` never takes over an existing branch. ``[REPORT]`` asks whether to continue it or choose another
+    slug; ``[FIX]`` is the exact ``--existing-branch`` command that attaches it when its unit directory is recorded.
     """
 
     code = "WORKTREE_BRANCH_EXISTS"
-    fix = "Continue the existing branch with --existing-branch <branch> --unit <dir>, or choose another slug"
 
 
 class BranchOutOfSyncError(_Interaction):
@@ -158,7 +186,8 @@ class GuardFailedError(WorktreeError):
 
 
 class NotFoundError(_Interaction):
-    """No worktree has the branch or its path (``INTERACTION``).
+    """No worktree has the branch or its path (``INTERACTION``); a branch that exists nowhere is a mistyped name,
+    raised with ``input_error`` (``INPUT_ERROR``) and ``[FIX]`` listing the worktrees and branches.
 
     For ``finish``, also when the merged branch lacks the marker ``start`` records (or a finish already
     completed for it): nothing runs, merges, pushes or is deleted for that branch, and with ``delete_branch`` the
@@ -166,14 +195,13 @@ class NotFoundError(_Interaction):
     """
 
     code = "WORKTREE_NOT_FOUND"
-    fix = "Check `uv run devkit worktree status` or `git worktree list` for the branch"
 
 
 class LockedError(_Interaction):
     """``finish`` found the branch's worktree locked (``git worktree lock``, ``INTERACTION``); nothing changed."""
 
     code = "WORKTREE_LOCKED"
-    fix = "Unlock the worktree (git worktree unlock <path>) once the user agrees, then rerun"
+    fix = "Once the user agrees, unlock the worktree the message names with git worktree unlock, then rerun"
 
 
 class BaseDetachedError(_Interaction):
@@ -184,7 +212,9 @@ class BaseDetachedError(_Interaction):
     """
 
     code = "WORKTREE_BASE_DETACHED"
-    fix = "Check out the branch the task integrates into in the base checkout (git switch <branch>), then rerun"
+    fix = (
+        "Ask the user which branch the task integrates into, switch the base checkout to it with git switch, then rerun"
+    )
 
 
 class BaseBehindError(_Interaction):
@@ -384,6 +414,7 @@ class SetupFailedWarning(WorktreeError):
 
     code = "WORKTREE_SETUP_FAILED"
     level = Level.WARNING
+    what_to_report = "The worktree was created, but its [worktree] setup command failed; the details show its output"
 
 
 class SyncFailedWarning(WorktreeError):

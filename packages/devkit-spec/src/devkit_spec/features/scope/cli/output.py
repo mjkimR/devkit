@@ -17,16 +17,22 @@ def echo_registered(location: Location, record: Record, token: str) -> None:
             revision=record.revision,
             scopes=len(record.scopes),
             unresolved=len(record.unresolved),
-            shared_path=str(location.shared_path),
+            shared_path=location.shown(location.shared_path),
             token=token,
         )
     )
 
 
 def registered_dict(location: Location, record: Record, token: str) -> dict[str, object]:
+    """The registration as JSON: what the ``[SCOPE]`` line carries, with the unresolved inputs listed; no timestamps
+    or record internals (``query`` shows the record)."""
     return {
-        "record": record.public_dict(),
-        "token": token,
+        "task": record.task_id,
         "namespace": location.namespace,
-        "shared_path": str(location.shared_path),
+        "revision": record.revision,
+        "spec": record.spec,
+        "scopes": len(record.scopes),
+        "unresolved": [item.to_dict() for item in record.unresolved],
+        "shared_path": location.shown(location.shared_path),
+        "token": token,
     }

@@ -259,7 +259,7 @@ def test_uninstall_after_pre_commit_took_the_hook_path(repo: Path) -> None:
     _fake_pre_commit_install(repo)  # the dispatcher goes to pre-commit.legacy
     _verify(repo, "echo devkit >> devkit-ran")
     result = CliRunner().invoke(cli, ["uninstall", "-w", str(repo)])
-    assert result.exit_code == 0 and "pre-commit: removed" in result.output, result.output
+    assert result.exit_code == 0 and "[HOOK: pre-commit action=removed " in result.output, result.output
     assert PRE_COMMIT_ID in (hooks_dir / "pre-commit").read_text()
     assert "user-ran" in (hooks_dir / "pre-commit.legacy").read_text()  # pre-commit's migration mode runs it
     assert not (hooks_dir / "pre-commit.d").exists()

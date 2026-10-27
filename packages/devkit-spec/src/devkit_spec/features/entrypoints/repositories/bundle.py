@@ -22,7 +22,7 @@ from pathlib import Path
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
 
-from devkit_spec.base.errors import EntrypointsInputInvalidError, EntrypointsInputMissingError
+from devkit_spec.base.errors import DEVKIT, EntrypointsInputInvalidError, EntrypointsInputMissingError
 
 _CHECKLIST_ITEM = re.compile(r"^ *(?:- |\* |\+ )\[[ xX]\] (.*)$")
 _BOUNDARY_LINE = re.compile(r"^\s*(?:[-*+]\s+)?\**_Boundary\**\s*:\**\s*(.*)$")
@@ -141,6 +141,12 @@ def load_bundle(root: Path, directory: str) -> Bundle:
     ``EntrypointsInputInvalidError`` when one cannot be read or ``reconcile.md`` has no well-formed targets.
     """
     base = root / directory
+    if not base.is_dir():
+        raise EntrypointsInputMissingError(
+            f"no spec bundle directory {directory}",
+            target_files=["--spec"],
+            fix=f"Pass an existing spec bundle directory ({DEVKIT} spec list spec --history lists them)",
+        )
     spec_id, status = base.name, ""
     try:
         spec = parse((base / "spec.md").read_text(encoding="utf-8")).data or {}

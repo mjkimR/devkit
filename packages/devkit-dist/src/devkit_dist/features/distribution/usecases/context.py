@@ -4,16 +4,17 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 
 from devkit_dist.base.errors import ReceiptError
 from devkit_dist.features.distribution.models.errors import BundleError, SelectionError
-from devkit_dist.features.distribution.models.invocation import devkit_command
 from devkit_dist.features.distribution.models.results import ContextResult, Instruction
 from devkit_dist.features.distribution.services.bundles.common import SLUG
 from devkit_dist.features.distribution.services.bundles.context_documents import declared_directory, list_documents
 from devkit_dist.features.distribution.services.bundles.instructions import read_instruction_header
+from devkit_dist.features.distribution.services.installation.discovery import discover_bundles
 from devkit_dist.features.distribution.services.installation.overrides import override_rel
 from devkit_dist.features.distribution.services.installation.reading import (
     read_owned,
@@ -21,7 +22,24 @@ from devkit_dist.features.distribution.services.installation.reading import (
     synchronized_project_root,
 )
 from devkit_dist.features.distribution.services.installation.transaction import project_lock
+from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.receipt import MANAGED_PATH, RECEIPT_PATH
+
+
+def _select_command(bundle: str) -> str:
+    """The command that makes ``bundle`` synchronized: ``add`` for an installed bundle with a default preset, else
+    ``list``, which tells a typo from a bundle whose preset has to be named.
+
+    Discovery runs on this error path only; a successful read uses the receipt alone.
+    """
+    try:
+        with discover_bundles() as installed:
+            item = next((item for item in installed if item.bundle.name == bundle), None)
+    except AdvisoryError:  # an unusable package must not replace the selection error
+        item = None
+    if item is not None and item.bundle.default_preset is not None:
+        return devkit_command(f"add {bundle}")
+    return devkit_command("list")
 
 
 class GetContext(BaseUseCase):
@@ -40,13 +58,12 @@ class GetContext(BaseUseCase):
             receipt = read_synchronized(root)
             prefix = f"{MANAGED_PATH}/{bundle}/"
             if receipt.file(prefix + "bundle.toml") is None:
-                # The name may be a typo or an unselected bundle: name the command that tells which, and the
-                # bundles this project does have, rather than guessing `devkit add` for a name that may not exist.
                 synchronized = sorted({package.bundle for package in receipt.packages})
                 raise SelectionError(
                     f"bundle is not synchronized: {bundle}",
                     f"synchronized bundles: {', '.join(synchronized) or 'none'}",
-                    fix=devkit_command("list"),
+                    fix=_select_command(bundle),
+                    target_files=["BUNDLE_NAME"],
                 )
             constitution_path = prefix + "AGENTS.md"
             constitution = None

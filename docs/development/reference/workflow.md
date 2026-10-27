@@ -120,7 +120,7 @@ The main calls:
 
 | Call | Purpose |
 | --- | --- |
-| `Workspace(root=None, *, lint=lint_with_rules, ancestor=is_ancestor)` | Load `[workflow]` configuration; the receipt, definitions, roles and plugins load lazily, once. |
+| `Workspace(root=None, *, lint=lint_with_rules, ancestor=is_ancestor, invocation=None)` | Load `[workflow]` configuration; the receipt, definitions, roles and plugins load lazily, once. `invocation` (the CLI passes the arguments after `devkit workflow`) lets `ANCHOR_AMBIGUOUS` list the exact command to rerun per candidate anchor. |
 | `ws.resolve_unit(unit, workflow=None, *, anchor=None) -> UnitRef` | Unit directory, anchor, binding and the workflow to evaluate against; `anchor` resolves `ANCHOR_AMBIGUOUS`. |
 | `ws.unit_scope(unit, *, anchor=None) -> UnitScope` | Unit directory, anchor, binding and the bound (else default) workflow id, without loading the definition, except to read the id of a default given as a `.md` path (what the envelope authoring commands use). |
 | `ws.bind_unit(unit, workflow=None, *, anchor=None) -> UnitRef` | `bind`: record the workflow ID in the anchor, keeping the history. A `workflow` path that is not the discovered definition of its id raises `WorkflowNotBindableError` (also from `create_unit`). |
@@ -133,7 +133,7 @@ The main calls:
 | `record_answer(ws, unit, request_id, action, values=(), *, note="", by="", lint=True) -> Decision` | `answer`. |
 | `return_to(ws, unit, stage, *, note="", by="", lint=True) -> Decision` | `return`. |
 | `plan_handoff(ws, unit, result, choice=None) -> HandoffPlan`, `apply_handoff(plan, *, when=None, by="", note="") -> HandoffOutcome` | `handoff`. |
-| `compose_envelope(...) -> Envelope`, `envelope_timestamp(unit_dir, workflow, segment_start)`, `render_envelope(envelope, created_at)`, `write_envelope(unit_dir, kind, body)` | The envelope authoring commands; pass `workflow=scope.workflow, segment=scope.binding.segment` (from `ws.unit_scope`) to scope the envelope, `load_envelopes(dir).scoped(workflow, segment)` as `envelopes`, and `envelope_timestamp(dir, workflow, scope.binding.segment_start)` as `created_at` so no earlier return voids it. |
+| `compose_envelope(...) -> Envelope`, `envelope_timestamp(unit_dir, workflow, segment_start)`, `render_envelope(envelope, created_at)`, `write_envelope(unit_dir, kind, body)` | The envelope authoring commands; pass `workflow=scope.workflow, segment=scope.binding.segment` (from `ws.unit_scope`) to scope the envelope, `load_envelopes(dir).scoped(workflow, segment)` as `envelopes`, `unit=scope.rel` so the refusals name runnable commands, and `envelope_timestamp(dir, workflow, scope.binding.segment_start)` as `created_at` so no earlier return voids it. |
 | `load_envelopes(dir).hold() -> Hold` | Unresolved problems and unanswered questions over every segment (`blocked`, `problems`, `questions`, `reasons()`); `UnitEvaluation.hold` carries the same. |
 | `evaluate_definition(doc, Options) -> UnitEvaluation` | Pure evaluation without policies or writes. |
 

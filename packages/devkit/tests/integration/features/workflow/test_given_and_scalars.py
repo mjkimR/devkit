@@ -101,7 +101,7 @@ def test_return_and_handoff_given_match_next_given(tmp_path: Path) -> None:
     assert blocked.exit_code == 2 and "(HANDOFF_NOT_READY)" in blocked.stderr
     done = _unit(root, "handoff", "--workflow", "w2", "--given", "dev-integration", "--given", "merged")
     assert done.exit_code == 0, done.output + done.stderr
-    assert "[HANDOFF: from=w to=w2" in done.output
+    assert "[HANDED_OFF: from=w to=w2" in done.output
 
 
 # --- reverify --from latest after a return -----------------------------------------------

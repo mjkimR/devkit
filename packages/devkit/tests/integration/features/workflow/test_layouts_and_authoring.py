@@ -132,7 +132,7 @@ def test_new_list_next_bind_across_layouts(two_layouts: Path) -> None:
     assert json.loads(_run("show", "-w", str(root), "incubate", "--format", "json").stdout)["anchor"] == "proposal.md"
 
     empty = _run("list", "-w", str(root / ".devkit"))
-    assert "[UNITS: none under" in empty.output
+    assert "[OK: no units dirs=" in empty.output
 
 
 def test_anchor_ambiguous_and_mismatch(two_layouts: Path) -> None:
@@ -194,9 +194,9 @@ def test_cli_skips_off_stage_and_completes(workspace: Path) -> None:
     assert nxt.exit_code == 0, nxt.output
     assert "[SKIPPED: build-verify reason=stages.build-verify=off]" in nxt.output
     assert "[SKIPPED: review reason=stages.review=off]" in nxt.output
-    assert "[STAGE: - complete=true]" in nxt.output
+    assert "[STAGE: - complete=yes]" in nxt.output
     show = _run("show", "-w", str(workspace), "direct-delivery")
-    assert "[SKIP: review reason=stages.review=off]" in show.output
+    assert "[SKIPPED: review reason=stages.review=off]" in show.output
     data = json.loads(_run("show", "-w", str(workspace), "direct-delivery", "--format", "json").stdout)
     assert data["stages_off"] == ["build-verify", "review"]
 
@@ -351,7 +351,7 @@ def test_cli_envelope_new_authoring_and_check(workspace: Path, tmp_path: Path) -
     assert review.exit_code == 0, review.output
     assert (
         review.output.strip()
-        == f"[ENVELOPE: {unit}/envelopes/review-01.yaml kind=review seq=01 status=completed open_findings=1]"
+        == "[ENVELOPE: envelopes/review-01.yaml kind=review seq=01 status=completed open_findings=1]"
     )
     stdin = CliRunner().invoke(
         cli,
@@ -399,6 +399,6 @@ def test_cli_envelope_new_authoring_and_check(workspace: Path, tmp_path: Path) -
     (workspace / unit / "envelopes/review-02.yaml").write_text("status: completed\n")
     broken = _run("envelope", "check", "-w", str(workspace), "--unit", unit)
     assert broken.exit_code == 1
-    assert '[ENVELOPE_ERROR: envelopes/review-02.yaml "missing required key kind"]' in broken.output
+    assert "[ENVELOPE_ERROR" not in broken.stdout and "(ENVELOPE_INVALID) missing required key kind" in broken.stderr
     assert "(ENVELOPE_INVALID)" in broken.stderr and f"[TARGET] {unit}/envelopes/review-02.yaml" in broken.stderr
     assert "[OK:" not in broken.output

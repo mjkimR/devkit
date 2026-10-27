@@ -12,8 +12,8 @@ from types import SimpleNamespace
 import pytest
 from click.testing import CliRunner
 
+from devkit_spec.base.errors import WorkerBaseUnresolvedError, WorkerHeadUnresolvedError, WorkerUnitUnresolvedError
 from devkit_spec.cli import cli
-from devkit_spec.features.worker.usecases.inputs import BaseUnresolved, HeadUnresolved, UnitUnresolved
 from devkit_spec.features.worker.usecases.inspect import InspectWorkerUseCase
 
 UNIT = "specs/2026-10/20261020-example"
@@ -124,7 +124,7 @@ def test_conflicting_problem_bases(repo: Path) -> None:
     worker(repo, 1, problem_base=git(repo, "rev-parse", "main"))
     worker(repo, 2, problem_base=git(repo, "rev-parse", "HEAD"))
     worker(repo, 3)
-    with pytest.raises(BaseUnresolved):
+    with pytest.raises(WorkerBaseUnresolvedError):
         inspect(repo, runner=passed)
 
 
@@ -145,7 +145,7 @@ def test_missing_scope_input_does_not_stop_other_checks(repo: Path) -> None:
     assert "outside_scope" not in result
     assert result["checks"]["rules"]["status"] == "pass"
     assert result["exit_code"] == 0
-    assert result["notices"][0]["code"] == "WORKER_CHECK_NOT_RUN"
+    assert result["notices"][0]["code"] == "SPEC_WORKER_CHECK_NOT_RUN"
 
 
 def test_head_mismatch_skips_rules(repo: Path) -> None:
@@ -166,11 +166,11 @@ def test_head_mismatch_skips_rules(repo: Path) -> None:
 
 
 def test_required_inputs(repo: Path) -> None:
-    with pytest.raises(HeadUnresolved):
+    with pytest.raises(WorkerHeadUnresolvedError):
         inspect(repo, runner=passed)
     worker(repo, 1)
     git(repo, "checkout", "--detach", "-q")
-    with pytest.raises(UnitUnresolved):
+    with pytest.raises(WorkerUnitUnresolvedError):
         inspect(repo, runner=passed)
     assert inspect(repo, unit=UNIT, base="main", head="HEAD", runner=passed)["head"] == git(repo, "rev-parse", "HEAD")
 
@@ -338,14 +338,14 @@ def test_linked_worktree_observes_base_without_checking_it(repo: Path) -> None:
 def test_missing_problem_base_is_unresolved(repo: Path) -> None:
     worker(repo, 1, problem_base="")
     worker(repo, 2)
-    with pytest.raises(BaseUnresolved):
+    with pytest.raises(WorkerBaseUnresolvedError):
         inspect(repo, runner=passed)
 
 
 def test_ambiguous_unit_and_readded_worker(repo: Path) -> None:
     write(repo, "specs/2026-09/20260920-example/spec.md", "---\nworkflow: sdd-spec-feature\n---\n")
     worker(repo, 1)
-    with pytest.raises(UnitUnresolved):
+    with pytest.raises(WorkerUnitUnresolvedError):
         inspect(repo, runner=passed)
     path = repo / UNIT / "envelopes/worker-01.yaml"
     text = path.read_text()
@@ -353,7 +353,7 @@ def test_ambiguous_unit_and_readded_worker(repo: Path) -> None:
     commit(repo)
     path.write_text(text)
     commit(repo)
-    with pytest.raises(HeadUnresolved):
+    with pytest.raises(WorkerHeadUnresolvedError):
         inspect(repo, unit=UNIT, runner=passed)
 
 
@@ -396,7 +396,7 @@ def test_scope_file_unknown_ref_and_notice_cli(repo: Path, monkeypatch: pytest.M
     assert json.loads(result.stdout)["error"]["code"] == "ARGUMENT_INVALID"
     result = runner.invoke(cli, ["worker", "inspect", "--head", "main", "--format", "json"])
     assert result.exit_code == 1
-    assert json.loads(result.stdout)["notices"][0]["code"] == "WORKER_CHECK_NOT_RUN"
+    assert json.loads(result.stdout)["notices"][0]["code"] == "SPEC_WORKER_CHECK_NOT_RUN"
     assert json.loads(result.stdout)["checks"]["rules"]["status"] == "not-run"
 
 
@@ -473,7 +473,7 @@ def test_text_scope_unknown_omits_outside_and_history(repo: Path, monkeypatch: p
     assert "outside=" not in result.stdout
     assert "fixture" not in result.stdout
     assert "envelopes':" not in result.stdout
-    assert "WORKER_CHECK_NOT_RUN" in result.stderr
+    assert "SPEC_WORKER_CHECK_NOT_RUN" in result.stderr
 
 
 def test_structured_advisories_use_stderr_once(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -498,3 +498,35 @@ def test_structured_advisories_use_stderr_once(repo: Path, monkeypatch: pytest.M
     assert result.stderr.count("(ARGUMENT_INVALID)") == 1
     assert "[ACTION]" in result.stderr and "[FIX]" in result.stderr
     assert "Pass the valid input" in result.stderr
+
+
+def test_cli_failed_checks_carry_advisories_workspace_and_compact_success(
+    repo: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    previous = worker(repo, 1)
+    write(repo, "outside.py", "x = 1\n")
+    git(repo, "add", "outside.py")
+    worker(repo, 2)
+    module = importlib.import_module("devkit_spec.features.worker.cli.commands")
+    monkeypatch.setattr(
+        module,
+        "InspectWorkerUseCase",
+        lambda: SimpleNamespace(execute=lambda root, **kw: inspect(root, **kw, runner=passed)),
+    )
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    monkeypatch.chdir(elsewhere)  # -w names the worktree; the cwd is not used
+    runner = CliRunner()
+    result = runner.invoke(cli, ["worker", "inspect", "--base", previous, "-w", str(repo)])
+    assert result.exit_code == 1, result.output
+    assert result.stdout.startswith(f"[WORKER_INSPECTION: verdict=fail base={previous} head=")
+    assert "(SPEC_WORKER_SCOPE_OUTSIDE)" in result.stderr and "[TARGET] outside.py" in result.stderr
+    data = json.loads(
+        runner.invoke(cli, ["worker", "inspect", "--base", previous, "-w", str(repo), "--format", "json"]).stdout
+    )
+    assert [error["code"] for error in data["errors"]] == ["SPEC_WORKER_SCOPE_OUTSIDE"]
+    # A passed check is its status: its wrapped body is left out without --details.
+    assert "result" not in data["checks"]["envelopes"] and "result" not in data["checks"]["workflow"]
+    head = git(repo, "rev-parse", "HEAD")
+    clean = runner.invoke(cli, ["worker", "inspect", "--strict", "--base", head, "-w", str(repo), "--format", "json"])
+    assert clean.exit_code == 0, clean.output

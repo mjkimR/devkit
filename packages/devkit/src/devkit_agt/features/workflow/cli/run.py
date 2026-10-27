@@ -6,7 +6,7 @@ import click
 from devkit_dist.adapters.cli import FORMAT_OPTION, Reported, boundary, echo_json, is_json
 
 from devkit_agt.features.workflow.cli.app import ANCHOR, NO_LINT, UNIT, WORKSPACE, cli, parse_date, workspace
-from devkit_agt.features.workflow.cli.render import quote, render_evaluation, render_requests
+from devkit_agt.features.workflow.cli.render import render_evaluation, render_requests
 from devkit_agt.features.workflow.models.decisions import ACTIONS
 from devkit_agt.features.workflow.usecases.answers import RecordAnswerUseCase, ReturnToStageUseCase
 from devkit_agt.features.workflow.usecases.operations import EvaluateUnitUseCase, HandoffWorkflowUseCase
@@ -41,7 +41,7 @@ def next_cmd(
     """Report the current stage of a unit, what is unmet and what to do next.
 
     When the rules behind lint-clean cannot run, their error is reported
-    unchanged after the result and sets the exit code.
+    unchanged after the result (on stderr in text, under "errors" in JSON) and sets the exit code.
     """
     ws = workspace(workspace_root)
     result = EvaluateUnitUseCase(ws).execute(unit, workflow_ref, anchor=anchor, given=given, lint=not no_lint)
@@ -51,10 +51,7 @@ def next_cmd(
             errors = [lint_error.to_dict()] if lint_error is not None else []
             echo_json({"requests": [r.to_dict() for r in result.requests], "errors": errors})
         else:
-            lines = render_requests(result.requests) or ["[REQUESTS: none]"]
-            if lint_error is not None:
-                lines.append(f"[LINT_ERROR: {quote(lint_error.message)}]")
-            click.echo("\n".join(lines))
+            click.echo("\n".join(render_requests(result.requests) or ["[OK: no open requests]"]))
     elif is_json(output_format):
         echo_json(result.to_dict())
     else:
@@ -185,5 +182,5 @@ def handoff_cmd(
         echo_json(outcome.to_dict())
         return
     tail = f" decision={outcome.decision}" if outcome.decision else ""
-    click.echo(f"[HANDOFF: from={outcome.source} to={outcome.target} policy={outcome.policy}{tail}]")
+    click.echo(f"[HANDED_OFF: from={outcome.source} to={outcome.target} policy={outcome.policy}{tail}]")
     click.echo(f"[HISTORY: {' '.join(h.workflow for h in outcome.history)}]")

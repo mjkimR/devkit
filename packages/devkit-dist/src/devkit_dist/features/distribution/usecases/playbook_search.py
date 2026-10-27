@@ -9,10 +9,10 @@ installed and lexical otherwise.
 from __future__ import annotations
 
 import dataclasses
-import json
 import math
 from pathlib import Path
 
+from devkit_cli import render_json
 from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 
@@ -55,7 +55,7 @@ class _Bounds:
 
 def _encoded_size(result: SearchResult) -> int:
     """Bytes of ``result`` as the CLI prints it (indented JSON plus the final newline)."""
-    return len(json.dumps(result.to_dict(), indent=2, ensure_ascii=False).encode()) + 1
+    return len(render_json(result.to_dict()).encode()) + 1
 
 
 def _bounds(

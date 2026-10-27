@@ -106,6 +106,7 @@ def test_the_public_names_are_pinned() -> None:
         "highest_exit_code",
         "is_json",
         "output_settings",
+        "render_json",
         "report_exit_code",
     }
     assert all(hasattr(devkit_cli, name) for name in devkit_cli.__all__)

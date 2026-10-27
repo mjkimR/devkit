@@ -33,6 +33,12 @@ def message_body(text: str) -> str:
     return "\n".join(lines)
 
 
+def _shown(ctx: GateContext) -> str:
+    """The message file Git passed, relative to the work tree when inside it; Git writes ``-m`` text to it too."""
+    path = ctx.message_file
+    return path.relative_to(ctx.repo_root).as_posix() if path.is_relative_to(ctx.repo_root) else str(path)
+
+
 class NonEmptyMessageGate(BaseGate):
     def __init__(self) -> None:
         super().__init__(
@@ -47,5 +53,8 @@ class NonEmptyMessageGate(BaseGate):
         if message_body(text).strip():
             return GateResult.passed()
         raise GateFindingsError(
-            "commit message is empty", code="GATE_MESSAGE_EMPTY", fix="Write a subject line describing the change"
+            "commit message is empty",
+            code="GATE_MESSAGE_EMPTY",
+            fix="Write a subject line describing the change",
+            target_files=[_shown(ctx)],
         )

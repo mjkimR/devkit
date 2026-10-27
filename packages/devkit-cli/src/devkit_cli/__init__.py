@@ -19,6 +19,7 @@ from devkit_cli.output import (
     highest_exit_code,
     is_json,
     output_settings,
+    render_json,
     report_exit_code,
 )
 
@@ -35,5 +36,6 @@ __all__ = [
     "highest_exit_code",
     "is_json",
     "output_settings",
+    "render_json",
     "report_exit_code",
 ]

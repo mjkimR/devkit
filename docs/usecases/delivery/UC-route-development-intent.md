@@ -132,7 +132,7 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 - **When**: the agent runs `devkit spec new <slug>`
 - **Then**: `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` holds skeleton-marked `spec.md`, `plan.md` and `tasks.md`,
   `spec.md` is bound to `sdd-spec-feature` with no `kind` field, and the output ends with
-  `[NEXT_CMD: devkit workflow next --unit <dir>]`
+  `[NEXT_CMD: uv run devkit workflow next --unit <dir>]`
 
 ### Scenario 2: Orientation recommends actionable queued work
 - **Covers**: 1a
@@ -174,7 +174,7 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 - **Given**: a request whose direction must be decided before implementation
 - **When**: the agent runs `devkit spec proposal new <slug>`
 - **Then**: `docs/proposals/PROP-<slug>/proposal.md` exists with `status: draft`, bound to `sdd-proposal`, and the
-  output ends with `[NEXT_CMD: devkit workflow next --unit docs/proposals/PROP-<slug>]`
+  output ends with `[NEXT_CMD: uv run devkit workflow next --unit docs/proposals/PROP-<slug>]`
 
 ### Scenario 6: Queued requests retain repository provenance
 - **Covers**: 3c

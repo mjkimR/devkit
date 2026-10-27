@@ -97,7 +97,10 @@ def test_start_guards(repo: Path) -> None:
     created = start(locate(repo), "dev-demo")
     with pytest.raises(NestedError) as nested:
         start(locate(created.path), "dev-other")
-    assert nested.value.mode is ActionMode.BLOCKED
+    assert (
+        nested.value.mode is ActionMode.INPUT_ERROR
+        and nested.value.fix == f"Rerun the same command with -w {repo}, the base checkout"
+    )
     write(created.path, "wip.txt", "x\n")
     with pytest.raises(BranchExistsError, match="already has its worktree") as existing:
         start(locate(repo), "dev-demo")  # dirty or clean, an existing branch's worktree is never started again
@@ -145,8 +148,9 @@ def test_a_failed_setup_is_a_warning_and_keeps_the_worktree(repo: Path) -> None:
     result = start(locate(repo), "dev-demo", setup="echo broken >&2; exit 3")
     [warning] = result.notices
     assert warning.code == "WORKTREE_SETUP_FAILED" and warning.mode is ActionMode.CONTINUE
-    assert "exited 3" in warning.message and "broken" in warning.message
-    assert warning.fix is not None and warning.fix.endswith("&& echo broken >&2; exit 3")
+    assert warning.message.endswith("exited 3") and list(warning.details) == ["broken"]
+    assert warning.fix == f"cd {result.path} && sh -c 'echo broken >&2; exit 3'"  # exit ends the subshell only
+    assert warning.what_to_report is not None
     assert result.created and result.path.is_dir()
 
 
@@ -432,7 +436,7 @@ def test_finish_without_a_worktree_never_deletes_a_branch_start_did_not_create(r
     with pytest.raises(NotFoundError, match=r"no branch\.dev-release\.devkitWorktree marker") as raised:
         finish(locate(repo), "dev-release")
     assert raised.value.result is None and raised.value.mode is ActionMode.INTERACTION
-    assert raised.value.fix == f"Once the user agrees, git -C {repo} branch -d dev-release"
+    assert raised.value.fix == f"git -C {repo} branch -d dev-release"
     assert git(repo, "branch", "--list", "dev-release")
     created = start(locate(repo), "dev-demo")
     git(repo, "worktree", "remove", str(created.path))  # removed by hand: the marked branch resumes
@@ -446,7 +450,7 @@ def test_finish_keeping_the_branch_never_resumes_a_branch_start_did_not_create(r
     with pytest.raises(NotFoundError, match=r"no branch\.dev-old\.devkitWorktree marker") as raised:
         finish(locate(repo), "dev-old", delete_branch=False, before_remove=seen.append)
     assert raised.value.code == "WORKTREE_NOT_FOUND" and raised.value.result is None
-    assert raised.value.fix is not None and "branch -d" not in raised.value.fix  # the configuration keeps branches
+    assert raised.value.fix is None and "delete_branch = false" in str(raised.value.what_to_report)
     assert seen == [] and git(repo, "branch", "--list", "dev-old").strip() == "dev-old"
 
 
@@ -507,13 +511,11 @@ def test_finish_merges_resumes_after_a_dirty_worktree_and_cleans_up(repo: Path) 
     write(created.path, "wip.txt", "x\n")
     with pytest.raises(DirtyError) as dirty:
         finish(locate(repo), "dev-demo", merge=True, pull_request="auto")
-    partial = dirty.value.result
-    assert isinstance(partial, FinishResult)
-    assert (partial.merged, partial.push, partial.removed) == (True, "no-upstream", False)
-    assert (repo / "work.txt").exists() and created.path.is_dir()
+    assert dirty.value.result is None and list(dirty.value.target_files) == [str(created.path)]
+    assert not (repo / "work.txt").exists() and created.path.is_dir()  # refused before the merge
     (created.path / "wip.txt").unlink()
-    done = finish(locate(repo), "dev-demo")  # already merged: no --merge needed to resume
-    assert (done.merged, done.removed, done.branch_deleted) == (False, True, True)
+    done = finish(locate(repo), "dev-demo", merge=True, pull_request="auto")
+    assert (done.merged, done.removed, done.branch_deleted) == (True, True, True)
     assert not created.path.exists() and "dev-demo" not in git(repo, "branch", "--list", "dev-demo")
 
 
@@ -764,7 +766,7 @@ def test_a_stale_receipt_names_the_committed_file_and_its_fix(repo: Path) -> Non
     assert warning.target_files == (str(result.path / "AGENTS.md"),)
     # The committed change comes first, ahead of the managed copies --locked would have restored.
     assert warning.details[0] == "would create AGENTS.md" and warning.details[-1].startswith("and ")
-    assert warning.fix == f"In {result.path}: uv run devkit sync, then commit the files it changes"
+    assert warning.fix == f"cd {result.path} && uv run devkit sync"
     assert not (result.path / "AGENTS.md").exists()  # --locked wrote nothing
 
 

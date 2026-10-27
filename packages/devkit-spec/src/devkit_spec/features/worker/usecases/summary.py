@@ -11,7 +11,10 @@ def summarize_inspection(result: dict[str, Any]) -> dict[str, Any]:
     for name, original in result["checks"].items():
         check = {key: value for key, value in original.items() if key != "result"}
         payload = original.get("result")
-        if name == "envelopes" and isinstance(payload, dict):
+        if original["status"] == "pass" and not _actionable(payload):
+            # A passed check is its status; its wrapped body is a log (``--details`` restores it).
+            pass
+        elif name == "envelopes" and isinstance(payload, dict):
             # inspect already projects these through Envelopes.inspection_dict: metadata and current findings.
             check["result"] = payload
         elif name == "workflow" and isinstance(payload, dict) and "workflow" in payload:
@@ -27,7 +30,7 @@ def summarize_inspection(result: dict[str, Any]) -> dict[str, Any]:
             check["result"] = {
                 key: value for key, value in payload.items() if key in {"violations", "errors", "notices", "summary"}
             }
-        elif original["status"] != "pass" or _actionable(payload):
+        elif payload is not None and (original["status"] != "pass" or _actionable(payload)):
             # Unknown failure shapes and non-JSON stdout must remain diagnosable.
             check["result"] = payload
         checks[name] = check

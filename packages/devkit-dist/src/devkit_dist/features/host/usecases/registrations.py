@@ -15,11 +15,13 @@ from pathlib import Path
 from typing import Any
 
 import tomlkit
-from devkit.advisory import AdvisoryError, Level
+from devkit.advisory import Actor, AdvisoryError, Level
+from devkit_core.base.errors import ArgumentError
 from devkit_core.core.git import run_git
 from devkit_core.core.locks import file_lock
 
 from devkit_dist.features.host.models.errors import HostError
+from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.invocation import guard_execution
 from devkit_dist.features.project.repositories.local_config import read_effective_config
 
@@ -30,19 +32,101 @@ GROUP = "devkit.mcp.registrations"
 
 
 class RegistrationError(HostError):
+    """A host file, the ledger or the journal differs from what devkit recorded (``INTERACTION``); nothing changed.
+
+    Every subclass sets its own mode, so ``except RegistrationError`` still catches each refusal of this module.
+    """
+
     code = "MCP_REGISTRATION_CONFLICT"
-    guardrail = True
-    fix = "Restore the exact recorded project entry after inspecting local edits, then run `uv run devkit sync`; use an independently authorized CLI/PR route meanwhile"
+    actor = Actor.USER
+    what_to_report = (
+        "A project MCP registration file differs from what devkit recorded; the user decides whether to restore it"
+    )
+
+
+class RegistrationInterrupted(RegistrationError):
+    """An interrupted registration transaction awaits recovery (``AUTO``); ordinary sync recovers it."""
+
+    code = "MCP_REGISTRATION_INTERRUPTED"
+    actor = Actor.TOOL
+    what_to_report = None
+    fix = devkit_command("sync")
+
+
+class LedgerUnignored(RegistrationError):
+    """The ownership ledger is not Git-ignored yet (``AUTO``); ordinary sync installs the ignore rule."""
+
+    code = "MCP_LEDGER_UNIGNORED"
+    actor = Actor.TOOL
+    what_to_report = None
+    target_files = (LEDGER,)
+    fix = devkit_command("sync")
+
+
+class CheckoutRequired(RegistrationError):
+    """Project registration needs the top level of a Git checkout (``INPUT_ERROR``)."""
+
+    code = "MCP_CHECKOUT_REQUIRED"
+    actor = Actor.DEVELOPER
+    input_error = True
+    what_to_report = None
+    target_files = ("--workspace-root",)
+    fix = "Pass the top level of a Git checkout that holds .devkit/ to -w/--workspace-root"
 
 
 class RegistrationUnavailable(RegistrationError):
+    """A host destination is tracked, visible or would hide a linked worktree's file; it was left unchanged.
+
+    Reported as a ``WARNING`` naming the destination in its target.
+    """
+
     code = "MCP_REGISTRATION_UNAVAILABLE"
-    fix = "Use host-owned setup or an independently authorized CLI/PR route; keep tracked and foreign host settings unchanged"
+    what_to_report = (
+        "devkit left this host MCP file unchanged because Git tracks it or shows it; register the devkit server"
+        " with the host's own setup if the user wants it"
+    )
+
+
+class HostUnsupported(RegistrationError):
+    """A selected host has no MCP registration adapter (``WARNING``)."""
+
+    code = "MCP_HOST_UNSUPPORTED"
+    what_to_report = (
+        "devkit cannot register its MCP server for this host; only codex, claude and antigravity are supported"
+    )
+
+
+class RegistrationShadowed(RegistrationError):
+    """A same-name server in the host's user or managed settings would shadow the project entry (``WARNING``)."""
+
+    code = "MCP_REGISTRATION_SHADOWED"
+    what_to_report = (
+        "A devkit MCP server in the host's user or managed settings shadows the project entry; the user resolves"
+        " it with the host's own tools"
+    )
+
+
+class ExclusionsRetained(RegistrationError):
+    """Clone-local exclusions stay after the last owned entry was removed in this run (``NOTICE``)."""
+
+    code = "MCP_EXCLUSIONS_RETAINED"
+    level = Level.NOTICE
+    brief = True
+    what_to_report = None
 
 
 class RuntimeUnavailable(RegistrationError):
+    """No verified retained runtime with the same service packages exists (``INPUT_ERROR``, ``--executable``)."""
+
     code = "MCP_RUNTIME_UNAVAILABLE"
-    fix = "Install devkit-mcp with the same service packages in a retained base/tool runtime, then run `uv run devkit mcp setup --executable PATH`; or use an independently authorized CLI/PR route"
+    actor = Actor.DEVELOPER
+    input_error = True
+    what_to_report = None
+    target_files = ("--executable",)
+    fix = (
+        "Rerun `uv run devkit mcp setup` with --executable set to the Python interpreter of a retained runtime"
+        " that has devkit-mcp and the same service packages installed"
+    )
 
 
 @dataclass(frozen=True)
@@ -68,6 +152,24 @@ def common_dir(root: Path) -> Path | None:
         return Path(_git(root, "rev-parse", "--path-format=absolute", "--git-common-dir")).resolve()
     except AdvisoryError:
         return None
+
+
+def require_project(root: Path) -> None:
+    """Raise ``ArgumentError`` (``--workspace-root``) unless ``root`` holds ``.devkit/``; reads only."""
+    if not (root / ".devkit").is_dir():
+        raise ArgumentError(
+            f"{root} is not a devkit project: it holds no .devkit/ directory",
+            target_files=["--workspace-root"],
+            fix="Run the command inside a devkit project, or pass the project's root to -w/--workspace-root",
+        )
+
+
+def require_checkout(root: Path) -> None:
+    """The precondition of ``mcp setup`` and ``mcp remove``, checked before any lock is taken: a devkit project
+    (``ArgumentError``) at the top level of a Git checkout (``CheckoutRequired``)."""
+    require_project(root)
+    if common_dir(root) is None:
+        raise CheckoutRequired(f"{root} is not the top level of a Git checkout")
 
 
 def _safe(path: Path, anchor: Path) -> None:
@@ -293,14 +395,14 @@ def plan(
     root = root.resolve()
     result = RegistrationPlan(root, common_dir(root))
     if (root / JOURNAL).exists():
-        raise RegistrationError("interrupted registration transaction; run ordinary devkit sync to recover")
+        raise RegistrationInterrupted("interrupted registration transaction awaits recovery", target_files=[JOURNAL])
     ledger = _ledger(root)
     installed = bool(metadata.entry_points(group=GROUP))
     if not installed and not ledger["entries"]:
         return result
     if result.common is None:
         result.notices.append(
-            RegistrationUnavailable("native project registration requires a Git checkout").with_level(Level.WARNING)
+            CheckoutRequired("native project registration requires a Git checkout").with_level(Level.WARNING)
         )
         return result
     enabled = not remove and read_effective_config(root).values["mcp"]["register"]
@@ -320,7 +422,7 @@ def plan(
     for host in sorted(desired_hosts | entries.keys()):
         if host not in DESTINATIONS:
             result.notices.append(
-                RegistrationUnavailable(f"selected host {host} has no supported MCP adapter").with_level(Level.WARNING)
+                HostUnsupported(f"selected host {host} has no supported MCP adapter").with_level(Level.WARNING)
             )
             continue
         relative = DESTINATIONS[host]
@@ -331,17 +433,25 @@ def plan(
         result.desired[host] = desired
         if _tracked(root, relative) or (before is not None and not _ignored(root, relative)):
             result.notices.append(
-                RegistrationUnavailable(f"{relative}: tracked or visible foreign host file left unchanged").with_level(
-                    Level.WARNING
-                )
+                RegistrationUnavailable(
+                    f"{relative}: tracked or visible foreign host file left unchanged", target_files=[relative]
+                ).with_level(Level.WARNING)
             )
             result.states[host] = "unavailable"
             continue
         if record is not None and before is not None and current != record["entry"]:
-            raise RegistrationError(f"{relative}: owned entry was edited or removed")
+            raise RegistrationError(
+                f"{relative}: the devkit entry devkit registered was edited or removed",
+                target_files=[relative],
+                fix=f"Restore the devkit server entry in {relative} exactly as {LEDGER} records it, then rerun",
+            )
         if record is None and current is not None:
             result.states[host] = "independently-managed"
-            raise RegistrationError(f"{relative}: unowned devkit entry cannot be adopted")
+            raise RegistrationError(
+                f"{relative}: a devkit entry devkit did not register cannot be adopted",
+                target_files=[relative],
+                fix=f"Remove the devkit server entry from {relative}, then rerun",
+            )
         if unavailable and host in desired_hosts:
             result.states[host] = "runtime-unavailable"
             continue
@@ -349,8 +459,8 @@ def plan(
             layers = collisions(root, host)
             if layers:
                 result.notices.append(
-                    RegistrationUnavailable(
-                        f"{host}: same-name or unreadable layers: {', '.join(layers)}; resolve using host tools"
+                    RegistrationShadowed(
+                        f"{host}: a devkit server in same-name or unreadable layers: {', '.join(layers)}"
                     ).with_level(Level.WARNING)
                 )
                 result.states[host] = "shadowed-or-unknown"
@@ -362,9 +472,9 @@ def plan(
             continue
         if _tracked(root, relative) or (before is not None and not _ignored(root, relative)):
             result.notices.append(
-                RegistrationUnavailable(f"{relative}: tracked or visible foreign host file left unchanged").with_level(
-                    Level.WARNING
-                )
+                RegistrationUnavailable(
+                    f"{relative}: tracked or visible foreign host file left unchanged", target_files=[relative]
+                ).with_level(Level.WARNING)
             )
             result.states[host] = "unavailable"
             continue
@@ -372,7 +482,7 @@ def plan(
             if _foreign_worktree(root, relative):
                 result.notices.append(
                     RegistrationUnavailable(
-                        f"{relative}: exclusion would hide a foreign linked-worktree file"
+                        f"{relative}: exclusion would hide a foreign linked-worktree file", target_files=[relative]
                     ).with_level(Level.WARNING)
                 )
                 continue
@@ -406,11 +516,11 @@ def plan(
     if updated != ledger:
         result.capture(LEDGER)
         result.after[LEDGER] = ((json.dumps(updated, indent=2) + "\n").encode(), 0o600)
-    if excludes and not entries:
+    if excludes and not entries and ledger["entries"]:
         result.notices.append(
-            RegistrationUnavailable(
-                "clone-local MCP exclusions retained; inspect every linked worktree before manually removing the exact lines from Git info/exclude"
-            ).with_level(Level.NOTICE)
+            ExclusionsRetained(
+                f"clone-local MCP exclusions retained in Git info/exclude: {', '.join(sorted(set(excludes)))}"
+            )
         )
     return result
 
@@ -477,7 +587,10 @@ def apply(result: RegistrationPlan, *, locked: bool = False) -> None:
     if not result.changes:
         return
     if locked:
-        raise RegistrationError("locked sync found changed local registration; run ordinary devkit sync")
+        raise RegistrationInterrupted(
+            "locked sync found changed local registration; ordinary sync reconciles it",
+            code="MCP_REGISTRATION_UNRECONCILED",
+        )
     assert result.common is not None
     for key, expected in result.before.items():
         if _snapshot(result.path(key), result.common if key == "exclude" else result.root) != expected:
@@ -492,7 +605,7 @@ def apply(result: RegistrationPlan, *, locked: bool = False) -> None:
         if not _ignored(result.root, relative) and _foreign_worktree(result.root, relative):
             raise RegistrationError("a linked-worktree foreign file appeared before exclusion write")
     if not _ignored(result.root, LEDGER):
-        raise RegistrationUnavailable("the local ledger must be ignored before registration; run devkit sync first")
+        raise LedgerUnignored("the local MCP ownership ledger must be Git-ignored before registration")
     journal = {
         "workspace": str(result.root),
         "common": str(result.common),

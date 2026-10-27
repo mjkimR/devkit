@@ -54,7 +54,7 @@ def scan(output_format: str) -> None:
 | --- | --- |
 | `Boundary(name, *, env_prefix=None, log=None)` | The decorator (`@boundary`, `@boundary(json_only=True)`): output options, error rendering, `[INFO]` logs under `-v`, UTF-8 output, exit `2` on a closed reader |
 | `FORMAT_OPTION`, `is_json` | `--format text\|json` |
-| `echo_json`, `echo_notices`, `exit_on_warnings` | One JSON object; returned warnings and notices after the result; `--strict` |
+| `echo_json`, `render_json`, `echo_notices`, `exit_on_warnings` | One compact JSON object (and its text, for size budgets); returned warnings and notices after the result; `--strict` |
 | `exit_on_problems`, `highest_exit_code`, `report_exit_code` | Exit codes of commands that collect problems |
 | `OutputSettings`, `output_settings`, `Reported` | The running command's options; an error whose JSON result is already printed |
 | `LazyGroup` | Subcommands imported only when they run |

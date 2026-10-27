@@ -14,10 +14,10 @@ from devkit_core.core.git import run_git
 
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.distribution.models.content import Content, json_content, signature
-from devkit_dist.features.distribution.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.distribution.models.results import Action
 from devkit_dist.features.distribution.services.installation.inventory import Inventory
 from devkit_dist.features.distribution.services.installation.workspace import snapshot
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.project.repositories.local_config import (
     LOCAL_CONFIG_PATH,
     read_effective_config,

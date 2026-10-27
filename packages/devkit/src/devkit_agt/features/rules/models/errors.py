@@ -50,7 +50,7 @@ class TargetError(RulesError):
 
     code = "RULES_TARGET_INVALID"
     input_error = True
-    fix = "Pass existing files or directories inside the workspace"
+    fix = "Correct or drop the file arguments [TARGET] names"
 
 
 class RulesDirError(RulesError):
@@ -72,7 +72,10 @@ class PinnedWriteError(RulesError):
 
     code = "RULES_PINNED_WRITE_REFUSED"
     guardrail = True
-    fix = "Edit the project override with `uv run devkit override create <bundle>:<asset>` instead of the pinned copy"
+    fix = (
+        "Leave the pinned copy unchanged; edit a project override instead, created with `uv run devkit override create` "
+        "for the asset that deploys it"
+    )
 
 
 class RuleProblem(RulesError):

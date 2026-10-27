@@ -190,7 +190,9 @@ def new_decision(
     if kind is None:
         raise RequestUnknownError(
             f"unknown request {request!r}",
-            fix="Use gate:<gate>, check:<name>, handoff, feedback:<target> or return:<stage>",
+            target_files=["--request"],
+            fix="Pass --request handoff, or gate:, check:, feedback: or return: followed by the gate, check, target"
+            " or stage name",
         )
     seq = decisions.next_sequence()
     return Decision(

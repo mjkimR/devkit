@@ -46,7 +46,7 @@ def test_terminal_statuses_are_hidden_by_default(settled: Path) -> None:
     assert _ids(result) == ["ADR-kept", "PROP-live", "FB-open"]
     assert result.stdout.splitlines()[-2:] == [
         "[PAGE: total=3 offset=0 limit=20 count=3 next=- hidden=6]",
-        f"[HISTORY_CMD: devkit spec list feedback decision proposal --history -w {settled}]",
+        f"[HISTORY_CMD: uv run devkit spec list feedback decision proposal --history -w {settled}]",
     ]
 
 
@@ -72,7 +72,7 @@ def test_the_page_reports_what_it_hid(settled: Path) -> None:
     result = _spec("list", "feedback", "-n", "0", workspace=settled)
     assert result.stdout.splitlines()[-2:] == [
         "[PAGE: total=1 offset=0 limit=0 count=1 next=- hidden=4]",
-        f"[HISTORY_CMD: devkit spec list feedback --history -w {settled} --limit 0]",
+        f"[HISTORY_CMD: uv run devkit spec list feedback --history -w {settled} --limit 0]",
     ]
     payload = json.loads(_spec("list", "feedback", "--format", "json", workspace=settled).stdout)
     assert payload["total"] == 1 and payload["hidden"] == 4

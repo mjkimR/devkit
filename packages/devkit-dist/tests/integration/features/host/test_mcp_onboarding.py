@@ -266,7 +266,7 @@ def test_inspect_lists_a_refused_plan_under_errors_not_notices(repo):
     (repo / r.JOURNAL).parent.mkdir(parents=True, exist_ok=True)
     (repo / r.JOURNAL).write_text("{}")
     result = r.inspect(repo, ["claude"])
-    assert [error.code for error in result["errors"]] == ["MCP_REGISTRATION_CONFLICT"]
+    assert [error.code for error in result["errors"]] == ["MCP_REGISTRATION_INTERRUPTED"]
     assert result["notices"] == []
     assert r.inspect(repo.parent, [])["errors"] == []  # nothing to inspect is no problem
 
@@ -319,3 +319,57 @@ def test_unregistered_hosts_skips_a_tracked_destination(repo):
     git(repo, "add", ".mcp.json")
     git(repo, "commit", "-m", "host-owned")
     assert r.unregistered_hosts(repo, ["claude"]) == []
+
+
+def test_each_registration_condition_has_its_own_code_mode_and_target(repo, tmp_path):
+    from devkit.advisory import ActionMode
+
+    r.apply(r.plan(repo, ["claude"]))
+    (repo / ".mcp.json").write_text('{"mcpServers":{"devkit":{"command":"edited"}}}')
+    with pytest.raises(r.RegistrationError) as edited:
+        r.plan(repo, ["claude"])
+    assert edited.value.code == "MCP_REGISTRATION_CONFLICT" and edited.value.mode is ActionMode.INTERACTION
+    assert edited.value.target_files == (".mcp.json",)
+    for error in (
+        r.RegistrationError("x"),
+        r.RegistrationUnavailable("x"),
+        r.RuntimeUnavailable("x"),
+        r.LedgerUnignored("x"),
+    ):
+        assert "independently authorized" not in (error.fix or "") and "PATH" not in (error.fix or "")
+    runtime = r.RuntimeUnavailable("x")
+    assert runtime.mode is ActionMode.INPUT_ERROR and runtime.target_files == ("--executable",)
+    ledger = r.LedgerUnignored("x")
+    assert ledger.mode is ActionMode.AUTO and ledger.fix == "uv run devkit sync"
+    (repo / r.JOURNAL).write_text("{}")
+    with pytest.raises(r.RegistrationError) as interrupted:
+        r.plan(repo, ["claude"])
+    assert interrupted.value.mode is ActionMode.AUTO and interrupted.value.fix == "uv run devkit sync"
+
+
+def test_unsupported_host_and_retained_exclusions_have_their_own_codes(repo):
+    planned = r.plan(repo, ["claude", "cursor"])
+    assert [notice.code for notice in planned.notices] == ["MCP_HOST_UNSUPPORTED"]
+    r.apply(planned)
+    removed = r.plan(repo, [], remove=True)
+    assert [notice.code for notice in removed.notices] == ["MCP_EXCLUSIONS_RETAINED"]
+    r.apply(removed)
+    # Retained lines were reported when they were left; an unchanged rerun repeats nothing.
+    assert r.plan(repo, [], remove=True).notices == []
+
+
+def test_tracked_destination_targets_the_file(repo):
+    (repo / ".mcp.json").write_text("{}")
+    git(repo, "add", ".mcp.json")
+    git(repo, "commit", "-q", "-m", "tracked")
+    (notice,) = r.plan(repo, ["claude"]).notices
+    assert notice.code == "MCP_REGISTRATION_UNAVAILABLE" and notice.target_files == (".mcp.json",)
+
+
+def test_locked_apply_with_changes_is_an_auto_reconcile_error(tmp_path: Path) -> None:
+    plan = r.RegistrationPlan(tmp_path, tmp_path, before={".mcp.json": None}, after={".mcp.json": (b"{}", 0o644)})
+    with pytest.raises(r.RegistrationError) as raised:
+        r.apply(plan, locked=True)
+    advisory = raised.value.to_dict()["advisory"]
+    assert raised.value.code == "MCP_REGISTRATION_UNRECONCILED" and advisory["mode"] == "AUTO"
+    assert advisory["fix"] == "uv run devkit sync"

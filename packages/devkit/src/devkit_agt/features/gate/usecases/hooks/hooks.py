@@ -14,12 +14,12 @@ from pathlib import Path
 from devkit.advisory import AdvisoryError, Level
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import atomic_write_bytes, file_lock
+from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.project import require_git_toplevel
 
 import devkit_agt.features.gate.repositories.git as git
 from devkit_agt.features.gate.models.contracts import Stage
 from devkit_agt.features.gate.models.errors import (
-    DEVKIT,
     ForeignHookError,
     GateInterpreterError,
     GatePythonError,
@@ -320,7 +320,9 @@ def missing_entry_notices(
         notice = _hooks_path_error(location, f"gates={','.join(gates)}", prefix="enabled gates do not run: ")
         return [notice.with_level(Level.WARNING)]
     by_stage = {item.stage: item for item in statuses}
-    notices: list[AdvisoryError] = []
+    stages: list[str] = []
+    details: list[str] = []
+    targets: list[str] = []
     for stage in Stage:
         gates = _enabled_gates(project, stage)
         item = by_stage.get(stage)
@@ -333,14 +335,18 @@ def missing_entry_notices(
             problem = f"{entry.parent.name}/{DEVKIT_ENTRY} is not installed"
         else:
             continue
-        notices.append(
-            HookEntryMissingNotice(
-                f"{stage}: enabled gates do not run: {problem}",
-                f"gates={','.join(gates)}",
-                target_files=[str(entry)],
-            )
+        stages.append(str(stage))
+        details.append(f"{stage}: {problem}; gates={','.join(gates)}")
+        targets.append(str(entry))
+    if not stages:
+        return []
+    return [
+        HookEntryMissingNotice(
+            f"enabled gates do not run in {', '.join(stages)}: the hook entry is missing",
+            *details,
+            target_files=targets,
         )
-    return notices
+    ]
 
 
 def chained_by_pre_commit(path: Path) -> bool:
@@ -389,15 +395,18 @@ def _write(path: Path, text: str, *, dry_run: bool = False) -> bool:
 def _hooks_path_fix(location: HooksLocation) -> str:
     """The step that stops ``core.hooksPath`` bypassing the managed directory, by the scope that sets it."""
     scope = location.hooks_path_scope
+    install = devkit_command("gate install")
     if scope == "local":
-        step = f"run `git config --unset {HOOKS_PATH_KEY}`"
-    elif scope == "worktree":
-        step = f"run `git config --worktree --unset {HOOKS_PATH_KEY}`"
-    elif scope == "command":
-        step = f"remove {HOOKS_PATH_KEY} from the `git -c` options or GIT_CONFIG_* environment variables"
-    else:  # global or system: override it for this repository only, leaving other repositories untouched
-        step = f"run `git config {HOOKS_PATH_KEY} {shlex.quote(location.directory.as_posix())}`"
-    return f"Once the user agrees, {step}, then `{DEVKIT} gate install`"
+        return f"git config --unset {HOOKS_PATH_KEY} && {install}"
+    if scope == "worktree":
+        return f"git config --worktree --unset {HOOKS_PATH_KEY} && {install}"
+    if scope == "command":
+        return (
+            f"Remove {HOOKS_PATH_KEY} from the `git -c` options or GIT_CONFIG_* environment variables, "
+            f"then run `{install}`"
+        )
+    # global or system: override it for this repository only, leaving other repositories untouched
+    return f"git config {HOOKS_PATH_KEY} {shlex.quote(location.directory.as_posix())} && {install}"
 
 
 def _hooks_path_error(location: HooksLocation, *details: str, prefix: str = "") -> HooksPathSetError:
@@ -422,6 +431,7 @@ class InstallResult:
 
     actions: list[str] = field(default_factory=list)
     notices: list[AdvisoryError] = field(default_factory=list)
+    hooks_dir: Path | None = None  # the directory Git runs hooks from, where each ``<stage>`` hook lives
 
 
 @contextmanager
@@ -528,14 +538,16 @@ class InstallHooksUseCase(BaseUseCase):
                 raise ForeignHookError(
                     "hooks are symbolic links or non-regular files",
                     *(str(item.path) for item in special),
-                    fix=f"Inspect the existing hooks, then run `{DEVKIT} gate install --force` to preserve and chain them",
+                    fix=devkit_command("gate install --force"),
+                    target_files=[str(item.path) for item in special],
                 )
             blocked = [plan.item for plan in plans if plan.item.backup and _Move.PRESERVE in (plan.hook, plan.legacy)]
             if blocked:
                 raise HookBackupExistsError(
                     "a preserved hook already exists",
                     *(str(_backup(item.path)) for item in blocked),
-                    fix=f"Move the conflicting preserved hooks to another path, then run `{DEVKIT} sync`",
+                    fix=f"Move the conflicting preserved hooks to another path, then run `{devkit_command('sync')}`",
+                    target_files=[str(_backup(item.path)) for item in blocked],
                 )
             if location.directory.is_symlink():
                 raise HookLayoutError("hooks directory is a symbolic link", str(location.directory))
@@ -562,7 +574,7 @@ class InstallHooksUseCase(BaseUseCase):
                             fallbacks[item.python] = recorded
             if not dry_run:
                 location.directory.mkdir(parents=True, exist_ok=True)
-            result = InstallResult()
+            result = InstallResult(hooks_dir=location.directory)
             for plan in plans:
                 self._install_stage(plan, stages, fallbacks.get(plan.item.python or "", recorded), result, dry_run)
             return result
@@ -588,18 +600,21 @@ class InstallHooksUseCase(BaseUseCase):
                 adapter.unlink()
         if stage in stages:
             changed |= _write(entries / DEVKIT_ENTRY, wrapper_script(stage, python), dry_run=dry_run)
+        # A move that returns a GATE_HOOK_PRESERVED warning is reported by it alone; a dry run returns the line.
         if plan.hook is _Move.PRESERVE:
             kind = "inert (non-executable) hook" if item.state is HookState.INERT else "existing hook"
-            moves.append(f"{stage}: moved {kind} to {preserved.name}")
+            if dry_run:
+                moves.append(f"{stage}: moved {kind} to {preserved.name}")
             notices.append(
                 HookPreservedNotice(
-                    f"existing {stage} hook preserved at {preserved}",
+                    f"{kind.replace('hook', f'{stage} hook')} preserved at {preserved}",
                     f"The preserved hook runs first through {entries / LEGACY_ENTRY}; its executable mode is unchanged",
                     target_files=[str(preserved)],
                 )
             )
         elif plan.hook is _Move.ENTRY:
-            moves.append(f"{stage}: moved the pre-commit framework hook to {entries.name}/{PRE_COMMIT_ENTRY}")
+            if dry_run:
+                moves.append(f"{stage}: moved the pre-commit framework hook to {entries.name}/{PRE_COMMIT_ENTRY}")
             notices.append(
                 HookPreservedNotice(
                     f"pre-commit framework {stage} hook chained at {framework}",
@@ -649,7 +664,7 @@ install = InstallHooksUseCase().execute
 class UninstallHooksUseCase(BaseUseCase):
     """Application entrypoint for uninstall."""
 
-    def execute(self, cwd: Path) -> list[str]:
+    def execute(self, cwd: Path) -> InstallResult:
         """Remove owned devkit entries; retain the dispatcher and legacy adapter while user entries remain.
 
         Without user entries the dispatcher goes and the hooks it chained take its place: a pre-commit framework
@@ -665,7 +680,7 @@ class UninstallHooksUseCase(BaseUseCase):
                 behind_pre_commit = item.state is not HookState.MANAGED and chained_by_pre_commit(item.path)
                 if item.state is HookState.MANAGED or behind_pre_commit:
                     _uninstall_stage(item, behind_pre_commit, actions)
-        return actions
+        return InstallResult(actions, hooks_dir=location.directory)
 
 
 def _uninstall_stage(item: HookStatus, behind_pre_commit: bool, actions: list[str]) -> None:

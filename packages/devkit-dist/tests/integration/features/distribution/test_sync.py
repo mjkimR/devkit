@@ -135,7 +135,7 @@ def test_user_edit_blocks_all_writes(installed: list[InstalledBundle], target: P
         assert guide.read_text() == "user edit"
         assert ".devkit/managed/team/guide.md" not in json.loads((target / RECEIPT_PATH).read_text())["files"]
         return
-    with pytest.raises(ConflictError, match="user-modified"):
+    with pytest.raises(ConflictError, match="managed files were edited"):
         sync_project(target, installed)
     assert guide.read_text() == "user edit"
     assert (target / RECEIPT_PATH).read_bytes() == receipt
@@ -144,7 +144,7 @@ def test_user_edit_blocks_all_writes(installed: list[InstalledBundle], target: P
 def test_mode_edit_is_protected(installed: list[InstalledBundle], target: Path) -> None:
     sync_project(target, installed)
     (target / ".devkit/managed/team/guide.md").chmod(0o755)
-    with pytest.raises(ConflictError, match="user-modified"):
+    with pytest.raises(ConflictError, match="managed files were edited"):
         sync_project(target, installed)
 
 
@@ -389,7 +389,7 @@ def test_preset_union_and_one_run_selection(installed: list[InstalledBundle], ta
 
 
 def test_selected_bundle_must_be_installed(installed: list[InstalledBundle], target: Path) -> None:
-    with pytest.raises(SelectionError, match=r"selected bundle is not installed: \['team'\]"):
+    with pytest.raises(SelectionError, match="selected bundle is not installed: team"):
         sync_project(target, [])
     with pytest.raises(SelectionError, match="unknown preset missing"):
         sync_project(target, installed, presets={"team": ["missing"]})
@@ -639,7 +639,10 @@ def test_cli_add_requires_preset_without_default(
     result = runner.invoke(cli, ["add", "team", "--workspace-root", str(bare)])
     assert result.exit_code != 0 and result.stdout == ""
     assert "team: the bundle declares no default preset" in result.stderr
-    assert "[FIX]    Select one of: team:all, team:minimal" in result.stderr
+    assert (
+        "[FIX]    uv run devkit list\n[DETAIL] uv run devkit add team:all\n[DETAIL] uv run devkit add team:minimal\n"
+        in result.stderr
+    )
     assert not (bare / CONFIG_PATH).exists()
     result = runner.invoke(cli, ["add", "team:minimal", "--workspace-root", str(bare), "--dry-run"])
     assert result.exit_code == 0, result.output
@@ -787,7 +790,7 @@ def test_a_hand_edit_behind_a_pulled_receipt_still_conflicts(
     guide = target / ".devkit/managed/team/guide.md"
     guide.write_text("user edit")
     assert get_project_status(target, newer).files.modified == [".devkit/managed/team/guide.md"]
-    with pytest.raises(ConflictError, match="user-modified"):
+    with pytest.raises(ConflictError, match="managed files were edited"):
         sync_project(target, newer)
     assert guide.read_text() == "user edit"
 

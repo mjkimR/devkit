@@ -135,7 +135,7 @@ sequence.
 14. **Proposal Planning ends at handoff** (`CAP-DLV-proposal-incubation`): `sdd-proposal` declares no `next`
     candidates, because devkit's `devkit workflow handoff` rebinds a unit in place and refuses a candidate with
     another anchor (`HANDOFF_LAYOUT_MISMATCH`). Once `plan-accept` holds, `next` reports the unit complete
-    (`[STAGE: - complete=true]`, no `[HANDOFF]` line) and Development starts with `devkit spec proposal handoff <slug>`.
+    (`[STAGE: - complete=yes]`, no `[HANDOFF]` line) and Development starts with `devkit spec proposal handoff <slug>`.
     An eligible draft may skip Planning by a **direct acceptance** (`ADR-proposal-acceptance`):
     Backlog work on the base checkout, under every pull-request policy, where the Host sweeps its own acceptance
     session at `collect-feedback` and records `plan-accept` with `devkit spec proposal accept <slug> --by user
@@ -583,18 +583,22 @@ worktree because the existing command reads disk; this prevents uncommitted reco
 Wrapped results retain their codes and actions.
 
 `--format json` emits one object containing `inputs` (value/source), `scope` entries, `base`, `head`, `changed_paths`,
-optional `outside_scope` and `base_checkout`, `checks`, `notices` and `exit_code`. Text output emits inspection,
-input, scope, changed-path and check sentinels. The compared commits and changed paths are reviewer payload
+optional `outside_scope` and `base_checkout`, `checks`, `errors` (one advisory per failed check), `notices` and
+`exit_code`. Text output emits `[WORKER_INSPECTION: verdict=pass|fail base= head=]`, then `[INPUT: ...]`, `[SCOPE_ENTRY: <path> source= ...]`,
+changed-path and check sentinels; each failed check is an `[ERROR]` block on stderr after the notices. `-w` names
+the worktree to inspect instead of the current directory, and `--strict` exits `1` on a warning when no check
+failed. The compared commits and changed paths are reviewer payload
 information. Default JSON keeps each check status, actionable findings, violations, notices, errors, unresolved problems, pending questions and recovery evidence; envelope entries contain metadata and current open findings rather than historical bodies. Successful wrapped check bodies are omitted. Workflow output retains the next action and approval evidence, with only stage identity, role, isolation and returns instead of the full stage definition. Unknown failed check payloads and diagnostic stdout/stderr remain intact. `--details --format json` includes all original wrapped results and envelope bodies. Both modes run every check and derive the same verdict from complete evidence. Exit 0 means no failed check, 1 means at least one failed check, and 2 means invalid invocation,
 invalid Git inputs or unresolved required unit/head/base. A not-run check alone is a notice, not exit 1.
 
 | Code | Meaning and action |
 | --- | --- |
-| `WORKER_UNIT_UNRESOLVED` | Supply `--unit` with the committed unit directory. |
-| `WORKER_HEAD_UNRESOLVED` | Supply `--head` when there is no uniquely added latest worker envelope. |
-| `WORKER_BASE_UNRESOLVED` | Supply `--base` when previous blocked records or base branch do not determine it. |
-| `WORKER_SCOPE_UNRESOLVED` | Supply complete literal paths with `--scope` or `--scope-file`. |
-| `WORKER_CHECK_NOT_RUN` | Inspect the reported cause and rerun the named check after correcting it. |
+| `SPEC_WORKER_UNIT_UNRESOLVED` | `INPUT_ERROR`: supply `--unit` with the committed unit directory. |
+| `SPEC_WORKER_HEAD_UNRESOLVED` | `INPUT_ERROR`: supply `--head` when there is no uniquely added latest worker envelope. |
+| `SPEC_WORKER_BASE_UNRESOLVED` | `INPUT_ERROR`: supply `--base` when previous blocked records or base branch do not determine it. |
+| `SPEC_WORKER_SCOPE_UNRESOLVED` | `INPUT_ERROR`: supply complete literal paths with `--scope` or `--scope-file`. |
+| `SPEC_WORKER_CHECK_NOT_RUN` | `NOTICE`: inspect the reported cause and rerun the named check after correcting it. |
+| `SPEC_WORKER_ANCESTRY_FAILED`, `SPEC_WORKER_HEAD_FAILED`, `SPEC_WORKER_SCOPE_OUTSIDE`, `SPEC_WORKER_WORKTREE_DIRTY`, `SPEC_WORKER_ENVELOPES_FAILED`, `SPEC_WORKER_RULES_FAILED`, `SPEC_WORKER_WORKFLOW_FAILED` (`SPEC_WORKER_CHECK_FAILED` is their class code) | `ERROR` (`INTERACTION`, exit `1`): the named check failed; `[TARGET]` names the outside or dirty paths, the flags or the `checks.<name>` entry. The Host decides acceptance. |
 
 The helper MUST NOT write records, modify files, repair, retry, synchronize, merge or widen scope. It adds no
 approval request, workflow gate, integration refusal or scope registration. The Host's delegation payload remains

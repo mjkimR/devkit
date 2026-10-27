@@ -11,7 +11,6 @@ from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 
 from devkit_dist.features.distribution.models.errors import OverrideRetainedNotice, SelectionError
-from devkit_dist.features.distribution.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.distribution.models.results import (
     ConfigurationReport,
     OverrideChange,
@@ -37,6 +36,7 @@ from devkit_dist.features.distribution.services.installation.plan import BundleP
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt
 from devkit_dist.features.distribution.services.installation.transaction import project_lock
 from devkit_dist.features.distribution.usecases.sync import sync_project
+from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.local_config import read_effective_config
 from devkit_dist.features.project.repositories.receipt import OVERRIDES_PATH
 from devkit_dist.features.project.services.presentation import language_notices, resolve_language
@@ -60,6 +60,7 @@ def _sync_and_save(
     environment: str | None = None,
     save_environment: bool = True,
     preview: bool = True,
+    selector: tuple[str, str] = ("add", "SELECTIONS"),
 ) -> SyncResult:
     """Synchronize; ``save`` builds a configuration edit that the sync renders and writes under the project lock.
 
@@ -68,10 +69,10 @@ def _sync_and_save(
     Without ``save`` the selection applies to this run only; on ``dry_run`` the edit is
     rendered and listed (``.devkit/config.toml``) but never written. ``deselect`` applies to the run in either case, so a bundle the edit cannot
     name (one the receipt keeps deployed without an installed package) leaves
-    the receipt.
+    the receipt. ``selector`` is the command and argument that named ``presets`` (``resolve_selection``).
     """
     with discover_bundles() as installed:
-        requested = resolve_selection(installed, presets or {})
+        requested = resolve_selection(installed, presets or {}, command=selector[0], target=selector[1])
 
         def selected() -> dict[str, list[str]]:
             return merge_selection(installed, read_config(root), requested) if merge else requested
@@ -137,6 +138,7 @@ class SyncSelection(BaseUseCase):
             environment=environment,
             save_environment=save,
             preview=not check,
+            selector=("sync --preset", "--preset"),
         )
 
 
@@ -243,7 +245,7 @@ class PlanSource(BaseUseCase):
     """Execute the plan source application operation."""
 
     def execute(self, source: Path, preset: str | None, agents: tuple[str, ...]) -> BundlePlan:
-        return plan_bundle(load_bundle(source), preset, list(agents) or None)
+        return plan_bundle(load_bundle(source), preset, list(agents) or None, source=str(source))
 
 
 def build_source(source: Path, output: Path):
@@ -272,14 +274,20 @@ class RemoveSelection(BaseUseCase):
     """Execute the remove selection application operation."""
 
     def execute(self, root: Path, bundles: tuple[str, ...], *, dry_run: bool = False) -> SyncResult:
+        # The presets each removed bundle deployed, for the command that selects it again (``OVERRIDE_RETAINED``).
+        removed: dict[str, list[str]] = {}
+
         def save(installed: list[InstalledBundle], _selected: dict[str, list[str]]) -> dict[str, Any]:
             config = read_config(root)
             selected = effective_selection(installed, config, read_receipt(root))
             missing = sorted(set(bundles) - set(selected))
             if missing:
                 raise SelectionError(
-                    f"bundle is not selected: {missing}", fix=f"List selected bundles with `{AGENT_INVOCATION} list`"
+                    f"bundle is not selected: {', '.join(missing)}",
+                    fix=devkit_command("list"),
+                    target_files=["BUNDLES"],
                 )
+            removed.update({name: list(selected[name]) for name in bundles})
             # Deleting an entry would not deselect a bundle selected without one (auto-selected, or kept deployed
             # because its package no longer loads), so those are opted out. One kept deployed without an installed
             # package needs no entry: the run's deselection drops it from the receipt, and nothing selects it again.
@@ -298,12 +306,18 @@ class RemoveSelection(BaseUseCase):
             f"{OVERRIDES_PATH}/{name}/" for name in sorted(set(bundles)) if (root / OVERRIDES_PATH / name).is_dir()
         ]
         if retained:
+            again = [
+                f"{name}:{preset}"
+                for name in sorted(set(bundles))
+                if (root / OVERRIDES_PATH / name).is_dir()
+                for preset in removed.get(name, [])
+            ]
             result.notices.append(
                 OverrideRetainedNotice(
                     f"overrides of removed bundles stay in place: {', '.join(retained)}",
+                    f"To drop them instead, delete {', '.join(retained)}",
                     target_files=retained,
-                    fix=f"Delete {', '.join(retained)} to drop them, or `{AGENT_INVOCATION} add <bundle>` to apply them"
-                    " again",
+                    fix=devkit_command(f"add {' '.join(again)}") if again else None,
                 )
             )
         return result

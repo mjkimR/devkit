@@ -48,6 +48,7 @@ def test_an_empty_message_tells_the_committer_to_correct_it(repo: Path) -> None:
         NonEmptyMessageGate().run(gate_ctx(repo, Stage.COMMIT_MSG, str(message)))
     except GateRefusedError as error:
         assert (error.code, error.mode, int(error.exit_code)) == ("GATE_MESSAGE_EMPTY", ActionMode.INPUT_ERROR, 1)
+        assert list(error.target_files) == ["MSG"]
     else:
         raise AssertionError("an empty message passed")
 
@@ -55,7 +56,7 @@ def test_an_empty_message_tells_the_committer_to_correct_it(repo: Path) -> None:
 def test_status_shows_whether_verify_commands_has_commands(repo: Path) -> None:
     result = CliRunner().invoke(cli, ["status", "-w", str(repo)])
     line = next(line for line in result.stdout.splitlines() if line.startswith("[GATE: verify-commands "))
-    assert line.endswith("commands=0 (skipped: no commands configured)]")
+    assert line.endswith(' setup="commands=0 (skipped: no commands configured)"]')
     (repo / ".devkit").mkdir()
     (repo / ".devkit/config.toml").write_text(
         '[gates.settings.verify-commands]\ncommands = ["just check", "just test"]\n'
@@ -82,3 +83,34 @@ def test_the_tracked_template_lists_the_built_in_gates_at_their_defaults(repo: P
     assert project.validation.errors == ()
     assert all(project.config.enabled(gate) for gate in project.registry.get_all())
     assert project.validation.settings["verify-commands"].commands == []
+
+
+def test_install_and_uninstall_report_in_text_and_json(repo: Path) -> None:
+    installed = CliRunner().invoke(cli, ["install", "-w", str(repo), "--format", "json"])
+    assert installed.exit_code == 0, installed.output
+    data = json.loads(installed.stdout)
+    assert data["hooks"][0] == {"stage": "pre-commit", "action": "installed", "detail": ""}
+    assert data["config"] == {"template": "created", "path": ".git/devkit.config"} and data["notices"] == []
+    removed = CliRunner().invoke(cli, ["uninstall", "-w", str(repo), "--format", "json"])
+    assert {"stage": "pre-commit", "action": "removed", "detail": ""} in json.loads(removed.stdout)["hooks"]
+    empty = CliRunner().invoke(cli, ["uninstall", "-w", str(repo)])
+    assert empty.stdout == "[OK: no managed hooks]\n"
+
+
+def test_status_writes_booleans_as_yes_or_no(repo: Path) -> None:
+    CliRunner().invoke(cli, ["install", "-w", str(repo)])
+    lines = CliRunner().invoke(cli, ["status", "-w", str(repo)]).stdout.splitlines()
+    assert "[HOOK: pre-commit state=managed python=" in lines[1] and " python_ok=yes scripts=20-devkit]" in lines[1]
+    assert " enabled=yes source=builtin" in next(line for line in lines if line.startswith("[GATE: rules-check "))
+    assert "true" not in "\n".join(lines) and "false" not in "\n".join(lines)
+
+
+def test_commit_msg_without_its_file_names_the_message_file_git_writes(repo: Path) -> None:
+    from devkit_core.base.errors import ArgumentError
+
+    try:
+        NonEmptyMessageGate().run(gate_ctx(repo, Stage.COMMIT_MSG))
+    except ArgumentError as error:
+        assert error.fix == f"uv run devkit gate run commit-msg {repo / '.git/COMMIT_EDITMSG'}"
+    else:
+        raise AssertionError("a commit-msg run without its file passed")

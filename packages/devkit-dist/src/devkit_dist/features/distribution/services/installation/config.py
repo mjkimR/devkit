@@ -32,7 +32,6 @@ from tomlkit.exceptions import TOMLKitError
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.distribution.models.content import Content
 from devkit_dist.features.distribution.models.errors import SelectionError
-from devkit_dist.features.distribution.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.distribution.models.settings import DEFAULT_PLAYBOOK_LIMIT as DEFAULT_PLAYBOOK_LIMIT
 from devkit_dist.features.distribution.models.settings import DEFAULT_PLAYBOOK_MAX_BYTES as DEFAULT_PLAYBOOK_MAX_BYTES
 from devkit_dist.features.distribution.models.settings import DEFAULT_PLAYBOOK_MIN_SCORE as DEFAULT_PLAYBOOK_MIN_SCORE
@@ -60,6 +59,7 @@ from devkit_dist.features.distribution.services.installation.config_template imp
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle, unusable_bundles
 from devkit_dist.features.distribution.services.installation.transaction import project_lock, replace_file
 from devkit_dist.features.distribution.services.subagents import parse_subagents
+from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.local_config import read_effective_config, validate_runtime_tables
 from devkit_dist.features.project.repositories.project import read_toml
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, RECEIPT_PATH, Receipt
@@ -174,7 +174,7 @@ def _load(root: Path) -> dict[str, Any] | None:
     unknown = set(data) - FIELDS
     if unknown:
         raise ConfigError(f"config: unknown fields: {sorted(unknown)}")
-    validate_runtime_tables(data, root / CONFIG_PATH)
+    validate_runtime_tables(data, CONFIG_PATH)
     validate_tool_tables(data.get("tool"))
     return data
 
@@ -267,10 +267,17 @@ def missing_selection_error(missing: list[str], deployed: list[str]) -> Selectio
     ``deployed`` names those selected only because the receipt records them deployed (no ``config.toml`` entry),
     for which a sync would otherwise delete committed files.
     """
+    configured = [name for name in missing if name not in deployed]
     return SelectionError(
-        f"selected bundle is not installed: {missing}"
-        + (f" (deployed per {RECEIPT_PATH}: {deployed})" if deployed else ""),
-        fix=f"Install the package that ships it (`uv sync`), or deselect it with `{AGENT_INVOCATION} remove <bundle>`",
+        f"selected bundle is not installed: {', '.join(missing)}"
+        + (
+            f" (deployed per {RECEIPT_PATH}{'' if deployed == missing else ': ' + ', '.join(deployed)})"
+            if deployed
+            else ""
+        ),
+        "To keep it instead, install the package that ships it, then run `uv sync`",
+        fix=devkit_command(f"remove {' '.join(missing)}"),
+        target_files=[*([CONFIG_PATH] if configured else []), *([RECEIPT_PATH] if deployed else [])],
     )
 
 
@@ -398,8 +405,18 @@ def parse_config(data: dict[str, Any] | None) -> ProjectConfig:
     )
 
 
-def resolve_selection(installed: list[InstalledBundle], requested: dict[str, list[str]]) -> dict[str, list[str]]:
-    """Resolve CLI selections; ``DEFAULT_PRESET``, or an empty preset list, means the bundle's ``default_preset``."""
+def resolve_selection(
+    installed: list[InstalledBundle],
+    requested: dict[str, list[str]],
+    *,
+    command: str = "add",
+    target: str = "SELECTIONS",
+) -> dict[str, list[str]]:
+    """Resolve CLI selections; ``DEFAULT_PRESET``, or an empty preset list, means the bundle's ``default_preset``.
+
+    ``command`` and ``target`` name the caller (``add`` and its ``SELECTIONS``, or ``sync --preset``): a
+    ``SELECTION_INVALID`` targets that argument and suggests one ``<command> <bundle>:<preset>`` per preset.
+    """
     bundles = {item.bundle.name: item.bundle for item in installed}
     result = {}
     for name, presets in requested.items():
@@ -410,16 +427,32 @@ def resolve_selection(installed: list[InstalledBundle], requested: dict[str, lis
                 raise unusable[name]
             raise SelectionError(
                 f"bundle is not installed: {name}",
-                fix=f"Install the content package that ships it, or run `{AGENT_INVOCATION} list`",
+                "Or install the content package that ships it, then run `uv sync`",
+                fix=devkit_command("list"),
+                target_files=[target],
             )
+
+        def choice(preset: str, name: str = name) -> str:
+            return devkit_command(f"{command} {name}:{preset}")
+
         if not presets or DEFAULT_PRESET in presets:
             default = bundle.default_preset
             if default is None:
-                raise SelectionError(
-                    f"{name}: the bundle declares no default preset",
-                    fix=f"Select one of: {', '.join(f'{name}:{p}' for p in bundle.preset_names)}",
+                raise bundle.preset_error(
+                    f"{name}: the bundle declares no default preset; name one of: {', '.join(bundle.preset_names)}",
+                    command=choice,
+                    fix=devkit_command("list"),
+                    target=target,
                 )
             presets = [default if preset == DEFAULT_PRESET else preset for preset in presets] or [default]
+        unknown = bundle.unknown_presets(presets)
+        if unknown:
+            raise bundle.preset_error(
+                f"{name}: unknown preset {unknown[0]}; available: {', '.join(bundle.preset_names)}",
+                command=choice,
+                fix=devkit_command("list"),
+                target=target,
+            )
         bundle.select(presets)
         result[name] = list(dict.fromkeys(presets))
     return result

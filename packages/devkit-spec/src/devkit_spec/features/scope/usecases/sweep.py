@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from devkit.advisory import AdvisoryError
 from devkit_core.base.usecase import BaseUseCase
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
 from devkit_spec.base.errors import ScopeStaleRevisionError
 from devkit_spec.features.scope.models.model import SweepResult, Verdict
@@ -33,6 +34,6 @@ class SweepScopesUseCase(BaseUseCase):
         if moved:
             error = ScopeStaleRevisionError(
                 f"{len(moved)} stale record(s) changed since they were read and were kept: {', '.join(moved)}",
-                fix="Run devkit spec scope sweep again and pass the revisions it reports to --apply --expect",
+                fix=f"Run {DEVKIT} spec scope sweep again and pass the revisions it reports to --apply --expect",
             )
         return SweptScopes(results, summary, notices, error)

@@ -37,7 +37,7 @@ def test_creates_a_bound_bundle(workspace: Path) -> None:
         "dir": f"specs/{MONTH}/{STAMP}-login-flow",
         "workflow": "sdd-spec-feature",
         "namespace": None,
-        "next_command": f"devkit workflow next --unit specs/{MONTH}/{STAMP}-login-flow",
+        "next_command": f"uv run devkit workflow next --unit specs/{MONTH}/{STAMP}-login-flow",
         "notices": [],
     }
     spec = _meta(target / "spec.md")
@@ -159,7 +159,7 @@ def test_cli(workspace: Path) -> None:
     assert result.exit_code == 0, result.output
     assert result.stdout.splitlines() == [
         "[SPEC: SPEC-demo path=specs/2026-09/20260902-demo workflow=sdd-spec-feature]",
-        "[NEXT_CMD: devkit workflow next --unit specs/2026-09/20260902-demo]",
+        "[NEXT_CMD: uv run devkit workflow next --unit specs/2026-09/20260902-demo]",
     ]
     assert _meta(workspace / "specs/2026-09/20260902-demo/spec.md")["created"].isoformat() == "2026-09-02"  # type: ignore[union-attr]
     result = CliRunner().invoke(

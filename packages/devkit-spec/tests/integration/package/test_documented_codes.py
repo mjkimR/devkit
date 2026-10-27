@@ -15,3 +15,12 @@ def test_every_code_is_documented() -> None:
     assert "SPEC_ID_UNRESOLVED" in codes  # the scan works
     documented = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "docs").rglob("*.md"))
     assert sorted(code for code in codes if f"`{code}`" not in documented) == []
+
+
+def test_the_agent_invocation_matches_devkit_dist() -> None:
+    """The package base repeats devkit_dist's agent-facing invocation (a base may not import a feature module)."""
+    from devkit_dist.features.project.models.invocation import AGENT_INVOCATION
+
+    from devkit_spec.base.errors import DEVKIT
+
+    assert DEVKIT == AGENT_INVOCATION

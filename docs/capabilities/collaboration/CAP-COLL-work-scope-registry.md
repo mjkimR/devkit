@@ -245,7 +245,7 @@ sentinel per line, warnings follow on stderr, and JSON is one object with the sa
 | `devkit spec scope query [--spec <dir>]` | Lists the namespace's records and this worktree's overlaps with the others (every pair when this worktree registered nothing, or its record is gone or may be unreadable). `--spec` compares that bundle's declared scope with every record not owned here, for a task about to start. |
 | `devkit spec scope query --history [--task <id>] [--limit <1-100>] [--cursor <cursor>]` | Prints the most recent 50 matching events in journal order by default. `--task` keeps events whose task ID or slug matches before paging; `--cursor` continues to older events using `next_cursor`. |
 | `devkit spec scope update --spec <dir> [--request-id <id>]` | Recollects the declared and observed scope, writes it, prints the overlaps and the ACK. |
-| `devkit spec scope release [--task-id <id>]` | Removes this worktree's record and token. With `--task-id`, a token is required and must own that record. A token whose record is already gone is removed, unless an unreadable record file may hold that record. |
+| `devkit spec scope release [--task-id <id>]` | Removes this worktree's record and token. Without a token it succeeds and changes nothing, with or without `--task-id`; with `--task-id`, the token must own that record. A token whose record is already gone is removed, unless an unreadable record file may hold that record. |
 | `devkit spec scope sweep [--apply] [--expect <task>=<rev>]...` | Reports stale, unverifiable and unreadable records; `--apply` removes stale ones whose revision is unchanged (without `--expect`, the revisions this command read first). |
 
 History cursors are bound to the namespace, task filter and preceding journal content. New appended events do not shift older pages. Invalid or stale cursors fail with `ARGUMENT_INVALID`; restart without a cursor. `next_cursor` is null after the oldest page. Journal-line warnings remain visible for every page.
@@ -263,19 +263,27 @@ Argument errors (`ARGUMENT_INVALID`): `register`/`update` without `--spec`, `com
 [DIFF: docs/capabilities/x/CAP-X-c.md set=SPEC-a in=target-docs]                        # compare
 [UNRESOLVED: docs/capabilities/x/CAP-X-new.md set=SPEC-a reason=planned-doc]            # compare
 [SUMMARY: sets=2 pairs=1 overlapping=1]                                                  # compare
-[SCOPE: SPEC-a namespace=3f2a... revision=1 scopes=6 unresolved=2 shared_path=/repo/.git/devkit-spec-scope token=...]  # register
-[RECORD: SPEC-b revision=3 worktree=/repo-wt-b host=h spec=specs/... scopes=7 unresolved=1 shared_worktree=no own=no]  # query
+[SCOPE: SPEC-a namespace=3f2a... revision=1 scopes=6 unresolved=2 shared_path=.git/devkit-spec-scope token=...]  # register
+[RECORD: SPEC-b revision=3 worktree=../repo-wt-b host=h spec=specs/... scopes=7 unresolved=1 shared_worktree=no own=no]  # query
 [SUMMARY: namespace=3f2a... records=2 pairs=1 overlapping=1 problems=0]                  # query
 [EVENT: update at=2026-10-13T08:00:00.000000Z task=SPEC-a slug=a revision=2 request_id=... status=applied added=1 removed=0 overlaps=1 unresolved=2 ...]
-[PAGE: limit=50 total=4 next_cursor=-]                                                # query --history
+[PAGE: total=4 limit=50 count=4 next=-]                                              # query --history
 [SUMMARY: namespace=3f2a... events=4 problems=0]
 [SCOPE_ACK: status=applied revision=2 added=1 removed=0 overlaps=1 unresolved=2 request_id=...]  # update
-[SCOPE: SPEC-a released=yes registered=yes already=no revision=2]                        # release
+[SCOPE_RELEASE: SPEC-a released=yes registered=yes already=no revision=2]                # release
 [SWEEP: SPEC-b verdict=stale reason=worktree-missing revision=3]                         # sweep
 [SUMMARY: namespace=3f2a... active=1 stale=1 unverifiable=0 error=0 removed=0]           # sweep
 ```
 
-- `[PAIR]` lines are followed by their `[EVIDENCE]` lines; `[DIFF]` carries `in=target-docs|reconcile`.
+- `[PAIR]` lines are followed by their `[EVIDENCE: <path> ...]` lines (the path positional everywhere, `collect`
+  too); `[DIFF]` carries `in=target-docs|reconcile`.
+- Paths are relative to the workspace root: `shared_path=`, `[RECORD]`/`[EVENT]` `worktree=` (`.` is this checkout)
+  and the `[TARGET]` of registry advisories.
+- `query --history` pages like `spec list`: `[PAGE: total= limit= count= next=<cursor>]`, then `[NEXT_CMD: ...]`
+  repeating the command with `--cursor <next>` when older events follow.
+- `query --spec` never pairs the bundle with a record of the same bundle or task.
+- `[SCOPE: <task> ...]` is only a registration; `release` prints `[SCOPE_RELEASE: ...]` and `spec worker inspect`
+  `[SCOPE_ENTRY: <path> ...]`.
 - Explicit `register` and successful creation registration may print the owner token once; collection and `query`
   never expose an owner token or its hash.
 - `overlaps` in the ACK is the number of other records this task overlaps. An update that does not apply prints its
@@ -285,7 +293,8 @@ Argument errors (`ARGUMENT_INVALID`): `register`/`update` without `--spec`, `com
 - `sweep` verdicts are `active`, `stale`, `unverifiable`, `error` and `removed`. `sweep --apply` that kept a record
   because its revision moved prints its verdicts, then `SPEC_SCOPE_STALE_REVISION`.
 
-JSON shapes: `compare` `{sets, pairs, summary}`; `register` `{record, token, namespace, shared_path, notices}`;
+JSON shapes: `compare` `{sets, pairs, summary}`; `register` `{task, namespace, revision, spec, scopes, unresolved,
+shared_path, token, notices}` (no record internals or timestamps; `query` shows the record);
 `query` `{own, records, pairs, summary, notices}`; `query --history` `{events, summary, pagination: {limit, total, next_cursor}, notices}`; `update`
 `{ack, pairs, notices[, errors]}`; `release` `{task, released, registered, already, revision, notices}`; `sweep`
 `{results, summary, notices[, errors]}`.
@@ -324,8 +333,8 @@ A malformed table is `SPEC_CONFIG_INVALID` (`CAP-DLV-project-policy`).
 | --- | --- | --- | --- |
 | `SPEC_SCOPE_NOT_A_WORKTREE` | `ERROR` (`INPUT_ERROR`) | `ScopeNotAWorktreeError` | The workspace is not inside a Git work tree. |
 | `SPEC_SCOPE_SPEC_NOT_FOUND` | `ERROR` (`INPUT_ERROR`) | `ScopeSpecNotFoundError` | `--spec` names no directory. |
-| `SPEC_SCOPE_INPUT_INVALID` | `ERROR` (`MAINTENANCE`) | `ScopeInputInvalidError` | `tasks.md`, `reconcile.md` or `target-docs.md` cannot be read, or its `targets` is not a list of mappings with a string `file`. |
-| `SPEC_SCOPE_TOKEN_MISSING` | `ERROR` (`INPUT_ERROR`) | `ScopeTokenMissingError` | This worktree registered nothing (update, release `--task-id`). |
+| `SPEC_SCOPE_INPUT_INVALID` | `ERROR` (`INPUT_ERROR`) | `ScopeInputInvalidError` | `tasks.md`, `reconcile.md` or `target-docs.md` cannot be read, or its `targets` is not a list of mappings with a string `file`. |
+| `SPEC_SCOPE_TOKEN_MISSING` | `ERROR` (`INPUT_ERROR`) | `ScopeTokenMissingError` | This worktree registered nothing (update). `release`, with or without `--task-id`, succeeds and changes nothing there. |
 | `SPEC_SCOPE_TOKEN_EXISTS` | `ERROR` (`INPUT_ERROR`) | `ScopeTokenExistsError` | This worktree already registered a task, or a concurrent registration in it saved its token first. |
 | `SPEC_SCOPE_TASK_EXISTS` | `ERROR` (`INPUT_ERROR`) | `ScopeTaskExistsError` | Another record has the task ID. |
 | `SPEC_SCOPE_RECORD_MISSING` | `ERROR` (`INPUT_ERROR`) | `ScopeRecordMissingError` | The token's record was released or swept, and no unreadable record file may hold it (`update`); `release` removes the orphaned token. |
@@ -342,7 +351,7 @@ A malformed table is `SPEC_CONFIG_INVALID` (`CAP-DLV-project-policy`).
 | `SPEC_SCOPE_JOURNAL_UNAVAILABLE` | `WARNING` | `ScopeJournalWarning` | The journal could not be written. |
 | `SPEC_SCOPE_JOURNAL_LINE_INVALID` | `WARNING` | `ScopeJournalLineWarning` | `query --history` skipped lines that are not JSON events. |
 | `SPEC_SCOPE_COLLECTION_PARTIAL` | `WARNING` | `ScopeCollectionPartialWarning` | Some requested source, input or comparison coverage is missing. |
-| `SPEC_SCOPE_COLLECTION_FAILED` | `ERROR` | `ScopeCollectionFailedError` | No selected inventory source can be read, or report metadata cannot fit the bounded result. |
+| `SPEC_SCOPE_COLLECTION_FAILED` | `ERROR` (`INPUT_ERROR`; `MAINTENANCE` for the report limit) | `ScopeCollectionFailedError` | No selected inventory source can be read (`[TARGET]` names the failed sources, `[DETAIL]` each reason), or report metadata cannot fit the bounded result. |
 | `SPEC_POST_FINISH_CLEANUP` | `NOTICE` | `PostFinishCleanupNotice` | `ScopedCleanup.integration_run` removed an empty proposal directory or a finished worktree's scope record during approval-bound local integration. |
 
 devkit's own errors pass through: `ARGUMENT_INVALID` (4.4), `GIT_FAILED`, `SPEC_PROPOSAL_NOT_FOUND` (compare),
@@ -410,8 +419,12 @@ ambiguous identity, inaccessible/unstable sources and exhausted budgets produce 
 Usable results exit 0, warning-bearing results exit 1 only under `--strict`, and inability to read any inventory
 source raises `SPEC_SCOPE_COLLECTION_FAILED` with exit 2. Invalid arguments remain `ARGUMENT_INVALID`.
 
-Text renders `[SCOPE_CANDIDATE: ...]`, `[SCOPE_OBSERVATION: ...]`, `[PAIR: ...]`, `[EVIDENCE: ...]` and a `[SUMMARY: ...
-coverage=complete|partial comparisons_complete=yes|no]`. It emits no worker ACK. The CLI uses the existing advisory
+Text renders `[SCOPE_CANDIDATE: source= activity= reason=]`, `[SCOPE_OBSERVATION: id= task=<id>|- unit=<dir>|-
+source= sha= missing=]`, `[PAIR: ...]`, `[EVIDENCE: <path> ...]` and a `[SUMMARY: ...
+coverage=complete|partial comparisons_complete=yes|no]`. A worktree source is named `worktree:<path relative to the
+workspace>` (`worktree:.` is this checkout). The base checkout (the main worktree off any activity branch) is an
+inactive `base-checkout` candidate, never a coverage gap, dirty or not. `SPEC_SCOPE_COLLECTION_PARTIAL` lists each
+source and reason once in `[DETAIL]`, the sources in `[TARGET]`. It emits no worker ACK. The CLI uses the existing advisory
 boundary for errors, notices and strict behavior.
 
 Total `--timeout` defaults to 30 seconds and `--source-timeout` to 5 seconds, each an integer 1–300. A source receives

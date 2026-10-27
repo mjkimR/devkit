@@ -32,7 +32,7 @@ below; start nothing else until the user approves.
 | State | Recommend |
 | :--- | :--- |
 | Unit with a `[STAGE]` | Its `[NEXT_SKILL]`. In a multi-skill stage, `spec-specify`, `spec-plan` or `spec-tasks` for the first of `spec.md`, `plan.md`, `tasks.md` an unmet check names. `[NEXT_SKILL: -]`: implement the next unchecked task within its `_Boundary:` and run its tests |
-| Proposal `accepted`, `[STAGE: - complete=true]` | `devkit worktree start dev-<slug>` (or `--no-worktree`, `--existing-branch`), `devkit spec proposal handoff <slug>` there, then in the same change the [post-handoff link check](references/post-handoff.md) |
+| Proposal `accepted`, `[STAGE: - complete=yes]` | `devkit worktree start dev-<slug>` (or `--no-worktree`, `--existing-branch`), `devkit spec proposal handoff <slug>` there, then in the same change the [post-handoff link check](references/post-handoff.md) |
 | Proposal `draft` or `reviewing` | For a queued draft, [next-work selection](references/next-work.md); otherwise review the hypothesis, add research to `materials/`, draft a PADR (`devkit spec proposal padr <slug> <title>`) or delegate a spike to `scout`/`challenger` (`spec-delegate`) |
 | Proposal `rejected` | The cleanup the `SPEC_PROPOSAL_REJECTED_PENDING` `[FIX]` names; never back to `reviewing` |
 | Nothing in progress | [next-work selection](references/next-work.md) |

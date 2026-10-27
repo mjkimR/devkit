@@ -24,7 +24,6 @@ from devkit_dist.features.distribution.models.errors import (
     RecoveryError,
     UnsafeWorkspaceError,
 )
-from devkit_dist.features.distribution.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.distribution.services.installation.workspace import (
     JOURNAL,
     LOCK,
@@ -34,6 +33,7 @@ from devkit_dist.features.distribution.services.installation.workspace import (
     project_path,
     snapshot,
 )
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.project.repositories.invocation import guard_execution
 
 logger = get_logger(__name__)

@@ -116,7 +116,7 @@ def test_b1_gate_approval_does_not_carry_across_a_handoff(tmp_path: Path) -> Non
     (root / UNIT / "done.txt").write_text("x")
     assert "[REQUEST: id=gate:integration" in _next(root).output
     _answer(root, "gate:integration", "--action", "accept")
-    assert "[STAGE: - complete=true]" in _next(root).output
+    assert "[STAGE: - complete=yes]" in _next(root).output
     handed = _run("handoff", "-w", str(root), "--unit", UNIT, "--no-lint")
     assert handed.exit_code == 0, handed.stderr
     (root / UNIT / "shipped.txt").write_text("x")
@@ -131,7 +131,7 @@ def test_b1_return_loop_requires_the_gate_again(tmp_path: Path) -> None:
     (unit / "tasks.md").write_text("- [x] a\n")
     (unit / "ready.txt").write_text("x")
     _answer(root, "gate:integration", "--action", "accept")
-    assert "[STAGE: - complete=true]" in _next(root).output
+    assert "[STAGE: - complete=yes]" in _next(root).output
 
     # The unit goes back to build: `next` reports the integration approval as stale but writes nothing.
     (unit / "tasks.md").write_text("- [ ] a\n")
@@ -149,7 +149,7 @@ def test_b1_return_loop_requires_the_gate_again(tmp_path: Path) -> None:
 
     # Until an explicit return, the stale approval still counts: redoing build completes the unit again.
     (unit / "tasks.md").write_text("- [x] a\n")
-    assert "[STAGE: - complete=true]" in _next(root).output
+    assert "[STAGE: - complete=yes]" in _next(root).output
 
     # After `devkit workflow return`, the approval no longer counts and must be given again.
     (unit / "tasks.md").write_text("- [ ] a\n")
@@ -326,7 +326,7 @@ def test_b9_json_output_is_a_single_document_when_lint_fails(tmp_path: Path, mon
     [error] = json.loads(result.stdout)["errors"]
     assert (error["code"], error["message"]) == ("UNEXPECTED_ERROR", "RuntimeError: rule exploded")
     text = _run("next", "-w", str(root), "--unit", UNIT)
-    assert '[LINT_ERROR: "RuntimeError: rule exploded"]' in text.stdout
+    assert "rule exploded" not in text.stdout and "lint failed: UNEXPECTED_ERROR" in text.stdout
     assert text.exit_code == 2 and "(UNEXPECTED_ERROR) RuntimeError: rule exploded" in text.stderr
 
 

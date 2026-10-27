@@ -560,8 +560,10 @@ def test_write_receipts_omit_large_body_but_exact_reads_retain_it(repository, ou
         input=request.content,
     )
     assert put.exit_code == 0, put.output
-    payload = put.output.strip()
-    receipt = json.loads(payload if output_format == "json" else payload.removeprefix("[SHARED_RESULT: ")[:-1])
+    if output_format == "text":
+        assert put.output.startswith("[SHARED_ARTIFACT: shared://") and len(put.output.encode()) < 4096
+        return
+    receipt = json.loads(put.output)
     assert "content" not in receipt
     assert receipt["metadata"]["byte_count"] == 1024 * 1024
     assert receipt["metadata"]["content_sha256"] == request.content_sha256
@@ -581,7 +583,98 @@ def test_write_receipts_omit_large_body_but_exact_reads_retain_it(repository, ou
     assert read == {**receipt, "content": request.content}
     fetched = CliRunner().invoke(cli, ["get", receipt["artifact_uri"], *arguments])
     assert fetched.exit_code == 0, fetched.output
-    payload = fetched.output.strip()
-    fetched_value = json.loads(payload if output_format == "json" else payload.removeprefix("[SHARED_RESULT: ")[:-1])
-    assert fetched_value == read
+    assert json.loads(fetched.output) == read
     assert adapter(repository).get(receipt["artifact_uri"]).content == request.content
+
+
+def _put(repository, request_data, *extra):
+    return CliRunner().invoke(
+        cli,
+        [
+            "put",
+            "--kind",
+            request_data.kind,
+            "--slug",
+            request_data.slug,
+            "--source-sha",
+            request_data.source_sha,
+            "--language",
+            request_data.language,
+            "-w",
+            str(repository),
+            *extra,
+        ],
+        input=request_data.content,
+    )
+
+
+def test_text_output_prints_one_sentinel_per_artifact_and_content_as_written(repository, request_data):
+    put = _put(repository, request_data)
+    assert put.exit_code == 0, put.output
+    line = put.stdout.strip()
+    assert line.startswith("[SHARED_ARTIFACT: shared://") and "{" not in line and str(repository) not in line
+    uri = line.split()[1]
+    assert f"kind={request_data.kind} slug={request_data.slug} source_sha={request_data.source_sha} language=en" in line
+    got = CliRunner().invoke(cli, ["get", uri, "-w", str(repository)])
+    assert got.exit_code == 0, got.output
+    assert got.stdout == line + "\n" + request_data.content
+    listed = CliRunner().invoke(cli, ["list", "--kind", "proposal-review", "--slug", "example", "-w", str(repository)])
+    assert listed.stdout.splitlines() == [line]
+    empty = CliRunner().invoke(cli, ["list", "--kind", "proposal-review", "--slug", "other", "-w", str(repository)])
+    assert empty.exit_code == 0 and empty.stdout.startswith("[OK: ")
+    swept = CliRunner().invoke(cli, ["sweep", "-w", str(repository)])
+    assert swept.exit_code == 0 and swept.stdout.startswith("[OK: ")
+
+
+def test_json_receipt_carries_each_fact_once(repository, request_data):
+    receipt = json.loads(_put(repository, request_data, "--format", "json").stdout)
+    assert "artifact_uri" not in receipt["metadata"] and "repository_namespace" not in receipt["metadata"]
+    assert "file_uri" not in receipt and receipt["repository_namespace"]
+
+
+def test_errors_target_the_flag_and_name_a_mode(repository, tmp_path):
+    from devkit.advisory import ActionMode
+    from devkit_dist.features.shared.models.errors import AccessError, WorkspaceError
+
+    limit = CliRunner().invoke(
+        cli,
+        ["list", "--kind", "proposal-review", "--slug", "x", "--limit", "0", "-w", str(repository), "--format", "json"],
+    )
+    advisory = json.loads(limit.stdout)["error"]["advisory"]
+    assert advisory["mode"] == "INPUT_ERROR" and advisory["target_files"] == ["--limit"]
+    cursor = CliRunner().invoke(
+        cli,
+        [
+            "list",
+            "--kind",
+            "proposal-review",
+            "--slug",
+            "x",
+            "--cursor",
+            "!",
+            "-w",
+            str(repository),
+            "--format",
+            "json",
+        ],
+    )
+    assert json.loads(cursor.stdout)["error"]["advisory"]["target_files"] == ["--cursor"]
+    kind = CliRunner().invoke(
+        cli, ["list", "--kind", "other", "--slug", "x", "-w", str(repository), "--format", "json"]
+    )
+    assert json.loads(kind.stdout)["error"]["advisory"]["target_files"] == ["--kind"]
+    assert WorkspaceError("x").mode is ActionMode.INPUT_ERROR
+    assert WorkspaceError("x").target_files == ("--workspace-root",)
+    assert MissingError("x").mode is ActionMode.INTERACTION
+    assert ExpiredError("x").mode is ActionMode.INTERACTION
+    assert AccessError("x").mode is ActionMode.INTERACTION
+    fixes = {cls("x").fix for cls in (SharedError, InputError, WorkspaceError, MissingError, AdapterError)}
+    assert not any(fix and fix.startswith("Inspect the artifact") for fix in fixes)
+
+
+def test_help_documents_every_command_and_option():
+    for command in ("put", "get", "list", "sweep"):
+        text = CliRunner().invoke(cli, [command, "--help"]).output
+        assert "-w, --workspace-root" in text
+        assert text.split("Options:")[0].count("\n") > 3  # a docstring
+    assert "1-100" in CliRunner().invoke(cli, ["list", "--help"]).output

@@ -54,7 +54,7 @@ class QueryScopeHistoryUseCase(BaseUseCase):
                 ScopeJournalLineWarning(
                     f"{len(problems)} journal line(s) are not JSON events and were skipped",
                     *(f"line {problem.line}: {problem.reason}" for problem in problems),
-                    target_files=[str(location.shared_path / location.namespace / JOURNAL_FILE)],
+                    target_files=[location.shown(location.shared_path / location.namespace / JOURNAL_FILE)],
                 )
             )
         return HistoryPage(

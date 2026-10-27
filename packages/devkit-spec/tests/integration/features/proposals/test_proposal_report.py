@@ -60,7 +60,7 @@ def test_cli_report_template_prints(repo):
 def test_accepted_base_and_wrong_branch(repo):
     root, sha = repo
     git(root, "branch", "-m", "main")
-    with pytest.raises(reports.ReportInvalidError):
+    with pytest.raises(reports.ReportWrongCheckoutError):
         reports.template(root, "example", sha)
     proposal = root / "docs/proposals/PROP-example/proposal.md"
     proposal.write_text(proposal.read_text().replace("status: reviewing", "status: accepted"))
@@ -80,7 +80,8 @@ def test_composed_handoff_advisories_are_emitted_once():
         "level": "WARNING",
         "advisory": {"actor": "USER", "retry": "SAFE"},
     }
-    assert len(_result_advisories({"notices": [advisory], "handoff": {"notices": [advisory]}})) == 1
+    errors, notices = _result_advisories({"notices": [advisory], "handoff": {"notices": [advisory]}})
+    assert errors == [] and len(notices) == 1
 
 
 @pytest.mark.parametrize("name", ["diagram.png", "한글.md"])
@@ -103,5 +104,33 @@ def test_source_still_refuses_a_non_regular_material(repo):
     (materials / "한글-link.md").symlink_to("../proposal.md")
     git(root, "add", ".")
     git(root, "commit", "-m", "link")
-    with pytest.raises(reports.ReportInvalidError, match="regular files"):
+    with pytest.raises(reports.ReportSourceInvalidError, match="regular file"):
         reports.source(root, "example", git(root, "rev-parse", "HEAD"))
+
+
+def test_report_refusals_have_their_own_codes_and_targets(repo):
+    root, _sha = repo
+    (root / "scratch.txt").write_text("uncommitted\n")
+
+    def error(*args: str) -> dict:
+        result = _cli(*args, "--workspace-root", str(root), "--format", "json")
+        assert result.exit_code == 2, result.output
+        return json.loads(result.stdout)["error"]
+
+    # The slug and SHA are checked before the checkout: a missing proposal is not reported as a dirty tree.
+    missing = error("nope")
+    assert missing["code"] == "SPEC_PROPOSAL_NOT_FOUND"
+    assert missing["advisory"]["target_files"] == ["docs/proposals/PROP-nope/proposal.md"]
+    short = error("example", "--source-sha", "deadbeef")
+    assert short["code"] == "SPEC_REPORT_ARGUMENT_INVALID" and short["advisory"]["target_files"] == ["--source-sha"]
+    assert error("Not_A_Slug")["code"] == "SPEC_REPORT_ARGUMENT_INVALID"
+    dirty = error("example")
+    assert dirty["code"] == "SPEC_REPORT_SOURCE_DIRTY" and dirty["advisory"]["target_files"] == ["scratch.txt"]
+    # The changes may be the user's: the user decides, the fix never tells the agent to commit them.
+    assert dirty["advisory"]["mode"] == "INTERACTION" and "commit" not in dirty["advisory"]["fix"].lower()
+    assert "uv run devkit spec proposal report example" in dirty["advisory"]["fix"]
+    (root / "scratch.txt").unlink()
+    git(root, "branch", "-m", "main")
+    other = error("example", "--source-sha", "0" * 40)
+    assert other["code"] == "SPEC_REPORT_SOURCE_NOT_HEAD"  # no leaked WORKTREE_NOT_FOUND
+    assert other["advisory"]["target_files"] == ["--source-sha"]

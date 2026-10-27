@@ -47,6 +47,10 @@ the file system is read-only for it, it reads without the lock (`CAP-DIST-sync-a
   the override tree must match its canonical receipt hash or validated personal render evidence. Missing or stale
   personal evidence is `CONFIG_LOCAL_RENDER_STALE`; other unsynchronized files are `NOT_SYNCHRONIZED`. Both direct
   the caller to sync. Bodies are never returned; see `CAP-DIST-sync-and-transactions`.
+- A bundle the receipt does not record is `SELECTION_INVALID` targeting `BUNDLE_NAME`, with the synchronized bundles
+  as `[DETAIL]`. Only on this error path are the installed packages discovered: the fix is `uv run devkit add
+  <bundle>` for an installed bundle with a default preset, else `uv run devkit list` (a typo, or a bundle whose preset
+  has to be named).
 - `documents`: always present, `[]` when the bundle declares no context document directory
   (`context_documents` in `bundle.toml`, `CAP-DIST-manifest-spec`) or the directory is absent
   (`ADR-bundle-context-lists-project-documents`). The declaration is read from the receipt-verified managed
@@ -189,7 +193,8 @@ Libraries return data without printing. The normative result fields are:
   bytes read including frontmatter. Overrides name their override path; other playbooks name
   the managed path. This identifies content, not package provenance or execution attestation.
 - `context`: `{bundle, argv, policy}` with the same bundle, argv
-  `["devkit", "get-context", "<bundle>"]` and policy `"once-per-agent-context"`.
+  `["uv", "run", "devkit", "get-context", "<bundle>"]` (the agent-facing invocation,
+  `ADR-keep-uv-run-as-the-agent-facing-devkit-invocation`) and policy `"once-per-agent-context"`.
 
 Run the context argv in the same resolved workspace (or pass its `-w`) before following the
 procedure unless already loaded in this agent context; reload after loss. Apply the full
@@ -214,8 +219,8 @@ partial results. Existing transaction, lock, unsafe-path and configuration advis
 
 | Condition | Code | Action |
 | --- | --- | --- |
-| Malformed selector | `ARGUMENT_INVALID` | Correct `<bundle>/<playbook>`; target `PLAYBOOK_ID` |
-| Absent synchronized bundle or playbook (unknown, wrong kind or unselected, and no effective header declares the alias) | `SELECTION_INVALID` | Inspect `devkit list` and explicit bundle/preset selection |
+| Malformed selector | `ARGUMENT_INVALID` | Correct `<bundle>/<playbook>`; target `PLAYBOOK_ID`; fix `uv run devkit list` |
+| Absent synchronized bundle or playbook (unknown, wrong kind or unselected, and no effective header declares the alias) | `SELECTION_INVALID` | Inspect `uv run devkit list` and explicit bundle/preset selection; target `PLAYBOOK_ID` |
 | Alias declared by more than one effective playbook header of the bundle | `PLAYBOOK_ALIAS_AMBIGUOUS` | Name the playbook by its exact asset ID, or keep the alias on one playbook; target the declaring playbooks |
 | No receipt, missing effective entrypoint or modified managed content | `NOT_SYNCHRONIZED` | `devkit sync` |
 | Stale/missing personal-render evidence, including unrelated assets | `CONFIG_LOCAL_RENDER_STALE` | `devkit sync` |

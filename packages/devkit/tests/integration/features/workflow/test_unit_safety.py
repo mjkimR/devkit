@@ -139,7 +139,8 @@ def test_every_unit_command_resolves_an_ambiguous_unit_with_anchor(ambiguous: Pa
     base = [command[0], "-w", str(ambiguous), "--unit", "docs/proposals/dup", *command[1:]]
     refused = _run(*base)
     assert refused.exit_code == 2 and "(ANCHOR_AMBIGUOUS)" in refused.stderr
-    assert "[FIX]    Pass --anchor <file> with one of spec.md, proposal.md" in refused.stderr
+    for anchor in ("spec.md", "proposal.md"):
+        assert f"[DETAIL] uv run devkit workflow {' '.join(base)} --anchor {anchor}" in refused.stderr
     resolved = _run(*base, "--anchor", "proposal.md")
     assert resolved.exit_code == 0, resolved.output + resolved.stderr
 
@@ -157,14 +158,14 @@ def test_handoff_resolves_an_ambiguous_unit_with_anchor(ambiguous: Path) -> None
     assert "(ANCHOR_AMBIGUOUS)" in _run(*base).stderr
     done = _run(*base, "--anchor", "proposal.md")
     assert done.exit_code == 0, done.stderr
-    assert done.output.startswith("[HANDOFF: from=incubate to=direct-delivery")
+    assert done.output.startswith("[HANDED_OFF: from=incubate to=direct-delivery")
 
 
 def test_anchor_must_be_a_present_candidate_and_agree_with_workflow(ambiguous: Path) -> None:
     unit = ["-w", str(ambiguous), "--unit", "docs/proposals/dup", "--no-lint"]
     unknown = _run("next", *unit, "--anchor", "other.md")
     assert unknown.exit_code == 2 and "(UNIT_NOT_FOUND)" in unknown.stderr
-    assert "Pass --anchor with one of: spec.md, proposal.md" in unknown.stderr
+    assert "Pass --anchor one of: spec.md, proposal.md" in unknown.stderr
     conflict = _run("next", *unit, "--workflow", "incubate", "--anchor", "spec.md")
     assert conflict.exit_code == 2 and "(ANCHOR_MISMATCH)" in conflict.stderr
     agreed = _run("next", *unit, "--workflow", "incubate", "--anchor", "proposal.md")
@@ -206,7 +207,7 @@ def test_anchor_mismatch_fix_names_a_command_every_caller_has(ambiguous: Path) -
     ):
         result = _run(*command, "-w", str(ambiguous), "--unit", "specs/x", "--no-lint")
         assert result.exit_code == 2 and "(ANCHOR_MISMATCH)" in result.stderr
-        assert "`uv run devkit workflow bind --unit specs/x --workflow <id>`" in result.stderr
+        assert "[DETAIL] uv run devkit workflow bind --unit specs/x --workflow direct-delivery" in result.stderr
     assert _run("bind", "-w", str(ambiguous), "--unit", "specs/x", "--workflow", "direct-delivery").exit_code == 0
 
 
@@ -316,7 +317,10 @@ def test_unbound_unit_without_default_names_bind(workspace: Path, command: tuple
     write_unit(workspace, ".devkit/transient/work/u")
     result = _run(command[0], "-w", str(workspace), "--unit", ".devkit/transient/work/u", *command[1:])
     assert result.exit_code == 2 and "(WORKFLOW_NOT_SELECTED)" in result.stderr
-    assert "`uv run devkit workflow bind --unit .devkit/transient/work/u --workflow <id>`" in result.stderr
+    assert (
+        "[FIX]    uv run devkit workflow bind --unit .devkit/transient/work/u --workflow direct-delivery"
+        in result.stderr
+    )
     bound = _run("bind", "-w", str(workspace), "--unit", ".devkit/transient/work/u", "--workflow", "direct-delivery")
     assert bound.exit_code == 0
 
@@ -324,7 +328,7 @@ def test_unbound_unit_without_default_names_bind(workspace: Path, command: tuple
 def test_new_without_default_names_workflow_option(workspace: Path) -> None:
     result = _run("new", "-w", str(workspace), "login")
     assert result.exit_code == 2 and "(WORKFLOW_NOT_SELECTED)" in result.stderr
-    assert "[FIX]    Pass --workflow <id>, or set [workflow].default" in result.stderr
+    assert "[FIX]    Pass --workflow with a workflow id `uv run devkit workflow validate` lists" in result.stderr
 
 
 # --- binding by definition path ---------------------------------------------------------------

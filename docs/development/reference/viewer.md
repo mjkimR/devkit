@@ -20,8 +20,10 @@ uv run devkit viewer --version
 
 ```text
 [VIEWER: url=http://127.0.0.1:8765/ repos=3]
-[VERSION: devkit-viewer 0.1.0]
 ```
+
+`serve` prints the `[VIEWER: ...]` line once it listens. `devkit viewer --version` prints
+`[VERSION: devkit-viewer 0.1.0]` on its own.
 
 | Code | Exit | When |
 | --- | --- | --- |

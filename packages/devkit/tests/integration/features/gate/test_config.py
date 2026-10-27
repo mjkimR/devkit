@@ -82,9 +82,9 @@ def test_missing_files_and_unset_enabled_keep_gate_default(tmp_path: Path) -> No
 @pytest.mark.parametrize(
     ("project", "local", "message"),
     [
-        ("[gates]\nverbose = true\n", "", "unknown fields: ['verbose']"),
+        ("[gates]\nverbose = true\n", "", "unknown fields: verbose"),
         ("[gates.settings.g]\nenabled = 'yes'\n", "", "expected true or false"),
-        ("", "[rules]\nx = 1\n", "unknown fields: ['rules']"),
+        ("", "[rules]\nx = 1\n", "unknown fields: rules"),
         ("[gates]\nsettings = 1\n", "", "gates.settings: expected a table"),
     ],
 )

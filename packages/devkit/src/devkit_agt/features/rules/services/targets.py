@@ -32,7 +32,11 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
         if not absolute.is_relative_to(workspace_root):
             absolute = absolute.resolve()
         if not absolute.is_relative_to(workspace_root):
-            raise TargetError(f"{target} is outside the workspace {workspace_root}", target_files=[str(target)])
+            raise TargetError(
+                f"{target} is outside the workspace {workspace_root}",
+                target_files=[str(target)],
+                fix=f"Drop the argument {target}: rules check only files inside {workspace_root}",
+            )
         if any(
             absolute.is_relative_to(directory) or absolute.resolve().is_relative_to(directory) for directory in pinned
         ):
@@ -45,6 +49,7 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
             raise TargetError(
                 f"{target} is a symlink that resolves outside the workspace {workspace_root}",
                 target_files=[str(target)],
+                fix=f"Drop the argument {target}: rules check only files inside {workspace_root}",
             )
         if absolute.is_dir():
             for found in cache.find_files(absolute, extensions=None):
@@ -59,6 +64,8 @@ def expand_targets(workspace_root: Path, cache: WorkspaceCache, targets: Sequenc
                 files.append(relative)
         else:
             raise TargetError(
-                f"{target} is not an existing file or directory inside the workspace", target_files=[str(target)]
+                f"{target} is not an existing file or directory inside the workspace",
+                target_files=[str(target)],
+                fix=f"Correct the path {target}, or drop it",
             )
     return files

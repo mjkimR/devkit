@@ -78,7 +78,7 @@ def select(namespaces: Sequence[Namespace], root: Path, cwd: Path, name: str | N
         raise ArgumentError(
             "--namespace and --all-namespaces cannot be combined",
             target_files=["--namespace", "--all-namespaces"],
-            fix="Pass one of --namespace NAME and --all-namespaces",
+            fix="Pass either --namespace or --all-namespaces, not both",
         )
     if name is not None:
         require(namespaces, name)

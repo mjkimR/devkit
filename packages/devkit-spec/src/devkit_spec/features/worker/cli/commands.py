@@ -8,11 +8,21 @@ from typing import Any
 import click
 from devkit.advisory import Actor, AdvisoryError, Level, Retry
 from devkit_core.base.errors import ArgumentError
-from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, echo_notices, is_json
+from devkit_dist.adapters.cli import (
+    FORMAT_OPTION,
+    boundary,
+    echo_json,
+    echo_notices,
+    exit_on_warnings,
+    is_json,
+    resolve_root,
+    workspace_option,
+)
 
-from devkit_spec.features.worker.usecases.inspect import CheckNotRun, InspectWorkerUseCase
+from devkit_spec.base.errors import WorkerCheckNotRunNotice
+from devkit_spec.features.worker.usecases.inspect import InspectWorkerUseCase
 from devkit_spec.features.worker.usecases.summary import summarize_inspection
-from devkit_spec.utils.output import sentinel
+from devkit_spec.utils.output import fields_line, sentinel
 
 
 @click.group(name="worker")
@@ -30,6 +40,7 @@ def worker_group() -> None:
 )
 @click.option("--base-checkout", default=None, help="Base checkout to observe; otherwise the registered base")
 @click.option("--details", is_flag=True, help="Include complete wrapped results and envelope history in JSON output")
+@workspace_option()
 @FORMAT_OPTION
 @boundary
 def inspect_cmd(
@@ -40,30 +51,39 @@ def inspect_cmd(
     scope_file: Path | None,
     base_checkout: str | None,
     details: bool,
+    workspace_root: str | None,
     output_format: str,
 ) -> None:
     """Collect range, scope, cleanliness, envelope, rules and workflow evidence. Never writes or repairs."""
     if scope and scope_file is not None:
-        raise ArgumentError("--scope and --scope-file are mutually exclusive", fix="Pass one complete scope input")
+        raise ArgumentError(
+            "--scope and --scope-file are mutually exclusive",
+            target_files=["--scope", "--scope-file"],
+            fix="Pass one complete scope input",
+        )
     entries = list(scope) if scope else None
     if scope_file is not None:
         try:
             entries = [line.strip() for line in scope_file.read_text(encoding="utf-8").splitlines() if line.strip()]
         except (OSError, UnicodeError) as exc:
             raise ArgumentError(
-                f"Cannot read scope file: {exc}", fix="Pass --scope-file with a readable UTF-8 file"
+                f"Cannot read scope file: {exc}",
+                target_files=["--scope-file"],
+                fix="Pass --scope-file with a readable UTF-8 file",
             ) from exc
+    root = resolve_root(workspace_root) if workspace_root is not None else Path.cwd()
     result = InspectWorkerUseCase().execute(
-        Path.cwd(), unit=unit, base=base, head=head, scope=entries, base_checkout=base_checkout, details=details
+        root, unit=unit, base=base, head=head, scope=entries, base_checkout=base_checkout, details=details
     )
     if is_json(output_format):
         echo_json(result if details else summarize_inspection(result))
     else:
-        click.echo(sentinel("WORKER_INSPECTION", result["exit_code"], base=result["base"], head=result["head"]))
+        verdict = "fail" if result["exit_code"] else "pass"
+        click.echo(fields_line("WORKER_INSPECTION", verdict=verdict, base=result["base"], head=result["head"]))
         for name, entry in result["inputs"].items():
             click.echo(sentinel("INPUT", name, **entry))
         for entry in result["scope"]:
-            click.echo(sentinel("SCOPE", entry["path"], **{k: v for k, v in entry.items() if k != "path"}))
+            click.echo(sentinel("SCOPE_ENTRY", entry["path"], **{k: v for k, v in entry.items() if k != "path"}))
         for path in result["changed_paths"]:
             flags = {"outside": path in result["outside_scope"]} if "outside_scope" in result else {}
             click.echo(sentinel("CHANGED", path, **flags))
@@ -82,7 +102,14 @@ def inspect_cmd(
                 if key not in rendered and f"({advisory.code})" not in stderr:
                     echo_notices([advisory])
                     rendered.add(key)
-    echo_notices(CheckNotRun(notice["message"]) for notice in result["notices"])
+    notices = [WorkerCheckNotRunNotice(notice["message"]) for notice in result["notices"]]
+    echo_notices(notices)
+    if not result["exit_code"]:
+        exit_on_warnings(notices)
+    elif not is_json(output_format):
+        # The failed checks end the output: one advisory per check, rendered after the notices.
+        for error in _advisories(result["errors"]):
+            click.echo(error.render(), err=True)
     raise click.exceptions.Exit(result["exit_code"])
 
 

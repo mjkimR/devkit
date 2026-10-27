@@ -104,7 +104,7 @@ def test_from_refusals_name_the_challenger_form(root: Path, source: str) -> None
     result = _envelope(root, "reverify", "--summary", "x", "--from", source, "--resolve", "all")
     assert result.exit_code == 2
     assert "ENVELOPE_FROM_INVALID" in result.stderr
-    assert "--from envelopes/challenger-NN.yaml" in result.stderr
+    assert "[DETAIL] --from envelopes/challenger-01.yaml" in result.stderr
     assert _names(root) == before
 
 
@@ -127,9 +127,10 @@ def test_a_reverify_names_a_review_or_challenger_round(root: Path) -> None:
     result = run_cli("envelope", "check", "-w", str(root), "--unit", SIMPLE_UNIT)
     assert result.exit_code == 1
     assert (
-        '[ENVELOPE_ERROR: envelopes/reverify-01.yaml "reverify needs `review: review-NN.yaml` or'
-        ' `review: challenger-NN.yaml` naming the round it closes"]' in result.stdout
+        "(ENVELOPE_INVALID) reverify needs `review: review-NN.yaml` or `review: challenger-NN.yaml` naming the round"
+        " it closes" in result.stderr
     )
+    assert f"[TARGET] {SIMPLE_UNIT}/envelopes/reverify-01.yaml" in result.stderr
     assert "[ENVELOPE: envelopes/reverify-02.yaml kind=reverify" in result.stdout
 
 
@@ -305,7 +306,7 @@ def test_a_reconcile_check_source_names_the_reconcile_route(root: Path) -> None:
     assert result.exit_code == 2
     assert "ENVELOPE_FROM_INVALID" in result.stderr
     assert "--kind reconcile-check" in result.stderr and "reconcile-reviewer" in result.stderr
-    assert "--from envelopes/challenger-NN.yaml" not in result.stderr
+    assert "--from envelopes/challenger-" not in result.stderr
     assert _names(root) == before
 
 

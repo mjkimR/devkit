@@ -17,6 +17,8 @@ from pathlib import Path
 from devkit.advisory import Actor, AdvisoryError, Level, Retry
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core.logs import get_logger
+from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
+from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_spec.base.errors import (
     ScopeAckFailedError,
@@ -30,6 +32,7 @@ from devkit_spec.base.errors import (
     ScopeTokenExistsError,
     ScopeTokenMissingError,
 )
+from devkit_spec.features.policy.repositories.branches import DEVELOPMENT_PREFIX, checkout
 from devkit_spec.features.policy.services.config import read_spec_config
 from devkit_spec.features.scope.models.deadline import JOURNAL_SECONDS, ROLLBACK_SECONDS, Deadline
 from devkit_spec.features.scope.models.model import (
@@ -174,9 +177,7 @@ class RegisterScopeUseCase(BaseUseCase):
         """
         location, registry, deadline = session.location, session.registry, session.deadline
         if location.token_path.exists():
-            raise ScopeTokenExistsError(
-                "this worktree already registered a task", target_files=[str(location.token_path)]
-            )
+            raise ScopeTokenExistsError("this worktree already registered a task")
         stamp = utc_now()
         base = head_revision(location.root, deadline)
         ref = base_ref(location, deadline)
@@ -276,8 +277,11 @@ def own(session: Session, *, cleanup: bool = True) -> Own:
     location = session.location
     token = load_token(location.token_path, cleanup=cleanup)
     if token is None:
+        fix, candidates = _register_guidance(location.root)
         raise ScopeTokenMissingError(
-            "this worktree holds no scope registry token", target_files=[str(location.token_path)]
+            "this worktree holds no scope registry token",
+            *candidates,
+            fix="A worktree that does not take part in the registry skips scope update; to take part, " + fix,
         )
     records, problems = session.registry.query(location.namespace, session.deadline)
     digest = token_hash(token)
@@ -286,12 +290,42 @@ def own(session: Session, *, cleanup: bool = True) -> Own:
         suspects = _suspects(session, problems, digest)
         if suspects:
             raise _unreadable(location, suspects, _OWN_UNREADABLE)
+        fix, candidates = _register_guidance(location.root)
         raise ScopeRecordMissingError(
             "the record of this worktree's token no longer exists (released or swept)",
-            target_files=[str(location.token_path)],
+            *candidates,
+            fix=f"Run `{DEVKIT} spec scope release` (it removes the orphaned token), then " + fix,
         )
     others = [record for record in records if record.token_hash != digest]
     return Own(token, mine[0], others, problems)
+
+
+def _register_guidance(root: Path) -> tuple[str, tuple[str, ...]]:
+    """The register step of a fix: the exact command for the one spec bundle of this ``dev-<slug>`` branch
+    (``specs/<YYYY-MM>/<YYYYMMDD>-<slug>``, the slug matched exactly), else where to find the bundle; with several
+    bundles of the slug they are the candidates in the details."""
+    found = checkout(root)
+    branch = found[1] if found is not None else ""
+    slug = branch.removeprefix(DEVELOPMENT_PREFIX) if branch.startswith(DEVELOPMENT_PREFIX) else ""
+    exact = re.compile(rf"\d{{8}}-{re.escape(slug)}")
+    bundles = sorted(
+        path.relative_to(root).as_posix()
+        for path in root.glob("specs/*/*")
+        if slug and path.is_dir() and exact.fullmatch(path.name)
+    )
+    if len(bundles) == 1:
+        return f"register with `{DEVKIT} spec scope register --spec {bundles[0]}`", ()
+    listing = devkit_command("spec list spec --history")
+    if bundles:
+        return (
+            f"register with `{DEVKIT} spec scope register --spec` and the bundle in [DETAIL] this worktree works on",
+            tuple(f"candidate: {path}" for path in bundles),
+        )
+    return (
+        f"register with `{DEVKIT} spec scope register --spec` and this worktree's spec bundle directory "
+        f"(`{listing}` lists the bundles)",
+        (),
+    )
 
 
 _OWN_UNREADABLE = (
@@ -322,9 +356,9 @@ def _unreadable(location: Location, problems: Sequence[Problem], message: str) -
         ),
         fix=(
             "Once the user decides, repair the record files in [TARGET] or delete those whose tasks are finished "
-            "(devkit spec scope sweep lists them with verdict=error), then rerun the same command"
+            f"({DEVKIT} spec scope sweep lists them with verdict=error), then rerun the same command"
         ),
-        target_files=[str(directory / problem.file) for problem in problems],
+        target_files=[location.shown(directory / problem.file) for problem in problems],
     )
 
 
@@ -478,9 +512,9 @@ class ReleaseScopeUseCase(BaseUseCase):
     def execute(self, session: Session, task_id: str | None = None, *, source: str = "") -> Released:
         """Remove this worktree's record with its token and delete the token; repeating is a no-op.
 
-        Without ``task_id`` and without a token nothing happens (``registered`` false); an incomplete token file (one
-        ``load_token`` takes for no token) is removed. With ``task_id`` the token must own that record
-        (``ScopeTokenMismatchError``), and a token is required (``ScopeTokenMissingError``). A token whose record is gone
+        Without a token nothing happens (``registered`` false), with or without ``task_id``; an incomplete token file
+        (one ``load_token`` takes for no token) is removed. With ``task_id`` the token must own that record
+        (``ScopeTokenMismatchError``). A token whose record is gone
         is removed (orphaned), unless an unreadable record file may hold that record. ``SPEC_SCOPE_RECORD_INVALID`` at
         ``ERROR`` (the token kept) is raised only when the record looked for may be unreadable: with ``task_id`` when
         that task's own record file cannot be read, without it when an unreadable file may hold this token's record.
@@ -488,10 +522,7 @@ class ReleaseScopeUseCase(BaseUseCase):
         location, registry, deadline = session.location, session.registry, session.deadline
         token = load_token(location.token_path)
         if token is None:
-            if task_id:
-                raise ScopeTokenMissingError(
-                    "this worktree holds no scope registry token", target_files=[str(location.token_path)]
-                )
+            # Nothing of this worktree is registered: there is nothing to release, with or without --task-id.
             if incomplete_token(location.token_path):
                 remove_token(location.token_path)  # a token nobody can present: an interrupted save
             return Released("", 0, registered=False, already=False)

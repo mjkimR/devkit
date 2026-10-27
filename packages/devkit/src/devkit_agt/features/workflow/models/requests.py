@@ -118,8 +118,8 @@ def stage_requests(
 
 
 def candidate_summary(checks: tuple[CheckResult, ...]) -> str:
-    """``name=true|false`` for each ``when`` check of a candidate."""
-    return " ".join(f"{k.name}={str(k.satisfied).lower()}" for k in checks)
+    """``name=yes|no`` for each ``when`` check of a candidate."""
+    return " ".join(f"{k.name}={'yes' if k.satisfied else 'no'}" for k in checks)
 
 
 def handoff_request(doc: WorkflowDocument, handoff: Handoff, declined: DeclinedLookup) -> Request:

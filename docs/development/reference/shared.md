@@ -4,14 +4,32 @@ Contract: `CAP-COLL-shared-artifacts`. API: `devkit_dist.features.shared` export
 SweepResult, RepositoryContext, SharedArtifactAdapter and adapter(workspace).
 
 ```sh
-printf '# Review\n' | devkit shared put --kind proposal-review --slug example --source-sha <full-commit-sha> --language en --format json
-devkit shared get <artifact-uri> --format json
-devkit shared list --kind proposal-review --slug example --format json
-devkit shared sweep --format json
-devkit shared sweep --apply --format json
+printf '# Review\n' | uv run devkit shared put --kind proposal-review --slug example --source-sha <full-commit-sha> --language en
+uv run devkit shared get <artifact-uri>
+uv run devkit shared list --kind proposal-review --slug example
+uv run devkit shared sweep
+uv run devkit shared sweep --apply
 ```
 
-All commands accept --workspace-root. Never infer report approval from artifact presence; compare source_sha and
+All commands accept `-w/--workspace-root` and `--format text|json`.
+
+## Output
+
+```text
+[SHARED_ARTIFACT: shared://<namespace>/<generation> kind=proposal-review slug=example source_sha=<sha> language=en expires_at=<UTC time>]
+```
+
+- `put` prints the sentinel of the published artifact; `list` one per live artifact; `get` the sentinel followed by
+  the content exactly as written.
+- `list` and `sweep` print `[NEXT_CURSOR: <cursor>]` when more entries remain; pass it to `--cursor`.
+- `sweep` prints `[SHARED_EXPIRED: <uri> removed=yes|no]` per expired artifact and `[SHARED_INVALID: <name>]` per
+  retained invalid file.
+- A result with no entries prints `[OK: ...]`.
+- JSON: `put` and `get` return `artifact_uri`, `metadata` (without the URI and namespace), `local_path` for the local
+  adapter, `adapter` and `repository_namespace`; `get` adds `content`. `list` returns `entries` and `cursor`;
+  `sweep` `entries`, `invalid`, `cursor` and `applied`.
+
+All commands require a Git checkout root with a retained main checkout. Never infer report approval from artifact presence; compare source_sha and
 language before consuming the exact URI. Cloud CLI's local store cannot share across hosts.
 
 ## Adapter authoring
@@ -32,14 +50,14 @@ DEVKIT_SHARED_ADAPTER. Unknown/malformed registrations fail explicitly without l
 
 ## Advisory codes
 
-| Code | Meaning | Action |
+| Code | Mode | Meaning |
 | --- | --- | --- |
-| `SHARED_INPUT_INVALID` | Invalid field, URI, cursor or content size/encoding | Correct the request |
-| `SHARED_WORKSPACE_UNAVAILABLE` | Retained main checkout identity unavailable | Restore the retained checkout |
-| `SHARED_EXCLUSION_CONFLICT` | Tracked or visible foreign storage would be hidden | Inspect all worktrees; preserve foreign content |
-| `SHARED_ADAPTER_UNAVAILABLE` | Unknown, duplicate or malformed adapter | Correct installation/configuration |
-| `SHARED_ARTIFACT_INVALID` | Corrupt envelope, unsafe path or missing stable lock | Inspect storage; preserve invalid evidence |
-| `SHARED_ARTIFACT_MISSING` | Exact generation absent | Regenerate the report |
-| `SHARED_ARTIFACT_EXPIRED` | Seven-day lifetime elapsed | Publish a fresh generation |
-| `SHARED_ACCESS_DENIED` | Local permission refusal | Inspect permissions without rerouting |
-| `SHARED_TIMEOUT` | Shared ten-second deadline elapsed | Retry the same bounded operation |
+| `SHARED_INPUT_INVALID` | `INPUT_ERROR` | Invalid field, URI, cursor, limit or content size/encoding; `[TARGET]` names the flag (`--kind`, `--slug`, `--source-sha`, `--language`, `--cursor`, `--limit`, `ARTIFACT_URI` or `stdin`) |
+| `SHARED_WORKSPACE_UNAVAILABLE` | `INPUT_ERROR` | Not a Git checkout root, or its retained main checkout is unavailable; `[TARGET]` `--workspace-root` |
+| `SHARED_EXCLUSION_CONFLICT` | `BLOCKED` | Tracked or visible foreign storage would be hidden; nothing was hidden |
+| `SHARED_ADAPTER_UNAVAILABLE` | `MAINTENANCE` | Unknown, duplicate or malformed adapter |
+| `SHARED_ARTIFACT_INVALID` | `MAINTENANCE` | Corrupt envelope, unsafe path or missing stable lock; invalid evidence is preserved |
+| `SHARED_ARTIFACT_MISSING` | `INTERACTION` | Exact generation absent; the report must be published again |
+| `SHARED_ARTIFACT_EXPIRED` | `INTERACTION` | Seven-day lifetime elapsed; the report must be published again |
+| `SHARED_ACCESS_DENIED` | `INTERACTION` | Local permission refusal; never reroute to another transport or root |
+| `SHARED_TIMEOUT` | `DEFER` | Shared ten-second deadline elapsed; retry the same bounded operation later |

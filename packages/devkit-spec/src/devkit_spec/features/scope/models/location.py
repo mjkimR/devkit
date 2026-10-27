@@ -1,5 +1,6 @@
 """A registry location and its owner token path."""
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -19,6 +20,10 @@ class Location:
     @property
     def token_path(self) -> Path:
         return self.git_dir / TOKEN_FILE
+
+    def shown(self, path: Path | str) -> str:
+        """``path`` as output names it: relative to the workspace root, so it is openable and not absolute."""
+        return os.path.relpath(path, self.root)
 
     @property
     def linked(self) -> bool:

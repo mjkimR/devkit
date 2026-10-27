@@ -9,7 +9,7 @@ from devkit_core.base.errors import ArgumentError
 from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, is_json, report_exit_code
 
 from devkit_agt.features.workflow.cli.app import ANCHOR, UNIT, WORKSPACE, cli, parse_date, workspace
-from devkit_agt.features.workflow.cli.render import quote, render_document
+from devkit_agt.features.workflow.cli.render import quote, render_document, value
 from devkit_agt.features.workflow.usecases.operations import BindUnitUseCase, DescribeWorkflowUseCase
 from devkit_agt.features.workflow.usecases.units import CreateUnitUseCase, ListUnitsUseCase
 
@@ -66,13 +66,13 @@ def show_cmd(
         raise ArgumentError(
             "pass exactly one of REF or --unit",
             target_files=["REF", "--unit"],
-            fix="Run `uv run devkit workflow show <id|path>` or `uv run devkit workflow show --unit <dir>`",
+            fix="Pass either a workflow id or definition path, or --unit with a unit directory, not both",
         )
     if anchor is not None and unit is None:
         raise ArgumentError(
             "--anchor applies only with --unit",
             target_files=["--anchor"],
-            fix="Drop --anchor, or run `uv run devkit workflow show --unit <dir> --anchor <file>`",
+            fix="Drop --anchor, or pass --unit with the unit directory instead of REF",
         )
     ws = workspace(workspace_root)
     description = DescribeWorkflowUseCase(ws).execute(ref, unit=unit, anchor=anchor)
@@ -105,14 +105,15 @@ def list_cmd(
     listing = ListUnitsUseCase().execute(ws, statuses=statuses, excluded=excluded)
     rows = listing.units
     if is_json(output_format):
-        echo_json({"units": [row.to_dict() for row in rows]})
+        errors = [row.error.to_dict() for row in rows if row.error is not None]
+        echo_json({"units": [row.to_dict() for row in rows], "errors": errors})
         return
     if not rows:
-        dirs = ", ".join(listing.directories)
-        click.echo(f"[UNITS: none under {dirs}]")
+        click.echo(f"[OK: no units dirs={value(','.join(listing.directories))}]")
         return
     for row in rows:
-        error = f" error={quote(row.error.message)}" if row.error is not None else ""
+        # The first line names the problem; the parser's full report is in JSON, and `next --unit` raises it.
+        error = f" error={quote(row.error.message.splitlines()[0])}" if row.error is not None else ""
         click.echo(
             f"[UNIT: {row.unit} status={row.status or '-'} workflow={row.binding.workflow or '-'} anchor={row.anchor}{error}]"
         )

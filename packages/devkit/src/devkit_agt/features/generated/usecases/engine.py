@@ -17,6 +17,7 @@ from __future__ import annotations
 import contextlib
 import hashlib
 import os
+import shlex
 import shutil
 import stat
 import tempfile
@@ -28,6 +29,7 @@ from devkit.advisory import AdvisoryError, Level
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import ArgumentError, GitError, run_git
 from devkit_dist.base.errors import ConfigError
+from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.project import require_git_toplevel
 
 from devkit_agt.features.compact import CommandRun, run_command
@@ -240,8 +242,9 @@ def _regenerate(checkout: Checkout, artifact: Artifact) -> tuple[str, ...]:
         raise CommandFailedError(
             f"{artifact.id}: {artifact.command} failed",
             *_failure_details(run),
-            fix=f"Fix what the command reports (the log has the full output), then rerun; "
-            f"the command is set in [artifacts.{artifact.id}] of .devkit/generated.toml",
+            target_files=[PROJECT_FILE],
+            fix=f"Correct what the command reports (the log has the full output) or the command of "
+            f"[artifacts.{artifact.id}] in {PROJECT_FILE}, then rerun",
         )
     after = snapshot(checkout.top)
     changed = sorted(path for path in before.keys() | after.keys() if before.get(path) != after.get(path))
@@ -252,9 +255,10 @@ def _regenerate(checkout: Checkout, artifact: Artifact) -> tuple[str, ...]:
         raise OutputUndeclaredError(
             f"{artifact.id}: {artifact.command} changed {len(undeclared)} file(s) outside its paths and updates;"
             " the changes are left in the work tree and nothing was staged",
-            *_listed(undeclared),
-            fix=f"Review the changes (git status); declare these files under paths or updates of "
-            f"[artifacts.{artifact.id}] in .devkit/generated.toml, or change the command so it writes only its files",
+            *([f"... and {len(undeclared) - LISTED} more"] if len(undeclared) > LISTED else []),
+            target_files=[PROJECT_FILE, *undeclared[:LISTED]],
+            fix=f"Declare these files under paths or updates of [artifacts.{artifact.id}] in {PROJECT_FILE},"
+            " or change the command so it writes only its files, then rerun",
         )
     return tuple(changed)
 
@@ -293,7 +297,7 @@ def _plan(
         raise ArgumentError(
             f"unknown or disabled generated artifacts: {', '.join(unknown)}",
             target_files=list(unknown),
-            fix=f"Pass ids that `devkit generated list` prints (registered: {known})",
+            fix=f"Pass ids that `{devkit_command('generated list')}` prints (registered: {known})",
         )
     return registry.closure(ids) if ids else registry.artifacts
 
@@ -330,10 +334,13 @@ class ResolveArtifacts(BaseUseCase):
                 if not artifact.inputs or (rel is not None and (artifact.may_read(rel) or artifact.may_write(rel))):
                     readers.setdefault(path, []).append(artifact.id)
         if readers:
+            paths = list(readers)[:LISTED]
             raise InputsConflictedError(
                 f"{len(readers)} conflict(s) no artifact owns may be read by the artifacts to regenerate; nothing was changed",
                 *_listed([f"{path}: read by {', '.join(ids)}" for path, ids in readers.items()]),
-                target_files=list(readers)[:LISTED],
+                target_files=paths,
+                fix=f"Resolve the conflicts in {', '.join(paths)} by hand, stage them with `git add -- "
+                f"{' '.join(shlex.quote(path) for path in paths)}`, then run `{devkit_command('generated resolve')}`",
             )
         files = tracked(checkout.top) if any(item.optional for item in plan) else set()
         runs = [
@@ -404,7 +411,10 @@ class RegenerateArtifacts(BaseUseCase):
         plan = _plan(load_registry(checkout.root), ids)
         conflicts = sorted(unmerged(checkout.top))
         if conflicts:
-            raise UnmergedError(f"{len(conflicts)} unmerged path(s); nothing ran", *_listed(conflicts))
+            extra = [f"... and {len(conflicts) - LISTED} more"] if len(conflicts) > LISTED else []
+            raise UnmergedError(
+                f"{len(conflicts)} unmerged path(s); nothing ran", *extra, target_files=conflicts[:LISTED]
+            )
         return RunResult(_run_all(checkout, plan))
 
 

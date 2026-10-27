@@ -87,7 +87,12 @@ def test_the_run_preset_left_the_bundle(tmp_path: Path, presets: list[str]) -> N
     with pytest.raises(SelectionError) as raised:
         sync_project(target, [InstalledBundle("devkit-dist", "0.1.0", load_bundle(_root()))])
     assert raised.value.code == "SELECTION_INVALID"
-    assert raised.value.fix == "Select one of: devkit:all, devkit:core"
+    assert raised.value.fix == "uv run devkit list"
+    assert raised.value.target_files == (".devkit/config.toml",)
+    assert raised.value.details == (
+        "uv run devkit sync --preset devkit:all",
+        "uv run devkit sync --preset devkit:core",
+    )
 
 
 def test_the_all_preset_deploys_no_run_guidance(tmp_path: Path) -> None:

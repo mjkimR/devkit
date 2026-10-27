@@ -8,7 +8,12 @@ from typing import Any
 from devkit_core.base.usecase import BaseUseCase
 
 from devkit_agt.features.workflow.models.decision_records import Decision
-from devkit_agt.features.workflow.models.errors import DecisionInvalidError, RequestUnknownError, ReturnInvalidError
+from devkit_agt.features.workflow.models.errors import (
+    DecisionInvalidError,
+    RequestUnknownError,
+    ReturnInvalidError,
+    workflow_command,
+)
 from devkit_agt.features.workflow.models.requests import Request
 from devkit_agt.features.workflow.repositories.unit.decisions import (
     ACTIONS,
@@ -30,11 +35,16 @@ def validate_answer(request: Request, action: str, values: Sequence[str]) -> Any
     or a value without accept.
     """
     if action not in ACTIONS:
-        raise DecisionInvalidError(f"--action {action!r} is not one of {'|'.join(ACTIONS)}")
+        raise DecisionInvalidError(
+            f"--action {action!r} is not one of {'|'.join(ACTIONS)}",
+            target_files=["--action"],
+            fix=f"Pass --action {' or '.join(ACTIONS)}",
+        )
     if action != "accept":
         if values:
             raise DecisionInvalidError(
                 "--value is only valid with --action accept",
+                target_files=["--value"],
                 fix="Drop --value, or use --action accept",
             )
         return None
@@ -42,26 +52,32 @@ def validate_answer(request: Request, action: str, values: Sequence[str]) -> Any
         if values:
             raise DecisionInvalidError(
                 "an approve request takes no --value",
-                fix="Pass --action accept or --action decline, optionally with --note",
+                target_files=["--value"],
+                fix="Drop --value; pass --action accept or --action decline, optionally with --note",
             )
         return None
     eligible = [o.id for o in request.options if o.eligible]
     if len(values) != 1:
         raise DecisionInvalidError(
             "a choose request takes exactly one --value",
-            fix=f"Choose one of: {', '.join(eligible) or 'none eligible'}",
+            target_files=["--value"],
+            fix=f"Pass one --value: {', '.join(eligible)}" if eligible else "No option is eligible; decline or cancel",
         )
     options = {o.id: o for o in request.options}
     option = options.get(values[0])
     if option is None:
         raise DecisionInvalidError(
             f"{values[0]!r} is not an option of {request.id}",
-            fix=f"Choose one of: {', '.join(options)}",
+            target_files=["--value"],
+            fix=f"Pass --value one of: {', '.join(options)}",
         )
     if not option.eligible:
         raise DecisionInvalidError(
             f"option {values[0]!r} is not eligible: {option.description or 'preconditions do not hold'}",
-            fix="Satisfy its preconditions first, or choose an eligible option",
+            target_files=["--value"],
+            fix=f"Pass --value an eligible option ({', '.join(eligible)})"
+            if eligible
+            else "No option is eligible; decline or cancel",
         )
     return values[0]
 
@@ -91,23 +107,32 @@ class RecordAnswerUseCase(BaseUseCase):
         (``DECISION_INVALID``) for every request.
         """
         ref = unit if isinstance(unit, UnitRef) else ws.resolve_unit(unit)
+        listing = workflow_command(f"next --view requests --unit {ref.rel}")
         if not is_request_id(request_id):
             raise RequestUnknownError(
-                f"--request {request_id!r} is not a request id",
-                fix="Use an id printed by `uv run devkit workflow next --view requests`, or feedback:<target>",
+                f"--request {request_id!r} is not a request id (an open request, or feedback:<target>)",
+                target_files=["--request"],
+                fix=listing,
             )
         stage = ""
         if request_id.startswith(FEEDBACK_PREFIX):
             if action not in ACTIONS:
-                raise DecisionInvalidError(f"--action {action!r} is not one of {'|'.join(ACTIONS)}")
+                raise DecisionInvalidError(
+                    f"--action {action!r} is not one of {'|'.join(ACTIONS)}",
+                    target_files=["--action"],
+                    fix=f"Pass --action {' or '.join(ACTIONS)}",
+                )
             if action == "accept":
                 if len(values) != 1 or not values[0].strip():
                     raise DecisionInvalidError(
                         "feedback requires exactly one --value with the text",
-                        fix="Pass --value <text>",
+                        target_files=["--value"],
+                        fix="Pass the feedback text as one non-empty --value",
                     )
             elif values:
-                raise DecisionInvalidError("--value is only valid with --action accept", fix="Drop --value")
+                raise DecisionInvalidError(
+                    "--value is only valid with --action accept", target_files=["--value"], fix="Drop --value"
+                )
             value: Any = values[0] if values else None
         else:
             result = ws.evaluate_unit(ref, given=given, lint=lint)
@@ -117,14 +142,17 @@ class RecordAnswerUseCase(BaseUseCase):
                 raise RequestUnknownError(
                     f"{request_id!r} is not an open request of {ref.rel}",
                     *([f"open: {rid}" for rid in open_requests] or ["open: none"]),
-                    fix="Run `uv run devkit workflow next --view requests --unit <dir>` and answer one of the listed ids",
+                    target_files=["--request"],
+                    fix=listing,
                 )
             if request.answer == "envelope":
                 source, _, question = request.target.name.partition("#")
                 raise DecisionInvalidError(
-                    f"{request_id} is a question; its answer is an answer envelope, not a decision record",
-                    fix=f"uv run devkit workflow envelope answer --unit {ref.rel} --answers-to {source}"
-                    f" --answers-file <file with `- question: {question}`, choice, decision>",
+                    f"{request_id} is a question; its answer is an answer envelope, not a decision record: pipe the"
+                    f" answers as a YAML list on stdin, each with question ({question}), choice (an option id or"
+                    " null) and decision (one sentence)",
+                    target_files=["--request"],
+                    fix=workflow_command(f"envelope answer --unit {ref.rel} --answers-to {source} --answers-file -"),
                 )
             value = validate_answer(request, action, values)
             stage = request.target.stage or ""
@@ -163,13 +191,15 @@ class ReturnToStageUseCase(BaseUseCase):
         if target < 0:
             raise ReturnInvalidError(
                 f"{stage!r} is not a stage of {ref.doc.id}",
-                fix=f"Use one of: {', '.join(s.id for s in ref.doc.stages)}",
+                target_files=["--to"],
+                fix=f"Pass --to one of: {', '.join(s.id for s in ref.doc.stages)}",
             )
         result = ws.evaluate_unit(ref, given=given, lint=lint)
         if result.stage is not None and target > ref.doc.stage_index(result.stage.id):
             raise ReturnInvalidError(
                 f"stage {stage!r} comes after the current stage {result.stage.id!r}",
-                fix=f"Return to {result.stage.id!r} or an earlier stage",
+                target_files=["--to"],
+                fix=f"Pass --to {result.stage.id} or an earlier stage",
             )
         return _record_return(ref, stage, note=note, by=by)
 

@@ -49,9 +49,13 @@ def test_single_bundle(bundles: Path) -> None:
     assert result.exit_code == 0, result.output
     assert result.stdout.splitlines() == [
         "[CANDIDATES: CAP-X-one path=docs/capabilities/x/CAP-X-one.md new=src/pkg missing=- folded=- declared=-]",
-        "[SKIPPED: N/A kind=boundary spec=SPEC-one task=1 reason=not-a-path]",
-        "[SUMMARY: pairs=1 new=1 declared=0 skipped=1 applied=0]",
+        # Skipped inputs are counted per reason by default; --skipped lists them.
+        "[SKIPPED_COUNT: not-a-path kind=boundary count=1]",
+        "[PAGE: total=1 offset=0 limit=20 count=1 next=-]",
+        "[SUMMARY: pairs=1 new=1 missing=0 folded=0 declared=0 skipped=1 applied=0]",
     ]
+    listed = _derive(bundles, "--spec", "specs/2026-10/20261001-one", "--skipped")
+    assert "[SKIPPED: N/A kind=boundary spec=SPEC-one task=1 reason=not-a-path]" in listed.stdout.splitlines()
     assert "entrypoints" not in (bundles / CAP).read_text()
     absolute = _derive(bundles, "--spec", str(bundles / "specs/2026-10/20261001-one"))
     assert absolute.stdout == result.stdout
@@ -80,7 +84,7 @@ def test_input_and_option_errors(bundles: Path, write: Write) -> None:
 
 
 def test_all_aggregates_and_skips_bundles(bundles: Path) -> None:
-    result = _derive(bundles, "--all")
+    result = _derive(bundles, "--all", "--skipped")
     assert result.exit_code == 0, result.output
     lines = result.stdout.splitlines()
     assert (
@@ -112,7 +116,7 @@ def test_apply_with_targets(bundles: Path) -> None:
     assert result.exit_code == 0, result.output
     lines = result.stdout.splitlines()
     assert f"[APPLIED: CAP-X-one path={CAP} added=src/other/,src/pkg/]" in lines
-    assert lines[-1] == "[SUMMARY: pairs=2 new=2 declared=0 skipped=2 applied=1]"
+    assert lines[-1] == "[SUMMARY: pairs=2 new=2 missing=0 folded=0 declared=0 skipped=2 applied=1]"
     assert (bundles / CAP).read_text() == (
         "---\nid: CAP-X-one\nstatus: active\nentrypoints:\n  - src/other/\n  - src/pkg/\n---\n"
     )
@@ -123,7 +127,7 @@ def test_apply_with_targets(bundles: Path) -> None:
 def test_code_and_exclude_filters(bundles: Path) -> None:
     result = _derive(bundles, "--all", "--code", "src/other")
     assert "new=src/other(1) " in result.stdout
-    result = _derive(bundles, "--all", "--exclude", "src/other/")
+    result = _derive(bundles, "--all", "--exclude", "src/other/", "--skipped")
     assert "[SKIPPED: src/other kind=boundary reason=excluded]" in result.stdout.splitlines()
     assert "src/pkg(2)" in result.stdout
     assert _code(_derive(bundles, "--all", "--code", "../x", "--format", "json")) == "SPEC_ENTRYPOINTS_PATH_INVALID"
@@ -168,13 +172,14 @@ def test_file_code_under_a_directory_candidate_is_applied(bundles: Path) -> None
     assert result.exit_code == 0, result.output
     assert result.stdout.splitlines() == [
         "[CANDIDATES: CAP-X-one path=docs/capabilities/x/CAP-X-one.md new=src/pkg/b.go missing=- folded=- declared=-]",
-        "[SKIPPED: N/A kind=boundary spec=SPEC-one task=1 reason=not-a-path]",
+        "[SKIPPED_COUNT: not-a-path kind=boundary count=1]",
         f"[APPLIED: CAP-X-one path={CAP} added=src/pkg/b.go]",
-        "[SUMMARY: pairs=1 new=1 declared=0 skipped=1 applied=1]",
+        "[PAGE: total=1 offset=0 limit=20 count=1 next=-]",
+        "[SUMMARY: pairs=1 new=1 missing=0 folded=0 declared=0 skipped=1 applied=1]",
     ]
     assert (bundles / CAP).read_text() == "---\nid: CAP-X-one\nstatus: active\nentrypoints:\n  - src/pkg/b.go\n---\n"
     rerun = _derive(bundles, *args)
-    assert rerun.stdout.splitlines()[-1] == "[SUMMARY: pairs=1 new=0 declared=1 skipped=1 applied=0]"
+    assert rerun.stdout.splitlines()[-1] == "[SUMMARY: pairs=1 new=0 missing=0 folded=0 declared=1 skipped=1 applied=0]"
     aggregated = _derive(bundles, "--all", "--code", "src/pkg/b.go", "--code", "src/other/c.go")
     assert "new=src/other/c.go(1) missing=- folded=- declared=src/pkg/b.go(2)]" in aggregated.stdout
 
@@ -285,3 +290,16 @@ def test_derive_directory_code_folds_and_applies(bundles: Path, write: Write) ->
 
     missing_res = _derive(bundles, "--spec", "specs/2026-10/20261010-files", "--code", "src/nonexistent/")
     assert missing_res.exit_code == 2
+
+
+def test_derive_pages_documents_and_counts_missing_apart(bundles: Path) -> None:
+    first = _derive(bundles, "--all", "--status", "completed,in-progress,draft", "--limit", "1")
+    assert first.exit_code == 0, first.output
+    lines = first.stdout.splitlines()
+    assert sum(line.startswith("[CANDIDATES:") for line in lines) == 1
+    page = next(line for line in lines if line.startswith("[PAGE:"))
+    assert page.startswith("[PAGE: total=2 offset=0 limit=1 count=1 next=1]"), lines
+    assert any(line.startswith("[NEXT_CMD: uv run devkit spec entrypoints derive --all") for line in lines)
+    data = json.loads(_derive(bundles, "--all", "--format", "json").stdout)
+    assert {"new", "missing", "folded"} <= set(data["summary"])
+    assert all(set(item) == {"kind", "reason", "count"} for item in data["skipped"])

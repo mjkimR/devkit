@@ -32,7 +32,7 @@ Two more record kinds are written by the engine itself rather than answering a r
 
 ## 3. Request
 
-`devkit workflow next` emits every open request of the unit, in text as one `[REQUEST: ...]` line each and in JSON as the `requests` array. `devkit workflow next --view requests --unit DIR` prints only that list.
+`devkit workflow next` emits every open request of the unit, in text as one `[REQUEST: ...]` line each and in JSON as the `requests` array. `devkit workflow next --view requests --unit DIR` prints only that list, or `[OK: no open requests]` when there is none.
 
 ```json
 {

@@ -24,7 +24,8 @@ class PresentationLanguageUnsupportedNotice(AdvisoryError):
     """A ``[presentation] language`` value other than ``auto``, ``en`` or ``ko`` resolved to ``en``; never raised.
 
     ``devkit sync``, ``devkit status`` and ``devkit config show`` return it under ``notices`` so the English
-    fallback is never silent.
+    fallback is never silent. ``language.source`` is the workspace-relative file, named once as the target and in
+    the fix.
     """
 
     code = "PRESENTATION_LANGUAGE_UNSUPPORTED"
@@ -37,8 +38,7 @@ class PresentationLanguageUnsupportedNotice(AdvisoryError):
     def of(cls, language: PresentationLanguage) -> "PresentationLanguageUnsupportedNotice":
         accepted = ", ".join(PRESENTATION_LANGUAGES)
         return cls(
-            f"{language.source}: presentation.language {language.requested!r} is unsupported; "
-            f"it resolves to {language.resolved!r}",
+            f"presentation.language {language.requested!r} is unsupported; it resolves to {language.resolved!r}",
             fix=f"Set [presentation] language in {language.source} to one of: {accepted}",
             target_files=[language.source],
         )

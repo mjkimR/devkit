@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shlex
 from dataclasses import asdict, dataclass, field
 from typing import Any, Protocol
 
 from devkit.advisory import AdvisoryError
+from devkit_dist.features.project.models.invocation import devkit_command
 
 from devkit_agt.features.worktree.models.lifecycle import FinishResult
 from devkit_agt.features.worktree.models.planning import FinishPlan
@@ -27,6 +29,31 @@ class Task:
     unit: str | None = None
     # Caller declarations are distinct from provider-verified evidence and are never approval authority.
     claims_json: str = "{}"
+
+
+def _task_arguments(branch: str, task: Task, route: str) -> str:
+    """The arguments that name ``branch``, ``task`` and ``route`` to ``devkit integration prepare|integrate``."""
+    parts = [branch, "--task-kind", task.kind, "--task-id", task.id]
+    if task.unit is not None:
+        parts += ["--unit", task.unit]
+    if route != "local":
+        parts += ["--route", route]
+    if task.claims_json != "{}":
+        parts += ["--claims", task.claims_json]
+    return " ".join(shlex.quote(part) for part in parts)
+
+
+def prepare_command(branch: str, task: Task, route: str, *, workspace: str | None = None) -> str:
+    """The exact ``prepare`` command that shows the scope of ``branch`` for ``task`` on ``route``."""
+    where = f" -w {shlex.quote(workspace)}" if workspace is not None else ""
+    return devkit_command(f"integration prepare {_task_arguments(branch, task, route)}{where}")
+
+
+def integrate_command(branch: str, task: Task, route: str, digest: str | None, *, workspace: str | None = None) -> str:
+    """The exact ``integrate`` command for the prepared scope whose digest is ``digest`` (none under ``auto``)."""
+    pinned = f" --expected-digest {digest}" if digest else ""
+    where = f" -w {shlex.quote(workspace)}" if workspace is not None else ""
+    return devkit_command(f"integration integrate {_task_arguments(branch, task, route)}{pinned}{where}")
 
 
 @dataclass(frozen=True)
@@ -167,8 +194,15 @@ class IntegrationRequest:
             "network_operations": "excluded" if self.route == "local" else "approved-pull-request",
             "route": self.route,
             "remote": self.repository.public_scope() if self.repository else None,
-            "pull_request": self.pr_number if self.pr_number else "create",
+            "pull_request": self._pull_request(),
+            "readiness": {"disclosure": self.readiness.disclosure},
         }
+
+    def _pull_request(self) -> int | str | None:
+        """The pull request the route lands through: its number, ``create`` before it exists, ``None`` on ``local``."""
+        if self.pr_number:
+            return self.pr_number
+        return "create" if self.route == "pull-request" else None
 
     def confirmation_message(self, language: str = "en") -> str:
         """Render owned copy; preserve exact evidence and business scope."""
@@ -185,7 +219,7 @@ class IntegrationRequest:
             "network_operations": "excluded" if self.route == "local" else "approved-pull-request",
             "route": self.route,
             "remote": self.repository.public_scope() if self.repository else None,
-            "pull_request": self.pr_number if self.pr_number else "create",
+            "pull_request": self._pull_request(),
         }
 
 

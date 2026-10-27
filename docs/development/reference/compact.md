@@ -45,7 +45,7 @@ Logs: `<tmp>/devkit-run-<uid>/<project hash>/` (both levels private to the user,
 | --- | --- | --- | --- |
 | `RUN_COMMAND_NOT_STARTED` | `ERROR` (`INPUT_ERROR`, exit `2`) | `CommandNotStartedError` | The command does not exist or is not executable, or the working directory does not exist (also when the shell's current directory was removed) or cannot be entered; `[TARGET]` names the command or the directory. |
 | `RUN_LOG_DIR_INVALID` | `ERROR` (`INTERACTION`, exit `2`) | `LogDirectoryError` | The per-user log directory or the project's directory in it is a symlink, not a directory, or belongs to another user, or the log cannot be created there (no permission, disk full). |
-| `RUN_SLOW_COMMAND` | `NOTICE` | `SlowCommandNotice` | The command ran at least `--slow-after` seconds. |
+| `RUN_SLOW_COMMAND` | `NOTICE` (brief, no `[ACTION]`) | `SlowCommandNotice` | The command ran at least `--slow-after` seconds. |
 | `ARGUMENT_INVALID` | `ERROR` (exit `2`) | `devkit_core.base.errors.ArgumentError` | `--slow-after` is negative or not finite. |
 
 ## Library
