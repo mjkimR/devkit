@@ -380,20 +380,34 @@ def test_a_bundle_root_record_is_not_kept_by_other_overrides(tmp_path: Path) -> 
     assert not record_overridden(tmp_path, "team", OverrideRecord("skill", "SKILL.md", "a" * 64, "b" * 64))
 
 
-def test_accept_under_block_succeeds_while_another_override_still_drifts(item: InstalledBundle, target: Path) -> None:
+def test_accept_under_block_only_rebaselines_while_another_override_still_drifts(
+    item: InstalledBundle, target: Path
+) -> None:
     sync_project(target, [item])
-    create_override(target, [item], "team:policy")
+    create_override(target, [item], "team:review")
     create_override(target, [item], "team:guide")
-    (item.bundle.root / "rules/helpers.py").write_text("HELP = 2\n")
+    (item.bundle.root / "skills/review/reference.md").write_text("reference v2\n")
+    (item.bundle.root / "skills/review/new.md").write_text("new upstream file v2\n")
     (item.bundle.root / "guide.md").write_text(instruction("guide", "Upstream v2.\n"))
     newer = reload(item)
     _set_override_drift(target, "block")
-    first = accept_override(target, [newer], "team:policy")
-    (drift,) = [notice for notice in first.notices if notice.code == "OVERRIDE_DRIFT"]
-    assert "team:guide" in drift.message and "team:policy" not in drift.message  # still reported, not refused
+    receipt_before = (target / RECEIPT_PATH).read_bytes()
+    first = accept_override(target, [newer], "team:guide")
+    (deferred,) = [notice for notice in first.notices if notice.code == "OVERRIDE_SYNC_DEFERRED"]
+    assert deferred.fix is not None and "uv run devkit override accept team:review" in deferred.fix
+    assert "team:review" in deferred.message and "sync --check" in (deferred.what_to_report or "")
+    # Nothing upstream of the still-drifted override was deployed beside its stale override files.
+    assert not (target / ".devkit/managed/team/skills/review/new.md").exists()
+    assert not (target / ".claude/skills/review/new.md").exists()
+    # Only the accepted override's baseline moved.
+    assert (target / RECEIPT_PATH).read_bytes() != receipt_before
+    assert [(entry.asset, entry.drift_detected) for entry in list_overrides(target, [newer])] == [
+        ("guide", False),
+        ("review", True),
+    ]
     with pytest.raises(OverrideDriftError):
         sync_project(target, [newer])  # a plain sync still refuses under block
-    second = accept_override(target, [newer], "team:guide")
-    assert "OVERRIDE_DRIFT" not in [notice.code for notice in second.notices]
-    assert [entry.drift_detected for entry in list_overrides(target, [newer])] == [False, False]
-    sync_project(target, [newer])
+    second = accept_override(target, [newer], "team:review")
+    assert [notice.code for notice in second.notices if notice.code.startswith("OVERRIDE")] == []
+    assert (target / ".claude/skills/review/new.md").read_text() == "new upstream file v2\n"
+    assert sync_project(target, [newer], dry_run=True).actions == []  # the last accept synchronized

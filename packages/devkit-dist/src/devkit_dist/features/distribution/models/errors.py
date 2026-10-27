@@ -253,6 +253,14 @@ class OverrideRetainedNotice(SyncNotice):
     what_to_report = "Overrides of the removed bundles stay in place; delete the directories to drop them"
 
 
+class OverrideSyncDeferredNotice(SyncNotice):
+    """``devkit override accept`` under ``override_drift = "block"`` recorded the new baseline only: other deployed
+    overrides still drift, and a sync now would deploy their upstream changes beside stale override files. The last
+    accept synchronizes; until then ``sync --check`` may report pending work."""
+
+    code = "OVERRIDE_SYNC_DEFERRED"
+
+
 class McpRegistrationPendingNotice(SyncNotice):
     """Selected hosts whose local MCP registration ``[mcp] register`` asks for but this checkout does not hold:
     ``devkit sync --locked`` restores assets only, so a fresh clone or worktree registers in a separate step."""

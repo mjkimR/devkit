@@ -1044,7 +1044,6 @@ def commit_locked(
     save_environment: bool = True,
     config_update: ConfigUpdate | None = None,
     captured_inputs: dict[str, bytes | None] | None = None,
-    refuse_drift: bool = True,
 ) -> Callable[[], SyncResult]:
     """Plan a sync and, unless ``dry_run``, commit it; the caller holds the project lock. Runs no post-sync extension.
 
@@ -1058,8 +1057,6 @@ def commit_locked(
     records them (``_restores_only``), without writing the receipt or a
     seeded file; otherwise it raises ``ReceiptStaleError`` before any write.
     A ``dry_run`` writes nothing, so the caller may hold the shared lock.
-    ``refuse_drift`` off keeps ``override_drift = "block"`` from refusing the sync; the drift is still reported as
-    the ``OVERRIDE_DRIFT`` warning (``devkit override accept``, which resolves drift one override at a time).
     """
     require_no_journal(root)
     captured = captured_inputs if captured_inputs is not None else local_render.inputs(root)
@@ -1079,7 +1076,7 @@ def commit_locked(
         root, installed, selection, previous_overrides, effective=True, environment=selected_environment
     )
     personal = local_render.personal_files(root, inventory, effective)
-    if config.override_drift == "block" and refuse_drift:
+    if config.override_drift == "block":
         _refuse_override_drift(inventory.drift)
     old_files = dict(previous.file_records) if previous else {}
     changes: Changes = {}

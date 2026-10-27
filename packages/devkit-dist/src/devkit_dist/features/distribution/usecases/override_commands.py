@@ -17,7 +17,12 @@ from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import ArgumentError
 
 from devkit_dist.features.distribution.models.content import Content, normal_mode
-from devkit_dist.features.distribution.models.errors import ConflictError, OrphanLeftNotice, SelectionError
+from devkit_dist.features.distribution.models.errors import (
+    ConflictError,
+    OrphanLeftNotice,
+    OverrideSyncDeferredNotice,
+    SelectionError,
+)
 from devkit_dist.features.distribution.models.invocation import AGENT_INVOCATION
 from devkit_dist.features.distribution.models.results import (
     OverrideChange,
@@ -44,6 +49,7 @@ from devkit_dist.features.distribution.services.installation.overrides import (
 )
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt, receipt_content
 from devkit_dist.features.distribution.services.installation.transaction import (
+    apply_changes,
     project_lock,
     prune_empty_parents,
     replace_file,
@@ -263,11 +269,36 @@ def _tracked(receipt: Receipt | None, bundle: str, asset: str, selector: str) ->
     return record
 
 
+def _still_drifting(installed: list[InstalledBundle], receipt: Receipt) -> list[str]:
+    """``bundle:asset`` of every deployed override whose upstream changed since its baseline in ``receipt``."""
+    deployed = {(asset.bundle, asset.id) for asset in receipt.asset_records}
+    return [
+        f"{item.bundle}:{item.asset}"
+        for item in override_statuses(installed, receipt)
+        if item.drift_detected and (item.bundle, item.asset) in deployed
+    ]
+
+
+def _deferred_notice(remaining: list[str]) -> OverrideSyncDeferredNotice:
+    commands = "; ".join(f"`{AGENT_INVOCATION} override accept {selector}`" for selector in remaining)
+    return OverrideSyncDeferredNotice(
+        f"baseline recorded without synchronizing: other overrides still drift ({', '.join(remaining)})",
+        target_files=[RECEIPT_PATH],
+        fix=f"Review each with `{AGENT_INVOCATION} override diff <bundle>:<asset>`, then accept it: {commands};"
+        " the last accept synchronizes",
+        what_to_report='override_drift = "block": nothing was deployed, so `sync --check` reports pending work'
+        " until the remaining overrides are accepted",
+    )
+
+
 def accept_override(root: Path, installed: list[InstalledBundle], selector: str) -> OverrideChange:
     """Record the current upstream files as the override's baseline (after reviewing ``override diff``), then
     synchronize, as ``create`` does, so the override files as merged are deployed and recorded.
 
-    When the synchronization fails before it commits, the baseline copies and the receipt are put back as they were.
+    Under ``override_drift = "block"`` with other deployed overrides still drifting, only the baseline is recorded
+    (``OVERRIDE_SYNC_DEFERRED``): a sync would deploy their upstream changes beside stale override files, which the
+    policy forbids. The accept that leaves no drift synchronizes. When the write or the synchronization fails before
+    it commits, the baseline copies and the receipt are put back as they were.
     """
     root = require_project_dir(root)
     bundle_name, asset_id = _parse_selector(selector)
@@ -284,19 +315,30 @@ def accept_override(root: Path, installed: list[InstalledBundle], selector: str)
             receipt,
             overrides=MappingProxyType({bundle: MappingProxyType(records) for bundle, records in overrides.items()}),
         )
+        remaining = _still_drifting(installed, updated) if read_config(root).override_drift == "block" else []
         undo = _Undo(root)
         try:
             for rel in asset_files(item.bundle, asset):
                 path = item.bundle.root / rel
                 undo.write(baseline_rel(bundle_name, rel), Content(path.read_bytes(), normal_mode(path.stat().st_mode)))
-            # The new baseline is in the receipt the sync starts from, so it holds for an asset that is not deployed.
-            undo.write(RECEIPT_PATH, receipt_content(updated))
-            # Under ``override_drift = "block"`` other overrides may still drift; accepting this one resolves its own
-            # drift, so the sync reports theirs as a warning instead of refusing (each would block the other).
-            finish = commit_locked(root, installed, refuse_drift=False)
+            if remaining:
+                apply_changes(root, {RECEIPT_PATH: receipt_content(updated)})
+            else:
+                # The new baseline is in the receipt the sync starts from, so it holds for an asset not deployed.
+                undo.write(RECEIPT_PATH, receipt_content(updated))
+                finish = commit_locked(root, installed)
         except BaseException:
             undo.restore()
             raise
+        if remaining:
+            return OverrideChange(
+                bundle_name,
+                asset_id,
+                "accepted",
+                [],
+                accepted_upstream_sha256=current,
+                notices=[_deferred_notice(remaining)],
+            )
         result = finish()
     return OverrideChange(
         bundle_name,
