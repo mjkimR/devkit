@@ -8,7 +8,7 @@ target: packages/devkit/src/devkit_agt/features/workflow/cli/render.py
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-26
 ---
 
@@ -47,3 +47,10 @@ created_at: 2026-10-26
 [NEXT_SKILL: spec]
 [GATE: plan-intent policy=auto satisfied=yes source=policy]
 ```
+
+## Disposition
+
+Resolved as a contract clarification, without an output change. `satisfied` on the `[GATE: ...]` line reports the
+gate's approval, and `CAP-DLV-workflow-orchestration` already defines an `auto` gate as `satisfied=yes source=policy`
+while its stage is current, so the line is correct for an XL draft whose size check is unmet. `CAP-DLV-cli-and-output`
+now states that `satisfied` covers the approval only and that the stage passes only when `[UNMET]` is empty.
