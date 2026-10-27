@@ -7,7 +7,7 @@ direct acceptance of an eligible draft), and ``handoff_proposal`` turns an appro
 the proposal. ``create_spec`` creates a spec bundle without a proposal. Contracts: ``CAP-DLV-proposal-incubation`` and ``CAP-DLV-spec-bundles`` (``docs/capabilities/delivery/``).
 """
 
-from devkit_spec.features.proposals.models.axes import (
+from devkit_spec.base.axes import (
     EFFORTS,
     PROPOSAL_WORKFLOW,
     TASK_KINDS,

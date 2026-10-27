@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import click
-from devkit.advisory import Actor, AdvisoryError, Level, Retry
+from devkit.advisory import Actor, Retry
 from devkit_core.base.errors import ArgumentError
 from devkit_dist.adapters.cli import (
     FORMAT_OPTION,
@@ -22,6 +22,7 @@ from devkit_dist.adapters.cli import (
 from devkit_spec.base.errors import WorkerCheckNotRunNotice
 from devkit_spec.features.worker.usecases.inspect import InspectWorkerUseCase
 from devkit_spec.features.worker.usecases.summary import summarize_inspection
+from devkit_spec.utils.advisory import restore_advisory
 from devkit_spec.utils.output import fields_line, sentinel
 
 
@@ -149,21 +150,7 @@ def _advisories(value: Any):
     elif isinstance(value, dict):
         data = value.get("advisory")
         if isinstance(data, dict) and "code" in value and "message" in value:
-            yield AdvisoryError(
-                value["message"],
-                *data.get("details", []),
-                code=value["code"],
-                level=Level(data.get("level", "ERROR")),
-                actor=Actor(data.get("actor", "NONE")),
-                retry=Retry(data.get("retry", "UNSAFE")),
-                guardrail=data.get("guardrail", False),
-                input_error=data.get("input_error", False),
-                retry_after=data.get("retry_after"),
-                fix=data.get("fix"),
-                what_to_report=data.get("what_to_report"),
-                target_files=data.get("target_files"),
-                brief="action" not in data,
-            )
+            yield restore_advisory(value, actor=Actor.NONE, retry=Retry.UNSAFE, restore_brief=True)
             return
         for key, item in value.items():
             if key != "envelopes":

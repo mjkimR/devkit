@@ -15,8 +15,8 @@ from spec_support.proposals import TODAY, write_workflow
 from spec_support.scope import git, write
 
 import devkit_spec
+from devkit_spec.base.axes import size_blocker
 from devkit_spec.features.proposals import create_proposal
-from devkit_spec.features.proposals.models.axes import size_blocker
 
 DEFINITION = (
     Path(devkit_spec.__file__).parent / "bundles" / "spec" / "bundle" / "workflows" / "sdd-proposal.md"

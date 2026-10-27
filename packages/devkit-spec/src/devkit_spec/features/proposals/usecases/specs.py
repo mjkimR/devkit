@@ -29,6 +29,7 @@ from devkit_core.core.frontmatter import locate
 from devkit_core.core.logs import get_logger
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
+from devkit_spec.base.axes import BUGFIX_WORKFLOW, DEFAULT_WORKFLOW
 from devkit_spec.base.errors import (
     SpecExistsError,
     SpecSlugError,
@@ -37,9 +38,9 @@ from devkit_spec.base.errors import (
     SpecWriteError,
     SpecWrongBranchError,
 )
+from devkit_spec.base.units import SKELETON_MARKER
 from devkit_spec.features.documents import DocumentIndex
 from devkit_spec.features.policy.repositories.branches import require_development_branch
-from devkit_spec.features.proposals.models.axes import BUGFIX_WORKFLOW, DEFAULT_WORKFLOW
 from devkit_spec.features.proposals.services.body import CarriedProposal, ensure_ac_ids
 from devkit_spec.features.proposals.usecases.binding import resolve_binding, unbound_guidance
 from devkit_spec.features.proposals.usecases.scaffold import (
@@ -51,8 +52,6 @@ from devkit_spec.features.proposals.usecases.scaffold import (
     yaml_scalar,
 )
 
-# devkit's not-skeleton check: specify stays open until the spec, plan and tasks are written and the line removed.
-SKELETON_MARKER = "<!-- devkit:skeleton -->"
 SPEC_FILE = "spec.md"
 
 _log = get_logger(__name__)

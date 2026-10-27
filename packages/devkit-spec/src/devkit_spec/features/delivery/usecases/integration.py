@@ -31,20 +31,16 @@ from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 from devkit_dist.features.project.repositories.receipt import load_receipt
 
-from devkit_spec.features.delivery.usecases.attach import (
-    PROPOSAL_UNIT,
-    PROPOSAL_WORKFLOW,
-    SPEC_UNIT,
-    attach_check,
-)
+from devkit_spec.base.axes import EFFORTS, PROPOSAL_WORKFLOW, SPEC_WORKFLOWS, TASK_KINDS
+from devkit_spec.base.units import PROPOSAL_UNIT, SPEC_UNIT, is_spec_dir
+from devkit_spec.features.delivery.usecases.attach import attach_check
 from devkit_spec.features.policy.services.config import check_approvals, read_spec_config
 
 REGULAR_MODES = {"100644", "100755"}
 SYMLINK_MODE = "120000"
 GITLINK_MODE = "160000"
-SPEC_WORKFLOWS = frozenset({"sdd-spec-feature", "sdd-spec-bugfix"})
-SESSION_KINDS = frozenset({"feature", "bugfix", "overall-refactor"})
-SESSION_EFFORTS = frozenset({"low", "medium", "high"})
+SESSION_KINDS = frozenset({*TASK_KINDS, "overall-refactor"})
+SESSION_EFFORTS = frozenset(EFFORTS)
 TARGET_BOUND = ("TARGET_SHA", "RESULT_SHA")
 DISCLOSURE = "CI rules only on the merged result; tests and review ran on the source only"
 CONFIG_PATH = ".devkit/config.toml"
@@ -362,7 +358,7 @@ def _check_session_task(
     # Verify the branch does not carry a spec/proposal unit for this slug or leave a touched unit held/incomplete.
     for spec_dir in sorted((workspace / "specs").glob(f"*/*-{slug}")) if (workspace / "specs").is_dir() else ():
         rel = spec_dir.relative_to(workspace).as_posix()
-        if SPEC_UNIT.fullmatch(rel):
+        if SPEC_UNIT.fullmatch(rel) and is_spec_dir(spec_dir.name, slug):
             reasons.append(f"branch {branch} has spec unit {rel}; integrate it as a unit task, not a session task")
     for unit_rel in sorted(_touched_units(snapshot, workspace)):
         unit_dir = workspace / unit_rel

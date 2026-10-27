@@ -16,6 +16,15 @@ from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.usecases.invocation import guard_execution
 
+from devkit_spec.base.axes import (
+    DEFAULT_EFFORT,
+    DEFAULT_TASK_KIND,
+    DEV_EFFORT,
+    EFFORTS,
+    PLANNING_EFFORT,
+    PROPOSAL_WORKFLOW,
+    TASK_KINDS,
+)
 from devkit_spec.base.errors import (
     HandoffBaseDirtyError,
     HandoffNotReadyError,
@@ -26,9 +35,9 @@ from devkit_spec.base.errors import (
     ProposalWrongWorktreeError,
     SpecConfigError,
 )
+from devkit_spec.base.units import PROPOSAL_FILE, proposal_unit
 from devkit_spec.features.delivery.usecases.handoff import handoff_and_register
 from devkit_spec.features.policy.usecases.approvals import approval_policy
-from devkit_spec.features.proposals.models.axes import EFFORTS, TASK_KINDS
 from devkit_spec.features.proposals.models.handoff import HandoffPreview
 
 
@@ -92,7 +101,7 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
             target_files=paths[:20],
         )
     head = run_git(position.base, "rev-parse", "HEAD").decode().strip()
-    unit = f"docs/proposals/PROP-{slug}"
+    unit = proposal_unit(slug)
     rel = f"{unit}/proposal.md"
     mode = run_git(position.base, "ls-tree", head, "--", rel).decode().split()
     if not mode or mode[0] not in {"100644", "100755"}:
@@ -116,12 +125,12 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
             f"PROP-{slug} is marked needs_decompose: true", "Backlog splits it first", target_files=[rel]
         )
     invalid = []
-    if meta.get("task_kind", "feature") not in TASK_KINDS:
+    if meta.get("task_kind", DEFAULT_TASK_KIND) not in TASK_KINDS:
         invalid.append(f"task_kind {meta.get('task_kind')!r} is not one of {' | '.join(TASK_KINDS)}")
-    if meta.get("planning_effort", "medium") not in EFFORTS:
+    if meta.get(PLANNING_EFFORT, DEFAULT_EFFORT) not in EFFORTS:
         invalid.append(f"planning_effort {meta.get('planning_effort')!r} is not one of {' | '.join(EFFORTS)}")
     invalid += [f"{key} is not text" for key in ("title", "summary") if key in meta and not isinstance(meta[key], str)]
-    effort_hint = meta.get("dev_effort", "medium")
+    effort_hint = meta.get(DEV_EFFORT, DEFAULT_EFFORT)
     if effort_hint not in EFFORTS:
         invalid.append(f"dev_effort {effort_hint!r} is not one of {' | '.join(EFFORTS)}")
     if invalid:
@@ -136,13 +145,13 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
     evaluation = workspace.evaluate_unit(ref, lint=False)
     passed = {gate.name for _stage, gate in evaluation.passed_gates if gate.satisfied}
     missing = sorted({"plan-intent", "plan-accept"} - passed)
-    if ref.doc.id != "sdd-proposal" or not evaluation.complete or evaluation.errors or missing:
-        details = [f"workflow: {ref.doc.id}" if ref.doc.id != "sdd-proposal" else ""]
+    if ref.doc.id != PROPOSAL_WORKFLOW or not evaluation.complete or evaluation.errors or missing:
+        details = [f"workflow: {ref.doc.id}" if ref.doc.id != PROPOSAL_WORKFLOW else ""]
         details += [f"unmet: {check.name}" for check in evaluation.unmet]
         details += [f"problem ({error.code}): {error.message}" for error in evaluation.errors]
         details += [f"missing approval: {name}" for name in missing]
         raise HandoffNotReadyError(
-            f"PROP-{slug} has no completed sdd-proposal Planning with its own plan-intent and plan-accept",
+            f"PROP-{slug} has no completed {PROPOSAL_WORKFLOW} Planning with its own plan-intent and plan-accept",
             *(line for line in details if line),
             target_files=[rel],
         )
@@ -195,7 +204,7 @@ class HandoffUseCase(BaseUseCase):
         if prepare(self.root, preview.slug) != preview:
             raise HandoffStaleError(
                 "the base, accepted plan or policy changed after review",
-                target_files=[f"docs/proposals/PROP-{preview.slug}/proposal.md"],
+                target_files=[f"{proposal_unit(preview.slug)}/{PROPOSAL_FILE}"],
             )
         position = locate(self.root)
         guard_execution()

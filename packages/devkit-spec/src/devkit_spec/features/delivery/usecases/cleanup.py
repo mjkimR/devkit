@@ -46,6 +46,7 @@ from devkit_core.core.git import run_git
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
 from devkit_spec.base.errors import PostFinishCleanupNotice, ProposalCleanupWarning, SpecError
+from devkit_spec.base.units import proposal_unit
 from devkit_spec.features.proposals.usecases.prune import prune_proposals
 from devkit_spec.features.proposals.usecases.scaffold import require_slug
 from devkit_spec.features.scope.models.model import Verdict
@@ -76,7 +77,7 @@ def _prune_step(base: Path, slug: str) -> tuple[bool, list[str | AdvisoryError]]
     except SpecError:  # a slug that cannot name a proposal has none to prune
         pruned = []
     except OSError as exc:  # a directory that cannot be listed or removed: report it and still sweep
-        target = f"docs/proposals/PROP-{slug}"
+        target = proposal_unit(slug)
         lines.append(
             ProposalCleanupWarning(
                 f"the empty proposal directories of {target} could not be pruned: {exc}",
@@ -136,9 +137,7 @@ def _parse_targets(
     context: IntegrationContext, targets: tuple[CleanupTarget, ...]
 ) -> tuple[tuple[CleanupTarget, ...], dict[str, tuple[str, str, int]]]:
     slug = _prune_slug(slug_of(context.finish.branch))
-    expected_prune = (
-        (CleanupTarget(KIND_PROPOSAL, f"docs/proposals/PROP-{slug}", context.finish.source_sha),) if slug else ()
-    )
+    expected_prune = (CleanupTarget(KIND_PROPOSAL, proposal_unit(slug), context.finish.source_sha),) if slug else ()
     prune_targets: list[CleanupTarget] = []
     scope_targets: dict[str, tuple[str, str, int]] = {}
     for target in targets:
@@ -241,7 +240,7 @@ class _Cleanup:
         targets: list[CleanupTarget] = []
         slug = _prune_slug(slug_of(context.finish.branch))
         if slug:
-            targets.append(CleanupTarget(KIND_PROPOSAL, f"docs/proposals/PROP-{slug}", context.finish.source_sha))
+            targets.append(CleanupTarget(KIND_PROPOSAL, proposal_unit(slug), context.finish.source_sha))
         worktree = Path(context.finish.path)
         session = open_session(base)
         mode = _scope_mode(base, worktree)

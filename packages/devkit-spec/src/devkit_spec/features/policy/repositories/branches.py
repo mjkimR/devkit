@@ -15,6 +15,8 @@ from devkit.advisory import AdvisoryError
 from devkit_core.core import GitError, run_git
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
+from devkit_spec.base.units import is_spec_dir
+
 PLANNING_PREFIX = "plan-"
 DEVELOPMENT_PREFIX = "dev-"
 BRANCH_LIMIT = 64  # devkit worktree's limit on an activity branch name
@@ -77,7 +79,7 @@ def _branch_unit(root: Path, branch: str, slug: str) -> str | None:
             for line in run_git(root, "ls-tree", "-d", "--name-only", f"refs/heads/{branch}", f"{month}/")
             .decode()
             .splitlines()
-            if line.endswith(f"-{slug}")
+            if is_spec_dir(line.rpartition("/")[2], slug)
         ]
     except GitError as exc:
         if exc.returncode is None:

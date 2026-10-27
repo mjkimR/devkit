@@ -124,7 +124,6 @@ public_modules = [
     "devkit_spec.features.policy.services.config",
     "devkit_spec.features.policy.usecases.approvals",
     "devkit_spec.features.policy.models.config",
-    "devkit_spec.features.proposals.models.axes",
     "devkit_spec.features.proposals.models.handoff",
     "devkit_spec.features.proposals.services.status",
     "devkit_spec.features.proposals.usecases.accept",

@@ -30,6 +30,13 @@ from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
+from devkit_spec.base.axes import (
+    DEFAULT_EFFORT,
+    DEFAULT_TASK_KIND,
+    EFFORTS,
+    PROPOSAL_WORKFLOW,
+    TASK_KINDS,
+)
 from devkit_spec.base.errors import (
     ProposalDecisionExistsError,
     ProposalExistsError,
@@ -42,23 +49,14 @@ from devkit_spec.base.errors import (
     ProposalWorkflowError,
     SpecError,
 )
-from devkit_spec.base.units import PROPOSALS
+from devkit_spec.base.units import PROPOSAL_FILE, PROPOSALS, TARGET_DOCS, proposal_unit
 from devkit_spec.features.documents import DocumentIndex
 from devkit_spec.features.documents.services.namespaces import detect, require
 from devkit_spec.features.policy.repositories.branches import SLUG_LIMIT, planning_branch_elsewhere
 from devkit_spec.features.policy.services.config import GLOBAL, read_spec_config
-from devkit_spec.features.proposals.models.axes import (
-    DEFAULT_EFFORT,
-    DEFAULT_TASK_KIND,
-    EFFORTS,
-    PROPOSAL_WORKFLOW,
-    TASK_KINDS,
-)
 from devkit_spec.features.proposals.usecases.binding import resolve_binding, unbound_guidance
 from devkit_spec.utils.text import foreign_letters
 
-PROPOSAL_FILE = "proposal.md"
-TARGET_DOCS = "target-docs.md"
 DECISIONS = "decisions"
 MATERIALS = "materials"
 DEFAULT_TARGET_AREA = "capabilities/<area>/"
@@ -693,7 +691,7 @@ class CreateProposalDecisionUseCase(BaseUseCase):
                 f"PROP-{slug} is in Planning on {branch}; a PADR is written on that branch only",
                 target_files=[rel],
                 fix=f"Run it in the checkout of {branch} ({DEVKIT} worktree start plan-{slug} --existing-branch {branch}"
-                f" --unit docs/proposals/PROP-{slug} attaches one), or wait until that branch is merged and removed",
+                f" --unit {proposal_unit(slug)} attaches one), or wait until that branch is merged and removed",
             )
         path = bundle / DECISIONS / f"{padr_id}.md"
         existing = [document.path for document in DocumentIndex.load(root).declares(padr_id)]

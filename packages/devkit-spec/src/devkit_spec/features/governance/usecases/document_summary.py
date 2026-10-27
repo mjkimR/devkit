@@ -20,12 +20,12 @@ from dataclasses import dataclass
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
 from devkit_agt.features.rules.services.builtins import BaseRule
 
+from devkit_spec.base.units import SKELETON_MARKER
 from devkit_spec.features.documents import Document, Summary, definition
 from devkit_spec.features.governance import document_index, is_material, reportable
 from devkit_spec.utils.text import foreign_letters as foreign_letters
 
 RULE_ID = "RULE-document-summary"
-SKELETON_MARKER = "<!-- devkit:skeleton -->"
 REMEDIATION = (
     "Write `summary:` in the frontmatter: one or two English sentences saying what the document defines"
     " (the title and body may stay in any language)"

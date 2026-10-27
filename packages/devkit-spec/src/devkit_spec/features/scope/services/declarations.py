@@ -13,6 +13,7 @@ from devkit_spec.base.errors import (
     ScopeInputInvalidError,
     ScopeSpecNotFoundError,
 )
+from devkit_spec.base.units import PROPOSAL_FILE, PROPOSALS, SKELETON_MARKER, TARGET_DOCS
 from devkit_spec.features.entrypoints import (
     Reason,
     classify_boundary,
@@ -25,10 +26,6 @@ from devkit_spec.features.entrypoints import (
 from devkit_spec.features.scope.models.model import Diff, Granularity, ScopePath, ScopeSet, Source, Stage, Unresolved
 from devkit_spec.features.scope.models.source import InputPath
 
-PROPOSAL_FILE = "proposal.md"
-PROPOSALS = "docs/proposals"
-TARGET_DOCS = "target-docs.md"
-SKELETON_MARKER = "<!-- devkit:skeleton -->"
 RECONCILE = "reconcile.md"
 TASKS = "tasks.md"
 SPEC = "spec.md"

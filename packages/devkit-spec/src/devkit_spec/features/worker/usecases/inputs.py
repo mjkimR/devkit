@@ -12,6 +12,7 @@ from devkit_core.base.errors import ArgumentError
 from devkit_core.core import GitError, run_git
 from devkit_core.core.frontmatter import parse
 
+from devkit_spec.base.axes import PROPOSAL_WORKFLOW, SPEC_WORKFLOW_PREFIX
 from devkit_spec.base.errors import (
     SpecError,
     WorkerBaseUnresolvedError,
@@ -19,7 +20,8 @@ from devkit_spec.base.errors import (
     WorkerScopeUnresolvedError,
     WorkerUnitUnresolvedError,
 )
-from devkit_spec.features.delivery.usecases.attach import PROPOSAL_UNIT, SPEC_UNIT, attach_check
+from devkit_spec.base.units import PROPOSAL_FILE, PROPOSAL_UNIT, SPEC_UNIT
+from devkit_spec.features.delivery.usecases.attach import attach_check
 from devkit_spec.features.entrypoints.repositories.bundle import parse_boundaries, parse_targets
 
 
@@ -102,7 +104,7 @@ def derive_unit(root: Path, tip: str, branch: str | None) -> tuple[str, str]:
     candidates = []
     for path in files(root, tip):
         directory, _, name = path.rpartition("/")
-        if name not in ("spec.md", "proposal.md"):
+        if name not in ("spec.md", PROPOSAL_FILE):
             continue
         match = SPEC_UNIT.fullmatch(directory) or PROPOSAL_UNIT.fullmatch(directory)
         if match and match["slug"] == branch.split("-", 1)[1] and not attach_check(root, branch, directory, tip):
@@ -143,13 +145,13 @@ def derive_base(
 
 def derive_scope(root: Path, tip: str, unit: str) -> list[dict[str, Any]]:
     paths = files(root, tip)
-    anchor = f"{unit}/spec.md" if f"{unit}/spec.md" in paths else f"{unit}/proposal.md"
+    anchor = f"{unit}/spec.md" if f"{unit}/spec.md" in paths else f"{unit}/{PROPOSAL_FILE}"
     text = read(root, tip, anchor)
     workflow = (parse(text).data or {}).get("workflow", "")
     entries: list[dict[str, Any]] = [{"path": unit, "source": "unit"}]
-    if workflow == "sdd-proposal":
+    if workflow == PROPOSAL_WORKFLOW:
         return entries
-    if not isinstance(workflow, str) or not workflow.startswith("sdd-spec-"):
+    if not isinstance(workflow, str) or not workflow.startswith(SPEC_WORKFLOW_PREFIX):
         raise WorkerScopeUnresolvedError(f"Unsupported workflow: {workflow}")
     for task in parse_boundaries(read(root, tip, f"{unit}/tasks.md")):
         entries.extend(

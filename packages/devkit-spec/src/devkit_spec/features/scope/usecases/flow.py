@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import contextlib
 import posixpath
-import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -32,6 +31,7 @@ from devkit_spec.base.errors import (
     ScopeTokenExistsError,
     ScopeTokenMissingError,
 )
+from devkit_spec.base.units import SPEC_DIR, is_spec_dir
 from devkit_spec.features.policy.repositories.branches import DEVELOPMENT_PREFIX, checkout
 from devkit_spec.features.policy.services.config import read_spec_config
 from devkit_spec.features.scope.models.deadline import JOURNAL_SECONDS, ROLLBACK_SECONDS, Deadline
@@ -65,7 +65,6 @@ from devkit_spec.features.scope.services.compare import compare_with
 from devkit_spec.features.scope.usecases.inputs import from_spec, observe_git
 
 SOURCE_HANDOFF = "handoff"
-_SPEC_DIR = re.compile(r"^\d{8}-(.+)$")
 
 
 @dataclass(frozen=True)
@@ -90,8 +89,8 @@ def open_session(root: Path) -> Session:
 
 def slug_from_spec(spec: str) -> str:
     """The slug of a spec directory named ``YYYYMMDD-<slug>``; ``""`` for any other name."""
-    match = _SPEC_DIR.match(posixpath.basename(spec.rstrip("/")))
-    return match.group(1) if match else ""
+    match = SPEC_DIR.fullmatch(posixpath.basename(spec.rstrip("/")))
+    return match["slug"] if match else ""
 
 
 def record_event(kind: EventKind, record: Record, source: str = "") -> Event:
@@ -308,11 +307,10 @@ def _register_guidance(root: Path) -> tuple[str, tuple[str, ...]]:
     found = checkout(root)
     branch = found[1] if found is not None else ""
     slug = branch.removeprefix(DEVELOPMENT_PREFIX) if branch.startswith(DEVELOPMENT_PREFIX) else ""
-    exact = re.compile(rf"\d{{8}}-{re.escape(slug)}")
     bundles = sorted(
         path.relative_to(root).as_posix()
         for path in root.glob("specs/*/*")
-        if slug and path.is_dir() and exact.fullmatch(path.name)
+        if slug and path.is_dir() and is_spec_dir(path.name, slug)
     )
     if len(bundles) == 1:
         return f"register with `{DEVKIT} spec scope register --spec {bundles[0]}`", ()

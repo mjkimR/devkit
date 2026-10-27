@@ -47,7 +47,7 @@ from pathlib import Path
 from typing import Any
 
 import click
-from devkit.advisory import Actor, AdvisoryError, ExitCode, Level, Retry
+from devkit.advisory import Actor, AdvisoryError, ExitCode, Retry
 from devkit_core.core import run_git
 from devkit_dist.adapters.cli import (
     FORMAT_OPTION,
@@ -61,16 +61,17 @@ from devkit_dist.adapters.cli import (
     workspace_option,
 )
 
+from devkit_spec.base.axes import EFFORTS
 from devkit_spec.base.errors import SpecError
 from devkit_spec.features.delivery.usecases.handoff import HandoffProposalUseCase
 from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase
 from devkit_spec.features.delivery.usecases.native_plan_accept import PlanAcceptUseCase
-from devkit_spec.features.proposals.models.axes import EFFORTS
 from devkit_spec.features.proposals.usecases.accept import ACTOR, AcceptProposalUseCase
 from devkit_spec.features.proposals.usecases.backlog import CheckBacklogUseCase
 from devkit_spec.features.proposals.usecases.prune import PruneProposalsUseCase
 from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecisionUseCase, CreateProposalUseCase
 from devkit_spec.features.scope.cli.output import echo_registered, registered_dict
+from devkit_spec.utils.advisory import restore_advisory
 from devkit_spec.utils.output import sentinel
 
 WORKSPACE = workspace_option()
@@ -80,23 +81,13 @@ SUCCESS = frozenset({"accepted", "handed_off"})
 
 
 def _advisory(item: dict[str, Any]) -> AdvisoryError:
-    """Rebuild a serialized advisory (``AdvisoryError.to_dict``) with every field it carried."""
-    envelope = item.get("advisory", {})
-    level = Level(item.get("level", "ERROR"))
-    return AdvisoryError(
-        item.get("message", "Lifecycle operation reported an advisory"),
-        *envelope.get("details", ()),
-        code=item.get("code"),
-        level=level,
-        actor=Actor(envelope.get("actor", "DEVELOPER")),
-        retry=Retry(envelope.get("retry", "AFTER_FIX")),
-        guardrail=bool(envelope.get("guardrail", False)),
-        input_error=bool(envelope.get("input_error", False)),
-        retry_after=envelope.get("retry_after"),
-        fix=envelope.get("fix"),
-        what_to_report=envelope.get("what_to_report"),
-        target_files=envelope.get("target_files"),
-        exit_code=ExitCode(item["exit_code"]) if level is Level.ERROR and item.get("exit_code") else None,
+    """Rebuild a serialized lifecycle advisory; its ``ERROR`` keeps its exit code."""
+    return restore_advisory(
+        item,
+        actor=Actor.DEVELOPER,
+        retry=Retry.AFTER_FIX,
+        message="Lifecycle operation reported an advisory",
+        restore_exit_code=True,
     )
 
 

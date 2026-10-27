@@ -64,6 +64,16 @@ from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import locate, parse
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
+from devkit_spec.base.axes import (
+    DEFAULT_TASK_KIND,
+    DEFAULT_WORKFLOW,
+    DEV_EFFORT,
+    EFFORTS,
+    PLANNING_EFFORT,
+    PROPOSAL_WORKFLOW,
+    TASK_KINDS,
+    spec_workflow,
+)
 from devkit_spec.base.errors import (
     ProposalAcceptanceUnrecordedError,
     ProposalCleanupWarning,
@@ -88,16 +98,6 @@ from devkit_spec.features.documents.models.model import Document
 from devkit_spec.features.documents.services.dependencies import cycle_members, live_unit, target_problem
 from devkit_spec.features.policy.repositories.branches import require_development_branch
 from devkit_spec.features.policy.services.config import GLOBAL
-from devkit_spec.features.proposals.models.axes import (
-    DEFAULT_TASK_KIND,
-    DEFAULT_WORKFLOW,
-    DEV_EFFORT,
-    EFFORTS,
-    PLANNING_EFFORT,
-    PROPOSAL_WORKFLOW,
-    TASK_KINDS,
-    spec_workflow,
-)
 from devkit_spec.features.proposals.services.body import CarriedProposal, carry_proposal_body
 from devkit_spec.features.proposals.services.history import rewrite_history
 from devkit_spec.features.proposals.services.rewrite import (

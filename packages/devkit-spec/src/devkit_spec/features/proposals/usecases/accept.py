@@ -38,6 +38,13 @@ from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
+from devkit_spec.base.axes import (
+    ALLOWED_SIZES,
+    DECOMPOSE_EXITS,
+    DEFAULT_TASK_KIND,
+    TASK_KINDS,
+    size_blocker,
+)
 from devkit_spec.base.errors import (
     ProposalAcceptRefusedError,
     ProposalGateNotOpenError,
@@ -54,13 +61,6 @@ from devkit_spec.features.policy.repositories.branches import (
     planning_branches,
 )
 from devkit_spec.features.policy.usecases.approvals import approval_policy
-from devkit_spec.features.proposals.models.axes import (
-    ALLOWED_SIZES,
-    DECOMPOSE_EXITS,
-    DEFAULT_TASK_KIND,
-    TASK_KINDS,
-    size_blocker,
-)
 from devkit_spec.features.proposals.services.status import accepted_text
 from devkit_spec.features.proposals.usecases.handoff import (
     ACCEPT_GATE,

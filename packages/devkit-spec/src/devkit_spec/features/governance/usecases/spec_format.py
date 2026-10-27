@@ -45,6 +45,8 @@ from devkit_core.core.frontmatter import BOM, load_header, locate
 from devkit_core.core.yaml import safe_load
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
+from devkit_spec.base.axes import DEV_EFFORT, EFFORTS, PLANNING_EFFORT
+from devkit_spec.base.units import PROPOSAL_FILE, PROPOSALS, TARGET_DOCS
 from devkit_spec.features.documents import (
     Document,
     DocumentIndex,
@@ -54,18 +56,19 @@ from devkit_spec.features.documents import (
     in_source_directory,
     is_document_file,
 )
-from devkit_spec.features.governance import FIX_COMMAND, document_index, explicitly_targeted, namespaces, reportable
+from devkit_spec.features.governance import (
+    FIX_COMMAND,
+    document_index,
+    explicitly_targeted,
+    is_proposal_anchor,
+    namespaces,
+    reportable,
+)
 from devkit_spec.features.policy.services.config import GLOBAL, Namespace
 
 RULE_ID = "RULE-spec-format"
-PROPOSALS = "docs/proposals"
-# A proposal bundle's anchor and blueprint (``CAP-DLV-proposal-incubation``); not imported from
-# ``devkit_spec.features.proposals``, which imports the rules.
-PROPOSAL_FILE = "proposal.md"
-TARGET_DOCS = "target-docs.md"
 NAMESPACE_FIELD = "namespace"
-EFFORT_FIELDS = ("planning_effort", "dev_effort")
-EFFORTS = ("low", "medium", "high")
+EFFORT_FIELDS = (PLANNING_EFFORT, DEV_EFFORT)
 REQUIRED = ("id", "title", "status")
 CREATED_FIELDS = ("created_at", "created", "date")
 DEFAULT_STATUS = "draft"
@@ -142,7 +145,7 @@ def _problems(ctx: RuleContext, path: str) -> list[_Problem]:
             )
         elif not isinstance(value, str):
             problems.append(_Problem(f"frontmatter field '{name}' must be a string", REMEDIATION[name]))
-    if _is_proposal_anchor(path):
+    if is_proposal_anchor(path):
         for field in EFFORT_FIELDS:
             if field not in data:
                 continue
@@ -282,22 +285,11 @@ class SpecFormatRule(BaseRule):
         return changed
 
 
-def _is_proposal_anchor(path: str) -> bool:
-    """Whether ``path`` is a proposal anchor: ``docs/proposals/PROP-<slug>/proposal.md`` or a single-file proposal
-    ``docs/proposals/PROP-<slug>.md``."""
-    if not path.startswith(f"{PROPOSALS}/"):
-        return False
-    parts = path.removeprefix(f"{PROPOSALS}/").split("/")
-    if len(parts) == 1:
-        return parts[0].startswith("PROP-")
-    return len(parts) == 2 and parts[0].startswith("PROP-") and parts[1] == PROPOSAL_FILE
-
-
 def _is_anchor(path: str) -> bool:
     """Whether ``path`` is a bundle anchor that may declare a ``namespace``: a proposal's ``proposal.md`` under
     ``docs/proposals/``, a single-file proposal ``docs/proposals/<file>.md`` or a spec bundle's ``spec.md`` under
     ``specs/``."""
-    return _is_proposal_anchor(path) or (path.startswith("specs/") and path.rsplit("/", 1)[-1] == "spec.md")
+    return is_proposal_anchor(path) or (path.startswith("specs/") and path.rsplit("/", 1)[-1] == "spec.md")
 
 
 def _namespace_checked(ctx: RuleContext, index: DocumentIndex, document: Document) -> bool:

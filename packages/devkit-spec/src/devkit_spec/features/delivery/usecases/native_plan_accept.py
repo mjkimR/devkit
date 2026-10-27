@@ -29,6 +29,7 @@ from devkit_dist.features.project.usecases.configuration import (
 )
 from devkit_dist.features.project.usecases.invocation import guard_execution
 
+from devkit_spec.base.axes import DEFAULT_EFFORT, DEV_EFFORT, EFFORTS, PROPOSAL_WORKFLOW
 from devkit_spec.base.errors import (
     ProposalAcceptanceUnrecordedError,
     ProposalAcceptCommitRefusedError,
@@ -41,9 +42,9 @@ from devkit_spec.base.errors import (
     SpecConfigError,
     acceptance_unrecorded_fix,
 )
+from devkit_spec.base.units import proposal_unit
 from devkit_spec.features.policy.usecases.approvals import approval_policy
 from devkit_spec.features.proposals import accept_proposal
-from devkit_spec.features.proposals.models.axes import EFFORTS
 from devkit_spec.features.proposals.services.status import accepted_text
 from devkit_spec.features.proposals.usecases.scaffold import require_slug
 
@@ -123,9 +124,9 @@ class _Acceptance:
 
     def __init__(self, root: Path, slug: str, mode: str = "accept_and_handoff"):
         self.root, self.slug = root, slug
-        self.unit = f"docs/proposals/PROP-{slug}"
+        self.unit = proposal_unit(slug)
         self.requested_mode = mode
-        self.mode, self.effort = mode, "medium"
+        self.mode, self.effort = mode, DEFAULT_EFFORT
         self.actor = "user"
         self.completed: list[str] = []
         self.acceptance_sha: str | None = None
@@ -141,7 +142,9 @@ class _Acceptance:
         evaluation = workspace.evaluate_unit(ref, lint=False)
         anchor = f"{self.unit}/proposal.md"
         next_step = devkit_command(f"workflow next --unit {self.unit}")
-        conditions = [f"workflow: {ref.doc.id} (expected sdd-proposal)"] if ref.doc.id != "sdd-proposal" else []
+        conditions = (
+            [f"workflow: {ref.doc.id} (expected {PROPOSAL_WORKFLOW})"] if ref.doc.id != PROPOSAL_WORKFLOW else []
+        )
         conditions += [f"problem ({error.code}): {error.message}" for error in evaluation.errors]
         conditions += [f"hold: {line}" for line in evaluation.hold.reasons()]
         conditions += [f"unmet: {item.name}" for item in evaluation.unmet if item.name != "gate:plan-accept"]
@@ -175,7 +178,7 @@ class _Acceptance:
                 fix=f"Once the user agrees, finish Planning on plan-{self.slug} (`{next_step}` there names the next "
                 "step), commit it, then rerun the same command",
             )
-        self.effort = str(meta.get("dev_effort", "medium"))
+        self.effort = str(meta.get(DEV_EFFORT, DEFAULT_EFFORT))
         if self.effort not in EFFORTS:
             raise ProposalInvalidError(
                 f"PROP-{self.slug} has dev_effort {self.effort!r}, not low, medium or high",
