@@ -23,7 +23,6 @@ import dataclasses
 import json
 import math
 import os
-import re
 import sys
 
 import click
@@ -39,6 +38,7 @@ from devkit_dist.adapters.cli import (
     echo_json,
     echo_notices,
     exit_on_warnings,
+    field_value,
     is_json,
     output_settings,
     render_json,
@@ -47,20 +47,11 @@ from devkit_dist.adapters.cli import (
 from devkit_agt.features.compact.models.scan import Failure, Omitted, RelayedAdvisory
 from devkit_agt.features.compact.usecases.execute import CommandInterrupted, CommandRun, RunCommand
 
-_BARE = re.compile(r'[^\s"\]]+')
-
 _log = get_logger(__name__)
 
 
 def _quote(value: str) -> str:
     return json.dumps(value, ensure_ascii=False)
-
-
-def _value(value: str) -> str:
-    """``-`` when empty, bare without spaces, quotes or brackets, else a JSON string."""
-    if not value:
-        return "-"
-    return value if _BARE.fullmatch(value) else _quote(value)
 
 
 def _outcome(run: CommandRun) -> str:
@@ -92,14 +83,16 @@ def _last_lines(run: CommandRun) -> tuple[str, ...]:
 
 def _text(run: CommandRun) -> str:
     found = run.scan
-    lines = [f"[RUN: {_quote(run.command)} outcome={_outcome(run)} exit={run.exit_code} log={_value(str(run.log))}]"]
+    lines = [
+        f"[RUN: {_quote(run.command)} outcome={_outcome(run)} exit={run.exit_code} log={field_value(str(run.log))}]"
+    ]
     lines += [f"[RUN_SUMMARY: {_quote(summary)}]" for summary in found.summaries]
     lines += [f"[RUN_LAST_LINE: {_quote(line)}]" for line in _last_lines(run)]
     lines += [
-        f"[RUN_FAILURE: {_quote(failure.test)} kind={failure.kind} message={_value(failure.message)}]"
+        f"[RUN_FAILURE: {_quote(failure.test)} kind={failure.kind} message={field_value(failure.message)}]"
         for failure in _failures(run)
     ]
-    lines += [f"[RUN_WARNING: {_quote(w.message)} location={_value(w.location)}]" for w in found.warnings]
+    lines += [f"[RUN_WARNING: {_quote(w.message)} location={field_value(w.location)}]" for w in found.warnings]
     omitted = _omitted(run)
     if omitted:
         lines.append(

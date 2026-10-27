@@ -14,8 +14,6 @@ stale_after=]``. ``--format json`` prints the result object (a refused ``finish`
 from __future__ import annotations
 
 import functools
-import json
-import re
 import shlex
 from collections.abc import Callable
 from pathlib import Path
@@ -31,6 +29,7 @@ from devkit_dist.adapters.cli import (
     echo_notices,
     existing_directory,
     exit_on_warnings,
+    field_value,
     is_json,
     workspace_option,
 )
@@ -45,17 +44,6 @@ from devkit_agt.features.worktree.usecases.stale import StaleBranches
 
 WORKSPACE = workspace_option("Any directory inside the checkout [default: the current directory]")
 BRANCH = click.argument("branch")
-_BARE = re.compile(r'[^\s"\]=]+')
-
-
-def _value(value: object) -> str:
-    """``-`` when empty, ``yes``/``no`` for a boolean, bare without spaces, quotes or brackets, else a JSON string."""
-    if value is None or value == "":
-        return "-"
-    if isinstance(value, bool):
-        return "yes" if value else "no"
-    text = str(value)
-    return text if _BARE.fullmatch(text) else json.dumps(text, ensure_ascii=False)
 
 
 def _position(workspace_root: str | None) -> tuple[Position, WorktreeConfig]:
@@ -168,8 +156,8 @@ def start_cmd(
             echo_json(started.to_dict())
         else:
             click.echo(
-                f"[BRANCH_STARTED: {_value(started.branch)} checkout={_value(started.checkout)}"
-                f" from={_value(started.started_from)}]"
+                f"[BRANCH_STARTED: {field_value(started.branch)} checkout={field_value(started.checkout)}"
+                f" from={field_value(started.started_from)}]"
             )
         echo_notices(started.notices)
         exit_on_warnings(started.notices)
@@ -179,9 +167,9 @@ def start_cmd(
         echo_json(result.to_dict())
     else:
         click.echo(
-            f"[WORKTREE_STARTED: {_value(result.branch)} path={_value(result.path)} base={_value(result.base)}"
-            f" created={_value(result.created)} existing={_value(result.existing)} unit={_value(result.unit)}"
-            f" setup={_value(result.setup)} synced={_value(result.synced)}]"
+            f"[WORKTREE_STARTED: {field_value(result.branch)} path={field_value(result.path)} base={field_value(result.base)}"
+            f" created={field_value(result.created)} existing={field_value(result.existing)} unit={field_value(result.unit)}"
+            f" setup={field_value(result.setup)} synced={field_value(result.synced)}]"
         )
         click.echo(f"[NEXT_CMD: cd {shlex.quote(str(result.path))}]")
     echo_notices(result.notices)
@@ -191,9 +179,9 @@ def start_cmd(
 def _finished(result: FinishResult, kind: str = "WORKTREE_FINISHED") -> str:
     """The finish result line; ``WORKTREE_FINISH_PARTIAL`` for the progress of a run a refusal stopped."""
     return (
-        f"[{kind}: {_value(result.branch)} path={_value(result.path)} merged={_value(result.merged)}"
-        f" push={_value(result.push)} removed={_value(result.removed)}"
-        f" branch_deleted={_value(result.branch_deleted)} discarded={_value(result.discarded)}]"
+        f"[{kind}: {field_value(result.branch)} path={field_value(result.path)} merged={field_value(result.merged)}"
+        f" push={field_value(result.push)} removed={field_value(result.removed)}"
+        f" branch_deleted={field_value(result.branch_deleted)} discarded={field_value(result.discarded)}]"
     )
 
 
@@ -275,14 +263,14 @@ def status_cmd(workspace_root: str | None, output_format: str, stale: bool) -> N
         return
     for item in result.worktrees:
         click.echo(
-            f"[WORKTREE: {_value(item.path)} branch={_value(item.branch)} head={_value(item.head)} role={item.role}"
-            f" merged={_value(item.merged)} dirty={_value(item.dirty)} prunable={_value(item.prunable)}]"
+            f"[WORKTREE: {field_value(item.path)} branch={field_value(item.branch)} head={field_value(item.head)} role={item.role}"
+            f" merged={field_value(item.merged)} dirty={field_value(item.dirty)} prunable={field_value(item.prunable)}]"
         )
     for branch in result.branches:
-        click.echo(f"[BRANCH: {_value(branch.name)} head={branch.head} merged=no]")
+        click.echo(f"[BRANCH: {field_value(branch.name)} head={branch.head} merged=no]")
     linked = [item for item in result.worktrees if item.role == "linked"]
     click.echo(
-        f"[SUMMARY: base={_value(result.base)} base_branch={_value(result.base_branch)} worktrees={len(linked)}"
+        f"[SUMMARY: base={field_value(result.base)} base_branch={field_value(result.base_branch)} worktrees={len(linked)}"
         f" unmerged={sum(item.merged is False for item in linked)} dirty={sum(item.dirty is True for item in linked)}"
         f" branches={len(result.branches)}]"
     )
@@ -303,11 +291,11 @@ def _show_stale(workspace_root: str | None, output_format: str) -> None:
         for item in result.stale:
             data = item.to_dict()
             click.echo(
-                f"[STALE_BRANCH: {_value(item.branch)} unit={_value(item.unit)}"
+                f"[STALE_BRANCH: {field_value(item.branch)} unit={field_value(item.unit)}"
                 f" last_activity={data['last_activity']} pr={item.pr} refs={','.join(item.refs)}]"
             )
         click.echo(
-            f"[SUMMARY: checked={_value(result.checked)} branches={result.branches} stale={len(result.stale)}"
+            f"[SUMMARY: checked={field_value(result.checked)} branches={result.branches} stale={len(result.stale)}"
             f" stale_after={result.stale_after}]"
         )
     echo_notices(notices)

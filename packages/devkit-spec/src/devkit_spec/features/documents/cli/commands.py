@@ -42,6 +42,7 @@ from devkit_dist.adapters.cli import (
     workspace_option,
 )
 
+from devkit_spec.adapters.cli import COMMAND, echo_page, fields_line, sentinel
 from devkit_spec.features.documents import Kind
 from devkit_spec.features.documents.usecases.browse import (
     ListDocumentsUseCase,
@@ -52,7 +53,6 @@ from devkit_spec.features.documents.usecases.browse import (
     _proposal_fields,
     _shown_status,
 )
-from devkit_spec.utils.output import COMMAND, echo_page, fields_line, sentinel
 
 WORKSPACE = workspace_option()
 DEFAULT_LIMIT = 20

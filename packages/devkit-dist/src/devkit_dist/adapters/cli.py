@@ -9,7 +9,8 @@ The agent-first output contract (``docs/architecture/ARCH-08-1-agent-output.md``
 - the output helpers of ``devkit_cli`` (``FORMAT_OPTION``, ``echo_json``, ``echo_notices``, ``exit_on_warnings``,
   ``exit_on_problems``, ``report_exit_code``, ``Reported``, ...), re-exported so command modules import one module;
 - ``workspace_option`` (``-w/--workspace-root``) and ``resolve_root``: the explicit workspace root, else the devkit
-  root found from the current directory (``devkit_dist.features.project.repositories.project``).
+  root found from the current directory (``devkit_dist.features.project.repositories.project``);
+- ``field_value`` and ``yes_no``: the one rendering of a sentinel field value (``ARCH-08-1-agent-output`` §3).
 
 click only parses syntax here: every semantic argument check raises ``ArgumentError`` (``ARGUMENT_INVALID``)
 through the boundary, so a JSON caller still receives one document.
@@ -17,6 +18,8 @@ through the boundary, so a JSON caller still receives one document.
 
 from __future__ import annotations
 
+import json
+import re
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -58,6 +61,7 @@ __all__ = [
     "existing_directory",
     "exit_on_problems",
     "exit_on_warnings",
+    "field_value",
     "highest_exit_code",
     "is_json",
     "output_options",
@@ -67,6 +71,7 @@ __all__ = [
     "resolve_output",
     "resolve_root",
     "workspace_option",
+    "yes_no",
 ]
 
 LOGGER = ROOT
@@ -79,6 +84,29 @@ resolve_output = BOUNDARY.resolve_output
 QUIET_ENV = BOUNDARY.quiet_env
 VERBOSE_ENV = BOUNDARY.verbose_env
 STRICT_ENV = BOUNDARY.strict_env
+
+# A value stays bare unless it has whitespace or a character that delimits a sentinel or a field.
+_BARE_VALUE = re.compile(r'[^\s"\[\]=\\]+')
+
+
+def yes_no(value: bool) -> str:
+    """A boolean sentinel field: ``yes`` or ``no``."""
+    return "yes" if value else "no"
+
+
+def field_value(value: object) -> str:
+    """``value`` as one token of a ``[KIND: ...]`` sentinel line (``ARCH-08-1-agent-output`` §3).
+
+    ``-`` for ``None`` or an empty string, ``yes``/``no`` for a boolean, bare when the text has no whitespace,
+    ``"``, ``[``, ``]``, ``=`` or backslash, else a JSON string, so every fact stays on one line.
+    """
+    if value is None or value == "":
+        return "-"
+    if isinstance(value, bool):
+        return yes_no(value)
+    text = str(value)
+    return text if _BARE_VALUE.fullmatch(text) else json.dumps(text, ensure_ascii=False)
+
 
 WORKSPACE_HELP = "Workspace root directory [default: the devkit project containing the current directory]"
 

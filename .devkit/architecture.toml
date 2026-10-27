@@ -105,7 +105,7 @@ feature_dependencies.worker = ["devkit_agt.features.workflow", "devkit_dist.feat
 feature_dependencies.policy = ["devkit_agt.features.workflow", "devkit_agt.features.worktree", "devkit_dist.features.project"]
 feature_dependencies.delivery = ["devkit_agt.features.integration", "devkit_agt.features.rules", "devkit_agt.features.workflow", "devkit_agt.features.worktree", "devkit_dist.features.project", "devkit_dist.features.shared", "devkit_spec.features.policy", "devkit_spec.features.proposals", "devkit_spec.features.scope"]
 feature_dependencies.governance = ["devkit_agt.features.rules", "devkit_dist.features.project", "devkit_spec.features.documents", "devkit_spec.features.entrypoints", "devkit_spec.features.policy"]
-root_modules = ["cli", "bootstrap"]
+root_modules = ["cli", "bootstrap", "adapters"]
 data_roots = ["bundles"]
 dependencies = ["devkit_agt", "devkit_dist", "devkit_core", "devkit.advisory"]
 

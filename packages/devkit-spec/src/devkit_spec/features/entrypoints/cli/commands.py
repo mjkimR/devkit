@@ -41,10 +41,11 @@ from devkit_dist.adapters.cli import (
     workspace_option,
 )
 
+from devkit_spec.adapters.cli import echo_page, fields_line, sentinel
 from devkit_spec.features.entrypoints import Applied
 from devkit_spec.features.entrypoints.models.derive import Pair, Skipped, State
 from devkit_spec.features.entrypoints.usecases.derive import DEFAULT_STATUS, DeriveEntrypointsUseCase, _check_options
-from devkit_spec.utils.output import echo_page, fields_line, page, sentinel
+from devkit_spec.utils.paging import page
 
 DEFAULT_LIMIT = 20
 

@@ -5,7 +5,7 @@ from typing import Any
 
 import click
 
-from devkit_spec.utils.output import fields_line, sentinel
+from devkit_spec.adapters.cli import fields_line, sentinel
 
 
 def _task(key: str | None) -> str:

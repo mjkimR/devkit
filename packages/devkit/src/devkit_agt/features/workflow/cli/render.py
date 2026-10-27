@@ -9,8 +9,9 @@ so quotes, backslashes and newlines are escaped and every fact stays on one line
 from __future__ import annotations
 
 import json
-import re
 from collections.abc import Mapping
+
+from devkit_dist.adapters.cli import field_value, yes_no
 
 from devkit_agt.features.workflow.models.checks import GATE_PREFIX
 from devkit_agt.features.workflow.models.definition import GATE_POLICIES, WorkflowDocument
@@ -25,19 +26,8 @@ def quote(value: str) -> str:
     return json.dumps(value, ensure_ascii=False)
 
 
-def value(text: str) -> str:
-    """``text`` bare when it is one token, else as a JSON string; ``-`` when empty."""
-    if not text:
-        return "-"
-    return text if re.fullmatch(r'[^\s"\]]+', text) else quote(text)
-
-
 def _dash(value: str | None) -> str:
     return value or "-"
-
-
-def _yn(value: bool) -> str:
-    return "yes" if value else "no"
 
 
 def _gate_source(gate: GateStatus) -> str:
@@ -49,7 +39,7 @@ def _gate_source(gate: GateStatus) -> str:
 def render_evaluation(res: UnitEvaluation) -> str:
     """The sentinel lines of ``next``."""
     lines: list[str] = [
-        f"[WORKFLOW: {res.workflow} unit={res.unit} status={_dash(res.status)} bound={_yn(res.binding.bound)}]"
+        f"[WORKFLOW: {res.workflow} unit={res.unit} status={_dash(res.status)} bound={yes_no(res.binding.bound)}]"
     ]
     if res.bound_elsewhere:
         lines.append(f"[BOUND_ELSEWHERE: workflow={res.bound_elsewhere}]")
@@ -70,8 +60,8 @@ def render_evaluation(res: UnitEvaluation) -> str:
             )
             for c in h.candidates:
                 lines.append(
-                    f"[CANDIDATE: {c.workflow} eligible={_yn(c.eligible)} recommended={_yn(c.recommended)} "
-                    f"when={value(candidate_summary(c.checks))}]"
+                    f"[CANDIDATE: {c.workflow} eligible={yes_no(c.eligible)} recommended={yes_no(c.recommended)} "
+                    f"when={field_value(candidate_summary(c.checks))}]"
                 )
             if res.waiting:
                 lines.append(f"[WAITING: {res.waiting.class_.value} {' '.join(res.waiting.checks)}]")
@@ -86,7 +76,7 @@ def render_evaluation(res: UnitEvaluation) -> str:
             if u.name == gate_check:
                 continue
             lines.append(
-                f"[CHECK: {u.name} class={u.class_.value} evaluated={_yn(u.evaluated)} detail={quote(u.detail)}]"
+                f"[CHECK: {u.name} class={u.class_.value} evaluated={yes_no(u.evaluated)} detail={quote(u.detail)}]"
             )
         lines.append(f"[NEXT_SKILL: {_dash(res.next_skill)}]")
         if res.delegate:
@@ -99,7 +89,7 @@ def render_evaluation(res: UnitEvaluation) -> str:
             g = res.gate
             held = " held=yes" if g.held else ""
             lines.append(
-                f"[GATE: {g.name} policy={g.policy} satisfied={_yn(g.satisfied)} source={_gate_source(g)}{held}]"
+                f"[GATE: {g.name} policy={g.policy} satisfied={yes_no(g.satisfied)} source={_gate_source(g)}{held}]"
             )
         if res.waiting:
             lines.append(f"[WAITING: {res.waiting.class_.value} {' '.join(res.waiting.checks)}]")
@@ -172,7 +162,7 @@ def render_document(
     for s in doc.stages:
         lines.append(
             f"[STAGE: {s.id} name={quote(s.name)} human_gate={_dash(s.gate)} role={_dash(s.role)} "
-            f"isolation={_dash(s.isolation)} optional={_yn(s.optional)} exception={_yn(s.exception)}]"
+            f"isolation={_dash(s.isolation)} optional={yes_no(s.optional)} exception={yes_no(s.exception)}]"
         )
         if stages.get(s.id) == "off":
             lines.append(f"[SKIPPED: {s.id} reason=stages.{s.id}=off]")
@@ -189,5 +179,5 @@ def render_document(
         if s.returns:
             lines.append(f"[RETURNS: {'; '.join(f'{r.to} when={quote(r.when)}' for r in s.returns)}]")
     for c in doc.next:
-        lines.append(f"[NEXT: {c.workflow} recommended={_yn(c.recommended)} when={value(' '.join(c.when))}]")
+        lines.append(f"[NEXT: {c.workflow} recommended={yes_no(c.recommended)} when={field_value(' '.join(c.when))}]")
     return "\n".join(lines) + "\n"

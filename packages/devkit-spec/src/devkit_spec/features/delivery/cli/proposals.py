@@ -61,6 +61,7 @@ from devkit_dist.adapters.cli import (
     workspace_option,
 )
 
+from devkit_spec.adapters.cli import sentinel
 from devkit_spec.base.axes import EFFORTS
 from devkit_spec.base.errors import SpecError
 from devkit_spec.features.delivery.usecases.handoff import HandoffProposalUseCase
@@ -72,7 +73,6 @@ from devkit_spec.features.proposals.usecases.prune import PruneProposalsUseCase
 from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecisionUseCase, CreateProposalUseCase
 from devkit_spec.features.scope.cli.output import echo_registered, registered_dict
 from devkit_spec.utils.advisory import restore_advisory
-from devkit_spec.utils.output import sentinel
 
 WORKSPACE = workspace_option()
 

@@ -71,8 +71,8 @@ The command writes and repairs nothing. See `CAP-DLV-delivery-workflows`.
 `bundles/spec/bundle/` contains distributable agent assets. Runtime behavior lives in `features/`, grouped by documents,
 proposals, scope, entrypoints, worker inspection, delivery integration, policy and governance. Each feature keeps
 its CLI and MCP adapters beside its use cases, services, repositories and models; only layers the feature needs
-are present. `cli.py` composes the command group. `base/errors.py` owns shared advisory contracts, and
-`utils/output.py` contains shared CLI presentation helpers.
+are present. `cli.py` composes the command group. `base/errors.py` owns shared advisory contracts,
+`adapters/cli.py` holds the sentinel output the commands share, and `utils/paging.py` the paging of listings.
 
 CLI and MCP execution entrypoints implement `devkit_core.base.usecase.BaseUseCase` with a typed
 `execute` method. Internal parsing, rendering and composition helpers remain functions. Constructors wire

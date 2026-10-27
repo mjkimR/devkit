@@ -106,7 +106,7 @@ The library raises the same codes, one class per code. `WorkflowError` is the ba
 
 ## 3. `next` Text Output
 
-`next --format text` prints one tagged line per fact (`ARCH-08-1-agent-output` section 3). Agents read the tags; the order is stable. A value without spaces is bare, a boolean is `yes` or `no`, an empty value is `-`, and free text (details, titles, notes, `when` reasons, descriptions, error reasons, a `when` summary that contains a space) is written as a JSON string literal, so quotes and newlines are escaped and every fact stays on one line. Lists documented as space-separated (`[DONE]`, `[UNMET]`, `[HANDOFF]`'s `candidates`, `eligible`, `recommended`) and comma-separated (`[REQUEST]`'s `options`, `eligible`, `recommended`) hold ids only.
+`next --format text` prints one tagged line per fact (`ARCH-08-1-agent-output` section 3). Agents read the tags; the order is stable. A value without spaces is bare, a boolean is `yes` or `no`, an empty value is `-`, and free text (details, titles, notes, `when` reasons, descriptions, error reasons, a `when` summary that contains a space or `=`) is written as a JSON string literal, so quotes and newlines are escaped and every fact stays on one line. Lists documented as space-separated (`[DONE]`, `[UNMET]`, `[HANDOFF]`'s `candidates`, `eligible`, `recommended`) and comma-separated (`[REQUEST]`'s `options`, `eligible`, `recommended`) hold ids only.
 
 ```text
 [WORKFLOW: direct-delivery unit=.devkit/transient/work/login status=in-progress bound=yes]
@@ -155,7 +155,7 @@ When the workflow is complete and declares `next` candidates (and `approvals.han
 ```text
 [STAGE: - complete=yes]
 [HANDOFF: policy=ask candidates=spec-driven hotfix direct-delivery eligible=hotfix direct-delivery recommended=- chosen=-]
-[CANDIDATE: spec-driven eligible=no recommended=yes when=file-exists(spec.md)=no]
+[CANDIDATE: spec-driven eligible=no recommended=yes when="file-exists(spec.md)=no"]
 [CANDIDATE: hotfix eligible=yes recommended=no when="frontmatter(task.md kind hotfix)=yes"]
 [CANDIDATE: direct-delivery eligible=yes recommended=no when=-]
 [WAITING: human handoff]

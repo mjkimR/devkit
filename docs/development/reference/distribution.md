@@ -175,8 +175,8 @@ never the deployed state it kept, which is the same on every run:
 [CHANGE: update .devkit/installation.json]
 ```
 
-One `[CHANGE: <create|update|remove|seed> <path>]` line follows per write (a path with spaces, quotes or brackets
-is a JSON string), `.devkit/config.toml` included when a selection command creates or changes it (also under
+One `[CHANGE: <create|update|remove|seed> <path>]` line follows per write (a path with whitespace, quotes, brackets, `=`
+or a backslash is a JSON string), `.devkit/config.toml` included when a selection command creates or changes it (also under
 `--dry-run`, which renders the edit without writing it), and `[OK: the workspace matches the selection]` when there
 is nothing to write. A command named in a `[FIX]` or `[DETAIL]` line is written as the agent runs it, `uv run devkit
 ...` (`ADR-keep-uv-run-as-the-agent-facing-devkit-invocation`). The warnings

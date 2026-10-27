@@ -6,10 +6,10 @@ import sys
 
 import click
 from devkit_core.base.errors import ArgumentError
-from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, is_json, report_exit_code
+from devkit_dist.adapters.cli import FORMAT_OPTION, boundary, echo_json, field_value, is_json, report_exit_code
 
 from devkit_agt.features.workflow.cli.app import ANCHOR, UNIT, WORKSPACE, cli, parse_date, workspace
-from devkit_agt.features.workflow.cli.render import quote, render_document, value
+from devkit_agt.features.workflow.cli.render import quote, render_document
 from devkit_agt.features.workflow.usecases.operations import BindUnitUseCase, DescribeWorkflowUseCase
 from devkit_agt.features.workflow.usecases.units import CreateUnitUseCase, ListUnitsUseCase
 
@@ -109,7 +109,7 @@ def list_cmd(
         echo_json({"units": [row.to_dict() for row in rows], "errors": errors})
         return
     if not rows:
-        click.echo(f"[OK: no units dirs={value(','.join(listing.directories))}]")
+        click.echo(f"[OK: no units dirs={field_value(','.join(listing.directories))}]")
         return
     for row in rows:
         # The first line names the problem; the parser's full report is in JSON, and `next --unit` raises it.

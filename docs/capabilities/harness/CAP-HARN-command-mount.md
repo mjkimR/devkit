@@ -9,7 +9,7 @@ usecases:
   - UC-adopt-in-an-existing-repository
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/cli.py
-  - packages/devkit-spec/src/devkit_spec/utils/output.py
+  - packages/devkit-spec/src/devkit_spec/adapters/cli.py
 ---
 
 # [CAP-HARN-command-mount] devkit spec Command Mount and Output Conventions
@@ -48,7 +48,7 @@ the whole toolchain through the one `devkit` executable of the project environme
 3. **Warnings and notices are results**: something a successful operation must report is returned under `notices`
    at `WARNING` or `NOTICE` and printed after the result; it never changes the exit code except under `--strict`.
 4. **Libraries never print**: commands write only through `devkit_dist.adapters.cli` (`boundary`, `echo_json`,
-   `echo_notices`, `exit_on_warnings`) and the helpers in `devkit_spec.utils.output`.
+   `echo_notices`, `exit_on_warnings`) and the helpers in `devkit_spec.adapters.cli`.
 5. **Every code is documented**: each `code` a `SpecError` subclass declares MUST appear as `` `CODE` `` in a
    document under `docs/` (`tests/test_documented_codes.py`).
 6. **Public surface only**: the CLI uses devkit through its public modules (`devkit_dist.adapters.cli`, `devkit_agt.features.workflow`,
@@ -101,7 +101,7 @@ is printed as:
 
 - `-` when it is empty or absent (`None`, `""`);
 - `yes` / `no` for a boolean;
-- bare when it has no whitespace, `"`, `]` or `=`;
+- bare when it has no whitespace, `"`, `[`, `]`, `=` or backslash;
 - otherwise a JSON string (`setup="uv sync"`), non-ASCII kept.
 
 ### 4.5 Paging

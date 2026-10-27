@@ -50,8 +50,9 @@ Text-mode stdout is made of one-line sentinels:
 ```
 
 - `KIND` is `UPPER_SNAKE` and names the fact (`VIOLATION`, `SUMMARY`, `STAGE`, `GATE`, `HOOK`, `UNIT`, `OK`, ...).
-- A value without spaces is written bare; free text (messages, titles, remediations, descriptions) is written as a JSON string, so quotes, backslashes and newlines are escaped and the fact stays on one line.
-- An empty value is `-`; a boolean is `yes` or `no`; a list is space- or comma-separated as the command documents it.
+- A value is written bare when it has no whitespace, `"`, `[`, `]`, `=` or backslash; otherwise, and always for free text (messages, titles, remediations, descriptions), it is written as a JSON string, so quotes, backslashes and newlines are escaped and the fact stays on one line.
+- An empty value (`None` or `""`) is `-`; a boolean is `yes` or `no`; a list is space- or comma-separated as the command documents it.
+- Every devkit command renders a field value with the one `devkit_dist.adapters.cli.field_value` (booleans alone with `yes_no`).
 - A command that succeeds with nothing to report prints an `[OK: ...]` line, so an empty stdout never has to be interpreted.
 - A document a command is asked to print (`devkit rules explain`'s guide, `devkit workflow show`'s rendering) follows its sentinel lines as written, and so does the bounded excerpt of a failed command after its `[RUN_OUTPUT: ...]` (`devkit run`) or `[RULE_TEST_OUTPUT: ...]` (`devkit rules test`) line.
 

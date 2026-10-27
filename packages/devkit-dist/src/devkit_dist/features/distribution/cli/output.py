@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import functools
-import json
 from collections import Counter
 from collections.abc import Callable, Mapping
 from pathlib import Path
@@ -18,6 +17,7 @@ from devkit_dist.adapters.cli import (
     echo_notices,
     exit_on_problems,
     exit_on_warnings,
+    field_value,
     is_json,
     workspace_option,
 )
@@ -48,11 +48,6 @@ def _json_command(fn: Callable[..., Any]) -> Callable[..., None]:
     return wrapper
 
 
-def _text_value(value: str) -> str:
-    """``value`` bare, or as a JSON string when it would not stay one token of a sentinel line."""
-    return json.dumps(value, ensure_ascii=False) if not value or any(c in value for c in ' "[]\\\n') else value
-
-
 def _echo_sync_text(result: SyncResult) -> None:
     """The text form of a synchronization: what it wrote (or would write), never the deployed state it kept.
 
@@ -64,7 +59,7 @@ def _echo_sync_text(result: SyncResult) -> None:
     fields = " ".join(f"{name}={counts[name]}" for name in ("create", "update", "remove", "seed"))
     click.echo(f"[SYNC: {fields} dry_run={'yes' if result.dry_run else 'no'}]")
     for item in result.actions:
-        click.echo(f"[CHANGE: {item.action} {_text_value(item.path)}]")
+        click.echo(f"[CHANGE: {item.action} {field_value(item.path)}]")
     if not result.actions:
         click.echo("[OK: the workspace matches the selection]")
 

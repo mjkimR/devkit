@@ -44,6 +44,7 @@ from devkit_dist.adapters.cli import (
     workspace_option,
 )
 
+from devkit_spec.adapters.cli import COMMAND, fields_line, sentinel
 from devkit_spec.features.scope import (
     Event,
     PairResult,
@@ -61,7 +62,6 @@ from devkit_spec.features.scope.usecases.query import (
     _spec_dir,
 )
 from devkit_spec.features.scope.usecases.sweep import SweepScopesUseCase
-from devkit_spec.utils.output import COMMAND, fields_line, sentinel
 
 
 @click.group(name="scope")

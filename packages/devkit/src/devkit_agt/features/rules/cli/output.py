@@ -12,13 +12,13 @@ Warnings and notices are advisory blocks on stderr (``devkit_dist.adapters.cli.e
 from __future__ import annotations
 
 import json
-import re
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
 import click
+from devkit_dist.adapters.cli import field_value
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
 from devkit_agt.features.rules.models.contracts import Phase, Rule, Severity, Violation
@@ -43,16 +43,6 @@ def _quote(value: str) -> str:
 def _value(value: object) -> str:
     """A setting value as one-line JSON (``null`` for ``None``)."""
     return json.dumps(value, ensure_ascii=False)
-
-
-_BARE = re.compile(r'[^\s"\]]+')
-
-
-def _bare(value: str | None) -> str:
-    """``-`` for none, bare without spaces, quotes or brackets, else a JSON string."""
-    if not value:
-        return "-"
-    return value if _BARE.fullmatch(value) else _quote(value)
 
 
 def echo_ok(text: str = OK_TEXT) -> None:
@@ -113,14 +103,14 @@ def _status(v: Violation) -> str:
 
 def _violation_line(v: Violation, guides: Mapping[str, Path], workspace_root: Path) -> str:
     line = (
-        f"[VIOLATION: {v.rule_id} severity={v.severity.value} file={_bare(v.file)} line={v.line} "
+        f"[VIOLATION: {v.rule_id} severity={v.severity.value} file={field_value(v.file)} line={v.line} "
         f"status={_status(v)} message={_quote(v.message)}"
     )
     if v.remediation:
         line += f" remediation={_quote(v.remediation)}"
     guide = _display_path(guides.get(v.rule_id), workspace_root)
     if guide:
-        line += f" guide={_bare(guide)}"
+        line += f" guide={field_value(guide)}"
     return line + "]"
 
 
@@ -177,11 +167,11 @@ def print_explain(rule: Rule, entry: dict[str, Any], resolver: SettingsResolver 
         f"[RULE: {rule.id} name={_quote(rule.name)} phase={entry['default_phase']} "
         f"effective_phase={entry['effective_phase']} severity={entry['default_severity']} "
         f"effective_severity={entry['effective_severity']} promote_to={entry['promote_to'] or '-'} "
-        f"guide={_bare(entry['guide'])} inputs={_bare(','.join(entry['inputs'] or []))}]"
+        f"guide={field_value(entry['guide'])} inputs={field_value(','.join(entry['inputs'] or []))}]"
     )
     click.echo(f"[DESCRIPTION: {_quote(rule.description)}]")
     for item in entry.get("related", []):
-        click.echo(f"[RELATED: {item['ref']} kind={item['kind'] or '-'} path={_bare(item['path'])}]")
+        click.echo(f"[RELATED: {item['ref']} kind={item['kind'] or '-'} path={field_value(item['path'])}]")
     if resolver is None:
         click.echo("[SETTINGS: none]")
     else:
@@ -190,7 +180,7 @@ def print_explain(rule: Rule, entry: dict[str, Any], resolver: SettingsResolver 
             click.echo(f"[SETTING: {key}={_value(value)} default={_value(default)}]")
         for override in resolver.overrides:
             values = " ".join(f"{k}={_value(v)}" for k, v in override.values.items())
-            click.echo(f"[SETTING_OVERRIDE: path={_bare(override.path)} {values}]")
+            click.echo(f"[SETTING_OVERRIDE: path={field_value(override.path)} {values}]")
     guide = ReadRuleGuideUseCase().execute(rule)
     if guide is not None:
         click.echo()
@@ -238,8 +228,8 @@ def print_rule_tests(results: Sequence[RuleTestRun], workspace_root: Path, summa
         exit_code = "-" if item.exit_code is None else str(item.exit_code)
         tests = _display_path(item.tests, workspace_root)
         click.echo(
-            f"[RULE_TEST: {item.rule_id} tests={_bare(tests)} result={item.result.value} exit={exit_code} "
-            f"log={_bare(str(run.log) if run is not None else None)}]"
+            f"[RULE_TEST: {item.rule_id} tests={field_value(tests)} result={item.result.value} exit={exit_code} "
+            f"log={field_value(str(run.log) if run is not None else None)}]"
         )
         if run is None or not _shows_failure(item) or run.log in shown:
             continue
@@ -250,7 +240,7 @@ def print_rule_tests(results: Sequence[RuleTestRun], workspace_root: Path, summa
         for failure in found.failures:
             click.echo(
                 f"[RULE_TEST_FAILURE: {item.rule_id} {_quote(failure.test)} kind={failure.kind} "
-                f"message={_bare(failure.message)}]"
+                f"message={field_value(failure.message)}]"
             )
         omitted = found.omitted
         click.echo(

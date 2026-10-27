@@ -20,8 +20,8 @@ from devkit_dist.adapters.cli import (
     workspace_option,
 )
 
+from devkit_spec.adapters.cli import fields_line, sentinel
 from devkit_spec.features.policy.usecases.inspect import InspectPolicyUseCase
-from devkit_spec.utils.output import fields_line, sentinel
 
 
 @click.command(name="policy")
