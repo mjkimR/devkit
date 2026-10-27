@@ -980,3 +980,30 @@ def test_check_refuses_a_hand_edited_managed_rule(tmp_path: Path) -> None:
     result = CliRunner().invoke(cli, ["check", "-w", str(tmp_path)])
     assert result.exit_code == 2
     assert "(RULES_LOAD_FAILED)" in result.output and "differs from the hash in the receipt" in result.output
+
+
+def test_cli_paths_with_spaces_or_brackets_are_quoted_in_sentinels(tmp_path: Path) -> None:
+    _write_config(
+        tmp_path,
+        "[[rules.settings.RULE-file-length.overrides]]\npath = 'my docs/**'\nmax_lines = 800\n",
+    )
+    runner = CliRunner()
+    text = runner.invoke(cli, ["explain", "-w", str(tmp_path), "RULE-file-length"])
+    assert '[SETTING_OVERRIDE: path="my docs/**" max_lines=800]' in text.output
+
+    (tmp_path / "my docs").mkdir()
+    (tmp_path / "my docs/a].md").write_text("[missing](nowhere.md)\n", encoding="utf-8")
+    result = runner.invoke(cli, ["check", "--workspace-root", str(tmp_path)])
+    assert '[VIOLATION: RULE-markdown-link severity=error file="my docs/a].md" line=1 ' in result.output
+
+
+def test_violation_line_quotes_a_guide_path_with_spaces(tmp_path: Path) -> None:
+    from devkit_agt.features.rules import Violation
+    from devkit_agt.features.rules.cli.output import _violation_line
+
+    line = _violation_line(
+        Violation(rule_id="RULE-x", file="a.md", line=1, message="m"),
+        {"RULE-x": tmp_path / "my rules/guide.md"},
+        tmp_path,
+    )
+    assert line.endswith(' guide="my rules/guide.md"]')

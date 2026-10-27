@@ -75,9 +75,16 @@ def list_cmd(workspace_root: str | None, output_format: str) -> None:
         )
 
 
-def _run_lines(runs: list[ArtifactRun], changed_kind: str, current_kind: str) -> None:
+def _run_lines(runs: list[ArtifactRun], changed_kind: str, current_kind: str, *, owned: bool = False) -> None:
+    """One line per artifact; with ``owned``, only a change to a file the artifact owns selects ``changed_kind``."""
     for item in runs:
-        kind = "GENERATED_SKIPPED" if item.skipped else changed_kind if item.changed else current_kind
+        kind = (
+            "GENERATED_SKIPPED"
+            if item.skipped
+            else changed_kind
+            if (item.owned if owned else item.changed)
+            else current_kind
+        )
         click.echo(f"[{kind}: {item.id} changed={len(item.changed)}]")
 
 
@@ -103,7 +110,7 @@ def regen_cmd(ids: tuple[str, ...], workspace_root: str | None, output_format: s
 
 def _stale_error(result: RunResult) -> StaleError:
     ids = " ".join(shlex.quote(item.id) for item in result.stale)
-    paths = [path for item in result.stale for path in item.changed]
+    paths = [path for item in result.stale for path in item.owned]
     return StaleError(
         f"{len(result.stale)} generated artifact(s) differ from what their command produces at {result.commit}",
         *paths[:20],
@@ -128,7 +135,7 @@ def check_cmd(ids: tuple[str, ...], rev: str, workspace_root: str | None, output
     if is_json(output_format):
         echo_json(result.to_dict() | ({"errors": [stale.to_dict()]} if stale else {}))
     else:
-        _run_lines(result.artifacts, "GENERATED_STALE", "GENERATED_CURRENT")
+        _run_lines(result.artifacts, "GENERATED_STALE", "GENERATED_CURRENT", owned=True)
         skipped = sum(item.skipped for item in result.artifacts)
         click.echo(
             f"[SUMMARY: commit={(result.commit or '')[:12]} checked={len(result.artifacts) - skipped}"

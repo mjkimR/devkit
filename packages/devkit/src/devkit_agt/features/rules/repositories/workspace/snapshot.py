@@ -152,14 +152,26 @@ def matches_working_tree(snapshot: Snapshot) -> bool:
     content-wise; any difference, a submodule's included, keeps the snapshot materialized. So does an untracked,
     not ignored file under ``.devkit/`` (a new ``config.toml``, receipt or override), since the policy must come
     from what is committed. A ``ci`` snapshot never matches: ``HEAD`` against its merge base is evaluated from
-    the tree.
+    the tree. Neither does an index with a skip-worktree entry (a sparse checkout, whose working tree lacks files)
+    or an assume-unchanged entry: Git's diff does not compare those entries with the working tree.
     """
     if snapshot.mode != "staged":
         return False
     index = commit_index(snapshot.root)
     if _git(snapshot.root, "diff", "--name-only", "-z", index=index):
         return False
+    if _has_unchecked_entries(snapshot.root, index):
+        return False
     return not _git(snapshot.root, "ls-files", "-z", "--others", "--exclude-standard", "--", ".devkit", index=index)
+
+
+def _has_unchecked_entries(root: Path, index: str | None) -> bool:
+    """Whether the index marks an entry skip-worktree (tag ``S``) or assume-unchanged (a lowercase tag)."""
+    for entry in _git(root, "ls-files", "-v", "-z", index=index).split(b"\0"):
+        tag = entry[:1]
+        if tag and (tag == b"S" or tag.islower()):
+            return True
+    return False
 
 
 def _inside_tree(name: str, link_target: str) -> bool:

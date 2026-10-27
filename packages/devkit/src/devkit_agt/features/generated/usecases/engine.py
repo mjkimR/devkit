@@ -77,13 +77,17 @@ def open_checkout(root: Path) -> Checkout:
 
 @dataclass(frozen=True)
 class ArtifactRun:
-    """One artifact of a run: the conflicts it settled, the files its command changed, or why it was skipped."""
+    """One artifact of a run: the conflicts it settled, the files its command changed, or why it was skipped.
+
+    ``owned`` is the part of ``changed`` the artifact owns (its ``paths``); the rest are files it ``updates``.
+    """
 
     id: str
     command: str
     conflicts: tuple[str, ...] = ()
     changed: tuple[str, ...] = ()
     skipped: bool = False  # optional, and none of its paths is tracked
+    owned: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -133,7 +137,8 @@ class RunResult:
 
     @property
     def stale(self) -> list[ArtifactRun]:
-        return [item for item in self.artifacts if item.changed]
+        """The artifacts whose command changed a file they own; a change to a file they only update is not stale."""
+        return [item for item in self.artifacts if item.owned]
 
     def to_dict(self) -> dict[str, object]:
         data: dict[str, object] = {"artifacts": [item.to_dict() for item in self.artifacts]}
@@ -299,8 +304,8 @@ class ResolveArtifacts(BaseUseCase):
     def execute(self, root: Path, *, dry_run: bool = False) -> ResolveResult:
         """Settle the conflicts whose paths a generated artifact owns, regenerate, and stage; see the module docstring.
 
-        Raises ``InputsConflictedError`` before any change when a conflict no artifact owns may be read by an artifact
-        to regenerate; ``CommandFailedError`` or ``OutputUndeclaredError`` when a command fails or writes outside its
+        Raises ``InputsConflictedError`` before any change when a conflict no artifact owns may be read or updated by
+        an artifact to regenerate; ``CommandFailedError`` or ``OutputUndeclaredError`` when a command fails or writes outside its
         files, with nothing staged (rerunning starts over from the same conflicts).
         """
         checkout = open_checkout(root)
@@ -321,7 +326,8 @@ class ResolveArtifacts(BaseUseCase):
         for path in unowned:
             rel = checkout.project_path(path)
             for artifact in plan:
-                if not artifact.inputs or (rel is not None and artifact.may_read(rel)):
+                # A file the artifact updates is read too: its command rewrites it in place, conflict markers included.
+                if not artifact.inputs or (rel is not None and (artifact.may_read(rel) or artifact.may_write(rel))):
                     readers.setdefault(path, []).append(artifact.id)
         if readers:
             raise InputsConflictedError(
@@ -409,7 +415,11 @@ def _run_all(checkout: Checkout, plan: Sequence[Artifact]) -> list[ArtifactRun]:
         if _skipped(checkout, artifact, files):
             runs.append(ArtifactRun(artifact.id, artifact.command, skipped=True))
         else:
-            runs.append(ArtifactRun(artifact.id, artifact.command, changed=_regenerate(checkout, artifact)))
+            changed = _regenerate(checkout, artifact)
+            owned = tuple(
+                path for path in changed if (rel := checkout.project_path(path)) is not None and artifact.owns(rel)
+            )
+            runs.append(ArtifactRun(artifact.id, artifact.command, changed=changed, owned=owned))
     return runs
 
 
@@ -420,7 +430,8 @@ class CheckArtifacts(BaseUseCase):
         """Regenerate in a temporary detached worktree of ``rev`` and report the artifacts that differ from it.
 
         The registry is read from that commit; the checkout is left as it was. An artifact is stale when its command
-        changed one of its files there (``RunResult.stale``).
+        changed one of the files it owns there (``RunResult.stale``); a change to a file it only ``updates`` is
+        reported in ``changed`` but is not stale.
         """
         checkout = open_checkout(root)
         try:

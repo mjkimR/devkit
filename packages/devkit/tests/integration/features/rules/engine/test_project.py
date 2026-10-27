@@ -252,6 +252,53 @@ def test_a_partially_staged_snapshot_is_materialized(tmp_path: Path) -> None:
     assert run.workspace_root != root and _files(run.result.violations) == ["docs/c.md"]
 
 
+def test_a_staged_file_named_in_nfd_on_disk_is_checked_in_place(tmp_path: Path) -> None:
+    import unicodedata
+
+    root = _committed_repo(tmp_path)
+    # Git lists the name in NFC (core.precomposeUnicode on macOS); the file system may keep it in NFD.
+    _write(root, unicodedata.normalize("NFD", "docs/café.md"), BROKEN)
+    _git(root, "add", "docs")
+    run = run_project_rules(root, snapshot=git_snapshot(root, staged=True))
+    assert [unicodedata.normalize("NFC", name) for name in _files(run.result.violations)] == [
+        unicodedata.normalize("NFC", "docs/café.md")
+    ]
+
+
+def test_a_target_typed_in_another_unicode_normalization_is_checked(tmp_path: Path) -> None:
+    import unicodedata
+
+    _write(tmp_path, unicodedata.normalize("NFD", "docs/café.md"), BROKEN)
+    for typed in ("NFC", "NFD"):
+        run = run_project_rules(tmp_path, targets=[unicodedata.normalize(typed, "docs/café.md")])
+        assert len(run.result.violations) == 1, typed
+
+
+def test_a_sparse_checkout_is_materialized(tmp_path: Path) -> None:
+    root = _committed_repo(tmp_path)
+    _write(root, "README.md", "# R\n")
+    _git(root, "add", "README.md")
+    _git(root, "-c", "user.email=a@b", "-c", "user.name=a", "commit", "-qm", "readme")
+    _git(root, "sparse-checkout", "set", "--no-cone", "/README.md")
+    assert not (root / "docs/a.md").exists()
+    _write(root, "README.md", "# R\n[a](docs/a.md)\n")
+    _git(root, "add", "README.md")
+    run = run_project_rules(root, snapshot=git_snapshot(root, staged=True))
+    # The link resolves in the committed tree, though docs/ is absent from the sparse working tree.
+    assert run.workspace_root != root and run.result.violations == []
+
+
+def test_an_assume_unchanged_entry_is_materialized(tmp_path: Path) -> None:
+    root = _committed_repo(tmp_path)
+    _git(root, "update-index", "--assume-unchanged", "docs/a.md")
+    # The working copy differs from the index, but Git's diff no longer reports it.
+    _write(root, "docs/a.md", "[x](missing.md)\n")
+    _write(root, "docs/c.md", "# C\n")
+    _git(root, "add", "docs/c.md")
+    run = run_project_rules(root, snapshot=git_snapshot(root, staged=True))
+    assert run.workspace_root != root
+
+
 def test_snapshot_without_changes_checks_nothing(tmp_path: Path) -> None:
     root = (tmp_path / "repo").resolve()
     root.mkdir()

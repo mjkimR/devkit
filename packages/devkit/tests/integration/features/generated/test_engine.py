@@ -236,6 +236,46 @@ def test_check_reports_stale_artifacts_and_leaves_the_checkout_alone(repo: Path)
     assert CheckArtifacts().execute(repo, rev="HEAD~1").stale == []
 
 
+def test_check_is_stale_only_when_owned_files_change(repo: Path) -> None:
+    # The command also rewrites README.md through updates, differently on every run; it owns only gen/note.txt.
+    note = '\n[artifacts.note]\npaths = ["gen/note.txt"]\nupdates = ["README.md"]\ncommand = "echo note > gen/note.txt && echo run >> README.md"\n'
+    write(repo, ".devkit/generated.toml", CONFIG + note)
+    RegenerateArtifacts().execute(repo)
+    commit_all(repo, "note")
+
+    result = CheckArtifacts().execute(repo, ["note"])
+    assert [item.changed for item in result.artifacts if item.id == "note"] == [("README.md",)]
+    assert result.stale == [] and result.to_dict()["stale"] == []
+    checked = invoke("check", "note", "-w", str(repo))
+    assert checked.exit_code == 0, checked.output
+    assert "[GENERATED_CURRENT: note changed=1]" in checked.stdout
+
+    write(repo, ".devkit/generated.toml", CONFIG + note.replace("echo note >", "echo changed >"))
+    commit_all(repo, "note changes")
+    stale = invoke("check", "note", "-w", str(repo))
+    assert stale.exit_code == 1 and "[GENERATED_STALE: note changed=2]" in stale.stdout
+    assert "gen/note.txt" in stale.stderr and "README.md" not in stale.stderr
+
+
+def test_a_conflict_in_a_file_an_artifact_updates_blocks_resolve(repo: Path) -> None:
+    updates = CONFIG.replace(
+        'inputs = ["src/**"]\ncommand = "mkdir -p gen && cat src/*.txt > gen/out.txt"',
+        'inputs = ["src/**"]\nupdates = ["README.md"]\n'
+        'command = "mkdir -p gen && cat src/*.txt > gen/out.txt && cat src/*.txt >> README.md"',
+    )
+    write(repo, ".devkit/generated.toml", updates)
+    write(repo, "README.md", "readme\n")
+    commit_all(repo, "updates")
+    diverge(repo, {"src/a.txt": "a\n"}, {"src/b.txt": "b\n"})
+    assert {"README.md", "gen/out.txt"} <= set(unmerged(repo))
+
+    with pytest.raises(InputsConflictedError) as caught:
+        ResolveArtifacts().execute(repo)
+
+    assert caught.value.details == ("README.md: read by gen",)
+    assert "README.md" in unmerged(repo)
+
+
 def test_check_names_an_artifact_registered_only_in_the_working_tree(repo: Path) -> None:
     write(repo, ".devkit/generated.toml", CONFIG + '\n[artifacts.extra]\npaths = ["gen/extra.txt"]\ncommand = "true"\n')
 

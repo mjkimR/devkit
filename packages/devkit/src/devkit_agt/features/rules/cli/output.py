@@ -113,14 +113,14 @@ def _status(v: Violation) -> str:
 
 def _violation_line(v: Violation, guides: Mapping[str, Path], workspace_root: Path) -> str:
     line = (
-        f"[VIOLATION: {v.rule_id} severity={v.severity.value} file={v.file} line={v.line} "
+        f"[VIOLATION: {v.rule_id} severity={v.severity.value} file={_bare(v.file)} line={v.line} "
         f"status={_status(v)} message={_quote(v.message)}"
     )
     if v.remediation:
         line += f" remediation={_quote(v.remediation)}"
     guide = _display_path(guides.get(v.rule_id), workspace_root)
     if guide:
-        line += f" guide={guide}"
+        line += f" guide={_bare(guide)}"
     return line + "]"
 
 
@@ -175,11 +175,11 @@ def print_explain(rule: Rule, entry: dict[str, Any], resolver: SettingsResolver 
         f"[RULE: {rule.id} name={_quote(rule.name)} phase={entry['default_phase']} "
         f"effective_phase={entry['effective_phase']} severity={entry['default_severity']} "
         f"effective_severity={entry['effective_severity']} promote_to={entry['promote_to'] or '-'} "
-        f"guide={entry['guide'] or '-'} inputs={_bare(','.join(entry['inputs'] or []))}]"
+        f"guide={_bare(entry['guide'])} inputs={_bare(','.join(entry['inputs'] or []))}]"
     )
     click.echo(f"[DESCRIPTION: {_quote(rule.description)}]")
     for item in entry.get("related", []):
-        click.echo(f"[RELATED: {item['ref']} kind={item['kind'] or '-'} path={item['path'] or '-'}]")
+        click.echo(f"[RELATED: {item['ref']} kind={item['kind'] or '-'} path={_bare(item['path'])}]")
     if resolver is None:
         click.echo("[SETTINGS: none]")
     else:
@@ -188,7 +188,7 @@ def print_explain(rule: Rule, entry: dict[str, Any], resolver: SettingsResolver 
             click.echo(f"[SETTING: {key}={_value(value)} default={_value(default)}]")
         for override in resolver.overrides:
             values = " ".join(f"{k}={_value(v)}" for k, v in override.values.items())
-            click.echo(f"[SETTING_OVERRIDE: path={override.path} {values}]")
+            click.echo(f"[SETTING_OVERRIDE: path={_bare(override.path)} {values}]")
     guide = ReadRuleGuideUseCase().execute(rule)
     if guide is not None:
         click.echo()
