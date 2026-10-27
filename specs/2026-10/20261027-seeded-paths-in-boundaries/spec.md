@@ -1,33 +1,22 @@
 ---
-id: PROP-seeded-paths-in-boundaries
+id: SPEC-seeded-paths-in-boundaries
 title: Seeded and synced paths in proposal boundaries
 summary: Lets a proposal's write scope cover the tracked files devkit sync writes because of the agreed change, such as a new seed in a selected preset, so Development does not stop on a path Planning could not name.
-status: accepted                     # draft | reviewing | accepted | rejected
-created_at: 2026-10-27
-target_area: delivery/
-priority: high                        # critical | high | medium | low
-size: S                               # S | M | L | XL (XL: would need two or more specs or task kinds; decompose before Planning)
-planning_effort: medium               # low | medium | high (hint for Planning)
-dev_effort: low                       # low | medium | high (hint for Development)
-boundaries:
-  owns:
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/payload.md
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/worker.md
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/subagents/development-worker.md.jinja
-    - packages/devkit-spec/tests/integration/bundles/spec/test_delegation_sandbox_guidance.py
-    - docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
-    - .devkit/installation.json
-  excludes:
-    - docs/decisions/
-    - packages/devkit-spec/src/devkit_spec/features/
-    - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/rules/proposal_boundaries/
-task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
-workflow: sdd-proposal
+status: planned
+created: 2026-10-27
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-seeded-paths-in-boundaries] Seeded and synced paths in proposal boundaries
+# [SPEC-seeded-paths-in-boundaries] Seeded and synced paths in proposal boundaries
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-seeded-paths-in-boundaries on 2026-10-27.
+
+### 1. Background & Hypothesis
 
 A proposal's `boundaries.owns` becomes Development's write scope, and `RULE-proposal-boundaries` admits only paths
 that exist at Planning (or their nearest parent). A change that adds a seed to a preset the repository selects makes
@@ -38,12 +27,31 @@ path by hand. `.devkit/installation.json` and `AGENTS.md` do not hit this only b
 Hypothesis: the tracked outputs that `devkit sync` writes because of the agreed change can be derived, or at least
 declared, so the handoff write scope includes them without a Host decision each time.
 
-## Source feedback (when this proposal receives feedback)
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Seeded and synced paths in proposal boundaries so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### Source feedback (when this proposal receives feedback)
 
 - `FB-new-seed-sync-output-outside-boundaries`: the whole observation, a seeded path outside the handed-off write
   scope that stopped Development.
 
-## 2. Technical Spike Questions
+### 2. Technical Spike Questions
 
 - **Q1**: Can Development derive the sync outputs of its own bundle change (for example from `devkit sync --check` in
   the worktree), or must Planning declare them?
@@ -65,9 +73,9 @@ declared, so the handoff write scope includes them without a Host decision each 
     derives its scope from `_Boundary:` and strips parenthetical notes, so a recorded `(sync output)` entry needs no
     code.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
-Wording only, in the `spec` bundle's delegation text and its capability (`PADR-admit-change-sync-outputs`):
+Wording only, in the `spec` bundle's delegation text and its capability (`ADR-admit-change-sync-outputs`):
 
 1. **Payload** (`spec-delegate` `references/payload.md`, the bundle-source bullet): the write scope admits, as a
    named class, every tracked path `devkit sync` writes in the worktree after the change (seeded files, projected
@@ -91,7 +99,7 @@ Wording only, in the `spec` bundle's delegation text and its capability (`PADR-a
 Not changed: `RULE-proposal-boundaries`, `devkit spec worker inspect`, `devkit sync` and any CLI. The interim
 Host-admitted practice becomes the standing rule.
 
-## Planning decisions
+### Planning decisions
 
 - Q3 (standing procedure) chosen over Q1 (derivation) and Q2 (declaration): the evidence shows the stop is a
   wording gap, and the existing receipt and `_Boundary:` parsing already carry what code would add.
@@ -102,7 +110,8 @@ Host-admitted practice becomes the standing rule.
 - Direct acceptance (`accept --direct`) no longer applies: Planning was requested (plan-intent) and the proposal is
   in `reviewing`; this turn ends ready for `plan-accept`.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
+
 <!--
 - Preliminary decisions: devkit spec proposal padr seeded-paths-in-boundaries "<title>" --summary "<Y-statement: For <context>, we <decision>, to <quality>, accepting <downside>.>" records a PADR in decisions/.
 - Research: collect benchmarks and references in materials/.
@@ -112,3 +121,4 @@ Host-admitted practice becomes the standing rule.
 - On rejection: change only status: rejected, with the user's reason in the commit message; a later hygiene pass
   writes the rejection ADR and deletes the proposal directory.
 -->
+
