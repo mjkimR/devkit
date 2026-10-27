@@ -9,7 +9,7 @@ depends on `devkit-dist` and `devkit-advisory` at its own version (released in l
 ships no console script of its own: its commands are `devkit.commands` plugins (`ARCH-05-3-command-plugins`).
 Requires Python 3.12 or later; runtime dependencies are `devkit-core`, `click`, `pyyaml`, `tomlkit`, `devkit-dist` and
 `devkit-advisory` (`devkit-dist` brings `devkit-cli`). The `search` extra selects `devkit-dist[search]` for dense/hybrid search. The `mcp` extra selects the same-version
-`devkit-mcp` wheel for optional transport and forms. Domain integration imports only dependency-free core contracts.
+`devkit-mcp` wheel for the optional transport. Domain integration imports only dependency-free core contracts.
 
 ## Install
 

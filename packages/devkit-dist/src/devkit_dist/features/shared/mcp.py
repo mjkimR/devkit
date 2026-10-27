@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from devkit_core.base.mcp import Confirmation, McpTool
+from devkit_core.base.mcp import McpTool
 
 from devkit_dist.features.project.usecases.invocation import configuration_workspace, guard_execution
 from devkit_dist.features.shared.models.api import PutRequest
@@ -28,7 +28,7 @@ def tools(root: Path) -> tuple[McpTool, ...]:
     )
 
     def declare(name: str, properties: tuple[str, ...], required: tuple[str, ...]) -> McpTool:
-        async def invoke(arguments: dict, _confirm: Confirmation) -> dict:
+        async def invoke(arguments: dict) -> dict:
             if name == "put":
                 guard_execution()
             workspace = configuration_workspace(root)

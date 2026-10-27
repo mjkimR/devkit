@@ -22,8 +22,10 @@ created_at: 2026-10-27
 - **Expectation**: An integration whose pull-request merge outcome was unknown is not merged twice, and a pending PR
   that was closed meanwhile is refused (`CAP-INT-mcp-services`).
 - **Actual**: On a fresh CLI invocation after an unknown merge outcome, the fake GitHub provider recorded a second
-  merge call while the PR stayed open; a closed pending PR is not refused on a fresh call. Only the removed
-  in-process retention prevented these; the CLI never had it.
+  merge call while the PR stayed open; a closed pending PR is not refused on a fresh call. A fresh run re-reads the
+  PR under the lock and merges only when it is not MERGED, so a merge the platform completed is safe, but an
+  unknown outcome with the PR still OPEN is merged again; and because the lookup filters to OPEN PRs, a closed
+  PR leads a fresh run to create a new one. Only the removed in-process retention prevented these.
 - **Workaround (or Interpretation Chosen)**: None in code; the pre-existing CLI behavior is unchanged by the
   refactor and recorded here.
 - **Suggestion**: Persist the integration request's merge attempt (PR number, head, merge call issued) in the

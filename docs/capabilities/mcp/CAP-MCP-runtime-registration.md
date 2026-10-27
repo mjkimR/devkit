@@ -19,12 +19,12 @@ updated: 2026-10-22
 ## Runtime contract
 
 `devkit-mcp` ships `devkit_mcp`, mounts `devkit mcp`, discovers `devkit_dist.features.host.services` and adapts the
-SDK-free contracts to FastMCP's stdio transport. `devkit_core.base.mcp` supplies dependency-free `McpTool`,
-`Confirmation` and `ConfirmationReply`.
+SDK-free contracts to FastMCP's stdio transport. `devkit_core.base.mcp` supplies the dependency-free `McpTool`, whose
+`invoke` takes only the validated arguments.
 Services declare execution as read_only, bounded_write, preflight, interactive or approved_resume; omitted classification is
 interactive regardless of descriptive MCP annotations. Schema validation and duplicate/unloadable service failures
-remain deterministic. Native acceptance requires both accept and approve=true; decline, cancel, disconnect or
-missing negotiated form capability grants no authority. Stdout contains only protocol traffic during serve.
+remain deterministic. The transport requests no form and grants no business authority; approval belongs to the
+Host-authorized CLI. Stdout contains only protocol traffic during serve.
 
 The server records the installed devkit source when it starts: the SHA-256 of every Python file under the import
 locations of the top-level `devkit` namespace and each `devkit_*` package. Before every call other than read_only, a
@@ -42,8 +42,8 @@ interpreters. A linked-worktree interpreter or editable source is ineligible. No
 MCP_RUNTIME_UNAVAILABLE (`INPUT_ERROR`, target `--executable`) and no new entry: an error that refuses `mcp setup`
 before any write, and a warning after ordinary sync.
 
-Every protected invocation resolves the owning checkout's effective execution environment. Cloud prevents forms,
-bounded writes, preflight and approved resume as well as interactive mutation; guards repeat after form/lock waits and before later
+Every protected invocation resolves the owning checkout's effective execution environment. Cloud prevents
+bounded writes, preflight and approved resume as well as interactive mutation; guards repeat after lock waits and before later
 effects. The cloud registration profile exposes only declared read-only tools, and no registration is created if
 none exist. Transport availability remains host-dependent. The configuration root cannot be changed by tool input.
 Local Host approval can act on cloud-produced work because environment belongs to the calling Host, not the branch.
@@ -127,13 +127,11 @@ before transaction writes, including recovery. The target checkout's copied loca
 the owner's constraint. Missing/changed owner identity or cloud transition stops remaining writes; partial
 transactions retain their journals for an independently authorized recovery. The parent rechecks on child return.
 
-## Form presentation context
+## Presentation context
 
 The existing invocation binding also lets core presentation resolution select the owning configuration workspace
-for domain-owned form text. The retained executor's preferences do not override it. Language is read once per form,
-with no language/workspace tool argument and no additional serialized approval authority. Execution/environment and
-workspace identity guards still run independently before and after confirmation and before effects. Static domain
-copy and host-owned display limits are specified in `CAP-INT-mcp-services` and `CAP-DLV-proposal-incubation`.
+for domain-owned text a tool returns. The retained executor's preferences do not override it, and no tool argument
+selects a language or workspace. Execution/environment and workspace identity guards run independently before effects.
 
 ## Shared artifact services
 

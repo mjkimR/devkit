@@ -101,6 +101,14 @@ the Git top level.
 - Two editing subagents added `[[import_exceptions]]` entries; both were replaced by correct placement (scanner in
   `rules.models`, spec `adapters` root module), so the work item adds no import exception.
 
+## Review
+
+A fresh reviewer compared old and new behavior over all tracked Markdown files (zero differences) and found one
+regression (an unclosed inline `<!--` hid later lines in the shared scanner), fixed in `f9664b0f`, plus leftovers of
+B1 (unreachable resume-only branches, the unused MCP confirmation channel) and docs drift, removed in the follow-up
+commit. Known delta kept: worktree stale checks run `gh` with isolated Git config, so a remote spelled through a global
+`insteadOf` alias reports pull requests as unknown.
+
 ## Outcome
 
 `applied`. Integration state: pending the work item's review and integration approval.

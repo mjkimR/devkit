@@ -95,13 +95,10 @@ def test_linked_cli_mcp_and_clone_isolation(repository, request_data, tmp_path):
     value = json.loads(result.output)
     assert "content" not in value
 
-    async def no_form(*args):
-        raise AssertionError("no form allowed")
-
     tool = next(t for t in tools(repository) if t.name == "shared_get")
 
     async def invoke():
-        return await tool.invoke({"artifact_uri": value["artifact_uri"]}, no_form)
+        return await tool.invoke({"artifact_uri": value["artifact_uri"]})
 
     read = asyncio.run(invoke())
     assert read["metadata"] == value["metadata"]
@@ -569,13 +566,10 @@ def test_write_receipts_omit_large_body_but_exact_reads_retain_it(repository, ou
     assert receipt["metadata"]["content_sha256"] == request.content_sha256
     assert len(put.output.encode()) < 4096
 
-    async def no_form(*args):
-        raise AssertionError("no form allowed")
-
     async def invoke():
         declared = {tool.name: tool for tool in tools(repository)}
-        written = await declared["shared_put"].invoke(asdict(request), no_form)
-        read = await declared["shared_get"].invoke({"artifact_uri": written["artifact_uri"]}, no_form)
+        written = await declared["shared_put"].invoke(asdict(request))
+        read = await declared["shared_get"].invoke({"artifact_uri": written["artifact_uri"]})
         return written, read
 
     written, read = asyncio.run(invoke())

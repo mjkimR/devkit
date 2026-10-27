@@ -48,7 +48,7 @@ def loaded(tmp_path, monkeypatch):
 
 def _tools(calls: list[str]) -> dict[str, McpTool]:
     def tool(name: str, execution: Execution) -> McpTool:
-        async def invoke(arguments, confirm):
+        async def invoke(arguments):
             calls.append(name)
             return {"ran": name}
 

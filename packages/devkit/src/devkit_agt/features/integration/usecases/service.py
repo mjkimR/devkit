@@ -484,8 +484,6 @@ class IntegrationService:
 
     def _execute(self, record: _Record, approving: bool) -> IntegrationResult:
         result, request = record.result, record.result.request
-        if result.status == "completed":
-            return result
         plan = request.context.finish
         result.errors.clear()
         result.notices[:] = [notice for notice in result.notices if notice.code != "INTEGRATION_CLEANUP_INCOMPLETE"]
@@ -498,30 +496,6 @@ class IntegrationService:
             if observed.get("inspection_incomplete"):
                 raise StaleRequestError("Git inspection is incomplete; inspect state before further mutations")
             head = observed.get("target_sha")
-            if result.steps["merge"] in {"unknown", "failed"} and result.build_target is not None:
-                if (
-                    result.result_sha is not None
-                    and head is not None
-                    and is_ancestor(self.root, result.result_sha, head)
-                ):
-                    merged = True
-                elif head != result.build_target:
-                    raise StaleRequestError("merge outcome is ambiguous; inspect Git before taking further action")
-            if result.steps["worktree_remove"] == "unknown" and not Path(plan.path).exists():
-                removed = True
-            if (
-                merged
-                and not observed.get("worktree_registered")
-                and not observed.get("worktree_exists")
-                and plan.delete_branch
-                and observed.get("source_sha") is None
-                and result.steps["branch_delete"] in {"failed", "unknown"}
-            ):
-                record.finalized = True
-                removed = True
-                result.steps["branch_delete"] = "completed"
-                if plan.worktree_identity:
-                    result.steps["worktree_remove"] = "completed"
             cleanup_done = {name for name, state in result.cleanup_steps.items() if state == "completed"}
             if not merged:
                 operation = "merge"
@@ -633,12 +607,7 @@ class IntegrationService:
         """Build the result commit on the current target, check it and fast-forward the base onto it."""
         request = result.request
         plan = request.context.finish
-        if result.build_target is not None:
-            if head != result.build_target:
-                raise StaleRequestError(
-                    "the target moved after this approval's build; a later target needs a new confirmation"
-                )
-        elif not approving:
+        if not approving:
             if head != plan.target_sha:
                 raise StaleRequestError(
                     "the target moved since the last invocation; inspect current Git state, rerun readiness and obtain"

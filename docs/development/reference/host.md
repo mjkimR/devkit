@@ -69,11 +69,11 @@ outside the top level of a Git checkout (`MCP_CHECKOUT_REQUIRED`), both targetin
 | `MCP_INTERACTIVE_UNAVAILABLE` | Use a local interactive Host or independently authorized CLI/PR route |
 | `HOST_MCP_FAILED` | Correct installed service entry points/runtime and reconnect |
 | `HOST_MCP_ARGUMENT_INVALID` | Supply only the advertised tool schema's arguments |
-| `HOST_CONFIRMATION_UNAVAILABLE` | Obtain conversational approval from the Host before invoking the lifecycle CLI; no authority was granted |
 
 `mcp serve` is a native-protocol exception to ordinary output/format flags; startup errors remain advisories on
 stderr. Other commands emit one JSON object or an MCP result sentinel and advisory notices. No output includes
-other servers' settings or environment values. Elicitation accept alone is insufficient: approve must be true.
+other servers' settings or environment values. The transport never requests a form; business approval belongs to
+the Host conversation and the CLI.
 
 For shared or personal approval/response defaults, set `[presentation] language = "ko"` (`auto`, `en`, `ko`)
 in shared config or ignored `.devkit/config.local.toml`. `devkit config show --effective` reports the requested and

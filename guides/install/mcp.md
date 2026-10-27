@@ -47,7 +47,7 @@ business approval. Trust, tool and sandbox prompts may still appear.
 
 Cloud exposes only declared read-only tools and refuses interactive/preflight/resume execution even through stale
 registrations. Its transport connectivity is separately host-dependent. Missing runtime, disconnected server,
-unavailable forms or unsupported cloud transport requires intentional installation/connection or an independently
+or unsupported cloud transport requires intentional installation/connection or an independently
 authorized CLI/PR route. Missing UI never supplies authority; existing authorization applies only to its exact scope.
 
 ## Supplied approval language

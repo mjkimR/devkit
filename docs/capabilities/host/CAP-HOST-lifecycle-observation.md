@@ -27,9 +27,9 @@ execution, SDD models or approval policy inside an adapter. Quick reference: [re
 - `distribution`: manifest validation, selection, overrides, shared-file planning, receipt, transaction and removal.
 
 `host` depends only on `core` and `advisory`; `distribution` may depend on `host`. No service is required to import
-distribution internals. The separate `devkit_mcp` runtime supplies optional FastMCP stdio transport and native
-confirmation for installed service factories (`devkit_dist.features.host.services`). `CAP-INT-mcp-services` defines the domain
-approval contract, while `host/registrations` reconciles exact local project entries. Host adapters grant no filesystem/network permission and
+distribution internals. The separate `devkit_mcp` runtime supplies optional FastMCP stdio transport for installed
+service factories (`devkit_dist.features.host.services`). `CAP-INT-mcp-services` defines the CLI
+integration approval contract, while `host/registrations` reconciles exact local project entries. Host adapters grant no filesystem/network permission and
 contain no Git executor, automatic policy dispatch or background recovery. Setup: [MCP services](../../development/reference/host.md#mcp-services).
 
 The initial adapter targets locally executed Codex CLI command hooks on POSIX. Other hosts are unsupported.
@@ -153,10 +153,10 @@ and trust prompts, and execution-permission prompts are separate observations.
 ## 6. Project MCP registration
 
 Dist owns the narrow `devkit.mcp.registrations` provider boundary and project-file reconciler described by
-`CAP-MCP-runtime-registration`. It does not own MCP transport or forms. Installing the optional runtime enables
+`CAP-MCP-runtime-registration`. It does not own MCP transport. Installing the optional runtime enables
 ordinary sync to reconcile exact local Codex, Claude Code and Antigravity entries; `[mcp] register = false` opts out. Uninstall,
 opt-out and selected-agent removal retire only exact owned entries. Host trust, permissions and global settings
-remain host-owned. Registration facts do not prove connectivity or native form UI support.
+remain host-owned. Registration facts do not prove connectivity.
 
 
 Approval language is bounded supplied content under `CAP-INT-mcp-services` and

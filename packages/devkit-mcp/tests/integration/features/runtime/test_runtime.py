@@ -18,7 +18,6 @@ from devkit_dist.features.project.repositories.invocation import (
 from devkit_dist.features.project.usecases.invocation import invocation
 from devkit_mcp.features.runtime.usecases import configuration
 from devkit_mcp.features.runtime.usecases import discovery as services
-from mcp_types import ClientCapabilities
 
 
 def git(root, *args):
@@ -100,7 +99,7 @@ def test_linked_interpreter_lexical_path_is_rejected(clones):
 
 
 def test_service_classification_is_separate_from_annotations(monkeypatch, tmp_path):
-    async def call(args, confirm):
+    async def call(args):
         return {}
 
     tool = McpTool("fixture", "fixture", {"type": "object"}, call, read_only=True)
@@ -118,13 +117,6 @@ def test_service_classification_is_separate_from_annotations(monkeypatch, tmp_pa
     )
     with pytest.raises(Exception, match="cannot load"):
         services.load_tools(tmp_path)
-
-
-@pytest.mark.parametrize("capability,form", [({}, False), ({"form": {}}, True), ({"url": {}}, False)])
-def test_installed_sdk_normalizes_form_capability(capability, form):
-    parsed = ClientCapabilities.model_validate({"elicitation": capability})
-    assert parsed.elicitation is not None
-    assert (parsed.elicitation.form is not None) is form
 
 
 def test_probe_reports_advisory_and_candidate_rejects_removable_dependency(clones, monkeypatch):

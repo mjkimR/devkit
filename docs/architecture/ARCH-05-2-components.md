@@ -181,7 +181,7 @@ e2e combinations; individual packages need no duplicate installation suites.
 | **`devkit_agt.features.integration`** (agt) | Approval-bound integration through Host-authorized CLI operations. | `integration` |
 | **`devkit_agt.features.generated`** (agt) | Tracking and deterministic regeneration of machine-generated files. | `generated check`, `generated regen` |
 
-The optional `devkit_mcp` component mounts `mcp`, loads `devkit.host.services` and adapts native forms.
+The optional `devkit_mcp` component mounts `mcp`, loads `devkit.host.services` and adapts them to the stdio transport.
 `devkit_core.base.mcp` owns SDK-free service contracts and explicit execution classification; the core execution binding
 keeps owning configuration workspace, retained executor and same-clone identity distinct. Domain mutation guards
 consume the process-local binding without importing the transport. Dist discovers only the narrow
