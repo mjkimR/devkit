@@ -174,7 +174,7 @@ _DRAFT_STATUS = re.compile(
     r"""^status:[ \t]*(?:draft|proposed|"(?:draft|proposed)"|'(?:draft|proposed)')(?=[ \t]*\r?$|[ \t]+#)""",
     re.MULTILINE,
 )
-_DRAFT_BODY_STATUS = re.compile(r"- \*\*Status\*\*:[ \t]*(?:Draft|Proposed)[ \t]*")
+_DRAFT_BODY_STATUS = re.compile(r"(- \*\*Status\*\*:[ \t]*)(?:Draft|Proposed)[ \t]*")
 
 
 @dataclass(frozen=True)
@@ -685,10 +685,11 @@ def _accept_status(text: str) -> str:
     end = block.end if block else 0
     text = _DRAFT_STATUS.sub("status: accepted", text[:end]) + text[end:]
     for line in visible_lines(text, start=end):
-        span = text[line.offset : line.offset + len(line.text)]
-        # ``line.text`` is masked (comments blanked); the replacement keeps the source line's exact text.
-        if _DRAFT_BODY_STATUS.fullmatch(line.text) and _DRAFT_BODY_STATUS.fullmatch(span):
-            return text[: line.offset] + "- **Status**: Accepted" + text[line.offset + len(span) :]
+        # ``line.text`` is the source line with comments blanked in place, so its positions are the source's: only
+        # the status word is replaced and a trailing comment stays.
+        if (match := _DRAFT_BODY_STATUS.fullmatch(line.text)) is not None:
+            word = line.offset + match.end(1)
+            return text[:word] + "Accepted" + text[word + len(match.group(0).rstrip()) - match.end(1) :]
     return text
 
 

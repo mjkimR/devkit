@@ -99,10 +99,12 @@ def record_source(record: OverrideRecord) -> str | None:
 
 
 def record_overridden(root: Path, bundle: str, record: OverrideRecord) -> bool:
-    """Whether any file remains under the override path of ``record`` (see ``record_source``); for a record at the
-    bundle root, under the bundle's override directory."""
+    """Whether any file remains under the override path of ``record`` (see ``record_source``); never for a record at
+    the bundle root, which names no asset's own override directory (other overrides must not keep it)."""
     source = record_source(record)
-    path = root / (override_rel(bundle, source) if source is not None else f"{OVERRIDES_PATH}/{bundle}")
+    if source is None:
+        return False
+    path = root / override_rel(bundle, source)
     return path.is_file() or (path.is_dir() and any(p.is_file() for p in path.rglob("*")))
 
 

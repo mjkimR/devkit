@@ -11,7 +11,7 @@ from devkit_dist.features.distribution.models.errors import ConflictError, Overr
 from devkit_dist.features.distribution.services.installation import transaction
 from devkit_dist.features.distribution.services.installation.config import update_config
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle
-from devkit_dist.features.distribution.services.installation.overrides import record_source
+from devkit_dist.features.distribution.services.installation.overrides import record_overridden, record_source
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt
 from devkit_dist.features.distribution.services.installation.workspace import JOURNAL
 from devkit_dist.features.distribution.usecases.override_commands import (
@@ -346,3 +346,11 @@ def test_remove_drops_the_override_of_a_removed_asset(item: InstalledBundle, tar
 def test_record_source_never_names_the_bundle_root(relative_path: str, expected: str | None) -> None:
     # A record at the bundle root would make override remove delete every override of the bundle.
     assert record_source(OverrideRecord("skill", relative_path, "a" * 64, "b" * 64)) == expected
+
+
+def test_a_bundle_root_record_is_not_kept_by_other_overrides(tmp_path: Path) -> None:
+    # A root record names no asset's own override directory; other overrides of the bundle must not keep it alive.
+    other = tmp_path / OVERRIDES_PATH / "team/skills/guide/SKILL.md"
+    other.parent.mkdir(parents=True)
+    other.write_text("override\n", encoding="utf-8")
+    assert not record_overridden(tmp_path, "team", OverrideRecord("skill", "SKILL.md", "a" * 64, "b" * 64))

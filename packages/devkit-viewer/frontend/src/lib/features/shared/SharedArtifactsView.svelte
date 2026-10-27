@@ -149,7 +149,10 @@
 
 	// Only the request for the current selection may change the detail; a superseded one is aborted and ignored.
 	async function loadDetail(genId: string, signal: AbortSignal) {
-		if (!source?.sharedBlob) return;
+		if (!source?.sharedBlob) {
+			detailLoading = false;
+			return;
+		}
 		selectedDetail = null;
 		detailError = null;
 		detailLoading = true;

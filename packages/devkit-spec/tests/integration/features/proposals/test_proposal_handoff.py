@@ -453,6 +453,20 @@ def test_a_commented_out_status_line_is_not_the_prose_status(workspace: Path) ->
     assert comment in adr and "\n- **Status**: Accepted\n" in adr
 
 
+def test_a_status_line_with_a_trailing_comment_is_accepted(workspace: Path) -> None:
+    proposal = _new(workspace, "noted")
+    create_padr(workspace, "noted", "Store format")
+    padr = proposal.parent / "decisions/PADR-store-format.md"
+    padr.write_text(
+        padr.read_text(encoding="utf-8").replace("- **Status**: Draft\n", "- **Status**: Draft <!-- todo -->\n", 1),
+        encoding="utf-8",
+    )
+    accept(proposal)
+    handoff_proposal(workspace, "noted", today=TODAY)
+    adr = (workspace / f"docs/decisions/{MONTH}/{STAMP}-store-format.md").read_text(encoding="utf-8")
+    assert "\n- **Status**: Accepted <!-- todo -->\n" in adr
+
+
 def test_promotes_a_padr_id_with_uppercase_and_underscore(workspace: Path) -> None:
     proposal = _new(workspace, "grammar")
     (proposal.parent / "decisions").mkdir(exist_ok=True)
