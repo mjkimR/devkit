@@ -18,8 +18,3 @@ class HandoffPreview:
     plan: str
     effort: str
     existing: bool = False
-
-    def message(self, language: str = "en") -> str:
-        from devkit_spec.features.proposals.models.approval import message
-
-        return message(self, language)

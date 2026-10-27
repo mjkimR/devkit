@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import json
 from dataclasses import replace
 
@@ -21,7 +20,6 @@ from devkit_agt.features.integration import (
 )
 from devkit_agt.features.worktree import PullRequestPolicyError, RemoveFailedError, finish, locate
 from devkit_core.base.errors import GitError
-from devkit_core.base.mcp import ConfirmationReply
 from testsupport.rules import git, write
 
 from .conftest import Entry
@@ -29,15 +27,13 @@ from .conftest import Entry
 TASK = Task("session", "fixture-task")
 
 
-async def approve(_message: str, _schema: dict) -> ConfirmationReply:
-    return ConfirmationReply("accept", {"approve": True})
-
-
 def integrate(service: IntegrationService):
-    return asyncio.run(service.integrate("dev-demo", TASK, approve))
+    """One Host-approved CLI invocation: the digest pins the scope presented by prepare."""
+    digest = service.prepare("dev-demo", TASK).request.digest
+    return service.execute_cli("dev-demo", TASK, expected_digest=digest)
 
 
-def test_native_approval_integrates_and_cleans_without_network(repo, monkeypatch):
+def test_host_approved_cli_integrates_and_cleans_without_network(repo, monkeypatch):
     base, worktree = repo
     git(base, "remote", "add", "origin", "unreachable://fixture")
     git(base, "config", "branch.main.remote", "origin")
@@ -54,7 +50,7 @@ def test_native_approval_integrates_and_cleans_without_network(repo, monkeypatch
     monkeypatch.setattr(lifecycle, "run_git", run)
     monkeypatch.setattr(merging, "run_git", run)
     result = integrate(IntegrationService(base))
-    assert result.status == "completed" and result.authority == "mcp-elicitation"
+    assert result.status == "completed" and result.authority == "host-conversation"
     assert result.steps["merge"] == result.steps["worktree_remove"] == result.steps["branch_delete"] == "completed"
     assert git(base, "rev-parse", "HEAD^1", "HEAD^2").split() == [target, tip] and not worktree.exists()
     assert git(base, "log", "-1", "--format=%s") == "chore(merge): integrate dev-demo into main"
@@ -70,111 +66,45 @@ def test_native_approval_integrates_and_cleans_without_network(repo, monkeypatch
     assert result.to_dict()["network_operations"] == "excluded"
 
 
-@pytest.mark.parametrize(
-    "action,content,status",
-    [
-        ("accept", {"approve": False}, "not_approved"),
-        ("accept", {}, "not_approved"),
-        ("accept", {"approve": "true"}, "not_approved"),
-        ("decline", {}, "declined"),
-        ("cancel", {}, "cancelled"),
-    ],
-)
-@pytest.mark.parametrize("language", ["en", "ko"])
-def test_nonapproval_performs_no_integration_mutations(repo, action, content, status, language):
+def test_ask_cli_without_the_presented_digest_has_no_authority(repo):
     base, worktree = repo
-    with (base / ".git/info/exclude").open("a") as stream:
-        stream.write("\n.devkit/config.local.toml\n")
-    (base / ".devkit/config.local.toml").write_text(f'[presentation]\nlanguage="{language}"\n')
     before = git(base, "show-ref")
-
-    async def reply(_message, schema):
-        assert schema["properties"]["approve"]["default"] is False
-        return ConfirmationReply(action, content)
-
-    service = IntegrationService(base)
-    result = asyncio.run(service.integrate("dev-demo", TASK, reply))
-    assert result.status == status and result.authority == "none"
+    with pytest.raises(AuthorityError):
+        IntegrationService(base).execute_cli("dev-demo", TASK)
     assert git(base, "show-ref") == before and worktree.exists()
     assert not (base / ".git/devkit-integration.lock").exists()
-    with pytest.raises(AuthorityError):
-        service.resume(result.request.id)
-
-
-def test_prepared_request_is_not_authority_and_cannot_cross_process(repo):
-    base, _ = repo
-    service = IntegrationService(base)
-    result = service.prepare("dev-demo", TASK)
-    with pytest.raises(AuthorityError):
-        service.resume(result.request.id)
-    with pytest.raises(AuthorityError):
-        IntegrationService(base).inspect(result.request.id)
-
-
-def test_pending_confirmation_leaves_git_and_worktree_unchanged(repo):
-    base, worktree = repo
-    before = git(base, "show-ref")
-
-    async def run():
-        entered, release = asyncio.Event(), asyncio.Event()
-
-        async def confirm(_message, _schema):
-            entered.set()
-            await release.wait()
-            return ConfirmationReply("cancel", {})
-
-        service = IntegrationService(base)
-        pending = asyncio.create_task(service.integrate("dev-demo", TASK, confirm))
-        try:
-            await asyncio.wait_for(entered.wait(), timeout=5)
-            assert not pending.done()
-            assert git(base, "show-ref") == before and worktree.exists()
-            assert not (base / ".git/devkit-integration.lock").exists()
-        finally:
-            release.set()
-            await pending
-        assert pending.result().status == "cancelled"
-        assert git(base, "show-ref") == before and worktree.exists()
-
-    asyncio.run(run())
 
 
 @pytest.mark.parametrize("moved", ["source", "target", "policy", "cleanup"])
-@pytest.mark.parametrize("language", ["en", "ko"])
-def test_changed_scope_invalidates_confirmation(repo, moved, language):
+def test_changed_scope_invalidates_the_presented_digest(repo, moved):
     base, worktree = repo
-    with (base / ".git/info/exclude").open("a") as stream:
-        stream.write("\n.devkit/config.local.toml\n")
-    (base / ".devkit/config.local.toml").write_text(f'[presentation]\nlanguage="{language}"\n')
     service = IntegrationService(base)
+    digest = service.prepare("dev-demo", TASK).request.digest
+    before = git(base, "rev-parse", "HEAD")
+    if moved == "source":
+        write(worktree, "changed.txt", "changed\n")
+        git(worktree, "add", ".")
+        git(worktree, "commit", "-qm", "change scope")
+    elif moved == "target":  # rewritten: no longer a descendant of the presented target
+        git(base, "commit", "--amend", "-qm", "rewritten target")
+        before = git(base, "rev-parse", "HEAD")
+    elif moved == "policy":
+        write(base, ".devkit/config.toml", '[integration]\nprovider = "other"\n')
+    else:
+        git(base, "worktree", "move", str(worktree), str(worktree.with_name("moved")))
+    with pytest.raises(AdvisoryError):
+        service.execute_cli("dev-demo", TASK, expected_digest=digest)
+    assert git(base, "rev-parse", "HEAD") == before
 
-    async def change(_message, _schema):
-        if moved == "source":
-            write(worktree, "changed.txt", "changed\n")
-            git(worktree, "add", ".")
-            git(worktree, "commit", "-qm", "change scope")
-        elif moved == "target":  # rewritten: no longer a descendant of the confirmation target
-            git(base, "commit", "--amend", "-qm", "rewritten target")
-        elif moved == "policy":
-            write(base, ".devkit/config.toml", '[integration]\nprovider = "other"\n')
-        else:
-            git(base, "worktree", "move", str(worktree), str(worktree.with_name("moved")))
-        return await approve(_message, _schema)
 
-    result = asyncio.run(service.integrate("dev-demo", TASK, change))
-    assert result.status == "blocked" and result.errors
-    assert result.steps["merge"] == "not_run"
-
-
-def test_review_readiness_is_rechecked_after_confirmation(repo, ready_provider):
+def test_review_readiness_is_rechecked_by_the_approving_call(repo, ready_provider):
     base, worktree = repo
-
-    async def change(message, schema):
-        ready_provider.allowed = False
-        return await approve(message, schema)
-
-    result = asyncio.run(IntegrationService(base).integrate("dev-demo", TASK, change))
-    assert result.status == "blocked" and result.errors[0].code == "INTEGRATION_NOT_READY"
+    service = IntegrationService(base)
+    digest = service.prepare("dev-demo", TASK).request.digest
+    ready_provider.allowed = False
+    with pytest.raises(AdvisoryError) as error:
+        service.execute_cli("dev-demo", TASK, expected_digest=digest)
+    assert error.value.code == "INTEGRATION_NOT_READY"
     assert worktree.exists()
 
 
@@ -212,7 +142,7 @@ def test_delete_branch_false_is_preserved(repo):
     assert git(base, "rev-parse", "dev-demo") == git(base, "rev-parse", "HEAD^2")
 
 
-def test_merge_then_permission_failure_resumes_cleanup_without_second_merge_or_approval(repo, monkeypatch):
+def test_merge_then_permission_failure_retries_cleanup_without_second_merge(repo, monkeypatch):
     base, worktree = repo
     original_remove, original_git = lifecycle._remove, lifecycle.run_git
     merged = []
@@ -235,8 +165,9 @@ def test_merge_then_permission_failure_resumes_cleanup_without_second_merge_or_a
     assert result.status == "partial" and result.steps["merge"] == "completed" and worktree.exists()
     assert result.failing_operation == "worktree_remove" and result.errors[0].code == "WORKTREE_REMOVE_FAILED"
     monkeypatch.setattr(lifecycle, "_remove", original_remove)
-    result = service.resume(result.request.id)
-    assert result.status == "completed" and not worktree.exists() and len(merged) == 1
+    result = integrate(service)
+    assert result.status == "completed" and result.steps["merge"] == "skipped"
+    assert not worktree.exists() and len(merged) == 1
 
 
 def test_unscoped_post_finish_extension_blocks_before_approval(repo, monkeypatch):
@@ -255,7 +186,7 @@ def test_unscoped_post_finish_extension_blocks_before_approval(repo, monkeypatch
         IntegrationService(base).prepare("dev-demo", TASK)
 
 
-def test_scoped_cleanup_receives_exact_targets_and_can_resume_after_git_is_finished(repo, monkeypatch):
+def test_scoped_cleanup_receives_exact_targets_and_reports_partial_after_git_is_finished(repo, monkeypatch):
     base, _ = repo
 
     class Cleanup:
@@ -285,8 +216,7 @@ def test_scoped_cleanup_receives_exact_targets_and_can_resume_after_git_is_finis
     service = IntegrationService(base)
     result = integrate(service)
     assert result.status == "partial" and result.steps["merge"] == "completed"
-    result = service.resume(result.request.id)
-    assert result.status == "completed" and cleanup.attempts == 2
+    assert result.cleanup_steps == {"scoped": "failed"} and cleanup.attempts == 1
 
 
 def test_missing_provider_configuration_fails_closed(repo):
@@ -305,7 +235,7 @@ def test_public_local_only_finish_excludes_fetch_and_push(repo):
     assert result.merged and result.push == "excluded" and not worktree.exists()
 
 
-def test_merge_permission_failure_has_correct_remedy_and_retains_authority(repo, monkeypatch):
+def test_merge_permission_failure_has_correct_remedy_and_a_fresh_call_completes(repo, monkeypatch):
     base, worktree = repo
     original = merging.run_git
 
@@ -320,7 +250,7 @@ def test_merge_permission_failure_has_correct_remedy_and_retains_authority(repo,
     assert result.status == "blocked" and result.errors[0].code == "WORKTREE_MERGE_FAILED"
     assert worktree.exists()
     monkeypatch.setattr(merging, "run_git", original)
-    assert service.resume(result.request.id).status == "completed"
+    assert integrate(service).status == "completed"
 
 
 def test_unknown_merge_outcome_is_inspected_and_not_merged_twice(repo, monkeypatch):
@@ -340,7 +270,8 @@ def test_unknown_merge_outcome_is_inspected_and_not_merged_twice(repo, monkeypat
     result = integrate(service)
     assert result.steps["merge"] == "unknown" and result.observed["target_sha"] == result.result_sha
     monkeypatch.setattr(merging, "run_git", original)
-    assert service.resume(result.request.id).status == "completed" and len(calls) == 1
+    retried = integrate(service)
+    assert retried.status == "completed" and retried.steps["merge"] == "skipped" and len(calls) == 1
 
 
 def test_server_runtime_inside_worktree_is_refused_even_with_symlinked_python(repo, monkeypatch):
@@ -379,16 +310,12 @@ def test_confirmation_lists_scoped_cleanup_effects_without_internal_revisions(re
             else original(**kw)
         ),
     )
-    service = IntegrationService(base)
-
-    async def decline(message, _schema):
-        assert f"Repository: {json.dumps(str(base))}" in message and str(worktree) in message
-        assert '"scoped": "record" "task-1"' in message and "internal-revision-1" not in message
-        assert 'Delete local branch: "dev-demo"' in message and "No fetch, push" in message
-        return ConfirmationReply("decline", {})
-
-    result = asyncio.run(service.integrate("dev-demo", TASK, decline))
-    assert result.status == "declined" and worktree.exists()
+    result = IntegrationService(base).prepare("dev-demo", TASK)
+    message = result.request.confirmation_message()
+    assert f"Repository: {json.dumps(str(base))}" in message and str(worktree) in message
+    assert '"scoped": "record" "task-1"' in message and "internal-revision-1" not in message
+    assert 'Delete local branch: "dev-demo"' in message and "No fetch, push" in message
+    assert worktree.exists()
     compact = result.compact_dict()
     assert compact["request"]["cleanup"] == [
         {"extension": "scoped", "targets": [{"kind": "record", "identity": "task-1"}]}
@@ -486,31 +413,17 @@ def test_bilingual_scope_and_owned_branches(repo, method, merged, pr, number, cl
         assert "INTEGRATION_LANDED_UNCHECKED" in korean if merged else "devkit" in korean
 
 
-def test_owning_workspace_language_snapshot_and_guard_independence(repo):
+def test_cloud_execution_environment_blocks_the_cli_before_effects(repo):
     from devkit_dist.features.project.repositories.invocation import ExecutionBinding, McpInteractiveError
     from devkit_dist.features.project.usecases.invocation import invocation
 
     base, worktree = repo
     with (base / ".git/info/exclude").open("a") as stream:
         stream.write("\n.devkit/config.local.toml\n")
-    (base / ".devkit/config.local.toml").write_text('[presentation]\nlanguage="en"\n')
     local = worktree / ".devkit/config.local.toml"
-    local.write_text('[presentation]\nlanguage="ko"\n')
-    binding = ExecutionBinding(worktree, base)
+    local.write_text('[execution]\nenvironment="cloud"\n')
+    before = git(base, "show-ref")
     service = IntegrationService(base)
-    messages = []
-
-    async def cancel(message, schema):
-        messages.append(message)
-        local.write_text('[presentation]\nlanguage="en"\n')
-        assert message == messages[-1]
-        return ConfirmationReply("cancel", {})
-
-    with invocation(binding):
-        asyncio.run(service.integrate("dev-demo", TASK, cancel))
-        asyncio.run(service.integrate("dev-demo", TASK, cancel))
-    assert "승인" in messages[0] and messages[1].startswith("Approve")
-    local.write_text('[presentation]\nlanguage="ko"\n[execution]\nenvironment="cloud"\n')
-    with pytest.raises(McpInteractiveError), invocation(binding):
-        asyncio.run(service.integrate("dev-demo", TASK, cancel))
-    assert len(messages) == 2
+    with pytest.raises(McpInteractiveError), invocation(ExecutionBinding(worktree, base)):
+        service.execute_cli("dev-demo", TASK, expected_digest="0" * 64)
+    assert git(base, "show-ref") == before and worktree.exists()

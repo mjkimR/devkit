@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import hashlib
 from pathlib import Path
 from typing import Any
@@ -11,12 +10,10 @@ from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow import Workspace
 from devkit_agt.features.worktree import StartResult, locate, path_for, read_worktree_config, start
 from devkit_agt.features.worktree.usecases.lifecycle import _prepare
-from devkit_core.base.mcp import Confirmation
 from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import run_git
 from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project.models.invocation import devkit_command
-from devkit_dist.features.project.usecases.configuration import approval_language
 from devkit_dist.features.project.usecases.invocation import guard_execution
 
 from devkit_spec.base.errors import (
@@ -31,7 +28,6 @@ from devkit_spec.base.errors import (
 )
 from devkit_spec.features.delivery.usecases.handoff import handoff_and_register
 from devkit_spec.features.policy.usecases.approvals import approval_policy
-from devkit_spec.features.proposals.models.approval import schema as approval_schema
 from devkit_spec.features.proposals.models.axes import EFFORTS, TASK_KINDS
 from devkit_spec.features.proposals.models.handoff import HandoffPreview
 
@@ -176,7 +172,6 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
 class HandoffUseCase(BaseUseCase):
     def __init__(self, root: Path) -> None:
         self.root = root
-        self._lock = asyncio.Lock()
 
     def execute(self, slug: str, effort: str) -> dict[str, Any]:
         """Start Development after Host-carried approval, rechecking the base."""
@@ -196,30 +191,6 @@ class HandoffUseCase(BaseUseCase):
             )
         result = self._execute(preview, effort)
         return {**result, "authority": "policy" if authority == "auto" else "host-conversation"}
-
-    async def execute_native(self, slug: str, confirm: Confirmation) -> dict[str, Any]:
-        self.root = self.root.resolve()
-        guard_execution()
-        async with self._lock:
-            guard_execution()
-            language = approval_language(self.root)
-            preview = await asyncio.to_thread(prepare, self.root, slug)
-            guard_execution()
-            if approval_policy(self.root, "proposal-handoff") == "auto":
-                result = await asyncio.to_thread(self._execute, preview, preview.effort)
-                return {**result, "authority": "policy"}
-            reply = await confirm(
-                preview.message(language),
-                approval_schema(preview.effort, language),
-            )
-            if reply.action != "accept" or reply.content.get("approve") is not True:
-                return {"status": {"decline": "declined", "cancel": "cancelled"}.get(reply.action, "not_approved")}
-            guard_execution()
-            effort = reply.content.get("activity_effort")
-            if effort not in EFFORTS:
-                raise HandoffReplyError("Host approval must include a Development effort of low, medium or high")
-            result = await asyncio.to_thread(self._execute, preview, effort)
-            return {**result, "authority": "user"}
 
     def _execute(self, preview: HandoffPreview, effort: str) -> dict:
         guard_execution()

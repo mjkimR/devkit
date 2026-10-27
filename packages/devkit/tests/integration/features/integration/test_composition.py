@@ -1,13 +1,14 @@
+"""The composed acceptance-and-integration engine that ``spec proposal accept`` drives (``_compose_execute``)."""
+
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
 
 import devkit_agt.features.integration.services.providers as providers
 import pytest
+from devkit.advisory import AdvisoryError
 from devkit_agt.features.integration import AuthorityError, CleanupResult, CleanupTarget, IntegrationService, Task
 from devkit_agt.features.worktree import integration_lock
-from devkit_core.base.mcp import ConfirmationReply
 from devkit_core.core import LockHeldError
 from testsupport.rules import git, write
 
@@ -28,13 +29,6 @@ class Lifecycle:
     def preview(self, context):
         return self.provider.check(context)
 
-    def confirmation(self, request, language):
-        return request.confirmation_message(language), {
-            "type": "object",
-            "properties": {"approve": {"type": "boolean", "default": False}},
-            "required": ["approve"],
-        }
-
     def select(self, content):
         self.selected = True
 
@@ -54,8 +48,22 @@ class Lifecycle:
         return git(self.worktree, "rev-parse", "HEAD")
 
 
-async def approve(message, schema):
-    return ConfirmationReply("accept", {"approve": True})
+def compose(service, lifecycle, between=None):
+    """Prepare with the lifecycle and execute the composition as the Host-authorized CLI does.
+
+    ``between`` runs after preparation, before the composition takes the operation lock. A refusal before execution
+    raises its advisory, which the CLI reports as blocked.
+    """
+    request = service._prepare("dev-demo", Task("session", "fixture"), lifecycle=lifecycle).request
+    lifecycle.validate(request)
+    lifecycle.select({})
+    if between is not None:
+        between()
+    return service._compose_execute(request, lifecycle, "host-conversation")
+
+
+def retained_authority(service, result):
+    return service._records[result.request.id].approved
 
 
 @pytest.mark.parametrize("existing", [False, True])
@@ -63,50 +71,29 @@ def test_composition_integrates_exact_acceptance_and_revokes_authority(repo, rea
     base, worktree = repo
     service = IntegrationService(base)
     lifecycle = Lifecycle(worktree, ready_provider, existing=existing)
-    result = asyncio.run(service._compose("dev-demo", Task("session", "fixture"), lifecycle, approve))
-    assert result.status == "completed"
+    result = compose(service, lifecycle)
+    assert result.status == "completed" and result.authority == "host-conversation"
     assert lifecycle.accepted and lifecycle.selected
     assert not worktree.exists()
-    with pytest.raises(AuthorityError):
-        service.resume(result.request.id)
+    assert retained_authority(service, result) is False
 
 
-@pytest.mark.parametrize("action,value", [("accept", False), ("accept", "true"), ("cancel", True)])
-def test_composition_nonapproval_cannot_accept_or_integrate(repo, ready_provider, action, value):
-    base, worktree = repo
-    service = IntegrationService(base)
-    lifecycle = Lifecycle(worktree, ready_provider)
-    before = git(base, "show-ref")
-
-    async def reply(message, schema):
-        return ConfirmationReply(action, {"approve": value})
-
-    result = asyncio.run(service._compose("dev-demo", Task("session", "fixture"), lifecycle, reply))
-    assert not lifecycle.accepted and not lifecycle.selected
-    assert git(base, "show-ref") == before
-    with pytest.raises(AuthorityError):
-        service.resume(result.request.id)
-
-
-def test_composition_target_change_during_form_blocks_acceptance(repo, ready_provider):
+def test_composition_target_change_after_preparation_blocks_acceptance(repo, ready_provider):
     base, worktree = repo
     service = IntegrationService(base)
     lifecycle = Lifecycle(worktree, ready_provider)
 
-    async def reply(message, schema):
+    def advance():
         write(base, "moved.txt", "moved\n")
         git(base, "add", ".")
         git(base, "commit", "-qm", "advance base")
-        return ConfirmationReply("accept", {"approve": True})
 
-    result = asyncio.run(service._compose("dev-demo", Task("session", "fixture"), lifecycle, reply))
-    assert result.status == "blocked"
+    with pytest.raises(AdvisoryError):
+        compose(service, lifecycle, advance)
     assert not lifecycle.accepted and worktree.exists()
-    with pytest.raises(AuthorityError):
-        service.resume(result.request.id)
 
 
-def test_composition_partial_result_has_no_resume_authority(repo, ready_provider, monkeypatch):
+def test_composition_partial_result_retains_no_authority(repo, ready_provider, monkeypatch):
     base, worktree = repo
     service = IntegrationService(base)
     lifecycle = Lifecycle(worktree, ready_provider)
@@ -118,11 +105,9 @@ def test_composition_partial_result_has_no_resume_authority(repo, ready_provider
         return result
 
     monkeypatch.setattr(service, "_execute", partial)
-    result = asyncio.run(service._compose("dev-demo", Task("session", "fixture"), lifecycle, approve))
+    result = compose(service, lifecycle)
     assert result.status == "partial"
-    monkeypatch.undo()
-    with pytest.raises(AuthorityError):
-        service.resume(result.request.id)
+    assert retained_authority(service, result) is False
 
 
 def test_composition_rechecks_real_provider_after_acceptance(repo, ready_provider):
@@ -131,15 +116,13 @@ def test_composition_rechecks_real_provider_after_acceptance(repo, ready_provide
     lifecycle = Lifecycle(worktree, ready_provider)
     before = git(base, "rev-parse", "HEAD")
 
-    async def reply(message, schema):
+    def refuse():
         ready_provider.allowed = False
-        return ConfirmationReply("accept", {"approve": True})
 
-    result = asyncio.run(service._compose("dev-demo", Task("session", "fixture"), lifecycle, reply))
-    assert result.status == "blocked" and lifecycle.accepted
+    with pytest.raises(AdvisoryError):
+        compose(service, lifecycle, refuse)
+    assert lifecycle.accepted
     assert git(base, "rev-parse", "HEAD") == before and worktree.exists()
-    with pytest.raises(AuthorityError):
-        service.resume(result.request.id)
 
 
 def test_composition_refuses_target_move_after_reprepare(repo, ready_provider, monkeypatch):
@@ -158,12 +141,11 @@ def test_composition_refuses_target_move_after_reprepare(repo, ready_provider, m
         return result
 
     monkeypatch.setattr(service, "_prepare", moved)
-    result = asyncio.run(service._compose("dev-demo", Task("session", "fixture"), lifecycle, approve))
+    result = compose(service, lifecycle)
     assert result.status == "blocked" and lifecycle.accepted
     assert result.steps["merge"] == "not_run" and worktree.exists()
     assert git(base, "log", "-1", "--format=%s") == "advance base after preparation"
-    with pytest.raises(AuthorityError):
-        service.resume(result.request.id)
+    assert retained_authority(service, result) is False
 
 
 def test_composition_holds_operation_lock_before_acceptance(repo, ready_provider, monkeypatch):
@@ -178,7 +160,7 @@ def test_composition_holds_operation_lock_before_acceptance(repo, ready_provider
         return accept(request)
 
     monkeypatch.setattr(lifecycle, "accept", locked_accept)
-    result = asyncio.run(service._compose("dev-demo", Task("session", "fixture"), lifecycle, approve))
+    result = compose(service, lifecycle)
     assert result.status == "completed"
 
 
@@ -206,11 +188,12 @@ def test_composition_cleanup_only_transforms_exact_source_bound_revision(repo, r
     monkeypatch.setattr(providers, "cleanup_extensions", lambda: {"fixture": ("fixture:cleanup", Cleanup())})
     service = IntegrationService(base)
     lifecycle = Lifecycle(worktree, ready_provider)
-    result = asyncio.run(service._compose("dev-demo", Task("session", "fixture"), lifecycle, approve))
-    assert result.status == ("completed" if change == "source" else "blocked")
-    assert worktree.exists() is (change != "source")
-    with pytest.raises(AuthorityError):
-        service.resume(result.request.id)
+    if change == "source":
+        assert compose(service, lifecycle).status == "completed" and not worktree.exists()
+    else:
+        with pytest.raises(AdvisoryError) as refused:
+            compose(service, lifecycle)
+        assert refused.value.code == "INTEGRATION_REQUEST_STALE" and worktree.exists()
 
 
 def test_composition_package_guard_after_acceptance_blocks_merge(repo, ready_provider, monkeypatch):
@@ -225,9 +208,8 @@ def test_composition_package_guard_after_acceptance_blocks_merge(repo, ready_pro
         raise AuthorityError("package evidence expired after acceptance")
 
     monkeypatch.setattr(lifecycle, "before_merge", expired)
-    result = asyncio.run(service._compose("dev-demo", Task("session", "fixture"), lifecycle, approve))
-    assert result.status == "blocked" and worktree.exists()
+    with pytest.raises(AuthorityError):
+        compose(service, lifecycle)
+    assert worktree.exists()
     assert git(base, "rev-parse", "HEAD") == before
     assert git(worktree, "rev-parse", "HEAD^") == source
-    with pytest.raises(AuthorityError):
-        service.resume(result.request.id)

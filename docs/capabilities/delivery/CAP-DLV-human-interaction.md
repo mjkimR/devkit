@@ -115,12 +115,3 @@ No other key is allowed. Records are never edited or deleted by the engine. Only
 - **Policy `auto` and `off`.** No request is emitted; the output records the policy that decided (`[GATE: ... source=policy]` while the stage is current, `[SKIPPED: ...]`), so a reader can tell a delegated decision from a human one.
 
 Decision records stay in the unit through handoffs as an audit trail, but they belong to the segment they were given in: an approval or handoff choice from a finished segment never counts in the next one, even for a gate with the same name. Envelopes written by the authoring commands are scoped the same way, by their `workflow` and `segment` keys (`CAP-DLV-workflow-envelopes`).
-
-## Domain-owned native form language
-
-The workflow engine's machine requests and decision records retain their existing output contract. Native integration
-and proposal-handoff domains supply English/Korean approval content using the owning workspace's presentation
-preference; see `CAP-INT-mcp-services` and `CAP-DLV-proposal-incubation`. The handoff message itself explains approval,
-setup effects, canonical low/medium/high effort meanings and separate final-integration authority, even when a client
-omits all schema titles/descriptions. Translated text never changes decision enums, defaults or authority. Host-owned
-controls and actual localized visible UI remain outside the supplied-content guarantee.

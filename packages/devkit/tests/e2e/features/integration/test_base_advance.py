@@ -1,8 +1,7 @@
-"""Approved integrations absorb target commits that land during the confirmation (``SPEC-integration-follow-ups``)."""
+"""The approving call absorbs target commits that land after its own preparation (``SPEC-integration-follow-ups``)."""
 
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import json
 import threading
@@ -10,15 +9,11 @@ import time
 from pathlib import Path
 
 import devkit_agt.features.integration.usecases.service as service_module
-import devkit_agt.features.worktree.services.merging as merging
 import pytest
 from devkit.advisory import ActionMode, Actor
 from devkit_agt.features.integration import IntegrationService, ProviderError, Task
 from devkit_agt.features.integration.repositories.receipts import check_merge
 from devkit_agt.features.worktree import CommitFailedError, MergeNotFastForwardError
-from devkit_core.base.errors import GitError
-from devkit_core.base.mcp import ConfirmationReply
-from devkit_core.core import LockHeldError
 from devkit_core.core.locks import file_lock
 from testsupport.rules import git, write
 
@@ -33,29 +28,29 @@ def commit(root: Path, rel: str, text: str = "x\n") -> str:
     return git(root, "rev-parse", "HEAD")
 
 
-def approve_after(action=None):
-    async def confirm(message: str, _schema: dict) -> ConfirmationReply:
-        confirm.messages.append(message)
-        if action is not None:
+def integrate(service: IntegrationService, action=None):
+    """One Host-approved CLI invocation; ``action`` runs after the call's own preparation, before its build."""
+    digest = service.prepare("dev-demo", TASK).request.digest
+    if action is not None:
+        prepare = service.prepare
+
+        def prepared(*args, **kwargs):
+            result = prepare(*args, **kwargs)
             action()
-        return ConfirmationReply("accept", {"approve": True})
+            return result
 
-    confirm.messages = []
-    return confirm
-
-
-def integrate(service: IntegrationService, confirm):
-    return asyncio.run(service.integrate("dev-demo", TASK, confirm))
+        service.prepare = prepared  # type: ignore[method-assign]
+    return service.execute_cli("dev-demo", TASK, expected_digest=digest)
 
 
-def test_clean_advance_during_confirmation_lands_a_merge_commit(repo, ready_provider, monkeypatch):
+def test_clean_advance_after_preparation_lands_a_merge_commit(repo, ready_provider, monkeypatch):
     base, worktree = repo
     tip, target = git(worktree, "rev-parse", "HEAD"), git(base, "rev-parse", "HEAD")
     guards = []
     original = service_module.run_finish_guards
     monkeypatch.setattr(service_module, "run_finish_guards", lambda *args: guards.append(args[2:]) or original(*args))
     moved = []
-    result = integrate(IntegrationService(base), approve_after(lambda: moved.append(commit(base, "theirs.txt"))))
+    result = integrate(IntegrationService(base), lambda: moved.append(commit(base, "theirs.txt")))
     assert result.status == "completed", result.errors
     head = git(base, "rev-parse", "HEAD")
     assert git(base, "rev-parse", "HEAD^1", "HEAD^2").split() == [moved[0], tip]
@@ -71,9 +66,7 @@ def test_conflicting_advance_changes_nothing(repo):
     base, worktree = repo
     commit(worktree, "README.md", "ours\n")
     moved = []
-    result = integrate(
-        IntegrationService(base), approve_after(lambda: moved.append(commit(base, "README.md", "theirs\n")))
-    )
+    result = integrate(IntegrationService(base), lambda: moved.append(commit(base, "README.md", "theirs\n")))
     assert result.status == "blocked" and result.errors[0].code == "WORKTREE_MERGE_CONFLICT"
     assert result.steps["merge"] == "failed" and "Merge the target branch into the task branch" in (
         result.errors[0].fix or ""
@@ -88,11 +81,11 @@ def test_ff_only_in_the_source_policy_fast_forwards_and_refuses_an_advance(repo)
     service = IntegrationService(base)
     assert service.prepare("dev-demo", TASK).request.approval_scope()["merge_method"] == "ff-only"
     moved = []
-    refused = integrate(service, approve_after(lambda: moved.append(commit(base, "theirs.txt"))))
+    refused = integrate(service, lambda: moved.append(commit(base, "theirs.txt")))
     assert refused.status == "blocked" and refused.errors[0].code == "WORKTREE_MERGE_NOT_FF"
     assert git(base, "rev-parse", "HEAD") == moved[0] and worktree.exists()
     git(base, "reset", "-q", "--hard", "HEAD~1")
-    result = integrate(IntegrationService(base), approve_after())
+    result = integrate(IntegrationService(base))
     assert result.status == "completed" and git(base, "rev-parse", "HEAD") == tip
 
 
@@ -107,7 +100,7 @@ def test_target_moved_between_build_and_fast_forward_changes_nothing(repo, monke
         return value
 
     monkeypatch.setattr(service_module, "build_result", build)
-    result = integrate(IntegrationService(base), approve_after())
+    result = integrate(IntegrationService(base))
     assert result.status == "blocked" and result.errors[0].code == "INTEGRATION_TARGET_MOVED"
     assert result.steps["merge"] == "not_run" and git(base, "rev-parse", "HEAD") == moved[0] and worktree.exists()
 
@@ -135,7 +128,7 @@ def test_receipt_and_asset_only_advance_is_absorbed(repo):
         git(base, "add", ".")
         git(base, "commit", "-qm", "sync bundle")
 
-    result = integrate(IntegrationService(base), approve_after(sync))
+    result = integrate(IntegrationService(base), sync)
     assert result.status == "completed", result.errors
     assert git(base, "show", "HEAD:bundle/skill.md") == "v2"
 
@@ -153,9 +146,7 @@ def test_receipt_and_asset_only_advance_is_absorbed(repo):
 def test_policy_advance_is_stale(repo, config):
     base, worktree = repo
     moved = []
-    result = integrate(
-        IntegrationService(base), approve_after(lambda: moved.append(commit(base, ".devkit/config.toml", config)))
-    )
+    result = integrate(IntegrationService(base), lambda: moved.append(commit(base, ".devkit/config.toml", config)))
     assert result.status == "blocked" and result.errors[0].code == "INTEGRATION_REQUEST_STALE"
     assert git(base, "rev-parse", "HEAD") == moved[0] and worktree.exists()
 
@@ -178,7 +169,7 @@ def test_merge_that_leaves_a_receipt_record_inconsistent_is_refused(tmp_path, re
     def action():
         return moved.append(commit(base, "managed.md", lines.replace(b"five", b"FIVE").decode()))
 
-    result = integrate(IntegrationService(base), approve_after(action))
+    result = integrate(IntegrationService(base), action)
     assert result.status == "blocked" and result.errors[0].code == "INTEGRATION_RECEIPT_CONFLICT"
     assert list(result.errors[0].target_files) == ["managed.md"]
     assert git(base, "rev-parse", "HEAD") == moved[0] and worktree.exists()
@@ -222,7 +213,7 @@ def test_changed_source_bound_evidence_at_the_build_is_stale(repo, ready_provide
         return value
 
     monkeypatch.setattr(type(ready_provider), "check", check)
-    result = integrate(IntegrationService(base), approve_after())
+    result = integrate(IntegrationService(base))
     assert result.status == "blocked" and result.errors[0].code == "INTEGRATION_REQUEST_STALE"
     assert worktree.exists()
 
@@ -247,10 +238,10 @@ def test_already_merged_branch_is_a_cleanup_only_request(repo):
     git(base, "merge", "-q", "--no-ff", "-m", "chore(merge): integrate dev-demo into main", "dev-demo")
     head = git(base, "rev-parse", "HEAD")
     service = IntegrationService(base)
-    confirm = approve_after()
-    result = integrate(service, confirm)
-    assert confirm.messages[0].startswith('Approve cleanup of "dev-demo", already merged into "main"?')
-    assert "nothing is merged; only the cleanup below runs" in confirm.messages[0]
+    message = service.prepare("dev-demo", TASK).request.confirmation_message()
+    assert message.startswith('Approve cleanup of "dev-demo", already merged into "main"?')
+    assert "nothing is merged; only the cleanup below runs" in message
+    result = integrate(service)
     assert result.status == "completed" and result.steps["merge"] == "skipped"
     assert result.request.approval_scope()["already_merged"] is True and result.build_target is None
     assert git(base, "rev-parse", "HEAD") == head and not worktree.exists()
@@ -289,57 +280,23 @@ def test_lock_released_within_the_wait_lets_the_build_run(repo, monkeypatch):
     thread.start()
     held.wait(5)
     threading.Timer(0.5, release.set).start()
-    result = integrate(IntegrationService(base), approve_after())
+    result = integrate(IntegrationService(base))
     thread.join()
     assert result.status == "completed"
 
 
-def test_lock_held_past_the_wait_changes_nothing_and_names_resume(repo, monkeypatch):
+def test_lock_held_past_the_wait_changes_nothing_and_names_the_rerun(repo, monkeypatch):
     base, worktree = repo
     monkeypatch.setattr(service_module, "LOCK_WAIT", 0.2)
     before = git(base, "show-ref")
     service = IntegrationService(base)
     with file_lock(base / LOCK):
         started = time.monotonic()
-        result = integrate(service, approve_after())
+        result = integrate(service)
         assert result.status == "blocked" and result.errors[0].code == "LOCK_HELD"
         assert "devkit integration integrate" in (result.errors[0].fix or "") and git(base, "show-ref") == before
-        with pytest.raises(LockHeldError):
-            service.resume(result.request.id)
         assert time.monotonic() - started < 5
-    assert service.resume(result.request.id).status == "completed" and not worktree.exists()
-
-
-def test_resume_never_absorbs_a_later_target(repo, monkeypatch):
-    base, worktree = repo
-    monkeypatch.setattr(service_module, "LOCK_WAIT", 0.2)
-    service = IntegrationService(base)
-    with file_lock(base / LOCK):
-        result = integrate(service, approve_after())
-    moved = commit(base, "later.txt")
-    resumed = service.resume(result.request.id)
-    assert resumed.status == "blocked" and resumed.errors[0].code == "INTEGRATION_REQUEST_STALE"
-    assert git(base, "rev-parse", "HEAD") == moved and worktree.exists()
-
-
-def test_resume_after_a_build_continues_only_onto_the_last_build_target(repo, monkeypatch):
-    base, worktree = repo
-    original = merging.run_git
-
-    def deny(root, *args, **kw):
-        if args[0] == "merge":
-            raise GitError("permission denied", returncode=128, stderr="denied")
-        return original(root, *args, **kw)
-
-    monkeypatch.setattr(merging, "run_git", deny)
-    service = IntegrationService(base)
-    result = integrate(service, approve_after())
-    assert result.errors[0].code == "WORKTREE_MERGE_FAILED" and result.build_target is not None
-    monkeypatch.setattr(merging, "run_git", original)
-    moved = commit(base, "later.txt")
-    resumed = service.resume(result.request.id)
-    assert resumed.status == "blocked" and resumed.errors[0].code == "INTEGRATION_REQUEST_STALE"
-    assert git(base, "rev-parse", "HEAD") == moved and worktree.exists()
+    assert integrate(IntegrationService(base)).status == "completed" and not worktree.exists()
 
 
 def test_cleanup_accepts_later_commits_on_the_base_after_the_merge(repo, monkeypatch):
@@ -354,11 +311,11 @@ def test_cleanup_accepts_later_commits_on_the_base_after_the_merge(repo, monkeyp
 
     monkeypatch.setattr(lifecycle, "_remove", deny)
     service = IntegrationService(base)
-    result = integrate(service, approve_after())
+    result = integrate(service)
     assert result.status == "partial" and result.steps["merge"] == "completed"
     commit(base, "later.txt")
     monkeypatch.setattr(lifecycle, "_remove", original)
-    assert service.resume(result.request.id).status == "completed" and not worktree.exists()
+    assert integrate(IntegrationService(base)).status == "completed" and not worktree.exists()
 
 
 def test_post_merge_metadata_rewrite_completes_cleanup(repo):
@@ -366,7 +323,7 @@ def test_post_merge_metadata_rewrite_completes_cleanup(repo):
     hook = base / ".git/hooks/post-merge"
     hook.write_text("#!/bin/sh\ngit -c core.hooksPath=/dev/null commit --amend -qm 'rewritten metadata'\n")
     hook.chmod(0o755)
-    result = integrate(IntegrationService(base), approve_after())
+    result = integrate(IntegrationService(base))
     assert result.status == "completed", result.errors
     assert result.result_sha == git(base, "rev-parse", "HEAD")
     assert not worktree.exists()
@@ -385,16 +342,14 @@ def test_post_merge_mutation_preserves_task(repo, mutation):
     hook.write_text("#!/bin/sh\n" + scripts[mutation] + "\n")
     hook.chmod(0o755)
     service = IntegrationService(base)
-    result = integrate(service, approve_after())
+    result = integrate(service)
     assert result.status in {"blocked", "partial"}
     assert result.errors[0].code == "INTEGRATION_REQUEST_STALE"
     assert worktree.exists()
     assert git(base, "rev-parse", "--verify", "refs/heads/dev-demo")
-    resumed = service.resume(result.request.id)
-    assert resumed.status in {"blocked", "partial"} and worktree.exists()
 
 
-def test_post_merge_metadata_rewrite_resumes_cleanup(repo, monkeypatch):
+def test_post_merge_metadata_rewrite_then_a_fresh_call_completes_cleanup(repo, monkeypatch):
     import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
     from devkit_agt.features.worktree import RemoveFailedError
 
@@ -409,36 +364,9 @@ def test_post_merge_metadata_rewrite_resumes_cleanup(repo, monkeypatch):
 
     monkeypatch.setattr(lifecycle, "_remove", deny)
     service = IntegrationService(base)
-    result = integrate(service, approve_after())
+    result = integrate(service)
     assert result.status == "partial" and result.steps["merge"] == "completed"
     assert result.result_sha == git(base, "rev-parse", "HEAD")
     commit(base, "later.txt")
     monkeypatch.setattr(lifecycle, "_remove", original)
-    assert service.resume(result.request.id).status == "completed" and not worktree.exists()
-
-
-@pytest.mark.parametrize("rewrite_after", [False, True])
-def test_cleanup_does_not_accept_unapproved_rewrites(repo, monkeypatch, rewrite_after):
-    import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
-    from devkit_agt.features.worktree import RemoveFailedError
-
-    base, worktree = repo
-    if not rewrite_after:
-        commit(worktree, ".devkit/config.toml", '[integration]\nprovider = "fixture"\n[worktree]\nmerge = "ff-only"\n')
-        hook = base / ".git/hooks/post-merge"
-        hook.write_text("#!/bin/sh\ngit -c core.hooksPath=/dev/null commit --amend -qm rewritten\n")
-        hook.chmod(0o755)
-    original = lifecycle._remove
-
-    def deny(_base, _path):
-        raise RemoveFailedError("permission denied")
-
-    monkeypatch.setattr(lifecycle, "_remove", deny)
-    service = IntegrationService(base)
-    result = integrate(service, approve_after())
-    assert result.status in {"blocked", "partial"} and worktree.exists()
-    if rewrite_after:
-        git(base, "commit", "--amend", "-qm", "later metadata rewrite")
-    monkeypatch.setattr(lifecycle, "_remove", original)
-    resumed = service.resume(result.request.id)
-    assert resumed.errors[0].code == "INTEGRATION_REQUEST_STALE" and worktree.exists()
+    assert integrate(IntegrationService(base)).status == "completed" and not worktree.exists()

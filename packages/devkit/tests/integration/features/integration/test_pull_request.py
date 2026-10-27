@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import asyncio
 from dataclasses import replace
 
 import pytest
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.integration import IntegrationService, Task
+from devkit_agt.features.worktree import MergeNotFastForwardError
 from devkit_agt.features.worktree.repositories.pull_request import CommandResult, GitHub, Repository
-from devkit_core.base.mcp import ConfirmationReply
 from testsupport.rules import git, write
 
 TASK = Task("session", "fixture-task")
@@ -112,15 +111,21 @@ def remote_service(repo, ready_provider, monkeypatch, tmp_path):
     return service, fake, base, worktree
 
 
-async def approve(message, schema):
-    assert "pull request" in message
-    assert "github.example/owner/repo" in message
-    assert "after the last check" in message or "not recorded" in message
-    return ConfirmationReply("accept", {"approve": True})
+def fresh(service):
+    """A later CLI invocation in a new process: nothing from the earlier request is retained."""
+    restarted = IntegrationService(service.root)
+    restarted.github = service.github
+    return run(restarted)
 
 
 def run(service):
-    return asyncio.run(service.integrate("dev-demo", TASK, approve, "pull-request"))
+    """One Host-approved CLI invocation of the pull-request route after presenting the prepared scope."""
+    request = service.prepare("dev-demo", TASK, "pull-request").request
+    message = request.confirmation_message()
+    assert "pull request" in message
+    assert "github.example/owner/repo" in message
+    assert "after the last check" in message or "not recorded" in message
+    return service.execute_cli("dev-demo", TASK, "pull-request", expected_digest=request.digest)
 
 
 def test_checked_merge_and_ordered_cleanup(remote_service):
@@ -135,29 +140,17 @@ def test_checked_merge_and_ordered_cleanup(remote_service):
     assert result.steps["post_finish"] == "completed"
 
 
-def test_decline_writes_no_remote_refs(remote_service):
-    service, fake, _base, worktree = remote_service
-    before = git(fake.remote, "show-ref")
-
-    async def decline(*args):
-        return ConfirmationReply("decline", {})
-
-    result = asyncio.run(service.integrate("dev-demo", TASK, decline, "pull-request"))
-    assert result.status == "declined"
-    assert git(fake.remote, "show-ref") == before and worktree.exists()
-
-
-def test_pending_resume_reuses_checked_build(remote_service, ready_provider):
-    service, fake, _base, _worktree = remote_service
+def test_pending_checks_finish_on_a_fresh_invocation(remote_service):
+    service, fake, base, _worktree = remote_service
     fake.pending = True
     result = run(service)
     assert result.status == "pending" and not result.errors
     assert result.steps["push"] == result.steps["pull_request"] == "completed"
     assert result.steps["merge"] == "not_run" and fake.merge_calls == 0
-    checks = len(ready_provider.calls)
     fake.pending = False
-    assert service.resume(result.request.id).status == "completed"
-    assert len(ready_provider.calls) == checks
+    restarted = IntegrationService(base)
+    restarted.github = fake
+    assert run(restarted).status == "completed" and fake.merge_calls == 1
 
 
 @pytest.mark.parametrize("mode", ["advanced", "tree-mismatch", "rewritten-base", "merge-not-contained"])
@@ -188,43 +181,37 @@ def test_unconfirmed_or_source_loss_preserves_work(remote_service, mode, code):
     assert worktree.exists() and result.steps["worktree_remove"] == "not_run"
 
 
-def test_unknown_merge_is_not_reissued(remote_service):
-    service, fake, _base, worktree = remote_service
-    fake.mode = "unknown"
-    result = run(service)
-    service.resume(result.request.id)
-    assert fake.merge_calls == 1 and worktree.exists()
-
-
-def test_target_advance_while_pending_refuses_resume(remote_service):
+def test_target_advance_while_pending_refuses_a_fresh_invocation(remote_service):
     service, fake, base, worktree = remote_service
     fake.pending = True
-    result = run(service)
+    run(service)
     parent = git(base, "rev-parse", "HEAD")
     advance = git(base, "commit-tree", f"{parent}^{{tree}}", "-p", parent, "-m", "advance")
     git(base, "push", "origin", f"{advance}:refs/heads/main")
     fake.pending = False
-    result = service.resume(result.request.id)
-    assert result.errors[0].code == "INTEGRATION_TARGET_MOVED" and fake.merge_calls == 0
-    assert worktree.exists()
+    with pytest.raises(MergeNotFastForwardError):
+        fresh(service)
+    assert fake.merge_calls == 0 and worktree.exists()
 
 
 @pytest.mark.parametrize(
     "field,value,code",
     [
-        ("state", "CLOSED", "INTEGRATION_PR_CONFLICT"),
         ("isDraft", True, "INTEGRATION_PR_CONFLICT"),
         ("baseRefName", "other", "INTEGRATION_PR_CONFLICT"),
         ("headRefOid", "0" * 40, "INTEGRATION_REMOTE_BRANCH_DIVERGED"),
     ],
 )
-def test_pending_pr_changes_refuse_resume(remote_service, field, value, code):
+def test_pending_pr_changes_refuse_a_fresh_invocation(remote_service, field, value, code):
     service, fake, _base, worktree = remote_service
     fake.pending = True
-    result = run(service)
+    run(service)
     fake.pr[field] = value
-    result = service.resume(result.request.id)
-    assert result.errors[0].code == code and worktree.exists()
+    try:
+        refused = fresh(service).errors[0].code
+    except AdvisoryError as exc:
+        refused = exc.code
+    assert refused == code and fake.merge_calls == 0 and worktree.exists()
 
 
 def test_failed_required_check_does_not_merge(remote_service):
@@ -242,7 +229,7 @@ def test_dependent_pr_preserves_local_and_remote_cleanup_identity(remote_service
     assert result.errors[0].code == "INTEGRATION_REMOTE_DELETE_BLOCKED"
     assert worktree.exists() and fake.ref(result.request.repository, "refs/heads/dev-demo")
     fake.block_delete = False
-    result = service.resume(result.request.id)
+    result = fresh(service)
     assert result.status == "completed", result.to_dict()
 
 
@@ -291,14 +278,14 @@ def test_queue_added_after_preparation_is_refused_without_enqueue(remote_service
     assert fake.pr["state"] == "OPEN" and worktree.exists()
 
 
-def test_dirty_local_target_blocks_cleanup_and_resume_preserves_then_recovers(remote_service):
+def test_dirty_local_target_blocks_cleanup_and_a_fresh_invocation_recovers(remote_service):
     service, fake, base, worktree = remote_service
     fake.after_merge = lambda: write(base, "user-work.txt", "keep me")
     result = run(service)
     assert result.errors[0].code == "INTEGRATION_LOCAL_TARGET_BLOCKED"
     assert worktree.exists() and (base / "user-work.txt").read_text() == "keep me"
     (base / "user-work.txt").unlink()
-    assert service.resume(result.request.id).status == "completed"
+    assert fresh(service).status == "completed"
 
 
 def test_divergent_local_target_is_never_overwritten(remote_service):
@@ -312,18 +299,6 @@ def test_divergent_local_target_is_never_overwritten(remote_service):
     local = git(base, "rev-parse", "HEAD")
     assert result.errors[0].code == "INTEGRATION_LOCAL_TARGET_BLOCKED" and worktree.exists()
     assert git(base, "rev-parse", "HEAD") == local
-
-
-def test_restart_during_pending_requires_new_confirmation(remote_service):
-    service, fake, base, _worktree = remote_service
-    fake.pending = True
-    pending = run(service)
-    restarted = IntegrationService(base)
-    restarted.github = fake
-    with pytest.raises(Exception, match="not retained"):
-        restarted.resume(pending.request.id)
-    fake.pending = False
-    assert run(restarted).status == "completed"
 
 
 def test_missing_target_upstream_has_actionable_code(remote_service):
@@ -345,15 +320,18 @@ def test_remote_source_divergence_refuses_before_approval(remote_service):
     assert fake.merge_calls == 0 and worktree.exists()
 
 
-def test_pending_resume_does_not_wait_for_repository_lock(remote_service):
+def test_repository_lock_held_past_the_wait_blocks_without_merging(remote_service, monkeypatch):
+    import devkit_agt.features.integration.usecases.service as service_module
     from devkit_agt.features.worktree import integration_lock
 
     service, fake, base, worktree = remote_service
+    monkeypatch.setattr(service_module, "LOCK_WAIT", 0.2)
     fake.pending = True
-    pending = run(service)
-    with integration_lock(base / ".git", timeout=0), pytest.raises(AdvisoryError) as error:
-        service.resume(pending.request.id)
-    assert error.value.code == "LOCK_HELD" and worktree.exists()
+    run(service)
+    fake.pending = False
+    with integration_lock(base / ".git", timeout=0):
+        result = fresh(service)
+    assert result.errors[0].code == "LOCK_HELD" and fake.merge_calls == 0 and worktree.exists()
 
 
 def test_source_change_after_remote_merge_blocks_local_fast_forward(remote_service):
@@ -375,7 +353,7 @@ def test_failed_build_then_manual_merge_remains_unchecked(remote_service, ready_
     result = run(service)
     assert result.errors and not result.build_checked and result.result_sha
     fake.merge(result.request.repository, 12, result.request.context.finish.source_sha, "dev-demo", "main", TASK.id)
-    result = service.resume(result.request.id)
+    result = fresh(service)
     assert result.status == "completed" and result.landing["reason"] == "not-recorded"
     assert not result.landing["checked"]
     assert any(n.code == "INTEGRATION_LANDED_UNCHECKED" for n in result.notices)

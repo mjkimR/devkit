@@ -28,23 +28,3 @@ class IntegrateUseCase(BaseUseCase):
         self, branch: str, task: Task, route: str = "local", *, expected_digest: str | None = None
     ) -> IntegrationResult:
         return self.service.execute_cli(branch, task, route, expected_digest=expected_digest)
-
-
-class ResumeIntegrationUseCase(BaseUseCase):
-    """Resume only authority retained by the same integration engine."""
-
-    def __init__(self, service: IntegrationService) -> None:
-        self.service = service
-
-    def execute(self, request_id: str) -> IntegrationResult:
-        return self.service.resume(request_id)
-
-
-class InspectIntegrationUseCase(BaseUseCase):
-    """Inspect progress without supplying approval authority."""
-
-    def __init__(self, service: IntegrationService) -> None:
-        self.service = service
-
-    def execute(self, request_id: str) -> IntegrationResult:
-        return self.service.inspect(request_id)
