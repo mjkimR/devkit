@@ -19,7 +19,7 @@ from devkit_agt.features.integration.usecases.service import IntegrationService
 from devkit_agt.features.workflow import Workspace
 from devkit_agt.features.worktree import locate, read_worktree_config
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core import GitError, run_git
+from devkit_core.core import GitError, run_git, run_git_text
 from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.usecases.configuration import (
@@ -105,10 +105,6 @@ def _spec_refusal(error: AdvisoryError, slug: str, by: str) -> AdvisoryError:
             "(ask or auto), then rerun the same command",
         )
     return error
-
-
-def _git(root: Path, *args: str) -> str:
-    return run_git(root, *args).decode().strip()
 
 
 def _configuration(root: Path) -> str:
@@ -198,10 +194,10 @@ class _Acceptance:
         assert self.source is not None
         guard_execution()
         return (
-            _git(self.root, "rev-parse", "HEAD"),
-            _git(self.source, "rev-parse", "HEAD"),
-            _git(self.root, "status", "--porcelain", "--untracked-files=normal"),
-            _git(self.source, "status", "--porcelain", "--untracked-files=normal"),
+            run_git_text(self.root, "rev-parse", "HEAD"),
+            run_git_text(self.source, "rev-parse", "HEAD"),
+            run_git_text(self.root, "status", "--porcelain", "--untracked-files=normal"),
+            run_git_text(self.source, "status", "--porcelain", "--untracked-files=normal"),
             _configuration(self.root),
             _configuration(self.source),
             approval_language(self.root),
@@ -268,16 +264,16 @@ class _Acceptance:
         if anchor.read_bytes() != expected_anchor:
             raise ProposalApprovalStaleError("acceptance changed unrelated proposal text")
         # A pre-existing clean index was bound by the preview; only these exact two writes may enter this commit.
-        _git(self.source, "add", "--", *paths)
-        changed = set(_git(self.source, "diff", "--cached", "--name-only").splitlines())
+        run_git_text(self.source, "add", "--", *paths)
+        changed = set(run_git_text(self.source, "diff", "--cached", "--name-only").splitlines())
         if changed != set(expected):
             raise ProposalApprovalStaleError("index contains changes outside the exact acceptance delta")
         guard_execution()
         try:
-            _git(self.source, "commit", "-m", f"spec: accept proposal {self.slug}")
+            run_git_text(self.source, "commit", "-m", f"spec: accept proposal {self.slug}")
         except GitError as exc:
             # Nothing landed: withdraw this service's own two writes so the worktree is clean for the rerun.
-            _git(self.source, "reset", "-q", "--", *paths)
+            run_git_text(self.source, "reset", "-q", "--", *paths)
             anchor.write_text(original)
             (self.source / accepted.decision).unlink()
             self.completed.remove("acceptance_record")
@@ -289,15 +285,15 @@ class _Acceptance:
                 fix=f"In the plan-{self.slug} worktree run `{devkit_command('rules check')}`, fix what it reports, "
                 "commit the fixes, then rerun the same command",
             ) from exc
-        head = _git(self.source, "rev-parse", "HEAD")
+        head = run_git_text(self.source, "rev-parse", "HEAD")
         self.acceptance_sha = head
         self.completed.append("acceptance_commit")
         previous = request.context.finish.source_sha
         if (
-            _git(self.source, "rev-list", "--parents", "-n", "1", head).split() != [head, previous]
-            or set(_git(self.source, "diff", "--name-only", previous, head).splitlines()) != set(expected)
+            run_git_text(self.source, "rev-list", "--parents", "-n", "1", head).split() != [head, previous]
+            or set(run_git_text(self.source, "diff", "--name-only", previous, head).splitlines()) != set(expected)
             or any(run_git(self.source, "show", f"{head}:{path}") != data for path, data in expected.items())
-            or _git(self.source, "status", "--porcelain", "--untracked-files=normal")
+            or run_git_text(self.source, "status", "--porcelain", "--untracked-files=normal")
         ):
             raise ProposalApprovalStaleError("committed acceptance differs from the exact service-created delta")
         return head
@@ -373,7 +369,7 @@ class PlanAcceptUseCase(BaseUseCase):
             payload["status"] = "needs_recovery" if completed else "blocked"
             return payload
         landed = result.result_sha or request.context.finish.source_sha
-        if _git(self.root, "rev-parse", "HEAD") != landed:
+        if run_git_text(self.root, "rev-parse", "HEAD") != landed:
             return {
                 **payload,
                 "status": "needs_recovery",

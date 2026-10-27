@@ -10,15 +10,11 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from devkit_core.core import GitError, run_git
-
-
-def _git(cwd: Path, *args: str) -> str:
-    return os.fsdecode(run_git(cwd, *args).rstrip(b"\n"))
+from devkit_core.core import GitError, run_git, run_git_text
 
 
 def _path(cwd: Path, *args: str) -> Path:
-    return Path(_git(cwd, *args)).resolve()
+    return Path(run_git_text(cwd, *args)).resolve()
 
 
 def git_dir(cwd: Path) -> Path:

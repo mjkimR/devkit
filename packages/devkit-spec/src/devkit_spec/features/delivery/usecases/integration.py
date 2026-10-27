@@ -18,7 +18,6 @@ from __future__ import annotations
 import hashlib
 import json
 import tempfile
-import tomllib
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -28,7 +27,9 @@ from devkit_agt.features.rules import Phase, Snapshot, materialize_snapshot, run
 from devkit_agt.features.workflow import Workspace, is_ancestor, load_decisions, load_envelopes, load_workflow_config
 from devkit_core.core import FrontmatterError, is_safe_relpath, run_git
 from devkit_core.core.frontmatter import parse
+from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
+from devkit_dist.features.project.repositories.project import commit_config
 from devkit_dist.features.project.repositories.receipt import load_receipt
 
 from devkit_spec.base.axes import EFFORTS, PROPOSAL_WORKFLOW, SPEC_WORKFLOWS, TASK_KINDS
@@ -43,7 +44,6 @@ SESSION_KINDS = frozenset({*TASK_KINDS, "overall-refactor"})
 SESSION_EFFORTS = frozenset(EFFORTS)
 TARGET_BOUND = ("TARGET_SHA", "RESULT_SHA")
 DISCLOSURE = "CI rules only on the merged result; tests and review ran on the source only"
-CONFIG_PATH = ".devkit/config.toml"
 
 
 def _decode(raw: bytes) -> str:
@@ -425,11 +425,11 @@ def _check_session_task(
 def _spec_policy(root: Path, commit: str) -> object:
     """The parsed ``[tool.spec]`` table committed at ``commit``; ``None`` without one, ``"invalid"`` when unreadable."""
     try:
-        if not run_git(root, "ls-tree", "--name-only", commit, "--", CONFIG_PATH).strip():
-            return None
-        data = tomllib.loads(run_git(root, "show", f"{commit}:{CONFIG_PATH}").decode("utf-8"))
-    except (ValueError, UnicodeError):
+        data = commit_config(root, commit)
+    except ConfigError:
         return "invalid"
+    if data is None:
+        return None
     tool = data.get("tool")
     return tool.get("spec") if isinstance(tool, dict) else None
 

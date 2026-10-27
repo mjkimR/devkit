@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 from devkit_core.base.errors import DevkitCoreError
-from devkit_core.core import GitError, run_git
+from devkit_core.core import GitError, is_ancestor, run_git, run_git_text
 
 
 def test_returns_stdout_bytes(repo: Path) -> None:
@@ -113,3 +113,26 @@ def test_git_messages_are_not_localized(tmp_path: Path, monkeypatch: pytest.Monk
     with pytest.raises(GitError) as info:
         run_git(tmp_path, "rev-parse", "--show-toplevel")
     assert "not a git repository" in info.value.stderr
+
+
+def test_run_git_text_decodes_with_surrogateescape_and_drops_one_newline(repo: Path) -> None:
+    blob = run_git_text(repo, "hash-object", "-w", "--stdin", input=b" caf\xe9 \n")  # not UTF-8, padded
+    assert blob == run_git(repo, "hash-object", "--stdin", input=b" caf\xe9 \n").decode().strip()
+    assert run_git_text(repo, "cat-file", "blob", blob) == b" caf\xe9 ".decode("utf-8", errors="surrogateescape")
+    run_git(repo, "commit", "-q", "--allow-empty", "-m", "one")
+    assert run_git_text(repo, "log", "-1", "--format=%s%n") == "one\n"  # only one trailing newline is removed
+
+
+def test_is_ancestor_answers_and_raises_when_git_cannot(repo: Path, tmp_path: Path) -> None:
+    run_git(repo, "commit", "-q", "--allow-empty", "-m", "one")
+    first = run_git_text(repo, "rev-parse", "HEAD")
+    run_git(repo, "commit", "-q", "--allow-empty", "-m", "two")
+    second = run_git_text(repo, "rev-parse", "HEAD")
+    assert is_ancestor(repo, first, second) is True
+    assert is_ancestor(repo, first, first) is True
+    assert is_ancestor(repo, second, first) is False
+    with pytest.raises(GitError) as info:
+        is_ancestor(repo, "0" * 40, first)
+    assert info.value.returncode not in (None, 1)
+    with pytest.raises(GitError):
+        is_ancestor(tmp_path, first, second)

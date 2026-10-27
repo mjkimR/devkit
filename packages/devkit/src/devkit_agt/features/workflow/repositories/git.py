@@ -1,4 +1,4 @@
-"""Git queries the workflow engine needs, built on ``devkit_core.core.git.run_git``."""
+"""Git queries the workflow engine needs, built on ``devkit_core.core.git``."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 from devkit_core.base.errors import GitError
-from devkit_core.core.git import run_git
+from devkit_core.core import git
 
 __all__ = ["REVISION", "is_ancestor", "is_revision"]
 
@@ -28,10 +28,4 @@ def is_ancestor(workspace_root: Path, ancestor: str, descendant: str) -> bool:
     for revision in (ancestor, descendant):
         if not is_revision(revision):
             raise GitError(f"{revision!r} is not a hexadecimal revision", input_error=True)
-    try:
-        run_git(workspace_root, "merge-base", "--is-ancestor", ancestor, descendant)
-    except GitError as exc:
-        if exc.returncode == 1:
-            return False
-        raise
-    return True
+    return git.is_ancestor(workspace_root, ancestor, descendant)

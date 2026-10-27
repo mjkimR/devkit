@@ -25,14 +25,18 @@ from devkit_agt.features.integration.models.errors import ReceiptConflictError, 
 _READER_PATHS = tuple(f"{name.replace('.', '/')}.py" for name in READER_MODULES)
 
 
-def _blob(root: Path, commit: str, path: str) -> bytes | None:
+def tracked_blob(root: Path, commit: str, path: str) -> bytes | None:
+    """The content of ``path`` committed at ``commit``; ``None`` when that commit does not track it.
+
+    Raises ``GitError`` when Git cannot read the commit.
+    """
     if not run_git(root, "ls-tree", "--name-only", commit, "--", path).strip():
         return None
     return run_git(root, "cat-file", "blob", f"{commit}:{path}")
 
 
 def _receipt(root: Path, commit: str) -> Receipt | None:
-    raw = _blob(root, commit, RECEIPT_PATH)
+    raw = tracked_blob(root, commit, RECEIPT_PATH)
     if raw is None:
         return None
     return parse_receipt(raw)

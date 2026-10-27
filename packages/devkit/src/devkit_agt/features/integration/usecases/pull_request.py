@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from devkit.advisory import AdvisoryError, Level
-from devkit_core.core.git import run_git
+from devkit_core.core.git import run_git_text
 from devkit_dist.features.project.repositories.invocation import capture_terminal_removal, guard_execution
 from devkit_dist.features.project.repositories.project import read_project_config
 
@@ -40,10 +40,6 @@ from devkit_agt.features.worktree.repositories.pull_request import GitHub, PullR
 
 if TYPE_CHECKING:
     from devkit_agt.features.integration.usecases.service import IntegrationService, _Record
-
-
-def _git(root: Path, *args: str) -> str:
-    return run_git(root, *args).decode("utf-8", errors="surrogateescape").strip()
 
 
 def _error(
@@ -90,8 +86,8 @@ def prepare(service: IntegrationService, branch: str, task: Task) -> Integration
         raise _error("INTEGRATION_TARGET_UPSTREAM", "Target checkout is detached")
     target = position.branch
     try:
-        remote = _git(root, "config", "--get", f"branch.{target}.remote")
-        remote_ref = _git(root, "config", "--get", f"branch.{target}.merge")
+        remote = run_git_text(root, "config", "--get", f"branch.{target}.remote")
+        remote_ref = run_git_text(root, "config", "--get", f"branch.{target}.merge")
     except AdvisoryError as exc:
         raise _error(
             "INTEGRATION_TARGET_UPSTREAM",
@@ -107,7 +103,7 @@ def prepare(service: IntegrationService, branch: str, task: Task) -> Integration
     repository = port.resolve(remote)
     guard_execution()
     target_sha = port.fetch(repository, target)
-    local_target = _git(root, "rev-parse", "HEAD")
+    local_target = run_git_text(root, "rev-parse", "HEAD")
     if not is_ancestor(root, local_target, target_sha):
         raise _error(
             "INTEGRATION_TARGET_UPSTREAM",
@@ -116,7 +112,7 @@ def prepare(service: IntegrationService, branch: str, task: Task) -> Integration
         )
     target_config = _policy(root, target_sha)
     target_policy = providers.effective(target_config)
-    source = _git(root, "rev-parse", "--verify", f"refs/heads/{branch}^{{commit}}")
+    source = run_git_text(root, "rev-parse", "--verify", f"refs/heads/{branch}^{{commit}}")
     source_config = _policy(root, source)
     source_policy = providers.effective(source_config)
     if any(
@@ -244,14 +240,14 @@ def _confirmed(root: Path, pr: dict[str, Any], source: str) -> tuple[str, str, s
     merge = (pr.get("mergeCommit") or {}).get("oid")
     if pr.get("state") != "MERGED" or not merge:
         raise _error("INTEGRATION_MERGE_UNCONFIRMED", "PR has no confirmed merge commit")
-    parents = _git(root, "rev-list", "--parents", "-n", "1", merge).split()
+    parents = run_git_text(root, "rev-list", "--parents", "-n", "1", merge).split()
     if len(parents) != 3 or parents[2] != source:
         raise _error(
             "INTEGRATION_MERGE_UNCONFIRMED",
             "PR merge second parent differs from approved source",
             "Report the unconfirmed merge to the user and retain the branches; clean up outside this route",
         )
-    return merge, parents[1], _git(root, "rev-parse", f"{merge}^{{tree}}")
+    return merge, parents[1], run_git_text(root, "rev-parse", f"{merge}^{{tree}}")
 
 
 def _checks(port: GitHub, request: IntegrationRequest, pr: dict[str, Any]) -> list[str]:
@@ -360,11 +356,11 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
         with integration_lock(Path(plan.common_dir), timeout=wait):
             guard_execution()
             if result.steps["worktree_remove"] == "unknown" and not Path(plan.path).exists():
-                entries = _git(root, "worktree", "list", "--porcelain", "-z").split("\0")
+                entries = run_git_text(root, "worktree", "list", "--porcelain", "-z").split("\0")
                 if f"worktree {plan.path}" not in entries:
                     result.steps["worktree_remove"] = "completed"
             if result.steps["branch_delete"] == "unknown" and result.steps["worktree_remove"] == "completed":
-                refs = _git(root, "for-each-ref", "--format=%(refname)", f"refs/heads/{plan.branch}")
+                refs = run_git_text(root, "for-each-ref", "--format=%(refname)", f"refs/heads/{plan.branch}")
                 if not refs:
                     record.finalized = True
                     result.steps["branch_delete"] = "completed"
@@ -407,7 +403,7 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
                     )
                     context = service._context(result)
                     run_finish_guards(
-                        root, plan.branch, _git(root, "merge-base", target, plan.source_sha), plan.source_sha
+                        root, plan.branch, run_git_text(root, "merge-base", target, plan.source_sha), plan.source_sha
                     )
                     ready = providers.check(providers.provider(request.provider)[1], context)
                     if (
@@ -453,7 +449,7 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
             merge_oid = (pr.get("mergeCommit") or {}).get("oid")
             if merge_oid:
                 try:
-                    _git(root, "cat-file", "-t", merge_oid)
+                    run_git_text(root, "cat-file", "-t", merge_oid)
                 except AdvisoryError:
                     guard_execution()
                     port.fetch_commit(repository, merge_oid)
@@ -476,7 +472,7 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
                 reason = "rewritten-base"
             elif parent != result.build_target:
                 reason = "advanced"
-            elif tree != _git(root, "rev-parse", f"{result.result_sha}^{{tree}}"):
+            elif tree != run_git_text(root, "rev-parse", f"{result.result_sha}^{{tree}}"):
                 reason = "tree-mismatch"
             result.landing = {
                 "checked": reason is None,
@@ -495,15 +491,15 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
                 result.notices.append(notice)
             operation = "local_fast_forward"
             if (
-                _git(root, "status", "--porcelain")
-                or _git(root, "symbolic-ref", "HEAD") != f"refs/heads/{plan.target_branch}"
+                run_git_text(root, "status", "--porcelain")
+                or run_git_text(root, "symbolic-ref", "HEAD") != f"refs/heads/{plan.target_branch}"
             ):
                 raise _error(
                     "INTEGRATION_LOCAL_TARGET_BLOCKED",
                     "Base checkout is dirty or on another branch",
                     f"Make the base checkout clean on the target branch, inspect the merged PR, then run `{prepare_command(plan.branch, request.context.task, 'pull-request')}` and, after Host approval, integrate with the digest it prints",
                 )
-            if not is_ancestor(root, _git(root, "rev-parse", "HEAD"), target):
+            if not is_ancestor(root, run_git_text(root, "rev-parse", "HEAD"), target):
                 raise _error(
                     "INTEGRATION_LOCAL_TARGET_BLOCKED",
                     "Local target cannot fast-forward",
@@ -511,7 +507,7 @@ def execute(service: IntegrationService, record: _Record, wait: float) -> Integr
                 )
             validate_finish(
                 plan,
-                target=_git(root, "rev-parse", "HEAD"),
+                target=run_git_text(root, "rev-parse", "HEAD"),
                 removed=result.steps["worktree_remove"] == "completed",
                 finalized=record.finalized,
                 check_upstream=False,

@@ -17,7 +17,7 @@ import tomlkit
 from devkit.advisory import Actor, AdvisoryError, Level
 from devkit_core.base.errors import ArgumentError
 from devkit_core.core import atomic_write_bytes
-from devkit_core.core.git import run_git
+from devkit_core.core.git import run_git_text
 from devkit_core.core.locks import file_lock
 
 from devkit_dist.features.host.models.errors import HostError
@@ -142,15 +142,11 @@ class LaunchDescriptor:
         return {"command": self.command, "args": list(self.args)}
 
 
-def _git(root: Path, *args: str) -> str:
-    return run_git(root, *args).decode("utf-8", errors="surrogateescape").strip()
-
-
 def common_dir(root: Path) -> Path | None:
     try:
-        if Path(_git(root, "rev-parse", "--show-toplevel")).resolve() != root.resolve():
+        if Path(run_git_text(root, "rev-parse", "--show-toplevel")).resolve() != root.resolve():
             return None
-        return Path(_git(root, "rev-parse", "--path-format=absolute", "--git-common-dir")).resolve()
+        return Path(run_git_text(root, "rev-parse", "--path-format=absolute", "--git-common-dir")).resolve()
     except AdvisoryError:
         return None
 
@@ -243,18 +239,18 @@ def _render(host: str, raw: bytes | None, entry: dict | None) -> bytes:
 
 
 def _tracked(root: Path, relative: str) -> bool:
-    return bool(_git(root, "ls-files", "--", relative))
+    return bool(run_git_text(root, "ls-files", "--", relative))
 
 
 def _ignored(root: Path, relative: str) -> bool:
     try:
-        return bool(_git(root, "check-ignore", "--", relative))
+        return bool(run_git_text(root, "check-ignore", "--", relative))
     except AdvisoryError:
         return False
 
 
 def _foreign_worktree(root: Path, relative: str) -> bool:
-    for part in _git(root, "worktree", "list", "--porcelain", "-z").split("\0"):
+    for part in run_git_text(root, "worktree", "list", "--porcelain", "-z").split("\0"):
         if part.startswith("worktree "):
             other = Path(part[9:])
             if (

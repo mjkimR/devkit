@@ -1,9 +1,11 @@
 """The one subprocess runner for Git.
 
-Output is returned as bytes: Git paths are arbitrary bytes, so callers decode
-them themselves (``data.decode("utf-8", errors="surrogateescape")`` keeps every
-name round-trippable). Package-specific queries live in their packages and are
-built on ``run_git``.
+``run_git`` returns bytes: Git paths are arbitrary bytes, so they are decoded with
+``data.decode("utf-8", errors="surrogateescape")``, which keeps every name
+round-trippable. ``run_git_text`` applies that rule for callers that want text, and
+``is_ancestor`` is the shared ``merge-base --is-ancestor`` test. These generic
+primitives live here; queries that encode one package's policy live in that package
+and are built on them.
 """
 
 from __future__ import annotations
@@ -78,3 +80,37 @@ def run_git(
             stderr=stderr,
         )
     return completed.stdout
+
+
+def run_git_text(
+    cwd: Path,
+    *args: str,
+    input: bytes | None = None,
+    timeout: float | None = DEFAULT_TIMEOUT,
+    index: str | None = None,
+    deadline: Deadline | None = None,
+) -> str:
+    """``run_git`` with its output decoded as UTF-8 with ``surrogateescape`` and one trailing newline removed.
+
+    Only a single ``\\n`` is removed, so a one-line answer (a commit id, a path) comes back bare while leading and
+    other trailing whitespace, which a path may carry, is kept. A caller that needs the output byte for byte (a file's
+    content from ``git show``) uses ``run_git``. Raises as ``run_git`` does.
+    """
+    output = run_git(cwd, *args, input=input, timeout=timeout, index=index, deadline=deadline)
+    return output.decode("utf-8", errors="surrogateescape").removesuffix("\n")
+
+
+def is_ancestor(cwd: Path, ancestor: str, descendant: str) -> bool:
+    """Whether commit ``ancestor`` is contained in ``descendant`` (a commit is its own ancestor).
+
+    Git's exit status 1 is the answer no; any other failure (an unknown revision, as in a shallow clone, or not a
+    repository) raises ``GitError``. Both revisions are passed to Git as given; a caller taking them from input
+    validates them first.
+    """
+    try:
+        run_git(cwd, "merge-base", "--is-ancestor", ancestor, descendant)
+    except GitError as exc:
+        if exc.returncode == 1:
+            return False
+        raise
+    return True

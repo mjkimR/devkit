@@ -23,7 +23,7 @@ from pathlib import Path
 
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
 from devkit_agt.features.rules.services.builtins import BaseRule
-from devkit_core.core import FrontmatterError, GitError, is_safe_relpath, normalize_relpath, run_git
+from devkit_core.core import FrontmatterError, GitError, is_safe_relpath, normalize_relpath, run_git, run_git_text
 from devkit_core.core.frontmatter import parse
 
 from devkit_spec.features.governance import explicitly_targeted
@@ -108,7 +108,7 @@ def _evidence(ctx: RuleContext, relative: str, data: dict[str, object]) -> list[
 
 def _git(root: Path, *args: str) -> str | None:
     try:
-        return run_git(root, *args).decode("utf-8", errors="surrogateescape").strip()
+        return run_git_text(root, *args)
     except GitError:
         return None
 

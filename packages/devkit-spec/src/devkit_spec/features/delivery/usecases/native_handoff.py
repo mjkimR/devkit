@@ -11,7 +11,7 @@ from devkit_agt.features.workflow import Workspace
 from devkit_agt.features.worktree import StartResult, locate, path_for, read_worktree_config, start
 from devkit_agt.features.worktree.usecases.lifecycle import _prepare
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core import run_git
+from devkit_core.core import run_git, run_git_text
 from devkit_core.core.frontmatter import parse
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.usecases.invocation import guard_execution
@@ -50,7 +50,7 @@ def _existing(root: Path, slug: str, head: str) -> bool:
     reason = None
     try:
         current = locate(path)
-        marker = run_git(position.base, "config", "--get", f"branch.dev-{slug}.devkitWorktree").decode().strip()
+        marker = run_git_text(position.base, "config", "--get", f"branch.dev-{slug}.devkitWorktree")
         if path.is_symlink() or not current.linked or current.root != path or current.base != position.base:
             reason = "it is not a linked worktree of this repository at the devkit worktree path"
         elif current.branch != f"dev-{slug}" or marker != str(path):
@@ -92,7 +92,7 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
             f"{position.branch or '- (detached HEAD)'}",
             fix=f"Run {command} in the main worktree on its base branch",
         )
-    dirty = run_git(position.base, "status", "--porcelain", "--untracked-files=normal").decode().splitlines()
+    dirty = run_git_text(position.base, "status", "--porcelain", "--untracked-files=normal").splitlines()
     if any(line.strip() for line in dirty):
         paths = [line[3:] for line in dirty if line.strip()]
         raise HandoffBaseDirtyError(
@@ -103,7 +103,7 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
     head = run_git(position.base, "rev-parse", "HEAD").decode().strip()
     unit = proposal_unit(slug)
     rel = f"{unit}/proposal.md"
-    mode = run_git(position.base, "ls-tree", head, "--", rel).decode().split()
+    mode = run_git_text(position.base, "ls-tree", head, "--", rel).split()
     if not mode or mode[0] not in {"100644", "100755"}:
         raise HandoffNotReadyError(
             f"PROP-{slug} has no committed proposal.md on the base",

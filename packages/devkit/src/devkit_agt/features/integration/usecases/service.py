@@ -22,7 +22,7 @@ from uuid import uuid4
 from devkit.advisory import Actor, AdvisoryError, Level
 from devkit_core.base.errors import GitError
 from devkit_core.core import LockHeldError
-from devkit_core.core.git import run_git
+from devkit_core.core.git import run_git_text
 from devkit_core.core.paths import normalize_relpath
 from devkit_dist.features.project.repositories.invocation import capture_terminal_removal, guard_execution
 from devkit_dist.features.project.repositories.project import read_project_config
@@ -68,10 +68,6 @@ from devkit_agt.features.worktree import (
 )
 
 LOCK_WAIT = 20.0  # seconds the approving call waits for another devkit integration
-
-
-def _git(root: Path, *args: str) -> str:
-    return run_git(root, *args).decode("utf-8", errors="surrogateescape").strip()
 
 
 def _prospective(root: Path, commit: str, other: str) -> tuple[str, dict[str, Any]]:
@@ -320,7 +316,7 @@ class IntegrationService:
             accepted = lifecycle.accept(request)
             if (
                 accepted != before.source_sha
-                and _git(self.root, "show", "-s", "--format=%P", accepted) != before.source_sha
+                and run_git_text(self.root, "show", "-s", "--format=%P", accepted) != before.source_sha
             ):
                 raise StaleRequestError("acceptance must produce the exact direct child of the displayed source")
             fresh = self._prepare(before.branch, request.context.task, approval_gate=request.approval_gate)
@@ -382,13 +378,13 @@ class IntegrationService:
             ("source_sha", f"refs/heads/{plan.branch}"),
         ):
             try:
-                observed[key] = _git(self.root, "rev-parse", "--verify", ref)
+                observed[key] = run_git_text(self.root, "rev-parse", "--verify", ref)
             except GitError as exc:
                 observed[key] = None
                 if exc.returncode is None:
                     observed["inspection_incomplete"] = True
         try:
-            entries = _git(self.root, "worktree", "list", "--porcelain", "-z").split("\0")
+            entries = run_git_text(self.root, "worktree", "list", "--porcelain", "-z").split("\0")
             observed["worktree_registered"] = f"worktree {plan.path}" in entries if plan.worktree_identity else None
         except GitError:
             observed["inspection_incomplete"] = True
@@ -664,7 +660,7 @@ class IntegrationService:
             advance=True,
         )
         context = self._context(result)
-        merge_base = _git(self.root, "merge-base", head, plan.source_sha)
+        merge_base = run_git_text(self.root, "merge-base", head, plan.source_sha)
         run_finish_guards(self.root, plan.branch, merge_base, plan.source_sha)
         _, provider = providers.provider(request.provider)
         ready = providers.check(provider, context)
@@ -674,7 +670,7 @@ class IntegrationService:
             if _prospective(self.root, result.result_sha, head)[0] != request.post_policy_digest:
                 raise StaleRequestError("the merged result changes the effective integration policy")
             receipts.check_merge(self.root, result.result_sha, (head, plan.source_sha))
-        if _git(self.root, "rev-parse", "--verify", f"refs/heads/{plan.target_branch}") != head:
+        if run_git_text(self.root, "rev-parse", "--verify", f"refs/heads/{plan.target_branch}") != head:
             raise TargetMovedError("the base branch moved after the build; nothing changed on the target")
         self._validate(request, merged=False, removed=removed, finalized=False, cleanup_done=cleanup_done, target=head)
         try:
@@ -686,11 +682,11 @@ class IntegrationService:
         # Git runs post-merge hooks before returning. A hook may amend commit metadata,
         # so bind cleanup to the observed commit only after proving checked content and
         # ordered provenance unchanged. Never substitute for the approved ff-only source.
-        landed = _git(self.root, "rev-parse", "--verify", f"refs/heads/{plan.target_branch}^{{commit}}")
+        landed = run_git_text(self.root, "rev-parse", "--verify", f"refs/heads/{plan.target_branch}^{{commit}}")
         if landed != result.result_sha:
-            if plan.merge_method != "no-ff" or _git(self.root, "show", "-s", "--format=%T %P", landed) != _git(
-                self.root, "show", "-s", "--format=%T %P", result.result_sha
-            ):
+            if plan.merge_method != "no-ff" or run_git_text(
+                self.root, "show", "-s", "--format=%T %P", landed
+            ) != run_git_text(self.root, "show", "-s", "--format=%T %P", result.result_sha):
                 raise StaleRequestError("the landed commit differs from the checked result tree or ordered parents")
             result.result_sha = landed
         result.steps["merge"] = "completed"

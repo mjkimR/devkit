@@ -15,21 +15,19 @@ import os
 from collections.abc import Callable
 from pathlib import Path, PurePosixPath
 
-from devkit_core.core.git import run_git
+from devkit_core.core.git import run_git, run_git_text
 
 from devkit_agt.features.workflow.services.envelope import ENVELOPES_DIR, collect_envelopes, is_envelope_name
 
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"  # what a branch without a merge base is compared with
 
 
-def _git(cwd: Path, *args: str) -> str:
-    return os.fsdecode(run_git(cwd, *args))
-
-
 def changed_units(base: Path, merge_base: str, tip: str) -> list[str]:
     """The repository-relative unit directories (``.`` at the top) whose ``envelopes/`` files changed between
     ``merge_base`` (the empty tree when there is none) and ``tip``."""
-    changed = _git(base, "diff", "--name-only", "-z", "--no-renames", merge_base or EMPTY_TREE, tip, "--").split("\0")
+    changed = run_git_text(
+        base, "diff", "--name-only", "-z", "--no-renames", merge_base or EMPTY_TREE, tip, "--"
+    ).split("\0")
     units = set()
     for name in filter(None, changed):
         path = PurePosixPath(name)
@@ -40,7 +38,7 @@ def changed_units(base: Path, merge_base: str, tip: str) -> list[str]:
 
 def _names(base: Path, rev: str, directory: str) -> list[str]:
     """The entries of ``directory`` at ``rev``; none when it does not exist there. Other failures raise."""
-    listed = _git(base, "ls-tree", "-z", "--name-only", rev, "--", f"{directory}/").split("\0")
+    listed = run_git_text(base, "ls-tree", "-z", "--name-only", rev, "--", f"{directory}/").split("\0")
     return [PurePosixPath(entry).name for entry in listed if entry]
 
 
@@ -57,7 +55,7 @@ def unit_hold_reasons(base: Path, tip: str, unit: str, merge_base: str = "") -> 
         deleted = [n for n in _names(base, merge_base, directory) if is_envelope_name(n) and n not in at_tip]
 
     def reader(rev: str, name: str) -> Callable[[], str]:
-        return lambda: _git(base, "show", f"{rev}:{directory}/{name}")
+        return lambda: os.fsdecode(run_git(base, "show", f"{rev}:{directory}/{name}"))
 
     files = [(name, reader(tip, name)) for name in at_tip] + [(name, reader(merge_base, name)) for name in deleted]
     return collect_envelopes(files).hold().reasons("" if unit == "." else f"{unit}/")

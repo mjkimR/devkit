@@ -31,7 +31,7 @@ from typing import Any
 from devkit.advisory import AdvisoryError, Level
 from devkit_core.base.errors import ArgumentError, GitError
 from devkit_core.base.usecase import BaseUseCase
-from devkit_core.core.git import run_git
+from devkit_core.core.git import is_ancestor, run_git, run_git_text
 from devkit_core.core.logs import get_logger
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.invocation import constraint_environment, guard_execution
@@ -110,14 +110,10 @@ class _Entry:
     locked: bool = False
 
 
-def _git(cwd: Path, *args: str) -> str:
-    return os.fsdecode(run_git(cwd, *args)).strip()
-
-
 def _query(cwd: Path, *args: str) -> str | None:
     """The output of a Git query, or ``None`` when it answers no (exit 1); any other failure raises."""
     try:
-        return _git(cwd, *args)
+        return run_git_text(cwd, *args)
     except GitError as exc:
         if exc.returncode == 1:
             return None
@@ -141,7 +137,7 @@ def _merged(base: Path, rev: str | None, head: str | None) -> bool:
     if rev is None or head is None:
         return False
     try:
-        return _succeeds(base, "merge-base", "--is-ancestor", rev, head)
+        return is_ancestor(base, rev, head)
     except GitError:
         if _query(base, "rev-parse", "--verify", "--quiet", f"{rev}^{{commit}}") is None:
             return False
@@ -170,8 +166,8 @@ def check_branch(branch: str) -> str:
 def locate(start: Path) -> Position:
     """The checkout containing ``start``: its top level, the base checkout, the branch, whether it is linked."""
     root = require_git_toplevel(start)
-    git_dir = _resolve(_git(root, "rev-parse", "--path-format=absolute", "--git-dir"))
-    common = _resolve(_git(root, "rev-parse", "--path-format=absolute", "--git-common-dir"))
+    git_dir = _resolve(run_git_text(root, "rev-parse", "--path-format=absolute", "--git-dir"))
+    common = _resolve(run_git_text(root, "rev-parse", "--path-format=absolute", "--git-common-dir"))
     branch = _short(_query(root, "symbolic-ref", "--quiet", "HEAD") or "")
     # The base checkout is the one whose Git directory is the common directory.
     if common.name != ".git" or not (common.parent / ".git").is_dir():
@@ -226,7 +222,7 @@ def _unmark(base: Path, branch: str) -> None:
 
 
 def _clean(checkout: Path) -> bool:
-    return not _git(checkout, "status", "--porcelain", "--untracked-files=normal")
+    return not run_git_text(checkout, "status", "--porcelain", "--untracked-files=normal")
 
 
 def _local_snapshot(base: Path) -> tuple[Path, bytes, int] | None:
@@ -307,7 +303,7 @@ def start(
             f"to continue the current task instead, keep working in {position.root}",
         )
     if revision is not None:
-        revision = _git(position.base, "rev-parse", "--verify", "--end-of-options", f"{revision}^{{commit}}")
+        revision = run_git_text(position.base, "rev-parse", "--verify", "--end-of-options", f"{revision}^{{commit}}")
     path = path_for(position, branch)
     for entry in _entries(position.base):
         if entry.path == path:
@@ -425,7 +421,7 @@ def _remote_holders(base: Path, branch: str) -> tuple[list[str], list[AdvisoryEr
     """
     holders: list[str] = []
     notices: list[AdvisoryError] = []
-    for remote in _git(base, "remote").splitlines():
+    for remote in run_git_text(base, "remote").splitlines():
         try:
             listed = os.fsdecode(
                 run_git(base, "ls-remote", "--heads", remote, f"refs/heads/{branch}", timeout=LS_REMOTE_TIMEOUT)
@@ -531,7 +527,7 @@ def attach(
             f"to continue the current task instead, keep working in {position.root}",
         )
     base = position.base
-    remotes = _git(base, "remote").splitlines()
+    remotes = run_git_text(base, "remote").splitlines()
     remote = _source_remote(source, branch, remotes)
     unit_path = _unit_path(unit)
     local = _query(base, "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}^{{commit}}")
@@ -633,7 +629,7 @@ def _remote_tracking(
     when several do).
     """
     if remote is None and local:
-        upstream = _git(base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}")
+        upstream = run_git_text(base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}")
         if upstream.startswith("refs/remotes/"):
             tip = _query(base, "rev-parse", "--verify", "--quiet", f"{upstream}^{{commit}}")
             if tip:
@@ -668,8 +664,8 @@ def _check_in_sync(position: Position, branch: str, local: str, remote_ref: str)
     """Refuse a local branch that lacks commits of ``remote_ref``; one ahead of it passes with a notice that the
     remote still lacks its commits, an equal one silently."""
     base = position.base
-    if _succeeds(base, "merge-base", "--is-ancestor", remote_ref, local):
-        if _git(base, "rev-parse", f"{remote_ref}^{{commit}}") == local:
+    if is_ancestor(base, remote_ref, local):
+        if run_git_text(base, "rev-parse", f"{remote_ref}^{{commit}}") == local:
             return None
         name = remote_ref.removeprefix("refs/remotes/")
         remote, _, _ = name.partition("/")
@@ -678,7 +674,7 @@ def _check_in_sync(position: Position, branch: str, local: str, remote_ref: str)
             " only by a push",
             fix=f"git -C {shlex.quote(str(base))} push {shlex.quote(remote)} {branch} when the work is to be shared",
         )
-    behind = _succeeds(base, "merge-base", "--is-ancestor", local, remote_ref)
+    behind = is_ancestor(base, local, remote_ref)
     name = remote_ref.removeprefix("refs/remotes/")
     holder = next((entry.path for entry in _entries(base) if entry.branch == branch), None)
     if behind and holder is None:
@@ -697,7 +693,7 @@ def _check_in_sync(position: Position, branch: str, local: str, remote_ref: str)
 def _object_type(base: Path, spec: str) -> str | None:
     """The type of the object ``spec`` (``<rev>:<path>``) names, ``None`` when it names none."""
     try:
-        return _git(base, "cat-file", "-t", spec)
+        return run_git_text(base, "cat-file", "-t", spec)
     except GitError as exc:
         if exc.returncode is None:
             raise
@@ -1168,7 +1164,7 @@ def finish(
     if delete_branch:
         _check_deletable(base, branch, position.branch)
     if merge:
-        tip = _git(base, "rev-parse", "--verify", f"{ref}^{{commit}}")
+        tip = run_git_text(base, "rev-parse", "--verify", f"{ref}^{{commit}}")
         head = _head(base)
         if head is not None and not _merged(base, tip, head):
             if not _merged(base, head, tip):
@@ -1182,7 +1178,7 @@ def finish(
             guard((_query(base, "merge-base", head, tip) or "") if head else "", tip)
         if network == "allow":
             _check_upstream(position)
-        if _git(base, "rev-parse", "--verify", f"{ref}^{{commit}}") != tip:
+        if run_git_text(base, "rev-parse", "--verify", f"{ref}^{{commit}}") != tip:
             raise ConflictError(
                 f"{branch} moved while finish checked it (it was {tip[:7]}); only the checked commit is merged;"
                 " nothing was changed",
@@ -1355,14 +1351,14 @@ def _check_deletable(base: Path, branch: str, into: str | None) -> None:
     that is ``into`` itself (a local upstream, as ``branch.autoSetupMerge always`` records) contains the branch once
     it is merged, so it never refuses.
     """
-    upstream = _git(base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}")
+    upstream = run_git_text(base, "for-each-ref", "--format=%(upstream)", f"refs/heads/{branch}")
     if (
         not upstream
         or (into is not None and upstream == f"refs/heads/{into}")
         or not _succeeds(base, "rev-parse", "--verify", "--quiet", upstream)
     ):
         return
-    if _succeeds(base, "merge-base", "--is-ancestor", f"refs/heads/{branch}", upstream):
+    if is_ancestor(base, f"refs/heads/{branch}", upstream):
         return
     remote = _config(base, f"branch.{branch}.remote")
     merge_ref = _config(base, f"branch.{branch}.merge")
@@ -1407,7 +1403,7 @@ def _check_upstream(position: Position) -> None:
         _log.info("could not fetch %s %s; the base is not checked against it: %s", remote, merge_ref, exc.message)
         return
     tip = _query(base, "rev-parse", "--verify", "--quiet", "FETCH_HEAD^{commit}")
-    if tip is None or _succeeds(base, "merge-base", "--is-ancestor", tip, "HEAD"):
+    if tip is None or is_ancestor(base, tip, "HEAD"):
         return
     raise BaseBehindError(
         f"{remote} {merge_ref} has commits the base branch {position.branch} lacks, so the push after the merge"
@@ -1499,7 +1495,7 @@ class WorktreeStatusQuery(BaseUseCase):
             )
         checked_out = {entry.branch for entry in entries if entry.branch}
         branches = []
-        refs = _git(base, "for-each-ref", "--format=%(refname) %(objectname)", "refs/heads/")
+        refs = run_git_text(base, "for-each-ref", "--format=%(refname) %(objectname)", "refs/heads/")
         for line in refs.splitlines():
             ref, _, head = line.partition(" ")
             name = _short(ref)

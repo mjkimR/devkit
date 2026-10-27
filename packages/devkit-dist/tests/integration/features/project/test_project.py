@@ -10,6 +10,7 @@ from devkit_core.base.errors import ArgumentError, GitError, UnsafePathError
 from devkit_dist.base.errors import ConfigError, DevkitRootNestedError
 from devkit_dist.features.project.repositories import project as project_module
 from devkit_dist.features.project.repositories.project import (
+    commit_config,
     config_table,
     find_project_root,
     git_toplevel,
@@ -221,6 +222,35 @@ def test_read_toml_reports_its_display_name(tmp_path: Path) -> None:
     with pytest.raises(ConfigError, match="invalid config local") as caught:
         read_toml(path, "local")
     assert caught.value.target_files == ("local",)
+
+
+def test_commit_config_reads_the_committed_file(repo: Path) -> None:
+    def commit(message: str) -> str:
+        subprocess.run(["git", "-C", str(repo), "add", "-A"], check=True)
+        subprocess.run(["git", "-C", str(repo), "commit", "-q", "--allow-empty", "-m", message], check=True)
+        return subprocess.run(
+            ["git", "-C", str(repo), "rev-parse", "HEAD"], check=True, capture_output=True, text=True
+        ).stdout.strip()
+
+    absent = commit("none")
+    config = repo / ".devkit/config.toml"
+    config.parent.mkdir()
+    config.write_text("[worktree]\nmerge = 'ff-only'\n")
+    valid = commit("valid")
+    config.write_text("[worktree\n")
+    invalid = commit("invalid")
+    config.write_bytes(b"x = '\xff'\n")
+    undecodable = commit("undecodable")
+    config.write_text("[worktree]\nmerge = 'no-ff'\n")  # the working tree is never read
+
+    assert commit_config(repo, absent) is None
+    assert commit_config(repo, valid) == {"worktree": {"merge": "ff-only"}}
+    for sha in (invalid, undecodable):
+        with pytest.raises(ConfigError, match=f"at commit {sha[:12]}") as caught:
+            commit_config(repo, sha)
+        assert caught.value.code == "CONFIG_INVALID" and caught.value.target_files == (".devkit/config.toml",)
+    with pytest.raises(GitError):
+        commit_config(repo, "0" * 40)
 
 
 class AreaConfigError(ConfigError):

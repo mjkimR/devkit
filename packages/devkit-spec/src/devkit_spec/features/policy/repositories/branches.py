@@ -12,7 +12,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
-from devkit_core.core import GitError, run_git
+from devkit_core.core import GitError, run_git, run_git_text
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 
 from devkit_spec.base.units import is_spec_dir
@@ -29,12 +29,12 @@ def checkout(root: Path) -> tuple[bool, str] | None:
     A ``GitError`` without an exit status (Git missing, a timeout) propagates.
     """
     try:
-        dirs = run_git(root, "rev-parse", "--path-format=absolute", "--git-common-dir", "--git-dir").splitlines()
+        dirs = run_git_text(root, "rev-parse", "--path-format=absolute", "--git-common-dir", "--git-dir").splitlines()
     except GitError as exc:
         if exc.returncode is None:
             raise
         return None
-    common, git_dir = (Path(line.decode()).resolve() for line in dirs[:2])
+    common, git_dir = (Path(line).resolve() for line in dirs[:2])
     try:
         branch = run_git(root, "symbolic-ref", "--quiet", "--short", "HEAD").decode().strip()
     except GitError as exc:
@@ -71,14 +71,14 @@ def _branch_unit(root: Path, branch: str, slug: str) -> str | None:
     """The committed unit directory of ``slug`` on the local ``branch`` (a spec bundle, else the proposal), relative to
     ``root``; ``None`` when the branch or a unique unit does not exist."""
     try:
-        listed = run_git(root, "ls-tree", "-d", "--name-only", f"refs/heads/{branch}", "specs/").decode()
+        listed = run_git_text(root, "ls-tree", "-d", "--name-only", f"refs/heads/{branch}", "specs/")
         months = [line for line in listed.splitlines() if line]
         bundles = [
             line
             for month in months
-            for line in run_git(root, "ls-tree", "-d", "--name-only", f"refs/heads/{branch}", f"{month}/")
-            .decode()
-            .splitlines()
+            for line in run_git_text(
+                root, "ls-tree", "-d", "--name-only", f"refs/heads/{branch}", f"{month}/"
+            ).splitlines()
             if is_spec_dir(line.rpartition("/")[2], slug)
         ]
     except GitError as exc:

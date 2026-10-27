@@ -9,7 +9,7 @@ from typing import Any
 from devkit_agt.features.workflow.services.envelope import Envelopes, collect_envelopes, is_envelope_name
 from devkit_agt.features.worktree.usecases.lifecycle import locate
 from devkit_core.base.errors import ArgumentError
-from devkit_core.core import GitError, run_git
+from devkit_core.core import GitError, run_git, run_git_text
 from devkit_core.core.frontmatter import parse
 
 from devkit_spec.base.axes import PROPOSAL_WORKFLOW, SPEC_WORKFLOW_PREFIX
@@ -23,10 +23,6 @@ from devkit_spec.base.errors import (
 from devkit_spec.base.units import PROPOSAL_FILE, PROPOSAL_UNIT, SPEC_UNIT
 from devkit_spec.features.delivery.usecases.attach import attach_check
 from devkit_spec.features.entrypoints.repositories.bundle import parse_boundaries, parse_targets
-
-
-def git(root: Path, *args: str) -> str:
-    return run_git(root, *args).decode("utf-8", errors="surrogateescape").strip()
 
 
 def files(root: Path, revision: str, prefix: str = "") -> list[str]:
@@ -45,7 +41,7 @@ def read(root: Path, revision: str, path: str) -> str:
 
 def marker(root: Path, branch: str, key: str) -> str:
     try:
-        return git(root, "config", "--get", f"branch.{branch}.{key}")
+        return run_git_text(root, "config", "--get", f"branch.{branch}.{key}")
     except GitError as exc:
         if exc.returncode == 1:
             return ""
@@ -62,7 +58,7 @@ def records(root: Path, revision: str, unit: str) -> Envelopes:
 
 
 def added(root: Path, revision: str, path: str, error: type[SpecError]) -> str:
-    commits = git(root, "log", "--format=%H", "--diff-filter=A", revision, "--", path).splitlines()
+    commits = run_git_text(root, "log", "--format=%H", "--diff-filter=A", revision, "--", path).splitlines()
     if len(commits) != 1:
         raise error(f"{path} has {len(commits)} adding commits")
     return commits[0]
@@ -134,10 +130,10 @@ def derive_base(
         return previous, "previous-worker-commit"
     base_branch = marker(root, branch, "devkitBase") if branch else ""
     if not base_branch and base_checkout:
-        base_branch = git(base_checkout, "symbolic-ref", "--quiet", "--short", "HEAD")
+        base_branch = run_git_text(base_checkout, "symbolic-ref", "--quiet", "--short", "HEAD")
     if not base_branch or base_branch == branch:
         raise WorkerBaseUnresolvedError("No distinct base branch is recorded")
-    bases = git(root, "merge-base", "--all", tip, base_branch).splitlines()
+    bases = run_git_text(root, "merge-base", "--all", tip, base_branch).splitlines()
     if len(bases) != 1:
         raise WorkerBaseUnresolvedError("The base branch has no single merge base")
     return bases[0], "branch-merge-base"
@@ -187,7 +183,7 @@ def inputs(
 ) -> tuple[Path, str, dict[str, Any]]:
     position = locate(root)
     root = position.root
-    tip = git(root, "rev-parse", "HEAD")
+    tip = run_git_text(root, "rev-parse", "HEAD")
     checkout = Path(base_checkout).resolve() if base_checkout else position.base if position.linked else None
     chosen_unit, unit_source = (unit_path(root, unit), "argument") if unit else derive_unit(root, tip, position.branch)
     if not files(root, tip, chosen_unit):
@@ -216,7 +212,7 @@ def inputs(
     ):
         if name != "unit":
             try:
-                value = git(root, "rev-parse", "--verify", "--end-of-options", f"{value}^{{commit}}")
+                value = run_git_text(root, "rev-parse", "--verify", "--end-of-options", f"{value}^{{commit}}")
             except GitError as exc:
                 raise ArgumentError(
                     f"Unknown {name} commit: {value}", fix=f"Pass --{name} with a valid commit"
