@@ -46,6 +46,10 @@ git status --porcelain          # uncommitted changes, if any
   for a non-empty one, ask the user whether to run `git init` first (commit gates and `--locked` restores need Git).
 - Uncommitted changes: suggest committing or stashing first, so the installation is a separate, reviewable change.
   Continue only with the user's agreement.
+- The top level differs from the directory you were asked to install into, or it holds several projects (a
+  monorepo): devkit still installs at the top level. Follow
+  [Monorepo or nested project](install/existing-repository.md#monorepo-or-nested-project) when you reach the install
+  step.
 - `.devkit/` already exists: devkit is already installed. Follow the maintenance section of the
   [existing-repository route](install/existing-repository.md#already-installed) instead of installing again.
 
@@ -56,7 +60,9 @@ git status --porcelain          # uncommitted changes, if any
 | No commits, or only a README, LICENSE, `.gitignore` or other boilerplate, and no source or build files | [New repository](install/new-repository.md) |
 | Source code, build files, CI or agent configuration already present | [Existing repository](install/existing-repository.md) |
 
-When unsure, take the existing-repository route: its analysis is read-only and costs nothing.
+When unsure, take the existing-repository route: its analysis is read-only and costs nothing. A monorepo, or a
+request to install into a subdirectory, always takes the existing-repository route and its
+[Monorepo or nested project](install/existing-repository.md#monorepo-or-nested-project) section.
 
 ## Step 3: Package sources
 
@@ -67,6 +73,8 @@ pins the commit. Declare exactly one devkit requirement:
 ```bash
 # the full harness (the default): distribution plus rules, commit gates, workflows, worktrees and devkit run
 uv add --no-build-package pyyaml --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
+# or the harness plus spec-driven delivery (brings devkit-agt from the same commit; declare it instead of devkit-agt)
+uv add --no-build-package pyyaml --dev "devkit-spec @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-spec"
 # or distribution only, when the user wants agent assets without rules, gates or workflows
 uv add --no-build-package pyyaml --dev "devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist"
 
@@ -79,6 +87,10 @@ uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibY
   for distribution without the harness: it deploys the `devkit` and `advisory` bundles and has no `devkit rules`,
   `devkit gate`, `devkit workflow` or `devkit run` (they fail with `HARNESS_COMMAND_UNAVAILABLE`). Adding the harness
   later replaces the `devkit-dist` requirement with the `devkit-agt` one in the same dependency group.
+- `devkit-spec` brings `devkit-agt` and the auto-selected `spec` bundle: the `/spec` entry skill, the spec-driven
+  delivery workflows (with the generated `devkit-workflow` skill) and the `devkit spec` commands. Declare it only when
+  the user wants spec-driven delivery ([Bundle Recommendations](install/bundle-recommendations.md) lists the
+  evidence); never declare `devkit-agt` next to it.
 - `devkit-catalog` (optional) adds opt-in bundles that deploy nothing until selected; add it only when a
   [recommended bundle](install/bundle-recommendations.md) comes from it.
 - Both packages require Python 3.12 or newer; the project's `requires-python` must allow 3.12 (the route documents
@@ -91,9 +103,16 @@ uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibY
 - Release wheels are an alternative only when `gh release view --repo mjkimR/devkit` lists `devkit_dist-*.whl` and
   `devkit_agt-*.whl` (and `devkit_catalog-*.whl` when needed); a `devkit-agt` wheel installation also names the
   `devkit-dist`, `devkit-core`, `devkit-cli` and `devkit-advisory` wheels of that release. Never mix Git and wheel sources for these packages.
-- Upgrading later: `uv lock --upgrade-package devkit-agt --upgrade-package devkit-dist --upgrade-package devkit-core
-  --upgrade-package devkit-cli --upgrade-package devkit-advisory`
-  (plus `--upgrade-package devkit-catalog`), then `uv sync` and `uv run devkit sync`. The first upgrade from a
+- Upgrading later, when the requirement names no ref (the commands above): `uv lock --upgrade-package devkit-agt
+  --upgrade-package devkit-dist --upgrade-package devkit-core --upgrade-package devkit-cli --upgrade-package
+  devkit-advisory` (plus `--upgrade-package devkit-spec` and `--upgrade-package devkit-catalog` when declared), then
+  `uv sync` and `uv run devkit sync`.
+- Upgrading a pinned requirement: when `pyproject.toml` pins a ref (`rev = ...` under `[tool.uv.sources]`, or
+  `@<ref>` in the Git URL), `uv lock --upgrade-package` keeps the pinned commit and changes nothing. Re-declare each
+  pinned devkit requirement with the new ref instead, for example
+  `uv add --no-build-package pyyaml --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git@<new-ref>#subdirectory=packages/devkit"`,
+  then `uv sync` and `uv run devkit sync`.
+- The first upgrade from a
   `devkit-agt` that predates `devkit-dist` follows
   [Upgrading across the package split](install/existing-repository.md#upgrading-across-the-package-split).
 
@@ -105,8 +124,9 @@ against each opt-in bundle, present the recommendations with their evidence, and
 ## Optional: MCP connection
 
 When Codex or Claude Code native service tools are wanted, now or on an existing installation, follow
-[MCP onboarding](install/mcp.md) after bundle selection, with its optional dependency and user-scoped registration
-in the approved plan. Sync never registers MCP.
+[MCP onboarding](install/mcp.md) after bundle selection, with its optional dependency and its project-scoped
+registration (ignored host files in this checkout) in the approved plan. Until `devkit-mcp` is installed, sync
+registers nothing.
 
 ## Step 5: Verify and report
 
@@ -124,7 +144,9 @@ Then report to the user:
 - every warning devkit printed (`[WARN]   (<CODE>) ...`) and what it means for them;
 - the files to commit: `pyproject.toml`, `uv.lock`, `.devkit/config.toml`, `.devkit/installation.json`,
   `.devkit/.gitignore`, `AGENTS.md`, `.gitignore` changes and any seeded files;
-- how a fresh clone restores the generated files: `uv sync`, then `uv run devkit sync --locked`.
+- how a fresh clone restores the generated files: `uv sync`, then `uv run devkit sync --locked`; with MCP in use, then
+  `uv run devkit sync --registrations-only` to register the selected hosts in that clone
+  ([MCP onboarding](install/mcp.md#teammates-and-fresh-clones)).
 
 Ask whether to commit. Do not commit on your own.
 

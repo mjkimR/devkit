@@ -24,6 +24,22 @@ MCP retains only the shared artifact services; lifecycle acceptance, handoff and
 through CLI commands after Host-carried conversational approval. Protocol tests do not establish actual terminal UI
 support. Desktop/VS Code adapters are outside this scope.
 
+## Teammates and fresh clones
+
+Registrations are project-scoped and Git-ignored, so each clone creates its own. `devkit sync --locked` restores
+assets but never writes registrations. A teammate restoring a clone where the project uses MCP runs:
+
+```bash
+uv sync                                     # installs devkit-mcp when the lock declares it
+uv run devkit sync --locked                 # restore the managed copies and projections
+uv run devkit sync --registrations-only     # register the selected hosts in this clone
+```
+
+- The hosts are the agents selected by `agents` in the tracked `.devkit/config.toml` (unset: every supported agent);
+  `agents` cannot be set per clone.
+- To register nothing in one clone, set `[mcp] register = false` in the ignored `.devkit/config.local.toml`, then run
+  `uv run devkit sync --registrations-only` again; it retires only the entries this clone owns.
+
 The Host reviews committed scope and required checks, presents the exact report, target and effects, obtains the
 user's conversational decision under `ask`, then invokes the corresponding CLI command. The CLI revalidates scope
 and policy but does not authenticate the conversation. Workers return verified scope to the Host and never request
