@@ -1,0 +1,10 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: Separate maintenance playbook for performance passes, authored with authoring/skill-authoring
+  as a router (SKILL.md entry plus references); reuse review-refactor's parallel application
+  and differential evidence by reference.
+by: user
+at: '2026-10-27T08:06:56.950384Z'
