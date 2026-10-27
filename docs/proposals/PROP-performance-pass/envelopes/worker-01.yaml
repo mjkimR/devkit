@@ -1,0 +1,75 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-27T08:23:09.835960Z'
+status: needs_input
+summary: 'Planning run 1: status reviewing; Q1-Q5 answered with evidence (materials/pass-evidence.md, design-options.md); router layout, measurement protocol, change classification and review-refactor reuse designed; 4 PADRs; challenger-01 folded (12 of 14 resolved in reverify-01); 3 questions for the user.'
+findings: []
+assumptions:
+- Development branches from a base that contains merge dc3e07a2 (review-refactor lessons), which this Planning branch predates.
+unverified_areas:
+- Session observations (profiler inflation during this pass, zsh word splitting, concurrent-agent noise) come from the Host handoff and were not re-measured; no probe path was given.
+- Executable-bit deployment for playbook directories was not tested.
+checks:
+  rules: PASS proposal dir, 0 violations
+diff_scope:
+  base: ''
+  head: 66b80ae5eb7ec5ef526a3dbc424885d8f48bf58a
+questions:
+- id: q1
+  title: Route for agreed performance changes
+  prompt: How should the agreed behavior-preserving performance changes of a run be developed when they edit several modules?
+  context: 'The design reuses review-refactor''s application steps, but its route for multi-module changes (direct-mode overall-refactor without a Unit) is granted only to review-refactor runs by the delivery workflow capability, the delivery architecture and the spec classification rules. This decides whether performance-pass needs an exception to those rules and edits outside this proposal''s current scope. Development cannot start until it is settled.
+
+    '
+  options:
+  - id: a
+    description: 'Use the repository''s feature workflow at the depth its own classification gives (with the spec bundle, session when no contract or specification text changes), for one module or several. No change to the classification rules; the 2026-10-27 pass already ran this way on its own branch.
+
+      '
+    recommended: true
+  - id: b
+    description: 'Extend review-refactor''s direct-mode overall-refactor route to performance-pass. Adds a decision record and edits to the delivery workflow capability, the delivery architecture and the devkit-spec classification reference, which widens this proposal''s scope.
+
+      '
+    recommended: false
+  allow_note: true
+- id: q2
+  title: Milestone for the performance pass
+  prompt: Where should this proposal belong, given that MS-maintenance-operations is already marked done?
+  context: 'The draft names MS-maintenance-operations, whose status is done with both completion assertions confirmed. Adding scope to a done milestone requires the user''s decision to reopen it (status active, both assertions reset) or to place the work elsewhere. The Host applies the choice in Backlog; Planning cannot edit the milestone.
+
+    '
+  options:
+  - id: a
+    description: 'Reopen MS-maintenance-operations to active, add the performance pass to its exit condition and reset both completion assertions; it is the theme of opt-in maintenance playbooks.
+
+      '
+    recommended: true
+  - id: b
+    description: Clear the proposal's milestone and keep it as standalone work.
+    recommended: false
+  - id: c
+    description: Create a new milestone for performance work and move the proposal there.
+    recommended: false
+  allow_note: true
+- id: q3
+  title: Timing helper script
+  prompt: Should the playbook ship a small standard-library script that runs the timing comparisons, or describe the procedure only?
+  context: 'The measurement steps (interleaved runs, warm-up, exit and output checks, median, minimum and range) are repetitive and deterministic, which the skill-authoring playbook says belongs in a script; the 2026-10-27 pass hit mechanical traps such as a shell variable not split into arguments. No bundle ships a script yet. This decides the playbook''s file list and Development''s scope.
+
+    '
+  options:
+  - id: a
+    description: 'Ship scripts/compare_runs.py (Python standard library) with a one-line manual fallback in SKILL.md. Development also adds its unit tests under packages/devkit-catalog/tests/unit/, a statement in the manifest capability that playbook directories keep executable bits, and a deploy test. If the deploy test shows executable bits are not kept for playbooks, the script is invoked with python3 instead.
+
+      '
+    recommended: true
+  - id: b
+    description: 'Procedure only, naming an installed benchmark tool (for example hyperfine) as an example and a hand loop otherwise. Smaller scope; each run rebuilds the loop and can repeat the traps.
+
+      '
+    recommended: false
+  allow_note: true
+activity_effort: medium
