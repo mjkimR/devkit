@@ -8,7 +8,7 @@ target: "exec_command require_escalated automatic approval reviewer"
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: forwarded
 created_at: 2026-10-25
 ---
 
@@ -44,3 +44,10 @@ This is a review failure, not a determination that the action is unsafe.
 Later read-only availability: ordinaryUsageAllowed=true; reset time had passed.
 Same reviewed worktree mutation: executed and committed successfully.
 ```
+
+## Disposition
+
+Forwarded on the user's decision (2026-10-27). A report for the Codex approval-review service was drafted (keep
+reviewer-unavailable failures distinct from policy denials; expose the reset time and availability so the same
+reviewed route can be retried) and handed to the user, who reviewed it. The agent did not send it; any submission is
+the user's, outside devkit. No repository change is needed.
