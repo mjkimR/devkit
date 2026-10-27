@@ -70,9 +70,20 @@ def _unlinked_path(root: Path, name: str) -> Path:
     path = root
     for part in rel.parts:
         path /= part
-        if path.is_symlink():
+        try:
+            mode = path.lstat().st_mode
+        except (FileNotFoundError, NotADirectoryError):
+            break  # nothing below a missing component exists, so no deeper one is a symlink
+        except (OSError, ValueError):
+            # Any other failure: what ``Path.is_symlink`` answers, or raises, for it.
+            if path.is_symlink():
+                raise UnsafeWorkspaceError(f"deployment symlink: {name}", target_files=[name]) from None
+            continue
+        if stat.S_ISLNK(mode):
             raise UnsafeWorkspaceError(f"deployment symlink: {name}", target_files=[name])
-    return path
+        if not stat.S_ISDIR(mode):
+            break  # below a file, every deeper lookup fails with ENOTDIR
+    return root.joinpath(*rel.parts)
 
 
 def checked_path(root: Path, name: str) -> Path:

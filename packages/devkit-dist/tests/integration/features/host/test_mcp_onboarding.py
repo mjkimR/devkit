@@ -72,6 +72,30 @@ def test_tracked_and_visible_foreign_destinations_are_unchanged(repo, tracked, i
     assert target.read_bytes() == raw
 
 
+def test_planning_asks_git_once_for_all_destinations_with_per_path_answers(repo, monkeypatch):
+    relatives = [*r.DESTINATIONS.values(), "tracked-dir"]
+    (repo / ".codex").mkdir()
+    (repo / ".codex/config.toml").write_text("")
+    (repo / ".mcp.json").write_text("{}")
+    (repo / "tracked-dir").mkdir()
+    (repo / "tracked-dir/file").write_text("")
+    git(repo, "add", ".codex/config.toml", "tracked-dir/file")
+    (repo / ".git/info/exclude").write_text("/.mcp.json\n/.agents/\n")
+    eligibility = r._Eligibility(repo, relatives)
+    for relative in relatives:
+        assert eligibility.tracked(relative) == r._tracked(repo, relative)
+        assert eligibility.ignored(relative) == r._ignored(repo, relative)
+    assert {item for item in relatives if eligibility.tracked(item)} == {".codex/config.toml", "tracked-dir"}
+    assert {item for item in relatives if eligibility.ignored(item)} == {".mcp.json", ".agents/mcp_config.json"}
+    (repo / ".git/info/exclude").write_text("")
+    calls = []
+    real = r.run_git_text
+    monkeypatch.setattr(r, "run_git_text", lambda *args, **kw: calls.append(args[1]) or real(*args, **kw))
+    none_ignored = r._Eligibility(repo, relatives)
+    assert not any(none_ignored.ignored(item) for item in relatives)  # Git's exit status 1: nothing is ignored
+    assert calls == ["check-ignore"]
+
+
 def test_ignored_foreign_settings_mode_and_noop_preserved(repo):
     target = repo / ".mcp.json"
     (repo / ".git/info/exclude").write_text("/.mcp.json\n")
