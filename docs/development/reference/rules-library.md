@@ -68,7 +68,7 @@ destinations are left alone, `#fragment` and `?query` are kept, and a
 destination that still names its target keeps the author's spelling.
 Destinations are read as `markdown_link` reads them (`local_target`: escapes
 removed, percent-encoding decoded), and a new destination is written with
-`devkit_agt.features.rules.repositories.workspace.markdown.encode_destination(path, suffix='', angle=False)`, which percent-encodes `%`,
+`devkit_agt.features.rules.models.markdown.encode_destination(path, suffix='', angle=False)`, which percent-encodes `%`,
 `\`, `#`, `?`, `<` and `>` and wraps a path with whitespace or parentheses in
 `<...>` (unless the destination already is), so it reads back as the same path;
 a trailing `/` (`docs/sub/`) is kept. A file that is a symbolic link is skipped

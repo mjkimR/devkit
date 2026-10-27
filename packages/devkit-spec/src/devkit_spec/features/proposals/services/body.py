@@ -12,7 +12,8 @@ heading (case-insensitive):
 - anything else: carried notes, headings demoted one level.
 
 Bodies are kept verbatim apart from heading levels; leading and trailing blank lines and trailing horizontal rules
-are trimmed. Fenced code is never read as a heading.
+are trimmed. Fenced code and HTML comments (as ``devkit_agt.features.rules.scan`` finds them) are never read as a
+heading or a list item.
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from devkit_agt.features.rules import LineKind, scan
 from devkit_core.core.frontmatter import locate
 
 _H1 = re.compile(r"^ {0,3}# +.+$")
@@ -52,8 +54,9 @@ class _Section:
     body: list[str] = field(default_factory=list)
 
 
-def _fence(line: str) -> bool:
-    return line.strip().startswith(("```", "~~~"))
+def _prose(lines: list[str]) -> list[bool]:
+    """Whether each of ``lines`` is a prose line (outside fenced or indented code and HTML comments)."""
+    return [scanned.kind is LineKind.PROSE for scanned in scan("\n".join(lines))] if lines else []
 
 
 def _sections(text: str) -> list[_Section]:
@@ -63,11 +66,10 @@ def _sections(text: str) -> list[_Section]:
     body = text[block.end :] if block is not None else text
     sections: list[_Section] = []
     current = _Section("")
-    seen_h1 = in_fence = False
-    for line in body.split("\n"):
-        if _fence(line):
-            in_fence = not in_fence
-        if not in_fence:
+    seen_h1 = False
+    lines = body.split("\n")
+    for line, prose in zip(lines, _prose(lines), strict=True):
+        if prose:
             if not seen_h1 and _H1.match(line) and not line.strip().startswith("##"):
                 seen_h1 = True
                 continue
@@ -111,11 +113,8 @@ def trim_blank(lines: list[str]) -> list[str]:
 def demote_headings(lines: list[str]) -> list[str]:
     """Every heading outside fenced code one level deeper (at most H6)."""
     out: list[str] = []
-    in_fence = False
-    for line in lines:
-        if _fence(line):
-            in_fence = not in_fence
-        match = None if in_fence else _HEADING.match(line)
+    for line, prose in zip(lines, _prose(lines), strict=True):
+        match = _HEADING.match(line) if prose else None
         if match and len(match.group(2)) < 6:
             out.append(f"{match.group(1)}{match.group(2)}#{match.group(3)}")
         else:
@@ -168,12 +167,9 @@ def ensure_ac_ids(body: str) -> tuple[str, list[str]]:
 
     has_h3 = False
     taken: set[str] = set()
-    in_fence = False
-    for line in lines:
-        if _fence(line):
-            in_fence = not in_fence
-            continue
-        match = None if in_fence else _H3.match(line)
+    prose_lines = _prose(lines)
+    for line, prose in zip(lines, prose_lines, strict=True):
+        match = _H3.match(line) if prose else None
         if match is not None:
             has_h3 = True
             tags = _AC_TAG.findall(match.group(1))
@@ -189,12 +185,9 @@ def ensure_ac_ids(body: str) -> tuple[str, list[str]]:
         return ids[-1]
 
     out: list[str] = []
-    in_fence = False
     if has_h3:
-        for line in lines:
-            if _fence(line):
-                in_fence = not in_fence
-            match = None if in_fence else _H3.match(line)
+        for line, prose in zip(lines, prose_lines, strict=True):
+            match = _H3.match(line) if prose else None
             if match is None:
                 out.append(line)
                 continue
@@ -208,10 +201,8 @@ def ensure_ac_ids(body: str) -> tuple[str, list[str]]:
             out.append(f"### Scenario {number} [{next_id()}]: {text}")
     elif lines:
         wrapped = False
-        for line in lines:
-            if _fence(line):
-                in_fence = not in_fence
-            if not in_fence and _LIST_ITEM.match(line):
+        for line, prose in zip(lines, prose_lines, strict=True):
+            if prose and _LIST_ITEM.match(line):
                 number = len(ids) + 1
                 if out and out[-1].strip():
                     out.append("")

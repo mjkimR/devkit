@@ -10,14 +10,14 @@ from pathlib import Path
 from devkit_dist.features.project.repositories.receipt import MANAGED_PATH, OVERRIDES_PATH
 
 from devkit_agt.features.rules.models.contracts import Autofixable, Phase, RuleContext, Severity, Violation
-from devkit_agt.features.rules.models.settings import match_path
-from devkit_agt.features.rules.repositories.workspace.markdown import (
+from devkit_agt.features.rules.models.markdown import (
     LocalTarget,
     MarkdownLink,
     encode_destination,
     local_target,
     split_lines,
 )
+from devkit_agt.features.rules.models.settings import match_path
 from devkit_agt.features.rules.services.builtins.base import BaseRule
 
 _FILE_URL = re.compile(r"file:", re.IGNORECASE)

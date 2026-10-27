@@ -24,6 +24,7 @@ from devkit_core.base.usecase import BaseUseCase
 
 from devkit_agt.features.rules.models.contracts import Phase, Rule, RuleContext, Violation
 from devkit_agt.features.rules.models.errors import NoneActiveNotice, RuleProblem, RulesDirError, RulesRunError
+from devkit_agt.features.rules.models.markdown import local_target
 from devkit_agt.features.rules.models.phases import (
     PhaseEntry,
     effective_phase,
@@ -37,7 +38,6 @@ from devkit_agt.features.rules.models.snapshot import Snapshot
 from devkit_agt.features.rules.repositories.config import RulesConfig, load_rules_config
 from devkit_agt.features.rules.repositories.discovery import resolve_managed_rules
 from devkit_agt.features.rules.repositories.workspace.cache import WorkspaceCache
-from devkit_agt.features.rules.repositories.workspace.markdown import local_target
 from devkit_agt.features.rules.repositories.workspace.snapshot import matches_working_tree, materialize_snapshot
 from devkit_agt.features.rules.services.builtins.base import guide_path
 from devkit_agt.features.rules.services.evaluator import EvaluationResult, evaluate_rules

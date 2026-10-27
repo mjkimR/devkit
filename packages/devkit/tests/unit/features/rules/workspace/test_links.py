@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 from devkit_agt.features.rules import extract_links
-from devkit_agt.features.rules.repositories.workspace.markdown import local_target, prose_lines
+from devkit_agt.features.rules.models.markdown import local_target, prose_lines
 
 
 @pytest.mark.parametrize(

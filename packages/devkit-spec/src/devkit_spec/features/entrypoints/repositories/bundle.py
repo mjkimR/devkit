@@ -1,11 +1,12 @@
 """The inputs of a spec bundle the derivation reads: ``_Boundary`` lines of ``tasks.md``, targets of ``reconcile.md``.
 
-``tasks.md`` is scanned outside fenced code blocks. Each ``_Boundary:`` line (bold or italic markers around the
-label allowed, as a list item or not) belongs to the most recent checklist item (``- [ ]``/``- [x]``); one before
-any checklist item belongs to task ``0``. Its value continues on the following lines indented deeper than the label
-line, up to a blank line, a list item (bullet or ordered), another ``_Boundary:`` line, a fence or a line
-indented no deeper; the lines are joined with a space. The
-value is split on commas; each entry loses backticks and ``(...)``
+``tasks.md`` is read through the shared Markdown scanner (``devkit_agt.features.rules.scan``): frontmatter, fenced
+and indented code and HTML comments are skipped, and its checklist tasks are the ones ``count_tasks`` counts. Each
+``_Boundary:`` line (bold or italic markers around the label allowed, as a list item or not) belongs to the most
+recent checklist item; one before any checklist item belongs to task ``0``. Its value continues on the following
+lines indented deeper than the label line, up to a blank line, a list item (bullet or ordered), another
+``_Boundary:`` line, a line the scanner does not report as prose (a fence, a comment) or a line indented no deeper;
+the lines are joined with a space. The value is split on commas; each entry loses backticks and ``(...)``
 notes, and a value wrapped in ``**...**`` loses the markers.
 
 ``reconcile.md`` frontmatter is read in the shape ``RULE-reconcile-contract`` checks: ``targets`` a list of
@@ -19,16 +20,14 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from devkit_agt.features.rules import LineKind, scan
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
 
 from devkit_spec.base.errors import DEVKIT, EntrypointsInputInvalidError, EntrypointsInputMissingError
 
-_CHECKLIST_ITEM = re.compile(r"^ *(?:- |\* |\+ )\[[ xX]\] (.*)$")
 _BOUNDARY_LINE = re.compile(r"^\s*(?:[-*+]\s+)?\**_Boundary\**\s*:\**\s*(.*)$")
 _LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s")
-_FENCES = ("```", "~~~")
-_FENCE = re.compile(r"^(`{3,}|~{3,})")
 _PAREN_NOTE = re.compile(r"\([^)]*\)")
 _BOLD = re.compile(r"^\*\*(.+)\*\*$")
 
@@ -67,8 +66,6 @@ def parse_boundaries(text: str) -> list[TaskBoundary]:
     tasks: list[TaskBoundary] = []
     current: TaskBoundary | None = None
     items = 0
-    # The open fence's marker: closed only by a run of the same character at least as long.
-    fence = ""
     # The open boundary value: its label line's indentation and the text so far, until a line ends it.
     open_indent: int | None = None
     value = ""
@@ -79,33 +76,26 @@ def parse_boundaries(text: str) -> list[TaskBoundary]:
             current.values.extend(split_boundary(value))
         open_indent, value = None, ""
 
-    for line in text.replace("\r\n", "\n").split("\n"):
+    for scanned in scan(text, frontmatter=True):
+        prose = scanned.kind is LineKind.PROSE
+        line = scanned.text
         stripped = line.strip()
         if open_indent is not None:
             if (
-                stripped
+                prose
+                and stripped
                 and _indent(line) > open_indent
                 and not _LIST_ITEM.match(line)
                 and not _BOUNDARY_LINE.match(line)
-                and not stripped.startswith(_FENCES)
             ):
                 value += " " + stripped
                 continue
             close()
-        marker = _FENCE.match(stripped)
-        if marker:
-            run = marker.group(1)
-            if not fence:
-                fence = run
-            elif run[0] == fence[0] and len(run) >= len(fence) and not stripped[len(run) :].strip():
-                fence = ""
+        if not prose:
             continue
-        if fence:
-            continue
-        item = _CHECKLIST_ITEM.match(line)
-        if item:
+        if scanned.task is not None:
             items += 1
-            current = TaskBoundary(index=items, title=item.group(1).strip())
+            current = TaskBoundary(index=items, title=scanned.task.title)
             tasks.append(current)
             continue
         boundary = _BOUNDARY_LINE.match(line)

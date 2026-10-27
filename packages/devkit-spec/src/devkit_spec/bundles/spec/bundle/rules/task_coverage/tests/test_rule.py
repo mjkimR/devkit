@@ -95,7 +95,12 @@ def test_covered_pairs_pass(tmp_path: Path, spec: str, tasks: str) -> None:
             SPEC_ONE, "- [ ] Task [AC-01]\n  - _Requirements: AC-1_", "invalid requirement ID 'AC-1'", id="bad"
         ),
         pytest.param(SPEC_ONE, "- [ ] Task [AC-01]\n  - _Requirements: _", "invalid requirement ID ''", id="blank"),
-        pytest.param(SPEC_ONE, "- [ ] Task\n\n    - [ ] Code [AC-01]", MISSING_01, id="indented-code-after-task"),
+        pytest.param(
+            SPEC_ONE,
+            "- [ ] Task\n\nOutside the list\n\n    - [ ] Code [AC-01]",
+            MISSING_01,
+            id="indented-code-after-list",
+        ),
         pytest.param(SPEC_ONE, "| Task | [AC-01] |", MISSING_01, id="table"),
         pytest.param(SPEC_ONE, "Mention [AC-01]\n_Requirements: AC-01_", MISSING_01, id="prose"),
         pytest.param(SPEC_ONE, "> - [ ] Example [AC-01]", MISSING_01, id="quote"),

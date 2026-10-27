@@ -149,7 +149,7 @@ A check reference is `name` or `name(arg1 arg2 ...)`. Arguments are whitespace-s
 | --- | --- | --- |
 | `file-exists` | `file` | the file exists in the unit directory (every `file` argument is a relative path inside the unit) |
 | `frontmatter` | `file field value` | the file's top-level frontmatter field equals the value, or one of the values `value` joins with `\|` (`frontmatter(proposal.md status reviewing\|accepted)`) |
-| `tasks-checked` | `file` | the file has at least one `- [ ]`/`- [x]` task and none unchecked; items inside YAML frontmatter or fenced code are not tasks (the counter is `devkit_agt.features.rules.count_tasks`, shared with rules) |
+| `tasks-checked` | `file` | the file has at least one `- [ ]`/`- [x]` task and none unchecked; items inside YAML frontmatter, fenced or indented code or HTML comments are not tasks (the counter is `devkit_agt.features.rules.count_tasks`, shared with rules) |
 | `not-skeleton` | `file` | the file is missing or has no line equal to `<!-- devkit:skeleton -->` |
 | `envelope-completed` | `kind` | the deciding `envelopes/<kind>-NN.yaml` of the current segment (`CAP-DLV-workflow-envelopes`) has `status: completed` and no open finding |
 | `envelope-check-pass` | `kind key` | the deciding envelope is completed and `checks.<key>` starts with `PASS` |

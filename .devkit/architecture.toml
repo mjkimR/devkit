@@ -80,7 +80,7 @@ public_modules = [
     "devkit_agt.features.worktree.usecases.lifecycle",
     "devkit_agt.features.integration.models.contracts",
     "devkit_agt.features.integration.usecases.service",
-    "devkit_agt.features.rules.repositories.workspace.markdown",
+    "devkit_agt.features.rules.models.markdown",
     "devkit_agt.features.workflow.services.envelope",
     "devkit_agt.features.workflow.repositories.git",
 
@@ -99,7 +99,7 @@ features = ["documents", "proposals", "scope", "entrypoints", "worker", "policy"
 feature_dependencies.documents = ["devkit_agt.features.rules", "devkit_dist.features.project", "devkit_dist.features.search", "devkit_spec.features.policy"]
 feature_dependencies.proposals = ["devkit_agt.features.integration", "devkit_agt.features.rules", "devkit_agt.features.workflow", "devkit_agt.features.worktree", "devkit_dist.features.project", "devkit_dist.features.shared", "devkit_spec.features.documents", "devkit_spec.features.policy"]
 feature_dependencies.scope = ["devkit_dist.features.project", "devkit_spec.features.entrypoints", "devkit_spec.features.policy", "devkit_spec.features.proposals"]
-feature_dependencies.entrypoints = ["devkit_dist.features.project", "devkit_spec.features.documents"]
+feature_dependencies.entrypoints = ["devkit_agt.features.rules", "devkit_dist.features.project", "devkit_spec.features.documents"]
 feature_dependencies.worker = ["devkit_agt.features.workflow", "devkit_dist.features.project", "devkit_agt.features.worktree", "devkit_spec.features.delivery", "devkit_spec.features.entrypoints"]
 feature_dependencies.policy = ["devkit_agt.features.workflow", "devkit_agt.features.worktree", "devkit_dist.features.project"]
 feature_dependencies.delivery = ["devkit_agt.features.integration", "devkit_agt.features.rules", "devkit_agt.features.workflow", "devkit_agt.features.worktree", "devkit_dist.features.project", "devkit_dist.features.shared", "devkit_spec.features.policy", "devkit_spec.features.proposals", "devkit_spec.features.scope"]

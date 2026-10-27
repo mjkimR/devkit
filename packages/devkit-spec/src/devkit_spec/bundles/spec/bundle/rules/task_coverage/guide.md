@@ -26,8 +26,9 @@ a direct child line (indented two spaces deeper) `- _Requirements: AC-01, AC-02_
 ID may be covered by several tasks. Nested tasks count too.
 
 Nothing else covers an ID: tables, prose, blockquotes, frontmatter, fenced code, HTML comments, a `_Requirements:_`
-line that is not a direct child of a task (unindented, or under a non-task item), and a checklist item indented four
-or more spaces that is not the direct child of a task (indented code).
+line that is not a direct child of a task (unindented, or under a non-task item), and a checklist item in indented code
+(four or more spaces after a blank line, outside a list). A task is exactly what the workflow `tasks-checked` check
+counts.
 
 ## 2. Cause of Violation
 
