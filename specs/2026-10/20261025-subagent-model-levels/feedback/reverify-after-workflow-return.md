@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-rev
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-25
 ---
 
@@ -43,3 +43,9 @@ STAGE review-refine
 UNMET envelope-review-passed
 CHECK detail="no review envelope"
 ```
+
+## Disposition
+
+Resolved as a `spec-review` wording change (2026-10-27): after `devkit workflow return` the earlier review no
+longer passes `review-refine`; a `reverify` of it closes its findings only, and the stage needs a fresh independent
+review envelope of the fixed range. Gate invalidation is unchanged.

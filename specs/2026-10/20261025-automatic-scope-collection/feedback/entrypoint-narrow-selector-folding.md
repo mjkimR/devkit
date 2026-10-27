@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-ent
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-25
 ---
 
@@ -42,3 +42,11 @@ created_at: 2026-10-25
 [SKIPPED: .../scope/usecases/collection.py kind=apply ... reason=folded]
 [SUMMARY: pairs=6 new=4 declared=2 skipped=5 applied=0]
 ```
+
+## Disposition
+
+Resolved by `SPEC-entrypoints-apply-file-codes` (integrated 2026-10-26). A `--code` equal to a folded candidate now
+unfolds it and is applied, and a `--code` under a directory candidate becomes its own candidate, so the reported
+`reason=folded` / `applied=0` no longer occurs. `test_cli.py::test_selected_folded_candidate_is_applied` reproduces
+this item's case (a task `_Boundary` naming the owning directory and the child file, applied with `--target` and the
+child `--code`) and passes. An unmatched `--code` is refused with `SPEC_ENTRYPOINTS_CODE_UNMATCHED`.

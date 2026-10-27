@@ -62,6 +62,7 @@ EOF
   `devkit workflow envelope reverify --unit <dir> --stage review-refine --from latest --resolve <N|all> --waive <N>=<reason>`.
 - A `session`-depth task gives the same content in the final response or PR body.
 - Feedback after a passed review that changes implementation returns to build/reverify; a direction change is a close.
+- After `devkit workflow return`, the earlier review no longer passes `review-refine`. A `reverify` of it closes its findings only; the stage needs a fresh independent review envelope of the fixed range.
 
 ## Completion
 

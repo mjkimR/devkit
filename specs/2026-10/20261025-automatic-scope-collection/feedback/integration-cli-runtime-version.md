@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-int
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-25
 ---
 
@@ -47,3 +47,11 @@ Retained base runtime: INTEGRATION_NOT_READY; RULE-cli-contract: Unknown command
 Source worktree runtime: INTEGRATION_RUNTIME_IN_WORKTREE.
 Independent source-version runtime: status=prepared, CI_RULES=pass, reasons=[], route=local, approval_policy=auto.
 ```
+
+## Disposition
+
+Resolved as a `spec-integrate` wording change (2026-10-27). The skill now states that a source changing the code
+integration itself runs (a new rule's imports, `INTEGRATION_RULE_RUNTIME_MISMATCH`, or a CLI command the contract
+rules cite) needs separately granted authority, then a runtime built from the source outside the worktree being
+removed, run from the base checkout with every readiness check kept. `SPEC-integration-readiness-branch-code`
+detects only the import case; a CLI citation mismatch still surfaces as `INTEGRATION_NOT_READY`.
