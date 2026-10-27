@@ -100,10 +100,10 @@ mismatch belongs to `CAP-DLV-drift-reconciliation`.
    - **Editing subagents**: an editing subagent MUST edit only its assigned scope and MUST leave its result
      uncommitted; each diff MUST be checked against the agreed change and its scope, and a rejected edit MUST be
      reverted hunk by hunk.
-   - **No governance relaxation**: an editing subagent MUST NOT add an exception, an ignore entry, a rule setting or a
-     bypass of the repository's checks to make its change pass; IF its change fails a layering, rule or configuration
-     check, THEN it MUST report the failure, and the playbook's agent MUST resolve the placement or return the change
-     to the decision round.
+   - **No governance relaxation**: the playbook's agent MUST NOT and an editing subagent MUST NOT add an exception, an
+     ignore entry, a rule setting or a bypass of the repository's checks to make a change pass; IF a subagent's change
+     fails a layering, rule or configuration check, THEN it MUST report the failure, and the playbook's agent MUST
+     resolve the placement or return the change to the decision round.
    - **Unrelated changes**: IF the working tree holds changes that do not belong to the run, THEN the playbook's agent
      MUST stop for the user to commit, stash or exclude them and MUST NOT discard them.
 7. **Commits and verification**: the playbook's agent MUST move each edit task's result onto the work item branch one

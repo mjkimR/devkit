@@ -2,7 +2,7 @@
 id: SPEC-review-refactor-lessons
 title: 'Review-refactor playbook: parallel application and preservation lessons'
 summary: 'Fold the 2026-10-27 code and performance passes into the review-refactor playbook: parallel disjoint-scope application by default, differential preservation evidence, divergence inventories, removal reachability sweeps, an adversarial reviewer brief and a post-integration report update.'
-status: planned
+status: in-progress
 created: 2026-10-27
 related_capabilities:
   - CAP-DLV-review-refactor
