@@ -1519,7 +1519,7 @@
     },
     ".devkit/managed/devkit/instructions/consumption.md": {
       "mode": 420,
-      "sha256": "1e1647ec28bf3fc670d779d9429f9aa1faee01fad5e5c14318e93dff6f08cef7"
+      "sha256": "1cd8a83c410e353e32a90c9b01bb6153b8abc48452d8d68f9e8e8ab541479828"
     },
     ".devkit/managed/devkit/instructions/in-repo-bundle.md": {
       "mode": 420,
@@ -1547,7 +1547,7 @@
     },
     ".devkit/managed/harness/instructions/harness-consumption.md": {
       "mode": 420,
-      "sha256": "e7cde687f0cfde87c37c72c93858c3bd1f941fa037a7237b9e23172a403674de"
+      "sha256": "100f6586073b8072ee8b1dab3deda1d26b9e98e38605edbbc30d33002b7b95f8"
     },
     ".devkit/managed/response-style/bundle.toml": {
       "mode": 420,
