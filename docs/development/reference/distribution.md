@@ -324,7 +324,7 @@ The engine loads only during rendering. See `CAP-DIST-manifest-spec` for syntax 
 ## Checkout-local preferences
 
 Edit ignored `.devkit/config.local.toml` for `[execution].environment`, `[mcp].register`, `[playbooks]` search
-preferences and `[bundles.<bundle>.variables]` scalar inputs. `devkit config show --effective --format json` shows
+preferences and `[bundles.<bundle>.variables]` scalar inputs. `devkit config show --effective` shows
 values and source paths. Governance and bundle selection remain shared. `devkit sync --cloud` selects cloud;
 `devkit sync --local` explicitly returns to local. Neither grants approval authority.
 

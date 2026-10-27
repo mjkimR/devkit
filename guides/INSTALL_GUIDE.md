@@ -139,7 +139,7 @@ language = "ko"
 
 Run `uv run devkit sync`; the selected bundle must declare that input. Personal output must be ignored and
 untracked, including affected native projections. Shared receipt and root guidance remain canonical. Inspect the
-result with `uv run devkit config show --effective --format json`. Governance and selection keys cannot be local.
+result with `uv run devkit config show --effective`. Governance and selection keys cannot be local.
 
 `uv run devkit sync --cloud` saves a cloud execution constraint in this checkout; `--local` returns to local.
 Cloud never grants approval. `--dry-run` and `--check` preview without persistence; `--no-save` keeps the selection

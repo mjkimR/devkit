@@ -495,7 +495,7 @@ use. Unknown local keys, including governance, selection and command settings, f
 `CONFIG_INVALID` (exit 2) naming the source. Unknown bundle variables are checked when that bundle is selected.
 `read_project_config(root)` remains explicitly shared-only for policy and snapshots.
 
-`devkit config show --effective [--format json]` returns `configuration`, per-key `sources`, and
+`devkit config show --effective` prints one JSON object with `configuration`, per-key `sources`, and
 `execution_environment`, `presentation_language` and `notices` under the project read lock. The language metadata
 contains `requested`, `resolved`, `source` and `fallback`; explicit bundle inputs and their leaf sources remain in the
 configuration/source maps. `resolve_execution_environment(root)` requires an existing

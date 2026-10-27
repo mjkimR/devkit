@@ -37,6 +37,8 @@ from devkit_dist.features.distribution.services.installation.overrides import (
     overridden_files,
     override_rel,
     primary_path,
+    record_overridden,
+    record_source,
     upstream_digest,
 )
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt, receipt_content
@@ -179,27 +181,45 @@ def _files_under(root: Path, name: str) -> list[str]:
     return [p.relative_to(root).as_posix() for p in found if p.is_file() or p.is_symlink()]
 
 
+def _removed_asset_source(root: Path, installed: list[InstalledBundle], bundle_name: str, asset_id: str) -> str | None:
+    """The override source of a tracked asset its installed bundle no longer has, while files remain under it."""
+    item = next((b for b in installed if b.bundle.name == bundle_name), None)
+    if item is None or item.bundle.asset(asset_id) is not None:
+        return None
+    receipt = read_receipt(root)
+    record = receipt.overrides.get(bundle_name, {}).get(asset_id) if receipt is not None else None
+    if record is None or not record_overridden(root, bundle_name, record):
+        return None
+    return record_source(record)
+
+
 def remove_override(root: Path, installed: list[InstalledBundle], selector: str) -> OverrideChange:
     """Delete an asset's override and baseline files, then synchronize the pristine upstream files.
 
     Only the override files of the asset's upstream files are deleted (with every baseline copy, which devkit
     writes): any other project file under the asset's override paths stays and is reported as ``ORPHAN_LEFT``.
+    For a tracked override of an asset its bundle no longer has, every file under the recorded path is deleted
+    and the sync drops the record.
     """
     root = require_project_dir(root)
     bundle_name, asset_id = _parse_selector(selector)
     with project_lock(root):
         require_no_journal(root)
-        item, asset = _find(installed, bundle_name, asset_id)
-        tracked = {override_rel(bundle_name, rel) for rel in asset_files(item.bundle, asset)}
-        under = sorted(
-            {name for _, source in asset.sources for name in _files_under(root, override_rel(bundle_name, source))}
-        )
-        overrides = [name for name in under if name in tracked]
+        removed = _removed_asset_source(root, installed, bundle_name, asset_id)
+        if removed is not None:
+            sources = [removed]
+            tracked = None
+        else:
+            item, asset = _find(installed, bundle_name, asset_id)
+            sources = [source for _, source in asset.sources]
+            tracked = {override_rel(bundle_name, rel) for rel in asset_files(item.bundle, asset)}
+        under = sorted({name for source in sources for name in _files_under(root, override_rel(bundle_name, source))})
+        overrides = [name for name in under if tracked is None or name in tracked]
         if not overrides:
             raise SelectionError(f"no override found for {selector}", fix="List overrides with `devkit override list`")
-        extra = [name for name in under if name not in tracked]
+        extra = [name for name in under if tracked is not None and name not in tracked]
         baselines = sorted(
-            {name for _, source in asset.sources for name in _files_under(root, baseline_rel(bundle_name, source))}
+            {name for source in sources for name in _files_under(root, baseline_rel(bundle_name, source))}
         )
         undo = _Undo(root)
         try:

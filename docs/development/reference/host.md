@@ -41,7 +41,7 @@ integration, proposal acceptance and handoff are CLI commands, never MCP tools. 
 | `devkit mcp setup [-w WORKSPACE] [--host codex|claude|antigravity] [--executable PATH]` | Exact eligible project reconciliation |
 | `devkit mcp remove [-w WORKSPACE]` | Exact owned entry removal; local exclusions retained |
 | `devkit sync --registrations-only [-w WORKSPACE]` | Reconcile optional registrations after locked asset restoration; no asset changes |
-| `devkit mcp status [-w WORKSPACE] --format json` | Desired/recorded/project facts, runtime and unknown host state |
+| `devkit mcp status [-w WORKSPACE] [--format json]` | Desired/recorded/project facts, runtime and unknown host state; text mode prints `[MCP: ...]` and one `[MCP_HOST: ...]` line per host; a refused inspection is listed under `errors` and exits `1` |
 | `devkit mcp serve --workspace-root EXECUTOR --configuration-workspace OWNER --profile local|read-only` | Native MCP stdio |
 
 Ordinary sync reconciles project registration by default when the provider is installed; `[mcp] register = false`

@@ -7,7 +7,7 @@ import tomllib
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from importlib import metadata
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 
 from devkit.advisory import AdvisoryError, ExitCode, Level
@@ -54,7 +54,7 @@ from devkit_dist.features.distribution.services.installation.inventory import (
     Seed,
     desired_inventory,
 )
-from devkit_dist.features.distribution.services.installation.overrides import Drift, overridden_files
+from devkit_dist.features.distribution.services.installation.overrides import Drift, overridden_files, record_overridden
 from devkit_dist.features.distribution.services.installation.receipt import read_receipt, receipt_content, receipt_json
 from devkit_dist.features.distribution.services.installation.transaction import (
     apply_changes,
@@ -85,7 +85,6 @@ from devkit_dist.features.project.repositories.project import git_toplevel, requ
 from devkit_dist.features.project.repositories.receipt import (
     CONFIG_PATH,
     MANAGED_PATH,
-    OVERRIDES_PATH,
     RECEIPT_PATH,
     FileRecord,
     OverrideRecord,
@@ -485,10 +484,11 @@ def _plan_seeds(
     presence, so whatever the project put there (a symlink, a directory) is
     left alone; one the project deleted is seeded again, except under
     ``locked``, which never writes a seeded file and leaves a missing one
-    missing. A path seeded for the first time must be absent or a regular file.
+    missing, and below a directory the project replaced by a symlink, where it
+    stays missing. A path seeded for the first time must be absent or a regular file.
     """
     for dest in sorted(seeds):
-        if dest in recorded and (locked or occupied(root, dest)):
+        if dest in recorded and (locked or occupied(root, dest) or _linked_parent(root, dest)):
             continue
         if snapshot(root, dest) is None:
             changes[dest] = seeds[dest].content
@@ -496,15 +496,28 @@ def _plan_seeds(
     return tuple(SeededRecord(seed.bundle, seed.asset, dest) for dest, seed in sorted(seeds.items()))
 
 
+def _linked_parent(root: Path, name: str) -> bool:
+    """Whether a directory above ``name`` is a symlink (the project's own content, never followed)."""
+    path = root
+    for part in PurePosixPath(name).parts[:-1]:
+        path /= part
+        if path.is_symlink():
+            return True
+    return False
+
+
 def _plan_devkit_gitignore(root: Path, changes: Changes, actions: list[Action]) -> None:
-    """Preserve project rules and manage only the local-configuration entry."""
+    """Preserve project rules and manage only the local-configuration entry.
+
+    The file is project-owned and kept as bytes, so any encoding survives the appended line.
+    """
     before = snapshot(root, DEVKIT_GITIGNORE)
-    text = before.data.decode("utf-8") if before else DEVKIT_GITIGNORE_TEXT
-    added = "/config.local.toml" not in text.splitlines()
+    data = before.data if before else DEVKIT_GITIGNORE_TEXT.encode()
+    added = b"/config.local.toml" not in data.splitlines()
     if added:
-        text += ("" if text.endswith("\n") else "\n") + "/config.local.toml\n"
+        data += (b"" if data.endswith(b"\n") else b"\n") + b"/config.local.toml\n"
     if before is None or added:
-        changes[DEVKIT_GITIGNORE] = Content(text.encode(), before.mode if before else 0o644)
+        changes[DEVKIT_GITIGNORE] = Content(data, before.mode if before else 0o644)
         actions.append(Action(DEVKIT_GITIGNORE, "update" if before else "seed"))
     local_render.require_ignored(root, LOCAL_CONFIG_PATH, planned_ignore=added)
 
@@ -519,8 +532,9 @@ def _carried_overrides(
 
     Keeping the baseline means drift that happens while an asset is not
     deployed (its bundle deselected, its preset narrowed) is still reported
-    when it is selected again. A bundle that is no longer installed keeps its
-    records while it has override files at all.
+    when it is selected again. The record of an asset whose bundle is no longer
+    installed, or which its bundle no longer has, is kept while files remain
+    under its own override path (``record_overridden``).
     """
     overrides = {bundle: dict(records) for bundle, records in tracked.items()}
     if previous is None:
@@ -535,7 +549,7 @@ def _carried_overrides(
             if bundle is not None and asset is not None:
                 present = bool(overridden_files(root, bundle, asset))
             else:
-                present = (root / OVERRIDES_PATH / name).is_dir()
+                present = record_overridden(root, name, record)
             if present:
                 overrides.setdefault(name, {})[asset_id] = record
     return overrides

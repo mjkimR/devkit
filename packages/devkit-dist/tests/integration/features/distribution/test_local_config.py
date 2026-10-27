@@ -169,7 +169,7 @@ def test_shared_writer_inspection_and_mutually_exclusive_flags(fixture) -> None:
     before = (root / LOCAL_CONFIG_PATH).read_bytes()
     update_config(root, agents=[])
     assert (root / LOCAL_CONFIG_PATH).read_bytes() == before
-    result = CliRunner().invoke(cli, ["config", "show", "--effective", "-w", str(root), "--format", "json"])
+    result = CliRunner().invoke(cli, ["config", "show", "--effective", "-w", str(root)])
     assert result.exit_code == 0, result.output
     assert json.loads(result.stdout)["sources"]["execution.environment"] == str(root / LOCAL_CONFIG_PATH)
     assert CliRunner().invoke(cli, ["sync", "--cloud", "--local", "-w", str(root)]).exit_code == 2

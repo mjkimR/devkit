@@ -115,7 +115,8 @@ See `CAP-HOST-lifecycle-observation`.
      `sync --check`, and only tested for presence, so whatever the project puts there (an edit, a symlink, a
      directory) never fails `sync` or `status`; deselecting the bundle leaves it. One deleted while its asset is
      still selected is seeded again by the next plain sync (until then `sync --check` exits `1`); `sync --locked`
-     never writes it and does not fail for it.
+     never writes it and does not fail for it. One deleted below a directory the project replaced by a symlink stays
+     missing: devkit never writes through a project symlink, and neither sync fails for it.
    - The receipt records which asset seeded which path under `seeded`, never under `files`; the record is
      informational. Seeded files are never receipt-verified context files; a bundle's declared context document
      directory (`context_documents`, `CAP-DIST-context-and-playbooks`) may still list the project files in it,
@@ -179,7 +180,9 @@ skill's script is drift even when only its `SKILL.md` is overridden. On drift th
 
 `devkit status` reports drift under `errors` and exits `1` under either policy. Both report drift only for deployed
 assets: the record of an asset that is not deployed (its bundle deselected, its preset narrowed) is kept while its
-override files remain, and its drift is reported once it is selected again.
+override files remain, and its drift is reported once it is selected again. For an asset its bundle no longer has,
+or whose bundle is no longer installed, that means files under the record's own override path (the skill directory
+for a skill), whatever other overrides the bundle has.
 
 Overrides resolve by bundle name and path. When an asset belongs to another bundle than the one an override names
 (an override of `devkit:devkit-run`, an asset of the `harness` bundle), the override does not apply: the asset
@@ -199,7 +202,9 @@ bundle and path but loses content keeps applying, with drift reported, until the
 - `devkit override remove <bundle>:<asset>` deletes the override files of the asset's upstream files and the
   baseline files, prunes empty directories and synchronizes the upstream sources (rendered for templates), under one lock with the same
   rollback as `create`; the receipt entry disappears with that sync. Any other project file under the asset's override
-  paths stays and is reported as an `ORPHAN_LEFT` warning.
+  paths stays and is reported as an `ORPHAN_LEFT` warning. For a tracked override of an asset its installed bundle
+  no longer has (removed or renamed upstream), it deletes every file under the recorded override path and its
+  baseline, and the sync drops the record.
 
 
 ## Checkout-local ownership

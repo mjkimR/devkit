@@ -136,6 +136,15 @@ def test_argument_errors_are_one_json_document_and_exit_2(
     assert result.stderr == ""
 
 
+def test_config_show_is_json_only(item: InstalledBundle, target: Path) -> None:
+    (target / CONFIG_PATH).write_text("schema = [\n")
+    result = _invoke("config", "show", "--effective", "-w", str(target))
+    assert result.exit_code == int(ExitCode.ERROR), result.output
+    assert "code" in json.loads(result.stdout)["error"]  # exactly one JSON document on stdout
+    assert result.stderr == ""
+    assert _invoke("config", "show", "--effective", "--format", "json", "-w", str(target)).stdout == ""
+
+
 def test_syntax_errors_stay_click_usage_errors(item: InstalledBundle) -> None:
     result = _invoke("sync", "--no-such-flag")
     assert result.exit_code == 2 and result.stdout == ""
@@ -144,7 +153,14 @@ def test_syntax_errors_stay_click_usage_errors(item: InstalledBundle) -> None:
 def test_every_json_command_prints_one_object(item: InstalledBundle, target: Path) -> None:
     update_config(target, presets={"team": ["all"]}, agents=[])
     assert _invoke("sync", "-w", str(target)).exit_code == 0
-    for args in (("list",), ("status",), ("override", "list"), ("get-context", "team"), ("recover",)):
+    for args in (
+        ("list",),
+        ("status",),
+        ("override", "list"),
+        ("get-context", "team"),
+        ("recover",),
+        ("config", "show", "--effective"),
+    ):
         result = _invoke(*args, "-w", str(target))
         assert result.exit_code == 0, (args, result.output)
         assert isinstance(json.loads(result.stdout), dict), args

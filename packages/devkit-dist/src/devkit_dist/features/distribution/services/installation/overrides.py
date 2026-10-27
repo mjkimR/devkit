@@ -12,7 +12,7 @@ commands that create, review, accept and remove overrides are in
 from __future__ import annotations
 
 from collections.abc import Iterable
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from devkit_dist.features.distribution.models.content import sha256
 from devkit_dist.features.distribution.models.drift import Drift
@@ -85,6 +85,21 @@ def asset_digest(files: Iterable[tuple[str, bytes]]) -> str:
 
 def upstream_digest(bundle: Bundle, asset: Asset) -> str:
     return asset_digest((rel, (bundle.root / rel).read_bytes()) for rel in asset_files(bundle, asset))
+
+
+def record_source(record: OverrideRecord) -> str:
+    """The bundle-relative source a record names: a skill's directory for its ``SKILL.md``, else the path itself.
+
+    It locates the override of an asset the installed bundle no longer has, whose upstream files are unknown.
+    """
+    path = PurePosixPath(record.relative_path)
+    return path.parent.as_posix() if path.name in ("SKILL.md", "SKILL.md.jinja") else record.relative_path
+
+
+def record_overridden(root: Path, bundle: str, record: OverrideRecord) -> bool:
+    """Whether any file remains under the override path of ``record`` (see ``record_source``)."""
+    path = root / override_rel(bundle, record_source(record))
+    return path.is_file() or (path.is_dir() and any(p.is_file() for p in path.rglob("*")))
 
 
 def overridden_files(root: Path | None, bundle: Bundle, asset: Asset) -> list[str]:

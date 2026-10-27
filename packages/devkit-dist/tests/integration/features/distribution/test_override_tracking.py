@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import pytest
@@ -290,3 +291,47 @@ claude-code = "native/reviewer.md"
     files = {entry["path"]: entry for entry in diff_override(target, [newer], "team:reviewer").to_dict()["files"]}
     assert "Prompt v2." in (files["native/reviewer.md"]["upstream_diff"] or "")
     assert 'model = "ours"' in (files["native/reviewer.toml"]["diff"] or "")
+
+
+def _without_asset(item: InstalledBundle, asset_id: str) -> InstalledBundle:
+    """``item`` reloaded after upstream dropped ``asset_id`` from its manifest."""
+    manifest = item.bundle.root / "bundle.toml"
+    blocks = manifest.read_text().split("[[assets]]\n")
+    manifest.write_text("[[assets]]\n".join(block for block in blocks if not block.startswith(f'id = "{asset_id}"\n')))
+    return reload(item)
+
+
+def test_record_of_a_removed_asset_follows_its_own_override_files(item: InstalledBundle, target: Path) -> None:
+    sync_project(target, [item])
+    create_override(target, [item], "team:guide")
+    create_override(target, [item], "team:review")
+    newer = _without_asset(item, "review")
+    sync_project(target, [newer])
+    receipt = read_receipt(target)
+    assert receipt is not None and set(receipt.overrides["team"]) == {"guide", "review"}
+    # Deleting the removed asset's override files drops its record, although another override of the bundle remains.
+    for name in ("team/skills", ".baseline/team/skills"):
+        shutil.rmtree(target / OVERRIDES_PATH / name)
+    sync_project(target, [newer])
+    receipt = read_receipt(target)
+    assert receipt is not None and set(receipt.overrides["team"]) == {"guide"}
+
+
+def test_remove_drops_the_override_of_a_removed_asset(item: InstalledBundle, target: Path) -> None:
+    sync_project(target, [item])
+    create_override(target, [item], "team:guide")
+    create_override(target, [item], "team:review")
+    newer = _without_asset(item, "review")
+    sync_project(target, [newer])
+    result = remove_override(target, [newer], "team:review")
+    assert result.paths == [
+        f"{OVERRIDES_PATH}/team/skills/review/SKILL.md",
+        f"{OVERRIDES_PATH}/team/skills/review/reference.md",
+    ]
+    assert not (target / OVERRIDES_PATH / "team/skills").exists()
+    assert not (target / OVERRIDES_PATH / ".baseline/team/skills").exists()
+    receipt = read_receipt(target)
+    assert receipt is not None and set(receipt.overrides["team"]) == {"guide"}
+    assert [entry.asset for entry in list_overrides(target, [newer])] == ["guide"]
+    with pytest.raises(SelectionError, match="asset not found"):
+        remove_override(target, [newer], "team:review")

@@ -38,7 +38,7 @@ uv run devkit sync --locked           # fresh clone, CI: restore ignored copies 
 
 Put execution environment, tool registration, playbook search preferences and
 scalar bundle variables in the ignored `.devkit/config.local.toml`; it is not a
-secret store. `uv run devkit config show --effective --format json` shows the
+secret store. `uv run devkit config show --effective` shows the
 values and their sources. Cloud execution means interactive approval is
 unavailable, never approval to act.
 

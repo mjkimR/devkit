@@ -420,3 +420,25 @@ def test_devkit_gitignore_preserves_project_rules_and_manages_local_config(tmp_p
 
     gitignore.unlink()  # a deleted one is seeded again
     assert sync_project(tmp_path, []).to_dict()["actions"] == [{"path": ".devkit/.gitignore", "action": "seed"}]
+
+
+def test_a_deleted_seed_under_a_symlinked_directory_is_left_missing(
+    installed: list[InstalledBundle], target: Path, tmp_path: Path
+) -> None:
+    sync_project(target, installed)
+    shared = tmp_path / "shared-spec"
+    (target / "docs/spec").rename(shared)
+    (target / "docs/spec").symlink_to(shared)
+    (shared / "glossary.md").unlink()
+    assert sync_project(target, installed).actions == []
+    assert sync_project(target, installed, locked=True).actions == []
+    assert not (shared / "glossary.md").exists()
+
+
+def test_devkit_gitignore_that_is_not_utf8_is_kept_byte_for_byte(tmp_path: Path) -> None:
+    gitignore = tmp_path / ".devkit/.gitignore"
+    gitignore.parent.mkdir()
+    gitignore.write_bytes(b"# caf\xe9\n/transient/")
+    assert _gitignore_actions(sync_project(tmp_path, []).to_dict()) == ["update"]
+    assert gitignore.read_bytes() == b"# caf\xe9\n/transient/\n/config.local.toml\n"
+    assert sync_project(tmp_path, []).to_dict()["actions"] == []
