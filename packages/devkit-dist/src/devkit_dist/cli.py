@@ -146,12 +146,12 @@ def _extra_unavailable(name: str) -> click.Command | None:
     """The stand-in for an extra's command name no installed package provides; ``None`` for any other name."""
     if name not in EXTRA_COMMANDS:
         return None
-    from devkit_dist.base.errors import ExtraCommandUnavailableError, extra_install_fix
+    from devkit_dist.base.errors import MCP_INSTALL_FIX, ExtraCommandUnavailableError, extra_install_fix
 
     extra = EXTRA_COMMANDS[name]
     error = ExtraCommandUnavailableError(
         f"command {name}: not installed; devkit {name} comes with the {extra} extra",
-        fix=extra_install_fix(extra),
+        fix=MCP_INSTALL_FIX if extra == "mcp" else extra_install_fix(extra),
     )
     return _unusable(name, error)
 

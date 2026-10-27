@@ -18,7 +18,7 @@ import click
 import pytest
 from click.testing import CliRunner
 from devkit_dist import cli as root
-from devkit_dist.base.errors import HARNESS_INSTALL_FIX, extra_install_fix
+from devkit_dist.base.errors import HARNESS_INSTALL_FIX, MCP_INSTALL_FIX
 
 HELLO = """
 import click
@@ -160,7 +160,9 @@ def test_an_extra_command_without_its_extra_names_the_extra() -> None:
     result = CliRunner().invoke(root.cli, ["mcp", "status"])
     assert result.exit_code == 2 and result.stdout == ""
     assert "(EXTRA_COMMAND_UNAVAILABLE) command mcp: not installed" in result.stderr
-    assert f"[FIX]    {extra_install_fix('mcp')}" in result.stderr
+    assert f"[FIX]    {MCP_INSTALL_FIX}" in result.stderr
+    # devkit-dist declares no mcp extra: a distribution-only project adds devkit-mcp itself
+    assert "devkit-dist[mcp]" not in MCP_INSTALL_FIX and "subdirectory=packages/devkit-mcp" in MCP_INSTALL_FIX
 
 
 @pytest.mark.usefixtures("no_plugins")

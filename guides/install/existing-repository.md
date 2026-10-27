@@ -41,7 +41,9 @@ ls "$(git rev-parse --git-common-dir)/hooks"
 - Existing executable hooks (for example from the `pre-commit` framework): devkit keeps running existing hooks before
   its gates; `uv run devkit gate status` shows the installed layout. Tell the user.
 - A project that uses the `pre-commit` framework: each teammate runs `pre-commit install` and
-  `uv run devkit sync --locked`, in either order.
+  `uv run devkit sync --locked`, in either order. Do not run `pre-commit install -f` (it replaces devkit's dispatcher;
+  `uv run devkit gate status` then reports `GATE_HOOK_ENTRY_MISSING`), and remove the hooks with
+  `uv run devkit gate uninstall` before `pre-commit uninstall`.
 
 ### Verification and conventions
 

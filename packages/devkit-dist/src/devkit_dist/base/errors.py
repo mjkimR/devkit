@@ -16,6 +16,13 @@ from devkit_core.base.errors import DevkitCoreError
 REPOSITORY_URL = "git+https://github.com/mjkimR/devkit.git"
 DIST_REQUIREMENT = f"devkit-dist @ {REPOSITORY_URL}#subdirectory=packages/devkit-dist"
 AGT_REQUIREMENT = f"devkit-agt @ {REPOSITORY_URL}#subdirectory=packages/devkit"
+MCP_REQUIREMENT = f"devkit-mcp @ {REPOSITORY_URL}#subdirectory=packages/devkit-mcp"
+# The directive that adds the MCP runtime (``devkit mcp``): devkit-agt declares the ``mcp`` extra; devkit-dist has none,
+# so a distribution-only project adds devkit-mcp itself.
+MCP_INSTALL_FIX = (
+    f"Add the mcp extra to the devkit requirement the project declares: uv add '{AGT_REQUIREMENT.replace('devkit-agt', 'devkit-agt[mcp]', 1)}'"
+    f" when it depends on devkit-agt, else uv add '{MCP_REQUIREMENT}'"
+)
 # The one directive that adds the devkit-agt harness to an installation, whatever its form (devkit-dist never detects
 # it): shared by ``HARNESS_COMMAND_UNAVAILABLE`` and the ``HARNESS_ENGINE_MISSING`` notice of ``devkit_dist.features.distribution``.
 HARNESS_INSTALL_FIX = (
