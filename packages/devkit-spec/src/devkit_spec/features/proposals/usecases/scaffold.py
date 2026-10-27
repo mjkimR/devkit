@@ -164,7 +164,7 @@ def _supersedes(value: str | None, slug: str) -> str | None:
     raise ArgumentError(
         f"--supersedes {value!r} must name another proposal as PROP-<slug>",
         target_files=["--supersedes"],
-        fix="Pass --supersedes PROP-<slug of the accepted proposal this draft replaces>; the new draft takes a new slug",
+        fix="Pass --supersedes with the PROP- ID of the accepted proposal this draft replaces; the new draft takes a new slug",
     )
 
 
@@ -182,7 +182,7 @@ def _check_superseded(root: Path, proposal_id: str | None) -> None:
         raise ProposalNotFoundError(
             f"--supersedes {proposal_id}: no proposal at {rel}",
             target_files=["--supersedes"],
-            fix=f"Pass --supersedes PROP-<slug> of the accepted proposal this draft replaces ({DEVKIT} spec list proposal"
+            fix=f"Pass --supersedes the PROP- ID of the accepted proposal this draft replaces ({DEVKIT} spec list proposal"
             " shows them)",
         )
     try:
@@ -195,7 +195,7 @@ def _check_superseded(root: Path, proposal_id: str | None) -> None:
             " accepted proposal only",
             target_files=[rel],
             what_to_report="The status of the proposal --supersedes names; a supersede reverses an accepted direction",
-            fix="Pass --supersedes PROP-<slug> of an accepted proposal, or drop the option: a draft or reviewing"
+            fix="Pass --supersedes the PROP- ID of an accepted proposal, or drop the option: a draft or reviewing"
             " proposal is changed in Backlog or its Planning, a rejected one is cleaned up by hygiene",
         )
 

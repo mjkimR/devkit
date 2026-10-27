@@ -7,7 +7,7 @@ from pathlib import Path
 
 from devkit_core.base.errors import ArgumentError
 
-from devkit_spec.base.errors import EntrypointsPathError
+from devkit_spec.base.errors import DEVKIT, EntrypointsPathError
 
 ROOT = "."
 
@@ -51,6 +51,6 @@ def _bundle_dir(root: Path, value: str) -> str:
         raise ArgumentError(
             f"--spec {value}: not a directory inside the workspace",
             target_files=["--spec"],
-            fix="Pass the bundle directory relative to the workspace root: specs/<YYYY-MM>/<YYYYMMDD>-<slug>",
+            fix=f"Pass the spec bundle directory relative to the workspace root ({DEVKIT} spec list spec --history lists them)",
         )
     return relative

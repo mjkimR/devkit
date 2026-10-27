@@ -82,7 +82,7 @@ def _spec_refusal(error: AdvisoryError, slug: str) -> AdvisoryError:
             target_files=[f"plan-{slug}"],
             fix=f"Run Planning on plan-{slug} first (`{devkit_command(f'worktree start plan-{slug}')}` in the base "
             f"checkout); a draft that skips Planning is accepted with `{devkit_command(f'spec proposal accept {slug}')}"
-            ' --by user --direct --note "<reason>"` after the user\'s explicit acceptance',
+            " --by user --direct` after the user's explicit acceptance, with --note carrying their reason",
         )
     if error.code == "INTEGRATION_CONFIG_INVALID":
         return SpecConfigError(

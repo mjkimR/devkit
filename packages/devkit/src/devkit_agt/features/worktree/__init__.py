@@ -50,6 +50,7 @@ from devkit_agt.features.worktree.models.errors import (
     UnsupportedLayoutError,
     WorktreeConfigError,
     WorktreeError,
+    pull_request_policy_fix,
 )
 from devkit_agt.features.worktree.repositories.config import WorktreeConfig, read_worktree_config
 from devkit_agt.features.worktree.services.extensions import run_finish_guards, run_post_finish
@@ -156,6 +157,7 @@ __all__ = [
     "merge_method",
     "path_for",
     "plan_finish",
+    "pull_request_policy_fix",
     "read_worktree_config",
     "run_finish_guards",
     "run_post_finish",

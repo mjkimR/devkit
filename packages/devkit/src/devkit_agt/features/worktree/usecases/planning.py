@@ -14,6 +14,7 @@ from devkit_agt.features.worktree.models.errors import (
     NotFoundError,
     PullRequestPolicyError,
     RunFromBaseError,
+    pull_request_policy_fix,
     run_from_base_fix,
 )
 from devkit_agt.features.worktree.models.planning import FinishPlan as FinishPlan
@@ -84,7 +85,9 @@ def plan_finish(
             fix=run_from_base_fix(position.base),
         )
     if pull_request == "required":
-        raise PullRequestPolicyError("required PR policy prevents local integration")
+        raise PullRequestPolicyError(
+            "required PR policy prevents local integration", fix=pull_request_policy_fix(branch)
+        )
     if position.branch is None:
         raise BaseDetachedError("local integration requires the base checkout on its target branch")
     if not _clean(position.base):

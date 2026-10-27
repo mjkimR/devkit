@@ -145,8 +145,7 @@ def load_bundle(root: Path, directory: str) -> Bundle:
         raise EntrypointsInputMissingError(
             f"no spec bundle directory {directory}",
             target_files=["--spec"],
-            fix=f"Pass an existing bundle directory specs/<YYYY-MM>/<YYYYMMDD>-<slug> ({DEVKIT} spec list spec --history "
-            "shows them)",
+            fix=f"Pass an existing spec bundle directory ({DEVKIT} spec list spec --history lists them)",
         )
     spec_id, status = base.name, ""
     try:

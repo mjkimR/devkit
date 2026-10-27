@@ -64,6 +64,7 @@ from devkit_agt.features.worktree import (
     locate,
     merge_method,
     plan_finish,
+    pull_request_policy_fix,
     read_worktree_config,
     run_finish_guards,
     validate_finish,
@@ -222,7 +223,10 @@ class IntegrationService:
         if not isinstance(worktree_policy, dict) or type(worktree_policy.get("delete_branch", True)) is not bool:
             raise IntegrationConfigError("source worktree policy is invalid")
         if worktree_policy.get("pull_request", "auto") == "required":
-            raise PullRequestPolicyError("the source policy requires PR integration; the local path is unavailable")
+            raise PullRequestPolicyError(
+                "the source policy requires PR integration; the local path is unavailable",
+                fix=pull_request_policy_fix(branch),
+            )
         plan = replace(plan, delete_branch=config.delete_branch and worktree_policy.get("delete_branch", True))
         context = IntegrationContext(plan, task)
         ident, provider = providers.provider(name)

@@ -52,7 +52,7 @@ class ReceiptError(DevkitCoreError):
     actor = Actor.DEVELOPER
     retry = Retry.AFTER_FIX
     target_files = (".devkit/installation.json",)
-    fix = "Restore .devkit/installation.json from version control (git checkout -- .devkit/installation.json), then run `devkit sync`"
+    fix = "Restore .devkit/installation.json from version control (git checkout -- .devkit/installation.json), then run `uv run devkit sync`"
 
 
 class ConfigError(DevkitCoreError):
@@ -128,4 +128,4 @@ class AssetFileError(DevkitCoreError):
     code = "ASSET_FILE_INVALID"
     actor = Actor.DEVELOPER
     retry = Retry.AFTER_FIX
-    fix = "Run `devkit sync`"
+    fix = "Run `uv run devkit sync`"

@@ -69,6 +69,7 @@ from devkit_agt.features.worktree.models.errors import (
     UnmergedError,
     UnsupportedLayoutError,
     WorktreeError,
+    pull_request_policy_fix,
     run_from_base_fix,
 )
 from devkit_agt.features.worktree.models.lifecycle import BranchStartResult as BranchStartResult
@@ -650,7 +651,7 @@ def _remote_tracking(
         raise ArgumentError(
             f"branch {branch} exists on several remotes ({', '.join(names)})",
             target_files=["--existing-branch"],
-            fix=f"Pass --existing-branch {names[0]} (or another <remote>/{branch})",
+            fix=f"Pass --existing-branch {names[0]}, or another of {', '.join(names)}",
         )
     if remote is not None and local and not found:
         raise NotFoundError(
@@ -1106,7 +1107,8 @@ def finish(
         )
     if merge and pull_request == "required":
         raise PullRequestPolicyError(
-            '[worktree] pull_request = "required" integrates through a pull request; --merge would merge locally'
+            '[worktree] pull_request = "required" integrates through a pull request; --merge would merge locally',
+            fix=pull_request_policy_fix(branch),
         )
     base, ref = position.base, f"refs/heads/{branch}"
     entry = _find(position, branch)

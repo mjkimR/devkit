@@ -308,10 +308,11 @@ def _register_guidance(root: Path) -> tuple[str, tuple[str, ...]]:
     if slug and len(bundles) == 1:
         return f"register with `{DEVKIT} spec scope register --spec {bundles[0]}`", ()
     candidates = bundles or sorted(path.relative_to(root).as_posix() for path in root.glob("specs/*/*-*"))[:10]
+    if not candidates:
+        return f"register with `{DEVKIT} spec scope register --spec` and this worktree's spec bundle directory", ()
     return (
-        f"register with `{DEVKIT} spec scope register --spec <dir>`, <dir> this worktree's spec bundle"
-        + (" (candidates in [DETAIL])" if candidates else ""),
-        tuple(f"candidate: {path}" for path in candidates),
+        "register with the [DETAIL] command of this worktree's spec bundle",
+        tuple(f"candidate: {DEVKIT} spec scope register --spec {path}" for path in candidates),
     )
 
 

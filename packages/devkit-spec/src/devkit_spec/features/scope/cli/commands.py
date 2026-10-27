@@ -125,7 +125,7 @@ def compare_cmd(
         raise ArgumentError(
             "compare needs at least two inputs",
             target_files=["--proposal", "--spec"],
-            fix="Pass two or more --proposal <slug> / --spec <dir> options",
+            fix="Pass two or more inputs in total: each --proposal with a proposal slug, each --spec with a spec bundle directory",
         )
     root = resolve_root(workspace_root)
     sets, pairs, summary = CompareScopesUseCase().execute(root, proposals, specs)

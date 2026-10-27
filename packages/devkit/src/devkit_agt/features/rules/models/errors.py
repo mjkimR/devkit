@@ -72,7 +72,10 @@ class PinnedWriteError(RulesError):
 
     code = "RULES_PINNED_WRITE_REFUSED"
     guardrail = True
-    fix = "Edit the project override with `uv run devkit override create <bundle>:<asset>` instead of the pinned copy"
+    fix = (
+        "Leave the pinned copy unchanged; edit a project override instead, created with `uv run devkit override create` "
+        "for the asset that deploys it"
+    )
 
 
 class RuleProblem(RulesError):

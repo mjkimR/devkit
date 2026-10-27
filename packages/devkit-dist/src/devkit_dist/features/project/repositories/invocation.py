@@ -25,6 +25,7 @@ class McpWorkspaceError(AdvisoryError):
 
 class McpInteractiveError(McpWorkspaceError):
     code = "MCP_INTERACTIVE_UNAVAILABLE"
+    guardrail = True  # a refusal in its own right, not by inheritance from McpWorkspaceError
     fix = "Use a local interactive Host or an independently authorized explicit CLI/PR route"
 
 

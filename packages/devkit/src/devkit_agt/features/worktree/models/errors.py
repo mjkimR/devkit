@@ -65,6 +65,15 @@ class RunFromBaseError(WorktreeError):
     fix = "Rerun the same command from the base checkout"
 
 
+def pull_request_policy_fix(branch: str) -> str:
+    """The ``[FIX]`` of ``PullRequestPolicyError`` for ``branch``: the pull-request route, or finishing a merged PR."""
+    quoted = shlex.quote(branch)
+    return (
+        f"Obtain Host authority, then run `uv run devkit integration integrate {quoted} --route pull-request`; or merge "
+        f"the PR under existing authority and run `uv run devkit worktree finish {quoted}`"
+    )
+
+
 def run_from_base_fix(base: object) -> str:
     """The ``[FIX]`` of ``RunFromBaseError`` and ``NestedError``: change to the base checkout ``base``, then rerun."""
     return f"cd {shlex.quote(str(base))}"
@@ -74,7 +83,6 @@ class PullRequestPolicyError(_Guardrail):
     """``finish --merge`` under ``[worktree] pull_request = "required"`` (``BLOCKED``): integration is a PR."""
 
     code = "WORKTREE_PR_POLICY"
-    fix = "Obtain Host authority, then run `uv run devkit integration integrate <branch> --route pull-request`; or merge the PR under existing authority and run `uv run devkit worktree finish <branch>`"
 
 
 class UnsupportedLayoutError(_Guardrail):
@@ -176,7 +184,7 @@ class LockedError(_Interaction):
     """``finish`` found the branch's worktree locked (``git worktree lock``, ``INTERACTION``); nothing changed."""
 
     code = "WORKTREE_LOCKED"
-    fix = "Unlock the worktree (git worktree unlock <path>) once the user agrees, then rerun"
+    fix = "Once the user agrees, unlock the worktree the message names with git worktree unlock, then rerun"
 
 
 class BaseDetachedError(_Interaction):
@@ -187,7 +195,9 @@ class BaseDetachedError(_Interaction):
     """
 
     code = "WORKTREE_BASE_DETACHED"
-    fix = "Check out the branch the task integrates into in the base checkout (git switch <branch>), then rerun"
+    fix = (
+        "Ask the user which branch the task integrates into, switch the base checkout to it with git switch, then rerun"
+    )
 
 
 class BaseBehindError(_Interaction):

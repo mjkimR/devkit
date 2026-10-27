@@ -11,6 +11,7 @@ from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 
 from devkit_spec.base.errors import (
+    DEVKIT,
     EntrypointsApplyError,
     EntrypointsCodeUnmatchedError,
     EntrypointsInputInvalidError,
@@ -49,7 +50,7 @@ def _check_options(
         raise ArgumentError(
             "derive needs exactly one of --spec and --all",
             target_files=["--spec", "--all"],
-            fix="Pass --spec specs/<YYYY-MM>/<YYYYMMDD>-<slug> for one bundle or --all for every bundle",
+            fix=f"Pass --spec with one spec bundle directory ({DEVKIT} spec list spec --history lists them) or --all",
         )
     if spec_dir is not None and (status is not None or min_count is not None):
         raise ArgumentError(

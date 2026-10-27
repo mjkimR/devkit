@@ -184,7 +184,7 @@ def test_update_failure_prints_the_ack_then_the_error(repo: Path) -> None:
     data = _json(_scope(repo, "update", "--spec", SPEC, "--format", "json"))
     assert data["ack"]["status"] == "failed" and data["errors"][0]["code"] == "SPEC_SCOPE_TOKEN_MISSING"
     # Off an activity branch the fix lists the bundles to choose from instead of a bare placeholder.
-    assert f"candidate: {SPEC}" in data["errors"][0]["advisory"]["details"]
+    assert f"candidate: uv run devkit spec scope register --spec {SPEC}" in data["errors"][0]["advisory"]["details"]
     git(repo, "checkout", "-q", "-b", "dev-s")
     exact = _json(_scope(repo, "update", "--spec", SPEC, "--format", "json"))["errors"][0]["advisory"]["fix"]
     assert f"`uv run devkit spec scope register --spec {SPEC}`" in exact

@@ -262,7 +262,7 @@ class AcceptProposalUseCase(BaseUseCase):
             raise ArgumentError(
                 "--note is required with --direct: the reason the draft was eligible",
                 target_files=["--note"],
-                fix='Pass --note "<why the direction leaves nothing to compare>"',
+                fix="Pass --note with the reason the direction leaves nothing to compare",
             )
         root = root.resolve()
         slug = require_slug(slug.strip().removeprefix("PROP-"))

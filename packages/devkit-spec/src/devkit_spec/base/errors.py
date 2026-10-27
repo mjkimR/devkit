@@ -62,7 +62,10 @@ class GlossaryInvalidError(SpecError):
     code = "SPEC_GLOSSARY_INVALID"
     input_error = True
     target_files = ("docs/steering/glossary.yaml",)
-    fix = "Correct docs/steering/glossary.yaml: terms is a list of {primary: <term>, synonyms: [<term>, ...]}"
+    fix = (
+        "Correct docs/steering/glossary.yaml: terms is a list of mappings, each with a primary string and an optional "
+        "synonyms list of strings"
+    )
 
 
 class ProposalSlugError(SpecError):
@@ -154,7 +157,8 @@ class ProposalNotApprovedError(SpecError):
     what_to_report = "The proposal's status, and that its handoff needs the user's plan-accept of its direction"
     fix = (
         f"Ask the user for plan-accept; after the explicit acceptance record it with {DEVKIT} spec proposal accept: "
-        "--direct for an eligible draft on the base checkout (Backlog), or without it on plan-<slug> after Planning. "
+        "--direct for an eligible draft on the base checkout (Backlog), or without it on the proposal's plan- branch "
+        "after Planning. "
         "Commit and merge that acceptance into this branch, then rerun the handoff"
     )
 
@@ -267,8 +271,8 @@ class ProposalWorkflowError(SpecError):
 
     code = "SPEC_PROPOSAL_WORKFLOW_INVALID"
     fix = (
-        f"Make the workflow sdd-spec-<task_kind> available and valid ({DEVKIT} sync, {DEVKIT} workflow validate), or "
-        "correct the proposal's task_kind, then rerun the handoff"
+        f"Make the workflow the proposal's task_kind selects (sdd-spec-feature or sdd-spec-bugfix) available and valid "
+        f"({DEVKIT} sync, {DEVKIT} workflow validate), or correct the proposal's task_kind, then rerun the handoff"
     )
 
 
@@ -344,7 +348,7 @@ class ProposalUnboundNotice(SpecError):
 
     code = "SPEC_PROPOSAL_UNBOUND"
     level = Level.NOTICE
-    fix = f"Bind the unit with {DEVKIT} workflow bind --unit <dir> --workflow <id> once a workflow fits it"
+    fix = f"Once a workflow fits the unit, bind it with {DEVKIT} workflow bind ({DEVKIT} workflow validate lists them)"
 
 
 class ListStatusUnknownNotice(SpecError):
@@ -388,7 +392,7 @@ class SpecExistsError(SpecError):
     input_error = True
     fix = (
         f"Choose an unused slug; for a proposal of the same slug, hand it off with {DEVKIT} spec proposal handoff "
-        "<slug> instead"
+        "instead"
     )
 
 
@@ -413,7 +417,7 @@ class SpecUnboundNotice(SpecError):
 
     code = "SPEC_UNBOUND"
     level = Level.NOTICE
-    fix = f"Bind the unit with {DEVKIT} workflow bind --unit <dir> --workflow <id> once a workflow fits it"
+    fix = f"Once a workflow fits the unit, bind it with {DEVKIT} workflow bind ({DEVKIT} workflow validate lists them)"
 
 
 class EntrypointsInputMissingError(SpecError):
@@ -520,7 +524,7 @@ class ScopeSpecNotFoundError(ScopeError):
 
     code = "SPEC_SCOPE_SPEC_NOT_FOUND"
     input_error = True
-    fix = "Pass an existing spec bundle directory: specs/<YYYY-MM>/<YYYYMMDD>-<slug>"
+    fix = f"Pass an existing spec bundle directory ({DEVKIT} spec list spec --history lists them)"
 
 
 class ScopeInputInvalidError(ScopeError):
@@ -529,7 +533,10 @@ class ScopeInputInvalidError(ScopeError):
 
     code = "SPEC_SCOPE_INPUT_INVALID"
     input_error = True
-    fix = "Repair the file in [TARGET] (UTF-8 text; targets: [{file: <workspace-relative path>, ...}]), then rerun"
+    fix = (
+        "Repair the file in [TARGET] (UTF-8 text; targets is a list of mappings, each with a workspace-relative file), "
+        "then rerun"
+    )
 
 
 class ScopeTokenMissingError(ScopeError):
@@ -539,7 +546,7 @@ class ScopeTokenMissingError(ScopeError):
     input_error = True
     fix = (
         "A worktree that does not take part in the registry skips scope update; to take part, register first: "
-        f"{DEVKIT} spec scope register --spec <dir>"
+        f"{DEVKIT} spec scope register --spec with the spec bundle directory"
     )
 
 
@@ -567,7 +574,10 @@ class ScopeRecordMissingError(ScopeError):
 
     code = "SPEC_SCOPE_RECORD_MISSING"
     input_error = True
-    fix = f"Run {DEVKIT} spec scope release (it removes the orphaned token), then {DEVKIT} spec scope register --spec <dir>"
+    fix = (
+        f"Run {DEVKIT} spec scope release (it removes the orphaned token), then {DEVKIT} spec scope register --spec "
+        "with the spec bundle directory"
+    )
 
 
 class ScopeTokenMismatchError(ScopeError):
@@ -596,8 +606,8 @@ class ScopeTimeoutError(ScopeError):
     actor = Actor.NONE
     retry = Retry.SAFE
     fix = (
-        "Retry once the other registry command has finished (an update with --request-id <request_id> from "
-        "[SCOPE_ACK]); raise [tool.spec.scope] timeout when the registry is busy for longer"
+        "Retry once the other registry command has finished (an update with the --request-id its [SCOPE_ACK] "
+        "printed); raise [tool.spec.scope] timeout when the registry is busy for longer"
     )
 
 
@@ -683,7 +693,10 @@ class ScopeRegisterFailedWarning(ScopeError):
 
     code = "SPEC_SCOPE_REGISTER_FAILED"
     level = Level.WARNING
-    fix = f"Fix the cause in [DETAIL], then run {DEVKIT} spec scope register --spec <dir> in the worktree"
+    fix = (
+        f"Fix the cause in [DETAIL], then run {DEVKIT} spec scope register --spec with the handed-off spec bundle "
+        "directory in the worktree"
+    )
 
 
 class HandoffNotReadyError(SpecError):

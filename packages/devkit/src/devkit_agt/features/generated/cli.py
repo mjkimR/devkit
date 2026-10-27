@@ -12,11 +12,11 @@ and, when nothing is left to resolve, ``[NEXT_CMD: git <operation> --continue]``
 from __future__ import annotations
 
 import json
-import logging
 import re
 import shlex
 
 import click
+from devkit_core.core.logs import get_logger
 from devkit_dist.adapters.cli import (
     FORMAT_OPTION,
     Reported,
@@ -41,7 +41,7 @@ from devkit_agt.features.generated.usecases.engine import (
     RunResult,
 )
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 WORKSPACE = workspace_option()
 IDS = click.argument("ids", nargs=-1)
 _BARE = re.compile(r'[^\s"\]=]+')

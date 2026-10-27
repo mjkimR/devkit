@@ -10,6 +10,7 @@ from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
 
 from devkit_spec.base.errors import (
+    DEVKIT,
     ScopeRecordInvalidWarning,
     ScopeRecordMissingError,
     ScopeSpecNotFoundError,
@@ -36,7 +37,7 @@ def _spec_dir(root: Path, value: str | None) -> str:
         raise ArgumentError(
             "--spec <dir> is required",
             target_files=["--spec"],
-            fix="Pass the bundle directory: --spec specs/<YYYY-MM>/<YYYYMMDD>-<slug>",
+            fix=f"Pass --spec with a spec bundle directory ({DEVKIT} spec list spec --history lists them)",
         )
     relative = _bundle_dir(root, value)
     if not (root / relative).is_dir():

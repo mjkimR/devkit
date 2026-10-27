@@ -40,6 +40,6 @@ def decomposition_source(root: Path, value: str | None, slug: str) -> str | None
         raise ArgumentError(
             "--decomposed-from must name another draft proposal",
             target_files=["--decomposed-from"],
-            fix="Pass PROP-<source-slug> of the draft being decomposed",
+            fix=f"Pass the PROP- ID of the draft being decomposed ({DEVKIT} spec list proposal lists them)",
         )
     return check_backlog_editable(root, value, decomposition=True).id
