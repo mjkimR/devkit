@@ -587,8 +587,9 @@ def apply(result: RegistrationPlan, *, locked: bool = False) -> None:
     if not result.changes:
         return
     if locked:
-        raise RegistrationError(
-            "locked sync found changed local registration; ordinary sync reconciles it", fix=devkit_command("sync")
+        raise RegistrationInterrupted(
+            "locked sync found changed local registration; ordinary sync reconciles it",
+            code="MCP_REGISTRATION_UNRECONCILED",
         )
     assert result.common is not None
     for key, expected in result.before.items():

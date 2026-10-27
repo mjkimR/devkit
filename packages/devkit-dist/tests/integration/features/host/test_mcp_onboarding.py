@@ -364,3 +364,12 @@ def test_tracked_destination_targets_the_file(repo):
     git(repo, "commit", "-q", "-m", "tracked")
     (notice,) = r.plan(repo, ["claude"]).notices
     assert notice.code == "MCP_REGISTRATION_UNAVAILABLE" and notice.target_files == (".mcp.json",)
+
+
+def test_locked_apply_with_changes_is_an_auto_reconcile_error(tmp_path: Path) -> None:
+    plan = r.RegistrationPlan(tmp_path, tmp_path, before={".mcp.json": None}, after={".mcp.json": (b"{}", 0o644)})
+    with pytest.raises(r.RegistrationError) as raised:
+        r.apply(plan, locked=True)
+    advisory = raised.value.to_dict()["advisory"]
+    assert raised.value.code == "MCP_REGISTRATION_UNRECONCILED" and advisory["mode"] == "AUTO"
+    assert advisory["fix"] == "uv run devkit sync"
