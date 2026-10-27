@@ -134,8 +134,7 @@ class _Acceptance:
 
     def preview(self, context: IntegrationContext) -> Readiness:
         plan = context.finish
-        relative = self.root.relative_to(locate(self.root).base)
-        self.source = Path(plan.path) / relative
+        self.source = Path(plan.path)
         meta = parse((self.source / self.unit / "proposal.md").read_text()).data or {}
         workspace = Workspace(self.source)
         ref = workspace.resolve_unit(self.unit)
@@ -267,11 +266,8 @@ class _Acceptance:
             raise ProposalApprovalStaleError("acceptance changed unrelated proposal text")
         # A pre-existing clean index was bound by the preview; only these exact two writes may enter this commit.
         _git(self.source, "add", "--", *paths)
-        # Git reports and resolves tree paths from the top level; the project may be a subdirectory of it.
-        prefix = _git(self.source, "rev-parse", "--show-prefix")
-        tree = {f"{prefix}{path}": data for path, data in expected.items()}
         changed = set(_git(self.source, "diff", "--cached", "--name-only").splitlines())
-        if changed != set(tree):
+        if changed != set(expected):
             raise ProposalApprovalStaleError("index contains changes outside the exact acceptance delta")
         guard_execution()
         try:
@@ -296,8 +292,8 @@ class _Acceptance:
         previous = request.context.finish.source_sha
         if (
             _git(self.source, "rev-list", "--parents", "-n", "1", head).split() != [head, previous]
-            or set(_git(self.source, "diff", "--name-only", previous, head).splitlines()) != set(tree)
-            or any(run_git(self.source, "show", f"{head}:{path}") != data for path, data in tree.items())
+            or set(_git(self.source, "diff", "--name-only", previous, head).splitlines()) != set(expected)
+            or any(run_git(self.source, "show", f"{head}:{path}") != data for path, data in expected.items())
             or _git(self.source, "status", "--porcelain", "--untracked-files=normal")
         ):
             raise ProposalApprovalStaleError("committed acceptance differs from the exact service-created delta")

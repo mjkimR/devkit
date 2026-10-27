@@ -92,18 +92,16 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
             target_files=paths[:20],
         )
     head = run_git(position.base, "rev-parse", "HEAD").decode().strip()
-    relative = root.relative_to(position.base)
     unit = f"docs/proposals/PROP-{slug}"
     rel = f"{unit}/proposal.md"
-    anchor = relative / rel
-    mode = run_git(position.base, "ls-tree", head, "--", anchor.as_posix()).decode().split()
+    mode = run_git(position.base, "ls-tree", head, "--", rel).decode().split()
     if not mode or mode[0] not in {"100644", "100755"}:
         raise HandoffNotReadyError(
             f"PROP-{slug} has no committed proposal.md on the base",
             "the accepted proposal must be a committed regular proposal.md file",
             target_files=[rel],
         )
-    text = run_git(position.base, "show", f"{head}:{anchor.as_posix()}").decode()
+    text = run_git(position.base, "show", f"{head}:{rel}").decode()
     meta = parse(text).data or {}
     if meta.get("status") != "accepted":
         raise HandoffNotReadyError(
@@ -207,7 +205,7 @@ class HandoffUseCase(BaseUseCase):
                 setup, synced = _prepare(
                     Path(preview.worktree),
                     preview.setup,
-                    self.root.relative_to(position.base),
+                    Path("."),
                     notices,
                     before_step=lambda _step: guard_execution(),
                 )
@@ -226,7 +224,7 @@ class HandoffUseCase(BaseUseCase):
                     position,
                     f"dev-{preview.slug}",
                     setup=preview.setup,
-                    project=self.root.relative_to(position.base),
+                    project=Path("."),
                     revision=preview.head,
                     before_step=lambda _step: guard_execution(),
                 )
@@ -247,7 +245,7 @@ class HandoffUseCase(BaseUseCase):
         }
         if any(item.code in {"WORKTREE_SETUP_FAILED", "WORKTREE_SYNC_FAILED"} for item in started.notices):
             return result
-        root = started.path / self.root.relative_to(position.base)
+        root = started.path
         try:
             if run_git(root, "rev-parse", "HEAD").decode().strip() != preview.head:
                 raise HandoffStaleError("the new worktree no longer contains the reviewed base commit")

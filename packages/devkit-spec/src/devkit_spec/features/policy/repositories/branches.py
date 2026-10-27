@@ -69,8 +69,7 @@ def _branch_unit(root: Path, branch: str, slug: str) -> str | None:
     """The committed unit directory of ``slug`` on the local ``branch`` (a spec bundle, else the proposal), relative to
     ``root``; ``None`` when the branch or a unique unit does not exist."""
     try:
-        prefix = run_git(root, "rev-parse", "--show-prefix").decode().strip()
-        listed = run_git(root, "ls-tree", "-d", "--name-only", f"refs/heads/{branch}", f"{prefix}specs/").decode()
+        listed = run_git(root, "ls-tree", "-d", "--name-only", f"refs/heads/{branch}", "specs/").decode()
         months = [line for line in listed.splitlines() if line]
         bundles = [
             line
@@ -85,7 +84,7 @@ def _branch_unit(root: Path, branch: str, slug: str) -> str | None:
             raise
         return None
     if len(bundles) == 1:
-        return bundles[0].removeprefix(prefix)
+        return bundles[0]
     return None
 
 

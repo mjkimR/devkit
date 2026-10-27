@@ -27,7 +27,6 @@ from devkit_agt.features.generated.repositories.registry import (
 from devkit_agt.features.generated.usecases.engine import (
     ArtifactRun,
     CheckArtifacts,
-    Checkout,
     RegenerateArtifacts,
     ResolveArtifacts,
     ResolveResult,
@@ -41,7 +40,6 @@ __all__ = [
     "Artifact",
     "ArtifactRun",
     "CheckArtifacts",
-    "Checkout",
     "CommandFailedError",
     "ConflictsRemainWarning",
     "GeneratedConfigError",

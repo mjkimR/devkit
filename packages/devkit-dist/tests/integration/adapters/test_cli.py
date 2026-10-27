@@ -239,6 +239,8 @@ def test_resolve_root_applies_require_devkit_root_to_the_workspace_root(repo: Pa
     (repo / "sub/.devkit").mkdir()
     with pytest.raises(DevkitRootNestedError):
         resolve_root(repo / "sub")
+    result = _invoke("-w", str(repo / "sub"), "--format", "json")  # refused, never resolved to a prefixed project
+    assert result.exit_code == 2 and json.loads(result.stdout)["error"]["code"] == "DEVKIT_ROOT_NESTED"
 
 
 def test_a_reported_error_keeps_stdout_to_the_result(tmp_path: Path) -> None:

@@ -556,12 +556,11 @@ retained base and uses the proposal's declared `dev_effort`. Final integration r
 `devkit spec worker inspect [--unit <dir>] [--base <accepted>] [--head <returned>]
 [--scope <prefix>... | --scope-file <file>] [--base-checkout <path>] [--details]` collects evidence in the activity worktree.
 It derives its inputs from committed HEAD records and reports each value's source; explicit flags replace only
-that input. Scope-file is UTF-8, one nonempty literal project-relative prefix per line; a scope override
+that input. Scope-file is UTF-8, one nonempty literal repository-relative prefix per line; a scope override
 replaces the entire derived scope. Literal paths match themselves and descendants at path-component boundaries.
-The project is the nearest directory from the invocation up to the Git top level that holds `.devkit/` (the top
-level without one); `--scope` entries, task boundaries, reconciliation targets and the `devkitUnit` marker are
-project-relative and are compared with changed paths as repository-relative paths under it. `N/A`/`none`
-boundaries and empty reconciliation targets add no scope.
+The devkit root is the Git top level (a `.devkit/` below it is refused with `DEVKIT_ROOT_NESTED`), so `--scope`
+entries, task boundaries, reconciliation targets and the `devkitUnit` marker are repository-relative and are
+compared with changed paths as they are. `N/A`/`none` boundaries and empty reconciliation targets add no scope.
 
 - Unit: the branch's `devkitUnit` marker, else its activity-branch correspondence. A Development spec takes
   precedence over its accepted pre-handoff proposal; ambiguous or absent correspondence is unresolved.

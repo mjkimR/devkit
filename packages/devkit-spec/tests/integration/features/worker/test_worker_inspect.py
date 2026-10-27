@@ -198,39 +198,6 @@ def test_empty_reconcile_target_and_not_applicable_boundary_are_skipped(repo: Pa
     assert {e["source"] for e in result["scope"]} == {"unit", "boundary", "materials"}
 
 
-def test_nested_project_scope_and_marker_are_project_relative(tmp_path: Path) -> None:
-    root = tmp_path / "repo"
-    project = root / "proj"
-    root.mkdir()
-    git(root, "init", "-qb", "main")
-    git(root, "config", "user.name", "Test")
-    git(root, "config", "user.email", "test@example.invalid")
-    write(project, ".devkit/config.toml", "")
-    commit(root)
-    git(root, "checkout", "-qb", "dev-example")
-    git(root, "config", "branch.dev-example.devkitBase", "main")
-    git(root, "config", "branch.dev-example.devkitUnit", UNIT)
-    write(project, f"{UNIT}/spec.md", "---\nid: SPEC-example\nworkflow: sdd-spec-feature\n---\n")
-    write(project, f"{UNIT}/tasks.md", "- [x] implement\n  - **_Boundary**: `src/`\n")
-    write(project, f"{UNIT}/reconcile.md", "---\ntargets:\n  - file: docs/contract.md\n    resolution: modified\n---\n")
-    write(project, "src/code.py", "pass\n")
-    write(project, "docs/contract.md", "contract\n")
-    write(
-        project,
-        f"{UNIT}/envelopes/worker-01.yaml",
-        "kind: worker\nstatus: completed\nstage: build-verify\nsummary: x\n",
-    )
-    commit(root)
-    result = inspect(project / "src", runner=passed)
-    assert result["inputs"]["unit"] == {"value": f"proj/{UNIT}", "source": "branch.devkitUnit"}
-    assert {"path": "proj/src", "source": "boundary", "task": 1} in result["scope"]
-    assert {"path": "proj/docs/contract.md", "source": "reconcile"} in result["scope"]
-    assert result["outside_scope"] == []
-    explicit = inspect(project, scope=["src", "docs", "specs"], runner=passed)
-    assert explicit["outside_scope"] == []
-    assert explicit["scope"][0] == {"path": "proj/src", "source": "argument"}
-
-
 @pytest.mark.parametrize("status", ["promoted", "resolved", "dismissed", "forwarded", "unknown", None])
 def test_terminal_source_edits_need_explicit_boundary(repo: Path, status: str | None) -> None:
     source = "specs/earlier/feedback/observation.md"
