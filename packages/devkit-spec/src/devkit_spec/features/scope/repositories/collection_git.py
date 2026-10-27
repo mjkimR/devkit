@@ -67,8 +67,9 @@ def git(root: Path, *args: str, deadline: Deadline, limit: int = MAX_GIT_BYTES) 
         raise deadline.exceeded("scope Git observation") from exc
     finally:
         if not completed:
-            # A child can hold pipes after Git's parent exits; kill the whole failed operation.
-            with contextlib.suppress(ProcessLookupError):
+            # A child can hold pipes after Git's parent exits; kill the whole failed operation. macOS answers EPERM
+            # for a group whose exited leader is not yet reaped and has no other member left to kill.
+            with contextlib.suppress(ProcessLookupError, PermissionError):
                 os.killpg(process.pid, signal.SIGKILL)
         if process.poll() is None:
             process.wait()
