@@ -84,7 +84,7 @@ Record per consolidation or removal:
   serialized format or other function whose inputs can be enumerated or generated, run the old and new code on the
   same inputs: the repository's own corpus plus edge cases of the input domain (for example empty, malformed or
   unclosed input and symbolic link loops). Record the input count and the result. Fix each difference unless it is
-  an approved behavior change.
+  an approved behavior change, or return it to the decision round as a behavior change.
   - Run the old code side by side from an extracted copy of the previous revision (for example `git archive`) or a
     separate checkout. Never stash to run it, because the stash list is shared by every worktree of the repository.
 - Characterization test: add one only when some merged caller is exercised by no existing test.

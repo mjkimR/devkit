@@ -76,17 +76,19 @@ into each other's files and verification.
   subagents for edits, drafting and research when the host supports them; otherwise it performs the same steps
   itself. Without a refactor workflow in the repository these steps are the procedure as stated.
 - **Parallel application** (the change from the superseded ADR): edit tasks with disjoint write scopes run
-  concurrently by default, each in its own isolated checkout (a Git worktree or any separate checkout) created from
-  the work item's current checkpoint and prepared like a fresh checkout of the repository: its setup and
-  managed-asset synchronization, so the repository's commit checks run there. Each subagent edits only inside the
+  concurrently by default, each in its own isolated checkout (a Git worktree or any separate checkout) that the
+  playbook's agent creates at the work item branch's current commit and prepares with the repository's documented
+  setup (for example dependency installation and managed-asset synchronization), so verification and the
+  repository's checks run there as on the work item branch. Each subagent edits only inside the
   explicit write scope the playbook's agent assigns, a subset of the batch's write scope, and leaves its result
   uncommitted. The playbook's agent moves each result onto the work item branch one at a time, checks its diff
-  against the agreed change and its scope, reverts a rejected edit hunk by hunk, verifies it there and commits it
+  against the agreed change and its scope, reverts a rejected edit hunk by hunk without resetting a path another
+  scope owns, redoes a result that no longer applies cleanly on the current checkpoint, verifies it there and commits it
   alone through the commit checks, so every commit holds one change with its own evidence. Changes whose write scopes
   overlap, or that build on another change, run one after another on the previous checkpoint.
-- **Governance**: an editing subagent never adds an exception, an ignore entry, a rule setting or a bypass of the
-  repository's checks to make its change pass; it reports the failure, and the playbook's agent resolves the
-  placement or returns the change to the decision round.
+- **Governance**: neither the playbook's agent nor an editing subagent adds an exception, an ignore entry, a rule
+  setting or a bypass of the repository's checks to make a change pass; a subagent reports the failure, and the
+  playbook's agent resolves the placement or returns the change to the decision round.
 - **Subagent results**: a subagent's review or verification result is an evidence-backed opinion: the playbook's
   agent validates it against the code or diff at the cited location, re-runs the commands of a verification or
   negative-reachability claim before recording it, and counts a root as covered only when the result lists what was
@@ -115,4 +117,7 @@ into each other's files and verification.
 
 - Spec review of `SPEC-review-refactor-lessons` maps AC-01, AC-02 and AC-03 to the playbook's application section
   (`applying.md`) and checks `CAP-DLV-review-refactor` and `UC-review-and-refactor-accumulated-slop` agree with it.
-- Review only for the route, single-module test and verification steps carried over unchanged.
+- Review confirms the route, single-module test, direct mode and the verification, review, report and integration
+  steps carried over unchanged.
+- A fixture exercise records the route decision and at least one parallel subagent edit with its transfer and diff
+  check when the host supports subagents.

@@ -107,7 +107,7 @@ flowchart LR
 `overall-refactor`, a structural change across the project that adds no behavior, has no depth: it runs
 `sdd-overall-refactor` in `direct` mode, without a Unit (`ADR-overall-refactor-workflow`).
 A `review-refactor` maintenance run applies its multi-module behavior-preserving work items the same way, its direction
-settling batch by batch with the user (`ADR-apply-behavior-preserving-batches-as-direct-mode-refactors`).
+settling batch by batch with the user (`ADR-apply-review-refactor-changes-in-parallel-checkouts`).
 
 ```mermaid
 flowchart LR

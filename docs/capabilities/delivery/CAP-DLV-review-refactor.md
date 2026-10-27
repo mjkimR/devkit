@@ -91,9 +91,10 @@ mismatch belongs to `CAP-DLV-drift-reconciliation`.
 6. **Direct mode**: WHERE the work item follows the cross-area refactor route, the playbook's agent MUST apply it on
    its own branch, without a Unit or workers, within the batch's write scope
    (`ADR-apply-review-refactor-changes-in-parallel-checkouts`).
-   - **Parallel application**: WHERE the host supports subagents, agreed changes with disjoint write scopes MUST by
-     default run as concurrent edit tasks, each in its own isolated checkout created from the work item's current
-     checkpoint and prepared like a fresh checkout of the repository (its setup and managed-asset synchronization).
+   - **Parallel application**: WHERE the host supports subagents, agreed changes with disjoint write scopes SHOULD run
+     as concurrent edit tasks, each in its own isolated checkout created at the work item branch's current commit and
+     prepared with the repository's documented setup (for example dependency installation and managed-asset
+     synchronization) before its subagent starts.
    - **Sequential fallback**: IF two changes' write scopes overlap or one change builds on another, THEN the playbook's
      agent MUST run them one after another on the previous checkpoint.
    - **Editing subagents**: an editing subagent MUST edit only its assigned scope and MUST leave its result

@@ -41,30 +41,33 @@ Where the repository has no refactor workflow, the steps below are the procedure
 1. Give each editing subagent the agreed edits and an explicit write scope: a subset of the batch's write scope,
    disjoint from every other subagent working at the same time.
 2. Run edit tasks with disjoint write scopes concurrently by default, each in its own isolated checkout (for example
-   a Git worktree) created from the work item's current checkpoint.
-   - Prepare each checkout like a fresh checkout of the repository (its setup and managed-asset synchronization), so
-     its commit checks can run.
+   a Git worktree) that you create at the work item branch's current commit.
+   - Before handing a checkout to its subagent, run the repository's documented setup there (its README or agent
+     guide; for example dependency installation and managed-asset synchronization), so verification and the
+     repository's checks run there as on the work item branch.
    - Run edit tasks whose write scopes overlap, or a change that builds on another, one after another, each on the
      previous checkpoint.
 3. Subagents leave their results uncommitted.
 4. Move each result onto the work item branch one at a time (for example as a patch applied with a three-way merge,
-   `git apply --3way`).
+   `git apply --3way`). If a result does not apply cleanly on the current checkpoint, discard the partial apply and
+   redo that task on the current checkpoint.
 5. Check each result against the diff before relying on it: the diff stays inside the assigned paths and matches the
    agreed change.
 6. Verify the change there and commit it alone by §4, through the repository's commit checks; never bypass them.
-7. Remove the extra checkouts once their results are committed or rejected.
+7. Remove the checkouts you created once their results are committed or rejected.
 
 - Revert a rejected edit hunk by hunk; never reset a path another scope owns. Then redo the change or return it to
   the decision round.
-- Subagents never add an exception, an ignore entry, a rule setting or a bypass of the repository's checks (for
-  example a layering exception, a lint ignore or `--no-verify`) to make a change pass. They report the failure; you
-  resolve the placement or return the change to the decision round.
+- Neither you nor a subagent adds an exception, an ignore entry, a rule setting or a bypass of the repository's
+  checks (for example a layering exception, a lint ignore or `--no-verify`) to make a change pass. A subagent reports
+  the failure; you resolve the placement or return the change to the decision round.
 - Subagents never commit, ask the user, approve a change or write the run's records.
 
 ## 4. Commits and verification
 
 1. Run the change's relevant verification before and after it, with only that change applied on the previous
-   checkpoint; record both results and the reachability evidence from `criteria.md` §4.
+   checkpoint; record both results and the preservation evidence from `criteria.md` §4 (reachability and, where it
+   applies, the differential comparison).
 2. After an agreed removal, recheck the branches, parameters, types, errors and helpers that only the removed path
    reached. Remove those that became unreachable within the agreed change and its write scope; record each one you
    keep or defer, with the reason.
@@ -85,9 +88,8 @@ otherwise do a self-review and record it as such.
 - Confirm each reported difference against the code, then fix it before integration or return it to the decision
   round as a behavior change.
 
-Where the repository's
-workflow defines review effort and bounded rounds (with the `spec` bundle, the run's activity effort, at `high` in
-bounded rounds), follow them.
+Where the repository's workflow defines review effort and bounded rounds (with the `spec` bundle, the run's activity
+effort, at `high` in bounded rounds), follow them.
 
 ## 6. Report
 

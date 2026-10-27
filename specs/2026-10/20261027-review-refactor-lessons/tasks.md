@@ -25,7 +25,7 @@ Tasks 1.1 to 1.3 have disjoint boundaries and run in parallel.
 
 ## Phase 2: Integration
 
-- [ ] **Task 2.1**: Cross-check, full verification and review
+- [x] **Task 2.1**: Cross-check, full verification and review
   - **_Boundary**: the files of Phase 1
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05, AC-06, AC-07, AC-08_
   - **Verification**: `just rules-check`; `just test devkit-catalog`; fresh review
