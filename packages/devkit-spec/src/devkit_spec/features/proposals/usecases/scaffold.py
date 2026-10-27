@@ -369,8 +369,8 @@ def _proposal(
     planning_effort_line = f"planning_effort: {planning_effort:<20} # low | medium | high (hint for Planning)"
     dev_effort_line = f"dev_effort: {dev_effort:<25} # low | medium | high (hint for Development)"
     task_kind_line = f"task_kind: {task_kind:<26} # feature | bugfix: the spec follows sdd-spec-<task_kind>"
-    supersedes_line = f"supersedes: {supersedes}\n" if supersedes else ""
-    supersedes_line += f"decomposed_from: {decomposed_from}\n" if decomposed_from else ""
+    supersedes_line = f"supersedes: {yaml_scalar(supersedes)}\n" if supersedes else ""
+    supersedes_line += f"decomposed_from: {yaml_scalar(decomposed_from)}\n" if decomposed_from else ""
     decompose_line = (
         "needs_decompose: true                 # split in Backlog before Planning starts\n" if needs_decompose else ""
     )

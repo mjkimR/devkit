@@ -21,3 +21,15 @@ def test_acceptance_preserves_comments_line_endings_and_body(newline: str, statu
 def test_body_status_cannot_supply_missing_frontmatter_status(text: str) -> None:
     with pytest.raises(ValueError):
         accepted_text(text)
+
+
+@pytest.mark.parametrize("prefix", ["", "﻿"])
+@pytest.mark.parametrize("closer", ["---", "..."])
+def test_acceptance_reads_the_frontmatter_block_the_parser_reads(prefix: str, closer: str) -> None:
+    before = f"{prefix}---\nstatus: reviewing\n{closer}\nstatus: draft\n"
+    assert accepted_text(before) == f"{prefix}---\nstatus: accepted\n{closer}\nstatus: draft\n"
+
+
+def test_unclosed_frontmatter_has_no_replaceable_status() -> None:
+    with pytest.raises(ValueError):
+        accepted_text("---\nstatus: reviewing\n")

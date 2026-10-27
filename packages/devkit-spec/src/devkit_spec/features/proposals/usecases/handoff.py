@@ -61,7 +61,7 @@ from devkit_agt.features.workflow import (
     write_decision,
 )
 from devkit_core.core import FrontmatterError
-from devkit_core.core.frontmatter import parse
+from devkit_core.core.frontmatter import locate, parse
 
 from devkit_spec.base.errors import (
     ProposalAcceptanceUnrecordedError,
@@ -81,6 +81,7 @@ from devkit_spec.base.errors import (
 )
 from devkit_spec.features.documents import DocumentIndex, parse_document
 from devkit_spec.features.documents.models.ids import is_legacy_id
+from devkit_spec.features.documents.models.markdown import visible_lines
 from devkit_spec.features.documents.models.model import Document
 from devkit_spec.features.documents.services.dependencies import cycle_members, live_unit, target_problem
 from devkit_spec.features.policy.repositories.branches import require_development_branch
@@ -166,13 +167,14 @@ _RECONCILE = {
     NON_REGULAR: "replace the non-regular file with a regular file, or rename or move the proposal's path",
 }
 
-_PADR = re.compile(r"\bPADR-[a-z0-9]+(?:-[a-z0-9]+)*")
+# A PADR ID by the document ID grammar (``ids.ID_SOURCE``): letters of either case, digits, ``_`` and ``-``.
+_PADR = re.compile(r"\bPADR-[A-Za-z0-9][A-Za-z0-9_-]*")
 # A frontmatter ``status: draft`` (or ``proposed``, plain or quoted); a trailing comment ("#" after whitespace) stays.
 _DRAFT_STATUS = re.compile(
     r"""^status:[ \t]*(?:draft|proposed|"(?:draft|proposed)"|'(?:draft|proposed)')(?=[ \t]*\r?$|[ \t]+#)""",
     re.MULTILINE,
 )
-_DRAFT_BODY_STATUS = re.compile(r"^- \*\*Status\*\*:[ \t]*(?:Draft|Proposed)[ \t]*$", re.MULTILINE)
+_DRAFT_BODY_STATUS = re.compile(r"- \*\*Status\*\*:[ \t]*(?:Draft|Proposed)[ \t]*")
 
 
 @dataclass(frozen=True)
@@ -362,7 +364,13 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
     dev_effort = _effort(meta, DEV_EFFORT, proposal_rel)
     index = DocumentIndex.load(root)
     source = next((d for d in index.documents if d.path == proposal_rel), None)
-    if source is None or any("depends_on" in issue.message for issue in source.issues):
+    if source is None:
+        raise ProposalInvalidError(
+            f"proposal has no valid id; its frontmatter must carry id: PROP-{slug}",
+            target_files=[proposal_rel],
+            fix=f"Set id: PROP-{slug} in the frontmatter of {proposal_rel}, then rerun the handoff",
+        )
+    if any("depends_on" in issue.message for issue in source.issues):
         raise ProposalInvalidError(
             "proposal depends_on must be a list of string anchor IDs", target_files=[proposal_rel]
         )
@@ -651,8 +659,7 @@ def _plan_decisions(root: Path, decisions_dir: Path, month: str, stamp: str) -> 
     planned = []
     for padr, adr_slug, original, rel, padr_id in sources:
         promoted = _PADR.sub(promote_id, original)
-        promoted = _DRAFT_STATUS.sub("status: accepted", promoted)
-        promoted = _DRAFT_BODY_STATUS.sub("- **Status**: Accepted", promoted)
+        promoted = _accept_status(promoted)
         try:
             new = parse_document(rel, promoted)
         except FrontmatterError as exc:
@@ -669,6 +676,19 @@ def _plan_decisions(root: Path, decisions_dir: Path, month: str, stamp: str) -> 
             )
         )
     return planned
+
+
+def _accept_status(text: str) -> str:
+    """``text`` with its frontmatter ``status: draft`` and its first prose ``- **Status**: Draft`` line accepted; a
+    fenced or indented example in the body keeps its draft status."""
+    block = locate(text)
+    end = block.end if block else 0
+    text = _DRAFT_STATUS.sub("status: accepted", text[:end]) + text[end:]
+    for line in visible_lines(text, start=end):
+        span = text[line.offset : line.offset + len(line.text)]
+        if _DRAFT_BODY_STATUS.fullmatch(span):
+            return text[: line.offset] + "- **Status**: Accepted" + text[line.offset + len(span) :]
+    return text
 
 
 def _unit_records(bundle: Path) -> list[Path]:
