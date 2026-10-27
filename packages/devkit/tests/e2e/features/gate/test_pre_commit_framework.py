@@ -177,6 +177,87 @@ def test_uninstall_gives_the_hook_path_back_to_pre_commit(repo: Path) -> None:
     assert _ran(repo, "user-ran") == ["user"] and _ran(repo, "framework-ran") == ["framework"]
 
 
+OLD_ADAPTER = """#!/bin/sh
+# Managed by devkit legacy adapter
+legacy="$(dirname "$0")/../pre-commit.legacy"
+if [ -f "$legacy" ] && [ -x "$legacy" ]; then
+    exec "$legacy" "$@"
+fi
+exit 0
+"""
+
+
+def _executable(path: Path, text: str) -> None:
+    path.write_text(text)
+    path.chmod(0o755)
+
+
+def test_upgrade_from_an_earlier_devkit_over_pre_commit_never_loops(repo: Path) -> None:
+    hooks_dir = repo / ".git/hooks"
+    _install(repo)
+    # An earlier devkit installed over pre-commit: its hook at pre-commit.legacy, run by an adapter naming that file.
+    _executable(hooks_dir / "pre-commit.d/00-legacy", OLD_ADAPTER)
+    _executable(hooks_dir / "pre-commit.legacy", FAKE_PRE_COMMIT)
+    _install(repo)
+    assert not (hooks_dir / "pre-commit.d/00-legacy").exists()  # nothing is preserved: no adapter
+    _fake_pre_commit_install(repo)  # the dispatcher goes to pre-commit.legacy
+    _verify(repo, "echo devkit >> devkit-ran")
+    (repo / "file.txt").write_text("loop?\n")
+    git(repo, "add", "file.txt")
+    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    result = subprocess.run(
+        ["git", "-C", str(repo), "commit", "-m", "feat: x"], capture_output=True, text=True, env=env, timeout=60
+    )
+    assert result.returncode == 0, result.stderr
+    assert _ran(repo, "framework-ran") == ["framework"] and _ran(repo, "devkit-ran") == ["devkit"]
+
+
+def test_a_stale_adapter_is_rewritten_while_a_hook_is_preserved(repo: Path) -> None:
+    hooks_dir = repo / ".git/hooks"
+    _executable(hooks_dir / "pre-commit", "#!/bin/sh\necho user >> user-ran\n")
+    _install(repo)
+    _executable(hooks_dir / "pre-commit.d/00-legacy", OLD_ADAPTER)
+    _install(repo)
+    assert (hooks_dir / "pre-commit.d/00-legacy").read_text() == hooks.legacy_script(Stage.PRE_COMMIT)
+
+
+def test_uninstall_after_pre_commit_took_the_hook_path(repo: Path) -> None:
+    hooks_dir = repo / ".git/hooks"
+    _executable(hooks_dir / "pre-commit", "#!/bin/sh\necho user >> user-ran\n")
+    _install(repo)  # the user hook is preserved beside the dispatcher
+    _fake_pre_commit_install(repo)  # the dispatcher goes to pre-commit.legacy
+    _verify(repo, "echo devkit >> devkit-ran")
+    result = CliRunner().invoke(cli, ["uninstall", "-w", str(repo)])
+    assert result.exit_code == 0 and "pre-commit: removed" in result.output, result.output
+    assert PRE_COMMIT_ID in (hooks_dir / "pre-commit").read_text()
+    assert "user-ran" in (hooks_dir / "pre-commit.legacy").read_text()  # pre-commit's migration mode runs it
+    assert not (hooks_dir / "pre-commit.d").exists()
+    assert not (hooks_dir / f"pre-commit{hooks.PRESERVED_SUFFIX}").exists()
+    result = _commit(repo)
+    assert result.returncode == 0, result.stderr
+    assert _ran(repo, "user-ran") == ["user"] and _ran(repo, "framework-ran") == ["framework"]
+    assert _ran(repo, "devkit-ran") == []
+
+
+def test_uninstall_reports_a_preserved_hook_it_cannot_chain(repo: Path) -> None:
+    hooks_dir = repo / ".git/hooks"
+    _executable(hooks_dir / "pre-commit", "#!/bin/sh\necho user >> user-ran\n")
+    _install(repo)
+    _executable(hooks_dir / "pre-commit.d/10-pre-commit", FAKE_PRE_COMMIT)
+    _executable(hooks_dir / "pre-commit.legacy", "#!/bin/sh\necho other >> other-ran\n")
+    result = CliRunner().invoke(cli, ["uninstall", "-w", str(repo)])
+    assert result.exit_code == 0, result.output
+    assert f"pre-commit{hooks.PRESERVED_SUFFIX}" in result.output and "nothing runs it" in result.output
+    assert (hooks_dir / f"pre-commit{hooks.PRESERVED_SUFFIX}").exists()
+
+
+def test_a_dry_run_takes_no_lock_and_writes_nothing(repo: Path) -> None:
+    before = sorted(path.name for path in (repo / ".git").iterdir())
+    planned = hooks.install(repo, sys.executable, dry_run=True)
+    assert planned.actions and sorted(path.name for path in (repo / ".git").iterdir()) == before
+    assert not (repo / ".git" / hooks.LOCK_FILE).exists()
+
+
 def test_only_post_commit_reports_failed_scripts() -> None:
     for stage in Stage:
         script = hooks.dispatcher_script(stage)

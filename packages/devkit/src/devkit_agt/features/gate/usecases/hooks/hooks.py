@@ -6,7 +6,7 @@ import os
 import shlex
 import subprocess
 from collections.abc import Iterator, Sequence
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
@@ -511,7 +511,8 @@ class InstallHooksUseCase(BaseUseCase):
             if not project.validation.ok
             else {gate.stage for gate in project.registry.get_all() if project.config.enabled(gate)}
         )
-        with clone_lock(location.directory.parent):
+        # A dry run writes nothing, not even the lock file; a concurrent install can only make its plan stale.
+        with nullcontext() if dry_run else clone_lock(location.directory.parent):
             current = status(cwd, location)
             plans = [_plan(item) for item in current]
             moving = [plan.item for plan in plans if plan.hook is not None]
@@ -570,8 +571,14 @@ class InstallHooksUseCase(BaseUseCase):
         if not dry_run:
             entries.mkdir(exist_ok=True)
         changed = False
+        adapter = entries / LEGACY_ENTRY
         if _Move.PRESERVE in (plan.hook, plan.legacy) or _present(preserved):
-            changed |= _write(entries / LEGACY_ENTRY, legacy_script(stage), dry_run=dry_run)
+            # Rewritten even when present: an earlier adapter ran ``<hook>.legacy``, which may now be the dispatcher.
+            changed |= _write(adapter, legacy_script(stage), dry_run=dry_run)
+        elif _owned(adapter, LEGACY_MARKER):
+            moves.append(f"{stage}: removed {entries.name}/{LEGACY_ENTRY}, which no preserved hook needs")
+            if not dry_run:
+                adapter.unlink()
         if stage in stages:
             changed |= _write(entries / DEVKIT_ENTRY, wrapper_script(stage, python), dry_run=dry_run)
         if plan.hook is _Move.PRESERVE:
@@ -640,45 +647,67 @@ class UninstallHooksUseCase(BaseUseCase):
 
         Without user entries the dispatcher goes and the hooks it chained take its place: a pre-commit framework
         entry becomes the hook again, with a preserved hook as its ``<hook>.legacy`` (pre-commit's migration mode);
-        otherwise the preserved hook is restored.
+        otherwise the preserved hook is restored. When ``pre-commit install`` moved the dispatcher to
+        ``<hook>.legacy`` (``chained_by_pre_commit``), pre-commit's hook stays and the preserved hook takes the
+        dispatcher's place there. A preserved hook that cannot be chained is left in place and reported.
         """
         location = locate(cwd)
         actions: list[str] = []
         with clone_lock(location.directory.parent):
             for item in status(cwd, location):
-                if item.state is not HookState.MANAGED:
-                    continue
-                entries = _entries(item.path)
-                if entries.is_symlink() or (_present(entries) and not entries.is_dir()):
-                    raise HookLayoutError("hook script directory is not a regular directory", str(entries))
-                entry = entries / DEVKIT_ENTRY
-                if _owned(entry, GATE_MARKER):
-                    entry.unlink()
-                    actions.append(f"{item.stage}: removed {DEVKIT_ENTRY}")
-                legacy = entries / LEGACY_ENTRY
-                framework = entries / PRE_COMMIT_ENTRY
-                chained = {legacy} if _owned(legacy, LEGACY_MARKER) else set()
-                if generated_by_pre_commit(framework):
-                    chained.add(framework)
-                remaining = list(entries.iterdir()) if entries.exists() else []
-                if any(child not in chained for child in remaining):
-                    actions.append(f"{item.stage}: retained dispatcher for user scripts")
-                    continue
-                if legacy in chained:
-                    legacy.unlink()
-                item.path.unlink()
-                actions.append(f"{item.stage}: removed")
-                backup = _backup(item.path)
-                if framework in chained:
-                    os.rename(framework, item.path)
-                    actions.append(f"{item.stage}: restored the pre-commit framework hook")
-                    old = _pre_commit_legacy(item.path)
-                    if _present(backup) and not _present(old):
-                        os.rename(backup, old)
-                        actions.append(f"{item.stage}: restored {backup.name} as {old.name}")
-                elif _present(backup):
-                    os.rename(backup, item.path)
-                    actions.append(f"{item.stage}: restored {backup.name}")
-                if entries.exists():
-                    entries.rmdir()
+                behind_pre_commit = item.state is not HookState.MANAGED and chained_by_pre_commit(item.path)
+                if item.state is HookState.MANAGED or behind_pre_commit:
+                    _uninstall_stage(item, behind_pre_commit, actions)
         return actions
+
+
+def _uninstall_stage(item: HookStatus, behind_pre_commit: bool, actions: list[str]) -> None:
+    stage = item.stage
+    entries = _entries(item.path)
+    if entries.is_symlink() or (_present(entries) and not entries.is_dir()):
+        raise HookLayoutError("hook script directory is not a regular directory", str(entries))
+    entry = entries / DEVKIT_ENTRY
+    if _owned(entry, GATE_MARKER):
+        entry.unlink()
+        actions.append(f"{stage}: removed {DEVKIT_ENTRY}")
+    legacy = entries / LEGACY_ENTRY
+    framework = entries / PRE_COMMIT_ENTRY
+    chained = {legacy} if _owned(legacy, LEGACY_MARKER) else set()
+    if generated_by_pre_commit(framework):
+        chained.add(framework)
+    remaining = list(entries.iterdir()) if entries.exists() else []
+    if any(child not in chained for child in remaining):
+        actions.append(f"{stage}: retained dispatcher for user scripts")
+        return
+    if legacy in chained:
+        legacy.unlink()
+    old = _pre_commit_legacy(item.path)
+    backup = _backup(item.path)
+    if behind_pre_commit:
+        # pre-commit's hook stays at the hook path; an older copy of it in the entries would only run it twice.
+        old.unlink()
+        if framework in chained:
+            framework.unlink()
+        actions.append(f"{stage}: removed the dispatcher pre-commit runs as {old.name}")
+        if _present(backup):
+            os.rename(backup, old)
+            actions.append(f"{stage}: restored {backup.name} as {old.name}")
+    else:
+        item.path.unlink()
+        actions.append(f"{stage}: removed")
+        if framework in chained:
+            os.rename(framework, item.path)
+            actions.append(f"{stage}: restored the pre-commit framework hook")
+            if _present(backup) and not _present(old):
+                os.rename(backup, old)
+                actions.append(f"{stage}: restored {backup.name} as {old.name}")
+            elif _present(backup):
+                actions.append(
+                    f"{stage}: left {backup.name} in place: {old.name} exists, so nothing runs it; "
+                    "move it to the hook path or chain it by hand"
+                )
+        elif _present(backup):
+            os.rename(backup, item.path)
+            actions.append(f"{stage}: restored {backup.name}")
+    if entries.exists():
+        entries.rmdir()

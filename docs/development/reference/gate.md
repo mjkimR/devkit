@@ -22,7 +22,7 @@ Writing syncs install dispatchers automatically. Existing regular hooks are pres
 | Command | Purpose |
 | --- | --- |
 | `devkit gate install [--force] [--python PATH]` | Prepare dispatchers and active `20-devkit` entries, and append the commented table of every gate `<common-git-dir>/devkit.config` does not mention yet (`CAP-GATE-commit-gates`). |
-| `devkit gate uninstall` | Remove owned devkit entries; keep dispatchers for user scripts, otherwise restore preserved hooks. |
+| `devkit gate uninstall` | Remove owned devkit entries; keep dispatchers for user scripts, otherwise restore preserved hooks and pre-commit's own layout, also after `pre-commit install` moved the dispatcher to `<hook>.legacy`. |
 | `devkit gate status [--format text\|json] [--strict]` | Hooks directory and `core.hooksPath`, hook states and script filenames, every gate with stage, order, effective enablement and source, configuration layers, and every problem that fails a commit (`load_gate_project`, the same `validate_gates` the stages run). Warns with `GATE_HOOK_ENTRY_MISSING` when a stage has enabled gates but no installed `20-devkit` entry, so they would not run; when `core.hooksPath` sends Git to another directory, no managed hook runs and `install` refuses, so one `GATE_HOOKS_PATH_SET` warning names every enabled gate instead, with the fix that clears the setting. Warnings leave the exit code `0`, except under `--strict`, which exits `1` on them. |
 | `devkit gate run [-q\|-v] [--strict] <stage> [hook args]` | Run one stage (`run_hook`); what the wrappers call, and how to test a stage by hand. Options go before `<stage>`; hooks set `DEVKIT_QUIET`, `DEVKIT_VERBOSE` or `DEVKIT_STRICT` instead, since Git passes no flags (`ARCH-08-1-agent-output`). |
 

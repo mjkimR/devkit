@@ -140,11 +140,15 @@ payloads such as `pre-push` requires a replay contract so every child receives t
     hook to `10-pre-commit`, removes the dispatcher at `<hook>.legacy` and writes the dispatcher at the hook path.
   - A `<hook>.legacy` an earlier devkit preserved is moved to `<hook>.devkit-preserved` (or, when it is a
     pre-commit script, to `10-pre-commit`) by the next install or sync.
+  - `00-legacy` exists exactly while a hook is preserved: install rewrites it to run `<hook>.devkit-preserved`
+    (an earlier adapter ran `<hook>.legacy`, which pre-commit may later fill with the dispatcher, a loop) and
+    removes it when no hook is preserved.
 - **Writing**: mutations, and the settings template refresh in `devkit.config`, are serialized by a clone-wide
   `devkit-hooks.lock` (an exclusive `devkit_core.core.locks.file_lock`, waited for without a bound). Scripts are LF-only
   executable files, replaced atomically without writing through symlinks. Identical scripts are left untouched.
   All stages are checked for conflicts before writing. If dispatcher replacement fails after a hook moves,
-  the original hook is restored.
+  the original hook is restored. A dry run (`post_sync_preview`) takes no lock and writes nothing, the lock file
+  included.
 - **Automatic installation**: the `devkit.post_sync` extension `gate-hooks` runs after writing syncs, including
   `--locked`; it does not run on `--dry-run` or `--check`, or install outside a Git worktree. When it changed the
   hooks it returns one line, `gate hooks: <stage>: <change>; ...` (each move, then `<stage>: installed` per stage
@@ -159,7 +163,11 @@ payloads such as `pre-push` requires a replay contract so every child receives t
 - **Removal**: uninstall removes owned `20-devkit` entries. If user entries remain, it keeps the dispatcher,
   `00-legacy` and the preserved hook. Otherwise it removes the dispatcher and managed adapter and restores the
   hooks it chained: a `10-pre-commit` entry becomes the hook again, with the preserved hook as its `<hook>.legacy`
-  (pre-commit's migration mode); without one, `<hook>.devkit-preserved` becomes the hook. It never deletes user entries, including non-executable files or directories.
+  (pre-commit's migration mode); without one, `<hook>.devkit-preserved` becomes the hook. When that `<hook>.legacy`
+  already exists, the preserved hook stays where it is and uninstall prints that nothing runs it. When
+  `pre-commit install` moved the dispatcher to `<hook>.legacy`, uninstall works on that layout: pre-commit's hook
+  stays, the dispatcher (and an older pre-commit copy in `10-pre-commit`) is removed and the preserved hook becomes
+  `<hook>.legacy`. It never deletes user entries, including non-executable files or directories.
 - **`core.hooksPath`**: a value pointing elsewhere is left unchanged. Explicit install refuses
   (`GATE_HOOKS_PATH_SET`), sync reports a skipped-install warning, and status reports the setting with a
   `GATE_HOOKS_PATH_SET` warning naming the enabled gates that do not run. Uninstall
