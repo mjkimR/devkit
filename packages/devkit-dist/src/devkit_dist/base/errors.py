@@ -103,6 +103,18 @@ class HarnessCommandUnavailableError(DevkitCoreError):
     fix = HARNESS_INSTALL_FIX
 
 
+class ExtraCommandUnavailableError(DevkitCoreError):
+    """A command an optional devkit extra mounts (``devkit mcp``) in an installation without that extra.
+
+    Like ``HARNESS_COMMAND_UNAVAILABLE`` it answers a known name only when no installed command has it; its fix names
+    the extra (``extra_install_fix``).
+    """
+
+    code = "EXTRA_COMMAND_UNAVAILABLE"
+    actor = Actor.USER
+    retry = Retry.AFTER_FIX
+
+
 class AssetFileError(DevkitCoreError):
     """A file the receipt lists for a synchronized asset is missing, unsafe, or differs from its recorded hash."""
 
