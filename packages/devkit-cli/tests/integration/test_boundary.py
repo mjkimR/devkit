@@ -146,6 +146,27 @@ def test_an_unexpected_exception_is_unexpected_error_with_its_traceback_under_ve
     assert verbose.stderr.index("[INFO]") < verbose.stderr.index("[ERROR]")
 
 
+def test_only_click_usage_errors_exits_and_aborts_pass_through() -> None:  # rule 5
+    @click.command()
+    @FORMAT_OPTION
+    @boundary
+    def plain(output_format: str) -> None:
+        raise click.ClickException("not a usage error")
+
+    @click.command()
+    @boundary
+    def usage() -> None:
+        raise click.UsageError("--a requires --b")
+
+    text = invoke(plain)
+    assert (text.exit_code, text.codes()) == (2, ["UNEXPECTED_ERROR"])
+    as_json = invoke(plain, ["--format", "json"])
+    assert (as_json.exit_code, as_json.json()["error"]["code"]) == (2, "UNEXPECTED_ERROR")
+    passed = invoke(usage)
+    assert (passed.exit_code, passed.codes()) == (2, [])
+    assert "--a requires --b" in passed.stderr
+
+
 def test_the_boundary_log_can_be_the_tool_own_logger() -> None:
     own = Boundary("mytool", log=logging.getLogger("mytool.adapters.cli"))
 

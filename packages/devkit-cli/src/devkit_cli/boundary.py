@@ -171,8 +171,8 @@ class Boundary:
         or the command's ``output_format`` parameter is ``json``) it is printed there instead, as ``{"error": {...}}``
         with the warnings and notices passed to ``echo_notices`` before it under ``notices``, or not at all when the
         error is ``Reported`` (its result is already there). The process exits with the error's ``exit_code``; any
-        other exception is ``UNEXPECTED_ERROR``, its traceback logged for ``--verbose``. click's own exits and usage
-        errors pass through. A ``BrokenPipeError`` (the reader closed stdout) exits ``2`` without output.
+        other exception is ``UNEXPECTED_ERROR``, its traceback logged for ``--verbose``. click's own exits, aborts and usage
+        errors pass through; any other ``click.ClickException`` is unexpected. A ``BrokenPipeError`` (the reader closed stdout) exits ``2`` without output.
         """
 
         def decorate(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -199,12 +199,12 @@ class Boundary:
                             return func(*args, **kwargs)
                         except Exception as exc:
                             expected = isinstance(exc, AdvisoryError) and exc.level is Level.ERROR
-                            if not (expected or isinstance(exc, (click.ClickException, Reported, BrokenPipeError))):
+                            if not (expected or isinstance(exc, (click.UsageError, Reported, BrokenPipeError))):
                                 self._log.debug("unexpected error", exc_info=exc)  # a raised notice included
                             raise
                 except (
                     click.exceptions.Exit,
-                    click.ClickException,
+                    click.UsageError,
                     click.exceptions.Abort,
                     SystemExit,
                     BrokenPipeError,

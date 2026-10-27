@@ -553,10 +553,14 @@ def clone_lock(root: Path, *, dry_run: bool = False):
 
 
 def inspect(root: Path, agents: list[str] | tuple[str, ...]) -> dict[str, Any]:
-    """Read registration facts without adopting entries or exposing unrelated host configuration."""
+    """Read registration facts without adopting entries or exposing unrelated host configuration.
+
+    A plan the current state refuses is listed under ``errors``; ``notices`` holds only warnings and notices.
+    """
     root = root.resolve()
     ledger = _ledger(root)
-    notices = []
+    notices: list[AdvisoryError] = []
+    errors: list[AdvisoryError] = []
     desired: dict[str, Any] = {}
     runtime = "absent" if not metadata.entry_points(group=GROUP) else "unknown"
     try:
@@ -566,7 +570,7 @@ def inspect(root: Path, agents: list[str] | tuple[str, ...]) -> dict[str, Any]:
         if runtime != "absent":
             runtime = "unavailable" if any(n.code == "MCP_RUNTIME_UNAVAILABLE" for n in notices) else "available"
     except RegistrationError as exc:
-        notices.append(exc)
+        errors.append(exc)
     project = {}
     for host in sorted({"claude" if agent == "claude-code" else agent for agent in agents} | ledger["entries"].keys()):
         if host not in DESTINATIONS:
@@ -592,5 +596,6 @@ def inspect(root: Path, agents: list[str] | tuple[str, ...]) -> dict[str, Any]:
         "form": "unknown",
         "trust": "unknown",
         "permissions": "unknown",
+        "errors": errors,
         "notices": notices,
     }

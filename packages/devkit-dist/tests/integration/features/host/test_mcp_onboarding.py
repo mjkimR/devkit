@@ -260,3 +260,12 @@ def test_antigravity_selection_uses_the_antigravity_adapter(repo):
     assert (repo / ".agents/mcp_config.json").is_file()
     assert r.inspect(repo, ["antigravity"])["project"]["antigravity"]["state"] == "owned"
     assert b"/.agents/mcp_config.json" in (repo / ".git/info/exclude").read_bytes()
+
+
+def test_inspect_lists_a_refused_plan_under_errors_not_notices(repo):
+    (repo / r.JOURNAL).parent.mkdir(parents=True, exist_ok=True)
+    (repo / r.JOURNAL).write_text("{}")
+    result = r.inspect(repo, ["claude"])
+    assert [error.code for error in result["errors"]] == ["MCP_REGISTRATION_CONFLICT"]
+    assert result["notices"] == []
+    assert r.inspect(repo.parent, [])["errors"] == []  # nothing to inspect is no problem
