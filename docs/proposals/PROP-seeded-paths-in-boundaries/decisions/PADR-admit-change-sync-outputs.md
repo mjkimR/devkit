@@ -47,11 +47,14 @@ Chosen: the standing procedure (Q3), because it removes the stop with wording on
 deterministic.
 
 - The class is "the tracked paths `devkit sync` writes in the worktree after the change, when `devkit sync --check`
-  exits `0` on the accepted head"; a clean starting sync makes every later output a consequence of the change.
+  exits `0` on the accepted head"; a clean starting sync makes every later output a consequence of the change. The
+  worker runs that check before its first edit and records it as `sync_start`; a nonzero exit is a problem.
 - The worker commits each such path, names it in the owning task's `_Boundary:` with the note `(sync output)`, and
-  stops on a problem only when `devkit sync --check` was not clean on the accepted head.
-- The Host passes a returned `(sync output)` path when the returned head's `.devkit/installation.json` records it
-  (seeded or projected) and `devkit sync --check` exits `0` there.
+  reports it in its `worker` envelope summary.
+- The Host checks each `(sync output)` entry `tasks.md` gained itself, because `devkit spec worker inspect` reads
+  `_Boundary:` at the returned head: it passes when `sync_start` is `0`, `devkit sync --check` exits `0` on the
+  returned head, and the path is under `seeded` or `files` in `.devkit/installation.json`, is the receipt itself, or
+  is the file that holds the managed guidance block.
 
 ## 5. Consequences
 

@@ -73,14 +73,18 @@ Wording only, in the `spec` bundle's delegation text and its capability (`PADR-a
    named class, every tracked path `devkit sync` writes in the worktree after the change (seeded files, projected
    files, `.devkit/installation.json`, the managed `AGENTS.md` block), not only the files `devkit sync --check` lists
    before the change. `.devkit/managed/` stays ignored and never a write path.
-2. **Worker contract** (`subagents/development-worker.md.jinja`, step 5 and Write boundaries): after `devkit sync`,
-   commit every tracked file it writes and name each one the payload did not list in the owning task's `_Boundary:`
-   with the note `(sync output)`, and in the `worker` envelope summary. It is a problem only when `devkit sync
-   --check` did not exit `0` on the accepted head (outputs that do not follow from the change). The `.devkit/` denial
-   excepts these outputs.
-3. **Host validation** (`spec-delegate` `references/worker.md`, Validate): a `(sync output)` path passes when the
-   returned head's `.devkit/installation.json` records it (seeded or projected) and `devkit sync --check` exits `0`
-   there.
+2. **Worker contract** (`subagents/development-worker.md.jinja`, step 5 and Write boundaries): before the first
+   edit, run `devkit sync --check` and record its exit as the `sync_start` check of the `worker` envelope; a nonzero
+   exit (drift that does not follow from the change) is a problem, never a `(sync output)`. After the change, run
+   `devkit sync`, commit every tracked file it writes and name each one the payload did not list in the owning task's
+   `_Boundary:` with the note `(sync output)`, and in the `worker` envelope summary. The `.devkit/` denial excepts
+   these outputs.
+3. **Host validation** (`spec-delegate` `references/worker.md`, Validate): `devkit spec worker inspect` derives its
+   scope from `_Boundary:` at the returned head, so its scope pass is no evidence for a `(sync output)` entry. For each
+   `(sync output)` entry `tasks.md` gained between `<accepted>` and `<returned>`, the path passes only when the
+   worker's `sync_start` check is `0`, `devkit sync --check` exits `0` on the returned head, and the path is under
+   `seeded` or `files` in the returned head's `.devkit/installation.json`, is `.devkit/installation.json` itself, or
+   is the file that holds the managed guidance block (`AGENTS.md`; the receipt records that block only as a hash).
 4. **Living Spec**: the delegated bundle-source sentence of `CAP-DLV-delivery-workflows` states the same class.
 5. **Test**: `test_delegation_sandbox_guidance.py` pins the new payload and contract sentences in place of the old.
 
@@ -91,6 +95,9 @@ Host-admitted practice becomes the standing rule.
 
 - Q3 (standing procedure) chosen over Q1 (derivation) and Q2 (declaration): the evidence shows the stop is a
   wording gap, and the existing receipt and `_Boundary:` parsing already carry what code would add.
+- `challenger-01` (three P2, all folded): the receipt check names the receipt and the guidance-block file, the
+  clean start is recorded as `sync_start`, and the Host checks `(sync output)` entries itself rather than trusting
+  `worker inspect`'s scope pass.
 - `size: S`, `dev_effort: low`: four text edits and one test update in one package plus its capability.
 - Direct acceptance (`accept --direct`) no longer applies: Planning was requested (plan-intent) and the proposal is
   in `reviewing`; this turn ends ready for `plan-accept`.
