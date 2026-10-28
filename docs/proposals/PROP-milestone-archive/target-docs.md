@@ -12,7 +12,7 @@ status: draft
 - `CAP-GOV-spec-rules`: allowed path/status pairs, explicit historical targeting and non-mutating placement reports.
 - `CAP-DLV-proposal-incubation`: archive membership validation and unchanged inactive notice.
 - `CAP-HARN-agent-guidance`: atomic close/drop/reopen movement, existing authority and historical merging.
-- `CAP-VIEW-repository-viewer`: optimized/backend/generic milestone discovery, history, dependencies and detail links.
+- `CAP-VIEW-repository-viewer`: optimized/backend/generic milestone discovery, post-load classification/counts, history, dependencies and detail links.
 - Applicable document/delivery use cases: repair path-specific lookup/history/authoring statements only where they exist.
 - Promote `PADR-archive-terminal-milestones-in-roadmap` for the storage-only partial supersession. Preserve unrelated
   outcomes of `ADR-roadmap-and-milestones` and `ADR-milestone-merging`; any old-ADR change is reference-only.

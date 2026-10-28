@@ -53,7 +53,7 @@ a later change that breaks this agreement returns to the Host rather than invent
 - **Q2 — boundary**: recommend extending the global milestone path convention and its existing document-rule
   validation. Keep lifecycle authority in Backlog guidance; no new archive command, watcher or move autofix.
 - **Q3 — reader coverage**: index/history/aliases already work by identity and status. Extend proposal membership,
-  viewer dashboard header discovery, dashboard filtering and roadmap loading to the reserved archive location.
+  viewer dashboard header discovery, post-load dashboard classification/counts and roadmap loading to the reserved archive location.
 - **Q4 — retained history**: recommend relocating the exact four unchanged files in
   `materials/relocation-candidates.json` after readers and checks pass. That manifest is an approval candidate,
   not relocation authority; the Host presents it with the proposed Development effects.
@@ -81,7 +81,7 @@ a later change that breaks this agreement returns to the Host rather than invent
 
 6. Retain status-derived default/history visibility, `resolve`, alias resolution and incoming/outgoing `refs`.
    The document scanner and history model do not need a second archive registry. Index both supported locations.
-7. `proposal new --milestone` validates either supported canonical global path, writes the canonical ID and retains
+7. `proposal new --milestone` validates the supported canonical global path and status/location pair, writes the canonical ID and retains
    `SPEC_PROPOSAL_MILESTONE_INACTIVE` for both done and dropped. It neither reactivates the milestone nor blocks
    otherwise valid membership simply because the file is archived.
 8. Existing milestone readiness treats both `done` and `dropped` prerequisites as satisfied. Resolve the complete
@@ -90,8 +90,8 @@ a later change that breaks this agreement returns to the Host rather than invent
 
 ### Viewer and lifecycle guidance
 
-9. Include archive headers in the existing backend dashboard list, frontend dashboard discovery and roadmap loader.
-   Cover both optimized `dashboardList` sources and generic tree/blob source fallback. Do not read the whole repository
+9. Include archive headers in the existing backend dashboard list, frontend dashboard discovery, post-load
+   `extractDashboardData` classification/count aggregation and roadmap loader. Cover both optimized `dashboardList` sources and generic tree/blob source fallback. Do not read the whole repository
    when the milestone section opens; add only the reserved archive directory. Keep current paging, caching, sorting,
    history toggle, detail and deep-link behavior. A reopened active file returns to live browsing.
 10. Generic viewer nested tree/blob reads already support `_archive`; verify archived detail navigation and both
@@ -142,7 +142,9 @@ runtime manifest protocol, hash lock or migration reader is introduced.
   edges; an unknown edge remains unknown. Resolve before display filtering and keep current member semantics.
 - **AC-05 — viewer readers**: Given optimized and generic viewer sources, when dashboard/roadmap history loads and
   an archived item opens, then correct headers, counts, sorting, paging, detail/deep links and existing cache behavior
-  include history without scanning unrelated sections. After authorized reopen, the active item is live at the root.
+  include history without scanning unrelated sections. A focused dashboard extraction fixture includes archived done
+  and dropped documents: both increase `totalCount`, neither increases `openCount`. After authorized reopen, the
+  active item is live at the root.
 - **AC-06 — transitions**: Given an authorized close/drop/reopen candidate, when the agent follows installed guidance,
   then the status, applicable assertions/disposition and move appear in one commit. Drop never certifies completion;
   repeat unchanged terminal operations are no-ops. Existing milestone merge/alias behavior works across locations.
