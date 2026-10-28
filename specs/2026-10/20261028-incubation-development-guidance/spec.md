@@ -4,7 +4,7 @@ title: Develop and resume an idea without SDD lifecycle records
 summary: "Ships opt-in incubation guidance, optional support roles and mutable current context independently of SDD, with observed iteration and resume verification."
 status: in-progress
 created: 2026-10-28
-depends_on: [PROP-incubation-lifecycle-policy]
+depends_on: [SPEC-incubation-lifecycle-policy]
 related_capabilities: []
 related_usecases: []
 workflow: sdd-spec-feature
@@ -81,7 +81,7 @@ wheel or spec dependency. `ADR-keep-incubation-guidance-opt-in-and-current-state
 3. A clean consumer installs devkit-docs plus devkit-catalog and selects `incubation:core`. The document package brings
    its existing distribution/harness dependencies. The supported path requires no installed devkit-spec distribution.
 4. Entry and the pointer inspect the effective development approach through the common interface delivered by
-   `PROP-incubation-lifecycle-policy`. They run incubation work only when the result is incubation. A mismatch or
+   `SPEC-incubation-lifecycle-policy`. They run incubation work only when the result is incubation. A mismatch or
    unreadable policy gives the next configuration action; guidance never silently switches approach or removes SDD.
 5. Selection and runtime applicability remain separate. Incubation assets can be present while SDD is selected;
    `/incubate` then explains the mismatch without doing product work. No unconditional instruction redirects every

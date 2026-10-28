@@ -1,13 +1,13 @@
 ---
-id: PADR-own-development-approach-policy-outside-sdd
+id: ADR-own-development-approach-policy-outside-sdd
 title: Own development approach policy outside SDD
 summary: "For projects that build without SDD, we own an explicit development approach in devkit-dist and apply it across guidance and runtime consumers, to preserve independent checks, accepting an additional shared configuration key."
-proposal: PROP-incubation-lifecycle-policy
-status: draft
+proposal: SPEC-incubation-lifecycle-policy
+status: accepted
 created_at: 2026-10-28
 ---
 
-# [PADR-own-development-approach-policy-outside-sdd] Own development approach policy outside SDD
+# [ADR-own-development-approach-policy-outside-sdd] Own development approach policy outside SDD
 
 ## 1. Context & Problem Statement
 
@@ -57,4 +57,4 @@ The proposal's applicability table and AC-01 through AC-08 define the feature sc
 Development tests default/explicit/invalid config, local override refusal, doc-only and installed-spec consumers,
 rule omission versus execution, direct/composed command refusal, retained-history changes/deletions, session
 integration claims and source/target/result policy changes. Independent code review and reconcile verification
-compare every consumer against the proposal's table. Planning source evidence is in `materials/consumer-inventory.md`.
+compare every consumer against the proposal's table. Planning source evidence is in `docs/materials/2026-10/20261028-incubation-lifecycle-policy/consumer-inventory.md`.

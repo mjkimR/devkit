@@ -1,1 +1,1 @@
-- Before any development work, run `uv run devkit get-context spec` once per agent context and follow it. Start work with `/spec <intent>`; each new task intake runs its intake step first; `/spec-next` orients. `docs/` is the current-state Living Spec, `specs/` holds feature specs.
+- Before development, inspect `uv run devkit config show`. For `sdd`, run `uv run devkit get-context spec` once and use `/spec <intent>` (`/spec-next` to resume). For `incubation`, use its guidance and independent checks without implicit SDD records.

@@ -32,6 +32,7 @@ from devkit_dist.adapters.cli import (
     existing_directory,
     exit_on_problems,
     exit_on_warnings,
+    field_value,
     is_json,
     resolve_root,
     workspace_option,
@@ -106,10 +107,13 @@ def _execute(request: RunRequest) -> None:
             {
                 "violations": [output.violation_json(v, run.guides, run.workspace_root) for v in violations],
                 "errors": [e.to_dict() for e in errors],
+                **({"omissions": [o.to_dict() for o in run.result.omissions]} if run.result.omissions else {}),
                 "notices": [n.to_dict() for n in notices],
             }
         )
     else:
+        for omission in run.result.omissions:
+            click.echo(f"[RULE_OMITTED: {omission.rule_id} code={omission.code} reason={field_value(omission.reason)}]")
         output.print_transitions(run.transitions, run.phase, violations)
         output.print_violations(
             violations,

@@ -9,6 +9,7 @@ from typing import Any, cast
 
 from devkit.advisory import AdvisoryError
 from devkit_dist.base.errors import ConfigError
+from devkit_dist.features.project import development_approach
 from devkit_dist.features.project.repositories.project import commit_config as committed_config
 from devkit_dist.features.project.repositories.project import read_project_config
 
@@ -58,6 +59,7 @@ def effective(config: dict[str, Any]) -> dict[str, Any]:
         "delete_branch": worktree.get("delete_branch", True),
         "merge": worktree.get("merge", "no-ff"),
         "provider": table(config, "integration").get("provider"),
+        "development_approach": development_approach(config).approach,
     }
 
 

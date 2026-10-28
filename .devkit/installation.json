@@ -1066,7 +1066,7 @@
     },
     ".agents/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "04da7bf3cecbd735e130333531843d8f4f3c94a3cf4ded87d4b62cc0447b277f"
+      "sha256": "df4fa73d604fc6f25b4859dfd833eb1118f8523b2c19d6caf9ee433093bc0d0c"
     },
     ".agents/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -1298,7 +1298,7 @@
     },
     ".claude/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "04da7bf3cecbd735e130333531843d8f4f3c94a3cf4ded87d4b62cc0447b277f"
+      "sha256": "df4fa73d604fc6f25b4859dfd833eb1118f8523b2c19d6caf9ee433093bc0d0c"
     },
     ".claude/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -1770,7 +1770,7 @@
     },
     ".devkit/managed/spec/AGENTS.md": {
       "mode": 420,
-      "sha256": "84098b2904386e5e3621a260d16f09c036559bcd7a0898a9b309db7ef86e27fb"
+      "sha256": "5092d494ad867fc999d345a2139d863e26635d3682fcf788dd60f003a98ff99e"
     },
     ".devkit/managed/spec/bundle.toml": {
       "mode": 420,
@@ -1778,7 +1778,7 @@
     },
     ".devkit/managed/spec/guidance/spec-pointer.md": {
       "mode": 420,
-      "sha256": "0824c29dc1851de71c07e464634425fea16d1f56c61739f1dac716d16c55cb70"
+      "sha256": "53dc95bc5b209155b437b9968cb06281a103205d7d206642c26713a44738be70"
     },
     ".devkit/managed/spec/playbooks/adr-compaction/SKILL.md": {
       "mode": 420,
@@ -1966,7 +1966,7 @@
     },
     ".devkit/managed/spec/skills/spec/SKILL.md": {
       "mode": 420,
-      "sha256": "04da7bf3cecbd735e130333531843d8f4f3c94a3cf4ded87d4b62cc0447b277f"
+      "sha256": "df4fa73d604fc6f25b4859dfd833eb1118f8523b2c19d6caf9ee433093bc0d0c"
     },
     ".devkit/managed/spec/skills/spec/references/backlog.md": {
       "mode": 420,
@@ -2105,7 +2105,7 @@
       "sha256": "35e3077b62c7c1a1ae36923e8109209b851ffa8dd558b51cda7d9305794869c5"
     }
   },
-  "guidance_block": "b667a029b4301104054474c59cdaf000e61c8488575b5e21c58e18dd5d5037b9",
+  "guidance_block": "96ca5a709f905fce0c4492d6df1bd505dd1e1b7d624d820c647bd141b09f6961",
   "packages": [
     {
       "bundle": "advisory",
