@@ -2,7 +2,7 @@
 id: MS-idea-incubation
 title: Idea incubation and transition to SDD
 summary: "Supports idea discovery, research, experimentation and lightweight app development without SDD lifecycle obligations, while retaining devkit document formats and an optional transition to SDD from the implemented baseline."
-status: planned
+status: done
 created_at: 2026-10-27
 depends_on: []
 ---
@@ -169,5 +169,5 @@ because document-format checks and project verification remain part of the inten
 
 ## Completion review
 
-Decomposition: pending
-Direct proposal work: pending
+Decomposition: confirmed
+Direct proposal work: confirmed
