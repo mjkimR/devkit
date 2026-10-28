@@ -222,7 +222,7 @@ counts (`ok`, `missing`, `stale`, `modified`, `mode-mismatch`, `unsafe`) with th
 appears only when it names a path), override drift of deployed assets, the guidance block state (`ok`, `missing`,
 `modified`, `unowned`, `disabled`, `invalid`), seeded paths as `{"counts": {"present", "missing"}, "missing": [...]}`
 (each missing entry with `bundle`, `id` and `path`; the list appears only when one is missing), a pending journal,
-and the recorded versus running tool version; without a receipt every entry describes an empty installation. What
+and the recorded versus running tool version; without a receipt the installation fields describe an empty installation. What
 needs acting on is listed under `errors`, each an error object with exit code `1`: missing managed files and stale ones, as this clone's last sync left them behind a receipt that moved (`NOT_SYNCHRONIZED`, fix `uv run devkit sync`), edited or mode-changed managed files
 (`SYNC_CONFLICT`), recorded paths that became symlinks or non-regular files (`WORKSPACE_UNSAFE`), a root
 `AGENTS.md` that is a symlink, malformed or not UTF-8 while the block is managed (`WORKSPACE_UNSAFE`,
@@ -244,6 +244,18 @@ under `--strict`. A selected host whose desired local MCP registration this chec
 `sync --locked`) is the `MCP_REGISTRATION_PENDING` notice; a checkout without a receipt has no such notice, since
 its next step, a plain `devkit sync`, registers too. Like every JSON-only command, status renders nothing on
 stderr: its `errors` and `notices` are in the result. `sync --check` remains the check that says whether a sync is needed.
+
+Optional installed packages contribute read-only checks through `devkit.status_checks`. Each callable accepts
+`root: Path` and returns a list or tuple of `AdvisoryError` values at `WARNING` or `NOTICE`. Checks run once in
+`(entry.name, entry.value)` order even without a receipt; their valid notices keep provider order and advisory
+fields. Discovery, load, execution (including `SystemExit`) and whole-result validation failures add
+`STATUS_CHECK_EXTENSION_FAILED`, identify the failed provider, and direct a report to its maintainer; core status
+and other providers remain available. Invalid results contribute no partial notices. Interrupts propagate.
+
+The optional harness registers `gate-hooks`, reusing `devkit gate status` hook diagnostics such as
+`GATE_HOOK_ENTRY_MISSING` and `GATE_HOOKS_PATH_SET`. Status executes no gate and repairs no hook. Healthy hooks,
+disabled gates, non-Git paths, and installations without a gate provider add no gate warning. Git hook notices are
+separate from native `host_hooks`. These warnings retain normal/strict exit behavior and the single JSON result.
 
 ### Error codes
 

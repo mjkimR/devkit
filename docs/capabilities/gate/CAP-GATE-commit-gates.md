@@ -1,12 +1,13 @@
 ---
 id: CAP-GATE-commit-gates
 title: "Commit Gates"
-summary: "Pluggable commit hooks, shell wrappers, layered policies, and snapshot verification."
+summary: "Pluggable commit hooks, shell wrappers, layered policies, snapshot verification and read-only hook diagnostics in gate and general project status."
 area: gate
 status: active
 entrypoints:
   - packages/devkit/src/devkit_agt/features/gate/usecases/hooks/hooks.py
   - packages/devkit/src/devkit_agt/features/gate/usecases/hooks/local_config.py
+  - packages/devkit/src/devkit_agt/features/gate/usecases/status.py
 created_at: 2026-10-17
 usecases:
   - UC-keep-the-living-spec-consistent
@@ -16,6 +17,24 @@ usecases:
 
 **Package**: `devkit_agt.features.gate` (`devkit gate` CLI). Commands, exit codes and error codes: [Gate Reference](../../development/reference/gate.md).
 **Related**: `CAP-DIST-manifest-spec`, `CAP-DIST-sync-and-transactions`, `CAP-GOV-rules-engine`.
+
+## Project status hook diagnostics
+
+- **Shared diagnosis**: WHERE the harness is installed, general `devkit status` MUST include the existing
+  `GateStatusUseCase` hook notices through the harness-owned `gate-hooks` entry point in `devkit.status_checks`.
+  `GATE_HOOK_ENTRY_MISSING` and `GATE_HOOKS_PATH_SET` MUST retain the dedicated gate status codes, levels,
+  actions and details (`CAP-DIST-sync-and-transactions`).
+- **Read-only inspection**: General status MUST NOT run gate rules, install or repair Git hooks. Hook warnings
+  belong in `notices`, independently of native `host_hooks`. Enabled gates without a usable dispatcher or
+  executable `20-devkit` entry produce the existing warning even without an installation receipt.
+- **Applicability**: Healthy dispatchers (including supported pre-commit migration chaining), stages without
+  enabled gates, and paths outside a Git worktree MUST contribute no hook warning. Without the harness,
+  distribution discovers no gate provider. Gate registry/configuration validation errors remain the dedicated
+  `devkit gate status` report's responsibility.
+
+`packages/devkit/tests/integration/features/gate/test_project_status.py` verifies hook replacement, missing and
+non-executable entries, `core.hooksPath`, healthy and disabled gates, and the real `pre-commit install -f`
+reproduction when pre-commit is installed. Dedicated gate status retains its text/JSON output and strict behavior.
 
 ## 1. Overview and Objectives
 
