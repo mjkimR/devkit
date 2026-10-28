@@ -1,0 +1,23 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T05:28:48.534724Z'
+status: completed
+summary: Completed entire baseline feature through independently verified code review, resolved Living Spec and final report. Fixed absent-provider activation and true-absence regression, canonicalized install replacement guidance. Receipt is the only tracked sync output. Captured FB-worker-inspect-partial-turn-scope; no merge/integration performed.
+findings: []
+assumptions:
+- 'Codex emulated: absolute worktree cwd/paths, per-operation escalations, actual scope diff and equal reviewer snapshots substitute for native enforcement'
+- Host supplied verified prerequisite policy and actual guidance stacks; reviewed baseline-owned feature across turns, not re-reviewed prerequisite implementation
+unverified_areas:
+- Host must incorporate final verified guidance/main and reverify integration content before sequential policy-authorized integration. Canonical network package installation was not repeated; synthetic decisions/scripted coordinator limits are explicit.
+checks:
+  sync_start: PASS exit=0 at final-turn accepted9fc51885 before edits
+  tests: PASS 1502 affected; corrected10check actual scenarios/assets/UCparser; prior inherited failures resolved by incorporated verified policy
+  build: PASS actual wheel includes corrected playbook/report/manifest; actual consumer commands and next SDD routing
+  lint: PASS Ruff format/check, Pyright, CI governance errors0warnings0 and sync --check
+  review: PASS whole owned feature independent code review P2 fixed/rechecked; independent reconcile P2 fixed/rechecked; no open findings
+diff_scope:
+  base: 9fc51885b409707f0ae268624b4c6df23fba10bb
+  head: 7a718f1fd1b2a64ff6878c0e7d8fcf0560b4cc5a
+activity_effort: medium
