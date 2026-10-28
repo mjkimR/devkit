@@ -2,7 +2,7 @@
 id: PROP-incubation-development-guidance
 title: Develop and resume an idea without SDD lifecycle records
 summary: "Ships opt-in incubation guidance, optional clarification, research and usage-verification roles, and mutable current product context independently of SDD assets."
-status: reviewing
+status: accepted
 created_at: 2026-10-28
 target_area: delivery/
 priority: medium
