@@ -22,6 +22,10 @@ confirmation of a `spec` intake offer loads it on demand (`CAP-DIST-context-and-
 reduction are its primary outcomes. It targets maintenance cost in code that agrees with its contract; a contract
 mismatch belongs to `CAP-DLV-drift-reconciliation`.
 
+`CAP-DLV-performance-pass` cites the headings of the application and evidence sections in
+`references/applying.md` and `references/criteria.md` by their text, so renaming one of those headings needs a
+matching edit of `performance-pass`, which a `devkit-catalog` bundle test enforces.
+
 ## 2. Scope & Boundary
 
 - **In scope**: review of code, agent guidance and CLI commands in user-selected roots; consolidation of duplicated

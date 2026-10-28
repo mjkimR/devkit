@@ -192,8 +192,10 @@ not measure model adherence, reader comprehension, comparative quality or host c
 The content-only `devkit-catalog` wheel registers `maintenance` as a resource module with no runtime dependencies
 or automatic selection. `devkit add maintenance` selects default `all`; `devkit add maintenance:upkeep` selects
 `upkeep` and deploys `drift-reconciliation` and `review-refactor`. `devkit add maintenance:reporting` deploys only
-`weekly-report`, and `devkit add maintenance:refactoring` deploys only `review-refactor`. Default `all` deploys the
-three independent playbooks and is implicit, not a declared preset table.
+`weekly-report`, `devkit add maintenance:refactoring` deploys only `review-refactor`, and
+`devkit add maintenance:performance` deploys `performance-pass` and `review-refactor`. Every preset that deploys
+`performance-pass` deploys `review-refactor`. Default `all` deploys the four playbooks and is implicit, not a
+declared preset table.
 
 Selection makes the playbook available to explicit `devkit-playbook` invocation, a confirmed `spec` intake offer and independent on-demand lookup
 (`CAP-DIST-context-and-playbooks`); it never executes a review. `CAP-DLV-drift-reconciliation` defines its bounded
@@ -202,4 +204,9 @@ reused; missing tools become reported coverage gaps rather than a new package de
 `CAP-DLV-weekly-report` defines revision-bound report generation, evidence limitations, immutable reruns and
 separately authorized publication. `CAP-DLV-review-refactor` defines surface-batched review, evidenced
 consolidation and reduction, and direct-mode application of agreed changes; `review-refactor` is a directory-form
-playbook (`SKILL.md` with `references/`). No playbook requires running another; none adds a history backend.
+playbook (`SKILL.md` with `references/`). `CAP-DLV-performance-pass` defines measured, unprofiled and interleaved
+performance passes over user-selected operations and the application of agreed behavior-preserving speedups;
+`performance-pass` is also a directory-form playbook and reads `review-refactor`'s application and evidence
+sections as reference text without running it
+(`ADR-reuse-review-refactor-application-through-exact-playbook-retrieval`). No playbook requires running another;
+none adds a history backend.
