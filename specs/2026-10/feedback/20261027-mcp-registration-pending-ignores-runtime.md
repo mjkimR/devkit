@@ -44,4 +44,4 @@ status notices: MCP_REGISTRATION_PENDING (every run); sync --registrations-only:
 
 ## Disposition
 
-- **Disposition**: `PROP-mcp-runtime-pending`: promoted by the user's decision for Planning of the recorded behavior and its contract constraints.
+- **Disposition**: `SPEC-mcp-runtime-pending`: promoted by the user's decision for Planning of the recorded behavior and its contract constraints.

@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: 'PROP-mcp-runtime-pending: Plan provider-free MCP runtime pending reporting
+  from FB-mcp-registration-pending-ignores-runtime using spec/feedback-hygiene.'
+by: user
+at: '2026-10-28T00:38:33.432194Z'

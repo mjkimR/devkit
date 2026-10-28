@@ -1,32 +1,23 @@
 ---
-id: PROP-mcp-runtime-pending
+id: SPEC-mcp-runtime-pending
 title: Remove speculative MCP registration notices from general status
-summary: "Remove MCP_REGISTRATION_PENDING from general devkit status while preserving diagnostics from actual registration plans, including locked sync's notice for a concrete registration write it withheld."
-status: accepted
-created_at: 2026-10-28
-target_area: capabilities/mcp/
-priority: high
-size: S
-planning_effort: low
-dev_effort: medium
-boundaries:
-  owns:
-    - packages/devkit-dist/src/devkit_dist/features/host/
-    - packages/devkit-dist/src/devkit_dist/features/distribution/
-    - packages/devkit-dist/tests/integration/features/host/
-    - packages/devkit-dist/tests/integration/features/distribution/
-    - docs/capabilities/mcp/CAP-MCP-runtime-registration.md
-    - docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md
-    - docs/development/reference/distribution.md
-  excludes:
-    - packages/devkit-mcp/
-task_kind: feature
-workflow: sdd-proposal
+summary: Remove MCP_REGISTRATION_PENDING from general devkit status while preserving diagnostics from actual registration plans, including locked sync's notice for a concrete registration write it withheld.
+status: planned
+created: 2026-10-28
+related_capabilities: []
+related_usecases: []
+workflow: sdd-spec-feature
 ---
+<!-- devkit:skeleton -->
 
-# [PROP-mcp-runtime-pending] Remove speculative MCP registration notices from general status
+# [SPEC-mcp-runtime-pending] Remove speculative MCP registration notices from general status
 
-## 1. Background & Hypothesis
+## 1. Problem Statement & Motivation
+
+Handed off from proposal PROP-mcp-runtime-pending on 2026-10-28.
+- **Preserved Materials**: `docs/materials/2026-10/20261028-mcp-runtime-pending`
+
+### 1. Background & Hypothesis
 
 General `devkit status` infers `MCP_REGISTRATION_PENDING` from provider entry-point presence and missing local
 ownership. It does not load the provider, so it cannot distinguish actionable registration from unavailable runtime
@@ -35,17 +26,36 @@ or a provider that returns `None`. The latter occurs for a read-only profile wit
 
 The user settled the direction: remove this speculative notice from general status entirely. Runtime availability
 and actual registration planning remain the responsibility of explicit MCP and sync commands. The existing
-provider-free status boundary stays intact. `PADR-remove-speculative-mcp-status-notice` records this narrow contract
-simplification; `materials/status-removal-evidence.md` identifies the affected seams.
+provider-free status boundary stays intact. `ADR-remove-speculative-mcp-status-notice` records this narrow contract
+simplification; `docs/materials/2026-10/20261028-mcp-runtime-pending/status-removal-evidence.md` identifies the affected seams.
 
-## 2. Technical Spike Questions
+## 2. User Stories
+
+- **US-1**: As a developer/agent, I want to implement Remove speculative MCP registration notices from general status so that system capabilities are extended.
+
+## 3. Non-Goals
+
+1. **Scope Excluded**: <what this change will not do>
+
+## 4. Acceptance Criteria & Behavioral Contracts
+
+### [AC-01] <scenario>
+- **Given** <precondition>
+- **When** <action>
+- **Then** <expected result>
+
+## 5. Carried Proposal Notes
+
+Sections of the proposal that did not map to a spec section. Trim or promote them while drafting; they are not contracts.
+
+### 2. Technical Spike Questions
 
 The direction has no unresolved questions. General status will not add an active-only check, runtime load/probe,
 cache, TTL, fingerprint, persistence schema or replacement notice. Low Planning effort applies to this turn because
 the user explicitly selected the complete bounded direction. Earlier support-role envelopes remain history of the
 withdrawn observation design; they do not require that design to be implemented.
 
-## 3. Proposed Design & Impact
+### 3. Proposed Design & Impact
 
 Remove the general-status import and call of `registration_pending_notices`, and its associated notice assembly.
 General status MUST NOT emit `MCP_REGISTRATION_PENDING`, regardless of receipt presence, optional package presence,
@@ -61,7 +71,7 @@ its `uv run devkit sync --registrations-only` fix remain. Preserve `MCP_REGISTRA
 registration warnings/errors. Do not change registration planning, provider failure handling, explicit `mcp status`
 or `mcp setup` behavior.
 
-### Development acceptance scenarios
+#### Development acceptance scenarios
 
 - **AC-1**: Given a synchronized checkout with an absent project registration, when general status runs with (a)
   no optional provider installed, (b) an installed provider that would return `None`, (c) an installed provider that
@@ -91,7 +101,7 @@ Retain relevant provider-failure and locked-sync regressions. Run lint/type chec
 `just test-dist` in Development. This Planning turn changes proposal documents only and runs document/envelope
 validation rather than executable implementation tests.
 
-### Living Spec targets and scope
+#### Living Spec targets and scope
 
 Update `CAP-MCP-runtime-registration` to remove the provider-metadata pending check and distinguish general status
 from explicit `mcp status`. Update `CAP-DIST-sync-and-transactions` to retain locked sync's actual-plan notice while
@@ -103,12 +113,12 @@ registration boundaries. Retain `dev_effort: medium` for the externally visible 
 matrix and documentation reconciliation. No runtime-provider code, registration storage format or general status
 refactor is included.
 
-## 4. Lifecycle & Retirement Criteria
+### 4. Lifecycle & Retirement Criteria
 
 The Host can present this committed direction for `plan-accept`; this worker performs neither acceptance nor
 handoff. Development retires the proposal after AC-1 through AC-5 pass and the named Living Spec targets agree.
 
-## 5. Planning Decisions
+### 5. Planning Decisions
 
 - Apply the user's settled direction: remove speculative MCP pending from general status; preserve real registration
   planning diagnostics and locked sync's concrete withheld-write notice.
@@ -118,7 +128,8 @@ handoff. Development retires the proposal after AC-1 through AC-5 pass and the n
   Development's exact documentation scope because it currently promises the general-status notice.
 - No new business questions remain. Acceptance and handoff are separate Host actions.
 
-## Source feedback
+### Source feedback
 
 `FB-mcp-registration-pending-ignores-runtime` remains the promoted source. This proposal owns its recorded behavior;
 Planning does not claim the behavior fixed and does not edit the source feedback.
+

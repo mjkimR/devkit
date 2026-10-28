@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-mcp-runtime-pending
+by: user
+at: '2026-10-28T00:38:33.434013Z'
