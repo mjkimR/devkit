@@ -24,48 +24,12 @@ class SpecError(AdvisoryError):
     retry = Retry.AFTER_FIX
 
 
-class DocumentInvalidWarning(SpecError):
-    """A file under ``docs/`` or ``specs/`` could not be read as a document and was left out (``WARNING``)."""
-
-    code = "SPEC_DOCUMENT_INVALID"
-    level = Level.WARNING
-    fix = "Correct the file's frontmatter (devkit's frontmatter grammar; id, reconcile_id and status are strings)"
-
-
-class UnresolvedIdError(SpecError):
-    """A document ID given to a command names no document (``INPUT_ERROR``)."""
-
-    code = "SPEC_ID_UNRESOLVED"
-    input_error = True
-    fix = f"Pass the exact ID of an existing document ({DEVKIT} spec list shows them)"
-
-
-class DuplicateIdError(SpecError):
-    """More than one document declares the ID (``MAINTENANCE``); references to it are ambiguous."""
-
-    code = "SPEC_ID_DUPLICATE"
-    fix = "Give each document its own ID: the ID follows the document's path (RULE-id-convention)"
-
-
 class SpecConfigError(SpecError, ConfigError):
     """The ``[tool.spec]`` table of ``.devkit/config.toml`` is malformed (``INPUT_ERROR``)."""
 
     code = "SPEC_CONFIG_INVALID"
     target_files = (".devkit/config.toml",)
     fix = "Correct the value the message names in the [tool.spec] table of .devkit/config.toml, then rerun"
-
-
-class GlossaryInvalidError(SpecError):
-    """``docs/steering/glossary.yaml`` cannot be read or does not hold ``terms: [{primary, synonyms}]``
-    (``INPUT_ERROR``)."""
-
-    code = "SPEC_GLOSSARY_INVALID"
-    input_error = True
-    target_files = ("docs/steering/glossary.yaml",)
-    fix = (
-        "Correct docs/steering/glossary.yaml: terms is a list of mappings, each with a primary string and an optional "
-        "synonyms list of strings"
-    )
 
 
 class ProposalSlugError(SpecError):
@@ -106,7 +70,7 @@ class ProposalNotFoundError(SpecError):
 
     code = "SPEC_PROPOSAL_NOT_FOUND"
     input_error = True
-    fix = f"Pass the slug of an existing proposal ({DEVKIT} spec list proposal shows them)"
+    fix = f"Pass the slug of an existing proposal ({DEVKIT} docs list proposal shows them)"
 
 
 class ProposalInvalidError(SpecError):
@@ -360,15 +324,6 @@ class ProposalUnboundNotice(SpecError):
     fix = f"Once a workflow fits the unit, bind it with {DEVKIT} workflow bind ({DEVKIT} workflow validate lists them)"
 
 
-class ListStatusUnknownNotice(SpecError):
-    """``devkit spec list --status``: a requested status occurs on no indexed document of the selected kinds
-    (``NOTICE``); the filter still applies, since a valid status may simply be unused so far."""
-
-    code = "SPEC_LIST_STATUS_UNKNOWN"
-    level = Level.NOTICE
-    fix = f"Pass a status the documents of the selected kinds carry ({DEVKIT} spec list shows them)"
-
-
 class PostFinishCleanupNotice(SpecError):
     """``devkit.post_finish``: a proposal directory was pruned or a finished worktree's scope record removed
     during scoped local integration (``NOTICE``)."""
@@ -453,15 +408,6 @@ class EntrypointsInputInvalidError(SpecError):
     )
 
 
-class EntrypointsPathError(SpecError):
-    """An entrypoint path is not a literal workspace-relative path: empty, absolute, with a ``..`` segment, a glob,
-    a backslash, a drive colon or a control character (``INPUT_ERROR``)."""
-
-    code = "SPEC_ENTRYPOINTS_PATH_INVALID"
-    input_error = True
-    fix = "Pass a literal workspace-relative file or directory path (no glob, no leading /, no .. segment)"
-
-
 class EntrypointsTargetError(SpecError):
     """``devkit spec entrypoints derive --apply --target``: the ID or path is not among the derived documents
     (``INPUT_ERROR``)."""
@@ -533,7 +479,7 @@ class ScopeSpecNotFoundError(ScopeError):
 
     code = "SPEC_SCOPE_SPEC_NOT_FOUND"
     input_error = True
-    fix = f"Pass an existing spec bundle directory ({DEVKIT} spec list spec --history lists them)"
+    fix = f"Pass an existing spec bundle directory ({DEVKIT} docs list spec --history lists them)"
 
 
 class ScopeInputInvalidError(ScopeError):

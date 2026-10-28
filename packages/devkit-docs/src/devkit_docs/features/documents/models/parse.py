@@ -1,0 +1,206 @@
+"""Read one document: its identity from the frontmatter, its references from the frontmatter and the prose.
+
+The frontmatter follows devkit's grammar (``devkit_core.core.frontmatter``): a
+malformed block raises ``FrontmatterError``. A document is indexed only when
+its ``id`` (or, for a reconcile file, ``reconcile_id``) is a well-formed ID;
+``id``, ``reconcile_id`` and ``status`` must be strings. Body references are
+`` `ID` `` code spans and ``[ID]`` brackets in prose (``markdown.visible_lines``);
+a heading line ``# ... ID ...`` does not reference the document's own ID.
+
+``aliases`` declares previous or alternate IDs of the document itself
+(``ADR-document-id-aliases``): a list of full IDs with the document's own
+prefix, never its own ID, never repeated and never a legacy date- or
+number-based form. A malformed item is left out and recorded as an alias issue.
+"""
+
+from __future__ import annotations
+
+import re
+from typing import Any
+
+import yaml
+from devkit_core.core import FrontmatterError, safe_compose
+from devkit_core.core.frontmatter import load_header, locate
+
+from devkit_docs.features.documents.models.ids import ID_SOURCE, Kind, is_id, is_legacy_id, kind_of
+from devkit_docs.features.documents.models.markdown import visible_lines
+from devkit_docs.features.documents.models.model import (
+    ALIASES,
+    BODY,
+    LIST_FIELDS,
+    PROVENANCE_FIELDS,
+    SCALAR_FIELDS,
+    Document,
+    Issue,
+    Reference,
+    is_unit_anchor,
+)
+
+_CODE_SPAN_ID = re.compile(rf"`({ID_SOURCE})`")
+_BRACKET_ID = re.compile(rf"\[({ID_SOURCE})\]")
+_STRING_FIELDS = ("id", "reconcile_id", "status")
+
+
+def parse_document(path: str, text: str) -> Document | None:
+    """The document at workspace-relative ``path``, or ``None`` when it declares no well-formed ID.
+
+    Raises ``FrontmatterError`` for a malformed frontmatter block or a non-string ``id``, ``reconcile_id`` or
+    ``status``.
+    """
+    block = locate(text)
+    if block is None:
+        return None
+    header_line = text.count("\n", 0, block.header_start) + 1
+    data = load_header(block.header, line_offset=header_line - 1, source=path)
+    for name in _STRING_FIELDS:
+        if name in data and not isinstance(data[name], str):
+            raise FrontmatterError(f"{path}: frontmatter {name} must be a string", target_files=[path])
+    document_id = data.get("id") or data.get("reconcile_id") or ""
+    kind = kind_of(document_id)
+    if kind is None:
+        return None
+    document = Document(id=document_id, path=path, kind=kind, frontmatter=data)
+    fields = [name for name in (*LIST_FIELDS, *SCALAR_FIELDS, *PROVENANCE_FIELDS) if name in data]
+    nodes = _field_nodes(block.header) if fields or ALIASES in data else {}
+    line_starts = _line_starts(text) if fields or ALIASES in data else []
+    if ALIASES in data:
+        _aliases(document, data[ALIASES], nodes.get(ALIASES), line_starts, header_line)
+    for name in fields:
+        if name in {"decomposed_from", "supersedes"} and not is_unit_anchor(document):
+            continue
+        if name == "depends_on" and document.kind is not Kind.MILESTONE and not is_unit_anchor(document):
+            document.issues.append(
+                Issue(header_line, "depends_on is valid only on milestones and proposal/spec anchors")
+            )
+            continue
+        if name == "milestone" and document.kind is Kind.SPEC and is_unit_anchor(document):
+            continue  # Historical SPEC metadata is not milestone membership.
+        if name == "milestone" and not is_unit_anchor(document):
+            document.issues.append(Issue(header_line, "milestone is valid only on proposal/spec anchors"))
+            continue
+        refs = _field_references(document, name, data[name], nodes.get(name), line_starts, header_line)
+        (document.provenance if name in PROVENANCE_FIELDS else document.references).extend(refs)
+    document.references.extend(_body_references(document, text, block.end, block.body_line))
+    return document
+
+
+def _line_starts(text: str) -> list[int]:
+    """The offset of the first character of each line (index 0 is line 1)."""
+    starts = [0]
+    index = text.find("\n")
+    while index >= 0:
+        starts.append(index + 1)
+        index = text.find("\n", index + 1)
+    return starts
+
+
+def _field_nodes(header: str) -> dict[str, yaml.Node]:
+    root = safe_compose(header, source="document frontmatter")
+    if not isinstance(root, yaml.MappingNode):
+        return {}
+    return {key.value: value for key, value in root.value if isinstance(key, yaml.ScalarNode)}
+
+
+def _field_references(
+    document: Document, name: str, value: Any, node: yaml.Node | None, line_starts: list[int], header_line: int
+) -> list[Reference]:
+    line = header_line + (node.start_mark.line if node is not None else 0)
+    if name in LIST_FIELDS:
+        if not isinstance(value, list) or not isinstance(node, yaml.SequenceNode):
+            document.issues.append(Issue(line, f"{name} must be a list of IDs"))
+            return []
+        items = list(zip(value, node.value, strict=True))
+    else:
+        if not isinstance(value, str) or not isinstance(node, yaml.ScalarNode):
+            document.issues.append(Issue(line, f"{name} must be one ID"))
+            return []
+        items = [(value, node)]
+    refs = []
+    for item, item_node in items:
+        start, end = item_node.start_mark, item_node.end_mark
+        if not isinstance(item, str):
+            document.issues.append(Issue(header_line + start.line, f"{name} must contain string IDs"))
+            continue
+        refs.append(
+            Reference(
+                target=item,
+                source=document.id,
+                path=document.path,
+                field=name,
+                line=header_line + start.line,
+                column=start.column + 1,
+                start=line_starts[header_line + start.line - 1] + start.column,
+                end=line_starts[header_line + end.line - 1] + end.column,
+            )
+        )
+    return refs
+
+
+def _aliases(document: Document, value: Any, node: yaml.Node | None, line_starts: list[int], header_line: int) -> None:
+    """Keep the well-formed ``aliases`` items of ``document`` and record an issue for each malformed one."""
+    line = header_line + (node.start_mark.line if node is not None else 0)
+    if not isinstance(value, list) or not isinstance(node, yaml.SequenceNode):
+        document.alias_issues.append(Issue(line, "aliases must be a list of IDs"))
+        return
+    prefix = document.id.split("-", 1)[0] + "-"
+    kept: list[str] = []
+    spans: list[tuple[int, int]] = []
+    for item, item_node in zip(value, node.value, strict=True):
+        item_line = header_line + item_node.start_mark.line
+        if not isinstance(item, str):
+            document.alias_issues.append(Issue(item_line, "aliases must contain string IDs"))
+            continue
+        problem = _alias_problem(document.id, prefix, item, kept)
+        if problem is not None:
+            document.alias_issues.append(Issue(item_line, problem))
+            continue
+        start, end = item_node.start_mark, item_node.end_mark
+        kept.append(item)
+        spans.append(
+            (
+                line_starts[header_line + start.line - 1] + start.column,
+                line_starts[header_line + end.line - 1] + end.column,
+            )
+        )
+    document.aliases = tuple(kept)
+    document.alias_spans = tuple(spans)
+
+
+def _alias_problem(document_id: str, prefix: str, item: str, kept: list[str]) -> str | None:
+    if not is_id(item):
+        return f"aliases must contain full document IDs, got {item!r}"
+    if is_legacy_id(item):
+        return f"alias {item} has a date- or number-based form; use a slug ID"
+    if not item.startswith(prefix):
+        return f"alias {item} must have the document's own prefix {prefix}"
+    if item == document_id:
+        return f"alias {item} is the document's own ID"
+    if item in kept:
+        return f"alias {item} is repeated"
+    return None
+
+
+def _body_references(document: Document, text: str, start: int, first_line: int) -> list[Reference]:
+    refs: list[Reference] = []
+    for line in visible_lines(text, start=start, first_line=first_line):
+        heading = line.text.lstrip().startswith("# ")
+        found = [(match, False) for match in _CODE_SPAN_ID.finditer(line.text)]
+        found += [(match, True) for match in _BRACKET_ID.finditer(line.text)]
+        for match, bracket in sorted(found, key=lambda item: item[0].start()):
+            target = match.group(1)
+            if heading and target == document.id:
+                continue
+            refs.append(
+                Reference(
+                    target=target,
+                    source=document.id,
+                    path=document.path,
+                    field=BODY,
+                    line=line.number,
+                    column=match.start(1) + 1,
+                    start=line.offset + match.start(1),
+                    end=line.offset + match.end(1),
+                    bracket=bracket,
+                )
+            )
+    return refs

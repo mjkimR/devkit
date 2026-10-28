@@ -4,9 +4,8 @@ from pathlib import Path
 
 from devkit_core.core import ArgumentError
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
-
-from devkit_spec.features.documents import DocumentIndex
-from devkit_spec.features.documents.models.ids import Kind
+from devkit_docs.features.documents import DocumentIndex
+from devkit_docs.features.documents.models.ids import Kind
 
 
 def milestone_id(root: Path, value: str | None) -> str | None:
@@ -24,7 +23,7 @@ def milestone_id(root: Path, value: str | None) -> str | None:
         raise ArgumentError(
             f"--milestone {value!r} must name one existing global milestone",
             target_files=["--milestone"],
-            fix=f"Pass an MS- ID shown by {DEVKIT} spec list milestone, or omit --milestone",
+            fix=f"Pass an MS- ID shown by {DEVKIT} docs list milestone, or omit --milestone",
         )
     return found[0].id
 
@@ -40,6 +39,6 @@ def decomposition_source(root: Path, value: str | None, slug: str) -> str | None
         raise ArgumentError(
             "--decomposed-from must name another draft proposal",
             target_files=["--decomposed-from"],
-            fix=f"Pass the PROP- ID of the draft being decomposed ({DEVKIT} spec list proposal lists them)",
+            fix=f"Pass the PROP- ID of the draft being decomposed ({DEVKIT} docs list proposal lists them)",
         )
     return check_backlog_editable(root, value, decomposition=True).id

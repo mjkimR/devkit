@@ -25,8 +25,8 @@ from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
 from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError, GitError, is_safe_relpath, normalize_relpath, run_git, run_git_text
 from devkit_core.core.frontmatter import parse
+from devkit_docs.features.governance import explicitly_targeted
 
-from devkit_spec.features.governance import explicitly_targeted
 from devkit_spec.features.policy.repositories.branches import recorded_base
 
 RULE_ID = "RULE-reconcile-contract"

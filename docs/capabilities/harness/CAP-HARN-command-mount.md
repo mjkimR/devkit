@@ -1,7 +1,7 @@
 ---
 id: CAP-HARN-command-mount
-title: devkit spec Command Mount and Output Conventions
-summary: How the devkit spec command group mounts into devkit's command line through the devkit.commands entry point, its --version line, and the output conventions all its subcommands share (options, sentinel encoding, [PAGE] and [NEXT_CMD] paging, JSON, advisories, exit codes).
+title: devkit spec and devkit docs Command Mounts and Output Conventions
+summary: "How the devkit spec and devkit docs command groups mount into devkit's command line through devkit.commands entry points, their --version lines, and the output conventions all their subcommands share (options, sentinel encoding, [PAGE] and [NEXT_CMD] paging, JSON, advisories, exit codes)."
 area: harness
 status: active
 created_at: 2026-10-13
@@ -10,14 +10,17 @@ usecases:
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/cli.py
   - packages/devkit-spec/src/devkit_spec/adapters/cli.py
+  - packages/devkit-docs/src/devkit_docs/cli.py
+  - packages/devkit-docs/src/devkit_docs/adapters/cli.py
 ---
 
-# [CAP-HARN-command-mount] devkit spec Command Mount and Output Conventions
+# [CAP-HARN-command-mount] devkit spec and devkit docs Command Mounts and Output Conventions
 
 ## 1. Summary
 
-devkit-spec has no executable of its own. Its click group `spec` (`devkit_spec.cli:cli`) is registered under the
-`devkit.commands` entry point `spec`, and devkit's root group imports it only when `devkit spec` runs
+devkit-spec and devkit-docs have no executable of their own. devkit-spec's click group `spec` (`devkit_spec.cli:cli`)
+is registered under the `devkit.commands` entry point `spec`, and devkit-docs' group `docs` (`devkit_docs.cli:cli`)
+under the entry point `docs` (`ADR-document-package`); devkit's root group imports each only when its command runs
 (`ARCH-05-3-command-plugins`). Agents reach
 the whole toolchain through the one `devkit` executable of the project environment. Every subcommand is built on
 `devkit_dist.adapters.cli` and follows devkit's agent-first output contract
@@ -26,14 +29,14 @@ the whole toolchain through the one `devkit` executable of the project environme
 
 ## 2. Scope & Boundary
 
-- **In-Scope**: the entry points of the package, the `devkit spec` group and its `--version` option, the subcommand
-  catalog, and the conventions shared by all subcommands: options, sentinel encoding, paging, JSON, advisories, exit
-  codes and the `SPEC_` code namespace.
+- **In-Scope**: the entry points of both packages, the `devkit spec` and `devkit docs` groups and their `--version`
+  options, the subcommand catalog, and the conventions shared by all subcommands: options, sentinel encoding, paging,
+  JSON, advisories, exit codes and the `SPEC_` and `DOCS_` code namespaces.
 - **Out-of-Scope**: each subcommand's own contract (see the catalog in 4.2); devkit's root command line, plugin
   loading and the Agent Advisory Protocol renderer.
 - **Non-Goals**:
-  - **Scope Excluded**: a separate `devkit-spec` console script. `devkit --version` reports devkit itself; the
-    package version is `devkit spec --version`.
+  - **Scope Excluded**: a separate `devkit-spec` or `devkit-docs` console script. `devkit --version` reports devkit
+    itself; the package versions are `devkit spec --version` and `devkit docs --version`.
   - **Scope Excluded**: terminal-dependent output (colour, tables, progress) on stdout.
 
 ## 3. Business Rules & Policies
@@ -42,15 +45,18 @@ the whole toolchain through the one `devkit` executable of the project environme
    `--format json`; stderr carries Agent Advisory Protocol blocks (`[ERROR]`, `[WARN]`, `[NOTICE]`) and `[INFO]` log
    lines only under `-v`.
 2. **Errors are advisories**: a failure or refusal MUST be raised as an `AdvisoryError` subclass of
-   `devkit_spec.base.errors.SpecError` with a stable `SPEC_`-prefixed code and a deterministic `[ACTION]`; agents branch on
+   `devkit_spec.base.errors.SpecError` (`devkit spec`) or `devkit_docs.base.errors.DocsError` (`devkit docs`, and the
+   document model a `devkit spec` command reads) with a stable `SPEC_`- or `DOCS_`-prefixed code and a deterministic
+   `[ACTION]`; agents branch on
    codes, never on message text. devkit's own codes (`ARGUMENT_INVALID`, `GIT_FAILED`, `CONFIG_INVALID`, ...) pass
    through unchanged.
 3. **Warnings and notices are results**: something a successful operation must report is returned under `notices`
    at `WARNING` or `NOTICE` and printed after the result; it never changes the exit code except under `--strict`.
 4. **Libraries never print**: commands write only through `devkit_dist.adapters.cli` (`boundary`, `echo_json`,
-   `echo_notices`, `exit_on_warnings`) and the helpers in `devkit_spec.adapters.cli`.
-5. **Every code is documented**: each `code` a `SpecError` subclass declares MUST appear as `` `CODE` `` in a
-   document under `docs/` (`tests/test_documented_codes.py`).
+   `echo_notices`, `exit_on_warnings`) and the helpers in `devkit_spec.adapters.cli` or `devkit_docs.adapters.cli`.
+5. **Every code is documented**: each `code` a `SpecError` or `DocsError` subclass declares MUST appear as
+   `` `CODE` `` in a document under `docs/` (`packages/devkit-spec/tests/integration/package/test_documented_codes.py`,
+   `packages/devkit-docs/tests/integration/package/test_documented_codes.py`).
 6. **Public surface only**: the CLI uses devkit through its public modules (`devkit_dist.adapters.cli`, `devkit_agt.features.workflow`,
    `devkit_agt.features.worktree`, `devkit.advisory`, ...), never private helpers.
 
@@ -59,23 +65,28 @@ the whole toolchain through the one `devkit` executable of the project environme
 ### 4.1 Entry Points
 
 ```toml
-# pyproject.toml
+# packages/devkit-spec/pyproject.toml
 [project.entry-points."devkit.bundles"]
 spec = "devkit_spec"                 # the spec bundle, deployed by devkit sync (auto_select)
 
 [project.entry-points."devkit.commands"]
 spec = "devkit_spec.cli:cli"         # the command group mounted as `devkit spec`
+
+# packages/devkit-docs/pyproject.toml
+[project.entry-points."devkit.commands"]
+docs = "devkit_docs.cli:cli"         # the command group mounted as `devkit docs`
 ```
 
-`devkit spec --version` prints `[VERSION: devkit-spec <version>]` (the installed distribution's version) and exits
-`0`; it is eager, so it works without a subcommand.
+`devkit spec --version` prints `[VERSION: devkit-spec <version>]` and `devkit docs --version` prints
+`[VERSION: devkit-docs <version>]` (the installed distribution's version); each exits `0` and is eager, so it works
+without a subcommand.
 
 ### 4.2 Subcommand Catalog
 
 | Command | Capability |
 | --- | --- |
-| `devkit spec resolve`, `refs`, `list` | `CAP-DOCS-document-lookup` |
-| `devkit spec search` | `CAP-DOCS-document-search` |
+| `devkit docs resolve`, `refs`, `list` | `CAP-DOCS-document-lookup` |
+| `devkit docs search` | `CAP-DOCS-document-search` |
 | `devkit spec entrypoints` | `CAP-TRACE-code-entrypoints` |
 | `devkit spec new` | `CAP-DLV-spec-bundles` |
 | `devkit spec proposal new\|padr\|accept\|handoff\|prune\|check` | `CAP-DLV-proposal-incubation` |
@@ -111,7 +122,7 @@ After the items they print:
 
 ```text
 [PAGE: total=57 offset=0 limit=20 count=20 next=20 hidden=0]
-[NEXT_CMD: uv run devkit spec list capability --limit 20 --offset 20]
+[NEXT_CMD: uv run devkit docs list capability --limit 20 --offset 20]
 ```
 
 `next` is the offset of the following page, `-` on the last page; `[NEXT_CMD: ...]` repeats the command's own
@@ -133,5 +144,5 @@ under `notices`. A command that reports a result and errors together (`resolve` 
 | Code | Meaning |
 | --- | --- |
 | `0` | Success, including results that carry warnings or notices. |
-| `1` | A warning under `--strict` (devkit's negative-result code; no `devkit spec` command reports a negative result otherwise). |
-| `2` | The command could not run or refused: every `SPEC_*` error, devkit's `ARGUMENT_INVALID`, and any unexpected exception (`UNEXPECTED_ERROR`, traceback under `-v`). A closed stdout (`BrokenPipeError`) exits `2` without output. |
+| `1` | A warning under `--strict` (devkit's negative-result code; no `devkit spec` or `devkit docs` command reports a negative result otherwise). |
+| `2` | The command could not run or refused: every `SPEC_*` and `DOCS_*` error, devkit's `ARGUMENT_INVALID`, and any unexpected exception (`UNEXPECTED_ERROR`, traceback under `-v`). A closed stdout (`BrokenPipeError`) exits `2` without output. |

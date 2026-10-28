@@ -9,6 +9,9 @@ from pathlib import Path
 from devkit.advisory import AdvisoryError
 from devkit_core.base.errors import ArgumentError
 from devkit_core.base.usecase import BaseUseCase
+from devkit_docs.base.errors import UnresolvedIdError
+from devkit_docs.features.documents import Document, DocumentIndex, Kind, is_id
+from devkit_docs.utils.paths import _bundle_dir
 
 from devkit_spec.base.errors import (
     DEVKIT,
@@ -17,9 +20,7 @@ from devkit_spec.base.errors import (
     EntrypointsInputInvalidError,
     EntrypointsInputMissingError,
     EntrypointsTargetError,
-    UnresolvedIdError,
 )
-from devkit_spec.features.documents import Document, DocumentIndex, Kind, is_id
 from devkit_spec.features.entrypoints import (
     Applied,
     adopt_nested_selectors,
@@ -33,7 +34,6 @@ from devkit_spec.features.entrypoints import (
     unmatched_selectors,
 )
 from devkit_spec.features.entrypoints.models.derive import Pair, Reason, SkipKind, Skipped, State
-from devkit_spec.utils.paths import _bundle_dir
 
 DEFAULT_STATUS = "completed,in-progress"
 
@@ -50,7 +50,7 @@ def _check_options(
         raise ArgumentError(
             "derive needs exactly one of --spec and --all",
             target_files=["--spec", "--all"],
-            fix=f"Pass --spec with one spec bundle directory ({DEVKIT} spec list spec --history lists them) or --all",
+            fix=f"Pass --spec with one spec bundle directory ({DEVKIT} docs list spec --history lists them) or --all",
         )
     if spec_dir is not None and (status is not None or min_count is not None):
         raise ArgumentError(

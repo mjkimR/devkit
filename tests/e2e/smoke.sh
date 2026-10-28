@@ -53,6 +53,7 @@ advisory_wheel=$(wheel devkit_advisory)
 starter_wheel=$(wheel devkit_starter)
 catalog_wheel=$(wheel devkit_catalog)
 mcp_wheel=$(wheel devkit_mcp)
+docs_wheel=$(wheel devkit_docs)
 spec_wheel=$(wheel devkit_spec)
 viewer_wheel=$(wheel devkit_viewer)
 
@@ -375,16 +376,17 @@ assert load_embedder().dimensions == 256
 index = SearchIndex([SearchDocument('secrets', 'Secrets must not enter the repository'), SearchDocument('length', 'File length warning')])
 assert index.search('leaked credentials', mode=SearchMode.HYBRID)[0].id == 'secrets'
 "
-    echo "--- SDD extension: install its wheel, mount the command and opt into valid docs"
-    uv add --dev "$spec_wheel" >/dev/null
+    echo "--- SDD extension: install its wheels, mount the commands and opt into valid docs"
+    uv add --dev "$spec_wheel" "$docs_wheel" >/dev/null
     uv run devkit spec --version
+    uv run devkit docs --version
     uv run devkit sync >/dev/null
     test ! -e docs
     test -f .devkit/managed/spec/bundle.toml
     uv run devkit add spec:docs-skeleton >/dev/null
     uv run python -c '
 from pathlib import Path
-from devkit_spec.features.documents import DocumentIndex
+from devkit_docs.features.documents import DocumentIndex
 index = DocumentIndex.load(Path.cwd())
 assert not index.problems, index.problems
 for document_id in (
@@ -393,7 +395,7 @@ for document_id in (
 ):
     assert index.resolve(document_id).path == f"docs/architecture/{document_id}.md"
 '
-    uv run devkit spec resolve ARCH-03-context ARCH-07-deployment ARCH-08-cross-cutting >/dev/null
+    uv run devkit docs resolve ARCH-03-context ARCH-07-deployment ARCH-08-cross-cutting >/dev/null
     uv run devkit sync --check >/dev/null
     uv run devkit rules check
     echo "--- viewer: install its wheel, serve this project and fetch the bundled page"

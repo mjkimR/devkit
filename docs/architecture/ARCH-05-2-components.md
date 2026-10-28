@@ -17,13 +17,15 @@ created_at: 2026-10-17
 
 Each application wheel owns a regular Python package (`ARCH-05-1-containers`): `devkit_dist`
 holds distribution behavior and the root command line; `devkit_agt` holds the harness engines;
-`devkit_spec`, `devkit_mcp` and `devkit_viewer` own their extensions. The public advisory API remains
-`devkit.advisory`. `ADR-package-split-and-namespaces` records the ownership and layout decision.
+`devkit_docs` holds the document system; `devkit_spec`, `devkit_mcp` and `devkit_viewer` own their extensions.
+The public advisory API remains `devkit.advisory`. `ADR-package-split-and-namespaces` records the ownership and
+layout decision; `ADR-document-package` places the document layer in `devkit_docs` below `devkit_spec`.
 
 ```mermaid
 graph TD
     CLI["devkit_dist root CLI"]
     Agt["devkit_agt.features: harness engines"]
+    Docs["devkit_docs.features: documents, document rules"]
     Spec["devkit_spec.features: SDD"]
     Viewer["devkit_viewer.features: local viewer"]
     Mcp["devkit_mcp.features: MCP runtime"]
@@ -34,10 +36,14 @@ graph TD
     CLI --> Dist
     CLI --> Toolkit
     CLI -.->|devkit.commands| Agt
+    CLI -.->|devkit.commands| Docs
     CLI -.->|devkit.commands| Spec
     CLI -.->|devkit.commands| Viewer
     CLI -.->|devkit.commands| Mcp
+    Spec --> Docs
     Spec --> Agt
+    Docs --> Agt
+    Docs -.->|devkit.docs.status_overlay| Spec
     Agt --> Dist
     Viewer --> Dist
     Mcp --> Dist
@@ -71,7 +77,7 @@ package-level `core/`, or a layer solely to forward a call. `base/` and
 `utils/` are optional. The foundation package is the explicit exception: `devkit_core.base` holds
 shared errors and SDK-free MCP contracts, and `devkit_core.core` holds generic implementations.
 A package may explicitly declare shared transport adapters: dist owns `adapters/cli.py` for
-its common CLI boundary, and spec owns `adapters/cli.py` for the sentinel output its commands share. These adapters remain above application layers. Application-owned bundles live under
+its common CLI boundary, and docs and spec each own `adapters/cli.py` for the sentinel output their commands share. These adapters remain above application layers. Application-owned bundles live under
 `bundles/<name>/bundle/`, including a package with only one bundle. Content-only packages
 may retain their existing bundle-only layouts. `tools/devkit-dev` owns the repository's
 structure and layering rules and the release handbook playbook (`CAP-DLV-release-handbook`) in a development bundle;
@@ -111,8 +117,8 @@ required `BaseRepository`, Command registry or Unit of Work. CLI commands remain
 - `devkit_dist` never imports `devkit_agt`, `devkit_mcp` or the MCP SDK, including dynamic module paths
   and entry-point targets. Its tests run with `devkit-agt` absent (`just test-dist`).
 - Entry-point groups preserve dependency inversion: `devkit.commands`, `devkit.post_sync`, `devkit.post_sync_preview`,
-  `devkit.config_tables`, `devkit.host.services`, `devkit.mcp.registrations`, `devkit.hygiene` and
-  `devkit.finish_guard` retain their public names. Their targets use the owning package namespace.
+  `devkit.config_tables`, `devkit.config_template`, `devkit.host.services`, `devkit.mcp.registrations`,
+  `devkit.hygiene`, `devkit.finish_guard` and `devkit.docs.status_overlay` retain their public names. Their targets use the owning package namespace.
 - Domain MCP adapters consume `devkit_core.base.mcp` contracts. The optional MCP runtime adapts them
   to the SDK; dist discovers only the narrow registration launch provider.
 - Bundle rule code is content loaded by the rule engine. It uses public foundation and rule APIs;
@@ -121,9 +127,12 @@ required `BaseRepository`, Command registry or Unit of Work. CLI commands remain
 Proposal handoff and optional scope registration are coordinated by the delivery feature.
 The proposal CLI group calls the delivery acceptance and handoff use cases;
 proposal state operations remain in the proposals feature. Shared branch conventions and
-Git branch queries belong to the policy feature, keeping documents and proposal state
-independent of delivery orchestration. The documents feature owns the document kind definitions
-that every other feature reads.
+Git branch queries belong to the policy feature, keeping proposal state independent of delivery
+orchestration. `devkit_docs.features.documents` owns the document kind definitions, including the delivery
+kinds, that every `devkit_spec` feature reads; `devkit_docs.features.governance` owns the document rules'
+implementations, and `devkit_spec.features.governance` the lifecycle rules. `devkit_docs` MUST NOT import
+`devkit_spec`; a delivery-specific status reaches `devkit docs list` only through the
+`devkit.docs.status_overlay` entry-point group (`RULE-architecture` over `.devkit/architecture.toml`).
 
 Repository structure rules check folder conventions, layer direction and explicit per-feature
 dependencies, including actual feature cycles. Package tests cover package ownership;
@@ -176,6 +185,9 @@ e2e combinations; individual packages need no duplicate installation suites.
 | **`devkit_agt.features.worktree`** (agt) | Activity branch management and task worktree lifecycle. | `worktree start`, `worktree finish` |
 | **`devkit_agt.features.gate`** (agt) | Git hook wrappers enforcing commit policies. | `gate install`, `gate run` |
 | **`devkit_agt.features.compact`** (agt) | Bounded command execution with persistent log capture. | `devkit run` |
+| **`devkit_docs.features.documents`** (docs) | Document model, index and memo, namespaces, references, browse and search. | `docs resolve`, `docs refs`, `docs list`, `docs search` |
+| **`devkit_docs.features.governance`** (docs) | Document rule implementations and the entrypoint path contract. | Library API (rule wrappers in the `spec` bundle) |
+| **`devkit_spec.features`** (spec) | Proposals, delivery, scope, worker inspection, policy, entrypoints and lifecycle rules. | `spec new`, `spec proposal`, `spec policy`, `spec entrypoints`, `spec scope`, `spec worker` |
 | **`devkit_dist.features.search`** (dist) | Lexical (BM25), dense (embeddings), and hybrid document retrieval. | Library API |
 | **`devkit_dist.features.host`** (dist) | Host environment discovery, lifecycle event hook dispatch, exact project MCP registrations. | `host status` |
 | **`devkit_agt.features.integration`** (agt) | Approval-bound integration through Host-authorized CLI operations. | `integration` |

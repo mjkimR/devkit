@@ -18,7 +18,7 @@ Text output (paths are workspace-relative):
 ``SKIPPED`` (an input left out of the derivation) differs from ``scope``'s ``UNRESOLVED`` (an input counted as an
 unknown overlap) even where both name the reason ``not-a-path``.
 
-Nothing is written without ``--apply``. Files that could not be indexed are ``SPEC_DOCUMENT_INVALID`` warnings; a
+Nothing is written without ``--apply``. Files that could not be indexed are ``DOCS_DOCUMENT_INVALID`` warnings; a
 document ``--apply`` could not write is a ``SPEC_ENTRYPOINTS_APPLY_FAILED`` error after the result. A ``--code`` that
 matches no candidate refuses the run with ``SPEC_ENTRYPOINTS_CODE_UNMATCHED`` before anything is written.
 """
@@ -40,12 +40,12 @@ from devkit_dist.adapters.cli import (
     resolve_root,
     workspace_option,
 )
+from devkit_docs.utils.paging import page
 
 from devkit_spec.adapters.cli import echo_page, fields_line, sentinel
 from devkit_spec.features.entrypoints import Applied
 from devkit_spec.features.entrypoints.models.derive import Pair, Skipped, State
 from devkit_spec.features.entrypoints.usecases.derive import DEFAULT_STATUS, DeriveEntrypointsUseCase, _check_options
-from devkit_spec.utils.paging import page
 
 DEFAULT_LIMIT = 20
 

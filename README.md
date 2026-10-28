@@ -25,7 +25,8 @@ command-line boundary (`devkit_cli`) that `devkit` and other repositories' click
 `packages/devkit-dist` is the distribution package with the CLI, `packages/devkit` the harness package
 (`devkit-agt`), `packages/devkit-advisory` the `devkit.advisory` library shipped on its own for other
 repositories' runtime,
-`packages/devkit-spec` the Spec-Driven Development (SDD) extension,
+`packages/devkit-docs` the document system (`devkit docs`, the document model and the document rules),
+`packages/devkit-spec` the Spec-Driven Development (SDD) extension built on it,
 `tools/devkit-dev` the repository development bundle and its structure rules,
 `packages/devkit-starter` an example content package, `packages/devkit-catalog` opt-in content bundles,
 `packages/devkit-viewer` the local repository viewer (`devkit viewer serve`, with its Svelte frontend), `models/devkit-embed` the embedding model of the
@@ -66,8 +67,8 @@ just --list                # every recipe (rules-fix, rules-phases, rules-explai
 
 Module commands discover projects from `packages/*/pyproject.toml` and
 `tools/*/pyproject.toml`; pass a project name (`devkit-core`, `devkit-cli`, `devkit-dist`, `devkit-agt`, `devkit-advisory`,
-`devkit-spec`, `devkit-starter`, `devkit-catalog` or `devkit-viewer`) or `all`. Short names are accepted too:
-`agt` and `devkit` for `devkit-agt`, and `dev`, `core`, `cli`, `dist`, `mcp`, `starter`, `catalog`, `spec` and `viewer` for
+`devkit-docs`, `devkit-spec`, `devkit-starter`, `devkit-catalog` or `devkit-viewer`) or `all`. Short names are accepted too:
+`agt` and `devkit` for `devkit-agt`, and `dev`, `core`, `cli`, `dist`, `mcp`, `starter`, `catalog`, `docs`, `spec` and `viewer` for
 `devkit-<name>` (`scripts/_lib.sh` `module_short_names`; an unknown name prints both lists). Feature names select their tests across tiers and matching source subtrees; tier names (`unit`, `integration`, `e2e`) or explicit paths also narrow `test` and `test-cov`, and extra pytest arguments follow them: `just test devkit gate worktree -k cache`. `just test-affected [--base REF] [--list] [-- PYTEST-ARGS]` derives the paths from the changes since the merge base with `main`.
 
 This repository's lint, type-check and test recipes use `devkit run` for bounded output.
@@ -78,7 +79,7 @@ and separately runs the compact tests through `devkit run`.
 `uv run pytest` from the repository root runs every test.
 
 The CLI (`devkit`), bundle names and entry-point groups retain their names. Python imports expose
-wheel ownership: `devkit_dist`, `devkit_agt`, `devkit_core`, `devkit_cli`, `devkit_spec`, `devkit_mcp` and
+wheel ownership: `devkit_dist`, `devkit_agt`, `devkit_core`, `devkit_cli`, `devkit_docs`, `devkit_spec`, `devkit_mcp` and
 `devkit_viewer`. The runtime advisory library preserves `devkit.advisory`. The distributions are
 `devkit-dist` and `devkit-agt` to avoid confusion with the unrelated `devkit` project on PyPI.
 They are not published to PyPI; install them from Git or an explicit wheel URL/path.

@@ -34,7 +34,7 @@ def _spec(root: Path, *args: str) -> object:
 
 def test_list_shows_a_draft_in_planning_as_reviewing_without_writing(tmp_path: Path) -> None:
     root = _repo(tmp_path)
-    result = CliRunner().invoke(devkit_cli, ["spec", "list", "proposal", "-w", str(root), "--format", "json"])
+    result = CliRunner().invoke(devkit_cli, ["docs", "list", "proposal", "-w", str(root), "--format", "json"])
     shown = {d["id"]: d for d in json.loads(result.stdout)["documents"]}
     assert (shown["PROP-local"]["status"], shown["PROP-local"]["planning_branch"]) == ("reviewing", "plan-local")
     assert (shown["PROP-remote"]["status"], shown["PROP-remote"]["planning_branch"]) == (
@@ -43,11 +43,11 @@ def test_list_shows_a_draft_in_planning_as_reviewing_without_writing(tmp_path: P
     )
     assert shown["PROP-idle"]["status"] == "draft" and "planning_branch" not in shown["PROP-idle"]
     assert "status: draft" in (root / "docs/proposals/PROP-local/proposal.md").read_text()  # the base is unchanged
-    text = CliRunner().invoke(devkit_cli, ["spec", "list", "proposal", "--status", "reviewing", "-w", str(root)])
+    text = CliRunner().invoke(devkit_cli, ["docs", "list", "proposal", "--status", "reviewing", "-w", str(root)])
     assert (
         "PROP-local" in text.stdout and "planning_branch=plan-local" in text.stdout and "PROP-idle" not in text.stdout
     )
-    assert "SPEC_LIST_STATUS_UNKNOWN" not in text.stderr  # the filter and the known statuses agree
+    assert "DOCS_LIST_STATUS_UNKNOWN" not in text.stderr  # the filter and the known statuses agree
 
 
 def test_a_status_only_stored_under_a_shown_one_is_unknown(tmp_path: Path) -> None:
@@ -55,8 +55,8 @@ def test_a_status_only_stored_under_a_shown_one_is_unknown(tmp_path: Path) -> No
     for slug in ("remote", "idle", "taken"):
         git(root, "branch", f"plan-{slug}")
     git(root, "update-ref", "-d", "refs/remotes/origin/plan-remote")
-    text = CliRunner().invoke(devkit_cli, ["spec", "list", "proposal", "--status", "draft", "-w", str(root)])
-    assert text.exit_code == 0 and "total=0 " in text.stdout and "SPEC_LIST_STATUS_UNKNOWN" in text.stderr
+    text = CliRunner().invoke(devkit_cli, ["docs", "list", "proposal", "--status", "draft", "-w", str(root)])
+    assert text.exit_code == 0 and "total=0 " in text.stdout and "DOCS_LIST_STATUS_UNKNOWN" in text.stderr
 
 
 def test_backlog_changes_only_a_draft_without_a_planning_branch(tmp_path: Path) -> None:

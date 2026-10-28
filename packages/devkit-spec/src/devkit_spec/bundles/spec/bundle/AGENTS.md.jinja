@@ -19,10 +19,10 @@ user instructions take precedence. Never end the user's session on your own.
 - `docs/steering/` holds project-wide background (glossary, product, style); `devkit get-context spec` lists each
   file's title and summary under `documents`. Read a file's body before a wording, naming, interface or content
   decision its summary covers.
-- Read current contracts and active specs (`devkit spec list spec`) before drafting new work. In a package namespace
+- Read current contracts and active specs (`devkit docs list spec`) before drafting new work. In a package namespace
   (`docs/packages/<name>/`), `list` and `search` cover that namespace plus global documents; pass `--all-namespaces`
   for cross-package impact.
-- Refer to ID-bearing documents by full ID, never by path (`devkit spec resolve <ID>`, `devkit spec refs <ID>`).
+- Refer to ID-bearing documents by full ID, never by path (`devkit docs resolve <ID>`, `devkit docs refs <ID>`).
 - Implement no Non-Goal and no unrequested feature, refactor or speculative scope. A lasting policy change or an
   exception to a MUST needs an ADR; state a one-off exception within the approved scope in the review or final report.
 - A task's `_Boundary:_` is the expected scope: explain a necessary extension in the report. Write boundaries given to

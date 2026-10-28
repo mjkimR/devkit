@@ -1,4 +1,4 @@
-# Synonyms for `devkit spec search`: a query containing any word of a cluster is expanded with the whole cluster.
+# Synonyms for `devkit docs search`: a query containing any word of a cluster is expanded with the whole cluster.
 # Project-owned; add the domain terms and the abbreviations or translations people search with.
 terms:
   - primary: reconciliation

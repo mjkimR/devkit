@@ -1,14 +1,14 @@
 ---
 id: CAP-DOCS-namespaces
 title: Document Namespaces
-summary: Defines monorepo namespaces, packages registered in [[tool.spec.namespaces]] that keep their own Living Spec under docs/packages/<name>/, how each document's namespace is determined, and how list and search select namespaces while IDs and references stay repository-wide.
+summary: "Defines monorepo namespaces, packages registered in [[tool.docs.namespaces]] that keep their own Living Spec under docs/packages/<name>/, how each document's namespace is determined, and how list and search select namespaces while IDs and references stay repository-wide."
 area: documents
 status: active
 usecases:
   - UC-find-the-right-documents
 entrypoints:
-  - packages/devkit-spec/src/devkit_spec/features/documents/services/namespaces.py
-  - packages/devkit-spec/src/devkit_spec/features/policy/services/config.py
+  - packages/devkit-docs/src/devkit_docs/features/documents/services/namespaces.py
+  - packages/devkit-docs/src/devkit_docs/features/documents/repositories/config.py
 created_at: 2026-10-13
 ---
 
@@ -17,13 +17,14 @@ created_at: 2026-10-13
 ## 1. Summary
 
 A monorepo registers its packages as namespaces, each with its own Living Spec under `docs/packages/<name>/` (the
-same layout as `docs/`). A namespace narrows what browsing shows, never what exists: `devkit spec list` and
-`devkit spec search` show the selected namespace plus the global documents, while IDs, `resolve`, `refs` and the
-reference rules stay repository-wide. `devkit_spec.features.documents.services.namespaces` implements it.
+same layout as `docs/`). A namespace narrows what browsing shows, never what exists: `devkit docs list` and
+`devkit docs search` show the selected namespace plus the global documents, while IDs, `resolve`, `refs` and the
+reference rules stay repository-wide. devkit-docs owns the registry (`ADR-document-package`):
+`devkit_docs.features.documents.services.namespaces` implements it.
 
 ## 2. Scope & Boundary
 
-- **In-Scope**: the `[[tool.spec.namespaces]]` registry, namespace membership of documents, the selection options and
+- **In-Scope**: the `[tool.docs]` table and its `[[tool.docs.namespaces]]` registry, namespace membership of documents, the selection options and
   the default selection, and how the rules treat namespace docs roots.
 - **Out-of-Scope** (Non-Goals):
   - Namespaced IDs or per-package ID spaces. Scope Excluded: IDs stay unique across the repository and references
@@ -31,21 +32,22 @@ reference rules stay repository-wide. `devkit_spec.features.documents.services.n
     packages.
   - Writing the `namespace` field: `devkit spec new --namespace` (`CAP-DLV-spec-bundles`) and
     `devkit spec proposal new --namespace` (`CAP-DLV-proposal-incubation`); handoff carries it.
-  - The rest of `[tool.spec]` (`worktree`, `scope`) and `devkit spec policy`: `CAP-DLV-project-policy`.
+  - `[tool.spec]` (`worktree`, `depth_escalation`, `scope`, `feedback`) and `devkit spec policy`: `CAP-DLV-project-policy`.
 
 ## 3. Business Rules & Policies
 
 ### 3.1 Registry
 
-1. Each `[[tool.spec.namespaces]]` entry of `.devkit/config.toml` MUST have exactly the keys `name` and `path`.
-2. `name` MUST be lowercase letters and digits in words joined by `-`, and MUST NOT be `global`.
-3. `path` MUST be a safe workspace-relative directory (the package's source directory) in canonical form: no `./`
+1. `[tool.docs]` of `.devkit/config.toml` MUST be a table whose only key is `namespaces`, an array of tables.
+2. Each `[[tool.docs.namespaces]]` entry MUST have exactly the keys `name` and `path`.
+3. `name` MUST be lowercase letters and digits in words joined by `-`, and MUST NOT be `global`.
+4. `path` MUST be a safe workspace-relative directory (the package's source directory) in canonical form: no `./`
    or `.` segment, no `//` and no trailing `/` (`services/api`, not `./services/api`). A non-canonical path fails
    with a fix naming its canonical form.
-4. Names and paths MUST be unique across entries.
-5. A namespace's docs root is `docs/packages/<name>/`.
-6. A malformed registry MUST fail with `SPEC_CONFIG_INVALID` in every command that reads it, and fail a rules run
-   (`SPEC_CONFIG_INVALID` attributed to the rule, exit `2`; `CAP-GOV-spec-rules`).
+5. Names and paths MUST be unique across entries.
+6. A namespace's docs root is `docs/packages/<name>/`.
+7. A malformed `[tool.docs]` table MUST fail with `DOCS_CONFIG_INVALID` in every command that reads it, and fail a
+   rules run (`DOCS_CONFIG_INVALID` attributed to the rule, exit `2`; `CAP-GOV-spec-rules`).
 
 ### 3.2 Membership
 
@@ -87,7 +89,7 @@ spec's `namespace` names `global` or a registered namespace, and rechecks every 
 ### 4.1 Configuration
 
 ```toml
-[[tool.spec.namespaces]]
+[[tool.docs.namespaces]]
 name = "api"            # lowercase words joined by -, not "global"
 path = "services/api"   # the package's source directory
 ```
@@ -96,8 +98,8 @@ path = "services/api"   # the package's source directory
 
 | Option | Commands | Effect |
 | --- | --- | --- |
-| `--namespace NAME` | `devkit spec list`, `devkit spec search` | `NAME` plus global documents; `global` for the global documents only. |
-| `--all-namespaces` | `devkit spec list`, `devkit spec search` | Every namespace. |
+| `--namespace NAME` | `devkit docs list`, `devkit docs search` | `NAME` plus global documents; `global` for the global documents only. |
+| `--all-namespaces` | `devkit docs list`, `devkit docs search` | Every namespace. |
 | `--namespace NAME` | `devkit spec new`, `devkit spec proposal new` | Writes the bundle's `namespace` field (`CAP-DLV-spec-bundles`, `CAP-DLV-proposal-incubation`). Omitted, the field is the namespace the current directory selects (section 3.3, rule 3), and none outside every package. |
 
 ### 4.3 Output
@@ -110,13 +112,16 @@ path = "services/api"   # the package's source directory
 
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
-| `SPEC_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_spec.base.errors.SpecConfigError` | `[tool.spec.namespaces]` is not an array of tables, an entry has keys other than exactly `name` and `path`, a name is malformed or `global`, a path is unsafe or not in canonical form, or a name or path is registered twice. |
+| `DOCS_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_docs.base.errors.DocsConfigError` | `[tool.docs]` is not a table or has a key other than `namespaces`, `[tool.docs.namespaces]` is not an array of tables, an entry has keys other than exactly `name` and `path`, a name is malformed or `global`, a path is unsafe or not in canonical form, or a name or path is registered twice. |
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_core.base.errors.ArgumentError` | `--namespace` names neither `global` nor a registered namespace (also when none is registered), or is combined with `--all-namespaces`. |
 
 ### 4.5 Library
 
-`devkit_spec.features.documents.services.namespaces`: `select` (the selection of the options or the current directory), `detect` (the namespace
+`devkit_docs.features.documents.services.namespaces`: `select` (the selection of the options or the current directory), `detect` (the namespace
 of a directory), `require` (validate a name), `namespace_resolver` (the namespace of each indexed document),
 `living_path` (`docs/packages/<name>/X` as the `docs/X` it mirrors, for the given namespaces or, given `None`, for
 every `docs/packages/<name>/`) and `docs_roots` (`docs` plus every namespace docs root).
-`devkit_spec.features.policy.services.config.read_spec_config(root).namespaces` reads the registry.
+`devkit_docs.features.documents.repositories.config.read_docs_config(root).namespaces` reads the registry;
+`devkit_docs.features.documents.models.namespace` holds `Namespace` (`name`, `path` and `docs`, the
+`docs/packages/<name>` root), `GLOBAL` and `PACKAGES_DIR`. The
+`devkit.config_template` entry point `docs` writes the commented `[tool.docs]` table for `devkit config template`.

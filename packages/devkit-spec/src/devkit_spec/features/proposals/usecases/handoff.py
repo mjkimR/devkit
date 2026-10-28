@@ -63,6 +63,12 @@ from devkit_agt.features.workflow import (
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import locate, parse
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
+from devkit_docs.features.documents import DocumentIndex, parse_document
+from devkit_docs.features.documents.models.ids import is_legacy_id
+from devkit_docs.features.documents.models.markdown import visible_lines
+from devkit_docs.features.documents.models.model import Document
+from devkit_docs.features.documents.models.namespace import GLOBAL
+from devkit_docs.features.documents.services.dependencies import cycle_members, live_unit, target_problem
 
 from devkit_spec.base.axes import (
     DEFAULT_TASK_KIND,
@@ -91,13 +97,7 @@ from devkit_spec.base.errors import (
     ProposalWrongWorktreeError,
     acceptance_unrecorded_fix,
 )
-from devkit_spec.features.documents import DocumentIndex, parse_document
-from devkit_spec.features.documents.models.ids import is_legacy_id
-from devkit_spec.features.documents.models.markdown import visible_lines
-from devkit_spec.features.documents.models.model import Document
-from devkit_spec.features.documents.services.dependencies import cycle_members, live_unit, target_problem
 from devkit_spec.features.policy.repositories.branches import require_development_branch
-from devkit_spec.features.policy.services.config import GLOBAL
 from devkit_spec.features.proposals.services.body import CarriedProposal, carry_proposal_body
 from devkit_spec.features.proposals.services.history import rewrite_history
 from devkit_spec.features.proposals.services.rewrite import (
@@ -564,7 +564,7 @@ def _namespace(root: Path, meta: dict[str, Any], proposal_rel: str) -> str | Non
     """The proposal's ``namespace``, carried to ``spec.md``; ``None`` when it has none.
 
     Raises ``ProposalInvalidError`` when it is not a string naming ``global`` or a registered namespace, and
-    ``SpecConfigError`` when ``[tool.spec]`` is malformed.
+    ``DocsConfigError`` when ``[tool.docs]`` is malformed.
     """
     if NAMESPACE not in meta:
         return None
@@ -576,7 +576,7 @@ def _namespace(root: Path, meta: dict[str, Any], proposal_rel: str) -> str | Non
         f"{proposal_rel}: namespace {value!r} is not global or a registered namespace",
         target_files=[proposal_rel],
         fix=(
-            f"Set the proposal's namespace to one of {', '.join(known)} (registered in [[tool.spec.namespaces]] of"
+            f"Set the proposal's namespace to one of {', '.join(known)} (registered in [[tool.docs.namespaces]] of"
             " .devkit/config.toml), or remove the field to hand it off as global, then rerun the handoff"
         ),
     )

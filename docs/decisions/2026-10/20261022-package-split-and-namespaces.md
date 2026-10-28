@@ -289,6 +289,8 @@ regular package.
 - `devkit-dist`, `devkit-agt` and `devkit-advisory` MUST be released in lockstep from one tag at one version;
   `devkit-agt` pins `devkit-dist` to that exact version. `devkit-spec`, `devkit-catalog` and `devkit-starter` keep
   independent versions. (ADR-dist-bundles-compatibility)
+  Extended by `ADR-document-package`: the `devkit-docs` wheel (package `devkit_docs`) holds the document system and
+  devkit-spec depends on it.
 - `devkit-spec` keeps depending on `devkit-agt`; `devkit-catalog` and `devkit-starter` switch their development
   dependency to `devkit-dist`. (ADR-dist-bundles-compatibility)
 - Non-goals: renaming `packages/devkit`; shim modules, alias distributions or alias presets; a smaller third-party

@@ -303,9 +303,9 @@ def test_the_workspace_option_is_named_w_workspace_root() -> None:
 
 READ_ONLY = (
     "spec policy",
-    "spec list spec",
-    "spec list proposal",
-    "spec resolve ARCH-08-1-agent-output",
+    "docs list spec",
+    "docs list proposal",
+    "docs resolve ARCH-08-1-agent-output",
     "rules check AGENTS.md",
     "workflow list",
     "workflow show sdd-spec-feature",

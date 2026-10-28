@@ -46,7 +46,7 @@ devkit spec proposal new <slug> --task-kind bugfix     # A defect: the spec foll
 devkit spec proposal new <slug> --planning-effort low --dev-effort high  # Scaffold with explicit effort hints
 devkit spec proposal new <slug> --needs-decompose      # Split in Backlog before Planning
 devkit spec proposal padr <slug> <title> --summary <text>  # Scaffold preliminary decision (PADR); the summary is kept by the promoted ADR
-devkit spec list proposal                               # List proposals
+devkit docs list proposal                               # List proposals
 devkit spec proposal handoff <slug>                     # Graduate proposal (scaffold spec, clean bundle)
 ```
 

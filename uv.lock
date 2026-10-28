@@ -17,6 +17,7 @@ members = [
     "devkit-core",
     "devkit-dev",
     "devkit-dist",
+    "devkit-docs",
     "devkit-mcp",
     "devkit-spec",
     "devkit-starter",
@@ -27,6 +28,7 @@ members = [
 dev = [
     { name = "devkit-agt", extras = ["search", "mcp"], editable = "packages/devkit" },
     { name = "devkit-dev", editable = "tools/devkit-dev" },
+    { name = "devkit-docs", extras = ["search"], editable = "packages/devkit-docs" },
     { name = "devkit-spec", extras = ["search"], editable = "packages/devkit-spec" },
     { name = "devkit-viewer", editable = "packages/devkit-viewer" },
     { name = "pyright", specifier = ">=1.1.390" },
@@ -590,6 +592,46 @@ dist-test = [
 ]
 
 [[package]]
+name = "devkit-docs"
+version = "0.1.4"
+source = { editable = "packages/devkit-docs" }
+dependencies = [
+    { name = "click" },
+    { name = "devkit-agt" },
+    { name = "devkit-core" },
+]
+
+[package.optional-dependencies]
+search = [
+    { name = "devkit-agt", extra = ["search"] },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pyright" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "click", specifier = ">=8.1.7" },
+    { name = "devkit-agt", editable = "packages/devkit" },
+    { name = "devkit-agt", extras = ["search"], marker = "extra == 'search'", editable = "packages/devkit" },
+    { name = "devkit-core", editable = "packages/devkit-core" },
+]
+provides-extras = ["search"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pyright", specifier = ">=1.1.390" },
+    { name = "pytest", specifier = ">=8.0.0" },
+    { name = "pytest-cov", specifier = ">=5.0.0" },
+    { name = "ruff", specifier = ">=0.9.0" },
+]
+
+[[package]]
 name = "devkit-embed"
 version = "0.1.0"
 source = { path = "models/devkit-embed/wheels/devkit_embed-0.1.0-py3-none-any.whl" }
@@ -626,11 +668,12 @@ dependencies = [
     { name = "click" },
     { name = "devkit-agt" },
     { name = "devkit-core" },
+    { name = "devkit-docs" },
 ]
 
 [package.optional-dependencies]
 search = [
-    { name = "devkit-agt", extra = ["search"] },
+    { name = "devkit-docs", extra = ["search"] },
 ]
 
 [package.dev-dependencies]
@@ -645,8 +688,9 @@ dev = [
 requires-dist = [
     { name = "click", specifier = ">=8.1.7" },
     { name = "devkit-agt", editable = "packages/devkit" },
-    { name = "devkit-agt", extras = ["search"], marker = "extra == 'search'", editable = "packages/devkit" },
     { name = "devkit-core", editable = "packages/devkit-core" },
+    { name = "devkit-docs", editable = "packages/devkit-docs" },
+    { name = "devkit-docs", extras = ["search"], marker = "extra == 'search'", editable = "packages/devkit-docs" },
 ]
 provides-extras = ["search"]
 

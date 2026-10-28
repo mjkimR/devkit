@@ -59,6 +59,7 @@ under 10 ms.
   is used only when `<root>/.devkit/transient/` exists as a directory, neither it, `spec/` nor the memo path is a
   symbolic link, and the memo path resolves inside `<root>`; otherwise the load behaves as today and creates no file
   or directory. `spec/` is created on the first write.
+  Superseded in part by `ADR-document-package`: the memo lives at `.devkit/transient/docs/document-index.json`.
 - **Format**: one UTF-8 JSON object with `version`, `fingerprint` and `entries` (path to digest and stored result).
   Strings, booleans, integers, finite floats and null stay plain; every list, mapping, `datetime` and `date` is a
   one-key tagged object (a mapping as a list of key-value pairs, so any key type survives; `datetime` checked before

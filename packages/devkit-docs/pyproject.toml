@@ -1,0 +1,58 @@
+[project]
+name = "devkit-docs"
+version = "0.1.4"
+description = "The devkit document system: the document model, lookup and search, namespaces and the document rules"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "devkit-core==0.1.4",
+    "click>=8.1.7",
+    "devkit-agt==0.1.4",
+]
+
+[project.optional-dependencies]
+# Dense and hybrid `devkit docs search`: devkit's search extra (numpy, tokenizers, the embedding model).
+search = ["devkit-agt[search]"]
+
+# The command group mounted under devkit: `devkit docs ...`.
+[project.entry-points."devkit.commands"]
+docs = "devkit_docs.cli:cli"
+
+# Config template extension: `devkit config template` writes the commented [tool.docs] table into .devkit/config.toml.
+[project.entry-points."devkit.config_template"]
+docs = "devkit_docs.features.documents.repositories.config:template"
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.390",
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "ruff>=0.9.0",
+]
+
+[tool.uv.sources]
+devkit-core = { workspace = true }
+devkit-agt = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/devkit_docs"]
+
+[tool.ruff]
+exclude = [".git", ".venv", "build", "dist"]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**/*.py" = ["F403", "E402"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

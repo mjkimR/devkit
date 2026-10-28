@@ -10,10 +10,6 @@ approvals and stage switches in ``[workflow.approvals]`` and
 worktree = "auto"           # direct mode only: "auto" a separate worktree when the activity needs one; "required" always
 depth_escalation = "auto"   # "auto": the Host raises planning-depth on its own; "ask": the user confirms each raise
 
-[[tool.spec.namespaces]]   # a package of a monorepo with its own Living Spec under docs/packages/<name>/
-name = "api"
-path = "services/api"
-
 [tool.spec.proposal_review]
 auto_write = false         # default: explicit publication; true lets the agent write/publish before plan-accept
 
@@ -37,9 +33,8 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 
-from devkit_core.core import is_safe_relpath
 from devkit_dist.features.project.models.templates import TemplateKey, TemplateTable
 from devkit_dist.features.project.repositories.project import read_project_config
 
@@ -47,9 +42,6 @@ from devkit_spec.base.errors import SpecConfigError
 from devkit_spec.features.policy.models.config import SCOPE_TIMEOUT_DEFAULT, ScopeConfig
 
 TABLE = "spec"
-GLOBAL = "global"
-NAMESPACE_NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-PACKAGES_DIR = "docs/packages"
 SCOPE_NAMESPACE = re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9._-]*$")
 SCOPE_TIMEOUT_RANGE = (1, 300)
 WORKTREE_LEVELS = ("auto", "required")
@@ -68,18 +60,6 @@ FEEDBACK_CHOICES = {
 
 
 @dataclass(frozen=True)
-class Namespace:
-    """A package of the workspace: ``path`` is its source directory, ``docs`` its Living Spec root."""
-
-    name: str
-    path: str
-
-    @property
-    def docs(self) -> str:
-        return f"{PACKAGES_DIR}/{self.name}"
-
-
-@dataclass(frozen=True)
 class FeedbackConfig:
     """Repository-first observation policy consumed by the feedback skills through ``spec policy``."""
 
@@ -93,7 +73,6 @@ class FeedbackConfig:
 class SpecConfig:
     worktree: str = "auto"
     depth_escalation: str = "auto"
-    namespaces: tuple[Namespace, ...] = field(default=())
     scope: ScopeConfig = field(default=ScopeConfig())
     feedback: FeedbackConfig = field(default=FeedbackConfig())
 
@@ -120,25 +99,6 @@ def template() -> list[TemplateTable]:
                     kind=" | ".join(f'"{value}"' for value in DEPTH_ESCALATION),
                 ),
             ),
-        ),
-        TemplateTable(
-            (
-                TemplateKey(
-                    "name",
-                    help=f"lowercase words joined by -, not {GLOBAL!r}; its Living Spec is {PACKAGES_DIR}/<name>/",
-                    kind="string",
-                    example="api",
-                ),
-                TemplateKey(
-                    "path",
-                    help="the package's workspace-relative source directory",
-                    kind="string",
-                    example="services/api",
-                ),
-            ),
-            path=("namespaces",),
-            help="A package of a monorepo with its own Living Spec; one table per package.",
-            array=True,
         ),
         TemplateTable(
             (
@@ -204,7 +164,7 @@ def read_spec_config(root: Path) -> SpecConfig:
     table = tool.get(TABLE, {}) if isinstance(tool, dict) else None
     if not isinstance(table, dict):
         raise SpecConfigError("config tool.spec: expected a table")
-    unknown = sorted(set(table) - {"worktree", "depth_escalation", "namespaces", "scope", "feedback"})
+    unknown = sorted(set(table) - {"worktree", "depth_escalation", "scope", "feedback"})
     if unknown:
         raise SpecConfigError(f"config tool.spec: unknown keys: {', '.join(unknown)}")
     worktree = table.get("worktree", "auto")
@@ -216,7 +176,6 @@ def read_spec_config(root: Path) -> SpecConfig:
     return SpecConfig(
         worktree=worktree,
         depth_escalation=escalation,
-        namespaces=_namespaces(table.get("namespaces", [])),
         scope=_scope(table.get("scope", {})),
         feedback=_feedback(table.get("feedback", {})),
     )
@@ -276,28 +235,3 @@ def _scope(value: object) -> ScopeConfig:
     if isinstance(timeout, bool) or not isinstance(timeout, int) or not low <= timeout <= high:
         raise SpecConfigError(f"{where}.timeout: expected whole seconds from {low} to {high}, got {timeout!r}")
     return ScopeConfig(shared_path=shared_path, namespace=namespace, timeout=timeout)
-
-
-def _namespaces(value: object) -> tuple[Namespace, ...]:
-    if not isinstance(value, list):
-        raise SpecConfigError("config tool.spec.namespaces: expected an array of tables")
-    found: list[Namespace] = []
-    for position, entry in enumerate(value):
-        where = f"config tool.spec.namespaces[{position}]"
-        if not isinstance(entry, dict) or set(entry) != {"name", "path"}:
-            raise SpecConfigError(f"{where}: expected exactly the keys name and path")
-        name, path = entry["name"], entry["path"]
-        if not isinstance(name, str) or not NAMESPACE_NAME.match(name) or name == GLOBAL:
-            raise SpecConfigError(f"{where}: name must be lowercase words joined by - and not {GLOBAL!r}, got {name!r}")
-        if not isinstance(path, str) or not is_safe_relpath(path):
-            raise SpecConfigError(f"{where}: path must be a workspace-relative directory, got {path!r}")
-        if not is_safe_relpath(path, canonical=True):
-            canonical = PurePosixPath(path).as_posix()
-            raise SpecConfigError(
-                f"{where}: path must be in canonical form (no ./, //, or trailing /), got {path!r}",
-                fix=f"Write path = {canonical!r} in [[tool.spec.namespaces]] of .devkit/config.toml",
-            )
-        if any(other.name == name for other in found) or any(other.path == path for other in found):
-            raise SpecConfigError(f"{where}: name {name!r} or path {path!r} is already registered")
-        found.append(Namespace(name, path))
-    return tuple(found)

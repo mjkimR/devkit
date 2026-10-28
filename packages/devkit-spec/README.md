@@ -5,15 +5,18 @@ Spec-driven development for AI coding agents, built on [devkit](../../README.md)
 - the `spec` bundle (`devkit.bundles`): instructions, skills, workflows, rules, templates and an opt-in docs skeleton;
 - the `devkit spec` command group (`devkit.commands`), mounted under the project's `devkit` executable.
 
-Devkit provides asset distribution, rule/workflow/gate engines, document search, task worktrees and the Agent
-Advisory Protocol. This extension adds the Living Spec document model, namespaces, IDs and references, proposals,
-spec bundles, code entrypoints, scope registry and SDD guidance. Contracts start at `CAP-HARN-command-mount`
-and `CAP-HARN-agent-guidance`; repository documentation starts at [docs/README.md](../../docs/README.md).
+Devkit provides asset distribution, rule/workflow/gate engines, task worktrees and the Agent Advisory Protocol.
+[devkit-docs](../devkit-docs/README.md) provides the Living Spec document model (kinds, IDs, references,
+namespaces), the `devkit docs` commands and the document rules' implementations. This extension adds proposals,
+spec bundles, code entrypoints, scope registry, the lifecycle rules and SDD guidance; the `spec` bundle ships every
+rule asset, including the document rules, whose wrappers import devkit-docs (`ADR-document-package`). Contracts
+start at `CAP-HARN-command-mount` and `CAP-HARN-agent-guidance`; repository documentation starts at
+[docs/README.md](../../docs/README.md).
 
 ## Use in a project
 
-Install from this monorepo's package subdirectory. uv resolves devkit-agt (the harness it builds on), devkit-dist,
-devkit-core, devkit-cli and devkit-advisory from the same commit. devkit-spec does not depend on devkit-mcp and
+Install from this monorepo's package subdirectory. uv resolves devkit-docs (the document layer it builds on),
+devkit-agt (the harness), devkit-dist, devkit-core, devkit-cli and devkit-advisory from the same commit. devkit-spec does not depend on devkit-mcp and
 registers no MCP service: proposal acceptance and handoff run through the `devkit spec proposal` CLI (the optional
 shared artifact tools are in [MCP runtime](../../guides/install/mcp.md)):
 
@@ -29,7 +32,8 @@ package index; add the matching `devkit-mcp` wheel only for the optional shared 
 [Releasing](../../README.md#releasing).
 
 A project opts out of the bundle with `[presets] spec = false` in `.devkit/config.toml`. `uv run devkit config
-template` writes the supported keys as commented defaults, including this extension's `[tool.spec]` tables.
+template` writes the supported keys as commented defaults, including this extension's `[tool.spec]` tables
+(worktree, depth escalation, scope and feedback) and devkit-docs' `[tool.docs]` namespaces.
 
 ## Development
 
@@ -68,11 +72,11 @@ The command writes and repairs nothing. See `CAP-DLV-delivery-workflows`.
 
 ## Package structure
 
-`bundles/spec/bundle/` contains distributable agent assets. Runtime behavior lives in `features/`, grouped by documents,
-proposals, scope, entrypoints, worker inspection, delivery integration, policy and governance. Each feature keeps
+`bundles/spec/bundle/` contains distributable agent assets. Runtime behavior lives in `features/`, grouped by proposals,
+scope, entrypoints, worker inspection, delivery integration, policy and governance (the lifecycle rules). Each feature keeps
 its CLI and MCP adapters beside its use cases, services, repositories and models; only layers the feature needs
 are present. `cli.py` composes the command group. `base/errors.py` owns shared advisory contracts,
-`adapters/cli.py` holds the sentinel output the commands share, and `utils/paging.py` the paging of listings.
+and `adapters/cli.py` holds the sentinel output the commands share.
 
 CLI and MCP execution entrypoints implement `devkit_core.base.usecase.BaseUseCase` with a typed
 `execute` method. Internal parsing, rendering and composition helpers remain functions. Constructors wire

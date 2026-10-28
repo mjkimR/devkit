@@ -41,9 +41,9 @@ A `session` task follows its workflow's completion conditions; do not abandon re
 
 Before deleting a source proposal or reporting completion, find concrete work the roadmap or final scope explicitly retains for later.
 
-1. Track each item as feedback (`/spec-feedback`) by default, or as a draft proposal when concrete: update a matching open `PROP-...` (`devkit spec search "<topic>" --kind proposal`), else run `devkit spec proposal new <slug>`.
+1. Track each item as feedback (`/spec-feedback`) by default, or as a draft proposal when concrete: update a matching open `PROP-...` (`devkit docs search "<topic>" --kind proposal`), else run `devkit spec proposal new <slug>`.
 2. Record the source, remaining scope, reason, restart conditions and expected acceptance checks.
 3. Cite the destination `FB-...` or `PROP-...` by full ID in `reconcile.md` (a session: its final report). A future-work paragraph in a capability document is no handoff.
-4. Confirm the destination exists with `devkit spec list feedback` or `devkit spec list proposal`.
+4. Confirm the destination exists with `devkit docs list feedback` or `devkit docs list proposal`.
 
 Never move required criteria or defects still in the agreed scope to a follow-up to claim completion.

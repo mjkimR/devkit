@@ -3,7 +3,7 @@
 ## 1. Overview
 
 A capability or use case may declare `entrypoints` in its frontmatter: the files and directories where its
-implementation starts. They are anchors for finding the code (`devkit spec list capability --file <path>` finds the
+implementation starts. They are anchors for finding the code (`devkit docs list capability --file <path>` finds the
 documents that own a path), not a complete list of the implementation and not proof that the code implements the
 document. The rule keeps every declared path alive, so an agent following an entrypoint never lands on nothing.
 

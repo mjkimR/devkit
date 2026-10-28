@@ -14,7 +14,7 @@ Read this for a workflow stage sweep, a Planning run's return or a user-requeste
 ## Procedure
 
 1. **Collect** unrecorded observations from this session and `git diff`.
-2. **Deduplicate** against `devkit spec list feedback --status open --all-namespaces -n 0`: a candidate with a listed
+2. **Deduplicate** against `devkit docs list feedback --status open --all-namespaces -n 0`: a candidate with a listed
    file's `target` and the same nature is a duplicate. Skip it and keep the listed ID.
 3. **Record** each remaining observation with the skill's recording procedure.
 4. **Report by entry**:

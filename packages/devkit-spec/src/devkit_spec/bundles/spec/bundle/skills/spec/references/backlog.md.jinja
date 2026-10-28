@@ -25,8 +25,8 @@ A decomposer `needs_input` on an `XL` draft means it was mis-sized: show the use
 `triage` (the `feedback-hygiene` playbook, Step 1) and `decomposer` are read-only: they return a message, recorded in no envelope, and the Host applies only what the user decides.
 
 1. **Before**: the checkout is clean (`git status --porcelain` empty); on a dirty one, delegate from a clean task worktree or stay inline. For the `decomposer`, `devkit spec proposal check <slug>` passes on the base and a Planning return is merged first; pass the base HEAD as `diff_scope.head`.
-2. **After**: `git status --porcelain` is still empty (`spec-delegate` step 4). Before applying a split, `git diff <head> -- docs/proposals/PROP-<slug>` is empty and `devkit spec refs PROP-<slug> --direction in -n 0` is unchanged; a change in either sends the draft back to the role or inline.
-3. **IDs**: every existing ID the return cites resolves with `devkit spec resolve`, or drop it and report it; a proposed child or milestone slug must not resolve. Write edges to children after the children exist, in the same commit.
+2. **After**: `git status --porcelain` is still empty (`spec-delegate` step 4). Before applying a split, `git diff <head> -- docs/proposals/PROP-<slug>` is empty and `devkit docs refs PROP-<slug> --direction in -n 0` is unchanged; a change in either sends the draft back to the role or inline.
+3. **IDs**: every existing ID the return cites resolves with `devkit docs resolve`, or drop it and report it; a proposed child or milestone slug must not resolve. Write edges to children after the children exist, in the same commit.
 4. **Apply** with the existing procedures: `feedback-hygiene` Steps 2 and 3; `proposal new --decomposed-from` (with `--milestone`), `devkit spec proposal padr` and a materials copy for each inherited item the user keeps, the prerequisite disposition and the feedback retirement. Never assign the parent's open feedback to a child.
 5. **Record**: the Backlog commit body names the role used. Gates and milestone status changes stay with the user.
 
@@ -60,7 +60,7 @@ When the user picks a queued draft whose work needs nothing settled first, the H
 
 Before splitting, superseding, rejecting, deleting or reclassifying a proposal:
 
-1. Run `devkit spec refs PROP-<slug> --direction in -n 0` and inspect `depends_on` on each live incoming unit; leave completed ones unchanged.
+1. Run `devkit docs refs PROP-<slug> --direction in -n 0` and inspect `depends_on` on each live incoming unit; leave completed ones unchanged.
 2. With the user, replace each edge with the required child/successor set, or remove it only when the prerequisite is explicitly waived. Never infer successors from `decomposed_from` or `supersedes`; rejection or deletion fulfills nothing.
 3. Commit the disposition in the same authorized change. If a dependent lies outside your write scope, stop and ask the Host to coordinate.
 

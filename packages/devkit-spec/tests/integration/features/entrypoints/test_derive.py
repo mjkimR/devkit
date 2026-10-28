@@ -4,10 +4,11 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
+from devkit_docs.base.errors import EntrypointsPathError
 from spec_support.entrypoints import BUNDLE, CAP, documents, fixture
 from spec_support.types import Write
 
-from devkit_spec.base.errors import EntrypointsInputInvalidError, EntrypointsInputMissingError, EntrypointsPathError
+from devkit_spec.base.errors import EntrypointsInputInvalidError, EntrypointsInputMissingError
 from devkit_spec.features.entrypoints import (
     Target,
     adopt_nested_selectors,
@@ -45,7 +46,7 @@ def test_normalize(value: str, expected: str) -> None:
 def test_normalize_rejects(value: str) -> None:
     with pytest.raises(EntrypointsPathError) as raised:
         normalize(value)
-    assert raised.value.code == "SPEC_ENTRYPOINTS_PATH_INVALID"
+    assert raised.value.code == "DOCS_ENTRYPOINTS_PATH_INVALID"
 
 
 def test_covers_and_overlaps_compare_whole_segments() -> None:

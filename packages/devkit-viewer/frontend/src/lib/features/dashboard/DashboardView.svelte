@@ -238,7 +238,7 @@
 					</li>
 					<li>
 						<strong>Recommended CLI commands:</strong>
-						`uv run devkit spec list`, `uv run devkit workflow next`.
+						`uv run devkit docs list`, `uv run devkit workflow next`.
 					</li>
 				</ul>
 			</div>

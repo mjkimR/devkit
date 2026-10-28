@@ -8,7 +8,7 @@ handed-off ``PROP-<slug>`` maps to exactly one ``SPEC-<slug>``.
 project has it. ``workflow`` records that binding. ``task_kind`` (``feature`` or ``bugfix``) is the
 provisional ``task-kind`` the proposal is confirmed with at ``plan-accept``; the spec follows ``sdd-spec-<task_kind>``
 after handoff. ``supersedes`` names the accepted proposal a close by supersede replaces, and ``needs_decompose: true``
-marks a draft Backlog splits before Planning starts. ``namespace`` names the document namespace (``devkit_spec.features.documents.services.namespaces``) the bundle
+marks a draft Backlog splits before Planning starts. ``namespace`` names the document namespace (``devkit_docs.features.documents.services.namespaces``) the bundle
 belongs to; without it the bundle is global, and handoff carries it to ``spec.md``. ``summary`` is the one or two
 English sentences ``RULE-document-summary`` requires of ``proposal.md``; handoff carries it to ``spec.md``, and a
 PADR's ``summary`` stays in its promoted ADR.
@@ -28,6 +28,11 @@ from devkit_core.base.usecase import BaseUseCase
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse, scalar
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
+from devkit_docs.features.documents import DocumentIndex
+from devkit_docs.features.documents.models.namespace import GLOBAL
+from devkit_docs.features.documents.repositories.config import read_docs_config
+from devkit_docs.features.documents.services.namespaces import detect, require
+from devkit_docs.utils.text import foreign_letters
 
 from devkit_spec.base.axes import (
     DEFAULT_EFFORT,
@@ -50,12 +55,8 @@ from devkit_spec.base.errors import (
     SpecError,
 )
 from devkit_spec.base.units import PROPOSAL_FILE, PROPOSALS, TARGET_DOCS, proposal_unit
-from devkit_spec.features.documents import DocumentIndex
-from devkit_spec.features.documents.services.namespaces import detect, require
 from devkit_spec.features.policy.repositories.branches import SLUG_LIMIT, planning_branch_elsewhere
-from devkit_spec.features.policy.services.config import GLOBAL, read_spec_config
 from devkit_spec.features.proposals.usecases.binding import resolve_binding, unbound_guidance
-from devkit_spec.utils.text import foreign_letters
 
 DECISIONS = "decisions"
 MATERIALS = "materials"
@@ -174,7 +175,7 @@ def _check_superseded(root: Path, proposal_id: str | None) -> None:
         raise ProposalNotFoundError(
             f"--supersedes {proposal_id}: no proposal at {rel}",
             target_files=["--supersedes"],
-            fix=f"Pass --supersedes the PROP- ID of the accepted proposal this draft replaces ({DEVKIT} spec list proposal"
+            fix=f"Pass --supersedes the PROP- ID of the accepted proposal this draft replaces ({DEVKIT} docs list proposal"
             " shows them)",
         )
     try:
@@ -193,22 +194,22 @@ def _check_superseded(root: Path, proposal_id: str | None) -> None:
 
 
 def known_namespaces(root: Path) -> list[str]:
-    """``global`` and the namespaces registered in the project at ``root`` (``SpecConfigError`` when malformed)."""
-    return [GLOBAL, *(namespace.name for namespace in read_spec_config(root).namespaces)]
+    """``global`` and the namespaces registered in the project at ``root`` (``DocsConfigError`` when malformed)."""
+    return [GLOBAL, *(namespace.name for namespace in read_docs_config(root).namespaces)]
 
 
 def bundle_namespace(root: Path, namespace: str | None, cwd: Path | None) -> tuple[str | None, str | None]:
     """The ``namespace`` field a new bundle gets (``None``: no field) and the namespace it reports.
 
     An explicit ``namespace`` must be ``global`` or registered in the project at ``root``. Without one, the bundle
-    takes the namespace ``cwd`` lies in (``devkit_spec.features.documents.services.namespaces.detect``), none outside every package or without
+    takes the namespace ``cwd`` lies in (``devkit_docs.features.documents.services.namespaces.detect``), none outside every package or without
     ``cwd``. The reported namespace is the field, else ``global`` in a project that registers namespaces, else
-    ``None``. Raises ``ArgumentError`` (``--namespace``) for an unregistered name, and ``SpecConfigError`` for a
-    malformed ``[tool.spec]`` table unless the name is ``global``.
+    ``None``. Raises ``ArgumentError`` (``--namespace``) for an unregistered name, and ``DocsConfigError`` for a
+    malformed ``[tool.docs]`` table unless the name is ``global``.
     """
     if namespace == GLOBAL:
         return GLOBAL, GLOBAL
-    namespaces = read_spec_config(root).namespaces
+    namespaces = read_docs_config(root).namespaces
     if namespace is not None:
         written: str | None = require(namespaces, namespace)
     else:

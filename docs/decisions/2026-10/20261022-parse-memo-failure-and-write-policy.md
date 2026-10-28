@@ -67,6 +67,7 @@ meets the identity, silence and no-wait drivers; a lost update only costs a late
 - Negative: concurrent writers can drop each other's new entries; the next load parses those files again and writes.
 - Negative: a process killed between the temporary write and the rename leaves a temporary file in
   `.devkit/transient/spec/`, ignored by Git; `atomic_write_bytes` removes it on every error it sees.
+  Superseded in part by `ADR-document-package`: the directory is `.devkit/transient/docs/`.
 
 ## 6. Confirmation
 

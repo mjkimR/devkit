@@ -8,9 +8,8 @@ import tomllib
 
 import pytest
 from devkit_core.core import frontmatter
+from devkit_docs.utils.text import foreign_letters
 from spec_support.bundle_text import BUNDLE, flat, raw, text
-
-from devkit_spec.utils.text import foreign_letters
 
 ROLES = sorted(path.name.removesuffix(".jinja") for path in (BUNDLE / "subagents").glob("*.md*"))
 OLD_PATHS = ("docs/glossary.md", "docs/glossary.yaml", "../glossary.md")

@@ -73,7 +73,7 @@ pins the commit. Declare exactly one devkit requirement:
 ```bash
 # the full harness (the default): distribution plus rules, commit gates, workflows, worktrees and devkit run
 uv add --no-build-package pyyaml --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
-# or the harness plus spec-driven delivery (brings devkit-agt from the same commit; declare it instead of devkit-agt)
+# or the harness plus spec-driven delivery (brings devkit-docs and devkit-agt from the same commit; declare it instead of devkit-agt)
 uv add --no-build-package pyyaml --dev "devkit-spec @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-spec"
 # or distribution only, when the user wants agent assets without rules, gates or workflows
 uv add --no-build-package pyyaml --dev "devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist"
@@ -87,8 +87,9 @@ uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibY
   for distribution without the harness: it deploys the `devkit` and `advisory` bundles and has no `devkit rules`,
   `devkit gate`, `devkit workflow` or `devkit run` (they fail with `HARNESS_COMMAND_UNAVAILABLE`). Adding the harness
   later replaces the `devkit-dist` requirement with the `devkit-agt` one in the same dependency group.
-- `devkit-spec` brings `devkit-agt` and the auto-selected `spec` bundle: the `/spec` entry skill, the spec-driven
-  delivery workflows (with the generated `devkit-workflow` skill) and the `devkit spec` commands. Declare it only when
+- `devkit-spec` brings `devkit-docs` (the `devkit docs` commands and the document model), `devkit-agt` and the
+  auto-selected `spec` bundle: the `/spec` entry skill, the spec-driven delivery workflows (with the generated
+  `devkit-workflow` skill) and the `devkit spec` commands. Declare it only when
   the user wants spec-driven delivery ([Bundle Recommendations](install/bundle-recommendations.md) lists the
   evidence); never declare `devkit-agt` next to it.
 - `devkit-catalog` (optional) adds opt-in bundles that deploy nothing until selected; add it only when a
@@ -105,7 +106,8 @@ uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader'), 'PyYAML LibY
   `devkit-dist`, `devkit-core`, `devkit-cli` and `devkit-advisory` wheels of that release. Never mix Git and wheel sources for these packages.
 - Upgrading later, when the requirement names no ref (the commands above): `uv lock --upgrade-package devkit-agt
   --upgrade-package devkit-dist --upgrade-package devkit-core --upgrade-package devkit-cli --upgrade-package
-  devkit-advisory` (plus `--upgrade-package devkit-spec` and `--upgrade-package devkit-catalog` when declared), then
+  devkit-advisory` (plus `--upgrade-package devkit-spec --upgrade-package devkit-docs` when `devkit-spec` is declared, and
+  `--upgrade-package devkit-catalog` when declared), then
   `uv sync` and `uv run devkit sync`.
 - Upgrading a pinned requirement: when `pyproject.toml` pins a ref (`rev = ...` under `[tool.uv.sources]`, or
   `@<ref>` in the Git URL), `uv lock --upgrade-package` keeps the pinned commit and changes nothing. Re-declare each

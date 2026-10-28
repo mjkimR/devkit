@@ -190,7 +190,7 @@ sequence.
     proposed for a session, the proposal advises `spec` depth for work that creates or changes a contract or a
     document kind and `proposal` depth for work that reverses an accepted decision. Proposal Planning runs
     questions only at `low`, one `challenger` pass at `medium` (a `scout` when the direction needs evidence) and, at
-    `high`, two or more options compared, a `scout` starting from `devkit spec refs <ID> --direction in` for each
+    `high`, two or more options compared, a `scout` starting from `devkit docs refs <ID> --direction in` for each
     capability and ADR the proposal touches, then `challenger` rounds of the same loop. A proposal scaffolds
     non-authoritative `planning_effort` and `dev_effort` hints (`low` | `medium` | `high`, default `medium`) in
     `proposal.md`: `planning_effort` is proposed with `plan-intent` and pre-fills Planning start, `dev_effort` is

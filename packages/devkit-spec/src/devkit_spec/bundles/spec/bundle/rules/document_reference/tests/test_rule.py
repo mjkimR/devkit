@@ -136,7 +136,7 @@ def _owners(violations: list[Violation]) -> list[tuple[str, int, str]]:
 
 
 def test_glossary_owner_resolution_without_indexing_or_autofix(tmp_path: Path) -> None:
-    from devkit_spec.features.documents import DocumentIndex
+    from devkit_docs.features.documents import DocumentIndex
 
     glossary = _GLOSSARY_HEADER + (
         "| one | definition | `CAP-A-valid`, [ADR-missing] | | |\n"
@@ -402,7 +402,7 @@ def test_the_old_glossary_path_is_no_longer_read(tmp_path: Path) -> None:
 
 
 def test_ids_cited_in_steering_files_resolve_without_fixes_or_edges(tmp_path: Path) -> None:
-    from devkit_spec.features.documents import DocumentIndex
+    from devkit_docs.features.documents import DocumentIndex
 
     product = (
         "---\ntitle: Product\nsummary: Read before naming a feature.\n---\n"

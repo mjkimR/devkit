@@ -17,9 +17,9 @@ Read this when building a payload (`spec-delegate` step 2).
 | `challenger` | Proposal or spec, AC, non-goals, ADRs and capabilities as paths; at `high` the `scout` list | `activity-effort` |
 | `code-reviewer` | `spec.md`, `plan.md`, `tasks.md`, touched capabilities and ADRs | Your check results; `activity-effort`; an ignored probe path inside the worktree for throwaway probe tests, preparing one if none exists, and this round's own subdirectory of it (for example `<probe path>/review-NN/`) |
 | `ux-reviewer` | The Screens drafts (`spec.md` or `target-docs.md`), the use cases they list, `docs/steering/ux-objects.md` when it exists, the linked Evidence | The round number (at most two) and the earlier round's envelope; the last commit, stating any uncommitted draft |
-| `triage` | The open-feedback listing (`devkit spec list feedback --status open --all-namespaces -n 0`) or the subset the user named | The clean base HEAD as `diff_scope.head` |
-| `decomposer` | The draft's directory (`proposal.md`, `target-docs.md`, `decisions/`, `envelopes/`, `materials/`) and its `devkit spec refs PROP-<slug> --direction in -n 0` listing | The clean base HEAD as `diff_scope.head`; the trigger (`needs_decompose`, the user's request, `size: XL`); the parent's milestone; edges the user waived |
-| `reconcile-reviewer` | `spec.md`, `reconcile.md`, the deciding review envelope, the docs `devkit spec refs <ID> --direction in` lists | `activity-effort` |
+| `triage` | The open-feedback listing (`devkit docs list feedback --status open --all-namespaces -n 0`) or the subset the user named | The clean base HEAD as `diff_scope.head` |
+| `decomposer` | The draft's directory (`proposal.md`, `target-docs.md`, `decisions/`, `envelopes/`, `materials/`) and its `devkit docs refs PROP-<slug> --direction in -n 0` listing | The clean base HEAD as `diff_scope.head`; the trigger (`needs_decompose`, the user's request, `size: XL`); the parent's milestone; edges the user waived |
+| `reconcile-reviewer` | `spec.md`, `reconcile.md`, the deciding review envelope, the docs `devkit docs refs <ID> --direction in` lists | `activity-effort` |
 | `development-worker` | `spec.md`, `plan.md`, `tasks.md` and the code starting points | Absolute worktree path; write scope (unit directory, `_Boundary:` paths, reconcile targets); checks to run; `activity-effort`; a recovery request for an open problem |
 | `planning-worker` | The proposal bundle and starting points | Absolute worktree path; the proposal directory as write scope; `activity-effort`; the user's rewritten answers |
 

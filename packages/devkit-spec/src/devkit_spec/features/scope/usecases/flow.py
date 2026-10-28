@@ -314,7 +314,7 @@ def _register_guidance(root: Path) -> tuple[str, tuple[str, ...]]:
     )
     if len(bundles) == 1:
         return f"register with `{DEVKIT} spec scope register --spec {bundles[0]}`", ()
-    listing = devkit_command("spec list spec --history")
+    listing = devkit_command("docs list spec --history")
     if bundles:
         return (
             f"register with `{DEVKIT} spec scope register --spec` and the bundle in [DETAIL] this worktree works on",

@@ -124,7 +124,7 @@ describe('DashboardView', () => {
 		);
 		expect(aiSection).not.toBeNull();
 		expect(aiSection?.textContent).toContain('Project SDD Dashboard');
-		expect(aiSection?.textContent).toContain('uv run devkit spec list');
+		expect(aiSection?.textContent).toContain('uv run devkit docs list');
 	});
 
 	it('calls onNavigate callback when clicking a card or action button', async () => {

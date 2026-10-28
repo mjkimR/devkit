@@ -39,6 +39,10 @@ observed
 """
 
 
+def _docs(root: Path, *args: str) -> Result:
+    return CliRunner().invoke(devkit_cli, ["docs", *args, "-w", str(root)])
+
+
 def _spec(root: Path, *args: str) -> Result:
     return CliRunner().invoke(devkit_cli, ["spec", *args, "-w", str(root)])
 
@@ -68,7 +72,7 @@ def _repo(tmp_path: Path) -> Path:
 def test_a_split_keeps_provenance_rewires_the_edge_and_retires_the_feedback(tmp_path: Path) -> None:
     root = _repo(tmp_path)
     assert _spec(root, "proposal", "check", "wide").exit_code == 0
-    incoming = json.loads(_spec(root, "refs", "PROP-wide", "--direction", "in", "-n", "0", "--format", "json").stdout)
+    incoming = json.loads(_docs(root, "refs", "PROP-wide", "--direction", "in", "-n", "0", "--format", "json").stdout)
     assert "PROP-later" in json.dumps(incoming)
 
     taken = root / "docs/proposals/PROP-taken/proposal.md"
@@ -94,11 +98,11 @@ def test_a_split_keeps_provenance_rewires_the_edge_and_retires_the_feedback(tmp_
     shutil.rmtree(root / "docs/proposals/PROP-wide")  # the emptied feedback/ directory
 
     assert _meta(later)["depends_on"] == ["PROP-wide-core"]
-    assert _spec(root, "resolve", "PROP-wide-core").exit_code == 0
+    assert _docs(root, "resolve", "PROP-wide-core").exit_code == 0
     moved = _meta(target)
     assert (moved["id"], moved["status"]) == ("FB-wide-observation", "open")
     assert not list((root / "docs/proposals").glob("PROP-wide-*/feedback/*.md"))
-    resolved = _spec(root, "resolve", "FB-wide-observation")
+    resolved = _docs(root, "resolve", "FB-wide-observation")
     assert resolved.exit_code == 0 and "specs/2026-10/feedback/20261026-wide-observation.md" in resolved.stdout
     assert not (root / "docs/proposals/PROP-wide").exists()
     for child in ("wide-core", "wide-viewer"):  # provenance survives the parent's deletion

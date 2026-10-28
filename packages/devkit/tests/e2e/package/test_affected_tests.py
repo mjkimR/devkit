@@ -127,6 +127,7 @@ def test_docs_select_the_tests_that_read_them(affected: ModuleType) -> None:
     assert selection.paths == tuple(
         sorted(
             (
+                "packages/devkit-docs/tests/integration/package/test_documented_codes.py",
                 "packages/devkit-spec/tests/integration/package/test_documented_codes.py",
                 f"{TESTS}/integration/features/rules/test_docs.py",
                 f"{TESTS}/integration/package/test_documented_codes.py",
@@ -259,7 +260,7 @@ def test_list_prints_the_selection_without_running(
     affected: ModuleType, monkeypatch: pytest.MonkeyPatch, command: list[list[str]]
 ) -> None:
     lines = invoke(affected, monkeypatch, ["docs/x.md"], "--list", "--base", "dev")
-    assert lines[0] == "[TEST_SELECTION: mode=partial base=dev changed=1 paths=4 reason=docs/]"
+    assert lines[0] == "[TEST_SELECTION: mode=partial base=dev changed=1 paths=5 reason=docs/]"
     assert lines[1:] == [f"[TEST_PATH: {path}]" for path in affected.select(ROOT, ["docs/x.md"]).paths]
     assert command == []
 

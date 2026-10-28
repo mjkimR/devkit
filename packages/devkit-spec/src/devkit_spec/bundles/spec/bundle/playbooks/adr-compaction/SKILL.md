@@ -14,7 +14,7 @@ run.
 
 ## Step 1: Group
 
-Read every ADR in scope, superseded ones included (`uv run devkit spec list decision --history -n 0`).
+Read every ADR in scope, superseded ones included (`uv run devkit docs list decision --history -n 0`).
 
 - A group holds the supersession closure of its members (`supersedes`, `superseded_by` in frontmatter; these are not
   in the reference graph) plus ADRs on the same topic. It has two or more members.
@@ -42,13 +42,13 @@ Write `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, dated today, from `.devki
 3. Correct every path, test and rule ID in a replacement's Confirmation section that no longer exists; write "Review
    only" when no check exists.
 4. Fidelity review: compare each replacement with its members (`git show <base>:<path>`) and their incoming references
-   (`devkit spec refs <ID> --direction in`). If an in-effect statement is missing, altered or untraceable, return to
+   (`devkit docs refs <ID> --direction in`). If an in-effect statement is missing, altered or untraceable, return to
    Step 2 or take the member out of the group.
 
 ## Completion conditions
 
 - `uv run devkit rules check` exits `0`.
-- `uv run devkit spec resolve <ID>` prints the replacement with `alias=<ID>` for every deleted ID
+- `uv run devkit docs resolve <ID>` prints the replacement with `alias=<ID>` for every deleted ID
   (`git diff --no-renames --name-only --diff-filter=D <base> -- docs/decisions/`), and no remaining `supersedes` or
   `superseded_by` names one.
 - One commit holds the replacements, deletions and rewrites; its body and the report to the user carry the group map,

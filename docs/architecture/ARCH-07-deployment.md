@@ -25,6 +25,7 @@ GitHub Release Assets (vX.Y.Z):
 ├── devkit_core-X.Y.Z-py3-none-any.whl
 ├── devkit_cli-X.Y.Z-py3-none-any.whl
 ├── devkit_mcp-X.Y.Z-py3-none-any.whl
+├── devkit_docs-X.Y.Z-py3-none-any.whl
 ├── devkit_spec-X.Y.Z-py3-none-any.whl
 ├── devkit_starter-X.Y.Z-py3-none-any.whl
 ├── devkit_catalog-X.Y.Z-py3-none-any.whl
@@ -41,7 +42,7 @@ In consumer projects managed with `uv`, devkit is declared either via release wh
 uv add --dev "devkit-agt @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit"
 # Or distribution only (no harness commands or guidance), never next to devkit-agt:
 uv add --dev "devkit-dist @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-dist"
-# Optional SDD extension; uv uses the same monorepo for its base dependencies:
+# Optional SDD extension; uv brings devkit-docs and its base dependencies from the same monorepo:
 uv add --dev "devkit-spec @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-spec"
 # Optional local viewer; its page is committed, so installing from Git needs no Node:
 uv add --dev "devkit-viewer @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-viewer"
@@ -58,7 +59,7 @@ The version source and generated metadata policy is `ADR-single-release-version`
 `uv tool install <devkit-dist requirement> --with <devkit-agt requirement>` (`ARCH-05-3-command-plugins`). The viewer's Svelte library is not a release asset: a host such as autohub
 vendors its `npm pack` tarball from a pinned commit (`CAP-VIEW-repository-viewer`). Release-wheel installations
 name every required local package wheel explicitly (a `devkit-agt` installation names the `devkit-dist`, `devkit-core`,
-`devkit-cli` and `devkit-advisory` wheels too; `devkit-spec` also names `devkit-mcp`); release notes include the harness, distribution-only, SDD, viewer and tool installation
+`devkit-cli` and `devkit-advisory` wheels too; `devkit-spec` also names `devkit-docs` and `devkit-mcp`); release notes include the harness, distribution-only, SDD, viewer and tool installation
 commands, and the runtime-only `devkit-advisory` and `devkit-cli` (with `devkit-advisory`) installations.
 
 Python runtime YAML reads require PyYAML's `yaml.CSafeLoader`; package dependency metadata does not guarantee that optional binding. For uv-managed environments, install PyYAML without building it from source with `uv add --no-build-package pyyaml ...` or `uv tool install --no-build-package pyyaml ...`. A compatible binary wheel needs no system LibYAML development headers. Installation guidance then checks the active interpreter with `uv run python -c "import yaml; assert hasattr(yaml, 'CSafeLoader')"`; runtime availability is authoritative, and a missing binding raises `YAML_BINDING_UNAVAILABLE` with exit `2` at the first YAML read. This check does not guarantee support for every operating system or Python build.

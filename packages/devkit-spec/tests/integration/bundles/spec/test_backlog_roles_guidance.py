@@ -39,7 +39,7 @@ def test_the_decomposer_runs_from_backlog_only_and_the_host_verifies_and_applies
         "the checkout is clean (`git status --porcelain` empty)",
         "`git status --porcelain` is still empty (`spec-delegate` step 4)",
         "`git diff <head> -- docs/proposals/PROP-<slug>` is empty",
-        "every existing ID the return cites resolves with `devkit spec resolve`",
+        "every existing ID the return cites resolves with `devkit docs resolve`",
         "a proposed child or milestone slug must not resolve",
         "Never assign the parent's open feedback to a child",
         "the Backlog commit body names the role used",

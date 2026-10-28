@@ -32,7 +32,8 @@ For cumulative branch verification before integration, also run `just rules-chec
 The consumer smoke first installs the `devkit-dist` wheel alone (distribution-only sync, the coded answers to harness
 command names and to rule assets no engine runs, one owner of the `devkit` executable) and a `uv tool install` of
 `devkit-dist` with `devkit-agt`, then installs the base packages, preserving their independent coverage, then installs the
-`devkit-spec` wheel and checks command mounting, opt-in docs seeding and seeded document discovery, and finally
+`devkit-spec` and `devkit-docs` wheels and checks that `devkit spec` and `devkit docs` mount, opt-in docs seeding and
+seeded document discovery, and finally
 installs the `devkit-viewer` wheel, starts `devkit viewer serve` for the consumer project and fetches its bundled
 page, a script and `/api/repos`.
 

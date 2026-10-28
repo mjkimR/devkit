@@ -3,7 +3,7 @@
 ## 1. Overview
 
 `summary` is one or two English sentences in a document's frontmatter saying what the document defines. It is the
-main signal of `devkit spec search`: the embedding model reads a document's ID and summary, while the title and the
+main signal of `devkit docs search`: the embedding model reads a document's ID and summary, while the title and the
 body, in any language, are ranked lexically only. A short English summary lets English queries find documents written
 in another language.
 

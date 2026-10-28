@@ -72,6 +72,7 @@ DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
         "docs/",
         (
             f"{DEVKIT}/tests/integration/package/test_documented_codes.py",
+            "packages/devkit-docs/tests/integration/package/test_documented_codes.py",
             "packages/devkit-spec/tests/integration/package/test_documented_codes.py",
             f"{DEVKIT}/tests/integration/features/rules/test_docs.py",
             f"{DEVKIT}/tests/integration/features/workflow/test_library.py",

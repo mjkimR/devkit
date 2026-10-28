@@ -31,7 +31,7 @@ description: Read before authoring, editing or reviewing docs/ or specs/ documen
 ## Summaries
 
 - Write `summary` as one or two English sentences that state the subject and its boundary for a reader who has never
-  seen the document, because `devkit spec search` finds documents by it. Skip status, history and boilerplate
+  seen the document, because `devkit docs search` finds documents by it. Skip status, history and boilerplate
   ("This document describes ..."). Titles and bodies may use any language.
 - Rewrite the summary whenever the document's contract changes.
 - Write it as a double-quoted YAML string (`summary: "..."`): an unquoted value containing `: ` or starting with a

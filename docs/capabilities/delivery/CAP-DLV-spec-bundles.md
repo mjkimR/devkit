@@ -100,7 +100,7 @@ devkit spec new <slug> [--title/-t TEXT] [--summary TEXT] [--workflow <id>] [--n
 | `--title/-t` | Spec title (default: the slug). |
 | `--summary` | Write `summary: <text>` into `spec.md`: one or two English sentences saying what the spec defines. After stripping surrounding whitespace, empty, longer than 300 characters, or containing a letter outside the Latin script: `ARGUMENT_INVALID` (`[TARGET] --summary`), nothing written. |
 | `--workflow` | Workflow `spec.md` is bound to (default `sdd-spec-feature`; `sdd-spec-bugfix` writes `spec.md` only). |
-| `--namespace` | Write `namespace: <name>`: `global` or a namespace registered in `[[tool.spec.namespaces]]`, else `ARGUMENT_INVALID` with the valid names in `[FIX]`. Omitted: the namespace of the current directory, if any (rule 7). |
+| `--namespace` | Write `namespace: <name>`: `global` or a namespace registered in `[[tool.docs.namespaces]]`, else `ARGUMENT_INVALID` with the valid names in `[FIX]`. Omitted: the namespace of the current directory, if any (rule 7). |
 | `--date` | Bundle date (default: today): the directory name and `created`. |
 
 ```bash
@@ -179,4 +179,4 @@ before anything is written; `DEFAULT_WORKFLOW` is `sdd-spec-feature`, `BUGFIX_WO
 | `SPEC_WRITE_FAILED` | `ERROR` (`MAINTENANCE`) | `SpecWriteError` | A write failed; what was written is removed. When the roll-back was incomplete, `[DETAIL]` lists what could not be removed. |
 | `SPEC_UNBOUND` | `NOTICE` | `SpecUnboundNotice` | No `--workflow` and `sdd-spec-feature` is not available: `spec.md` is unbound. |
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | devkit's `ArgumentError` | `--namespace` is neither `global` nor registered, or stripped `--summary` is empty, longer than 300 characters or not English. |
-| `SPEC_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `SpecConfigError` | `[tool.spec]` is malformed and the namespace is not `--namespace global` (it is validated or detected; `CAP-DLV-project-policy`). |
+| `DOCS_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_docs.base.errors.DocsConfigError` | `[tool.docs]` is malformed and the namespace is not `--namespace global` (it is validated or detected; `CAP-DOCS-namespaces`). |

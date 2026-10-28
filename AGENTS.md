@@ -68,6 +68,7 @@ Each package's README describes its modules; `docs/capabilities/<area>/` holds t
 | `devkit-mcp` | Optional MCP transport and registration provider |
 | `devkit-cli` | Agent-first command-line boundary (`devkit_cli`) |
 | `devkit-advisory` | Agent Advisory Protocol library (`devkit.advisory`) |
+| `devkit-docs` | Document system: document model, `devkit docs` commands, document rules |
 | `devkit-spec` | Spec-driven delivery commands and agent assets |
 | `devkit-starter` | Example external content package |
 | `devkit-catalog` | Opt-in content bundles |

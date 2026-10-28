@@ -15,8 +15,6 @@ import click
 
 from devkit_spec.features.delivery.cli.proposals import proposal_group
 from devkit_spec.features.delivery.cli.specs import spec_new_cmd
-from devkit_spec.features.documents.cli.commands import list_cmd, refs_cmd, resolve_cmd
-from devkit_spec.features.documents.cli.search import search_cmd
 from devkit_spec.features.entrypoints.cli.commands import entrypoints_group
 from devkit_spec.features.policy.cli.commands import policy_cmd
 from devkit_spec.features.scope.cli.commands import scope_group
@@ -44,15 +42,11 @@ def _print_version(ctx: click.Context, _param: click.Parameter, value: bool) -> 
     help=f"Print a [VERSION: {DISTRIBUTION} <version>] line and exit",
 )
 def cli() -> None:
-    """Spec-driven development: Living Spec documents, feature specs and their reconciliation."""
+    """Spec-driven development: proposals, feature specs, their workflows and reconciliation."""
 
 
-cli.add_command(resolve_cmd)
-cli.add_command(refs_cmd)
-cli.add_command(list_cmd)
 cli.add_command(policy_cmd)
 cli.add_command(proposal_group)
-cli.add_command(search_cmd)
 cli.add_command(spec_new_cmd)
 cli.add_command(entrypoints_group)
 cli.add_command(scope_group)

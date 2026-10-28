@@ -123,7 +123,7 @@ The page is the viewer moved from autohub, with a repository picker and a label 
 - **파일 탐색**: the repository working tree, with Markdown, frontmatter and Mermaid rendering.
 
 Documents are parsed in the browser, so the server never runs a repository's own devkit and repositories pinning
-different `devkit-spec` versions are all readable. A document with unknown kinds or fields renders like any other; one
+different `devkit-docs` versions are all readable. A document with unknown kinds or fields renders like any other; one
 whose frontmatter is not valid YAML is listed among the documents that could not be read and the others are still
 shown. Rendered Markdown and SVG pass through DOMPurify.
 

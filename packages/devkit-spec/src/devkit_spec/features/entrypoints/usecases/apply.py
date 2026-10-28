@@ -21,10 +21,10 @@ from pathlib import Path
 import yaml
 from devkit_core.core import FrontmatterError, atomic_write_text
 from devkit_core.core.frontmatter import locate, parse
+from devkit_docs.base.errors import EntrypointsPathError
+from devkit_docs.features.governance.services.entrypoint_paths import covers, normalize
 
-from devkit_spec.base.errors import EntrypointsPathError
 from devkit_spec.features.entrypoints.models.derive import Pair, Reason, SkipKind, Skipped, State
-from devkit_spec.features.entrypoints.services.paths import covers, normalize
 
 _KEY = re.compile(r"^entrypoints:[ \t]*(.*)$")
 # A line that continues a top-level key's value: indented, or a zero-indented sequence item.

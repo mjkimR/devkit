@@ -20,7 +20,7 @@ def _found(violations: list[Violation]) -> list[tuple[str, int, str]]:
 
 def _namespaces(*names: str) -> str:
     """``.devkit/config.toml`` registering a namespace per name, with source path ``packages/<name>``."""
-    return "".join(f'[[tool.spec.namespaces]]\nname = "{name}"\npath = "packages/{name}"\n\n' for name in names)
+    return "".join(f'[[tool.docs.namespaces]]\nname = "{name}"\npath = "packages/{name}"\n\n' for name in names)
 
 
 def test_required_frontmatter(tmp_path: Path) -> None:
