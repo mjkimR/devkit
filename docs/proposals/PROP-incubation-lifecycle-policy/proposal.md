@@ -4,7 +4,7 @@ title: Make development approach policy consistent across SDD consumers
 summary: Defines an inspectable development approach and aligns lifecycle enforcement,
   CLI preconditions and integration readiness while retaining document and project
   checks.
-status: draft
+status: reviewing
 created_at: 2026-10-28
 target_area: delivery/
 priority: medium
