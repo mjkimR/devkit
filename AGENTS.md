@@ -2,6 +2,17 @@
 
 Personal developer tools monorepo: Python packages managed with `uv` workspaces and `just`.
 
+## Proportionate Guardrails
+
+- This is a personal project. Governance checks primarily prevent accidental
+  mistakes and keep development consistent.
+- Deliberate policy bypass by the repository owner is outside the threat model.
+  Do not add complexity solely to make local rules impossible to bypass.
+- Prefer simple checks at the relevant boundary. Add defensive layers only for
+  a concrete failure scenario with a meaningful consequence.
+- Keep safeguards proportionate to the impact of failure. Protect secrets,
+  destructive operations and published compatibility contracts with appropriate care.
+
 ## Architecture and Boundaries
 
 `ARCH-05-2-components` is the contract for package layout, layering and test layout; the repository-owned
