@@ -1,0 +1,20 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T00:52:50.998861Z'
+status: completed
+summary: General status no longer emits speculative MCP pending notices or inspects registration ownership/destinations for them. Actual registration diagnostics and locked withheld-write notices are preserved; independent code review and three-target reconciliation passed with no findings.
+findings: []
+assumptions:
+- Approved removal only; no runtime/cache/schema/provider-source/readiness additions. Promoted source feedback unchanged; no deferred work.
+unverified_areas:
+- No real runtime installation or host mutation. Host owns moved-base merge, sync, cumulative verification and integration.
+checks:
+  tests: PASS affected 3211 passed, 1 skipped; dist-only 1264 passed without devkit-agt; focused matrix/ownership/output 80 passed
+  build: PASS no build-input changes; packaging build not applicable
+  lint: PASS lint-check dist; Pyright 0 errors; committed rules --ci --base main 21 rules, zero violations
+  measurement: PASS handoff baseline general-status pending=1 to head=0; locked-sync pending=1 in both, isolated fake provider test
+diff_scope:
+  base: 5c8150d16a1a42b73036d99f93f9ff8ced9573b3
+  head: 50d6e394f4702917394a0a09174785d6165704e3
