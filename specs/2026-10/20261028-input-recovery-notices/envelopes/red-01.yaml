@@ -1,0 +1,15 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-27T23:13:22.308314Z'
+status: completed
+summary: Before production edits, missing claims recovery failed 2 CLI cases and 1 provider case; inactive milestone notices failed 8 cases; 4 active/planned preservation cases passed
+findings: []
+assumptions:
+- Regression tests ran uncommitted; production files still equal accepted baseline
+checks:
+  reproduced: PASS 11 characterized failures and 4 preservation passes from regression tests at unchanged production baseline
+diff_scope:
+  base: 60908741cd4965898ab42851902251a8b7e84d01
+  head: ''

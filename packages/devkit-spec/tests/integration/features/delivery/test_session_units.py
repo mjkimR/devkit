@@ -36,3 +36,16 @@ def test_the_bundle_of_the_session_slug_is_refused(tmp_path: Path) -> None:
         "branch dev-cleanup has spec unit specs/2026-10/20261002-cleanup;"
         " integrate it as a unit task, not a session task"
     ]
+
+
+def test_missing_claims_emit_coded_input_recovery(tmp_path: Path) -> None:
+    context = SimpleNamespace(
+        finish=SimpleNamespace(branch="dev-session", source_sha="a" * 40, target_sha="b" * 40),
+        task=SimpleNamespace(claims_json="{}"),
+    )
+    snapshot = SimpleNamespace(changed=(), deleted=())
+    evidence, reasons = _check_session_task(cast(Any, context), cast(Any, snapshot), tmp_path)
+    assert reasons
+    assert [(item.code, item.value) for item in evidence if item.code == "SESSION_CLAIMS_INVALID"] == [
+        ("SESSION_CLAIMS_INVALID", "--claims")
+    ]

@@ -190,10 +190,20 @@ def check(value: ReadinessProvider, context: IntegrationContext) -> Readiness:
         ):
             raise TypeError("readiness reasons must be a tuple of strings")
         if result.reasons:
+            claims_invalid = any(item.code == "SESSION_CLAIMS_INVALID" for item in result.evidence)
             raise ReadinessError(
                 "the configured provider refused integration",
                 *result.reasons,
-                target_files=[context.finish.path] if context.finish.path else None,
+                target_files=(
+                    ["--claims"] if claims_invalid else [context.finish.path] if context.finish.path else None
+                ),
+                fix=(
+                    "Correct --claims with the required session fields and passing verification results, then retry"
+                    " the same `uv run devkit integration prepare` or `uv run devkit integration integrate` command"
+                    " with --claims supplied explicitly; resolve any other reported readiness conditions before retrying"
+                    if claims_invalid
+                    else ReadinessError.fix
+                ),
             )
         return result
     except AdvisoryError:

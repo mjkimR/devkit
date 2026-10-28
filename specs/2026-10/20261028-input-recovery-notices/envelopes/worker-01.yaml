@@ -1,0 +1,29 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-27T23:23:01.232916Z'
+status: completed
+summary: Completed characterize through final change report for the two authorized fixes; clean committed result ready for Host integration. No bundle assets changed and no sync outputs. Host authorized only two exact documentation boundary extensions to address reconcile findings.
+findings: []
+assumptions:
+- 'Codex boundaries are emulated, not native: absolute worktree paths/cwd, per-operation escalation, strict diff validation and nested read-only reviewer pre/post snapshots substitute for confinement'
+- Reviewers report no explicit outside-worktree reads; uv dependency/cache internal reads were not independently audited
+- Baseline measured with unchanged production code before fixes, then identical tests after fixes; no base checkout or claims persistence
+- Characterize and plan-tasks artifacts committed together per task-coverage instruction; all later stage boundaries committed separately
+- main advanced to 6ffb1ea17a1ee861318925ebd585d03777f2c637 under Host ownership; worker did not merge, push or integrate; dev-integration policy auto is authority for the Host
+unverified_areas:
+- Host must incorporate the moved base and run cumulative integration verification; no merge/integration was performed by this worker
+checks:
+  sync_start: PASS uv run devkit sync --check exit 0; create=0 update=0 remove=0 seed=0
+  tests: 'PASS final just test-affected --base 60908741: 2158 passed; fallback retained; 15 baseline regressions Green versus 11 failures and 4 passes Red'
+  lint: PASS just lint-check devkit and devkit-spec; committed rules --ci --base main passed 21 rules at 5e4eef3f
+  build: 'PASS just check devkit and devkit-spec: 0 errors/warnings; no build-input or packaging changes'
+  review: PASS nested independent code-reviewer no findings; pre/post snapshot and HEAD unchanged
+  reconcile: PASS nested independent reconcile-reviewer P1/P2 corrected in exact Host-authorized docs; medium implementer self-recheck PASS; four targets resolved
+  boundary: PASS committed paths within original scope plus exact Host-authorized docs/development/reference/integration.md and docs/capabilities/delivery/CAP-DLV-delivery-workflows.md
+  feedback: PASS both named open sources resolved with SPEC-linked Disposition and verification; sweep recorded 0 new observations; 0 critical open feedback
+diff_scope:
+  base: 60908741cd4965898ab42851902251a8b7e84d01
+  head: 294feaed0605f03b641145c8106c5f92e66dbe0a
+activity_effort: medium
