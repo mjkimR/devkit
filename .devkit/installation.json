@@ -866,6 +866,18 @@
     {
       "bundle": "spec",
       "entrypoints": [
+        ".devkit/managed/spec/playbooks/sdd-baseline/SKILL.md"
+      ],
+      "id": "sdd-baseline",
+      "kind": "playbook",
+      "paths": [
+        ".devkit/managed/spec/playbooks/sdd-baseline/SKILL.md",
+        ".devkit/managed/spec/playbooks/sdd-baseline/references/report-template.md"
+      ]
+    },
+    {
+      "bundle": "spec",
+      "entrypoints": [
         ".devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md"
       ],
       "id": "feedback-hygiene",
@@ -1774,7 +1786,7 @@
     },
     ".devkit/managed/spec/bundle.toml": {
       "mode": 420,
-      "sha256": "bc125cd9f2efaf9f546a6652b721658e20bbdbd1a4b39222d4353595269930ec"
+      "sha256": "47f64d1eba51d6912e3f08490286844f0c44cdf74960e27bd4f38e128e85d911"
     },
     ".devkit/managed/spec/guidance/spec-pointer.md": {
       "mode": 420,
@@ -1795,6 +1807,14 @@
     ".devkit/managed/spec/playbooks/feedback-hygiene/SKILL.md": {
       "mode": 420,
       "sha256": "d3654540b80fceb43fe47208f0a9320b56a67d573171b0faa0bb1a05b4360aff"
+    },
+    ".devkit/managed/spec/playbooks/sdd-baseline/SKILL.md": {
+      "mode": 420,
+      "sha256": "ea9701e5a514f3aea69844000b8fe84e0d9e11727bb39851701efeca4bfc03be"
+    },
+    ".devkit/managed/spec/playbooks/sdd-baseline/references/report-template.md": {
+      "mode": 420,
+      "sha256": "82f78eb44ec9894d11358a97d71cbe0b41d0b9a217308fa7fb4c61c6e5f4a782"
     },
     ".devkit/managed/spec/rules/proposal_boundaries/guide.md": {
       "mode": 420,

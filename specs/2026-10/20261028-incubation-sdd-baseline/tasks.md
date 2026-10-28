@@ -6,8 +6,8 @@ plan: PLAN-incubation-sdd-baseline
 
 # Task Breakdown: Incubation SDD baseline
 
-- [ ] **Task 1**: Deliver the focused baseline playbook, material report template and isolated asset checks.
-  - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/sdd-baseline/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml, packages/devkit-spec/tests/integration/bundles/spec/test_sdd_baseline_guidance.py
+- [x] **Task 1**: Deliver the focused baseline playbook, material report template and isolated asset checks.
+  - **_Boundary**: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/sdd-baseline/, packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/bundle.toml, packages/devkit-spec/tests/integration/bundles/spec/test_sdd_baseline_guidance.py, .devkit/installation.json (sync output)
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05, AC-06, AC-07_
   - **Verification**: manifest selection, isolated sync/discovery/reference checks, playbook contract checks, affected tests and sync check.
 - [ ] **Task 2**: Exercise adoption with the delivered prerequisites and reflect the retained contract in the Living Spec and installation references.

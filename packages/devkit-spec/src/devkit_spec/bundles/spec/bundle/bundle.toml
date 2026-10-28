@@ -215,6 +215,11 @@ kind = "playbook"
 source = "playbooks/brownfield-adoption"
 
 [[assets]]
+id = "sdd-baseline"
+kind = "playbook"
+source = "playbooks/sdd-baseline"
+
+[[assets]]
 id = "feedback-hygiene"
 kind = "playbook"
 source = "playbooks/feedback-hygiene"
@@ -269,6 +274,7 @@ assets = [
     "development-worker",
     "planning-worker",
     "brownfield-adoption",
+    "sdd-baseline",
     "feedback-hygiene",
     "adr-compaction",
 ]
