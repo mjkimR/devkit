@@ -8,7 +8,7 @@ target: devkit sync --locked / devkit sync --check (fresh worktree setup)
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-28
 ---
 
@@ -49,3 +49,11 @@ created_at: 2026-10-28
 [CHANGE: create .devkit/transient/mcp/registrations.json]
 [ERROR]  (NOT_SYNCHRONIZED) the workspace does not match the selection: 4 planned changes
 ```
+
+## Disposition
+
+- **Disposition**: Dismissed by the user's decision: `CAP-MCP-runtime-registration` and
+  `CAP-DIST-sync-and-transactions` intentionally leave real registration writes pending during locked restoration.
+  A normal sync check includes those actual writes, so this observation does not establish a product defect.
+  Explicit `uv run devkit sync --registrations-only` completes registration when a fresh checkout requires it;
+  no change to locked behavior or new diagnostic mechanism is needed.

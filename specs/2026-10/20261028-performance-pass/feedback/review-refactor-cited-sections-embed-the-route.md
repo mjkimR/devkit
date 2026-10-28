@@ -8,7 +8,7 @@ target: packages/devkit-catalog/src/devkit_catalog/maintenance/bundle/playbooks/
 origin: agent
 severity: noise
 recurring: false
-status: open
+status: dismissed
 created_at: 2026-10-28
 ---
 
@@ -46,3 +46,9 @@ workflow's Git policy allows."
 review-refactor applying.md "Integration": "With the `spec` bundle, use the session integration path with task kind
 `overall-refactor`; a single-module work item uses its feature workflow's path."
 ```
+
+## Disposition
+
+- **Disposition**: Dismissed by the user's decision: `CAP-DLV-performance-pass` already selects its feature route
+  through an explicit override of the cited text. Current routing is defined; removing that documentation
+  duplication alone does not justify separate work. Keep the existing override and behavior.

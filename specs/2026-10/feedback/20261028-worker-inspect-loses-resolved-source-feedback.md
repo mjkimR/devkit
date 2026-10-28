@@ -8,7 +8,7 @@ target: devkit spec worker inspect source feedback scope derivation
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-28
 ---
 
@@ -41,3 +41,12 @@ Filename stem: 20261027-integrate-asks-for-a-new-request-when-claims-are-missing
 Required stem: integrate-asks-for-a-new-request-when-claims-are-missing
 Read-only derive_scope probe: open and resolved both raise the same WorkerScopeUnresolvedError.
 ```
+
+## Disposition
+
+- **Disposition**: `packages/devkit-spec/src/devkit_spec/features/worker/usecases/inputs.py`: resolved by accepting
+  the optional date prefix during filename matching while retaining exact frontmatter-ID validation, unique
+  lookup and status-dependent scope boundaries. Regression coverage in
+  `packages/devkit-spec/tests/integration/features/worker/test_worker_inspect.py` verifies dated and undated paths,
+  original exact-name matches, duplicate IDs and terminal feedback's explicit-boundary requirement. The initial
+  regression run had 8 expected failures; the final focused suite passes all 42 tests.

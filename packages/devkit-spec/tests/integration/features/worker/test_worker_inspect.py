@@ -175,17 +175,26 @@ def test_required_inputs(repo: Path) -> None:
     assert inspect(repo, unit=UNIT, base="main", head="HEAD", runner=passed)["head"] == git(repo, "rev-parse", "HEAD")
 
 
-def test_feedback_and_marker(repo: Path) -> None:
-    write(repo, f"{UNIT}/spec.md", (repo / UNIT / "spec.md").read_text() + "\n## Source feedback\n`FB-observation`\n")
-    write(repo, "specs/earlier/feedback/observation.md", "---\nid: FB-observation\nstatus: open\n---\n")
+@pytest.mark.parametrize(
+    ("source", "identifier"),
+    [
+        ("specs/earlier/feedback/observation.md", "FB-observation"),
+        ("specs/2026-10/feedback/20261028-observation.md", "FB-observation"),
+        ("specs/earlier/feedback/20261028-observation.md", "FB-20261028-observation"),
+    ],
+)
+def test_feedback_and_marker(repo: Path, source: str, identifier: str) -> None:
+    write(repo, f"{UNIT}/spec.md", (repo / UNIT / "spec.md").read_text() + f"\n## Source feedback\n`{identifier}`\n")
+    write(repo, source, f"---\nid: {identifier}\nstatus: open\n---\n")
+    write(repo, "specs/earlier/feedback/unrelated.md", "---\ninvalid: [\n")
     git(repo, "config", "branch.dev-example.devkitUnit", UNIT)
     worker(repo, 1)
     result = inspect(repo, runner=passed)
     assert result["inputs"]["unit"]["source"] == "branch.devkitUnit"
     assert {
-        "path": "specs/earlier/feedback/observation.md",
+        "path": source,
         "source": "source-feedback",
-        "id": "FB-observation",
+        "id": identifier,
     } in result["scope"]
 
 
@@ -198,9 +207,11 @@ def test_empty_reconcile_target_and_not_applicable_boundary_are_skipped(repo: Pa
     assert {e["source"] for e in result["scope"]} == {"unit", "boundary", "materials"}
 
 
+@pytest.mark.parametrize(
+    "source", ["specs/earlier/feedback/observation.md", "specs/2026-10/feedback/20261028-observation.md"]
+)
 @pytest.mark.parametrize("status", ["promoted", "resolved", "dismissed", "forwarded", "unknown", None])
-def test_terminal_source_edits_need_explicit_boundary(repo: Path, status: str | None) -> None:
-    source = "specs/earlier/feedback/observation.md"
+def test_terminal_source_edits_need_explicit_boundary(repo: Path, source: str, status: str | None) -> None:
     write(repo, f"{UNIT}/spec.md", (repo / UNIT / "spec.md").read_text() + "\n## Source feedback\n`FB-observation`\n")
     metadata = f"status: {status}\n" if status is not None else ""
     write(repo, source, f"---\nid: FB-observation\n{metadata}---\n")
@@ -220,6 +231,25 @@ def test_terminal_source_edits_need_explicit_boundary(repo: Path, status: str | 
     result = inspect(repo, base=previous, runner=passed)
     assert source not in result["outside_scope"]
     assert any(entry["path"] == source and entry["source"] == "boundary" for entry in result["scope"])
+
+
+def test_dated_and_undated_sources_with_the_same_id_are_ambiguous(repo: Path) -> None:
+    write(repo, f"{UNIT}/spec.md", (repo / UNIT / "spec.md").read_text() + "\n## Source feedback\n`FB-observation`\n")
+    for source in ("specs/earlier/feedback/observation.md", "specs/2026-10/feedback/20261028-observation.md"):
+        write(repo, source, "---\nid: FB-observation\nstatus: open\n---\n")
+    worker(repo, 1)
+    result = inspect(repo, runner=passed)
+    assert result["checks"]["scope"]["status"] == "not-run"
+    assert result["checks"]["scope"]["cause"]["code"] == "SPEC_WORKER_SCOPE_UNRESOLVED"
+
+
+def test_a_dated_filename_does_not_override_the_frontmatter_id(repo: Path) -> None:
+    write(repo, f"{UNIT}/spec.md", (repo / UNIT / "spec.md").read_text() + "\n## Source feedback\n`FB-observation`\n")
+    write(repo, "specs/2026-10/feedback/20261028-observation.md", "---\nid: FB-another\nstatus: open\n---\n")
+    worker(repo, 1)
+    result = inspect(repo, runner=passed)
+    assert result["checks"]["scope"]["status"] == "not-run"
+    assert result["checks"]["scope"]["cause"]["code"] == "SPEC_WORKER_SCOPE_UNRESOLVED"
 
 
 def test_rename_reports_old_and_new_names(repo: Path) -> None:

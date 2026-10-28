@@ -158,7 +158,10 @@ def derive_scope(root: Path, tip: str, unit: str) -> list[dict[str, Any]]:
             if (
                 "/feedback/" in path
                 and path.endswith(".md")
-                and Path(path).stem == identifier.removeprefix("FB-")
+                and (
+                    Path(path).stem == identifier.removeprefix("FB-")
+                    or re.sub(r"^\d{8}-", "", Path(path).stem) == identifier.removeprefix("FB-")
+                )
                 and (parse(read(root, tip, path)).data or {}).get("id") == identifier
             ):
                 matches.append(path)
