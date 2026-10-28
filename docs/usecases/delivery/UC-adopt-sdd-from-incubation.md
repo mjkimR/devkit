@@ -34,13 +34,13 @@ entrypoints:
 
 ## 3. Extensions
 
-- **1a — no explicit request**: ordinary incubation continues; this use case does not start.
-- **2a — already SDD**: the agent routes the request to ordinary reconciliation or brownfield adoption; this use case ends without another graduation.
-- **2b — absent live context or spec assets**: the agent discovers current facts and presents the needed installation/selection effects while keeping incubation; resumes at step 3 after authorized preparation.
-- **4a — missing/failed/skipped evidence or mismatch**: the agent records the gap and presents correction, user-decided scope change or deferral; resumes at step 3 after correction, or ends in incubation without readiness.
-- **5a — changed relevant source**: the agent invalidates affected observations and resumes at step 3; stale evidence does not activate SDD.
-- **6a — effects not authorized**: the agent leaves adoption unactivated; this use case ends. A necessary provider change is an activation effect rather than an implicit settings rewrite.
-- **7a — partial installation/update/sync failure**: the agent reports actual partial state and supported recovery; resumes at step 3 after source/evidence revalidation or ends with no successful-adoption claim.
+- **1a.** no explicit request: ordinary incubation continues; this use case does not start.
+- **2a.** already SDD: the agent routes the request to ordinary reconciliation or brownfield adoption; this use case ends without another graduation.
+- **2b.** absent live context or spec assets: the agent discovers current facts and presents the needed installation/selection effects while keeping incubation; resumes at step 3 after authorized preparation.
+- **4a.** missing/failed/skipped evidence or mismatch: the agent records the gap and presents correction, user-decided scope change or deferral; resumes at step 3 after correction, or ends in incubation without readiness.
+- **5a.** changed relevant source: the agent invalidates affected observations and resumes at step 3; stale evidence does not activate SDD.
+- **6a.** effects not authorized: the agent leaves adoption unactivated; this use case ends. A necessary provider change is an activation effect rather than an implicit settings rewrite.
+- **7a.** partial installation/update/sync failure: the agent reports actual partial state and supported recovery; resumes at step 3 after source/evidence revalidation or ends with no successful-adoption claim.
 
 ## 4. Postconditions
 
