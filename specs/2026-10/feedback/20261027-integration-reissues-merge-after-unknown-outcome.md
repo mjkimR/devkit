@@ -52,4 +52,4 @@ the fake recorded merge_calls == 2 while the PR stayed open." "A closed pending 
 
 ## Disposition
 
-- **Disposition**: `PROP-pr-merge-recovery`: promoted by the user's decision for Planning of the recorded behavior and its contract constraints.
+- **Disposition**: ~~`PROP-pr-merge-recovery`~~ (Git `2092282ab6a30059243e26ee4cc148e865e91107`): promoted for Planning; its persistent-journal direction was rejected by the user and retired under `ADR-reject-persistent-pr-merge-journal`.
