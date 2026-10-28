@@ -29,11 +29,11 @@ created_at: 2026-10-28
 
 ## 4. Decision Outcome
 
-Recommend the focused playbook, pending Host/user acceptance.
+Adopt the focused playbook to keep retained-product readiness separate from legacy debt containment.
 
 1. Ship it in spec:core and invoke only for explicitly requested or confirmed graduation. Package/asset installation is a prerequisite, not activation.
 2. Prepare an ordinary material report and needed current-state documents while incubation policy remains effective. Require evidence coverage of the user-selected retained product, with no unresolved retained-scope mismatch or required missing check evidence.
-3. Present the exact ready source/scope/effects for the user's activation decision, reusing a decision already bound to them. Change only the authoritative approach through the accepted policy contract, sync and verify consistency.
+3. Present the exact ready source/scope/effects for the user's activation decision, reusing a decision already bound to them. Change the authoritative approach through the accepted policy contract, include a necessary project-to-spec integration provider switch among the explicitly authorized effects, then sync and verify consistency.
 4. Start ordinary SDD for later changes. Create no historical Units/approvals or discarded-experiment ADRs and preserve existing SDD history.
 
 ## 5. Consequences

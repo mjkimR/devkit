@@ -10,6 +10,7 @@ status: active
 created_at: 2026-10-28
 capabilities:
   - CAP-DLV-incubation-sdd-baseline
+  - CAP-HARN-agent-guidance
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/sdd-baseline/SKILL.md
 ---

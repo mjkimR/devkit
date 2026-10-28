@@ -8,6 +8,7 @@ created_at: 2026-10-13
 usecases:
   - UC-route-development-intent
   - UC-adopt-in-an-existing-repository
+  - UC-adopt-sdd-from-incubation
   - UC-handle-delivery-problems-and-exceptions
   - UC-resolve-stale-activity-branches
 entrypoints:
@@ -114,7 +115,7 @@ A project opts out of the bundle with `[presets] spec = false` in `.devkit/confi
 | `skill` | the 15 skills of 4.4 |
 | `workflow` | `sdd-session-feature`, `sdd-session-bugfix`, `sdd-overall-refactor`, `sdd-spec-feature`, `sdd-spec-bugfix`, `sdd-proposal` |
 | `subagent` | `challenger`, `reconcile-reviewer`, `code-reviewer`, `ux-reviewer`, `scout`, `triage`, `decomposer`, `planning-worker`, `development-worker` |
-| `playbook` | `brownfield-adoption`, `feedback-hygiene`, `adr-compaction` |
+| `playbook` | `brownfield-adoption`, `sdd-baseline`, `feedback-hygiene`, `adr-compaction` |
 | `document` | `templates` holds the proposal template. docs owns the shared templates and optional skeleton. |
 
 ### 4.2 Constitution
@@ -292,6 +293,7 @@ even under requested-only capture or a disabled collect-feedback stage, without 
 | Playbook | Procedure |
 | --- | --- |
 | `brownfield-adoption` | Adopt spec-driven delivery in a repository that already has code and docs: install, take the baseline, contain legacy Markdown under `docs/materials/_legacy/` and record any deferral as a commented `.devkit/config.toml` entry the user decided, then migrate legacy content through normal work. |
+| `sdd-baseline` | Verify the user-selected retained incubation product through current documents, implementation and actual checks, then activate SDD under an exact-effects user decision; package selection is preparation, not activation (`CAP-DLV-incubation-sdd-baseline`). |
 | `feedback-hygiene` | Triage open feedback in one batch: group by target, order by severity and recurrence, promote to rules, playbooks, decisions or spec work, or dismiss or forward, with the user's decision; above 5 open items, on a host that runs it natively, the read-only `triage` role groups and recommends from a clean checkout. |
 | `adr-compaction` | Consolidate related approved ADRs into replacement ADRs that keep the retired IDs as aliases, without changing any decision (`ADR-immutable-decisions-editable-records`). |
 

@@ -7,6 +7,7 @@ status: active
 created_at: 2026-10-28
 usecases:
   - UC-adopt-sdd-from-incubation
+  - UC-adopt-in-an-existing-repository
 entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/playbooks/sdd-baseline/SKILL.md
 ---
