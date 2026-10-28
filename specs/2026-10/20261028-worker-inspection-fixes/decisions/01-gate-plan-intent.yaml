@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-bugfix
+stage: intent
+note: Fix the two remaining reproduced worker inspection defects directly
+by: user
+at: '2026-10-28T06:04:06.622259Z'
