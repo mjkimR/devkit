@@ -2,7 +2,7 @@
 id: PROP-incubation-lifecycle-policy
 title: Apply explicit development approach policy across lifecycle consumers
 summary: "Owns an inspectable project development approach outside devkit-spec and aligns runtime lifecycle checks, integration and installed guidance while preserving independent verification and existing SDD artifacts."
-status: reviewing
+status: accepted
 created_at: 2026-10-28
 target_area: delivery/
 priority: medium
