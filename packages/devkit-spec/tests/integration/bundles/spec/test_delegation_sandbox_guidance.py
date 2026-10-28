@@ -7,7 +7,10 @@ execution environments because two of them are templates.
 
 from __future__ import annotations
 
+import re
+
 import pytest
+from devkit_agt.features.workflow.services.envelope.authoring import parse_check_flag
 from spec_support.bundle_text import text
 
 PAYLOAD = "skills/spec-delegate/references/payload.md"
@@ -50,11 +53,21 @@ def test_the_host_checks_each_sync_output_against_the_receipt(environment: str) 
     validate = text(WORKER_RESULTS, environment)
     assert "Each `(sync output)` entry `tasks.md` gained between `<accepted>` and `<returned>`" in validate
     assert "its scope pass is no evidence for that entry" in validate
-    assert "the worker's `sync_start` check is `0`" in validate
+    assert "the worker's `sync_start` check is `PASS exit=0`" in validate
     assert "`devkit sync --check` exits `0` on `<returned>`" in validate
     assert "is under `seeded` or `files` in the returned head's `.devkit/installation.json`" in validate
     assert "is `.devkit/installation.json` itself" in validate
     assert "the file that holds the managed guidance block (`AGENTS.md`" in validate
+
+
+@pytest.mark.parametrize("environment", ENVIRONMENTS)
+def test_documented_sync_start_can_be_recorded_and_verified(environment: str) -> None:
+    worker = text(WORKER, environment)
+    example = re.search(r'--check "(sync_start=[^"]+)"', worker)
+    assert example is not None, "the worker needs an executable sync_start check example"
+    key, value = parse_check_flag(example.group(1))
+    assert (key, value) == ("sync_start", "PASS exit=0")
+    assert f"the worker's `sync_start` check is `{value}`" in text(WORKER_RESULTS, environment)
 
 
 # AC-02

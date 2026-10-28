@@ -78,6 +78,10 @@ DATA: tuple[tuple[str, tuple[str, ...]], ...] = (
             f"{DEVKIT}/tests/integration/features/workflow/test_library.py",
         ),
     ),
+    (
+        "docs/usecases/",
+        ("packages/devkit-docs/tests/integration/features/governance/test_ux_repository_usecases.py",),
+    ),
     ("examples/", ("packages/devkit-starter/tests", f"{DEVKIT}/tests/integration/features/workflow/test_library.py")),
     ("models/", (f"{DIST}/tests/unit/features/search", f"{DIST}/tests/integration/features/search")),
     ("scripts/module.sh", (f"{DEVKIT}/tests/integration/package/test_module_script.py",)),

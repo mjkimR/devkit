@@ -148,9 +148,11 @@ def derive_scope(root: Path, tip: str, unit: str) -> list[dict[str, Any]]:
         )
     parts = PurePosixPath(unit).parts
     entries.append({"path": str(PurePosixPath(*parts[:-3], "docs", "materials", *parts[-2:])), "source": "materials"})
-    for target in parse_targets(read(root, tip, f"{unit}/reconcile.md"), f"{unit}/reconcile.md"):
-        if target.file.strip():
-            entries.append({"path": prefix(target.file.strip()), "source": "reconcile"})
+    reconcile = f"{unit}/reconcile.md"
+    if reconcile in paths:
+        for target in parse_targets(read(root, tip, reconcile), reconcile):
+            if target.file.strip():
+                entries.append({"path": prefix(target.file.strip()), "source": "reconcile"})
     section = re.search(r"(?im)^## [^\n]*Source feedback[^\n]*\n(.*?)(?=^## |\Z)", text, re.DOTALL)
     for identifier in sorted(set(re.findall(r"\bFB-[a-z0-9-]+", section[1] if section else ""))):
         matches = []
@@ -173,7 +175,7 @@ def derive_scope(root: Path, tip: str, unit: str) -> list[dict[str, Any]]:
 
 
 def inputs(
-    root: Path, unit: str | None, base: str | None, head: str | None, base_checkout: str | None
+    root: Path, unit: str | None, base: str | None, head: str | None, base_checkout: str | None, rules_base: str | None
 ) -> tuple[Path, str, dict[str, Any]]:
     position = locate(root)
     root = position.root
@@ -196,6 +198,12 @@ def inputs(
         chosen_base, base_source = (
             (base, "argument") if base else derive_base(root, tip, chosen_unit, workers, position.branch, checkout)
         )
+        if rules_base is not None:
+            chosen_rules_base, rules_source = rules_base, "argument"
+        elif (position.branch and branch_marker(root, position.branch, BASE_KEY)) or checkout:
+            chosen_rules_base, rules_source = derive_base(root, tip, chosen_unit, [], position.branch, checkout)
+        else:
+            chosen_rules_base, rules_source = chosen_base, "audit-base-fallback"
     except GitError as exc:
         raise WorkerBaseUnresolvedError(exc.message) from exc
     resolved = {}
@@ -203,13 +211,14 @@ def inputs(
         ("unit", chosen_unit, unit_source),
         ("base", chosen_base, base_source),
         ("head", chosen_head, head_source),
+        ("rules_base", chosen_rules_base, rules_source),
     ):
         if name != "unit":
             try:
                 value = run_git_text(root, "rev-parse", "--verify", "--end-of-options", f"{value}^{{commit}}")
             except GitError as exc:
                 raise ArgumentError(
-                    f"Unknown {name} commit: {value}", fix=f"Pass --{name} with a valid commit"
+                    f"Unknown {name} commit: {value}", fix=f"Pass --{name.replace('_', '-')} with a valid commit"
                 ) from exc
         resolved[name] = {"value": value, "source": source}
     resolved["base_checkout"] = {

@@ -77,7 +77,9 @@ integration is excluded.
 `devkit spec worker inspect --format json` collects compact committed worker evidence (`--details` includes full wrapped results and envelope history): range and scope information, cleanliness,
 envelope validation, rules and workflow checks. Inputs derive from the activity worktree and committed records;
 `--unit`, `--base`, `--head`, `--scope` (repeat) or `--scope-file` (one prefix per line), and `--base-checkout` replace
-individual inputs. Scope overrides replace the entire scope. Results include provenance and reviewer-ready compared
+individual inputs. `--rules-base` overrides cumulative rules comparison, whose default is the recorded base-branch
+merge base independent of the accepted-turn `--base`; manual inspection without a recorded base uses a labelled audit-base fallback.
+Absent optional reconciliation adds no scope; malformed present records remain not-run. Scope overrides replace the entire scope. Results include provenance and reviewer-ready compared
 heads and changed paths. Exit 0 means no failed check, 1 a negative check, 2 an invalid invocation or unresolved
 required input; unavailable checks are explicitly not-run. The Host retains scope and acceptance authority.
 The command writes and repairs nothing. See `CAP-DLV-delivery-workflows`.
