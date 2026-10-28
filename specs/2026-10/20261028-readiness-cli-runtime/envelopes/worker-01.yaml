@@ -1,0 +1,26 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-28T00:43:38.749498Z'
+status: completed
+summary: Completed the agreed diagnostic guidance scope through final report; no underlying runtime fix or integration. Changed only the CLI-contract remediation, its rule guide/regression, and this spec bundle; no sync outputs. Host scope inspection and integration remain.
+findings: []
+assumptions:
+- Low effort uses author review/reconcile per effort.md and settled scope; no nested role required.
+- Codex isolation is emulated using explicit cwd, path-scoped writes and commits, per-operation approval, and final diff inspection; no native guarantee.
+- Promoted source feedback remains unchanged; narrowed guidance fully delivered, underlying runtime mismatch excluded. No bundle source selected, so no sync outputs.
+- Host will incorporate moving main and verify cumulative integration content; worker performs no merge or integration.
+checks:
+  sync_start: PASS exit 0 before first edit; sync --check also clean after guide edit
+  tests: PASS Red 2 expected failures before production fix; Green 17/17; test-affected 3406 passed in 23.57s, full fallback retained
+  lint: PASS lint-check devkit and committed rules check --ci --base main
+  types: PASS check devkit, zero errors
+  review: PASS author self-review, no findings; AC-01 and AC-02 verified
+  reconcile: PASS author self-check; no Living Spec contract or entrypoint impact
+  scope: PASS all changed paths in strict payload boundaries; runtime behavior unchanged
+  outcome: PASS same two cases fail with original remediation and pass after clarification; no base checkout
+diff_scope:
+  base: f24cab8b57b09e98c68cd67afd017b80f179fe3d
+  head: 981b50aca52f2d3a3e712afdb39f302a36f697b9
+activity_effort: low
