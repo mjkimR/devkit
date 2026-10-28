@@ -1,0 +1,12 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-27T23:20:36.030993Z'
+status: completed
+summary: Swept this Planning run across repository/upstream tool observations; no new feedback beyond the promoted source observation.
+findings: []
+assumptions:
+- The promoted source FB-integration-reissues-merge-after-unknown-outcome remains owned by this proposal; no source feedback edit.
+checks:
+  swept: PASS recorded=0 duplicates=0
