@@ -12,6 +12,10 @@ targets:
     resolution: modified
   - file: docs/decisions/2026-10/20261028-adopt-sdd-through-an-evidenced-baseline-playbook.md
     resolution: modified
+  - file: guides/INSTALL_GUIDE.md
+    resolution: modified
+  - file: docs/decisions/2026-10/20261028-keep-incubation-guidance-opt-in-and-current-state-based.md
+    resolution: modified
 ---
 
 # Reconciliation
@@ -26,8 +30,7 @@ an existing spec provider and explicitly authorizing a necessary project-to-spec
 `CAP-DLV-project-policy` is unchanged: its implemented setting and runtime contract are consumed, not redefined.
 
 The source includes separately reviewed prerequisite policy and stacked guidance assets. Baseline review covers its
-own entire feature, not a new review of those prerequisite implementations. Guidance final integration still precedes
-Host baseline integration. Actual commands and simulated decisions are distinguished in materials/scenario-evidence.md.
+own entire feature, not a new review of those prerequisite implementations. The Host incorporated verified guidance main before baseline integration. Actual commands and simulated decisions are distinguished in materials/scenario-evidence.md.
 
 No concrete baseline requirement is deferred to another feature. Full milestone closure remains a Host/user decision
 after all three integrated results are compared with MS-idea-incubation.
@@ -42,8 +45,7 @@ behavior. Existing harness/adoption entrypoints remain valid; their changes are 
 
 The final policy snapshot is present; eight real CLI/app scenario/asset checks passed, plus twelve affected
 document checks and the use-case parser regression. Source/scenario evidence is labelled synthetic product inputs
-and simulated user decisions. Autonomous product-scope inference is not claimed. Guidance final source/main
-incorporation and sequential integration remain the Host's next verification boundary.
+and simulated user decisions. Autonomous product-scope inference is not claimed. The Host incorporated final guidance source/main; only sequential integration remains.
 
 The focused installation guide follows canonical package-source replacement in the consumer's actual group/source/ref,
 retains optional catalog, prevents a duplicate direct base requirement and checks the required PyYAML binary binding.
@@ -56,3 +58,10 @@ a real absent-table scenario, then independently rechecked including correction 
 fixture claim. Initial reconcile review found the new guide's installation-source mismatch; canonical dependency
 replacement and binary-binding verification were folded and independently rechecked. Both reviews have no open findings.
 The final affected selection passed1502tests; targeted actual scenario/assets/parser checks passed10.
+
+## Host integration verification
+
+The merged harness document preserves both incubation sections and the separate baseline playbook inventory.
+The installation entry links the focused adoption guide. Handoff repairs change only the successor ID in the
+guidance ADR and completed guidance references; target-document identities and completed prerequisite content
+remain intact. Runtime behavior and the accepted baseline contract are unchanged by this integration reflection.
