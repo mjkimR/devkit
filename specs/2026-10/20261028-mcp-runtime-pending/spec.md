@@ -2,7 +2,7 @@
 id: SPEC-mcp-runtime-pending
 title: Remove speculative MCP registration notices from general status
 summary: "Remove MCP_REGISTRATION_PENDING from general status while preserving actual registration planning and locked sync's withheld-write notice."
-status: in-progress
+status: completed
 created: 2026-10-28
 related_capabilities:
   - CAP-MCP-runtime-registration

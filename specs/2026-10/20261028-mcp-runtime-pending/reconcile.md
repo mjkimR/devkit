@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-mcp-runtime-pending
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/mcp/CAP-MCP-runtime-registration.md
     resolution: modified
