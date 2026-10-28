@@ -8,7 +8,7 @@ target: devkit status (devkit_dist.features.distribution.usecases.status); devki
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-27
 ---
 
@@ -40,3 +40,12 @@ created_at: 2026-10-27
 ```text
 walkthrough (existing repository): devkit status -> host_hooks: [], errors: []; devkit gate status -> GATE_HOOK_ENTRY_MISSING
 ```
+
+## Disposition
+
+Resolved by `SPEC-gate-health-status`. General project status discovers the optional gate-owned check and returns
+existing hook diagnostics without running gates or changing hooks. Regression tests reproduce the current missing
+and non-executable entry cases and actual `pre-commit 4.1.0 install -f` overwriting the dispatcher. They verify exact
+advisory equality with dedicated gate status, normal/strict JSON output, healthy/disabled/non-Git cases, and unchanged
+Git hook/config bytes. The same overwritten fixture yields zero warnings with the check disabled and one
+`GATE_HOOK_ENTRY_MISSING` with it enabled. Distribution-only verification passes without the harness.

@@ -1,7 +1,7 @@
 ---
 id: CAP-DIST-sync-and-transactions
 title: "Synchronization & Transactions"
-summary: "Transactional deployment, canonical receipts, shared subagent model policy and restricted checkout-local configuration, with execution, presentation and personal rendering provenance."
+summary: "Transactional deployment, canonical receipts, shared subagent model policy and restricted checkout-local configuration, with execution, presentation and personal rendering provenance and optional read-only project status checks."
 area: distribution
 status: active
 entrypoints:
@@ -421,6 +421,29 @@ signature and the same notice handling; each reports what its post-sync extensio
 `--check` runs no preview: it is the read-only CI gate, and its answer (and its exit code under `--strict`) must not
 depend on this checkout's Git hooks.
 `devkit-agt` registers `gate-hooks` there too (`gate hooks would change: ...`).
+
+### Optional Project Status Checks
+
+1. **Optional providers**: WHEN `devkit status` runs, distribution MUST discover installed `devkit.status_checks`
+   entry points without importing a harness module directly. It MUST call each provider once with the resolved
+   project root in `(name, value)` order, including projects without a receipt.
+2. **Advisory contract**: A provider MUST perform read-only inspection and return a list or tuple of
+   `devkit.advisory.AdvisoryError` values at `WARNING` or `NOTICE`. Distribution MUST append valid results to
+   `notices` in provider-result order, retaining their codes, levels and actionable advisory fields.
+3. **Failure isolation**: IF discovery, loading, execution (including `SystemExit`) or whole-result validation
+   fails, THEN distribution MUST append `STATUS_CHECK_EXTENSION_FAILED` at `WARNING`, identifying the provider
+   and directing a report to its package maintainer. It MUST retain core status and continue later providers.
+   An invalid result contributes none of its values. `KeyboardInterrupt` propagates.
+4. **CLI behavior**: Status MUST retain its single JSON object with `errors` and `notices`, with no stderr.
+   Warnings MUST leave a successful status exit at `0`, or `1` under `--strict`; core status errors still exit `1`.
+5. **Optional harness**: Without a provider, distribution MUST add no check notice. The harness contributes only
+   existing Git gate hook warnings through its gate-owned provider (`CAP-GATE-commit-gates`). Native host hooks
+   remain a separate report under `host_hooks`; status MUST NOT execute gates or repair hooks.
+
+The normative provider signature is `check(root: Path) -> list[AdvisoryError] | tuple[AdvisoryError, ...]`.
+Provider absence requires no installation. Checks are enforced by
+`packages/devkit-dist/tests/integration/features/distribution/test_status_checks.py` and
+`packages/devkit/tests/integration/features/gate/test_project_status.py`; `just test-dist` checks harness isolation.
 
 ### Engine Notice
 
