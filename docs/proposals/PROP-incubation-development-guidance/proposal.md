@@ -135,6 +135,9 @@ it does not become a spec Unit or a durable product contract.
 - `PROP-incubation-sdd-baseline` consumes current goal, retained choices, implementation and verification evidence
   semantically. It need not parse this context filename or require historical records. Voluntary transition is owned
   there; `/incubate` records the user's intent and points to the accepted transition entry when available.
+  For an explicit adoption request, explain preparing the spec package/assets while the effective approach remains
+  incubation, then route to `sdd-baseline` in `spec:core` once available. Baseline readiness, activation and recovery
+  remain owned by that playbook; the incubation entry does not activate SDD itself.
 - All three Planning units write separate proposal directories. Implementation remains dependent on the accepted
   policy, and overlapping guides or architecture changes integrate sequentially after a scope comparison.
 
