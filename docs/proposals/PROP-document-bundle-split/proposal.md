@@ -19,6 +19,7 @@ boundaries:
     - docs/capabilities/delivery/
     - docs/capabilities/governance/
     - docs/architecture/
+    - docs/decisions/
     - docs/steering/glossary.md
     - .devkit/config.toml
     - .devkit/installation.json
@@ -84,6 +85,18 @@ The preceding package refactor is integrated at `26a3c494`; it is not an unresol
    assets with `uv run devkit remove spec`, but installed devkit-spec command extensions remain installed. A
    clean document-only consumer installs devkit-docs without devkit-spec and is the isolation acceptance case.
 
+### Rule inventory
+
+| Owner | Existing rule assets | Judgment after the split |
+| --- | --- | --- |
+| docs | document-reference, id-convention, spec-format, traceability-link, document-summary, steering-documents, ux-links, ux-coverage, code-entrypoints | Unchanged document identity, format, reference, relationship and path checks. |
+| spec | task-coverage, spec-lifecycle, spec-progress, reconcile-contract, proposal-boundaries | Unchanged delivery coverage, progress, completion, reconciliation and proposal checks. |
+
+The rule IDs keep their existing `RULE-` names, including `RULE-spec-format`: that rule checks document formats
+and does not make the SDD lifecycle mandatory. Rejected-proposal and milestone hygiene are runtime spec
+extensions, not docs bundle assets. They are absent from the clean docs-only environment because devkit-spec
+is not installed; removing selected spec assets alone does not disable those installed extensions.
+
 ### Separation of authoring and lifecycle policy
 
 The docs constitution retains document identity, frontmatter, full-ID references, applicable structure, summaries,
@@ -134,6 +147,13 @@ Rule behavior, document kind vocabulary, statuses and command names stay as esta
 
 The Host retains milestone follow-up decomposition and tracking; no omitted milestone exit criterion is claimed
 complete by this proposal. `target-docs.md` identifies the Living Spec reflection and documentation repairs.
+
+### Planning review
+
+The medium-effort Challenger inspected wheel ownership, manifest selection, explicit opt-outs, document rule
+implementations, instructions and seeds at `9492bd01`. It returned no material findings. No open design question
+requires a separate worker answer; the proposed direction remains subject to Host/user `plan-accept`.
+Consumer installation and semantic text verification remain Development evidence.
 
 ## 4. Lifecycle & Retirement Criteria
 
