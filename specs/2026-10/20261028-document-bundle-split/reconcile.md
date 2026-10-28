@@ -40,9 +40,9 @@ The capability, architecture, installation and quick-reference changes match AC-
 ## Deferred milestone work
 
 Runtime lifecycle policy, incubation development guidance and optional baseline transition remain outside this spec.
-The remaining work is tracked by `PROP-incubation-lifecycle-policy`, `PROP-incubation-development-guidance` and
-`PROP-incubation-sdd-baseline`, each in `MS-idea-incubation`. Their drafts record the remaining scope, Planning
-questions and expected acceptance checks. This spec claims no milestone completion.
+The remaining work is tracked by `SPEC-incubation-lifecycle-policy`, `SPEC-incubation-development-guidance` and
+`SPEC-incubation-sdd-baseline`, each in `MS-idea-incubation`. Their specs retain the follow-up scope, Planning
+decisions and acceptance checks. This spec claims no milestone completion.
 The Host merged the advanced base without conflicts; the added files are Backlog drafts only.
 
 ## Review and verification
