@@ -10,7 +10,7 @@ size: L
 planning_effort: medium
 dev_effort: medium
 milestone: MS-idea-incubation
-depends_on: [PROP-incubation-lifecycle-policy]
+depends_on: [SPEC-incubation-lifecycle-policy]
 boundaries:
   owns:
     - packages/devkit-catalog/
@@ -64,7 +64,7 @@ that work without a new wheel or lifecycle records. Ownership evidence is in `ma
 3. A clean consumer installs devkit-docs plus devkit-catalog and selects `incubation:core`. The document package brings
    its existing distribution/harness dependencies. The supported path requires no installed devkit-spec distribution.
 4. Entry and the pointer inspect the effective development approach through the common interface delivered by
-   `PROP-incubation-lifecycle-policy`. They run incubation work only when the result is incubation. A mismatch or
+   `SPEC-incubation-lifecycle-policy`. They run incubation work only when the result is incubation. A mismatch or
    unreadable policy gives the next configuration action; guidance never silently switches approach or removes SDD.
 5. Selection and runtime applicability remain separate. Incubation assets can be present while SDD is selected;
    `/incubate` then explains the mismatch without doing product work. No unconditional instruction redirects every

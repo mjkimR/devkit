@@ -97,6 +97,7 @@ from devkit_spec.base.errors import (
     ProposalWrongWorktreeError,
     acceptance_unrecorded_fix,
 )
+from devkit_spec.features.policy import require_sdd
 from devkit_spec.features.policy.repositories.branches import require_development_branch
 from devkit_spec.features.proposals.services.body import CarriedProposal, carry_proposal_body
 from devkit_spec.features.proposals.services.history import rewrite_history
@@ -320,6 +321,7 @@ def handoff_proposal(root: Path, slug: str, *, today: date | None = None) -> Han
     itself when the failure was one (such as a ``FrontmatterError`` binding ``spec.md``) and the roll-back was
     complete.
     """
+    require_sdd(root)
     root = root.resolve()
     slug = require_slug(slug)
     _check_worktree(root, slug)

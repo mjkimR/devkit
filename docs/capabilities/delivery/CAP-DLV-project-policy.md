@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-project-policy
 title: Project Policy
-summary: "Effective approval, stage, Git (auto or required worktree and pull request levels) and repository-first feedback policy reported by devkit spec policy, including Host conversational approval and retained-base automatic authority for lifecycle CLI operations."
+summary: "Effective SDD approval, stage, Git, routing and feedback policies consume the common development approach without owning another setting; retained-base authority governs lifecycle integration."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -219,3 +219,16 @@ On the pull-request route (`CAP-INT-mcp-services`), `delete_branch` selects loca
 report the Host presents before conversational approval; it grants no authority. GitHub automatic branch deletion
 is separately disclosed. Required PR policy restricts route selection without granting push, merge or cleanup
 permission.
+
+
+## Development approach inspection
+
+`devkit spec policy` consumes the common `CAP-DIST-sync-and-transactions` development approach; it owns no second
+setting. Text begins with `[DEVELOPMENT_APPROACH: approach=sdd source=default]` (or explicit incubation/shared source).
+JSON adds `development: {approach, source}`. Existing approval, stage, Git, routing and feedback defaults remain.
+
+WHILE the effective approach is incubation, ordinary work MUST NOT acquire implicit SDD Units, stages, approvals
+or envelopes. Document-format and independent project checks remain active. The spec router and pointer inspect
+`devkit config show` before applying SDD routing. Existing deliberately bound SDD artifacts keep their applicable
+checks, and inspecting older artifacts remains available.
+`packages/devkit-spec/tests/integration/features/policy/test_incubation.py` checks the runtime boundary.

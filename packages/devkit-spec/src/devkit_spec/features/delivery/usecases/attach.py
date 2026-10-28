@@ -20,10 +20,12 @@ The files are read at ``tip`` through Git, since no worktree may exist yet. Each
 
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
+from devkit_agt.features.rules import committed_anchors
 from devkit_core.core import FrontmatterError, GitError, run_git
 from devkit_core.core.frontmatter import parse
+from devkit_dist.features.project import read_development_approach
 
 from devkit_spec.base.axes import (
     ALLOWED_SIZES,
@@ -61,6 +63,14 @@ def _bound(meta: dict[str, object] | None, unit: str, name: str, tip: str) -> tu
 
 def attach_check(root: Path, branch: str, unit: str, tip: str) -> list[str]:
     """The reasons ``unit`` at ``tip`` is not the unit of the activity branch ``branch``; empty when it is."""
+    if read_development_approach(root).approach == "incubation":
+        bindings = committed_anchors(root, tip)
+        if not any(
+            PurePosixPath(path).parent == PurePosixPath(unit.strip("/") or ".")
+            and any(w.startswith("sdd-") for w in ids)
+            for path, ids in bindings.items()
+        ):
+            return []
     activity, _, slug = branch.partition("-")
     unit = unit.strip("/")
     proposal, spec = PROPOSAL_UNIT.fullmatch(unit), SPEC_UNIT.fullmatch(unit)

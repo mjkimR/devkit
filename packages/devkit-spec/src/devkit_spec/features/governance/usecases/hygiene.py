@@ -13,8 +13,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
+from devkit_agt.features.rules import workflow_ids
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import parse
+from devkit_dist.features.project import read_development_approach
 
 from devkit_spec.base.errors import ProposalRejectedPendingWarning
 from devkit_spec.base.units import PROPOSALS
@@ -31,12 +33,16 @@ def _anchors(root: Path) -> list[Path]:
 
 def rejected_proposals(root: Path) -> list[AdvisoryError] | None:
     """One ``SPEC_PROPOSAL_REJECTED_PENDING`` warning per rejected proposal of the base; ``None`` without the bundle."""
-    if not (root / ".devkit" / "managed" / "spec").is_dir():
+    incubation = read_development_approach(root).approach == "incubation"
+    if not incubation and not (root / ".devkit" / "managed" / "spec").is_dir():
         return None
     found: list[AdvisoryError] = []
     for anchor in _anchors(root):
         try:
-            status = (parse(anchor.read_text("utf-8")).data or {}).get("status")
+            data = parse(anchor.read_text("utf-8")).data or {}
+            if incubation and not any(w.startswith("sdd-") for w in workflow_ids(data)):
+                continue
+            status = data.get("status")
         except (FrontmatterError, OSError, UnicodeError):
             continue  # the spec-format rule reports an unreadable proposal
         if status != "rejected":
@@ -71,7 +77,11 @@ def milestone_members(root: Path) -> list[AdvisoryError]:
         members = [
             d
             for d in index.documents
-            if is_unit_anchor(d)
+            if (
+                read_development_approach(root).approach != "incubation"
+                or any(w.startswith("sdd-") for w in workflow_ids(d.frontmatter))
+            )
+            and is_unit_anchor(d)
             and d.kind is Kind.PROPOSAL
             and isinstance(d.frontmatter.get("milestone"), str)
             and index.canonical_id(d.frontmatter["milestone"].strip()) == milestone.id

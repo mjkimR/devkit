@@ -1,8 +1,0 @@
-request: gate:plan-intent
-kind: approve
-action: accept
-workflow: sdd-proposal
-stage: intent-proposal
-note: Continue MS-idea-incubation after the integrated document bundle split
-by: user
-at: '2026-10-28T04:15:44.422512Z'

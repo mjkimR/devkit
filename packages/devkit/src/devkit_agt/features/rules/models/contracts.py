@@ -54,6 +54,16 @@ class Violation:
         }
 
 
+@dataclass(frozen=True)
+class RuleOmission:
+    rule_id: str
+    code: str
+    reason: str
+
+    def to_dict(self) -> dict[str, str]:
+        return {"rule_id": self.rule_id, "code": self.code, "reason": self.reason}
+
+
 def _is_clean_relative(path: str) -> bool:
     """Whether ``path`` is a relative POSIX path that lexical normalization leaves unchanged (no ``.``, ``..`` or
     empty segment), so it names a file inside the workspace as it stands."""

@@ -55,6 +55,7 @@ from devkit_dist.features.distribution.services.installation.config_template imp
 from devkit_dist.features.distribution.services.installation.discovery import InstalledBundle, unusable_bundles
 from devkit_dist.features.distribution.services.installation.transaction import project_lock, replace_file
 from devkit_dist.features.distribution.services.subagents import parse_subagents
+from devkit_dist.features.project import development_approach
 from devkit_dist.features.project.models.invocation import devkit_command
 from devkit_dist.features.project.repositories.local_config import read_effective_config, validate_runtime_tables
 from devkit_dist.features.project.repositories.project import read_toml
@@ -76,6 +77,7 @@ FIELDS = frozenset(
     {
         "schema",
         "execution",
+        "development",
         "presentation",
         "mcp",
         "shared",
@@ -167,6 +169,7 @@ def _load(root: Path) -> dict[str, Any] | None:
     if unknown:
         raise ConfigError(f"config: unknown fields: {sorted(unknown)}")
     validate_runtime_tables(data, CONFIG_PATH)
+    development_approach(data)
     validate_tool_tables(data.get("tool"))
     return data
 
@@ -637,6 +640,24 @@ def _template(root: Path) -> tuple[str | None, str, list[str], list[AdvisoryErro
 def _templates() -> tuple[list[ToolTemplate], list[ToolTemplate], list[AdvisoryError]]:
     """The installed ``[tool.<name>]`` templates, the reserved tables' templates and the warnings of both loads."""
     reserved, reserved_notices = load_reserved_templates(RESERVED_TABLES)
+    reserved.insert(
+        0,
+        ToolTemplate(
+            "development",
+            (
+                TemplateTable(
+                    (
+                        TemplateKey(
+                            "approach",
+                            "sdd",
+                            "Shared development approach: sdd or incubation; no local/environment override",
+                        ),
+                    )
+                ),
+            ),
+            "devkit-dist",
+        ),
+    )
     reserved.insert(
         0,
         ToolTemplate(

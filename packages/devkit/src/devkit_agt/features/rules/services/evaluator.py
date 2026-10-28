@@ -12,7 +12,7 @@ from devkit.advisory import AdvisoryError, Level
 from devkit_core.core.logs import get_logger
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, RECEIPT_PATH
 
-from devkit_agt.features.rules.models.contracts import Autofixable, Rule, RuleContext, Severity, Violation
+from devkit_agt.features.rules.models.contracts import Autofixable, Rule, RuleContext, RuleOmission, Severity, Violation
 from devkit_agt.features.rules.models.errors import RuleExecutionError, RuleProblem, SettingsError
 from devkit_agt.features.rules.models.phases import effective_phase, runs_in_phase
 from devkit_agt.features.rules.models.policy import effective_severity, validate_policy
@@ -28,6 +28,7 @@ class EvaluationResult:
     # IDs of the active rules the final check pass did not evaluate, because no explicit target matched their
     # declared ``inputs`` (``scope_rules``).
     skipped: list[str] = field(default_factory=list)
+    omissions: list[RuleOmission] = field(default_factory=list)
 
     @property
     def blocking_violations(self) -> list[Violation]:
@@ -107,6 +108,7 @@ def evaluate_rules(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
     selected, skipped = scope_rules(ctx, active)
     result = EvaluationResult(skipped=skipped)
     _log_skipped(skipped)
+    selected = _applicable(ctx, selected, result)
     initial = _check_rules(ctx, selected, "execution", result.errors)
     if not ctx.fix or ctx.dry_run or result.errors:
         result.violations = initial
@@ -122,9 +124,27 @@ def evaluate_rules(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
     else:
         rechecked, skipped = scope_rules(ctx, active, modified)
     result.skipped = skipped
+    result.omissions = []
+    rechecked = _applicable(ctx, rechecked, result)
     recheck = _check_rules(ctx, rechecked, "recheck", result.errors)
     result.violations = recheck if result.errors else _mark_fixed(initial, recheck)
     return result
+
+
+def _applicable(ctx: RuleContext, rules: Sequence[Rule], result: EvaluationResult) -> list[Rule]:
+    applicable = []
+    for rule in rules:
+        try:
+            omit = getattr(rule, "omission", lambda _ctx: None)(ctx)
+            if omit is not None:
+                if not isinstance(omit, RuleOmission):
+                    raise TypeError("omission must return RuleOmission or None")
+                result.omissions.append(omit)
+            else:
+                applicable.append(rule)
+        except Exception as exc:
+            result.errors.append(_execution_error(rule, f"{rule.id}: applicability failed", exc))
+    return applicable
 
 
 def _log_skipped(skipped: Sequence[str]) -> None:

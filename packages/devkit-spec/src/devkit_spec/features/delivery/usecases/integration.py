@@ -18,19 +18,26 @@ from __future__ import annotations
 import hashlib
 import json
 import tempfile
-from collections.abc import Sequence
 from pathlib import Path
 
 from devkit.advisory import AdvisoryError
 from devkit_agt.features.integration import Evidence, IntegrationContext, Readiness
+from devkit_agt.features.integration import (
+    build_snapshot as _build_snapshot,
+)
+from devkit_agt.features.integration import (
+    populate_managed_files as _populate_managed_files,
+)
+from devkit_agt.features.integration import (
+    snapshot_root as _snapshot_root,
+)
 from devkit_agt.features.rules import Phase, Snapshot, materialize_snapshot, run_project_rules
 from devkit_agt.features.workflow import Workspace, is_ancestor, load_decisions, load_envelopes, load_workflow_config
-from devkit_core.core import FrontmatterError, is_safe_relpath, run_git
+from devkit_core.core import FrontmatterError, run_git
 from devkit_core.core.frontmatter import parse
 from devkit_dist.base.errors import ConfigError
 from devkit_dist.features.project.models.invocation import AGENT_INVOCATION as DEVKIT
 from devkit_dist.features.project.repositories.project import commit_config
-from devkit_dist.features.project.repositories.receipt import load_receipt
 
 from devkit_spec.base.axes import EFFORTS, PROPOSAL_WORKFLOW, SPEC_WORKFLOWS, TASK_KINDS
 from devkit_spec.base.units import PROPOSAL_UNIT, SPEC_UNIT, is_spec_dir
@@ -44,81 +51,6 @@ SESSION_KINDS = frozenset({*TASK_KINDS, "overall-refactor"})
 SESSION_EFFORTS = frozenset(EFFORTS)
 TARGET_BOUND = ("TARGET_SHA", "RESULT_SHA")
 DISCLOSURE = "CI rules only on the merged result; tests and review ran on the source only"
-
-
-def _decode(raw: bytes) -> str:
-    return raw.decode("utf-8", errors="surrogateescape")
-
-
-def _snapshot_root(base: Path, worktree: Path) -> Path:
-    if worktree.is_dir() and (worktree / ".devkit" / "managed").is_dir():
-        return worktree.resolve()
-    return base.resolve()
-
-
-def _build_snapshot(root: Path, source_sha: str, target_sha: str, result_sha: str | None = None) -> Snapshot:
-    """The tree to check and its diff: the source from the merge base, or the result from the build target."""
-    tree = run_git(root, "rev-parse", "--verify", "--quiet", f"{result_sha or source_sha}^{{tree}}").decode().strip()
-    prior = target_sha if result_sha else run_git(root, "merge-base", "--", target_sha, source_sha).decode().strip()
-    output = run_git(root, "diff", "--name-status", "-z", "--no-renames", prior, tree, "--")
-    parts = [part for part in output.split(b"\0") if part]
-    changed: list[str] = []
-    deleted: list[str] = []
-    for status, name in zip(parts[0::2], parts[1::2], strict=True):
-        path = _decode(name)
-        changed.append(path)
-        if status.startswith(b"D"):
-            deleted.append(path)
-    files: list[tuple[str, str, str]] = []
-    regular: set[str] = set()
-    for entry in run_git(root, "ls-tree", "-r", "--full-tree", "-z", tree).split(b"\0"):
-        if not entry:
-            continue
-        meta, _, raw_path = entry.partition(b"\t")
-        file_mode, _kind, sha = meta.decode().split(" ")
-        name = _decode(raw_path)
-        if file_mode not in REGULAR_MODES | {SYMLINK_MODE, GITLINK_MODE} or not is_safe_relpath(name, canonical=True):
-            continue
-        files.append((name, sha, file_mode))
-        if file_mode in REGULAR_MODES:
-            regular.add(name)
-    return Snapshot(
-        root=root,
-        mode="ci",
-        tree=tree,
-        base=prior,
-        changed=tuple(path for path in changed if path in regular),
-        deleted=tuple(deleted),
-        files=tuple(files),
-    )
-
-
-def _populate_managed_files(workspace: Path, sources: Sequence[Path]) -> None:
-    try:
-        receipt = load_receipt(workspace)
-    except AdvisoryError:
-        return
-    if receipt is None:
-        return
-    for rel, record in receipt.file_records.items():
-        dest = workspace / rel
-        if dest.exists() or dest.is_symlink():
-            continue
-        for src in sources:
-            candidate = src / rel
-            try:
-                if not candidate.is_file() or candidate.is_symlink():
-                    continue
-                data = candidate.read_bytes()
-                if not record.matches(data):
-                    continue
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                dest.write_bytes(data)
-                if record.mode == 0o755:
-                    dest.chmod(0o755)
-                break
-            except OSError:
-                continue
 
 
 def _check_project_policies(base: Path, workspace: Path) -> list[str]:
@@ -462,6 +394,13 @@ def _unit_advance(root: Path, context: IntegrationContext) -> list[str]:
 
 def check(context: IntegrationContext) -> Readiness:
     """Verify SDD completion readiness for ``context`` from committed Git state."""
+    from devkit_agt.features.integration import check_project_readiness as project_check
+    from devkit_dist.features.project import development_approach
+
+    target_config = commit_config(Path(context.finish.base), context.finish.target_sha) or {}
+    if development_approach(target_config).approach == "incubation" and context.task.kind == "session":
+        # The independent provider refuses touched retained Units; callers use their Unit validator explicitly.
+        return project_check(context)
     base = Path(context.finish.base).resolve()
     worktree = Path(context.finish.path)
     snap_root = _snapshot_root(base, worktree)

@@ -202,3 +202,9 @@ consume the process-local binding without importing the transport. Dist discover
 The document wheel owns `devkit_docs/bundles/docs/bundle/`. Its auto-selected docs bundle carries shared
 instructions, document rule wrappers, templates and steering context; `devkit_spec/bundles/spec/bundle/` owns SDD
 lifecycle assets. No asset has two owners (`ADR-document-and-sdd-bundles`).
+
+
+The project feature owns typed shared development approach inspection in devkit-dist. Integration in devkit-agt
+reuses the rule engine for independent incubation readiness; SDD rule applicability and mutation judgments remain
+in devkit-spec. The common committed-ownership repository reads workflow anchor frontmatter without importing the
+workflow engine or optional SDD tooling. `RULE-architecture` enforces these dependency edges.

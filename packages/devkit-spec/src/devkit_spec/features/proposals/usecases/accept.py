@@ -54,6 +54,7 @@ from devkit_spec.base.errors import (
     ProposalPolicyNotAutoError,
     ProposalWrongWorktreeError,
 )
+from devkit_spec.features.policy import require_sdd
 from devkit_spec.features.policy.repositories.branches import (
     PLANNING_PREFIX,
     base_checkout_problem,
@@ -245,6 +246,7 @@ class AcceptProposalUseCase(BaseUseCase):
         failed direct condition in its details). After writing the status: ``ProposalGateNotOpenError``, with the status
         restored.
         """
+        require_sdd(root)
         if by not in {ACTOR, "policy"}:
             raise ArgumentError(
                 f"--by {by!r}: expected user or policy",

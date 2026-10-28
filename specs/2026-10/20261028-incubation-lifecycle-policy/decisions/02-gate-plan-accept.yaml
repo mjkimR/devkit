@@ -1,0 +1,8 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: PROP-incubation-lifecycle-policy
+by: user
+at: '2026-10-28T04:30:42.318312Z'

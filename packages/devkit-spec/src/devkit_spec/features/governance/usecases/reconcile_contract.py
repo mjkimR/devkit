@@ -22,11 +22,12 @@ from __future__ import annotations
 from pathlib import Path
 
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
-from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError, GitError, is_safe_relpath, normalize_relpath, run_git, run_git_text
 from devkit_core.core.frontmatter import parse
 from devkit_docs.features.governance import explicitly_targeted
 
+from devkit_spec.features.governance.services.applicability import LifecycleRule as BaseRule
+from devkit_spec.features.governance.services.applicability import applies
 from devkit_spec.features.policy.repositories.branches import recorded_base
 
 RULE_ID = "RULE-reconcile-contract"
@@ -165,6 +166,8 @@ class ReconcileContractRule(BaseRule):
         found: list[Violation] = []
         for path in ctx.cache.find_files(root / "specs", extensions=(".md",)):
             relative = ctx.cache.relative_name(path)
+            if not applies(ctx, relative):
+                continue
             parts = relative.split("/")
             if path.name != "reconcile.md" or len(parts) != 4 or not ctx.is_file_targeted(relative):
                 continue

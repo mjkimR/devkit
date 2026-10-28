@@ -180,3 +180,10 @@ before anything is written; `DEFAULT_WORKFLOW` is `sdd-spec-feature`, `BUGFIX_WO
 | `SPEC_UNBOUND` | `NOTICE` | `SpecUnboundNotice` | No `--workflow` and `sdd-spec-feature` is not available: `spec.md` is unbound. |
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | devkit's `ArgumentError` | `--namespace` is neither `global` nor registered, or stripped `--summary` is empty, longer than 300 characters or not English. |
 | `DOCS_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_docs.base.errors.DocsConfigError` | `[tool.docs]` is malformed and the namespace is not `--namespace global` (it is validated or detected; `CAP-DOCS-namespaces`). |
+
+
+## Approach precondition
+
+WHILE the common approach is incubation, `devkit spec new` and its public creation operation MUST refuse before
+writing with `SPEC_LIFECYCLE_INACTIVE`. Existing document lookup is unaffected. The common configuration owner is
+`CAP-DIST-sync-and-transactions`; lifecycle applicability is `CAP-DLV-delivery-workflows`.

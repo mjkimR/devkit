@@ -15,7 +15,7 @@ status: draft
 - `CAP-HARN-agent-guidance`: conditional spec entry, approach inspection and independent check obligations.
 - Attachment, cleanup, hygiene and proposal command contracts: repair descriptions where installed extension behavior changes.
 - Architecture/deployment: project-owned reader in devkit-dist, project readiness in devkit-agt and SDD-specific applicability in devkit-spec.
-- Promote `PADR-own-development-approach-policy-outside-sdd`; existing decisions remain unchanged unless exact supersession is required.
+- Promote `ADR-own-development-approach-policy-outside-sdd`; existing decisions remain unchanged unless exact supersession is required.
 - Package READMEs, guides and quick references: explicit incubation setup, no local/env override and preserved SDD default.
 - Root glossary: register development approach with its owner and exact configuration identifier if the term is introduced.
 

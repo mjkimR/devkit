@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T05:06:22.529502Z'
+status: completed
+summary: Shared approach policy, inactive mutations, explicit lifecycle omissions and independent project readiness implemented; all review and reconcile findings independently resolved
+findings: []
+assumptions:
+- 'Codex emulated: absolute paths, per-operation escalation, real diff and reviewer snapshots substitute for native enforcement'
+unverified_areas:
+- Host must incorporate advanced base and rewrite concurrent successor identifiers before final integration; source worktree does not merge or integrate
+checks:
+  tests: PASS affected full fallback5898 passed14skipped; after final root attachment correction affected1420 passed
+  build: PASS dist-only1271 passed; built-wheel doc-only real project provider and official smoke
+  lint: PASS dist/agt/spec lint and format; dist/agt/spec/docs Pyright0; cumulative governance clean; sync clean
+diff_scope:
+  base: aa83b6ed1beb5e6ee6cb1915b5e647936ad4b85b
+  head: faacf508c6758f2fae57b7959c4d7d0800a3bf09

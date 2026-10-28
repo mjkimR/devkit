@@ -1,7 +1,7 @@
 ---
 id: CAP-HARN-agent-guidance
 title: Agent Guidance Assets
-summary: "Spec guidance supplies SDD lifecycle skills, workflows, roles and policy while the independent docs bundle owns shared authoring instructions, templates, steering context and document scaffolds."
+summary: "Approach-aware SDD entry uses shared policy while the independent docs bundle owns authoring formats and instructions; incubation preserves independent checks without implicit delivery records."
 area: harness
 status: active
 created_at: 2026-10-13
@@ -43,7 +43,7 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
 
 ## 3. Business Rules & Policies
 
-1. **Context first**: an agent MUST read the constitution (`devkit get-context spec`) once per agent context before
+1. **Context first**: WHILE the shared development approach is SDD, an agent MUST read the constitution (`devkit get-context spec`) once per agent context before
    development work, including work started without a skill, and read each relevant instruction body before the
    action it governs. An instruction never overrides a mandatory check; a conflict is reported, not resolved by
    picking one. Every role contract under `subagents/` runs `devkit get-context spec` itself, so nested roles load
@@ -54,7 +54,7 @@ directories and writes the guidance pointer into the root `AGENTS.md` block.
    `spec-pointer` fragment); everything else is reached through `devkit get-context spec` and the skills.
 3. **Managed files are read-only**: files under `.devkit/managed/` and projected agent files are never edited;
    project changes go through `devkit override` or the project's own bundle.
-4. **Classification**: the `spec` skill MUST classify work on `task-kind`, then `planning-depth`, then per activity
+4. **Classification**: WHILE the approach is SDD, the `spec` skill MUST classify work on `task-kind`, then `planning-depth`, then per activity
    the mode and `activity-effort`, after reading `devkit spec policy`, propose the classification for the user to
    confirm at `plan-intent` (for `proposal` depth, scaffolding `planning_effort` and provisional `dev_effort` hints on
    `proposal.md`, refining `dev_effort` before `plan-accept`, and using `dev_effort` from `handoff` as the default
@@ -378,3 +378,13 @@ Host to coordinate; never edit another worker's checkout. Retained rejected PROP
 blocked. Missing targets never mean ready. Do not rewrite completed history, infer successors through provenance
 or store a lineage graph. On-demand code/Git inspection can answer downstream milestone outcome questions;
 proposal disappearance is not completion evidence.
+
+
+## Approach-aware SDD entry
+
+The installed spec pointer, constitution and router inspect `devkit config show` before selecting SDD routing.
+For `sdd`, existing intake/classification/stage/Git/approval rules apply. For `incubation`, they direct ordinary work
+to the project's incubation guidance and independent checks without implicit SDD Units, per-change envelopes or
+immutable iteration history. Existing explicitly bound SDD artifacts keep their checks. Installing or selecting spec
+assets never switches the approach. Incubation entry/roles/context are separately delivered; this policy supplies no
+product discovery coordinator.
