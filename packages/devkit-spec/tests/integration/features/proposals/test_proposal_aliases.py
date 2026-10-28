@@ -5,13 +5,13 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import devkit_docs
 import pytest
 from devkit_agt.features.rules.services.testing import check, load_rule
 from devkit_core.core.frontmatter import parse
 from spec_support.proposals import TODAY, accept, spec_dir
 from spec_support.types import Write
 
-import devkit_spec
 from devkit_spec.base.errors import (
     ProposalDecisionExistsError,
     ProposalExistsError,
@@ -22,7 +22,7 @@ from devkit_spec.base.errors import (
 from devkit_spec.features.proposals import create_proposal, create_spec, handoff_proposal
 from devkit_spec.features.proposals.usecases.scaffold import CreateProposalDecisionUseCase
 
-RULE = load_rule(Path(devkit_spec.__file__).parent / "bundles/spec/bundle/rules/document_reference/rule.py")
+RULE = load_rule(Path(devkit_docs.__file__).parent / "bundles/docs/bundle/rules/document_reference/rule.py")
 
 
 def _proposal(root: Path, slug: str, aliases: str = "") -> Path:

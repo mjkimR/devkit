@@ -33,12 +33,12 @@ RULES = (
 )
 # The instructions holding each rule's judgment (``related``); the other rules declare none.
 RELATED = {
-    "RULE-document-reference": ("spec:living-spec-writing",),
-    "RULE-id-convention": ("spec:living-spec-writing",),
-    "RULE-traceability-link": ("spec:living-spec-writing",),
-    "RULE-spec-lifecycle": ("spec:living-spec-writing",),
-    "RULE-document-summary": ("spec:living-spec-writing",),
-    "RULE-task-coverage": ("spec:contract-authoring",),
+    "RULE-document-reference": ("docs:living-spec-writing",),
+    "RULE-id-convention": ("docs:living-spec-writing",),
+    "RULE-traceability-link": ("docs:living-spec-writing",),
+    "RULE-spec-lifecycle": ("docs:living-spec-writing",),
+    "RULE-document-summary": ("docs:living-spec-writing",),
+    "RULE-task-coverage": ("docs:contract-authoring",),
 }
 PYPROJECT = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
@@ -89,7 +89,7 @@ def test_devkit_sync_deploys_the_default_preset_and_its_rules_run(tmp_path: Path
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
     result = _devkit("sync", "-w", str(tmp_path))
     assert result.returncode == 0, result.stderr
-    assert (tmp_path / ".devkit/managed/spec/instructions/contract-authoring.md").is_file()
+    assert (tmp_path / ".devkit/managed/docs/instructions/contract-authoring.md").is_file()
     doc = tmp_path / "docs/capabilities/core/CAP-CORE-a.md"
     doc.parent.mkdir(parents=True)
     doc.write_text("---\nid: CAP-CORE-a\nstatus: active\n---\nSee `UC-missing`.\n", encoding="utf-8")
@@ -101,7 +101,7 @@ def test_devkit_sync_deploys_the_default_preset_and_its_rules_run(tmp_path: Path
         assert explain.returncode == 0 and f"# [{rule}] " in explain.stdout, explain.stderr
         for ref in RELATED.get(rule, ()):
             name = ref.split(":", 1)[1]
-            line = f"[RELATED: {ref} kind=instruction path=.devkit/managed/spec/instructions/{name}.md]"
+            line = f"[RELATED: {ref} kind=instruction path=.devkit/managed/docs/instructions/{name}.md]"
             assert line in explain.stdout, explain.stdout
 
 
@@ -123,7 +123,7 @@ def test_the_docs_skeleton_is_opt_in_and_passes_the_rules(tmp_path: Path) -> Non
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
     assert _devkit("sync", "-w", str(tmp_path)).returncode == 0
     assert not (tmp_path / "docs").exists()
-    added = _devkit("add", "spec:docs-skeleton", "-w", str(tmp_path))
+    added = _devkit("add", "docs:docs-skeleton", "-w", str(tmp_path))
     assert added.returncode == 0, added.stderr
     assert (tmp_path / "docs/architecture/ARCH-01-introduction-and-goals.md").is_file()
     assert (tmp_path / "docs/steering/glossary.yaml").is_file()
@@ -133,7 +133,7 @@ def test_the_docs_skeleton_is_opt_in_and_passes_the_rules(tmp_path: Path) -> Non
     )
     index = DocumentIndex.load(tmp_path)
     assert not index.problems, index.problems
-    for source in (BUNDLE / "seed/docs/architecture").glob("ARCH-*.md"):
+    for source in (bundle_text.DOCS / "seed/docs/architecture").glob("ARCH-*.md"):
         assert index.resolve(source.stem).path == f"docs/architecture/{source.name}"
     existing = tmp_path / "docs/architecture/ARCH-01-introduction-and-goals.md"
     customized = existing.read_text(encoding="utf-8") + "\nProject-owned content.\n"
@@ -146,10 +146,10 @@ def test_the_docs_skeleton_is_opt_in_and_passes_the_rules(tmp_path: Path) -> Non
 
 
 def test_roadmap_template_and_guidance_are_packaged() -> None:
-    template = (BUNDLE / "templates/milestone.md").read_text()
+    template = (bundle_text.DOCS / "templates/milestone.md").read_text()
     assert "status: planned" in template and "depends_on: []" in template
     backlog = bundle_text.text("skills/spec/references/backlog.md")
     selection = bundle_text.text("skills/spec-next/references/next-work.md")
     assert "--decomposed-from" in backlog and "[milestone completion](milestone-completion.md)" in backlog
     assert "devkit docs list milestone --all-namespaces -n 0" in selection
-    assert (BUNDLE / "seed/docs/roadmap/README.md").is_file()
+    assert not (bundle_text.DOCS / "skills/spec/references/roadmap-catalog.md").exists()

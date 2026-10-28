@@ -18,7 +18,7 @@ legacy content up front.
 | An in-progress feature spec (for example spec-kit `specs/NNN-*/`) | A new spec through the `spec` skill when that work resumes |
 | Research, meeting notes, superseded plans, completed specs | Stay in `_legacy/` |
 
-Start from `.devkit/managed/spec/templates/<kind>.md`.
+Start from `.devkit/managed/docs/templates/<kind>.md`.
 
 ## Procedure
 

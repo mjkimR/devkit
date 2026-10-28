@@ -54,7 +54,7 @@ to a checklist task with `[AC-XX]` or a direct `_Requirements: AC-XX_` line; cor
 defines; list only well-formed IDs (`_Requirements: AC-01, AC-02_`); restore a readable `spec.md` or repair its YAML
 frontmatter.
 
-When a criterion is added, split or rewritten rather than renumbered, read the `spec:contract-authoring` instruction
+When a criterion is added, split or rewritten rather than renumbered, read the `docs:contract-authoring` instruction
 (Scope and Verifiability) for how an acceptance scenario is made checkable.
 
 ## 4. Configuration

@@ -228,3 +228,7 @@ the following; check each with the user and commit the result together with `pyp
 For cloud execution, run `uv run devkit sync --cloud` and use CLI inspection and artifact commands. This saves the checkout-local execution setting and records the actual render environment in the receipt. Optional native-service onboarding is for local execution only; skip it in cloud setup. Cloud mutation still requires a separately authorized CLI/PR route.
 
 `sync --no-save --cloud` renders cloud guidance and records its provenance without changing persisted runtime authorization. The next ordinary sync uses the saved/default environment; status/check reports the pending difference. `sync --local` restores local guidance. Locked sync refuses canonical environment changes; use ordinary sync and commit the resulting tracked output.
+
+For document formats without SDD lifecycle obligations, choose devkit-docs instead of the base harness requirement.
+It auto-selects docs:core. For SDD, devkit-spec additionally selects spec:core. The document skeleton is opt-in
+through `uv run devkit add docs:docs-skeleton`; existing seeded files remain project-owned.

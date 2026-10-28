@@ -26,7 +26,7 @@ uv run devkit rules check
 git ls-files -- 'docs/*.md' 'specs/*.md' > /tmp/legacy.txt
 ```
 
-- Remove from the set the paths `spec:docs-skeleton` seeded, if it was added, and files already shaped like the
+- Remove from the set the paths `docs:docs-skeleton` seeded, if it was added, and files already shaped like the
   Living Spec; those stay in place and are fixed as ordinary work.
 - Review a long or mixed set with the user.
 
@@ -64,7 +64,7 @@ Propose the containment as one commit before any migration, so moves and content
 
 ## Step 3: Docs skeleton, policy and commit gate
 
-- **Docs skeleton** (optional): `uv run devkit add spec:docs-skeleton`. Point a link to a legacy index such as
+- **Docs skeleton** (optional): `uv run devkit add docs:docs-skeleton`. Point a link to a legacy index such as
   `docs/README.md` at its `_legacy/` copy when the reader needs the old content.
 - **Policy**: show `uv run devkit spec policy` and record the user's decisions in `.devkit/config.toml`.
 - **Commit gate**: the `rules-check` gate refuses a commit touching a file with an error finding. The user chooses to

@@ -3,7 +3,7 @@
 How to choose opt-in bundles after the base installation. Entry point: [Installation Guide](../INSTALL_GUIDE.md).
 
 A bundle is a set of assets; a preset selects part of it. `devkit` and `advisory` (and `harness` with `devkit-agt`,
-`spec` with `devkit-spec`) are deployed automatically; every other bundle deploys nothing until `uv run devkit add <bundle>[:<preset>]` selects
+`docs` with `devkit-docs`, `docs` and `spec` with `devkit-spec`) are deployed automatically; every other bundle deploys nothing until `uv run devkit add <bundle>[:<preset>]` selects
 it. Recommend a bundle only on evidence from the repository or the user's answers, and select only what the user
 approves.
 
@@ -22,7 +22,8 @@ recommend comes from it.
 
 | Bundle (package) | Recommend when | Preset |
 | --- | --- | --- |
-| `spec` (`devkit-spec`) | The user wants spec-driven delivery (specs with acceptance criteria, planned and reviewed changes, a Living Spec under `docs/`), or the repository already keeps feature specs or decision records that agents maintain. | Not selected with `devkit add`: declare `devkit-spec` instead of `devkit-agt` ([Installation Guide, step 3](../INSTALL_GUIDE.md#step-3-package-sources)) and sync; default `core` deploys the `/spec` entry skill and its stage skills, the spec delivery workflows with the generated `devkit-workflow` skill, writing instructions, spec rules and subagents. `docs-skeleton` (`uv run devkit add spec:docs-skeleton`) seeds absent `docs/` files. |
+| `docs` (`devkit-docs`) | The user wants document formats and validation without mandatory SDD. | Auto-selected `core`: writing instructions, document rules, shared templates and steering context. Optional `docs:docs-skeleton` seeds absent files. Install devkit-docs instead of devkit-agt. |
+| `spec` (`devkit-spec`) | The user wants spec-driven delivery (specs with acceptance criteria, planned and reviewed changes, a Living Spec under `docs/`), or the repository already requires SDD feature delivery. | Not selected with `devkit add`: declare `devkit-spec` instead of `devkit-agt` ([Installation Guide, step 3](../INSTALL_GUIDE.md#step-3-package-sources)) and sync; default `core` deploys the `/spec` entry skill and its stage skills, the spec delivery workflows with the generated `devkit-workflow` skill, lifecycle rules and subagents; docs:core supplies shared writing instructions and document rules. `docs-skeleton` (`uv run devkit add docs:docs-skeleton`) seeds absent `docs/` files. |
 | `harness:run` (built in, `devkit-agt`) | The repository has tests, linters or type checks that agents run. | Adds one `AGENTS.md` line sending agents to `devkit run` for bounded command output. |
 | `git-commits` (built in) | `git log --format=%s -n 50` shows mostly `type(scope): subject`, or the user wants Conventional Commits. | Default `core`: the convention and an `AGENTS.md` pointer to it. |
 | `authoring` (built in, `devkit-agt`) | The repository contains agent skills (`SKILL.md`) or playbooks. | `skill-authoring`: the `agent-asset-writing` instruction, the restructuring playbook, the size rule and the wording rule. |

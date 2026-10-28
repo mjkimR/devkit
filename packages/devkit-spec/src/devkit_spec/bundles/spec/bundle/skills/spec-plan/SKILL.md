@@ -14,7 +14,7 @@ with frontmatter `id: PLAN-<slug>` and `spec: SPEC-<slug>`.
 1. **Invariants**: check the design against accepted ADRs (`devkit docs search "<topic>" --kind decision`),
    `docs/architecture/` and the capabilities it touches (`devkit docs refs <CAP-ID> --direction in`).
 2. **Changed invariant**: if an architectural rule that must hold has to change, propose an ADR
-   (`docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, template `.devkit/managed/spec/templates/decision.md`).
+   (`docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, template `.devkit/managed/docs/templates/decision.md`).
 3. **Choices**: inside the agreed intent, take the recommended option and record its reason. Outside it, raise a
    problem for the Host; a bugfix that needs a different defect scope returns to `characterize`.
 4. **Design**: give every user story and `[AC-NN]` scenario a handling component and keep every non-goal out. Name the

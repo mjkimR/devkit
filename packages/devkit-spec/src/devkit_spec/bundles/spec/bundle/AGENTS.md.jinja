@@ -16,9 +16,7 @@ user instructions take precedence. Never end the user's session on your own.
 
 - `docs/` is the Living Spec, the current contract: capabilities, use cases, architecture and decisions. A feature spec
   is `specs/<YYYY-MM>/<YYYYMMDD>-<slug>/` (`spec.md`, `plan.md`, `tasks.md`) and stays as history once completed.
-- `docs/steering/` holds project-wide background (glossary, product, style); `devkit get-context spec` lists each
-  file's title and summary under `documents`. Read a file's body before a wording, naming, interface or content
-  decision its summary covers.
+- Before using document contracts, run `uv run devkit get-context docs` once per agent context and apply its instructions.
 - Read current contracts and active specs (`devkit docs list spec`) before drafting new work. In a package namespace
   (`docs/packages/<name>/`), `list` and `search` cover that namespace plus global documents; pass `--all-namespaces`
   for cross-package impact.
@@ -27,6 +25,9 @@ user instructions take precedence. Never end the user's session on your own.
   exception to a MUST needs an ADR; state a one-off exception within the approved scope in the review or final report.
 - A task's `_Boundary:_` is the expected scope: explain a necessary extension in the report. Write boundaries given to
   a delegated role are strict.
+
+- In SDD, a changed decision is a new ADR with `supersedes`; wording, metadata and reference repairs and ADR compaction may edit an existing ADR without changing its decision.
+- A spec with `status: completed` stays in place as history; start a later behavior change in a new spec.
 
 ## 3. Classification and Authority
 
@@ -51,6 +52,9 @@ user instructions take precedence. Never end the user's session on your own.
   change needs new authority.
 - Records name `user` or `policy` and carry decisions, never conversation quotes, paraphrases or dates.
 
+- UX alternatives are chosen in proposal Planning or inline Planning before `plan-intent`. Development takes the recommended candidate and records alternatives as an assumption in `spec.md`.
+- In SDD, draft screens in `target-docs.md` for proposals or `spec.md` for specs before code. `spec-sync` writes the retained drafts and citations. Offer optional `ux-reviewer` before code; a `session` task runs no UX review.
+
 ## 4. Verification and Completion
 
 - Before reporting completion, compare the final diff, the agreed requirements, the check results and the Living Spec
@@ -61,6 +65,6 @@ user instructions take precedence. Never end the user's session on your own.
 
 ## 5. Managed Files
 
-- Templates: `.devkit/managed/spec/templates/{capability,usecase,ux,decision,proposal,milestone}.md`.
+- Shared templates: `.devkit/managed/docs/templates/{capability,usecase,ux,decision,milestone}.md`; proposal template: `.devkit/managed/spec/templates/proposal.md`.
 - Read policy through `devkit spec policy`, never by parsing `.devkit/config.toml`.
 - Change `.devkit/managed/` through `devkit override` or the project's own bundle, never by editing it.

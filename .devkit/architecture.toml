@@ -95,6 +95,7 @@ public_modules = [
 [[packages]]
 namespace = "devkit_docs"
 root = "packages/devkit-docs/src/devkit_docs"
+data_roots = ["bundles"]
 kind = "features"
 features = ["documents", "governance"]
 feature_dependencies.documents = ["devkit_agt.features.rules", "devkit_dist.features.project", "devkit_dist.features.search"]

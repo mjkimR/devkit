@@ -99,10 +99,11 @@ viewer frontend change selects no pytest test: run the command its `[FRONTEND_CH
 This repository installs agent assets with `devkit`. `.devkit/config.toml` selects
 bundles; `.devkit/installation.json` records what is deployed.
 
-- Before work that touches a bundle's assets, run `uv run devkit get-context <bundle>` once per bundle in the current agent context. Installed bundles: `advisory`, `authoring`, `devkit`, `devkit-dev`, `harness`, `response-style`, `spec`.
+- Before work that touches a bundle's assets, run `uv run devkit get-context <bundle>` once per bundle in the current agent context. Installed bundles: `advisory`, `authoring`, `devkit`, `devkit-dev`, `docs`, `harness`, `response-style`, `spec`.
 - Entry skill `devkit-playbook`: find and run an operational playbook the user invokes or confirms.
 - Entry skill `devkit-workflow`: diagnose and follow the delivery workflow stage of a work unit.
 - Never edit `.devkit/managed/` or projected agent files; change the source bundle or use `devkit override`.
+- Before document work, run `uv run devkit get-context docs` once per agent context and follow its writing instructions. Read the listed steering documents when their summaries concern the decision.
 - Before replying, read and apply the `response-style` skill. Put the conclusion in the first sentence. Use `→ **Core sentence.** Explanation` for ordinary points; preserve required facts and formats, and make unfinished work and necessary user decisions clear.
 - Before any development work, run `uv run devkit get-context spec` once per agent context and follow it. Start work with `/spec <intent>`; each new task intake runs its intake step first; `/spec-next` orients. `docs/` is the current-state Living Spec, `specs/` holds feature specs.
 

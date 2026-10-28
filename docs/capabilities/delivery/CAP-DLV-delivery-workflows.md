@@ -602,3 +602,10 @@ invalid Git inputs or unresolved required unit/head/base. A not-run check alone 
 The helper MUST NOT write records, modify files, repair, retry, synchronize, merge or widen scope. It adds no
 approval request, workflow gate, integration refusal or scope registration. The Host's delegation payload remains
 authoritative, and the Host decides acceptance under the existing procedure.
+
+## Shared document context
+
+SDD guidance MUST load `devkit get-context docs` before using document contracts. The docs bundle owns shared
+authoring instructions and templates; spec retains lifecycle gates, immutable decision supersession and completed
+spec preservation. Installing devkit-spec auto-selects both core bundles. Explicitly removing docs requires
+`devkit add docs` to restore the supported SDD selection (`ADR-document-and-sdd-bundles`).

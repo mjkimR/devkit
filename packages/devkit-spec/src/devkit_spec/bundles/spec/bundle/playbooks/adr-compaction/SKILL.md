@@ -27,7 +27,7 @@ groups.
 
 ## Step 2: Write each replacement
 
-Write `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, dated today, from `.devkit/managed/spec/templates/decision.md`:
+Write `docs/decisions/<YYYY-MM>/<YYYYMMDD>-<slug>.md`, dated today, from `.devkit/managed/docs/templates/decision.md`:
 
 - Frontmatter: `status: accepted`, `created_at` today, `aliases:` every member ID and every alias a member declared;
   no `supersedes` or `proposal`.

@@ -102,7 +102,7 @@ class TraceabilityLinkRule(BaseRule):
             phase=Phase.LINTER,
             severity=Severity.ERROR,
             guide="guide.md",
-            related=("spec:living-spec-writing",),
+            related=("docs:living-spec-writing",),
         )
 
     def check(self, ctx: RuleContext) -> list[Violation]:

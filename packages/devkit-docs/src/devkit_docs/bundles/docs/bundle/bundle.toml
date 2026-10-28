@@ -1,0 +1,153 @@
+schema = 1
+name = "docs"
+version = "0.1.4"
+default_preset = "core"
+auto_select = true
+context_documents = "docs/steering"
+
+[[assets]]
+id = "contract-authoring"
+kind = "instruction"
+source = "instructions/contract-authoring.md"
+
+
+[[assets]]
+id = "living-spec-writing"
+kind = "instruction"
+source = "instructions/living-spec-writing.md"
+
+
+[[assets]]
+id = "document-writing"
+kind = "instruction"
+source = "instructions/document-writing.md"
+
+
+[[assets]]
+id = "decision-writing"
+kind = "instruction"
+source = "instructions/decision-writing.md"
+
+
+[[assets]]
+id = "capability-writing"
+kind = "instruction"
+source = "instructions/capability-writing.md"
+
+
+[[assets]]
+id = "usecase-writing"
+kind = "instruction"
+source = "instructions/usecase-writing.md"
+
+
+[[assets]]
+id = "ux-writing"
+kind = "instruction"
+source = "instructions/ux-writing.md"
+
+
+[[assets]]
+id = "architecture-writing"
+kind = "instruction"
+source = "instructions/architecture-writing.md"
+
+
+[[assets]]
+id = "document-reference"
+kind = "rule"
+source = "rules/document_reference"
+
+
+[[assets]]
+id = "id-convention"
+kind = "rule"
+source = "rules/id_convention"
+
+
+[[assets]]
+id = "spec-format"
+kind = "rule"
+source = "rules/spec_format"
+
+
+[[assets]]
+id = "traceability-link"
+kind = "rule"
+source = "rules/traceability_link"
+
+
+[[assets]]
+id = "docs-skeleton"
+kind = "document"
+seeded = true
+source = "seed/docs"
+target = "docs"
+
+
+[[assets]]
+id = "code-entrypoints"
+kind = "rule"
+source = "rules/code_entrypoints"
+
+
+[[assets]]
+id = "document-summary"
+kind = "rule"
+source = "rules/document_summary"
+
+
+[[assets]]
+id = "steering-documents"
+kind = "rule"
+source = "rules/steering_documents"
+
+
+[[assets]]
+id = "ux-links"
+kind = "rule"
+source = "rules/ux_links"
+
+
+[[assets]]
+id = "ux-coverage"
+kind = "rule"
+source = "rules/ux_coverage"
+
+
+[[assets]]
+id = "templates"
+kind = "document"
+source = "templates"
+
+
+[[assets]]
+id = "docs-pointer"
+kind = "guidance"
+source = "guidance/docs-pointer.md"
+
+[presets.core]
+assets = [
+    "ux-writing",
+    "usecase-writing",
+    "contract-authoring",
+    "document-writing",
+    "capability-writing",
+    "architecture-writing",
+    "living-spec-writing",
+    "decision-writing",
+    "document-reference",
+    "id-convention",
+    "spec-format",
+    "traceability-link",
+    "document-summary",
+    "steering-documents",
+    "ux-links",
+    "ux-coverage",
+    "code-entrypoints",
+    "templates",
+    "docs-pointer",
+]
+
+[presets.docs-skeleton]
+assets = ["docs-skeleton"]

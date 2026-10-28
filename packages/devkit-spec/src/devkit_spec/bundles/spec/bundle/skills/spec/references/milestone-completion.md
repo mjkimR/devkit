@@ -1,6 +1,6 @@
 # Milestone completion review
 
-Read this for a requested Backlog close review, or to propose one after the milestone's known work finishes. Scope changes and handoff effects on the assertions are in the milestone template (`.devkit/managed/spec/templates/milestone.md`).
+Read this for a requested Backlog close review, or to propose one after the milestone's known work finishes. The shared milestone template is `.devkit/managed/docs/templates/milestone.md`. In SDD, only direct PROP anchors declare milestone membership; handoff does not carry it to SPEC. The milestone frames direction, not binding implementation requirements. Planning settles scope. Semantic scope changes reset both completion assertions to pending; normal handoff does not. Record confirmed assertions and done status together only after user confirmation.
 
 ## Prepare one candidate
 

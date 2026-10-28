@@ -306,3 +306,14 @@ prefix opens `value` as `<PREFIX>-...`, and `KindTableError` reports an inconsis
 `parse_document(path, text)` reads one document (`None` without a well-formed ID); `visible_lines` is the prose
 scanner behind reference extraction; `SOURCE_DIRECTORIES`, `is_document_file` and `in_source_directory` expose the
 file selection.
+
+## Document asset distribution
+
+The devkit-docs wheel MUST register the auto-selected `docs:core` bundle. It owns eight writing instructions,
+nine document rule assets, five shared templates and the docs-pointer. Only docs declares the `docs/steering`
+context directory. `devkit get-context docs` lists steering summaries and document instructions.
+`docs:docs-skeleton` seeds absent files only when selected; seeded files remain project-owned.
+The bundle introduces no SDD entry, approval, immutable ADR history or completed-artifact retention obligations.
+The selected development approach owns those policies (`ADR-document-and-sdd-bundles`).
+A clean document-only installation omits devkit-spec; deselecting spec assets does not disable installed extensions.
+Tests: `packages/devkit-docs/tests/integration/bundles/docs/` and `packages/devkit-docs/tests/e2e/bundles/docs/`.

@@ -2,7 +2,8 @@
 
 [presets]
 advisory = "python"
-spec = ["core", "docs-skeleton"]
+docs = ["core", "docs-skeleton"]
+spec = "core"
 authoring = "skill-authoring"
 response-style = "all"
 devkit-dev = ["structure", "handbook"]

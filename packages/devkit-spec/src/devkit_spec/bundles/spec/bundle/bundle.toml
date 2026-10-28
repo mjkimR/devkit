@@ -3,255 +3,134 @@ name = "spec"
 version = "0.1.4"
 default_preset = "core"
 auto_select = true
-# Steering documents: get-context lists each file's title and summary in every agent context.
-context_documents = "docs/steering"
 
-# Normative wording, measurable contracts, non-goals and examples (exceptions: the constitution).
-[[assets]]
-id = "contract-authoring"
-kind = "instruction"
-source = "instructions/contract-authoring.md"
-
-# Current-state writing, history placement, completed specs, traceability and ID references.
-[[assets]]
-id = "living-spec-writing"
-kind = "instruction"
-source = "instructions/living-spec-writing.md"
-
-# Sentence-level baseline every document follows; the per-kind writing instructions add to it.
-[[assets]]
-id = "document-writing"
-kind = "instruction"
-source = "instructions/document-writing.md"
-
-# ADR and PADR writing: Y-statement summary, options, outcome and Confirmation.
-[[assets]]
-id = "decision-writing"
-kind = "instruction"
-source = "instructions/decision-writing.md"
-
-# Capability writing: EARS business rules and their enforcing checks.
-[[assets]]
-id = "capability-writing"
-kind = "instruction"
-source = "instructions/capability-writing.md"
-
-# Use case writing: main success scenario, step-keyed extensions, postconditions and acceptance scenarios.
-[[assets]]
-id = "usecase-writing"
-kind = "instruction"
-source = "instructions/usecase-writing.md"
-
-# UX writing: one element per document, content tree, states, interactions with step keys and the object register.
-[[assets]]
-id = "ux-writing"
-kind = "instruction"
-source = "instructions/ux-writing.md"
-
-# Architecture writing: arc42 placement, constraints with enforcing checks, quality scenarios.
-[[assets]]
-id = "architecture-writing"
-kind = "instruction"
-source = "instructions/architecture-writing.md"
-
-# The AGENTS.md line that sends every session to the spec bundle's context before development work.
 [[assets]]
 id = "spec-pointer"
 kind = "guidance"
 source = "guidance/spec-pointer.md"
 
-# Documents reference each other by exact, resolvable full IDs.
-[[assets]]
-id = "document-reference"
-kind = "rule"
-source = "rules/document_reference"
 
-# Paths, IDs and heading tokens follow the slug conventions; no date- or number-based references.
-[[assets]]
-id = "id-convention"
-kind = "rule"
-source = "rules/id_convention"
-
-# Capabilities, use cases and proposals carry id, title and status frontmatter.
-[[assets]]
-id = "spec-format"
-kind = "rule"
-source = "rules/spec_format"
-
-# Use case and capability links are bidirectional.
-[[assets]]
-id = "traceability-link"
-kind = "rule"
-source = "rules/traceability_link"
-
-# Every acceptance criterion of a spec is covered by a task, and tasks cite only defined ones.
 [[assets]]
 id = "task-coverage"
 kind = "rule"
 source = "rules/task_coverage"
 
-# A spec's status agrees with its reconcile record and task checklist.
+
 [[assets]]
 id = "spec-lifecycle"
 kind = "rule"
 source = "rules/spec_lifecycle"
 
-# A spec whose tasks have started is marked in-progress (warning).
+
 [[assets]]
 id = "spec-progress"
 kind = "rule"
 source = "rules/spec_progress"
 
-# Entry router: classify the task (task-kind, planning-depth), run Backlog and inline Planning, drive the workflow.
+
 [[assets]]
 id = "spec"
 kind = "skill"
 source = "skills/spec"
 
-# Orient in work under way: diagnose the stage and the next action.
+
 [[assets]]
 id = "spec-next"
 kind = "skill"
 source = "skills/spec-next"
 
-# Write spec.md: requirements, non-goals and acceptance criteria.
+
 [[assets]]
 id = "spec-specify"
 kind = "skill"
 source = "skills/spec-specify"
 
-# Write plan.md: design, interfaces and verification plan.
+
 [[assets]]
 id = "spec-plan"
 kind = "skill"
 source = "skills/spec-plan"
 
-# Write tasks.md: tasks covering every acceptance criterion.
+
 [[assets]]
 id = "spec-tasks"
 kind = "skill"
 source = "skills/spec-tasks"
 
-# Verify the change against the spec, tests and checks before completion.
+
 [[assets]]
 id = "spec-review"
 kind = "skill"
 source = "skills/spec-review"
 
-# Walk each linked use case through drafted screens and score them on a rubric, before code.
+
 [[assets]]
 id = "spec-ux-review"
 kind = "skill"
 source = "skills/spec-ux-review"
 
-# Review proposal decisions and refine Planning against an exact report.
+
 [[assets]]
 id = "spec-review-proposal"
 kind = "skill"
 source = "skills/spec-review-proposal"
 
-# Reconcile the change into the Living Spec and resolve reconcile.md.
+
 [[assets]]
 id = "spec-sync"
 kind = "skill"
 source = "skills/spec-sync"
 
-# Integrate an approved change: conflicts, docs reflection, merge and cleanup.
+
 [[assets]]
 id = "spec-integrate"
 kind = "skill"
 source = "skills/spec-integrate"
 
-# Delegate a stage to a role contract and record its envelope.
+
 [[assets]]
 id = "spec-delegate"
 kind = "skill"
 source = "skills/spec-delegate"
 
-# Orchestration mode: the user switches the session to coordinating workers in their own worktrees.
+
 [[assets]]
 id = "spec-orchestrate"
 kind = "skill"
 source = "skills/spec-orchestrate"
 invocation = "user"
 
-# Author or tune a project rule for devkit rules.
+
 [[assets]]
 id = "spec-rule"
 kind = "skill"
 source = "skills/spec-rule"
 
-# Record and sweep feedback observations.
+
 [[assets]]
 id = "spec-feedback"
 kind = "skill"
 source = "skills/spec-feedback"
 
-# Derive capability/use case entrypoints from spec bundles, review them and write the chosen ones.
+
 [[assets]]
 id = "spec-entrypoints"
 kind = "skill"
 source = "skills/spec-entrypoints"
 
-# The docs/ skeleton (Living Spec directories, arc42 chapters, steering glossary and synonyms): written once where absent,
-# then project-owned. Opt-in preset, so an existing docs/ tree never receives files it did not ask for.
-[[assets]]
-id = "docs-skeleton"
-kind = "document"
-seeded = true
-source = "seed/docs"
-target = "docs"
 
-# A reconcile.md record has an id, a pending or resolved status and well-formed targets.
 [[assets]]
 id = "reconcile-contract"
 kind = "rule"
 source = "rules/reconcile_contract"
 
-# Every entrypoints path of a capability or use case is an existing workspace file or directory.
-[[assets]]
-id = "code-entrypoints"
-kind = "rule"
-source = "rules/code_entrypoints"
 
-# A proposal's target_area and boundaries.owns entries name existing paths (warning).
 [[assets]]
 id = "proposal-boundaries"
 kind = "rule"
 source = "rules/proposal_boundaries"
 
-# Searchable documents carry a short English summary, the main signal of document search.
-[[assets]]
-id = "document-summary"
-kind = "rule"
-source = "rules/document_summary"
 
-# The steering directory stays flat, ID-free, summarized in English and within its count and size caps.
-[[assets]]
-id = "steering-documents"
-kind = "rule"
-source = "rules/steering_documents"
-
-# A UX document and the use case steps that cite it do not contradict each other.
-[[assets]]
-id = "ux-links"
-kind = "rule"
-source = "rules/ux_links"
-
-# Steps of a use case a UX document serves cite a screen, and interactions name their step (warning).
-[[assets]]
-id = "ux-coverage"
-kind = "rule"
-source = "rules/ux_coverage"
-
-# Starting points for new documents, read by path (.devkit/managed/spec/templates/<kind>.md).
-[[assets]]
-id = "templates"
-kind = "document"
-source = "templates"
-
-# Delivery workflows, one per planning-depth and task-kind (sdd-<planning-depth>[-<task-kind>]), with the
-# plan-intent, plan-accept and dev-integration gates.
 [[assets]]
 id = "sdd-session-feature"
 kind = "workflow"
@@ -282,8 +161,7 @@ id = "sdd-proposal"
 kind = "workflow"
 source = "workflows/sdd-proposal.md"
 
-# Optional support roles the workflows delegate to: host-neutral contracts, projected per agent; the body is the
-# role's prompt, so a procedure no main session runs lives there rather than in a skill.
+
 [[assets]]
 id = "challenger"
 kind = "subagent"
@@ -309,7 +187,7 @@ id = "ux-reviewer"
 kind = "subagent"
 source = "subagents/ux-reviewer.md"
 
-# Backlog roles: read-only recommendations the Host applies on the user's decision; a return is a message.
+
 [[assets]]
 id = "triage"
 kind = "subagent"
@@ -330,7 +208,7 @@ id = "planning-worker"
 kind = "subagent"
 source = "subagents/planning-worker.md.jinja"
 
-# Occasional procedures, found through `devkit playbook search` on explicit request or offered at `spec` intake.
+
 [[assets]]
 id = "brownfield-adoption"
 kind = "playbook"
@@ -346,32 +224,20 @@ id = "adr-compaction"
 kind = "playbook"
 source = "playbooks/adr-compaction"
 
+[[assets]]
+id = "templates"
+kind = "document"
+source = "templates"
+
 [presets.core]
 assets = [
-    "contract-authoring",
-    "living-spec-writing",
-    "document-writing",
-    "decision-writing",
-    "capability-writing",
-    "usecase-writing",
-    "ux-writing",
-    "architecture-writing",
+    "templates",
     "spec-pointer",
-    "document-reference",
-    "id-convention",
-    "spec-format",
-    "traceability-link",
     "task-coverage",
     "spec-lifecycle",
     "spec-progress",
     "reconcile-contract",
-    "document-summary",
-    "steering-documents",
-    "ux-links",
-    "ux-coverage",
-    "code-entrypoints",
     "proposal-boundaries",
-    "templates",
     "spec",
     "spec-next",
     "spec-specify",
@@ -406,6 +272,3 @@ assets = [
     "feedback-hygiene",
     "adr-compaction",
 ]
-
-[presets.docs-skeleton]
-assets = ["docs-skeleton"]

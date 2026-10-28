@@ -56,7 +56,7 @@ class SteeringDocumentsRule(BaseRule):
             severity=Severity.ERROR,
             settings=SteeringDocumentsSettings(),
             guide="guide.md",
-            related=("spec:living-spec-writing",),
+            related=("docs:living-spec-writing",),
         )
 
     def validate_settings(self, settings: SteeringDocumentsSettings) -> None:

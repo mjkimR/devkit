@@ -2,7 +2,7 @@
 id: SPEC-document-bundle-split
 title: Install the document system without SDD
 summary: Ships document formats, authoring guidance, templates and document rules in a docs bundle, independently of the spec bundle's SDD lifecycle assets.
-status: planned
+status: in-progress
 created: 2026-10-28
 decomposed_from: PROP-document-layer-package
 related_capabilities:
