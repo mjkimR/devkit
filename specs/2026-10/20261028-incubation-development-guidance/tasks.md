@@ -18,7 +18,7 @@ plan: PLAN-incubation-development-guidance
   - **_Boundary**: docs/capabilities/delivery/CAP-DLV-idea-incubation.md, docs/usecases/delivery/UC-incubate-an-idea.md
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05, AC-06_
   - **Verification**: capability/usecase rules and reciprocal traceability; compare with semantic-exercises evidence.
-- [ ] **Task 3**: Reflect delivered ownership, interaction and adoption doorway in current contracts and guides after shared-doc write release.
+- [x] **Task 3**: Reflect delivered ownership, interaction and adoption doorway in current contracts and guides after shared-doc write release.
   - **_Boundary**: docs/capabilities/delivery/, docs/capabilities/harness/, docs/usecases/delivery/, docs/usecases/harness/, docs/architecture/, docs/decisions/, docs/steering/, guides/
   - _Requirements: AC-01, AC-02, AC-03, AC-04, AC-05, AC-06_
   - **Verification**: independent reconcile comparison, rule checks and final cumulative governance.

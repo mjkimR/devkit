@@ -118,3 +118,10 @@ configuration loss blocks new approval/resume; only the same approved call's exa
 The devkit-docs wheel registers `docs = "devkit_docs.bundles.docs"` in `devkit.bundles`. Its default core is
 auto-selected alongside spec:core for devkit-spec installations. Built-wheel isolation without devkit-spec is
 verified by `packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py`.
+
+The devkit-catalog wheel registers `incubation = "devkit_catalog.incubation"`; it deploys only after explicit
+`incubation:core` selection. A clean incubation installation uses devkit-docs plus devkit-catalog without devkit-spec.
+The catalog owns the entry, pointer, role contracts and managed current-context template. The coordinator's
+`.devkit/incubation.md` remains project-owned and is never a seeded or overwritten deployment output. Built-wheel
+isolation, common policy inspection and context preservation are exercised by
+`packages/devkit-catalog/tests/e2e/bundles/incubation/test_installed_consumer.py`.

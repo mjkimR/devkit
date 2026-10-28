@@ -8,6 +8,7 @@ supporting_actors: [Product owner, Optional product clarification/research/usage
 status: active
 capabilities:
   - CAP-DLV-idea-incubation
+  - CAP-HARN-agent-guidance
 ---
 
 # [UC-incubate-an-idea] Advance an idea and leave resumable current context
@@ -21,7 +22,7 @@ capabilities:
 
 ## 2. Main Success Scenario
 
-1. The agent invokes incubation guidance for the requested product action (`CAP-DLV-idea-incubation`).
+1. The agent invokes incubation guidance for the requested product action (`CAP-DLV-idea-incubation`, `CAP-HARN-agent-guidance`).
 2. The agent verifies that the effective development approach permits incubation work (`CAP-DLV-idea-incubation`).
 3. The agent recovers current goals, choices and execution evidence from available context and implementation (`CAP-DLV-idea-incubation`).
 4. The agent selects the next useful action from the remaining decision or evidence need (`CAP-DLV-idea-incubation`).

@@ -6,12 +6,40 @@ targets:
   resolution: modified
 - file: docs/usecases/delivery/UC-incubate-an-idea.md
   resolution: modified
+- file: docs/capabilities/harness/CAP-HARN-agent-guidance.md
+  resolution: modified
+- file: docs/architecture/ARCH-05-2-components.md
+  resolution: modified
+- file: docs/architecture/ARCH-07-deployment.md
+  resolution: modified
+- file: docs/decisions/2026-10/20261028-keep-incubation-guidance-opt-in-and-current-state-based.md
+  resolution: modified
+- file: docs/steering/glossary.md
+  resolution: modified
+- file: guides/INSTALL_GUIDE.md
+  resolution: modified
+- file: guides/install/bundle-recommendations.md
+  resolution: modified
+- file: guides/install/new-repository.md
+  resolution: modified
+- file: guides/install/existing-repository.md
+  resolution: modified
 ---
 
-# Reconciliation draft
+# Reconciliation
 
-The Host released these exact new contract paths while existing shared contracts/guides remain deferred.
-They describe the catalog assets, common-policy applicability, optional role boundaries, mutable current context
-and observed action/resume behavior. `materials/semantic-exercises.md` distinguishes synthetic decisions from
-actual command evidence. This record remains pending until shared-doc reflection, policy fixes and independent
-reconcile verification are complete; it claims no final or milestone completion.
+The catalog-owned entry, optional role contracts and mutable project context match the capability/usecase,
+approach-aware agent guidance, architecture ownership, glossary and installation instructions.
+`materials/semantic-exercises.md` separates synthetic input/choices from actual usage and resume observations.
+
+## Scope and deferred work
+
+Shared runtime applicability is implemented by `SPEC-incubation-lifecycle-policy`; this feature consumes it without
+changing runtime code. Optional baseline readiness/activation remains `PROP-incubation-sdd-baseline`, whose accepted
+work is tracked separately. No milestone completion is claimed. Existing SDD history and project checks remain
+protected. The independent reviewer verifies these targets before this record becomes resolved.
+
+## Feedback
+
+`FB-usecase-parser-affected-selection` records the observed selector gap; the source selector is outside this
+feature and remains unchanged. The explicit usecase parser regression is included in final verification.

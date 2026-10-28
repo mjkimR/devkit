@@ -1,12 +1,13 @@
 ---
 id: CAP-HARN-agent-guidance
 title: Agent Guidance Assets
-summary: "Approach-aware SDD entry uses shared policy while the independent docs bundle owns authoring formats and instructions; incubation preserves independent checks without implicit delivery records."
+summary: "Approach-aware SDD and opt-in incubation entries consume shared policy; docs owns authoring formats, while catalog incubation supplies optional product support and mutable current context."
 area: harness
 status: active
 created_at: 2026-10-13
 usecases:
   - UC-route-development-intent
+  - UC-incubate-an-idea
   - UC-adopt-in-an-existing-repository
   - UC-handle-delivery-problems-and-exceptions
   - UC-resolve-stale-activity-branches
@@ -388,3 +389,19 @@ to the project's incubation guidance and independent checks without implicit SDD
 immutable iteration history. Existing explicitly bound SDD artifacts keep their checks. Installing or selecting spec
 assets never switches the approach. Incubation entry/roles/context are separately delivered; this policy supplies no
 product discovery coordinator.
+
+## Incubation entry and current context
+
+The opt-in `incubation:core` catalog bundle supplies `/incubate`, its conditional references, the incubation pointer,
+three optional support contracts and a current-context template (`CAP-DLV-idea-incubation`). Install devkit-docs
+and devkit-catalog and select incubation explicitly; devkit-spec is not required. The entry inspects common
+`configuration.development.approach` before product work and stops on SDD or invalid policy rather than switching
+approach implicitly. Independent document/project checks and retained SDD artifact protections remain applicable.
+
+The coordinator adapts clarification, research, implementation and actual-usage verification to the next useful
+action. Product-clarifier, incubation-researcher and usage-reviewer roles return bounded evidence only when useful;
+no iteration requires all roles. Their role contracts preserve source/index/HEAD authority and distinguish
+emulated boundaries from native confinement. The coordinator owns mutable project context at
+`.devkit/incubation.md`, including current goal/choices, source-specific run/check evidence, uncertainty and next
+action. Sync owns its pristine template and preserves the project-owned file. Explicit adoption requests route to
+the separately available baseline procedure; this entry does not activate SDD or reconstruct experiment history.
