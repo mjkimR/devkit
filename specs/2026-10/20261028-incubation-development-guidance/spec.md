@@ -2,7 +2,7 @@
 id: SPEC-incubation-development-guidance
 title: Develop and resume an idea without SDD lifecycle records
 summary: "Ships opt-in incubation guidance, optional support roles and mutable current context independently of SDD, with observed iteration and resume verification."
-status: in-progress
+status: completed
 created: 2026-10-28
 depends_on: [SPEC-incubation-lifecycle-policy]
 related_capabilities: [CAP-DLV-idea-incubation]
