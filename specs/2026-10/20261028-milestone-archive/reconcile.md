@@ -1,6 +1,6 @@
 ---
 reconcile_id: REC-milestone-archive
-status: pending
+status: resolved
 targets:
   - file: docs/capabilities/documents/CAP-DOCS-document-model.md
     resolution: modified
