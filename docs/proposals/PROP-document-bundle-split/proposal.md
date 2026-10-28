@@ -17,7 +17,6 @@ boundaries:
     - docs/decisions/
 task_kind: feature                    # feature | bugfix: the spec follows sdd-spec-<task_kind>
 decomposed_from: PROP-document-layer-package
-depends_on: [PROP-document-package-extraction]
 workflow: sdd-proposal
 ---
 
@@ -31,6 +30,9 @@ repository cannot keep devkit documents without SDD guidance. See `docs/material
 
 Hypothesis: a document-only installation, with the lifecycle as a separate selection, lets idea incubation and
 other processes reuse the document formats without SDD entry guidance.
+
+Prerequisite: the document layer is first decoupled from the lifecycle and moved into its own package by an
+overall refactor, which has no unit to depend on. Start Planning once that refactor has landed.
 
 ## 2. Technical Spike Questions
 
