@@ -198,7 +198,7 @@ they run in their own `notices` list.
 | `OVERRIDE_DRIFT` | `WARNING` | `override_drift` (`OverrideDriftError`) | an override hides upstream changes (`override_drift = "warn"`); also in `devkit status` `notices`, the same advisory | one advisory for every drifted override. `target_files`: their workspace-relative override files (`.devkit/overrides/<bundle>/...`); for one override `fix` is its `uv run devkit override diff <bundle>:<asset>` and `[DETAIL]` its `override accept`; for several `fix` is `uv run devkit override list` and `[DETAIL]` each `diff` and `accept` |
 | `OVERRIDE_RETAINED` | `NOTICE` | `OverrideRetainedNotice` | `devkit remove` deselected a bundle whose `.devkit/overrides/<bundle>/` directory stays (applied again, with drift, when the bundle is selected again) | `target_files`: the directories; `fix`: `uv run devkit add <bundle>:<preset>...` with the presets the bundles deployed; `[DETAIL]`: delete the directories to drop the overrides |
 | `OVERRIDE_SYNC_DEFERRED` | `NOTICE` | `OverrideSyncDeferredNotice` | `override accept` under `override_drift = "block"` recorded the baseline without synchronizing because other deployed overrides still drift; `sync --check` may report pending work until the last accept | message: the remaining overrides; `fix` and `[DETAIL]`: their `override diff` and `override accept` commands, as for `OVERRIDE_DRIFT` |
-| `MCP_REGISTRATION_PENDING` | `NOTICE` | `McpRegistrationPendingNotice` | `sync --locked` left the desired local MCP registration of a selected host unwritten; also in `devkit status` `notices` while a synchronized checkout (one with a receipt) lacks it | message: the hosts; `fix`: `uv run devkit sync --registrations-only` |
+| `MCP_REGISTRATION_PENDING` | `NOTICE` | `McpRegistrationPendingNotice` | `sync --locked` withheld a selected host's actual registration-plan state of `write`; omitted from general `devkit status` | message: the hosts; `fix`: `uv run devkit sync --registrations-only` |
 | `MANAGED_FILE_STRAY` | `WARNING` | `StrayFilesNotice` | files under `.devkit/managed/` that neither the receipt nor the inventory owns | `target_files`: the files; `what_to_report`: move project-owned files out of the managed root |
 | `GATE_HOOK_PRESERVED` | `WARNING` | `HookPreservedNotice` | an existing regular Git hook was preserved and chained during automatic installation | `details`: adapter path and unchanged executable mode; reported once when moved |
 | `GATE_HOOK_INSTALL_SKIPPED` | `WARNING` | `HookInstallSkippedNotice` | automatic hook installation could not safely run | `details`: reason code and paths; `fix`: remediation |
@@ -240,9 +240,12 @@ receipt or configuration). An installed package the project does not deploy that
 `BUNDLE_PACKAGE_INVALID` warning under `notices` (also in `devkit list`), and deployed rule, gate or workflow assets
 that no installed engine runs are a `HARNESS_ENGINE_MISSING` warning there, and override drift under the default
 `override_drift = "warn"` is the `OVERRIDE_DRIFT` warning `devkit sync` reports; none changes the exit code except
-under `--strict`. A selected host whose desired local MCP registration this checkout lacks (a fresh clone after
-`sync --locked`) is the `MCP_REGISTRATION_PENDING` notice; a checkout without a receipt has no such notice, since
-its next step, a plain `devkit sync`, registers too. Like every JSON-only command, status renders nothing on
+under `--strict`. General `devkit status` omits speculative MCP registration notices, regardless of receipt or
+provider presence. It does not load the registration provider, probe runtime readiness or inspect the MCP ownership
+ledger and destinations for that check. Explicit `devkit mcp status`, `devkit mcp setup` and sync diagnose actual
+registration plans. Locked sync retains `MCP_REGISTRATION_PENDING` only for an actual registration-plan state of
+`write` it withheld; an absent provider, `None` or runtime-unavailable result does not invent that notice.
+Runtime-unavailable warnings remain on actual planning paths. Like every JSON-only command, status renders nothing on
 stderr: its `errors` and `notices` are in the result. `sync --check` remains the check that says whether a sync is needed.
 
 Optional installed packages contribute read-only checks through `devkit.status_checks`. Each callable accepts
