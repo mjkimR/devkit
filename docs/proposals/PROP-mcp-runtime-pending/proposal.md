@@ -2,7 +2,7 @@
 id: PROP-mcp-runtime-pending
 title: Report MCP registration pending only when runtime state warrants it
 summary: Distinguish unavailable MCP runtimes from actionable registration work while keeping status provider-free and invalidating stale observations.
-status: draft                         # draft | reviewing | accepted | rejected
+status: reviewing                     # draft | reviewing | accepted | rejected
 created_at: 2026-10-28
 target_area: capabilities/mcp/
 priority: high                        # critical | high | medium | low
