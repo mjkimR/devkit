@@ -8,7 +8,7 @@ target: devkit integration integrate (devkit_agt.features.integration usecases s
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-27
 ---
 
@@ -49,3 +49,7 @@ created_at: 2026-10-27
 Change B1 subagent report: "After an unknown PR merge outcome, a fresh CLI call issues the merge again:
 the fake recorded merge_calls == 2 while the PR stayed open." "A closed pending PR is not refused on a fresh call."
 ```
+
+## Disposition
+
+- **Disposition**: `PROP-pr-merge-recovery`: promoted by the user's decision for Planning of the recorded behavior and its contract constraints.

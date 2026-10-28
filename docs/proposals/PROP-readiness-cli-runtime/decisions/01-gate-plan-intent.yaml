@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: Plan readiness runtime selection from FB-readiness-cli-contract-checks-the-base-runtime
+  using spec/feedback-hygiene.
+by: user
+at: '2026-10-27T23:12:29.904173Z'

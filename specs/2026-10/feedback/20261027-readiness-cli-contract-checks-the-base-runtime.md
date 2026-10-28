@@ -8,7 +8,7 @@ target: devkit integration prepare (devkit-spec readiness provider) with RULE-cl
 origin: agent
 severity: blocked
 recurring: false
-status: open
+status: promoted
 created_at: 2026-10-27
 ---
 
@@ -55,3 +55,7 @@ created_at: 2026-10-27
 (two more for answer and return)
 Branch worktree: just rules-check -> [OK: no error-severity violation remains]
 ```
+
+## Disposition
+
+- **Disposition**: `PROP-readiness-cli-runtime`: promoted by the user's decision for Planning of the recorded behavior and its contract constraints.
