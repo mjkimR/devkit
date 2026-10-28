@@ -50,3 +50,11 @@ is explicit and does not grant authority to rewrite historical Units or alter in
 No production code is changed in Planning. Direct library entrypoint coverage, applicability details and runtime
 report fields are implementation work constrained by proposal AC-01 through AC-08. A built consumer with devkit-spec
 absent, a consumer with it installed and retained-history snapshot tests are required Development evidence.
+
+## Challenger correction
+
+The first review found that dispatching only on caller task kind could route retained SDD artifact edits through
+project/session readiness. The proposal now requires prior/proposed workflow ownership detection before that
+dispatch, and coded refusal unless matching lifecycle validation runs. This guard is generic and does not require
+devkit-spec to recognize that a retained Unit needs its validator. Untouched history remains compatible with a
+document-only environment. AC-04, AC-06 and AC-07 require changed/deleted anchor, companion and binding coverage.

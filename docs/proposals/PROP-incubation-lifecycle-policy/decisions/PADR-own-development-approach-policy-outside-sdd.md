@@ -38,6 +38,9 @@ override is supported. SDD remains default; incubation is an explicit project ch
 SDD-specific consumers apply lifecycle knowledge, while generic rules reporting exposes omissions and devkit-agt
 provides independent project readiness. Explicitly bound historical SDD artifacts retain their checks. The retained
 committed target governs integration readiness; a source-only policy change cannot select a weaker path.
+Project/session readiness first detects touched prior/proposed workflow-owned Units regardless of the caller's
+label, refusing unless the matching lifecycle validator runs. Missing optional SDD tooling cannot weaken retained
+history checks; untouched history does not require that tooling.
 
 No dependency resolver, mandatory iteration Unit, new application package or broad structural refactor is introduced.
 The proposal's applicability table and AC-01 through AC-08 define the feature scope.

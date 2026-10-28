@@ -116,6 +116,15 @@ this change supplies no artifact conversion or history rewrite.
   can explicitly select `[integration] provider = "project"`. In SDD, `project` cannot bypass SDD readiness and
   refuses with `INTEGRATION_APPROACH_MISMATCH`. An incubation `unit` task carrying SDD history retains SDD readiness
   when that provider is available; a missing required provider fails closed rather than silently downgrading.
+- Before choosing an ordinary session path, project readiness inspects prior and proposed committed trees for
+  touched workflow-bound Unit ownership, independent of caller task kind. Inspect changed/deleted anchors and
+  companions through prior ownership as well as current bindings. Any retained workflow-owned Unit requires its
+  lifecycle validator, even if the request says `session`, its anchor/binding was removed, or its package/assets
+  are no longer installed. The generic project provider refuses with `INTEGRATION_LIFECYCLE_VALIDATION_REQUIRED`
+  and identifies the affected Unit when the matching validator does not run. It never treats absence as success.
+  The spec provider can use independent readiness only for ordinary incubation diffs; for touched retained SDD
+  ownership it retains SDD artifact validation and completion/hold checks. Untouched history does not require the
+  SDD package. Generic ownership detection belongs in devkit-agt; SDD judgments remain in devkit-spec.
 - `project` readiness carries `DEVELOPMENT_APPROACH`, `LIFECYCLE` (`omitted:incubation`), source/target/result identity,
   CI-rule result and verification-claim evidence. It enforces the existing source/target/receipt/runtime checks,
   finish guards, approval, PR policy, worktree identity and scoped cleanup contracts. It never creates a Unit.
@@ -151,7 +160,9 @@ this change supplies no artifact conversion or history rewrite.
   omissions appear as omissions. Configured approvals, route, guards, runtime and cleanup checks remain enforced.
 - **AC-07 — snapshot authority**: Given retained SDD target policy, when a source sets incubation or changes its
   provider, then retained SDD readiness still governs. Given a prepared incubation request, when base policy or
-  source/result identity changes, then it is stale. Exercise source/target/result config and rule-snapshot cases.
+  source/result identity changes, then it is stale. Exercise source/target/result config and rule-snapshot cases. A `session` label never bypasses touched retained Unit
+  validation: repeat with devkit-spec absent and selected lifecycle assets absent, and assert coded refusal rather
+  than a successful independent-check claim. Untouched history must still allow ordinary incubation integration.
 - **AC-08 — guidance and packaging**: Given each supported approach with or without installed devkit-spec, when
   templates, config inspection, guidance, rules and consumer smoke run, then they agree on the effective approach.
   No local/env override, implicit migration, mandatory incarnation history or skipped-as-pass result is introduced.
@@ -182,3 +193,7 @@ its final transition writes and entry behavior depend on the accepted policy and
 Acceptance approves the explicit policy and consumer applicability direction and promotes its PADR. Handoff starts
 one feature spec. Implementation must pass AC-01 through AC-08; it does not complete `MS-idea-incubation`.
 Keep this proposal in review until Host/user direction acceptance. No worker records acceptance or handoff.
+
+The medium Challenger identified one P1 gap in session integration over retained workflow-owned artifacts. Planning
+closed it by requiring prior/proposed ownership detection before task-kind dispatch and coded refusal unless the
+matching lifecycle validator runs. This design correction is part of AC-04, AC-06 and AC-07, not a waiver.
