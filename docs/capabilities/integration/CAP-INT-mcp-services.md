@@ -1,7 +1,7 @@
 ---
 id: CAP-INT-mcp-services
 title: Scoped CLI Integration
-summary: "The Host prepares and integrates committed work through CLI operations that revalidate policy, readiness, source identity and cleanup scope. Under ask the Host carries conversational approval; auto authority comes only from the retained base policy."
+summary: "Host-authorized CLI integration revalidates policy, readiness, source identity and cleanup scope. Session input refusals identify explicit claims recovery while retaining source-readiness and authority checks."
 area: integration
 status: active
 entrypoints:
@@ -38,6 +38,10 @@ Under `auto`, the digest is optional; a supplied digest MUST still match. These 
 `integrate` constructs a fresh request and repeats all checks before mutation. The CLI accepts
 no approval boolean, token, request ID, cleanup path or merge strategy. Caller `claims` are provider declarations,
 not evidence or authority.
+
+Session claims remain explicit on both `prepare` and `integrate`; neither command persists or reuses the other's claims.
+Correcting invocation input alone requires no source change. Ordinary source-readiness, digest and authority checks
+remain in force (`packages/devkit/tests/integration/features/integration/test_cli.py`).
 
 Text `prepare` prints `[INTEGRATION_PREPARED: <id> branch=... target="..." digest=... route=... network=...]` and
 `[INTEGRATION_SCOPE: worktree_remove=yes|no delete_branch=yes|no cleanup=<extensions>|- disclosure="<text>"]`;
@@ -125,7 +129,7 @@ registered.
 | Code | Next action |
 | --- | --- |
 | `INTEGRATION_CONFIG_INVALID` | Configure or install the named readiness provider and use a supported route. |
-| `INTEGRATION_NOT_READY` | `INPUT_ERROR`: resolve each reported condition (`[DETAIL]`) in the source worktree (`[TARGET]`), commit and prepare again. |
+| `INTEGRATION_NOT_READY` | `INPUT_ERROR`: missing or invalid session claims are identified by provider evidence `SESSION_CLAIMS_INVALID`; `[TARGET]` names `--claims` and `[FIX]` directs correction and retry of the same prepare or integrate command with explicit claims. Other readiness failures direct source-worktree fixes, commit and preparation again. |
 | `INTEGRATION_PROVIDER_FAILED` | Repair the installed provider or its evidence contract. |
 | `INTEGRATION_RULE_RUNTIME_MISMATCH` | The source needs no change. With separately granted authority, build a runtime from the source's code outside the worktree being removed and run `devkit integration integrate <branch>` from the base checkout with it; never edit the rules, skip readiness or use the worktree's own runtime. |
 | `INTEGRATION_AUTHORITY_REQUIRED` | Under `ask` without a digest, `INTERACTION`: run `[FIX]` to present the scope; the `[DETAIL]` integrate command is for after the user approves it. Otherwise `BLOCKED`: inspect the retained base policy and selected route. |

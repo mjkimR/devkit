@@ -5,6 +5,7 @@ from pathlib import Path
 
 from devkit.advisory import AdvisoryError
 from devkit_core.base.usecase import BaseUseCase
+from devkit_dist.features.project.repositories.project import git_toplevel
 
 from devkit_agt.features.gate.usecases.hooks.hooks import (
     HooksLocation,
@@ -35,3 +36,11 @@ class GateStatusUseCase(BaseUseCase):
         hooks = status(project.root, location)
         notices = missing_entry_notices(project, hooks, location)
         return GateStatus(project, location, tuple(hooks), tuple(notices))
+
+
+def status_check(root: Path) -> tuple[AdvisoryError, ...]:
+    """Contribute existing hook diagnostics to general status without executing gates or repairing hooks."""
+    top = git_toplevel(root)
+    if top is None:
+        return ()
+    return GateStatusUseCase().execute(top).notices

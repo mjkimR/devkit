@@ -1,0 +1,26 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-27T23:18:00.529085Z'
+status: completed
+summary: 'reconcile-reviewer check 1 (activity-effort medium, native isolated subagent): all six targets cover the change and match the contract; 1 P2 and 1 P3 omission in CAP-DLV-performance-pass'
+findings:
+- issue: 'CAP-DLV-performance-pass omits three playbook rules: revalidation when HEAD or a dirty path moved before application, the report outcome update after integration, and load recorded for every measurement including baselines.'
+  evidence: performance-pass/SKILL.md:94-96, :110; references/measurement.md:55; CAP-DLV-performance-pass.md sections 3, 4.7, 4.10, 6
+  failure_condition: A reader of the contract applies after HEAD moved without re-baselining, leaves a stale outcome, or accepts a baseline without load.
+  suggested_action: Add the revalidation rule, the outcome update, 'each measurement' and load in the baseline record.
+  resolution: open
+  severity: P2
+- issue: 'The capability omits two design-contract points: preferring removal of repeated work, and the collector, cold/warm and startup/import attribution checks.'
+  evidence: spec.md section 5; references/candidates.md:28; references/profiling.md:32-38; CAP-DLV-performance-pass.md 4.9, 5.1
+  failure_condition: A later playbook change drops these practices with no Living Spec change.
+  suggested_action: Add a SHOULD to 5.1 and extend 4.9.
+  resolution: open
+  severity: P3
+checks:
+  rules: PASS devkit rules check docs specs unit errors=0
+diff_scope:
+  base: a7788da6f10f986db3bc50245fa4fe3bc160bd39
+  head: ec0439a549f7742db4c3963c759d1dc65b98ad4b
+activity_effort: medium

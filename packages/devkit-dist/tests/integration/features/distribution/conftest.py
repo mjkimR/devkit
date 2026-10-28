@@ -25,3 +25,16 @@ def _without_optional_registration_runtime(monkeypatch: pytest.MonkeyPatch) -> N
         "entry_points",
         lambda group: [] if group == registrations.GROUP else entry_points(group=group),
     )
+
+
+@pytest.fixture(autouse=True)
+def _without_optional_status_checks(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Distribution fixtures model dist alone; gate status provider coverage belongs to the harness."""
+    from devkit_dist.features.distribution.services.installation import status_checks
+
+    entry_points = status_checks.metadata.entry_points
+    monkeypatch.setattr(
+        status_checks.metadata,
+        "entry_points",
+        lambda group: [] if group == status_checks.GROUP else entry_points(group=group),
+    )

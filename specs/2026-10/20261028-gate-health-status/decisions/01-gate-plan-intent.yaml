@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: Expose existing gate hook diagnostics from general status through an optional
+  engine check; no automatic gate execution or repair. Source FB-gate-hook-problems-invisible-to-status.
+by: user
+at: '2026-10-27T23:18:37.789538Z'
