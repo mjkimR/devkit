@@ -1,7 +1,7 @@
 ---
 id: CAP-INT-mcp-services
 title: Scoped CLI Integration
-summary: "The Host prepares and integrates committed work through CLI operations that revalidate policy, readiness, source identity and cleanup scope. Under ask the Host carries conversational approval; auto authority comes only from the retained base policy."
+summary: "Host-authorized CLI integration revalidates policy, readiness, source identity and cleanup scope. Session input refusals identify explicit claims recovery while retaining source-readiness and authority checks."
 area: integration
 status: active
 entrypoints:
@@ -38,6 +38,10 @@ Under `auto`, the digest is optional; a supplied digest MUST still match. These 
 `integrate` constructs a fresh request and repeats all checks before mutation. The CLI accepts
 no approval boolean, token, request ID, cleanup path or merge strategy. Caller `claims` are provider declarations,
 not evidence or authority.
+
+Session claims remain explicit on both `prepare` and `integrate`; neither command persists or reuses the other's claims.
+Correcting invocation input alone requires no source change. Ordinary source-readiness, digest and authority checks
+remain in force (`packages/devkit/tests/integration/features/integration/test_cli.py`).
 
 Text `prepare` prints `[INTEGRATION_PREPARED: <id> branch=... target="..." digest=... route=... network=...]` and
 `[INTEGRATION_SCOPE: worktree_remove=yes|no delete_branch=yes|no cleanup=<extensions>|- disclosure="<text>"]`;
@@ -137,7 +141,3 @@ registered.
 Public API: `devkit_agt.features.integration` exports `IntegrationService`, `Task`, `IntegrationContext`, `Evidence`,
 `Readiness`, `ReadinessProvider`, `IntegrationRequest`, `IntegrationResult`, `CleanupTarget`, `CleanupScope`,
 `CleanupResult`, `ScopedCleanup` and typed errors. `devkit_agt.features.worktree` owns merge and finish primitives.
-
-Session claims remain explicit on both `prepare` and `integrate`; neither command persists or reuses the other's claims.
-Correcting invocation input alone requires no source change. Ordinary source-readiness, digest and authority checks
-remain in force (`packages/devkit/tests/integration/features/integration/test_cli.py`).

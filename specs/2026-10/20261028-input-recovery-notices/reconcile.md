@@ -1,0 +1,35 @@
+---
+reconcile_id: REC-input-recovery-notices
+status: pending
+targets:
+  - file: docs/capabilities/integration/CAP-INT-mcp-services.md
+    resolution: modified
+  - file: docs/capabilities/delivery/CAP-DLV-proposal-incubation.md
+    resolution: modified
+---
+
+# Reconciliation
+
+`SPEC-input-recovery-notices` specializes `INTEGRATION_NOT_READY` input recovery using the session provider's
+`SESSION_CLAIMS_INVALID` evidence, with explicit claims on both commands and preserved source/digest/authority checks.
+`CAP-INT-mcp-services` reflects the two recovery paths and mixed-failure preservation.
+
+`CAP-DLV-proposal-incubation` documents `SPEC_PROPOSAL_MILESTONE_INACTIVE`, canonical membership, notice-only
+review guidance, strict success and unchanged milestone lifecycle. Proposal creation remains the operation's owner.
+No use case steps, architecture, terminology, bundle assets or milestone lifecycle contracts change. The optional
+`docs/development/reference/spec.md` path does not exist in this checkout; no reference file needs updating.
+
+## Source feedback
+
+- `FB-integrate-asks-for-a-new-request-when-claims-are-missing`: resolved by the coded same-command recovery and
+  verified retry/digest/source-failure regressions.
+- `FB-proposal-new-accepts-a-done-milestone`: resolved within the authorized done/dropped NOTICE scope, verified by
+  status/alias and text/JSON/strict regressions without milestone mutation.
+
+No agreed work is deferred.
+
+## Entrypoints
+
+Derived candidates were reviewed. Keep the existing integration feature doorway and add the proposal scaffold
+use case doorway to proposal incubation. Reject tests, error models, unrelated cross-capability candidates and
+broad proposal directories because they do not identify this operation's reading start.
