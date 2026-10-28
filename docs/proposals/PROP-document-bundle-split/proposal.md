@@ -2,7 +2,7 @@
 id: PROP-document-bundle-split
 title: Install the document system without SDD
 summary: "Ships document formats, authoring guidance, templates and document rules in a docs bundle, independently of the spec bundle's SDD lifecycle assets."
-status: reviewing
+status: accepted
 created_at: 2026-10-28
 target_area: packages/devkit-docs/
 priority: medium
