@@ -23,3 +23,19 @@ repository-only report, not a newly executed reproduction. Development must demo
 The Scout used the emulated Codex route. Before/after delegation tree snapshots both equal
 `d5b2285720221fce210bd3c432f9e62b3f4abdd5`; HEAD was unchanged. It reported no outside-worktree reads.
 All authored Planning files stay inside this proposal; sibling writes use individual host approvals.
+
+## Challenger fold and self-verification
+
+Input: `e6bbd46c1fa81495d5e851127e672d6ccf2fce20`. The read-only Challenger left both delegation
+snapshots at `d7bc439bde63501cccbcb50a68504615cec4f491`; HEAD was unchanged and it reported no outside reads.
+
+1. Source repair after pending checks: proposal now permits only a never-attempted source-only update,
+   under the lock after fresh authority and the existing source/head/readiness/policy checks. Issued records stay refusing.
+   AC-R8 requires pending -> target advance -> source repair -> exactly one eventual fake merge.
+2. Saturated discovery: 1000 returned candidates cannot establish absence. Proposal requires
+   `INTEGRATION_PR_HISTORY_INCOMPLETE` before new publication; AC-R4 adds the omitted-closed-PR fixture.
+
+The Planning worker compared both changes to the existing target-moved remedy and adapter limit.
+They are document fixes verified by review, with executable regressions reserved for Development.
+No user-dependent question remains; accepting the bounded journal and conservative untracked-OPEN refusal
+is the Host's existing plan-accept boundary, not a new business approval requested by this worker.

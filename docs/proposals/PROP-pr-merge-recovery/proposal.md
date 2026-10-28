@@ -69,6 +69,11 @@ Exceeding either limit refuses a new record before any merge call.
 Remove records only after observing their exact PR as `MERGED` with valid source containment or `CLOSED`.
 Unresolved records never expire or get evicted to admit another operation.
 No journal deletion or source/task change may make an uncertain same-PR merge eligible again.
+A never-attempted record may update only its source SHA after fresh preparation and Host authority.
+Keep repository, PR number, head/base branches and task identity fixed.
+Under the integration lock, revalidate the recorded state and remote head before atomically updating the source binding.
+The usual remote-source ancestry, readiness, policy and digest checks still apply.
+An issued or otherwise uncertain record cannot use this update path.
 
 Validate the schema, identity and size under the integration lock.
 Persist by atomic replacement, fsync the file and containing directory, then call the merge endpoint.
@@ -100,9 +105,12 @@ Register a never-attempted record only for a PR confirmed created by this invoca
 A PR discovered after a lost creation reply remains untracked and conservatively refused in a fresh invocation.
 An exact, already `MERGED` PR can be recovered without a journal because remote evidence proves merge completion.
 An ambiguous candidate set refuses; lookup order must not choose the first matching PR.
+A discovery result containing 1000 candidates reaches the existing adapter cap.
+Refuse new publication with `INTEGRATION_PR_HISTORY_INCOMPLETE` rather than treating that result as proof of absence.
+Use exact-number observation for an already bound record; do not require an unbounded history scan.
 Historical closed PRs with another source SHA do not block an unrelated request, unless its recorded PR identity binds it.
 An unresolved record for a PR blocks that PR even when the task, source SHA or local branch name changes.
-A changed binding is a conflict, not a new operation.
+A changed binding is a conflict, except the validated never-attempted source-only update above.
 
 Immediately before merge, change the durable record from never-attempted to issued.
 A lost reply, timeout, 5xx, malformed response, or crash leaves it issued.
@@ -128,6 +136,7 @@ Under `ask`, missing/stale digest retains the existing interaction guidance and 
 - **AC-R4**: Given a pending PR closed before the next invocation, when preparation or execution runs,
   then it returns `INTEGRATION_PR_CONFLICT` with no merge or replacement creation.
   Include exact-source closed history, unrelated closed history, ambiguous candidates and changes after preparation.
+  Saturated 1000-candidate history refuses new publication even when the relevant closed PR is omitted.
 - **AC-R5**: Given an issued record, when source/task/remote binding changes, the record is missing/corrupt,
   or the journal exceeds its limits, then no same-PR merge is sent and recovery identities remain.
   Missing journal plus existing `OPEN` yields `INTEGRATION_MERGE_HISTORY_UNKNOWN`.
@@ -136,7 +145,10 @@ Under `ask`, missing/stale digest retains the existing interaction guidance and 
   Cover two services sharing a clone lock, atomic-write failure and a journal change after preparation.
 - **AC-R7**: A retained marker never satisfies a missing digest, changed readiness/policy/source or missing Host authority.
   Verify known platform refusal permits a newly prepared retry only after definitive refusal and exact observation.
-- **AC-R8**: Existing merged-cleanup ordering, source preservation, checked/unchecked landing reporting,
+- **AC-R8**: Given tracked pending checks and a never-attempted record, when the target advances and the Host
+  incorporates it into the source, re-verifies and obtains fresh authority, then the source binding updates atomically
+  and exactly one eventual merge is allowed. The same change on an issued record refuses without another merge.
+- **AC-R9**: Existing merged-cleanup ordering, source preservation, checked/unchecked landing reporting,
   CLI JSON/text output and local-route behavior continue to pass.
 
 Use only fake GitHub providers and local fixture repositories.

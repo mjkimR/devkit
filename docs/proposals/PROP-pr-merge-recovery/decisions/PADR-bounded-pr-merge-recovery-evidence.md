@@ -43,6 +43,9 @@ Persist an issued marker before merge; unresolved `OPEN` never clears it.
 Admit only confirmed newly created PRs as never-attempted; refuse untracked existing `OPEN` PRs.
 Remote proof of `MERGED` supports only verified remaining cleanup.
 Closed exact-source PRs refuse replacement.
+Saturated historical discovery refuses publication when absence cannot be established.
+A valid never-attempted record permits a source-only update after fresh preparation, validation and Host authority.
+An issued record cannot be updated into a merge-eligible record.
 
 This decision supersedes only the no-recovery-journal clause of `ADR-host-cli-lifecycle-authority`.
 Its Host conversational authorization decision remains in force.
