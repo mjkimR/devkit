@@ -1,0 +1,15 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-27T23:19:44.786206Z'
+status: completed
+summary: performance-pass playbook (SKILL.md + measurement/profiling/candidates/changes references), maintenance preset performance, bundle tests for AC-01..AC-05, catalog README and bundle recommendations guide, new CAP-DLV-performance-pass and UC-speed-up-selected-slow-operations, updates to CAP-DIST-context-and-playbooks, CAP-DIST-content-packages, CAP-DLV-review-refactor; review round 1 (1 P2, 4 P3) and reconcile check 1 (1 P2, 1 P3) fixed; 2 feedback items recorded.
+findings: []
+checks:
+  tests: PASS just test-affected 86 passed; just test devkit-catalog 76 passed
+  build: PASS just check devkit-catalog 0 errors; devkit sync --check OK
+  lint: PASS just lint-check; just rules-check; devkit rules check --ci --base a7788da6 errors=0; hygiene rules on the playbook PASS
+diff_scope:
+  base: ''
+  head: 0c20f68bc5ca027535c78a2dd882ee1f58469467
