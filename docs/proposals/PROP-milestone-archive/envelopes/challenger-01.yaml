@@ -1,0 +1,24 @@
+kind: challenger
+stage: spike
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-28T06:05:48.095735Z'
+status: completed
+summary: 'One P2 coverage gap: post-load dashboard classification discards archived milestone paths; flat archive and lifecycle authority otherwise fit current contracts'
+findings:
+- issue: AC-05 dashboard counts require updating the post-load classifier, missing from the reader inventory
+  evidence: materials/reader-inventory.md:15 lists loading.ts only; proposal.md:93 names discovery; packages/devkit-viewer/frontend/src/lib/features/dashboard/dashboard.ts:109 rejects archive paths and :229 derives totalCount
+  failure_condition: After either loader returns archived milestone headers, extractDashboardData discards them and archived done/dropped milestones vanish from dashboard totals
+  suggested_action: Include dashboard classification/count aggregation in item 9 and inventory; require archived done and dropped extraction fixtures to affect totalCount but not openCount
+  resolution: open
+  severity: P2
+assumptions:
+- Both done and dropped are settled scope; dependency semantics stay unchanged
+unverified_areas:
+- No implementation or frontend runtime tests; relocation authority remains Host/user-owned
+checks:
+  boundary: PASS equal tree 74711d370d9c6d4978727aed5625e2d64d4e04b4 and unchanged c0210c79; emulated read-only role
+  inspection: PASS proposal PADR contracts loading classification readiness and reader owners
+diff_scope:
+  base: 982b9c1f927b0c1c273b8474a34a53546e7b0913
+  head: c0210c79b480837b36fbaf3906e132dfa3e91307
