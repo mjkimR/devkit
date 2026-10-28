@@ -165,7 +165,7 @@ this change supplies no artifact conversion or history rewrite.
   than a successful independent-check claim. Untouched history must still allow ordinary incubation integration.
 - **AC-08 — guidance and packaging**: Given each supported approach with or without installed devkit-spec, when
   templates, config inspection, guidance, rules and consumer smoke run, then they agree on the effective approach.
-  No local/env override, implicit migration, mandatory incarnation history or skipped-as-pass result is introduced.
+  No local/env override, implicit migration, mandatory iteration history or skipped-as-pass result is introduced.
   Run lint/types, `just test-affected` with full fallback, consumer smoke and cumulative governance.
 
 ### Successor Planning inputs
@@ -193,6 +193,10 @@ its final transition writes and entry behavior depend on the accepted policy and
 Acceptance approves the explicit policy and consumer applicability direction and promotes its PADR. Handoff starts
 one feature spec. Implementation must pass AC-01 through AC-08; it does not complete `MS-idea-incubation`.
 Keep this proposal in review until Host/user direction acceptance. No worker records acceptance or handoff.
+
+Planning ran source-evidence Scout and one medium Challenger round. The Challenger independently rechecked the
+P1 correction and found it resolved without waiver. No user-only question remains outside acceptance of this
+proposed direction. Runtime behavior, package isolation and snapshot/omission evidence remain Development checks.
 
 The medium Challenger identified one P1 gap in session integration over retained workflow-owned artifacts. Planning
 closed it by requiring prior/proposed ownership detection before task-kind dispatch and coded refusal unless the
