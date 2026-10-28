@@ -9,6 +9,8 @@ from devkit_core.core.frontmatter import parse
 def workflow_ids(data: dict) -> tuple[str, ...]:
     current = data.get("workflow")
     history = data.get("workflow_history", [])
+    if not isinstance(history, list):
+        history = []
     return tuple(
         [
             *([current] if isinstance(current, str) and current else []),
@@ -19,9 +21,7 @@ def workflow_ids(data: dict) -> tuple[str, ...]:
 
 def committed_anchors(root: Path, revision: str) -> dict[str, tuple[str, ...]]:
     try:
-        names = run_git(
-            root, "grep", "-l", "-z", "-e", "^workflow:", "-e", "^workflow_history:", revision, "--", "*.md"
-        )
+        names = run_git(root, "grep", "-l", "-z", "workflow", revision, "--", "*.md")
     except GitError as exc:
         if exc.returncode == 1:
             return {}
@@ -46,7 +46,12 @@ def touched_owners(anchors: dict[str, tuple[str, ...]], changed: tuple[str, ...]
             {
                 str(PurePosixPath(anchor).parent)
                 for anchor in anchors
-                if any(path == anchor or path.startswith(str(PurePosixPath(anchor).parent) + "/") for path in changed)
+                if any(
+                    str(PurePosixPath(anchor).parent) == "."
+                    or path == anchor
+                    or path.startswith(str(PurePosixPath(anchor).parent) + "/")
+                    for path in changed
+                )
             }
         )
     )

@@ -60,11 +60,14 @@ _SWEEP_FIX = f"run {DEVKIT} spec scope sweep --apply to remove the finished work
 
 
 def _has_spec_bundle(base: Path) -> bool:
-    return (
-        (base / ".devkit" / "managed" / "spec").is_dir()
-        or (base / "specs").is_dir()
-        or (base / "docs" / "proposals").is_dir()
-    )
+    if (base / ".devkit" / "managed" / "spec").is_dir():
+        return True
+    from devkit_agt.features.rules import committed_anchors
+    from devkit_dist.features.project import read_development_approach
+
+    if read_development_approach(base).approach != "incubation":
+        return False
+    return any(w.startswith("sdd-") for ids in committed_anchors(base, "HEAD").values() for w in ids)
 
 
 def _prune_slug(slug: str) -> str:

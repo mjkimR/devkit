@@ -1,7 +1,7 @@
 ---
 id: CAP-INT-mcp-services
 title: Scoped CLI Integration
-summary: "Host-authorized CLI integration revalidates policy, readiness, source identity and cleanup scope. Session input refusals identify explicit claims recovery while retaining source-readiness and authority checks."
+summary: "Host-authorized integration revalidates retained policy, readiness and cleanup. Independent incubation project readiness preserves explicit verification claims and refuses unvalidated retained workflow Units."
 area: integration
 status: active
 entrypoints:
@@ -141,3 +141,29 @@ registered.
 Public API: `devkit_agt.features.integration` exports `IntegrationService`, `Task`, `IntegrationContext`, `Evidence`,
 `Readiness`, `ReadinessProvider`, `IntegrationRequest`, `IntegrationResult`, `CleanupTarget`, `CleanupScope`,
 `CleanupResult`, `ScopedCleanup` and typed errors. `devkit_agt.features.worktree` owns merge and finish primitives.
+
+
+## Independent incubation project readiness
+
+The installed `project` provider in devkit-agt supports `session` integration when the retained committed target
+approach is incubation. Its explicit claims require passing `review`, `tests` and `lint` results, accepting `true`,
+`PASS`, `PASSED` or a `PASS ...` string. Missing/failed claims produce `SESSION_CLAIMS_INVALID` evidence and existing
+`INTEGRATION_NOT_READY` recovery. No SDD depth, effort, Unit or lifecycle envelope is manufactured.
+
+The provider runs cumulative linter rules against the prospective result (source before build) and binds source,
+target/result identity, the target/proposed development approaches, verification claims, `CI_RULES` and
+`LIFECYCLE=omitted:incubation`. Reported rule omissions remain distinct from successful execution. Review/tests/lint
+are disclosed source claims; they are not secretly rerun by the provider. Existing receipt/runtime/route/approval,
+request freshness, worktree and exact cleanup checks remain in the common executor.
+
+IF a project provider sees a committed SDD target, THEN it MUST refuse with `INTEGRATION_APPROACH_MISMATCH`.
+The common policy digest includes the validated development approach. A proposed source-only switch cannot select
+weaker target readiness. The installed spec provider delegates ordinary incubation sessions to project readiness.
+
+Before treating a diff as an ordinary session, ownership discovery examines parsed bindings/history in both prior
+and proposed committed trees. IF changed/deleted anchors or companions belong to a retained workflow Unit, THEN
+project readiness MUST refuse with `INTEGRATION_LIFECYCLE_VALIDATION_REQUIRED` and identify the Unit. The caller must
+run its matching Unit lifecycle validator explicitly; task labels and optional package absence are not evidence that
+validation ran. Untouched history does not require the SDD package. The ordinary doc-only path is exercised by
+`packages/devkit-docs/tests/e2e/bundles/docs/test_installed_consumer.py`; actual prepare/integrate and retained cases by
+`packages/devkit/tests/integration/features/integration/test_project_readiness.py`.

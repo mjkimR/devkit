@@ -30,7 +30,7 @@ from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 from devkit_dist.features.project.services.config_template import TemplateKey, TemplateTable, uncomment
 from distsupport.distribution import cli, make_bundle
 
-COMMON_TABLES = ["shared", "subagents", "workflow.approvals", "workflow.stages", "worktree"]
+COMMON_TABLES = ["shared", "subagents", "development", "workflow.approvals", "workflow.stages", "worktree"]
 DEVKIT_PARTS = ["agents", "guidance_block", "override_drift", *COMMON_TABLES]
 
 # Stand-ins for the templates an engine package registers for reserved tables, in entry-point name order.
@@ -126,6 +126,7 @@ def test_creates_the_file_with_devkit_keys_at_their_defaults(tmp_path: Path, too
         },
         "worktree": {"pull_request": "auto", "setup": "uv sync"},
         "shared": {"adapter": "local"},
+        "development": {"approach": "sdd"},
         "subagents": {"default_level": "inherit", "levels": {}, "roles": {}},
     }
     assert (
@@ -172,7 +173,7 @@ def test_without_engine_templates_no_reserved_table_is_written(
 ) -> None:
     reserved.clear()  # a standalone devkit-dist installation: no package registers reserved tables
     result = refresh_config_template(project)
-    assert result.added == ["agents", "guidance_block", "override_drift", "shared", "subagents"]
+    assert result.added == ["agents", "guidance_block", "override_drift", "shared", "subagents", "development"]
     assert "[workflow" not in _text(project) and "[worktree" not in _text(project)
     _write(project, _text(project) + '\n[workflow.approvals]\nintegration = "auto"\n\n[worktree]\nsetup = "uv sync"\n')
     assert read_config(project) == ProjectConfig()  # reserved tables are passed through unread
@@ -228,6 +229,7 @@ def test_existing_common_tables_are_preserved(project: Path, tools: list[SimpleN
         "override_drift",
         "shared",
         "subagents",
+        "development",
         "workflow.stages",
         "worktree",
     ]
@@ -437,6 +439,7 @@ def test_cli_reports_every_commented_part_it_writes_and_nothing_after(
         "override_drift",
         "shared",
         "subagents",
+        "development",
         "workflow.stages",
         "tool.demo.limits",
     ]
