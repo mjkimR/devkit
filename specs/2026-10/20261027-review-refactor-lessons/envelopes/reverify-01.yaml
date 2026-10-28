@@ -1,0 +1,22 @@
+kind: reverify
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-27T08:10:25.574099Z'
+status: completed
+review: review-01.yaml
+summary: ''
+findings:
+- issue: spec.md status is still planned although all tasks are checked (RULE-spec-progress warning).
+  evidence: specs/2026-10/20261027-review-refactor-lessons/spec.md:5
+  failure_condition: Rules checks over the branch warn and a stage reading the spec status sees a stale state.
+  suggested_action: Run devkit rules fix on spec.md or let the workflow transition set it before integration.
+  resolution: resolved
+  severity: P3
+- issue: CAP-DLV-review-refactor rule 6 bans governance relaxation for editing subagents only, while the ADR and playbook ban it for the playbook's agent too.
+  evidence: docs/capabilities/delivery/CAP-DLV-review-refactor.md rule 6 No governance relaxation
+  failure_condition: An agent applying changes itself is not bound by the capability contract.
+  suggested_action: Name the playbook's agent and editing subagents alike in the MUST NOT.
+  resolution: resolved
+  severity: P3
+checks: {}
