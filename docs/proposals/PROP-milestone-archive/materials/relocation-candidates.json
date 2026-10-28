@@ -1,0 +1,42 @@
+{
+  "base": "b17db06f2d28b2316878d15d5debee1257c5a611",
+  "authority": "candidate only; no move authorized",
+  "counts": {
+    "done": 4,
+    "dropped": 0
+  },
+  "files": [
+    {
+      "id": "MS-backlog-subagent-roles",
+      "status": "done",
+      "source": "docs/roadmap/MS-backlog-subagent-roles.md",
+      "destination": "docs/roadmap/_archive/MS-backlog-subagent-roles.md",
+      "bytes": 1761,
+      "sha256": "955191d50c9a9e9faa9f82c52c0744cd05b6f5a685d311ebf16338dfa8d70938"
+    },
+    {
+      "id": "MS-idea-incubation",
+      "status": "done",
+      "source": "docs/roadmap/MS-idea-incubation.md",
+      "destination": "docs/roadmap/_archive/MS-idea-incubation.md",
+      "bytes": 11847,
+      "sha256": "1a9be411ed73fe6a2dacddcdbd83055dabb02e23e789f0afc24df6360ebee760"
+    },
+    {
+      "id": "MS-maintenance-operations",
+      "status": "done",
+      "source": "docs/roadmap/MS-maintenance-operations.md",
+      "destination": "docs/roadmap/_archive/MS-maintenance-operations.md",
+      "bytes": 2055,
+      "sha256": "5332a225e8f3327ea5ffcde094b0b4d0d20a7a40460943bc0599c39b6f7ba9b2"
+    },
+    {
+      "id": "MS-ux-documentation",
+      "status": "done",
+      "source": "docs/roadmap/MS-ux-documentation.md",
+      "destination": "docs/roadmap/_archive/MS-ux-documentation.md",
+      "bytes": 2907,
+      "sha256": "2576e3cc3895f99ec1c95b003641aa4ec2772a367c06a039c9d97902d8500109"
+    }
+  ]
+}

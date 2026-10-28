@@ -1,8 +1,8 @@
 ---
 id: PROP-milestone-archive
 title: Archive done and dropped milestones within the roadmap
-summary: "Separate done and dropped milestone files into docs/roadmap/_archive while preserving milestone identity, historical lookup and dependency resolution. Define close, drop, reopen and existing-history relocation without coupling the change to CLI restructuring."
-status: draft
+summary: "Archives done and dropped global milestones in one flat roadmap directory while preserving identity, history visibility, dependencies and lifecycle authority across document tools and the viewer."
+status: accepted
 created_at: 2026-10-28
 target_area: capabilities/documents/
 priority: low
@@ -34,123 +34,144 @@ workflow: sdd-proposal
 
 ## 1. Background & Hypothesis
 
-`CAP-DOCS-document-model` and `ADR-roadmap-and-milestones` classify `done` and `dropped` milestones as history.
-Default document browsing and search hide them, but the files remain beside current milestones in `docs/roadmap/`.
-Separating `done` and `dropped` files would make filesystem browsing reflect the working roadmap without discarding
-history.
+`CAP-DOCS-document-model` and `ADR-roadmap-and-milestones` retain terminal milestone history. The root roadmap
+contains four `done` files and two `planned` files at base `b17db06f`; there are no `dropped` files. History filters
+already hide done/dropped documents, but filesystem browsing still mixes them with current themes.
 
-The hypothesis is that one reserved directory, `docs/roadmap/_archive/`, is enough. Milestone status remains the
-lifecycle fact; the directory is its storage convention. Archiving adds no status, document kind or membership
-registry. This proposal concerns one storage and lifecycle contract, including the readers required to preserve it.
+One reserved flat archive can separate storage without another status or index. The document index already reads
+nested Markdown and derives history from status; path validators, proposal membership and viewer discovery still
+assume root-only milestone files. `materials/reader-inventory.md` records the source evidence and a bounded probe.
 
-This is a queued Backlog draft. Implementation is deferred while CLI refactoring is in progress. Formal Planning,
-direction acceptance and Development have not started. Planning should inspect the then-current package ownership
-and CLI contracts rather than freezing implementation details from this draft.
+Planning uses the current docs/spec/viewer ownership. No structural prerequisite or active CLI-refactor dependency
+was found in these seams. Development rechecks its base and repairs renamed reader locations within this scope;
+a later change that breaks this agreement returns to the Host rather than inventing a dependency or duplicate API.
 
 ## 2. Technical Spike Questions
 
-- **Q1 — terminal scope (resolved)**: The archive contains both `done` and `dropped`, following the user's scope
-  decision. Their statuses remain distinct; archiving a dropped milestone does not certify completion.
-- **Q2 — enforcement**: Which existing document-rule boundary should validate status and location, including
-  explicitly targeted historical files, without introducing automatic lifecycle writes?
-- **Q3 — reader coverage**: After the CLI refactoring, which index, proposal-authoring, governance and viewer readers
-  still assume a direct child of `docs/roadmap/`? Verify the complete reader set before selecting implementation tasks.
-- **Q4 — existing history**: Confirm a reviewed, one-time relocation of existing `done` and `dropped` files after
-  reader support lands. Retain their content and lifecycle evidence rather than re-running completion review.
+- **Q1 — terminal scope, settled**: include both `done` and `dropped`. Keep their statuses distinct; archiving does
+  not certify completion. This was resolved before this Planning turn.
+- **Q2 — boundary**: recommend extending the global milestone path convention and its existing document-rule
+  validation. Keep lifecycle authority in Backlog guidance; no new archive command, watcher or move autofix.
+- **Q3 — reader coverage**: index/history/aliases already work by identity and status. Extend proposal membership,
+  viewer dashboard header discovery, post-load dashboard classification/counts and roadmap loading to the reserved archive location.
+- **Q4 — retained history**: recommend relocating the exact four unchanged files in
+  `materials/relocation-candidates.json` after readers and checks pass. That manifest is an approval candidate,
+  not relocation authority; the Host presents it with the proposed Development effects.
+
+`PADR-archive-terminal-milestones-in-roadmap` compares keeping the root, one archive and partitioned alternatives.
 
 ## 3. Proposed Design & Impact
 
-### 3.1 Recommended storage convention
+### Storage and validation
 
-```text
-docs/roadmap/
-  MS-current-theme.md          # planned or active
-  _archive/
-    MS-delivered-theme.md      # done
-    MS-abandoned-theme.md      # dropped
-```
+1. Global `planned`/`active` milestones live at `docs/roadmap/MS-<slug>.md`; global `done`/`dropped` milestones live
+   at `docs/roadmap/_archive/MS-<slug>.md`. Keep the word-led kebab-case slug and matching ID/H1. No other nesting,
+   year/status partition or namespace roadmap is supported.
+2. Preserve the filename, ID, aliases, frontmatter and body on an existing-history move. Moving location alone
+   creates no alias, status, `archived_at`, copied index or member registry. There is exactly one file per identity.
+3. Extend the existing location check to validate status/location pairs. Invalid pairs, duplicate identities and
+   destination collisions remain visible errors; do not silently overwrite, choose a duplicate or move a file.
+   Keep invalid archived active/planned documents indexed so their location error can be reported.
+4. Preserve existing safe metadata-format fixes. Placement enforcement neither changes an existing lifecycle status
+   nor moves files automatically. Default historical targeting remains unchanged; explicit archived-file checks run.
+5. Prefer a small pure accepted-path helper in the existing document layout owner if needed by both Python
+   validators. Do not make indexing reject invalid documents or add a general path abstraction/resolver.
 
-- Use `_archive`, with no year/status subdirectories. Add partitioning only after a concrete browsing need appears.
-- Store `planned` and `active` milestones at the roadmap root, and `done` and `dropped` milestones in `_archive/`.
-- Preserve the filename, `MS-<slug>` ID, aliases, creation date, dependencies, summary and completion review body.
-  A directory move does not rename the milestone or need a new alias.
-- Keep exactly one file per milestone identity across the roadmap and archive. A destination collision requires
-  explicit resolution; never overwrite or silently select one copy.
-- Derive historical visibility from status as before. Directory placement alone must not make an active milestone
-  historical or satisfy a prerequisite. Invalid status/location pairs should be reported rather than silently hidden.
-- Add no `archived` status, `archived_at`, copied archive index or separate member list.
+### Lookup and prerequisites
 
-### 3.2 Close, drop, reopen and existing files
+6. Retain status-derived default/history visibility, `resolve`, alias resolution and incoming/outgoing `refs`.
+   The document scanner and history model do not need a second archive registry. Index both supported locations.
+7. `proposal new --milestone` validates the supported canonical global path and status/location pair, writes the canonical ID and retains
+   `SPEC_PROPOSAL_MILESTONE_INACTIVE` for both done and dropped. It neither reactivates the milestone nor blocks
+   otherwise valid membership simply because the file is archived.
+8. Existing milestone readiness treats both `done` and `dropped` prerequisites as satisfied. Resolve the complete
+   milestone set before applying history display filters. Hiding a terminal document must not turn a known edge into
+   an unknown one. Preserve MS-only edges and direct PROP-only membership; SPECs acquire no milestone field.
 
-- Close uses the existing user-owned completion decision in `CAP-HARN-agent-guidance`: recheck the candidate and
-  confirm both assertions. Write `status: done`, both confirmed assertions and the move into `_archive/` in the same
-  Backlog commit. Archiving is part of that authorized close, with no additional approval round.
-- Drop uses the existing user-owned decision after reviewing unsettled members and dependent milestones and
-  preparing member reassignment, clearing or rejection. Record `status: dropped`, the agreed disposition and the
-  archive move in the same Backlog commit. Do not mark completion assertions confirmed merely because of a drop.
-- Reopen requires the existing user decision. Move the file to the roadmap root, set `status: active` and reset both
-  assertions to pending in the same Backlog commit. The move alone grants no authority to reopen or extend scope.
-- Existing `done` and `dropped` files move only after all required readers support the archive. Prepare an exact file
-  set for the user's relocation decision. Preserve their contents, including absent historical completion assertions;
-  relocation does not certify delivery or retrofit closure evidence. Leave completed spec bundles in place.
-- Retrying an unchanged archived close or drop writes nothing. Preserve the existing milestone merge procedure in
-  `ADR-milestone-merging`, including archived sources and aliases.
-- Prefer agent guidance and ordinary file moves for close/drop/reopen. No new archive CLI command, background watcher,
-  automatic status transition or general rule autofix is proposed.
+### Viewer and lifecycle guidance
 
-### 3.3 Lookup, references and viewer
+9. Include archive headers in the existing backend dashboard list, frontend dashboard discovery, post-load
+   `extractDashboardData` classification/count aggregation and roadmap loader. Cover both optimized `dashboardList` sources and generic tree/blob source fallback. Do not read the whole repository
+   when the milestone section opens; add only the reserved archive directory. Keep current paging, caching, sorting,
+   history toggle, detail and deep-link behavior. A reopened active file returns to live browsing.
+10. Generic viewer nested tree/blob reads already support `_archive`; verify archived detail navigation and both
+    loader paths. No archive screen or redesigned roadmap is introduced. Rebuild the committed viewer page after
+    frontend changes using the repository's viewer checks.
+11. Backlog close writes done, both confirmed assertions and the archive move in one authorized commit. Drop writes
+    the agreed member/dependency disposition, dropped and the move together, without inventing completion assertions.
+    Reopen moves to the root, sets active and resets both assertions in one authorized commit. Keep the existing
+    user-owned decision boundaries; no extra archive-only approval round for those exact transition effects.
+12. Repeating an unchanged archived close/drop writes nothing. Milestone merging still works for either location:
+    retain merged IDs as aliases, preserve explicit scope disposition and never infer delivery from removal.
 
-- Index both supported locations. Preserve `resolve`, incoming/outgoing `refs`, alias resolution and the existing
-  `--history` list/search behavior under `CAP-DOCS-document-lookup` and `CAP-DOCS-document-search`.
-- A live milestone depending on an archived `done` or `dropped` milestone remains ready under the existing dependency
-  semantics. Resolve the full milestone set before applying display filters, so hiding history never turns a satisfied
-  dependency into an unknown one.
-- `proposal new --milestone` accepts an archived milestone ID or alias as an existing global milestone. Preserve
-  canonicalization and `SPEC_PROPOSAL_MILESTONE_INACTIVE`; archiving does not reactivate it or forbid membership.
-- Preserve viewer roadmap/dashboard history access and milestone detail links. Update both backend candidate
-  discovery and frontend path recognition/loading where needed. Keep the existing UI and data-source contracts;
-  this work does not add an archive screen or viewer redesign.
-- Extend the allowed milestone paths and corresponding rule guidance. Keep historical rule targeting semantics;
-  explicitly targeted archived files remain checkable.
+### Existing-history relocation and authority
 
-### 3.4 Known implementation touchpoints to recheck in Planning
+The captured candidate set is:
 
-These are inspection evidence, not a prescribed implementation layout:
+| ID | Source | Destination |
+| --- | --- | --- |
+| MS-backlog-subagent-roles | `docs/roadmap/MS-backlog-subagent-roles.md` | `docs/roadmap/_archive/MS-backlog-subagent-roles.md` |
+| MS-idea-incubation | `docs/roadmap/MS-idea-incubation.md` | `docs/roadmap/_archive/MS-idea-incubation.md` |
+| MS-maintenance-operations | `docs/roadmap/MS-maintenance-operations.md` | `docs/roadmap/_archive/MS-maintenance-operations.md` |
+| MS-ux-documentation | `docs/roadmap/MS-ux-documentation.md` | `docs/roadmap/_archive/MS-ux-documentation.md` |
 
-- `packages/devkit-docs/src/devkit_docs/features/governance/usecases/id_convention.py` requires a direct roadmap child.
-- `packages/devkit-spec/src/devkit_spec/features/proposals/usecases/roadmap.py` validates that exact location.
-- `packages/devkit-viewer/src/devkit_viewer/features/browse/repositories/worktree.py` discovers direct milestone files
-  for dashboard headers.
-- `packages/devkit-viewer/frontend/src/lib/api/roadmap.ts` matches direct paths and loads only the roadmap root.
-- Reconcile `CAP-DOCS-document-model`, lookup/search, proposal incubation, governance, agent guidance and viewer
-  contracts. Record the changed storage decision in a PADR during Planning and promote it through the normal handoff.
-  Update the owning bundle sources and seed guidance, then regenerate managed assets through synchronization.
+All four are done. The manifest records their current bytes and SHA256; synthetic fixtures exercise dropped history.
+No source/destination collision exists in this snapshot. There are no live Markdown file links to these exact paths;
+one older feedback fence records an observed source path and stays historical evidence rather than a link repair.
+References by ID need no rewrite and filenames/IDs stay unchanged.
 
-### 3.5 Expected acceptance checks
+After reader support is verified, the Host obtains or reuses explicit authority for that exact batch and performs
+content-preserving moves in Development. Compare bytes before/after. Preserve absent old assertions rather than
+retrofitting evidence, even though the current four all have confirmed assertions. Re-read the candidate set before
+applying it. New terminal files, changed source contents or destination conflicts require a refreshed concrete
+candidate and authority for changed effects; do not silently broaden this batch. Plain file checks suffice; no new
+runtime manifest protocol, hash lock or migration reader is introduced.
 
-| Check | Given / When / Then |
-| --- | --- |
-| AC-1 | Given a valid user-confirmed close candidate, when close is recorded, then status, both assertions and archive relocation appear together with the same milestone ID. |
-| AC-2 | Given an archived `done` or `dropped` milestone, when lookup/search and reference queries run, then default/history visibility and ID/alias resolution retain their existing semantics. |
-| AC-3 | Given a live milestone depending on archived `done` or `dropped` history, when CLI references and viewer readiness are evaluated, then the prerequisite is resolved and satisfied with history display off or on. |
-| AC-4 | Given an authorized reopen, when it is recorded, then the file returns to the root as `active` with both assertions pending and its ID unchanged. |
-| AC-5 | Given existing `done` and `dropped` files, when their reviewed relocation is applied, then only paths change; repeated relocation does not create duplicate files or overwrite collisions. |
-| AC-6 | Given an archived milestone ID or alias, when a proposal is created with it, then the canonical membership and inactive notice are preserved. |
-| AC-7 | Given archived history or invalid placement, when governance explicitly targets the files, then supported paths pass and duplicate identities or invalid status/location pairs are reported; no lifecycle state is automatically rewritten. |
-| AC-8 | Given a user-authorized drop with member disposition prepared, when it is recorded, then disposition, `status: dropped` and archive relocation appear together with the same ID, without certifying completion. |
+### Validation scenarios
 
-### 3.6 Non-goals
+- **AC-01 — layout**: Given root live and archived terminal milestones, when convention/format checks run, then
+  supported pairs pass with the same ID/H1; archived live, root terminal, arbitrary nested and namespaced locations
+  report the invalid placement when targeted. A fix never changes status or moves a file to resolve placement.
+- **AC-02 — history and identity**: Given archived done/dropped documents with aliases and incoming refs, when
+  resolve/refs/list/search run, then IDs/aliases remain resolvable and default, explicit-status and history visibility
+  match the existing status contract. Invalid active archived input remains indexed and is reported by governance.
+- **AC-03 — proposal membership**: Given either archived terminal state or alias, when proposal creation runs, then
+  canonical membership and the inactive notice are preserved. Invalid location/identity is refused before writes.
+- **AC-04 — prerequisites**: Given a live milestone depending independently on archived done and archived dropped,
+  when next-work guidance and viewer readiness are evaluated with history off/on, then both are known satisfied
+  edges; an unknown edge remains unknown. Resolve before display filtering and keep current member semantics.
+- **AC-05 — viewer readers**: Given optimized and generic viewer sources, when dashboard/roadmap history loads and
+  an archived item opens, then correct headers, counts, sorting, paging, detail/deep links and existing cache behavior
+  include history without scanning unrelated sections. A focused dashboard extraction fixture includes archived done
+  and dropped documents: both increase `totalCount`, neither increases `openCount`. After authorized reopen, the
+  active item is live at the root.
+- **AC-06 — transitions**: Given an authorized close/drop/reopen candidate, when the agent follows installed guidance,
+  then the status, applicable assertions/disposition and move appear in one commit. Drop never certifies completion;
+  repeat unchanged terminal operations are no-ops. Existing milestone merge/alias behavior works across locations.
+- **AC-07 — captured batch**: Given approval for the exact recorded relocation set and passing readers, when the four
+  files move, then only paths change and bytes match the reviewed source. Duplicate destinations or changed candidates
+  stop for resolution; completed specs remain in place. No historical assertion is invented.
+- **AC-08 — delivered checks**: Given the complete implementation, when package lint/types, affected Python tests,
+  consumer smoke, viewer frontend lint/check/test/build, sync and cumulative governance run, then they pass.
+  Include real done/dropped/collision/reopen fixtures and archived detail/loading tests; rebuild the committed page.
 
-Scope excluded: implementing or extending the ongoing CLI refactoring; a new archive command; a viewer redesign;
-archiving proposals, specs, ADRs or feedback; changing completion authority or membership; recomputing delivery
-lineage; retention/deletion policies; nested archive partitions; and retroactively changing completion assertions.
+### Verification boundary and exclusions
+
+Development selects exact test paths from the inventory. Reuse document lookup/history/namespace tests, milestone
+convention and proposal roadmap tests, viewer backend selective-read tests and frontend dashboard/roadmap/deep-link
+coverage. Semantic close/drop/reopen exercises record actual file states and clearly labelled simulated decisions;
+a token assertion alone does not establish the transition. `just test-affected` retains its full fallback. Run the
+command named by its `[FRONTEND_CHECK: ...]` result and the required viewer build, rather than claiming pytest covers TS.
+
+- **Scope Excluded**: CLI restructuring, a new archive command/API, viewer redesign, lifecycle authority or dependency
+  meaning changes, automatic transitions/moves, migration shims, a persistent manifest/index/lineage graph, archiving
+  other document kinds, partitioned archives and retroactive completion evidence.
+- **Scope Excluded**: actual archive moves or milestone status changes during Planning.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Keep this proposal `draft` until the user picks it up. Resume Planning after the CLI work permits stable reader and
-package boundaries, resolving Q2–Q4 against the current repository before acceptance. Review the size and effort
-hints at pickup; this draft estimates one feature spec rather than separate CLI and viewer deliverables.
-
-Acceptance decides the storage and lifecycle direction. Development starts only through the normal authorized
-handoff. This draft authorizes no milestone status changes or file relocation. On rejection, use the existing
-proposal retirement procedure and retain the user's reason.
+Keep one feature spec: storage convention and all required readers jointly deliver the archive path. Planning
+found no independent structural prerequisite and retains M/medium hints. Host/user acceptance approves the
+proposed direction; handoff starts Development only under its existing policy. Any exact relocation authority must
+name the reviewed effects; no worker accepts or hands off. Completion requires AC-01 through AC-08 and current
+Living Spec/guidance reflection. The milestone theme decisions and historical records remain otherwise unchanged.

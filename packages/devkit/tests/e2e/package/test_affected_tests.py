@@ -122,8 +122,9 @@ def test_files_no_test_reads_select_nothing(affected: ModuleType, path: str) -> 
     assert (selection.mode, selection.paths, selection.reason) == ("none", (), "untested")
 
 
-def test_docs_select_the_tests_that_read_them(affected: ModuleType) -> None:
-    selection = affected.select(ROOT, ["docs/capabilities/gate/CAP-GATE-commit-gates.md"])
+@pytest.mark.parametrize("path", ["docs/capabilities/gate/CAP-GATE-commit-gates.md", "docs/usecases-other/README.md"])
+def test_docs_select_the_tests_that_read_them(affected: ModuleType, path: str) -> None:
+    selection = affected.select(ROOT, [path])
     assert selection.paths == tuple(
         sorted(
             (
@@ -135,6 +136,21 @@ def test_docs_select_the_tests_that_read_them(affected: ModuleType) -> None:
             )
         )
     )
+
+
+@pytest.mark.parametrize(
+    "path",
+    ["docs/usecases/delivery/UC-incubate-an-idea.md", "docs/usecases/delivery/UC-deleted.md"],
+)
+def test_usecase_changes_select_the_repository_parser_only_in_addition_to_doc_tests(
+    affected: ModuleType, path: str
+) -> None:
+    ordinary = affected.select(ROOT, ["docs/capabilities/gate/CAP-GATE-commit-gates.md"])
+    selection = affected.select(ROOT, [path])
+    assert selection.mode == "partial"
+    assert set(selection.paths) == set(ordinary.paths) | {
+        "packages/devkit-docs/tests/integration/features/governance/test_ux_repository_usecases.py"
+    }
 
 
 def test_architecture_config_alone_selects_structure_rule_and_integration_tests(affected: ModuleType) -> None:

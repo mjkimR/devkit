@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-del
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-28
 ---
 
@@ -38,3 +38,15 @@ worker contract: record its exit as the sync_start check
 Host reference: the worker's sync_start check is 0
 ENVELOPE_FLAG_INVALID: --check 'sync_start=0': the value must start with PASS|FAIL|SKIP
 ```
+
+## Disposition
+
+Resolved by the session changes to the source Development worker instructions and
+`packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-delegate/references/worker.md`.
+Both now use `sync_start=PASS exit=0` for a successful check and preserve the observed exit detail.
+The regression in `test_delegation_sandbox_guidance.py` parses the documented flag with the actual envelope parser.
+
+Verification: the focused Red run reproduced the failures before the fixes; both changed regression files passed
+90 tests after the fixes. The cumulative affected selection passed 1,573 tests. Ruff, Pyright, governance rules,
+and `devkit sync --check` passed. Independent code review of commit `2664c8c6c9d5d27e3fd247949b8f6d21d91ad9ab`
+reported no findings; the Host verified the reviewed tree was unchanged.

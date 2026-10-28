@@ -1,0 +1,24 @@
+kind: worker
+stage: direction-handoff
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-28T06:07:17.256790Z'
+status: completed
+summary: 'Completed medium Planning: flat done/dropped archive, preserved identity/status/authority, current reader and lifecycle coverage, one PADR, exact four-file relocation candidate and closed Challenger; pending Host plan-accept, no Development or relocation performed'
+findings: []
+assumptions:
+- Both done and dropped are settled scope with existing satisfied-prerequisite meaning; global milestones only
+unverified_areas:
+- Implementation, frontend runtime, future reader tests and close/drop/reopen transition fixtures belong to Development; no new screens drafted
+- Host plan-accept and separate existing exact-batch relocation authority remain pending; four candidate source contents must be refreshed before application
+checks:
+  tests: PASS just test-affected --base b17db06f selected 5 paths, 12 passed; full fallback retained
+  governance: PASS cumulative --ci --base b17db06f and explicit proposal rules; 21 rules zero errors warnings
+  envelopes: PASS Scout Challenger reverify and per-run feedback valid; Challenger P2 resolved
+  roles: PASS both nested roles returned, immutable snapshots and unchanged HEAD verified; emulated boundaries only
+  probe: PASS synthetic archived done/dropped index history aliases and generic viewer tree/blob; existing proposal-membership rejection confirmed
+  boundary: PASS only assigned proposal bundle changed; no milestone moves or lifecycle status changes
+diff_scope:
+  base: f1bbc676280f303e769355f44dadfa75a69a9a38
+  head: 44d378042a4cceba33e99e2352cd4836a52a15b5
+activity_effort: medium
