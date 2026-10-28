@@ -3,7 +3,7 @@ id: PROP-incubation-sdd-baseline
 title: Adopt SDD from a verified implemented baseline
 summary: Establishes a verified current-state baseline for voluntary SDD adoption
   without reconstructing delivery artifacts for earlier incubation work.
-status: draft
+status: reviewing
 created_at: 2026-10-28
 target_area: delivery/
 priority: medium
