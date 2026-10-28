@@ -92,7 +92,7 @@ freshness; partial-state recovery; subsequent SDD routing (`CAP-DLV-incubation-s
 
 ### Unapproved provider effect
 
-- **Given** a ready baseline whose necessary project-to-spec provider change is not authorized,
+- **Given** a ready baseline whose necessary missing-provider configuration or project-to-spec switch is not authorized,
 - **When** activation effects are considered,
 - **Then** no successful activation is claimed and the mismatch is reported for the owner's decision.
 - **Covers**: 6a.

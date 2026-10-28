@@ -79,3 +79,22 @@ Simulated user decision (test data, not real user authority): activate 0e496259a
 ## Remaining completion work
 
 Host must refresh verified policy/guidance/base content before final tests. Shared current contracts/guides, independent code/reconcile review and final completion records remain pending. Source is stacked implementation, not released prerequisite evidence.
+
+## Final dependency and missing-provider correction
+
+The verified final policy source is incorporated at accepted head9fc51885b409707f0ae268624b4c6df23fba10bb.
+Initial independent review reproduced an absent integration-provider gap: approach/sync inspection passed but the
+actual provider reader refused normal integration. The playbook now includes configuring spec among the exact
+authorized effects when the provider is absent, as well as replacing project; compatible existing spec is preserved.
+
+Executed after the correction:
+
+```sh
+uv run pytest packages/devkit-spec/tests/e2e/bundles/spec/test_sdd_baseline_scenarios.py packages/devkit-spec/tests/integration/bundles/spec/test_sdd_baseline_guidance.py packages/devkit-docs/tests/integration/features/governance/test_ux_repository_usecases.py --basetemp .devkit/transient/incubation-baseline/run-provider-fix -q
+```
+
+Observed result:10 passed in24.91seconds. This includes six scripted scenarios (three initial-provider cases:
+project, spec and absent), three deployed asset checks and the actual repository use-case parser check. No policy
+runtime was stubbed. The absent-provider case executes the actual approach inspection, app checks, authorized
+provider configuration, sync consistency and next-change SDD routing. User decisions remain synthetic test data.
+The final document influence selection also passed12tests; source Ruff/Pyright and cumulative governance passed.

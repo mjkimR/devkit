@@ -56,7 +56,7 @@ approach = "sdd"
 provider = "spec"
 ```
 
-Retain an existing `spec` provider. If the project uses `project`, present its necessary switch to `spec` as an
+Retain an existing `spec` provider. If the provider is absent or the project uses `project`, present configuring `spec` as an
 explicit activation effect requiring authority. Without that authority, report the mismatch and claim no successful
 adoption. Preserve approval, worktree, other integration and project-check settings unless their change was authorized.
 This example is not a universal settings profile or a command to overwrite the configuration.

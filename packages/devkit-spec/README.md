@@ -41,7 +41,7 @@ Use the explicitly invoked or confirmed `sdd-baseline` playbook for a verified r
 activation. Keep `[development] approach = "incubation"` while installing/selecting spec assets and preparing
 current documents and actual check/usage evidence. Retrieve it with `uv run devkit playbook get spec/sdd-baseline`.
 Package selection alone does not activate SDD; the ready source, scope and policy effects require matching user
-authority. A necessary project-to-spec integration provider change is an explicit effect rather than an implicit
+authority. Configuring a missing spec provider or a necessary project-to-spec integration provider change is an explicit effect rather than an implicit
 settings profile. See the [incubation adoption guide](../../guides/install/incubation-sdd-adoption.md) and
 `CAP-DLV-incubation-sdd-baseline`. Legacy rule containment remains the separate `brownfield-adoption` path.
 

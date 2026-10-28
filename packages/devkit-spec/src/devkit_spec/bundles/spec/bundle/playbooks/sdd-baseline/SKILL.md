@@ -58,7 +58,8 @@ Preparation and package selection do not activate SDD.
 1. Recheck the relevant source and dirty paths against report evidence.
    If they changed, invalidate affected observations and repeat the affected comparison/checks before readiness.
 2. Present the ready report/revision, retained scope, actual check outcomes, selected SDD assets and exact policy effects, including the integration provider.
-   If the provider is `project`, present changing it to `spec` as a necessary activation effect; retain an existing `spec` provider.
+   If the provider is absent or `project`, present configuring `spec` as a necessary activation effect; retain an existing `spec` provider.
+   For another configured provider, verify its SDD readiness contract or report the unresolved compatibility before activation.
    If that provider change is not authorized, report the mismatch and do not claim successful SDD adoption.
    Reuse an explicit user decision already bound to the same source and effects; otherwise obtain that decision now.
    Preparation intent alone does not authorize activation against an unknown final scope.

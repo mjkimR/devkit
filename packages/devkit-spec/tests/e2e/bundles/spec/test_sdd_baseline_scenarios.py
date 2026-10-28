@@ -72,7 +72,7 @@ Run `python checks/check_notes.py`; exercise add and list against the same store
 
 
 class Exercise:
-    def __init__(self, root: Path, provider: str = "project") -> None:
+    def __init__(self, root: Path, provider: str | None = "project") -> None:
         self.root = root
         self.env = {k: v for k, v in os.environ.items() if not k.startswith(("DEVKIT_", "PYTHONPATH"))}
         self.observations: list[dict[str, object]] = []
@@ -111,7 +111,7 @@ class Exercise:
     def cli(self, *args: str, expected: int = 0) -> subprocess.CompletedProcess[str]:
         return self.run(sys.executable, "-m", "devkit_dist", *args, "-w", str(self.root), expected=expected)
 
-    def configure(self, approach: str, provider: str, preset: str = "core") -> None:
+    def configure(self, approach: str, provider: str | None, preset: str = "core") -> None:
         (self.root / ".devkit/config.toml").write_text(
             f'[development]\napproach="{approach}"\n[integration]\nprovider="{provider}"\n[presets]\nspec="{preset}"\n'
         )
@@ -146,8 +146,10 @@ class Exercise:
         return path
 
 
-@pytest.mark.parametrize("initial_provider", ["project", "spec"])
-def test_ready_product_activates_exact_effects_and_next_change_uses_sdd(tmp_path: Path, initial_provider: str) -> None:
+@pytest.mark.parametrize("initial_provider", ["project", "spec", None])
+def test_ready_product_activates_exact_effects_and_next_change_uses_sdd(
+    tmp_path: Path, initial_provider: str | None
+) -> None:
     exercise = Exercise(tmp_path / "consumer", initial_provider)
     assert exercise.config()["development"]["approach"] == "incubation"
     inactive = exercise.cli("spec", "new", "next-change", expected=2)
