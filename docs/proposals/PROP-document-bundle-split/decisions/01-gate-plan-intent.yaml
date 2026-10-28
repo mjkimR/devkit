@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-proposal
+stage: intent-proposal
+note: User requested Planning from PROP-document-bundle-split as the first step of
+  MS-idea-incubation
+by: user
+at: '2026-10-28T02:55:07.227269Z'
