@@ -6,6 +6,7 @@ from dataclasses import replace
 from pathlib import Path
 
 import devkit_agt.features.worktree.usecases.lifecycle as lifecycle
+import pytest
 from click.testing import CliRunner
 from devkit_agt.features.integration import IntegrationService
 from devkit_agt.features.integration.cli import cli
@@ -302,6 +303,7 @@ def test_not_ready_is_an_input_error_keeping_the_reasons(repo, ready_provider):
     advisory = json.loads(result.output)["error"]["advisory"]
     assert (advisory["code"], advisory["mode"]) == ("INTEGRATION_NOT_READY", "INPUT_ERROR")
     assert advisory["details"] == ["finish the fixture checks"] and advisory["target_files"] == [str(worktree)]
+    assert "commit the final changes and prepare a new" in advisory["fix"]
 
 
 def test_task_argument_errors_target_the_flag(repo):
@@ -376,3 +378,41 @@ def test_prepare_inside_the_worktree_fixes_with_the_same_command_on_the_base(rep
         f"[FIX]    uv run devkit integration prepare dev-demo --task-kind session --task-id fixture -w {base}\n"
         in result.output
     )
+
+
+@pytest.mark.parametrize("command", ["prepare", "integrate"])
+def test_missing_session_claims_retries_same_command(repo, ready_provider, monkeypatch, command):
+    from devkit_agt.features.integration import Evidence
+
+    base, worktree = repo
+    original = ready_provider.check
+    claims = '{"task_kind":"feature","effort":"low","review":true,"tests":true,"lint":true}'
+
+    def check(context):
+        result = original(context)
+        if context.task.claims_json == "{}":
+            return replace(
+                result,
+                evidence=(*result.evidence, Evidence("SESSION_CLAIMS_INVALID", "--claims")),
+                reasons=("session claims require task_kind",),
+            )
+        return result
+
+    monkeypatch.setattr(ready_provider, "check", check)
+    digest = IntegrationService(base).prepare("dev-demo", Task("session", "fixture", claims_json=claims)).request.digest
+    args = [command, "dev-demo", "--task-kind", "session", "--task-id", "fixture", "-w", str(base), "--format", "json"]
+    if command == "integrate":
+        args += ["--expected-digest", digest]
+    result = CliRunner().invoke(cli, args)
+    assert result.exit_code == 2, result.output
+    advisory = json.loads(result.output)["error"]["advisory"]
+    assert advisory["code"] == "INTEGRATION_NOT_READY"
+    assert advisory["target_files"] == ["--claims"]
+    assert "--claims" in advisory["fix"] and "same" in advisory["fix"]
+    assert "commit" not in advisory["fix"] and "prepare a new" not in advisory["fix"]
+    assert worktree.exists()
+    retried = CliRunner().invoke(cli, [*args, "--claims", claims])
+    assert retried.exit_code == 0, retried.output
+    payload = json.loads(retried.output)
+    assert payload["request"]["digest"] == digest
+    assert payload["status"] == ("prepared" if command == "prepare" else "completed")
