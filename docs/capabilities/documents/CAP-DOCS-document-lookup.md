@@ -15,7 +15,7 @@ created_at: 2026-10-13
 
 ## 1. Summary
 
-Three commands give an agent deterministic access to the document index (`CAP-DOCS-document-model`): `devkit spec
+Three commands give an agent deterministic access to the document index (`CAP-DOCS-document-model`): `devkit docs
 resolve` maps IDs to paths, `devkit docs refs` follows the references of one document in either direction, and
 `devkit docs list` browses documents with filters. They are the exact-match counterpart of `devkit docs search`
 (`CAP-DOCS-document-search`), which ranks by meaning when the ID is not known. Each call loads the index through
@@ -42,7 +42,7 @@ changes an argument, output, code or exit status.
 ### 3.1 Common
 
 1. **Workspace**: every command takes `-w/--workspace-root` (default: the devkit project containing the current
-   directory), `--format text|json` and devkit's output options (`-q`, `-v`, `--strict`), as every `devkit spec`
+   directory), `--format text|json` and devkit's output options (`-q`, `-v`, `--strict`), as every `devkit docs`
    command does (`CAP-HARN-command-mount`). Paths in the output MUST be workspace-relative.
 2. **Warnings and notices**: files the index left out are `DOCS_DOCUMENT_INVALID` warnings, and an unknown
    `list --status` value is a `DOCS_LIST_STATUS_UNKNOWN` notice (3.4); both go to stderr (under `notices` in JSON).
@@ -79,8 +79,8 @@ changes an argument, output, code or exit status.
    - `--status/-s a,b`: comma-separated statuses, compared case-insensitively. A given `--status` replaces the default
      history hiding: the documents whose status it names are listed whatever their history. Status vocabularies
      come from the templates, which a project may override, so a value is never rejected: one that no indexed
-     document of the selected kinds (every kind without `KIND`) carries as the status `list` shows (a draft
-     proposal in Planning shows `reviewing`), historical or in another namespace included, adds one `DOCS_LIST_STATUS_UNKNOWN` notice naming those values, with the statuses that do occur in
+     document of the selected kinds (every kind without `KIND`) carries as the status `list` shows (a status
+     overlay's value where one applies, 3.6), historical or in another namespace included, adds one `DOCS_LIST_STATUS_UNKNOWN` notice naming those values, with the statuses that do occur in
      its `[FIX]` (`SPEC-list-unknown-status`). The filter still applies as given, so a valid status no document carries yet
      gives an empty page plus the notice.
    - `--area/-a TEXT`: case-insensitive substring of the frontmatter `area`.
@@ -105,7 +105,7 @@ changes an argument, output, code or exit status.
      of the current directory plus the global documents.
 3. **Order**: kind order (the table of `CAP-DOCS-document-model`), then, for feedback, `severity` (`critical`,
    `blocked`, `workaround`, `noise`, then any other or missing value, case-insensitive), then ID, then path.
-4. **Line fields**: `kind`, `status`, `path`, `tasks` (`<checked>/<total>` of the `tasks.md` beside a spec, counted
+4. **Line fields**: `kind`, `status`, `path`, the fields a status overlay adds (3.6), `tasks` (`<checked>/<total>` of the `tasks.md` beside a spec, counted
    as devkit counts checklist items; `-` for other kinds or without `tasks.md`), on proposal lines only `task_kind`,
    `planning_effort` and `dev_effort` (`-` when absent), on feedback lines only `severity`,
    `scope` and `target` (`-` when absent), `namespace` (only in a workspace that registers namespaces), `title`.
@@ -117,10 +117,27 @@ changes an argument, output, code or exit status.
 2. The output ends with `[PAGE: total= offset= limit= count= next=]`; `next` is the offset of the next page, `-` on
    the last one. `list` adds `hidden=<n>` last: the documents that match every other filter but were left out as
    historical (`0` with `--history` or `--status`).
-3. When more items follow, `[NEXT_CMD: uv run devkit spec ...]` repeats the command with every given filter, `-w` when it
+3. When more items follow, `[NEXT_CMD: uv run devkit docs ...]` repeats the command with every given filter, `-w` when it
    was given, `--limit` and the next `--offset`; each `--where` is repeated as given, in order.
 4. When `hidden` is above zero, `list` prints `[HISTORY_CMD: uv run devkit docs list ... --history]` last: the command with
    every given filter, `--history`, `-w` when it was given and `--limit` when it is not the default.
+
+### 3.6 Status Overlays (`list`)
+
+1. **Registration**: `list` MUST load every callable registered in the entry-point group `devkit.docs.status_overlay`,
+   in entry-point name order. Each is called as `overlay(root, documents)` and returns
+   `{document ID: {field: value}}`.
+2. **Shown status**: WHERE an overlay sets `status` for a document, `list` MUST show that value as the document's
+   status and MUST apply `--status` and the `DOCS_LIST_STATUS_UNKNOWN` notice (3.4) to it.
+3. **Extra fields**: every other field an overlay sets MUST be added to the document's line, after `path`, and to its JSON
+   record.
+4. **Precedence**: IF two overlays set the same field of one document, THEN the one loaded later MUST win.
+5. **Display only**: an overlay MUST NOT write a document; `resolve`, `refs`, `search` and the rules read the
+   declared status. Without a registered overlay, `list` shows the declared status.
+6. **devkit-spec's overlay**: devkit-spec registers `spec =
+   devkit_spec.features.proposals.services.planning:planning_overlay`: a `draft` proposal whose `plan-<slug>` branch
+   exists, locally or fetched, is shown with `status=reviewing` and `planning_branch` (`CAP-DLV-proposal-incubation`
+   rule 10, `ADR-document-package`).
 
 ## 4. Interfaces & Data Contracts
 
@@ -154,8 +171,9 @@ devkit docs list feedback --status resolved            # resolved feedback, with
 
 `resolve` prints `[DOCUMENT: <id> kind= status= path=]`, with `alias=<alias>` appended when the argument was an
 alias; `list` prints
-`[DOCUMENT: <id> kind= status= path= tasks= task_kind= planning_effort= dev_effort= severity= scope= target= namespace= title=]`, `tasks=` only on spec lines, `task_kind=`, `planning_effort=` and `dev_effort=` only on proposal lines, `severity=`, `scope=` and
-`target=` only on feedback lines, `namespace=` only with registered namespaces. Values follow devkit's sentinel conventions: `-` for empty, `yes`/`no` for booleans, a JSON
+`[DOCUMENT: <id> kind= status= path= [overlay fields] tasks= task_kind= planning_effort= dev_effort= severity= scope= target= namespace= title=]`, `tasks=` only on spec lines, `task_kind=`, `planning_effort=` and `dev_effort=` only on proposal lines, `severity=`, `scope=` and
+`target=` only on feedback lines, `namespace=` only with registered namespaces, and the overlay fields (3.6), such as
+`planning_branch=`, only on documents an overlay names. Values follow devkit's sentinel conventions: `-` for empty, `yes`/`no` for booleans, a JSON
 string when the value holds whitespace, quotes, brackets, `=` or a backslash.
 
 ### 4.3 JSON Keys (`--format json`)
@@ -164,7 +182,7 @@ string when the value holds whitespace, quotes, brackets, `=` or a backslash.
 | --- | --- |
 | `resolve` | `documents` (document records: `id`, `kind`, `path`, `status`, `title`, `area`, `summary`, plus `alias`: the alias argument, `null` for a declared ID), `errors` (advisory objects), `notices` |
 | `refs` | `id`, `direction`, `total`, `offset`, `limit`, `items` (`id`, `path`, `status`, `references`: `target`, `source`, `path`, `field`, `line`, `column`, `bracket`), `notices`; `path` and `status` are `null` for an ID no single document declares |
-| `list` | `total`, `hidden` (the page line's `hidden`), `offset`, `limit`, `namespace` (the selection, `null` for every namespace), `documents` (document records plus `namespace`, `historical` (`true` for a document historical by rule 7 or 8 of `CAP-DOCS-document-model`), `tasks` (spec records); proposal records also `task_kind`, `planning_effort`, `dev_effort`; feedback records also `severity`, `scope`, `target`; a key without a value is left out; a draft proposal whose `plan-<slug>` exists, locally or fetched, is shown with `status: reviewing` and its `planning_branch`, `CAP-DLV-proposal-incubation` rule 10), `notices` |
+| `list` | `total`, `hidden` (the page line's `hidden`), `offset`, `limit`, `namespace` (the selection, `null` for every namespace), `documents` (document records plus `namespace`, `historical` (`true` for a document historical by rule 7 or 8 of `CAP-DOCS-document-model`), `tasks` (spec records); proposal records also `task_kind`, `planning_effort`, `dev_effort`; feedback records also `severity`, `scope`, `target`; a key without a value is left out; the fields of a status overlay (3.6), its `status` replacing the declared one), `notices` |
 
 ### 4.4 Exit Codes
 
@@ -179,6 +197,6 @@ notices always exit `0`.
 | `DOCS_ID_DUPLICATE` | `ERROR` (`MAINTENANCE`) | `DuplicateIdError` | More than one document declares the ID; `[TARGET]` lists them. |
 | `DOCS_DOCUMENT_INVALID` | `WARNING` | `DocumentInvalidWarning` | A file under `docs/` or `specs/` cannot be read or has malformed frontmatter; it is left out. A `refs` that then fails (`DOCS_ID_UNRESOLVED`) still reports these warnings, before the error in text and under `notices` of `{"error": ...}` in JSON. |
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_core.base.errors.ArgumentError` | A negative `--limit` or `--offset`; a `--where` item without `=`, field or value; an unknown `--namespace`, or `--namespace` combined with `--all-namespaces`. |
-| `SPEC_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_spec.base.errors.SpecConfigError` | `list`: a malformed `[tool.spec]` table, namespaces included (`CAP-DLV-project-policy`). |
-| `DOCS_ENTRYPOINTS_PATH_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_spec.base.errors.EntrypointsPathError` | `list --file`: the path breaks the entrypoint path contract (`CAP-TRACE-code-entrypoints`). |
-| `DOCS_LIST_STATUS_UNKNOWN` | `NOTICE` | `devkit_spec.base.errors.ListStatusUnknownNotice` | `list --status`: a value no indexed document of the selected kinds (every kind without `KIND`) carries as its shown status (a draft proposal in Planning shows `reviewing`), whatever its history or namespace; `[FIX]` lists the statuses that do occur. The filter still applies and the exit code is unchanged. |
+| `DOCS_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_docs.base.errors.DocsConfigError` | `list`: a malformed `[tool.docs]` table, namespaces included (`CAP-DOCS-namespaces`). |
+| `DOCS_ENTRYPOINTS_PATH_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_docs.base.errors.EntrypointsPathError` | `list --file`: the path breaks the entrypoint path contract (`CAP-TRACE-code-entrypoints`). |
+| `DOCS_LIST_STATUS_UNKNOWN` | `NOTICE` | `devkit_docs.base.errors.ListStatusUnknownNotice` | `list --status`: a value no indexed document of the selected kinds (every kind without `KIND`) carries as its shown status (3.6), whatever its history or namespace; `[FIX]` lists the statuses that do occur. The filter still applies and the exit code is unchanged. |

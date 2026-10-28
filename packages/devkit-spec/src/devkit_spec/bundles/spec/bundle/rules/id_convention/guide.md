@@ -48,7 +48,7 @@ live in `docs/decisions/`); `12` (the glossary) is `docs/steering/glossary.md`. 
 04 Solution Strategy, 05 Building Block View, 06 Runtime View, 07 Deployment View, 08 Cross-cutting Concepts, 09
 Architecture Decisions, 10 Quality Requirements, 11 Risks and Technical Debts, 12 Glossary.
 
-In a monorepo, a package registered in `[[tool.spec.namespaces]]` of `.devkit/config.toml` keeps its Living Spec
+In a monorepo, a package registered in `[[tool.docs.namespaces]]` of `.devkit/config.toml` keeps its Living Spec
 under `docs/packages/<name>/` with the same layout (`capabilities/`, `usecases/`, `architecture/`). IDs are
 repository-wide, so a slug is unique across `docs/` and every package.
 
@@ -97,7 +97,7 @@ exact field ID or an ordinary link belongs.
 
 ## 4. Configuration
 
-No settings. Namespaces come from `[[tool.spec.namespaces]]` in `.devkit/config.toml`.
+No settings. Namespaces come from `[[tool.docs.namespaces]]` in `.devkit/config.toml`.
 
 ## 5. Exceptions
 

@@ -20,7 +20,7 @@ and record any other deferral as a `.devkit/config.toml` entry the user decided.
 ## Step 1: Install and take the legacy set
 
 ```bash
-uv add --dev devkit devkit-spec
+uv add --no-build-package pyyaml --dev "devkit-spec @ git+https://github.com/mjkimR/devkit.git#subdirectory=packages/devkit-spec"  # brings devkit-docs and devkit-agt
 uv run devkit sync
 uv run devkit rules check
 git ls-files -- 'docs/*.md' 'specs/*.md' > /tmp/legacy.txt

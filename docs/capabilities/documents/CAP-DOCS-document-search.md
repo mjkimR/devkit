@@ -18,8 +18,8 @@ created_at: 2026-10-13
 ## 1. Summary
 
 `devkit docs search` finds documents by meaning when the exact ID is not known. The ranking is devkit's
-(`CAP-SRCH-document-search`); devkit-spec adds the spec
-search policy on top: which documents are candidates, which fields are embedded, exact-match pinning and glossary
+(`CAP-SRCH-document-search`); devkit-docs adds the document search policy on top
+(`ADR-document-package`): which documents are candidates, which fields are embedded, exact-match pinning and glossary
 expansion. Going from a known ID to its path stays `devkit docs resolve` (`CAP-DOCS-document-lookup`).
 
 ## 2. Scope & Boundary
@@ -54,7 +54,8 @@ expansion. Going from a known ID to its path stays `devkit docs resolve` (`CAP-D
    Terms of different clusters that tokenize to the same words (`C++` and `C#` are both `c`) expand to the union of
    their clusters, in glossary order, so no cluster is lost. Without the file there is no expansion. If the PyYAML LibYAML binding is unavailable while reading the file, search MUST fail with `YAML_BINDING_UNAVAILABLE` and exit `2`; it MUST NOT report `DOCS_GLOSSARY_INVALID` or fall back to Python parsing.
 5. **Modes**: `--mode auto` (default) is `hybrid` when devkit's search extra is installed
-   (`uv add 'devkit-spec[search]'`, which adds `devkit[search]`), else `lexical`. `lexical`, `dense` and `hybrid`
+   (`uv add 'devkit-docs[search]'`, which adds `devkit-agt[search]`; `devkit-spec[search]` includes it), else
+   `lexical`. `lexical`, `dense` and `hybrid`
    force one; an explicit `dense` or `hybrid` without the extra MUST fail with devkit's `SEARCH_EXTRA_MISSING`.
    `[SEARCH: ... mode=]` names the ranking that ran, never `auto`.
 6. **Similarity floor**: `--min-similarity` (default `0.35`, the floor of devkit's playbook search) drops the long
@@ -122,7 +123,7 @@ terms:
 
 devkit's `SEARCH_EXTRA_MISSING`, `SEARCH_MODEL_NOT_FOUND` and `SEARCH_MODEL_INVALID` pass through for explicit dense
 or hybrid searches; `ARGUMENT_INVALID` for a blank query, a negative `--limit` or an invalid namespace
-selection; `SPEC_CONFIG_INVALID` for a malformed `[tool.spec]` table. Unreadable documents are
+selection; `DOCS_CONFIG_INVALID` for a malformed `[tool.docs]` table. Unreadable documents are
 `DOCS_DOCUMENT_INVALID` warnings. Exit codes: `0` success (also with no hit for a non-blank query), `2` an error,
 warnings `1` only under `--strict`.
 

@@ -34,7 +34,7 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
   (`devkit_spec.features.policy.services.config.read_spec_config`), the defaults the command reports, and the `[tool.spec]` tables of devkit's
   commented config template (`devkit_spec.features.policy.services.config.template`).
 - **Out-of-Scope**:
-  - The meaning of `[[tool.spec.namespaces]]`: `CAP-DOCS-namespaces`.
+  - Document namespaces, the `[[tool.docs.namespaces]]` table devkit-docs reads and validates: `CAP-DOCS-namespaces`.
   - The meaning of `[tool.spec.scope]`: `CAP-COLL-work-scope-registry`. This capability owns their validation only.
   - How gates and stage switches act on a workflow: `CAP-DLV-delivery-workflows` and devkit's workflow engine.
   - Executing worktree and integration steps (`CAP-HARN-agent-guidance`): devkit's `devkit worktree`, `devkit_agt.features.integration` (`[integration] provider = "spec"`), and the `spec`
@@ -67,8 +67,8 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
    as a human approval. The Planning acceptance merge belongs to `plan-accept`, not Development's `dev-integration`.
    Host permissions, required PR policy and publication authority remain separate (`ADR-delivery-decision-boundaries`).
    `exception` is a resolution stage, not a gate: its key emits `SPEC_APPROVAL_KEY_IGNORED` and is not listed.
-5. **Strict table**: `[tool.spec]` MUST be a table with only the keys `worktree`, `depth_escalation`, `namespaces`,
-   `scope` and `feedback`; anything else is `SPEC_CONFIG_INVALID`, raised by every command that reads the table.
+5. **Strict table**: `[tool.spec]` MUST be a table with only the keys `worktree`, `depth_escalation`, `scope` and
+   `feedback`; anything else is `SPEC_CONFIG_INVALID`, raised by every command that reads the table.
    `worktree` is `"auto"` or `"required"`, `depth_escalation` `"auto"` or `"ask"`; a boolean is `SPEC_CONFIG_INVALID`, with no mapping (devkit rejects a boolean `pull_request` the
    same way, `WORKTREE_CONFIG_INVALID`).
 6. **Git policy levels**: `[tool.spec] worktree` applies to `direct` mode only (`local-orchestrated` always runs each
@@ -88,7 +88,7 @@ policy with one command, `devkit spec policy`, before routing, gate and Git deci
    assumptions; an explicit user request naming the checkout or the integration path overrides the policy for that
    task only, recorded there too.
 7. **Template at the defaults**: `template()` MUST describe every `[tool.spec]` key at the default
-   `read_spec_config` applies (an example for a key unset by default and for the namespaces), so the commented
+   `read_spec_config` applies (an example for a key unset by default), so the commented
    tables `devkit config template` writes read back as the defaults once uncommented.
 
 8. **Feedback defaults**: `[tool.spec.feedback]` defaults to `capture = "observed"`, `coverage = "repo"`,
@@ -161,10 +161,6 @@ provider = "spec"           # devkit_agt.features.integration.readiness entry po
 worktree = "required"       # direct mode: spec and proposal activities always run in a worktree (default "auto")
 depth_escalation = "ask"    # the user confirms each planning-depth raise (default "auto")
 
-[[tool.spec.namespaces]]    # monorepo packages with their own Living Spec under docs/packages/<name>/
-name = "api"
-path = "services/api"
-
 [tool.spec.feedback]
 capture = "observed"        # observed | requested-only
 coverage = "repo"           # repo | repo-and-upstream
@@ -181,7 +177,6 @@ timeout = 10                # whole seconds per registry command, 1 to 300
 | --- | --- | --- | --- |
 | `tool.spec.worktree` | string | `"auto"` | `auto` or `required`; a boolean is rejected. |
 | `tool.spec.depth_escalation` | string | `"auto"` | `auto` or `ask`. |
-| `tool.spec.namespaces` | array of tables | `[]` | Each entry exactly `name` and `path`; `name` lowercase words joined by `-`, not `global`; `path` a safe workspace-relative directory in canonical form (no `./`, `//` or trailing `/`); no name or path registered twice. |
 | `tool.spec.scope.shared_path` | string | Git common dir `devkit-spec-scope/` | Absolute after `~` expansion. |
 | `tool.spec.scope.namespace` | string | common-dir hash | Letters, digits, `.`, `_`, `-`, not starting with `.`. |
 | `tool.spec.scope.timeout` | integer | `10` | Whole seconds from 1 to 300 (a boolean is rejected). |
@@ -192,7 +187,7 @@ timeout = 10                # whole seconds per registry command, 1 to 300
 
 `devkit config template` writes the `[tool.spec]` tables into `.devkit/config.toml` as comments, from
 `devkit_spec.features.policy.services.config.template`, the `devkit.config_template` entry point `spec`: every key at its default, an example
-for `shared_path`, `namespace` and the namespaces, uncommented in place to change a value. devkit adds only the
+for `shared_path` and `namespace`, uncommented in place to change a value. devkit adds only the
 tables the file does not mention yet and never changes a line.
 
 `collect-feedback = "off"` makes the delivery workflows skip the feedback sweep; the
@@ -203,11 +198,11 @@ executor reports it as skipped.
 ```python
 from devkit_spec.features.policy.services.config import read_spec_config
 
-config = read_spec_config(root)  # SpecConfig with worktree, namespaces, scope and feedback
-tables = template()  # list[devkit_dist.features.project.services.config_template.TemplateTable]: [tool.spec], its namespaces, scope and feedback tables
+config = read_spec_config(root)  # SpecConfig with worktree, depth_escalation, scope and feedback
+tables = template()  # list[devkit_dist.features.project.services.config_template.TemplateTable]: [tool.spec], its scope and feedback tables
 ```
 
-`Namespace` has `name`, `path` and `docs` (`docs/packages/<name>`); `ScopeConfig` has `shared_path` (`Path` or
+`ScopeConfig` has `shared_path` (`Path` or
 `None`), `namespace` (`str` or `None`) and `timeout`. `FeedbackConfig` has the four validated string choices
 `capture`, `coverage`, `detail` and `reminder`.
 
@@ -215,7 +210,7 @@ tables = template()  # list[devkit_dist.features.project.services.config_templat
 
 | Code | Level | Class | Condition |
 | --- | --- | --- | --- |
-| `SPEC_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `SpecConfigError` | `[tool.spec]` is not a table, has an unknown key, `worktree` is not `auto` or `required`, or a namespace entry is malformed (keys other than `name` and `path`, an invalid or `global` name, an unsafe or non-canonical path, a name or path registered twice), or `[tool.spec.feedback]` has an invalid table, unknown key, type or choice, or `[tool.spec.scope]` is not a table, has an unknown key, a relative `shared_path`, a `namespace` that is not a plain name, or a `timeout` outside 1 to 300 whole seconds. |
+| `SPEC_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `SpecConfigError` | `[tool.spec]` is not a table, has an unknown key, `worktree` is not `auto` or `required`, `depth_escalation` is not `auto` or `ask`, or `[tool.spec.feedback]` has an invalid table, unknown key, type or choice, or `[tool.spec.scope]` is not a table, has an unknown key, a relative `shared_path`, a `namespace` that is not a plain name, or a `timeout` outside 1 to 300 whole seconds. |
 
 devkit's own errors pass through: `CONFIG_INVALID` (an unreadable file), `WORKFLOW_CONFIG_INVALID`,
 `WORKTREE_CONFIG_INVALID`.

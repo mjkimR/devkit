@@ -278,7 +278,7 @@ Argument errors (`ARGUMENT_INVALID`): `register`/`update` without `--spec`, `com
   too); `[DIFF]` carries `in=target-docs|reconcile`.
 - Paths are relative to the workspace root: `shared_path=`, `[RECORD]`/`[EVENT]` `worktree=` (`.` is this checkout)
   and the `[TARGET]` of registry advisories.
-- `query --history` pages like `spec list`: `[PAGE: total= limit= count= next=<cursor>]`, then `[NEXT_CMD: ...]`
+- `query --history` pages like `docs list`: `[PAGE: total= limit= count= next=<cursor>]`, then `[NEXT_CMD: ...]`
   repeating the command with `--cursor <next>` when older events follow.
 - `query --spec` never pairs the bundle with a record of the same bundle or task.
 - `[SCOPE: <task> ...]` is only a registration; `release` prints `[SCOPE_RELEASE: ...]` and `spec worker inspect`

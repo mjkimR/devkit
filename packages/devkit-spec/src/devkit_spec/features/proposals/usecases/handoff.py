@@ -564,7 +564,7 @@ def _namespace(root: Path, meta: dict[str, Any], proposal_rel: str) -> str | Non
     """The proposal's ``namespace``, carried to ``spec.md``; ``None`` when it has none.
 
     Raises ``ProposalInvalidError`` when it is not a string naming ``global`` or a registered namespace, and
-    ``SpecConfigError`` when ``[tool.spec]`` is malformed.
+    ``DocsConfigError`` when ``[tool.docs]`` is malformed.
     """
     if NAMESPACE not in meta:
         return None

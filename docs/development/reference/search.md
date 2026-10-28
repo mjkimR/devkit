@@ -1,6 +1,6 @@
 # devkit_dist.features.search
 
-Lexical, dense and hybrid search over a caller's documents. Semantics, measurements and the model package: `CAP-SRCH-document-search`. There is no CLI of its own; `devkit playbook search` ranks with it.
+Lexical, dense and hybrid search over a caller's documents. Semantics, measurements and the model package: `CAP-SRCH-document-search`. There is no CLI of its own; `devkit playbook search` and devkit-docs' `devkit docs search` rank with it.
 
 ## Install
 

@@ -19,4 +19,6 @@ distribution that ships the module (`ARCH-05-1-containers`).
 | `devkit_agt.features.generated` | `devkit-agt` | [Generated](generated.md) | `CAP-GEN-tracked-artifacts` |
 | `devkit_dist.features.search` | `devkit-dist` | [Search](search.md) | `CAP-SRCH-document-search` |
 | `devkit_agt.features.compact` | `devkit-agt` | [Compact](compact.md) | `CAP-CMP-bounded-execution` |
+| `devkit_docs` | `devkit-docs` | [devkit-docs README](../../../packages/devkit-docs/README.md) | `CAP-DOCS-document-model`, `CAP-DOCS-document-lookup` |
+| `devkit_spec` | `devkit-spec` | [devkit-spec README](../../../packages/devkit-spec/README.md) | `CAP-HARN-command-mount`, `CAP-DLV-delivery-workflows` |
 | `devkit_viewer` (devkit-viewer) | [Viewer](viewer.md) | `CAP-VIEW-repository-viewer` |

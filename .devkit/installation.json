@@ -1611,7 +1611,7 @@
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/SKILL.md": {
       "mode": 420,
-      "sha256": "4eb49b35a4f440718c38875b415b05558798c7a8d1aa24b93c1478cfdfc9f859"
+      "sha256": "50ec16e662e2f87b0b7a60284e4cbb921ac816d9b860fed4bb900a16b0bcb574"
     },
     ".devkit/managed/spec/playbooks/brownfield-adoption/references/migration.md": {
       "mode": 420,
@@ -1659,7 +1659,7 @@
     },
     ".devkit/managed/spec/rules/id_convention/guide.md": {
       "mode": 420,
-      "sha256": "d298446d5afc3df52a046cec75bf357e3f1759b1cf105d602ecc026bc5396afc"
+      "sha256": "3f63dad72a290fba8b55e84a513daad1e2494c228d76600121808b4ba109f590"
     },
     ".devkit/managed/spec/rules/id_convention/rule.py": {
       "mode": 420,
@@ -1695,7 +1695,7 @@
     },
     ".devkit/managed/spec/rules/spec_format/guide.md": {
       "mode": 420,
-      "sha256": "8020751c0c5a3823448d5009cb706db15a0e32f0955d7c2ec84687c53df889c6"
+      "sha256": "c0293b93859c7ac46c530650c4953cf9ea8bcd5c4dde90780deaa3a47e75ae67"
     },
     ".devkit/managed/spec/rules/spec_format/rule.py": {
       "mode": 420,
@@ -1755,7 +1755,7 @@
     },
     ".devkit/managed/spec/rules/traceability_link/guide.md": {
       "mode": 420,
-      "sha256": "dccbc069133217026ad4b811490f2bef2233ca50b8ad4c999a3d5c070e0d4f15"
+      "sha256": "e780b53f7b5a26dfd66725c74b278780b7d3edb5222b4a6a40a6bc40c0be6232"
     },
     ".devkit/managed/spec/rules/traceability_link/rule.py": {
       "mode": 420,

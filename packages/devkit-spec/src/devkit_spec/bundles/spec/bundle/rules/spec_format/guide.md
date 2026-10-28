@@ -9,7 +9,7 @@ present, non-blank strings; their values are checked by the other spec rules (`R
 - **Phase and severity**: `linter`, `error`.
 - **What is checked**: the targeted Markdown files under `docs/capabilities/`, `docs/usecases/`, `docs/proposals/` and
   `docs/roadmap/`, and under `capabilities/` and `usecases/` of each namespace docs root (`docs/packages/<name>/`,
-  registered in `[[tool.spec.namespaces]]`), even when they declare no ID. Milestones (`docs/roadmap/`) also need
+  registered in `[[tool.docs.namespaces]]`), even when they declare no ID. Milestones (`docs/roadmap/`) also need
   `created_at` and a lifecycle `status`; `done` and `dropped` milestones are history, checked only when named as
   explicit targets.
 - **What is not**: `README.md`, templates (`*-template.md`, `*_template.md`), directories starting with `.` and
@@ -57,13 +57,13 @@ present, non-blank strings; their values are checked by the other spec rules (`R
   not valid UTF-8. Review the filled-in values: `status: draft` and a title taken from the heading are starting
   points, not decisions.
 - **By hand**: close the block with `---` and fix its YAML; quote a non-string value. For `namespace`, set a name
-  registered in `[[tool.spec.namespaces]]` of `.devkit/config.toml`, or remove the field: a bundle without one is
+  registered in `[[tool.docs.namespaces]]` of `.devkit/config.toml`, or remove the field: a bundle without one is
   global. For `planning_effort` and `dev_effort`, set `low`, `medium` or `high`, or remove the field. Neither
   `namespace` nor the effort hint fields are fixable.
 
 ## 4. Configuration
 
-No settings. Namespaces come from `[[tool.spec.namespaces]]` in `.devkit/config.toml`.
+No settings. Namespaces come from `[[tool.docs.namespaces]]` in `.devkit/config.toml`.
 
 ## 5. Exceptions
 

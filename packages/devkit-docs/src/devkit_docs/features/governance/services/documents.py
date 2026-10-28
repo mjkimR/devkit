@@ -21,8 +21,8 @@ work history and are checked only when named as explicit targets.
 Document namespaces (``[[tool.docs.namespaces]]``) are read with
 ``namespaces(ctx)``: a namespace docs root ``docs/packages/<name>/`` holds
 Living Spec documents under the same conventions as ``docs/``. A malformed
-``[tool.spec]`` table is not a violation: ``SpecConfigError`` propagates and
-fails the run (``SPEC_CONFIG_INVALID`` with the rule's ID, exit 2), as devkit treats its own
+``[tool.docs]`` table is not a violation: ``DocsConfigError`` propagates and
+fails the run (``DOCS_CONFIG_INVALID`` with the rule's ID, exit 2), as devkit treats its own
 malformed configuration, because no document can be checked against a
 namespace registry that cannot be read.
 """
@@ -81,7 +81,7 @@ def field_line(text: str, key: str) -> int:
 
 
 def namespaces(ctx: RuleContext) -> tuple[Namespace, ...]:
-    """The document namespaces of the run's workspace; raises ``SpecConfigError`` for a malformed ``[tool.spec]``."""
+    """The document namespaces of the run's workspace; raises ``DocsConfigError`` for a malformed ``[tool.docs]``."""
     return read_docs_config(ctx.workspace_root).namespaces
 
 

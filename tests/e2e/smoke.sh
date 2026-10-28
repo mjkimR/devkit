@@ -53,6 +53,7 @@ advisory_wheel=$(wheel devkit_advisory)
 starter_wheel=$(wheel devkit_starter)
 catalog_wheel=$(wheel devkit_catalog)
 mcp_wheel=$(wheel devkit_mcp)
+docs_wheel=$(wheel devkit_docs)
 spec_wheel=$(wheel devkit_spec)
 viewer_wheel=$(wheel devkit_viewer)
 
@@ -375,9 +376,10 @@ assert load_embedder().dimensions == 256
 index = SearchIndex([SearchDocument('secrets', 'Secrets must not enter the repository'), SearchDocument('length', 'File length warning')])
 assert index.search('leaked credentials', mode=SearchMode.HYBRID)[0].id == 'secrets'
 "
-    echo "--- SDD extension: install its wheel, mount the command and opt into valid docs"
-    uv add --dev "$spec_wheel" >/dev/null
+    echo "--- SDD extension: install its wheels, mount the commands and opt into valid docs"
+    uv add --dev "$spec_wheel" "$docs_wheel" >/dev/null
     uv run devkit spec --version
+    uv run devkit docs --version
     uv run devkit sync >/dev/null
     test ! -e docs
     test -f .devkit/managed/spec/bundle.toml

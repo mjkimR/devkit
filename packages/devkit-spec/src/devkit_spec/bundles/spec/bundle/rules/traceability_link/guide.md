@@ -9,7 +9,7 @@ Both sides are kept so an agent reading either document sees the whole relation 
 
 - **Phase and severity**: `linter`, `error`.
 - **What is checked**: use cases and capabilities under `docs/usecases/` and `docs/capabilities/` and under the same
-  directories of each package registered in `[[tool.spec.namespaces]]` (`docs/packages/<name>/usecases/`,
+  directories of each package registered in `[[tool.docs.namespaces]]` (`docs/packages/<name>/usecases/`,
   `.../capabilities/`); links may cross packages, since IDs are repository-wide. Materials are not checked.
 - **Targeting**: the document missing the reverse link is reported when the run targets it. When it does not (a commit
   that changes only the use case, say), the one-sided link is reported on the document that declares it instead, so a
@@ -41,7 +41,7 @@ Missing targets, duplicate IDs, wrong ID kinds and malformed fields are reported
 
 ## 4. Configuration
 
-No settings. Namespaces come from `[[tool.spec.namespaces]]` in `.devkit/config.toml`.
+No settings. Namespaces come from `[[tool.docs.namespaces]]` in `.devkit/config.toml`.
 
 ## 5. Exceptions
 

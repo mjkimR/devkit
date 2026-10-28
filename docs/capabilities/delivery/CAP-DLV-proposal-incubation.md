@@ -110,7 +110,8 @@ removes it.
    they do not hold the merge of the Planning branch.
 10. **Discovery is dynamic**: active proposals are listed with `devkit docs list proposal`, never through catalog
     tables maintained in README files. A `draft` whose `plan-<slug>` exists, locally or fetched from a remote, is
-    listed as `reviewing` with its `planning_branch`: Planning is running there (01 §5.1). Only the display changes;
+    listed as `reviewing` with its `planning_branch` through devkit-spec's status overlay
+    (`CAP-DOCS-document-lookup` section 3.6): Planning is running there (01 §5.1). Only the display changes;
     the base's `status` is never written for it, and a branch made elsewhere shows once it is fetched.
 11. **Hand off on the slug's Development branch**: at either `[tool.spec] worktree` level, a handoff in a checkout,
     linked or base, whose branch is not `dev-<slug>` (a detached HEAD included) MUST be refused before anything is
@@ -491,7 +492,7 @@ uv run devkit spec proposal check fast-engine                        # before an
 | `--dev-effort` | `new` | Write `dev_effort: low\|medium\|high` (default `medium`); anything else is `ARGUMENT_INVALID`. |
 | `--supersedes` | `new` | Write `supersedes: PROP-<old>`; a value that is not another proposal's ID is `ARGUMENT_INVALID`, a proposal that does not exist `SPEC_PROPOSAL_NOT_FOUND`, one that is not `accepted` `SPEC_PROPOSAL_NOT_APPROVED`; nothing written. |
 | `--needs-decompose` | `new` | Write `needs_decompose: true`. |
-| `--namespace` | `new` | Write `namespace: <name>`: `global` or registered in `[[tool.spec.namespaces]]`, else `ARGUMENT_INVALID` with the valid names in `[FIX]`. Omitted: the namespace the current directory lies in (`CAP-DOCS-namespaces`), else no field and the bundle is global. |
+| `--namespace` | `new` | Write `namespace: <name>`: `global` or registered in `[[tool.docs.namespaces]]`, else `ARGUMENT_INVALID` with the valid names in `[FIX]`. Omitted: the namespace the current directory lies in (`CAP-DOCS-namespaces`), else no field and the bundle is global. |
 | `--slug` | `padr` | The PADR slug for its ID and file name (default: the title's slug); refused when its first segment has no letter. |
 | `--summary` | `new`, `padr` | Write `summary: <text>`. After stripping surrounding whitespace, empty, longer than 300 characters, or with a letter outside the Latin script: `ARGUMENT_INVALID` (`[TARGET] --summary`), nothing written. A promoted ADR keeps its PADR's summary. |
 | `--with-target-docs` | `new` | Also write `target-docs.md`. |
@@ -613,7 +614,7 @@ Warnings exit `0` (`1` under `--strict`, which never turns a `2` into a `1`). Ev
 | `SPEC_PROPOSAL_MILESTONE_INACTIVE` | `NOTICE` | `ProposalMilestoneInactiveNotice` | `new --milestone`: the canonical milestone is done or dropped; creation succeeds and the notice names its ID and state and advises membership review. Milestone status and completion assertions are unchanged; no approval gate is added and `--strict` still exits `0` for this notice. |
 | `SPEC_PROPOSAL_UNBOUND` | `NOTICE` | `ProposalUnboundNotice` | `new`: `sdd-proposal` is not available, `proposal.md` is unbound. `handoff`: `task_kind` is `feature` (or absent) and `sdd-spec-feature` is not available, `spec.md` is unbound. The `[FIX]` is `devkit workflow bind --unit <dir> --workflow <id>`. |
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | devkit's `ArgumentError` | `accept`: `--direct` with a blank `--note`. `new`: `--namespace` is neither `global` nor registered, `--task-kind` is not `feature` or `bugfix`, `--planning-effort` or `--dev-effort` is not `low`, `medium` or `high`, `--supersedes` names no other proposal. `new`, `padr`: stripped `--summary` is empty, longer than 300 characters or not English. |
-| `SPEC_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `SpecConfigError` | `[tool.spec]` is malformed and it must be read: `new` without `--namespace global`, a proposal's `namespace` other than `global` at handoff, or a handoff in a linked worktree. |
+| `DOCS_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_docs.base.errors.DocsConfigError` | `[tool.docs]` is malformed and the namespace registry must be read: `new` without `--namespace global`, a proposal's `namespace` other than `global` at handoff, or a handoff in a linked worktree (`CAP-DOCS-namespaces`). |
 
 
 ## Host-authorized proposal lifecycle CLI

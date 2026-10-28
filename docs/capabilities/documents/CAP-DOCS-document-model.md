@@ -19,9 +19,9 @@ created_at: 2026-10-13
 ## 1. Summary
 
 The document model decides which files are spec documents, how each one is identified and how documents reference
-each other. `devkit_docs.features.documents` implements it as a workspace index built from the files on every load,
-reusing a file's parse result, also between processes, only while its path and text are unchanged. The
-lookup commands (`CAP-DOCS-document-lookup`), document search (`CAP-DOCS-document-search`), namespaces
+each other. The devkit-docs wheel owns it (`ADR-document-package`): `devkit_docs.features.documents` implements it
+as a workspace index built from the files on every load, reusing a file's parse result, also between processes, only
+while its path and text are unchanged. The lookup commands (`CAP-DOCS-document-lookup`), document search (`CAP-DOCS-document-search`), namespaces
 (`CAP-DOCS-namespaces`) and spec rules (`CAP-GOV-spec-rules`) resolve document identities through this index.
 `RULE-document-reference` also reads root glossary Owner cells and the IDs cited in steering files through the rules
 workspace cache; these files stay ID-free and unindexed, and their references do not become graph edges.
@@ -192,12 +192,12 @@ citations against the UX document's Interactions table (`CAP-GOV-spec-rules`).
 2. **Parse reuse**: a file's parse result MUST be reused only for the same workspace-relative path and the exact text
    the reader returned; within a process this makes the rules of one run parse every file once.
 3. **Parse memo**: WHERE `<root>/.devkit/transient/` is a directory, the index MUST keep parse results between
-   processes in `<root>/.devkit/transient/spec/document-index.json`, each entry keyed by the path and the BLAKE2b
+   processes in `<root>/.devkit/transient/docs/document-index.json`, each entry keyed by the path and the BLAKE2b
    digest of the UTF-8 encoding of the text parsed, the whole file under a parser fingerprint (the format version,
    the source of the read, parse and codec modules, the PyYAML version, libyaml presence and the Python version)
    (`ADR-content-keyed-document-parse-memo`, `ADR-parse-memo-location-and-format`). A stored result is a document,
    "no document", a malformed-frontmatter reason or an "unstorable" marker; a file that cannot be read or decoded
-   has no entry. The memo is not used when a symbolic link is at `.devkit/transient/`, `spec/` or the file, or the
+   has no entry. The memo is not used when a symbolic link is at `.devkit/transient/`, `docs/` or the file, or the
    file resolves outside the root. Deleting the file is always safe: the next load rebuilds it.
 4. **Memo writes**: only a load that walks the workspace with the default reader MUST write the memo, and only when
    its entries differ from those it read (a new, changed or removed file, or a discarded memo), by atomic replace

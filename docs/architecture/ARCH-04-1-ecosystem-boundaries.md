@@ -1,7 +1,7 @@
 ---
 id: ARCH-04-1-ecosystem-boundaries
 title: Ecosystem Boundaries & Responsibilities
-summary: "Package dependency directions, responsibilities, shared contracts, and actor matrices across devkit, devkit-spec, and autohub."
+summary: "Package dependency directions, responsibilities, shared contracts, and actor matrices across devkit, devkit-docs, devkit-spec, and autohub."
 status: active
 created_at: 2026-10-21
 ---
@@ -16,7 +16,7 @@ created_at: 2026-10-21
 
 ## 1. Package Dependency Architecture
 
-The delivery ecosystem maintains strict unidirectional dependencies across foundation, harness, methodology, and cloud execution layers:
+The delivery ecosystem maintains strict unidirectional dependencies across foundation, harness, document, methodology, and cloud execution layers:
 
 ```mermaid
 flowchart BT
@@ -24,6 +24,7 @@ flowchart BT
     DKD["devkit-dist<br/>distribution & CLI"]
     DKA["devkit-agt<br/>harness & workflows"]
     DKM["devkit-mcp<br/>MCP transport & registration"]
+    DKO["devkit-docs<br/>document system"]
     DKS["devkit-spec<br/>SDD methodology bundle"]
     AH["autohub<br/>cloud execution & ops"]
     PRJ[(Consumer Project<br/>.devkit/)]
@@ -31,6 +32,8 @@ flowchart BT
     DKD --> DKC
     DKA --> DKD
     DKM -.->|transports| DKA
+    DKO -->|rules engine| DKA
+    DKS -->|document model & rules| DKO
     DKS -->|bundle & extension points| DKA
     AH -.->|fixed runtime pins| DKS
     AH -.->|fixed runtime pins| DKA
@@ -41,11 +44,12 @@ flowchart BT
     style DKD fill:none,stroke:#3b82f6,stroke-width:2px
     style DKA fill:none,stroke:#1d4ed8,stroke-width:2px
     style DKM fill:none,stroke:#0284c7,stroke-width:2px
+    style DKO fill:none,stroke:#16a34a,stroke-width:2px
     style DKS fill:none,stroke:#15803d,stroke-width:2px
     style AH fill:none,stroke:#9ca3af,stroke-dasharray:2 4
 ```
 
-1. **Unidirectional flow**: Lower packages never import higher orchestrators. `devkit-core` has zero harness dependencies; `devkit-dist` exposes the `devkit` executable without importing `devkit-agt`; `devkit-agt` mounts the developer harness; `devkit-mcp` exposes services over MCP; `devkit-spec` packages SDD assets and hooks.
+1. **Unidirectional flow**: Lower packages never import higher orchestrators. `devkit-core` has zero harness dependencies; `devkit-dist` exposes the `devkit` executable without importing `devkit-agt`; `devkit-agt` mounts the developer harness; `devkit-mcp` exposes services over MCP; `devkit-docs` owns the document system and never imports `devkit-spec`; `devkit-spec` packages SDD assets and hooks (`ADR-document-package`).
 2. **Runtime pinning**: Cloud platforms (`autohub`) consume fixed distribution wheel pins, verifying contract receipts rather than running ad-hoc repository checkouts.
 
 ---
@@ -58,7 +62,8 @@ flowchart BT
 | **`devkit-dist`** | Distribution engine (`devkit sync`), projection management, bundle packaging, `devkit` CLI executable. | SDD concepts, delivery stages, commit gate evaluation. |
 | **`devkit-agt`** | Workflow engine (`devkit workflow`), worktree lifecycle, commit gates, rules engine, integration services (`CAP-INT-mcp-services`). | Methodology semantics (spec vs proposal, task classification, roadmap authoring). |
 | **`devkit-mcp`** | Optional MCP transport, retained-runtime registration provider, host tool endpoint exposition. | Domain business logic, repository state mutations, direct CLI handlers. |
-| **`devkit-spec`** | SDD workflows (`sdd-*`), planning and development skills, subagent roles, proposal incubation, roadmap & backlog procedures, extension hooks (`attach_check`, `hygiene`). | Agent host execution, slot management, remote runner dispatch. |
+| **`devkit-docs`** | Document model (kinds, IDs, references, namespaces), document index, `devkit docs` lookup and search, document rule implementations, the `devkit.docs.status_overlay` extension point. | Delivery process: proposals, spec lifecycle, workflows, bundles. |
+| **`devkit-spec`** | SDD workflows (`sdd-*`), planning and development skills, subagent roles, proposal incubation, roadmap & backlog procedures, lifecycle rules, extension hooks (`attach_check`, `hygiene`, the `spec` status overlay), the `spec` bundle with every rule asset. | Agent host execution, slot management, remote runner dispatch. |
 | **`autohub`** | Cloud PR runner dispatch, conversational UI for questions and approvals, quota and admission control, PR merging. | File modifications requiring subjective judgement, workflow stage re-derivation. |
 
 ---

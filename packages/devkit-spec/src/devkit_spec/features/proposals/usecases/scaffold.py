@@ -194,7 +194,7 @@ def _check_superseded(root: Path, proposal_id: str | None) -> None:
 
 
 def known_namespaces(root: Path) -> list[str]:
-    """``global`` and the namespaces registered in the project at ``root`` (``SpecConfigError`` when malformed)."""
+    """``global`` and the namespaces registered in the project at ``root`` (``DocsConfigError`` when malformed)."""
     return [GLOBAL, *(namespace.name for namespace in read_docs_config(root).namespaces)]
 
 
@@ -204,8 +204,8 @@ def bundle_namespace(root: Path, namespace: str | None, cwd: Path | None) -> tup
     An explicit ``namespace`` must be ``global`` or registered in the project at ``root``. Without one, the bundle
     takes the namespace ``cwd`` lies in (``devkit_docs.features.documents.services.namespaces.detect``), none outside every package or without
     ``cwd``. The reported namespace is the field, else ``global`` in a project that registers namespaces, else
-    ``None``. Raises ``ArgumentError`` (``--namespace``) for an unregistered name, and ``SpecConfigError`` for a
-    malformed ``[tool.spec]`` table unless the name is ``global``.
+    ``None``. Raises ``ArgumentError`` (``--namespace``) for an unregistered name, and ``DocsConfigError`` for a
+    malformed ``[tool.docs]`` table unless the name is ``global``.
     """
     if namespace == GLOBAL:
         return GLOBAL, GLOBAL
