@@ -1,0 +1,8 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: intent
+note: user requested the milestone guidance fix in the session
+by: user
+at: '2026-10-28T00:39:59.010923Z'

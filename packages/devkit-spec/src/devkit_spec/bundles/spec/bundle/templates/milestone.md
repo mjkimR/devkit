@@ -15,6 +15,8 @@ Cite the goal in ARCH-01-introduction-and-goals. Use a word-led slug, for exampl
 User and agent jointly review a multi-unit phase, release or architectural theme and decompose it into direct PROP
 members. A theme may initially have one proposal while broader scope is not authored; prefer a broader theme over
 a milestone that only sequences one proposal. Use unit depends_on for unit ordering.
+A milestone, in any status, frames direction and binds nothing: proposal Planning concretizes and settles scope and
+requirements. Never treat its goal, exit condition or non-goals as constraints when judging design options.
 
 ## Exit condition
 
