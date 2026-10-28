@@ -196,6 +196,8 @@ Rebuilding on devkit raises the questions of the package's shape:
     (ADR-mount-under-the-devkit-command-line)
   - A malformed `[tool.spec]` is `SPEC_CONFIG_INVALID`; in a rule run it fails the run (devkit's
     `RULES_EXECUTION_FAILED`, exit `2`) instead of being a violation. (ADR-policy-in-the-tool-spec-table)
+    Superseded in part by `ADR-document-package`: rule runs read only `[tool.docs]`; a malformed `[tool.spec]` is
+    reported by the commands that read it.
   - A project, its commit gate and its CI must install devkit-spec in the environment that runs `devkit rules check`
     (`ARCH-07-deployment`). (ADR-rules-implemented-in-the-package)
   - Users relearn the skill names. (ADR-skills-named-spec)

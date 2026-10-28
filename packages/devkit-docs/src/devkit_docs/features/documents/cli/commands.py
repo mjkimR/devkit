@@ -20,7 +20,7 @@ Text output (paths are relative to the workspace root):
 unless ``--history`` or ``--status`` is given, adds ``hidden=`` (how many it hid) to its page line and, when that is
 above zero, ``[HISTORY_CMD: ...]`` repeating the command with ``--history``. Files that could not be indexed are
 ``DOCS_DOCUMENT_INVALID`` warnings; ``list --status`` adds a ``DOCS_LIST_STATUS_UNKNOWN`` notice naming the values no
-document of the selected kinds carries.
+document of the selected kinds carries, and a status overlay left out is a ``DOCS_OVERLAY_FAILED`` warning.
 """
 
 from __future__ import annotations

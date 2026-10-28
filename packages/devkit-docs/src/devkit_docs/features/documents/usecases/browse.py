@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
@@ -139,6 +140,8 @@ branch exists as ``reviewing`` with its ``planning_branch``."""
 
 Overlay = Callable[[Path, Sequence[Document]], Mapping[str, Mapping[str, str]]]
 
+# An overlay's field names, written unquoted as ``key=`` on the sentinel line.
+OVERLAY_FIELD = re.compile(r"[a-z][a-z0-9_]*")
 # The fields ``list`` already shows for a document; an overlay may replace ``status`` only.
 RESERVED_FIELDS = frozenset(
     {"id", "kind", "path", "title", "area", "summary", "namespace", "historical", "tasks"}
@@ -156,32 +159,35 @@ def _overlays(index: DocumentIndex) -> tuple[dict[str, dict[str, str]], list[Adv
     for entry in sorted(metadata.entry_points(group=OVERLAY_GROUP), key=lambda item: (item.name, item.value)):
         try:
             overlay: Overlay = entry.load()
-            returned = overlay(index.root, index.documents)
+            result = _overlay_result(overlay(index.root, index.documents))
         except Exception as exc:
             failed.append(_overlay_failed(entry.name, str(exc) or type(exc).__name__))
             continue
-        problem = _overlay_problem(returned)
-        if problem:
-            failed.append(_overlay_failed(entry.name, problem))
-            continue
-        for document_id, fields in returned.items():
+        for document_id, fields in result.items():
             merged.setdefault(document_id, {}).update(fields)
     return merged, failed
 
 
-def _overlay_problem(returned: object) -> str | None:
-    """Why ``returned`` is no ``{document ID: {field: text}}`` an overlay may give; ``None`` when it is one."""
+def _overlay_result(returned: object) -> dict[str, dict[str, str]]:
+    """``returned`` copied into plain dictionaries; ``ValueError`` when it is no ``{document ID: {field: text}}`` an
+    overlay may give (a field name is a lower-case identifier and no field ``list`` already shows)."""
     if not isinstance(returned, Mapping):
-        return f"returned {type(returned).__name__}, expected a mapping of document IDs to fields"
+        raise ValueError(f"returned {type(returned).__name__}, expected a mapping of document IDs to fields")
+    result: dict[str, dict[str, str]] = {}
     for document_id, fields in returned.items():
         if not isinstance(document_id, str) or not isinstance(fields, Mapping):
-            return "expected a mapping of document IDs to field mappings"
+            raise ValueError("expected a mapping of document IDs to field mappings")
+        copied: dict[str, str] = {}
         for field, value in fields.items():
             if not isinstance(field, str) or not isinstance(value, str):
-                return f"{document_id}: fields and values must be text"
+                raise ValueError(f"{document_id}: fields and values must be text")
+            if not OVERLAY_FIELD.fullmatch(field):
+                raise ValueError(f"{document_id}: the field name {field!r} is not a lower-case identifier")
             if field in RESERVED_FIELDS:
-                return f"{document_id}: the field {field} is one list already shows"
-    return None
+                raise ValueError(f"{document_id}: the field {field} is one list already shows")
+            copied[field] = value
+        result[document_id] = copied
+    return result
 
 
 def _overlay_failed(name: str, problem: str) -> AdvisoryError:

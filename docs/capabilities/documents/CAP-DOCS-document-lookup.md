@@ -136,9 +136,10 @@ changes an argument, output, code or exit status.
    `path`, `title`, `area`, `summary`, `namespace`, `historical`, `tasks`, the proposal fields and the feedback
    fields).
 6. **Failure isolation**: IF an overlay fails to load, raises, returns anything other than a mapping of document IDs to
-   mappings of text fields, or sets a reserved field, THEN `list` MUST leave that overlay's whole result out, add one
-   `DOCS_OVERLAY_FAILED` warning naming it (`extension: <name>`), and still apply the other overlays and exit as
-   without it.
+   mappings of text fields (one that raises while it is read included), names a field other than a lower-case
+   identifier (`[a-z][a-z0-9_]*`), or sets a reserved field, THEN `list` MUST leave that overlay's whole result out,
+   add one `DOCS_OVERLAY_FAILED` warning naming it (`extension: <name>`), and still apply the other overlays; the exit
+   code is that of any other warning (4.4).
 7. **Display only**: an overlay MUST NOT write a document; `resolve`, `refs`, `search` and the rules read the
    declared status. Without a registered overlay, `list` shows the declared status.
 8. **devkit-spec's overlay**: devkit-spec registers `spec =
@@ -206,5 +207,5 @@ notices always exit `0`.
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_core.base.errors.ArgumentError` | A negative `--limit` or `--offset`; a `--where` item without `=`, field or value; an unknown `--namespace`, or `--namespace` combined with `--all-namespaces`. |
 | `DOCS_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_docs.base.errors.DocsConfigError` | `list`: a malformed `[tool.docs]` table, namespaces included (`CAP-DOCS-namespaces`). |
 | `DOCS_ENTRYPOINTS_PATH_INVALID` | `ERROR` (`INPUT_ERROR`) | `devkit_docs.base.errors.EntrypointsPathError` | `list --file`: the path breaks the entrypoint path contract (`CAP-TRACE-code-entrypoints`). |
-| `DOCS_OVERLAY_FAILED` | `WARNING` | `devkit_docs.base.errors.OverlayFailedWarning` | `list`: a `devkit.docs.status_overlay` extension failed to load, raised, returned a malformed result or set a reserved field (3.6); its result is left out and the detail names it. The exit code is unchanged. |
+| `DOCS_OVERLAY_FAILED` | `WARNING` | `devkit_docs.base.errors.OverlayFailedWarning` | `list`: a `devkit.docs.status_overlay` extension failed to load, raised, returned a malformed result, named a field that is no lower-case identifier or set a reserved field (3.6); its result is left out and the detail names it. The exit code is that of any other warning (4.4). |
 | `DOCS_LIST_STATUS_UNKNOWN` | `NOTICE` | `devkit_docs.base.errors.ListStatusUnknownNotice` | `list --status`: a value no indexed document of the selected kinds (every kind without `KIND`) carries as its shown status (3.6), whatever its history or namespace; `[FIX]` lists the statuses that do occur. The filter still applies and the exit code is unchanged. |
