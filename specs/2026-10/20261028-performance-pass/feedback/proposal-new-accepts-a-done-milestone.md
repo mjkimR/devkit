@@ -8,7 +8,7 @@ target: devkit spec proposal new --milestone (devkit_spec.features.proposals.use
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-27
 ---
 
@@ -50,3 +50,12 @@ docs/proposals/PROP-performance-pass/proposal.md: milestone: MS-maintenance-oper
 roadmap.milestone_id: checks prefix, existence, kind and global path only; no status check
 hygiene.py: warns SPEC_MILESTONE_DONE_UNSETTLED for done milestones with unsettled members
 ```
+
+## Disposition
+
+`SPEC-input-recovery-notices` resolves the authorized notice-only scope. Creation in done/dropped milestones
+succeeds with `SPEC_PROPOSAL_MILESTONE_INACTIVE` at NOTICE level, identifying canonical ID and state and advising
+membership review. No milestone reopening, assertion reset or approval gate is performed. Regression tests verify
+aliases, canonical membership, unchanged milestone bytes and text/JSON `--strict` success. All 8 originally failing
+notice cases pass; planned/active cases remain passing. The affected suite passed 2157 tests and independent code
+review found no issues.

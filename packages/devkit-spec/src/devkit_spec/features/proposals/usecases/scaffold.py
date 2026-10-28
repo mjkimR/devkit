@@ -40,6 +40,7 @@ from devkit_spec.base.errors import (
     ProposalDecisionExistsError,
     ProposalExistsError,
     ProposalInPlanningError,
+    ProposalMilestoneInactiveNotice,
     ProposalNotApprovedError,
     ProposalNotFoundError,
     ProposalSlugConflictError,
@@ -619,6 +620,15 @@ class CreateProposalUseCase(BaseUseCase):
             planning_effort=planning,
             dev_effort=dev,
         )
+        milestone_document = index.canonical(milestone) if milestone is not None else None
+        if milestone_document is not None and milestone_document[0].status in {"done", "dropped"}:
+            document = milestone_document[0]
+            result.notices.append(
+                ProposalMilestoneInactiveNotice(
+                    f"{result.id} was assigned to milestone {document.id}, whose status is {document.status}",
+                    target_files=[result.path, document.path],
+                )
+            )
         if unbound is not None:
             fix, choices = unbound_guidance(root, result.dir, PROPOSAL_WORKFLOW)
             result.notices.append(
