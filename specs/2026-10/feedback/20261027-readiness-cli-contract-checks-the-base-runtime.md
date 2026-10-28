@@ -58,4 +58,4 @@ Branch worktree: just rules-check -> [OK: no error-severity violation remains]
 
 ## Disposition
 
-- **Disposition**: `PROP-readiness-cli-runtime`: promoted by the user's decision for Planning of the recorded behavior and its contract constraints.
+- **Disposition**: `SPEC-readiness-cli-runtime`: promoted by the user's decision for Planning of the recorded behavior and its contract constraints.

@@ -1,0 +1,15 @@
+kind: red
+stage: reproduce
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-28T00:40:03.819450Z'
+status: completed
+summary: Unknown command and option preserve lookup facts but lack running CLI guidance; both regression cases fail only on remediation.
+findings: []
+assumptions:
+- Regression ran on uncommitted test additions before any production fix.
+checks:
+  reproduced: PASS 2 expected failures, 15 deselected; original remediation active
+diff_scope:
+  base: f24cab8b57b09e98c68cd67afd017b80f179fe3d
+  head: ''

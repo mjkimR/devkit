@@ -1,0 +1,9 @@
+request: gate:plan-intent
+kind: approve
+action: accept
+workflow: sdd-spec-bugfix
+stage: intent
+note: 'PROP-readiness-cli-runtime: Plan readiness runtime selection from FB-readiness-cli-contract-checks-the-base-runtime
+  using spec/feedback-hygiene.'
+by: user
+at: '2026-10-28T00:37:18.937101Z'

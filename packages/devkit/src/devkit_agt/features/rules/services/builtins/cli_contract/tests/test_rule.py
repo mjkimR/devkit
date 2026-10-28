@@ -8,6 +8,7 @@ import click
 import pytest
 from click.testing import CliRunner
 from devkit_agt.features.rules import RuleContext
+from devkit_agt.features.rules.models.contracts import Severity
 from devkit_agt.features.rules.models.errors import RulesRunError
 from devkit_agt.features.rules.services.builtins.cli_contract import CliContractRule
 from devkit_agt.features.rules.services.builtins.cli_contract.citations import extract_citations, iter_option_names
@@ -211,3 +212,34 @@ def test_the_devkit_command_line_itself(tmp_path: Path) -> None:
     )
     found = check(CliContractRule(cli), tmp_path, {"a.md": text})
     assert [v.message for v in found] == ["Unknown command 'lint' of 'devkit rules' in `devkit rules lint`"]
+
+
+@pytest.mark.parametrize(
+    ("citation", "message"),
+    [
+        ("devkit scope missing", "Unknown command 'missing' of 'devkit scope' in `devkit scope missing`"),
+        (
+            "devkit scope update --missing",
+            "Unknown option --missing of 'devkit scope update' in `devkit scope update --missing`",
+        ),
+    ],
+)
+def test_missing_interface_guidance_names_running_cli_and_possible_causes(
+    tmp_path: Path, citation: str, message: str
+) -> None:
+    found = check(RULE, tmp_path, {"docs/a.md": f"Run `{citation}`.\n"})
+    assert len(found) == 1
+    violation = found[0]
+    assert (
+        violation.rule_id,
+        violation.file,
+        violation.line,
+        violation.column,
+        violation.severity,
+        violation.message,
+    ) == ("RULE-cli-contract", "docs/a.md", 1, 5, Severity.ERROR, message)
+    assert violation.remediation.startswith(
+        "CLI citations are checked against the currently running CLI. "
+        "A missing command or option can mean an invalid citation or an older runtime. "
+        "Check the running CLI's help and compare it with the intended interface."
+    )

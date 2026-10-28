@@ -1,0 +1,16 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-28T00:41:29.643681Z'
+status: completed
+summary: Shared remediation and rule guide explain the running CLI and both possible causes without claiming a proven mismatch.
+findings: []
+assumptions:
+- Green ran on uncommitted remediation and guide changes.
+checks:
+  resolved: PASS same two regression cases now pass
+  preserved: PASS 17 rule-local tests; affected selection 3406 passed; lint-check and check devkit passed
+diff_scope:
+  base: f24cab8b57b09e98c68cd67afd017b80f179fe3d
+  head: ''

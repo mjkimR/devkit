@@ -25,9 +25,9 @@ from devkit_agt.features.rules.services.builtins.cli_contract.citations import (
 _COMMAND_NAME = re.compile(r"^[a-z][a-z0-9-]*$")
 
 REMEDIATION = (
-    "Cite the command as the CLI has it (`devkit <command> --help` lists subcommands and options)."
-    " Describe a planned or removed command in prose instead of an inline-code `devkit` invocation;"
-    " exclude documents that record history (decisions, proposals) through the rule's `exclude` setting"
+    "CLI citations are checked against the currently running CLI."
+    " A missing command or option can mean an invalid citation or an older runtime."
+    " Check the running CLI's help and compare it with the intended interface."
 )
 
 
