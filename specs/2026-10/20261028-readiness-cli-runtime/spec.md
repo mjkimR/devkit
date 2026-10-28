@@ -2,7 +2,7 @@
 id: SPEC-readiness-cli-runtime
 title: Explain the running CLI reference in citation diagnostics
 summary: "Clarify the running CLI reference and possible causes of missing commands or options without changing validation or integration behavior."
-status: in-progress
+status: completed
 created: 2026-10-28
 related_capabilities: []
 related_usecases: []
