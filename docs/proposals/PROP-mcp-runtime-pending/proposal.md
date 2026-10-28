@@ -1,13 +1,13 @@
 ---
 id: PROP-mcp-runtime-pending
-title: Report MCP registration pending only when runtime state warrants it
-summary: "Suppress repeated MCP registration pending notices after a recent runtime-unavailable registration attempt, using an ignored advisory observation with input invalidation and a 300-second lifetime while status remains provider-free."
+title: Remove speculative MCP registration notices from general status
+summary: "Remove MCP_REGISTRATION_PENDING from general devkit status while preserving diagnostics from actual registration plans, including locked sync's notice for a concrete registration write it withheld."
 status: reviewing
 created_at: 2026-10-28
 target_area: capabilities/mcp/
 priority: high
-size: M
-planning_effort: medium
+size: S
+planning_effort: low
 dev_effort: medium
 boundaries:
   owns:
@@ -15,7 +15,8 @@ boundaries:
     - packages/devkit-dist/src/devkit_dist/features/distribution/
     - packages/devkit-dist/tests/integration/features/host/
     - packages/devkit-dist/tests/integration/features/distribution/
-    - docs/capabilities/mcp/
+    - docs/capabilities/mcp/CAP-MCP-runtime-registration.md
+    - docs/capabilities/distribution/CAP-DIST-sync-and-transactions.md
     - docs/development/reference/distribution.md
   excludes:
     - packages/devkit-mcp/
@@ -23,176 +24,101 @@ task_kind: feature
 workflow: sdd-proposal
 ---
 
-# [PROP-mcp-runtime-pending] Report MCP registration pending only when runtime state warrants it
+# [PROP-mcp-runtime-pending] Remove speculative MCP registration notices from general status
 
 ## 1. Background & Hypothesis
 
-`status` emits `MCP_REGISTRATION_PENDING` for an eligible missing project registration even when the proposed fix,
-`uv run devkit sync --registrations-only`, reports `MCP_RUNTIME_UNAVAILABLE`. The pending check deliberately reads
-provider entry-point metadata without loading the provider. `CAP-MCP-runtime-registration` and
-`ADR-mcp-runtime-and-shared-artifacts` keep runtime selection in the optional provider.
+General `devkit status` infers `MCP_REGISTRATION_PENDING` from provider entry-point presence and missing local
+ownership. It does not load the provider, so it cannot distinguish actionable registration from unavailable runtime
+or a provider that returns `None`. The latter occurs for a read-only profile with no exposed tools.
+`FB-mcp-registration-pending-ignores-runtime` records the resulting unhelpful retry advice.
 
-A recent negative registration observation can suppress this unhelpful retry without making status select a
-runtime. The observation cannot prove current runtime availability. It therefore needs both input invalidation
-and a hard expiry. `PADR-bounded-runtime-unavailable-observation` selects the bounded compromise.
+The user settled the direction: remove this speculative notice from general status entirely. Runtime availability
+and actual registration planning remain the responsibility of explicit MCP and sync commands. The existing
+provider-free status boundary stays intact. `PADR-remove-speculative-mcp-status-notice` records this narrow contract
+simplification; `materials/status-removal-evidence.md` identifies the affected seams.
 
 ## 2. Technical Spike Questions
 
-- **Q1, settled**: Can status establish runtime availability without loading the provider? No. Candidate probes,
-  service versions, imported paths and linked-worktree rejection belong to the provider. A dist-only filesystem
-  fingerprint is incomplete. The evidence and alternatives are in `materials/runtime-observation-options.md`.
-- **Q2, settled**: What invalidates a negative observation? A changed observation key, unreadable key inputs,
-  malformed observation, a future timestamp or age of at least 300 seconds invalidates it. A completed normal
-  registration attempt always re-probes and replaces or clears the observation.
-- **Q3, settled**: Does runtime installation restore pending immediately? Observable key changes do. Repairs that
-  leave the key unchanged restore pending on the first status at least 300 seconds after the observation. This
-  maximum stale window is part of the proposed behavior, not a claim of immediate runtime detection.
+The direction has no unresolved questions. General status will not add an active-only check, runtime load/probe,
+cache, TTL, fingerprint, persistence schema or replacement notice. Low Planning effort applies to this turn because
+the user explicitly selected the complete bounded direction. Earlier support-role envelopes remain history of the
+withdrawn observation design; they do not require that design to be implemented.
 
 ## 3. Proposed Design & Impact
 
-### Advisory observation
+Remove the general-status import and call of `registration_pending_notices`, and its associated notice assembly.
+General status MUST NOT emit `MCP_REGISTRATION_PENDING`, regardless of receipt presence, optional package presence,
+provider result or actual registration absence. It MUST NOT load a registration provider, invoke a runtime probe or
+write registration state. Keep its other core, host-hook and gate-health diagnostics on their existing paths.
+Removing this MCP-specific check also removes its ledger/destination inspection from general status; explicit
+registration commands retain their validation and errors.
 
-Add a dist-owned, optional ignored file at `.devkit/transient/mcp/runtime-observation.json`. It records only the
-last completed default-selection registration attempt that reported `MCP_RUNTIME_UNAVAILABLE`: schema version,
-normalized workspace identity, observation-key digest, observed UTC time and the fixed outcome
-`runtime-unavailable`. Do not store host entries, environment values, probe stdout or ownership claims there.
-Keep the strict ownership ledger and its schema unchanged.
+Remove `registration_pending_notices` and `unregistered_hosts` if their remaining callers are only the obsolete
+status path and its tests. Preserve `_registration_pending` and `McpRegistrationPendingNotice`: locked sync uses
+them after an actual provider plan has produced a host state of `write`. That concrete withheld-write notice and
+its `uv run devkit sync --registrations-only` fix remain. Preserve `MCP_REGISTRATION_UNRECONCILED` and other existing
+registration warnings/errors. Do not change registration planning, provider failure handling, explicit `mcp status`
+or `mcp setup` behavior.
 
-The observation is advisory input only. Status and locked/dry-run/check operations MUST NOT write or renew it.
-They MUST NOT import `devkit_mcp`, load the registration provider, invoke a candidate interpreter or launch a host
-because of this feature. A missing, expired, invalid, unreadable, tracked, unignored, symlink or nonregular
-observation is a cache miss.
-A malformed ownership ledger retains its existing error. Host-destination errors on the existing validation paths
-retain their behavior; the observation MUST NOT mask them. With no ownership record, the existing pending check
-does not parse a destination, and this feature does not expand that validation contract.
+### Development acceptance scenarios
 
-Only ordinary nonlocked sync and registrations-only sync opt into creating negative observations. Keep `plan`
-read-only: carry the attempt outcome and observation context in `RegistrationPlan`, then process observation
-intent in dist's apply path even when registration `changes` is empty. The unavailable-runtime/empty-ledger case
-MUST persist without requiring any host-file or ledger change. Do not put the only cache writer behind the
-existing no-changes early return. Observation handling is separate from the host transaction branch; locked mode
-skips all observation writes, including clearing.
+- **AC-1**: Given a synchronized checkout with an absent project registration, when general status runs with (a)
+  no optional provider installed, (b) an installed provider that would return `None`, (c) an installed provider that
+  would raise `MCP_RUNTIME_UNAVAILABLE`, or (d) a provider that would plan a real missing registration, then its
+  result contains no `MCP_REGISTRATION_PENDING`. Repeat the no-receipt case. Assert no provider load, runtime probe
+  or registration write occurs, rather than merely asserting notice absence.
+- **AC-2**: Given those four provider scenarios, when the existing registration planning/registrations-only path
+  runs explicitly, then its real result is preserved: no-provider no-op, `None` with no desired registration,
+  runtime-unavailable warning, or a concrete registration plan/action respectively. Existing explicit `mcp status`
+  and `mcp setup` result, refusal and provider-failure tests remain valid when the runtime package is installed.
+  Use fake providers and isolated repository fixtures; no real runtime installation or host-file mutation is needed.
+- **AC-3**: Given a fresh checkout whose actual provider plan has a desired host state of `write`, when locked sync
+  leaves that registration unwritten, then it still returns `MCP_REGISTRATION_PENDING` with its existing fix and
+  writes no host entry. Given absent provider, `None` or runtime-unavailable instead, then it preserves the actual
+  plan's no-op or warning and does not invent a withheld-write pending notice. Existing reconciliation refusals
+  for changed registrations remain intact.
+- **AC-4**: Given existing independent core, host-hook or gate-health findings, when general status runs, then those
+  findings retain their existing reporting and exit semantics. No replacement MCP readiness or active-only check
+  is introduced, and registration state is not consulted through a substitute path.
+- **AC-5**: The MCP capability, distribution capability and distribution quick reference consistently state that
+  general status omits speculative registration notices, explicit registration commands diagnose actual state, and
+  locked sync retains its concrete withheld-write notice. No cache, TTL, fingerprint or observation-file contract
+  is introduced.
 
-Create reusable negatives only for default executable selection, the effective persisted environment and the
-configured host selection. A temporary environment or host selection used by ordinary sync MUST NOT create a
-reusable negative. A completed overridden attempt clears a previous observation instead. Registrations-only sync
-uses its default persisted configuration. Runtime setup/remove retain their existing calls into dist apply:
-successful completion may clear a previous observation, but cannot create a negative. Setup's runtime-unavailable
-refusal stays before every write. A default-successful attempt clears the observation when no runtime-unavailable
-outcome remains, including provider absence, opt-out and cloud profiles with no exposed tools. A failed or refused
-attempt does not create or renew it. Registration attempts always invoke normal planning; the cache never skips
-probes. No excluded `devkit-mcp` caller change is needed.
+Extend or replace the existing host onboarding and distribution reporting/output contract tests for this matrix.
+Retain relevant provider-failure and locked-sync regressions. Run lint/type checks, `just test-affected` and
+`just test-dist` in Development. This Planning turn changes proposal documents only and runs document/envelope
+validation rather than executable implementation tests.
 
-Persist with safe atomic replacement under the existing clone-then-project locks and lifecycle guards. Check the
-cache's parent path safety and require an untracked, ignored destination before any write or removal. If the
-destination exists, require a regular file; otherwise require safe absence. Do not follow symlinks or install an ignore rule for this advisory file. Reading an
-unusable observation or failing to create one falls back to ordinary pending behavior and a diagnostic log,
-without changing the registration result. A failed replacement leaves no fresh observation: any prior readable
-record can remain usable only until its original expiry. A failed clear likewise can leave the previous negative
-usable until its original expiry; it MUST NOT renew its timestamp. Successful clear restores the baseline check.
-The observation is outside the ownership journal: a partial cache write is a cache miss and cannot authorize
-recovery or host-file mutation. Size is bounded at 64 KiB and the schema rejects unknown fields. No TTL setting or
-new public CLI surface is introduced.
+### Living Spec targets and scope
 
-### Observation key and bounded validity
+Update `CAP-MCP-runtime-registration` to remove the provider-metadata pending check and distinguish general status
+from explicit `mcp status`. Update `CAP-DIST-sync-and-transactions` to retain locked sync's actual-plan notice while
+removing its general-status counterpart. Update the distribution quick reference's notice table and status prose.
+The tiny PADR is the only decision to promote at handoff.
 
-Compute the same key before and after the provider attempt. Persist a negative only when both keys match.
-Recompute the key from current trusted inputs rather than following any path supplied by the observation:
-
-- Normalized workspace path, common Git directory identity (path, device and inode), workspace directory identity
-  and the ordered registered worktree paths, including retained executor identity. Refuse cache reuse when these
-  identities cannot be read consistently.
-- Shared and local configuration file bytes, including absence, plus the normalized configured host selection and
-  effective `mcp.register` and execution environment. Any configuration-byte change invalidates the observation.
-- Sorted installed registration-provider and host-service entry-point metadata: name, value, distribution name and
-  version. Include the running dist version; a missing required metadata field disables cache reuse.
-- The running interpreter and retained executor's default `.venv/bin/python` paths: existence, symlink target,
-  resolved path and device/inode/mode/size/mtime/ctime tuple (excluding access time), plus
-  `sys.prefix/pyvenv.cfg` and the retained executor's `.venv/pyvenv.cfg` bytes where present. These are early
-  invalidation signals, not a reimplementation of runtime selection or a complete dependency fingerprint.
-
-A usable observation has `0 <= now - observed_at < 300 seconds` and an equal key. Future timestamps, nonfinite
-values, unsupported schemas and changed/unreadable inputs are cache misses. Reads never slide the expiry.
-Candidate creation/replacement and configuration changes invalidate on the next status. A package/import repair
-that changes none of these signals can be hidden for the remaining lifetime, at most 300 seconds under the
-system clock. No recursive environment scan or interpreter probe is added to status.
-
-### Pending selection and output
-
-Run the existing provider-present, register-enabled, destination-eligibility and ownership validation first.
-Filter the resulting missing eligible hosts only when a valid negative observation matches their configured
-registration context. Preserve the existing aggregate `MCP_REGISTRATION_PENDING` notice and its fix when no valid
-negative applies. Do not invent a current `MCP_RUNTIME_UNAVAILABLE` result from historical evidence. The registration
-attempt continues to return its existing runtime-unavailable warning; status emits no replacement warning during
-the valid observation window. Status output fields and exit codes stay unchanged.
-
-### Verification scenarios for Development
-
-- **AC-1**: Given an installed provider and eligible missing configured registration with no observation, when
-  status runs, then it emits `MCP_REGISTRATION_PENDING` with the existing registrations-only fix and never loads
-  the provider. Existing fresh-checkout behavior remains covered.
-- **AC-2**: Given a completed default registration attempt reports `MCP_RUNTIME_UNAVAILABLE`, when status repeats
-  with the same key at ages 0 and 299 seconds, then pending is absent and neither status nor cache reads change
-  any file. Registration still returns the runtime warning.
-- **AC-3**: Given that observation, when status runs at age 300 seconds, with a future timestamp, changed shared or
-  local configuration, host selection, provider/service metadata, worktree identity, or default interpreter
-  creation/replacement, then the observation is ignored and pending returns for still-eligible missing hosts.
-- **AC-4**: Given a runtime repair that leaves the key unchanged, when the clock reaches expiry, then pending
-  returns; when registration is explicitly retried before expiry, then the provider is probed and a successful
-  result clears the observation. No observation can prevent a registration attempt.
-- **AC-5**: Given dry-run, check, locked restoration, runtime setup/remove, temporary host/environment overrides,
-  provider failure or lifecycle refusal, when the route runs, then it creates or renews no reusable negative
-  observation. Completed mutating setup/remove and overridden attempts clear an existing one; read-only and locked
-  routes do not. An unavailable setup still refuses before any write. An ordinary or registrations-only sync
-  with no host/ledger changes still persists a completed default negative. Cache writes cannot alter assets,
-  receipt, host entries or exclusions beyond their pre-existing registration behavior.
-- **AC-6**: Given absent, malformed, oversized, symlink, nonregular, tracked, unignored or unreadable optional
-  observation, when status or a registration route uses it, then the cache falls back without changing registration
-  results. A malformed ownership ledger and malformed owned host destination still raise their existing errors
-  even with a valid negative; an unowned malformed destination retains the existing pending-check behavior.
-  Given a readable unexpired observation whose directory becomes nonwritable, when replacement or clearing fails,
-  then the original timestamp stays unchanged and any suppression ends at the original expiry.
-- **AC-7**: Given opt-out, removed provider, an already matching registration, a tracked/visible destination or an
-  unsupported host, when status runs, then current eligibility behavior remains intact and the cache grants no
-  ownership. A partial/interrupted observation write cannot change the registration journal's recovery behavior.
-
-Use fake clocks and fake provider outcomes; do not install a runtime or modify real host registration files in
-verification. Extend the existing host onboarding and distribution reporting/output contract integration tests.
-Run lint/type checks, `just test-affected`, and `just test-dist` in Development to retain dist-only support.
-These scenarios specify observable behavior; they do not claim timing or operation-count improvement.
-
-### Living Spec targets and boundaries
-
-Update `CAP-MCP-runtime-registration` with historical-observation semantics, invalidation and the 300-second
-stale bound. Keep its provider-free and runtime-selection ownership contracts. Update the distribution quick
-reference's pending-notice explanation. Promote the PADR at handoff through the existing workflow.
-
-Development is confined to the declared host/distribution code, their existing integration test parents and the
-named MCP contract/reference. No runtime-provider code or general plugin policy changes are required. The design
-retains `dev_effort: medium`: one package's bounded status/registration behavior, with focused cache and integration
-coverage and independent review.
+`size: S` and `task_kind: feature` reflect an agreed contract simplification within dist's existing status and
+registration boundaries. Retain `dev_effort: medium` for the externally visible notification removal, preservation
+matrix and documentation reconciliation. No runtime-provider code, registration storage format or general status
+refactor is included.
 
 ## 4. Lifecycle & Retirement Criteria
 
-Planning is ready for the Host's direction decision once the options, support envelopes, folded findings and
-proposal checks are committed. Acceptance and handoff belong to the Host. No implementation is authorized here.
-
-Development retires this proposal after the handoff spec satisfies AC-1 through AC-7 and reconciles the named
-Living Spec targets. Strict immediate detection of every runtime repair is excluded from this direction; adopting
-it would require reopening the provider observation contract rather than claiming a complete dist fingerprint.
+The Host can present this committed direction for `plan-accept`; this worker performs neither acceptance nor
+handoff. Development retires the proposal after AC-1 through AC-5 pass and the named Living Spec targets agree.
 
 ## 5. Planning Decisions
 
-- Recommend a 300-second maximum negative observation with early input invalidation; keep runtime validation in
-  the provider. `PADR-bounded-runtime-unavailable-observation` records alternatives and consequences.
-- Use a separate expendable advisory file rather than adding negative ownership entries to the ledger.
-- Preserve unknown first-run availability: a fresh checkout still reports pending until a registration attempt
-  supplies evidence. The runtime warning is not replayed as a current status fact.
-- Challenger P2 findings were folded: explicit no-op writer modes and setup refusal, unchanged host-validation
-  scope, and failed-clear expiry semantics. `envelopes/reverify-01.yaml` records self-verification.
-- No unresolved business questions remain; the Host's `plan-accept` decides this bounded direction.
+- Apply the user's settled direction: remove speculative MCP pending from general status; preserve real registration
+  planning diagnostics and locked sync's concrete withheld-write notice.
+- Withdraw the bounded runtime-observation PADR because no observation mechanism remains. Its file is deleted and
+  no reference to it remains in the current proposal. Earlier envelopes remain immutable Planning history.
+- Replace the observation comparison material with focused removal evidence. Add the distribution capability to
+  Development's exact documentation scope because it currently promises the general-status notice.
+- No new business questions remain. Acceptance and handoff are separate Host actions.
 
 ## Source feedback
 
-`FB-mcp-registration-pending-ignores-runtime` is the promoted source. This proposal owns its recorded behavior;
-Planning does not mark the observation fixed and does not modify the source feedback.
+`FB-mcp-registration-pending-ignores-runtime` remains the promoted source. This proposal owns its recorded behavior;
+Planning does not claim the behavior fixed and does not edit the source feedback.
