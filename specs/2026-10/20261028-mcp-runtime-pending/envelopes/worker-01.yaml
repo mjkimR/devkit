@@ -1,0 +1,26 @@
+kind: worker
+stage: integrate
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T00:53:31.831145Z'
+status: completed
+summary: Completed approved general-status MCP notice removal through final-change-report. Deleted obsolete inference helpers; preserved actual registration plans and locked withheld-write notice; reconciled all three authorized docs. No sync outputs or out-of-boundary edits; integration remains with Host.
+findings: []
+assumptions:
+- 'Codex boundary emulated: fixed absolute worktree cwd/read scopes, separate per-operation approvals for sibling writes/shared Git; no native guarantee. Both nested reviewers reported no explicit outside content reads; shared base Git metadata and uv runtime/cache accessed.'
+- User-approved narrow deletion only; no cache, new readiness/state/schema or devkit-mcp source changes. Promoted feedback left terminal. No deferred work.
+unverified_areas:
+- No real runtime installation or real host mutation. Host main moved independently; worker did not merge. Host owns moved-base sync/cumulative verification and runner lint-ci-clean before integration.
+checks:
+  sync_start: PASS uv run devkit sync --check exit 0 before first edit; no bundle-source edits or sync outputs
+  tests: PASS affected 3211 passed, 1 skipped, full fallback intact; dist-only 1264 passed without devkit-agt; focused 80 passed
+  lint: PASS just lint-check dist; committed rules --ci --base main 21 rules, zero violations; diff --check
+  types: PASS just check dist, 0 errors or warnings
+  build: PASS no build-input changes; packaging build not applicable
+  outcome: PASS isolated baseline general-status pending=1 to head=0; locked=1 in both, 8 general-status and 12 actual-plan preservation cases
+  review: PASS independent code-reviewer no findings; unchanged pre/post snapshot 3d67e1011a9eb8b7f2f3468b4696014601baa40b
+  reconcile: PASS independent reconcile-reviewer no findings; three targets resolved; unchanged pre/post snapshot 08f20a6e1dab7c2de9b1a34f54af9cd93a27dc35
+diff_scope:
+  base: 5c8150d16a1a42b73036d99f93f9ff8ced9573b3
+  head: c4c5e15d8e1d065d02aa25ec8bddbe4b937756d9
+activity_effort: medium
