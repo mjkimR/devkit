@@ -1,0 +1,10 @@
+kind: feedback
+stage: collect-feedback
+workflow: sdd-proposal
+segment: 0
+created_at: '2026-10-27T23:00:56.651380Z'
+status: completed
+summary: 'Planning run 2 sweep (answer record and fold): no new observations; FB-proposal-new-accepts-a-done-milestone already recorded.'
+findings: []
+checks:
+  swept: PASS recorded=0 duplicates=0
