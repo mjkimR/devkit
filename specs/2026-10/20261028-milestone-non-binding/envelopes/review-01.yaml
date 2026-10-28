@@ -1,0 +1,16 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T00:41:28.806815Z'
+status: completed
+summary: 'PASS: author self-review at low effort; the template, Backlog reference and CAP-HARN-agent-guidance state the same non-binding boundary (AC-01..03) and leave the completion review unchanged.'
+findings: []
+checks:
+  tests: PASS just test-affected 1947 passed
+  lint: PASS just rules-check 0 violations; devkit sync --check clean; git diff --check clean
+  build: SKIP guidance-only change
+diff_scope:
+  base: d47d21f1f678d0073c0c83d2a6e8de566c2d2827
+  head: c8b9f6eb12b6018512c79aeccffb52b290259612
+activity_effort: low
