@@ -20,7 +20,7 @@ The files are read at ``tip`` through Git, since no worktree may exist yet. Each
 
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from devkit_agt.features.rules import committed_anchors
 from devkit_core.core import FrontmatterError, GitError, run_git
@@ -66,7 +66,8 @@ def attach_check(root: Path, branch: str, unit: str, tip: str) -> list[str]:
     if read_development_approach(root).approach == "incubation":
         bindings = committed_anchors(root, tip)
         if not any(
-            path.startswith(unit.strip("/") + "/") and any(w.startswith("sdd-") for w in ids)
+            PurePosixPath(path).parent == PurePosixPath(unit.strip("/") or ".")
+            and any(w.startswith("sdd-") for w in ids)
             for path, ids in bindings.items()
         ):
             return []

@@ -1,0 +1,8 @@
+request: return:build-verify
+kind: return
+action: accept
+workflow: sdd-spec-feature
+stage: build-verify
+note: Independent reconciliation found root attachment retained-ownership mismatch;
+  narrow implementation correction and re-verification
+at: '2026-10-28T05:03:08.510549Z'
