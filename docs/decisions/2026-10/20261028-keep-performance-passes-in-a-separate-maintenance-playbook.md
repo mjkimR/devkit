@@ -1,15 +1,15 @@
 ---
-id: PADR-keep-performance-passes-in-a-separate-maintenance-playbook
+id: ADR-keep-performance-passes-in-a-separate-maintenance-playbook
 title: Keep performance passes in a separate maintenance playbook
 summary: For repeatable performance passes, we ship a separate router-structured performance-pass playbook in the maintenance bundle instead of a review-refactor surface, to keep each playbook's goal, criteria and evidence focused, accepting a second playbook that must stay aligned with review-refactor.
-proposal: PROP-performance-pass
-status: draft
+proposal: SPEC-performance-pass
+status: accepted
 created_at: 2026-10-27
 ---
 
-# [PADR-keep-performance-passes-in-a-separate-maintenance-playbook] Keep performance passes in a separate maintenance playbook
+# [ADR-keep-performance-passes-in-a-separate-maintenance-playbook] Keep performance passes in a separate maintenance playbook
 
-- **Status**: Draft
+- **Status**: Accepted
 - **Date**: 2026-10-27
 
 ---
@@ -44,7 +44,7 @@ reduction grounds) do not apply to latency.
   selection, the decision round summary, the report and completion; each phase that only some runs need has its own
   reference.
 - It reuses `review-refactor`'s application procedure and differential evidence by reference
-  (`PADR-reuse-review-refactor-application-through-exact-playbook-retrieval`).
+  (`ADR-reuse-review-refactor-application-through-exact-playbook-retrieval`).
 
 ## 5. Consequences
 
