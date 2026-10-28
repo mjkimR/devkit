@@ -238,6 +238,13 @@ class PostSyncExtensionFailedNotice(SyncNotice):
     level = Level.WARNING
 
 
+class StatusCheckExtensionFailedNotice(DistributionError):
+    """An optional status check failed; core status and the other checks remain available."""
+
+    code = "STATUS_CHECK_EXTENSION_FAILED"
+    level = Level.WARNING
+
+
 class ConfigTemplateExtensionFailedNotice(DistributionError):
     """A ``devkit.config_template`` or ``devkit.config_tables`` extension failed to load, raised, returned no valid
     tables or (``devkit.config_tables``) is not named after a reserved table; never raised.
