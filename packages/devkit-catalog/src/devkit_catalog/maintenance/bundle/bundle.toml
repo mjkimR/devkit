@@ -26,3 +26,11 @@ source = "playbooks/review-refactor"
 
 [presets.refactoring]
 assets = ["review-refactor"]
+
+[[assets]]
+id = "performance-pass"
+kind = "playbook"
+source = "playbooks/performance-pass"
+
+[presets.performance]
+assets = ["performance-pass", "review-refactor"]

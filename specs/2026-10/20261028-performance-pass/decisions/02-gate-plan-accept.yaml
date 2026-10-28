@@ -1,0 +1,9 @@
+request: gate:plan-accept
+kind: approve
+action: accept
+workflow: sdd-spec-feature
+stage: direction-handoff
+note: 'PROP-performance-pass: Accepted 2026-10-28: feature workflow for agreed changes,
+  no milestone, procedure-only timing guidance'
+by: user
+at: '2026-10-27T23:03:09.096942Z'

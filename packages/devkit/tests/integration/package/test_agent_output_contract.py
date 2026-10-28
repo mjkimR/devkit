@@ -12,7 +12,9 @@ must hold for every command and error, not only the ones a feature's own tests h
 - the stdout sentinels of real read-only commands follow the sentinel grammar.
 
 Fix strings are found in the sources (class attributes and ``fix=``/``what_to_report=`` keywords, f-string fields
-read as ``{}``) and on the classes themselves, so a fix built from a module constant is checked too. A rule's own
+read as ``{}``) and on the classes themselves, so a fix built from a module constant is checked too.
+Explicit constructed-advisory regressions in ``test_rendered_advisory_contract.py`` cover selected helper and
+conditional paths with these same text checks; unexecuted dynamic paths are not covered. A rule's own
 ``tests/`` under the sources hold fixtures only.
 """
 
@@ -35,6 +37,7 @@ from devkit.advisory import AdvisoryError
 from devkit.advisory.advisory import Advisory
 from devkit.advisory.types import ActionMode
 from devkit_dist.cli import cli
+from testsupport.advisory_contract import RETRY_FIRST, bare_devkit, templated
 
 REPO = Path(__file__).resolve().parents[5]
 PACKAGES = (
@@ -62,13 +65,6 @@ SOURCES = tuple(
     )
     if path.is_dir()
 )
-
-# A `<word>` template; `<<` (a heredoc) and `<-` never occur in a fix.
-PLACEHOLDER = re.compile(r"<[A-Za-z][\w.:-]*(?: [\w.:-]+)*>")
-# An option followed by an all-caps metavar, such as `--namespace NAME`; FETCH_HEAD and HEAD are Git literals.
-METAVAR = re.compile(r"(?<![\w-])(--?[a-z][\w-]*)[ =]([A-Z][A-Z_]{2,})\b(?![\w-])")
-GIT_LITERALS = {"HEAD", "FETCH_HEAD", "ORIG_HEAD", "MERGE_HEAD"}
-RETRY_FIRST = re.compile(r"^\s*(?:re-?run|retry|try again|repeat)\b", re.IGNORECASE)
 
 # A fragment of a fix whose placeholder stays: why. Keep this short.
 PLACEHOLDER_ALLOWED: dict[str, str] = {}
@@ -147,23 +143,8 @@ def _literals() -> list[tuple[str, str, int, str]]:
     return found
 
 
-def _bare_devkit(text: str, commands: set[str], *, quoted_only: bool) -> list[str]:
-    """Each ``devkit <subcommand>`` in ``text`` not run through ``uv run``; with ``quoted_only``, only in backticks."""
-    pattern = re.compile(rf"(?<![\w./-])devkit ({'|'.join(sorted(map(re.escape, commands)))})(?![\w-])")
-    bare = []
-    for match in pattern.finditer(text):
-        if text[: match.start()].endswith("uv run "):
-            continue
-        if quoted_only and text[: match.start()].count("`") % 2 == 0:
-            continue
-        bare.append(match.group(0))
-    return bare
-
-
 def _templated(fix: str) -> bool:
-    if any(fragment in fix for fragment in PLACEHOLDER_ALLOWED):
-        return False
-    return bool(PLACEHOLDER.search(fix) or {name for _, name in METAVAR.findall(fix)} - GIT_LITERALS)
+    return templated(fix, allowed=PLACEHOLDER_ALLOWED)
 
 
 def test_the_fix_scan_finds_the_fields() -> None:
@@ -193,12 +174,12 @@ def test_devkit_commands_are_named_through_uv_run() -> None:
     problems = {
         f"{file}:{line}": text
         for field, file, line, text in _literals()
-        if _bare_devkit(text, commands, quoted_only=field != "fix")
+        if bare_devkit(text, commands, quoted_only=field != "fix")
     }
     problems |= {
         f"{cls.__module__}.{cls.__qualname__}": str(cls.fix)
         for cls in _advisory_classes()
-        if isinstance(cls.fix, str) and _bare_devkit(cls.fix, commands, quoted_only=False)
+        if isinstance(cls.fix, str) and bare_devkit(cls.fix, commands, quoted_only=False)
     }
     assert problems == {}, (
         "name devkit as the agent runs it: uv run devkit ... (ADR-keep-uv-run-as-the-agent-facing-...)"

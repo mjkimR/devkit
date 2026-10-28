@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-proposal-incubation
 title: Proposal Incubation and Handoff
-summary: "Proposal incubation and handoff preserve approved scope, decisions, materials and feedback. They validate direct prerequisites, review the committed Planning source before acceptance, relocate live references, and compose acceptance and handoff through Host-authorized CLI operations."
+summary: "Proposal creation validates milestone membership and notices done/dropped milestones without changing their lifecycle. Incubation and Host-authorized acceptance/handoff preserve approved scope, decisions, materials and feedback."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -13,6 +13,7 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/features/delivery/usecases/native_handoff.py
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/skills/spec-review-proposal/SKILL.md.jinja
   - packages/devkit-spec/src/devkit_spec/features/policy/cli/commands.py
+  - packages/devkit-spec/src/devkit_spec/features/proposals/usecases/scaffold.py
 ---
 
 # [CAP-DLV-proposal-incubation] Proposal Incubation and Handoff
@@ -257,7 +258,7 @@ legacy proposal or PADR whose slug starts that way, before writing anything, wit
 | `namespace` | Optional (`--namespace`): `global` or a registered namespace (`CAP-DOCS-namespaces`); carried to `spec.md`. Every file of the bundle belongs to it. |
 | `priority` | `critical`, `high` (scaffolded), `medium`, `low`. |
 | `size` | `S` (single fix), `M` (scaffolded; 1-2 sessions), `L` (complex module), `XL`: the work would produce two or more specs, or bundles deliverables of a different nature (work that would need separate specs or a different `task_kind`). `XL`: a new CLI command with a viewer redesign it does not need (two specs), or a parser bugfix with a new search feature (`bugfix` and `feature`); not `XL`: two agent contracts and the command checks that route work to them, in one `feature` spec. An `XL` draft is decomposed before Planning (rule 13). |
-| `milestone` | Optional (`--milestone`): one existing global MS ID under docs/roadmap/, or one of its aliases (the canonical ID is written); validated before writing and never carried to `spec.md`. |
+| `milestone` | Optional (`--milestone`): one existing global MS ID under docs/roadmap/, or one of its aliases (the canonical ID is written); validated before writing and never carried to `spec.md`. A done or dropped milestone returns `SPEC_PROPOSAL_MILESTONE_INACTIVE` without blocking creation or changing the milestone. |
 | `boundaries` | `owns` (scaffolded: the target area) and `excludes` (scaffolded: `docs/decisions/`); carried to `plan.md` and `tasks.md`. |
 | `task_kind` | `feature` (scaffolded default) or `bugfix` (`--task-kind`): the provisional `task-kind`, confirmed at `plan-accept`; the spec follows `sdd-spec-<task_kind>`. |
 | `planning_effort` | `low`, `medium` (scaffolded default) or `high` (`--planning-effort`): non-authoritative Planning `activity-effort` hint, confirmed at `plan-intent`; not carried to `spec.md`. |
@@ -609,6 +610,7 @@ Warnings exit `0` (`1` under `--strict`, which never turns a `2` into a `1`). Ev
 | `SPEC_PROPOSAL_CLEANUP_FAILED` | `WARNING` | `ProposalCleanupWarning` | The handoff completed but the proposal could not be removed, or the post-finish prune of the slug's empty proposal directories failed (`CAP-COLL-work-scope-registry`). |
 | `SPEC_PROPOSAL_LINK_UNRESOLVED` | `WARNING` | `ProposalLinkUnresolvedWarning` | Links or references into the proposal were left as they were; the `[UNRESOLVED_LINK]` lines list them. |
 | `SPEC_PROPOSAL_REFS_REWRITTEN` | `NOTICE` | `ProposalReferencesRewrittenNotice` | ID references now name the spec or the ADRs; reread each `[REWRITTEN ... kind=id]` sentence. |
+| `SPEC_PROPOSAL_MILESTONE_INACTIVE` | `NOTICE` | `ProposalMilestoneInactiveNotice` | `new --milestone`: the canonical milestone is done or dropped; creation succeeds and the notice names its ID and state and advises membership review. Milestone status and completion assertions are unchanged; no approval gate is added and `--strict` still exits `0` for this notice. |
 | `SPEC_PROPOSAL_UNBOUND` | `NOTICE` | `ProposalUnboundNotice` | `new`: `sdd-proposal` is not available, `proposal.md` is unbound. `handoff`: `task_kind` is `feature` (or absent) and `sdd-spec-feature` is not available, `spec.md` is unbound. The `[FIX]` is `devkit workflow bind --unit <dir> --workflow <id>`. |
 | `ARGUMENT_INVALID` | `ERROR` (`INPUT_ERROR`) | devkit's `ArgumentError` | `accept`: `--direct` with a blank `--note`. `new`: `--namespace` is neither `global` nor registered, `--task-kind` is not `feature` or `bugfix`, `--planning-effort` or `--dev-effort` is not `low`, `medium` or `high`, `--supersedes` names no other proposal. `new`, `padr`: stripped `--summary` is empty, longer than 300 characters or not English. |
 | `SPEC_CONFIG_INVALID` | `ERROR` (`INPUT_ERROR`) | `SpecConfigError` | `[tool.spec]` is malformed and it must be read: `new` without `--namespace global`, a proposal's `namespace` other than `global` at handoff, or a handoff in a linked worktree. |

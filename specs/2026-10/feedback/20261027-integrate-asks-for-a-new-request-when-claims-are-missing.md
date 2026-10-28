@@ -8,7 +8,7 @@ target: devkit integration integrate
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-27
 ---
 
@@ -39,3 +39,11 @@ created_at: 2026-10-27
 second prepare: digest=c8bee9eb... (unchanged)
 integrate ... --claims '<same json>' --expected-digest c8bee9eb... -> [INTEGRATION: status=completed ...]
 ```
+
+## Disposition
+
+`SPEC-input-recovery-notices` resolves the invocation-recovery defect. Missing or invalid session claims retain
+`INTEGRATION_NOT_READY` and now target `--claims` with a same-command retry instruction. Claims remain explicit on
+both commands. Regression tests verify successful retry with the original digest, ordinary source recovery and
+simultaneous source/input failures. The original 2 CLI failures and 1 provider failure pass after the fix; the
+affected suite passed 2157 tests and independent code review found no issues.

@@ -1,0 +1,19 @@
+kind: final-report
+stage: final-change-report
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-27T23:22:28.514996Z'
+status: completed
+summary: 'Both authorized fixes verified: claims recovery retries the same command; done/dropped milestone membership succeeds with NOTICE; scoped source feedback resolved and four Living Spec targets reconciled'
+findings: []
+assumptions:
+- Host authorized exact reference and provider-evidence documentation boundary extensions; no other scope changes
+- Integration remains Host-owned; main advanced to 6ffb1ea17a1ee861318925ebd585d03777f2c637 without worker merge; Host incorporates moved base and runs cumulative integration verification
+checks:
+  tests: PASS final just test-affected --base 60908741 selected 117 paths, 2158 passed in 32.79s with full fallback retained; original regressions Red 11 failures/4 passes to Green 15/15
+  build: 'PASS just check devkit and just check devkit-spec: 0 errors/warnings; no packaging or build-input changes'
+  lint: 'PASS just lint-check devkit and devkit-spec; committed uv run devkit rules check --ci --base main: 21 rules, zero violations'
+  review: PASS independent code-reviewer no findings; independent reconcile P1/P2 corrected and medium implementer recheck PASS
+diff_scope:
+  base: 60908741cd4965898ab42851902251a8b7e84d01
+  head: 5e4eef3f9d62eeecfb0904bbf5191d08dad8d3ec

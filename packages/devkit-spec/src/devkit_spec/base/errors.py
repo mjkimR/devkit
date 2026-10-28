@@ -343,6 +343,14 @@ class ProposalReferencesRewrittenNotice(SpecError):
     )
 
 
+class ProposalMilestoneInactiveNotice(SpecError):
+    """A proposal was created in a done or dropped milestone without changing its lifecycle."""
+
+    code = "SPEC_PROPOSAL_MILESTONE_INACTIVE"
+    level = Level.NOTICE
+    fix = "Review whether this proposal's milestone membership is appropriate; adjust its membership if needed"
+
+
 class ProposalUnboundNotice(SpecError):
     """A new proposal or handed-off spec is not bound to a workflow: its default workflow is not available
     (``NOTICE``)."""

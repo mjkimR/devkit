@@ -7,7 +7,7 @@ the project selects it with `devkit add`, and a preset picks its assets.
 | Bundle | Presets (default first) | Contents |
 | --- | --- | --- |
 | `response-style` | `all` | Answer-first user-facing replies that keep decision-critical facts, with configurable conversation language |
-| `maintenance` | `all`, `upkeep`, `reporting`, `refactoring` | Manual drift reconciliation, evidence-based weekly reporting, and review and refactoring passes |
+| `maintenance` | `all`, `upkeep`, `reporting`, `refactoring`, `performance` | Manual drift reconciliation, evidence-based weekly reporting, review and refactoring passes, and performance passes |
 | `cli-tool` | `all`, `guide` | Structure guide for agent-facing click tools on `devkit-cli`, with rules for the feature layout, layer imports, command boundaries, library output and heavy imports; `CAP-CLI-agent-cli-toolkit` |
 
 ```bash
@@ -52,15 +52,19 @@ reminder only references the skill. Documentation and code-comment language stil
 
 ## Maintenance
 
-`devkit add maintenance` deploys the three independent playbooks; `maintenance:upkeep` selects
-`drift-reconciliation` and `review-refactor`, `maintenance:reporting` selects `weekly-report` and
-`maintenance:refactoring` selects `review-refactor` alone. Invoke them explicitly through
+`devkit add maintenance` deploys the four playbooks; `maintenance:upkeep` selects
+`drift-reconciliation` and `review-refactor`, `maintenance:reporting` selects `weekly-report`,
+`maintenance:refactoring` selects `review-refactor` alone and `maintenance:performance` selects `performance-pass`
+with `review-refactor`, whose application sections it reads as reference text. Invoke them explicitly through
 `devkit-playbook` or exact `devkit playbook get maintenance/weekly-report`, or confirm the one-line offer that
 `spec` intake makes when a request names their operation; selection never executes them.
 Drift reports record evidence, user decisions and coverage gaps. Weekly reports preserve revision-bound evidence,
 health limitations and prioritized actions in immutable local artifacts; publication needs separate explicit
 authority and records its outcome independently. Review-refactor runs review user-selected code, guidance or CLI roots one
 surface batch at a time and apply only agreed consolidations and reductions with preservation evidence; contract
-removals become separate work items. Missing tools remain gaps. No runtime, scheduler, detector, mandatory companion
-run or history backend is added. See `CAP-DLV-drift-reconciliation`, `CAP-DLV-weekly-report` and
-`CAP-DLV-review-refactor`.
+removals become separate work items. Performance passes measure user-selected slow operations unprofiled and
+interleaved, attribute their cost, and apply only agreed behavior-preserving speedups with measured before/after and
+differential evidence; contract-changing speedups become separate work items, and no timing script is bundled.
+Missing tools remain gaps. No runtime, scheduler, detector, mandatory companion run or history backend is added.
+See `CAP-DLV-drift-reconciliation`, `CAP-DLV-weekly-report`, `CAP-DLV-review-refactor` and
+`CAP-DLV-performance-pass`.
