@@ -14,6 +14,7 @@ entrypoints:
   - packages/devkit-spec/src/devkit_spec/bundles/spec/bundle/workflows/
   - packages/devkit-spec/src/devkit_spec/features/delivery/cli/proposals.py
   - packages/devkit/src/devkit_agt/features/integration/cli.py
+  - packages/devkit-spec/src/devkit_spec/features/worker/cli/commands.py
 ---
 
 # [CAP-DLV-delivery-workflows] Delivery Workflows
