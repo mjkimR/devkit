@@ -28,6 +28,8 @@ targets:
   resolution: waived
   rationale: Existing command and skeleton contracts use no moved shared-template
     path; proposal template remains spec-owned and runtime behavior is unchanged.
+- file: docs/decisions/2026-10/20261028-document-and-sdd-bundles.md
+  resolution: modified
 ---
 
 # Reconciliation

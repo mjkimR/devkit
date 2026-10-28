@@ -31,7 +31,7 @@ SDD entry obligations. `MS-idea-incubation` needs the document formats independe
 
 ## 4. Decision Outcome
 
-Recommend separate docs and spec bundles. This is a proposed direction pending Host/user acceptance.
+Adopt separate docs and spec bundles.
 
 1. devkit-docs owns the auto-selected `docs:core`, all shared writing instructions, document rules and templates,
    the document-only constitution/pointer, steering context discovery and opt-in `docs:docs-skeleton`.

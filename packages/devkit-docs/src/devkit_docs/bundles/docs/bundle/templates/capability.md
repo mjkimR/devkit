@@ -21,7 +21,7 @@ usecases:
 
 ## 3. Business Rules & Policies
 <!-- One EARS sentence per rule with an RFC 2119 keyword (capability-writing): [WHEN <event> | WHILE <state> | IF <condition> THEN | WHERE <feature>,] <system> MUST <response>. End a checked rule with its RULE-<slug> or test path. -->
-1. **[Rule 1 Name]**: <!-- Rule specification and RFC 2119 keyword (MUST). Violation requires prior ADR -->
+1. **[Rule 1 Name]**: <!-- Rule specification and RFC 2119 keyword (MUST). The selected development approach defines authorization for exceptions. -->
 2. **[Rule 2 Name]**: <!-- Rule specification and RFC 2119 keyword (MUST). -->
 3. **[Rule 3 Name]**: <!-- Rule specification and RFC 2119 keyword (SHOULD NOT). -->
 

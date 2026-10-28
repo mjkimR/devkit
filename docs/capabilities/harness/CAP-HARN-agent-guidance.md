@@ -119,7 +119,7 @@ A project opts out of the bundle with `[presets] spec = false` in `.devkit/confi
 
 ### 4.2 Constitution
 
-`devkit get-context spec` returns `{"bundle": "spec", "constitution": <text>, "instructions": [{"path", "header"}],
+`devkit get-context spec` returns `{"bundle": "spec", "constitution": <text>, "instructions": [],
 "documents": []}`. Shared instructions and steering summaries are returned by `devkit get-context docs`.
 The constitution's sections:
 
@@ -135,17 +135,20 @@ The constitution's sections:
    reporting completion; a `session` task reports in its final response or PR body.
 5. **Managed Files**: template paths, policy read through `devkit spec policy`, managed files changed only by override.
 
-### 4.3 Instructions and Guidance Pointer
+### 4.3 Shared Instructions and Guidance Pointers
+
+The following instructions belong to docs:core. SDD decision supersession, completed-spec preservation and
+Planning-only UX timing belong to the spec constitution.
 
 | Asset | Read before |
 | --- | --- |
 | `contract-authoring` | Authoring or reviewing specifications, acceptance criteria, policies, instructions, rules or workflows: RFC 2119 wording, measurable contracts, Non-Goals, examples (policy exceptions are in the spec constitution). |
-| `living-spec-writing` | Authoring, editing or reviewing `docs/` or `specs/`: current-state writing, history placement, completed specs, traceability, summaries, ID references, and terminology and the glossary: eight domain-neutral naming rules in its Glossary section (`ADR-writing-and-terminology-guidance`) that inform naming, enforce nothing and do not authorize renaming code, APIs or schemas. |
+| `living-spec-writing` | Authoring, editing or reviewing `docs/` or `specs/`: current-state writing, approach-owned retention boundaries, traceability, summaries, ID references, and terminology and the glossary: six domain-neutral naming rules in its Glossary section (`ADR-writing-and-terminology-guidance`) that inform naming, enforce nothing and do not authorize renaming code, APIs or schemas. |
 | `document-writing` | Writing or editing any document: the sentence-level baseline (one directive or claim per sentence, condition first, prohibitions with their alternative, one-clause reasons with background by ID, no hedges or emphatic capitals, one default, concrete examples); the per-kind instructions add to it. |
 | `decision-writing` | Writing an ADR or PADR: Y-statement `summary`, context, drivers, options, outcome, consequences and the `Confirmation` section naming the check, test or review. |
 | `capability-writing` | Writing a capability: EARS business rules (`WHEN`, `WHILE`, `IF ... THEN`, `WHERE`) with RFC 2119 keywords and their enforcing rule or test, scope owners, exact interfaces. |
 | `usecase-writing` | Writing a use case: goal, main success scenario, extensions keyed to its steps, postconditions, Example Mapping to Given/When/Then scenarios. |
-| `ux-writing` | Writing a UX document (`docs/ux/`) or a Screens draft: one screen, modal or panel per document, purpose, content tree without character-cell layouts, states, interactions naming the served step, contrasting candidates in Planning only, the `docs/steering/ux-objects.md` register created with the first UX document, style and medium left to the project (`ADR-ux-screen-documents`). |
+| `ux-writing` | Writing a UX document (`docs/ux/`) or a Screens draft: one screen, modal or panel per document, purpose, content tree without character-cell layouts, states, interactions naming the served step, contrasting candidates, the `docs/steering/ux-objects.md` register created with the first UX document, style and medium left to the project (`ADR-ux-screen-documents`). |
 | `architecture-writing` | Writing `docs/architecture/`: arc42 placement, C4 diagram scope, constraints with their enforcing check (fitness function) or "review only", quality-attribute scenarios. |
 
 The `spec-pointer` line in the root `AGENTS.md` block: run `uv run devkit get-context spec` once per agent context

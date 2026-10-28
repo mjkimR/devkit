@@ -57,6 +57,7 @@ def test_inventory_and_guidance_have_independent_ownership() -> None:
             body = source.read_text()
             for marker in [
                 "`/spec",
+                "requires prior ADR",
                 "`spec-sync`",
                 "`plan-intent`",
                 "devkit spec proposal",
