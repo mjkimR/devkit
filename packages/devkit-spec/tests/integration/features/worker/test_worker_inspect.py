@@ -11,9 +11,11 @@ from types import SimpleNamespace
 
 import pytest
 from click.testing import CliRunner
+from devkit_agt.features.rules import RuleContext, evaluate_rules, git_snapshot
 
 from devkit_spec.base.errors import WorkerBaseUnresolvedError, WorkerHeadUnresolvedError, WorkerUnitUnresolvedError
 from devkit_spec.cli import cli
+from devkit_spec.features.governance.usecases.reconcile_contract import ReconcileContractRule
 from devkit_spec.features.worker.usecases.inspect import InspectWorkerUseCase
 
 UNIT = "specs/2026-10/20261020-example"
@@ -168,7 +170,10 @@ def test_invalid_present_or_missing_required_scope_record_is_not_run(repo: Path,
 
 def test_rules_keep_earlier_turn_target_in_cumulative_comparison(repo: Path) -> None:
     write(repo, "docs/contract.md", "created in first turn")
+    record = "---\nreconcile_id: REC-example\nstatus: pending\ntargets:\n  - file: docs/contract.md\n    resolution: modified\n---\n"
+    write(repo, f"{UNIT}/reconcile.md", record)
     previous = worker(repo, 1)
+    write(repo, f"{UNIT}/reconcile.md", record.replace("pending", "resolved"))
     write(repo, "src/code.py", "changed in second turn")
     returned = worker(repo, 2)
     calls = []
@@ -176,8 +181,11 @@ def test_rules_keep_earlier_turn_target_in_cumulative_comparison(repo: Path) -> 
     def cumulative_check(root: Path, args: Sequence[str]) -> dict:
         calls.append(list(args))
         if args[0] == "rules":
-            changed = git(root, "diff", "--name-only", args[-1], "HEAD").splitlines()
-            return {"status": "pass" if "docs/contract.md" in changed else "fail"}
+            snapshot = git_snapshot(root, staged=False, base=args[-1])
+            ctx = RuleContext(workspace_root=root, changed_files=list(snapshot.changed), snapshot=snapshot)
+            checked = evaluate_rules(ctx, [ReconcileContractRule()])
+            assert checked.errors == []
+            return {"status": "fail" if checked.violations else "pass"}
         return passed(root, args)
 
     result = inspect(repo, runner=cumulative_check)
@@ -189,6 +197,11 @@ def test_rules_keep_earlier_turn_target_in_cumulative_comparison(repo: Path) -> 
     assert result["inputs"]["rules_base"] == {"value": result["rules_base"], "source": "branch-merge-base"}
     assert calls[0][-1] == result["rules_base"]
     assert result["checks"]["rules"]["status"] == "pass"
+    # Reproduce the original governance failure without changing the write audit.
+    scoped = inspect(repo, rules_base=previous, runner=cumulative_check)
+    assert scoped["checks"]["rules"]["status"] == "fail"
+    assert scoped["base"] == result["base"]
+    assert scoped["changed_paths"] == result["changed_paths"]
 
 
 def test_rules_base_override_and_manual_fallback(repo: Path) -> None:
@@ -513,7 +526,7 @@ def test_dirty_record_never_reaches_disk_workflow_runner(repo: Path) -> None:
 
 
 def test_text_scope_unknown_omits_outside_and_history(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    (repo / UNIT / "reconcile.md").unlink()
+    write(repo, f"{UNIT}/reconcile.md", "---\ntargets: invalid\n---\n")
     worker(repo, 1)
     monkeypatch.chdir(repo)
     module = importlib.import_module("devkit_spec.features.worker.cli.commands")
@@ -585,3 +598,28 @@ def test_cli_failed_checks_carry_advisories_workspace_and_compact_success(
     head = git(repo, "rev-parse", "HEAD")
     clean = runner.invoke(cli, ["worker", "inspect", "--strict", "--base", head, "-w", str(repo), "--format", "json"])
     assert clean.exit_code == 0, clean.output
+
+
+def test_rules_base_cli_evidence_and_invalid_ref(repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    previous = worker(repo, 1)
+    worker(repo, 2)
+    monkeypatch.chdir(repo)
+    module = importlib.import_module("devkit_spec.features.worker.cli.commands")
+    monkeypatch.setattr(
+        module,
+        "InspectWorkerUseCase",
+        lambda: SimpleNamespace(execute=lambda root, **kw: inspect(root, **kw, runner=passed)),
+    )
+    runner = CliRunner()
+    args = ["worker", "inspect", "--rules-base", previous]
+    compact = runner.invoke(cli, [*args, "--format", "json"])
+    full = runner.invoke(cli, [*args, "--details", "--format", "json"])
+    text = runner.invoke(cli, args)
+    assert compact.exit_code == full.exit_code == text.exit_code == 0
+    a, b = json.loads(compact.stdout), json.loads(full.stdout)
+    assert a["rules_base"] == b["rules_base"] == previous
+    assert a["inputs"]["rules_base"] == b["inputs"]["rules_base"] == {"value": previous, "source": "argument"}
+    assert f"[INPUT: rules_base value={previous} source=argument]" in text.stdout
+    invalid = runner.invoke(cli, ["worker", "inspect", "--rules-base", "unknown-rules-ref", "--format", "json"])
+    assert invalid.exit_code == 2
+    assert json.loads(invalid.stdout)["error"]["code"] == "ARGUMENT_INVALID"

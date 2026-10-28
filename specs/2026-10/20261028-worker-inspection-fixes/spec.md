@@ -2,7 +2,7 @@
 id: SPEC-worker-inspection-fixes
 title: Inspect partial worker turns with independent audit and governance bases
 summary: Fixes scope inference before reconciliation exists and separates the accepted-turn write audit from cumulative feature governance without weakening either check.
-status: planned
+status: in-progress
 created: 2026-10-28
 related_capabilities: [CAP-DLV-delivery-workflows]
 related_usecases: []

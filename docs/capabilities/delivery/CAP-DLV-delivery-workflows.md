@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-delivery-workflows
 title: Delivery Workflows
-summary: "Delivery workflows define SDD stages, gates, checks and run records. Incubation omits implicit SDD Units and refuses new SDD lifecycle mutations while preserving explicit historical ownership."
+summary: "Delivery workflows define SDD stages, gates, checks and run records. Worker inspection separates accepted-turn write audits from cumulative rules comparison and supports partial turns before reconciliation. Incubation omits implicit SDD Units while preserving explicit historical ownership."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -554,7 +554,7 @@ retained base and uses the proposal's declared `dev_effort`. Final integration r
 ## Worker result inspection
 
 `devkit spec worker inspect [--unit <dir>] [--base <accepted>] [--head <returned>]
-[--scope <prefix>... | --scope-file <file>] [--base-checkout <path>] [--details]` collects evidence in the activity worktree.
+[--rules-base <commit>] [--scope <prefix>... | --scope-file <file>] [--base-checkout <path>] [--details]` collects evidence in the activity worktree.
 It derives its inputs from committed HEAD records and reports each value's source; explicit flags replace only
 that input. Scope-file is UTF-8, one nonempty literal repository-relative prefix per line; a scope override
 replaces the entire derived scope. Literal paths match themselves and descendants at path-component boundaries.
@@ -567,21 +567,25 @@ compared with changed paths as they are. `N/A`/`none` boundaries and empty recon
 - Head: the unique commit adding the highest-numbered worker envelope. Base: the commit adding the previous
   worker envelope when its state is unblocked, otherwise the common `diff_scope.base` of its unresolved problems.
   With no previous worker, use the single merge base with `devkitBase`, or the registered base checkout's branch.
+- Rules base: `--rules-base` when supplied; otherwise the single merge base with `devkitBase` or the registered
+  base checkout branch, independently of previous workers and `--base`. Without a recorded base branch or registered
+  checkout, the audit base is used with source `audit-base-fallback`. Invalid recorded references remain errors.
 - Scope: a Planning proposal directory; for Development, the unit directory, literal task boundaries, materials
   directory, reconciliation targets and explicitly linked Source feedback files whose committed status is `open`.
   Terminal or unknown statuses add no implicit source scope; explicit task boundaries remain independent. Entries retain their source,
-  task number or feedback ID. Missing or invalid scope records leave the scope check not-run.
+  task number or feedback ID. Absent optional reconciliation adds no scope; malformed present reconciliation or
+  missing required anchor/tasks leave the scope check not-run. Workflow stage requirements remain unchanged.
 - Base checkout: the worktree's registered common-directory checkout; absent when run in the base itself. Its
   HEAD and dirty paths are observations for the Host's comparison with its saved state, not checks.
 
 Checks report `pass`, `fail` or `not-run`: base ancestry, worktree HEAD equality, changed paths and outside-scope
 paths, worktree cleanliness, committed envelope validation (including unresolved problems and pending questions),
-cumulative `devkit rules check --ci --base` and `devkit workflow next`. Both old and new paths of renames are
+cumulative `devkit rules check --ci --base <rules_base>` and `devkit workflow next`. Both old and new paths of renames are
 included. Rules run only when worktree HEAD equals returned head. Workflow evaluation is not-run in a dirty
 worktree because the existing command reads disk; this prevents uncommitted records from changing its result.
 Wrapped results retain their codes and actions.
 
-`--format json` emits one object containing `inputs` (value/source), `scope` entries, `base`, `head`, `changed_paths`,
+`--format json` emits one object containing `inputs` (value/source, including `rules_base`), `scope` entries, `base`, `rules_base`, `head`, `changed_paths`,
 optional `outside_scope` and `base_checkout`, `checks`, `errors` (one advisory per failed check), `notices` and
 `exit_code`. Text output emits `[WORKER_INSPECTION: verdict=pass|fail base= head=]`, then `[INPUT: ...]`, `[SCOPE_ENTRY: <path> source= ...]`,
 changed-path and check sentinels; each failed check is an `[ERROR]` block on stderr after the notices. `-w` names

@@ -8,7 +8,7 @@ target: packages/devkit-spec/src/devkit_spec/features/worker/usecases/inspect.py
 origin: agent
 severity: workaround
 recurring: false
-status: open
+status: resolved
 created_at: 2026-10-28
 ---
 
@@ -39,3 +39,8 @@ rules check --ci --base main: errors0 warnings0
 just test-affected --base43a12db6: 44 passed
 CAP-DLV-idea-incubation exists in the full feature diff but not in the final scoped-turn diff
 ```
+
+
+## Disposition
+
+Resolved by `SPEC-worker-inspection-fixes`. Optional absent reconciliation now preserves unit/task scope while malformed present and missing required records remain not-run. Cumulative rules use an independent rules_base while accepted-turn ancestry and changed paths retain base. Verification: 48 worker inspector regression tests, including actual RULE-reconcile-contract evaluation for an earlier-turn-created target, overrides, invalid references and compact/full/text evidence; affected tests and package lint/types pass.

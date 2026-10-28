@@ -978,7 +978,7 @@
     },
     ".agents/skills/spec-delegate/references/worker.md": {
       "mode": 420,
-      "sha256": "c7d67e3aaa9b5959ab97f9c2ea2b7961e001a55be924b6ef59a0d3dcc53aa629"
+      "sha256": "5bb7f38fed9c3c559ca88d059798a97349280ebf7cb7c7b4dc46a94f99fba48f"
     },
     ".agents/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
@@ -1214,7 +1214,7 @@
     },
     ".claude/skills/spec-delegate/references/worker.md": {
       "mode": 420,
-      "sha256": "c7d67e3aaa9b5959ab97f9c2ea2b7961e001a55be924b6ef59a0d3dcc53aa629"
+      "sha256": "5bb7f38fed9c3c559ca88d059798a97349280ebf7cb7c7b4dc46a94f99fba48f"
     },
     ".claude/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
@@ -1890,7 +1890,7 @@
     },
     ".devkit/managed/spec/skills/spec-delegate/references/worker.md": {
       "mode": 420,
-      "sha256": "c7d67e3aaa9b5959ab97f9c2ea2b7961e001a55be924b6ef59a0d3dcc53aa629"
+      "sha256": "5bb7f38fed9c3c559ca88d059798a97349280ebf7cb7c7b4dc46a94f99fba48f"
     },
     ".devkit/managed/spec/skills/spec-entrypoints/SKILL.md": {
       "mode": 420,
