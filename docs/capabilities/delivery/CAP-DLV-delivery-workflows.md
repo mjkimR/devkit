@@ -1,7 +1,7 @@
 ---
 id: CAP-DLV-delivery-workflows
 title: Delivery Workflows
-summary: "Five delivery workflows define stages, gates, checks, bounded reviews, run records, feedback resolution and integration readiness. They support Host-authorized local and pull-request CLI integration, worker-result inspection, and native or emulated roles."
+summary: "Delivery workflows define SDD stages, gates, checks and run records. Incubation omits implicit SDD Units and refuses new SDD lifecycle mutations while preserving explicit historical ownership."
 area: delivery
 status: active
 created_at: 2026-10-13
@@ -609,3 +609,16 @@ SDD guidance MUST load `devkit get-context docs` before using document contracts
 authoring instructions and templates; spec retains lifecycle gates, immutable decision supersession and completed
 spec preservation. Installing devkit-spec auto-selects both core bundles. Explicitly removing docs requires
 `devkit add docs` to restore the supported SDD selection (`ADR-document-and-sdd-bundles`).
+
+
+## Incubation applicability
+
+WHILE the common approach is incubation, SDD spec/proposal creation, proposal acceptance and handoff MUST refuse
+before mutation with `SPEC_LIFECYCLE_INACTIVE` (exit 2). The action points to shared policy inspection and an explicit
+SDD choice; it does not suggest bypassing checks. Both direct public operations and composed worktree/acceptance
+operations enforce the boundary. Generic workflows, read-only policy/scope/worker inspection and document lookup
+remain usable. `packages/devkit-spec/tests/integration/features/policy/test_incubation.py` covers these refusals.
+
+The installed attachment extension leaves generic non-SDD Units to generic validation in incubation and preserves
+its SDD checks for explicitly SDD-bound Units. Scoped cleanup retains its no-bundle default; incubation may retain
+cleanup for concretely recorded SDD ownership. Mode changes grant no broader cleanup authority.

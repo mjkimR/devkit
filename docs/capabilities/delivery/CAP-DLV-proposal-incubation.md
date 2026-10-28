@@ -718,3 +718,11 @@ for its separate start decision. The CLI `mode` is `accept_only` or `accept_and_
 Handoff runs under Host-carried authority for `ask` or base policy authority for `auto`. Snapshot checks,
 readiness and partial-effect recovery apply under either authority. Internal worker sequencing, review,
 retries and fixes inside the approved scope are delegated to the Host, rather than additional user approval gates.
+
+
+## Approach precondition
+
+Proposal creation, acceptance and handoff are SDD lifecycle mutations. WHILE the common approach is incubation,
+these operations MUST refuse before changing files, branches or records with `SPEC_LIFECYCLE_INACTIVE`.
+Read-only existing proposal inspection remains available. `CAP-DLV-delivery-workflows` owns the shared applicability
+boundary; the direct and composed operations use the same check.

@@ -63,3 +63,23 @@ uv run devkit add --dry-run <bundle>          # preview the files first when uns
   in-repository bundle and point to the `in-repo-bundle` instruction: `uv run devkit get-context devkit`.
 - **Changing a deployed asset**: `uv run devkit override create <bundle>:<asset>` copies it to
   `.devkit/overrides/` for editing.
+
+
+### Incubation policy
+
+For development without SDD lifecycle records, install the document system and choose shared policy explicitly:
+
+```toml
+[development]
+approach = "incubation"
+
+[integration]
+provider = "project"
+```
+
+Inspect `uv run devkit config show`; the absent approach defaults to `sdd`. Local/environment overrides are not
+supported. Document checks and the project's run/build/lint/test commands remain active. Package or bundle selection
+does not activate either approach. Installed spec extensions reject new SDD lifecycle records in incubation while
+retaining existing SDD artifact checks. Independent project integration uses explicit passing review/tests/lint
+claims and the ordinary approval/route/cleanup checks. Product discovery guidance and voluntary baseline adoption
+are separate assets; changing this setting does not establish a verified SDD baseline.

@@ -85,3 +85,9 @@ Public selection operations in `features/distribution/usecases/commands.py` own 
 additive preset merging, persistence and installed-bundle discovery. Adapters supply parsed selections to
 `sync_selection` or `add_selection`; they do not construct configuration callbacks. Project listing, status
 and override operations keep discovered package resources open until their results have been collected.
+
+
+Development approach is shared project policy: inspect `uv run devkit config show`. `[development] approach`
+accepts `sdd` (the absent default) or explicit `incubation`; bundle/package selection does not change it. Incubation
+keeps document and project checks without implicit SDD records. The common reader belongs to devkit-dist; the
+`project` readiness provider belongs to devkit-agt, and SDD mutation/applicability consumers to devkit-spec.

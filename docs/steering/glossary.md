@@ -39,6 +39,7 @@ The ubiquitous terms of devkit as its documents, commands and bundles use them. 
 
 | Term | Definition | Owner | Avoid | Code identifiers |
 | :--- | :--- | :--- | :--- | :--- |
+| **Development approach** | Shared project choice of SDD or incubation, independent of installed packages and selected assets; excludes clone-local execution environment and publication authority. | `CAP-DIST-sync-and-transactions` | development mode | `[development] approach`, `DevelopmentApproach` |
 | **Work scope observation** | Invocation-local evidence from one snapshot, pinned branch tree or accessible worktree, with task attribution, provenance and missing layers; excludes a persistent registry revision or write authority. | `CAP-COLL-work-scope-registry` |  | `Observation`, `observation_id`, `task_key` |
 | **Workflow** | A multi-stage delivery procedure declared as data (`kind = "workflow"`): ordered stages with entry/exit checks, approval gates, and returns. | `CAP-DLV-workflow-orchestration` |  | `kind = "workflow"` |
 | **Unit** | A directory driven by a workflow, tracked by its anchor file (e.g. `spec.md` or `proposal.md`). | `CAP-DLV-workflow-orchestration` |  |  |

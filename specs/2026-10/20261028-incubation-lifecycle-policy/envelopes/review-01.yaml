@@ -1,0 +1,43 @@
+kind: review
+stage: review-refine
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T04:50:40.334902Z'
+status: completed
+summary: Independent medium review reproduced convergence, cleanup and ownership defects plus eager command loading; fix before completion
+findings:
+- issue: Rule convergence rechecks lose initially skipped rules.
+  evidence: packages/devkit/src/devkit_agt/features/rules/services/evaluator.py:134; existing scoping regressions fail
+  failure_condition: A fixer changes another rule input or fails after partial write.
+  suggested_action: Rescope all active rules and reapply omissions.
+  resolution: open
+  severity: P1
+- issue: Mere document directories activate SDD cleanup.
+  evidence: packages/devkit-spec/src/devkit_spec/features/delivery/usecases/cleanup.py:62; no-bundle cleanup regression fails
+  failure_condition: Ordinary docs/proposals exists without spec bundle.
+  suggested_action: Preserve no-bundle default and require concrete retained ownership.
+  resolution: open
+  severity: P1
+- issue: Committed ownership ignores quoted YAML binding keys.
+  evidence: packages/devkit/src/devkit_agt/features/rules/repositories/ownership.py:21; independent quoted-binding probe fails
+  failure_condition: Retained anchor uses valid quoted workflow or history keys.
+  suggested_action: Discover candidates broadly and use parsed frontmatter authority.
+  resolution: open
+  severity: P1
+- issue: Root Units fail to own companion files.
+  evidence: packages/devkit/src/devkit_agt/features/rules/repositories/ownership.py:43; independent root-unit probe fails
+  failure_condition: Anchor directory is dot and companion has no dot prefix.
+  suggested_action: Handle root ownership explicitly in common and SDD matching.
+  resolution: open
+  severity: P1
+- issue: Integration help eagerly imports rules.
+  evidence: packages/devkit/src/devkit_agt/features/integration/__init__.py:31; command-loading isolation test fails
+  failure_condition: Resolving integration help loads readiness helpers.
+  suggested_action: Export readiness helpers lazily.
+  resolution: open
+  severity: P2
+checks:
+  boundary: PASS immutable head/tree verified
+diff_scope:
+  base: aa83b6ed1beb5e6ee6cb1915b5e647936ad4b85b
+  head: 41a88a7f570570996d6e96bcd602fe4d8b374243

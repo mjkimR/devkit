@@ -55,3 +55,45 @@ def test_composed_and_direct_accept_handoff_refuse(tmp_path):
             operation()
     assert not (tmp_path / "specs").exists()
     assert not (tmp_path / "docs").exists()
+
+
+def test_installed_cli_reports_omissions_and_inactive_mutation(tmp_path, synced_template):
+    import json
+
+    from click.testing import CliRunner
+    from devkit_dist.cli import cli
+    from spec_support.delivery import _make_synced_repo
+
+    repo = _make_synced_repo(tmp_path, synced_template, extra_config='[development]\napproach="incubation"')
+    runner = CliRunner()
+    result = runner.invoke(cli, ["rules", "check", "-w", str(repo), "--format", "json"])
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.stdout)
+    assert len(data["omissions"]) == 5 and not data["errors"]
+    assert all(o["code"] == "SDD_LIFECYCLE_INACTIVE" for o in data["omissions"])
+    result = runner.invoke(cli, ["spec", "new", "demo", "-w", str(repo), "--format", "json"])
+    assert result.exit_code == 2, result.output
+    assert json.loads(result.stdout)["error"]["code"] == "SPEC_LIFECYCLE_INACTIVE"
+    policy = runner.invoke(cli, ["spec", "policy", "-w", str(repo), "--format", "json"])
+    assert json.loads(policy.stdout)["development"] == {"approach": "incubation", "source": ".devkit/config.toml"}
+
+
+def test_root_attachment_preserves_bound_sdd_validation(tmp_path):
+    from devkit_core.core import run_git
+
+    from devkit_spec.features.delivery.usecases.attach import attach_check
+
+    config(tmp_path)
+    run_git(tmp_path, "init", "-q")
+    run_git(tmp_path, "config", "user.name", "Test")
+    run_git(tmp_path, "config", "user.email", "test@example.com")
+    run_git(tmp_path, "config", "commit.gpgsign", "false")
+    anchor = tmp_path / "anchor.md"
+    anchor.write_text('---\n"workflow": sdd-spec-feature\n---\n# Retained root Unit\n')
+    run_git(tmp_path, "add", ".")
+    run_git(tmp_path, "commit", "-qm", "retain root Unit")
+    assert attach_check(tmp_path, "dev-demo", ".", "HEAD")
+    anchor.write_text("---\nworkflow: custom\n---\n# Generic root Unit\n")
+    run_git(tmp_path, "add", ".")
+    run_git(tmp_path, "commit", "-qm", "generic root Unit")
+    assert attach_check(tmp_path, "dev-demo", ".", "HEAD") == []

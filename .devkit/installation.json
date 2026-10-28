@@ -1778,7 +1778,7 @@
     },
     ".devkit/managed/spec/guidance/spec-pointer.md": {
       "mode": 420,
-      "sha256": "53dc95bc5b209155b437b9968cb06281a103205d7d206642c26713a44738be70"
+      "sha256": "fefe53b9eb2375dc7fac123711933123e598d9d318e5e31649169dfa94649825"
     },
     ".devkit/managed/spec/playbooks/adr-compaction/SKILL.md": {
       "mode": 420,
@@ -2105,7 +2105,7 @@
       "sha256": "35e3077b62c7c1a1ae36923e8109209b851ffa8dd558b51cda7d9305794869c5"
     }
   },
-  "guidance_block": "96ca5a709f905fce0c4492d6df1bd505dd1e1b7d624d820c647bd141b09f6961",
+  "guidance_block": "408a5fbfd17a478e0ce467dc7db8f4c8e55be621ed55af4f3340526808eb684c",
   "packages": [
     {
       "bundle": "advisory",

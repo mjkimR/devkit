@@ -108,19 +108,7 @@ def evaluate_rules(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
     selected, skipped = scope_rules(ctx, active)
     result = EvaluationResult(skipped=skipped)
     _log_skipped(skipped)
-    applicable = []
-    for rule in selected:
-        try:
-            omit = getattr(rule, "omission", lambda _ctx: None)(ctx)
-            if omit is not None:
-                if not isinstance(omit, RuleOmission):
-                    raise TypeError("omission must return RuleOmission or None")
-                result.omissions.append(omit)
-            else:
-                applicable.append(rule)
-        except Exception as exc:
-            result.errors.append(_execution_error(rule, f"{rule.id}: applicability failed", exc))
-    selected = applicable
+    selected = _applicable(ctx, selected, result)
     initial = _check_rules(ctx, selected, "execution", result.errors)
     if not ctx.fix or ctx.dry_run or result.errors:
         result.violations = initial
@@ -132,13 +120,31 @@ def evaluate_rules(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
         return result
 
     if result.errors:
-        rechecked, skipped = selected, []
+        rechecked, skipped = active, []
     else:
-        rechecked, skipped = scope_rules(ctx, selected, modified)
+        rechecked, skipped = scope_rules(ctx, active, modified)
     result.skipped = skipped
+    result.omissions = []
+    rechecked = _applicable(ctx, rechecked, result)
     recheck = _check_rules(ctx, rechecked, "recheck", result.errors)
     result.violations = recheck if result.errors else _mark_fixed(initial, recheck)
     return result
+
+
+def _applicable(ctx: RuleContext, rules: Sequence[Rule], result: EvaluationResult) -> list[Rule]:
+    applicable = []
+    for rule in rules:
+        try:
+            omit = getattr(rule, "omission", lambda _ctx: None)(ctx)
+            if omit is not None:
+                if not isinstance(omit, RuleOmission):
+                    raise TypeError("omission must return RuleOmission or None")
+                result.omissions.append(omit)
+            else:
+                applicable.append(rule)
+        except Exception as exc:
+            result.errors.append(_execution_error(rule, f"{rule.id}: applicability failed", exc))
+    return applicable
 
 
 def _log_skipped(skipped: Sequence[str]) -> None:

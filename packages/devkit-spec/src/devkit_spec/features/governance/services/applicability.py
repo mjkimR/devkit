@@ -37,7 +37,10 @@ def applies(ctx: RuleContext, path: str) -> bool:
     if read_development_approach(ctx.workspace_root).approach == "sdd":
         return True
     return any(
-        path == anchor or path.startswith(str(PurePosixPath(anchor).parent) + "/") for anchor in sdd_anchors(ctx)
+        str(PurePosixPath(anchor).parent) == "."
+        or path == anchor
+        or path.startswith(str(PurePosixPath(anchor).parent) + "/")
+        for anchor in sdd_anchors(ctx)
     )
 
 
@@ -48,7 +51,12 @@ class LifecycleRule(BaseRule):
         candidates = tuple(ctx.targets) + (ctx.snapshot.deleted if ctx.snapshot else ())
         if any(
             not candidates
-            or any(path == anchor or path.startswith(str(PurePosixPath(anchor).parent) + "/") for path in candidates)
+            or any(
+                str(PurePosixPath(anchor).parent) == "."
+                or path == anchor
+                or path.startswith(str(PurePosixPath(anchor).parent) + "/")
+                for path in candidates
+            )
             for anchor in sdd_anchors(ctx)
         ):
             return None
@@ -64,7 +72,7 @@ def binding_violations(ctx: RuleContext, rule_id: str) -> list[Violation]:
     for anchor, ids in prior.items():
         directory = str(PurePosixPath(anchor).parent)
         if not any(w.startswith("sdd-") for w in ids) or not any(
-            p == anchor or p.startswith(directory + "/") for p in changed
+            directory == "." or p == anchor or p.startswith(directory + "/") for p in changed
         ):
             continue
         try:
