@@ -174,7 +174,7 @@ this change supplies no artifact conversion or history rewrite.
 incubation's lack of implicit SDD records, and preservation of independent checks once this direction is accepted.
 Its bundle name, entry skill, optional roles, current-context artifact and product discovery flow remain open to
 its own Planning. Guidance Planning can run alongside policy Development, with final binding to the implemented
-interfaces before its own verification. `PROP-incubation-sdd-baseline` can research baseline evidence independently;
+interfaces before its own verification. `SPEC-incubation-sdd-baseline` can research baseline evidence independently;
 its final transition writes and entry behavior depend on the accepted policy and current-context contracts.
 
 ### Non-goals
@@ -182,7 +182,7 @@ its final transition writes and entry behavior depend on the accepted policy and
 - **Scope Excluded**: incubation entry skills, product discovery/research/usage roles and resumable product context;
   these remain `PROP-incubation-development-guidance`.
 - **Scope Excluded**: voluntary baseline adoption, automatic graduation, rewriting existing SDD history or switching
-  this repository to incubation; adoption remains `PROP-incubation-sdd-baseline`.
+  this repository to incubation; adoption remains `SPEC-incubation-sdd-baseline`.
 - **Scope Excluded**: disabling project checks, all custom workflows or all commit gates; a generic bypass flag;
   local/environment overrides; adding a workflow for every incubation iteration; generic bundle resolver changes.
 - **Scope Excluded**: moving packages solely for structure. No independent structural prerequisite is required by

@@ -132,7 +132,7 @@ it does not become a spec Unit or a durable product contract.
   Its draft shared `sdd|incubation` setting is unapproved; this proposal relies only on an inspectable effective
   approach and preservation of independent checks. Before Development, refresh this proposal against its accepted
   interface; an incompatible choice returns to Planning rather than inventing a second policy source.
-- `PROP-incubation-sdd-baseline` consumes current goal, retained choices, implementation and verification evidence
+- `SPEC-incubation-sdd-baseline` consumes current goal, retained choices, implementation and verification evidence
   semantically. It need not parse this context filename or require historical records. Voluntary transition is owned
   there; `/incubate` records the user's intent and points to the accepted transition entry when available.
   For an explicit adoption request, explain preparing the spec package/assets while the effective approach remains

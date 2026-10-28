@@ -49,7 +49,7 @@ history. The baseline proposal consumes semantic facts and does not require pars
 - Negative: consumers install catalog and docs, and guidance behavior needs semantic walkthrough evidence.
 - Risks: stale context can mislead a later session; source identity, current checks and explicit uncertainty limit that
   risk. Applicable policy must be refreshed against the accepted lifecycle-policy interface before Development.
-- Follow-up: optional SDD adoption remains `PROP-incubation-sdd-baseline`; runtime applicability remains
+- Follow-up: optional SDD adoption remains `SPEC-incubation-sdd-baseline`; runtime applicability remains
   `PROP-incubation-lifecycle-policy`.
 
 ## 6. Confirmation

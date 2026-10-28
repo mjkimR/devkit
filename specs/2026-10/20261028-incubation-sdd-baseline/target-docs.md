@@ -12,7 +12,7 @@ status: draft
 - `UC-adopt-in-an-existing-repository`: distinguish legacy containment from the optional incubation baseline; preserve its existing gradual-migration path.
 - `CAP-DLV-drift-reconciliation`: unchanged; evidence practices are reused without extending its maintenance playbook contract.
 - `CAP-DLV-project-policy`: the accepted prerequisite owns activation setting and inspection. Repair a routing cross-reference if needed; do not redefine the setting here.
-- Promote `PADR-adopt-sdd-through-an-evidenced-baseline-playbook` at handoff to record playbook ownership and readiness boundaries.
+- Promote `ADR-adopt-sdd-through-an-evidenced-baseline-playbook` at handoff to record playbook ownership and readiness boundaries.
 - Installation guides and package README: point incubation adoption requests at the playbook and document installed-package/selected-assets/activation distinctions.
 
 This feature does not alter the incubation entry/context assets owned by the guidance prerequisite. That prerequisite exposes a graduation recommendation; cross-bundle integration uses its accepted interface. Any exact link repair outside these owning documents is declared in tasks before editing.
