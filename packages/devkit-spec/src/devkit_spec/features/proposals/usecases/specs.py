@@ -40,6 +40,7 @@ from devkit_spec.base.errors import (
     SpecWrongBranchError,
 )
 from devkit_spec.base.units import SKELETON_MARKER
+from devkit_spec.features.policy import require_sdd
 from devkit_spec.features.policy.repositories.branches import require_development_branch
 from devkit_spec.features.proposals.services.body import CarriedProposal, ensure_ac_ids
 from devkit_spec.features.proposals.usecases.binding import resolve_binding, unbound_guidance
@@ -381,6 +382,7 @@ def create_spec(
     as a ``FrontmatterError`` binding ``spec.md``) and the roll-back was complete; what the roll-back could not remove is
     in the ``SpecWriteError`` details.
     """
+    require_sdd(root)
     root = root.resolve()
     slug = new_slug(slug.strip().removeprefix("SPEC-"), error=SpecSlugError)
     require_development_branch(root, slug, "devkit spec new", SpecWrongBranchError)

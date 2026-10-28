@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from devkit_dist.base.errors import ConfigError
+from devkit_dist.features.project.models.development import development_approach
 from devkit_dist.features.project.repositories.project import read_toml
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH
 
@@ -130,6 +131,7 @@ def read_effective_config(root: Path, *, local: bool = True) -> EffectiveConfig:
     if "schema" in shared and (type(shared["schema"]) is not int or shared["schema"] != 1):
         raise _invalid(CONFIG_PATH, "unsupported config schema")
     validate_runtime_tables(shared, CONFIG_PATH)
+    development = development_approach(shared)
     overlay = read_local_config(root) if local else {}
     values = merge_config(shared, overlay, path=LOCAL_CONFIG_PATH)
     sources: dict[str, str] = {}
@@ -152,6 +154,8 @@ def read_effective_config(root: Path, *, local: bool = True) -> EffectiveConfig:
     ):
         values.setdefault(table, {}).setdefault(key, value)
         sources.setdefault(f"{table}.{key}", "default")
+    values.setdefault("development", {})["approach"] = development.approach
+    sources["development.approach"] = development.source
     return EffectiveConfig(values, sources)
 
 

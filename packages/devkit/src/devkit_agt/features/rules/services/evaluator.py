@@ -12,7 +12,7 @@ from devkit.advisory import AdvisoryError, Level
 from devkit_core.core.logs import get_logger
 from devkit_dist.features.project.repositories.receipt import CONFIG_PATH, RECEIPT_PATH
 
-from devkit_agt.features.rules.models.contracts import Autofixable, Rule, RuleContext, Severity, Violation
+from devkit_agt.features.rules.models.contracts import Autofixable, Rule, RuleContext, RuleOmission, Severity, Violation
 from devkit_agt.features.rules.models.errors import RuleExecutionError, RuleProblem, SettingsError
 from devkit_agt.features.rules.models.phases import effective_phase, runs_in_phase
 from devkit_agt.features.rules.models.policy import effective_severity, validate_policy
@@ -28,6 +28,7 @@ class EvaluationResult:
     # IDs of the active rules the final check pass did not evaluate, because no explicit target matched their
     # declared ``inputs`` (``scope_rules``).
     skipped: list[str] = field(default_factory=list)
+    omissions: list[RuleOmission] = field(default_factory=list)
 
     @property
     def blocking_violations(self) -> list[Violation]:
@@ -107,6 +108,19 @@ def evaluate_rules(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
     selected, skipped = scope_rules(ctx, active)
     result = EvaluationResult(skipped=skipped)
     _log_skipped(skipped)
+    applicable = []
+    for rule in selected:
+        try:
+            omit = getattr(rule, "omission", lambda _ctx: None)(ctx)
+            if omit is not None:
+                if not isinstance(omit, RuleOmission):
+                    raise TypeError("omission must return RuleOmission or None")
+                result.omissions.append(omit)
+            else:
+                applicable.append(rule)
+        except Exception as exc:
+            result.errors.append(_execution_error(rule, f"{rule.id}: applicability failed", exc))
+    selected = applicable
     initial = _check_rules(ctx, selected, "execution", result.errors)
     if not ctx.fix or ctx.dry_run or result.errors:
         result.violations = initial
@@ -118,9 +132,9 @@ def evaluate_rules(ctx: RuleContext, rules: Sequence[Rule]) -> EvaluationResult:
         return result
 
     if result.errors:
-        rechecked, skipped = active, []
+        rechecked, skipped = selected, []
     else:
-        rechecked, skipped = scope_rules(ctx, active, modified)
+        rechecked, skipped = scope_rules(ctx, selected, modified)
     result.skipped = skipped
     recheck = _check_rules(ctx, rechecked, "recheck", result.errors)
     result.violations = recheck if result.errors else _mark_fixed(initial, recheck)

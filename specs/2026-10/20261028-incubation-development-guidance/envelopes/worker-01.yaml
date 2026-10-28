@@ -1,0 +1,22 @@
+kind: worker
+stage: build-verify
+workflow: sdd-spec-feature
+segment: 0
+created_at: '2026-10-28T04:43:00.640235Z'
+status: completed
+summary: Implemented independent opt-in catalog bundle, entry and four conditional references, three optional roles, mutable context template and real selection/projection/preservation tests. Task1 complete; policy-dependent Task2 and shared-document Task3 remain pending for a later scoped turn, with no completion or final-report claim.
+findings: []
+assumptions:
+- 'Codex emulated: absolute worktree cwd/paths, operation-specific escalation and committed path checks substitute for native enforcement'
+- Host authorized .devkit/architecture.toml catalog content_roots addition and merged main guardrails at f5554ad3; AGENTS.md is unchanged since that Host merge
+unverified_areas:
+- Actual policy/no-spec built-wheel consumer, adaptive app/role/resume exercises, shared Living Spec, mandatory independent code and reconcile reviews await integrated policy and next-turn write scope
+checks:
+  sync_start: PASS exit=0 before first edit
+  tests: PASS catalog32; affected full fallback5886 passed14skipped after Host base merge
+  lint: PASS catalog Ruff check/format and Pyright; cumulative governance errors0 warnings0
+  sync: PASS sync --check; incubation intentionally unselected, no tracked sync outputs
+diff_scope:
+  base: b671dd684472b4e00831cec79240feef2c30ad5d
+  head: f5554ad3d60b3db29b5839e22a7a3f589cba53c5
+activity_effort: medium

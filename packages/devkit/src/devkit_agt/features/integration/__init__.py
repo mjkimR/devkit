@@ -28,6 +28,10 @@ from devkit_agt.features.integration.models.errors import (
     StaleRequestError,
     TargetMovedError,
 )
+from devkit_agt.features.integration.repositories.snapshots import _snapshot_root as snapshot_root
+from devkit_agt.features.integration.repositories.snapshots import build_snapshot, populate_managed_files
+from devkit_agt.features.integration.usecases.project import check as check_project_readiness
+from devkit_agt.features.integration.usecases.project import touched_workflow_units
 from devkit_agt.features.integration.usecases.service import IntegrationService
 
 __all__ = [
@@ -56,4 +60,9 @@ __all__ = [
     "StaleRequestError",
     "TargetMovedError",
     "Task",
+    "build_snapshot",
+    "check_project_readiness",
+    "populate_managed_files",
+    "snapshot_root",
+    "touched_workflow_units",
 ]

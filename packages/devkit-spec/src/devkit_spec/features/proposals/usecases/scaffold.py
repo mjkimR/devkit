@@ -55,6 +55,7 @@ from devkit_spec.base.errors import (
     SpecError,
 )
 from devkit_spec.base.units import PROPOSAL_FILE, PROPOSALS, TARGET_DOCS, proposal_unit
+from devkit_spec.features.policy import require_sdd
 from devkit_spec.features.policy.repositories.branches import SLUG_LIMIT, planning_branch_elsewhere
 from devkit_spec.features.proposals.usecases.binding import resolve_binding, unbound_guidance
 
@@ -318,6 +319,7 @@ def create_proposal(
     cwd: Path | None = None,
 ) -> CreatedProposal:
     """Compose the application entrypoint for internal callers."""
+    require_sdd(root)
     return CreateProposalUseCase().execute(
         root,
         slug,

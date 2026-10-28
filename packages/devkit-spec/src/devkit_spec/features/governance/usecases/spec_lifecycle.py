@@ -24,11 +24,13 @@ import re
 from dataclasses import dataclass
 
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation, count_tasks
-from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import locate
 from devkit_docs.features.governance import FIX_COMMAND, explicitly_targeted
 from devkit_docs.utils.text import trailing_comment
+
+from devkit_spec.features.governance.services.applicability import LifecycleRule as BaseRule
+from devkit_spec.features.governance.services.applicability import applies, binding_violations
 
 RULE_ID = "RULE-spec-lifecycle"
 COMPLETED = "completed"
@@ -75,7 +77,7 @@ class SpecLifecycleRule(BaseRule):
         )
 
     def check(self, ctx: RuleContext) -> list[Violation]:
-        found: list[Violation] = []
+        found: list[Violation] = binding_violations(ctx, self.id)
         for bundle in bundles(ctx):
             finding = _evaluate(ctx, bundle)
             if finding is not None:
@@ -113,6 +115,8 @@ def bundles(ctx: RuleContext) -> list[Bundle]:
         if path.name != "spec.md":
             continue
         spec = ctx.cache.relative_name(path)
+        if not applies(ctx, spec):
+            continue
         base = spec.removesuffix("spec.md")
         reconcile, tasks = f"{base}reconcile.md", f"{base}tasks.md"
         has_reconcile = _read(ctx, reconcile) is not None

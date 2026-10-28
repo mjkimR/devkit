@@ -37,6 +37,7 @@ from devkit_spec.base.errors import (
 )
 from devkit_spec.base.units import PROPOSAL_FILE, proposal_unit
 from devkit_spec.features.delivery.usecases.handoff import handoff_and_register
+from devkit_spec.features.policy import require_sdd
 from devkit_spec.features.policy.usecases.approvals import approval_policy
 from devkit_spec.features.proposals.models.handoff import HandoffPreview
 
@@ -84,6 +85,7 @@ def prepare(root: Path, slug: str, effort: str | None = None) -> HandoffPreview:
     base checkout, ``HandoffBaseDirtyError``, ``HandoffNotReadyError`` (not accepted, decomposition, incomplete
     Planning), ``ProposalInvalidError`` (a field without a valid value) and ``HandoffWorktreeConflictError``.
     """
+    require_sdd(root)
     position = locate(root)
     command = _handoff_command(slug, effort)
     if position.linked or not position.branch or position.branch.startswith(("dev-", "plan-")):

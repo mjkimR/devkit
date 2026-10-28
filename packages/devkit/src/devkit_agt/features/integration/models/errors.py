@@ -108,3 +108,13 @@ class ReceiptReaderChangedError(IntegrationError):
         " Host authority for `uv run devkit integration integrate` for this branch in the base checkout using a runtime built from"
         " the source's code. Do not edit the receipt or switch routes without that authority"
     )
+
+
+class ApproachMismatchError(ReadinessError):
+    code = "INTEGRATION_APPROACH_MISMATCH"
+    fix = "Use the existing SDD readiness provider for SDD projects; inspect `uv run devkit config show`"
+
+
+class LifecycleValidationRequiredError(ReadinessError):
+    code = "INTEGRATION_LIFECYCLE_VALIDATION_REQUIRED"
+    fix = "Run the matching lifecycle validator for the touched retained Unit before integration"

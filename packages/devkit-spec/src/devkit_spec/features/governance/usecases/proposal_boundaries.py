@@ -22,7 +22,6 @@ from typing import Any
 
 import yaml
 from devkit_agt.features.rules import Phase, RuleContext, Severity, Violation
-from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
 from devkit_core.core.frontmatter import locate
 from devkit_core.core.yaml import safe_compose
@@ -31,6 +30,8 @@ from devkit_docs.features.documents import Document
 from devkit_docs.features.governance import document_index, is_proposal_anchor, namespaces
 
 from devkit_spec.features.entrypoints import exists, normalize
+from devkit_spec.features.governance.services.applicability import LifecycleRule as BaseRule
+from devkit_spec.features.governance.services.applicability import applies
 
 RULE_ID = "RULE-proposal-boundaries"
 CHECKED_STATUSES = frozenset({"draft", "reviewing", "accepted"})
@@ -62,6 +63,8 @@ class ProposalBoundariesRule(BaseRule):
         found: list[Violation] = []
         docs_roots: dict[str, str] | None = None
         for document in index.documents:
+            if not applies(ctx, document.path):
+                continue
             if not is_proposal_anchor(document.path) or not ctx.is_file_targeted(document.path):
                 continue
             if document.status.strip().lower() not in CHECKED_STATUSES:

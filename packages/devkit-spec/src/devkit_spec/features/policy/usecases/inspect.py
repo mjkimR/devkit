@@ -7,6 +7,7 @@ from devkit.advisory import AdvisoryError
 from devkit_agt.features.workflow import load_workflow_config
 from devkit_agt.features.worktree import read_worktree_config
 from devkit_core.base.usecase import BaseUseCase
+from devkit_dist.features.project import read_development_approach
 
 from devkit_spec.base.errors import ApprovalKeyIgnoredWarning
 from devkit_spec.features.policy.services.config import APPROVAL_GATES, INTENT_GATE, check_approvals, read_spec_config
@@ -50,6 +51,7 @@ class InspectPolicyUseCase(BaseUseCase):
         }
         routing = {"depth_escalation": spec.depth_escalation}
         return {
+            "development": asdict(read_development_approach(root)),
             "approvals": approvals,
             "stages_off": stages_off,
             "git": git,

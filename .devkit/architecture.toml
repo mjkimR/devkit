@@ -68,7 +68,7 @@ feature_dependencies.rules = ["devkit_agt.features.compact", "devkit_dist.featur
 feature_dependencies.workflow = ["devkit_agt.features.rules", "devkit_dist.features.project"]
 feature_dependencies.gate = ["devkit_agt.features.compact", "devkit_agt.features.rules", "devkit_dist.features.project"]
 feature_dependencies.worktree = ["devkit_dist.features.project"]
-feature_dependencies.integration = ["devkit_agt.features.worktree", "devkit_dist.features.project"]
+feature_dependencies.integration = ["devkit_agt.features.worktree", "devkit_agt.features.rules", "devkit_dist.features.project"]
 feature_dependencies.generated = ["devkit_agt.features.compact", "devkit_dist.features.project"]
 feature_dependencies.compact = ["devkit_dist.features.project"]
 root_modules = ["bootstrap"]
@@ -189,7 +189,7 @@ data_roots = ["bundle"]
 namespace = "devkit_catalog"
 root = "packages/devkit-catalog/src/devkit_catalog"
 kind = "content"
-data_roots = ["response_style", "host_observer", "maintenance", "cli_tool"]
+data_roots = ["response_style", "host_observer", "maintenance", "cli_tool", "incubation"]
 
 [[import_exceptions]]
 source = "devkit_agt.features.rules.models.contracts"

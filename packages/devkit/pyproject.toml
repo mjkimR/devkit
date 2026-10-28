@@ -61,6 +61,9 @@ dev = [
     "pytest>=8.0.0",
 ]
 
+[project.entry-points."devkit.integration.readiness"]
+project = "devkit_agt.features.integration.usecases.project"
+
 [tool.uv.sources]
 devkit-core = { workspace = true }
 devkit-mcp = { workspace = true }

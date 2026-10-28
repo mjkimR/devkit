@@ -43,6 +43,7 @@ from devkit_spec.base.errors import (
     acceptance_unrecorded_fix,
 )
 from devkit_spec.base.units import proposal_unit
+from devkit_spec.features.policy import require_sdd
 from devkit_spec.features.policy.usecases.approvals import approval_policy
 from devkit_spec.features.proposals import accept_proposal
 from devkit_spec.features.proposals.services.status import accepted_text
@@ -309,6 +310,7 @@ class PlanAcceptUseCase(BaseUseCase):
         """Accept and integrate a reviewed proposal after Host-carried approval."""
         from devkit_spec.features.delivery.usecases.native_handoff import HandoffUseCase, prepare
 
+        require_sdd(self.root)
         self.root = self.root.resolve()
         slug = require_slug(slug)
         if mode not in {"accept_only", "accept_and_handoff"}:

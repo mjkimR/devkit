@@ -5,8 +5,8 @@ summary: "Establishes an evidenced retained-product baseline through an explicit
 status: in-progress
 created: 2026-10-28
 depends_on:
-  - PROP-incubation-lifecycle-policy
-  - PROP-incubation-development-guidance
+  - SPEC-incubation-lifecycle-policy
+  - SPEC-incubation-development-guidance
 related_capabilities: []
 related_usecases: []
 workflow: sdd-spec-feature
@@ -19,7 +19,7 @@ workflow: sdd-spec-feature
 Incubation can remain a complete development path. When the user chooses SDD, retained behavior, structure,
 choices and verification need a truthful baseline before future changes inherit SDD obligations.
 `ADR-adopt-sdd-through-an-evidenced-baseline-playbook` selects a focused playbook over a new runtime or retrospective Unit.
-`PROP-incubation-sdd-baseline-target` lists the current-contract reflection.
+`SPEC-incubation-sdd-baseline-target` lists the current-contract reflection.
 Planning evidence remains in `docs/materials/2026-10/20261028-incubation-sdd-baseline/`.
 
 ## 2. User Stories

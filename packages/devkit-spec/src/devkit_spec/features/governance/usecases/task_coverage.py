@@ -27,9 +27,11 @@ from collections.abc import Callable
 from pathlib import PurePosixPath
 
 from devkit_agt.features.rules import LineKind, Phase, RuleContext, Severity, Violation, match_path, scan
-from devkit_agt.features.rules.services.builtins import BaseRule
 from devkit_core.core import FrontmatterError
 from devkit_docs.features.governance import explicitly_targeted
+
+from devkit_spec.features.governance.services.applicability import LifecycleRule as BaseRule
+from devkit_spec.features.governance.services.applicability import applies
 
 RULE_ID = "RULE-task-coverage"
 COMPLETED = "completed"
@@ -146,6 +148,8 @@ class TaskCoverageRule(BaseRule):
             if path.name != "tasks.md":
                 continue
             tasks_path = ctx.cache.relative_name(path)
+            if not applies(ctx, tasks_path):
+                continue
             spec_path = (PurePosixPath(tasks_path).parent / "spec.md").as_posix()
             if not (ctx.is_file_targeted(tasks_path) or ctx.is_file_targeted(spec_path)):
                 continue
