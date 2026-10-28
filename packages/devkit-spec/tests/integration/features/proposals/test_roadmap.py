@@ -1,6 +1,7 @@
 """CLI authoring validates roadmap metadata before writes and handoff preserves origins."""
 
 import inspect
+import json
 import subprocess
 from pathlib import Path
 
@@ -109,3 +110,58 @@ def test_decomposition_rejects_planning_branch(workspace: Path) -> None:
     subprocess.run(["git", "-C", str(workspace), "branch", "plan-parent"], check=True)
     with pytest.raises(ProposalInPlanningError):
         create_proposal(workspace, "child", decomposed_from="PROP-parent")
+
+
+@pytest.mark.parametrize("status", ["done", "dropped", "active", "planned"])
+@pytest.mark.parametrize("alias", [False, True])
+def test_milestone_membership_notices_preserve_milestone(workspace: Path, status: str, alias: bool) -> None:
+    milestone(workspace)
+    path = workspace / "docs/roadmap/MS-foundation.md"
+    path.write_text(
+        f"---\nid: MS-foundation\naliases: [MS-old]\nstatus: {status}\n"
+        "scope_confirmed: true\ndecomposition_confirmed: true\n---\n"
+    )
+    before = path.read_bytes()
+    result = create_proposal(workspace, "member", milestone="MS-old" if alias else "MS-foundation")
+    data = parse((workspace / result.path).read_text()).data
+    assert data is not None and data["milestone"] == "MS-foundation"
+    assert path.read_bytes() == before
+    notices = [notice.to_dict() for notice in result.notices if notice.code == "SPEC_PROPOSAL_MILESTONE_INACTIVE"]
+    assert len(notices) == (1 if status in {"done", "dropped"} else 0)
+    if notices:
+        assert notices[0]["level"] == "NOTICE"
+        assert "MS-foundation" in notices[0]["message"] and status in notices[0]["message"]
+        assert "membership" in notices[0]["advisory"]["fix"]
+
+
+@pytest.mark.parametrize("format", ["text", "json"])
+@pytest.mark.parametrize("status", ["done", "dropped"])
+def test_inactive_milestone_cli_notice_is_nonblocking_under_strict(workspace: Path, format: str, status: str) -> None:
+    milestone(workspace)
+    path = workspace / "docs/roadmap/MS-foundation.md"
+    path.write_text(path.read_text().replace("status: planned", f"status: {status}"))
+    result = CliRunner().invoke(
+        cli,
+        [
+            "spec",
+            "proposal",
+            "new",
+            "member",
+            "--milestone",
+            "MS-foundation",
+            "--strict",
+            "--format",
+            format,
+            "-w",
+            str(workspace),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    if format == "json":
+        payload = json.loads(result.stdout)
+        notices = [notice["advisory"] for notice in payload["notices"]]
+        assert any(
+            notice["code"] == "SPEC_PROPOSAL_MILESTONE_INACTIVE" and notice["level"] == "NOTICE" for notice in notices
+        )
+    else:
+        assert "SPEC_PROPOSAL_MILESTONE_INACTIVE" in result.stderr and "[NOTICE]" in result.stderr

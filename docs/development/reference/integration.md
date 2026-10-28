@@ -35,7 +35,7 @@ and `already_merged`), `plan_finish`, `validate_finish` (`result=`, `target=`), 
 | Code | Required next action |
 | --- | --- |
 | `INTEGRATION_CONFIG_INVALID` | `INPUT_ERROR`: configure/install the provider and use the supported approval/PR policy (`[TARGET] .devkit/config.toml`), or correct the flag `[TARGET]` names (`--task-id`, `--unit`, `--claims`) |
-| `INTEGRATION_NOT_READY` | `INPUT_ERROR`: resolve the conditions (`[DETAIL]`) in the source worktree (`[TARGET]`) and prepare final committed work |
+| `INTEGRATION_NOT_READY` | `INPUT_ERROR`: for missing or invalid session claims, correct explicit `--claims` and retry the same prepare or integrate command; claims are not reused between commands. Resolve any other reported readiness conditions before retrying. Ordinary source-readiness failures still target the source worktree and require final committed work and preparation again. |
 | `INTEGRATION_PROVIDER_FAILED` | Repair the installed provider or its evidence contract |
 | `INTEGRATION_REQUEST_STALE` | A digest that differs from the current scope: `INTERACTION`, `[FIX]` the exact `prepare` command that re-presents the scope, and a `[DETAIL]` with the exact `integrate` command and the current digest, for after the user approves it. Otherwise inspect completed progress and approve a new request for the remaining scope |
 | `INTEGRATION_TARGET_MOVED` | Merge nothing: merge the current base into the source and obtain fresh Host approval before integrating again |

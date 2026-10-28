@@ -1,0 +1,28 @@
+kind: reconcile-check
+stage: living-spec-draft
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-27T23:20:22.468458Z'
+status: completed
+summary: Independent reconciliation review found contradictory quick-reference recovery (P1) and missing conditional provider evidence description (P2); correction required
+findings:
+- issue: Integration quick reference contradicts claims recovery and is missing from reconcile targets.
+  evidence: docs/development/reference/integration.md:38; reconcile.md incorrectly says no reference requires updating.
+  failure_condition: Missing or invalid session claims are refused and the quick reference directs source correction and committed work instead of the same command with explicit claims.
+  suggested_action: Specialize the reference row, preserve ordinary source recovery, add its reconcile target and correct the no-impact statement.
+  resolution: open
+  severity: P1
+- issue: SDD provider capability omits conditional evidence code.
+  evidence: docs/capabilities/delivery/CAP-DLV-delivery-workflows.md:532 omits SESSION_CLAIMS_INVALID emitted at integration.py:424.
+  failure_condition: A reader consults the provider evidence contract to interpret rejected session claims and cannot find the conditional marker or recovery purpose.
+  suggested_action: Document SESSION_CLAIMS_INVALID and its recovery purpose and add the capability reconcile target.
+  resolution: open
+  severity: P2
+assumptions:
+- Codex isolation emulated with read-only role, explicit cwd/absolute read scope, git -C, identical pre/post tree 31e5a831f82f335e534babd7187634984e42aa36 and unchanged HEAD
+- Reviewer reports no explicit outside-worktree reads; uv dependency/cache internals were not independently audited
+checks:
+  docs: FAIL integration reference and delivery provider evidence description need correction
+diff_scope:
+  base: 60908741cd4965898ab42851902251a8b7e84d01
+  head: e3a618e47644068e596a9477808d4803699741e2

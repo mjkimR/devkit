@@ -1,0 +1,16 @@
+kind: green
+stage: fix-verify
+workflow: sdd-spec-bugfix
+segment: 0
+created_at: '2026-10-27T23:15:43.883356Z'
+status: completed
+summary: All 15 original regressions pass; mixed claims/source failure keeps both reasons and remains blocked after claims-only correction
+findings: []
+assumptions:
+- Green tests ran on uncommitted production changes; no checkout or restoration of the baseline
+checks:
+  resolved: 'PASS same baseline regressions: 15/15 Green versus 11 failures and 4 passes Red'
+  preserved: 'PASS just test-affected --base 60908741: 2157 passed; mixed-source supplemental test passed; lint and type checks pass for devkit and devkit-spec'
+diff_scope:
+  base: 60908741cd4965898ab42851902251a8b7e84d01
+  head: ''
