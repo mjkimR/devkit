@@ -99,3 +99,9 @@ Shared document instructions, templates and document rules belong to docs:core. 
 `uv run devkit get-context spec` and `uv run devkit get-context docs`. The supported SDD asset selection includes
 both bundles; restore an explicitly removed docs selection with `uv run devkit add docs`. Removing spec assets
 does not uninstall its command extensions or disable its runtime policies.
+
+
+Development approach is shared project policy: inspect `uv run devkit config show`. `[development] approach`
+accepts `sdd` (the absent default) or explicit `incubation`; bundle/package selection does not change it. Incubation
+keeps document and project checks without implicit SDD records. The common reader belongs to devkit-dist; the
+`project` readiness provider belongs to devkit-agt, and SDD mutation/applicability consumers to devkit-spec.

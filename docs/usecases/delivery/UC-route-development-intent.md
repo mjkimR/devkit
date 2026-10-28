@@ -1,7 +1,7 @@
 ---
 id: UC-route-development-intent
 title: Route a Development Request to the Right Workflow
-summary: "An AI coding agent classifies a user's development request by task-kind, planning-depth and activity-effort under the project's policy, records the agreed intent and starts the one matching delivery workflow, or queues the request in Backlog."
+summary: "Routes SDD development requests by task-kind, planning-depth and activity-effort after shared approach inspection; incubation follows its own guidance without implicit SDD Units."
 area: delivery
 primary_actor: AI coding agent (Host)
 supporting_actors:
@@ -26,7 +26,7 @@ capabilities:
 - **Scope**: the `spec` skill's routing, `devkit spec policy`, `devkit spec new` and the delivery workflow
   definitions of `devkit-spec`.
 - **Trigger**: The user states a development intent (`/spec <intent>` or any development request).
-- **Preconditions**: The repository has `devkit-spec` installed and its `spec` bundle synchronized.
+- **Preconditions**: The repository has `devkit-spec` installed and its `spec` bundle synchronized; the main scenario uses the effective SDD approach.
 
 ---
 
@@ -34,7 +34,7 @@ capabilities:
 
 The main scenario follows a `spec`-depth `feature` request in `direct` mode.
 
-1. The agent loads the spec constitution once in its agent context and enters the `spec` skill with the user's
+1. The agent inspects `devkit config show`, confirms the effective approach is SDD, loads the spec constitution once in its agent context and enters the `spec` skill with the user's
    intent. At this new task intake it runs one bounded `devkit playbook search`; no candidate names the requested
    operation, so it continues without a question (`CAP-HARN-agent-guidance`, `ADR-spec-intake-playbook-discovery`).
 2. The agent reads the effective project policy (`CAP-DLV-project-policy`).
@@ -67,6 +67,7 @@ The main scenario follows a `spec`-depth `feature` request in `direct` mode.
   follows the playbook (`feedback-hygiene` delegates its grouping to the read-only `triage` role above 5 open items on
   a host that runs it natively) and the use case ends; on a decline it never offers that candidate again in the conversation
   (`CAP-HARN-agent-guidance`, `CAP-DIST-context-and-playbooks`); resumes at step 2.
+- **1d.** The effective approach is incubation: the agent uses the project's incubation guidance and independent document/project checks without creating an implicit SDD Unit or classifying this change into SDD depths. Existing bound history retains its checks; this routing use case ends.
 - **2a.** The effective policy is invalid (a `[tool.spec]` key outside the table, or a `plan-intent` or main
   boundary policy other than `ask` or `auto`): the system refuses with `SPEC_CONFIG_INVALID`
   (`CAP-DLV-project-policy`); the agent stops policy-dependent work; the use case ends.
