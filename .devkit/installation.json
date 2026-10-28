@@ -1810,11 +1810,11 @@
     },
     ".devkit/managed/spec/playbooks/sdd-baseline/SKILL.md": {
       "mode": 420,
-      "sha256": "ea9701e5a514f3aea69844000b8fe84e0d9e11727bb39851701efeca4bfc03be"
+      "sha256": "840725670145cb425aadef1fc7ab5004b26833afe81da2702141271f2331b7b6"
     },
     ".devkit/managed/spec/playbooks/sdd-baseline/references/report-template.md": {
       "mode": 420,
-      "sha256": "82f78eb44ec9894d11358a97d71cbe0b41d0b9a217308fa7fb4c61c6e5f4a782"
+      "sha256": "95eec384073593eba192de9160a1d93ea4e598d4dd20805141be3f8d8764bbef"
     },
     ".devkit/managed/spec/rules/proposal_boundaries/guide.md": {
       "mode": 420,

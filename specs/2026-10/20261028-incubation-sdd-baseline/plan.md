@@ -27,7 +27,7 @@ There is no product runtime code or new dependency. Existing brownfield containm
 - Future Living Spec: the target-docs blueprint selects delivery capability/use case, harness adoption and guides.
 
 The playbook consumes semantic current facts and the prerequisite common policy interface. It does not parse a live
-context schema. Exact activation commands are bound to the delivered policy before end-to-end verification.
+context schema. Inspection uses config show configuration.development.approach and its source. Activation edits the shared development table; a project-to-spec integration provider switch is an explicit necessary effect, not a universal settings profile.
 
 ## 5. Error Handling & Edge Cases
 

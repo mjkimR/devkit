@@ -7,8 +7,10 @@ created: 2026-10-28
 depends_on:
   - SPEC-incubation-lifecycle-policy
   - SPEC-incubation-development-guidance
-related_capabilities: []
-related_usecases: []
+related_capabilities:
+  - CAP-DLV-incubation-sdd-baseline
+related_usecases:
+  - UC-adopt-sdd-from-incubation
 workflow: sdd-spec-feature
 ---
 
@@ -82,5 +84,7 @@ Planning evidence remains in `docs/materials/2026-10/20261028-incubation-sdd-bas
 
 The policy prerequisite owns approach inspection and mutation; this playbook consumes that interface.
 The guidance prerequisite owns live context; baseline reads its current facts without a parser or fixed filename requirement.
-The first parallel turn implements playbook assets and isolated mechanical checks only. Actual adoption exercises,
-shared documents and final reconcile wait for the Host to incorporate both prerequisite implementations.
+Actual adoption exercises use the stacked policy and guidance implementation supplied by the Host.
+Final completion still waits verified prerequisite content, shared documents and independent review/reconcile.
+When an incubation project uses the project integration provider, activation presents a necessary switch to spec
+as an explicit effect requiring matching authority; an existing spec provider remains unchanged.

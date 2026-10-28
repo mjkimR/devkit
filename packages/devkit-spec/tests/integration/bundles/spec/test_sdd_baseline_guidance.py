@@ -65,6 +65,8 @@ def test_guidance_orders_evidence_before_activation_and_preserves_current_state(
         "Recheck the relevant source and dirty paths",
         "Reuse an explicit user decision already bound to the same source and effects",
         "Edit only `.devkit/config.toml`",
+        "present changing it to `spec` as a necessary activation effect",
+        "If that provider change is not authorized, report the mismatch",
         "claim neither successful adoption nor automatic rollback",
         "Create no retrospective proposal, spec Unit, workflow approval, envelope or ADR",
     ):
