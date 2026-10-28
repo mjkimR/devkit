@@ -2,7 +2,7 @@
 id: PROP-incubation-sdd-baseline
 title: Adopt SDD from a verified implemented baseline
 summary: "Establishes an evidenced retained-product baseline through an explicit SDD adoption playbook before activating SDD, without reconstructing incubation delivery history."
-status: reviewing
+status: accepted
 created_at: 2026-10-28
 target_area: delivery/
 priority: medium
