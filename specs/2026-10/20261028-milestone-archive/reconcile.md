@@ -31,7 +31,7 @@ targets:
   - file: docs/usecases/documents/UC-find-the-right-documents.md
     resolution: waived
     rationale: "Existing identity, alias, reference and status-derived history procedures are path-independent; archived integration fixtures verify the same contract without new flags or steps."
-  - file: docs/usecases/documents/UC-keep-the-living-spec-consistent.md
+  - file: docs/usecases/governance/UC-keep-the-living-spec-consistent.md
     resolution: waived
     rationale: "Existing identity, alias, reference and status-derived history procedures are path-independent; archived integration fixtures verify the same contract without new flags or steps."
 ---
